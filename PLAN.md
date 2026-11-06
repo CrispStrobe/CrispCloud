@@ -335,6 +335,7 @@ CrispCloud becomes the **definitive open-source cloud file manager**: a single, 
 - [x] Memory ceiling: 2-chunk back-pressure via StreamController transform
 
 ### 2.2 Concurrent Transfers
+- [x] Copy/move job management: exclusive admission, source/destination path reservations, both-endpoint accounting, independent dispatch pause, persisted earliest starts, bulk controls, status/search filters and job-level progress. See `docs/transfer-queue.md` for behavior and platform boundaries.
 - [x] `TransferQueue` service with configurable `maxConcurrent` (default 3)
 - [x] Exponential backoff retry for transient errors (timeout, connection, 429, 503)
 - [x] `TransferTask` with priority, `cancelAll()`, `clearCompleted()`

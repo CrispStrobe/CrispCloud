@@ -23,6 +23,10 @@ class OperationProgress implements TransferOperation {
   OperationStatus status;
   String? errorMessage;
 
+  /// Ephemeral foreground details; recovery remains owned by the journal.
+  String? currentFilePath;
+  String? phaseLabel;
+
   // Batch support
   final String? batchId;
   final List<FileProgress>? files;
@@ -37,6 +41,7 @@ class OperationProgress implements TransferOperation {
 
   // Speed tracking
   final DateTime? _transferStartTime;
+  final DateTime Function() _now;
   DateTime? _lastSpeedUpdate;
   int _lastSpeedBytes = 0;
   double _currentSpeed = 0; // bytes per second
@@ -53,9 +58,13 @@ class OperationProgress implements TransferOperation {
     this.errorMessage,
     this.batchId,
     this.files,
-  }) : _transferStartTime = DateTime.now();
+    DateTime Function()? now,
+  }) : _now = now ?? DateTime.now,
+       _transferStartTime = (now ?? DateTime.now)();
 
-  double get progress => totalBytes > 0 ? currentBytes / totalBytes : 0;
+  double get progress => totalBytes > 0
+      ? (currentBytes / totalBytes).clamp(0.0, 1.0).toDouble()
+      : 0;
 
   bool get isComplete =>
       status == OperationStatus.completed || status == OperationStatus.failed;
@@ -103,6 +112,7 @@ class OperationProgress implements TransferOperation {
     if (!_isPaused && isActive) {
       _isPaused = true;
       _pauseCompleter = Completer<void>();
+      _resetSpeedWindow();
       _log.debug('Operation paused: $fileName');
     }
   }
@@ -115,6 +125,7 @@ class OperationProgress implements TransferOperation {
         _pauseCompleter!.complete();
       }
       _pauseCompleter = null;
+      _resetSpeedWindow();
       _log.debug('Operation resumed: $fileName');
     }
   }
@@ -136,6 +147,12 @@ class OperationProgress implements TransferOperation {
     if (files == null) return 0;
     return files!.where((f) => f.error != null).length;
   }
+
+  /// Skipped and filtered rows are resolved work, not copied files.
+  int get skippedFiles => files?.where((file) => file.isSkipped).length ?? 0;
+
+  int get processedFiles =>
+      files?.where((file) => file.isProcessed).length ?? 0;
 
   void complete() {
     status = OperationStatus.completed;
@@ -166,27 +183,35 @@ class OperationProgress implements TransferOperation {
   }
 
   /// Current transfer speed in bytes per second.
-  double get currentSpeed => _currentSpeed;
+  double get currentSpeed => isActive && !_isPaused ? _currentSpeed : 0;
 
   /// Average speed since transfer started.
   double get averageSpeed {
     if (_transferStartTime == null) return 0;
-    final elapsed = DateTime.now()
-        .difference(_transferStartTime)
-        .inMilliseconds;
+    final elapsed = _now().difference(_transferStartTime).inMilliseconds;
     if (elapsed <= 0) return 0;
     return currentBytes / (elapsed / 1000);
   }
 
   /// Estimated time remaining in seconds.
   double get estimatedSecondsRemaining {
-    if (_currentSpeed <= 0 || totalBytes <= 0) return 0;
-    final remaining = totalBytes - currentBytes;
-    return remaining / _currentSpeed;
+    if (currentSpeed <= 0 || totalBytes <= 0) return 0;
+    final remaining = (totalBytes - currentBytes).clamp(0, totalBytes);
+    return remaining / currentSpeed;
+  }
+
+  void _resetSpeedWindow() {
+    _currentSpeed = 0;
+    _lastSpeedUpdate = null;
+    _lastSpeedBytes = currentBytes;
   }
 
   void updateProgress(int bytes) {
-    final now = DateTime.now();
+    // A restarted partial stream may begin at a lower offset. Start a new
+    // sampling window instead of showing negative throughput or ETA.
+    bytes = bytes < 0 ? 0 : bytes;
+    if (bytes < currentBytes) _resetSpeedWindow();
+    final now = _now();
     // Calculate instantaneous speed (smoothed over 1-second windows)
     if (_lastSpeedUpdate != null) {
       final elapsed = now.difference(_lastSpeedUpdate!).inMilliseconds;
@@ -272,6 +297,11 @@ class FileProgress {
 
   /// Human-readable terminal state for filtered, skipped, or cancelled rows.
   String? statusLabel;
+
+  bool get isSkipped => statusLabel == 'skipped' || statusLabel == 'filtered';
+
+  bool get isProcessed =>
+      isComplete || isSkipped || error != null || statusLabel == 'cancelled';
 
   FileProgress({
     required this.name,

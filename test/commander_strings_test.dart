@@ -4,6 +4,7 @@ import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/l10n/commander_strings.dart';
 import 'package:crisp_cloud/l10n/commander_translations.dart';
 import 'package:crisp_cloud/l10n/commander_completion_translations.dart';
+import 'package:crisp_cloud/l10n/transfer_queue_translations.dart';
 import 'package:crisp_cloud/models/rename_batch.dart';
 import 'package:crisp_cloud/models/transfer_job.dart';
 import 'package:crisp_cloud/services/file_operation_options.dart';
@@ -47,6 +48,7 @@ void main() {
     for (final entry in {
       ...commanderTranslations,
       ...commanderCompletionTranslations,
+      ...transferQueueTranslations,
     }.entries) {
       expect(entry.value, hasLength(8), reason: entry.key);
       final expected = parameters
@@ -128,6 +130,8 @@ void main() {
       'file_operation_dialog',
       'file_operation_conflict_dialog',
       'transfer_history_dialog',
+      'operations_panel',
+      'transfer_schedule_dialog',
       'rename_history_dialog',
       'trash_history_dialog',
       'file_collections_dialog',

@@ -102,6 +102,9 @@ Modular adapter pattern with provider-agnostic interfaces:
 - **`CloudStorageClient`** — abstract interface for all 14 providers
 - **`DeltaSyncService`** — block-level diff engine (Adler-32 + SHA-256)
 - **`TransferQueue`** — concurrent transfers with exponential backoff retry
+- **Copy/move job management** — path reservations, scheduled starts, queue and
+  bulk controls, truthful job progress and journaled recovery; see
+  [transfer queue behavior](docs/transfer-queue.md).
 - **`SyncEngine`** — background sync with conflict resolution
 - **`PanelProvider`** — dual-panel state management (Riverpod)
 

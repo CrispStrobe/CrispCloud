@@ -17,10 +17,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 
 import '../models/file_item.dart';
 import '../models/operation_progress.dart';
 import '../models/transfer_job.dart';
+import '../models/transfer_queue_summary.dart';
 import '../models/panel_side.dart';
 import '../services/audit_service.dart';
 import '../services/file_operation_service.dart';
@@ -29,9 +31,11 @@ import '../services/transfer_queue.dart';
 import '../services/transfer_journal.dart';
 import '../services/background_transfer_journal.dart';
 import '../services/transfer_recovery_service.dart';
+import '../services/transfer_resource_claims.dart';
 import '../models/integrity_recovery.dart';
 import '../services/web_streaming_service.dart';
 import '../services/log_service.dart';
+import '../utils/async_lock.dart';
 import 'auth_provider.dart';
 import 'core_providers.dart';
 import 'panel_provider.dart';
@@ -48,7 +52,15 @@ class TransferNotifier extends ChangeNotifier {
   final TransferQueue _queue = TransferQueue();
   final List<OperationProgress> _operations = [];
   final Map<String, FileOperationControl> _fileOperationControls = {};
+  final Map<String, StreamSubscription<void>> _controlSubscriptions = {};
+  final Map<String, Set<FileOperationEntry>> _unknownFileSizes = {};
   final Set<String> _integrityProgressIds = {};
+  final AsyncLock _queueConfiguration = AsyncLock();
+  List<TransferTask> _pendingTasks = const [];
+  final Map<String, TransferTask> _firstPendingTask = {};
+  final Map<String, OperationProgress> _activeOperations = {};
+  bool _queueUserPaused = false;
+  int _dispatchHolds = 0;
 
   late final TransferJournal _journal;
   late final Future<void> ready;
@@ -57,28 +69,170 @@ class TransferNotifier extends ChangeNotifier {
 
   TransferNotifier(this._ref) {
     _journal = _ref.read(transferJournalProvider);
-    _queue.addListener(notifyListeners);
+    _queue.addListener(_queueChanged);
     ready = _restore();
+  }
+
+  void _queueChanged() {
+    _pendingTasks = _queue.pendingTasks;
+    _firstPendingTask.clear();
+    for (final task in _pendingTasks) {
+      _firstPendingTask.putIfAbsent(task.operation.id, () => task);
+    }
+    _activeOperations.clear();
+    for (final task in _queue.activeTasks) {
+      _activeOperations[task.operation.id] = task.operation;
+    }
+    notifyListeners();
   }
 
   List<OperationProgress> get operations => List.unmodifiable(_operations);
   List<TransferJobRecord> get savedJobs => _journal.jobs;
   List<String> get recoveryWarnings => List.unmodifiable(_journal.warnings);
   TransferJobRecord? savedJob(String id) => _journal.job(id);
-  bool get hasActiveOperations => _operations.any((op) => op.isActive);
+  bool get hasActiveOperations => _operations.any(
+    (op) => op.isActive || op.isCancelled && isJobLive(op.id),
+  );
   bool isJobLive(String id) =>
-      _fileOperationControls.containsKey(id) || _journal.isOperationActive(id);
+      _fileOperationControls.containsKey(id) ||
+      _journal.isOperationActive(id) ||
+      _firstPendingTask.containsKey(id) ||
+      _activeOperations.containsKey(id);
   int get maxConcurrent => _queue.maxConcurrent;
-  int get queuedCount => _queue.pendingCount;
-  List<String> get queuedIds =>
-      _queue.pendingTasks.map((task) => task.id).toList();
-  bool isQueued(String id) => _queue.pendingTasks.any((task) => task.id == id);
-  int priorityOf(String id) => _journal.job(id)?.priority ?? 0;
+  bool get queuePaused => _queueUserPaused;
+  int get queuedCount => queuedIds.length;
+
+  /// Queue controls operate on user-visible jobs, even when a legacy upload
+  /// consists of several scheduler tasks sharing the same operation.
+  List<String> get queuedIds {
+    return [
+      ..._firstPendingTask.keys.where(
+        (id) => !_activeOperations.containsKey(id),
+      ),
+    ];
+  }
+
+  bool isQueued(String id) =>
+      !_activeOperations.containsKey(id) && _firstPendingTask.containsKey(id);
+
+  bool isRunning(String id) {
+    final operation = _activeOperations[id];
+    return operation != null && operation.isActive && !operation.isPaused;
+  }
+
+  int priorityOf(String id) =>
+      _journal.job(id)?.priority ?? _firstPendingTask[id]?.priority ?? 0;
+
+  String? queueBlockedReason(String id) {
+    if (!isQueued(id)) return null;
+    if (_dispatchHolds > 0 && !_queueUserPaused) {
+      return 'Saving queue changes';
+    }
+    final task = _firstPendingTask[id];
+    return task == null ? null : _queue.blockedReason(task.id);
+  }
+
+  TransferQueueSummary get queueSummary {
+    final now = DateTime.now();
+    final pending = <String, List<TransferTask>>{};
+    for (final task in _pendingTasks) {
+      pending.putIfAbsent(task.operation.id, () => []).add(task);
+    }
+    var running = 0;
+    var queued = 0;
+    var scheduled = 0;
+    var paused = 0;
+    var waiting = 0;
+    var needsReview = 0;
+    var completed = 0;
+    var cancelling = 0;
+    var cancelled = 0;
+    var totalBytes = 0;
+    var transferredBytes = 0;
+    var bytesPerSecond = 0.0;
+    var hasUnknownSize = false;
+    for (final operation in _operations) {
+      final saved = _journal.job(operation.id);
+      final live = isJobLive(operation.id);
+      if (operation.isCancelled ||
+          !live && saved?.status == TransferJobStatus.cancelled) {
+        if (live) {
+          cancelling++;
+        } else {
+          cancelled++;
+        }
+        continue;
+      }
+      if (operation.isWaitingForDecision) {
+        waiting++;
+        continue;
+      }
+      if (operation.status == OperationStatus.completed) {
+        completed++;
+        continue;
+      }
+      if (operation.status == OperationStatus.failed) {
+        needsReview++;
+        continue;
+      }
+      if (operation.isPaused) {
+        paused++;
+      } else if (_activeOperations.containsKey(operation.id)) {
+        running++;
+        final speed = operation.currentSpeed;
+        if (speed.isFinite && speed > 0) bytesPerSecond += speed;
+      } else {
+        final tasks = pending[operation.id] ?? const <TransferTask>[];
+        if (tasks.isNotEmpty &&
+            tasks.every((task) => task.notBefore?.isAfter(now) == true)) {
+          scheduled++;
+        } else {
+          queued++;
+        }
+      }
+      final total = operation.totalBytes < 0 ? 0 : operation.totalBytes;
+      final current = operation.currentBytes < 0 ? 0 : operation.currentBytes;
+      totalBytes += total;
+      transferredBytes += total > 0 && current > total ? total : current;
+      final unknown = _unknownFileSizes[operation.id];
+      if (unknown != null) {
+        hasUnknownSize = hasUnknownSize || unknown.isNotEmpty;
+      } else if (saved != null) {
+        hasUnknownSize =
+            hasUnknownSize ||
+            saved.entries.any(
+              (entry) =>
+                  !entry.source.isFolder &&
+                  entry.source.size == null &&
+                  entry.outcome != FileOperationOutcome.filtered &&
+                  entry.outcome != FileOperationOutcome.skipped,
+            );
+      }
+    }
+    return TransferQueueSummary(
+      running: running,
+      queued: queued,
+      scheduled: scheduled,
+      paused: paused,
+      waiting: waiting,
+      needsReview: needsReview,
+      completed: completed,
+      cancelling: cancelling,
+      cancelled: cancelled,
+      totalBytes: totalBytes,
+      transferredBytes: transferredBytes,
+      bytesPerSecond: bytesPerSecond,
+      hasUnknownSize: hasUnknownSize,
+    );
+  }
 
   Future<void> _restore() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final limit = prefs.getInt('commander_transfer_concurrency') ?? 3;
+      _queueUserPaused =
+          prefs.getBool('commander_transfer_queue_paused') ?? false;
+      _applyDispatchState();
       _queue.setMaxConcurrent(limit.clamp(0, 16));
     } catch (error) {
       _log.warn('Could not load transfer concurrency', error);
@@ -261,36 +415,149 @@ class TransferNotifier extends ChangeNotifier {
   Future<void> setConcurrency(int limit) async {
     if (limit < 0 || limit > 16) throw ArgumentError.value(limit, 'limit');
     await ready;
-    final prefs = await SharedPreferences.getInstance();
-    if (!await prefs.setInt('commander_transfer_concurrency', limit)) {
-      throw StateError('Could not save transfer concurrency.');
+    await _withDispatchHeld(() async {
+      final prefs = await SharedPreferences.getInstance();
+      if (!await prefs.setInt('commander_transfer_concurrency', limit)) {
+        throw StateError('Could not save transfer concurrency.');
+      }
+      _queue.setMaxConcurrent(limit);
+    });
+  }
+
+  /// Stop admitting new work without changing the user's parallelism setting
+  /// or unpausing any job that was paused individually.
+  Future<void> setQueuePaused(bool paused) async {
+    await ready;
+    await _withDispatchHeld(() async {
+      final prefs = await SharedPreferences.getInstance();
+      if (!await prefs.setBool('commander_transfer_queue_paused', paused)) {
+        throw StateError('Could not save the queue pause setting.');
+      }
+      _queueUserPaused = paused;
+    });
+  }
+
+  void _applyDispatchState() {
+    if (_disposed) return;
+    if (_queueUserPaused || _dispatchHolds > 0) {
+      _queue.pause();
+    } else {
+      _queue.resume();
     }
-    _queue.setMaxConcurrent(limit);
+  }
+
+  /// A job cannot start halfway through saving its schedule or queue policy.
+  /// This hold affects dispatch only; active I/O retains its worker and claims.
+  /// A counter and the separate user pause flag prevent one concurrent change
+  /// from resuming dispatch while another change is still being saved.
+  Future<T> _withDispatchHeld<T>(Future<T> Function() action) async {
+    if (_disposed) throw StateError('The transfer queue is closed.');
+    _dispatchHolds++;
+    _applyDispatchState();
+    try {
+      return await _queueConfiguration.synchronized(() async {
+        if (_disposed) throw StateError('The transfer queue is closed.');
+        return action();
+      });
+    } finally {
+      _dispatchHolds--;
+      _applyDispatchState();
+      notifyListeners();
+    }
   }
 
   Future<void> setPriority(String id, int priority) async {
-    if (!isQueued(id)) return;
-    final job = _journal.job(id);
-    if (job != null) {
-      await _journal.updateQueue(id, priority: priority);
-    }
-    _queue.setPendingPriority(id, priority);
-    await _saveQueueOrder();
+    await ready;
+    await _withDispatchHeld(() async {
+      if (!isQueued(id)) return;
+      final job = _journal.job(id);
+      if (job != null) {
+        await _journal.updateQueue(id, priority: priority);
+      }
+      for (final task in _queue.pendingTasks.where(
+        (task) => task.operation.id == id,
+      )) {
+        _queue.setPendingPriority(task.id, priority);
+      }
+      await _saveQueueOrder();
+    });
+  }
+
+  Future<void> setScheduledStart(String id, DateTime? notBefore) async {
+    await ready;
+    await _withDispatchHeld(() async {
+      if (!isQueued(id)) {
+        throw StateError(
+          'This job has already started or finished; its start time cannot be changed.',
+        );
+      }
+      final job = _journal.job(id);
+      if (job == null) {
+        throw StateError('This transfer does not have a saved plan.');
+      }
+      final scheduledAt = notBefore?.toUtc();
+      await _journal.updateQueue(
+        id,
+        scheduledAt: scheduledAt,
+        clearScheduledAt: scheduledAt == null,
+      );
+      for (final task in _queue.pendingTasks.where(
+        (task) => task.operation.id == id,
+      )) {
+        _queue.setPendingStart(task.id, scheduledAt);
+      }
+    });
   }
 
   Future<void> reorderPending(int oldIndex, int newIndex) async {
-    _queue.reorderPending(oldIndex, newIndex);
-    await _saveQueueOrder();
+    await ready;
+    await _withDispatchHeld(() async {
+      final ids = queuedIds;
+      if (oldIndex < 0 ||
+          oldIndex >= ids.length ||
+          newIndex < 0 ||
+          newIndex > ids.length) {
+        return;
+      }
+      final id = ids.removeAt(oldIndex);
+      if (newIndex > oldIndex) newIndex--;
+      ids.insert(newIndex, id);
+      for (final id in ids.reversed) {
+        _movePendingJobFirst(id);
+      }
+      await _saveQueueOrder();
+    });
   }
 
   Future<void> moveQueuedFirst(String id) async {
-    _queue.movePendingToTop(id);
-    await _saveQueueOrder();
+    await ready;
+    await _withDispatchHeld(() async {
+      if (!isQueued(id)) return;
+      _movePendingJobFirst(id);
+      await _saveQueueOrder();
+    });
   }
 
   Future<void> moveQueuedLast(String id) async {
-    _queue.movePendingToBottom(id);
-    await _saveQueueOrder();
+    await ready;
+    await _withDispatchHeld(() async {
+      if (!isQueued(id)) return;
+      for (final task in _queue.pendingTasks.where(
+        (task) => task.operation.id == id,
+      )) {
+        _queue.movePendingToBottom(task.id);
+      }
+      await _saveQueueOrder();
+    });
+  }
+
+  void _movePendingJobFirst(String id) {
+    final tasks = _queue.pendingTasks
+        .where((task) => task.operation.id == id)
+        .toList();
+    for (final task in tasks.reversed) {
+      _queue.movePendingToTop(task.id);
+    }
   }
 
   Future<void> _saveQueueOrder() async {
@@ -309,12 +576,7 @@ class TransferNotifier extends ChangeNotifier {
     if (isJobLive(id)) {
       throw StateError('Finish or cancel this transfer first.');
     }
-    final job = _journal.job(id);
-    if (job != null && isIntegrityTransferJob(job)) {
-      await _journal.runExclusiveOperation(id, () => _journal.dismiss(id));
-    } else {
-      await _journal.dismiss(id);
-    }
+    await _journal.runExclusiveOperation(id, () => _journal.dismiss(id));
     _operations.removeWhere((operation) => operation.id == id);
     notifyListeners();
   }
@@ -323,25 +585,25 @@ class TransferNotifier extends ChangeNotifier {
     await ready;
     for (final job in _journal.jobs.where((job) => job.isFinished)) {
       if (!isJobLive(job.id)) {
-        if (isIntegrityTransferJob(job)) {
-          await _journal.runExclusiveOperation(
-            job.id,
-            () => _journal.dismiss(job.id),
-          );
-        } else {
-          await _journal.dismiss(job.id);
-        }
+        await _journal.runExclusiveOperation(
+          job.id,
+          () => _journal.dismiss(job.id),
+        );
       }
     }
     await _journal.compact();
     _operations.removeWhere(
-      (operation) => operation.status == OperationStatus.completed,
+      (operation) =>
+          operation.status == OperationStatus.completed &&
+          !isJobLive(operation.id),
     );
     notifyListeners();
   }
 
   /// Restores a reviewed backup only into a vacant original location. The
-  /// rename intent is durable before the storage operation starts.
+  /// rename intent is durable before the storage operation starts. Restoration
+  /// holds dispatch and requires existing workers to settle, so its verification
+  /// and publication cannot race a different queued transfer.
   Future<void> restoreSavedBackup(
     String id,
     int index,
@@ -349,41 +611,69 @@ class TransferNotifier extends ChangeNotifier {
     FileOperationControl control,
   ) async {
     await ready;
-    final job = _journal.job(id);
-    if (job == null || isJobLive(id)) {
-      throw StateError('Transfer is unavailable or active.');
-    }
-    final saved = job.entries[index];
-    final entry =
-        FileOperationEntry(
-            saved.source,
-            saved.destination,
-            existing: saved.existing,
-          )
-          ..outcome = saved.outcome
-          ..message = saved.message
-          ..recovery = Map.of(saved.recovery);
-    await const TransferRecoveryService().restoreBackup(
-      job,
-      saved,
-      destination,
-      control,
-      checkpoint: (phase) async {
-        entry.recovery = {...?entry.recovery, 'phase': phase};
-        if (phase == 'backupRestored') {
-          entry.message = 'Previous destination restored from verified backup.';
-        }
-        await _journal.checkpoint(id, index, entry, phase);
-      },
-    );
+    await _withDispatchHeld(() async {
+      if (_queue.activeCount > 0) {
+        throw StateError(
+          'Wait for running transfers to finish before restoring a backup.',
+        );
+      }
+      final job = _journal.job(id);
+      if (job == null || isJobLive(id)) {
+        throw StateError('Transfer is unavailable or active.');
+      }
+      await _journal.runExclusiveOperation(id, () async {
+        final saved = job.entries[index];
+        final entry =
+            FileOperationEntry(
+                saved.source,
+                saved.destination,
+                existing: saved.existing,
+              )
+              ..outcome = saved.outcome
+              ..message = saved.message
+              ..recovery = Map.of(saved.recovery);
+        await const TransferRecoveryService().restoreBackup(
+          job,
+          saved,
+          destination,
+          control,
+          checkpoint: (phase) async {
+            entry.recovery = {...?entry.recovery, 'phase': phase};
+            if (phase == 'backupRestored') {
+              entry.message =
+                  'Previous destination restored from verified backup.';
+            }
+            await _journal.checkpoint(id, index, entry, phase);
+          },
+        );
+      });
+    });
     notifyListeners();
   }
 
   void clearCompletedOperations() {
-    _operations.removeWhere((op) => op.isComplete || op.isCancelled);
+    _operations.removeWhere(
+      (op) => _canHideOperation(op.id) && (op.isComplete || op.isCancelled),
+    );
     _queue.clearCompleted();
     notifyListeners();
   }
+
+  /// Hide successful/cancelled rows while keeping failures and conflicts in
+  /// view. Saved manifests remain available in history and recovery.
+  void clearFinishedOperations() {
+    _operations.removeWhere(
+      (op) =>
+          _canHideOperation(op.id) &&
+          (op.status == OperationStatus.completed ||
+              op.isCancelled ||
+              _journal.job(op.id)?.status == TransferJobStatus.cancelled),
+    );
+    _queue.clearCompleted();
+    notifyListeners();
+  }
+
+  bool _canHideOperation(String id) => !isJobLive(id);
 
   void cancelAllOperations() {
     for (final operation in _operations.where(
@@ -391,7 +681,7 @@ class TransferNotifier extends ChangeNotifier {
     )) {
       unawaited(_cancelWaitingJob(operation.id));
     }
-    for (final control in _fileOperationControls.values) {
+    for (final control in [..._fileOperationControls.values]) {
       control.cancel();
     }
     _queue.cancelAll();
@@ -402,12 +692,16 @@ class TransferNotifier extends ChangeNotifier {
   }
 
   void removeOperation(String id) {
+    if (!_canHideOperation(id)) return;
     _operations.removeWhere((op) => op.id == id);
+    // The durable journal owns history. Scheduler closures can retain plans,
+    // streams and account clients, so discard their settled cache as well.
+    _queue.clearCompleted();
     notifyListeners();
   }
 
   Future<void> _saveLiveStatus(String id, TransferJobStatus status) async {
-    if (!_fileOperationControls.containsKey(id)) return;
+    if (_disposed || !_fileOperationControls.containsKey(id)) return;
     try {
       await _journal.setStatus(
         id,
@@ -426,28 +720,71 @@ class TransferNotifier extends ChangeNotifier {
   }
 
   void pauseOperation(String operationId) {
-    _fileOperationControls[operationId]?.pause();
+    final control = _fileOperationControls[operationId];
+    control?.pause();
     for (final operation in _operations.where((op) => op.id == operationId)) {
       operation.pause();
     }
-    unawaited(_saveLiveStatus(operationId, TransferJobStatus.paused));
+    if (control == null) notifyListeners();
     _queue.refresh();
   }
 
   void resumeOperation(String operationId) {
-    _fileOperationControls[operationId]?.resume();
+    final control = _fileOperationControls[operationId];
+    control?.resume();
     for (final operation in _operations.where((op) => op.id == operationId)) {
       operation.resume();
     }
-    unawaited(
-      _saveLiveStatus(
-        operationId,
-        isQueued(operationId)
-            ? TransferJobStatus.queued
-            : TransferJobStatus.running,
-      ),
-    );
+    if (control == null) notifyListeners();
     _queue.refresh();
+  }
+
+  void pauseOperations(Iterable<String> ids) {
+    for (final id in ids.toSet()) {
+      pauseOperation(id);
+    }
+  }
+
+  void resumeOperations(Iterable<String> ids) {
+    for (final id in ids.toSet()) {
+      resumeOperation(id);
+    }
+  }
+
+  void cancelOperations(Iterable<String> ids) {
+    for (final id in ids.toSet()) {
+      cancelOperation(id);
+    }
+  }
+
+  void _synchronizeControl(
+    String id,
+    FileOperationControl control,
+    OperationProgress operation,
+  ) {
+    if (_disposed) return;
+    if (control.isCancelled) {
+      operation.cancel();
+      _queue.cancel(id);
+    } else {
+      if (control.isPaused) {
+        operation.pause();
+      } else {
+        operation.resume();
+      }
+      unawaited(
+        _saveLiveStatus(
+          id,
+          control.isPaused
+              ? TransferJobStatus.paused
+              : isQueued(id)
+              ? TransferJobStatus.queued
+              : TransferJobStatus.running,
+        ),
+      );
+      _queue.refresh();
+    }
+    notifyListeners();
   }
 
   void cancelOperation(String operationId) {
@@ -492,6 +829,7 @@ class TransferNotifier extends ChangeNotifier {
     VoidCallback? onQueued,
     String? recoveryJobId,
     int priority = 0,
+    DateTime? notBefore,
   }) async {
     await ready;
     if (recoveryError != null) throw StateError(recoveryError!);
@@ -499,12 +837,53 @@ class TransferNotifier extends ChangeNotifier {
       throw StateError('Review a valid operation plan first.');
     }
     if (_disposed) throw StateError('The transfer queue is closed.');
-    final id =
-        recoveryJobId ?? 'commander_${DateTime.now().microsecondsSinceEpoch}';
+    final id = recoveryJobId ?? 'commander_${const Uuid().v4()}';
     if (isJobLive(id)) throw StateError('This transfer is already queued.');
+    // Admission is synchronous, before any plan/journal await. A second
+    // recovery cannot replace the live owner's controls or durable entries.
+    try {
+      await _journal.runExclusiveOperation(
+        id,
+        () => _runAdmittedFileOperation(
+          id,
+          plan,
+          control: control,
+          resolveConflict: resolveConflict,
+          resolveDetailedConflict: resolveDetailedConflict,
+          onProgress: onProgress,
+          onEntryComplete: onEntryComplete,
+          onQueued: onQueued,
+          recoveryJobId: recoveryJobId,
+          priority: priority,
+          notBefore: notBefore,
+        ),
+      );
+    } finally {
+      notifyListeners();
+    }
+  }
+
+  Future<void> _runAdmittedFileOperation(
+    String id,
+    FileOperationPlan plan, {
+    required FileOperationControl control,
+    FileConflictResolver? resolveConflict,
+    DetailedFileConflictResolver? resolveDetailedConflict,
+    void Function(FileOperationEntry, int, int?)? onProgress,
+    void Function(FileOperationEntry)? onEntryComplete,
+    VoidCallback? onQueued,
+    String? recoveryJobId,
+    int priority = 0,
+    DateTime? notBefore,
+  }) async {
     TransferJobRecord job;
     if (recoveryJobId == null) {
-      job = await _journal.create(id, plan, priority: priority);
+      job = await _journal.create(
+        id,
+        plan,
+        priority: priority,
+        scheduledAt: notBefore?.toUtc(),
+      );
     } else {
       final saved = _journal.job(id);
       if (saved != null && isIntegrityTransferJob(saved)) {
@@ -530,8 +909,19 @@ class TransferNotifier extends ChangeNotifier {
       }
       await _journal.saveReviewedOptions(id, plan.options);
       await _journal.saveEntries(id, plan.entries);
+      if (notBefore != null) {
+        await _journal.updateQueue(id, scheduledAt: notBefore.toUtc());
+      }
       await _journal.setStatus(id, TransferJobStatus.queued);
       priority = saved.priority;
+    }
+    if (_disposed) {
+      await _journal.setStatus(
+        id,
+        TransferJobStatus.cancelled,
+        message: 'Cancelled before queue admission. The saved plan can be reviewed later.',
+      );
+      throw StateError('The transfer queue is closed.');
     }
     _operations.removeWhere((operation) => operation.id == id);
     // A lost response can be reconciled entirely by read-only verification.
@@ -560,6 +950,13 @@ class TransferNotifier extends ChangeNotifier {
               : entry.outcome.name,
         ),
     };
+    final excludedFromTotal = plan.entries
+        .where(
+          (entry) =>
+              entry.outcome == FileOperationOutcome.skipped ||
+              entry.outcome == FileOperationOutcome.filtered,
+        )
+        .toSet();
     final operation = OperationProgress(
       id: id,
       type: plan.options.kind == FileOperationKind.move
@@ -569,7 +966,10 @@ class TransferNotifier extends ChangeNotifier {
       targetPath: plan.targetDirectory,
       fileName: '${plan.fileCount} files',
       totalBytes: plan.entries
-          .where((entry) => !entry.source.isFolder)
+          .where(
+            (entry) =>
+                !entry.source.isFolder && !excludedFromTotal.contains(entry),
+          )
           .fold(0, (sum, entry) => sum + (entry.source.size ?? 0)),
       files: rows.values.toList(),
     );
@@ -577,163 +977,240 @@ class TransferNotifier extends ChangeNotifier {
     final audit = _ref.read(auditServiceProvider);
     _operations.add(operation);
     _fileOperationControls[operation.id] = control;
+    _unknownFileSizes[id] = plan.entries
+        .where(
+          (entry) =>
+              !entry.source.isFolder &&
+              entry.source.size == null &&
+              !excludedFromTotal.contains(entry),
+        )
+        .toSet();
+    _controlSubscriptions[id] = control.changes.listen(
+      (_) => _synchronizeControl(id, control, operation),
+    );
+    if (control.isPaused) operation.pause();
+    if (control.isCancelled) operation.cancel();
     notifyListeners();
     var completedBytes = rows.values
         .where((row) => row.isComplete)
         .fold(0, (sum, row) => sum + row.size);
+    operation.currentBytes = completedBytes;
     final counted = plan.entries.where((entry) => entry.completed).toSet();
     final transferSizes = {
       for (final entry in plan.entries) entry: rows[entry]!.size,
     };
+    final progressBytes = <FileOperationEntry, int>{};
     var started = false;
-    _queue.enqueue(
-      TransferTask(
-        id: id,
-        operation: operation,
-        providerName:
-            plan.destination.persistentStorageId ?? plan.destination.label,
-        priority: priority,
-        execute: () async {
-          started = true;
-          // The service records failures. Do not return them to the queue's
-          // transient-network retry loop after partial destructive work.
-          try {
-            await JournaledTransferRunner(_journal).execute(
-              id,
-              plan,
-              control: control,
-              resolveConflict: resolveConflict,
-              resolveDetailedConflict: resolveDetailedConflict,
-              onPhase: (_, phase) {
-                notifyListeners();
-              },
-              onProgress: (entry, bytes, total) {
-                if (total != null && total != transferSizes[entry]) {
-                  operation.totalBytes += total - transferSizes[entry]!;
-                  transferSizes[entry] = total;
-                }
-                operation.updateProgress(completedBytes + bytes);
-                onProgress?.call(entry, bytes, total);
-                notifyListeners();
-              },
-              onEntryComplete: (entry) {
-                final row = rows[entry]!;
-                row.isComplete = entry.completed;
-                row.error = entry.failed ? entry.message : null;
-                row.statusLabel =
-                    entry.outcome == FileOperationOutcome.needsDecision
-                    ? 'Waiting for a conflict decision'
-                    : entry.outcome.name;
-                if (entry.completed && counted.add(entry)) {
-                  completedBytes += transferSizes[entry]!;
-                }
-                operation.currentBytes = completedBytes;
-                onEntryComplete?.call(entry);
-                notifyListeners();
-              },
-            );
-            final waiting = plan.entries.any(
-              (entry) => entry.outcome == FileOperationOutcome.needsDecision,
-            );
-            if (control.isCancelled) {
-              operation.cancel();
-            } else if (waiting) {
-              // A background conflict stops the service with remaining rows
-              // still pending. Never report that partially executed plan as
-              // complete, or invite a retry of the already completed rows.
-              for (final entry in plan.entries.where(
-                (entry) => entry.outcome == FileOperationOutcome.pending,
-              )) {
-                rows[entry]!.statusLabel =
-                    'Not started (awaiting conflict decision)';
-              }
-              operation.waitForDecision();
-            } else if (plan.entries.any((entry) => entry.failed)) {
-              operation.fail(
-                '${plan.entries.where((entry) => entry.failed).length} item(s) need review.',
-              );
-            } else {
-              operation.status = OperationStatus.completed;
-              operation.totalBytes = completedBytes;
-              operation.currentBytes = completedBytes;
-            }
-            // Audit failures must not turn a verified transfer into a retry.
+    try {
+      _queue.enqueue(
+        TransferTask(
+          id: id,
+          operation: operation,
+          providerNames: transferProviderNames(plan),
+          resourceClaims: transferResourceClaims(plan),
+          notBefore: job.scheduledAt,
+          maxRetries: 0,
+          priority: priority,
+          execute: () async {
+            started = true;
+            // The service records failures. Do not return them to the queue's
+            // transient-network retry loop after partial destructive work.
             try {
-              for (final entry in plan.entries) {
-                if (entry.completed) {
-                  await audit.logSuccess(
-                    operation: entry.outcome == FileOperationOutcome.moved
-                        ? AuditOperation.move
-                        : AuditOperation.copy,
-                    sourcePath: entry.source.path!,
-                    targetPath: entry.destination,
-                    provider: plan.destination.label,
-                    sizeBytes: entry.source.size,
-                  );
-                } else if (entry.failed) {
-                  await audit.logError(
-                    operation: plan.options.kind == FileOperationKind.move
-                        ? AuditOperation.move
-                        : AuditOperation.copy,
-                    sourcePath: entry.source.path!,
-                    targetPath: entry.destination,
-                    provider: plan.destination.label,
-                    error: entry.message ?? 'Operation failed',
-                  );
+              await JournaledTransferRunner(_journal).execute(
+                id,
+                plan,
+                control: control,
+                resolveConflict: resolveConflict,
+                resolveDetailedConflict: resolveDetailedConflict,
+                onPhase: (entry, phase) {
+                  operation.currentFilePath = entry.source.path;
+                  operation.phaseLabel = _transferPhaseLabel(phase);
+                  notifyListeners();
+                },
+                onProgress: (entry, bytes, total) {
+                  operation.currentFilePath = entry.source.path;
+                  operation.phaseLabel = 'Copying';
+                  progressBytes[entry] = bytes;
+                  if (total != null) _unknownFileSizes[id]?.remove(entry);
+                  if (total != null && total != transferSizes[entry]) {
+                    operation.totalBytes += total - transferSizes[entry]!;
+                    transferSizes[entry] = total;
+                  }
+                  operation.updateProgress(completedBytes + bytes);
+                  onProgress?.call(entry, bytes, total);
+                  notifyListeners();
+                },
+                onEntryComplete: (entry) {
+                  final row = rows[entry]!;
+                  row.isComplete = entry.completed;
+                  row.error = entry.failed ? entry.message : null;
+                  row.statusLabel =
+                      entry.outcome == FileOperationOutcome.needsDecision
+                      ? 'Waiting for a conflict decision'
+                      : entry.outcome.name;
+                  if ((entry.outcome == FileOperationOutcome.skipped ||
+                          entry.outcome == FileOperationOutcome.filtered) &&
+                      excludedFromTotal.add(entry)) {
+                    operation.totalBytes -= transferSizes[entry]!;
+                    _unknownFileSizes[id]?.remove(entry);
+                  }
+                  final actual = progressBytes[entry];
+                  if (entry.completed &&
+                      actual != null &&
+                      _unknownFileSizes[id]?.remove(entry) == true) {
+                    operation.totalBytes += actual - transferSizes[entry]!;
+                    transferSizes[entry] = actual;
+                  }
+                  if (entry.completed && counted.add(entry)) {
+                    completedBytes += transferSizes[entry]!;
+                  }
+                  operation.currentBytes = completedBytes;
+                  onEntryComplete?.call(entry);
+                  notifyListeners();
+                },
+              );
+              final waiting = plan.entries.any(
+                (entry) => entry.outcome == FileOperationOutcome.needsDecision,
+              );
+              if (control.isCancelled) {
+                operation.cancel();
+              } else if (waiting) {
+                // A background conflict stops the service with remaining rows
+                // still pending. Never report that partially executed plan as
+                // complete, or invite a retry of the already completed rows.
+                for (final entry in plan.entries.where(
+                  (entry) => entry.outcome == FileOperationOutcome.pending,
+                )) {
+                  rows[entry]!.statusLabel =
+                      'Not started (awaiting conflict decision)';
                 }
+                operation.waitForDecision();
+              } else if (plan.entries.any((entry) => entry.failed)) {
+                operation.fail(
+                  '${plan.entries.where((entry) => entry.failed).length} item(s) need review.',
+                );
+              } else {
+                operation.status = OperationStatus.completed;
+                operation.totalBytes = completedBytes;
+                operation.currentBytes = completedBytes;
+              }
+              operation.currentFilePath = null;
+              operation.phaseLabel = null;
+              // Audit failures must not turn a verified transfer into a retry.
+              try {
+                for (final entry in plan.entries) {
+                  if (entry.completed) {
+                    await audit.logSuccess(
+                      operation: entry.outcome == FileOperationOutcome.moved
+                          ? AuditOperation.move
+                          : AuditOperation.copy,
+                      sourcePath: entry.source.path!,
+                      targetPath: entry.destination,
+                      provider: plan.destination.label,
+                      sizeBytes: entry.source.size,
+                    );
+                  } else if (entry.failed) {
+                    await audit.logError(
+                      operation: plan.options.kind == FileOperationKind.move
+                          ? AuditOperation.move
+                          : AuditOperation.copy,
+                      sourcePath: entry.source.path!,
+                      targetPath: entry.destination,
+                      provider: plan.destination.label,
+                      error: entry.message ?? 'Operation failed',
+                    );
+                  }
+                }
+              } catch (error) {
+                _log.warn('Transfer audit could not be saved', error);
               }
             } catch (error) {
-              _log.warn('Transfer audit could not be saved', error);
-            }
-          } catch (error) {
-            operation.fail(error.toString());
-          }
-        },
-        onDone: (error) async {
-          try {
-            if (!started || operation.isCancelled || control.isCancelled) {
-              control.cancel();
-              for (final entry in plan.entries.where(
-                (entry) => entry.outcome == FileOperationOutcome.pending,
-              )) {
-                entry.outcome = FileOperationOutcome.cancelled;
-                entry.message = 'Cancelled before starting.';
-                rows[entry]!.statusLabel = 'cancelled';
-                onEntryComplete?.call(entry);
-              }
-              await _journal.saveEntries(id, plan.entries);
-              await _journal.setStatus(
-                id,
-                TransferJobStatus.cancelled,
-                message: 'Cancelled. Review the saved transfer to retry unfinished items.',
-              );
-            }
-            if (error != null && error is! TransferCancelled) {
               operation.fail(error.toString());
+              operation.currentFilePath = null;
+              operation.phaseLabel = null;
             }
-          } catch (error) {
-            recoveryError = 'Could not save transfer completion: $error';
-            operation.fail(recoveryError!);
-          } finally {
-            _fileOperationControls.remove(id);
-            notifyListeners();
-            if (!done.isCompleted) done.complete();
-          }
-        },
-      ),
-    );
-    onQueued?.call();
-    unawaited(
-      Future.any([control.cancellationFuture, done.future]).then((_) {
-        if (control.isCancelled && _fileOperationControls.containsKey(id)) {
-          cancelOperation(id);
-        }
-      }),
-    );
+          },
+          onDone: (error) async {
+            try {
+              if (!started || operation.isCancelled || control.isCancelled) {
+                control.cancel();
+                for (final entry in plan.entries.where(
+                  (entry) => entry.outcome == FileOperationOutcome.pending,
+                )) {
+                  entry.outcome = FileOperationOutcome.cancelled;
+                  entry.message = 'Cancelled before starting.';
+                  rows[entry]!.statusLabel = 'cancelled';
+                  onEntryComplete?.call(entry);
+                }
+                await _journal.saveEntries(id, plan.entries);
+                await _journal.setStatus(
+                  id,
+                  TransferJobStatus.cancelled,
+                  message: 'Cancelled. Review the saved transfer to retry unfinished items.',
+                );
+              }
+              if (error != null && error is! TransferCancelled) {
+                operation.fail(error.toString());
+              }
+            } catch (error) {
+              recoveryError = 'Could not save transfer completion: $error';
+              operation.fail(recoveryError!);
+            } finally {
+              operation.currentFilePath = null;
+              operation.phaseLabel = null;
+              _unknownFileSizes.remove(id);
+              await _controlSubscriptions.remove(id)?.cancel();
+              _fileOperationControls.remove(id);
+              notifyListeners();
+              if (!done.isCompleted) done.complete();
+            }
+          },
+        ),
+      );
+    } catch (error) {
+      _unknownFileSizes.remove(id);
+      await _controlSubscriptions.remove(id)?.cancel();
+      _fileOperationControls.remove(id);
+      operation.fail(error.toString());
+      await _journal.setStatus(id, TransferJobStatus.failed, message: '$error');
+      rethrow;
+    }
+    if (control.isPaused) {
+      unawaited(_saveLiveStatus(id, TransferJobStatus.paused));
+    }
+    try {
+      onQueued?.call();
+    } catch (error) {
+      // A dismissed UI observer cannot release job ownership while I/O runs.
+      _log.warn('Transfer queue observer failed', error);
+    }
     await done.future;
   }
 
+  String _transferPhaseLabel(String phase) => switch (phase) {
+    'creatingParent' || 'writing' => 'Preparing transfer',
+    'staging' || 'uploading' => 'Copying',
+    'allocating' => 'Reserving disk space',
+    'backingUp' ||
+    'backedUp' ||
+    'renamingExisting' => 'Saving existing destination',
+    'committing' => 'Publishing copy',
+    'committed' ||
+    'verified' ||
+    'finishingCopy' ||
+    'complete' => 'Finishing transfer',
+    'metadata' || 'directoryMetadata' => 'Preserving metadata',
+    'deletingSource' || 'deletingSourceDirectory' => 'Removing source',
+    'needsDecision' => 'Waiting for a conflict decision',
+    'cancelled' => 'Cancelling',
+    'failed' || 'metadataFailed' => 'Needs review',
+    _ => 'Running',
+  };
+
   Future<void> uploadFiles(List<FileItem> files, {String? targetPath}) async {
+    await ready;
+    if (_disposed) throw StateError('The transfer queue is closed.');
+    if (files.isEmpty) return;
     final auth = _ref.read(authProvider);
     final localFileService = _ref.read(localFileServiceProvider);
     final client = auth.client;
@@ -919,6 +1396,9 @@ class TransferNotifier extends ChangeNotifier {
   }
 
   Future<void> downloadFiles(List<FileItem> files, {String? localPath}) async {
+    await ready;
+    if (_disposed) throw StateError('The transfer queue is closed.');
+    if (files.isEmpty) return;
     final auth = _ref.read(authProvider);
     final localFileService = _ref.read(localFileServiceProvider);
     final client = auth.client;
@@ -1124,10 +1604,17 @@ class TransferNotifier extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
-    for (final control in _fileOperationControls.values) {
+    for (final control in [..._fileOperationControls.values]) {
       control.cancel();
     }
+    for (final subscription in _controlSubscriptions.values) {
+      unawaited(subscription.cancel());
+    }
+    _controlSubscriptions.clear();
     _queue.dispose();
+    _pendingTasks = const [];
+    _firstPendingTask.clear();
+    _activeOperations.clear();
     super.dispose();
   }
 

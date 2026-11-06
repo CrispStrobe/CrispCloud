@@ -1,12 +1,82 @@
-// widgets/operations_panel.dart
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/commander_strings.dart';
 import '../models/operation_progress.dart';
+import '../models/transfer_job.dart';
 import '../providers/providers.dart';
+import '../services/file_operation_options.dart';
 import '../utils/formatters.dart' show formatBytes, formatSpeed;
 import 'transfer_history_dialog.dart';
+import 'transfer_schedule_dialog.dart';
+
+enum _QueueFilter { active, queued, attention, finished, all }
+
+enum _JobState {
+  running,
+  queued,
+  scheduled,
+  paused,
+  cancelling,
+  waiting,
+  needsReview,
+  completed,
+  cancelled,
+}
+
+/// Progress can be queued without active I/O; restored rows require review.
+_JobState _stateOf(
+  OperationProgress operation,
+  TransferNotifier transfers, {
+  required bool isQueued,
+}) {
+  final saved = transfers.savedJob(operation.id);
+  final live = transfers.isJobLive(operation.id);
+  if (operation.isCancelled) {
+    return live ? _JobState.cancelling : _JobState.cancelled;
+  }
+  if (!live && saved?.status == TransferJobStatus.cancelled) {
+    return _JobState.cancelled;
+  }
+  if (operation.isWaitingForDecision) return _JobState.waiting;
+  if (operation.error != null || operation.status == OperationStatus.failed) {
+    return _JobState.needsReview;
+  }
+  if (operation.isComplete) return _JobState.completed;
+  if (operation.isPaused) return _JobState.paused;
+  if (isQueued) {
+    final start = saved?.scheduledAt;
+    return start != null && start.isAfter(DateTime.now())
+        ? _JobState.scheduled
+        : _JobState.queued;
+  }
+  return transfers.isRunning(operation.id)
+      ? _JobState.running
+      : _JobState.queued;
+}
+
+bool _canPause(_JobState state) => const {
+  _JobState.running,
+  _JobState.queued,
+  _JobState.scheduled,
+}.contains(state);
+
+bool _canCancel(_JobState state) =>
+    _canPause(state) || state == _JobState.paused || state == _JobState.waiting;
+
+String _stateLabel(_JobState state) => switch (state) {
+  _JobState.running => 'Running',
+  _JobState.queued => 'Queued',
+  _JobState.scheduled => 'Scheduled',
+  _JobState.paused => 'Paused',
+  _JobState.cancelling => 'Cancelling',
+  _JobState.waiting => 'Waiting for a conflict decision',
+  _JobState.needsReview => 'Needs review',
+  _JobState.completed => 'Completed',
+  _JobState.cancelled => 'Cancelled',
+};
 
 class OperationsPanel extends ConsumerStatefulWidget {
   const OperationsPanel({super.key});
@@ -16,210 +86,286 @@ class OperationsPanel extends ConsumerStatefulWidget {
 }
 
 class _OperationsPanelState extends ConsumerState<OperationsPanel> {
+  final _searchController = TextEditingController();
+  final _selectedIds = <String>{};
   String? _expandedOperationId;
   bool _isPanelExpanded = true;
+  _QueueFilter _filter = _QueueFilter.all;
+  String _search = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _action(FutureOr<void> Function() run) async {
+    try {
+      await run();
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('$error')));
+      }
+    }
+  }
+
+  bool _matchesFilter(_JobState state, bool isQueued, _QueueFilter filter) {
+    return switch (filter) {
+      _QueueFilter.active =>
+        _canPause(state) ||
+            state == _JobState.paused ||
+            state == _JobState.cancelling,
+      _QueueFilter.queued => isQueued,
+      _QueueFilter.attention =>
+        state == _JobState.waiting || state == _JobState.needsReview,
+      _QueueFilter.finished =>
+        state == _JobState.completed || state == _JobState.cancelled,
+      _QueueFilter.all => true,
+    };
+  }
+
+  bool _matchesSearch(OperationProgress operation, TransferNotifier transfers) {
+    if (_search.isEmpty) return true;
+    final saved = transfers.savedJob(operation.id);
+    if ([
+      operation.fileName,
+      operation.sourcePath,
+      operation.targetPath,
+      saved?.sourceLabel ?? '',
+      saved?.destinationLabel ?? '',
+    ].any((value) => value.toLowerCase().contains(_search))) {
+      return true;
+    }
+    // Copy/move headers use a count and backend label, so the real member
+    // names and paths must participate when searching a batch.
+    if (operation.files?.any(
+          (file) =>
+              file.name.toLowerCase().contains(_search) ||
+              file.path.toLowerCase().contains(_search),
+        ) ==
+        true) {
+      return true;
+    }
+    return saved?.entries.any(
+          (entry) => entry.destination.toLowerCase().contains(_search),
+        ) ??
+        false;
+  }
+
+  Future<void> _jobAction(
+    TransferNotifier transfers,
+    OperationProgress operation,
+    String choice,
+  ) => _action(() async {
+    switch (choice) {
+      case 'pause':
+        transfers.pauseOperations([operation.id]);
+      case 'resume':
+        transfers.resumeOperations([operation.id]);
+      case 'cancel':
+        transfers.cancelOperations([operation.id]);
+      case 'first':
+        await transfers.moveQueuedFirst(operation.id);
+      case 'last':
+        await transfers.moveQueuedLast(operation.id);
+      case 'high':
+        await transfers.setPriority(operation.id, 10);
+      case 'normal':
+        await transfers.setPriority(operation.id, 0);
+      case 'low':
+        await transfers.setPriority(operation.id, -10);
+      case 'schedule':
+        final start = await showTransferStartPicker(
+          context,
+          initialValue: transfers.savedJob(operation.id)?.scheduledAt,
+        );
+        if (start != null && mounted) {
+          await transfers.setScheduledStart(operation.id, start);
+        }
+      case 'now':
+        await transfers.setScheduledStart(operation.id, null);
+      case 'files':
+        setState(() {
+          _expandedOperationId = _expandedOperationId == operation.id
+              ? null
+              : operation.id;
+        });
+      case 'hide':
+        transfers.removeOperation(operation.id);
+        setState(() => _selectedIds.remove(operation.id));
+    }
+  });
 
   @override
   Widget build(BuildContext context) {
     final transfers = ref.watch(transferProvider);
-
     if (transfers.operations.isEmpty &&
         transfers.savedJobs.isEmpty &&
         transfers.recoveryError == null) {
       return const SizedBox.shrink();
     }
 
-    final order = transfers.queuedIds;
+    final order = {
+      for (final (index, id) in transfers.queuedIds.indexed) id: index,
+    };
+    final originalOrder = {
+      for (final (index, operation) in transfers.operations.indexed)
+        operation.id: index,
+    };
     final operations = transfers.operations.toList()
       ..sort((a, b) {
-        final ai = order.indexOf(a.id);
-        final bi = order.indexOf(b.id);
-        if (ai >= 0 && bi >= 0) return ai.compareTo(bi);
-        if (ai >= 0) return -1;
-        if (bi >= 0) return 1;
-        return 0;
+        final ai = order[a.id];
+        final bi = order[b.id];
+        if (ai != null && bi != null) return ai.compareTo(bi);
+        if (ai != null) return -1;
+        if (bi != null) return 1;
+        return originalOrder[a.id]!.compareTo(originalOrder[b.id]!);
       });
-    Future<void> action(Future<void> Function() run) async {
-      try {
-        await run();
-      } catch (error) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text('$error')));
-        }
-      }
-    }
+    // Build admission/status lookups once per update, rather than rescanning
+    // the scheduler for each filter and selected row in a long queue.
+    final states = {
+      for (final operation in operations)
+        operation.id: _stateOf(
+          operation,
+          transfers,
+          isQueued: order.containsKey(operation.id),
+        ),
+    };
+    final visible = operations
+        .where(
+          (operation) =>
+              _matchesFilter(
+                states[operation.id]!,
+                order.containsKey(operation.id),
+                _filter,
+              ) &&
+              _matchesSearch(operation, transfers),
+        )
+        .toList();
+    final selected = operations
+        .where((operation) => _selectedIds.contains(operation.id))
+        .toList();
+    final finished = operations.where((operation) {
+      final state = states[operation.id]!;
+      return state == _JobState.completed || state == _JobState.cancelled;
+    }).toList();
 
-    int totalBytes = 0;
-    int transferredBytes = 0;
-    int activeCount = 0;
-    int completeCount = 0;
-    int errorCount = 0;
-    int waitingCount = 0;
-
-    for (final op in transfers.operations) {
-      totalBytes += op.totalBytes;
-      transferredBytes += op.transferredBytes;
-      if (op.isWaitingForDecision) {
-        waitingCount++;
-      } else if (op.isCancelled) {
-        errorCount++;
-      } else if (op.error != null) {
-        errorCount++;
-      } else if (op.isComplete) {
-        completeCount++;
-      } else {
-        activeCount++;
-      }
-    }
-
-    final overallProgress = totalBytes > 0
-        ? transferredBytes / totalBytes
-        : 0.0;
-
+    // Keep the browser usable when controls wrap on a narrow phone. The queue
+    // and its file details remain lazy, within a bounded scrolling surface.
+    final contentHeight = (MediaQuery.sizeOf(context).height * .48).clamp(
+      180.0,
+      420.0,
+    );
     return Material(
       color: Theme.of(context).colorScheme.surfaceContainerHighest,
       shape: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
       child: ExpansionTile(
-        title: _buildPanelHeader(
-          context,
-          transfers,
-          activeCount,
-          completeCount,
-          errorCount,
-          waitingCount,
-          overallProgress,
-          transferredBytes,
-          totalBytes,
-        ),
+        key: const ValueKey('operations-panel'),
+        title: _buildPanelHeader(context, transfers),
+        tilePadding: const EdgeInsets.symmetric(horizontal: 12),
         initiallyExpanded: true,
-        onExpansionChanged: (isExpanded) =>
-            setState(() => _isPanelExpanded = isExpanded),
+        onExpansionChanged: (expanded) =>
+            setState(() => _isPanelExpanded = expanded),
         trailing: Icon(
           _isPanelExpanded ? Icons.expand_less : Icons.expand_more,
         ),
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-            child: Wrap(
-              spacing: 12,
-              runSpacing: 8,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                TextButton.icon(
-                  onPressed: () => showTransferHistoryDialog(context, ref),
-                  icon: const Icon(Icons.history),
-                  label: const Text('History and recovery'),
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text('Parallel transfers: '),
-                    DropdownButton<int>(
-                      value: transfers.maxConcurrent,
-                      items: [
-                        for (final limit in {
-                          0,
-                          1,
-                          2,
-                          3,
-                          4,
-                          6,
-                          8,
-                          12,
-                          16,
-                          transfers.maxConcurrent,
-                        }.toList()..sort())
-                          DropdownMenuItem(
-                            value: limit,
-                            child: Text(limit == 0 ? 'Queue only' : '$limit'),
+          ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: contentHeight),
+            child: CustomScrollView(
+              key: const ValueKey('queue-scroll'),
+              shrinkWrap: true,
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _buildQueueControls(context, transfers, finished),
+                        const SizedBox(height: 4),
+                        _buildFilters(context, operations, states, order),
+                        const SizedBox(height: 6),
+                        _buildSearch(context, visible),
+                        if (selected.isNotEmpty)
+                          _buildSelectionControls(
+                            context,
+                            transfers,
+                            selected,
+                            states,
                           ),
+                        if (transfers.recoveryError != null)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: Text(
+                              transfers.recoveryError!,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                            ),
+                          ),
+                        const SizedBox(height: 4),
                       ],
-                      onChanged: (limit) {
-                        if (limit != null) {
-                          action(() => transfers.setConcurrency(limit));
-                        }
-                      },
                     ),
-                  ],
-                ),
-                if (activeCount > 0)
-                  TextButton.icon(
-                    onPressed: transfers.cancelAllOperations,
-                    icon: const Icon(Icons.stop_circle_outlined),
-                    label: const Text('Cancel active'),
                   ),
-                if (completeCount > 0 || errorCount > 0)
-                  TextButton.icon(
-                    onPressed: transfers.clearCompletedOperations,
-                    icon: const Icon(Icons.clear_all),
-                    label: const Text('Hide finished'),
+                ),
+                if (visible.isEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Text(
+                        operations.isEmpty
+                            ? context.commanderTr(
+                                'Open history to review saved transfers',
+                              )
+                            : context.commanderTr('No jobs match this view'),
+                      ),
+                    ),
+                  )
+                else
+                  SliverList(
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final operation = visible[index];
+                      final saved = transfers.savedJob(operation.id);
+                      final isQueued = order.containsKey(operation.id);
+                      return _OperationTile(
+                        key: ValueKey('queue-job-${operation.id}'),
+                        operation: operation,
+                        state: states[operation.id]!,
+                        selected: _selectedIds.contains(operation.id),
+                        onSelected: (selected) => setState(() {
+                          if (selected) {
+                            _selectedIds.add(operation.id);
+                          } else {
+                            _selectedIds.remove(operation.id);
+                          }
+                        }),
+                        isExpanded: _expandedOperationId == operation.id,
+                        isQueued: isQueued,
+                        priority: transfers.priorityOf(operation.id),
+                        scheduledAt: saved?.scheduledAt,
+                        canSchedule: isQueued && saved != null,
+                        blockedReason: transfers.queueBlockedReason(
+                          operation.id,
+                        ),
+                        onReview:
+                            saved != null && !transfers.isJobLive(operation.id)
+                            ? () => _action(
+                                () => showTransferHistoryDialog(
+                                  context,
+                                  ref,
+                                  jobId: operation.id,
+                                  reviewOnOpen: operation.isWaitingForDecision,
+                                ),
+                              )
+                            : null,
+                        onAction: (choice) =>
+                            _jobAction(transfers, operation, choice),
+                      );
+                    }, childCount: visible.length),
                   ),
               ],
-            ),
-          ),
-          if (transfers.recoveryError != null)
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Text(
-                transfers.recoveryError!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-            ),
-          Container(
-            constraints: const BoxConstraints(maxHeight: 250),
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: operations.length,
-              itemBuilder: (context, index) {
-                final op = operations[index];
-                final isExpanded = _expandedOperationId == op.id;
-                return _OperationTile(
-                  operation: op,
-                  statusLabel:
-                      transfers.isQueued(op.id) ||
-                          op.isComplete ||
-                          op.isWaitingForDecision
-                      ? transfers.statusLabel(op.id)
-                      : null,
-                  onReview:
-                      transfers.savedJob(op.id) != null &&
-                          !transfers.isJobLive(op.id)
-                      ? () => showTransferHistoryDialog(
-                          context,
-                          ref,
-                          jobId: op.id,
-                          reviewOnOpen: op.isWaitingForDecision,
-                        )
-                      : null,
-                  onQueueAction: transfers.isQueued(op.id)
-                      ? (choice) => action(() async {
-                          switch (choice) {
-                            case 'first':
-                              await transfers.moveQueuedFirst(op.id);
-                            case 'last':
-                              await transfers.moveQueuedLast(op.id);
-                            case 'high':
-                              await transfers.setPriority(op.id, 10);
-                            case 'normal':
-                              await transfers.setPriority(op.id, 0);
-                            case 'low':
-                              await transfers.setPriority(op.id, -10);
-                          }
-                        })
-                      : null,
-                  isExpanded: isExpanded,
-                  onToggleExpanded: () => setState(() {
-                    _expandedOperationId = isExpanded ? null : op.id;
-                  }),
-                  onRemove: () => transfers.removeOperation(op.id),
-                  onCancel: !op.isComplete && !op.isCancelled
-                      ? () => transfers.cancelOperation(op.id)
-                      : null,
-                  onPause: () => transfers.pauseOperation(op.id),
-                  onResume: () => transfers.resumeOperation(op.id),
-                );
-              },
             ),
           ),
         ],
@@ -227,63 +373,307 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
     );
   }
 
-  Widget _buildPanelHeader(
-    BuildContext context,
-    TransferNotifier transfers,
-    int activeCount,
-    int completeCount,
-    int errorCount,
-    int waitingCount,
-    double overallProgress,
-    int transferredBytes,
-    int totalBytes,
-  ) {
-    final speed = transfers.operations
-        .where((op) => op.isActive)
-        .fold<double>(0, (sum, op) => sum + op.currentSpeed);
+  Widget _buildPanelHeader(BuildContext context, TransferNotifier transfers) {
+    final summary = transfers.queueSummary;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '${transfers.operations.length} operation(s) · ${transfers.queuedCount} queued',
+            context.commanderTr('Transfer queue · {0} jobs', [
+              summary.totalJobs,
+            ]),
             style: const TextStyle(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 4),
           Wrap(
             spacing: 12,
-            runSpacing: 4,
+            runSpacing: 3,
             children: [
-              if (activeCount > 0)
+              if (summary.running > 0)
+                Text(context.commanderTr('{0} running', [summary.running])),
+              if (summary.queued > 0)
+                Text(context.commanderTr('{0} queued', [summary.queued])),
+              if (summary.scheduled > 0)
+                Text(context.commanderTr('{0} scheduled', [summary.scheduled])),
+              if (summary.paused > 0)
+                Text(context.commanderTr('{0} paused', [summary.paused])),
+              if (summary.cancelling > 0)
                 Text(
-                  '${formatBytes(transferredBytes)} / ${formatBytes(totalBytes)}',
+                  context.commanderTr('{0} cancelling', [summary.cancelling]),
                 ),
-              if (speed > 0) Text(formatSpeed(speed)),
-              if (completeCount > 0)
+              if (summary.waiting > 0)
                 Text(
-                  '$completeCount complete',
-                  style: TextStyle(color: Colors.green[700]),
-                ),
-              if (errorCount > 0)
-                Text(
-                  '$errorCount need review',
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
-              if (waitingCount > 0)
-                Text(
-                  context.commanderTr("{0} waiting for a decision", [
-                    waitingCount,
+                  context.commanderTr('{0} waiting for a decision', [
+                    summary.waiting,
                   ]),
                 ),
+              if (summary.needsReview > 0)
+                Text(
+                  context.commanderTr('{0} need review', [summary.needsReview]),
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              if (summary.completed > 0)
+                Text(context.commanderTr('{0} completed', [summary.completed])),
+              if (summary.cancelled > 0)
+                Text(context.commanderTr('{0} cancelled', [summary.cancelled])),
               if (transfers.operations.isEmpty)
-                Text('${transfers.savedJobs.length} saved transfer(s)'),
+                Text(
+                  context.commanderTr('Saved transfers: {0}', [
+                    transfers.savedJobs.length,
+                  ]),
+                ),
             ],
           ),
-          if (activeCount > 0) ...[
+          if (summary.liveJobs > summary.cancelling) ...[
+            if (summary.totalBytes > 0 || summary.bytesPerSecond > 0) ...[
+              const SizedBox(height: 4),
+              Wrap(
+                spacing: 12,
+                runSpacing: 3,
+                children: [
+                  if (summary.totalBytes > 0)
+                    Text(
+                      '${formatBytes(summary.transferredBytes)} / '
+                      '${formatBytes(summary.totalBytes)}',
+                      key: const ValueKey('queue-byte-summary'),
+                    ),
+                  if (summary.bytesPerSecond > 0)
+                    Text(
+                      formatSpeed(summary.bytesPerSecond),
+                      key: const ValueKey('queue-speed-summary'),
+                    ),
+                ],
+              ),
+            ],
             const SizedBox(height: 6),
-            LinearProgressIndicator(value: overallProgress.clamp(0, 1)),
+            LinearProgressIndicator(
+              key: const ValueKey('queue-overall-progress'),
+              value: summary.progress ?? (summary.running > 0 ? null : 0.0),
+            ),
           ],
+          if (transfers.queuePaused) ...[
+            const SizedBox(height: 4),
+            Text(
+              context.commanderTr('Queue paused. Running jobs may finish.'),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQueueControls(
+    BuildContext context,
+    TransferNotifier transfers,
+    List<OperationProgress> finished,
+  ) => Wrap(
+    spacing: 8,
+    runSpacing: 4,
+    crossAxisAlignment: WrapCrossAlignment.center,
+    children: [
+      FilledButton.tonalIcon(
+        key: const ValueKey('queue-pause'),
+        onPressed: () =>
+            _action(() => transfers.setQueuePaused(!transfers.queuePaused)),
+        icon: Icon(transfers.queuePaused ? Icons.play_arrow : Icons.pause),
+        label: Text(
+          transfers.queuePaused
+              ? context.commanderTr('Resume queue')
+              : context.commanderTr('Pause queue'),
+        ),
+      ),
+      TextButton.icon(
+        onPressed: () => _action(() => showTransferHistoryDialog(context, ref)),
+        icon: const Icon(Icons.history),
+        label: Text(context.commanderTr('History and recovery')),
+      ),
+      Wrap(
+        spacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          Text(context.commanderTr('Parallel transfers')),
+          DropdownButton<int>(
+            key: const ValueKey('queue-concurrency'),
+            value: transfers.maxConcurrent,
+            items: [
+              for (final limit in {
+                if (transfers.maxConcurrent == 0) 0,
+                1,
+                2,
+                3,
+                4,
+                6,
+                8,
+                12,
+                16,
+                transfers.maxConcurrent,
+              }.toList()..sort())
+                DropdownMenuItem(value: limit, child: Text('$limit')),
+            ],
+            onChanged: (limit) {
+              if (limit != null) _action(() => transfers.setConcurrency(limit));
+            },
+          ),
+        ],
+      ),
+      if (finished.isNotEmpty)
+        TextButton.icon(
+          onPressed: () => _action(() {
+            transfers.clearFinishedOperations();
+            for (final operation in finished) {
+              _selectedIds.remove(operation.id);
+            }
+          }),
+          icon: const Icon(Icons.clear_all),
+          label: Text(context.commanderTr('Hide finished')),
+        ),
+    ],
+  );
+
+  Widget _buildFilters(
+    BuildContext context,
+    List<OperationProgress> operations,
+    Map<String, _JobState> states,
+    Map<String, int> queueOrder,
+  ) => Wrap(
+    spacing: 6,
+    runSpacing: 4,
+    children: [
+      for (final filter in _QueueFilter.values)
+        ChoiceChip(
+          key: ValueKey('queue-filter-${filter.name}'),
+          selected: _filter == filter,
+          label: Text(
+            '${context.commanderTr(switch (filter) {
+              _QueueFilter.active => 'Active',
+              _QueueFilter.queued => 'Queued',
+              _QueueFilter.attention => 'Attention',
+              _QueueFilter.finished => 'Finished',
+              _QueueFilter.all => 'All',
+            })} '
+            '(${operations.where((op) => _matchesFilter(states[op.id]!, queueOrder.containsKey(op.id), filter)).length})',
+          ),
+          onSelected: (_) => setState(() => _filter = filter),
+        ),
+    ],
+  );
+
+  Widget _buildSearch(BuildContext context, List<OperationProgress> visible) {
+    final selectedVisible = visible
+        .where((operation) => _selectedIds.contains(operation.id))
+        .length;
+    return Row(
+      children: [
+        Tooltip(
+          message: context.commanderTr('Select visible jobs'),
+          child: Checkbox(
+            key: const ValueKey('queue-select-visible'),
+            tristate: true,
+            value: selectedVisible == 0
+                ? false
+                : selectedVisible == visible.length
+                ? true
+                : null,
+            onChanged: visible.isEmpty
+                ? null
+                : (_) => setState(() {
+                    final ids = visible.map((operation) => operation.id);
+                    if (selectedVisible == visible.length) {
+                      _selectedIds.removeAll(ids);
+                    } else {
+                      _selectedIds.addAll(ids);
+                    }
+                  }),
+          ),
+        ),
+        Expanded(
+          child: TextField(
+            key: const ValueKey('queue-search'),
+            controller: _searchController,
+            decoration: InputDecoration(
+              isDense: true,
+              border: const OutlineInputBorder(),
+              hintText: context.commanderTr('Search jobs or paths'),
+              prefixIcon: const Icon(Icons.search, size: 20),
+              suffixIcon: _search.isEmpty
+                  ? null
+                  : IconButton(
+                      tooltip: context.commanderTr('Clear search'),
+                      icon: const Icon(Icons.close, size: 18),
+                      onPressed: () {
+                        _searchController.clear();
+                        setState(() => _search = '');
+                      },
+                    ),
+            ),
+            onChanged: (value) =>
+                setState(() => _search = value.trim().toLowerCase()),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSelectionControls(
+    BuildContext context,
+    TransferNotifier transfers,
+    List<OperationProgress> selected,
+    Map<String, _JobState> states,
+  ) {
+    final pausable = selected
+        .where((op) => _canPause(states[op.id]!))
+        .map((op) => op.id)
+        .toList();
+    final resumable = selected
+        .where((op) => states[op.id] == _JobState.paused)
+        .map((op) => op.id)
+        .toList();
+    final cancellable = selected
+        .where((op) => _canCancel(states[op.id]!))
+        .map((op) => op.id)
+        .toList();
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 4,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          Text(context.commanderTr('{0} selected', [selected.length])),
+          TextButton(
+            onPressed: () => setState(_selectedIds.clear),
+            child: Text(context.commanderTr('Clear selection')),
+          ),
+          TextButton.icon(
+            key: const ValueKey('queue-pause-selected'),
+            onPressed: pausable.isEmpty
+                ? null
+                : () => _action(() => transfers.pauseOperations(pausable)),
+            icon: const Icon(Icons.pause),
+            label: Text(context.commanderTr('Pause selected')),
+          ),
+          TextButton.icon(
+            key: const ValueKey('queue-resume-selected'),
+            onPressed: resumable.isEmpty
+                ? null
+                : () => _action(() => transfers.resumeOperations(resumable)),
+            icon: const Icon(Icons.play_arrow),
+            label: Text(context.commanderTr('Resume selected')),
+          ),
+          TextButton.icon(
+            key: const ValueKey('queue-cancel-selected'),
+            onPressed: cancellable.isEmpty
+                ? null
+                : () => _action(() {
+                    transfers.cancelOperations(cancellable);
+                    setState(() => _selectedIds.removeAll(cancellable));
+                  }),
+            icon: const Icon(Icons.cancel_outlined),
+            label: Text(context.commanderTr('Cancel selected')),
+          ),
         ],
       ),
     );
@@ -291,269 +681,405 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
 }
 
 class _OperationTile extends StatelessWidget {
-  final OperationProgress operation;
-  final bool isExpanded;
-  final VoidCallback onToggleExpanded;
-  final VoidCallback onRemove;
-  final VoidCallback? onCancel;
-  final VoidCallback onPause;
-  final VoidCallback onResume;
-  final String? statusLabel;
-  final VoidCallback? onReview;
-  final void Function(String)? onQueueAction;
-
   const _OperationTile({
+    super.key,
     required this.operation,
+    required this.state,
+    required this.selected,
+    required this.onSelected,
     required this.isExpanded,
-    required this.onToggleExpanded,
-    required this.onRemove,
-    this.onCancel,
-    required this.onPause,
-    required this.onResume,
-    this.statusLabel,
-    this.onReview,
-    this.onQueueAction,
+    required this.isQueued,
+    required this.priority,
+    required this.scheduledAt,
+    required this.canSchedule,
+    required this.blockedReason,
+    required this.onReview,
+    required this.onAction,
   });
+
+  final OperationProgress operation;
+  final _JobState state;
+  final bool selected;
+  final ValueChanged<bool> onSelected;
+  final bool isExpanded;
+  final bool isQueued;
+  final int priority;
+  final DateTime? scheduledAt;
+  final bool canSchedule;
+  final String? blockedReason;
+  final VoidCallback? onReview;
+  final ValueChanged<String> onAction;
 
   @override
   Widget build(BuildContext context) {
-    IconData icon;
-    Color? color;
+    final theme = Theme.of(context);
+    final color = switch (state) {
+      _JobState.needsReview => theme.colorScheme.error,
+      _JobState.cancelled => theme.colorScheme.onSurfaceVariant,
+      _JobState.cancelling => theme.colorScheme.onSurfaceVariant,
+      _ => theme.colorScheme.primary,
+    };
+    final icon = switch (state) {
+      _JobState.waiting => Icons.help_outline,
+      _JobState.needsReview => Icons.error_outline,
+      _JobState.cancelled => Icons.cancel_outlined,
+      _JobState.cancelling => Icons.hourglass_top,
+      _JobState.completed => Icons.check_circle_outline,
+      _JobState.paused => Icons.pause_circle_outline,
+      _JobState.scheduled => Icons.schedule,
+      _JobState.queued => Icons.pending_outlined,
+      _JobState.running => switch (operation.type) {
+        OperationType.upload => Icons.upload,
+        OperationType.download => Icons.download,
+        OperationType.move => Icons.drive_file_move_outline,
+        OperationType.copy => Icons.file_copy_outlined,
+        OperationType.delete => Icons.delete_outline,
+      },
+    };
+    final live = _canPause(state) || state == _JobState.paused;
+    final route = '${operation.sourcePath} → ${operation.targetPath}';
+    final currentWork = [
+      if (operation.phaseLabel != null)
+        context.commanderTr(operation.phaseLabel!),
+      if (operation.currentFilePath != null) operation.currentFilePath!,
+    ].join(' · ');
+    final localStart = scheduledAt?.toLocal();
+    final startLabel = localStart == null
+        ? null
+        : '${MaterialLocalizations.of(context).formatCompactDate(localStart)} '
+              '${MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.fromDateTime(localStart), alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(context))}';
 
-    if (operation.isWaitingForDecision) {
-      icon = Icons.help_outline;
-      color = Theme.of(context).colorScheme.primary;
-    } else if (operation.isCancelled) {
-      icon = Icons.cancel;
-      color = Colors.orange;
-    } else if (operation.isPaused) {
-      icon = Icons.pause_circle;
-      color = Colors.blue;
-    } else if (operation.error != null) {
-      icon = Icons.error;
-      color = Theme.of(context).colorScheme.error;
-    } else if (operation.isComplete) {
-      icon = Icons.check_circle;
-      color = Colors.green;
-    } else {
-      icon = operation.type == OperationType.upload
-          ? Icons.upload
-          : Icons.download;
-      color = Theme.of(context).colorScheme.primary;
-    }
-
-    return Column(
-      children: [
-        ListTile(
-          dense: true,
-          leading: Icon(icon, size: 20, color: color),
-          title: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  operation.fileName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 13),
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: selected ? theme.colorScheme.secondaryContainer : null,
+        border: Border(
+          top: BorderSide(color: theme.dividerColor.withValues(alpha: .3)),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Semantics(
+                  label: context.commanderTr('Select {0}', [
+                    operation.fileName,
+                  ]),
+                  child: Checkbox(
+                    key: ValueKey('queue-select-${operation.id}'),
+                    value: selected,
+                    onChanged: (value) => onSelected(value ?? false),
+                  ),
+                ),
+                Icon(icon, color: color, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    operation.fileName,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                if (onReview != null)
+                  IconButton(
+                    icon: Icon(
+                      state == _JobState.waiting ? Icons.rule : Icons.history,
+                    ),
+                    tooltip: state == _JobState.waiting
+                        ? context.commanderTr('Resolve conflict')
+                        : context.commanderTr('Review saved transfer'),
+                    onPressed: onReview,
+                  ),
+                PopupMenuButton<String>(
+                  key: ValueKey('queue-menu-${operation.id}'),
+                  tooltip: context.commanderTr('Job actions'),
+                  enabled: state != _JobState.cancelling || operation.isBatch,
+                  onSelected: onAction,
+                  itemBuilder: (context) => [
+                    if (_canPause(state))
+                      PopupMenuItem(
+                        value: 'pause',
+                        child: Text(context.commanderTr('Pause')),
+                      ),
+                    if (state == _JobState.paused)
+                      PopupMenuItem(
+                        value: 'resume',
+                        child: Text(context.commanderTr('Resume')),
+                      ),
+                    if (isQueued && state != _JobState.cancelling) ...[
+                      PopupMenuItem(
+                        value: 'first',
+                        child: Text(context.commanderTr('Run next')),
+                      ),
+                      PopupMenuItem(
+                        value: 'last',
+                        child: Text(context.commanderTr('Move to end')),
+                      ),
+                      if (canSchedule) ...[
+                        PopupMenuItem(
+                          value: 'schedule',
+                          child: Text(context.commanderTr('Start later')),
+                        ),
+                        if (scheduledAt != null)
+                          PopupMenuItem(
+                            value: 'now',
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(context.commanderTr('Run now')),
+                                Text(
+                                  context.commanderTr(
+                                    'Removes the start time; queue controls still apply.',
+                                  ),
+                                  style: theme.textTheme.bodySmall,
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                      const PopupMenuDivider(),
+                      PopupMenuItem(
+                        value: 'high',
+                        child: Text(context.commanderTr('High priority')),
+                      ),
+                      PopupMenuItem(
+                        value: 'normal',
+                        child: Text(context.commanderTr('Normal priority')),
+                      ),
+                      PopupMenuItem(
+                        value: 'low',
+                        child: Text(context.commanderTr('Low priority')),
+                      ),
+                    ],
+                    if (operation.isBatch)
+                      PopupMenuItem(
+                        value: 'files',
+                        child: Text(
+                          isExpanded
+                              ? context.commanderTr('Hide files')
+                              : context.commanderTr('Show files'),
+                        ),
+                      ),
+                    if (_canCancel(state))
+                      PopupMenuItem(
+                        value: 'cancel',
+                        child: Text(context.commanderTr('Cancel')),
+                      )
+                    else if (state != _JobState.cancelling)
+                      PopupMenuItem(
+                        value: 'hide',
+                        child: Text(context.commanderTr('Hide from queue')),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+            Tooltip(
+              message: route,
+              child: Text(
+                route,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Wrap(
+              spacing: 10,
+              runSpacing: 3,
+              children: [
+                Text(
+                  context.commanderTr(_stateLabel(state)),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                if (isQueued)
+                  Text(
+                    context.commanderTr('Priority {0}', [priority]),
+                    style: theme.textTheme.bodySmall,
+                  ),
+                if (operation.isBatch)
+                  Text(
+                    context.commanderTr('{0}/{1} items processed', [
+                      operation.processedFiles,
+                      operation.totalFiles,
+                    ]),
+                    style: theme.textTheme.bodySmall,
+                  ),
+                if (operation.skippedFiles > 0)
+                  Text(
+                    context.commanderTr('{0} skipped', [
+                      operation.skippedFiles,
+                    ]),
+                    style: theme.textTheme.bodySmall,
+                  ),
+              ],
+            ),
+            if (live) ...[
+              const SizedBox(height: 6),
+              LinearProgressIndicator(
+                value: operation.totalBytes > 0
+                    ? operation.progress.clamp(0, 1)
+                    : state == _JobState.running
+                    ? null
+                    : 0.0,
+              ),
+              if (operation.totalBytes > 0 ||
+                  state == _JobState.running && operation.currentSpeed > 0)
+                Padding(
+                  padding: const EdgeInsets.only(top: 3),
+                  child: Wrap(
+                    spacing: 10,
+                    runSpacing: 3,
+                    children: [
+                      if (operation.totalBytes > 0)
+                        Text(
+                          '${formatBytes(operation.transferredBytes)} / '
+                          '${formatBytes(operation.totalBytes)}',
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      if (state == _JobState.running &&
+                          operation.currentSpeed > 0)
+                        Text(
+                          formatSpeed(operation.currentSpeed),
+                          style: theme.textTheme.bodySmall,
+                        ),
+                    ],
+                  ),
+                ),
+            ],
+            if ((state == _JobState.running || state == _JobState.paused) &&
+                currentWork.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Tooltip(
+                  message: currentWork,
+                  child: Text(
+                    currentWork,
+                    key: ValueKey('queue-current-${operation.id}'),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall,
+                  ),
                 ),
               ),
-              if (operation.isBatch) ...[
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+            if (blockedReason != null && state != _JobState.cancelled)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  context.commanderTr(blockedReason!),
+                  style: theme.textTheme.bodySmall,
+                ),
+              ),
+            if (startLabel != null && isQueued) ...[
+              const SizedBox(height: 4),
+              Text(
+                context.commanderTr('Scheduled: {0}', [startLabel]),
+                style: theme.textTheme.bodySmall,
+              ),
+              Text(
+                context.commanderTr(
+                  'Starts while CrispCloud is open. Restored jobs require review.',
+                ),
+                style: theme.textTheme.bodySmall,
+              ),
+            ],
+            if (operation.error != null && state == _JobState.needsReview)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Tooltip(
+                  message: operation.error!,
                   child: Text(
-                    '${operation.completedFiles}/${operation.totalFiles} files',
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    operation.error!,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.error,
+                    ),
+                  ),
+                ),
+              ),
+            if (isExpanded && operation.isBatch) _buildFiles(context),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFiles(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(top: 8),
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(maxHeight: 150),
+      child: ListView.builder(
+        key: ValueKey('queue-files-${operation.id}'),
+        shrinkWrap: true,
+        primary: false,
+        itemCount: operation.files!.length,
+        itemBuilder: (context, index) {
+          final file = operation.files![index];
+          final outcome = FileOperationOutcome.values
+              .where((value) => value.name == file.statusLabel)
+              .firstOrNull;
+          final label = outcome == null
+              ? file.statusLabel
+              : CommanderStrings.labelForEnum(outcome);
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 3),
+            child: Row(
+              children: [
+                Icon(
+                  file.error != null
+                      ? Icons.error_outline
+                      : file.isSkipped
+                      ? Icons.skip_next
+                      : file.isComplete
+                      ? Icons.check_circle_outline
+                      : Icons.pending_outlined,
+                  size: 14,
+                  color: file.error != null
+                      ? Theme.of(context).colorScheme.error
+                      : null,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  flex: 3,
+                  child: Tooltip(
+                    message: file.path,
+                    child: Text(
+                      file.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  flex: 2,
+                  child: Tooltip(
+                    message: file.error ?? file.path,
+                    child: Text(
+                      label == null
+                          ? formatBytes(file.size)
+                          : context.commanderTr(label),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ),
                 ),
               ],
-            ],
-          ),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (operation.isActive &&
-                  operation.error == null &&
-                  !operation.isCancelled)
-                LinearProgressIndicator(
-                  value: operation.progress.clamp(0, 1),
-                  backgroundColor: Colors.grey[300],
-                ),
-              const SizedBox(height: 2),
-              Text(
-                operation.isCancelled
-                    ? 'Cancelled'
-                    : operation.isPaused
-                    ? 'Paused'
-                    : statusLabel ??
-                          operation.error ??
-                          _getStatusText(operation),
-                style: TextStyle(
-                  fontSize: 11,
-                  color: operation.error != null
-                      ? Colors.red
-                      : operation.isCancelled
-                      ? Colors.orange
-                      : operation.isPaused
-                      ? Colors.blue
-                      : null,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (onReview != null)
-                IconButton(
-                  icon: Icon(
-                    operation.isWaitingForDecision ? Icons.rule : Icons.history,
-                    size: 20,
-                  ),
-                  tooltip: operation.isWaitingForDecision
-                      ? context.commanderTr("Resolve conflict")
-                      : 'Review saved transfer',
-                  onPressed: onReview,
-                ),
-              if (onQueueAction != null)
-                PopupMenuButton<String>(
-                  tooltip: 'Queue order and priority',
-                  onSelected: onQueueAction,
-                  itemBuilder: (_) => const [
-                    PopupMenuItem(value: 'first', child: Text('Run next')),
-                    PopupMenuItem(value: 'last', child: Text('Move to end')),
-                    PopupMenuDivider(),
-                    PopupMenuItem(value: 'high', child: Text('High priority')),
-                    PopupMenuItem(
-                      value: 'normal',
-                      child: Text('Normal priority'),
-                    ),
-                    PopupMenuItem(value: 'low', child: Text('Low priority')),
-                  ],
-                ),
-              if (operation.isActive)
-                IconButton(
-                  icon: Icon(
-                    operation.isPaused ? Icons.play_arrow : Icons.pause,
-                    size: 20,
-                  ),
-                  tooltip: operation.isPaused ? 'Resume' : 'Pause',
-                  color: Colors.blue,
-                  onPressed: operation.isPaused ? onResume : onPause,
-                ),
-              if (!operation.isComplete &&
-                  !operation.isCancelled &&
-                  onCancel != null)
-                IconButton(
-                  icon: const Icon(Icons.cancel, size: 20),
-                  tooltip: 'Cancel',
-                  color: Colors.red,
-                  onPressed: onCancel,
-                ),
-              if (operation.isBatch)
-                IconButton(
-                  icon: Icon(
-                    isExpanded ? Icons.expand_less : Icons.expand_more,
-                    size: 20,
-                  ),
-                  onPressed: onToggleExpanded,
-                ),
-              if (operation.isComplete ||
-                  operation.error != null ||
-                  operation.isCancelled)
-                IconButton(
-                  icon: const Icon(Icons.close, size: 20),
-                  onPressed: onRemove,
-                ),
-            ],
-          ),
-        ),
-        if (isExpanded && operation.isBatch && operation.files != null)
-          Container(
-            color: Theme.of(context).colorScheme.surface,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            constraints: const BoxConstraints(maxHeight: 150),
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: operation.files!.length,
-              itemBuilder: (context, index) {
-                final file = operation.files![index];
-                return Padding(
-                  padding: const EdgeInsets.only(left: 16, top: 2),
-                  child: Row(
-                    children: [
-                      Icon(
-                        file.error != null
-                            ? Icons.error
-                            : file.isComplete
-                            ? Icons.check_circle
-                            : Icons.pending,
-                        size: 12,
-                        color: file.error != null
-                            ? Colors.red
-                            : file.isComplete
-                            ? Colors.green
-                            : Colors.grey,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          file.name,
-                          style: const TextStyle(fontSize: 11),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      Tooltip(
-                        message: file.error ?? file.path,
-                        child: Text(
-                          file.statusLabel ?? formatBytes(file.size),
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
             ),
-          ),
-      ],
-    );
-  }
-
-  String _getStatusText(OperationProgress op) {
-    if (op.isWaitingForDecision) return 'Waiting for a conflict decision';
-    if (op.error != null) return 'Error: ${op.error}';
-    if (op.isComplete) return 'Complete';
-    final percent = (op.progress * 100).toStringAsFixed(0);
-    final speedStr = op.currentSpeed > 0
-        ? ' • ${formatSpeed(op.currentSpeed)}'
-        : '';
-    final etaStr = op.estimatedSecondsRemaining > 0
-        ? ' • ${_formatEta(op.estimatedSecondsRemaining)}'
-        : '';
-    return '$percent% • ${formatBytes(op.transferredBytes)} / ${formatBytes(op.totalBytes)}$speedStr$etaStr';
-  }
-
-  String _formatEta(double seconds) {
-    final s = seconds.round();
-    if (s < 60) return '${s}s left';
-    if (s < 3600) return '${s ~/ 60}m ${s % 60}s left';
-    return '${s ~/ 3600}h ${(s % 3600) ~/ 60}m left';
-  }
+          );
+        },
+      ),
+    ),
+  );
 }
