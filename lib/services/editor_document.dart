@@ -64,6 +64,8 @@ class EditorDocument {
     required this.lineEnding,
     this.hadMixedLineEndings = false,
     this.hadBom = false,
+    this.originalLineEndings,
+    this.originalNormalizedText,
   });
 
   /// LF-normalized document text without a byte-order mark.
@@ -77,6 +79,13 @@ class EditorDocument {
 
   /// True when the source began with a byte-order mark.
   final bool hadBom;
+
+  /// Original line terminators, in order, before LF normalization.
+  /// A null value means no source map is available (e.g. a new document).
+  final List<EditorLineEnding>? originalLineEndings;
+
+  /// The normalized text corresponding to [originalLineEndings].
+  final String? originalNormalizedText;
 
   /// Decode [bytes], detect the encoding and line-ending style, and normalize
   /// the text to LF.
@@ -92,6 +101,8 @@ class EditorDocument {
       lineEnding: lineEnding,
       hadMixedLineEndings: endings.isMixed,
       hadBom: detection.bomLength > 0,
+      originalLineEndings: List.unmodifiable(_extractLineEndings(decoded)),
+      originalNormalizedText: _normalizeLineEndings(decoded),
     );
   }
 
@@ -108,6 +119,8 @@ class EditorDocument {
       lineEnding: lineEnding ?? this.lineEnding,
       hadMixedLineEndings: hadMixedLineEndings ?? this.hadMixedLineEndings,
       hadBom: hadBom ?? this.hadBom,
+      originalLineEndings: originalLineEndings,
+      originalNormalizedText: originalNormalizedText,
     );
   }
 
@@ -117,7 +130,7 @@ class EditorDocument {
   /// represent a character added by the user.
   Uint8List encode([String? source]) {
     final normalized = _normalizeLineEndings(source ?? text);
-    final withLineEndings = normalized.replaceAll('\n', lineEnding.sequence);
+    final withLineEndings = _restoreLineEndings(normalized);
     switch (encoding) {
       case EditorEncoding.utf8:
         return Uint8List.fromList(utf8.encode(withLineEndings));
@@ -147,6 +160,70 @@ class EditorDocument {
         }
         return Uint8List.fromList(latin1.encode(withLineEndings));
     }
+  }
+
+  /// Keep the exact CR/LF/CRLF sequence for unchanged line boundaries.
+  /// Inserted or replaced boundaries adopt the selected document style.
+  /// Changing the selected style explicitly converts all boundaries.
+  String _restoreLineEndings(String normalized) {
+    final original = originalNormalizedText;
+    final endings = originalLineEndings;
+    if (original == null || endings == null ||
+        lineEnding != EditorDocument._dominantFromEndings(endings)) {
+      return normalized.replaceAll('\\n', lineEnding.sequence);
+    }
+    if (normalized == original) {
+      final buffer = StringBuffer();
+      var index = 0;
+      var boundary = 0;
+      for (var i = 0; i < normalized.length; i++) {
+        if (normalized.codeUnitAt(i) == 10) {
+          buffer.write(normalized.substring(index, i));
+          buffer.write(endings[boundary++].sequence);
+          index = i + 1;
+        }
+      }
+      buffer.write(normalized.substring(index));
+      return buffer.toString();
+    }
+    // Match unchanged prefix and suffix lines; changed middle boundaries
+    // inherit the preferred style rather than a potentially wrong old one.
+    final oldLines = original.split('\\n');
+    final newLines = normalized.split('\\n');
+    var prefix = 0;
+    while (prefix < oldLines.length && prefix < newLines.length &&
+        oldLines[prefix] == newLines[prefix]) { prefix++; }
+    var suffix = 0;
+    while (suffix < oldLines.length - prefix &&
+        suffix < newLines.length - prefix &&
+        oldLines[oldLines.length - 1 - suffix] ==
+            newLines[newLines.length - 1 - suffix]) { suffix++; }
+    final output = StringBuffer();
+    for (var i = 0; i < newLines.length; i++) {
+      if (i > 0) {
+        final oldBoundary = i - 1;
+        EditorLineEnding style = lineEnding;
+        if (i <= prefix && oldBoundary < endings.length) {
+          style = endings[oldBoundary];
+        } else if (i >= newLines.length - suffix) {
+          final fromEnd = newLines.length - i;
+          final oldIndex = oldLines.length - fromEnd - 1;
+          if (oldIndex >= 0 && oldIndex < endings.length) {
+            style = endings[oldIndex];
+          }
+        }
+        output.write(style.sequence);
+      }
+      output.write(newLines[i]);
+    }
+    return output.toString();
+  }
+
+  static EditorLineEnding _dominantFromEndings(List<EditorLineEnding> endings) {
+    final crlf = endings.where((e) => e == EditorLineEnding.crlf).length;
+    final cr = endings.where((e) => e == EditorLineEnding.cr).length;
+    final lf = endings.length - crlf - cr;
+    return _LineEndingCounts(crlf, cr, lf).dominant;
   }
 
   static String _normalizeLineEndings(String source) {
@@ -373,4 +450,22 @@ _LineEndingCounts _countLineEndings(String text) {
     }
   }
   return _LineEndingCounts(crlf, cr, lf);
+}
+
+List<EditorLineEnding> _extractLineEndings(String text) {
+  final result = <EditorLineEnding>[];
+  for (var i = 0; i < text.length; i++) {
+    final unit = text.codeUnitAt(i);
+    if (unit == 13) {
+      if (i + 1 < text.length && text.codeUnitAt(i + 1) == 10) {
+        result.add(EditorLineEnding.crlf);
+        i++;
+      } else {
+        result.add(EditorLineEnding.cr);
+      }
+    } else if (unit == 10) {
+      result.add(EditorLineEnding.lf);
+    }
+  }
+  return result;
 }

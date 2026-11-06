@@ -41,7 +41,7 @@ void main() {
       expect(document.encode(), utf8.encode(source));
     });
 
-    test('mixed endings use the dominant style and are reported', () {
+    test('mixed endings are preserved and reported', () {
       const source = 'one\r\ntwo\nthree\r\n';
       final document = EditorDocument.decode(utf8.encode(source));
 
@@ -50,9 +50,20 @@ void main() {
       expect(document.hadMixedLineEndings, isTrue);
       expect(
         document.encode(),
-        utf8.encode('one\r\ntwo\r\nthree\r\n'),
-        reason: 'A save must apply one documented style to the whole file.',
+        utf8.encode(source),
+        reason: 'An unchanged mixed-ending document must round-trip exactly.',
       );
+    });
+
+    test('editing one line retains unaffected mixed terminators', () {
+      final document = EditorDocument.decode(utf8.encode('a\\r\\nb\\nc\\r'));
+      final edited = document.copyWith(text: 'a\\nchanged\\nc\\n');
+      expect(utf8.decode(edited.encode()), 'a\\r\\nchanged\\nc\\r');
+    });
+
+    test('explicit line-ending conversion normalizes mixed endings', () {
+      final document = EditorDocument.decode(utf8.encode('a\\r\\nb\\nc\\r'));
+      expect(utf8.decode(document.copyWith(lineEnding: EditorLineEnding.lf).encode()), 'a\\nb\\nc\\n');
     });
 
     test('a CRLF/LF tie prefers CRLF', () {
