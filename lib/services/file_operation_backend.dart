@@ -709,9 +709,11 @@ class LocalOperationBackend extends FileOperationBackend {
     bool permissions = true,
     bool modified = true,
     bool accessed = true,
+    bool created = true,
     bool ownership = true,
     bool extendedAttributes = true,
     bool acl = true,
+    bool windowsAttributes = true,
   }) async {
     if (kIsWeb) return super.readMetadata(path);
     return service.withFileOperationAccess(path, () async {

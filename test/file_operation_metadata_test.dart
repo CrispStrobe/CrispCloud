@@ -36,6 +36,31 @@ void main() {
     ..file('/tree/nested/data.txt', 'copied bytes', mode: 0x1a0);
 
   test(
+    'selective default includes and masks creation and Windows attributes',
+    () async {
+      final source = tree();
+      final created = DateTime.utc(2023, 7, 8);
+      source.metadata['/tree'] = TransferMetadata(
+        created: created,
+        windowsAttributes: 0x23,
+        windowsAttributesMask: 0x03,
+      );
+      final included = await source.readMetadataFields('/tree');
+      expect(included.created, created);
+      expect(included.windowsAttributes, 0x23);
+      expect(included.windowsAttributesMask, 0x03);
+      final excluded = await source.readMetadataFields(
+        '/tree',
+        created: false,
+        windowsAttributes: false,
+      );
+      expect(excluded.created, isNull);
+      expect(excluded.windowsAttributes, isNull);
+      expect(excluded.windowsAttributesMask, 0x03);
+    },
+  );
+
+  test(
     'all requested directory metadata is applied after child writes',
     () async {
       final source = tree();
@@ -564,9 +589,11 @@ class _SelectiveMetadataBackend extends _MetadataBackend {
     bool permissions = true,
     bool modified = true,
     bool accessed = true,
+    bool created = true,
     bool ownership = true,
     bool extendedAttributes = true,
     bool acl = true,
+    bool windowsAttributes = true,
   }) async {
     requested = {
       'permissions': permissions,
@@ -576,7 +603,13 @@ class _SelectiveMetadataBackend extends _MetadataBackend {
       'extendedAttributes': extendedAttributes,
       'acl': acl,
     };
-    if (modified || accessed || ownership || extendedAttributes || acl) {
+    if (modified ||
+        accessed ||
+        created ||
+        ownership ||
+        extendedAttributes ||
+        acl ||
+        windowsAttributes) {
       throw UnsupportedError('Only POSIX mode is available.');
     }
     return TransferMetadata(mode: metadata[path]!.mode);

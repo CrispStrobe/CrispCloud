@@ -133,21 +133,26 @@ abstract class FileOperationBackend {
     bool permissions = true,
     bool modified = true,
     bool accessed = true,
+    bool created = true,
     bool ownership = true,
     bool extendedAttributes = true,
     bool acl = true,
+    bool windowsAttributes = true,
   }) async {
     final metadata = await readMetadata(path);
     return TransferMetadata(
       mode: permissions ? metadata.mode : null,
       modified: modified ? metadata.modified : null,
       accessed: accessed ? metadata.accessed : null,
+      created: created ? metadata.created : null,
       owner: ownership ? metadata.owner : null,
       group: ownership ? metadata.group : null,
       extendedAttributes: extendedAttributes
           ? metadata.extendedAttributes
           : const {},
       acl: acl ? metadata.acl : null,
+      windowsAttributes: windowsAttributes ? metadata.windowsAttributes : null,
+      windowsAttributesMask: metadata.windowsAttributesMask,
     );
   }
 
@@ -1611,9 +1616,11 @@ class FileOperationService {
           permissions: options.preservePermissions,
           modified: false,
           accessed: false,
+          created: false,
           ownership: options.preserveOwnership,
           extendedAttributes: options.preserveExtendedAttributes,
           acl: options.preserveAcl,
+          windowsAttributes: false,
         );
         _checkSources(source, target);
         final missing = [
