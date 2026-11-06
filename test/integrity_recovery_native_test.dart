@@ -8,13 +8,20 @@ import 'package:crisp_cloud/services/transfer_journal.dart';
 import 'package:crisp_cloud/services/transfer_journal_storage_io.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/native_integrity_backend.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  SharedPreferences.setMockInitialValues({});
   test('a new process recovers flushed split evidence after the writer exits without cleanup', () async {
-    final root = await Directory.systemTemp.createTemp('integrity-process-');
+    final temporary = await Directory.systemTemp.createTemp(
+      'integrity-process-',
+    );
+    // macOS exposes its temp directory through /var. Use the owned canonical
+    // path so native no-symlink guards exercise the files, not that alias.
+    final root = Directory(await temporary.resolveSymbolicLinks());
     addTearDown(() async {
       if (await root.exists()) await root.delete(recursive: true);
     });

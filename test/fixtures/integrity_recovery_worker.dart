@@ -5,11 +5,13 @@ import 'package:crisp_cloud/services/transfer_journal.dart';
 import 'package:crisp_cloud/services/transfer_journal_storage_io.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../support/native_integrity_backend.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  SharedPreferences.setMockInitialValues({});
   final root = Platform.environment['CRISP_INTEGRITY_RECOVERY_ROOT'];
   test(
     'interrupt native split immediately after committing its second part',
