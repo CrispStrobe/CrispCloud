@@ -57,6 +57,7 @@ void main() {
       excludedDirectories: FileSelectionPattern('cache;tmp'),
       excludeEmptyDirectories: true,
       preservePermissions: true,
+      preserveWindowsAttributes: true,
       verifyContents: true,
       copyMethod: FileCopyMethod.stream,
       preallocate: true,
@@ -80,6 +81,7 @@ void main() {
           duplicateNameTemplate: '{name}_backup-{counter:000}{ext}',
           fileConflict: FileConflictPolicy.keepBoth,
           clientBytesPerSecond: 512,
+          preserveWindowsAttributes: true,
         ),
       );
       final stored = (await profiles.load())['@default:copy']!;
@@ -88,6 +90,7 @@ void main() {
       expect(stored.destinationMask, '*.bak');
       expect(stored.duplicateNameTemplate, '{name}_backup-{counter:000}{ext}');
       expect(stored.clientBytesPerSecond, 512);
+      expect(stored.preserveWindowsAttributes, isTrue);
       await profiles.remove('@default:copy');
       expect(await profiles.load(), isEmpty);
     },
@@ -96,8 +99,13 @@ void main() {
   test('old saved options retain the original numbered duplicate names', () {
     final legacy = const FileOperationOptions().toJson()
       ..remove('duplicateNameTemplate')
-      ..remove('clientBytesPerSecond');
+      ..remove('clientBytesPerSecond')
+      ..remove('preserveWindowsAttributes');
     expect(FileOperationOptions.fromJson(legacy).clientBytesPerSecond, isNull);
+    expect(
+      FileOperationOptions.fromJson(legacy).preserveWindowsAttributes,
+      isFalse,
+    );
     expect(
       FileOperationOptions.fromJson(legacy).duplicateNameTemplate,
       '{name} ({counter}){ext}',

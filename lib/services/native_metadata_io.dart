@@ -7,6 +7,7 @@ import 'dart:typed_data';
 import 'package:ffi/ffi.dart';
 
 import 'storage_transfer_contract.dart';
+import 'native_metadata_windows.dart';
 
 // Descriptor APIs keep a final-component symlink from redirecting metadata
 // changes. The limits apply to metadata, never to the file's content length.
@@ -19,40 +20,60 @@ const _linuxAclPrefix = 'linux-posix-v1:';
 const _darwinAclPrefix = 'darwin-acl-v1:';
 
 bool get supportsNativeMetadata =>
-    (Platform.isLinux || Platform.isMacOS) && sizeOf<IntPtr>() == 8;
+    ((Platform.isLinux || Platform.isMacOS) && sizeOf<IntPtr>() == 8) ||
+    supportsWindowsNativeMetadata;
 bool get supportsNativeOwnership =>
-    supportsNativeMetadata &&
-    DynamicLibrary.process().providesSymbol(
-      Platform.isMacOS ? 'fgetattrlist' : 'statx',
-    );
+    supportsWindowsNativeMetadata ||
+    (supportsNativeMetadata &&
+        DynamicLibrary.process().providesSymbol(
+          Platform.isMacOS ? 'fgetattrlist' : 'statx',
+        ));
 bool get supportsNativeExtendedAttributes =>
+    !Platform.isWindows &&
     supportsNativeMetadata &&
     DynamicLibrary.process().providesSymbol('flistxattr') &&
     DynamicLibrary.process().providesSymbol('fgetxattr') &&
     DynamicLibrary.process().providesSymbol('fsetxattr');
 bool get supportsNativeAccessControlLists =>
-    supportsNativeMetadata &&
-    (Platform.isLinux
-        ? supportsNativeExtendedAttributes
-        : DynamicLibrary.process().providesSymbol('acl_get_fd_np') &&
-              DynamicLibrary.process().providesSymbol('acl_set_fd_np'));
+    supportsWindowsNativeMetadata ||
+    (supportsNativeMetadata &&
+        (Platform.isLinux
+            ? supportsNativeExtendedAttributes
+            : DynamicLibrary.process().providesSymbol('acl_get_fd_np') &&
+                  DynamicLibrary.process().providesSymbol('acl_set_fd_np')));
+bool get supportsNativeWindowsAttributes => supportsWindowsNativeMetadata;
+bool get supportsNativeCreatedTime => supportsWindowsNativeMetadata;
 
 Future<TransferMetadata> readNativeMetadata(
   String path, {
   bool ownership = true,
   bool extendedAttributes = true,
   bool acl = true,
+  bool created = true,
+  bool windowsAttributes = true,
 }) => Isolate.run(
-  () => _read(
-    path,
-    ownership: ownership,
-    extendedAttributes: extendedAttributes,
-    acl: acl,
-  ),
+  () => Platform.isWindows
+      ? readWindowsNativeMetadata(
+          path,
+          ownership: ownership,
+          acl: acl,
+          created: created,
+          windowsAttributes: windowsAttributes,
+        )
+      : _read(
+          path,
+          ownership: ownership,
+          extendedAttributes: extendedAttributes,
+          acl: acl,
+        ),
 );
 
 Future<void> writeNativeMetadata(String path, TransferMetadata metadata) =>
-    Isolate.run(() => _write(path, metadata));
+    Isolate.run(
+      () => Platform.isWindows
+          ? writeWindowsNativeMetadata(path, metadata)
+          : _write(path, metadata),
+    );
 
 typedef _OpenN = Int32 Function(Pointer<Utf8>, Int32, VarArgs<(Int32,)>);
 typedef _OpenD = int Function(Pointer<Utf8>, int, int);
@@ -697,6 +718,11 @@ void _setAttribute(
 }
 
 Map<String, Uint8List?>? _validate(TransferMetadata metadata) {
+  if (metadata.created != null || metadata.windowsAttributes != null) {
+    throw UnsupportedError(
+      'Creation time and Windows attributes cannot be changed on this platform.',
+    );
+  }
   _numericOwner(metadata.owner, 'Owner');
   _numericOwner(metadata.group, 'Group');
   if (metadata.mode != null &&

@@ -75,6 +75,7 @@ void main() {
           'user.note': Uint8List.fromList([1, 2, 3]),
         },
         acl: 'owner:rwx;group:r-x',
+        windowsAttributes: 0x27,
       );
       final plan = await prepare(
         source,
@@ -85,6 +86,7 @@ void main() {
           preserveOwnership: true,
           preserveExtendedAttributes: true,
           preserveAcl: true,
+          preserveWindowsAttributes: true,
         ),
       );
       expect(plan.errors, isEmpty);
@@ -97,6 +99,8 @@ void main() {
       expect(root.modified, modified);
       expect(root.extendedAttributes['user.note'], [1, 2, 3]);
       expect(root.acl, 'owner:rwx;group:r-x');
+      expect(root.windowsAttributes, 0x27);
+      expect(root.windowsAttributesMask, 0x27);
       expect(target.metadata['/target/tree/nested']!.mode, 0x1e8);
       expect(
         target.events.where((event) => event.startsWith('metadata:')).toList(),
@@ -150,6 +154,7 @@ void main() {
         options: const FileOperationOptions(
           kind: FileOperationKind.move,
           preservePermissions: true,
+          preserveWindowsAttributes: true,
         ),
       );
       await journal.create('directory-metadata', plan);
@@ -170,6 +175,7 @@ void main() {
       final restarted = TransferJournal(storage);
       await restarted.initialize();
       final saved = restarted.job('directory-metadata')!;
+      expect(saved.options.preserveWindowsAttributes, isTrue);
       expect(saved.entries[1].outcome, FileOperationOutcome.metadataFailed);
       target.metadataFailures.clear();
       final preview = await const TransferRecoveryService().prepare(
@@ -185,6 +191,7 @@ void main() {
       expect(target.writes, 1);
       expect(target.metadata['/target/tree/nested']!.mode, 0x1e8);
       expect(target.metadata['/target/tree']!.mode, 0x1c0);
+      expect(target.metadata['/target/tree']!.windowsAttributes, 0x20);
       expect(source.directories, isNot(contains('/tree/nested')));
       expect(source.directories, isNot(contains('/tree')));
     },
@@ -300,6 +307,10 @@ void main() {
     ('permissions', const FileOperationOptions(preservePermissions: true)),
     ('ownership', const FileOperationOptions(preserveOwnership: true)),
     ('access control list', const FileOperationOptions(preserveAcl: true)),
+    (
+      'Windows attributes',
+      const FileOperationOptions(preserveWindowsAttributes: true),
+    ),
   ]) {
     test('missing requested ${requirement.$1} is a metadata failure', () async {
       final source = _MetadataBackend('source')..file('/file.txt', 'source');
@@ -322,6 +333,25 @@ void main() {
       );
     });
   }
+
+  test(
+    'Windows attribute preservation requires both storage capabilities',
+    () async {
+      final source = tree();
+      final target = _MetadataBackend('target')
+        ..windowsAttributesSupported = false;
+      final plan = await prepare(
+        source,
+        target,
+        options: const FileOperationOptions(preserveWindowsAttributes: true),
+      );
+      expect(
+        plan.errors,
+        contains('Both storages must support preserving Windows attributes.'),
+      );
+      expect(target.writes, 0);
+    },
+  );
 
   for (final folder in [false, true]) {
     test(
@@ -422,14 +452,16 @@ class _MetadataBackend extends FileOperationBackend {
   @override
   bool get supportsModifiedTime => true;
   @override
-  StorageTransferCapabilities get capabilities =>
-      const StorageTransferCapabilities(
-        permissions: true,
-        ownership: true,
-        extendedAttributes: true,
-        accessControlLists: true,
-        setModifiedTime: true,
-      );
+  StorageTransferCapabilities get capabilities => StorageTransferCapabilities(
+    permissions: true,
+    ownership: true,
+    extendedAttributes: true,
+    accessControlLists: true,
+    setModifiedTime: true,
+    windowsAttributes: windowsAttributesSupported,
+  );
+
+  bool windowsAttributesSupported = true;
 
   final directories = <String>{};
   final bytes = <String, List<int>>{};
@@ -454,6 +486,7 @@ class _MetadataBackend extends FileOperationBackend {
       owner: '1000',
       group: '1000',
       acl: 'owner:rwx;group:r-x',
+      windowsAttributes: 0x20,
     );
   }
 
@@ -467,6 +500,7 @@ class _MetadataBackend extends FileOperationBackend {
       owner: '1000',
       group: '1000',
       acl: 'owner:rw-;group:r--',
+      windowsAttributes: 0x20,
     );
   }
 
@@ -546,6 +580,8 @@ class _MetadataBackend extends FileOperationBackend {
           ? existing.extendedAttributes
           : value.extendedAttributes,
       acl: value.acl ?? existing.acl,
+      windowsAttributes: value.windowsAttributes ?? existing.windowsAttributes,
+      windowsAttributesMask: value.windowsAttributesMask,
     );
     events.add('metadata:$path');
     await afterMetadata?.call(path);
@@ -562,6 +598,7 @@ class _MetadataBackend extends FileOperationBackend {
       group: existing.group,
       extendedAttributes: existing.extendedAttributes,
       acl: existing.acl,
+      windowsAttributes: existing.windowsAttributes,
     );
   }
 

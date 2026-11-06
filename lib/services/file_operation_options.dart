@@ -53,6 +53,7 @@ class FileOperationOptions {
     this.preserveOwnership = false,
     this.preserveExtendedAttributes = false,
     this.preserveAcl = false,
+    this.preserveWindowsAttributes = false,
     this.verifyContents = false,
     this.stopOnError = true,
     this.copySymbolicLinks = false,
@@ -85,6 +86,7 @@ class FileOperationOptions {
   final bool preserveOwnership;
   final bool preserveExtendedAttributes;
   final bool preserveAcl;
+  final bool preserveWindowsAttributes;
   final bool verifyContents;
   final bool stopOnError;
   final bool copySymbolicLinks;
@@ -156,7 +158,8 @@ class FileOperationOptions {
       preservePermissions ||
       preserveOwnership ||
       preserveExtendedAttributes ||
-      preserveAcl;
+      preserveAcl ||
+      preserveWindowsAttributes;
 
   FileSearchQuery get searchFilter => FileSearchQuery(
     namePattern: pattern?.expression ?? '*',
@@ -189,6 +192,7 @@ class FileOperationOptions {
     'preserveOwnership': preserveOwnership,
     'preserveExtendedAttributes': preserveExtendedAttributes,
     'preserveAcl': preserveAcl,
+    'preserveWindowsAttributes': preserveWindowsAttributes,
     'verifyContents': verifyContents,
     'stopOnError': stopOnError,
     'copySymbolicLinks': copySymbolicLinks,
@@ -230,6 +234,7 @@ class FileOperationOptions {
       preserveOwnership: json['preserveOwnership'] == true,
       preserveExtendedAttributes: json['preserveExtendedAttributes'] == true,
       preserveAcl: json['preserveAcl'] == true,
+      preserveWindowsAttributes: json['preserveWindowsAttributes'] == true,
       verifyContents: json['verifyContents'] == true,
       stopOnError: json['stopOnError'] != false,
       copySymbolicLinks: json['copySymbolicLinks'] == true,

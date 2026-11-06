@@ -31,6 +31,11 @@ void main() {
       backend.capabilities.accessControlLists,
       supportsNativeAccessControlLists,
     );
+    expect(
+      backend.capabilities.windowsAttributes,
+      supportsNativeWindowsAttributes,
+    );
+    expect(backend.capabilities.setCreatedTime, supportsNativeCreatedTime);
   });
 
   test('ownership reads actual UID/GID and same-owner preservation retains content', () async {
@@ -47,7 +52,7 @@ void main() {
     );
     expect((await file.stat()).mode & 0xfff, 0x1a0);
     expect(await file.readAsString(), 'owned data');
-  }, skip: !supportsNativeOwnership);
+  }, skip: Platform.isWindows || !supportsNativeOwnership);
 
   test('selective reads omit unrelated native fields and preserve requested values', () async {
     final file = await File('${root.path}/selective')
@@ -158,7 +163,7 @@ void main() {
       expect(after.mode, before.mode);
       expect(await file.readAsString(), 'target');
     },
-    skip: !supportsNativeMetadata,
+    skip: Platform.isWindows || !supportsNativeMetadata,
   );
 
   test(
@@ -249,7 +254,7 @@ void main() {
     } finally {
       await Process.run('chmod', ['600', file.path]);
     }
-  }, skip: !supportsNativeAccessControlLists);
+  }, skip: Platform.isWindows || !supportsNativeAccessControlLists);
 
   test(
     'malformed ownership or ACL payload is rejected before mode changes',
@@ -272,7 +277,28 @@ void main() {
         expect((await file.stat()).mode, before.mode);
       }
     },
-    skip: !supportsNativeMetadata,
+    skip: Platform.isWindows || !supportsNativeMetadata,
+  );
+
+  test(
+    'Unix refuses unsupported creation and Windows attributes before mutation',
+    () async {
+      final file = await File('${root.path}/unsupported')
+          .writeAsString('intact');
+      final before = await file.stat();
+      for (final metadata in [
+        TransferMetadata(created: DateTime.utc(2020), mode: 0),
+        const TransferMetadata(windowsAttributes: 1, mode: 0),
+      ]) {
+        await expectLater(
+          backend.writeMetadata(file.path, metadata),
+          throwsUnsupportedError,
+        );
+        expect((await file.stat()).mode, before.mode);
+        expect(await file.readAsString(), 'intact');
+      }
+    },
+    skip: Platform.isWindows || !supportsNativeMetadata,
   );
 
   test('Linux access and default directory ACLs are independent from ordinary xattrs', () async {

@@ -66,6 +66,7 @@ class LocalOperationBackend extends FileOperationBackend {
     readRanges: !kIsWeb,
     setModifiedTime: !kIsWeb,
     setAccessedTime: !kIsWeb,
+    setCreatedTime: !kIsWeb && supportsNativeCreatedTime,
     symbolicLinks: !kIsWeb,
     deleteEmptyDirectory: !kIsWeb || service is LocalTransferFileOperations,
     boundedUpload: !kIsWeb || service is LocalTransferFileOperations,
@@ -76,6 +77,7 @@ class LocalOperationBackend extends FileOperationBackend {
     ownership: !kIsWeb && supportsNativeOwnership,
     extendedAttributes: !kIsWeb && supportsNativeExtendedAttributes,
     accessControlLists: !kIsWeb && supportsNativeAccessControlLists,
+    windowsAttributes: !kIsWeb && supportsNativeWindowsAttributes,
   );
   @override
   String get label => 'Local';
@@ -728,18 +730,26 @@ class LocalOperationBackend extends FileOperationBackend {
       }
       final info = await FileStat.stat(path);
       final extra =
-          supportsNativeMetadata && (ownership || extendedAttributes || acl)
+          supportsNativeMetadata &&
+              (ownership ||
+                  extendedAttributes ||
+                  acl ||
+                  (created && supportsNativeCreatedTime) ||
+                  (windowsAttributes && supportsNativeWindowsAttributes))
           ? await readNativeMetadata(
               path,
               ownership: ownership,
               extendedAttributes: extendedAttributes,
               acl: acl,
+              created: created,
+              windowsAttributes: windowsAttributes,
             )
           : const TransferMetadata();
       _check();
       return TransferMetadata(
         modified: modified ? info.modified : null,
         accessed: accessed ? info.accessed : null,
+        created: extra.created,
         mode: permissions && capabilities.permissions
             ? info.mode & 0xfff
             : null,
@@ -747,6 +757,7 @@ class LocalOperationBackend extends FileOperationBackend {
         group: extra.group,
         extendedAttributes: extra.extendedAttributes,
         acl: extra.acl,
+        windowsAttributes: extra.windowsAttributes,
       );
     });
   }
@@ -758,7 +769,9 @@ class LocalOperationBackend extends FileOperationBackend {
         (metadata.owner != null ||
             metadata.group != null ||
             metadata.extendedAttributes.isNotEmpty ||
-            metadata.acl != null)) {
+            metadata.acl != null ||
+            metadata.created != null ||
+            metadata.windowsAttributes != null)) {
       throw UnsupportedError(
         'This native backend does not implement the requested ownership, attributes, or ACL.',
       );

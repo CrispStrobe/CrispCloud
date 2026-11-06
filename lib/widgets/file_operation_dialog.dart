@@ -202,6 +202,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
   bool _preserveOwnership = false;
   bool _preserveXattrs = false;
   bool _preserveAcl = false;
+  bool _preserveWindowsAttributes = false;
   FileOperationControl _control = FileOperationControl();
   final _origins = <PanelSide, PanelFileOrigin>{};
   late final PanelNotifier _panel;
@@ -389,6 +390,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     preserveOwnership: _preserveOwnership,
     preserveExtendedAttributes: _preserveXattrs,
     preserveAcl: _preserveAcl,
+    preserveWindowsAttributes: _preserveWindowsAttributes,
     destinationName: _targetName.text.trim().isEmpty
         ? null
         : _targetName.text.trim(),
@@ -456,6 +458,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     _preserveOwnership = options.preserveOwnership;
     _preserveXattrs = options.preserveExtendedAttributes;
     _preserveAcl = options.preserveAcl;
+    _preserveWindowsAttributes = options.preserveWindowsAttributes;
     _verify = options.verifyContents;
     _stopOnError = options.stopOnError;
     _copyLinks = options.copySymbolicLinks;
@@ -713,13 +716,17 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     final supportsAcl =
         (sourceBackend?.capabilities.accessControlLists ?? false) &&
         (destinationBackend?.capabilities.accessControlLists ?? false);
+    final supportsWindowsAttributes =
+        (sourceBackend?.capabilities.windowsAttributes ?? false) &&
+        (destinationBackend?.capabilities.windowsAttributes ?? false);
     final hasUnsupportedSettings =
         (_preserveTime && !supportsTime) ||
         (_copyLinks && !supportsLinks) ||
         (_preservePermissions && !supportsPermissions) ||
         (_preserveOwnership && !supportsOwnership) ||
         (_preserveXattrs && !supportsXattrs) ||
-        (_preserveAcl && !supportsAcl);
+        (_preserveAcl && !supportsAcl) ||
+        (_preserveWindowsAttributes && !supportsWindowsAttributes);
     final supportsClone =
         sourceBackend != null &&
         destinationBackend != null &&
@@ -1269,6 +1276,12 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                       _preserveAcl,
                       (v) => _preserveAcl = v,
                       enabled: supportsAcl,
+                    ),
+                    _toggle(
+                      context.commanderTr("Preserve Windows attributes"),
+                      _preserveWindowsAttributes,
+                      (v) => _preserveWindowsAttributes = v,
+                      enabled: supportsWindowsAttributes,
                     ),
                   ],
                 ),

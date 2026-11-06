@@ -582,6 +582,7 @@ void main() {
         preserveOwnership: true,
         preserveExtendedAttributes: true,
         preserveAcl: true,
+        preserveWindowsAttributes: true,
       ),
     );
     await open(tester);
@@ -598,6 +599,7 @@ void main() {
       'Preserve owner/group',
       'Preserve extended attributes',
       'Preserve ACL',
+      'Preserve Windows attributes',
     ]) {
       final row = find.ancestor(of: find.text(label), matching: find.byType(Row)).first;
       final checkbox = find.descendant(of: row, matching: find.byType(Checkbox));
@@ -620,6 +622,7 @@ void main() {
     expect(defaults.preserveOwnership, isTrue);
     expect(defaults.preserveExtendedAttributes, isTrue);
     expect(defaults.preserveAcl, isTrue);
+    expect(defaults.preserveWindowsAttributes, isTrue);
   });
 
   test('an unanswered background conflict is reported as incomplete', () async {

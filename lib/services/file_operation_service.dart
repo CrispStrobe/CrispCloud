@@ -554,6 +554,12 @@ class FileOperationService {
             destination.capabilities.accessControlLists,
         'access control lists',
       ),
+      (
+        options.preserveWindowsAttributes,
+        source.capabilities.windowsAttributes &&
+            destination.capabilities.windowsAttributes,
+        'Windows attributes',
+      ),
     ]) {
       if (requirement.$1 && !requirement.$2) {
         errors.add('Both storages must support preserving ${requirement.$3}.');
@@ -1610,7 +1616,8 @@ class FileOperationService {
       if (options.preservePermissions ||
           options.preserveOwnership ||
           options.preserveExtendedAttributes ||
-          options.preserveAcl) {
+          options.preserveAcl ||
+          options.preserveWindowsAttributes) {
         metadata = await source.readMetadataFields(
           entry.source.path!,
           permissions: options.preservePermissions,
@@ -1620,7 +1627,7 @@ class FileOperationService {
           ownership: options.preserveOwnership,
           extendedAttributes: options.preserveExtendedAttributes,
           acl: options.preserveAcl,
-          windowsAttributes: false,
+          windowsAttributes: options.preserveWindowsAttributes,
         );
         _checkSources(source, target);
         final missing = [
@@ -1631,6 +1638,9 @@ class FileOperationService {
             'ownership',
           if (options.preserveAcl && metadata.acl == null)
             'access control list',
+          if (options.preserveWindowsAttributes &&
+              metadata.windowsAttributes == null)
+            'Windows attributes',
         ];
         if (missing.isNotEmpty) {
           throw StateError(
@@ -1653,6 +1663,10 @@ class FileOperationService {
                 ? metadata.extendedAttributes
                 : const {},
             acl: options.preserveAcl ? metadata.acl : null,
+            windowsAttributes: options.preserveWindowsAttributes
+                ? metadata.windowsAttributes
+                : null,
+            windowsAttributesMask: 0x27,
           ),
         );
       }
