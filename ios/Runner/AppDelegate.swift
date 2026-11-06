@@ -2,6 +2,8 @@ import Flutter
 import UIKit
 import FileProvider
 import Intents
+import BackgroundTasks
+import workmanager_apple
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
@@ -19,6 +21,41 @@ import Intents
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
+    // Workmanager creates a separate headless engine. Register secure storage,
+    // preferences, database-path and notification plugins on that engine too.
+    WorkmanagerPlugin.setPluginRegistrantCallback { registry in
+      GeneratedPluginRegistrant.register(with: registry)
+    }
+
+    if #available(iOS 13.0, *) {
+      let syncIdentifier = "crisp_cloud.background_sync"
+      BGTaskScheduler.shared.register(
+        forTaskWithIdentifier: syncIdentifier,
+        using: nil
+      ) { task in
+        guard let refreshTask = task as? BGAppRefreshTask else {
+          task.setTaskCompleted(success: false)
+          return
+        }
+        // The pinned Apple plugin reschedules before starting Dart. Read the
+        // latest preference on each wake so interval changes and cancellation
+        // also apply to that reschedule, without relaunching the foreground UI.
+        let preferences = UserDefaults.standard
+        guard preferences.bool(forKey: "flutter.background_sync_enabled") else {
+          task.setTaskCompleted(success: true)
+          return
+        }
+        let minutes = max(
+          15, preferences.integer(forKey: "flutter.background_sync_interval_minutes")
+        )
+        WorkmanagerPlugin.handlePeriodicTask(
+          identifier: syncIdentifier,
+          task: refreshTask,
+          earliestBeginInSeconds: Double(minutes) * 60
+        )
+      }
+    }
+
     // Pre-warm the engine so the first scene connects instantly.
     _ = flutterEngine
 

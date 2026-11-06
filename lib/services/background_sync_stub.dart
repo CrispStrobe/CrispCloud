@@ -19,9 +19,12 @@ Future<void> scheduleWorkmanagerTask({
 
 Future<void> cancelWorkmanagerTask(String uniqueName) async {}
 
-/// Always returns null on stub platforms.
-Future<CloudStorageClient?> buildClientForProvider(String provider) async =>
-    null;
+/// Unsupported providers must never be reported as a successful sync skip.
+Future<CloudStorageClient> buildClientForProvider(
+  String provider, {
+  String remotePath = '/',
+}) async =>
+    throw UnsupportedError('Background sync is unavailable on this platform.');
 
 Future<void> showLocalNotification({
   required int id,

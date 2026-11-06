@@ -95,7 +95,7 @@ void main() {
           cloud.release.complete();
         }
         final succeeded = await pending;
-        if (!fail) expect(succeeded, isTrue);
+        expect(succeeded, !fail);
         expect(requestedProviders, ['fixture']);
         final afterTask = await importBackgroundTransferJournals(
           foreground,
