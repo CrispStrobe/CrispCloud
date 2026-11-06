@@ -683,6 +683,10 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         onSelected: () =>
             setTerminalVisible(ref, !ref.read(showTerminalProvider)),
       ),
+      PlatformMenuItem(
+        label: context.commanderTr("Toggle Top Toolbar"),
+        onSelected: () => ref.read(topToolbarVisibleProvider.notifier).toggle(),
+      ),
       if (editor == null)
         PlatformMenuItemGroup(
           members: <PlatformMenuItem>[
