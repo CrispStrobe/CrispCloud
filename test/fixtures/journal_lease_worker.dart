@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import '../../lib/services/native_journal_lease.dart';
+import 'package:crisp_cloud/services/native_journal_lease.dart';
 
 Future<void> main(List<String> args) async {
   final lease = await tryAcquireNativeJournalLease(args.single);

@@ -137,7 +137,15 @@ void main() {
   test('closing a run drains checkpoints and forbids later writes', () async {
     final run = await createBackgroundTransferJournalRun(rootPath: root.path);
     await _save(run, 'closed');
+    final checkpoints = [
+      for (var i = 0; i < 20; i++)
+        run.journal.updateQueue('sync-job', priority: i),
+    ];
+    // Let all calls enter the journal queue while native disk flushes remain
+    // outstanding. Closing must drain accepted work before dropping the lease.
+    await Future<void>.delayed(Duration.zero);
     await run.close();
+    await Future.wait(checkpoints);
     await run.close();
     await expectLater(
       run.journal.setStatus('sync-job', TransferJobStatus.completed),
@@ -151,6 +159,7 @@ void main() {
       )).importedJobs,
       1,
     );
+    expect(target.jobs.single.priority, 19);
   });
 
   test(
