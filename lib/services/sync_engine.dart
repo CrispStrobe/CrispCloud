@@ -7,14 +7,22 @@
 // The engine is provider-agnostic — it takes a CloudStorageClient and works
 // with any provider that implements the interface.
 
+import 'dart:async';
 import 'dart:io';
 
 import 'package:drift/drift.dart';
-import 'package:crypto/crypto.dart';
 import 'package:glob/glob.dart' as globpkg;
 import 'package:path/path.dart' as p;
 
+import '../models/file_item.dart';
 import 'cloud_storage_interface.dart';
+import 'file_operation_backend.dart';
+import 'file_operation_service.dart';
+import 'local_file_service.dart';
+import 'storage_identity.dart';
+import 'sync_transfer_service.dart';
+import 'transfer_journal.dart';
+import 'transfer_recovery_service.dart';
 import 'log_service.dart';
 import 'placeholder_service.dart';
 import 'sync_database.dart';
@@ -117,9 +125,13 @@ class SyncPlan {
     this._fingerprints,
     this._isCurrent,
     this._adopted,
+    this.localSource,
+    this.remoteSource,
   );
   final SyncPair pair;
   final CloudStorageClient client;
+  final FileOperationBackend localSource;
+  final FileOperationBackend remoteSource;
   final List<SyncAction> actions;
   final Map<String, _FileInfo> _local;
   final Map<String, _FileInfo> _remote;
@@ -144,8 +156,9 @@ class SyncPlan {
     if (local != null &&
         remote != null &&
         !local.isFolder &&
-        pair.direction == 'twoWay')
+        pair.direction == 'twoWay') {
       choices.add(SyncActionType.keepBoth);
+    }
     return choices.toList();
   }
 }
@@ -155,7 +168,11 @@ class SyncEngine {
 
   final SyncDatabase db;
 
-  SyncEngine(this.db);
+  SyncEngine(this.db, {LocalFileService? local, TransferJournal? journal})
+    : _localService = local ?? LocalFileService(),
+      _transfers = SyncTransferService(journal: journal);
+  final LocalFileService _localService;
+  final SyncTransferService _transfers;
 
   /// Check if a relative path passes the include/exclude filters for a pair.
   ///
@@ -211,7 +228,7 @@ class SyncEngine {
       pair,
       client,
       isCurrent: isCurrent,
-      verifyContents: false,
+      verifyContents: true,
     );
     return executePlan(plan);
   }
@@ -224,18 +241,21 @@ class SyncEngine {
     bool Function()? isCancelled,
     bool verifyContents = true,
   }) async {
-    final account = client.userId;
-    final bucket = client.bucketId;
+    final account = storageReferenceForClient(client);
     bool current() =>
         (isCurrent?.call() ?? true) &&
         client.isAuthenticated &&
-        client.userId == account &&
-        client.bucketId == bucket;
+        storageReferenceForClient(client) == account;
     void check() {
       if (isCancelled?.call() ?? false) throw const SyncCancelledException();
       if (!current()) throw StateError('The synchronization source changed.');
     }
 
+    final localSource = LocalOperationBackend(
+      _localService,
+      isCurrent: current,
+    );
+    final remoteSource = CloudOperationBackend(client, isCurrent: current);
     check();
     if (!p.isAbsolute(pair.localPath) || !p.posix.isAbsolute(pair.remotePath)) {
       throw const FormatException('Sync roots must be absolute paths.');
@@ -251,11 +271,16 @@ class SyncEngine {
     );
 
     // 1. Scan local
-    final localFiles = await _scanLocal(pair.localPath, check: check);
+    final localFiles = await _scan(
+      localSource,
+      pair.localPath,
+      local: true,
+      check: check,
+    );
 
     // 2. Scan remote
-    final remoteFiles = await _scanRemote(
-      client,
+    final remoteFiles = await _scan(
+      remoteSource,
       pair.remotePath,
       check: check,
     );
@@ -305,7 +330,8 @@ class SyncEngine {
     final fingerprints = verifyContents
         ? await _fingerprint(
             pair,
-            client,
+            localSource,
+            remoteSource,
             localFiles,
             remoteFiles,
             actions.map((action) => action.relativePath),
@@ -333,6 +359,8 @@ class SyncEngine {
       fingerprints,
       current,
       adopted,
+      localSource,
+      remoteSource,
     );
   }
 
@@ -346,16 +374,28 @@ class SyncEngine {
   }) async {
     void check() {
       if (isCancelled?.call() ?? false) throw const SyncCancelledException();
-      if (!plan.isCurrent)
+      if (!plan.isCurrent) {
         throw StateError('The synchronization source changed. Compare again.');
+      }
     }
 
+    final control = _SyncOperationControl(check);
+    // Also wake a stream stalled between chunks. Merely inspecting the next
+    // chunk would leave a stopped sync waiting for a provider indefinitely.
+    final cancellation = Timer.periodic(const Duration(milliseconds: 50), (_) {
+      if ((isCancelled?.call() ?? false) || !plan.isCurrent) control.cancel();
+    });
     var result = const SyncResult();
     try {
       check();
-      final local = await _scanLocal(plan.pair.localPath, check: check);
-      final remote = await _scanRemote(
-        plan.client,
+      final local = await _scan(
+        plan.localSource,
+        plan.pair.localPath,
+        local: true,
+        check: check,
+      );
+      final remote = await _scan(
+        plan.remoteSource,
         plan.pair.remotePath,
         check: check,
       );
@@ -367,7 +407,8 @@ class SyncEngine {
       if (plan._fingerprints.isNotEmpty) {
         final fingerprints = await _fingerprint(
           plan.pair,
-          plan.client,
+          plan.localSource,
+          plan.remoteSource,
           local,
           remote,
           [
@@ -375,6 +416,7 @@ class SyncEngine {
             ...plan._adopted,
           ],
           check,
+          operationControl: control,
         );
         if (fingerprints.length != plan._fingerprints.length ||
             plan._fingerprints.entries.any(
@@ -419,11 +461,13 @@ class SyncEngine {
             .split('/')
             .length
             .compareTo(b.relativePath.split('/').length);
-        return priority(a) == 2 ? -depth : depth;
+        if (depth != 0) return priority(a) == 2 ? -depth : depth;
+        return a.relativePath.compareTo(b.relativePath);
       });
       var completed = 0;
       for (final action in actions) {
         check();
+        await _validateRow(plan, action.relativePath, control, check);
         if (action.type == SyncActionType.conflict) {
           await db.upsertEntry(
             SyncEntriesCompanion.insert(
@@ -439,8 +483,8 @@ class SyncEngine {
         } else {
           final step = await _executeAction(
             action,
-            plan.pair,
-            plan.client,
+            plan,
+            control: control,
             check: check,
           );
           result += step;
@@ -452,10 +496,11 @@ class SyncEngine {
       if (result.errors == 0 && !result.cancelled) {
         for (final path in plan._adopted) {
           check();
+          await _validateRow(plan, path, control, check);
           await _updateEntryAfterSync(
             plan.pair.id,
             path,
-            await File(p.join(plan.pair.localPath, path)).stat(),
+            (await plan.localSource.stat(p.join(plan.pair.localPath, path)))!,
             local[path]!.size,
             remote: remote[path],
           );
@@ -466,62 +511,88 @@ class SyncEngine {
       }
     } on SyncCancelledException {
       return result + const SyncResult(cancelled: true);
+    } on FileOperationCancelled {
+      return result + const SyncResult(cancelled: true);
     } catch (error) {
       return result + SyncResult(errors: 1, errorMessages: [error.toString()]);
+    } finally {
+      cancellation.cancel();
     }
     return result;
   }
 
+  bool _sameInfo(_FileInfo? first, _FileInfo? second) => first == null
+      ? second == null
+      : second != null &&
+            first.isFolder == second.isFolder &&
+            (first.isFolder ||
+                first.size == second.size &&
+                    first.modified == second.modified &&
+                    first.contentHash == second.contentHash) &&
+            (first.file == null ||
+                second.file != null &&
+                    sameTransferVersion(first.file!, second.file!));
+
   bool _sameTree(Map<String, _FileInfo> first, Map<String, _FileInfo> second) =>
       first.length == second.length &&
-      first.entries.every((entry) {
-        final other = second[entry.key];
-        return other != null &&
-            entry.value.isFolder == other.isFolder &&
-            entry.value.size == other.size &&
-            entry.value.modified == other.modified &&
-            entry.value.contentHash == other.contentHash;
-      });
+      first.entries.every((entry) => _sameInfo(entry.value, second[entry.key]));
+
+  Future<void> _validateRow(
+    SyncPlan plan,
+    String path,
+    FileOperationControl control,
+    void Function() check,
+  ) async {
+    for (final (label, source, root, expected) in [
+      ('local', plan.localSource, plan.pair.localPath, plan._local[path]),
+      ('remote', plan.remoteSource, plan.pair.remotePath, plan._remote[path]),
+    ]) {
+      check();
+      final item = await source.stat(
+        source.paths.joinAll([root, ...path.split('/')]),
+      );
+      if (!_sameInfo(
+        expected,
+        item == null ? null : _FileInfo.fromItem(item),
+      )) {
+        throw StateError('$path changed after comparison. Compare again.');
+      }
+      final hash = plan._fingerprints['$label:$path'];
+      if (hash != null &&
+          await transferDigest(source, item!, control) != hash) {
+        throw StateError(
+          '$path contents changed after comparison. Compare again.',
+        );
+      }
+    }
+    check();
+  }
 
   Future<Map<String, String>> _fingerprint(
     SyncPair pair,
-    CloudStorageClient client,
+    FileOperationBackend localSource,
+    FileOperationBackend remoteSource,
     Map<String, _FileInfo> local,
     Map<String, _FileInfo> remote,
     Iterable<String> paths,
-    void Function() check,
-  ) async {
+    void Function() check, {
+    FileOperationControl? operationControl,
+  }) async {
     final result = <String, String>{};
+    final control = operationControl ?? _SyncOperationControl(check);
     for (final path in paths.toSet()) {
-      check();
-      if (local[path] != null && !local[path]!.isFolder) {
-        result['local:$path'] =
-            (await sha256
-                    .bind(
-                      File(p.join(pair.localPath, path))
-                          .openRead()
-                          .map((chunk) {
-                            check();
-                            return chunk;
-                          }),
-                    )
-                    .first)
-                .toString();
-      }
-      check();
-      if (remote[path] != null && !remote[path]!.isFolder) {
-        result['remote:$path'] =
-            (await sha256
-                    .bind(
-                      client
-                          .downloadStream(p.posix.join(pair.remotePath, path))
-                          .map((chunk) {
-                            check();
-                            return chunk;
-                          }),
-                    )
-                    .first)
-                .toString();
+      for (final (label, source, info) in [
+        ('local', localSource, local[path]),
+        ('remote', remoteSource, remote[path]),
+      ]) {
+        check();
+        if (info != null && !info.isFolder) {
+          result['$label:$path'] = await transferDigest(
+            source,
+            info.file!,
+            control,
+          );
+        }
       }
     }
     check();
@@ -579,10 +650,12 @@ class SyncEngine {
         dbEntry: known,
       );
     }
-    if (direction == SyncDirection.uploadOnly)
+    if (direction == SyncDirection.uploadOnly) {
       policy = ConflictPolicy.localWins;
-    if (direction == SyncDirection.downloadOnly)
+    }
+    if (direction == SyncDirection.downloadOnly) {
       policy = ConflictPolicy.remoteWins;
+    }
 
     // --- New files (not in DB) ---
     if (!existsInDb) {
@@ -852,47 +925,54 @@ class SyncEngine {
     return timeDiff > 1 || file.size != knownSize;
   }
 
-  /// Execute a single sync action.
+  /// Execute the reviewed object through captured backends. Copy operations
+  /// are streamed, staged and verified before replacing an existing file.
   Future<SyncResult> _executeAction(
     SyncAction action,
-    SyncPair pair,
-    CloudStorageClient client, {
-    void Function()? check,
+    SyncPlan plan, {
+    required FileOperationControl control,
+    required void Function() check,
   }) async {
-    final localBase = pair.localPath;
-    final remoteBase = pair.remotePath;
-    final localPath = p.join(localBase, action.relativePath);
-    final remotePath = p.posix.join(remoteBase, action.relativePath);
-
+    final pair = plan.pair;
+    final localPath = plan.localSource.paths.joinAll([
+      pair.localPath,
+      ...action.relativePath.split('/'),
+    ]);
+    final remotePath = p.posix.join(pair.remotePath, action.relativePath);
     try {
-      check?.call();
+      check();
       switch (action.type) {
         case SyncActionType.keepBoth:
-          return await _keepBoth(action, pair, client, check: check);
+          return await _keepBoth(action, plan, control: control, check: check);
         case SyncActionType.upload:
-          final bytes = await File(localPath).readAsBytes();
-          final fileName = p.basename(action.relativePath);
-          final targetDir = p.posix.dirname(remotePath);
-          check?.call();
-          await client.uploadFile(bytes, fileName, targetDir);
-          check?.call();
-          final stat = await File(localPath).stat();
+          final written = await _transfers.copy(
+            source: plan.localSource,
+            file: plan._local[action.relativePath]!.file!,
+            destination: plan.remoteSource,
+            destinationPath: remotePath,
+            expectedDestination: plan._remote[action.relativePath]?.file,
+            expectedSourceHash:
+                plan._fingerprints['local:${action.relativePath}'],
+            expectedDestinationHash:
+                plan._fingerprints['remote:${action.relativePath}'],
+            control: control,
+            check: check,
+          );
+          check();
           await _updateEntryAfterSync(
             pair.id,
             action.relativePath,
-            stat,
-            bytes.length,
-            remote: await _remoteInfo(client, remotePath),
+            (await plan.localSource.stat(localPath))!,
+            written.size ?? plan._local[action.relativePath]!.size,
+            remote: _FileInfo.fromItem(written),
           );
           return const SyncResult(uploaded: 1);
-
         case SyncActionType.download:
-          // Placeholder mode: create stub instead of downloading (for new files only)
           if (pair.usePlaceholders && action.dbEntry == null) {
             final placeholder = PlaceholderService(db);
             await placeholder.createPlaceholder(
               pairId: pair.id,
-              localBasePath: localBase,
+              localBasePath: pair.localPath,
               relativePath: action.relativePath,
               remotePath: remotePath,
               provider: pair.provider,
@@ -902,28 +982,47 @@ class SyncEngine {
             );
             return const SyncResult(downloaded: 1);
           }
-          final bytes = await client.downloadFileBytes(remotePath);
-          check?.call();
-          final file = File(localPath);
-          await file.parent.create(recursive: true);
-          await file.writeAsBytes(bytes);
-          final stat = await file.stat();
+          final written = await _transfers.copy(
+            source: plan.remoteSource,
+            file: plan._remote[action.relativePath]!.file!,
+            destination: plan.localSource,
+            destinationPath: localPath,
+            expectedDestination: plan._local[action.relativePath]?.file,
+            expectedSourceHash:
+                plan._fingerprints['remote:${action.relativePath}'],
+            expectedDestinationHash:
+                plan._fingerprints['local:${action.relativePath}'],
+            control: control,
+            check: check,
+          );
+          check();
           await _updateEntryAfterSync(
             pair.id,
             action.relativePath,
-            stat,
-            bytes.length,
-            remoteContentHash: action.remoteContentHash,
-            remoteModified: action.remoteModified,
+            written,
+            written.size ?? plan._remote[action.relativePath]!.size,
+            remote: plan._remote[action.relativePath],
           );
           return const SyncResult(downloaded: 1);
-
         case SyncActionType.deleteLocal:
-          final entity = FileSystemEntity.typeSync(localPath);
-          if (entity == FileSystemEntityType.directory) {
-            await Directory(localPath).delete();
-          } else if (entity == FileSystemEntityType.file) {
-            await File(localPath).delete();
+        case SyncActionType.deleteRemote:
+          final source = action.type == SyncActionType.deleteLocal
+              ? plan.localSource
+              : plan.remoteSource;
+          final item =
+              (action.type == SyncActionType.deleteLocal
+                      ? plan._local
+                      : plan._remote)[action.relativePath]
+                  ?.file;
+          if (item != null) {
+            check();
+            if (item.isFolder) {
+              // Never emulate this with a listing followed by recursive delete.
+              // The backend must provide a nonrecursive empty-directory primitive.
+              await source.deleteEmptyDirectory(item.path!);
+            } else {
+              await source.deleteFile(item);
+            }
           }
           final existing = await db.getEntry(pair.id, action.relativePath);
           if (existing != null) {
@@ -931,44 +1030,19 @@ class SyncEngine {
               db.syncEntries,
             )..where((table) => table.id.equals(existing.id))).go();
           }
-          return const SyncResult(deletedLocal: 1);
-
-        case SyncActionType.deleteRemote:
-          if (action.isFolder || action.dbEntry?.isFolder == true) {
-            final listing = await client.listPath(remotePath);
-            if (((listing['files'] as List?)?.isNotEmpty ?? false) ||
-                ((listing['folders'] as List?)?.isNotEmpty ?? false)) {
-              throw StateError(
-                'Directory is not empty; refusing recursive deletion: $remotePath',
-              );
-            }
-          }
-          check?.call();
-          await client.deletePath(remotePath);
-          // Remove from DB
-          final existing = await db.getEntry(pair.id, action.relativePath);
-          if (existing != null) {
-            await (db.delete(
-              db.syncEntries,
-            )..where((t) => t.id.equals(existing.id))).go();
-          }
-          return const SyncResult(deletedRemote: 1);
-
+          return action.type == SyncActionType.deleteLocal
+              ? const SyncResult(deletedLocal: 1)
+              : const SyncResult(deletedRemote: 1);
         case SyncActionType.createLocalFolder:
-          await Directory(localPath).create(recursive: true);
-          await db.upsertEntry(
-            SyncEntriesCompanion.insert(
-              pairId: pair.id,
-              relativePath: action.relativePath,
-              isFolder: const Value(true),
-              status: const Value('synced'),
-              lastSyncAt: Value(DateTime.now()),
-            ),
-          );
-          return const SyncResult(downloaded: 1);
-
         case SyncActionType.createRemoteFolder:
-          await client.createFolderPath(remotePath);
+          final source = action.type == SyncActionType.createLocalFolder
+              ? plan.localSource
+              : plan.remoteSource;
+          final path = action.type == SyncActionType.createLocalFolder
+              ? localPath
+              : remotePath;
+          await source.createDirectory(path);
+          check();
           await db.upsertEntry(
             SyncEntriesCompanion.insert(
               pairId: pair.id,
@@ -978,27 +1052,30 @@ class SyncEngine {
               lastSyncAt: Value(DateTime.now()),
             ),
           );
-          return const SyncResult(uploaded: 1);
-
+          return action.type == SyncActionType.createLocalFolder
+              ? const SyncResult(downloaded: 1)
+              : const SyncResult(uploaded: 1);
         case SyncActionType.conflict:
         case SyncActionType.skip:
           return const SyncResult();
       }
     } on SyncCancelledException {
       return const SyncResult(cancelled: true);
-    } catch (e) {
-      _log.error('Error executing $action', e);
+    } on FileOperationCancelled {
+      return const SyncResult(cancelled: true);
+    } catch (error) {
+      _log.error('Error executing $action', error);
       await db.upsertEntry(
         SyncEntriesCompanion.insert(
           pairId: pair.id,
           relativePath: action.relativePath,
           status: const Value('error'),
-          error: Value(e.toString()),
+          error: Value(error.toString()),
         ),
       );
       return SyncResult(
         errors: 1,
-        errorMessages: ['${action.relativePath}: $e'],
+        errorMessages: ['${action.relativePath}: $error'],
       );
     }
   }
@@ -1006,7 +1083,7 @@ class SyncEngine {
   Future<void> _updateEntryAfterSync(
     int pairId,
     String relativePath,
-    FileStat stat,
+    FileItem local,
     int size, {
     String? remoteContentHash,
     DateTime? remoteModified,
@@ -1016,7 +1093,7 @@ class SyncEngine {
       SyncEntriesCompanion.insert(
         pairId: pairId,
         relativePath: relativePath,
-        localModified: Value(stat.modified),
+        localModified: Value(local.updatedAt),
         remoteModified: Value(remote?.modified ?? remoteModified),
         localSize: Value(size),
         remoteSize: Value(size),
@@ -1028,228 +1105,147 @@ class SyncEngine {
     );
   }
 
-  Future<_FileInfo?> _remoteInfo(CloudStorageClient client, String path) async {
-    final listing = await client.listPath(p.posix.dirname(path));
-    for (final item in (listing['files'] as List?) ?? []) {
-      if (item['name'] != p.posix.basename(path)) continue;
-      final date = item['lastModified'] ?? item['modificationTime'];
-      return _FileInfo(
-        isFolder: false,
-        size: (item['size'] as num?)?.toInt() ?? 0,
-        modified: date is int
-            ? DateTime.fromMillisecondsSinceEpoch(date)
-            : DateTime.tryParse(date?.toString() ?? ''),
-        contentHash:
-            item['content_hash'] as String? ?? item['crc32Hash'] as String?,
-      );
-    }
-    return null;
-  }
-
   Future<SyncResult> _keepBoth(
     SyncAction action,
-    SyncPair pair,
-    CloudStorageClient client, {
-    void Function()? check,
+    SyncPlan plan, {
+    required FileOperationControl control,
+    required void Function() check,
   }) async {
-    check?.call();
-    final original = File(p.join(pair.localPath, action.relativePath));
-    final remotePath = p.posix.join(pair.remotePath, action.relativePath);
+    final pair = plan.pair;
+    final local = plan.localSource;
+    final remote = plan.remoteSource;
+    final original = plan._local[action.relativePath]!.file!;
+    final remoteOriginal = plan._remote[action.relativePath]!.file!;
     final parent = p.posix.dirname(action.relativePath);
     final basename = p.posix.basenameWithoutExtension(action.relativePath);
     final extension = p.posix.extension(action.relativePath);
-    final listing = await client.listPath(p.posix.dirname(remotePath));
-    final remoteNames = <String>{
-      for (final entry in [
-        ...?listing['files'] as List?,
-        ...?listing['folders'] as List?,
-      ])
-        entry['name'] as String,
-    };
     var suffix = 1;
-    late String copyRelative;
-    late File copy;
+    late String copyRelative, localCopyPath, remoteCopyPath;
     while (true) {
+      check();
       final name =
           '$basename (local conflict${suffix == 1 ? '' : ' $suffix'})$extension';
       copyRelative = p.posix.normalize(p.posix.join(parent, name));
-      copy = File(p.join(pair.localPath, copyRelative));
-      if (!remoteNames.contains(name) &&
-          await FileSystemEntity.type(copy.path, followLinks: false) ==
-              FileSystemEntityType.notFound)
+      localCopyPath = local.paths.joinAll([
+        pair.localPath,
+        ...copyRelative.split('/'),
+      ]);
+      remoteCopyPath = p.posix.join(pair.remotePath, copyRelative);
+      if (await local.stat(localCopyPath) == null &&
+          await remote.stat(remoteCopyPath) == null) {
         break;
+      }
       suffix++;
     }
-
-    // Preserve the local version before touching the original. If either cloud
-    // operation fails, both originals and this recovery copy remain intact.
-    check?.call();
-    await original.copy(copy.path);
-    final remoteBytes = await client.downloadFileBytes(remotePath);
-    check?.call();
-    final localBytes = await copy.readAsBytes();
-    final copyRemotePath = p.posix.join(pair.remotePath, copyRelative);
-    check?.call();
-    await client.uploadFile(
-      localBytes,
-      p.posix.basename(copyRelative),
-      p.posix.dirname(copyRemotePath),
+    // This verified recovery copy remains if a later cloud step fails. Neither
+    // original is replaced until both conflict versions have been preserved.
+    final copy = await _transfers.copy(
+      source: local,
+      file: original,
+      destination: local,
+      destinationPath: localCopyPath,
+      expectedDestination: null,
+      expectedSourceHash: plan._fingerprints['local:${action.relativePath}'],
+      control: control,
+      check: check,
+    );
+    await _validateRow(plan, action.relativePath, control, check);
+    final remoteCopy = await _transfers.copy(
+      source: local,
+      file: copy,
+      destination: remote,
+      destinationPath: remoteCopyPath,
+      expectedDestination: null,
+      expectedSourceHash: plan._fingerprints['local:${action.relativePath}'],
+      control: control,
+      check: check,
     );
     await _updateEntryAfterSync(
       pair.id,
       copyRelative,
-      await copy.stat(),
-      localBytes.length,
-      remote: await _remoteInfo(client, copyRemotePath),
+      copy,
+      copy.size!,
+      remote: _FileInfo.fromItem(remoteCopy),
     );
-
-    // Stage the download before replacing the local original. Do not leave a
-    // partially written original if the download or disk write fails.
-    final stage = await Directory(pair.localPath).createTemp('.crisp-sync-');
-    try {
-      final stagedFile = File(p.join(stage.path, 'download'));
-      await stagedFile.writeAsBytes(remoteBytes, flush: true);
-      check?.call();
-      await stagedFile.rename(original.path);
-    } finally {
-      if (await stage.exists()) await stage.delete(recursive: true);
-    }
+    await _validateRow(plan, action.relativePath, control, check);
+    final written = await _transfers.copy(
+      source: remote,
+      file: remoteOriginal,
+      destination: local,
+      destinationPath: original.path!,
+      expectedDestination: original,
+      expectedSourceHash: plan._fingerprints['remote:${action.relativePath}'],
+      expectedDestinationHash:
+          plan._fingerprints['local:${action.relativePath}'],
+      control: control,
+      check: check,
+    );
     await _updateEntryAfterSync(
       pair.id,
       action.relativePath,
-      await original.stat(),
-      remoteBytes.length,
-      remoteModified: action.remoteModified,
-      remoteContentHash: action.remoteContentHash,
+      written,
+      written.size!,
+      remote: plan._remote[action.relativePath],
     );
     return const SyncResult(uploaded: 1, downloaded: 1);
   }
 
-  // --- Filesystem scanning ---
-
-  /// Recursively scan a local directory and return a map of relative paths → file info.
-  Future<Map<String, _FileInfo>> _scanLocal(
-    String basePath, {
-    void Function()? check,
+  Future<Map<String, _FileInfo>> _scan(
+    FileOperationBackend source,
+    String root, {
+    bool local = false,
+    required void Function() check,
   }) async {
-    final result = <String, _FileInfo>{};
-    final dir = Directory(basePath);
-    if (!await dir.exists())
-      throw FileSystemException('Sync root is unavailable.', basePath);
-
-    await for (final entity in dir.list(recursive: true, followLinks: false)) {
-      check?.call();
-      if (entity is Link)
-        throw UnsupportedError(
-          'Synchronization does not follow symbolic links: ${entity.path}',
-        );
-      final relative = p
-          .relative(entity.path, from: basePath)
-          .replaceAll(p.separator, '/');
-      // Skip hidden files and placeholder stubs
-      if (p.split(relative).any((s) => s.startsWith('.'))) continue;
-      if (PlaceholderService.isPlaceholder(relative)) continue;
-
-      final stat = await entity.stat();
-      result[relative] = _FileInfo(
-        isFolder: stat.type == FileSystemEntityType.directory,
-        modified: stat.modified,
-        size: stat.type == FileSystemEntityType.file ? stat.size : 0,
-      );
+    check();
+    final directory = await source.stat(root);
+    if (directory == null ||
+        !directory.isFolder ||
+        directory.isSymlink == true) {
+      throw FileSystemException('Sync root is unavailable.', root);
     }
-    return result;
-  }
-
-  String _safeChildName(dynamic value) {
-    if (value is! String ||
-        value.isEmpty ||
-        value == '.' ||
-        value == '..' ||
-        value.contains(':') ||
-        value.contains('/') ||
-        value.contains('\\') ||
-        value.contains('\u0000')) {
-      throw StateError('Storage returned an unsafe child name.');
-    }
-    return value;
-  }
-
-  /// Recursively scan a remote directory via the cloud client.
-  Future<Map<String, _FileInfo>> _scanRemote(
-    CloudStorageClient client,
-    String basePath, {
-    void Function()? check,
-  }) async {
-    final result = <String, _FileInfo>{};
-    await _scanRemoteRecursive(client, basePath, '', result, check: check);
-    return result;
-  }
-
-  Future<void> _scanRemoteRecursive(
-    CloudStorageClient client,
-    String basePath,
-    String prefix,
-    Map<String, _FileInfo> result, {
-    void Function()? check,
-  }) async {
-    check?.call();
-    final fullPath = prefix.isEmpty ? basePath : p.posix.join(basePath, prefix);
-    if (prefix.split('/').length > 200 || result.length > 200000) {
-      throw StateError('Sync tree exceeds supported traversal limits.');
-    }
-    final listing = await client.listPath(fullPath);
-    check?.call();
-
-    for (final folder in (listing['folders'] as List?) ?? []) {
-      final name = _safeChildName(folder['name']);
-      final relative = prefix.isEmpty ? name : '$prefix/$name';
-      DateTime? modified;
-      final rawDate = folder['lastModified'] ?? folder['modificationTime'];
-      if (rawDate != null) {
-        try {
-          if (rawDate is int) {
-            modified = DateTime.fromMillisecondsSinceEpoch(rawDate);
-          } else {
-            modified = DateTime.parse(rawDate.toString());
-          }
-        } catch (_) {}
+    final found = <String, _FileInfo>{};
+    final seen = <String>{};
+    Future<void> walk(String path, int depth) async {
+      check();
+      if (depth > 200 || found.length > 200000) {
+        throw StateError('Sync tree exceeds supported traversal limits.');
       }
-      result[relative] = _FileInfo(isFolder: true, modified: modified, size: 0);
-      // Recurse into subfolder
-      await _scanRemoteRecursive(
-        client,
-        basePath,
-        relative,
-        result,
-        check: check,
-      );
+      if (!seen.add(source.pathKey(path))) {
+        throw StateError('Repeated sync directory: $path');
+      }
+      for (final item in await source.list(path)) {
+        check();
+        if (item.path == null ||
+            !source.isWithin(root, item.path!) ||
+            source.paths.dirname(item.path!) != path) {
+          throw StateError(
+            'Storage returned an unsafe sync path: ${item.path}',
+          );
+        }
+        if (item.isSymlink == true) {
+          throw UnsupportedError(
+            'Synchronization does not follow symbolic links: ${item.path}',
+          );
+        }
+        if (local &&
+            (item.name.startsWith('.') ||
+                PlaceholderService.isPlaceholder(item.name))) {
+          continue;
+        }
+        final relative = source.paths
+            .relative(item.path!, from: root)
+            .replaceAll(source.paths.separator, '/');
+        if (found.containsKey(relative)) {
+          throw StateError('Ambiguous sync path: $relative');
+        }
+        found[relative] = _FileInfo.fromItem(item);
+        if (item.isFolder) await walk(item.path!, depth + 1);
+      }
     }
 
-    for (final file in (listing['files'] as List?) ?? []) {
-      final name = _safeChildName(file['name']);
-      final relative = prefix.isEmpty ? name : '$prefix/$name';
-      DateTime? modified;
-      final rawDate = file['lastModified'] ?? file['modificationTime'];
-      if (rawDate != null) {
-        try {
-          if (rawDate is int) {
-            modified = DateTime.fromMillisecondsSinceEpoch(rawDate);
-          } else {
-            modified = DateTime.parse(rawDate.toString());
-          }
-        } catch (_) {}
-      }
-      final size = file['size'] as int? ?? 0;
-      // Capture provider content hash for delta sync (Dropbox, OneDrive)
-      final contentHash =
-          file['content_hash'] as String? ?? file['crc32Hash'] as String?;
-      result[relative] = _FileInfo(
-        isFolder: false,
-        modified: modified,
-        size: size,
-        contentHash: contentHash,
-      );
-    }
+    await walk(root, 0);
+    check();
+    return found;
   }
 }
 
@@ -1262,12 +1258,23 @@ class _FileInfo {
   /// Provider-supplied content hash (e.g. Dropbox content_hash, OneDrive crc32Hash).
   /// When available, enables delta sync — only transfer files whose hash changed.
   final String? contentHash;
+  final FileItem? file;
+
+  factory _FileInfo.fromItem(FileItem file) => _FileInfo(
+    isFolder: file.isFolder,
+    modified: file.updatedAt,
+    size: file.size ?? 0,
+    contentHash: (file.metadata?['content_hash'] ?? file.metadata?['crc32Hash'])
+        ?.toString(),
+    file: file,
+  );
 
   const _FileInfo({
     required this.isFolder,
     this.modified,
     this.size = 0,
     this.contentHash,
+    this.file,
   });
 }
 
@@ -1275,4 +1282,15 @@ class SyncCancelledException implements Exception {
   const SyncCancelledException();
   @override
   String toString() => 'Synchronization cancelled.';
+}
+
+class _SyncOperationControl extends FileOperationControl {
+  _SyncOperationControl(this.check);
+  final void Function() check;
+  @override
+  Future<void> checkpoint() async {
+    check();
+    await super.checkpoint();
+    check();
+  }
 }

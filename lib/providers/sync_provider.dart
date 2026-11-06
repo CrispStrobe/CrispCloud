@@ -17,6 +17,7 @@ import '../services/placeholder_service.dart';
 import '../services/sync_database.dart';
 import '../services/sync_engine.dart';
 import '../services/sync_watcher.dart';
+import '../services/transfer_journal.dart';
 import '../services/tray_service.dart';
 import '../services/log_service.dart';
 import 'auth_provider.dart';
@@ -53,7 +54,7 @@ class SyncNotifier extends ChangeNotifier {
 
   SyncNotifier(this._ref) {
     _db = SyncDatabase();
-    _engine = SyncEngine(_db);
+    _engine = SyncEngine(_db, journal: _ref.read(transferJournalProvider));
     _watcher = SyncWatcherService();
     _loadPairs();
     _loadBackgroundSyncState();
@@ -66,7 +67,7 @@ class SyncNotifier extends ChangeNotifier {
   @visibleForTesting
   SyncNotifier.forTesting(this._ref, SyncDatabase db) {
     _db = db;
-    _engine = SyncEngine(_db);
+    _engine = SyncEngine(_db, journal: _ref.read(transferJournalProvider));
     _watcher = SyncWatcherService();
     // Do NOT call _loadPairs / _loadBackgroundSyncState etc. in tests.
   }
