@@ -40,6 +40,9 @@ import workmanager_apple
         // The pinned Apple plugin reschedules before starting Dart. Read the
         // latest preference on each wake so interval changes and cancellation
         // also apply to that reschedule, without relaunching the foreground UI.
+        // Dart verifies that a pending wake exists. If the plugin swallowed a
+        // replacement-submit error, the retained older request still picks up
+        // this newly requested interval when it wakes.
         let preferences = UserDefaults.standard
         guard preferences.bool(forKey: "flutter.background_sync_enabled") else {
           task.setTaskCompleted(success: true)

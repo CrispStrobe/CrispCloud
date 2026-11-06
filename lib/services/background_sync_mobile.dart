@@ -82,7 +82,10 @@ Future<void> scheduleWorkmanagerTask({
     backoffPolicyDelay: const Duration(minutes: 5),
   );
   // The pinned Apple plugin logs submit errors instead of returning them over
-  // its channel. Verify acceptance before persisting an enabled preference.
+  // its channel. This proves a pending wake exists, not that a replacement was
+  // accepted: an older request may remain after a swallowed submit failure.
+  // The saved interval is the desired cadence; AppDelegate reads it on every
+  // wake and uses it for the next reschedule, including a retained old request.
   if (isApple && !await Workmanager().isScheduledByUniqueName(scheduledName)) {
     throw StateError(
       'iOS did not accept the background sync request. '

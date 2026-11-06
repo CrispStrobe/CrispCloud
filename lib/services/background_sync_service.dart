@@ -76,6 +76,9 @@ class BackgroundSyncService {
   /// on Android due to Doze mode; iOS best-effort).  The value is persisted so
   /// it survives app restarts. An optional [scheduler] lets host tests exercise
   /// the same preference bookkeeping with a native scheduler fixture.
+  /// On iOS this is the desired interval applied at the next wake. An existing
+  /// pending request may retain its earlier requested start time; the native
+  /// handler uses the latest saved interval when it schedules the following run.
   static Future<void> schedulePeriodicSync({
     int intervalMinutes = _kDefaultInterval,
     Future<void> Function(int intervalMinutes)? scheduler,

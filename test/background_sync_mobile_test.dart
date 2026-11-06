@@ -178,6 +178,7 @@ class _Scheduler extends WorkmanagerPlatform {
   Duration? interval;
   bool accepted = true;
   bool rejectRegistration = false;
+  bool retainPreviousRequest = false;
 
   @override
   Future<bool> isScheduledByUniqueName(String uniqueName) async =>
@@ -203,6 +204,7 @@ class _Scheduler extends WorkmanagerPlatform {
     String? tag,
   }) async {
     if (rejectRegistration) throw StateError('Scheduler rejected the update');
+    if (retainPreviousRequest && this.uniqueName != null) return;
     this.uniqueName = uniqueName;
     callbackId = taskName;
     interval = frequency;
@@ -422,6 +424,41 @@ void main() {
       );
     },
   );
+
+  test('retained Apple wake accepts a desired interval for its next reschedule', () async {
+    final previous = WorkmanagerPlatform.instance;
+    final scheduler = _Scheduler();
+    WorkmanagerPlatform.instance = scheduler;
+    addTearDown(() => WorkmanagerPlatform.instance = previous);
+    Future<void> schedule(int interval) => mobile.scheduleWorkmanagerTask(
+      uniqueName: kBackgroundSyncTaskName,
+      taskId: kBackgroundSyncTaskId,
+      intervalMinutes: interval,
+      targetPlatform: TargetPlatform.iOS,
+    );
+    await BackgroundSyncService.schedulePeriodicSync(
+      intervalMinutes: 30,
+      scheduler: schedule,
+    );
+    // The Apple plugin can swallow a replacement-submit failure while its old
+    // request remains pending. A boolean pending check cannot distinguish it.
+    scheduler.retainPreviousRequest = true;
+    await BackgroundSyncService.schedulePeriodicSync(
+      intervalMinutes: 60,
+      scheduler: schedule,
+    );
+    final preferences = await SharedPreferences.getInstance();
+    expect(preferences.getBool('background_sync_enabled'), isTrue);
+    expect(preferences.getInt('background_sync_interval_minutes'), 60);
+    expect(scheduler.interval, const Duration(minutes: 30));
+    expect(
+      await scheduler.isScheduledByUniqueName(kBackgroundSyncTaskId),
+      isTrue,
+    );
+    expect(scheduler.cancelled, isEmpty);
+    // AppDelegate reads this desired interval at the next wake. The service
+    // does not claim that the retained request's start time changed to 60 min.
+  });
 
   test('rejected first registration cannot persist enabled state or a new interval', () async {
     SharedPreferences.setMockInitialValues({
