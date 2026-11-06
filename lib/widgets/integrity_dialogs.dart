@@ -665,6 +665,7 @@ class _SplitCombineDialogState extends ConsumerState<_SplitCombineDialog> {
           await FileSplitService.combineFromManifest(
             source: source,
             manifestFile: manifest,
+            reviewedManifest: _manifest!,
             destination: destination,
             outputPath: output,
             isCancelled: () => _cancelled || !mounted,
@@ -717,7 +718,13 @@ class _SplitCombineDialogState extends ConsumerState<_SplitCombineDialog> {
         }
       }
     } catch (error) {
-      if (mounted) setState(() => _error = '$error');
+      if (mounted) {
+        setState(
+          () => _error = error is SplitManifestChangedException
+              ? context.commanderTr(SplitManifestChangedException.message)
+              : '$error',
+        );
+      }
     } finally {
       if (mounted) {
         setState(() {
