@@ -40,6 +40,8 @@ migrate_working_dir/
 /packages/pro_video_editor/build/
 /packages/crisp_audio/pubspec.lock
 /packages/crisp_audio/build/
+/packages/madedit2_hex/pubspec.lock
+/packages/madedit2_hex/build/
 # Flutter's browser test server serves test/ directly instead of built assets.
 /test/widget/assets/packages/pro_image_editor/
 
