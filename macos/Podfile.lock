@@ -1,4 +1,7 @@
 PODS:
+  - crisp_audio (0.1.0):
+    - Flutter
+    - FlutterMacOS
   - cryptography_flutter (0.0.1):
     - FlutterMacOS
   - desktop_drop (0.0.1):
@@ -22,6 +25,12 @@ PODS:
   - package_info_plus (0.0.1):
     - FlutterMacOS
   - pdfx (1.0.0):
+    - FlutterMacOS
+  - pro_image_editor (12.0.8):
+    - Flutter
+    - FlutterMacOS
+  - pro_video_editor (0.0.1):
+    - Flutter
     - FlutterMacOS
   - share_plus (0.0.1):
     - FlutterMacOS
@@ -62,6 +71,7 @@ PODS:
     - FlutterMacOS
 
 DEPENDENCIES:
+  - crisp_audio (from `Flutter/ephemeral/.symlinks/plugins/crisp_audio/darwin`)
   - cryptography_flutter (from `Flutter/ephemeral/.symlinks/plugins/cryptography_flutter/macos`)
   - desktop_drop (from `Flutter/ephemeral/.symlinks/plugins/desktop_drop/macos`)
   - dynamic_color (from `Flutter/ephemeral/.symlinks/plugins/dynamic_color/macos`)
@@ -74,6 +84,8 @@ DEPENDENCIES:
   - macos_secure_bookmarks (from `Flutter/ephemeral/.symlinks/plugins/macos_secure_bookmarks/macos`)
   - package_info_plus (from `Flutter/ephemeral/.symlinks/plugins/package_info_plus/macos`)
   - pdfx (from `Flutter/ephemeral/.symlinks/plugins/pdfx/macos`)
+  - pro_image_editor (from `Flutter/ephemeral/.symlinks/plugins/pro_image_editor/darwin`)
+  - pro_video_editor (from `Flutter/ephemeral/.symlinks/plugins/pro_video_editor/darwin`)
   - share_plus (from `Flutter/ephemeral/.symlinks/plugins/share_plus/macos`)
   - shared_preferences_foundation (from `Flutter/ephemeral/.symlinks/plugins/shared_preferences_foundation/darwin`)
   - sqlite3_flutter_libs (from `Flutter/ephemeral/.symlinks/plugins/sqlite3_flutter_libs/darwin`)
@@ -86,6 +98,8 @@ SPEC REPOS:
     - sqlite3
 
 EXTERNAL SOURCES:
+  crisp_audio:
+    :path: Flutter/ephemeral/.symlinks/plugins/crisp_audio/darwin
   cryptography_flutter:
     :path: Flutter/ephemeral/.symlinks/plugins/cryptography_flutter/macos
   desktop_drop:
@@ -110,6 +124,10 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/package_info_plus/macos
   pdfx:
     :path: Flutter/ephemeral/.symlinks/plugins/pdfx/macos
+  pro_image_editor:
+    :path: Flutter/ephemeral/.symlinks/plugins/pro_image_editor/darwin
+  pro_video_editor:
+    :path: Flutter/ephemeral/.symlinks/plugins/pro_video_editor/darwin
   share_plus:
     :path: Flutter/ephemeral/.symlinks/plugins/share_plus/macos
   shared_preferences_foundation:
@@ -124,6 +142,7 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/video_player_avfoundation/darwin
 
 SPEC CHECKSUMS:
+  crisp_audio: c1b02b155da73f43c566acddb8e2a9e0e1b2ecee
   cryptography_flutter: be2b3e0e31603521b6a1c2bea232a88a2488a91c
   desktop_drop: 10a3e6a7fa9dbe350541f2574092fecfa345a07b
   dynamic_color: cb7c2a300ee67ed3bd96c3e852df3af0300bf610
@@ -136,6 +155,8 @@ SPEC CHECKSUMS:
   macos_secure_bookmarks: e096d8ec49de2d25ea47e1061b85e5f2f1520fef
   package_info_plus: f0052d280d17aa382b932f399edf32507174e870
   pdfx: 1e79f57f7a6ce2f4a4c30f21fa54d3dc82441b51
+  pro_image_editor: e57a76b305fd8c2e06d57f92aec82b9c6a6e8d9f
+  pro_video_editor: f9925027073083111fdd91cb118f6bfbaf46fa3b
   share_plus: 510bf0af1a42cd602274b4629920c9649c52f4cc
   shared_preferences_foundation: 7036424c3d8ec98dfe75ff1667cb0cd531ec82bb
   sqlite3: a51c07cf16e023d6c48abd5e5791a61a47354921

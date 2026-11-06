@@ -18,6 +18,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 
 import 'log_service.dart';
+import 'macos_app_store.dart';
 
 // ---------------------------------------------------------------------------
 // Exception
@@ -205,6 +206,9 @@ class VeraCryptMountService {
   /// True when VeraCrypt mounts are supported on the current platform.
   static bool get isDesktopPlatform {
     if (kIsWeb) return false;
+    // VeraCrypt integration invokes a separately installed privileged tool.
+    // That model is not eligible for the sandboxed Mac App Store build.
+    if (Platform.isMacOS && isMacAppStoreBuild()) return false;
     return Platform.isLinux || Platform.isMacOS || Platform.isWindows;
   }
 

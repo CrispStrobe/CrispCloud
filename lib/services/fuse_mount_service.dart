@@ -26,6 +26,7 @@ import 'cloud_storage_interface.dart';
 import 'fuse_filesystem.dart';
 import 'fuse_helper_script.dart';
 import 'log_service.dart';
+import 'macos_app_store.dart';
 
 // ---------------------------------------------------------------------------
 // Data model
@@ -110,6 +111,9 @@ class FuseMountService {
   /// the appropriate native FUSE library installed.
   static bool get isSupported {
     if (kIsWeb) return false;
+    // macFUSE requires a kernel/system extension and a privileged helper.
+    // Neither is permitted in a Mac App Store build.
+    if (Platform.isMacOS && isMacAppStoreBuild()) return false;
     return Platform.isMacOS || Platform.isLinux || Platform.isWindows;
   }
 
@@ -137,6 +141,10 @@ class FuseMountService {
   ///
   /// Returns null if available, or a human-readable error string if not.
   Future<String?> checkFuseAvailability() async {
+    if (!kIsWeb && Platform.isMacOS && isMacAppStoreBuild()) {
+      return 'FUSE mounts are not available in the Mac App Store build. '
+          'Use a direct-download build for macFUSE/FUSE-T mounts.';
+    }
     _requireDesktop();
     try {
       if (Platform.isLinux) {
