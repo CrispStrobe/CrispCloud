@@ -74,6 +74,9 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
 
       _isRunning = true;
       _appendOutput('${strings.text('started')}\n\$ ');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _inputFocusNode.requestFocus();
+      });
 
       _shell!.outputStream.listen(
         (data) => _appendOutput(data),
@@ -186,7 +189,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
 
   void _appendOutput(String text) {
     if (!mounted) return;
-    setState(() => _output.write(text));
+    setState(() => _output.write(_stripAnsi(text).replaceAll('\r', '')));
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_outputController.hasClients) {
         _outputController.jumpTo(_outputController.position.maxScrollExtent);
