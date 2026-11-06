@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:crisp_cloud/providers/core_providers.dart';
+import 'package:crisp_cloud/providers/focus_area_provider.dart';
 import 'package:crisp_cloud/providers/terminal_provider.dart';
 import 'package:crisp_cloud/services/secure_storage_service.dart';
 import 'package:crisp_cloud/services/terminal_connection.dart';
@@ -148,6 +149,30 @@ void main() {
       await tester.pump();
     },
   );
+
+  testWidgets('showing the terminal focuses it without an extra click', (
+    tester,
+  ) async {
+    await connectSession();
+    container.read(showTerminalProvider.notifier).state = false;
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          home: Scaffold(body: TerminalPanelHost(session: session)),
+        ),
+      ),
+    );
+    container.read(showTerminalProvider.notifier).state = true;
+    container.read(focusAreaProvider.notifier).state = FocusArea.terminal;
+    await tester.pump();
+    await tester.pump();
+    final view = tester.widget<TerminalView>(find.byType(TerminalView));
+    expect(view.focusNode!.hasFocus, isTrue);
+
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump();
+  });
 
   testWidgets(
     'remote clipboard sequences are denied; explicit bracketed paste and copy work',

@@ -205,10 +205,11 @@ class _FileTreeViewState extends ConsumerState<FileTreeView> {
     }
 
     final isActivePanel = ref.read(activePanelProvider) == widget.side;
+    final terminalVisible = ref.watch(showTerminalProvider);
     final theme = Theme.of(context);
 
     return Focus(
-      autofocus: isActivePanel,
+      autofocus: isActivePanel && !terminalVisible,
       canRequestFocus: true,
       skipTraversal: true,
       onKeyEvent: (node, event) {
