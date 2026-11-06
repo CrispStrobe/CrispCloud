@@ -122,14 +122,28 @@ void main() {
     expect(metadata.extendedAttributes[emptyKey], isEmpty);
     // Independent OS reader verifies the representation, not just a round trip
     // through our own serialization and FFI wrappers.
-    final external = await Process.run('python3', [
-      '-c',
-      'import os,sys; print(os.getxattr(sys.argv[1],sys.argv[2]).hex())',
-      copied,
-      key,
-    ]);
-    expect(external.exitCode, 0, reason: external.stderr.toString());
-    expect(external.stdout.toString().trim(), '00ff804100');
+    for (final attribute in [(key, '00ff804100'), (emptyKey, '')]) {
+      // Python's os.getxattr is Linux-specific. Apple's xattr tool provides an
+      // independent native reader on macOS, including binary and empty values.
+      final external = Platform.isMacOS
+          ? await Process.run('/usr/bin/xattr', [
+              '-p',
+              '-x',
+              attribute.$1,
+              copied,
+            ])
+          : await Process.run('python3', [
+              '-c',
+              'import os,sys; print(os.getxattr(sys.argv[1],sys.argv[2]).hex())',
+              copied,
+              attribute.$1,
+            ]);
+      expect(external.exitCode, 0, reason: external.stderr.toString());
+      expect(
+        external.stdout.toString().replaceAll(RegExp(r'\s+'), '').toLowerCase(),
+        attribute.$2,
+      );
+    }
   }, skip: !supportsNativeExtendedAttributes);
 
   test(
