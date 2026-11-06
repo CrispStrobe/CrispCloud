@@ -202,7 +202,7 @@ void main() {
           (external['rules'] as List).where(
             (dynamic rule) =>
                 rule['sid'] == before.owner &&
-                rule['type'] == 'Allow' &&
+                rule['type'] == 'AccessAllowed' &&
                 rule['rights'] == 0x1f01ff,
           ),
           isNotEmpty,
@@ -244,6 +244,7 @@ void main() {
             .writeAsString('child data');
         final before = await backend.readMetadata(directory.path);
         final childBefore = await _inspect(child.path);
+        final nativeChildBefore = await backend.readMetadata(child.path);
         addTearDown(
           () => backend.writeMetadata(
             directory.path,
@@ -259,7 +260,20 @@ void main() {
           (await _inspect(directory.path))['dacl'],
           contains('(A;OICI;FR;;;WD)'),
         );
-        expect((await _inspect(child.path))['dacl'], childBefore['dacl']);
+        final childAfter = await _inspect(child.path);
+        expect(
+          childAfter['dacl'],
+          childBefore['dacl'],
+          reason:
+              'Raw child descriptor must retain its ACE order, inherited '
+              'flags, and DACL protection. Before: $childBefore; '
+              'after: $childAfter',
+        );
+        expect(
+          (await backend.readMetadata(child.path)).acl,
+          nativeChildBefore.acl,
+          reason: 'The handle-based reader must also retain the child ACL.',
+        );
         expect(await child.readAsString(), 'child data');
       },
     );
@@ -474,20 +488,49 @@ Future<String> _powershell(String path, String script) async {
 Future<Map<String, dynamic>> _inspect(String path) async => jsonDecode(
   await _powershell(path, r'''
 $item = Get-Item -Force -LiteralPath $env:CRISP_METADATA_TEST_PATH
-# Use Windows PowerShell's .NET Framework filesystem security accessor. The
-# runner's inherited PowerShell 7 module path can break Get-Acl autoloading in
-# powershell.exe; this remains an independent native security read.
-$acl = $item.GetAccessControl()
+# GetAccessControl wraps the native descriptor in CommonSecurityDescriptor,
+# which canonicalizes ACE order. Read the raw descriptor through a separate
+# documented file API so exact native order/protection/inheritance comparisons
+# cannot be changed by that managed representation.
+# https://learn.microsoft.com/windows/win32/api/securitybaseapi/nf-securitybaseapi-getfilesecurityw
+Add-Type -TypeDefinition @'
+using System;
+using System.ComponentModel;
+using System.Runtime.InteropServices;
+using System.Security.AccessControl;
+public static class CrispRawFileSecurity {
+  [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+  [return: MarshalAs(UnmanagedType.Bool)]
+  private static extern bool GetFileSecurityW(
+    string path, uint information, byte[] descriptor, uint length,
+    out uint needed);
+  public static RawSecurityDescriptor Read(string path) {
+    uint needed;
+    GetFileSecurityW(path, 7, null, 0, out needed);
+    int error = Marshal.GetLastWin32Error();
+    if (error != 122 || needed == 0)
+      throw new Win32Exception(error);
+    if (needed > 1048576)
+      throw new InvalidOperationException("Unexpected security descriptor size.");
+    byte[] descriptor = new byte[needed];
+    if (!GetFileSecurityW(path, 7, descriptor, needed, out needed))
+      throw new Win32Exception(Marshal.GetLastWin32Error());
+    return new RawSecurityDescriptor(descriptor, 0);
+  }
+}
+'@
+$acl = [CrispRawFileSecurity]::Read($env:CRISP_METADATA_TEST_PATH)
 [ordered]@{
-  owner = $acl.GetOwner([Security.Principal.SecurityIdentifier]).Value
-  group = $acl.GetGroup([Security.Principal.SecurityIdentifier]).Value
-  dacl = $acl.GetSecurityDescriptorSddlForm([Security.AccessControl.AccessControlSections]::Access)
-  protected = $acl.AreAccessRulesProtected
-  rules = @(foreach ($rule in $acl.GetAccessRules($true, $true, [Security.Principal.SecurityIdentifier])) {
+  owner = $acl.Owner.Value
+  group = $acl.Group.Value
+  dacl = $acl.GetSddlForm([Security.AccessControl.AccessControlSections]::Access)
+  protected = ([int]$acl.ControlFlags -band 0x1000) -ne 0
+  rules = @(foreach ($rule in $acl.DiscretionaryAcl) {
     [ordered]@{
-      sid = $rule.IdentityReference.Value
-      type = $rule.AccessControlType.ToString()
-      rights = [int]$rule.FileSystemRights
+      sid = $rule.SecurityIdentifier.Value
+      type = $rule.AceQualifier.ToString()
+      rights = $rule.AccessMask
+      flags = [int]$rule.AceFlags
     }
   })
   attributes = [int]$item.Attributes
