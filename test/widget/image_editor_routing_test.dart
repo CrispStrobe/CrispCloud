@@ -2,6 +2,7 @@ import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/widgets/file_editor_dialog.dart';
+import 'package:crisp_cloud/widgets/hex_editor_dialog.dart';
 import 'package:crisp_cloud/widgets/image_editor_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -81,11 +82,7 @@ void main() {
     await _openFile(tester, FileItem(name: 'drawing.svg', isFolder: false));
 
     expect(find.byType(ImageEditorDialog), findsNothing);
-    expect(find.byType(TextField), findsNothing);
-    expect(
-      find.text('This file type cannot be edited here. Use F3 to view it.'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('Cannot open hex editor'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
   });
 

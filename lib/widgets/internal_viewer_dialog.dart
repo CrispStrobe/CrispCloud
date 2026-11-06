@@ -354,7 +354,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       widget.bytesOverride == null &&
       _origin?.isCurrent == true &&
       !widget.file.isFolder &&
-      isEditableInBuiltInEditor(_viewName);
+      (isEditableInBuiltInEditor(_viewName) || !isTextEditableName(_viewName));
 
   int get _dataSize => _source?.size ?? widget.file.size ?? 0;
 

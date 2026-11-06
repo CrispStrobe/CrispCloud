@@ -47,11 +47,22 @@ Saving encodes the edited text back with the retained metadata. This means:
 - a UTF-8 BOM or UTF-16/32 BOM is preserved;
 - a file that already existed is not re-encoded just because it was opened.
 
-Mixed line endings are normalized to the dominant style on load. The status
-bar shows a warning when this happened. If the document is edited and saved,
-the whole file is written with the dominant style. The goal is a defined,
-predictable policy rather than byte-preserving mixed endings, which Re-Editor's
-line model cannot represent.
+Mixed line endings are preserved using a per-boundary sidecar while Re-Editor
+continues to use LF internally. The sidecar follows controller history values
+and is updated on each content change, not reconstructed only at save time.
+The line-ending menu independently selects preservation, explicit whole-file
+conversion (including conversion to the current dominant style), and the style
+for newly inserted breaks. No host OS newline default is used. Final-newline
+presence is retained unless the user edits it.
+
+The model also exposes exact UTF-16 range replacement for adapters that have
+edit deltas. Whole-value changes use prefix/suffix and equal-boundary matching;
+ambiguous bulk transformations cannot recover edit intent from text alone.
+Use exact deltas for future structural/multi-edit commands.
+
+BOM-marked malformed Unicode is rejected instead of silently rewritten. Known
+BOM-less UTF-16/32 can be reopened explicitly using the overflow menu. Encoding
+conversion and BOM presence are separate save choices.
 
 If a Latin-1 document gains characters outside Latin-1 (for example an emoji),
 saving fails with an actionable message instead of writing corrupted bytes.

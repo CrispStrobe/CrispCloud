@@ -29,6 +29,8 @@ import '../services/media_capabilities.dart';
 import '../services/code_editor_menu.dart';
 import '../services/captured_file_target.dart';
 import '../services/editor_document.dart';
+import '../services/editor_document_history.dart';
+import 'hex_editor_dialog.dart';
 import '../services/editor_highlighting.dart';
 import '../services/image_edit_session.dart' show isImageEditorFileName;
 import '../services/log_service.dart';
@@ -64,9 +66,15 @@ Future<void> showFileEditorDialog(
       if (MediaCapabilities.canEdit(mediaKind)) {
         await showMediaEditorDialog(context, ref, file, side);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(
-          context.mediaTr('This media format cannot be edited on this platform.'),
-        )));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              context.mediaTr(
+                'This media format cannot be edited on this platform.',
+              ),
+            ),
+          ),
+        );
       }
       return;
     }
@@ -79,15 +87,7 @@ Future<void> showFileEditorDialog(
     // F4 and the native menu can be invoked even when the viewer's Edit button
     // is disabled. Never decode an unsupported binary file as editable text.
     if (!isTextEditableName(file.name)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            context.imageTr(
-              'This file type cannot be edited here. Use F3 to view it.',
-            ),
-          ),
-        ),
-      );
+      await showHexEditorDialog(context, ref, file, side);
       return;
     }
     await Navigator.of(context).push(
@@ -130,6 +130,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
   final _focusNode = FocusNode();
 
   EditorDocument? _document;
+  final _documentHistory = EditorDocumentHistory();
   Uint8List? _originalBytes;
   Timer? _autoSaveTimer;
   CapturedFileTarget? _target;
@@ -306,15 +307,25 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     if (!mounted) return;
 
     final codeLines = _controller.codeLines;
-    final textChanged = !identical(codeLines, _lastCodeLines);
+    final valueChanged = !identical(codeLines, _lastCodeLines);
+    // Folding may replace CodeLines without editing the file.
+    final nextText = valueChanged ? _controller.text : null;
+    final textChanged = valueChanged && nextText != _document?.text;
     if (textChanged) {
       _lastCodeLines = codeLines;
+      if (!_suppressChange && _document != null) {
+        _document = _documentHistory.apply(codeLines, nextText!, _document!);
+      }
       if (!_suppressChange) {
         _saveState.markChanged();
         _scheduleAutoSave();
       }
     }
 
+    if (valueChanged && !textChanged && _document != null) {
+      _documentHistory.remember(codeLines, _document!);
+      _lastCodeLines = codeLines;
+    }
     final selection = _controller.selection;
     final newLine = selection.extentIndex + 1;
     final newColumn = selection.extentOffset + 1;
@@ -345,7 +356,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     });
   }
 
-  Future<void> _loadFile() async {
+  Future<void> _loadFile({EditorEncoding? encodingOverride}) async {
     _log.debug(
       'loadFile: ${widget.file.name} side=${widget.side.name} web=$kIsWeb',
     );
@@ -370,7 +381,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
 
       if (!mounted) return;
 
-      final document = EditorDocument.decode(bytes);
+      final document = EditorDocument.decode(bytes, encoding: encodingOverride);
       _applyDocument(document, bytes);
       setState(() {
         _loading = false;
@@ -408,6 +419,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     _cursorLine = 1;
     _cursorColumn = 1;
     _document = document;
+    _documentHistory.remember(_controller.codeLines, document);
     _originalBytes = bytes;
     _saveState.markLoaded();
     _autoSaveTimer?.cancel();
@@ -495,7 +507,6 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     }
 
     setState(() {
-      _document = _document?.copyWith(hadMixedLineEndings: false);
       _conflictDetected = false;
     });
     ref.read(panelProvider(widget.side)).refreshFiles();
@@ -554,10 +565,66 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
 
   void _setLineEnding(EditorLineEnding lineEnding) {
     final document = _document;
-    if (document == null || document.lineEnding == lineEnding) return;
+    if (document == null ||
+        (document.lineEnding == lineEnding &&
+            document.lineEndingPolicy == EditorLineEndingPolicy.normalize))
+      return;
     setState(() => _document = document.copyWith(lineEnding: lineEnding));
     _saveState.markChanged();
     _scheduleAutoSave();
+  }
+
+  void _setEndingPolicy(EditorLineEndingPolicy policy) {
+    if (_document == null || _document!.lineEndingPolicy == policy) return;
+    setState(() => _document = _document!.copyWith(lineEndingPolicy: policy));
+    _saveState.markChanged();
+    _scheduleAutoSave();
+  }
+
+  void _setNewLineEnding(EditorLineEnding style) {
+    if (_document == null || _document!.lineEnding == style) return;
+    setState(() => _document = _document!.withNewLineEnding(style));
+    // In normalize mode the preference also determines stored line endings.
+    if (_document!.lineEndingPolicy == EditorLineEndingPolicy.normalize) {
+      _saveState.markChanged();
+      _scheduleAutoSave();
+    }
+  }
+
+  void _toggleBom() {
+    final document = _document;
+    if (document == null || document.encoding == EditorEncoding.latin1) return;
+    setState(
+      () => _document = document.copyWith(
+        encoding: document.encoding == EditorEncoding.utf8
+            ? EditorEncoding.utf8Bom
+            : document.encoding == EditorEncoding.utf8Bom
+            ? EditorEncoding.utf8
+            : document.encoding,
+        hadBom: !document.writesBom,
+      ),
+    );
+    _saveState.markChanged();
+    _scheduleAutoSave();
+  }
+
+  Future<void> _reopenEncoding() async {
+    if (!await _confirmDiscard() || !mounted) return;
+    final encoding = await showDialog<EditorEncoding>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: const Text('Reopen saved bytes using encoding'),
+        children: [
+          for (final value in EditorEncoding.values)
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(ctx, value),
+              child: Text(value.label),
+            ),
+        ],
+      ),
+    );
+    if (encoding != null && mounted)
+      await _loadFile(encodingOverride: encoding);
   }
 
   void _toggleHighlighting() {
@@ -803,6 +870,10 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
                   child: Text('Toggle syntax highlighting'),
                 ),
                 PopupMenuDivider(),
+                const PopupMenuItem(
+                  value: _EditorMenuAction.reopenEncoding,
+                  child: Text('Reopen using encoding…'),
+                ),
                 PopupMenuItem(
                   value: _EditorMenuAction.reload,
                   child: Text('Reload from disk'),
@@ -866,6 +937,9 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
         break;
       case _EditorMenuAction.highlight:
         _toggleHighlighting();
+        break;
+      case _EditorMenuAction.reopenEncoding:
+        await _reopenEncoding();
         break;
       case _EditorMenuAction.reload:
         await _reloadFromDisk();
@@ -966,6 +1040,13 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
 
   Widget _buildStatusBar(EditorDocument document) {
     return CodeEditorStatusBar(
+      lineEndingPolicy: document.lineEndingPolicy,
+      onPolicySelected: _setEndingPolicy,
+      onNewLineEndingSelected: _setNewLineEnding,
+      writesBom: document.writesBom,
+      onToggleBom: document.encoding == EditorEncoding.latin1
+          ? null
+          : _toggleBom,
       cursorLine: _cursorLine,
       cursorColumn: _cursorColumn,
       lineCount: _lineCount,
@@ -981,4 +1062,12 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
   }
 }
 
-enum _EditorMenuAction { find, replace, goToLine, wordWrap, highlight, reload }
+enum _EditorMenuAction {
+  find,
+  replace,
+  goToLine,
+  wordWrap,
+  highlight,
+  reload,
+  reopenEncoding,
+}

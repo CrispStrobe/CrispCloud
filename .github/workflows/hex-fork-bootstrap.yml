@@ -1,0 +1,35 @@
+name: Requested MadEdit2 fork bootstrap
+on:
+  push:
+    branches: [feature/madedit2-hex-editor]
+    paths: ['.github/workflows/hex-fork-bootstrap.yml']
+permissions:
+  contents: read
+jobs:
+  fork:
+    if: github.repository == 'CrispStrobe/CrispCloud' && github.actor == 'CrispStrobe'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Create only the requested fork; never expose credentials
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "$GH_TOKEN" ]; then
+            echo 'FORK_NOT_CREATED: No existing GH_PAT credential is configured.' >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          owner=$(gh api user --jq '.login')
+          if [ "$owner" != CrispStrobe ]; then
+            echo 'FORK_NOT_CREATED: Existing credential belongs to another account.' >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          if gh api repos/CrispStrobe/madedit2 > /tmp/fork.json 2>/dev/null; then
+            python3 -c 'import json; r=json.load(open("/tmp/fork.json")); assert r.get("fork") and r.get("parent",{}).get("full_name")=="madedit/madedit2", "Existing name is not the requested fork"'
+            echo 'FORK_EXISTS: https://github.com/CrispStrobe/madedit2' >> "$GITHUB_STEP_SUMMARY"
+          else
+            gh api --method POST repos/madedit/madedit2/forks -f name=madedit2 -F default_branch_only=true --jq '.html_url' > /tmp/fork-url.txt
+            echo "FORK_REQUEST_ACCEPTED: $(cat /tmp/fork-url.txt)" >> "$GITHUB_STEP_SUMMARY"
+          fi

@@ -1,0 +1,110 @@
+name: Finish and validate hex integration checkpoint
+on:
+  push:
+    branches: [feature/madedit2-hex-editor]
+    paths: ['.github/workflows/hex-apply-checkpoint.yml']
+permissions:
+  contents: read
+concurrency:
+  group: apply-hex-checkpoint-01
+  cancel-in-progress: false
+jobs:
+  apply-and-test:
+    if: github.repository == 'CrispStrobe/CrispCloud' && github.actor == 'CrispStrobe'
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      FLUTTER_VERSION: 3.47.8
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          ref: ${{ github.sha }}
+      - name: Repair the verified viewport delimiter
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('packages/madedit2_hex/lib/hex_editor.dart')
+          text = p.read_text()
+          old = '                    })))))))),\n'
+          new = '                    }))))))))),\n'
+          assert text.count(old) == 1, 'Unexpected source; do not apply a guessed fix'
+          p.write_text(text.replace(old, new))
+          PY
+          git config user.name 'CrispCloud integration'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add packages/madedit2_hex/lib/hex_editor.dart
+          git commit -m 'fix(hex): close the scrollable viewport widget tree'
+          git push origin HEAD:refs/heads/feature/madedit2-hex-editor
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        id: flutter
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - name: Resolve dependencies and format integration
+        id: resolve
+        run: |
+          (cd packages/madedit2_hex && flutter pub get)
+          flutter pub get
+          dart format packages/madedit2_hex/lib packages/madedit2_hex/test lib/services/editor_document.dart lib/services/editor_document_history.dart lib/services/hex_file_session.dart lib/services/hex_file_source.dart lib/services/hex_file_source_io.dart lib/services/hex_file_source_stub.dart lib/widgets/code_editor_status_bar.dart lib/widgets/file_context_menu.dart lib/widgets/file_editor_dialog.dart lib/widgets/hex_editor_dialog.dart lib/widgets/internal_viewer_dialog.dart test/editor_document_test.dart test/editor_line_endings_regression_test.dart test/hex_file_session_test.dart
+      - name: Preserve formatted source and resolved lockfile
+        if: ${{ !cancelled() && steps.resolve.outcome == 'success' }}
+        run: |
+          git add -- '*.dart' pubspec.lock packages/madedit2_hex/analysis_options.yaml
+          if ! git diff --cached --quiet; then
+            git commit -m 'chore(editor): format native integration and resolve hex dependency'
+            git push origin HEAD:refs/heads/feature/madedit2-hex-editor
+          fi
+          echo "Validation source: $(git rev-parse HEAD)" >> "$GITHUB_STEP_SUMMARY"
+      - name: Analyze hex package
+        if: ${{ !cancelled() && steps.resolve.outcome == 'success' }}
+        working-directory: packages/madedit2_hex
+        run: flutter analyze --no-fatal-infos
+      - name: Test hex model and widget on the VM
+        if: ${{ !cancelled() && steps.resolve.outcome == 'success' }}
+        working-directory: packages/madedit2_hex
+        run: flutter test --reporter expanded
+      - name: Analyze host integration
+        if: ${{ !cancelled() && steps.resolve.outcome == 'success' }}
+        run: >-
+          flutter analyze --no-fatal-infos --no-fatal-warnings
+          lib/services/editor_document.dart lib/services/editor_document_history.dart
+          lib/services/hex_file_session.dart lib/services/hex_file_source.dart
+          lib/services/hex_file_source_io.dart lib/services/hex_file_source_stub.dart
+          lib/widgets/code_editor_status_bar.dart lib/widgets/file_context_menu.dart
+          lib/widgets/file_editor_dialog.dart lib/widgets/hex_editor_dialog.dart
+          lib/widgets/internal_viewer_dialog.dart
+          test/editor_document_test.dart test/editor_line_endings_regression_test.dart
+          test/hex_file_session_test.dart
+      - name: Test text, newline history, staged storage and existing routes
+        if: ${{ !cancelled() && steps.resolve.outcome == 'success' }}
+        run: >-
+          flutter test --reporter expanded --concurrency=2
+          test/editor_document_test.dart test/editor_line_endings_regression_test.dart
+          test/hex_file_session_test.dart test/editor_save_coordinator_test.dart
+          test/code_editor_widget_test.dart test/code_editor_status_bar_test.dart
+          test/captured_file_target_test.dart test/file_editability_test.dart
+          test/hex_viewer_test.dart test/internal_viewer_test.dart
+      - name: Test hex in Chrome
+        if: ${{ !cancelled() && steps.resolve.outcome == 'success' }}
+        working-directory: packages/madedit2_hex
+        run: flutter test --platform chrome --reporter expanded
+      - name: Test encoding and newline behavior in Chrome
+        if: ${{ !cancelled() && steps.resolve.outcome == 'success' }}
+        run: flutter test --platform chrome --reporter expanded test/editor_document_test.dart test/editor_line_endings_regression_test.dart
+      - name: Preserve current reviewable source
+        if: always()
+        run: |
+          mkdir -p build/hex-checkpoint-review
+          git archive --format=zip HEAD -o build/hex-checkpoint-review/source.zip
+          git rev-parse HEAD > build/hex-checkpoint-review/REVISION.txt
+          git diff --binary > build/hex-checkpoint-review/uncommitted.patch
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: hex-applied-checkpoint-${{ github.run_id }}
+          path: build/hex-checkpoint-review/
+          retention-days: 7
