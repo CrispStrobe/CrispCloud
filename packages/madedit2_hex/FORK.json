@@ -1,13 +1,13 @@
 {
   "repository": "https://github.com/CrispStrobe/madedit2",
-  "revision": "a2e0fe3e5d63a7b769ec190f6fb92a6949004fb6",
+  "revision": "a6e2fda562c6e112dff59813ebfa1be4585da481",
   "path": "packages/madedit2_hex",
   "files": {
     "LICENSE": "bc2eb5598fd4b2a09e7f79f929dc1787dc11bb18",
     "analysis_options.yaml": "801d885f946208fdbbbb17dc9014de006ddf9cc5",
     "lib/hex_controller.dart": "3d8f850f6e204338948659fb1844f5307e84ba45",
     "lib/hex_document.dart": "881d12d83d948dd3c35c0be208d60d11c307a611",
-    "lib/hex_editor.dart": "721ee67b50370572cd8150bc4f587c8cc70d57af",
+    "lib/hex_editor.dart": "da2c14cf510c933b91d26e55060eeb041e7a34ae",
     "lib/hex_layout.dart": "89ff52943c9a27b501a8e27f71e55ae634be9f33",
     "lib/madedit2_hex.dart": "f17b17d7195385956e49b3b62518363b8b6edad2",
     "pubspec.yaml": "6004b30cd652a6dc0311cc2d79404e40043adc84",
