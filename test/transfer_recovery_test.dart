@@ -861,6 +861,28 @@ void main() {
     },
   );
 
+  test('a truncated compacted plan cannot retain a ready header', () async {
+    final source = _MemoryBackend('a')..file('/file', 'data');
+    final storage = MemoryTransferJournalStorage();
+    final journal = TransferJournal(storage);
+    await journal.create('job', await plan(source, _MemoryBackend('b')));
+    await journal.compact();
+    final header = decodeTransferEvent(storage.lines.first);
+    expect((header['job'] as Map)['ready'], isFalse);
+    // Old compacted journals persisted ready=true in their header. A valid
+    // header alone must not authorize execution when its entries were lost.
+    (header['job'] as Map)['ready'] = true;
+    storage.lines
+      ..clear()
+      ..add(encodeTransferEvent(header));
+    final restored = TransferJournal(storage);
+    await restored.initialize();
+    expect(restored.job('job')!.ready, isFalse);
+    expect(restored.job('job')!.status, TransferJobStatus.failed);
+    expect(restored.warnings, isNotEmpty);
+    expect(restored.job('job')!.expectedEntries, 1);
+  });
+
   test(
     'a corrupt middle checkpoint blocks recovery instead of skipping an intent',
     () async {

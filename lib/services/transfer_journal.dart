@@ -61,6 +61,13 @@ class TransferJournal {
     // A prior process cannot still be running these closures. Review and bind
     // real accounts before resuming; startup never starts destructive work.
     for (final job in _jobs.values) {
+      if (job.ready && job.entries.length != job.expectedEntries) {
+        job.ready = false;
+        job.status = TransferJobStatus.failed;
+        job.message =
+            'The saved plan is incomplete. Retained entries require review.';
+        warnings.add('Transfer ${job.id} is missing saved plan entries.');
+      }
       if (const [
         TransferJobStatus.running,
         TransferJobStatus.queued,
@@ -374,7 +381,11 @@ class TransferJournal {
       }
 
       for (final job in _jobs.values) {
-        add({'kind': 'header', 'id': job.id, 'job': job.toHeaderJson()});
+        add({
+          'kind': 'header',
+          'id': job.id,
+          'job': {...job.toHeaderJson(), 'ready': false},
+        });
         for (var start = 0; start < job.entries.length; start += 128) {
           final end = (start + 128).clamp(0, job.entries.length);
           add({
