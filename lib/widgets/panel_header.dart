@@ -642,9 +642,7 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
       case 'swap':
         await swapPanelSources(ref);
       case 'terminal':
-        ref.read(showTerminalProvider.notifier).state = !ref.read(
-          showTerminalProvider,
-        );
+        setTerminalVisible(ref, !ref.read(showTerminalProvider));
       case 'dual':
         ref.read(showDualPanelProvider.notifier).state = !ref.read(
           showDualPanelProvider,

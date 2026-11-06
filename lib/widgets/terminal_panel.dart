@@ -14,6 +14,7 @@ import '../l10n/terminal_strings.dart';
 import '../l10n/terminal_mount_error_strings.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
+import '../providers/focus_area_provider.dart';
 import '../providers/terminal_provider.dart';
 import 'terminal_shell.dart';
 import 'terminal_process_stub.dart'
@@ -66,6 +67,9 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     if (!mounted) return;
     ref.read(terminalInputFocusedProvider.notifier).state =
         _inputFocusNode.hasFocus;
+    if (_inputFocusNode.hasFocus) {
+      ref.read(focusAreaProvider.notifier).state = FocusArea.terminal;
+    }
   }
 
   void _copyAll() {
@@ -153,7 +157,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
         _isRunning = true;
         _shellReady = true;
         _appendOutput(
-          '[${strings.text('builtIn')}]\n${strings.text('started')}\n\$ ',
+          '[${strings.text('builtIn')}]\n${strings.text('started')}\n',
         );
         _shell!.outputStream.listen(
           (data) => _appendOutput(data),
@@ -173,7 +177,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     _readyTimer = null;
     if (!mounted || _shellReady || _shell == null) return;
     _shellReady = true;
-    _appendOutput('${TerminalStrings(context).text('started')}\n\$ ');
+    _appendOutput('${TerminalStrings(context).text('started')}\n');
     final pending = List<String>.of(_pendingCommands);
     _pendingCommands.clear();
     for (final command in pending) {
@@ -350,6 +354,14 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final height = ref.watch(terminalHeightProvider);
+    final focused = ref.watch(focusAreaProvider) == FocusArea.terminal;
+    if (focused && !_inputFocusNode.hasFocus) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_inputFocusNode.hasFocus) {
+          _inputFocusNode.requestFocus();
+        }
+      });
+    }
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -377,74 +389,102 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
             ),
           ),
         ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          color: theme.colorScheme.surfaceContainerHighest,
-          child: Row(
-            children: [
-              const Icon(Icons.terminal, size: 16),
-              const SizedBox(width: 8),
-              Text(
-                _sshLabel ?? TerminalStrings(context).text('terminal'),
-                style: theme.textTheme.labelMedium,
-              ),
-              const Spacer(),
-              IconButton(
-                icon: _sshConnecting
-                    ? const SizedBox(
-                        width: 14,
-                        height: 14,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.dns_outlined, size: 16),
-                tooltip: TerminalStrings(context).text('connectSsh'),
-                onPressed: _sshConnecting ? null : _connectSsh,
-                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                padding: EdgeInsets.zero,
-              ),
-              IconButton(
-                icon: const Icon(Icons.copy_all, size: 16),
-                tooltip: TerminalStrings(context).text('copyAll'),
-                onPressed: _copyAll,
-                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                padding: EdgeInsets.zero,
-              ),
-              IconButton(
-                icon: const Icon(Icons.restart_alt, size: 16),
-                tooltip: TerminalStrings(context).text('restart'),
-                onPressed: () {
-                  _shell?.kill();
-                  final sshId = _sshSessionId;
-                  _sshSessionId = null;
-                  _sshLabel = null;
-                  if (sshId != null) {
-                    ref.read(sshTerminalServiceProvider).disconnect(sshId);
-                  }
-                  _output.clear();
-                  _shellError = null;
-                  _isRunning = false;
-                  _shellReady = false;
-                  _pendingCommands.clear();
-                  if (_scopeHeld) {
-                    _scopeHeld = false;
-                    unawaited(
-                      ref.read(localFileServiceProvider).endStreamAccess(),
-                    );
-                  }
-                  _startShell();
-                },
-                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                padding: EdgeInsets.zero,
-              ),
-              IconButton(
-                icon: const Icon(Icons.close, size: 16),
-                tooltip: TerminalStrings(context).text('close'),
-                onPressed: () =>
-                    ref.read(showTerminalProvider.notifier).state = false,
-                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                padding: EdgeInsets.zero,
-              ),
-            ],
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () {
+            ref.read(focusAreaProvider.notifier).state = FocusArea.terminal;
+            _inputFocusNode.requestFocus();
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            color: focused
+                ? theme.colorScheme.primaryContainer
+                : theme.colorScheme.surfaceContainerHighest,
+            child: Row(
+              children: [
+                const Icon(Icons.terminal, size: 16),
+                const SizedBox(width: 8),
+                Text(
+                  _sshLabel ?? TerminalStrings(context).text('terminal'),
+                  style: theme.textTheme.labelMedium,
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: _sshConnecting
+                      ? const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.dns_outlined, size: 16),
+                  tooltip: TerminalStrings(context).text('connectSsh'),
+                  onPressed: _sshConnecting ? null : _connectSsh,
+                  constraints: const BoxConstraints(
+                    minWidth: 28,
+                    minHeight: 28,
+                  ),
+                  padding: EdgeInsets.zero,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.copy_all, size: 16),
+                  tooltip: TerminalStrings(context).text('copyAll'),
+                  onPressed: _copyAll,
+                  constraints: const BoxConstraints(
+                    minWidth: 28,
+                    minHeight: 28,
+                  ),
+                  padding: EdgeInsets.zero,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.restart_alt, size: 16),
+                  tooltip: TerminalStrings(context).text('restart'),
+                  onPressed: () {
+                    _shell?.kill();
+                    final sshId = _sshSessionId;
+                    _sshSessionId = null;
+                    _sshLabel = null;
+                    if (sshId != null) {
+                      ref.read(sshTerminalServiceProvider).disconnect(sshId);
+                    }
+                    _output.clear();
+                    _shellError = null;
+                    _isRunning = false;
+                    _shellReady = false;
+                    _pendingCommands.clear();
+                    if (_scopeHeld) {
+                      _scopeHeld = false;
+                      unawaited(
+                        ref.read(localFileServiceProvider).endStreamAccess(),
+                      );
+                    }
+                    _startShell();
+                  },
+                  constraints: const BoxConstraints(
+                    minWidth: 28,
+                    minHeight: 28,
+                  ),
+                  padding: EdgeInsets.zero,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, size: 16),
+                  tooltip: TerminalStrings(context).text('close'),
+                  onPressed: () {
+                    ref.read(showTerminalProvider.notifier).state = false;
+                    final side = ref.read(activePanelProvider);
+                    ref
+                        .read(focusAreaProvider.notifier)
+                        .state = side == PanelSide.local
+                        ? FocusArea.local
+                        : FocusArea.remote;
+                  },
+                  constraints: const BoxConstraints(
+                    minWidth: 28,
+                    minHeight: 28,
+                  ),
+                  padding: EdgeInsets.zero,
+                ),
+              ],
+            ),
           ),
         ),
         SizedBox(

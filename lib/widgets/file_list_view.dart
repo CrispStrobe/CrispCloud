@@ -13,6 +13,7 @@ import '../l10n/file_list_strings.dart';
 import '../models/file_item.dart';
 import '../models/file_view_configuration.dart';
 import '../models/panel_side.dart';
+import '../providers/focus_area_provider.dart';
 import '../providers/providers.dart';
 import '../providers/toolbar_provider.dart'
     show columnWidthsProvider, panelViewModeProvider, fileColumnsProvider;
@@ -237,7 +238,8 @@ class FileListView extends ConsumerWidget {
       // ListView's own Shortcuts handler consumes them for scrolling.
       // autofocus = true when this is the active panel so compact tiles
       // (which have no inner Focus widget) still drive key events here.
-      final isActivePanel = ref.read(activePanelProvider) == side;
+      final focusArea = ref.read(focusAreaProvider);
+      final isActivePanel = focusArea == side;
       if (isActivePanel) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!context.mounted) return;
@@ -261,8 +263,9 @@ class FileListView extends ConsumerWidget {
             if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
               return KeyEventResult.ignored;
             }
-            final activePanel = ref.read(activePanelProvider);
-            if (side != activePanel) return KeyEventResult.ignored;
+            if (ref.read(focusAreaProvider) != side) {
+              return KeyEventResult.ignored;
+            }
 
             final isShift = HardwareKeyboard.instance.isShiftPressed;
             final p = ref.read(panelProvider(side));

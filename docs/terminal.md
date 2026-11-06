@@ -112,3 +112,17 @@ the appropriate backend, or use separate build flavors/entry points.
   passphrases use the app's secure storage.
 - The built-in shell, like the real shell, executes user-authored commands.
   Do not expose it to untrusted input.
+
+## Focus model
+
+Keyboard focus is a sticky, explicit target: **left pane**, **right pane**, or
+**terminal**. Clicking a pane or the terminal header changes the target; it is
+not stolen by refreshes, tab changes or dialogs. The active surface is visibly
+highlighted (pane highlight / terminal header colour). While the terminal owns
+focus, printable keys, arrows and Cmd+C/V go only to the terminal; the file
+browser's type-ahead and global shortcuts are suspended until focus is moved
+back to a pane.
+
+The terminal no longer prints its own `$ ` prompt marker: the real shell prompt
+is the only prompt. A command typed before the shell prompt appears is queued
+and sent after the prompt is detected.

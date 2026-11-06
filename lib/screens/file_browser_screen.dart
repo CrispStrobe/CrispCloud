@@ -76,6 +76,7 @@ import '../widgets/custom_command_dialog.dart';
 import '../widgets/extensions_dialog.dart';
 import '../l10n/extension_translations.dart';
 import '../widgets/terminal_panel.dart';
+import '../providers/focus_area_provider.dart';
 import '../providers/terminal_provider.dart';
 import '../main.dart' show appLockServiceProvider;
 import '../services/windows_integration_service.dart';
@@ -601,10 +602,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       ),
       PlatformMenuItem(
         label: context.commanderTr("Toggle Terminal"),
-        onSelected: () {
-          final current = ref.read(showTerminalProvider);
-          ref.read(showTerminalProvider.notifier).state = !current;
-        },
+        onSelected: () =>
+            setTerminalVisible(ref, !ref.read(showTerminalProvider)),
       ),
       if (editor == null)
         PlatformMenuItemGroup(
@@ -1497,6 +1496,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
   /// Single panel layout for wide screens (no dual panel).
   Widget _buildSingleWideLayout(BuildContext context) {
     final activePanel = ref.watch(activePanelProvider);
+    final focusArea = ref.watch(focusAreaProvider);
     final showPreview = ref.watch(showPreviewProvider);
     final activePanelNotifier = ref.watch(panelProvider(activePanel));
     final previewFile = activePanelNotifier.selection.length == 1
@@ -1522,6 +1522,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
 
   Widget _buildTwoPanelLayout(BuildContext context) {
     final activePanel = ref.watch(activePanelProvider);
+    final focusArea = ref.watch(focusAreaProvider);
     final showPreview = ref.watch(showPreviewProvider);
     final splitRatio = ref.watch(panelSplitRatioProvider);
     final activePanelNotifier = ref.watch(panelProvider(activePanel));
@@ -1537,17 +1538,21 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       first: RepaintBoundary(
         child: FilePanel(
           side: PanelSide.local,
-          isActive: activePanel == PanelSide.local,
-          onTap: () =>
-              ref.read(activePanelProvider.notifier).state = PanelSide.local,
+          isActive: focusArea == FocusArea.local,
+          onTap: () {
+            ref.read(activePanelProvider.notifier).state = PanelSide.local;
+            ref.read(focusAreaProvider.notifier).state = FocusArea.local;
+          },
         ),
       ),
       second: RepaintBoundary(
         child: FilePanel(
           side: PanelSide.remote,
-          isActive: activePanel == PanelSide.remote,
-          onTap: () =>
-              ref.read(activePanelProvider.notifier).state = PanelSide.remote,
+          isActive: focusArea == FocusArea.remote,
+          onTap: () {
+            ref.read(activePanelProvider.notifier).state = PanelSide.remote;
+            ref.read(focusAreaProvider.notifier).state = FocusArea.remote;
+          },
         ),
       ),
       third: showPreview
@@ -1736,8 +1741,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                 color: showTerminal ? Theme.of(ctx).colorScheme.primary : null,
               ),
               tooltip: showTerminal ? l.hideTerminal : l.showTerminal,
-              onPressed: () => cref.read(showTerminalProvider.notifier).state =
-                  !showTerminal,
+              onPressed: () => setTerminalVisible(cref, !showTerminal),
             );
           },
         ),
@@ -1931,9 +1935,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           case 'move_options':
             showMoveDialogFromSelection(context, ref);
           case 'terminal':
-            ref.read(showTerminalProvider.notifier).state = !ref.read(
-              showTerminalProvider,
-            );
+            setTerminalVisible(ref, !ref.read(showTerminalProvider));
           case 'multi_cloud':
             showMultiCloudDialog(context);
           case 'sync':
