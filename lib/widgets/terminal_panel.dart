@@ -4,6 +4,7 @@
 // Uses conditional import to avoid dart:io on web.
 
 import 'dart:async';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,7 +15,8 @@ import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../providers/terminal_provider.dart';
 import 'terminal_process_stub.dart'
-    if (dart.library.io) 'terminal_process_native.dart' as proc;
+    if (dart.library.io) 'terminal_process_native.dart'
+    as proc;
 
 class TerminalPanel extends ConsumerStatefulWidget {
   const TerminalPanel({super.key});
@@ -34,6 +36,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   String? _sshSessionId;
   String? _sshLabel;
   bool _sshConnecting = false;
+  bool _scopeHeld = false;
 
   @override
   void initState() {
@@ -54,7 +57,15 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     _shellError = null;
     try {
       final panel = ref.read(panelProvider(PanelSide.local));
-      _shell = await proc.startShell(panel.currentPath);
+      final local = ref.read(localFileServiceProvider);
+      // Hold the app's security-scoped grant for the whole shell session.
+      // Child processes inherit the active sandbox extension; without this the
+      // shell can only see the app container even when the panel has access.
+      _scopeHeld = await local.beginStreamAccess(panel.currentPath);
+      final cwd = _scopeHeld
+          ? panel.currentPath
+          : await local.getSafeFallbackDirectory();
+      _shell = await proc.startShell(cwd);
       if (_shell == null) {
         _shellError = strings.text('platform');
         _appendOutput('[${strings.text('platform')}]\n');
@@ -140,7 +151,8 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
       _sshLabel = '${config.username}@${config.host}';
       _isRunning = true;
       _appendOutput(
-          '${TerminalStrings(context).value('connected', _sshLabel!)}\n');
+        '${TerminalStrings(context).value('connected', _sshLabel!)}\n',
+      );
       stream.listen(
         (data) => _appendOutput(_stripAnsi(data)),
         onDone: () {
@@ -151,7 +163,8 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
         onError: (Object error) {
           if (!mounted) return;
           _appendOutput(
-              '\n[${TerminalStrings(context).value('sshError', localizedTerminalMountError(context, error))}]\n');
+            '\n[${TerminalStrings(context).value('sshError', localizedTerminalMountError(context, error))}]\n',
+          );
           setState(() => _isRunning = false);
         },
       );
@@ -204,6 +217,10 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
 
   @override
   void dispose() {
+    if (_scopeHeld) {
+      _scopeHeld = false;
+      unawaited(ref.read(localFileServiceProvider).endStreamAccess());
+    }
     final sshId = _sshSessionId;
     if (sshId != null) {
       try {
@@ -236,67 +253,79 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
             height: 6,
             color: theme.dividerColor,
             child: Center(
-                child: Container(
-              width: 40,
-              height: 3,
-              decoration: BoxDecoration(
-                color:
-                    theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
-                borderRadius: BorderRadius.circular(2),
+              child: Container(
+                width: 40,
+                height: 3,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.onSurfaceVariant.withValues(
+                    alpha: 0.4,
+                  ),
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-            )),
+            ),
           ),
         ),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           color: theme.colorScheme.surfaceContainerHighest,
-          child: Row(children: [
-            const Icon(Icons.terminal, size: 16),
-            const SizedBox(width: 8),
-            Text(_sshLabel ?? TerminalStrings(context).text('terminal'),
-                style: theme.textTheme.labelMedium),
-            const Spacer(),
-            IconButton(
-              icon: _sshConnecting
-                  ? const SizedBox(
-                      width: 14,
-                      height: 14,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.dns_outlined, size: 16),
-              tooltip: TerminalStrings(context).text('connectSsh'),
-              onPressed: _sshConnecting ? null : _connectSsh,
-              constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-              padding: EdgeInsets.zero,
-            ),
-            IconButton(
-              icon: const Icon(Icons.restart_alt, size: 16),
-              tooltip: TerminalStrings(context).text('restart'),
-              onPressed: () {
-                _shell?.kill();
-                final sshId = _sshSessionId;
-                _sshSessionId = null;
-                _sshLabel = null;
-                if (sshId != null) {
-                  ref.read(sshTerminalServiceProvider).disconnect(sshId);
-                }
-                _output.clear();
-                _shellError = null;
-                _isRunning = false;
-                _startShell();
-              },
-              constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-              padding: EdgeInsets.zero,
-            ),
-            IconButton(
-              icon: const Icon(Icons.close, size: 16),
-              tooltip: TerminalStrings(context).text('close'),
-              onPressed: () =>
-                  ref.read(showTerminalProvider.notifier).state = false,
-              constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-              padding: EdgeInsets.zero,
-            ),
-          ]),
+          child: Row(
+            children: [
+              const Icon(Icons.terminal, size: 16),
+              const SizedBox(width: 8),
+              Text(
+                _sshLabel ?? TerminalStrings(context).text('terminal'),
+                style: theme.textTheme.labelMedium,
+              ),
+              const Spacer(),
+              IconButton(
+                icon: _sshConnecting
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.dns_outlined, size: 16),
+                tooltip: TerminalStrings(context).text('connectSsh'),
+                onPressed: _sshConnecting ? null : _connectSsh,
+                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                padding: EdgeInsets.zero,
+              ),
+              IconButton(
+                icon: const Icon(Icons.restart_alt, size: 16),
+                tooltip: TerminalStrings(context).text('restart'),
+                onPressed: () {
+                  _shell?.kill();
+                  final sshId = _sshSessionId;
+                  _sshSessionId = null;
+                  _sshLabel = null;
+                  if (sshId != null) {
+                    ref.read(sshTerminalServiceProvider).disconnect(sshId);
+                  }
+                  _output.clear();
+                  _shellError = null;
+                  _isRunning = false;
+                  if (_scopeHeld) {
+                    _scopeHeld = false;
+                    unawaited(
+                      ref.read(localFileServiceProvider).endStreamAccess(),
+                    );
+                  }
+                  _startShell();
+                },
+                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                padding: EdgeInsets.zero,
+              ),
+              IconButton(
+                icon: const Icon(Icons.close, size: 16),
+                tooltip: TerminalStrings(context).text('close'),
+                onPressed: () =>
+                    ref.read(showTerminalProvider.notifier).state = false,
+                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                padding: EdgeInsets.zero,
+              ),
+            ],
+          ),
         ),
         SizedBox(
           height: height - 46,
@@ -304,84 +333,107 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
             color: theme.brightness == Brightness.dark
                 ? const Color(0xFF1E1E1E)
                 : const Color(0xFFF5F5F5),
-            child: Column(children: [
-              if (_shellError != null)
-                Container(
-                  width: double.infinity,
-                  color: theme.colorScheme.errorContainer,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                  child: Row(children: [
-                    Icon(Icons.warning_amber_rounded,
-                        size: 16, color: theme.colorScheme.onErrorContainer),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        _shellError!,
-                        style: TextStyle(
-                          fontSize: 12,
+            child: Column(
+              children: [
+                if (_shellError != null)
+                  Container(
+                    width: double.infinity,
+                    color: theme.colorScheme.errorContainer,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 6,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.warning_amber_rounded,
+                          size: 16,
                           color: theme.colorScheme.onErrorContainer,
                         ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _shellError!,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: theme.colorScheme.onErrorContainer,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    controller: _outputController,
+                    padding: const EdgeInsets.all(8),
+                    child: SelectableText(
+                      _output.toString(),
+                      style: TextStyle(
+                        fontFamily: 'AppMono',
+                        fontFamilyFallback: const [
+                          'Menlo',
+                          'Consolas',
+                          'monospace',
+                        ],
+                        fontSize: 12,
+                        height: 1.4,
+                        color: theme.brightness == Brightness.dark
+                            ? const Color(0xFFD4D4D4)
+                            : const Color(0xFF1E1E1E),
                       ),
                     ),
-                  ]),
-                ),
-              Expanded(
-                  child: SingleChildScrollView(
-                controller: _outputController,
-                padding: const EdgeInsets.all(8),
-                child: SelectableText(
-                  _output.toString(),
-                  style: TextStyle(
-                    fontFamily: 'AppMono',
-                    fontFamilyFallback: const [
-                      'Menlo',
-                      'Consolas',
-                      'monospace'
-                    ],
-                    fontSize: 12,
-                    height: 1.4,
-                    color: theme.brightness == Brightness.dark
-                        ? const Color(0xFFD4D4D4)
-                        : const Color(0xFF1E1E1E),
                   ),
                 ),
-              )),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                child: Row(children: [
-                  Text('\$ ',
-                      style: TextStyle(
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  child: Row(
+                    children: [
+                      Text(
+                        '\$ ',
+                        style: TextStyle(
                           fontFamily: 'monospace',
                           fontSize: 12,
-                          color: theme.colorScheme.primary)),
-                  Expanded(
-                      child: TextField(
-                    controller: _inputController,
-                    focusNode: _inputFocusNode,
-                    enabled: _isRunning,
-                    autofocus: _isRunning,
-                    style: const TextStyle(
-                      fontFamily: 'AppMono',
-                      fontFamilyFallback: ['Menlo', 'Consolas', 'monospace'],
-                      fontSize: 12,
-                    ),
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      isDense: true,
-                      contentPadding: EdgeInsets.zero,
-                      hintText: _isRunning
-                          ? null
-                          : TerminalStrings(context).text('unavailable'),
-                    ),
-                    onSubmitted: (cmd) {
-                      _sendCommand(cmd);
-                      _inputFocusNode.requestFocus();
-                    },
-                  )),
-                ]),
-              ),
-            ]),
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                      Expanded(
+                        child: TextField(
+                          controller: _inputController,
+                          focusNode: _inputFocusNode,
+                          enabled: _isRunning,
+                          autofocus: _isRunning,
+                          style: const TextStyle(
+                            fontFamily: 'AppMono',
+                            fontFamilyFallback: [
+                              'Menlo',
+                              'Consolas',
+                              'monospace',
+                            ],
+                            fontSize: 12,
+                          ),
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: EdgeInsets.zero,
+                            hintText: _isRunning
+                                ? null
+                                : TerminalStrings(context).text('unavailable'),
+                          ),
+                          onSubmitted: (cmd) {
+                            _sendCommand(cmd);
+                            _inputFocusNode.requestFocus();
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -454,7 +506,8 @@ class _SshConnectDialogState extends State<_SshConnectDialog> {
               controller: _host,
               autofocus: true,
               decoration: InputDecoration(
-                  labelText: TerminalStrings(context).text('host')),
+                labelText: TerminalStrings(context).text('host'),
+              ),
             ),
             const SizedBox(height: 8),
             Row(
@@ -463,7 +516,8 @@ class _SshConnectDialogState extends State<_SshConnectDialog> {
                   child: TextField(
                     controller: _username,
                     decoration: InputDecoration(
-                        labelText: TerminalStrings(context).text('username')),
+                      labelText: TerminalStrings(context).text('username'),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -473,7 +527,8 @@ class _SshConnectDialogState extends State<_SshConnectDialog> {
                     controller: _port,
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
-                        labelText: TerminalStrings(context).text('port')),
+                      labelText: TerminalStrings(context).text('port'),
+                    ),
                   ),
                 ),
               ],
@@ -483,7 +538,8 @@ class _SshConnectDialogState extends State<_SshConnectDialog> {
               controller: _password,
               obscureText: true,
               decoration: InputDecoration(
-                  labelText: TerminalStrings(context).text('password')),
+                labelText: TerminalStrings(context).text('password'),
+              ),
               onSubmitted: (_) => _submit(),
             ),
           ],
@@ -495,8 +551,9 @@ class _SshConnectDialogState extends State<_SshConnectDialog> {
           child: Text(TerminalStrings(context).text('cancel')),
         ),
         ElevatedButton(
-            onPressed: _submit,
-            child: Text(TerminalStrings(context).text('connect'))),
+          onPressed: _submit,
+          child: Text(TerminalStrings(context).text('connect')),
+        ),
       ],
     );
   }
