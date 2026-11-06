@@ -23,6 +23,7 @@ void main() {
     expect(isEditableInBuiltInEditor('letter.docx'), isTrue);
     expect(isEditableInBuiltInEditor('book.xlsx'), isTrue);
     expect(isEditableInBuiltInEditor('slides.pptx'), isTrue);
+    expect(isEditableInBuiltInEditor('Info.plist'), isTrue);
   });
 
   test('view-only and binary formats are not offered as editable', () {
@@ -53,5 +54,11 @@ void main() {
     expect(isTextEditableName('.env'), isTrue);
     expect(isTextEditableName('.gitignore'), isTrue);
     expect(isTextEditableName('photo.jpg.'), isFalse);
+    expect(isTextEditableName('Info.plist'), isTrue);
+    expect(isTextEditableName('Localizable.strings'), isTrue);
+    expect(isTextEditableName('Runner.entitlements'), isTrue);
+    expect(isTextEditableName('App.xcconfig'), isTrue);
+    expect(isTextEditableName('project.pbxproj'), isTrue);
+    expect(isTextEditableName('diagram.svg'), isFalse);
   });
 }

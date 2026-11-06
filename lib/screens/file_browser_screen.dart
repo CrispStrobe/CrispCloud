@@ -18,9 +18,8 @@ import '../models/panel_side.dart';
 import '../models/file_item.dart';
 import '../providers/providers.dart';
 import '../providers/panel_source_provider.dart'
-    show fkeyBarVisibleProvider, panelSourceProvider, swapPanelSources;
+    show fkeyBarVisibleProvider, swapPanelSources;
 import '../providers/toolbar_provider.dart' show panelViewModeProvider;
-import '../services/panel_swap_service.dart';
 import '../services/platform_diagnostics_service.dart';
 import '../services/crash_reporting_service.dart' show CrashReport;
 import '../services/panel_view_mode_service.dart' show PanelViewMode;
@@ -387,6 +386,11 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         label: context.commanderTr("Edit"),
         shortcut: const SingleActivator(LogicalKeyboardKey.f4),
         onSelected: () => editSelectedFile(context, ref),
+      ),
+      PlatformMenuItem(
+        label: context.commanderTr("Edit with…"),
+        shortcut: const SingleActivator(LogicalKeyboardKey.f4, shift: true),
+        onSelected: () => chooseEditorForSelection(context, ref),
       ),
       PlatformMenuItemGroup(
         members: <PlatformMenuItem>[

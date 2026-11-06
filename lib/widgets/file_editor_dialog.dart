@@ -23,13 +23,13 @@ import '../l10n/app_localizations.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
-import '../l10n/image_editor_strings.dart';
 import '../l10n/media_editor_strings.dart';
 import '../services/media_capabilities.dart';
 import '../services/code_editor_menu.dart';
 import '../services/captured_file_target.dart';
 import '../services/editor_document.dart';
 import '../services/editor_document_history.dart';
+import '../services/editor_kind.dart';
 import 'hex_editor_dialog.dart';
 import '../services/editor_highlighting.dart';
 import '../services/image_edit_session.dart' show isImageEditorFileName;
@@ -49,53 +49,59 @@ Future<void> showFileEditorDialog(
   BuildContext context,
   WidgetRef ref,
   FileItem file,
-  PanelSide side,
-) async {
+  PanelSide side, {
+  bool forceText = false,
+}) async {
   if (file.isFolder) return;
   try {
-    if (isImageEditorFileName(file.name)) {
-      await showImageEditorDialog(context, ref, file, side);
-      return;
-    }
-    if (isPdfFileName(file.name)) {
-      await showPdfEditorDialog(context, ref, file, side);
-      return;
-    }
-    final mediaKind = mediaKindForFileName(file.name);
-    if (mediaKind != null) {
-      if (MediaCapabilities.canEdit(mediaKind)) {
-        await showMediaEditorDialog(context, ref, file, side);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              context.mediaTr(
-                'This media format cannot be edited on this platform.',
+    if (!forceText) {
+      if (isImageEditorFileName(file.name)) {
+        await showImageEditorDialog(context, ref, file, side);
+        return;
+      }
+      if (isPdfFileName(file.name)) {
+        await showPdfEditorDialog(context, ref, file, side);
+        return;
+      }
+      final mediaKind = mediaKindForFileName(file.name);
+      if (mediaKind != null) {
+        if (MediaCapabilities.canEdit(mediaKind)) {
+          await showMediaEditorDialog(context, ref, file, side);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                context.mediaTr(
+                  'This media format cannot be edited on this platform.',
+                ),
               ),
             ),
-          ),
-        );
+          );
+        }
+        return;
       }
-      return;
+      // Office documents get the rich Word/Sheet/Slides editor instead of the
+      // plain-text editor.
+      if (isOfficeFileName(file.name)) {
+        await showOfficeEditorDialog(context, ref, file, side);
+        return;
+      }
+      // F4 and the native menu can be invoked even when the viewer's Edit
+      // button is disabled. Never decode an unsupported binary file as text.
+      if (!isTextEditableName(file.name)) {
+        await showHexEditorDialog(context, ref, file, side);
+        return;
+      }
     }
-    // Office documents get the rich Word/Sheet/Slides editor instead of the
-    // plain-text editor.
-    if (isOfficeFileName(file.name)) {
-      await showOfficeEditorDialog(context, ref, file, side);
-      return;
-    }
-    // F4 and the native menu can be invoked even when the viewer's Edit button
-    // is disabled. Never decode an unsupported binary file as editable text.
-    if (!isTextEditableName(file.name)) {
-      await showHexEditorDialog(context, ref, file, side);
-      return;
-    }
-    await Navigator.of(context).push(
+    final target = await Navigator.of(context).push<EditorKind>(
       MaterialPageRoute(
         fullscreenDialog: true,
         builder: (_) => _FileEditorPage(file: file, side: side),
       ),
     );
+    if (target == EditorKind.hex && context.mounted) {
+      await showHexEditorDialog(context, ref, file, side);
+    }
   } finally {
     // Returning from any editor should land back on the same file with the
     // panel ready for the next F3/F4, including when opened from a context
@@ -289,6 +295,45 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
       if (!mounted) return;
       Navigator.of(context).pop();
     }
+  }
+
+  Future<void> _switchToHexEditor() async {
+    if (!await _confirmSwitch()) return;
+    if (!mounted) return;
+    Navigator.of(context).pop(EditorKind.hex);
+  }
+
+  Future<bool> _confirmSwitch() async {
+    if (!_isModified) return true;
+    final choice = await showDialog<_SwitchChoice>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Save changes before switching editors?'),
+        content: const Text(
+          'The hex editor reads the saved file. You can save first, discard '
+          'your edits, or keep editing.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, _SwitchChoice.discard),
+            child: Text(AppLocalizations.of(context)!.discard),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, _SwitchChoice.save),
+            child: const Text('Save and switch'),
+          ),
+        ],
+      ),
+    );
+    if (choice == _SwitchChoice.save) {
+      await _saveFile();
+      return !_isModified;
+    }
+    return choice == _SwitchChoice.discard;
   }
 
   Future<void> _reloadFromDisk() async {
@@ -825,6 +870,13 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
                     : 'Enable syntax highlighting',
                 onPressed: _toggleHighlighting,
               ),
+            IconButton(
+              icon: const Icon(Icons.hexagon_outlined, size: 20),
+              tooltip: 'Open in Hex Editor',
+              onPressed: _loading || _isSaving
+                  ? null
+                  : () => unawaited(_switchToHexEditor()),
+            ),
             _isSaving
                 ? const Padding(
                     padding: EdgeInsets.all(12),
@@ -868,6 +920,10 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
                 PopupMenuItem(
                   value: _EditorMenuAction.highlight,
                   child: Text('Toggle syntax highlighting'),
+                ),
+                const PopupMenuItem(
+                  value: _EditorMenuAction.hex,
+                  child: Text('Open in Hex Editor'),
                 ),
                 PopupMenuDivider(),
                 const PopupMenuItem(
@@ -937,6 +993,9 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
         break;
       case _EditorMenuAction.highlight:
         _toggleHighlighting();
+        break;
+      case _EditorMenuAction.hex:
+        await _switchToHexEditor();
         break;
       case _EditorMenuAction.reopenEncoding:
         await _reopenEncoding();
@@ -1068,6 +1127,9 @@ enum _EditorMenuAction {
   goToLine,
   wordWrap,
   highlight,
+  hex,
   reload,
   reopenEncoding,
 }
+
+enum _SwitchChoice { save, discard }

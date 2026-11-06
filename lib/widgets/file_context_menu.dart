@@ -57,6 +57,7 @@ import 'integrity_recovery_dialog.dart';
 import '../services/file_operation_service.dart';
 import 'diff_viewer_dialog.dart' show showDiffViewerDialog;
 import 'hex_editor_dialog.dart' show showHexEditorDialog;
+import 'editor_chooser_dialog.dart' show showEditorChooser;
 import 'file_editor_dialog.dart' show showFileEditorDialog;
 import 'pdf_editor_dialog.dart' show isPdfFileName;
 import 'pdf_operations_dialog.dart';
@@ -435,6 +436,22 @@ void showFileContextMenu(
 
   // Specialized editors and text/code editing for a single file.
   if (!isMultiSelect && !isSingleFolder) {
+    if (isTextEditableName(file.name)) {
+      items.add(
+        PopupMenuItem(
+          child: const Row(
+            children: [
+              Icon(Icons.tune),
+              SizedBox(width: 8),
+              Expanded(child: Text('Edit with…')),
+            ],
+          ),
+          onTap: () => Future.delayed(Duration.zero, () {
+            if (context.mounted) showEditorChooser(context, ref, file, side);
+          }),
+        ),
+      );
+    }
     items.add(
       PopupMenuItem(
         child: const Row(

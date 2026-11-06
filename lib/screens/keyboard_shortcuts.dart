@@ -17,7 +17,6 @@ import '../providers/toolbar_provider.dart' show panelViewModeProvider;
 import '../services/panel_view_mode_service.dart' show PanelViewMode;
 import '../services/panel_swap_service.dart';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path/path.dart' as p;
 
 import '../services/archive_service.dart';
@@ -28,10 +27,7 @@ import '../widgets/pattern_selection_dialog.dart';
 import '../widgets/file_list_dialog.dart';
 import '../widgets/file_clipboard_actions.dart';
 import '../widgets/file_context_menu.dart'
-    show
-        openListedFileWithSystemEditor,
-        showPropertiesDialog,
-        showFileContextMenu;
+    show showPropertiesDialog, showFileContextMenu;
 import '../widgets/file_toolbar.dart' show showPanelFilterDialog;
 import '../widgets/search_dialogs.dart' show showSearchDialog;
 import 'screen_dialogs.dart';
@@ -332,12 +328,15 @@ KeyEventResult handleKeyEvent(
     return KeyEventResult.handled;
   }
 
-  // F2 or Shift+F6 - In-place rename of cursor item (TC/DC convention)
-  if (event.logicalKey == LogicalKeyboardKey.f2 ||
-      (!isCtrl && isShift && event.logicalKey == LogicalKeyboardKey.f6)) {
+  // F2 or Shift+F6 - In-place rename of cursor item (TC/DC convention).
+  // Shift+F6 keeps the extension and selects only the base name.
+  final isF2 = !isCtrl && !isShift && event.logicalKey == LogicalKeyboardKey.f2;
+  final isShiftF6 =
+      !isCtrl && isShift && event.logicalKey == LogicalKeyboardKey.f6;
+  if (isF2 || isShiftF6) {
     final cursor = panel.cursorItem;
     if (cursor != null && cursor.name != '..') {
-      panel.startRename(cursor);
+      panel.startRename(cursor, keepExtension: isShiftF6);
     } else {
       showRenameDialog(context, ref);
     }
@@ -354,15 +353,7 @@ KeyEventResult handleKeyEvent(
   // Shift+F4 - Edit file in system editor
   if (event.logicalKey == LogicalKeyboardKey.f4) {
     if (isShift) {
-      // Open with system editor
-      final activePanel = ref.read(activePanelProvider);
-      final pnl = ref.read(panelProvider(activePanel));
-      final target = pnl.selection.isEmpty
-          ? pnl.cursorItem
-          : pnl.selection.first;
-      if (target?.path != null && !kIsWeb) {
-        openListedFileWithSystemEditor(context, ref, target!);
-      }
+      chooseEditorForSelection(context, ref);
     } else {
       editSelectedFile(context, ref);
     }

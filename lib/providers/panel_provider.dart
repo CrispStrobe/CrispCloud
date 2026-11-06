@@ -251,6 +251,10 @@ class PanelNotifier extends ChangeNotifier {
   FileItem? _renamingItem;
   FileItem? get renamingItem => _renamingItem;
 
+  /// True when Shift+F6 started the rename and the extension must be kept.
+  bool _renameKeepExtension = false;
+  bool get renameKeepExtension => _renameKeepExtension;
+
   // Whether to show hidden (dot-prefixed) files — toggle via Ctrl+.
   bool _showHiddenFiles = false;
   bool get showHiddenFiles => _showHiddenFiles;
@@ -5207,15 +5211,17 @@ class PanelNotifier extends ChangeNotifier {
 
   // --- In-place rename ---
 
-  void startRename(FileItem item) {
+  void startRename(FileItem item, {bool keepExtension = false}) {
     if (item.name == '..') return;
     _renamingItem = item;
+    _renameKeepExtension = keepExtension;
     notifyListeners();
   }
 
   void cancelRename() {
     if (_renamingItem == null) return;
     _renamingItem = null;
+    _renameKeepExtension = false;
     notifyListeners();
   }
 
@@ -5223,6 +5229,7 @@ class PanelNotifier extends ChangeNotifier {
     final item = _renamingItem;
     if (item == null) return;
     _renamingItem = null;
+    _renameKeepExtension = false;
     notifyListeners();
     final trimmed = newName.trim();
     if (trimmed.isEmpty || trimmed == item.name) return;

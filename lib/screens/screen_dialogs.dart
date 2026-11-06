@@ -16,6 +16,7 @@ import '../providers/providers.dart';
 import '../widgets/azure_connection_dialog.dart';
 import '../widgets/b2_connection_dialog.dart';
 import '../widgets/connection_dialog.dart';
+import '../widgets/editor_chooser_dialog.dart';
 import '../widgets/file_editor_dialog.dart' show showFileEditorDialog;
 import '../widgets/file_operation_dialog.dart';
 import '../widgets/archive_workspace_dialog.dart';
@@ -108,7 +109,7 @@ void showKeyboardShortcutsHelp(BuildContext context) {
             _shortcutRow('F2 / Shift+F6', 'Rename (in-place)'),
             _shortcutRow('F3', 'View file (full-screen)'),
             _shortcutRow('F4', 'Edit file (built-in)'),
-            _shortcutRow('Shift+F4', 'Open with system editor'),
+            _shortcutRow('Shift+F4', 'Choose editor (text, hex, system)'),
             _shortcutRow('F5', 'Copy with options…'),
             _shortcutRow('Ctrl+R', 'Refresh'),
             _shortcutRow('F6', 'Move with options…'),
@@ -324,6 +325,17 @@ Future<void> _viewFile(
     // closes, so F3/F4 can be pressed again immediately.
     panel.restoreCursorAndFocus(viewedFile);
   }
+}
+
+/// Shift+F4: choose the text/code editor, hex editor or system editor.
+void chooseEditorForSelection(BuildContext context, WidgetRef ref) {
+  final activePanel = ref.read(activePanelProvider);
+  final panel = ref.read(panelProvider(activePanel));
+  final target =
+      panel.cursorItem ??
+      (panel.selection.isNotEmpty ? panel.selection.first : null);
+  if (target == null || target.isFolder) return;
+  unawaited(showEditorChooser(context, ref, target, activePanel));
 }
 
 /// F4: Open cursor item in the file editor.

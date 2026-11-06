@@ -7,9 +7,12 @@ import 'package:madedit2_hex/madedit2_hex.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
+import '../utils/file_editability.dart' show isTextEditableName;
 import '../services/file_operation_backend.dart';
 import '../services/file_operation_service.dart';
 import '../services/hex_file_session.dart';
+import '../services/editor_kind.dart';
+import 'file_editor_dialog.dart' show showFileEditorDialog;
 
 /// Capture the file's verified storage before navigation. Neither a later tab
 /// switch nor a matching path on another account can redirect a save.
@@ -37,7 +40,7 @@ Future<void> showHexEditorDialog(
       path:
           file.path ?? backend.paths.join(origin.source.currentPath, file.name),
     );
-    await Navigator.of(context).push<void>(
+    final target = await Navigator.of(context).push<EditorKind>(
       MaterialPageRoute(
         fullscreenDialog: true,
         builder: (_) => HexFileEditorPage(file: original, backend: backend),
@@ -54,6 +57,9 @@ Future<void> showHexEditorDialog(
       await panel.refresh();
     } catch (_) {}
     panel.restoreCursorAndFocus(file);
+    if (target == EditorKind.text && context.mounted) {
+      await showFileEditorDialog(context, ref, file, side, forceText: true);
+    }
   } catch (error) {
     if (context.mounted) {
       ScaffoldMessenger.of(
@@ -281,6 +287,41 @@ class _HexFileEditorPageState extends State<HexFileEditorPage> {
     }
   }
 
+  Future<void> _switchToText() async {
+    if (_controller?.isDirty == true) {
+      final action = await showDialog<String>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Unsaved binary changes'),
+          content: const Text(
+            'Save your changes before opening the text editor?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, 'cancel'),
+              child: const Text('Keep editing'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, 'discard'),
+              child: const Text('Discard'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, 'save'),
+              child: const Text('Save and switch'),
+            ),
+          ],
+        ),
+      );
+      if (action == null || action == 'cancel') return;
+      if (action == 'save' && !await _save()) return;
+    }
+    if (!mounted) return;
+    setState(() => _canPop = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) Navigator.of(context).pop(EditorKind.text);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final controller = _controller;
@@ -301,6 +342,12 @@ class _HexFileEditorPageState extends State<HexFileEditorPage> {
             '${widget.file.name} — Hex${controller?.isDirty == true ? ' *' : ''}',
           ),
           actions: [
+            if (isTextEditableName(widget.file.name))
+              IconButton(
+                tooltip: 'Open in Text Editor',
+                icon: const Icon(Icons.code),
+                onPressed: _saving ? null : () => unawaited(_switchToText()),
+              ),
             IconButton(
               tooltip: 'Save a separate copy',
               icon: const Icon(Icons.save_as_outlined),

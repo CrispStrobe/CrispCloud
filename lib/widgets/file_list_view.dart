@@ -172,6 +172,17 @@ class FileListView extends ConsumerWidget {
               final isSelected = panel.isSelected(file);
               final isCursor = index == cursorIndex;
 
+              if (panel.renamingItem == file) {
+                return _InlineRenameField(
+                  file: file,
+                  side: side,
+                  isCursor: isCursor,
+                  isSelected: isSelected,
+                  height: itemHeight,
+                  keepExtension: panel.renameKeepExtension,
+                );
+              }
+
               if (isCompact) {
                 final origin = panel.originForOperation(file);
                 return CompactFileTile(
@@ -472,6 +483,7 @@ class FileListTile extends ConsumerWidget {
         side: side,
         isCursor: isCursor,
         isSelected: isSelected,
+        keepExtension: ref.read(panelProvider(side)).renameKeepExtension,
       );
     }
 
@@ -846,11 +858,19 @@ class _InlineRenameField extends ConsumerStatefulWidget {
   final bool isCursor;
   final bool isSelected;
 
+  /// Exact row height when the field replaces a list row.
+  final double? height;
+
+  /// Select only the base name so the extension is preserved.
+  final bool keepExtension;
+
   const _InlineRenameField({
     required this.file,
     required this.side,
     required this.isCursor,
     required this.isSelected,
+    this.height,
+    this.keepExtension = false,
   });
 
   @override
@@ -873,7 +893,7 @@ class _InlineRenameFieldState extends ConsumerState<_InlineRenameField> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _focus.requestFocus();
       final dotIdx = name.lastIndexOf('.');
-      if (!widget.file.isFolder && dotIdx > 0) {
+      if (widget.keepExtension && !widget.file.isFolder && dotIdx > 0) {
         _ctrl.selection = TextSelection(baseOffset: 0, extentOffset: dotIdx);
       } else {
         _ctrl.selection = TextSelection(
@@ -904,9 +924,11 @@ class _InlineRenameFieldState extends ConsumerState<_InlineRenameField> {
         : theme.colorScheme.primaryContainer.withValues(alpha: 0.2);
 
     return Container(
-      height: ref.read(panelViewModeProvider(widget.side)) == PanelViewMode.full
-          ? 26.0
-          : 64.0,
+      height:
+          widget.height ??
+          (ref.read(panelViewModeProvider(widget.side)) == PanelViewMode.full
+              ? 26.0
+              : 64.0),
       color: bgColor,
       alignment: Alignment.centerLeft,
       padding: const EdgeInsets.symmetric(horizontal: 8),
