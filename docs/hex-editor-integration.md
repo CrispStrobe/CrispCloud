@@ -35,9 +35,13 @@ conditional writes still have a check/commit race; this is not a universal
 atomic compare-and-swap guarantee. Cancellation stops before commit, never in
 the middle of a backup/replacement sequence. Existing backend recovery applies.
 
-Undo is capped by steps (500), and a single inserted edit/clipboard is capped
-at 16 MiB; this is not a strict total memory budget. Rendering caches at most
-eight 64 KiB pages. Search needles are capped at 1 MiB and use streaming KMP.
+Undo and redo share a 500-step cap and a 64 MiB budget for retained inserted
+buffers. Shared buffers count once; original-source ranges use no byte budget.
+Current content, caller-held snapshots and metadata can retain additional
+memory. A single inserted edit/clipboard is capped at 16 MiB. Rendering caches
+at most eight 64 KiB pages. Search needles are capped at 1 MiB and use streaming
+KMP; navigation cancels stale search results. Keyboard caret movement also
+scrolls horizontally on narrow screens.
 
 ## Validation
 

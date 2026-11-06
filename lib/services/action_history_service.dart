@@ -99,13 +99,23 @@ class ActionRecord {
 // Result type
 // ---------------------------------------------------------------------------
 
+/// Structured outcome for localized presentation; [UndoResult.message] remains
+/// available for logging and existing consumers.
+enum UndoResultCode {
+  undoNotFound, undoNotReversible, undoFailed, undoRestored, undoNoTrash,
+  undoRenamePath, undoRenameHandler, undoRenamed, undoMovePath, undoMoveHandler,
+  undoMoved, undoFolderHandler, undoFolderDeleted, undoCopyHandler, undoCopyDeleted,
+}
+
 /// Outcome of an undo attempt.
 class UndoResult {
   final bool success;
   final String message;
+  final UndoResultCode? code;
+  final Map<String, Object> arguments;
 
-  const UndoResult.success(this.message) : success = true;
-  const UndoResult.failure(this.message) : success = false;
+  const UndoResult.success(this.message, {this.code, this.arguments = const {}}) : success = true;
+  const UndoResult.failure(this.message, {this.code, this.arguments = const {}}) : success = false;
 }
 
 // ---------------------------------------------------------------------------
@@ -199,7 +209,7 @@ class ActionHistoryService {
     }
     final idx = _history.indexWhere((a) => a.id == actionId);
     if (idx == -1) {
-      return const UndoResult.failure('Action not found in history.');
+      return const UndoResult.failure('Action not found in history.', code: UndoResultCode.undoNotFound);
     }
 
     final action = _history[idx];
@@ -208,6 +218,7 @@ class ActionHistoryService {
       return UndoResult.failure(
         'Cannot undo ${action.type.name} on provider "${action.provider}". '
         'Operation is not reversible.',
+        code: UndoResultCode.undoNotReversible, arguments: {'provider': action.provider},
       );
     }
 
@@ -260,7 +271,7 @@ class ActionHistoryService {
           );
         }
         return const UndoResult.failure(
-          'Cannot undo delete: provider does not support trash restore.',
+          'Cannot undo delete: provider does not support trash restore.', code: UndoResultCode.undoNoTrash,
         );
 
       // ---- rename --------------------------------------------------------
@@ -285,6 +296,7 @@ class ActionHistoryService {
         }
         return UndoResult.success(
           'Renamed ${p.basename(action.newPath!)} back to ${p.basename(action.originalPath)}.',
+          code: UndoResultCode.undoRenamed, arguments: {'new': p.basename(action.newPath!), 'old': p.basename(action.originalPath)},
         );
 
       // ---- move ----------------------------------------------------------
@@ -309,6 +321,7 @@ class ActionHistoryService {
         }
         return UndoResult.success(
           'Moved ${p.basename(action.originalPath)} back to ${p.dirname(action.originalPath)}.',
+          code: UndoResultCode.undoMoved, arguments: {'name': p.basename(action.originalPath), 'path': p.dirname(action.originalPath)},
         );
 
       // ---- createFolder --------------------------------------------------
@@ -328,6 +341,7 @@ class ActionHistoryService {
         }
         return UndoResult.success(
           'Deleted folder ${p.basename(action.originalPath)}.',
+          code: UndoResultCode.undoFolderDeleted, arguments: {'name': p.basename(action.originalPath)},
         );
 
       // ---- copy ----------------------------------------------------------
@@ -353,6 +367,7 @@ class ActionHistoryService {
         }
         return UndoResult.success(
           'Deleted copy ${p.basename(action.originalPath)}.',
+          code: UndoResultCode.undoCopyDeleted, arguments: {'name': p.basename(action.originalPath)},
         );
     }
   }

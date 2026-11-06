@@ -7,11 +7,14 @@
 //   3. Connection String — paste the full Azure connection string
 
 import 'package:flutter/material.dart';
+
+import '../l10n/provider_operation_strings.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/core_providers.dart';
 import '../services/azure_config_service.dart';
 import '../l10n/app_localizations.dart';
+import '../l10n/cloud_setup_strings.dart';
 
 // ---------------------------------------------------------------------------
 // Auth mode enum
@@ -89,56 +92,58 @@ class _AzureConnectionDialogState
     });
   }
 
+  String _text(String key, [Map<String, Object> values = const {}]) =>
+      CloudSetupStrings(context).text(key, values);
+
   // ── Validation ────────────────────────────────────────────────────────────
 
   String? _validate() {
     switch (_authMode) {
       case _AzureAuthMode.accountKey:
         if (_accountNameController.text.trim().isEmpty) {
-          return 'Account Name is required';
+          return _text('accountNameRequired');
         }
         if (_accountKeyController.text.trim().isEmpty) {
-          return 'Account Key is required';
+          return _text('accountKeyRequired');
         }
         if (_containerController.text.trim().isEmpty) {
-          return 'Container name is required';
+          return _text('containerRequired');
         }
         return null;
 
       case _AzureAuthMode.sasToken:
         if (_sasUseFull) {
           if (_sasUrlController.text.trim().isEmpty) {
-            return 'SAS URL is required';
+            return _text('sasUrlRequired');
           }
           final token = AzureConfigService.parseSasToken(
             _sasUrlController.text.trim(),
           );
           if (token == null) {
-            return 'SAS URL does not appear to contain a valid query string';
+            return _text('sasInvalid');
           }
         } else {
           if (_sasAccountNameController.text.trim().isEmpty) {
-            return 'Account Name is required';
+            return _text('accountNameRequired');
           }
           if (_sasTokenController.text.trim().isEmpty) {
-            return 'SAS Token is required';
+            return _text('sasTokenRequired');
           }
           if (_sasContainerController.text.trim().isEmpty) {
-            return 'Container name is required';
+            return _text('containerRequired');
           }
         }
         return null;
 
       case _AzureAuthMode.connectionString:
         if (_connStringController.text.trim().isEmpty) {
-          return 'Connection String is required';
+          return _text('connectionRequired');
         }
         final info = AzureConfigService.parseConnectionString(
           _connStringController.text.trim(),
         );
         if (info == null) {
-          return 'Connection string is not valid. '
-              'Expected format: DefaultEndpointsProtocol=…;AccountName=…;AccountKey=…';
+          return _text('connectionInvalid');
         }
         return null;
     }
@@ -179,7 +184,7 @@ class _AzureConnectionDialogState
     }
   }
 
-  // ── Test Connection ───────────────────────────────────────────────────────
+  // ── Check Format ───────────────────────────────────────────────────────
 
   Future<void> _testConnection() async {
     final validationError = _validate();
@@ -198,10 +203,7 @@ class _AzureConnectionDialogState
     });
 
     try {
-      // Simulate a lightweight connectivity check: validate that the
-      // endpoint is reachable and the credentials are well-formed.
-      // A real implementation would call the Azure Blob REST API.
-      await Future.delayed(const Duration(milliseconds: 500));
+      // This checks local formatting only; it does not contact Azure.
 
       // Parse / derive endpoint for display.
       String endpoint;
@@ -226,12 +228,12 @@ class _AzureConnectionDialogState
       }
 
       setState(() {
-        _testResult = 'Connected to $endpoint';
+        _testResult = _text('connected', {'endpoint': endpoint});
         _isTesting = false;
       });
     } catch (e) {
       setState(() {
-        _error = 'Test failed: ${e.toString().replaceAll("Exception:", "").trim()}';
+        _error = _text('formatFailed', {'error': localizedProviderError(context, e).replaceAll('Exception:', '').trim()});
         _isTesting = false;
       });
     }
@@ -261,7 +263,7 @@ class _AzureConnectionDialogState
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = e.toString().replaceAll('Exception:', '').trim();
+          _error = localizedProviderError(context, e).replaceAll('Exception:', '').trim();
           _isLoading = false;
         });
       }
@@ -273,7 +275,7 @@ class _AzureConnectionDialogState
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Connect to Azure Blob Storage'),
+      title: Text(_text('azure')),
       scrollable: true,
       content: SizedBox(
         width: 420,
@@ -283,7 +285,7 @@ class _AzureConnectionDialogState
           children: [
             // ── Auth mode selector ──────────────────────────────────────────
             Text(
-              'Authentication Mode',
+              _text('mode'),
               style: Theme.of(context).textTheme.labelLarge,
             ),
             const SizedBox(height: 8),
@@ -297,19 +299,19 @@ class _AzureConnectionDialogState
                   _testResult = null;
                 });
               },
-              child: const Column(
+              child: Column(
                 children: [
                   _ModeRadio<_AzureAuthMode>(
                     value: _AzureAuthMode.accountKey,
-                    label: 'Account Key',
+                    label: _text('accountKey'),
                   ),
                   _ModeRadio<_AzureAuthMode>(
                     value: _AzureAuthMode.sasToken,
-                    label: 'SAS Token',
+                    label: _text('sasToken'),
                   ),
                   _ModeRadio<_AzureAuthMode>(
                     value: _AzureAuthMode.connectionString,
-                    label: 'Connection String',
+                    label: _text('connectionString'),
                   ),
                 ],
               ),
@@ -357,7 +359,7 @@ class _AzureConnectionDialogState
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Text('Test Connection'),
+              : Text(_text('checkFormat')),
         ),
         ElevatedButton(
           onPressed: (_isLoading || _isTesting) ? null : _connect,
@@ -367,7 +369,7 @@ class _AzureConnectionDialogState
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Text('Connect'),
+              : Text(AppLocalizations.of(context)!.connect),
         ),
       ],
     );
@@ -380,12 +382,12 @@ class _AzureConnectionDialogState
           key: const Key('azure_account_name'),
           controller: _accountNameController,
           enabled: !_isLoading,
-          decoration: const InputDecoration(
-            labelText: 'Account Name',
+          decoration: InputDecoration(
+            labelText: _text('accountName'),
             hintText: 'mystorageaccount',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.storage_outlined),
-            helperText: 'The storage account name (without .blob.core.windows.net)',
+            border: const OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.storage_outlined),
+            helperText: _text('accountHelp'),
           ),
         ),
         const SizedBox(height: 16),
@@ -394,11 +396,11 @@ class _AzureConnectionDialogState
           controller: _accountKeyController,
           enabled: !_isLoading,
           obscureText: true,
-          decoration: const InputDecoration(
-            labelText: 'Account Key',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.vpn_key_outlined),
-            helperText: 'Found in Azure Portal → Storage account → Access keys',
+          decoration: InputDecoration(
+            labelText: _text('accountKey'),
+            border: const OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.vpn_key_outlined),
+            helperText: _text('azureKeyHelp'),
           ),
         ),
         const SizedBox(height: 16),
@@ -406,11 +408,11 @@ class _AzureConnectionDialogState
           key: const Key('azure_container'),
           controller: _containerController,
           enabled: !_isLoading,
-          decoration: const InputDecoration(
-            labelText: 'Container',
+          decoration: InputDecoration(
+            labelText: _text('container'),
             hintText: 'my-container',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.folder_outlined),
+            border: const OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.folder_outlined),
           ),
         ),
       ];
@@ -423,12 +425,12 @@ class _AzureConnectionDialogState
             if (_isLoading || v == null) return;
             setState(() => _sasUseFull = v);
           },
-          child: const Row(
+          child: Row(
             children: [
               Expanded(
                 child: RadioListTile<bool>(
                   value: true,
-                  title: Text('Full SAS URL', style: TextStyle(fontSize: 13)),
+                  title: Text(_text('fullUrl'), style: const TextStyle(fontSize: 13)),
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -436,7 +438,7 @@ class _AzureConnectionDialogState
               Expanded(
                 child: RadioListTile<bool>(
                   value: false,
-                  title: Text('Token + Account', style: TextStyle(fontSize: 13)),
+                  title: Text(_text('tokenAccount'), style: const TextStyle(fontSize: 13)),
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -450,14 +452,14 @@ class _AzureConnectionDialogState
             key: const Key('azure_sas_url'),
             controller: _sasUrlController,
             enabled: !_isLoading,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'SAS URL',
               hintText:
                   'https://account.blob.core.windows.net/container?sv=…&sig=…',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.link),
+              border: const OutlineInputBorder(),
+              prefixIcon: const Icon(Icons.link),
               helperText:
-                  'Full SAS URL from Azure Portal or az storage … generate-sas',
+                  _text('sasUrlHelp'),
             ),
           ),
         ] else ...[
@@ -465,11 +467,11 @@ class _AzureConnectionDialogState
             key: const Key('azure_sas_account_name'),
             controller: _sasAccountNameController,
             enabled: !_isLoading,
-            decoration: const InputDecoration(
-              labelText: 'Account Name',
+            decoration: InputDecoration(
+              labelText: _text('accountName'),
               hintText: 'mystorageaccount',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.storage_outlined),
+              border: const OutlineInputBorder(),
+              prefixIcon: const Icon(Icons.storage_outlined),
             ),
           ),
           const SizedBox(height: 16),
@@ -478,13 +480,13 @@ class _AzureConnectionDialogState
             controller: _sasTokenController,
             enabled: !_isLoading,
             obscureText: true,
-            decoration: const InputDecoration(
-              labelText: 'SAS Token',
+            decoration: InputDecoration(
+              labelText: _text('sasToken'),
               hintText: 'sv=2023-11-03&ss=b&…&sig=…',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.vpn_key_outlined),
+              border: const OutlineInputBorder(),
+              prefixIcon: const Icon(Icons.vpn_key_outlined),
               helperText:
-                  'Token query string only (without the leading ?)',
+                  _text('tokenHelp'),
             ),
           ),
           const SizedBox(height: 16),
@@ -492,11 +494,11 @@ class _AzureConnectionDialogState
             key: const Key('azure_sas_container'),
             controller: _sasContainerController,
             enabled: !_isLoading,
-            decoration: const InputDecoration(
-              labelText: 'Container',
+            decoration: InputDecoration(
+              labelText: _text('container'),
               hintText: 'my-container',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.folder_outlined),
+              border: const OutlineInputBorder(),
+              prefixIcon: const Icon(Icons.folder_outlined),
             ),
           ),
         ],
@@ -508,13 +510,13 @@ class _AzureConnectionDialogState
           controller: _connStringController,
           enabled: !_isLoading,
           maxLines: 3,
-          decoration: const InputDecoration(
-            labelText: 'Connection String',
+          decoration: InputDecoration(
+            labelText: _text('connectionString'),
             hintText:
                 'DefaultEndpointsProtocol=https;AccountName=…;AccountKey=…;EndpointSuffix=core.windows.net',
-            border: OutlineInputBorder(),
+            border: const OutlineInputBorder(),
             helperText:
-                'Found in Azure Portal → Storage account → Access keys',
+                _text('azureKeyHelp'),
           ),
         ),
       ];

@@ -18,7 +18,12 @@ class SmbSession {
   }
 
   Future<T> _guard<T>(Future<T> Function() action) async {
-    if (_closed) throw const RemoteException('SMB connection closed.');
+    if (_closed)
+      throw const RemoteException(
+        'SMB connection closed.',
+        code: RemoteErrorCode.closed,
+        arguments: {'protocol': 'SMB'},
+      );
     try {
       return await action();
     } on Smb2Exception catch (e) {
@@ -32,6 +37,14 @@ class SmbSession {
             : 'SMB request failed (${e.type.name}). Check the share permissions, network and encryption setting.',
         retryable: e.isTransient,
         cause: e,
+        code: e.isCancelled
+            ? RemoteErrorCode.smbPaused
+            : e.isAuthError
+            ? RemoteErrorCode.smbAuth
+            : e.isNotFound
+            ? RemoteErrorCode.smbNotFound
+            : RemoteErrorCode.smbRequest,
+        arguments: {'type': e.type.name},
       );
     }
   }
@@ -57,7 +70,11 @@ class SmbSession {
     );
     if (_closed) {
       await pool.disconnect();
-      throw const RemoteException('SMB connection closed.');
+      throw const RemoteException(
+        'SMB connection closed.',
+        code: RemoteErrorCode.closed,
+        arguments: {'protocol': 'SMB'},
+      );
     }
     return pool;
   });
@@ -68,7 +85,11 @@ class SmbSession {
     if (parts.any(
       (s) => s == '.' || s == '..' || s.contains(r'\') || s.contains('\u0000'),
     )) {
-      throw const FormatException('Invalid SMB path.');
+      throw const RemoteFormatException(
+        'Invalid SMB path.',
+        RemoteErrorCode.invalidPath,
+        arguments: {'protocol': 'SMB'},
+      );
     }
     return connection.url
         .replace(
@@ -88,7 +109,11 @@ class SmbSession {
           s.contains(r'\') ||
           s.contains('\u0000'),
     )) {
-      throw const RemoteException('Invalid SMB path.');
+      throw const RemoteException(
+        'Invalid SMB path.',
+        code: RemoteErrorCode.invalidPath,
+        arguments: {'protocol': 'SMB'},
+      );
     }
     final target = base.resolve(path.isEmpty ? base.toString() : path);
     final parts = target.pathSegments;
@@ -109,6 +134,8 @@ class SmbSession {
         )) {
       throw const RemoteException(
         'The SMB path is outside this connection’s root.',
+        code: RemoteErrorCode.outsideRoot,
+        arguments: {'protocol': 'SMB'},
       );
     }
     return parts.skip(1).where((s) => s.isNotEmpty).join('/');
@@ -119,7 +146,11 @@ class SmbSession {
     final pool = await _open();
     final entries = await pool.listDirectory(target, cancelToken: _cancel);
     if (entries.length > 10000) {
-      throw const RemoteException('SMB folder is too large.');
+      throw const RemoteException(
+        'SMB folder is too large.',
+        code: RemoteErrorCode.folderTooLarge,
+        arguments: {'protocol': 'SMB'},
+      );
     }
     final parent = connection.url.resolve(
       path.isEmpty ? connection.url.toString() : path,
@@ -165,7 +196,11 @@ class SmbSession {
     try {
       final s = await pool.stat(target, cancelToken: _cancel);
       if (!s.isDirectory && !s.isFile) {
-        throw const RemoteException('SMB links are unsupported.');
+        throw const RemoteException(
+          'SMB links are unsupported.',
+          code: RemoteErrorCode.linksUnsupported,
+          arguments: {'protocol': 'SMB'},
+        );
       }
       return RemoteEntry(
         path,
@@ -187,7 +222,12 @@ class SmbSession {
     final pool = await _open();
     try {
       final before = await pool.stat(target, cancelToken: _cancel);
-      if (!before.isFile) throw const RemoteException('Choose an SMB file.');
+      if (!before.isFile)
+        throw const RemoteException(
+          'Choose an SMB file.',
+          code: RemoteErrorCode.chooseFile,
+          arguments: {'protocol': 'SMB'},
+        );
       final handle = await pool.openFile(target, cancelToken: _cancel);
       try {
         var received = 0;
@@ -201,6 +241,8 @@ class SmbSession {
           if (bytes.isEmpty) {
             throw const RemoteException(
               'SMB download was incomplete.',
+              code: RemoteErrorCode.incomplete,
+              arguments: {'protocol': 'SMB'},
               retryable: true,
             );
           }
@@ -214,6 +256,8 @@ class SmbSession {
             before.changed != after.changed) {
           throw const RemoteException(
             'SMB file changed during download. Retry it.',
+            code: RemoteErrorCode.fileChanged,
+            arguments: {'protocol': 'SMB'},
           );
         }
       } finally {
@@ -222,6 +266,8 @@ class SmbSession {
     } on Smb2Exception catch (e) {
       throw RemoteException(
         'SMB download interrupted.',
+        code: RemoteErrorCode.interrupted,
+        arguments: {'protocol': 'SMB'},
         retryable: e.isTransient,
       );
     }
@@ -239,6 +285,8 @@ class SmbSession {
     if (!before.isFile || before.size <= 0 || before.size > limit) {
       throw const RemoteException(
         'SMB file is empty, unsupported or exceeds the download limit.',
+        code: RemoteErrorCode.invalidFile,
+        arguments: {'protocol': 'SMB'},
       );
     }
     final validator =
@@ -263,11 +311,18 @@ class SmbSession {
         (file) async {
           while (offset < before.size) {
             final length = (before.size - offset).clamp(0, 256 * 1024);
-            if (_closed) throw const RemoteException('SMB transfer paused.');
+            if (_closed)
+              throw const RemoteException(
+                'SMB transfer paused.',
+                code: RemoteErrorCode.paused,
+                arguments: {'protocol': 'SMB'},
+              );
             final bytes = await file.read(offset: offset, length: length);
             if (bytes.isEmpty) {
               throw const RemoteException(
                 'SMB download was incomplete.',
+                code: RemoteErrorCode.incomplete,
+                arguments: {'protocol': 'SMB'},
                 retryable: true,
               );
             }
@@ -286,6 +341,8 @@ class SmbSession {
           after.changed != before.changed) {
         throw const RemoteException(
           'SMB file changed during download. Retry it.',
+          code: RemoteErrorCode.fileChanged,
+          arguments: {'protocol': 'SMB'},
         );
       }
     } finally {
@@ -317,7 +374,10 @@ class SmbSession {
       _guard(() async {
         final target = _path(path);
         if (target.isEmpty || target == _path('')) {
-          throw const RemoteException('Cannot delete the connection root.');
+          throw const RemoteException(
+            'Cannot delete the connection root.',
+            code: RemoteErrorCode.deleteRoot,
+          );
         }
         final pool = await _open();
         if (directory) {

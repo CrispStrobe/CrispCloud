@@ -10,6 +10,9 @@ enum OperationType { upload, download, copy, move, delete }
 
 enum OperationStatus { inProgress, waitingForDecision, completed, failed }
 
+/// App-authored transfer failures that can be presented in the UI locale.
+enum TransferErrorCode { cancelled, allFilesFailed, someFilesFailed }
+
 class OperationProgress implements TransferOperation {
   static const _log = Log('OperationProgress');
 
@@ -22,6 +25,8 @@ class OperationProgress implements TransferOperation {
   int currentBytes;
   OperationStatus status;
   String? errorMessage;
+  TransferErrorCode? errorCode;
+  Map<String, Object> errorArguments = const {};
 
   /// Ephemeral foreground details; recovery remains owned by the journal.
   String? currentFilePath;
@@ -96,6 +101,8 @@ class OperationProgress implements TransferOperation {
       _isCancelled = true;
       status = OperationStatus.failed;
       errorMessage = 'Cancelled by user';
+      errorCode = TransferErrorCode.cancelled;
+      errorArguments = const {};
       if (!_cancellationCompleter.isCompleted) {
         _cancellationCompleter.complete();
       }
@@ -156,6 +163,9 @@ class OperationProgress implements TransferOperation {
 
   void complete() {
     status = OperationStatus.completed;
+    errorMessage = null;
+    errorCode = null;
+    errorArguments = const {};
     currentBytes = totalBytes;
 
     // Mark all files as complete if this is a batch
@@ -168,15 +178,23 @@ class OperationProgress implements TransferOperation {
     }
   }
 
-  void fail(String error) {
+  void fail(
+    String error, {
+    TransferErrorCode? code,
+    Map<String, Object> arguments = const {},
+  }) {
     status = OperationStatus.failed;
     errorMessage = error;
+    errorCode = code;
+    errorArguments = Map.unmodifiable(arguments);
   }
 
   void waitForDecision() {
     resume();
     status = OperationStatus.waitingForDecision;
     errorMessage = null;
+    errorCode = null;
+    errorArguments = const {};
     _currentSpeed = 0;
     _lastSpeedUpdate = null;
     _lastSpeedBytes = currentBytes;
@@ -294,6 +312,9 @@ class FileProgress {
   final int size;
   bool isComplete;
   String? error;
+
+  /// Original failure, retained for localized presentation and diagnostics.
+  Object? errorCause;
 
   /// Human-readable terminal state for filtered, skipped, or cancelled rows.
   String? statusLabel;

@@ -1,11 +1,27 @@
 import 'package:flutter/widgets.dart';
 
+import 'pdf_workflow_translations.dart';
+import 'pdf_operations_romance.dart';
+import 'pdf_operations_cjk.dart';
+import 'pdf_operations_ko_ar.dart';
+
 /// Host-owned PDF workflows. The embedded editor localizes its own tools.
 abstract final class PdfOperationsStrings {
+  @visibleForTesting
+  static Set<String> get sourceKeys => _de.keys.toSet();
+
   static String translate(BuildContext context, String english) =>
       Localizations.localeOf(context).languageCode == 'de'
       ? _de[english] ?? english
-      : english;
+      : pdfWorkflowTranslations[Localizations.localeOf(context)
+                .languageCode]?[english] ??
+            pdfOperationsRomance[Localizations.localeOf(context)
+                .languageCode]?[english] ??
+            pdfOperationsCjk[Localizations.localeOf(context)
+                .languageCode]?[english] ??
+            pdfOperationsKoAr[Localizations.localeOf(context)
+                .languageCode]?[english] ??
+            english;
 
   static const _de = <String, String>{
     'Edit PDF': 'PDF bearbeiten',

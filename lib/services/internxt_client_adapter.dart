@@ -22,6 +22,7 @@ import 'package:internxt_client/internxt_client.dart';
 
 import 'cloud_storage_interface.dart';
 import 'internxt_client.dart' show InternxtUrls;
+import 'internxt_operation_failure.dart';
 import 'internxt_flutter/shared_prefs_storage.dart';
 import 'log_service.dart';
 import 'internxt_streaming_transfer.dart';

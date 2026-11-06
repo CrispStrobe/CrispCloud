@@ -7,7 +7,9 @@ import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/panel_source_provider.dart';
+import 'package:crisp_cloud/providers/focus_area_provider.dart';
 import 'package:crisp_cloud/providers/providers.dart';
+import 'package:crisp_cloud/screens/keyboard_shortcuts.dart';
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:crisp_cloud/services/file_selection_pattern.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
@@ -888,11 +890,77 @@ void main() {
     await tester.pumpAndSettle();
   });
 
+  testWidgets(
+    'F2 renames the compact cursor row and Shift+F6 keeps the extension',
+    (tester) async {
+      final panel = await remote();
+      container.read(activePanelProvider.notifier).state = PanelSide.remote;
+      container.read(focusAreaProvider.notifier).state = FocusArea.remote;
+      final scroll = ScrollController();
+      addTearDown(scroll.dispose);
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            home: Scaffold(
+              body: Consumer(
+                builder: (context, ref, child) => Focus(
+                  autofocus: true,
+                  onKeyEvent: (node, event) =>
+                      handleKeyEvent(context, ref, event),
+                  child: child!,
+                ),
+                child: FileListView(
+                  side: PanelSide.remote,
+                  files: panel.files!,
+                  scrollController: scroll,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final item = panel.files!.firstWhere((file) => file.name == 'a.txt');
+      panel.setCursorOnly(item);
+      panel.focusList();
+      await tester.pump();
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.f2);
+      await tester.pump();
+      expect(find.byType(TextField), findsOneWidget);
+      var field = tester.widget<TextField>(find.byType(TextField));
+      expect(
+        field.controller!.selection,
+        const TextSelection(baseOffset: 0, extentOffset: 5),
+      );
+
+      panel.cancelRename();
+      await tester.pump();
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.f6);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.pump();
+      expect(find.byType(TextField), findsOneWidget);
+      field = tester.widget<TextField>(find.byType(TextField));
+      expect(
+        field.controller!.selection,
+        const TextSelection(baseOffset: 0, extentOffset: 1),
+      );
+
+      panel.cancelRename();
+      await tester.pumpAndSettle();
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpAndSettle();
+    },
+  );
+
   testWidgets('numpad plus opens selection instead of entering quick search', (
     tester,
   ) async {
     final panel = await remote();
     container.read(activePanelProvider.notifier).state = PanelSide.remote;
+    container.read(focusAreaProvider.notifier).state = FocusArea.remote;
     final scroll = ScrollController();
     addTearDown(scroll.dispose);
     await tester.pumpWidget(

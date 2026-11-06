@@ -9,15 +9,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/app_localizations.dart';
+import '../l10n/command_strings.dart';
+import '../l10n/undo_presentation.dart';
+import '../l10n/viewer_action_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
-import '../providers/panel_source_provider.dart' show panelSourceProvider;
+import '../providers/panel_source_provider.dart'
+    show panelSourceProvider, swapPanelSources;
+import '../providers/focus_area_provider.dart';
+import '../providers/terminal_provider.dart';
 import '../providers/toolbar_provider.dart' show panelViewModeProvider;
 import '../services/panel_view_mode_service.dart' show PanelViewMode;
-import '../services/panel_swap_service.dart';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path/path.dart' as p;
 
 import '../services/archive_service.dart';
@@ -28,10 +33,7 @@ import '../widgets/pattern_selection_dialog.dart';
 import '../widgets/file_list_dialog.dart';
 import '../widgets/file_clipboard_actions.dart';
 import '../widgets/file_context_menu.dart'
-    show
-        openListedFileWithSystemEditor,
-        showPropertiesDialog,
-        showFileContextMenu;
+    show showPropertiesDialog, showFileContextMenu;
 import '../widgets/file_toolbar.dart' show showPanelFilterDialog;
 import '../widgets/search_dialogs.dart' show showSearchDialog;
 import 'screen_dialogs.dart';
@@ -43,12 +45,45 @@ import 'screen_dialogs.dart';
 ///
 /// [onPanelSwitch] is called when Tab is pressed on narrow screens
 /// to sync the mobile panel tab state.
+bool _isGlobalFunctionKey(LogicalKeyboardKey key) =>
+    key == LogicalKeyboardKey.f1 ||
+    key == LogicalKeyboardKey.f2 ||
+    key == LogicalKeyboardKey.f3 ||
+    key == LogicalKeyboardKey.f4 ||
+    key == LogicalKeyboardKey.f5 ||
+    key == LogicalKeyboardKey.f6 ||
+    key == LogicalKeyboardKey.f7 ||
+    key == LogicalKeyboardKey.f8 ||
+    key == LogicalKeyboardKey.f9 ||
+    key == LogicalKeyboardKey.f10 ||
+    key == LogicalKeyboardKey.f11 ||
+    key == LogicalKeyboardKey.f12;
+
+bool _isEditingText() {
+  final focus = FocusManager.instance.primaryFocus;
+  final context = focus?.context;
+  if (context == null) return false;
+  return context.widget is EditableText ||
+      context.findAncestorWidgetOfExactType<EditableText>() != null ||
+      context.findAncestorStateOfType<EditableTextState>() != null;
+}
+
 KeyEventResult handleKeyEvent(
   BuildContext context,
   WidgetRef ref,
   KeyEvent event, {
   void Function(PanelSide)? onPanelSwitch,
 }) {
+  // A focused text field (terminal command line, search box, dialog input)
+  // must receive printable keys, arrows and editing keys. The file browser
+  // only keeps global function keys and modified shortcuts while editing.
+  final terminalOwnsFocus = ref.read(focusAreaProvider) == FocusArea.terminal;
+  final terminalTyping = ref.read(terminalInputFocusedProvider);
+  if ((terminalOwnsFocus || terminalTyping || _isEditingText()) &&
+      !_isGlobalFunctionKey(event.logicalKey)) {
+    return KeyEventResult.ignored;
+  }
+
   // Allow key-repeat only for navigation keys; block for everything else
   if (event is KeyRepeatEvent) {
     final k = event.logicalKey;
@@ -332,12 +367,15 @@ KeyEventResult handleKeyEvent(
     return KeyEventResult.handled;
   }
 
-  // F2 or Shift+F6 - In-place rename of cursor item (TC/DC convention)
-  if (event.logicalKey == LogicalKeyboardKey.f2 ||
-      (!isCtrl && isShift && event.logicalKey == LogicalKeyboardKey.f6)) {
+  // F2 or Shift+F6 - In-place rename of cursor item (TC/DC convention).
+  // Shift+F6 keeps the extension and selects only the base name.
+  final isF2 = !isCtrl && !isShift && event.logicalKey == LogicalKeyboardKey.f2;
+  final isShiftF6 =
+      !isCtrl && isShift && event.logicalKey == LogicalKeyboardKey.f6;
+  if (isF2 || isShiftF6) {
     final cursor = panel.cursorItem;
     if (cursor != null && cursor.name != '..') {
-      panel.startRename(cursor);
+      panel.startRename(cursor, keepExtension: isShiftF6);
     } else {
       showRenameDialog(context, ref);
     }
@@ -354,15 +392,7 @@ KeyEventResult handleKeyEvent(
   // Shift+F4 - Edit file in system editor
   if (event.logicalKey == LogicalKeyboardKey.f4) {
     if (isShift) {
-      // Open with system editor
-      final activePanel = ref.read(activePanelProvider);
-      final pnl = ref.read(panelProvider(activePanel));
-      final target = pnl.selection.isEmpty
-          ? pnl.cursorItem
-          : pnl.selection.first;
-      if (target?.path != null && !kIsWeb) {
-        openListedFileWithSystemEditor(context, ref, target!);
-      }
+      chooseEditorForSelection(context, ref);
     } else {
       editSelectedFile(context, ref);
     }
@@ -445,18 +475,11 @@ KeyEventResult handleKeyEvent(
 
   // Ctrl+U - Swap panel sources (orthodox FM convention, like Midnight Commander)
   if (isCtrl && !isShift && event.logicalKey == LogicalKeyboardKey.keyU) {
-    const service = PanelSwapService();
-    final leftSrc = ref.read(panelSourceProvider(PanelSide.local));
-    final rightSrc = ref.read(panelSourceProvider(PanelSide.remote));
-    if (service.canSwap(leftSrc, rightSrc)) {
-      final (newLeft, newRight) = service.swap(leftSrc, rightSrc);
-      ref
-          .read(panelSourceProvider(PanelSide.local).notifier)
-          .setSource(newLeft);
-      ref
-          .read(panelSourceProvider(PanelSide.remote).notifier)
-          .setSource(newRight);
-    }
+    unawaited(
+      swapPanelSources(ref).then((_) {
+        if (context.mounted) onPanelSwitch?.call(ref.read(activePanelProvider));
+      }),
+    );
     return KeyEventResult.handled;
   }
 
@@ -605,10 +628,9 @@ Future<void> _openCursorInPanel(
   if (sourcePanel.isInArchive) {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Extract the file first; items inside an archive cannot be '
-            'opened in another panel.',
+            ViewerActionStrings(context).archiveOtherPanelUnsupported,
           ),
         ),
       );
@@ -621,10 +643,8 @@ Future<void> _openCursorInPanel(
   if (sourceIsLocal != targetIsLocal) {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Cannot open a local file in a remote panel (or vice versa).',
-          ),
+        SnackBar(
+          content: Text(ViewerActionStrings(context).incompatiblePanelSources),
         ),
       );
     }
@@ -687,9 +707,9 @@ void _undoLastAction(
   final last = historyNotifier.lastAction;
   if (last == null) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Nothing to undo'),
-        duration: Duration(seconds: 2),
+      SnackBar(
+        content: Text(CommandStrings(context).text('nothingUndo')),
+        duration: const Duration(seconds: 2),
       ),
     );
     return;
@@ -698,7 +718,11 @@ void _undoLastAction(
   if (!historyNotifier.canUndo(last)) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Cannot undo: ${last.description}'),
+        content: Text(
+          CommandStrings(context).text('cannotUndo', {
+            'action': UndoPresentation(context).description(last),
+          }),
+        ),
         duration: const Duration(seconds: 3),
       ),
     );
@@ -712,7 +736,7 @@ void _undoLastAction(
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(result.message),
+        content: Text(UndoPresentation(context).result(result)),
         duration: const Duration(seconds: 3),
         backgroundColor: result.success
             ? null

@@ -7,6 +7,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/cache_settings_strings.dart';
 import '../providers/providers.dart';
 import '../utils/formatters.dart' as fmt;
 import '../l10n/app_localizations.dart';
@@ -15,11 +16,11 @@ void showCacheSettingsDialog(BuildContext context, WidgetRef ref) {
   showDialog(
     context: context,
     builder: (_) => AlertDialog(
-      title: const Row(
+      title: Row(
         children: [
-          Icon(Icons.storage),
-          SizedBox(width: 8),
-          Text('Cache Settings'),
+          const Icon(Icons.storage),
+          const SizedBox(width: 8),
+          Text(CacheSettingsStrings(context).text('settings')),
         ],
       ),
       content: const SizedBox(width: 420, child: CacheSettingsPanel()),
@@ -64,10 +65,8 @@ class _CacheSettingsPanelState extends ConsumerState<CacheSettingsPanel> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Clear Cache'),
-        content: const Text(
-          'Remove all cached files? They will be re-downloaded when needed.',
-        ),
+        title: Text(CacheSettingsStrings(context).text('clearTitle')),
+        content: Text(CacheSettingsStrings(context).text('clearConfirm')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -95,24 +94,34 @@ class _CacheSettingsPanelState extends ConsumerState<CacheSettingsPanel> {
     final totalSize = cache.totalSize;
     final maxSize = cache.maxSize;
     final entryCount = cache.entryCount;
-    final usagePercent =
-        maxSize > 0 ? (totalSize / maxSize).clamp(0.0, 1.0) : 0.0;
+    final usagePercent = maxSize > 0
+        ? (totalSize / maxSize).clamp(0.0, 1.0)
+        : 0.0;
 
     final usageText = maxSize == 0
-        ? '${fmt.formatBytes(totalSize)} used (Unlimited)'
-        : '${fmt.formatBytes(totalSize)} / ${fmt.formatBytes(maxSize)} used';
+        ? CacheSettingsStrings(
+            context,
+          ).text('usedUnlimited', {'used': fmt.formatBytes(totalSize)})
+        : CacheSettingsStrings(context).text('usedLimit', {
+            'used': fmt.formatBytes(totalSize),
+            'max': fmt.formatBytes(maxSize),
+          });
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Cache Usage', style: Theme.of(context).textTheme.titleSmall),
+        Text(
+          CacheSettingsStrings(context).text('usage'),
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
         const SizedBox(height: 8),
         if (maxSize > 0)
           LinearProgressIndicator(
             value: usagePercent,
-            backgroundColor:
-                Theme.of(context).colorScheme.surfaceContainerHighest,
+            backgroundColor: Theme.of(
+              context,
+            ).colorScheme.surfaceContainerHighest,
           ),
         const SizedBox(height: 6),
         Row(
@@ -120,24 +129,31 @@ class _CacheSettingsPanelState extends ConsumerState<CacheSettingsPanel> {
           children: [
             Text(usageText, style: Theme.of(context).textTheme.bodySmall),
             Text(
-              '$entryCount file${entryCount == 1 ? '' : 's'}',
+              CacheSettingsStrings(context).files(entryCount),
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
         ),
         const Divider(height: 24),
-        Text('Maximum Cache Size',
-            style: Theme.of(context).textTheme.titleSmall),
+        Text(
+          CacheSettingsStrings(context).text('max'),
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
           runSpacing: 8,
           children: _cacheSizeOptions.map((opt) {
-            final isSelected = opt.bytes == maxSize ||
+            final isSelected =
+                opt.bytes == maxSize ||
                 (opt.bytes == 0 && maxSize == 0) ||
                 (opt.bytes == 0 && maxSize > 2 * 1024 * 1024 * 1024);
             return ChoiceChip(
-              label: Text(opt.label),
+              label: Text(
+                opt.bytes == 0
+                    ? CacheSettingsStrings(context).text('unlimited')
+                    : opt.label,
+              ),
               selected: isSelected,
               onSelected: (_) => _setMaxSize(opt.bytes),
             );
@@ -145,10 +161,10 @@ class _CacheSettingsPanelState extends ConsumerState<CacheSettingsPanel> {
         ),
         const SizedBox(height: 4),
         Text(
-          'Least recently used files are evicted when the limit is reached.',
+          CacheSettingsStrings(context).text('eviction'),
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.outline,
-              ),
+            color: Theme.of(context).colorScheme.outline,
+          ),
         ),
         const SizedBox(height: 8),
         TextButton.icon(
@@ -158,10 +174,13 @@ class _CacheSettingsPanelState extends ConsumerState<CacheSettingsPanel> {
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : Icon(Icons.delete_sweep,
-                  size: 18, color: Theme.of(context).colorScheme.error),
+              : Icon(
+                  Icons.delete_sweep,
+                  size: 18,
+                  color: Theme.of(context).colorScheme.error,
+                ),
           label: Text(
-            'Clear Cache',
+            CacheSettingsStrings(context).text('clearTitle'),
             style: TextStyle(color: Theme.of(context).colorScheme.error),
           ),
           onPressed: _clearing ? null : _clearCache,

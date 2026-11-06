@@ -277,6 +277,8 @@ class _Connection implements TerminalConnection {
   Completer<int?>? exitGate;
 
   @override
+  bool get isSandbox => false;
+  @override
   Stream<String> get output => controller.stream;
   @override
   Future<int?> get exitCode async =>

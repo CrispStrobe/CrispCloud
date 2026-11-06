@@ -45,6 +45,7 @@ import '../services/smb_config_service.dart';
 import '../services/smb_client_adapter.dart';
 import '../services/log_service.dart';
 import 'error_provider.dart';
+import '../services/auth_sync_notice.dart';
 
 class AuthNotifier extends ChangeNotifier {
   static const _log = Log('AuthNotifier');
@@ -153,6 +154,20 @@ class AuthNotifier extends ChangeNotifier {
     await _saveCredentialsAfterLogin(email);
 
     _userEmail = email;
+    _isConnected = true;
+    _ref.read(errorProvider).clearErrors();
+    notifyListeners();
+  }
+
+  /// Key material never enters the generic password/2FA flow or logs.
+  Future<void> loginSftpWithPrivateKey(
+      String identity, String privateKey, String? passphrase) async {
+    final client = _cloudClient;
+    if (client is! SFTPClientAdapter) {
+      throw StateError('SFTP provider is not selected');
+    }
+    await client.loginWithPrivateKey(identity, privateKey, passphrase);
+    _userEmail = identity;
     _isConnected = true;
     _ref.read(errorProvider).clearErrors();
     notifyListeners();
@@ -357,7 +372,8 @@ class AuthNotifier extends ChangeNotifier {
         }
       } catch (e) {
         _log.warn('Auto-login exception', e);
-        _ref.read(errorProvider).addError('Session expired. Please log in again.');
+        _ref.read(errorProvider).addError('Session expired. Please log in again.',
+            cause: const AuthSyncNotice(AuthSyncNoticeCode.sessionExpired));
         _isConnected = false;
         notifyListeners();
       }

@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
@@ -34,6 +35,9 @@ class FileSelectionBar extends ConsumerWidget {
     );
     final files = selection.toList();
     final theme = Theme.of(context);
+    final strings =
+        AppLocalizations.of(context) ??
+        lookupAppLocalizations(const Locale('en'));
 
     Widget responsiveButton({
       required IconData icon,
@@ -79,7 +83,7 @@ class FileSelectionBar extends ConsumerWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '${selection.length} selected',
+                  strings.nSelected(selection.length),
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: theme.colorScheme.onSecondaryContainer,
@@ -99,8 +103,8 @@ class FileSelectionBar extends ConsumerWidget {
                 if (side == PanelSide.local && auth.isConnected)
                   responsiveButton(
                     icon: Icons.upload,
-                    label: 'Upload',
-                    tooltip: 'Upload',
+                    label: strings.upload,
+                    tooltip: strings.upload,
                     showLabel: showLabels,
                     onPressed: () => panel.showingSearchResults
                         ? showFileOperationDialog(
@@ -116,8 +120,8 @@ class FileSelectionBar extends ConsumerWidget {
                 if (side == PanelSide.remote)
                   responsiveButton(
                     icon: Icons.download,
-                    label: 'Download',
-                    tooltip: 'Download',
+                    label: strings.download,
+                    tooltip: strings.download,
                     showLabel: showLabels,
                     onPressed: () => panel.showingSearchResults
                         ? showFileOperationDialog(
@@ -134,7 +138,7 @@ class FileSelectionBar extends ConsumerWidget {
 
                 IconButton(
                   icon: const Icon(Icons.content_copy, size: 20),
-                  tooltip: 'Copy to...',
+                  tooltip: AppLocalizations.of(context)!.copyTo,
                   color: theme.colorScheme.onSecondaryContainer,
                   onPressed: () => panel.showingSearchResults
                       ? showFileOperationDialog(
@@ -148,7 +152,7 @@ class FileSelectionBar extends ConsumerWidget {
                 ),
                 IconButton(
                   icon: const Icon(Icons.drive_file_move, size: 20),
-                  tooltip: 'Move to...',
+                  tooltip: AppLocalizations.of(context)!.moveTo,
                   color: theme.colorScheme.onSecondaryContainer,
                   onPressed: () => panel.showingSearchResults
                       ? showFileOperationDialog(
@@ -162,7 +166,7 @@ class FileSelectionBar extends ConsumerWidget {
                 ),
                 IconButton(
                   icon: const Icon(Icons.delete, size: 20),
-                  tooltip: 'Delete',
+                  tooltip: AppLocalizations.of(context)!.delete,
                   color: theme.colorScheme.onSecondaryContainer,
                   onPressed: () => confirmDelete(context, ref, side, files),
                 ),
@@ -170,8 +174,8 @@ class FileSelectionBar extends ConsumerWidget {
                 const SizedBox(width: 16),
                 responsiveButton(
                   icon: Icons.clear,
-                  label: 'Clear',
-                  tooltip: 'Clear selection',
+                  label: strings.clear,
+                  tooltip: strings.clearSelection,
                   showLabel: showLabels,
                   onPressed: () => panel.clearSelection(),
                 ),

@@ -24,10 +24,19 @@ import 'package:koni_archive/koni_archive.dart' as koni;
 /// Maximum bytes read from a single archive member / decompressed container.
 const int kArchiveReadLimit = 64 * 1024 * 1024;
 
+/// Machine-readable identifiers for app-authored archive messages.
+enum ArchiveMessageCode {
+  closed, archiveLimit, corrupt, entryLimit, entryLimitDetail, readEntry,
+  singleFormat, decompressFile, decompressArchive, unsupported,
+  archiveEncrypted, entryEncrypted, wrongOrCorrupt,
+}
+
 /// A user-presentable archive error (unsupported, corrupt, oversized).
 class ArchiveViewException implements Exception {
   final String message;
-  const ArchiveViewException(this.message);
+  final ArchiveMessageCode? code;
+  final Map<String, Object> arguments;
+  const ArchiveViewException(this.message, {this.code, this.arguments = const {}});
 
   @override
   String toString() => message;
@@ -39,10 +48,14 @@ class ArchivePasswordRequiredException implements Exception {
 
   /// True when a password was supplied but rejected.
   final bool wrongPassword;
+  final ArchiveMessageCode? code;
+  final Map<String, Object> arguments;
 
   const ArchivePasswordRequiredException(
     this.message, {
     this.wrongPassword = false,
+    this.code,
+    this.arguments = const {},
   });
 
   @override
@@ -132,7 +145,7 @@ class ViewerArchive {
     int maxBytes = kArchiveReadLimit,
   }) async {
     if (_closed) {
-      throw const ArchiveViewException('This archive has been closed.');
+      throw const ArchiveViewException('This archive has been closed.', code: ArchiveMessageCode.closed);
     }
     if (maxBytes <= 0) throw ArgumentError.value(maxBytes, 'maxBytes');
     if (member.index < 0 ||
@@ -252,6 +265,7 @@ Future<ViewerArchive> _openWithKoni(
     await source.close();
     throw ArchivePasswordRequiredException(
       'This archive is encrypted.',
+      code: ArchiveMessageCode.archiveEncrypted,
       wrongPassword: password != null || e is koni.InvalidPasswordException,
     );
   } on koni.SizeLimitExceededException catch (e) {
@@ -259,13 +273,15 @@ Future<ViewerArchive> _openWithKoni(
     throw ArchiveViewException(
       'The archive expands beyond the ${_mb(maxMemberBytes)} safety limit '
       '(${e.message}).',
+      code: ArchiveMessageCode.archiveLimit,
+      arguments: {'limit': _mb(maxMemberBytes), 'detail': e.message},
     );
   } on koni.ArchiveException catch (e) {
     await source.close();
-    throw ArchiveViewException('Unsupported or corrupt archive: ${e.message}');
+    throw ArchiveViewException('Unsupported or corrupt archive: ${e.message}', code: ArchiveMessageCode.corrupt, arguments: {'detail': e.message});
   } catch (e) {
     await source.close();
-    throw ArchiveViewException('Unsupported or corrupt archive: $e');
+    throw ArchiveViewException('Unsupported or corrupt archive: $e', code: ArchiveMessageCode.corrupt, arguments: {'detail': e});
   }
 
   final entries = reader.entries;
@@ -307,6 +323,7 @@ Future<ViewerArchive> _openWithKoni(
           if (builder.length + chunk.length > limit) {
             throw ArchiveViewException(
               'The entry is larger than the ${_mb(limit)} safety limit.',
+              code: ArchiveMessageCode.entryLimit, arguments: {'limit': _mb(limit)},
             );
           }
           builder.add(chunk);
@@ -316,12 +333,14 @@ Future<ViewerArchive> _openWithKoni(
       } on koni.EncryptedArchiveException catch (e) {
         throw ArchivePasswordRequiredException(
           'This entry is encrypted.',
+          code: ArchiveMessageCode.entryEncrypted,
           wrongPassword: password != null || e is koni.InvalidPasswordException,
         );
       } on koni.SizeLimitExceededException catch (e) {
         throw ArchiveViewException(
           'The entry is larger than the ${_mb(limit)} safety limit '
           '(${e.message}).',
+          code: ArchiveMessageCode.entryLimitDetail, arguments: {'limit': _mb(limit), 'detail': e.message},
         );
       } on koni.ArchiveException catch (e) {
         if (entry.isEncrypted) {
@@ -329,12 +348,13 @@ Future<ViewerArchive> _openWithKoni(
           // data or a checksum mismatch.
           throw const ArchivePasswordRequiredException(
             'The password is wrong or the entry is corrupt.',
+            code: ArchiveMessageCode.wrongOrCorrupt,
             wrongPassword: true,
           );
         }
-        throw ArchiveViewException('Could not read entry: ${e.message}');
+        throw ArchiveViewException('Could not read entry: ${e.message}', code: ArchiveMessageCode.readEntry, arguments: {'detail': e.message});
       } catch (e) {
-        throw ArchiveViewException('Could not read entry: $e');
+        throw ArchiveViewException('Could not read entry: $e', code: ArchiveMessageCode.readEntry, arguments: {'detail': e});
       }
       return builder.takeBytes();
     },
@@ -396,7 +416,7 @@ String stripCompressionSuffix(String name) {
     } else if (lower.endsWith('.zst') || lower.endsWith('.tzst')) {
       data = ar.ZstdDecoder().decodeBytes(bytes, maxOutputSize: maxBytes);
     } else {
-      throw ArchiveViewException('Not a single-file compressed format: $name');
+      throw ArchiveViewException('Not a single-file compressed format: $name', code: ArchiveMessageCode.singleFormat, arguments: {'name': name});
     }
   } on ArchiveViewException {
     rethrow;
@@ -404,6 +424,7 @@ String stripCompressionSuffix(String name) {
     throw ArchiveViewException(
       'Could not decompress $name (it may be corrupt or larger than the '
       '${_mb(maxBytes)} safety limit): $e',
+      code: ArchiveMessageCode.decompressFile, arguments: {'name': name, 'limit': _mb(maxBytes), 'detail': e},
     );
   }
   return (data: data, innerName: stripCompressionSuffix(name));
@@ -462,9 +483,10 @@ Uint8List _decompressContainer(Uint8List bytes, String lower, int cap) {
     throw ArchiveViewException(
       'Could not decompress the archive (corrupt or larger than the '
       '${_mb(cap)} safety limit): $e',
+      code: ArchiveMessageCode.decompressArchive, arguments: {'limit': _mb(cap), 'detail': e},
     );
   }
-  throw ArchiveViewException('Not a supported compressed archive: $lower');
+  throw ArchiveViewException('Not a supported compressed archive: $lower', code: ArchiveMessageCode.unsupported, arguments: {'name': lower});
 }
 
 String _compressionLabel(String lower) {

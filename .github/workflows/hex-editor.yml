@@ -9,12 +9,19 @@ on:
       - 'packages/madedit2_hex/**'
       - 'tool/verify_hex_vendor.py'
       - 'lib/services/editor_document*'
+      - 'lib/services/captured_file_target.dart'
+      - 'lib/services/pdf_file_store.dart'
       - 'lib/services/hex_*'
       - 'lib/services/file_operation*'
       - 'lib/services/transfer_spool*'
+      - 'lib/providers/panel_provider.dart'
+      - 'lib/providers/panel_source_provider.dart'
       - 'lib/widgets/*editor*'
+      - 'lib/l10n/code_document_ui_strings.dart'
       - 'test/*editor*'
       - 'test/hex_*'
+      - 'test/code_document_ui_localization_test.dart'
+      - 'test/widget/*editor*'
       - 'pubspec.*'
       - '.github/workflows/hex-editor.yml'
   workflow_dispatch:
@@ -73,12 +80,15 @@ jobs:
           test/code_editor_widget_test.dart
           test/code_editor_status_bar_test.dart
           test/hex_file_session_test.dart
+          test/hex_editor_page_test.dart
+          test/widget/editor_handoff_test.dart
       - name: Browser hex editor save, conflict and close tests
         run: >-
           flutter test --platform=chrome --reporter expanded --concurrency=1
           test/hex_editor_page_test.dart
           test/hex_file_session_test.dart
           test/editor_document_test.dart
+          test/widget/editor_handoff_test.dart
 
   desktop-contracts:
     name: Native contracts (${{ matrix.os }})
@@ -113,3 +123,5 @@ jobs:
           test/hex_file_session_test.dart
           test/editor_document_test.dart
           test/editor_save_coordinator_test.dart
+          test/hex_editor_page_test.dart
+          test/widget/editor_handoff_test.dart

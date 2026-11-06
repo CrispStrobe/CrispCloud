@@ -853,6 +853,21 @@ class _MenuRow {
   final double height;
 }
 
+String _defaultFilterHint(BuildContext context) {
+  const hints = <String, String>{
+    'de': 'Zum Suchen eingeben',
+    'fr': 'Saisissez pour rechercher',
+    'es': 'Escriba para buscar',
+    'pt': 'Escreva para pesquisar',
+    'zh': '输入以搜索',
+    'ja': '入力して検索',
+    'ko': '검색어 입력',
+    'ar': 'اكتب للبحث',
+  };
+  return hints[Localizations.maybeLocaleOf(context)?.languageCode] ??
+      'Type to search';
+}
+
 class _OfficeContextOverlayState extends State<_OfficeContextOverlay> {
   static const double _width = 292;
   static const double _filterHeight = 34;
@@ -1146,7 +1161,7 @@ class _OfficeContextOverlayState extends State<_OfficeContextOverlay> {
                                       child: Text(
                                         _query.isEmpty
                                             ? (widget.filterHint ??
-                                                  'Type to search')
+                                                  _defaultFilterHint(context))
                                             : _query,
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,

@@ -11,12 +11,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../l10n/background_notification_strings.dart';
 import 'background_transfer_journal.dart';
-import 'cloud_storage_interface.dart';
 import 'log_service.dart';
 import 'installation_identity.dart';
 import 'sync_database.dart';
 import 'sync_engine.dart';
+import 'cloud_storage_interface.dart';
 
 // Workmanager and flutter_local_notifications are only used on Android/iOS.
 // Conditional imports prevent compilation errors on web/desktop.
@@ -38,6 +39,45 @@ const _kPrefInterval = 'background_sync_interval_minutes';
 
 /// Default sync interval.
 const _kDefaultInterval = 15;
+
+/// Runs all pairs, retaining failures even when a client cannot be created.
+Future<SyncResult> runBackgroundSyncPairs(
+  List<SyncPair> pairs, {
+  required Future<CloudStorageClient?> Function(String provider) buildClient,
+  required Future<SyncResult> Function(SyncPair pair, CloudStorageClient client)
+  syncPair,
+}) async {
+  var total = const SyncResult();
+  for (final pair in pairs) {
+    try {
+      final client = await buildClient(pair.provider);
+      if (client == null) {
+        total += SyncResult(
+          errors: 1,
+          errorMessages: [
+            '${pair.name}: Background connection unavailable for ${pair.provider}',
+          ],
+          failureDetails: [
+            SyncFailureDetail(
+              location: pair.name,
+              provider: pair.provider,
+              providerUnavailable: true,
+            ),
+          ],
+        );
+        continue;
+      }
+      total += await syncPair(pair, client);
+    } catch (error) {
+      total += SyncResult(
+        errors: 1,
+        errorMessages: ['${pair.name}: $error'],
+        failureDetails: [SyncFailureDetail(location: pair.name, cause: error)],
+      );
+    }
+  }
+  return total;
+}
 
 /// Service that manages background sync scheduling on Android and iOS.
 ///
@@ -190,12 +230,11 @@ class BackgroundSyncService {
           await (journalFactory?.call() ??
               createBackgroundTransferJournalRun());
       final engine = SyncEngine(db, journal: run.journal);
-      int conflicts = 0;
-      int errors = 0;
-      final errorMessages = <String>[];
+      var result = const SyncResult();
 
       for (final pair in pairs) {
         CloudStorageClient? client;
+        var providerUnavailable = false;
         try {
           client = await (clientFactory != null
               ? clientFactory(pair.provider)
@@ -204,6 +243,7 @@ class BackgroundSyncService {
                   remotePath: pair.remotePath,
                 ));
           if (client == null) {
+            providerUnavailable = true;
             throw StateError(
               'Background sync is unavailable for "${pair.provider}". '
               'Open CrispCloud and reconnect the account.',
@@ -214,15 +254,23 @@ class BackgroundSyncService {
               'The saved "${pair.provider}" account could not be authenticated.',
             );
           }
-          final result = await engine.syncPair(pair, client);
-          conflicts += result.conflicts;
-          errors += result.errors;
-          errorMessages.addAll(result.errorMessages);
-          _log.info('Pair "${pair.name}" synced — $result');
+          final pairResult = await engine.syncPair(pair, client);
+          result += pairResult;
+          _log.info('Pair "${pair.name}" synced — $pairResult');
         } catch (e, st) {
           _log.error('Error syncing pair "${pair.name}"', e, st);
-          errors++;
-          errorMessages.add('${pair.name}: $e');
+          result += SyncResult(
+            errors: 1,
+            errorMessages: ['${pair.name}: $e'],
+            failureDetails: [
+              SyncFailureDetail(
+                location: pair.name,
+                cause: e,
+                provider: pair.provider,
+                providerUnavailable: providerUnavailable,
+              ),
+            ],
+          );
         } finally {
           try {
             // Production builders use private credential copies, so cleanup
@@ -234,28 +282,36 @@ class BackgroundSyncService {
               e,
               st,
             );
-            errors++;
-            errorMessages.add(
-              '${pair.name}: Could not close the provider session.',
+            result += SyncResult(
+              errors: 1,
+              errorMessages: [
+                '${pair.name}: Could not close the provider session.',
+              ],
+              failureDetails: [
+                SyncFailureDetail(location: pair.name, cause: e),
+              ],
             );
           }
         }
       }
 
       // 4. Send local notification if there is something worth reporting
-      if (conflicts > 0 || errors > 0) {
-        final message = _buildNotificationBody(
-          conflicts: conflicts,
-          errors: errors,
-          errorMessages: errorMessages,
+      if (result.conflicts > 0 || result.errors > 0) {
+        final strings = await BackgroundNotificationStrings.fromPreferences();
+        final message = strings.body(
+          conflicts: result.conflicts,
+          errors: result.errors,
+          details: result.failureDetails.isEmpty
+              ? result.errorMessages
+              : result.failureDetails.map(strings.failureDetail).toList(),
         );
         try {
           await notify(
             id: 1001,
-            title: 'CrispCloud Sync',
+            title: strings.text('title'),
             body: message,
             channelId: 'crisp_cloud_sync',
-            channelName: 'Sync Notifications',
+            channelName: strings.text('channel'),
           );
         } catch (e, st) {
           _log.warn('Could not display the background sync result', e, st);
@@ -263,20 +319,21 @@ class BackgroundSyncService {
       }
 
       _log.info(
-        'Background sync task finished. conflicts=$conflicts errors=$errors',
+        'Background sync task finished. conflicts=${result.conflicts} errors=${result.errors}',
       );
       // Workmanager must receive failure when credentials/providers or a pair
       // fail. Android can then apply the configured retry/backoff policy.
-      return errors == 0;
+      return result.errors == 0;
     } catch (e, st) {
       _log.error('Background sync task failed', e, st);
       try {
+        final strings = await BackgroundNotificationStrings.fromPreferences();
         await notify(
           id: 1002,
-          title: 'CrispCloud Sync Error',
-          body: 'Background sync failed: $e',
+          title: strings.text('errorTitle'),
+          body: strings.failure(e),
           channelId: 'crisp_cloud_sync',
-          channelName: 'Sync Notifications',
+          channelName: strings.text('channel'),
         );
       } catch (_) {}
       return false;
@@ -287,21 +344,5 @@ class BackgroundSyncService {
         await db?.close();
       }
     }
-  }
-
-  static String _buildNotificationBody({
-    required int conflicts,
-    required int errors,
-    required List<String> errorMessages,
-  }) {
-    final parts = <String>[];
-    if (conflicts > 0) {
-      parts.add('$conflicts conflict${conflicts == 1 ? '' : 's'}');
-    }
-    if (errors > 0) parts.add('$errors error${errors == 1 ? '' : 's'}');
-    if (errorMessages.isNotEmpty) {
-      parts.add(errorMessages.first);
-    }
-    return parts.join(' — ');
   }
 }

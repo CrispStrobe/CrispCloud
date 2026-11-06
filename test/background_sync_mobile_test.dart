@@ -8,6 +8,7 @@ import 'package:crisp_cloud/services/background_transfer_journal.dart';
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:crisp_cloud/services/ftp_client_adapter.dart';
 import 'package:crisp_cloud/services/ftp_config_service.dart';
+import 'package:crisp_cloud/services/locale_preference.dart';
 import 'package:crisp_cloud/services/secure_storage_service.dart';
 import 'package:crisp_cloud/services/sync_database.dart';
 import 'package:crisp_cloud/services/webdav_client_adapter.dart';
@@ -222,6 +223,7 @@ class _TestPaths extends PathProviderPlatform {
 }
 
 class _Notices {
+  final titles = <String>[];
   final bodies = <String>[];
   Future<void> send({
     required int id,
@@ -230,6 +232,7 @@ class _Notices {
     required String channelId,
     required String channelName,
   }) async {
+    titles.add(title);
     bodies.add(body);
   }
 }
@@ -257,6 +260,36 @@ Future<SyncPair> _pair(
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUp(() => SharedPreferences.setMockInitialValues({}));
+
+  test('worker localizes failures without reporting unavailable accounts as success', () async {
+    final root = await Directory.systemTemp.createTemp('background-locale-');
+    addTearDown(() => root.delete(recursive: true));
+    final local = await Directory(p.join(root.path, 'local')).create();
+    final db = SyncDatabase.forTesting(NativeDatabase.memory());
+    await _pair(db, local.path, WorkflowFakeClient());
+    // Pair binding initializes the installation identity and resets its mock
+    // preferences once. Persist the UI language after that fixture setup.
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setString(LocalePreference.key, 'de');
+    expect((await LocalePreference.read())?.languageCode, 'de');
+    final notices = _Notices();
+    final success = await BackgroundSyncService.executeBackgroundTask(
+      databaseFactory: () => db,
+      clientFactory: (_) async => null,
+      journalFactory: () => createBackgroundTransferJournalRun(
+        rootPath: p.join(root.path, 'runs'),
+      ),
+      notificationSender: notices.send,
+    );
+    expect(success, isFalse);
+    expect(notices.titles.single, 'CrispCloud-Synchronisierung');
+    expect(notices.bodies.single, contains('1 Fehler'));
+    expect(
+      notices.bodies.single,
+      contains('Hintergrundverbindung für ftp nicht verfügbar'),
+    );
+    expect(await local.list().toList(), isEmpty);
+  });
 
   for (final platform in [TargetPlatform.android, TargetPlatform.iOS]) {
     test(

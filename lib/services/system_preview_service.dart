@@ -16,7 +16,8 @@ import 'package:path_provider/path_provider.dart';
 
 class SystemPreviewException implements Exception {
   final String message;
-  const SystemPreviewException(this.message);
+  final String? code;
+  const SystemPreviewException(this.message, {this.code});
 
   @override
   String toString() => message;
@@ -32,6 +33,7 @@ class SystemPreviewService {
     if (!isSupported) {
       throw const SystemPreviewException(
         'System preview is only available on macOS and iOS.',
+        code: 'preview_unsupported',
       );
     }
 
@@ -55,6 +57,7 @@ class SystemPreviewService {
     } on PlatformException catch (e) {
       throw SystemPreviewException(
         e.message ?? 'The system could not preview this document.',
+        code: e.message == null ? 'preview_generic' : e.code,
       );
     }
   }

@@ -81,26 +81,17 @@ SFTP (SSH File Transfer Protocol) connects to any SSH server. It is the most cap
 | Hostname | IP address or domain name of the SSH server |
 | Port | Default: 22 |
 | Username | SSH username |
-| Authentication | Password or private key |
-| Password | SSH password (if using password auth) |
-| Private Key Path | Absolute path to your private key file (if using key auth) |
-| Private Key Passphrase | Passphrase for an encrypted private key (optional) |
+| Password | SSH password |
+| SSH private key | Select an OpenSSH, PKCS#1 RSA or SEC1 EC private key file |
+| Key passphrase | Passphrase for an encrypted private key, if applicable |
 
-### Key Authentication
-
-Generate an RSA or Ed25519 key pair if you do not have one:
-
-```bash
-ssh-keygen -t ed25519 -f ~/.ssh/crispcloud_key
-```
-
-Copy the public key to the server:
-
-```bash
-ssh-copy-id -i ~/.ssh/crispcloud_key.pub user@hostname
-```
-
-In CrispCloud, set **Authentication** to **Private Key** and enter the path to `~/.ssh/crispcloud_key`.
+The connection dialog supports password authentication, including a single
+unambiguous keyboard-interactive password prompt, or an SSH private key. For
+key authentication, select **SSH private key**, choose the key file, and enter
+its passphrase if encrypted. The key and passphrase are stored in the app's
+secure credential store to reconnect. On the web, SFTP requires an SSH-over-
+WebSocket bridge. Interactive one-time-password challenges and combinations
+of multiple SSH authentication factors are not currently supported.
 
 ### Known Hosts
 
@@ -384,7 +375,10 @@ Using the wrong server results in authentication errors.
 
 **Filen / Internxt**: double-check email and password. If 2FA is enabled, ensure the TOTP code is entered before it expires (codes rotate every 30 seconds).
 
-**SFTP**: verify the username exists on the server. If using key auth, ensure the public key is in `~/.ssh/authorized_keys` on the server and permissions on `~/.ssh` are `700` and `authorized_keys` is `600`.
+**SFTP**: verify the username exists and the server permits the selected
+authentication method. For a private key, check that the matching public key
+is authorized by the server and that the passphrase is correct. Additional-
+factor SSH logins are not supported by the current dialog.
 
 **S3**: verify the access key is active and the IAM policy grants access to the specific bucket and region. Access keys are case-sensitive.
 

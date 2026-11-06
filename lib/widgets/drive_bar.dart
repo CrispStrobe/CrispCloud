@@ -13,6 +13,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import 'bookmark_actions.dart';
+import '../l10n/file_panel_strings.dart';
 
 /// A volume/drive entry shown in the drive bar.
 class DriveEntry {
@@ -20,8 +21,15 @@ class DriveEntry {
   final String label;
   final IconData icon;
   final Bookmark? bookmark;
+  final bool isHome;
 
-  const DriveEntry({required this.path, required this.label, required this.icon, this.bookmark});
+  const DriveEntry({
+    required this.path,
+    required this.label,
+    required this.icon,
+    this.bookmark,
+    this.isHome = false,
+  });
 }
 
 /// Provider that caches the list of local drives/volumes.
@@ -38,7 +46,9 @@ Future<List<DriveEntry>> _macVolumes() async {
     final entries = <DriveEntry>[];
     // Always include home
     final home = Platform.environment['HOME'] ?? '/Users';
-    entries.add(DriveEntry(path: home, label: 'Home', icon: Icons.home));
+    entries.add(
+      DriveEntry(path: home, label: 'Home', icon: Icons.home, isHome: true),
+    );
 
     final volumesDir = Directory('/Volumes');
     if (await volumesDir.exists()) {
@@ -47,7 +57,9 @@ Future<List<DriveEntry>> _macVolumes() async {
         if (d is Directory) {
           final name = d.path.split('/').last;
           if (name.startsWith('.')) continue;
-          entries.add(DriveEntry(path: d.path, label: name, icon: Icons.storage));
+          entries.add(
+            DriveEntry(path: d.path, label: name, icon: Icons.storage),
+          );
         }
       }
     }
@@ -62,7 +74,9 @@ Future<List<DriveEntry>> _linuxMounts() async {
   try {
     final entries = <DriveEntry>[];
     final home = Platform.environment['HOME'] ?? '/home';
-    entries.add(DriveEntry(path: home, label: 'Home', icon: Icons.home));
+    entries.add(
+      DriveEntry(path: home, label: 'Home', icon: Icons.home, isHome: true),
+    );
     entries.add(const DriveEntry(path: '/', label: '/', icon: Icons.computer));
 
     final mountsFile = File('/proc/mounts');
@@ -74,18 +88,42 @@ Future<List<DriveEntry>> _linuxMounts() async {
         final mountPoint = parts[1].replaceAll(r'\040', ' ');
         final fsType = parts.length > 2 ? parts[2] : '';
         // Skip system pseudo-filesystems
-        if (const {'proc', 'sysfs', 'devtmpfs', 'devpts', 'tmpfs', 'cgroup', 'bpf',
-                    'pstore', 'autofs', 'mqueue', 'hugetlbfs', 'debugfs', 'tracefs',
-                    'securityfs', 'configfs', 'fusectl', 'none'}.contains(fsType)) {
+        if (const {
+          'proc',
+          'sysfs',
+          'devtmpfs',
+          'devpts',
+          'tmpfs',
+          'cgroup',
+          'bpf',
+          'pstore',
+          'autofs',
+          'mqueue',
+          'hugetlbfs',
+          'debugfs',
+          'tracefs',
+          'securityfs',
+          'configfs',
+          'fusectl',
+          'none',
+        }.contains(fsType)) {
           continue;
         }
         if (mountPoint == '/' || mountPoint == home) continue;
-        if (mountPoint.startsWith('/dev') || mountPoint.startsWith('/proc') ||
-            mountPoint.startsWith('/sys') || mountPoint.startsWith('/run')) {
+        if (mountPoint.startsWith('/dev') ||
+            mountPoint.startsWith('/proc') ||
+            mountPoint.startsWith('/sys') ||
+            mountPoint.startsWith('/run')) {
           continue;
         }
         final label = mountPoint.split('/').last;
-        entries.add(DriveEntry(path: mountPoint, label: label.isEmpty ? mountPoint : label, icon: Icons.usb));
+        entries.add(
+          DriveEntry(
+            path: mountPoint,
+            label: label.isEmpty ? mountPoint : label,
+            icon: Icons.usb,
+          ),
+        );
       }
     }
     return entries;
@@ -97,9 +135,11 @@ Future<List<DriveEntry>> _linuxMounts() async {
 
 Future<List<DriveEntry>> _windowsDrives() async {
   try {
-    final result = await Process.run(
-      'wmic', ['logicaldisk', 'get', 'DeviceID,Description'],
-    );
+    final result = await Process.run('wmic', [
+      'logicaldisk',
+      'get',
+      'DeviceID,Description',
+    ]);
     final entries = <DriveEntry>[];
     final lines = result.stdout.toString().trim().split('\n');
     for (final line in lines.skip(1)) {
@@ -108,8 +148,10 @@ Future<List<DriveEntry>> _windowsDrives() async {
       final desc = parts.first.trim();
       final letter = parts.length > 1 ? parts.last.trim() : desc;
       if (letter.length >= 2 && letter[1] == ':') {
-        final icon = desc.toLowerCase().contains('cd') ? Icons.album
-            : desc.toLowerCase().contains('removable') ? Icons.usb
+        final icon = desc.toLowerCase().contains('cd')
+            ? Icons.album
+            : desc.toLowerCase().contains('removable')
+            ? Icons.usb
             : Icons.storage;
         entries.add(DriveEntry(path: '$letter\\', label: letter, icon: icon));
       }
@@ -143,10 +185,18 @@ class DriveBar extends ConsumerWidget {
       if (bookmarks.isEmpty) return const SizedBox.shrink();
       return _DriveBarRow(
         entries: bookmarks
-            .map((b) => DriveEntry(path: b.path, label: b.name, icon: Icons.bookmark, bookmark: b))
+            .map(
+              (b) => DriveEntry(
+                path: b.path,
+                label: b.name,
+                icon: Icons.bookmark,
+                bookmark: b,
+              ),
+            )
             .toList(),
         currentPath: currentPath,
-        onTap: (entry) => openBookmark(context, ref, entry.bookmark!, side: side),
+        onTap: (entry) =>
+            openBookmark(context, ref, entry.bookmark!, side: side),
         theme: theme,
       );
     }
@@ -200,25 +250,34 @@ class _DriveBarRow extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: isActive ? theme.colorScheme.primary : Colors.transparent,
+                  color: isActive
+                      ? theme.colorScheme.primary
+                      : Colors.transparent,
                   borderRadius: BorderRadius.circular(3),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(entry.icon, size: 12,
-                        color: isActive
-                            ? theme.colorScheme.onPrimary
-                            : theme.colorScheme.onSurfaceVariant),
+                    Icon(
+                      entry.icon,
+                      size: 12,
+                      color: isActive
+                          ? theme.colorScheme.onPrimary
+                          : theme.colorScheme.onSurfaceVariant,
+                    ),
                     const SizedBox(width: 4),
                     Text(
-                      entry.label,
+                      entry.isHome
+                          ? FilePanelStrings(context).text('home')
+                          : entry.label,
                       style: TextStyle(
                         fontSize: 11,
                         color: isActive
                             ? theme.colorScheme.onPrimary
                             : theme.colorScheme.onSurfaceVariant,
-                        fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+                        fontWeight: isActive
+                            ? FontWeight.w600
+                            : FontWeight.normal,
                       ),
                     ),
                   ],

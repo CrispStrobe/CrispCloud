@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/panel_side.dart';
 import '../providers/panel_source_provider.dart';
 import '../services/panel_source_service.dart';
@@ -67,7 +68,7 @@ class _SourceDropdown extends StatelessWidget {
               Icon(_iconFor(entry.source), size: 16),
               const SizedBox(width: 4),
               Text(
-                entry.label,
+                entry.key == 'local' ? (AppLocalizations.of(context)?.local ?? entry.label) : entry.label,
                 overflow: TextOverflow.ellipsis,
               ),
             ],
@@ -96,7 +97,7 @@ class _SourceDropdown extends StatelessWidget {
               ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 120),
                 child: Text(
-                  entry.label,
+                  entry.key == 'local' ? (AppLocalizations.of(context)?.local ?? entry.label) : entry.label,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodySmall?.copyWith(
                     fontWeight: FontWeight.w600,

@@ -1,3 +1,4 @@
+import 'oauth_callback_page.dart';
 // lib/services/pcloud_client_adapter.dart
 //
 // pCloud adapter using the pCloud API with pure HTTP.
@@ -41,6 +42,8 @@ import 'delta_sync_service.dart';
 import 'pcloud_config_service.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
+import './connection_failure.dart';
+import './pcloud_operation_failure.dart';
 
 class PCloudClientAdapter extends CloudStorageClient
     with CloudTransferOperations
@@ -155,7 +158,8 @@ class PCloudClientAdapter extends CloudStorageClient
     _useEuApi = parts.length > 1 && parts[1].trim().toLowerCase() == 'eu';
 
     if (_appKey == null || _appKey!.isEmpty) {
-      throw Exception('App Key is required');
+      throw PCloudOperationFailure(
+          PCloudOperationCode.appKey, 'App Key is required', {});
     }
 
     // Try stored access token (pCloud long-lived tokens don't expire)
@@ -289,7 +293,8 @@ class PCloudClientAdapter extends CloudStorageClient
         }
       }
       if (!found) {
-        throw Exception('pCloud folder not found: $builtPath');
+        throw PCloudOperationFailure(PCloudOperationCode.folderNotFound,
+            'pCloud folder not found: $builtPath', {'path': builtPath});
       }
     }
 
@@ -770,7 +775,9 @@ class PCloudClientAdapter extends CloudStorageClient
   // --- Internal helpers ---
 
   void _ensureToken() {
-    if (_accessToken == null) throw Exception('Not authenticated');
+    if (_accessToken == null)
+      throw PCloudOperationFailure(
+          PCloudOperationCode.notAuthenticated, 'Not authenticated', {});
   }
 
   /// Get the numeric file ID for a given path by listing the parent folder.
@@ -793,7 +800,8 @@ class PCloudClientAdapter extends CloudStorageClient
         return (item['fileid'] as num).toInt();
       }
     }
-    throw Exception('pCloud file not found: $filePath');
+    throw PCloudOperationFailure(PCloudOperationCode.fileNotFound,
+        'pCloud file not found: $filePath', {'path': filePath});
   }
 
   Future<void> _fetchUserInfo() async {
@@ -851,12 +859,16 @@ class PCloudClientAdapter extends CloudStorageClient
       await launchUrl(authUri, mode: LaunchMode.externalApplication);
     } else {
       await server.close();
-      throw Exception('Could not open browser for pCloud authorization');
+      throw const ConnectionFailure(
+          ConnectionFailureCode.oauthBrowserUnavailable,
+          'Could not open browser for pCloud authorization',
+          {'provider': 'pCloud'});
     }
 
     String? authCode;
     try {
       await for (final request in server) {
+        final page = await OAuthCallbackPage.effective();
         final code = request.uri.queryParameters['code'];
         final error = request.uri.queryParameters['error'];
 
@@ -887,7 +899,7 @@ class PCloudClientAdapter extends CloudStorageClient
 
         request.response
           ..statusCode = 404
-          ..write('Not found');
+          ..write(page.notFound);
         await request.response.close();
       }
     } finally {
@@ -898,7 +910,10 @@ class PCloudClientAdapter extends CloudStorageClient
       throw StateError('pCloud authentication was superseded.');
     }
     if (authCode == null) {
-      throw Exception('pCloud authorization was cancelled or failed');
+      throw const ConnectionFailure(
+          ConnectionFailureCode.oauthCancelled,
+          'pCloud authorization was cancelled or failed',
+          {'provider': 'pCloud'});
     }
 
     // Exchange code for access token
@@ -930,7 +945,8 @@ class PCloudClientAdapter extends CloudStorageClient
 
     _accessToken = tokenData['access_token'] as String?;
     if (_accessToken == null || _accessToken!.isEmpty) {
-      throw Exception('pCloud: no access token in response');
+      throw PCloudOperationFailure(PCloudOperationCode.noAccessToken,
+          'pCloud: no access token in response', {});
     }
 
     // If the response indicates EU location, switch to EU API
@@ -982,7 +998,10 @@ class PCloudClientAdapter extends CloudStorageClient
     );
     final resp = await http.get(uri);
     if (resp.statusCode != 200) {
-      throw Exception('pCloud file_pread failed (HTTP ${resp.statusCode})');
+      throw PCloudOperationFailure(
+          PCloudOperationCode.rangeDownload,
+          'pCloud file_pread failed (HTTP ${resp.statusCode})',
+          {'status': resp.statusCode});
     }
     return resp.bodyBytes;
   }

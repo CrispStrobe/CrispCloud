@@ -5,8 +5,10 @@ import 'remote_client.dart';
 /// Browsers cannot connect to SMB TCP sockets.
 class SmbSession {
   SmbSession(RemoteConnection connection);
-  Never _unsupported() =>
-      throw UnsupportedError('SMB requires the installed app.');
+  Never _unsupported() => throw RemoteUnsupportedError(
+    'SMB requires the installed app.',
+    RemoteErrorCode.smbWebUnsupported,
+  );
   String urlForPath(String path) => _unsupported();
   Future<List<RemoteEntry>> browse(String path) => _unsupported();
   Future<RemoteEntry?> stat(String path) => _unsupported();

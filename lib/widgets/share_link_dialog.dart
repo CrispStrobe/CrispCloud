@@ -22,7 +22,9 @@ import '../services/dropbox_client_adapter.dart';
 import '../services/onedrive_client_adapter.dart';
 import '../services/s3_client_adapter.dart';
 import '../services/log_service.dart';
+import '../l10n/provider_operation_strings.dart';
 import '../l10n/app_localizations.dart';
+import '../l10n/share_link_strings.dart';
 
 void showShareLinkDialog(
   BuildContext context,
@@ -47,6 +49,13 @@ void showShareLinkDialog(
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text('$error')));
   }
+}
+
+class _ShareMessage implements Exception {
+  const _ShareMessage(this.message);
+  final String message;
+  @override
+  String toString() => message;
 }
 
 class _ShareLinkDialog extends ConsumerStatefulWidget {
@@ -281,7 +290,7 @@ class _ShareLinkDialogState extends ConsumerState<_ShareLinkDialog> {
       _log.error('Share link generation failed', e);
       if (mounted) {
         setState(() {
-          _error = e.toString();
+          _error = localizedProviderError(context, e);
           _loading = false;
         });
       }
@@ -291,6 +300,7 @@ class _ShareLinkDialogState extends ConsumerState<_ShareLinkDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = ShareLinkStrings(context);
 
     return AlertDialog(
       title: Row(
@@ -354,6 +364,7 @@ class _ShareLinkDialogState extends ConsumerState<_ShareLinkDialog> {
   }
 
   Widget _buildOptionsView(ThemeData theme) {
+    final strings = ShareLinkStrings(context);
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -465,6 +476,7 @@ class _ShareLinkDialogState extends ConsumerState<_ShareLinkDialog> {
   }
 
   Widget _buildResultView(ThemeData theme) {
+    final strings = ShareLinkStrings(context);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [

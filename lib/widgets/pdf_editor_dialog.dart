@@ -115,23 +115,24 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
     });
   }
 
-  @override
-  void dispose() {
+  void _clearMenu() {
     final container = _providerContainer;
     final actions = _menuActions;
     _menuActions = null;
-    _providerContainer = null;
-    if (container != null && actions != null) {
-      scheduleMicrotask(() {
-        try {
-          if (identical(container.read(pdfEditorMenuProvider), actions)) {
-            container.read(pdfEditorMenuProvider.notifier).state = null;
-          }
-        } catch (_) {
-          // The provider container may already be disposed.
-        }
-      });
+    if (container == null || actions == null) return;
+    try {
+      if (identical(container.read(pdfEditorMenuProvider), actions)) {
+        container.read(pdfEditorMenuProvider.notifier).state = null;
+      }
+    } catch (_) {
+      // The provider container may already be disposed.
     }
+  }
+
+  @override
+  void dispose() {
+    _providerContainer = null;
+    _clearMenu();
     _controller?.removeListener(_onRevision);
     _controller?.dispose();
     _session?.removeListener(_onSessionChanged);
@@ -642,6 +643,8 @@ class _PdfEditorDialogState extends ConsumerState<PdfEditorDialog> {
   }
 
   Future<void> _leave() async {
+    _messenger.currentState?.hideCurrentSnackBar();
+    _clearMenu();
     setState(() => _allowPop = true);
     await WidgetsBinding.instance.endOfFrame;
     if (mounted) Navigator.of(context).pop();

@@ -26,6 +26,7 @@ import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 
 import 'b2_config_service.dart';
+import 'b2_operation_failure.dart';
 import 'cloud_storage_interface.dart';
 import 'bounded_http_transfer.dart';
 import 'bounded_transfer_stream.dart';
@@ -192,8 +193,10 @@ class B2ClientAdapter extends CloudStorageClient
     final accountId = body['accountId'] as String?;
 
     if (apiUrl == null || downloadUrl == null || authToken == null) {
-      throw StateError(
+      throw B2StateFailure(
+        B2OperationCode.authorizationResponse,
         'b2_authorize_account response missing required fields: $body',
+        {'body': body},
       );
     }
 
@@ -338,7 +341,10 @@ class B2ClientAdapter extends CloudStorageClient
         account == null ||
         api == null ||
         download == null) {
-      throw StateError('Backblaze B2 is not authenticated.');
+      throw B2StateFailure(
+        B2OperationCode.unauthenticated,
+        'Backblaze B2 is not authenticated.',
+      );
     }
     final bucket = await _resolveBucketId();
     final name = needBucketName ? await _resolveBucketName() : _bucketName;
@@ -821,7 +827,11 @@ class B2ClientAdapter extends CloudStorageClient
     );
     final files = result['files'] as List<dynamic>? ?? [];
     if (files.isEmpty) {
-      throw StateError('File not found for hard delete: $fileName');
+      throw B2StateFailure(
+        B2OperationCode.fileNotFound,
+        'File not found for hard delete: $fileName',
+        {'name': fileName},
+      );
     }
     final file = files.first as Map<String, dynamic>;
     final fileId = file['fileId'] as String;
@@ -869,7 +879,11 @@ class B2ClientAdapter extends CloudStorageClient
     bool authRefreshAllowed = true,
   }) async {
     final apiUrl = _config.getApiUrl();
-    if (apiUrl == null) throw StateError('Not authenticated');
+    if (apiUrl == null)
+      throw B2StateFailure(
+        B2OperationCode.unauthenticated,
+        'Not authenticated',
+      );
 
     final uri = Uri.parse('$apiUrl/b2api/v3/$endpoint');
     final resp = await _retryablePost(
@@ -928,7 +942,10 @@ class B2ClientAdapter extends CloudStorageClient
   Future<Map<String, dynamic>> _listBuckets() async {
     final accountId = _config.accountId;
     if (accountId == null || accountId.isEmpty) {
-      throw StateError('No accountId — call login first');
+      throw B2StateFailure(
+        B2OperationCode.missingAccount,
+        'No accountId — call login first',
+      );
     }
 
     final resp = await _callApi('b2_list_buckets', {'accountId': accountId});
@@ -971,7 +988,8 @@ class B2ClientAdapter extends CloudStorageClient
       return _bucketId!;
     }
 
-    throw StateError(
+    throw B2StateFailure(
+      B2OperationCode.missingBucketId,
       'No bucketId configured. Set it via B2ConfigService.saveCredentials.',
     );
   }
@@ -993,7 +1011,8 @@ class B2ClientAdapter extends CloudStorageClient
       return _bucketName!;
     }
 
-    throw StateError(
+    throw B2StateFailure(
+      B2OperationCode.missingBucketName,
       'No bucketName configured. Set it via B2ConfigService.saveCredentials.',
     );
   }
@@ -1077,7 +1096,11 @@ class B2ClientAdapter extends CloudStorageClient
       final body = resp.body.length > 500
           ? resp.body.substring(0, 500)
           : resp.body;
-      throw StateError('B2 $operation failed with ${resp.statusCode}: $body');
+      throw B2StateFailure(
+        B2OperationCode.api,
+        'B2 $operation failed with ${resp.statusCode}: $body',
+        {'operation': operation, 'status': resp.statusCode, 'body': body},
+      );
     }
   }
 
@@ -1085,7 +1108,11 @@ class B2ClientAdapter extends CloudStorageClient
     try {
       return json.decode(body) as Map<String, dynamic>;
     } catch (e) {
-      throw FormatException('B2 response is not valid JSON: $body');
+      throw B2FormatFailure(
+        B2OperationCode.invalidJson,
+        'B2 response is not valid JSON: $body',
+        {'body': body},
+      );
     }
   }
 

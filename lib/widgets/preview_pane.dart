@@ -22,6 +22,7 @@ import '../services/file_operation_backend.dart';
 import '../services/local_file_service.dart';
 import '../services/viewer_spool.dart';
 import '../l10n/pdf_editor_strings.dart';
+import '../l10n/provider_operation_strings.dart';
 import '../services/file_bytes_loader.dart';
 import '../services/internal_viewer_service.dart';
 import '../utils/formatters.dart';
@@ -40,6 +41,7 @@ import 'package:flutter_highlight/themes/monokai-sublime.dart';
 import 'package:flutter_highlight/themes/github.dart';
 
 import '../services/log_service.dart';
+import '../l10n/preview_media_strings.dart';
 
 /// File types we can preview inline.
 enum PreviewType {
@@ -171,8 +173,11 @@ String? _highlightLang(String filename) {
 
 /// Extract readable text from Office documents (DOCX, XLSX, PPTX, ODT, EPUB).
 /// Shared implementation lives in preview_media.dart.
-Future<String> _extractOfficeText(Uint8List bytes, String filename) =>
-    extractOfficeText(bytes, filename);
+Future<String> _extractOfficeText(
+  Uint8List bytes,
+  String filename,
+  PreviewMediaStrings strings,
+) => extractOfficeText(bytes, filename, strings: strings);
 String _mimeTypeForExt(String ext) => mimeTypeForExt(ext);
 
 class PreviewPane extends ConsumerStatefulWidget {
@@ -197,7 +202,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
   VideoPlayerController? _videoController;
   String? _mediaBlobUrl; // Web: blob URL for HTML5 audio/video
   bool _loading = false;
-  String? _error;
+  String Function(BuildContext)? _error;
   FileItem? _loadedFile; // track which file we loaded
 
   @override
@@ -279,7 +284,9 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
         .originForOperation(file);
     if (origin == null || !origin.isCurrent) {
       setState(
-        () => _error = 'The original preview source is unavailable. Refresh or reopen the file.',
+        () =>
+            _error = (context) =>
+                PreviewMediaStrings(context).text('sourceUnavailable'),
       );
       return;
     }
@@ -293,8 +300,10 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
         file.size != null &&
         file.size! > maxSize) {
       setState(
-        () => _error =
-            'File too large for inline preview (${formatBytes(file.size!)}). Open the F3 viewer.',
+        () => _error = (context) {
+          final strings = PreviewMediaStrings(context);
+          return '${strings.text('fileTooLarge', {'size': formatBytes(file.size!)})}. ${strings.text('openViewer')}';
+        },
       );
       return;
     }
@@ -343,7 +352,11 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
         _pdfDocument = document;
         _pdfController = PdfController(document: Future.value(document));
       } else if (type == PreviewType.office) {
-        final text = await _extractOfficeText(bytes, file.name);
+        final text = await _extractOfficeText(
+          bytes,
+          file.name,
+          PreviewMediaStrings(context),
+        );
         if (!_sameRequest(file, token)) return;
         if (!origin.isCurrent) {
           throw const FileBytesLoadException(
@@ -363,7 +376,10 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
       _log.warn('preview failed', error);
       if (!_sameRequest(file, token)) return;
       setState(() {
-        _error = 'Preview failed: $error';
+        _error = (context) => PreviewMediaStrings(context).text(
+          'previewFailed',
+          {'error': localizedProviderError(context, error)},
+        );
         _loading = false;
       });
     }
@@ -445,7 +461,9 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
       _log.warn('media preview failed', error);
       if (!_sameRequest(file, token)) return;
       setState(() {
-        _error = 'Media preview failed: $error';
+        _error = (context) => PreviewMediaStrings(context).text('mediaFailed', {
+          'error': localizedProviderError(context, error),
+        });
         _loading = false;
       });
     } finally {
@@ -584,7 +602,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
               Icon(Icons.error_outline, size: 36, color: theme.disabledColor),
               const SizedBox(height: 8),
               Text(
-                _error!,
+                _error!(context),
                 style: TextStyle(color: theme.disabledColor, fontSize: 12),
                 textAlign: TextAlign.center,
               ),
@@ -647,12 +665,12 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
               children: [
                 IconButton(
                   icon: const Icon(Icons.first_page, size: 20),
-                  tooltip: AppLocalizations.of(context)!.firstPage,
+                  tooltip: PreviewMediaStrings(context).text('firstPage'),
                   onPressed: () => _pdfController!.jumpToPage(1),
                 ),
                 IconButton(
                   icon: const Icon(Icons.chevron_left, size: 20),
-                  tooltip: AppLocalizations.of(context)!.previousPage,
+                  tooltip: PreviewMediaStrings(context).text('previousPage'),
                   onPressed: () {
                     final current = _pdfController!.page;
                     if (current > 1) _pdfController!.jumpToPage(current - 1);
@@ -670,7 +688,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.chevron_right, size: 20),
-                  tooltip: AppLocalizations.of(context)!.nextPage,
+                  tooltip: PreviewMediaStrings(context).text('nextPage'),
                   onPressed: () {
                     final current = _pdfController!.page;
                     _pdfController!.jumpToPage(current + 1);
@@ -806,7 +824,11 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
             const SizedBox(height: 12),
           ],
           if (file.size != null)
-            _infoRow(context, 'Size', formatBytes(file.size!)),
+            _infoRow(
+              context,
+              PreviewMediaStrings(context).text('size'),
+              formatBytes(file.size!),
+            ),
           if (file.updatedAt != null)
             _infoRow(context, 'Modified', formatDateFull(file.updatedAt!)),
           if (file.path != null) _infoRow(context, 'Path', file.path!),

@@ -1,3 +1,4 @@
+import 'web_file_failure.dart';
 // lib/services/archive_service.dart
 //
 // Archive operations: extract and create .zip files.

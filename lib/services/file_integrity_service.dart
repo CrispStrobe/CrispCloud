@@ -36,6 +36,16 @@ class FileIntegrityCancelled implements Exception {
   String toString() => 'Operation cancelled.';
 }
 
+/// A missing or non-regular input, distinct from account changes or mutations
+/// detected while hashing. Callers can present the affected path without
+/// converting cancellation and integrity failures into filesystem errors.
+class FileIntegrityUnavailable extends StateError {
+  FileIntegrityUnavailable(this.filePath)
+    : super('Missing or unsupported regular file: $filePath');
+
+  final String filePath;
+}
+
 class _DigestSink implements Sink<crypto.Digest> {
   crypto.Digest? digest;
   @override
@@ -120,9 +130,7 @@ Future<FileItem> requireIntegrityFile(
   final current = file.path == null ? null : await source.stat(file.path!);
   checkIntegrityCurrent(source, isCancelled);
   if (current == null || current.isFolder || current.isSymlink == true) {
-    throw StateError(
-      'Missing or unsupported regular file: ${file.path ?? file.name}',
-    );
+    throw FileIntegrityUnavailable(file.path ?? file.name);
   }
   if (file.uuid != null && current.uuid != file.uuid) {
     throw StateError('A different file now occupies ${file.path}.');

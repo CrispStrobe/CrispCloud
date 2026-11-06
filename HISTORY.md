@@ -2,6 +2,34 @@
 
 Audit trail of bugs found, issues discovered, and fixes applied.
 
+## 2026-11-06 — Unified open-PR integration
+
+- Reconciled PRs #8 (providers, mounts and localization), #18 (runtime and
+  sandbox polish), and #20 (hex reliability) with the copy/move queue already
+  merged in #19. Retained each source branch's history in the integration.
+- Kept the newer `madedit2_hex` fork pin, which includes the font correction
+  and byte-history/search fixes. Text/hex handoffs retain one captured backend
+  and path through the complete session, including after saves replace object
+  IDs. Closing/switching waits for accepted edits and saves before prompting.
+- Unified keyboard/toolbar panel swaps into a source transaction with fresh
+  listing verification, per-row file-list origins and archive session ownership.
+  Preserved modern source-bound rename, sync, recovery, collections and editors
+  while incorporating the older branch's localized presentation.
+- Corrected quoted shell operators, empty arguments, multi-source copy/move
+  validation and recursive destination overlap. Kept real PTY/SSH terminals,
+  browser gateways and the sandbox shell under the same session lifecycle and
+  per-connection security-scope cleanup.
+- Completed Azure's bounded-range capability declaration and SFTP private-key
+  forwarding through verified SSH transport. Preserved typed provider/checksum
+  errors, and localized the newer UI without changing external diagnostics.
+- Fixed missing-path upload failures, preserved per-file typed causes, and used
+  unique IDs for concurrent legacy batches. Queue error messages and batch
+  titles now share the localized presentation while retaining scheduling,
+  admission reservations, reviewed recovery and bulk controls.
+- Native mounts remain read-only and capability-gated; App Store restrictions,
+  explicit FUSE-T acknowledgment and external driver requirements remain in
+  effect. No live account mount or driver installation was performed here.
+
 ## 2026-11-06 — Copy/move job queue and batch controls
 
 - Added independent, persisted queue pause; operation-level priority/order;

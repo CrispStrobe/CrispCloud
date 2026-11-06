@@ -7,6 +7,8 @@
 import 'package:flutter/material.dart';
 import 'package:re_editor/re_editor.dart';
 
+import '../l10n/code_search_panel_strings.dart';
+
 class CodeEditorSelectionToolbarController
     implements SelectionToolbarController {
   const CodeEditorSelectionToolbarController();
@@ -20,6 +22,7 @@ class CodeEditorSelectionToolbarController
     required LayerLink layerLink,
     required ValueNotifier<bool> visibility,
   }) {
+    final strings = MaterialLocalizations.of(context);
     final selection = controller.selection;
     final hasSelection = !selection.isCollapsed;
     final hasText = controller.selectedText.isNotEmpty;
@@ -36,31 +39,31 @@ class CodeEditorSelectionToolbarController
         PopupMenuItem<void>(
           enabled: hasText,
           onTap: () => controller.copy(),
-          child: const Text('Copy'),
+          child: Text(strings.copyButtonLabel),
         ),
         PopupMenuItem<void>(
           enabled: hasSelection,
           onTap: () => controller.cut(),
-          child: const Text('Cut'),
+          child: Text(strings.cutButtonLabel),
         ),
         PopupMenuItem<void>(
           onTap: () => controller.paste(),
-          child: const Text('Paste'),
+          child: Text(strings.pasteButtonLabel),
         ),
         const PopupMenuDivider(),
         PopupMenuItem<void>(
           onTap: controller.selectAll,
-          child: const Text('Select all'),
+          child: Text(strings.selectAllButtonLabel),
         ),
         PopupMenuItem<void>(
           enabled: controller.canUndo,
           onTap: controller.undo,
-          child: const Text('Undo'),
+          child: Text(CodeSearchPanelStrings(context).text('undo')),
         ),
         PopupMenuItem<void>(
           enabled: controller.canRedo,
           onTap: controller.redo,
-          child: const Text('Redo'),
+          child: Text(CodeSearchPanelStrings(context).text('redo')),
         ),
       ],
     );

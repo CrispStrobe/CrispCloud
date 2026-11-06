@@ -27,25 +27,28 @@ Map<String, dynamic> _loadArb(String locale) {
 
 /// Returns only the user-facing keys (no @-prefixed metadata, no @@locale).
 Set<String> _userKeys(Map<String, dynamic> arb) {
-  return arb.keys
-      .where((k) => !k.startsWith('@'))
-      .toSet();
+  return arb.keys.where((k) => !k.startsWith('@')).toSet();
 }
 
 /// All supported locales under test.
-const List<String> _locales = ['en', 'de', 'fr', 'es', 'pt', 'zh', 'ja', 'ko', 'ar'];
+const List<String> _locales = [
+  'en',
+  'de',
+  'fr',
+  'es',
+  'pt',
+  'zh',
+  'ja',
+  'ko',
+  'ar'
+];
 
-/// Placeholders that must be preserved verbatim in translated values.
-const Map<String, List<String>> _placeholdersByKey = {
-  'nSelected': ['{count}'],
-  'transferProgress': ['{percent}'],
-  'transferSpeed': ['{speed}'],
-  'transferEta': ['{time}'],
-  'deleteFailed': ['{error}'],
-  'renameFailed': ['{error}'],
-  'operationFailed': ['{error}'],
-  'confirmDeleteMessage': ['{count}'],
-};
+/// Extract named placeholders used by the English ARB messages.
+Set<String> _placeholders(String value) =>
+    RegExp(r'\{([A-Za-z][A-Za-z0-9_]*)\}')
+        .allMatches(value)
+        .map((match) => match.group(1)!)
+        .toSet();
 
 void main() {
   // ---------------------------------------------------------------------------
@@ -123,7 +126,10 @@ void main() {
       test('app_$locale.arb has no empty string values', () {
         final arb = _loadArb(locale);
         final emptyKeys = arb.entries
-            .where((e) => !e.key.startsWith('@') && e.value is String && (e.value as String).isEmpty)
+            .where((e) =>
+                !e.key.startsWith('@') &&
+                e.value is String &&
+                (e.value as String).isEmpty)
             .map((e) => e.key)
             .toList();
         expect(emptyKeys, isEmpty,
@@ -143,7 +149,8 @@ void main() {
         final content = file.readAsStringSync();
         // Walk the raw text to count top-level key occurrences (2-space indent only).
         final keyPattern = RegExp(r'^  "([^"]+)"\s*:', multiLine: true);
-        final allMatches = keyPattern.allMatches(content).map((m) => m.group(1)!).toList();
+        final allMatches =
+            keyPattern.allMatches(content).map((m) => m.group(1)!).toList();
         final seen = <String>{};
         final duplicates = <String>[];
         for (final k in allMatches) {
@@ -159,22 +166,19 @@ void main() {
   // 7. Placeholder patterns preserved in all translations
   // ---------------------------------------------------------------------------
   group('Placeholder patterns preserved', () {
+    final english = _loadArb('en');
     for (final locale in _locales) {
-      for (final entry in _placeholdersByKey.entries) {
-        final key = entry.key;
-        final placeholders = entry.value;
-        test('app_$locale.arb [$key] preserves placeholders $placeholders', () {
-          final arb = _loadArb(locale);
-          final value = arb[key];
-          expect(value, isA<String>(),
-              reason: 'app_$locale.arb: key "$key" must be a String');
-          for (final ph in placeholders) {
-            expect((value as String).contains(ph), isTrue,
-                reason:
-                    'app_$locale.arb: key "$key" must contain placeholder "$ph" but value was: "$value"');
-          }
-        });
-      }
+      test('app_$locale.arb preserves every English message placeholder', () {
+        final translated = _loadArb(locale);
+        for (final entry in english.entries) {
+          if (entry.key.startsWith('@') || entry.value is! String) continue;
+          final value = translated[entry.key];
+          expect(value, isA<String>(), reason: '$locale: ${entry.key}');
+          expect(_placeholders(value as String),
+              _placeholders(entry.value as String),
+              reason: '$locale: ${entry.key}');
+        }
+      });
     }
   });
 

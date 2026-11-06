@@ -4,6 +4,7 @@
 // triggers sync runs, and exposes sync status to the UI.
 
 import 'dart:async';
+import 'dart:ui' show Locale;
 
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
@@ -23,7 +24,9 @@ import '../services/transfer_journal.dart';
 import '../services/tray_service.dart';
 import '../services/log_service.dart';
 import 'auth_provider.dart';
+import 'core_providers.dart' show localeProvider;
 import 'error_provider.dart';
+import '../services/auth_sync_notice.dart';
 
 class SyncNotifier extends ChangeNotifier {
   static const _log = Log('SyncNotifier');
@@ -121,9 +124,15 @@ class SyncNotifier extends ChangeNotifier {
       onSyncAll: () => syncAll(),
       onShowApp: onShowApp,
       onQuit: onQuit,
+      locale: _ref.read(localeProvider),
     );
     _trayInitialized = true;
     _updateTray();
+  }
+
+  /// Refresh tray text when the app's language override changes.
+  void setTrayLocale(Locale? locale) {
+    unawaited(_tray.setLocale(locale));
   }
 
   // --- Auto-eviction ---
@@ -451,7 +460,12 @@ class SyncNotifier extends ChangeNotifier {
       return result;
     } catch (e) {
       _log.warn('operation failed', e);
-      _ref.read(errorProvider).addError('Sync failed: $e');
+      _ref
+          .read(errorProvider)
+          .addError(
+            'Sync failed: $e',
+            cause: AuthSyncNotice(AuthSyncNoticeCode.sync, cause: e),
+          );
       return SyncResult(errors: 1, errorMessages: [e.toString()]);
     } finally {
       _isSyncing = false;
@@ -698,7 +712,12 @@ class SyncNotifier extends ChangeNotifier {
       return localPath;
     } catch (e) {
       _log.error('Failed to hydrate placeholder: $e');
-      _ref.read(errorProvider).addError('Failed to download file: $e');
+      _ref
+          .read(errorProvider)
+          .addError(
+            'Failed to download file: $e',
+            cause: AuthSyncNotice(AuthSyncNoticeCode.download, cause: e),
+          );
       return null;
     }
   }
@@ -726,7 +745,12 @@ class SyncNotifier extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       _log.error('Failed to dehydrate file: $e');
-      _ref.read(errorProvider).addError('Failed to free up space: $e');
+      _ref
+          .read(errorProvider)
+          .addError(
+            'Failed to free up space: $e',
+            cause: AuthSyncNotice(AuthSyncNoticeCode.freeSpace, cause: e),
+          );
     }
   }
 
@@ -751,7 +775,12 @@ class SyncNotifier extends ChangeNotifier {
       return count;
     } catch (e) {
       _log.error('Failed to hydrate all: $e');
-      _ref.read(errorProvider).addError('Failed to download all files: $e');
+      _ref
+          .read(errorProvider)
+          .addError(
+            'Failed to download all files: $e',
+            cause: AuthSyncNotice(AuthSyncNoticeCode.downloadAll, cause: e),
+          );
       return 0;
     }
   }
@@ -767,5 +796,7 @@ class SyncNotifier extends ChangeNotifier {
 }
 
 final syncProvider = ChangeNotifierProvider<SyncNotifier>((ref) {
-  return SyncNotifier(ref);
+  final notifier = SyncNotifier(ref);
+  ref.listen(localeProvider, (_, next) => notifier.setTrayLocale(next));
+  return notifier;
 });

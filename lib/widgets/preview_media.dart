@@ -12,7 +12,7 @@ import 'package:flutter/services.dart' show FontLoader;
 import 'package:universal_html/html.dart' as html;
 import 'package:video_player/video_player.dart';
 
-import '../l10n/app_localizations.dart';
+import '../l10n/preview_media_strings.dart';
 import '../services/archive_viewer_service.dart';
 
 /// RFC 4180-style delimited parser: supports quoted cells, embedded commas,
@@ -99,7 +99,8 @@ const int _kOfficeXmlCap = 8 * 1024 * 1024;
 ///
 /// Uses the viewer's hardened archive layer: metadata-only open, per-entry
 /// size caps while decompressing (zip-bomb safe), typed rejections.
-Future<String> extractOfficeText(Uint8List bytes, String filename) async {
+Future<String> extractOfficeText(Uint8List bytes, String filename,
+    {PreviewMediaStrings? strings}) async {
   final ext = filename.split('.').last.toLowerCase();
   final buffer = StringBuffer();
   ViewerArchive? archive;
@@ -151,14 +152,14 @@ Future<String> extractOfficeText(Uint8List bytes, String filename) async {
       }
     }
   } on ArchiveViewException {
-    return '(Could not extract text from this document)';
+    return (strings?.text('extractFailed') ?? '(Could not extract text from this document)');
   } on ArchivePasswordRequiredException {
-    return '(This document is encrypted)';
+    return (strings?.text('encrypted') ?? '(This document is encrypted)');
   } finally {
     await archive?.close();
   }
 
-  return buffer.isEmpty ? '(No text content found)' : buffer.toString();
+  return buffer.isEmpty ? (strings?.text('noText') ?? '(No text content found)') : buffer.toString();
 }
 
 /// Inline media player for video and audio files.
@@ -221,7 +222,7 @@ class _MediaPlayerState extends State<MediaPlayer> {
                           size: 64, color: theme.colorScheme.primary),
                       const SizedBox(height: 8),
                       Text(
-                        isPlaying ? 'Playing' : 'Paused',
+                        PreviewMediaStrings(context).text(isPlaying ? 'playing' : 'paused'),
                         style: TextStyle(
                             color: theme.colorScheme.onSurfaceVariant),
                       ),
@@ -276,6 +277,7 @@ class _MediaPlayerState extends State<MediaPlayer> {
                   IconButton(
                     icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow,
                         size: 20),
+                    tooltip: PreviewMediaStrings(context).text(isPlaying ? 'pause' : 'play'),
                     onPressed: () {
                       if (isPlaying) {
                         controller.pause();
@@ -302,6 +304,7 @@ class _MediaPlayerState extends State<MediaPlayer> {
                           : Icons.volume_off,
                       size: 18,
                     ),
+                    tooltip: PreviewMediaStrings(context).text(controller.value.volume > 0 ? 'mute' : 'unmute'),
                     onPressed: () {
                       controller
                           .setVolume(controller.value.volume > 0 ? 0.0 : 1.0);
@@ -345,8 +348,8 @@ class WebMediaPlayer extends StatelessWidget {
           ElevatedButton.icon(
             icon: const Icon(Icons.play_arrow),
             label: Text(isAudio
-                ? AppLocalizations.of(context)!.playAudio
-                : AppLocalizations.of(context)!.playVideo),
+                ? PreviewMediaStrings(context).text('playAudio')
+                : PreviewMediaStrings(context).text('playVideo')),
             onPressed: () {
               html.window.open(blobUrl, '_blank');
             },
@@ -429,7 +432,7 @@ class _FontPreviewState extends State<FontPreview> {
                 )),
             const SizedBox(height: 4),
             Text(
-              'The quick brown fox jumps over the lazy dog',
+              PreviewMediaStrings(context).text('sample'),
               style: style.copyWith(fontSize: size),
             ),
             const SizedBox(height: 8),
@@ -471,7 +474,7 @@ class CsvTableView extends StatelessWidget {
         .where((row) => row.any((cell) => cell.trim().isNotEmpty))
         .toList();
     if (rows.isEmpty) {
-      return Center(child: Text(AppLocalizations.of(context)!.emptyFile));
+      return Center(child: Text(PreviewMediaStrings(context).text('emptyFile')));
     }
 
     final headerRow = rows.first;

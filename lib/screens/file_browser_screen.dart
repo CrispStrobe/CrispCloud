@@ -18,9 +18,8 @@ import '../models/panel_side.dart';
 import '../models/file_item.dart';
 import '../providers/providers.dart';
 import '../providers/panel_source_provider.dart'
-    show fkeyBarVisibleProvider, panelSourceProvider;
+    show fkeyBarVisibleProvider, panelSourceProvider, swapPanelSources;
 import '../providers/toolbar_provider.dart' show panelViewModeProvider;
-import '../services/panel_swap_service.dart';
 import '../services/platform_diagnostics_service.dart';
 import '../services/crash_reporting_service.dart' show CrashReport;
 import '../services/panel_view_mode_service.dart' show PanelViewMode;
@@ -67,6 +66,8 @@ import '../widgets/multi_cloud_dialog.dart';
 import '../widgets/mount_dialog.dart';
 import '../widgets/sync_dialog.dart';
 import '../widgets/tree_sidebar.dart';
+import '../l10n/browser_menu_strings.dart';
+import '../l10n/browser_drawer_strings.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/image_editor_strings.dart';
 import '../l10n/office_editor_strings.dart';
@@ -78,6 +79,7 @@ import '../widgets/custom_command_dialog.dart';
 import '../widgets/extensions_dialog.dart';
 import '../l10n/extension_translations.dart';
 import '../widgets/terminal_panel.dart';
+import '../providers/focus_area_provider.dart';
 import '../providers/terminal_provider.dart';
 import '../main.dart' show appLockServiceProvider;
 import '../services/windows_integration_service.dart';
@@ -388,6 +390,11 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         shortcut: const SingleActivator(LogicalKeyboardKey.f4),
         onSelected: () => editSelectedFile(context, ref),
       ),
+      PlatformMenuItem(
+        label: context.commanderTr("Edit with…"),
+        shortcut: const SingleActivator(LogicalKeyboardKey.f4, shift: true),
+        onSelected: () => chooseEditorForSelection(context, ref),
+      ),
       PlatformMenuItemGroup(
         members: <PlatformMenuItem>[
           PlatformMenuItem(
@@ -673,10 +680,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       ),
       PlatformMenuItem(
         label: context.commanderTr("Toggle Terminal"),
-        onSelected: () {
-          final current = ref.read(showTerminalProvider);
-          ref.read(showTerminalProvider.notifier).state = !current;
-        },
+        onSelected: () =>
+            setTerminalVisible(ref, !ref.read(showTerminalProvider)),
       ),
       if (editor == null)
         PlatformMenuItemGroup(
@@ -1569,6 +1574,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
   /// Single panel layout for wide screens (no dual panel).
   Widget _buildSingleWideLayout(BuildContext context) {
     final activePanel = ref.watch(activePanelProvider);
+    final focusArea = ref.watch(focusAreaProvider);
     final showPreview = ref.watch(showPreviewProvider);
     final activePanelNotifier = ref.watch(panelProvider(activePanel));
     final previewFile = activePanelNotifier.selection.length == 1
@@ -1576,7 +1582,17 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         : null;
 
     final panel = RepaintBoundary(
-      child: FilePanel(side: activePanel, isActive: true, onTap: () {}),
+      child: FilePanel(
+        side: activePanel,
+        isActive: focusArea.panelSide == activePanel,
+        onTap: () {
+          ref
+              .read(focusAreaProvider.notifier)
+              .state = activePanel == PanelSide.local
+              ? FocusArea.local
+              : FocusArea.remote;
+        },
+      ),
     );
 
     return showPreview && previewFile != null
@@ -1594,6 +1610,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
 
   Widget _buildTwoPanelLayout(BuildContext context) {
     final activePanel = ref.watch(activePanelProvider);
+    final focusArea = ref.watch(focusAreaProvider);
     final showPreview = ref.watch(showPreviewProvider);
     final splitRatio = ref.watch(panelSplitRatioProvider);
     final activePanelNotifier = ref.watch(panelProvider(activePanel));
@@ -1609,17 +1626,21 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       first: RepaintBoundary(
         child: FilePanel(
           side: PanelSide.local,
-          isActive: activePanel == PanelSide.local,
-          onTap: () =>
-              ref.read(activePanelProvider.notifier).state = PanelSide.local,
+          isActive: focusArea == FocusArea.local,
+          onTap: () {
+            ref.read(activePanelProvider.notifier).state = PanelSide.local;
+            ref.read(focusAreaProvider.notifier).state = FocusArea.local;
+          },
         ),
       ),
       second: RepaintBoundary(
         child: FilePanel(
           side: PanelSide.remote,
-          isActive: activePanel == PanelSide.remote,
-          onTap: () =>
-              ref.read(activePanelProvider.notifier).state = PanelSide.remote,
+          isActive: focusArea == FocusArea.remote,
+          onTap: () {
+            ref.read(activePanelProvider.notifier).state = PanelSide.remote;
+            ref.read(focusAreaProvider.notifier).state = FocusArea.remote;
+          },
         ),
       ),
       third: showPreview
@@ -1629,22 +1650,14 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
   }
 
   Widget _buildSinglePanelLayout(BuildContext context) {
-    final auth = ref.watch(authProvider);
+    final focusArea = ref.watch(focusAreaProvider);
 
     void switchTo(PanelSide side) {
-      if (side == PanelSide.remote && !auth.isConnected) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              context.commanderTr("Please connect to access remote files"),
-            ),
-            duration: const Duration(seconds: 2),
-          ),
-        );
-        return;
-      }
       setState(() => _activePanelMobile = side);
       ref.read(activePanelProvider.notifier).state = side;
+      ref.read(focusAreaProvider.notifier).state = side == PanelSide.local
+          ? FocusArea.local
+          : FocusArea.remote;
     }
 
     return GestureDetector(
@@ -1701,9 +1714,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                 ),
                 Expanded(
                   child: InkWell(
-                    onTap: auth.isConnected
-                        ? () => switchTo(PanelSide.remote)
-                        : null,
+                    onTap: () => switchTo(PanelSide.remote),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         vertical: 6,
@@ -1719,12 +1730,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                           ),
                         ),
                       ),
-                      child: Opacity(
-                        opacity: auth.isConnected ? 1.0 : 0.4,
-                        child: const PanelSourceSelector(
-                          side: PanelSide.remote,
-                        ),
-                      ),
+                      child: const PanelSourceSelector(side: PanelSide.remote),
                     ),
                   ),
                 ),
@@ -1735,8 +1741,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             child: RepaintBoundary(
               child: FilePanel(
                 side: _activePanelMobile,
-                isActive: true,
-                onTap: () {},
+                isActive: focusArea.panelSide == _activePanelMobile,
+                onTap: () => switchTo(_activePanelMobile),
               ),
             ),
           ),
@@ -1807,8 +1813,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
               color: showTerminal ? Theme.of(ctx).colorScheme.primary : null,
             ),
             tooltip: showTerminal ? l.hideTerminal : l.showTerminal,
-            onPressed: () =>
-                cref.read(showTerminalProvider.notifier).state = !showTerminal,
+            onPressed: () => setTerminalVisible(cref, !showTerminal),
           );
         },
       ),
@@ -2019,9 +2024,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           case 'move_options':
             showMoveDialogFromSelection(context, ref);
           case 'terminal':
-            ref.read(showTerminalProvider.notifier).state = !ref.read(
-              showTerminalProvider,
-            );
+            setTerminalVisible(ref, !ref.read(showTerminalProvider));
           case 'multi_cloud':
             showMultiCloudDialog(context);
           case 'sync':
@@ -2410,27 +2413,11 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
 
   /// Exchange the left (local) and right (remote) panel sources.
   /// Called by the AppBar swap button and Ctrl+U.
-  void _swapPanels() {
-    const service = PanelSwapService();
-    final leftSrc = ref.read(panelSourceProvider(PanelSide.local));
-    final rightSrc = ref.read(panelSourceProvider(PanelSide.remote));
-    if (!service.canSwap(leftSrc, rightSrc)) return;
-    final (newLeft, newRight) = service.swap(leftSrc, rightSrc);
-    ref.read(panelSourceProvider(PanelSide.local).notifier).setSource(newLeft);
-    ref
-        .read(panelSourceProvider(PanelSide.remote).notifier)
-        .setSource(newRight);
-    // Also toggle the active panel so the user sees the swap happen.
-    final active = ref.read(activePanelProvider);
-    final newActive = active == PanelSide.local
-        ? PanelSide.remote
-        : PanelSide.local;
-    ref.read(activePanelProvider.notifier).state = newActive;
-    // Update mobile tab if in single-panel mode.
-    setState(() => _activePanelMobile = newActive);
-    // Refresh both panels to reflect new sources.
-    ref.read(panelProvider(PanelSide.local)).refresh();
-    ref.read(panelProvider(PanelSide.remote)).refresh();
+  Future<void> _swapPanels() async {
+    await swapPanelSources(ref);
+    if (mounted && MediaQuery.of(context).size.width <= 800) {
+      setState(() => _activePanelMobile = ref.read(activePanelProvider));
+    }
   }
 
   void _handleFKeyAction(
@@ -2516,6 +2503,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
   Widget _buildDrawer(BuildContext context) {
     final auth = ref.watch(authProvider);
     final transfers = ref.watch(transferProvider);
+    final d = BrowserDrawerStrings(context);
 
     return Drawer(
       child: ListView(
@@ -2833,6 +2821,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
   }
 
   Future<void> _showDiagnosticsDialog(BuildContext context) async {
+    final d = BrowserDrawerStrings(context);
     final service = ref.read(crashReportingServiceProvider);
     final results = await Future.wait([
       service.getRecentReports(20),
@@ -2861,8 +2850,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 2),
                   child: Row(
                     children: [
-                      SizedBox(width: 150, child: Text(entry.key)),
-                      Expanded(child: Text(entry.value)),
+                      SizedBox(width: 150, child: Text(d.text(entry.key))),
+                      Expanded(child: Text(d.text(entry.value))),
                     ],
                   ),
                 ),
@@ -2967,6 +2956,7 @@ class _WindowsExplorerIntegrationTileState
   }
 
   Future<void> _toggle(bool enable) async {
+    final d = BrowserDrawerStrings(context);
     setState(() => _loading = true);
     final success = enable
         ? await _service.registerContextMenu()
@@ -2996,6 +2986,7 @@ class _WindowsExplorerIntegrationTileState
 
   @override
   Widget build(BuildContext context) {
+    final d = BrowserDrawerStrings(context);
     return SwitchListTile(
       secondary: _loading
           ? const SizedBox(

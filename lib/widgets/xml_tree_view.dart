@@ -6,6 +6,8 @@
 import 'package:flutter/material.dart';
 import 'package:xml/xml.dart';
 
+import '../l10n/xml_view_strings.dart';
+
 class XmlTreeView extends StatelessWidget {
   final String xml;
   final double fontSize;
@@ -27,7 +29,7 @@ class XmlTreeView extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Text(
-            'XML parse error: $e\n\nSwitch to Source to inspect the raw file.',
+            XmlViewStrings(context).parseError(e),
             textAlign: TextAlign.center,
             style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
           ),
@@ -44,7 +46,7 @@ class XmlTreeView extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(12),
             child: Text(
-              'Tree truncated after 5000 nodes — use Source for the rest.',
+              XmlViewStrings(context).text('truncated'),
               style: TextStyle(
                 fontSize: 12,
                 color: theme.colorScheme.onSurfaceVariant,

@@ -2126,6 +2126,16 @@ const commanderTranslations = <String, List<String>>{
     "제안된 이름 편집",
     "تحرير الأسماء المقترحة",
   ],
+  "Edit with…": [
+    "Bearbeiten mit…",
+    "Modifier avec…",
+    "Editar con…",
+    "Editar com…",
+    "使用…编辑",
+    "…で編集",
+    "다음으로 편집…",
+    "التحرير باستخدام…",
+  ],
   "Edit text": [
     "Text bearbeiten",
     "Modifier le texte",

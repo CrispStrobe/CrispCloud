@@ -6,6 +6,7 @@
 
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui' show Locale, PlatformDispatcher;
 
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/foundation.dart';
@@ -13,6 +14,8 @@ import 'package:macos_secure_bookmarks/macos_secure_bookmarks.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../utils/path_access.dart';
+import '../l10n/access_and_fkey_strings.dart';
+import 'locale_preference.dart';
 
 class MacOSBookmarkService {
   /// Current multi-bookmark store.
@@ -36,14 +39,18 @@ class MacOSBookmarkService {
       try {
         final List<dynamic> decoded = json.decode(raw) as List<dynamic>;
         return <Map<String, String>>[
-          for (final dynamic item in decoded)
-            if (item is Map)
-              <String, String>{
-                'path': (item['path'] ?? '').toString(),
-                'data': (item['data'] ?? '').toString(),
-              },
-        ].where((Map<String, String> e) =>
-            e['path']!.isNotEmpty && e['data']!.isNotEmpty).toList();
+              for (final dynamic item in decoded)
+                if (item is Map)
+                  <String, String>{
+                    'path': (item['path'] ?? '').toString(),
+                    'data': (item['data'] ?? '').toString(),
+                  },
+            ]
+            .where(
+              (Map<String, String> e) =>
+                  e['path']!.isNotEmpty && e['data']!.isNotEmpty,
+            )
+            .toList();
       } catch (_) {
         // Fall through to migration / empty.
       }
@@ -84,9 +91,7 @@ class MacOSBookmarkService {
 
   static Future<void> _rememberPath(String path) async {
     final List<String> paths = await _loadPaths();
-    paths.removeWhere(
-      (String existing) => isSameOrUnderPath(existing, path),
-    );
+    paths.removeWhere((String existing) => isSameOrUnderPath(existing, path));
     paths.add(path);
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString(_pathsKey, json.encode(paths));
@@ -94,9 +99,7 @@ class MacOSBookmarkService {
 
   static Future<void> _forgetPath(String path) async {
     final List<String> paths = await _loadPaths();
-    paths.removeWhere(
-      (String existing) => isSameOrUnderPath(existing, path),
-    );
+    paths.removeWhere((String existing) => isSameOrUnderPath(existing, path));
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString(_pathsKey, json.encode(paths));
   }
@@ -106,8 +109,7 @@ class MacOSBookmarkService {
     final String bookmarkData = await _bookmarks.bookmark(File(path));
     final List<Map<String, String>> entries = await _loadEntries();
     entries.removeWhere(
-      (Map<String, String> entry) =>
-          isSameOrUnderPath(entry['path']!, path),
+      (Map<String, String> entry) => isSameOrUnderPath(entry['path']!, path),
     );
     entries.add(<String, String>{'path': path, 'data': bookmarkData});
     await _saveEntries(entries);
@@ -122,12 +124,23 @@ class MacOSBookmarkService {
   }
 
   /// Request a new folder grant and persist it.
-  static Future<String?> requestDirectoryAccess({String? initialDirectory}) async {
+  static Future<String?> requestDirectoryAccess({
+    String? initialDirectory,
+  }) async {
     if (!Platform.isMacOS) return null;
     try {
+      Locale locale;
+      try {
+        locale =
+            await LocalePreference.read(refresh: true) ??
+            PlatformDispatcher.instance.locale;
+      } catch (_) {
+        // A preference read must never prevent the system folder picker.
+        locale = PlatformDispatcher.instance.locale;
+      }
       final String? directoryPath = await getDirectoryPath(
         initialDirectory: initialDirectory,
-        confirmButtonText: 'Grant Access',
+        confirmButtonText: AccessAndFKeyStrings(locale).grantAccess,
       );
       if (directoryPath == null) return null;
       await addBookmark(directoryPath);
@@ -146,8 +159,9 @@ class MacOSBookmarkService {
     final List<Map<String, String>> kept = <Map<String, String>>[];
     for (final Map<String, String> entry in entries) {
       try {
-        final FileSystemEntity entity =
-            await _bookmarks.resolveBookmark(entry['data']!);
+        final FileSystemEntity entity = await _bookmarks.resolveBookmark(
+          entry['data']!,
+        );
         resolved.add(entity);
         kept.add(entry);
       } catch (e) {
@@ -200,8 +214,7 @@ class MacOSBookmarkService {
   static Future<void> removeBookmark(String path) async {
     final List<Map<String, String>> entries = await _loadEntries();
     entries.removeWhere(
-      (Map<String, String> entry) =>
-          isSameOrUnderPath(entry['path']!, path),
+      (Map<String, String> entry) => isSameOrUnderPath(entry['path']!, path),
     );
     await _saveEntries(entries);
     await _forgetPath(path);

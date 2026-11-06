@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 
 import '../models/custom_toolbar_command.dart';
+import 'macos_app_store.dart';
 
 class CommandExecutionResult {
   const CommandExecutionResult({
@@ -143,6 +144,11 @@ class RunningToolbarCommand extends ChangeNotifier {
     if (kIsWeb ||
         (!Platform.isMacOS && !Platform.isWindows && !Platform.isLinux)) {
       throw UnsupportedError('Command execution requires the desktop app.');
+    }
+    if (Platform.isMacOS && isMacAppStoreBuild()) {
+      throw UnsupportedError(
+        'Custom commands are not available in the sandboxed Mac App Store build.',
+      );
     }
     if (maxOutputBytes < 1 || maxOutputBytes > 4 * 1024 * 1024) {
       throw ArgumentError.value(maxOutputBytes, 'maxOutputBytes');

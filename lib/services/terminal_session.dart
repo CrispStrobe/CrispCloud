@@ -15,7 +15,7 @@ enum TerminalSessionStatus {
   failed,
 }
 
-enum TerminalSessionKind { local, ssh }
+enum TerminalSessionKind { local, sandbox, ssh }
 
 /// Owns the emulator and exactly one transport, independently of its viewport.
 ///
@@ -73,6 +73,7 @@ class TerminalSession extends ChangeNotifier {
   bool _disposed = false;
 
   bool get isConnected => status == TerminalSessionStatus.connected;
+  bool get isSandbox => kind == TerminalSessionKind.sandbox;
   bool get isConnecting => status == TerminalSessionStatus.connecting;
   bool get canDisconnect =>
       isConnecting ||
@@ -120,6 +121,7 @@ class TerminalSession extends ChangeNotifier {
         return;
       }
       _connection = connection;
+      if (connection.isSandbox) this.kind = TerminalSessionKind.sandbox;
       status = TerminalSessionStatus.connected;
       _subscription = connection.output.listen(
         (data) {

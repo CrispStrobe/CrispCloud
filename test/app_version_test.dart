@@ -38,5 +38,13 @@ void main() {
         'Version 2.0.0',
       );
     });
+
+    test('accepts localized labels while retaining build and commit', () {
+      expect(
+        formatAppVersion(version: '1.1.0', buildNumber: '10', gitHash: 'abc123',
+            versionLabel: 'Version', buildLabel: 'Build'),
+        'Version 1.1.0 (Build 10, abc123)',
+      );
+    });
   });
 }

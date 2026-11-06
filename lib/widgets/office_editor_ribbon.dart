@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:quds_office_editor/quds_office_editor.dart';
 
 import '../l10n/office_editor_strings.dart';
+import '../l10n/office_ribbon_control_strings.dart';
 import '../services/office_editor_menu.dart';
 import 'office_editor_dialogs.dart';
 
@@ -494,7 +495,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
             ),
           ),
           IconButton(
-            tooltip: _collapsed ? 'Expand ribbon' : 'Collapse ribbon',
+            tooltip: OfficeRibbonControlStrings(context).text(_collapsed ? 'Expand ribbon' : 'Collapse ribbon'),
             iconSize: 17,
             visualDensity: VisualDensity.compact,
             padding: EdgeInsets.zero,
@@ -1589,7 +1590,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
     List<PopupMenuEntry<VoidCallback>> entries,
   ) {
     return PopupMenuButton<VoidCallback>(
-      tooltip: label,
+      tooltip: context.tr(label),
       onSelected: (VoidCallback action) => action(),
       itemBuilder: (BuildContext context) => entries,
       child: _bigButtonVisual(icon, label),
@@ -1608,7 +1609,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Text(
-        text,
+        OfficeRibbonControlStrings(context).text(text),
         style: TextStyle(
           fontSize: 9,
           color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -1795,7 +1796,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
           active: _runProps.underline != WmlUnderline.none,
         ),
         PopupMenuButton<WmlUnderline>(
-          tooltip: 'Underline style',
+          tooltip: OfficeRibbonControlStrings(context).text('Underline style'),
           padding: EdgeInsets.zero,
           iconSize: 14,
           onSelected: _toggleUnderline,
@@ -1804,7 +1805,13 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
               PopupMenuItem<WmlUnderline>(
                 value: style,
                 height: 30,
-                child: Text(style.name, style: const TextStyle(fontSize: 12)),
+                child: Text(OfficeRibbonControlStrings(context).text(switch (style) {
+                  WmlUnderline.none => 'None',
+                  WmlUnderline.single => 'Single',
+                  WmlUnderline.double => 'Double',
+                  WmlUnderline.dotted => 'Dotted',
+                  WmlUnderline.wavy => 'Wavy',
+                }), style: const TextStyle(fontSize: 12)),
               ),
           ],
         ),
@@ -1814,7 +1821,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
 
   Widget _vertAlignControl() {
     return PopupMenuButton<WmlVertAlign>(
-      tooltip: 'Superscript / subscript',
+      tooltip: OfficeRibbonControlStrings(context).text('Superscript / subscript'),
       icon: const Icon(Icons.superscript, size: 17),
       iconSize: 17,
       padding: EdgeInsets.zero,
@@ -1825,17 +1832,17 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
         });
       },
       itemBuilder: (BuildContext context) => <PopupMenuEntry<WmlVertAlign>>[
-        const PopupMenuItem<WmlVertAlign>(
+        PopupMenuItem<WmlVertAlign>(
           value: WmlVertAlign.superscript,
-          child: Text('Superscript', style: TextStyle(fontSize: 12)),
+          child: Text(OfficeRibbonControlStrings(context).text('Superscript'), style: const TextStyle(fontSize: 12)),
         ),
-        const PopupMenuItem<WmlVertAlign>(
+        PopupMenuItem<WmlVertAlign>(
           value: WmlVertAlign.subscript,
-          child: Text('Subscript', style: TextStyle(fontSize: 12)),
+          child: Text(OfficeRibbonControlStrings(context).text('Subscript'), style: const TextStyle(fontSize: 12)),
         ),
-        const PopupMenuItem<WmlVertAlign>(
+        PopupMenuItem<WmlVertAlign>(
           value: WmlVertAlign.baseline,
-          child: Text('Baseline', style: TextStyle(fontSize: 12)),
+          child: Text(OfficeRibbonControlStrings(context).text('Baseline'), style: const TextStyle(fontSize: 12)),
         ),
       ],
     );
@@ -1843,7 +1850,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
 
   Widget _lineSpacingControl() {
     return PopupMenuButton<double>(
-      tooltip: 'Line spacing',
+      tooltip: OfficeRibbonControlStrings(context).text('Line spacing'),
       icon: const Icon(Icons.format_line_spacing, size: 17),
       iconSize: 17,
       padding: EdgeInsets.zero,
@@ -1859,7 +1866,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
             value: value,
             height: 30,
             child: Text(
-              value == 1.0 ? 'Single' : '$value lines',
+              value == 1.0 ? OfficeRibbonControlStrings(context).text('Single') : OfficeRibbonControlStrings(context).lines(value),
               style: const TextStyle(fontSize: 12),
             ),
           ),
@@ -1869,19 +1876,19 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
 
   Widget _wordDirectionControl() {
     return PopupMenuButton<bool>(
-      tooltip: 'Text direction',
+      tooltip: OfficeRibbonControlStrings(context).text('Text direction'),
       icon: const Icon(Icons.format_textdirection_l_to_r, size: 17),
       iconSize: 17,
       padding: EdgeInsets.zero,
       onSelected: (bool rtl) => _word.setParagraphDirection(rtl: rtl),
       itemBuilder: (BuildContext context) => <PopupMenuEntry<bool>>[
-        const PopupMenuItem<bool>(
+        PopupMenuItem<bool>(
           value: false,
-          child: Text('Left-to-right', style: TextStyle(fontSize: 12)),
+          child: Text(OfficeRibbonControlStrings(context).text('Left-to-right'), style: const TextStyle(fontSize: 12)),
         ),
-        const PopupMenuItem<bool>(
+        PopupMenuItem<bool>(
           value: true,
-          child: Text('Right-to-left', style: TextStyle(fontSize: 12)),
+          child: Text(OfficeRibbonControlStrings(context).text('Right-to-left'), style: const TextStyle(fontSize: 12)),
         ),
       ],
     );
@@ -1951,7 +1958,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
           context,
           initial: currentColor,
           allowNone: allowNone,
-          noneLabel: 'No color',
+          noneLabel: context.tr('No color'),
         );
         if (picked != null) onChanged(picked);
       },
@@ -2573,7 +2580,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
       context,
       initial: '',
       allowNone: true,
-      noneLabel: 'No shading',
+      noneLabel: context.tr('No shading'),
     );
     if (picked == null) return;
     _word.setParagraphShading(picked.isEmpty ? null : picked);
@@ -2697,7 +2704,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
       context,
       initial: _cell.fillRgb,
       allowNone: true,
-      noneLabel: 'No fill',
+      noneLabel: context.tr('No fill'),
     );
     if (picked == null) return;
     _sheetFillValue(picked);
@@ -2840,7 +2847,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
       title: context.tr('Insert text box'),
       label: context.tr('Text'),
       multiline: true,
-      confirmLabel: 'Insert',
+      confirmLabel: context.tr('Insert'),
     );
     if (text == null) return;
     _slideAddShape(
@@ -2951,7 +2958,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
       context,
       initial: shape.fillColor,
       allowNone: true,
-      noneLabel: 'No fill',
+      noneLabel: context.tr('No fill'),
     );
     if (picked == null) return;
     _slideFillValue(picked);

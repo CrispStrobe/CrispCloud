@@ -146,12 +146,12 @@ class AppLockService {
   /// (which also accepts a PIN as fallback). We therefore set `biometricOnly`
   /// to false on Windows so the plugin does not throw an unsupported-option
   /// error while still delegating to Windows Hello for authentication.
-  Future<bool> authenticateWithBiometric() async {
+  Future<bool> authenticateWithBiometric({String localizedReason = 'Unlock CrispCloud'}) async {
     if (kIsWeb) return false;
     final isWindows = !kIsWeb && Platform.isWindows;
     try {
       final result = await _localAuth.authenticate(
-        localizedReason: 'Unlock CrispCloud',
+        localizedReason: localizedReason,
         options: AuthenticationOptions(
           stickyAuth: true,
           // Windows Hello does not support biometric-only enforcement.

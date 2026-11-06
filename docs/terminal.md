@@ -23,7 +23,7 @@ The reviewed versions are `xterm2` **5.4.0**, `xterm2_core` **1.0.0**,
 are MIT licensed. The new direct dependencies, `xterm2` and `flutter_pty2`, are
 pinned to these releases; `flutter_pty2` uses a local
 override based on that exact release. A desktop-only build hook and spawn guard
-keep unused subprocess native code out of the SSH-only mobile apps. A separate
+keep unused subprocess native code out of mobile builds. A separate
 Windows fix makes child standard handles connect to ConPTY even when the parent
 application's input/output is redirected. The Unix backend is unchanged; see
 [`packages/flutter_pty2/UPSTREAM.md`](../packages/flutter_pty2/UPSTREAM.md).
@@ -50,18 +50,43 @@ listed on a dependency's package page.
 
 | Platform | Local shell | SSH shell |
 | --- | --- | --- |
-| Linux desktop | Unix PTY with the user's available shell | Direct SSH TCP connection |
-| macOS desktop | Unix PTY when allowed by the app sandbox and OS | Direct SSH TCP connection |
-| Windows desktop | ConPTY with the available Windows command shell | Direct SSH TCP connection |
-| Android | Not offered | Direct SSH TCP connection |
-| iOS | Not offered | Direct SSH TCP connection |
-| Web/PWA | Unavailable | SSH through an explicitly configured secure WebSocket gateway |
+| Linux desktop | Unix PTY with the user's available shell; built-in shell if the PTY is denied | Direct SSH TCP connection |
+| macOS desktop | Unix PTY in an unsandboxed build; built-in sandbox shell in the App Store build | Direct SSH TCP connection |
+| Windows desktop | ConPTY with the available Windows command shell; built-in shell if ConPTY fails | Direct SSH TCP connection |
+| Android | Built-in sandbox shell (no host process) | Direct SSH TCP connection |
+| iOS | Built-in sandbox shell (no host process) | Direct SSH TCP connection |
+| Web/PWA | Built-in in-memory shell | SSH through an explicitly configured secure WebSocket gateway |
 
-The app does not bypass macOS sandbox restrictions. A denied local process
-launch reports the error and offers SSH. Simulator support in an upstream PTY
-package is not evidence that arbitrary local shells work on physical iOS
-devices. Although `flutter_pty2` also contains Android/iOS paths, CrispCloud
-intentionally enables local processes only on desktop.
+The built-in shell is the normal local terminal wherever an App Sandbox, mobile
+OS or browser forbids spawning a host shell. It is implemented in Dart over a
+small filesystem boundary (`sandbox_shell_fs.dart`), never launches a process
+and therefore does not weaken App Sandbox or App Store review. On desktop the
+real PTY is still preferred; if `forkpty`/`tcsetattr` is denied, the terminal
+falls back to the built-in shell instead of failing. The status line says
+"Sandbox shell" so the distinction is visible.
+
+The built-in shell supports navigation and file inspection (`pwd`, `cd`, `ls`,
+`cat`, `head`, `tail`, `wc`, `grep`, `find`, `stat`, `file`, `xxd`/`hexdump`),
+file operations (`mkdir`, `touch`, `rm`, `cp`, `mv`), shell utilities (`echo`,
+`export`, `unset`, `env`, `date`, `whoami`, `uname`, `history`, `clear`,
+`which`, `exit`) and simple pipelines/redirection. `file` reports UTF-8 BOM,
+UTF-16 and LF/CRLF/mixed line endings, and `xxd` exposes raw bytes. External
+programs, `sudo` and background jobs are intentionally unavailable; use SSH for
+a full remote shell or an unsandboxed desktop build for the host PTY.
+
+Quoted and escaped `|`, `<`, and `>` remain literal arguments. The shell checks
+the complete pipeline for syntax errors before executing it; an unterminated
+quote or missing redirection filename does not execute a destructive prefix.
+Empty path operands are rejected, including an unset variable passed to `rm`.
+Copying or moving multiple sources requires an existing destination directory.
+Self-copies and directory destinations beneath the source are rejected, with
+existing symbolic-link parents resolved on native filesystems. Native moves
+fall back to copy-and-delete only for a reported cross-device rename error.
+
+Simulator support in an upstream PTY package is not evidence that arbitrary
+local shells work on physical iOS devices. Although `flutter_pty2` also contains
+Android/iOS paths, CrispCloud intentionally enables host processes only on
+desktop.
 
 Browsers cannot open raw SSH TCP connections. The browser connection dialog
 therefore requires the user's own `wss://` gateway URL, using the existing
@@ -108,6 +133,12 @@ and fixes the case exposed by Flutter's headless test runner.
   Reconnecting starts a new shell; it cannot restore an exited process. Use a
   remote multiplexer such as `tmux` when persistence across network or app
   restarts is required.
+- Each native local connection holds its own security-scoped folder grant for
+  its lifetime. A transfer or restarted terminal cannot release another
+  connection's grant. Normal exit, failed startup and disconnect release it;
+  hiding the panel keeps it while the shell remains alive. The built-in shell
+  finishes an already accepted filesystem command before disconnect releases
+  access, and does not execute later queued input after disconnect.
 
 SSH retains the existing 30-minute inactivity timeout. Terminal input, output,
 and resizing count as activity; hiding a quiet SSH session does not suspend
@@ -126,6 +157,12 @@ Command+V on Apple platforms. Ctrl+C remains an interrupt. Selection and copy
 must use the active buffer so an old selection cannot refer to an alternate
 screen after a TUI exits. The bundled `AppMono` font supplies consistent cell
 advances.
+
+Keyboard ownership is explicit: the left pane, right pane or terminal. Clicking
+the terminal header restores terminal input, and hiding it returns ownership to
+the last active pane. File refreshes and terminal output do not steal focus.
+The file-browser shortcut handler defers while the terminal owns the keyboard.
+Terminal chrome and typed SSH errors follow the selected application locale.
 
 Remote output does not gain clipboard read/write permission. In xterm2 5.4.0,
 `TerminalView` supplies default OS clipboard handlers when the model callbacks
@@ -255,7 +292,9 @@ physical-device keyboard/IME or Windows ConPTY validation.
    exercise the software keyboard, IME, paste and extra keys. On web, supply a
    controlled `wss://` gateway and verify the real SSH endpoint's host-key
    prompt, interactive output and resize. Check that missing/invalid gateway
-   URLs are rejected and no local shell or native library is offered/loaded.
+   URLs are rejected and no host shell or native library is offered/loaded.
+   Also exercise the browser's in-memory built-in shell; those files are local
+   to that terminal session and are not the browser's selected filesystem.
    Test a signed sandboxed macOS build separately from an unsandboxed build.
 
 Only claim platform smoke tests that were actually executed. In particular,

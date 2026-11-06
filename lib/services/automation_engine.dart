@@ -19,6 +19,7 @@ import 'package:watcher/watcher.dart';
 
 import 'automation_rule_service.dart';
 import 'log_service.dart';
+import 'macos_app_store.dart';
 
 // ---------------------------------------------------------------------------
 // TriggerContext — what fired a rule
@@ -449,6 +450,12 @@ class AutomationEngine {
   Future<void> _handleRunCommand(String command, TriggerContext ctx) async {
     if (kIsWeb) {
       _log.warn('RunCommandAction not supported on web');
+      return;
+    }
+    if (Platform.isMacOS && isMacAppStoreBuild()) {
+      _log.warn(
+        'RunCommandAction is disabled in the sandboxed Mac App Store build',
+      );
       return;
     }
     final args = command.split(RegExp(r'\s+'));

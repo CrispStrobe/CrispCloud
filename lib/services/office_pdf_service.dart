@@ -17,7 +17,10 @@ const int kOfficePdfInputCap = 64 * 1024 * 1024;
 
 class OfficePdfException implements Exception {
   final String message;
-  const OfficePdfException(this.message);
+  final int? sizeBytes;
+  final Object? cause;
+
+  const OfficePdfException(this.message, {this.sizeBytes, this.cause});
 
   @override
   String toString() => message;
@@ -36,6 +39,7 @@ Future<Uint8List> convertOfficeToPdf(
     throw OfficePdfException(
       'This document is too large to lay out safely '
       '(${(bytes.length / (1024 * 1024)).toStringAsFixed(1)} MB).',
+      sizeBytes: bytes.length,
     );
   }
 
@@ -47,11 +51,7 @@ Future<Uint8List> convertOfficeToPdf(
 
   Uint8List render() {
     final font = SfntFont.parse(fontBytes);
-    return OfficePdfExport.fromBytes(
-      bytes,
-      font: font,
-      password: password,
-    );
+    return OfficePdfExport.fromBytes(bytes, font: font, password: password);
   }
 
   try {
@@ -61,6 +61,6 @@ Future<Uint8List> convertOfficeToPdf(
     }
     return await Isolate.run(render);
   } catch (e) {
-    throw OfficePdfException('Could not lay out this document: $e');
+    throw OfficePdfException('Could not lay out this document: $e', cause: e);
   }
 }

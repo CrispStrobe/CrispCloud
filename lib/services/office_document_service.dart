@@ -27,6 +27,18 @@ const int _kOfficeRawCap = 4 * 1024 * 1024;
 
 enum OfficeDocumentKind { document, spreadsheet, presentation, ebook }
 
+enum OfficePreviewFallback { legacyPresentation, extractionFailed, missingDocx, missingOds, missingOdp, missingOdt }
+
+enum OfficeHeadingKind { sheet, slide }
+
+class OfficeGeneratedHeading {
+  final int start;
+  final int end;
+  final OfficeHeadingKind kind;
+  final int number;
+  const OfficeGeneratedHeading(this.start, this.end, this.kind, this.number);
+}
+
 class OfficeDocument {
   final OfficeDocumentKind kind;
   final String markdown;
@@ -35,6 +47,10 @@ class OfficeDocument {
   final String? rawXml;
   final String? note;
   final SlideDeck? deck;
+  final OfficePreviewFallback? fallback;
+  final List<OfficeGeneratedHeading> markdownHeadings;
+  final List<OfficeGeneratedHeading> textHeadings;
+  final List<OfficeGeneratedHeading> csvHeadings;
 
   const OfficeDocument({
     required this.kind,
@@ -44,6 +60,10 @@ class OfficeDocument {
     this.rawXml,
     this.note,
     this.deck,
+    this.fallback,
+    this.markdownHeadings = const [],
+    this.textHeadings = const [],
+    this.csvHeadings = const [],
   });
 }
 
@@ -103,6 +123,7 @@ Future<OfficeDocument> parseOfficeDocument(
   if (ext == 'ppt' || ext == 'pps') {
     return const OfficeDocument(
       kind: OfficeDocumentKind.presentation,
+      fallback: OfficePreviewFallback.legacyPresentation,
       markdown: '',
       plainText:
           '(Legacy PowerPoint (.ppt) files cannot be rendered inline. '
@@ -144,6 +165,7 @@ Future<OfficeDocument> parseOfficeDocument(
       kind: OfficeDocumentKind.document,
       markdown: '',
       plainText: '(Could not extract text from this document)',
+      fallback: OfficePreviewFallback.extractionFailed,
       note: e.toString(),
     );
   } finally {
@@ -200,6 +222,42 @@ String _stripMarkdown(String markdown) {
   return lines.join('\n').replaceAll(RegExp(r'\n{3,}'), '\n\n').trim();
 }
 
+(String, List<OfficeGeneratedHeading>) _plainWithHeadings(
+    String markdown, List<OfficeGeneratedHeading> headings) {
+  var marker = '\uE000';
+  while (markdown.contains(marker)) { marker += '\uE000'; }
+  var marked = markdown;
+  for (var i = headings.length - 1; i >= 0; i--) {
+    final h = headings[i];
+    marked = marked.replaceRange(h.start, h.end, '$marker$i$marker');
+  }
+  final stripped = _stripMarkdown(marked);
+  final result = StringBuffer();
+  final mapped = <OfficeGeneratedHeading>[];
+  var offset = 0;
+  for (var i = 0; i < headings.length; i++) {
+    final token = '$marker$i$marker';
+    final start = stripped.indexOf(token, offset);
+    result.write(stripped.substring(offset, start));
+    final heading = headings[i];
+    final label = markdown.substring(heading.start, heading.end);
+    final newStart = result.length;
+    result.write(label);
+    mapped.add(OfficeGeneratedHeading(newStart, result.length, heading.kind, heading.number));
+    offset = start + token.length;
+  }
+  result.write(stripped.substring(offset));
+  return (result.toString(), mapped);
+}
+
+void _writeHeading(StringBuffer buffer, String prefix, OfficeHeadingKind kind,
+    int number, List<OfficeGeneratedHeading> headings) {
+  final label = '${kind == OfficeHeadingKind.sheet ? 'Sheet' : 'Slide'} $number';
+  final start = buffer.length + prefix.length;
+  headings.add(OfficeGeneratedHeading(start, start + label.length, kind, number));
+  buffer.writeln('$prefix$label');
+}
+
 String _escapePipes(String value) => value.replaceAll('|', r'\|');
 
 String _csvCell(String value) {
@@ -239,6 +297,7 @@ Future<OfficeDocument> _parseDocx(ViewerArchive archive) async {
       kind: OfficeDocumentKind.document,
       markdown: '',
       plainText: '(No document.xml found in this DOCX)',
+      fallback: OfficePreviewFallback.missingDocx,
     );
   }
 
@@ -371,6 +430,8 @@ Future<OfficeDocument> _parseSpreadsheet(
 
   final markdown = StringBuffer();
   final csv = StringBuffer();
+  final headings = <OfficeGeneratedHeading>[];
+  final csvHeadings = <OfficeGeneratedHeading>[];
   var sheetNumber = 0;
   for (final sheetPath in sheets) {
     sheetNumber++;
@@ -378,10 +439,11 @@ Future<OfficeDocument> _parseSpreadsheet(
     if (xml == null) continue;
     final rows = _xlsxRows(xml, shared);
     if (rows.isEmpty) continue;
-    markdown.writeln('## Sheet $sheetNumber\n');
+    _writeHeading(markdown, '## ', OfficeHeadingKind.sheet, sheetNumber, headings);
+    markdown.writeln();
     markdown.writeln(_markdownTable(rows));
     markdown.writeln();
-    csv.writeln('# Sheet $sheetNumber');
+    _writeHeading(csv, '# ', OfficeHeadingKind.sheet, sheetNumber, csvHeadings);
     for (final row in rows) {
       csv.writeln(row.map(_csvCell).join(','));
     }
@@ -389,11 +451,15 @@ Future<OfficeDocument> _parseSpreadsheet(
   }
 
   final md = markdown.toString().trim();
+  final (plain, textHeadings) = _plainWithHeadings(md, headings);
   return OfficeDocument(
     kind: OfficeDocumentKind.spreadsheet,
     markdown: md,
-    plainText: _stripMarkdown(md),
+    plainText: plain,
+    markdownHeadings: headings,
+    textHeadings: textHeadings,
     csv: csv.toString().trim(),
+    csvHeadings: csvHeadings,
     rawXml: await _rawPart(archive, sheets.firstOrNull),
   );
 }
@@ -439,11 +505,13 @@ Future<OfficeDocument> _parseOds(ViewerArchive archive) async {
       kind: OfficeDocumentKind.spreadsheet,
       markdown: '',
       plainText: '(No content.xml found in this ODS)',
+      fallback: OfficePreviewFallback.missingOds,
     );
   }
   final document = XmlDocument.parse(xml);
   final markdown = StringBuffer();
   final csv = StringBuffer();
+  final headings = <OfficeGeneratedHeading>[];
   var tableNumber = 0;
   for (final table in document.findAllElements('table:table')) {
     tableNumber++;
@@ -462,7 +530,8 @@ Future<OfficeDocument> _parseOds(ViewerArchive archive) async {
       if (cells.any((c) => c.isNotEmpty)) rows.add(cells);
     }
     if (rows.isEmpty) continue;
-    markdown.writeln('## Sheet $tableNumber\n');
+    _writeHeading(markdown, '## ', OfficeHeadingKind.sheet, tableNumber, headings);
+    markdown.writeln();
     markdown.writeln(_markdownTable(rows));
     markdown.writeln();
     for (final row in rows) {
@@ -471,10 +540,13 @@ Future<OfficeDocument> _parseOds(ViewerArchive archive) async {
     csv.writeln();
   }
   final md = markdown.toString().trim();
+  final (plain, textHeadings) = _plainWithHeadings(md, headings);
   return OfficeDocument(
     kind: OfficeDocumentKind.spreadsheet,
     markdown: md,
-    plainText: _stripMarkdown(md),
+    plainText: plain,
+    markdownHeadings: headings,
+    textHeadings: textHeadings,
     csv: csv.toString().trim(),
     rawXml: _capRaw(xml, 'content.xml'),
   );
@@ -518,6 +590,7 @@ Future<OfficeDocument> _parsePptx(ViewerArchive archive) async {
 
   final pages = <SlidePage>[];
   final markdown = StringBuffer();
+  final headings = <OfficeGeneratedHeading>[];
   var slideNumber = 0;
   for (final slidePath in slides) {
     if (pages.length >= 200) break;
@@ -602,7 +675,8 @@ Future<OfficeDocument> _parsePptx(ViewerArchive archive) async {
 
     pages.add(SlidePage(backgroundHex: background, shapes: shapes));
 
-    markdown.writeln('## Slide $slideNumber\n');
+    _writeHeading(markdown, '## ', OfficeHeadingKind.slide, slideNumber, headings);
+    markdown.writeln();
     if (textParagraphs.isNotEmpty) {
       markdown.writeln(textParagraphs.first);
       markdown.writeln();
@@ -614,10 +688,13 @@ Future<OfficeDocument> _parsePptx(ViewerArchive archive) async {
   }
 
   final md = markdown.toString().trim();
+  final (plain, textHeadings) = _plainWithHeadings(md, headings);
   return OfficeDocument(
     kind: OfficeDocumentKind.presentation,
     markdown: md,
-    plainText: _stripMarkdown(md),
+    plainText: plain,
+    markdownHeadings: headings,
+    textHeadings: textHeadings,
     rawXml: await _rawPart(archive, slides.firstOrNull),
     deck: pages.isEmpty
         ? null
@@ -696,14 +773,17 @@ Future<OfficeDocument> _parseOdp(ViewerArchive archive) async {
       kind: OfficeDocumentKind.presentation,
       markdown: '',
       plainText: '(No content.xml found in this ODP)',
+      fallback: OfficePreviewFallback.missingOdp,
     );
   }
   final document = XmlDocument.parse(xml);
   final markdown = StringBuffer();
+  final headings = <OfficeGeneratedHeading>[];
   var pageNumber = 0;
   for (final page in document.findAllElements('draw:page')) {
     pageNumber++;
-    markdown.writeln('## Slide $pageNumber\n');
+    _writeHeading(markdown, '## ', OfficeHeadingKind.slide, pageNumber, headings);
+    markdown.writeln();
     for (final paragraph in page.findAllElements('text:p')) {
       final text = paragraph.innerText.trim();
       if (text.isNotEmpty) markdown.writeln('- $text');
@@ -711,10 +791,13 @@ Future<OfficeDocument> _parseOdp(ViewerArchive archive) async {
     markdown.writeln();
   }
   final md = markdown.toString().trim();
+  final (plain, textHeadings) = _plainWithHeadings(md, headings);
   return OfficeDocument(
     kind: OfficeDocumentKind.presentation,
     markdown: md,
-    plainText: _stripMarkdown(md),
+    plainText: plain,
+    markdownHeadings: headings,
+    textHeadings: textHeadings,
     rawXml: _capRaw(xml, 'content.xml'),
   );
 }
@@ -730,6 +813,7 @@ Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
       kind: OfficeDocumentKind.document,
       markdown: '',
       plainText: '(No content.xml found in this ODT)',
+      fallback: OfficePreviewFallback.missingOdt,
     );
   }
   final document = XmlDocument.parse(xml);

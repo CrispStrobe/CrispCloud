@@ -9,6 +9,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../l10n/app_localizations.dart';
+import '../l10n/misc_ui_strings.dart';
+import '../l10n/quick_search_status_strings.dart';
 import '../utils/formatters.dart';
 
 class StatusBar extends ConsumerStatefulWidget {
@@ -36,11 +38,24 @@ class _StatusBarState extends ConsumerState<StatusBar> {
     _lastProvider = providerName;
     _quotaLoading = true;
 
-    auth.client.getQuota().then((q) {
-      if (mounted) setState(() { _quota = q; _quotaLoading = false; });
-    }).catchError((_) {
-      if (mounted) setState(() { _quota = null; _quotaLoading = false; });
-    });
+    auth.client
+        .getQuota()
+        .then((q) {
+          if (mounted) {
+            setState(() {
+              _quota = q;
+              _quotaLoading = false;
+            });
+          }
+        })
+        .catchError((_) {
+          if (mounted) {
+            setState(() {
+              _quota = null;
+              _quotaLoading = false;
+            });
+          }
+        });
   }
 
   @override
@@ -61,7 +76,10 @@ class _StatusBarState extends ConsumerState<StatusBar> {
     final itemCount = panel.filteredFiles?.length ?? 0;
     final totalCount = panel.files?.length ?? 0;
     final selectedCount = panel.selection.length;
-    final selectedSize = panel.selection.fold<int>(0, (s, f) => s + (f.size ?? 0));
+    final selectedSize = panel.selection.fold<int>(
+      0,
+      (s, f) => s + (f.size ?? 0),
+    );
 
     final activeOps = transfers.operations.where((op) => op.isActive).length;
     final totalTransferred = transfers.operations
@@ -103,14 +121,21 @@ class _StatusBarState extends ConsumerState<StatusBar> {
           // Privacy score
           if (auth.isConnected) ...[
             const SizedBox(width: 6),
-            Builder(builder: (_) {
-              final score = privacyScore(auth.providerName);
-              final scoreColor = score >= 70 ? Colors.green : score >= 50 ? Colors.orange : Colors.red;
-              return Tooltip(
-                message: 'Privacy: ${privacyLabel(score)} ($score/100)',
-                child: Icon(Icons.shield, size: 12, color: scoreColor),
-              );
-            }),
+            Builder(
+              builder: (_) {
+                final score = privacyScore(auth.providerName);
+                final scoreColor = score >= 70
+                    ? Colors.green
+                    : score >= 50
+                    ? Colors.orange
+                    : Colors.red;
+                return Tooltip(
+                  message:
+                      '${MiscUiStrings(context).text('privacy')}: ${MiscUiStrings(context).privacyLevel(score)} ($score/100)',
+                  child: Icon(Icons.shield, size: 12, color: scoreColor),
+                );
+              },
+            ),
           ],
 
           // Quota display
@@ -139,7 +164,9 @@ class _StatusBarState extends ConsumerState<StatusBar> {
             const SizedBox(width: 8),
             Text(
               '${panel.cursorIndex + 1} / $itemCount',
-              style: style.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+              style: style.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
             ),
           ],
 
@@ -149,7 +176,10 @@ class _StatusBarState extends ConsumerState<StatusBar> {
             const SizedBox(width: 8),
             Text(
               '${l.nSelected(selectedCount)}${selectedSize > 0 ? ' (${formatBytes(selectedSize)})' : ''}',
-              style: style.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w500),
+              style: style.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ],
 
@@ -157,7 +187,8 @@ class _StatusBarState extends ConsumerState<StatusBar> {
 
           if (activeOps > 0) ...[
             SizedBox(
-              width: 12, height: 12,
+              width: 12,
+              height: 12,
               child: CircularProgressIndicator(
                 strokeWidth: 1.5,
                 value: totalSize > 0 ? totalTransferred / totalSize : null,
@@ -168,7 +199,10 @@ class _StatusBarState extends ConsumerState<StatusBar> {
             Text(l.nTransfers(activeOps), style: style),
             if (totalSize > 0) ...[
               const SizedBox(width: 4),
-              Text('${formatBytes(totalTransferred)} / ${formatBytes(totalSize)}', style: style),
+              Text(
+                '${formatBytes(totalTransferred)} / ${formatBytes(totalSize)}',
+                style: style,
+              ),
             ],
             const SizedBox(width: 16),
             Container(width: 1, height: 14, color: theme.dividerColor),
@@ -178,19 +212,29 @@ class _StatusBarState extends ConsumerState<StatusBar> {
           // Sync status
           if (sync.isSyncing) ...[
             SizedBox(
-              width: 12, height: 12,
-              child: CircularProgressIndicator(strokeWidth: 1.5, color: theme.colorScheme.tertiary),
+              width: 12,
+              height: 12,
+              child: CircularProgressIndicator(
+                strokeWidth: 1.5,
+                color: theme.colorScheme.tertiary,
+              ),
             ),
             const SizedBox(width: 6),
-            Text('${l.syncing}${sync.currentPairName != null ? ' ${sync.currentPairName}' : ''}...', style: style),
+            Text(
+              '${l.syncing}${sync.currentPairName != null ? ' ${sync.currentPairName}' : ''}...',
+              style: style,
+            ),
             const SizedBox(width: 16),
             Container(width: 1, height: 14, color: theme.dividerColor),
             const SizedBox(width: 16),
-          ] else if (sync.lastResult != null && sync.lastResult!.hasChanges) ...[
+          ] else if (sync.lastResult != null &&
+              sync.lastResult!.hasChanges) ...[
             const Icon(Icons.sync_alt, size: 14, color: Colors.green),
             const SizedBox(width: 4),
             Text(
-              l.lastSyncChanges(sync.lastResult!.uploaded + sync.lastResult!.downloaded),
+              l.lastSyncChanges(
+                sync.lastResult!.uploaded + sync.lastResult!.downloaded,
+              ),
               style: style,
             ),
             const SizedBox(width: 16),
@@ -208,22 +252,21 @@ class _StatusBarState extends ConsumerState<StatusBar> {
           // Filter / type-ahead indicator
           if (panel.filterQuery.isNotEmpty) ...[
             Icon(
-                (!panel.isTypeahead || panel.isQuickFilterActive)
-                    ? Icons.filter_list
-                    : Icons.search,
-                size: 14,
-                color: theme.colorScheme.primary),
+              (!panel.isTypeahead || panel.isQuickFilterActive)
+                  ? Icons.filter_list
+                  : Icons.search,
+              size: 14,
+              color: theme.colorScheme.primary,
+            ),
             const SizedBox(width: 4),
             Text(
-              panel.isTypeahead
-                  ? (panel.isQuickFilterActive
-                          ? 'Filter: "${panel.filterQuery}"'
-                          : 'Find: "${panel.filterQuery}"') +
-                      (panel.typeaheadMatchCount > 0
-                          ? '  ${panel.typeaheadMatchPosition}/'
-                              '${panel.typeaheadMatchCount}'
-                          : '  no matches')
-                  : 'Filter: "${panel.filterQuery}"',
+              QuickSearchStatusStrings(context).status(
+                query: panel.filterQuery,
+                isTypeahead: panel.isTypeahead,
+                isQuickFilterActive: panel.isQuickFilterActive,
+                matchPosition: panel.typeaheadMatchPosition,
+                matchCount: panel.typeaheadMatchCount,
+              ),
               style: style.copyWith(color: theme.colorScheme.primary),
             ),
             const SizedBox(width: 16),
@@ -233,18 +276,31 @@ class _StatusBarState extends ConsumerState<StatusBar> {
 
           // Hidden files indicator
           if (isLocal && panel.showHiddenFiles) ...[
-            Icon(Icons.visibility, size: 14, color: theme.colorScheme.secondary),
+            Icon(
+              Icons.visibility,
+              size: 14,
+              color: theme.colorScheme.secondary,
+            ),
             const SizedBox(width: 4),
-            Text(l.hidden, style: style.copyWith(
-                color: theme.colorScheme.secondary, fontSize: 11)),
+            Text(
+              l.hidden,
+              style: style.copyWith(
+                color: theme.colorScheme.secondary,
+                fontSize: 11,
+              ),
+            ),
             const SizedBox(width: 8),
           ],
 
           // Loading indicator
           if (panel.isLoading) ...[
             SizedBox(
-              width: 12, height: 12,
-              child: CircularProgressIndicator(strokeWidth: 1.5, color: theme.colorScheme.primary),
+              width: 12,
+              height: 12,
+              child: CircularProgressIndicator(
+                strokeWidth: 1.5,
+                color: theme.colorScheme.primary,
+              ),
             ),
             const SizedBox(width: 6),
           ],
@@ -254,8 +310,10 @@ class _StatusBarState extends ConsumerState<StatusBar> {
           Text(isLocal ? l.local : l.remote, style: style),
           if (isLocal && panel.freeBytes != null) ...[
             const SizedBox(width: 8),
-            Text(l.free(formatBytes(panel.freeBytes!)),
-                style: style.copyWith(fontSize: 11)),
+            Text(
+              l.free(formatBytes(panel.freeBytes!)),
+              style: style.copyWith(fontSize: 11),
+            ),
           ],
         ],
       ),

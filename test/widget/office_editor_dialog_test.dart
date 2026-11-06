@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quds_office_editor/quds_office_editor.dart';
 
+import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/services/office_editor_menu.dart';
@@ -24,6 +25,26 @@ void main() {
     expect(isOfficeFileName('notes.odt'), isTrue);
     expect(isOfficeFileName('notes.txt'), isFalse);
     expect(isOfficeFileName('README'), isFalse);
+  });
+
+  testWidgets('office load translates an oversized file error',
+      (tester) async {
+    const path = '/large.docx';
+    await tester.pumpWidget(ProviderScope(
+      child: MaterialApp(
+        locale: const Locale('de'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: OfficeEditorDialog(
+          file: FileItem(name: 'large.docx', path: path, size: 65 * 1024 * 1024, isFolder: false),
+          side: PanelSide.local,
+        ),
+      ),
+    ));
+    await tester.pump();
+    await tester.pumpAndSettle();
+    expect(find.textContaining('überschreitet das Anzeigelimit'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
   });
 
   testWidgets('PPTX opens in the slide editor', (tester) async {

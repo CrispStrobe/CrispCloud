@@ -1,7 +1,5 @@
 import 'dart:async';
-import 'dart:collection';
 import 'dart:math' as math;
-import 'dart:typed_data';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -33,21 +31,24 @@ class _HexEditorState extends State<HexEditor> {
   final _focus = FocusNode(debugLabel: 'Hex editor');
   final _vertical = ScrollController(), _horizontal = ScrollController();
   final _viewport = GlobalKey();
-  final _pages = LinkedHashMap<int, Future<Uint8List>>();
+  final _pages = <int, Future<Uint8List>>{};
   static const _pageSize = 65536;
   late HexSnapshot _snapshot;
   double _charWidth = 9, _rowHeight = 24;
   int? _dragPointer;
-  int _previousCaret = 0;
+  late (int, int, HexArea) _previousCaret;
   bool _keypad = false;
   HexEditorController get c => widget.controller;
+  (int, int, HexArea) get _caretPosition => (c.caret, c.nibble, c.area);
 
   @override
   void initState() {
     super.initState();
     _snapshot = c.document.snapshot;
     _keypad = widget.showKeypad;
+    _previousCaret = _caretPosition;
     c.addListener(_changed);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _revealCaret());
   }
 
   @override
@@ -58,6 +59,8 @@ class _HexEditorState extends State<HexEditor> {
       c.addListener(_changed);
       _snapshot = c.document.snapshot;
       _pages.clear();
+      _previousCaret = _caretPosition;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _revealCaret());
     }
   }
 
@@ -68,23 +71,42 @@ class _HexEditorState extends State<HexEditor> {
       _pages.clear();
     }
     setState(() {});
-    if (_previousCaret != c.caret) {
-      _previousCaret = c.caret;
+    if (_previousCaret != _caretPosition) {
+      _previousCaret = _caretPosition;
       WidgetsBinding.instance.addPostFrameCallback((_) => _revealCaret());
     }
   }
 
   void _revealCaret() {
-    if (!mounted || !_vertical.hasClients) return;
-    final top = (c.caret ~/ hexBytesPerRow) * _rowHeight;
-    final position = _vertical.position;
-    var offset = position.pixels;
-    if (top < offset) offset = top;
-    if (top + _rowHeight > offset + position.viewportDimension) {
-      offset = top + _rowHeight - position.viewportDimension;
+    if (!mounted) return;
+    if (_vertical.hasClients) {
+      final top = (c.caret ~/ hexBytesPerRow) * _rowHeight;
+      final position = _vertical.position;
+      var offset = position.pixels;
+      if (top < offset) offset = top;
+      if (top + _rowHeight > offset + position.viewportDimension) {
+        offset = top + _rowHeight - position.viewportDimension;
+      }
+      offset = offset.clamp(0.0, position.maxScrollExtent);
+      if (offset != position.pixels) _vertical.jumpTo(offset);
     }
-    offset = offset.clamp(0.0, position.maxScrollExtent);
-    if (offset != position.pixels) _vertical.jumpTo(offset);
+    if (_horizontal.hasClients) {
+      final byte = c.caret % hexBytesPerRow;
+      final digits = hexOffsetDigits(c.document.length);
+      final column = c.area == HexArea.hex
+          ? hexCharCol(byte, digits) + c.nibble
+          : asciiCharCol(byte, digits);
+      final left = 8 + column * _charWidth;
+      final right = left + _charWidth;
+      final position = _horizontal.position;
+      var offset = position.pixels;
+      if (left < offset) offset = left;
+      if (right > offset + position.viewportDimension) {
+        offset = right - position.viewportDimension;
+      }
+      offset = offset.clamp(0.0, position.maxScrollExtent);
+      if (offset != position.pixels) _horizontal.jumpTo(offset);
+    }
   }
 
   Future<Uint8List> _page(int index) {
@@ -163,8 +185,9 @@ class _HexEditorState extends State<HexEditor> {
   }
 
   KeyEventResult _key(FocusNode node, KeyEvent event) {
-    if (event is! KeyDownEvent && event is! KeyRepeatEvent)
+    if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
       return KeyEventResult.ignored;
+    }
     final key = event.logicalKey;
     final hardware = HardwareKeyboard.instance;
     final command = hardware.isControlPressed || hardware.isMetaPressed;
@@ -241,8 +264,9 @@ class _HexEditorState extends State<HexEditor> {
       c.cancelSearch();
     } else {
       final text = event.character;
-      if (text == null || text.isEmpty || text.codeUnits.any((v) => v < 32))
+      if (text == null || text.isEmpty || text.codeUnits.any((v) => v < 32)) {
         return KeyEventResult.ignored;
+      }
       if (c.area == HexArea.hex) {
         final digit = text.length == 1 ? int.tryParse(text, radix: 16) : null;
         if (digit == null) return KeyEventResult.ignored;
@@ -289,9 +313,10 @@ class _HexEditorState extends State<HexEditor> {
   }
 
   void _message(Object error) {
-    if (mounted)
+    if (mounted) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(error.toString())));
+    }
   }
 
   Future<void> _goTo() async {
@@ -321,10 +346,11 @@ class _HexEditorState extends State<HexEditor> {
     );
     if (value == null || !mounted) return;
     try {
-      if (textMode && value.runes.any((v) => v > (c.latin1 ? 255 : 127)))
+      if (textMode && value.runes.any((v) => v > (c.latin1 ? 255 : 127))) {
         throw const FormatException(
           'Text is outside the selected byte encoding.',
         );
+      }
       final bytes = textMode
           ? Uint8List.fromList(value.codeUnits)
           : parseHexBytes(value);
@@ -361,7 +387,17 @@ class _HexEditorState extends State<HexEditor> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context), colors = Theme.of(context).colorScheme;
     final style = TextStyle(
-      fontFamily: 'monospace',
+      // A generic 'monospace' family is not resolved reliably on macOS or
+      // Windows. Pin real monospace faces and keep a generic fallback.
+      fontFamily: 'Menlo',
+      fontFamilyFallback: const [
+        'Menlo',
+        'SF Mono',
+        'Consolas',
+        'DejaVu Sans Mono',
+        'Liberation Mono',
+        'monospace',
+      ],
       fontSize: 14,
       color: colors.onSurface,
     );
@@ -553,16 +589,18 @@ class _HexEditorState extends State<HexEditor> {
                               key: ValueKey((_snapshot.revision, row)),
                               future: future,
                               builder: (context, state) {
-                                if (state.hasError)
+                                if (state.hasError) {
                                   return Text(
                                     'Read failed: ${state.error}',
                                     style: TextStyle(color: colors.error),
                                   );
-                                if (!state.hasData)
+                                }
+                                if (!state.hasData) {
                                   return Text(
                                     '${hexNumber(offset, digits)}  …',
                                     style: style,
                                   );
+                                }
                                 final bytes = count == 0
                                     ? Uint8List(0)
                                     : Uint8List.sublistView(
@@ -577,7 +615,7 @@ class _HexEditorState extends State<HexEditor> {
                                         _viewport.currentContext
                                                 ?.findRenderObject()
                                             as RenderBox?;
-                                    if (box != null)
+                                    if (box != null) {
                                       _hit(
                                         box.globalToLocal(
                                           details.globalPosition,
@@ -586,6 +624,7 @@ class _HexEditorState extends State<HexEditor> {
                                             .instance
                                             .isShiftPressed,
                                       );
+                                    }
                                   },
                                   child: Semantics(
                                     label:
@@ -641,8 +680,9 @@ class _HexEditorState extends State<HexEditor> {
                     child: TextButton(
                       onPressed: editable
                           ? () {
-                              if (c.area != HexArea.hex)
+                              if (c.area != HexArea.hex) {
                                 unawaited(c.setArea(HexArea.hex));
+                              }
                               unawaited(c.typeDigit(digit));
                             }
                           : null,

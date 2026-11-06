@@ -39,6 +39,7 @@ import '../utils/async_lock.dart';
 import 'auth_provider.dart';
 import 'core_providers.dart';
 import 'panel_provider.dart';
+import '../services/provider_workflow_failure.dart';
 
 class TransferNotifier extends ChangeNotifier {
   static const _log = Log('TransferNotifier');
@@ -1231,16 +1232,20 @@ class TransferNotifier extends ChangeNotifier {
         fileSize = file.size ?? 0;
       }
       fileProgresses.add(
-        FileProgress(name: file.name, path: file.path!, size: fileSize),
+        FileProgress(
+          name: file.name,
+          path: file.path ?? file.name,
+          size: fileSize,
+        ),
       );
       totalBytes += fileSize;
     }
 
     final operation = OperationProgress(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: const Uuid().v4(),
       type: OperationType.upload,
       sourcePath: files.length == 1
-          ? files.first.path!
+          ? files.first.path ?? files.first.name
           : '${files.length} files',
       targetPath: target,
       fileName: files.length == 1 ? files.first.name : '${files.length} files',
@@ -1269,8 +1274,10 @@ class TransferNotifier extends ChangeNotifier {
             if (operation.isCancelled) return;
 
             if (file.path == null) {
-              fileProgress.error = 'No path';
-              return;
+              throw const TransferFileException(
+                TransferFileCode.noPath,
+                'No path',
+              );
             }
 
             final audit = _ref.read(auditServiceProvider);
@@ -1359,6 +1366,7 @@ class TransferNotifier extends ChangeNotifier {
             } catch (e) {
               _log.warn('operation failed', e);
               fileProgress.error = e.toString();
+              fileProgress.errorCause = e;
               // If an S3 multipart upload was interrupted, persist state
               // for future resume.
               if (client is S3ClientAdapter) {
@@ -1384,6 +1392,7 @@ class TransferNotifier extends ChangeNotifier {
           },
           onDone: (error) {
             fileProgress.error = error?.toString();
+            fileProgress.errorCause = error;
             tasksFinished++;
             if (tasksFinished == files.length) {
               _finalizeBatch(operation, fileProgresses);
@@ -1421,7 +1430,7 @@ class TransferNotifier extends ChangeNotifier {
     final totalBytes = files.fold(0, (sum, f) => sum + (f.size ?? 0));
 
     final operation = OperationProgress(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: const Uuid().v4(),
       type: OperationType.download,
       sourcePath: files.length == 1
           ? files.first.name
@@ -1565,6 +1574,7 @@ class TransferNotifier extends ChangeNotifier {
             } catch (e) {
               _log.warn('operation failed', e);
               fileProgress.error = e.toString();
+              fileProgress.errorCause = e;
               await audit.logError(
                 operation: AuditOperation.download,
                 sourcePath: fileRemotePath,
@@ -1581,6 +1591,7 @@ class TransferNotifier extends ChangeNotifier {
           },
           onDone: (error) {
             fileProgress.error = error?.toString();
+            fileProgress.errorCause = error;
             tasksFinished++;
             if (tasksFinished == files.length) {
               _finalizeBatch(operation, fileProgresses);
@@ -1624,15 +1635,22 @@ class TransferNotifier extends ChangeNotifier {
     List<FileProgress> fileProgresses,
   ) {
     if (operation.isCancelled) {
-      operation.fail('Cancelled by user');
+      operation.fail('Cancelled by user', code: TransferErrorCode.cancelled);
     } else {
       final failedCount = fileProgresses.where((f) => f.error != null).length;
       if (failedCount == 0) {
         operation.complete();
       } else if (failedCount == fileProgresses.length) {
-        operation.fail('All files failed');
+        operation.fail(
+          'All files failed',
+          code: TransferErrorCode.allFilesFailed,
+        );
       } else {
-        operation.fail('$failedCount of ${fileProgresses.length} files failed');
+        operation.fail(
+          '$failedCount of ${fileProgresses.length} files failed',
+          code: TransferErrorCode.someFilesFailed,
+          arguments: {'failed': failedCount, 'total': fileProgresses.length},
+        );
       }
     }
     notifyListeners();
@@ -1716,7 +1734,10 @@ class TransferNotifier extends ChangeNotifier {
         name.contains('/') ||
         name.contains('\\') ||
         name.contains('\x00')) {
-      throw const FormatException('The server returned an invalid file name');
+      throw const TransferFileFormatException(
+        TransferFileCode.invalidName,
+        'The server returned an invalid file name',
+      );
     }
     return p.join(directory, name);
   }

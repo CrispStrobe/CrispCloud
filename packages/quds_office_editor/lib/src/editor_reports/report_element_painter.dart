@@ -8,6 +8,7 @@ import 'package:quds_office_engine/pdf_widgets.dart'
 import 'package:quds_office_engine/quds_office_engine.dart';
 
 import 'report_design_layout.dart';
+import 'report_designer_strings.dart';
 import 'report_layout_painter.dart';
 
 /// Paints template elements on the band canvas: text with its placeholders
@@ -56,6 +57,7 @@ class ReportElementPainter {
     bool hideText = false,
     ReportFontRegistry? fonts,
     Map<String, Object?>? data,
+    ReportDesignerStrings? strings,
   }) {
     final ReportTemplate t = layout.template;
     switch (e) {
@@ -73,7 +75,7 @@ class ReportElementPainter {
         _paintChart(canvas, t, e, r, fonts ?? _defaultFonts, shapes, data);
       case ReportCrosstabElement():
       case ReportSubreportElement():
-        _paintFrame(canvas, r, e.displayName);
+        _paintFrame(canvas, r, strings?.elementTitle(e) ?? e.displayName);
     }
   }
 

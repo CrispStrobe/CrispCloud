@@ -5,24 +5,26 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
+import 'link_operation_failure.dart';
+
 class LinkService {
   /// Create a symbolic link at [linkPath] pointing to [target].
   static Future<void> createSymlink(String target, String linkPath) async {
-    if (kIsWeb) throw UnsupportedError('Link creation not supported on Web');
+    if (kIsWeb) throw LinkUnsupportedError(LinkOperationCode.webUnsupported, 'Link creation not supported on Web');
     await Link(linkPath).create(target);
   }
 
   /// Create a hard link at [linkPath] pointing to [target].
   /// Only supported on POSIX systems (macOS, Linux).
   static Future<void> createHardlink(String target, String linkPath) async {
-    if (kIsWeb) throw UnsupportedError('Link creation not supported on Web');
+    if (kIsWeb) throw LinkUnsupportedError(LinkOperationCode.webUnsupported, 'Link creation not supported on Web');
     if (Platform.isWindows) {
-      throw UnsupportedError('Hard links on Windows require elevated privileges');
+      throw LinkUnsupportedError(LinkOperationCode.windowsHardlink, 'Hard links on Windows require elevated privileges');
     }
     // Use the ln command on POSIX
     final result = await Process.run('ln', [target, linkPath]);
     if (result.exitCode != 0) {
-      throw Exception('Failed to create hard link: ${result.stderr}');
+      throw LinkOperationException(LinkOperationCode.hardlinkFailed, 'Failed to create hard link: ${result.stderr}', {'detail': result.stderr.toString()});
     }
   }
 
@@ -36,7 +38,7 @@ class LinkService {
     String escaped(String s) => s.replaceAll("'", "'\\''");
     final result = await execute("ln -s '${escaped(target)}' '${escaped(linkPath)}'");
     if (result.contains('Permission denied') || result.contains('Operation not permitted')) {
-      throw Exception('Permission denied creating symlink');
+      throw LinkOperationException(LinkOperationCode.symlinkDenied, 'Permission denied creating symlink', {'detail': result});
     }
   }
 

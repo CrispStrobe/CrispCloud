@@ -7,9 +7,11 @@ import 'package:madedit2_hex/madedit2_hex.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
-import '../services/file_operation_backend.dart';
+import '../utils/file_editability.dart' show isTextEditableName;
 import '../services/file_operation_service.dart';
 import '../services/hex_file_session.dart';
+import '../services/editor_kind.dart';
+import 'file_editor_dialog.dart' show showTextHexEditorSession;
 
 /// Capture the file's verified storage before navigation. Neither a later tab
 /// switch nor a matching path on another account can redirect a save.
@@ -21,45 +23,23 @@ Future<void> showHexEditorDialog(
 ) async {
   if (file.isFolder) return;
   try {
-    final panel = ref.read(panelProvider(side));
-    final origin = panel.originForOperation(file);
-    if (origin == null || !origin.isCurrent) {
-      throw const HexSaveConflict(
-        'Refresh or reopen the original file before hex editing. Archive previews are read-only.',
-      );
-    }
-    final backend = fileOperationBackend(
-      source: origin.source,
-      local: ref.read(localFileServiceProvider),
-      isCurrent: () => origin.isCurrent,
+    await showTextHexEditorSession(
+      context,
+      ref,
+      file,
+      side,
+      initialEditor: EditorKind.hex,
     );
-    final original = file.copyWith(
-      path:
-          file.path ?? backend.paths.join(origin.source.currentPath, file.name),
-    );
-    await Navigator.of(context).push<void>(
-      MaterialPageRoute(
-        fullscreenDialog: true,
-        builder: (_) => HexFileEditorPage(file: original, backend: backend),
-      ),
-    );
-    // Refresh only after the editor has closed; an active session must retain
-    // the origin it captured. Invalidate stale file previews independently.
-    try {
-      await ref
-          .read(fileCacheProvider)
-          .remove(original.path!, origin.storageId);
-    } catch (_) {}
-    try {
-      await panel.refresh();
-    } catch (_) {}
-    panel.restoreCursorAndFocus(file);
   } catch (error) {
     if (context.mounted) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Cannot open hex editor: $error')));
     }
+  } finally {
+    try {
+      ref.read(panelProvider(side)).restoreCursorAndFocus(file);
+    } catch (_) {}
   }
 }
 
@@ -182,7 +162,7 @@ class _HexFileEditorPageState extends State<HexFileEditorPage> {
   }
 
   Future<void> _saveCopy() async {
-    if (_saving || _controller == null || _session == null) return;
+    if (_saving || _closing || _controller == null || _session == null) return;
     final input = TextEditingController(text: '${widget.file.name}.edited');
     final name = await showDialog<String>(
       context: context,
@@ -236,11 +216,21 @@ class _HexFileEditorPageState extends State<HexFileEditorPage> {
     }
   }
 
-  Future<void> _close() async {
-    if (_closing || _saving) return;
-    _closing = true;
+  Future<void> _close() => _leaveEditor();
+
+  Future<void> _switchToText() => _leaveEditor(EditorKind.text);
+
+  Future<void> _leaveEditor([EditorKind? next]) async {
+    if (_closing ||
+        _saving ||
+        (next != null && (_loading || _controller == null))) {
+      return;
+    }
+    setState(() => _closing = true);
     try {
       if (_loading) _cancelled = true;
+      // Pending reads and clipboard edits may still make the document dirty.
+      // Finish them before deciding whether a handoff needs confirmation.
       await _controller?.idle;
       if (!mounted) return;
       if (_controller?.isDirty ?? false) {
@@ -248,8 +238,10 @@ class _HexFileEditorPageState extends State<HexFileEditorPage> {
           context: context,
           builder: (ctx) => AlertDialog(
             title: const Text('Unsaved binary changes'),
-            content: const Text(
-              'Save your changes, discard them, or keep editing?',
+            content: Text(
+              next == null
+                  ? 'Save your changes, discard them, or keep editing?'
+                  : 'Save your changes before opening the text editor?',
             ),
             actions: [
               TextButton(
@@ -262,7 +254,7 @@ class _HexFileEditorPageState extends State<HexFileEditorPage> {
               ),
               FilledButton(
                 onPressed: () => Navigator.pop(ctx, 'save'),
-                child: const Text('Save'),
+                child: Text(next == null ? 'Save' : 'Save and switch'),
               ),
             ],
           ),
@@ -274,10 +266,10 @@ class _HexFileEditorPageState extends State<HexFileEditorPage> {
       setState(() => _canPop = true);
       // Let PopScope observe the new permission before popping.
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) Navigator.of(context).pop();
+        if (mounted) Navigator.of(context).pop(next);
       });
     } finally {
-      _closing = false;
+      if (mounted && !_canPop) setState(() => _closing = false);
     }
   }
 
@@ -295,23 +287,35 @@ class _HexFileEditorPageState extends State<HexFileEditorPage> {
           leading: IconButton(
             tooltip: 'Close hex editor',
             icon: const Icon(Icons.close),
-            onPressed: _saving ? null : () => unawaited(_close()),
+            onPressed: _saving || _closing ? null : () => unawaited(_close()),
           ),
           title: Text(
             '${widget.file.name} — Hex${controller?.isDirty == true ? ' *' : ''}',
           ),
           actions: [
+            if (isTextEditableName(widget.file.name))
+              IconButton(
+                tooltip: 'Open in Text Editor',
+                icon: const Icon(Icons.code),
+                onPressed: _saving || _closing || _loading || controller == null
+                    ? null
+                    : () => unawaited(_switchToText()),
+              ),
             IconButton(
               tooltip: 'Save a separate copy',
               icon: const Icon(Icons.save_as_outlined),
-              onPressed: controller == null || _saving
+              onPressed: controller == null || _saving || _closing
                   ? null
                   : () => unawaited(_saveCopy()),
             ),
             IconButton(
               tooltip: 'Save original (Ctrl/Cmd+S)',
               icon: const Icon(Icons.save_outlined),
-              onPressed: controller == null || _saving || !controller.isDirty
+              onPressed:
+                  controller == null ||
+                      _saving ||
+                      _closing ||
+                      !controller.isDirty
                   ? null
                   : () => unawaited(_save()),
             ),
@@ -357,15 +361,23 @@ class _HexFileEditorPageState extends State<HexFileEditorPage> {
               ),
             if (controller != null)
               Expanded(
-                child: HexEditor(
-                  controller: controller,
-                  saving: _saving,
-                  onSave: () {
-                    if (!_saving)
-                      unawaited(_save());
-                    else
-                      _saveAgain = true;
-                  },
+                child: AbsorbPointer(
+                  absorbing: _closing,
+                  child: ExcludeFocus(
+                    excluding: _closing,
+                    child: HexEditor(
+                      controller: controller,
+                      saving: _saving || _closing,
+                      onSave: () {
+                        if (_closing) return;
+                        if (!_saving) {
+                          unawaited(_save());
+                        } else {
+                          _saveAgain = true;
+                        }
+                      },
+                    ),
+                  ),
                 ),
               )
             else if (!_loading)

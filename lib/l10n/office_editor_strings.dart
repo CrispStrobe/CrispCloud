@@ -7,6 +7,9 @@
 
 import 'package:flutter/widgets.dart';
 
+import 'office_ribbon_common_strings.dart';
+import 'office_fallback_strings.dart';
+
 class OfficeEditorStrings {
   const OfficeEditorStrings._();
 
@@ -22,7 +25,8 @@ class OfficeEditorStrings {
     for (final MapEntry<String, String> entry in map.entries) {
       if (entry.key.toLowerCase() == lower) return entry.value;
     }
-    return english;
+    return OfficeRibbonCommonStrings.lookup(code, english) ??
+        OfficeFallbackStrings.lookup(code, english) ?? english;
   }
 
   static const Map<String, Map<String, String>> _translations =

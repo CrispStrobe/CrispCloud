@@ -4,6 +4,7 @@
 // Compares two text files (local vs remote, or two selected files).
 
 import 'package:flutter/material.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/commander_strings.dart';
@@ -15,6 +16,7 @@ import '../services/file_comparison_service.dart';
 import '../services/file_operation_backend.dart';
 import '../services/file_operation_service.dart';
 import '../services/editor_document.dart';
+import '../l10n/diff_viewer_strings.dart';
 export '../services/file_comparison_service.dart' show DiffLine, DiffType;
 
 /// Show a diff dialog comparing two raw text strings.
@@ -23,16 +25,16 @@ void showDiffViewerFromContent(
   BuildContext context, {
   required String leftContent,
   required String rightContent,
-  String leftLabel = 'Left',
-  String rightLabel = 'Right',
+  String? leftLabel,
+  String? rightLabel,
 }) {
   showDialog(
     context: context,
     builder: (_) => _ContentDiffDialog(
       leftContent: leftContent,
       rightContent: rightContent,
-      leftLabel: leftLabel,
-      rightLabel: rightLabel,
+      leftLabel: leftLabel ?? DiffViewerStrings(context).text('left'),
+      rightLabel: rightLabel ?? DiffViewerStrings(context).text('right'),
     ),
   );
 }

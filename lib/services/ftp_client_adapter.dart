@@ -9,6 +9,7 @@ import 'package:path/path.dart' as p;
 import 'package:flutter/foundation.dart';
 
 import 'cloud_storage_interface.dart';
+import 'ftp_operation_failure.dart';
 import 'upload_temp_file.dart';
 import 'ftp_config_service.dart';
 import 'log_service.dart';
@@ -182,7 +183,10 @@ class FTPClientAdapter extends CloudStorageClient
     try {
       final connected = await connection.connect();
       if (!connected) {
-        throw Exception('FTP connection failed');
+        throw FtpOperationFailure(
+          FtpOperationCode.connectionFailed,
+          'FTP connection failed',
+        );
       }
       if (epoch != _authEpoch) {
         throw StateError('The FTP account changed while connecting.');
@@ -206,7 +210,11 @@ class FTPClientAdapter extends CloudStorageClient
         _password = null;
       }
       _log.error('Connection error', e);
-      throw Exception('Connection failed: $e');
+      throw FtpOperationFailure(
+        FtpOperationCode.connectionError,
+        'Connection failed: $e',
+        {'error': e},
+      );
     }
   }
 
@@ -219,7 +227,7 @@ class FTPClientAdapter extends CloudStorageClient
     String? twoFactorCode,
   }) async {
     if (kIsWeb) {
-      throw UnsupportedError('FTP is not supported on Web');
+      throw FtpWebUnsupportedFailure();
     }
     _authEpoch++;
     await _closeSessions();
@@ -368,7 +376,11 @@ class FTPClientAdapter extends CloudStorageClient
       }
     } catch (e) {
       _log.error('List error', e);
-      throw Exception('Failed to list path $path: $e');
+      throw FtpOperationFailure(
+        FtpOperationCode.list,
+        'Failed to list path $path: $e',
+        {'path': path, 'error': e},
+      );
     }
 
     return {'folders': folders, 'files': files};
@@ -395,7 +407,11 @@ class FTPClientAdapter extends CloudStorageClient
         sRemoteName: remotePath,
       );
       if (!success) {
-        throw Exception('FTP upload failed for $fileName');
+        throw FtpOperationFailure(
+          FtpOperationCode.upload,
+          'FTP upload failed for $fileName',
+          {'path': fileName},
+        );
       }
       onProgress?.call(fileData.length, fileData.length);
     });
@@ -477,7 +493,11 @@ class FTPClientAdapter extends CloudStorageClient
     // The library sends this complete path in both SIZE and RETR.
     final success = await client.downloadFile(source, localFile);
     if (!success) {
-      throw Exception('FTP download failed for $remotePath');
+      throw FtpOperationFailure(
+        FtpOperationCode.download,
+        'FTP download failed for $remotePath',
+        {'path': remotePath},
+      );
     }
 
     final size = await localFile.length();
@@ -498,7 +518,11 @@ class FTPClientAdapter extends CloudStorageClient
     try {
       final success = await client.downloadFile(source, tempFile);
       if (!success) {
-        throw Exception('FTP download failed for $remotePath');
+        throw FtpOperationFailure(
+          FtpOperationCode.download,
+          'FTP download failed for $remotePath',
+          {'path': remotePath},
+        );
       }
 
       final bytes = await tempFile.readAsBytes();

@@ -1,0 +1,528 @@
+import 'package:flutter/widgets.dart';
+
+/// Labels for browser drawer and local diagnostic actions.
+class BrowserDrawerStrings {
+  BrowserDrawerStrings(BuildContext context)
+      : _language = Localizations.localeOf(context).languageCode;
+  final String _language;
+  String text(String english) => _translations[_language]?[english] ?? english;
+  String operations(int count) =>
+      text('{count} operation(s)').replaceAll('{count}', '$count');
+  @visibleForTesting
+  static Map<String, Map<String, String>> get translations => _translations;
+}
+
+const _translations = <String, Map<String, String>>{
+  "de": {
+    "Operations": "Vorgänge",
+    "Clear Selections": "Auswahl aufheben",
+    "Prefer System Editor": "Systemeditor bevorzugen",
+    "Edit opens with the OS default app":
+        "Bearbeiten öffnet die Standardanwendung des Systems",
+    "Edit opens built-in editor": "Bearbeiten öffnet den integrierten Editor",
+    "F-Key Bar": "F-Tastenleiste",
+    "F3–F8 bar is shown": "F3–F8-Leiste wird angezeigt",
+    "F3–F8 bar is hidden": "F3–F8-Leiste ist ausgeblendet",
+    "Selection Bar": "Auswahlleiste",
+    "Action bar shown when files are selected (touch mode)":
+        "Aktionsleiste bei ausgewählten Dateien anzeigen (Touch-Modus)",
+    "Hidden — use F-keys / keyboard (DC mode)":
+        "Ausgeblendet — F-Tasten oder Tastatur verwenden (DC-Modus)",
+    "Toolbar Customization": "Symbolleiste anpassen",
+    "Show/hide and reorder toolbar buttons":
+        "Schaltflächen ein-/ausblenden und neu anordnen",
+    "Toolbar button visibility and order can be configured via the toolbar customization service. Full drag-and-drop reorder dialog coming soon.":
+        "Sichtbarkeit und Reihenfolge der Schaltflächen können über den Anpassungsdienst konfiguriert werden. Ein Dialog zum Anordnen per Drag-and-drop folgt.",
+    "App lock is currently enabled.": "Die App-Sperre ist derzeit aktiviert.",
+    "Disable": "Deaktivieren",
+    "Change Code": "Code ändern",
+    "App lock disabled": "App-Sperre deaktiviert",
+    "Local Crash Diagnostics": "Lokale Absturzdiagnose",
+    "Stores sanitized crash reports on this device":
+        "Speichert bereinigte Absturzberichte auf diesem Gerät",
+    "Off — no crash reports are retained":
+        "Aus — es werden keine Absturzberichte gespeichert",
+    "Diagnostics": "Diagnose",
+    "Review, copy, or clear local crash reports":
+        "Lokale Absturzberichte prüfen, kopieren oder löschen",
+    "Local Diagnostics": "Lokale Diagnose",
+    "Platform checks": "Plattformprüfungen",
+    "Crash reports": "Absturzberichte",
+    "No crash reports are stored on this device.":
+        "Auf diesem Gerät sind keine Absturzberichte gespeichert.",
+    "Diagnostics copied": "Diagnose kopiert",
+    "Windows Explorer Integration": "Windows-Explorer-Integration",
+    "Right-click files to upload to CrispCloud":
+        "Dateien per Rechtsklick zu CrispCloud hochladen",
+    "Add \"Upload to CrispCloud\" to Explorer context menu":
+        "„Zu CrispCloud hochladen“ zum Explorer-Kontextmenü hinzufügen",
+    "Failed to register context menu. Check app permissions.":
+        "Kontextmenü konnte nicht registriert werden. App-Berechtigungen prüfen.",
+    "Failed to unregister context menu.":
+        "Kontextmenü konnte nicht entfernt werden.",
+    "{count} operation(s)": "{count} Vorgänge",
+    "Platform": "Plattform",
+    "Packaged app": "Paketierte App",
+    "App sandbox": "App-Sandbox",
+    "Application Support": "Anwendungsunterstützung",
+    "Crypto backend": "Krypto-Backend",
+    "Credential store": "Zugangsdaten-Speicher",
+    "Yes": "Ja",
+    "No": "Nein",
+    "Enabled": "Aktiviert",
+    "Not detected": "Nicht erkannt",
+    "Available": "Verfügbar",
+    "Unavailable": "Nicht verfügbar",
+    "Encrypted browser storage": "Verschlüsselter Browserspeicher",
+    "CryptoKit (bundled)": "CryptoKit (mitgeliefert)",
+    "System OpenSSL": "System-OpenSSL",
+    "Platform cryptography": "Plattformkryptografie",
+    "Windows protected storage": "Geschützter Windows-Speicher",
+    "libsecret / platform storage": "libsecret / Plattformspeicher",
+  },
+  "fr": {
+    "Operations": "Opérations",
+    "Clear Selections": "Effacer les sélections",
+    "Prefer System Editor": "Privilégier l’éditeur système",
+    "Edit opens with the OS default app":
+        "Modifier ouvre l’application par défaut du système",
+    "Edit opens built-in editor": "Modifier ouvre l’éditeur intégré",
+    "F-Key Bar": "Barre des touches F",
+    "F3–F8 bar is shown": "La barre F3–F8 est affichée",
+    "F3–F8 bar is hidden": "La barre F3–F8 est masquée",
+    "Selection Bar": "Barre de sélection",
+    "Action bar shown when files are selected (touch mode)":
+        "Barre d’actions affichée lors de la sélection de fichiers (mode tactile)",
+    "Hidden — use F-keys / keyboard (DC mode)":
+        "Masquée — utiliser les touches F ou le clavier (mode DC)",
+    "Toolbar Customization": "Personnalisation de la barre d’outils",
+    "Show/hide and reorder toolbar buttons":
+        "Afficher, masquer et réorganiser les boutons",
+    "Toolbar button visibility and order can be configured via the toolbar customization service. Full drag-and-drop reorder dialog coming soon.":
+        "La visibilité et l’ordre des boutons peuvent être configurés par le service de personnalisation. Une boîte de réorganisation par glisser-déposer sera bientôt disponible.",
+    "App lock is currently enabled.":
+        "Le verrouillage de l’application est activé.",
+    "Disable": "Désactiver",
+    "Change Code": "Modifier le code",
+    "App lock disabled": "Verrouillage désactivé",
+    "Local Crash Diagnostics": "Diagnostics locaux des plantages",
+    "Stores sanitized crash reports on this device":
+        "Stocke des rapports de plantage expurgés sur cet appareil",
+    "Off — no crash reports are retained":
+        "Désactivé — aucun rapport de plantage n’est conservé",
+    "Diagnostics": "Diagnostics",
+    "Review, copy, or clear local crash reports":
+        "Consulter, copier ou effacer les rapports de plantage locaux",
+    "Local Diagnostics": "Diagnostics locaux",
+    "Platform checks": "Vérifications de la plateforme",
+    "Crash reports": "Rapports de plantage",
+    "No crash reports are stored on this device.":
+        "Aucun rapport de plantage n’est stocké sur cet appareil.",
+    "Diagnostics copied": "Diagnostics copiés",
+    "Windows Explorer Integration": "Intégration à l’Explorateur Windows",
+    "Right-click files to upload to CrispCloud":
+        "Cliquez droit sur les fichiers pour les envoyer vers CrispCloud",
+    "Add \"Upload to CrispCloud\" to Explorer context menu":
+        "Ajouter « Envoyer vers CrispCloud » au menu contextuel de l’Explorateur",
+    "Failed to register context menu. Check app permissions.":
+        "Impossible d’enregistrer le menu contextuel. Vérifiez les autorisations de l’application.",
+    "Failed to unregister context menu.":
+        "Impossible de supprimer le menu contextuel.",
+    "{count} operation(s)": "{count} opération(s)",
+    "Platform": "Plateforme",
+    "Packaged app": "Application empaquetée",
+    "App sandbox": "Bac à sable",
+    "Application Support": "Prise en charge de l’application",
+    "Crypto backend": "Moteur cryptographique",
+    "Credential store": "Stockage des identifiants",
+    "Yes": "Oui",
+    "No": "Non",
+    "Enabled": "Activé",
+    "Not detected": "Non détecté",
+    "Available": "Disponible",
+    "Unavailable": "Indisponible",
+    "Encrypted browser storage": "Stockage chiffré du navigateur",
+    "CryptoKit (bundled)": "CryptoKit (inclus)",
+    "System OpenSSL": "OpenSSL système",
+    "Platform cryptography": "Cryptographie de la plateforme",
+    "Windows protected storage": "Stockage protégé Windows",
+    "libsecret / platform storage": "libsecret / stockage système",
+  },
+  "es": {
+    "Operations": "Operaciones",
+    "Clear Selections": "Borrar selecciones",
+    "Prefer System Editor": "Preferir editor del sistema",
+    "Edit opens with the OS default app":
+        "Editar abre la aplicación predeterminada del sistema",
+    "Edit opens built-in editor": "Editar abre el editor integrado",
+    "F-Key Bar": "Barra de teclas F",
+    "F3–F8 bar is shown": "La barra F3–F8 está visible",
+    "F3–F8 bar is hidden": "La barra F3–F8 está oculta",
+    "Selection Bar": "Barra de selección",
+    "Action bar shown when files are selected (touch mode)":
+        "Mostrar acciones al seleccionar archivos (modo táctil)",
+    "Hidden — use F-keys / keyboard (DC mode)":
+        "Oculta: use las teclas F o el teclado (modo DC)",
+    "Toolbar Customization": "Personalizar barra de herramientas",
+    "Show/hide and reorder toolbar buttons":
+        "Mostrar, ocultar y reordenar botones",
+    "Toolbar button visibility and order can be configured via the toolbar customization service. Full drag-and-drop reorder dialog coming soon.":
+        "La visibilidad y el orden de los botones pueden configurarse mediante el servicio de personalización. Próximamente habrá un cuadro para ordenar arrastrando.",
+    "App lock is currently enabled.":
+        "El bloqueo de la aplicación está activado.",
+    "Disable": "Desactivar",
+    "Change Code": "Cambiar código",
+    "App lock disabled": "Bloqueo de la aplicación desactivado",
+    "Local Crash Diagnostics": "Diagnóstico local de fallos",
+    "Stores sanitized crash reports on this device":
+        "Guarda informes de fallos depurados en este dispositivo",
+    "Off — no crash reports are retained":
+        "Desactivado: no se conservan informes de fallos",
+    "Diagnostics": "Diagnóstico",
+    "Review, copy, or clear local crash reports":
+        "Revisar, copiar o borrar informes de fallos locales",
+    "Local Diagnostics": "Diagnóstico local",
+    "Platform checks": "Comprobaciones de plataforma",
+    "Crash reports": "Informes de fallos",
+    "No crash reports are stored on this device.":
+        "No hay informes de fallos guardados en este dispositivo.",
+    "Diagnostics copied": "Diagnóstico copiado",
+    "Windows Explorer Integration": "Integración con el Explorador de Windows",
+    "Right-click files to upload to CrispCloud":
+        "Haga clic derecho en los archivos para subirlos a CrispCloud",
+    "Add \"Upload to CrispCloud\" to Explorer context menu":
+        "Añadir «Subir a CrispCloud» al menú contextual del Explorador",
+    "Failed to register context menu. Check app permissions.":
+        "No se pudo registrar el menú contextual. Compruebe los permisos de la aplicación.",
+    "Failed to unregister context menu.":
+        "No se pudo eliminar el menú contextual.",
+    "{count} operation(s)": "{count} operación(es)",
+    "Platform": "Plataforma",
+    "Packaged app": "Aplicación empaquetada",
+    "App sandbox": "Aislamiento de la aplicación",
+    "Application Support": "Soporte de aplicación",
+    "Crypto backend": "Motor criptográfico",
+    "Credential store": "Almacén de credenciales",
+    "Yes": "Sí",
+    "No": "No",
+    "Enabled": "Activado",
+    "Not detected": "No detectado",
+    "Available": "Disponible",
+    "Unavailable": "No disponible",
+    "Encrypted browser storage": "Almacenamiento cifrado del navegador",
+    "CryptoKit (bundled)": "CryptoKit (incluido)",
+    "System OpenSSL": "OpenSSL del sistema",
+    "Platform cryptography": "Criptografía de la plataforma",
+    "Windows protected storage": "Almacenamiento protegido de Windows",
+    "libsecret / platform storage": "libsecret / almacenamiento de plataforma",
+  },
+  "pt": {
+    "Operations": "Operações",
+    "Clear Selections": "Limpar seleções",
+    "Prefer System Editor": "Preferir editor do sistema",
+    "Edit opens with the OS default app":
+        "Editar abre a aplicação predefinida do sistema",
+    "Edit opens built-in editor": "Editar abre o editor integrado",
+    "F-Key Bar": "Barra de teclas F",
+    "F3–F8 bar is shown": "A barra F3–F8 está visível",
+    "F3–F8 bar is hidden": "A barra F3–F8 está oculta",
+    "Selection Bar": "Barra de seleção",
+    "Action bar shown when files are selected (touch mode)":
+        "Mostrar ações quando há ficheiros selecionados (modo tátil)",
+    "Hidden — use F-keys / keyboard (DC mode)":
+        "Oculta — use as teclas F ou o teclado (modo DC)",
+    "Toolbar Customization": "Personalização da barra de ferramentas",
+    "Show/hide and reorder toolbar buttons":
+        "Mostrar, ocultar e reordenar botões",
+    "Toolbar button visibility and order can be configured via the toolbar customization service. Full drag-and-drop reorder dialog coming soon.":
+        "A visibilidade e a ordem dos botões podem ser configuradas pelo serviço de personalização. Uma janela de reordenação por arrastar estará disponível em breve.",
+    "App lock is currently enabled.": "O bloqueio da aplicação está ativado.",
+    "Disable": "Desativar",
+    "Change Code": "Alterar código",
+    "App lock disabled": "Bloqueio da aplicação desativado",
+    "Local Crash Diagnostics": "Diagnóstico local de falhas",
+    "Stores sanitized crash reports on this device":
+        "Guarda relatórios de falhas depurados neste dispositivo",
+    "Off — no crash reports are retained":
+        "Desativado — não são guardados relatórios de falhas",
+    "Diagnostics": "Diagnóstico",
+    "Review, copy, or clear local crash reports":
+        "Rever, copiar ou limpar relatórios de falhas locais",
+    "Local Diagnostics": "Diagnóstico local",
+    "Platform checks": "Verificações da plataforma",
+    "Crash reports": "Relatórios de falhas",
+    "No crash reports are stored on this device.":
+        "Não há relatórios de falhas guardados neste dispositivo.",
+    "Diagnostics copied": "Diagnóstico copiado",
+    "Windows Explorer Integration": "Integração com o Explorador do Windows",
+    "Right-click files to upload to CrispCloud":
+        "Clique com o botão direito nos ficheiros para enviar para o CrispCloud",
+    "Add \"Upload to CrispCloud\" to Explorer context menu":
+        "Adicionar «Enviar para CrispCloud» ao menu de contexto do Explorador",
+    "Failed to register context menu. Check app permissions.":
+        "Não foi possível registar o menu de contexto. Verifique as permissões da aplicação.",
+    "Failed to unregister context menu.":
+        "Não foi possível remover o menu de contexto.",
+    "{count} operation(s)": "{count} operação(ões)",
+    "Platform": "Plataforma",
+    "Packaged app": "Aplicação empacotada",
+    "App sandbox": "Isolamento da aplicação",
+    "Application Support": "Suporte da aplicação",
+    "Crypto backend": "Motor criptográfico",
+    "Credential store": "Armazenamento de credenciais",
+    "Yes": "Sim",
+    "No": "Não",
+    "Enabled": "Ativado",
+    "Not detected": "Não detetado",
+    "Available": "Disponível",
+    "Unavailable": "Indisponível",
+    "Encrypted browser storage": "Armazenamento cifrado do navegador",
+    "CryptoKit (bundled)": "CryptoKit (incluído)",
+    "System OpenSSL": "OpenSSL do sistema",
+    "Platform cryptography": "Criptografia da plataforma",
+    "Windows protected storage": "Armazenamento protegido do Windows",
+    "libsecret / platform storage": "libsecret / armazenamento da plataforma",
+  },
+  "zh": {
+    "Operations": "操作",
+    "Clear Selections": "清除选择",
+    "Prefer System Editor": "优先使用系统编辑器",
+    "Edit opens with the OS default app": "编辑时使用系统默认应用打开",
+    "Edit opens built-in editor": "编辑时使用内置编辑器打开",
+    "F-Key Bar": "功能键栏",
+    "F3–F8 bar is shown": "F3–F8 栏已显示",
+    "F3–F8 bar is hidden": "F3–F8 栏已隐藏",
+    "Selection Bar": "选择栏",
+    "Action bar shown when files are selected (touch mode)": "选择文件时显示操作栏（触控模式）",
+    "Hidden — use F-keys / keyboard (DC mode)": "已隐藏 — 使用功能键或键盘（DC 模式）",
+    "Toolbar Customization": "自定义工具栏",
+    "Show/hide and reorder toolbar buttons": "显示、隐藏和重新排列工具栏按钮",
+    "Toolbar button visibility and order can be configured via the toolbar customization service. Full drag-and-drop reorder dialog coming soon.":
+        "可通过工具栏自定义服务配置按钮的显示状态和顺序。拖放排序对话框即将推出。",
+    "App lock is currently enabled.": "应用锁当前已启用。",
+    "Disable": "禁用",
+    "Change Code": "更改密码",
+    "App lock disabled": "应用锁已禁用",
+    "Local Crash Diagnostics": "本地崩溃诊断",
+    "Stores sanitized crash reports on this device": "在此设备上存储经过清理的崩溃报告",
+    "Off — no crash reports are retained": "关闭 — 不保留崩溃报告",
+    "Diagnostics": "诊断",
+    "Review, copy, or clear local crash reports": "查看、复制或清除本地崩溃报告",
+    "Local Diagnostics": "本地诊断",
+    "Platform checks": "平台检查",
+    "Crash reports": "崩溃报告",
+    "No crash reports are stored on this device.": "此设备上没有存储崩溃报告。",
+    "Diagnostics copied": "诊断信息已复制",
+    "Windows Explorer Integration": "Windows 资源管理器集成",
+    "Right-click files to upload to CrispCloud": "右键单击文件以上传到 CrispCloud",
+    "Add \"Upload to CrispCloud\" to Explorer context menu":
+        "在资源管理器右键菜单中添加“上传到 CrispCloud”",
+    "Failed to register context menu. Check app permissions.":
+        "无法注册右键菜单。请检查应用权限。",
+    "Failed to unregister context menu.": "无法注销右键菜单。",
+    "{count} operation(s)": "{count} 个操作",
+    "Platform": "平台",
+    "Packaged app": "打包应用",
+    "App sandbox": "应用沙盒",
+    "Application Support": "应用支持目录",
+    "Crypto backend": "加密后端",
+    "Credential store": "凭据存储",
+    "Yes": "是",
+    "No": "否",
+    "Enabled": "已启用",
+    "Not detected": "未检测到",
+    "Available": "可用",
+    "Unavailable": "不可用",
+    "Encrypted browser storage": "加密的浏览器存储",
+    "CryptoKit (bundled)": "CryptoKit（随附）",
+    "System OpenSSL": "系统 OpenSSL",
+    "Platform cryptography": "平台加密",
+    "Windows protected storage": "Windows 受保护存储",
+    "libsecret / platform storage": "libsecret / 平台存储",
+  },
+  "ja": {
+    "Operations": "操作",
+    "Clear Selections": "選択を解除",
+    "Prefer System Editor": "システムエディターを優先",
+    "Edit opens with the OS default app": "編集時に OS の既定アプリで開く",
+    "Edit opens built-in editor": "編集時に内蔵エディターで開く",
+    "F-Key Bar": "ファンクションキー バー",
+    "F3–F8 bar is shown": "F3–F8 バーを表示中",
+    "F3–F8 bar is hidden": "F3–F8 バーを非表示",
+    "Selection Bar": "選択バー",
+    "Action bar shown when files are selected (touch mode)":
+        "ファイル選択時に操作バーを表示（タッチモード）",
+    "Hidden — use F-keys / keyboard (DC mode)":
+        "非表示 — ファンクションキーまたはキーボードを使用（DC モード）",
+    "Toolbar Customization": "ツールバーのカスタマイズ",
+    "Show/hide and reorder toolbar buttons": "ボタンの表示・非表示と並べ替え",
+    "Toolbar button visibility and order can be configured via the toolbar customization service. Full drag-and-drop reorder dialog coming soon.":
+        "ツールバーのカスタマイズサービスでボタンの表示と順序を設定できます。ドラッグ＆ドロップによる並べ替え画面は近日公開予定です。",
+    "App lock is currently enabled.": "アプリロックは現在有効です。",
+    "Disable": "無効にする",
+    "Change Code": "コードを変更",
+    "App lock disabled": "アプリロックを無効にしました",
+    "Local Crash Diagnostics": "ローカルのクラッシュ診断",
+    "Stores sanitized crash reports on this device":
+        "機密情報を除いたクラッシュレポートをこの端末に保存",
+    "Off — no crash reports are retained": "オフ — クラッシュレポートを保存しない",
+    "Diagnostics": "診断",
+    "Review, copy, or clear local crash reports": "ローカルのクラッシュレポートを確認、コピー、削除",
+    "Local Diagnostics": "ローカル診断",
+    "Platform checks": "プラットフォームの確認",
+    "Crash reports": "クラッシュレポート",
+    "No crash reports are stored on this device.": "この端末にクラッシュレポートは保存されていません。",
+    "Diagnostics copied": "診断情報をコピーしました",
+    "Windows Explorer Integration": "Windows エクスプローラーとの連携",
+    "Right-click files to upload to CrispCloud":
+        "ファイルを右クリックして CrispCloud にアップロード",
+    "Add \"Upload to CrispCloud\" to Explorer context menu":
+        "エクスプローラーのコンテキストメニューに「CrispCloud にアップロード」を追加",
+    "Failed to register context menu. Check app permissions.":
+        "コンテキストメニューを登録できません。アプリの権限を確認してください。",
+    "Failed to unregister context menu.": "コンテキストメニューを解除できませんでした。",
+    "{count} operation(s)": "{count} 件の操作",
+    "Platform": "プラットフォーム",
+    "Packaged app": "パッケージアプリ",
+    "App sandbox": "アプリサンドボックス",
+    "Application Support": "アプリケーションサポート",
+    "Crypto backend": "暗号化バックエンド",
+    "Credential store": "認証情報ストア",
+    "Yes": "はい",
+    "No": "いいえ",
+    "Enabled": "有効",
+    "Not detected": "検出されません",
+    "Available": "利用可能",
+    "Unavailable": "利用不可",
+    "Encrypted browser storage": "暗号化されたブラウザーストレージ",
+    "CryptoKit (bundled)": "CryptoKit（同梱）",
+    "System OpenSSL": "システム OpenSSL",
+    "Platform cryptography": "プラットフォーム暗号化",
+    "Windows protected storage": "Windows 保護ストレージ",
+    "libsecret / platform storage": "libsecret / プラットフォームストレージ",
+  },
+  "ko": {
+    "Operations": "작업",
+    "Clear Selections": "선택 해제",
+    "Prefer System Editor": "시스템 편집기 우선",
+    "Edit opens with the OS default app": "편집 시 OS 기본 앱으로 열기",
+    "Edit opens built-in editor": "편집 시 내장 편집기로 열기",
+    "F-Key Bar": "F 키 표시줄",
+    "F3–F8 bar is shown": "F3–F8 표시줄이 표시됨",
+    "F3–F8 bar is hidden": "F3–F8 표시줄이 숨겨짐",
+    "Selection Bar": "선택 표시줄",
+    "Action bar shown when files are selected (touch mode)":
+        "파일 선택 시 작업 표시줄 표시 (터치 모드)",
+    "Hidden — use F-keys / keyboard (DC mode)": "숨김 — F 키 또는 키보드 사용 (DC 모드)",
+    "Toolbar Customization": "도구 모음 사용자 지정",
+    "Show/hide and reorder toolbar buttons": "도구 모음 버튼 표시, 숨기기 및 재정렬",
+    "Toolbar button visibility and order can be configured via the toolbar customization service. Full drag-and-drop reorder dialog coming soon.":
+        "도구 모음 사용자 지정 서비스에서 버튼 표시와 순서를 설정할 수 있습니다. 끌어서 놓기 정렬 대화상자는 곧 제공됩니다.",
+    "App lock is currently enabled.": "앱 잠금이 현재 활성화되어 있습니다.",
+    "Disable": "사용 안 함",
+    "Change Code": "코드 변경",
+    "App lock disabled": "앱 잠금이 비활성화됨",
+    "Local Crash Diagnostics": "로컬 충돌 진단",
+    "Stores sanitized crash reports on this device": "정리된 충돌 보고서를 이 기기에 저장",
+    "Off — no crash reports are retained": "끔 — 충돌 보고서를 보관하지 않음",
+    "Diagnostics": "진단",
+    "Review, copy, or clear local crash reports": "로컬 충돌 보고서 검토, 복사 또는 삭제",
+    "Local Diagnostics": "로컬 진단",
+    "Platform checks": "플랫폼 확인",
+    "Crash reports": "충돌 보고서",
+    "No crash reports are stored on this device.": "이 기기에 저장된 충돌 보고서가 없습니다.",
+    "Diagnostics copied": "진단 정보가 복사됨",
+    "Windows Explorer Integration": "Windows 탐색기 통합",
+    "Right-click files to upload to CrispCloud":
+        "파일을 마우스 오른쪽 버튼으로 클릭하여 CrispCloud에 업로드",
+    "Add \"Upload to CrispCloud\" to Explorer context menu":
+        "탐색기 상황에 맞는 메뉴에 “CrispCloud에 업로드” 추가",
+    "Failed to register context menu. Check app permissions.":
+        "상황에 맞는 메뉴를 등록하지 못했습니다. 앱 권한을 확인하세요.",
+    "Failed to unregister context menu.": "상황에 맞는 메뉴 등록을 해제하지 못했습니다.",
+    "{count} operation(s)": "작업 {count}개",
+    "Platform": "플랫폼",
+    "Packaged app": "패키지 앱",
+    "App sandbox": "앱 샌드박스",
+    "Application Support": "애플리케이션 지원",
+    "Crypto backend": "암호화 백엔드",
+    "Credential store": "자격 증명 저장소",
+    "Yes": "예",
+    "No": "아니요",
+    "Enabled": "사용",
+    "Not detected": "감지되지 않음",
+    "Available": "사용 가능",
+    "Unavailable": "사용할 수 없음",
+    "Encrypted browser storage": "암호화된 브라우저 저장소",
+    "CryptoKit (bundled)": "CryptoKit (포함됨)",
+    "System OpenSSL": "시스템 OpenSSL",
+    "Platform cryptography": "플랫폼 암호화",
+    "Windows protected storage": "Windows 보호 저장소",
+    "libsecret / platform storage": "libsecret / 플랫폼 저장소",
+  },
+  "ar": {
+    "Operations": "العمليات",
+    "Clear Selections": "مسح التحديدات",
+    "Prefer System Editor": "تفضيل محرر النظام",
+    "Edit opens with the OS default app":
+        "يفتح التحرير التطبيق الافتراضي للنظام",
+    "Edit opens built-in editor": "يفتح التحرير المحرر المدمج",
+    "F-Key Bar": "شريط مفاتيح الوظائف",
+    "F3–F8 bar is shown": "شريط F3–F8 ظاهر",
+    "F3–F8 bar is hidden": "شريط F3–F8 مخفي",
+    "Selection Bar": "شريط التحديد",
+    "Action bar shown when files are selected (touch mode)":
+        "إظهار شريط الإجراءات عند تحديد الملفات (وضع اللمس)",
+    "Hidden — use F-keys / keyboard (DC mode)":
+        "مخفي — استخدم مفاتيح الوظائف أو لوحة المفاتيح (وضع DC)",
+    "Toolbar Customization": "تخصيص شريط الأدوات",
+    "Show/hide and reorder toolbar buttons":
+        "إظهار أزرار شريط الأدوات أو إخفاؤها وإعادة ترتيبها",
+    "Toolbar button visibility and order can be configured via the toolbar customization service. Full drag-and-drop reorder dialog coming soon.":
+        "يمكن ضبط ظهور الأزرار وترتيبها من خلال خدمة تخصيص شريط الأدوات. ستتوفر نافذة لإعادة الترتيب بالسحب والإفلات قريبًا.",
+    "App lock is currently enabled.": "قفل التطبيق مفعّل حاليًا.",
+    "Disable": "تعطيل",
+    "Change Code": "تغيير الرمز",
+    "App lock disabled": "تم تعطيل قفل التطبيق",
+    "Local Crash Diagnostics": "تشخيصات الأعطال المحلية",
+    "Stores sanitized crash reports on this device":
+        "حفظ تقارير الأعطال المنقّحة على هذا الجهاز",
+    "Off — no crash reports are retained": "إيقاف — لا تُحفظ تقارير الأعطال",
+    "Diagnostics": "التشخيصات",
+    "Review, copy, or clear local crash reports":
+        "مراجعة تقارير الأعطال المحلية أو نسخها أو مسحها",
+    "Local Diagnostics": "التشخيصات المحلية",
+    "Platform checks": "فحوصات المنصة",
+    "Crash reports": "تقارير الأعطال",
+    "No crash reports are stored on this device.":
+        "لا توجد تقارير أعطال محفوظة على هذا الجهاز.",
+    "Diagnostics copied": "تم نسخ التشخيصات",
+    "Windows Explorer Integration": "تكامل مستكشف Windows",
+    "Right-click files to upload to CrispCloud":
+        "انقر بزر الماوس الأيمن على الملفات لرفعها إلى CrispCloud",
+    "Add \"Upload to CrispCloud\" to Explorer context menu":
+        "إضافة «رفع إلى CrispCloud» إلى قائمة المستكشف السياقية",
+    "Failed to register context menu. Check app permissions.":
+        "تعذّر تسجيل القائمة السياقية. تحقق من أذونات التطبيق.",
+    "Failed to unregister context menu.": "تعذّر إلغاء تسجيل القائمة السياقية.",
+    "{count} operation(s)": "{count} عملية",
+    "Platform": "المنصة",
+    "Packaged app": "التطبيق المعبأ",
+    "App sandbox": "عزل التطبيق",
+    "Application Support": "دعم التطبيق",
+    "Crypto backend": "واجهة التشفير",
+    "Credential store": "مخزن بيانات الاعتماد",
+    "Yes": "نعم",
+    "No": "لا",
+    "Enabled": "مفعّل",
+    "Not detected": "لم يُكتشف",
+    "Available": "متاح",
+    "Unavailable": "غير متاح",
+    "Encrypted browser storage": "تخزين المتصفح المشفر",
+    "CryptoKit (bundled)": "CryptoKit (مضمن)",
+    "System OpenSSL": "OpenSSL الخاص بالنظام",
+    "Platform cryptography": "تشفير المنصة",
+    "Windows protected storage": "تخزين Windows المحمي",
+    "libsecret / platform storage": "libsecret / تخزين المنصة",
+  },
+};

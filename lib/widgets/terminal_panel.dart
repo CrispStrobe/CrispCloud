@@ -8,13 +8,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:xterm2/xterm.dart';
 
 import '../l10n/terminal_strings.dart';
+import '../l10n/terminal_mount_error_strings.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../providers/terminal_provider.dart';
+import '../providers/focus_area_provider.dart';
 import '../services/ssh_terminal_service.dart';
 import '../services/terminal_backends.dart';
 import '../services/terminal_menu.dart';
 import '../services/terminal_session.dart';
+import '../services/terminal_mount_failure.dart';
+
+final _terminalFocusOwnerProvider = StateProvider<Object?>((ref) => null);
 
 /// Mounts the terminal on first use, then preserves its session while hidden.
 class TerminalPanelHost extends ConsumerStatefulWidget {
@@ -69,6 +74,9 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   late bool _ownsSession;
   late final SshTerminalService _ssh;
   late final StateController<TerminalMenuActions?> _menuState;
+  late final StateController<bool> _inputFocusedState;
+  late final StateController<Object?> _focusOwnerState;
+  late final StateController<FocusArea> _focusAreaState;
   Terminal? _observedTerminal;
   void Function(String)? _previousTitleHandler;
   void Function(String)? _titleHandler;
@@ -101,12 +109,16 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     super.initState();
     _ssh = ref.read(sshTerminalServiceProvider);
     _menuState = ref.read(terminalMenuProvider.notifier);
-    _focus.addListener(_scheduleMenuUpdate);
+    _inputFocusedState = ref.read(terminalInputFocusedProvider.notifier);
+    _focusOwnerState = ref.read(_terminalFocusOwnerProvider.notifier);
+    _focusAreaState = ref.read(focusAreaProvider.notifier);
+    _focus.addListener(_onInputFocusChanged);
     _controller.addListener(_scheduleMenuUpdate);
     _attachSession(widget.session);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      if (_ownsSession && _desktop) {
+      if (widget.visible) _focus.requestFocus();
+      if (_ownsSession) {
         unawaited(_startLocal());
       } else {
         _focusIfVisible();
@@ -159,7 +171,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
       _detachTitleHandler();
       if (_ownsSession) _session.dispose();
       _attachSession(widget.session);
-      if (_ownsSession && _desktop) {
+      if (_ownsSession) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) unawaited(_startLocal());
         });
@@ -181,7 +193,24 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   }
 
   void _focusIfVisible() {
-    if (mounted && widget.visible) _focus.requestFocus();
+    if (mounted &&
+        widget.visible &&
+        _focusAreaState.state == FocusArea.terminal) {
+      _focus.requestFocus();
+    }
+  }
+
+  void _onInputFocusChanged() {
+    if (!mounted) return;
+    if (_focus.hasFocus) {
+      _focusOwnerState.state = _menuOwner;
+      _inputFocusedState.state = true;
+      _focusAreaState.state = FocusArea.terminal;
+    } else if (identical(_focusOwnerState.state, _menuOwner)) {
+      _focusOwnerState.state = null;
+      _inputFocusedState.state = false;
+    }
+    _scheduleMenuUpdate();
   }
 
   /// Native menu snapshots are published after layout, never during build.
@@ -231,10 +260,13 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   }
 
   Future<void> _startLocal() async {
-    if (!mounted || !_desktop) return;
+    if (!mounted) return;
     final directory = ref.read(panelProvider(PanelSide.local)).currentPath;
+    final files = ref.read(localFileServiceProvider);
     final connecting = _session.connect(
-      (columns, rows) => openLocalTerminal(directory, columns, rows),
+      (columns, rows) => kIsWeb
+          ? openLocalTerminal(directory, columns, rows)
+          : openScopedLocalTerminal(files, directory, columns, rows),
       kind: TerminalSessionKind.local,
       label: context.terminalTr('Local shell'),
     );
@@ -266,9 +298,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
           title: Text(dialogContext.terminalTr('Trust SSH host?')),
           content: SingleChildScrollView(
             child: Text(
-              '${dialogContext.terminalTr('Host')}: $endpoint\n\n'
-              '${dialogContext.terminalTr('Fingerprint')}:\n$fingerprint\n\n'
-              '${dialogContext.terminalTr('Only accept if this matches the fingerprint supplied by your server administrator.')}',
+              TerminalStrings(dialogContext).trust(endpoint, fingerprint),
             ),
           ),
           actions: [
@@ -391,14 +421,17 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
 
   void _hide() {
     _focus.unfocus();
-    ref.read(showTerminalProvider.notifier).state = false;
+    setTerminalVisible(ref, false);
     _scheduleMenuUpdate();
   }
 
   String _statusText() => switch (_session.status) {
     TerminalSessionStatus.idle => context.terminalTr('Terminal'),
     TerminalSessionStatus.connecting => context.terminalTr('Connecting…'),
-    TerminalSessionStatus.connected => context.terminalTr('Connected'),
+    TerminalSessionStatus.connected =>
+      _session.isSandbox
+          ? context.terminalTr('Sandbox shell')
+          : context.terminalTr('Connected'),
     TerminalSessionStatus.disconnected => context.terminalTr('Disconnected'),
     TerminalSessionStatus.waitingForExit => context.terminalTr(
       'Waiting for exit…',
@@ -412,26 +445,22 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   String? _message() {
     final error = _session.error;
     if (error != null) {
-      final detail = error.toString();
-      if (_session.kind == TerminalSessionKind.local &&
-          (detail.toLowerCase().contains('sandbox') ||
-              detail.toLowerCase().contains('operation not permitted'))) {
-        return '${context.terminalTr('This build cannot launch a local shell. Use SSH or an unsandboxed desktop build.')}\n$detail';
+      if (error is TerminalMountFailure) {
+        return localizedTerminalMountError(context, error);
       }
+      final detail = localizedTerminalMountError(context, error);
       final heading = _session.kind == TerminalSessionKind.ssh
           ? 'SSH connection failed'
+          : _session.kind == TerminalSessionKind.sandbox
+          ? 'Built-in shell failed to start'
           : 'Shell failed to start';
       return '${context.terminalTr(heading)}: $detail';
     }
     if (kIsWeb && _session.status == TerminalSessionStatus.idle) {
-      return context.terminalTr(
-        'Connect via SSH using your secure WebSocket gateway. Local shells are available in the desktop app.',
-      );
+      return context.terminalTr('Starting the built-in browser shell…');
     }
     if (_mobile && _session.status == TerminalSessionStatus.idle) {
-      return context.terminalTr(
-        'Connect via SSH to use a terminal on this device.',
-      );
+      return context.terminalTr('Starting the built-in shell…');
     }
     return null;
   }
@@ -454,105 +483,125 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   Widget _buildHeader() {
     final theme = Theme.of(context);
     final connectionLabel =
-        _session.label ??
-        context.terminalTr(_desktop ? 'Local shell' : 'Terminal');
+        (_session.kind == TerminalSessionKind.ssh ? _session.label : null) ??
+        context.terminalTr(
+          _session.kind == TerminalSessionKind.sandbox
+              ? 'Built-in shell'
+              : _desktop
+              ? 'Local shell'
+              : 'Terminal',
+        );
     // The remote OSC title supplements the trusted endpoint label. It must
     // never replace the host identity shown by the connection UI.
     final title = _title?.isNotEmpty == true
         ? '$connectionLabel: $_title'
         : connectionLabel;
-    return Material(
-      color: theme.colorScheme.surfaceContainerHighest,
-      child: SizedBox(
-        height: 48,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return Row(
-              children: [
-                const SizedBox(width: 8),
-                if (constraints.maxWidth >= 280) ...[
-                  const Icon(Icons.terminal, size: 18),
+    final focused = ref.watch(focusAreaProvider) == FocusArea.terminal;
+    return GestureDetector(
+      onTap: () {
+        _focusAreaState.state = FocusArea.terminal;
+        _focusIfVisible();
+      },
+      child: Material(
+        color: focused
+            ? theme.colorScheme.primaryContainer
+            : theme.colorScheme.surfaceContainerHighest,
+        child: SizedBox(
+          height: 48,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return Row(
+                children: [
                   const SizedBox(width: 8),
-                ],
-                Expanded(
-                  child: Tooltip(
-                    message: '$title · ${_statusText()}',
-                    child: Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.labelMedium,
+                  if (constraints.maxWidth >= 280) ...[
+                    const Icon(Icons.terminal, size: 18),
+                    const SizedBox(width: 8),
+                  ],
+                  Expanded(
+                    child: Tooltip(
+                      message: '$title · ${_statusText()}',
+                      child: Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.labelMedium,
+                      ),
                     ),
                   ),
-                ),
-                if (constraints.maxWidth >= 480)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Text(
-                      _statusText(),
-                      style: theme.textTheme.labelSmall,
+                  if (constraints.maxWidth >= 480)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Text(
+                        _statusText(),
+                        style: theme.textTheme.labelSmall,
+                      ),
                     ),
+                  if (_session.isConnecting)
+                    const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  IconButton(
+                    key: const ValueKey('terminal-connect-ssh'),
+                    tooltip: context.terminalTr('Connect via SSH'),
+                    onPressed: _session.isConnecting ? null : _connectSsh,
+                    icon: const Icon(Icons.dns_outlined, size: 20),
                   ),
-                if (_session.isConnecting)
-                  const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                IconButton(
-                  key: const ValueKey('terminal-connect-ssh'),
-                  tooltip: context.terminalTr('Connect via SSH'),
-                  onPressed: _session.isConnecting ? null : _connectSsh,
-                  icon: const Icon(Icons.dns_outlined, size: 20),
-                ),
-                PopupMenuButton<_PanelAction>(
-                  key: const ValueKey('terminal-actions'),
-                  tooltip: context.terminalTr('Terminal actions'),
-                  onSelected: _performAction,
-                  itemBuilder: (_) => [
-                    if (_desktop)
+                  PopupMenuButton<_PanelAction>(
+                    key: const ValueKey('terminal-actions'),
+                    tooltip: context.terminalTr('Terminal actions'),
+                    onSelected: _performAction,
+                    itemBuilder: (_) => [
                       PopupMenuItem(
                         value: _PanelAction.local,
                         child: Text(
                           context.terminalTr(
-                            _session.kind == TerminalSessionKind.local &&
-                                    _canDisconnect
+                            _session.kind == TerminalSessionKind.sandbox
+                                ? _canDisconnect
+                                      ? 'Restart built-in shell'
+                                      : 'Start built-in shell'
+                                : _session.kind == TerminalSessionKind.local &&
+                                      _canDisconnect
                                 ? 'Restart local shell'
-                                : 'Start local shell',
+                                : _desktop
+                                ? 'Start local shell'
+                                : 'Start built-in shell',
                           ),
                         ),
                       ),
-                    PopupMenuItem(
-                      value: _PanelAction.copy,
-                      enabled: _canCopy,
-                      child: Text(context.terminalTr('Copy selection')),
-                    ),
-                    PopupMenuItem(
-                      value: _PanelAction.paste,
-                      enabled: _session.isConnected,
-                      child: Text(context.terminalTr('Paste')),
-                    ),
-                    PopupMenuItem(
-                      value: _PanelAction.disconnect,
-                      enabled: _canDisconnect,
-                      child: Text(context.terminalTr('Disconnect')),
-                    ),
-                    PopupMenuItem(
-                      value: _PanelAction.hide,
-                      child: Text(context.terminalTr('Hide terminal')),
-                    ),
-                  ],
-                  icon: const Icon(Icons.more_vert, size: 20),
-                ),
-                IconButton(
-                  key: const ValueKey('terminal-hide'),
-                  tooltip: context.terminalTr('Hide terminal'),
-                  onPressed: _hide,
-                  icon: const Icon(Icons.close, size: 20),
-                ),
-              ],
-            );
-          },
+                      PopupMenuItem(
+                        value: _PanelAction.copy,
+                        enabled: _canCopy,
+                        child: Text(context.terminalTr('Copy selection')),
+                      ),
+                      PopupMenuItem(
+                        value: _PanelAction.paste,
+                        enabled: _session.isConnected,
+                        child: Text(context.terminalTr('Paste')),
+                      ),
+                      PopupMenuItem(
+                        value: _PanelAction.disconnect,
+                        enabled: _canDisconnect,
+                        child: Text(context.terminalTr('Disconnect')),
+                      ),
+                      PopupMenuItem(
+                        value: _PanelAction.hide,
+                        child: Text(context.terminalTr('Hide terminal')),
+                      ),
+                    ],
+                    icon: const Icon(Icons.more_vert, size: 20),
+                  ),
+                  IconButton(
+                    key: const ValueKey('terminal-hide'),
+                    tooltip: context.terminalTr('Hide terminal'),
+                    onPressed: _hide,
+                    icon: const Icon(Icons.close, size: 20),
+                  ),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
@@ -595,6 +644,13 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<FocusArea>(focusAreaProvider, (_, next) {
+      if (next == FocusArea.terminal) {
+        _focusIfVisible();
+      } else {
+        _focus.unfocus();
+      }
+    });
     final requestedHeight = ref.watch(terminalHeightProvider);
     final media = MediaQuery.of(context);
     final view = View.of(context);
@@ -742,15 +798,21 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
 
   @override
   void dispose() {
-    _focus.removeListener(_scheduleMenuUpdate);
+    _focus.removeListener(_onInputFocusChanged);
     _controller.removeListener(_scheduleMenuUpdate);
     _session.removeListener(_onSessionChanged);
     _detachTitleHandler();
     final menuState = _menuState;
+    final focusOwner = _focusOwnerState;
+    final inputFocused = _inputFocusedState;
     final owner = _menuOwner;
     scheduleMicrotask(() {
       try {
         if (identical(menuState.state?.owner, owner)) menuState.state = null;
+        if (identical(focusOwner.state, owner)) {
+          focusOwner.state = null;
+          inputFocused.state = false;
+        }
       } catch (_) {
         // ProviderScope may have been disposed along with the app.
       }

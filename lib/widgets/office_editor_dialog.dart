@@ -25,7 +25,11 @@ import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../services/captured_file_target.dart';
 import '../services/log_service.dart';
+import '../l10n/file_bytes_error_strings.dart';
+import '../l10n/provider_operation_strings.dart';
 import '../l10n/office_editor_strings.dart';
+import '../l10n/office_fallback_strings.dart';
+import '../l10n/office_surface_strings.dart';
 import '../services/office_editor_menu.dart';
 import 'office_editor_find_bar.dart';
 import 'office_editor_ribbon.dart';
@@ -134,6 +138,8 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     _providerContainer = ProviderScope.containerOf(context, listen: false);
+    _config = _config.copyWith(strings: OfficeSurfaceStrings.of(context));
+    _controller?.syncConfig(_config);
   }
 
   @override
@@ -239,7 +245,8 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = '${context.tr('Could not open this document')}: $e';
+        _error = '${context.tr('Could not open this document')}: '
+            '${localizedFileBytesError(context, e)}';
       });
     }
   }
@@ -288,7 +295,8 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       setState(() => _saving = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${context.tr('Save failed')}: $e'),
+          content: Text('${context.tr('Save failed')}: '
+              '${localizedProviderError(context, e)}'),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );

@@ -432,7 +432,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get darkTheme => '深色';
 
   @override
-  String get oledTheme => 'OLED Black';
+  String get oledTheme => 'OLED 黑色';
 
   @override
   String get nordTheme => 'Nord';
@@ -524,714 +524,708 @@ class AppLocalizationsZh extends AppLocalizations {
   String get compareProviders => '比较提供商';
 
   @override
-  String get singlePanel => 'Single Panel';
+  String get singlePanel => '单面板';
 
   @override
-  String get dualPanel => 'Dual Panel';
+  String get dualPanel => '双面板';
 
   @override
-  String get showTreeSidebar => 'Show Tree Sidebar';
+  String get showTreeSidebar => '显示目录树侧栏';
 
   @override
-  String get hideTreeSidebar => 'Hide Tree Sidebar';
+  String get hideTreeSidebar => '隐藏目录树侧栏';
 
   @override
-  String get detailsList => 'Details List';
+  String get detailsList => '详细列表';
 
   @override
-  String get largeItems => 'Large Items';
+  String get largeItems => '大图标';
 
   @override
-  String get compactItems => 'Compact Items';
+  String get compactItems => '紧凑视图';
 
   @override
-  String get showPreview => 'Show Preview';
+  String get showPreview => '显示预览';
 
   @override
-  String get hidePreview => 'Hide Preview';
+  String get hidePreview => '隐藏预览';
 
   @override
-  String get showTerminal => 'Show Terminal';
+  String get showTerminal => '显示终端';
 
   @override
-  String get hideTerminal => 'Hide Terminal';
+  String get hideTerminal => '隐藏终端';
 
   @override
-  String get moreActions => 'More actions';
+  String get moreActions => '更多操作';
 
   @override
-  String get mountAsDrive => 'Mount as Drive';
+  String get mountAsDrive => '挂载为驱动器';
 
   @override
-  String get auditLog => 'Audit Log';
+  String get auditLog => '审计日志';
 
   @override
-  String get systemLog => 'System Log';
+  String get systemLog => '系统日志';
 
   @override
-  String get cacheSettings => 'Cache Settings';
+  String get cacheSettings => '缓存设置';
 
   @override
-  String get keyboardShortcuts => 'Keyboard Shortcuts';
+  String get keyboardShortcuts => '键盘快捷键';
 
   @override
-  String get swapPanels => 'Swap Panels';
+  String get swapPanels => '交换面板';
 
   @override
-  String get connectToCloud => 'Connect to Cloud';
+  String get connectToCloud => '连接到云端';
 
   @override
   String browseProvider(String provider) {
-    return 'Browse $provider';
+    return '浏览 $provider';
   }
 
   @override
-  String get pleaseConnectRemote => 'Please connect to access remote files';
+  String get pleaseConnectRemote => '请先连接以访问远程文件';
 
   @override
-  String get notConnected => 'Not connected';
+  String get notConnected => '未连接';
 
   @override
-  String get connectToCloudShort => 'Connect to cloud';
+  String get connectToCloudShort => '连接云端';
 
   @override
-  String get loggedIn => 'Logged in';
+  String get loggedIn => '已登录';
 
   @override
-  String get localFiles => 'Local Files';
+  String get localFiles => '本地文件';
 
   @override
-  String get remoteFiles => 'Remote Files';
+  String get remoteFiles => '远程文件';
 
   @override
-  String get bookmarkFolder => 'Bookmark current folder';
+  String get bookmarkFolder => '收藏当前文件夹';
 
   @override
-  String get noFolders => 'No folders';
+  String get noFolders => '没有文件夹';
 
   @override
-  String get selectFileToPreview => 'Select a file to preview';
+  String get selectFileToPreview => '选择文件以预览';
 
   @override
   String fileTooLarge(String size) {
-    return 'File too large to preview ($size)';
+    return '文件过大，无法预览（$size）';
   }
 
   @override
   String previewFailed(String error) {
-    return 'Preview failed: $error';
+    return '预览失败：$error';
   }
 
   @override
-  String get firstPage => 'First page';
+  String get firstPage => '首页';
 
   @override
-  String get previousPage => 'Previous page';
+  String get previousPage => '上一页';
 
   @override
-  String get nextPage => 'Next page';
+  String get nextPage => '下一页';
 
   @override
-  String get lastPage => 'Last page';
+  String get lastPage => '末页';
 
   @override
-  String get playAudio => 'Play Audio';
+  String get playAudio => '播放音频';
 
   @override
-  String get playVideo => 'Play Video';
+  String get playVideo => '播放视频';
 
   @override
-  String get emptyFile => 'Empty file';
+  String get emptyFile => '空文件';
 
   @override
   String systemLogTitle(int count) {
-    return 'System Log ($count entries)';
+    return '系统日志（$count 条）';
   }
 
   @override
-  String get minimumLevel => 'Minimum level';
+  String get minimumLevel => '最低级别';
 
   @override
-  String get pauseAutoScroll => 'Pause auto-scroll';
+  String get pauseAutoScroll => '暂停自动滚动';
 
   @override
-  String get resumeAutoScroll => 'Resume auto-scroll';
+  String get resumeAutoScroll => '恢复自动滚动';
 
   @override
-  String get copyVisible => 'Copy visible';
+  String get copyVisible => '复制可见内容';
 
   @override
-  String get copyAll => 'Copy all';
+  String get copyAll => '复制全部';
 
   @override
-  String get filterLogs => 'Filter logs...';
+  String get filterLogs => '筛选日志...';
 
   @override
-  String get visibleLinesCopied => 'Visible lines copied';
+  String get visibleLinesCopied => '已复制可见行';
 
   @override
-  String get allLogsCopied => 'All logs copied';
+  String get allLogsCopied => '已复制所有日志';
 
   @override
-  String get open => 'Open';
+  String get open => '打开';
 
   @override
-  String get editSystemEditor => 'Edit (System Editor)';
+  String get editSystemEditor => '编辑（系统编辑器）';
 
   @override
-  String get editBuiltIn => 'Edit (Built-in)';
+  String get editBuiltIn => '编辑（内置编辑器）';
 
   @override
-  String get openWithSystemApp => 'Open with System App';
+  String get openWithSystemApp => '使用系统应用打开';
 
   @override
-  String get verifyAgainstRemote => 'Verify against remote';
+  String get verifyAgainstRemote => '与远程文件校验';
 
   @override
-  String get browseArchive => 'Browse Archive';
+  String get browseArchive => '浏览归档';
 
   @override
-  String get archiveExtracted => 'Archive extracted successfully';
+  String get archiveExtracted => '归档解压成功';
 
   @override
-  String get revealInFinder => 'Reveal in Finder';
+  String get revealInFinder => '在 Finder 中显示';
 
   @override
-  String get showInExplorer => 'Show in Explorer';
+  String get showInExplorer => '在资源管理器中显示';
 
   @override
-  String get openContainingFolder => 'Open containing folder';
+  String get openContainingFolder => '打开所在文件夹';
 
   @override
-  String get properties => 'Properties';
+  String get properties => '属性';
 
   @override
-  String get copyNames => 'Copy name(s)';
+  String get copyNames => '复制名称';
 
   @override
-  String get copyPaths => 'Copy path(s)';
+  String get copyPaths => '复制路径';
 
   @override
-  String get createMd5 => 'Create .md5 file';
+  String get createMd5 => '创建 .md5 文件';
 
   @override
-  String get verifyChecksumFile => 'Verify checksum file';
+  String get verifyChecksumFile => '验证校验和文件';
 
   @override
-  String get splitFile => 'Split File';
+  String get splitFile => '拆分文件';
 
   @override
-  String get combineParts => 'Combine Parts';
+  String get combineParts => '合并分卷';
 
   @override
-  String get createLink => 'Create Link...';
+  String get createLink => '创建链接...';
 
   @override
-  String get secureWipe => 'Secure Wipe';
+  String get secureWipe => '安全擦除';
 
   @override
   String confirmDeleteBody(int count) {
-    return 'Are you sure you want to delete $count item(s)?';
+    return '确定要删除 $count 个项目吗？';
   }
 
   @override
   String totalSize(String size) {
-    return 'Total size: $size';
+    return '总大小：$size';
   }
 
   @override
-  String get cannotBeUndone => 'This action cannot be undone.';
+  String get cannotBeUndone => '此操作无法撤销。';
 
   @override
   String nItems(int count) {
-    return '$count items';
+    return '$count 个项目';
   }
 
   @override
   String nTransfers(int count) {
-    return '$count transfer(s)';
+    return '$count 个传输';
   }
 
   @override
-  String get syncing => 'Syncing';
+  String get syncing => '正在同步';
 
   @override
   String lastSyncChanges(int count) {
-    return 'Last sync: $count changes';
+    return '上次同步：$count 项更改';
   }
 
   @override
   String nPairs(int count) {
-    return '$count pair(s)';
+    return '$count 对';
   }
 
   @override
-  String get hidden => 'Hidden';
+  String get hidden => '隐藏';
 
   @override
   String free(String size) {
-    return 'Free: $size';
+    return '可用：$size';
   }
 
   @override
-  String get aboutLegal => 'About / Legal';
+  String get aboutLegal => '关于 / 法律信息';
 
   @override
-  String get appDescription =>
-      'An unofficial, open-source client for Filen.io, SFTP & WebDAV.';
+  String get appDescription => '适用于 Filen.io、SFTP 和 WebDAV 的非官方开源客户端。';
 
   @override
-  String get serviceProvider => 'Service Provider';
+  String get serviceProvider => '服务提供商';
 
   @override
-  String get contact => 'Contact';
+  String get contact => '联系方式';
 
   @override
-  String get disclaimer => 'Disclaimer';
+  String get disclaimer => '免责声明';
 
   @override
   String get disclaimerText =>
-      'This software is provided \"as is\", without warranty of any kind. This app is not affiliated with Filen.io, or any other cloud provider.';
+      '本软件按“原样”提供，不提供任何保证。本应用与 Filen.io 或任何其他云服务提供商无关联。';
 
   @override
-  String get sourceCode => 'Source Code (GitHub)';
+  String get sourceCode => '源代码（GitHub）';
 
   @override
-  String get website => 'Website';
+  String get website => '网站';
 
   @override
-  String get viewLicenses => 'View Open Source Licenses';
+  String get viewLicenses => '查看开源许可证';
 
   @override
-  String get flatView => 'Flat View (all subdirectories)';
+  String get flatView => '平铺视图（所有子目录）';
 
   @override
-  String get exitFlatView => 'Exit Flat View';
+  String get exitFlatView => '退出平铺视图';
 
   @override
-  String get showHiddenFiles => 'Show hidden files';
+  String get showHiddenFiles => '显示隐藏文件';
 
   @override
-  String get hideHiddenFiles => 'Hide hidden files';
+  String get hideHiddenFiles => '隐藏隐藏文件';
 
   @override
-  String get touchFriendlyView => 'Switch to touch-friendly view';
+  String get touchFriendlyView => '切换到触控视图';
 
   @override
-  String get compactView => 'Switch to compact view';
+  String get compactView => '切换到紧凑视图';
 
   @override
-  String get sort => 'Sort';
+  String get sort => '排序';
 
   @override
-  String get secondarySort => 'Secondary Sort';
+  String get secondarySort => '次级排序';
 
   @override
-  String get none => 'None';
+  String get none => '无';
 
   @override
-  String get byName => 'by Name';
+  String get byName => '按名称';
 
   @override
-  String get bySize => 'by Size';
+  String get bySize => '按大小';
 
   @override
-  String get byDate => 'by Date';
+  String get byDate => '按日期';
 
   @override
-  String get enterPath => 'Enter path...';
+  String get enterPath => '输入路径...';
 
   @override
-  String get editPath => 'Edit path';
+  String get editPath => '编辑路径';
 
   @override
-  String get searchResults => 'Search results';
+  String get searchResults => '搜索结果';
 
   @override
   String nFiles(int count) {
-    return '$count file(s)';
+    return '$count 个文件';
   }
 
   @override
   String copyNItems(int count) {
-    return 'Copy $count item(s)';
+    return '复制 $count 个项目';
   }
 
   @override
   String moveNItems(int count) {
-    return 'Move $count item(s)';
+    return '移动 $count 个项目';
   }
 
   @override
-  String get targetPath => 'Target path';
+  String get targetPath => '目标路径';
 
   @override
   String saved(String name) {
-    return 'Saved $name';
+    return '已保存 $name';
   }
 
   @override
   String saveFailed(String error) {
-    return 'Save failed: $error';
+    return '保存失败：$error';
   }
 
   @override
-  String get unsavedChanges => 'Unsaved Changes';
+  String get unsavedChanges => '未保存的更改';
 
   @override
-  String get discardChanges => 'You have unsaved changes. Discard them?';
+  String get discardChanges => '有未保存的更改。要放弃吗？';
 
   @override
-  String get discard => 'Discard';
+  String get discard => '放弃';
 
   @override
-  String get saveShortcut => 'Save (Ctrl+S)';
+  String get saveShortcut => '保存（Ctrl+S）';
 
   @override
-  String get fileModifiedOnServer =>
-      'This file was modified on the server since you opened it.';
+  String get fileModifiedOnServer => '打开后，此文件已在服务器上被修改。';
 
   @override
-  String get saveAnyway => 'Save Anyway';
+  String get saveAnyway => '仍然保存';
 
   @override
-  String get reload => 'Reload';
+  String get reload => '重新加载';
 
   @override
-  String get saveProfile => 'Save Profile';
+  String get saveProfile => '保存配置';
 
   @override
-  String get profileName => 'Profile Name';
+  String get profileName => '配置名称';
 
   @override
-  String get profileNameHint => 'e.g., Work S3, Personal SFTP';
+  String get profileNameHint => '例如：工作 S3、个人 SFTP';
 
   @override
   String profileSaved(String name) {
-    return 'Profile \"$name\" saved';
+    return '已保存配置“$name”';
   }
 
   @override
-  String get connectToCloudStorage => 'Connect to Cloud Storage';
+  String get connectToCloudStorage => '连接云存储';
 
   @override
-  String get savedProfiles => 'Saved Profiles';
+  String get savedProfiles => '已保存的配置';
 
   @override
-  String get loadProfile => 'Load a saved profile...';
+  String get loadProfile => '加载已保存的配置...';
 
   @override
-  String get deleteProfile => 'Delete Profile';
+  String get deleteProfile => '删除配置';
 
   @override
-  String get saveAsProfile => 'Save as Profile';
+  String get saveAsProfile => '保存为配置';
 
   @override
-  String get enableEncryption => 'Enable Client-Side Encryption';
+  String get enableEncryption => '启用客户端加密';
 
   @override
-  String get encryptBeforeUpload => 'Encrypt files before upload (AES-256-GCM)';
+  String get encryptBeforeUpload => '上传前加密文件（AES-256-GCM）';
 
   @override
-  String get encryptionPassphrase => 'Encryption Passphrase';
+  String get encryptionPassphrase => '加密密码短语';
 
   @override
-  String get appLocked => 'CrispCloud is Locked';
+  String get appLocked => 'CrispCloud 已锁定';
 
   @override
-  String get enterPinToContinue => 'Enter your PIN or password to continue';
+  String get enterPinToContinue => '请输入 PIN 或密码以继续';
 
   @override
-  String get pinPassword => 'PIN / Password';
+  String get pinPassword => 'PIN / 密码';
 
   @override
-  String get incorrectPin => 'Incorrect PIN or password';
+  String get incorrectPin => 'PIN 或密码不正确';
 
   @override
-  String get tooManyAttempts =>
-      'Too many failed attempts. Restart the app to try again.';
+  String get tooManyAttempts => '失败次数过多。请重启应用后重试。';
 
   @override
   String attemptsRemaining(int count) {
-    return '$count attempts remaining';
+    return '剩余 $count 次尝试';
   }
 
   @override
-  String get appLockSetup => 'Set Up App Lock';
+  String get appLockSetup => '设置应用锁';
 
   @override
-  String get changeAppLockCode => 'Change App Lock';
+  String get changeAppLockCode => '更改应用锁';
 
   @override
-  String get currentPin => 'Current PIN / Password';
+  String get currentPin => '当前 PIN / 密码';
 
   @override
-  String get newPin => 'New PIN / Password';
+  String get newPin => '新 PIN / 密码';
 
   @override
-  String get confirmPin => 'Confirm PIN / Password';
+  String get confirmPin => '确认 PIN / 密码';
 
   @override
-  String get minFourChars => 'Minimum 4 characters';
+  String get minFourChars => '至少 4 个字符';
 
   @override
-  String get codesDoNotMatch => 'Codes do not match';
+  String get codesDoNotMatch => '输入的代码不一致';
 
   @override
-  String get autoLockAfter => 'Auto-lock after';
+  String get autoLockAfter => '自动锁定时间';
 
   @override
-  String get immediately => 'Immediately';
+  String get immediately => '立即';
 
   @override
-  String get oneMinute => '1 minute';
+  String get oneMinute => '1 分钟';
 
   @override
-  String get fiveMinutes => '5 minutes';
+  String get fiveMinutes => '5 分钟';
 
   @override
-  String get fifteenMinutes => '15 minutes';
+  String get fifteenMinutes => '15 分钟';
 
   @override
-  String get thirtyMinutes => '30 minutes';
+  String get thirtyMinutes => '30 分钟';
 
   @override
-  String get oneHour => '1 hour';
+  String get oneHour => '1 小时';
 
   @override
-  String get connectToHetzner => 'Connect to Hetzner Storage Box';
+  String get connectToHetzner => '连接 Hetzner Storage Box';
 
   @override
-  String get sftpPort23 => 'SFTP (port 23)';
+  String get sftpPort23 => 'SFTP（端口 23）';
 
   @override
-  String get webdavHttps => 'WebDAV (HTTPS)';
+  String get webdavHttps => 'WebDAV（HTTPS）';
 
   @override
-  String get testConnection => 'Test Connection';
+  String get testConnection => '测试连接';
 
   @override
-  String get connectionSuccessful => 'Connection successful';
+  String get connectionSuccessful => '连接成功';
 
   @override
   String testFailed(String error) {
-    return 'Test failed: $error';
+    return '测试失败：$error';
   }
 
   @override
-  String get connectToAzure => 'Connect to Azure Blob Storage';
+  String get connectToAzure => '连接 Azure Blob Storage';
 
   @override
-  String get authenticationMode => 'Authentication Mode';
+  String get authenticationMode => '身份验证方式';
 
   @override
-  String get accountName => 'Account Name';
+  String get accountName => '账户名';
 
   @override
-  String get container => 'Container';
+  String get container => '容器';
 
   @override
-  String get sasUrl => 'SAS URL';
+  String get sasUrl => 'SAS 地址';
 
   @override
-  String get sasToken => 'SAS Token';
+  String get sasToken => 'SAS 令牌';
 
   @override
-  String get connectToB2 => 'Connect to Backblaze B2';
+  String get connectToB2 => '连接 Backblaze B2';
 
   @override
-  String get applicationKeyId => 'Application Key ID';
+  String get applicationKeyId => '应用密钥 ID';
 
   @override
-  String get applicationKey => 'Application Key';
+  String get applicationKey => '应用密钥';
 
   @override
-  String get bucketNameOptional => 'Bucket Name (optional)';
+  String get bucketNameOptional => '存储桶名称（可选）';
 
   @override
-  String get mount => 'Mount';
+  String get mount => '挂载';
 
   @override
-  String get unmount => 'Unmount';
+  String get unmount => '卸载';
 
   @override
-  String get displayName => 'Display Name';
+  String get displayName => '显示名称';
 
   @override
-  String get localMountPoint => 'Local Mount Point';
+  String get localMountPoint => '本地挂载点';
 
   @override
-  String get newMount => 'New Mount';
+  String get newMount => '新建挂载';
 
   @override
-  String get noMountsConfigured => 'No mounts configured';
+  String get noMountsConfigured => '尚未配置挂载';
 
   @override
-  String get fuseDesktopOnly =>
-      'FUSE mounts are only available on macOS, Linux, and Windows desktop.';
+  String get fuseDesktopOnly => 'FUSE 挂载仅适用于 macOS、Linux 和 Windows 桌面系统。';
 
   @override
-  String get multiCloud => 'Multi-Cloud';
+  String get multiCloud => '多云';
 
   @override
-  String get connections => 'Connections';
+  String get connections => '连接';
 
   @override
-  String get transfer => 'Transfer';
+  String get transfer => '传输';
 
   @override
-  String get compareAndSearch => 'Compare & Search';
+  String get compareAndSearch => '比较与搜索';
 
   @override
-  String get noConnectionsYet => 'No connections registered yet.';
+  String get noConnectionsYet => '尚未注册连接。';
 
   @override
-  String get startTransfer => 'Start Transfer';
+  String get startTransfer => '开始传输';
 
   @override
-  String get syncPairs => 'Sync Pairs';
+  String get syncPairs => '同步配对';
 
   @override
-  String get enableAutoSync => 'Enable Auto-Sync';
+  String get enableAutoSync => '启用自动同步';
 
   @override
-  String get disableAutoSync => 'Disable Auto-Sync';
+  String get disableAutoSync => '关闭自动同步';
 
   @override
-  String get noSyncPairs => 'No sync pairs configured';
+  String get noSyncPairs => '尚未配置同步配对';
 
   @override
-  String get replayOffline => 'Replay Offline';
+  String get replayOffline => '重放离线操作';
 
   @override
-  String get newSyncPair => 'New Sync Pair';
+  String get newSyncPair => '新建同步配对';
 
   @override
-  String get cacheUsage => 'Cache Usage';
+  String get cacheUsage => '缓存使用量';
 
   @override
-  String get maximumCacheSize => 'Maximum Cache Size';
+  String get maximumCacheSize => '最大缓存大小';
 
   @override
-  String get clearCacheConfirm =>
-      'Remove all cached files? They will be re-downloaded when needed.';
+  String get clearCacheConfirm => '删除所有缓存文件？需要时将重新下载。';
 
   @override
   String batchRenameTitle(int count) {
-    return 'Batch Rename ($count files)';
+    return '批量重命名（$count 个文件）';
   }
 
   @override
-  String get findReplace => 'Find/Replace';
+  String get findReplace => '查找/替换';
 
   @override
-  String get number => 'Number';
+  String get number => '编号';
 
   @override
-  String get prefixSuffix => 'Prefix/Suffix';
+  String get prefixSuffix => '前缀/后缀';
 
   @override
-  String get extension => 'Extension';
+  String get extension => '扩展名';
 
   @override
-  String get duplicateFinder => 'Duplicate Finder';
+  String get duplicateFinder => '重复文件查找';
 
   @override
-  String get noDuplicatesFound => 'No duplicates found!';
+  String get noDuplicatesFound => '未找到重复文件！';
 
   @override
-  String get chooseTheme => 'Choose Theme';
+  String get chooseTheme => '选择主题';
 
   @override
-  String get checkForUpdates => 'Check for Updates';
+  String get checkForUpdates => '检查更新';
 
   @override
-  String get youAreUpToDate => 'You\'re up to date';
+  String get youAreUpToDate => '已是最新版本';
 
   @override
-  String get updateAvailable => 'Update available';
+  String get updateAvailable => '有可用更新';
 
   @override
-  String get releaseNotes => 'Release notes';
+  String get releaseNotes => '发行说明';
 
   @override
-  String get checkNow => 'Check Now';
+  String get checkNow => '立即检查';
 
   @override
-  String get general => 'General';
+  String get general => '常规';
 
   @override
-  String get accessibility => 'Accessibility';
+  String get accessibility => '无障碍';
 
   @override
-  String get privacy => 'Privacy';
+  String get privacy => '隐私';
 
   @override
-  String get advanced => 'Advanced';
+  String get advanced => '高级';
 
   @override
-  String get showFKeyButtons =>
-      'Show F3-F8 shortcut buttons at the bottom of the screen';
+  String get showFKeyButtons => '在屏幕底部显示 F3-F8 快捷按钮';
 
   @override
-  String get exportKeys => 'Export/Import Encryption Keys';
+  String get exportKeys => '导出/导入加密密钥';
 
   @override
-  String get backupRecovery => 'BIP39 Mnemonic Backup and Recovery';
+  String get backupRecovery => 'BIP39 助记词备份与恢复';
 
   @override
-  String get noActiveOperations => 'No active operations';
+  String get noActiveOperations => '没有活动操作';
 
   @override
-  String get refreshAll => 'Refresh All';
+  String get refreshAll => '全部刷新';
 
   @override
-  String get newName => 'New name';
+  String get newName => '新名称';
 
   @override
-  String get items => 'Items:';
+  String get items => '项目：';
 
   @override
   String andMore(int count) {
-    return '... and $count more';
+    return '...以及另外 $count 个';
   }
 
   @override
-  String get searchPattern => 'Search Pattern';
+  String get searchPattern => '搜索模式';
 
   @override
-  String get findPattern => 'Find Pattern';
+  String get findPattern => '查找模式';
 
   @override
-  String get searchHint => 'Search for files...';
+  String get searchHint => '搜索文件...';
 
   @override
-  String get findHint => 'e.g., *.pdf, report*';
+  String get findHint => '例如：*.pdf, report*';
 
   @override
-  String get noResultsFound => 'No results found';
+  String get noResultsFound => '未找到结果';
 
   @override
-  String get size => 'Size';
+  String get size => '大小';
 
   @override
-  String get date => 'Date';
+  String get date => '日期';
 
   @override
-  String get name => 'Name';
+  String get name => '名称';
 
   @override
-  String get type => 'Type';
+  String get type => '类型';
 
   @override
-  String get created => 'Created';
+  String get created => '创建时间';
 
   @override
-  String get accessed => 'Accessed';
+  String get accessed => '访问时间';
 
   @override
-  String get computeMd5 => 'Compute MD5';
+  String get computeMd5 => '计算 MD5';
 
   @override
-  String get protocol => 'Protocol';
+  String get protocol => '协议';
 }

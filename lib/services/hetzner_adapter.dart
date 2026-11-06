@@ -1,3 +1,4 @@
+import 'azure_hetzner_failure.dart';
 import 'package:crisp_storage/crisp_storage.dart'
     show SshKnownHosts, HostKeyPrompt;
 // lib/services/hetzner_adapter.dart
@@ -142,7 +143,9 @@ class HetznerStorageBoxAdapter extends CloudStorageClient {
   /// Constructs the appropriate inner adapter from persisted config.
   Future<void> loginFromSaved() async {
     final creds = await _config.readCredentials();
-    if (creds == null) throw Exception('No saved Hetzner credentials');
+    if (creds == null)
+      throw AzureHetznerException(AzureHetznerErrorCode.hetznerCredentials,
+          'No saved Hetzner credentials');
 
     final username = creds['username'] ?? '';
     final password = creds['password'] ?? '';
@@ -248,7 +251,9 @@ class HetznerStorageBoxAdapter extends CloudStorageClient {
   // ── Path operations — delegated ───────────────────────────────────────────
 
   CloudStorageClient get _requireInner {
-    if (_inner == null) throw Exception('Not connected to Hetzner Storage Box');
+    if (_inner == null)
+      throw AzureHetznerException(AzureHetznerErrorCode.hetznerDisconnected,
+          'Not connected to Hetzner Storage Box');
     return _inner!;
   }
 
