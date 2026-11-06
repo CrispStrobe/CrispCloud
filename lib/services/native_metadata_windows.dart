@@ -12,12 +12,12 @@ import 'storage_transfer_contract.dart';
 // https://learn.microsoft.com/windows/win32/api/aclapi/nf-aclapi-setsecurityinfo
 // https://learn.microsoft.com/windows/win32/api/winbase/ns-winbase-file_basic_info
 // https://learn.microsoft.com/windows/win32/api/fileapi/nf-fileapi-createfilew
+// https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntsetsecurityobject
 const _readControl = 0x00020000;
 const _writeDac = 0x00040000;
 const _writeOwner = 0x00080000;
 const _readAttributes = 0x80;
 const _writeAttributes = 0x100;
-const _maximumAllowed = 0x02000000;
 const _ownerInformation = 1;
 const _groupInformation = 2;
 const _daclInformation = 4;
@@ -113,6 +113,10 @@ typedef _SetSecurityD = int Function(
   Pointer<Void>,
   Pointer<Void>,
 );
+typedef _SetObjectSecurityN = Int32 Function(IntPtr, Uint32, Pointer<Void>);
+typedef _SetObjectSecurityD = int Function(int, int, Pointer<Void>);
+typedef _StatusErrorN = Uint32 Function(Int32);
+typedef _StatusErrorD = int Function(int);
 typedef _SidTextN = Int32 Function(Pointer<Void>, Pointer<Pointer<Utf16>>);
 typedef _SidTextD = int Function(Pointer<Void>, Pointer<Pointer<Utf16>>);
 typedef _TextSidN = Int32 Function(Pointer<Utf16>, Pointer<Pointer<Void>>);
@@ -179,7 +183,8 @@ typedef _DescriptorSidD = int Function(
 class _WindowsApi {
   _WindowsApi()
     : kernel = DynamicLibrary.open('kernel32.dll'),
-      security = DynamicLibrary.open('advapi32.dll') {
+      security = DynamicLibrary.open('advapi32.dll'),
+      native = DynamicLibrary.open('ntdll.dll') {
     _getLastError = kernel.lookupFunction<_LastErrorN, _LastErrorD>(
       'GetLastError',
     );
@@ -187,6 +192,7 @@ class _WindowsApi {
 
   final DynamicLibrary kernel;
   final DynamicLibrary security;
+  final DynamicLibrary native;
   late final _LastErrorD _getLastError;
 
   int get lastError => _getLastError();
@@ -549,31 +555,42 @@ void writeWindowsNativeMetadata(String path, TransferMetadata metadata) {
     var access = writesBasic ? _writeAttributes : 0;
     if (owner != nullptr || group != nullptr) access |= _writeOwner;
     if (descriptor != nullptr) {
-      // SetSecurityInfo otherwise rewrites inherited ACEs in existing children.
-      // Microsoft's documented MAXIMUM_ALLOWED case changes only this object.
-      // Required rights stay explicit so insufficient access fails before writes.
-      access |= _writeDac | _maximumAllowed;
+      access |= _writeDac;
     }
     api.withHandle(path, access, (handle, basic) {
-      var securityFlags =
+      final securityFlags =
           (owner != nullptr ? _ownerInformation : 0) |
           (group != nullptr ? _groupInformation : 0);
-      Pointer<Void> dacl = nullptr;
-      if (descriptor != nullptr) {
-        dacl = api.descriptorDacl(descriptor, path).pointer;
-        final protected =
-            api.descriptorControl(descriptor, path) & _daclProtected != 0;
-        securityFlags |=
-            _daclInformation |
-            (protected
-                ? _protectedDaclInformation
-                : _unprotectedDaclInformation);
-      }
       if (securityFlags != 0) {
         final code = api.security.lookupFunction<_SetSecurityN, _SetSecurityD>(
           'SetSecurityInfo',
-        )(handle, 1, securityFlags, owner, group, dacl, nullptr);
+        )(handle, 1, securityFlags, owner, group, nullptr, nullptr);
         if (code != 0) api.fail('Cannot set file security', path, code);
+      }
+      if (descriptor != nullptr) {
+        // SetSecurityInfo applies directory inheritance to existing children,
+        // even with MAXIMUM_ALLOWED (which can protect their inherited ACEs).
+        // The documented user-mode native setter changes this checked object
+        // only. No recursive ACL rewrite is part of a metadata patch.
+        final protected =
+            api.descriptorControl(descriptor, path) & _daclProtected != 0;
+        final status =
+            api.native.lookupFunction<_SetObjectSecurityN, _SetObjectSecurityD>(
+              'NtSetSecurityObject',
+            )(
+              handle,
+              _daclInformation |
+                  (protected
+                      ? _protectedDaclInformation
+                      : _unprotectedDaclInformation),
+              descriptor,
+            );
+        if (status < 0) {
+          final code = api.native.lookupFunction<_StatusErrorN, _StatusErrorD>(
+            'RtlNtStatusToDosError',
+          )(status);
+          api.fail('Cannot set discretionary ACL', path, code);
+        }
       }
       if (writesBasic) {
         final update = calloc<_BasicInfo>();

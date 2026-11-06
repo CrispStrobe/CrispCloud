@@ -184,6 +184,7 @@ void main() {
         final file = await File(p.join(root.path, 'acl.txt'))
             .writeAsString('acl data');
         final before = await backend.readMetadata(file.path);
+        final original = await _inspect(file.path);
         addTearDown(
           () => backend.writeMetadata(
             file.path,
@@ -197,7 +198,15 @@ void main() {
         );
         final external = await _inspect(file.path);
         expect(external['protected'], isTrue);
-        expect(external['dacl'], contains('(A;;FA;;;${before.owner})'));
+        expect(
+          (external['rules'] as List).where(
+            (dynamic rule) =>
+                rule['sid'] == before.owner &&
+                rule['type'] == 'Allow' &&
+                rule['rights'] == 0x1f01ff,
+          ),
+          isNotEmpty,
+        );
         expect(external['dacl'], contains('(A;;FR;;;WD)'));
         expect(external['owner'], before.owner);
         expect(external['group'], before.group);
@@ -216,6 +225,13 @@ void main() {
         expect(read.owner, isNull);
         expect(read.created, isNull);
         expect(read.windowsAttributes, isNull);
+        await backend.writeMetadata(
+          file.path,
+          TransferMetadata(acl: before.acl),
+        );
+        final restored = await _inspect(file.path);
+        expect(restored['protected'], original['protected']);
+        expect(restored['dacl'], original['dacl']);
       },
     );
 
@@ -467,10 +483,17 @@ $acl = $item.GetAccessControl()
   group = $acl.GetGroup([Security.Principal.SecurityIdentifier]).Value
   dacl = $acl.GetSecurityDescriptorSddlForm([Security.AccessControl.AccessControlSections]::Access)
   protected = $acl.AreAccessRulesProtected
+  rules = @(foreach ($rule in $acl.GetAccessRules($true, $true, [Security.Principal.SecurityIdentifier])) {
+    [ordered]@{
+      sid = $rule.IdentityReference.Value
+      type = $rule.AccessControlType.ToString()
+      rights = [int]$rule.FileSystemRights
+    }
+  })
   attributes = [int]$item.Attributes
   created = $item.CreationTimeUtc.ToString('o')
   modified = $item.LastWriteTimeUtc.ToString('o')
   accessed = $item.LastAccessTimeUtc.ToString('o')
-} | ConvertTo-Json -Compress
+} | ConvertTo-Json -Compress -Depth 4
 '''),
 ) as Map<String, dynamic>;

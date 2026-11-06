@@ -16,7 +16,10 @@ void main() {
   late LocalOperationBackend backend;
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
-    root = await Directory.systemTemp.createTemp('crisp-metadata-');
+    final temporary = await Directory.systemTemp.createTemp('crisp-metadata-');
+    // macOS exposes the temporary directory through /var -> /private/var.
+    // Transfer paths deliberately reject unreviewed ancestor symlinks.
+    root = Directory(await temporary.resolveSymbolicLinks());
     backend = LocalOperationBackend(LocalFileService(), isCurrent: () => true);
   });
   tearDown(() async {
