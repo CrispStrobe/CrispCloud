@@ -7,7 +7,7 @@ determines which account an operation changes.
 
 Development is checkpointed on `feature/commander-file-operations`. This guide
 describes integrated behavior; the [completion plan](commander-completion-plan.md)
-tracks remaining integration. Earlier limits concerning session-only lists,
+records the delivered scope. Earlier limits concerning session-only lists,
 individual rename undo, rename cycles and basic copy dialogs are superseded.
 
 ## Entry points
@@ -146,7 +146,7 @@ rather than automatic execution. Retry remaining, restart, reconcile a lost
 response and restore a verified backup use fresh evidence. Partial resume
 validates the existing prefix and original source.
 
-Concurrency, priority and pending order persist. Paused jobs do not occupy
+Concurrency, priority and pending order persist. Paused pending jobs do not occupy
 running slots; cancelled queued jobs do not start. Foreground conflicts wait for
 a decision. Background queuing requires choices that can finish without an
 abandoned dialog. Clearing visible outcomes retains durable recovery records.
@@ -252,11 +252,15 @@ rename and server operations differ by backend. Unsupported controls are
 disabled or rejected before mutation. An accepted asynchronous request is not
 proof of completion.
 
+Pause and cancellation take effect at supported transfer checkpoints. An already
+accepted provider request can finish writing a private stage before returning;
+cancellation prevents subsequent forward commit steps. Recovery retains evidence
+when a provider cannot confirm or reverse an operation already in flight.
+
 Distributed atomic rollback across unrelated stores and all legacy binary
 Commander plugins are not universal guarantees. Recovery uses recorded evidence
-and fresh validation. The completion plan tracks remaining adapter,
-extension and localization checkpoints; do not treat those
-unchecked items as complete.
+and fresh validation. The completed implementation plan concerns the workflows
+described here, with these explicit platform, provider and resource boundaries.
 
 ## Verification
 
@@ -265,6 +269,23 @@ restart/recovery, failed transfers, native temporary files, mocked provider
 protocols, archives, integrity manifests and narrow widget layouts. Provider
 tests use fixtures, not live credentials. Validation uses Flutter 3.47.8 /
 Dart 3.13.7. These checkpoints do not deploy or merge the feature branch.
+
+The deterministic application gate excludes explicitly tagged benchmarks, live
+provider/deployment tests, integration fixtures and goldens. Run the same scope
+after resolving the pinned dependencies:
+
+```sh
+flutter analyze --no-pub --no-fatal-infos --no-fatal-warnings
+flutter test --no-pub --concurrency=2 --reporter=expanded \
+  --exclude-tags=benchmark,live,deploy,mock_server,integration,connection_dialog,golden
+flutter build web --no-pub --release --no-wasm-dry-run
+```
+
+CI separately runs shared-storage and CLI contracts, desktop crypto checks on
+Linux/Windows/macOS, and native platform builds. Analysis follows the repository's
+errors-only policy; a successful check does not mean all existing lint notices
+have been removed. Checkpoint results and outstanding platform checks are
+recorded in [the feature PR](https://github.com/CrispStrobe/CrispCloud/pull/12).
 
 Reference behavior:
 

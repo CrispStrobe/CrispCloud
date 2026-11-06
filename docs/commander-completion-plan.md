@@ -77,10 +77,10 @@ implementation status, not a claim of universal Total/Double Commander parity.
 - [x] Consistent archive member copy-out and supported edit/repack operations.
 - [x] Native file clipboard copy/cut/paste integration.
 - [x] Selected-file viewer navigation, reload/tail and remote read capabilities.
-- [ ] Functional custom-command configuration/execution and extension lifecycle.
+- [x] Functional custom-command configuration/execution and extension lifecycle.
 - [x] Tab groups/locks, paired source-aware locations and column profiles.
 - [x] Checksum/split manifests, missing-part checks and cancellation.
-- [ ] Keyboard/accessibility/localization completion for the added workflows.
+- [x] Keyboard/accessibility/localization completion for the added workflows.
 
 ## Acceptance scenarios
 
@@ -103,8 +103,9 @@ implementation status, not a claim of universal Total/Double Commander parity.
   tail, checksums and verified split/combine are integrated and pushed.
 - Tab lock/order/label/source snapshots, named groups, paired bookmarks, editable
   column/view profiles and their managers are integrated. Custom command editing,
-  review and bounded execution are integrated; extension lifecycle and the active
-  file-panel command bar are in progress.
+  review, bounded execution, extension lifecycle and the active file-panel
+  command bar are integrated. Native/overflow/palette and both ordinary/collection
+  context menus reach the verified action hosts.
 - Native allocation/copy-on-write and cancellable bounded planning are integrated.
   Conditional object-store staging, Drive/Dropbox/WebDAV bounded streams, dedicated
   FTP/FTPS transfer sessions and disk/OPFS spooling are integrated.
@@ -112,9 +113,11 @@ implementation status, not a claim of universal Total/Double Commander parity.
   multipart-session binding are integrated. The optional AES-GCM wrapper
   authenticates private spools before exposing plaintext; each provider retains
   its documented encryption format. Unbounded adapter defaults are rejected.
-- Rename, selection, lists, transfer/recovery and workspace screens are localized
+- Rename, selection, lists, transfer/recovery, workspaces, viewers, archives,
+  comparison, integrity, extension and provider-action controls are localized
   across all nine app languages, with narrow German/Arabic layout regressions.
-  Viewer/archive/comparison/integrity menus and extension UI are being finished.
-  Final broad tests, web build and platform CI follow integration.
+  Command palette keyboard navigation, locale changes and dialog handoff are
+  covered by focused tests. The Commander catalog contains 807 keys.
 - Parallel lanes use isolated worktrees. Finished checkpoints are integrated and
-  pushed separately. Unchecked items are not represented as complete.
+  pushed separately. Platform/provider boundaries remain explicit in the
+  [workflow guide](commander-file-operations.md).
