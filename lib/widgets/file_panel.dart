@@ -381,13 +381,27 @@ class _FilePanelState extends ConsumerState<FilePanel> {
         ? ref.watch(localViewModeProvider)
         : ref.watch(remoteViewModeProvider);
 
-    if (viewMode == ViewMode.grid ||
-        viewMode == ViewMode.tiles ||
-        viewMode == ViewMode.gallery) {
+    if (viewMode == ViewMode.grid) {
       return FileGridView(
         side: side,
         files: files,
         scrollController: _scrollController,
+      );
+    }
+    if (viewMode == ViewMode.tiles) {
+      return FileGridView(
+        side: side,
+        files: files,
+        scrollController: _scrollController,
+        tileLayout: true,
+      );
+    }
+    if (viewMode == ViewMode.gallery) {
+      return FileGridView(
+        side: side,
+        files: files,
+        scrollController: _scrollController,
+        galleryOnly: true,
       );
     }
     if (viewMode == ViewMode.column) {
