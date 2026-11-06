@@ -122,6 +122,32 @@ abstract class FileOperationBackend {
 
   Future<TransferMetadata> readMetadata(String path) async =>
       const TransferMetadata();
+
+  /// Read only the fields requested by a transfer. Native adapters override
+  /// this to avoid probing unrelated filesystem features (for example ACLs
+  /// when the user only requested permissions).
+  Future<TransferMetadata> readMetadataFields(
+    String path, {
+    bool permissions = true,
+    bool modified = true,
+    bool accessed = true,
+    bool ownership = true,
+    bool extendedAttributes = true,
+    bool acl = true,
+  }) async {
+    final metadata = await readMetadata(path);
+    return TransferMetadata(
+      mode: permissions ? metadata.mode : null,
+      modified: modified ? metadata.modified : null,
+      accessed: accessed ? metadata.accessed : null,
+      owner: ownership ? metadata.owner : null,
+      group: ownership ? metadata.group : null,
+      extendedAttributes:
+          extendedAttributes ? metadata.extendedAttributes : const {},
+      acl: acl ? metadata.acl : null,
+    );
+  }
+
   Future<void> writeMetadata(String path, TransferMetadata metadata) async =>
       throw UnsupportedError(
         'This storage cannot preserve the requested metadata.',
@@ -1515,7 +1541,15 @@ class FileOperationService {
           options.preserveOwnership ||
           options.preserveExtendedAttributes ||
           options.preserveAcl) {
-        metadata = await source.readMetadata(entry.source.path!);
+        metadata = await source.readMetadataFields(
+          entry.source.path!,
+          permissions: options.preservePermissions,
+          modified: false,
+          accessed: false,
+          ownership: options.preserveOwnership,
+          extendedAttributes: options.preserveExtendedAttributes,
+          acl: options.preserveAcl,
+        );
         _checkSources(source, target);
         final missing = [
           if (options.preservePermissions && metadata.mode == null)
