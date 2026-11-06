@@ -94,6 +94,26 @@ void main() {
     expect(plan.entries.single.outcome, FileAttributesOutcome.failed);
   });
 
+  test('replacement during the apply metadata read cannot receive reviewed attributes', () async {
+    final original = backend.items['/root/sub/file']!;
+    final plan = await preview(
+      targets: [FileAttributesTarget(backend, original)],
+    );
+    backend.onRead = (path) async {
+      backend.onRead = null;
+      backend.items[path] = original.copyWith(
+        metadata: {'etag': 'replacement'},
+      );
+    };
+    await service.apply(plan);
+    expect(backend.writes, isEmpty);
+    expect(plan.entries.single.outcome, FileAttributesOutcome.failed);
+    expect(
+      plan.entries.single.message,
+      contains('while reading its attributes'),
+    );
+  });
+
   test(
     'recursive listing captures directory access times after its own reads',
     () async {
@@ -358,6 +378,7 @@ class _Backend extends FileOperationBackend {
   final metadata = <String, TransferMetadata>{};
   final writes = <String>[];
   final readFields = <List<bool>>[];
+  Future<void> Function(String path)? onRead;
   @override
   Object get identity => this;
   @override
@@ -410,6 +431,7 @@ class _Backend extends FileOperationBackend {
     bool extendedAttributes = true,
     bool acl = true,
   }) async {
+    await onRead?.call(path);
     readFields.add([
       permissions,
       modified,

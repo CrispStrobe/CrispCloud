@@ -434,6 +434,11 @@ class FileAttributesService {
         if (!plan.patch.matches(row.before!, before)) {
           throw StateError('The reviewed attributes changed; preview again.');
         }
+        if (!_sameFile(file, await backend.stat(file.path!))) {
+          throw StateError(
+            'The item changed while reading its attributes; no attributes were written.',
+          );
+        }
         if (isCancelled?.call() == true) {
           row.outcome = FileAttributesOutcome.cancelled;
           onChanged?.call();
