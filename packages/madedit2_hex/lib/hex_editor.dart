@@ -289,7 +289,7 @@ class _HexEditorState extends State<HexEditor> {
                               latin1: c.latin1, selection: colors.primary.withValues(alpha: 0.25), cursor: colors.primary),
                               size: Size(rowWidth, _rowHeight))));
                         });
-                    })))))))),
+                    }))))))))),
       if (_keypad) Material(color: colors.surfaceContainerLow, child: Wrap(alignment: WrapAlignment.center,
         children: [for (var digit = 0; digit < 16; digit++) SizedBox(width: 44, height: 40,
           child: TextButton(onPressed: editable ? () { if (c.area != HexArea.hex) unawaited(c.setArea(HexArea.hex)); unawaited(c.typeDigit(digit)); } : null,
