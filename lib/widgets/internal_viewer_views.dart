@@ -12,6 +12,7 @@ import 'package:pdfx/pdfx.dart';
 import '../services/file_bytes_loader.dart';
 import '../services/internal_viewer_service.dart';
 import '../services/viewer_search_service.dart';
+import '../services/viewer_text_decoder.dart';
 import '../l10n/commander_strings.dart';
 
 /// Monospace text style helper shared by the line-mode views.
@@ -156,6 +157,9 @@ class StreamingSafeView extends StatefulWidget {
   /// containing it — used by goto/match navigation from the dialog.
   final int? scrollToByte;
 
+  /// Distinguishes repeated explicit jumps from unrelated parent rebuilds.
+  final int scrollRequest;
+
   const StreamingSafeView({
     super.key,
     required this.source,
@@ -167,6 +171,7 @@ class StreamingSafeView extends StatefulWidget {
     this.matchStart,
     this.matchEnd,
     this.scrollToByte,
+    this.scrollRequest = 0,
   });
 
   @override
@@ -179,7 +184,6 @@ class _StreamingSafeViewState extends State<StreamingSafeView> {
   int _windowEnd = 0;
   int _indexedBytes = 0;
   int? _pendingTarget;
-  int? _lastHandledScrollTo;
   bool _windowDone = false;
   String? _error;
   static const int _indexChunk = 128 * 1024;
@@ -212,25 +216,29 @@ class _StreamingSafeViewState extends State<StreamingSafeView> {
       return;
     }
     final target = widget.scrollToByte;
-    if (target != null && target != _lastHandledScrollTo) _jumpToByte(target);
+    if (target != null &&
+        (target != oldWidget.scrollToByte ||
+            widget.scrollRequest != oldWidget.scrollRequest)) {
+      _jumpToByte(target);
+    }
   }
 
   void _resetWindow(int requested, {bool center = false}) {
     final size = widget.source.size;
     final target = requested.clamp(0, size > 0 ? size - 1 : 0);
     var start = (target - (center ? 128 * 1024 : 0)).clamp(0, size);
-    start -= start % _unit;
-    if (widget.rawText && widget.encoding == 'utf8' && start > 0) {
-      final sample = widget.source.readSync(start, 4);
-      var skip = 0;
-      while (skip < sample.length && sample[skip] & 0xc0 == 0x80) {
-        skip++;
-      }
-      start += skip;
+    if (widget.rawText) {
+      start = alignViewerTextOffset(widget.source, start, widget.encoding);
     }
     _windowStart = start;
     _windowEnd = (start + kMaxIndexedBytes).clamp(0, size);
-    if (_windowEnd < size) _windowEnd -= _windowEnd % _unit;
+    if (widget.rawText && _windowEnd < size) {
+      _windowEnd = alignViewerTextOffset(
+        widget.source,
+        _windowEnd,
+        widget.encoding,
+      );
+    }
     _indexedBytes = start;
     _lineOffsets
       ..clear()
@@ -238,7 +246,6 @@ class _StreamingSafeViewState extends State<StreamingSafeView> {
     _windowDone = false;
     _error = null;
     _pendingTarget = target;
-    _lastHandledScrollTo = null;
     WidgetsBinding.instance.addPostFrameCallback((_) => _indexMore());
   }
 
@@ -269,7 +276,6 @@ class _StreamingSafeViewState extends State<StreamingSafeView> {
       _pendingTarget = offset;
       return;
     }
-    _lastHandledScrollTo = requested;
     _pendingTarget = null;
     final controller = widget.controller;
     if (controller == null ||
@@ -305,9 +311,8 @@ class _StreamingSafeViewState extends State<StreamingSafeView> {
         final longLine = next - _lineOffsets.last >= kMaxLineRenderBytes;
         final boundary =
             !widget.rawText ||
-            widget.encoding != 'utf8' ||
-            i + 1 == bytes.length ||
-            bytes[i + 1] & 0xc0 != 0x80;
+            !longLine ||
+            alignViewerTextOffset(widget.source, next, widget.encoding) == next;
         if (next <= end && (newline || (longLine && boundary))) {
           _lineOffsets.add(next);
           if (_lineOffsets.length >= _maximumLines) {

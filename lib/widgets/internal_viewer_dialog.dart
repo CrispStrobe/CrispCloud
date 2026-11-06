@@ -303,11 +303,18 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   bool _isByteSearch = false;
   Uint8List? _searchBytes;
   List<int> _matches = const [];
+  List<int> _matchEnds = const [];
+  int _matchBase = 0;
+  int _totalMatches = 0;
+  int? _nextSearchOffset;
+  int? _nextTextOffset;
+  bool _matchCase = false;
   int _matchIndex = -1;
   String? _searchNote;
   int? _matchHighlightStart;
   int? _matchHighlightEnd;
   int? _streamScrollTo;
+  int _streamScrollRequest = 0;
   int? _selectedByte;
 
   // Cache for the safe-view char offset of the active match.
@@ -350,12 +357,6 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       isEditableInBuiltInEditor(_viewName);
 
   int get _dataSize => _source?.size ?? widget.file.size ?? 0;
-
-  bool get _isByteMode =>
-      _mode == ViewerMode.hex ||
-      _mode == ViewerMode.ascii ||
-      _mode == ViewerMode.binary ||
-      (_mode == ViewerMode.text && _isStreamed);
 
   bool get _canChangeEncoding =>
       (_mode == ViewerMode.text ||
@@ -561,6 +562,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   }
 
   Future<void> _useMemorySource(Uint8List data) async {
+    _resetSearchResults();
     _source?.dispose();
     _fullData = data;
     final source = ViewBytesSource.memory(data);
@@ -633,6 +635,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
 
   void _selectMode(ViewerMode mode) {
     if (!mounted) return;
+    _resetSearchResults();
     if (_tailEnabled) {
       _reload(preferredMode: mode);
       return;
@@ -666,7 +669,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       _pdfTextError = null;
     });
 
-    final query = _searchController.text.trim();
+    final query = _searchController.text;
     if (_searchOpen && query.isNotEmpty) {
       _runSearch(query);
     }
@@ -1222,15 +1225,15 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     if (text.isEmpty) return;
 
     if (offsetMode) {
-      final offset = _parseOffset(
-        text,
-        defaultRadix: _mode == ViewerMode.hex ? 16 : 10,
-      );
+      final offset = _parseOffset(text, defaultRadix: 10);
       if (offset == null || offset < 0) return;
       if (_mode == ViewerMode.hex) {
         _scrollToRow(offset ~/ _bytesPerLine);
       } else if (_isStreamed) {
-        setState(() => _streamScrollTo = offset);
+        setState(() {
+          _streamScrollTo = offset;
+          _streamScrollRequest++;
+        });
       }
       return;
     }
@@ -1270,30 +1273,44 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   // Search
   // ---------------------------------------------------------------------------
 
-  void _toggleSearch() {
-    _searchGeneration++;
+  void _resetSearchResults({bool cancel = true}) {
+    if (cancel) {
+      _searchGeneration++;
+      _searchDebounce?.cancel();
+    }
     _searching = false;
+    _matches = const [];
+    _matchEnds = const [];
+    _matchIndex = -1;
+    _matchBase = 0;
+    _totalMatches = 0;
+    _nextSearchOffset = null;
+    _nextTextOffset = null;
+    _searchNote = null;
+    _matchHighlightStart = null;
+    _matchHighlightEnd = null;
+    _isByteSearch = false;
+    _searchBytes = null;
+    _cachedSafeMatchIndex = null;
+    _cachedSafeMatchBinary = null;
+    _cachedSafeMatchOffset = null;
+  }
+
+  void _toggleSearch() {
+    _resetSearchResults();
     if (_searchOpen) {
       _searchDebounce?.cancel();
       setState(() {
         _searchOpen = false;
-        _matches = const [];
-        _matchIndex = -1;
-        _searchNote = null;
-        _matchHighlightStart = null;
-        _matchHighlightEnd = null;
         _searchController.clear();
       });
       return;
     }
-
     setState(() => _searchOpen = true);
     if (_mode != ViewerMode.text &&
         _mode != ViewerMode.ascii &&
         _mode != ViewerMode.binary &&
         _mode != ViewerMode.hex) {
-      // Rendered modes (markdown/CSV/office/archive/image/…) don't support
-      // match highlighting; fall back to the text view.
       _selectMode(ViewerMode.text);
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1302,17 +1319,14 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   }
 
   void _onSearchChanged(String value) {
-    _searchGeneration++;
-    _searching = false;
     _searchDebounce?.cancel();
-    if (_isStreamed) {
-      setState(() {
-        _searchNote = value.trim().isEmpty
-            ? null
-            : 'Press Enter to scan the file';
-      });
-      return;
-    }
+    setState(() {
+      _resetSearchResults();
+      if (_isStreamed && value.isNotEmpty) {
+        _searchNote = 'Press Enter to scan the file';
+      }
+    });
+    if (_isStreamed || value.isEmpty) return;
     _searchDebounce = Timer(const Duration(milliseconds: 350), () {
       if (mounted) _runSearch(value);
     });
@@ -1323,145 +1337,126 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     _runSearch(value);
   }
 
-  Future<void> _runSearch(String raw) async {
-    final generation = ++_searchGeneration;
-    final query = raw.trim();
+  Future<void> _runSearch(
+    String raw, {
+    int startOffset = 0,
+    int startTextOffset = 0,
+    int skipMatches = 0,
+    int matchBase = 0,
+    bool selectLast = false,
+  }) async {
     if (!mounted) return;
-
-    if (query.isEmpty) {
+    _searchDebounce?.cancel();
+    final generation = ++_searchGeneration;
+    final textMode = _mode == ViewerMode.text;
+    // Spaces and strings beginning with "0x" remain literal in Text mode.
+    final query =
+        _mode == ViewerMode.hex ||
+            (!textMode && raw.trimLeft().toLowerCase().startsWith('0x'))
+        ? raw.trim()
+        : raw;
+    final source = _source;
+    setState(() => _resetSearchResults(cancel: false));
+    if (query.isEmpty || source == null) return;
+    try {
+      String? encoding;
+      if (textMode) {
+        if (!source.isStreamed) _ensureText();
+        encoding =
+            _encodingOverride ??
+            (!source.isStreamed ? _encoding : null) ??
+            viewerSourceEncoding(source);
+      }
+      final pattern = textMode ? null : _patternFor(query);
       setState(() {
-        _matches = const [];
-        _matchIndex = -1;
-        _searchNote = null;
-        _matchHighlightStart = null;
-        _matchHighlightEnd = null;
-        _isByteSearch = false;
-        _searchBytes = null;
+        _isByteSearch = !textMode || source.isStreamed;
+        _searchBytes = pattern;
+        _searching = true;
+        _searchBytesScanned = startOffset;
       });
-      return;
-    }
-
-    if (_isByteMode) {
-      final Uint8List pattern;
-      try {
-        pattern = _patternFor(query);
-      } catch (error) {
-        setState(() {
-          _matches = const [];
-          _matchIndex = -1;
-          _searchNote = '$error';
-        });
-        return;
-      }
-      if (pattern.isEmpty) return;
-      _searchBytes = pattern;
-      _isByteSearch = true;
-
-      List<int> found;
-      String? scanNote;
-      if (_isStreamed) {
-        final source = _source;
-        if (source == null) return;
-        setState(() {
-          _searching = true;
-          _searchBytesScanned = 0;
-        });
-        try {
-          final result = await searchViewerBytes(
-            source,
-            pattern,
-            maximumOffsets: _kSearchMaxMatches,
-            alignment:
-                _mode == ViewerMode.text &&
-                    !query.toLowerCase().startsWith('0x')
-                ? viewerCodeUnitBytes(
-                    viewerSourceEncoding(source, override: _encodingOverride),
-                  )
-                : 1,
-            isCancelled: () => !mounted || generation != _searchGeneration,
-            checkSource: () {
-              if (_origin?.isCurrent == false) {
-                throw StateError('The viewed source is unavailable.');
-              }
-            },
-            onProgress: (bytes, total) {
-              if (mounted && generation == _searchGeneration) {
-                setState(() => _searchBytesScanned = bytes);
-              }
-            },
-          );
-          if (!mounted || generation != _searchGeneration) return;
-          found = result.offsets;
-          scanNote = result.totalMatches > found.length
-              ? context.commanderTr("Showing first {0} of {1} matches", [
-                  found.length,
-                  result.totalMatches,
-                ])
-              : context.commanderTr("Searched entire file ({0})", [
-                  formatBytes(result.scannedBytes),
-                ]);
-        } on ViewerSearchCancelled {
-          return;
-        } catch (error) {
-          if (mounted && generation == _searchGeneration) {
-            setState(() {
-              _matches = const [];
-              _matchIndex = -1;
-              _searchNote = '$error';
-            });
-          }
-          return;
-        } finally {
-          if (mounted && generation == _searchGeneration) {
-            setState(() => _searching = false);
-          }
+      bool cancelled() =>
+          !mounted ||
+          generation != _searchGeneration ||
+          !identical(_source, source);
+      void checkSource() {
+        if (_origin?.isCurrent == false) {
+          throw StateError('The viewed source is unavailable.');
         }
-      } else {
-        final data = _fullData;
-        if (data == null) return;
-        found = InternalViewerService.findBytes(
-          data,
-          pattern,
-          maxMatches: _kSearchMaxMatches,
-        );
       }
 
+      void progress(int bytes, int total) {
+        if (!cancelled()) setState(() => _searchBytesScanned = bytes);
+      }
+
+      final result = textMode
+          ? await searchViewerText(
+              source,
+              query,
+              encoding: encoding!,
+              caseSensitive: _matchCase,
+              skipBom: _encodingOverride == null,
+              maximumOffsets: _kSearchMaxMatches,
+              startOffset: startOffset,
+              startTextOffset: startTextOffset,
+              skipMatches: skipMatches,
+              isCancelled: cancelled,
+              checkSource: checkSource,
+              onProgress: progress,
+            )
+          : await searchViewerBytes(
+              source,
+              pattern!,
+              maximumOffsets: _kSearchMaxMatches,
+              startOffset: startOffset,
+              skipMatches: skipMatches,
+              isCancelled: cancelled,
+              checkSource: checkSource,
+              onProgress: progress,
+            );
+      if (cancelled()) return;
+      final characterOffsets = textMode && !source.isStreamed;
+      final found = characterOffsets ? result.textOffsets : result.offsets;
+      final ends = characterOffsets ? result.textEndOffsets : result.endOffsets;
+      final total = startOffset == 0
+          ? result.totalMatches
+          : matchBase + result.totalMatches;
       setState(() {
         _matches = found;
-        _matchIndex = found.isEmpty ? -1 : 0;
-        _searchNote = scanNote;
-        _cachedSafeMatchIndex = null;
-        _cachedSafeMatchBinary = null;
-        _cachedSafeMatchOffset = null;
-        _matchHighlightStart = null;
-        _matchHighlightEnd = null;
+        _matchEnds = ends;
+        _matchIndex = found.isEmpty
+            ? -1
+            : selectLast
+            ? found.length - 1
+            : 0;
+        _matchBase = matchBase;
+        _totalMatches = total;
+        _nextSearchOffset = result.nextOffset;
+        _nextTextOffset = result.nextTextOffset;
+        _searchNote = total > found.length && found.isNotEmpty
+            ? context.commanderTr("Showing matches {0}–{1} of {2}", [
+                matchBase + 1,
+                matchBase + found.length,
+                total,
+              ])
+            : context.commanderTr("Searched entire file ({0})", [
+                formatBytes(source.size),
+              ]);
       });
       if (_matchIndex >= 0) _navigateToMatch();
-      return;
+    } on ViewerSearchCancelled {
+      // The action that invalidated this scan has already cleared its results.
+    } catch (error) {
+      if (mounted && generation == _searchGeneration) {
+        setState(() {
+          _resetSearchResults(cancel: false);
+          _searchNote = '$error';
+        });
+      }
+    } finally {
+      if (mounted && generation == _searchGeneration) {
+        setState(() => _searching = false);
+      }
     }
-
-    _isByteSearch = false;
-    _searchBytes = null;
-    final text = _ensureText();
-    final haystack = text.toLowerCase();
-    final needle = query.toLowerCase();
-    final found = <int>[];
-    var from = 0;
-    while (found.length < _kSearchMaxMatches) {
-      final at = haystack.indexOf(needle, from);
-      if (at < 0) break;
-      found.add(at);
-      from = at + 1;
-    }
-
-    setState(() {
-      _matches = found;
-      _matchIndex = found.isEmpty ? -1 : 0;
-      _searchNote = null;
-      _matchHighlightStart = null;
-      _matchHighlightEnd = null;
-    });
-    if (_matchIndex >= 0) _navigateToMatch();
   }
 
   Uint8List _patternFor(String query) {
@@ -1471,21 +1466,50 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       final parsed = InternalViewerService.parseHexPattern(query);
       if (parsed != null) return parsed;
     }
-    return _mode == ViewerMode.text && _isStreamed && _source != null
-        ? encodeViewerSearchText(
-            query,
-            viewerSourceEncoding(_source!, override: _encodingOverride),
-          )
-        : Uint8List.fromList(utf8.encode(query));
+    return Uint8List.fromList(utf8.encode(query));
   }
 
   void _gotoMatch(int step) {
-    if (_matches.isEmpty) return;
-    var next = _matchIndex + step;
-    if (next < 0) next = _matches.length - 1;
-    if (next >= _matches.length) next = 0;
-    setState(() => _matchIndex = next);
-    _navigateToMatch();
+    if (_searching || _matches.isEmpty) return;
+    final next = _matchIndex + step;
+    if (next >= 0 && next < _matches.length) {
+      setState(() => _matchIndex = next);
+      _navigateToMatch();
+      return;
+    }
+    if (_totalMatches <= _matches.length) {
+      setState(() => _matchIndex = next < 0 ? _matches.length - 1 : 0);
+      _navigateToMatch();
+      return;
+    }
+    if (step > 0 &&
+        _matchBase + _matches.length < _totalMatches &&
+        _nextSearchOffset != null) {
+      unawaited(
+        _runSearch(
+          _searchController.text,
+          startOffset: _nextSearchOffset!,
+          startTextOffset: _nextTextOffset ?? 0,
+          matchBase: _matchBase + _matches.length,
+        ),
+      );
+      return;
+    }
+    // Previous/last pages rescan with a bounded result index instead of keeping
+    // every earlier match in memory. Forward pages resume at their exact cursor.
+    final base = step > 0
+        ? 0
+        : _matchBase > 0
+        ? (_matchBase - _kSearchMaxMatches).clamp(0, _totalMatches)
+        : ((_totalMatches - 1) ~/ _kSearchMaxMatches) * _kSearchMaxMatches;
+    unawaited(
+      _runSearch(
+        _searchController.text,
+        skipMatches: base,
+        matchBase: base,
+        selectLast: step < 0,
+      ),
+    );
   }
 
   void _navigateToMatch() {
@@ -1493,7 +1517,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     final offset = _matches[_matchIndex];
 
     if (_isByteSearch) {
-      final end = offset + (_searchBytes?.length ?? 1);
+      final end = _matchEnds.length > _matchIndex
+          ? _matchEnds[_matchIndex]
+          : offset + 1;
       setState(() {
         _matchHighlightStart = offset;
         _matchHighlightEnd = end;
@@ -1511,7 +1537,10 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       return;
     }
     if (_isStreamed) {
-      setState(() => _streamScrollTo = offset);
+      setState(() {
+        _streamScrollTo = offset;
+        _streamScrollRequest++;
+      });
       return;
     }
 
@@ -1554,6 +1583,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   // ---------------------------------------------------------------------------
 
   void _reload({ViewerMode? preferredMode}) {
+    _resetSearchResults();
     _tailTimer?.cancel();
     _tailEnabled = false;
     _tailService = null;
@@ -1596,6 +1626,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   }
 
   void _toggleTail() {
+    _resetSearchResults();
     if (_tailEnabled) {
       _reload();
       return;
@@ -2293,8 +2324,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   }
 
   Widget _inlineSearch(ThemeData theme) {
-    final total = _matches.length;
-    final position = _matchIndex >= 0 ? '${_matchIndex + 1}' : '0';
+    final total = _totalMatches;
+    final position = _matchIndex >= 0 ? '${_matchBase + _matchIndex + 1}' : '0';
     return SizedBox(
       width: math.min(340, MediaQuery.sizeOf(context).width),
       child: Padding(
@@ -2303,6 +2334,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           children: [
             Expanded(
               child: TextField(
+                key: const ValueKey('viewer-search-input'),
                 controller: _searchController,
                 focusNode: _searchFocus,
                 style: const TextStyle(fontSize: 13),
@@ -2312,7 +2344,11 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                       ? context.commanderTr(
                           "Hex bytes (e.g. DE AD BE EF) or text",
                         )
-                      : context.commanderTr("Search text or 0x… bytes"),
+                      : context.commanderTr(
+                          _mode == ViewerMode.text
+                              ? "Search text"
+                              : "Search text or 0x… bytes",
+                        ),
                   border: const OutlineInputBorder(),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 8,
@@ -2323,6 +2359,18 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                 onSubmitted: _onSearchSubmitted,
               ),
             ),
+            if (_mode == ViewerMode.text)
+              IconButton(
+                key: const ValueKey('viewer-match-case'),
+                tooltip: context.commanderTr("Match case"),
+                isSelected: _matchCase,
+                icon: const Icon(Icons.text_fields, size: 18),
+                visualDensity: VisualDensity.compact,
+                onPressed: () {
+                  setState(() => _matchCase = !_matchCase);
+                  _runSearch(_searchController.text);
+                },
+              ),
             const SizedBox(width: 4),
             Text(
               '$position/$total',
@@ -2336,8 +2384,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                 tooltip: context.commanderTr("Stop search"),
                 icon: const Icon(Icons.stop_circle_outlined, size: 18),
                 onPressed: () => setState(() {
-                  _searchGeneration++;
-                  _searching = false;
+                  _resetSearchResults();
                   _searchNote = context.commanderTr("Search cancelled");
                 }),
                 visualDensity: VisualDensity.compact,
@@ -2345,7 +2392,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
             IconButton(
               tooltip: context.commanderTr("Previous match (Shift+F3)"),
               icon: const Icon(Icons.keyboard_arrow_up, size: 18),
-              onPressed: total == 0 ? null : () => _gotoMatch(-1),
+              onPressed: _searching || _matches.isEmpty
+                  ? null
+                  : () => _gotoMatch(-1),
               visualDensity: VisualDensity.compact,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
@@ -2353,7 +2402,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
             IconButton(
               tooltip: context.commanderTr("Next match (F3)"),
               icon: const Icon(Icons.keyboard_arrow_down, size: 18),
-              onPressed: total == 0 ? null : () => _gotoMatch(1),
+              onPressed: _searching || _matches.isEmpty
+                  ? null
+                  : () => _gotoMatch(1),
               visualDensity: VisualDensity.compact,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
@@ -2452,6 +2503,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           matchStart: _isByteSearch ? _matchHighlightStart : null,
           matchEnd: _isByteSearch ? _matchHighlightEnd : null,
           scrollToByte: _streamScrollTo,
+          scrollRequest: _streamScrollRequest,
         ),
       );
     }
@@ -2511,6 +2563,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           matchStart: _isByteSearch ? _matchHighlightStart : null,
           matchEnd: _isByteSearch ? _matchHighlightEnd : null,
           scrollToByte: _streamScrollTo,
+          scrollRequest: _streamScrollRequest,
         ),
       );
     }
@@ -3153,7 +3206,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     }
     final base = _matches.isEmpty
         ? context.commanderTr("No matches")
-        : '${_matchIndex + 1}/${_matches.length}';
+        : '${_matchBase + _matchIndex + 1}/$_totalMatches';
     if (_searchNote == null) return base;
     return '$base (${context.commanderTr(_searchNote!)})';
   }
@@ -3170,8 +3223,10 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     final offset = _matches[_matchIndex];
     final line = _lineIndexOfOffset(starts, offset);
     final local = offset - starts[line];
-    final length = _searchController.text.trim().length;
-    return _MatchSpan(line, local, local + (length < 1 ? 1 : length));
+    final end = _matchEnds.length > _matchIndex
+        ? _matchEnds[_matchIndex]
+        : offset + 1;
+    return _MatchSpan(line, local, local + end - offset);
   }
 
   _MatchSpan? _safeMatchSpan(bool binary) {

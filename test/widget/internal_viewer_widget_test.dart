@@ -19,6 +19,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/services/file_bytes_loader.dart';
+import 'package:crisp_cloud/services/viewer_search_service.dart';
 import 'package:crisp_cloud/widgets/hex_viewer.dart';
 import 'package:crisp_cloud/widgets/internal_viewer_dialog.dart';
 import 'package:crisp_cloud/widgets/internal_viewer_views.dart';
@@ -54,6 +55,115 @@ Future<void> _tapChip(WidgetTester tester, String label) async {
 
 void main() {
   group('text mode', () {
+    testWidgets(
+      'literal whitespace and 0x text, case toggle and edited-query reset agree',
+      (tester) async {
+        await _pumpViewer(
+          tester,
+          Uint8List.fromList(utf8.encode('Needle needle\n0x41 A\n x \nx\n')),
+        );
+        await tester.tap(find.byTooltip('Search (Ctrl+F)'));
+        await tester.pumpAndSettle();
+        final input = find.byKey(const ValueKey('viewer-search-input'));
+        Future<void> search(String query) async {
+          await tester.enterText(input, query);
+          await tester.pump(const Duration(milliseconds: 400));
+          await tester.pumpAndSettle();
+        }
+
+        await search('needle');
+        expect(find.text('1/2'), findsOneWidget);
+        await tester.tap(find.byKey(const ValueKey('viewer-match-case')));
+        await tester.pumpAndSettle();
+        expect(find.text('1/1'), findsOneWidget);
+        await search('0x41');
+        expect(find.text('1/1'), findsOneWidget);
+        await search(' x ');
+        expect(find.text('1/1'), findsOneWidget);
+        await tester.enterText(input, 'missing');
+        await tester.pump();
+        expect(find.text('0/0'), findsOneWidget);
+        final next = tester.widget<IconButton>(
+          find.byWidgetPredicate(
+            (widget) =>
+                widget is IconButton && widget.tooltip == 'Next match (F3)',
+          ),
+        );
+        expect(next.onPressed, isNull);
+        await tester.pump(const Duration(milliseconds: 400));
+        await tester.pumpAndSettle();
+        expect(find.text('0/0'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'every match remains reachable past the bounded result page in both directions',
+      (tester) async {
+        await _pumpViewer(
+          tester,
+          Uint8List.fromList(
+            utf8.encode(List.filled(2002, 'needle').join('\n')),
+          ),
+        );
+        await tester.tap(find.byTooltip('Search (Ctrl+F)'));
+        await tester.pumpAndSettle();
+        await tester.enterText(
+          find.byKey(const ValueKey('viewer-search-input')),
+          'needle',
+        );
+        await tester.pump(const Duration(milliseconds: 400));
+        await tester.pumpAndSettle();
+        expect(find.text('1/2002'), findsOneWidget);
+        Future<void> previous() async {
+          await tester.tap(find.byTooltip('Previous match (Shift+F3)'));
+          await tester.pumpAndSettle();
+        }
+
+        await previous();
+        expect(find.text('2002/2002'), findsOneWidget);
+        await previous();
+        expect(find.text('2001/2002'), findsOneWidget);
+        await previous();
+        expect(find.text('2000/2002'), findsOneWidget);
+        await tester.tap(find.byTooltip('Next match (F3)'));
+        await tester.pumpAndSettle();
+        expect(find.text('2001/2002'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
+
+    testWidgets(
+      'reload cancels an active scan and any pending query debounce',
+      (tester) async {
+        final data = Uint8List(4 * 1024 * 1024);
+        data.setAll(0, utf8.encode('needle\n'));
+        await _pumpViewer(tester, data, name: 'sample.txt');
+        await tester.tap(find.byTooltip('Search (Ctrl+F)'));
+        await tester.pumpAndSettle();
+        final input = find.byKey(const ValueKey('viewer-search-input'));
+        await tester.enterText(input, 'needle');
+        tester.widget<TextField>(input).onSubmitted!('needle');
+        await tester.pump();
+        expect(find.byTooltip('Stop search'), findsOneWidget);
+        await tester.tap(find.byTooltip('Reload (F5)'));
+        await tester.pumpAndSettle();
+        await tester.pump(const Duration(milliseconds: 400));
+        await tester.pumpAndSettle();
+        expect(find.byTooltip('Stop search'), findsNothing);
+        expect(tester.widget<TextField>(input).controller!.text, isEmpty);
+        expect(find.text('0/0'), findsOneWidget);
+        expect(find.textContaining('disposed'), findsNothing);
+
+        await tester.enterText(input, 'needle');
+        await tester.tap(find.byTooltip('Reload (F5)'));
+        await tester.pumpAndSettle();
+        await tester.pump(const Duration(milliseconds: 400));
+        await tester.pumpAndSettle();
+        expect(find.text('0/0'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
+
     testWidgets('renders decoded lines for a text file', (tester) async {
       await _pumpViewer(
         tester,
@@ -75,7 +185,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField), 'beta');
       await tester.pump(const Duration(milliseconds: 400));
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       expect(find.textContaining('1/2'), findsWidgets);
     });
@@ -124,6 +234,31 @@ void main() {
       await _tapChip(tester, 'Hex');
       expect(find.byType(HexViewer), findsOneWidget);
     });
+
+    testWidgets(
+      'hex goto uses decimal numbers and explicit hexadecimal offsets',
+      (tester) async {
+        await _pumpViewer(tester, Uint8List(8192), name: 'sample.bin');
+        await _tapChip(tester, 'Hex');
+        Future<double> go(String offset) async {
+          await tester.tap(find.byTooltip('Go to line / offset (Ctrl+G)'));
+          await tester.pumpAndSettle();
+          await tester.enterText(find.byType(TextField), offset);
+          await tester.tap(find.widgetWithText(TextButton, 'Go'));
+          await tester.pumpAndSettle();
+          return tester
+              .widget<HexViewer>(find.byType(HexViewer))
+              .controller!
+              .offset;
+        }
+
+        final decimal = await go('160');
+        final hexadecimal = await go('0x160');
+        expect(decimal, closeTo(4 + 10 * hexRowExtent(1), 0.01));
+        expect(hexadecimal, closeTo(4 + 22 * hexRowExtent(1), 0.01));
+        expect(await go('0xA0'), decimal);
+      },
+    );
   });
 
   group('rich modes', () {
@@ -361,6 +496,84 @@ void main() {
   });
 
   group('streaming view', () {
+    testWidgets(
+      'UTF-8 page boundaries preserve the whole character and paging survives a parent rebuild',
+      (tester) async {
+        final bytes = Uint8List.fromList(
+          utf8.encode('${'x' * (kMaxIndexedBytes - 1)}🙂next'),
+        );
+        final source = ViewBytesSource.memory(bytes);
+        await source.open();
+        final controller = ScrollController();
+        addTearDown(controller.dispose);
+        addTearDown(source.dispose);
+        Widget view(double zoom, int request) => _wrap(
+          Scaffold(
+            body: StreamingSafeView(
+              source: source,
+              rawText: true,
+              fontScale: zoom,
+              controller: controller,
+              scrollToByte: 0,
+              scrollRequest: request,
+            ),
+          ),
+        );
+        await tester.pumpWidget(view(1, 0));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Next text window'));
+        await tester.pumpAndSettle();
+        expect(find.text('🙂next', findRichText: true), findsOneWidget);
+        await tester.pumpWidget(view(1.2, 0));
+        await tester.pumpAndSettle();
+        expect(find.text('🙂next', findRichText: true), findsOneWidget);
+        await tester.pumpWidget(view(1.2, 1));
+        await tester.pumpAndSettle();
+        expect(find.text('🙂next', findRichText: true), findsNothing);
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox());
+      },
+    );
+
+    testWidgets(
+      'long rows keep UTF-16 surrogate pairs and UTF-8 chunk-edge scalars together',
+      (tester) async {
+        for (final encoding in ['utf16le', 'utf8']) {
+          final count = encoding == 'utf16le' ? 4095 : 128 * 1024 - 1;
+          final source = ViewBytesSource.memory(
+            encodeViewerSearchText('${'x' * count}🙂end', encoding),
+          );
+          await source.open();
+          await tester.pumpWidget(
+            _wrap(
+              Scaffold(
+                body: StreamingSafeView(
+                  source: source,
+                  rawText: true,
+                  encoding: encoding,
+                  fontScale: 1,
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+          expect(
+            find.textContaining('🙂', findRichText: true),
+            findsOneWidget,
+            reason: encoding,
+          );
+          expect(
+            find.text('end', findRichText: true),
+            findsOneWidget,
+            reason: encoding,
+          );
+          expect(tester.takeException(), isNull);
+          await tester.pumpWidget(const SizedBox());
+          source.dispose();
+        }
+      },
+    );
+
     testWidgets('indexes lines and shows byte offsets', (tester) async {
       final data = Uint8List.fromList(utf8.encode('one\ntwo\nthree\n'));
       final source = ViewBytesSource.memory(data);

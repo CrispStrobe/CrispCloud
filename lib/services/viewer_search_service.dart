@@ -3,16 +3,31 @@ import 'dart:typed_data';
 
 import 'file_bytes_loader.dart';
 import 'internal_viewer_service.dart';
+import 'viewer_text_decoder.dart';
 
 class ViewerSearchCancelled implements Exception {
   const ViewerSearchCancelled();
 }
 
 class ViewerSearchResult {
-  const ViewerSearchResult(this.offsets, this.totalMatches, this.scannedBytes);
+  const ViewerSearchResult(
+    this.offsets,
+    this.totalMatches,
+    this.scannedBytes, {
+    this.endOffsets = const [],
+    this.textOffsets = const [],
+    this.textEndOffsets = const [],
+    this.nextOffset,
+    this.nextTextOffset,
+  });
   final List<int> offsets;
   final int totalMatches;
   final int scannedBytes;
+  final List<int> endOffsets;
+  final List<int> textOffsets;
+  final List<int> textEndOffsets;
+  final int? nextOffset;
+  final int? nextTextOffset;
 }
 
 /// Linear-time byte search. A KMP prefix table carries partial matches across
@@ -24,6 +39,7 @@ Future<ViewerSearchResult> searchViewerBytes(
   int maximumOffsets = 2000,
   int startOffset = 0,
   int alignment = 1,
+  int skipMatches = 0,
   bool Function()? isCancelled,
   void Function()? checkSource,
   void Function(int bytes, int total)? onProgress,
@@ -34,6 +50,7 @@ Future<ViewerSearchResult> searchViewerBytes(
     );
   }
   if (maximumOffsets < 1 ||
+      skipMatches < 0 ||
       startOffset < 0 ||
       startOffset > source.size ||
       ![1, 2, 4].contains(alignment)) {
@@ -75,7 +92,9 @@ Future<ViewerSearchResult> searchViewerBytes(
         final offset = position + index + 1 - pattern.length;
         if (offset % alignment == 0) {
           total++;
-          if (offsets.length < maximumOffsets) offsets.add(offset);
+          if (total > skipMatches && offsets.length < maximumOffsets) {
+            offsets.add(offset);
+          }
         }
         matched = prefixes[matched - 1];
       }
@@ -88,7 +107,144 @@ Future<ViewerSearchResult> searchViewerBytes(
   check();
   await source.validateUnchanged();
   check();
-  return ViewerSearchResult(List.unmodifiable(offsets), total, position);
+  return ViewerSearchResult(
+    List.unmodifiable(offsets),
+    total,
+    position,
+    endOffsets: List.unmodifiable(
+      offsets.map((offset) => offset + pattern.length),
+    ),
+    nextOffset: offsets.isEmpty ? null : offsets.last + 1,
+  );
+}
+
+/// Searches decoded literal text with the same Unicode case rules in small
+/// and streamed views. Offset maps retain exact encoded ranges for highlighting
+/// even when a caseless match uses a different byte length (for example K/k).
+/// Only one decode chunk, a pattern-sized overlap and one result page survive.
+Future<ViewerSearchResult> searchViewerText(
+  ViewBytesSource source,
+  String query, {
+  required String encoding,
+  bool caseSensitive = false,
+  bool skipBom = true,
+  int maximumOffsets = 2000,
+  int startOffset = 0,
+  int startTextOffset = 0,
+  int skipMatches = 0,
+  bool Function()? isCancelled,
+  void Function()? checkSource,
+  void Function(int bytes, int total)? onProgress,
+}) async {
+  if (query.isEmpty || query.length > 1024 * 1024) {
+    throw const FormatException(
+      'Text search requires 1 character to 1 MiB of text.',
+    );
+  }
+  if (maximumOffsets < 1 ||
+      skipMatches < 0 ||
+      startTextOffset < 0 ||
+      startOffset < 0 ||
+      startOffset > source.size) {
+    throw ArgumentError('Invalid text search bounds.');
+  }
+  void check() {
+    if (isCancelled?.call() == true) throw const ViewerSearchCancelled();
+    checkSource?.call();
+  }
+
+  check();
+  await source.validateUnchanged();
+  check();
+  final decoder = ViewerTextDecoder(encoding, skipBom: skipBom);
+  final expression = RegExp(
+    '(?=(${RegExp.escape(query)}))',
+    caseSensitive: caseSensitive,
+    unicode: true,
+  );
+  final offsets = <int>[],
+      ends = <int>[],
+      textOffsets = <int>[],
+      textEnds = <int>[];
+  var total = 0, processed = startTextOffset, lastReported = -1;
+  int? nextOffset, nextTextOffset;
+  var tail = '';
+  var tailStarts = <int>[], tailEnds = <int>[];
+
+  void match(ViewerDecodedText part) {
+    final window = '$tail${part.text}';
+    final starts = [...tailStarts, ...part.starts];
+    final byteEnds = [...tailEnds, ...part.ends];
+    final base = processed - tail.length;
+    for (final hit in expression.allMatches(window)) {
+      final absolute = base + hit.start;
+      if (absolute <= lastReported) continue;
+      lastReported = absolute;
+      total++;
+      if (total <= skipMatches || offsets.length >= maximumOffsets) continue;
+      final end = hit.start + hit.group(1)!.length;
+      offsets.add(starts[hit.start]);
+      ends.add(byteEnds[end - 1]);
+      textOffsets.add(absolute);
+      textEnds.add(base + end);
+      nextOffset = byteEnds[hit.start];
+      final first = window.codeUnitAt(hit.start);
+      nextTextOffset =
+          absolute +
+          (first >= 0xd800 &&
+                  first <= 0xdbff &&
+                  hit.start + 1 < window.length &&
+                  window.codeUnitAt(hit.start + 1) >= 0xdc00 &&
+                  window.codeUnitAt(hit.start + 1) <= 0xdfff
+              ? 2
+              : 1);
+    }
+    processed += part.text.length;
+    var keepFrom = (window.length - query.length - 2).clamp(0, window.length);
+    if (keepFrom > 0 &&
+        window.codeUnitAt(keepFrom) >= 0xdc00 &&
+        window.codeUnitAt(keepFrom) <= 0xdfff &&
+        window.codeUnitAt(keepFrom - 1) >= 0xd800 &&
+        window.codeUnitAt(keepFrom - 1) <= 0xdbff) {
+      keepFrom--;
+    }
+    tail = window.substring(keepFrom);
+    tailStarts = starts.sublist(keepFrom);
+    tailEnds = byteEnds.sublist(keepFrom);
+  }
+
+  var position = alignViewerTextOffset(
+    source,
+    startOffset,
+    encoding,
+    forward: true,
+  );
+  while (position < source.size) {
+    check();
+    final length = (source.size - position).clamp(0, 128 * 1024);
+    final bytes = source.readSync(position, length);
+    if (bytes.length != length) {
+      throw StateError('The file changed during search.');
+    }
+    match(decoder.add(bytes, position));
+    position += bytes.length;
+    onProgress?.call(position, source.size);
+    await Future<void>.delayed(Duration.zero);
+  }
+  match(decoder.add(Uint8List(0), position, last: true));
+  check();
+  await source.validateUnchanged();
+  check();
+  return ViewerSearchResult(
+    List.unmodifiable(offsets),
+    total,
+    position,
+    endOffsets: List.unmodifiable(ends),
+    textOffsets: List.unmodifiable(textOffsets),
+    textEndOffsets: List.unmodifiable(textEnds),
+    nextOffset: nextOffset,
+    nextTextOffset: nextTextOffset,
+  );
 }
 
 int viewerCodeUnitBytes(String encoding) => switch (encoding) {

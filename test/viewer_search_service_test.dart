@@ -4,6 +4,8 @@ import 'dart:typed_data';
 
 import 'package:crisp_cloud/services/file_bytes_loader.dart';
 import 'package:crisp_cloud/services/viewer_search_service.dart';
+import 'package:crisp_cloud/services/viewer_text_decoder.dart';
+import 'package:crisp_cloud/services/internal_viewer_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -13,6 +15,280 @@ void main() {
   );
   tearDown(() => root.delete(recursive: true));
   Uint8List pattern(String text) => Uint8List.fromList(utf8.encode(text));
+
+  test('decoded literal search preserves whitespace, Unicode case and exact encoded ranges', () async {
+    const text = 'x KELVIN café CAFÉ 0x41 A  x ';
+    final source = ViewBytesSource.memory(pattern(text));
+    await source.open();
+    final kelvin = await searchViewerText(source, 'kelvin', encoding: 'utf8');
+    expect(kelvin.offsets, [2]);
+    expect(kelvin.endOffsets, [10]);
+    expect(kelvin.textOffsets, [2]);
+    expect(kelvin.textEndOffsets, [8]);
+    expect(
+      (await searchViewerText(
+        source,
+        'kelvin',
+        encoding: 'utf8',
+        caseSensitive: true,
+      )).totalMatches,
+      0,
+    );
+    expect(
+      (await searchViewerText(source, 'café', encoding: 'utf8')).totalMatches,
+      2,
+    );
+    for (final query in ['0x41', ' x ', ' ']) {
+      final result = await searchViewerText(source, query, encoding: 'utf8');
+      final expected = RegExp('(?=(${RegExp.escape(query)}))')
+          .allMatches(text)
+          .map((m) => m.start);
+      expect(result.textOffsets, expected, reason: query);
+    }
+  });
+
+  test('text decoding matches the viewer across every code-unit split and malformed UTF-8', () {
+    for (final encoding in [
+      'utf8',
+      'utf16le',
+      'utf16be',
+      'utf32le',
+      'utf32be',
+      'latin1',
+    ]) {
+      final data = encodeViewerSearchText(
+        encoding == 'latin1' ? 'Café\ntext' : 'Café 🙂 東京\ntext',
+        encoding,
+      );
+      for (final split in [1, 2, 3, 7, 17]) {
+        final decoder = ViewerTextDecoder(encoding, skipBom: false);
+        final chunks = <ViewerDecodedText>[];
+        for (var offset = 0; offset < data.length; offset += split) {
+          chunks.add(
+            decoder.add(
+              Uint8List.sublistView(
+                data,
+                offset,
+                (offset + split).clamp(0, data.length),
+              ),
+              offset,
+            ),
+          );
+        }
+        chunks.add(decoder.add(Uint8List(0), data.length, last: true));
+        expect(
+          chunks.map((c) => c.text).join(),
+          InternalViewerService.decodeTextForView(
+            data,
+            encoding: encoding,
+          ).text,
+          reason: '$encoding/$split',
+        );
+        for (final chunk in chunks) {
+          expect(chunk.starts.length, chunk.text.length);
+          expect(chunk.ends.length, chunk.text.length);
+        }
+      }
+    }
+    for (final data in <List<int>>[
+      [0xe2, 0x82],
+      [0xe2, 0x82, 0x20],
+      [0xe0, 0x80, 0x80],
+      [0xf4, 0x90, 0x80, 0x80],
+      [0xc0, 0xaf],
+      [0xed, 0xa0, 0x80],
+    ]) {
+      final decoder = ViewerTextDecoder('utf8');
+      final actual = StringBuffer();
+      for (var offset = 0; offset < data.length; offset++) {
+        actual.write(
+          decoder.add(Uint8List.fromList([data[offset]]), offset).text,
+        );
+      }
+      actual.write(decoder.add(Uint8List(0), data.length, last: true).text);
+      expect(
+        actual.toString(),
+        utf8.decode(data, allowMalformed: true),
+        reason: '$data',
+      );
+    }
+  });
+
+  test(
+    'Unicode text matches span chunk boundaries in every supported encoding',
+    () async {
+      for (final encoding in [
+        'utf8',
+        'utf16le',
+        'utf16be',
+        'utf32le',
+        'utf32be',
+        'latin1',
+      ]) {
+        final unit = viewerCodeUnitBytes(encoding);
+        final prefix = 'x' * ((128 * 1024 - unit) ~/ unit);
+        final query = encoding == 'latin1' ? 'café' : '🙂café';
+        final original = '$prefix${query.toUpperCase()} end';
+        final source = ViewBytesSource.memory(
+          encodeViewerSearchText(original, encoding),
+        );
+        await source.open();
+        final result = await searchViewerText(
+          source,
+          query,
+          encoding: encoding,
+        );
+        expect(result.offsets, [128 * 1024 - unit], reason: encoding);
+        expect(result.textOffsets, [prefix.length], reason: encoding);
+        expect(result.endOffsets, [
+          encodeViewerSearchText(
+            '$prefix${query.toUpperCase()}',
+            encoding,
+          ).length,
+        ], reason: encoding);
+      }
+    },
+  );
+
+  test('bounded text result pages continue through overlaps and navigate back or to the last page', () async {
+    final source = ViewBytesSource.memory(pattern('aaaaaa'));
+    await source.open();
+    final first = await searchViewerText(
+      source,
+      'aa',
+      encoding: 'utf8',
+      maximumOffsets: 2,
+    );
+    expect(first.offsets, [0, 1]);
+    expect(first.totalMatches, 5);
+    final next = await searchViewerText(
+      source,
+      'aa',
+      encoding: 'utf8',
+      maximumOffsets: 2,
+      startOffset: first.nextOffset!,
+      startTextOffset: first.nextTextOffset!,
+    );
+    expect(next.offsets, [2, 3]);
+    expect(next.textOffsets, [2, 3]);
+    expect(next.totalMatches, 3);
+    final last = await searchViewerText(
+      source,
+      'aa',
+      encoding: 'utf8',
+      maximumOffsets: 2,
+      skipMatches: 4,
+    );
+    expect(last.offsets, [4]);
+    expect(last.totalMatches, 5);
+    final previous = await searchViewerBytes(
+      source,
+      pattern('aa'),
+      maximumOffsets: 2,
+      skipMatches: 2,
+    );
+    expect(previous.offsets, [2, 3]);
+    expect(previous.nextOffset, 4);
+  });
+
+  test('text continuation never starts inside a surrogate or malformed UTF-8 replacement', () async {
+    for (final encoding in ['utf8', 'utf16le', 'utf16be', 'utf32le']) {
+      final source = ViewBytesSource.memory(
+        encodeViewerSearchText('🙂🙂🙂', encoding),
+      );
+      await source.open();
+      final first = await searchViewerText(
+        source,
+        '🙂',
+        encoding: encoding,
+        maximumOffsets: 1,
+      );
+      final next = await searchViewerText(
+        source,
+        '🙂',
+        encoding: encoding,
+        maximumOffsets: 1,
+        startOffset: first.nextOffset!,
+        startTextOffset: first.nextTextOffset!,
+      );
+      expect(next.offsets, [4], reason: encoding);
+      expect(next.textOffsets, [2], reason: encoding);
+    }
+    final malformed = ViewBytesSource.memory(
+      Uint8List.fromList([0xe0, 0x80, 0x80]),
+    );
+    await malformed.open();
+    final first = await searchViewerText(
+      malformed,
+      '\ufffd',
+      encoding: 'utf8',
+      maximumOffsets: 1,
+    );
+    final next = await searchViewerText(
+      malformed,
+      '\ufffd',
+      encoding: 'utf8',
+      maximumOffsets: 2,
+      startOffset: first.nextOffset!,
+      startTextOffset: first.nextTextOffset!,
+    );
+    expect(next.offsets, [1, 2]);
+  });
+
+  test('decoded search cancellation and source revocation cannot publish early matches', () async {
+    final source = ViewBytesSource.memory(
+      Uint8List(512 * 1024)..fillRange(0, 512 * 1024, 97),
+    );
+    await source.open();
+    var cancelled = false;
+    await expectLater(
+      searchViewerText(
+        source,
+        'a',
+        encoding: 'utf8',
+        isCancelled: () => cancelled,
+        onProgress: (_, _) => cancelled = true,
+      ),
+      throwsA(isA<ViewerSearchCancelled>()),
+    );
+    var current = true;
+    await expectLater(
+      searchViewerText(
+        source,
+        'a',
+        encoding: 'utf8',
+        checkSource: () {
+          if (!current) throw StateError('Disconnected');
+        },
+        onProgress: (_, _) => current = false,
+      ),
+      throwsStateError,
+    );
+  });
+
+  test(
+    'text boundary alignment preserves complete UTF-8 and UTF-16 scalars',
+    () async {
+      for (final encoding in ['utf8', 'utf16le', 'utf16be', 'utf32le']) {
+        final source = ViewBytesSource.memory(
+          encodeViewerSearchText('🙂x', encoding),
+        );
+        await source.open();
+        for (var position = 1; position < 4; position++) {
+          expect(
+            alignViewerTextOffset(source, position, encoding),
+            0,
+            reason: '$encoding/$position',
+          );
+          expect(
+            alignViewerTextOffset(source, position, encoding, forward: true),
+            4,
+            reason: '$encoding/$position',
+          );
+        }
+      }
+    },
+  );
 
   test(
     'a real disk match after 64 MiB is found with its absolute offset',
