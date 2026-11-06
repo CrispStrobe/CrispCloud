@@ -135,6 +135,7 @@ void main() {
       'internal_viewer_dialog',
       'internal_viewer_views',
       'file_attributes_dialog',
+      'file_name_dialog',
       'diff_viewer_dialog',
       'directory_comparison_dialog',
       'sync_dialog',
