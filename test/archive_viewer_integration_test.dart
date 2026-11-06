@@ -17,6 +17,9 @@ import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/providers/panel_source_provider.dart';
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
+import 'package:crisp_cloud/services/archive_viewer_service.dart';
+import 'package:crisp_cloud/services/archive_workspace.dart';
+import 'package:crisp_cloud/services/file_operation_backend.dart';
 import 'package:crisp_cloud/services/filen_config_service.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:crisp_cloud/services/panel_source_service.dart';
@@ -56,7 +59,9 @@ class _ArchiveFileService implements LocalFileService {
   Future<bool> hasAccessToPath(String path) async => true;
 
   @override
-  Future<List<FileSystemEntity>?> listDirectory(String path) async => [File(zipPath)];
+  Future<List<FileSystemEntity>?> listDirectory(String path) async => [
+    File(zipPath),
+  ];
 
   @override
   Future<String?> requestDirectoryAccess({String? initialDirectory}) async =>
@@ -88,8 +93,7 @@ class _ArchiveFileService implements LocalFileService {
     String path, {
     bool includeHidden = false,
     int maxItems = 10000,
-  }) async =>
-      const <FileItem>[];
+  }) async => const <FileItem>[];
 }
 
 void main() {
@@ -109,7 +113,7 @@ void main() {
 
     final archive = Archive()
       ..addFile(ArchiveFile('hello.txt', 5, [72, 101, 108, 108, 111]));
-    zipBytes = Uint8List.fromList(ZipEncoder().encode(archive)!);
+    zipBytes = Uint8List.fromList(ZipEncoder().encode(archive));
     await File(zipPath).writeAsBytes(zipBytes);
 
     secureStorage = InMemorySecureStorage();
@@ -117,20 +121,24 @@ void main() {
       configPath: '/tmp/archive_viewer_test_config',
       secureStorage: secureStorage,
     );
-    container = ProviderContainer(overrides: [
-      secureStorageProvider.overrideWithValue(secureStorage),
-      configPathProvider.overrideWithValue('/tmp/archive_viewer_test_config'),
-      localFileServiceProvider.overrideWithValue(
-        _ArchiveFileService(zipPath, zipBytes),
-      ),
-      authProvider.overrideWith((ref) => AuthNotifier(
+    container = ProviderContainer(
+      overrides: [
+        secureStorageProvider.overrideWithValue(secureStorage),
+        configPathProvider.overrideWithValue('/tmp/archive_viewer_test_config'),
+        localFileServiceProvider.overrideWithValue(
+          _ArchiveFileService(zipPath, zipBytes),
+        ),
+        authProvider.overrideWith(
+          (ref) => AuthNotifier(
             ref,
             initialProvider: CloudProvider.filen,
             config: configService,
             configPath: '/tmp/archive_viewer_test_config',
             secureStorage: secureStorage,
-          )),
-    ]);
+          ),
+        ),
+      ],
+    );
   });
 
   tearDown(() async {
@@ -143,7 +151,9 @@ void main() {
     await Future<void>.delayed(const Duration(milliseconds: 50));
 
     await panel.refresh();
-    await panel.enterArchive(panel.files!.firstWhere((file) => file.path == zipPath));
+    await panel.enterArchive(
+      panel.files!.firstWhere((file) => file.path == zipPath),
+    );
 
     expect(panel.isInArchive, isTrue);
     final member = panel.files!.firstWhere((f) => f.name == 'hello.txt');
@@ -151,6 +161,108 @@ void main() {
     expect(String.fromCharCodes(bytes), 'Hello');
   });
 
+  test('nested navigation restores the parent directory and rejects stale or substituted members', () async {
+    final inner = ZipEncoder().encode(
+      Archive()
+        ..addFile(ArchiveFile.bytes('same.txt', 'inside'.codeUnits))
+        ..addFile(ArchiveFile.bytes('folder/other.txt', [7])),
+    );
+    final outer = ZipEncoder().encode(
+      Archive()
+        ..addFile(ArchiveFile.bytes('same.txt', 'outside'.codeUnits))
+        ..addFile(ArchiveFile.bytes('nested/inner.zip', inner)),
+    );
+    await File(zipPath).writeAsBytes(outer);
+    final panel = container.read(panelProvider(PanelSide.local));
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    await panel.refresh();
+    await panel.enterArchive(
+      panel.files!.firstWhere((file) => file.path == zipPath),
+    );
+    final staleOuter = panel.files!.firstWhere(
+      (file) => file.name == 'same.txt',
+    );
+    await panel.navigateInto(
+      panel.files!.firstWhere((file) => file.name == 'nested'),
+    );
+    final nested = panel.files!.single;
+    await panel.navigateInto(nested.copyWith());
+    expect(panel.archiveSource!.archiveName, 'sample.zip');
+    await panel.navigateInto(nested);
+    expect(panel.archiveSource!.parent, isA<ArchivePanelSource>());
+    expect(panel.currentPath, 'sample.zip!/nested/inner.zip:/');
+    final current = panel.files!.firstWhere((file) => file.name == 'same.txt');
+    expect(
+      String.fromCharCodes(await panel.readArchiveMember(current)),
+      'inside',
+    );
+    await expectLater(
+      panel.readArchiveMember(staleOuter),
+      throwsA(isA<ArchiveViewException>()),
+    );
+    await expectLater(
+      panel.readArchiveMember(current.copyWith()),
+      throwsA(isA<ArchiveViewException>()),
+    );
+    final location = panel.captureArchiveWorkspaceLocation();
+    expect(location.file.path, zipPath);
+    expect(location.nestedMembers, ['nested/inner.zip']);
+    await panel.navigateUpArchive();
+    expect(panel.archiveSource!.archiveName, 'sample.zip');
+    expect(panel.archiveSource!.innerPath, 'nested/');
+    expect(panel.cursorItem!.name, 'inner.zip');
+    expect(location.isCurrent(), isFalse);
+    await panel.navigateUpArchive();
+    expect(panel.archiveSource!.innerPath, '');
+    panel.exitArchive();
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    expect(panel.currentPath, tempDir.path);
+  });
+
+  test(
+    'refresh after a nested workspace save opens the updated physical snapshot',
+    () async {
+      final inner = ZipEncoder().encode(
+        Archive()..addFile(ArchiveFile.bytes('edit.txt', [1])),
+      );
+      await File(zipPath).writeAsBytes(
+        ZipEncoder().encode(
+          Archive()..addFile(ArchiveFile.bytes('inner.zip', inner)),
+        ),
+      );
+      final panel = container.read(panelProvider(PanelSide.local));
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      await panel.refresh();
+      await panel.enterArchive(
+        panel.files!.firstWhere((file) => file.path == zipPath),
+      );
+      await panel.navigateInto(panel.files!.single);
+      final stale = panel.files!.single;
+      final location = panel.captureArchiveWorkspaceLocation();
+      final origin = panel.captureArchiveOrigin();
+      final backend = fileOperationBackend(
+        source: origin.source,
+        local: container.read(localFileServiceProvider),
+        isCurrent: () => origin.isCurrent,
+      );
+      final workspace = await ArchiveWorkspace.openNested(
+        backend,
+        location.file,
+        location.nestedMembers,
+        expectedOuterFingerprint: location.fingerprint,
+      );
+      workspace.replace('/edit.txt', Uint8List.fromList([2, 3]));
+      await workspace.save();
+      await workspace.close();
+      await panel.refresh();
+      expect(panel.archiveSource!.archiveName, 'inner.zip');
+      expect(await panel.readArchiveMember(panel.files!.single), [2, 3]);
+      await expectLater(
+        panel.readArchiveMember(stale),
+        throwsA(isA<ArchiveViewException>()),
+      );
+    },
+  );
 
   test('repairs a path with the home directory appended twice', () async {
     final home = Platform.environment['HOME']!;
@@ -167,7 +279,9 @@ void main() {
     await Future<void>.delayed(const Duration(milliseconds: 50));
 
     await panel.refresh();
-    await panel.enterArchive(panel.files!.firstWhere((file) => file.path == zipPath));
+    await panel.enterArchive(
+      panel.files!.firstWhere((file) => file.path == zipPath),
+    );
     expect(panel.isInArchive, isTrue);
 
     await panel.navigateToPath(tempDir.path);
@@ -176,23 +290,35 @@ void main() {
     expect(panel.currentPath, tempDir.path);
   });
 
-  test('a local archive in the right pane reads and returns to local storage', () async {
-    final panel = container.read(panelProvider(PanelSide.remote));
-    await Future<void>.delayed(const Duration(milliseconds: 50));
-    container.read(panelSourceProvider(PanelSide.remote).notifier)
-        .setSource(LocalPanelSource(tempDir.path));
-    await Future<void>.delayed(const Duration(milliseconds: 50));
-    final file = panel.files!.firstWhere((file) => file.path == zipPath);
-    expect(panel.originForFile(file)!.source, isA<LocalPanelSource>());
-    await panel.enterArchive(file);
-    expect(panel.archiveSource!.parent, isA<LocalPanelSource>());
-    final member = panel.files!.firstWhere((file) => file.name == 'hello.txt');
-    expect(String.fromCharCodes(await panel.readArchiveMember(member)), 'Hello');
-    await expectLater(panel.readArchiveMember(member, maxBytes: 4), throwsException);
-    panel.exitArchive();
-    await Future<void>.delayed(const Duration(milliseconds: 50));
-    expect(panel.isInArchive, isFalse);
-    expect(panel.currentPath, tempDir.path);
-    expect(panel.files!.any((file) => file.path == zipPath), isTrue);
-  });
+  test(
+    'a local archive in the right pane reads and returns to local storage',
+    () async {
+      final panel = container.read(panelProvider(PanelSide.remote));
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      container
+          .read(panelSourceProvider(PanelSide.remote).notifier)
+          .setSource(LocalPanelSource(tempDir.path));
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      final file = panel.files!.firstWhere((file) => file.path == zipPath);
+      expect(panel.originForFile(file)!.source, isA<LocalPanelSource>());
+      await panel.enterArchive(file);
+      expect(panel.archiveSource!.parent, isA<LocalPanelSource>());
+      final member = panel.files!.firstWhere(
+        (file) => file.name == 'hello.txt',
+      );
+      expect(
+        String.fromCharCodes(await panel.readArchiveMember(member)),
+        'Hello',
+      );
+      await expectLater(
+        panel.readArchiveMember(member, maxBytes: 4),
+        throwsException,
+      );
+      panel.exitArchive();
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      expect(panel.isInArchive, isFalse);
+      expect(panel.currentPath, tempDir.path);
+      expect(panel.files!.any((file) => file.path == zipPath), isTrue);
+    },
+  );
 }

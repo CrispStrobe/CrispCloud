@@ -49,6 +49,7 @@ class _Cloud extends Fake implements CloudStorageClient {
   };
   Completer<void>? delay;
   Completer<Uint8List>? pendingDownload;
+  Completer<void>? downloadStarted;
   final downloads = <String>[];
   Uint8List archiveBytes = Uint8List.fromList(
     ZipEncoder().encode(
@@ -68,13 +69,28 @@ class _Cloud extends Fake implements CloudStorageClient {
   }
 
   @override
+  Stream<List<int>> downloadStream(
+    String remotePath, {
+    Function(int, int)? onProgress,
+  }) async* {
+    downloads.add(remotePath);
+    downloadStarted?.complete();
+    yield pendingDownload == null
+        ? archiveBytes
+        : await pendingDownload!.future;
+  }
+
+  @override
   Future<Map<String, dynamic>> listPath(String path) async {
     paths.add(path);
     await delay?.future;
     return {
       'files': [
         for (final name in listings[path] ?? const <String>[])
-          {'name': name, 'size': 10},
+          {
+            'name': name,
+            'size': name == 'archive.zip' ? archiveBytes.length : 10,
+          },
       ],
       'folders': [
         for (final name in folders[path] ?? const <String>[]) {'name': name},
@@ -1003,6 +1019,8 @@ void main() {
   test(
     'remote archives in a left-pane result list use captured cloud storage',
     () async {
+      cloud.folders['/'] = ['two'];
+      cloud.listings['/two']!.add('archive.zip');
       final panel = container.read(panelProvider(PanelSide.local));
       await Future<void>.delayed(Duration.zero);
       container
@@ -1039,13 +1057,16 @@ void main() {
   test(
     'account change during archive download cannot publish old-account members',
     () async {
+      cloud.folders['/'] = ['two'];
+      cloud.listings['/two']!.add('archive.zip');
       final panel = await remote();
       panel.showSearchResults([
         item('/two/archive.zip'),
       ], origin: panel.captureRemoteSearchOrigin());
       cloud.pendingDownload = Completer<Uint8List>();
+      cloud.downloadStarted = Completer<void>();
       final opening = panel.enterArchive(panel.files!.single);
-      await Future<void>.delayed(Duration.zero);
+      await cloud.downloadStarted!.future;
       auth.connection(false);
       auth.connection(true);
       cloud.pendingDownload!.complete(cloud.archiveBytes);
@@ -1054,6 +1075,22 @@ void main() {
       expect(cloud.downloads, ['/two/archive.zip']);
     },
   );
+
+  test('a failed archive open keeps the verified result list usable', () async {
+    cloud.folders['/'] = ['two'];
+    cloud.listings['/two']!.add('archive.zip');
+    cloud.archiveBytes = Uint8List.fromList([1, 2, 3]);
+    final panel = await remote();
+    panel.showSearchResults([
+      item('/two/archive.zip'),
+    ], origin: panel.captureRemoteSearchOrigin());
+    final row = panel.files!.single;
+    await panel.enterArchive(row);
+    expect(panel.isInArchive, isFalse);
+    expect(panel.showingSearchResults, isTrue);
+    expect(identical(panel.files!.single, row), isTrue);
+    expect(panel.originForOperation(row)?.isCurrent, isTrue);
+  });
 
   test('refresh follows actual storage in either pane', () async {
     final left = container.read(panelProvider(PanelSide.local));

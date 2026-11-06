@@ -33,6 +33,7 @@ import 'trash_history_provider.dart';
 import '../services/native_file_operations.dart';
 import '../services/native_file_primitives.dart';
 import '../services/archive_service.dart';
+import '../services/archive_browser_session.dart';
 import '../services/archive_viewer_service.dart';
 import '../services/audit_service.dart';
 import '../services/cloud_storage_interface.dart' show CloudStorageClient;
@@ -295,6 +296,7 @@ class PanelNotifier extends ChangeNotifier {
       _pendingTabStorage = null;
       _leaveFileList();
       _listingGeneration++;
+      _clearArchiveState();
       _log.info(
         'Source switched: ${prev?.displayName} → ${next.displayName} (path=${next.currentPath})',
       );
@@ -1106,9 +1108,7 @@ class PanelNotifier extends ChangeNotifier {
     _verifiedListingGeneration = _listingGeneration;
     _isLoading = false;
     _isFlatView = false;
-    _archiveSource = null;
-    _archiveOrigin = null;
-    _archiveBytes = null;
+    _clearArchiveState();
     _selection.clear();
     _lastSelected = null;
     _itemToScrollTo = null;
@@ -1769,25 +1769,69 @@ class PanelNotifier extends ChangeNotifier {
 
   // --- Archive navigation ---
 
-  /// Enter a compressed archive for browsing.
-  /// Cached archive bytes for web browsing (native reads from disk each time).
-  Uint8List? _archiveBytes;
+  final List<_ArchivePanelFrame> _archiveFrames = [];
   PanelFileOrigin? _archiveOrigin;
+
+  void _clearArchiveState() {
+    final frames = List<_ArchivePanelFrame>.of(_archiveFrames);
+    _archiveFrames.clear();
+    _archiveSource = null;
+    _archiveOrigin = null;
+    for (final frame in frames.reversed) {
+      unawaited(
+        frame.session.close().catchError((Object error) {
+          _log.warn('archive cleanup failed', error);
+        }),
+      );
+    }
+  }
 
   PanelFileOrigin captureArchiveOrigin() {
     final origin = _archiveOrigin;
-    if (_isDisposed || !isInArchive || origin == null || !origin.isCurrent) {
+    if (_isDisposed ||
+        !isInArchive ||
+        origin == null ||
+        !origin.isCurrent ||
+        _archiveFrames.isEmpty ||
+        !_archiveFrames.last.session.isCurrent) {
       throw StateError('Reopen the archive from its original storage account.');
     }
     return origin;
   }
 
+  ArchiveWorkspaceLocation captureArchiveWorkspaceLocation() {
+    captureArchiveOrigin();
+    final frame = _archiveFrames.last;
+    return ArchiveWorkspaceLocation(
+      file: _archiveFrames.first.session.file,
+      fingerprint: _archiveFrames.first.session.fingerprint,
+      nestedMembers: List.unmodifiable(
+        _archiveFrames
+            .skip(1)
+            .map(
+              (entry) =>
+                  entry.session.file.path!.replaceFirst(RegExp(r'^/'), ''),
+            ),
+      ),
+      isCurrent: () =>
+          !_isDisposed &&
+          _archiveFrames.isNotEmpty &&
+          identical(_archiveFrames.last, frame) &&
+          frame.session.isCurrent,
+    );
+  }
+
   Future<void> enterArchive(FileItem file) async {
+    if (isInArchive) {
+      await _enterNestedArchive(file);
+      return;
+    }
     if (file.path == null && file.name.isEmpty) return;
     int? requestGeneration;
+    List<FileItem>? previousFiles;
+    var previousVerified = false;
+    ArchiveBrowserSession? opened;
     try {
-      // A list entry must be the exact captured result. For a regular folder,
-      // read-only archive callers may provide a same-path FileItem wrapper.
       final origin = _showingSearchResults
           ? captureOperationOrigin([file])
           : (originForOperation(file) ?? captureCurrentOrigin());
@@ -1807,96 +1851,157 @@ class PanelNotifier extends ChangeNotifier {
       if (tab?.lockMode == TabLockMode.newTab) {
         _createTabLocation(parentSource.currentPath, origin.storageReference);
       }
-      _leaveFileList();
+      previousFiles = _files;
+      previousVerified = _verifiedListingGeneration == _listingGeneration;
       final generation = ++_listingGeneration;
       requestGeneration = generation;
-      _archiveSource = const PanelSourceService().enterArchive(
+      _isLoading = true;
+      notifyListeners();
+      final backend = fileOperationBackend(
+        source: origin.source,
+        local: _localFileService,
+        isCurrent: () => !_isDisposed && origin.isCurrent,
+      );
+      opened = await ArchiveBrowserSession.open(
+        backend,
+        file.copyWith(path: archivePath),
+        isCancelled: () => _isDisposed || generation != _listingGeneration,
+      );
+      if (_isDisposed ||
+          generation != _listingGeneration ||
+          !origin.isCurrent) {
+        return;
+      }
+      _leaveFileList();
+      _clearArchiveState();
+      final source = const PanelSourceService().enterArchive(
         archivePath,
         parentSource,
       );
+      _archiveFrames.add(_ArchivePanelFrame(opened, source));
+      opened = null;
+      _archiveSource = source;
       _archiveOrigin = origin;
-      _archiveBytes = null;
-      _isLoading = true;
-      notifyListeners();
-      _log.info('enterArchive: $archivePath (${parentSource.displayName})');
-      Uint8List bytes;
-      if (origin.source is RemotePanelSource) {
-        bytes = await (origin.source as RemotePanelSource).client
-            .downloadFileBytes(archivePath);
-      } else {
-        if (!await _localFileService.ensureAccess(archivePath)) {
-          throw StateError('Access to the archive was not granted.');
-        }
-        bytes = await _localFileService.readFile(archivePath, fileItem: file);
-      }
-      if (_isDisposed || generation != _listingGeneration) return;
-      if (!origin.isCurrent) {
-        throw StateError(
-          'The storage account changed while opening the archive.',
-        );
-      }
-      _archiveBytes = bytes;
-      _isLoading = false;
+      _filterQuery = '';
+      _isFlatView = false;
       await _loadArchiveFiles();
-      if (!_isDisposed) notifyListeners();
-    } catch (e) {
+      _log.info('enterArchive: $archivePath (${parentSource.displayName})');
+    } catch (error) {
       if (_isDisposed ||
           (requestGeneration != null &&
               requestGeneration != _listingGeneration)) {
         return;
       }
-      _log.warn('archive open failed', e);
-      _archiveSource = null;
-      _archiveOrigin = null;
-      _archiveBytes = null;
+      _log.warn('archive open failed', error);
       _isLoading = false;
-      _ref.read(errorProvider).addError('Cannot open archive: $e');
+      if (previousVerified && identical(previousFiles, _files)) {
+        _verifiedListingGeneration = _listingGeneration;
+      }
+      _ref.read(errorProvider).addError('Cannot open archive: $error');
       notifyListeners();
+    } finally {
+      await opened?.close();
     }
   }
 
-  /// Navigate deeper into a folder within the archive.
-  Future<void> _navigateArchive(String innerPath) async {
-    if (_archiveSource == null) return;
-    _archiveSource = _archiveSource!.withPath(innerPath);
-    await _loadArchiveFiles();
+  bool _isCurrentArchiveRow(FileItem file) =>
+      _archiveFrames.isNotEmpty &&
+      _archiveFrames.last.session.isCurrent &&
+      (_files?.any((row) => identical(row, file)) ?? false);
+
+  Future<void> _enterNestedArchive(FileItem file) async {
+    if (!_isCurrentArchiveRow(file) ||
+        file.isFolder ||
+        file.path == null ||
+        !ArchiveService.isArchive(file.name)) {
+      return;
+    }
+    if (_archiveFrames.length >= kArchiveNestingLimit) {
+      _ref
+          .read(errorProvider)
+          .addError('Archive nesting is limited to 8 levels.');
+      return;
+    }
+    final parent = _archiveFrames.last;
+    final generation = ++_listingGeneration;
+    _isLoading = true;
     notifyListeners();
+    ArchiveBrowserSession? opened;
+    try {
+      opened = await ArchiveBrowserSession.open(
+        parent.session.backend,
+        file.copyWith(path: '/${file.path}'),
+        maxInputBytes: kArchiveReadLimit,
+        isCancelled: () => _isDisposed || generation != _listingGeneration,
+      );
+      if (_isDisposed ||
+          generation != _listingGeneration ||
+          !identical(_archiveFrames.lastOrNull, parent) ||
+          !parent.session.isCurrent) {
+        return;
+      }
+      final source = const PanelSourceService().enterArchive(
+        file.path!,
+        parent.source,
+      );
+      _archiveFrames.add(
+        _ArchivePanelFrame(opened, source, returnCursor: file.path),
+      );
+      opened = null;
+      _archiveSource = source;
+      await _loadArchiveFiles();
+    } catch (error) {
+      if (_isDisposed || generation != _listingGeneration) return;
+      _isLoading = false;
+      _ref.read(errorProvider).addError('Cannot open nested archive: $error');
+      notifyListeners();
+    } finally {
+      await opened?.close();
+    }
   }
 
-  /// Navigate up one level within the archive, or exit if at root.
+  Future<void> _navigateArchive(String innerPath) async {
+    if (_archiveFrames.isEmpty) return;
+    final frame = _archiveFrames.last;
+    final directory = frame.session.index.directoryPath(innerPath);
+    frame.source = frame.source.withPath(
+      directory.isEmpty ? '' : '$directory/',
+    );
+    _archiveSource = frame.source;
+    await _loadArchiveFiles();
+  }
+
   Future<void> navigateUpArchive() async {
-    if (_archiveSource == null) return;
-    final inner = _archiveSource!.innerPath;
+    if (_archiveFrames.isEmpty) return;
+    final inner = _archiveFrames.last.source.innerPath.replaceAll(
+      RegExp(r'/+$'),
+      '',
+    );
     if (inner.isEmpty) {
       exitArchive();
       return;
     }
-    // Go up one directory level within the archive
-    var parent = inner.endsWith('/')
-        ? inner.substring(0, inner.length - 1)
-        : inner;
-    final lastSlash = parent.lastIndexOf('/');
-    parent = lastSlash > 0 ? parent.substring(0, lastSlash + 1) : '';
-    _archiveSource = _archiveSource!.withPath(parent);
-    await _loadArchiveFiles();
-    notifyListeners();
+    final parent = p.posix.dirname(inner);
+    await _navigateArchive(parent == '.' ? '' : parent);
   }
 
-  /// Exit the archive and restore the parent directory listing.
+  /// A nested exit restores its exact enclosing directory and cursor. Only
+  /// leaving the outermost archive navigates back to physical storage.
   void exitArchive() {
-    final source = _archiveSource;
-    final origin = _archiveOrigin;
-    _archiveSource = null;
-    _archiveOrigin = null;
-    _archiveBytes = null;
-    if (source != null) {
-      if (source.parent.isRemote) {
-        _remotePath = p.posix.dirname(source.archivePath);
-      } else {
-        _localPath = p.dirname(source.archivePath);
-      }
+    if (_archiveFrames.isEmpty) return;
+    if (_archiveFrames.length > 1) {
+      final closed = _archiveFrames.removeLast();
+      _archiveSource = _archiveFrames.last.source;
+      unawaited(closed.session.close());
+      unawaited(_loadArchiveFiles(cursorPath: closed.returnCursor));
+      return;
     }
-    final restore = source != null && origin != null && origin.isCurrent
+    final source = _archiveFrames.first.source;
+    final origin = _archiveOrigin;
+    _listingGeneration++;
+    _clearArchiveState();
+    _isLoading = false;
+    final restore = origin != null && origin.isCurrent
         ? navigateToPath(
             source.parent.currentPath,
             origin: origin,
@@ -1918,8 +2023,6 @@ class PanelNotifier extends ChangeNotifier {
     );
   }
 
-  /// Leave an archive and go to the home directory. Used by the error banner
-  /// when a stale archive path cannot be listed.
   Future<void> navigateHome() async {
     if (isInArchive) {
       exitArchive();
@@ -1930,96 +2033,92 @@ class PanelNotifier extends ChangeNotifier {
     if (!_isDisposed) focusList();
   }
 
-  Future<void> _loadArchiveFiles() async {
-    final generation = ++_listingGeneration;
-    final source = _archiveSource;
-    if (source == null) return;
-    if (_archiveOrigin != null && !_archiveOrigin!.isCurrent) {
-      _files = [];
-      _ref
-          .read(errorProvider)
-          .addError(
-            'The archive source account changed. Open the archive again.',
-          );
-      return;
-    }
-    final bytes = _archiveBytes;
-    if (bytes == null) {
-      // Fallback for sources without cached bytes (legacy path).
-      if (source.parent.isRemote) {
-        _files = [];
-        _ref
-            .read(errorProvider)
-            .addError('Open this remote archive again to read its contents.');
-        return;
-      }
-      final files = await const PanelSourceService().listFiles(source);
-      if (_isDisposed || generation != _listingGeneration) return;
-      _files = files;
-      _sortFiles();
-      return;
-    }
-
-    ViewerArchive? archive;
+  Future<void> _loadArchiveFiles({String? cursorPath}) async {
+    ++_listingGeneration;
+    if (_archiveFrames.isEmpty) return;
     try {
-      archive = await openViewerArchive(bytes, name: source.archivePath);
-      final prefix = source.innerPath.isEmpty
-          ? ''
-          : (source.innerPath.endsWith('/')
-                ? source.innerPath
-                : '${source.innerPath}/');
-      final items = <FileItem>[];
-      final folders = <String>{};
-      for (final member in archive.members) {
-        var name = member.name;
-        if (name.startsWith('./')) name = name.substring(2);
-        if (prefix.isNotEmpty && !name.startsWith(prefix)) continue;
-        if (name == prefix || name == source.innerPath) continue;
-        final relative = prefix.isEmpty ? name : name.substring(prefix.length);
-        if (relative.isEmpty) continue;
-        final slash = relative.indexOf('/');
-        if (slash == -1) {
-          if (member.isFile) {
-            items.add(
-              FileItem(
-                name: relative,
-                path: '$prefix$relative',
-                isFolder: false,
-                size: member.size,
-              ),
-            );
-          }
-        } else {
-          final folder = relative.substring(0, slash);
-          if (folders.add(folder)) {
-            items.add(
-              FileItem(name: folder, path: '$prefix$folder/', isFolder: true),
-            );
-          }
+      captureArchiveOrigin();
+      final frame = _archiveFrames.last;
+      _files = frame.session.list(frame.source.innerPath);
+      _selection.clear();
+      _lastSelected = null;
+      _itemToScrollTo = null;
+      _cursorIndex = 0;
+      _sortFiles();
+      if (cursorPath != null) {
+        final index =
+            displayedFiles?.indexWhere((row) => row.path == cursorPath) ?? -1;
+        if (index >= 0) {
+          _cursorIndex = index;
+          _itemToScrollTo = displayedFiles![index];
         }
+      }
+    } catch (error) {
+      _files = [];
+      _ref.read(errorProvider).addError('Failed to read archive: $error');
+    }
+    _isLoading = false;
+    if (!_isDisposed) notifyListeners();
+  }
+
+  /// Refresh the physical snapshot and reopen the same nested route, so edits
+  /// committed from the workspace are visible instead of relisting stale bytes.
+  Future<void> _reloadArchiveFiles() async {
+    if (_archiveFrames.isEmpty) return;
+    final oldFrames = List<_ArchivePanelFrame>.of(_archiveFrames);
+    final origin = _archiveOrigin!;
+    final cursorPath = cursorItem?.path;
+    final generation = ++_listingGeneration;
+    final fresh = <_ArchivePanelFrame>[];
+    _isLoading = true;
+    notifyListeners();
+    try {
+      if (!origin.isCurrent) {
+        throw StateError('The archive source account changed.');
+      }
+      var backend = oldFrames.first.session.source;
+      for (var i = 0; i < oldFrames.length; i++) {
+        final previous = oldFrames[i];
+        final file = await backend.stat(previous.session.file.path!);
+        if (file == null) throw StateError('The archive was removed.');
+        final session = await ArchiveBrowserSession.open(
+          backend,
+          file,
+          maxInputBytes: i == 0 ? kArchiveBrowseInputLimit : kArchiveReadLimit,
+          isCancelled: () => _isDisposed || generation != _listingGeneration,
+        );
+        fresh.add(
+          _ArchivePanelFrame(
+            session,
+            previous.source,
+            returnCursor: previous.returnCursor,
+          ),
+        );
+        session.index.directoryPath(previous.source.innerPath);
+        backend = session.backend;
       }
       if (_isDisposed ||
           generation != _listingGeneration ||
-          !identical(_archiveSource, source)) {
+          !origin.isCurrent) {
         return;
       }
-      _files = items;
-      _sortFiles();
-    } on ArchivePasswordRequiredException {
+      _clearArchiveState();
+      _archiveFrames.addAll(fresh);
+      fresh.clear();
+      _archiveOrigin = origin;
+      _archiveSource = _archiveFrames.last.source;
+      await _loadArchiveFiles(cursorPath: cursorPath);
+    } catch (error) {
       if (_isDisposed || generation != _listingGeneration) return;
       _files = [];
-      _ref.read(errorProvider).addError('This archive is password-protected.');
-    } on ArchiveViewException catch (e) {
-      if (_isDisposed || generation != _listingGeneration) return;
-      _files = [];
-      _ref.read(errorProvider).addError('Failed to read archive: ${e.message}');
-    } catch (e) {
-      if (_isDisposed || generation != _listingGeneration) return;
-      _log.warn('archive listing failed', e);
-      _files = [];
-      _ref.read(errorProvider).addError('Failed to read archive: $e');
+      _selection.clear();
+      _isLoading = false;
+      _ref.read(errorProvider).addError('Failed to reload archive: $error');
+      notifyListeners();
     } finally {
-      await archive?.close();
+      for (final frame in fresh.reversed) {
+        await frame.session.close();
+      }
     }
   }
 
@@ -2124,7 +2223,14 @@ class PanelNotifier extends ChangeNotifier {
 
   String get currentPath {
     if (isInArchive) {
-      return '${_archiveSource!.archiveName}:/${_archiveSource!.innerPath}';
+      final route = _archiveFrames.indexed
+          .map(
+            (entry) => entry.$1 == 0
+                ? entry.$2.source.archiveName
+                : entry.$2.source.archivePath,
+          )
+          .join('!/');
+      return '$route:/${_archiveSource!.innerPath}';
     }
     if (_showingSearchResults && _fileListOrigin != null) {
       return _fileListOrigin!.source.currentPath;
@@ -2918,7 +3024,7 @@ class PanelNotifier extends ChangeNotifier {
           }
         }
       } else if (isInArchive) {
-        await _loadArchiveFiles();
+        await _reloadArchiveFiles();
       } else if (_isFlatView) {
         await _loadFlatFiles();
       } else {
@@ -2994,9 +3100,7 @@ class PanelNotifier extends ChangeNotifier {
   Future<bool> grantAccessToPath(String path) async {
     if (side != PanelSide.local && !kIsWeb) return false;
     if (isInArchive) {
-      _archiveSource = null;
-      _archiveOrigin = null;
-      _archiveBytes = null;
+      _clearArchiveState();
     }
     var target = path.isEmpty ? currentPath : path;
     if (_isArchiveVirtualPath(target)) {
@@ -3116,9 +3220,7 @@ class PanelNotifier extends ChangeNotifier {
     // ArchivePanelSource kept currentPath virtual and Home/breadcrumbs tried
     // to list "archive.zip:/inner/".
     if (isInArchive) {
-      _archiveSource = null;
-      _archiveOrigin = null;
-      _archiveBytes = null;
+      _clearArchiveState();
     }
     if (_isArchiveVirtualPath(path)) {
       final archive = path.split(':/').first;
@@ -3219,8 +3321,11 @@ class PanelNotifier extends ChangeNotifier {
     }
     // If we're inside an archive, navigate within it
     if (isInArchive) {
+      if (!_isCurrentArchiveRow(item)) return;
       if (item.isFolder && item.path != null) {
         await _navigateArchive(item.path!);
+      } else if (ArchiveService.isArchive(item.name)) {
+        await _enterNestedArchive(item);
       }
       return;
     }
@@ -4714,10 +4819,10 @@ class PanelNotifier extends ChangeNotifier {
     // This loader must never receive an archive's virtual path. If an archive
     // failed to open or a stale tab restored one, leave archive mode first.
     if (_archiveSource != null) {
-      final archivePath = _archiveSource!.archivePath;
-      _archiveSource = null;
-      _archiveOrigin = null;
-      _archiveBytes = null;
+      final archivePath =
+          _archiveFrames.firstOrNull?.source.archivePath ??
+          _archiveSource!.archivePath;
+      _clearArchiveState();
       if (side == PanelSide.local && archivePath.contains('/')) {
         _localPath = p.dirname(archivePath);
       }
@@ -4984,46 +5089,29 @@ class PanelNotifier extends ChangeNotifier {
     }
   }
 
-  /// Read one member of the currently opened archive for the internal viewer.
-  /// The archive is reopened metadata-only, so F3 works for files inside ZIP,
-  /// TAR, 7z and RAR archives that the panel is browsing.
+  /// Read the exact row in the current archive. A same-basename member from
+  /// another directory or a row retained from a previous archive is rejected.
   Future<Uint8List> readArchiveMember(
     FileItem file, {
     int maxBytes = kArchiveReadLimit,
   }) async {
-    final source = _archiveSource;
-    final bytes = _archiveBytes;
-    if (source == null ||
-        bytes == null ||
-        (_archiveOrigin != null && !_archiveOrigin!.isCurrent)) {
+    if (!_isCurrentArchiveRow(file) || file.isFolder || file.path == null) {
       throw const ArchiveViewException(
-        'This archive is no longer open. Return to the archive and try again.',
+        'This archive row is no longer current. Reopen it.',
       );
     }
-
-    ViewerArchive? archive;
-    try {
-      archive = await openViewerArchive(bytes, name: source.archivePath);
-      final wanted = (file.path ?? file.name);
-      String normalise(String name) =>
-          name.startsWith('./') ? name.substring(2) : name;
-      ViewerArchiveMember? match;
-      for (final member in archive.members) {
-        final name = normalise(member.name);
-        if (name == wanted || name == file.name) {
-          match = member;
-          break;
-        }
-      }
-      if (match == null || !match.isFile) {
-        throw ArchiveViewException(
-          'Could not find "${file.name}" inside ${source.archiveName}.',
-        );
-      }
-      return await archive.readMember(match, maxBytes: maxBytes);
-    } finally {
-      await archive?.close();
+    final frame = _archiveFrames.last;
+    final generation = _listingGeneration;
+    final bytes = await frame.session.read(file.path!, maxBytes: maxBytes);
+    if (_isDisposed ||
+        generation != _listingGeneration ||
+        !identical(_archiveFrames.lastOrNull, frame) ||
+        !frame.session.isCurrent) {
+      throw const ArchiveViewException(
+        'The archive changed while reading this member.',
+      );
     }
+    return bytes;
   }
 
   /// Return keyboard focus to this panel's file list.
@@ -5277,6 +5365,7 @@ class PanelNotifier extends ChangeNotifier {
   @override
   void dispose() {
     _isDisposed = true;
+    _clearArchiveState();
     _typeaheadResetTimer?.cancel();
     _refreshDebounce?.cancel();
     _viewSaveDebounce?.cancel();
@@ -5343,4 +5432,11 @@ bool _isPermissionDenied(FileSystemException error) {
   if (error is PathAccessException) return true;
   final code = error.osError?.errorCode;
   return code == 1 || code == 13;
+}
+
+class _ArchivePanelFrame {
+  _ArchivePanelFrame(this.session, this.source, {this.returnCursor});
+  final ArchiveBrowserSession session;
+  ArchivePanelSource source;
+  final String? returnCursor;
 }

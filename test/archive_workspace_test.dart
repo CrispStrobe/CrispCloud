@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:archive/archive.dart' as codecs;
 import 'package:crisp_cloud/services/archive_viewer_service.dart';
 import 'package:crisp_cloud/services/archive_workspace.dart';
 import 'package:crisp_cloud/services/file_operation_backend.dart';
@@ -63,6 +64,105 @@ Future<Uint8List> _archive(
 }
 
 void main() {
+  Uint8List zip(Map<String, List<int>> contents) {
+    final archive = codecs.Archive();
+    for (final entry in contents.entries) {
+      archive.addFile(codecs.ArchiveFile.bytes(entry.key, entry.value));
+    }
+    return Uint8List.fromList(codecs.ZipEncoder().encode(archive));
+  }
+
+  test('nested archive save repacks through the captured outer archive and can retry a failed upload', () async {
+    final inner = zip({'same.txt': utf8.encode('before')});
+    final original = zip({
+      'folder/inner.zip': inner,
+      'keep.txt': [4, 5],
+    });
+    final client = WorkflowFakeClient()..put('/outer.zip', original);
+    final backend = CloudOperationBackend(
+      client,
+      isCurrent: () => client.current,
+    );
+    final workspace = await ArchiveWorkspace.openNested(
+      backend,
+      (await backend.stat('/outer.zip'))!,
+      ['folder/inner.zip'],
+    );
+    addTearDown(workspace.close);
+    workspace.replace('/same.txt', Uint8List.fromList(utf8.encode('after')));
+    client.failUploads = true;
+    await expectLater(workspace.save(), throwsStateError);
+    expect(client.files['/outer.zip'], original);
+    expect(workspace.dirty, isTrue);
+    client.failUploads = false;
+    await workspace.save();
+    expect(workspace.dirty, isFalse);
+    expect(client.files.keys, ['/outer.zip']);
+    expect(
+      client.writes.every(
+        (path) => !path.contains('folder') && !path.contains('same.txt'),
+      ),
+      isTrue,
+    );
+    final outer = await openViewerArchive(
+      client.files['/outer.zip']!,
+      name: 'outer.zip',
+    );
+    addTearDown(outer.close);
+    expect(
+      await outer.readMember(
+        outer.members.firstWhere((m) => m.name == 'keep.txt'),
+      ),
+      [4, 5],
+    );
+    final changedInner = await openViewerArchive(
+      await outer.readMember(
+        outer.members.firstWhere((m) => m.name == 'folder/inner.zip'),
+      ),
+      name: 'inner.zip',
+    );
+    addTearDown(changedInner.close);
+    expect(
+      utf8.decode(await changedInner.readMember(changedInner.members.single)),
+      'after',
+    );
+  });
+
+  test('nested save refuses an externally replaced outer container and unsafe routes', () async {
+    final original = zip({
+      'folder/inner.zip': zip({
+        'inside.txt': [1],
+      }),
+    });
+    final client = WorkflowFakeClient()..put('/outer.zip', original);
+    final backend = CloudOperationBackend(
+      client,
+      isCurrent: () => client.current,
+    );
+    final file = (await backend.stat('/outer.zip'))!;
+    await expectLater(
+      ArchiveWorkspace.openNested(backend, file, ['../inner.zip']),
+      throwsA(isA<ArchiveViewException>()),
+    );
+    await expectLater(
+      ArchiveWorkspace.openNested(backend, file, ['inner.zip']),
+      throwsA(isA<ArchiveViewException>()),
+    );
+    final workspace = await ArchiveWorkspace.openNested(backend, file, [
+      'folder/inner.zip',
+    ]);
+    addTearDown(workspace.close);
+    workspace.replace('/inside.txt', Uint8List.fromList([2]));
+    final external = zip({
+      'external.txt': [3],
+    });
+    client.put('/outer.zip', external);
+    await expectLater(workspace.save(), throwsStateError);
+    expect(client.files['/outer.zip'], external);
+    expect(client.writes, isEmpty);
+    expect(workspace.dirty, isTrue);
+  });
+
   test(
     'external archive change during upload is caught before staged replacement',
     () async {
