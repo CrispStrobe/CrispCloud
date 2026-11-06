@@ -369,4 +369,20 @@ void main() {
     expect(store.copyNames, ['copy.pdf']);
     expect(find.text('sample.pdf *'), findsOneWidget);
   });
+  testWidgets('discarding unsaved changes closes without a disposal assertion', (
+    tester,
+  ) async {
+    final store = _MemoryPdfStore();
+    await _open(tester, store);
+    await _rotate(tester);
+    await tester.tap(_close);
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.descendant(of: _unsaved, matching: find.text('Discard')),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(PdfEditorDialog), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
 }

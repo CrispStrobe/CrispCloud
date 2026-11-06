@@ -34,6 +34,7 @@ import 'file_tree_view_stub.dart' if (dart.library.io) 'file_tree_view.dart';
 import 'panel_tab_bar.dart';
 import 'panel_header.dart';
 import '../l10n/app_localizations.dart';
+import '../l10n/access_and_fkey_strings.dart';
 import '../l10n/file_panel_strings.dart';
 import '../screens/screen_dialogs.dart' show showConnectionDialogScreen;
 
@@ -84,6 +85,7 @@ class _FilePanelState extends ConsumerState<FilePanel> {
     if (lastError != null &&
         lastError.isNotEmpty &&
         widget.side == PanelSide.local &&
+        lastAppError?.code != PanelErrorCode.permissionDenied &&
         lastError != _lastShownError) {
       _lastShownError = lastError;
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -131,6 +133,8 @@ class _FilePanelState extends ConsumerState<FilePanel> {
     final currentPath = panel.currentPath;
     final selection = panel.selection;
 
+    final panelSource = ref.watch(panelSourceProvider(widget.side));
+    final sourceIsRemote = !panelSource.isLocal;
     final layout = widget.side == PanelSide.local
         ? ref.watch(localViewModeProvider)
         : ref.watch(remoteViewModeProvider);
@@ -264,9 +268,8 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                     color: Theme.of(context).colorScheme.primary,
                     width: 2,
                   ),
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.primary.withValues(alpha: 0.08),
+                  color: Theme.of(context).colorScheme.primary
+                      .withValues(alpha: 0.08),
                 ),
                 child: Center(
                   child: Column(
@@ -508,9 +511,8 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                 }
               } catch (error) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text('$error')));
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(SnackBar(content: Text('$error')));
                 }
               }
             },
@@ -581,6 +583,8 @@ class _FilePanelState extends ConsumerState<FilePanel> {
     String currentPath,
     Set<FileItem> selection,
   ) {
+    final panelSource = ref.watch(panelSourceProvider(widget.side));
+    final sourceIsRemote = !panelSource.isLocal;
     final layout = widget.side == PanelSide.local
         ? ref.watch(localViewModeProvider)
         : ref.watch(remoteViewModeProvider);
@@ -652,7 +656,7 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                 ? const Center(child: CircularProgressIndicator())
                 : files.isEmpty && !visualLayout
                 ? Center(
-                    child: _isDragging && widget.side == PanelSide.remote
+                    child: _isDragging && sourceIsRemote
                         ? Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -670,17 +674,15 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                           )
                         : panel.showingSearchResults
                         ? Text(context.commanderTr("This file list is empty."))
-                        : widget.side == PanelSide.remote &&
-                              !ref.read(authProvider).isConnected
+                        : sourceIsRemote && !ref.read(authProvider).isConnected
                         ? Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(
                                 Icons.cloud_off,
                                 size: 56,
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurface.withValues(alpha: 0.3),
+                                color: Theme.of(context).colorScheme.onSurface
+                                    .withValues(alpha: 0.3),
                               ),
                               const SizedBox(height: 12),
                               Text(
@@ -697,12 +699,36 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                               ElevatedButton.icon(
                                 icon: const Icon(Icons.login, size: 18),
                                 label: Text(
-                                  AppLocalizations.of(
-                                    context,
-                                  )!.connectToCloudShort,
+                                  AppLocalizations.of(context)!
+                                      .connectToCloudShort,
                                 ),
                                 onPressed: () =>
                                     showConnectionDialogScreen(context),
+                              ),
+                            ],
+                          )
+                        : ref.watch(errorProvider).lastAppError?.code ==
+                              PanelErrorCode.permissionDenied
+                        ? Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.lock_outline, size: 56),
+                              const SizedBox(height: 12),
+                              Text(
+                                AppLocalizations.of(context)!.permissionDenied,
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              const SizedBox(height: 16),
+                              ElevatedButton.icon(
+                                icon: const Icon(Icons.folder_open, size: 18),
+                                label: Text(
+                                  AccessAndFKeyStrings(
+                                    Localizations.localeOf(context),
+                                  ).grantAccess,
+                                ),
+                                onPressed: () =>
+                                    panel.grantAccessToCurrentPath(),
                               ),
                             ],
                           )
@@ -721,9 +747,8 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                           right: 0,
                           bottom: 0,
                           child: Container(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.inverseSurface.withValues(alpha: 0.9),
+                            color: Theme.of(context).colorScheme.inverseSurface
+                                .withValues(alpha: 0.9),
                             padding: const EdgeInsets.symmetric(
                               horizontal: 12,
                               vertical: 4,
@@ -735,9 +760,9 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                                       ? Icons.filter_list
                                       : Icons.search,
                                   size: 16,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onInverseSurface,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onInverseSurface,
                                 ),
                                 const SizedBox(width: 8),
                                 Expanded(
@@ -748,9 +773,9 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                                         panel.filterQuery,
                                     style: TextStyle(
                                       fontSize: 13,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onInverseSurface,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onInverseSurface,
                                     ),
                                   ),
                                 ),
@@ -762,9 +787,9 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                                       '${panel.typeaheadMatchCount}',
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.onInverseSurface,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onInverseSurface,
                                       ),
                                     ),
                                   ),
@@ -773,9 +798,9 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                                   child: Icon(
                                     Icons.close,
                                     size: 16,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onInverseSurface,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onInverseSurface,
                                   ),
                                 ),
                               ],

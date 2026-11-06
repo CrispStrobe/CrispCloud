@@ -2819,7 +2819,8 @@ class PanelNotifier extends ChangeNotifier {
   /// Explicitly ask the OS for access to [path] (or the current directory),
   /// persist the security-scoped bookmark, and reload on success.
   Future<bool> grantAccessToPath(String path) async {
-    if (side != PanelSide.local && !kIsWeb) return false;
+    final source = _ref.read(panelSourceProvider(side));
+    if (!source.isLocal && !kIsWeb) return false;
     if (isInArchive) {
       _archiveSource = null;
       _archiveOrigin = null;

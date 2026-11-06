@@ -232,7 +232,13 @@ class MacosFileService
         return await Directory(path).exists();
       }
       final handle = await File(path).open();
-      await handle.close();
+      try {
+        // Opening metadata alone can succeed while the sandbox denies reads.
+        // Probe an actual byte so ensureAccess prompts for the folder.
+        await handle.read(1);
+      } finally {
+        await handle.close();
+      }
       return true;
     } catch (_) {
       return false;

@@ -314,9 +314,9 @@ void viewSelectedFile(BuildContext context, WidgetRef ref) {
   final activePanel = ref.read(activePanelProvider);
   final panel = ref.read(panelProvider(activePanel));
   // TC/DC view the file under the cursor, not the selection set.
-  final target =
-      panel.cursorItem ??
-      (panel.selection.isNotEmpty ? panel.selection.first : null);
+  final target = panel.selection.isNotEmpty
+      ? panel.selection.first
+      : panel.cursorItem;
   if (target == null || target.isFolder) return;
   // Full-screen DC-style viewer: text/ASCII/binary/hex/image/markdown/PDF/
   // media/font/CSV/office/archive with streaming hex for huge local files.
@@ -399,6 +399,12 @@ Future<void> _editFile(
       return;
     }
     await showFileEditorDialog(context, ref, target, side);
+  } catch (error) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not open editor: $error')));
+    }
   } finally {
     panel.restoreCursorAndFocus(target);
   }
