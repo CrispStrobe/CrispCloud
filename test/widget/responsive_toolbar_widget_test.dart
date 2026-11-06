@@ -8,7 +8,8 @@
 import 'dart:typed_data';
 
 import 'package:drift/native.dart';
-import 'package:flutter/foundation.dart' show TargetPlatform, debugDefaultTargetPlatformOverride, kIsWeb;
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, debugDefaultTargetPlatformOverride, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -40,8 +41,8 @@ class _MockCloudClient extends CloudStorageClient {
   final bool _connected;
 
   _MockCloudClient({String name = 'Mock', bool connected = false})
-      : _name = name,
-        _connected = connected;
+    : _name = name,
+      _connected = connected;
 
   @override
   String get providerName => _name;
@@ -54,8 +55,11 @@ class _MockCloudClient extends CloudStorageClient {
   @override
   String get rootPath => '/';
   @override
-  Future<void> login(String email, String password,
-      {String? twoFactorCode}) async {}
+  Future<void> login(
+    String email,
+    String password, {
+    String? twoFactorCode,
+  }) async {}
   @override
   Future<bool> is2faNeeded(String email) async => false;
   @override
@@ -65,16 +69,23 @@ class _MockCloudClient extends CloudStorageClient {
   @override
   Future<Map<String, dynamic>> listPath(String path) async => {};
   @override
-  Future<void> uploadFile(List<int> fileData, String fileName,
-      String targetPath,
-      {Function(int, int)? onProgress}) async {}
+  Future<void> uploadFile(
+    List<int> fileData,
+    String fileName,
+    String targetPath, {
+    Function(int, int)? onProgress,
+  }) async {}
   @override
-  Future<void> downloadFileByPath(String remotePath, String localPath,
-      {Function(int, int)? onProgress}) async {}
+  Future<void> downloadFileByPath(
+    String remotePath,
+    String localPath, {
+    Function(int, int)? onProgress,
+  }) async {}
   @override
-  Future<Uint8List> downloadFileBytes(String remotePath,
-      {Function(int, int)? onProgress}) async =>
-      Uint8List(0);
+  Future<Uint8List> downloadFileBytes(
+    String remotePath, {
+    Function(int, int)? onProgress,
+  }) async => Uint8List(0);
   @override
   Future<void> createFolderPath(String path) async {}
   @override
@@ -99,18 +110,18 @@ class _TestAuthNotifier extends AuthNotifier {
     Ref ref, {
     required bool isConnected,
     required String providerName,
-  })  : _mockConnected = isConnected,
-        _mockName = providerName,
-        super(
-          ref,
-          initialProvider: CloudProvider.filen,
-          config: FilenConfigService(
-            configPath: '/tmp/rt_widget_test',
-            secureStorage: InMemorySecureStorage(),
-          ),
-          configPath: '/tmp/rt_widget_test',
-          secureStorage: InMemorySecureStorage(),
-        );
+  }) : _mockConnected = isConnected,
+       _mockName = providerName,
+       super(
+         ref,
+         initialProvider: CloudProvider.filen,
+         config: FilenConfigService(
+           configPath: '/tmp/rt_widget_test',
+           secureStorage: InMemorySecureStorage(),
+         ),
+         configPath: '/tmp/rt_widget_test',
+         secureStorage: InMemorySecureStorage(),
+       );
 
   @override
   bool get isConnected => _mockConnected;
@@ -124,10 +135,9 @@ class _TestAuthNotifier extends AuthNotifier {
 class _TestPanelNotifier extends PanelNotifier {
   final List<FileItem> _mockFiles;
 
-  _TestPanelNotifier(Ref ref, PanelSide side,
-      {List<FileItem> files = const []})
-      : _mockFiles = files,
-        super(ref, side);
+  _TestPanelNotifier(Ref ref, PanelSide side, {List<FileItem> files = const []})
+    : _mockFiles = files,
+      super(ref, side);
 
   @override
   List<FileItem>? get files => _mockFiles;
@@ -170,8 +180,13 @@ List<Override> _baseOverrides({
   final db = SyncDatabase.forTesting(NativeDatabase.memory());
   return [
     secureStorageProvider.overrideWithValue(InMemorySecureStorage()),
-    authProvider.overrideWith((ref) => _TestAuthNotifier(ref,
-        isConnected: authConnected, providerName: providerName)),
+    authProvider.overrideWith(
+      (ref) => _TestAuthNotifier(
+        ref,
+        isConnected: authConnected,
+        providerName: providerName,
+      ),
+    ),
     activePanelProvider.overrideWith((ref) => PanelSide.local),
     transferProvider.overrideWith((ref) => _TestTransferNotifier(ref)),
     panelProvider(PanelSide.local)
@@ -252,12 +267,10 @@ void main() {
   // =========================================================================
 
   group('AppBar on wide screen (>800px)', () {
-    testWidgets('shows scrollable toolbar with action buttons',
-        (tester) async {
-      await tester.pumpWidget(_wrapScreen(
-        width: 1200,
-        overrides: _baseOverrides(),
-      ));
+    testWidgets('shows scrollable toolbar with action buttons', (tester) async {
+      await tester.pumpWidget(
+        _wrapScreen(width: 1200, overrides: _baseOverrides()),
+      );
       await tester.pump();
 
       // The wide layout wraps toolbar buttons in a horizontal SingleChildScrollView.
@@ -267,8 +280,11 @@ void main() {
       final hasHorizontal = scrollViews.any(
         (sv) => sv.scrollDirection == Axis.horizontal,
       );
-      expect(hasHorizontal, isTrue,
-          reason: 'Wide AppBar should have a horizontal SingleChildScrollView');
+      expect(
+        hasHorizontal,
+        isTrue,
+        reason: 'Wide AppBar should have a horizontal SingleChildScrollView',
+      );
 
       // Core buttons always visible in the scrollable row.
       expect(find.byTooltip('Swap Panels (Ctrl+U)'), findsOneWidget);
@@ -277,12 +293,12 @@ void main() {
       expect(find.byTooltip('More actions'), findsOneWidget);
     });
 
-    testWidgets('shows "CrispCloud" title text in scrollable row',
-        (tester) async {
-      await tester.pumpWidget(_wrapScreen(
-        width: 1200,
-        overrides: _baseOverrides(),
-      ));
+    testWidgets('shows "CrispCloud" title text in scrollable row', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrapScreen(width: 1200, overrides: _baseOverrides()),
+      );
       await tester.pump();
 
       // The wide layout embeds the app title as a Text widget inside the
@@ -290,23 +306,24 @@ void main() {
       expect(find.text('CrispCloud'), findsOneWidget);
     });
 
-    testWidgets('shows Connect button when not authenticated',
-        (tester) async {
-      await tester.pumpWidget(_wrapScreen(
-        width: 1200,
-        overrides: _baseOverrides(authConnected: false),
-      ));
+    testWidgets('shows Connect button when not authenticated', (tester) async {
+      await tester.pumpWidget(
+        _wrapScreen(
+          width: 1200,
+          overrides: _baseOverrides(authConnected: false),
+        ),
+      );
       await tester.pump();
 
       expect(find.text('Connect'), findsOneWidget);
     });
 
-    testWidgets('overflow menu contains secondary actions on wide screen',
-        (tester) async {
-      await tester.pumpWidget(_wrapScreen(
-        width: 1200,
-        overrides: _baseOverrides(),
-      ));
+    testWidgets('overflow menu contains secondary actions on wide screen', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrapScreen(width: 1200, overrides: _baseOverrides()),
+      );
       await tester.pump();
 
       // Tap the overflow (more) menu.
@@ -329,24 +346,22 @@ void main() {
   });
 
   group('AppBar on narrow screen (<=800px)', () {
-    testWidgets('shows overflow menu instead of all buttons',
-        (tester) async {
-      await tester.pumpWidget(_wrapScreen(
-        width: 600,
-        overrides: _baseOverrides(),
-      ));
+    testWidgets('shows overflow menu instead of all buttons', (tester) async {
+      await tester.pumpWidget(
+        _wrapScreen(width: 600, overrides: _baseOverrides()),
+      );
       await tester.pump();
 
       // Overflow popup menu is present.
       expect(find.byTooltip('More actions'), findsOneWidget);
     });
 
-    testWidgets('overflow menu opens and shows all secondary actions',
-        (tester) async {
-      await tester.pumpWidget(_wrapScreen(
-        width: 600,
-        overrides: _baseOverrides(),
-      ));
+    testWidgets('overflow menu opens and shows all secondary actions', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrapScreen(width: 600, overrides: _baseOverrides()),
+      );
       await tester.pump();
 
       // Tap the overflow menu.
@@ -367,24 +382,22 @@ void main() {
       expect(find.text('About'), findsOneWidget);
     });
 
-    testWidgets('keeps swap panels button visible on narrow screen',
-        (tester) async {
-      await tester.pumpWidget(_wrapScreen(
-        width: 600,
-        overrides: _baseOverrides(),
-      ));
+    testWidgets('keeps swap panels button visible on narrow screen', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrapScreen(width: 600, overrides: _baseOverrides()),
+      );
       await tester.pump();
 
       // Swap panels is an essential button that stays directly in the AppBar.
       expect(find.byTooltip('Swap Panels (Ctrl+U)'), findsOneWidget);
     });
 
-    testWidgets('shows title text in AppBar on narrow screen',
-        (tester) async {
-      await tester.pumpWidget(_wrapScreen(
-        width: 600,
-        overrides: _baseOverrides(),
-      ));
+    testWidgets('shows title text in AppBar on narrow screen', (tester) async {
+      await tester.pumpWidget(
+        _wrapScreen(width: 600, overrides: _baseOverrides()),
+      );
       await tester.pump();
 
       // On narrow screens the AppBar.title shows the app name.
@@ -406,10 +419,9 @@ void main() {
     testWidgets('shows terminal toggle on desktop platform', (tester) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.linux;
       try {
-        await tester.pumpWidget(_wrapScreen(
-          width: 1200,
-          overrides: _baseOverrides(),
-        ));
+        await tester.pumpWidget(
+          _wrapScreen(width: 1200, overrides: _baseOverrides()),
+        );
         await tester.pump();
 
         // On desktop, a terminal toggle button is shown directly in the wide toolbar.
@@ -419,14 +431,14 @@ void main() {
       }
     });
 
-    testWidgets('shows mount button in overflow menu on desktop platform',
-        (tester) async {
+    testWidgets('shows mount button in overflow menu on desktop platform', (
+      tester,
+    ) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.linux;
       try {
-        await tester.pumpWidget(_wrapScreen(
-          width: 1200,
-          overrides: _baseOverrides(),
-        ));
+        await tester.pumpWidget(
+          _wrapScreen(width: 1200, overrides: _baseOverrides()),
+        );
         await tester.pump();
 
         // Open the overflow menu to see desktop-only items.
@@ -441,40 +453,38 @@ void main() {
       }
     });
 
-    testWidgets('hides terminal button on mobile platform',
-        (tester) async {
+    testWidgets('hides terminal button on mobile platform', (tester) async {
       // android is the default in flutter_test, but be explicit.
       debugDefaultTargetPlatformOverride = TargetPlatform.android;
       try {
-        await tester.pumpWidget(_wrapScreen(
-          width: 1200,
-          overrides: _baseOverrides(),
-        ));
+        await tester.pumpWidget(
+          _wrapScreen(width: 1200, overrides: _baseOverrides()),
+        );
         await tester.pump();
 
-        // No terminal toggle icon button in the wide toolbar on mobile.
-        expect(find.byTooltip('Show Terminal'), findsNothing);
+        // The real terminal is available on mobile as an SSH gateway.
+        expect(find.byTooltip('Show Terminal'), findsOneWidget);
         expect(find.byTooltip('Hide Terminal'), findsNothing);
       } finally {
         debugDefaultTargetPlatformOverride = null;
       }
     });
 
-    testWidgets('hides terminal and mount in overflow menu on mobile',
-        (tester) async {
+    testWidgets('hides terminal and mount in overflow menu on mobile', (
+      tester,
+    ) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.android;
       try {
-        await tester.pumpWidget(_wrapScreen(
-          width: 600,
-          overrides: _baseOverrides(),
-        ));
+        await tester.pumpWidget(
+          _wrapScreen(width: 600, overrides: _baseOverrides()),
+        );
         await tester.pump();
 
         await tester.tap(find.byTooltip('More actions'));
         await tester.pump(const Duration(milliseconds: 300));
 
-        // Desktop-only entries must not appear in the overflow menu on mobile.
-        expect(find.text('Show Terminal'), findsNothing);
+        // The SSH terminal remains available on mobile; native mounts do not.
+        expect(find.text('Show Terminal'), findsOneWidget);
         expect(find.text('Hide Terminal'), findsNothing);
         expect(find.text('Mount as Drive'), findsNothing);
       } finally {
@@ -488,12 +498,12 @@ void main() {
   // =========================================================================
 
   group('FileToolbar responsive', () {
-    testWidgets('wraps action buttons in a horizontal ScrollView',
-        (tester) async {
-      await tester.pumpWidget(_wrapToolbar(
-        width: 300,
-        overrides: _baseOverrides(),
-      ));
+    testWidgets('wraps action buttons in a horizontal ScrollView', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrapToolbar(width: 300, overrides: _baseOverrides()),
+      );
       await tester.pump();
 
       // The FileToolbar should contain a SingleChildScrollView for
@@ -504,15 +514,17 @@ void main() {
       final hasHorizontal = scrollViews.any(
         (sv) => sv.scrollDirection == Axis.horizontal,
       );
-      expect(hasHorizontal, isTrue,
-          reason: 'FileToolbar should have a horizontal SingleChildScrollView');
+      expect(
+        hasHorizontal,
+        isTrue,
+        reason: 'FileToolbar should have a horizontal SingleChildScrollView',
+      );
     });
 
     testWidgets('shows core navigation buttons', (tester) async {
-      await tester.pumpWidget(_wrapToolbar(
-        width: 800,
-        overrides: _baseOverrides(),
-      ));
+      await tester.pumpWidget(
+        _wrapToolbar(width: 800, overrides: _baseOverrides()),
+      );
       await tester.pump();
 
       expect(find.byTooltip('Up (Backspace)'), findsOneWidget);
@@ -522,10 +534,9 @@ void main() {
     });
 
     testWidgets('shows path text', (tester) async {
-      await tester.pumpWidget(_wrapToolbar(
-        width: 800,
-        overrides: _baseOverrides(),
-      ));
+      await tester.pumpWidget(
+        _wrapToolbar(width: 800, overrides: _baseOverrides()),
+      );
       await tester.pump();
 
       expect(find.text('/home/test'), findsOneWidget);
@@ -537,26 +548,30 @@ void main() {
   // =========================================================================
 
   group('Layout preset selector', () {
-    testWidgets('layout presets enum contains Commander, Explorer, Gallery',
-        (tester) async {
+    testWidgets('layout presets enum contains Commander, Explorer, Gallery', (
+      tester,
+    ) async {
       // The LayoutPreset enum drives the layout but the selector UI is
       // accessed via the overflow menu rather than a dedicated toolbar button.
       // Verify the enum values exist so the persistence layer is intact.
-      expect(LayoutPreset.values, containsAll([
-        LayoutPreset.commander,
-        LayoutPreset.explorer,
-        LayoutPreset.gallery,
-      ]));
+      expect(
+        LayoutPreset.values,
+        containsAll([
+          LayoutPreset.commander,
+          LayoutPreset.explorer,
+          LayoutPreset.gallery,
+        ]),
+      );
     });
 
-    testWidgets('dual panel toggle is accessible on wide screen',
-        (tester) async {
+    testWidgets('dual panel toggle is accessible on wide screen', (
+      tester,
+    ) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.linux;
       try {
-        await tester.pumpWidget(_wrapScreen(
-          width: 1200,
-          overrides: _baseOverrides(),
-        ));
+        await tester.pumpWidget(
+          _wrapScreen(width: 1200, overrides: _baseOverrides()),
+        );
         await tester.pump();
 
         // The dual-panel toggle is always visible in the wide toolbar row.
@@ -568,14 +583,14 @@ void main() {
       }
     });
 
-    testWidgets('tree sidebar toggle is accessible on wide screen',
-        (tester) async {
+    testWidgets('tree sidebar toggle is accessible on wide screen', (
+      tester,
+    ) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.linux;
       try {
-        await tester.pumpWidget(_wrapScreen(
-          width: 1200,
-          overrides: _baseOverrides(),
-        ));
+        await tester.pumpWidget(
+          _wrapScreen(width: 1200, overrides: _baseOverrides()),
+        );
         await tester.pump();
 
         // Tree sidebar toggle is always in the wide toolbar.
