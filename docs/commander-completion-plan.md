@@ -8,7 +8,33 @@ in the parity audit. Development checkpoints are pushed incrementally to
 Baseline: `0728973` (the first Commander implementation). This document records
 implementation status, not a claim of universal Total/Double Commander parity.
 
-## Delivery status
+## Current completion review
+
+**Feature completion is still under verification in draft PR #15.** The earlier
+checkboxes recorded broad areas as delivered but did not establish that each
+promised workflow worked. A source-level review on 6 November found missing
+selection actions, buffered sync transfers, incomplete directory/native metadata,
+archive filtering and nested-navigation gaps, background conflict handling,
+and viewer/comparison limits. This follow-up implements those behaviors and
+records the remaining acceptance work explicitly.
+
+| Workflow | Current follow-up state | Acceptance evidence |
+| --- | --- | --- |
+| Sync copy, move and Keep both | Staged streaming with reviewed-row validation | Stream-only 33 MiB upload, failed replacement, same-size external edit, cancellation |
+| Saved sync sources and cloud-only files | Account/device/root binding, explicit legacy rebind, safe placeholders and hydration | Wrong account/endpoint/bucket/device, old queued token, placeholder must not delete remote original, verified eviction |
+| Transfer metadata | Post-order folder metadata, source retention, selective reads; native portability review in progress | File/folder metadata failure, retry without recopy, Linux ownership/xattrs/access/default ACLs; macOS/Windows need their own CI evidence |
+| Duplicate names and rate controls | Configurable template and cancellable client stream rate | Preview/late collision/recovery consistency; pause/cancel/multiple-file byte pacing |
+| Selection and saved filters | Same extension/stem/parent, paths as marks, exclusion consistency | Captured source, same path on different accounts, list/cursor unchanged, Shift+Numpad routes |
+| Content and archive search | Full-stream literal search; bounded regex/Office/archive extraction with reported limits | Hit beyond 64 MiB, split encodings, late read failure, archive dates/exclusions and retained member evidence |
+| Background Ask transfers | Waiting state and Resolve action; does not occupy a worker | Restart/revalidate/resolve, durable cancel, later jobs continue |
+| Bulk attributes | Read-only preview and per-item verified application | Stale source/file/metadata, child-before-parent, skipped links, failed child retains parent, German/Arabic controls |
+| Large-file viewer | Full-file byte search, explicit encodings and bounded text windows | Match after 64 MiB, chunk-boundary matches, cancel/late changes, UTF-16 and distant text navigation |
+| Nested archives | Implementation checkpoint ready for integration | Generated 257 MiB native stream, exact member identity, parent restoration, nested save/retry and outer-file conflict |
+| Text/binary comparison | Implementation in progress | Per-side encoding and navigable binary differences still need integrated acceptance |
+| Background sync recovery | Implementation in progress | Separate-isolate journals must not share an unsafe writer; foreground recovery discovery required |
+| Final integration | In progress | Current-head analysis, deterministic app suite, focused platform tests and builds; earlier baseline CI is not evidence for new code |
+
+## Delivery history
 
 The implementation reached `main` through
 [PR #13](https://github.com/CrispStrobe/CrispCloud/pull/13) at `0b35b16` on
@@ -74,12 +100,12 @@ for the validation scope and platform boundaries.
 - [x] Additional size/date/content decisions and filter templates.
 - [x] Native and provider-side exact-destination fast paths with completion checks.
 - [x] Safe empty-directory cleanup and empty-result exclusion.
-- [x] Capability-based metadata, link, allocation and copy-on-write behavior.
+- [ ] Capability-based metadata, link, allocation and copy-on-write behavior.
 - [x] Separate data-copy and metadata-failure outcomes.
 
 ## 5. Recovery, queue and scale
 
-- [x] Persist queued jobs and validated resumable transfer state.
+- [ ] Persist queued jobs and validated resumable transfer state.
 - [x] Resume interrupted/retry remaining/restart with source-version checks.
 - [x] Queue reorder/priority/concurrency controls and waiting-for-decision state.
 - [x] Bounded streaming/spooling and incremental large-tree planning.
@@ -89,14 +115,14 @@ for the validation scope and platform boundaries.
 
 - [x] Unified recursive search, scope/exclusions/content options and faithful presets.
 - [x] Compare/review/execute synchronization with per-item decisions.
-- [x] Editable text merge, binary comparison and large-file handling.
-- [x] Consistent archive member copy-out and supported edit/repack operations.
+- [ ] Editable text merge, binary comparison and large-file handling.
+- [ ] Consistent archive member copy-out and supported edit/repack operations.
 - [x] Native file clipboard copy/cut/paste integration.
 - [x] Selected-file viewer navigation, reload/tail and remote read capabilities.
 - [x] Functional custom-command configuration/execution and extension lifecycle.
 - [x] Tab groups/locks, paired source-aware locations and column profiles.
 - [x] Checksum/split manifests, missing-part checks and cancellation.
-- [x] Keyboard/accessibility/localization completion for the added workflows.
+- [ ] Keyboard/accessibility/localization completion for the added workflows.
 
 ## Acceptance scenarios
 
@@ -133,7 +159,8 @@ for the validation scope and platform boundaries.
   comparison, integrity, extension and provider-action controls are localized
   across all nine app languages, with narrow German/Arabic layout regressions.
   Command palette keyboard navigation, locale changes and dialog handoff are
-  covered by focused tests. The Commander catalog contains 807 keys.
+  covered by focused tests. New follow-up controls are checked against the
+  expanded catalog and are included in the final integration gate.
 - Parallel lanes use isolated worktrees. Finished checkpoints are integrated and
   pushed separately. Platform/provider boundaries remain explicit in the
   [workflow guide](commander-file-operations.md).

@@ -268,7 +268,13 @@ class FileListView extends ConsumerWidget {
             if (event.logicalKey == LogicalKeyboardKey.numpadAdd ||
                 event.logicalKey == LogicalKeyboardKey.numpadSubtract) {
               if (p.renamingItem != null) return KeyEventResult.ignored;
-              if (event is KeyDownEvent) {
+              if (event is KeyDownEvent && isShift) {
+                p.selectSameExtension(
+                  action: event.logicalKey == LogicalKeyboardKey.numpadAdd
+                      ? SelectionAction.select
+                      : SelectionAction.deselect,
+                );
+              } else if (event is KeyDownEvent) {
                 showPatternSelectionDialog(
                   context,
                   ref,

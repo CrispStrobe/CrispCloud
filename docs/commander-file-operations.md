@@ -7,7 +7,7 @@ determines which account an operation changes.
 
 Development is checkpointed on `feature/commander-file-operations`. This guide
 describes integrated behavior; the [completion plan](commander-completion-plan.md)
-records the delivered scope. Earlier limits concerning session-only lists,
+records current implementation and acceptance status. Earlier limits concerning session-only lists,
 individual rename undo, rename cycles and basic copy dialogs are superseded.
 
 ## Entry points
@@ -16,6 +16,9 @@ individual rename undo, rename cycles and basic copy dialogs are superseded.
 | --- | --- | --- |
 | Multi-Rename | Ctrl+M | More actions, Edit menu, palette, selection context menu |
 | Select / deselect by wildcard or regex | Numpad + / - | Edit menu, palette, file-list controls |
+| Select / deselect same extension | Shift+Numpad + / - | Edit menu, palette, pattern dialog |
+| Load selection from paths | — | More actions, Edit menu, palette, file-list controls |
+| Change attributes | — | Properties, selection context menu, Edit menu, palette |
 | Invert selection | Numpad * | Edit menu |
 | Copy / move with options | F5 / F6 | More actions, context menu, selection bar, palette |
 | File clipboard copy / cut / paste | Ctrl+C / Ctrl+X / Ctrl+V | Context menu, native clipboard where supported |
@@ -62,13 +65,20 @@ endpoint/bucket namespace without storing credentials.
 
 Recursive search supports explicit roots, recursion/depth, wildcard/regex names,
 directory exclusions, hidden items, files/folders, extensions, size/date ranges,
-and bounded content matching with encoding options. Feed all or marked search
+and content matching with encoding options. Literal plain-text searches consume
+the entire source stream with bounded memory. Regex, Office extraction and archive
+member content retain explicit extraction budgets (64 MiB by default); exceeding
+a budget is reported rather than treated as a non-match. Feed all or marked search
 hits to a source-aware panel list. Branch view uses the recursive search engine
 for local and cloud sources, with progress and cancellation.
 
 Select by pattern adds, removes, toggles or replaces marks on visible rows.
 Parent-directory entries are never marked. Selection memory, same-name/
-extension/path commands and pattern history complement the dialog.
+extension/parent-folder commands and pattern history complement the dialog.
+Same name compares the stem without its final extension. Path-list selection
+marks only verified visible rows in a chosen source, retaining the panel contents
+and cursor. Saved directory exclusions also apply to ancestors in flat lists.
+Archive matches retain their member paths and evidence in saved collections.
 
 - `*` matches any sequence; `?` matches one character.
 - `;` separates alternatives, such as `*.jpg;*.png`.
@@ -126,6 +136,13 @@ another preview. Mixed-account collections are reviewed as captured source
 groups against one fixed destination, protecting all selected sources.
 
 - Exact destination names, destination masks, relative paths, profiles and defaults.
+- Keep-both templates use `{name}`, `{ext}` and a required `{counter}` or
+  `{counter:000}`. Preview, late conflicts, profiles and recovery use the same
+  filename-only template; the counter always starts from the original base name.
+- Optional client streaming rate in KiB/s, retained in profiles and recovery.
+  This paces bytes supplied to the copy stream. Verification and native or
+  server-side copies are excluded; providers that spool uploads can still burst
+  on the later network send, so this is not a network bandwidth guarantee.
 - Ask, skip, replace, newer/larger/smaller decisions, Keep both, verified partial
   resume and explicit append. Unknown metadata cannot authorize a comparison.
 - Per-conflict rename, compare and apply-to-all, including rename-existing-target.
@@ -139,8 +156,10 @@ groups against one fixed destination, protecting all selected sources.
 - Stop/continue-on-error and separate content-copy versus metadata-failure results.
 
 Moves delete sources only after confirmed destination data. Failed, skipped,
-filtered and cancelled rows retain sources. Metadata failure may leave move
-cleanup pending. Staging and backup paths remain visible when restoration
+filtered and cancelled rows retain sources. Metadata failure leaves move cleanup pending and retains the source.
+Folder metadata is applied after descendants; a child requiring retry prevents
+restrictive parent metadata from blocking that retry. Missing requested metadata
+is reported as a failure, rather than silently omitted. Staging and backup paths remain visible when restoration
 cannot finish.
 
 Durable transfer history retains jobs, entry states, staging/backup evidence,
@@ -151,8 +170,28 @@ validates the existing prefix and original source.
 
 Concurrency, priority and pending order persist. Paused pending jobs do not occupy
 running slots; cancelled queued jobs do not start. Foreground conflicts wait for
-a decision. Background queuing requires choices that can finish without an
-abandoned dialog. Clearing visible outcomes retains durable recovery records.
+a decision. Recoverable background jobs with Ask enter a persisted waiting state
+and release their worker slot. Resolve conflict in the operations panel opens
+fresh source/account/file validation before continuing through the usual conflict
+chooser. Temporary storage without recovery support keeps conflict review in the
+open foreground dialog. Clearing visible outcomes retains durable recovery records.
+
+## Reviewed bulk attributes
+
+Change attributes accepts a multi-file selection, including verified rows from
+several sources. Blank fields retain their existing values. Permissions are
+entered as three or four octal digits; ownership uses the backend's IDs. Modified
+and accessed timestamps use an explicit local-time or UTC interpretation, and
+invalid calendar dates are rejected. Each row is capability-checked during the
+read-only preview. Unsupported rows and links are shown individually.
+
+Applying revisits the captured account, file version and requested metadata before
+each write, then reads those fields back. Recursive edits process descendants
+before parents. Cancellation stops remaining items; a failed child retains its
+parent's attributes for retry. A batch is a sequence of reported per-item changes,
+not a filesystem-wide atomic transaction. Linux/macOS native metadata uses
+non-following descriptors for ownership, xattrs, ACLs and timestamp operations;
+platform-specific behavior is validated by the desktop test gates.
 
 ## Large files and resource limits
 

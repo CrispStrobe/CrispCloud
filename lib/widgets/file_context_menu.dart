@@ -36,7 +36,6 @@ import 'file_origin_actions.dart';
 import 'command_extension_actions.dart';
 import '../services/cloud_storage_interface.dart'
     show CloudStorageClientCapabilities;
-import '../services/file_split_service.dart';
 import '../services/image_edit_session.dart' show isImageEditorFileName;
 import '../services/link_service.dart';
 import '../services/secure_wipe_service.dart';
@@ -60,6 +59,7 @@ import 'pdf_editor_dialog.dart' show isPdfFileName;
 import 'pdf_operations_dialog.dart';
 import 'share_link_dialog.dart' show showShareLinkDialog;
 import 'permissions_dialog.dart' show showPermissionsDialog;
+import 'file_attributes_dialog.dart';
 import 'version_history_dialog.dart' show showVersionHistoryDialog;
 
 const _log = Log('FileContextMenu');
@@ -79,9 +79,8 @@ Future<void> openListedFileWithSystemEditor(
     });
   } catch (error) {
     if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('$error')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('$error')));
     }
   }
 }
@@ -153,9 +152,8 @@ void _showResultListContextMenu(
         await action();
       } catch (error) {
         if (context.mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(error.toString())));
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(error.toString())));
         }
       }
     }),
@@ -256,6 +254,11 @@ void _showResultListContextMenu(
               .toList(),
         ),
       ),
+      command(
+        context.commanderTr("Change attributes…"),
+        Icons.tune,
+        () => showFileAttributesDialog(context, ref, side, files),
+      ),
       ...buildCommandExtensionMenuItems<void>(context, ref, side, files),
       const PopupMenuDivider(),
       command(
@@ -352,9 +355,8 @@ void showFileContextMenu(
         await withNativeFileAction(ref, origin, paths, action);
       } catch (error) {
         if (context.mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('$error')));
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text('$error')));
         }
       }
     }());
@@ -1069,6 +1071,28 @@ void showFileContextMenu(
     );
   }
 
+  items.add(
+    PopupMenuItem(
+      child: Row(
+        children: [
+          const Icon(Icons.tune),
+          const SizedBox(width: 8),
+          Expanded(child: Text(context.commanderTr("Change attributes…"))),
+        ],
+      ),
+      onTap: () => Future.delayed(Duration.zero, () {
+        if (context.mounted)
+          showFileAttributesDialog(
+            context,
+            ref,
+            side,
+            files,
+            sourceOrigin: origin,
+          );
+      }),
+    ),
+  );
+
   // Permissions (SFTP only, single file)
   if (!isMultiSelect && remote != null) {
     if (remote.client is SFTPClientAdapter) {
@@ -1666,9 +1690,8 @@ Future<void> _downloadFilesOnWeb(
     }
   } catch (error) {
     if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('$error')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('$error')));
     }
   }
 }
@@ -1962,6 +1985,21 @@ class _PropertiesDialogState extends ConsumerState<_PropertiesDialog> {
         ),
       ),
       actions: [
+        if (_origin?.isCurrent == true)
+          TextButton.icon(
+            icon: const Icon(Icons.tune),
+            label: Text(context.commanderTr("Change attributes…")),
+            onPressed: () async {
+              await showFileAttributesDialog(
+                context,
+                ref,
+                ref.read(activePanelProvider),
+                [file],
+                sourceOrigin: _origin,
+              );
+              if (mounted) await _loadStat();
+            },
+          ),
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: Text(context.commanderTr("Close")),
@@ -1984,9 +2022,8 @@ Widget _propertyRow(
       children: [
         Text(
           label,
-          style: Theme.of(context).textTheme.labelMedium?.copyWith(
-            color: Theme.of(context).colorScheme.primary,
-          ),
+          style: Theme.of(context).textTheme.labelMedium
+              ?.copyWith(color: Theme.of(context).colorScheme.primary),
         ),
         const SizedBox(height: 4),
         SelectableText(

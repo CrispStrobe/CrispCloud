@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 
 import 'app_localizations.dart';
 import 'commander_translations.dart';
+import 'commander_completion_translations.dart';
 import 'image_editor_translations.dart';
 import 'workspace_translations.dart';
 
@@ -23,6 +24,7 @@ abstract final class CommanderStrings {
     for (final entry in {
       ...commanderTranslations,
       ...workspaceTranslations,
+      ...commanderCompletionTranslations,
     }.entries)
       _normalize(entry.key): entry.value,
   };

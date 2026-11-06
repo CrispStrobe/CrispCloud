@@ -906,6 +906,26 @@ void main() {
     expect(find.text('Select by pattern'), findsOneWidget);
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
+    panel.clearSelection();
+    panel.setCursorOnly(
+      panel.files!.firstWhere((item) => item.name == 'a.txt'),
+    );
+    panel.focusList();
+    await tester.pump();
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.numpadAdd);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+    await tester.pumpAndSettle();
+    expect(find.text('Select by pattern'), findsNothing);
+    expect(
+      panel.selection.map((item) => item.name),
+      containsAll(['a.txt', 'b.txt']),
+    );
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.numpadSubtract);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+    await tester.pumpAndSettle();
+    expect(panel.selection, isEmpty);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pumpAndSettle();

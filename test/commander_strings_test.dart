@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/l10n/commander_strings.dart';
 import 'package:crisp_cloud/l10n/commander_translations.dart';
+import 'package:crisp_cloud/l10n/commander_completion_translations.dart';
 import 'package:crisp_cloud/models/rename_batch.dart';
 import 'package:crisp_cloud/models/transfer_job.dart';
 import 'package:crisp_cloud/services/file_operation_options.dart';
@@ -44,7 +45,10 @@ void main() {
           .toSet(),
     );
     final parameters = RegExp(r'\{(?:\d+|[A-Za-z][A-Za-z0-9_]*)\}');
-    for (final entry in commanderTranslations.entries) {
+    for (final entry in {
+      ...commanderTranslations,
+      ...commanderCompletionTranslations,
+    }.entries) {
       expect(entry.value, hasLength(8), reason: entry.key);
       final expected = parameters
           .allMatches(entry.key)
@@ -129,6 +133,8 @@ void main() {
       'archive_workspace_dialog',
       'integrity_dialogs',
       'internal_viewer_dialog',
+      'internal_viewer_views',
+      'file_attributes_dialog',
       'diff_viewer_dialog',
       'directory_comparison_dialog',
       'sync_dialog',

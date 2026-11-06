@@ -23,6 +23,7 @@ import '../screens/screen_dialogs.dart'
         uploadSelected,
         downloadSelected;
 import 'pattern_selection_dialog.dart';
+import 'file_attributes_dialog.dart';
 import 'file_list_dialog.dart';
 import 'file_collections_dialog.dart';
 import 'rename_history_dialog.dart';
@@ -189,6 +190,38 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
           side,
           initialAction: SelectionAction.deselect,
         ),
+      ),
+      _Command(
+        name: context.commanderTr("Same extension"),
+        shortcut: 'Shift+Num +',
+        icon: Icons.library_add_check,
+        action: () => panel.selectSameExtension(),
+      ),
+      _Command(
+        name: context.commanderTr("Same name (without extension)"),
+        icon: Icons.checklist,
+        action: () => panel.selectSameName(),
+      ),
+      _Command(
+        name: context.commanderTr("Same containing folder"),
+        icon: Icons.folder_copy_outlined,
+        action: () => panel.selectSameParent(),
+      ),
+      _Command(
+        name: context.commanderTr("Load selection from paths…"),
+        icon: Icons.playlist_add_check,
+        action: () => showFileListDialog(
+          widget.parentContext,
+          ref,
+          side,
+          selectionMode: true,
+        ),
+      ),
+      _Command(
+        name: context.commanderTr("Change attributes…"),
+        icon: Icons.tune,
+        action: () =>
+            showFileAttributesFromSelection(widget.parentContext, ref),
       ),
       _Command(
         name: context.commanderTr("Multi-Rename"),
