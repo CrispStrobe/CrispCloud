@@ -295,6 +295,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
 
     return Column(
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         GestureDetector(
           onVerticalDragUpdate: (details) {
@@ -426,38 +427,42 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                   child: SingleChildScrollView(
                     controller: _outputController,
                     padding: const EdgeInsets.all(8),
-                    child: SelectableText(
-                      _output.toString(),
-                      onSelectionChanged: (selection, cause) {
-                        _outputSelection = selection;
-                      },
-                      contextMenuBuilder: (context, editableTextState) {
-                        return AdaptiveTextSelectionToolbar.buttonItems(
-                          anchors: editableTextState.contextMenuAnchors,
-                          buttonItems: [
-                            ...editableTextState.contextMenuButtonItems,
-                            ContextMenuButtonItem(
-                              label: TerminalStrings(context).text('copyAll'),
-                              onPressed: () {
-                                _copyAll();
-                                editableTextState.hideToolbar();
-                              },
-                            ),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: SelectableText(
+                        _output.toString(),
+                        textAlign: TextAlign.left,
+                        onSelectionChanged: (selection, cause) {
+                          _outputSelection = selection;
+                        },
+                        contextMenuBuilder: (context, editableTextState) {
+                          return AdaptiveTextSelectionToolbar.buttonItems(
+                            anchors: editableTextState.contextMenuAnchors,
+                            buttonItems: [
+                              ...editableTextState.contextMenuButtonItems,
+                              ContextMenuButtonItem(
+                                label: TerminalStrings(context).text('copyAll'),
+                                onPressed: () {
+                                  _copyAll();
+                                  editableTextState.hideToolbar();
+                                },
+                              ),
+                            ],
+                          );
+                        },
+                        style: TextStyle(
+                          fontFamily: 'AppMono',
+                          fontFamilyFallback: const [
+                            'Menlo',
+                            'Consolas',
+                            'monospace',
                           ],
-                        );
-                      },
-                      style: TextStyle(
-                        fontFamily: 'AppMono',
-                        fontFamilyFallback: const [
-                          'Menlo',
-                          'Consolas',
-                          'monospace',
-                        ],
-                        fontSize: 12,
-                        height: 1.4,
-                        color: theme.brightness == Brightness.dark
-                            ? const Color(0xFFD4D4D4)
-                            : const Color(0xFF1E1E1E),
+                          fontSize: 12,
+                          height: 1.4,
+                          color: theme.brightness == Brightness.dark
+                              ? const Color(0xFFD4D4D4)
+                              : const Color(0xFF1E1E1E),
+                        ),
                       ),
                     ),
                   ),
