@@ -1,0 +1,68 @@
+name: Text and hex editor
+
+on:
+  push:
+    branches: [feature/madedit2-hex-editor]
+  pull_request:
+    branches: [main]
+    paths:
+      - 'packages/madedit2_hex/**'
+      - 'lib/services/editor_document.dart'
+      - 'lib/services/hex_*'
+      - 'lib/widgets/*editor*'
+      - 'test/*editor*'
+      - 'test/hex_*'
+      - '.github/workflows/hex-editor.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hex-editor-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: 3.47.8
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Preserve the exact source checkpoint
+        run: |
+          mkdir -p build/hex-review
+          git archive --format=zip HEAD -o build/hex-review/source.zip
+          git rev-parse HEAD > build/hex-review/REVISION.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hex-source-${{ github.sha }}
+          path: build/hex-review/
+          retention-days: 7
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - name: Resolve isolated hex package
+        working-directory: packages/madedit2_hex
+        run: flutter pub get
+      - name: Analyze and test byte editor
+        working-directory: packages/madedit2_hex
+        run: |
+          flutter analyze --no-fatal-infos
+          flutter test --reporter expanded
+      - name: Resolve application dependencies
+        run: flutter pub get
+      - name: Text document and save regression tests
+        run: >-
+          flutter test --reporter expanded --concurrency=2
+          test/editor_document_test.dart
+          test/editor_save_coordinator_test.dart
+          test/code_editor_widget_test.dart
+          test/code_editor_status_bar_test.dart
