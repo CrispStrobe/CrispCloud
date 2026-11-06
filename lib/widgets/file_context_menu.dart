@@ -55,6 +55,7 @@ import 'archive_workspace_dialog.dart';
 import 'integrity_dialogs.dart';
 import '../services/file_operation_service.dart';
 import 'diff_viewer_dialog.dart' show showDiffViewerDialog;
+import 'hex_editor_dialog.dart' show showHexEditorDialog;
 import 'file_editor_dialog.dart' show showFileEditorDialog;
 import 'pdf_editor_dialog.dart' show isPdfFileName;
 import 'pdf_operations_dialog.dart';
@@ -422,6 +423,13 @@ void showFileContextMenu(
 
   // Specialized editors and text/code editing for a single file.
   if (!isMultiSelect && !isSingleFolder) {
+    items.add(PopupMenuItem(
+      child: const Row(children: [Icon(Icons.hexagon_outlined), SizedBox(width: 8),
+        Expanded(child: Text('Edit as Hex'))]),
+      onTap: () => Future.delayed(Duration.zero, () {
+        if (context.mounted && current()) showHexEditorDialog(context, ref, file, side);
+      }),
+    ));
     final preferExternal = native && ref.read(preferExternalEditorProvider);
     if (isImageEditorFileName(file.name)) {
       items.add(

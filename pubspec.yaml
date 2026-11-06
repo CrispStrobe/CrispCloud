@@ -28,6 +28,9 @@ dependencies:
   
   # UI
   desktop_drop: ^0.7.1
+  madedit2_hex:
+    path: packages/madedit2_hex
+
   # Code editor surface (line numbers, folding, find/replace, undo history)
   # and its syntax-highlighting engine. Both are MIT licensed.
   re_editor: ^0.10.0

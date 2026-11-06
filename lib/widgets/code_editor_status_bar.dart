@@ -23,8 +23,18 @@ class CodeEditorStatusBar extends StatelessWidget {
     required this.hadMixedLineEndings,
     required this.onLineEndingSelected,
     required this.onEncodingSelected,
+    this.lineEndingPolicy = EditorLineEndingPolicy.preserve,
+    this.onPolicySelected,
+    this.onNewLineEndingSelected,
+    this.writesBom = false,
+    this.onToggleBom,
   });
 
+  final EditorLineEndingPolicy lineEndingPolicy;
+  final ValueChanged<EditorLineEndingPolicy>? onPolicySelected;
+  final ValueChanged<EditorLineEnding>? onNewLineEndingSelected;
+  final bool writesBom;
+  final VoidCallback? onToggleBom;
   final int cursorLine;
   final int cursorColumn;
   final int lineCount;
@@ -103,10 +113,9 @@ class CodeEditorStatusBar extends StatelessWidget {
               ),
               if (hadMixedLineEndings)
                 Tooltip(
-                  message:
-                      'Mixed line endings were normalized to '
-                      '${lineEnding.label}. Saving writes the whole file with '
-                      'that style.',
+                  message: lineEndingPolicy == EditorLineEndingPolicy.preserve
+                      ? 'Mixed line endings are preserved individually. New breaks use ${lineEnding.label}.'
+                      : 'Saving will explicitly convert every line ending to ${lineEnding.label}.',
                   child: Padding(
                     padding: const EdgeInsets.only(right: 6),
                     child: Icon(
@@ -116,22 +125,43 @@ class CodeEditorStatusBar extends StatelessWidget {
                     ),
                   ),
                 ),
-              _StatusMenuButton<EditorLineEnding>(
+              PopupMenuButton<String>(
                 tooltip: 'Line endings',
-                values: EditorLineEnding.values,
-                label: (value) =>
-                    value == lineEnding ? '✓ ${value.label}' : value.label,
-                onSelected: onLineEndingSelected,
-                text: lineEnding.label,
+                onSelected: (value) {
+                  if (value == 'preserve') { onPolicySelected?.call(EditorLineEndingPolicy.preserve); }
+                  else if (value.startsWith('new:')) {
+                    onNewLineEndingSelected?.call(EditorLineEnding.values.byName(value.substring(4)));
+                  } else { onLineEndingSelected(EditorLineEnding.values.byName(value)); }
+                },
+                itemBuilder: (context) => [
+                  if (onPolicySelected != null) PopupMenuItem(value: 'preserve',
+                    child: Text('${lineEndingPolicy == EditorLineEndingPolicy.preserve ? '✓ ' : ''}Preserve existing line endings')),
+                  for (final style in EditorLineEnding.values) PopupMenuItem(value: style.name,
+                    child: Text('Convert ALL line endings to ${style.label}')),
+                  if (onNewLineEndingSelected != null) ...[
+                    const PopupMenuDivider(),
+                    for (final style in EditorLineEnding.values) PopupMenuItem(value: 'new:${style.name}',
+                      child: Text('${lineEnding == style ? '✓ ' : ''}New breaks: ${style.label}')),
+                  ],
+                ],
+                child: Padding(padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                  child: Text(lineEnding.label, style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant))),
               ),
               const SizedBox(width: 6),
-              _StatusMenuButton<EditorEncoding>(
+              PopupMenuButton<String>(
                 tooltip: 'File encoding',
-                values: EditorEncoding.values,
-                label: (value) =>
-                    value == encoding ? '✓ ${value.label}' : value.label,
-                onSelected: onEncodingSelected,
-                text: encoding.label,
+                onSelected: (value) {
+                  if (value == 'bom') { onToggleBom?.call(); }
+                  else { onEncodingSelected(EditorEncoding.values.byName(value)); }
+                },
+                itemBuilder: (context) => [
+                  for (final value in EditorEncoding.values) PopupMenuItem(value: value.name,
+                    child: Text('${value == encoding ? '✓ ' : ''}${value.label}')),
+                  if (onToggleBom != null) ...[const PopupMenuDivider(),
+                    PopupMenuItem(value: 'bom', child: Text(writesBom ? 'Remove byte-order mark (BOM)' : 'Write byte-order mark (BOM)'))],
+                ],
+                child: Padding(padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                  child: Text(encoding.label, style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant))),
               ),
               if (showStatusText) ...[
                 const SizedBox(width: 12),
@@ -165,45 +195,6 @@ class CodeEditorStatusBar extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-class _StatusMenuButton<T> extends StatelessWidget {
-  const _StatusMenuButton({
-    required this.tooltip,
-    required this.values,
-    required this.label,
-    required this.onSelected,
-    required this.text,
-  });
-
-  final String tooltip;
-  final List<T> values;
-  final String Function(T value) label;
-  final ValueChanged<T> onSelected;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return PopupMenuButton<T>(
-      tooltip: tooltip,
-      onSelected: onSelected,
-      itemBuilder: (context) => [
-        for (final value in values)
-          PopupMenuItem<T>(value: value, child: Text(label(value))),
-      ],
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-        child: Text(
-          text,
-          style: TextStyle(
-            fontSize: 11,
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-      ),
     );
   }
 }

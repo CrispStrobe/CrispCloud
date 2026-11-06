@@ -56,14 +56,14 @@ void main() {
     });
 
     test('editing one line retains unaffected mixed terminators', () {
-      final document = EditorDocument.decode(utf8.encode('a\\r\\nb\\nc\\r'));
-      final edited = document.copyWith(text: 'a\\nchanged\\nc\\n');
-      expect(utf8.decode(edited.encode()), 'a\\r\\nchanged\\nc\\r');
+      final document = EditorDocument.decode(utf8.encode('a\r\nb\nc\r'));
+      final edited = document.copyWith(text: 'a\nchanged\nc\n');
+      expect(utf8.decode(edited.encode()), 'a\r\nchanged\nc\r');
     });
 
     test('explicit line-ending conversion normalizes mixed endings', () {
-      final document = EditorDocument.decode(utf8.encode('a\\r\\nb\\nc\\r'));
-      expect(utf8.decode(document.copyWith(lineEnding: EditorLineEnding.lf).encode()), 'a\\nb\\nc\\n');
+      final document = EditorDocument.decode(utf8.encode('a\r\nb\nc\r'));
+      expect(utf8.decode(document.copyWith(lineEnding: EditorLineEnding.lf).encode()), 'a\nb\nc\n');
     });
 
     test('a CRLF/LF tie prefers CRLF', () {
