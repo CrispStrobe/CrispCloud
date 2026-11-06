@@ -8,6 +8,7 @@ import '../models/file_item.dart';
 import '../models/storage_reference.dart';
 import 'file_operation_options.dart';
 import 'destination_name_mask.dart';
+import 'duplicate_name_template.dart';
 import 'file_selection_pattern.dart';
 import 'storage_transfer_contract.dart';
 
@@ -142,8 +143,9 @@ abstract class FileOperationBackend {
       accessed: accessed ? metadata.accessed : null,
       owner: ownership ? metadata.owner : null,
       group: ownership ? metadata.group : null,
-      extendedAttributes:
-          extendedAttributes ? metadata.extendedAttributes : const {},
+      extendedAttributes: extendedAttributes
+          ? metadata.extendedAttributes
+          : const {},
       acl: acl ? metadata.acl : null,
     );
   }
@@ -438,6 +440,8 @@ class FileOperationService {
     final sourceMetadata = _PlanningMetadata(source, maxEntries);
     final targetMetadata = _PlanningMetadata(destination, maxEntries);
     options.validateSearchCriteria();
+    options.validateTransferSettings();
+    final duplicateNames = DuplicateNameTemplate(options.duplicateNameTemplate);
     final criteria = options.searchCriteria;
     final criteriaMatcher = criteria?.nameMatcher;
     final criteriaExcluded =
@@ -611,6 +615,7 @@ class FileOperationService {
         return;
       }
       final file = current.copyWith(path: path);
+      String? duplicateNameBase;
       if (!file.isFolder &&
           !(options.destinationName != null && roots.containsKey(path))) {
         output = destination.paths.join(
@@ -623,9 +628,11 @@ class FileOperationService {
           !file.isFolder &&
           options.kind == FileOperationKind.copy &&
           options.fileConflict == FileConflictPolicy.keepBoth) {
+        duplicateNameBase = output;
         output = await _availableName(
           output,
           destination,
+          template: duplicateNames,
           reserved: reservedDestinations,
           stat: targetMetadata.stat,
           nextSuffix: nextCopySuffix,
@@ -638,6 +645,9 @@ class FileOperationService {
         return;
       }
       final entry = FileOperationEntry(file, output);
+      if (duplicateNameBase != null) {
+        entry.recovery = {'duplicateNameBase': duplicateNameBase};
+      }
       entries.add(entry);
       if (file.isSymlink == true && !options.copySymbolicLinks) {
         entry.outcome = FileOperationOutcome.skipped;
@@ -679,9 +689,14 @@ class FileOperationService {
       if (previous != null && !(previous.source.isFolder && file.isFolder)) {
         if (options.fileConflict == FileConflictPolicy.keepBoth &&
             !file.isFolder) {
+          entry.recovery = {
+            ...?entry.recovery,
+            'duplicateNameBase': duplicateNameBase ?? output,
+          };
           output = await _availableName(
-            output,
+            duplicateNameBase ?? output,
             destination,
+            template: duplicateNames,
             reserved: reservedDestinations,
             stat: targetMetadata.stat,
             nextSuffix: nextCopySuffix,
@@ -724,9 +739,16 @@ class FileOperationService {
           options.fileConflict == FileConflictPolicy.keepBoth) {
         // Show the actual planned copy name, including names already reserved
         // by earlier entries. execute still rechecks for changes after preview.
+        duplicateNameBase ??= entry.recovery?['duplicateNameBase'] as String?;
+        duplicateNameBase ??= output;
+        entry.recovery = {
+          ...?entry.recovery,
+          'duplicateNameBase': duplicateNameBase,
+        };
         output = await _availableName(
-          output,
+          duplicateNameBase,
           destination,
+          template: duplicateNames,
           reserved: reservedDestinations,
           stat: targetMetadata.stat,
           nextSuffix: nextCopySuffix,
@@ -887,9 +909,11 @@ class FileOperationService {
   }) async {
     if (!plan.canExecute) throw StateError(plan.errors.join('\n'));
     plan.options.validateSearchCriteria();
+    plan.options.validateTransferSettings();
     final source = plan.source;
     final target = plan.destination;
     final options = plan.options;
+    final duplicateNames = DuplicateNameTemplate(options.duplicateNameTemplate);
     final skippedDirectories = <String>[];
     final reserved = plan.entries
         .map((entry) => target.destinationPathKey(entry.destination))
@@ -1011,9 +1035,21 @@ class FileOperationService {
             );
           }
           if (decision == FileConflictDecision.keepBoth) {
+            final base =
+                entry.recovery?['duplicateNameBase'] as String? ??
+                entry.destination;
+            if (!target.paths.isAbsolute(base) ||
+                !target.samePath(
+                  target.paths.dirname(base),
+                  target.paths.dirname(entry.destination),
+                )) {
+              throw StateError('The saved duplicate-name base is invalid.');
+            }
+            entry.recovery = {...?entry.recovery, 'duplicateNameBase': base};
             entry.destination = await _availableName(
-              entry.destination,
+              base,
               target,
+              template: duplicateNames,
               reserved: reserved,
             );
             reserved.add(target.destinationPathKey(entry.destination));
@@ -1761,19 +1797,17 @@ class FileOperationService {
   Future<String> _availableName(
     String original,
     FileOperationBackend backend, {
+    required DuplicateNameTemplate template,
     Set<String> reserved = const {},
     Future<FileItem?> Function(String path)? stat,
     Map<String, int>? nextSuffix,
   }) async {
     final name = backend.paths.basename(original);
-    final dot = name.lastIndexOf('.');
-    final stem = dot > 0 ? name.substring(0, dot) : name;
-    final extension = dot > 0 ? name.substring(dot) : '';
     final key = backend.destinationPathKey(original);
     for (var index = nextSuffix?[key] ?? 1; index < 1000000; index++) {
       final candidate = backend.paths.join(
         backend.paths.dirname(original),
-        '$stem ($index)$extension',
+        template.apply(name, index: index),
       );
       if (!reserved.contains(backend.destinationPathKey(candidate)) &&
           await (stat ?? backend.stat)(candidate) == null) {

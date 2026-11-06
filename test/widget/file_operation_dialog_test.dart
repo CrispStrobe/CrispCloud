@@ -13,8 +13,6 @@ import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:crisp_cloud/services/file_operation_backend.dart';
 import 'package:crisp_cloud/services/file_operation_profiles.dart';
 import 'package:crisp_cloud/services/file_operation_service.dart';
-import 'package:crisp_cloud/services/file_operation_backend.dart';
-import 'package:crisp_cloud/services/file_operation_profiles.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:crisp_cloud/services/panel_source_service.dart';
 import 'package:crisp_cloud/services/saved_search_service.dart';
@@ -684,16 +682,20 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Keep both (number new copies)').last);
       await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const ValueKey('transfer-duplicate-name-template')),
+        '{name}_copy-{counter:000}{ext}',
+      );
       await tester.enterText(field('File filter'), '*.txt');
       await toggle(tester, 'Verify contents (SHA-256)');
       await tester.tap(find.text('Preview'));
       await tester.pumpAndSettle();
       await runOperation(tester, FileOperationKind.copy);
       expect(cloud.files['/target/one.txt'], existing);
-      expect(cloud.files['/target/one (1).txt'], utf8.encode('one\n'));
+      expect(cloud.files['/target/one_copy-001.txt'], utf8.encode('one\n'));
       expect(cloud.files.containsKey('/target/two.bin'), isFalse);
       expect(cloud.files['/one.txt'], utf8.encode('one\n'));
-      expect(cloud.reads, contains('/target/one (1).txt'));
+      expect(cloud.reads, contains('/target/one_copy-001.txt'));
       expect(
         find.text('1 completed · 1 skipped/filtered · 0 failed'),
         findsOneWidget,
@@ -701,6 +703,38 @@ void main() {
       expect(container.read(transferProvider).operations.single.error, isNull);
     },
   );
+
+  testWidgets('duplicate templates load, save and reject invalid defaults', (tester) async {
+    await FileOperationProfiles().save(
+      '@default:copy',
+      const FileOperationOptions(duplicateNameTemplate: '{name}-backup{counter}{ext}'),
+    );
+    await open(tester);
+    final template = find.byKey(const ValueKey('transfer-duplicate-name-template'));
+    expect(
+      tester.widget<TextField>(template).controller!.text,
+      '{name}-backup{counter}{ext}',
+    );
+    await tester.enterText(template, '{name}_copy-{counter:000}{ext}');
+    await tester.ensureVisible(find.text('Save as defaults'));
+    await tester.tap(find.text('Save as defaults'));
+    await tester.pumpAndSettle();
+    expect(
+      (await FileOperationProfiles().load())['@default:copy']!.duplicateNameTemplate,
+      '{name}_copy-{counter:000}{ext}',
+    );
+    await tester.enterText(template, '../{counter}');
+    await tester.ensureVisible(find.text('Save as defaults'));
+    await tester.tap(find.text('Save as defaults'));
+    await tester.pumpAndSettle();
+    expect(
+      (await FileOperationProfiles().load())['@default:copy']!.duplicateNameTemplate,
+      '{name}_copy-{counter:000}{ext}',
+    );
+    expect(find.textContaining('FormatException'), findsOneWidget);
+    expect(cloud.uploads, isEmpty);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets('move deletes only files that pass the configured filter', (
     tester,

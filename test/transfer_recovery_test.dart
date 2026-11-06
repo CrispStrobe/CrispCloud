@@ -341,6 +341,45 @@ void main() {
     },
   );
 
+  test('restart retains custom duplicate names and original collision base', () async {
+    final storage = MemoryTransferJournalStorage();
+    final journal = TransferJournal(storage);
+    final source = _MemoryBackend('source')..file('/a.txt', 'source');
+    final target = _MemoryBackend('target')..file('/target/a.txt', 'old');
+    final prepared = await plan(
+      source,
+      target,
+      options: const FileOperationOptions(
+        fileConflict: FileConflictPolicy.keepBoth,
+        duplicateNameTemplate: '{name}_copy-{counter:000}{ext}',
+      ),
+    );
+    expect(prepared.entries.single.destination, '/target/a_copy-001.txt');
+    await journal.create('custom-copy', prepared);
+    final restarted = TransferJournal(storage);
+    await restarted.initialize();
+    final restored = restarted.job('custom-copy')!;
+    expect(restored.options.duplicateNameTemplate, '{name}_copy-{counter:000}{ext}');
+    final preview = await const TransferRecoveryService().prepare(
+      restored,
+      source: source,
+      destination: target,
+      control: FileOperationControl(),
+    );
+    expect(preview.issues, isEmpty);
+    expect(preview.plan.entries.single.recovery!['duplicateNameBase'], '/target/a.txt');
+    // Another actor can take the reviewed name after recovery's revalidation.
+    target.file('/target/a_copy-001.txt', 'late arrival');
+    await JournaledTransferRunner(restarted).execute(
+      'custom-copy',
+      preview.plan,
+      control: FileOperationControl(),
+    );
+    expect(restored.status, TransferJobStatus.completed);
+    expect(target.bytes['/target/a_copy-001.txt'], utf8.encode('late arrival'));
+    expect(target.bytes['/target/a_copy-002.txt'], utf8.encode('source'));
+  });
+
   test(
     'read-only reconciliation completes without re-running a lost-ack move',
     () async {

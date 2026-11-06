@@ -180,6 +180,9 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
   final _relativeBase = TextEditingController();
   final _mask = TextEditingController(text: '*');
   final _nameMask = TextEditingController(text: '*.*');
+  final _duplicateNameTemplate = TextEditingController(
+    text: const FileOperationOptions().duplicateNameTemplate,
+  );
   final _targetName = TextEditingController();
   final _minimumSize = TextEditingController();
   final _maximumSize = TextEditingController();
@@ -297,6 +300,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     _mask.dispose();
     for (final controller in [
       _nameMask,
+      _duplicateNameTemplate,
       _targetName,
       _minimumSize,
       _maximumSize,
@@ -387,6 +391,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
         ? null
         : _targetName.text.trim(),
     destinationMask: _nameMask.text,
+    duplicateNameTemplate: _duplicateNameTemplate.text,
     minimumSize: _minimumSize.text.trim().isEmpty
         ? null
         : int.parse(_minimumSize.text.trim()),
@@ -437,6 +442,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     _caseSensitive = options.pattern?.caseSensitive ?? false;
     _matchPath = options.pattern?.matchFullPath ?? false;
     _nameMask.text = options.destinationMask;
+    _duplicateNameTemplate.text = options.duplicateNameTemplate;
     _minimumSize.text = options.minimumSize?.toString() ?? '';
     _maximumSize.text = options.maximumSize?.toString() ?? '';
     _modifiedAfter.text = options.modifiedAfter?.toIso8601String() ?? '';
@@ -521,6 +527,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
   Future<void> _saveProfile({bool defaults = false}) async {
     try {
       final options = _options();
+      options.validateTransferSettings();
       String? name = '@default:${widget.kind.name}';
       if (!defaults) {
         final controller = TextEditingController();
@@ -757,6 +764,24 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                   enabled: !_busy,
                   decoration: InputDecoration(
                     labelText: context.commanderTr("Destination directory"),
+                    border: const OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  onChanged: (_) => _change(() {}),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  key: const ValueKey('transfer-duplicate-name-template'),
+                  controller: _duplicateNameTemplate,
+                  enabled: !_busy,
+                  decoration: InputDecoration(
+                    labelText: context.commanderTr(
+                      "Keep both filename template",
+                    ),
+                    helperText: context.commanderTr(
+                      "{name} is the filename without extension; {ext} includes the dot. A {counter} or {counter:000} is required.",
+                    ),
+                    helperMaxLines: 4,
                     border: const OutlineInputBorder(),
                     isDense: true,
                   ),

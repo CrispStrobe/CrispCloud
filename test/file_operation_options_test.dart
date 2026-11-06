@@ -37,6 +37,7 @@ void main() {
       kind: FileOperationKind.move,
       fileConflict: FileConflictPolicy.resumeVerified,
       destinationMask: '[N]_[C:000].[E]',
+      duplicateNameTemplate: '{name}_copy-{counter:000}{ext}',
       minimumSize: 2,
       maximumSize: 50,
       modifiedAfter: DateTime.utc(2025),
@@ -75,6 +76,7 @@ void main() {
           destinationName: 'one.txt',
           relativeBase: '/private/source',
           destinationMask: '*.bak',
+          duplicateNameTemplate: '{name}_backup-{counter:000}{ext}',
           fileConflict: FileConflictPolicy.keepBoth,
         ),
       );
@@ -82,8 +84,36 @@ void main() {
       expect(stored.destinationName, isNull);
       expect(stored.relativeBase, isNull);
       expect(stored.destinationMask, '*.bak');
+      expect(stored.duplicateNameTemplate, '{name}_backup-{counter:000}{ext}');
       await profiles.remove('@default:copy');
       expect(await profiles.load(), isEmpty);
+    },
+  );
+
+  test('old saved options retain the original numbered duplicate names', () {
+    final legacy = const FileOperationOptions().toJson()
+      ..remove('duplicateNameTemplate');
+    expect(
+      FileOperationOptions.fromJson(legacy).duplicateNameTemplate,
+      '{name} ({counter}){ext}',
+    );
+  });
+
+  test(
+    'invalid saved templates cannot enter profiles or restored jobs',
+    () async {
+    const invalid = FileOperationOptions(
+        duplicateNameTemplate: '../{name}-{counter}',
+      );
+      expect(
+        () => FileOperationOptions.fromJson(invalid.toJson()),
+        throwsFormatException,
+      );
+      await expectLater(
+        FileOperationProfiles().save('invalid', invalid),
+        throwsFormatException,
+      );
+      expect(await FileOperationProfiles().load(), isEmpty);
     },
   );
 }

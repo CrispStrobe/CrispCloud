@@ -1,5 +1,6 @@
 import '../models/file_item.dart';
 import '../models/file_search_query.dart';
+import 'duplicate_name_template.dart';
 import 'file_selection_pattern.dart';
 
 enum FileOperationKind { copy, move }
@@ -55,6 +56,7 @@ class FileOperationOptions {
     this.searchCriteria,
     this.destinationName,
     this.destinationMask = '*.*',
+    this.duplicateNameTemplate = DuplicateNameTemplate.defaultTemplate,
     this.minimumSize,
     this.maximumSize,
     this.modifiedAfter,
@@ -112,6 +114,16 @@ class FileOperationOptions {
 
   /// Applied to regular file names at every selected depth.
   final String destinationMask;
+
+  /// A counter-based filename used whenever a conflict is kept as a new copy.
+  /// Saved independently from the destination mask so late conflicts and
+  /// recovered jobs use the same naming rule that was reviewed.
+  final String duplicateNameTemplate;
+
+  void validateTransferSettings() {
+    DuplicateNameTemplate(duplicateNameTemplate);
+  }
+
   final int? minimumSize;
   final int? maximumSize;
   final DateTime? modifiedAfter;
@@ -168,6 +180,7 @@ class FileOperationOptions {
     'searchCriteria': searchCriteria?.toJson(),
     'destinationName': destinationName,
     'destinationMask': destinationMask,
+    'duplicateNameTemplate': duplicateNameTemplate,
     'minimumSize': minimumSize,
     'maximumSize': maximumSize,
     'modifiedAfter': modifiedAfter?.toUtc().toIso8601String(),
@@ -184,7 +197,7 @@ class FileOperationOptions {
     if (json['version'] != 1) {
       throw const FormatException('Unsupported transfer options version.');
     }
-    return FileOperationOptions(
+    final options = FileOperationOptions(
       kind: FileOperationKind.values.byName(json['kind'] as String),
       fileConflict: FileConflictPolicy.values.byName(
         json['fileConflict'] as String,
@@ -211,6 +224,9 @@ class FileOperationOptions {
             ),
       destinationName: json['destinationName'] as String?,
       destinationMask: json['destinationMask'] as String? ?? '*.*',
+      duplicateNameTemplate:
+          json['duplicateNameTemplate'] as String? ??
+          DuplicateNameTemplate.defaultTemplate,
       minimumSize: json['minimumSize'] as int?,
       maximumSize: json['maximumSize'] as int?,
       modifiedAfter: _date(json['modifiedAfter']),
@@ -224,6 +240,8 @@ class FileOperationOptions {
       ),
       preallocate: json['preallocate'] == true,
     );
+    options.validateTransferSettings();
+    return options;
   }
 
   static DateTime? _date(dynamic value) =>
