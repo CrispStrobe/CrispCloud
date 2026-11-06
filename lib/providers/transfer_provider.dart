@@ -29,6 +29,7 @@ import '../services/transfer_queue.dart';
 import '../services/transfer_journal.dart';
 import '../services/background_transfer_journal.dart';
 import '../services/transfer_recovery_service.dart';
+import '../models/integrity_recovery.dart';
 import '../services/web_streaming_service.dart';
 import '../services/log_service.dart';
 import 'auth_provider.dart';
@@ -47,6 +48,7 @@ class TransferNotifier extends ChangeNotifier {
   final TransferQueue _queue = TransferQueue();
   final List<OperationProgress> _operations = [];
   final Map<String, FileOperationControl> _fileOperationControls = {};
+  final Set<String> _integrityProgressIds = {};
 
   late final TransferJournal _journal;
   late final Future<void> ready;
@@ -64,7 +66,8 @@ class TransferNotifier extends ChangeNotifier {
   List<String> get recoveryWarnings => List.unmodifiable(_journal.warnings);
   TransferJobRecord? savedJob(String id) => _journal.job(id);
   bool get hasActiveOperations => _operations.any((op) => op.isActive);
-  bool isJobLive(String id) => _fileOperationControls.containsKey(id);
+  bool isJobLive(String id) =>
+      _fileOperationControls.containsKey(id) || _journal.isOperationActive(id);
   int get maxConcurrent => _queue.maxConcurrent;
   int get queuedCount => _queue.pendingCount;
   List<String> get queuedIds =>
@@ -85,8 +88,10 @@ class TransferNotifier extends ChangeNotifier {
       await _importBackgroundRecovery(addProgress: false);
       if (_disposed) return;
       for (final job in _journal.jobs.where((job) => job.needsReview)) {
+        if (isIntegrityTransferJob(job) || isJobLive(job.id)) continue;
         _operations.add(_savedProgress(job));
       }
+      _reconcileIntegrityProgress();
     } catch (error) {
       recoveryError = 'Saved transfer history could not be read: $error';
       _log.warn('Transfer recovery unavailable', error);
@@ -98,6 +103,34 @@ class TransferNotifier extends ChangeNotifier {
       _backgroundRefresh ??= _refreshBackgroundRecovery().whenComplete(
         () => _backgroundRefresh = null,
       );
+
+  /// Integrity owns its active progress/cancel UI. Keep only its stopped or
+  /// newly completed rows in generic history, without touching queue jobs.
+  Future<void> refreshIntegrityHistory() async {
+    await ready;
+    if (_disposed) return;
+    _reconcileIntegrityProgress();
+    notifyListeners();
+  }
+
+  void _reconcileIntegrityProgress() {
+    final jobs = _journal.jobs.where(isIntegrityTransferJob).toList();
+    final currentIds = jobs.map((job) => job.id).toSet();
+    _operations.removeWhere(
+      (operation) =>
+          _integrityProgressIds.contains(operation.id) ||
+          currentIds.contains(operation.id),
+    );
+    _integrityProgressIds.retainAll(currentIds);
+    for (final job in jobs) {
+      if (!job.isFinished) _integrityProgressIds.add(job.id);
+      if (isJobLive(job.id)) continue;
+      if (job.needsReview ||
+          job.isFinished && _integrityProgressIds.contains(job.id)) {
+        _operations.add(_savedProgress(job));
+      }
+    }
+  }
 
   Future<void> _refreshBackgroundRecovery() async {
     await ready;
@@ -116,10 +149,12 @@ class TransferNotifier extends ChangeNotifier {
       }
       if (addProgress && !_disposed) {
         for (final job in _journal.jobs.where((job) => job.needsReview)) {
+          if (isIntegrityTransferJob(job) || isJobLive(job.id)) continue;
           if (!_operations.any((operation) => operation.id == job.id)) {
             _operations.add(_savedProgress(job));
           }
         }
+        _reconcileIntegrityProgress();
       }
     } catch (error) {
       final warning =
@@ -130,6 +165,7 @@ class TransferNotifier extends ChangeNotifier {
   }
 
   OperationProgress _savedProgress(TransferJobRecord job) {
+    if (isIntegrityTransferJob(job)) return _savedIntegrityProgress(job);
     final files = job.entries
         .map(
           (entry) => FileProgress(
@@ -175,6 +211,41 @@ class TransferNotifier extends ChangeNotifier {
           ? OperationStatus.waitingForDecision
           : OperationStatus.failed,
       errorMessage: complete || waiting
+          ? null
+          : job.message ?? transferStatusLabel(job.status),
+    );
+  }
+
+  OperationProgress _savedIntegrityProgress(TransferJobRecord job) {
+    final header = job.entries.firstOrNull;
+    final splitting = header?.recovery['integrityKind'] == 'split';
+    final entries = splitting ? job.entries.skip(1) : job.entries.take(1);
+    final files = entries.map((entry) {
+      final rawSize = splitting
+          ? entry.recovery['partSize']
+          : entry.recovery['totalBytes'];
+      return FileProgress(
+        name: p.basename(entry.destination),
+        path: entry.destination,
+        size: rawSize is int ? rawSize : 0,
+        isComplete: entry.recovery['confirmed'] is Map,
+        statusLabel: entry.phase,
+      );
+    }).toList();
+    final completed = job.isFinished;
+    return OperationProgress(
+      id: job.id,
+      type: OperationType.copy,
+      sourcePath: job.sourceLabel,
+      targetPath: job.targetDirectory,
+      fileName: header?.source.name ?? job.targetDirectory,
+      files: files,
+      totalBytes: files.fold(0, (sum, file) => sum + file.size),
+      currentBytes: files
+          .where((file) => file.isComplete)
+          .fold(0, (sum, file) => sum + file.size),
+      status: completed ? OperationStatus.completed : OperationStatus.failed,
+      errorMessage: completed
           ? null
           : job.message ?? transferStatusLabel(job.status),
     );
@@ -238,7 +309,12 @@ class TransferNotifier extends ChangeNotifier {
     if (isJobLive(id)) {
       throw StateError('Finish or cancel this transfer first.');
     }
-    await _journal.dismiss(id);
+    final job = _journal.job(id);
+    if (job != null && isIntegrityTransferJob(job)) {
+      await _journal.runExclusiveOperation(id, () => _journal.dismiss(id));
+    } else {
+      await _journal.dismiss(id);
+    }
     _operations.removeWhere((operation) => operation.id == id);
     notifyListeners();
   }
@@ -246,7 +322,16 @@ class TransferNotifier extends ChangeNotifier {
   Future<void> clearSavedCompleted() async {
     await ready;
     for (final job in _journal.jobs.where((job) => job.isFinished)) {
-      if (!isJobLive(job.id)) await _journal.dismiss(job.id);
+      if (!isJobLive(job.id)) {
+        if (isIntegrityTransferJob(job)) {
+          await _journal.runExclusiveOperation(
+            job.id,
+            () => _journal.dismiss(job.id),
+          );
+        } else {
+          await _journal.dismiss(job.id);
+        }
+      }
     }
     await _journal.compact();
     _operations.removeWhere(
@@ -422,6 +507,9 @@ class TransferNotifier extends ChangeNotifier {
       job = await _journal.create(id, plan, priority: priority);
     } else {
       final saved = _journal.job(id);
+      if (saved != null && isIntegrityTransferJob(saved)) {
+        throw StateError('Use Split/combine recovery for this operation.');
+      }
       if (saved == null ||
           !saved.ready ||
           saved.entries.length != plan.entries.length ||

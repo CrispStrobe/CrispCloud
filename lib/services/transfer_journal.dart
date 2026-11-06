@@ -27,6 +27,23 @@ class TransferJournal {
   int _pendingWrites = 0;
   Completer<void>? _writesDrained;
   bool _reloadAfterFailure = false;
+  final Set<String> _activeOperations = {};
+
+  bool isOperationActive(String id) => _activeOperations.contains(id);
+
+  /// Admit one owner before its first await. Operation-specific recovery uses
+  /// this gate across service instances sharing the foreground journal.
+  Future<T> runExclusiveOperation<T>(
+    String id,
+    Future<T> Function() operation,
+  ) {
+    if (!_activeOperations.add(id)) {
+      return Future<T>.error(StateError('This operation is already active.'));
+    }
+    return Future<T>.sync(operation).whenComplete(() {
+      _activeOperations.remove(id);
+    });
+  }
 
   List<TransferJobRecord> get jobs =>
       _jobs.values.toList()..sort((a, b) => b.created.compareTo(a.created));
