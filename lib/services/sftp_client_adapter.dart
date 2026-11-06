@@ -23,6 +23,10 @@ import 'cloud_storage_interface.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
 import 'sftp_config_service.dart';
+import 'web_ssh_socket.dart';
+
+// Preserve the existing public adapter import for downstream callers.
+export 'web_ssh_socket.dart' show WebSSHSocket;
 
 class SFTPClientAdapter extends CloudStorageClient
     with CloudTransferOperations
@@ -696,64 +700,4 @@ class SFTPClientAdapter extends CloudStorageClient
       await file.close();
     }
   }
-}
-
-// --- HELPER CLASSES FOR WEB SOCKET SFTP ---
-
-/// Wraps a WebSocketChannel to implement the SSHSocket interface.
-/// This allows dartssh2 to use WebSockets on the web.
-class WebSSHSocket implements SSHSocket {
-  final WebSocketChannel _ws;
-
-  WebSSHSocket(this._ws);
-
-  @override
-  Stream<Uint8List> get stream => _ws.stream.map((event) {
-    if (event is Uint8List) return event;
-    if (event is List<int>) return Uint8List.fromList(event);
-    throw FormatException(
-      'Invalid payload from WebSocket: ${event.runtimeType}',
-    );
-  });
-
-  @override
-  StreamSink<Uint8List> get sink => _WebSSHSink(_ws.sink);
-
-  @override
-  Future<void> close() => _ws.sink.close();
-
-  @override
-  Future<void> flush() async {
-    /* WebSocket sends are enqueued immediately. */
-  }
-
-  @override
-  Future<void> get done => _ws.sink.done;
-
-  @override
-  void destroy() {
-    _ws.sink.close();
-  }
-}
-
-/// Helper sink to cast Uint8List to dynamic for WebSocketChannel
-class _WebSSHSink implements StreamSink<Uint8List> {
-  final StreamSink _sink;
-  _WebSSHSink(this._sink);
-
-  @override
-  void add(Uint8List event) => _sink.add(event);
-
-  @override
-  void addError(Object error, [StackTrace? stackTrace]) =>
-      _sink.addError(error, stackTrace);
-
-  @override
-  Future addStream(Stream<Uint8List> stream) => _sink.addStream(stream);
-
-  @override
-  Future close() => _sink.close();
-
-  @override
-  Future get done => _sink.done;
 }

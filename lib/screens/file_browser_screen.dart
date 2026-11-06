@@ -4,6 +4,7 @@
 // Keyboard handling, dialogs, and about dialog are in separate files.
 
 import '../l10n/commander_strings.dart';
+import '../l10n/terminal_strings.dart';
 
 import 'dart:io' show Platform;
 
@@ -28,6 +29,7 @@ import '../services/office_editor_menu.dart';
 import '../services/image_editor_menu.dart';
 import '../services/media_editor_menu.dart';
 import '../services/pdf_editor_menu.dart';
+import '../services/terminal_menu.dart';
 import '../widgets/code_editor_menus.dart';
 import '../widgets/image_editor_menus.dart';
 import '../widgets/media_editor_menus.dart';
@@ -109,6 +111,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       mediaEditorMenuProvider,
     );
     final PdfEditorMenuActions? pdfEditor = ref.watch(pdfEditorMenuProvider);
+    final TerminalMenuActions? terminal = ref.watch(terminalMenuProvider);
     final auth = ref.watch(authProvider);
     final showPreview = ref.watch(showPreviewProvider);
     // layoutPresetProvider kept for persistence but no longer drives layout.
@@ -184,14 +187,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
               ),
             ),
             const OperationsPanel(),
-            // Embedded terminal panel
-            Consumer(
-              builder: (context, ref, _) {
-                final showTerminal = ref.watch(showTerminalProvider);
-                if (!showTerminal) return const SizedBox.shrink();
-                return const TerminalPanel();
-              },
-            ),
+            // Hiding the viewport must not terminate an interactive process.
+            const TerminalPanelHost(),
             FKeyBar(
               onAction: (action) => _handleFKeyAction(context, ref, action),
             ),
@@ -215,6 +212,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           pdfEditor,
           codeEditor,
           mediaEditor,
+          terminal,
         ),
         child: scaffold,
       );
@@ -241,6 +239,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     PdfEditorMenuActions? pdfEditor,
     CodeEditorMenuActions? codeEditor,
     MediaEditorMenuActions? mediaEditor,
+    TerminalMenuActions? terminal,
   ) {
     final appMenu = PlatformMenu(
       label: context.commanderTr("CrispCloud"),
@@ -305,6 +304,56 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       return <PlatformMenuItem>[
         appMenu,
         ...buildCodeEditorPlatformMenus(codeEditor),
+      ];
+    }
+
+    if (terminal != null && editor == null) {
+      return <PlatformMenuItem>[
+        appMenu,
+        PlatformMenu(
+          label: context.terminalTr('Terminal'),
+          menus: [
+            PlatformMenuItem(
+              label: context.terminalTr('Disconnect'),
+              onSelected: terminal.canDisconnect
+                  ? () => terminal.perform(TerminalMenuAction.disconnect)
+                  : null,
+            ),
+            PlatformMenuItem(
+              label: context.terminalTr('Hide terminal'),
+              shortcut: const SingleActivator(
+                LogicalKeyboardKey.keyW,
+                meta: true,
+              ),
+              onSelected: () => terminal.perform(TerminalMenuAction.hide),
+            ),
+          ],
+        ),
+        PlatformMenu(
+          label: context.terminalTr('Edit'),
+          menus: [
+            PlatformMenuItem(
+              label: context.terminalTr('Copy selection'),
+              shortcut: const SingleActivator(
+                LogicalKeyboardKey.keyC,
+                meta: true,
+              ),
+              onSelected: terminal.canCopy
+                  ? () => terminal.perform(TerminalMenuAction.copy)
+                  : null,
+            ),
+            PlatformMenuItem(
+              label: context.terminalTr('Paste'),
+              shortcut: const SingleActivator(
+                LogicalKeyboardKey.keyV,
+                meta: true,
+              ),
+              onSelected: terminal.canPaste
+                  ? () => terminal.perform(TerminalMenuAction.paste)
+                  : null,
+            ),
+          ],
+        ),
       ];
     }
 
@@ -1747,23 +1796,22 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         tooltip: context.commanderTr("{0} (Ctrl+U)", [l.swapPanels]),
         onPressed: () => _swapPanels(),
       ),
-      // Terminal toggle — only on native desktop
-      if (isDesktopPlatform)
-        Consumer(
-          builder: (ctx, cref, _) {
-            final showTerminal = cref.watch(showTerminalProvider);
-            return IconButton(
-              icon: Icon(
-                Icons.terminal,
-                size: 20,
-                color: showTerminal ? Theme.of(ctx).colorScheme.primary : null,
-              ),
-              tooltip: showTerminal ? l.hideTerminal : l.showTerminal,
-              onPressed: () => cref.read(showTerminalProvider.notifier).state =
-                  !showTerminal,
-            );
-          },
-        ),
+      // Browsers use an explicit WebSocket gateway for SSH.
+      Consumer(
+        builder: (ctx, cref, _) {
+          final showTerminal = cref.watch(showTerminalProvider);
+          return IconButton(
+            icon: Icon(
+              Icons.terminal,
+              size: 20,
+              color: showTerminal ? Theme.of(ctx).colorScheme.primary : null,
+            ),
+            tooltip: showTerminal ? l.hideTerminal : l.showTerminal,
+            onPressed: () =>
+                cref.read(showTerminalProvider.notifier).state = !showTerminal,
+          );
+        },
+      ),
       // Toggle: dual panel ↔ single panel
       Consumer(
         builder: (ctx, cref, _) {
@@ -2197,17 +2245,16 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         ),
         const PopupMenuDivider(),
 
-        if (isDesktopPlatform)
-          PopupMenuItem(
-            value: 'terminal',
-            child: _overflowItem(
-              Icons.terminal,
-              ref.read(showTerminalProvider) ? l.hideTerminal : l.showTerminal,
-              iconColor: ref.read(showTerminalProvider)
-                  ? Theme.of(context).colorScheme.primary
-                  : null,
-            ),
+        PopupMenuItem(
+          value: 'terminal',
+          child: _overflowItem(
+            Icons.terminal,
+            ref.read(showTerminalProvider) ? l.hideTerminal : l.showTerminal,
+            iconColor: ref.read(showTerminalProvider)
+                ? Theme.of(context).colorScheme.primary
+                : null,
           ),
+        ),
         PopupMenuItem(
           value: 'multi_cloud',
           child: _overflowItem(Icons.cloud_sync, l.multiCloudManager),

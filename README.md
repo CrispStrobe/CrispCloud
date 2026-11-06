@@ -50,6 +50,7 @@ We also maintain patched Nextcloud and ownCloud desktop clients with delta sync 
 - **Preview pane:** images (zoom/pan), SVG, PDF (page navigation), syntax-highlighted code (30+ languages), markdown, CSV/TSV tables, DOCX/XLSX/PPTX/ODT text, fonts (TTF/OTF/WOFF2), audio/video
 - **Archive browsing:** browse ZIP/TAR/TGZ files like folders (including on web)
 - **Built-in editor:** F4 text/code editor with syntax highlighting, synchronized line numbers, save/undo, and F3-viewer Edit handoff; F3 also previews archive members
+- **Interactive terminal:** local desktop PTY/Windows ConPTY and SSH sessions with ANSI colors, full-screen programs, live resizing, raw control keys, scrollback, and mobile extra keys. Browser SSH uses your own secure WebSocket gateway. [Terminal design, licensing, and platform support](docs/terminal.md)
 - **Office editing:** DOCX/XLSX/PPTX editing through the patched Quds engine, with independent Word round-trip verification and archive members kept view-only
 - **PDF editor:** annotate, fill standard PDF forms, edit page content, and organize pages from F4, the file menu, or the preview pane. Includes conflict checks, save-copy/export recovery, and password-protected input; see [PDF editing](docs/pdf-editor.md) for supported behavior and limits.
 - **Web support:** full file operations (open folder, copy, move, delete, download) via File System Access API with Safari/Firefox fallback

@@ -42,6 +42,7 @@ import 'services/installation_identity.dart';
 import 'services/thumbnail_service.dart';
 import 'services/proxy_service.dart';
 import 'services/pdf_font_licenses.dart';
+import 'services/terminal_licenses.dart';
 import 'services/secure_storage_service.dart';
 import 'services/secure_storage_web.dart';
 import 'widgets/lock_screen.dart';
@@ -60,6 +61,7 @@ Future<void> main() async {
     await InstallationIdentityService.instance.initialize();
     registerBundledEditorAssets();
     registerPdfFontLicenses();
+    registerTerminalLicenses();
     registerMediaVideoLicenses();
     LicenseRegistry.addLicense(() => Stream.value(const LicenseEntryWithLineBreaks(['libsmb2'], smbLicense)));
 

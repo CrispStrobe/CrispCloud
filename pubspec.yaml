@@ -33,6 +33,11 @@ dependencies:
   re_editor: ^0.10.0
   re_highlight: ^0.0.3
 
+  # Native Flutter terminal emulator + desktop PTY/Windows ConPTY (MIT).
+  # Pin reviewed releases; see docs/terminal.md for license provenance.
+  xterm2: 5.4.0
+  flutter_pty2: 3.0.0
+
   # Web specific
   universal_html: ^2.2.4
   
@@ -167,6 +172,10 @@ dev_dependencies:
   covfuzz: ^0.1.1
 
 dependency_overrides:
+  # Reviewed MIT 3.0.0 runtime; omit native subprocess assets on mobile.
+  # See packages/flutter_pty2/UPSTREAM.md for the two desktop-only guards.
+  flutter_pty2:
+    path: packages/flutter_pty2
   pro_video_editor:
     path: packages/pro_video_editor
   pro_image_editor:
@@ -211,6 +220,7 @@ flutter:
     - assets/fonts/Roboto_LICENSE.txt
     - assets/fonts/RobotoMono_LICENSE.txt
     - assets/licenses/pdf_fonts/
+    - assets/licenses/terminal/
 
   fonts:
     - family: StoreRoboto

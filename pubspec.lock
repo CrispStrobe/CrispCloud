@@ -358,6 +358,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.8.1"
+  equatable:
+    dependency: transitive
+    description:
+      name: equatable
+      sha256: "3bce007a596ff8b3119c45d68aaef631272537c03d30e5d4534dd24bf4c5eaa2"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.1.0"
   extension:
     dependency: transitive
     description:
@@ -556,6 +564,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.35"
+  flutter_pty2:
+    dependency: "direct main"
+    description:
+      path: "packages/flutter_pty2"
+      relative: true
+    source: path
+    version: "3.0.0"
   flutter_riverpod:
     dependency: "direct main"
     description:
@@ -1323,6 +1338,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.5.0"
+  quiver:
+    dependency: transitive
+    description:
+      name: quiver
+      sha256: ea0b925899e64ecdfbf9c7becb60d5b50e706ade44a85b2363be2a22d88117d2
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.2.2"
   re_editor:
     dependency: "direct main"
     description:
@@ -1920,6 +1943,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.6.1"
+  xterm2:
+    dependency: "direct main"
+    description:
+      name: xterm2
+      sha256: da8f15c6ecd0a0e06ca11f8d9fe55d6f1e686823ff084ad82fccf9a5fd1f8c00
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.4.0"
+  xterm2_core:
+    dependency: transitive
+    description:
+      name: xterm2_core
+      sha256: "500ac551e448d8fa9766671aba26303dd5979d9d1af93df77af80afae16c75de"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
   yaml:
     dependency: transitive
     description:
@@ -1928,6 +1967,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.3"
+  zmodem:
+    dependency: transitive
+    description:
+      name: zmodem
+      sha256: "3b7e5b29f3a7d8aee472029b05165a68438eff2f3f7766edf13daba1e297adbf"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.6"
 sdks:
   dart: ">=3.13.0 <4.0.0"
   flutter: ">=3.47.0"
