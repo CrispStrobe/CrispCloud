@@ -351,11 +351,10 @@ class FileConflictResolution {
   final bool applyToAll;
 }
 
-typedef DetailedFileConflictResolver =
-    Future<FileConflictResolution> Function(
-      FileOperationEntry entry,
-      FileItem existing,
-    );
+typedef DetailedFileConflictResolver = Future<FileConflictResolution> Function(
+  FileOperationEntry entry,
+  FileItem existing,
+);
 
 class FileOperationNeedsDecision implements Exception {
   const FileOperationNeedsDecision();
@@ -363,11 +362,10 @@ class FileOperationNeedsDecision implements Exception {
   String toString() => 'Waiting for a conflict decision.';
 }
 
-typedef FileConflictResolver =
-    Future<FileConflictDecision> Function(
-      FileOperationEntry entry,
-      FileItem existing,
-    );
+typedef FileConflictResolver = Future<FileConflictDecision> Function(
+  FileOperationEntry entry,
+  FileItem existing,
+);
 
 /// Previews all paths, then executes in order. Directory moves are file-by-file:
 /// only empty source directories are removed, so filters/skips never lose data.
@@ -649,8 +647,7 @@ class FileOperationService {
       if (file.isFolder &&
           !options.matchesSharedCriteria(file, matcher: criteriaMatcher)) {
         entry.outcome = FileOperationOutcome.filtered;
-        entry.message =
-            'Folder excluded by shared criteria; matching descendants remain eligible.';
+        entry.message = 'Folder excluded by shared criteria; matching descendants remain eligible.';
       }
       final previous = destinations[destination.destinationPathKey(output)];
       if (previous != null && !(previous.source.isFolder && file.isFolder)) {
@@ -1107,6 +1104,20 @@ class FileOperationService {
         if (entry.source.isFolder && entry.source.isSymlink != true) {
           await _ensureDirectory(target, entry.destination);
           entry.outcome = FileOperationOutcome.directoryCreated;
+          if (options.requestsMetadataPreservation) {
+            final directory = await target.stat(entry.destination);
+            _checkSources(source, target);
+            if (directory == null ||
+                !directory.isFolder ||
+                directory.isSymlink == true) {
+              throw StateError('The destination directory changed.');
+            }
+            entry.recovery = {
+              ...?entry.recovery,
+              'directoryMetadataApplied': false,
+              'directoryTargetObjectId': directory.uuid,
+            };
+          }
           entry.message = existing == null
               ? 'Directory created.'
               : 'Merged into existing directory.';
@@ -1157,6 +1168,10 @@ class FileOperationService {
               recoveredStagePath == null &&
               recoveredUploadPath == null &&
               !options.verifyContents &&
+              // A native move consumes the source before a later metadata
+              // write can fail. Keep it until every explicitly requested
+              // preservation step has succeeded.
+              !options.requestsMetadataPreservation &&
               source.identity == target.identity &&
               options.kind == FileOperationKind.move) {
             nativeMoved = await source.moveNoReplace(
@@ -1372,22 +1387,81 @@ class FileOperationService {
       }
       onEntryComplete?.call(entry);
     }
-    if (options.preserveModified && !control.isCancelled) {
+    if (options.requestsMetadataPreservation && !control.isCancelled) {
+      // Restrictive modes/ACLs are applied after children. Do not lock a
+      // directory while an unfinished child still needs a write or retry.
+      final incompleteDirectories = <String>{};
+      void retainAncestors(String path) {
+        var parent = source.paths.dirname(path);
+        while (incompleteDirectories.add(source.pathKey(parent))) {
+          final next = source.paths.dirname(parent);
+          if (next == parent) break;
+          parent = next;
+        }
+      }
+
+      for (final entry in plan.entries) {
+        if (entry.failed ||
+            entry.outcome == FileOperationOutcome.pending ||
+            entry.outcome == FileOperationOutcome.needsDecision ||
+            entry.outcome == FileOperationOutcome.cancelled) {
+          retainAncestors(entry.source.path!);
+        }
+      }
       for (final entry in plan.entries.reversed.where(
         (entry) =>
             entry.source.isFolder &&
-            entry.completed &&
-            entry.source.updatedAt != null,
+            entry.source.isSymlink != true &&
+            entry.outcome == FileOperationOutcome.directoryCreated &&
+            entry.recovery?['directoryMetadataApplied'] != true,
       )) {
+        if (incompleteDirectories.contains(
+          source.pathKey(entry.source.path!),
+        )) {
+          continue;
+        }
         try {
           await control.checkpoint();
           _checkSources(source, target);
           plan.assertDestinationUnprotected(entry.destination);
-          await target.setModified(entry.destination, entry.source.updatedAt!);
+          final currentSource = await source.stat(entry.source.path!);
+          final currentTarget = await target.stat(entry.destination);
+          _checkSources(source, target);
+          final expectedTargetId = entry.recovery?['directoryTargetObjectId'];
+          if (currentSource == null ||
+              !currentSource.isFolder ||
+              currentSource.isSymlink == true ||
+              // Child moves can legitimately change a directory revision.
+              // Its stable object identity must still match the reviewed one.
+              (entry.source.uuid != null &&
+                  currentSource.uuid != entry.source.uuid) ||
+              currentTarget == null ||
+              !currentTarget.isFolder ||
+              currentTarget.isSymlink == true ||
+              (expectedTargetId != null &&
+                  currentTarget.uuid != expectedTargetId)) {
+            throw StateError(
+              'A directory changed before its metadata could be preserved.',
+            );
+          }
+          await checkpoint?.call(entry, 'directoryMetadata');
+          await _preserveMetadata(source, target, entry, options);
+          entry.recovery = {
+            ...?entry.recovery,
+            'directoryMetadataApplied': true,
+          };
+          await checkpoint?.call(entry, 'complete');
+          onEntryComplete?.call(entry);
+        } on FileOperationCancelled {
+          // The job remains cancelled with its unfinished metadata checkpoint;
+          // cancellation is not a metadata error and must not remove sources.
+          break;
         } catch (error) {
           entry.outcome = FileOperationOutcome.metadataFailed;
           entry.message =
-              'Contents copied; directory timestamp could not be preserved: $error';
+              'Directory contents copied; metadata could not be preserved: '
+              '$error. Source directory retained.';
+          retainAncestors(entry.source.path!);
           await checkpoint?.call(entry, 'metadataFailed');
           onEntryComplete?.call(entry);
         }
@@ -1397,7 +1471,9 @@ class FileOperationService {
       for (final entry in plan.entries.reversed.where(
         (entry) =>
             entry.source.isFolder &&
-            entry.outcome == FileOperationOutcome.directoryCreated,
+            entry.outcome == FileOperationOutcome.directoryCreated &&
+            (!options.requestsMetadataPreservation ||
+                entry.recovery?['directoryMetadataApplied'] == true),
       )) {
         try {
           await control.checkpoint();
@@ -1429,23 +1505,38 @@ class FileOperationService {
   ) async {
     try {
       if (entry.source.isSymlink == true &&
-          (options.preserveModified ||
-              options.preservePermissions ||
-              options.preserveOwnership ||
-              options.preserveExtendedAttributes ||
-              options.preserveAcl)) {
+          options.requestsMetadataPreservation) {
         throw UnsupportedError(
           'Link metadata cannot be changed without following the target.',
         );
       }
-      if (options.preserveModified && entry.source.updatedAt != null) {
-        await target.setModified(entry.destination, entry.source.updatedAt!);
-      }
+      TransferMetadata? metadata;
       if (options.preservePermissions ||
           options.preserveOwnership ||
           options.preserveExtendedAttributes ||
           options.preserveAcl) {
-        final metadata = await source.readMetadata(entry.source.path!);
+        metadata = await source.readMetadata(entry.source.path!);
+        _checkSources(source, target);
+        final missing = [
+          if (options.preservePermissions && metadata.mode == null)
+            'permissions',
+          if (options.preserveOwnership &&
+              (metadata.owner == null || metadata.group == null))
+            'ownership',
+          if (options.preserveAcl && metadata.acl == null)
+            'access control list',
+        ];
+        if (missing.isNotEmpty) {
+          throw StateError(
+            'The source did not return requested ${missing.join(', ')} '
+            'metadata for ${entry.source.path}.',
+          );
+        }
+      }
+      if (options.preserveModified && entry.source.updatedAt != null) {
+        await target.setModified(entry.destination, entry.source.updatedAt!);
+      }
+      if (metadata != null) {
         await target.writeMetadata(
           entry.destination,
           TransferMetadata(

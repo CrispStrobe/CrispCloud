@@ -123,6 +123,13 @@ class FileOperationOptions {
   final FileCopyMethod copyMethod;
   final bool preallocate;
 
+  bool get requestsMetadataPreservation =>
+      preserveModified ||
+      preservePermissions ||
+      preserveOwnership ||
+      preserveExtendedAttributes ||
+      preserveAcl;
+
   FileSearchQuery get searchFilter => FileSearchQuery(
     namePattern: pattern?.expression ?? '*',
     nameMode: pattern?.mode ?? FilePatternMode.wildcard,
