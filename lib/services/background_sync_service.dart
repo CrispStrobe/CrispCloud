@@ -11,6 +11,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'background_transfer_journal.dart';
+import 'cloud_storage_interface.dart';
 import 'log_service.dart';
 import 'installation_identity.dart';
 import 'sync_database.dart';
@@ -130,16 +132,23 @@ class BackgroundSyncService {
   ///
   /// This runs in an isolate that has NO Flutter widget tree — only raw Dart
   /// and platform channels. Keep it lean: init DB, sync, notify, return.
-  static Future<bool> executeBackgroundTask() async {
+  /// Optional factories allow host-side integration tests to exercise the
+  /// same run lifecycle without a platform credential store or user database.
+  static Future<bool> executeBackgroundTask({
+    SyncDatabase Function()? databaseFactory,
+    Future<CloudStorageClient?> Function(String provider)? clientFactory,
+    Future<BackgroundTransferJournalRun> Function()? journalFactory,
+  }) async {
     _log.info('Background sync task started');
 
     SyncDatabase? db;
+    BackgroundTransferJournalRun? run;
     try {
       // Background isolates must resolve the same persisted installation as
       // foreground pairs. An uninitialized session identity cannot bind paths.
       await InstallationIdentityService.instance.initialize();
       // 1. Open database
-      db = SyncDatabase();
+      db = databaseFactory?.call() ?? SyncDatabase();
 
       // 2. Get all enabled sync pairs
       final pairs = await db.getEnabledPairs();
@@ -151,14 +160,22 @@ class BackgroundSyncService {
       // 3. Run sync for each pair
       //    In background we don't have a live auth provider, so we try to
       //    reconstruct a client from stored credentials for each pair.
-      final engine = SyncEngine(db);
+      // A background isolate must not append to the foreground journal. Its
+      // own leased log remains discoverable after termination; foreground
+      // recovery imports it only after this writer has released the lease.
+      run =
+          await (journalFactory?.call() ??
+              createBackgroundTransferJournalRun());
+      final engine = SyncEngine(db, journal: run.journal);
       int conflicts = 0;
       int errors = 0;
       final errorMessages = <String>[];
 
       for (final pair in pairs) {
         try {
-          final client = await mobile.buildClientForProvider(pair.provider);
+          final client = await (clientFactory ?? mobile.buildClientForProvider)(
+            pair.provider,
+          );
           if (client == null) {
             _log.warn(
               'Could not build client for provider "${pair.provider}" — skipping "${pair.name}"',
@@ -210,7 +227,11 @@ class BackgroundSyncService {
       } catch (_) {}
       return false;
     } finally {
-      await db?.close();
+      try {
+        await run?.close();
+      } finally {
+        await db?.close();
+      }
     }
   }
 
