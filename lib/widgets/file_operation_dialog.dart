@@ -183,6 +183,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
   final _duplicateNameTemplate = TextEditingController(
     text: const FileOperationOptions().duplicateNameTemplate,
   );
+  final _clientRate = TextEditingController();
   final _targetName = TextEditingController();
   final _minimumSize = TextEditingController();
   final _maximumSize = TextEditingController();
@@ -301,6 +302,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     for (final controller in [
       _nameMask,
       _duplicateNameTemplate,
+      _clientRate,
       _targetName,
       _minimumSize,
       _maximumSize,
@@ -415,6 +417,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     preferNative: _native,
     copyMethod: _copyMethod,
     preallocate: _preallocate,
+    clientBytesPerSecond: _clientRateBytes(),
     searchCriteria: _searchCriteria,
     pattern: FileSelectionPattern(
       _mask.text,
@@ -423,6 +426,25 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
       matchFullPath: _matchPath,
     ),
   );
+
+  int? _clientRateBytes() {
+    final text = _clientRate.text.trim();
+    if (text.isEmpty) return null;
+    final kibibytes = double.tryParse(text);
+    if (kibibytes == null || !kibibytes.isFinite || kibibytes <= 0) {
+      throw const FormatException(
+        'Enter a positive client streaming rate or leave it empty for unlimited.',
+      );
+    }
+    final bytes = kibibytes * 1024;
+    // Bound the conversion before round(), including on the web runtime.
+    if (bytes < 1 || bytes > FileOperationOptions.maximumClientBytesPerSecond) {
+      throw const FormatException(
+        'The client streaming rate must be between 1 byte/s and 1 TiB/s.',
+      );
+    }
+    return bytes.round();
+  }
 
   void _applyProfile(FileOperationOptions options) {
     _fileConflict = options.fileConflict;
@@ -453,6 +475,12 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     _native = options.preferNative;
     _copyMethod = options.copyMethod;
     _preallocate = options.preallocate;
+    final rate = options.clientBytesPerSecond;
+    _clientRate.text = rate == null
+        ? ''
+        : rate % 1024 == 0
+        ? (rate ~/ 1024).toString()
+        : (rate / 1024).toString();
     _searchCriteria = options.searchCriteria;
   }
 
@@ -1281,6 +1309,28 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                             }
                           });
                         },
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  key: const ValueKey('transfer-client-rate'),
+                  controller: _clientRate,
+                  enabled: !_busy,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: context.commanderTr(
+                      "Client streaming rate (KiB/s)",
+                    ),
+                    hintText: context.commanderTr("Unlimited"),
+                    helperText: context.commanderTr(
+                      "Limits bytes fed to the copy stream. Verification and native/server-side copies are not limited; buffered uploads may still burst.",
+                    ),
+                    helperMaxLines: 5,
+                    border: const OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  onChanged: (_) => _change(() {}),
                 ),
                 _toggle(
                   context.commanderTr(

@@ -2,6 +2,7 @@ import '../models/file_item.dart';
 import '../models/file_search_query.dart';
 import 'duplicate_name_template.dart';
 import 'file_selection_pattern.dart';
+import 'stream_rate_limiter.dart';
 
 enum FileOperationKind { copy, move }
 
@@ -37,6 +38,9 @@ enum FileOperationOutcome {
 /// Frozen and serializable settings; credentials and account objects never
 /// belong in saved profiles or operation manifests.
 class FileOperationOptions {
+  static const maximumClientBytesPerSecond =
+      StreamRateLimiter.maximumBytesPerSecond;
+
   const FileOperationOptions({
     this.kind = FileOperationKind.copy,
     this.fileConflict = FileConflictPolicy.ask,
@@ -67,6 +71,7 @@ class FileOperationOptions {
     this.preferNative = true,
     this.copyMethod = FileCopyMethod.automatic,
     this.preallocate = false,
+    this.clientBytesPerSecond,
   });
 
   final FileOperationKind kind;
@@ -122,6 +127,12 @@ class FileOperationOptions {
 
   void validateTransferSettings() {
     DuplicateNameTemplate(duplicateNameTemplate);
+    final rate = clientBytesPerSecond;
+    if (rate != null && (rate <= 0 || rate > maximumClientBytesPerSecond)) {
+      throw const FormatException(
+        'The client streaming rate must be positive and at most 1 TiB/s.',
+      );
+    }
   }
 
   final int? minimumSize;
@@ -134,6 +145,11 @@ class FileOperationOptions {
   final bool preferNative;
   final FileCopyMethod copyMethod;
   final bool preallocate;
+
+  /// Maximum bytes per second fed to this operation's copy stream. Null means
+  /// unlimited. Native/server-side operations, verification reads and buffered
+  /// provider upload bodies do not pass through that stream.
+  final int? clientBytesPerSecond;
 
   bool get requestsMetadataPreservation =>
       preserveModified ||
@@ -191,6 +207,7 @@ class FileOperationOptions {
     'preferNative': preferNative,
     'copyMethod': copyMethod.name,
     'preallocate': preallocate,
+    'clientBytesPerSecond': clientBytesPerSecond,
   };
 
   factory FileOperationOptions.fromJson(Map<String, dynamic> json) {
@@ -239,6 +256,7 @@ class FileOperationOptions {
         json['copyMethod'] as String? ?? 'automatic',
       ),
       preallocate: json['preallocate'] == true,
+      clientBytesPerSecond: json['clientBytesPerSecond'] as int?,
     );
     options.validateTransferSettings();
     return options;

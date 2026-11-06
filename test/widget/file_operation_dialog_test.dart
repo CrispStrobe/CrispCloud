@@ -736,6 +736,41 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('client streaming rate loads and saves exact fractional KiB values', (tester) async {
+    await FileOperationProfiles().save(
+      '@default:copy',
+      const FileOperationOptions(clientBytesPerSecond: 512),
+    );
+    await open(tester);
+    final rate = find.byKey(const ValueKey('transfer-client-rate'));
+    expect(tester.widget<TextField>(rate).controller!.text, '0.5');
+    expect(
+      find.text('Limits bytes fed to the copy stream. Verification and native/server-side copies are not limited; buffered uploads may still burst.'),
+      findsOneWidget,
+    );
+    await tester.ensureVisible(rate);
+    await tester.enterText(rate, '1.25');
+    await tester.ensureVisible(find.text('Save as defaults'));
+    await tester.tap(find.text('Save as defaults'));
+    await tester.pumpAndSettle();
+    expect((await FileOperationProfiles().load())['@default:copy']!.clientBytesPerSecond, 1280);
+    await tester.ensureVisible(rate);
+    await tester.enterText(rate, '0');
+    await tester.ensureVisible(find.text('Save as defaults'));
+    await tester.tap(find.text('Save as defaults'));
+    await tester.pumpAndSettle();
+    expect((await FileOperationProfiles().load())['@default:copy']!.clientBytesPerSecond, 1280);
+    expect(find.textContaining('positive client streaming rate'), findsOneWidget);
+    await tester.ensureVisible(rate);
+    await tester.enterText(rate, '');
+    await tester.ensureVisible(find.text('Save as defaults'));
+    await tester.tap(find.text('Save as defaults'));
+    await tester.pumpAndSettle();
+    expect((await FileOperationProfiles().load())['@default:copy']!.clientBytesPerSecond, isNull);
+    expect(cloud.uploads, isEmpty);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('move deletes only files that pass the configured filter', (
     tester,
   ) async {

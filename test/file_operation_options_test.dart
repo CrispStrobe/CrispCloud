@@ -60,6 +60,7 @@ void main() {
       verifyContents: true,
       copyMethod: FileCopyMethod.stream,
       preallocate: true,
+      clientBytesPerSecond: 128 * 1024,
     );
     expect(
       FileOperationOptions.fromJson(options.toJson()).toJson(),
@@ -78,6 +79,7 @@ void main() {
           destinationMask: '*.bak',
           duplicateNameTemplate: '{name}_backup-{counter:000}{ext}',
           fileConflict: FileConflictPolicy.keepBoth,
+          clientBytesPerSecond: 512,
         ),
       );
       final stored = (await profiles.load())['@default:copy']!;
@@ -85,6 +87,7 @@ void main() {
       expect(stored.relativeBase, isNull);
       expect(stored.destinationMask, '*.bak');
       expect(stored.duplicateNameTemplate, '{name}_backup-{counter:000}{ext}');
+      expect(stored.clientBytesPerSecond, 512);
       await profiles.remove('@default:copy');
       expect(await profiles.load(), isEmpty);
     },
@@ -92,17 +95,39 @@ void main() {
 
   test('old saved options retain the original numbered duplicate names', () {
     final legacy = const FileOperationOptions().toJson()
-      ..remove('duplicateNameTemplate');
+      ..remove('duplicateNameTemplate')
+      ..remove('clientBytesPerSecond');
+    expect(FileOperationOptions.fromJson(legacy).clientBytesPerSecond, isNull);
     expect(
       FileOperationOptions.fromJson(legacy).duplicateNameTemplate,
       '{name} ({counter}){ext}',
     );
   });
 
+  test('invalid streaming rates cannot be restored or saved', () async {
+    for (final rate in [
+      0,
+      -1,
+      FileOperationOptions.maximumClientBytesPerSecond + 1,
+    ]) {
+      final invalid = FileOperationOptions(clientBytesPerSecond: rate);
+      expect(invalid.validateTransferSettings, throwsFormatException);
+      expect(
+        () => FileOperationOptions.fromJson(invalid.toJson()),
+        throwsFormatException,
+      );
+      await expectLater(
+        FileOperationProfiles().save('invalid', invalid),
+        throwsFormatException,
+      );
+    }
+    expect(await FileOperationProfiles().load(), isEmpty);
+  });
+
   test(
     'invalid saved templates cannot enter profiles or restored jobs',
     () async {
-    const invalid = FileOperationOptions(
+      const invalid = FileOperationOptions(
         duplicateNameTemplate: '../{name}-{counter}',
       );
       expect(

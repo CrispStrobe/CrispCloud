@@ -11,6 +11,7 @@ import 'destination_name_mask.dart';
 import 'duplicate_name_template.dart';
 import 'file_selection_pattern.dart';
 import 'storage_transfer_contract.dart';
+import 'stream_rate_limiter.dart';
 
 export 'file_operation_options.dart';
 
@@ -259,34 +260,45 @@ class FileOperationPlan {
       .fold(0, (sum, entry) => sum + (entry.source.size ?? 0));
 }
 
-class FileOperationControl {
+class FileOperationControl implements StreamRateControl {
   bool _cancelled = false;
   final Completer<void> _cancellation = Completer<void>();
-  final StreamController<bool> _cancelEvents = StreamController<bool>.broadcast(
+  final StreamController<void> _changeEvents = StreamController<void>.broadcast(
     sync: true,
   );
   Future<void> get cancellationFuture => _cancellation.future;
+  @override
+  Stream<void> get changes => _changeEvents.stream;
   Completer<void>? _paused;
+  @override
   bool get isCancelled => _cancelled;
+  @override
   bool get isPaused => _paused != null;
   void cancel() {
     if (_cancelled) return;
     _cancelled = true;
     if (!_cancellation.isCompleted) _cancellation.complete();
-    _cancelEvents.add(true);
-    resume();
+    final pause = _paused;
+    _paused = null;
+    pause?.complete();
+    _changeEvents.add(null);
   }
 
   void pause() {
-    if (!_cancelled) _paused ??= Completer<void>();
+    if (_cancelled || _paused != null) return;
+    _paused = Completer<void>();
+    _changeEvents.add(null);
   }
 
   void resume() {
     final pause = _paused;
+    if (pause == null) return;
     _paused = null;
-    pause?.complete();
+    pause.complete();
+    _changeEvents.add(null);
   }
 
+  @override
   Future<void> checkpoint() async {
     if (_cancelled) throw const FileOperationCancelled();
     await _paused?.future;
@@ -298,7 +310,7 @@ class FileOperationControl {
   Stream<T> bind<T>(Stream<T> input) {
     late StreamController<T> output;
     StreamSubscription<T>? source;
-    StreamSubscription<bool>? cancelled;
+    StreamSubscription<void>? cancelled;
     void stopSource() {
       final pending = source?.cancel();
       if (pending != null) unawaited(pending.catchError((Object _) {}));
@@ -312,7 +324,8 @@ class FileOperationControl {
           unawaited(output.close());
           return;
         }
-        cancelled = _cancelEvents.stream.listen((_) {
+        cancelled = _changeEvents.stream.listen((_) {
+          if (!_cancelled) return;
           if (!output.isClosed) {
             output.addError(const FileOperationCancelled());
             unawaited(output.close());
@@ -398,7 +411,11 @@ typedef FileConflictResolver = Future<FileConflictDecision> Function(
 /// Previews all paths, then executes in order. Directory moves are file-by-file:
 /// only empty source directories are removed, so filters/skips never lose data.
 class FileOperationService {
-  const FileOperationService();
+  const FileOperationService({
+    this.rateLimiterFactory = createStreamRateLimiter,
+  });
+
+  final StreamRateLimiter Function(int bytesPerSecond) rateLimiterFactory;
 
   void _checkSources(FileOperationBackend source, FileOperationBackend target) {
     if (!source.isCurrent || !target.isCurrent) {
@@ -913,6 +930,9 @@ class FileOperationService {
     final source = plan.source;
     final target = plan.destination;
     final options = plan.options;
+    final rateLimiter = options.clientBytesPerSecond == null
+        ? null
+        : rateLimiterFactory(options.clientBytesPerSecond!);
     final duplicateNames = DuplicateNameTemplate(options.duplicateNameTemplate);
     final skippedDirectories = <String>[];
     final reserved = plan.entries
@@ -1330,7 +1350,10 @@ class FileOperationService {
             if (!nativeCopied) {
               Stream<List<int>> tracked() async* {
                 try {
-                  await for (final chunk in control.bind(contents())) {
+                  final input = control.bind(contents());
+                  final limited =
+                      rateLimiter?.bind(input, control: control) ?? input;
+                  await for (final chunk in limited) {
                     await control.checkpoint();
                     _checkSources(source, target);
                     sent += chunk.length;

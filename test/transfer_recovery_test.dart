@@ -352,6 +352,7 @@ void main() {
       options: const FileOperationOptions(
         fileConflict: FileConflictPolicy.keepBoth,
         duplicateNameTemplate: '{name}_copy-{counter:000}{ext}',
+        clientBytesPerSecond: 128 * 1024,
       ),
     );
     expect(prepared.entries.single.destination, '/target/a_copy-001.txt');
@@ -360,6 +361,7 @@ void main() {
     await restarted.initialize();
     final restored = restarted.job('custom-copy')!;
     expect(restored.options.duplicateNameTemplate, '{name}_copy-{counter:000}{ext}');
+    expect(restored.options.clientBytesPerSecond, 128 * 1024);
     final preview = await const TransferRecoveryService().prepare(
       restored,
       source: source,
@@ -368,6 +370,7 @@ void main() {
     );
     expect(preview.issues, isEmpty);
     expect(preview.plan.entries.single.recovery!['duplicateNameBase'], '/target/a.txt');
+    expect(preview.plan.options.clientBytesPerSecond, 128 * 1024);
     // Another actor can take the reviewed name after recovery's revalidation.
     target.file('/target/a_copy-001.txt', 'late arrival');
     await JournaledTransferRunner(restarted).execute(
