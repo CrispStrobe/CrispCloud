@@ -1595,6 +1595,12 @@ class FileOperationService {
           'Link metadata cannot be changed without following the target.',
         );
       }
+      if (options.preserveModified && entry.source.updatedAt == null) {
+        throw StateError(
+          'The reviewed source has no modification timestamp to preserve: '
+          '${entry.source.path}.',
+        );
+      }
       TransferMetadata? metadata;
       if (options.preservePermissions ||
           options.preserveOwnership ||

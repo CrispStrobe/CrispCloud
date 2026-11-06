@@ -298,6 +298,63 @@ void main() {
     });
   }
 
+  for (final folder in [false, true]) {
+    test(
+      'missing ${folder ? 'directory' : 'file'} timestamp retains a move source',
+      () async {
+        final source = _MetadataBackend('source');
+        if (folder) {
+          source.directory('/item');
+        } else {
+          source.file('/item', 'retain');
+        }
+        source.metadata['/item'] = const TransferMetadata();
+        final target = _MetadataBackend('target');
+        final plan = await prepare(
+          source,
+          target,
+          root: '/item',
+          options: const FileOperationOptions(
+            kind: FileOperationKind.move,
+            preserveModified: true,
+          ),
+        );
+        await service.execute(plan, control: FileOperationControl());
+        expect(
+          plan.entries.single.outcome,
+          FileOperationOutcome.metadataFailed,
+        );
+        expect(plan.entries.single.message, contains('modification timestamp'));
+        expect(await source.stat('/item'), isNotNull);
+        expect(await target.stat('/target/item'), isNotNull);
+        if (!folder) {
+          expect(source.bytes['/item'], target.bytes['/target/item']);
+        }
+      },
+    );
+  }
+
+  test(
+    'permissions-only preservation does not probe unrelated metadata',
+    () async {
+      final source = _SelectiveMetadataBackend()
+        ..file('/file.txt', 'source', mode: 0x180);
+      final target = _MetadataBackend('target');
+      final plan = await prepare(source, target, root: '/file.txt');
+      await service.execute(plan, control: FileOperationControl());
+      expect(plan.entries.single.outcome, FileOperationOutcome.copied);
+      expect(target.metadata['/target/file.txt']!.mode, 0x180);
+      expect(source.requested, {
+        'permissions': true,
+        'modified': false,
+        'accessed': false,
+        'ownership': false,
+        'extendedAttributes': false,
+        'acl': false,
+      });
+    },
+  );
+
   test(
     'an empty source extended-attribute map is supported metadata',
     () async {
@@ -368,6 +425,7 @@ class _MetadataBackend extends FileOperationBackend {
     directories.add(path);
     metadata[path] = TransferMetadata(
       mode: mode,
+      modified: DateTime.utc(2024),
       owner: '1000',
       group: '1000',
       acl: 'owner:rwx;group:r-x',
@@ -380,6 +438,7 @@ class _MetadataBackend extends FileOperationBackend {
     bytes[path] = utf8.encode(contents);
     metadata[path] = TransferMetadata(
       mode: mode,
+      modified: DateTime.utc(2024),
       owner: '1000',
       group: '1000',
       acl: 'owner:rw-;group:r--',
@@ -488,5 +547,38 @@ class _MetadataBackend extends FileOperationBackend {
     bytes[destination] = bytes.remove(file.path)!;
     metadata[destination] = metadata.remove(file.path)!;
     return true;
+  }
+}
+
+class _SelectiveMetadataBackend extends _MetadataBackend {
+  _SelectiveMetadataBackend() : super('selective');
+  Map<String, bool>? requested;
+
+  @override
+  Future<TransferMetadata> readMetadata(String path) async =>
+      throw UnsupportedError('The filesystem cannot read ACLs.');
+
+  @override
+  Future<TransferMetadata> readMetadataFields(
+    String path, {
+    bool permissions = true,
+    bool modified = true,
+    bool accessed = true,
+    bool ownership = true,
+    bool extendedAttributes = true,
+    bool acl = true,
+  }) async {
+    requested = {
+      'permissions': permissions,
+      'modified': modified,
+      'accessed': accessed,
+      'ownership': ownership,
+      'extendedAttributes': extendedAttributes,
+      'acl': acl,
+    };
+    if (modified || accessed || ownership || extendedAttributes || acl) {
+      throw UnsupportedError('Only POSIX mode is available.');
+    }
+    return TransferMetadata(mode: metadata[path]!.mode);
   }
 }
