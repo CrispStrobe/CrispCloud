@@ -550,7 +550,12 @@ String? _readAcl(
   try {
     return _readSupportedAcl(lib, fd, path, descriptorPath);
   } on FileSystemException catch (error) {
-    if (_unsupported(error.osError?.errorCode ?? -1)) return null;
+    final code = error.osError?.errorCode ?? -1;
+    if (_unsupported(code) || (_mac && code == 2)) return null;
+    // Darwin's acl_get_fd_np also reports ENOENT when FILESEC_ACL was not
+    // returned by fstatx_np. XNU uses that state both for absent ACLs and for
+    // unsupported va_acl evidence, so it must not become a synthetic empty
+    // ACL. An explicit preservation request will reject this null field.
     rethrow;
   }
 }

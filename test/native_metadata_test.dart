@@ -8,12 +8,14 @@ import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:crisp_cloud/services/native_metadata.dart';
 import 'package:crisp_cloud/services/storage_transfer_contract.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late Directory root;
   late LocalOperationBackend backend;
   setUp(() async {
+    SharedPreferences.setMockInitialValues({});
     root = await Directory.systemTemp.createTemp('crisp-metadata-');
     backend = LocalOperationBackend(LocalFileService(), isCurrent: () => true);
   });

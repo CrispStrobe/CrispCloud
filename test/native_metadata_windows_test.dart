@@ -458,7 +458,10 @@ Future<String> _powershell(String path, String script) async {
 Future<Map<String, dynamic>> _inspect(String path) async => jsonDecode(
   await _powershell(path, r'''
 $item = Get-Item -Force -LiteralPath $env:CRISP_METADATA_TEST_PATH
-$acl = Get-Acl -LiteralPath $env:CRISP_METADATA_TEST_PATH
+# Use Windows PowerShell's .NET Framework filesystem security accessor. The
+# runner's inherited PowerShell 7 module path can break Get-Acl autoloading in
+# powershell.exe; this remains an independent native security read.
+$acl = $item.GetAccessControl()
 [ordered]@{
   owner = $acl.GetOwner([Security.Principal.SecurityIdentifier]).Value
   group = $acl.GetGroup([Security.Principal.SecurityIdentifier]).Value
