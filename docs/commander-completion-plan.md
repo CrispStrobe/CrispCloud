@@ -20,18 +20,20 @@ records the remaining acceptance work explicitly.
 
 | Workflow | Current follow-up state | Acceptance evidence |
 | --- | --- | --- |
-| Sync copy, move and Keep both | Staged streaming with reviewed-row validation | Stream-only 33 MiB upload, failed replacement, same-size external edit, cancellation |
+| Sync copy, move and Keep both | Staged streaming, reviewed-row validation and optional full-content comparison | Stream-only 33 MiB upload, failed replacement, same-size/time edits, stale equal rows, ambiguous baselines, cancellation |
 | Saved sync sources and cloud-only files | Account/device/root binding, explicit legacy rebind, safe placeholders and hydration | Wrong account/endpoint/bucket/device, old queued token, placeholder must not delete remote original, verified eviction |
-| Transfer metadata | Post-order folder metadata, source retention, selective reads; native portability review in progress | File/folder metadata failure, retry without recopy, Linux ownership/xattrs/access/default ACLs; macOS/Windows need their own CI evidence |
+| Transfer metadata | Post-order folder metadata, source retention, selective reads; Windows SID/DACL/attribute/creation-time implementation integrated | File/folder metadata failure, retry without recopy, Linux ownership/xattrs/access/default ACLs; macOS/Windows runtime fixes remain in the platform gate |
 | Duplicate names and rate controls | Configurable template and cancellable client stream rate | Preview/late collision/recovery consistency; pause/cancel/multiple-file byte pacing |
 | Selection and saved filters | Same extension/stem/parent, paths as marks, exclusion consistency | Captured source, same path on different accounts, list/cursor unchanged, Shift+Numpad routes |
 | Content and archive search | Full-stream literal search; bounded regex/Office/archive extraction with reported limits | Hit beyond 64 MiB, split encodings, late read failure, archive dates/exclusions and retained member evidence |
 | Background Ask transfers | Waiting state and Resolve action; does not occupy a worker | Restart/revalidate/resolve, durable cancel, later jobs continue |
-| Bulk attributes | Read-only preview and per-item verified application | Stale source/file/metadata, child-before-parent, skipped links, failed child retains parent, German/Arabic controls |
-| Large-file viewer | Full-file byte search, explicit encodings and bounded text windows | Match after 64 MiB, chunk-boundary matches, cancel/late changes, UTF-16 and distant text navigation |
-| Nested archives | Implementation checkpoint ready for integration | Generated 257 MiB native stream, exact member identity, parent restoration, nested save/retry and outer-file conflict |
-| Text/binary comparison | Implementation in progress | Per-side encoding and navigable binary differences still need integrated acceptance |
-| Background sync recovery | Implementation in progress | Separate-isolate journals must not share an unsafe writer; foreground recovery discovery required |
+| Bulk attributes | Reviewed mode/owner/time edits and masked Windows attributes | Stale source/revision/metadata, directory access-time enumeration, child-before-parent, unrelated Windows flags retained, German/Arabic controls |
+| Large-file viewer | Full-file decoded/byte search, complete match navigation and bounded Unicode text windows | Match after 64 MiB, 2,002-match navigation, split UTF-8/16, reload/debounce cancellation, decimal/hex offsets |
+| Nested archives | Integrated bounded browser snapshots and owned nested workspaces | Generated 257 MiB native stream, exact member identity, parent restoration, nested save/retry and outer-file conflict |
+| Text/binary comparison | Integrated per-side decoding, guarded merge and full binary-range navigation | BOM-less UTF-16/32, repeated CRLF saves, sparse difference index, all range navigation, cancellation, German/Arabic layout |
+| Background sync recovery | Integrated isolated leased journals and idempotent foreground discovery | Same-process isolate exclusion, process kill, import retry/receipt/compaction, successful and failed background tasks; OS checks in desktop CI |
+| Split/combine review | Complete effective manifest definition rechecked before destination writes | Same-path/same-size/mtime replacement blocked, harmless formatting accepted, explicit new review required |
+| Legacy rename/New Folder routes | Source-binding and truthful outcome follow-up in progress | Captured prompt destination, durable single-rename/Undo fingerprints and visible submit errors |
 | Final integration | In progress | Current-head analysis, deterministic app suite, focused platform tests and builds; earlier baseline CI is not evidence for new code |
 
 ## Delivery history
@@ -105,7 +107,7 @@ for the validation scope and platform boundaries.
 
 ## 5. Recovery, queue and scale
 
-- [ ] Persist queued jobs and validated resumable transfer state.
+- [x] Persist queued jobs and validated resumable transfer state.
 - [x] Resume interrupted/retry remaining/restart with source-version checks.
 - [x] Queue reorder/priority/concurrency controls and waiting-for-decision state.
 - [x] Bounded streaming/spooling and incremental large-tree planning.
@@ -115,8 +117,8 @@ for the validation scope and platform boundaries.
 
 - [x] Unified recursive search, scope/exclusions/content options and faithful presets.
 - [x] Compare/review/execute synchronization with per-item decisions.
-- [ ] Editable text merge, binary comparison and large-file handling.
-- [ ] Consistent archive member copy-out and supported edit/repack operations.
+- [x] Editable text merge, binary comparison and large-file handling.
+- [x] Consistent archive member copy-out and supported edit/repack operations.
 - [x] Native file clipboard copy/cut/paste integration.
 - [x] Selected-file viewer navigation, reload/tail and remote read capabilities.
 - [x] Functional custom-command configuration/execution and extension lifecycle.

@@ -149,7 +149,7 @@ groups against one fixed destination, protecting all selected sources.
 - Folder merge/skip/ask, recursion, name/metadata filters, saved criteria,
   directory exclusions and empty-result exclusion.
 - SHA-256 verification, modification times and capability-gated permissions,
-  ownership, extended attributes, ACLs and symbolic links.
+  ownership, extended attributes, ACLs, Windows attributes and symbolic links.
 - Native/provider fast paths with explicit capabilities and completion checks.
 - Automatic, streamed or required copy-on-write methods and native preallocation
   where supported. Required copy-on-write never silently becomes a full copy.
@@ -176,14 +176,29 @@ fresh source/account/file validation before continuing through the usual conflic
 chooser. Temporary storage without recovery support keeps conflict review in the
 open foreground dialog. Clearing visible outcomes retains durable recovery records.
 
+Mobile background sync writes a separate journal for each invocation. An OS-held
+lease prevents foreground recovery from reading an active writer's log, including
+another isolate in the same process. App startup, resume and transfer history
+discover released logs. Imports retain account bindings, temporary paths and
+checkpoint states; durable receipts prevent duplicate recovery after retry or
+history compaction. An incomplete journal remains available for diagnosis.
+Background credential reconstruction currently supports FTP/FTPS and WebDAV;
+other providers continue through foreground sync or an available connected client.
+
 ## Reviewed bulk attributes
 
 Change attributes accepts a multi-file selection, including verified rows from
 several sources. Blank fields retain their existing values. Permissions are
 entered as three or four octal digits; ownership uses the backend's IDs. Modified
-and accessed timestamps use an explicit local-time or UTC interpretation, and
+and accessed timestamps, plus creation time where supported, use an explicit
+local-time or UTC interpretation, and
 invalid calendar dates are rejected. Each row is capability-checked during the
 read-only preview. Unsupported rows and links are shown individually.
+
+Windows Read-only, Hidden, System and Archive controls have three states: keep,
+set and clear. Only explicitly selected bits change; directory, sparse,
+compression and other unrelated native flags are retained. Permissions are
+shown only for sources with a POSIX mode; Windows ownership uses SIDs.
 
 Applying revisits the captured account, file version and requested metadata before
 each write, then reads those fields back. Recursive edits process descendants
@@ -191,7 +206,15 @@ before parents. Cancellation stops remaining items; a failed child retains its
 parent's attributes for retry. A batch is a sequence of reported per-item changes,
 not a filesystem-wide atomic transaction. Linux/macOS native metadata uses
 non-following descriptors for ownership, xattrs, ACLs and timestamp operations;
-platform-specific behavior is validated by the desktop test gates.
+platform-specific behavior is validated by the desktop test gates. Windows
+uses checked handles for SIDs, DACLs and native file attributes. It preserves
+DACL protection and distinguishes a null DACL from an empty DACL. SACL/audit
+policy is outside the copied ACL contract. Creation-time editing is currently
+implemented on Windows; Linux/macOS do not advertise that capability.
+macOS can omit ACL evidence for both a missing ACL and an unavailable ACL.
+That omission is reported as unavailable: preserving an ACL then fails explicitly
+instead of clearing the destination's security settings from an assumption.
+Named ACLs with returned evidence remain readable and writable.
 
 ## Large files and resource limits
 
@@ -238,8 +261,23 @@ Folder comparison produces a reviewed plan with per-item decisions and fresh
 fingerprint checks. Synchronization Keep both preserves both contents. Duplicate
 candidates require content confirmation before being presented as identical.
 
-Text comparison offers editable merge output and guarded saves; binary
-comparison and bounded reads are available. Editors retain their captured
+Sync review defaults to a fast metadata comparison. **Compare full file contents**
+streams every included file, including files with matching size and modification
+time, and compares SHA-256 evidence against the last verified common baseline.
+It reports progress and supports cancellation. Conflicting changes without a
+trusted baseline or an unambiguous winner require a decision. Equal rows are
+revalidated before execution too; an external change invalidates the review.
+Source bindings include account, endpoint/bucket, device and roots. Older saved
+pairs require explicit binding, and rebinding does not redirect queued jobs.
+Cloud-only placeholders cannot authorize deletion of the remote original.
+
+Text comparison offers editable merge output and guarded saves, with independent
+UTF-8, UTF-16/32 LE/BE and Latin-1 decoding on the two sides. BOM-less Unicode
+and line-ending style survive repeated saves. Text merge is bounded to 8 MiB.
+Binary comparison streams whole files, counts exact contiguous difference ranges
+and provides first/previous/next/last navigation, decimal or `0x` byte offsets,
+and paged highlighted hex/ASCII. Its sparse index avoids retaining every range;
+some navigation rescans the file. Editors retain their captured
 account and detect external changes. Browser download-copy saves are not
 represented as confirmed in-place writes.
 
@@ -249,6 +287,16 @@ staged entry only after the copy succeeds. Containment checks, expansion budgets
 source fingerprints and hashes guard extraction/repack. Unsupported formats or
 transformations fail explicitly.
 
+Nested archives retain a route to the original physical container. Leaving an
+inner archive restores its parent's directory and cursor; supported nested
+updates propagate through owned workspaces and save only the captured outer
+file after validating it. Navigation is limited to eight archive levels.
+Native browsing spools at most 2 GiB of container input; web browsing is limited
+to 256 MiB. Individual members and nested containers are limited to 64 MiB, as
+are compressed formats whose decoder requires buffering. Editing also enforces
+its existing total expansion and repack budgets. These limits produce explicit
+errors instead of silently incomplete listings.
+
 Viewer playlists retain each row's original source, support reload and bounded
 tail, and route F4 to the correct editor. Remote media/PDF use owned spool files
 and release resources on close. Generic byte previews default to 64 MiB; remote
@@ -256,13 +304,24 @@ viewer spooling is bounded to 2 GiB. Native viewing can use file-backed windows.
 Preview and Properties use captured origins rather than guessing locality from
 the path.
 
+Text and byte search scan the entire available viewer source. Text search uses
+decoded characters, supports Match case, and treats whitespace and `0x` text
+literally; Hex mode accepts byte patterns. At most 2,000 matches are indexed per
+page, but all matches remain navigable. Forward pages continue from their
+recorded cursor; backward/last pages may rescan with progress and cancellation.
+Text windows are 4 MiB with bounded line indexing, and preserve UTF-8 characters
+and UTF-16 surrogate pairs at boundaries. Reload, source changes and edited or
+stopped queries invalidate old results.
+
 Checksum tools stream MD5, SHA-1, SHA-256, SHA-512 and CRC32 and validate GNU/SFV
 manifests with exact filenames and safe paths. Split manifests record ordered
 parts, sizes, per-part SHA-256 and whole-file SHA-256. Combine preflights all
 parts and the destination, writes and verifies a stage, then commits. Missing/
 corrupt/changed parts, traversal, cancellation and account changes stop the
 operation. Legacy numbered parts require consent because no original checksum
-is available.
+is available. A reviewed manifest's complete effective definition is checked
+again before writing, so an edited manifest cannot silently substitute parts;
+harmless JSON formatting changes remain acceptable.
 
 ## Workspaces, commands and backend boundaries
 
@@ -301,7 +360,7 @@ when a provider cannot confirm or reverse an operation already in flight.
 
 Distributed atomic rollback across unrelated stores and all legacy binary
 Commander plugins are not universal guarantees. Recovery uses recorded evidence
-and fresh validation. The completed implementation plan concerns the workflows
+and fresh validation. The implementation plan concerns the workflows
 described here, with these explicit platform, provider and resource boundaries.
 
 ## Verification
