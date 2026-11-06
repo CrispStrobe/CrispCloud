@@ -82,6 +82,64 @@ void main() {
       panel.files!.firstWhere((file) => file.name == name);
 
   testWidgets(
+    'explicit hex edit returns the displayed binary and its captured origin',
+    (tester) async {
+      late Future<InternalViewerAction> result;
+      PanelFileOrigin? captured;
+      final binary = item('blob.bin');
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            home: Builder(
+              builder: (context) => Scaffold(
+                body: TextButton(
+                  onPressed: () {
+                    result = showInternalViewer(
+                      context,
+                      file: binary,
+                      side: PanelSide.remote,
+                      onOriginChanged: (origin) => captured = origin,
+                    );
+                  },
+                  child: const Text('Open hex'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Open hex'));
+      await tester.pumpAndSettle();
+      expect(find.byTooltip('Edit as hex'), findsOneWidget);
+      expect(captured, isNotNull);
+      expect(captured!.isCurrent, isTrue);
+      await tester.tap(find.byTooltip('Edit as hex'));
+      await tester.pumpAndSettle();
+      expect(await result, InternalViewerAction.editHex);
+    },
+  );
+
+  testWidgets('text files also expose an explicit hex editing action', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          home: InternalViewerDialog(
+            file: item('a.txt'),
+            side: PanelSide.remote,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('Edit (F4)'), findsOneWidget);
+    expect(find.byTooltip('Edit as hex'), findsOneWidget);
+  });
+
+  testWidgets(
     'navigation keeps only selected files and edits the displayed file',
     (tester) async {
       panel.toggleSelection(item('a.txt'));

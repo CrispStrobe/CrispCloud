@@ -324,6 +324,59 @@ void main() {
   });
 
   group('snapshot and I/O concurrency', () {
+    test(
+      'subscribing retains a snapshot before asynchronous delivery',
+      () async {
+        var closes = 0;
+        final doc = HexDocument(
+          CallbackHexByteSource(
+            length: 8,
+            read: (offset, length) async => Uint8List.fromList(
+              List.generate(length, (index) => offset + index),
+            ),
+            close: () => closes++,
+          ),
+        );
+        final snapshot = doc.snapshot();
+        final output = snapshot.stream(chunkSize: 3).toList();
+        final closingSnapshot = snapshot.close();
+        final closingDocument = doc.close();
+        expect(await output, [
+          [0, 1, 2],
+          [3, 4, 5],
+          [6, 7],
+        ]);
+        await Future.wait([closingSnapshot, closingDocument]);
+        expect(closes, 1);
+      },
+    );
+
+    test(
+      'canceling before the first chunk releases the stream lease',
+      () async {
+        var closes = 0;
+        var reads = 0;
+        final doc = HexDocument(
+          CallbackHexByteSource(
+            length: 8,
+            read: (offset, length) async {
+              reads++;
+              return Uint8List(length);
+            },
+            close: () => closes++,
+          ),
+        );
+        final snapshot = doc.snapshot();
+        final subscription = snapshot.stream().listen((_) {});
+        final cancellation = subscription.cancel();
+        await snapshot.close();
+        await doc.close();
+        await cancellation;
+        expect(reads, 0);
+        expect(closes, 1);
+      },
+    );
+
     test('an in-flight document read sees a single revision', () async {
       final start = Completer<void>();
       final release = Completer<void>();

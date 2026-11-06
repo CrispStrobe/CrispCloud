@@ -17,6 +17,7 @@ import '../widgets/azure_connection_dialog.dart';
 import '../widgets/b2_connection_dialog.dart';
 import '../widgets/connection_dialog.dart';
 import '../widgets/file_editor_dialog.dart' show showFileEditorDialog;
+import '../widgets/hex_editor_dialog.dart' show showHexEditorDialog;
 import '../widgets/file_operation_dialog.dart';
 import '../widgets/archive_workspace_dialog.dart';
 import '../widgets/batch_rename_dialog.dart' show showBatchRenameDialog;
@@ -310,6 +311,7 @@ Future<void> _viewFile(
   FileItem target,
 ) async {
   var viewedFile = target;
+  PanelFileOrigin? viewedOrigin;
   try {
     InternalViewerAction action = InternalViewerAction.close;
     if (panel.isInArchive) {
@@ -330,10 +332,19 @@ Future<void> _viewFile(
         file: target,
         side: side,
         onFileChanged: (file) => viewedFile = file,
+        onOriginChanged: (origin) => viewedOrigin = origin,
       );
     }
     if (action == InternalViewerAction.edit && context.mounted) {
       await _editFile(context, ref, panel, side, viewedFile);
+    } else if (action == InternalViewerAction.editHex && context.mounted) {
+      await showHexEditorDialog(
+        context,
+        ref,
+        viewedFile,
+        side,
+        origin: viewedOrigin,
+      );
     }
   } catch (e) {
     if (context.mounted) {

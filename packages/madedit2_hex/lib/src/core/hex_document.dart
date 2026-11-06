@@ -291,23 +291,66 @@ class HexSnapshot {
   /// Once subscribed, the stream retains its own source lease. It remains
   /// valid if the document or snapshot is closed while streaming. Canceling
   /// the subscription releases that lease in the same way as completion.
-  Stream<List<int>> stream({int chunkSize = 65536}) async* {
-    if (chunkSize <= 0) {
-      throw RangeError.value(chunkSize, 'chunkSize', 'must be positive');
-    }
-    final view = _requireView();
-    _source.retain();
-    try {
-      var offset = 0;
-      while (offset < length) {
-        final remaining = length - offset;
-        final count = remaining < chunkSize ? remaining : chunkSize;
-        yield await _readView(_source, view, offset, count);
-        offset += count;
-      }
-    } finally {
+  Stream<List<int>> stream({int chunkSize = 65536}) {
+    late final StreamController<List<int>> controller;
+    StreamSubscription<List<int>>? subscription;
+    var retained = false;
+    var cancelled = false;
+
+    Future<void> release() async {
+      if (!retained) return;
+      retained = false;
       await _source.release();
     }
+
+    Stream<List<int>> chunks(_ReadView view) async* {
+      try {
+        var offset = 0;
+        while (!cancelled && offset < length) {
+          final remaining = length - offset;
+          final count = remaining < chunkSize ? remaining : chunkSize;
+          yield await _readView(_source, view, offset, count);
+          offset += count;
+        }
+      } finally {
+        await release();
+      }
+    }
+
+    controller = StreamController<List<int>>(
+      onListen: () {
+        try {
+          if (chunkSize <= 0) {
+            throw RangeError.value(chunkSize, 'chunkSize', 'must be positive');
+          }
+          // async* begins delivering after listen returns. Capture and retain
+          // here so a subsequent snapshot.close cannot invalidate the stream.
+          final view = _requireView();
+          _source.retain();
+          retained = true;
+          subscription = chunks(view).listen(
+            controller.add,
+            onError: controller.addError,
+            onDone: controller.close,
+          );
+        } catch (error, stack) {
+          controller.addError(error, stack);
+          unawaited(controller.close());
+        }
+      },
+      onPause: () => subscription?.pause(),
+      onResume: () => subscription?.resume(),
+      onCancel: () async {
+        cancelled = true;
+        try {
+          await subscription?.cancel();
+        } finally {
+          // Cancellation before chunks starts does not run its finally block.
+          await release();
+        }
+      },
+    );
+    return controller.stream;
   }
 
   Future<void> close() {
@@ -444,8 +487,9 @@ class _SourceLifetime {
   Future<void>? _closing;
 
   void retain() {
-    if (_references <= 0)
+    if (_references <= 0) {
       throw StateError('The byte source has been released.');
+    }
     _references++;
   }
 

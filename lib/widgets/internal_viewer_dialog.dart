@@ -42,6 +42,7 @@ import 'package:universal_html/html.dart' as html;
 import 'package:video_player/video_player.dart';
 
 import '../l10n/commander_strings.dart';
+import '../l10n/hex_editor_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
@@ -91,7 +92,7 @@ const InternalViewerService _viewerService = InternalViewerService();
 
 /// Open the internal viewer for [file] as a full-screen dialog.
 /// Result requested by the viewer when it closes.
-enum InternalViewerAction { close, edit }
+enum InternalViewerAction { close, edit, editHex }
 
 Future<InternalViewerAction> showInternalViewer(
   BuildContext context, {
@@ -101,6 +102,7 @@ Future<InternalViewerAction> showInternalViewer(
   String? displayName,
   PanelFileOrigin? origin,
   ValueChanged<FileItem>? onFileChanged,
+  ValueChanged<PanelFileOrigin?>? onOriginChanged,
 }) async {
   final result = await showDialog<InternalViewerAction>(
     context: context,
@@ -113,6 +115,7 @@ Future<InternalViewerAction> showInternalViewer(
         displayName: displayName,
         origin: origin,
         onFileChanged: onFileChanged,
+        onOriginChanged: onOriginChanged,
       ),
     ),
   );
@@ -129,6 +132,7 @@ class _ViewerSessionHost extends ConsumerStatefulWidget {
     this.displayName,
     this.origin,
     this.onFileChanged,
+    this.onOriginChanged,
   });
   final FileItem file;
   final PanelSide side;
@@ -136,6 +140,7 @@ class _ViewerSessionHost extends ConsumerStatefulWidget {
   final String? displayName;
   final PanelFileOrigin? origin;
   final ValueChanged<FileItem>? onFileChanged;
+  final ValueChanged<PanelFileOrigin?>? onOriginChanged;
   @override
   ConsumerState<_ViewerSessionHost> createState() => _ViewerSessionHostState();
 }
@@ -174,6 +179,7 @@ class _ViewerSessionHostState extends ConsumerState<_ViewerSessionHost> {
         ),
     ];
     _index = _items.indexWhere((item) => identical(item.file, widget.file));
+    widget.onOriginChanged?.call(_items[_index].origin);
   }
 
   void _go(int delta) {
@@ -181,6 +187,7 @@ class _ViewerSessionHostState extends ConsumerState<_ViewerSessionHost> {
     if (next < 0 || next >= _items.length) return;
     setState(() => _index = next);
     widget.onFileChanged?.call(_items[next].file);
+    widget.onOriginChanged?.call(_items[next].origin);
   }
 
   @override
@@ -340,11 +347,13 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
 
   /// Archive members and test byte overrides have no host path to save to, so
   /// they stay view-only. Otherwise show Edit for formats F4 can save.
-  bool get _canEdit =>
+  bool get _canEditHex =>
       widget.bytesOverride == null &&
       _origin?.isCurrent == true &&
       !widget.file.isFolder &&
-      isEditableInBuiltInEditor(_viewName);
+      _expansionName == null;
+
+  bool get _canEdit => _canEditHex && isEditableInBuiltInEditor(_viewName);
 
   int get _dataSize => _source?.size ?? widget.file.size ?? 0;
 
@@ -1823,7 +1832,11 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         const SingleActivator(LogicalKeyboardKey.f5): _reload,
         const SingleActivator(LogicalKeyboardKey.keyR, control: true): _reload,
         const SingleActivator(LogicalKeyboardKey.f4): () {
-          if (_canEdit) Navigator.of(context).pop(InternalViewerAction.edit);
+          if (_mode == ViewerMode.hex && _canEditHex) {
+            Navigator.of(context).pop(InternalViewerAction.editHex);
+          } else if (_canEdit) {
+            Navigator.of(context).pop(InternalViewerAction.edit);
+          }
         },
         const SingleActivator(LogicalKeyboardKey.f3): () => _gotoMatch(1),
         const SingleActivator(LogicalKeyboardKey.f3, shift: true): () =>
@@ -1899,6 +1912,14 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                             onPressed: () =>
                                 Navigator.of(context)
                                     .pop(InternalViewerAction.edit),
+                          ),
+                        if (_canEditHex)
+                          IconButton(
+                            tooltip: context.hexTr('Edit as hex'),
+                            icon: const Icon(Icons.data_object),
+                            onPressed: () =>
+                                Navigator.of(context)
+                                    .pop(InternalViewerAction.editHex),
                           ),
                         IconButton(
                           tooltip: context.commanderTr("Search (Ctrl+F)"),

@@ -38,6 +38,7 @@ import 'code_editor_context_menu.dart';
 import 'code_editor_find_panel.dart';
 import 'code_editor_status_bar.dart';
 import 'image_editor_dialog.dart';
+import 'hex_editor_dialog.dart';
 import 'media_editor_dialog.dart';
 import 'office_editor_dialog.dart';
 import 'pdf_editor_dialog.dart';
@@ -64,9 +65,15 @@ Future<void> showFileEditorDialog(
       if (MediaCapabilities.canEdit(mediaKind)) {
         await showMediaEditorDialog(context, ref, file, side);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(
-          context.mediaTr('This media format cannot be edited on this platform.'),
-        )));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              context.mediaTr(
+                'This media format cannot be edited on this platform.',
+              ),
+            ),
+          ),
+        );
       }
       return;
     }
@@ -76,18 +83,10 @@ Future<void> showFileEditorDialog(
       await showOfficeEditorDialog(context, ref, file, side);
       return;
     }
-    // F4 and the native menu can be invoked even when the viewer's Edit button
-    // is disabled. Never decode an unsupported binary file as editable text.
+    // Unrecognized binary formats use the byte editor; known document,
+    // image, media and text formats keep their specialized editors.
     if (!isTextEditableName(file.name)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            context.imageTr(
-              'This file type cannot be edited here. Use F3 to view it.',
-            ),
-          ),
-        ),
-      );
+      await showHexEditorDialog(context, ref, file, side);
       return;
     }
     await Navigator.of(context).push(

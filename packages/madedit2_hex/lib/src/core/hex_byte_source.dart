@@ -55,13 +55,8 @@ typedef HexSourceCloser = FutureOr<void> Function();
 
 /// Adapts a host's range reader without imposing a filesystem or network API.
 class CallbackHexByteSource implements HexByteSource {
-  CallbackHexByteSource({
-    required int length,
-    required HexRangeReader read,
-    HexSourceCloser? close,
-  }) : _length = RangeError.checkNotNegative(length, 'length'),
-       _read = read,
-       _close = close;
+  CallbackHexByteSource({required int length, required this._read, this._close})
+    : _length = RangeError.checkNotNegative(length, 'length');
 
   final int _length;
   final HexRangeReader _read;
