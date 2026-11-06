@@ -612,25 +612,7 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
       case 'settings':
         await showSettingsDialog(context);
       case 'swap':
-        const PanelSwapService service = PanelSwapService();
-        final PanelSource left = ref.read(panelSourceProvider(PanelSide.local));
-        final PanelSource right = ref.read(
-          panelSourceProvider(PanelSide.remote),
-        );
-        if (service.canSwap(left, right)) {
-          final (PanelSource newLeft, PanelSource newRight) = service.swap(
-            left,
-            right,
-          );
-          ref
-              .read(panelSourceProvider(PanelSide.local).notifier)
-              .setSource(newLeft);
-          ref
-              .read(panelSourceProvider(PanelSide.remote).notifier)
-              .setSource(newRight);
-          ref.read(activePanelProvider.notifier).state =
-              active == PanelSide.local ? PanelSide.remote : PanelSide.local;
-        }
+        await swapPanelSources(ref);
       case 'terminal':
         ref.read(showTerminalProvider.notifier).state = !ref.read(
           showTerminalProvider,

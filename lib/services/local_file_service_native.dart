@@ -251,7 +251,12 @@ class MacosFileService
         return await Directory(path).exists();
       }
       final handle = await File(path).open();
-      await handle.close();
+      try {
+        // Opening metadata can succeed while reads are sandbox-denied.
+        await handle.read(1);
+      } finally {
+        await handle.close();
+      }
       return true;
     } catch (_) {
       return false;
@@ -454,9 +459,47 @@ class MacosFileService
     return _probeAccess(accessPath, null);
   }
 
+  int? _cachedUid;
+
+  int? _currentUid() {
+    if (_cachedUid != null) return _cachedUid;
+    try {
+      final result = Process.runSync('/usr/bin/id', <String>['-u']);
+      _cachedUid = int.tryParse(result.stdout.toString().trim());
+    } catch (_) {
+      _cachedUid = null;
+    }
+    return _cachedUid;
+  }
+
+  int? _ownerUid(String path) {
+    try {
+      final result = Platform.isMacOS
+          ? Process.runSync('/usr/bin/stat', <String>['-f', '%u', path])
+          : Process.runSync('/usr/bin/stat', <String>['-c', '%u', path]);
+      return int.tryParse(result.stdout.toString().trim());
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<bool> _needsElevatedRights(String path) async {
+    try {
+      final stat = await FileStat.stat(path);
+      if (stat.type == FileSystemEntityType.notFound) return false;
+      final uid = _currentUid();
+      final owner = _ownerUid(path);
+      if (uid == null || uid == 0 || owner != 0) return false;
+      return (stat.mode & 0x24) == 0;
+    } catch (_) {
+      return false;
+    }
+  }
+
   @override
   Future<bool> ensureAccess(String path) async {
     if (await hasAccessToPath(path)) return true;
+    if (await _needsElevatedRights(path)) return false;
 
     // Ask for the real target's folder. Re-picking the symlink's parent would
     // grant nothing when the link points into another volume.
@@ -488,7 +531,16 @@ class MacosFileService
     Future<T> Function() action,
   ) async {
     if (!await ensureAccess(path)) {
-      throw FileSystemException('Access to this path was not granted.', path);
+      final needsRights = await _needsElevatedRights(path);
+      throw FileSystemException(
+        needsRights
+            ? 'This item is owned by root and is not readable by your user. '
+                  'A folder grant cannot change Unix permissions; open it with '
+                  'Finder or an elevated process instead.'
+            : 'Access to this path was not granted. Grant its containing folder '
+                  'and try again.',
+        path,
+      );
     }
     final scope = await _beginScope(path);
     try {

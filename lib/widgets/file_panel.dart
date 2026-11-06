@@ -376,13 +376,27 @@ class _FilePanelState extends ConsumerState<FilePanel> {
         ? ref.watch(localViewModeProvider)
         : ref.watch(remoteViewModeProvider);
 
-    if (viewMode == ViewMode.grid ||
-        viewMode == ViewMode.tiles ||
-        viewMode == ViewMode.gallery) {
+    if (viewMode == ViewMode.grid) {
       return FileGridView(
         side: side,
         files: files,
         scrollController: _scrollController,
+      );
+    }
+    if (viewMode == ViewMode.tiles) {
+      return FileGridView(
+        side: side,
+        files: files,
+        scrollController: _scrollController,
+        tileLayout: true,
+      );
+    }
+    if (viewMode == ViewMode.gallery) {
+      return FileGridView(
+        side: side,
+        files: files,
+        scrollController: _scrollController,
+        galleryOnly: true,
       );
     }
     if (viewMode == ViewMode.column) {
@@ -719,6 +733,8 @@ class _FilePanelState extends ConsumerState<FilePanel> {
         layout == ViewMode.grid ||
         layout == ViewMode.tiles ||
         layout == ViewMode.gallery;
+    final source = ref.watch(panelSourceProvider(widget.side));
+    final sourceIsRemote = !source.isLocal;
     return Container(
       decoration: BoxDecoration(
         color: widget.isActive ? null : Colors.black.withValues(alpha: 0.02),
@@ -783,7 +799,7 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                 ? const Center(child: CircularProgressIndicator())
                 : files.isEmpty && !visualLayout
                 ? Center(
-                    child: _isDragging && widget.side == PanelSide.remote
+                    child: _isDragging && sourceIsRemote
                         ? Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -801,8 +817,7 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                           )
                         : panel.showingSearchResults
                         ? Text(context.commanderTr("This file list is empty."))
-                        : widget.side == PanelSide.remote &&
-                              !ref.read(authProvider).isConnected
+                        : sourceIsRemote && !ref.read(authProvider).isConnected
                         ? Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
