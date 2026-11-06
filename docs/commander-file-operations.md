@@ -39,6 +39,25 @@ Named collections persist source-aware references, marks and optional search
 definitions. Identical paths from different accounts remain different items.
 Refresh verifies the listed items; rerun executes the saved search again.
 
+Saved collections load through a lightweight catalog and immutable row pages.
+The panel displays up to 500 rows at a time, with first/previous/next/last controls
+and a full matching-item count. Sorting and filtering scan the complete collection
+while retaining only a bounded result window. The shared row cache across
+collections and panes is limited to 4 MiB of encoded page data and 4,000 entries;
+each stored page is limited to 500 rows and 512 KiB. Inactive saved tabs retain
+collection identity and position rather than another full row list.
+
+Marks persist across pages, sorting and filtering. Select all, invert, pattern,
+criteria and path-list marking include the full matching collection. The gallery's
+explicit **Select visible** command applies only to its displayed rows. Before a
+file operation, every requested marked original is resolved against its captured
+account and checked again, with progress and cancellation. A missing, replaced or
+unavailable original blocks the action instead of silently reducing it to the
+visible page. Reloading the saved collection explicitly discards unsaved marks.
+Remembered selections retain compact identity evidence across pages and filters,
+with a per-pane aggregate limit of 4 MiB and 100,000 entries. Restoring them checks
+the original accounts and objects again before replacing the current marks.
+
 File Collections opens, saves, appends marked items, renames, imports/exports
 and removes collections. Removing a collection or row keeps its stored files.
 Delete files is a separate operation. Verified moves and renames update active
@@ -72,12 +91,14 @@ a budget is reported rather than treated as a non-match. Feed all or marked sear
 hits to a source-aware panel list. Branch view uses the recursive search engine
 for local and cloud sources, with progress and cancellation.
 
-Select by pattern adds, removes, toggles or replaces marks on visible rows.
+Select by pattern adds, removes, toggles or replaces marks on the current filtered
+scope, including all matching pages of a saved collection.
 Parent-directory entries are never marked. Selection memory, same-name/
 extension/parent-folder commands and pattern history complement the dialog.
 Same name compares the stem without its final extension. Path-list selection
-marks only verified visible rows in a chosen source, retaining the panel contents
-and cursor. Saved directory exclusions also apply to ancestors in flat lists.
+marks verified rows in a chosen source, including off-page rows of a saved
+collection, while retaining the panel contents and cursor. Saved directory
+exclusions also apply to ancestors in flat lists.
 Archive matches retain their member paths and evidence in saved collections.
 
 - `*` matches any sequence; `?` matches one character.

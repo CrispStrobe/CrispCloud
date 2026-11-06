@@ -32,9 +32,13 @@ Future<void> showFileAttributesDialog(
 }) async {
   try {
     if (files.isEmpty) throw StateError('Select files or folders first.');
+    final prepared = sourceOrigin == null
+        ? await ref.read(panelProvider(side)).prepareOperationFiles(files)
+        : files;
+    if (!context.mounted) return;
     final local = ref.read(localFileServiceProvider);
     final targets = [
-      for (final file in files)
+      for (final file in prepared)
         () {
           final origin = captureFileActionOrigin(
             ref,

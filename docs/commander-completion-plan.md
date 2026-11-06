@@ -22,7 +22,7 @@ records the remaining acceptance work explicitly.
 | --- | --- | --- |
 | Sync copy, move and Keep both | Staged streaming, reviewed-row validation and optional full-content comparison | Stream-only 33 MiB upload, failed replacement, same-size/time edits, stale equal rows, ambiguous baselines, cancellation |
 | Saved sync sources and cloud-only files | Account/device/root binding, explicit legacy rebind, safe placeholders and hydration | Wrong account/endpoint/bucket/device, old queued token, placeholder must not delete remote original, verified eviction |
-| Transfer metadata | Post-order folder metadata, source retention, selective reads; Windows SID/DACL/attribute/creation-time implementation integrated | Three-OS native gates passed at `052b77a`, including raw ACL restoration and unchanged child ACLs; final-head and null-ACL inheritance follow-up acceptance pending |
+| Transfer metadata | Post-order folder metadata, source retention, selective reads; Windows SID/DACL/attribute/creation-time implementation integrated | Three-OS native gates passed at `3a9e590` (86 passed / 17 skipped each), including raw ACL restoration, null-ACL inheritance and unchanged child ACLs; final collection integration gate pending |
 | Duplicate names and rate controls | Configurable template and cancellable client stream rate | Preview/late collision/recovery consistency; pause/cancel/multiple-file byte pacing |
 | Selection and saved filters | Same extension/stem/parent, paths as marks, exclusion consistency | Captured source, same path on different accounts, list/cursor unchanged, Shift+Numpad routes |
 | Content and archive search | Full-stream literal search; bounded regex/Office/archive extraction with reported limits | Hit beyond 64 MiB, split encodings, late read failure, archive dates/exclusions and retained member evidence |
@@ -33,8 +33,8 @@ records the remaining acceptance work explicitly.
 | Text/binary comparison | Integrated per-side decoding, guarded merge and full binary-range navigation | BOM-less UTF-16/32, repeated CRLF saves, sparse difference index, all range navigation, cancellation, German/Arabic layout |
 | Background sync recovery | Integrated isolated leased journals and idempotent foreground discovery | Same-process isolate exclusion, process kill, import retry/receipt/compaction, successful and failed background tasks; OS checks in desktop CI |
 | Split/combine review | Complete effective manifest definition rechecked before destination writes | Same-path/same-size/mtime replacement blocked, harmless formatting accepted, explicit new review required |
-| Split/combine restart recovery | Durable intent and discovery, dedicated review/continue controls in history, menus and the keyboard palette | Process-exit restart, unchanged verified-part identity, changed-source/part/account rejection, lost-response reconciliation and German/Arabic review layouts; final-head three-OS gate pending |
-| Large saved collections | In progress: lazy/paged storage and loading with an aggregate resident-data bound | Existing identity/persistence tests; incremental multi-collection loading acceptance pending |
+| Split/combine restart recovery | Durable intent and discovery, dedicated review/continue controls in history, menus and the keyboard palette | Three-OS process-exit restart at `3a9e590`; unchanged verified-part identity, changed-source/part/account rejection, lost-response reconciliation and German/Arabic review layouts; combined collection host checks passed |
+| Large saved collections | Lazy native/IndexedDB catalog and pages, aggregate cache bounds, global sort/filter/gallery queries, complete marks and captured operations | Store/CAS/migration/restart tests, 19 panel tests, 26 gallery/layout compatibility tests and 17 combined host/layout/gallery/catalog tests passed; actual Chrome and final-head integration gates pending |
 | Legacy rename/New Folder routes | Integrated captured prompts and shared durable rename/Undo | Same-size replacements, original destination retained after navigation, account switch blocked, visible failure/retry and cancellable fingerprinting |
 | Final integration | In progress | Current-head analysis, deterministic app suite, focused platform tests and builds; earlier baseline CI is not evidence for new code |
 
@@ -84,7 +84,7 @@ for the validation scope and platform boundaries.
 - [x] Versioned operation records with completed/staged/failed/recovery states.
 - [x] Batch rename history, reverse preview and complete-batch undo.
 - [x] Named collections with original source identity and missing/offline states.
-- [ ] Incremental loading of large collections with bounded resident memory.
+- [x] Incremental loading of large collections with bounded resident memory.
 - [x] Refresh collection items separately from rerunning saved search definitions.
 - [x] Saved tabs/bookmarks retain storage identity; selection save/restore.
 

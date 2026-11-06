@@ -72,7 +72,11 @@ Future<void> showChecksumToolsDialog(
   bool verifyInitially = false,
 }) async {
   try {
-    final captured = _captureFiles(ref, side, files);
+    final prepared = await ref
+        .read(panelProvider(side))
+        .prepareOperationFiles(files);
+    if (!context.mounted) return;
+    final captured = _captureFiles(ref, side, prepared);
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -454,8 +458,11 @@ Future<void> _showSplitCombineDialog(
   required bool combining,
 }) async {
   try {
-    final captured = _captureFiles(ref, side, files);
-    final origin = ref.read(panelProvider(side)).captureOperationOrigin(files);
+    final panel = ref.read(panelProvider(side));
+    final prepared = await panel.prepareOperationFiles(files);
+    if (!context.mounted) return;
+    final captured = _captureFiles(ref, side, prepared);
+    final origin = panel.captureOperationOrigin(prepared);
     final backend = fileOperationBackend(
       source: origin.source,
       local: ref.read(localFileServiceProvider),
@@ -464,7 +471,7 @@ Future<void> _showSplitCombineDialog(
     final destinations = [
       _IntegrityDestination(
         origin,
-        backend.paths.dirname(files.first.path!),
+        backend.paths.dirname(prepared.first.path!),
         true,
       ),
     ];
