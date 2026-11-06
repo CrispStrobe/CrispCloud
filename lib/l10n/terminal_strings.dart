@@ -14,6 +14,7 @@ class TerminalStrings {
           .replaceAll('{fingerprint}', fingerprint);
   static const Map<String, Map<String, String>> _values = {
     "en": {
+      "starting": "Starting shell…",
       "builtIn": "Using built-in terminal (no process launch on this platform)",
       "copyAll": "Copy all",
       "notRunning": "Shell is not running",

@@ -19,8 +19,15 @@ import 'terminal_process_stub.dart'
     if (dart.library.io) 'terminal_process_native.dart'
     as proc;
 
+typedef TerminalShellStarter = Future<proc.ShellProcess?> Function(
+  String workingDirectory,
+);
+
 class TerminalPanel extends ConsumerStatefulWidget {
-  const TerminalPanel({super.key});
+  const TerminalPanel({super.key, this.shellStarter});
+
+  /// Test/embedding hook; defaults to the platform backend.
+  final TerminalShellStarter? shellStarter;
 
   @override
   ConsumerState<TerminalPanel> createState() => _TerminalPanelState();
@@ -45,7 +52,9 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     super.initState();
     _inputFocusNode.addListener(_onInputFocusChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _startShell();
+      if (!mounted) return;
+      _inputFocusNode.requestFocus();
+      _startShell();
     });
   }
 
@@ -93,7 +102,9 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
       final cwd = _scopeHeld
           ? panel.currentPath
           : await local.getSafeFallbackDirectory();
-      _shell = await proc.startShell(cwd) ?? await proc.startBuiltInShell(cwd);
+      _shell =
+          await (widget.shellStarter ?? proc.startShell)(cwd) ??
+          await proc.startBuiltInShell(cwd);
       if (_shell == null) {
         _shellError = strings.text('platform');
         _appendOutput('[${strings.text('platform')}]\n');
@@ -266,14 +277,14 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   }
 
   @override
-  void dispose() {
-    _inputFocusNode.removeListener(_onInputFocusChanged);
+  void deactivate() {
     ref.read(terminalInputFocusedProvider.notifier).state = false;
     if (_scopeHeld) {
       _scopeHeld = false;
       unawaited(ref.read(localFileServiceProvider).endStreamAccess());
     }
     final sshId = _sshSessionId;
+    _sshSessionId = null;
     if (sshId != null) {
       try {
         ref.read(sshTerminalServiceProvider).disconnect(sshId);
@@ -281,6 +292,12 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
         // Provider may already be disposed.
       }
     }
+    super.deactivate();
+  }
+
+  @override
+  void dispose() {
+    _inputFocusNode.removeListener(_onInputFocusChanged);
     _shell?.kill();
     _outputController.dispose();
     _inputController.dispose();
@@ -486,8 +503,8 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                         child: TextField(
                           controller: _inputController,
                           focusNode: _inputFocusNode,
-                          enabled: _isRunning,
-                          autofocus: _isRunning,
+                          enabled: true,
+                          autofocus: true,
                           style: const TextStyle(
                             fontFamily: 'AppMono',
                             fontFamilyFallback: [
@@ -503,7 +520,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                             contentPadding: EdgeInsets.zero,
                             hintText: _isRunning
                                 ? null
-                                : TerminalStrings(context).text('unavailable'),
+                                : TerminalStrings(context).text('starting'),
                           ),
                           onSubmitted: (cmd) {
                             _sendCommand(cmd);
