@@ -92,7 +92,8 @@ Future<NativeJournalLease?> tryAcquireNativeJournalLease(String path) async {
       : lib.providesSymbol('__errno_location')
       ? '__errno_location'
       : '__errno';
-  int errno() => lib.lookupFunction<_ErrnoN, _ErrnoD>(errnoName)().value;
+  final errnoLocation = lib.lookupFunction<_ErrnoN, _ErrnoD>(errnoName);
+  int errno() => errnoLocation().value;
   final name = path.toNativeUtf8();
   late final int fd;
   var openError = 0;
