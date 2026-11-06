@@ -31,11 +31,13 @@ Future<void> copyFilesToClipboard(
                   panel.cursorItem!,
               ]);
     if (files.isEmpty) return;
+    final prepared = await panel.prepareOperationFiles(files);
+    if (!context.mounted) return;
     await ref
         .read(fileClipboardProvider)
         .capture(
           panel,
-          files,
+          prepared,
           ref.read(nativeFileOperationsProvider),
           cut: cut,
         );
@@ -43,7 +45,7 @@ Future<void> copyFilesToClipboard(
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            '${files.length} item(s) ${cut ? 'cut' : 'copied'}. Open the destination and paste.',
+            '${prepared.length} item(s) ${cut ? 'cut' : 'copied'}. Open the destination and paste.',
           ),
         ),
       );

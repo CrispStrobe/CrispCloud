@@ -19,7 +19,8 @@ class SourceRenameBatchStorage extends RenameBatchStorage {
     required this.source,
     required this.local,
     required bool Function() isCurrent,
-    required this.fallbackRename,
+    this.fallbackRename,
+    this.isCancelled,
   }) : _isCurrent = isCurrent {
     _backend = fileOperationBackend(
       source: source,
@@ -33,7 +34,8 @@ class SourceRenameBatchStorage extends RenameBatchStorage {
   final PanelSource source;
   final LocalFileService local;
   final bool Function() _isCurrent;
-  final Future<void> Function(FileItem, String) fallbackRename;
+  final Future<void> Function(FileItem, String)? fallbackRename;
+  final bool Function()? isCancelled;
   late final FileOperationBackend _backend;
 
   @override
@@ -63,6 +65,11 @@ class SourceRenameBatchStorage extends RenameBatchStorage {
 
   void _check() {
     if (!isCurrent) throw StateError('The captured storage account changed.');
+    if (isCancelled?.call() == true) {
+      throw StateError(
+        'Rename cancelled. Review rename history for completed steps.',
+      );
+    }
   }
 
   @override
@@ -247,9 +254,7 @@ class SourceRenameBatchStorage extends RenameBatchStorage {
           file.path!,
           destination,
           expectedSourceVersion: client.transferCapabilities.conditionalMove
-              ? (file.metadata?['version']?.toString() ??
-                    file.metadata?['eTag']?.toString() ??
-                    file.metadata?['etag']?.toString())
+              ? RenameFingerprint.fromFile(file).version
               : null,
           checkpoint: () async {
             _check();
@@ -261,11 +266,56 @@ class SourceRenameBatchStorage extends RenameBatchStorage {
           );
         }
       } else {
-        await fallbackRename(file, paths.basename(destination));
+        await _fallbackRename(file, paths.basename(destination));
       }
     } else {
-      await fallbackRename(file, paths.basename(destination));
+      await _fallbackRename(file, paths.basename(destination));
     }
     _check();
+  }
+
+  Future<void> _fallbackRename(FileItem file, String name) async {
+    final supplied = fallbackRename;
+    if (supplied != null) {
+      await supplied(file, name);
+      return;
+    }
+    if (source is RemotePanelSource) {
+      await (source as RemotePanelSource).client.renamePath(file.path!, name);
+      return;
+    }
+    if (source is! LocalPanelSource || !kIsWeb || file.isFolder) {
+      throw UnsupportedError(
+        'This filesystem cannot safely rename the selected item.',
+      );
+    }
+    // Browser compatibility uses the same copy-then-delete behavior as before,
+    // with an explicit bound for the whole-buffer local-file API.
+    if (file.size == null || file.size! > 64 * 1024 * 1024) {
+      throw UnsupportedError(
+        'Use the transfer dialog to move browser files larger than 64 MiB.',
+      );
+    }
+    final destination = paths.join(paths.dirname(file.path!), name);
+    final bytes = await local.readFile(file.path!, fileItem: file);
+    _check();
+    final saved = await local.saveFileReportingResult(
+      destination,
+      bytes,
+      overwrite: false,
+    );
+    if (saved != LocalFileSaveResult.written) {
+      throw StateError(
+        'The browser downloaded a copy; the source was retained.',
+      );
+    }
+    _check();
+    final current = await stat(file.path!);
+    if (current == null ||
+        !RenameFingerprint.fromFile(file)
+            .matches(RenameFingerprint.fromFile(current))) {
+      throw StateError('The original file changed; both copies were retained.');
+    }
+    await local.deleteEntry(file.path!, false);
   }
 }

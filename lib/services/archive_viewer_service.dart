@@ -134,6 +134,19 @@ class ViewerArchive {
     if (_closed) {
       throw const ArchiveViewException('This archive has been closed.');
     }
+    if (maxBytes <= 0) throw ArgumentError.value(maxBytes, 'maxBytes');
+    if (member.index < 0 ||
+        member.index >= members.length ||
+        !identical(members[member.index], member)) {
+      throw const ArchiveViewException(
+        'This member belongs to another archive.',
+      );
+    }
+    if (member.size > maxBytes) {
+      throw ArchiveViewException(
+        'The entry is larger than the ${_mb(maxBytes)} safety limit.',
+      );
+    }
     return _read(member, maxBytes);
   }
 
@@ -143,7 +156,7 @@ class ViewerArchive {
     try {
       await _close();
     } catch (_) {
-      // Closing is best-effort; the data is in memory already.
+      // Closing remains idempotent even when a parser's cleanup fails.
     }
   }
 }
@@ -157,16 +170,47 @@ Future<ViewerArchive> openViewerArchive(
   required String name,
   String? password,
   int maxMemberBytes = kArchiveReadLimit,
+}) => openViewerArchiveSource(
+  koni.MemoryByteSource(bytes, name: name),
+  name: name,
+  password: password,
+  maxMemberBytes: maxMemberBytes,
+);
+
+/// Opens an owned random-access source without retaining a full input buffer.
+/// The returned handle owns [source] and closes it on failure or on close.
+/// Package-only compression formats still require a bounded container decode.
+Future<ViewerArchive> openViewerArchiveSource(
+  koni.ByteSource source, {
+  required String name,
+  String? password,
+  int maxMemberBytes = kArchiveReadLimit,
+  int maxBufferedContainerBytes = kArchiveReadLimit,
 }) async {
   final lower = name.toLowerCase();
 
   // bzip2/xz/zstd containers are decoded here (bounded), then listed as TAR
   // when they contain one, or exposed as a single decompressed entry.
   if (_isPackageCompressed(lower)) {
-    final decompressed = _decompressContainer(bytes, lower, maxMemberBytes);
+    Uint8List decompressed;
+    try {
+      if (source.length > maxBufferedContainerBytes) {
+        throw ArchiveViewException(
+          'This compression format requires a buffered decode limited to '
+          '${_mb(maxBufferedContainerBytes)}.',
+        );
+      }
+      decompressed = _decompressContainer(
+        await source.read(0, source.length),
+        lower,
+        maxMemberBytes,
+      );
+    } finally {
+      await source.close();
+    }
     if (_isTarContainerName(lower) || looksLikeTar(decompressed)) {
       return _openWithKoni(
-        decompressed,
+        koni.MemoryByteSource(decompressed, name: name),
         password: password,
         maxMemberBytes: maxMemberBytes,
       );
@@ -179,18 +223,17 @@ Future<ViewerArchive> openViewerArchive(
   }
 
   return _openWithKoni(
-    bytes,
+    source,
     password: password,
     maxMemberBytes: maxMemberBytes,
   );
 }
 
 Future<ViewerArchive> _openWithKoni(
-  Uint8List bytes, {
+  koni.ByteSource source, {
   String? password,
   required int maxMemberBytes,
 }) async {
-  final source = koni.MemoryByteSource(bytes);
   koni.ArchiveReader reader;
   try {
     // Use the reader directly (not the Archive facade): a reader may throw

@@ -6,6 +6,8 @@ import 'package:koni_archive/koni_archive.dart' as koni;
 import 'package:path/path.dart' as p;
 
 import '../models/file_item.dart';
+import 'archive_browser_session.dart';
+import 'archive_member_index.dart';
 import 'archive_service.dart';
 import 'archive_viewer_service.dart';
 import 'file_operation_service.dart';
@@ -28,11 +30,13 @@ class ArchiveWorkspace {
   final _entries = <String, _ArchiveEntry>{};
   bool _closed = false;
   bool _dirty = false;
-  bool get dirty => _dirty;
+  ArchiveWorkspace? _parentWorkspace;
+  bool get dirty => _dirty || (_parentWorkspace?.dirty ?? false);
   bool get isCurrent => !_closed && source.isCurrent;
   String get format => _archive.formatName;
   bool get encrypted => _archive.members.any((member) => member.isEncrypted);
   bool get canUpdate {
+    if (_parentWorkspace?.canUpdate == false) return false;
     final name = file.name.toLowerCase();
     return name.endsWith('.zip') ||
         name.endsWith('.7z') ||
@@ -41,7 +45,9 @@ class ArchiveWorkspace {
         name.endsWith('.tgz');
   }
 
-  String get updateSupport => canUpdate
+  String get updateSupport => _parentWorkspace?.canUpdate == false
+      ? 'The enclosing archive cannot be repacked. Browsing and extraction are available.'
+      : canUpdate
       ? 'Edit, add, rename and delete members; save repacks the archive.'
       : 'This format supports browsing and extraction. Repacking is unavailable.';
 
@@ -68,15 +74,68 @@ class ArchiveWorkspace {
       }
       builder.add(chunk);
     }
+    if (!source.isCurrent) throw StateError('The archive source changed.');
+    if (isCancelled?.call() ?? false) {
+      throw StateError('Archive operation cancelled.');
+    }
     return builder.takeBytes();
+  }
+
+  /// Opens a nested route through owned workspaces. Each inner save replaces
+  /// its member in the parent working copy; only the outermost save reaches
+  /// physical storage, through the existing conflict and verification gates.
+  static Future<ArchiveWorkspace> openNested(
+    FileOperationBackend source,
+    FileItem file,
+    List<String> nestedMembers, {
+    String? password,
+    String? expectedOuterFingerprint,
+  }) async {
+    if (nestedMembers.length >= kArchiveNestingLimit) {
+      throw const ArchiveViewException(
+        'Archive nesting is limited to 8 levels.',
+      );
+    }
+    var workspace = await open(
+      source,
+      file,
+      password: password,
+      expectedFingerprint: expectedOuterFingerprint,
+    );
+    try {
+      for (final memberPath in nestedMembers) {
+        final relative = ArchiveService.safeMemberPath(memberPath);
+        final backend = _NestedArchiveBackend(workspace, '/$relative');
+        final member = await backend.stat('/$relative');
+        if (member == null || member.isFolder) {
+          throw ArchiveViewException(
+            'Nested archive no longer exists: $memberPath',
+          );
+        }
+        final child = await open(backend, member, password: password);
+        child._parentWorkspace = workspace;
+        workspace = child;
+      }
+      return workspace;
+    } catch (_) {
+      await workspace.close();
+      rethrow;
+    }
   }
 
   static Future<ArchiveWorkspace> open(
     FileOperationBackend source,
     FileItem file, {
     String? password,
+    String? expectedFingerprint,
   }) async {
     final bytes = await _read(source, file, ArchiveService.maxArchiveBytes);
+    if (expectedFingerprint != null &&
+        sha256.convert(bytes).toString() != expectedFingerprint) {
+      throw StateError(
+        'The archive changed since it was opened. Refresh it before editing or extracting members.',
+      );
+    }
     final archive = await openViewerArchive(
       bytes,
       name: file.name,
@@ -109,19 +168,12 @@ class ArchiveWorkspace {
 
   void _loadEntries() {
     _entries.clear();
-    for (final member in _archive.members) {
-      if (member.pathEscapedRoot || member.isSpecial) {
-        throw ArchiveViewException(
-          'Unsafe or unsupported member: ${member.name}',
-        );
-      }
-      // Root directory entries carry no content and need not be materialized.
-      if (member.name == '/' && !member.isFile) continue;
-      final name = ArchiveService.safeMemberPath(member.name);
-      if (_entries.containsKey(name)) {
-        throw ArchiveViewException('Duplicate member path: $name');
-      }
-      _entries[name] = _ArchiveEntry(name, !member.isFile, member: member);
+    for (final entry in ArchiveMemberIndex(_archive).members.entries) {
+      _entries[entry.key] = _ArchiveEntry(
+        entry.key,
+        !entry.value.isFile,
+        member: entry.value,
+      );
     }
     _validateEntries(_entries);
   }
@@ -476,7 +528,10 @@ class ArchiveWorkspace {
 
   Future<void> save({bool Function()? isCancelled}) async {
     _check(writing: true);
-    if (!_dirty) return;
+    if (!_dirty) {
+      await _parentWorkspace?.save(isCancelled: isCancelled);
+      return;
+    }
     final bytes = await repack(isCancelled: isCancelled);
     final current = await _read(
       source,
@@ -583,13 +638,58 @@ class ArchiveWorkspace {
       await replacement.close();
       rethrow;
     }
+    // Keep a staged parent dirty if its save fails. A retry can commit the
+    // already-verified child without closing or repacking the child again.
+    await _parentWorkspace?.save(isCancelled: isCancelled);
   }
 
   ArchiveOperationBackend get backend => ArchiveOperationBackend(this);
 
   Future<void> close() async {
+    if (_closed) return;
     _closed = true;
-    await _archive.close();
+    try {
+      await _archive.close();
+    } finally {
+      await _parentWorkspace?.close();
+    }
+  }
+}
+
+/// A capability to replace exactly one nested container in a parent working
+/// copy. Other writes stay unavailable and no virtual path reaches a provider.
+class _NestedArchiveBackend extends ArchiveOperationBackend {
+  _NestedArchiveBackend(super.workspace, this.memberPath);
+  final String memberPath;
+
+  @override
+  Future<void> writeFile(
+    String path,
+    Stream<List<int>> data,
+    int? length, {
+    required bool replace,
+  }) async {
+    if (!replace || path != memberPath) {
+      throw StateError('Only the captured nested archive can be replaced.');
+    }
+    workspace._check(writing: true);
+    final builder = BytesBuilder(copy: false);
+    await for (final chunk in data) {
+      workspace._check(writing: true);
+      if (builder.length + chunk.length > kArchiveReadLimit) {
+        throw const ArchiveViewException(
+          'Nested archive exceeds the 64 MiB member limit.',
+        );
+      }
+      builder.add(chunk);
+    }
+    workspace._check(writing: true);
+    if (length != null && builder.length != length) {
+      throw const ArchiveViewException(
+        'Nested archive write ended at an unexpected size.',
+      );
+    }
+    workspace.replace(path, builder.takeBytes());
   }
 }
 

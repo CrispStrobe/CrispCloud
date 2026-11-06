@@ -14,6 +14,7 @@
 //
 // "Free Up Space" converts a synced local file back to a placeholder.
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -21,6 +22,13 @@ import 'package:drift/drift.dart';
 import 'package:path/path.dart' as p;
 
 import 'cloud_storage_interface.dart';
+import 'file_operation_backend.dart';
+import 'file_operation_service.dart';
+import 'local_file_service.dart';
+import 'sync_source_binding.dart';
+import 'sync_transfer_service.dart';
+import 'transfer_journal.dart';
+import 'transfer_recovery_service.dart';
 import 'log_service.dart';
 import 'sync_database.dart';
 
@@ -34,6 +42,7 @@ class PlaceholderMeta {
   final int sizeBytes;
   final DateTime? remoteModified;
   final String? contentHash;
+  final String? sourceBinding;
 
   const PlaceholderMeta({
     required this.remotePath,
@@ -41,17 +50,19 @@ class PlaceholderMeta {
     required this.sizeBytes,
     this.remoteModified,
     this.contentHash,
+    this.sourceBinding,
   });
 
   Map<String, dynamic> toJson() => {
-        'remotePath': remotePath,
-        'provider': provider,
-        'sizeBytes': sizeBytes,
-        if (remoteModified != null)
-          'remoteModified': remoteModified!.toIso8601String(),
-        if (contentHash != null) 'contentHash': contentHash,
-        'version': 1,
-      };
+    'remotePath': remotePath,
+    'provider': provider,
+    'sizeBytes': sizeBytes,
+    if (remoteModified != null)
+      'remoteModified': remoteModified!.toIso8601String(),
+    if (contentHash != null) 'contentHash': contentHash,
+    if (sourceBinding != null) 'sourceBinding': sourceBinding,
+    'version': 1,
+  };
 
   factory PlaceholderMeta.fromJson(Map<String, dynamic> json) =>
       PlaceholderMeta(
@@ -62,10 +73,10 @@ class PlaceholderMeta {
             ? DateTime.tryParse(json['remoteModified'] as String)
             : null,
         contentHash: json['contentHash'] as String?,
+        sourceBinding: json['sourceBinding'] as String?,
       );
 
-  String encode() =>
-      const JsonEncoder.withIndent('  ').convert(toJson());
+  String encode() => const JsonEncoder.withIndent('  ').convert(toJson());
 
   static PlaceholderMeta? decode(String content) {
     try {
@@ -82,16 +93,18 @@ class PlaceholderService {
 
   final SyncDatabase _db;
 
-  PlaceholderService(this._db);
+  PlaceholderService(this._db, {TransferJournal? journal})
+    : _transfers = SyncTransferService(journal: journal);
+  final SyncTransferService _transfers;
 
   /// Check if a local file path is a placeholder.
-  static bool isPlaceholder(String path) =>
-      path.endsWith(placeholderExtension);
+  static bool isPlaceholder(String path) => path.endsWith(placeholderExtension);
 
   /// Get the real file name from a placeholder path.
-  static String realName(String placeholderPath) =>
-      placeholderPath.substring(
-          0, placeholderPath.length - placeholderExtension.length);
+  static String realName(String placeholderPath) => placeholderPath.substring(
+    0,
+    placeholderPath.length - placeholderExtension.length,
+  );
 
   /// Get the placeholder path for a real file path.
   static String placeholderName(String realPath) =>
@@ -111,7 +124,16 @@ class PlaceholderService {
     DateTime? remoteModified,
     String? contentHash,
   }) async {
+    final pair = await _db.getPair(pairId);
+    SyncSourceBinding.requireLocal(pair);
+    validateSyncRelativePath(relativePath);
+    if (!p.equals(pair.localPath, localBasePath) ||
+        provider != pair.provider ||
+        remotePath != p.posix.join(pair.remotePath, relativePath)) {
+      throw StateError('The placeholder does not belong to this saved pair.');
+    }
     final meta = PlaceholderMeta(
+      sourceBinding: pair.sourceBinding,
       remotePath: remotePath,
       provider: provider,
       sizeBytes: sizeBytes,
@@ -124,20 +146,32 @@ class PlaceholderService {
 
     // Write the stub file
     final stubFile = File(stubPath);
+    if (await FileSystemEntity.type(stubPath, followLinks: false) ==
+        FileSystemEntityType.link) {
+      throw StateError('A placeholder cannot replace a symbolic link.');
+    }
+    if (await stubFile.exists()) {
+      if (await stubFile.length() > 64 * 1024 ||
+          PlaceholderMeta.decode(await stubFile.readAsString()) == null) {
+        throw StateError('An unrelated file occupies the placeholder path.');
+      }
+    }
     await stubFile.parent.create(recursive: true);
     await stubFile.writeAsString(meta.encode());
 
     // Mark in DB as placeholder
-    await _db.upsertEntry(SyncEntriesCompanion.insert(
-      pairId: pairId,
-      relativePath: relativePath,
-      remoteModified: Value(remoteModified),
-      remoteSize: Value(sizeBytes),
-      remoteHash: Value(contentHash),
-      status: const Value('placeholder'),
-      isFolder: const Value(false),
-      lastSyncAt: Value(DateTime.now()),
-    ));
+    await _db.upsertEntry(
+      SyncEntriesCompanion.insert(
+        pairId: pairId,
+        relativePath: relativePath,
+        remoteModified: Value(remoteModified),
+        remoteSize: Value(sizeBytes),
+        remoteHash: Value(contentHash),
+        status: const Value('placeholder'),
+        isFolder: const Value(false),
+        lastSyncAt: Value(DateTime.now()),
+      ),
+    );
 
     _log.debug('Created placeholder for $relativePath');
   }
@@ -150,51 +184,98 @@ class PlaceholderService {
     required String localBasePath,
     required String relativePath,
     required CloudStorageClient client,
+    bool Function()? isCurrent,
   }) async {
+    final pair = await _db.getPair(pairId);
+    final binding = SyncSourceBinding.require(pair, client);
+    validateSyncRelativePath(relativePath);
+    if (!p.equals(pair.localPath, localBasePath)) {
+      throw StateError('The placeholder local folder changed.');
+    }
+    bool current() =>
+        (isCurrent?.call() ?? true) && binding.matches(pair, client);
+    void check() {
+      if (!current()) throw StateError('The placeholder account changed.');
+    }
+
+    final local = LocalOperationBackend(LocalFileService(), isCurrent: current);
+    final remote = CloudOperationBackend(client, isCurrent: current);
     final realLocalPath = p.join(localBasePath, relativePath);
     final stubPath = placeholderName(realLocalPath);
     final stubFile = File(stubPath);
-
-    // Read metadata from stub
-    PlaceholderMeta? meta;
-    if (await stubFile.exists()) {
-      final content = await stubFile.readAsString();
-      meta = PlaceholderMeta.decode(content);
+    final stub = await local.stat(stubPath);
+    if (stub == null ||
+        stub.isFolder ||
+        stub.isSymlink == true ||
+        stub.size == null ||
+        stub.size! > 64 * 1024) {
+      throw StateError('The placeholder metadata is missing or invalid.');
     }
-
-    // Download the real file
-    final remotePath =
-        meta?.remotePath ?? relativePath; // Fallback to relative
-    _log.info('Hydrating placeholder: $relativePath');
-    final bytes = await client.downloadFileBytes(remotePath);
-
-    // Write the real file
-    final realFile = File(realLocalPath);
-    await realFile.parent.create(recursive: true);
-    await realFile.writeAsBytes(bytes);
-
-    // Remove the stub
-    if (await stubFile.exists()) {
-      await stubFile.delete();
+    final stubContents = await stubFile.readAsString();
+    final meta = PlaceholderMeta.decode(stubContents);
+    final remotePath = p.posix.join(pair.remotePath, relativePath);
+    if (meta == null ||
+        meta.sourceBinding != pair.sourceBinding ||
+        meta.remotePath != remotePath ||
+        meta.provider != pair.provider) {
+      throw StateError(
+        'This placeholder belongs to an earlier account binding. Compare the pair to recreate it.',
+      );
     }
-
-    // Update DB: synced, no longer placeholder
-    final stat = await realFile.stat();
-    await _db.upsertEntry(SyncEntriesCompanion.insert(
-      pairId: pairId,
-      relativePath: relativePath,
-      localModified: Value(stat.modified),
-      remoteModified: Value(meta?.remoteModified ?? stat.modified),
-      localSize: Value(bytes.length),
-      remoteSize: Value(bytes.length),
-      remoteHash: Value(meta?.contentHash),
-      status: const Value('synced'),
-      isFolder: const Value(false),
-      lastSyncAt: Value(DateTime.now()),
-    ));
-
-    _log.info('Hydrated $relativePath (${bytes.length} bytes)');
-    return realLocalPath;
+    if (await local.stat(realLocalPath) != null) {
+      throw StateError(
+        'A local file already exists. Compare the pair before replacing it.',
+      );
+    }
+    final file = await remote.stat(remotePath);
+    if (file == null || file.isFolder || file.isSymlink == true) {
+      throw StateError('The placeholder cloud file is unavailable.');
+    }
+    final control = FileOperationControl();
+    final timer = Timer.periodic(const Duration(milliseconds: 50), (_) {
+      if (!current()) control.cancel();
+    });
+    try {
+      final hash = await transferDigest(remote, file, control);
+      final written = await _transfers.copy(
+        source: remote,
+        file: file,
+        destination: local,
+        destinationPath: realLocalPath,
+        expectedDestination: null,
+        expectedSourceHash: hash,
+        control: control,
+        check: check,
+      );
+      check();
+      if (await stubFile.exists() &&
+          await stubFile.readAsString() == stubContents) {
+        await stubFile.delete();
+      }
+      await _db.upsertEntry(
+        SyncEntriesCompanion.insert(
+          pairId: pairId,
+          relativePath: relativePath,
+          localModified: Value(written.updatedAt),
+          remoteModified: Value(file.updatedAt),
+          localSize: Value(written.size ?? file.size ?? 0),
+          remoteSize: Value(file.size ?? written.size ?? 0),
+          localHash: Value(hash),
+          remoteHash: Value(
+            (file.metadata?['content_hash'] ?? file.metadata?['crc32Hash'])
+                ?.toString(),
+          ),
+          status: const Value('synced'),
+          error: const Value(null),
+          isFolder: const Value(false),
+          lastSyncAt: Value(DateTime.now()),
+        ),
+      );
+      _log.info('Hydrated $relativePath');
+      return realLocalPath;
+    } finally {
+      timer.cancel();
+    }
   }
 
   /// Free up space: replace a synced local file with a placeholder.
@@ -206,34 +287,81 @@ class PlaceholderService {
     required String relativePath,
     required String remotePath,
     required String provider,
+    required CloudStorageClient client,
+    bool Function()? isCurrent,
   }) async {
-    final realLocalPath = p.join(localBasePath, relativePath);
-    final realFile = File(realLocalPath);
-
-    if (!await realFile.exists()) {
-      _log.warn('Cannot dehydrate: file not found at $realLocalPath');
-      return;
+    final pair = await _db.getPair(pairId);
+    final binding = SyncSourceBinding.require(pair, client);
+    validateSyncRelativePath(relativePath);
+    if (!p.equals(localBasePath, pair.localPath) ||
+        remotePath != p.posix.join(pair.remotePath, relativePath) ||
+        provider != pair.provider) {
+      throw StateError('The cloud-only file does not belong to this pair.');
     }
-
-    final stat = await realFile.stat();
-    final entry = await _db.getEntry(pairId, relativePath);
-
-    // Create placeholder with metadata from real file + DB
-    await createPlaceholder(
-      pairId: pairId,
-      localBasePath: localBasePath,
-      relativePath: relativePath,
-      remotePath: remotePath,
-      provider: provider,
-      sizeBytes: stat.size,
-      remoteModified: entry?.remoteModified ?? stat.modified,
-      contentHash: entry?.remoteHash,
-    );
-
-    // Delete the real file
-    await realFile.delete();
-
-    _log.info('Dehydrated $relativePath (freed ${stat.size} bytes)');
+    bool current() =>
+        (isCurrent?.call() ?? true) && binding.matches(pair, client);
+    final local = LocalOperationBackend(LocalFileService(), isCurrent: current);
+    final remote = CloudOperationBackend(client, isCurrent: current);
+    final control = FileOperationControl();
+    final timer = Timer.periodic(const Duration(milliseconds: 50), (_) {
+      if (!current()) control.cancel();
+    });
+    try {
+      final realLocalPath = p.join(localBasePath, relativePath);
+      final entry = await _db.getEntry(pairId, relativePath);
+      final file = await local.stat(realLocalPath);
+      if (entry == null ||
+          entry.status != 'synced' ||
+          entry.localHash == null ||
+          file == null ||
+          file.isSymlink == true ||
+          file.isFolder ||
+          file.size != entry.localSize ||
+          await transferDigest(local, file, control) != entry.localHash) {
+        throw StateError(
+          'Sync and verify this file before freeing space; its local contents changed or have no verified baseline.',
+        );
+      }
+      final cloud = await remote.stat(remotePath);
+      if (cloud == null ||
+          cloud.isFolder ||
+          cloud.isSymlink == true ||
+          await transferDigest(remote, cloud, control) != entry.localHash) {
+        throw StateError(
+          'The cloud copy changed or is unavailable. The local version was retained.',
+        );
+      }
+      await createPlaceholder(
+        pairId: pairId,
+        localBasePath: localBasePath,
+        relativePath: relativePath,
+        remotePath: remotePath,
+        provider: provider,
+        sizeBytes: file.size!,
+        remoteModified: cloud.updatedAt,
+        contentHash:
+            (cloud.metadata?['content_hash'] ?? cloud.metadata?['crc32Hash'])
+                ?.toString(),
+      );
+      final latest = await local.stat(realLocalPath);
+      final latestCloud = await remote.stat(remotePath);
+      if ((await _db.getPair(pairId)).sourceBinding != pair.sourceBinding ||
+          latest == null ||
+          !sameTransferVersion(file, latest) ||
+          latestCloud == null ||
+          !sameTransferVersion(cloud, latestCloud) ||
+          await transferDigest(local, latest, control) != entry.localHash ||
+          await transferDigest(remote, latestCloud, control) !=
+              entry.localHash) {
+        throw StateError(
+          'A file changed while freeing space; the local version was retained.',
+        );
+      }
+      await local.deleteFile(latest);
+      _log.info('Dehydrated $relativePath (freed ${file.size} bytes)');
+    } finally {
+      timer.cancel();
+    }
   }
 
   /// Check if a file is currently a placeholder (by DB status).
@@ -254,18 +382,30 @@ class PlaceholderService {
   /// Iterates all 'synced' entries for every pair that has placeholders
   /// enabled and calls [dehydrate] on those not accessed recently.
   /// Returns the number of files evicted.
-  Future<int> autoEvict(int maxAgeDays, SyncDatabase db) async {
-    if (maxAgeDays <= 0) return 0;
+  Future<int> autoEvict(
+    int maxAgeDays,
+    SyncDatabase db, {
+    required CloudStorageClient client,
+    bool Function()? isCurrent,
+  }) async {
+    if (maxAgeDays <= 0 || !client.isAuthenticated) return 0;
 
     final cutoff = DateTime.now().subtract(Duration(days: maxAgeDays));
     final pairs = await db.getAllPairs();
     int evicted = 0;
 
     for (final pair in pairs) {
-      if (!pair.usePlaceholders) continue;
+      if (!pair.usePlaceholders ||
+          !(SyncSourceBinding.decode(pair.sourceBinding)
+                  ?.matches(pair, client) ??
+              false)) {
+        continue;
+      }
 
       final entries = await db.getEntriesForPair(pair.id);
-      final syncedEntries = entries.where((e) => e.status == 'synced' && !e.isFolder);
+      final syncedEntries = entries.where(
+        (e) => e.status == 'synced' && !e.isFolder,
+      );
 
       for (final entry in syncedEntries) {
         final realLocalPath = p.join(pair.localPath, entry.relativePath);
@@ -284,9 +424,13 @@ class PlaceholderService {
               relativePath: entry.relativePath,
               remotePath: '${pair.remotePath}/${entry.relativePath}',
               provider: pair.provider,
+              client: client,
+              isCurrent: isCurrent,
             );
             evicted++;
-            _log.info('Auto-evicted ${entry.relativePath} (last accessed: $lastAccess)');
+            _log.info(
+              'Auto-evicted ${entry.relativePath} (last accessed: $lastAccess)',
+            );
           }
         } catch (e) {
           _log.error('Auto-evict error for ${entry.relativePath}: $e');
@@ -294,7 +438,9 @@ class PlaceholderService {
       }
     }
 
-    _log.info('Auto-eviction complete: $evicted file(s) evicted (maxAge: ${maxAgeDays}d)');
+    _log.info(
+      'Auto-eviction complete: $evicted file(s) evicted (maxAge: ${maxAgeDays}d)',
+    );
     return evicted;
   }
 
@@ -303,6 +449,7 @@ class PlaceholderService {
     required int pairId,
     required String localBasePath,
     required CloudStorageClient client,
+    bool Function()? isCurrent,
   }) async {
     final placeholders = await getPlaceholders(pairId);
     int count = 0;
@@ -313,6 +460,7 @@ class PlaceholderService {
           localBasePath: localBasePath,
           relativePath: entry.relativePath,
           client: client,
+          isCurrent: isCurrent,
         );
         count++;
       } catch (e) {

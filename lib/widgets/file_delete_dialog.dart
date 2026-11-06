@@ -14,6 +14,16 @@ Future<void> showFileDeleteDialog(
 ) async {
   if (files.isEmpty) return;
   final panel = ref.read(panelProvider(side));
+  try {
+    files = await panel.prepareOperationFiles(files);
+  } catch (error) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('$error')));
+    }
+    return;
+  }
+  if (!context.mounted) return;
   final canTrash = panel.canTrashFiles(files);
   var permanent = !canTrash;
   var busy = false;
@@ -63,11 +73,12 @@ Future<void> showFileDeleteDialog(
                         files,
                         permanently: permanent,
                       );
-                      if (deletedCount > 0)
+                      if (deletedCount > 0) {
                         deletionId = ref
                             .read(actionHistoryProvider)
                             .lastAction
                             ?.id;
+                      }
                       if (!context.mounted) return;
                       Navigator.pop(context);
                     },

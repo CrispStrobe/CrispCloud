@@ -8,7 +8,6 @@ import '../l10n/commander_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../models/rename_batch.dart';
-import '../providers/core_providers.dart';
 import '../providers/panel_provider.dart';
 import '../services/rename_batch_service.dart';
 import '../services/rename_batch_storage.dart';
@@ -19,20 +18,7 @@ SourceRenameBatchStorage createPanelRenameStorage(
   WidgetRef ref,
   PanelNotifier panel,
   PanelFileOrigin origin,
-) => SourceRenameBatchStorage(
-  reference: origin.storageReference,
-  source: origin.source,
-  local: ref.read(localFileServiceProvider),
-  isCurrent: () => origin.isCurrent,
-  fallbackRename: (file, name) => panel.renameFile(
-    file,
-    name,
-    refreshAfter: false,
-    rethrowErrors: true,
-    recordHistory: false,
-    operationOrigin: origin,
-  ),
-);
+) => panel.createRenameStorage(origin);
 
 Future<RenameBatchRecord?> showRenameHistoryDialog(
   BuildContext context,
@@ -213,7 +199,7 @@ class _RenameHistoryDialogState extends ConsumerState<RenameHistoryDialog> {
                 storageId: record.storage.id,
               ),
         };
-        _panel.applyFileListChanges(changes, origin: _origin);
+        await _panel.applyFileListChanges(changes, origin: _origin);
         await _panel.refresh();
       }
       await _load();
@@ -267,7 +253,7 @@ class _RenameHistoryDialogState extends ConsumerState<RenameHistoryDialog> {
       await _service.acknowledgeObservedDestination(record, _storage!);
       _lastChanged = record;
       if (_origin?.isCurrent == true) {
-        _panel.applyFileListChanges({
+        await _panel.applyFileListChanges({
           for (final item in record.items)
             if (before[item.sourcePath] != item.currentPath)
               before[item.sourcePath]!: item.asFile(

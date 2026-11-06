@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 
 import '../models/file_item.dart';
+import '../models/integrity_recovery.dart';
 import '../models/transfer_job.dart';
 import 'file_operation_service.dart';
 import 'transfer_journal.dart';
@@ -104,6 +105,11 @@ class JournaledTransferRunner {
     void Function(FileOperationEntry)? onEntryComplete,
     void Function(FileOperationEntry, String)? onPhase,
   }) async {
+    await journal.initialize();
+    final saved = journal.job(id);
+    if (saved != null && isIntegrityTransferJob(saved)) {
+      throw StateError('Use Split/combine recovery for this operation.');
+    }
     await journal.setStatus(id, TransferJobStatus.running);
     final indices = {
       for (var i = 0; i < plan.entries.length; i++) plan.entries[i]: i,
@@ -318,6 +324,9 @@ class TransferRecoveryService {
     TransferRecoveryMode mode = TransferRecoveryMode.retryRemaining,
     void Function(int, int)? onProgress,
   }) async {
+    if (isIntegrityTransferJob(job)) {
+      throw StateError('Use Split/combine recovery for this operation.');
+    }
     if (!job.ready ||
         job.entries.length != job.expectedEntries ||
         !job.canRecover ||
@@ -558,6 +567,9 @@ class TransferRecoveryService {
     FileOperationControl control, {
     Future<void> Function(String phase)? checkpoint,
   }) async {
+    if (isIntegrityTransferJob(job)) {
+      throw StateError('Use Split/combine recovery for this operation.');
+    }
     if (job.destination != destination.storageReference ||
         !destination.isCurrent) {
       throw StateError(

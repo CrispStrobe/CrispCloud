@@ -46,12 +46,25 @@ class FileSearchQuery {
   final String contentEncoding;
   final bool contentNegated;
   final bool searchArchives;
+
+  /// Full-text buffer limit for regex, archives and structured documents.
+  /// Plain-file literal searches stream the complete file with bounded memory.
   final int maxContentBytes;
   final List<String> extensions;
   final int? minSize;
   final int? maxSize;
   final DateTime? modifiedAfter;
   final DateTime? modifiedBefore;
+
+  static const contentEncodings = {
+    'auto',
+    'utf8',
+    'utf16le',
+    'utf16be',
+    'utf32le',
+    'utf32be',
+    'latin1',
+  };
 
   FileSelectionPattern get nameMatcher => FileSelectionPattern(
     namePattern,
@@ -64,6 +77,9 @@ class FileSearchQuery {
 
   void validate() {
     nameMatcher;
+    if (!contentEncodings.contains(contentEncoding)) {
+      throw FormatException('Unsupported content encoding: $contentEncoding.');
+    }
     if (contentRegex && contentPattern.isNotEmpty) {
       RegExp(
         contentPattern,
@@ -95,19 +111,23 @@ class FileSearchQuery {
 
   bool matchesMetadata(FileItem file) {
     if (!file.isFolder) {
-      if (extensions.isNotEmpty && !extensions.contains(file.extension))
+      if (extensions.isNotEmpty && !extensions.contains(file.extension)) {
         return false;
-      if ((minSize != null || maxSize != null) && file.size == null)
+      }
+      if ((minSize != null || maxSize != null) && file.size == null) {
         return false;
+      }
       if (minSize != null && file.size! < minSize!) return false;
       if (maxSize != null && file.size! > maxSize!) return false;
     }
     if (modifiedAfter != null &&
-        (file.updatedAt == null || file.updatedAt!.isBefore(modifiedAfter!)))
+        (file.updatedAt == null || file.updatedAt!.isBefore(modifiedAfter!))) {
       return false;
+    }
     if (modifiedBefore != null &&
-        (file.updatedAt == null || file.updatedAt!.isAfter(modifiedBefore!)))
+        (file.updatedAt == null || file.updatedAt!.isAfter(modifiedBefore!))) {
       return false;
+    }
     return true;
   }
 

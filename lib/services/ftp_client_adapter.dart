@@ -15,15 +15,14 @@ import 'log_service.dart';
 import 'secure_storage_service.dart';
 import 'ftp_transfer_session.dart';
 
-typedef FTPClientFactory =
-    FTPConnect Function(
-      String host, {
-      required int port,
-      required String user,
-      required String pass,
-      required SecurityType securityType,
-      required int timeout,
-    });
+typedef FTPClientFactory = FTPConnect Function(
+  String host, {
+  required int port,
+  required String user,
+  required String pass,
+  required SecurityType securityType,
+  required int timeout,
+});
 
 class FTPClientAdapter extends CloudStorageClient
     with CloudTransferOperations
@@ -142,6 +141,10 @@ class FTPClientAdapter extends CloudStorageClient
   bool get supportsTrash => false;
 
   // --- Connection Management ---
+
+  /// Connect using the exact persisted host, port, user and TLS mode. Unlike
+  /// login this does not parse a combined identity or rewrite stored secrets.
+  Future<void> restoreSession() => _ensureConnection();
 
   Future<void> _ensureConnection() {
     if (_ftpClient != null && _authenticated) return Future.value();

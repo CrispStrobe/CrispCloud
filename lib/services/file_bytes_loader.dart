@@ -186,6 +186,7 @@ class ViewBytesSource {
   final Uint8List? _memory;
   bool _disposed = false;
   bool _opened = false;
+  FileStat? _snapshot;
 
   final Future<void> Function()? _acquireAccess;
   final Future<void> Function()? _releaseAccess;
@@ -231,8 +232,28 @@ class ViewBytesSource {
     final acquire = _acquireAccess;
     if (acquire != null) await acquire();
     final f = _file!;
-    size = await f.length();
+    _snapshot = await f.stat();
+    size = _snapshot!.size;
     _raf = await f.open();
+    await validateUnchanged();
+  }
+
+  /// Searches must not present an early hit as a verified result if the file
+  /// was replaced, truncated or edited before the scan reached its end.
+  Future<void> validateUnchanged() async {
+    if (_disposed) throw StateError('ViewBytesSource already disposed');
+    final before = _snapshot;
+    if (before == null) return;
+    final after = await _file!.stat();
+    if (before.type != after.type ||
+        before.size != after.size ||
+        before.modified != after.modified ||
+        before.changed != after.changed) {
+      throw FileSystemException(
+        'The viewed file changed; reload it before searching.',
+        path,
+      );
+    }
   }
 
   /// Read [length] bytes at [offset] (clamped to the available range).
@@ -262,11 +283,19 @@ class ViewBytesSource {
 
     // Load a window around the requested slice.
     final wStart = start;
-    var wLen = _windowSize;
+    // Callers also index/search in chunks larger than the scroll cache. The
+    // window must cover the entire requested slice, not just its first 256 KiB.
+    var wLen = end - start > _windowSize ? end - start : _windowSize;
     if (wStart + wLen > size) wLen = size - wStart;
     if (wLen <= 0) return Uint8List(0);
     raf.setPositionSync(wStart);
     final window = raf.readSync(wLen);
+    if (window.length < end - start) {
+      throw FileSystemException(
+        'The viewed file became shorter while reading.',
+        path,
+      );
+    }
     _window = window;
     _windowStart = wStart;
     return Uint8List.sublistView(window, start - wStart, end - wStart);

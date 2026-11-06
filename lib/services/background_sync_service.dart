@@ -1,6 +1,6 @@
 // lib/services/background_sync_service.dart
 //
-// Mobile background sync using Workmanager (Android) and background fetch (iOS).
+// Mobile background sync using Workmanager and iOS BGAppRefreshTask.
 // Only active on Android and iOS — no-op on web and desktop platforms.
 //
 // Usage:
@@ -11,19 +11,23 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'background_transfer_journal.dart';
+import 'cloud_storage_interface.dart';
 import 'log_service.dart';
+import 'installation_identity.dart';
 import 'sync_database.dart';
 import 'sync_engine.dart';
 
 // Workmanager and flutter_local_notifications are only used on Android/iOS.
 // Conditional imports prevent compilation errors on web/desktop.
 import 'background_sync_stub.dart'
-    if (dart.library.io) 'background_sync_mobile.dart' as mobile;
+    if (dart.library.io) 'background_sync_mobile.dart'
+    as mobile;
 
 /// Unique task name registered with Workmanager.
 const kBackgroundSyncTaskName = 'crisp_cloud_background_sync';
 
-/// Unique task identifier (must be a simple string, no special chars).
+/// Android callback ID and iOS BGTaskScheduler permitted identifier.
 const kBackgroundSyncTaskId = 'crisp_cloud.background_sync';
 
 /// SharedPreferences key that tracks whether background sync is scheduled.
@@ -43,8 +47,7 @@ class BackgroundSyncService {
   static const _log = Log('BackgroundSyncService');
 
   /// Whether this service can do anything on the current platform.
-  static bool get isSupported =>
-      !kIsWeb && mobile.isMobileSupported;
+  static bool get isSupported => !kIsWeb && mobile.isMobileSupported;
 
   // -------------------------------------------------------------------------
   // Initialization
@@ -71,36 +74,49 @@ class BackgroundSyncService {
   ///
   /// [intervalMinutes] — how often the OS should wake the task (minimum 15 min
   /// on Android due to Doze mode; iOS best-effort).  The value is persisted so
-  /// it survives app restarts.
+  /// it survives app restarts. An optional [scheduler] lets host tests exercise
+  /// the same preference bookkeeping with a native scheduler fixture.
+  /// On iOS this is the desired interval applied at the next wake. An existing
+  /// pending request may retain its earlier requested start time; the native
+  /// handler uses the latest saved interval when it schedules the following run.
   static Future<void> schedulePeriodicSync({
     int intervalMinutes = _kDefaultInterval,
+    Future<void> Function(int intervalMinutes)? scheduler,
   }) async {
-    if (!isSupported) return;
+    if (!isSupported && scheduler == null) return;
     try {
-      await mobile.scheduleWorkmanagerTask(
-        uniqueName: kBackgroundSyncTaskName,
-        taskId: kBackgroundSyncTaskId,
-        intervalMinutes: intervalMinutes,
-      );
+      if (scheduler != null) {
+        await scheduler(intervalMinutes);
+      } else {
+        await mobile.scheduleWorkmanagerTask(
+          uniqueName: kBackgroundSyncTaskName,
+          taskId: kBackgroundSyncTaskId,
+          intervalMinutes: intervalMinutes,
+        );
+      }
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_kPrefEnabled, true);
       await prefs.setInt(_kPrefInterval, intervalMinutes);
       _log.info('Scheduled background sync every $intervalMinutes min');
     } catch (e, st) {
       _log.error('Failed to schedule background sync', e, st);
+      rethrow;
     }
   }
 
-  /// Cancel any previously scheduled background sync task.
-  static Future<void> cancelSync() async {
-    if (!isSupported) return;
+  /// Cancel any previously scheduled background sync task. [canceller] is the
+  /// corresponding host-test seam for checking failure/status propagation.
+  static Future<void> cancelSync({Future<void> Function()? canceller}) async {
+    if (!isSupported && canceller == null) return;
     try {
-      await mobile.cancelWorkmanagerTask(kBackgroundSyncTaskName);
+      await (canceller?.call() ??
+          mobile.cancelWorkmanagerTask(kBackgroundSyncTaskName));
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_kPrefEnabled, false);
       _log.info('Background sync cancelled');
     } catch (e, st) {
       _log.error('Failed to cancel background sync', e, st);
+      rethrow;
     }
   }
 
@@ -129,13 +145,33 @@ class BackgroundSyncService {
   ///
   /// This runs in an isolate that has NO Flutter widget tree — only raw Dart
   /// and platform channels. Keep it lean: init DB, sync, notify, return.
-  static Future<bool> executeBackgroundTask() async {
+  /// Optional factories allow host-side integration tests to exercise the
+  /// same run lifecycle without a platform credential store or user database.
+  static Future<bool> executeBackgroundTask({
+    SyncDatabase Function()? databaseFactory,
+    // Factories return a worker-owned session; it is closed after each pair.
+    Future<CloudStorageClient?> Function(String provider)? clientFactory,
+    Future<BackgroundTransferJournalRun> Function()? journalFactory,
+    Future<void> Function({
+      required int id,
+      required String title,
+      required String body,
+      required String channelId,
+      required String channelName,
+    })?
+    notificationSender,
+  }) async {
     _log.info('Background sync task started');
+    final notify = notificationSender ?? mobile.showLocalNotification;
 
     SyncDatabase? db;
+    BackgroundTransferJournalRun? run;
     try {
+      // Background isolates must resolve the same persisted installation as
+      // foreground pairs. An uninitialized session identity cannot bind paths.
+      await InstallationIdentityService.instance.initialize();
       // 1. Open database
-      db = SyncDatabase();
+      db = databaseFactory?.call() ?? SyncDatabase();
 
       // 2. Get all enabled sync pairs
       final pairs = await db.getEnabledPairs();
@@ -147,17 +183,36 @@ class BackgroundSyncService {
       // 3. Run sync for each pair
       //    In background we don't have a live auth provider, so we try to
       //    reconstruct a client from stored credentials for each pair.
-      final engine = SyncEngine(db);
+      // A background isolate must not append to the foreground journal. Its
+      // own leased log remains discoverable after termination; foreground
+      // recovery imports it only after this writer has released the lease.
+      run =
+          await (journalFactory?.call() ??
+              createBackgroundTransferJournalRun());
+      final engine = SyncEngine(db, journal: run.journal);
       int conflicts = 0;
       int errors = 0;
       final errorMessages = <String>[];
 
       for (final pair in pairs) {
+        CloudStorageClient? client;
         try {
-          final client = await mobile.buildClientForProvider(pair.provider);
+          client = await (clientFactory != null
+              ? clientFactory(pair.provider)
+              : mobile.buildClientForProvider(
+                  pair.provider,
+                  remotePath: pair.remotePath,
+                ));
           if (client == null) {
-            _log.warn('Could not build client for provider "${pair.provider}" — skipping "${pair.name}"');
-            continue;
+            throw StateError(
+              'Background sync is unavailable for "${pair.provider}". '
+              'Open CrispCloud and reconnect the account.',
+            );
+          }
+          if (!client.isAuthenticated) {
+            throw StateError(
+              'The saved "${pair.provider}" account could not be authenticated.',
+            );
           }
           final result = await engine.syncPair(pair, client);
           conflicts += result.conflicts;
@@ -168,6 +223,22 @@ class BackgroundSyncService {
           _log.error('Error syncing pair "${pair.name}"', e, st);
           errors++;
           errorMessages.add('${pair.name}: $e');
+        } finally {
+          try {
+            // Production builders use private credential copies, so cleanup
+            // cannot erase or replace the foreground account's saved secrets.
+            await client?.logout();
+          } catch (e, st) {
+            _log.error(
+              'Could not close the background provider session',
+              e,
+              st,
+            );
+            errors++;
+            errorMessages.add(
+              '${pair.name}: Could not close the provider session.',
+            );
+          }
         }
       }
 
@@ -178,21 +249,29 @@ class BackgroundSyncService {
           errors: errors,
           errorMessages: errorMessages,
         );
-        await mobile.showLocalNotification(
-          id: 1001,
-          title: 'CrispCloud Sync',
-          body: message,
-          channelId: 'crisp_cloud_sync',
-          channelName: 'Sync Notifications',
-        );
+        try {
+          await notify(
+            id: 1001,
+            title: 'CrispCloud Sync',
+            body: message,
+            channelId: 'crisp_cloud_sync',
+            channelName: 'Sync Notifications',
+          );
+        } catch (e, st) {
+          _log.warn('Could not display the background sync result', e, st);
+        }
       }
 
-      _log.info('Background sync task finished. conflicts=$conflicts errors=$errors');
-      return true;
+      _log.info(
+        'Background sync task finished. conflicts=$conflicts errors=$errors',
+      );
+      // Workmanager must receive failure when credentials/providers or a pair
+      // fail. Android can then apply the configured retry/backoff policy.
+      return errors == 0;
     } catch (e, st) {
       _log.error('Background sync task failed', e, st);
       try {
-        await mobile.showLocalNotification(
+        await notify(
           id: 1002,
           title: 'CrispCloud Sync Error',
           body: 'Background sync failed: $e',
@@ -202,7 +281,11 @@ class BackgroundSyncService {
       } catch (_) {}
       return false;
     } finally {
-      await db?.close();
+      try {
+        await run?.close();
+      } finally {
+        await db?.close();
+      }
     }
   }
 
@@ -212,7 +295,9 @@ class BackgroundSyncService {
     required List<String> errorMessages,
   }) {
     final parts = <String>[];
-    if (conflicts > 0) parts.add('$conflicts conflict${conflicts == 1 ? '' : 's'}');
+    if (conflicts > 0) {
+      parts.add('$conflicts conflict${conflicts == 1 ? '' : 's'}');
+    }
     if (errors > 0) parts.add('$errors error${errors == 1 ? '' : 's'}');
     if (errorMessages.isNotEmpty) {
       parts.add(errorMessages.first);

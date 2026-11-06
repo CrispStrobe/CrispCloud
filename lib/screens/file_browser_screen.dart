@@ -46,12 +46,14 @@ import '../widgets/preview_pane.dart';
 import '../widgets/settings_dialog.dart' show showSettingsDialog;
 import '../widgets/search_dialogs.dart' show showSearchDialog, showFindDialog;
 import '../widgets/pattern_selection_dialog.dart';
+import '../widgets/file_attributes_dialog.dart';
 import '../widgets/file_list_dialog.dart';
 import '../widgets/file_collections_dialog.dart';
 import '../widgets/rename_history_dialog.dart';
 import '../widgets/trash_history_dialog.dart';
 import '../widgets/transfer_history_dialog.dart';
 import '../widgets/integrity_dialogs.dart';
+import '../widgets/integrity_recovery_dialog.dart';
 import '../widgets/directory_comparison_dialog.dart';
 import '../widgets/file_clipboard_actions.dart';
 import '../widgets/file_toolbar.dart' show showPanelFilterDialog;
@@ -417,6 +419,27 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         ),
       ),
       PlatformMenuItem(
+        label: context.commanderTr("Same extension"),
+        onSelected: () => _activePanel(ref).selectSameExtension(),
+      ),
+      PlatformMenuItem(
+        label: context.commanderTr("Same name (without extension)"),
+        onSelected: () => _activePanel(ref).selectSameName(),
+      ),
+      PlatformMenuItem(
+        label: context.commanderTr("Same containing folder"),
+        onSelected: () => _activePanel(ref).selectSameParent(),
+      ),
+      PlatformMenuItem(
+        label: context.commanderTr("Load selection from paths…"),
+        onSelected: () =>
+            showFileListDialog(context, ref, activeSide, selectionMode: true),
+      ),
+      PlatformMenuItem(
+        label: context.commanderTr("Change attributes…"),
+        onSelected: () => showFileAttributesFromSelection(context, ref),
+      ),
+      PlatformMenuItem(
         label: context.commanderTr("Multi-Rename..."),
         shortcut: const SingleActivator(LogicalKeyboardKey.keyM, control: true),
         onSelected: () => showMultiRenameFromSelection(context, ref),
@@ -452,6 +475,10 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                 _integritySelection(ref).single,
               )
             : null,
+      ),
+      PlatformMenuItem(
+        label: context.commanderTr("Split/combine recovery…"),
+        onSelected: () => showIntegrityRecoveryDialog(context, ref),
       ),
       PlatformMenuItem(
         label: context.commanderTr("Combine Parts..."),
@@ -1865,6 +1892,21 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             showExtensionsDialog(context, ref, ref.read(activePanelProvider));
           case 'multi_rename':
             showMultiRenameFromSelection(context, ref);
+          case 'change_attributes':
+            showFileAttributesFromSelection(context, ref);
+          case 'load_selection':
+            showFileListDialog(
+              context,
+              ref,
+              ref.read(activePanelProvider),
+              selectionMode: true,
+            );
+          case 'same_extension':
+            _activePanel(ref).selectSameExtension();
+          case 'same_name':
+            _activePanel(ref).selectSameName();
+          case 'same_parent':
+            _activePanel(ref).selectSameParent();
           case 'pattern_selection':
             showPatternSelectionDialog(
               context,
@@ -1884,6 +1926,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             showTrashHistoryDialog(context, ref, ref.read(activePanelProvider));
           case 'transfer_history':
             showTransferHistoryDialog(context, ref);
+          case 'integrity_recovery':
+            showIntegrityRecoveryDialog(context, ref);
           case 'checksums':
             showChecksumToolsDialog(
               context,
@@ -2040,10 +2084,52 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           ),
         ),
         PopupMenuItem(
+          value: 'integrity_recovery',
+          child: _overflowItem(
+            Icons.restore,
+            context.commanderTr("Split/combine recovery…"),
+          ),
+        ),
+        PopupMenuItem(
           value: 'combine_parts',
           child: _overflowItem(
             Icons.join_inner,
             context.commanderTr("Combine parts…"),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'change_attributes',
+          child: _overflowItem(
+            Icons.tune,
+            context.commanderTr("Change attributes…"),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'same_extension',
+          child: _overflowItem(
+            Icons.library_add_check,
+            context.commanderTr("Same extension"),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'same_name',
+          child: _overflowItem(
+            Icons.checklist,
+            context.commanderTr("Same name (without extension)"),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'same_parent',
+          child: _overflowItem(
+            Icons.folder_copy_outlined,
+            context.commanderTr("Same containing folder"),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'load_selection',
+          child: _overflowItem(
+            Icons.playlist_add_check,
+            context.commanderTr("Load selection from paths…"),
           ),
         ),
         PopupMenuItem(

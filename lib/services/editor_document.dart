@@ -64,6 +64,7 @@ class EditorDocument {
     required this.lineEnding,
     this.hadMixedLineEndings = false,
     this.hadBom = false,
+    this.writeBom,
   });
 
   /// LF-normalized document text without a byte-order mark.
@@ -78,12 +79,29 @@ class EditorDocument {
   /// True when the source began with a byte-order mark.
   final bool hadBom;
 
+  /// A decoded UTF-16/32 file retains its original BOM choice. Newly created
+  /// documents use the conventional BOM unless a caller specifies otherwise.
+  final bool? writeBom;
+
   /// Decode [bytes], detect the encoding and line-ending style, and normalize
   /// the text to LF.
-  factory EditorDocument.decode(List<int> bytes) {
+  factory EditorDocument.decode(
+    List<int> bytes, {
+    EditorEncoding? encodingOverride,
+  }) {
     final data = bytes is Uint8List ? bytes : Uint8List.fromList(bytes);
-    final detection = _detectEncoding(data);
-    final decoded = detection.decode(data);
+    final detection = encodingOverride == null
+        ? _detectEncoding(data)
+        : _explicitEncoding(data, encodingOverride);
+    late final String decoded;
+    try {
+      decoded = detection.decode(data);
+    } on FormatException catch (error) {
+      throw EditorEncodingException(
+        detection.encoding,
+        'The file is not valid ${detection.encoding.label}: ${error.message}',
+      );
+    }
     final endings = _countLineEndings(decoded);
     final lineEnding = endings.dominant;
     return EditorDocument(
@@ -92,6 +110,7 @@ class EditorDocument {
       lineEnding: lineEnding,
       hadMixedLineEndings: endings.isMixed,
       hadBom: detection.bomLength > 0,
+      writeBom: detection.bomLength > 0,
     );
   }
 
@@ -101,6 +120,7 @@ class EditorDocument {
     EditorLineEnding? lineEnding,
     bool? hadMixedLineEndings,
     bool? hadBom,
+    bool? writeBom,
   }) {
     return EditorDocument(
       text: text ?? this.text,
@@ -108,6 +128,11 @@ class EditorDocument {
       lineEnding: lineEnding ?? this.lineEnding,
       hadMixedLineEndings: hadMixedLineEndings ?? this.hadMixedLineEndings,
       hadBom: hadBom ?? this.hadBom,
+      writeBom:
+          writeBom ??
+          (encoding != null && encoding != this.encoding
+              ? null
+              : this.writeBom),
     );
   }
 
@@ -129,13 +154,29 @@ class EditorDocument {
           ...utf8.encode(withLineEndings),
         ]);
       case EditorEncoding.utf16le:
-        return _encodeUtf16(withLineEndings, littleEndian: true);
+        return _encodeUtf16(
+          withLineEndings,
+          littleEndian: true,
+          includeBom: writeBom ?? true,
+        );
       case EditorEncoding.utf16be:
-        return _encodeUtf16(withLineEndings, littleEndian: false);
+        return _encodeUtf16(
+          withLineEndings,
+          littleEndian: false,
+          includeBom: writeBom ?? true,
+        );
       case EditorEncoding.utf32le:
-        return _encodeUtf32(withLineEndings, littleEndian: true);
+        return _encodeUtf32(
+          withLineEndings,
+          littleEndian: true,
+          includeBom: writeBom ?? true,
+        );
       case EditorEncoding.utf32be:
-        return _encodeUtf32(withLineEndings, littleEndian: false);
+        return _encodeUtf32(
+          withLineEndings,
+          littleEndian: false,
+          includeBom: writeBom ?? true,
+        );
       case EditorEncoding.latin1:
         if (withLineEndings.runes.any((rune) => rune > 0xFF)) {
           throw EditorEncodingException(
@@ -153,14 +194,18 @@ class EditorDocument {
     return source.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
   }
 
-  static Uint8List _encodeUtf16(String source, {required bool littleEndian}) {
+  static Uint8List _encodeUtf16(
+    String source, {
+    required bool littleEndian,
+    required bool includeBom,
+  }) {
     final units = source.codeUnits;
-    final out = Uint8List(2 + units.length * 2);
+    final out = Uint8List((includeBom ? 2 : 0) + units.length * 2);
     var i = 0;
-    if (littleEndian) {
+    if (includeBom && littleEndian) {
       out[i++] = 0xFF;
       out[i++] = 0xFE;
-    } else {
+    } else if (includeBom) {
       out[i++] = 0xFE;
       out[i++] = 0xFF;
     }
@@ -176,16 +221,20 @@ class EditorDocument {
     return out;
   }
 
-  static Uint8List _encodeUtf32(String source, {required bool littleEndian}) {
+  static Uint8List _encodeUtf32(
+    String source, {
+    required bool littleEndian,
+    required bool includeBom,
+  }) {
     final runes = source.runes.toList(growable: false);
-    final out = Uint8List(4 + runes.length * 4);
+    final out = Uint8List((includeBom ? 4 : 0) + runes.length * 4);
     var i = 0;
-    if (littleEndian) {
+    if (includeBom && littleEndian) {
       out[i++] = 0xFF;
       out[i++] = 0xFE;
       out[i++] = 0x00;
       out[i++] = 0x00;
-    } else {
+    } else if (includeBom) {
       out[i++] = 0x00;
       out[i++] = 0x00;
       out[i++] = 0xFE;
@@ -218,6 +267,49 @@ class _EncodingDetection {
   final EditorEncoding encoding;
   final int bomLength;
   final String Function(Uint8List bytes) decode;
+}
+
+_EncodingDetection _explicitEncoding(Uint8List bytes, EditorEncoding encoding) {
+  final bom = switch (encoding) {
+    EditorEncoding.utf8 || EditorEncoding.utf8Bom => const [0xEF, 0xBB, 0xBF],
+    EditorEncoding.utf16le => const [0xFF, 0xFE],
+    EditorEncoding.utf16be => const [0xFE, 0xFF],
+    EditorEncoding.utf32le => const [0xFF, 0xFE, 0, 0],
+    EditorEncoding.utf32be => const [0, 0, 0xFE, 0xFF],
+    EditorEncoding.latin1 => const <int>[],
+  };
+  final length = bom.isNotEmpty && _startsWith(bytes, bom) ? bom.length : 0;
+  return _EncodingDetection(
+    encoding: encoding == EditorEncoding.utf8 && length > 0
+        ? EditorEncoding.utf8Bom
+        : encoding,
+    bomLength: length,
+    decode: (data) => switch (encoding) {
+      EditorEncoding.utf8 ||
+      EditorEncoding.utf8Bom => utf8.decode(_slice(data, length)),
+      EditorEncoding.utf16le => _decodeUtf16(
+        data,
+        littleEndian: true,
+        bomLength: length,
+      ),
+      EditorEncoding.utf16be => _decodeUtf16(
+        data,
+        littleEndian: false,
+        bomLength: length,
+      ),
+      EditorEncoding.utf32le => _decodeUtf32(
+        data,
+        littleEndian: true,
+        bomLength: length,
+      ),
+      EditorEncoding.utf32be => _decodeUtf32(
+        data,
+        littleEndian: false,
+        bomLength: length,
+      ),
+      EditorEncoding.latin1 => latin1.decode(data),
+    },
+  );
 }
 
 _EncodingDetection _detectEncoding(Uint8List bytes) {
@@ -253,13 +345,7 @@ _EncodingDetection _detectEncoding(Uint8List bytes) {
     return _EncodingDetection(
       encoding: EditorEncoding.utf8Bom,
       bomLength: 3,
-      decode: (data) {
-        try {
-          return utf8.decode(_slice(data, 3));
-        } on FormatException {
-          return latin1.decode(_slice(data, 3));
-        }
-      },
+      decode: (data) => utf8.decode(_slice(data, 3)),
     );
   }
   try {
@@ -293,8 +379,15 @@ Uint8List _slice(Uint8List bytes, int start) {
   return Uint8List.sublistView(bytes, start);
 }
 
-String _decodeUtf16(Uint8List bytes, {required bool littleEndian}) {
-  final data = _slice(bytes, 2);
+String _decodeUtf16(
+  Uint8List bytes, {
+  required bool littleEndian,
+  int bomLength = 2,
+}) {
+  final data = _slice(bytes, bomLength);
+  if (data.length.isOdd) {
+    throw const FormatException('Incomplete UTF-16 code unit.');
+  }
   final units = <int>[];
   for (var i = 0; i + 1 < data.length; i += 2) {
     units.add(
@@ -303,11 +396,31 @@ String _decodeUtf16(Uint8List bytes, {required bool littleEndian}) {
           : (data[i] << 8) | data[i + 1],
     );
   }
+  for (var i = 0; i < units.length; i++) {
+    final unit = units[i];
+    if (unit >= 0xD800 && unit <= 0xDBFF) {
+      if (i + 1 >= units.length ||
+          units[i + 1] < 0xDC00 ||
+          units[i + 1] > 0xDFFF) {
+        throw const FormatException('Unpaired UTF-16 surrogate.');
+      }
+      i++;
+    } else if (unit >= 0xDC00 && unit <= 0xDFFF) {
+      throw const FormatException('Unpaired UTF-16 surrogate.');
+    }
+  }
   return String.fromCharCodes(units);
 }
 
-String _decodeUtf32(Uint8List bytes, {required bool littleEndian}) {
-  final data = _slice(bytes, 4);
+String _decodeUtf32(
+  Uint8List bytes, {
+  required bool littleEndian,
+  int bomLength = 4,
+}) {
+  final data = _slice(bytes, bomLength);
+  if (data.length % 4 != 0) {
+    throw const FormatException('Incomplete UTF-32 code point.');
+  }
   final runes = <int>[];
   for (var i = 0; i + 3 < data.length; i += 4) {
     final value = littleEndian
@@ -319,7 +432,10 @@ String _decodeUtf32(Uint8List bytes, {required bool littleEndian}) {
               (data[i + 1] << 16) |
               (data[i + 2] << 8) |
               data[i + 3];
-    runes.add(_isValidRune(value) ? value : 0xFFFD);
+    if (!_isValidRune(value)) {
+      throw const FormatException('Invalid UTF-32 code point.');
+    }
+    runes.add(value);
   }
   return String.fromCharCodes(runes);
 }

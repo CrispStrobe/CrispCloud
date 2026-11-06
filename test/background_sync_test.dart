@@ -37,12 +37,15 @@ void main() {
       await stub.cancelWorkmanagerTask('test_task');
     });
 
-    test('buildClientForProvider always returns null', () async {
-      final client = await stub.buildClientForProvider('gdrive');
-      expect(client, isNull);
-
-      final client2 = await stub.buildClientForProvider('s3');
-      expect(client2, isNull);
+    test('unavailable background clients fail explicitly', () async {
+      await expectLater(
+        stub.buildClientForProvider('gdrive'),
+        throwsUnsupportedError,
+      );
+      await expectLater(
+        stub.buildClientForProvider('s3'),
+        throwsUnsupportedError,
+      );
     });
 
     test('showLocalNotification completes without error', () async {
@@ -84,10 +87,13 @@ void main() {
       expect(scheduled, false);
     });
 
-    test('getIntervalMinutes returns default (15) when nothing is saved', () async {
-      final interval = await BackgroundSyncService.getIntervalMinutes();
-      expect(interval, 15);
-    });
+    test(
+      'getIntervalMinutes returns default (15) when nothing is saved',
+      () async {
+        final interval = await BackgroundSyncService.getIntervalMinutes();
+        expect(interval, 15);
+      },
+    );
 
     test('getIntervalMinutes returns saved value', () async {
       SharedPreferences.setMockInitialValues({
@@ -99,9 +105,7 @@ void main() {
 
     test('isScheduled respects SharedPreferences flag', () async {
       // Even if we write the pref, isSupported is false so isScheduled returns false
-      SharedPreferences.setMockInitialValues({
-        'background_sync_enabled': true,
-      });
+      SharedPreferences.setMockInitialValues({'background_sync_enabled': true});
       final scheduled = await BackgroundSyncService.isScheduled();
       expect(scheduled, false);
     });

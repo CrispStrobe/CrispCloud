@@ -1,3 +1,4 @@
+import '../l10n/commander_strings.dart';
 // lib/widgets/search_dialogs.dart
 //
 // Search and find dialogs, extracted from file_context_menu.dart.
@@ -603,6 +604,8 @@ class _FindDialogState extends State<_FindDialog> {
                         'utf8',
                         'utf16le',
                         'utf16be',
+                        'utf32le',
+                        'utf32be',
                         'latin1',
                       ])
                         DropdownMenuItem(
@@ -616,15 +619,17 @@ class _FindDialogState extends State<_FindDialog> {
                   ),
                 ],
               ),
-              const Text(
-                'Content is read from the selected source, up to 64 MiB per file. Files beyond the limit are reported. Symbolic links are not followed.',
-                style: TextStyle(fontSize: 12),
+              Text(
+                context.commanderTr(
+                  "Literal text search scans the complete file with bounded memory. Regex, Office documents, and archive members use a 64 MiB text limit; files beyond it are reported. Symbolic links are not followed.",
+                ),
+                style: const TextStyle(fontSize: 12),
               ),
             ],
             if (_searchArchives)
               const Text(
                 'Archive hits refer to the containing archive. The matching member appears in the result details.',
-                style: TextStyle(fontSize: 12),
+                style: const TextStyle(fontSize: 12),
               ),
             const Divider(),
             Wrap(

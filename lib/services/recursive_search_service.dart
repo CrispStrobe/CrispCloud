@@ -1,14 +1,16 @@
 import 'dart:typed_data';
-import 'dart:convert';
+
+import 'package:path/path.dart' as p;
 
 import '../models/file_item.dart';
 import '../models/file_search_query.dart';
 import 'archive_service.dart';
 import 'archive_viewer_service.dart';
 import 'file_operation_service.dart';
-import 'file_selection_pattern.dart';
+import 'file_search_path_filter.dart';
 import 'internal_viewer_service.dart';
 import 'office_search_text.dart';
+import 'search_content_matcher.dart';
 
 class FileSearchMatch {
   const FileSearchMatch(this.file, {this.snippet = '', this.archiveMember});
@@ -17,6 +19,24 @@ class FileSearchMatch {
 
   /// Archive matches refer to the original archive file for safe list actions.
   final String? archiveMember;
+
+  /// Group archive hits without losing earlier members when the outer archive
+  /// also matches. The evidence is display data, not a virtual-file capability.
+  FileItem groupedFile(FileItem? previous) {
+    final members = <String>{
+      ...?(previous?.metadata?['matchingArchiveMembers'] as List?)
+          ?.whereType<String>(),
+      if (archiveMember != null) archiveMember!,
+    };
+    return members.isEmpty
+        ? file
+        : file.copyWith(
+            metadata: {
+              ...?file.metadata,
+              'matchingArchiveMembers': members.toList(),
+            },
+          );
+  }
 }
 
 class FileSearchResult {
@@ -45,21 +65,8 @@ class RecursiveSearchService {
   }) async {
     query.validate();
     final matcher = query.nameMatcher;
-    final excludedDirectories = query.excludeDirectories.isEmpty
-        ? null
-        : FileSelectionPattern(
-            query.excludeDirectories,
-            caseSensitive: query.caseSensitive,
-            matchFullPath: query.excludeDirectories.contains('/'),
-          );
-    final contentRegex = query.contentRegex && query.contentPattern.isNotEmpty
-        ? RegExp(
-            query.contentPattern,
-            caseSensitive: query.contentCaseSensitive,
-            multiLine: true,
-            unicode: true,
-          )
-        : null;
+    final pathFilter = FileSearchPathFilter(query, paths: source.paths);
+    final archiveFilter = FileSearchPathFilter(query, paths: p.posix);
     final matches = <FileSearchMatch>[];
     final errors = <String>[];
     final seen = <String>{};
@@ -68,8 +75,9 @@ class RecursiveSearchService {
 
     void check() {
       if (isCancelled?.call() ?? false) throw const _SearchCancelled();
-      if (!source.isCurrent)
+      if (!source.isCurrent) {
         throw StateError('The search source changed. Run the search again.');
+      }
     }
 
     void emit(FileSearchMatch match) {
@@ -78,57 +86,52 @@ class RecursiveSearchService {
       onMatch?.call(match);
     }
 
-    String? contentMatch(Uint8List bytes) {
-      final text = InternalViewerService.decodeTextForView(
-        bytes,
-        encoding: query.contentEncoding == 'auto'
-            ? null
-            : query.contentEncoding,
-      ).text;
-      final pattern = query.contentPattern;
-      final match = contentRegex?.firstMatch(text);
-      final index = contentRegex != null
-          ? match?.start ?? -1
-          : query.contentCaseSensitive
-          ? text.indexOf(pattern)
-          : text.toLowerCase().indexOf(pattern.toLowerCase());
-      if (query.contentNegated)
-        return index < 0 ? 'Content does not contain the query.' : null;
-      if (index < 0) return null;
-      final start = (index - 45).clamp(0, text.length);
-      final end = (index + (match?.group(0)?.length ?? pattern.length) + 90)
-          .clamp(0, text.length);
-      return '${start > 0 ? '…' : ''}${text.substring(start, end).replaceAll('\n', ' ')}${end < text.length ? '…' : ''}';
+    void scan(String path) {
+      check();
+      if (scanned >= 200000) throw const _SearchLimitReached();
+      scanned++;
+      onProgress?.call(scanned, path);
+    }
+
+    Future<String?> contentMatch(Uint8List bytes, String name) async {
+      final text = isSearchableOfficeDocument(name)
+          ? await officeSearchText(bytes, name, query.maxContentBytes)
+          : InternalViewerService.decodeTextForView(
+              bytes,
+              encoding: query.contentEncoding == 'auto'
+                  ? null
+                  : query.contentEncoding,
+            ).text;
+      check();
+      return matchSearchText(text, query);
     }
 
     Future<Uint8List> read(FileItem file, int limit) async {
-      if ((file.size ?? 0) > limit)
+      if ((file.size ?? 0) > limit) {
         throw StateError('Content exceeds the configured $limit byte limit.');
+      }
       final bytes = BytesBuilder(copy: false);
       await for (final chunk in source.readFile(file)) {
         check();
-        if (bytes.length + chunk.length > limit)
+        if (bytes.length + chunk.length > limit) {
           throw StateError('Content exceeds the configured $limit byte limit.');
+        }
         bytes.add(chunk);
       }
       check();
       return bytes.takeBytes();
     }
 
-    Future<void> examine(FileItem file) async {
+    Future<void> examine(FileItem file, int depth) async {
       check();
       if (file.name == '.' ||
           file.name == '..' ||
           file.path == null ||
-          file.isSymlink == true)
+          file.isSymlink == true) {
         return;
+      }
       if (!query.includeHidden && file.name.startsWith('.')) return;
-      scanned++;
-      onProgress?.call(scanned, file.path!);
-      if (scanned > 200000)
-        throw StateError(
-          'Search reached its 200,000 item limit. Narrow its scope.',
-        );
+      scan(file.path!);
       if (query.searchArchives &&
           !file.isFolder &&
           ArchiveService.isArchive(file.name)) {
@@ -141,25 +144,52 @@ class RecursiveSearchService {
           try {
             for (final entry in archive.members) {
               check();
-              if (entry.pathEscapedRoot || entry.isSpecial || !entry.isFile)
+              if (entry.pathEscapedRoot || entry.isSpecial) continue;
+              final memberPath = p.posix.normalize(entry.name);
+              if (p.posix.isAbsolute(memberPath) ||
+                  memberPath == '..' ||
+                  memberPath.startsWith('../')) {
                 continue;
+              }
+              scan('${file.path}!/$memberPath');
+              final memberDepth = p.posix.split(memberPath).length - 1;
+              if ((!query.recursive && memberDepth > 0) ||
+                  (query.maxDepth != null &&
+                      depth + memberDepth > query.maxDepth!)) {
+                continue;
+              }
               final member = FileItem(
-                name: entry.name.split('/').last,
-                path: entry.name,
-                isFolder: false,
+                name: p.posix.basename(memberPath),
+                path: memberPath,
+                isFolder: !entry.isFile,
                 size: entry.size,
+                updatedAt: entry.modified,
               );
-              if (!matcher.matches(member) || !query.matchesMetadata(member))
+              if (!archiveFilter.allows(member, root: '.') ||
+                  !matcher.matches(member) ||
+                  !query.matchesMetadata(member)) {
                 continue;
-              final snippet = query.contentPattern.isEmpty
-                  ? ''
-                  : contentMatch(
-                      await archive.readMember(
-                        entry,
-                        maxBytes: query.maxContentBytes,
-                      ),
-                    );
-              if (snippet != null)
+              }
+              if (!entry.isFile && query.contentPattern.isNotEmpty) continue;
+              String? snippet;
+              try {
+                snippet = query.contentPattern.isEmpty
+                    ? ''
+                    : await contentMatch(
+                        await archive.readMember(
+                          entry,
+                          maxBytes: query.maxContentBytes,
+                        ),
+                        entry.name,
+                      );
+              } on _SearchCancelled {
+                rethrow;
+              } catch (error) {
+                check();
+                errors.add('${file.path}!/${entry.name}: $error');
+                continue;
+              }
+              if (snippet != null) {
                 emit(
                   FileSearchMatch(
                     file,
@@ -167,11 +197,14 @@ class RecursiveSearchService {
                     archiveMember: entry.name,
                   ),
                 );
+              }
             }
           } finally {
             await archive.close();
           }
         } on _SearchCancelled {
+          rethrow;
+        } on _SearchLimitReached {
           rethrow;
         } catch (error) {
           errors.add('${file.path}: $error');
@@ -182,19 +215,17 @@ class RecursiveSearchService {
         emit(FileSearchMatch(file));
       } else if (!file.isFolder && !ArchiveService.isArchive(file.name)) {
         try {
-          var content = await read(file, query.maxContentBytes);
-          if (isSearchableOfficeDocument(file.name)) {
-            content = Uint8List.fromList(
-              utf8.encode(
-                await officeSearchText(
-                  content,
+          final snippet =
+              !query.contentRegex && !isSearchableOfficeDocument(file.name)
+              ? await searchLiteralContent(
+                  source.readFile(file),
+                  query,
+                  check: check,
+                )
+              : await contentMatch(
+                  await read(file, query.maxContentBytes),
                   file.name,
-                  query.maxContentBytes,
-                ),
-              ),
-            );
-          }
-          final snippet = contentMatch(content);
+                );
           if (snippet != null) emit(FileSearchMatch(file, snippet: snippet));
         } on _SearchCancelled {
           rethrow;
@@ -204,7 +235,7 @@ class RecursiveSearchService {
       }
     }
 
-    Future<void> walk(String directory, int depth) async {
+    Future<void> walk(String directory, int depth, String root) async {
       check();
       final key = source.pathKey(directory);
       if (!seen.add(key)) return;
@@ -224,15 +255,13 @@ class RecursiveSearchService {
           errors.add('Invalid child path returned by source: ${file.path}');
           continue;
         }
-        if (file.isFolder && excludedDirectories?.matches(file) == true)
-          continue;
-        if (!query.includeHidden && file.name.startsWith('.')) continue;
-        await examine(file);
+        if (!pathFilter.allows(file, root: root)) continue;
+        await examine(file, depth);
         if (file.isFolder &&
             file.isSymlink != true &&
             query.recursive &&
             (query.maxDepth == null || depth < query.maxDepth!)) {
-          await walk(file.path!, depth + 1);
+          await walk(file.path!, depth + 1, root);
         }
       }
     }
@@ -241,9 +270,10 @@ class RecursiveSearchService {
       for (final root
           in query.roots.isEmpty ? [currentDirectory] : query.roots) {
         final normalized = source.paths.normalize(root);
-        if (!source.paths.isAbsolute(normalized))
+        if (!source.paths.isAbsolute(normalized)) {
           throw const FormatException('Search roots must be absolute paths.');
-        await walk(normalized, 0);
+        }
+        await walk(normalized, 0, normalized);
       }
     } on _SearchCancelled {
       cancelled = true;
@@ -256,4 +286,11 @@ class RecursiveSearchService {
 
 class _SearchCancelled implements Exception {
   const _SearchCancelled();
+}
+
+class _SearchLimitReached implements Exception {
+  const _SearchLimitReached();
+  @override
+  String toString() =>
+      'Search reached its 200,000 item limit. Narrow its scope.';
 }

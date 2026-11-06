@@ -16,6 +16,14 @@ const kSplitMaxParts = 10000;
 
 enum SplitManifestStatus { incomplete, complete, cancelled, failed }
 
+class SplitManifestChangedException implements Exception {
+  const SplitManifestChangedException();
+  static const message =
+      'The split manifest changed after review. Close and reopen Combine to review the current parts.';
+  @override
+  String toString() => message;
+}
+
 class SplitPart {
   const SplitPart({
     required this.index,
@@ -73,6 +81,14 @@ class SplitManifest {
       throw const FormatException('Split manifest exceeds 8 MiB.');
     }
     return bytes;
+  }
+
+  /// The effective definition binds a reviewed combination to its original
+  /// parts and whole-file checksum. JSON whitespace and ignored extension
+  /// fields do not change the operation being approved.
+  String get definitionFingerprint {
+    final digest = ChecksumAccumulator(ChecksumAlgorithm.sha256)..add(encode());
+    return digest.finish();
   }
 
   SplitManifest copyWith({
@@ -468,16 +484,24 @@ class FileSplitService {
   static Future<String> combineFromManifest({
     required FileOperationBackend source,
     required FileItem manifestFile,
+    SplitManifest? reviewedManifest,
     required FileOperationBackend destination,
     required String outputPath,
     bool Function()? isCancelled,
     void Function(String phase, int bytes, int total)? onProgress,
   }) async {
+    // Capture before the first asynchronous read so even an in-memory caller
+    // cannot change a mutable supplied part list while validation is pending.
+    final expectedDefinition = reviewedManifest?.definitionFingerprint;
     final manifest = await readManifest(
       source,
       manifestFile,
       isCancelled: isCancelled,
     );
+    if (expectedDefinition != null &&
+        manifest.definitionFingerprint != expectedDefinition) {
+      throw const SplitManifestChangedException();
+    }
     if (manifest.status != SplitManifestStatus.complete) {
       throw StateError(
         'This split is ${manifest.status.name}; ${manifest.parts.length} of ${manifest.expectedParts} parts were recorded.',
@@ -794,6 +818,7 @@ class FileSplitService {
       final result = await combineFromManifest(
         source: backend,
         manifestFile: manifest,
+        reviewedManifest: content,
         destination: backend,
         outputPath: outputPath,
         isCancelled: isCancelled,

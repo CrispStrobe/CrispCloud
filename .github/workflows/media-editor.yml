@@ -39,10 +39,39 @@ jobs:
           g++ -std=c++17 -O2 -fPIC -fvisibility=hidden -D_FILE_OFFSET_BITS=64 \
             -shared packages/crisp_audio/src/crisp_audio.cpp \
             -o build/media-native/libcrisp_audio.so -lm
-      - name: Independent audio decode, trim, fades, cancellation and reopen
+      - name: Install independent audio inspectors with bounded mirror fallback
+        timeout-minutes: 7
+        shell: bash
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y ffmpeg
+          set -euo pipefail
+          download_ffmpeg() {
+            sudo timeout --kill-after=5s 45s apt-get update -qq &&
+              sudo timeout --kill-after=5s 90s apt-get install --download-only -y ffmpeg
+          }
+          if ! download_ffmpeg; then
+            echo "::warning::FFmpeg download failed or timed out; retrying the official Ubuntu archives."
+            ubuntu_sources=/etc/apt/sources.list.d/ubuntu.sources
+            [[ -f "$ubuntu_sources" ]] || ubuntu_sources=/etc/apt/sources.list
+            # Hosted Ubuntu uses this mirror list, not a direct Azure URI.
+            # Reject an unknown layout rather than retrying the same endpoint.
+            if ! grep -Eq '^[[:space:]]*(URIs:|deb[[:space:]]).*mirror\+file:/etc/apt/apt-mirrors\.txt([[:space:]]|$)' "$ubuntu_sources" ||
+                grep -Fq 'azure.archive.ubuntu.com' "$ubuntu_sources"; then
+              echo "::error::Unrecognized Ubuntu APT source layout; refusing an ineffective mirror fallback."
+              exit 1
+            fi
+            printf 'https://archive.ubuntu.com/ubuntu/\tpriority:1\nhttps://security.ubuntu.com/ubuntu/\tpriority:2\n' |
+              sudo tee /etc/apt/apt-mirrors.txt
+            download_ffmpeg
+          fi
+          # Only network acquisition is retried; do not interrupt dpkg to retry.
+          sudo apt-get install --no-download -y ffmpeg
+          command -v ffmpeg
+          command -v ffprobe
+          ffmpeg -version
+          ffprobe -version
+      - name: Independent audio decode, trim, fades, cancellation and reopen
+        timeout-minutes: 3
+        run: |
           python3 packages/crisp_audio/native_test/test_audio.py --library build/media-native/libcrisp_audio.so
       - name: Format media integration
         run: >-

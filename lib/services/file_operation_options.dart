@@ -1,6 +1,8 @@
 import '../models/file_item.dart';
 import '../models/file_search_query.dart';
+import 'duplicate_name_template.dart';
 import 'file_selection_pattern.dart';
+import 'stream_rate_limiter.dart';
 
 enum FileOperationKind { copy, move }
 
@@ -36,6 +38,9 @@ enum FileOperationOutcome {
 /// Frozen and serializable settings; credentials and account objects never
 /// belong in saved profiles or operation manifests.
 class FileOperationOptions {
+  static const maximumClientBytesPerSecond =
+      StreamRateLimiter.maximumBytesPerSecond;
+
   const FileOperationOptions({
     this.kind = FileOperationKind.copy,
     this.fileConflict = FileConflictPolicy.ask,
@@ -48,6 +53,7 @@ class FileOperationOptions {
     this.preserveOwnership = false,
     this.preserveExtendedAttributes = false,
     this.preserveAcl = false,
+    this.preserveWindowsAttributes = false,
     this.verifyContents = false,
     this.stopOnError = true,
     this.copySymbolicLinks = false,
@@ -55,6 +61,7 @@ class FileOperationOptions {
     this.searchCriteria,
     this.destinationName,
     this.destinationMask = '*.*',
+    this.duplicateNameTemplate = DuplicateNameTemplate.defaultTemplate,
     this.minimumSize,
     this.maximumSize,
     this.modifiedAfter,
@@ -65,6 +72,7 @@ class FileOperationOptions {
     this.preferNative = true,
     this.copyMethod = FileCopyMethod.automatic,
     this.preallocate = false,
+    this.clientBytesPerSecond,
   });
 
   final FileOperationKind kind;
@@ -78,6 +86,7 @@ class FileOperationOptions {
   final bool preserveOwnership;
   final bool preserveExtendedAttributes;
   final bool preserveAcl;
+  final bool preserveWindowsAttributes;
   final bool verifyContents;
   final bool stopOnError;
   final bool copySymbolicLinks;
@@ -112,6 +121,22 @@ class FileOperationOptions {
 
   /// Applied to regular file names at every selected depth.
   final String destinationMask;
+
+  /// A counter-based filename used whenever a conflict is kept as a new copy.
+  /// Saved independently from the destination mask so late conflicts and
+  /// recovered jobs use the same naming rule that was reviewed.
+  final String duplicateNameTemplate;
+
+  void validateTransferSettings() {
+    DuplicateNameTemplate(duplicateNameTemplate);
+    final rate = clientBytesPerSecond;
+    if (rate != null && (rate <= 0 || rate > maximumClientBytesPerSecond)) {
+      throw const FormatException(
+        'The client streaming rate must be positive and at most 1 TiB/s.',
+      );
+    }
+  }
+
   final int? minimumSize;
   final int? maximumSize;
   final DateTime? modifiedAfter;
@@ -122,6 +147,19 @@ class FileOperationOptions {
   final bool preferNative;
   final FileCopyMethod copyMethod;
   final bool preallocate;
+
+  /// Maximum bytes per second fed to this operation's copy stream. Null means
+  /// unlimited. Native/server-side operations, verification reads and buffered
+  /// provider upload bodies do not pass through that stream.
+  final int? clientBytesPerSecond;
+
+  bool get requestsMetadataPreservation =>
+      preserveModified ||
+      preservePermissions ||
+      preserveOwnership ||
+      preserveExtendedAttributes ||
+      preserveAcl ||
+      preserveWindowsAttributes;
 
   FileSearchQuery get searchFilter => FileSearchQuery(
     namePattern: pattern?.expression ?? '*',
@@ -154,6 +192,7 @@ class FileOperationOptions {
     'preserveOwnership': preserveOwnership,
     'preserveExtendedAttributes': preserveExtendedAttributes,
     'preserveAcl': preserveAcl,
+    'preserveWindowsAttributes': preserveWindowsAttributes,
     'verifyContents': verifyContents,
     'stopOnError': stopOnError,
     'copySymbolicLinks': copySymbolicLinks,
@@ -161,6 +200,7 @@ class FileOperationOptions {
     'searchCriteria': searchCriteria?.toJson(),
     'destinationName': destinationName,
     'destinationMask': destinationMask,
+    'duplicateNameTemplate': duplicateNameTemplate,
     'minimumSize': minimumSize,
     'maximumSize': maximumSize,
     'modifiedAfter': modifiedAfter?.toUtc().toIso8601String(),
@@ -171,13 +211,14 @@ class FileOperationOptions {
     'preferNative': preferNative,
     'copyMethod': copyMethod.name,
     'preallocate': preallocate,
+    'clientBytesPerSecond': clientBytesPerSecond,
   };
 
   factory FileOperationOptions.fromJson(Map<String, dynamic> json) {
     if (json['version'] != 1) {
       throw const FormatException('Unsupported transfer options version.');
     }
-    return FileOperationOptions(
+    final options = FileOperationOptions(
       kind: FileOperationKind.values.byName(json['kind'] as String),
       fileConflict: FileConflictPolicy.values.byName(
         json['fileConflict'] as String,
@@ -193,6 +234,7 @@ class FileOperationOptions {
       preserveOwnership: json['preserveOwnership'] == true,
       preserveExtendedAttributes: json['preserveExtendedAttributes'] == true,
       preserveAcl: json['preserveAcl'] == true,
+      preserveWindowsAttributes: json['preserveWindowsAttributes'] == true,
       verifyContents: json['verifyContents'] == true,
       stopOnError: json['stopOnError'] != false,
       copySymbolicLinks: json['copySymbolicLinks'] == true,
@@ -204,6 +246,9 @@ class FileOperationOptions {
             ),
       destinationName: json['destinationName'] as String?,
       destinationMask: json['destinationMask'] as String? ?? '*.*',
+      duplicateNameTemplate:
+          json['duplicateNameTemplate'] as String? ??
+          DuplicateNameTemplate.defaultTemplate,
       minimumSize: json['minimumSize'] as int?,
       maximumSize: json['maximumSize'] as int?,
       modifiedAfter: _date(json['modifiedAfter']),
@@ -216,7 +261,10 @@ class FileOperationOptions {
         json['copyMethod'] as String? ?? 'automatic',
       ),
       preallocate: json['preallocate'] == true,
+      clientBytesPerSecond: json['clientBytesPerSecond'] as int?,
     );
+    options.validateTransferSettings();
+    return options;
   }
 
   static DateTime? _date(dynamic value) =>

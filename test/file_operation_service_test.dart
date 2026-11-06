@@ -667,6 +667,83 @@ void main() {
   });
 
   group('selection and destination planning', () {
+    test('custom keep-both template reserves every selected duplicate', () async {
+      source.file('/first/a.txt', 'first');
+      source.file('/second/a.txt', 'second');
+      target.file('/target/a.txt', 'old');
+      final plan = await prepare(
+        ['/first/a.txt', '/second/a.txt'],
+        options: const FileOperationOptions(
+          fileConflict: FileConflictPolicy.keepBoth,
+          duplicateNameTemplate: '{name}_copy-{counter:000}{ext}',
+        ),
+      );
+      expect(plan.entries.map((entry) => entry.destination), [
+        '/target/a_copy-001.txt',
+        '/target/a_copy-002.txt',
+      ]);
+      // An independently created target after preview must use the original
+      // base, and must not take the name reserved for the second selected file.
+      target.file('/target/a_copy-001.txt', 'arrived after preview');
+      await execute(plan);
+      expect(target.text('/target/a.txt'), 'old');
+      expect(target.text('/target/a_copy-001.txt'), 'arrived after preview');
+      expect(target.text('/target/a_copy-002.txt'), 'second');
+      expect(target.text('/target/a_copy-003.txt'), 'first');
+      expect(plan.entries.every((entry) => entry.completed), isTrue);
+      expect(target.contains('/target/a_copy-001_copy-001.txt'), isFalse);
+    });
+
+    test('custom same-directory names respect case-insensitive collisions', () async {
+      source = _CaseInsensitiveMemoryBackend('source');
+      source.file('/tree/a.txt', 'source');
+      source.file('/tree/A_COPY-001.TXT', 'retain');
+      final plan = await prepare(
+        ['/tree/a.txt'],
+        targetBackend: source,
+        destination: '/tree',
+        options: const FileOperationOptions(
+          fileConflict: FileConflictPolicy.keepBoth,
+          duplicateNameTemplate: '{name}_copy-{counter:000}{ext}',
+        ),
+      );
+      expect(plan.entries.single.destination, '/tree/a_copy-002.txt');
+      await execute(plan);
+      expect(source.text('/tree/A_COPY-001.TXT'), 'retain');
+      expect(source.text('/tree/a_copy-002.txt'), 'source');
+    });
+
+    test('invalid template cannot preview or execute a forged plan', () async {
+      source.file('/a', 'retain');
+      const invalid = FileOperationOptions(duplicateNameTemplate: '../{counter}');
+      await expectLater(prepare(['/a'], options: invalid), throwsFormatException);
+      final forged = FileOperationPlan(
+        source: source,
+        destination: target,
+        targetDirectory: '/target',
+        options: invalid,
+        entries: [FileOperationEntry(source.item('/a'), '/target/a')],
+        errors: [],
+      );
+      await expectLater(execute(forged), throwsFormatException);
+      expect(target.writeAttempts, isEmpty);
+    });
+
+    test('saved duplicate-name bases cannot redirect a late conflict', () async {
+      source.file('/a', 'retain');
+      target.file('/target/a', 'old');
+      final plan = await prepare(
+        ['/a'],
+        options: const FileOperationOptions(fileConflict: FileConflictPolicy.keepBoth),
+      );
+      target.file(plan.entries.single.destination, 'late conflict');
+      plan.entries.single.recovery!['duplicateNameBase'] = '/elsewhere/a';
+      await execute(plan);
+      expect(plan.entries.single.outcome, FileOperationOutcome.failed);
+      expect(plan.entries.single.message, contains('duplicate-name base'));
+      expect(target.writeAttempts, isEmpty);
+    });
+
     test('same-directory Keep both creates a distinct copy and preserves the source', () async {
       source.file('/tree/a.txt', 'original');
       source.file('/tree/a (1).txt', 'earlier copy');

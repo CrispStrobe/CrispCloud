@@ -42,6 +42,9 @@ class SyncPairs extends Table {
   TextColumn get localPath => text()();
   TextColumn get remotePath => text()();
   TextColumn get provider => text()(); // CloudProvider.name
+  /// Versioned local installation + remote account/root references. Legacy
+  /// rows remain unbound until the user explicitly reviews their sources.
+  TextColumn get sourceBinding => text().nullable()();
   TextColumn get conflictPolicy =>
       text().withDefault(const Constant('newestWins'))();
   TextColumn get direction => text().withDefault(const Constant('twoWay'))();
@@ -86,6 +89,7 @@ class SyncEntries extends Table {
 }
 
 /// Queued operations for offline mode — replayed on reconnect.
+@DataClassName('OfflineQueueEntry')
 class OfflineQueue extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get pairId => integer().references(SyncPairs, #id)();
@@ -93,6 +97,8 @@ class OfflineQueue extends Table {
       text()(); // upload, download, delete, rename, move
   TextColumn get path => text()();
   TextColumn get targetPath => text().nullable()(); // for move/rename
+  /// Exact binding in effect when queued; never inherited after a rebind.
+  TextColumn get sourceBinding => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   BoolColumn get completed => boolean().withDefault(const Constant(false))();
   TextColumn get error => text().nullable()();
@@ -106,7 +112,7 @@ class SyncDatabase extends _$SyncDatabase {
   SyncDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -118,6 +124,10 @@ class SyncDatabase extends _$SyncDatabase {
       }
       if (from < 3) {
         await m.addColumn(syncPairs, syncPairs.usePlaceholders);
+      }
+      if (from < 4) {
+        await m.addColumn(syncPairs, syncPairs.sourceBinding);
+        await m.addColumn(offlineQueue, offlineQueue.sourceBinding);
       }
     },
   );
@@ -138,8 +148,33 @@ class SyncDatabase extends _$SyncDatabase {
   Future<bool> updatePair(SyncPairsCompanion pair) =>
       update(syncPairs).replace(pair);
 
-  Future<int> deletePair(int id) =>
-      (delete(syncPairs)..where((t) => t.id.equals(id))).go();
+  Future<int> deletePair(int id) => transaction(() async {
+    await (delete(offlineQueue)..where((t) => t.pairId.equals(id))).go();
+    await deleteEntriesForPair(id);
+    return (delete(syncPairs)..where((t) => t.id.equals(id))).go();
+  });
+
+  /// Rebinding discards the old comparison baseline and leaves queued work
+  /// visibly blocked under its original token instead of retargeting it.
+  Future<void> rebindPair(int id, String sourceBinding) =>
+      transaction(() async {
+        await deleteEntriesForPair(id);
+        await (update(syncPairs)..where((t) => t.id.equals(id))).write(
+          SyncPairsCompanion(
+            sourceBinding: Value(sourceBinding),
+            lastSyncAt: const Value(null),
+          ),
+        );
+        await (update(
+          offlineQueue,
+        )..where((t) => t.pairId.equals(id) & t.completed.equals(false))).write(
+          const OfflineQueueCompanion(
+            error: Value(
+              'The sync pair was rebound. Review this queued operation and enqueue it again.',
+            ),
+          ),
+        );
+      });
 
   // --- SyncEntry CRUD ---
 

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
@@ -18,17 +19,94 @@ class TransferJournal {
   final TransferJournalStorage storage;
   final AsyncLock _lock = AsyncLock();
   final Map<String, TransferJobRecord> _jobs = {};
+  final Set<String> _imported = {};
   final List<String> warnings = [];
   Future<void>? _initializing;
   int _sequence = 0;
+  bool _writesClosed = false;
+  int _pendingWrites = 0;
+  Completer<void>? _writesDrained;
+  bool _reloadAfterFailure = false;
+  final Set<String> _activeOperations = {};
+
+  bool isOperationActive(String id) => _activeOperations.contains(id);
+
+  /// Admit one owner before its first await. Operation-specific recovery uses
+  /// this gate across service instances sharing the foreground journal.
+  Future<T> runExclusiveOperation<T>(
+    String id,
+    Future<T> Function() operation,
+  ) {
+    if (!_activeOperations.add(id)) {
+      return Future<T>.error(StateError('This operation is already active.'));
+    }
+    return Future<T>.sync(operation).whenComplete(() {
+      _activeOperations.remove(id);
+    });
+  }
 
   List<TransferJobRecord> get jobs =>
       _jobs.values.toList()..sort((a, b) => b.created.compareTo(a.created));
   TransferJobRecord? job(String id) => _jobs[id];
   Future<void> initialize() => _initializing ??= _load();
+  Future<void> flushPending() => _lock.synchronized(() async {});
 
-  Future<void> _load() async {
+  /// Stop accepting writes synchronously and wait for every admitted mutation,
+  /// including calls still awaiting initialization or their place in the lock.
+  /// A leased writer must finish this before releasing its OS lease.
+  Future<void> closeWrites() {
+    _writesClosed = true;
+    return _pendingWrites == 0
+        ? Future<void>.value()
+        : (_writesDrained ??= Completer<void>()).future;
+  }
+
+  Future<T> _mutate<T>(Future<T> Function() action) {
+    if (_writesClosed) {
+      return Future<T>.error(StateError('The transfer journal has closed.'));
+    }
+    // Admission happens before the first await. A lock sentinel alone could
+    // overtake a public method that is still awaiting initialize().
+    _pendingWrites++;
+    return Future<T>.sync(() async {
+      await initialize();
+      return _lock.synchronized(() async {
+        if (_reloadAfterFailure) {
+          // An append/replace can reach disk before its acknowledgement fails.
+          // Reconcile the actual log before allocating another sequence or
+          // retrying an import, preserving statuses of live foreground jobs.
+          await _load(
+            liveJobs: {
+              for (final job in _jobs.values)
+                if (_activeStatus(job.status)) job.id,
+            },
+          );
+          _reloadAfterFailure = false;
+        }
+        try {
+          return await action();
+        } catch (_) {
+          _reloadAfterFailure = true;
+          rethrow;
+        }
+      });
+    }).whenComplete(() {
+      _pendingWrites--;
+      if (_pendingWrites == 0) _writesDrained?.complete();
+    });
+  }
+
+  static bool _activeStatus(TransferJobStatus status) => const [
+    TransferJobStatus.running,
+    TransferJobStatus.queued,
+    TransferJobStatus.paused,
+  ].contains(status);
+
+  Future<void> _load({Set<String> liveJobs = const {}}) async {
     final lines = await storage.readLines();
+    _jobs.clear();
+    _imported.clear();
+    _sequence = 0;
     final valid = <String>[];
     for (var i = 0; i < lines.length; i++) {
       try {
@@ -48,6 +126,7 @@ class TransferJournal {
         );
         await storage.rewrite(valid);
         _jobs.clear();
+        _imported.clear();
         _sequence = 0;
         for (final line in valid) {
           _apply(decodeTransferEvent(line));
@@ -58,11 +137,14 @@ class TransferJournal {
     // A prior process cannot still be running these closures. Review and bind
     // real accounts before resuming; startup never starts destructive work.
     for (final job in _jobs.values) {
-      if (const [
-        TransferJobStatus.running,
-        TransferJobStatus.queued,
-        TransferJobStatus.paused,
-      ].contains(job.status)) {
+      if (job.ready && job.entries.length != job.expectedEntries) {
+        job.ready = false;
+        job.status = TransferJobStatus.failed;
+        job.message =
+            'The saved plan is incomplete. Retained entries require review.';
+        warnings.add('Transfer ${job.id} is missing saved plan entries.');
+      }
+      if (_activeStatus(job.status) && !liveJobs.contains(job.id)) {
         job.status = TransferJobStatus.interrupted;
         job.message = 'Interrupted. Review the saved plan to resume.';
       }
@@ -148,6 +230,12 @@ class TransferJournal {
         );
       case 'dismiss':
         _jobs.remove(id);
+        // The final imported state can be visible even if appending its receipt
+        // failed. A durable dismissal must still prevent later rediscovery
+        // from resurrecting that import, including after compaction.
+        if (RegExp(r'^bg_[a-f0-9]{64}$').hasMatch(id)) _imported.add(id);
+      case 'imported':
+        _imported.add(id);
       default:
         throw const FormatException('Unknown transfer journal event.');
     }
@@ -158,8 +246,7 @@ class TransferJournal {
     FileOperationPlan plan, {
     int priority = 0,
   }) async {
-    await initialize();
-    return _lock.synchronized(() async {
+    return _mutate(() async {
       final now = DateTime.now().toUtc();
       final record = TransferJobRecord(
         id: id,
@@ -222,8 +309,7 @@ class TransferJournal {
   }
 
   Future<void> saveEntries(String id, List<FileOperationEntry> entries) async {
-    await initialize();
-    await _lock.synchronized(() => _saveEntries(id, entries));
+    return _mutate(() => _saveEntries(id, entries));
   }
 
   Future<void> checkpoint(
@@ -232,8 +318,7 @@ class TransferJournal {
     FileOperationEntry entry,
     String phase,
   ) async {
-    await initialize();
-    await _lock.synchronized(
+    return _mutate(
       () => _append({
         'kind': 'entries',
         'id': id,
@@ -243,8 +328,7 @@ class TransferJournal {
   }
 
   Future<void> updateQueue(String id, {int? priority, int? queueOrder}) async {
-    await initialize();
-    await _lock.synchronized(
+    return _mutate(
       () => _append({
         'kind': 'queue',
         'id': id,
@@ -258,8 +342,7 @@ class TransferJournal {
     String id,
     FileOperationOptions options,
   ) async {
-    await initialize();
-    await _lock.synchronized(
+    return _mutate(
       () => _append({'kind': 'options', 'id': id, 'options': options.toJson()}),
     );
   }
@@ -272,8 +355,7 @@ class TransferJournal {
     int? queueOrder,
     Set<TransferJobStatus>? onlyIf,
   }) async {
-    await initialize();
-    await _lock.synchronized(() async {
+    return _mutate(() async {
       if (onlyIf != null && !onlyIf.contains(_jobs[id]?.status)) return;
       await _append({
         'kind': 'state',
@@ -287,11 +369,77 @@ class TransferJournal {
     });
   }
 
+  /// A stopped background writer imports through this instance's normal lock
+  /// and sequence allocator. Import receipts survive compaction and dismissal,
+  /// so rediscovery cannot resurrect dismissed jobs or replace resumed state.
+  Future<bool> importRecord(
+    TransferJobRecord source, {
+    required String importedId,
+  }) async {
+    if (!RegExp(r'^bg_[a-f0-9]{64}$').hasMatch(importedId)) {
+      throw const FormatException('Invalid imported transfer identifier.');
+    }
+    return _mutate(() async {
+      if (_imported.contains(importedId)) return false;
+      final existing = _jobs[importedId];
+      if (existing != null &&
+          (existing.created != source.created ||
+              existing.expectedEntries != source.expectedEntries ||
+              existing.targetDirectory != source.targetDirectory ||
+              jsonEncode(existing.source?.toJson()) !=
+                  jsonEncode(source.source?.toJson()) ||
+              jsonEncode(existing.destination?.toJson()) !=
+                  jsonEncode(source.destination?.toJson()))) {
+        throw StateError('A background import conflicts with an existing job.');
+      }
+      if (existing == null) {
+        final header = source.toHeaderJson()
+          ..['id'] = importedId
+          ..['ready'] = false
+          ..['status'] = TransferJobStatus.preparing.name;
+        await _append({'kind': 'header', 'id': importedId, 'job': header});
+      }
+      // A prior import may have flushed its final state before the receipt
+      // failed. Never replace progress that could already have been reviewed.
+      if (_jobs[importedId]!.ready != true) {
+        for (var start = 0; start < source.entries.length; start += 128) {
+          final end = (start + 128).clamp(0, source.entries.length);
+          await _append({
+            'kind': 'entries',
+            'id': importedId,
+            'entries': [
+              for (var i = start; i < end; i++) source.entries[i].toJson(),
+            ],
+          });
+        }
+        final ready =
+            source.ready && source.entries.length == source.expectedEntries;
+        final stoppedStatus =
+            const [
+              TransferJobStatus.running,
+              TransferJobStatus.queued,
+              TransferJobStatus.paused,
+            ].contains(source.status)
+            ? TransferJobStatus.interrupted
+            : source.status;
+        await _append({
+          'kind': 'state',
+          'id': importedId,
+          'status': (ready ? stoppedStatus : TransferJobStatus.failed).name,
+          'updated': source.updated.toUtc().toIso8601String(),
+          'ready': ready,
+          'message': ready ? source.message : 'The background plan was not completely saved. Review retained evidence.',
+        });
+      }
+      await _append({'kind': 'imported', 'id': importedId});
+      return true;
+    });
+  }
+
   /// Explicit history maintenance keeps the write-ahead log bounded without
   /// losing any unfinished entry or replacing it with a summary.
   Future<void> compact() async {
-    await initialize();
-    await _lock.synchronized(() async {
+    return _mutate(() async {
       var sequence = 0;
       final lines = <String>[];
       void add(Map<String, dynamic> event) {
@@ -301,7 +449,11 @@ class TransferJournal {
       }
 
       for (final job in _jobs.values) {
-        add({'kind': 'header', 'id': job.id, 'job': job.toHeaderJson()});
+        add({
+          'kind': 'header',
+          'id': job.id,
+          'job': {...job.toHeaderJson(), 'ready': false},
+        });
         for (var start = 0; start < job.entries.length; start += 128) {
           final end = (start + 128).clamp(0, job.entries.length);
           add({
@@ -323,14 +475,16 @@ class TransferJournal {
           });
         }
       }
+      for (final id in _imported) {
+        add({'kind': 'imported', 'id': id});
+      }
       await storage.rewrite(lines);
       _sequence = sequence;
     });
   }
 
   Future<void> dismiss(String id) async {
-    await initialize();
-    await _lock.synchronized(() => _append({'kind': 'dismiss', 'id': id}));
+    return _mutate(() => _append({'kind': 'dismiss', 'id': id}));
   }
 }
 

@@ -8,6 +8,7 @@ import 'package:crisp_cloud/services/sync_database.dart';
 import 'package:crisp_cloud/services/sync_engine.dart';
 
 import 'support/workflow_fake_client.dart';
+import 'support/sync_test_binding.dart';
 
 void main() {
   late Directory local;
@@ -28,6 +29,7 @@ void main() {
     );
     pair = await db.getPair(id);
     cloud = WorkflowFakeClient();
+    pair = await bindTestPair(db, pair, cloud);
     await File(p.join(local.path, 'notes.txt')).writeAsString('local version');
     cloud.put('/docs/notes.txt', 'cloud version'.codeUnits);
   });

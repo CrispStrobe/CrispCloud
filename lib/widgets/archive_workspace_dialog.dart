@@ -10,6 +10,7 @@ import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../services/archive_viewer_service.dart';
+import '../services/archive_browser_session.dart';
 import '../services/archive_workspace.dart';
 import '../services/editor_document.dart';
 import '../services/file_operation_backend.dart';
@@ -34,6 +35,12 @@ Future<void> showCurrentArchiveWorkspaceDialog(
     final panel = ref.read(panelProvider(side));
     final origin = panel.captureArchiveOrigin();
     final archive = panel.archiveSource!;
+    final location = panel.captureArchiveWorkspaceLocation();
+    if (focusedMember != null &&
+        !(panel.files?.any((file) => identical(file, focusedMember)) ??
+            false)) {
+      throw StateError('This archive row is no longer current. Reopen it.');
+    }
     final selected = focusedMember != null
         ? [focusedMember]
         : panel.selection.isNotEmpty
@@ -47,12 +54,9 @@ Future<void> showCurrentArchiveWorkspaceDialog(
       context,
       ref,
       side,
-      FileItem(
-        name: archive.archiveName,
-        path: archive.archivePath,
-        isFolder: false,
-      ),
+      location.file,
       sourceOrigin: origin,
+      location: location,
       initialDirectory: memberPath(archive.innerPath),
       initialSelectedPaths: selected
           .where((file) => file.name != '..' && file.path != null)
@@ -74,6 +78,7 @@ Future<void> showArchiveWorkspaceDialog(
   PanelSide side,
   FileItem file, {
   PanelFileOrigin? sourceOrigin,
+  ArchiveWorkspaceLocation? location,
   String initialDirectory = '/',
   Set<String> initialSelectedPaths = const {},
   ArchiveWorkspaceAction initialAction = ArchiveWorkspaceAction.browse,
@@ -89,6 +94,7 @@ Future<void> showArchiveWorkspaceDialog(
         side: side,
         file: file,
         origin: origin,
+        location: location,
         initialDirectory: initialDirectory,
         initialSelectedPaths: initialSelectedPaths,
         initialAction: initialAction,
@@ -108,6 +114,7 @@ class _ArchiveWorkspaceDialog extends ConsumerStatefulWidget {
     required this.side,
     required this.file,
     required this.origin,
+    this.location,
     required this.initialDirectory,
     required this.initialSelectedPaths,
     required this.initialAction,
@@ -115,6 +122,7 @@ class _ArchiveWorkspaceDialog extends ConsumerStatefulWidget {
   final PanelSide side;
   final FileItem file;
   final PanelFileOrigin origin;
+  final ArchiveWorkspaceLocation? location;
   final String initialDirectory;
   final Set<String> initialSelectedPaths;
   final ArchiveWorkspaceAction initialAction;
@@ -201,14 +209,19 @@ class _ArchiveWorkspaceDialogState
       final source = fileOperationBackend(
         source: widget.origin.source,
         local: ref.read(localFileServiceProvider),
-        isCurrent: () => mounted && widget.origin.isCurrent,
+        isCurrent: () =>
+            mounted &&
+            widget.origin.isCurrent &&
+            (widget.location?.isCurrent() ?? true),
       );
       while (mounted) {
         try {
-          final workspace = await ArchiveWorkspace.open(
+          final workspace = await ArchiveWorkspace.openNested(
             source,
             widget.file,
+            widget.location?.nestedMembers ?? const [],
             password: password,
+            expectedOuterFingerprint: widget.location?.fingerprint,
           );
           if (!mounted) {
             await workspace.close();
@@ -551,7 +564,10 @@ class _ArchiveWorkspaceDialogState
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    widget.file.name,
+                                    [
+                                      widget.file.name,
+                                      ...?widget.location?.nestedMembers,
+                                    ].join('!/'),
                                     style: Theme.of(context)
                                         .textTheme
                                         .titleLarge,

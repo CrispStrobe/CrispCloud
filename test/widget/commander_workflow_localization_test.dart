@@ -8,6 +8,7 @@ import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/panel_source_provider.dart';
 import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/services/directory_comparison_service.dart';
+import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:crisp_cloud/services/panel_source_service.dart';
 import 'package:crisp_cloud/services/sync_database.dart';
@@ -53,6 +54,8 @@ class _Auth extends ChangeNotifier implements AuthNotifier {
   @override
   String get providerName => client.providerName;
   @override
+  CloudProvider get currentProvider => CloudProvider.sftp;
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
@@ -65,6 +68,8 @@ class _Pair extends Fake implements SyncPair {
   String get localPath => '/local';
   @override
   String get remotePath => '/cloud';
+  @override
+  String get provider => 'sftp';
   @override
   bool get enabled => true;
   @override
@@ -106,8 +111,14 @@ class _Sync extends ChangeNotifier implements SyncNotifier {
   @override
   int get autoEvictDays => 0;
   @override
-  Future<SyncPlan> planOne(int pairId, {bool Function()? isCancelled}) async =>
-      _Plan();
+  bool isPairBound(SyncPair pair) => true;
+  @override
+  Future<SyncPlan> planOne(
+    int pairId, {
+    bool Function()? isCancelled,
+    bool compareContents = false,
+    void Function(int completed, int total, String path)? onCompareProgress,
+  }) async => _Plan();
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

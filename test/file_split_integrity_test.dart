@@ -57,6 +57,103 @@ void main() {
     await expectLater(split(), throwsStateError);
   });
 
+  test('reviewed manifest rejects same-identity replacement before destination work', () async {
+    final result = await split();
+    final captured = (await destination.stat(result.manifestPath))!;
+    final originalBytes = output.files[result.manifestPath]!;
+    final reviewed = await FileSplitService.readManifest(destination, captured);
+    final replacementBytes = <int>[];
+    final replacementParts = <SplitPart>[];
+    for (final part in reviewed.parts) {
+      final path = part.path.replaceFirst('data.bin', 'next.bin');
+      final bytes = output.files['/${part.path}']!
+          .map((byte) => byte + 20)
+          .toList();
+      replacementBytes.addAll(bytes);
+      output.put('/$path', bytes);
+      final digest = ChecksumAccumulator(ChecksumAlgorithm.sha256)..add(bytes);
+      replacementParts.add(
+        SplitPart(
+          index: part.index,
+          path: path,
+          size: part.size,
+          sha256: digest.finish(),
+        ),
+      );
+    }
+    final digest = ChecksumAccumulator(ChecksumAlgorithm.sha256)
+      ..add(replacementBytes);
+    final replacement = SplitManifest(
+      originalName: 'next.bin',
+      totalBytes: reviewed.totalBytes,
+      chunkSize: reviewed.chunkSize,
+      status: SplitManifestStatus.complete,
+      parts: replacementParts,
+      sha256: digest.finish(),
+    );
+    final encoded = replacement.encode();
+    expect(encoded.length, originalBytes.length);
+    output.put(result.manifestPath, encoded, date: captured.updatedAt);
+    final replaced = (await destination.stat(result.manifestPath))!;
+    expect(replaced.path, captured.path);
+    expect(replaced.uuid, captured.uuid);
+    expect(replaced.size, captured.size);
+    expect(replaced.updatedAt, captured.updatedAt);
+    final writesBefore = input.writes.length;
+    await expectLater(
+      FileSplitService.combineFromManifest(
+        source: destination,
+        manifestFile: captured,
+        reviewedManifest: reviewed,
+        destination: source,
+        outputPath: '/combined.bin',
+      ),
+      throwsA(isA<SplitManifestChangedException>()),
+    );
+    expect(input.writes.length, writesBefore);
+    expect(input.files['/combined.bin'], isNull);
+    expect(
+      input.files.keys.where((path) => path.contains('.crisp-transfer-')),
+      isEmpty,
+    );
+
+    final reopened = await FileSplitService.readManifest(destination, replaced);
+    await FileSplitService.combineFromManifest(
+      source: destination,
+      manifestFile: replaced,
+      reviewedManifest: reopened,
+      destination: source,
+      outputPath: '/combined.bin',
+    );
+    expect(input.files['/combined.bin'], replacementBytes);
+  });
+
+  test(
+    'equivalent reformatted manifest preserves reviewed combination',
+    () async {
+      final result = await split();
+      final manifest = (await destination.stat(result.manifestPath))!;
+      final reviewed = await FileSplitService.readManifest(
+        destination,
+        manifest,
+      );
+      final json = reviewed.toJson()
+        ..['annotation'] = 'No operation fields changed';
+      output.put(
+        result.manifestPath,
+        utf8.encode(const JsonEncoder.withIndent('  ').convert(json)),
+      );
+      await FileSplitService.combineFromManifest(
+        source: destination,
+        manifestFile: manifest,
+        reviewedManifest: reviewed,
+        destination: source,
+        outputPath: '/combined.bin',
+      );
+      expect(input.files['/combined.bin'], input.files['/data.bin']);
+    },
+  );
+
   test(
     'missing and corrupt parts are rejected before any output is committed',
     () async {

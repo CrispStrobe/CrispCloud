@@ -14,6 +14,10 @@ import '../services/file_integrity_service.dart';
 import '../services/file_operation_backend.dart';
 import '../services/file_operation_service.dart';
 import '../services/file_split_service.dart';
+import '../services/integrity_recovery_service.dart';
+import '../services/transfer_journal.dart';
+import 'integrity_recovery_dialog.dart';
+import 'commander_review_dialog.dart';
 import '../utils/formatters.dart';
 
 class _IntegrityFile {
@@ -68,7 +72,11 @@ Future<void> showChecksumToolsDialog(
   bool verifyInitially = false,
 }) async {
   try {
-    final captured = _captureFiles(ref, side, files);
+    final prepared = await ref
+        .read(panelProvider(side))
+        .prepareOperationFiles(files);
+    if (!context.mounted) return;
+    final captured = _captureFiles(ref, side, prepared);
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -450,8 +458,11 @@ Future<void> _showSplitCombineDialog(
   required bool combining,
 }) async {
   try {
-    final captured = _captureFiles(ref, side, files);
-    final origin = ref.read(panelProvider(side)).captureOperationOrigin(files);
+    final panel = ref.read(panelProvider(side));
+    final prepared = await panel.prepareOperationFiles(files);
+    if (!context.mounted) return;
+    final captured = _captureFiles(ref, side, prepared);
+    final origin = panel.captureOperationOrigin(prepared);
     final backend = fileOperationBackend(
       source: origin.source,
       local: ref.read(localFileServiceProvider),
@@ -460,7 +471,7 @@ Future<void> _showSplitCombineDialog(
     final destinations = [
       _IntegrityDestination(
         origin,
-        backend.paths.dirname(files.first.path!),
+        backend.paths.dirname(prepared.first.path!),
         true,
       ),
     ];
@@ -526,6 +537,8 @@ class _SplitCombineDialogState extends ConsumerState<_SplitCombineDialog> {
   bool _cancelled = false;
   bool _legacyConfirmed = false;
   bool _finished = false;
+  FileOperationControl _recoveryControl = FileOperationControl();
+  String? _recoveryJobId;
   FileItem? _manifestFile;
   SplitManifest? _manifest;
   List<FileItem> _legacy = [];
@@ -547,6 +560,7 @@ class _SplitCombineDialogState extends ConsumerState<_SplitCombineDialog> {
   @override
   void dispose() {
     _cancelled = true;
+    _recoveryControl.cancel();
     _partSize.dispose();
     _directory.dispose();
     _outputName.dispose();
@@ -623,6 +637,8 @@ class _SplitCombineDialogState extends ConsumerState<_SplitCombineDialog> {
   }
 
   Future<void> _start() async {
+    if (_running || _loading || _finished) return;
+    _recoveryControl = FileOperationControl();
     setState(() {
       _running = true;
       _cancelled = false;
@@ -632,6 +648,16 @@ class _SplitCombineDialogState extends ConsumerState<_SplitCombineDialog> {
     try {
       final source = _backend(widget.files.first.origin);
       final destination = _backend(widget.destinations[_destination].origin);
+      final recovery = IntegrityRecoveryService(
+        ref.read(transferJournalProvider),
+      );
+      void created(String id) {
+        if (mounted) {
+          setState(() => _recoveryJobId = id);
+          unawaited(_refreshRecoveryHistory());
+        }
+      }
+
       void progress(String _, int bytes, int total) {
         if (mounted) {
           setState(() {
@@ -662,23 +688,26 @@ class _SplitCombineDialogState extends ConsumerState<_SplitCombineDialog> {
         }
         final manifest = _manifestFile;
         if (manifest != null) {
-          await FileSplitService.combineFromManifest(
+          await recovery.startCombine(
             source: source,
             manifestFile: manifest,
+            reviewedManifest: _manifest!,
             destination: destination,
             outputPath: output,
-            isCancelled: () => _cancelled || !mounted,
+            control: _recoveryControl,
             onProgress: progress,
+            onJobCreated: created,
           );
         } else {
-          await FileSplitService.combineLegacy(
+          await recovery.startCombine(
             source: source,
-            files: _legacy,
+            legacyParts: _legacy,
             destination: destination,
             outputPath: output,
             allowUnverifiedLegacy: _legacyConfirmed,
-            isCancelled: () => _cancelled || !mounted,
+            control: _recoveryControl,
             onProgress: progress,
+            onJobCreated: created,
           );
         }
         if (mounted) {
@@ -697,14 +726,15 @@ class _SplitCombineDialogState extends ConsumerState<_SplitCombineDialog> {
         if (size == null || size <= 0) {
           throw ArgumentError('Enter a positive whole part size in MiB.');
         }
-        final result = await FileSplitService.splitToBackend(
+        final result = await recovery.startSplit(
           source: source,
           file: widget.files.single.file,
           destination: destination,
           targetDirectory: _directory.text,
           chunkSizeBytes: size * 1024 * 1024,
-          isCancelled: () => _cancelled || !mounted,
+          control: _recoveryControl,
           onProgress: progress,
+          onJobCreated: created,
         );
         if (mounted) {
           setState(() {
@@ -717,8 +747,15 @@ class _SplitCombineDialogState extends ConsumerState<_SplitCombineDialog> {
         }
       }
     } catch (error) {
-      if (mounted) setState(() => _error = '$error');
+      if (mounted) {
+        setState(
+          () => _error = error is SplitManifestChangedException
+              ? context.commanderTr(SplitManifestChangedException.message)
+              : '$error',
+        );
+      }
     } finally {
+      await _refreshRecoveryHistory();
       if (mounted) {
         setState(() {
           _running = false;
@@ -728,22 +765,27 @@ class _SplitCombineDialogState extends ConsumerState<_SplitCombineDialog> {
     }
   }
 
+  Future<void> _refreshRecoveryHistory() async {
+    if (!mounted) return;
+    try {
+      await ref.read(transferProvider).refreshIntegrityHistory();
+    } catch (error) {
+      if (mounted) setState(() => _error = '$error');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final busy = _running || _loading;
     return PopScope(
       canPop: !busy,
-      child: AlertDialog(
-        title: Text(
-          widget.combining
-              ? context.commanderTr("Combine file parts")
-              : context.commanderTr("Split {0}", [
-                  widget.files.single.file.name,
-                ]),
-        ),
-        content: SizedBox(
-          width: math.min(640, MediaQuery.sizeOf(context).width - 48),
-          child: SingleChildScrollView(
+      child: CommanderReviewDialog(
+        width: 640,
+        title: widget.combining
+            ? context.commanderTr("Combine file parts")
+            : context.commanderTr("Split {0}", [widget.files.single.file.name]),
+        slivers: [
+          SliverToBoxAdapter(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -871,14 +913,45 @@ class _SplitCombineDialogState extends ConsumerState<_SplitCombineDialog> {
               ],
             ),
           ),
-        ),
+        ],
         actions: [
           if (_running)
             TextButton(
-              onPressed: () => setState(() => _cancelled = true),
+              onPressed: () {
+                _recoveryControl.cancel();
+                setState(() => _cancelled = true);
+              },
               child: Text(context.commanderTr("Cancel operation")),
             )
           else ...[
+            TextButton(
+              onPressed: _loading
+                  ? null
+                  : () async {
+                      await showIntegrityRecoveryDialog(
+                        context,
+                        ref,
+                        jobId: _recoveryJobId,
+                      );
+                      if (mounted && _recoveryJobId != null) {
+                        setState(() {
+                          _finished =
+                              ref
+                                  .read(transferJournalProvider)
+                                  .job(_recoveryJobId!)
+                                  ?.isFinished ==
+                              true;
+                          if (_finished) {
+                            _error = null;
+                            _status = (context) => context.commanderTr(
+                              'Saved operation completed and verified.',
+                            );
+                          }
+                        });
+                      }
+                    },
+              child: Text(context.commanderTr('Split/combine recovery')),
+            ),
             TextButton(
               onPressed: _loading ? null : () => Navigator.pop(context),
               child: Text(context.commanderTr("Close")),

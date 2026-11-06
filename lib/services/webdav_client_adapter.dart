@@ -254,8 +254,63 @@ class WebDavClientAdapter extends CloudStorageClient
   Future<void> logout() async {
     _streamClient?.close();
     _streamClient = null;
+    _client?.c.close(force: true);
     _client = null;
     await _config.clearCredentials();
+  }
+
+  /// Restore the exact saved endpoint/account without rewriting credentials.
+  /// Authenticate with a bounded depth-zero probe, not an entire directory
+  /// listing. A redirect must not carry saved credentials to another endpoint.
+  Future<void> restoreSession({String remotePath = '/'}) async {
+    if (!p.posix.isAbsolute(remotePath)) {
+      throw ArgumentError.value(remotePath, 'remotePath', 'Must be absolute');
+    }
+    await _ensureClient();
+    final client = _client!;
+    final cancel = dio.CancelToken();
+    final timeout = Timer(const Duration(seconds: 30), () {
+      cancel.cancel('The saved WebDAV connection timed out.');
+    });
+    var challenges = 0;
+    try {
+      final response = await client.c.req<dio.ResponseBody>(
+        client,
+        'PROPFIND',
+        Uri(pathSegments: remotePath.split('/')).toString(),
+        data:
+            '<d:propfind xmlns:d="DAV:"><d:prop><d:resourcetype/>'
+            '</d:prop></d:propfind>',
+        cancelToken: cancel,
+        optionsHandler: (options) {
+          options.responseType = dio.ResponseType.stream;
+          options.followRedirects = false;
+          options.headers!['depth'] = '0';
+          options.headers!['content-type'] = 'application/xml;charset=UTF-8';
+          options.validateStatus = (status) {
+            if (status == 401) return ++challenges <= 2;
+            return status == 207;
+          };
+        },
+      );
+      var bytes = 0;
+      if (response.data case final body?) {
+        await for (final chunk in body.stream) {
+          bytes += chunk.length;
+          if (bytes > 256 * 1024) {
+            cancel.cancel('The WebDAV authentication response is too large.');
+            throw StateError(
+              'The WebDAV authentication response is too large.',
+            );
+          }
+        }
+      }
+      if (response.statusCode != 207) {
+        throw StateError('The saved WebDAV account was not authenticated.');
+      }
+    } finally {
+      timeout.cancel();
+    }
   }
 
   Future<void> _ensureClient() async {

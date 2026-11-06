@@ -68,6 +68,48 @@ class _RemotePart {
   final String digest;
 }
 
+/// Holds only the owned spool's deletion. Other filesystem work remains real,
+/// so the test can distinguish awaited cleanup from detached cleanup without
+/// depending on disk timing or a later directory enumeration.
+class _BlockedSpoolDirectory extends Fake implements Directory {
+  _BlockedSpoolDirectory(
+    this.directory, {
+    required this.onCreate,
+    required this.beforeDelete,
+    required this.afterDelete,
+  });
+  final Directory directory;
+  final void Function(Directory) onCreate;
+  final Future<void> Function() beforeDelete;
+  final void Function() afterDelete;
+
+  @override
+  String get path => directory.path;
+
+  @override
+  Future<Directory> createTemp([String? prefix]) async {
+    final created = await directory.createTemp(prefix);
+    onCreate(created);
+    return _BlockedSpoolDirectory(
+      created,
+      onCreate: onCreate,
+      beforeDelete: beforeDelete,
+      afterDelete: afterDelete,
+    );
+  }
+
+  @override
+  Future<Directory> delete({bool recursive = false}) async {
+    try {
+      await beforeDelete();
+      await directory.delete(recursive: recursive);
+      return this;
+    } finally {
+      afterDelete();
+    }
+  }
+}
+
 class _StreamingClient extends http.BaseClient {
   _StreamingClient(this.server);
   final _S3Server server;
@@ -195,6 +237,68 @@ void main() {
 
   Future<T> withSpools<T>(Future<T> Function() action) =>
       IOOverrides.runZoned(action, getSystemTempDirectory: () => temporaryRoot);
+
+  test(
+    'multipart upload awaits owned spool cleanup before reading the next part',
+    () async {
+      final adapter = await _adapter();
+      final server = _S3Server();
+      final cleanupStarted = Completer<void>();
+      final releaseCleanup = Completer<void>();
+      final cleanupFinished = Completer<void>();
+      final created = <Directory>[];
+      final root = _BlockedSpoolDirectory(
+        temporaryRoot,
+        onCreate: created.add,
+        beforeDelete: () {
+          cleanupStarted.complete();
+          return releaseCleanup.future;
+        },
+        afterDelete: cleanupFinished.complete,
+      );
+      var sourceEnded = false;
+      var uploadFinished = false;
+      final upload = IOOverrides.runZoned(
+        () => http.runWithClient(
+          () => adapter.uploadStream(
+            _largeSource(onEnd: () => sourceEnded = true),
+            _largePartSize + 3,
+            'large.bin',
+            '/',
+            multipartPartSize: _largePartSize,
+          ),
+          server.createClient,
+        ),
+        getSystemTempDirectory: () => root,
+      ).whenComplete(() => uploadFinished = true);
+      try {
+        await cleanupStarted.future;
+        // Give detached work a complete event-loop turn to expose a missing
+        // await. With correct cleanup ordering, the gate blocks further input.
+        await Future<void>.delayed(Duration.zero);
+        expect(created, hasLength(1));
+        expect(await created.single.exists(), isTrue);
+        expect(
+          await File('${created.single.path}/payload').length(),
+          _largePartSize,
+        );
+        expect(sourceEnded, isFalse);
+        expect(uploadFinished, isFalse);
+        expect(server.attempts, [1]);
+        expect(server.completions, 0);
+        releaseCleanup.complete();
+        await upload;
+        expect(await created.single.exists(), isFalse);
+        expect(sourceEnded, isTrue);
+        expect(server.attempts, [1, 2]);
+        expect(server.completions, 1);
+      } finally {
+        if (!releaseCleanup.isCompleted) releaseCleanup.complete();
+        await upload;
+        await cleanupFinished.future;
+      }
+    },
+  );
 
   test('large parts stream from private storage and resume by hashing without respooling', () async {
     final adapter = await _adapter();

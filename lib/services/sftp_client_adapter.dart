@@ -38,6 +38,7 @@ class SFTPClientAdapter extends CloudStorageClient
         noReplaceMove: false,
         readRanges: true,
         setModifiedTime: true,
+        setAccessedTime: true,
         permissions: true,
         ownership: true,
         deleteEmptyDirectory: true,

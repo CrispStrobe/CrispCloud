@@ -176,6 +176,32 @@ jobs:
         run: >-
           flutter test test/native_ffi_crypto_test.dart test/crypto_paths_test.dart
           test/gcm_transfer_stream_test.dart test/encrypted_storage_wrapper_test.dart
+          test/native_metadata_test.dart
+          test/background_transfer_journal_test.dart
+          test/transfer_journal_storage_io_test.dart
+          test/integrity_recovery_native_test.dart
+          test/file_collection_paging_store_test.dart
+          test/native_metadata_windows_test.dart
+          test/local_file_service_symlink_test.dart
+
+  collection-browser:
+    name: Collection persistence (Chrome)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: ${{ env.FLUTTER_CHANNEL }}
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - name: Configure git auth for private deps
+        run: git config --global url."https://x-access-token:${{ secrets.GH_PAT || github.token }}@github.com/".insteadOf "https://github.com/"
+      - run: flutter pub get
+      - name: IndexedDB concurrency and paged restart recovery
+        run: >-
+          flutter test --no-pub --reporter expanded --platform chrome --concurrency=1
+          test/file_collection_browser_storage_test.dart
 
   # ---------- Multi-platform builds (matrix) ----------
   # Linux, Android, and Web build on ubuntu-latest.

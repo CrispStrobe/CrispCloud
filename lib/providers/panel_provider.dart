@@ -21,9 +21,14 @@ import '../models/panel_tab.dart';
 import '../models/sort.dart';
 import '../models/storage_reference.dart';
 import '../models/file_collection.dart';
+import '../models/file_collection_page.dart';
 import '../models/file_search_query.dart';
+import '../models/rename_batch.dart';
 import '../services/recursive_search_service.dart';
 import '../services/file_collection_service.dart';
+import '../services/collection_panel_state.dart';
+import '../services/file_collection_query.dart';
+import '../services/file_collection_store.dart';
 import '../services/file_operation_service.dart';
 import '../services/captured_file_target.dart';
 import '../services/storage_identity.dart';
@@ -31,14 +36,19 @@ import '../services/storage_trash.dart';
 import '../services/trash_history_store.dart';
 import 'trash_history_provider.dart';
 import '../services/native_file_operations.dart';
-import '../services/native_file_primitives.dart';
+import '../services/multi_rename_service.dart';
+import '../services/rename_batch_service.dart';
+import '../services/rename_batch_storage.dart';
+import '../services/rename_batch_store.dart';
 import '../services/archive_service.dart';
+import '../services/archive_browser_session.dart';
 import '../services/archive_viewer_service.dart';
 import '../services/audit_service.dart';
 import '../services/cloud_storage_interface.dart' show CloudStorageClient;
 import '../services/directory_cache_service.dart';
 import '../services/file_operation_backend.dart';
 import '../services/file_selection_pattern.dart';
+import '../services/file_search_path_filter.dart';
 import '../services/file_list_paths.dart';
 import '../services/local_file_service.dart';
 import '../services/log_service.dart';
@@ -92,7 +102,18 @@ class PanelNotifier extends ChangeNotifier {
   int _accountGeneration = 0;
   int _connectionGeneration = 0;
   PanelFileOrigin? _currentDirectoryOrigin;
-  final Set<FileItem> _selection = {};
+  late final Set<FileItem> _selection = PanelSelection(
+    paged: () => _collectionPage != null,
+    canMutate: () =>
+        _suppressCollectionMarks || !isPagedCollection || !_collectionBusy,
+    onAdd: (file) => _collectionMarkChanged(file, true),
+    onRemove: (file) => _collectionMarkChanged(file, false),
+    onClear: () {
+      if (_suppressCollectionMarks) return;
+      _collectionMarks?.desired.clear();
+      _scheduleCollectionMarksSave();
+    },
+  );
   FileItem? _lastSelected;
   FileItem? _itemToScrollTo;
 
@@ -142,6 +163,49 @@ class PanelNotifier extends ChangeNotifier {
   int _collectionRequest = 0;
   bool _collectionBusy = false;
   String _collectionProgress = '';
+  FileCollectionPage? _collectionPage;
+  CollectionQueryWindow? _collectionWindow;
+  bool _applyingCollectionWindow = false;
+  Timer? _collectionQueryTimer;
+  CollectionViewProjection? _collectionProjection;
+  int _collectionQueryRevision = 0;
+  int get collectionQueryRevision => _collectionQueryRevision;
+  final Map<String, CollectionSelectionMemory> _collectionSelectionMemories =
+      {};
+  int _collectionSelectionMemoryBytes = 0;
+  CollectionMarkSession? _collectionMarks;
+  FileCollectionStore? _collectionStoreForMarks;
+  Future<void>? _pendingCollectionChanges;
+  bool _suppressCollectionMarks = false;
+  Timer? _collectionMarksTimer;
+  String? _collectionLoadError;
+  final _preparedCollectionRows = Expando<bool Function()>(
+    'prepared collection row',
+  );
+  bool get isPagedCollection => _collectionPage != null;
+  int get collectionPageIndex => _collectionWindow?.index ?? 0;
+  int get collectionPageCount => _collectionWindow?.pageCount ?? 1;
+  int get collectionTotalCount =>
+      _collectionMarks?.manifest.summary.itemCount ??
+      (_collectionId == null
+          ? null
+          : _ref
+                .read(fileCollectionStoreProvider)
+                .get(_collectionId!)
+                ?.itemCount) ??
+      _files?.length ??
+      0;
+  int get collectionPageStart => _collectionWindow?.start ?? 0;
+  int get collectionMatchingCount =>
+      _collectionWindow?.total ?? collectionTotalCount;
+  String? get collectionLoadError => _collectionLoadError;
+  String? get collectionRevision => _collectionMarks?.manifest.summary.revision;
+  @visibleForTesting
+  int get retainedSavedCollectionRows =>
+      (isPagedCollection ? _files?.length ?? 0 : 0) +
+      _fileListTabs.values
+          .where((tab) => tab.collectionPageIndex != null)
+          .fold<int>(0, (sum, tab) => sum + tab.files.length);
   String? get activeCollectionId =>
       _showingSearchResults ? _collectionId : null;
   bool get collectionBusy => _collectionBusy;
@@ -155,6 +219,7 @@ class PanelNotifier extends ChangeNotifier {
 
   bool get canOperateOnFileList =>
       !_showingSearchResults ||
+      (isPagedCollection && !_collectionBusy && _selection.isNotEmpty) ||
       (_files?.any((file) => _fileOrigins[file]?.isCurrent == true) ?? false);
 
   /// When non-null, the panel is browsing inside a compressed archive.
@@ -294,6 +359,7 @@ class PanelNotifier extends ChangeNotifier {
       _pendingTabStorage = null;
       _leaveFileList();
       _listingGeneration++;
+      _clearArchiveState();
       _log.info(
         'Source switched: ${prev?.displayName} → ${next.displayName} (path=${next.currentPath})',
       );
@@ -628,6 +694,7 @@ class PanelNotifier extends ChangeNotifier {
     _filterQuery = query;
     _isTypeahead = false;
     _rememberTabView();
+    if (isPagedCollection) _scheduleCollectionQuery();
     if (_isFiltering) {
       final current = cursorItem;
       final displayed = filteredFiles;
@@ -650,6 +717,7 @@ class PanelNotifier extends ChangeNotifier {
     _filterQuery = '';
     _isTypeahead = false;
     _rememberTabView();
+    if (isPagedCollection) _scheduleCollectionQuery();
     notifyListeners();
   }
 
@@ -668,6 +736,7 @@ class PanelNotifier extends ChangeNotifier {
     _filterQuery += char;
 
     if (settings.mode == QuickSearchMode.filter) {
+      if (isPagedCollection) _scheduleCollectionQuery();
       _selectFirstVisibleMatch();
     } else if (settings.mode == QuickSearchMode.select) {
       _selectTypeaheadMatches();
@@ -687,6 +756,7 @@ class PanelNotifier extends ChangeNotifier {
       return;
     }
     if (_typeaheadMode == QuickSearchMode.filter) {
+      if (isPagedCollection) _scheduleCollectionQuery();
       _selectFirstVisibleMatch();
     } else if (_typeaheadMode == QuickSearchMode.select) {
       _selectTypeaheadMatches();
@@ -724,6 +794,7 @@ class PanelNotifier extends ChangeNotifier {
     if (!_isTypeahead) return;
     _filterQuery = '';
     _isTypeahead = false;
+    if (isPagedCollection) _scheduleCollectionQuery();
     notifyListeners();
   }
 
@@ -877,7 +948,8 @@ class PanelNotifier extends ChangeNotifier {
         _verifiedListingGeneration != _listingGeneration ||
         file.name == '..' ||
         file.name == '.' ||
-        !(_files?.any((candidate) => identical(candidate, file)) ?? false)) {
+        (!(_files?.any((candidate) => identical(candidate, file)) ?? false) &&
+            !(_preparedCollectionRows[file]?.call() ?? false))) {
       return null;
     }
     final origin = _fileOrigins[file];
@@ -943,7 +1015,9 @@ class PanelNotifier extends ChangeNotifier {
   /// The returned guard stays false after account disconnection/reconnection.
   PanelFileOrigin captureOperationOrigin(List<FileItem> files) {
     if (files.isEmpty) throw StateError('Select at least one file or folder.');
-    if (_showingSearchResults && !canOperateOnFileList) {
+    if (_showingSearchResults &&
+        !canOperateOnFileList &&
+        !files.every((file) => originForOperation(file) != null)) {
       throw StateError(
         'The file list source changed. Run the search or import again.',
       );
@@ -1023,7 +1097,15 @@ class PanelNotifier extends ChangeNotifier {
     String title = 'Search results',
     FileCollection? collection,
     CollectionSearch? search,
+    FileCollectionPage? page,
   }) {
+    if (page == null) {
+      _saveDepartingCollectionMarks();
+      _collectionMarks = null;
+      _collectionWindow = null;
+    }
+    _collectionPage = page;
+    _collectionLoadError = null;
     final items = <FileItem>[];
     final seen = <String>{};
     PanelFileOrigin? commonOrigin = origin;
@@ -1105,9 +1187,7 @@ class PanelNotifier extends ChangeNotifier {
     _verifiedListingGeneration = _listingGeneration;
     _isLoading = false;
     _isFlatView = false;
-    _archiveSource = null;
-    _archiveOrigin = null;
-    _archiveBytes = null;
+    _clearArchiveState();
     _selection.clear();
     _lastSelected = null;
     _itemToScrollTo = null;
@@ -1134,14 +1214,256 @@ class PanelNotifier extends ChangeNotifier {
   void _rememberFileListTab() {
     if (!_showingSearchResults || _activeTabId.isEmpty) return;
     _fileListTabs[_activeTabId] = _FileListSnapshot(
-      files: List.of(_files ?? []),
+      files: isPagedCollection ? const [] : List.of(_files ?? []),
       title: _fileListTitle,
       origin: _fileListOrigin,
-      selection: Set.of(_selection),
-      cursor: cursorItem,
+      selection: isPagedCollection ? const {} : Set.of(_selection),
+      cursor: isPagedCollection ? null : cursorItem,
       collectionId: _collectionId,
       search: _collectionSearch,
+      collectionPageIndex: isPagedCollection ? collectionPageIndex : null,
     );
+  }
+
+  void _collectionMarkChanged(FileItem file, bool selected) {
+    if (_suppressCollectionMarks) return;
+    final marks = _collectionMarks;
+    if (marks == null) return;
+    final key = collectionRowKey(file);
+    final page = marks.rowPages[key];
+    if (page == null) return;
+    if (selected) {
+      marks.desired[key] = page;
+    } else {
+      marks.desired.remove(key);
+    }
+    _scheduleCollectionMarksSave();
+  }
+
+  void _scheduleCollectionMarksSave() {
+    if (_suppressCollectionMarks || _collectionMarks == null) return;
+    _collectionMarksTimer?.cancel();
+    final session = _collectionMarks!;
+    _collectionMarksTimer = Timer(const Duration(milliseconds: 250), () {
+      unawaited(
+        _persistCollectionMarks(session).catchError((Object error) {
+          if (!_isDisposed) {
+            _collectionLoadError = '$error';
+            _ref
+                .read(errorProvider)
+                .addError('Could not save collection marks: $error');
+            notifyListeners();
+          }
+        }),
+      );
+    });
+  }
+
+  Future<void> _persistCollectionMarks(CollectionMarkSession session) async {
+    final manifest = await session.flush(
+      _ref.read(fileCollectionStoreProvider),
+    );
+    if (_isDisposed || !identical(session, _collectionMarks)) return;
+    final page = _collectionPage;
+    if (page != null && page.index < manifest.pages.length) {
+      _collectionPage = FileCollectionPage(
+        manifest: manifest,
+        index: page.index,
+        collection: page.collection,
+      );
+    }
+    notifyListeners();
+  }
+
+  Future<void> flushCollectionMarks() async {
+    _collectionMarksTimer?.cancel();
+    final session = _collectionMarks;
+    if (session != null) await _persistCollectionMarks(session);
+  }
+
+  void _saveDepartingCollectionMarks() {
+    _collectionMarksTimer?.cancel();
+    final session = _collectionMarks;
+    if (session == null) return;
+    final store = _collectionStoreForMarks;
+    if (store == null) return;
+    unawaited(
+      session.flush(store).catchError((Object error) {
+        if (!_isDisposed) {
+          _ref
+              .read(errorProvider)
+              .addError('Could not save collection marks: $error');
+        }
+        return session.manifest;
+      }),
+    );
+  }
+
+  /// Capture all requested original rows, including marks outside the visible
+  /// page. No capability is returned if even one original is unavailable,
+  /// replaced, or changed accounts while the pages were being resolved.
+  Future<List<FileItem>> prepareOperationFiles(Iterable<FileItem> files) =>
+      _prepareCollectionFiles(files);
+
+  Future<List<FileItem>> _prepareCollectionFiles(
+    Iterable<FileItem> files, {
+    int? reuseRequest,
+  }) async {
+    final requested = files.toList();
+    if (!isPagedCollection || requested.isEmpty) return requested;
+    if (_collectionBusy && reuseRequest == null) {
+      throw StateError('Wait for the collection to finish loading.');
+    }
+    final session = _collectionMarks!;
+    final tab = _activeTabId;
+    final generation = _listingGeneration;
+    if (reuseRequest == null) {
+      final issued = Set<FileItem>.identity()
+        ..addAll(_selection)
+        ..addAll(_files ?? const []);
+      if (requested.any(
+        (file) =>
+            !issued.contains(file) &&
+            !(_preparedCollectionRows[file]?.call() ?? false),
+      )) {
+        throw StateError(
+          'The requested collection rows belong to an older view. Select their current originals again.',
+        );
+      }
+    }
+    await flushCollectionMarks();
+    if (_isDisposed ||
+        !identical(session, _collectionMarks) ||
+        tab != _activeTabId ||
+        generation != _listingGeneration) {
+      throw StateError(
+        'The collection view changed while preparing the operation.',
+      );
+    }
+    final manifest = session.manifest;
+    final request = reuseRequest ?? ++_collectionRequest;
+    bool current() =>
+        !_isDisposed &&
+        identical(session, _collectionMarks) &&
+        request == _collectionRequest &&
+        tab == _activeTabId &&
+        generation == _listingGeneration &&
+        _ref
+                .read(fileCollectionStoreProvider)
+                .get(manifest.summary.id)
+                ?.revision ==
+            manifest.summary.revision;
+    final wanted = {for (final file in requested) collectionRowKey(file)};
+    final pages = <int>{};
+    for (final key in wanted) {
+      final page = session.rowPages[key];
+      if (page == null) {
+        throw StateError(
+          'A requested row does not belong to this captured collection.',
+        );
+      }
+      pages.add(page);
+    }
+    final origins = <String, PanelFileOrigin>{};
+    final backends = <String, FileOperationBackend>{};
+    FileOperationBackend? resolve(StorageReference storage, String path) {
+      if (backends.containsKey(storage.id)) return backends[storage.id];
+      final origin = resolveStorageReference(storage, path);
+      if (origin == null) return null;
+      origins[storage.id] = origin;
+      return backends[storage.id] = fileOperationBackend(
+        source: origin.source,
+        local: _localFileService,
+        isCurrent: () => current() && origin.isCurrent,
+      );
+    }
+
+    final resolved = <String, FileItem>{};
+    _collectionBusy = true;
+    _collectionProgress = '0 / ${wanted.length}';
+    notifyListeners();
+    try {
+      for (final index in pages) {
+        if (!current()) {
+          throw StateError(
+            'The collection changed while preparing the operation.',
+          );
+        }
+        final page = await _ref
+            .read(fileCollectionStoreProvider)
+            .loadPage(
+              manifest.summary.id,
+              index,
+              revision: manifest.summary.revision,
+            );
+        final subset = page.collection.copyWith(
+          entries: page.collection.entries
+              .where((entry) => wanted.contains(entry.key))
+              .toList(),
+        );
+        final refreshed = await const FileCollectionService().refresh(
+          subset,
+          resolve,
+          isCancelled: () => !current(),
+          onProgress: (done, _) {
+            if (current()) {
+              _collectionProgress =
+                  '${resolved.length + done} / ${wanted.length}';
+              notifyListeners();
+            }
+          },
+        );
+        for (final entry in refreshed.collection.entries) {
+          if (!refreshed.verifiedKeys.contains(entry.key)) {
+            throw StateError(
+              'Cannot use "${entry.reference.path}": ${entry.detail ?? 'refresh the original source or review its replacement.'}',
+            );
+          }
+          resolved[entry.key] = entry.file;
+        }
+      }
+      if (!current() ||
+          resolved.length != wanted.length ||
+          origins.values.any((origin) => !origin.isCurrent)) {
+        throw StateError(
+          'The complete marked selection could not be verified. Reload its original sources.',
+        );
+      }
+      final result = [
+        for (final file in requested) resolved[collectionRowKey(file)]!,
+      ];
+      for (final file in result) {
+        final origin = origins[file.storageId]!;
+        final paths = origin.source.isLocal && !kIsWeb ? p.context : p.posix;
+        _fileOrigins[file] = _originAt(origin, paths.dirname(file.path!));
+        _preparedCollectionRows[file] = current;
+      }
+      return result;
+    } finally {
+      if (reuseRequest == null &&
+          !_isDisposed &&
+          request == _collectionRequest) {
+        _collectionBusy = false;
+        _collectionProgress = '';
+        notifyListeners();
+      }
+    }
+  }
+
+  /// Drag hover is an identity check, never an I/O authorization. Drop handlers
+  /// still resolve and verify every returned original before opening a plan.
+  bool recognizesCollectionRows(Iterable<FileItem> files) {
+    if (!isPagedCollection || _collectionBusy) return false;
+    final session = _collectionMarks!;
+    final known = Set<FileItem>.identity()
+      ..addAll(_selection)
+      ..addAll(_files ?? const []);
+    return files.isNotEmpty &&
+        files.every(
+          (file) =>
+              known.contains(file) &&
+              session.rowPages.containsKey(collectionRowKey(file)),
+        );
   }
 
   FileCollection _collectionSnapshot({
@@ -1190,6 +1512,33 @@ class PanelNotifier extends ChangeNotifier {
     bool createNew = false,
   }) async {
     final tabId = _activeTabId;
+    if (isPagedCollection) {
+      await flushCollectionMarks();
+      final store = _ref.read(fileCollectionStoreProvider);
+      final original = _collectionId!;
+      if (selectedOnly || createNew) {
+        final id = const Uuid().v4();
+        await store.copyCollection(
+          original,
+          id: id,
+          name: name.trim(),
+          selectedOnly: selectedOnly,
+        );
+        if (!selectedOnly && !_isDisposed && tabId == _activeTabId) {
+          await openCollection(id, pageIndex: collectionPageIndex);
+        }
+        return id;
+      }
+      await store.rename(original, name.trim());
+      if (!_isDisposed && tabId == _activeTabId) {
+        _collectionMarks!.manifest = await store.manifest(original);
+        _fileListTitle = name.trim();
+        _rememberFileListTab();
+        await _saveTabs();
+        notifyListeners();
+      }
+      return original;
+    }
     final id = !selectedOnly && !createNew
         ? _collectionId ?? const Uuid().v4()
         : const Uuid().v4();
@@ -1208,48 +1557,493 @@ class PanelNotifier extends ChangeNotifier {
       _collectionId = id;
       _fileListTitle = collection.name;
       activeTab?.collectionId = id;
-      _rememberFileListTab();
-      _saveTabs();
-      notifyListeners();
+      await openCollection(id);
     }
     return id;
   }
 
   Future<void> appendToCollection(String id, {bool selectedOnly = true}) async {
+    if (isPagedCollection) {
+      await flushCollectionMarks();
+      await _ref
+          .read(fileCollectionStoreProvider)
+          .appendCollection(id, _collectionId!, selectedOnly: selectedOnly);
+      return;
+    }
     final additions = _collectionSnapshot(
       id: 'pending',
       name: 'Pending',
       files: selectedOnly ? _selection : _files ?? const [],
       selection: _selection,
     );
-    await _ref.read(fileCollectionStoreProvider).update(id, (current) {
-      final entries = {
-        for (final entry in current.entries) entry.key: entry,
-        for (final entry in additions.entries) entry.key: entry,
-      };
-      return current.copyWith(
-        entries: entries.values.toList(),
-        selectedKeys: {...current.selectedKeys, ...additions.selectedKeys},
-        clearSearch: true,
+    await _ref.read(fileCollectionStoreProvider).append(id, additions);
+  }
+
+  Future<void> openCollection(
+    String id, {
+    bool newTab = false,
+    int pageIndex = 0,
+  }) async {
+    await flushCollectionMarks();
+    final store = _ref.read(fileCollectionStoreProvider);
+    _collectionStoreForMarks = store;
+    await store.ready;
+    if (_isDisposed) return;
+    final summary = store.get(id);
+    if (summary == null) {
+      throw StateError('The saved collection no longer exists.');
+    }
+    final previousTab = activeTab;
+    if (newTab ||
+        (previousTab != null &&
+            previousTab.collectionId != id &&
+            (previousTab.lockMode == TabLockMode.locked ||
+                previousTab.lockMode == TabLockMode.newTab))) {
+      _createTabLocation(
+        currentPath,
+        _currentDirectoryOrigin?.storageReference,
+      );
+    }
+    final request = ++_collectionRequest;
+    final tab = _activeTabId;
+    bool cancelled() =>
+        _isDisposed || request != _collectionRequest || tab != _activeTabId;
+    _collectionBusy = true;
+    _collectionLoadError = null;
+    _collectionProgress = '';
+    notifyListeners();
+    try {
+      final manifest = await store.manifest(id);
+      final marks = CollectionMarkSession(manifest);
+      final selected = <FileItem>[];
+      for (var index = 0; index < manifest.pages.length; index++) {
+        if (cancelled()) return;
+        if (manifest.pages[index].selectedCount == 0) continue;
+        final page = await store.loadPage(
+          id,
+          index,
+          revision: manifest.summary.revision,
+        );
+        for (final entry in page.collection.entries) {
+          if (!page.collection.selectedKeys.contains(entry.key)) continue;
+          marks.rowPages[entry.key] = index;
+          marks.saved[entry.key] = index;
+          marks.desired[entry.key] = index;
+          selected.add(_compactCollectionMark(entry.file));
+        }
+        _collectionProgress =
+            '${selected.length} / ${manifest.summary.selectedCount}';
+        notifyListeners();
+      }
+      if (cancelled()) return;
+      _collectionWindow = null;
+      final window = await _readCollectionWindow(
+        manifest,
+        pageIndex,
+        cancelled: cancelled,
+      );
+      if (cancelled()) return;
+      _suppressCollectionMarks = true;
+      _selection.clear();
+      _collectionPage = FileCollectionPage(
+        manifest: manifest,
+        index: 0,
+        collection: FileCollection(
+          id: id,
+          name: manifest.summary.name,
+          entries: const [],
+          search: manifest.search,
+        ),
+      );
+      _collectionMarks = marks;
+      _selection.addAll(selected);
+      _suppressCollectionMarks = false;
+      await _displayCollectionWindow(window, cancelled: cancelled);
+      if (cancelled()) return;
+      activeTab?.collectionId = id;
+      _rememberFileListTab();
+      await _saveTabs();
+    } catch (error) {
+      if (!cancelled()) {
+        _collectionLoadError = '$error';
+        notifyListeners();
+      }
+      rethrow;
+    } finally {
+      if (!cancelled()) {
+        _collectionBusy = false;
+        _collectionProgress = '';
+        notifyListeners();
+      }
+    }
+  }
+
+  static FileItem _compactCollectionMark(FileItem file) => FileItem(
+    name: file.name,
+    path: file.path,
+    uuid: file.uuid,
+    storageId: file.storageId,
+    isFolder: file.isFolder,
+    size: file.size,
+    updatedAt: file.updatedAt,
+  );
+
+  Future<void> _displayCollectionWindow(
+    CollectionQueryWindow window, {
+    required bool Function() cancelled,
+  }) async {
+    final page = FileCollectionPage(
+      manifest: window.manifest,
+      index: 0,
+      collection: FileCollection(
+        id: window.manifest.summary.id,
+        name: window.manifest.summary.name,
+        entries: window.rows.map((row) => row.entry).toList(),
+        selectedKeys: window.rows
+            .where(
+              (row) => _collectionMarks!.desired.containsKey(row.entry.key),
+            )
+            .map((row) => row.entry.key)
+            .toSet(),
+        search: window.manifest.search,
+      ),
+    );
+    final origins = <String, PanelFileOrigin>{};
+    final backends = <String, FileOperationBackend>{};
+    FileOperationBackend? resolve(StorageReference storage, String path) {
+      if (backends.containsKey(storage.id)) return backends[storage.id];
+      final origin = resolveStorageReference(storage, path);
+      if (origin == null) return null;
+      origins[storage.id] = origin;
+      return backends[storage.id] = fileOperationBackend(
+        source: origin.source,
+        local: _localFileService,
+        isCurrent: () => !cancelled() && origin.isCurrent,
+      );
+    }
+
+    final refreshed = await const FileCollectionService().refresh(
+      page.collection,
+      resolve,
+      isCancelled: cancelled,
+      onProgress: (done, total) {
+        if (!cancelled()) {
+          _collectionProgress = '$done / $total';
+          notifyListeners();
+        }
+      },
+    );
+    if (cancelled()) return;
+    final selected = _selection.map(_compactCollectionMark).toList();
+    final filter = _filterQuery;
+    final typeahead = _isTypeahead;
+    final mode = _typeaheadMode;
+    _suppressCollectionMarks = true;
+    _applyingCollectionWindow = true;
+    try {
+      _collectionWindow = window;
+      showSearchResults(
+        refreshed.collection.entries
+            .map(
+              (entry) => entry.file.copyWith(
+                metadata: {
+                  ...?entry.file.metadata,
+                  'collectionState': entry.state.name,
+                  if (entry.detail != null) 'collectionDetail': entry.detail,
+                  'collectionReplacement': entry.replacement,
+                },
+              ),
+            )
+            .toList(),
+        collection: refreshed.collection,
+        page: FileCollectionPage(
+          manifest: page.manifest,
+          index: page.index,
+          collection: refreshed.collection,
+        ),
+        originForFile: (file) =>
+            refreshed.verifiedKeys.contains(collectionRowKey(file))
+            ? origins[file.storageId]
+            : null,
+      );
+      if (page.summary.sourceCount > 1) _fileListOrigin = null;
+      final marks = _collectionMarks!;
+      for (final row in window.rows) {
+        marks.rowPages[row.entry.key] = row.pageIndex;
+      }
+      _selection
+        ..clear()
+        ..addAll(selected);
+      for (final file in _files ?? const <FileItem>[]) {
+        if (marks.desired.containsKey(collectionRowKey(file))) {
+          _selection.add(file);
+        }
+      }
+      _filterQuery = filter;
+      _isTypeahead = typeahead;
+      _typeaheadMode = mode;
+      _resetCursor();
+    } finally {
+      _suppressCollectionMarks = false;
+      _applyingCollectionWindow = false;
+    }
+    _rememberFileListTab();
+    notifyListeners();
+  }
+
+  Future<void> loadCollectionPage(int index) async {
+    if (!isPagedCollection || _collectionBusy) return;
+    if (index < 0 || index >= collectionPageCount) return;
+    await flushCollectionMarks();
+    final request = ++_collectionRequest;
+    final session = _collectionMarks!;
+    bool cancelled() =>
+        _isDisposed ||
+        request != _collectionRequest ||
+        !identical(session, _collectionMarks);
+    _collectionBusy = true;
+    _collectionLoadError = null;
+    notifyListeners();
+    try {
+      final window = await _readCollectionWindow(
+        session.manifest,
+        index,
+        cancelled: cancelled,
+      );
+      if (cancelled()) return;
+      await _displayCollectionWindow(window, cancelled: cancelled);
+    } catch (error) {
+      if (!cancelled()) _collectionLoadError = '$error';
+      rethrow;
+    } finally {
+      if (!cancelled()) {
+        _collectionBusy = false;
+        _collectionProgress = '';
+        notifyListeners();
+      }
+    }
+  }
+
+  bool Function(FileItem) _collectionFilter() {
+    if (!_isFiltering) return (_) => true;
+    final settings = _ref.read(quickSearchSettingsProvider);
+    final query = settings.caseSensitive
+        ? _filterQuery
+        : _filterQuery.toLowerCase();
+    return (file) => _matchesQuickSearch(file, query, settings);
+  }
+
+  Future<CollectionQueryWindow> _readCollectionWindow(
+    FileCollectionManifest manifest,
+    int index, {
+    required bool Function() cancelled,
+  }) async {
+    final store = _ref.read(fileCollectionStoreProvider);
+    final compare = _fileSortComparator();
+    final matches = _collectionFilter();
+    final projection = _collectionProjection;
+    Future<CollectionQueryWindow> scan({
+      FileCollectionEntry? after,
+      FileCollectionEntry? before,
+      bool last = false,
+    }) => FileCollectionQuery().run(
+      store,
+      manifest,
+      compare: compare,
+      matches: matches,
+      matchesEntry: projection?.matches,
+      compareEntry: projection?.compare,
+      after: after,
+      before: before,
+      last: last,
+      isCancelled: cancelled,
+      onProgress: (done, total) {
+        if (!cancelled()) {
+          _collectionProgress = '$done / $total';
+          notifyListeners();
+        }
+      },
+    );
+    final current = _collectionWindow;
+    if (index > 0 &&
+        current != null &&
+        current.manifest.summary.id == manifest.summary.id &&
+        current.rows.isNotEmpty) {
+      if (index == current.pageCount - 1) return scan(last: true);
+      if (index == current.index + 1) {
+        return scan(after: current.rows.last.entry);
+      }
+      if (index == current.index - 1) {
+        return scan(before: current.rows.first.entry);
+      }
+    }
+    var window = await scan();
+    if (index >= window.pageCount - 1 && index > 0) return scan(last: true);
+    for (
+      var position = 0;
+      position < index && window.rows.isNotEmpty;
+      position++
+    ) {
+      window = await scan(after: window.rows.last.entry);
+    }
+    return window;
+  }
+
+  void _scheduleCollectionQuery() {
+    if (!isPagedCollection || _applyingCollectionWindow) return;
+    _collectionQueryRevision++;
+    _collectionRequest++;
+    _collectionBusy = false;
+    _collectionQueryTimer?.cancel();
+    _collectionQueryTimer = Timer(const Duration(milliseconds: 150), () {
+      unawaited(
+        reloadCollectionQuery().catchError((Object error) {
+          if (!_isDisposed) {
+            _collectionLoadError = '$error';
+            notifyListeners();
+          }
+        }),
       );
     });
   }
 
-  Future<void> openCollection(String id, {bool newTab = false}) async {
-    final store = _ref.read(fileCollectionStoreProvider);
-    await store.ready;
+  void setCollectionProjection(
+    Object owner, {
+    required Object signature,
+    required bool Function(FileCollectionEntry) matches,
+    required Comparator<FileCollectionEntry> compare,
+  }) {
     if (_isDisposed) return;
-    final collection = store.get(id);
-    if (collection == null) {
-      throw StateError('The saved collection no longer exists.');
+    final previous = _collectionProjection;
+    if (previous != null &&
+        identical(previous.owner, owner) &&
+        previous.signature == signature) {
+      return;
     }
-    if (newTab) addTab();
-    showSearchResults(
-      collection.entries.map((entry) => entry.file).toList(),
-      collection: collection,
+    _collectionProjection = CollectionViewProjection(
+      owner: owner,
+      signature: signature,
+      matches: matches,
+      compare: compare,
     );
-    activeTab?.collectionId = id;
-    await refreshCollectionItems();
+    _scheduleCollectionQuery();
+  }
+
+  void clearCollectionProjection(Object owner) {
+    if (_isDisposed || !identical(_collectionProjection?.owner, owner)) return;
+    _collectionProjection = null;
+    _scheduleCollectionQuery();
+  }
+
+  Future<void> reloadCollectionQuery() async {
+    if (!isPagedCollection) return;
+    _collectionQueryTimer?.cancel();
+    _collectionWindow = null;
+    await loadCollectionPage(0);
+  }
+
+  Future<void> reloadSavedCollection() async {
+    final id = _collectionId;
+    if (id == null || _collectionBusy) return;
+    final index = collectionPageIndex;
+    _collectionMarksTimer?.cancel();
+    _collectionMarks = null;
+    _collectionPage = null;
+    await _ref.read(fileCollectionStoreProvider).reload();
+    await openCollection(id, pageIndex: index);
+  }
+
+  Future<void> _refreshPagedCollection({
+    required bool rerunSearch,
+    required bool acceptReplacements,
+    Set<String>? acceptedReplacementKeys,
+  }) async {
+    await flushCollectionMarks();
+    final store = _ref.read(fileCollectionStoreProvider);
+    final session = _collectionMarks!;
+    final id = session.manifest.summary.id;
+    final pageIndex = collectionPageIndex;
+    final request = ++_collectionRequest;
+    bool cancelled() =>
+        _isDisposed ||
+        request != _collectionRequest ||
+        !identical(session, _collectionMarks);
+    _collectionBusy = true;
+    _collectionLoadError = null;
+    _collectionProgress = '';
+    notifyListeners();
+    final backends = <String, FileOperationBackend>{};
+    FileOperationBackend? resolve(StorageReference storage, String path) {
+      if (backends.containsKey(storage.id)) return backends[storage.id];
+      final origin = resolveStorageReference(storage, path);
+      if (origin == null) return null;
+      return backends[storage.id] = fileOperationBackend(
+        source: origin.source,
+        local: _localFileService,
+        isCurrent: () => !cancelled() && origin.isCurrent,
+      );
+    }
+
+    try {
+      const service = FileCollectionService();
+      if (rerunSearch) {
+        final metadata = FileCollection(
+          id: id,
+          name: _fileListTitle,
+          entries: const [],
+          selectedKeys: session.desired.keys.toSet(),
+          search: session.manifest.search,
+        );
+        final result = await service.rerun(
+          metadata,
+          resolve,
+          isCancelled: cancelled,
+          onProgress: (scanned, _) {
+            if (!cancelled()) {
+              _collectionProgress = '$scanned';
+              notifyListeners();
+            }
+          },
+        );
+        if (cancelled()) return;
+        await store.save(result.collection);
+      } else {
+        var complete = 0;
+        await store.transform(id, (page) async {
+          final result = await service.refresh(
+            page,
+            resolve,
+            isCancelled: cancelled,
+            acceptReplacements: acceptReplacements,
+            acceptedReplacementKeys: acceptedReplacementKeys,
+            onProgress: (done, _) {
+              if (!cancelled()) {
+                _collectionProgress =
+                    '${complete + done} / ${session.manifest.summary.itemCount}';
+                notifyListeners();
+              }
+            },
+          );
+          complete += page.entries.length;
+          return result.collection;
+        }, isCancelled: cancelled);
+      }
+      if (cancelled()) return;
+      // The committed revision is authoritative; old page/mark identities must
+      // not be used to save again while reopening it.
+      _collectionMarks = null;
+      _collectionPage = null;
+      await openCollection(id, pageIndex: pageIndex);
+    } catch (error) {
+      if (!cancelled()) _collectionLoadError = '$error';
+      rethrow;
+    } finally {
+      if (!cancelled()) {
+        _collectionBusy = false;
+        _collectionProgress = '';
+        notifyListeners();
+      }
+    }
   }
 
   void cancelCollectionRefresh() {
@@ -1262,8 +2056,21 @@ class PanelNotifier extends ChangeNotifier {
   Future<void> refreshCollectionItems({
     bool rerunSearch = false,
     bool acceptReplacements = false,
+    Set<String>? acceptedReplacementKeys,
   }) async {
     if (!_showingSearchResults || _isDisposed) return;
+    if (isPagedCollection) {
+      await _refreshPagedCollection(
+        rerunSearch: rerunSearch,
+        acceptReplacements: acceptReplacements,
+        acceptedReplacementKeys:
+            acceptedReplacementKeys ??
+            (acceptReplacements
+                ? collectionReplacements.map(collectionRowKey).toSet()
+                : null),
+      );
+      return;
+    }
     final request = ++_collectionRequest;
     final tabId = _activeTabId;
     final generation = _listingGeneration;
@@ -1315,6 +2122,7 @@ class PanelNotifier extends ChangeNotifier {
               resolve,
               isCancelled: cancelled,
               acceptReplacements: acceptReplacements,
+              acceptedReplacementKeys: acceptedReplacementKeys,
               onProgress: (done, total) {
                 if (!cancelled()) {
                   _collectionProgress = '$done / $total';
@@ -1357,6 +2165,7 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   void _leaveFileList({bool forget = true}) {
+    _saveDepartingCollectionMarks();
     if (forget) {
       _fileListTabs.remove(_activeTabId);
       activeTab?.collectionId = null;
@@ -1366,6 +2175,11 @@ class PanelNotifier extends ChangeNotifier {
     _fileListOrigin = null;
     _collectionId = null;
     _collectionSearch = null;
+    _collectionPage = null;
+    _collectionMarks = null;
+    _collectionWindow = null;
+    _collectionQueryTimer?.cancel();
+    _collectionLoadError = null;
     _collectionRequest++;
     _collectionBusy = false;
     _selection.clear();
@@ -1377,6 +2191,7 @@ class PanelNotifier extends ChangeNotifier {
   /// Return to the directory from which this list was opened.
   Future<void> clearSearchResults() async {
     if (!_showingSearchResults) return;
+    await flushCollectionMarks();
     final origin = _fileListOrigin;
     if (origin != null && origin.isCurrent) {
       await navigateToPath(
@@ -1398,8 +2213,41 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   /// Remove rows only. No filesystem or provider delete call is made.
-  void removeFromFileList(Iterable<FileItem> items) {
+  Future<void> removeFromFileList(Iterable<FileItem> items) async {
     if (!_showingSearchResults) return;
+    if (isPagedCollection) {
+      final keys = items.map(collectionRowKey).toSet();
+      final id = _collectionId!;
+      final index = collectionPageIndex;
+      try {
+        await flushCollectionMarks();
+        await _ref.read(fileCollectionStoreProvider).transform(id, (
+          page,
+        ) async {
+          final rows = page.entries
+              .where((entry) => !keys.contains(entry.key))
+              .toList();
+          if (rows.length == page.entries.length) return page;
+          return page.copyWith(
+            entries: rows,
+            selectedKeys: page.selectedKeys.difference(keys),
+          );
+        });
+        if (_isDisposed || _collectionId != id) return;
+        _collectionMarks = null;
+        _collectionPage = null;
+        await openCollection(id, pageIndex: index);
+      } catch (error) {
+        if (!_isDisposed) {
+          _collectionLoadError = '$error';
+          _ref
+              .read(errorProvider)
+              .addError('Could not remove collection rows: $error');
+          notifyListeners();
+        }
+      }
+      return;
+    }
     final removed = Set<FileItem>.identity()..addAll(items);
     final cursor = cursorItem;
     _files?.removeWhere(removed.contains);
@@ -1428,7 +2276,9 @@ class PanelNotifier extends ChangeNotifier {
   /// Async callers pass their captured [origin] so results cannot affect a
   /// same-path row in another storage account after the pane changes sources.
   /// Matching saved list tabs are updated even while another tab is active.
-  void applyFileListChanges(
+  /// Visible list changes remain immediate; the returned future acknowledges
+  /// saved-reference persistence and any resulting paged collection reload.
+  Future<void> applyFileListChanges(
     Map<String, FileItem?> replacements, {
     PanelFileOrigin? origin,
     Set<String> removedDirectories = const {},
@@ -1436,7 +2286,7 @@ class PanelNotifier extends ChangeNotifier {
     if (_isDisposed ||
         replacements.isEmpty ||
         (origin != null && !origin.isCurrent)) {
-      return;
+      return Future<void>.value();
     }
     bool matchesOrigin(PanelFileOrigin? candidate) =>
         origin == null ||
@@ -1454,23 +2304,63 @@ class PanelNotifier extends ChangeNotifier {
             )
             .toList()
           ..sort((a, b) => b.key.length.compareTo(a.key.length));
+    var completion = Future<void>.value();
     if (origin != null) {
+      // Capture the persistence service and account before yielding. The
+      // operation already completed on this source; a later panel disposal
+      // must not replace or invalidate its accepted saved-reference update.
+      final store = _ref.read(fileCollectionStoreProvider);
+      final storage = origin.storageReference;
+      final changes = Map<String, FileItem?>.of(replacements);
+      final removed = Set<String>.of(removedDirectories);
+      final previous = _pendingCollectionChanges;
+      final pagedId = isPagedCollection ? _collectionId : null;
+      final pageIndex = collectionPageIndex;
+      final session = _collectionMarks;
+      if (pagedId != null) {
+        _collectionBusy = true;
+        notifyListeners();
+      }
+      completion = () async {
+        try {
+          if (previous != null) await previous;
+          if (session != null) await session.flush(store);
+          await store.applyFileChanges(
+            storage,
+            changes,
+            removedDirectories: removed,
+          );
+          if (!_isDisposed &&
+              pagedId != null &&
+              _collectionId == pagedId &&
+              identical(session, _collectionMarks)) {
+            _collectionMarks = null;
+            _collectionPage = null;
+            await openCollection(pagedId, pageIndex: pageIndex);
+          }
+        } catch (error) {
+          if (!_isDisposed) {
+            if (pagedId != null && _collectionId == pagedId) {
+              _collectionBusy = false;
+              _collectionLoadError = '$error';
+              notifyListeners();
+            }
+            _ref
+                .read(errorProvider)
+                .addError('Could not update saved collections: $error');
+          }
+        }
+      }();
+      _pendingCollectionChanges = completion;
+      final accepted = completion;
       unawaited(
-        _ref
-            .read(fileCollectionStoreProvider)
-            .applyFileChanges(
-              origin.storageReference,
-              replacements,
-              removedDirectories: removedDirectories,
-            )
-            .catchError((Object error) {
-              if (!_isDisposed) {
-                _ref
-                    .read(errorProvider)
-                    .addError('Could not update saved collections: $error');
-              }
-            }),
+        accepted.whenComplete(() {
+          if (identical(_pendingCollectionChanges, accepted)) {
+            _pendingCollectionChanges = null;
+          }
+        }),
       );
+      if (pagedId != null) return completion;
     }
 
     FileItem? replacementFor(FileItem? old) {
@@ -1544,7 +2434,7 @@ class PanelNotifier extends ChangeNotifier {
 
     if (!_showingSearchResults) {
       if (changed) notifyListeners();
-      return;
+      return completion;
     }
     final previousCursor = cursorItem;
     final updated = <FileItem>[];
@@ -1558,11 +2448,21 @@ class PanelNotifier extends ChangeNotifier {
       if (identical(_lastSelected, old)) _lastSelected = item;
       if (identical(_itemToScrollTo, old)) _itemToScrollTo = item;
     }
-    if (!changed) return;
+    if (!changed) return completion;
     _files = updated;
-    _selection
-      ..clear()
-      ..addAll(selected);
+    if (isPagedCollection) {
+      final visibleKeys = _collectionPage!.collection.entries
+          .map((entry) => entry.key)
+          .toSet();
+      _selection.removeWhere(
+        (file) => visibleKeys.contains(collectionRowKey(file)),
+      );
+      _selection.addAll(selected);
+    } else {
+      _selection
+        ..clear()
+        ..addAll(selected);
+    }
     if (_lastSelected != null &&
         !updated.any((item) => identical(item, _lastSelected))) {
       _lastSelected = null;
@@ -1575,9 +2475,17 @@ class PanelNotifier extends ChangeNotifier {
     _resetCursor(preserveItem: replacementFor(previousCursor));
     _rememberFileListTab();
     notifyListeners();
+    return completion;
   }
 
   String exportFileListPaths({bool selectedOnly = false}) {
+    if (isPagedCollection &&
+        !selectedOnly &&
+        collectionTotalCount > (_files?.length ?? 0)) {
+      throw StateError(
+        'Use the complete collection export to include every saved page.',
+      );
+    }
     final files = selectedOnly ? _selection : (_files ?? const <FileItem>[]);
     return FileListPaths.encode(
       files.where((item) => item.name != '..').map((item) {
@@ -1592,6 +2500,29 @@ class PanelNotifier extends ChangeNotifier {
         return paths.join(origin.source.currentPath, item.name);
       }),
     );
+  }
+
+  Future<String> exportAllFileListPaths({bool selectedOnly = false}) async {
+    if (!isPagedCollection || selectedOnly) {
+      return exportFileListPaths(selectedOnly: selectedOnly);
+    }
+    await flushCollectionMarks();
+    final manifest = _collectionMarks!.manifest;
+    final paths = <String>[];
+    var bytes = 0;
+    await for (final page
+        in _ref
+            .read(fileCollectionStoreProvider)
+            .pages(manifest.summary.id, revision: manifest.summary.revision)) {
+      for (final entry in page.collection.entries) {
+        bytes += utf8.encode(entry.reference.path).length + 3;
+        if (bytes > 32 * 1024 * 1024) {
+          throw const FormatException('The exported path list exceeds 32 MiB.');
+        }
+        paths.add(entry.reference.path);
+      }
+    }
+    return FileListPaths.encode(paths);
   }
 
   Future<void> openContainingFolder(FileItem item) async {
@@ -1768,25 +2699,69 @@ class PanelNotifier extends ChangeNotifier {
 
   // --- Archive navigation ---
 
-  /// Enter a compressed archive for browsing.
-  /// Cached archive bytes for web browsing (native reads from disk each time).
-  Uint8List? _archiveBytes;
+  final List<_ArchivePanelFrame> _archiveFrames = [];
   PanelFileOrigin? _archiveOrigin;
+
+  void _clearArchiveState() {
+    final frames = List<_ArchivePanelFrame>.of(_archiveFrames);
+    _archiveFrames.clear();
+    _archiveSource = null;
+    _archiveOrigin = null;
+    for (final frame in frames.reversed) {
+      unawaited(
+        frame.session.close().catchError((Object error) {
+          _log.warn('archive cleanup failed', error);
+        }),
+      );
+    }
+  }
 
   PanelFileOrigin captureArchiveOrigin() {
     final origin = _archiveOrigin;
-    if (_isDisposed || !isInArchive || origin == null || !origin.isCurrent) {
+    if (_isDisposed ||
+        !isInArchive ||
+        origin == null ||
+        !origin.isCurrent ||
+        _archiveFrames.isEmpty ||
+        !_archiveFrames.last.session.isCurrent) {
       throw StateError('Reopen the archive from its original storage account.');
     }
     return origin;
   }
 
+  ArchiveWorkspaceLocation captureArchiveWorkspaceLocation() {
+    captureArchiveOrigin();
+    final frame = _archiveFrames.last;
+    return ArchiveWorkspaceLocation(
+      file: _archiveFrames.first.session.file,
+      fingerprint: _archiveFrames.first.session.fingerprint,
+      nestedMembers: List.unmodifiable(
+        _archiveFrames
+            .skip(1)
+            .map(
+              (entry) =>
+                  entry.session.file.path!.replaceFirst(RegExp(r'^/'), ''),
+            ),
+      ),
+      isCurrent: () =>
+          !_isDisposed &&
+          _archiveFrames.isNotEmpty &&
+          identical(_archiveFrames.last, frame) &&
+          frame.session.isCurrent,
+    );
+  }
+
   Future<void> enterArchive(FileItem file) async {
+    if (isInArchive) {
+      await _enterNestedArchive(file);
+      return;
+    }
     if (file.path == null && file.name.isEmpty) return;
     int? requestGeneration;
+    List<FileItem>? previousFiles;
+    var previousVerified = false;
+    ArchiveBrowserSession? opened;
     try {
-      // A list entry must be the exact captured result. For a regular folder,
-      // read-only archive callers may provide a same-path FileItem wrapper.
       final origin = _showingSearchResults
           ? captureOperationOrigin([file])
           : (originForOperation(file) ?? captureCurrentOrigin());
@@ -1806,96 +2781,157 @@ class PanelNotifier extends ChangeNotifier {
       if (tab?.lockMode == TabLockMode.newTab) {
         _createTabLocation(parentSource.currentPath, origin.storageReference);
       }
-      _leaveFileList();
+      previousFiles = _files;
+      previousVerified = _verifiedListingGeneration == _listingGeneration;
       final generation = ++_listingGeneration;
       requestGeneration = generation;
-      _archiveSource = const PanelSourceService().enterArchive(
+      _isLoading = true;
+      notifyListeners();
+      final backend = fileOperationBackend(
+        source: origin.source,
+        local: _localFileService,
+        isCurrent: () => !_isDisposed && origin.isCurrent,
+      );
+      opened = await ArchiveBrowserSession.open(
+        backend,
+        file.copyWith(path: archivePath),
+        isCancelled: () => _isDisposed || generation != _listingGeneration,
+      );
+      if (_isDisposed ||
+          generation != _listingGeneration ||
+          !origin.isCurrent) {
+        return;
+      }
+      _leaveFileList();
+      _clearArchiveState();
+      final source = const PanelSourceService().enterArchive(
         archivePath,
         parentSource,
       );
+      _archiveFrames.add(_ArchivePanelFrame(opened, source));
+      opened = null;
+      _archiveSource = source;
       _archiveOrigin = origin;
-      _archiveBytes = null;
-      _isLoading = true;
-      notifyListeners();
-      _log.info('enterArchive: $archivePath (${parentSource.displayName})');
-      Uint8List bytes;
-      if (origin.source is RemotePanelSource) {
-        bytes = await (origin.source as RemotePanelSource).client
-            .downloadFileBytes(archivePath);
-      } else {
-        if (!await _localFileService.ensureAccess(archivePath)) {
-          throw StateError('Access to the archive was not granted.');
-        }
-        bytes = await _localFileService.readFile(archivePath, fileItem: file);
-      }
-      if (_isDisposed || generation != _listingGeneration) return;
-      if (!origin.isCurrent) {
-        throw StateError(
-          'The storage account changed while opening the archive.',
-        );
-      }
-      _archiveBytes = bytes;
-      _isLoading = false;
+      _filterQuery = '';
+      _isFlatView = false;
       await _loadArchiveFiles();
-      if (!_isDisposed) notifyListeners();
-    } catch (e) {
+      _log.info('enterArchive: $archivePath (${parentSource.displayName})');
+    } catch (error) {
       if (_isDisposed ||
           (requestGeneration != null &&
               requestGeneration != _listingGeneration)) {
         return;
       }
-      _log.warn('archive open failed', e);
-      _archiveSource = null;
-      _archiveOrigin = null;
-      _archiveBytes = null;
+      _log.warn('archive open failed', error);
       _isLoading = false;
-      _ref.read(errorProvider).addError('Cannot open archive: $e');
+      if (previousVerified && identical(previousFiles, _files)) {
+        _verifiedListingGeneration = _listingGeneration;
+      }
+      _ref.read(errorProvider).addError('Cannot open archive: $error');
       notifyListeners();
+    } finally {
+      await opened?.close();
     }
   }
 
-  /// Navigate deeper into a folder within the archive.
-  Future<void> _navigateArchive(String innerPath) async {
-    if (_archiveSource == null) return;
-    _archiveSource = _archiveSource!.withPath(innerPath);
-    await _loadArchiveFiles();
+  bool _isCurrentArchiveRow(FileItem file) =>
+      _archiveFrames.isNotEmpty &&
+      _archiveFrames.last.session.isCurrent &&
+      (_files?.any((row) => identical(row, file)) ?? false);
+
+  Future<void> _enterNestedArchive(FileItem file) async {
+    if (!_isCurrentArchiveRow(file) ||
+        file.isFolder ||
+        file.path == null ||
+        !ArchiveService.isArchive(file.name)) {
+      return;
+    }
+    if (_archiveFrames.length >= kArchiveNestingLimit) {
+      _ref
+          .read(errorProvider)
+          .addError('Archive nesting is limited to 8 levels.');
+      return;
+    }
+    final parent = _archiveFrames.last;
+    final generation = ++_listingGeneration;
+    _isLoading = true;
     notifyListeners();
+    ArchiveBrowserSession? opened;
+    try {
+      opened = await ArchiveBrowserSession.open(
+        parent.session.backend,
+        file.copyWith(path: '/${file.path}'),
+        maxInputBytes: kArchiveReadLimit,
+        isCancelled: () => _isDisposed || generation != _listingGeneration,
+      );
+      if (_isDisposed ||
+          generation != _listingGeneration ||
+          !identical(_archiveFrames.lastOrNull, parent) ||
+          !parent.session.isCurrent) {
+        return;
+      }
+      final source = const PanelSourceService().enterArchive(
+        file.path!,
+        parent.source,
+      );
+      _archiveFrames.add(
+        _ArchivePanelFrame(opened, source, returnCursor: file.path),
+      );
+      opened = null;
+      _archiveSource = source;
+      await _loadArchiveFiles();
+    } catch (error) {
+      if (_isDisposed || generation != _listingGeneration) return;
+      _isLoading = false;
+      _ref.read(errorProvider).addError('Cannot open nested archive: $error');
+      notifyListeners();
+    } finally {
+      await opened?.close();
+    }
   }
 
-  /// Navigate up one level within the archive, or exit if at root.
+  Future<void> _navigateArchive(String innerPath) async {
+    if (_archiveFrames.isEmpty) return;
+    final frame = _archiveFrames.last;
+    final directory = frame.session.index.directoryPath(innerPath);
+    frame.source = frame.source.withPath(
+      directory.isEmpty ? '' : '$directory/',
+    );
+    _archiveSource = frame.source;
+    await _loadArchiveFiles();
+  }
+
   Future<void> navigateUpArchive() async {
-    if (_archiveSource == null) return;
-    final inner = _archiveSource!.innerPath;
+    if (_archiveFrames.isEmpty) return;
+    final inner = _archiveFrames.last.source.innerPath.replaceAll(
+      RegExp(r'/+$'),
+      '',
+    );
     if (inner.isEmpty) {
       exitArchive();
       return;
     }
-    // Go up one directory level within the archive
-    var parent = inner.endsWith('/')
-        ? inner.substring(0, inner.length - 1)
-        : inner;
-    final lastSlash = parent.lastIndexOf('/');
-    parent = lastSlash > 0 ? parent.substring(0, lastSlash + 1) : '';
-    _archiveSource = _archiveSource!.withPath(parent);
-    await _loadArchiveFiles();
-    notifyListeners();
+    final parent = p.posix.dirname(inner);
+    await _navigateArchive(parent == '.' ? '' : parent);
   }
 
-  /// Exit the archive and restore the parent directory listing.
+  /// A nested exit restores its exact enclosing directory and cursor. Only
+  /// leaving the outermost archive navigates back to physical storage.
   void exitArchive() {
-    final source = _archiveSource;
-    final origin = _archiveOrigin;
-    _archiveSource = null;
-    _archiveOrigin = null;
-    _archiveBytes = null;
-    if (source != null) {
-      if (source.parent.isRemote) {
-        _remotePath = p.posix.dirname(source.archivePath);
-      } else {
-        _localPath = p.dirname(source.archivePath);
-      }
+    if (_archiveFrames.isEmpty) return;
+    if (_archiveFrames.length > 1) {
+      final closed = _archiveFrames.removeLast();
+      _archiveSource = _archiveFrames.last.source;
+      unawaited(closed.session.close());
+      unawaited(_loadArchiveFiles(cursorPath: closed.returnCursor));
+      return;
     }
-    final restore = source != null && origin != null && origin.isCurrent
+    final source = _archiveFrames.first.source;
+    final origin = _archiveOrigin;
+    _listingGeneration++;
+    _clearArchiveState();
+    _isLoading = false;
+    final restore = origin != null && origin.isCurrent
         ? navigateToPath(
             source.parent.currentPath,
             origin: origin,
@@ -1917,8 +2953,6 @@ class PanelNotifier extends ChangeNotifier {
     );
   }
 
-  /// Leave an archive and go to the home directory. Used by the error banner
-  /// when a stale archive path cannot be listed.
   Future<void> navigateHome() async {
     if (isInArchive) {
       exitArchive();
@@ -1929,96 +2963,92 @@ class PanelNotifier extends ChangeNotifier {
     if (!_isDisposed) focusList();
   }
 
-  Future<void> _loadArchiveFiles() async {
-    final generation = ++_listingGeneration;
-    final source = _archiveSource;
-    if (source == null) return;
-    if (_archiveOrigin != null && !_archiveOrigin!.isCurrent) {
-      _files = [];
-      _ref
-          .read(errorProvider)
-          .addError(
-            'The archive source account changed. Open the archive again.',
-          );
-      return;
-    }
-    final bytes = _archiveBytes;
-    if (bytes == null) {
-      // Fallback for sources without cached bytes (legacy path).
-      if (source.parent.isRemote) {
-        _files = [];
-        _ref
-            .read(errorProvider)
-            .addError('Open this remote archive again to read its contents.');
-        return;
-      }
-      final files = await const PanelSourceService().listFiles(source);
-      if (_isDisposed || generation != _listingGeneration) return;
-      _files = files;
-      _sortFiles();
-      return;
-    }
-
-    ViewerArchive? archive;
+  Future<void> _loadArchiveFiles({String? cursorPath}) async {
+    ++_listingGeneration;
+    if (_archiveFrames.isEmpty) return;
     try {
-      archive = await openViewerArchive(bytes, name: source.archivePath);
-      final prefix = source.innerPath.isEmpty
-          ? ''
-          : (source.innerPath.endsWith('/')
-                ? source.innerPath
-                : '${source.innerPath}/');
-      final items = <FileItem>[];
-      final folders = <String>{};
-      for (final member in archive.members) {
-        var name = member.name;
-        if (name.startsWith('./')) name = name.substring(2);
-        if (prefix.isNotEmpty && !name.startsWith(prefix)) continue;
-        if (name == prefix || name == source.innerPath) continue;
-        final relative = prefix.isEmpty ? name : name.substring(prefix.length);
-        if (relative.isEmpty) continue;
-        final slash = relative.indexOf('/');
-        if (slash == -1) {
-          if (member.isFile) {
-            items.add(
-              FileItem(
-                name: relative,
-                path: '$prefix$relative',
-                isFolder: false,
-                size: member.size,
-              ),
-            );
-          }
-        } else {
-          final folder = relative.substring(0, slash);
-          if (folders.add(folder)) {
-            items.add(
-              FileItem(name: folder, path: '$prefix$folder/', isFolder: true),
-            );
-          }
+      captureArchiveOrigin();
+      final frame = _archiveFrames.last;
+      _files = frame.session.list(frame.source.innerPath);
+      _selection.clear();
+      _lastSelected = null;
+      _itemToScrollTo = null;
+      _cursorIndex = 0;
+      _sortFiles();
+      if (cursorPath != null) {
+        final index =
+            displayedFiles?.indexWhere((row) => row.path == cursorPath) ?? -1;
+        if (index >= 0) {
+          _cursorIndex = index;
+          _itemToScrollTo = displayedFiles![index];
         }
+      }
+    } catch (error) {
+      _files = [];
+      _ref.read(errorProvider).addError('Failed to read archive: $error');
+    }
+    _isLoading = false;
+    if (!_isDisposed) notifyListeners();
+  }
+
+  /// Refresh the physical snapshot and reopen the same nested route, so edits
+  /// committed from the workspace are visible instead of relisting stale bytes.
+  Future<void> _reloadArchiveFiles() async {
+    if (_archiveFrames.isEmpty) return;
+    final oldFrames = List<_ArchivePanelFrame>.of(_archiveFrames);
+    final origin = _archiveOrigin!;
+    final cursorPath = cursorItem?.path;
+    final generation = ++_listingGeneration;
+    final fresh = <_ArchivePanelFrame>[];
+    _isLoading = true;
+    notifyListeners();
+    try {
+      if (!origin.isCurrent) {
+        throw StateError('The archive source account changed.');
+      }
+      var backend = oldFrames.first.session.source;
+      for (var i = 0; i < oldFrames.length; i++) {
+        final previous = oldFrames[i];
+        final file = await backend.stat(previous.session.file.path!);
+        if (file == null) throw StateError('The archive was removed.');
+        final session = await ArchiveBrowserSession.open(
+          backend,
+          file,
+          maxInputBytes: i == 0 ? kArchiveBrowseInputLimit : kArchiveReadLimit,
+          isCancelled: () => _isDisposed || generation != _listingGeneration,
+        );
+        fresh.add(
+          _ArchivePanelFrame(
+            session,
+            previous.source,
+            returnCursor: previous.returnCursor,
+          ),
+        );
+        session.index.directoryPath(previous.source.innerPath);
+        backend = session.backend;
       }
       if (_isDisposed ||
           generation != _listingGeneration ||
-          !identical(_archiveSource, source)) {
+          !origin.isCurrent) {
         return;
       }
-      _files = items;
-      _sortFiles();
-    } on ArchivePasswordRequiredException {
+      _clearArchiveState();
+      _archiveFrames.addAll(fresh);
+      fresh.clear();
+      _archiveOrigin = origin;
+      _archiveSource = _archiveFrames.last.source;
+      await _loadArchiveFiles(cursorPath: cursorPath);
+    } catch (error) {
       if (_isDisposed || generation != _listingGeneration) return;
       _files = [];
-      _ref.read(errorProvider).addError('This archive is password-protected.');
-    } on ArchiveViewException catch (e) {
-      if (_isDisposed || generation != _listingGeneration) return;
-      _files = [];
-      _ref.read(errorProvider).addError('Failed to read archive: ${e.message}');
-    } catch (e) {
-      if (_isDisposed || generation != _listingGeneration) return;
-      _log.warn('archive listing failed', e);
-      _files = [];
-      _ref.read(errorProvider).addError('Failed to read archive: $e');
+      _selection.clear();
+      _isLoading = false;
+      _ref.read(errorProvider).addError('Failed to reload archive: $error');
+      notifyListeners();
     } finally {
-      await archive?.close();
+      for (final frame in fresh.reversed) {
+        await frame.session.close();
+      }
     }
   }
 
@@ -2123,7 +3153,14 @@ class PanelNotifier extends ChangeNotifier {
 
   String get currentPath {
     if (isInArchive) {
-      return '${_archiveSource!.archiveName}:/${_archiveSource!.innerPath}';
+      final route = _archiveFrames.indexed
+          .map(
+            (entry) => entry.$1 == 0
+                ? entry.$2.source.archiveName
+                : entry.$2.source.archivePath,
+          )
+          .join('!/');
+      return '$route:/${_archiveSource!.innerPath}';
     }
     if (_showingSearchResults && _fileListOrigin != null) {
       return _fileListOrigin!.source.currentPath;
@@ -2192,6 +3229,19 @@ class PanelNotifier extends ChangeNotifier {
 
   void _sortFiles() {
     if (_files == null || _files!.isEmpty) return;
+    if (isPagedCollection &&
+        _applyingCollectionWindow &&
+        _collectionProjection != null) {
+      return;
+    }
+    if (isPagedCollection && !_applyingCollectionWindow) {
+      _scheduleCollectionQuery();
+      return;
+    }
+    _files!.sort(_fileSortComparator());
+  }
+
+  Comparator<FileItem> _fileSortComparator() {
     final columns = _ref.read(fileColumnsProvider(side));
     FileColumnDefinition? column(String? id) {
       for (final value in columns) {
@@ -2202,7 +3252,11 @@ class PanelNotifier extends ChangeNotifier {
 
     final primaryColumn = column(_sortColumnId);
     final secondaryColumn = column(_secondarySortColumnId);
-    _files!.sort((a, b) {
+    final sortBy = _sortBy;
+    final sortOrder = _sortOrder;
+    final secondarySortBy = _secondarySortBy;
+    final secondarySortOrder = _secondarySortOrder;
+    return (a, b) {
       // ".." always stays at the top
       if (a.name == '..') return -1;
       if (b.name == '..') return 1;
@@ -2211,26 +3265,26 @@ class PanelNotifier extends ChangeNotifier {
       if (!a.isFolder && b.isFolder) return 1;
 
       int comparison =
-          primaryColumn?.compare(a, b) ?? compareSortKey(a, b, _sortBy);
-      comparison = _sortOrder == SortOrder.ascending ? comparison : -comparison;
+          primaryColumn?.compare(a, b) ?? compareSortKey(a, b, sortBy);
+      comparison = sortOrder == SortOrder.ascending ? comparison : -comparison;
 
       // Secondary sort key when primary ties
       if (comparison == 0 &&
-          (_secondarySortBy != null || secondaryColumn != null)) {
+          (secondarySortBy != null || secondaryColumn != null)) {
         final int secondary =
             secondaryColumn?.compare(a, b) ??
-            compareSortKey(a, b, _secondarySortBy!);
-        comparison = _secondarySortOrder == SortOrder.ascending
+            compareSortKey(a, b, secondarySortBy!);
+        comparison = secondarySortOrder == SortOrder.ascending
             ? secondary
             : -secondary;
       }
 
       if (comparison == 0 && (_showingSearchResults || _isFlatView)) {
         comparison = (a.path ?? '').compareTo(b.path ?? '');
-        if (_sortOrder == SortOrder.descending) comparison = -comparison;
+        if (sortOrder == SortOrder.descending) comparison = -comparison;
       }
       return comparison;
-    });
+    };
   }
 
   // --- Selection ---
@@ -2241,6 +3295,7 @@ class PanelNotifier extends ChangeNotifier {
     bool shiftKey = false,
     bool ctrlKey = false,
   }) {
+    if (isPagedCollection && _collectionBusy) return;
     _log.debug(
       'toggleSelection: ${item.name} shift=$shiftKey ctrl=$ctrlKey lastSelected=${_lastSelected?.name} side=$side',
     );
@@ -2292,6 +3347,10 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   void selectAll() {
+    if (isPagedCollection) {
+      _startWholeCollectionSelection(invert: false);
+      return;
+    }
     final displayed = displayedFiles;
     _log.debug('selectAll (${displayed?.length ?? 0} visible files)');
     if (displayed != null) {
@@ -2303,6 +3362,10 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   void invertSelection() {
+    if (isPagedCollection) {
+      _startWholeCollectionSelection(invert: true);
+      return;
+    }
     _log.debug('invertSelection (was ${_selection.length} selected)');
     final displayed = displayedFiles;
     if (displayed == null) return;
@@ -2315,10 +3378,229 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   void clearSelection() {
+    if (isPagedCollection && _collectionBusy) return;
     _log.debug('clearSelection (was ${_selection.length})');
     _selection.clear();
     _lastSelected = null;
     notifyListeners();
+  }
+
+  void _startWholeCollectionSelection({required bool invert}) {
+    unawaited(
+      selectWholeCollection(invert: invert).catchError((Object error) {
+        if (!_isDisposed) {
+          _collectionLoadError = '$error';
+          _ref
+              .read(errorProvider)
+              .addError('Could not update collection marks: $error');
+          notifyListeners();
+        }
+      }),
+    );
+  }
+
+  /// Ctrl+A/invert apply to every matching saved row, including off-page rows.
+  Future<void> selectWholeCollection({bool invert = false}) async {
+    await _selectSavedRows(
+      (_) => true,
+      invert ? SelectionAction.invert : SelectionAction.select,
+    );
+  }
+
+  Future<int> _selectSavedRows(
+    bool Function(FileCollectionEntry) extra,
+    SelectionAction action, {
+    String? replaceStorageId,
+    bool preserveOnEmpty = false,
+    bool verifyMatches = false,
+    bool Function()? isCancelled,
+  }) async {
+    if (!isPagedCollection || _collectionBusy) return 0;
+    await flushCollectionMarks();
+    final session = _collectionMarks!;
+    final request = ++_collectionRequest;
+    bool cancelled() =>
+        _isDisposed ||
+        request != _collectionRequest ||
+        !identical(session, _collectionMarks) ||
+        (isCancelled?.call() ?? false);
+    _collectionBusy = true;
+    _collectionProgress = '';
+    notifyListeners();
+    try {
+      final selected = {
+        for (final file in _selection)
+          collectionRowKey(file): _compactCollectionMark(file),
+      };
+      final locations = Map<String, int>.of(session.desired);
+      if (action == SelectionAction.replace) {
+        if (replaceStorageId == null) {
+          selected.clear();
+          locations.clear();
+        } else {
+          final removed = selected.entries
+              .where((entry) => entry.value.storageId == replaceStorageId)
+              .map((entry) => entry.key)
+              .toList();
+          for (final key in removed) {
+            selected.remove(key);
+            locations.remove(key);
+          }
+        }
+      }
+      final matches = _collectionFilter();
+      final projection = _collectionProjection;
+      var done = 0;
+      var matched = 0;
+      await for (final page
+          in _ref
+              .read(fileCollectionStoreProvider)
+              .pages(
+                session.manifest.summary.id,
+                revision: session.manifest.summary.revision,
+              )) {
+        if (cancelled()) throw StateError('Collection selection cancelled.');
+        for (final entry in page.collection.entries) {
+          if (!matches(entry.file) ||
+              !(projection?.matches(entry) ?? true) ||
+              !extra(entry)) {
+            continue;
+          }
+          matched++;
+          final add =
+              action == SelectionAction.select ||
+              action == SelectionAction.replace ||
+              (action == SelectionAction.invert &&
+                  !session.desired.containsKey(entry.key));
+          if (add) {
+            selected[entry.key] = _compactCollectionMark(entry.file);
+            locations[entry.key] = page.index;
+          } else {
+            selected.remove(entry.key);
+            locations.remove(entry.key);
+          }
+        }
+        done += page.collection.entries.length;
+        _collectionProgress = '$done / ${session.manifest.summary.itemCount}';
+        notifyListeners();
+      }
+      if (cancelled()) throw StateError('Collection selection cancelled.');
+      if (preserveOnEmpty && matched == 0) return 0;
+      session.rowPages.addAll(locations);
+      if (verifyMatches) {
+        await _prepareCollectionFiles(selected.values, reuseRequest: request);
+        if (cancelled()) throw StateError('Collection selection cancelled.');
+      }
+      final manifest = await session.replaceMarks(
+        _ref.read(fileCollectionStoreProvider),
+        locations,
+        isCancelled: cancelled,
+      );
+      if (cancelled()) return matched;
+      final page = _collectionPage;
+      if (page != null) {
+        _collectionPage = FileCollectionPage(
+          manifest: manifest,
+          index: page.index,
+          collection: page.collection,
+        );
+      }
+      _suppressCollectionMarks = true;
+      _selection
+        ..clear()
+        ..addAll(selected.values);
+      for (final file in _files ?? const <FileItem>[]) {
+        if (locations.containsKey(collectionRowKey(file))) _selection.add(file);
+      }
+      _suppressCollectionMarks = false;
+      return matched;
+    } finally {
+      _suppressCollectionMarks = false;
+      if (!_isDisposed &&
+          request == _collectionRequest &&
+          identical(session, _collectionMarks)) {
+        _collectionBusy = false;
+        _collectionProgress = '';
+        notifyListeners();
+      }
+    }
+  }
+
+  bool Function(FileCollectionEntry) _collectionCriteria(
+    FileSearchQuery criteria,
+  ) {
+    criteria.validate();
+    if (criteria.contentPattern.isNotEmpty || criteria.searchArchives) {
+      throw const FormatException(
+        'Run a content or archive search first, then select its result rows.',
+      );
+    }
+    final filters = <String, FileSearchPathFilter>{};
+    final pattern = criteria.nameMatcher;
+    final search = _collectionSearch;
+    return (entry) {
+      if (!pattern.matches(entry.file) ||
+          !criteria.matchesMetadata(entry.file)) {
+        return false;
+      }
+      final storage = entry.reference.storage;
+      final filter = filters.putIfAbsent(
+        storage.id,
+        () => FileSearchPathFilter(
+          criteria,
+          paths: storage.isLocal && !kIsWeb ? p.context : p.posix,
+        ),
+      );
+      return filter.allows(
+        entry.file,
+        root: search?.storage == storage ? search!.directory : storage.root,
+      );
+    };
+  }
+
+  Future<int> applyCollectionCriteriaSelection(
+    FileSearchQuery criteria, {
+    SelectionAction action = SelectionAction.select,
+  }) async {
+    if (!isPagedCollection) {
+      return applyCriteriaSelection(criteria, action: action);
+    }
+    return _selectSavedRows(_collectionCriteria(criteria), action);
+  }
+
+  Future<int> countCollectionCriteria(
+    FileSearchQuery criteria, {
+    bool Function()? isCancelled,
+  }) async {
+    if (!isPagedCollection) return matchingCriteriaFiles(criteria).length;
+    final session = _collectionMarks!;
+    final matches = _collectionCriteria(criteria);
+    final filter = _collectionFilter();
+    final projection = _collectionProjection;
+    var count = 0;
+    await for (final page
+        in _ref
+            .read(fileCollectionStoreProvider)
+            .pages(
+              session.manifest.summary.id,
+              revision: session.manifest.summary.revision,
+            )) {
+      if (_isDisposed ||
+          isCancelled?.call() == true ||
+          !identical(session, _collectionMarks) ||
+          !identical(projection, _collectionProjection)) {
+        throw StateError('Collection selection preview cancelled.');
+      }
+      count += page.collection.entries
+          .where(
+            (entry) =>
+                filter(entry.file) &&
+                (projection?.matches(entry) ?? true) &&
+                matches(entry),
+          )
+          .length;
+    }
+    return count;
   }
 
   bool get _canUseSelectionMemory =>
@@ -2341,6 +3623,10 @@ class PanelNotifier extends ChangeNotifier {
   /// Remember marks for this tab and storage session, never just basenames.
   /// Restoration resolves fresh, verified rows; saved objects grant no writes.
   int rememberSelection() {
+    if (isPagedCollection) {
+      _startSavedSelection(rememberCollectionSelection());
+      return 0;
+    }
     if (!_canUseSelectionMemory || _activeTabId.isEmpty) return 0;
     final remembered = <(StorageReference, String), _SelectionMemoryEntry>{};
     for (final item in _files ?? const <FileItem>[]) {
@@ -2362,8 +3648,94 @@ class PanelNotifier extends ChangeNotifier {
     return remembered.length;
   }
 
-  int get rememberedSelectionCount =>
-      _selectionMemories[_activeTabId]?.length ?? 0;
+  int get rememberedSelectionCount => isPagedCollection
+      ? _collectionSelectionMemories[_activeTabId]?.rows.length ?? 0
+      : _selectionMemories[_activeTabId]?.length ?? 0;
+
+  Future<int> rememberCollectionSelection() async {
+    if (!isPagedCollection) return rememberSelection();
+    final tab = _activeTabId;
+    final session = _collectionMarks;
+    final prepared = await prepareOperationFiles(_selection);
+    if (_isDisposed ||
+        tab != _activeTabId ||
+        !identical(session, _collectionMarks) ||
+        prepared.isEmpty) {
+      return 0;
+    }
+    final rows = <String, CollectionRememberedRow>{};
+    final guards = <String, bool Function()>{};
+    var bytes = 0;
+    for (final file in prepared) {
+      final origin = originForOperation(file);
+      if (origin == null) {
+        throw StateError(
+          'The original source changed before remembering the selection.',
+        );
+      }
+      final key = collectionRowKey(file);
+      final objectId = FileCollectionService.objectIdentity(file);
+      bytes +=
+          utf8.encode(key).length + utf8.encode(objectId ?? '').length + 32;
+      if (bytes > 4 * 1024 * 1024 || rows.length >= 100000) {
+        throw StateError(
+          'Remembered collection marks exceed 100,000 identities or 4 MiB.',
+        );
+      }
+      guards.putIfAbsent(
+        origin.storageId,
+        () =>
+            () => origin.isCurrent,
+      );
+      rows[key] = CollectionRememberedRow(
+        objectId: objectId,
+        isFolder: file.isFolder,
+        isSymlink: file.isSymlink,
+        storageId: origin.storageId,
+      );
+    }
+    final previous = _collectionSelectionMemories.remove(tab);
+    if (previous != null) _collectionSelectionMemoryBytes -= previous.bytes;
+    while (_collectionSelectionMemories.isNotEmpty &&
+        (_collectionSelectionMemoryBytes + bytes > 4 * 1024 * 1024 ||
+            _collectionSelectionMemories.values.fold<int>(
+                  rows.length,
+                  (sum, memory) => sum + memory.rows.length,
+                ) >
+                100000)) {
+      _collectionSelectionMemoryBytes -= _collectionSelectionMemories
+          .remove(_collectionSelectionMemories.keys.first)!
+          .bytes;
+    }
+    _collectionSelectionMemories[tab] = CollectionSelectionMemory(
+      rows: Map.unmodifiable(rows),
+      sourceGuards: Map.unmodifiable(guards),
+      bytes: bytes,
+    );
+    _collectionSelectionMemoryBytes += bytes;
+    notifyListeners();
+    return rows.length;
+  }
+
+  Future<int> restoreCollectionSelection() async {
+    if (!isPagedCollection) return restoreSelection();
+    final memory = _collectionSelectionMemories[_activeTabId];
+    if (memory == null) return 0;
+    return _selectSavedRows(
+      (entry) {
+        final saved = memory.rows[entry.key];
+        return saved != null &&
+            memory.sourceGuards[saved.storageId]?.call() == true &&
+            saved.isFolder == entry.file.isFolder &&
+            (saved.isSymlink == true) == (entry.file.isSymlink == true) &&
+            (saved.objectId == null ||
+                saved.objectId == entry.reference.objectId);
+      },
+      SelectionAction.replace,
+      preserveOnEmpty: true,
+      verifyMatches: true,
+    );
+  }
 
   List<FileItem> _restorableSelection() {
     if (!_canUseSelectionMemory) return const [];
@@ -2389,11 +3761,22 @@ class PanelNotifier extends ChangeNotifier {
     return matches.values.whereType<FileItem>().toList();
   }
 
-  int get restorableSelectionCount => _restorableSelection().length;
+  int get restorableSelectionCount {
+    if (!isPagedCollection) return _restorableSelection().length;
+    final memory = _collectionSelectionMemories[_activeTabId];
+    return memory?.rows.values
+            .where((row) => memory.sourceGuards[row.storageId]?.call() == true)
+            .length ??
+        0;
+  }
 
   /// Replace marks with remembered items still visible in this tab and source.
   /// If none can be resolved, retain the current marks instead of erasing them.
   int restoreSelection() {
+    if (isPagedCollection) {
+      _startSavedSelection(restoreCollectionSelection());
+      return 0;
+    }
     final restored = _restorableSelection();
     if (restored.isEmpty) return 0;
     _selection
@@ -2419,9 +3802,17 @@ class PanelNotifier extends ChangeNotifier {
     final selected = items
         .where((item) => item.name != '..' && valid.contains(item))
         .toList();
-    _selection
-      ..clear()
-      ..addAll(selected);
+    if (isPagedCollection) {
+      final visibleKeys = listed.map(collectionRowKey).toSet();
+      _selection.removeWhere(
+        (file) => visibleKeys.contains(collectionRowKey(file)),
+      );
+      _selection.addAll(selected);
+    } else {
+      _selection
+        ..clear()
+        ..addAll(selected);
+    }
     if (cursor != null && valid.contains(cursor)) {
       _cursorIndex = _indexOfIdentical(listed, cursor);
       _itemToScrollTo = cursor;
@@ -2575,6 +3966,12 @@ class PanelNotifier extends ChangeNotifier {
     FileSelectionPattern pattern, {
     SelectionAction action = SelectionAction.select,
   }) {
+    if (isPagedCollection) {
+      _startSavedSelection(
+        _selectSavedRows((entry) => pattern.matches(entry.file), action),
+      );
+      return 0;
+    }
     final matches = (displayedFiles ?? const <FileItem>[])
         .where(pattern.matches)
         .toList();
@@ -2599,10 +3996,7 @@ class PanelNotifier extends ChangeNotifier {
 
   /// Reuse the search model for visible-row name and metadata criteria.
   /// Content/archive searches require the search engine before feeding a list.
-  int applyCriteriaSelection(
-    FileSearchQuery criteria, {
-    SelectionAction action = SelectionAction.select,
-  }) {
+  List<FileItem> matchingCriteriaFiles(FileSearchQuery criteria) {
     criteria.validate();
     if (criteria.contentPattern.isNotEmpty || criteria.searchArchives) {
       throw const FormatException(
@@ -2610,16 +4004,64 @@ class PanelNotifier extends ChangeNotifier {
       );
     }
     final pattern = criteria.nameMatcher;
-    final matches = (displayedFiles ?? const <FileItem>[])
-        .where(
-          (file) =>
-              file.name != '..' &&
-              file.name != '.' &&
-              (criteria.includeHidden || !file.name.startsWith('.')) &&
-              pattern.matches(file) &&
-              criteria.matchesMetadata(file),
-        )
-        .toList();
+    final filters = <String, FileSearchPathFilter>{};
+    return (displayedFiles ?? const <FileItem>[]).where((file) {
+      final origin = originForOperation(file);
+      if (origin == null ||
+          !pattern.matches(file) ||
+          !criteria.matchesMetadata(file)) {
+        return false;
+      }
+      final filter = filters.putIfAbsent(
+        origin.storageId,
+        () => FileSearchPathFilter(
+          criteria,
+          paths: origin.source.isLocal && !kIsWeb ? p.context : p.posix,
+        ),
+      );
+      final root = _showingSearchResults
+          ? (_collectionSearch?.storage == origin.storageReference
+                ? _collectionSearch!.directory
+                : _fileListOrigin?.source.currentPath ??
+                      origin.storageReference.root)
+          : origin.source.currentPath;
+      return filter.allows(file, root: root);
+    }).toList();
+  }
+
+  int applyCriteriaSelection(
+    FileSearchQuery criteria, {
+    SelectionAction action = SelectionAction.select,
+  }) {
+    if (isPagedCollection) {
+      _startSavedSelection(
+        applyCollectionCriteriaSelection(criteria, action: action),
+      );
+      return 0;
+    }
+    return _applySelectionMatches(matchingCriteriaFiles(criteria), action);
+  }
+
+  void _startSavedSelection(Future<int> operation) {
+    unawaited(
+      operation.catchError((Object error) {
+        if (!_isDisposed) {
+          _collectionLoadError = '$error';
+          _ref
+              .read(errorProvider)
+              .addError('Could not select saved collection rows: $error');
+          notifyListeners();
+        }
+        return 0;
+      }),
+    );
+  }
+
+  int _applySelectionMatches(
+    List<FileItem> matches,
+    SelectionAction action, {
+    String? replaceStorageId,
+  }) {
     switch (action) {
       case SelectionAction.select:
         _selection.addAll(matches);
@@ -2630,13 +4072,323 @@ class PanelNotifier extends ChangeNotifier {
           if (!_selection.remove(file)) _selection.add(file);
         }
       case SelectionAction.replace:
-        _selection
-          ..clear()
-          ..addAll(matches);
+        if (replaceStorageId == null) {
+          _selection.clear();
+        } else {
+          _selection.removeWhere(
+            (file) => originForOperation(file)?.storageId == replaceStorageId,
+          );
+        }
+        _selection.addAll(matches);
     }
     _lastSelected = null;
+    _rememberFileListTab();
     notifyListeners();
     return matches.length;
+  }
+
+  /// Same-name follows Commander semantics: ignore the final file extension.
+  /// Dotfiles without another dot are extensionless; folders use their full name.
+  int selectSameName({
+    FileItem? focused,
+    bool caseSensitive = false,
+    SelectionAction action = SelectionAction.select,
+  }) => _selectRelated('name', focused, caseSensitive, action);
+
+  int selectSameExtension({
+    FileItem? focused,
+    bool caseSensitive = false,
+    SelectionAction action = SelectionAction.select,
+  }) => _selectRelated('extension', focused, caseSensitive, action);
+
+  /// A directory path on another account is never the same containing folder.
+  int selectSameParent({
+    FileItem? focused,
+    SelectionAction action = SelectionAction.select,
+  }) => _selectRelated('parent', focused, true, action);
+
+  int _selectRelated(
+    String kind,
+    FileItem? focused,
+    bool caseSensitive,
+    SelectionAction action,
+  ) {
+    if (isPagedCollection) {
+      _startSavedSelection(
+        selectRelatedCollection(
+          kind: kind,
+          focused: focused,
+          caseSensitive: caseSensitive,
+          action: action,
+        ),
+      );
+      return 0;
+    }
+    focused ??= cursorItem;
+    if (focused == null) return 0;
+    final origin = originForOperation(focused);
+    if (origin == null || (kind == 'extension' && focused.isFolder)) return 0;
+    final paths = origin.source.isLocal && !kIsWeb ? p.context : p.posix;
+    String stem(FileItem file) {
+      final dot = file.name.lastIndexOf('.');
+      return file.isFolder || dot <= 0
+          ? file.name
+          : file.name.substring(0, dot);
+    }
+
+    String value(FileItem file) {
+      if (kind == 'parent') {
+        return paths.dirname(
+          file.path ?? paths.join(origin.source.currentPath, file.name),
+        );
+      }
+      final result = kind == 'name'
+          ? stem(file)
+          : file.name.substring(stem(file).length);
+      return caseSensitive ? result : result.toLowerCase();
+    }
+
+    final target = value(focused);
+    final matches = (displayedFiles ?? const <FileItem>[]).where((file) {
+      final candidate = originForOperation(file);
+      if (candidate == null) return false;
+      if (kind == 'parent') {
+        if (candidate.storageReference != origin.storageReference) return false;
+      } else if (file.isFolder != focused!.isFolder) {
+        return false;
+      }
+      return value(file) == target;
+    }).toList();
+    return _applySelectionMatches(matches, action);
+  }
+
+  Future<int> selectRelatedCollection({
+    required String kind,
+    FileItem? focused,
+    bool caseSensitive = false,
+    SelectionAction action = SelectionAction.select,
+  }) async {
+    if (!isPagedCollection) {
+      return _selectRelated(kind, focused, caseSensitive, action);
+    }
+    focused ??= cursorItem;
+    final reference = focused == null
+        ? null
+        : _collectionEntries[focused]?.reference;
+    if (reference == null || (kind == 'extension' && focused!.isFolder)) {
+      return 0;
+    }
+    final targetFile = focused!;
+    final paths = reference.storage.isLocal && !kIsWeb ? p.context : p.posix;
+    String stem(FileItem file) {
+      final dot = file.name.lastIndexOf('.');
+      return file.isFolder || dot <= 0
+          ? file.name
+          : file.name.substring(0, dot);
+    }
+
+    String value(FileItem file) {
+      if (kind == 'parent') return paths.dirname(file.path!);
+      final result = kind == 'name'
+          ? stem(file)
+          : file.name.substring(stem(file).length);
+      return caseSensitive ? result : result.toLowerCase();
+    }
+
+    final target = value(targetFile);
+    return _selectSavedRows((entry) {
+      if (kind == 'parent' && entry.reference.storage != reference.storage) {
+        return false;
+      }
+      if (kind != 'parent' && entry.file.isFolder != targetFile.isFolder) {
+        return false;
+      }
+      return value(entry.file) == target;
+    }, action);
+  }
+
+  /// A path-only list must be applied to an explicitly captured storage account.
+  /// The dialog chooses one source for mixed collections. Captures expire after
+  /// navigation/refresh rather than redirecting marks to a replacement listing.
+  List<PathSelectionSource> get pathSelectionSources {
+    if (!_canUseSelectionMemory) return const [];
+    final sources = <String, PanelFileOrigin>{};
+    if (isPagedCollection) {
+      final storedSources = _collectionMarks!.manifest.pages
+          .expand((page) => page.sources)
+          .toSet();
+      final auth = _ref.read(authProvider);
+      final clients = <CloudStorageClient>{
+        if (auth.isConnected) auth.client,
+        ..._ref
+            .read(multiCloudProvider)
+            .connections
+            .map((connection) => connection.client),
+      };
+      for (final client in clients) {
+        final reference = storageReferenceForClient(client);
+        if (storedSources.contains(reference.id) &&
+            _isConnectedClient(client)) {
+          sources[reference.id] = _remoteOrigin(
+            client,
+            client.providerName,
+            reference.root,
+          );
+        }
+      }
+    }
+    try {
+      final current = captureCurrentOrigin();
+      sources[current.storageId] = current;
+    } on StateError {
+      // Mixed collections have no common source; collect their verified rows.
+    }
+    for (final file in displayedFiles ?? const <FileItem>[]) {
+      final origin = originForOperation(file);
+      if (origin != null) sources.putIfAbsent(origin.storageId, () => origin);
+    }
+    final generation = _listingGeneration;
+    final tab = _activeTabId;
+    return [
+      for (final origin in sources.values)
+        PathSelectionSource._(
+          this,
+          origin,
+          () =>
+              _canUseSelectionMemory &&
+              generation == _listingGeneration &&
+              tab == _activeTabId &&
+              origin.isCurrent,
+        ),
+    ];
+  }
+
+  Future<FileListImportResult> selectPathsFromListAsync(
+    String text, {
+    PathSelectionSource? source,
+    SelectionAction action = SelectionAction.select,
+    bool Function()? isCancelled,
+  }) async {
+    if (!isPagedCollection) {
+      return selectPathsFromList(text, source: source, action: action);
+    }
+    if (source == null) {
+      final sources = pathSelectionSources;
+      if (sources.length != 1) {
+        throw StateError(
+          'Choose the original storage account for this path list.',
+        );
+      }
+      source = sources.single;
+    }
+    if (!identical(source._owner, this) || !source.isCurrent) {
+      throw StateError(
+        'The panel or source changed. Open path selection again.',
+      );
+    }
+    final captured = source;
+    final origin = captured.origin;
+    final backend = fileOperationBackend(
+      source: origin.source,
+      local: _localFileService,
+      isCurrent: () => captured.isCurrent,
+    );
+    final paths = FileListPaths.parse(
+      text,
+      basePath: origin.source.currentPath,
+      local: origin.source.isLocal,
+    );
+    final requested = {for (final path in paths) backend.pathKey(path): path};
+    final found = <String>{};
+    await _selectSavedRows(
+      (entry) {
+        if (!captured.isCurrent) {
+          throw StateError(
+            'The original source changed during path selection.',
+          );
+        }
+        if (entry.reference.storage != origin.storageReference) return false;
+        final key = backend.pathKey(entry.reference.path);
+        if (!requested.containsKey(key)) return false;
+        found.add(key);
+        return true;
+      },
+      action,
+      replaceStorageId: origin.storageId,
+      isCancelled: isCancelled,
+    );
+    return FileListImportResult(
+      loaded: found.length,
+      failures: {
+        for (final entry in requested.entries)
+          if (!found.contains(entry.key)) entry.value: 'No matching collection row in the chosen original account and current filter.',
+      },
+    );
+  }
+
+  FileListImportResult selectPathsFromList(
+    String text, {
+    PathSelectionSource? source,
+    SelectionAction action = SelectionAction.select,
+  }) {
+    if (source == null) {
+      final sources = pathSelectionSources;
+      if (sources.length != 1) {
+        throw StateError(
+          'Choose the original storage account for this path list.',
+        );
+      }
+      source = sources.single;
+    }
+    if (!identical(source._owner, this) || !source.isCurrent) {
+      throw StateError(
+        'The panel or source changed. Open path selection again.',
+      );
+    }
+    final origin = source.origin;
+    final backend = fileOperationBackend(
+      source: origin.source,
+      local: _localFileService,
+      isCurrent: () => origin.isCurrent,
+    );
+    final requested = FileListPaths.parse(
+      text,
+      basePath: origin.source.currentPath,
+      local: origin.source.isLocal,
+    );
+    final candidates = <String, List<FileItem>>{};
+    for (final file in displayedFiles ?? const <FileItem>[]) {
+      final current = originForOperation(file);
+      if (current == null ||
+          current.storageReference != origin.storageReference) {
+        continue;
+      }
+      final path =
+          file.path ??
+          backend.paths.join(current.source.currentPath, file.name);
+      candidates.putIfAbsent(backend.pathKey(path), () => []).add(file);
+    }
+    final matches = <FileItem>[];
+    final failures = <String, String>{};
+    for (final path in requested) {
+      final rows = candidates[backend.pathKey(path)] ?? const <FileItem>[];
+      if (rows.length == 1) {
+        matches.add(rows.single);
+      } else {
+        failures[path] = rows.isEmpty
+            ? 'No visible, verified row in the chosen source.'
+            : 'Several rows identify this path; refresh before selecting it.';
+      }
+    }
+    // Resolve/validate the entire list before changing any selection marks.
+    if (!source.isCurrent) {
+      throw StateError('The source changed during path selection.');
+    }
+    _applySelectionMatches(matches, action, replaceStorageId: origin.storageId);
+    return FileListImportResult(
+      loaded: matches.length,
+      failures: Map.unmodifiable(failures),
+    );
   }
 
   /// Compatibility entry points used by existing keypad commands.
@@ -2708,6 +4460,13 @@ class PanelNotifier extends ChangeNotifier {
   /// Queued work must not outlive the panel that requested it.
   Future<void> refresh() async {
     if (_isDisposed) return;
+    // Transfer callbacks may deliberately ignore applyFileListChanges's
+    // Future. Their following refresh still acknowledges every accepted saved
+    // reference update before it reloads rows or reports the operation done.
+    while (_pendingCollectionChanges != null) {
+      await _pendingCollectionChanges;
+      if (_isDisposed) return;
+    }
     if (_pendingTabStorage != null) {
       await _restoreSelectedTab();
       return;
@@ -2728,7 +4487,7 @@ class PanelNotifier extends ChangeNotifier {
           }
         }
       } else if (isInArchive) {
-        await _loadArchiveFiles();
+        await _reloadArchiveFiles();
       } else if (_isFlatView) {
         await _loadFlatFiles();
       } else {
@@ -2804,9 +4563,7 @@ class PanelNotifier extends ChangeNotifier {
   Future<bool> grantAccessToPath(String path) async {
     if (side != PanelSide.local && !kIsWeb) return false;
     if (isInArchive) {
-      _archiveSource = null;
-      _archiveOrigin = null;
-      _archiveBytes = null;
+      _clearArchiveState();
     }
     var target = path.isEmpty ? currentPath : path;
     if (_isArchiveVirtualPath(target)) {
@@ -2926,9 +4683,7 @@ class PanelNotifier extends ChangeNotifier {
     // ArchivePanelSource kept currentPath virtual and Home/breadcrumbs tried
     // to list "archive.zip:/inner/".
     if (isInArchive) {
-      _archiveSource = null;
-      _archiveOrigin = null;
-      _archiveBytes = null;
+      _clearArchiveState();
     }
     if (_isArchiveVirtualPath(path)) {
       final archive = path.split(':/').first;
@@ -3029,8 +4784,11 @@ class PanelNotifier extends ChangeNotifier {
     }
     // If we're inside an archive, navigate within it
     if (isInArchive) {
+      if (!_isCurrentArchiveRow(item)) return;
       if (item.isFolder && item.path != null) {
         await _navigateArchive(item.path!);
+      } else if (ArchiveService.isArchive(item.name)) {
+        await _enterNestedArchive(item);
       }
       return;
     }
@@ -3377,7 +5135,7 @@ class PanelNotifier extends ChangeNotifier {
       _log.warn('Delete failed', error);
       _ref.read(errorProvider).addError('Delete failed: $error');
     } finally {
-      applyFileListChanges(
+      await applyFileListChanges(
         removed,
         origin: origin,
         removedDirectories: removedDirectories,
@@ -3454,6 +5212,19 @@ class PanelNotifier extends ChangeNotifier {
     return List.unmodifiable(items);
   }
 
+  /// Single, batch and recovered renames use the same captured storage and
+  /// low-level mutation implementation. The fallback never starts another job.
+  SourceRenameBatchStorage createRenameStorage(
+    PanelFileOrigin origin, {
+    bool Function()? isCancelled,
+  }) => SourceRenameBatchStorage(
+    reference: origin.storageReference,
+    source: origin.source,
+    local: _localFileService,
+    isCurrent: () => origin.isCurrent,
+    isCancelled: isCancelled,
+  );
+
   Future<void> renameFile(
     FileItem file,
     String newName, {
@@ -3461,151 +5232,144 @@ class PanelNotifier extends ChangeNotifier {
     bool rethrowErrors = false,
     bool recordHistory = true,
     PanelFileOrigin? operationOrigin,
+    bool Function()? isCancelled,
   }) async {
     _log.info('renameFile: ${file.name} → $newName');
     final audit = _ref.read(auditServiceProvider);
-    final actionHistory = _ref.read(actionHistoryProvider.notifier);
+    final history = _ref.read(actionHistoryProvider.notifier);
+    final service = RenameBatchService(_ref.read(renameBatchStoreProvider));
     var providerName = 'unknown';
-    final src = file.path ?? file.name;
+    final sourcePath = file.path ?? file.name;
+    PanelFileOrigin? origin;
+    SourceRenameBatchStorage? storage;
+    RenameBatchRecord? record;
     try {
       if (newName == file.name) return;
-      if (newName.trim().isEmpty ||
-          newName == '.' ||
-          newName == '..' ||
-          RegExp(r'[/\\\x00-\x1f\x7f]').hasMatch(newName)) {
-        throw const FormatException(
-          'Enter a filename without path separators or control characters.',
-        );
-      }
-      final origin = operationOrigin ?? captureOperationOrigin([file]);
-      if (!origin.isCurrent) throw StateError('The storage account changed.');
-      final source = origin.source;
-      final isLocalSource = source is LocalPanelSource;
-      providerName = source is RemotePanelSource
-          ? source.providerName
-          : 'local';
+      final problem = MultiRenameService.validateName(newName);
+      if (problem != null) throw FormatException(problem);
       if (file.path == null) {
         throw StateError('The original file path is unavailable.');
       }
-      final paths = isLocalSource && !kIsWeb ? p.context : p.posix;
-      final target = paths.join(paths.dirname(src), newName);
-      if (await operationPathExists(target, origin)) {
-        throw StateError(
-          'A destination already exists: $target. For case-only renames, use an unused temporary name first.',
-        );
-      }
+      origin = operationOrigin ?? captureOperationOrigin([file]);
       if (!origin.isCurrent) throw StateError('The storage account changed.');
-      String computedNewPath;
-      if (isLocalSource && kIsWeb) {
-        // Web rename: copy under new name, delete old entry
-        final oldPath = file.path!;
-        computedNewPath = p.posix.join(p.posix.dirname(oldPath), newName);
-        if (!file.isFolder) {
-          final bytes = await _localFileService.readFile(
-            oldPath,
-            fileItem: file,
-          );
-          final saved = await _localFileService.saveFileReportingResult(
-            computedNewPath,
-            bytes,
-            overwrite: false,
-          );
-          if (saved != LocalFileSaveResult.written) {
-            throw StateError(
-              'The browser downloaded a copy; the source was retained.',
-            );
-          }
-          if (!origin.isCurrent) {
-            throw StateError('The source is no longer available.');
-          }
-          await _localFileService.deleteEntry(oldPath, false);
-        } else {
-          throw UnsupportedError(
-            'Folder rename requires a native filesystem or cloud provider.',
-          );
-        }
-      } else if (isLocalSource) {
-        computedNewPath = p.join(p.dirname(file.path!), newName);
-        await _localFileService.withFileOperationAccess(src, () async {
-          if (!origin.isCurrent) {
-            throw StateError('The source is no longer available.');
-          }
-          if (!await moveNativeNoReplace(src, computedNewPath)) {
-            throw UnsupportedError(
-              'This filesystem cannot safely rename without replacing an existing item.',
-            );
-          }
-        });
-      } else {
-        if (source is! RemotePanelSource) {
-          throw UnsupportedError('This source cannot be renamed.');
-        }
-        final client = source.client;
-        final sourcePath = src;
-        computedNewPath = p.posix.join(p.posix.dirname(sourcePath), newName);
-        await client.renamePath(sourcePath, newName);
+      storage = createRenameStorage(origin, isCancelled: isCancelled);
+      providerName = origin.source is RemotePanelSource
+          ? (origin.source as RemotePanelSource).providerName
+          : 'local';
+      final plan = const MultiRenameService().preview(
+        [file],
+        const MultiRenameOptions(),
+        directory: storage.paths.dirname(file.path!),
+        pathContext: storage.paths,
+        caseSensitivePaths: storage.caseSensitivePaths,
+        allowDependencies: true,
+        targetNames: {file.path!: newName},
+      );
+      record = await service.prepare(plan, storage, isCancelled: isCancelled);
+      await service.run(record, storage, isCancelled: isCancelled);
+      if (!record.isComplete) {
+        throw StateError(
+          record.message ?? 'Rename stopped. Review rename history.',
+        );
       }
       await audit.logSuccess(
         operation: AuditOperation.rename,
-        sourcePath: src,
-        targetPath: newName,
+        sourcePath: sourcePath,
+        targetPath: record.items.single.targetPath,
         provider: providerName,
       );
-      if (recordHistory) {
-        actionHistory.record(
-          type: ActionType.rename,
-          originalPath: src,
-          newPath: computedNewPath,
-          provider: providerName,
-          metadata: {'oldName': file.name, 'newName': newName},
-          isCurrent: () => origin.isCurrent,
-          undoAction: () async {
-            if (!origin.isCurrent) {
-              return const UndoResult.failure('The storage account changed.');
-            }
-            final renamed = file.copyWith(name: newName, path: computedNewPath);
-            await renameFile(
-              renamed,
-              file.name,
-              operationOrigin: origin,
-              refreshAfter: false,
-              rethrowErrors: true,
-              recordHistory: false,
-            );
-            applyFileListChanges({computedNewPath: file}, origin: origin);
-            await refresh();
-            return UndoResult.success('Renamed $newName back to ${file.name}.');
-          },
-        );
+    } catch (error) {
+      if (error is RenameBatchPersistenceException) record = error.record;
+      _log.warn('operation failed', error);
+      if (!_isDisposed) {
+        _ref.read(errorProvider).addError('Rename failed: $error');
       }
-      if (refreshAfter) {
-        applyFileListChanges({
-          src: file.copyWith(name: newName, path: computedNewPath),
-        }, origin: origin);
-        await refresh();
-      }
-    } catch (e) {
-      _log.warn('operation failed', e);
-      _ref.read(errorProvider).addError('Rename failed: $e');
       await audit.logError(
         operation: AuditOperation.rename,
-        sourcePath: src,
+        sourcePath: sourcePath,
         targetPath: newName,
         provider: providerName,
-        error: e.toString(),
+        error: error.toString(),
       );
       if (rethrowErrors) rethrow;
+    } finally {
+      final completed = record;
+      final captured = origin;
+      final capturedStorage = storage;
+      if (completed != null && captured != null && capturedStorage != null) {
+        if (recordHistory && completed.canRestore) {
+          history.record(
+            type: ActionType.rename,
+            originalPath: sourcePath,
+            newPath: completed.items.single.targetPath,
+            provider: providerName,
+            metadata: {
+              'oldName': file.name,
+              'newName': newName,
+              'renameBatchId': completed.id,
+              'storage': captured.storageReference.toJson(),
+            },
+            isCurrent: () => captured.isCurrent,
+            undoAction: () async {
+              final latest = await service.store.read(completed.id);
+              if (latest == null) {
+                return const UndoResult.failure(
+                  'The rename recovery record is missing.',
+                );
+              }
+              final before = {
+                for (final item in latest.items)
+                  item.sourcePath: item.currentPath,
+              };
+              try {
+                await service.restore(latest, createRenameStorage(captured));
+                return latest.isRestored
+                    ? UndoResult.success(
+                        'Renamed $newName back to ${file.name}.',
+                      )
+                    : UndoResult.failure(
+                        latest.message ??
+                            'Restore stopped. Review rename history.',
+                      );
+              } finally {
+                if (captured.isCurrent) {
+                  await applyFileListChanges({
+                    for (final item in latest.items)
+                      if (before[item.sourcePath] != item.currentPath)
+                        before[item.sourcePath]!: item.asFile(
+                          capturedStorage.paths.basename(item.currentPath),
+                          storageId: latest.storage.id,
+                        ),
+                  }, origin: captured);
+                  await refresh();
+                }
+              }
+            },
+          );
+        }
+        if (refreshAfter && captured.isCurrent) {
+          await applyFileListChanges(
+            RenameBatchService.changes(completed),
+            origin: captured,
+          );
+          await refresh();
+        }
+      }
     }
   }
 
-  Future<void> createFolder(String name) async {
+  Future<void> createFolder(
+    String name, {
+    PanelFileOrigin? operationOrigin,
+    bool rethrowErrors = false,
+  }) async {
     final audit = _ref.read(auditServiceProvider);
     final actionHistory = _ref.read(actionHistoryProvider.notifier);
     var providerName = 'unknown';
     var folderPath = name;
     var createdPath = folderPath;
     try {
-      if (_showingSearchResults) {
+      if (operationOrigin == null && _showingSearchResults) {
         throw StateError('Open a real directory before creating a folder.');
       }
       if (name.isEmpty ||
@@ -3618,7 +5382,10 @@ class PanelNotifier extends ChangeNotifier {
           'Enter a folder name without path separators.',
         );
       }
-      final origin = captureCurrentOrigin();
+      final origin = operationOrigin ?? captureCurrentOrigin();
+      if (!origin.isCurrent) {
+        throw StateError('The original storage disconnected.');
+      }
       final backend = fileOperationBackend(
         source: origin.source,
         local: _localFileService,
@@ -3669,10 +5436,11 @@ class PanelNotifier extends ChangeNotifier {
       }
       await audit.logError(
         operation: AuditOperation.createFolder,
-        sourcePath: folderPath ?? name,
+        sourcePath: folderPath,
         provider: providerName,
         error: error.toString(),
       );
+      if (rethrowErrors) rethrow;
     }
   }
 
@@ -4046,6 +5814,10 @@ class PanelNotifier extends ChangeNotifier {
         for (final tab in List.of(_tabs)) {
           final snapshot = _fileListTabs[tab.id];
           if (snapshot == null) continue;
+          if (snapshot.collectionPageIndex != null) {
+            tab.collectionId = snapshot.collectionId;
+            continue;
+          }
           final id =
               snapshot.collectionId ?? tab.collectionId ?? const Uuid().v4();
           try {
@@ -4064,13 +5836,14 @@ class PanelNotifier extends ChangeNotifier {
               _collectionId = id;
             }
             _fileListTabs[tab.id] = _FileListSnapshot(
-              files: snapshot.files,
+              files: const [],
               title: snapshot.title,
               origin: snapshot.origin,
-              selection: snapshot.selection,
-              cursor: snapshot.cursor,
+              selection: const {},
+              cursor: null,
               collectionId: id,
               search: snapshot.search,
+              collectionPageIndex: 0,
             );
           } catch (error) {
             _log.warn('Could not persist unverified list tab', error);
@@ -4182,6 +5955,8 @@ class PanelNotifier extends ChangeNotifier {
     _tabs.remove(tab);
     _fileListTabs.remove(tabId);
     _selectionMemories.remove(tabId);
+    final remembered = _collectionSelectionMemories.remove(tabId);
+    if (remembered != null) _collectionSelectionMemoryBytes -= remembered.bytes;
     if (_activeTabId == tabId) {
       _leaveFileList();
       final newIdx = idx.clamp(0, _tabs.length - 1);
@@ -4194,6 +5969,7 @@ class PanelNotifier extends ChangeNotifier {
   Future<void> selectTab(String tabId) async {
     _log.debug('selectTab: $tabId');
     if (!_tabs.any((tab) => tab.id == tabId)) return;
+    if (_collectionMarks != null) await flushCollectionMarks();
     if (tabId != _activeTabId) {
       _departTab();
     } else {
@@ -4214,6 +5990,13 @@ class PanelNotifier extends ChangeNotifier {
     }
     final list = _fileListTabs[tabId];
     if (list != null) {
+      if (list.collectionPageIndex != null && list.collectionId != null) {
+        await openCollection(
+          list.collectionId!,
+          pageIndex: list.collectionPageIndex!,
+        );
+        return;
+      }
       _showingSearchResults = true;
       _fileListTitle = list.title;
       _fileListOrigin = list.origin;
@@ -4524,10 +6307,10 @@ class PanelNotifier extends ChangeNotifier {
     // This loader must never receive an archive's virtual path. If an archive
     // failed to open or a stale tab restored one, leave archive mode first.
     if (_archiveSource != null) {
-      final archivePath = _archiveSource!.archivePath;
-      _archiveSource = null;
-      _archiveOrigin = null;
-      _archiveBytes = null;
+      final archivePath =
+          _archiveFrames.firstOrNull?.source.archivePath ??
+          _archiveSource!.archivePath;
+      _clearArchiveState();
       if (side == PanelSide.local && archivePath.contains('/')) {
         _localPath = p.dirname(archivePath);
       }
@@ -4794,46 +6577,29 @@ class PanelNotifier extends ChangeNotifier {
     }
   }
 
-  /// Read one member of the currently opened archive for the internal viewer.
-  /// The archive is reopened metadata-only, so F3 works for files inside ZIP,
-  /// TAR, 7z and RAR archives that the panel is browsing.
+  /// Read the exact row in the current archive. A same-basename member from
+  /// another directory or a row retained from a previous archive is rejected.
   Future<Uint8List> readArchiveMember(
     FileItem file, {
     int maxBytes = kArchiveReadLimit,
   }) async {
-    final source = _archiveSource;
-    final bytes = _archiveBytes;
-    if (source == null ||
-        bytes == null ||
-        (_archiveOrigin != null && !_archiveOrigin!.isCurrent)) {
+    if (!_isCurrentArchiveRow(file) || file.isFolder || file.path == null) {
       throw const ArchiveViewException(
-        'This archive is no longer open. Return to the archive and try again.',
+        'This archive row is no longer current. Reopen it.',
       );
     }
-
-    ViewerArchive? archive;
-    try {
-      archive = await openViewerArchive(bytes, name: source.archivePath);
-      final wanted = (file.path ?? file.name);
-      String normalise(String name) =>
-          name.startsWith('./') ? name.substring(2) : name;
-      ViewerArchiveMember? match;
-      for (final member in archive.members) {
-        final name = normalise(member.name);
-        if (name == wanted || name == file.name) {
-          match = member;
-          break;
-        }
-      }
-      if (match == null || !match.isFile) {
-        throw ArchiveViewException(
-          'Could not find "${file.name}" inside ${source.archiveName}.',
-        );
-      }
-      return await archive.readMember(match, maxBytes: maxBytes);
-    } finally {
-      await archive?.close();
+    final frame = _archiveFrames.last;
+    final generation = _listingGeneration;
+    final bytes = await frame.session.read(file.path!, maxBytes: maxBytes);
+    if (_isDisposed ||
+        generation != _listingGeneration ||
+        !identical(_archiveFrames.lastOrNull, frame) ||
+        !frame.session.isCurrent) {
+      throw const ArchiveViewException(
+        'The archive changed while reading this member.',
+      );
     }
+    return bytes;
   }
 
   /// Return keyboard focus to this panel's file list.
@@ -5086,7 +6852,11 @@ class PanelNotifier extends ChangeNotifier {
 
   @override
   void dispose() {
+    _saveDepartingCollectionMarks();
+    _collectionMarksTimer?.cancel();
+    _collectionQueryTimer?.cancel();
     _isDisposed = true;
+    _clearArchiveState();
     _typeaheadResetTimer?.cancel();
     _refreshDebounce?.cancel();
     _viewSaveDebounce?.cancel();
@@ -5099,6 +6869,16 @@ class FileListImportResult {
   const FileListImportResult({required this.loaded, required this.failures});
   final int loaded;
   final Map<String, String> failures;
+}
+
+class PathSelectionSource {
+  PathSelectionSource._(this._owner, this.origin, this._isCurrent);
+  final PanelNotifier _owner;
+  final PanelFileOrigin origin;
+  final bool Function() _isCurrent;
+  bool get isCurrent => _isCurrent();
+  String get label => _owner.storageDisplayName(origin.storageReference);
+  String get basePath => origin.source.currentPath;
 }
 
 class _SelectionMemoryEntry {
@@ -5122,6 +6902,7 @@ class _FileListSnapshot {
     required this.cursor,
     this.collectionId,
     this.search,
+    this.collectionPageIndex,
   });
   final List<FileItem> files;
   final String title;
@@ -5130,6 +6911,7 @@ class _FileListSnapshot {
   final FileItem? cursor;
   final String? collectionId;
   final CollectionSearch? search;
+  final int? collectionPageIndex;
 }
 
 final panelProvider = ChangeNotifierProvider.family<PanelNotifier, PanelSide>((
@@ -5143,4 +6925,11 @@ bool _isPermissionDenied(FileSystemException error) {
   if (error is PathAccessException) return true;
   final code = error.osError?.errorCode;
   return code == 1 || code == 13;
+}
+
+class _ArchivePanelFrame {
+  _ArchivePanelFrame(this.session, this.source, {this.returnCursor});
+  final ArchiveBrowserSession session;
+  ArchivePanelSource source;
+  final String? returnCursor;
 }

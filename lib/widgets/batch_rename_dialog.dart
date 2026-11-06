@@ -109,8 +109,7 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
     try {
       _origin = _panel.captureOperationOrigin(_files);
       if (_origin == null) {
-        _originError =
-            'These items no longer have a verified storage source. Refresh the panel.';
+        _originError = 'These items no longer have a verified storage source. Refresh the panel.';
       } else if (_origin!.source.isLocal && !kIsWeb) {
         _paths = p.context;
       }
@@ -1533,8 +1532,7 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
     final storage = _storage;
     if (origin == null || storage == null || !origin.isCurrent) {
       setState(
-        () => _originError =
-            'The storage source changed. Close this dialog and select the items again.',
+        () => _originError = 'The storage source changed. Close this dialog and select the items again.',
       );
       return;
     }
@@ -1577,8 +1575,7 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
       if (mounted) {
         setState(() {
           _executionErrors = error.problems;
-          _message =
-              'Nothing was renamed. Resolve the path errors shown in the preview.';
+          _message = 'Nothing was renamed. Resolve the path errors shown in the preview.';
         });
       }
     } on RenameBatchPersistenceException catch (error) {
@@ -1601,7 +1598,7 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
         }
         if (mounted) setState(() => _result = _resultFor(plan, record));
         if (origin.isCurrent) {
-          _panel.applyFileListChanges(
+          await _panel.applyFileListChanges(
             RenameBatchService.changes(record),
             origin: origin,
           );
@@ -1674,7 +1671,7 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                 );
         } finally {
           if (origin.isCurrent) {
-            panel.applyFileListChanges({
+            await panel.applyFileListChanges({
               for (final item in latest.items)
                 if (before[item.sourcePath] != item.currentPath)
                   before[item.sourcePath]!: item.asFile(
@@ -1722,7 +1719,7 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
       if (mounted) setState(() => _message = 'Restore stopped: $error');
     } finally {
       if (_origin?.isCurrent == true) {
-        _panel.applyFileListChanges({
+        await _panel.applyFileListChanges({
           for (final item in record.items)
             if (before[item.sourcePath] != item.currentPath)
               before[item.sourcePath]!: item.asFile(
@@ -1861,14 +1858,24 @@ class _RenamePresetNameDialogState extends State<_RenamePresetNameDialog> {
 }
 
 /// The tool also accepts one item, useful for testing a mask before a batch.
-void showBatchRenameDialog(
+Future<void> showBatchRenameDialog(
   BuildContext context,
   WidgetRef ref,
   PanelSide side,
   List<FileItem> files,
-) {
+) async {
   if (files.isEmpty) return;
-  showDialog<MultiRenameResult>(
+  try {
+    files = await ref.read(panelProvider(side)).prepareOperationFiles(files);
+  } catch (error) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('$error')));
+    }
+    return;
+  }
+  if (!context.mounted) return;
+  await showDialog<MultiRenameResult>(
     context: context,
     barrierDismissible: false,
     builder: (_) =>
