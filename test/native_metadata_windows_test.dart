@@ -152,31 +152,40 @@ void main() {
       expect(await File(target).readAsString(), 'verified copy');
     });
 
-    test('an explicit null DACL is not confused with an empty ACL', () async {
-      final file = await File(p.join(root.path, 'null-acl.txt'))
-          .writeAsString('public fixture');
-      final before = await backend.readMetadata(file.path);
-      addTearDown(
-        () =>
-            backend.writeMetadata(file.path, TransferMetadata(acl: before.acl)),
-      );
-      await backend.writeMetadata(
-        file.path,
-        const TransferMetadata(acl: 'windows-sddl-v1:D:PNO_ACCESS_CONTROL'),
-      );
-      final native = await backend.readMetadataFields(
-        file.path,
-        permissions: false,
-        modified: false,
-        accessed: false,
-        created: false,
-        ownership: false,
-        extendedAttributes: false,
-        windowsAttributes: false,
-      );
-      expect(native.acl, 'windows-sddl-v1:D:PNO_ACCESS_CONTROL');
-      expect(await file.readAsString(), 'public fixture');
-    });
+    for (final autoInherited in [false, true]) {
+      test('an explicit null DACL is not confused with an empty ACL'
+          '${autoInherited ? ' with automatic inheritance' : ''}', () async {
+        final file = await File(p.join(root.path, 'null-acl.txt'))
+            .writeAsString('public fixture');
+        final before = await backend.readMetadata(file.path);
+        addTearDown(
+          () => backend.writeMetadata(
+            file.path,
+            TransferMetadata(acl: before.acl),
+          ),
+        );
+        final acl =
+            'windows-sddl-v1:D:P${autoInherited ? 'AI' : ''}'
+            'NO_ACCESS_CONTROL';
+        await backend.writeMetadata(file.path, TransferMetadata(acl: acl));
+        final native = await backend.readMetadataFields(
+          file.path,
+          permissions: false,
+          modified: false,
+          accessed: false,
+          created: false,
+          ownership: false,
+          extendedAttributes: false,
+          windowsAttributes: false,
+        );
+        expect(native.acl, acl);
+        final external = await _inspect(file.path);
+        expect(external['nullDacl'], isTrue);
+        expect(external['protected'], isTrue);
+        expect((external['control'] as int) & 0x400, autoInherited ? 0x400 : 0);
+        expect(await file.readAsString(), 'public fixture');
+      });
+    }
 
     for (final autoInherited in [false, true]) {
       test('DACL protection and native ACEs survive write and independent read'
@@ -558,10 +567,17 @@ public static class CrispRawFileSecurity {
 }
 '@
 $acl = [CrispRawFileSecurity]::Read($env:CRISP_METADATA_TEST_PATH)
+$nullDacl = $null -eq $acl.DiscretionaryAcl
+$daclSddl = $null
+if (!$nullDacl) {
+  $daclSddl = $acl.GetSddlForm([Security.AccessControl.AccessControlSections]::Access)
+}
 [ordered]@{
   owner = $acl.Owner.Value
   group = $acl.Group.Value
-  dacl = $acl.GetSddlForm([Security.AccessControl.AccessControlSections]::Access)
+  dacl = $daclSddl
+  nullDacl = $nullDacl
+  control = [int]$acl.ControlFlags
   protected = ([int]$acl.ControlFlags -band 0x1000) -ne 0
   rules = @(foreach ($rule in $acl.DiscretionaryAcl) {
     [ordered]@{

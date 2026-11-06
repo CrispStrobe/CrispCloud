@@ -417,10 +417,11 @@ class _WindowsApi {
     if (dacl.pointer == nullptr) {
       // Null and empty ACLs have opposite meanings. The normal SDDL encoder
       // can reject a present null DACL; encode its explicit Windows 7+ token.
-      final protected =
-          descriptorControl(descriptor, path) & _daclProtected != 0;
+      final control = descriptorControl(descriptor, path);
       return '$_aclPrefix'
-          'D:${protected ? 'P' : ''}NO_ACCESS_CONTROL';
+          'D:${control & _daclProtected != 0 ? 'P' : ''}'
+          '${control & _daclAutoInherited != 0 ? 'AI' : ''}'
+          'NO_ACCESS_CONTROL';
     }
     final text = calloc<Pointer<Utf16>>();
     try {
