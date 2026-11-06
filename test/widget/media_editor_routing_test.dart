@@ -11,9 +11,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:re_editor/re_editor.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../support/workspace_fixture.dart';
+
 Future<void> _openFile(WidgetTester tester, FileItem file) async {
+  final harness = await WorkspaceTestHarness.create();
+  addTearDown(harness.dispose);
   await tester.pumpWidget(
-    ProviderScope(
+    UncontrolledProviderScope(
+      container: harness.container,
       child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
@@ -49,9 +54,15 @@ void main() {
         expect(find.byType(MediaEditorDialog), findsOneWidget);
         expect(find.byType(CodeEditor), findsNothing);
         expect(find.byType(TextField), findsNothing);
-        // Routing does not require a configured cloud login. This harness omits
-        // app startup providers, so opening fails safely before media decoding.
-        expect(find.text('Could not open media'), findsOneWidget);
+        // Routing does not require a cloud login for local files. These rows
+        // were not listed by the fixture, so source verification rejects them
+        // before media decoding.
+        expect(
+          find.text(
+            'Refresh this folder before editing. The file’s source could not be verified.',
+          ),
+          findsOneWidget,
+        );
         expect(find.textContaining('UnimplementedError'), findsNothing);
         await _unmount(tester);
       }
@@ -133,7 +144,13 @@ void main() {
       await _openFile(tester, FileItem(name: name, isFolder: false));
       expect(find.byType(MediaEditorDialog), findsNothing);
       expect(find.byType(CodeEditor), findsNothing);
-      expect(find.textContaining('Cannot open hex editor'), findsOneWidget);
+      expect(find.byType(HexFileEditorPage), findsNothing);
+      expect(
+        (tester.widget<SnackBar>(find.byType(SnackBar)).content as Text).data,
+        'Failed to load file: Refresh or reopen the original file before editing. '
+        'Its storage could not be verified.',
+      );
+      expect(tester.takeException(), isNull);
       await _unmount(tester);
     }
   }, variant: TargetPlatformVariant.only(TargetPlatform.linux));

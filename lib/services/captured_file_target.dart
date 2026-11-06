@@ -16,6 +16,17 @@ class FileTargetConflict implements Exception {
   String toString() => message;
 }
 
+/// A captured editor target exceeded its existing input or output budget.
+/// Keep the numeric limit so each editor can localize the presentation.
+class FileTargetTooLarge extends FileTargetConflict {
+  FileTargetTooLarge(this.limitBytes)
+    : super(
+        'This file exceeds the ${limitBytes ~/ (1024 * 1024)} MiB editing limit.',
+      );
+
+  final int limitBytes;
+}
+
 /// Shared editor target with captured storage, fresh reads and content checks.
 /// The established PDF/image store supplies the staged-write/conflict contract;
 /// the host sees format-neutral errors and never treats a download as a save.
@@ -87,9 +98,7 @@ class CapturedFileTarget {
         'The original storage account changed. Reopen this file.',
       );
     } on PdfFileTooLargeException catch (error) {
-      throw FileTargetConflict(
-        'This file exceeds the ${error.limitBytes ~/ (1024 * 1024)} MiB editing limit.',
-      );
+      throw FileTargetTooLarge(error.limitBytes);
     }
   }
 }

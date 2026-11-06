@@ -207,6 +207,7 @@ void main() {
       cloud.objectIds['/collection/replaced.txt'] = 'new-replaced-object';
       await right.refreshCollectionItems();
       expect(right.isPagedCollection, isFalse);
+      expect(right.currentPath, '/collection');
       expect(right.collectionReplacements.map((row) => row.name), [
         'replaced.txt',
       ]);
@@ -215,6 +216,7 @@ void main() {
       expect(await left.swapViewWith(right), isTrue);
       expect(left.showingSearchResults, isTrue);
       expect(left.isPagedCollection, isFalse);
+      expect(left.currentPath, '/collection');
       expect(left.collectionReplacements.map((row) => row.name), [
         'replaced.txt',
       ]);
@@ -237,6 +239,7 @@ void main() {
       // unavailable original intentionally has no live operation origin.
       await left.refreshCollectionItems();
       expect(left.activeTab!.collectionId, originalCollection);
+      expect(left.currentPath, '/collection');
       final savedId = await left.saveCurrentCollection(
         'After swapping panes',
         createNew: true,
@@ -254,6 +257,18 @@ void main() {
       expect(byName['replaced.txt']!.replacement, isTrue);
       expect(byName['replaced.txt']!.reference.objectId, 'original-replaced');
       expect(saved.selectedKeys, {byName['kept.txt']!.key});
+
+      // Saving reopens this as a paged collection. Its return location still
+      // names the containing directory, never the first saved member's path.
+      expect(left.currentPath, '/collection');
+      await left.clearSearchResults();
+      expect(left.showingSearchResults, isFalse);
+      expect(left.currentPath, '/collection');
+      expect(left.captureCurrentOrigin().source.currentPath, '/collection');
+      expect(
+        left.files!.where((row) => !row.isFolder).map((row) => row.name),
+        unorderedEquals(['kept.txt', 'replaced.txt']),
+      );
     },
   );
 

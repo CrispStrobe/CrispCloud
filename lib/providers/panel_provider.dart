@@ -1695,6 +1695,21 @@ class PanelNotifier extends ChangeNotifier {
     updatedAt: file.updatedAt,
   );
 
+  PanelFileOrigin? _resolveCollectionDirectory(
+    StorageReference storage,
+    String memberPath, {
+    CollectionSearch? search,
+  }) {
+    final paths = storage.isLocal && !kIsWeb ? p.context : p.posix;
+    final previous = _fileListOrigin;
+    final directory = search?.storage == storage
+        ? search!.directory
+        : previous?.storageReference == storage
+        ? previous!.source.currentPath
+        : paths.dirname(memberPath);
+    return resolveStorageReference(storage, directory);
+  }
+
   Future<void> _displayCollectionWindow(
     CollectionQueryWindow window, {
     required bool Function() cancelled,
@@ -1719,7 +1734,11 @@ class PanelNotifier extends ChangeNotifier {
     final backends = <String, FileOperationBackend>{};
     FileOperationBackend? resolve(StorageReference storage, String path) {
       if (backends.containsKey(storage.id)) return backends[storage.id];
-      final origin = resolveStorageReference(storage, path);
+      final origin = _resolveCollectionDirectory(
+        storage,
+        path,
+        search: window.manifest.search,
+      );
       if (origin == null) return null;
       origins[storage.id] = origin;
       return backends[storage.id] = fileOperationBackend(
@@ -1982,7 +2001,11 @@ class PanelNotifier extends ChangeNotifier {
     final backends = <String, FileOperationBackend>{};
     FileOperationBackend? resolve(StorageReference storage, String path) {
       if (backends.containsKey(storage.id)) return backends[storage.id];
-      final origin = resolveStorageReference(storage, path);
+      final origin = _resolveCollectionDirectory(
+        storage,
+        path,
+        search: session.manifest.search,
+      );
       if (origin == null) return null;
       return backends[storage.id] = fileOperationBackend(
         source: origin.source,
@@ -2092,15 +2115,11 @@ class PanelNotifier extends ChangeNotifier {
     final backends = <String, FileOperationBackend>{};
     FileOperationBackend? resolve(StorageReference storage, String path) {
       if (backends.containsKey(storage.id)) return backends[storage.id];
-      final paths = storage.isLocal && !kIsWeb ? p.context : p.posix;
-      final search = collection.search;
-      final previous = _fileListOrigin;
-      final directory = search?.storage == storage
-          ? search!.directory
-          : previous?.storageReference == storage
-          ? previous!.source.currentPath
-          : paths.dirname(path);
-      final origin = resolveStorageReference(storage, directory);
+      final origin = _resolveCollectionDirectory(
+        storage,
+        path,
+        search: collection.search,
+      );
       if (origin == null) return null;
       sources[storage.id] = origin;
       return backends[storage.id] = fileOperationBackend(

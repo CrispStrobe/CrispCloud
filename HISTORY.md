@@ -11,6 +11,10 @@ Audit trail of bugs found, issues discovered, and fixes applied.
   and byte-history/search fixes. Text/hex handoffs retain one captured backend
   and path through the complete session, including after saves replace object
   IDs. Closing/switching waits for accepted edits and saves before prompting.
+  A deterministic Android/iOS rapid-disposal regression exposed the upstream
+  text editor's untracked cursor callback. Vendored the exact MIT-licensed
+  re_editor 0.10.0 runtime with one tracked-timer cancellation patch and source
+  provenance; blocked late loads from re-focusing a closing editor.
 - Unified keyboard/toolbar panel swaps into a source transaction with fresh
   listing verification, per-row file-list origins and archive session ownership.
   Preserved modern source-bound rename, sync, recovery, collections and editors

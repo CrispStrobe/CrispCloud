@@ -176,6 +176,10 @@ dev_dependencies:
   covfuzz: ^0.1.1
 
 dependency_overrides:
+  # MIT 0.10.0 runtime with cancellable mobile cursor reveal on disposal.
+  # Source provenance and the narrow patch are in packages/re_editor/UPSTREAM.md.
+  re_editor:
+    path: packages/re_editor
   # Reviewed MIT 3.0.0 runtime; omit native subprocess assets on mobile.
   # See packages/flutter_pty2/UPSTREAM.md for the two desktop-only guards.
   flutter_pty2:

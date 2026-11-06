@@ -7,6 +7,7 @@ on:
     branches: [main]
     paths:
       - 'packages/madedit2_hex/**'
+      - 'packages/re_editor/**'
       - 'tool/verify_hex_vendor.py'
       - 'lib/services/editor_document*'
       - 'lib/services/captured_file_target.dart'
@@ -88,6 +89,7 @@ jobs:
           test/hex_editor_page_test.dart
           test/hex_file_session_test.dart
           test/editor_document_test.dart
+          test/code_editor_widget_test.dart
           test/widget/editor_handoff_test.dart
 
   desktop-contracts:
@@ -123,5 +125,6 @@ jobs:
           test/hex_file_session_test.dart
           test/editor_document_test.dart
           test/editor_save_coordinator_test.dart
+          test/code_editor_widget_test.dart
           test/hex_editor_page_test.dart
           test/widget/editor_handoff_test.dart

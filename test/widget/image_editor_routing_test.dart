@@ -8,10 +8,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:re_editor/re_editor.dart';
+
+import '../support/workspace_fixture.dart';
 
 Future<void> _openFile(WidgetTester tester, FileItem file) async {
+  final harness = await WorkspaceTestHarness.create();
+  addTearDown(harness.dispose);
   await tester.pumpWidget(
-    ProviderScope(
+    UncontrolledProviderScope(
+      container: harness.container,
       child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
@@ -82,7 +88,14 @@ void main() {
     await _openFile(tester, FileItem(name: 'drawing.svg', isFolder: false));
 
     expect(find.byType(ImageEditorDialog), findsNothing);
-    expect(find.textContaining('Cannot open hex editor'), findsOneWidget);
+    expect(find.byType(HexFileEditorPage), findsNothing);
+    expect(find.byType(CodeEditor), findsNothing);
+    expect(
+      (tester.widget<SnackBar>(find.byType(SnackBar)).content as Text).data,
+      'Failed to load file: Refresh or reopen the original file before editing. '
+      'Its storage could not be verified.',
+    );
+    expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });
 

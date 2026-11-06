@@ -402,6 +402,10 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
 
   Future<void> _leaveEditor([EditorKind? next]) async {
     if (_closing || (next != null && _loading)) return;
+    // Stop input before waiting for saves or a confirmation. A late file load
+    // must not reopen the keyboard while this route is leaving.
+    _focusNode.canRequestFocus = false;
+    _focusNode.unfocus();
     setState(() => _closing = true);
     _autoSaveTimer?.cancel();
     _publishMenu();
@@ -418,8 +422,10 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
       });
     } finally {
       if (mounted && !_canPop) {
+        _focusNode.canRequestFocus = true;
         setState(() => _closing = false);
         _publishMenu();
+        if (!_loading) _focusNode.requestFocus();
         if (_isModified) _scheduleAutoSave();
       }
     }
@@ -525,6 +531,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
   }
 
   Future<void> _loadFile({EditorEncoding? encodingOverride}) async {
+    if (_closing) return;
     _log.debug(
       'loadFile: ${widget.file.name} side=${widget.side.name} web=$kIsWeb',
     );
@@ -534,7 +541,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     // dirty based on the previous document's revision.
     if (_saveState.isSaving) {
       await _saveState.idle;
-      if (!mounted) return;
+      if (!mounted || _closing) return;
     }
     setState(() {
       _loading = true;
@@ -544,7 +551,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     try {
       final bytes = await widget.target.load();
 
-      if (!mounted) return;
+      if (!mounted || _canPop) return;
 
       final document = EditorDocument.decode(bytes, encoding: encodingOverride);
       _applyDocument(document, bytes);
@@ -554,10 +561,10 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
         _conflictDetected = false;
       });
       _publishMenu();
-      _focusNode.requestFocus();
+      if (!_closing) _focusNode.requestFocus();
     } catch (e) {
       _log.warn('operation failed', e);
-      if (!mounted) return;
+      if (!mounted || _canPop) return;
       setState(() {
         _error = FileEditorStrings(context)
             .value('loadError', localizedProviderError(context, e));
@@ -740,8 +747,9 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     final document = _document;
     if (document == null ||
         (document.lineEnding == lineEnding &&
-            document.lineEndingPolicy == EditorLineEndingPolicy.normalize))
+            document.lineEndingPolicy == EditorLineEndingPolicy.normalize)) {
       return;
+    }
     setState(() => _document = document.copyWith(lineEnding: lineEnding));
     _saveState.markChanged();
     _scheduleAutoSave();
@@ -796,8 +804,9 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
         ],
       ),
     );
-    if (encoding != null && mounted)
+    if (encoding != null && mounted) {
       await _loadFile(encodingOverride: encoding);
+    }
   }
 
   void _toggleHighlighting() {
