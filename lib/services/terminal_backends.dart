@@ -7,16 +7,23 @@ import 'sandbox_shell_connection.dart';
 import 'ssh_terminal_service.dart';
 import 'terminal_connection.dart';
 
+typedef HostShellStarter = Future<local.ShellProcess?> Function(
+  String directory, {
+  int columns,
+  int rows,
+});
+
 Future<TerminalConnection> openLocalTerminal(
   String directory,
   int columns,
-  int rows,
-) async {
+  int rows, {
+  HostShellStarter? startHostShell,
+}) async {
   Object? hostFailure;
   final appStore = isMacAppStoreBuild();
   if (!appStore) {
     try {
-      final process = await local.startShell(
+      final process = await (startHostShell ?? local.startShell)(
         directory,
         columns: columns,
         rows: rows,
