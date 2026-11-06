@@ -7,11 +7,14 @@ on:
     branches: [main]
     paths:
       - 'packages/madedit2_hex/**'
-      - 'lib/services/editor_document.dart'
+      - 'lib/services/editor_document*'
       - 'lib/services/hex_*'
+      - 'lib/services/file_operation*'
+      - 'lib/services/transfer_spool*'
       - 'lib/widgets/*editor*'
       - 'test/*editor*'
       - 'test/hex_*'
+      - 'pubspec.*'
       - '.github/workflows/hex-editor.yml'
   workflow_dispatch:
 
@@ -29,7 +32,7 @@ env:
 jobs:
   contracts:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
         with:
@@ -59,10 +62,49 @@ jobs:
           flutter test --reporter expanded
       - name: Resolve application dependencies
         run: flutter pub get
-      - name: Text document and save regression tests
+      - name: Text document and native hex save regression tests
         run: >-
           flutter test --reporter expanded --concurrency=2
           test/editor_document_test.dart
           test/editor_save_coordinator_test.dart
           test/code_editor_widget_test.dart
           test/code_editor_status_bar_test.dart
+          test/hex_file_session_test.dart
+      - name: Browser hex editor save, conflict and close tests
+        run: >-
+          flutter test --platform=chrome --reporter expanded --concurrency=1
+          test/hex_editor_page_test.dart
+          test/hex_file_session_test.dart
+          test/editor_document_test.dart
+
+  desktop-contracts:
+    name: Native contracts (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-14]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - name: Resolve isolated hex package
+        working-directory: packages/madedit2_hex
+        run: flutter pub get
+      - name: Test native hex controller and byte model
+        working-directory: packages/madedit2_hex
+        run: flutter test --reporter expanded
+      - name: Resolve application dependencies
+        run: flutter pub get
+      - name: Test native snapshot storage, encoding and line endings
+        run: >-
+          flutter test --reporter expanded --concurrency=2
+          test/hex_file_session_test.dart
+          test/editor_document_test.dart
+          test/editor_save_coordinator_test.dart
