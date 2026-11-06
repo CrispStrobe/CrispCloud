@@ -262,6 +262,8 @@ class _RecordingConnection implements TerminalConnection {
 
   final TerminalConnection _connection;
   @override
+  bool get isSandbox => _connection.isSandbox;
+  @override
   final Stream<String> output;
   @override
   Future<int?> get exitCode => _connection.exitCode;

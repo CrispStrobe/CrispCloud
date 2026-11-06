@@ -50,18 +50,34 @@ listed on a dependency's package page.
 
 | Platform | Local shell | SSH shell |
 | --- | --- | --- |
-| Linux desktop | Unix PTY with the user's available shell | Direct SSH TCP connection |
-| macOS desktop | Unix PTY when allowed by the app sandbox and OS | Direct SSH TCP connection |
-| Windows desktop | ConPTY with the available Windows command shell | Direct SSH TCP connection |
-| Android | Not offered | Direct SSH TCP connection |
-| iOS | Not offered | Direct SSH TCP connection |
-| Web/PWA | Unavailable | SSH through an explicitly configured secure WebSocket gateway |
+| Linux desktop | Unix PTY with the user's available shell; built-in shell if the PTY is denied | Direct SSH TCP connection |
+| macOS desktop | Unix PTY in an unsandboxed build; built-in sandbox shell in the App Store build | Direct SSH TCP connection |
+| Windows desktop | ConPTY with the available Windows command shell; built-in shell if ConPTY fails | Direct SSH TCP connection |
+| Android | Built-in sandbox shell (no host process) | Direct SSH TCP connection |
+| iOS | Built-in sandbox shell (no host process) | Direct SSH TCP connection |
+| Web/PWA | Built-in in-memory shell | SSH through an explicitly configured secure WebSocket gateway |
 
-The app does not bypass macOS sandbox restrictions. A denied local process
-launch reports the error and offers SSH. Simulator support in an upstream PTY
-package is not evidence that arbitrary local shells work on physical iOS
-devices. Although `flutter_pty2` also contains Android/iOS paths, CrispCloud
-intentionally enables local processes only on desktop.
+The built-in shell is the normal local terminal wherever an App Sandbox, mobile
+OS or browser forbids spawning a host shell. It is implemented in Dart over a
+small filesystem boundary (`sandbox_shell_fs.dart`), never launches a process
+and therefore does not weaken App Sandbox or App Store review. On desktop the
+real PTY is still preferred; if `forkpty`/`tcsetattr` is denied, the terminal
+falls back to the built-in shell instead of failing. The status line says
+"Sandbox shell" so the distinction is visible.
+
+The built-in shell supports navigation and file inspection (`pwd`, `cd`, `ls`,
+`cat`, `head`, `tail`, `wc`, `grep`, `find`, `stat`, `file`, `xxd`/`hexdump`),
+file operations (`mkdir`, `touch`, `rm`, `cp`, `mv`), shell utilities (`echo`,
+`export`, `unset`, `env`, `date`, `whoami`, `uname`, `history`, `clear`,
+`which`, `exit`) and simple pipelines/redirection. `file` reports UTF-8 BOM,
+UTF-16 and LF/CRLF/mixed line endings, and `xxd` exposes raw bytes. External
+programs, `sudo` and background jobs are intentionally unavailable; use SSH for
+a full remote shell or an unsandboxed desktop build for the host PTY.
+
+Simulator support in an upstream PTY package is not evidence that arbitrary
+local shells work on physical iOS devices. Although `flutter_pty2` also contains
+Android/iOS paths, CrispCloud intentionally enables host processes only on
+desktop.
 
 Browsers cannot open raw SSH TCP connections. The browser connection dialog
 therefore requires the user's own `wss://` gateway URL, using the existing

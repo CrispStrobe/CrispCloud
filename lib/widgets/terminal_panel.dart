@@ -106,7 +106,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     _attachSession(widget.session);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      if (_ownsSession && _desktop) {
+      if (_ownsSession) {
         unawaited(_startLocal());
       } else {
         _focusIfVisible();
@@ -159,7 +159,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
       _detachTitleHandler();
       if (_ownsSession) _session.dispose();
       _attachSession(widget.session);
-      if (_ownsSession && _desktop) {
+      if (_ownsSession) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) unawaited(_startLocal());
         });
@@ -231,7 +231,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   }
 
   Future<void> _startLocal() async {
-    if (!mounted || !_desktop) return;
+    if (!mounted) return;
     final directory = ref.read(panelProvider(PanelSide.local)).currentPath;
     final connecting = _session.connect(
       (columns, rows) => openLocalTerminal(directory, columns, rows),
@@ -398,7 +398,10 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   String _statusText() => switch (_session.status) {
     TerminalSessionStatus.idle => context.terminalTr('Terminal'),
     TerminalSessionStatus.connecting => context.terminalTr('Connecting…'),
-    TerminalSessionStatus.connected => context.terminalTr('Connected'),
+    TerminalSessionStatus.connected =>
+      _session.isSandbox
+          ? context.terminalTr('Sandbox shell')
+          : context.terminalTr('Connected'),
     TerminalSessionStatus.disconnected => context.terminalTr('Disconnected'),
     TerminalSessionStatus.waitingForExit => context.terminalTr(
       'Waiting for exit…',
@@ -413,25 +416,18 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     final error = _session.error;
     if (error != null) {
       final detail = error.toString();
-      if (_session.kind == TerminalSessionKind.local &&
-          (detail.toLowerCase().contains('sandbox') ||
-              detail.toLowerCase().contains('operation not permitted'))) {
-        return '${context.terminalTr('This build cannot launch a local shell. Use SSH or an unsandboxed desktop build.')}\n$detail';
-      }
       final heading = _session.kind == TerminalSessionKind.ssh
           ? 'SSH connection failed'
+          : _session.kind == TerminalSessionKind.sandbox
+          ? 'Built-in shell failed to start'
           : 'Shell failed to start';
       return '${context.terminalTr(heading)}: $detail';
     }
     if (kIsWeb && _session.status == TerminalSessionStatus.idle) {
-      return context.terminalTr(
-        'Connect via SSH using your secure WebSocket gateway. Local shells are available in the desktop app.',
-      );
+      return context.terminalTr('Starting the built-in browser shell…');
     }
     if (_mobile && _session.status == TerminalSessionStatus.idle) {
-      return context.terminalTr(
-        'Connect via SSH to use a terminal on this device.',
-      );
+      return context.terminalTr('Starting the built-in shell…');
     }
     return null;
   }
@@ -455,7 +451,13 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     final theme = Theme.of(context);
     final connectionLabel =
         _session.label ??
-        context.terminalTr(_desktop ? 'Local shell' : 'Terminal');
+        context.terminalTr(
+          _session.kind == TerminalSessionKind.sandbox
+              ? 'Built-in shell'
+              : _desktop
+              ? 'Local shell'
+              : 'Terminal',
+        );
     // The remote OSC title supplements the trusted endpoint label. It must
     // never replace the host identity shown by the connection UI.
     final title = _title?.isNotEmpty == true
@@ -510,18 +512,23 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                   tooltip: context.terminalTr('Terminal actions'),
                   onSelected: _performAction,
                   itemBuilder: (_) => [
-                    if (_desktop)
-                      PopupMenuItem(
-                        value: _PanelAction.local,
-                        child: Text(
-                          context.terminalTr(
-                            _session.kind == TerminalSessionKind.local &&
+                    PopupMenuItem(
+                      value: _PanelAction.local,
+                      child: Text(
+                        context.terminalTr(
+                          _session.kind == TerminalSessionKind.sandbox
+                              ? _canDisconnect
+                                    ? 'Restart built-in shell'
+                                    : 'Start built-in shell'
+                              : _session.kind == TerminalSessionKind.local &&
                                     _canDisconnect
-                                ? 'Restart local shell'
-                                : 'Start local shell',
-                          ),
+                              ? 'Restart local shell'
+                              : _desktop
+                              ? 'Start local shell'
+                              : 'Start built-in shell',
                         ),
                       ),
+                    ),
                     PopupMenuItem(
                       value: _PanelAction.copy,
                       enabled: _canCopy,

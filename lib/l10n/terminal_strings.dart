@@ -11,8 +11,17 @@ extension TerminalStrings on BuildContext {
 const _de = <String, String>{
   'Terminal': 'Terminal',
   'Local shell': 'Lokale Shell',
+  'Built-in shell': 'Integrierte Shell',
+  'Sandbox shell': 'Sandbox-Shell',
   'Start local shell': 'Lokale Shell starten',
   'Restart local shell': 'Lokale Shell neu starten',
+  'Start built-in shell': 'Integrierte Shell starten',
+  'Restart built-in shell': 'Integrierte Shell neu starten',
+  'Built-in shell failed to start':
+      'Integrierte Shell konnte nicht gestartet werden',
+  'Starting the built-in browser shell…':
+      'Integrierte Browser-Shell wird gestartet…',
+  'Starting the built-in shell…': 'Integrierte Shell wird gestartet…',
   'Connect via SSH': 'Über SSH verbinden',
   'Connecting…': 'Verbindung wird hergestellt…',
   'Connected': 'Verbunden',
