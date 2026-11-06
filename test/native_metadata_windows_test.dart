@@ -178,13 +178,31 @@ void main() {
       expect(await file.readAsString(), 'public fixture');
     });
 
-    test(
-      'DACL protection and native ACEs survive write and independent read',
-      () async {
+    for (final autoInherited in [false, true]) {
+      test('DACL protection and native ACEs survive write and independent read'
+          '${autoInherited ? ' with auto-inherited ACEs' : ''}', () async {
         final file = await File(p.join(root.path, 'acl.txt'))
             .writeAsString('acl data');
+        if (autoInherited) {
+          await _powershell(file.path, r'''
+$item = Get-Item -Force -LiteralPath $env:CRISP_METADATA_TEST_PATH
+$acl = $item.GetAccessControl()
+$acl.SetAccessRuleProtection($false, $false)
+$item.SetAccessControl($acl)
+''');
+        }
         final before = await backend.readMetadata(file.path);
         final original = await _inspect(file.path);
+        expect(before.acl, 'windows-sddl-v1:${original['dacl']}');
+        if (autoInherited) {
+          expect(original['dacl'], contains('AI'));
+          expect(
+            (original['rules'] as List).where(
+              (dynamic rule) => (rule['flags'] as int) & 0x10 != 0,
+            ),
+            isNotEmpty,
+          );
+        }
         addTearDown(
           () => backend.writeMetadata(
             file.path,
@@ -232,8 +250,8 @@ void main() {
         final restored = await _inspect(file.path);
         expect(restored['protected'], original['protected']);
         expect(restored['dacl'], original['dacl']);
-      },
-    );
+      });
+    }
 
     test(
       'a directory ACL edit does not rewrite existing descendant ACLs',

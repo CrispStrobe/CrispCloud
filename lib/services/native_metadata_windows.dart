@@ -13,6 +13,7 @@ import 'storage_transfer_contract.dart';
 // https://learn.microsoft.com/windows/win32/api/winbase/ns-winbase-file_basic_info
 // https://learn.microsoft.com/windows/win32/api/fileapi/nf-fileapi-createfilew
 // https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntsetsecurityobject
+// https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntquerysecurityobject
 const _readControl = 0x00020000;
 const _writeDac = 0x00040000;
 const _writeOwner = 0x00080000;
@@ -75,25 +76,19 @@ typedef _BasicN = Int32 Function(IntPtr, Int32, Pointer<Void>, Uint32);
 typedef _BasicD = int Function(int, int, Pointer<Void>, int);
 typedef _FreeN = Pointer<Void> Function(Pointer<Void>);
 typedef _FreeD = Pointer<Void> Function(Pointer<Void>);
-typedef _GetSecurityN = Uint32 Function(
+typedef _QuerySecurityN = Int32 Function(
   IntPtr,
-  Int32,
   Uint32,
-  Pointer<Pointer<Void>>,
-  Pointer<Pointer<Void>>,
-  Pointer<Pointer<Void>>,
-  Pointer<Pointer<Void>>,
-  Pointer<Pointer<Void>>,
+  Pointer<Void>,
+  Uint32,
+  Pointer<Uint32>,
 );
-typedef _GetSecurityD = int Function(
+typedef _QuerySecurityD = int Function(
   int,
   int,
+  Pointer<Void>,
   int,
-  Pointer<Pointer<Void>>,
-  Pointer<Pointer<Void>>,
-  Pointer<Pointer<Void>>,
-  Pointer<Pointer<Void>>,
-  Pointer<Pointer<Void>>,
+  Pointer<Uint32>,
 );
 typedef _SetSecurityN = Uint32 Function(
   IntPtr,
@@ -204,6 +199,13 @@ class _WindowsApi {
         OSError('Windows metadata operation failed', code ?? lastError),
       );
 
+  Never failStatus(String operation, String path, int status) {
+    final code = native.lookupFunction<_StatusErrorN, _StatusErrorD>(
+      'RtlNtStatusToDosError',
+    )(status);
+    fail(operation, path, code);
+  }
+
   void free(Pointer pointer) {
     if (pointer != nullptr) {
       kernel.lookupFunction<_FreeN, _FreeD>('LocalFree')(pointer.cast());
@@ -274,6 +276,90 @@ class _WindowsApi {
     } finally {
       free(text.value);
       calloc.free(text);
+    }
+  }
+
+  T withSecurityDescriptor<T>(
+    int handle,
+    String path,
+    int information,
+    T Function(Pointer<Void>) action,
+  ) {
+    // GetSecurityInfo's inheritance-aware view can synthesize inherited ACE
+    // and protection flags from the current parent. Preserving that view
+    // would change the stored descriptor on restoration. Query the descriptor
+    // itself from the already checked handle instead.
+    final query = native.lookupFunction<_QuerySecurityN, _QuerySecurityD>(
+      'NtQuerySecurityObject',
+    );
+    final needed = calloc<Uint32>();
+    Pointer<Uint8> descriptor = nullptr;
+    var length = 0;
+    try {
+      for (var attempt = 0; attempt < 4; attempt++) {
+        final status = query(
+          handle,
+          information,
+          descriptor.cast(),
+          length,
+          needed,
+        );
+        if (status >= 0) {
+          if (descriptor == nullptr || needed.value > length) {
+            throw FileSystemException(
+              'An invalid security descriptor size was returned.',
+              path,
+            );
+          }
+          return action(descriptor.cast());
+        }
+        // STATUS_BUFFER_TOO_SMALL; a concurrent security edit may increase
+        // the size between the probe and read, so allow bounded retries.
+        if (status != -1073741789) {
+          failStatus('Cannot read file security', path, status);
+        }
+        final next = needed.value;
+        if (next <= length || next > 1024 * 1024) {
+          throw FileSystemException(
+            'The file security descriptor size is unsupported.',
+            path,
+          );
+        }
+        calloc.free(descriptor);
+        descriptor = nullptr;
+        length = next;
+        descriptor = calloc<Uint8>(length);
+      }
+      throw FileSystemException(
+        'The file security descriptor kept changing while it was read.',
+        path,
+      );
+    } finally {
+      calloc.free(descriptor);
+      calloc.free(needed);
+    }
+  }
+
+  String descriptorSidText(
+    Pointer<Void> descriptor,
+    String function,
+    String path,
+  ) {
+    final sid = calloc<Pointer<Void>>();
+    final defaulted = calloc<Int32>();
+    try {
+      if (security.lookupFunction<_DescriptorSidN, _DescriptorSidD>(function)(
+            descriptor,
+            sid,
+            defaulted,
+          ) ==
+          0) {
+        fail('Cannot inspect file ownership', path);
+      }
+      return sidText(sid.value, path);
+    } finally {
+      calloc.free(sid);
+      calloc.free(defaulted);
     }
   }
 
@@ -367,36 +453,27 @@ TransferMetadata readWindowsNativeMetadata(
     String? group;
     String? dacl;
     if (ownership || acl) {
-      final ownerPointer = calloc<Pointer<Void>>();
-      final groupPointer = calloc<Pointer<Void>>();
-      final descriptor = calloc<Pointer<Void>>();
-      try {
-        final code =
-            api.security.lookupFunction<_GetSecurityN, _GetSecurityD>(
-              'GetSecurityInfo',
-            )(
-              handle,
-              1,
-              (ownership ? _ownerInformation | _groupInformation : 0) |
-                  (acl ? _daclInformation : 0),
-              ownership ? ownerPointer : nullptr,
-              ownership ? groupPointer : nullptr,
-              nullptr,
-              nullptr,
+      api.withSecurityDescriptor(
+        handle,
+        path,
+        (ownership ? _ownerInformation | _groupInformation : 0) |
+            (acl ? _daclInformation : 0),
+        (descriptor) {
+          if (ownership) {
+            owner = api.descriptorSidText(
               descriptor,
+              'GetSecurityDescriptorOwner',
+              path,
             );
-        if (code != 0) api.fail('Cannot read file security', path, code);
-        if (ownership) {
-          owner = api.sidText(ownerPointer.value, path);
-          group = api.sidText(groupPointer.value, path);
-        }
-        if (acl) dacl = api.daclText(descriptor.value, path);
-      } finally {
-        api.free(descriptor.value);
-        calloc.free(descriptor);
-        calloc.free(ownerPointer);
-        calloc.free(groupPointer);
-      }
+            group = api.descriptorSidText(
+              descriptor,
+              'GetSecurityDescriptorGroup',
+              path,
+            );
+          }
+          if (acl) dacl = api.daclText(descriptor, path);
+        },
+      );
     }
     return TransferMetadata(
       owner: owner,
@@ -568,8 +645,7 @@ void writeWindowsNativeMetadata(String path, TransferMetadata metadata) {
         if (code != 0) api.fail('Cannot set file security', path, code);
       }
       if (descriptor != nullptr) {
-        // SetSecurityInfo applies directory inheritance to existing children,
-        // even with MAXIMUM_ALLOWED (which can protect their inherited ACEs).
+        // SetSecurityInfo can apply directory inheritance to existing children.
         // The documented user-mode native setter changes this checked object
         // only. No recursive ACL rewrite is part of a metadata patch.
         final protected =
@@ -586,10 +662,7 @@ void writeWindowsNativeMetadata(String path, TransferMetadata metadata) {
               descriptor,
             );
         if (status < 0) {
-          final code = api.native.lookupFunction<_StatusErrorN, _StatusErrorD>(
-            'RtlNtStatusToDosError',
-          )(status);
-          api.fail('Cannot set discretionary ACL', path, code);
+          api.failStatus('Cannot set discretionary ACL', path, status);
         }
       }
       if (writesBasic) {
