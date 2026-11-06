@@ -33,6 +33,8 @@ records the remaining acceptance work explicitly.
 | Text/binary comparison | Integrated per-side decoding, guarded merge and full binary-range navigation | BOM-less UTF-16/32, repeated CRLF saves, sparse difference index, all range navigation, cancellation, German/Arabic layout |
 | Background sync recovery | Integrated isolated leased journals and idempotent foreground discovery | Same-process isolate exclusion, process kill, import retry/receipt/compaction, successful and failed background tasks; OS checks in desktop CI |
 | Split/combine review | Complete effective manifest definition rechecked before destination writes | Same-path/same-size/mtime replacement blocked, harmless formatting accepted, explicit new review required |
+| Split/combine restart recovery | In progress: durable discovery, review and continuation of interrupted integrity jobs | Pending resumed-output identity, changed-source/part/account and lost-response scenarios |
+| Large saved collections | In progress: lazy/paged storage and loading with an aggregate resident-data bound | Existing identity/persistence tests; incremental multi-collection loading acceptance pending |
 | Legacy rename/New Folder routes | Integrated captured prompts and shared durable rename/Undo | Same-size replacements, original destination retained after navigation, account switch blocked, visible failure/retry and cancellable fingerprinting |
 | Final integration | In progress | Current-head analysis, deterministic app suite, focused platform tests and builds; earlier baseline CI is not evidence for new code |
 
@@ -82,6 +84,7 @@ for the validation scope and platform boundaries.
 - [x] Versioned operation records with completed/staged/failed/recovery states.
 - [x] Batch rename history, reverse preview and complete-batch undo.
 - [x] Named collections with original source identity and missing/offline states.
+- [ ] Incremental loading of large collections with bounded resident memory.
 - [x] Refresh collection items separately from rerunning saved search definitions.
 - [x] Saved tabs/bookmarks retain storage identity; selection save/restore.
 
@@ -102,7 +105,7 @@ for the validation scope and platform boundaries.
 - [x] Additional size/date/content decisions and filter templates.
 - [x] Native and provider-side exact-destination fast paths with completion checks.
 - [x] Safe empty-directory cleanup and empty-result exclusion.
-- [ ] Capability-based metadata, link, allocation and copy-on-write behavior.
+- [x] Capability-based metadata, link, allocation and copy-on-write behavior implemented; three-OS runtime acceptance tracked above.
 - [x] Separate data-copy and metadata-failure outcomes.
 
 ## 5. Recovery, queue and scale
@@ -124,6 +127,7 @@ for the validation scope and platform boundaries.
 - [x] Functional custom-command configuration/execution and extension lifecycle.
 - [x] Tab groups/locks, paired source-aware locations and column profiles.
 - [x] Checksum/split manifests, missing-part checks and cancellation.
+- [ ] Discoverable split/combine restart recovery with reviewed continuation.
 - [x] Keyboard/accessibility/localization completion for the added workflows.
 
 ## Acceptance scenarios

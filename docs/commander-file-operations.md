@@ -194,8 +194,23 @@ another isolate in the same process. App startup, resume and transfer history
 discover released logs. Imports retain account bindings, temporary paths and
 checkpoint states; durable receipts prevent duplicate recovery after retry or
 history compaction. An incomplete journal remains available for diagnosis.
-Background credential reconstruction currently supports FTP/FTPS and WebDAV;
-other providers continue through foreground sync or an available connected client.
+Mobile workers reconstruct authenticated FTP/FTPS and WebDAV sessions from the
+same secure credential maps as the foreground app. Each worker uses a private
+in-memory copy, so closing a connection or failing authentication cannot erase
+the foreground account's credentials. Saved endpoint/account bindings are still
+checked before synchronization. Missing credentials and providers without a
+background reconstruction implementation produce a failed task and a visible
+result; they are not silently counted as successful synchronization. Other
+providers continue through foreground sync or an available connected client.
+
+Android and iOS callbacks accept their actual registered task identifiers; the
+iOS headless engine registers the required plugins. The interval is a requested
+minimum, and the operating system controls execution. iOS applies the latest
+desired interval when its pending wake reschedules, including when an older
+request remains after a replacement submission was rejected internally by the
+plugin. A pending identifier proves that a wake exists, not that a replacement
+request was accepted. Reported scheduling/cancellation failures retain the
+previous setting and appear in the controls instead of toggling them optimistically.
 
 ## Reviewed bulk attributes
 
