@@ -133,6 +133,7 @@ void main() {
       'file_collections_dialog',
       'archive_workspace_dialog',
       'integrity_dialogs',
+      'integrity_recovery_dialog',
       'internal_viewer_dialog',
       'internal_viewer_views',
       'file_attributes_dialog',

@@ -13,9 +13,11 @@ import '../providers/panel_provider.dart';
 import '../providers/transfer_provider.dart';
 import '../services/file_operation_backend.dart';
 import '../services/file_operation_service.dart';
+import '../services/integrity_recovery_service.dart';
 import '../services/transfer_recovery_service.dart';
 import '../utils/formatters.dart' show formatBytes;
 import 'file_operation_conflict_dialog.dart';
+import 'integrity_recovery_dialog.dart';
 
 Future<void> showTransferHistoryDialog(
   BuildContext context,
@@ -123,6 +125,10 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
 
   Future<void> _review(TransferJobRecord job) async {
     if (_busy) return;
+    if (IntegrityRecoveryService.isIntegrityJob(job)) {
+      await showIntegrityRecoveryDialog(context, ref, jobId: job.id);
+      return;
+    }
     _control = FileOperationControl();
     setState(() {
       _selected = job.id;
@@ -175,6 +181,7 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
   }
 
   Future<void> _run(TransferJobRecord job) async {
+    if (IntegrityRecoveryService.isIntegrityJob(job)) return;
     final preview = _preview;
     final origin = _sourceOrigin;
     if (_busy || preview == null || origin == null) return;
@@ -223,7 +230,7 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
   }
 
   Future<void> _restoreBackup(TransferJobRecord job, int index) async {
-    if (_busy) return;
+    if (_busy || IntegrityRecoveryService.isIntegrityJob(job)) return;
     setState(() {
       _busy = true;
       _error = null;
@@ -289,6 +296,8 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
         jobs.where((job) => job.needsReview).firstOrNull ??
         jobs.firstOrNull;
     final live = job != null && transfers.isJobLive(job.id);
+    final integrity =
+        job != null && IntegrityRecoveryService.isIntegrityJob(job);
     final preview = _preview;
     final remainingIssues =
         preview?.issues.keys
@@ -341,7 +350,7 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
                     child: Center(
                       child: Text(
                         context.commanderTr(
-                          "Reviewed copy and move jobs appear here, including every file and its result.",
+                          "Saved operations and their recovery instructions appear here.",
                         ),
                       ),
                     ),
@@ -358,7 +367,7 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
                               isExpanded: true,
                               decoration: InputDecoration(
                                 labelText: context.commanderTr(
-                                  "Saved transfer",
+                                  "Saved operation",
                                 ),
                               ),
                               items: jobs
@@ -366,7 +375,7 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
                                     (saved) => DropdownMenuItem(
                                       value: saved.id,
                                       child: Text(
-                                        '${saved.created.toLocal().toString().split('.').first} · ${context.commanderEnum(saved.options.kind)} · ${saved.sourceLabel} → ${saved.destinationLabel} · ${context.commanderTr(transferStatusLabel(saved.status))}',
+                                        '${saved.created.toLocal().toString().split('.').first} · ${IntegrityRecoveryService.isIntegrityJob(saved) ? context.commanderTr("Split/combine") : context.commanderEnum(saved.options.kind)} · ${saved.sourceLabel} → ${saved.destinationLabel} · ${context.commanderTr(transferStatusLabel(saved.status))}',
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
@@ -402,14 +411,35 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
                               ),
                             if (live && !_running)
                               _notice(
-                                'This transfer is active in the queue. Pause or cancel it in the operations panel before reviewing recovery.',
+                                integrity
+                                    ? context.commanderTr(
+                                        'This split/combine operation is active. Cancel it in the dialog running it before reviewing recovery.',
+                                      )
+                                    : 'This transfer is active in the queue. Pause or cancel it in the operations panel before reviewing recovery.',
                               ),
                             if (job.message != null)
                               Text(
                                 job.message!,
                                 style: Theme.of(context).textTheme.bodySmall,
                               ),
-                            if (job.canRecover &&
+                            if (integrity &&
+                                job.canRecover &&
+                                job.ready &&
+                                !job.isFinished &&
+                                !live) ...[
+                              const SizedBox(height: 10),
+                              FilledButton.tonalIcon(
+                                onPressed: _busy ? null : () => _review(job),
+                                icon: const Icon(Icons.fact_check_outlined),
+                                label: Text(
+                                  context.commanderTr(
+                                    "Review split/combine recovery",
+                                  ),
+                                ),
+                              ),
+                            ],
+                            if (!integrity &&
+                                job.canRecover &&
                                 job.ready &&
                                 !job.isFinished &&
                                 !live) ...[
@@ -692,7 +722,8 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
               ],
             ),
           ),
-          if (backup != null &&
+          if (!IntegrityRecoveryService.isIntegrityJob(job) &&
+              backup != null &&
               saved.recovery['backupSha256'] != null &&
               saved.phase != 'backupRestored')
             TextButton(

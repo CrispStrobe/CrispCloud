@@ -53,6 +53,7 @@ import '../widgets/rename_history_dialog.dart';
 import '../widgets/trash_history_dialog.dart';
 import '../widgets/transfer_history_dialog.dart';
 import '../widgets/integrity_dialogs.dart';
+import '../widgets/integrity_recovery_dialog.dart';
 import '../widgets/directory_comparison_dialog.dart';
 import '../widgets/file_clipboard_actions.dart';
 import '../widgets/file_toolbar.dart' show showPanelFilterDialog;
@@ -474,6 +475,10 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                 _integritySelection(ref).single,
               )
             : null,
+      ),
+      PlatformMenuItem(
+        label: context.commanderTr("Split/combine recovery…"),
+        onSelected: () => showIntegrityRecoveryDialog(context, ref),
       ),
       PlatformMenuItem(
         label: context.commanderTr("Combine Parts..."),
@@ -1921,6 +1926,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             showTrashHistoryDialog(context, ref, ref.read(activePanelProvider));
           case 'transfer_history':
             showTransferHistoryDialog(context, ref);
+          case 'integrity_recovery':
+            showIntegrityRecoveryDialog(context, ref);
           case 'checksums':
             showChecksumToolsDialog(
               context,
@@ -2074,6 +2081,13 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           child: _overflowItem(
             Icons.splitscreen,
             context.commanderTr("Split file…"),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'integrity_recovery',
+          child: _overflowItem(
+            Icons.restore,
+            context.commanderTr("Split/combine recovery…"),
           ),
         ),
         PopupMenuItem(

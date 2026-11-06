@@ -30,6 +30,7 @@ import 'rename_history_dialog.dart';
 import 'trash_history_dialog.dart';
 import 'transfer_history_dialog.dart';
 import 'integrity_dialogs.dart';
+import 'integrity_recovery_dialog.dart';
 import 'directory_comparison_dialog.dart';
 import 'file_clipboard_actions.dart';
 import 'pdf_editor_dialog.dart';
@@ -296,6 +297,11 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
         icon: Icons.verified_outlined,
         action: () =>
             showChecksumToolsDialog(widget.parentContext, ref, side, pdfFiles),
+      ),
+      _Command(
+        name: context.commanderTr("Split/combine recovery"),
+        icon: Icons.restore,
+        action: () => showIntegrityRecoveryDialog(widget.parentContext, ref),
       ),
       if (pdfFiles.length == 1 && !pdfFiles.single.isFolder)
         _Command(

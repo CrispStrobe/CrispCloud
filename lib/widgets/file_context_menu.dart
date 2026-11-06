@@ -53,6 +53,7 @@ import 'file_name_dialog.dart';
 import 'file_clipboard_actions.dart';
 import 'archive_workspace_dialog.dart';
 import 'integrity_dialogs.dart';
+import 'integrity_recovery_dialog.dart';
 import '../services/file_operation_service.dart';
 import 'diff_viewer_dialog.dart' show showDiffViewerDialog;
 import 'file_editor_dialog.dart' show showFileEditorDialog;
@@ -189,6 +190,11 @@ void _showResultListContextMenu(
           context.commanderTr("Checksums…"),
           Icons.fingerprint,
           () => showChecksumToolsDialog(context, ref, side, files),
+        ),
+        command(
+          context.commanderTr("Split/combine recovery…"),
+          Icons.restore,
+          () => showIntegrityRecoveryDialog(context, ref),
         ),
         if (files.every((file) => isChecksumManifest(file.name)))
           command(
@@ -1425,6 +1431,13 @@ void showFileContextMenu(
         'Checksums…',
         Icons.fingerprint,
         () => showChecksumToolsDialog(context, ref, side, files),
+      ),
+    );
+    items.add(
+      integrityCommand(
+        'Split/combine recovery…',
+        Icons.restore,
+        () => showIntegrityRecoveryDialog(context, ref),
       ),
     );
     if (files.every((entry) => isChecksumManifest(entry.name))) {

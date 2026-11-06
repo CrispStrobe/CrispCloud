@@ -24,7 +24,7 @@ individual rename undo, rename cycles and basic copy dialogs are superseded.
 | File clipboard copy / cut / paste | Ctrl+C / Ctrl+X / Ctrl+V | Context menu, native clipboard where supported |
 | Import path list | Ctrl+Shift+L | More actions, Edit menu, palette, file-list controls |
 | Collections and rename/trash/transfer history | — | More actions, Edit menu, palette |
-| Checksums, split, combine | — | More actions, Edit menu, palette, context menus |
+| Checksums, split, combine and split/combine recovery | — | More actions, Edit menu, palette, context menus |
 | View / edit | F3 / F4 | Context menu |
 
 Shortcuts apply while the browser has focus. Relevant Ctrl commands also accept
@@ -349,6 +349,22 @@ operation. Legacy numbered parts require consent because no original checksum
 is available. A reviewed manifest's complete effective definition is checked
 again before writing, so an edited manifest cannot silently substitute parts;
 harmless JSON formatting changes remain acceptable.
+
+Split and combine save their reviewed definition and write intent before changing
+outputs. After interruption, **Split/combine recovery** is available from the
+keyboard palette, menus, the original operation dialog and saved operation
+history. It reconnects only to the original storage accounts and verifies source
+bytes, parts, manifests and existing outputs before offering continuation.
+Split resumes missing parts while retaining verified completed parts. An unfinished
+combine restarts from verified inputs into a new stage; a matching completed
+output can instead be recorded without another copy. A changed source, part,
+account, destination directory or unreviewed file at an output path blocks the
+operation. Retained staging and backup files are listed for inspection.
+
+Recovery never appends to an unverified file or automatically retries after
+restart. **Forget recovery, keep files** removes only the saved instructions;
+originals, parts, manifests, completed output and retained recovery files remain.
+An unreadable journal is reported rather than presented as an empty history.
 
 ## Workspaces, commands and backend boundaries
 
