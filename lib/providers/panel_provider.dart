@@ -2355,6 +2355,68 @@ class PanelNotifier extends ChangeNotifier {
     return (origin.storageReference, paths.normalize(path));
   }
 
+  /// Exchange the visible listing/path state with [other]. Used by panel swap
+  /// so both panes move together even when one source needs a fresh grant or
+  /// the other tab is locked.
+  void swapViewWith(PanelNotifier other) {
+    final local = _localPath;
+    _localPath = other._localPath;
+    other._localPath = local;
+    final remote = _remotePath;
+    _remotePath = other._remotePath;
+    other._remotePath = remote;
+    final files = _files;
+    _files = other._files;
+    other._files = files;
+    final selection = _selection.toSet();
+    _selection
+      ..clear()
+      ..addAll(other._selection);
+    other._selection
+      ..clear()
+      ..addAll(selection);
+    final last = _lastSelected;
+    _lastSelected = other._lastSelected;
+    other._lastSelected = last;
+    final cursor = _cursorIndex;
+    _cursorIndex = other._cursorIndex;
+    other._cursorIndex = cursor;
+    final origin = _currentDirectoryOrigin;
+    _currentDirectoryOrigin = other._currentDirectoryOrigin;
+    other._currentDirectoryOrigin = origin;
+    for (final file in _files ?? const <FileItem>[]) {
+      if (_currentDirectoryOrigin != null) {
+        _fileOrigins[file] = _currentDirectoryOrigin!;
+      }
+    }
+    for (final file in other._files ?? const <FileItem>[]) {
+      if (other._currentDirectoryOrigin != null) {
+        other._fileOrigins[file] = other._currentDirectoryOrigin!;
+      }
+    }
+    final showing = _showingSearchResults;
+    _showingSearchResults = other._showingSearchResults;
+    other._showingSearchResults = showing;
+    final listOrigin = _fileListOrigin;
+    _fileListOrigin = other._fileListOrigin;
+    other._fileListOrigin = listOrigin;
+    final listTitle = _fileListTitle;
+    _fileListTitle = other._fileListTitle;
+    other._fileListTitle = listTitle;
+    final flat = _isFlatView;
+    _isFlatView = other._isFlatView;
+    other._isFlatView = flat;
+    final pending = _pendingTabStorage;
+    _pendingTabStorage = other._pendingTabStorage;
+    other._pendingTabStorage = pending;
+    _verifiedListingGeneration = _listingGeneration;
+    other._verifiedListingGeneration = other._listingGeneration;
+    _syncTabPath();
+    other._syncTabPath();
+    notifyListeners();
+    other.notifyListeners();
+  }
+
   /// Remember marks for this tab and storage session, never just basenames.
   /// Restoration resolves fresh, verified rows; saved objects grant no writes.
   int rememberSelection() {

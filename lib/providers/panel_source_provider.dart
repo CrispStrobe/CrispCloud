@@ -44,12 +44,9 @@ Future<void> swapPanelSources(WidgetRef ref) async {
   ref.read(activePanelProvider.notifier).state = active == PanelSide.local
       ? PanelSide.remote
       : PanelSide.local;
-  await ref
-      .read(panelProvider(PanelSide.local))
-      .navigateToPath(newLeft.currentPath, bypassTabLock: true);
-  await ref
-      .read(panelProvider(PanelSide.remote))
-      .navigateToPath(newRight.currentPath, bypassTabLock: true);
+  final leftPanel = ref.read(panelProvider(PanelSide.local));
+  final rightPanel = ref.read(panelProvider(PanelSide.remote));
+  leftPanel.swapViewWith(rightPanel);
 }
 
 // ---------------------------------------------------------------------------
