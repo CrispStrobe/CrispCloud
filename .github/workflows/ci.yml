@@ -141,7 +141,7 @@ jobs:
           path: coverage/lcov.info
           retention-days: 14
 
-  # ---------- Crypto gate (headless, all three desktop OSes) ----------
+  # ---------- Native desktop gate (headless, all three OSes) ----------
   # Standing per-PR gate for the file-crypto stack on Linux, Windows and macOS.
   # native_ffi_crypto_test ASSERTS the OS's system-crypto binding loads + is
   # byte-exact + interoperable with existing pointycastle files (Linux->OpenSSL,
@@ -184,8 +184,13 @@ jobs:
           test/native_metadata_windows_test.dart
           test/local_file_service_symlink_test.dart
 
+      # Surface native PTY/ConPTY failures before the full Linux suite finishes.
+      # Packaged builds retain their complete terminal regression checks below.
+      - name: Native terminal smoke tests
+        run: flutter test test/terminal_process_test.dart
+
   collection-browser:
-    name: Collection persistence (Chrome)
+    name: Browser storage + terminal (Chrome)
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -202,6 +207,12 @@ jobs:
         run: >-
           flutter test --no-pub --reporter expanded --platform chrome --concurrency=1
           test/file_collection_browser_storage_test.dart
+
+      - name: Terminal input and explicit SSH gateway
+        run: >-
+          flutter test --no-pub --reporter expanded --platform chrome --concurrency=1
+          test/terminal_session_test.dart test/terminal_widget_test.dart
+          test/ssh_gateway_test.dart test/ssh_terminal_gateway_test.dart
 
   # ---------- Multi-platform builds (matrix) ----------
   # Linux, Android, and Web build on ubuntu-latest.
@@ -362,6 +373,11 @@ jobs:
       - run: flutter config --enable-windows-desktop
       - run: flutter pub get
 
+      - name: Terminal regression tests (Windows ConPTY)
+        run: >-
+          flutter test test/terminal_process_test.dart
+          test/terminal_session_test.dart test/terminal_widget_test.dart
+
       - name: Patch pdfx CMake (fix VERSION 2.8.12 rejected by CMake 3.30+)
         shell: bash
         run: |
@@ -433,6 +449,9 @@ jobs:
           test/finder_extension_test.dart
           test/local_file_service_test.dart
           test/xdg_test.dart
+          test/terminal_process_test.dart
+          test/terminal_session_test.dart
+          test/terminal_widget_test.dart
       - run: flutter build macos --release
 
       - name: Launch release bundle

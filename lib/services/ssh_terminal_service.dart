@@ -1,6 +1,3 @@
-import 'package:crisp_storage/crisp_storage.dart'
-    show SshKnownHosts, HostKeyPrompt, openVerifiedSsh;
-import 'secure_storage_service.dart';
 // lib/services/ssh_terminal_service.dart
 //
 // Embedded SSH terminal service for SFTP connections.
@@ -9,18 +6,35 @@ import 'secure_storage_service.dart';
 // Manages a pool of up to [maxSessions] concurrent sessions.
 // Sessions idle longer than [idleTimeout] are automatically disconnected.
 //
-// Desktop-only: attempting to use this service on web or mobile platforms
-// throws [UnsupportedError].
+// Native platforms use TCP. Browsers require an explicit secure WebSocket
+// gateway that already forwards to the chosen SSH host.
 
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io' show Platform;
 import 'dart:typed_data';
 
+import 'package:crisp_storage/crisp_storage.dart'
+    show SshKnownHosts, HostKeyPrompt, openVerifiedSsh;
 import 'package:dartssh2/dartssh2.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
 
 import 'log_service.dart';
+import 'secure_storage_service.dart';
+import 'ssh_gateway.dart';
+import 'terminal_output.dart';
+
+export 'ssh_gateway.dart' show sshGatewayValidationMessage;
+
+/// Connection boundary used to exercise the terminal without a live SSH server.
+typedef SshClientConnector = Future<SSHClient> Function(
+  String host,
+  int port, {
+  required String username,
+  String? password,
+  List<SSHIdentity>? identities,
+  Uri? gateway,
+});
 
 // ---------------------------------------------------------------------------
 // Model
@@ -67,24 +81,24 @@ class SshSession {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'host': host,
-        'port': port,
-        'username': username,
-        'connected': connected,
-        'startedAt': startedAt.toIso8601String(),
-        'lastActivityAt': lastActivityAt.toIso8601String(),
-      };
+    'id': id,
+    'host': host,
+    'port': port,
+    'username': username,
+    'connected': connected,
+    'startedAt': startedAt.toIso8601String(),
+    'lastActivityAt': lastActivityAt.toIso8601String(),
+  };
 
   factory SshSession.fromJson(Map<String, dynamic> json) => SshSession(
-        id: json['id'] as String,
-        host: json['host'] as String,
-        port: json['port'] as int,
-        username: json['username'] as String,
-        connected: json['connected'] as bool,
-        startedAt: DateTime.parse(json['startedAt'] as String),
-        lastActivityAt: DateTime.parse(json['lastActivityAt'] as String),
-      );
+    id: json['id'] as String,
+    host: json['host'] as String,
+    port: json['port'] as int,
+    username: json['username'] as String,
+    connected: json['connected'] as bool,
+    startedAt: DateTime.parse(json['startedAt'] as String),
+    lastActivityAt: DateTime.parse(json['lastActivityAt'] as String),
+  );
 
   @override
   bool operator ==(Object other) => other is SshSession && other.id == id;
@@ -102,12 +116,13 @@ class SshSession {
 // ---------------------------------------------------------------------------
 
 class _SessionState {
-  final SshSession session;
-  SSHClient? client;
+  SshSession session;
+  final SSHClient client;
   SSHSession? shellSession;
-  StreamController<String>? shellOutput;
+  TerminalOutput? shellOutput;
+  int shellGeneration = 0;
 
-  _SessionState({required this.session, this.client});
+  _SessionState({required this.session, required this.client});
 }
 
 // ---------------------------------------------------------------------------
@@ -135,32 +150,36 @@ class SshTerminalService {
   final Duration idleTimeout;
   HostKeyPrompt? confirmHostKey;
   late final SshKnownHosts _knownHosts = SshKnownHosts(
-      read: () => _secure.read('ssh_known_hosts_v1'),
-      write: (value) => _secure.write('ssh_known_hosts_v1', value));
+    read: () => _secure.read('ssh_known_hosts_v1'),
+    write: (value) => _secure.write('ssh_known_hosts_v1', value),
+  );
   final SecureStorage _secure;
+  final SshClientConnector? _clientConnector;
 
   /// Internal session registry.
   final Map<String, _SessionState> _sessions = {};
 
   /// Periodic idle-check timer.
   Timer? _idleTimer;
+  bool _disposed = false;
+  int _pendingConnections = 0;
+  int _connectionGeneration = 0;
+  int _nextId = 0;
 
-  SshTerminalService(
-      {this.idleTimeout = defaultIdleTimeout,
-      SecureStorage? secureStorage,
-      this.confirmHostKey})
-      : _secure = secureStorage ?? PlatformSecureStorage() {
-    _idleTimer =
-        Timer.periodic(const Duration(minutes: 1), (_) => _sweepIdle());
-  }
+  SshTerminalService({
+    this.idleTimeout = defaultIdleTimeout,
+    SecureStorage? secureStorage,
+    this.confirmHostKey,
+    @visibleForTesting this._clientConnector,
+  }) : _secure = secureStorage ?? PlatformSecureStorage();
 
   // -------------------------------------------------------------------------
   // Platform guard
   // -------------------------------------------------------------------------
 
-  /// Returns true when SSH is supported on the current platform (desktop only).
+  /// Whether this platform has an SSH transport. Web needs an explicit gateway.
   static bool get isSupported {
-    if (kIsWeb) return false;
+    if (kIsWeb) return true;
     try {
       // dartssh2 works on mobile too; SSH is the only terminal option on
       // sandboxed iOS/macOS builds.
@@ -174,12 +193,12 @@ class SshTerminalService {
     }
   }
 
-  void _checkPlatform() {
+  void _checkPlatform(Uri? gateway) {
     if (!isSupported) {
-      throw UnsupportedError(
-        'SSH terminal is not supported on web.',
-      );
+      throw UnsupportedError('SSH terminal is not supported on this platform.');
     }
+    final validation = sshGatewayValidationMessage(gateway, required: kIsWeb);
+    if (validation != null) throw ArgumentError(validation);
   }
 
   // -------------------------------------------------------------------------
@@ -188,52 +207,16 @@ class SshTerminalService {
 
   /// Establishes an SSH connection using password authentication.
   ///
-  /// Throws [UnsupportedError] on web/mobile.
+  /// [gateway] is required on web and optional on native platforms. It is never
+  /// used as the SSH host-key identity; [host] and [port] still identify that.
   /// Throws [StateError] when the session pool is full.
   Future<SshSession> connect(
     String host,
     int port,
     String username,
-    String password,
-  ) async {
-    _checkPlatform();
-    _checkPoolCapacity();
-
-    final id = _generateId();
-    final now = DateTime.now();
-
-    _log.info('Connecting to $host:$port as $username (id=$id)');
-
-    SSHClient client;
-    try {
-      final socket = await SSHSocket.connect(host, port,
-          timeout: const Duration(seconds: 15));
-      client = await openVerifiedSsh(socket,
-          username: username,
-          password: password,
-          verify: (_, fingerprint) => _knownHosts.verify(
-              SshKnownHosts.endpoint(host, port), utf8.decode(fingerprint),
-              prompt: confirmHostKey));
-      await client.authenticated;
-    } catch (e) {
-      _log.error('SSH connect failed', e);
-      throw Exception('SSH connection failed: $e');
-    }
-
-    final session = SshSession(
-      id: id,
-      host: host,
-      port: port,
-      username: username,
-      connected: true,
-      startedAt: now,
-      lastActivityAt: now,
-    );
-
-    _sessions[id] = _SessionState(session: session, client: client);
-    _log.info('Session $id established');
-    return session;
-  }
+    String password, {
+    Uri? gateway,
+  }) => _connect(host, port, username, password: password, gateway: gateway);
 
   // -------------------------------------------------------------------------
   // Connect (private key)
@@ -243,55 +226,124 @@ class SshTerminalService {
   ///
   /// [privateKey] should be a PEM-encoded private key string.
   ///
-  /// Throws [UnsupportedError] on web/mobile.
+  /// [gateway] is required on web and optional on native platforms.
   /// Throws [StateError] when the session pool is full.
   Future<SshSession> connectWithKey(
     String host,
     int port,
     String username,
-    String privateKey,
-  ) async {
-    _checkPlatform();
-    _checkPoolCapacity();
-
-    final id = _generateId();
-    final now = DateTime.now();
-
-    _log.info('Connecting to $host:$port as $username via key (id=$id)');
-
-    SSHClient client;
-    try {
-      final keyPair = _parseKeyPair(privateKey);
-      if (keyPair == null) {
-        throw const FormatException('Invalid SSH private key');
-      }
-      final socket = await SSHSocket.connect(host, port,
-          timeout: const Duration(seconds: 15));
-      client = await openVerifiedSsh(socket,
-          username: username,
-          identities: [keyPair],
-          verify: (_, fingerprint) => _knownHosts.verify(
-              SshKnownHosts.endpoint(host, port), utf8.decode(fingerprint),
-              prompt: confirmHostKey));
-      await client.authenticated;
-    } catch (e) {
-      _log.error('SSH key-connect failed', e);
-      throw Exception('SSH key-based connection failed: $e');
+    String privateKey, {
+    Uri? gateway,
+  }) async {
+    final keyPair = _parseKeyPair(privateKey);
+    if (keyPair == null) {
+      throw const FormatException('Invalid SSH private key');
     }
-
-    final session = SshSession(
-      id: id,
-      host: host,
-      port: port,
-      username: username,
-      connected: true,
-      startedAt: now,
-      lastActivityAt: now,
+    return _connect(
+      host,
+      port,
+      username,
+      identities: [keyPair],
+      gateway: gateway,
     );
+  }
 
-    _sessions[id] = _SessionState(session: session, client: client);
-    _log.info('Session $id established via key');
-    return session;
+  Future<SshSession> _connect(
+    String host,
+    int port,
+    String username, {
+    String? password,
+    List<SSHIdentity>? identities,
+    Uri? gateway,
+  }) async {
+    _checkPlatform(gateway);
+    if (_disposed) throw StateError('SSH terminal service is disposed');
+    _checkPoolCapacity();
+    _pendingConnections++;
+    final generation = _connectionGeneration;
+    SSHClient? client;
+    try {
+      client = await (_clientConnector ?? _openClient)(
+        host,
+        port,
+        username: username,
+        password: password,
+        identities: identities,
+        gateway: gateway,
+      );
+      await client.authenticated;
+      // A slow connection must not resurrect a session after sign-out/dispose.
+      if (_disposed || generation != _connectionGeneration) {
+        throw StateError('SSH connection was cancelled');
+      }
+      if (client.isClosed) throw StateError('SSH connection closed');
+
+      final now = DateTime.now();
+      final session = SshSession(
+        id: _generateId(),
+        host: host,
+        port: port,
+        username: username,
+        connected: true,
+        startedAt: now,
+        lastActivityAt: now,
+      );
+      final state = _SessionState(session: session, client: client);
+      _sessions[session.id] = state;
+      _idleTimer ??= Timer.periodic(
+        const Duration(minutes: 1),
+        (_) => _sweepIdle(),
+      );
+      unawaited(
+        client.done.then<void>(
+          (_) => _clientClosed(session.id, state),
+          onError: (Object error, StackTrace stack) {
+            _log.error('SSH connection closed', error);
+            _clientClosed(session.id, state);
+          },
+        ),
+      );
+      _log.info('Session ${session.id} established to $host:$port');
+      return session;
+    } catch (error) {
+      if (client != null) {
+        try {
+          await client.close();
+        } catch (_) {}
+      }
+      _log.error('SSH connect failed', error);
+      rethrow;
+    } finally {
+      _pendingConnections--;
+    }
+  }
+
+  Future<SSHClient> _openClient(
+    String host,
+    int port, {
+    required String username,
+    String? password,
+    List<SSHIdentity>? identities,
+    Uri? gateway,
+  }) async {
+    final socket = gateway == null
+        ? await SSHSocket.connect(
+            host,
+            port,
+            timeout: const Duration(seconds: 15),
+          )
+        : await openSshGateway(gateway);
+    return openVerifiedSsh(
+      socket,
+      username: username,
+      password: password,
+      identities: identities,
+      verify: (_, fingerprint) => _knownHosts.verify(
+        SshKnownHosts.endpoint(host, port),
+        utf8.decode(fingerprint),
+        prompt: confirmHostKey,
+      ),
+    );
   }
 
   // -------------------------------------------------------------------------
@@ -309,6 +361,7 @@ class SshTerminalService {
 
   /// Closes all active sessions.
   Future<void> disconnectAll() async {
+    _connectionGeneration++;
     final ids = List<String>.from(_sessions.keys);
     for (final id in ids) {
       await disconnect(id);
@@ -325,7 +378,7 @@ class SshTerminalService {
   Future<String> execute(String sessionId, String command) async {
     final state = _requireSession(sessionId);
     final client = state.client;
-    if (client == null || client.isClosed) {
+    if (client.isClosed) {
       throw StateError('Session $sessionId is not connected');
     }
 
@@ -334,7 +387,7 @@ class SshTerminalService {
 
     try {
       final result = await client.run(command);
-      final output = String.fromCharCodes(result);
+      final output = utf8.decode(result, allowMalformed: true);
       return output;
     } catch (e) {
       _log.error('execute error', e);
@@ -348,58 +401,69 @@ class SshTerminalService {
 
   /// Starts an interactive PTY shell on [sessionId].
   ///
-  /// Returns a [Stream<String>] that emits terminal output lines.
-  Future<Stream<String>> startShell(String sessionId) async {
+  /// Returns a single-subscription stream of decoded terminal output, including
+  /// ANSI sequences. The initial prompt is buffered until a listener attaches.
+  Future<Stream<String>> startShell(
+    String sessionId, {
+    int width = 80,
+    int height = 24,
+  }) async {
+    _validateDimensions(width, height);
     final state = _requireSession(sessionId);
     final client = state.client;
-    if (client == null || client.isClosed) {
+    if (client.isClosed) {
       throw StateError('Session $sessionId is not connected');
     }
 
     _touch(sessionId);
     _log.info('startShell($sessionId)');
 
-    // Close existing shell if any.
-    if (state.shellSession != null) {
-      state.shellSession!.close();
-      await state.shellOutput?.close();
+    // Invalidates callbacks from the previous shell before closing its stream.
+    final generation = ++state.shellGeneration;
+    final previousOutput = state.shellOutput;
+    final previousShell = state.shellSession;
+    state.shellOutput = null;
+    state.shellSession = null;
+    previousShell?.close();
+    await previousOutput?.dispose();
+    if (!_isCurrentShell(sessionId, state, generation)) {
+      throw StateError('SSH shell start was cancelled');
     }
 
-    final shell = await client.shell(
-      pty: const SSHPtyConfig(
-        type: 'xterm-256color',
-        width: 80,
-        height: 24,
-      ),
-    );
-
+    SSHSession shell;
+    try {
+      shell = await client.shell(
+        pty: SSHPtyConfig(type: 'xterm-256color', width: width, height: height),
+      );
+    } catch (_) {
+      if (_isCurrentShell(sessionId, state, generation)) {
+        await disconnect(sessionId);
+      }
+      rethrow;
+    }
+    if (!_isCurrentShell(sessionId, state, generation)) {
+      shell.close();
+      throw StateError('SSH shell start was cancelled');
+    }
     state.shellSession = shell;
-
-    final controller = StreamController<String>.broadcast();
-    state.shellOutput = controller;
-
-    // Pipe stdout.
-    shell.stdout.transform(const _BytesToStringTransformer()).listen(
-      (data) {
-        _touch(sessionId);
-        controller.add(data);
+    final output = TerminalOutput(
+      [shell.stdout, shell.stderr],
+      onActivity: () => _touch(sessionId),
+      onDone: () {
+        if (_isCurrentShell(sessionId, state, generation)) {
+          // Both streams have drained. SSHSession.done alone can complete while
+          // final output is still pending in either channel.
+          unawaited(disconnect(sessionId));
+        }
       },
-      onError: controller.addError,
-      onDone: controller.close,
-      cancelOnError: false,
-    );
-
-    // Pipe stderr (if distinct).
-    shell.stderr.transform(const _BytesToStringTransformer()).listen(
-      (data) {
-        _touch(sessionId);
-        controller.add(data);
+      onCancel: () async {
+        if (_isCurrentShell(sessionId, state, generation)) {
+          await disconnect(sessionId);
+        }
       },
-      onError: (e) {},
-      cancelOnError: false,
     );
-
-    return controller.stream;
+    state.shellOutput = output;
+    return output.stream;
   }
 
   /// Sends [input] to the active interactive shell of [sessionId].
@@ -411,22 +475,14 @@ class SshTerminalService {
     }
 
     _touch(sessionId);
-    shell.stdin.add(Uint8List.fromList(input.codeUnits));
+    shell.stdin.add(Uint8List.fromList(utf8.encode(input)));
   }
 
   /// Notifies the remote host of a terminal resize to [width] × [height].
   ///
   /// Throws [ArgumentError] when dimensions are not positive.
-  Future<void> resizeTerminal(
-    String sessionId,
-    int width,
-    int height,
-  ) async {
-    if (width <= 0 || height <= 0) {
-      throw ArgumentError(
-        'Terminal dimensions must be positive (got ${width}x$height)',
-      );
-    }
+  Future<void> resizeTerminal(String sessionId, int width, int height) async {
+    _validateDimensions(width, height);
 
     final state = _requireSession(sessionId);
     final shell = state.shellSession;
@@ -457,6 +513,8 @@ class SshTerminalService {
 
   /// Releases all resources. Call when the service is no longer needed.
   Future<void> dispose() async {
+    if (_disposed) return;
+    _disposed = true;
     _idleTimer?.cancel();
     _idleTimer = null;
     await disconnectAll();
@@ -467,7 +525,7 @@ class SshTerminalService {
   // -------------------------------------------------------------------------
 
   void _checkPoolCapacity() {
-    if (_sessions.length >= maxSessions) {
+    if (_sessions.length + _pendingConnections >= maxSessions) {
       throw StateError(
         'SSH session pool is full (max $maxSessions concurrent sessions).',
       );
@@ -485,23 +543,38 @@ class SshTerminalService {
   void _touch(String sessionId) {
     final state = _sessions[sessionId];
     if (state == null) return;
-    _sessions[sessionId] = _SessionState(
-      session: state.session.copyWith(lastActivityAt: DateTime.now()),
-      client: state.client,
-    )
-      ..shellSession = state.shellSession
-      ..shellOutput = state.shellOutput;
+    state.session = state.session.copyWith(lastActivityAt: DateTime.now());
+  }
+
+  bool _isCurrentShell(String id, _SessionState state, int generation) =>
+      identical(_sessions[id], state) && state.shellGeneration == generation;
+
+  void _clientClosed(String id, _SessionState state) {
+    if (!identical(_sessions[id], state)) return;
+    state.session = state.session.copyWith(connected: false);
+    // An attached shell drains its stdout/stderr before removing the session.
+    // Connections used only for execute have no terminal streams to drain.
+    if (state.shellOutput == null) unawaited(disconnect(id));
+  }
+
+  static void _validateDimensions(int width, int height) {
+    if (width <= 0 || height <= 0) {
+      throw ArgumentError(
+        'Terminal dimensions must be positive (got ${width}x$height)',
+      );
+    }
   }
 
   Future<void> _closeState(_SessionState state) async {
+    state.shellGeneration++;
     try {
       state.shellSession?.close();
     } catch (_) {}
     try {
-      await state.shellOutput?.close();
+      await state.shellOutput?.dispose();
     } catch (_) {}
     try {
-      await state.client?.close();
+      await state.client.close();
     } catch (_) {}
   }
 
@@ -532,21 +605,5 @@ class SshTerminalService {
 
   String _generateId() =>
       DateTime.now().microsecondsSinceEpoch.toRadixString(36) +
-      (_sessions.length).toRadixString(36);
-}
-
-// ---------------------------------------------------------------------------
-// Utility transformer
-// ---------------------------------------------------------------------------
-
-class _BytesToStringTransformer
-    implements StreamTransformer<Uint8List, String> {
-  const _BytesToStringTransformer();
-
-  @override
-  Stream<String> bind(Stream<Uint8List> stream) =>
-      stream.map((bytes) => String.fromCharCodes(bytes));
-
-  @override
-  StreamTransformer<RS, RT> cast<RS, RT>() => StreamTransformer.castFrom(this);
+      (_nextId++).toRadixString(36);
 }

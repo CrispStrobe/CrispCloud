@@ -6,4 +6,4 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 final showTerminalProvider = StateProvider<bool>((ref) => false);
 
 /// Height of the terminal panel in pixels.
-final terminalHeightProvider = StateProvider<double>((ref) => 220.0);
+final terminalHeightProvider = StateProvider<double>((ref) => 280.0);

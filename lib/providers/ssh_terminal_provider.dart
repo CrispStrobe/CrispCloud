@@ -16,7 +16,9 @@ import 'core_providers.dart';
 /// The service is created lazily and disposed when the provider is no longer
 /// listened to.
 final sshTerminalServiceProvider = Provider<SshTerminalService>((ref) {
-  final service = SshTerminalService(secureStorage:ref.read(secureStorageProvider));
+  final service = SshTerminalService(
+    secureStorage: ref.read(secureStorageProvider),
+  );
   ref.onDispose(service.dispose);
   return service;
 });
@@ -54,9 +56,16 @@ class SshTerminalNotifier extends StateNotifier<List<SshSession>> {
     String host,
     int port,
     String username,
-    String password,
-  ) async {
-    final session = await _service.connect(host, port, username, password);
+    String password, {
+    Uri? gateway,
+  }) async {
+    final session = await _service.connect(
+      host,
+      port,
+      username,
+      password,
+      gateway: gateway,
+    );
     _refresh();
     return session;
   }
@@ -66,10 +75,16 @@ class SshTerminalNotifier extends StateNotifier<List<SshSession>> {
     String host,
     int port,
     String username,
-    String privateKey,
-  ) async {
-    final session =
-        await _service.connectWithKey(host, port, username, privateKey);
+    String privateKey, {
+    Uri? gateway,
+  }) async {
+    final session = await _service.connectWithKey(
+      host,
+      port,
+      username,
+      privateKey,
+      gateway: gateway,
+    );
     _refresh();
     return session;
   }
@@ -91,8 +106,11 @@ class SshTerminalNotifier extends StateNotifier<List<SshSession>> {
       _service.execute(sessionId, command);
 
   /// Delegates to [SshTerminalService.startShell].
-  Future<Stream<String>> startShell(String sessionId) =>
-      _service.startShell(sessionId);
+  Future<Stream<String>> startShell(
+    String sessionId, {
+    int width = 80,
+    int height = 24,
+  }) => _service.startShell(sessionId, width: width, height: height);
 
   /// Delegates to [SshTerminalService.writeToShell].
   Future<void> writeToShell(String sessionId, String input) =>
@@ -110,6 +128,6 @@ class SshTerminalNotifier extends StateNotifier<List<SshSession>> {
 /// Provider for [SshTerminalNotifier].
 final sshTerminalNotifierProvider =
     StateNotifierProvider<SshTerminalNotifier, List<SshSession>>((ref) {
-  final service = ref.watch(sshTerminalServiceProvider);
-  return SshTerminalNotifier(service);
-});
+      final service = ref.watch(sshTerminalServiceProvider);
+      return SshTerminalNotifier(service);
+    });
