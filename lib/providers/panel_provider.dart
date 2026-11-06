@@ -22,6 +22,7 @@ import '../models/sort.dart';
 import '../models/storage_reference.dart';
 import '../models/file_collection.dart';
 import '../models/file_search_query.dart';
+import '../models/rename_batch.dart';
 import '../services/recursive_search_service.dart';
 import '../services/file_collection_service.dart';
 import '../services/file_operation_service.dart';
@@ -31,7 +32,10 @@ import '../services/storage_trash.dart';
 import '../services/trash_history_store.dart';
 import 'trash_history_provider.dart';
 import '../services/native_file_operations.dart';
-import '../services/native_file_primitives.dart';
+import '../services/multi_rename_service.dart';
+import '../services/rename_batch_service.dart';
+import '../services/rename_batch_storage.dart';
+import '../services/rename_batch_store.dart';
 import '../services/archive_service.dart';
 import '../services/archive_browser_session.dart';
 import '../services/archive_viewer_service.dart';
@@ -3749,6 +3753,19 @@ class PanelNotifier extends ChangeNotifier {
     return List.unmodifiable(items);
   }
 
+  /// Single, batch and recovered renames use the same captured storage and
+  /// low-level mutation implementation. The fallback never starts another job.
+  SourceRenameBatchStorage createRenameStorage(
+    PanelFileOrigin origin, {
+    bool Function()? isCancelled,
+  }) => SourceRenameBatchStorage(
+    reference: origin.storageReference,
+    source: origin.source,
+    local: _localFileService,
+    isCurrent: () => origin.isCurrent,
+    isCancelled: isCancelled,
+  );
+
   Future<void> renameFile(
     FileItem file,
     String newName, {
@@ -3756,151 +3773,144 @@ class PanelNotifier extends ChangeNotifier {
     bool rethrowErrors = false,
     bool recordHistory = true,
     PanelFileOrigin? operationOrigin,
+    bool Function()? isCancelled,
   }) async {
     _log.info('renameFile: ${file.name} → $newName');
     final audit = _ref.read(auditServiceProvider);
-    final actionHistory = _ref.read(actionHistoryProvider.notifier);
+    final history = _ref.read(actionHistoryProvider.notifier);
+    final service = RenameBatchService(_ref.read(renameBatchStoreProvider));
     var providerName = 'unknown';
-    final src = file.path ?? file.name;
+    final sourcePath = file.path ?? file.name;
+    PanelFileOrigin? origin;
+    SourceRenameBatchStorage? storage;
+    RenameBatchRecord? record;
     try {
       if (newName == file.name) return;
-      if (newName.trim().isEmpty ||
-          newName == '.' ||
-          newName == '..' ||
-          RegExp(r'[/\\\x00-\x1f\x7f]').hasMatch(newName)) {
-        throw const FormatException(
-          'Enter a filename without path separators or control characters.',
-        );
-      }
-      final origin = operationOrigin ?? captureOperationOrigin([file]);
-      if (!origin.isCurrent) throw StateError('The storage account changed.');
-      final source = origin.source;
-      final isLocalSource = source is LocalPanelSource;
-      providerName = source is RemotePanelSource
-          ? source.providerName
-          : 'local';
+      final problem = MultiRenameService.validateName(newName);
+      if (problem != null) throw FormatException(problem);
       if (file.path == null) {
         throw StateError('The original file path is unavailable.');
       }
-      final paths = isLocalSource && !kIsWeb ? p.context : p.posix;
-      final target = paths.join(paths.dirname(src), newName);
-      if (await operationPathExists(target, origin)) {
-        throw StateError(
-          'A destination already exists: $target. For case-only renames, use an unused temporary name first.',
-        );
-      }
+      origin = operationOrigin ?? captureOperationOrigin([file]);
       if (!origin.isCurrent) throw StateError('The storage account changed.');
-      String computedNewPath;
-      if (isLocalSource && kIsWeb) {
-        // Web rename: copy under new name, delete old entry
-        final oldPath = file.path!;
-        computedNewPath = p.posix.join(p.posix.dirname(oldPath), newName);
-        if (!file.isFolder) {
-          final bytes = await _localFileService.readFile(
-            oldPath,
-            fileItem: file,
-          );
-          final saved = await _localFileService.saveFileReportingResult(
-            computedNewPath,
-            bytes,
-            overwrite: false,
-          );
-          if (saved != LocalFileSaveResult.written) {
-            throw StateError(
-              'The browser downloaded a copy; the source was retained.',
-            );
-          }
-          if (!origin.isCurrent) {
-            throw StateError('The source is no longer available.');
-          }
-          await _localFileService.deleteEntry(oldPath, false);
-        } else {
-          throw UnsupportedError(
-            'Folder rename requires a native filesystem or cloud provider.',
-          );
-        }
-      } else if (isLocalSource) {
-        computedNewPath = p.join(p.dirname(file.path!), newName);
-        await _localFileService.withFileOperationAccess(src, () async {
-          if (!origin.isCurrent) {
-            throw StateError('The source is no longer available.');
-          }
-          if (!await moveNativeNoReplace(src, computedNewPath)) {
-            throw UnsupportedError(
-              'This filesystem cannot safely rename without replacing an existing item.',
-            );
-          }
-        });
-      } else {
-        if (source is! RemotePanelSource) {
-          throw UnsupportedError('This source cannot be renamed.');
-        }
-        final client = source.client;
-        final sourcePath = src;
-        computedNewPath = p.posix.join(p.posix.dirname(sourcePath), newName);
-        await client.renamePath(sourcePath, newName);
+      storage = createRenameStorage(origin, isCancelled: isCancelled);
+      providerName = origin.source is RemotePanelSource
+          ? (origin.source as RemotePanelSource).providerName
+          : 'local';
+      final plan = const MultiRenameService().preview(
+        [file],
+        const MultiRenameOptions(),
+        directory: storage.paths.dirname(file.path!),
+        pathContext: storage.paths,
+        caseSensitivePaths: storage.caseSensitivePaths,
+        allowDependencies: true,
+        targetNames: {file.path!: newName},
+      );
+      record = await service.prepare(plan, storage, isCancelled: isCancelled);
+      await service.run(record, storage, isCancelled: isCancelled);
+      if (!record.isComplete) {
+        throw StateError(
+          record.message ?? 'Rename stopped. Review rename history.',
+        );
       }
       await audit.logSuccess(
         operation: AuditOperation.rename,
-        sourcePath: src,
-        targetPath: newName,
+        sourcePath: sourcePath,
+        targetPath: record.items.single.targetPath,
         provider: providerName,
       );
-      if (recordHistory) {
-        actionHistory.record(
-          type: ActionType.rename,
-          originalPath: src,
-          newPath: computedNewPath,
-          provider: providerName,
-          metadata: {'oldName': file.name, 'newName': newName},
-          isCurrent: () => origin.isCurrent,
-          undoAction: () async {
-            if (!origin.isCurrent) {
-              return const UndoResult.failure('The storage account changed.');
-            }
-            final renamed = file.copyWith(name: newName, path: computedNewPath);
-            await renameFile(
-              renamed,
-              file.name,
-              operationOrigin: origin,
-              refreshAfter: false,
-              rethrowErrors: true,
-              recordHistory: false,
-            );
-            applyFileListChanges({computedNewPath: file}, origin: origin);
-            await refresh();
-            return UndoResult.success('Renamed $newName back to ${file.name}.');
-          },
-        );
+    } catch (error) {
+      if (error is RenameBatchPersistenceException) record = error.record;
+      _log.warn('operation failed', error);
+      if (!_isDisposed) {
+        _ref.read(errorProvider).addError('Rename failed: $error');
       }
-      if (refreshAfter) {
-        applyFileListChanges({
-          src: file.copyWith(name: newName, path: computedNewPath),
-        }, origin: origin);
-        await refresh();
-      }
-    } catch (e) {
-      _log.warn('operation failed', e);
-      _ref.read(errorProvider).addError('Rename failed: $e');
       await audit.logError(
         operation: AuditOperation.rename,
-        sourcePath: src,
+        sourcePath: sourcePath,
         targetPath: newName,
         provider: providerName,
-        error: e.toString(),
+        error: error.toString(),
       );
       if (rethrowErrors) rethrow;
+    } finally {
+      final completed = record;
+      final captured = origin;
+      final capturedStorage = storage;
+      if (completed != null && captured != null && capturedStorage != null) {
+        if (recordHistory && completed.canRestore) {
+          history.record(
+            type: ActionType.rename,
+            originalPath: sourcePath,
+            newPath: completed.items.single.targetPath,
+            provider: providerName,
+            metadata: {
+              'oldName': file.name,
+              'newName': newName,
+              'renameBatchId': completed.id,
+              'storage': captured.storageReference.toJson(),
+            },
+            isCurrent: () => captured.isCurrent,
+            undoAction: () async {
+              final latest = await service.store.read(completed.id);
+              if (latest == null) {
+                return const UndoResult.failure(
+                  'The rename recovery record is missing.',
+                );
+              }
+              final before = {
+                for (final item in latest.items)
+                  item.sourcePath: item.currentPath,
+              };
+              try {
+                await service.restore(latest, createRenameStorage(captured));
+                return latest.isRestored
+                    ? UndoResult.success(
+                        'Renamed $newName back to ${file.name}.',
+                      )
+                    : UndoResult.failure(
+                        latest.message ??
+                            'Restore stopped. Review rename history.',
+                      );
+              } finally {
+                if (captured.isCurrent) {
+                  applyFileListChanges({
+                    for (final item in latest.items)
+                      if (before[item.sourcePath] != item.currentPath)
+                        before[item.sourcePath]!: item.asFile(
+                          capturedStorage.paths.basename(item.currentPath),
+                          storageId: latest.storage.id,
+                        ),
+                  }, origin: captured);
+                  await refresh();
+                }
+              }
+            },
+          );
+        }
+        if (refreshAfter && captured.isCurrent) {
+          applyFileListChanges(
+            RenameBatchService.changes(completed),
+            origin: captured,
+          );
+          await refresh();
+        }
+      }
     }
   }
 
-  Future<void> createFolder(String name) async {
+  Future<void> createFolder(
+    String name, {
+    PanelFileOrigin? operationOrigin,
+    bool rethrowErrors = false,
+  }) async {
     final audit = _ref.read(auditServiceProvider);
     final actionHistory = _ref.read(actionHistoryProvider.notifier);
     var providerName = 'unknown';
     var folderPath = name;
     var createdPath = folderPath;
     try {
-      if (_showingSearchResults) {
+      if (operationOrigin == null && _showingSearchResults) {
         throw StateError('Open a real directory before creating a folder.');
       }
       if (name.isEmpty ||
@@ -3913,7 +3923,10 @@ class PanelNotifier extends ChangeNotifier {
           'Enter a folder name without path separators.',
         );
       }
-      final origin = captureCurrentOrigin();
+      final origin = operationOrigin ?? captureCurrentOrigin();
+      if (!origin.isCurrent) {
+        throw StateError('The original storage disconnected.');
+      }
       final backend = fileOperationBackend(
         source: origin.source,
         local: _localFileService,
@@ -3964,10 +3977,11 @@ class PanelNotifier extends ChangeNotifier {
       }
       await audit.logError(
         operation: AuditOperation.createFolder,
-        sourcePath: folderPath ?? name,
+        sourcePath: folderPath,
         provider: providerName,
         error: error.toString(),
       );
+      if (rethrowErrors) rethrow;
     }
   }
 

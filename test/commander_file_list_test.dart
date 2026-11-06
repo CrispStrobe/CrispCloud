@@ -11,6 +11,7 @@ import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:crisp_cloud/services/file_selection_pattern.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
+import 'package:crisp_cloud/services/multi_rename_service.dart';
 import 'package:crisp_cloud/services/native_file_primitives.dart';
 import 'package:crisp_cloud/services/panel_source_service.dart';
 import 'package:flutter/material.dart';
@@ -599,7 +600,7 @@ void main() {
           rethrowErrors: true,
           recordHistory: false,
         ),
-        throwsA(isA<FileSystemException>()),
+        throwsA(isA<MultiRenamePreflightException>()),
       );
       expect(await source.readAsString(), 'source');
       expect(await target.readAsString(), 'concurrent target');

@@ -49,6 +49,7 @@ import 'package:path/path.dart' as p;
 
 import 'batch_rename_dialog.dart' show showBatchRenameDialog;
 import 'file_operation_dialog.dart';
+import 'file_name_dialog.dart';
 import 'file_clipboard_actions.dart';
 import 'archive_workspace_dialog.dart';
 import 'integrity_dialogs.dart';
@@ -1559,95 +1560,13 @@ void showFileContextMenu(
   );
 }
 
-void showRenameDialog(
+Future<void> showRenameDialog(
   BuildContext context,
   WidgetRef ref,
   PanelSide side,
   FileItem file,
-) {
-  final controller = TextEditingController(text: file.name);
-
-  // Select filename without extension
-  final dotIndex = file.name.lastIndexOf('.');
-  if (dotIndex > 0 && !file.isFolder) {
-    controller.selection = TextSelection(baseOffset: 0, extentOffset: dotIndex);
-  } else {
-    controller.selection = TextSelection(
-      baseOffset: 0,
-      extentOffset: file.name.length,
-    );
-  }
-
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Text(AppLocalizations.of(context)!.rename),
-      content: TextField(
-        controller: controller,
-        decoration: InputDecoration(
-          labelText: context.commanderTr("New name"),
-          border: const OutlineInputBorder(),
-          prefixIcon: Icon(
-            file.isFolder ? Icons.folder : Icons.insert_drive_file,
-          ),
-        ),
-        autofocus: true,
-        onSubmitted: (value) async {
-          if (value.isNotEmpty && value != file.name) {
-            try {
-              await ref.read(panelProvider(side)).renameFile(file, value);
-              if (context.mounted) {
-                Navigator.pop(context);
-              }
-            } catch (e) {
-              _log.warn('operation failed', e);
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      '${AppLocalizations.of(context)!.renameFailed}: $e',
-                    ),
-                  ),
-                );
-              }
-            }
-          }
-        },
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(AppLocalizations.of(context)!.cancel),
-        ),
-        ElevatedButton(
-          onPressed: () async {
-            if (controller.text.isNotEmpty && controller.text != file.name) {
-              try {
-                await ref
-                    .read(panelProvider(side))
-                    .renameFile(file, controller.text);
-                if (context.mounted) {
-                  Navigator.pop(context);
-                }
-              } catch (e) {
-                _log.warn('operation failed', e);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        '${AppLocalizations.of(context)!.renameFailed}: $e',
-                      ),
-                    ),
-                  );
-                }
-              }
-            }
-          },
-          child: Text(AppLocalizations.of(context)!.rename),
-        ),
-      ],
-    ),
-  );
+) async {
+  await showCapturedRenameDialog(context, ref.read(panelProvider(side)), file);
 }
 
 /// Download local files on web via browser download.

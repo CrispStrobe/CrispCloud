@@ -20,10 +20,12 @@ import '../widgets/file_editor_dialog.dart' show showFileEditorDialog;
 import '../widgets/file_operation_dialog.dart';
 import '../widgets/archive_workspace_dialog.dart';
 import '../widgets/batch_rename_dialog.dart' show showBatchRenameDialog;
+import '../widgets/file_name_dialog.dart';
 import '../services/file_operation_service.dart';
 import '../widgets/internal_viewer_dialog.dart'
     show InternalViewerAction, showInternalViewer;
 import '../l10n/app_localizations.dart';
+import '../l10n/commander_strings.dart';
 
 /// Explicit selection, or the cursor item when nothing is marked. This mirrors
 /// Total Commander: F5/F6/F8 operate on the item under the cursor when there
@@ -237,55 +239,21 @@ void confirmDeleteSelected(BuildContext context, WidgetRef ref) {
   showFileDeleteDialog(context, ref, side, _selectedOrCursor(panel));
 }
 
-void showRenameDialog(BuildContext context, WidgetRef ref) {
+Future<void> showRenameDialog(BuildContext context, WidgetRef ref) async {
   final activePanel = ref.read(activePanelProvider);
   final panel = ref.read(panelProvider(activePanel));
   final targets = _selectedOrCursor(panel);
   if (targets.length != 1) return;
-
   final file = targets.first;
-  final controller = TextEditingController(text: file.name);
-
-  Future<void> doRename(String value) async {
-    if (value.isNotEmpty && value != file.name) {
-      await panel.renameFile(file, value);
-      if (context.mounted) {
-        Navigator.pop(context);
-        _showUndoSnackBar(
-          context,
-          ref,
-          activePanel,
-          'Renamed "${file.name}" to "$value"',
-        );
-      }
-    }
+  final name = await showCapturedRenameDialog(context, panel, file);
+  if (name != null && name != file.name && context.mounted) {
+    _showUndoSnackBar(
+      context,
+      ref,
+      activePanel,
+      context.commanderTr('Renamed "{0}" to "{1}"', [file.name, name]),
+    );
   }
-
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Rename'),
-      content: TextField(
-        controller: controller,
-        decoration: const InputDecoration(
-          labelText: 'New name',
-          border: OutlineInputBorder(),
-        ),
-        autofocus: true,
-        onSubmitted: doRename,
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(AppLocalizations.of(context)!.cancel),
-        ),
-        ElevatedButton(
-          onPressed: () => doRename(controller.text),
-          child: const Text('Rename'),
-        ),
-      ],
-    ),
-  );
 }
 
 /// F3: Open cursor item in a full-screen internal viewer dialog.
@@ -442,49 +410,21 @@ void showMultiRenameFromSelection(BuildContext context, WidgetRef ref) {
   if (files.isNotEmpty) showBatchRenameDialog(context, ref, side, files);
 }
 
-void showCreateFolderDialog(
+Future<void> showCreateFolderDialog(
   BuildContext context,
   WidgetRef ref,
   PanelSide side,
-) {
+) async {
   final panel = ref.read(panelProvider(side));
-  final controller = TextEditingController();
-
-  Future<void> doCreate(String value) async {
-    if (value.isNotEmpty) {
-      await panel.createFolder(value);
-      if (context.mounted) {
-        Navigator.pop(context);
-        _showUndoSnackBar(context, ref, side, 'Created folder "$value"');
-      }
-    }
+  final name = await showCapturedCreateFolderDialog(context, panel);
+  if (name != null && context.mounted) {
+    _showUndoSnackBar(
+      context,
+      ref,
+      side,
+      context.commanderTr('Created folder "{0}"', [name]),
+    );
   }
-
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('New Folder'),
-      content: TextField(
-        controller: controller,
-        decoration: const InputDecoration(
-          labelText: 'Folder name',
-          border: OutlineInputBorder(),
-        ),
-        autofocus: true,
-        onSubmitted: doCreate,
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(AppLocalizations.of(context)!.cancel),
-        ),
-        ElevatedButton(
-          onPressed: () => doCreate(controller.text),
-          child: const Text('Create'),
-        ),
-      ],
-    ),
-  );
 }
 
 void showReceivedFilesDialog(BuildContext context, List<String> files) {
