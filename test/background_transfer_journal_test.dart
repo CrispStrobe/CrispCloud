@@ -88,6 +88,125 @@ void main() {
     expect(await target.readAsString(), 'retained');
   }, skip: Platform.isWindows);
 
+  test(
+    'discovery leaves a run alone until its writer publishes a log',
+    () async {
+      final directory = await Directory(p.join(root.path, 'run-starting'))
+          .create();
+      final target = TransferJournal(MemoryTransferJournalStorage());
+      final starting = await importBackgroundTransferJournals(
+        target,
+        rootPath: root.path,
+      );
+      expect(starting.importedJobs, 0);
+      expect(starting.activeRuns, 0);
+      expect(starting.warnings, isEmpty);
+      expect(await directory.exists(), isTrue);
+      final lockPath = p.join(directory.path, 'owner.lock');
+      expect(
+        await FileSystemEntity.type(lockPath, followLinks: false),
+        FileSystemEntityType.notFound,
+      );
+
+      final lease = await tryAcquireNativeJournalLease(lockPath);
+      expect(lease, isNotNull);
+      try {
+        await File(p.join(directory.path, 'journal.jsonl'))
+            .writeAsString('', flush: true);
+        final active = await importBackgroundTransferJournals(
+          target,
+          rootPath: root.path,
+        );
+        expect(active.activeRuns, 1);
+        expect(active.warnings, isEmpty);
+        expect(await directory.exists(), isTrue);
+      } finally {
+        lease!.close();
+      }
+      final closed = await importBackgroundTransferJournals(
+        target,
+        rootPath: root.path,
+      );
+      expect(closed.importedJobs, 0);
+      expect(closed.warnings, isEmpty);
+      expect(await directory.exists(), isFalse);
+    },
+  );
+
+  test('a new run publishes an empty leased log and closes cleanly', () async {
+    final run = await createBackgroundTransferJournalRun(rootPath: root.path);
+    final file = File(p.join(run.directoryPath, 'journal.jsonl'));
+    expect(await file.readAsString(), isEmpty);
+    final target = TransferJournal(MemoryTransferJournalStorage());
+    final active = await importBackgroundTransferJournals(
+      target,
+      rootPath: root.path,
+    );
+    expect(active.activeRuns, 1);
+    expect(await file.exists(), isTrue);
+    await run.close();
+    final closed = await importBackgroundTransferJournals(
+      target,
+      rootPath: root.path,
+    );
+    expect(closed.importedJobs, 0);
+    expect(closed.warnings, isEmpty);
+    expect(await Directory(run.directoryPath).exists(), isFalse);
+  });
+
+  test(
+    'a previous regular log recovers when the main log is missing',
+    () async {
+      final run = await createBackgroundTransferJournalRun(rootPath: root.path);
+      await _save(run, 'previous-only');
+      await run.close();
+      final file = File(p.join(run.directoryPath, 'journal.jsonl'));
+      await file.rename('${file.path}.previous');
+      final target = TransferJournal(MemoryTransferJournalStorage());
+      final recovered = await importBackgroundTransferJournals(
+        target,
+        rootPath: root.path,
+      );
+      expect(recovered.importedJobs, 1);
+      expect(recovered.warnings, isEmpty);
+      expect(target.jobs.single.source!.accountKey, 'previous-only');
+      expect(await Directory(run.directoryPath).exists(), isFalse);
+    },
+  );
+
+  for (final kind in ['directory', 'symlink']) {
+    test('a $kind cannot substitute for a missing recovery log', () async {
+      final directory = await Directory(p.join(root.path, 'run-invalid'))
+          .create();
+      final previousPath = p.join(directory.path, 'journal.jsonl.previous');
+      final external = await File(p.join(root.path, 'retained'))
+          .writeAsString('retained');
+      if (kind == 'directory') {
+        await Directory(previousPath).create();
+      } else {
+        await Link(previousPath).create(external.path);
+      }
+      final target = TransferJournal(MemoryTransferJournalStorage());
+      final rejected = await importBackgroundTransferJournals(
+        target,
+        rootPath: root.path,
+      );
+      expect(rejected.importedJobs, 0);
+      expect(rejected.warnings, hasLength(1));
+      expect(rejected.warnings.single, contains('not a regular file'));
+      expect(target.jobs, isEmpty);
+      expect(await directory.exists(), isTrue);
+      expect(await external.readAsString(), 'retained');
+      expect(
+        await FileSystemEntity.type(
+          p.join(directory.path, 'owner.lock'),
+          followLinks: false,
+        ),
+        FileSystemEntityType.notFound,
+      );
+    }, skip: kind == 'symlink' && Platform.isWindows);
+  }
+
   test('active runs remain private; released runs import source-bound recovery evidence', () async {
     final first = await createBackgroundTransferJournalRun(rootPath: root.path);
     final second = await createBackgroundTransferJournalRun(

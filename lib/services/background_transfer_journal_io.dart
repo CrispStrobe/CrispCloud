@@ -36,13 +36,16 @@ Future<BackgroundTransferJournalRun> createBackgroundTransferJournalRun({
     throw StateError('A new background journal is unexpectedly busy.');
   }
   try {
+    // Publish an empty log only after owning the lease. Discovery ignores a
+    // directory without a log so it cannot remove a run between mkdir and
+    // lease acquisition. Closed runs with no transfers remain cleanable.
+    final journalFile = File(p.join(directory.path, 'journal.jsonl'));
+    await journalFile.writeAsString('', flush: true);
     var open = true;
     Future<void>? closing;
     final journal = TransferJournal(
       _LeasedStorage(
-        NativeTransferJournalStorage(
-          file: () async => File(p.join(directory.path, 'journal.jsonl')),
-        ),
+        NativeTransferJournalStorage(file: () async => journalFile),
         () => open,
       ),
     );
@@ -124,6 +127,21 @@ Future<BackgroundJournalImport> importBackgroundTransferJournals(
         journalKind != FileSystemEntityType.notFound) {
       warnings.add('Background journal is not a regular file: ${entity.path}');
       continue;
+    }
+    if (journalKind == FileSystemEntityType.notFound) {
+      final previousKind = await FileSystemEntity.type(
+        '${journalFile.path}.previous',
+        followLinks: false,
+      );
+      // The creator may not have acquired its lease or published its empty log
+      // yet. A previous regular log still permits crash recovery.
+      if (previousKind == FileSystemEntityType.notFound) continue;
+      if (previousKind != FileSystemEntityType.file) {
+        warnings.add(
+          'Background recovery journal is not a regular file: ${entity.path}',
+        );
+        continue;
+      }
     }
     NativeJournalLease? lease;
     var complete = false;
