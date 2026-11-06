@@ -223,6 +223,26 @@ class LocalOperationBackend extends FileOperationBackend {
     path = paths.normalize(path);
     final parent = paths.dirname(path);
     if (!kIsWeb) {
+      if (parent != path &&
+          await FileSystemEntity.type(parent, followLinks: false) ==
+              FileSystemEntityType.notFound &&
+          !await service.hasAccessToPath(path)) {
+        // A committed stage may have removed its private parent directory.
+        // Inspect that parent under the same scoped stat contract, reaching
+        // an existing ancestor instead of requesting a picker for a vanished
+        // child. Existing scopes covering the exact path stay on the normal
+        // path below. _nativeItemOrNull confirms ENOENT and propagates denied
+        // or unknown access; FileSystemEntity.type alone is not absence proof.
+        final currentParent = await stat(parent);
+        _check();
+        if (currentParent == null) return null;
+        if (!currentParent.isFolder || currentParent.isSymlink == true) {
+          throw FileSystemException(
+            'The parent is not a regular directory.',
+            parent,
+          );
+        }
+      }
       return service.withFileOperationAccess(path, () async {
         _check();
         if (parent != path) {
