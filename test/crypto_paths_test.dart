@@ -38,6 +38,12 @@ class _MemInner implements CloudStorageClient {
   String get providerName => 'memory';
 
   @override
+  String get rootPath => '/';
+
+  @override
+  bool get isAuthenticated => true;
+
+  @override
   String? get userId => null;
 
   @override
