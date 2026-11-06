@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -5,6 +6,18 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:crisp_cloud/services/encryption_service.dart';
 import 'package:crisp_cloud/services/encrypted_storage_wrapper.dart';
+import 'package:crisp_cloud/services/web_crypto_provider.dart';
+
+class _PausedCrypto extends PointycastleCryptoProvider {
+  final started = Completer<void>();
+  final release = Completer<void>();
+  @override
+  Future<Uint8List> encrypt(Object key, Uint8List plaintext) async {
+    started.complete();
+    await release.future;
+    return super.encrypt(key, plaintext);
+  }
+}
 
 /// Simple mock that records what was uploaded and serves fixed download data.
 class MockCloudClient implements CloudStorageClient {
@@ -16,42 +29,85 @@ class MockCloudClient implements CloudStorageClient {
   /// Set this to control what downloadFileBytes returns.
   set downloadData(Uint8List data) => _downloadData = data;
 
-  @override String get providerName => 'MockProvider';
-  @override String get rootPath => '/';
-  @override bool get isAuthenticated => true;
-  @override String? get userId => 'mock-user';
-  @override String? get bucketId => null;
-
-  @override bool get supportsStreaming => true;
-  @override bool get supportsMultipart => true;
-  @override bool get supportsVersioning => true;
-  @override bool get supportsSharing => true;
-  @override bool get supportsSearch => true;
-  @override bool get supportsThumbnails => true;
-  @override bool get supportsTrash => true;
-  @override bool get supportsNativeShare => false;
-  @override bool get supportsServerSideCopy => false;
-
-  @override Future<Uint8List?> getThumbnail(String remotePath) async => null;
-  @override Future<Map<String, int>?> getQuota() async => null;
-  @override Future<int> healthCheck() async => -1;
-  @override Future<void> copyPath(String sourcePath, String targetPath) async {}
-  @override bool get supportsFullTextSearch => false;
-  @override Future<List<Map<String, dynamic>>> fullTextSearch(String query, String remotePath) async => [];
-
-  @override Future<void> login(String email, String password, {String? twoFactorCode}) async {}
-  @override Future<bool> is2faNeeded(String email) async => false;
-  @override Future<void> logout() async {}
-  @override Future<Map<String, dynamic>?> resolvePath(String path) async => null;
-  @override Future<Map<String, dynamic>> listPath(String path) async => {'folders': [], 'files': []};
-  @override Future<void> createFolderPath(String path) async {}
-  @override Future<void> deletePath(String path) async {}
-  @override Future<void> movePath(String s, String t) async {}
-  @override Future<void> renamePath(String p, String n) async {}
+  @override
+  String get providerName => 'MockProvider';
+  @override
+  String get rootPath => '/';
+  @override
+  bool get isAuthenticated => true;
+  @override
+  String? get userId => 'mock-user';
+  @override
+  String? get bucketId => null;
 
   @override
-  Future<void> uploadFile(List<int> fileData, String fileName, String targetPath,
-      {Function(int, int)? onProgress}) async {
+  bool get supportsStreaming => true;
+  @override
+  bool get supportsMultipart => true;
+  @override
+  bool get supportsVersioning => true;
+  @override
+  bool get supportsSharing => true;
+  @override
+  bool get supportsSearch => true;
+  @override
+  bool get supportsThumbnails => true;
+  @override
+  bool get supportsTrash => true;
+  @override
+  bool get supportsNativeShare => false;
+  @override
+  bool get supportsServerSideCopy => false;
+
+  @override
+  Future<Uint8List?> getThumbnail(String remotePath) async => null;
+  @override
+  Future<Map<String, int>?> getQuota() async => null;
+  @override
+  Future<int> healthCheck() async => -1;
+  @override
+  Future<void> copyPath(String sourcePath, String targetPath) async {}
+  @override
+  bool get supportsFullTextSearch => false;
+  @override
+  Future<List<Map<String, dynamic>>> fullTextSearch(
+    String query,
+    String remotePath,
+  ) async => [];
+
+  @override
+  Future<void> login(
+    String email,
+    String password, {
+    String? twoFactorCode,
+  }) async {}
+  @override
+  Future<bool> is2faNeeded(String email) async => false;
+  @override
+  Future<void> logout() async {}
+  @override
+  Future<Map<String, dynamic>?> resolvePath(String path) async => null;
+  @override
+  Future<Map<String, dynamic>> listPath(String path) async => {
+    'folders': [],
+    'files': [],
+  };
+  @override
+  Future<void> createFolderPath(String path) async {}
+  @override
+  Future<void> deletePath(String path) async {}
+  @override
+  Future<void> movePath(String s, String t) async {}
+  @override
+  Future<void> renamePath(String p, String n) async {}
+
+  @override
+  Future<void> uploadFile(
+    List<int> fileData,
+    String fileName,
+    String targetPath, {
+    Function(int, int)? onProgress,
+  }) async {
     lastUploadedData = fileData;
     lastUploadedFileName = fileName;
     lastUploadedPath = targetPath;
@@ -59,8 +115,11 @@ class MockCloudClient implements CloudStorageClient {
   }
 
   @override
-  Future<void> downloadFileByPath(String remotePath, String localPath,
-      {Function(int, int)? onProgress}) async {}
+  Future<void> downloadFileByPath(
+    String remotePath,
+    String localPath, {
+    Function(int, int)? onProgress,
+  }) async {}
 
   @override
   Future<void> uploadStream(
@@ -74,18 +133,28 @@ class MockCloudClient implements CloudStorageClient {
     await for (final chunk in dataStream) {
       builder.add(chunk);
     }
-    await uploadFile(builder.takeBytes(), fileName, targetPath, onProgress: onProgress);
+    await uploadFile(
+      builder.takeBytes(),
+      fileName,
+      targetPath,
+      onProgress: onProgress,
+    );
   }
 
   @override
-  Stream<List<int>> downloadStream(String remotePath, {Function(int, int)? onProgress}) async* {
+  Stream<List<int>> downloadStream(
+    String remotePath, {
+    Function(int, int)? onProgress,
+  }) async* {
     final bytes = await downloadFileBytes(remotePath, onProgress: onProgress);
     yield bytes;
   }
 
   @override
-  Future<Uint8List> downloadFileBytes(String remotePath,
-      {Function(int, int)? onProgress}) async {
+  Future<Uint8List> downloadFileBytes(
+    String remotePath, {
+    Function(int, int)? onProgress,
+  }) async {
     if (_downloadData == null) {
       throw StateError('Set downloadData before calling downloadFileBytes');
     }
@@ -101,8 +170,11 @@ void main() {
 
   setUp(() {
     final salt = EncryptionService.generateSalt();
-    testKey = EncryptionService.deriveKey('test-passphrase', salt,
-        iterations: 1000);
+    testKey = EncryptionService.deriveKey(
+      'test-passphrase',
+      salt,
+      iterations: 1000,
+    );
     mockClient = MockCloudClient();
     wrapper = EncryptedStorageWrapper(
       inner: mockClient,
@@ -163,13 +235,18 @@ void main() {
         expect(mockClient.lastUploadedData, isNotNull);
         expect(mockClient.lastUploadedData, isNot(equals(original)));
         // It should be larger (nonce + tag overhead)
-        expect(mockClient.lastUploadedData!.length,
-            greaterThan(original.length));
+        expect(
+          mockClient.lastUploadedData!.length,
+          greaterThan(original.length),
+        );
       });
 
       test('does not encrypt filename by default', () async {
         await wrapper.uploadFile(
-            Uint8List.fromList([1]), 'report.pdf', '/remote');
+          Uint8List.fromList([1]),
+          'report.pdf',
+          '/remote',
+        );
         expect(mockClient.lastUploadedFileName, equals('report.pdf'));
       });
 
@@ -180,7 +257,10 @@ void main() {
           encryptFilenames: true,
         );
         await encWrapper.uploadFile(
-            Uint8List.fromList([1]), 'report.pdf', '/remote');
+          Uint8List.fromList([1]),
+          'report.pdf',
+          '/remote',
+        );
         expect(mockClient.lastUploadedFileName, isNot(equals('report.pdf')));
       });
     });
@@ -232,8 +312,9 @@ void main() {
       expect(mockClient.lastUploadedData, isNot(equals([1, 2, 3, 4, 5, 6])));
 
       // Verify it can be decrypted back
-      mockClient.downloadData =
-          Uint8List.fromList(mockClient.lastUploadedData!);
+      mockClient.downloadData = Uint8List.fromList(
+        mockClient.lastUploadedData!,
+      );
       final decrypted = await wrapper.downloadFileBytes('/remote/stream.bin');
       expect(decrypted, equals(Uint8List.fromList([1, 2, 3, 4, 5, 6])));
     });
@@ -245,10 +326,93 @@ void main() {
       final original = Uint8List.fromList([99, 100, 101]);
       mockClient.downloadData = EncryptionService.encrypt(original, testKey);
 
-      final chunks =
-          await wrapper.downloadStream('/remote/file.bin').toList();
+      final chunks = await wrapper.downloadStream('/remote/file.bin').toList();
       expect(chunks.length, 1);
       expect(chunks.first, equals(original));
+    });
+
+    test(
+      'failed authentication preserves an existing download destination',
+      () async {
+        final directory = await Directory.systemTemp.createTemp(
+          'encrypted-save-test-',
+        );
+        addTearDown(() => directory.delete(recursive: true));
+        final destination = File('${directory.path}/existing.bin');
+        await destination.writeAsBytes([9, 8, 7]);
+        final corrupt = EncryptionService.encrypt(
+          Uint8List.fromList([1, 2, 3]),
+          testKey,
+        );
+        corrupt.last ^= 1;
+        mockClient.downloadData = corrupt;
+        await expectLater(
+          wrapper.downloadFileByPath('/remote/source', destination.path),
+          throwsA(isA<Exception>()),
+        );
+        expect(await destination.readAsBytes(), [9, 8, 7]);
+      },
+    );
+
+    test('wrong declared upload length cannot reach the provider', () async {
+      await expectLater(
+        wrapper.uploadStream(Stream.value([1, 2]), 3, 'target', '/'),
+        throwsStateError,
+      );
+      expect(mockClient.lastUploadedData, isNull);
+    });
+
+    test(
+      'same-account login cannot reactivate an already captured upload',
+      () async {
+        Stream<List<int>> source() async* {
+          await wrapper.logout();
+          await wrapper.login('same-account', 'fixture');
+          yield [1, 2, 3];
+        }
+
+        await expectLater(
+          wrapper.uploadStream(source(), 3, 'target', '/'),
+          throwsStateError,
+        );
+        expect(mockClient.lastUploadedData, isNull);
+      },
+    );
+
+    test(
+      'a byte upload cannot change accounts during asynchronous encryption',
+      () async {
+        final crypto = _PausedCrypto();
+        final guarded = EncryptedStorageWrapper(
+          inner: mockClient,
+          encryptionKey: testKey,
+          cryptoProvider: crypto,
+        );
+        final operation = guarded.uploadFile([1, 2, 3], 'target', '/');
+        await crypto.started.future;
+        await guarded.logout();
+        await guarded.login('same-account', 'fixture');
+        final rejected = expectLater(operation, throwsStateError);
+        crypto.release.complete();
+        await rejected;
+        expect(mockClient.lastUploadedData, isNull);
+      },
+    );
+
+    test('copy decrypts and re-encrypts through bounded streams', () async {
+      final plain = Uint8List.fromList([1, 2, 3, 4]);
+      final encrypted = EncryptionService.encrypt(plain, testKey);
+      mockClient.downloadData = encrypted;
+      await wrapper.copyPath('/source.bin', '/target');
+      expect(mockClient.lastUploadedData, isNot(encrypted));
+      expect(
+        EncryptionService.decrypt(
+          Uint8List.fromList(mockClient.lastUploadedData!),
+          testKey,
+        ),
+        plain,
+      );
+      expect(mockClient.lastUploadedFileName, 'source.bin');
     });
 
     // -----------------------------------------------------------------------

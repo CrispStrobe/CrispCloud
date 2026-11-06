@@ -59,6 +59,14 @@ class _FakeStorageClient extends CloudStorageClient {
     };
   }
 
+  // This fixture already owns its tiny payload in memory; production adapters
+  // must supply a real bounded stream rather than inherit a byte-download path.
+  @override
+  Stream<List<int>> downloadStream(String remotePath,
+      {Function(int, int)? onProgress}) async* {
+    yield await downloadFileBytes(remotePath, onProgress: onProgress);
+  }
+
   @override
   Future<Uint8List> downloadFileBytes(String remotePath, {Function(int, int)? onProgress}) async {
     final fileName = remotePath.split('/').last;

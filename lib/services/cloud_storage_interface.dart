@@ -1,5 +1,6 @@
 // lib/services/cloud_storage_interface.dart
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'azure_blob_adapter.dart'; // AzureBlobAdapter
@@ -19,6 +20,11 @@ import 'webdav_client_adapter.dart';
 import 'smb_client_adapter.dart';
 import 'smb_config_service.dart';
 import 'secure_storage_service.dart';
+import 'storage_transfer_contract.dart';
+import 'transfer_spool.dart';
+import 'storage_identity.dart';
+
+export 'storage_transfer_contract.dart';
 
 /// Optional capability for genuinely bounded random-access downloads.
 ///
@@ -136,12 +142,32 @@ abstract class CloudStorageClient {
   }
 
   /// Server-side copy a file from [sourcePath] to [targetPath].
-  /// Default implementation downloads the file bytes and re-uploads them.
+  /// The compatibility implementation uses an owned disk/browser spool and
+  /// streaming APIs, so an absent native-copy method cannot buffer a whole file.
   /// Providers that support server-side copy should override this.
   Future<void> copyPath(String sourcePath, String targetPath) async {
     final fileName = sourcePath.split('/').last;
-    final bytes = await downloadFileBytes(sourcePath);
-    await uploadFile(bytes, fileName, targetPath);
+    final storage = storageReferenceForClient(this);
+    void checkCurrent() {
+      if (!isAuthenticated || storageReferenceForClient(this) != storage) {
+        throw StateError(
+          'The original transfer account is no longer available.',
+        );
+      }
+    }
+
+    checkCurrent();
+    final spool = await createTransferSpool(
+      downloadStream(sourcePath),
+      checkpoint: () async => checkCurrent(),
+    );
+    try {
+      checkCurrent();
+      await uploadStream(spool.openRead(), spool.length, fileName, targetPath);
+      checkCurrent();
+    } finally {
+      await spool.dispose();
+    }
   }
 
   /// Full-text search: search inside file contents in the given directory.
@@ -215,8 +241,18 @@ abstract class CloudStorageClient {
         final filePath = remotePath.endsWith('/')
             ? '$remotePath$name'
             : '$remotePath/$name';
-        final bytes = await downloadFileBytes(filePath);
-        final content = String.fromCharCodes(bytes);
+        final contentBytes = BytesBuilder(copy: false);
+        var tooLarge = false;
+        await for (final chunk in downloadStream(filePath)) {
+          if (contentBytes.length + chunk.length > maxSize) {
+            tooLarge = true;
+            break;
+          }
+          contentBytes.add(chunk);
+        }
+        if (tooLarge) continue;
+        final bytes = contentBytes.takeBytes();
+        final content = utf8.decode(bytes, allowMalformed: true);
         final lowerContent = content.toLowerCase();
         final idx = lowerContent.indexOf(lowerQuery);
         if (idx == -1) continue;
@@ -246,8 +282,13 @@ abstract class CloudStorageClient {
     return results;
   }
 
-  /// Stream-based upload. Providers that support streaming override this.
-  /// Default implementation buffers the stream and calls uploadFile.
+  /// Maximum payload accepted by the legacy byte-upload compatibility path.
+  /// Transfer adapters override [uploadStream] with a bounded implementation.
+  static const maxBufferedUploadBytes = 32 * 1024 * 1024;
+
+  /// Small legacy uploads remain supported with a strict byte ceiling. Reject
+  /// oversized declarations before reading the source, and validate its exact
+  /// length before giving any bytes to the provider's committing upload API.
   Future<void> uploadStream(
     Stream<List<int>> dataStream,
     int length,
@@ -255,27 +296,53 @@ abstract class CloudStorageClient {
     String targetPath, {
     Function(int, int)? onProgress,
   }) async {
-    // Default: buffer to memory and delegate to uploadFile
+    if (length < 0 || length > maxBufferedUploadBytes) {
+      throw UnsupportedError(
+        'This provider requires a known upload size of at most 32 MiB. '
+        'Larger files require its streaming upload implementation.',
+      );
+    }
+    final storage = storageReferenceForClient(this);
+    void checkCurrent() {
+      if (!isAuthenticated || storageReferenceForClient(this) != storage) {
+        throw StateError(
+          'The original transfer account is no longer available.',
+        );
+      }
+    }
+
+    checkCurrent();
     final builder = BytesBuilder(copy: false);
     await for (final chunk in dataStream) {
+      checkCurrent();
+      if (builder.length + chunk.length > length) {
+        throw StateError('Upload source exceeded its declared length.');
+      }
       builder.add(chunk);
     }
+    if (builder.length != length) {
+      throw StateError('Upload source ended before its declared length.');
+    }
+    checkCurrent();
     await uploadFile(
       builder.takeBytes(),
       fileName,
       targetPath,
       onProgress: onProgress,
     );
+    checkCurrent();
   }
 
-  /// Stream-based download. Returns a stream of chunks.
-  /// Default implementation downloads all bytes then yields them as one chunk.
+  /// Providers must implement actual bounded reads. A directory's recorded
+  /// size cannot make a whole-file byte download safe: the source can grow or
+  /// the response can differ, before a caller has the chance to check it.
   Stream<List<int>> downloadStream(
     String remotePath, {
     Function(int, int)? onProgress,
   }) async* {
-    final bytes = await downloadFileBytes(remotePath, onProgress: onProgress);
-    yield bytes;
+    throw UnsupportedError(
+      'This provider has no bounded streaming download implementation.',
+    );
   }
 }
 
@@ -308,6 +375,7 @@ class CloudCapabilities {
   final bool nativeShare;
   final bool serverSideCopy;
   final bool fullTextSearch;
+  final StorageTransferCapabilities transfer;
 
   const CloudCapabilities({
     required this.streaming,
@@ -320,6 +388,7 @@ class CloudCapabilities {
     required this.nativeShare,
     required this.serverSideCopy,
     required this.fullTextSearch,
+    this.transfer = const StorageTransferCapabilities(),
   });
 
   List<String> get highlights => [
@@ -339,6 +408,15 @@ class CloudCapabilities {
 /// This intentionally remains an extension rather than an interface member:
 /// Dart's `implements` requires concrete members to be reimplemented too.
 extension CloudStorageClientCapabilities on CloudStorageClient {
+  StorageTransferCapabilities get transferCapabilities =>
+      this is CloudTransferOperations
+      ? (this as CloudTransferOperations).transferCapabilities
+      : const StorageTransferCapabilities();
+
+  String get transferIdentity => this is CloudTransferOperations
+      ? (this as CloudTransferOperations).transferIdentity
+      : '';
+
   CloudCapabilities get capabilities => CloudCapabilities(
     streaming: supportsStreaming,
     multipart: supportsMultipart,
@@ -350,6 +428,7 @@ extension CloudStorageClientCapabilities on CloudStorageClient {
     nativeShare: supportsNativeShare,
     serverSideCopy: supportsServerSideCopy,
     fullTextSearch: supportsFullTextSearch,
+    transfer: transferCapabilities,
   );
 }
 

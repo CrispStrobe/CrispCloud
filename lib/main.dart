@@ -42,7 +42,7 @@ import 'services/cert_pinning_service.dart';
 import 'services/crash_reporting_service.dart';
 import 'services/file_cache_service.dart';
 import 'services/log_service.dart';
-import 'services/locale_preference.dart';
+import 'services/installation_identity.dart';
 import 'services/thumbnail_service.dart';
 import 'services/proxy_service.dart';
 import 'services/pdf_font_licenses.dart';
@@ -88,15 +88,148 @@ const _appVersion = String.fromEnvironment(
 
 Future<void> main() async {
   CrashReportingService? crashReporting;
-  runZonedGuarded(
-    () async {
-      WidgetsFlutterBinding.ensureInitialized();
-      registerBundledEditorAssets();
-      registerPdfFontLicenses();
-      registerMediaVideoLicenses();
-      LicenseRegistry.addLicense(
-        () => Stream.value(
-          const LicenseEntryWithLineBreaks(['libsmb2'], smbLicense),
+  runZonedGuarded(() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    await InstallationIdentityService.instance.initialize();
+    registerBundledEditorAssets();
+    registerPdfFontLicenses();
+    registerMediaVideoLicenses();
+    LicenseRegistry.addLicense(() => Stream.value(const LicenseEntryWithLineBreaks(['libsmb2'], smbLicense)));
+
+    crashReporting = CrashReportingService(
+      backend: LocalBackend(),
+      appVersion: _appVersion,
+    );
+    await crashReporting!.initialize();
+    crashReporting!.installGlobalHandlers();
+    crashReporting!.reportBreadcrumb('Flutter binding ready', 'startup');
+
+    // Route AES-GCM to the platform's hardware-accelerated crypto on native
+    // (Android Keystore / Apple CryptoKit) — ~1000 MB/s vs ~1-9 MB/s pure-Dart
+    // for file encryption. No-op on web (which uses WebCrypto directly).
+    if (!kIsWeb) {
+      FlutterCryptography.enable();
+    }
+
+    // Disable browser context menu on web so our custom context menu works.
+    if (kIsWeb) {
+      BrowserContextMenu.disableContextMenu();
+    }
+
+    // Register the Workmanager background task callback (Android/iOS only).
+    // Must be called before runApp() so the callback isolate can be spawned.
+    await BackgroundSyncService.initialize();
+    crashReporting!.reportBreadcrumb('Background services ready', 'startup');
+
+    _log.info('App starting...');
+
+    // Initialize secure storage and migrate credentials.
+    // On web, use encrypted localStorage with a master password.
+    // On native platforms, use OS-level secure storage (Keychain, etc.).
+    final SecureStorage secureStorage;
+    if (kIsWeb) {
+      final webStorage = WebEncryptedStorage(LocalStorageBackend());
+      // The master password prompt is handled by _MasterPasswordGate below.
+      // We pass the un-initialized storage and let the gate handle it.
+      secureStorage = webStorage;
+    } else {
+      secureStorage = PlatformSecureStorage();
+      await CredentialMigration.migrateIfNeeded(secureStorage);
+    }
+    crashReporting!.reportBreadcrumb('Secure storage ready', 'startup');
+
+    // Platform-specific config path
+    String configPath;
+    if (kIsWeb) {
+      configPath = 'cloud-storage-config';
+    } else if (Platform.isAndroid || Platform.isIOS) {
+      final dir = await getApplicationSupportDirectory();
+      configPath = p.join(dir.path, '.cloud-storage-config');
+    } else {
+      final home = Platform.environment['HOME'] ??
+          Platform.environment['USERPROFILE'] ??
+          '.';
+      configPath = p.join(home, '.cloud-storage-config');
+    }
+
+    _log.info('Config path: $configPath');
+    crashReporting!.reportBreadcrumb('Configuration path resolved', 'startup');
+
+    // Load proxy and certificate pinning configuration
+    final certPinning = CertPinningService();
+    await certPinning.load();
+
+    final proxyService = ProxyService();
+    await proxyService.load();
+    proxyService.setCertPinning(certPinning);
+    proxyService.applyGlobally();
+    crashReporting!.reportBreadcrumb('Network policy ready', 'startup');
+
+    // Initialize file cache, thumbnail service, and audit service
+    final fileCache = FileCacheService();
+    await fileCache.init();
+
+    final thumbnailService = ThumbnailService();
+    await thumbnailService.init();
+
+    final auditService = AuditService();
+    await auditService.init();
+    crashReporting!.reportBreadcrumb('Caches and audit log ready', 'startup');
+
+    CloudProvider defaultProvider = await _getDefaultProvider();
+
+    if (defaultProvider == CloudProvider.internxt &&
+        !CloudStorageFactory.isInternxtSupported) {
+      _log.warn(
+          'Internxt preference detected but provider is disabled. Forcing Filen.');
+      defaultProvider = CloudProvider.filen;
+    }
+
+    try {
+      final configService = await _createConfigService(
+          configPath, defaultProvider, secureStorage);
+
+      runApp(ProviderScope(
+        overrides: [
+          secureStorageProvider.overrideWithValue(secureStorage),
+          configPathProvider.overrideWithValue(configPath),
+          proxyServiceProvider.overrideWithValue(proxyService),
+          certPinningProvider.overrideWithValue(certPinning),
+          fileCacheProvider.overrideWithValue(fileCache),
+          thumbnailServiceProvider.overrideWithValue(thumbnailService),
+          auditServiceProvider.overrideWithValue(auditService),
+          crashReportingServiceProvider.overrideWithValue(crashReporting!),
+          authProvider.overrideWith((ref) => AuthNotifier(
+                ref,
+                initialProvider: defaultProvider,
+                config: configService,
+                configPath: configPath,
+                secureStorage: secureStorage,
+              )),
+        ],
+        child: const MyApp(),
+      ));
+      crashReporting!.reportBreadcrumb('Application UI mounted', 'startup');
+    } catch (e, stack) {
+      _log.error('Critical error creating config service', e, stack);
+      await crashReporting!.reportError(
+        e,
+        stack,
+        context: const {'origin': 'startup_config'},
+      );
+      // Show an error screen instead of a black screen
+      runApp(MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Text(
+                'Failed to start CrispCloud:\n$e',
+                style: const TextStyle(color: Colors.red, fontSize: 16),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
         ),
       );
 

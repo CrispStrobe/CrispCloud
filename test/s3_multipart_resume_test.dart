@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:crypto/crypto.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:crisp_cloud/services/s3_client_adapter.dart';
@@ -31,46 +30,63 @@ void main() {
   });
 
   group('S3 Multipart Resume - SharedPreferences tracking', () {
-    test('getInterruptedUploads returns empty list when no uploads tracked', () async {
-      final uploads = await adapter.getInterruptedUploads();
-      expect(uploads, isEmpty);
-    });
+    test(
+      'getInterruptedUploads returns empty list when no uploads tracked',
+      () async {
+        final uploads = await adapter.getInterruptedUploads();
+        expect(uploads, isEmpty);
+      },
+    );
 
-    test('getInterruptedUploads returns tracked uploads from SharedPreferences', () async {
-      // Simulate a previously persisted interrupted upload
-      final prefs = await SharedPreferences.getInstance();
-      final trackingData = jsonEncode({
-        'uploadId': 'test-upload-id-123',
-        'bucket': 'test-bucket',
-        'key': 'photos/large-file.zip',
-        'parts': [
-          {'partNumber': 1, 'etag': '"etag1"'},
-          {'partNumber': 2, 'etag': '"etag2"'},
-        ],
-      });
-      await prefs.setString('crisp_s3_multipart_test-upload-id-123', trackingData);
+    test(
+      'getInterruptedUploads returns tracked uploads from SharedPreferences',
+      () async {
+        // Simulate a previously persisted interrupted upload
+        final prefs = await SharedPreferences.getInstance();
+        final trackingData = jsonEncode({
+          'uploadId': 'test-upload-id-123',
+          'bucket': 'test-bucket',
+          'key': 'photos/large-file.zip',
+          'parts': [
+            {'partNumber': 1, 'etag': '"etag1"'},
+            {'partNumber': 2, 'etag': '"etag2"'},
+          ],
+        });
+        await prefs.setString(
+          'crisp_s3_multipart_test-upload-id-123',
+          trackingData,
+        );
 
-      final uploads = await adapter.getInterruptedUploads();
-      expect(uploads, hasLength(1));
-      expect(uploads[0]['uploadId'], equals('test-upload-id-123'));
-      expect(uploads[0]['key'], equals('photos/large-file.zip'));
-      expect(uploads[0]['parts'], hasLength(2));
-    });
+        final uploads = await adapter.getInterruptedUploads();
+        expect(uploads, hasLength(1));
+        expect(uploads[0]['uploadId'], equals('test-upload-id-123'));
+        expect(uploads[0]['key'], equals('photos/large-file.zip'));
+        expect(uploads[0]['parts'], hasLength(2));
+      },
+    );
 
     test('getInterruptedUploads returns multiple tracked uploads', () async {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('crisp_s3_multipart_upload-1', jsonEncode({
-        'uploadId': 'upload-1',
-        'bucket': 'b1',
-        'key': 'file1.zip',
-        'parts': [{'partNumber': 1, 'etag': '"e1"'}],
-      }));
-      await prefs.setString('crisp_s3_multipart_upload-2', jsonEncode({
-        'uploadId': 'upload-2',
-        'bucket': 'b2',
-        'key': 'file2.zip',
-        'parts': [],
-      }));
+      await prefs.setString(
+        'crisp_s3_multipart_upload-1',
+        jsonEncode({
+          'uploadId': 'upload-1',
+          'bucket': 'b1',
+          'key': 'file1.zip',
+          'parts': [
+            {'partNumber': 1, 'etag': '"e1"'},
+          ],
+        }),
+      );
+      await prefs.setString(
+        'crisp_s3_multipart_upload-2',
+        jsonEncode({
+          'uploadId': 'upload-2',
+          'bucket': 'b2',
+          'key': 'file2.zip',
+          'parts': [],
+        }),
+      );
 
       final uploads = await adapter.getInterruptedUploads();
       expect(uploads, hasLength(2));
@@ -78,30 +94,39 @@ void main() {
       expect(ids, containsAll(['upload-1', 'upload-2']));
     });
 
-    test('getInterruptedUploads ignores non-multipart SharedPrefs keys', () async {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('some_other_key', 'some_value');
-      await prefs.setString('crisp_s3_multipart_upload-x', jsonEncode({
-        'uploadId': 'upload-x',
-        'bucket': 'b',
-        'key': 'f.zip',
-        'parts': [],
-      }));
+    test(
+      'getInterruptedUploads ignores non-multipart SharedPrefs keys',
+      () async {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('some_other_key', 'some_value');
+        await prefs.setString(
+          'crisp_s3_multipart_upload-x',
+          jsonEncode({
+            'uploadId': 'upload-x',
+            'bucket': 'b',
+            'key': 'f.zip',
+            'parts': [],
+          }),
+        );
 
-      final uploads = await adapter.getInterruptedUploads();
-      expect(uploads, hasLength(1));
-      expect(uploads[0]['uploadId'], equals('upload-x'));
-    });
+        final uploads = await adapter.getInterruptedUploads();
+        expect(uploads, hasLength(1));
+        expect(uploads[0]['uploadId'], equals('upload-x'));
+      },
+    );
 
     test('getInterruptedUploads skips malformed JSON entries', () async {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('crisp_s3_multipart_bad', 'not valid json {{{');
-      await prefs.setString('crisp_s3_multipart_good', jsonEncode({
-        'uploadId': 'good-id',
-        'bucket': 'b',
-        'key': 'ok.zip',
-        'parts': [],
-      }));
+      await prefs.setString(
+        'crisp_s3_multipart_good',
+        jsonEncode({
+          'uploadId': 'good-id',
+          'bucket': 'b',
+          'key': 'ok.zip',
+          'parts': [],
+        }),
+      );
 
       final uploads = await adapter.getInterruptedUploads();
       expect(uploads, hasLength(1));
@@ -110,16 +135,22 @@ void main() {
   });
 
   group('S3 Multipart Resume - resumeMultipartUpload error handling', () {
-    test('resumeMultipartUpload throws when no interrupted upload found', () async {
-      expect(
-        () => adapter.resumeMultipartUpload('/nonexistent/file.zip', [1, 2, 3]),
-        throwsA(isA<Exception>().having(
-          (e) => e.toString(),
-          'message',
-          contains('No interrupted upload found'),
-        )),
-      );
-    });
+    test(
+      'resumeMultipartUpload throws when no interrupted upload found',
+      () async {
+        expect(
+          () =>
+              adapter.resumeMultipartUpload('/nonexistent/file.zip', [1, 2, 3]),
+          throwsA(
+            isA<Exception>().having(
+              (e) => e.toString(),
+              'message',
+              contains('No interrupted upload found'),
+            ),
+          ),
+        );
+      },
+    );
   });
 
   group('S3 Multipart Resume - ListParts XML parsing', () {
@@ -182,8 +213,8 @@ void main() {
       </ListPartsResult>
       ''';
 
-      final isTruncated =
-          RegExp(r'<IsTruncated>true</IsTruncated>').hasMatch(xml);
+      final isTruncated = RegExp(r'<IsTruncated>true</IsTruncated>')
+          .hasMatch(xml);
       expect(isTruncated, isTrue);
 
       final markerMatch = RegExp(
@@ -200,8 +231,8 @@ void main() {
       </ListPartsResult>
       ''';
 
-      final isTruncated =
-          RegExp(r'<IsTruncated>true</IsTruncated>').hasMatch(xml);
+      final isTruncated = RegExp(r'<IsTruncated>true</IsTruncated>')
+          .hasMatch(xml);
       expect(isTruncated, isFalse);
     });
   });
@@ -217,10 +248,13 @@ void main() {
   });
 
   group('S3 Multipart Resume - persistInterruptedUploads', () {
-    test('persistInterruptedUploads does not throw when no active uploads', () async {
-      // Should be a no-op, not throw
-      await adapter.persistInterruptedUploads();
-    });
+    test(
+      'persistInterruptedUploads does not throw when no active uploads',
+      () async {
+        // Should be a no-op, not throw
+        await adapter.persistInterruptedUploads();
+      },
+    );
   });
 
   group('S3 Multipart Resume - multipart threshold constants', () {

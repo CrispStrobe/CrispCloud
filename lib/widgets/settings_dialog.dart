@@ -28,6 +28,10 @@ import 'cache_settings_dialog.dart';
 import 'provider_settings_dialog.dart';
 import 'proxy_settings_dialog.dart';
 import 'theme_picker.dart';
+import '../l10n/commander_strings.dart';
+import 'custom_command_dialog.dart';
+import '../l10n/extension_translations.dart';
+import 'extensions_dialog.dart';
 
 // ---------------------------------------------------------------------------
 // Public entry point
@@ -107,6 +111,16 @@ class _GeneralSection extends ConsumerWidget {
       title: s.text('General'),
       icon: Icons.tune,
       children: [
+        ListTile(leading: const Icon(Icons.terminal),
+          title: Text(CommanderStrings.translate(context, 'Custom commands')),
+          onTap: () => showCustomCommandsDialog(context, ref,
+            ref.read(activePanelProvider))),
+        ListTile(
+          key: const ValueKey('settings-extensions'),
+          leading: const Icon(Icons.extension),
+          title: Text(context.extensionTr('Extensions')),
+          onTap: () => showExtensionsDialog(context, ref, ref.read(activePanelProvider)),
+        ),
         SwitchListTile(
           key: const Key('settings_fkey_bar_toggle'),
           value: fkeyVisible,
@@ -482,11 +496,10 @@ class _LanguageSection extends ConsumerWidget {
 class _CacheSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final s = SettingsStrings(context);
-    return _Section(
-      title: s.text('Cache'),
+    return const _Section(
+      title: 'Cache',
       icon: Icons.storage,
-      children: const [
+      children: [
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 24),
           child: CacheSettingsPanel(),

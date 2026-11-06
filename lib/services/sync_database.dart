@@ -19,7 +19,16 @@ part 'sync_database.g.dart';
 enum ConflictPolicy { newestWins, localWins, remoteWins, keepBoth, manual }
 
 /// Current sync status of a file entry.
-enum SyncStatus { synced, localModified, remoteModified, conflict, pendingUpload, pendingDownload, error, placeholder }
+enum SyncStatus {
+  synced,
+  localModified,
+  remoteModified,
+  conflict,
+  pendingUpload,
+  pendingDownload,
+  error,
+  placeholder,
+}
 
 /// Direction of sync.
 enum SyncDirection { twoWay, uploadOnly, downloadOnly }
@@ -33,7 +42,8 @@ class SyncPairs extends Table {
   TextColumn get localPath => text()();
   TextColumn get remotePath => text()();
   TextColumn get provider => text()(); // CloudProvider.name
-  TextColumn get conflictPolicy => text().withDefault(const Constant('newestWins'))();
+  TextColumn get conflictPolicy =>
+      text().withDefault(const Constant('newestWins'))();
   TextColumn get direction => text().withDefault(const Constant('twoWay'))();
   BoolColumn get enabled => boolean().withDefault(const Constant(true))();
   DateTimeColumn get lastSyncAt => dateTime().nullable()();
@@ -49,7 +59,8 @@ class SyncPairs extends Table {
 
   /// When true, new remote files are created as lightweight placeholders
   /// instead of being fully downloaded. Users can hydrate on demand.
-  BoolColumn get usePlaceholders => boolean().withDefault(const Constant(false))();
+  BoolColumn get usePlaceholders =>
+      boolean().withDefault(const Constant(false))();
 }
 
 /// Per-file sync state within a sync pair.
@@ -69,14 +80,17 @@ class SyncEntries extends Table {
   DateTimeColumn get lastSyncAt => dateTime().nullable()();
 
   @override
-  List<Set<Column>> get uniqueKeys => [{pairId, relativePath}];
+  List<Set<Column>> get uniqueKeys => [
+    {pairId, relativePath},
+  ];
 }
 
 /// Queued operations for offline mode — replayed on reconnect.
 class OfflineQueue extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get pairId => integer().references(SyncPairs, #id)();
-  TextColumn get operation => text()(); // upload, download, delete, rename, move
+  TextColumn get operation =>
+      text()(); // upload, download, delete, rename, move
   TextColumn get path => text()();
   TextColumn get targetPath => text().nullable()(); // for move/rename
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
@@ -133,14 +147,15 @@ class SyncDatabase extends _$SyncDatabase {
       (select(syncEntries)..where((t) => t.pairId.equals(pairId))).get();
 
   Future<SyncEntry?> getEntry(int pairId, String relativePath) =>
-      (select(syncEntries)
-            ..where((t) => t.pairId.equals(pairId) & t.relativePath.equals(relativePath)))
+      (select(syncEntries)..where(
+            (t) =>
+                t.pairId.equals(pairId) & t.relativePath.equals(relativePath),
+          ))
           .getSingleOrNull();
 
   Future<int> upsertEntry(SyncEntriesCompanion entry) =>
       into(syncEntries).insert(
         entry,
-        // Sync scans identify entries by pair + path, without the database id.
         onConflict: DoUpdate(
           (_) => entry,
           target: [syncEntries.pairId, syncEntries.relativePath],
@@ -150,19 +165,19 @@ class SyncDatabase extends _$SyncDatabase {
   Future<int> deleteEntriesForPair(int pairId) =>
       (delete(syncEntries)..where((t) => t.pairId.equals(pairId))).go();
 
-  Future<List<SyncEntry>> getConflicts(int pairId) =>
-      (select(syncEntries)
-            ..where((t) => t.pairId.equals(pairId) & t.status.equals('conflict')))
-          .get();
+  Future<List<SyncEntry>> getConflicts(int pairId) => (select(
+    syncEntries,
+  )..where((t) => t.pairId.equals(pairId) & t.status.equals('conflict'))).get();
 
   Future<List<SyncEntry>> getPendingEntries(int pairId) =>
-      (select(syncEntries)
-            ..where((t) =>
+      (select(syncEntries)..where(
+            (t) =>
                 t.pairId.equals(pairId) &
                 (t.status.equals('pendingUpload') |
                     t.status.equals('pendingDownload') |
                     t.status.equals('localModified') |
-                    t.status.equals('remoteModified'))))
+                    t.status.equals('remoteModified')),
+          ))
           .get();
 
   // --- Offline Queue ---
@@ -177,8 +192,9 @@ class SyncDatabase extends _$SyncDatabase {
           .get();
 
   Future<void> markOfflineCompleted(int id) =>
-      (update(offlineQueue)..where((t) => t.id.equals(id)))
-          .write(const OfflineQueueCompanion(completed: Value(true)));
+      (update(offlineQueue)..where((t) => t.id.equals(id))).write(
+        const OfflineQueueCompanion(completed: Value(true)),
+      );
 
   Future<int> clearCompletedOffline() =>
       (delete(offlineQueue)..where((t) => t.completed.equals(true))).go();

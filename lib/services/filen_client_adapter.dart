@@ -1,14 +1,27 @@
 // lib/services/filen_client_adapter.dart
 import 'cloud_storage_interface.dart';
+
 import 'package:filen_client/filen_client.dart';
+
 import 'filen_config_service.dart';
-import 'filen_operation_failure.dart';
+
 import 'package:flutter/foundation.dart'; // for kIsWeb
+
 import 'log_service.dart';
 import 'upload_temp_file.dart';
+import 'filen_stream_transfer.dart';
 
 class FilenClientAdapter extends CloudStorageClient
+    with CloudTransferOperations
     implements FreshCloudDirectoryReader {
+  @override
+  bool get supportsStreaming => true;
+  @override
+  StorageTransferCapabilities get transferCapabilities =>
+      const StorageTransferCapabilities(
+        boundedUpload: true,
+        boundedDownload: true,
+      );
   static const _log = Log('FilenClient');
 
   final FilenClient _client;
@@ -19,6 +32,90 @@ class FilenClientAdapter extends CloudStorageClient
       _client = FilenClient(
         config: ConfigService(configPath: config.configPath),
       );
+
+  @visibleForTesting
+  FilenClientAdapter.withClient(
+    FilenClient client, {
+    required FilenConfigService config,
+  }) : _client = client,
+       filenConfig = config;
+
+  (String, List<String>, String, void Function()) _captureTransfer() {
+    final token = _client.apiKey;
+    final keys = List<String>.of(_client.masterKeys);
+    final email = _client.email ?? '';
+    final root = _client.baseFolderUUID;
+    if (token == null || token.isEmpty || keys.isEmpty) {
+      throw StateError('Sign in to Filen before transferring files.');
+    }
+    void check() {
+      if (_client.apiKey != token ||
+          (_client.email ?? '') != email ||
+          _client.baseFolderUUID != root ||
+          !listEquals(keys, _client.masterKeys)) {
+        throw StateError('The original Filen account is no longer available.');
+      }
+    }
+
+    return (token, keys, email, check);
+  }
+
+  @override
+  Stream<List<int>> downloadStream(
+    String remotePath, {
+    Function(int, int)? onProgress,
+  }) async* {
+    final captured = _captureTransfer();
+    final resolved = await _client.resolvePath(remotePath);
+    captured.$4();
+    if (resolved['type'] != 'file' || resolved['uuid'] is! String) {
+      throw StateError('The Filen source is not a file.');
+    }
+    yield* readFilenStream(
+      _client,
+      resolved['uuid'] as String,
+      token: captured.$1,
+      masterKeys: captured.$2,
+      checkCurrent: captured.$4,
+      onProgress: onProgress,
+    );
+  }
+
+  @override
+  Future<void> uploadStream(
+    Stream<List<int>> dataStream,
+    int length,
+    String fileName,
+    String targetPath, {
+    Function(int, int)? onProgress,
+  }) async {
+    if (fileName.isEmpty ||
+        fileName == '.' ||
+        fileName == '..' ||
+        fileName.contains('/') ||
+        fileName.contains(r'\') ||
+        fileName.contains('\u0000')) {
+      throw const FormatException('Enter a file name without path separators.');
+    }
+    final captured = _captureTransfer();
+    final parent = await _client.resolvePath(targetPath);
+    captured.$4();
+    if (parent['type'] != 'folder' || parent['uuid'] is! String) {
+      throw StateError('The Filen target is not a folder.');
+    }
+    await writeFilenStream(
+      _client,
+      dataStream,
+      length,
+      fileName,
+      parent['uuid'] as String,
+      token: captured.$1,
+      masterKeys: captured.$2,
+      email: captured.$3,
+      checkCurrent: captured.$4,
+      onProgress: onProgress,
+    );
+  }
 
   @override
   String get providerName => 'Filen';
@@ -289,11 +386,7 @@ class FilenClientAdapter extends CloudStorageClient
 
     final targetResolved = await resolvePath(targetPath);
     if (targetResolved == null || targetResolved['type'] != 'folder') {
-      throw FilenOperationFailure(
-        FilenOperationCode.targetMissingFolder,
-        'Target path must be an existing folder: $targetPath',
-        {'path': targetPath},
-      );
+      throw Exception('Target path must be an existing folder: $targetPath');
     }
 
     final sourceUuid = sourceResolved['uuid'] as String;

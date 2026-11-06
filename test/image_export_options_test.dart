@@ -1,0 +1,104 @@
+import 'package:crisp_cloud/services/image_edit_session.dart';
+import 'package:crisp_cloud/services/image_export_options.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:image/image.dart' as image;
+
+import 'support/image_editor_fixture.dart';
+
+void main() {
+  test('PNG conversion resizes and preserves transparent pixels', () {
+    final bytes = encodeImageExport(
+      buildImageEditorFixture(),
+      ImageFileFormat.png,
+      const ImageExportOptions(
+        format: ImageExportFormat.png,
+        width: 12,
+        height: 8,
+      ),
+    );
+    final result = image.decodePng(bytes)!;
+    expect((result.width, result.height), (12, 8));
+    expect(result.getPixel(0, 0).a, lessThan(255));
+  });
+
+  test('JPEG export composites transparent pixels on white', () {
+    final pixels = image.Image(width: 8, height: 8, numChannels: 4);
+    image.fill(pixels, color: image.ColorRgba8(0, 0, 0, 0));
+    final bytes = encodeImageExport(
+      image.encodePng(pixels),
+      ImageFileFormat.png,
+      const ImageExportOptions(format: ImageExportFormat.jpeg, jpegQuality: 95),
+    );
+    final pixel = image.decodeJpg(bytes)!.getPixel(0, 0);
+    expect(pixel.r, greaterThan(245));
+    expect(pixel.g, greaterThan(245));
+    expect(pixel.b, greaterThan(245));
+  });
+
+  test('WebP export preserves transparency and validates its container', () {
+    final output = encodeImageExport(
+      buildImageEditorFixture(),
+      ImageFileFormat.png,
+      const ImageExportOptions(format: ImageExportFormat.webp),
+    );
+    final decoded = image.decodeWebP(output)!;
+    expect((decoded.width, decoded.height), (24, 16));
+    expect(decoded.getPixel(0, 0).a, 0);
+    expect(
+      () => validateImageExport(output, ImageExportFormat.webp),
+      returnsNormally,
+    );
+    final truncated = output.sublist(0, output.length - 1);
+    expect(
+      () => validateImageExport(truncated, ImageExportFormat.webp),
+      throwsA(isA<ImageEditException>()),
+    );
+  });
+
+  test('GIF copy export preserves representable colors and transparency', () {
+    final pixels = image.Image(width: 3, height: 2, numChannels: 4);
+    image.fill(pixels, color: image.ColorRgba8(10, 20, 30, 255));
+    pixels.setPixelRgba(0, 0, 0, 0, 0, 0);
+    final result = encodeImageExport(
+      image.encodePng(pixels),
+      ImageFileFormat.png,
+      const ImageExportOptions(format: ImageExportFormat.gif),
+    );
+    final decoded = image.decodeGif(result)!;
+    expect(decoded.getPixel(0, 0).a, 0);
+    expect(decoded.getPixel(1, 1).r, 10);
+    expect(imageExportExtension(ImageExportFormat.gif), 'gif');
+  });
+
+  test('one dimension preserves the edited aspect ratio', () {
+    final bytes = encodeImageExport(
+      buildImageEditorFixture(),
+      ImageFileFormat.png,
+      const ImageExportOptions(format: ImageExportFormat.png, width: 12),
+    );
+    final result = image.decodePng(bytes)!;
+    expect((result.width, result.height), (12, 8));
+  });
+
+  test('rejects invalid dimensions and quality', () {
+    final source = buildImageEditorFixture();
+    for (final options in [
+      const ImageExportOptions(
+        format: ImageExportFormat.png,
+        width: 0,
+        height: 1,
+      ),
+      const ImageExportOptions(format: ImageExportFormat.jpeg, jpegQuality: 0),
+      const ImageExportOptions(
+        format: ImageExportFormat.png,
+        width: 16384,
+        height: 16384,
+      ),
+    ]) {
+      expect(
+        () => encodeImageExport(source, ImageFileFormat.png, options),
+        throwsArgumentError,
+      );
+    }
+  });
+}

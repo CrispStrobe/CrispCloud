@@ -19,13 +19,7 @@ import 'log_service.dart';
 // Enums & model
 // ---------------------------------------------------------------------------
 
-enum ActionType {
-  delete,
-  rename,
-  move,
-  copy,
-  createFolder,
-}
+enum ActionType { delete, rename, move, copy, createFolder }
 
 /// A single recorded file-operation that may be undone.
 class ActionRecord {
@@ -60,6 +54,12 @@ class ActionRecord {
   /// Extra context stored at record time for display purposes.
   final Map<String, dynamic> metadata;
 
+  /// Session-bound operations must never be undone against a later account.
+  final bool Function()? isCurrent;
+
+  /// Optional source-bound reversal; avoids guessing storage from active pane.
+  final Future<UndoResult> Function()? undoAction;
+
   ActionRecord({
     required this.id,
     required this.timestamp,
@@ -68,6 +68,8 @@ class ActionRecord {
     this.newPath,
     required this.provider,
     this.metadata = const {},
+    this.isCurrent,
+    this.undoAction,
   });
 
   /// Human-readable description of the action.
@@ -76,6 +78,10 @@ class ActionRecord {
       case ActionType.delete:
         return 'Deleted ${p.basename(originalPath)}';
       case ActionType.rename:
+        final count = metadata['batchCount'] ?? metadata['renameBatchCount'];
+        if (count is int && count > 0) {
+          return 'Renamed batch of $count ${count == 1 ? 'item' : 'items'}';
+        }
         final oldName = p.basename(originalPath);
         final newName = newPath != null ? p.basename(newPath!) : '?';
         return 'Renamed $oldName → $newName';
@@ -127,11 +133,13 @@ class ActionHistoryService {
 
   final _uuid = const Uuid();
   final List<ActionRecord> _history = [];
+  final Set<String> _undoing = {};
 
   // --- Public API ----------------------------------------------------------
 
   /// All recorded actions, most-recent first.
-  List<ActionRecord> get history => List.unmodifiable(_history.reversed.toList());
+  List<ActionRecord> get history =>
+      List.unmodifiable(_history.reversed.toList());
 
   /// Record a new action and return its assigned id.
   String record(ActionRecord action) {
@@ -155,6 +163,8 @@ class ActionHistoryService {
     String? newPath,
     required String provider,
     Map<String, dynamic> metadata = const {},
+    bool Function()? isCurrent,
+    Future<UndoResult> Function()? undoAction,
   }) {
     final action = ActionRecord(
       id: _uuid.v4(),
@@ -164,18 +174,23 @@ class ActionHistoryService {
       newPath: newPath,
       provider: provider,
       metadata: Map.unmodifiable(metadata),
+      isCurrent: isCurrent,
+      undoAction: undoAction,
     );
     return record(action);
   }
 
   /// Return true if [action] can be undone given the current environment.
   bool canUndo(ActionRecord action) {
+    if (_undoing.contains(action.id)) return false;
+    if (action.isCurrent != null && !action.isCurrent!()) return false;
+    if (action.undoAction != null) return true;
     if (kIsWeb && action.provider == 'local') return false;
     switch (action.type) {
       case ActionType.delete:
-        // Delete undo is only possible for remote providers (trash restore).
-        // For local we cannot restore without a trash directory — report false.
-        return action.provider != 'local';
+        // A provider label is not evidence of a restorable deletion. New trash
+        // actions supply a receipt-bound undoAction above.
+        return false;
       case ActionType.rename:
       case ActionType.move:
       case ActionType.createFolder:
@@ -189,6 +204,9 @@ class ActionHistoryService {
   /// The caller supplies [context] so this service never imports cloud clients
   /// or flutter widgets directly.
   Future<UndoResult> undo(String actionId, UndoContext context) async {
+    if (_undoing.contains(actionId)) {
+      return const UndoResult.failure('This action is already being undone.');
+    }
     final idx = _history.indexWhere((a) => a.id == actionId);
     if (idx == -1) {
       return const UndoResult.failure('Action not found in history.', code: UndoResultCode.undoNotFound);
@@ -204,6 +222,7 @@ class ActionHistoryService {
       );
     }
 
+    _undoing.add(action.id);
     _log.info('Undoing action', {
       'id': actionId,
       'type': action.type.name,
@@ -211,9 +230,14 @@ class ActionHistoryService {
     });
 
     try {
-      final result = await _performUndo(action, context);
+      final result = action.undoAction != null
+          ? await action.undoAction!()
+          : await _performUndo(action, context);
       if (result.success) {
-        _history.removeAt(idx);
+        // Other actions may be recorded, undone, trimmed, or cleared while
+        // this callback awaits storage. Its earlier list index is no longer
+        // authoritative; remove only the action that actually completed.
+        _history.removeWhere((record) => record.id == action.id);
         _log.info('Undo successful', {'type': action.type.name});
       } else {
         _log.warn('Undo failed: ${result.message}');
@@ -221,7 +245,9 @@ class ActionHistoryService {
       return result;
     } catch (e, st) {
       _log.error('Undo threw an exception', e, st);
-      return UndoResult.failure('Undo failed: $e', code: UndoResultCode.undoFailed, arguments: {'error': e.toString()});
+      return UndoResult.failure('Undo failed: $e');
+    } finally {
+      _undoing.remove(action.id);
     }
   }
 
@@ -233,17 +259,16 @@ class ActionHistoryService {
 
   // --- Private helpers -----------------------------------------------------
 
-  Future<UndoResult> _performUndo(
-    ActionRecord action,
-    UndoContext ctx,
-  ) async {
+  Future<UndoResult> _performUndo(ActionRecord action, UndoContext ctx) async {
     switch (action.type) {
       // ---- delete --------------------------------------------------------
       case ActionType.delete:
         // Remote providers may support trash restore via their client.
         if (ctx.restoreFromTrash != null) {
           await ctx.restoreFromTrash!(action.originalPath);
-          return UndoResult.success('Restored ${p.basename(action.originalPath)} from trash.', code: UndoResultCode.undoRestored, arguments: {'name': p.basename(action.originalPath)});
+          return UndoResult.success(
+            'Restored ${p.basename(action.originalPath)} from trash.',
+          );
         }
         return const UndoResult.failure(
           'Cannot undo delete: provider does not support trash restore.', code: UndoResultCode.undoNoTrash,
@@ -254,13 +279,17 @@ class ActionHistoryService {
         // newPath holds the path after renaming.
         // We rename it back to originalPath (i.e. original name).
         if (action.newPath == null) {
-          return const UndoResult.failure('Cannot undo rename: new path unknown.', code: UndoResultCode.undoRenamePath);
+          return const UndoResult.failure(
+            'Cannot undo rename: new path unknown.',
+          );
         }
         if (action.provider == 'local') {
           await _localRename(action.newPath!, action.originalPath);
         } else {
           if (ctx.remoteRename == null) {
-            return const UndoResult.failure('Cannot undo rename: no remote rename handler.', code: UndoResultCode.undoRenameHandler);
+            return const UndoResult.failure(
+              'Cannot undo rename: no remote rename handler.',
+            );
           }
           final originalName = p.basename(action.originalPath);
           await ctx.remoteRename!(action.newPath!, originalName);
@@ -275,13 +304,17 @@ class ActionHistoryService {
         // originalPath is the source (before move).
         // newPath is the destination path (after move).
         if (action.newPath == null) {
-          return const UndoResult.failure('Cannot undo move: destination unknown.', code: UndoResultCode.undoMovePath);
+          return const UndoResult.failure(
+            'Cannot undo move: destination unknown.',
+          );
         }
         if (action.provider == 'local') {
           await _localRename(action.newPath!, action.originalPath);
         } else {
           if (ctx.remoteMove == null) {
-            return const UndoResult.failure('Cannot undo move: no remote move handler.', code: UndoResultCode.undoMoveHandler);
+            return const UndoResult.failure(
+              'Cannot undo move: no remote move handler.',
+            );
           }
           final originalDir = p.dirname(action.originalPath);
           await ctx.remoteMove!(action.newPath!, originalDir);
@@ -300,7 +333,9 @@ class ActionHistoryService {
           }
         } else {
           if (ctx.remoteDelete == null) {
-            return const UndoResult.failure('Cannot undo create folder: no remote delete handler.', code: UndoResultCode.undoFolderHandler);
+            return const UndoResult.failure(
+              'Cannot undo create folder: no remote delete handler.',
+            );
           }
           await ctx.remoteDelete!(action.originalPath);
         }
@@ -324,7 +359,9 @@ class ActionHistoryService {
           }
         } else {
           if (ctx.remoteDelete == null) {
-            return const UndoResult.failure('Cannot undo copy: no remote delete handler.', code: UndoResultCode.undoCopyHandler);
+            return const UndoResult.failure(
+              'Cannot undo copy: no remote delete handler.',
+            );
           }
           await ctx.remoteDelete!(action.originalPath);
         }
@@ -364,7 +401,8 @@ class UndoContext {
   final Future<void> Function(String currentPath, String name)? remoteRename;
 
   /// Move a remote file to [targetDirectory].
-  final Future<void> Function(String currentPath, String targetDirectory)? remoteMove;
+  final Future<void> Function(String currentPath, String targetDirectory)?
+  remoteMove;
 
   /// Delete a remote path.
   final Future<void> Function(String path)? remoteDelete;

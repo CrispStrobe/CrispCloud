@@ -1,5 +1,9 @@
+import '../models/storage_reference.dart';
+
 // lib/services/ftp_client_adapter.dart
 import 'dart:io';
+import 'dart:async';
+
 import 'package:ftpconnect/ftpconnect.dart';
 import 'package:path/path.dart' as p;
 import 'package:flutter/foundation.dart';
@@ -10,6 +14,7 @@ import 'upload_temp_file.dart';
 import 'ftp_config_service.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
+import 'ftp_transfer_session.dart';
 
 typedef FTPClientFactory =
     FTPConnect Function(
@@ -21,7 +26,27 @@ typedef FTPClientFactory =
       required int timeout,
     });
 
-class FTPClientAdapter extends CloudStorageClient {
+class FTPClientAdapter extends CloudStorageClient
+    with CloudTransferOperations
+    implements StorageNamespaceIdentity {
+  @override
+  String get storageNamespace => '${_host ?? ''}:$_port';
+
+  @override
+  StorageTransferCapabilities get transferCapabilities =>
+      const StorageTransferCapabilities(
+        // FTP RNTO cannot enforce the optional exact no-replace contract.
+        deleteEmptyDirectory: true,
+        boundedUpload: !kIsWeb,
+        boundedDownload: !kIsWeb,
+      );
+
+  @override
+  Future<void> deleteDirectoryIfEmpty(String path) => _serialized(() async {
+    final result = await _operationClient.deleteEmptyDirectory(path);
+    if (!result) throw StateError('FTP refused to remove the empty directory.');
+  });
+
   static const _log = Log('FTPClient');
 
   final FTPConfigService _config;
@@ -31,14 +56,61 @@ class FTPClientAdapter extends CloudStorageClient {
   FTPConfigService get config => _config;
 
   // FTP State. ftpconnect has one control socket without a command queue.
-  // Absolute data paths avoid CWD-dependent routing; callers must still avoid
-  // overlapping commands on this connection. Directory operations retain CWD.
+  // Legacy metadata operations share this connection and are serialized.
+  // Bounded data transfers use independent control and data connections.
   FTPConnect? _ftpClient;
   String? _username;
+  String? _password;
   String? _host;
   int _port = 21;
   bool _useTLS = false;
   bool _authenticated = false;
+  int _authEpoch = 0;
+  final Set<FtpTransferSession> _transferSessions = {};
+  Future<void>? _connecting;
+  Future<void> _legacyQueue = Future.value();
+  final Object _legacyClientKey = Object();
+
+  Future<T> _serialized<T>(Future<T> Function() action) async {
+    final epoch = _authEpoch;
+    final preceding = _legacyQueue;
+    final released = Completer<void>();
+    _legacyQueue = released.future;
+    await preceding;
+    try {
+      if (epoch != _authEpoch) {
+        throw StateError('The FTP account changed before this operation.');
+      }
+      await _ensureConnection();
+      if (epoch != _authEpoch) {
+        throw StateError('The FTP account changed before this operation.');
+      }
+      final client = _ftpClient!;
+      final result = await runZoned(
+        action,
+        zoneValues: {_legacyClientKey: (client, epoch)},
+      );
+      if (!_authenticated ||
+          epoch != _authEpoch ||
+          !identical(client, _ftpClient)) {
+        throw StateError('The original FTP account is no longer connected.');
+      }
+      return result;
+    } finally {
+      released.complete();
+    }
+  }
+
+  FTPConnect get _operationClient {
+    final captured = Zone.current[_legacyClientKey] as (FTPConnect, int)?;
+    if (captured == null ||
+        !_authenticated ||
+        captured.$2 != _authEpoch ||
+        !identical(captured.$1, _ftpClient)) {
+      throw StateError('The original FTP account is no longer connected.');
+    }
+    return captured.$1;
+  }
 
   FTPClientAdapter({required dynamic config, FTPClientFactory? clientFactory})
     : _config = (config is FTPConfigService)
@@ -65,55 +137,75 @@ class FTPClientAdapter extends CloudStorageClient {
   String? get bucketId => _host;
 
   @override
-  bool get supportsStreaming => false;
+  bool get supportsStreaming => !kIsWeb;
 
   @override
   bool get supportsTrash => false;
 
   // --- Connection Management ---
 
-  Future<void> _ensureConnection() async {
-    if (_ftpClient != null && _authenticated) return;
+  Future<void> _ensureConnection() {
+    if (_ftpClient != null && _authenticated) return Future.value();
+    if (_connecting != null) return _connecting!;
+    late Future<void> pending;
+    pending = _connect().whenComplete(() {
+      if (identical(_connecting, pending)) _connecting = null;
+    });
+    return _connecting = pending;
+  }
 
+  Future<void> _connect() async {
+    final epoch = _authEpoch;
     final creds = await _config.readCredentials();
-    if (creds == null) {
-      throw FtpOperationFailure(FtpOperationCode.notLoggedIn, 'Not logged in');
-    }
-
-    _username = creds['username'];
-    _host = creds['host'];
+    if (creds == null) throw Exception('Not logged in');
+    final username = creds['username'];
+    final host = creds['host'];
     final password = creds['password'];
-    _port = int.tryParse(creds['port'] ?? '21') ?? 21;
-    _useTLS = creds['useTLS'] == 'true';
-
-    if (_host == null || _username == null || password == null) {
-      throw FtpOperationFailure(
-        FtpOperationCode.incompleteCredentials,
-        'Incomplete credentials',
-      );
+    final port = int.tryParse(creds['port'] ?? '21') ?? 21;
+    final tls = creds['useTLS'] == 'true';
+    if (host == null || username == null || password == null) {
+      throw Exception('Incomplete credentials');
     }
-
+    if (epoch != _authEpoch) {
+      throw StateError('The FTP account changed while connecting.');
+    }
+    final connection = _createClient(
+      host,
+      port: port,
+      user: username,
+      pass: password,
+      securityType: tls ? SecurityType.ftps : SecurityType.ftp,
+      timeout: 30,
+    );
     try {
-      _ftpClient = _createClient(
-        _host!,
-        port: _port,
-        user: _username!,
-        pass: password,
-        securityType: _useTLS ? SecurityType.ftps : SecurityType.ftp,
-        timeout: 30,
-      );
-
-      final connected = await _ftpClient!.connect();
+      final connected = await connection.connect();
       if (!connected) {
         throw FtpOperationFailure(
           FtpOperationCode.connectionFailed,
           'FTP connection failed',
         );
       }
+      if (epoch != _authEpoch) {
+        throw StateError('The FTP account changed while connecting.');
+      }
+      _ftpClient = connection;
+      _username = username;
+      _host = host;
+      _password = password;
+      _port = port;
+      _useTLS = tls;
       _authenticated = true;
     } catch (e) {
-      _ftpClient = null;
-      _authenticated = false;
+      try {
+        await connection.disconnect();
+      } catch (_) {
+        /* Preserve connection failure. */
+      }
+      if (epoch == _authEpoch) {
+        _ftpClient = null;
+        _authenticated = false;
+        _password = null;
+      }
       _log.error('Connection error', e);
       throw FtpOperationFailure(
         FtpOperationCode.connectionError,
@@ -134,6 +226,8 @@ class FTPClientAdapter extends CloudStorageClient {
     if (kIsWeb) {
       throw FtpWebUnsupportedFailure();
     }
+    _authEpoch++;
+    await _closeSessions();
 
     String user = email;
     String host = '';
@@ -163,8 +257,7 @@ class FTPClientAdapter extends CloudStorageClient {
         host = hostPart;
       }
     } else {
-      throw FtpOperationFailure(
-        FtpOperationCode.invalidFormat,
+      throw Exception(
         'Format must be user@host[:port] (e.g. user@ftp.example.com:21)',
       );
     }
@@ -190,57 +283,69 @@ class FTPClientAdapter extends CloudStorageClient {
 
   @override
   Future<void> logout() async {
-    if (_ftpClient != null) {
+    _authEpoch++;
+    await _closeSessions();
+    await _config.clearCredentials();
+  }
+
+  Future<void> _closeSessions() async {
+    for (final session in _transferSessions.toList()) {
+      session.close();
+    }
+    _transferSessions.clear();
+    final connection = _ftpClient;
+    _ftpClient = null;
+    _connecting = null;
+    _authenticated = false;
+    _password = null;
+    if (connection != null) {
       try {
-        await _ftpClient!.disconnect();
+        await connection.disconnect();
       } catch (e) {
         _log.warn('Disconnect error', e);
       }
     }
-    _ftpClient = null;
-    _authenticated = false;
-    await _config.clearCredentials();
   }
 
   @override
-  Future<Map<String, dynamic>?> resolvePath(String path) async {
-    await _ensureConnection();
-    try {
-      // Try to list the path to determine if it exists
-      final currentDir = await _ftpClient!.currentDirectory();
-      final changed = await _ftpClient!.changeDirectory(path);
-      if (changed) {
-        // It's a directory
-        await _ftpClient!.changeDirectory(currentDir);
-        return {
-          'type': 'folder',
-          'name': p.basename(path),
-          'path': path,
-          'uuid': path,
-        };
-      }
-      // If changeDirectory failed, it might be a file
-      return {
-        'type': 'file',
-        'name': p.basename(path),
-        'path': path,
-        'uuid': path,
-      };
-    } catch (e) {
-      return null;
-    }
-  }
+  Future<Map<String, dynamic>?> resolvePath(String path) =>
+      _serialized(() async {
+        try {
+          // Try to list the path to determine if it exists
+          final currentDir = await _operationClient.currentDirectory();
+          final changed = await _operationClient.changeDirectory(path);
+          if (changed) {
+            // It's a directory
+            await _operationClient.changeDirectory(currentDir);
+            return {
+              'type': 'folder',
+              'name': p.basename(path),
+              'path': path,
+              'uuid': path,
+            };
+          }
+          // If changeDirectory failed, it might be a file
+          return {
+            'type': 'file',
+            'name': p.basename(path),
+            'path': path,
+            'uuid': path,
+          };
+        } catch (e) {
+          return null;
+        }
+      });
 
   @override
-  Future<Map<String, dynamic>> listPath(String path) async {
-    await _ensureConnection();
-
+  Future<Map<String, dynamic>> listPath(String path) => _serialized(() async {
     final folders = <Map<String, dynamic>>[];
     final files = <Map<String, dynamic>>[];
 
     try {
-      await _ftpClient!.changeDirectory(path);
-      final items = await _ftpClient!.listDirectoryContent();
+      if (!await _operationClient.changeDirectory(path)) {
+        throw StateError('The FTP directory is unavailable: $path');
+      }
+      final items = await _operationClient.listDirectoryContent();
 
       for (final item in items) {
         final name = item.name;
@@ -276,7 +381,7 @@ class FTPClientAdapter extends CloudStorageClient {
     }
 
     return {'folders': folders, 'files': files};
-  }
+  });
 
   @override
   Future<void> uploadFile(
@@ -284,9 +389,8 @@ class FTPClientAdapter extends CloudStorageClient {
     String fileName,
     String targetPath, {
     Function(int, int)? onProgress,
-  }) async {
-    await _ensureConnection();
-    final client = _ftpClient!;
+  }) => _serialized(() async {
+    final client = _operationClient;
     final remotePath = p.posix.normalize(
       p.posix.join('/', targetPath, fileName),
     );
@@ -308,6 +412,70 @@ class FTPClientAdapter extends CloudStorageClient {
       }
       onProgress?.call(fileData.length, fileData.length);
     });
+  });
+
+  Future<FtpTransferSession> _openTransfer() async {
+    if (kIsWeb) throw UnsupportedError('FTP is unavailable in a browser.');
+    await _ensureConnection();
+    final epoch = _authEpoch;
+    final connection = _ftpClient;
+    final password = _password;
+    if (password == null) {
+      throw StateError('The FTP session credentials are unavailable.');
+    }
+    final session = FtpTransferSession(
+      host: _host!,
+      port: _port,
+      username: _username!,
+      password: password,
+      secure: _useTLS,
+      isCurrent: () =>
+          _authenticated &&
+          _authEpoch == epoch &&
+          identical(_ftpClient, connection),
+    );
+    _transferSessions.add(session);
+    try {
+      await session.connect();
+      return session;
+    } catch (_) {
+      _transferSessions.remove(session);
+      session.close();
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> uploadStream(
+    Stream<List<int>> dataStream,
+    int length,
+    String fileName,
+    String targetPath, {
+    Function(int, int)? onProgress,
+  }) async {
+    final remote = p.posix.normalize(p.posix.join('/', targetPath, fileName));
+    final session = await _openTransfer();
+    try {
+      await session.upload(remote, dataStream, length, onProgress: onProgress);
+    } finally {
+      _transferSessions.remove(session);
+      session.close();
+    }
+  }
+
+  @override
+  Stream<List<int>> downloadStream(
+    String remotePath, {
+    Function(int, int)? onProgress,
+  }) async* {
+    final remote = p.posix.normalize(p.posix.join('/', remotePath));
+    final session = await _openTransfer();
+    try {
+      yield* session.download(remote, onProgress: onProgress);
+    } finally {
+      _transferSessions.remove(session);
+      session.close();
+    }
   }
 
   @override
@@ -315,9 +483,8 @@ class FTPClientAdapter extends CloudStorageClient {
     String remotePath,
     String localPath, {
     Function(int, int)? onProgress,
-  }) async {
-    await _ensureConnection();
-    final client = _ftpClient!;
+  }) => _serialized(() async {
+    final client = _operationClient;
     final source = p.posix.normalize(p.posix.join('/', remotePath));
     final localFile = File(localPath);
     // The library sends this complete path in both SIZE and RETR.
@@ -332,15 +499,14 @@ class FTPClientAdapter extends CloudStorageClient {
 
     final size = await localFile.length();
     onProgress?.call(size, size);
-  }
+  });
 
   @override
   Future<Uint8List> downloadFileBytes(
     String remotePath, {
     Function(int, int)? onProgress,
-  }) async {
-    await _ensureConnection();
-    final client = _ftpClient!;
+  }) => _serialized(() async {
+    final client = _operationClient;
     final source = p.posix.normalize(p.posix.join('/', remotePath));
     final tempDir = await Directory.systemTemp.createTemp(
       'crisp-ftp-download-',
@@ -370,29 +536,26 @@ class FTPClientAdapter extends CloudStorageClient {
         );
       }
     }
-  }
+  });
 
   @override
-  Future<void> createFolderPath(String path) async {
-    await _ensureConnection();
+  Future<void> createFolderPath(String path) => _serialized(() async {
     try {
-      await _ftpClient!.makeDirectory(path);
+      await _operationClient.makeDirectory(path);
     } catch (e) {
       // Ignore if already exists
       _log.debug('mkdir note: $e');
     }
-  }
+  });
 
   @override
-  Future<void> deletePath(String path) async {
-    await _ensureConnection();
-
+  Future<void> deletePath(String path) => _serialized(() async {
     // Try to determine if it's a directory
     try {
-      final currentDir = await _ftpClient!.currentDirectory();
-      final isDir = await _ftpClient!.changeDirectory(path);
+      final currentDir = await _operationClient.currentDirectory();
+      final isDir = await _operationClient.changeDirectory(path);
       if (isDir) {
-        await _ftpClient!.changeDirectory(currentDir);
+        await _operationClient.changeDirectory(currentDir);
         await _deleteDirectoryRecursive(path);
         return;
       }
@@ -400,12 +563,12 @@ class FTPClientAdapter extends CloudStorageClient {
       // Not a directory, try as file
     }
 
-    await _ftpClient!.deleteFile(path);
-  }
+    await _operationClient.deleteFile(path);
+  });
 
   Future<void> _deleteDirectoryRecursive(String path) async {
-    await _ftpClient!.changeDirectory(path);
-    final items = await _ftpClient!.listDirectoryContent();
+    await _operationClient.changeDirectory(path);
+    final items = await _operationClient.listDirectoryContent();
 
     for (final item in items) {
       if (item.name == '.' || item.name == '..') continue;
@@ -414,25 +577,24 @@ class FTPClientAdapter extends CloudStorageClient {
       if (item.type == FTPEntryType.dir) {
         await _deleteDirectoryRecursive(fullPath);
       } else {
-        await _ftpClient!.deleteFile(fullPath);
+        await _operationClient.deleteFile(fullPath);
       }
     }
 
     // Go back to parent before removing directory
-    await _ftpClient!.changeDirectory(p.posix.dirname(path));
-    await _ftpClient!.deleteEmptyDirectory(path);
+    await _operationClient.changeDirectory(p.posix.dirname(path));
+    await _operationClient.deleteEmptyDirectory(path);
   }
 
   @override
-  Future<void> movePath(String sourcePath, String targetPath) async {
-    await _ensureConnection();
-    await _ftpClient!.rename(sourcePath, targetPath);
-  }
+  Future<void> movePath(String sourcePath, String targetPath) =>
+      _serialized(() async {
+        await _operationClient.rename(sourcePath, targetPath);
+      });
 
   @override
-  Future<void> renamePath(String path, String newName) async {
-    await _ensureConnection();
+  Future<void> renamePath(String path, String newName) => _serialized(() async {
     final newPath = p.posix.join(p.posix.dirname(path), newName);
-    await _ftpClient!.rename(path, newPath);
-  }
+    await _operationClient.rename(path, newPath);
+  });
 }

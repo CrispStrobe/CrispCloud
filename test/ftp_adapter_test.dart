@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:crisp_cloud/services/ftp_client_adapter.dart';
 import 'package:crisp_cloud/services/ftp_config_service.dart';
 import 'package:crisp_cloud/services/secure_storage_service.dart';
+import 'package:ftpconnect/ftpconnect.dart';
 
 void main() {
   late FTPClientAdapter adapter;
@@ -14,7 +15,17 @@ void main() {
       configPath: '/tmp/ftp_test_config',
       secureStorage: InMemorySecureStorage(),
     );
-    adapter = FTPClientAdapter(config: configService);
+    adapter = FTPClientAdapter(
+      config: configService,
+      clientFactory: (
+        String host, {
+        required int port,
+        required String user,
+        required String pass,
+        required SecurityType securityType,
+        required int timeout,
+      }) => _RejectedFtpConnection(),
+    );
   });
 
   group('FTPClientAdapter - basic properties', () {
@@ -45,8 +56,8 @@ void main() {
   });
 
   group('FTPClientAdapter - capability flags', () {
-    test('supportsStreaming is false', () {
-      expect(adapter.supportsStreaming, isFalse);
+    test('supportsStreaming is true on native platforms', () {
+      expect(adapter.supportsStreaming, isTrue);
     });
 
     test('supportsTrash is false', () {
@@ -79,9 +90,7 @@ void main() {
     });
 
     test('login saves credentials and attempts connection', () async {
-      // This will fail at connection (no real FTP server) but credentials
-      // should be saved first. We verify by checking that after the error
-      // the credentials are cleared (adapter clears on connection failure).
+      // A rejected synthetic connection never contacts an external server.
       try {
         await adapter.login('user@ftp.example.com:21', 'pass123');
       } catch (e) {
@@ -154,4 +163,13 @@ void main() {
       expect(creds, isNull);
     });
   });
+}
+
+class _RejectedFtpConnection implements FTPConnect {
+  @override
+  Future<bool> connect() async => false;
+  @override
+  Future<bool> disconnect() async => true;
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

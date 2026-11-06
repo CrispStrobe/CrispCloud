@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_ui/material_ui.dart' as material;
 import 'package:path/path.dart' as p;
 import 'package:pro_image_editor/pro_image_editor.dart';
 
@@ -12,12 +14,19 @@ import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/panel_source_provider.dart';
 import '../providers/providers.dart';
+import '../services/image_device_export.dart';
+import '../services/image_edit_project.dart';
+import '../services/image_project_store.dart';
+import '../services/image_overlay.dart';
+import '../services/pdf_file_store.dart';
 import '../services/image_edit_session.dart';
+import '../services/image_export_options.dart';
 import '../services/image_editor_menu.dart';
 import '../services/image_file_store.dart';
 import '../services/log_service.dart';
 import '../services/panel_source_service.dart';
 import 'image_editor_surface.dart';
+import 'image_export_dialog.dart';
 
 const _log = Log('ImageEditor');
 
@@ -43,6 +52,10 @@ class ImageEditorDialog extends ConsumerStatefulWidget {
     this.storeOverride,
     this.editorKey,
     this.enableIsolateGeneration = true,
+    this.deviceExporterOverride,
+    this.projectStoreOverride,
+    this.projectExporterOverride,
+    this.overlayPickerOverride,
   });
 
   final FileItem file;
@@ -52,6 +65,10 @@ class ImageEditorDialog extends ConsumerStatefulWidget {
   final ImageFileStore? storeOverride;
   final GlobalKey<ProImageEditorState>? editorKey;
   final bool enableIsolateGeneration;
+  final ImageDeviceExporter? deviceExporterOverride;
+  final ImageProjectStore? projectStoreOverride;
+  final ImageProjectExporter? projectExporterOverride;
+  final ImageOverlayPicker? overlayPickerOverride;
 
   @override
   ConsumerState<ImageEditorDialog> createState() => _ImageEditorDialogState();
@@ -66,6 +83,8 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
   EditorStateHistory? _originalHistory;
   int _nextToken = 1;
   ImageFileStore? _store;
+  ImageProjectStore? _projectStore;
+  ImageEditProject? _project;
   ImageEditSession? _session;
   Uint8List? _initialBytes;
   ImageFileInfo? _info;
@@ -74,15 +93,18 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
   bool _loading = true;
   bool _loadInProgress = false;
   bool _ready = false;
+  bool _restoringProject = false;
+  bool _showLayers = false;
   bool _closing = false;
   bool _applying = false;
+  bool _exporting = false;
   bool _allowPop = false;
   bool _refreshScheduled = false;
   SubEditor? _tool;
   String? _errorKey;
 
   bool get _saving => _session?.isSaving ?? false;
-  bool get _busy => _saving || _closing || _applying || _allowPop;
+  bool get _busy => _saving || _exporting || _closing || _applying || _allowPop;
   bool get _dirty => _session?.isDirty ?? false;
   bool get _routeIsCurrent => ModalRoute.of(context)?.isCurrent ?? true;
   bool get _toolOpen =>
@@ -170,6 +192,93 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
     );
   }
 
+  ImageProjectStore _captureProjectStore() {
+    if (widget.projectStoreOverride case final store?) return store;
+    final panel = ref.read(panelProvider(widget.side));
+    final selectedSource = ref.read(panelSourceProvider(widget.side));
+    if (panel.isInArchive ||
+        selectedSource.isArchive ||
+        selectedSource.isContainer) {
+      throw const _ImageOpenMessage(
+        'Extract this file from its archive or container before editing.',
+      );
+    }
+    final origin = panel.originForFile(widget.file);
+    if (origin == null) {
+      throw const _ImageOpenMessage(
+        'Refresh this folder before editing. The file’s source could not be verified.',
+      );
+    }
+    final source = origin.source;
+    if (source is LocalPanelSource) {
+      return ImageProjectStore(
+        PdfFileStore.local(
+          service: ref.read(localFileServiceProvider),
+          file: widget.file,
+          inputLimitBytes: ImageEditProject.maxBytes,
+          outputLimitBytes: ImageEditProject.maxBytes,
+        ),
+      );
+    }
+    if (source is! RemotePanelSource) {
+      throw const _ImageOpenMessage(
+        'Extract this file from its archive or container before editing.',
+      );
+    }
+    return ImageProjectStore(
+      PdfFileStore.remote(
+        client: source.client,
+        providerName: source.providerName,
+        cache: ref.read(fileCacheProvider),
+        file: widget.file.path == null
+            ? widget.file.copyWith(
+                path: p.posix.join(source.path, widget.file.name),
+              )
+            : widget.file,
+        isCurrentAccount: () => mounted && origin.isCurrent,
+        inputLimitBytes: ImageEditProject.maxBytes,
+        outputLimitBytes: ImageEditProject.maxBytes,
+      ),
+    );
+  }
+
+  Future<void> _finishImageLoad() async {
+    final editor = _editorKey.currentState;
+    if (editor == null || !mounted || _ready || _restoringProject) return;
+    _restoringProject = true;
+    try {
+      _onHistory(editor.stateManager, editor);
+      if (_project case final project?) {
+        final overlays = ImageProjectOverlayCache();
+        await overlays.precache(editor.context, project.history);
+        if (!mounted) return;
+        await editor.importStateHistory(
+          ImportStateHistory.fromMap(
+            project.history,
+            configs: ImportEditorConfigs(widgetLoader: overlays.load),
+          ),
+        );
+        if (!mounted) return;
+        _onHistory(editor.stateManager, editor);
+        final revision = _session!.currentRevision;
+        _session!.removeListener(_scheduleRefresh);
+        _session!.dispose();
+        _session = ImageEditSession(
+          initialBytes: _initialBytes!,
+          format: _info!.format,
+          initialRevision: revision,
+        )..addListener(_scheduleRefresh);
+      }
+      _ready = true;
+    } catch (error, stack) {
+      _log.warn('Could not restore image project', error, stack);
+      if (mounted) setState(() => _errorKey = 'Could not open image');
+    } finally {
+      _restoringProject = false;
+      _scheduleRefresh();
+    }
+  }
+
   Future<void> _load() async {
     if (_loadInProgress) return;
     _loadInProgress = true;
@@ -177,21 +286,38 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
       setState(() {
         _loading = true;
         _ready = false;
+        _restoringProject = false;
         _errorKey = null;
       });
     }
     try {
       // Check listing size before touching storage (including unsupported origins).
-      if ((widget.file.size ?? 0) > kImageEditorInputLimitBytes) {
+      final isProject = isImageEditProjectName(widget.file.name);
+      if ((widget.file.size ?? 0) >
+          (isProject
+              ? ImageEditProject.maxBytes
+              : kImageEditorInputLimitBytes)) {
         throw const ImageEditException(ImageEditFailure.inputTooLarge);
       }
-      final store = _store ??= _captureStore();
-      final bytes = await store.load();
+      final Uint8List bytes;
+      if (isProject) {
+        final store = _projectStore ??= _captureProjectStore();
+        _project = await store.load();
+        bytes = _project!.sourceBytes;
+      } else {
+        final store = _store ??= _captureStore();
+        bytes = await store.load();
+      }
       if (!mounted) return;
-      final info = inspectEditableImage(bytes, fileName: widget.file.name);
+      final sourceName =
+          _project?.sourceName ??
+          (isTranscodedRasterFileName(widget.file.name)
+              ? 'source.png'
+              : widget.file.name);
+      final info = inspectEditableImage(bytes, fileName: sourceName);
       // Validate compressed pixels with Flutter's real decoder before handing
       // them to a renderer which would otherwise stay on its loading surface.
-      final codec = await ui.instantiateImageCodec(bytes);
+      final codec = await ui.instantiateImageCodec(Uint8List.fromList(bytes));
       try {
         if (codec.frameCount != 1) {
           throw const ImageEditException(ImageEditFailure.animatedImage);
@@ -287,12 +413,36 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
     switch (action) {
       case ImageEditorAction.save:
         unawaited(_save());
+      case ImageEditorAction.addEmoji:
+        unawaited(_addEmoji());
+      case ImageEditorAction.addOverlay:
+        unawaited(_addOverlay());
+      case ImageEditorAction.saveProjectCopy:
+        unawaited(_saveProjectCopy());
+      case ImageEditorAction.exportCopy:
+        unawaited(_exportCopy());
       case ImageEditorAction.close:
         unawaited(_close());
       case ImageEditorAction.undo:
         editor?.undoAction();
       case ImageEditorAction.redo:
         editor?.redoAction();
+      case ImageEditorAction.layers:
+        setState(() => _showLayers = !_showLayers);
+      case ImageEditorAction.zoomIn:
+        if (editor != null) {
+          editor.zoomTo(
+            scale: (editor.editorScaleFactor * 1.25).clamp(1.0, 5.0),
+          );
+        }
+      case ImageEditorAction.zoomOut:
+        if (editor != null) {
+          editor.zoomTo(
+            scale: (editor.editorScaleFactor / 1.25).clamp(1.0, 5.0),
+          );
+        }
+      case ImageEditorAction.zoomReset:
+        editor?.resetZoom();
       case ImageEditorAction.cropRotate:
         editor?.openCropRotateEditor();
       case ImageEditorAction.paint:
@@ -314,7 +464,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
     final store = _store;
     final editor = _editorKey.currentState;
     if (session == null ||
-        store == null ||
+        (store == null && _projectStore == null) ||
         editor == null ||
         !_canEdit ||
         !session.isDirty) {
@@ -328,7 +478,18 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
           if (!mounted) throw StateError('Image editor disposed');
           return editor.captureEditorImage();
         },
-        write: store.save,
+        write: (bytes) async {
+          final projectStore = _projectStore;
+          if (projectStore == null) return store!.save(bytes);
+          final history = await (await editor.exportStateHistory()).toMap();
+          return projectStore.save(
+            ImageEditProject(
+              sourceName: _project!.sourceName,
+              sourceBytes: _initialBytes!,
+              history: history,
+            ),
+          );
+        },
       );
       if (!mounted) return false;
       if (outcome != ImageSaveOutcome.savedOriginal) {
@@ -341,7 +502,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
         session.isDirty ? 'New changes remain unsaved.' : 'Image saved',
       );
       // Refresh failures must not turn a completed write into a failed save.
-      if (widget.storeOverride == null) {
+      if (widget.storeOverride == null && widget.projectStoreOverride == null) {
         ref.read(panelProvider(widget.side)).refreshFiles();
       }
       return !session.isDirty;
@@ -352,6 +513,188 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
       }
       return false;
     } finally {
+      _scheduleRefresh();
+    }
+  }
+
+  Future<void> _addEmoji() async {
+    final editor = _editorKey.currentState;
+    if (editor == null || !_canEdit) return;
+    setState(() => _exporting = true);
+    _scheduleRefresh();
+    try {
+      final layer = await showModalBottomSheet<EmojiLayer>(
+        context: editor.context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        builder: (_) => Localizations.override(
+          context: editor.context,
+          delegates: material.GlobalMaterialLocalizations.delegates,
+          child: material.Theme(
+            data: editor.widget.configs.theme!,
+            child: SizedBox(
+              height: 420,
+              child: EmojiEditor(configs: editor.widget.configs),
+            ),
+          ),
+        ),
+      );
+      if (mounted && layer != null) {
+        layer.scale = editor.widget.configs.emojiEditor.initScale;
+        editor.addLayer(layer);
+      }
+    } catch (error, stack) {
+      _log.warn('Could not add emoji', error, stack);
+      if (mounted) _showMessage('Could not add emoji', error: true);
+    } finally {
+      if (mounted) setState(() => _exporting = false);
+      _scheduleRefresh();
+    }
+  }
+
+  Future<void> _addOverlay() async {
+    final editor = _editorKey.currentState;
+    if (editor == null || !_canEdit) return;
+    final title = context.imageTr('Add image overlay');
+    setState(() => _exporting = true);
+    _scheduleRefresh();
+    try {
+      final overlay = await (widget.overlayPickerOverride ?? pickImageOverlay)(
+        title,
+      );
+      if (!mounted || overlay == null) return;
+      final codec = await ui.instantiateImageCodec(overlay.displayBytes);
+      try {
+        if (codec.frameCount != 1)
+          throw const ImageEditException(ImageEditFailure.animatedImage);
+        final frame = await codec.getNextFrame();
+        frame.image.dispose();
+      } finally {
+        codec.dispose();
+      }
+      if (!mounted) return;
+      Object? imageError;
+      await precacheImage(
+        MemoryImage(overlay.displayBytes),
+        editor.context,
+        onError: (error, _) => imageError = error,
+      );
+      if (imageError != null)
+        throw const ImageEditException(ImageEditFailure.invalidImage);
+      if (!mounted) return;
+      editor.addLayer(imageOverlayLayer(overlay));
+    } catch (error, stack) {
+      _log.warn('Could not add image overlay', error, stack);
+      if (mounted)
+        _showMessage(
+          _messageFor(error, 'Could not add image overlay'),
+          error: true,
+        );
+    } finally {
+      if (mounted) setState(() => _exporting = false);
+      _scheduleRefresh();
+    }
+  }
+
+  Future<void> _saveProjectCopy() async {
+    final session = _session;
+    final editor = _editorKey.currentState;
+    if (session == null || editor == null || !_canEdit) return;
+    final revision = session.currentRevision;
+    setState(() => _exporting = true);
+    _scheduleRefresh();
+    try {
+      await WidgetsBinding.instance.endOfFrame;
+      final history = await (await editor.exportStateHistory()).toMap();
+      if (!mounted || session.currentRevision != revision) {
+        throw const ImageEditException(ImageEditFailure.staleExport);
+      }
+      final project = ImageEditProject(
+        sourceName:
+            _project?.sourceName ??
+            (isTranscodedRasterFileName(widget.file.name)
+                ? '${p.basenameWithoutExtension(widget.file.name)}.png'
+                : widget.file.name),
+        sourceBytes: _initialBytes!,
+        history: history,
+      );
+      final name = '${p.basenameWithoutExtension(widget.file.name)}.ccimage';
+      final title = context.imageTr('Save project copy');
+      final exporter = widget.projectExporterOverride ?? exportImageProjectCopy;
+      final outcome = await exporter(project.encode(), name, title);
+      if (mounted && outcome != null) {
+        _showMessage(
+          outcome == ImageSaveOutcome.downloadedCopy
+              ? 'A copy was downloaded. The original image has not been updated.'
+              : 'Project copy saved.',
+        );
+      }
+    } catch (error, stack) {
+      _log.warn('Could not save project copy', error, stack);
+      if (mounted)
+        _showMessage(
+          _messageFor(error, 'Could not save project copy'),
+          error: true,
+        );
+    } finally {
+      if (mounted) setState(() => _exporting = false);
+      _scheduleRefresh();
+    }
+  }
+
+  Future<void> _exportCopy() async {
+    final session = _session;
+    final editor = _editorKey.currentState;
+    if (session == null || editor == null || !_canEdit) return;
+    final options = await showDialog<ImageExportOptions>(
+      context: context,
+      builder: (_) => ImageExportDialog(
+        initialFormat: session.format,
+        initialExportFormat: widget.file.name.toLowerCase().endsWith('.webp')
+            ? ImageExportFormat.webp
+            : widget.file.name.toLowerCase().endsWith('.gif')
+            ? ImageExportFormat.gif
+            : null,
+      ),
+    );
+    if (!mounted || options == null || !_canEdit) return;
+    final revision = session.currentRevision;
+    setState(() => _exporting = true);
+    _scheduleRefresh();
+    try {
+      await WidgetsBinding.instance.endOfFrame;
+      final capture = await editor.captureEditorImage();
+      if (!mounted || session.currentRevision != revision) {
+        throw const ImageEditException(ImageEditFailure.staleExport);
+      }
+      final output = await compute(_encodeExport, (
+        capture,
+        session.format,
+        options,
+      ));
+      if (!mounted) return;
+      final extension = '.${imageExportExtension(options.format)}';
+      final name =
+          '${p.basenameWithoutExtension(widget.file.name)}-edited$extension';
+      final title = context.imageTr('Export image copy');
+      final exporter = widget.deviceExporterOverride ?? exportImageCopy;
+      final outcome = await exporter(output, name, title, options.format);
+      if (mounted && outcome != null) {
+        _showMessage(
+          outcome == ImageSaveOutcome.downloadedCopy
+              ? 'A copy was downloaded. The original image has not been updated.'
+              : 'Image copy exported.',
+        );
+      }
+    } catch (error, stack) {
+      _log.warn('Could not export image copy', error, stack);
+      if (mounted)
+        _showMessage(
+          _messageFor(error, 'Could not export image copy'),
+          error: true,
+        );
+    } finally {
+      if (mounted) setState(() => _exporting = false);
       _scheduleRefresh();
     }
   }
@@ -461,12 +804,12 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
 
   String _messageFor(Object error, String fallback) => switch (error) {
     _ImageOpenMessage(:final key) => key,
-    ImageAccountChangedException() =>
+    ImageAccountChangedException() || PdfAccountChangedException() =>
       'The storage account changed. Reopen the image before saving.',
-    ImageSaveConflictException() => 'The original image changed or could not be verified. Reopen it before saving.',
+    ImageSaveConflictException() || PdfSaveConflictException() => 'The original image changed or could not be verified. Reopen it before saving.',
     ImageEditException(:final reason) => switch (reason) {
       ImageEditFailure.unsupportedFormat =>
-        'Only PNG and JPEG images can be edited.',
+        'This image format is not supported for editing.',
       ImageEditFailure.formatMismatch =>
         'The image contents do not match the filename extension.',
       ImageEditFailure.invalidImage =>
@@ -479,6 +822,11 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
         'The edited image exceeds the 64 MiB save limit.',
       ImageEditFailure.dimensionsTooLarge =>
         'This image exceeds the 40 megapixel or 16384 pixel dimension limit.',
+      ImageEditFailure.multiPageImage =>
+        'Multi-page images cannot be overwritten by this editor.',
+      ImageEditFailure.rasterEncodingLoss =>
+        'This format cannot preserve the edited pixels. Export as PNG or WebP.',
+      ImageEditFailure.gifColorLimit => 'GIF cannot preserve these colors or transparency. Export as PNG or WebP.',
       ImageEditFailure.staleExport =>
         'The image changed during export. Please save again.',
     },
@@ -540,6 +888,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
                   children: [
                     _header(actions),
                     const Divider(height: 1),
+                    if (_showLayers && !_toolOpen && _ready) _layerPanel(),
                     Expanded(child: _body()),
                     if (_saving) const LinearProgressIndicator(),
                   ],
@@ -643,6 +992,91 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
     );
   }
 
+  Widget _layerPanel() {
+    final editor = _editorKey.currentState;
+    final layers = editor?.activeLayers ?? <Layer>[];
+    final canEdit = _canEdit;
+    return Material(
+      color: Theme.of(context).colorScheme.surfaceContainerLow,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxHeight: 180),
+        child: layers.isEmpty
+            ? Padding(
+                padding: const EdgeInsets.all(12),
+                child: Text(context.imageTr('No layers yet')),
+              )
+            : ListView.builder(
+                shrinkWrap: true,
+                itemCount: layers.length,
+                itemBuilder: (context, displayIndex) {
+                  final index = layers.length - displayIndex - 1;
+                  final layer = layers[index];
+                  final selected = editor!.selectedLayers.any(
+                    (item) => item.id == layer.id,
+                  );
+                  final label =
+                      layer is TextLayer && layer.text.trim().isNotEmpty
+                      ? layer.text
+                      : context.imageTr(
+                          layer is PaintLayer ? 'Drawing' : 'Layer',
+                        );
+                  return ListTile(
+                    key: ValueKey('image-layer-${layer.id}'),
+                    dense: true,
+                    selected: selected,
+                    title: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    onTap: canEdit && layer.interaction.enableSelection
+                        ? () {
+                            editor.selectLayerById(layer.id);
+                            _scheduleRefresh();
+                          }
+                        : null,
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          tooltip: context.imageTr('Move layer forward'),
+                          onPressed: canEdit && index < layers.length - 1
+                              ? () {
+                                  editor.moveLayerForward(layer);
+                                  _scheduleRefresh();
+                                }
+                              : null,
+                          icon: const Icon(Icons.arrow_upward),
+                        ),
+                        IconButton(
+                          tooltip: context.imageTr('Move layer backward'),
+                          onPressed: canEdit && index > 0
+                              ? () {
+                                  editor.moveLayerBackward(layer);
+                                  _scheduleRefresh();
+                                }
+                              : null,
+                          icon: const Icon(Icons.arrow_downward),
+                        ),
+                        IconButton(
+                          tooltip: context.imageTr('Remove'),
+                          onPressed: canEdit
+                              ? () {
+                                  editor.removeLayer(layer);
+                                  _scheduleRefresh();
+                                }
+                              : null,
+                          icon: const Icon(Icons.delete_outline),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+      ),
+    );
+  }
+
   Widget _body() {
     if (_loading) {
       return Center(
@@ -681,7 +1115,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
       children: [
         Expanded(
           child: AbsorbPointer(
-            absorbing: _saving || _closing || _applying,
+            absorbing: _saving || _exporting || _closing || _applying,
             child: ImageEditorSurface(
               bytes: _initialBytes!,
               info: _info!,
@@ -702,12 +1136,7 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
                   onLayerInteractionEnd: _onGestureEnd,
                   onScaleStart: (_) => _scheduleRefresh(),
                   onScaleEnd: (_) => _scheduleRefresh(),
-                  onImageDecoded: () {
-                    _ready = true;
-                    final editor = _editorKey.currentState;
-                    if (editor != null) _onHistory(editor.stateManager, editor);
-                    _scheduleRefresh();
-                  },
+                  onImageDecoded: () => unawaited(_finishImageLoad()),
                   onOpenSubEditor: (tool) {
                     _tool = tool;
                     _scheduleRefresh();
@@ -722,11 +1151,23 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
             ),
           ),
         ),
+        if (widget.file.name.toLowerCase().endsWith('.gif'))
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+            child: Text(
+              context.imageTr(
+                'GIF saves require at most 256 colors and fully opaque or transparent pixels.',
+              ),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
           child: Text(
             context.imageTr(
-              'Edited images are flattened. Metadata may be removed.',
+              _project == null
+                  ? 'Edited images are flattened. Metadata and color precision may change.'
+                  : 'Projects retain editable layers. Exported images are flattened.',
             ),
             style: Theme.of(context).textTheme.bodySmall,
           ),
@@ -744,6 +1185,22 @@ class _ImageEditorDialogState extends ConsumerState<ImageEditorDialog> {
     (ImageEditorAction.tune, 'Adjust', Icons.tune),
     (ImageEditorAction.filter, 'Filters', Icons.filter_outlined),
     (ImageEditorAction.blur, 'Blur', Icons.blur_on),
+    (ImageEditorAction.addEmoji, 'Emoji', Icons.emoji_emotions_outlined),
+    (
+      ImageEditorAction.addOverlay,
+      'Add image overlay',
+      Icons.add_photo_alternate_outlined,
+    ),
+    (ImageEditorAction.layers, 'Layers', Icons.layers_outlined),
+    (ImageEditorAction.zoomIn, 'Zoom in', Icons.zoom_in),
+    (ImageEditorAction.zoomOut, 'Zoom out', Icons.zoom_out),
+    (ImageEditorAction.zoomReset, 'Fit image', Icons.fit_screen),
+    (
+      ImageEditorAction.saveProjectCopy,
+      'Save project copy',
+      Icons.layers_outlined,
+    ),
+    (ImageEditorAction.exportCopy, 'Export image copy', Icons.ios_share),
   ];
 }
 
@@ -751,3 +1208,7 @@ class _ImageOpenMessage implements Exception {
   const _ImageOpenMessage(this.key);
   final String key;
 }
+
+Uint8List _encodeExport(
+  (Uint8List, ImageFileFormat, ImageExportOptions) args,
+) => encodeImageExport(args.$1, args.$2, args.$3);

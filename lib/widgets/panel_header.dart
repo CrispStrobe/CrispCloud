@@ -9,6 +9,8 @@
 // The "..." menu also carries the application toolbar actions when the top
 // toolbar is collapsed.
 
+import '../l10n/commander_strings.dart';
+
 import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -16,9 +18,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/app_localizations.dart';
-import '../l10n/browser_menu_strings.dart';
-import '../l10n/panel_header_strings.dart';
-import '../l10n/shortcut_strings.dart';
+import '../l10n/gallery_strings.dart';
+import 'file_view_selector.dart';
 import '../models/panel_side.dart';
 import '../models/file_item.dart';
 import '../providers/providers.dart';
@@ -30,6 +31,7 @@ import '../services/panel_view_mode_service.dart';
 import '../services/panel_source_service.dart';
 import '../screens/screen_dialogs.dart';
 import '../widgets/command_palette.dart';
+import 'bookmark_actions.dart';
 import '../widgets/file_context_menu.dart' show showPropertiesDialog;
 import '../widgets/file_toolbar.dart' show showPanelFilterDialog;
 import '../widgets/search_dialogs.dart' show showSearchDialog, showFindDialog;
@@ -89,20 +91,21 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
             ],
             _navButton(
               icon: Icons.arrow_back,
-              tooltip: m.text('Back'),
+              tooltip: context.commanderTr("Back"),
               onPressed: panel.canNavigateBack ? panel.navigateBack : null,
             ),
             _navButton(
               icon: Icons.arrow_forward,
-              tooltip: m.text('Forward'),
-              onPressed:
-                  panel.canNavigateForward ? panel.navigateForward : null,
+              tooltip: context.commanderTr("Forward"),
+              onPressed: panel.canNavigateForward
+                  ? panel.navigateForward
+                  : null,
             ),
             _volumeButton(panel, isLocal),
             if (panel.isInArchive)
               _navButton(
                 icon: Icons.close,
-                tooltip: ShortcutStrings(context).extra('exitArchive'),
+                tooltip: context.commanderTr("Exit archive"),
                 onPressed: panel.exitArchive,
               ),
             const SizedBox(width: 2),
@@ -115,20 +118,23 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
               _navButton(
                 icon: Icons.folder_open,
                 tooltip:
-                    AppLocalizations.of(context)?.browseTooltip ?? 'Browse...',
+                    AppLocalizations.of(context)?.browseTooltip ??
+                    context.commanderTr("Browse..."),
                 onPressed: panel.pickLocalDirectory,
               ),
             if (isLocal)
               _navButton(
                 icon: Icons.layers,
-                tooltip: panel.isFlatView ? h.text('Exit flat view') : m.text('Flat View'),
+                tooltip: panel.isFlatView
+                    ? context.commanderTr("Exit flat view")
+                    : context.commanderTr("Flat view"),
                 active: panel.isFlatView,
                 onPressed: panel.toggleFlatView,
               ),
             _moreButton(context, panel, isLocal),
             _navButton(
               icon: Icons.edit,
-              tooltip: h.text('Edit path'),
+              tooltip: context.commanderTr("Edit path"),
               onPressed: () {
                 _pathController.text = panel.currentPath;
                 _pathController.selection = TextSelection(
@@ -177,9 +183,12 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
             style: const TextStyle(fontSize: 12.5),
             decoration: InputDecoration(
               isDense: true,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 8,
+                vertical: 7,
+              ),
               border: const OutlineInputBorder(),
-              hintText: h.text('Enter path…'),
+              hintText: context.commanderTr("Enter path…"),
               prefixIcon: const Icon(Icons.folder_open, size: 17),
             ),
             onSubmitted: (String value) {
@@ -190,7 +199,7 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
         ),
         IconButton(
           icon: const Icon(Icons.close, size: 17),
-          tooltip: l?.cancel ?? 'Cancel',
+          tooltip: context.commanderTr("Cancel"),
           visualDensity: VisualDensity.compact,
           onPressed: () => setState(() => _editingPath = false),
         ),
@@ -205,7 +214,8 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
     bool isLocal,
   ) {
     final ThemeData theme = Theme.of(context);
-    final List<({String label, String path})> crumbs = <({String label, String path})>[];
+    final List<({String label, String path})> crumbs =
+        <({String label, String path})>[];
     if (isLocal) {
       if (!kIsWeb && Platform.isWindows) {
         final List<String> parts = path.split('\\');
@@ -237,8 +247,9 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
       String accumulated = '';
       for (int i = 1; i < parts.length; i++) {
         if (parts[i].isEmpty) continue;
-        accumulated =
-            accumulated.isEmpty ? '/${parts[i]}' : '$accumulated/${parts[i]}';
+        accumulated = accumulated.isEmpty
+            ? '/${parts[i]}'
+            : '$accumulated/${parts[i]}';
         crumbs.add((label: parts[i], path: accumulated));
       }
     }
@@ -273,7 +284,10 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
     if (crumbs.isEmpty) {
       return Text(
         path,
-        style: TextStyle(fontSize: 12.5, color: theme.colorScheme.onPrimaryContainer),
+        style: TextStyle(
+          fontSize: 12.5,
+          color: theme.colorScheme.onPrimaryContainer,
+        ),
         overflow: TextOverflow.ellipsis,
       );
     }
@@ -290,18 +304,21 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
                   Icon(
                     Icons.chevron_right,
                     size: 15,
-                    color: theme.colorScheme.onPrimaryContainer
-                        .withValues(alpha: 0.55),
+                    color: theme.colorScheme.onPrimaryContainer.withValues(
+                      alpha: 0.55,
+                    ),
                   ),
                 InkWell(
                   onTap: i == crumbs.length - 1
                       ? null
                       : () => panel.navigateToPath(crumbs[i].path),
-                  onLongPress: () => _toggleBookmark(panel, crumbs[i].path,
-                      crumbs[i].label),
+                  onLongPress: () =>
+                      _toggleBookmark(panel, crumbs[i].path, crumbs[i].label),
                   child: Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 4,
+                    ),
                     child: Text(
                       crumbs[i].label,
                       style: TextStyle(
@@ -328,18 +345,15 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
     final l = AppLocalizations.of(context);
     if (!isLocal) {
       final bookmarks = ref.watch(bookmarksProvider);
-      return PopupMenuButton<DriveEntry>(
-        tooltip: l?.bookmarks ?? 'Bookmarks',
+      return PopupMenuButton<Bookmark>(
+        tooltip: context.commanderTr("Bookmarks"),
         padding: EdgeInsets.zero,
-        onSelected: (DriveEntry entry) => panel.navigateToPath(entry.path),
-        itemBuilder: (BuildContext context) => <PopupMenuEntry<DriveEntry>>[
+        onSelected: (Bookmark bookmark) =>
+            openBookmark(context, ref, bookmark, side: widget.side),
+        itemBuilder: (BuildContext context) => <PopupMenuEntry<Bookmark>>[
           for (final bookmark in bookmarks.bookmarks)
-            PopupMenuItem<DriveEntry>(
-              value: DriveEntry(
-                path: bookmark.path,
-                label: bookmark.name,
-                icon: Icons.bookmark_outline,
-              ),
+            PopupMenuItem<Bookmark>(
+              value: bookmark,
               child: Row(
                 children: <Widget>[
                   const Icon(Icons.bookmark_outline, size: 17),
@@ -355,7 +369,7 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
 
     final drives = ref.watch(drivesProvider);
     return PopupMenuButton<DriveEntry>(
-      tooltip: h.text('Volumes'),
+      tooltip: context.commanderTr("Volumes"),
       padding: EdgeInsets.zero,
       onSelected: (DriveEntry entry) => panel.navigateToPath(entry.path),
       itemBuilder: (BuildContext context) {
@@ -383,12 +397,16 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
             ),
           const PopupMenuDivider(),
           PopupMenuItem<DriveEntry>(
-            value: const DriveEntry(path: '/', label: '/', icon: Icons.computer),
+            value: const DriveEntry(
+              path: '/',
+              label: '/',
+              icon: Icons.computer,
+            ),
             child: Row(
               children: <Widget>[
                 const Icon(Icons.computer, size: 17),
                 const SizedBox(width: 8),
-                Text(h.text('Computer')),
+                Text(context.commanderTr("Computer")),
               ],
             ),
           ),
@@ -412,30 +430,27 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
           Icon(
             Icons.arrow_drop_down,
             size: 15,
-            color: theme.colorScheme.onPrimaryContainer
-                .withValues(alpha: loading ? 0.4 : 0.9),
+            color: theme.colorScheme.onPrimaryContainer.withValues(
+              alpha: loading ? 0.4 : 0.9,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _moreButton(
-    BuildContext context,
-    PanelNotifier panel,
-    bool isLocal,
-  ) {
+  Widget _moreButton(BuildContext context, PanelNotifier panel, bool isLocal) {
     final ThemeData theme = Theme.of(context);
     final bool topVisible = ref.watch(topToolbarVisibleProvider);
-    final bool desktop = !kIsWeb &&
-        (Platform.isMacOS || Platform.isWindows || Platform.isLinux);
+    final bool desktop =
+        !kIsWeb && (Platform.isMacOS || Platform.isWindows || Platform.isLinux);
     final AuthNotifier auth = ref.watch(authProvider);
     final l = AppLocalizations.of(context) ?? lookupAppLocalizations(const Locale('en'));
     final m = BrowserMenuStrings(context);
     final h = PanelHeaderStrings(context);
 
     return PopupMenuButton<String>(
-      tooltip: h.text('More commands'),
+      tooltip: context.commanderTr("More commands"),
       padding: EdgeInsets.zero,
       icon: Icon(
         Icons.more_horiz,
@@ -450,18 +465,17 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
             topVisible ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
             topVisible ? h.text('Hide top toolbar') : h.text('Show top toolbar'),
           ),
-        if (desktop)
-          const PopupMenuDivider(),
-        _menuItem('up', Icons.arrow_upward, m.text('Up')),
-        _menuItem('refresh', Icons.refresh, l.refresh),
-        _menuItem('new_folder', Icons.create_new_folder, '${l.newFolder}…'),
-        _menuItem('rename', Icons.drive_file_rename_outline, '${l.rename}…'),
-        _menuItem('delete', Icons.delete_outline, '${l.delete}…'),
-        _menuItem('copy', Icons.copy, '${l.copy}…'),
-        _menuItem('move', Icons.drive_file_move, '${l.move}…'),
-        _menuItem('properties', Icons.info_outline, '${l.properties}…'),
-        _menuItem('select_all', Icons.select_all, l.selectAll),
-        _menuItem('invert_selection', Icons.flip_to_back, m.text('Invert Selection')),
+        if (desktop) const PopupMenuDivider(),
+        _menuItem('up', Icons.arrow_upward, 'Up'),
+        _menuItem('refresh', Icons.refresh, 'Refresh'),
+        _menuItem('new_folder', Icons.create_new_folder, 'New folder…'),
+        _menuItem('rename', Icons.drive_file_rename_outline, 'Rename…'),
+        _menuItem('delete', Icons.delete_outline, 'Delete…'),
+        _menuItem('copy', Icons.copy, 'Copy…'),
+        _menuItem('move', Icons.drive_file_move, 'Move…'),
+        _menuItem('properties', Icons.info_outline, 'Properties…'),
+        _menuItem('select_all', Icons.select_all, 'Select all'),
+        _menuItem('invert_selection', Icons.flip_to_back, 'Invert selection'),
         const PopupMenuDivider(),
         _menuItem('sort_name', Icons.sort_by_alpha, l.sortByName),
         _menuItem('sort_size', Icons.data_usage, l.sortBySize),
@@ -469,13 +483,26 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
         _menuItem('sort_ext', Icons.category, l.sortByExtension),
         _menuItem('sort_order', Icons.swap_vert, m.text('Reverse Sort Order')),
         const PopupMenuDivider(),
-        _menuItem('density', Icons.density_medium, h.text('Toggle row density')),
-        _menuItem('view_mode', Icons.view_list, h.text('Cycle list/grid/columns')),
-        _menuItem('filter', Icons.filter_list, '${l.filterFiles}…'),
-        _menuItem('hidden', Icons.visibility, h.text('Toggle hidden files')),
-        if (isLocal)
-          _menuItem('flat', Icons.layers, h.text('Toggle flat view')),
-        _menuItem('bookmark', Icons.star_border, h.text('Bookmark this folder')),
+        _menuItem('density', Icons.density_medium, 'Toggle row density'),
+        _menuItem(
+          'view_mode',
+          Icons.view_list,
+          'Cycle list/icons/tiles/gallery/columns',
+        ),
+        _menuItem(
+          'gallery',
+          Icons.photo_library_outlined,
+          context.galleryTr('Image gallery'),
+        ),
+        _menuItem(
+          'tiles',
+          Icons.view_module_outlined,
+          context.galleryTr('Tiles'),
+        ),
+        _menuItem('filter', Icons.filter_list, 'Filter files…'),
+        _menuItem('hidden', Icons.visibility, 'Toggle hidden files'),
+        if (isLocal) _menuItem('flat', Icons.layers, 'Toggle flat view'),
+        _menuItem('bookmark', Icons.star_border, 'Bookmark this folder'),
         if (isLocal)
           _menuItem(
             'grant_access',
@@ -569,16 +596,11 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
         final ViewMode mode = local
             ? ref.read(localViewModeProvider)
             : ref.read(remoteViewModeProvider);
-        final ViewMode next = mode == ViewMode.list
-            ? ViewMode.grid
-            : mode == ViewMode.grid
-                ? ViewMode.column
-                : ViewMode.list;
-        if (local) {
-          ref.read(localViewModeProvider.notifier).state = next;
-        } else {
-          ref.read(remoteViewModeProvider.notifier).state = next;
-        }
+        setFileView(ref, widget.side, mode.next);
+      case 'gallery':
+        setFileView(ref, widget.side, ViewMode.gallery);
+      case 'tiles':
+        setFileView(ref, widget.side, ViewMode.tiles);
       case 'filter':
         showPanelFilterDialog(context, panel);
       case 'hidden':
@@ -586,17 +608,7 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
       case 'flat':
         panel.toggleFlatView();
       case 'bookmark':
-        final BookmarksNotifier bm = ref.read(bookmarksProvider);
-        if (bm.isBookmarked(panel.currentPath, widget.side)) {
-          bm.remove(panel.currentPath, widget.side);
-        } else {
-          final name = panel.currentPath
-                  .split('/')
-                  .where((String s) => s.isNotEmpty)
-                  .lastOrNull ??
-              '/';
-          bm.add(name, panel.currentPath, widget.side);
-        }
+        await togglePanelBookmark(context, ref, widget.side);
       case 'grant_access':
         await panel.grantAccessToCurrentPath();
       case 'goto_path':
@@ -612,11 +624,14 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
       case 'swap':
         const PanelSwapService service = PanelSwapService();
         final PanelSource left = ref.read(panelSourceProvider(PanelSide.local));
-        final PanelSource right =
-            ref.read(panelSourceProvider(PanelSide.remote));
+        final PanelSource right = ref.read(
+          panelSourceProvider(PanelSide.remote),
+        );
         if (service.canSwap(left, right)) {
-          final (PanelSource newLeft, PanelSource newRight) =
-              service.swap(left, right);
+          final (PanelSource newLeft, PanelSource newRight) = service.swap(
+            left,
+            right,
+          );
           ref
               .read(panelSourceProvider(PanelSide.local).notifier)
               .setSource(newLeft);
@@ -627,17 +642,21 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
               active == PanelSide.local ? PanelSide.remote : PanelSide.local;
         }
       case 'terminal':
-        ref.read(showTerminalProvider.notifier).state =
-            !ref.read(showTerminalProvider);
+        ref.read(showTerminalProvider.notifier).state = !ref.read(
+          showTerminalProvider,
+        );
       case 'dual':
-        ref.read(showDualPanelProvider.notifier).state =
-            !ref.read(showDualPanelProvider);
+        ref.read(showDualPanelProvider.notifier).state = !ref.read(
+          showDualPanelProvider,
+        );
       case 'tree':
-        ref.read(showTreeSidebarProvider.notifier).state =
-            !ref.read(showTreeSidebarProvider);
+        ref.read(showTreeSidebarProvider.notifier).state = !ref.read(
+          showTreeSidebarProvider,
+        );
       case 'preview':
-        ref.read(showPreviewProvider.notifier).state =
-            !ref.read(showPreviewProvider);
+        ref.read(showPreviewProvider.notifier).state = !ref.read(
+          showPreviewProvider,
+        );
       case 'connect':
         showConnectionDialogScreen(context);
       case 'logout':
@@ -646,11 +665,12 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
   }
 
   void _toggleBookmark(PanelNotifier panel, String path, String label) {
-    final BookmarksNotifier bm = ref.read(bookmarksProvider);
-    if (bm.isBookmarked(path, widget.side)) {
-      bm.remove(path, widget.side);
-    } else {
-      bm.add(label.isEmpty ? '/' : label, path, widget.side);
-    }
+    togglePanelBookmark(
+      context,
+      ref,
+      widget.side,
+      path: path,
+      label: label.isEmpty ? '/' : label,
+    );
   }
 }

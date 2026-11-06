@@ -126,6 +126,8 @@ The status bar at the bottom of each panel shows:
 
 All operations are accessible from the toolbar, the right-click context menu, or keyboard shortcuts.
 
+For Multi-Rename, wildcard/regex selection, reusable search-result lists, and detailed copy/move options, see [Commander file operations](commander-file-operations.md).
+
 ### Upload
 
 - **Drag and drop** files or folders from your OS file manager onto the remote panel.
@@ -143,9 +145,9 @@ S3 uploads larger than 5 MB automatically use multipart upload with per-part pro
 
 ### Move and Copy
 
-- **Move**: select files, drag them to the target panel or folder. Alternatively, select → **F6** (Move).
-- **Copy**: select files → **F5** (Copy) or drag while holding **Ctrl** on desktop.
-- **Cloud-to-cloud copy**: when supported by the provider (GDrive, OneDrive, Dropbox, S3), copy uses the server-side API without downloading to your device.
+- **Move**: select files and press **F6** to review move options, or **Ctrl+X** followed by **Ctrl+V** in the destination.
+- **Copy**: select files and press **F5**, drag them to the other pane, or use **Ctrl+C** followed by **Ctrl+V**. Each route opens copy options before starting a transfer.
+- **Copy/move with options**: F5/F6 opens a preview with destination, conflict, recursion, filter, metadata, and verification controls. Cloud transfers through this dialog use the provider streaming contracts and may transfer data through your device; providers without streaming support may buffer it.
 
 ### Delete
 
@@ -176,7 +178,9 @@ Right-click a file on an SFTP connection → **Permissions** to open the permiss
 
 ### Undo
 
-Most destructive operations (delete, rename, move, copy, create folder) can be undone via **Ctrl+Z** or Edit → **Undo Last Action**. The action history keeps the last 20 operations.
+Use **Ctrl+Z** or Edit → **Undo Last Action** for a reversible action in the history. The history keeps the last 50 actions for the current session. Multi-Rename records the completed batch as one action, including batches of more than 50 files, and binds undo to the original storage account. Undo refuses occupied original names and can retry the remaining items after a partial failure. Copy/move with options reports each completed, skipped, or failed item; it does not offer whole-batch rollback. Delete recovery depends on the provider and available trash support.
+
+Multi-Rename also has **History / recovery**, which keeps its batch records across restarts. Reconnect the original storage account to inspect, resume, or restore a recorded batch. Its checks still apply to the current files and occupied names; recovery is a sequence of checked operations, not an atomic rollback. See [Multi-rename and recovery](MULTI_RENAME.md).
 
 ---
 
@@ -200,7 +204,7 @@ Pinned tabs cannot be closed accidentally with Ctrl+W. They are visually disting
 
 ### Tab Persistence
 
-All open tabs, including their paths and pinned state, are saved automatically. On the next launch, CrispCloud restores all tabs exactly as you left them.
+Directory tabs, including their paths and pinned state, are saved automatically and restored on the next launch. Search-result and imported file-list contents persist only within the current app session; export a file list to retain its paths across restarts.
 
 ### Drag Between Tabs
 
@@ -277,7 +281,7 @@ Right-click a folder → **Find Duplicates**. For local files, duplicates are fo
 
 ### Search Results as Folder
 
-After any search, click **Show as Folder** to promote the results to a virtual directory in the current panel. You can perform file operations (download, delete, move) directly on search results.
+In the search results dialog, click **Feed all to panel**, or mark result checkboxes and choose **Feed selected to panel**, to keep results as a virtual list in the source panel. The list supports pattern selection, Multi-Rename, and copy/move options using each item's original path. **Remove from list (keep files)** removes rows without deleting files; **Return to folder** leaves the list. See [search results and reusable file lists](commander-file-operations.md#search-results-and-reusable-file-lists) for importing, exporting, and saving lists between sessions.
 
 ---
 
@@ -410,7 +414,7 @@ Use **Arrow keys** to navigate and **Enter** to execute. The palette is context-
 | Enter / F4 | Open folder or file |
 | Backspace / Alt+Left | Go up one level |
 | Ctrl+G | Go to folder dialog |
-| F5 | Refresh directory listing |
+| Ctrl+R | Refresh directory listing |
 | Tab | Switch active panel |
 | Space | Toggle preview pane |
 
@@ -419,12 +423,18 @@ Use **Arrow keys** to navigate and **Enter** to execute. The palette is context-
 | Shortcut | Action |
 |----------|--------|
 | F2 | Rename selected file |
-| F5 (cross-panel) | Copy selected files to other panel |
-| F6 | Move selected files to other panel |
+| F5 / Shift+F5 | Open copy options for selected files |
+| F6 | Open move options for selected files |
+| Ctrl+C / Ctrl+X | Copy / cut the captured file selection |
+| Ctrl+V | Paste through reviewed copy/move options |
 | F7 | Create new folder |
 | F8 / Delete | Delete selected files |
 | Ctrl+Z | Undo last action |
 | Ctrl+A | Select all |
+| Ctrl+M | Multi-Rename |
+| Numpad + / Numpad - | Select / deselect by wildcard or regex |
+| Numpad * | Invert selection |
+| Ctrl+Shift+L | Import a file list |
 | Ctrl+Click | Toggle selection |
 | Shift+Click | Range select |
 
@@ -479,18 +489,9 @@ The generated URL is copied to your clipboard. On mobile, the native share sheet
 
 ## Batch Rename
 
-Select multiple files, then right-click → **Batch Rename** (or press **Ctrl+Shift+R**).
+Select files, then press **Ctrl+M** or choose **More actions → Multi-Rename**. The normal multi-selection context menu also opens this tool through **Batch Rename**.
 
-### Rename Modes
-
-| Mode | Description |
-|------|-------------|
-| Find & Replace | Replace text within filenames; supports regex |
-| Numbering | Append or prepend a sequence number with configurable start and step |
-| Prefix / Suffix | Add text before or after the base filename |
-| Extension | Change or remove file extensions for all selected files |
-
-A live preview shows the before and after names for every selected file before you apply. Click **Apply** to rename all files.
+Use name and extension masks, counters, literal or regex find/replace, and case conversion to compose new names. Advanced controls select the CrispCloud/Total Commander/Double Commander mask dialect, dates, variables, and collision numbering. You can chain transformation steps, edit proposed names, import names from clipboard or a text file, reorder rows, or exclude items before execution. The preview shows original paths, proposed names, and validation errors. See [Multi-rename](commander-file-operations.md#multi-rename) for examples, presets, and undo.
 
 ---
 

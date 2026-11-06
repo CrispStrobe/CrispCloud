@@ -6,20 +6,32 @@ import 'web_file_failure.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data' show ByteBuffer;
+
 import 'package:flutter/foundation.dart';
 import 'package:universal_html/html.dart' as html;
-import 'filen_web_stub.dart' if (dart.library.js_util) 'dart:js_util' as js_util;
+
+import 'filen_web_stub.dart'
+    if (dart.library.js_util) 'dart:js_util'
+    as js_util;
+
 import 'package:path/path.dart' as p;
+
 import '../models/file_item.dart';
 import 'local_file_service.dart';
 import 'log_service.dart';
+import 'web_streaming_service.dart';
 
 LocalFileService createPlatformFileService() {
   return WebFileService.instance;
 }
 
 class WebFileService
-    implements LocalFileService, LocalFileSaveReporter, FreshLocalFileReader {
+    implements
+        LocalFileService,
+        LocalFileSaveReporter,
+        FreshLocalFileReader,
+        LocalTransferFileOperations,
+        LocalFileSourceIdentity {
   static const _log = Log('WebFS');
 
   // Singleton pattern to preserve state across reloads/instantiations
@@ -33,6 +45,13 @@ class WebFileService
 
   // File System Access API Handles (Chrome/Edge only) — one per opened root folder.
   static final Map<String, dynamic> _rootHandles = {};
+  static final Map<String, Object> _rootIdentities = {};
+
+  @override
+  Object? sourceIdentityForPath(String path) {
+    final parts = path.split('/').where((part) => part.isNotEmpty);
+    return parts.isEmpty ? null : _rootIdentities['/${parts.first}'];
+  }
 
   @override
   String currentPath = '/';
@@ -46,7 +65,9 @@ class WebFileService
     if (f != null) {
       return {
         'size': f.size,
-        'modified': DateTime.fromMillisecondsSinceEpoch(f.lastModified ?? DateTime.now().millisecondsSinceEpoch),
+        'modified': DateTime.fromMillisecondsSinceEpoch(
+          f.lastModified ?? DateTime.now().millisecondsSinceEpoch,
+        ),
       };
     }
     return {};
@@ -63,7 +84,10 @@ class WebFileService
 
     // 2. Try File System Access API (Chrome/Edge/Opera — skip on Safari)
     final userAgent = html.window.navigator.userAgent;
-    final isSafari = userAgent.contains('Safari') && !userAgent.contains('Chrome') && !userAgent.contains('Chromium');
+    final isSafari =
+        userAgent.contains('Safari') &&
+        !userAgent.contains('Chrome') &&
+        !userAgent.contains('Chromium');
     if (!isSafari && js_util.hasProperty(html.window, 'showDirectoryPicker')) {
       try {
         debugPrint("[Web] Attempting 'showDirectoryPicker' (Write Access)...");
@@ -71,16 +95,21 @@ class WebFileService
         final opts = js_util.newObject();
         js_util.setProperty(opts, 'mode', 'readwrite');
 
-        final promise = js_util.callMethod(html.window, 'showDirectoryPicker', [opts]);
+        final promise = js_util.callMethod(html.window, 'showDirectoryPicker', [
+          opts,
+        ]);
         final dirHandle = await js_util.promiseToFuture(promise);
 
-        final rootName = _sanitizeFsaName(js_util.getProperty(dirHandle, 'name') as String);
+        final rootName = _sanitizeFsaName(
+          js_util.getProperty(dirHandle, 'name') as String,
+        );
         debugPrint("[Web] Got handle for folder: $rootName");
 
         // If this root was already opened, clear its stale children so they reload fresh.
         _clearSubtree('/$rootName');
 
         _rootHandles['/$rootName'] = dirHandle;
+        _rootIdentities['/$rootName'] = Object();
 
         // Add the root folder to top-level listing (if not already there).
         if (!_virtualTree['/']!.any((e) => e.path == '/$rootName')) {
@@ -94,11 +123,14 @@ class WebFileService
         return currentPath;
       } catch (e) {
         _log.warn('operation failed', e);
-        if (e.toString().contains('AbortError') || e.toString().contains('user aborted')) {
+        if (e.toString().contains('AbortError') ||
+            e.toString().contains('user aborted')) {
           debugPrint("[Web] User cancelled directory picker.");
           return null;
         }
-        debugPrint("[Web] showDirectoryPicker failed: $e. Falling back to input.");
+        debugPrint(
+          "[Web] showDirectoryPicker failed: $e. Falling back to input.",
+        );
       }
     }
 
@@ -118,13 +150,21 @@ class WebFileService
 
       String rootName = 'root';
       if (input.files!.isNotEmpty) {
-        final firstPath = input.files!.first.relativePath ?? input.files!.first.name;
+        final firstPath =
+            input.files!.first.relativePath ?? input.files!.first.name;
         final cleanFirst = _sanitizeRelPath(firstPath);
         final parts = cleanFirst.split('/');
         if (parts.isNotEmpty) rootName = parts[0];
       }
 
-      debugPrint("[Web] Processing ${input.files!.length} files via legacy input (root: $rootName)...");
+      debugPrint(
+        "[Web] Processing ${input.files!.length} files via legacy input (root: $rootName)...",
+      );
+
+      // A new file-input grant can name an unrelated folder. Discard both
+      // cached children and any previous writable handle for that name.
+      _clearSubtree('/$rootName');
+      _rootIdentities['/$rootName'] = Object();
 
       if (!_virtualTree['/']!.any((e) => e.path == '/$rootName')) {
         _virtualTree['/']!.add(Directory('/$rootName'));
@@ -184,15 +224,23 @@ class WebFileService
 
   /// Remove cached state for a specific root and all its descendants.
   void _clearSubtree(String rootPath) {
-    _virtualTree.removeWhere((k, _) => k == rootPath || k.startsWith('$rootPath/'));
-    _fileRefs.removeWhere((k, _) => k.startsWith('$rootPath/') || k == rootPath);
-    _dirHandles.removeWhere((k, _) => k == rootPath || k.startsWith('$rootPath/'));
+    _virtualTree.removeWhere(
+      (k, _) => k == rootPath || k.startsWith('$rootPath/'),
+    );
+    _fileRefs.removeWhere(
+      (k, _) => k.startsWith('$rootPath/') || k == rootPath,
+    );
+    _dirHandles.removeWhere(
+      (k, _) => k == rootPath || k.startsWith('$rootPath/'),
+    );
     _rootHandles.remove(rootPath);
+    _rootIdentities.remove(rootPath);
   }
 
   /// Load only the immediate children of a directory handle (no recursion).
   Future<void> _loadDirectChildren(dynamic dirHandle, String absPath) async {
-    if (_virtualTree.containsKey(absPath) && _virtualTree[absPath]!.isNotEmpty) {
+    if (_virtualTree.containsKey(absPath) &&
+        _virtualTree[absPath]!.isNotEmpty) {
       return; // Already loaded.
     }
     _virtualTree[absPath] = [];
@@ -208,7 +256,9 @@ class WebFileService
         if (js_util.getProperty(next, 'done') == true) break;
 
         final handle = js_util.getProperty(next, 'value');
-        final name = _sanitizeFsaName(js_util.getProperty(handle, 'name') as String);
+        final name = _sanitizeFsaName(
+          js_util.getProperty(handle, 'name') as String,
+        );
         final kind = js_util.getProperty(handle, 'kind');
 
         if (name.startsWith('.') || name.startsWith('._')) continue;
@@ -238,13 +288,17 @@ class WebFileService
     for (int i = 0; i < parts.length; i++) {
       final partName = parts[i];
       final isFile = (i == parts.length - 1);
-      final currentItemPath = parentPath == '/' ? '/$partName' : '$parentPath/$partName';
+      final currentItemPath = parentPath == '/'
+          ? '/$partName'
+          : '$parentPath/$partName';
 
       if (!_virtualTree.containsKey(parentPath)) {
         _virtualTree[parentPath] = [];
       }
 
-      final exists = _virtualTree[parentPath]!.any((e) => e.path == currentItemPath);
+      final exists = _virtualTree[parentPath]!.any(
+        (e) => e.path == currentItemPath,
+      );
 
       if (!exists) {
         if (isFile) {
@@ -259,7 +313,9 @@ class WebFileService
 
   @override
   Future<List<FileSystemEntity>?> listDirectory(String path) async {
-    _log.debug('listDirectory: $path (tree=${_virtualTree.containsKey(path)}, handle=${_dirHandles.containsKey(path)})');
+    _log.debug(
+      'listDirectory: $path (tree=${_virtualTree.containsKey(path)}, handle=${_dirHandles.containsKey(path)})',
+    );
     String lookup = path;
     if (lookup.length > 1 && lookup.endsWith('/')) {
       lookup = lookup.substring(0, lookup.length - 1);
@@ -282,7 +338,9 @@ class WebFileService
     if (lookup.length > 1 && lookup.endsWith('/')) {
       lookup = lookup.substring(0, lookup.length - 1);
     }
-    return _virtualTree.containsKey(lookup) || _fileRefs.containsKey(lookup) || _dirHandles.containsKey(lookup);
+    return _virtualTree.containsKey(lookup) ||
+        _fileRefs.containsKey(lookup) ||
+        _dirHandles.containsKey(lookup);
   }
 
   @override
@@ -293,7 +351,9 @@ class WebFileService
 
   @override
   Future<Uint8List> readFile(String path, {FileItem? fileItem}) async {
-    _log.debug('readFile: $path (refs=${_fileRefs.containsKey(path)}, handles=${_dirHandles.length})');
+    _log.debug(
+      'readFile: $path (refs=${_fileRefs.containsKey(path)}, handles=${_dirHandles.length})',
+    );
     // Try direct lookup first.
     var fileRef = _fileRefs[path];
 
@@ -315,17 +375,24 @@ class WebFileService
           dynamic current = rootHandle;
           // Skip the root folder name (first segment matches the root handle).
           for (var i = 1; i < parts.length - 1; i++) {
-            final dirHandle = _dirHandles['/${parts.sublist(0, i + 1).join('/')}'];
+            final dirHandle =
+                _dirHandles['/${parts.sublist(0, i + 1).join('/')}'];
             if (dirHandle != null) {
               current = dirHandle;
             } else {
               final opts = js_util.newObject();
-              final promise = js_util.callMethod(current, 'getDirectoryHandle', [parts[i], opts]);
+              final promise = js_util.callMethod(
+                current,
+                'getDirectoryHandle',
+                [parts[i], opts],
+              );
               current = await js_util.promiseToFuture(promise);
             }
           }
           final fileName = parts.last;
-          final fhPromise = js_util.callMethod(current, 'getFileHandle', [fileName]);
+          final fhPromise = js_util.callMethod(current, 'getFileHandle', [
+            fileName,
+          ]);
           final fh = await js_util.promiseToFuture(fhPromise);
           final fPromise = js_util.callMethod(fh, 'getFile', []);
           fileRef = await js_util.promiseToFuture(fPromise);
@@ -450,6 +517,127 @@ class WebFileService
     }
   }
 
+  Future<dynamic> _transferParent(
+    String path, {
+    String permission = 'readwrite',
+  }) async {
+    final root = _findRootHandle(path);
+    if (root == null) {
+      throw UnsupportedError(
+        'Choose a writable browser folder before transferring.',
+      );
+    }
+    if (!await _verifyPermission(root, permission)) {
+      throw FileSystemException('Browser folder access was not granted.', path);
+    }
+    final parts = path.split('/').where((part) => part.isNotEmpty).toList();
+    if (parts.length < 2) {
+      throw FileSystemException('Cannot replace a granted root.', path);
+    }
+    dynamic parent = root;
+    for (var i = 1; i < parts.length - 1; i++) {
+      parent = await js_util.promiseToFuture(
+        js_util.callMethod(parent, 'getDirectoryHandle', [parts[i]]),
+      );
+      _dirHandles['/${parts.sublist(0, i + 1).join('/')}'] = parent;
+    }
+    return parent;
+  }
+
+  @override
+  Future<void> deleteDirectoryIfEmpty(String path) async {
+    final parent = await _transferParent(path);
+    final options = js_util.newObject();
+    js_util.setProperty(options, 'recursive', false);
+    // FSA rejects a nonempty folder atomically, including a file created after
+    // the engine checked it. Never fall back to recursive removal.
+    await js_util.promiseToFuture(
+      js_util.callMethod(parent, 'removeEntry', [p.basename(path), options]),
+    );
+    _virtualTree[p.dirname(path)]?.removeWhere((entity) => entity.path == path);
+    _virtualTree.remove(path);
+    _dirHandles.remove(path);
+  }
+
+  @override
+  Stream<List<int>> readTransferStream(String path) async* {
+    dynamic file;
+    if (_findRootHandle(path) != null) {
+      final parent = await _transferParent(path, permission: 'read');
+      final handle = await js_util.promiseToFuture(
+        js_util.callMethod(parent, 'getFileHandle', [p.basename(path)]),
+      );
+      file = await js_util.promiseToFuture(
+        js_util.callMethod(handle, 'getFile', []),
+      );
+      _fileRefs[path] = file as html.File;
+    } else {
+      file = _fileRefs[path];
+    }
+    if (file == null) {
+      throw FileSystemException('Browser file is unavailable.', path);
+    }
+    yield* WebStreamingService().streamFromBlob(file as Object);
+  }
+
+  @override
+  Future<void> writeTransferStream(
+    String path,
+    Stream<List<int>> data,
+    int? length, {
+    required bool replace,
+  }) async {
+    final parent = await _transferParent(path);
+    if (!replace) {
+      dynamic existing;
+      try {
+        existing = await js_util.promiseToFuture(
+          js_util.callMethod(parent, 'getFileHandle', [p.basename(path)]),
+        );
+      } catch (error) {
+        if (!error.toString().contains('NotFoundError')) rethrow;
+      }
+      if (existing != null) {
+        throw FileSystemException('Destination already exists.', path);
+      }
+    }
+    final options = js_util.newObject();
+    js_util.setProperty(options, 'create', true);
+    final file = await js_util.promiseToFuture(
+      js_util.callMethod(parent, 'getFileHandle', [p.basename(path), options]),
+    );
+    final writer = await js_util.promiseToFuture(
+      js_util.callMethod(file, 'createWritable', []),
+    );
+    var bytes = 0;
+    try {
+      await for (final chunk in data) {
+        bytes += chunk.length;
+        await js_util.promiseToFuture(
+          js_util.callMethod(writer, 'write', [Uint8List.fromList(chunk)]),
+        );
+      }
+      if (length != null && bytes != length) {
+        throw StateError('Source length changed.');
+      }
+      await js_util.promiseToFuture(js_util.callMethod(writer, 'close', []));
+    } catch (_) {
+      try {
+        await js_util.promiseToFuture(js_util.callMethod(writer, 'abort', []));
+      } catch (_) {
+        /* Keep the original write failure. */
+      }
+      rethrow;
+    }
+    _fileRefs[path] = await js_util.promiseToFuture(
+      js_util.callMethod(file, 'getFile', []),
+    );
+    _virtualTree.putIfAbsent(p.dirname(path), () => []);
+    if (!_virtualTree[p.dirname(path)]!.any((entry) => entry.path == path)) {
+      _virtualTree[p.dirname(path)]!.add(File(path));
+    }
+  }
+
   @override
   Future<void> deleteEntry(String path, bool isFolder) async {
     _log.debug('deleteEntry: $path isFolder=$isFolder');
@@ -462,7 +650,10 @@ class WebFileService
       try {
         final opts = js_util.newObject();
         if (isFolder) js_util.setProperty(opts, 'recursive', true);
-        final promise = js_util.callMethod(parentHandle, 'removeEntry', [name, opts]);
+        final promise = js_util.callMethod(parentHandle, 'removeEntry', [
+          name,
+          opts,
+        ]);
         await js_util.promiseToFuture(promise);
       } catch (e) {
         _log.debug('FSA removeEntry failed: $e');
@@ -478,6 +669,7 @@ class WebFileService
   }
 
   /// Create a directory at [path] using FSA handles.
+  @override
   Future<void> createDirectory(String path) async {
     _log.debug('createDirectory: $path');
     final rootHandle = _findRootHandle(path);
@@ -498,7 +690,10 @@ class WebFileService
       } else {
         final opts = js_util.newObject();
         js_util.setProperty(opts, 'create', true);
-        final promise = js_util.callMethod(current, 'getDirectoryHandle', [parts[i], opts]);
+        final promise = js_util.callMethod(current, 'getDirectoryHandle', [
+          parts[i],
+          opts,
+        ]);
         current = await js_util.promiseToFuture(promise);
         _dirHandles[dirPath] = current;
       }
@@ -546,7 +741,10 @@ class WebFileService
             final dirPath = '/${parts.sublist(0, i + 1).join('/')}';
             final opts = js_util.newObject();
             js_util.setProperty(opts, 'create', true);
-            final promise = js_util.callMethod(current, 'getDirectoryHandle', [parts[i], opts]);
+            final promise = js_util.callMethod(current, 'getDirectoryHandle', [
+              parts[i],
+              opts,
+            ]);
             current = await js_util.promiseToFuture(promise);
             _dirHandles[dirPath] = current;
           }
@@ -575,10 +773,18 @@ class WebFileService
           final createOpts = js_util.newObject();
           js_util.setProperty(createOpts, 'create', true);
 
-          final fileHandlePromise = js_util.callMethod(current, 'getFileHandle', [fileName, createOpts]);
+          final fileHandlePromise = js_util.callMethod(
+            current,
+            'getFileHandle',
+            [fileName, createOpts],
+          );
           final fileHandle = await js_util.promiseToFuture(fileHandlePromise);
 
-          final writablePromise = js_util.callMethod(fileHandle, 'createWritable', []);
+          final writablePromise = js_util.callMethod(
+            fileHandle,
+            'createWritable',
+            [],
+          );
           writable = await js_util.promiseToFuture(writablePromise);
 
           final writePromise = js_util.callMethod(writable, 'write', [data]);
@@ -592,7 +798,11 @@ class WebFileService
 
           final dirPath = p.dirname(path);
           try {
-            final fileObjPromise = js_util.callMethod(fileHandle, 'getFile', []);
+            final fileObjPromise = js_util.callMethod(
+              fileHandle,
+              'getFile',
+              [],
+            );
             _fileRefs[path] = await js_util.promiseToFuture(fileObjPromise);
           } catch (error) {
             // close() already committed the write. Do not report a download
@@ -634,7 +844,9 @@ class WebFileService
       final opts = js_util.newObject();
       js_util.setProperty(opts, 'mode', mode);
 
-      final queryPromise = js_util.callMethod(handle, 'queryPermission', [opts]);
+      final queryPromise = js_util.callMethod(handle, 'queryPermission', [
+        opts,
+      ]);
       final state = await js_util.promiseToFuture(queryPromise);
 
       if (state == 'granted') {
@@ -642,7 +854,9 @@ class WebFileService
       }
 
       _log.debug('Permission is "$state", querying user...');
-      final reqPromise = js_util.callMethod(handle, 'requestPermission', [opts]);
+      final reqPromise = js_util.callMethod(handle, 'requestPermission', [
+        opts,
+      ]);
       final newState = await js_util.promiseToFuture(reqPromise);
 
       return newState == 'granted';
@@ -683,6 +897,5 @@ class WebFileService
     String path, {
     bool includeHidden = false,
     int maxItems = 10000,
-  }) async =>
-      const <FileItem>[];
+  }) async => const <FileItem>[];
 }

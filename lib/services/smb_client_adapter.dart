@@ -1,14 +1,23 @@
 import 'dart:io';
 import 'dart:typed_data';
+
 import 'package:crisp_storage/crisp_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
+
 import 'cloud_storage_interface.dart';
+import 'bounded_transfer_stream.dart';
 import 'smb_config_service.dart';
 import 'smb_operation_failure.dart';
 
 /// File-manager operations over the same SMB transport as CrisperPlayer.
-class SmbClientAdapter extends CloudStorageClient {
+class SmbClientAdapter extends CloudStorageClient with CloudTransferOperations {
+  @override
+  StorageTransferCapabilities get transferCapabilities =>
+      const StorageTransferCapabilities(
+        boundedUpload: !kIsWeb,
+        boundedDownload: !kIsWeb,
+      );
   final SmbConfigService config;
   SmbSession? _session;
   String? _username, _server;
@@ -37,13 +46,14 @@ class SmbClientAdapter extends CloudStorageClient {
           SmbOperationCode.unsupported, 'SMB requires the installed app.');
     }
     final connection = RemoteConnection(
-        id: 'crispcloud-smb',
-        name: 'SMB',
-        kind: 'smb',
-        url: credentials['url']!,
-        username: credentials['username']!,
-        secret: credentials['password']!,
-        requireEncryption: credentials['requireEncryption'] != 'false');
+      id: 'crispcloud-smb',
+      name: 'SMB',
+      kind: 'smb',
+      url: credentials['url']!,
+      username: credentials['username']!,
+      secret: credentials['password']!,
+      requireEncryption: credentials['requireEncryption'] != 'false',
+    );
     final session = SmbSession(connection);
     try {
       await session.browse('');
@@ -68,8 +78,11 @@ class SmbClientAdapter extends CloudStorageClient {
   }
 
   @override
-  Future<void> login(String email, String password,
-      {String? twoFactorCode}) async {
+  Future<void> login(
+    String email,
+    String password, {
+    String? twoFactorCode,
+  }) async {
     final split = email.lastIndexOf('@smb://');
     if (split < 1) {
       throw const SmbFormatFailure(
@@ -79,7 +92,7 @@ class SmbClientAdapter extends CloudStorageClient {
       'username': email.substring(0, split),
       'url': email.substring(split + 1),
       'password': password,
-      'requireEncryption': '$requireEncryption'
+      'requireEncryption': '$requireEncryption',
     };
     final session = await _connect(credentials);
     try {
@@ -108,12 +121,12 @@ class SmbClientAdapter extends CloudStorageClient {
 
   String _url(SmbSession session, String path) => session.urlForPath(path);
   Map<String, dynamic> _map(RemoteEntry e, String path) => {
-        'uuid': path,
-        'path': path,
-        'name': e.name,
-        'type': e.type,
-        'size': e.size,
-      };
+    'uuid': path,
+    'path': path,
+    'name': e.name,
+    'type': e.type,
+    'size': e.size,
+  };
   @override
   Future<Map<String, dynamic>?> resolvePath(String path) async {
     final session = await _ensure();
@@ -128,11 +141,11 @@ class SmbClientAdapter extends CloudStorageClient {
     return {
       'folders': [
         for (final e in entries)
-          if (e.type == 'folder') _map(e, p.posix.join(path, e.name))
+          if (e.type == 'folder') _map(e, p.posix.join(path, e.name)),
       ],
       'files': [
         for (final e in entries)
-          if (e.type == 'file') _map(e, p.posix.join(path, e.name))
+          if (e.type == 'file') _map(e, p.posix.join(path, e.name)),
       ],
     };
   }
@@ -151,32 +164,52 @@ class SmbClientAdapter extends CloudStorageClient {
   }
 
   @override
-  Stream<List<int>> downloadStream(String remotePath,
-      {Function(int, int)? onProgress}) async* {
+  Stream<List<int>> downloadStream(
+    String remotePath, {
+    Function(int, int)? onProgress,
+  }) async* {
     final session = await _ensure();
-    yield* session.stream(_url(session, remotePath), onProgress: onProgress);
+    await for (final chunk in session.stream(
+      _url(session, remotePath),
+      onProgress: onProgress,
+    )) {
+      if (!identical(session, _session)) {
+        throw StateError('The original SMB connection is no longer available.');
+      }
+      yield chunk;
+    }
   }
 
   @override
-  Future<Uint8List> downloadFileBytes(String remotePath,
-      {Function(int, int)? onProgress}) async {
+  Future<Uint8List> downloadFileBytes(
+    String remotePath, {
+    Function(int, int)? onProgress,
+  }) async {
     final builder = BytesBuilder(copy: false);
-    await for (final chunk
-        in downloadStream(remotePath, onProgress: onProgress)) {
+    await for (final chunk in downloadStream(
+      remotePath,
+      onProgress: onProgress,
+    )) {
       builder.add(chunk);
     }
     return builder.takeBytes();
   }
 
   @override
-  Future<void> downloadFileByPath(String remotePath, String localPath,
-      {Function(int, int)? onProgress}) async {
+  Future<void> downloadFileByPath(
+    String remotePath,
+    String localPath, {
+    Function(int, int)? onProgress,
+  }) async {
     final session = await _ensure();
     final source = _url(session, remotePath);
     final total = (await session.stat(source))?.size ?? 0;
-    await session.download(source, File(localPath),
-        limit: 64 * 1024 * 1024 * 1024,
-        onBytes: (received) => onProgress?.call(received, total));
+    await session.download(
+      source,
+      File(localPath),
+      limit: 64 * 1024 * 1024 * 1024,
+      onBytes: (received) => onProgress?.call(received, total),
+    );
     // Resume hints belong to incomplete transfers, not the user's downloads.
     for (final suffix in ['.resume', '.resume.tmp']) {
       final sidecar = File('$localPath$suffix');
@@ -186,26 +219,43 @@ class SmbClientAdapter extends CloudStorageClient {
 
   @override
   Future<void> uploadFile(
-      List<int> fileData, String fileName, String targetPath,
-      {Function(int, int)? onProgress}) async {
+    List<int> fileData,
+    String fileName,
+    String targetPath, {
+    Function(int, int)? onProgress,
+  }) async {
     final session = await _ensure();
-    await session.write(_url(session, _child(targetPath, fileName)),
-        Uint8List.fromList(fileData));
+    await session.write(
+      _url(session, _child(targetPath, fileName)),
+      Uint8List.fromList(fileData),
+    );
     onProgress?.call(fileData.length, fileData.length);
   }
 
   @override
-  Future<void> uploadStream(Stream<List<int>> dataStream, int length,
-      String fileName, String targetPath,
-      {Function(int, int)? onProgress}) async {
+  Future<void> uploadStream(
+    Stream<List<int>> dataStream,
+    int length,
+    String fileName,
+    String targetPath, {
+    Function(int, int)? onProgress,
+  }) async {
     final session = await _ensure();
     var received = 0;
-    final data = dataStream.map((chunk) {
+    final data = validatedTransferParts(dataStream, length, 64 * 1024).map((
+      chunk,
+    ) {
+      if (!identical(session, _session)) {
+        throw StateError('The original SMB connection is no longer available.');
+      }
       received += chunk.length;
       onProgress?.call(received, length);
       return chunk;
     });
     await session.upload(_url(session, _child(targetPath, fileName)), data);
+    if (!identical(session, _session)) {
+      throw StateError('The original SMB connection is no longer available.');
+    }
   }
 
   @override
@@ -244,7 +294,7 @@ class SmbClientAdapter extends CloudStorageClient {
       final listing = await listPath(path);
       for (final child in [
         ...listing['files'] as List,
-        ...listing['folders'] as List
+        ...listing['folders'] as List,
       ]) {
         await deletePath(child['path'] as String);
       }

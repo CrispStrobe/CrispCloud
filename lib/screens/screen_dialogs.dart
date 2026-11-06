@@ -1,3 +1,4 @@
+import '../widgets/file_delete_dialog.dart';
 // lib/screens/screen_dialogs.dart
 //
 // Dialog helpers for the file browser screen.
@@ -5,10 +6,8 @@
 
 import 'dart:async';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:universal_html/html.dart' as html;
 import 'package:path/path.dart' as p;
 
 import '../models/file_item.dart';
@@ -18,19 +17,13 @@ import '../widgets/azure_connection_dialog.dart';
 import '../widgets/b2_connection_dialog.dart';
 import '../widgets/connection_dialog.dart';
 import '../widgets/file_editor_dialog.dart' show showFileEditorDialog;
+import '../widgets/file_operation_dialog.dart';
+import '../widgets/archive_workspace_dialog.dart';
+import '../widgets/batch_rename_dialog.dart' show showBatchRenameDialog;
+import '../services/file_operation_service.dart';
 import '../widgets/internal_viewer_dialog.dart'
     show InternalViewerAction, showInternalViewer;
 import '../l10n/app_localizations.dart';
-import '../l10n/command_strings.dart';
-import '../l10n/undo_presentation.dart';
-import '../l10n/screen_dialog_strings.dart';
-import '../l10n/shortcut_strings.dart';
-import '../l10n/viewer_action_strings.dart';
-import '../l10n/image_editor_strings.dart';
-import '../services/image_edit_session.dart' show isEditableImageFileName;
-import '../services/log_service.dart';
-
-const _log = Log('ScreenDialogs');
 
 /// Explicit selection, or the cursor item when nothing is marked. This mirrors
 /// Total Commander: F5/F6/F8 operate on the item under the cursor when there
@@ -111,98 +104,53 @@ void showKeyboardShortcutsHelp(BuildContext context) {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // F-keys (DC orthodox FM)
-            _shortcutRow('F1', ShortcutStrings(context).description(0)),
-            _shortcutRow(
-              'F2 / Shift+F6',
-              ShortcutStrings(context).description(1),
-            ),
-            _shortcutRow('F3', ShortcutStrings(context).description(2)),
-            _shortcutRow('F4', ShortcutStrings(context).description(3)),
-            _shortcutRow('Shift+F4', ShortcutStrings(context).description(4)),
-            _shortcutRow(
-              'F5 / Ctrl+C',
-              ShortcutStrings(context).description(5),
-            ),
-            _shortcutRow('Ctrl+R', ShortcutStrings(context).description(6)),
-            _shortcutRow(
-              'F6 / Ctrl+X',
-              ShortcutStrings(context).description(7),
-            ),
-            _shortcutRow(
-              'F7 / Ctrl+N',
-              ShortcutStrings(context).description(8),
-            ),
-            _shortcutRow(
-              'F8 / Delete',
-              ShortcutStrings(context).description(9),
-            ),
+            _shortcutRow('F1', 'This help dialog'),
+            _shortcutRow('F2 / Shift+F6', 'Rename (in-place)'),
+            _shortcutRow('F3', 'View file (full-screen)'),
+            _shortcutRow('F4', 'Edit file (built-in)'),
+            _shortcutRow('Shift+F4', 'Open with system editor'),
+            _shortcutRow('F5', 'Copy with options…'),
+            _shortcutRow('Ctrl+R', 'Refresh'),
+            _shortcutRow('F6', 'Move with options…'),
+            _shortcutRow('F7 / Ctrl+N', 'New folder'),
+            _shortcutRow('F8 / Delete', 'Delete selected'),
             const Divider(),
             // Navigation
+            _shortcutRow('Alt+← / Alt+→', 'Back / Forward (history)'),
+            _shortcutRow('Backspace', 'Navigate up / leave archive'),
+            _shortcutRow('Esc (in archive)', 'Exit archive'),
+            _shortcutRow('Enter', 'Open folder / file'),
+            _shortcutRow('Ctrl+Enter', 'Open item in the other panel'),
+            _shortcutRow('Ctrl+← / Ctrl+→', 'Open item in left / right panel'),
+            _shortcutRow('Tab', 'Switch panels'),
+            _shortcutRow('Ctrl+G / Ctrl+L', 'Go to path'),
+            _shortcutRow('Alt+F7', 'Search all files'),
+            _shortcutRow('Ctrl+F', 'Filter files'),
             _shortcutRow(
-              'Alt+← / Alt+→',
-              ShortcutStrings(context).description(10),
+              'Type letters',
+              'Quick search / filter (see Settings)',
             ),
-            _shortcutRow(
-              'Backspace',
-              ShortcutStrings(context).extra('upArchive'),
-            ),
-            _shortcutRow(
-              'Esc (${ShortcutStrings(context).extra('archive')})',
-              ShortcutStrings(context).extra('exitArchive'),
-            ),
-            _shortcutRow('Enter', ShortcutStrings(context).description(12)),
-            _shortcutRow(
-              'Ctrl+Enter',
-              ShortcutStrings(context).extra('oppositeItem'),
-            ),
-            _shortcutRow(
-              'Ctrl+← / Ctrl+→',
-              ShortcutStrings(context).extra('directionItem'),
-            ),
-            _shortcutRow('Tab', ShortcutStrings(context).description(14)),
-            _shortcutRow(
-              'Ctrl+G / Ctrl+L',
-              ShortcutStrings(context).description(15),
-            ),
-            _shortcutRow(
-              'Alt+F7',
-              AppLocalizations.of(context)!.searchAllFiles,
-            ),
-            _shortcutRow('Ctrl+F', ShortcutStrings(context).description(16)),
-            _shortcutRow(
-              ShortcutStrings(context).keyLabel('type'),
-              ShortcutStrings(context).description(17),
-            ),
-            _shortcutRow(
-              ShortcutStrings(context).keyLabel('arrows'),
-              ShortcutStrings(context).description(18),
-            ),
+            _shortcutRow('↑ / ↓ while searching', 'Previous / next match'),
             const Divider(),
             // Selection
-            _shortcutRow('Ctrl+A', ShortcutStrings(context).description(19)),
-            _shortcutRow('Numpad *', ShortcutStrings(context).description(20)),
-            _shortcutRow('Numpad +', ShortcutStrings(context).description(21)),
-            _shortcutRow('Numpad -', ShortcutStrings(context).description(22)),
-            _shortcutRow(
-              'Space / Insert',
-              ShortcutStrings(context).description(23),
-            ),
-            _shortcutRow('Numpad 5', ShortcutStrings(context).description(19)),
-            _shortcutRow('Shift+↑/↓', ShortcutStrings(context).description(24)),
-            _shortcutRow('Escape', ShortcutStrings(context).description(25)),
+            _shortcutRow('Ctrl+A', 'Select all'),
+            _shortcutRow('Numpad *', 'Invert selection'),
+            _shortcutRow('Numpad +', 'Select by wildcard or regex'),
+            _shortcutRow('Numpad -', 'Deselect by wildcard or regex'),
+            _shortcutRow('Space / Insert', 'Mark + advance'),
+            _shortcutRow('Numpad 5', 'Select all'),
+            _shortcutRow('Shift+↑/↓', 'Extend selection'),
+            _shortcutRow('Escape', 'Clear selection / type-ahead'),
             const Divider(),
             // File operations
-            _shortcutRow('Ctrl+C', ShortcutStrings(context).description(5)),
-            _shortcutRow('Ctrl+Z', ShortcutStrings(context).description(26)),
-            _shortcutRow(
-              'Ctrl+Shift+C',
-              ShortcutStrings(context).description(27),
-            ),
-            _shortcutRow(
-              'Ctrl+Shift+N',
-              ShortcutStrings(context).description(28),
-            ),
-            _shortcutRow('Ctrl+=', ShortcutStrings(context).description(29)),
+            _shortcutRow('Ctrl+C / Ctrl+X', 'Copy / cut files to clipboard'),
+            _shortcutRow('Ctrl+V', 'Paste files with options…'),
+            _shortcutRow('Ctrl+M', 'Multi-Rename'),
+            _shortcutRow('Ctrl+Shift+L', 'Import file list'),
+            _shortcutRow('Ctrl+Z', 'Undo last action'),
+            _shortcutRow('Ctrl+Shift+C', 'Copy paths to clipboard'),
+            _shortcutRow('Ctrl+Shift+N', 'Copy names to clipboard'),
+            _shortcutRow('Ctrl+=', 'Sync opposite panel to here'),
             const Divider(),
             // Sort
             _shortcutRow('Ctrl+F3', ShortcutStrings(context).description(30)),
@@ -248,7 +196,7 @@ void showKeyboardShortcutsHelp(BuildContext context) {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text(AppLocalizations.of(context)!.close),
+          child: const Text('Close'),
         ),
       ],
     ),
@@ -279,59 +227,31 @@ Widget _shortcutRow(String keys, String description) {
 void uploadSelected(BuildContext context, WidgetRef ref) {
   final panel = ref.read(panelProvider(PanelSide.local));
   if (panel.selection.isEmpty) return;
-  ref.read(transferProvider).uploadFiles(panel.selection.toList());
+  showFileOperationDialog(
+    context,
+    ref,
+    PanelSide.local,
+    panel.selection.toList(),
+    kind: FileOperationKind.copy,
+  );
 }
 
 void downloadSelected(BuildContext context, WidgetRef ref) {
   final panel = ref.read(panelProvider(PanelSide.remote));
   if (panel.selection.isEmpty) return;
-  ref.read(transferProvider).downloadFiles(panel.selection.toList());
+  showFileOperationDialog(
+    context,
+    ref,
+    PanelSide.remote,
+    panel.selection.toList(),
+    kind: FileOperationKind.copy,
+  );
 }
 
 void confirmDeleteSelected(BuildContext context, WidgetRef ref) {
-  final activePanel = ref.read(activePanelProvider);
-  final panel = ref.read(panelProvider(activePanel));
-  final targets = _selectedOrCursor(panel);
-  _log.debug(
-    'confirmDeleteSelected: ${targets.length} items, side=${activePanel.name}',
-  );
-  if (targets.isEmpty) return;
-
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Text(AppLocalizations.of(context)!.confirmDeleteTitle),
-      content: Text(
-        AppLocalizations.of(context)!.confirmDeleteMessage(targets.length),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(AppLocalizations.of(context)!.cancel),
-        ),
-        ElevatedButton(
-          onPressed: () async {
-            final files = targets;
-            await panel.deleteFiles(files);
-            if (context.mounted) {
-              Navigator.pop(context);
-              _showUndoSnackBar(
-                context,
-                ref,
-                activePanel,
-                ScreenDialogStrings(context).value('deleted', files.length),
-              );
-            }
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.error,
-            foregroundColor: Theme.of(context).colorScheme.onError,
-          ),
-          child: Text(AppLocalizations.of(context)!.delete),
-        ),
-      ],
-    ),
-  );
+  final side = ref.read(activePanelProvider);
+  final panel = ref.read(panelProvider(side));
+  showFileDeleteDialog(context, ref, side, _selectedOrCursor(panel));
 }
 
 void showRenameDialog(BuildContext context, WidgetRef ref) {
@@ -352,8 +272,7 @@ void showRenameDialog(BuildContext context, WidgetRef ref) {
           context,
           ref,
           activePanel,
-          ScreenDialogStrings(context)
-              .value('renamed', '${file.name} → $value'),
+          'Renamed "${file.name}" to "$value"',
         );
       }
     }
@@ -365,9 +284,9 @@ void showRenameDialog(BuildContext context, WidgetRef ref) {
       title: Text(AppLocalizations.of(context)!.rename),
       content: TextField(
         controller: controller,
-        decoration: InputDecoration(
-          labelText: AppLocalizations.of(context)!.newName,
-          border: const OutlineInputBorder(),
+        decoration: const InputDecoration(
+          labelText: 'New name',
+          border: OutlineInputBorder(),
         ),
         autofocus: true,
         onSubmitted: doRename,
@@ -407,6 +326,7 @@ Future<void> _viewFile(
   PanelSide side,
   FileItem target,
 ) async {
+  var viewedFile = target;
   try {
     InternalViewerAction action = InternalViewerAction.close;
     if (panel.isInArchive) {
@@ -422,25 +342,26 @@ Future<void> _viewFile(
         displayName: target.name,
       );
     } else {
-      action = await showInternalViewer(context, file: target, side: side);
+      action = await showInternalViewer(
+        context,
+        file: target,
+        side: side,
+        onFileChanged: (file) => viewedFile = file,
+      );
     }
     if (action == InternalViewerAction.edit && context.mounted) {
-      await _editFile(context, ref, panel, side, target);
+      await _editFile(context, ref, panel, side, viewedFile);
     }
   } catch (e) {
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            ViewerActionStrings(context).cannotView(target.name, e),
-          ),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Cannot view ${target.name}: $e')));
     }
   } finally {
     // Keep the file selected and the panel keyboard-focused after the viewer
     // closes, so F3/F4 can be pressed again immediately.
-    panel.restoreCursorAndFocus(target);
+    panel.restoreCursorAndFocus(viewedFile);
   }
 }
 
@@ -464,19 +385,13 @@ Future<void> _editFile(
 ) async {
   try {
     if (panel.isInArchive) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              isEditableImageFileName(target.name)
-                  ? context.imageTr(
-                      'Extract this file from its archive or container before editing.',
-                    )
-                  : ViewerActionStrings(context).archiveEditingUnsupported,
-            ),
-          ),
-        );
-      }
+      await showCurrentArchiveWorkspaceDialog(
+        context,
+        ref,
+        side,
+        action: ArchiveWorkspaceAction.edit,
+        focusedMember: target,
+      );
       return;
     }
     await showFileEditorDialog(context, ref, target, side);
@@ -486,169 +401,62 @@ Future<void> _editFile(
 }
 
 void showCopyDialogFromSelection(BuildContext context, WidgetRef ref) {
-  final activePanel = ref.read(activePanelProvider);
-  final panel = ref.read(panelProvider(activePanel));
-  final targets = _selectedOrCursor(panel);
-  if (targets.isEmpty) return;
-
-  // On web: if the opposite panel has a local folder open, copy there.
-  // Otherwise download via browser.
-  if (kIsWeb) {
-    final opposite = activePanel == PanelSide.local
-        ? PanelSide.remote
-        : PanelSide.local;
-    final oppositePanel = ref.read(panelProvider(opposite));
-    final oppPath = oppositePanel.currentPath;
-    _log.debug(
-      'web copy: active=${activePanel.name} oppPath=$oppPath selection=${targets.length}',
+  final side = ref.read(activePanelProvider);
+  final panel = ref.read(panelProvider(side));
+  if (panel.isInArchive) {
+    unawaited(
+      showCurrentArchiveWorkspaceDialog(
+        context,
+        ref,
+        side,
+        action: ArchiveWorkspaceAction.copyOut,
+      ),
     );
-
-    // If the opposite panel has a local folder open (not just '/'), copy there.
-    if (oppPath.length > 1) {
-      panel.copyFiles(targets, oppPath).then((_) {
-        oppositePanel.refresh();
-      });
-      return;
-    }
-    // Fallback: download via browser.
-    _downloadFilesOnWeb(ref, targets);
     return;
   }
-
-  _showPathDialog(
+  final files = _selectedOrCursor(panel);
+  showFileOperationDialog(
     context,
     ref,
-    activePanel,
-    panel,
-    targets,
-    true,
-    panel.copyFiles,
+    side,
+    files,
+    kind: FileOperationKind.copy,
   );
-}
-
-/// Download local files via browser on web.
-void _downloadFilesOnWeb(WidgetRef ref, List<FileItem> files) {
-  final localSvc = ref.read(localFileServiceProvider);
-  for (final file in files) {
-    if (file.isFolder || file.path == null) continue;
-    localSvc
-        .readFile(file.path!, fileItem: file)
-        .then((bytes) {
-          final blob = html.Blob([bytes]);
-          final url = html.Url.createObjectUrlFromBlob(blob);
-          html.AnchorElement(href: url)
-            ..setAttribute('download', file.name)
-            ..click();
-          html.Url.revokeObjectUrl(url);
-        })
-        .catchError((_) {});
-  }
 }
 
 void showMoveDialogFromSelection(BuildContext context, WidgetRef ref) {
-  final activePanel = ref.read(activePanelProvider);
-  final panel = ref.read(panelProvider(activePanel));
-  final targets = _selectedOrCursor(panel);
-  _log.debug(
-    'showMoveDialogFromSelection: ${targets.length} items, side=${activePanel.name}',
-  );
-  if (targets.isEmpty) return;
-
-  // On web: move to opposite panel's directory automatically.
-  if (kIsWeb) {
-    final opposite = activePanel == PanelSide.local
-        ? PanelSide.remote
-        : PanelSide.local;
-    final oppositePanel = ref.read(panelProvider(opposite));
-    final oppPath = oppositePanel.currentPath;
-    _log.debug(
-      'web move: active=${activePanel.name} oppPath=$oppPath selection=${targets.length}',
+  final side = ref.read(activePanelProvider);
+  final panel = ref.read(panelProvider(side));
+  if (panel.isInArchive) {
+    unawaited(
+      showCurrentArchiveWorkspaceDialog(
+        context,
+        ref,
+        side,
+        action: ArchiveWorkspaceAction.moveOut,
+      ),
     );
-
-    if (oppPath.length > 1) {
-      panel.moveFiles(targets, oppPath).then((_) {
-        oppositePanel.refresh();
-      });
-      return;
-    }
+    return;
   }
-
-  _showPathDialog(
+  final files = _selectedOrCursor(panel);
+  showFileOperationDialog(
     context,
     ref,
-    activePanel,
-    panel,
-    targets,
-    false,
-    panel.moveFiles,
+    side,
+    files,
+    kind: FileOperationKind.move,
   );
 }
 
-void _showPathDialog(
-  BuildContext context,
-  WidgetRef ref,
-  PanelSide activePanel,
-  PanelNotifier panel,
-  List<FileItem> files,
-  bool isCopy,
-  Future<void> Function(List<FileItem>, String) action,
-) {
-  final controller = TextEditingController(text: panel.currentPath);
-
-  Future<void> doAction(String value) async {
-    if (value.isNotEmpty) {
-      await action(files, value);
-      // Refresh opposite panel in case the target path is there.
-      final opposite = activePanel == PanelSide.local
-          ? PanelSide.remote
-          : PanelSide.local;
-      ref.read(panelProvider(opposite)).refresh();
-      if (context.mounted) {
-        Navigator.pop(context);
-        _showUndoSnackBar(
-          context,
-          ref,
-          activePanel,
-          ScreenDialogStrings(context)
-              .value(isCopy ? 'copied' : 'moved', '${files.length} → $value'),
-        );
-      }
-    }
-  }
-
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Text(
-        isCopy
-            ? AppLocalizations.of(context)!.copyNItems(files.length)
-            : AppLocalizations.of(context)!.moveNItems(files.length),
-      ),
-      content: TextField(
-        controller: controller,
-        decoration: InputDecoration(
-          labelText: AppLocalizations.of(context)!.targetPath,
-          border: const OutlineInputBorder(),
-        ),
-        autofocus: true,
-        onSubmitted: doAction,
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(AppLocalizations.of(context)!.cancel),
-        ),
-        ElevatedButton(
-          onPressed: () => doAction(controller.text),
-          child: Text(
-            isCopy
-                ? AppLocalizations.of(context)!.copy
-                : AppLocalizations.of(context)!.move,
-          ),
-        ),
-      ],
-    ),
-  );
+void showMultiRenameFromSelection(BuildContext context, WidgetRef ref) {
+  final side = ref.read(activePanelProvider);
+  final panel = ref.read(panelProvider(side));
+  final files = panel.selection.isEmpty
+      ? _selectedOrCursor(panel)
+      : (panel.displayedFiles ?? const <FileItem>[])
+            .where((item) => panel.selection.contains(item))
+            .toList();
+  if (files.isNotEmpty) showBatchRenameDialog(context, ref, side, files);
 }
 
 void showCreateFolderDialog(
@@ -680,9 +488,9 @@ void showCreateFolderDialog(
       title: Text(AppLocalizations.of(context)!.newFolder),
       content: TextField(
         controller: controller,
-        decoration: InputDecoration(
-          labelText: AppLocalizations.of(context)!.folderName,
-          border: const OutlineInputBorder(),
+        decoration: const InputDecoration(
+          labelText: 'Folder name',
+          border: OutlineInputBorder(),
         ),
         autofocus: true,
         onSubmitted: doCreate,
@@ -729,7 +537,7 @@ void showReceivedFilesDialog(BuildContext context, List<String> files) {
               ),
           if (files.length > 5)
             Text(
-              AppLocalizations.of(context)!.andMore(files.length - 5),
+              '... and ${files.length - 5} more',
               style: const TextStyle(fontSize: 12),
             ),
         ],

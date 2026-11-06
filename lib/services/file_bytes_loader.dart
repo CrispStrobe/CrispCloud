@@ -15,6 +15,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
+import 'file_operation_backend.dart';
+import 'file_operation_service.dart';
+import 'panel_source_service.dart';
 import './log_service.dart';
 
 /// App-authored byte-loading failures that can be localized at the UI boundary.
@@ -34,16 +37,13 @@ class FileBytesLoadException implements Exception {
 /// Thrown when the file exceeds an explicit caller-provided size cap.
 class FileBytesTooLargeException extends FileBytesLoadException {
   FileBytesTooLargeException(int size, int cap)
-      : super(
-            'File is ${_fmt(size)} — larger than the ${_fmt(cap)} view limit.',
-            code: FileBytesErrorCode.tooLarge,
-            arguments: {'size': _fmt(size), 'limit': _fmt(cap)});
+    : super('File is ${_fmt(size)} — larger than the ${_fmt(cap)} view limit.');
 
   static String _fmt(int b) => b >= 1024 * 1024 * 1024
       ? '${(b / 1024 / 1024 / 1024).toStringAsFixed(1)} GB'
       : b >= 1024 * 1024
-          ? '${(b / 1024 / 1024).toStringAsFixed(1)} MB'
-          : '${(b / 1024).toStringAsFixed(0)} KB';
+      ? '${(b / 1024 / 1024).toStringAsFixed(1)} MB'
+      : '${(b / 1024).toStringAsFixed(0)} KB';
 }
 
 const _log = Log('FileBytesLoader');
@@ -57,78 +57,114 @@ Future<Uint8List> loadFileBytes(
   FileItem file,
   PanelSide side, {
   int? capBytes,
+  PanelFileOrigin? origin,
 }) async {
-  // Local panel: read through the platform service so macOS security-scoped
-  // bookmarks are honoured.
-  if (side == PanelSide.local && file.path != null) {
-    final localSvc = ref.read(localFileServiceProvider);
-    final path = file.path!;
+  final captured =
+      origin ?? ref.read(panelProvider(side)).originForOperation(file);
+  if (captured == null || !captured.isCurrent) {
+    throw const FileBytesLoadException(
+      'The original file source is unavailable. Refresh or reopen the file.',
+    );
+  }
+  final source = captured.source;
+  final local = ref.read(localFileServiceProvider);
+  final backend = fileOperationBackend(
+    source: source,
+    local: local,
+    isCurrent: () => captured.isCurrent,
+  );
+  final path = file.path ?? backend.paths.join(source.currentPath, file.name);
+  final limit = capBytes ?? 64 * 1024 * 1024;
+  if (limit <= 0) throw ArgumentError.value(limit, 'capBytes');
+  if (file.size != null) _assertCap(file.size!, limit);
 
-    // Prefer the listing size to avoid loading an oversized file just to
-    // reject it.
-    if (capBytes != null && file.size != null) {
-      _assertCap(file.size!, capBytes);
+  Future<Uint8List> read() async {
+    final current = await backend.stat(path);
+    if (current == null || current.isFolder) {
+      throw FileBytesLoadException('File not found: $path');
     }
-
-    try {
-      final bytes = await localSvc.readFile(path, fileItem: file);
-      _assertCap(bytes.length, capBytes);
-      return bytes;
-    } on PathNotFoundException {
-      throw FileBytesLoadException('File not found: $path',
-          code: FileBytesErrorCode.notFound, arguments: {'path': path});
-    } on FileSystemException catch (e) {
-      if (kIsWeb || !_isPermissionDenied(e)) {
-        throw FileBytesLoadException('Could not read "$path": ${e.message}',
-            code: FileBytesErrorCode.couldNotRead,
-            arguments: {'path': path, 'error': e.message});
-      }
-      // Sandbox denial: ask the user to grant the containing folder, save the
-      // bookmark, then retry once.
-      final granted = await localSvc.ensureAccess(path);
-      if (!granted) {
-        throw FileBytesLoadException(
-          'Access to "$path" was not granted. Grant access to its folder '
-          'and try again.',
-          code: FileBytesErrorCode.accessDenied, arguments: {'path': path},
+    if (file.uuid != null && current.uuid != file.uuid) {
+      throw const FileBytesLoadException(
+        'A different item now occupies this path. Refresh or reopen it.',
+      );
+    }
+    if (current.size != null) _assertCap(current.size!, limit);
+    // Only provider versions can safely identify reusable preview bytes.
+    // Unversioned files are read afresh, including same-size external edits.
+    final version =
+        current.metadata?['etag'] ??
+        current.metadata?['versionId'] ??
+        current.metadata?['revision'];
+    final cacheScope =
+        '${captured.storageId}:view:${current.uuid ?? path}:$version';
+    final cache = ref.read(fileCacheProvider);
+    if (source is RemotePanelSource && version != null) {
+      final cached = await cache.get(path, cacheScope);
+      if (!captured.isCurrent) {
+        throw const FileBytesLoadException(
+          'The account disconnected while reading.',
         );
       }
-      final bytes = await localSvc.readFile(path, fileItem: file);
-      _assertCap(bytes.length, capBytes);
-      return bytes;
+      if (cached != null) {
+        _assertCap(cached.length, limit);
+        return Uint8List.fromList(cached);
+      }
+    }
+    final bytes = await readFileBytesBounded(backend, current, maxBytes: limit);
+    if (source is RemotePanelSource && version != null) {
+      unawaited(() async {
+        try {
+          await cache.put(path, cacheScope, bytes);
+        } catch (error, stack) {
+          _log.warn('cache put failed (non-fatal)', error, stack);
+        }
+      }());
+    }
+    return bytes;
+  }
+
+  try {
+    return await read();
+  } on FileSystemException catch (error) {
+    if (source is! LocalPanelSource || kIsWeb || !_isPermissionDenied(error)) {
+      throw FileBytesLoadException('Could not read "$path": ${error.message}');
+    }
+    if (!await local.ensureAccess(path)) {
+      throw FileBytesLoadException('Access to "$path" was not granted.');
+    }
+    return read();
+  }
+}
+
+/// Bounded reads shared by previews; the iterator is cancelled on overflow.
+Future<Uint8List> readFileBytesBounded(
+  FileOperationBackend backend,
+  FileItem file, {
+  required int maxBytes,
+  bool Function()? isCancelled,
+}) async {
+  if (maxBytes <= 0) throw ArgumentError.value(maxBytes, 'maxBytes');
+  if (file.size != null) _assertCap(file.size!, maxBytes);
+  final bytes = BytesBuilder(copy: false);
+  void check() {
+    if (!backend.isCurrent) {
+      throw const FileBytesLoadException(
+        'The account disconnected while reading.',
+      );
+    }
+    if (isCancelled?.call() ?? false) {
+      throw const FileBytesLoadException('File read cancelled.');
     }
   }
 
-  // Remote panel: cache first, then download.
-  final auth = ref.read(authProvider);
-  final client = auth.client;
-  final remotePath = file.path ?? '/${file.name}';
-  final providerName = auth.providerName;
-  final cache = ref.read(fileCacheProvider);
-
-  // Refuse oversized files before downloading when the listing has a size.
-  if (capBytes != null && file.size != null && file.size! > capBytes) {
-    throw FileBytesTooLargeException(file.size!, capBytes);
+  check();
+  await for (final chunk in backend.readFile(file)) {
+    check();
+    _assertCap(bytes.length + chunk.length, maxBytes);
+    bytes.add(chunk);
   }
-
-  final cached = await cache.get(remotePath, providerName);
-  if (cached != null) {
-    _assertCap(cached.length, capBytes);
-    return Uint8List.fromList(cached);
-  }
-
-  final bytes = await client.downloadFileBytes(remotePath);
-  _assertCap(bytes.length, capBytes);
-
-  // Cache for offline access (fire-and-forget: never delay the preview).
-  unawaited(() async {
-    try {
-      await cache.put(remotePath, providerName, bytes);
-    } catch (e, st) {
-      _log.warn('cache put failed (non-fatal)', e, st);
-    }
-  }());
-  return bytes;
+  check();
+  return bytes.takeBytes();
 }
 
 bool _isPermissionDenied(FileSystemException error) {
@@ -160,19 +196,19 @@ class ViewBytesSource {
   final Future<void> Function()? _releaseAccess;
 
   ViewBytesSource.memory(Uint8List data)
-      : _memory = data,
-        _file = null,
-        _acquireAccess = null,
-        _releaseAccess = null;
+    : _memory = data,
+      _file = null,
+      _acquireAccess = null,
+      _releaseAccess = null;
 
   ViewBytesSource.file(
     String path, {
     Future<void> Function()? acquireAccess,
     Future<void> Function()? releaseAccess,
-  })  : _file = File(path),
-        _memory = null,
-        _acquireAccess = acquireAccess,
-        _releaseAccess = releaseAccess;
+  }) : _file = File(path),
+       _memory = null,
+       _acquireAccess = acquireAccess,
+       _releaseAccess = releaseAccess;
 
   static const _windowSize = 256 * 1024;
   Uint8List? _window;
@@ -220,7 +256,10 @@ class ViewBytesSource {
         start >= _windowStart &&
         end <= _windowStart + _window!.length) {
       return Uint8List.sublistView(
-          _window!, start - _windowStart, end - _windowStart);
+        _window!,
+        start - _windowStart,
+        end - _windowStart,
+      );
     }
 
     final raf = _raf;

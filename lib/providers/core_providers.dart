@@ -100,10 +100,56 @@ final showSelectionBarProvider = StateProvider<bool>((ref) => false);
 final panelSplitRatioProvider = StateProvider<double>((ref) => 0.5);
 
 /// File view mode per panel.
-enum ViewMode { list, grid, column }
+enum ViewMode { list, grid, column, tiles, gallery }
 
-final localViewModeProvider = StateProvider<ViewMode>((ref) => ViewMode.list);
-final remoteViewModeProvider = StateProvider<ViewMode>((ref) => ViewMode.list);
+extension ViewModeCycle on ViewMode {
+  ViewMode get next => switch (this) {
+    ViewMode.list => ViewMode.grid,
+    ViewMode.grid => ViewMode.tiles,
+    ViewMode.tiles => ViewMode.gallery,
+    ViewMode.gallery => ViewMode.column,
+    ViewMode.column => ViewMode.list,
+  };
+}
+
+/// Persist the visual layout per panel without resetting navigation/selection.
+class FileViewModeController extends StateController<ViewMode> {
+  FileViewModeController(this.side) : super(ViewMode.list) { _load(); }
+  final PanelSide side;
+  int _changes = 0;
+  Future<void> _tail = Future.value();
+  String get _key => 'file_layout_${side.name}_v1';
+
+  Future<void> _load() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final saved = prefs.getString(_key);
+      if (mounted && _changes == 0) {
+        super.state = ViewMode.values.firstWhere(
+          (mode) => mode.name == saved, orElse: () => ViewMode.list,
+        );
+      }
+    } catch (_) { /* Keep the usable default if storage is unavailable. */ }
+  }
+
+  @override
+  set state(ViewMode value) {
+    _changes++;
+    super.state = value;
+    _tail = _tail.then((_) async {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_key, value.name);
+    }).catchError((Object _) {});
+  }
+
+}
+
+final localViewModeProvider = StateNotifierProvider<FileViewModeController, ViewMode>(
+  (ref) => FileViewModeController(PanelSide.local),
+);
+final remoteViewModeProvider = StateNotifierProvider<FileViewModeController, ViewMode>(
+  (ref) => FileViewModeController(PanelSide.remote),
+);
 
 /// Proxy service — overridden in main.dart with the loaded instance.
 final proxyServiceProvider = Provider<ProxyService>((ref) {

@@ -12,20 +12,38 @@ import 'package:flutter/widgets.dart' show FocusNode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 
 import '../models/file_item.dart';
+import '../models/file_view_configuration.dart';
 import '../models/panel_side.dart';
 import '../models/panel_tab.dart';
 import '../models/sort.dart';
+import '../models/storage_reference.dart';
+import '../models/file_collection.dart';
+import '../models/file_search_query.dart';
+import '../services/recursive_search_service.dart';
+import '../services/file_collection_service.dart';
+import '../services/file_operation_service.dart';
+import '../services/captured_file_target.dart';
+import '../services/storage_identity.dart';
+import '../services/storage_trash.dart';
+import '../services/trash_history_store.dart';
+import 'trash_history_provider.dart';
+import '../services/native_file_operations.dart';
+import '../services/native_file_primitives.dart';
 import '../services/archive_service.dart';
 import '../services/archive_viewer_service.dart';
 import '../services/audit_service.dart';
-import '../services/cloud_storage_interface.dart'
-    show CloudStorageClient, CloudStorageClientCapabilities;
+import '../services/cloud_storage_interface.dart' show CloudStorageClient;
 import '../services/directory_cache_service.dart';
+import '../services/file_operation_backend.dart';
+import '../services/file_selection_pattern.dart';
+import '../services/file_list_paths.dart';
 import '../services/local_file_service.dart';
 import '../services/log_service.dart';
 import '../services/panel_source_service.dart';
+import '../services/panel_view_mode_service.dart';
 import '../utils/async_lock.dart';
 import 'action_history_provider.dart';
 import 'auth_provider.dart';
@@ -34,6 +52,11 @@ import 'error_provider.dart';
 import 'panel_source_provider.dart';
 import 'quick_search_provider.dart';
 import 'recent_locations_provider.dart';
+import 'native_file_operations_provider.dart';
+import 'multi_cloud_provider.dart';
+import 'file_collection_provider.dart';
+import 'toolbar_provider.dart';
+import 'transfer_provider.dart';
 
 // SortBy and SortOrder are defined in models/sort.dart
 export '../models/sort.dart';
@@ -41,13 +64,17 @@ export '../models/sort.dart';
 /// The storage source that actually produced a listed file, captured before
 /// the listing request. It is independent of the pane's label or dropdown.
 class PanelFileOrigin {
-  const PanelFileOrigin._(this.source, this._isCurrent);
+  PanelFileOrigin._(this.source, this._isCurrent)
+    : storageReference = storageReferenceForSource(source);
 
   final PanelSource source;
   final bool Function() _isCurrent;
 
   /// Remains false after the captured account disconnects or changes.
   bool get isCurrent => _isCurrent();
+
+  final StorageReference storageReference;
+  String get storageId => storageReference.id;
 }
 
 class PanelNotifier extends ChangeNotifier {
@@ -63,6 +90,8 @@ class PanelNotifier extends ChangeNotifier {
   int _listingGeneration = 0;
   int _verifiedListingGeneration = -1;
   int _accountGeneration = 0;
+  int _connectionGeneration = 0;
+  PanelFileOrigin? _currentDirectoryOrigin;
   final Set<FileItem> _selection = {};
   FileItem? _lastSelected;
   FileItem? _itemToScrollTo;
@@ -91,14 +120,42 @@ class PanelNotifier extends ChangeNotifier {
   String _activeTabId = '';
 
   final _refreshLock = AsyncLock();
+  final _tabSaveLock = AsyncLock();
+  StorageReference? _pendingTabStorage;
   Timer? _refreshDebounce;
   late final FocusNode listFocusNode;
   bool _isDisposed = false;
 
-  /// When true, [_files] holds search results instead of the real directory
-  /// listing; normal refresh/navigation calls restore the real listing.
+  /// A virtual list retains original item paths across refresh and operations.
+  /// Explicit navigation or the Return to folder command leaves this view.
   bool _showingSearchResults = false;
   bool get showingSearchResults => _showingSearchResults;
+  String _fileListTitle = 'Search results';
+  String get fileListTitle => _fileListTitle;
+  PanelFileOrigin? _fileListOrigin;
+  final Map<String, _FileListSnapshot> _fileListTabs = {};
+  final _collectionEntries = Expando<FileCollectionEntry>(
+    'saved collection row',
+  );
+  String? _collectionId;
+  CollectionSearch? _collectionSearch;
+  int _collectionRequest = 0;
+  bool _collectionBusy = false;
+  String _collectionProgress = '';
+  String? get activeCollectionId =>
+      _showingSearchResults ? _collectionId : null;
+  bool get collectionBusy => _collectionBusy;
+  String get collectionProgress => _collectionProgress;
+  bool get canRerunCollectionSearch => _collectionSearch != null;
+  List<FileItem> get collectionReplacements => (_files ?? const <FileItem>[])
+      .where((file) => _collectionEntries[file]?.replacement == true)
+      .toList();
+  final Map<String, Map<(StorageReference, String), _SelectionMemoryEntry>>
+  _selectionMemories = {};
+
+  bool get canOperateOnFileList =>
+      !_showingSearchResults ||
+      (_files?.any((file) => _fileOrigins[file]?.isCurrent == true) ?? false);
 
   /// When non-null, the panel is browsing inside a compressed archive.
   ArchivePanelSource? _archiveSource;
@@ -108,6 +165,12 @@ class PanelNotifier extends ChangeNotifier {
   /// Secondary sort key for multi-key sorting (Phase 1.2).
   SortBy? _secondarySortBy;
   SortOrder _secondarySortOrder = SortOrder.ascending;
+  String? _sortColumnId;
+  String? _secondarySortColumnId;
+  bool _applyingTabView = false;
+  Timer? _viewSaveDebounce;
+  String? get sortColumnId => _sortColumnId;
+  String? get secondarySortColumnId => _secondarySortColumnId;
   SortBy? get secondarySortBy => _secondarySortBy;
   SortOrder get secondarySortOrder => _secondarySortOrder;
 
@@ -129,6 +192,7 @@ class PanelNotifier extends ChangeNotifier {
 
   void toggleShowHiddenFiles() {
     _showHiddenFiles = !_showHiddenFiles;
+    _rememberTabView();
     refresh();
   }
 
@@ -168,6 +232,34 @@ class PanelNotifier extends ChangeNotifier {
         account = current;
       }
     });
+    var connections = _ref
+        .read(multiCloudProvider)
+        .connections
+        .map(
+          (entry) => (
+            entry.id,
+            entry.client,
+            storageReferenceForClient(entry.client),
+            entry.client.isAuthenticated,
+          ),
+        )
+        .toList();
+    _ref.listen<MultiCloudNotifier>(multiCloudProvider, (_, next) {
+      final current = next.connections
+          .map(
+            (entry) => (
+              entry.id,
+              entry.client,
+              storageReferenceForClient(entry.client),
+              entry.client.isAuthenticated,
+            ),
+          )
+          .toList();
+      if (!listEquals(connections, current)) {
+        connections = current;
+        _connectionGeneration++;
+      }
+    });
     _restoreTabs();
     if (side == PanelSide.local) {
       _initializeLocalPath();
@@ -187,6 +279,20 @@ class PanelNotifier extends ChangeNotifier {
     // Listen for panel source changes (e.g. user switches provider in dropdown).
     _ref.listen<PanelSource>(panelSourceProvider(side), (prev, next) {
       if (prev == next) return;
+      if (next.isLocal || next.isRemote) {
+        final reference = storageReferenceForSource(next);
+        final tab = activeTab;
+        if (tab != null &&
+            (tab.lockMode == TabLockMode.locked ||
+                tab.lockMode == TabLockMode.newTab) &&
+            _tabLocationDiffers(tab, next.currentPath, reference)) {
+          // A source picker changes the source before this callback. Preserve
+          // the locked tab's exact account and open the chosen source beside it.
+          _createTabLocation(next.currentPath, reference);
+        }
+      }
+      _pendingTabStorage = null;
+      _leaveFileList();
       _listingGeneration++;
       _log.info(
         'Source switched: ${prev?.displayName} → ${next.displayName} (path=${next.currentPath})',
@@ -200,6 +306,13 @@ class PanelNotifier extends ChangeNotifier {
       }
       notifyListeners();
     });
+    _ref.listen(columnWidthsProvider(side), (_, _) => _rememberTabView());
+    _ref.listen(fileColumnsProvider(side), (_, _) => _rememberTabView());
+    _ref.listen(panelViewModeProvider(side), (_, _) => _rememberTabView());
+    _ref.listen(
+      side == PanelSide.local ? localViewModeProvider : remoteViewModeProvider,
+      (_, _) => _rememberTabView(),
+    );
   }
 
   // --- Getters ---
@@ -209,23 +322,37 @@ class PanelNotifier extends ChangeNotifier {
   /// listing. A same-path object from search, an archive, an old listing, or
   /// another account must never authorize an editor write.
   PanelFileOrigin? originForFile(FileItem file) {
-    if (_isDisposed) return null;
-    final selectedSource = _ref.read(panelSourceProvider(side));
-    if (_isLoading ||
-        _showingSearchResults ||
-        _verifiedListingGeneration != _listingGeneration ||
-        selectedSource.isArchive ||
-        selectedSource.isContainer ||
-        isInArchive ||
-        _isFlatView ||
-        !(_files?.any((item) => identical(item, file)) ?? false)) {
-      return null;
-    }
-    final origin = _fileOrigins[file];
-    return origin != null && origin.isCurrent ? origin : null;
+    return originForOperation(file);
   }
 
   void _recordOrigins(Iterable<FileItem> files, PanelFileOrigin origin) {
+    _currentDirectoryOrigin = origin;
+    final previousTab = activeTab;
+    if (previousTab != null &&
+        (previousTab.lockMode == TabLockMode.locked ||
+            previousTab.lockMode == TabLockMode.newTab) &&
+        _tabLocationDiffers(
+          previousTab,
+          origin.source.currentPath,
+          origin.storageReference,
+        )) {
+      _createTabLocation(
+        origin.source.currentPath,
+        origin.storageReference,
+        keepListing: true,
+      );
+    }
+    final tab = activeTab;
+    if (tab != null &&
+        !_showingSearchResults &&
+        (tab.storage != origin.storageReference ||
+            tab.path != origin.source.currentPath)) {
+      tab.storage = origin.storageReference;
+      tab.path = origin.source.currentPath;
+      tab.collectionId = null;
+      tab.updateLabel();
+      _saveTabs();
+    }
     final listed = files.toList(growable: false);
     // The preview uses selection.first; keeping the old object here would
     // leave it permanently outside the exact-identity origin gate after a
@@ -288,22 +415,111 @@ class PanelNotifier extends ChangeNotifier {
     String path,
   ) {
     final generation = _accountGeneration;
+    final connectionGeneration = _connectionGeneration;
     final email = _ref.read(authProvider).userEmail;
+    final primary = identical(_ref.read(authProvider).client, client);
+    final reference = storageReferenceForClient(client);
     final userId = client.userId;
     final bucketId = client.bucketId;
     return PanelFileOrigin._(
       RemotePanelSource(providerName: providerName, client: client, path: path),
       () {
-        if (_isDisposed || generation != _accountGeneration) return false;
+        if (_isDisposed ||
+            (primary
+                ? generation != _accountGeneration
+                : connectionGeneration != _connectionGeneration) ||
+            !client.isAuthenticated ||
+            storageReferenceForClient(client) != reference) {
+          return false;
+        }
         final auth = _ref.read(authProvider);
-        return auth.isConnected &&
-            identical(auth.client, client) &&
-            auth.userEmail == email &&
-            client.isAuthenticated &&
+        final connected = primary
+            ? auth.isConnected &&
+                  identical(auth.client, client) &&
+                  auth.userEmail == email
+            : _isRegisteredClient(client);
+        return connected &&
             client.userId == userId &&
             client.bucketId == bucketId;
       },
     );
+  }
+
+  bool _isRegisteredClient(CloudStorageClient client) =>
+      client.isAuthenticated &&
+      _ref
+          .read(multiCloudProvider)
+          .connections
+          .any((entry) => identical(entry.client, client));
+
+  bool _isConnectedClient(CloudStorageClient client) {
+    final auth = _ref.read(authProvider);
+    return client.isAuthenticated &&
+        ((auth.isConnected && identical(auth.client, client)) ||
+            _isRegisteredClient(client));
+  }
+
+  String storageDisplayName(StorageReference storage) {
+    if (storage.isLocal) return 'Local';
+    for (final connection in _ref.read(multiCloudProvider).connections) {
+      if (storageReferenceForClient(connection.client) == storage) {
+        return '${connection.label} (${storage.provider})';
+      }
+    }
+    final auth = _ref.read(authProvider);
+    if (storageReferenceForClient(auth.client) == storage &&
+        auth.userEmail?.isNotEmpty == true) {
+      return '${storage.provider} · ${auth.userEmail}';
+    }
+    return '${storage.provider} · ${storage.accountKey.substring(0, storage.accountKey.length.clamp(0, 8))}';
+  }
+
+  /// Reconnect a persisted location only to its exact account/namespace.
+  /// Provider labels and the currently selected account are never substitutes.
+  PanelFileOrigin? resolveStorageReference(
+    StorageReference reference,
+    String path,
+  ) {
+    if (_isDisposed || path.isEmpty || path.contains('\u0000')) return null;
+    final paths = reference.isLocal && !kIsWeb ? p.context : p.posix;
+    if (!paths.isAbsolute(path)) return null;
+    path = paths.normalize(path);
+    if (reference.isLocal) {
+      final source = LocalPanelSource(path);
+      if (storageReferenceForSource(source) != reference) return null;
+      return PanelFileOrigin._(source, () => !_isDisposed);
+    }
+    final auth = _ref.read(authProvider);
+    final clients = <CloudStorageClient>{
+      if (auth.isConnected) auth.client,
+      ..._ref.read(multiCloudProvider).connections.map((entry) => entry.client),
+    };
+    for (final client in clients) {
+      if (_isConnectedClient(client) &&
+          storageReferenceForClient(client) == reference) {
+        return _remoteOrigin(client, client.providerName, path);
+      }
+    }
+    return null;
+  }
+
+  RemotePanelSource? _remoteSourceForListing() {
+    final selected = _ref.read(panelSourceProvider(side));
+    if (selected is RemotePanelSource && _isConnectedClient(selected.client)) {
+      return selected;
+    }
+    final previous = _currentDirectoryOrigin?.source;
+    if (previous is RemotePanelSource && _isConnectedClient(previous.client)) {
+      return previous;
+    }
+    final auth = _ref.read(authProvider);
+    return auth.isConnected && auth.client.isAuthenticated
+        ? RemotePanelSource(
+            providerName: auth.providerName,
+            client: auth.client,
+            path: _remotePath,
+          )
+        : null;
   }
 
   Set<FileItem> get selection => _selection;
@@ -411,6 +627,7 @@ class PanelNotifier extends ChangeNotifier {
   void setFilter(String query) {
     _filterQuery = query;
     _isTypeahead = false;
+    _rememberTabView();
     if (_isFiltering) {
       final current = cursorItem;
       final displayed = filteredFiles;
@@ -432,6 +649,7 @@ class PanelNotifier extends ChangeNotifier {
     _typeaheadResetTimer?.cancel();
     _filterQuery = '';
     _isTypeahead = false;
+    _rememberTabView();
     notifyListeners();
   }
 
@@ -605,47 +823,947 @@ class PanelNotifier extends ChangeNotifier {
 
   /// Navigate to [path] without recording to history (used by back/forward).
   Future<void> _navigateRaw(String path) async {
+    await navigateToPath(path, recordHistory: false);
+  }
+
+  // --- Search results and Commander file lists ---
+
+  /// Capture the actual, verified storage endpoint behind this panel.
+  /// In particular, a legacy remote listing may have a local dropdown label;
+  /// that label must never redirect an operation to another filesystem.
+  PanelFileOrigin captureCurrentOrigin() {
+    if (_isDisposed || _isLoading || isInArchive) {
+      throw StateError(
+        'Wait for a real filesystem listing before starting an operation.',
+      );
+    }
+    final origin = _showingSearchResults
+        ? _fileListOrigin
+        : _currentDirectoryOrigin;
+    if (origin == null ||
+        !origin.isCurrent ||
+        _verifiedListingGeneration != _listingGeneration) {
+      throw StateError(
+        'The source is no longer current. Refresh the folder or run the search again.',
+      );
+    }
+    return origin;
+  }
+
+  /// Capture the account before an asynchronous provider search begins.
+  /// Only SearchNotifier uses this for provider-returned result objects.
+  PanelFileOrigin captureRemoteSearchOrigin() {
+    final source = _remoteSourceForListing();
+    if (source == null) {
+      throw StateError('Connect to a cloud account before searching.');
+    }
+    return _remoteOrigin(source.client, source.providerName, _remotePath);
+  }
+
+  /// The OS clipboard supplies paths; callers stat every item before planning.
+  PanelFileOrigin captureLocalClipboardOrigin(String parent) {
+    if (_isDisposed || kIsWeb || !p.isAbsolute(parent)) {
+      throw StateError('The local file clipboard is unavailable.');
+    }
+    return PanelFileOrigin._(LocalPanelSource(parent), () => !_isDisposed);
+  }
+
+  /// Only the exact verified row and its original account authorize operations.
+  /// Archive members and unresolved or replacement collection rows stay blocked.
+  PanelFileOrigin? originForOperation(FileItem file) {
+    if (_isDisposed ||
+        _isLoading ||
+        isInArchive ||
+        _verifiedListingGeneration != _listingGeneration ||
+        file.name == '..' ||
+        file.name == '.' ||
+        !(_files?.any((candidate) => identical(candidate, file)) ?? false)) {
+      return null;
+    }
+    final origin = _fileOrigins[file];
+    if (origin == null || !origin.isCurrent) return null;
+    if (_showingSearchResults && (file.path == null || file.path!.isEmpty)) {
+      return null;
+    }
+    return origin;
+  }
+
+  /// Capture once when an editor opens, including verified collection rows.
+  /// Later tab/account changes never choose a new save destination.
+  CapturedFileTarget captureFileTarget(
+    FileItem file, {
+    int maxBytes = 64 * 1024 * 1024,
+  }) {
+    final origin = originForOperation(file);
+    if (origin == null || file.isFolder) {
+      throw StateError(
+        'Refresh or reopen the original file before editing. Its storage could not be verified.',
+      );
+    }
+    final source = origin.source;
+    final path =
+        file.path ??
+        (source.isLocal && !kIsWeb
+            ? p.join(source.currentPath, file.name)
+            : p.posix.join(source.currentPath, file.name));
+    final original = file.copyWith(path: path);
+    final reference = FileReference(
+      storage: origin.storageReference,
+      path: path,
+      objectId: file.uuid,
+      version:
+          (file.metadata?['etag'] ??
+                  file.metadata?['versionId'] ??
+                  file.metadata?['revision'])
+              ?.toString(),
+    );
+    if (source is LocalPanelSource) {
+      return CapturedFileTarget.local(
+        reference: reference,
+        service: _localFileService,
+        file: original,
+        isCurrent: () => origin.isCurrent,
+        maxBytes: maxBytes,
+      );
+    }
+    if (source is RemotePanelSource) {
+      return CapturedFileTarget.remote(
+        reference: reference,
+        client: source.client,
+        cache: _ref.read(fileCacheProvider),
+        file: original,
+        isCurrent: () => origin.isCurrent,
+        maxBytes: maxBytes,
+      );
+    }
+    throw UnsupportedError('Extract this file before editing it.');
+  }
+
+  /// Pin all selected items to one storage/account snapshot before mutation.
+  /// The returned guard stays false after account disconnection/reconnection.
+  PanelFileOrigin captureOperationOrigin(List<FileItem> files) {
+    if (files.isEmpty) throw StateError('Select at least one file or folder.');
+    if (_showingSearchResults && !canOperateOnFileList) {
+      throw StateError(
+        'The file list source changed. Run the search or import again.',
+      );
+    }
+    final origins = <PanelFileOrigin>[];
+    for (final file in files) {
+      final origin = originForOperation(file);
+      if (origin == null) {
+        throw StateError(
+          'The source of "${file.name}" is not verified. Refresh its folder or run the search again.',
+        );
+      }
+      if (origins.isNotEmpty &&
+          !_sameStorage(origins.first.source, origin.source)) {
+        throw StateError(
+          'A single operation cannot mix files from different storage accounts.',
+        );
+      }
+      origins.add(origin);
+    }
+    final listOrigin = _showingSearchResults ? _fileListOrigin : null;
+    if (listOrigin != null &&
+        !_sameStorage(listOrigin.source, origins.first.source)) {
+      throw StateError(
+        'These results belong to a different storage source. Open separate lists for each source.',
+      );
+    }
+    final source = listOrigin?.source ?? origins.first.source;
+    return PanelFileOrigin._(
+      source,
+      () =>
+          (listOrigin == null || listOrigin.isCurrent) &&
+          origins.every((origin) => origin.isCurrent),
+    );
+  }
+
+  /// Mixed collections are split into independently captured account groups.
+  /// Every row must be verified before any group is allowed to start.
+  Map<PanelFileOrigin, List<FileItem>> captureOperationGroups(
+    List<FileItem> files,
+  ) {
+    if (files.isEmpty) throw StateError('Select at least one item.');
+    final groups = <String, List<FileItem>>{};
+    for (final file in files) {
+      final origin = originForOperation(file);
+      if (origin == null) {
+        throw StateError(
+          'Refresh or reconnect the original source of "${file.name}".',
+        );
+      }
+      groups.putIfAbsent(origin.storageId, () => []).add(file);
+    }
+    return {
+      for (final group in groups.values)
+        captureOperationOrigin(group): List.unmodifiable(group),
+    };
+  }
+
+  static bool _sameStorage(PanelSource a, PanelSource b) =>
+      (a is LocalPanelSource && b is LocalPanelSource) ||
+      (a is RemotePanelSource &&
+          b is RemotePanelSource &&
+          identical(a.client, b.client) &&
+          a.providerName == b.providerName);
+
+  static PanelFileOrigin _originAt(PanelFileOrigin origin, String path) =>
+      PanelFileOrigin._(origin.source.withPath(path), () => origin.isCurrent);
+
+  /// Feed a search/selection to a persistent, actionable panel list.
+  /// Externally fetched results must carry an origin captured before the query.
+  /// Passing arbitrary objects without a verified origin displays them, but
+  /// never grants permission to mutate them.
+  void showSearchResults(
+    List<FileItem> results, {
+    PanelFileOrigin? origin,
+    PanelFileOrigin? Function(FileItem)? originForFile,
+    String title = 'Search results',
+    FileCollection? collection,
+    CollectionSearch? search,
+  }) {
+    final items = <FileItem>[];
+    final seen = <String>{};
+    PanelFileOrigin? commonOrigin = origin;
+    var mixed = false;
+    final saved = {
+      for (final entry in collection?.entries ?? const <FileCollectionEntry>[])
+        entry.key: entry,
+    };
+    for (final result in results) {
+      if (result.name == '..' || result.name == '.') continue;
+      final verified =
+          originForFile?.call(result) ?? origin ?? originForOperation(result);
+      if (verified != null &&
+          commonOrigin != null &&
+          (!_sameStorage(commonOrigin.source, verified.source) ||
+              commonOrigin.storageReference != verified.storageReference)) {
+        mixed = true;
+      }
+      var path = result.path;
+      if ((path == null || path.isEmpty) &&
+          verified != null &&
+          _files?.any((item) => identical(item, result)) == true) {
+        final paths = verified.source.isRemote ? p.posix : p.context;
+        path = paths.join(verified.source.currentPath, result.name);
+      }
+      final paths = verified?.source.isRemote == true ? p.posix : p.context;
+      final normalized = path == null || path.isEmpty
+          ? null
+          : paths.normalize(path);
+      final storageId = verified?.storageId ?? result.storageId;
+      final key =
+          '${storageId ?? 'unverified'}\u0000${normalized ?? 'id:${result.uuid ?? identityHashCode(result)}'}';
+      if (!seen.add(key)) continue;
+      final item = result.copyWith(
+        name: normalized == null
+            ? paths.basename(result.name)
+            : paths.basename(normalized),
+        path: normalized,
+        storageId: storageId,
+        metadata: {
+          ...?result.metadata,
+          if (verified != null)
+            'collectionSource': storageDisplayName(verified.storageReference)
+          else if (saved[key] != null)
+            'collectionSource': storageDisplayName(
+              saved[key]!.reference.storage,
+            ),
+        },
+      );
+      final savedEntry = saved[key];
+      if (savedEntry != null) _collectionEntries[item] = savedEntry;
+      if (verified != null &&
+          verified.isCurrent &&
+          normalized != null &&
+          paths.isAbsolute(normalized)) {
+        _fileOrigins[item] = _originAt(verified, paths.dirname(normalized));
+        commonOrigin ??= verified;
+      }
+      items.add(item);
+    }
+    _log.info('Showing ${items.length} items in $title');
+    final tab = activeTab;
+    if (tab != null &&
+        (tab.lockMode == TabLockMode.locked ||
+            tab.lockMode == TabLockMode.newTab) &&
+        (collection == null || collection.id != tab.collectionId)) {
+      _createTabLocation(
+        commonOrigin?.source.currentPath ?? currentPath,
+        commonOrigin?.storageReference ??
+            _currentDirectoryOrigin?.storageReference,
+      );
+    }
+    _showingSearchResults = true;
+    _fileListTitle = collection?.name ?? title;
+    _fileListOrigin = mixed ? null : commonOrigin;
+    _collectionId = collection?.id;
+    _collectionSearch = collection?.search ?? search;
+    _listingGeneration++;
+    _verifiedListingGeneration = _listingGeneration;
+    _isLoading = false;
+    _isFlatView = false;
+    _archiveSource = null;
+    _archiveOrigin = null;
+    _archiveBytes = null;
     _selection.clear();
     _lastSelected = null;
-    if (_isTypeahead) {
-      _filterQuery = '';
-      _isTypeahead = false;
+    _itemToScrollTo = null;
+    _filterQuery = '';
+    _isTypeahead = false;
+    _typeaheadResetTimer?.cancel();
+    _files = items;
+    if (collection != null) {
+      _selection.addAll(
+        items.where(
+          (file) => collection.selectedKeys.contains(
+            '${file.storageId}\u0000${file.path}',
+          ),
+        ),
+      );
     }
-    if (side == PanelSide.local) {
-      _localPath = path;
-      await _loadLocalFiles();
-    } else {
-      _remotePath = path;
-      if (_ref.read(authProvider).isConnected) {
-        await _loadRemoteFiles();
-      } else {
-        _localPath = path;
-        await _loadLocalFiles();
+    _sortFiles();
+    _cursorIndex = items.isEmpty ? -1 : 0;
+    _rememberFileListTab();
+    _saveTabs();
+    notifyListeners();
+  }
+
+  void _rememberFileListTab() {
+    if (!_showingSearchResults || _activeTabId.isEmpty) return;
+    _fileListTabs[_activeTabId] = _FileListSnapshot(
+      files: List.of(_files ?? []),
+      title: _fileListTitle,
+      origin: _fileListOrigin,
+      selection: Set.of(_selection),
+      cursor: cursorItem,
+      collectionId: _collectionId,
+      search: _collectionSearch,
+    );
+  }
+
+  FileCollection _collectionSnapshot({
+    required String id,
+    required String name,
+    required Iterable<FileItem> files,
+    required Set<FileItem> selection,
+    CollectionSearch? search,
+  }) {
+    final entries = <FileCollectionEntry>[];
+    final selected = <String>{};
+    for (final file in files) {
+      if (file.name == '..' || file.name == '.') continue;
+      var entry = _collectionEntries[file];
+      if (entry == null) {
+        final origin = _fileOrigins[file];
+        if (origin == null) {
+          throw StateError(
+            'The original source of "${file.name}" was never verified.',
+          );
+        }
+        final paths = origin.source.isRemote || kIsWeb ? p.posix : p.context;
+        entry = FileCollectionService.capture(
+          file.copyWith(
+            path: file.path ?? paths.join(origin.source.currentPath, file.name),
+          ),
+          origin.storageReference,
+        );
+      }
+      entries.add(entry);
+      if (selection.contains(file)) selected.add(entry.key);
+    }
+    return FileCollection(
+      id: id,
+      name: name,
+      entries: entries,
+      selectedKeys: selected,
+      search: search,
+    );
+  }
+
+  /// Save the current rows and marks. Authentication and live clients are never serialized.
+  Future<String> saveCurrentCollection(
+    String name, {
+    bool selectedOnly = false,
+    bool createNew = false,
+  }) async {
+    final tabId = _activeTabId;
+    final id = !selectedOnly && !createNew
+        ? _collectionId ?? const Uuid().v4()
+        : const Uuid().v4();
+    final collection = _collectionSnapshot(
+      id: id,
+      name: name.trim(),
+      files: selectedOnly ? _selection : _files ?? const [],
+      selection: _selection,
+      search: selectedOnly ? null : _collectionSearch,
+    );
+    await _ref.read(fileCollectionStoreProvider).save(collection);
+    if (!_isDisposed &&
+        tabId == _activeTabId &&
+        _showingSearchResults &&
+        !selectedOnly) {
+      _collectionId = id;
+      _fileListTitle = collection.name;
+      activeTab?.collectionId = id;
+      _rememberFileListTab();
+      _saveTabs();
+      notifyListeners();
+    }
+    return id;
+  }
+
+  Future<void> appendToCollection(String id, {bool selectedOnly = true}) async {
+    final additions = _collectionSnapshot(
+      id: 'pending',
+      name: 'Pending',
+      files: selectedOnly ? _selection : _files ?? const [],
+      selection: _selection,
+    );
+    await _ref.read(fileCollectionStoreProvider).update(id, (current) {
+      final entries = {
+        for (final entry in current.entries) entry.key: entry,
+        for (final entry in additions.entries) entry.key: entry,
+      };
+      return current.copyWith(
+        entries: entries.values.toList(),
+        selectedKeys: {...current.selectedKeys, ...additions.selectedKeys},
+        clearSearch: true,
+      );
+    });
+  }
+
+  Future<void> openCollection(String id, {bool newTab = false}) async {
+    final store = _ref.read(fileCollectionStoreProvider);
+    await store.ready;
+    if (_isDisposed) return;
+    final collection = store.get(id);
+    if (collection == null) {
+      throw StateError('The saved collection no longer exists.');
+    }
+    if (newTab) addTab();
+    showSearchResults(
+      collection.entries.map((entry) => entry.file).toList(),
+      collection: collection,
+    );
+    activeTab?.collectionId = id;
+    await refreshCollectionItems();
+  }
+
+  void cancelCollectionRefresh() {
+    _collectionRequest++;
+    _collectionBusy = false;
+    notifyListeners();
+  }
+
+  /// Refresh saved paths. Rerunning a saved query is an explicit separate action.
+  Future<void> refreshCollectionItems({
+    bool rerunSearch = false,
+    bool acceptReplacements = false,
+  }) async {
+    if (!_showingSearchResults || _isDisposed) return;
+    final request = ++_collectionRequest;
+    final tabId = _activeTabId;
+    final generation = _listingGeneration;
+    final collection = _collectionSnapshot(
+      id: _collectionId ?? const Uuid().v4(),
+      name: _fileListTitle,
+      files: _files ?? const [],
+      selection: _selection,
+      search: _collectionSearch,
+    );
+    final sources = <String, PanelFileOrigin>{};
+    final backends = <String, FileOperationBackend>{};
+    FileOperationBackend? resolve(StorageReference storage, String path) {
+      if (backends.containsKey(storage.id)) return backends[storage.id];
+      final origin = resolveStorageReference(storage, path);
+      if (origin == null) return null;
+      sources[storage.id] = origin;
+      return backends[storage.id] = fileOperationBackend(
+        source: origin.source,
+        local: _localFileService,
+        isCurrent: () => origin.isCurrent,
+      );
+    }
+
+    bool cancelled() =>
+        _isDisposed ||
+        request != _collectionRequest ||
+        tabId != _activeTabId ||
+        generation != _listingGeneration;
+    _collectionBusy = true;
+    _collectionProgress = '';
+    notifyListeners();
+    try {
+      const service = FileCollectionService();
+      final result = rerunSearch
+          ? await service.rerun(
+              collection,
+              resolve,
+              isCancelled: cancelled,
+              onProgress: (scanned, _) {
+                if (!cancelled()) {
+                  _collectionProgress = '$scanned scanned';
+                  notifyListeners();
+                }
+              },
+            )
+          : await service.refresh(
+              collection,
+              resolve,
+              isCancelled: cancelled,
+              acceptReplacements: acceptReplacements,
+              onProgress: (done, total) {
+                if (!cancelled()) {
+                  _collectionProgress = '$done / $total';
+                  notifyListeners();
+                }
+              },
+            );
+      if (cancelled()) return;
+      await _ref.read(fileCollectionStoreProvider).save(result.collection);
+      if (cancelled()) return;
+      showSearchResults(
+        result.collection.entries
+            .map(
+              (entry) => entry.file.copyWith(
+                metadata: {
+                  ...?entry.file.metadata,
+                  'collectionState': entry.state.name,
+                  if (entry.detail != null) 'collectionDetail': entry.detail,
+                  'collectionReplacement': entry.replacement,
+                },
+              ),
+            )
+            .toList(),
+        collection: result.collection,
+        originForFile: (file) {
+          final key = '${file.storageId}\u0000${file.path}';
+          final source = sources[file.storageId];
+          return result.verifiedKeys.contains(key) && source?.isCurrent == true
+              ? source
+              : null;
+        },
+      );
+      activeTab?.collectionId = result.collection.id;
+    } finally {
+      if (!_isDisposed && request == _collectionRequest) {
+        _collectionBusy = false;
+        notifyListeners();
       }
     }
-    _syncTabPath();
-    notifyListeners();
   }
 
-  // --- Search-results virtual folder ---
-
-  /// Replace the file listing with [results] from a search/find operation.
-  /// The actual remote path is preserved so [clearSearchResults] can restore it.
-  void showSearchResults(List<FileItem> results) {
-    _log.info('Showing ${results.length} search results as virtual folder');
-    _showingSearchResults = true;
-    _listingGeneration++;
-    _files = List.of(results);
-    _sortFiles();
-    notifyListeners();
-  }
-
-  /// Restore the real directory listing by re-loading the current remote path.
-  void clearSearchResults() {
+  void _leaveFileList({bool forget = true}) {
+    if (forget) {
+      _fileListTabs.remove(_activeTabId);
+      activeTab?.collectionId = null;
+    }
     if (!_showingSearchResults) return;
-    _log.info('Clearing search results, restoring directory listing');
     _showingSearchResults = false;
-    refresh();
+    _fileListOrigin = null;
+    _collectionId = null;
+    _collectionSearch = null;
+    _collectionRequest++;
+    _collectionBusy = false;
+    _selection.clear();
+    _lastSelected = null;
+    _itemToScrollTo = null;
+    _listingGeneration++;
+  }
+
+  /// Return to the directory from which this list was opened.
+  Future<void> clearSearchResults() async {
+    if (!_showingSearchResults) return;
+    final origin = _fileListOrigin;
+    if (origin != null && origin.isCurrent) {
+      await navigateToPath(
+        origin.source.currentPath,
+        origin: origin,
+        recordHistory: false,
+      );
+    } else {
+      final directory = _currentDirectoryOrigin;
+      if (!_allowTabNavigation(
+        directory?.source.currentPath ?? currentPath,
+        directory?.storageReference,
+      )) {
+        return;
+      }
+      _leaveFileList();
+      await refresh();
+    }
+  }
+
+  /// Remove rows only. No filesystem or provider delete call is made.
+  void removeFromFileList(Iterable<FileItem> items) {
+    if (!_showingSearchResults) return;
+    final removed = Set<FileItem>.identity()..addAll(items);
+    final cursor = cursorItem;
+    _files?.removeWhere(removed.contains);
+    _selection.removeWhere(removed.contains);
+    if (removed.contains(_lastSelected)) _lastSelected = null;
+    if (removed.contains(_itemToScrollTo)) _itemToScrollTo = null;
+    _resetCursor(preserveItem: cursor);
+    _rememberFileListTab();
+    if (_collectionId != null) {
+      unawaited(
+        saveCurrentCollection(_fileListTitle).catchError((Object error) {
+          if (!_isDisposed) {
+            _ref
+                .read(errorProvider)
+                .addError('Could not save collection changes: $error');
+          }
+          return '';
+        }),
+      );
+    }
+    notifyListeners();
+  }
+
+  /// Update rows after successful operations; null means moved/deleted away.
+  /// Keys are original full paths, never basenames shared by other folders.
+  /// Async callers pass their captured [origin] so results cannot affect a
+  /// same-path row in another storage account after the pane changes sources.
+  /// Matching saved list tabs are updated even while another tab is active.
+  void applyFileListChanges(
+    Map<String, FileItem?> replacements, {
+    PanelFileOrigin? origin,
+    Set<String> removedDirectories = const {},
+  }) {
+    if (_isDisposed ||
+        replacements.isEmpty ||
+        (origin != null && !origin.isCurrent)) {
+      return;
+    }
+    bool matchesOrigin(PanelFileOrigin? candidate) =>
+        origin == null ||
+        (candidate != null &&
+            candidate.isCurrent &&
+            _sameStorage(origin.source, candidate.source));
+
+    final folderMoves =
+        replacements.entries
+            .where(
+              (entry) =>
+                  entry.value?.isFolder == true &&
+                  entry.value?.isSymlink != true &&
+                  entry.value?.path != null,
+            )
+            .toList()
+          ..sort((a, b) => b.key.length.compareTo(a.key.length));
+    if (origin != null) {
+      unawaited(
+        _ref
+            .read(fileCollectionStoreProvider)
+            .applyFileChanges(
+              origin.storageReference,
+              replacements,
+              removedDirectories: removedDirectories,
+            )
+            .catchError((Object error) {
+              if (!_isDisposed) {
+                _ref
+                    .read(errorProvider)
+                    .addError('Could not update saved collections: $error');
+              }
+            }),
+      );
+    }
+
+    FileItem? replacementFor(FileItem? old) {
+      if (old == null || old.path == null) return old;
+      final oldOrigin = _fileOrigins[old];
+      if (origin != null && !matchesOrigin(oldOrigin)) return old;
+      final paths = oldOrigin?.source.isRemote == true ? p.posix : p.context;
+      FileItem? item;
+      if (replacements.containsKey(old.path)) {
+        item = replacements[old.path]?.copyWith(storageId: old.storageId);
+      } else if (removedDirectories.any(
+        (parent) => paths.isWithin(parent, old.path!),
+      )) {
+        return null;
+      } else {
+        for (final folder in folderMoves) {
+          if (!paths.isWithin(folder.key, old.path!)) continue;
+          item = old.copyWith(
+            path: paths.join(
+              folder.value!.path!,
+              paths.relative(old.path!, from: folder.key),
+            ),
+          );
+          break;
+        }
+        if (item == null) return old;
+      }
+      if (item != null &&
+          !identical(old, item) &&
+          oldOrigin != null &&
+          item.path != null) {
+        _fileOrigins[item] = _originAt(oldOrigin, paths.dirname(item.path!));
+        _collectionEntries[item] = FileCollectionService.capture(
+          item,
+          oldOrigin.storageReference,
+        );
+      }
+      return item;
+    }
+
+    var changed = false;
+    // Without an explicit operation origin, preserve the synchronous API's
+    // scope to the active list. Async callers always supply their origin.
+    if (origin != null) {
+      for (final entry in _fileListTabs.entries.toList()) {
+        if (_showingSearchResults && entry.key == _activeTabId) continue;
+        final snapshot = entry.value;
+        final updated = <FileItem>[];
+        final selected = <FileItem>{};
+        var tabChanged = false;
+        for (final old in snapshot.files) {
+          final item = replacementFor(old);
+          tabChanged = tabChanged || !identical(old, item);
+          if (item == null) continue;
+          updated.add(item);
+          if (snapshot.selection.contains(old)) selected.add(item);
+        }
+        if (!tabChanged) continue;
+        _fileListTabs[entry.key] = _FileListSnapshot(
+          files: updated,
+          title: snapshot.title,
+          origin: snapshot.origin,
+          selection: selected,
+          cursor: replacementFor(snapshot.cursor),
+          collectionId: snapshot.collectionId,
+          search: snapshot.search,
+        );
+        changed = true;
+      }
+    }
+
+    if (!_showingSearchResults) {
+      if (changed) notifyListeners();
+      return;
+    }
+    final previousCursor = cursorItem;
+    final updated = <FileItem>[];
+    final selected = <FileItem>{};
+    for (final old in _files ?? const <FileItem>[]) {
+      final item = replacementFor(old);
+      changed = changed || !identical(old, item);
+      if (item == null) continue;
+      updated.add(item);
+      if (_selection.contains(old)) selected.add(item);
+      if (identical(_lastSelected, old)) _lastSelected = item;
+      if (identical(_itemToScrollTo, old)) _itemToScrollTo = item;
+    }
+    if (!changed) return;
+    _files = updated;
+    _selection
+      ..clear()
+      ..addAll(selected);
+    if (_lastSelected != null &&
+        !updated.any((item) => identical(item, _lastSelected))) {
+      _lastSelected = null;
+    }
+    if (_itemToScrollTo != null &&
+        !updated.any((item) => identical(item, _itemToScrollTo))) {
+      _itemToScrollTo = null;
+    }
+    _sortFiles();
+    _resetCursor(preserveItem: replacementFor(previousCursor));
+    _rememberFileListTab();
+    notifyListeners();
+  }
+
+  String exportFileListPaths({bool selectedOnly = false}) {
+    final files = selectedOnly ? _selection : (_files ?? const <FileItem>[]);
+    return FileListPaths.encode(
+      files.where((item) => item.name != '..').map((item) {
+        if (item.path != null && item.path!.isNotEmpty) return item.path!;
+        final origin = originForOperation(item);
+        if (origin == null) {
+          throw StateError(
+            'The original path of "${item.name}" is unavailable.',
+          );
+        }
+        final paths = origin.source.isRemote ? p.posix : p.context;
+        return paths.join(origin.source.currentPath, item.name);
+      }),
+    );
+  }
+
+  Future<void> openContainingFolder(FileItem item) async {
+    final origin = originForOperation(item);
+    if (origin == null) {
+      throw StateError(
+        'This result no longer has a verified source. Run the search again.',
+      );
+    }
+    final paths = origin.source.isRemote ? p.posix : p.context;
+    final path = item.path ?? paths.join(origin.source.currentPath, item.name);
+    await navigateToPath(paths.dirname(path), selectItem: item, origin: origin);
+    focusList();
+  }
+
+  /// Resolve an imported path list through the current source. Every imported
+  /// row must be present in a real parent-directory listing before it gains an
+  /// operation origin. The panel/account may not change during the import.
+  Future<FileListImportResult> importFileListPaths(
+    String text, {
+    String title = 'File list',
+    bool Function()? isCancelled,
+  }) async {
+    final origin = captureCurrentOrigin();
+    final generation = _listingGeneration;
+    final paths = origin.source.isRemote ? p.posix : p.context;
+    final requested = FileListPaths.parse(
+      text,
+      basePath: origin.source.currentPath,
+      local: origin.source.isLocal,
+    );
+    final byParent = <String, List<String>>{};
+    for (final path in requested) {
+      (byParent[paths.dirname(path)] ??= []).add(path);
+    }
+    final found = <String, FileItem>{};
+    final failures = <String, String>{};
+    for (final entry in byParent.entries) {
+      if (isCancelled?.call() == true) {
+        throw StateError('File list import cancelled.');
+      }
+      if (!origin.isCurrent || generation != _listingGeneration) {
+        throw StateError(
+          'The panel or account changed during import. Open the list again.',
+        );
+      }
+      try {
+        final listed = <FileItem>[];
+        if (origin.source is RemotePanelSource) {
+          final result = await (origin.source as RemotePanelSource).client
+              .listPath(entry.key);
+          for (final kind in const ['folders', 'files']) {
+            for (final value in (result[kind] as List? ?? const [])) {
+              final map = Map<String, dynamic>.from(value as Map);
+              var name = map['name']?.toString() ?? '';
+              if (name.isEmpty ||
+                  name == '..' ||
+                  name == '.' ||
+                  name.contains('/')) {
+                continue;
+              }
+              if (kind == 'files') {
+                final extension = (map['fileType'] ?? map['type'] ?? '')
+                    .toString();
+                if (extension.isNotEmpty &&
+                    extension.toLowerCase() != 'file' &&
+                    !name.toLowerCase().endsWith(
+                      '.${extension.toLowerCase()}',
+                    )) {
+                  name = '$name.$extension';
+                }
+              }
+              final modified =
+                  map['lastModified'] ??
+                  map['modificationTime'] ??
+                  map['updatedAt'];
+              listed.add(
+                FileItem(
+                  name: name,
+                  path: paths.join(entry.key, name),
+                  isFolder: kind == 'folders',
+                  uuid: map['uuid']?.toString(),
+                  size: (map['size'] as num?)?.toInt(),
+                  updatedAt: modified is int
+                      ? DateTime.fromMillisecondsSinceEpoch(modified)
+                      : DateTime.tryParse(modified?.toString() ?? ''),
+                  metadata: map,
+                ),
+              );
+            }
+          }
+        } else {
+          final entities = await _localFileService.listDirectory(entry.key);
+          if (entities == null) {
+            throw StateError('This folder could not be listed.');
+          }
+          for (final entity in entities) {
+            if (!entry.value.contains(paths.normalize(entity.path))) continue;
+            var folder = entity is Directory;
+            int? size;
+            DateTime? modified;
+            bool? symlink;
+            String? symlinkTarget;
+            if (kIsWeb) {
+              final metadata = _localFileService.getWebMetadata(entity.path);
+              size = metadata['size'] as int?;
+              modified = metadata['modified'] as DateTime?;
+            } else {
+              final stat = await entity.stat();
+              folder = stat.type == FileSystemEntityType.directory;
+              size = folder ? null : stat.size;
+              modified = stat.modified;
+              symlink =
+                  await FileSystemEntity.type(
+                    entity.path,
+                    followLinks: false,
+                  ) ==
+                  FileSystemEntityType.link;
+              if (symlink) symlinkTarget = await Link(entity.path).target();
+            }
+            listed.add(
+              FileItem(
+                name: paths.basename(entity.path),
+                path: paths.normalize(entity.path),
+                isFolder: folder,
+                size: size,
+                updatedAt: modified,
+                isSymlink: symlink,
+                symlinkTarget: symlinkTarget,
+              ),
+            );
+          }
+        }
+        for (final path in entry.value) {
+          final candidates = listed.where((item) => item.path == path).toList();
+          if (candidates.length == 1) {
+            found[path] = candidates.single;
+          } else {
+            failures[path] = candidates.isEmpty
+                ? 'Not found or inaccessible'
+                : 'Ambiguous directory entry';
+          }
+        }
+      } catch (e) {
+        for (final path in entry.value) {
+          failures[path] = e.toString();
+        }
+      }
+    }
+    if (isCancelled?.call() == true) {
+      throw StateError('File list import cancelled.');
+    }
+    if (!origin.isCurrent || generation != _listingGeneration) {
+      throw StateError(
+        'The panel or account changed during import. Open the list again.',
+      );
+    }
+    if (found.isEmpty) {
+      throw StateError(
+        'None of the listed paths could be found in ${origin.source.displayName}. '
+        '${failures.isEmpty ? '' : failures.values.first}',
+      );
+    }
+    final ordered = requested
+        .map((path) => found[path])
+        .whereType<FileItem>()
+        .toList();
+    showSearchResults(ordered, origin: origin, title: title);
+    return FileListImportResult(
+      loaded: ordered.length,
+      failures: Map.unmodifiable(failures),
+    );
   }
 
   // --- Archive navigation ---
@@ -653,49 +1771,87 @@ class PanelNotifier extends ChangeNotifier {
   /// Enter a compressed archive for browsing.
   /// Cached archive bytes for web browsing (native reads from disk each time).
   Uint8List? _archiveBytes;
+  PanelFileOrigin? _archiveOrigin;
+
+  PanelFileOrigin captureArchiveOrigin() {
+    final origin = _archiveOrigin;
+    if (_isDisposed || !isInArchive || origin == null || !origin.isCurrent) {
+      throw StateError('Reopen the archive from its original storage account.');
+    }
+    return origin;
+  }
 
   Future<void> enterArchive(FileItem file) async {
     if (file.path == null && file.name.isEmpty) return;
-    final archivePath = file.path ?? p.posix.join(_remotePath, file.name);
-    final parentSource = side == PanelSide.local
-        ? LocalPanelSource(currentPath)
-        : LocalPanelSource(currentPath);
-    _log.info('enterArchive: $archivePath');
-    _archiveSource = const PanelSourceService().enterArchive(
-      archivePath,
-      parentSource,
-    );
-
-    // Load the archive through the platform service so macOS security-scoped
-    // bookmarks are honoured; the listing is decoded from these bytes.
-    _archiveBytes = null;
+    int? requestGeneration;
     try {
-      if (side == PanelSide.local) {
-        await _localFileService.ensureAccess(archivePath);
-        _archiveBytes = await _localFileService.readFile(
-          archivePath,
-          fileItem: file,
-        );
-      } else {
-        final client = _ref.read(authProvider).client;
-        _archiveBytes = await client.downloadFileBytes(archivePath);
+      // A list entry must be the exact captured result. For a regular folder,
+      // read-only archive callers may provide a same-path FileItem wrapper.
+      final origin = _showingSearchResults
+          ? captureOperationOrigin([file])
+          : (originForOperation(file) ?? captureCurrentOrigin());
+      final paths = origin.source.isRemote ? p.posix : p.context;
+      final archivePath =
+          file.path ?? paths.join(origin.source.currentPath, file.name);
+      final parentSource = origin.source.withPath(paths.dirname(archivePath));
+      final tab = activeTab;
+      if (tab?.lockMode == TabLockMode.locked) {
+        _ref
+            .read(errorProvider)
+            .addError(
+              'The tab "${tab!.label}" is locked. Open the archive in a new tab or unlock it.',
+            );
+        return;
       }
+      if (tab?.lockMode == TabLockMode.newTab) {
+        _createTabLocation(parentSource.currentPath, origin.storageReference);
+      }
+      _leaveFileList();
+      final generation = ++_listingGeneration;
+      requestGeneration = generation;
+      _archiveSource = const PanelSourceService().enterArchive(
+        archivePath,
+        parentSource,
+      );
+      _archiveOrigin = origin;
+      _archiveBytes = null;
+      _isLoading = true;
+      notifyListeners();
+      _log.info('enterArchive: $archivePath (${parentSource.displayName})');
+      Uint8List bytes;
+      if (origin.source is RemotePanelSource) {
+        bytes = await (origin.source as RemotePanelSource).client
+            .downloadFileBytes(archivePath);
+      } else {
+        if (!await _localFileService.ensureAccess(archivePath)) {
+          throw StateError('Access to the archive was not granted.');
+        }
+        bytes = await _localFileService.readFile(archivePath, fileItem: file);
+      }
+      if (_isDisposed || generation != _listingGeneration) return;
+      if (!origin.isCurrent) {
+        throw StateError(
+          'The storage account changed while opening the archive.',
+        );
+      }
+      _archiveBytes = bytes;
+      _isLoading = false;
+      await _loadArchiveFiles();
+      if (!_isDisposed) notifyListeners();
     } catch (e) {
+      if (_isDisposed ||
+          (requestGeneration != null &&
+              requestGeneration != _listingGeneration)) {
+        return;
+      }
       _log.warn('archive open failed', e);
       _archiveSource = null;
-      _ref
-          .read(errorProvider)
-          .addError(
-            'Cannot open archive: $e',
-            code: PanelErrorCode.archiveOpen,
-            arguments: {'error': e},
-          );
+      _archiveOrigin = null;
+      _archiveBytes = null;
+      _isLoading = false;
+      _ref.read(errorProvider).addError('Cannot open archive: $e');
       notifyListeners();
-      return;
     }
-
-    await _loadArchiveFiles();
-    notifyListeners();
   }
 
   /// Navigate deeper into a folder within the archive.
@@ -728,20 +1884,36 @@ class PanelNotifier extends ChangeNotifier {
   /// Exit the archive and restore the parent directory listing.
   void exitArchive() {
     final source = _archiveSource;
+    final origin = _archiveOrigin;
     _archiveSource = null;
+    _archiveOrigin = null;
     _archiveBytes = null;
     if (source != null) {
-      if (side == PanelSide.local) {
-        _localPath = p.dirname(source.archivePath);
-      } else {
+      if (source.parent.isRemote) {
         _remotePath = p.posix.dirname(source.archivePath);
+      } else {
+        _localPath = p.dirname(source.archivePath);
       }
     }
-    _syncTabPath();
+    final restore = source != null && origin != null && origin.isCurrent
+        ? navigateToPath(
+            source.parent.currentPath,
+            origin: origin,
+            recordHistory: false,
+          )
+        : refresh();
     unawaited(
-      refresh().then((_) {
-        if (!_isDisposed) focusList();
-      }),
+      restore
+          .then((_) {
+            if (!_isDisposed) focusList();
+          })
+          .catchError((Object error) {
+            if (!_isDisposed) {
+              _ref
+                  .read(errorProvider)
+                  .addError('Could not return to the archive folder: $error');
+            }
+          }),
     );
   }
 
@@ -758,13 +1930,31 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   Future<void> _loadArchiveFiles() async {
-    _listingGeneration++;
+    final generation = ++_listingGeneration;
     final source = _archiveSource;
     if (source == null) return;
+    if (_archiveOrigin != null && !_archiveOrigin!.isCurrent) {
+      _files = [];
+      _ref
+          .read(errorProvider)
+          .addError(
+            'The archive source account changed. Open the archive again.',
+          );
+      return;
+    }
     final bytes = _archiveBytes;
     if (bytes == null) {
       // Fallback for sources without cached bytes (legacy path).
-      _files = await const PanelSourceService().listFiles(source);
+      if (source.parent.isRemote) {
+        _files = [];
+        _ref
+            .read(errorProvider)
+            .addError('Open this remote archive again to read its contents.');
+        return;
+      }
+      final files = await const PanelSourceService().listFiles(source);
+      if (_isDisposed || generation != _listingGeneration) return;
+      _files = files;
       _sortFiles();
       return;
     }
@@ -807,9 +1997,15 @@ class PanelNotifier extends ChangeNotifier {
           }
         }
       }
+      if (_isDisposed ||
+          generation != _listingGeneration ||
+          !identical(_archiveSource, source)) {
+        return;
+      }
       _files = items;
       _sortFiles();
     } on ArchivePasswordRequiredException {
+      if (_isDisposed || generation != _listingGeneration) return;
       _files = [];
       _ref
           .read(errorProvider)
@@ -818,6 +2014,7 @@ class PanelNotifier extends ChangeNotifier {
             code: PanelErrorCode.archivePassword,
           );
     } on ArchiveViewException catch (e) {
+      if (_isDisposed || generation != _listingGeneration) return;
       _files = [];
       _ref
           .read(errorProvider)
@@ -827,6 +2024,7 @@ class PanelNotifier extends ChangeNotifier {
             arguments: {'error': e.message},
           );
     } catch (e) {
+      if (_isDisposed || generation != _listingGeneration) return;
       _log.warn('archive listing failed', e);
       _files = [];
       _ref
@@ -845,6 +2043,8 @@ class PanelNotifier extends ChangeNotifier {
 
   void setSecondarySortBy(SortBy? sortBy) {
     _secondarySortBy = sortBy;
+    _secondarySortColumnId = null;
+    _rememberTabView();
     _sortFiles();
     notifyListeners();
   }
@@ -853,6 +2053,7 @@ class PanelNotifier extends ChangeNotifier {
     _secondarySortOrder = _secondarySortOrder == SortOrder.ascending
         ? SortOrder.descending
         : SortOrder.ascending;
+    _rememberTabView();
     _sortFiles();
     notifyListeners();
   }
@@ -862,47 +2063,78 @@ class PanelNotifier extends ChangeNotifier {
   Future<void> toggleFlatView() async {
     if (_isFlatView) {
       _isFlatView = false;
-      await refresh();
+      await clearSearchResults();
     } else {
-      _isFlatView = true;
       await _loadFlatFiles();
     }
     notifyListeners();
   }
 
   Future<void> _loadFlatFiles() async {
-    _listingGeneration++;
-    if (kIsWeb || side != PanelSide.local) {
-      _ref
-          .read(errorProvider)
-          .addError(
-            'Flat view is only available for local directories',
-            code: PanelErrorCode.flatLocal,
-          );
-      _isFlatView = false;
-      return;
-    }
+    final origin = captureCurrentOrigin();
+    final backend = fileOperationBackend(
+      source: origin.source,
+      local: _localFileService,
+      isCurrent: () => origin.isCurrent,
+    );
+    final generation = _listingGeneration;
+    final tab = _activeTabId;
+    final request = ++_collectionRequest;
+    final query = FileSearchQuery(
+      includeFolders: false,
+      includeHidden: _showHiddenFiles,
+    );
+    _collectionBusy = true;
+    _collectionProgress = 'Reading branch…';
+    notifyListeners();
+    bool cancelled() =>
+        _isDisposed ||
+        request != _collectionRequest ||
+        generation != _listingGeneration ||
+        tab != _activeTabId ||
+        !origin.isCurrent;
     try {
-      final items = await _localFileService.walkFiles(
-        currentPath,
-        includeHidden: _showHiddenFiles,
-        maxItems: 10000,
+      final result = await RecursiveSearchService().search(
+        backend,
+        query,
+        currentDirectory: origin.source.currentPath,
+        isCancelled: cancelled,
+        onProgress: (count, path) {
+          if (!cancelled() && count % 100 == 0) {
+            _collectionProgress = '$count items scanned';
+            notifyListeners();
+          }
+        },
       );
-      final prev = cursorItem;
-      _files = items;
-      _sortFiles();
-      _resetCursor(preserveItem: prev);
-      notifyListeners();
-    } catch (e) {
-      _log.warn('operation failed', e);
-      _ref
-          .read(errorProvider)
-          .addError(
-            'Flat view failed: $e',
-            code: PanelErrorCode.flatFailed,
-            arguments: {'error': e},
-          );
-      _isFlatView = false;
+      if (cancelled() || result.cancelled) return;
+      if (result.errors.isNotEmpty) {
+        _ref
+            .read(errorProvider)
+            .addError(
+              'Branch view has ${result.errors.length} unreadable location(s): ${result.errors.take(3).join('; ')}',
+            );
+      }
+      showSearchResults(
+        result.matches.map((match) => match.file).toList(),
+        origin: origin,
+        title: 'Branch: ${origin.source.currentPath}',
+        search: CollectionSearch(
+          storage: origin.storageReference,
+          directory: origin.source.currentPath,
+          query: query,
+        ),
+      );
+      _isFlatView = true;
+    } catch (error) {
+      if (!cancelled()) {
+        _ref.read(errorProvider).addError('Branch view failed: $error');
+      }
+    } finally {
+      if (!_isDisposed && request == _collectionRequest) {
+        _collectionBusy = false;
+        _collectionProgress = '';
+        notifyListeners();
+      }
     }
   }
 
@@ -910,12 +2142,17 @@ class PanelNotifier extends ChangeNotifier {
     if (isInArchive) {
       return '${_archiveSource!.archiveName}:/${_archiveSource!.innerPath}';
     }
-    // Check the panel source — if it's local, use the per-panel _localPath
-    // (not the shared singleton _localFileService.currentPath).
+    if (_showingSearchResults && _fileListOrigin != null) {
+      return _fileListOrigin!.source.currentPath;
+    }
+    if (_currentDirectoryOrigin != null &&
+        _verifiedListingGeneration == _listingGeneration) {
+      return _currentDirectoryOrigin!.source.isRemote
+          ? _remotePath
+          : _localPath;
+    }
     final source = _ref.read(panelSourceProvider(side));
-    if (source.isLocal) return _localPath;
-    if (side == PanelSide.local) return _localPath;
-    return _remotePath;
+    return source.isRemote ? _remotePath : _localPath;
   }
 
   String _remotePath = '/';
@@ -932,6 +2169,8 @@ class PanelNotifier extends ChangeNotifier {
   // --- Sort ---
   void setSortBy(SortBy sortBy) {
     _sortBy = sortBy;
+    _sortColumnId = null;
+    _rememberTabView();
     _sortFiles();
     notifyListeners();
   }
@@ -940,6 +2179,7 @@ class PanelNotifier extends ChangeNotifier {
     _sortOrder = _sortOrder == SortOrder.ascending
         ? SortOrder.descending
         : SortOrder.ascending;
+    _rememberTabView();
     _sortFiles();
     notifyListeners();
   }
@@ -969,6 +2209,16 @@ class PanelNotifier extends ChangeNotifier {
 
   void _sortFiles() {
     if (_files == null || _files!.isEmpty) return;
+    final columns = _ref.read(fileColumnsProvider(side));
+    FileColumnDefinition? column(String? id) {
+      for (final value in columns) {
+        if (value.id == id) return value;
+      }
+      return null;
+    }
+
+    final primaryColumn = column(_sortColumnId);
+    final secondaryColumn = column(_secondarySortColumnId);
     _files!.sort((a, b) {
       // ".." always stays at the top
       if (a.name == '..') return -1;
@@ -977,17 +2227,25 @@ class PanelNotifier extends ChangeNotifier {
       if (a.isFolder && !b.isFolder) return -1;
       if (!a.isFolder && b.isFolder) return 1;
 
-      int comparison = compareSortKey(a, b, _sortBy);
+      int comparison =
+          primaryColumn?.compare(a, b) ?? compareSortKey(a, b, _sortBy);
       comparison = _sortOrder == SortOrder.ascending ? comparison : -comparison;
 
       // Secondary sort key when primary ties
-      if (comparison == 0 && _secondarySortBy != null) {
-        final int secondary = compareSortKey(a, b, _secondarySortBy!);
+      if (comparison == 0 &&
+          (_secondarySortBy != null || secondaryColumn != null)) {
+        final int secondary =
+            secondaryColumn?.compare(a, b) ??
+            compareSortKey(a, b, _secondarySortBy!);
         comparison = _secondarySortOrder == SortOrder.ascending
             ? secondary
             : -secondary;
       }
 
+      if (comparison == 0 && (_showingSearchResults || _isFlatView)) {
+        comparison = (a.path ?? '').compareTo(b.path ?? '');
+        if (_sortOrder == SortOrder.descending) comparison = -comparison;
+      }
       return comparison;
     });
   }
@@ -1003,6 +2261,8 @@ class PanelNotifier extends ChangeNotifier {
     _log.debug(
       'toggleSelection: ${item.name} shift=$shiftKey ctrl=$ctrlKey lastSelected=${_lastSelected?.name} side=$side',
     );
+    final files = _files;
+    if (files == null || !_containsIdentical(files, item)) return;
     // Ensure this panel is the active panel (drives F-key context).
     if (_ref.read(activePanelProvider) != side) {
       _ref.read(activePanelProvider.notifier).state = side;
@@ -1013,20 +2273,26 @@ class PanelNotifier extends ChangeNotifier {
       if (idx != -1) _cursorIndex = idx;
     }
     // ".." cannot be selection-marked — clicking it just moves cursor
-    if (item.name == '..') {
+    if (item.name == '..' || item.name == '.') {
       _lastSelected = null;
       notifyListeners();
       return;
     }
-    if (shiftKey && _lastSelected != null && _files != null) {
-      final startIdx = _files!.indexOf(_lastSelected!);
-      final endIdx = _files!.indexOf(item);
+    if (shiftKey && _lastSelected != null) {
+      final displayed = displayedFiles ?? const <FileItem>[];
+      final startIdx = _indexOfIdentical(displayed, _lastSelected!);
+      final endIdx = _indexOfIdentical(displayed, item);
       if (startIdx != -1 && endIdx != -1) {
         final start = startIdx < endIdx ? startIdx : endIdx;
         final end = startIdx < endIdx ? endIdx : startIdx;
         for (var i = start; i <= end; i++) {
-          if (_files![i].name != '..') _selection.add(_files![i]);
+          if (displayed[i].name != '..' && displayed[i].name != '.') {
+            _selection.add(displayed[i]);
+          }
         }
+      } else if (endIdx != -1) {
+        // A previous anchor can disappear when a filter is applied.
+        _selection.add(item);
       }
     } else if (ctrlKey) {
       if (_selection.contains(item)) {
@@ -1043,22 +2309,24 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   void selectAll() {
-    _log.debug('selectAll (${_files?.length ?? 0} files)');
-    if (_files != null) {
-      _selection.addAll(_files!.where((f) => f.name != '..'));
+    final displayed = displayedFiles;
+    _log.debug('selectAll (${displayed?.length ?? 0} visible files)');
+    if (displayed != null) {
+      _selection.addAll(
+        displayed.where((f) => f.name != '..' && f.name != '.'),
+      );
       notifyListeners();
     }
   }
 
   void invertSelection() {
     _log.debug('invertSelection (was ${_selection.length} selected)');
-    if (_files == null) return;
-    final newSel = _files!
-        .where((f) => f.name != '..' && !_selection.contains(f))
-        .toSet();
-    _selection
-      ..clear()
-      ..addAll(newSel);
+    final displayed = displayedFiles;
+    if (displayed == null) return;
+    for (final item in displayed) {
+      if (item.name == '..' || item.name == '.') continue;
+      if (!_selection.remove(item)) _selection.add(item);
+    }
     _lastSelected = null;
     notifyListeners();
   }
@@ -1067,6 +2335,118 @@ class PanelNotifier extends ChangeNotifier {
     _log.debug('clearSelection (was ${_selection.length})');
     _selection.clear();
     _lastSelected = null;
+    notifyListeners();
+  }
+
+  bool get _canUseSelectionMemory =>
+      !_isDisposed &&
+      !_isLoading &&
+      !isInArchive &&
+      _verifiedListingGeneration == _listingGeneration;
+
+  (StorageReference, String)? _selectionMemoryKey(
+    FileItem item,
+    PanelFileOrigin origin,
+  ) {
+    if (item.name == '..' || item.name == '.') return null;
+    final paths = origin.source.isRemote || kIsWeb ? p.posix : p.context;
+    final path = item.path ?? paths.join(origin.source.currentPath, item.name);
+    if (!paths.isAbsolute(path)) return null;
+    return (origin.storageReference, paths.normalize(path));
+  }
+
+  /// Remember marks for this tab and storage session, never just basenames.
+  /// Restoration resolves fresh, verified rows; saved objects grant no writes.
+  int rememberSelection() {
+    if (!_canUseSelectionMemory || _activeTabId.isEmpty) return 0;
+    final remembered = <(StorageReference, String), _SelectionMemoryEntry>{};
+    for (final item in _files ?? const <FileItem>[]) {
+      if (!_selection.contains(item)) continue;
+      final origin = _fileOrigins[item];
+      if (origin == null || !origin.isCurrent) continue;
+      final key = _selectionMemoryKey(item, origin);
+      if (key != null) {
+        remembered[key] = _SelectionMemoryEntry(
+          origin: origin,
+          objectId: item.uuid,
+          isFolder: item.isFolder,
+        );
+      }
+    }
+    if (remembered.isEmpty) return 0;
+    _selectionMemories[_activeTabId] = remembered;
+    notifyListeners();
+    return remembered.length;
+  }
+
+  int get rememberedSelectionCount =>
+      _selectionMemories[_activeTabId]?.length ?? 0;
+
+  List<FileItem> _restorableSelection() {
+    if (!_canUseSelectionMemory) return const [];
+    final remembered = _selectionMemories[_activeTabId];
+    if (remembered == null || remembered.isEmpty) return const [];
+    final matches = <(StorageReference, String), FileItem?>{};
+    for (final item in displayedFiles ?? const <FileItem>[]) {
+      final origin = _fileOrigins[item];
+      if (origin == null || !origin.isCurrent) continue;
+      final key = _selectionMemoryKey(item, origin);
+      if (key == null) continue;
+      final memory = remembered[key];
+      if (memory == null ||
+          !memory.origin.isCurrent ||
+          !_sameStorage(memory.origin.source, origin.source) ||
+          memory.isFolder != item.isFolder ||
+          (memory.objectId != null && memory.objectId != item.uuid)) {
+        continue;
+      }
+      // An ambiguous directory entry is never chosen by a saved mark.
+      matches[key] = matches.containsKey(key) ? null : item;
+    }
+    return matches.values.whereType<FileItem>().toList();
+  }
+
+  int get restorableSelectionCount => _restorableSelection().length;
+
+  /// Replace marks with remembered items still visible in this tab and source.
+  /// If none can be resolved, retain the current marks instead of erasing them.
+  int restoreSelection() {
+    final restored = _restorableSelection();
+    if (restored.isEmpty) return 0;
+    _selection
+      ..clear()
+      ..addAll(restored);
+    _lastSelected = null;
+    _rememberFileListTab();
+    notifyListeners();
+    return restored.length;
+  }
+
+  /// Select an explicit projection of the current listing (gallery filters,
+  /// visual sort/ranges). Hidden entries must never be added by a range or
+  /// Select all action. Only the exact listed objects are accepted.
+  void selectVisibleItems(
+    Iterable<FileItem> items, {
+    FileItem? cursor,
+    FileItem? anchor,
+  }) {
+    final listed = _files;
+    if (listed == null) return;
+    final valid = Set<FileItem>.identity()..addAll(listed);
+    final selected = items
+        .where((item) => item.name != '..' && valid.contains(item))
+        .toList();
+    _selection
+      ..clear()
+      ..addAll(selected);
+    if (cursor != null && valid.contains(cursor)) {
+      _cursorIndex = _indexOfIdentical(listed, cursor);
+      _itemToScrollTo = cursor;
+    }
+    _lastSelected = anchor != null && valid.contains(anchor) ? anchor : cursor;
+    if (_ref.read(activePanelProvider) != side) {
+      _ref.read(activePanelProvider.notifier).state = side;
+    }
     notifyListeners();
   }
 
@@ -1186,9 +2566,9 @@ class PanelNotifier extends ChangeNotifier {
     final start = cur < next ? cur : next;
     final end = cur < next ? next : cur;
     for (var i = start; i <= end; i++) {
-      _selection.add(displayed[i]);
+      if (displayed[i].name != '..') _selection.add(displayed[i]);
     }
-    _lastSelected = displayed[next];
+    _lastSelected = displayed[next].name == '..' ? null : displayed[next];
     _setCursorToItem(displayed[next]);
     notifyListeners();
   }
@@ -1206,59 +2586,84 @@ class PanelNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Reset or preserve cursor after a file listing changes.
-  /// On first load (_cursorIndex == -1) or if files are empty, goes to 0.
-  /// Otherwise keeps the cursor on the same item by name/path/uuid,
-  /// falling back to clamping the current index within the new list length.
-  /// Select all files matching [glob] pattern (e.g. "*.dart"). Numpad +.
-  void selectByPattern(String glob) {
-    if (_files == null) return;
-    final lower = glob.toLowerCase();
-    // Simple glob: "*.ext" or "prefix*" — convert to prefix/suffix match
-    final isExtGlob =
-        lower.startsWith('*.') && !lower.substring(2).contains('*');
-    for (final f in _files!) {
-      if (f.name == '..') continue;
-      final name = f.name.toLowerCase();
-      final matches = isExtGlob
-          ? name.endsWith(lower.substring(1)) // "*.dart" → ".dart" suffix
-          : _globMatch(lower, name);
-      if (matches) _selection.add(f);
+  /// Apply a compiled pattern to visible items without changing the filter.
+  /// Validation happens when [pattern] is constructed, before marks change.
+  int applyPatternSelection(
+    FileSelectionPattern pattern, {
+    SelectionAction action = SelectionAction.select,
+  }) {
+    final matches = (displayedFiles ?? const <FileItem>[])
+        .where(pattern.matches)
+        .toList();
+    switch (action) {
+      case SelectionAction.select:
+        _selection.addAll(matches);
+      case SelectionAction.deselect:
+        _selection.removeAll(matches);
+      case SelectionAction.invert:
+        for (final item in matches) {
+          if (!_selection.remove(item)) _selection.add(item);
+        }
+      case SelectionAction.replace:
+        _selection
+          ..clear()
+          ..addAll(matches);
     }
+    _lastSelected = null;
     notifyListeners();
+    return matches.length;
   }
 
-  /// Deselect all files matching [glob] pattern. Numpad -.
-  void deselectByPattern(String glob) {
-    if (_files == null) return;
-    final lower = glob.toLowerCase();
-    final isExtGlob =
-        lower.startsWith('*.') && !lower.substring(2).contains('*');
-    _selection.removeWhere((f) {
-      final name = f.name.toLowerCase();
-      return isExtGlob
-          ? name.endsWith(lower.substring(1))
-          : _globMatch(lower, name);
-    });
+  /// Reuse the search model for visible-row name and metadata criteria.
+  /// Content/archive searches require the search engine before feeding a list.
+  int applyCriteriaSelection(
+    FileSearchQuery criteria, {
+    SelectionAction action = SelectionAction.select,
+  }) {
+    criteria.validate();
+    if (criteria.contentPattern.isNotEmpty || criteria.searchArchives) {
+      throw const FormatException(
+        'Run a content or archive search first, then select its result rows.',
+      );
+    }
+    final pattern = criteria.nameMatcher;
+    final matches = (displayedFiles ?? const <FileItem>[])
+        .where(
+          (file) =>
+              file.name != '..' &&
+              file.name != '.' &&
+              (criteria.includeHidden || !file.name.startsWith('.')) &&
+              pattern.matches(file) &&
+              criteria.matchesMetadata(file),
+        )
+        .toList();
+    switch (action) {
+      case SelectionAction.select:
+        _selection.addAll(matches);
+      case SelectionAction.deselect:
+        _selection.removeAll(matches);
+      case SelectionAction.invert:
+        for (final file in matches) {
+          if (!_selection.remove(file)) _selection.add(file);
+        }
+      case SelectionAction.replace:
+        _selection
+          ..clear()
+          ..addAll(matches);
+    }
+    _lastSelected = null;
     notifyListeners();
+    return matches.length;
   }
 
-  bool _globMatch(String pattern, String text) {
-    // Minimal glob: * matches anything
-    if (!pattern.contains('*')) return pattern == text;
-    final parts = pattern.split('*');
-    int pos = 0;
-    for (int i = 0; i < parts.length; i++) {
-      final part = parts[i];
-      if (part.isEmpty) continue;
-      final idx = text.indexOf(part, pos);
-      if (idx == -1) return false;
-      if (i == 0 && idx != 0) return false; // must start with prefix
-      pos = idx + part.length;
-    }
-    if (!pattern.endsWith('*') && pos != text.length) return false;
-    return true;
-  }
+  /// Compatibility entry points used by existing keypad commands.
+  void selectByPattern(String glob) =>
+      applyPatternSelection(FileSelectionPattern(glob));
+
+  void deselectByPattern(String glob) => applyPatternSelection(
+    FileSelectionPattern(glob),
+    action: SelectionAction.deselect,
+  );
 
   /// Jump cursor to the first file whose name starts with [char] (case-insensitive).
   /// Searches within the currently displayed (filtered) list and cycles.
@@ -1292,12 +2697,16 @@ class PanelNotifier extends ChangeNotifier {
     }
     final anchor = preserveItem ?? cursorItem;
     if (anchor != null) {
-      final idx = _files!.indexWhere(
-        (f) =>
-            (f.uuid != null && f.uuid == anchor.uuid) ||
-            (f.path != null && f.path == anchor.path) ||
-            f.name == anchor.name,
-      );
+      var idx = _indexOfIdentical(_files!, anchor);
+      if (idx == -1 && anchor.path != null) {
+        idx = _files!.indexWhere((f) => f.path == anchor.path);
+      }
+      if (idx == -1 && anchor.uuid != null) {
+        idx = _files!.indexWhere((f) => f.uuid == anchor.uuid);
+      }
+      if (idx == -1 && anchor.path == null && anchor.uuid == null) {
+        idx = _files!.indexWhere((f) => f.name == anchor.name);
+      }
       if (idx != -1) {
         _cursorIndex = idx;
         return;
@@ -1312,31 +2721,62 @@ class PanelNotifier extends ChangeNotifier {
 
   // --- Navigation ---
 
-  /// Refresh the current directory listing. Debounced to avoid rapid re-fetches
-  /// (e.g. from multiple filesystem events or repeated F5 presses).
+  /// Refresh the current directory listing, serializing overlapping requests.
+  /// Queued work must not outlive the panel that requested it.
   Future<void> refresh() async {
+    if (_isDisposed) return;
+    if (_pendingTabStorage != null) {
+      await _restoreSelectedTab();
+      return;
+    }
     _log.debug('refresh: side=$side archive=$isInArchive flat=$_isFlatView');
     await _refreshLock.synchronized(() async {
-      if (isInArchive) {
+      // A tab change can queue this callback while a previous listing is still
+      // pending. The container may be disposed before the lock is released.
+      if (_isDisposed) return;
+      if (_showingSearchResults) {
+        try {
+          await refreshCollectionItems();
+        } catch (error) {
+          if (!_isDisposed) {
+            _ref
+                .read(errorProvider)
+                .addError('Collection refresh failed: $error');
+          }
+        }
+      } else if (isInArchive) {
         await _loadArchiveFiles();
       } else if (_isFlatView) {
         await _loadFlatFiles();
-      } else if (side == PanelSide.local) {
-        _localFileService.currentPath = _localPath;
-        await _localFileService.refresh();
-        await _loadLocalFiles();
-      } else if (_ref.read(authProvider).isConnected) {
-        await _loadRemoteFiles();
       } else {
-        _localFileService.currentPath = _localPath;
-        await _localFileService.refresh();
-        await _loadLocalFiles();
+        // Panel position is not storage identity: either pane can show a
+        // cloud account or local files. Reconnect refreshes a fresh listing
+        // from the active account; old origins never authorize its writes.
+        final knownSource = _verifiedListingGeneration == _listingGeneration
+            ? _currentDirectoryOrigin?.source
+            : null;
+        final selectedSource = _ref.read(panelSourceProvider(side));
+        final remote =
+            _remoteSourceForListing() != null &&
+            (knownSource?.isRemote ??
+                (selectedSource.isRemote ||
+                    (side == PanelSide.remote &&
+                        _currentDirectoryOrigin == null)));
+        if (remote) {
+          await _loadRemoteFiles();
+        } else {
+          _localFileService.currentPath = _localPath;
+          await _localFileService.refresh();
+          if (_isDisposed) return;
+          await _loadLocalFiles();
+        }
       }
     });
   }
 
   /// Debounced refresh — coalesces rapid refresh calls within [delay].
   void refreshDebounced({Duration delay = const Duration(milliseconds: 500)}) {
+    if (_isDisposed) return;
     _refreshDebounce?.cancel();
     _refreshDebounce = Timer(delay, () => refresh());
   }
@@ -1348,6 +2788,10 @@ class PanelNotifier extends ChangeNotifier {
     _log.info(
       'navigateUp: currentPath=$currentPath archive=$isInArchive flat=$_isFlatView',
     );
+    if (_showingSearchResults) {
+      await clearSearchResults();
+      return;
+    }
     // If inside an archive, navigate up within archive or exit
     if (isInArchive) {
       await navigateUpArchive();
@@ -1378,10 +2822,11 @@ class PanelNotifier extends ChangeNotifier {
     if (side != PanelSide.local && !kIsWeb) return false;
     if (isInArchive) {
       _archiveSource = null;
+      _archiveOrigin = null;
       _archiveBytes = null;
     }
     var target = path.isEmpty ? currentPath : path;
-    if (target.contains(':/')) {
+    if (_isArchiveVirtualPath(target)) {
       final archive = target.split(':/').first;
       target = archive.contains('/')
           ? p.dirname(archive)
@@ -1450,26 +2895,67 @@ class PanelNotifier extends ChangeNotifier {
     return path;
   }
 
-  Future<void> navigateToPath(String path, {FileItem? selectItem}) async {
+  Future<void> navigateToPath(
+    String path, {
+    FileItem? selectItem,
+    PanelFileOrigin? origin,
+    bool recordHistory = true,
+    bool bypassTabLock = false,
+  }) async {
     _log.info('navigateToPath: $path (side=$side, web=$kIsWeb)');
+    final sourceOrigin =
+        origin ??
+        (_pendingTabStorage == null
+            ? null
+            : resolveStorageReference(_pendingTabStorage!, path)) ??
+        (_showingSearchResults
+            ? _fileListOrigin
+            : (_verifiedListingGeneration == _listingGeneration
+                  ? _currentDirectoryOrigin
+                  : null));
+    if (_pendingTabStorage != null && sourceOrigin == null) {
+      throw StateError(
+        'Reconnect the original account for this tab or choose a different source.',
+      );
+    }
+    if (sourceOrigin != null && !sourceOrigin.isCurrent) {
+      throw StateError(
+        'The storage account changed. Refresh the folder or run the search again.',
+      );
+    }
+    final selectedSource = _ref.read(panelSourceProvider(side));
+    final isRemote =
+        sourceOrigin?.source.isRemote ??
+        (selectedSource.isRemote ||
+            (side == PanelSide.remote && _ref.read(authProvider).isConnected));
+    if (!isRemote) {
+      path = _normaliseLocalPath(path);
+      if (path.isEmpty) return;
+    }
+    final requestedStorage =
+        sourceOrigin?.storageReference ??
+        (isRemote
+            ? (_remoteSourceForListing() == null
+                  ? null
+                  : storageReferenceForSource(_remoteSourceForListing()!))
+            : storageReferenceForSource(LocalPanelSource(path)));
+    if (!bypassTabLock && !_allowTabNavigation(path, requestedStorage)) return;
+    _leaveFileList();
     // Any explicit path navigation leaves archive mode. Previously the stale
     // ArchivePanelSource kept currentPath virtual and Home/breadcrumbs tried
     // to list "archive.zip:/inner/".
     if (isInArchive) {
       _archiveSource = null;
+      _archiveOrigin = null;
       _archiveBytes = null;
     }
-    if (path.contains(':/')) {
+    if (_isArchiveVirtualPath(path)) {
       final archive = path.split(':/').first;
-      path = side == PanelSide.local
+      path = !isRemote
           ? (archive.contains('/')
                 ? p.dirname(archive)
                 : (kIsWeb ? '/' : (Platform.environment['HOME'] ?? '/')))
           : p.posix.dirname(archive);
-    }
-    if (side == PanelSide.local) {
-      path = _normaliseLocalPath(path);
-      if (path.isEmpty) return;
     }
     _selection.clear();
     _lastSelected = null;
@@ -1477,7 +2963,7 @@ class PanelNotifier extends ChangeNotifier {
       _filterQuery = '';
       _isTypeahead = false;
     }
-    if (side == PanelSide.local) {
+    if (!isRemote) {
       if (!kIsWeb && !await _localFileService.hasAccessToPath(path)) {
         final target = path;
         final granted = await _localFileService.requestDirectoryAccess(
@@ -1486,11 +2972,7 @@ class PanelNotifier extends ChangeNotifier {
         if (granted == null) {
           _ref
               .read(errorProvider)
-              .addError(
-                'Access to "$target" was not granted.',
-                code: PanelErrorCode.accessDenied,
-                arguments: {'path': target},
-              );
+              .addError('Access to "$target" was not granted.');
           return;
         }
         if (!await _localFileService.hasAccessToPath(target)) {
@@ -1513,20 +2995,28 @@ class PanelNotifier extends ChangeNotifier {
       await _loadLocalFiles();
     } else {
       _remotePath = path;
-      if (_ref.read(authProvider).isConnected) {
-        await _loadRemoteFiles();
-      } else {
-        _localPath = path;
-        await _loadLocalFiles();
+      if (sourceOrigin?.source case final RemotePanelSource requested) {
+        final selected = _ref.read(panelSourceProvider(side));
+        if (selected is! RemotePanelSource ||
+            !identical(selected.client, requested.client)) {
+          _ref
+              .read(panelSourceProvider(side).notifier)
+              .setSource(requested.withPath(path));
+        }
       }
+      if (_remoteSourceForListing() == null ||
+          (sourceOrigin != null && !sourceOrigin.isCurrent)) {
+        throw StateError('The cloud account is no longer connected.');
+      }
+      await _loadRemoteFiles();
     }
 
     if (selectItem != null && _files != null) {
       try {
         final found = _files!.firstWhere(
-          (f) => side == PanelSide.local
-              ? f.path == selectItem.path
-              : f.uuid == selectItem.uuid,
+          (f) =>
+              (selectItem.path != null && f.path == selectItem.path) ||
+              (selectItem.uuid != null && f.uuid == selectItem.uuid),
         );
         _selection.clear();
         _selection.add(found);
@@ -1538,7 +3028,7 @@ class PanelNotifier extends ChangeNotifier {
     }
 
     _syncTabPath();
-    _pushHistory(currentPath);
+    if (recordHistory) _pushHistory(currentPath);
     _ref.read(recentLocationsProvider).add(currentPath, side);
     notifyListeners();
   }
@@ -1547,6 +3037,17 @@ class PanelNotifier extends ChangeNotifier {
     _log.info(
       'navigateInto: ${item.name} isFolder=${item.isFolder} path=${item.path}',
     );
+    final operationOrigin = _showingSearchResults
+        ? originForOperation(item)
+        : null;
+    if (_showingSearchResults && operationOrigin == null) {
+      _ref
+          .read(errorProvider)
+          .addError(
+            'This result no longer has a verified source. Run the search again.',
+          );
+      return;
+    }
     // If we're inside an archive, navigate within it
     if (isInArchive) {
       if (item.isFolder && item.path != null) {
@@ -1560,10 +3061,12 @@ class PanelNotifier extends ChangeNotifier {
       return;
     }
     if (!item.isFolder) return;
-    if (side == PanelSide.local) {
+    if (operationOrigin != null) {
+      await navigateToPath(item.path!, origin: operationOrigin);
+    } else if (side == PanelSide.local) {
       if (item.path != null) await navigateToPath(item.path!);
     } else {
-      await navigateToPath(p.posix.join(_remotePath, item.name));
+      await navigateToPath(item.path ?? p.posix.join(_remotePath, item.name));
     }
   }
 
@@ -1604,6 +3107,7 @@ class PanelNotifier extends ChangeNotifier {
     if (idx == -1) return;
     final replacement = item.copyWith(calculatedSize: size);
     _fileOrigins[replacement] = _fileOrigins[item];
+    _collectionEntries[replacement] = _collectionEntries[item];
     _files![idx] = replacement;
     final selected = _selection
         .map((entry) => identical(entry, item) ? replacement : entry)
@@ -1617,72 +3121,296 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   // --- File operations (local panel helpers) ---
-  Future<void> deleteFiles(List<FileItem> files) async {
-    _log.info('deleteFiles: ${files.length} items (web=$kIsWeb, side=$side)');
-    final errors = _ref.read(errorProvider);
-    final audit = _ref.read(auditServiceProvider);
-    final actionHistory = _ref.read(actionHistoryProvider.notifier);
-    final providerName = side == PanelSide.local
-        ? 'local'
-        : _ref.read(authProvider).client.providerName;
+  bool canTrashFiles(List<FileItem> files) {
     try {
-      for (final file in files) {
-        final src = file.path ?? p.posix.join(_remotePath, file.name);
-        if (side == PanelSide.local) {
-          if (kIsWeb) {
-            await _localFileService.deleteEntry(file.path!, file.isFolder);
-          } else {
-            if (file.isFolder) {
-              await Directory(file.path!).delete(recursive: true);
-            } else {
-              await File(file.path!).delete();
-            }
-          }
-        } else {
-          final client = _ref.read(authProvider).client;
-          final deletePath = file.path ?? p.posix.join(_remotePath, file.name);
-          await client.deletePath(deletePath);
-        }
-        await audit.logSuccess(
-          operation: AuditOperation.delete,
-          sourcePath: src,
-          provider: providerName,
-          sizeBytes: file.size,
-        );
-        actionHistory.record(
-          type: ActionType.delete,
-          originalPath: src,
-          provider: providerName,
-          metadata: {'name': file.name, 'isFolder': file.isFolder},
-        );
-      }
-      // Remember cursor position so we can land on the next item after delete
-      final savedIdx = _cursorIndex;
-      await refresh();
-      clearSelection();
-      // Move cursor to the same index (now points to the next item) or clamp to last
-      if (_files != null && _files!.isNotEmpty) {
-        _cursorIndex = savedIdx.clamp(0, _files!.length - 1);
-        _itemToScrollTo = _files![_cursorIndex];
-        notifyListeners();
-      }
-    } catch (e) {
-      _log.warn('operation failed', e);
-      errors.addError(
-        'Delete failed: $e',
-        code: PanelErrorCode.deleteFailed,
-        arguments: {'error': e},
+      return captureOperationGroups(files).keys.every((origin) {
+        final source = origin.source;
+        return source is LocalPanelSource
+            ? NativeFileOperations.supported
+            : source is RemotePanelSource &&
+                  source.client is StorageTrashOperations;
+      });
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> restoreTrashRecord(String id) async {
+    final store = _ref.read(trashHistoryProvider);
+    await store.ready;
+    final record = store.get(id);
+    if (record == null || record.receipt == null) {
+      throw StateError(
+        'No confirmed trash receipt is available. Inspect the original path and the system or provider trash.',
       );
-      for (final file in files) {
-        final src = file.path ?? p.posix.join(_remotePath, file.name);
-        await audit.logError(
-          operation: AuditOperation.delete,
-          sourcePath: src,
-          provider: providerName,
-          error: e.toString(),
+    }
+    if (record.state == TrashRecordState.restored) return;
+    final origin = resolveStorageReference(
+      record.file.storage,
+      record.file.path,
+    );
+    if (origin == null) {
+      throw StateError(
+        'Reconnect the original storage account before restoring.',
+      );
+    }
+    final source = origin.source;
+    final backend = fileOperationBackend(
+      source: source,
+      local: _localFileService,
+      isCurrent: () => origin.isCurrent,
+    );
+    if (await backend.stat(record.file.path) != null) {
+      throw StateError(
+        'The original path is occupied. Inspect that item before moving it aside or retrying restore.',
+      );
+    }
+    if (!origin.isCurrent) {
+      throw StateError('The original source disconnected.');
+    }
+    Future<void> restore() async {
+      if (source is LocalPanelSource && NativeFileOperations.supported) {
+        final native = _ref.read(nativeFileOperationsProvider);
+        await _localFileService.withFileOperationAccess(
+          record.file.path,
+          () => native.restore(record.receipt!),
+        );
+      } else if (source is RemotePanelSource &&
+          source.client is StorageTrashOperations) {
+        await (source.client as StorageTrashOperations).restoreTrash(
+          record.receipt!,
+        );
+      } else {
+        throw UnsupportedError(
+          'This source does not support receipt-based restore.',
         );
       }
     }
+
+    await store.save(record.withState(TrashRecordState.restoring));
+    try {
+      if (!origin.isCurrent) {
+        throw StateError('The original source disconnected.');
+      }
+      await restore();
+      if (!origin.isCurrent) {
+        throw StateError(
+          'Restore returned after the original source disconnected. Inspect it before retrying.',
+        );
+      }
+      await store.save(
+        record.withState(TrashRecordState.restored),
+        retainOnFailure: true,
+      );
+    } catch (error) {
+      await store.save(
+        record.withState(TrashRecordState.uncertain, detail: '$error'),
+        retainOnFailure: true,
+      );
+      rethrow;
+    }
+    if (!_isDisposed) await refresh();
+  }
+
+  Future<int> deleteFiles(
+    List<FileItem> files, {
+    bool permanently = false,
+  }) async {
+    var deleted = 0;
+    try {
+      final groups = captureOperationGroups(files);
+      if (!permanently && !canTrashFiles(files)) {
+        throw UnsupportedError(
+          'Trash is unavailable for one or more original sources. Choose Delete without restore explicitly.',
+        );
+      }
+      for (final group in groups.entries) {
+        deleted += await _deleteCapturedFiles(
+          group.value,
+          group.key,
+          permanently: permanently,
+        );
+      }
+    } catch (error) {
+      _ref.read(errorProvider).addError('Delete failed: $error');
+    } finally {
+      await refresh();
+      clearSelection();
+    }
+    return deleted;
+  }
+
+  Future<int> _deleteCapturedFiles(
+    List<FileItem> files,
+    PanelFileOrigin origin, {
+    required bool permanently,
+  }) async {
+    final audit = _ref.read(auditServiceProvider);
+    final history = _ref.read(actionHistoryProvider.notifier);
+    var providerName = 'unknown';
+    final removed = <String, FileItem?>{};
+    final removedDirectories = <String>{};
+    var deletedCount = 0;
+    try {
+      final source = origin.source;
+      final paths = source.isLocal && !kIsWeb ? p.context : p.posix;
+      providerName = source is RemotePanelSource
+          ? source.providerName
+          : 'local';
+      final roots = files
+          .where(
+            (file) => !files.any(
+              (parent) =>
+                  parent.isFolder &&
+                  parent.isSymlink != true &&
+                  !identical(file, parent) &&
+                  parent.path != null &&
+                  file.path != null &&
+                  paths.isWithin(parent.path!, file.path!),
+            ),
+          )
+          .toList();
+      for (final file in roots) {
+        if (!origin.isCurrent) throw StateError('The storage account changed.');
+        final path = file.path;
+        if (path == null) throw StateError('The original path is unavailable.');
+        TrashReceipt? receipt;
+        Future<void> Function()? restore;
+        if (!permanently) {
+          final trashStore = _ref.read(trashHistoryProvider);
+          final record = await trashStore.begin(
+            file: FileReference(
+              storage: origin.storageReference,
+              path: path,
+              objectId: file.uuid,
+            ),
+            name: file.name,
+            isFolder: file.isFolder,
+          );
+          try {
+            if (!origin.isCurrent) {
+              throw StateError(
+                'The original source disconnected before trashing.',
+              );
+            }
+            if (source is LocalPanelSource) {
+              final native = _ref.read(nativeFileOperationsProvider);
+              receipt = await _localFileService.withFileOperationAccess(
+                path,
+                () => native.trash(path),
+              );
+            } else if (source is RemotePanelSource &&
+                source.client is StorageTrashOperations) {
+              receipt = await (source.client as StorageTrashOperations)
+                  .trashPath(path);
+            }
+            if (receipt == null || receipt.originalPath != path) {
+              throw StateError(
+                'The source did not return a matching restore receipt. Inspect its trash before retrying.',
+              );
+            }
+          } catch (error) {
+            await trashStore.save(
+              record.withState(TrashRecordState.uncertain, detail: '$error'),
+              retainOnFailure: true,
+            );
+            rethrow;
+          }
+          try {
+            await trashStore.save(
+              record.withState(TrashRecordState.trashed, receipt: receipt),
+              retainOnFailure: true,
+            );
+          } catch (error) {
+            _ref
+                .read(errorProvider)
+                .addError(
+                  'The item was trashed, but its restore receipt could not be saved. Restore it before closing the app: $error',
+                );
+          }
+          restore = () => restoreTrashRecord(record.id);
+        } else if (source is LocalPanelSource) {
+          if (kIsWeb) {
+            await _localFileService.deleteEntry(path, file.isFolder);
+          } else {
+            await _localFileService.withFileOperationAccess(path, () async {
+              if (!origin.isCurrent) {
+                throw StateError('The source is no longer available.');
+              }
+              if (file.isSymlink == true) {
+                await Link(path).delete();
+              } else if (file.isFolder) {
+                await Directory(path).delete(recursive: true);
+              } else {
+                await File(path).delete();
+              }
+            });
+          }
+        } else if (source is RemotePanelSource) {
+          final client = source.client;
+          if (client is StorageTrashOperations) {
+            await (client as StorageTrashOperations).deletePermanently(path);
+          } else {
+            await client.deletePath(path);
+          }
+        } else {
+          throw UnsupportedError('This source cannot be deleted from here.');
+        }
+        removed[path] = null;
+        deletedCount++;
+        if (file.isFolder && file.isSymlink != true) {
+          removedDirectories.add(path);
+          for (final child in _files ?? const <FileItem>[]) {
+            if (child.path != null && paths.isWithin(path, child.path!)) {
+              removed[child.path!] = null;
+            }
+          }
+        }
+        await audit.logSuccess(
+          operation: AuditOperation.delete,
+          sourcePath: path,
+          provider: providerName,
+          sizeBytes: file.size,
+        );
+        history.record(
+          type: ActionType.delete,
+          originalPath: path,
+          provider: providerName,
+          metadata: {
+            'name': file.name,
+            'isFolder': file.isFolder,
+            'permanent': permanently,
+            'storage': origin.storageReference.toJson(),
+            if (receipt != null) 'trash': receipt.toJson(),
+          },
+          isCurrent: () => origin.isCurrent,
+          undoAction: restore == null
+              ? null
+              : () async {
+                  if (!origin.isCurrent) {
+                    return const UndoResult.failure(
+                      'Reconnect the original storage before restoring.',
+                    );
+                  }
+                  await restore!();
+                  await refresh();
+                  return UndoResult.success(
+                    'Restored ${file.name} from trash.',
+                  );
+                },
+        );
+      }
+    } catch (error) {
+      _log.warn('Delete failed', error);
+      _ref.read(errorProvider).addError('Delete failed: $error');
+    } finally {
+      applyFileListChanges(
+        removed,
+        origin: origin,
+        removedDirectories: removedDirectories,
+      );
+    }
+    return deletedCount;
   }
 
   // --- In-place rename ---
@@ -1709,17 +3437,91 @@ class PanelNotifier extends ChangeNotifier {
     await renameFile(item, trimmed);
   }
 
-  Future<void> renameFile(FileItem file, String newName) async {
+  Future<bool> operationPathExists(String path, PanelFileOrigin origin) async =>
+      await operationFileInfo(path, origin) != null;
+
+  /// Read fresh metadata at an original path, including after a rename.
+  /// Captured operations and undo must not resolve against a different pane
+  /// source or accept metadata fetched across an account change.
+  Future<FileItem?> operationFileInfo(
+    String path,
+    PanelFileOrigin origin,
+  ) async {
+    if (!origin.isCurrent) throw StateError('The storage account changed.');
+    final backend = fileOperationBackend(
+      source: origin.source,
+      local: _localFileService,
+      isCurrent: () => origin.isCurrent,
+    );
+    if (!backend.paths.isAbsolute(path)) {
+      throw const FormatException('Use an absolute original file path.');
+    }
+    final item = await backend.stat(backend.paths.normalize(path));
+    if (!origin.isCurrent) throw StateError('The storage account changed.');
+    return item;
+  }
+
+  /// Read siblings from the storage captured when an operation was opened.
+  /// A tab/source change must never redirect a preview to the current pane.
+  Future<List<FileItem>> listOperationDirectory(
+    String path,
+    PanelFileOrigin origin,
+  ) async {
+    if (!origin.isCurrent) throw StateError('The storage account changed.');
+    final backend = fileOperationBackend(
+      source: origin.source,
+      local: _localFileService,
+      isCurrent: () => origin.isCurrent,
+    );
+    if (!backend.paths.isAbsolute(path)) {
+      throw const FormatException('Use an absolute original directory path.');
+    }
+    final items = await backend.list(backend.paths.normalize(path));
+    if (!origin.isCurrent) throw StateError('The storage account changed.');
+    return List.unmodifiable(items);
+  }
+
+  Future<void> renameFile(
+    FileItem file,
+    String newName, {
+    bool refreshAfter = true,
+    bool rethrowErrors = false,
+    bool recordHistory = true,
+    PanelFileOrigin? operationOrigin,
+  }) async {
     _log.info('renameFile: ${file.name} → $newName');
     final audit = _ref.read(auditServiceProvider);
     final actionHistory = _ref.read(actionHistoryProvider.notifier);
-    final isLocalSource =
-        _ref.read(panelSourceProvider(side)).isLocal || side == PanelSide.local;
-    final providerName = isLocalSource
-        ? 'local'
-        : _ref.read(authProvider).client.providerName;
-    final src = file.path ?? p.posix.join(_remotePath, file.name);
+    var providerName = 'unknown';
+    final src = file.path ?? file.name;
     try {
+      if (newName == file.name) return;
+      if (newName.trim().isEmpty ||
+          newName == '.' ||
+          newName == '..' ||
+          RegExp(r'[/\\\x00-\x1f\x7f]').hasMatch(newName)) {
+        throw const FormatException(
+          'Enter a filename without path separators or control characters.',
+        );
+      }
+      final origin = operationOrigin ?? captureOperationOrigin([file]);
+      if (!origin.isCurrent) throw StateError('The storage account changed.');
+      final source = origin.source;
+      final isLocalSource = source is LocalPanelSource;
+      providerName = source is RemotePanelSource
+          ? source.providerName
+          : 'local';
+      if (file.path == null) {
+        throw StateError('The original file path is unavailable.');
+      }
+      final paths = isLocalSource && !kIsWeb ? p.context : p.posix;
+      final target = paths.join(paths.dirname(src), newName);
+      if (await operationPathExists(target, origin)) {
+        throw StateError(
+          'A destination already exists: $target. For case-only renames, use an unused temporary name first.',
+        );
+      }
+      if (!origin.isCurrent) throw StateError('The storage account changed.');
       String computedNewPath;
       if (isLocalSource && kIsWeb) {
         // Web rename: copy under new name, delete old entry
@@ -1730,23 +3532,43 @@ class PanelNotifier extends ChangeNotifier {
             oldPath,
             fileItem: file,
           );
-          await _localFileService.saveFile(computedNewPath, bytes);
+          final saved = await _localFileService.saveFileReportingResult(
+            computedNewPath,
+            bytes,
+            overwrite: false,
+          );
+          if (saved != LocalFileSaveResult.written) {
+            throw StateError(
+              'The browser downloaded a copy; the source was retained.',
+            );
+          }
+          if (!origin.isCurrent) {
+            throw StateError('The source is no longer available.');
+          }
           await _localFileService.deleteEntry(oldPath, false);
         } else {
-          // Folder rename on web: recursive copy to new name, delete old
-          await _copyDirectoryWeb(oldPath, computedNewPath);
-          await _localFileService.deleteEntry(oldPath, true);
+          throw UnsupportedError(
+            'Folder rename requires a native filesystem or cloud provider.',
+          );
         }
       } else if (isLocalSource) {
         computedNewPath = p.join(p.dirname(file.path!), newName);
-        if (file.isFolder) {
-          await Directory(file.path!).rename(computedNewPath);
-        } else {
-          await File(file.path!).rename(computedNewPath);
-        }
+        await _localFileService.withFileOperationAccess(src, () async {
+          if (!origin.isCurrent) {
+            throw StateError('The source is no longer available.');
+          }
+          if (!await moveNativeNoReplace(src, computedNewPath)) {
+            throw UnsupportedError(
+              'This filesystem cannot safely rename without replacing an existing item.',
+            );
+          }
+        });
       } else {
-        final client = _ref.read(authProvider).client;
-        final sourcePath = file.path ?? p.posix.join(_remotePath, file.name);
+        if (source is! RemotePanelSource) {
+          throw UnsupportedError('This source cannot be renamed.');
+        }
+        final client = source.client;
+        final sourcePath = src;
         computedNewPath = p.posix.join(p.posix.dirname(sourcePath), newName);
         await client.renamePath(sourcePath, newName);
       }
@@ -1756,14 +3578,39 @@ class PanelNotifier extends ChangeNotifier {
         targetPath: newName,
         provider: providerName,
       );
-      actionHistory.record(
-        type: ActionType.rename,
-        originalPath: src,
-        newPath: computedNewPath,
-        provider: providerName,
-        metadata: {'oldName': file.name, 'newName': newName},
-      );
-      await refresh();
+      if (recordHistory) {
+        actionHistory.record(
+          type: ActionType.rename,
+          originalPath: src,
+          newPath: computedNewPath,
+          provider: providerName,
+          metadata: {'oldName': file.name, 'newName': newName},
+          isCurrent: () => origin.isCurrent,
+          undoAction: () async {
+            if (!origin.isCurrent) {
+              return const UndoResult.failure('The storage account changed.');
+            }
+            final renamed = file.copyWith(name: newName, path: computedNewPath);
+            await renameFile(
+              renamed,
+              file.name,
+              operationOrigin: origin,
+              refreshAfter: false,
+              rethrowErrors: true,
+              recordHistory: false,
+            );
+            applyFileListChanges({computedNewPath: file}, origin: origin);
+            await refresh();
+            return UndoResult.success('Renamed $newName back to ${file.name}.');
+          },
+        );
+      }
+      if (refreshAfter) {
+        applyFileListChanges({
+          src: file.copyWith(name: newName, path: computedNewPath),
+        }, origin: origin);
+        await refresh();
+      }
     } catch (e) {
       _log.warn('operation failed', e);
       _ref
@@ -1780,29 +3627,50 @@ class PanelNotifier extends ChangeNotifier {
         provider: providerName,
         error: e.toString(),
       );
+      if (rethrowErrors) rethrow;
     }
   }
 
   Future<void> createFolder(String name) async {
-    _log.info('createFolder: $name in $currentPath');
     final audit = _ref.read(auditServiceProvider);
     final actionHistory = _ref.read(actionHistoryProvider.notifier);
-    final isLocalSource =
-        _ref.read(panelSourceProvider(side)).isLocal || side == PanelSide.local;
-    final providerName = isLocalSource
-        ? 'local'
-        : _ref.read(authProvider).client.providerName;
-    final folderPath = isLocalSource
-        ? p.posix.join(currentPath, name)
-        : p.posix.join(_remotePath, name);
+    var providerName = 'unknown';
+    var folderPath = name;
+    var createdPath = folderPath;
     try {
-      if (isLocalSource && kIsWeb) {
-        await _localFileService.createDirectory(folderPath);
-      } else if (isLocalSource) {
-        await Directory(p.join(currentPath, name)).create();
-      } else {
-        final client = _ref.read(authProvider).client;
-        await client.createFolderPath(p.posix.join(_remotePath, name));
+      if (_showingSearchResults) {
+        throw StateError('Open a real directory before creating a folder.');
+      }
+      if (name.isEmpty ||
+          name == '.' ||
+          name == '..' ||
+          name.contains('/') ||
+          name.contains(r'\') ||
+          name.contains('\u0000')) {
+        throw const FormatException(
+          'Enter a folder name without path separators.',
+        );
+      }
+      final origin = captureCurrentOrigin();
+      final backend = fileOperationBackend(
+        source: origin.source,
+        local: _localFileService,
+        isCurrent: () => origin.isCurrent,
+      );
+      providerName = backend.label;
+      createdPath = backend.paths.join(origin.source.currentPath, name);
+      folderPath = createdPath;
+      if (await backend.stat(folderPath) != null) {
+        throw StateError('An item already exists with that name.');
+      }
+      if (!origin.isCurrent) {
+        throw StateError('The original storage disconnected.');
+      }
+      await backend.createDirectory(folderPath);
+      if (!origin.isCurrent) {
+        throw StateError(
+          'The original storage changed while creating the folder.',
+        );
       }
       await audit.logSuccess(
         operation: AuditOperation.createFolder,
@@ -1813,242 +3681,310 @@ class PanelNotifier extends ChangeNotifier {
         type: ActionType.createFolder,
         originalPath: folderPath,
         provider: providerName,
-        metadata: {'name': name},
+        metadata: {'name': name, 'storage': origin.storageReference.toJson()},
+        // Undo must use the same captured account and must never fall back to
+        // deleting a remote directory recursively through the active client.
+        isCurrent: () =>
+            origin.isCurrent && backend.capabilities.deleteEmptyDirectory,
+        undoAction: () async {
+          if (!origin.isCurrent) {
+            return const UndoResult.failure('The storage account changed.');
+          }
+          await backend.deleteEmptyDirectory(createdPath);
+          return UndoResult.success('Deleted folder $name.');
+        },
       );
       await refresh();
-    } catch (e) {
-      _log.warn('operation failed', e);
-      _ref
-          .read(errorProvider)
-          .addError(
-            'Create folder failed: $e',
-            code: PanelErrorCode.createFailed,
-            arguments: {'error': e},
-          );
+    } catch (error) {
+      _log.warn('operation failed', error);
+      if (!_isDisposed) {
+        _ref.read(errorProvider).addError('Create folder failed: $error');
+      }
       await audit.logError(
         operation: AuditOperation.createFolder,
-        sourcePath: folderPath,
+        sourcePath: folderPath ?? name,
         provider: providerName,
-        error: e.toString(),
+        error: error.toString(),
       );
     }
   }
 
-  Future<void> moveFiles(List<FileItem> files, String targetPath) async {
-    _log.info(
-      'moveFiles: ${files.length} items → $targetPath (web=$kIsWeb, side=$side)',
-    );
-    final audit = _ref.read(auditServiceProvider);
-    final actionHistory = _ref.read(actionHistoryProvider.notifier);
-    final isLocalSource =
-        _ref.read(panelSourceProvider(side)).isLocal || side == PanelSide.local;
-    final providerName = isLocalSource
-        ? 'local'
-        : _ref.read(authProvider).client.providerName;
+  /// Non-interactive compatibility entry points share the same captured-source
+  /// planner, staged writes and durable queue as the foreground operation dialog.
+  /// Existing targets are skipped; callers needing a decision use the dialog.
+  Future<void> moveFiles(List<FileItem> files, String targetPath) =>
+      _transferFiles(files, targetPath, FileOperationKind.move);
+
+  Future<void> copyFiles(List<FileItem> files, String targetPath) =>
+      _transferFiles(files, targetPath, FileOperationKind.copy);
+
+  Future<void> _transferFiles(
+    List<FileItem> files,
+    String targetPath,
+    FileOperationKind kind,
+  ) async {
+    if (files.isEmpty) return;
     try {
-      for (final file in files) {
-        final src = file.path ?? p.posix.join(_remotePath, file.name);
-        final String movedToPath;
-        if (isLocalSource && kIsWeb) {
-          // Web: move = copy bytes to target + delete source
-          movedToPath = p.posix.join(targetPath, file.name);
-          if (file.path != null && !file.isFolder) {
-            final bytes = await _localFileService.readFile(
-              file.path!,
-              fileItem: file,
-            );
-            await _localFileService.saveFile(movedToPath, bytes);
-            await _localFileService.deleteEntry(file.path!, false);
-          } else if (file.path != null && file.isFolder) {
-            await _copyDirectoryWeb(file.path!, movedToPath);
-            await _localFileService.deleteEntry(file.path!, true);
-          }
-        } else if (isLocalSource) {
-          movedToPath = p.join(targetPath, file.name);
-          if (file.isFolder) {
-            await Directory(file.path!).rename(movedToPath);
-          } else {
-            await File(file.path!).rename(movedToPath);
-          }
-        } else {
-          final client = _ref.read(authProvider).client;
-          final sourcePath = file.path ?? p.posix.join(_remotePath, file.name);
-          movedToPath = p.posix.join(targetPath, file.name);
-          await client.movePath(sourcePath, targetPath);
-        }
-        await audit.logSuccess(
-          operation: AuditOperation.move,
-          sourcePath: src,
-          targetPath: targetPath,
-          provider: providerName,
-          sizeBytes: file.size,
-        );
-        actionHistory.record(
-          type: ActionType.move,
-          originalPath: src,
-          newPath: movedToPath,
-          provider: providerName,
-          metadata: {'name': file.name, 'targetDir': targetPath},
-        );
-      }
-      await refresh();
-      clearSelection();
-    } catch (e) {
-      _log.warn('operation failed', e);
-      _ref
-          .read(errorProvider)
-          .addError(
-            'Move failed: $e',
-            code: PanelErrorCode.moveFailed,
-            arguments: {'error': e},
+      final targetOrigin = captureCurrentOrigin();
+      final groups = captureOperationGroups(files);
+      FileOperationBackend backend(PanelFileOrigin origin) =>
+          fileOperationBackend(
+            source: origin.source,
+            local: _localFileService,
+            isCurrent: () => origin.isCurrent,
           );
-      for (final file in files) {
-        final src = file.path ?? p.posix.join(_remotePath, file.name);
-        await audit.logError(
-          operation: AuditOperation.move,
-          sourcePath: src,
-          targetPath: targetPath,
-          provider: providerName,
-          error: e.toString(),
+      final destination = backend(targetOrigin);
+      final plans = <(PanelFileOrigin, FileOperationPlan)>[];
+      // Validate every selected source before starting any mutation.
+      for (final group in groups.entries) {
+        final plan = await const FileOperationService().prepare(
+          files: group.value,
+          source: backend(group.key),
+          destination: destination,
+          targetDirectory: targetPath,
+          options: FileOperationOptions(
+            kind: kind,
+            fileConflict: FileConflictPolicy.skip,
+          ),
+          protectedDestinationPaths: [
+            for (final file in files)
+              if (originForOperation(file)?.storageId ==
+                      targetOrigin.storageId &&
+                  file.path != null)
+                file.path!,
+          ],
         );
+        if (plan.errors.isNotEmpty) throw StateError(plan.errors.join('\n'));
+        plans.add((group.key, plan));
       }
-      await refresh();
-    }
-  }
-
-  Future<void> copyFiles(List<FileItem> files, String targetPath) async {
-    _log.info(
-      'copyFiles: ${files.length} items → $targetPath (web=$kIsWeb, side=$side)',
-    );
-    final audit = _ref.read(auditServiceProvider);
-    final actionHistory = _ref.read(actionHistoryProvider.notifier);
-    final isLocalSource =
-        _ref.read(panelSourceProvider(side)).isLocal || side == PanelSide.local;
-    final providerName = isLocalSource
-        ? 'local'
-        : _ref.read(authProvider).client.providerName;
-    try {
-      for (final file in files) {
-        final src = file.path ?? p.posix.join(_remotePath, file.name);
-        // copyPath is the new file that was created — used for undo (delete the copy)
-        final String copyPath;
-        if (isLocalSource && kIsWeb) {
-          // Web: copy within virtual filesystem
-          copyPath = p.posix.join(targetPath, file.name);
-          if (file.path != null) {
-            final bytes = await _localFileService.readFile(
-              file.path!,
-              fileItem: file,
+      for (final (origin, plan) in plans) {
+        if (!plan.canExecute) continue;
+        await _ref
+            .read(transferProvider)
+            .runFileOperation(
+              plan,
+              control: FileOperationControl(),
+              onEntryComplete: (entry) {
+                if (entry.outcome == FileOperationOutcome.moved) {
+                  applyFileListChanges({
+                    entry.source.path!: null,
+                  }, origin: origin);
+                }
+              },
             );
-            await _localFileService.saveFile(copyPath, bytes);
-          }
-        } else if (isLocalSource) {
-          copyPath = p.join(targetPath, file.name);
-          if (file.isFolder) {
-            await _copyDirectory(file.path!, copyPath);
-          } else {
-            await File(file.path!).copy(copyPath);
-          }
-        } else {
-          if (kIsWeb) {
-            throw UnsupportedError('Remote copy not supported on web');
-          }
-          final client = _ref.read(authProvider).client;
-          final sourcePath = file.path ?? p.posix.join(_remotePath, file.name);
-          copyPath = p.posix.join(targetPath, file.name);
-          if (client.capabilities.serverSideCopy) {
-            _log.info('Using server-side copy for ${file.name}');
-            await client.copyPath(sourcePath, targetPath);
-          } else {
-            final tempPath = p.join(Directory.systemTemp.path, file.name);
-            await client.downloadFileByPath(sourcePath, tempPath);
-            final data = await File(tempPath).readAsBytes();
-            await client.uploadFile(data, file.name, targetPath);
-            await File(tempPath).delete();
-          }
-        }
-        await audit.logSuccess(
-          operation: AuditOperation.copy,
-          sourcePath: src,
-          targetPath: targetPath,
-          provider: providerName,
-          sizeBytes: file.size,
-        );
-        // For copy: originalPath = the new copy, newPath = source (for display)
-        actionHistory.record(
-          type: ActionType.copy,
-          originalPath: copyPath,
-          newPath: src,
-          provider: providerName,
-          metadata: {
-            'name': file.name,
-            'sourceDir': p.dirname(src),
-            'targetDir': targetPath,
-          },
-        );
       }
-      await refresh();
-    } catch (e) {
-      _log.warn('operation failed', e);
-      _ref
-          .read(errorProvider)
-          .addError(
-            'Copy failed: $e',
-            code: PanelErrorCode.copyFailed,
-            arguments: {'error': e},
-          );
-      for (final file in files) {
-        final src = file.path ?? p.posix.join(_remotePath, file.name);
-        await audit.logError(
-          operation: AuditOperation.copy,
-          sourcePath: src,
-          targetPath: targetPath,
-          provider: providerName,
-          error: e.toString(),
-        );
+      if (!_isDisposed) {
+        await refresh();
+        if (kind == FileOperationKind.move) clearSelection();
+      }
+    } catch (error) {
+      _log.warn('file transfer failed', error);
+      if (!_isDisposed) {
+        _ref.read(errorProvider).addError('File transfer failed: $error');
       }
     }
   }
 
-  Future<void> _copyDirectory(String source, String target) async {
-    if (kIsWeb) {
-      await _copyDirectoryWeb(source, target);
-      return;
-    }
-    await Directory(target).create(recursive: true);
-    final entities = await Directory(source).list().toList();
-    for (final entity in entities) {
-      if (entity is File) {
-        await entity.copy(p.join(target, p.basename(entity.path)));
-      } else if (entity is Directory) {
-        await _copyDirectory(
-          entity.path,
-          p.join(target, p.basename(entity.path)),
-        );
-      }
-    }
-  }
-
-  /// Recursively copy a directory on web using the virtual filesystem.
-  Future<void> _copyDirectoryWeb(String source, String target) async {
-    await _localFileService.createDirectory(target);
-    final entities = await _localFileService.listDirectory(source);
-    if (entities == null) return;
-    for (final entity in entities) {
-      final name = p.posix.basename(entity.path);
-      if (entity is Directory) {
-        await _copyDirectoryWeb(entity.path, p.posix.join(target, name));
-      } else {
-        final bytes = await _localFileService.readFile(entity.path);
-        await _localFileService.saveFile(p.posix.join(target, name), bytes);
-      }
-    }
-  }
+  static bool _isArchiveVirtualPath(String path) => RegExp(
+    r'\.(?:zip|7z|rar|tar|tar\.gz|tgz|tar\.bz2|tbz2|tar\.xz|txz):/',
+    caseSensitive: false,
+  ).hasMatch(path);
 
   // --- Tabs ---
+  FileViewConfiguration captureViewConfiguration() {
+    final mode = _ref.read(
+      side == PanelSide.local ? localViewModeProvider : remoteViewModeProvider,
+    );
+    final density = _ref.read(panelViewModeProvider(side));
+    final columns = _ref.read(fileColumnsProvider(side));
+    if (!columns.any((column) => column.id == _sortColumnId)) {
+      _sortColumnId = null;
+    }
+    if (!columns.any((column) => column.id == _secondarySortColumnId)) {
+      _secondarySortColumnId = null;
+    }
+    return FileViewConfiguration(
+      display: FileViewDisplay.values.firstWhere(
+        (display) =>
+            display.name == (mode == ViewMode.list ? density.name : mode.name),
+        orElse: () => FileViewDisplay.full,
+      ),
+      columns: columns,
+      widths: _ref.read(columnWidthsProvider(side)),
+      sortBy: _sortBy,
+      sortOrder: _sortOrder,
+      secondarySortBy: _secondarySortBy,
+      secondarySortOrder: _secondarySortOrder,
+      sortColumnId: _sortColumnId,
+      secondarySortColumnId: _secondarySortColumnId,
+      showHidden: _showHiddenFiles,
+      filter: _isTypeahead ? '' : _filterQuery,
+    );
+  }
+
+  void _captureTabView() {
+    if (_isDisposed || _applyingTabView) return;
+    final index = _tabs.indexWhere((tab) => tab.id == _activeTabId);
+    if (index >= 0) _tabs[index].view = captureViewConfiguration();
+  }
+
+  void _rememberTabView() {
+    if (_isDisposed || _applyingTabView) return;
+    _captureTabView();
+    _viewSaveDebounce?.cancel();
+    if (!kIsWeb && Platform.environment.containsKey('FLUTTER_TEST')) return;
+    _viewSaveDebounce = Timer(
+      const Duration(milliseconds: 250),
+      () => _saveTabs(),
+    );
+  }
+
+  void _applyTabView(FileViewConfiguration? view) {
+    if (view == null || _isDisposed) return;
+    _applyingTabView = true;
+    try {
+      _sortBy = view.sortBy;
+      _sortOrder = view.sortOrder;
+      _secondarySortBy = view.secondarySortBy;
+      _secondarySortOrder = view.secondarySortOrder;
+      _sortColumnId = view.sortColumnId;
+      _secondarySortColumnId = view.secondarySortColumnId;
+      _showHiddenFiles = view.showHidden;
+      _filterQuery = view.filter;
+      _isTypeahead = false;
+      _typeaheadResetTimer?.cancel();
+      _ref.read(columnWidthsProvider(side).notifier).applyWidths(view.widths);
+      _ref.read(fileColumnsProvider(side).notifier).applyColumns(view.columns);
+      _ref
+          .read(panelViewModeProvider(side).notifier)
+          .applyMode(
+            view.display == FileViewDisplay.tree
+                ? PanelViewMode.tree
+                : view.display == FileViewDisplay.brief
+                ? PanelViewMode.brief
+                : PanelViewMode.full,
+          );
+      _ref
+          .read(
+            (side == PanelSide.local
+                    ? localViewModeProvider
+                    : remoteViewModeProvider)
+                .notifier,
+          )
+          .state = ViewMode.values.firstWhere(
+        (mode) => mode.name == view.display.name,
+        orElse: () => ViewMode.list,
+      );
+    } finally {
+      _applyingTabView = false;
+    }
+  }
+
+  Future<void> applyViewConfiguration(
+    FileViewConfiguration view, {
+    String? profileId,
+  }) async {
+    final reload = _showHiddenFiles != view.showHidden;
+    _applyTabView(view);
+    activeTab?.viewProfileId = profileId;
+    _captureTabView();
+    _sortFiles();
+    notifyListeners();
+    if (reload) await refresh();
+    await _saveTabs();
+  }
+
+  void setColumnSort(String id, {bool secondary = false}) {
+    final columns = _ref.read(fileColumnsProvider(side));
+    if (!columns.any((column) => column.id == id)) return;
+    if (secondary) {
+      _secondarySortColumnId = _secondarySortColumnId == id ? null : id;
+      _secondarySortBy = null;
+    } else if (_sortColumnId == id) {
+      _sortOrder = _sortOrder == SortOrder.ascending
+          ? SortOrder.descending
+          : SortOrder.ascending;
+    } else {
+      _sortColumnId = id;
+      _sortOrder = SortOrder.ascending;
+    }
+    _sortFiles();
+    _rememberTabView();
+    notifyListeners();
+  }
+
   String _nextTabId() => 'tab_${_tabIdCounter++}';
 
   String get _tabStorageKey => 'panel_tabs_${side.name}';
+
+  bool _tabLocationDiffers(
+    PanelTab tab,
+    String path,
+    StorageReference? storage,
+  ) {
+    final paths = storage?.isLocal == true && !kIsWeb ? p.context : p.posix;
+    return tab.collectionId != null ||
+        _fileListTabs.containsKey(tab.id) ||
+        tab.storage != storage ||
+        paths.normalize(tab.path) != paths.normalize(path);
+  }
+
+  void _departTab() {
+    // Closing or replacing the active tab can remove it before selection.
+    // Never capture its old view into activeTab's fallback (the first tab).
+    if (!_tabs.any((tab) => tab.id == _activeTabId)) return;
+    _captureTabView();
+    _rememberFileListTab();
+    final tab = activeTab;
+    if (tab != null && tab.resetToLockedLocation()) {
+      _fileListTabs.remove(tab.id);
+    }
+  }
+
+  PanelTab _createTabLocation(
+    String path,
+    StorageReference? storage, {
+    bool keepListing = false,
+  }) {
+    _departTab();
+    _leaveFileList(forget: false);
+    final tab = PanelTab(
+      id: _nextTabId(),
+      path: path,
+      storage: storage,
+      view: activeTab?.view,
+      viewProfileId: activeTab?.viewProfileId,
+    );
+    final index = _tabs.indexWhere((value) => value.id == _activeTabId);
+    _tabs.insert(index < 0 ? _tabs.length : index + 1, tab);
+    _activeTabId = tab.id;
+    _pendingTabStorage = null;
+    if (!keepListing) {
+      _files = null;
+      _selection.clear();
+      _lastSelected = null;
+      _listingGeneration++;
+      _verifiedListingGeneration = -1;
+    }
+    return tab;
+  }
+
+  bool _allowTabNavigation(String path, StorageReference? storage) {
+    final tab = activeTab;
+    if (tab == null || !_tabLocationDiffers(tab, path, storage)) return true;
+    if (tab.lockMode == TabLockMode.locked) {
+      _ref
+          .read(errorProvider)
+          .addError(
+            'The tab "${tab.label}" is locked. Unlock it or open the location in a new tab.',
+          );
+      return false;
+    }
+    if (tab.lockMode == TabLockMode.newTab) {
+      _createTabLocation(path, storage);
+    }
+    return true;
+  }
 
   void _initFirstTab() {
     final id = _nextTabId();
@@ -2074,7 +4010,7 @@ class PanelNotifier extends ChangeNotifier {
           for (final item in list) {
             final id = _nextTabId();
             var path = (item['path'] as String?) ?? '/';
-            if (path.contains(':/')) {
+            if (_isArchiveVirtualPath(path)) {
               // Old tab saved while browsing an archive: fall back to the
               // real parent path (or home) instead of a virtual path.
               final archive = path.split(':/').first;
@@ -2083,9 +4019,18 @@ class PanelNotifier extends ChangeNotifier {
                   : (Platform.environment['HOME'] ?? '/');
               if (path.isEmpty) path = '/';
             }
-            _tabs.add(
-              PanelTab(id: id, path: path, isPinned: item['pinned'] == true),
+            final restored = PanelTab.fromJson(
+              id,
+              Map<String, dynamic>.from(item as Map)..['path'] = path,
             );
+            if (restored.storage == null && restored.collectionId == null) {
+              restored.storage = const StorageReference(
+                kind: 'remote',
+                provider: 'Original source',
+                accountKey: 'legacy-unscoped-tab',
+              );
+            }
+            _tabs.add(restored);
           }
           final savedActiveIdx = prefs.getInt('${_tabStorageKey}_active') ?? 0;
           _activeTabId = _tabs[savedActiveIdx.clamp(0, _tabs.length - 1)].id;
@@ -2099,7 +4044,7 @@ class PanelNotifier extends ChangeNotifier {
             if (tab != null) _remotePath = tab.path;
           }
           notifyListeners();
-          if (side == PanelSide.remote) refresh();
+          await _restoreSelectedTab();
           return;
         }
       }
@@ -2118,67 +4063,211 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   /// Persist current tabs to SharedPreferences.
-  Future<void> _saveTabs() async {
-    if (!kIsWeb && Platform.environment.containsKey('FLUTTER_TEST')) return;
+  Future<void> _saveTabs({
+    bool force = false,
+    bool rethrowErrors = false,
+  }) async {
+    _captureTabView();
+    _viewSaveDebounce?.cancel();
+    if (!force && !kIsWeb && Platform.environment.containsKey('FLUTTER_TEST')) {
+      return;
+    }
+    await _tabSaveLock.synchronized(() async {
+      if (_isDisposed) return;
+      try {
+        _rememberFileListTab();
+        for (final tab in List.of(_tabs)) {
+          final snapshot = _fileListTabs[tab.id];
+          if (snapshot == null) continue;
+          final id =
+              snapshot.collectionId ?? tab.collectionId ?? const Uuid().v4();
+          try {
+            final collection = _collectionSnapshot(
+              id: id,
+              name: snapshot.title,
+              files: snapshot.files,
+              selection: snapshot.selection,
+              search: snapshot.search,
+            );
+            await _ref.read(fileCollectionStoreProvider).save(collection);
+            if (_isDisposed) return;
+            if (!identical(_fileListTabs[tab.id], snapshot)) continue;
+            tab.collectionId = id;
+            if (tab.id == _activeTabId && _showingSearchResults) {
+              _collectionId = id;
+            }
+            _fileListTabs[tab.id] = _FileListSnapshot(
+              files: snapshot.files,
+              title: snapshot.title,
+              origin: snapshot.origin,
+              selection: snapshot.selection,
+              cursor: snapshot.cursor,
+              collectionId: id,
+              search: snapshot.search,
+            );
+          } catch (error) {
+            _log.warn('Could not persist unverified list tab', error);
+            if (rethrowErrors) rethrow;
+          }
+        }
+        final prefs = await SharedPreferences.getInstance();
+        final list = _tabs.map((t) => t.toJson()).toList();
+        final saved = await prefs.setString(_tabStorageKey, json.encode(list));
+        final savedActive = await prefs.setInt(
+          '${_tabStorageKey}_active',
+          _tabs
+              .indexWhere((t) => t.id == _activeTabId)
+              .clamp(0, _tabs.length - 1),
+        );
+        if (!saved || !savedActive) {
+          throw StateError('The tab configuration could not be saved.');
+        }
+      } catch (e) {
+        _log.warn('Tab save failed', e);
+        if (rethrowErrors) rethrow;
+      }
+    });
+  }
+
+  Future<void> _restoreSelectedTab() async {
+    final tab = activeTab;
+    if (tab == null || _isDisposed) return;
+    final savedView = tab.view;
+    _applyTabView(savedView);
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final list = _tabs
-          .map((t) => {'path': t.path, 'pinned': t.isPinned})
-          .toList();
-      await prefs.setString(_tabStorageKey, json.encode(list));
-      await prefs.setInt(
-        '${_tabStorageKey}_active',
-        _tabs
-            .indexWhere((t) => t.id == _activeTabId)
-            .clamp(0, _tabs.length - 1),
+      if (tab.collectionId != null) {
+        await openCollection(tab.collectionId!);
+        if (!_isDisposed && _activeTabId == tab.id && savedView != null) {
+          _applyTabView(savedView);
+          _sortFiles();
+          _captureTabView();
+          notifyListeners();
+          await _saveTabs();
+        }
+        return;
+      }
+      final storage = tab.storage;
+      if (storage == null) {
+        await refresh();
+        return;
+      }
+      final origin = resolveStorageReference(storage, tab.path);
+      if (origin == null) {
+        _pendingTabStorage = storage;
+        _files = [];
+        _selection.clear();
+        _currentDirectoryOrigin = null;
+        _listingGeneration++;
+        _verifiedListingGeneration = -1;
+        _ref
+            .read(errorProvider)
+            .addError(
+              storage.accountKey == 'legacy-unscoped-tab'
+                  ? 'Choose a source for the older saved tab "${tab.label}". Its previous format did not identify the account.'
+                  : 'Reconnect ${storage.provider} for the saved tab "${tab.label}". Its original account is unavailable.',
+            );
+        notifyListeners();
+        return;
+      }
+      _pendingTabStorage = null;
+      await navigateToPath(
+        tab.path,
+        origin: origin,
+        recordHistory: false,
+        bypassTabLock: true,
       );
-    } catch (e) {
-      _log.warn('Tab save failed', e);
+    } catch (error) {
+      if (!_isDisposed) {
+        _ref.read(errorProvider).addError('Could not reopen tab: $error');
+      }
     }
   }
 
   void addTab({String? path}) {
     _log.debug('addTab: path=${path ?? currentPath}');
-    final id = _nextTabId();
-    _tabs.add(PanelTab(id: id, path: path ?? currentPath));
-    _activeTabId = id;
+    final directory = path ?? currentPath;
+    if (path == null && activeTab != null) {
+      duplicateTab(activeTab!.id);
+      return;
+    }
+    _createTabLocation(
+      directory,
+      _currentDirectoryOrigin?.storageReference ?? activeTab?.storage,
+    );
+    if (side == PanelSide.local) {
+      _localPath = directory;
+    } else {
+      _remotePath = directory;
+    }
     notifyListeners();
     _saveTabs();
+    _restoreSelectedTab();
   }
 
-  void closeTab(String tabId) {
+  void closeTab(String tabId, {bool force = false}) {
     _log.debug('closeTab: $tabId');
     if (_tabs.length <= 1) return;
-    final tab = _tabs.firstWhere(
-      (t) => t.id == tabId,
-      orElse: () => _tabs.first,
-    );
-    if (tab.isPinned) return;
+    final index = _tabs.indexWhere((tab) => tab.id == tabId);
+    if (index < 0) return;
+    final tab = _tabs[index];
+    if (tab.isProtected && !force) return;
     final idx = _tabs.indexOf(tab);
     _tabs.remove(tab);
+    _fileListTabs.remove(tabId);
+    _selectionMemories.remove(tabId);
     if (_activeTabId == tabId) {
+      _leaveFileList();
       final newIdx = idx.clamp(0, _tabs.length - 1);
-      _activeTabId = _tabs[newIdx].id;
+      selectTab(_tabs[newIdx].id);
     }
     notifyListeners();
     _saveTabs();
   }
 
-  void selectTab(String tabId) {
+  Future<void> selectTab(String tabId) async {
     _log.debug('selectTab: $tabId');
+    if (!_tabs.any((tab) => tab.id == tabId)) return;
+    if (tabId != _activeTabId) {
+      _departTab();
+    } else {
+      _rememberFileListTab();
+    }
+    _leaveFileList(forget: false);
     _activeTabId = tabId;
+    _pendingTabStorage = null;
     final tab = activeTab;
+    _applyTabView(tab?.view);
     if (tab != null) {
-      if (tab.path.contains(':/')) return;
+      if (_isArchiveVirtualPath(tab.path)) return;
       if (side == PanelSide.local) {
         _localPath = tab.path;
       } else {
         _remotePath = tab.path;
       }
     }
+    final list = _fileListTabs[tabId];
+    if (list != null) {
+      _showingSearchResults = true;
+      _fileListTitle = list.title;
+      _fileListOrigin = list.origin;
+      _collectionId = list.collectionId;
+      _collectionSearch = list.search;
+      _files = List.of(list.files);
+      _sortFiles();
+      _selection
+        ..clear()
+        ..addAll(list.selection);
+      _listingGeneration++;
+      _verifiedListingGeneration = _listingGeneration;
+      _isLoading = false;
+      _resetCursor(preserveItem: list.cursor);
+      notifyListeners();
+      _saveTabs();
+      return;
+    }
     notifyListeners();
     _saveTabs();
-    refresh();
+    await _restoreSelectedTab();
   }
 
   /// Cycle to the next tab. Wraps around.
@@ -2198,23 +4287,202 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   void toggleTabPin(String tabId) {
-    final tab = _tabs.firstWhere(
-      (t) => t.id == tabId,
-      orElse: () => _tabs.first,
-    );
+    final index = _tabs.indexWhere((tab) => tab.id == tabId);
+    if (index < 0) return;
+    final tab = _tabs[index];
     tab.isPinned = !tab.isPinned;
     notifyListeners();
     _saveTabs();
   }
 
   void renameTab(String tabId, String newLabel) {
-    final tab = _tabs.firstWhere(
-      (t) => t.id == tabId,
-      orElse: () => _tabs.first,
-    );
-    tab.label = newLabel;
+    final index = _tabs.indexWhere((tab) => tab.id == tabId);
+    if (index < 0) return;
+    final tab = _tabs[index];
+    tab.renameLabel(newLabel);
     notifyListeners();
     _saveTabs();
+  }
+
+  void setTabLock(String tabId, TabLockMode mode) {
+    final index = _tabs.indexWhere((tab) => tab.id == tabId);
+    if (index < 0) return;
+    final tab = _tabs[index];
+    if (mode == TabLockMode.resetOnLeave &&
+        _fileListTabs.containsKey(tabId) &&
+        tab.collectionId == null) {
+      _ref
+          .read(errorProvider)
+          .addError(
+            'Save this file list as a collection before using a return-to-location lock.',
+          );
+      return;
+    }
+    tab.setLock(mode);
+    notifyListeners();
+    _saveTabs();
+  }
+
+  void reorderTabs(int oldIndex, int newIndex) {
+    if (oldIndex < 0 ||
+        oldIndex >= _tabs.length ||
+        newIndex < 0 ||
+        newIndex > _tabs.length) {
+      return;
+    }
+    if (newIndex > oldIndex) newIndex--;
+    if (oldIndex == newIndex) return;
+    final tab = _tabs.removeAt(oldIndex);
+    _tabs.insert(newIndex, tab);
+    notifyListeners();
+    _saveTabs();
+  }
+
+  void duplicateTab(String tabId) {
+    final index = _tabs.indexWhere((tab) => tab.id == tabId);
+    if (index < 0) return;
+    _captureTabView();
+    _rememberFileListTab();
+    final original = _tabs[index];
+    final snapshot = _fileListTabs[tabId];
+    final duplicate = PanelTab(
+      id: _nextTabId(),
+      path: original.path,
+      label: original.label,
+      customLabel: original.customLabel,
+      storage: original.storage,
+      collectionId: original.collectionId,
+      view: original.view,
+      viewProfileId: original.viewProfileId,
+    );
+    _tabs.insert(index + 1, duplicate);
+    if (snapshot != null) _fileListTabs[duplicate.id] = snapshot;
+    selectTab(duplicate.id);
+  }
+
+  int closeDuplicateTabs() {
+    final survivors = <String, PanelTab>{};
+    final remove = <String>[];
+    int priority(PanelTab tab) =>
+        (tab.isPinned ? 4 : 0) +
+        (tab.isLocked ? 2 : 0) +
+        (tab.customLabel != null ? 1 : 0);
+    for (final tab in _tabs) {
+      if (tab.storage == null && tab.collectionId == null) continue;
+      final paths = tab.storage?.isLocal == true && !kIsWeb
+          ? p.context
+          : p.posix;
+      final key = tab.collectionId == null
+          ? '${tab.storage!.id}\u0000${paths.normalize(tab.path)}'
+          : 'collection:${tab.collectionId}';
+      final other = survivors[key];
+      if (other == null) {
+        survivors[key] = tab;
+      } else if (priority(tab) > priority(other) && !other.isProtected) {
+        remove.add(other.id);
+        survivors[key] = tab;
+      } else if (!tab.isProtected) {
+        remove.add(tab.id);
+      }
+    }
+    for (final id in remove) {
+      closeTab(id);
+    }
+    return remove.length;
+  }
+
+  /// Captures only serializable, source-bound locations. Virtual lists are
+  /// first persisted as collections so a saved group never becomes a folder
+  /// belonging to whichever account happens to be active on restoration.
+  Future<List<Map<String, dynamic>>> exportTabs() async {
+    await _saveTabs(force: true, rethrowErrors: true);
+    return _tabs.map((tab) => tab.toJson()).toList(growable: false);
+  }
+
+  /// Opens a bookmark against its original account. Locked tabs remain intact;
+  /// opening a bookmark beside them does not alter their saved lock anchors.
+  Future<void> openSavedLocation(
+    Map<String, dynamic> saved, {
+    bool newTab = false,
+  }) async {
+    final target = PanelTab.fromJson('bookmark', saved);
+    if (target.collectionId != null) {
+      final store = _ref.read(fileCollectionStoreProvider);
+      await store.ready;
+      if (store.get(target.collectionId!) == null) {
+        throw StateError('The bookmarked collection is unavailable.');
+      }
+    } else if (target.storage == null ||
+        resolveStorageReference(target.storage!, target.path) == null) {
+      throw StateError('Reconnect the original account for this bookmark.');
+    }
+    final locked = activeTab?.lockMode;
+    if (newTab ||
+        locked == TabLockMode.locked ||
+        locked == TabLockMode.newTab) {
+      await restoreTabs([saved]);
+      return;
+    }
+    if (target.collectionId != null) {
+      await openCollection(target.collectionId!);
+    } else {
+      final origin = resolveStorageReference(target.storage!, target.path);
+      if (origin == null || !origin.isCurrent) {
+        throw StateError('The bookmarked storage account disconnected.');
+      }
+      await navigateToPath(target.path, origin: origin);
+    }
+    if (target.view != null) {
+      await applyViewConfiguration(
+        target.view!,
+        profileId: target.viewProfileId,
+      );
+    }
+  }
+
+  Future<void> restoreTabs(
+    List<Map<String, dynamic>> saved, {
+    int activeIndex = 0,
+    bool replace = false,
+    bool keepProtected = true,
+  }) async {
+    if (saved.isEmpty || saved.length > 500) {
+      throw const FormatException('A panel group must contain 1–500 tabs.');
+    }
+    final incoming = [
+      for (final value in saved) PanelTab.fromJson(_nextTabId(), value),
+    ];
+    for (final tab in incoming) {
+      if (tab.storage == null && tab.collectionId == null) {
+        throw const FormatException(
+          'Saved tabs must identify their storage account.',
+        );
+      }
+      final paths =
+          tab.storage?.isLocal == true && tab.storage?.provider == 'windows'
+          ? p.windows
+          : p.posix;
+      if (!paths.isAbsolute(tab.path) || _isArchiveVirtualPath(tab.path)) {
+        throw const FormatException(
+          'Saved tabs must use absolute storage paths.',
+        );
+      }
+    }
+    _departTab();
+    _leaveFileList(forget: false);
+    if (replace) {
+      final removed = _tabs
+          .where((tab) => !keepProtected || !tab.isProtected)
+          .toList();
+      for (final tab in removed) {
+        _tabs.remove(tab);
+        _fileListTabs.remove(tab.id);
+        _selectionMemories.remove(tab.id);
+      }
+    }
+    _tabs.addAll(incoming);
+    await selectTab(incoming[activeIndex.clamp(0, incoming.length - 1)].id);
+    await _saveTabs(force: true, rethrowErrors: true);
   }
 
   void _syncTabPath() {
@@ -2222,8 +4490,10 @@ class PanelNotifier extends ChangeNotifier {
     if (tab != null) {
       // Never persist archive virtual paths (e.g. "file.zip:/"): they are not
       // real directories and would break restart/restore.
-      var titlePath = side == PanelSide.local ? _localPath : _remotePath;
-      if (titlePath.contains(':/')) {
+      var titlePath = _currentDirectoryOrigin?.source.isRemote == true
+          ? _remotePath
+          : _localPath;
+      if (_isArchiveVirtualPath(titlePath)) {
         final archive = titlePath.split(':/').first;
         titlePath = side == PanelSide.local
             ? (archive.contains('/')
@@ -2232,6 +4502,8 @@ class PanelNotifier extends ChangeNotifier {
             : p.posix.dirname(archive);
       }
       tab.path = titlePath;
+      tab.storage = _currentDirectoryOrigin?.storageReference;
+      tab.collectionId = _showingSearchResults ? _collectionId : null;
       tab.updateLabel();
     }
     _saveTabs();
@@ -2284,22 +4556,24 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   Future<void> _loadLocalFiles({bool fallbackOnMissing = true}) async {
+    if (_showingSearchResults) return;
     final generation = ++_listingGeneration;
     // This loader must never receive an archive's virtual path. If an archive
     // failed to open or a stale tab restored one, leave archive mode first.
     if (_archiveSource != null) {
       final archivePath = _archiveSource!.archivePath;
       _archiveSource = null;
+      _archiveOrigin = null;
       _archiveBytes = null;
       if (side == PanelSide.local && archivePath.contains('/')) {
         _localPath = p.dirname(archivePath);
       }
     }
-    if (!kIsWeb && _localPath.contains(':/')) {
+    if (!kIsWeb && _isArchiveVirtualPath(_localPath)) {
       _localPath = await _localFileService.getSafeFallbackDirectory();
     }
     if (_isDisposed || generation != _listingGeneration) return;
-    final listingPath = currentPath;
+    final listingPath = _localPath;
     final origin = PanelFileOrigin._(
       LocalPanelSource(listingPath),
       () => !_isDisposed,
@@ -2319,7 +4593,14 @@ class PanelNotifier extends ChangeNotifier {
       final cached = dirCache.get(cacheKey);
       if (cached != null && cached.isNotEmpty) {
         final prev = cursorItem;
-        _files = List.of(cached);
+        _files = cached
+            .where(
+              (file) =>
+                  _showHiddenFiles ||
+                  !file.name.startsWith('.') ||
+                  file.name == '..',
+            )
+            .toList();
         _sortFiles();
         _resetCursor(preserveItem: prev);
         notifyListeners();
@@ -2560,10 +4841,15 @@ class PanelNotifier extends ChangeNotifier {
   /// Read one member of the currently opened archive for the internal viewer.
   /// The archive is reopened metadata-only, so F3 works for files inside ZIP,
   /// TAR, 7z and RAR archives that the panel is browsing.
-  Future<Uint8List> readArchiveMember(FileItem file) async {
+  Future<Uint8List> readArchiveMember(
+    FileItem file, {
+    int maxBytes = kArchiveReadLimit,
+  }) async {
     final source = _archiveSource;
     final bytes = _archiveBytes;
-    if (source == null || bytes == null) {
+    if (source == null ||
+        bytes == null ||
+        (_archiveOrigin != null && !_archiveOrigin!.isCurrent)) {
       throw const ArchiveViewException(
         'This archive is no longer open. Return to the archive and try again.',
       );
@@ -2588,7 +4874,7 @@ class PanelNotifier extends ChangeNotifier {
           'Could not find "${file.name}" inside ${source.archiveName}.',
         );
       }
-      return await archive.readMember(match, maxBytes: kArchiveReadLimit);
+      return await archive.readMember(match, maxBytes: maxBytes);
     } finally {
       await archive?.close();
     }
@@ -2605,9 +4891,11 @@ class PanelNotifier extends ChangeNotifier {
     final files = _files;
     if (files != null) {
       final index = files.indexWhere(
-        (candidate) =>
-            (candidate.path != null && candidate.path == item.path) ||
-            candidate.name == item.name,
+        (candidate) => item.path != null
+            ? candidate.path == item.path
+            : item.uuid != null
+            ? candidate.uuid == item.uuid
+            : candidate.name == item.name,
       );
       if (index != -1) {
         _cursorIndex = index;
@@ -2661,17 +4949,16 @@ class PanelNotifier extends ChangeNotifier {
 
     final generation = ++_listingGeneration;
     final auth = _ref.read(authProvider);
-    // This loader currently uses the primary auth adapter, even if the
-    // dropdown points elsewhere. Stamp the actual request, never the label.
-    final client = auth.client;
-    final providerName = auth.providerName;
+    final selected = _remoteSourceForListing();
+    final client = selected?.client ?? auth.client;
+    final providerName = selected?.providerName ?? auth.providerName;
     final listingPath = _remotePath;
     final origin = _remoteOrigin(client, providerName, listingPath);
 
     _isLoading = true;
     notifyListeners();
     try {
-      if (!client.isAuthenticated && !auth.isConnected) {
+      if (!_isConnectedClient(client)) {
         _files = [];
         _isLoading = false;
         notifyListeners();
@@ -2680,10 +4967,7 @@ class PanelNotifier extends ChangeNotifier {
 
       // Show cached listing immediately for smooth UX.
       final dirCache = _ref.read(directoryCacheProvider);
-      final cacheKey = DirectoryCacheService.key(
-        'remote:$providerName',
-        listingPath,
-      );
+      final cacheKey = DirectoryCacheService.key(origin.storageId, listingPath);
       final cached = dirCache.get(cacheKey);
       if (cached != null && _files == null) {
         _files = List.of(cached);
@@ -2745,6 +5029,7 @@ class PanelNotifier extends ChangeNotifier {
               );
             return FileItem(
               name: map['name'] ?? 'Unknown',
+              path: p.posix.join(listingPath, map['name'] ?? 'Unknown'),
               isFolder: true,
               uuid: map['uuid'],
               updatedAt: folderDate,
@@ -2793,6 +5078,7 @@ class PanelNotifier extends ChangeNotifier {
               );
             return FileItem(
               name: fullName,
+              path: p.posix.join(listingPath, fullName),
               isFolder: false,
               size: map['size'] as int?,
               uuid: map['uuid'],
@@ -2803,7 +5089,9 @@ class PanelNotifier extends ChangeNotifier {
           [];
 
       // Prepend ".." for cloud paths that aren't root
-      final allItems = [...folders, ...files];
+      final allItems = [...folders, ...files]
+          .where((file) => _showHiddenFiles || !file.name.startsWith('.'))
+          .toList();
       if (listingPath != '/' && listingPath.isNotEmpty) {
         final parentRemote = p.posix.dirname(listingPath);
         allItems.insert(
@@ -2845,9 +5133,47 @@ class PanelNotifier extends ChangeNotifier {
     _isDisposed = true;
     _typeaheadResetTimer?.cancel();
     _refreshDebounce?.cancel();
+    _viewSaveDebounce?.cancel();
     listFocusNode.dispose();
     super.dispose();
   }
+}
+
+class FileListImportResult {
+  const FileListImportResult({required this.loaded, required this.failures});
+  final int loaded;
+  final Map<String, String> failures;
+}
+
+class _SelectionMemoryEntry {
+  const _SelectionMemoryEntry({
+    required this.origin,
+    required this.objectId,
+    required this.isFolder,
+  });
+
+  final PanelFileOrigin origin;
+  final String? objectId;
+  final bool isFolder;
+}
+
+class _FileListSnapshot {
+  const _FileListSnapshot({
+    required this.files,
+    required this.title,
+    required this.origin,
+    required this.selection,
+    required this.cursor,
+    this.collectionId,
+    this.search,
+  });
+  final List<FileItem> files;
+  final String title;
+  final PanelFileOrigin? origin;
+  final Set<FileItem> selection;
+  final FileItem? cursor;
+  final String? collectionId;
+  final CollectionSearch? search;
 }
 
 final panelProvider = ChangeNotifierProvider.family<PanelNotifier, PanelSide>((

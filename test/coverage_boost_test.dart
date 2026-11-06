@@ -36,6 +36,7 @@ import 'package:crisp_cloud/services/placeholder_service.dart';
 import 'package:crisp_cloud/services/sync_watcher.dart';
 import 'package:crisp_cloud/services/action_history_service.dart';
 import 'package:crisp_cloud/services/storage_analytics_service.dart';
+import 'package:crisp_cloud/services/storage_trash.dart';
 import 'package:crisp_cloud/services/saved_search_service.dart';
 import 'package:crisp_cloud/services/app_lock_service.dart';
 import 'package:crisp_cloud/services/formatters.dart';
@@ -51,7 +52,7 @@ class _MockClient extends CloudStorageClient {
   final Map<String, Map<String, dynamic>> _dirs;
 
   _MockClient(this._name, {Map<String, Map<String, dynamic>>? dirs})
-      : _dirs = dirs ?? {};
+    : _dirs = dirs ?? {};
 
   @override
   String get providerName => _name;
@@ -77,14 +78,25 @@ class _MockClient extends CloudStorageClient {
       _dirs[path] ?? {'files': [], 'folders': []};
   @override
   Future<void> uploadFile(
-    List<int> data, String name, String target, {Function(int, int)? onProgress}) async {
+    List<int> data,
+    String name,
+    String target, {
+    Function(int, int)? onProgress,
+  }) async {
     onProgress?.call(data.length, data.length);
   }
+
   @override
-  Future<void> downloadFileByPath(String rp, String lp, {Function(int, int)? onProgress}) async {}
+  Future<void> downloadFileByPath(
+    String rp,
+    String lp, {
+    Function(int, int)? onProgress,
+  }) async {}
   @override
-  Future<Uint8List> downloadFileBytes(String rp, {Function(int, int)? onProgress}) async =>
-      Uint8List.fromList([1, 2, 3]);
+  Future<Uint8List> downloadFileBytes(
+    String rp, {
+    Function(int, int)? onProgress,
+  }) async => Uint8List.fromList([1, 2, 3]);
   @override
   Future<void> createFolderPath(String path) async {}
   @override
@@ -96,13 +108,23 @@ class _MockClient extends CloudStorageClient {
 }
 
 Map<String, dynamic> _f(String name, {int? size, String? updatedAt}) => {
-      'name': name,
-      if (size != null) 'size': size.toString(),
-      if (updatedAt != null) 'updatedAt': updatedAt,
-    };
+  'name': name,
+  if (size != null) 'size': size.toString(),
+  if (updatedAt != null) 'updatedAt': updatedAt,
+};
 
-FileItem _fileItem(String name, {int? size, DateTime? updatedAt, String? path}) =>
-    FileItem(name: name, isFolder: false, size: size, updatedAt: updatedAt, path: path ?? '/$name');
+FileItem _fileItem(
+  String name, {
+  int? size,
+  DateTime? updatedAt,
+  String? path,
+}) => FileItem(
+  name: name,
+  isFolder: false,
+  size: size,
+  updatedAt: updatedAt,
+  path: path ?? '/$name',
+);
 
 FileItem _folderItem(String name) => FileItem(name: name, isFolder: true);
 
@@ -185,7 +207,10 @@ void _pathSanitizerTests() {
     });
 
     test('unicode characters preserved', () {
-      expect(PathSanitizer.sanitizeFilename('Ünterlagen.pdf'), 'Ünterlagen.pdf');
+      expect(
+        PathSanitizer.sanitizeFilename('Ünterlagen.pdf'),
+        'Ünterlagen.pdf',
+      );
     });
   });
 
@@ -414,28 +439,33 @@ void _connectionProfileTests() {
 
     test('save and retrieve ten profiles', () async {
       for (var i = 0; i < 10; i++) {
-        await svc.save(ConnectionProfile(
-          name: 'profile_$i',
-          provider: 's3',
-          fields: {'bucket': 'b$i'},
-        ));
+        await svc.save(
+          ConnectionProfile(
+            name: 'profile_$i',
+            provider: 's3',
+            fields: {'bucket': 'b$i'},
+          ),
+        );
       }
       final all = await svc.getAll();
       expect(all.length, 10);
     });
 
     test('getForProvider with no matching returns empty list', () async {
-      await svc.save(const ConnectionProfile(
-          name: 'x', provider: 'ftp', fields: {}));
+      await svc.save(
+        const ConnectionProfile(name: 'x', provider: 'ftp', fields: {}),
+      );
       expect(await svc.getForProvider('gdrive'), isEmpty);
     });
 
     test('delete then save same name works', () async {
-      await svc.save(const ConnectionProfile(
-          name: 'n', provider: 's3', fields: {'k': 'v1'}));
+      await svc.save(
+        const ConnectionProfile(name: 'n', provider: 's3', fields: {'k': 'v1'}),
+      );
       await svc.delete('n', 's3');
-      await svc.save(const ConnectionProfile(
-          name: 'n', provider: 's3', fields: {'k': 'v2'}));
+      await svc.save(
+        const ConnectionProfile(name: 'n', provider: 's3', fields: {'k': 'v2'}),
+      );
       final all = await svc.getAll();
       expect(all.length, 1);
       expect(all.first.fields['k'], 'v2');
@@ -448,8 +478,7 @@ void _connectionProfileTests() {
 
     test('delete all one by one leaves empty list', () async {
       for (final p in ['a', 'b', 'c']) {
-        await svc.save(
-            ConnectionProfile(name: p, provider: 'ftp', fields: {}));
+        await svc.save(ConnectionProfile(name: p, provider: 'ftp', fields: {}));
       }
       await svc.delete('a', 'ftp');
       await svc.delete('b', 'ftp');
@@ -466,45 +495,57 @@ void _connectionProfileTests() {
 void _fileDiffTests() {
   group('FileDiff.toString', () {
     final item = FileItem(
-        name: 'test.bin',
-        isFolder: false,
-        size: 1024,
-        updatedAt: DateTime(2025, 1, 1));
+      name: 'test.bin',
+      isFolder: false,
+      size: 1024,
+      updatedAt: DateTime(2025, 1, 1),
+    );
 
     test('onlyInA contains "only in A"', () {
-      final d = FileDiff(name: 'test.bin', kind: FileDiffKind.onlyInA, itemA: item);
+      final d = FileDiff(
+        name: 'test.bin',
+        kind: FileDiffKind.onlyInA,
+        itemA: item,
+      );
       expect(d.toString(), contains('only in A'));
     });
 
     test('onlyInB contains "only in B"', () {
-      final d = FileDiff(name: 'test.bin', kind: FileDiffKind.onlyInB, itemB: item);
+      final d = FileDiff(
+        name: 'test.bin',
+        kind: FileDiffKind.onlyInB,
+        itemB: item,
+      );
       expect(d.toString(), contains('only in B'));
     });
 
     test('sizeDiffers contains "size differs"', () {
       final d = FileDiff(
-          name: 'file',
-          kind: FileDiffKind.sizeDiffers,
-          itemA: item,
-          itemB: item);
+        name: 'file',
+        kind: FileDiffKind.sizeDiffers,
+        itemA: item,
+        itemB: item,
+      );
       expect(d.toString(), contains('size differs'));
     });
 
     test('dateDiffers contains "date differs"', () {
       final d = FileDiff(
-          name: 'file',
-          kind: FileDiffKind.dateDiffers,
-          itemA: item,
-          itemB: item);
+        name: 'file',
+        kind: FileDiffKind.dateDiffers,
+        itemA: item,
+        itemB: item,
+      );
       expect(d.toString(), contains('date differs'));
     });
 
     test('bothDiffer contains "size and date differ"', () {
       final d = FileDiff(
-          name: 'file',
-          kind: FileDiffKind.bothDiffer,
-          itemA: item,
-          itemB: item);
+        name: 'file',
+        kind: FileDiffKind.bothDiffer,
+        itemA: item,
+        itemB: item,
+      );
       expect(d.toString(), contains('size and date differ'));
     });
   });
@@ -523,97 +564,146 @@ void _multiCloudTests() {
 
     test('adding two connections results in count of 2', () {
       svc.addConnection(
-          id: 'a',
-          label: 'A',
-          provider: CloudProvider.s3,
-          client: _MockClient('A'));
+        id: 'a',
+        label: 'A',
+        provider: CloudProvider.s3,
+        client: _MockClient('A'),
+      );
       svc.addConnection(
-          id: 'b',
-          label: 'B',
-          provider: CloudProvider.ftp,
-          client: _MockClient('B'));
+        id: 'b',
+        label: 'B',
+        provider: CloudProvider.ftp,
+        client: _MockClient('B'),
+      );
       expect(svc.getAllConnections().length, equals(2));
     });
 
     test('getAllConnections is unmodifiable', () {
       final c = _MockClient('P');
       svc.addConnection(
-          id: 'z', label: 'Z', provider: CloudProvider.sftp, client: c);
+        id: 'z',
+        label: 'Z',
+        provider: CloudProvider.sftp,
+        client: c,
+      );
       final list = svc.getAllConnections();
       expect(
-          () => list.add(CloudConnection(
-              id: 'x',
-              label: 'X',
-              provider: CloudProvider.sftp,
-              client: c)),
-          throwsUnsupportedError);
+        () => list.add(
+          CloudConnection(
+            id: 'x',
+            label: 'X',
+            provider: CloudProvider.sftp,
+            client: c,
+          ),
+        ),
+        throwsUnsupportedError,
+      );
     });
 
     test('compareFiles: empty directories return empty list', () async {
-      final clientA = _MockClient('A', dirs: {
-        '/': {'files': [], 'folders': []}
-      });
-      final clientB = _MockClient('B', dirs: {
-        '/': {'files': [], 'folders': []}
-      });
+      final clientA = _MockClient(
+        'A',
+        dirs: {
+          '/': {'files': [], 'folders': []},
+        },
+      );
+      final clientB = _MockClient(
+        'B',
+        dirs: {
+          '/': {'files': [], 'folders': []},
+        },
+      );
       final diffs = await svc.compareFiles(
-          clientA: clientA, pathA: '/', clientB: clientB, pathB: '/');
+        clientA: clientA,
+        pathA: '/',
+        clientB: clientB,
+        pathB: '/',
+      );
       expect(diffs, isEmpty);
     });
 
     test('compareFiles: folders compared by name', () async {
-      final clientA = _MockClient('A', dirs: {
-        '/': {
-          'files': [],
-          'folders': [_f('docs')],
-        }
-      });
-      final clientB = _MockClient('B', dirs: {
-        '/': {'files': [], 'folders': []}
-      });
+      final clientA = _MockClient(
+        'A',
+        dirs: {
+          '/': {
+            'files': [],
+            'folders': [_f('docs')],
+          },
+        },
+      );
+      final clientB = _MockClient(
+        'B',
+        dirs: {
+          '/': {'files': [], 'folders': []},
+        },
+      );
       final diffs = await svc.compareFiles(
-          clientA: clientA, pathA: '/', clientB: clientB, pathB: '/');
+        clientA: clientA,
+        pathA: '/',
+        clientB: clientB,
+        pathB: '/',
+      );
       expect(diffs.length, 1);
       expect(diffs.first.kind, FileDiffKind.onlyInA);
     });
 
-    test('searchAcrossProviders: whitespace-only query returns empty', () async {
-      final results = await svc.searchAcrossProviders('   ', []);
-      expect(results, isEmpty);
-    });
+    test(
+      'searchAcrossProviders: whitespace-only query returns empty',
+      () async {
+        final results = await svc.searchAcrossProviders('   ', []);
+        expect(results, isEmpty);
+      },
+    );
 
     test(
-        'searchAcrossProviders: provider that throws returns empty (graceful)',
-        () async {
-      // _MockClient returns empty dirs, so search gracefully returns []
-      final client = _MockClient('X', dirs: {
-        '/': {
-          'files': [_f('match.txt')],
-          'folders': [],
-        }
-      });
-      svc.addConnection(
-          id: 'x', label: 'X', provider: CloudProvider.ftp, client: client);
-      final results =
-          await svc.searchAcrossProviders('match', svc.getAllConnections());
-      expect(results.isNotEmpty, isTrue);
-      expect(results.first.item.name, 'match.txt');
-    });
+      'searchAcrossProviders: provider that throws returns empty (graceful)',
+      () async {
+        // _MockClient returns empty dirs, so search gracefully returns []
+        final client = _MockClient(
+          'X',
+          dirs: {
+            '/': {
+              'files': [_f('match.txt')],
+              'folders': [],
+            },
+          },
+        );
+        svc.addConnection(
+          id: 'x',
+          label: 'X',
+          provider: CloudProvider.ftp,
+          client: client,
+        );
+        final results = await svc.searchAcrossProviders(
+          'match',
+          svc.getAllConnections(),
+        );
+        expect(results.isNotEmpty, isTrue);
+        expect(results.first.item.name, 'match.txt');
+      },
+    );
 
     test('MultiCloudSearchResult fields are set correctly', () async {
-      final client = _MockClient('Prov', dirs: {
-        '/': {
-          'files': [_f('data.csv')],
-          'folders': [],
-        }
-      });
+      final client = _MockClient(
+        'Prov',
+        dirs: {
+          '/': {
+            'files': [_f('data.csv')],
+            'folders': [],
+          },
+        },
+      );
       svc.addConnection(
-          id: 'p',
-          label: 'My Provider',
-          provider: CloudProvider.gdrive,
-          client: client);
-      final results =
-          await svc.searchAcrossProviders('data', svc.getAllConnections());
+        id: 'p',
+        label: 'My Provider',
+        provider: CloudProvider.gdrive,
+        client: client,
+      );
+      final results = await svc.searchAcrossProviders(
+        'data',
+        svc.getAllConnections(),
+      );
       expect(results.first.connectionId, 'p');
       expect(results.first.connectionLabel, 'My Provider');
       expect(results.first.providerName, 'Prov');
@@ -662,8 +752,11 @@ void _placeholderMetaTests() {
     });
 
     test('toJson version is always 1', () {
-      final meta =
-          PlaceholderMeta(remotePath: '/x', provider: 's3', sizeBytes: 0);
+      final meta = PlaceholderMeta(
+        remotePath: '/x',
+        provider: 's3',
+        sizeBytes: 0,
+      );
       expect(meta.toJson()['version'], 1);
     });
 
@@ -737,7 +830,8 @@ void _syncWatcherTests() {
 
     test('start then stop then dispose is safe', () async {
       final p = PollingWatcherService(
-          interval: const Duration(milliseconds: 200));
+        interval: const Duration(milliseconds: 200),
+      );
       p.start([1], (id) async {});
       p.stop();
       p.dispose();
@@ -751,8 +845,11 @@ void _syncWatcherTests() {
 
 void _actionHistoryTests() {
   group('ActionRecord.description', () {
-    String _desc(ActionType t,
-        {String orig = '/dir/file.txt', String? newPath}) {
+    String _desc(
+      ActionType t, {
+      String orig = '/dir/file.txt',
+      String? newPath,
+    }) {
       return ActionRecord(
         id: 'test',
         timestamp: DateTime.now(),
@@ -768,8 +865,11 @@ void _actionHistoryTests() {
     });
 
     test('rename description shows old and new name', () {
-      final d = _desc(ActionType.rename,
-          orig: '/dir/old.txt', newPath: '/dir/new.txt');
+      final d = _desc(
+        ActionType.rename,
+        orig: '/dir/old.txt',
+        newPath: '/dir/new.txt',
+      );
       expect(d, contains('old.txt'));
       expect(d, contains('new.txt'));
     });
@@ -812,8 +912,8 @@ void _actionHistoryTests() {
       expect(svc.canUndo(_rec(ActionType.delete, 'local')), isFalse);
     });
 
-    test('delete on remote can be undone', () {
-      expect(svc.canUndo(_rec(ActionType.delete, 'filen')), isTrue);
+    test('a remote label alone does not make deletion undoable', () {
+      expect(svc.canUndo(_rec(ActionType.delete, 'filen')), isFalse);
     });
 
     test('rename on local can be undone', () {
@@ -850,57 +950,85 @@ void _actionHistoryTests() {
 
     test('undo non-undoable action returns failure', () async {
       final id = svc.recordNew(
-          type: ActionType.delete,
-          originalPath: '/local/file.txt',
-          provider: 'local');
+        type: ActionType.delete,
+        originalPath: '/local/file.txt',
+        provider: 'local',
+      );
       final result = await svc.undo(id, const UndoContext());
       expect(result.success, isFalse);
     });
 
-    test('undo delete without restoreFromTrash handler fails', () async {
+    test('undo delete without a captured receipt fails', () async {
       final id = svc.recordNew(
-          type: ActionType.delete,
-          originalPath: '/remote/file.txt',
-          provider: 'filen');
+        type: ActionType.delete,
+        originalPath: '/remote/file.txt',
+        provider: 'filen',
+      );
       final result = await svc.undo(id, const UndoContext());
       expect(result.success, isFalse);
-      expect(result.message, contains('trash'));
+      expect(result.message, contains('not reversible'));
     });
 
-    test('undo delete with restoreFromTrash succeeds', () async {
-      String? restoredPath;
+    test('undo delete uses the captured restore action', () async {
+      var restored = false;
       final id = svc.recordNew(
-          type: ActionType.delete,
-          originalPath: '/remote/x.txt',
-          provider: 'filen');
-      final result = await svc.undo(
-          id,
-          UndoContext(
-              restoreFromTrash: (path) async {
-                restoredPath = path;
-              }));
+        type: ActionType.delete,
+        originalPath: '/remote/x.txt',
+        provider: 'filen',
+        undoAction: () async {
+          restored = true;
+          return const UndoResult.success('Restored captured item.');
+        },
+      );
+      final result = await svc.undo(id, const UndoContext());
       expect(result.success, isTrue);
-      expect(restoredPath, '/remote/x.txt');
-      // Action should be removed from history after successful undo
+      expect(restored, isTrue);
       expect(svc.history.any((a) => a.id == id), isFalse);
     });
 
+    test(
+      'undo delete does not restore after its original source changes',
+      () async {
+        var sourceIsCurrent = true;
+        var restoreCalls = 0;
+        final id = svc.recordNew(
+          type: ActionType.delete,
+          originalPath: '/remote/x.txt',
+          provider: 'filen',
+          isCurrent: () => sourceIsCurrent,
+          undoAction: () async {
+            restoreCalls++;
+            return const UndoResult.success('Restored from trash');
+          },
+        );
+        expect(svc.canUndo(svc.history.single), isTrue);
+        sourceIsCurrent = false;
+        expect(svc.canUndo(svc.history.single), isFalse);
+        final result = await svc.undo(id, const UndoContext());
+        expect(result.success, isFalse);
+        expect(restoreCalls, 0);
+        expect(svc.history.single.id, id);
+      },
+    );
+
     test('undo rename without newPath fails', () async {
       final id = svc.recordNew(
-          type: ActionType.rename,
-          originalPath: '/remote/a.txt',
-          newPath: null,
-          provider: 'filen');
+        type: ActionType.rename,
+        originalPath: '/remote/a.txt',
+        newPath: null,
+        provider: 'filen',
+      );
       final result = await svc.undo(id, const UndoContext());
       expect(result.success, isFalse);
     });
 
     test('undo rename on remote with no handler fails', () async {
       final id = svc.recordNew(
-          type: ActionType.rename,
-          originalPath: '/remote/old.txt',
-          newPath: '/remote/new.txt',
-          provider: 'filen');
+        type: ActionType.rename,
+        originalPath: '/remote/old.txt',
+        newPath: '/remote/new.txt',
+        provider: 'filen',
+      );
       final result = await svc.undo(id, const UndoContext());
       expect(result.success, isFalse);
     });
@@ -909,17 +1037,20 @@ void _actionHistoryTests() {
       String? renamedFrom;
       String? renamedTo;
       final id = svc.recordNew(
-          type: ActionType.rename,
-          originalPath: '/remote/old.txt',
-          newPath: '/remote/new.txt',
-          provider: 'filen');
+        type: ActionType.rename,
+        originalPath: '/remote/old.txt',
+        newPath: '/remote/new.txt',
+        provider: 'filen',
+      );
       final result = await svc.undo(
-          id,
-          UndoContext(
-              remoteRename: (current, name) async {
-                renamedFrom = current;
-                renamedTo = name;
-              }));
+        id,
+        UndoContext(
+          remoteRename: (current, name) async {
+            renamedFrom = current;
+            renamedTo = name;
+          },
+        ),
+      );
       expect(result.success, isTrue);
       expect(renamedFrom, '/remote/new.txt');
       expect(renamedTo, 'old.txt');
@@ -927,10 +1058,11 @@ void _actionHistoryTests() {
 
     test('undo move without newPath fails', () async {
       final id = svc.recordNew(
-          type: ActionType.move,
-          originalPath: '/remote/dir/file.txt',
-          newPath: null,
-          provider: 'filen');
+        type: ActionType.move,
+        originalPath: '/remote/dir/file.txt',
+        newPath: null,
+        provider: 'filen',
+      );
       final result = await svc.undo(id, const UndoContext());
       expect(result.success, isFalse);
     });
@@ -938,16 +1070,19 @@ void _actionHistoryTests() {
     test('undo move on remote with handler succeeds', () async {
       String? movedTo;
       final id = svc.recordNew(
-          type: ActionType.move,
-          originalPath: '/remote/src/file.txt',
-          newPath: '/remote/dst/file.txt',
-          provider: 'filen');
+        type: ActionType.move,
+        originalPath: '/remote/src/file.txt',
+        newPath: '/remote/dst/file.txt',
+        provider: 'filen',
+      );
       final result = await svc.undo(
-          id,
-          UndoContext(
-              remoteMove: (current, targetDir) async {
-                movedTo = targetDir;
-              }));
+        id,
+        UndoContext(
+          remoteMove: (current, targetDir) async {
+            movedTo = targetDir;
+          },
+        ),
+      );
       expect(result.success, isTrue);
       expect(movedTo, '/remote/src');
     });
@@ -955,15 +1090,18 @@ void _actionHistoryTests() {
     test('undo copy on remote with handler succeeds', () async {
       bool deleteCalled = false;
       final id = svc.recordNew(
-          type: ActionType.copy,
-          originalPath: '/remote/copy.txt',
-          provider: 'filen');
+        type: ActionType.copy,
+        originalPath: '/remote/copy.txt',
+        provider: 'filen',
+      );
       final result = await svc.undo(
-          id,
-          UndoContext(
-              remoteDelete: (path) async {
-                deleteCalled = true;
-              }));
+        id,
+        UndoContext(
+          remoteDelete: (path) async {
+            deleteCalled = true;
+          },
+        ),
+      );
       expect(result.success, isTrue);
       expect(deleteCalled, isTrue);
     });
@@ -971,24 +1109,28 @@ void _actionHistoryTests() {
     test('undo createFolder on remote with handler succeeds', () async {
       String? deletedPath;
       final id = svc.recordNew(
-          type: ActionType.createFolder,
-          originalPath: '/remote/new_folder',
-          provider: 'filen');
+        type: ActionType.createFolder,
+        originalPath: '/remote/new_folder',
+        provider: 'filen',
+      );
       final result = await svc.undo(
-          id,
-          UndoContext(
-              remoteDelete: (path) async {
-                deletedPath = path;
-              }));
+        id,
+        UndoContext(
+          remoteDelete: (path) async {
+            deletedPath = path;
+          },
+        ),
+      );
       expect(result.success, isTrue);
       expect(deletedPath, '/remote/new_folder');
     });
 
     test('clear empties history', () {
       svc.recordNew(
-          type: ActionType.createFolder,
-          originalPath: '/a',
-          provider: 'local');
+        type: ActionType.createFolder,
+        originalPath: '/a',
+        provider: 'local',
+      );
       svc.clear();
       expect(svc.history, isEmpty);
     });
@@ -996,9 +1138,10 @@ void _actionHistoryTests() {
     test('history capped at 50', () {
       for (var i = 0; i < 55; i++) {
         svc.recordNew(
-            type: ActionType.createFolder,
-            originalPath: '/f$i',
-            provider: 'local');
+          type: ActionType.createFolder,
+          originalPath: '/f$i',
+          provider: 'local',
+        );
       }
       expect(svc.history.length, 50);
     });
@@ -1028,36 +1171,66 @@ void _storageAnalyticsTests() {
     late StorageAnalyticsService svc;
     setUp(() => svc = StorageAnalyticsService());
 
-    test('pdf is document', () =>
-        expect(svc.categorizeFile('report.pdf'), FileCategory.documents));
-    test('docx is document', () =>
-        expect(svc.categorizeFile('letter.DOCX'), FileCategory.documents));
-    test('mp4 is video', () =>
-        expect(svc.categorizeFile('clip.mp4'), FileCategory.videos));
-    test('mkv is video', () =>
-        expect(svc.categorizeFile('movie.mkv'), FileCategory.videos));
-    test('mp3 is audio', () =>
-        expect(svc.categorizeFile('track.mp3'), FileCategory.audio));
-    test('flac is audio', () =>
-        expect(svc.categorizeFile('hifi.flac'), FileCategory.audio));
-    test('jpg is image', () =>
-        expect(svc.categorizeFile('photo.jpg'), FileCategory.images));
-    test('png is image', () =>
-        expect(svc.categorizeFile('icon.PNG'), FileCategory.images));
-    test('zip is archive', () =>
-        expect(svc.categorizeFile('bundle.zip'), FileCategory.archives));
-    test('tar.gz: extension is "gz" which is archive', () =>
-        expect(svc.categorizeFile('archive.tar.gz'), FileCategory.archives));
-    test('unknown extension is other', () =>
-        expect(svc.categorizeFile('data.xyz123'), FileCategory.other));
-    test('no extension is other', () =>
-        expect(svc.categorizeFile('Makefile'), FileCategory.other));
-    test('empty string is other', () =>
-        expect(svc.categorizeFile(''), FileCategory.other));
-    test('py is code', () =>
-        expect(svc.categorizeFile('script.py'), FileCategory.code));
-    test('js is code', () =>
-        expect(svc.categorizeFile('app.js'), FileCategory.code));
+    test(
+      'pdf is document',
+      () => expect(svc.categorizeFile('report.pdf'), FileCategory.documents),
+    );
+    test(
+      'docx is document',
+      () => expect(svc.categorizeFile('letter.DOCX'), FileCategory.documents),
+    );
+    test(
+      'mp4 is video',
+      () => expect(svc.categorizeFile('clip.mp4'), FileCategory.videos),
+    );
+    test(
+      'mkv is video',
+      () => expect(svc.categorizeFile('movie.mkv'), FileCategory.videos),
+    );
+    test(
+      'mp3 is audio',
+      () => expect(svc.categorizeFile('track.mp3'), FileCategory.audio),
+    );
+    test(
+      'flac is audio',
+      () => expect(svc.categorizeFile('hifi.flac'), FileCategory.audio),
+    );
+    test(
+      'jpg is image',
+      () => expect(svc.categorizeFile('photo.jpg'), FileCategory.images),
+    );
+    test(
+      'png is image',
+      () => expect(svc.categorizeFile('icon.PNG'), FileCategory.images),
+    );
+    test(
+      'zip is archive',
+      () => expect(svc.categorizeFile('bundle.zip'), FileCategory.archives),
+    );
+    test(
+      'tar.gz: extension is "gz" which is archive',
+      () => expect(svc.categorizeFile('archive.tar.gz'), FileCategory.archives),
+    );
+    test(
+      'unknown extension is other',
+      () => expect(svc.categorizeFile('data.xyz123'), FileCategory.other),
+    );
+    test(
+      'no extension is other',
+      () => expect(svc.categorizeFile('Makefile'), FileCategory.other),
+    );
+    test(
+      'empty string is other',
+      () => expect(svc.categorizeFile(''), FileCategory.other),
+    );
+    test(
+      'py is code',
+      () => expect(svc.categorizeFile('script.py'), FileCategory.code),
+    );
+    test(
+      'js is code',
+      () => expect(svc.categorizeFile('app.js'), FileCategory.code),
+    );
   });
 
   group('StorageAnalyticsService – findLargestFiles', () {
@@ -1078,19 +1251,13 @@ void _storageAnalyticsTests() {
     });
 
     test('folders excluded', () {
-      final files = [
-        _folderItem('folder'),
-        _fileItem('small', size: 10),
-      ];
+      final files = [_folderItem('folder'), _fileItem('small', size: 10)];
       final top = svc.findLargestFiles(files, 10);
       expect(top.every((f) => !f.isFolder), isTrue);
     });
 
     test('files without size excluded', () {
-      final files = [
-        _fileItem('no_size'),
-        _fileItem('has_size', size: 100),
-      ];
+      final files = [_fileItem('no_size'), _fileItem('has_size', size: 100)];
       final top = svc.findLargestFiles(files, 10);
       expect(top.length, 1);
       expect(top.first.name, 'has_size');
@@ -1161,15 +1328,17 @@ void _storageAnalyticsTests() {
     test('returns sum of all suggestion savingsBytes', () {
       final suggestions = [
         const CleanupSuggestion(
-            type: CleanupType.duplicate,
-            description: 'd',
-            savingsBytes: 100,
-            files: []),
+          type: CleanupType.duplicate,
+          description: 'd',
+          savingsBytes: 100,
+          files: [],
+        ),
         const CleanupSuggestion(
-            type: CleanupType.stale,
-            description: 's',
-            savingsBytes: 200,
-            files: []),
+          type: CleanupType.stale,
+          description: 's',
+          savingsBytes: 200,
+          files: [],
+        ),
       ];
       expect(svc.estimateSavings(suggestions), 300);
     });
@@ -1187,10 +1356,8 @@ void _storageAnalyticsTests() {
       final group = DuplicateGroup(
         key: '1024:file.jpg',
         entries: [
-          DuplicateEntry(
-              path: '/a/file.jpg', provider: 'p1', sizeBytes: 1024),
-          DuplicateEntry(
-              path: '/b/file.jpg', provider: 'p2', sizeBytes: 1024),
+          DuplicateEntry(path: '/a/file.jpg', provider: 'p1', sizeBytes: 1024),
+          DuplicateEntry(path: '/b/file.jpg', provider: 'p2', sizeBytes: 1024),
         ],
       );
       final suggestions = svc.generateCleanupSuggestions([], [group], []);
@@ -1200,10 +1367,11 @@ void _storageAnalyticsTests() {
     test('stale files generate suggestion', () {
       final stale = [
         StaleFile(
-            path: '/old.txt',
-            provider: 'prov',
-            sizeBytes: 500,
-            daysSinceAccess: 200),
+          path: '/old.txt',
+          provider: 'prov',
+          sizeBytes: 500,
+          daysSinceAccess: 200,
+        ),
       ];
       final suggestions = svc.generateCleanupSuggestions([], [], stale);
       expect(suggestions.any((s) => s.type == CleanupType.stale), isTrue);
@@ -1217,7 +1385,11 @@ void _storageAnalyticsTests() {
 
   group('StorageAnalyticsService models – serialization', () {
     test('CategoryStats toJson/fromJson round-trip', () {
-      const cs = CategoryStats(fileCount: 10, totalBytes: 1024, percentage: 50.0);
+      const cs = CategoryStats(
+        fileCount: 10,
+        totalBytes: 1024,
+        percentage: 50.0,
+      );
       final r = CategoryStats.fromJson(cs.toJson());
       expect(r.fileCount, 10);
       expect(r.totalBytes, 1024);
@@ -1250,8 +1422,11 @@ void _storageAnalyticsTests() {
 
     test('DuplicateEntry toJson/fromJson round-trip', () {
       final de = DuplicateEntry(
-          path: '/x', provider: 'p', sizeBytes: 512,
-          modifiedAt: DateTime.utc(2025, 6, 1));
+        path: '/x',
+        provider: 'p',
+        sizeBytes: 512,
+        modifiedAt: DateTime.utc(2025, 6, 1),
+      );
       final r = DuplicateEntry.fromJson(de.toJson());
       expect(r.path, '/x');
       expect(r.provider, 'p');
@@ -1498,13 +1673,17 @@ void _fileItemTests() {
     });
 
     test('MB format', () {
-      expect(_fileItem('f', size: 5 * 1024 * 1024).sizeFormatted,
-          contains('MB'));
+      expect(
+        _fileItem('f', size: 5 * 1024 * 1024).sizeFormatted,
+        contains('MB'),
+      );
     });
 
     test('GB format', () {
-      expect(_fileItem('f', size: 2 * 1024 * 1024 * 1024).sizeFormatted,
-          contains('GB'));
+      expect(
+        _fileItem('f', size: 2 * 1024 * 1024 * 1024).sizeFormatted,
+        contains('GB'),
+      );
     });
   });
 
@@ -1638,7 +1817,9 @@ void _localeFormattingTests() {
 
     test('1 TB shown in TB', () {
       expect(
-          formatBytesLocale(1024 * 1024 * 1024 * 1024, 'en'), contains('TB'));
+        formatBytesLocale(1024 * 1024 * 1024 * 1024, 'en'),
+        contains('TB'),
+      );
     });
 
     test('German uses comma decimal', () {

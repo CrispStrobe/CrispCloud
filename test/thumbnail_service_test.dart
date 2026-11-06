@@ -8,13 +8,16 @@
 //   - cachedKeys and memoryCacheSize
 //   - clear behavior
 
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:image/image.dart' as img;
 
 import 'package:crisp_cloud/services/thumbnail_service.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   // ---------------------------------------------------------------------------
   // isSupported — comprehensive extension coverage
   // ---------------------------------------------------------------------------
@@ -63,8 +66,10 @@ void main() {
       expect(ThumbnailService.isSupported('logo.svg'), false);
     });
 
-    test('rejects tiff (not in supported set)', () {
-      expect(ThumbnailService.isSupported('scan.tiff'), false);
+    test('supports formats available through the pure Dart fallback', () {
+      for (final extension in ['tif', 'tiff', 'psd', 'tga', 'pnm', 'ppm']) {
+        expect(ThumbnailService.isSupported('scan.$extension'), true);
+      }
     });
 
     test('is case-insensitive', () {
@@ -83,6 +88,7 @@ void main() {
     test('no extension returns false', () {
       // 'Makefile'.split('.').last == 'Makefile' which is not in the set
       expect(ThumbnailService.isSupported('Makefile'), false);
+      expect(ThumbnailService.isSupported('jpg'), false);
     });
   });
 
@@ -163,6 +169,97 @@ void main() {
     test('memory cache size starts at zero', () {
       expect(service.memoryCacheSize, 0);
       expect(service.cachedKeys, isEmpty);
+    });
+
+    test('LRU hits protect the recently used item', () async {
+      service = ThumbnailService(maxMemoryCacheEntries: 2);
+      await service.cacheProviderThumbnail('a', Uint8List.fromList([1]));
+      await service.cacheProviderThumbnail('b', Uint8List.fromList([2]));
+      service.getCached('a');
+      await service.cacheProviderThumbnail('c', Uint8List.fromList([3]));
+      expect(service.getCached('a'), isNotNull);
+      expect(service.getCached('b'), isNull);
+    });
+
+    test('byte budget and replacement accounting stay bounded', () async {
+      service = ThumbnailService(maxMemoryCacheBytes: 5);
+      await service.cacheProviderThumbnail('a', Uint8List(3));
+      await service.cacheProviderThumbnail('b', Uint8List(3));
+      expect(service.getCached('a'), isNull);
+      expect(service.memoryCacheSize, 3);
+      await service.cacheProviderThumbnail('b', Uint8List(2));
+      expect(service.memoryCacheSize, 2);
+      await service.cacheProviderThumbnail('oversized', Uint8List(8));
+      expect(service.memoryCacheSize, 2);
+      expect(service.getCached('oversized'), isNull);
+    });
+
+    test('cached snapshots cannot be modified by the caller', () async {
+      final source = Uint8List.fromList([1, 2]);
+      await service.cacheProviderThumbnail('image', source);
+      source[0] = 9;
+      expect(service.getCached('image'), [1, 2]);
+      expect(() => service.getCached('image')![0] = 3, throwsUnsupportedError);
+    });
+  });
+
+  group('Actual decoding and disk reuse', () {
+    Uint8List png(int width, int height) => img.encodePng(
+        img.Image(width: width, height: height, numChannels: 4));
+
+    test('native thumbnails preserve ratio and alpha without upscaling', () async {
+      final service = ThumbnailService();
+      final wide = await service.generate('wide', png(300, 100));
+      expect(wide, isNotNull);
+      final decoded = img.decodePng(wide!)!;
+      expect((decoded.width, decoded.height), (120, 40));
+      expect(decoded.getPixel(0, 0).a, 0);
+      final small = img.decodePng((await service.generate('small', png(16, 8)))!)!;
+      expect((small.width, small.height), (16, 8));
+    });
+
+    test('thumbnail sizes and concurrent decodes cannot alias', () async {
+      final service = ThumbnailService();
+      final bytes = png(512, 256);
+      final first = service.generate('same', bytes, size: 64);
+      final duplicate = service.generate('same', bytes, size: 64);
+      expect(identical(first, duplicate), true);
+      final small = img.decodePng((await first)!)!;
+      final large = img.decodePng((await service.generate('same', bytes, size: 256))!)!;
+      expect((small.width, small.height), (64, 32));
+      expect((large.width, large.height), (256, 128));
+      expect(service.getCached('same', size: 64), isNot(service.getCached('same', size: 256)));
+    });
+
+    test('clear prevents an in-flight decode from repopulating the cache', () async {
+      final service = ThumbnailService();
+      final pending = service.generate('late', png(300, 100));
+      await service.clear();
+      await pending;
+      expect(service.cachedKeys, isEmpty);
+    });
+
+    test('invalid image bytes return null', () async {
+      expect(await ThumbnailService().generate('bad', Uint8List.fromList([1, 2, 3])), isNull);
+    });
+
+    test('disk cache is read before original bytes and obeys its budgets', () async {
+      final dir = await Directory.systemTemp.createTemp('gallery-thumbnail-test-');
+      try {
+        final first = ThumbnailService(maxDiskCacheEntries: 2);
+        await first.init(cacheDirectory: dir.path);
+        final expected = await first.generate('image', png(200, 100), size: 64);
+        final second = ThumbnailService(maxDiskCacheEntries: 2);
+        await second.init(cacheDirectory: dir.path);
+        expect(await second.readCached('image', size: 64), expected);
+        await second.cacheProviderThumbnail('a', Uint8List.fromList([1]));
+        await second.cacheProviderThumbnail('b', Uint8List.fromList([2]));
+        expect(await second.getDiskCacheCount(), 2);
+        await second.clear();
+        expect(await second.getDiskCacheCount(), 0);
+      } finally {
+        await dir.delete(recursive: true);
+      }
     });
   });
 }

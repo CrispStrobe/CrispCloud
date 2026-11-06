@@ -16,28 +16,31 @@ import 'dart:io' as dart_io;
 import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path/path.dart' as p;
 import 'package:xml/xml.dart' as xml;
 
 import 'cloud_storage_interface.dart';
-import 'connection_failure.dart';
-import 'nextcloud_operation_failure.dart';
+import 'bounded_http_transfer.dart';
+import 'bounded_transfer_stream.dart';
+import 'transfer_stream_request.dart';
+import 'transfer_spool.dart';
+import 'spooled_http_upload.dart';
 import 'delta_sync_service.dart';
 import 'log_service.dart';
 import 'nextcloud_config_service.dart';
 import 'secure_storage_service.dart';
 
-/// Authentication was rejected by the Nextcloud server.
-class NextcloudAuthenticationException implements Exception {
-  const NextcloudAuthenticationException();
-
+class NextcloudClientAdapter extends CloudStorageClient
+    with CloudTransferOperations {
   @override
-  String toString() => 'Authentication failed. Check your username and password. '
-      'If your account uses two-factor authentication, create an app password '
-      'in Nextcloud security settings.';
-}
-
-class NextcloudClientAdapter extends CloudStorageClient {
+  bool get supportsStreaming => true;
+  @override
+  StorageTransferCapabilities get transferCapabilities =>
+      const StorageTransferCapabilities(
+        boundedUpload: true,
+        boundedDownload: true,
+      );
   static const _log = Log('NextcloudClient');
 
   final NextcloudConfigService _config;
@@ -51,9 +54,12 @@ class NextcloudClientAdapter extends CloudStorageClient {
   bool _authenticated = false;
 
   NextcloudClientAdapter({required dynamic config})
-      : _config = (config is NextcloudConfigService)
-            ? config
-            : NextcloudConfigService(configPath: '', secureStorage: InMemorySecureStorage());
+    : _config = (config is NextcloudConfigService)
+          ? config
+          : NextcloudConfigService(
+              configPath: '',
+              secureStorage: InMemorySecureStorage(),
+            );
 
   // ---------------------------------------------------------------------------
   // Basic properties
@@ -66,7 +72,8 @@ class NextcloudClientAdapter extends CloudStorageClient {
   String get rootPath => '/';
 
   @override
-  bool get isAuthenticated => _authenticated && _username != null && _serverUrl != null;
+  bool get isAuthenticated =>
+      _authenticated && _username != null && _serverUrl != null;
 
   @override
   String? get userId => _username;
@@ -99,7 +106,11 @@ class NextcloudClientAdapter extends CloudStorageClient {
 
   /// Login with identity = "username@https://nextcloud.example.com"
   @override
-  Future<void> login(String email, String password, {String? twoFactorCode}) async {
+  Future<void> login(
+    String email,
+    String password, {
+    String? twoFactorCode,
+  }) async {
     final parsed = _parseIdentity(email);
     if (parsed == null) {
       throw NextcloudOperationFailure(NextcloudOperationCode.invalidIdentity, 'Format must be username@https://nextcloud.example.com');
@@ -262,10 +273,12 @@ class NextcloudClientAdapter extends CloudStorageClient {
 
       // Build user-visible path relative to DAV root
       final itemDavPath = item['href'] as String? ?? '';
-      final davRoot = '/remote.php/dav/files/${Uri.encodeComponent(_username!)}/';
+      final davRoot =
+          '/remote.php/dav/files/${Uri.encodeComponent(_username!)}/';
       String relativePath;
       if (itemDavPath.startsWith(davRoot)) {
-        relativePath = '/${Uri.decodeComponent(itemDavPath.substring(davRoot.length))}';
+        relativePath =
+            '/${Uri.decodeComponent(itemDavPath.substring(davRoot.length))}';
       } else {
         relativePath = p.posix.join(cleanPath, name);
       }
@@ -305,26 +318,108 @@ class NextcloudClientAdapter extends CloudStorageClient {
     String fileName,
     String targetPath, {
     Function(int, int)? onProgress,
-  }) async {
-    await _ensureAuth();
+  }) => uploadStream(
+    Stream.value(fileData),
+    fileData.length,
+    fileName,
+    targetPath,
+    onProgress: onProgress,
+  );
 
-    final remotePath = p.posix.join(_normalizePath(targetPath), fileName);
-    final uri = _davUri(_serverUrl!, _username!, remotePath);
-
-    final req = http.Request('PUT', uri);
-    req.headers['Authorization'] = _basicAuth(_username!, _password!);
-    req.headers['Content-Type'] = 'application/octet-stream';
-    req.bodyBytes = Uint8List.fromList(fileData);
-
-    final streamed = await req.send();
-    final resp = await http.Response.fromStream(streamed);
-
-    if (resp.statusCode != 200 && resp.statusCode != 201 && resp.statusCode != 204) {
-      throw NextcloudOperationFailure(NextcloudOperationCode.upload, 'Nextcloud upload failed (HTTP ${resp.statusCode}): ${resp.body}', {'status': resp.statusCode, 'body': resp.body});
+  void Function() _captureTransfer() {
+    final user = _username, password = _password, server = _serverUrl;
+    void check() {
+      if (!isAuthenticated ||
+          user != _username ||
+          password != _password ||
+          server != _serverUrl) {
+        throw StateError(
+          'The original Nextcloud account is no longer available.',
+        );
+      }
     }
 
-    onProgress?.call(fileData.length, fileData.length);
-    _log.debug('Uploaded $fileName to $remotePath');
+    check();
+    return check;
+  }
+
+  @override
+  Future<void> uploadStream(
+    Stream<List<int>> dataStream,
+    int length,
+    String fileName,
+    String targetPath, {
+    Function(int, int)? onProgress,
+  }) async {
+    if (length < 0) throw ArgumentError.value(length, 'length');
+    if (fileName.isEmpty ||
+        fileName == '.' ||
+        fileName == '..' ||
+        fileName.contains('/') ||
+        fileName.contains(r'\') ||
+        fileName.contains('\u0000')) {
+      throw const FormatException('Enter a file name without path separators.');
+    }
+    await _ensureAuth();
+    final check = _captureTransfer();
+    final uri = _davUri(
+      _serverUrl!,
+      _username!,
+      p.posix.join(_normalizePath(targetPath), fileName),
+    );
+    final headers = {
+      'authorization': _basicAuth(_username!, _password!),
+      'content-type': 'application/octet-stream',
+    };
+    http.Response response;
+    if (kIsWeb) {
+      final spool = await createTransferSpool(
+        dataStream,
+        expectedLength: length,
+        checkpoint: () async => check(),
+      );
+      try {
+        response = await uploadSpooledHttpBody(
+          uri,
+          spool,
+          operation: 'Nextcloud upload',
+          headers: headers,
+          allowHttp: true,
+          checkCurrent: check,
+          onProgress: onProgress,
+        );
+      } finally {
+        await spool.dispose();
+      }
+    } else {
+      final client = http.Client();
+      var sent = 0;
+      try {
+        final body = validatedTransferParts(dataStream, length, 64 * 1024).map((
+          chunk,
+        ) {
+          check();
+          sent += chunk.length;
+          onProgress?.call(sent, length);
+          return chunk;
+        });
+        response = await sendTransferRequest(
+          client,
+          TransferStreamRequest('PUT', uri, body, length)
+            ..headers.addAll(headers),
+          operation: 'Nextcloud upload',
+        );
+      } finally {
+        client.close();
+      }
+    }
+    check();
+    if (!const {200, 201, 204}.contains(response.statusCode)) {
+      throw StateError(
+        'Nextcloud upload was not confirmed (HTTP ${response.statusCode}).',
+      );
+    }
+    onProgress?.call(length, length);
   }
 
   // ---------------------------------------------------------------------------
@@ -339,16 +434,41 @@ class NextcloudClientAdapter extends CloudStorageClient {
     await _ensureAuth();
 
     final uri = _davUri(_serverUrl!, _username!, _normalizePath(remotePath));
-    final resp = await http.get(uri, headers: {
-      'Authorization': _basicAuth(_username!, _password!),
-    });
+    final resp = await http.get(
+      uri,
+      headers: {'Authorization': _basicAuth(_username!, _password!)},
+    );
 
     if (resp.statusCode != 200) {
-      throw NextcloudOperationFailure(NextcloudOperationCode.download, 'Nextcloud download failed (HTTP ${resp.statusCode}): ${resp.body}', {'status': resp.statusCode, 'body': resp.body});
+      throw Exception(
+        'Nextcloud download failed (HTTP ${resp.statusCode}): ${resp.body}',
+      );
     }
 
     onProgress?.call(resp.bodyBytes.length, resp.bodyBytes.length);
     return resp.bodyBytes;
+  }
+
+  @override
+  Stream<List<int>> downloadStream(
+    String remotePath, {
+    Function(int, int)? onProgress,
+  }) async* {
+    await _ensureAuth();
+    final check = _captureTransfer();
+    final uri = _davUri(_serverUrl!, _username!, _normalizePath(remotePath));
+    yield* streamHttpDownload(
+      uri,
+      operation: 'Nextcloud download',
+      headers: {
+        'authorization': _basicAuth(_username!, _password!),
+        'accept-encoding': 'identity',
+      },
+      followRedirects: false,
+      allowHttp: true,
+      checkCurrent: check,
+      onProgress: onProgress,
+    );
   }
 
   @override
@@ -357,8 +477,13 @@ class NextcloudClientAdapter extends CloudStorageClient {
     String localPath, {
     Function(int, int)? onProgress,
   }) async {
-    final bytes = await downloadFileBytes(remotePath, onProgress: onProgress);
-    await dart_io.File(localPath).writeAsBytes(bytes);
+    final sink = dart_io.File(localPath).openWrite();
+    try {
+      await sink.addStream(downloadStream(remotePath, onProgress: onProgress));
+      await sink.flush();
+    } finally {
+      await sink.close();
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -388,7 +513,9 @@ class NextcloudClientAdapter extends CloudStorageClient {
 
       if (mkcolResp.statusCode != 201 && mkcolResp.statusCode != 405) {
         // 405 = already exists in some servers
-        throw NextcloudOperationFailure(NextcloudOperationCode.createFolder, 'Failed to create folder "$accumulated" (HTTP ${mkcolResp.statusCode})', {'path': accumulated, 'status': mkcolResp.statusCode});
+        throw Exception(
+          'Failed to create folder "$accumulated" (HTTP ${mkcolResp.statusCode})',
+        );
       }
     }
   }
@@ -409,7 +536,9 @@ class NextcloudClientAdapter extends CloudStorageClient {
     final resp = await http.Response.fromStream(streamed);
 
     if (resp.statusCode != 204 && resp.statusCode != 200) {
-      throw NextcloudOperationFailure(NextcloudOperationCode.delete, 'Nextcloud delete failed (HTTP ${resp.statusCode}): ${resp.body}', {'status': resp.statusCode, 'body': resp.body});
+      throw Exception(
+        'Nextcloud delete failed (HTTP ${resp.statusCode}): ${resp.body}',
+      );
     }
   }
 
@@ -417,8 +546,16 @@ class NextcloudClientAdapter extends CloudStorageClient {
   Future<void> movePath(String sourcePath, String targetPath) async {
     await _ensureAuth();
 
-    final sourceUri = _davUri(_serverUrl!, _username!, _normalizePath(sourcePath));
-    final destinationUrl = _davUri(_serverUrl!, _username!, _normalizePath(targetPath)).toString();
+    final sourceUri = _davUri(
+      _serverUrl!,
+      _username!,
+      _normalizePath(sourcePath),
+    );
+    final destinationUrl = _davUri(
+      _serverUrl!,
+      _username!,
+      _normalizePath(targetPath),
+    ).toString();
 
     final req = http.Request('MOVE', sourceUri);
     req.headers['Authorization'] = _basicAuth(_username!, _password!);
@@ -429,7 +566,9 @@ class NextcloudClientAdapter extends CloudStorageClient {
     final resp = await http.Response.fromStream(streamed);
 
     if (resp.statusCode != 201 && resp.statusCode != 204) {
-      throw NextcloudOperationFailure(NextcloudOperationCode.move, 'Nextcloud move failed (HTTP ${resp.statusCode}): ${resp.body}', {'status': resp.statusCode, 'body': resp.body});
+      throw Exception(
+        'Nextcloud move failed (HTTP ${resp.statusCode}): ${resp.body}',
+      );
     }
   }
 
@@ -453,7 +592,9 @@ class NextcloudClientAdapter extends CloudStorageClient {
     await _ensureAuth();
 
     // shareType 3 = public link
-    final uri = Uri.parse('$_serverUrl/ocs/v2.php/apps/files_sharing/api/v1/shares');
+    final uri = Uri.parse(
+      '$_serverUrl/ocs/v2.php/apps/files_sharing/api/v1/shares',
+    );
     final resp = await http.post(
       uri,
       headers: {
@@ -465,7 +606,9 @@ class NextcloudClientAdapter extends CloudStorageClient {
     );
 
     if (resp.statusCode != 200) {
-      throw NextcloudOperationFailure(NextcloudOperationCode.share, 'OCS share creation failed (HTTP ${resp.statusCode}): ${resp.body}', {'status': resp.statusCode, 'body': resp.body});
+      throw Exception(
+        'OCS share creation failed (HTTP ${resp.statusCode}): ${resp.body}',
+      );
     }
 
     // Parse the share URL from XML response
@@ -488,7 +631,8 @@ class NextcloudClientAdapter extends CloudStorageClient {
     await _ensureAuth();
 
     final uri = Uri.parse(
-        '$_serverUrl/remote.php/dav/versions/$_username/versions/$fileId');
+      '$_serverUrl/remote.php/dav/versions/$_username/versions/$fileId',
+    );
     final resp = await _propfind(uri, _username!, _password!, depth: '1');
 
     if (resp.statusCode != 207) {
@@ -497,16 +641,28 @@ class NextcloudClientAdapter extends CloudStorageClient {
 
     final items = _parsePropfind(resp.body);
     // Skip the first item (the versions container itself)
-    return items.skip(1).map((item) => Map<String, dynamic>.from(item)).toList();
+    return items
+        .skip(1)
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList();
   }
 
   /// Restore a specific version. `fileId` and `versionId` come from [listVersions].
-  Future<void> restoreVersion(String fileId, String versionId, String targetPath) async {
+  Future<void> restoreVersion(
+    String fileId,
+    String versionId,
+    String targetPath,
+  ) async {
     await _ensureAuth();
 
     final sourceUri = Uri.parse(
-        '$_serverUrl/remote.php/dav/versions/$_username/versions/$fileId/$versionId');
-    final destUri = _davUri(_serverUrl!, _username!, _normalizePath(targetPath));
+      '$_serverUrl/remote.php/dav/versions/$_username/versions/$fileId/$versionId',
+    );
+    final destUri = _davUri(
+      _serverUrl!,
+      _username!,
+      _normalizePath(targetPath),
+    );
 
     final req = http.Request('COPY', sourceUri);
     req.headers['Authorization'] = _basicAuth(_username!, _password!);
@@ -517,7 +673,9 @@ class NextcloudClientAdapter extends CloudStorageClient {
     final resp = await http.Response.fromStream(streamed);
 
     if (resp.statusCode != 201 && resp.statusCode != 204) {
-      throw NextcloudOperationFailure(NextcloudOperationCode.restoreVersion, 'Restore version failed (HTTP ${resp.statusCode}): ${resp.body}', {'status': resp.statusCode, 'body': resp.body});
+      throw Exception(
+        'Restore version failed (HTTP ${resp.statusCode}): ${resp.body}',
+      );
     }
   }
 
@@ -526,7 +684,12 @@ class NextcloudClientAdapter extends CloudStorageClient {
   // ---------------------------------------------------------------------------
 
   Future<void> _ensureAuth() async {
-    if (_authenticated && _username != null && _password != null && _serverUrl != null) return;
+    if (_authenticated &&
+        _username != null &&
+        _password != null &&
+        _serverUrl != null) {
+      return;
+    }
 
     // Try restoring from storage
     final creds = await _config.readCredentials();
@@ -548,7 +711,9 @@ class NextcloudClientAdapter extends CloudStorageClient {
     final cleanPath = _normalizePath(path);
     final encodedUsername = Uri.encodeComponent(username);
     final encodedPath = cleanPath.split('/').map(Uri.encodeComponent).join('/');
-    return Uri.parse('$serverUrl/remote.php/dav/files/$encodedUsername$encodedPath');
+    return Uri.parse(
+      '$serverUrl/remote.php/dav/files/$encodedUsername$encodedPath',
+    );
   }
 
   /// Ensure path starts with / and has no trailing slash (unless root).
@@ -605,24 +770,31 @@ class NextcloudClientAdapter extends CloudStorageClient {
 
     try {
       final doc = xml.XmlDocument.parse(body);
-      final responses = doc.findAllElements('response',
-          namespace: 'DAV:');
+      final responses = doc.findAllElements('response', namespace: 'DAV:');
 
       for (final response in responses) {
-        final hrefNode = response.findElements('href', namespace: 'DAV:').firstOrNull;
+        final hrefNode = response
+            .findElements('href', namespace: 'DAV:')
+            .firstOrNull;
         final href = hrefNode?.innerText ?? '';
 
         // Get the last non-empty path segment as the display name
         final hrefDecoded = Uri.decodeComponent(href);
-        final segments = hrefDecoded.split('/').where((s) => s.isNotEmpty).toList();
+        final segments = hrefDecoded
+            .split('/')
+            .where((s) => s.isNotEmpty)
+            .toList();
         final name = segments.isNotEmpty ? segments.last : '';
 
         // Resource type: check for <d:collection/>
         final resourceType = response
             .findAllElements('resourcetype', namespace: 'DAV:')
             .firstOrNull;
-        final isDir = resourceType != null &&
-            resourceType.findAllElements('collection', namespace: 'DAV:').isNotEmpty;
+        final isDir =
+            resourceType != null &&
+            resourceType
+                .findAllElements('collection', namespace: 'DAV:')
+                .isNotEmpty;
 
         // Content length
         int? size;
@@ -702,9 +874,10 @@ class NextcloudClientAdapter extends CloudStorageClient {
   Future<String?> getFileETag(String remotePath) async {
     await _ensureAuth();
     final uri = _davUri(_serverUrl!, _username!, _normalizePath(remotePath));
-    final resp = await http.head(uri, headers: {
-      'Authorization': _basicAuth(_username!, _password!),
-    });
+    final resp = await http.head(
+      uri,
+      headers: {'Authorization': _basicAuth(_username!, _password!)},
+    );
     if (resp.statusCode != 200) return null;
     final etag = resp.headers['etag'];
     return etag?.replaceAll('"', '');
@@ -719,14 +892,18 @@ class NextcloudClientAdapter extends CloudStorageClient {
   ) async {
     await _ensureAuth();
     final uri = _davUri(_serverUrl!, _username!, _normalizePath(remotePath));
-    final resp = await http.get(uri, headers: {
-      'Authorization': _basicAuth(_username!, _password!),
-      'Range': 'bytes=$offset-${offset + length - 1}',
-    });
+    final resp = await http.get(
+      uri,
+      headers: {
+        'Authorization': _basicAuth(_username!, _password!),
+        'Range': 'bytes=$offset-${offset + length - 1}',
+      },
+    );
 
     if (resp.statusCode != 206 && resp.statusCode != 200) {
-      throw NextcloudOperationFailure(NextcloudOperationCode.rangeDownload,
-          'Nextcloud range download failed (HTTP ${resp.statusCode})', {'status': resp.statusCode});
+      throw Exception(
+        'Nextcloud range download failed (HTTP ${resp.statusCode})',
+      );
     }
     return resp.bodyBytes;
   }
@@ -770,7 +947,8 @@ class NextcloudClientAdapter extends CloudStorageClient {
     final file = dart_io.File(localPath);
     final fileSize = await file.length();
     final transferId = 'crisp-delta-${DateTime.now().millisecondsSinceEpoch}';
-    final uploadsBase = '$_serverUrl/remote.php/dav/uploads/${Uri.encodeComponent(_username!)}/$transferId';
+    final uploadsBase =
+        '$_serverUrl/remote.php/dav/uploads/${Uri.encodeComponent(_username!)}/$transferId';
     final authHeader = _basicAuth(_username!, _password!);
 
     // 1. MKCOL — create transfer directory
@@ -786,7 +964,9 @@ class NextcloudClientAdapter extends CloudStorageClient {
     final raf = await file.open();
     try {
       for (int offset = 0; offset < fileSize; offset += chunkSize) {
-        final end = (offset + chunkSize > fileSize) ? fileSize : offset + chunkSize;
+        final end = (offset + chunkSize > fileSize)
+            ? fileSize
+            : offset + chunkSize;
         final buf = Uint8List(end - offset);
         await raf.readInto(buf);
 
@@ -797,7 +977,9 @@ class NextcloudClientAdapter extends CloudStorageClient {
         putReq.bodyBytes = buf;
         final putResp = await http.Response.fromStream(await putReq.send());
         if (putResp.statusCode != 201 && putResp.statusCode != 204) {
-          throw NextcloudOperationFailure(NextcloudOperationCode.chunkUpload, 'Chunked PUT failed at offset $offset (${putResp.statusCode})', {'offset': offset, 'status': putResp.statusCode});
+          throw Exception(
+            'Chunked PUT failed at offset $offset (${putResp.statusCode})',
+          );
         }
       }
     } finally {
@@ -805,7 +987,11 @@ class NextcloudClientAdapter extends CloudStorageClient {
     }
 
     // 3. MOVE — assemble at destination
-    final destPath = _davUri(_serverUrl!, _username!, _normalizePath(remotePath)).toString();
+    final destPath = _davUri(
+      _serverUrl!,
+      _username!,
+      _normalizePath(remotePath),
+    ).toString();
     final moveReq = http.Request('MOVE', Uri.parse('$uploadsBase/.file'));
     moveReq.headers['Authorization'] = authHeader;
     moveReq.headers['Destination'] = destPath;
@@ -841,31 +1027,41 @@ class NextcloudClientAdapter extends CloudStorageClient {
 
         // POST /api/blocks/{remotePath}?offset={offset}&size={size}
         final blockUri = Uri.parse(
-            '$appBase/api/blocks/$encodedPath?offset=${op.offset}&size=${op.size}');
-        final resp = await http.post(blockUri, headers: {
-          'Authorization': authHeader,
-          'Content-Type': 'application/octet-stream',
-        }, body: buf);
+          '$appBase/api/blocks/$encodedPath?offset=${op.offset}&size=${op.size}',
+        );
+        final resp = await http.post(
+          blockUri,
+          headers: {
+            'Authorization': authHeader,
+            'Content-Type': 'application/octet-stream',
+          },
+          body: buf,
+        );
 
         if (resp.statusCode != 200 && resp.statusCode != 204) {
-          throw NextcloudOperationFailure(NextcloudOperationCode.deltaUpload,
-              'Delta block upload failed at offset ${op.offset} (${resp.statusCode})', {'offset': op.offset, 'status': resp.statusCode});
+          throw Exception(
+            'Delta block upload failed at offset ${op.offset} (${resp.statusCode})',
+          );
         }
       }
 
       // Finalize: tell the server we're done so it can update the file's mtime/etag.
       // Pass ?size=N so the server truncates if the file shrank.
       final localSize = await dart_io.File(localPath).length();
-      final finalizeUri = Uri.parse('$appBase/api/finalize/$encodedPath?size=$localSize');
+      final finalizeUri = Uri.parse(
+        '$appBase/api/finalize/$encodedPath?size=$localSize',
+      );
       await http.post(finalizeUri, headers: {'Authorization': authHeader});
     } finally {
       await raf.close();
     }
 
-    _log.info('Delta upload via server app: $remotePath '
-        '(${plan.changedBlockIndices.length}/${plan.operations.length} blocks, '
-        '${plan.transferSize} bytes transferred, '
-        '${plan.savingsPercent.toStringAsFixed(1)}% savings)');
+    _log.info(
+      'Delta upload via server app: $remotePath '
+      '(${plan.changedBlockIndices.length}/${plan.operations.length} blocks, '
+      '${plan.transferSize} bytes transferred, '
+      '${plan.savingsPercent.toStringAsFixed(1)}% savings)',
+    );
   }
 
   /// Fetch block map from the server-side CrispCloud delta app.
@@ -878,9 +1074,10 @@ class NextcloudClientAdapter extends CloudStorageClient {
     final encodedPath = Uri.encodeComponent(remotePath);
     final uri = Uri.parse('$appBase/api/blockmap/$encodedPath');
 
-    final resp = await http.get(uri, headers: {
-      'Authorization': _basicAuth(_username!, _password!),
-    });
+    final resp = await http.get(
+      uri,
+      headers: {'Authorization': _basicAuth(_username!, _password!)},
+    );
 
     if (resp.statusCode != 200) return null;
 
@@ -908,15 +1105,17 @@ class NextcloudClientAdapter extends CloudStorageClient {
     String remotePath, {
     String? cacheDir,
     void Function(int processedBlocks, int totalBlocks, int processedBytes)?
-        onProgress,
+    onProgress,
   }) async {
     if (!deltaSyncEnabled) return null;
 
     final file = dart_io.File(localPath);
     final fileSize = await file.length();
 
-    if (!_deltaSyncService.shouldUseDeltaSync(fileSize,
-        minSize: deltaSyncMinSize)) {
+    if (!_deltaSyncService.shouldUseDeltaSync(
+      fileSize,
+      minSize: deltaSyncMinSize,
+    )) {
       return null; // File too small, caller should use normal upload
     }
 
@@ -929,7 +1128,10 @@ class NextcloudClientAdapter extends CloudStorageClient {
     // Fall back to local cache
     if (remoteMap == null && cacheDir != null) {
       final cachePath = _deltaSyncService.blockMapCachePath(
-          cacheDir, remotePath, 'nextcloud');
+        cacheDir,
+        remotePath,
+        'nextcloud',
+      );
       remoteMap = await _deltaSyncService.loadBlockMap(cachePath);
 
       // Validate cached map against current remote ETag
@@ -959,22 +1161,32 @@ class NextcloudClientAdapter extends CloudStorageClient {
     final delta = _deltaSyncService.compareBlockMaps(localMap, remoteMap);
 
     if (delta.changedBlocks.isEmpty) {
-      _log.info('Delta sync: $remotePath is identical (${delta.totalBlocks} blocks)');
+      _log.info(
+        'Delta sync: $remotePath is identical (${delta.totalBlocks} blocks)',
+      );
       return delta;
     }
 
-    _log.info('Delta sync: $remotePath — ${delta.changedBlocks.length}/${delta.totalBlocks} blocks changed, '
-        '${delta.savingsPercent.toStringAsFixed(1)}% savings');
+    _log.info(
+      'Delta sync: $remotePath — ${delta.changedBlocks.length}/${delta.totalBlocks} blocks changed, '
+      '${delta.savingsPercent.toStringAsFixed(1)}% savings',
+    );
 
     // 4. Build transfer plan and upload
     final plan = _deltaSyncService.createTransferPlan(
-        delta, TransferDirection.upload, localMap);
+      delta,
+      TransferDirection.upload,
+      localMap,
+    );
     await uploadDeltaBlocks(remotePath, localPath, plan);
 
     // 5. Cache the new block map for next sync
     if (cacheDir != null) {
       final cachePath = _deltaSyncService.blockMapCachePath(
-          cacheDir, remotePath, 'nextcloud');
+        cacheDir,
+        remotePath,
+        'nextcloud',
+      );
       await _deltaSyncService.saveBlockMap(localMap, cachePath);
     }
 
@@ -989,7 +1201,7 @@ class NextcloudClientAdapter extends CloudStorageClient {
     String localPath, {
     String? cacheDir,
     void Function(int processedBlocks, int totalBlocks, int processedBytes)?
-        onProgress,
+    onProgress,
   }) async {
     if (!deltaSyncEnabled) return null;
 
@@ -997,8 +1209,10 @@ class NextcloudClientAdapter extends CloudStorageClient {
     if (!file.existsSync()) return null; // No local file to diff against
 
     final fileSize = await file.length();
-    if (!_deltaSyncService.shouldUseDeltaSync(fileSize,
-        minSize: deltaSyncMinSize)) {
+    if (!_deltaSyncService.shouldUseDeltaSync(
+      fileSize,
+      minSize: deltaSyncMinSize,
+    )) {
       return null;
     }
 
@@ -1025,7 +1239,10 @@ class NextcloudClientAdapter extends CloudStorageClient {
 
     // Build download plan and apply using Range GET
     final plan = _deltaSyncService.createTransferPlan(
-        delta, TransferDirection.download, remoteMap);
+      delta,
+      TransferDirection.download,
+      remoteMap,
+    );
 
     await _deltaSyncService.applyDelta(
       plan,
@@ -1039,9 +1256,14 @@ class NextcloudClientAdapter extends CloudStorageClient {
     // Cache updated local block map
     if (cacheDir != null) {
       final newLocalMap = await _deltaSyncService.computeBlockMap(
-          localPath, blockSize: deltaSyncBlockSize);
+        localPath,
+        blockSize: deltaSyncBlockSize,
+      );
       final cachePath = _deltaSyncService.blockMapCachePath(
-          cacheDir, remotePath, 'nextcloud');
+        cacheDir,
+        remotePath,
+        'nextcloud',
+      );
       await _deltaSyncService.saveBlockMap(newLocalMap, cachePath);
     }
 

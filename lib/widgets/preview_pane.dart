@@ -4,17 +4,23 @@
 // Supports: images (inline), text/code (read-only), markdown (rendered),
 // PDF (scrollable), video/audio (streaming player), and metadata for other types.
 
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:universal_html/html.dart' as html;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:pdfx/pdfx.dart';
 import 'package:video_player/video_player.dart';
+
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
+import '../providers/providers.dart';
+import '../services/file_operation_backend.dart';
+import '../services/local_file_service.dart';
+import '../services/viewer_spool.dart';
 import '../l10n/pdf_editor_strings.dart';
 import '../services/file_bytes_loader.dart';
 import '../services/internal_viewer_service.dart';
@@ -26,15 +32,29 @@ import 'code_highlighting.dart';
 
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../l10n/preview_media_strings.dart';
-import '../l10n/file_bytes_error_strings.dart';
+
+import '../l10n/app_localizations.dart';
+
 import 'package:flutter_highlight/flutter_highlight.dart';
 import 'package:flutter_highlight/themes/monokai-sublime.dart';
 import 'package:flutter_highlight/themes/github.dart';
+
 import '../services/log_service.dart';
 
 /// File types we can preview inline.
-enum PreviewType { image, svg, text, markdown, csv, pdf, video, audio, office, font, none }
+enum PreviewType {
+  image,
+  svg,
+  text,
+  markdown,
+  csv,
+  pdf,
+  video,
+  audio,
+  office,
+  font,
+  none,
+}
 
 PreviewType _classifyFile(String name) {
   final ext = name.split('.').last.toLowerCase();
@@ -160,11 +180,7 @@ class PreviewPane extends ConsumerStatefulWidget {
   final FileItem? file;
   final PanelSide side;
 
-  const PreviewPane({
-    super.key,
-    required this.file,
-    required this.side,
-  });
+  const PreviewPane({super.key, required this.file, required this.side});
 
   @override
   ConsumerState<PreviewPane> createState() => _PreviewPaneState();
@@ -175,6 +191,10 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
   Uint8List? _previewBytes;
   String? _textContent;
   PdfController? _pdfController;
+  PdfDocument? _pdfDocument;
+  ViewerSpool? _spool;
+  LocalFileService? _mediaLocal;
+  int _loadToken = 0;
   VideoPlayerController? _videoController;
   String? _mediaBlobUrl; // Web: blob URL for HTML5 audio/video
   bool _loading = false;
@@ -186,7 +206,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
   void didUpdateWidget(PreviewPane oldWidget) {
     super.didUpdateWidget(oldWidget);
     // Reload preview when file changes
-    if (widget.file != _loadedFile) {
+    if (!identical(widget.file, _loadedFile) || widget.side != oldWidget.side) {
       _loadPreview();
     }
   }
@@ -199,197 +219,249 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
 
   @override
   void dispose() {
-    _pdfController?.dispose();
-    _videoController?.dispose();
+    ++_loadToken;
+    _releaseResources();
     super.dispose();
   }
 
+  void _releaseResources() {
+    final pdf = _pdfController;
+    final document = _pdfDocument;
+    final video = _videoController;
+    final spool = _spool;
+    final local = _mediaLocal;
+    final blob = _mediaBlobUrl;
+    _pdfController = null;
+    _pdfDocument = null;
+    _videoController = null;
+    _spool = null;
+    _mediaLocal = null;
+    _mediaBlobUrl = null;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      pdf?.dispose();
+      try {
+        await document?.close();
+      } catch (_) {}
+      try {
+        await video?.dispose();
+      } catch (_) {}
+      try {
+        await local?.endStreamAccess();
+      } catch (_) {}
+      try {
+        await spool?.close();
+      } catch (_) {}
+      if (blob != null && kIsWeb) html.Url.revokeObjectUrl(blob);
+    });
+  }
+
+  bool _sameRequest(FileItem file, int token) =>
+      mounted && token == _loadToken && identical(file, _loadedFile);
+
   void _loadPreview() {
     final file = widget.file;
-    _log.debug('loadPreview: ${file?.name} side=${widget.side.name} type=${file != null ? _classifyFile(file.name).name : "null"}');
+    final token = ++_loadToken;
+    _releaseResources();
     _previewBytes = null;
     _textContent = null;
-    _pdfController?.dispose();
-    _pdfController = null;
-    _videoController?.dispose();
-    _videoController = null;
-    _mediaBlobUrl = null;
     _error = null;
-    _errorArgs = {};
+    _loading = false;
     _loadedFile = file;
-
     if (file == null || file.isFolder) {
       setState(() {});
       return;
     }
-
-    final previewType = _classifyFile(file.name);
-    if (previewType == PreviewType.none) {
+    final type = _classifyFile(file.name);
+    if (type == PreviewType.none) {
       setState(() {});
       return;
     }
-
-    // Video/audio: size limits are more generous (100 MB) since they stream
-    final maxSize = previewType == PreviewType.text || previewType == PreviewType.markdown
+    final origin = ref
+        .read(panelProvider(widget.side))
+        .originForOperation(file);
+    if (origin == null || !origin.isCurrent) {
+      setState(
+        () => _error = 'The original preview source is unavailable. Refresh or reopen the file.',
+      );
+      return;
+    }
+    final media = type == PreviewType.video || type == PreviewType.audio;
+    final maxSize = type == PreviewType.text || type == PreviewType.markdown
         ? 5 * 1024 * 1024
-        : previewType == PreviewType.video || previewType == PreviewType.audio
-            ? 100 * 1024 * 1024
-            : 20 * 1024 * 1024;
-    if (file.size != null && file.size! > maxSize) {
-      setState(() {
-        _error = 'fileTooLarge';
-        _errorArgs = {'size': formatBytes(file.size!)};
-      });
+        : media
+        ? 100 * 1024 * 1024
+        : 20 * 1024 * 1024;
+    if ((!media || kIsWeb || !origin.source.isLocal) &&
+        file.size != null &&
+        file.size! > maxSize) {
+      setState(
+        () => _error =
+            'File too large for inline preview (${formatBytes(file.size!)}). Open the F3 viewer.',
+      );
       return;
     }
-
     setState(() => _loading = true);
-
-    // Video/audio: download to temp file and play via VideoPlayerController
-    if (previewType == PreviewType.video || previewType == PreviewType.audio) {
-      _fetchMediaPreview(file, previewType);
-      return;
+    if (media) {
+      unawaited(_fetchMediaPreview(file, origin, token));
+    } else {
+      unawaited(_fetchPreview(file, type, origin, token));
     }
-
-    _fetchPreview(file, previewType);
   }
 
-  Future<void> _fetchPreview(FileItem file, PreviewType type) async {
+  Future<void> _fetchPreview(
+    FileItem file,
+    PreviewType type,
+    PanelFileOrigin origin,
+    int token,
+  ) async {
     try {
-      // Local files: read from filesystem (or web FS bridge); remote: cache
-      // + download. Sizes are pre-checked in _loadPreview; the caps guard
-      // files whose size header was missing.
-      final effectiveMax = type == PreviewType.video || type == PreviewType.audio
-          ? 100 * 1024 * 1024
-          : type == PreviewType.text || type == PreviewType.markdown
-              ? 5 * 1024 * 1024
-              : 20 * 1024 * 1024;
-      final bytes =
-          await loadFileBytes(ref, file, widget.side, capBytes: effectiveMax);
-
-      if (!mounted || _loadedFile != file) return; // stale
-
-      if (type == PreviewType.font) {
-        setState(() {
-          _previewBytes = bytes;
-          _loading = false;
-        });
-      } else if (type == PreviewType.image || type == PreviewType.svg) {
-        setState(() {
-          _previewBytes = bytes;
-          _loading = false;
-        });
-      } else if (type == PreviewType.pdf) {
-        try {
-          final doc = await PdfDocument.openData(bytes);
-          _pdfController = PdfController(document: Future.value(doc));
-          setState(() => _loading = false);
-        } catch (e) {
-          _log.warn('operation failed', e);
-          setState(() {
-            _error = 'pdfFailed';
-            _errorArgs = {'error': localizedFileBytesError(context, e)};
-            _loading = false;
-          });
-        }
-      } else if (type == PreviewType.office) {
-        // Extract text from Office documents (DOCX/XLSX/PPTX/ODT).
-        final strings = PreviewMediaStrings(context);
-        try {
-          _textContent = await _extractOfficeText(bytes, file.name, strings);
-        } catch (e) {
-          _log.warn('operation failed', e);
-          _textContent = strings.text('extractFailed');
-        }
-        setState(() => _loading = false);
-      } else if (type == PreviewType.csv || type == PreviewType.text || type == PreviewType.markdown) {
-        // Decode as text (BOM/UTF-16 aware, UTF-8 with Latin-1 fallback).
-        try {
-          _textContent = InternalViewerService.decodeTextForView(bytes).text;
-        } catch (e) {
-          _log.warn('operation failed', e);
-          _textContent = PreviewMediaStrings(context).text('binary');
-        }
-        setState(() => _loading = false);
+      final limit = type == PreviewType.text || type == PreviewType.markdown
+          ? 5 * 1024 * 1024
+          : 20 * 1024 * 1024;
+      final bytes = await loadFileBytes(
+        ref,
+        file,
+        widget.side,
+        capBytes: limit,
+        origin: origin,
+      );
+      if (!_sameRequest(file, token)) return;
+      if (!origin.isCurrent) {
+        throw const FileBytesLoadException(
+          'The original preview source is unavailable.',
+        );
       }
-    } catch (e) {
-      _log.warn('operation failed', e);
-      if (!mounted || _loadedFile != file) return;
-      setState(() {
-        _error = 'previewFailed';
-            _errorArgs = {'error': localizedFileBytesError(context, e)};
-        _loading = false;
-      });
-    }
-  }
-
-  Future<void> _fetchMediaPreview(FileItem file, PreviewType type) async {
-    try {
-      Uint8List bytes;
-
-      if (widget.side == PanelSide.local && file.path != null) {
-        // Local file: play directly from file path
-        if (!kIsWeb) {
-          final controller = VideoPlayerController.file(File(file.path!));
-          await controller.initialize();
-          if (!mounted || _loadedFile != file) {
-            controller.dispose();
-            return;
+      if (type == PreviewType.pdf) {
+        final document = await PdfDocument.openData(bytes);
+        if (!_sameRequest(file, token) || !origin.isCurrent) {
+          await document.close();
+          if (!origin.isCurrent) {
+            throw const FileBytesLoadException(
+              'The original preview source is unavailable.',
+            );
           }
-          setState(() {
-            _videoController = controller;
-            _loading = false;
-          });
           return;
         }
-        // Web fallback: read bytes via the shared loader
-        bytes = await loadFileBytes(ref, file, widget.side);
+        _pdfDocument = document;
+        _pdfController = PdfController(document: Future.value(document));
+      } else if (type == PreviewType.office) {
+        final text = await _extractOfficeText(bytes, file.name);
+        if (!_sameRequest(file, token)) return;
+        if (!origin.isCurrent) {
+          throw const FileBytesLoadException(
+            'The original preview source is unavailable.',
+          );
+        }
+        _textContent = text;
+      } else if (type == PreviewType.csv ||
+          type == PreviewType.text ||
+          type == PreviewType.markdown) {
+        _textContent = InternalViewerService.decodeTextForView(bytes).text;
       } else {
-        // Remote file: download via the shared loader (cache first)
-        bytes = await loadFileBytes(ref, file, widget.side);
+        _previewBytes = bytes;
       }
+      setState(() => _loading = false);
+    } catch (error) {
+      _log.warn('preview failed', error);
+      if (!_sameRequest(file, token)) return;
+      setState(() {
+        _error = 'Preview failed: $error';
+        _loading = false;
+      });
+    }
+  }
 
-      if (!mounted || _loadedFile != file) return;
-
+  Future<void> _fetchMediaPreview(
+    FileItem file,
+    PanelFileOrigin origin,
+    int token,
+  ) async {
+    ViewerSpool? spool;
+    LocalFileService? local;
+    VideoPlayerController? controller;
+    var retained = false;
+    try {
       if (kIsWeb) {
-        // Web: create blob URL for HTML5 audio/video element
-        final ext = file.name.split('.').last.toLowerCase();
-        final mimeType = _mimeTypeForExt(ext);
-        final blob = html.Blob([bytes], mimeType);
-        final blobUrl = html.Url.createObjectUrlFromBlob(blob);
+        final bytes = await loadFileBytes(
+          ref,
+          file,
+          widget.side,
+          capBytes: 100 * 1024 * 1024,
+          origin: origin,
+        );
+        if (!_sameRequest(file, token)) return;
+        if (!origin.isCurrent) {
+          throw const FileBytesLoadException(
+            'The original preview source is unavailable.',
+          );
+        }
+        final blob = html.Blob([bytes], _mimeTypeForExt(file.extension));
         setState(() {
-          _mediaBlobUrl = blobUrl;
+          _mediaBlobUrl = html.Url.createObjectUrlFromBlob(blob);
           _loading = false;
         });
         return;
       }
-
-      // Write to temp file for VideoPlayerController
-      final tempDir = await getTemporaryDirectory();
-      final ext = file.name.contains('.') ? '.${file.name.split('.').last}' : '';
-      final tempFile = File('${tempDir.path}/crispcloud_preview$ext');
-      await tempFile.writeAsBytes(bytes);
-
-      final controller = VideoPlayerController.file(tempFile);
-      await controller.initialize();
-
-      if (!mounted || _loadedFile != file) {
-        controller.dispose();
-        return;
+      late String path;
+      if (origin.source.isLocal && file.path != null) {
+        final localService = ref.read(localFileServiceProvider);
+        if (!origin.isCurrent ||
+            !await localService.beginStreamAccess(file.path!)) {
+          throw const FileBytesLoadException(
+            'Access to the original media file was not granted.',
+          );
+        }
+        local = localService;
+        path = file.path!;
+      } else {
+        final backend = fileOperationBackend(
+          source: origin.source,
+          local: ref.read(localFileServiceProvider),
+          isCurrent: () => mounted && origin.isCurrent,
+        );
+        spool = await createViewerSpool(
+          backend,
+          file,
+          maxBytes: 100 * 1024 * 1024,
+          isCancelled: () => !_sameRequest(file, token),
+        );
+        path = spool.path;
       }
-
+      if (!_sameRequest(file, token)) return;
+      controller = VideoPlayerController.file(File(path));
+      await controller.initialize();
+      if (!_sameRequest(file, token)) return;
+      if (!origin.isCurrent) {
+        throw const FileBytesLoadException(
+          'The original preview source is unavailable.',
+        );
+      }
       setState(() {
         _videoController = controller;
+        _spool = spool;
+        _mediaLocal = local;
         _loading = false;
       });
-    } catch (e) {
-      _log.warn('operation failed', e);
-      if (!mounted || _loadedFile != file) return;
+      retained = true;
+    } catch (error) {
+      _log.warn('media preview failed', error);
+      if (!_sameRequest(file, token)) return;
       setState(() {
-        _error = 'mediaFailed';
-            _errorArgs = {'error': localizedFileBytesError(context, e)};
+        _error = 'Media preview failed: $error';
         _loading = false;
       });
+    } finally {
+      if (!retained) {
+        try {
+          await controller?.dispose();
+        } catch (_) {}
+        try {
+          await local?.endStreamAccess();
+        } catch (_) {}
+        try {
+          await spool?.close();
+        } catch (_) {}
+      }
     }
   }
 
@@ -405,8 +477,10 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
           children: [
             Icon(Icons.preview, size: 48, color: theme.disabledColor),
             const SizedBox(height: 8),
-            Text(PreviewMediaStrings(context).text('select'),
-                style: TextStyle(color: theme.disabledColor)),
+            Text(
+              AppLocalizations.of(context)!.selectFileToPreview,
+              style: TextStyle(color: theme.disabledColor),
+            ),
           ],
         ),
       );
@@ -419,9 +493,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: theme.colorScheme.surfaceContainerHighest,
-            border: Border(
-              bottom: BorderSide(color: theme.dividerColor),
-            ),
+            border: Border(bottom: BorderSide(color: theme.dividerColor)),
           ),
           child: Row(
             children: [
@@ -437,20 +509,39 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
                   children: [
                     Text(
                       file.name,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     Row(
                       children: [
                         if (file.size != null)
-                          Text(formatBytes(file.size!),
-                              style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant)),
+                          Text(
+                            formatBytes(file.size!),
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
                         if (file.size != null && file.updatedAt != null)
-                          Text(' • ', style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant)),
+                          Text(
+                            ' • ',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
                         if (file.updatedAt != null)
-                          Text(formatDateFull(file.updatedAt!),
-                              style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant)),
+                          Text(
+                            formatDateFull(file.updatedAt!),
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
                       ],
                     ),
                   ],
@@ -494,8 +585,11 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
             children: [
               Icon(Icons.error_outline, size: 36, color: theme.disabledColor),
               const SizedBox(height: 8),
-              Text(PreviewMediaStrings(context).text(_error!, _errorArgs), style: TextStyle(color: theme.disabledColor, fontSize: 12),
-                  textAlign: TextAlign.center),
+              Text(
+                _error!,
+                style: TextStyle(color: theme.disabledColor, fontSize: 12),
+                textAlign: TextAlign.center,
+              ),
             ],
           ),
         ),
@@ -513,10 +607,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
         minScale: 0.5,
         maxScale: 5.0,
         child: Center(
-          child: SvgPicture.memory(
-            _previewBytes!,
-            fit: BoxFit.contain,
-          ),
+          child: SvgPicture.memory(_previewBytes!, fit: BoxFit.contain),
         ),
       );
     }
@@ -573,7 +664,10 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
                   controller: _pdfController!,
                   builder: (_, __, page, total) => Text(
                     '$page / $total',
-                    style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
                 IconButton(
@@ -586,8 +680,10 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.last_page, size: 20),
-                  tooltip: PreviewMediaStrings(context).text('lastPage'),
-                  onPressed: () => _pdfController!.jumpToPage(_pdfController!.pagesCount ?? 1),
+                  tooltip: AppLocalizations.of(context)!.lastPage,
+                  onPressed: () => _pdfController!.jumpToPage(
+                    _pdfController!.pagesCount ?? 1,
+                  ),
                 ),
               ],
             ),
@@ -616,7 +712,8 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
     }
 
     // Markdown preview
-    if (_textContent != null && _classifyFile(file.name) == PreviewType.markdown) {
+    if (_textContent != null &&
+        _classifyFile(file.name) == PreviewType.markdown) {
       return Container(
         color: theme.colorScheme.surfaceContainerLowest,
         child: Markdown(
@@ -646,7 +743,11 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
               _textContent!,
               language: lang,
               theme: isDark ? monokaiSublimeTheme : githubTheme,
-              textStyle: const TextStyle(fontFamily: 'monospace', fontSize: 12, height: 1.4),
+              textStyle: const TextStyle(
+                fontFamily: 'monospace',
+                fontSize: 12,
+                height: 1.4,
+              ),
               padding: const EdgeInsets.all(8),
             ),
           ),
@@ -674,7 +775,9 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
 
   Widget _buildMetadataView(BuildContext context, FileItem file) {
     final theme = Theme.of(context);
-    final ext = file.name.contains('.') ? file.name.split('.').last.toUpperCase() : '';
+    final ext = file.name.contains('.')
+        ? file.name.split('.').last.toUpperCase()
+        : '';
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -693,20 +796,22 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
                 color: theme.colorScheme.primaryContainer,
                 borderRadius: BorderRadius.circular(4),
               ),
-              child: Text(ext, style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.onPrimaryContainer,
-              )),
+              child: Text(
+                ext,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.onPrimaryContainer,
+                ),
+              ),
             ),
             const SizedBox(height: 12),
           ],
           if (file.size != null)
             _infoRow(context, PreviewMediaStrings(context).text('size'), formatBytes(file.size!)),
           if (file.updatedAt != null)
-            _infoRow(context, PreviewMediaStrings(context).text('modified'), formatDateFull(file.updatedAt!)),
-          if (file.path != null)
-            _infoRow(context, PreviewMediaStrings(context).text('path'), file.path!),
+            _infoRow(context, 'Modified', formatDateFull(file.updatedAt!)),
+          if (file.path != null) _infoRow(context, 'Path', file.path!),
           if (file.uuid != null && file.uuid != file.path)
             _infoRow(context, 'UUID', file.uuid!),
         ],
@@ -722,15 +827,17 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
         children: [
           SizedBox(
             width: 70,
-            child: Text(label,
-                style: TextStyle(
-                    fontSize: 11,
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.w500)),
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
           Expanded(
-            child: SelectableText(value,
-                style: const TextStyle(fontSize: 11)),
+            child: SelectableText(value, style: const TextStyle(fontSize: 11)),
           ),
         ],
       ),

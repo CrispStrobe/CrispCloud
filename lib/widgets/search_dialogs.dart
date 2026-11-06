@@ -7,9 +7,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
+
 import '../models/file_item.dart';
+import '../models/file_search_query.dart';
+import '../services/file_selection_pattern.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
+import '../services/file_list_paths.dart';
 import 'file_list_view.dart' show getFileIcon;
 import 'saved_searches_dialog.dart'
     show showSavedSearchesDialog, showSaveSearchDialog;
@@ -20,56 +24,8 @@ import '../l10n/search_dialog_strings.dart';
 // Public API
 // ---------------------------------------------------------------------------
 
-void showSearchDialog(BuildContext context, WidgetRef ref) {
-  final controller = TextEditingController();
-  final panelContext = context;
-
-  showDialog(
-    context: context,
-    builder: (dialogContext) => AlertDialog(
-      title: Text(SearchDialogStrings(context).text('fuzzy')),
-      content: TextField(
-        controller: controller,
-        decoration: InputDecoration(
-          labelText: SearchDialogStrings(context).text('query'),
-          border: OutlineInputBorder(),
-          prefixIcon: Icon(Icons.search),
-        ),
-        autofocus: true,
-        onSubmitted: (value) async {
-          if (value.isNotEmpty) {
-            Navigator.pop(dialogContext);
-            final results = await ref.read(searchProvider).searchFiles(value);
-            if (panelContext.mounted) {
-              showSearchResultsDialog(panelContext, ref, value,
-                  results['folders'] ?? [], results['files'] ?? []);
-            }
-          }
-        },
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(dialogContext),
-          child: Text(AppLocalizations.of(context)!.cancel),
-        ),
-        ElevatedButton(
-          onPressed: () async {
-            if (controller.text.isNotEmpty) {
-              Navigator.pop(dialogContext);
-              final results =
-                  await ref.read(searchProvider).searchFiles(controller.text);
-              if (panelContext.mounted) {
-                showSearchResultsDialog(panelContext, ref, controller.text,
-                    results['folders'] ?? [], results['files'] ?? []);
-              }
-            }
-          },
-          child: Text(AppLocalizations.of(context)!.search),
-        ),
-      ],
-    ),
-  );
-}
+void showSearchDialog(BuildContext context, WidgetRef ref) =>
+    showFindDialog(context, ref);
 
 void showFindDialog(BuildContext context, WidgetRef ref) {
   showDialog(
@@ -78,83 +34,225 @@ void showFindDialog(BuildContext context, WidgetRef ref) {
   );
 }
 
-void showSearchResultsDialog(BuildContext context, WidgetRef ref,
-    String query, List<FileItem> folders, List<FileItem> files,
-    {Map<String, String>? snippets}) {
+void showSearchResultsDialog(
+  BuildContext context,
+  WidgetRef ref,
+  String query,
+  List<FileItem> folders,
+  List<FileItem> files, {
+  Map<String, String>? snippets,
+  PanelSide side = PanelSide.remote,
+  List<String> messages = const [],
+}) {
   final allItems = [...folders, ...files];
+  final selected = Set<FileItem>.identity();
 
-  showDialog(
+  Future<void> openParent(BuildContext dialogContext, FileItem item) async {
+    try {
+      final panel = ref.read(panelProvider(side));
+      final origin =
+          ref.read(searchProvider).originForResult(item) ??
+          panel.originForOperation(item);
+      if (origin == null || !origin.isCurrent || item.path == null) {
+        throw StateError(
+          'The original source is no longer current. Run the search again.',
+        );
+      }
+      await panel.navigateToPath(
+        p.dirname(item.path!),
+        selectItem: item,
+        origin: origin,
+      );
+      if (dialogContext.mounted) Navigator.pop(dialogContext);
+      panel.focusList();
+    } catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(error.toString())));
+      }
+    }
+  }
+
+  showDialog<void>(
     context: context,
-    builder: (ctx) => AlertDialog(
-      title: Text(SearchDialogStrings(context).value('results', query)),
-      content: SizedBox(
-        width: double.maxFinite,
-        height: 400,
-        child: allItems.isEmpty
-            ? Center(child: Text(SearchDialogStrings(context).text('none')))
-            : ListView.builder(
-                itemCount: allItems.length,
-                itemBuilder: (ctx2, index) {
-                  final item = allItems[index];
-                  final snippet = snippets?[item.path ?? item.name];
-                  return ListTile(
-                    leading:
-                        Icon(item.isFolder ? Icons.folder : getFileIcon(item.name)),
-                    title: Text(p.basename(item.name)),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          p.dirname(item.path ?? '/'),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        if (snippet != null && snippet.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 2),
-                            child: Text(
-                              snippet,
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontStyle: FontStyle.italic,
-                                color: Theme.of(ctx).colorScheme.onSurfaceVariant,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                      ],
+    builder: (ctx) => StatefulBuilder(
+      builder: (ctx, update) => AlertDialog(
+        title: Text('Search Results for "$query"'),
+        content: SizedBox(
+          width: 720,
+          height: 420,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (messages.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    messages.join('\n'),
+                    maxLines: 4,
+                    style: TextStyle(color: Theme.of(ctx).colorScheme.error),
+                  ),
+                ),
+              if (allItems.isNotEmpty)
+                Row(
+                  children: [
+                    Checkbox(
+                      tristate: true,
+                      value: selected.isEmpty
+                          ? false
+                          : selected.length == allItems.length
+                          ? true
+                          : null,
+                      onChanged: (_) => update(() {
+                        if (selected.length == allItems.length) {
+                          selected.clear();
+                        } else {
+                          selected.addAll(allItems);
+                        }
+                      }),
                     ),
-                    onTap: () {
-                      if (item.path != null) {
-                        final parentPath = p.dirname(item.path!);
-                        ref
-                            .read(panelProvider(PanelSide.remote))
-                            .navigateToPath(parentPath, selectItem: item);
-                        Navigator.pop(ctx);
-                      }
-                    },
-                  );
-                },
+                    Expanded(
+                      child: Text(
+                        '${allItems.length} result(s) · ${selected.length} selected',
+                      ),
+                    ),
+                    TextButton.icon(
+                      icon: const Icon(Icons.copy, size: 16),
+                      label: const Text('Copy paths'),
+                      onPressed: () async {
+                        try {
+                          final targets = selected.isEmpty
+                              ? allItems
+                              : selected;
+                          final paths = targets.map((item) {
+                            if (item.path == null) {
+                              throw StateError(
+                                'A result has no original path.',
+                              );
+                            }
+                            return item.path!;
+                          });
+                          await Clipboard.setData(
+                            ClipboardData(text: FileListPaths.encode(paths)),
+                          );
+                        } catch (error) {
+                          if (ctx.mounted) {
+                            ScaffoldMessenger.of(ctx).showSnackBar(
+                              SnackBar(content: Text(error.toString())),
+                            );
+                          }
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              Expanded(
+                child: allItems.isEmpty
+                    ? const Center(child: Text('No results found.'))
+                    : ListView.builder(
+                        itemCount: allItems.length,
+                        itemBuilder: (ctx2, index) {
+                          final item = allItems[index];
+                          final snippet = snippets?[item.path ?? item.name];
+                          return ListTile(
+                            selected: selected.contains(item),
+                            leading: Checkbox(
+                              value: selected.contains(item),
+                              onChanged: (_) => update(() {
+                                if (!selected.remove(item)) selected.add(item);
+                              }),
+                            ),
+                            title: Row(
+                              children: [
+                                Icon(
+                                  item.isFolder
+                                      ? Icons.folder
+                                      : getFileIcon(item.name),
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 6),
+                                Expanded(child: Text(p.basename(item.name))),
+                              ],
+                            ),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Tooltip(
+                                  message:
+                                      item.path ?? 'Original path unavailable',
+                                  child: Text(
+                                    item.path ?? 'Original path unavailable',
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                if (snippet != null && snippet.isNotEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 2),
+                                    child: Text(
+                                      snippet,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontStyle: FontStyle.italic,
+                                        color: Theme.of(ctx)
+                                            .colorScheme
+                                            .onSurfaceVariant,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            trailing: IconButton(
+                              tooltip: 'Open containing folder',
+                              onPressed: item.path == null
+                                  ? null
+                                  : () => openParent(ctx, item),
+                              icon: const Icon(Icons.folder_open),
+                            ),
+                            onTap: () => update(() {
+                              if (!selected.remove(item)) selected.add(item);
+                            }),
+                          );
+                        },
+                      ),
               ),
-      ),
-      actions: [
-        if (allItems.isNotEmpty)
-          TextButton.icon(
-            icon: const Icon(Icons.folder_special_outlined, size: 16),
-            label: Text(SearchDialogStrings(context).text('folder')),
-            onPressed: () {
-              ref
-                  .read(searchProvider)
-                  .setSearchResults(allItems, asFolder: true);
-              Navigator.pop(ctx);
-            },
+            ],
           ),
-        TextButton(
-          onPressed: () => Navigator.pop(ctx),
-          child: Text(AppLocalizations.of(context)!.close),
         ),
-      ],
+        actions: [
+          if (allItems.isNotEmpty)
+            FilledButton.icon(
+              icon: const Icon(Icons.playlist_add, size: 16),
+              label: Text(
+                selected.isEmpty
+                    ? 'Feed all to panel'
+                    : 'Feed selected to panel',
+              ),
+              onPressed: () {
+                final targets = selected.isEmpty
+                    ? allItems
+                    : allItems.where(selected.contains).toList();
+                ref
+                    .read(searchProvider)
+                    .setSearchResults(
+                      targets,
+                      asFolder: true,
+                      side: side,
+                      title: 'Search: $query',
+                    );
+                ref.read(activePanelProvider.notifier).state = side;
+                Navigator.pop(ctx);
+                ref.read(panelProvider(side)).focusList();
+              },
+            ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(AppLocalizations.of(context)!.close),
+          ),
+        ],
+      ),
     ),
   );
 }
@@ -174,111 +272,172 @@ class _FindDialog extends StatefulWidget {
 }
 
 class _FindDialogState extends State<_FindDialog> {
-  final _patternCtrl = TextEditingController();
+  final _patternCtrl = TextEditingController(text: '*');
+  final _contentCtrl = TextEditingController();
+  final _rootsCtrl = TextEditingController();
+  final _excludeCtrl = TextEditingController();
+  final _depthCtrl = TextEditingController();
   final _minSizeCtrl = TextEditingController();
   final _maxSizeCtrl = TextEditingController();
-
   bool _useRegex = false;
   bool _searchContents = false;
-
-  // Type-filter chips
+  bool _caseSensitive = false;
+  bool _fullPath = false;
+  bool _recursive = true;
+  bool _includeFiles = true;
+  bool _includeFolders = true;
+  bool _includeHidden = true;
+  bool _contentRegex = false;
+  bool _contentCaseSensitive = false;
+  bool _contentNegated = false;
+  bool _searchArchives = false;
+  bool _running = false;
+  String _encoding = 'auto';
+  String? _error;
   final Set<FileTypeCategory> _selectedCategories = {};
-
-  // Size units
   _SizeUnit _minSizeUnit = _SizeUnit.kb;
   _SizeUnit _maxSizeUnit = _SizeUnit.mb;
-
-  // Date range
   DateTime? _dateAfter;
   DateTime? _dateBefore;
+  late final PanelSide _side;
+  late final SearchNotifier _search;
 
   @override
   void initState() {
     super.initState();
-    _patternCtrl.addListener(() => setState(() {}));
+    _side = widget.ref.read(activePanelProvider);
+    _search = widget.ref.read(searchProvider)..addListener(_changed);
+    _rootsCtrl.text = widget.ref.read(panelProvider(_side)).currentPath;
+  }
+
+  void _changed() {
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
-    _patternCtrl.dispose();
-    _minSizeCtrl.dispose();
-    _maxSizeCtrl.dispose();
+    _search.removeListener(_changed);
+    if (_running) _search.cancelSearch();
+    for (final controller in [
+      _patternCtrl,
+      _contentCtrl,
+      _rootsCtrl,
+      _excludeCtrl,
+      _depthCtrl,
+      _minSizeCtrl,
+      _maxSizeCtrl,
+    ]) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
-  String get _remotePath =>
-      widget.ref.read(panelProvider(PanelSide.remote)).currentPath;
-
-  // Build filters from UI state and push them to the search provider
-  void _applyFiltersToProvider() {
-    final search = widget.ref.read(searchProvider);
-    // Start from a clean slate so stale values from a previous search are gone.
-    search.clearFilters();
-
-    final extensions = extensionsForCategories(_selectedCategories);
-
-    int? minBytes;
-    if (_minSizeCtrl.text.isNotEmpty) {
-      final v = double.tryParse(_minSizeCtrl.text);
-      if (v != null) minBytes = (v * _minSizeUnit.multiplier).round();
-    }
-    int? maxBytes;
-    if (_maxSizeCtrl.text.isNotEmpty) {
-      final v = double.tryParse(_maxSizeCtrl.text);
-      if (v != null) maxBytes = (v * _maxSizeUnit.multiplier).round();
+  FileSearchQuery _query() {
+    int? bytes(TextEditingController controller, _SizeUnit unit) {
+      if (controller.text.trim().isEmpty) return null;
+      final value = double.tryParse(controller.text);
+      if (value == null || !value.isFinite || value < 0) {
+        throw const FormatException('Enter valid non-negative file sizes.');
+      }
+      return (value * unit.multiplier).round();
     }
 
-    search.setFilters(
-      filterByType: extensions,
-      filterByMinSize: minBytes,
-      filterByMaxSize: maxBytes,
-      filterByDateAfter: _dateAfter,
-      filterByDateBefore: _dateBefore,
+    final depth = _depthCtrl.text.trim().isEmpty
+        ? null
+        : int.tryParse(_depthCtrl.text);
+    if (_depthCtrl.text.trim().isNotEmpty && depth == null) {
+      throw const FormatException('Depth must be a whole number.');
+    }
+    if (_searchContents && _contentCtrl.text.isEmpty) {
+      throw const FormatException('Enter the content to find.');
+    }
+    final query = FileSearchQuery(
+      namePattern: _patternCtrl.text,
+      nameMode: _useRegex ? FilePatternMode.regex : FilePatternMode.wildcard,
+      caseSensitive: _caseSensitive,
+      matchFullPath: _fullPath,
+      roots: _rootsCtrl.text
+          .split('\n')
+          .map((root) => root.trim())
+          .where((root) => root.isNotEmpty)
+          .toList(),
+      recursive: _recursive,
+      maxDepth: depth,
+      includeFiles: _includeFiles,
+      includeFolders: _includeFolders,
+      includeHidden: _includeHidden,
+      excludeDirectories: _excludeCtrl.text.trim(),
+      contentPattern: _searchContents ? _contentCtrl.text : '',
+      contentRegex: _contentRegex,
+      contentCaseSensitive: _contentCaseSensitive,
+      contentEncoding: _encoding,
+      contentNegated: _contentNegated,
+      searchArchives: _searchArchives,
+      extensions: extensionsForCategories(_selectedCategories),
+      minSize: bytes(_minSizeCtrl, _minSizeUnit),
+      maxSize: bytes(_maxSizeCtrl, _maxSizeUnit),
+      modifiedAfter: _dateAfter,
+      modifiedBefore: _dateBefore,
     );
+    query.validate();
+    return query;
   }
 
   Future<void> _doFind() async {
-    if (_patternCtrl.text.isEmpty) return;
-    _applyFiltersToProvider();
-    Navigator.pop(context);
-
-    final ref = widget.ref;
-    final panelCtx = widget.panelContext;
-
-    if (_searchContents) {
-      // Full-text search (search inside file contents)
-      final results =
-          await ref.read(searchProvider).fullTextSearch(_patternCtrl.text);
-      final snippets = ref.read(searchProvider).lastSnippets;
-      if (panelCtx.mounted) {
+    if (_running) return;
+    try {
+      final query = _query();
+      setState(() {
+        _running = true;
+        _error = null;
+      });
+      final results = await _search.runQuery(query, side: _side);
+      if (!mounted) return;
+      setState(() => _running = false);
+      if (results.isEmpty && _search.searchErrors.isNotEmpty) {
+        setState(() => _error = _search.searchErrors.join('\n'));
+        return;
+      }
+      final messages = [
+        if (_search.wasCancelled)
+          'Search cancelled; showing the results collected so far.',
+        ..._search.searchErrors,
+      ];
+      Navigator.pop(context);
+      if (widget.panelContext.mounted) {
         showSearchResultsDialog(
-          panelCtx, ref, _patternCtrl.text, [], results,
-          snippets: snippets,
+          widget.panelContext,
+          widget.ref,
+          query.namePattern,
+          [],
+          results,
+          side: _side,
+          snippets: _search.lastSnippets,
+          messages: messages,
         );
       }
-    } else if (_useRegex) {
-      try {
-        final regex = RegExp(_patternCtrl.text, caseSensitive: false);
-        final activePanel = ref.read(activePanelProvider);
-        final panel = ref.read(panelProvider(activePanel));
-        final allFiles =
-            panel.files?.where((f) => regex.hasMatch(f.name)).toList() ?? [];
-        final filtered = ref.read(searchProvider).applyFilters(allFiles);
-        if (panelCtx.mounted) {
-          showSearchResultsDialog(panelCtx, ref, _patternCtrl.text, [], filtered);
-        }
-      } catch (e) {
-        if (panelCtx.mounted) {
-          ScaffoldMessenger.of(panelCtx).showSnackBar(
-            SnackBar(content: Text(SearchDialogStrings(panelCtx).value('badRegex', e))),
-          );
-        }
-      }
-    } else {
-      final results = await ref.read(searchProvider).findFiles(_patternCtrl.text);
-      if (panelCtx.mounted) {
-        showSearchResultsDialog(panelCtx, ref, _patternCtrl.text, [], results);
-      }
+    } catch (error) {
+      if (mounted)
+        setState(() {
+          _running = false;
+          _error = error.toString();
+        });
+    }
+  }
+
+  Future<void> _save() async {
+    try {
+      final query = _query();
+      _search.configureQuery(query);
+      await showSaveSearchDialog(
+        context,
+        widget.ref,
+        query: query.contentPattern.isEmpty
+            ? query.namePattern
+            : query.contentPattern,
+      );
+    } catch (error) {
+      if (mounted) setState(() => _error = error.toString());
     }
   }
 
@@ -289,7 +448,7 @@ class _FindDialogState extends State<_FindDialog> {
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );
-    if (picked != null) {
+    if (picked != null && mounted)
       setState(() {
         if (isAfter) {
           _dateAfter = picked;
@@ -297,234 +456,299 @@ class _FindDialogState extends State<_FindDialog> {
           _dateBefore = picked;
         }
       });
-    }
   }
 
+  Widget _toggle(String label, bool value, ValueChanged<bool> change) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Checkbox(
+        value: value,
+        onChanged: _running
+            ? null
+            : (value) => setState(() => change(value ?? false)),
+      ),
+      Text(label),
+    ],
+  );
+
   @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return AlertDialog(
-      title: Text(SearchDialogStrings(context).value('findIn', p.basename(_remotePath))),
-      content: SingleChildScrollView(
+  Widget build(BuildContext context) => AlertDialog(
+    title: Text(
+      'Find in ${_side == PanelSide.local ? 'left' : 'right'} panel source',
+    ),
+    content: SizedBox(
+      width: 700,
+      child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Pattern field
             TextField(
               controller: _patternCtrl,
-              decoration: InputDecoration(
-                labelText: _useRegex
-                    ? SearchDialogStrings(context).text('regexPattern')
-                    : SearchDialogStrings(context).text('pattern'),
-                border: const OutlineInputBorder(),
-                prefixIcon: const Icon(Icons.find_in_page),
-              ),
+              enabled: !_running,
               autofocus: true,
+              decoration: const InputDecoration(
+                labelText: 'Filename mask or regex',
+                helperText: '*.jpg;*.png|thumb*   •   Regex uses ^ and \$ for whole names',
+                border: OutlineInputBorder(),
+              ),
               onSubmitted: (_) => _doFind(),
             ),
-            const SizedBox(height: 8),
-
-            // Regex toggle
-            Row(
+            Wrap(
               children: [
-                Checkbox(
-                  value: _useRegex,
-                  onChanged: _searchContents
-                      ? null
-                      : (v) => setState(() => _useRegex = v ?? false),
+                _toggle('Regex', _useRegex, (v) => _useRegex = v),
+                _toggle(
+                  'Case sensitive',
+                  _caseSensitive,
+                  (v) => _caseSensitive = v,
                 ),
-                Text(SearchDialogStrings(context).text('useRegex'), style: TextStyle(fontSize: 13)),
-                const Spacer(),
-                if (_useRegex)
-                  Text(
-                    SearchDialogStrings(context).text('filterListing'),
-                    style: TextStyle(
-                        fontSize: 11, color: colorScheme.onSurfaceVariant),
-                  ),
+                _toggle('Full path', _fullPath, (v) => _fullPath = v),
               ],
             ),
-
-            // Search file contents toggle
-            Row(
+            TextField(
+              controller: _rootsCtrl,
+              enabled: !_running,
+              minLines: 1,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                labelText: 'Search directories (one absolute path per line)',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            Wrap(
               children: [
-                Checkbox(
-                  value: _searchContents,
-                  onChanged: (v) => setState(() {
-                    _searchContents = v ?? false;
-                    if (_searchContents) _useRegex = false;
-                  }),
+                _toggle('Subdirectories', _recursive, (v) => _recursive = v),
+                _toggle('Files', _includeFiles, (v) => _includeFiles = v),
+                _toggle('Folders', _includeFolders, (v) => _includeFolders = v),
+                _toggle(
+                  'Hidden items',
+                  _includeHidden,
+                  (v) => _includeHidden = v,
                 ),
-                Text(SearchDialogStrings(context).text('contents'), style: TextStyle(fontSize: 13)),
-                const Spacer(),
-                if (_searchContents)
-                  Text(
-                    SearchDialogStrings(context).text('fullText'),
-                    style: TextStyle(
-                        fontSize: 11, color: colorScheme.onSurfaceVariant),
-                  ),
               ],
             ),
-
-            const Divider(height: 20),
-
-            // --- File type chips ---
-            Text(SearchDialogStrings(context).text('fileType'),
-                style: Theme.of(context)
-                    .textTheme
-                    .labelMedium
-                    ?.copyWith(color: colorScheme.onSurfaceVariant)),
-            const SizedBox(height: 6),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _excludeCtrl,
+                    enabled: !_running,
+                    decoration: const InputDecoration(
+                      labelText: 'Exclude directories (e.g. .git;node_modules)',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                SizedBox(
+                  width: 130,
+                  child: TextField(
+                    controller: _depthCtrl,
+                    enabled: !_running && _recursive,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Maximum depth',
+                      hintText: 'Unlimited',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            Wrap(
+              children: [
+                _toggle(
+                  'Search contents',
+                  _searchContents,
+                  (v) => _searchContents = v,
+                ),
+                _toggle(
+                  'Search inside archives',
+                  _searchArchives,
+                  (v) => _searchArchives = v,
+                ),
+              ],
+            ),
+            if (_searchContents) ...[
+              TextField(
+                controller: _contentCtrl,
+                enabled: !_running,
+                decoration: const InputDecoration(
+                  labelText: 'Containing text or regex',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  _toggle(
+                    'Content regex',
+                    _contentRegex,
+                    (v) => _contentRegex = v,
+                  ),
+                  _toggle(
+                    'Case sensitive',
+                    _contentCaseSensitive,
+                    (v) => _contentCaseSensitive = v,
+                  ),
+                  _toggle(
+                    'Does not contain',
+                    _contentNegated,
+                    (v) => _contentNegated = v,
+                  ),
+                  DropdownButton<String>(
+                    value: _encoding,
+                    items: [
+                      for (final encoding in [
+                        'auto',
+                        'utf8',
+                        'utf16le',
+                        'utf16be',
+                        'latin1',
+                      ])
+                        DropdownMenuItem(
+                          value: encoding,
+                          child: Text(encoding),
+                        ),
+                    ],
+                    onChanged: _running
+                        ? null
+                        : (value) => setState(() => _encoding = value!),
+                  ),
+                ],
+              ),
+              const Text(
+                'Content is read from the selected source, up to 64 MiB per file. Files beyond the limit are reported. Symbolic links are not followed.',
+                style: TextStyle(fontSize: 12),
+              ),
+            ],
+            if (_searchArchives)
+              const Text(
+                'Archive hits refer to the containing archive. The matching member appears in the result details.',
+                style: TextStyle(fontSize: 12),
+              ),
+            const Divider(),
             Wrap(
               spacing: 6,
-              runSpacing: 4,
-              children: FileTypeCategory.values.map((cat) {
-                final selected = _selectedCategories.contains(cat);
-                return FilterChip(
-                  label: Text(_categoryLabel(context, cat)),
-                  selected: selected,
-                  onSelected: (v) => setState(() {
-                    if (v) {
-                      _selectedCategories.add(cat);
-                    } else {
-                      _selectedCategories.remove(cat);
-                    }
-                  }),
-                );
-              }).toList(),
+              children: [
+                for (final category in FileTypeCategory.values)
+                  FilterChip(
+                    label: Text(_categoryLabel(category)),
+                    selected: _selectedCategories.contains(category),
+                    onSelected: _running
+                        ? null
+                        : (selected) => setState(() {
+                            if (selected) {
+                              _selectedCategories.add(category);
+                            } else {
+                              _selectedCategories.remove(category);
+                            }
+                          }),
+                  ),
+              ],
             ),
-
-            const Divider(height: 20),
-
-            // --- Size range ---
-            Text(SearchDialogStrings(context).text('size'),
-                style: Theme.of(context)
-                    .textTheme
-                    .labelMedium
-                    ?.copyWith(color: colorScheme.onSurfaceVariant)),
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
             Row(
               children: [
                 Expanded(
                   child: TextField(
                     controller: _minSizeCtrl,
-                    decoration: InputDecoration(
-                      labelText: SearchDialogStrings(context).text('min'),
-                      border: OutlineInputBorder(),
-                      isDense: true,
+                    enabled: !_running,
+                    decoration: const InputDecoration(
+                      labelText: 'Minimum size',
                     ),
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(
-                          RegExp(r'^\d*\.?\d*'))
-                    ],
+                    keyboardType: TextInputType.number,
                   ),
                 ),
-                const SizedBox(width: 6),
                 _SizeUnitDropdown(
                   value: _minSizeUnit,
-                  onChanged: (u) => setState(() => _minSizeUnit = u),
+                  onChanged: (value) => setState(() => _minSizeUnit = value),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 16),
                 Expanded(
                   child: TextField(
                     controller: _maxSizeCtrl,
-                    decoration: InputDecoration(
-                      labelText: SearchDialogStrings(context).text('max'),
-                      border: OutlineInputBorder(),
-                      isDense: true,
+                    enabled: !_running,
+                    decoration: const InputDecoration(
+                      labelText: 'Maximum size',
                     ),
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(
-                          RegExp(r'^\d*\.?\d*'))
-                    ],
+                    keyboardType: TextInputType.number,
                   ),
                 ),
-                const SizedBox(width: 6),
                 _SizeUnitDropdown(
                   value: _maxSizeUnit,
-                  onChanged: (u) => setState(() => _maxSizeUnit = u),
+                  onChanged: (value) => setState(() => _maxSizeUnit = value),
                 ),
               ],
             ),
-
-            const Divider(height: 20),
-
-            // --- Date range ---
-            Text(SearchDialogStrings(context).text('modified'),
-                style: Theme.of(context)
-                    .textTheme
-                    .labelMedium
-                    ?.copyWith(color: colorScheme.onSurfaceVariant)),
-            const SizedBox(height: 6),
             Row(
               children: [
                 Expanded(
                   child: _DatePickerTile(
-                    label: SearchDialogStrings(context).text('after'),
+                    label: 'Modified after',
                     date: _dateAfter,
                     onTap: () => _pickDate(isAfter: true),
-                    onClear: _dateAfter != null
-                        ? () => setState(() => _dateAfter = null)
-                        : null,
+                    onClear: () => setState(() => _dateAfter = null),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 12),
                 Expanded(
                   child: _DatePickerTile(
-                    label: SearchDialogStrings(context).text('before'),
+                    label: 'Modified before',
                     date: _dateBefore,
                     onTap: () => _pickDate(isAfter: false),
-                    onClear: _dateBefore != null
-                        ? () => setState(() => _dateBefore = null)
-                        : null,
+                    onClear: () => setState(() => _dateBefore = null),
                   ),
                 ),
               ],
             ),
+            if (_error != null)
+              Text(
+                _error!,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            if (_running) ...[
+              const LinearProgressIndicator(),
+              Text(
+                '${_search.scannedCount} items searched • ${_search.searchResults.length} results',
+              ),
+              for (final item in _search.searchResults.reversed.take(6))
+                Text(
+                  item.path ?? item.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+            ],
           ],
         ),
       ),
-      actions: [
-        // Saved Searches
-        TextButton.icon(
-          icon: const Icon(Icons.bookmarks_outlined, size: 16),
-          label: Text(SearchDialogStrings(context).text('saved')),
-          onPressed: () {
-            Navigator.pop(context);
-            showSavedSearchesDialog(widget.panelContext, widget.ref);
-          },
-        ),
-        // Save Current Search
-        TextButton.icon(
-          icon: const Icon(Icons.bookmark_add_outlined, size: 16),
-          label: Text(AppLocalizations.of(context)!.save),
-          onPressed: _patternCtrl.text.isEmpty
-              ? null
-              : () async {
-                  // Apply filters before saving so state is captured
-                  _applyFiltersToProvider();
-                  await showSaveSearchDialog(
-                    context,
-                    widget.ref,
-                    query: _patternCtrl.text,
-                  );
-                },
-        ),
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(AppLocalizations.of(context)!.cancel),
-        ),
-        ElevatedButton(
-          onPressed: _doFind,
-          child: Text(SearchDialogStrings(context).text('find')),
-        ),
-      ],
-    );
-  }
+    ),
+    actions: [
+      TextButton(
+        onPressed: _running
+            ? null
+            : () {
+                Navigator.pop(context);
+                showSavedSearchesDialog(widget.panelContext, widget.ref);
+              },
+        child: const Text('Saved searches'),
+      ),
+      TextButton(
+        onPressed: _running ? null : _save,
+        child: const Text('Save query'),
+      ),
+      TextButton(
+        onPressed: _running
+            ? _search.cancelSearch
+            : () => Navigator.pop(context),
+        child: Text(_running ? 'Stop search' : 'Cancel'),
+      ),
+      FilledButton(
+        onPressed: _running ? null : _doFind,
+        child: const Text('Find'),
+      ),
+    ],
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -588,26 +812,32 @@ class _DatePickerTile extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.calendar_today_outlined, size: 14,
-              color: colorScheme.onSurface),
+          Icon(
+            Icons.calendar_today_outlined,
+            size: 14,
+            color: colorScheme.onSurface,
+          ),
           const SizedBox(width: 4),
           Expanded(
             child: Text(
-              date != null
-                  ? '$label: ${_fmt(date!)}'
-                  : label,
+              date != null ? '$label: ${_fmt(date!)}' : label,
               style: TextStyle(
-                  fontSize: 12,
-                  color: date != null
-                      ? colorScheme.onSurface
-                      : colorScheme.onSurfaceVariant),
+                fontSize: 12,
+                color: date != null
+                    ? colorScheme.onSurface
+                    : colorScheme.onSurfaceVariant,
+              ),
               overflow: TextOverflow.ellipsis,
             ),
           ),
           if (onClear != null)
             GestureDetector(
               onTap: onClear,
-              child: Icon(Icons.close, size: 14, color: colorScheme.onSurfaceVariant),
+              child: Icon(
+                Icons.close,
+                size: 14,
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
         ],
       ),

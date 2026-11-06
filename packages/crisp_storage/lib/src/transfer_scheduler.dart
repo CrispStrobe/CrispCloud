@@ -51,13 +51,15 @@ class TransferScheduler<T extends TransferOperation> {
     if (!_disposed) onChanged?.call();
   }
 
-  final int maxConcurrent;
+  int _maxConcurrent;
+  int get maxConcurrent => _maxConcurrent;
   final int maxRetries;
   final Duration retryBaseDelay;
 
   final List<ScheduledTransfer<T>> _pending = [];
   final Map<String, ScheduledTransfer<T>> _active = {};
   final List<ScheduledTransfer<T>> _completed = [];
+  final Map<ScheduledTransfer<T>, Future<void>> _pendingPauseSignals = {};
 
   /// Per-provider rate limits: max concurrent transfers per provider.
   /// Defaults to maxConcurrent if not set.
@@ -71,19 +73,48 @@ class TransferScheduler<T extends TransferOperation> {
 
   TransferScheduler({
     this.onChanged,
-    this.maxConcurrent = 3,
+    int maxConcurrent = 3,
     this.maxRetries = 3,
     this.retryBaseDelay = const Duration(seconds: 2),
-  }) {
+  }) : _maxConcurrent = maxConcurrent {
     if (maxConcurrent < 0 || maxRetries < 0 || retryBaseDelay.isNegative) {
       throw ArgumentError('Invalid transfer scheduler limits');
     }
+  }
+
+  /// Zero stops starting queued work; lowering a limit leaves active work
+  /// intact. Increasing it immediately fills the newly available slots.
+  void setMaxConcurrent(int limit) {
+    if (limit < 0) throw ArgumentError.value(limit, 'limit');
+    _maxConcurrent = limit;
+    _processQueue();
+  }
+
+  /// Resume scheduling after an operation's pause state changes.
+  void refresh() => _processQueue();
+
+  void setPendingPriority(String taskId, int priority) {
+    final index = _pending.indexWhere((task) => task.id == taskId);
+    if (index < 0) return;
+    final task = _pending.removeAt(index);
+    _pendingPauseSignals.remove(task);
+    enqueue(
+      ScheduledTransfer<T>(
+        id: task.id,
+        operation: task.operation,
+        execute: task.execute,
+        onDone: task.onDone,
+        providerName: task.providerName,
+        priority: priority,
+      ),
+    );
   }
 
   /// Set max concurrent transfers for a specific provider.
   void setProviderLimit(String provider, int limit) {
     if (limit < 1) throw ArgumentError.value(limit, 'limit');
     _providerLimits[provider] = limit;
+    _processQueue();
   }
 
   /// Set minimum delay between requests for a provider (rate limiting).
@@ -120,6 +151,20 @@ class TransferScheduler<T extends TransferOperation> {
       }
     }
     _pending.insert(insertIdx, task);
+    // Operations can be cancelled directly by their owner (including a batch
+    // operation shared by several tasks), even while the queue has no slots.
+    unawaited(task.operation.cancellationFuture.then((_) {
+      if (_disposed) return;
+      final index = _pending.indexOf(task);
+      if (index < 0) return;
+      _pending.removeAt(index);
+      _pendingPauseSignals.remove(task);
+      try {
+        task.onDone?.call(const TransferCancelled());
+      } finally {
+        _processQueue();
+      }
+    }));
     _processQueue();
   }
 
@@ -158,6 +203,7 @@ class TransferScheduler<T extends TransferOperation> {
       task.onDone?.call(const TransferCancelled());
     }
     _pending.clear();
+    _pendingPauseSignals.clear();
 
     for (final task in _active.values) {
       task.operation.cancel();
@@ -169,6 +215,7 @@ class TransferScheduler<T extends TransferOperation> {
     final index = _pending.indexWhere((t) => t.id == taskId);
     if (index >= 0) {
       final task = _pending.removeAt(index);
+      _pendingPauseSignals.remove(task);
       task.operation.cancel();
       task.onDone?.call(const TransferCancelled());
       notifyListeners();
@@ -188,12 +235,33 @@ class TransferScheduler<T extends TransferOperation> {
     return _active.values.where((t) => t.providerName == provider).length;
   }
 
+  void _watchPendingPause(ScheduledTransfer<T> task) {
+    final signal = task.operation.pauseFuture;
+    if (signal == null || identical(_pendingPauseSignals[task], signal)) return;
+    _pendingPauseSignals[task] = signal;
+    unawaited(signal.then((_) {
+      if (!identical(_pendingPauseSignals[task], signal)) return;
+      _pendingPauseSignals.remove(task);
+      if (_pending.contains(task)) _processQueue();
+    }));
+  }
+
   void _processQueue() {
     if (_disposed) return;
     final skipped = <ScheduledTransfer<T>>[];
 
     while (_active.length < maxConcurrent && _pending.isNotEmpty) {
       final task = _pending.removeAt(0);
+      if (task.operation.isCancelled) {
+        _pendingPauseSignals.remove(task);
+        task.onDone?.call(const TransferCancelled());
+        continue;
+      }
+      if (task.operation.isPaused) {
+        _watchPendingPause(task);
+        skipped.add(task);
+        continue;
+      }
 
       // Check per-provider limit
       if (task.providerName != null) {
@@ -204,6 +272,7 @@ class TransferScheduler<T extends TransferOperation> {
         }
       }
 
+      _pendingPauseSignals.remove(task);
       _active[task.id] = task;
       _runTask(task);
     }
@@ -230,9 +299,13 @@ class TransferScheduler<T extends TransferOperation> {
   Future<void> _runTask(ScheduledTransfer<T> task) async {
     Object? taskError;
     try {
-      for (var attempt = 0;; attempt++) {
+      for (var attempt = 0; ; attempt++) {
         if (task.operation.isCancelled) throw const TransferCancelled();
-        if (task.operation.isPaused) await task.operation.pauseFuture;
+        while (task.operation.isPaused && !task.operation.isCancelled) {
+          final resumed = task.operation.pauseFuture;
+          if (resumed == null) break;
+          await Future.any([resumed, task.operation.cancellationFuture]);
+        }
         if (task.operation.isCancelled) throw const TransferCancelled();
         final provider = task.providerName;
         if (provider != null) {
@@ -240,8 +313,9 @@ class TransferScheduler<T extends TransferOperation> {
           final now = DateTime.now();
           final last = _providerLastRequest[provider];
           final earliest = last?.add(Duration(milliseconds: minDelay));
-          final slot =
-              earliest != null && earliest.isAfter(now) ? earliest : now;
+          final slot = earliest != null && earliest.isAfter(now)
+              ? earliest
+              : now;
           // Reserve before awaiting so parallel tasks receive distinct slots.
           _providerLastRequest[provider] = slot;
           if (slot.isAfter(now)) {

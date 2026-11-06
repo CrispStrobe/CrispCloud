@@ -68,9 +68,9 @@ void main() {
       expect(svc.canUndo(svc.history.first), isFalse);
     });
 
-    test('canUndo returns true for remote delete', () {
+    test('remote delete without a restore receipt is not undoable', () {
       svc.recordNew(type: ActionType.delete, originalPath: '/x', provider: 'filen');
-      expect(svc.canUndo(svc.history.first), isTrue);
+      expect(svc.canUndo(svc.history.first), isFalse);
     });
 
     test('canUndo returns true for rename', () {
@@ -197,7 +197,7 @@ void main() {
 
     // --- undo: delete (remote with trash restore) ---
 
-    test('undo delete calls restoreFromTrash callback', () async {
+    test('legacy path-only restore is rejected without a captured receipt', () async {
       String? restoredPath;
       final ctx = UndoContext(
         restoreFromTrash: (path) async { restoredPath = path; },
@@ -205,8 +205,8 @@ void main() {
       svc.recordNew(type: ActionType.delete, originalPath: '/remote/file.txt', provider: 'filen');
 
       final result = await svc.undo(svc.history.first.id, ctx);
-      expect(result.success, isTrue);
-      expect(restoredPath, equals('/remote/file.txt'));
+      expect(result.success, isFalse);
+      expect(restoredPath, isNull);
     });
 
     // --- undo: rename (remote) ---

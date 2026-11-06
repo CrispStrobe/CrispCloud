@@ -43,6 +43,7 @@ We also maintain patched Nextcloud and ownCloud desktop clients with delta sync 
 ## Key Features
 
 - **Flexible layout:** dual/single panel toggle, tree sidebar toggle, grid/list toggle, density toggle — all independent and composable
+- **Image gallery and tiles:** adjustable thumbnails, image-only gallery, natural sorting and catalog filters, 0–5 ratings, color labels, favorites and tags. Fullscreen filmstrip/slideshow, linked 2–4-image comparison, image-editor handoff, batch conversion/resizing and contact-sheet export. See [image gallery](docs/image-gallery.md) for controls, format coverage and limits.
 - **Encryption:** AES-256-GCM + Cryptomator vault support + VeraCrypt container detection
 - **Sync engine:** background sync, conflict resolution, selective sync
 - **Backup engine:** scheduled backups with versioning

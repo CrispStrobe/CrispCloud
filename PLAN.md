@@ -498,6 +498,7 @@ CrispCloud becomes the **definitive open-source cloud file manager**: a single, 
 - [x] Go-to-folder dialog (Ctrl+G)
 - [x] Column view (Finder-style) as layout alternative — `FileColumnView` widget, toolbar cycles list→grid→column
 - [x] Grid / Gallery view for image-heavy folders (toggle in toolbar)
+- [x] XnView-style image workspace: distinct Icons/Tiles/Gallery layouts, source-aware thumbnails, natural sorting/filtering, local ratings/labels/tags catalog, filmstrip/slideshow/2–4-image linked comparison, batch conversion and contact sheets — see `docs/image-gallery.md`.
 - [x] Tree view sidebar (expandable folder tree, toggle in app bar)
 
 ### 5.6 Drag & Drop

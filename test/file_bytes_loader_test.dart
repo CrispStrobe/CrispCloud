@@ -7,6 +7,10 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:crisp_cloud/services/filen_config_service.dart';
+import 'package:crisp_cloud/services/cloud_storage_interface.dart';
+import 'package:crisp_cloud/services/secure_storage_service.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,6 +20,8 @@ import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/services/file_bytes_loader.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
+
+import 'support/workflow_fake_client.dart';
 
 void main() {
   group('ViewBytesSource.memory', () {
@@ -31,20 +37,40 @@ void main() {
       expect(source.readSync(200, 10), isEmpty);
 
       source.dispose();
-      expect(
-        () => source.readSync(0, 1),
-        throwsA(isA<StateError>()),
-      );
+      expect(() => source.readSync(0, 1), throwsA(isA<StateError>()));
     });
   });
 
-  testWidgets('local read retries once after access is granted', (tester) async {
+  testWidgets('local read retries once after access is granted', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final dir = await tester.runAsync(
+      () => Directory.systemTemp.createTemp('loader_retry_'),
+    );
+    final file = File('${dir!.path}/x.zip');
+    await tester.runAsync(() => file.writeAsBytes([1, 2, 3]));
+    addTearDown(() => dir.delete(recursive: true));
     late WidgetRef captured;
     final fake = _RetryLocalService();
+    final secure = InMemorySecureStorage();
+    final config = FilenConfigService(configPath: '', secureStorage: secure);
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          authProvider.overrideWith((_) => _LocalTestAuth()),
           localFileServiceProvider.overrideWithValue(fake),
+          secureStorageProvider.overrideWithValue(secure),
+          configPathProvider.overrideWithValue(''),
+          authProvider.overrideWith(
+            (ref) => AuthNotifier(
+              ref,
+              initialProvider: CloudProvider.filen,
+              config: config,
+              configPath: '',
+              secureStorage: secure,
+            ),
+          ),
         ],
         child: Consumer(
           builder: (context, ref, _) {
@@ -58,14 +84,18 @@ void main() {
     final bytes = await tester.runAsync(
       () => loadFileBytes(
         captured,
-        FileItem(name: 'x.zip', path: '/denied/x.zip', isFolder: false),
+        FileItem(name: 'x.zip', path: file.path, isFolder: false),
         PanelSide.local,
+        origin: captured
+            .read(panelProvider(PanelSide.remote))
+            .captureLocalClipboardOrigin(dir.path),
       ),
     );
 
     expect(bytes, <int>[1, 2, 3]);
-    expect(fake.reads, 2);
+    expect(fake.scopeAttempts, greaterThanOrEqualTo(2));
     expect(fake.accessRequests, 1);
+    await tester.pumpWidget(const SizedBox());
   });
 
   group('ViewBytesSource.file', () {
@@ -119,26 +149,47 @@ void main() {
   });
 }
 
-class _RetryLocalService implements LocalFileService {
-  int reads = 0;
+class _LocalTestAuth extends ChangeNotifier implements AuthNotifier {
+  @override
+  final WorkflowFakeClient client = WorkflowFakeClient()..current = false;
+
+  @override
+  bool get isConnected => false;
+
+  @override
+  String? get userEmail => null;
+
+  @override
+  String get providerName => client.providerName;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _RetryLocalService
+    implements LocalFileService, ScopedLocalFileOperations {
+  int scopeAttempts = 0;
   int accessRequests = 0;
 
   @override
-  String currentPath = '/';
+  bool get isConnected => false;
 
   @override
-  String? get grantedBasePath => '/';
+  String? get userEmail => null;
 
   @override
-  Future<Uint8List> readFile(String path, {FileItem? fileItem}) async {
-    reads++;
-    if (reads == 1) {
+  Future<T> withFileOperationAccess<T>(
+    String path,
+    Future<T> Function() action,
+  ) async {
+    scopeAttempts++;
+    if (accessRequests == 0) {
       throw PathAccessException(
         path,
         const OSError('Operation not permitted', 1),
       );
     }
-    return Uint8List.fromList(<int>[1, 2, 3]);
+    return action();
   }
 
   @override
@@ -150,4 +201,3 @@ class _RetryLocalService implements LocalFileService {
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
-

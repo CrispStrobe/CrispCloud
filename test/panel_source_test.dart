@@ -28,8 +28,11 @@ class StubCloudClient extends CloudStorageClient {
   bool get isAuthenticated => false;
 
   @override
-  Future<void> login(String email, String password,
-      {String? twoFactorCode}) async {}
+  Future<void> login(
+    String email,
+    String password, {
+    String? twoFactorCode,
+  }) async {}
 
   @override
   Future<bool> is2faNeeded(String email) async => false;
@@ -47,21 +50,31 @@ class StubCloudClient extends CloudStorageClient {
   Future<Map<String, dynamic>?> resolvePath(String path) async => null;
 
   @override
-  Future<Map<String, dynamic>> listPath(String path) async =>
-      {'folders': <dynamic>[], 'files': <dynamic>[]};
+  Future<Map<String, dynamic>> listPath(String path) async => {
+    'folders': <dynamic>[],
+    'files': <dynamic>[],
+  };
 
   @override
-  Future<void> uploadFile(List<int> fileData, String fileName, String targetPath,
-      {Function(int, int)? onProgress}) async {}
+  Future<void> uploadFile(
+    List<int> fileData,
+    String fileName,
+    String targetPath, {
+    Function(int, int)? onProgress,
+  }) async {}
 
   @override
-  Future<void> downloadFileByPath(String remotePath, String localPath,
-      {Function(int, int)? onProgress}) async {}
+  Future<void> downloadFileByPath(
+    String remotePath,
+    String localPath, {
+    Function(int, int)? onProgress,
+  }) async {}
 
   @override
-  Future<Uint8List> downloadFileBytes(String remotePath,
-      {Function(int, int)? onProgress}) async =>
-      Uint8List(0);
+  Future<Uint8List> downloadFileBytes(
+    String remotePath, {
+    Function(int, int)? onProgress,
+  }) async => Uint8List(0);
 
   @override
   Future<void> createFolderPath(String path) async {}
@@ -236,38 +249,93 @@ void main() {
   // ---- Archive detection ---------------------------------------------------
 
   group('isArchive', () {
-    test('.zip is archive', () => expect(service.isArchive('backup.zip'), isTrue));
-    test('.tar.gz is archive', () => expect(service.isArchive('src.tar.gz'), isTrue));
-    test('.tgz is archive', () => expect(service.isArchive('data.tgz'), isTrue));
+    test(
+      '.zip is archive',
+      () => expect(service.isArchive('backup.zip'), isTrue),
+    );
+    test(
+      '.tar.gz is archive',
+      () => expect(service.isArchive('src.tar.gz'), isTrue),
+    );
+    test(
+      '.tgz is archive',
+      () => expect(service.isArchive('data.tgz'), isTrue),
+    );
     test('.7z is archive', () => expect(service.isArchive('files.7z'), isTrue));
-    test('.rar is archive', () => expect(service.isArchive('docs.rar'), isTrue));
-    test('.txt is not archive', () => expect(service.isArchive('readme.txt'), isFalse));
-    test('.pdf is not archive', () => expect(service.isArchive('report.pdf'), isFalse));
-    test('case insensitive ZIP', () => expect(service.isArchive('BACKUP.ZIP'), isTrue));
+    test(
+      '.rar is archive',
+      () => expect(service.isArchive('docs.rar'), isTrue),
+    );
+    test(
+      '.txt is not archive',
+      () => expect(service.isArchive('readme.txt'), isFalse),
+    );
+    test(
+      '.pdf is not archive',
+      () => expect(service.isArchive('report.pdf'), isFalse),
+    );
+    test(
+      'case insensitive ZIP',
+      () => expect(service.isArchive('BACKUP.ZIP'), isTrue),
+    );
   });
 
   // ---- Container detection -------------------------------------------------
 
   group('isEncryptedContainer', () {
-    test('.vc is container', () => expect(service.isEncryptedContainer('vault.vc'), isTrue));
-    test('.hc is container', () => expect(service.isEncryptedContainer('secure.hc'), isTrue));
-    test('vault.cryptomator is container',
-        () => expect(service.isEncryptedContainer('vault.cryptomator'), isTrue));
-    test('.zip is not container', () => expect(service.isEncryptedContainer('files.zip'), isFalse));
-    test('.txt is not container', () => expect(service.isEncryptedContainer('notes.txt'), isFalse));
+    test(
+      '.vc is container',
+      () => expect(service.isEncryptedContainer('vault.vc'), isTrue),
+    );
+    test(
+      '.hc is container',
+      () => expect(service.isEncryptedContainer('secure.hc'), isTrue),
+    );
+    test(
+      'vault.cryptomator is container',
+      () => expect(service.isEncryptedContainer('vault.cryptomator'), isTrue),
+    );
+    test(
+      '.zip is not container',
+      () => expect(service.isEncryptedContainer('files.zip'), isFalse),
+    );
+    test(
+      '.txt is not container',
+      () => expect(service.isEncryptedContainer('notes.txt'), isFalse),
+    );
   });
 
   // ---- canEnter ------------------------------------------------------------
 
   group('canEnter', () {
-    test('zip can be entered', () => expect(service.canEnter('photos.zip'), isTrue));
-    test('.vc can be entered', () => expect(service.canEnter('data.vc'), isTrue));
-    test('.hc can be entered', () => expect(service.canEnter('data.hc'), isTrue));
-    test('vault.cryptomator can be entered',
-        () => expect(service.canEnter('vault.cryptomator'), isTrue));
-    test('.mp4 cannot be entered', () => expect(service.canEnter('video.mp4'), isFalse));
-    test('.docx cannot be entered', () => expect(service.canEnter('document.docx'), isFalse));
-    test('.7z can be entered', () => expect(service.canEnter('backup.7z'), isTrue));
+    test(
+      'zip can be entered',
+      () => expect(service.canEnter('photos.zip'), isTrue),
+    );
+    test(
+      '.vc can be entered',
+      () => expect(service.canEnter('data.vc'), isTrue),
+    );
+    test(
+      '.hc can be entered',
+      () => expect(service.canEnter('data.hc'), isTrue),
+    );
+    test(
+      'vault.cryptomator can be entered',
+      () => expect(service.canEnter('vault.cryptomator'), isTrue),
+    );
+    test(
+      '.mp4 cannot be entered',
+      () => expect(service.canEnter('video.mp4'), isFalse),
+    );
+    test(
+      '.docx cannot be entered',
+      () => expect(service.canEnter('document.docx'), isFalse),
+    );
+    test(
+      '.7z can be entered',
+      () => expect(service.canEnter('backup.7z'), isTrue),
+    );
   });
 
   // ---- enterArchive --------------------------------------------------------
@@ -305,7 +373,11 @@ void main() {
   group('enterContainer', () {
     test('returns ContainerPanelSource with empty innerPath', () {
       const parent = LocalPanelSource('/mnt');
-      final container = service.enterContainer('/mnt/secure.vc', 'p@ssw0rd', parent);
+      final container = service.enterContainer(
+        '/mnt/secure.vc',
+        'p@ssw0rd',
+        parent,
+      );
       expect(container, isA<ContainerPanelSource>());
       expect(container.containerPath, '/mnt/secure.vc');
       expect(container.innerPath, '');
@@ -356,25 +428,28 @@ void main() {
       expect(result, local);
     });
 
-    test('nested archive: exit inner returns outer archive, exit outer returns local', () {
-      const localParent = LocalPanelSource('/docs');
-      const outerArchive = ArchivePanelSource(
-        archivePath: '/docs/outer.zip',
-        innerPath: '',
-        parent: localParent,
-      );
-      const innerArchive = ArchivePanelSource(
-        archivePath: '/docs/outer.zip',
-        innerPath: 'inner/',
-        parent: outerArchive,
-      );
+    test(
+      'nested archive: exit inner returns outer archive, exit outer returns local',
+      () {
+        const localParent = LocalPanelSource('/docs');
+        const outerArchive = ArchivePanelSource(
+          archivePath: '/docs/outer.zip',
+          innerPath: '',
+          parent: localParent,
+        );
+        const innerArchive = ArchivePanelSource(
+          archivePath: '/docs/outer.zip',
+          innerPath: 'inner/',
+          parent: outerArchive,
+        );
 
-      final afterFirstExit = service.exitToParent(innerArchive);
-      expect(afterFirstExit, outerArchive);
+        final afterFirstExit = service.exitToParent(innerArchive);
+        expect(afterFirstExit, outerArchive);
 
-      final afterSecondExit = service.exitToParent(afterFirstExit);
-      expect(afterSecondExit, localParent);
-    });
+        final afterSecondExit = service.exitToParent(afterFirstExit);
+        expect(afterSecondExit, localParent);
+      },
+    );
   });
 
   // ---- Both panels same type -----------------------------------------------
@@ -507,10 +582,12 @@ void main() {
 
     test('different LocalPanelSource paths are not equal', () {
       expect(
-          const LocalPanelSource('/a') == const LocalPanelSource('/b'), isFalse);
+        const LocalPanelSource('/a') == const LocalPanelSource('/b'),
+        isFalse,
+      );
     });
 
-    test('RemotePanelSource equality by provider + path', () {
+    test('RemotePanelSource equality includes the exact connected client', () {
       final clientA = StubCloudClient('X');
       final clientB = StubCloudClient('X');
       final a = RemotePanelSource(
@@ -523,7 +600,80 @@ void main() {
         client: clientB,
         path: '/p',
       );
-      expect(a, b);
+      expect(a, isNot(b));
+      expect(
+        a,
+        RemotePanelSource(providerName: 'X', client: clientA, path: '/p'),
+      );
+      expect({a, b}.length, 2);
     });
+
+    test(
+      'archive and container equality retains parent account and unlocked session',
+      () {
+        final a = RemotePanelSource(
+          providerName: 'X',
+          client: StubCloudClient('X'),
+          path: '/',
+        );
+        final b = RemotePanelSource(
+          providerName: 'X',
+          client: StubCloudClient('X'),
+          path: '/',
+        );
+        expect(
+          ArchivePanelSource(
+            archivePath: '/same.zip',
+            innerPath: '',
+            parent: a,
+          ),
+          isNot(
+            ArchivePanelSource(
+              archivePath: '/same.zip',
+              innerPath: '',
+              parent: b,
+            ),
+          ),
+        );
+        final session = Object();
+        final first = ContainerPanelSource(
+          containerPath: '/same.vc',
+          innerPath: '',
+          parent: a,
+          unlockSession: session,
+        );
+        expect(
+          first,
+          ContainerPanelSource(
+            containerPath: '/same.vc',
+            innerPath: '',
+            parent: a,
+            unlockSession: session,
+          ),
+        );
+        expect(
+          first,
+          isNot(
+            ContainerPanelSource(
+              containerPath: '/same.vc',
+              innerPath: '',
+              parent: a,
+              unlockSession: Object(),
+            ),
+          ),
+        );
+        expect(
+          first,
+          isNot(
+            ContainerPanelSource(
+              containerPath: '/same.vc',
+              innerPath: '',
+              parent: b,
+              unlockSession: session,
+            ),
+          ),
+        );
+      },
+    );
   });
 }

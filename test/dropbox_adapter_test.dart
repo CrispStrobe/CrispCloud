@@ -1,6 +1,8 @@
 // test/dropbox_adapter_test.dart
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:crisp_cloud/services/dropbox_client_adapter.dart';
@@ -46,13 +48,25 @@ void main() {
   });
 
   group('DropboxClientAdapter capability flags', () {
-    test('supports versioning', () => expect(adapter.supportsVersioning, isTrue));
+    test(
+      'supports versioning',
+      () => expect(adapter.supportsVersioning, isTrue),
+    );
     test('supports sharing', () => expect(adapter.supportsSharing, isTrue));
     test('supports search', () => expect(adapter.supportsSearch, isTrue));
-    test('supports thumbnails', () => expect(adapter.supportsThumbnails, isTrue));
+    test(
+      'supports thumbnails',
+      () => expect(adapter.supportsThumbnails, isTrue),
+    );
     test('supports trash', () => expect(adapter.supportsTrash, isTrue));
-    test('does not support streaming', () => expect(adapter.supportsStreaming, isFalse));
-    test('does not support multipart', () => expect(adapter.supportsMultipart, isFalse));
+    test(
+      'supports bounded streaming',
+      () => expect(adapter.supportsStreaming, isTrue),
+    );
+    test(
+      'does not support multipart',
+      () => expect(adapter.supportsMultipart, isFalse),
+    );
   });
 
   group('DropboxClientAdapter 2FA', () {
@@ -65,9 +79,13 @@ void main() {
     test('login throws on empty app key', () async {
       expect(
         () => adapter.login('', ''),
-        throwsA(isA<Exception>().having(
-          (e) => e.toString(), 'message', contains('App Key is required'),
-        )),
+        throwsA(
+          isA<Exception>().having(
+            (e) => e.toString(),
+            'message',
+            contains('App Key is required'),
+          ),
+        ),
       );
     });
   });
@@ -92,7 +110,10 @@ void main() {
     });
 
     test('clearCredentials removes stored credentials', () async {
-      await configService.saveCredentials({'app_key': 'k', 'refresh_token': 't'});
+      await configService.saveCredentials({
+        'app_key': 'k',
+        'refresh_token': 't',
+      });
       await configService.clearCredentials();
       expect(await configService.readCredentials(), isNull);
     });
@@ -116,7 +137,18 @@ void main() {
         'app_key': 'test',
         'refresh_token': 'invalid-token',
       });
-      expect(await adapter.restoreCredentials(), isFalse);
+      await http.runWithClient(
+        () async {
+          expect(await adapter.restoreCredentials(), isFalse);
+        },
+        () => MockClient((request) async {
+          expect(request.url.host, 'api.dropboxapi.com');
+          return http.Response(
+            '{"result":2000,"error":"Test authentication rejected"}',
+            401,
+          );
+        }),
+      );
     });
   });
 
@@ -141,10 +173,7 @@ void main() {
 
   group('DropboxClientAdapter - shared folders', () {
     test('listSharedFolders throws when not authenticated', () {
-      expect(
-        () => adapter.listSharedFolders(),
-        throwsA(isA<Exception>()),
-      );
+      expect(() => adapter.listSharedFolders(), throwsA(isA<Exception>()));
     });
 
     test('mountSharedFolder throws when not authenticated', () {
@@ -164,10 +193,7 @@ void main() {
 
   group('DropboxClientAdapter - unauthenticated operations', () {
     test('listPath throws when not authenticated', () {
-      expect(
-        () => adapter.listPath('/'),
-        throwsA(isA<Exception>()),
-      );
+      expect(() => adapter.listPath('/'), throwsA(isA<Exception>()));
     });
 
     test('uploadFile throws when not authenticated', () {
@@ -185,10 +211,7 @@ void main() {
     });
 
     test('deletePath throws when not authenticated', () {
-      expect(
-        () => adapter.deletePath('/test.txt'),
-        throwsA(isA<Exception>()),
-      );
+      expect(() => adapter.deletePath('/test.txt'), throwsA(isA<Exception>()));
     });
 
     test('createFolderPath throws when not authenticated', () {
@@ -214,7 +237,10 @@ void main() {
 
     test('computeContentHash handles empty data', () {
       final hash = DropboxClientAdapter.computeContentHash([]);
-      expect(hash.length, equals(64));
+      expect(
+        hash,
+        'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+      );
     });
 
     test('computeContentHash is deterministic', () {
@@ -237,7 +263,9 @@ void main() {
       expect(hash.length, equals(64));
 
       // Single block hash should be different
-      final smallHash = DropboxClientAdapter.computeContentHash(data.sublist(0, 100));
+      final smallHash = DropboxClientAdapter.computeContentHash(
+        data.sublist(0, 100),
+      );
       expect(hash, isNot(equals(smallHash)));
     });
   });
@@ -247,10 +275,7 @@ void main() {
   // ===========================================================================
   group('DropboxClientAdapter - Paper docs', () {
     test('listPaperDocs throws when not authenticated', () {
-      expect(
-        () => adapter.listPaperDocs(),
-        throwsA(isA<Exception>()),
-      );
+      expect(() => adapter.listPaperDocs(), throwsA(isA<Exception>()));
     });
 
     test('listPaperDocs accepts search query', () {

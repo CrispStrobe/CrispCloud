@@ -1,6 +1,6 @@
 // lib/services/plugin_service.dart
 //
-// Plugin API, registry, models, and sandboxed execution context for CrispCloud.
+// First-party plugin API, lifecycle registry, and scoped execution context.
 //
 // Usage:
 //   final registry = PluginRegistry();
@@ -14,6 +14,9 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'log_service.dart';
+import '../utils/async_lock.dart';
+import 'plugin_workspace.dart';
+export 'plugin_workspace.dart';
 
 // ---------------------------------------------------------------------------
 // Enums
@@ -30,15 +33,7 @@ enum PluginCapability {
 }
 
 /// File operations that can trigger plugin hooks.
-enum FileAction {
-  upload,
-  download,
-  delete,
-  rename,
-  move,
-  copy,
-  create,
-}
+enum FileAction { upload, download, delete, rename, move, copy, create }
 
 // ---------------------------------------------------------------------------
 // Models
@@ -65,18 +60,18 @@ class PluginMenuItem {
   });
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'label': label,
-        'icon': icon,
-        'enabled': enabled,
-      };
+    'id': id,
+    'label': label,
+    'icon': icon,
+    'enabled': enabled,
+  };
 
   factory PluginMenuItem.fromJson(Map<String, dynamic> json) => PluginMenuItem(
-        id: json['id'] as String,
-        label: json['label'] as String,
-        icon: json['icon'] as String,
-        enabled: json['enabled'] as bool? ?? true,
-      );
+    id: json['id'] as String,
+    label: json['label'] as String,
+    icon: json['icon'] as String,
+    enabled: json['enabled'] as bool? ?? true,
+  );
 
   @override
   bool operator ==(Object other) =>
@@ -101,24 +96,29 @@ class PluginToolbarButton {
   final String tooltip;
   final String icon;
 
-  /// Key used by the UI to look up the onPressed handler.
+  /// Legacy serialization key. A key alone is not executable.
   final String onPressedKey;
+
+  /// Trusted first-party callback. The host supplies verified local paths only.
+  /// No callback is reconstructed from JSON.
+  final void Function(List<String> filePaths)? onPressed;
 
   const PluginToolbarButton({
     required this.id,
     required this.label,
     required this.tooltip,
     required this.icon,
-    required this.onPressedKey,
+    this.onPressedKey = '',
+    this.onPressed,
   });
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'label': label,
-        'tooltip': tooltip,
-        'icon': icon,
-        'onPressedKey': onPressedKey,
-      };
+    'id': id,
+    'label': label,
+    'tooltip': tooltip,
+    'icon': icon,
+    'onPressedKey': onPressedKey,
+  };
 
   factory PluginToolbarButton.fromJson(Map<String, dynamic> json) =>
       PluginToolbarButton(
@@ -126,7 +126,7 @@ class PluginToolbarButton {
         label: json['label'] as String,
         tooltip: json['tooltip'] as String,
         icon: json['icon'] as String,
-        onPressedKey: json['onPressedKey'] as String,
+        onPressedKey: json['onPressedKey'] as String? ?? '',
       );
 
   @override
@@ -158,10 +158,7 @@ class PluginSettings {
     this.settings = const {},
   });
 
-  PluginSettings copyWith({
-    bool? enabled,
-    Map<String, dynamic>? settings,
-  }) =>
+  PluginSettings copyWith({bool? enabled, Map<String, dynamic>? settings}) =>
       PluginSettings(
         pluginId: pluginId,
         enabled: enabled ?? this.enabled,
@@ -169,17 +166,16 @@ class PluginSettings {
       );
 
   Map<String, dynamic> toJson() => {
-        'pluginId': pluginId,
-        'enabled': enabled,
-        'settings': settings,
-      };
+    'pluginId': pluginId,
+    'enabled': enabled,
+    'settings': settings,
+  };
 
   factory PluginSettings.fromJson(Map<String, dynamic> json) => PluginSettings(
-        pluginId: json['pluginId'] as String,
-        enabled: json['enabled'] as bool? ?? true,
-        settings:
-            (json['settings'] as Map<String, dynamic>?) ?? const {},
-      );
+    pluginId: json['pluginId'] as String,
+    enabled: json['enabled'] as bool? ?? true,
+    settings: (json['settings'] as Map<String, dynamic>?) ?? const {},
+  );
 
   @override
   bool operator ==(Object other) =>
@@ -191,77 +187,63 @@ class PluginSettings {
   int get hashCode => Object.hash(pluginId, enabled);
 
   @override
-  String toString() =>
-      'PluginSettings(pluginId: $pluginId, enabled: $enabled)';
+  String toString() => 'PluginSettings(pluginId: $pluginId, enabled: $enabled)';
 }
 
 // ---------------------------------------------------------------------------
-// PluginContext — sandboxed execution context passed to plugins
+// PluginContext — scoped resources passed to trusted first-party plugins
 // ---------------------------------------------------------------------------
 
-/// Sandboxed context provided to each plugin on initialisation.
-///
-/// Deliberately does NOT expose credentials, secure storage, or raw provider
-/// clients. Plugins may only:
-///   - read/write their own scoped temporary directory,
-///   - read/write their own settings,
-///   - emit log messages.
+/// A narrow convenience API for trusted in-process Dart code. It does not
+/// expose credentials or provider clients, but it is NOT an OS sandbox: Dart
+/// code compiled into the application still has the application's privileges.
 abstract class PluginContext {
-  /// Path to a writable temporary directory scoped to this plugin.
+  /// A real scoped directory on native platforms, or a virtual memory namespace
+  /// on web. Native filesystem APIs are not available on web.
   String get tempDir;
-
-  /// Read the current settings for this plugin (merged with defaults).
   Future<Map<String, dynamic>> getSettings();
-
-  /// Persist updated settings for this plugin.
   Future<void> saveSettings(Map<String, dynamic> settings);
-
-  /// Emit a log message scoped to this plugin.
   void log(String message);
 }
 
-/// Default implementation of [PluginContext] backed by SharedPreferences.
 class _PluginContextImpl implements PluginContext {
-  final String _pluginId;
-  final String _tempDir;
-  final Map<String, dynamic> _defaults;
-  static const _log = Log('PluginContext');
-
-  _PluginContextImpl({
-    required String pluginId,
-    required String tempDir,
-    required Map<String, dynamic> defaults,
-  })  : _pluginId = pluginId,
-        _tempDir = tempDir,
-        _defaults = defaults;
+  _PluginContextImpl(this.id, this.workspace, this.read, this.write);
+  final String id;
+  final PluginWorkspace workspace;
+  final Map<String, dynamic> Function() read;
+  final Future<void> Function(Map<String, dynamic>) write;
+  bool active = true;
+  void _check() {
+    if (!active) throw StateError('This extension context has been disposed.');
+  }
 
   @override
-  String get tempDir => _tempDir;
+  String get tempDir {
+    _check();
+    return workspace.path;
+  }
 
   @override
   Future<Map<String, dynamic>> getSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    final key = _prefsSettingsKey(_pluginId);
-    final raw = prefs.getString(key);
-    if (raw == null) return Map<String, dynamic>.from(_defaults);
-    try {
-      final decoded = jsonDecode(raw) as Map<String, dynamic>;
-      // Merge: defaults fill in any keys not yet saved.
-      return {..._defaults, ...decoded};
-    } catch (_) {
-      return Map<String, dynamic>.from(_defaults);
-    }
+    _check();
+    return read();
   }
 
   @override
   Future<void> saveSettings(Map<String, dynamic> settings) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_prefsSettingsKey(_pluginId), jsonEncode(settings));
+    _check();
+    await write(settings);
   }
 
   @override
   void log(String message) {
-    _log.info('[$_pluginId] $message');
+    _check();
+    const Log('PluginContext').info('[$id] $message');
+  }
+
+  Future<void> close() async {
+    active = false;
+    await workspace.close();
   }
 }
 
@@ -300,7 +282,7 @@ abstract class CrispCloudPlugin {
   List<PluginCapability> get capabilities;
 
   /// Called once when the plugin is loaded (and enabled).
-  /// [context] provides the sandboxed execution environment.
+  /// [context] provides scoped resources, not an operating-system sandbox.
   Future<void> initialize(PluginContext context);
 
   /// Called when the plugin is unloaded or the app shuts down.
@@ -331,238 +313,375 @@ abstract class CrispCloudPlugin {
 ///
 /// Preserves registration order. Use [initializeAll] during app startup
 /// and [disposeAll] on shutdown.
+enum PluginRuntimeStatus { registered, disabled, initializing, ready, failed }
+
+typedef PluginWorkspaceFactory = Future<PluginWorkspace> Function(String id);
+
 class PluginRegistry {
+  PluginRegistry({
+    PluginWorkspaceFactory? workspaceFactory,
+    Future<SharedPreferences> Function()? preferences,
+  }) : _workspaceFactory = workspaceFactory ?? createPluginWorkspace,
+       _preferences = preferences ?? SharedPreferences.getInstance;
   static const _log = Log('PluginRegistry');
-
-  // Ordered list preserves registration order.
+  final PluginWorkspaceFactory _workspaceFactory;
+  final Future<SharedPreferences> Function() _preferences;
+  final _lifecycle = AsyncLock();
+  final _settingsLock = AsyncLock();
   final List<CrispCloudPlugin> _plugins = [];
-
-  // Mutable settings map keyed by plugin id.
   final Map<String, PluginSettings> _settings = {};
+  final Map<String, PluginRuntimeStatus> _status = {};
+  final Map<String, String> _errors = {};
+  final Map<String, _PluginContextImpl> _contexts = {};
+  final Set<String> _loaded = {};
+  final Set<String> _started = {};
 
-  // Whether persistence has been loaded from SharedPreferences.
-  bool _loaded = false;
+  Map<String, String> get errors => Map.unmodifiable(_errors);
+  PluginRuntimeStatus? statusOf(String id) => _status[id];
+  bool isReady(String id) =>
+      _status[id] == PluginRuntimeStatus.ready &&
+      _settings[id]?.enabled == true;
 
-  // ---------------------------------------------------------------------------
-  // Internal helpers
-  // ---------------------------------------------------------------------------
-
-  Future<void> _ensureLoaded() async {
-    if (_loaded) return;
-    await _loadAllSettings();
-    _loaded = true;
+  static Map<String, dynamic> _copySettings(Map<String, dynamic> settings) {
+    final text = jsonEncode(settings);
+    if (utf8.encode(text).length > 1024 * 1024) {
+      throw const FormatException('Extension settings exceed 1 MiB.');
+    }
+    return Map<String, dynamic>.from(jsonDecode(text) as Map);
   }
 
-  Future<void> _loadAllSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    for (final plugin in _plugins) {
+  void _failed(String id, Object error) {
+    _errors[id] = error.toString();
+    _status[id] = PluginRuntimeStatus.failed;
+    _log.error('Extension "$id" failed', error);
+  }
+
+  Future<bool> _loadSettings(CrispCloudPlugin plugin) async {
+    if (_loaded.contains(plugin.id)) return true;
+    try {
+      final prefs = await _preferences();
       final enabled =
-          prefs.getBool(_prefsEnabledKey(plugin.id)) ?? true;
+          prefs.getBool(_prefsEnabledKey(plugin.id)) ??
+          _settings[plugin.id]!.enabled;
+      _settings[plugin.id] = _settings[plugin.id]!.copyWith(enabled: enabled);
       final raw = prefs.getString(_prefsSettingsKey(plugin.id));
-      Map<String, dynamic> savedSettings = {};
-      if (raw != null) {
-        try {
-          savedSettings = jsonDecode(raw) as Map<String, dynamic>;
-        } catch (_) {}
-      }
-      final merged = {...plugin.getDefaultSettings(), ...savedSettings};
+      final saved = raw == null
+          ? <String, dynamic>{}
+          : _copySettings(Map<String, dynamic>.from(jsonDecode(raw) as Map));
       _settings[plugin.id] = PluginSettings(
         pluginId: plugin.id,
         enabled: enabled,
-        settings: merged,
+        settings: _copySettings({...plugin.getDefaultSettings(), ...saved}),
       );
+      _loaded.add(plugin.id);
+      if (!enabled) _status[plugin.id] = PluginRuntimeStatus.disabled;
+      return true;
+    } catch (error) {
+      _failed(plugin.id, error);
+      return false;
     }
   }
 
-  Future<void> _persistEnabled(String id, bool enabled) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_prefsEnabledKey(id), enabled);
-  }
-
-  PluginContext _contextFor(CrispCloudPlugin plugin) => _PluginContextImpl(
-        pluginId: plugin.id,
-        tempDir: '/tmp/crisp_plugins/${plugin.id}',
-        defaults: plugin.getDefaultSettings(),
-      );
-
-  bool _isEnabled(String id) => _settings[id]?.enabled ?? true;
-
-  // ---------------------------------------------------------------------------
-  // Registration
-  // ---------------------------------------------------------------------------
-
-  /// Register a plugin. Throws [ArgumentError] if a plugin with the same [id]
-  /// is already registered.
-  void registerPlugin(CrispCloudPlugin plugin) {
-    if (_plugins.any((p) => p.id == plugin.id)) {
-      throw ArgumentError(
-          'A plugin with id "${plugin.id}" is already registered.');
+  Future<void> _writeSettings(
+    String id,
+    Map<String, dynamic> values, {
+    bool Function()? isCurrent,
+  }) => _settingsLock.synchronized(() async {
+    final plugin = getPlugin(id);
+    if (plugin == null) {
+      throw StateError('The extension is no longer installed.');
     }
-    _plugins.add(plugin);
-    // Set up default settings entry (enable by default).
-    if (!_settings.containsKey(plugin.id)) {
-      _settings[plugin.id] = PluginSettings(
-        pluginId: plugin.id,
-        enabled: true,
-        settings: Map<String, dynamic>.from(plugin.getDefaultSettings()),
-      );
+    final saved = _copySettings(values);
+    final merged = _copySettings({...plugin.getDefaultSettings(), ...saved});
+    final prefs = await _preferences();
+    if (isCurrent?.call() == false) {
+      throw StateError('This extension context has been disposed.');
     }
-    _log.info('Plugin registered', {'id': plugin.id, 'name': plugin.name});
-  }
-
-  /// Unregister a plugin, calling [dispose] on it first.
-  ///
-  /// Does nothing if the plugin is not registered.
-  Future<void> unregisterPlugin(String id) async {
-    final index = _plugins.indexWhere((p) => p.id == id);
-    if (index == -1) return;
-    final plugin = _plugins[index];
-    try {
-      await plugin.dispose();
-    } catch (e) {
-      _log.error('Error disposing plugin "$id"', e);
+    if (!await prefs.setString(_prefsSettingsKey(id), jsonEncode(saved))) {
+      throw StateError('Extension settings could not be saved.');
     }
-    _plugins.removeAt(index);
-    _settings.remove(id);
-    _log.info('Plugin unregistered', {'id': id});
-  }
-
-  // ---------------------------------------------------------------------------
-  // Lookup
-  // ---------------------------------------------------------------------------
-
-  /// Return the plugin with the given [id], or null if not registered.
-  CrispCloudPlugin? getPlugin(String id) {
-    try {
-      return _plugins.firstWhere((p) => p.id == id);
-    } catch (_) {
-      return null;
+    if (isCurrent?.call() == false || !identical(getPlugin(id), plugin)) {
+      throw StateError('This extension context has been disposed.');
     }
-  }
+    _settings[id] = _settings[id]!.copyWith(settings: merged);
+  });
 
-  /// All registered plugins in registration order.
-  List<CrispCloudPlugin> getAllPlugins() => List.unmodifiable(_plugins);
-
-  /// All registered plugins that are currently enabled.
-  List<CrispCloudPlugin> getEnabledPlugins() =>
-      _plugins.where((p) => _isEnabled(p.id)).toList();
-
-  // ---------------------------------------------------------------------------
-  // Enable / disable
-  // ---------------------------------------------------------------------------
-
-  /// Enable or disable a plugin by [id] and persist the state.
-  Future<void> setEnabled(String id, bool enabled) async {
-    if (!_plugins.any((p) => p.id == id)) return;
-    final current = _settings[id] ??
-        PluginSettings(pluginId: id, enabled: enabled);
-    _settings[id] = current.copyWith(enabled: enabled);
-    await _persistEnabled(id, enabled);
-    _log.info('Plugin ${enabled ? "enabled" : "disabled"}', {'id': id});
-  }
-
-  // ---------------------------------------------------------------------------
-  // Lifecycle
-  // ---------------------------------------------------------------------------
-
-  /// Call [initialize] on all currently enabled plugins.
-  Future<void> initializeAll() async {
-    await _ensureLoaded();
-    for (final plugin in getEnabledPlugins()) {
-      try {
-        await plugin.initialize(_contextFor(plugin));
-        _log.info('Plugin initialized', {'id': plugin.id});
-      } catch (e) {
-        _log.error('Plugin "${plugin.id}" failed to initialize', e);
-      }
-    }
-  }
-
-  /// Call [dispose] on all registered plugins and clear the registry.
-  Future<void> disposeAll() async {
-    for (final plugin in List.of(_plugins)) {
+  Future<void> _stop(CrispCloudPlugin plugin) async {
+    final id = plugin.id;
+    _status[id] = PluginRuntimeStatus.disabled;
+    final context = _contexts.remove(id);
+    // Revoke old settings/callback access before awaiting plugin code. Otherwise
+    // a dispose hook could overwrite settings that the user just saved.
+    if (context != null) context.active = false;
+    await _settingsLock.synchronized(() async {});
+    if (_started.remove(id)) {
       try {
         await plugin.dispose();
-      } catch (e) {
-        _log.error('Plugin "${plugin.id}" failed to dispose', e);
+      } catch (error) {
+        _errors[id] = 'Dispose failed: $error';
+        _log.error('Error disposing extension "$id"', error);
       }
+    }
+    if (context != null) {
+      try {
+        await context.close();
+      } catch (error) {
+        _errors[id] = 'Temporary resource cleanup failed: $error';
+      }
+    }
+  }
+
+  Future<bool> _start(CrispCloudPlugin plugin) async {
+    final id = plugin.id;
+    if (isReady(id)) return true;
+    if (_status[id] == PluginRuntimeStatus.failed ||
+        !await _loadSettings(plugin)) {
+      return false;
+    }
+    if (_settings[id]?.enabled != true) {
+      _status[id] = PluginRuntimeStatus.disabled;
+      return false;
+    }
+    _status[id] = PluginRuntimeStatus.initializing;
+    _errors.remove(id);
+    try {
+      final workspace = await _workspaceFactory(id);
+      late final _PluginContextImpl context;
+      context = _PluginContextImpl(
+        id,
+        workspace,
+        () => _copySettings(_settings[id]!.settings),
+        (values) => _writeSettings(
+          id,
+          values,
+          isCurrent: () => context.active && identical(_contexts[id], context),
+        ),
+      );
+      _contexts[id] = context;
+      _started.add(id);
+      await plugin.initialize(context);
+      _status[id] = PluginRuntimeStatus.ready;
+      return true;
+    } catch (error) {
+      await _stop(plugin);
+      _failed(id, error);
+      return false;
+    }
+  }
+
+  void registerPlugin(CrispCloudPlugin plugin, {bool enabledByDefault = true}) {
+    validatePluginId(plugin.id);
+    if (_plugins.any((value) => value.id == plugin.id)) {
+      throw ArgumentError(
+        'An extension with id "${plugin.id}" is already registered.',
+      );
+    }
+    final defaults = _copySettings(plugin.getDefaultSettings());
+    _plugins.add(plugin);
+    _settings[plugin.id] = PluginSettings(
+      pluginId: plugin.id,
+      enabled: enabledByDefault,
+      settings: defaults,
+    );
+    _status[plugin.id] = PluginRuntimeStatus.registered;
+  }
+
+  Future<void> unregisterPlugin(String id, {bool removeSettings = false}) =>
+      _lifecycle.synchronized(() async {
+        final plugin = getPlugin(id);
+        if (plugin == null) return;
+        await _stop(plugin);
+        if (removeSettings) {
+          final prefs = await _preferences();
+          if (!await prefs.remove(_prefsEnabledKey(id)) ||
+              !await prefs.remove(_prefsSettingsKey(id))) {
+            throw StateError('Extension settings could not be removed.');
+          }
+        }
+        _plugins.remove(plugin);
+        _settings.remove(id);
+        _status.remove(id);
+        _errors.remove(id);
+        _loaded.remove(id);
+      });
+
+  CrispCloudPlugin? getPlugin(String id) =>
+      _plugins.where((plugin) => plugin.id == id).firstOrNull;
+  List<CrispCloudPlugin> getAllPlugins() => List.unmodifiable(_plugins);
+
+  /// Only successfully initialized, enabled plugins may contribute hooks.
+  List<CrispCloudPlugin> getEnabledPlugins() =>
+      _plugins.where((plugin) => isReady(plugin.id)).toList(growable: false);
+
+  Future<void> setEnabled(String id, bool enabled) =>
+      _lifecycle.synchronized(() async {
+        final plugin = getPlugin(id);
+        if (plugin == null) return;
+        if (!await _loadSettings(plugin) && enabled) {
+          throw StateError(
+            _errors[id] ?? 'Extension settings could not be read.',
+          );
+        }
+        final prefs = await _preferences();
+        if (!await prefs.setBool(_prefsEnabledKey(id), enabled)) {
+          throw StateError('Extension enabled state could not be saved.');
+        }
+        _settings[id] = _settings[id]!.copyWith(enabled: enabled);
+        if (!enabled) {
+          await _stop(plugin);
+          return;
+        }
+        if (!isReady(id)) {
+          _status[id] = PluginRuntimeStatus.registered;
+          _errors.remove(id);
+        }
+        if (!await _start(plugin)) {
+          throw StateError(_errors[id] ?? 'Extension initialization failed.');
+        }
+      });
+
+  Future<void> initializeAll() => _lifecycle.synchronized(() async {
+    for (final plugin in List.of(_plugins)) {
+      await _start(plugin);
+    }
+  });
+
+  Future<void> retryPlugin(String id) => _lifecycle.synchronized(() async {
+    final plugin = getPlugin(id);
+    if (plugin == null) return;
+    await _stop(plugin);
+    _loaded.remove(id);
+    _errors.remove(id);
+    _status[id] = PluginRuntimeStatus.registered;
+    if (!await _start(plugin) && _settings[id]?.enabled == true) {
+      throw StateError(_errors[id] ?? 'Extension initialization failed.');
+    }
+  });
+
+  Future<void> disposeAll() => _lifecycle.synchronized(() async {
+    for (final plugin in List.of(_plugins)) {
+      await _stop(plugin);
     }
     _plugins.clear();
     _settings.clear();
-    _loaded = false;
-    _log.info('All plugins disposed');
-  }
+    _status.clear();
+    _errors.clear();
+    _loaded.clear();
+  });
 
-  // ---------------------------------------------------------------------------
-  // Event broadcasting
-  // ---------------------------------------------------------------------------
-
-  /// Notify all enabled plugins with [PluginCapability.fileAction] of a file
-  /// operation.
   Future<void> notifyFileAction(
-      FileAction action, List<String> filePaths) async {
-    final candidates = getEnabledPlugins()
-        .where((p) => p.capabilities.contains(PluginCapability.fileAction));
-    for (final plugin in candidates) {
-      try {
-        await plugin.onFileAction(action, filePaths);
-      } catch (e) {
-        _log.error(
-            'Plugin "${plugin.id}" threw on fileAction ${action.name}', e);
+    FileAction action,
+    List<String> filePaths,
+  ) async {
+    await initializeAll();
+    await _lifecycle.synchronized(() async {
+      for (final plugin in getEnabledPlugins()) {
+        if (!plugin.capabilities.contains(PluginCapability.fileAction)) {
+          continue;
+        }
+        try {
+          await plugin.onFileAction(action, List.unmodifiable(filePaths));
+        } catch (error) {
+          _errors[plugin.id] = 'File action failed: $error';
+        }
       }
-    }
+    });
   }
 
-  /// Collect context-menu items from all enabled plugins that declare
-  /// [PluginCapability.contextMenu].
-  List<PluginMenuItem> getContextMenuItems(List<String> filePaths) {
+  List<PluginMenuItem> getContextMenuItems(List<String> paths) {
     final items = <PluginMenuItem>[];
     for (final plugin in getEnabledPlugins()) {
-      if (!plugin.capabilities.contains(PluginCapability.contextMenu)) {
-        continue;
-      }
+      if (!plugin.capabilities.contains(PluginCapability.contextMenu)) continue;
       try {
-        items.addAll(plugin.getContextMenuItems(filePaths));
-      } catch (e) {
-        _log.error(
-            'Plugin "${plugin.id}" threw on getContextMenuItems', e);
+        final lease = _contexts[plugin.id];
+        for (final item in plugin.getContextMenuItems(
+          List.unmodifiable(paths),
+        )) {
+          items.add(
+            PluginMenuItem(
+              id: item.id,
+              label: item.label,
+              icon: item.icon,
+              enabled: item.enabled,
+              onSelected: item.onSelected == null
+                  ? null
+                  : (files) {
+                      _checkContribution(plugin.id, lease);
+                      item.onSelected!(List.unmodifiable(files));
+                    },
+            ),
+          );
+        }
+      } catch (error) {
+        _errors[plugin.id] = 'Context menu failed: $error';
       }
     }
     return items;
   }
 
-  /// Collect toolbar buttons from all enabled plugins that declare
-  /// [PluginCapability.toolbar].
   List<PluginToolbarButton> getToolbarButtons() {
-    final buttons = <PluginToolbarButton>[];
+    final items = <PluginToolbarButton>[];
     for (final plugin in getEnabledPlugins()) {
-      if (!plugin.capabilities.contains(PluginCapability.toolbar)) {
-        continue;
-      }
+      if (!plugin.capabilities.contains(PluginCapability.toolbar)) continue;
       try {
-        buttons.addAll(plugin.getToolbarButtons());
-      } catch (e) {
-        _log.error('Plugin "${plugin.id}" threw on getToolbarButtons', e);
+        final lease = _contexts[plugin.id];
+        for (final button in plugin.getToolbarButtons()) {
+          items.add(
+            PluginToolbarButton(
+              id: button.id,
+              label: button.label,
+              tooltip: button.tooltip,
+              icon: button.icon,
+              onPressedKey: button.onPressedKey,
+              onPressed: button.onPressed == null
+                  ? null
+                  : (files) {
+                      _checkContribution(plugin.id, lease);
+                      button.onPressed!(List.unmodifiable(files));
+                    },
+            ),
+          );
+        }
+      } catch (error) {
+        _errors[plugin.id] = 'Toolbar contribution failed: $error';
       }
     }
-    return buttons;
+    return items;
   }
 
-  // ---------------------------------------------------------------------------
-  // Settings access (for provider layer)
-  // ---------------------------------------------------------------------------
+  void _checkContribution(String id, _PluginContextImpl? lease) {
+    if (!isReady(id) || lease == null || !identical(_contexts[id], lease)) {
+      throw StateError(
+        'This extension action is no longer active. Open it again.',
+      );
+    }
+  }
 
-  /// Return the current [PluginSettings] for [pluginId], or null if unknown.
-  PluginSettings? getPluginSettings(String pluginId) =>
-      _settings[pluginId];
+  PluginSettings? getPluginSettings(String id) {
+    final value = _settings[id];
+    return value?.copyWith(settings: _copySettings(value.settings));
+  }
 
-  /// Overwrite the in-memory settings for [pluginId] and persist.
   Future<void> savePluginSettings(
-      String pluginId, Map<String, dynamic> newSettings) async {
-    if (!_settings.containsKey(pluginId)) return;
-    final current = _settings[pluginId]!;
-    _settings[pluginId] = current.copyWith(settings: newSettings);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_prefsSettingsKey(pluginId), jsonEncode(newSettings));
-  }
+    String id,
+    Map<String, dynamic> values,
+  ) => _lifecycle.synchronized(() async {
+    final plugin = getPlugin(id);
+    if (plugin == null) return;
+    // This explicit settings replacement can repair malformed saved JSON;
+    // the enabled flag was still read before decoding the old settings.
+    await _loadSettings(plugin);
+    await _writeSettings(id, values);
+    _loaded.add(id);
+    final enabled = _settings[id]!.enabled;
+    await _stop(plugin);
+    _status[id] = PluginRuntimeStatus.registered;
+    _errors.remove(id);
+    if (enabled && !await _start(plugin)) {
+      throw StateError(
+        'Settings saved, but the extension could not restart: ${_errors[id]}',
+      );
+    }
+    if (!enabled) _status[id] = PluginRuntimeStatus.disabled;
+  });
 }

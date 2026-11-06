@@ -9,11 +9,13 @@
 // constructs a real InternxtClient from the package, passing:
 //   - URL overrides for kIsWeb (Vercel proxy paths)
 //   - SharedPreferencesStorage for kIsWeb (file-IO unavailable)
-// Path-based facade methods (listPath, uploadFileBytes, movePath,
-// etc.) come from the package's `paths.dart` extension methods —
-// no local extensions file needed anymore.
+// Bounded transfers reuse the package's cryptography with private spooling.
+// Directory/path reads use request-local caches so newly uploaded objects are
+// immediately visible without relying on the SDK session's one-hour cache.
 
-import 'dart:io';
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:path/path.dart' as p;
 import 'package:flutter/foundation.dart';
 import 'package:internxt_client/internxt_client.dart';
@@ -23,24 +25,54 @@ import 'internxt_client.dart' show InternxtUrls;
 import 'internxt_operation_failure.dart';
 import 'internxt_flutter/shared_prefs_storage.dart';
 import 'log_service.dart';
+import 'internxt_streaming_transfer.dart';
+import 'internxt_transfer_platform.dart';
 
-class InternxtClientAdapter extends CloudStorageClient {
+class InternxtClientAdapter extends CloudStorageClient
+    with CloudTransferOperations
+    implements FreshCloudDirectoryReader {
   static const _log = Log('InternxtClient');
   final InternxtClient _client;
+  final InternxtStreamingTransfer _streaming;
+  int _authGeneration = 0;
+
+  @override
+  bool get supportsStreaming => true;
+  @override
+  bool get supportsMultipart => true;
+  @override
+  StorageTransferCapabilities get transferCapabilities =>
+      const StorageTransferCapabilities(
+        boundedUpload: true,
+        boundedDownload: true,
+      );
+  @override
+  String get transferIdentity => jsonEncode([
+    'internxt',
+    _client.driveApiUrl,
+    _client.networkUrl,
+    userId,
+    bucketId,
+    _client.rootFolderId,
+  ]);
 
   InternxtClientAdapter({required ConfigService config})
-      : _client = InternxtClient(
-          // Adapter accepts whatever ConfigService AppState constructed.
-          // For Web that means a ConfigService whose storage is
-          // SharedPreferencesStorage; for native it's the default
-          // FileConfigStorage. Either way, just pass it through.
-          config: config,
-          networkUrl: InternxtUrls.networkUrl,
-          driveApiUrl: InternxtUrls.driveApiUrl,
-        );
+    : _streaming = const InternxtStreamingTransfer(),
+      _client = InternxtClient(
+        // Adapter accepts whatever ConfigService AppState constructed.
+        // For Web that means a ConfigService whose storage is
+        // SharedPreferencesStorage; for native it's the default
+        // FileConfigStorage. Either way, just pass it through.
+        config: config,
+        networkUrl: InternxtUrls.networkUrl,
+        driveApiUrl: InternxtUrls.driveApiUrl,
+      );
 
   @visibleForTesting
-  InternxtClientAdapter.withClient(InternxtClient client) : _client = client;
+  InternxtClientAdapter.withClient(
+    this._client, {
+    InternxtStreamingTransfer? streaming,
+  }) : _streaming = streaming ?? const InternxtStreamingTransfer();
 
   /// Convenience constructor that builds the right ConfigService
   /// for the host platform. Use this when AppState doesn't already
@@ -73,19 +105,27 @@ class InternxtClientAdapter extends CloudStorageClient {
   String? get bucketId => _client.bucketId;
 
   void setAuth(Map<String, dynamic> creds) {
+    _authGeneration++;
     _client.setAuth(creds);
   }
 
   @override
-  Future<void> login(String email, String password,
-      {String? twoFactorCode}) async {
+  Future<void> login(
+    String email,
+    String password, {
+    String? twoFactorCode,
+  }) async {
+    _authGeneration++;
     _log.debug('Calling InternxtClient login...');
     try {
-      final response =
-          await _client.login(email, password, tfaCode: twoFactorCode);
+      final response = await _client.login(
+        email,
+        password,
+        tfaCode: twoFactorCode,
+      );
       _lastLoginResponse = response;
       _log.debug('Login successful. Keys received: ${response.keys}');
-      _client.setAuth(response);
+      setAuth(response);
     } catch (e) {
       _log.error('Login failed', e);
       rethrow;
@@ -97,138 +137,230 @@ class InternxtClientAdapter extends CloudStorageClient {
 
   @override
   Future<void> logout() async {
+    _authGeneration++;
     _client.userId = null;
     _client.bucketId = null;
     await _client.config.clearCredentials();
+  }
+
+  InternxtTransferSession _capture({bool requireEncryption = true}) {
+    final generation = _authGeneration;
+    final user = _client.userId,
+        bucket = _client.bucketId,
+        root = _client.rootFolderId;
+    final token = _client.newToken, mnemonic = _client.mnemonic;
+    final bridge = _client.bridgeUser, bridgeId = _client.userIdForAuth;
+    if (user == null ||
+        user.isEmpty ||
+        token == null ||
+        token.isEmpty ||
+        root == null ||
+        root.isEmpty ||
+        (requireEncryption &&
+            (bucket == null ||
+                bucket.isEmpty ||
+                mnemonic == null ||
+                mnemonic.isEmpty ||
+                bridge == null ||
+                bridge.isEmpty ||
+                bridgeId == null ||
+                bridgeId.isEmpty))) {
+      throw StateError('Sign in to Internxt before transferring files.');
+    }
+    void check() {
+      if (!isAuthenticated ||
+          generation != _authGeneration ||
+          user != _client.userId ||
+          bucket != _client.bucketId ||
+          root != _client.rootFolderId ||
+          token != _client.newToken ||
+          mnemonic != _client.mnemonic ||
+          bridge != _client.bridgeUser ||
+          bridgeId != _client.userIdForAuth) {
+        throw StateError(
+          'The original Internxt account is no longer available.',
+        );
+      }
+    }
+
+    check();
+    return InternxtTransferSession(
+      driveUrl: _client.driveApiUrl,
+      networkUrl: _client.networkUrl,
+      token: token,
+      mnemonic: mnemonic ?? '',
+      bucket: bucket ?? '',
+      rootFolder: root,
+      bridgeUser: bridge ?? '',
+      userIdForAuth: bridgeId ?? user,
+      checkCurrent: check,
+    );
+  }
+
+  @override
+  Stream<List<int>> downloadStream(
+    String remotePath, {
+    Function(int, int)? onProgress,
+  }) async* {
+    yield* _streaming.download(_capture(), remotePath, onProgress: onProgress);
   }
 
   @override
   Future<Uint8List> downloadFileBytes(
     String remotePath, {
     Function(int, int)? onProgress,
-  }) {
-    // Path-based variant from the package's `paths.dart` extension.
-    return _client.downloadFileBytesByPath(remotePath, onProgress: onProgress);
+  }) async {
+    const maxBytes = 32 * 1024 * 1024;
+    final result = BytesBuilder(copy: false);
+    await for (final bytes in _streaming.download(
+      _capture(),
+      remotePath,
+      onProgress: onProgress,
+      maxBytes: maxBytes,
+    )) {
+      if (result.length + bytes.length > maxBytes) {
+        throw StateError('This Internxt file requires a streaming download.');
+      }
+      result.add(bytes);
+    }
+    return result.takeBytes();
   }
 
   @override
   Future<Map<String, dynamic>?> resolvePath(String path) async {
     try {
-      return await _client.resolvePath(path);
-    } catch (e) {
-      if (e is UnsupportedError) rethrow;
+      return await _streaming.resolve(_capture(requireEncryption: false), path);
+    } on InternxtPathNotFound {
       return null;
     }
   }
 
   @override
-  Future<Map<String, dynamic>> listPath(String path) => _client.listPath(path);
+  Future<Map<String, dynamic>> listPath(String path) =>
+      _streaming.list(_capture(requireEncryption: false), path);
+
+  @override
+  Future<Map<String, dynamic>> readDirectoryForEdit(String path) =>
+      listPath(path);
 
   @override
   Future<void> uploadFile(
     List<int> fileData,
     String fileName,
     String targetPath, {
-    Function(int p1, int p2)? onProgress,
-  }) {
-    // Path-based bytes upload from `paths.dart`.
-    return _client.uploadFileBytes(fileData, fileName, targetPath);
+    Function(int, int)? onProgress,
+  }) => uploadStream(
+    Stream.value(fileData),
+    fileData.length,
+    fileName,
+    targetPath,
+    onProgress: onProgress,
+  );
+
+  @override
+  Future<void> uploadStream(
+    Stream<List<int>> dataStream,
+    int length,
+    String fileName,
+    String targetPath, {
+    Function(int, int)? onProgress,
+  }) async {
+    await _streaming.upload(
+      _capture(),
+      dataStream,
+      length,
+      fileName,
+      targetPath,
+      onProgress: onProgress,
+    );
   }
 
   @override
   Future<void> downloadFileByPath(
     String remotePath,
     String localPath, {
-    Function(int p1, int p2)? onProgress,
+    Function(int, int)? onProgress,
   }) async {
-    if (kIsWeb) {
-      throw InternxtUnsupportedFailure(InternxtOperationCode.webDownload,
-          'Use browser downloads on the web.');
-    }
-    if (!isAuthenticated ||
-        _client.bridgeUser == null ||
-        _client.userIdForAuth == null ||
-        _client.mnemonic == null) {
-      throw InternxtStateFailure(InternxtOperationCode.notSignedIn,
-          'Sign in to Internxt before downloading.');
-    }
-    final resolved = await _client.resolvePath(remotePath);
-    if (resolved['type'] != 'file') {
-      throw InternxtStateFailure(
-          InternxtOperationCode.notFile, 'The selected path is not a file.');
-    }
-    final metadata = (resolved['metadata'] as Map?) ?? resolved;
-    var name = metadata['name'] as String? ?? p.posix.basename(remotePath);
-    final extension = metadata['fileType'] as String? ?? '';
-    if (extension.isNotEmpty &&
-        extension != 'file' &&
-        !name.toLowerCase().endsWith('.${extension.toLowerCase()}')) {
-      name = '$name.$extension';
-    }
-    // Reject path separators and NUL in provider metadata.
-    if (name.isEmpty ||
-        name == '.' ||
-        name == '..' ||
-        name.contains('/') ||
-        name.codeUnits.contains(92) ||
-        name.codeUnits.contains(0) ||
-        p.basename(name) != name) {
-      throw const InternxtFormatFailure(
-          InternxtOperationCode.invalidName, 'Invalid remote filename.');
-    }
-    // SDK 0.2.3 saves the original name but its rename helper reads a missing
-    // top-level name. Stage privately under the actual remote filename first.
-    final destination = File(localPath);
-    await destination.parent.create(recursive: true);
-    late final Directory inbox;
-    var atomic = true;
-    try {
-      inbox = await destination.parent.createTemp('.crisp-internxt-download-');
-    } on FileSystemException catch (error) {
-      final code = error.osError?.errorCode;
-      final denied = Platform.isWindows ? code == 5 : code == 1 || code == 13;
-      if (!denied) rethrow;
-      // A sandbox save dialog may grant only the selected file, not its parent.
-      inbox = await Directory.systemTemp.createTemp('crisp-internxt-download-');
-      atomic = false;
-    }
-    try {
-      final received = File(p.join(inbox.path, name));
-      await _client.downloadFileByPath(remotePath, received.path,
-          onConflict: 'overwrite');
-      final size = await received.length();
-      if (atomic) {
-        await received.rename(destination.path);
-      } else {
-        await received.copy(destination.path);
-      }
-      onProgress?.call(size, size);
-    } finally {
-      await inbox.delete(recursive: true);
-    }
+    final session = _capture();
+    await saveInternxtDownload(
+      _streaming.download(session, remotePath, onProgress: onProgress),
+      localPath,
+      checkCurrent: session.checkCurrent,
+    );
   }
 
   @override
   Future<void> createFolderPath(String path) => _client.createFolderPath(path);
 
   @override
-  Future<void> deletePath(String path) => _client.deletePath(path);
-
-  @override
-  Future<void> movePath(String sourcePath, String targetPath) async {
-    await _client.movePath(sourcePath, targetPath);
+  Future<void> deletePath(String path) async {
+    final session = _capture(requireEncryption: false);
+    final source = await _streaming.resolve(session, path);
+    session.checkCurrent();
+    await _client.trashItems(
+      source['uuid'] as String,
+      source['type'] as String,
+    );
+    session.checkCurrent();
   }
 
   @override
-  Future<void> renamePath(String path, String newName) =>
-      _client.renamePath(path, newName);
+  Future<void> movePath(String sourcePath, String targetPath) async {
+    final session = _capture(requireEncryption: false);
+    final source = await _streaming.resolve(session, sourcePath);
+    final target = await _streaming.resolve(session, targetPath);
+    if (target['type'] != 'folder') {
+      throw StateError('The target is not a folder.');
+    }
+    session.checkCurrent();
+    if (source['type'] == 'file') {
+      await _client.moveFile(
+        source['uuid'] as String,
+        target['uuid'] as String,
+      );
+    } else {
+      await _client.moveFolder(
+        source['uuid'] as String,
+        target['uuid'] as String,
+      );
+    }
+    session.checkCurrent();
+  }
+
+  @override
+  Future<void> renamePath(String path, String newName) async {
+    if (newName.isEmpty ||
+        newName == '.' ||
+        newName == '..' ||
+        newName.contains('/') ||
+        newName.contains(r'\') ||
+        newName.contains('\u0000')) {
+      throw const FormatException('Enter a file name without path separators.');
+    }
+    final session = _capture(requireEncryption: false);
+    final source = await _streaming.resolve(session, path);
+    session.checkCurrent();
+    if (source['type'] == 'file') {
+      await _client.renameFile(
+        source['uuid'] as String,
+        p.posix.basenameWithoutExtension(newName),
+        p.posix.extension(newName).replaceFirst('.', ''),
+      );
+    } else {
+      await _client.renameFolder(source['uuid'] as String, newName);
+    }
+    session.checkCurrent();
+  }
 
   // Internxt-specific operations exposed for AppState's search UI.
-  Future<Map<String, List<Map<String, dynamic>>>> search(String query,
-          {bool detailed = false}) =>
-      _client.search(query, detailed: detailed);
+  Future<Map<String, List<Map<String, dynamic>>>> search(
+    String query, {
+    bool detailed = false,
+  }) => _client.search(query, detailed: detailed);
 
-  Future<List<Map<String, dynamic>>> findFiles(String path, String pattern,
-          {int maxDepth = -1}) =>
-      _client.findFiles(path, pattern, maxDepth: maxDepth);
+  Future<List<Map<String, dynamic>>> findFiles(
+    String path,
+    String pattern, {
+    int maxDepth = -1,
+  }) => _client.findFiles(path, pattern, maxDepth: maxDepth);
 }

@@ -1,26 +1,9 @@
-// lib/widgets/panel_tab_bar.dart
-//
-// Tab bar widget for file panels. Supports multiple tabs per panel
-// with add, close, pin, reorder, and context menu.
-
 import 'package:flutter/material.dart';
-import '../l10n/app_localizations.dart';
-import '../l10n/panel_tab_strings.dart';
+
 import '../models/panel_tab.dart';
 import 'file_list_view.dart' show PanelDragData;
 
 class PanelTabBar extends StatelessWidget {
-  final List<PanelTab> tabs;
-  final String activeTabId;
-  final ValueChanged<String> onTabSelected;
-  final ValueChanged<String> onTabClosed;
-  final VoidCallback onNewTab;
-  final ValueChanged<String>? onTabPinToggle;
-  final void Function(String tabId, List<dynamic> files)? onFilesDroppedOnTab;
-  /// Number of selected items in the active tab (shown as [N] badge).
-  final int activeSelectionCount;
-  final void Function(String tabId, String newLabel)? onTabRenamed;
-
   const PanelTabBar({
     super.key,
     required this.tabs,
@@ -29,22 +12,38 @@ class PanelTabBar extends StatelessWidget {
     required this.onTabClosed,
     required this.onNewTab,
     this.onTabPinToggle,
+    this.onTabLockChanged,
+    this.onTabForceClosed,
+    this.onTabDuplicated,
+    this.onTabReordered,
+    this.onCloseDuplicates,
+    this.onWorkspace,
     this.onFilesDroppedOnTab,
     this.activeSelectionCount = 0,
     this.onTabRenamed,
   });
 
+  final List<PanelTab> tabs;
+  final String activeTabId;
+  final ValueChanged<String> onTabSelected;
+  final ValueChanged<String> onTabClosed;
+  final VoidCallback onNewTab;
+  final ValueChanged<String>? onTabPinToggle;
+  final void Function(String, TabLockMode)? onTabLockChanged;
+  final ValueChanged<String>? onTabForceClosed;
+  final ValueChanged<String>? onTabDuplicated;
+  final void Function(int, int)? onTabReordered;
+  final VoidCallback? onCloseDuplicates;
+  final VoidCallback? onWorkspace;
+  final void Function(String, List<dynamic>)? onFilesDroppedOnTab;
+  final int activeSelectionCount;
+  final void Function(String, String)? onTabRenamed;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
-    if (tabs.length <= 1) {
-      // Don't show tab bar for single tab
-      return const SizedBox.shrink();
-    }
-
     return Container(
-      height: 32,
+      height: 34,
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerLow,
         border: Border(
@@ -53,223 +52,305 @@ class PanelTabBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Tabs
           Expanded(
-            child: ListView.builder(
+            child: ReorderableListView.builder(
               scrollDirection: Axis.horizontal,
+              buildDefaultDragHandles: false,
+              onReorderItem: (oldIndex, newIndex) => onTabReordered?.call(
+                oldIndex,
+                newIndex > oldIndex ? newIndex + 1 : newIndex,
+              ),
               itemCount: tabs.length,
               itemBuilder: (context, index) {
                 final tab = tabs[index];
-                final isActive = tab.id == activeTabId;
-
+                final active = tab.id == activeTabId;
+                final title = active && activeSelectionCount > 0
+                    ? '[$activeSelectionCount] ${tab.label}'
+                    : tab.label;
                 return DragTarget<PanelDragData>(
-                  onAcceptWithDetails: (details) {
-                    onFilesDroppedOnTab?.call(tab.id, details.data.files);
-                  },
-                  builder: (ctx, candidateData, rejectedData) => GestureDetector(
-                  onSecondaryTapDown: (details) {
-                    _showTabContextMenu(context, tab, details.globalPosition);
-                  },
-                  child: InkWell(
-                    onTap: () => onTabSelected(tab.id),
-                    child: Container(
-                      constraints: const BoxConstraints(maxWidth: 180, minWidth: 60),
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      decoration: BoxDecoration(
-                        color: isActive
-                            ? theme.colorScheme.surface
-                            : Colors.transparent,
-                        border: Border(
-                          bottom: BorderSide(
-                            color: isActive
-                                ? theme.colorScheme.primary
-                                : Colors.transparent,
-                            width: 2,
+                  key: ValueKey(tab.id),
+                  onAcceptWithDetails: (details) =>
+                      onFilesDroppedOnTab?.call(tab.id, details.data.files),
+                  builder: (context, candidates, rejected) => Tooltip(
+                    message:
+                        '${tab.storage?.provider ?? 'Location'}: ${tab.path}'
+                        '${tab.isLocked ? '\n${tab.lockMode.label}' : ''}'
+                        '${tab.lockedPath != null && tab.lockedPath != tab.path ? '\nLocked location: ${tab.lockedPath}' : ''}',
+                    child: GestureDetector(
+                      onSecondaryTapDown: (details) =>
+                          _menu(context, tab, details.globalPosition),
+                      onLongPressStart: (details) =>
+                          _menu(context, tab, details.globalPosition),
+                      child: InkWell(
+                        onTap: () => onTabSelected(tab.id),
+                        child: Container(
+                          constraints: const BoxConstraints(
+                            minWidth: 72,
+                            maxWidth: 220,
                           ),
-                          right: BorderSide(
-                            color: theme.dividerColor,
-                            width: 0.5,
+                          padding: const EdgeInsets.symmetric(horizontal: 6),
+                          decoration: BoxDecoration(
+                            color: candidates.isNotEmpty
+                                ? theme.colorScheme.primaryContainer
+                                : active
+                                ? theme.colorScheme.surface
+                                : Colors.transparent,
+                            border: Border(
+                              bottom: BorderSide(
+                                color: active
+                                    ? theme.colorScheme.primary
+                                    : Colors.transparent,
+                                width: 2,
+                              ),
+                              right: BorderSide(
+                                color: theme.dividerColor,
+                                width: 0.5,
+                              ),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (onTabReordered != null)
+                                ReorderableDragStartListener(
+                                  index: index,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(right: 3),
+                                    child: Icon(
+                                      Icons.drag_indicator,
+                                      size: 12,
+                                      color: theme.hintColor,
+                                    ),
+                                  ),
+                                ),
+                              if (tab.isProtected)
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 4),
+                                  child: Icon(
+                                    tab.isLocked
+                                        ? Icons.lock_outline
+                                        : Icons.push_pin,
+                                    size: 12,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                ),
+                              Flexible(
+                                child: Text(
+                                  title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: active
+                                        ? FontWeight.w600
+                                        : FontWeight.normal,
+                                  ),
+                                ),
+                              ),
+                              if (!tab.isProtected && tabs.length > 1)
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 4),
+                                  child: InkWell(
+                                    onTap: () => onTabClosed(tab.id),
+                                    child: const Icon(Icons.close, size: 14),
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (tab.isPinned)
-                            Padding(
-                              padding: const EdgeInsets.only(right: 4),
-                              child: Icon(
-                                Icons.push_pin,
-                                size: 10,
-                                color: theme.colorScheme.primary,
-                              ),
-                            ),
-                          Flexible(
-                            child: Text(
-                              isActive && activeSelectionCount > 0
-                                  ? '[$activeSelectionCount] ${tab.label}'
-                                  : tab.label,
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight:
-                                    isActive ? FontWeight.w600 : FontWeight.normal,
-                                color: isActive
-                                    ? theme.colorScheme.onSurface
-                                    : theme.colorScheme.onSurfaceVariant,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          if (!tab.isPinned && tabs.length > 1) ...[
-                            const SizedBox(width: 4),
-                            InkWell(
-                              onTap: () => onTabClosed(tab.id),
-                              borderRadius: BorderRadius.circular(8),
-                              child: Icon(
-                                Icons.close,
-                                size: 14,
-                                color: isActive
-                                    ? theme.colorScheme.onSurface
-                                    : theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
                     ),
                   ),
-                ));
+                );
               },
             ),
           ),
-          // New tab button
-          InkWell(
-            onTap: onNewTab,
-            borderRadius: BorderRadius.circular(4),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              child: Icon(
-                Icons.add,
-                size: 16,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
+          IconButton(
+            tooltip: 'New tab',
+            visualDensity: VisualDensity.compact,
+            iconSize: 17,
+            onPressed: onNewTab,
+            icon: const Icon(Icons.add),
           ),
-          const SizedBox(width: 4),
+          if (onWorkspace != null)
+            IconButton(
+              tooltip: 'Workspaces, bookmarks and views',
+              visualDensity: VisualDensity.compact,
+              iconSize: 17,
+              onPressed: onWorkspace,
+              icon: const Icon(Icons.dashboard_customize_outlined),
+            ),
         ],
       ),
     );
   }
 
-  void _showTabContextMenu(BuildContext context, PanelTab tab, Offset position) {
-    showMenu(
+  Future<void> _menu(
+    BuildContext context,
+    PanelTab tab,
+    Offset position,
+  ) async {
+    final index = tabs.indexWhere((value) => value.id == tab.id);
+    final action = await showMenu<String>(
       context: context,
       position: RelativeRect.fromLTRB(
-          position.dx, position.dy, position.dx + 1, position.dy + 1),
+        position.dx,
+        position.dy,
+        position.dx + 1,
+        position.dy + 1,
+      ),
       items: [
-        PopupMenuItem(
-          child: Row(
-            children: [
-              Icon(tab.isPinned ? Icons.push_pin_outlined : Icons.push_pin,
-                  size: 16),
-              const SizedBox(width: 8),
-              Expanded(child: Text(tab.isPinned ? AppLocalizations.of(context)!.unpinTab : AppLocalizations.of(context)!.pinTab)),
-            ],
-          ),
-          onTap: () => onTabPinToggle?.call(tab.id),
-        ),
-        if (!tab.isPinned && tabs.length > 1)
-          PopupMenuItem(
-            child: Row(
-              children: [
-                Icon(Icons.close, size: 16),
-                SizedBox(width: 8),
-                Expanded(child: Text(AppLocalizations.of(context)!.closeTab)),
-              ],
-            ),
-            onTap: () => onTabClosed(tab.id),
-          ),
-        PopupMenuItem(
-          child: Row(
-            children: [
-              Icon(Icons.close_fullscreen, size: 16),
-              SizedBox(width: 8),
-              Expanded(child: Text(AppLocalizations.of(context)!.closeOtherTabs)),
-            ],
-          ),
-          onTap: () {
-            for (final t in tabs) {
-              if (t.id != tab.id && !t.isPinned) {
-                onTabClosed(t.id);
-              }
-            }
-          },
-        ),
-        PopupMenuItem(
-          onTap: onNewTab,
-          child: Row(
-            children: [
-              Icon(Icons.content_copy, size: 16),
-              SizedBox(width: 8),
-              Expanded(child: Text(AppLocalizations.of(context)!.duplicateTab)),
-            ],
-          ),
-        ),
         if (onTabRenamed != null)
-          PopupMenuItem(
-            child: Row(
-              children: [
-                Icon(Icons.edit, size: 16),
-                SizedBox(width: 8),
-                Expanded(child: Text(PanelTabStrings(context).text('renameTab'))),
-              ],
+          const PopupMenuItem(value: 'rename', child: Text('Rename tab…')),
+        const PopupMenuItem(
+          value: 'duplicate',
+          child: Text('Duplicate this tab'),
+        ),
+        if (onTabPinToggle != null)
+          CheckedPopupMenuItem(
+            value: 'pin',
+            checked: tab.isPinned,
+            child: const Text('Pin tab'),
+          ),
+        if (onTabLockChanged != null) ...[
+          const PopupMenuDivider(),
+          for (final mode in TabLockMode.values)
+            CheckedPopupMenuItem(
+              value: 'lock:${mode.name}',
+              checked: tab.lockMode == mode,
+              child: Text(mode.label),
             ),
-            onTap: () {
-              final ctx = context;
-              Future.delayed(Duration.zero, () {
-                if (!ctx.mounted) return;
-                _showRenameTabDialog(ctx, tab);
-              });
-            },
+        ],
+        if (onTabReordered != null) ...[
+          const PopupMenuDivider(),
+          PopupMenuItem(
+            value: 'left',
+            enabled: index > 0,
+            child: const Text('Move tab left'),
+          ),
+          PopupMenuItem(
+            value: 'right',
+            enabled: index < tabs.length - 1,
+            child: const Text('Move tab right'),
+          ),
+        ],
+        const PopupMenuDivider(),
+        PopupMenuItem(
+          value: 'close',
+          enabled: tabs.length > 1,
+          child: Text(tab.isProtected ? 'Close protected tab…' : 'Close tab'),
+        ),
+        const PopupMenuItem(
+          value: 'others',
+          child: Text('Close other unprotected tabs'),
+        ),
+        if (onCloseDuplicates != null)
+          const PopupMenuItem(
+            value: 'duplicates',
+            child: Text('Close duplicate tabs'),
           ),
       ],
     );
+    if (!context.mounted || action == null) return;
+    if (action.startsWith('lock:')) {
+      onTabLockChanged?.call(
+        tab.id,
+        TabLockMode.values.byName(action.substring(5)),
+      );
+      return;
+    }
+    switch (action) {
+      case 'rename':
+        final value = await showDialog<String>(
+          context: context,
+          builder: (_) => _TabNameDialog(initial: tab.customLabel ?? tab.label),
+        );
+        if (value != null) onTabRenamed?.call(tab.id, value);
+      case 'duplicate':
+        if (onTabDuplicated != null) {
+          onTabDuplicated!(tab.id);
+        } else {
+          onNewTab();
+        }
+      case 'pin':
+        onTabPinToggle?.call(tab.id);
+      case 'left':
+        onTabReordered?.call(index, index - 1);
+      case 'right':
+        onTabReordered?.call(index, index + 2);
+      case 'close':
+        if (!tab.isProtected) {
+          onTabClosed(tab.id);
+        } else if (onTabForceClosed != null) {
+          final confirmed = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Close protected tab?'),
+              content: Text('Close "${tab.label}" at ${tab.path}?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('Cancel'),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text('Close tab'),
+                ),
+              ],
+            ),
+          );
+          if (confirmed == true) onTabForceClosed!(tab.id);
+        }
+      case 'others':
+        for (final other in List<PanelTab>.of(tabs)) {
+          if (other.id != tab.id && !other.isProtected) onTabClosed(other.id);
+        }
+      case 'duplicates':
+        onCloseDuplicates?.call();
+    }
+  }
+}
+
+class _TabNameDialog extends StatefulWidget {
+  const _TabNameDialog({required this.initial});
+  final String initial;
+  @override
+  State<_TabNameDialog> createState() => _TabNameDialogState();
+}
+
+class _TabNameDialogState extends State<_TabNameDialog> {
+  late final controller = TextEditingController(text: widget.initial);
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
   }
 
-  void _showRenameTabDialog(BuildContext context, PanelTab tab) {
-    final ctrl = TextEditingController(text: tab.label);
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(PanelTabStrings(context).text('renameTab')),
-        content: TextField(
-          controller: ctrl,
-          autofocus: true,
-          decoration: InputDecoration(
-            labelText: PanelTabStrings(ctx).text('tabName'),
-            border: OutlineInputBorder(),
-          ),
-          onSubmitted: (v) {
-            if (v.trim().isNotEmpty) onTabRenamed!(tab.id, v.trim());
-            Navigator.pop(ctx);
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(AppLocalizations.of(ctx)!.cancel),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final v = ctrl.text.trim();
-              if (v.isNotEmpty) onTabRenamed!(tab.id, v);
-              Navigator.pop(ctx);
-            },
-            child: Text(AppLocalizations.of(ctx)!.rename),
-          ),
-        ],
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: const Text('Rename tab'),
+    content: TextField(
+      controller: controller,
+      autofocus: true,
+      decoration: const InputDecoration(
+        labelText: 'Tab title',
+        helperText: 'Leave empty to use the folder name.',
       ),
-    );
-  }
+      onSubmitted: (value) => Navigator.pop(context, value),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: const Text('Cancel'),
+      ),
+      TextButton(
+        onPressed: () => Navigator.pop(context, ''),
+        child: const Text('Use folder name'),
+      ),
+      FilledButton(
+        onPressed: () => Navigator.pop(context, controller.text),
+        child: const Text('Save'),
+      ),
+    ],
+  );
 }

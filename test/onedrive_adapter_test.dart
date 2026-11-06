@@ -3,6 +3,8 @@
 // Unit tests for the OneDrive client adapter.
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:crisp_cloud/services/onedrive_client_adapter.dart';
@@ -70,8 +72,8 @@ void main() {
       expect(adapter.supportsTrash, isTrue);
     });
 
-    test('does not support streaming (default)', () {
-      expect(adapter.supportsStreaming, isFalse);
+    test('supports bounded streaming', () {
+      expect(adapter.supportsStreaming, isTrue);
     });
 
     test('does not support multipart (default)', () {
@@ -89,21 +91,28 @@ void main() {
     test('login throws on empty client ID', () async {
       expect(
         () => adapter.login('', ''),
-        throwsA(isA<Exception>().having(
-          (e) => e.toString(), 'message', contains('Application (Client) ID is required'),
-        )),
+        throwsA(
+          isA<Exception>().having(
+            (e) => e.toString(),
+            'message',
+            contains('Application (Client) ID is required'),
+          ),
+        ),
       );
     });
 
-    test('login with pipe-separated clientId|secret parses correctly', () async {
-      // Will fail on network, but tests the format acceptance
-      try {
-        await adapter.login('test-client-id|test-secret', '');
-      } catch (e) {
-        // Expected network/browser error — we just verify it got past validation
-        expect(e, isA<Exception>());
-      }
-    });
+    test(
+      'login with pipe-separated clientId|secret parses correctly',
+      () async {
+        // Will fail on network, but tests the format acceptance
+        try {
+          await adapter.login('test-client-id|test-secret', '');
+        } catch (e) {
+          // Expected network/browser error — we just verify it got past validation
+          expect(e, isA<Exception>());
+        }
+      },
+    );
   });
 
   group('OneDriveConfigService', () {
@@ -157,10 +166,20 @@ void main() {
       await configService.saveCredentials({
         'client_id': 'test-id',
         'refresh_token': 'invalid-token',
-        'email': 'user@outlook.com',
+        'email': 'user@example.invalid',
       });
-      final result = await adapter.restoreCredentials();
-      expect(result, isFalse);
+      await http.runWithClient(
+        () async {
+          expect(await adapter.restoreCredentials(), isFalse);
+        },
+        () => MockClient((request) async {
+          expect(request.url.host, 'login.microsoftonline.com');
+          return http.Response(
+            '{"result":2000,"error":"Test authentication rejected"}',
+            401,
+          );
+        }),
+      );
     });
   });
 
@@ -185,10 +204,7 @@ void main() {
 
   group('OneDriveClientAdapter - delta sync', () {
     test('fetchDelta throws when not authenticated', () {
-      expect(
-        () => adapter.fetchDelta(),
-        throwsA(isA<Exception>()),
-      );
+      expect(() => adapter.fetchDelta(), throwsA(isA<Exception>()));
     });
 
     test('fetchDelta with null deltaToken requests full enumeration', () {
@@ -212,10 +228,7 @@ void main() {
 
   group('OneDriveClientAdapter - unauthenticated operations', () {
     test('listPath throws when not authenticated', () {
-      expect(
-        () => adapter.listPath('/'),
-        throwsA(isA<Exception>()),
-      );
+      expect(() => adapter.listPath('/'), throwsA(isA<Exception>()));
     });
 
     test('uploadFile throws when not authenticated', () {
@@ -233,10 +246,7 @@ void main() {
     });
 
     test('deletePath throws when not authenticated', () {
-      expect(
-        () => adapter.deletePath('/test.txt'),
-        throwsA(isA<Exception>()),
-      );
+      expect(() => adapter.deletePath('/test.txt'), throwsA(isA<Exception>()));
     });
 
     test('createFolderPath throws when not authenticated', () {
@@ -252,10 +262,7 @@ void main() {
   // ===========================================================================
   group('OneDriveClientAdapter - shared libraries', () {
     test('listSharedLibraries throws when not authenticated', () {
-      expect(
-        () => adapter.listSharedLibraries(),
-        throwsA(isA<Exception>()),
-      );
+      expect(() => adapter.listSharedLibraries(), throwsA(isA<Exception>()));
     });
 
     test('listSiteDrives throws when not authenticated', () {
