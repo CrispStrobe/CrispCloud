@@ -3606,9 +3606,7 @@ class PanelNotifier extends ChangeNotifier {
     var createdPath = folderPath;
     try {
       if (_showingSearchResults) {
-        throw StateError(
-          'Open the destination folder before creating a folder.',
-        );
+        throw StateError('Open a real directory before creating a folder.');
       }
       if (name.isEmpty ||
           name == '.' ||
