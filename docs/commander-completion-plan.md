@@ -33,7 +33,7 @@ records the remaining acceptance work explicitly.
 | Text/binary comparison | Integrated per-side decoding, guarded merge and full binary-range navigation | BOM-less UTF-16/32, repeated CRLF saves, sparse difference index, all range navigation, cancellation, German/Arabic layout |
 | Background sync recovery | Integrated isolated leased journals and idempotent foreground discovery | Same-process isolate exclusion, process kill, import retry/receipt/compaction, successful and failed background tasks; OS checks in desktop CI |
 | Split/combine review | Complete effective manifest definition rechecked before destination writes | Same-path/same-size/mtime replacement blocked, harmless formatting accepted, explicit new review required |
-| Legacy rename/New Folder routes | Source-binding and truthful outcome follow-up in progress | Captured prompt destination, durable single-rename/Undo fingerprints and visible submit errors |
+| Legacy rename/New Folder routes | Integrated captured prompts and shared durable rename/Undo | Same-size replacements, original destination retained after navigation, account switch blocked, visible failure/retry and cancellable fingerprinting |
 | Final integration | In progress | Current-head analysis, deterministic app suite, focused platform tests and builds; earlier baseline CI is not evidence for new code |
 
 ## Delivery history
@@ -124,7 +124,7 @@ for the validation scope and platform boundaries.
 - [x] Functional custom-command configuration/execution and extension lifecycle.
 - [x] Tab groups/locks, paired source-aware locations and column profiles.
 - [x] Checksum/split manifests, missing-part checks and cancellation.
-- [ ] Keyboard/accessibility/localization completion for the added workflows.
+- [x] Keyboard/accessibility/localization completion for the added workflows.
 
 ## Acceptance scenarios
 

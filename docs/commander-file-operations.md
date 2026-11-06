@@ -117,6 +117,18 @@ flushed and atomically replaced; browser records use acknowledged updates.
 Failed persistence stops the next mutation. Undo is a checked reverse operation:
 changed files, occupied old names and disconnected accounts block unsafe reversal.
 
+Single-file Rename uses this same journal, fingerprint and Undo path. Its prompt
+captures the source before input and supports cancellation during streamed
+fingerprinting. New Folder likewise captures the destination before its prompt;
+changing accounts or locations cannot redirect submission, and a failed operation
+keeps its error visible instead of producing a success notification.
+
+Native directory fingerprints enumerate with cancellation and share limits of
+200,000 entries, 256 levels and 32 MiB of listed path bytes. Directory digests are
+hashed incrementally in the existing stable format. Exceeding a budget blocks
+the reviewed rename; it does not silently omit descendants.
+The browser rename fallback has an explicit 64 MiB per-file buffer ceiling.
+
 One multi-rename batch belongs to one captured storage account. Files from
 several directories on that account may share a batch. A collection containing
 several accounts must be renamed in source-specific batches; copy/move can
@@ -352,6 +364,18 @@ and directory permission revoked. Metadata, links, clipboard actions, exclusive
 rename and server operations differ by backend. Unsupported controls are
 disabled or rejected before mutation. An accepted asynchronous request is not
 proof of completion.
+
+| Workflow | Native filesystem | Browser filesystem | Cloud source |
+| --- | --- | --- | --- |
+| Copy/move data | Streams, verified stages, supported native fast paths | Writable handles; OPFS for private spooling where needed | Adapter streams/spools and confirmed provider operations |
+| Exclusive rename | OS no-replace primitive where available | Verified fallback subject to handle and size limits | Exclusive/conditional API where available; weaker prechecks are identified |
+| Permissions and ownership | POSIX mode/UID/GID on Unix; SID ownership on Windows | Not advertised by the current browser backend | Only adapters with explicit metadata capabilities |
+| Extended attributes and ACLs | Unix xattrs and returned ACL evidence; Windows DACLs | Not advertised | Only when the adapter can read, write and verify the requested field |
+| Creation time and DOS attributes | Windows checked-handle implementation | Not advertised | Only when explicitly advertised by the adapter |
+| Trash and restore | Native supported trash implementation and retained restore identity | Depends on the filesystem API; permanent deletion stays explicit | Provider trash/restore contract; no invented undo for permanent deletion |
+| Restart recovery | Flushed journals and captured installation/account references | Acknowledged persistent storage; eviction remains a limitation | Reconnect the original account; provider-specific resume evidence is checked |
+| Clipboard | App selection plus native file-manager interoperability | App selection; browser clipboard permission applies | App selection retains original accounts; paste opens reviewed transfer |
+| Background mobile sync | Separate leased log on Android/iOS; OS scheduling applies | Unavailable | Reconstructible FTP/FTPS/WebDAV credentials; other providers use foreground paths |
 
 Pause and cancellation take effect at supported transfer checkpoints. An already
 accepted provider request can finish writing a private stage before returning;
