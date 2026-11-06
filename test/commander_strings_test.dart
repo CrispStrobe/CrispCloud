@@ -133,6 +133,12 @@ void main() {
       'directory_comparison_dialog',
       'sync_dialog',
       'sync_plan_dialog',
+      'command_palette',
+      'file_context_menu',
+      'share_link_dialog',
+      'version_history_dialog',
+      'permissions_dialog',
+      '../screens/file_browser_screen',
     ]) {
       final source = File('lib/widgets/$name.dart').readAsStringSync();
       final matches = calls.allMatches(source).toList();

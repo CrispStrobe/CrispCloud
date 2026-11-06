@@ -3,6 +3,8 @@
 // Main scaffold and layout for the two-panel file browser.
 // Keyboard handling, dialogs, and about dialog are in separate files.
 
+import '../l10n/commander_strings.dart';
+
 import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart'
@@ -66,6 +68,11 @@ import '../l10n/image_editor_strings.dart';
 import '../l10n/office_editor_strings.dart';
 import '../widgets/lock_screen.dart';
 import '../widgets/command_palette.dart';
+import '../widgets/workspace_dialog.dart';
+import '../widgets/file_view_editor_dialog.dart';
+import '../widgets/custom_command_dialog.dart';
+import '../widgets/extensions_dialog.dart';
+import '../l10n/extension_translations.dart';
 import '../widgets/terminal_panel.dart';
 import '../providers/terminal_provider.dart';
 import '../main.dart' show appLockServiceProvider;
@@ -234,14 +241,14 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     MediaEditorMenuActions? mediaEditor,
   ) {
     final appMenu = PlatformMenu(
-      label: 'CrispCloud',
+      label: context.commanderTr("CrispCloud"),
       menus: <PlatformMenuItem>[
         PlatformMenuItemGroup(
           members: <PlatformMenuItem>[
             PlatformMenuItem(
               label: imageEditor != null || mediaEditor != null
                   ? context.imageTr('About CrispCloud')
-                  : 'About CrispCloud',
+                  : context.commanderTr("About CrispCloud"),
               onSelected: () => showDialog(
                 context: context,
                 builder: (_) => const AboutAppDialog(),
@@ -254,7 +261,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             PlatformMenuItem(
               label: imageEditor != null || mediaEditor != null
                   ? context.imageTr('Settings...')
-                  : 'Settings...',
+                  : context.commanderTr("Settings..."),
               shortcut: const SingleActivator(
                 LogicalKeyboardKey.comma,
                 meta: true,
@@ -300,11 +307,10 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     }
 
     final PanelSide activeSide = ref.read(activePanelProvider);
-    final bool localActive = activeSide == PanelSide.local;
 
     final List<PlatformMenuItem> browserFileMenus = <PlatformMenuItem>[
       PlatformMenuItem(
-        label: 'New Tab',
+        label: context.commanderTr("New Tab"),
         shortcut: const SingleActivator(LogicalKeyboardKey.keyT, meta: true),
         onSelected: () {
           final side = ref.read(activePanelProvider);
@@ -312,7 +318,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         },
       ),
       PlatformMenuItem(
-        label: 'Close Tab',
+        label: context.commanderTr("Close Tab"),
         shortcut: const SingleActivator(LogicalKeyboardKey.keyW, meta: true),
         onSelected: () {
           final side = ref.read(activePanelProvider);
@@ -322,34 +328,34 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         },
       ),
       PlatformMenuItem(
-        label: 'Open',
+        label: context.commanderTr("Open"),
         shortcut: const SingleActivator(LogicalKeyboardKey.enter),
         onSelected: () => viewSelectedFile(context, ref),
       ),
       PlatformMenuItem(
-        label: 'Edit',
+        label: context.commanderTr("Edit"),
         shortcut: const SingleActivator(LogicalKeyboardKey.f4),
         onSelected: () => editSelectedFile(context, ref),
       ),
       PlatformMenuItemGroup(
         members: <PlatformMenuItem>[
           PlatformMenuItem(
-            label: 'Copy...',
+            label: context.commanderTr("Copy..."),
             shortcut: const SingleActivator(LogicalKeyboardKey.f5),
             onSelected: () => showCopyDialogFromSelection(context, ref),
           ),
           PlatformMenuItem(
-            label: 'Move...',
+            label: context.commanderTr("Move..."),
             shortcut: const SingleActivator(LogicalKeyboardKey.f6),
             onSelected: () => showMoveDialogFromSelection(context, ref),
           ),
           PlatformMenuItem(
-            label: 'Delete...',
+            label: context.commanderTr("Delete..."),
             shortcut: const SingleActivator(LogicalKeyboardKey.f8),
             onSelected: () => confirmDeleteSelected(context, ref),
           ),
           PlatformMenuItem(
-            label: 'Rename...',
+            label: context.commanderTr("Rename..."),
             shortcut: const SingleActivator(LogicalKeyboardKey.f6, shift: true),
             onSelected: () => showRenameDialog(context, ref),
           ),
@@ -358,12 +364,12 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       PlatformMenuItemGroup(
         members: <PlatformMenuItem>[
           PlatformMenuItem(
-            label: 'New Folder...',
+            label: context.commanderTr("New Folder..."),
             shortcut: const SingleActivator(LogicalKeyboardKey.f7),
             onSelected: () => showCreateFolderDialog(context, ref, activeSide),
           ),
           PlatformMenuItem(
-            label: 'Properties',
+            label: context.commanderTr("Properties"),
             onSelected: () {
               final panel = _activePanel(ref);
               final item = panel.selection.isNotEmpty
@@ -377,7 +383,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       PlatformMenuItemGroup(
         members: <PlatformMenuItem>[
           PlatformMenuItem(
-            label: 'Go to Path...',
+            label: context.commanderTr("Go to Path..."),
             shortcut: const SingleActivator(
               LogicalKeyboardKey.keyG,
               meta: true,
@@ -385,7 +391,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             onSelected: () => showGoToDialog(context, ref),
           ),
           PlatformMenuItem(
-            label: 'Connect...',
+            label: context.commanderTr("Connect..."),
             shortcut: const SingleActivator(
               LogicalKeyboardKey.keyK,
               meta: true,
@@ -398,11 +404,11 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
 
     final List<PlatformMenuItem> browserEditMenus = <PlatformMenuItem>[
       PlatformMenuItem(
-        label: 'Select by Wildcard or Regex...',
+        label: context.commanderTr("Select by Wildcard or Regex..."),
         onSelected: () => showPatternSelectionDialog(context, ref, activeSide),
       ),
       PlatformMenuItem(
-        label: 'Deselect by Wildcard or Regex...',
+        label: context.commanderTr("Deselect by Wildcard or Regex..."),
         onSelected: () => showPatternSelectionDialog(
           context,
           ref,
@@ -411,24 +417,24 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         ),
       ),
       PlatformMenuItem(
-        label: 'Multi-Rename...',
+        label: context.commanderTr("Multi-Rename..."),
         shortcut: const SingleActivator(LogicalKeyboardKey.keyM, control: true),
         onSelected: () => showMultiRenameFromSelection(context, ref),
       ),
       PlatformMenuItem(
-        label: 'Trash History and Restore...',
+        label: context.commanderTr("Trash History and Restore..."),
         onSelected: () => showTrashHistoryDialog(context, ref, activeSide),
       ),
       PlatformMenuItem(
-        label: 'Rename History and Recovery...',
+        label: context.commanderTr("Rename History and Recovery..."),
         onSelected: () => showRenameHistoryDialog(context, ref, activeSide),
       ),
       PlatformMenuItem(
-        label: 'Transfer Queue and Recovery...',
+        label: context.commanderTr("Transfer Queue and Recovery..."),
         onSelected: () => showTransferHistoryDialog(context, ref),
       ),
       PlatformMenuItem(
-        label: 'Create or Verify Checksums...',
+        label: context.commanderTr("Create or Verify Checksums..."),
         onSelected: () => showChecksumToolsDialog(
           context,
           ref,
@@ -437,7 +443,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         ),
       ),
       PlatformMenuItem(
-        label: 'Split File...',
+        label: context.commanderTr("Split File..."),
         onSelected: _integritySelection(ref).length == 1
             ? () => showSplitFileDialog(
                 context,
@@ -448,7 +454,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             : null,
       ),
       PlatformMenuItem(
-        label: 'Combine Parts...',
+        label: context.commanderTr("Combine Parts..."),
         onSelected: () => showCombinePartsDialog(
           context,
           ref,
@@ -457,16 +463,16 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         ),
       ),
       PlatformMenuItem(
-        label: 'Import File List...',
+        label: context.commanderTr("Import File List..."),
         onSelected: () =>
             showFileListDialog(context, ref, activeSide, importMode: true),
       ),
       PlatformMenuItem(
-        label: 'Export File List...',
+        label: context.commanderTr("Export File List..."),
         onSelected: () => showFileListDialog(context, ref, activeSide),
       ),
       PlatformMenuItem(
-        label: 'File Collections...',
+        label: context.commanderTr("File Collections..."),
         onSelected: () => showFileCollectionsDialog(
           context,
           ref,
@@ -474,27 +480,27 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         ),
       ),
       PlatformMenuItem(
-        label: 'Remember Selection',
+        label: context.commanderTr("Remember Selection"),
         onSelected: () => _activePanel(ref).rememberSelection(),
       ),
       PlatformMenuItem(
-        label: 'Restore Selection',
+        label: context.commanderTr("Restore Selection"),
         onSelected: () => _activePanel(ref).restoreSelection(),
       ),
 
       PlatformMenuItem(
-        label: 'Select All',
+        label: context.commanderTr("Select All"),
         shortcut: const SingleActivator(LogicalKeyboardKey.keyA, meta: true),
         onSelected: () => _activePanel(ref).selectAll(),
       ),
       PlatformMenuItem(
-        label: 'Copy Files',
+        label: context.commanderTr("Copy Files"),
         shortcut: const SingleActivator(LogicalKeyboardKey.keyC, meta: true),
         onSelected: () =>
             copyFilesToClipboard(context, ref, ref.read(activePanelProvider)),
       ),
       PlatformMenuItem(
-        label: 'Cut Files',
+        label: context.commanderTr("Cut Files"),
         shortcut: const SingleActivator(LogicalKeyboardKey.keyX, meta: true),
         onSelected: () => copyFilesToClipboard(
           context,
@@ -504,7 +510,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         ),
       ),
       PlatformMenuItem(
-        label: 'Paste Files...',
+        label: context.commanderTr("Paste Files..."),
         shortcut: const SingleActivator(LogicalKeyboardKey.keyV, meta: true),
         onSelected: () => pasteFilesFromClipboard(
           context,
@@ -513,25 +519,25 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         ),
       ),
       PlatformMenuItem(
-        label: 'Invert Selection',
+        label: context.commanderTr("Invert Selection"),
         onSelected: () => _activePanel(ref).invertSelection(),
       ),
       PlatformMenuItemGroup(
         members: <PlatformMenuItem>[
           PlatformMenuItem(
-            label: 'Copy...',
+            label: context.commanderTr("Copy..."),
             onSelected: () => showCopyDialogFromSelection(context, ref),
           ),
           PlatformMenuItem(
-            label: 'Move...',
+            label: context.commanderTr("Move..."),
             onSelected: () => showMoveDialogFromSelection(context, ref),
           ),
           PlatformMenuItem(
-            label: 'Delete...',
+            label: context.commanderTr("Delete..."),
             onSelected: () => confirmDeleteSelected(context, ref),
           ),
           PlatformMenuItem(
-            label: 'Rename...',
+            label: context.commanderTr("Rename..."),
             onSelected: () => showRenameDialog(context, ref),
           ),
         ],
@@ -539,7 +545,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       PlatformMenuItemGroup(
         members: <PlatformMenuItem>[
           PlatformMenuItem(
-            label: 'Filter Files...',
+            label: context.commanderTr("Filter Files..."),
             shortcut: const SingleActivator(
               LogicalKeyboardKey.keyF,
               control: true,
@@ -550,11 +556,11 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             },
           ),
           PlatformMenuItem(
-            label: 'Find by Pattern...',
+            label: context.commanderTr("Find by Pattern..."),
             onSelected: () => showFindDialog(context, ref),
           ),
           PlatformMenuItem(
-            label: 'Search All Files...',
+            label: context.commanderTr("Search All Files..."),
             onSelected: () => showSearchDialog(context, ref),
           ),
         ],
@@ -564,11 +570,11 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     final List<PlatformMenuItem> viewMenus = <PlatformMenuItem>[
       if (editor != null)
         PlatformMenuItem(
-          label: 'Toggle Reading View',
+          label: context.commanderTr("Toggle Reading View"),
           onSelected: () => editor.perform(OfficeEditorAction.readingView),
         ),
       PlatformMenuItem(
-        label: 'Toggle Preview',
+        label: context.commanderTr("Toggle Preview"),
         shortcut: const SingleActivator(LogicalKeyboardKey.space),
         onSelected: () {
           final current = ref.read(showPreviewProvider);
@@ -576,21 +582,21 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         },
       ),
       PlatformMenuItem(
-        label: 'Toggle Tree Sidebar',
+        label: context.commanderTr("Toggle Tree Sidebar"),
         onSelected: () {
           final current = ref.read(showTreeSidebarProvider);
           ref.read(showTreeSidebarProvider.notifier).state = !current;
         },
       ),
       PlatformMenuItem(
-        label: 'Toggle Dual Panel',
+        label: context.commanderTr("Toggle Dual Panel"),
         onSelected: () {
           final current = ref.read(showDualPanelProvider);
           ref.read(showDualPanelProvider.notifier).state = !current;
         },
       ),
       PlatformMenuItem(
-        label: 'Toggle Terminal',
+        label: context.commanderTr("Toggle Terminal"),
         onSelected: () {
           final current = ref.read(showTerminalProvider);
           ref.read(showTerminalProvider.notifier).state = !current;
@@ -600,19 +606,19 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         PlatformMenuItemGroup(
           members: <PlatformMenuItem>[
             PlatformMenuItem(
-              label: 'Brief Rows',
+              label: context.commanderTr("Brief Rows"),
               onSelected: () => ref
                   .read(panelViewModeProvider(activeSide).notifier)
                   .setMode(PanelViewMode.brief),
             ),
             PlatformMenuItem(
-              label: 'Full Rows',
+              label: context.commanderTr("Full Rows"),
               onSelected: () => ref
                   .read(panelViewModeProvider(activeSide).notifier)
                   .setMode(PanelViewMode.full),
             ),
             PlatformMenuItem(
-              label: 'Tree View',
+              label: context.commanderTr("Tree View"),
               onSelected: () => ref
                   .read(panelViewModeProvider(activeSide).notifier)
                   .setMode(PanelViewMode.tree),
@@ -623,11 +629,11 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         PlatformMenuItemGroup(
           members: <PlatformMenuItem>[
             PlatformMenuItem(
-              label: 'List View',
+              label: context.commanderTr("List View"),
               onSelected: () => setFileView(ref, activeSide, ViewMode.list),
             ),
             PlatformMenuItem(
-              label: 'Grid View',
+              label: context.commanderTr("Grid View"),
               onSelected: () => setFileView(ref, activeSide, ViewMode.grid),
             ),
             PlatformMenuItem(
@@ -639,7 +645,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
               onSelected: () => setFileView(ref, activeSide, ViewMode.gallery),
             ),
             PlatformMenuItem(
-              label: 'Column View',
+              label: context.commanderTr("Column View"),
               onSelected: () => setFileView(ref, activeSide, ViewMode.column),
             ),
           ],
@@ -648,23 +654,23 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         PlatformMenuItemGroup(
           members: <PlatformMenuItem>[
             PlatformMenuItem(
-              label: 'Sort by Name',
+              label: context.commanderTr("Sort by Name"),
               onSelected: () => _activePanel(ref).setSortBy(SortBy.name),
             ),
             PlatformMenuItem(
-              label: 'Sort by Size',
+              label: context.commanderTr("Sort by Size"),
               onSelected: () => _activePanel(ref).setSortBy(SortBy.size),
             ),
             PlatformMenuItem(
-              label: 'Sort by Date',
+              label: context.commanderTr("Sort by Date"),
               onSelected: () => _activePanel(ref).setSortBy(SortBy.date),
             ),
             PlatformMenuItem(
-              label: 'Sort by Extension',
+              label: context.commanderTr("Sort by Extension"),
               onSelected: () => _activePanel(ref).setSortBy(SortBy.extension),
             ),
             PlatformMenuItem(
-              label: 'Reverse Sort Order',
+              label: context.commanderTr("Reverse Sort Order"),
               onSelected: () => _activePanel(ref).toggleSortOrder(),
             ),
           ],
@@ -673,15 +679,15 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         PlatformMenuItemGroup(
           members: <PlatformMenuItem>[
             PlatformMenuItem(
-              label: 'Show Hidden Files',
+              label: context.commanderTr("Show Hidden Files"),
               onSelected: () => _activePanel(ref).toggleShowHiddenFiles(),
             ),
             PlatformMenuItem(
-              label: 'Flat View',
+              label: context.commanderTr("Flat View"),
               onSelected: () => _activePanel(ref).toggleFlatView(),
             ),
             PlatformMenuItem(
-              label: 'Refresh',
+              label: context.commanderTr("Refresh"),
               shortcut: const SingleActivator(
                 LogicalKeyboardKey.f5,
                 control: true,
@@ -689,7 +695,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
               onSelected: () => _activePanel(ref).refresh(),
             ),
             PlatformMenuItem(
-              label: 'Refresh All',
+              label: context.commanderTr("Refresh All"),
               onSelected: () {
                 ref.read(panelProvider(PanelSide.local)).refresh();
                 ref.read(panelProvider(PanelSide.remote)).refresh();
@@ -700,15 +706,15 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       PlatformMenuItemGroup(
         members: <PlatformMenuItem>[
           PlatformMenuItem(
-            label: 'Compare Folders...',
+            label: context.commanderTr("Compare Folders..."),
             onSelected: () => showDirectoryComparisonDialog(context, ref),
           ),
           PlatformMenuItem(
-            label: 'Sync Manager',
+            label: context.commanderTr("Sync Manager"),
             onSelected: () => showSyncDialog(context),
           ),
           PlatformMenuItem(
-            label: 'Find Duplicates',
+            label: context.commanderTr("Find Duplicates"),
             onSelected: () => showDuplicateFinderDialog(context, ref),
           ),
         ],
@@ -716,7 +722,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       PlatformMenuItemGroup(
         members: <PlatformMenuItem>[
           PlatformMenuItem(
-            label: 'Command Palette',
+            label: context.commanderTr("Command Palette"),
             shortcut: const SingleActivator(
               LogicalKeyboardKey.keyP,
               meta: true,
@@ -730,7 +736,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
 
     final List<PlatformMenuItem> browserGoMenus = <PlatformMenuItem>[
       PlatformMenuItem(
-        label: 'Back',
+        label: context.commanderTr("Back"),
         shortcut: const SingleActivator(
           LogicalKeyboardKey.arrowLeft,
           alt: true,
@@ -738,7 +744,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         onSelected: () => _activePanel(ref).navigateBack(),
       ),
       PlatformMenuItem(
-        label: 'Forward',
+        label: context.commanderTr("Forward"),
         shortcut: const SingleActivator(
           LogicalKeyboardKey.arrowRight,
           alt: true,
@@ -746,28 +752,36 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         onSelected: () => _activePanel(ref).navigateForward(),
       ),
       PlatformMenuItem(
-        label: 'Up',
+        label: context.commanderTr("Up"),
         shortcut: const SingleActivator(LogicalKeyboardKey.arrowUp, alt: true),
         onSelected: () => _activePanel(ref).navigateUp(),
       ),
       PlatformMenuItemGroup(
         members: <PlatformMenuItem>[
           PlatformMenuItem(
-            label: 'Home',
+            label: context.commanderTr("Home"),
             onSelected: () {
               final panel = _activePanel(ref);
-              final String home = localActive
-                  ? (Platform.environment['HOME'] ?? '/')
-                  : '/';
-              panel.navigateToPath(home);
+              try {
+                final origin = panel.isInArchive
+                    ? panel.captureArchiveOrigin()
+                    : panel.captureCurrentOrigin();
+                final home = origin.source.isLocal && !kIsWeb
+                    ? (Platform.environment['HOME'] ?? '/')
+                    : '/';
+                panel.navigateToPath(home);
+              } catch (error) {
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(SnackBar(content: Text('$error')));
+              }
             },
           ),
           PlatformMenuItem(
-            label: 'Root',
+            label: context.commanderTr("Root"),
             onSelected: () => _activePanel(ref).navigateToPath('/'),
           ),
           PlatformMenuItem(
-            label: 'Go to Path...',
+            label: context.commanderTr("Go to Path..."),
             shortcut: const SingleActivator(
               LogicalKeyboardKey.keyG,
               meta: true,
@@ -780,33 +794,69 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
 
     final List<PlatformMenuItem> browserToolsMenus = <PlatformMenuItem>[
       PlatformMenuItem(
-        label: 'Search All Files...',
+        label: context.commanderTr("Search All Files..."),
         onSelected: () => showSearchDialog(context, ref),
       ),
       PlatformMenuItem(
-        label: 'Find by Pattern...',
+        label: context.commanderTr("Find by Pattern..."),
         onSelected: () => showFindDialog(context, ref),
+      ),
+      PlatformMenuItemGroup(
+        members: [
+          PlatformMenuItem(
+            label: context.commanderTr("Commander workspaces"),
+            onSelected: () => showWorkspaceDialog(
+              context,
+              ref,
+              ref.read(activePanelProvider),
+            ),
+          ),
+          PlatformMenuItem(
+            label: context.commanderTr("Columns and view"),
+            onSelected: () => showPanelViewDialog(
+              context,
+              ref,
+              ref.read(activePanelProvider),
+            ),
+          ),
+          PlatformMenuItem(
+            label: context.commanderTr("Custom commands"),
+            onSelected: () => showCustomCommandsDialog(
+              context,
+              ref,
+              ref.read(activePanelProvider),
+            ),
+          ),
+          PlatformMenuItem(
+            label: context.extensionTr('Extensions'),
+            onSelected: () => showExtensionsDialog(
+              context,
+              ref,
+              ref.read(activePanelProvider),
+            ),
+          ),
+        ],
       ),
       PlatformMenuItemGroup(
         members: <PlatformMenuItem>[
           PlatformMenuItem(
-            label: 'Compare Folders...',
+            label: context.commanderTr("Compare Folders..."),
             onSelected: () => showDirectoryComparisonDialog(context, ref),
           ),
           PlatformMenuItem(
-            label: 'Sync Manager',
+            label: context.commanderTr("Sync Manager"),
             onSelected: () => showSyncDialog(context),
           ),
           PlatformMenuItem(
-            label: 'Find Duplicates',
+            label: context.commanderTr("Find Duplicates"),
             onSelected: () => showDuplicateFinderDialog(context, ref),
           ),
           PlatformMenuItem(
-            label: 'Multi-Cloud...',
+            label: context.commanderTr("Multi-Cloud..."),
             onSelected: () => showMultiCloudDialog(context),
           ),
           PlatformMenuItem(
-            label: 'Mount...',
+            label: context.commanderTr("Mount..."),
             onSelected: () => showMountDialog(context),
           ),
         ],
@@ -814,11 +864,11 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       PlatformMenuItemGroup(
         members: <PlatformMenuItem>[
           PlatformMenuItem(
-            label: 'Command Palette...',
+            label: context.commanderTr("Command Palette..."),
             onSelected: () => showCommandPalette(context, ref),
           ),
           PlatformMenuItem(
-            label: 'Keyboard Shortcuts...',
+            label: context.commanderTr("Keyboard Shortcuts..."),
             onSelected: () => showKeyboardShortcutsDialog(context),
           ),
         ],
@@ -839,9 +889,13 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           menus: _editorEditMenus(context, editor),
         )
       else
-        PlatformMenu(label: 'Edit', menus: browserEditMenus),
+        PlatformMenu(
+          label: context.commanderTr("Edit"),
+          menus: browserEditMenus,
+        ),
       PlatformMenu(label: context.tr('View'), menus: viewMenus),
-      if (editor == null) PlatformMenu(label: 'Go', menus: browserGoMenus),
+      if (editor == null)
+        PlatformMenu(label: context.commanderTr("Go"), menus: browserGoMenus),
       if (editor != null) ...<PlatformMenuItem>[
         PlatformMenu(
           label: context.tr('Insert'),
@@ -856,16 +910,19 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           menus: _editorToolsMenus(context, editor),
         ),
       ] else
-        PlatformMenu(label: 'Tools', menus: browserToolsMenus),
+        PlatformMenu(
+          label: context.commanderTr("Tools"),
+          menus: browserToolsMenus,
+        ),
       PlatformMenu(
         label: context.tr('Help'),
         menus: <PlatformMenuItem>[
           PlatformMenuItem(
-            label: 'Keyboard Shortcuts...',
+            label: context.commanderTr("Keyboard Shortcuts..."),
             onSelected: () => showKeyboardShortcutsDialog(context),
           ),
           PlatformMenuItem(
-            label: 'About CrispCloud',
+            label: context.commanderTr("About CrispCloud"),
             onSelected: () => showDialog(
               context: context,
               builder: (_) => const AboutAppDialog(),
@@ -1501,9 +1558,11 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     void switchTo(PanelSide side) {
       if (side == PanelSide.remote && !auth.isConnected) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please connect to access remote files'),
-            duration: Duration(seconds: 2),
+          SnackBar(
+            content: Text(
+              context.commanderTr("Please connect to access remote files"),
+            ),
+            duration: const Duration(seconds: 2),
           ),
         );
         return;
@@ -1619,12 +1678,12 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     return [
       IconButton(
         icon: const Icon(Icons.swap_horiz, size: 20),
-        tooltip: '${l.swapPanels} (Ctrl+U)',
+        tooltip: context.commanderTr("{0} (Ctrl+U)", [l.swapPanels]),
         onPressed: () => _swapPanels(),
       ),
       IconButton(
         icon: const Icon(Icons.settings, size: 20),
-        tooltip: 'Settings',
+        tooltip: context.commanderTr("Settings"),
         onPressed: () => showSettingsDialog(context),
       ),
       _buildOverflowMenu(context, auth),
@@ -1658,7 +1717,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       // Panel swap
       IconButton(
         icon: const Icon(Icons.swap_horiz, size: 20),
-        tooltip: '${l.swapPanels} (Ctrl+U)',
+        tooltip: context.commanderTr("{0} (Ctrl+U)", [l.swapPanels]),
         onPressed: () => _swapPanels(),
       ),
       // Terminal toggle — only on native desktop
@@ -1751,7 +1810,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       // Overflow menu (same as narrow)
       IconButton(
         icon: const Icon(Icons.settings, size: 20),
-        tooltip: 'Settings',
+        tooltip: context.commanderTr("Settings"),
         onPressed: () => showSettingsDialog(context),
       ),
       _buildOverflowMenu(context, auth),
@@ -1792,6 +1851,18 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       tooltip: l.moreActions,
       onSelected: (value) {
         switch (value) {
+          case 'workspaces':
+            showWorkspaceDialog(context, ref, ref.read(activePanelProvider));
+          case 'columns':
+            showPanelViewDialog(context, ref, ref.read(activePanelProvider));
+          case 'commands':
+            showCustomCommandsDialog(
+              context,
+              ref,
+              ref.read(activePanelProvider),
+            );
+          case 'extensions':
+            showExtensionsDialog(context, ref, ref.read(activePanelProvider));
           case 'multi_rename':
             showMultiRenameFromSelection(context, ref);
           case 'pattern_selection':
@@ -1929,62 +2000,114 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           value: 'multi_rename',
           child: _overflowItem(
             Icons.drive_file_rename_outline,
-            'Multi-Rename (Ctrl+M)',
+            context.commanderTr("Multi-Rename (Ctrl+M)"),
           ),
         ),
         PopupMenuItem(
           value: 'trash_history',
           child: _overflowItem(
             Icons.restore_from_trash,
-            'Trash history and restore…',
+            context.commanderTr("Trash history and restore…"),
           ),
         ),
         PopupMenuItem(
           value: 'rename_history',
-          child: _overflowItem(Icons.history, 'Rename history and recovery…'),
+          child: _overflowItem(
+            Icons.history,
+            context.commanderTr("Rename history and recovery…"),
+          ),
         ),
         PopupMenuItem(
           value: 'transfer_history',
           child: _overflowItem(
             Icons.pending_actions,
-            'Transfer queue and recovery…',
+            context.commanderTr("Transfer queue and recovery…"),
           ),
         ),
         PopupMenuItem(
           value: 'checksums',
           child: _overflowItem(
             Icons.verified_outlined,
-            'Create or verify checksums…',
+            context.commanderTr("Create or verify checksums…"),
           ),
         ),
         PopupMenuItem(
           value: 'split_file',
           enabled: _integritySelection(ref).length == 1,
-          child: _overflowItem(Icons.splitscreen, 'Split file…'),
+          child: _overflowItem(
+            Icons.splitscreen,
+            context.commanderTr("Split file…"),
+          ),
         ),
         PopupMenuItem(
           value: 'combine_parts',
-          child: _overflowItem(Icons.join_inner, 'Combine parts…'),
+          child: _overflowItem(
+            Icons.join_inner,
+            context.commanderTr("Combine parts…"),
+          ),
         ),
         PopupMenuItem(
           value: 'pattern_selection',
-          child: _overflowItem(Icons.rule, 'Select by wildcard or regex'),
+          child: _overflowItem(
+            Icons.rule,
+            context.commanderTr("Select by wildcard or regex"),
+          ),
         ),
         PopupMenuItem(
           value: 'copy_options',
-          child: _overflowItem(Icons.copy, 'Copy with options (F5)'),
+          child: _overflowItem(
+            Icons.copy,
+            context.commanderTr("Copy with options (F5)"),
+          ),
         ),
         PopupMenuItem(
           value: 'move_options',
-          child: _overflowItem(Icons.drive_file_move, 'Move with options (F6)'),
+          child: _overflowItem(
+            Icons.drive_file_move,
+            context.commanderTr("Move with options (F6)"),
+          ),
         ),
         PopupMenuItem(
           value: 'import_file_list',
-          child: _overflowItem(Icons.playlist_add, 'Import file list'),
+          child: _overflowItem(
+            Icons.playlist_add,
+            context.commanderTr("Import file list"),
+          ),
         ),
         PopupMenuItem(
           value: 'export_file_list',
-          child: _overflowItem(Icons.playlist_play, 'Export file list'),
+          child: _overflowItem(
+            Icons.playlist_play,
+            context.commanderTr("Export file list"),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'workspaces',
+          child: _overflowItem(
+            Icons.bookmarks_outlined,
+            context.commanderTr("Commander workspaces"),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'columns',
+          child: _overflowItem(
+            Icons.view_column_outlined,
+            context.commanderTr("Columns and view"),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'commands',
+          child: _overflowItem(
+            Icons.terminal,
+            context.commanderTr("Custom commands"),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'extensions',
+          child: _overflowItem(
+            Icons.extension,
+            context.extensionTr('Extensions'),
+          ),
         ),
         const PopupMenuDivider(),
 
@@ -2009,13 +2132,16 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         ),
         PopupMenuItem(
           value: 'compare_folders',
-          child: _overflowItem(Icons.compare_arrows, 'Compare folders…'),
+          child: _overflowItem(
+            Icons.compare_arrows,
+            context.commanderTr("Compare folders…"),
+          ),
         ),
         PopupMenuItem(
           value: 'collections',
           child: _overflowItem(
             Icons.collections_bookmark_outlined,
-            'File collections…',
+            context.commanderTr("File collections…"),
           ),
         ),
         if (isDesktopPlatform)
@@ -2037,7 +2163,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         ),
         PopupMenuItem(
           value: 'settings',
-          child: _overflowItem(Icons.settings, 'Settings'),
+          child: _overflowItem(Icons.settings, context.commanderTr("Settings")),
         ),
         const PopupMenuDivider(),
         PopupMenuItem(
@@ -2120,7 +2246,10 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         if (auth.isEncryptionEnabled)
           PopupMenuItem(
             value: 'keys',
-            child: _overflowItem(Icons.key, 'Key Management'),
+            child: _overflowItem(
+              Icons.key,
+              context.commanderTr("Key Management"),
+            ),
           ),
         const PopupMenuDivider(),
         PopupMenuItem(
@@ -2141,7 +2270,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       children: [
         Icon(icon, size: 20, color: iconColor),
         const SizedBox(width: 12),
-        Flexible(child: Text(label, overflow: TextOverflow.ellipsis)),
+        Expanded(child: Text(label)),
       ],
     );
   }
@@ -2211,7 +2340,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  auth.userEmail ?? 'User',
+                  auth.userEmail ?? context.commanderTr("User"),
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
@@ -2219,7 +2348,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Logged in',
+                  context.commanderTr("Logged in"),
                   style: TextStyle(
                     fontSize: 12,
                     color: Theme.of(context).colorScheme.primary,
@@ -2229,13 +2358,13 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             ),
           ),
           const PopupMenuDivider(),
-          const PopupMenuItem<String>(
+          PopupMenuItem<String>(
             value: 'logout',
             child: Row(
               children: [
-                Icon(Icons.logout, size: 20),
-                SizedBox(width: 12),
-                Text('Logout'),
+                const Icon(Icons.logout, size: 20),
+                const SizedBox(width: 12),
+                Text(context.commanderTr("Logout")),
               ],
             ),
           ),
@@ -2243,7 +2372,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         child: Chip(
           avatar: const Icon(Icons.account_circle, size: 20),
           label: Text(
-            auth.userEmail ?? 'Connected',
+            auth.userEmail ?? context.commanderTr("Connected"),
             style: const TextStyle(fontSize: 13),
           ),
         ),
@@ -2281,7 +2410,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                 if (auth.isConnected) ...[
                   const SizedBox(height: 4),
                   Text(
-                    auth.userEmail ?? 'Connected',
+                    auth.userEmail ?? context.commanderTr("Connected"),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onPrimaryContainer,
                     ),
@@ -2293,7 +2422,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           if (!auth.isConnected)
             ListTile(
               leading: const Icon(Icons.login),
-              title: const Text('Connect to Cloud'),
+              title: Text(context.commanderTr("Connect to Cloud")),
               onTap: () {
                 Navigator.pop(context);
                 showConnectionDialogScreen(context);
@@ -2302,10 +2431,14 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           else ...[
             ListTile(
               leading: const Icon(Icons.sync_alt),
-              title: const Text('Operations'),
+              title: Text(context.commanderTr("Operations")),
               subtitle: transfers.operations.isEmpty
-                  ? const Text('No active operations')
-                  : Text('${transfers.operations.length} operation(s)'),
+                  ? Text(context.commanderTr("No active operations"))
+                  : Text(
+                      context.commanderTr("{0} operation(s)", [
+                        transfers.operations.length,
+                      ]),
+                    ),
               onTap: () {
                 Navigator.pop(context);
               },
@@ -2313,7 +2446,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             const Divider(),
             ListTile(
               leading: const Icon(Icons.refresh),
-              title: const Text('Refresh All'),
+              title: Text(context.commanderTr("Refresh All")),
               onTap: () {
                 Navigator.pop(context);
                 ref.read(panelProvider(PanelSide.local)).refresh();
@@ -2322,7 +2455,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.clear_all),
-              title: const Text('Clear Selections'),
+              title: Text(context.commanderTr("Clear Selections")),
               onTap: () {
                 Navigator.pop(context);
                 ref.read(panelProvider(PanelSide.local)).clearSelection();
@@ -2332,7 +2465,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             const Divider(),
             ListTile(
               leading: const Icon(Icons.history),
-              title: const Text('Audit Log'),
+              title: Text(context.commanderTr("Audit Log")),
               onTap: () {
                 Navigator.pop(context);
                 showAuditLogDialog(context);
@@ -2340,7 +2473,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.settings),
-              title: const Text('Settings'),
+              title: Text(context.commanderTr("Settings")),
               onTap: () {
                 Navigator.pop(context);
                 showSettingsDialog(context);
@@ -2352,11 +2485,13 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                 final preferExternal = cref.watch(preferExternalEditorProvider);
                 return SwitchListTile(
                   secondary: const Icon(Icons.open_in_new),
-                  title: const Text('Prefer System Editor'),
+                  title: Text(context.commanderTr("Prefer System Editor")),
                   subtitle: Text(
                     preferExternal
-                        ? 'Edit opens with the OS default app'
-                        : 'Edit opens built-in editor',
+                        ? context.commanderTr(
+                            "Edit opens with the OS default app",
+                          )
+                        : context.commanderTr("Edit opens built-in editor"),
                     style: const TextStyle(fontSize: 11),
                   ),
                   value: preferExternal,
@@ -2375,9 +2510,11 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                 final fkeyVisible = cref.watch(fkeyBarVisibleProvider);
                 return SwitchListTile(
                   secondary: const Icon(Icons.keyboard_alt_outlined),
-                  title: const Text('F-Key Bar'),
+                  title: Text(context.commanderTr("F-Key Bar")),
                   subtitle: Text(
-                    fkeyVisible ? 'F3–F8 bar is shown' : 'F3–F8 bar is hidden',
+                    fkeyVisible
+                        ? context.commanderTr("F3–F8 bar is shown")
+                        : context.commanderTr("F3–F8 bar is hidden"),
                     style: const TextStyle(fontSize: 11),
                   ),
                   value: fkeyVisible,
@@ -2392,11 +2529,15 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                 final show = cref.watch(showSelectionBarProvider);
                 return SwitchListTile(
                   secondary: const Icon(Icons.checklist),
-                  title: const Text('Selection Bar'),
+                  title: Text(context.commanderTr("Selection Bar")),
                   subtitle: Text(
                     show
-                        ? 'Action bar shown when files are selected (touch mode)'
-                        : 'Hidden — use F-keys / keyboard (DC mode)',
+                        ? context.commanderTr(
+                            "Action bar shown when files are selected (touch mode)",
+                          )
+                        : context.commanderTr(
+                            "Hidden — use F-keys / keyboard (DC mode)",
+                          ),
                     style: const TextStyle(fontSize: 11),
                   ),
                   value: show,
@@ -2405,38 +2546,25 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                 );
               },
             ),
-            // Toolbar customization
             ListTile(
-              leading: const Icon(Icons.tune),
-              title: const Text('Toolbar Customization'),
-              subtitle: const Text(
-                'Show/hide and reorder toolbar buttons',
-                style: TextStyle(fontSize: 11),
+              leading: const Icon(Icons.terminal),
+              title: Text(context.commanderTr("Custom commands")),
+              subtitle: Text(
+                context.commanderTr("Commands use verified local files."),
+                style: const TextStyle(fontSize: 11),
               ),
               onTap: () {
                 Navigator.pop(context);
-                showDialog(
-                  context: context,
-                  builder: (dialogContext) => AlertDialog(
-                    title: const Text('Toolbar Customization'),
-                    content: const Text(
-                      'Toolbar button visibility and order can be configured '
-                      'via the toolbar customization service. '
-                      'Full drag-and-drop reorder dialog coming soon.',
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(dialogContext),
-                        child: const Text('Close'),
-                      ),
-                    ],
-                  ),
+                showCustomCommandsDialog(
+                  context,
+                  ref,
+                  ref.read(activePanelProvider),
                 );
               },
             ),
             ListTile(
               leading: const Icon(Icons.keyboard),
-              title: const Text('Keyboard Shortcuts'),
+              title: Text(context.commanderTr("Keyboard Shortcuts")),
               onTap: () {
                 Navigator.pop(context);
                 showKeyboardShortcutsDialog(context);
@@ -2444,7 +2572,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.lock_outline),
-              title: const Text('App Lock'),
+              title: Text(context.commanderTr("App Lock")),
               onTap: () async {
                 Navigator.pop(context);
                 final lockService = ref.read(appLockServiceProvider);
@@ -2455,20 +2583,22 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                   final action = await showDialog<String>(
                     context: context,
                     builder: (ctx) => AlertDialog(
-                      title: const Text('App Lock'),
-                      content: const Text('App lock is currently enabled.'),
+                      title: Text(context.commanderTr("App Lock")),
+                      content: Text(
+                        context.commanderTr("App lock is currently enabled."),
+                      ),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(ctx, 'disable'),
-                          child: const Text('Disable'),
+                          child: Text(context.commanderTr("Disable")),
                         ),
                         TextButton(
                           onPressed: () => Navigator.pop(ctx, 'change'),
-                          child: const Text('Change Code'),
+                          child: Text(context.commanderTr("Change Code")),
                         ),
                         TextButton(
                           onPressed: () => Navigator.pop(ctx),
-                          child: const Text('Cancel'),
+                          child: Text(context.commanderTr("Cancel")),
                         ),
                       ],
                     ),
@@ -2477,7 +2607,9 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                     await lockService.disable();
                     if (!context.mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('App lock disabled')),
+                      SnackBar(
+                        content: Text(context.commanderTr("App lock disabled")),
+                      ),
                     );
                   } else if (action == 'change') {
                     if (!context.mounted) return;
@@ -2501,7 +2633,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.info_outline),
-              title: const Text('About'),
+              title: Text(context.commanderTr("About")),
               onTap: () {
                 Navigator.pop(context);
                 showDialog(
@@ -2517,7 +2649,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                 color: Theme.of(context).colorScheme.error,
               ),
               title: Text(
-                'Logout',
+                context.commanderTr("Logout"),
                 style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
               onTap: () {
@@ -2532,11 +2664,15 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
               final enabled = cref.watch(crashReportingEnabledProvider);
               return SwitchListTile(
                 secondary: const Icon(Icons.health_and_safety_outlined),
-                title: const Text('Local Crash Diagnostics'),
+                title: Text(context.commanderTr("Local Crash Diagnostics")),
                 subtitle: Text(
                   enabled
-                      ? 'Stores sanitized crash reports on this device'
-                      : 'Off — no crash reports are retained',
+                      ? context.commanderTr(
+                          "Stores sanitized crash reports on this device",
+                        )
+                      : context.commanderTr(
+                          "Off — no crash reports are retained",
+                        ),
                   style: const TextStyle(fontSize: 11),
                 ),
                 value: enabled,
@@ -2548,10 +2684,10 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           ),
           ListTile(
             leading: const Icon(Icons.monitor_heart_outlined),
-            title: const Text('Diagnostics'),
-            subtitle: const Text(
-              'Review, copy, or clear local crash reports',
-              style: TextStyle(fontSize: 11),
+            title: Text(context.commanderTr("Diagnostics")),
+            subtitle: Text(
+              context.commanderTr("Review, copy, or clear local crash reports"),
+              style: const TextStyle(fontSize: 11),
             ),
             onTap: () {
               Navigator.pop(context);
@@ -2576,14 +2712,14 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Local Diagnostics'),
+        title: Text(context.commanderTr("Local Diagnostics")),
         content: SizedBox(
           width: 560,
           child: ListView(
             shrinkWrap: true,
             children: [
               Text(
-                'Platform checks',
+                context.commanderTr("Platform checks"),
                 style: Theme.of(dialogContext).textTheme.titleSmall,
               ),
               const SizedBox(height: 6),
@@ -2600,13 +2736,17 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
               ),
               const Divider(height: 24),
               Text(
-                'Crash reports',
+                context.commanderTr("Crash reports"),
                 style: Theme.of(dialogContext).textTheme.titleSmall,
               ),
               if (reports.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.only(top: 8),
-                  child: Text('No crash reports are stored on this device.'),
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    context.commanderTr(
+                      "No crash reports are stored on this device.",
+                    ),
+                  ),
                 )
               else
                 ...reports.map(
@@ -2635,12 +2775,14 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                 await Clipboard.setData(ClipboardData(text: exported));
                 if (dialogContext.mounted) {
                   ScaffoldMessenger.of(dialogContext).showSnackBar(
-                    const SnackBar(content: Text('Diagnostics copied')),
+                    SnackBar(
+                      content: Text(context.commanderTr("Diagnostics copied")),
+                    ),
                   );
                 }
               },
               icon: const Icon(Icons.copy),
-              label: const Text('Copy'),
+              label: Text(context.commanderTr("Copy")),
             ),
           if (reports.isNotEmpty)
             TextButton.icon(
@@ -2649,11 +2791,11 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                 if (dialogContext.mounted) Navigator.pop(dialogContext);
               },
               icon: const Icon(Icons.delete_outline),
-              label: const Text('Clear'),
+              label: Text(context.commanderTr("Clear")),
             ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Close'),
+            child: Text(context.commanderTr("Close")),
           ),
         ],
       ),
@@ -2708,8 +2850,10 @@ class _WindowsExplorerIntegrationTileState
           SnackBar(
             content: Text(
               enable
-                  ? 'Failed to register context menu. Check app permissions.'
-                  : 'Failed to unregister context menu.',
+                  ? context.commanderTr(
+                      "Failed to register context menu. Check app permissions.",
+                    )
+                  : context.commanderTr("Failed to unregister context menu."),
             ),
           ),
         );
@@ -2727,11 +2871,13 @@ class _WindowsExplorerIntegrationTileState
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           : const Icon(Icons.folder_open),
-      title: const Text('Windows Explorer Integration'),
+      title: Text(context.commanderTr("Windows Explorer Integration")),
       subtitle: Text(
         _registered
-            ? 'Right-click files to upload to CrispCloud'
-            : 'Add "Upload to CrispCloud" to Explorer context menu',
+            ? context.commanderTr("Right-click files to upload to CrispCloud")
+            : context.commanderTr(
+                "Add \"Upload to CrispCloud\" to Explorer context menu",
+              ),
         style: const TextStyle(fontSize: 11),
       ),
       value: _registered,

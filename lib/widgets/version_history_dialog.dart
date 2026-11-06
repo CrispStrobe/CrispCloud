@@ -3,6 +3,8 @@
 // Shows file version history and allows restoring previous versions.
 // Works with providers that support versioning (GDrive, Dropbox, OneDrive).
 
+import '../l10n/commander_strings.dart';
+
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -76,6 +78,7 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
   List<Map<String, dynamic>> _versions = [];
   bool _loading = true;
   bool _restoring = false;
+  bool _comparing = false;
   String? _error;
 
   @override
@@ -161,7 +164,7 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
             'modified': r['modifiedTime'],
             'size': int.tryParse(r['size']?.toString() ?? '0') ?? 0,
             'expectedLength': int.tryParse(r['size']?.toString() ?? ''),
-            'author': r['lastModifyingUser']?['displayName'] ?? 'Unknown',
+            'author': r['lastModifyingUser']?['displayName'] ?? '',
             'provider': 'gdrive',
             'fileId': fileId,
           },
@@ -246,27 +249,32 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Restore Version?'),
+        scrollable: true,
+        title: Text(context.commanderTr("Restore Version?")),
         content: Text(
-          'This will replace the current file with the version from '
-          '${version['modified'] ?? 'unknown date'}. '
-          'The current version will be preserved in the version history.',
+          context.commanderTr(
+            "This will replace the current file with the version from {0}. The current version will be preserved in the version history.",
+            [version['modified'] ?? context.commanderTr("Unknown date")],
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(context.commanderTr("Cancel")),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Restore'),
+            child: Text(context.commanderTr("Restore")),
           ),
         ],
       ),
     );
     if (confirm != true || !mounted) return;
 
-    setState(() => _restoring = true);
+    setState(() {
+      _restoring = true;
+      _comparing = false;
+    });
 
     try {
       final client = capturedRemoteClient(widget.origin);
@@ -307,7 +315,10 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Restored ${widget.file.name} to version from ${version['modified']}',
+              context.commanderTr("Restored {0} to version from {1}", [
+                widget.file.name,
+                version['modified'],
+              ]),
             ),
           ),
         );
@@ -322,8 +333,11 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
       _log.error('Failed to restore version', e);
       if (mounted) {
         setState(() => _restoring = false);
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Restore failed: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.commanderTr("Restore failed: {0}", [e])),
+          ),
+        );
       }
     }
   }
@@ -454,7 +468,10 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
 
   /// Compare a version with the current version using the diff viewer.
   Future<void> _compareVersion(Map<String, dynamic> version) async {
-    setState(() => _restoring = true); // reuse loading overlay
+    setState(() {
+      _restoring = true;
+      _comparing = true;
+    });
 
     try {
       // Download the old version
@@ -486,21 +503,22 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
       final modified = DateTime.tryParse(version['modified'] ?? '');
       final versionLabel = modified != null
           ? formatDateFull(modified)
-          : 'Version ${version['id']}';
+          : '${version['id']}';
 
       showDiffViewerFromContent(
         context,
         leftContent: oldContent,
         rightContent: currentContent,
-        leftLabel: 'Version: $versionLabel',
-        rightLabel: 'Current',
+        leftLabel: context.commanderTr("Version {0}", [versionLabel]),
+        rightLabel: context.commanderTr("Current"),
       );
     } catch (e) {
       _log.error('Version diff failed', e);
       if (mounted) {
         setState(() => _restoring = false);
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Diff failed: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.commanderTr("Diff failed: {0}", [e]))),
+        );
       }
     }
   }
@@ -516,7 +534,7 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Version History — ${widget.file.name}',
+              context.commanderTr("Version History — {0}", [widget.file.name]),
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -535,7 +553,11 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
                 ),
               )
             : _versions.isEmpty
-            ? const Center(child: Text('No version history available'))
+            ? Center(
+                child: Text(
+                  context.commanderTr("No version history available"),
+                ),
+              )
             : Stack(
                 children: [
                   ListView.builder(
@@ -543,78 +565,70 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
                     itemBuilder: (context, index) {
                       final v = _versions[index];
                       final modified = DateTime.tryParse(v['modified'] ?? '');
-                      return ListTile(
-                        leading: CircleAvatar(
-                          radius: 16,
-                          backgroundColor: index == 0
-                              ? theme.colorScheme.primary
-                              : theme.colorScheme.surfaceContainerHighest,
-                          child: Text(
-                            '${index + 1}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: index == 0
-                                  ? theme.colorScheme.onPrimary
-                                  : theme.colorScheme.onSurface,
-                            ),
-                          ),
-                        ),
-                        title: Text(
-                          modified != null
-                              ? formatDateFull(modified)
-                              : 'Version ${v['id']}',
-                          style: const TextStyle(fontSize: 13),
-                        ),
-                        subtitle: Text(
-                          '${formatBytes(v['size'] as int)}${v['author']?.isNotEmpty == true ? ' • ${v['author']}' : ''}',
-                          style: const TextStyle(fontSize: 11),
-                        ),
-                        trailing: index == 0
-                            ? const Chip(
-                                label: Text(
-                                  'Current',
-                                  style: TextStyle(fontSize: 10),
-                                ),
-                                visualDensity: VisualDensity.compact,
-                              )
-                            : Row(
-                                mainAxisSize: MainAxisSize.min,
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                modified != null
+                                    ? formatDateFull(modified)
+                                    : context.commanderTr("Version {0}", [
+                                        v['id'],
+                                      ]),
+                                style: theme.textTheme.titleSmall,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${formatBytes(v['size'] as int)}${v['author']?.isNotEmpty == true ? ' • ${v['author']}' : ''}',
+                                style: theme.textTheme.bodySmall,
+                              ),
+                              const SizedBox(height: 8),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 4,
                                 children: [
-                                  TextButton(
+                                  TextButton.icon(
+                                    icon: const Icon(
+                                      Icons.compare_arrows,
+                                      size: 18,
+                                    ),
                                     onPressed: _restoring
                                         ? null
                                         : () => _compareVersion(v),
-                                    child: const Text(
-                                      'Diff',
-                                      style: TextStyle(fontSize: 12),
-                                    ),
+                                    label: Text(context.commanderTr("Diff")),
                                   ),
-                                  TextButton(
+                                  TextButton.icon(
+                                    icon: const Icon(Icons.restore, size: 18),
                                     onPressed: _restoring
                                         ? null
                                         : () => _restoreVersion(v),
-                                    child: const Text(
-                                      'Restore',
-                                      style: TextStyle(fontSize: 12),
-                                    ),
+                                    label: Text(context.commanderTr("Restore")),
                                   ),
                                 ],
                               ),
+                            ],
+                          ),
+                        ),
                       );
                     },
                   ),
                   if (_restoring)
                     Container(
                       color: Colors.black26,
-                      child: const Center(
+                      child: Center(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            CircularProgressIndicator(),
-                            SizedBox(height: 12),
+                            const CircularProgressIndicator(),
+                            const SizedBox(height: 12),
                             Text(
-                              'Restoring...',
-                              style: TextStyle(color: Colors.white),
+                              _comparing
+                                  ? context.commanderTr("Loading…")
+                                  : context.commanderTr("Restoring..."),
+                              style: const TextStyle(color: Colors.white),
                             ),
                           ],
                         ),

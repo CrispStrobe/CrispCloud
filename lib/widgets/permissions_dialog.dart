@@ -3,6 +3,8 @@
 // File permissions editor for SFTP connections.
 // Allows changing chmod (rwxrwxrwx) and chown (user:group).
 
+import '../l10n/commander_strings.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -53,7 +55,7 @@ class _PermissionsDialogState extends ConsumerState<_PermissionsDialog> {
   final _groupController = TextEditingController();
   bool _loading = true;
   bool _saving = false;
-  String? _error;
+  String Function(BuildContext)? _error;
 
   @override
   void initState() {
@@ -66,7 +68,9 @@ class _PermissionsDialogState extends ConsumerState<_PermissionsDialog> {
       final client = capturedRemoteClient(widget.origin);
       if (client is! SFTPClientAdapter) {
         setState(() {
-          _error = 'Permissions are only available for SFTP connections';
+          _error = (context) => context.commanderTr(
+            "Permissions are only available for SFTP connections",
+          );
           _loading = false;
         });
         return;
@@ -99,7 +103,8 @@ class _PermissionsDialogState extends ConsumerState<_PermissionsDialog> {
       _log.error('Failed to load permissions', e);
       if (mounted) {
         setState(() {
-          _error = 'Failed to load permissions: $e';
+          _error = (context) =>
+              context.commanderTr("Failed to load permissions: {0}", [e]);
           _loading = false;
         });
       }
@@ -146,112 +151,111 @@ class _PermissionsDialogState extends ConsumerState<_PermissionsDialog> {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Permissions — ${widget.file.name}',
+              context.commanderTr("Permissions — {0}", [widget.file.name]),
               overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
       ),
-      content: SizedBox(
-        width: 400,
-        child: _loading
-            ? const Center(child: CircularProgressIndicator())
-            : _error != null
-            ? Center(
-                child: Text(
-                  _error!,
-                  style: TextStyle(color: theme.colorScheme.error),
-                ),
-              )
-            : Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Octal + symbolic display
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(8),
+      content: SingleChildScrollView(
+        child: SizedBox(
+          width: 400,
+          child: _loading
+              ? const Center(child: CircularProgressIndicator())
+              : _error != null
+              ? Center(
+                  child: Text(
+                    _error!(context),
+                    style: TextStyle(color: theme.colorScheme.error),
+                  ),
+                )
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Octal + symbolic display
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Wrap(
+                        alignment: WrapAlignment.center,
+                        spacing: 16,
+                        runSpacing: 8,
+                        children: [
+                          Text(
+                            _toOctal(),
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontFamily: 'monospace',
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            _toSymbolic(),
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontFamily: 'monospace',
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    const SizedBox(height: 16),
+
+                    // Permission grid
+                    _buildPermissionRow(context.commanderTr("Owner"), 0),
+                    _buildPermissionRow(context.commanderTr("Group"), 3),
+                    _buildPermissionRow(context.commanderTr("Other"), 6),
+                    const SizedBox(height: 16),
+
+                    // Quick presets
+                    Wrap(
+                      spacing: 8,
                       children: [
-                        Text(
-                          _toOctal(),
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontFamily: 'monospace',
-                            fontWeight: FontWeight.bold,
+                        _presetChip('644', 'rw-r--r--'),
+                        _presetChip('755', 'rwxr-xr-x'),
+                        _presetChip('700', 'rwx------'),
+                        _presetChip('600', 'rw-------'),
+                        _presetChip('777', 'rwxrwxrwx'),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    const Divider(),
+
+                    // Ownership
+                    const SizedBox(height: 8),
+                    Column(
+                      children: [
+                        TextField(
+                          controller: _ownerController,
+                          decoration: InputDecoration(
+                            labelText: context.commanderTr("Owner"),
+                            border: const OutlineInputBorder(),
+                            isDense: true,
                           ),
                         ),
-                        const SizedBox(width: 16),
-                        Text(
-                          _toSymbolic(),
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontFamily: 'monospace',
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: _groupController,
+                          decoration: InputDecoration(
+                            labelText: context.commanderTr("Group"),
+                            border: const OutlineInputBorder(),
+                            isDense: true,
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Permission grid
-                  _buildPermissionRow('Owner', 0),
-                  _buildPermissionRow('Group', 3),
-                  _buildPermissionRow('Other', 6),
-                  const SizedBox(height: 16),
-
-                  // Quick presets
-                  Wrap(
-                    spacing: 8,
-                    children: [
-                      _presetChip('644', 'rw-r--r--'),
-                      _presetChip('755', 'rwxr-xr-x'),
-                      _presetChip('700', 'rwx------'),
-                      _presetChip('600', 'rw-------'),
-                      _presetChip('777', 'rwxrwxrwx'),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  const Divider(),
-
-                  // Ownership
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _ownerController,
-                          decoration: const InputDecoration(
-                            labelText: 'Owner',
-                            border: OutlineInputBorder(),
-                            isDense: true,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: TextField(
-                          controller: _groupController,
-                          decoration: const InputDecoration(
-                            labelText: 'Group',
-                            border: OutlineInputBorder(),
-                            isDense: true,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                  ],
+                ),
+        ),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(context.commanderTr("Cancel")),
         ),
         ElevatedButton(
           onPressed: _saving || _loading || _error != null ? null : _save,
@@ -261,49 +265,50 @@ class _PermissionsDialogState extends ConsumerState<_PermissionsDialog> {
                   height: 20,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Text('Apply'),
+              : Text(context.commanderTr("Apply")),
         ),
       ],
     );
   }
 
-  Widget _buildPermissionRow(String label, int startIndex) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 60,
-            child: Text(
+  Widget _buildPermissionRow(String label, int startIndex) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
+        Wrap(
+          spacing: 8,
+          children: [
+            _permCheckbox(label, context.commanderTr("Read"), startIndex),
+            _permCheckbox(label, context.commanderTr("Write"), startIndex + 1),
+            _permCheckbox(
               label,
-              style: const TextStyle(fontWeight: FontWeight.w500),
+              context.commanderTr("Execute"),
+              startIndex + 2,
             ),
-          ),
-          _permCheckbox('R', startIndex),
-          _permCheckbox('W', startIndex + 1),
-          _permCheckbox('X', startIndex + 2),
-        ],
-      ),
-    );
-  }
+          ],
+        ),
+      ],
+    ),
+  );
 
-  Widget _permCheckbox(String label, int index) {
-    return Row(
+  Widget _permCheckbox(String group, String label, int index) => Semantics(
+    label: '$group: $label',
+    child: Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Checkbox(
           value: _perms[index],
-          onChanged: (v) => setState(() => _perms[index] = v ?? false),
+          onChanged: _saving
+              ? null
+              : (value) => setState(() => _perms[index] = value ?? false),
           visualDensity: VisualDensity.compact,
         ),
-        Text(
-          label,
-          style: const TextStyle(fontSize: 12, fontFamily: 'monospace'),
-        ),
-        const SizedBox(width: 8),
+        Flexible(child: Text(label, style: const TextStyle(fontSize: 12))),
       ],
-    );
-  }
+    ),
+  );
 
   Widget _presetChip(String octal, String symbolic) {
     return ActionChip(
@@ -349,7 +354,11 @@ class _PermissionsDialogState extends ConsumerState<_PermissionsDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Permissions set to ${_toOctal()} (${_toSymbolic()}) for ${widget.file.name}',
+              context.commanderTr("Permissions set to {0} ({1}) for {2}", [
+                _toOctal(),
+                _toSymbolic(),
+                widget.file.name,
+              ]),
             ),
           ),
         );
@@ -359,7 +368,11 @@ class _PermissionsDialogState extends ConsumerState<_PermissionsDialog> {
       if (mounted) {
         setState(() => _saving = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to set permissions: $e')),
+          SnackBar(
+            content: Text(
+              context.commanderTr("Failed to set permissions: {0}", [e]),
+            ),
+          ),
         );
       }
     }

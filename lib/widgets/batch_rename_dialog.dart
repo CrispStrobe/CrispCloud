@@ -642,7 +642,9 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                       context.commanderTr(
                         "{0}{1} renamed, {2} failed, {3} unchanged, {4} not run.",
                         [
-                          _result!.cancelled ? "Stopped. " : "",
+                          _result!.cancelled
+                              ? "${context.commanderTr("Stopped.")} "
+                              : "",
                           _result!.renamed,
                           _result!.failed,
                           _result!.unchanged,

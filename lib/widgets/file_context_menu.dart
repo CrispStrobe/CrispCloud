@@ -1,3 +1,4 @@
+import '../l10n/commander_strings.dart';
 import 'file_delete_dialog.dart';
 // widgets/file_context_menu.dart
 
@@ -32,6 +33,7 @@ import '../services/file_bytes_loader.dart';
 import '../services/panel_source_service.dart';
 import '../services/viewer_spool.dart';
 import 'file_origin_actions.dart';
+import 'command_extension_actions.dart';
 import '../services/cloud_storage_interface.dart'
     show CloudStorageClientCapabilities;
 import '../services/image_edit_session.dart' show isImageEditorFileName;
@@ -92,8 +94,10 @@ Future<void> openWithSystemEditor(BuildContext context, String path) async {
       _log.warn('Cannot launch file URI: $uri');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No system editor found for this file type'),
+          SnackBar(
+            content: Text(
+              context.commanderTr("No system editor found for this file type"),
+            ),
           ),
         );
       }
@@ -101,8 +105,11 @@ Future<void> openWithSystemEditor(BuildContext context, String path) async {
   } catch (e) {
     _log.error('Failed to open with system editor: $e');
     if (context.mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Failed to open file: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.commanderTr("Failed to open file: {0}", [e])),
+        ),
+      );
     }
   }
 }
@@ -158,12 +165,12 @@ void _showResultListContextMenu(
     ),
     items: [
       command(
-        'Copy files to clipboard',
+        context.commanderTr("Copy files to clipboard"),
         Icons.content_copy,
         () => copyFilesToClipboard(context, ref, side, items: files),
       ),
       command(
-        'Cut files to clipboard',
+        context.commanderTr("Cut files to clipboard"),
         Icons.content_cut,
         () => copyFilesToClipboard(context, ref, side, cut: true, items: files),
       ),
@@ -171,19 +178,19 @@ void _showResultListContextMenu(
           !files.single.isFolder &&
           ArchiveService.isArchive(files.single.name))
         command(
-          'Manage archive…',
+          context.commanderTr("Manage archive…"),
           Icons.archive_outlined,
           () => showArchiveWorkspaceDialog(context, ref, side, files.single),
         ),
       if (files.every((file) => !file.isFolder && file.path != null)) ...[
         command(
-          'Checksums…',
+          context.commanderTr("Checksums…"),
           Icons.fingerprint,
           () => showChecksumToolsDialog(context, ref, side, files),
         ),
         if (files.every((file) => isChecksumManifest(file.name)))
           command(
-            'Verify checksum file',
+            context.commanderTr("Verify checksum file"),
             Icons.verified,
             () => showChecksumToolsDialog(
               context,
@@ -195,25 +202,25 @@ void _showResultListContextMenu(
           ),
         if (files.length == 1)
           command(
-            'Split file with integrity manifest…',
+            context.commanderTr("Split file with integrity manifest…"),
             Icons.call_split,
             () => showSplitFileDialog(context, ref, side, files.single),
           ),
         if (files.every((file) => isSplitPartOrManifest(file.name)))
           command(
-            'Verify and combine parts…',
+            context.commanderTr("Verify and combine parts…"),
             Icons.merge_type,
             () => showCombinePartsDialog(context, ref, side, files),
           ),
       ],
       if (files.length == 1)
         command(
-          'Open containing folder',
+          context.commanderTr("Open containing folder"),
           Icons.folder_open,
           () => panel.openContainingFolder(files.single),
         ),
       command(
-        'Copy with options…',
+        context.commanderTr("Copy with options…"),
         Icons.copy,
         () => showFileOperationDialog(
           context,
@@ -224,7 +231,7 @@ void _showResultListContextMenu(
         ),
       ),
       command(
-        'Move with options…',
+        context.commanderTr("Move with options…"),
         Icons.drive_file_move,
         () => showFileOperationDialog(
           context,
@@ -235,7 +242,7 @@ void _showResultListContextMenu(
         ),
       ),
       command(
-        'Multi-Rename…',
+        context.commanderTr("Multi-Rename…"),
         Icons.drive_file_rename_outline,
         () => showBatchRenameDialog(
           context,
@@ -246,15 +253,16 @@ void _showResultListContextMenu(
               .toList(),
         ),
       ),
+      ...buildCommandExtensionMenuItems<void>(context, ref, side, files),
       const PopupMenuDivider(),
       command(
-        'Remove from list (keep files)',
+        context.commanderTr("Remove from list (keep files)"),
         Icons.playlist_remove,
         () => panel.removeFromFileList(files),
         requiresSource: false,
       ),
       command(
-        'Delete files…',
+        context.commanderTr("Delete files…"),
         Icons.delete_outline,
         () => confirmDelete(context, ref, side, files),
       ),
@@ -323,8 +331,12 @@ void showFileContextMenu(
     }
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('The original file account is no longer connected.'),
+        SnackBar(
+          content: Text(
+            context.commanderTr(
+              "The original file account is no longer connected.",
+            ),
+          ),
         ),
       );
     }
@@ -453,7 +465,9 @@ void showFileContextMenu(
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  preferExternal ? 'Edit (System Editor)' : 'Edit (Built-in)',
+                  preferExternal
+                      ? context.commanderTr("Edit (System Editor)")
+                      : context.commanderTr("Edit (Built-in)"),
                 ),
               ),
             ],
@@ -488,8 +502,8 @@ void showFileContextMenu(
                 Expanded(
                   child: Text(
                     preferExternal
-                        ? 'Edit (Built-in)'
-                        : 'Open with System Editor',
+                        ? context.commanderTr("Edit (Built-in)")
+                        : context.commanderTr("Open with System Editor"),
                   ),
                 ),
               ],
@@ -506,7 +520,11 @@ void showFileContextMenu(
                 ], () => openWithSystemEditor(context, file.path!));
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('System editor not available')),
+                  SnackBar(
+                    content: Text(
+                      context.commanderTr("System editor not available"),
+                    ),
+                  ),
                 );
               }
             }),
@@ -524,11 +542,11 @@ void showFileContextMenu(
       !isTextEditableName(file.name)) {
     items.add(
       PopupMenuItem(
-        child: const Row(
+        child: Row(
           children: [
-            Icon(Icons.open_in_new, size: 20),
-            SizedBox(width: 8),
-            Expanded(child: Text('Open with System App')),
+            const Icon(Icons.open_in_new, size: 20),
+            const SizedBox(width: 8),
+            Expanded(child: Text(context.commanderTr("Open with System App"))),
           ],
         ),
         onTap: () => Future.delayed(Duration.zero, () {
@@ -559,11 +577,13 @@ void showFileContextMenu(
     if (oppMatch.isNotEmpty) {
       items.add(
         PopupMenuItem(
-          child: const Row(
+          child: Row(
             children: [
-              Icon(Icons.verified, size: 20),
-              SizedBox(width: 8),
-              Expanded(child: Text('Verify against other panel')),
+              const Icon(Icons.verified, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(context.commanderTr("Verify against other panel")),
+              ),
             ],
           ),
           onTap: () => Future.delayed(Duration.zero, () {
@@ -590,11 +610,11 @@ void showFileContextMenu(
     if (matchingFile.isNotEmpty) {
       items.add(
         PopupMenuItem(
-          child: const Row(
+          child: Row(
             children: [
-              Icon(Icons.compare_arrows),
-              SizedBox(width: 8),
-              Expanded(child: Text('Compare')),
+              const Icon(Icons.compare_arrows),
+              const SizedBox(width: 8),
+              Expanded(child: Text(context.commanderTr("Compare"))),
             ],
           ),
           onTap: () => Future.delayed(Duration.zero, () {
@@ -636,7 +656,11 @@ void showFileContextMenu(
             const Icon(Icons.upload),
             const SizedBox(width: 8),
             Expanded(
-              child: Text('Upload${isMultiSelect ? ' (${files.length})' : ''}'),
+              child: Text(
+                context.commanderTr("Upload{0}", [
+                  isMultiSelect ? ' (${files.length})' : '',
+                ]),
+              ),
             ),
           ],
         ),
@@ -658,7 +682,9 @@ void showFileContextMenu(
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                'Download${isMultiSelect ? ' (${files.length})' : ''}',
+                context.commanderTr("Download{0}", [
+                  isMultiSelect ? ' (${files.length})' : '',
+                ]),
               ),
             ),
           ],
@@ -680,7 +706,11 @@ void showFileContextMenu(
             const Icon(Icons.share),
             const SizedBox(width: 8),
             Expanded(
-              child: Text('Share${isMultiSelect ? ' (${files.length})' : ''}'),
+              child: Text(
+                context.commanderTr("Share{0}", [
+                  isMultiSelect ? ' (${files.length})' : '',
+                ]),
+              ),
             ),
           ],
         ),
@@ -726,7 +756,11 @@ void showFileContextMenu(
               _log.warn('operation failed', e);
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Share link failed: $e')),
+                  SnackBar(
+                    content: Text(
+                      context.commanderTr("Share link failed: {0}", [e]),
+                    ),
+                  ),
                 );
               }
             }
@@ -751,19 +785,23 @@ void showFileContextMenu(
           }
           // Show loading snackbar
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
               content: Row(
                 children: [
-                  SizedBox(
+                  const SizedBox(
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   ),
-                  SizedBox(width: 12),
-                  Expanded(child: Text('Preparing file for sharing...')),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      context.commanderTr("Preparing file for sharing..."),
+                    ),
+                  ),
                 ],
               ),
-              duration: Duration(seconds: 30),
+              duration: const Duration(seconds: 30),
             ),
           );
           try {
@@ -791,8 +829,11 @@ void showFileContextMenu(
             _log.warn('operation failed', e);
             if (context.mounted) {
               ScaffoldMessenger.of(context).hideCurrentSnackBar();
-              ScaffoldMessenger.of(context)
-                  .showSnackBar(SnackBar(content: Text('Share failed: $e')));
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(context.commanderTr("Share failed: {0}", [e])),
+                ),
+              );
             }
           }
         }),
@@ -808,9 +849,9 @@ void showFileContextMenu(
   // Menus and keyboard shortcuts share the captured clipboard flow.
   items.addAll([
     PopupMenuItem(
-      child: const ListTile(
-        leading: Icon(Icons.content_copy),
-        title: Text('Copy files to clipboard'),
+      child: ListTile(
+        leading: const Icon(Icons.content_copy),
+        title: Text(context.commanderTr("Copy files to clipboard")),
       ),
       onTap: () => Future<void>.delayed(Duration.zero, () async {
         if (context.mounted) {
@@ -819,9 +860,9 @@ void showFileContextMenu(
       }),
     ),
     PopupMenuItem(
-      child: const ListTile(
-        leading: Icon(Icons.content_cut),
-        title: Text('Cut files to clipboard'),
+      child: ListTile(
+        leading: const Icon(Icons.content_cut),
+        title: Text(context.commanderTr("Cut files to clipboard")),
       ),
       onTap: () => Future<void>.delayed(Duration.zero, () async {
         if (context.mounted) {
@@ -836,9 +877,9 @@ void showFileContextMenu(
       }),
     ),
     PopupMenuItem(
-      child: const ListTile(
-        leading: Icon(Icons.content_paste),
-        title: Text('Paste files with options…'),
+      child: ListTile(
+        leading: const Icon(Icons.content_paste),
+        title: Text(context.commanderTr("Paste files with options…")),
       ),
       onTap: () => Future<void>.delayed(Duration.zero, () async {
         if (context.mounted) {
@@ -858,7 +899,9 @@ void showFileContextMenu(
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                'Download${isMultiSelect ? ' (${files.length})' : ''}',
+                context.commanderTr("Download{0}", [
+                  isMultiSelect ? ' (${files.length})' : '',
+                ]),
               ),
             ),
           ],
@@ -879,7 +922,9 @@ void showFileContextMenu(
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                'Copy to...${isMultiSelect ? ' (${files.length})' : ''}',
+                context.commanderTr("Copy to...{0}", [
+                  isMultiSelect ? ' (${files.length})' : '',
+                ]),
               ),
             ),
           ],
@@ -903,7 +948,9 @@ void showFileContextMenu(
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Move to...${isMultiSelect ? ' (${files.length})' : ''}',
+              context.commanderTr("Move to...{0}", [
+                isMultiSelect ? ' (${files.length})' : '',
+              ]),
             ),
           ),
         ],
@@ -948,7 +995,11 @@ void showFileContextMenu(
           children: [
             const Icon(Icons.drive_file_rename_outline),
             const SizedBox(width: 8),
-            Expanded(child: Text('Batch Rename (${files.length})')),
+            Expanded(
+              child: Text(
+                context.commanderTr("Batch Rename ({0})", [files.length]),
+              ),
+            ),
           ],
         ),
         onTap: () => Future.delayed(Duration.zero, () {
@@ -997,11 +1048,11 @@ void showFileContextMenu(
     items.add(const PopupMenuDivider());
     items.add(
       PopupMenuItem(
-        child: const Row(
+        child: Row(
           children: [
-            Icon(Icons.history),
-            SizedBox(width: 8),
-            Expanded(child: Text('Version History')),
+            const Icon(Icons.history),
+            const SizedBox(width: 8),
+            Expanded(child: Text(context.commanderTr("Version History"))),
           ],
         ),
         onTap: () => Future.delayed(Duration.zero, () {
@@ -1019,11 +1070,11 @@ void showFileContextMenu(
     if (remote.client is SFTPClientAdapter) {
       items.add(
         PopupMenuItem(
-          child: const Row(
+          child: Row(
             children: [
-              Icon(Icons.security),
-              SizedBox(width: 8),
-              Expanded(child: Text('Permissions')),
+              const Icon(Icons.security),
+              const SizedBox(width: 8),
+              Expanded(child: Text(context.commanderTr("Permissions"))),
             ],
           ),
           onTap: () => Future.delayed(Duration.zero, () {
@@ -1040,9 +1091,9 @@ void showFileContextMenu(
   if (!isMultiSelect && !file.isFolder && ArchiveService.isArchive(file.name)) {
     items.add(
       PopupMenuItem(
-        child: const ListTile(
-          leading: Icon(Icons.archive_outlined),
-          title: Text('Manage archive…'),
+        child: ListTile(
+          leading: const Icon(Icons.archive_outlined),
+          title: Text(context.commanderTr("Manage archive…")),
         ),
         onTap: () => Future<void>.delayed(Duration.zero, () async {
           if (context.mounted) {
@@ -1100,17 +1151,23 @@ void showFileContextMenu(
               ref.read(panelProvider(side)).refresh();
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Archive extracted successfully'),
+                  SnackBar(
+                    content: Text(
+                      context.commanderTr("Archive extracted successfully"),
+                    ),
                   ),
                 );
               }
             } catch (e) {
               _log.warn('operation failed', e);
               if (context.mounted) {
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text('Extract failed: $e')));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      context.commanderTr("Extract failed: {0}", [e]),
+                    ),
+                  ),
+                );
               }
             }
           }),
@@ -1128,7 +1185,9 @@ void showFileContextMenu(
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Create Zip${isMultiSelect ? ' (${files.length})' : ''}',
+                  context.commanderTr("Create Zip{0}", [
+                    isMultiSelect ? ' (${files.length})' : '',
+                  ]),
                 ),
               ),
             ],
@@ -1168,14 +1227,23 @@ void showFileContextMenu(
               });
               ref.read(panelProvider(side)).refresh();
               if (context.mounted) {
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(SnackBar(content: Text('Created $zipName')));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      context.commanderTr("Created {0}", [zipName]),
+                    ),
+                  ),
+                );
               }
             } catch (e) {
               _log.warn('operation failed', e);
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Zip creation failed: $e')),
+                  SnackBar(
+                    content: Text(
+                      context.commanderTr("Zip creation failed: {0}", [e]),
+                    ),
+                  ),
                 );
               }
             }
@@ -1188,10 +1256,10 @@ void showFileContextMenu(
   // Reveal in Finder / Explorer (local files only)
   if (native && file.path != null) {
     final revealLabel = Platform.isMacOS
-        ? 'Reveal in Finder'
+        ? context.commanderTr("Reveal in Finder")
         : Platform.isWindows
-        ? 'Show in Explorer'
-        : 'Open containing folder';
+        ? context.commanderTr("Show in Explorer")
+        : context.commanderTr("Open containing folder");
     items.add(
       PopupMenuItem(
         child: Row(
@@ -1247,11 +1315,11 @@ void showFileContextMenu(
   if (isSingleFolder && native) {
     items.add(
       PopupMenuItem(
-        child: const Row(
+        child: Row(
           children: [
-            Icon(Icons.data_usage),
-            SizedBox(width: 8),
-            Expanded(child: Text('Calculate Size')),
+            const Icon(Icons.data_usage),
+            const SizedBox(width: 8),
+            Expanded(child: Text(context.commanderTr("Calculate Size"))),
           ],
         ),
         onTap: () => Future.delayed(Duration.zero, () {
@@ -1269,11 +1337,11 @@ void showFileContextMenu(
   // Copy names / paths to clipboard
   items.add(
     PopupMenuItem(
-      child: const Row(
+      child: Row(
         children: [
-          Icon(Icons.content_copy, size: 20),
-          SizedBox(width: 8),
-          Expanded(child: Text('Copy name(s)')),
+          const Icon(Icons.content_copy, size: 20),
+          const SizedBox(width: 8),
+          Expanded(child: Text(context.commanderTr("Copy name(s)"))),
         ],
       ),
       onTap: () {
@@ -1286,11 +1354,11 @@ void showFileContextMenu(
   );
   items.add(
     PopupMenuItem(
-      child: const Row(
+      child: Row(
         children: [
-          Icon(Icons.link, size: 20),
-          SizedBox(width: 8),
-          Expanded(child: Text('Copy path(s)')),
+          const Icon(Icons.link, size: 20),
+          const SizedBox(width: 8),
+          Expanded(child: Text(context.commanderTr("Copy path(s)"))),
         ],
       ),
       onTap: () {
@@ -1314,7 +1382,7 @@ void showFileContextMenu(
         children: [
           Icon(icon, size: 20),
           const SizedBox(width: 8),
-          Expanded(child: Text(label)),
+          Expanded(child: Text(context.commanderTr(label))),
         ],
       ),
       onTap: () => Future<void>.delayed(Duration.zero, () async {
@@ -1371,11 +1439,11 @@ void showFileContextMenu(
         (Platform.isMacOS || Platform.isLinux || Platform.isWindows)) {
       items.add(
         PopupMenuItem(
-          child: const Row(
+          child: Row(
             children: [
-              Icon(Icons.link, size: 20),
-              SizedBox(width: 8),
-              Expanded(child: Text('Create Link...')),
+              const Icon(Icons.link, size: 20),
+              const SizedBox(width: 8),
+              Expanded(child: Text(context.commanderTr("Create Link..."))),
             ],
           ),
           onTap: () => Future.delayed(Duration.zero, () {
@@ -1403,7 +1471,9 @@ void showFileContextMenu(
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                'Secure Wipe${isMultiSelect ? ' (${files.length})' : ''}',
+                context.commanderTr("Secure Wipe{0}", [
+                  isMultiSelect ? ' (${files.length})' : '',
+                ]),
                 style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             ),
@@ -1430,7 +1500,9 @@ void showFileContextMenu(
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Delete${isMultiSelect ? ' (${files.length})' : ''}',
+              context.commanderTr("Delete{0}", [
+                isMultiSelect ? ' (${files.length})' : '',
+              ]),
               style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
           ),
@@ -1445,41 +1517,7 @@ void showFileContextMenu(
     ),
   );
 
-  // Plugin-contributed context menu items
-  final pluginRegistry = ref.read(pluginRegistryProvider);
-  final filePaths = files
-      .where((f) => f.path != null)
-      .map((f) => f.path!)
-      .toList();
-  final pluginItems = native
-      ? pluginRegistry.getContextMenuItems(filePaths)
-      : [];
-  if (pluginItems.isNotEmpty) {
-    items.add(const PopupMenuDivider());
-    for (final menuItem in pluginItems) {
-      if (!menuItem.enabled) {
-        continue;
-      }
-      items.add(
-        PopupMenuItem(
-          onTap: menuItem.onSelected != null
-              ? () => Future.delayed(Duration.zero, () {
-                  if (current()) {
-                    menuItem.onSelected!(filePaths);
-                  }
-                })
-              : null,
-          child: Row(
-            children: [
-              const Icon(Icons.extension, size: 20),
-              const SizedBox(width: 8),
-              Expanded(child: Text(menuItem.label)),
-            ],
-          ),
-        ),
-      );
-    }
-  }
+  items.addAll(buildCommandExtensionMenuItems(context, ref, side, files));
 
   showMenu(
     context: context,
@@ -1519,7 +1557,7 @@ void showRenameDialog(
       content: TextField(
         controller: controller,
         decoration: InputDecoration(
-          labelText: 'New name',
+          labelText: context.commanderTr("New name"),
           border: const OutlineInputBorder(),
           prefixIcon: Icon(
             file.isFolder ? Icons.folder : Icons.insert_drive_file,
@@ -1808,10 +1846,10 @@ class _PropertiesDialogState extends ConsumerState<_PropertiesDialog> {
     final file = widget.file;
     final canRead = _origin?.isCurrent == true && file.path != null;
     final mimeType = file.isFolder
-        ? 'Directory'
+        ? context.commanderTr("Directory")
         : file.extension.isNotEmpty
-        ? 'File (${file.extension.toUpperCase()})'
-        : 'File';
+        ? context.commanderTr("File ({0})", [file.extension.toUpperCase()])
+        : context.commanderTr("File");
 
     return AlertDialog(
       title: Row(
@@ -1832,45 +1870,58 @@ class _PropertiesDialogState extends ConsumerState<_PropertiesDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _propertyRow(context, 'Type', mimeType),
+            _propertyRow(context, context.commanderTr("Type"), mimeType),
             if (file.isSymlink == true && file.symlinkTarget != null)
               _propertyRow(
                 context,
-                '→ Target',
+                context.commanderTr("→ Target"),
                 file.symlinkTarget!,
                 mono: true,
               ),
             if (file.size != null)
               _propertyRow(
                 context,
-                'Size',
-                '${formatBytes(file.size!)} (${file.size} bytes)',
+                context.commanderTr("Size"),
+                context.commanderTr("{0} ({1} bytes)", [
+                  formatBytes(file.size!),
+                  file.size,
+                ]),
               ),
             if (file.path != null)
-              _propertyRow(context, 'Path', file.path!, mono: true),
+              _propertyRow(
+                context,
+                context.commanderTr("Path"),
+                file.path!,
+                mono: true,
+              ),
             if (file.uuid != null)
-              _propertyRow(context, 'UUID', file.uuid!, mono: true),
+              _propertyRow(
+                context,
+                context.commanderTr("UUID"),
+                file.uuid!,
+                mono: true,
+              ),
             if (file.updatedAt != null)
               _propertyRow(
                 context,
-                'Modified',
+                context.commanderTr("Modified"),
                 formatDateFull(file.updatedAt!),
               ),
             if (_stat != null) ...[
               _propertyRow(
                 context,
-                'Metadata changed',
+                context.commanderTr("Metadata changed"),
                 formatDateFull(_stat!.changed),
               ),
               _propertyRow(
                 context,
-                'Accessed',
+                context.commanderTr("Accessed"),
                 formatDateFull(_stat!.accessed),
               ),
               if (!kIsWeb && !Platform.isWindows)
                 _propertyRow(
                   context,
-                  'Permissions',
+                  context.commanderTr("Permissions"),
                   _modeString(_stat!.mode),
                   mono: true,
                 ),
@@ -1883,7 +1934,12 @@ class _PropertiesDialogState extends ConsumerState<_PropertiesDialog> {
             if (canRead && !file.isFolder) ...[
               const Divider(),
               if (_md5 != null)
-                _propertyRow(context, 'MD5', _md5!, mono: true)
+                _propertyRow(
+                  context,
+                  context.commanderTr("MD5"),
+                  _md5!,
+                  mono: true,
+                )
               else
                 TextButton.icon(
                   onPressed: _computingMd5 ? null : _computeMd5,
@@ -1894,7 +1950,7 @@ class _PropertiesDialogState extends ConsumerState<_PropertiesDialog> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.fingerprint, size: 16),
-                  label: const Text('Compute MD5'),
+                  label: Text(context.commanderTr("Compute MD5")),
                 ),
             ],
           ],
@@ -1903,7 +1959,7 @@ class _PropertiesDialogState extends ConsumerState<_PropertiesDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Close'),
+          child: Text(context.commanderTr("Close")),
         ),
       ],
     );
@@ -1929,6 +1985,7 @@ Widget _propertyRow(
         const SizedBox(height: 4),
         SelectableText(
           value,
+          textDirection: mono ? TextDirection.ltr : null,
           style: TextStyle(
             fontFamily: mono ? 'monospace' : null,
             fontSize: mono ? 12 : null,
@@ -1987,12 +2044,12 @@ void _showFolderSize(
                   ),
                 ],
               ),
-              content: const Row(
+              content: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  CircularProgressIndicator(),
-                  SizedBox(width: 16),
-                  Text('Calculating folder size...'),
+                  const CircularProgressIndicator(),
+                  const SizedBox(width: 16),
+                  Text(context.commanderTr("Calculating folder size...")),
                 ],
               ),
             );
@@ -2016,14 +2073,22 @@ void _showFolderSize(
                 if (snapshot.hasError)
                   Text('${snapshot.error}')
                 else
-                  _propertyRow(context, 'Total Size', formatBytes(size)),
-                _propertyRow(context, 'Bytes', size.toString()),
+                  _propertyRow(
+                    context,
+                    context.commanderTr("Total Size"),
+                    formatBytes(size),
+                  ),
+                _propertyRow(
+                  context,
+                  context.commanderTr("Bytes"),
+                  size.toString(),
+                ),
               ],
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: const Text('Close'),
+                child: Text(context.commanderTr("Close")),
               ),
             ],
           );
@@ -2049,16 +2114,22 @@ void _showCreateLinkDialog(
     context: context,
     builder: (context) => StatefulBuilder(
       builder: (context, setState) => AlertDialog(
-        title: const Text('Create Link'),
+        title: Text(context.commanderTr("Create Link")),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Target: ${file.name}'),
+            Text(context.commanderTr("Target: {0}", [file.name])),
             const SizedBox(height: 16),
             SegmentedButton<bool>(
-              segments: const [
-                ButtonSegment(value: true, label: Text('Symlink')),
-                ButtonSegment(value: false, label: Text('Hard Link')),
+              segments: [
+                ButtonSegment(
+                  value: true,
+                  label: Text(context.commanderTr("Symlink")),
+                ),
+                ButtonSegment(
+                  value: false,
+                  label: Text(context.commanderTr("Hard Link")),
+                ),
               ],
               selected: {isSymlink},
               onSelectionChanged: (v) => setState(() => isSymlink = v.first),
@@ -2066,9 +2137,9 @@ void _showCreateLinkDialog(
             const SizedBox(height: 16),
             TextField(
               controller: controller,
-              decoration: const InputDecoration(
-                labelText: 'Link path',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.commanderTr("Link path"),
+                border: const OutlineInputBorder(),
               ),
             ),
           ],
@@ -2104,7 +2175,11 @@ void _showCreateLinkDialog(
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
-                        '${isSymlink ? "Symlink" : "Hard link"} created',
+                        context.commanderTr("{0} created", [
+                          isSymlink
+                              ? context.commanderTr("Symlink")
+                              : context.commanderTr("Hard Link"),
+                        ]),
                       ),
                     ),
                   );
@@ -2113,12 +2188,16 @@ void _showCreateLinkDialog(
                 _log.warn('operation failed', e);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Link creation failed: $e')),
+                    SnackBar(
+                      content: Text(
+                        context.commanderTr("Link creation failed: {0}", [e]),
+                      ),
+                    ),
                   );
                 }
               }
             },
-            child: const Text('Create'),
+            child: Text(context.commanderTr("Create")),
           ),
         ],
       ),
@@ -2144,25 +2223,37 @@ void _showSecureWipeDialog(
           color: Theme.of(context).colorScheme.error,
           size: 48,
         ),
-        title: const Text('Secure Wipe'),
+        title: Text(context.commanderTr("Secure Wipe")),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'This will overwrite ${files.length} item(s) with random data before deletion. This cannot be undone.',
+              context.commanderTr(
+                "This will overwrite {0} item(s) with random data before deletion. This cannot be undone.",
+                [files.length],
+              ),
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<int>(
               initialValue: passes,
-              decoration: const InputDecoration(
-                labelText: 'Overwrite passes',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.commanderTr("Overwrite passes"),
+                border: const OutlineInputBorder(),
               ),
-              items: const [
-                DropdownMenuItem(value: 1, child: Text('1 pass')),
-                DropdownMenuItem(value: 3, child: Text('3 passes')),
-                DropdownMenuItem(value: 7, child: Text('7 passes')),
+              items: [
+                DropdownMenuItem(
+                  value: 1,
+                  child: Text(context.commanderTr("1 pass")),
+                ),
+                DropdownMenuItem(
+                  value: 3,
+                  child: Text(context.commanderTr("3 passes")),
+                ),
+                DropdownMenuItem(
+                  value: 7,
+                  child: Text(context.commanderTr("7 passes")),
+                ),
               ],
               onChanged: (v) => setState(() => passes = v!),
             ),
@@ -2208,19 +2299,27 @@ void _showSecureWipeDialog(
                 ref.read(panelProvider(side)).clearSelection();
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Secure wipe completed')),
+                    SnackBar(
+                      content: Text(
+                        context.commanderTr("Secure wipe completed"),
+                      ),
+                    ),
                   );
                 }
               } catch (e) {
                 _log.warn('operation failed', e);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Secure wipe failed: $e')),
+                    SnackBar(
+                      content: Text(
+                        context.commanderTr("Secure wipe failed: {0}", [e]),
+                      ),
+                    ),
                   );
                 }
               }
             },
-            child: const Text('Wipe'),
+            child: Text(context.commanderTr("Wipe")),
           ),
         ],
       ),
@@ -2244,24 +2343,26 @@ void _verifyAgainstRemote(
       future: _computeVerification(localFile, remoteFile, ref),
       builder: (context, snap) {
         if (snap.connectionState != ConnectionState.done) {
-          return const AlertDialog(
+          return AlertDialog(
             content: Row(
               children: [
-                CircularProgressIndicator(),
-                SizedBox(width: 16),
-                Text('Computing checksum…'),
+                const CircularProgressIndicator(),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(context.commanderTr("Computing checksum…")),
+                ),
               ],
             ),
           );
         }
         if (snap.error != null) {
           return AlertDialog(
-            title: const Text('Verify failed'),
+            title: Text(context.commanderTr("Verify failed")),
             content: Text('${snap.error}'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: const Text('OK'),
+                child: Text(context.commanderTr("OK")),
               ),
             ],
           );
@@ -2283,7 +2384,13 @@ void _verifyAgainstRemote(
                 color: allOk ? Colors.green : Colors.orange,
               ),
               const SizedBox(width: 8),
-              Text(allOk ? 'Files match' : 'Possible mismatch'),
+              Expanded(
+                child: Text(
+                  allOk
+                      ? context.commanderTr("Files match")
+                      : context.commanderTr("Possible mismatch"),
+                ),
+              ),
             ],
           ),
           content: Column(
@@ -2291,12 +2398,12 @@ void _verifyAgainstRemote(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Local: ${formatBytes(localSize)}',
+                context.commanderTr("Left: {0}", [formatBytes(localSize)]),
                 style: const TextStyle(fontSize: 13),
               ),
               if (remoteSize != null)
                 Text(
-                  'Remote: ${formatBytes(remoteSize)}',
+                  context.commanderTr("Right: {0}", [formatBytes(remoteSize)]),
                   style: TextStyle(
                     fontSize: 13,
                     color: sizeMatch ? null : Colors.red,
@@ -2304,12 +2411,14 @@ void _verifyAgainstRemote(
                 ),
               const SizedBox(height: 8),
               Text(
-                'MD5: ${localMd5.substring(0, 12)}…',
+                context.commanderTr("MD5: {0}…", [localMd5.substring(0, 12)]),
                 style: const TextStyle(fontSize: 12, fontFamily: 'monospace'),
               ),
               if (remoteMd5 != null)
                 Text(
-                  'Remote MD5: ${remoteMd5.substring(0, 12)}…',
+                  context.commanderTr("Right MD5: {0}…", [
+                    remoteMd5.substring(0, 12),
+                  ]),
                   style: TextStyle(
                     fontSize: 12,
                     fontFamily: 'monospace',
@@ -2321,7 +2430,7 @@ void _verifyAgainstRemote(
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Close'),
+              child: Text(context.commanderTr("Close")),
             ),
           ],
         );
