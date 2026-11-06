@@ -60,11 +60,13 @@ void main() {
     expect(session.terminal.buffer.getText().trim(), isEmpty);
   });
 
-  test('terminal replies to remote cursor-position queries over the same transport', () async {
+  test('terminal answers device-attribute and cursor queries over its transport', () async {
     final connection = await connect();
-    connection.controller.add('\x1b[4;7H\x1b[6n');
+    // ConPTY can wait for primary device attributes during startup. Both DA1
+    // forms and cursor reports must return to the owned transport automatically.
+    connection.controller.add('\x1b[c\x1b[0c\x1b[4;7H\x1b[6n');
     await _events();
-    expect(connection.writes, contains('\x1b[4;7R'));
+    expect(connection.writes, ['\x1b[?6c', '\x1b[?6c', '\x1b[4;7R']);
   });
 
   test(
