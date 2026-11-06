@@ -178,6 +178,7 @@ jobs:
           test/gcm_transfer_stream_test.dart test/encrypted_storage_wrapper_test.dart
           test/native_metadata_test.dart
           test/background_transfer_journal_test.dart
+          test/transfer_journal_storage_io_test.dart
           test/native_metadata_windows_test.dart
           test/local_file_service_symlink_test.dart
 
