@@ -17,6 +17,7 @@ import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../providers/panel_source_provider.dart' show panelSourceProvider;
+import '../providers/terminal_provider.dart';
 import '../providers/toolbar_provider.dart' show panelViewModeProvider;
 import '../services/panel_view_mode_service.dart' show PanelViewMode;
 import '../services/panel_swap_service.dart';
@@ -79,10 +80,8 @@ KeyEventResult handleKeyEvent(
   // A focused text field (terminal command line, search box, dialog input)
   // must receive printable keys, arrows and editing keys. The file browser
   // only keeps global function keys and modified shortcuts while editing.
-  if (_isEditingText() &&
-      !HardwareKeyboard.instance.isControlPressed &&
-      !HardwareKeyboard.instance.isMetaPressed &&
-      !HardwareKeyboard.instance.isAltPressed &&
+  final terminalTyping = ref.read(terminalInputFocusedProvider);
+  if ((terminalTyping || _isEditingText()) &&
       !_isGlobalFunctionKey(event.logicalKey)) {
     return KeyEventResult.ignored;
   }

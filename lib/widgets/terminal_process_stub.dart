@@ -11,3 +11,6 @@ class ShellProcess {
 
 /// On web, always returns null (terminal not supported).
 Future<ShellProcess?> startShell(String workingDirectory) async => null;
+
+/// On web, there is no filesystem-backed built-in shell either.
+Future<ShellProcess?> startBuiltInShell(String workingDirectory) async => null;

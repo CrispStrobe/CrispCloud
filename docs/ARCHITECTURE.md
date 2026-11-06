@@ -34,3 +34,10 @@ notifier exists.
    deterministic suite never depends on credentials, network, timing, or a GUI.
 5. Treat analyzer warnings as tracked debt; new and changed files should be
    warning-free.
+
+## Terminal
+
+The terminal backend is platform- and distribution-aware: a real PTY-backed
+shell on desktop, a sandboxed shell with security-scoped folder grants on the
+macOS App Store build, an unsandboxed shell for Developer ID builds, and a
+built-in command layer on iOS. See [terminal.md](terminal.md).

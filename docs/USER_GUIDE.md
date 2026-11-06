@@ -627,3 +627,20 @@ Automation rules (planned for v2.0) will allow event-driven file operations:
 - **Rule engine**: match files by name pattern, size, or extension and apply an action ("upload `*.pdf` from `/Scans/` to Filen `/Documents/`")
 - **Webhooks**: call an external URL when an event occurs
 - **Conflict policy**: each rule defines its own conflict handling so automation never blocks on a prompt
+
+## Terminal
+
+The embedded terminal opens with **View → Toggle Terminal** or the terminal
+button in the title bar. On desktop it runs a real shell; on iOS it provides a
+built-in command layer because iOS cannot launch arbitrary processes.
+
+- Copy terminal output with the **Copy all** button in the terminal header, or
+  select text and use the right-click menu / Cmd+C.
+- Paste into the command line with Cmd+V.
+- On macOS the terminal inherits only folders granted through **Browse** or
+  **Grant Access**. Grant a parent folder to work across a project tree.
+- Root-owned files remain unreadable even after a folder grant; open them with
+  Finder, `sudo`, or an elevated/unsandboxed build.
+
+See [terminal.md](terminal.md) for the platform/distribution matrix, sandbox
+details and the built-in command list.

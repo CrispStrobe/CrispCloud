@@ -7,6 +7,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/terminal_strings.dart';
@@ -37,13 +38,40 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   String? _sshLabel;
   bool _sshConnecting = false;
   bool _scopeHeld = false;
+  TextSelection? _outputSelection;
 
   @override
   void initState() {
     super.initState();
+    _inputFocusNode.addListener(_onInputFocusChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _startShell();
     });
+  }
+
+  void _onInputFocusChanged() {
+    if (!mounted) return;
+    ref.read(terminalInputFocusedProvider.notifier).state =
+        _inputFocusNode.hasFocus;
+  }
+
+  void _copyAll() {
+    Clipboard.setData(ClipboardData(text: _output.toString()));
+  }
+
+  void _copySelection() {
+    final selection = _outputSelection;
+    final text = _output.toString();
+    if (selection != null &&
+        !selection.isCollapsed &&
+        selection.start >= 0 &&
+        selection.end <= text.length) {
+      Clipboard.setData(
+        ClipboardData(text: text.substring(selection.start, selection.end)),
+      );
+    } else {
+      _copyAll();
+    }
   }
 
   Future<void> _startShell() async {
@@ -65,7 +93,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
       final cwd = _scopeHeld
           ? panel.currentPath
           : await local.getSafeFallbackDirectory();
-      _shell = await proc.startShell(cwd);
+      _shell = await proc.startShell(cwd) ?? await proc.startBuiltInShell(cwd);
       if (_shell == null) {
         _shellError = strings.text('platform');
         _appendOutput('[${strings.text('platform')}]\n');
@@ -88,6 +116,25 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
         },
       );
     } catch (e) {
+      try {
+        final panel = ref.read(panelProvider(PanelSide.local));
+        _shell = await proc.startBuiltInShell(panel.currentPath);
+      } catch (_) {
+        _shell = null;
+      }
+      if (_shell != null) {
+        _isRunning = true;
+        _appendOutput(
+          '[${strings.text('builtIn')}]\n${strings.text('started')}\n\$ ',
+        );
+        _shell!.outputStream.listen(
+          (data) => _appendOutput(data),
+          onDone: () {
+            if (mounted) setState(() => _isRunning = false);
+          },
+        );
+        return;
+      }
       _shellError = _friendlyShellError(e, strings);
       _appendOutput('[${strings.value('shellError', e)}]\n');
     }
@@ -220,6 +267,8 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
 
   @override
   void dispose() {
+    _inputFocusNode.removeListener(_onInputFocusChanged);
+    ref.read(terminalInputFocusedProvider.notifier).state = false;
     if (_scopeHeld) {
       _scopeHeld = false;
       unawaited(ref.read(localFileServiceProvider).endStreamAccess());
@@ -291,6 +340,13 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                     : const Icon(Icons.dns_outlined, size: 16),
                 tooltip: TerminalStrings(context).text('connectSsh'),
                 onPressed: _sshConnecting ? null : _connectSsh,
+                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                padding: EdgeInsets.zero,
+              ),
+              IconButton(
+                icon: const Icon(Icons.copy_all, size: 16),
+                tooltip: TerminalStrings(context).text('copyAll'),
+                onPressed: _copyAll,
                 constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
                 padding: EdgeInsets.zero,
               ),
@@ -372,6 +428,24 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                     padding: const EdgeInsets.all(8),
                     child: SelectableText(
                       _output.toString(),
+                      onSelectionChanged: (selection, cause) {
+                        _outputSelection = selection;
+                      },
+                      contextMenuBuilder: (context, editableTextState) {
+                        return AdaptiveTextSelectionToolbar.buttonItems(
+                          anchors: editableTextState.contextMenuAnchors,
+                          buttonItems: [
+                            ...editableTextState.contextMenuButtonItems,
+                            ContextMenuButtonItem(
+                              label: TerminalStrings(context).text('copyAll'),
+                              onPressed: () {
+                                _copyAll();
+                                editableTextState.hideToolbar();
+                              },
+                            ),
+                          ],
+                        );
+                      },
                       style: TextStyle(
                         fontFamily: 'AppMono',
                         fontFamilyFallback: const [
