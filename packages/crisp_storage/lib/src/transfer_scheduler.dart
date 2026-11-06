@@ -59,6 +59,7 @@ class TransferScheduler<T extends TransferOperation> {
   final List<ScheduledTransfer<T>> _pending = [];
   final Map<String, ScheduledTransfer<T>> _active = {};
   final List<ScheduledTransfer<T>> _completed = [];
+  final Map<ScheduledTransfer<T>, Future<void>> _pendingPauseSignals = {};
 
   /// Per-provider rate limits: max concurrent transfers per provider.
   /// Defaults to maxConcurrent if not set.
@@ -96,6 +97,7 @@ class TransferScheduler<T extends TransferOperation> {
     final index = _pending.indexWhere((task) => task.id == taskId);
     if (index < 0) return;
     final task = _pending.removeAt(index);
+    _pendingPauseSignals.remove(task);
     enqueue(
       ScheduledTransfer<T>(
         id: task.id,
@@ -149,6 +151,20 @@ class TransferScheduler<T extends TransferOperation> {
       }
     }
     _pending.insert(insertIdx, task);
+    // Operations can be cancelled directly by their owner (including a batch
+    // operation shared by several tasks), even while the queue has no slots.
+    unawaited(task.operation.cancellationFuture.then((_) {
+      if (_disposed) return;
+      final index = _pending.indexOf(task);
+      if (index < 0) return;
+      _pending.removeAt(index);
+      _pendingPauseSignals.remove(task);
+      try {
+        task.onDone?.call(const TransferCancelled());
+      } finally {
+        _processQueue();
+      }
+    }));
     _processQueue();
   }
 
@@ -187,6 +203,7 @@ class TransferScheduler<T extends TransferOperation> {
       task.onDone?.call(const TransferCancelled());
     }
     _pending.clear();
+    _pendingPauseSignals.clear();
 
     for (final task in _active.values) {
       task.operation.cancel();
@@ -198,6 +215,7 @@ class TransferScheduler<T extends TransferOperation> {
     final index = _pending.indexWhere((t) => t.id == taskId);
     if (index >= 0) {
       final task = _pending.removeAt(index);
+      _pendingPauseSignals.remove(task);
       task.operation.cancel();
       task.onDone?.call(const TransferCancelled());
       notifyListeners();
@@ -217,13 +235,30 @@ class TransferScheduler<T extends TransferOperation> {
     return _active.values.where((t) => t.providerName == provider).length;
   }
 
+  void _watchPendingPause(ScheduledTransfer<T> task) {
+    final signal = task.operation.pauseFuture;
+    if (signal == null || identical(_pendingPauseSignals[task], signal)) return;
+    _pendingPauseSignals[task] = signal;
+    unawaited(signal.then((_) {
+      if (!identical(_pendingPauseSignals[task], signal)) return;
+      _pendingPauseSignals.remove(task);
+      if (_pending.contains(task)) _processQueue();
+    }));
+  }
+
   void _processQueue() {
     if (_disposed) return;
     final skipped = <ScheduledTransfer<T>>[];
 
     while (_active.length < maxConcurrent && _pending.isNotEmpty) {
       final task = _pending.removeAt(0);
+      if (task.operation.isCancelled) {
+        _pendingPauseSignals.remove(task);
+        task.onDone?.call(const TransferCancelled());
+        continue;
+      }
       if (task.operation.isPaused) {
+        _watchPendingPause(task);
         skipped.add(task);
         continue;
       }
@@ -237,6 +272,7 @@ class TransferScheduler<T extends TransferOperation> {
         }
       }
 
+      _pendingPauseSignals.remove(task);
       _active[task.id] = task;
       _runTask(task);
     }
@@ -265,7 +301,11 @@ class TransferScheduler<T extends TransferOperation> {
     try {
       for (var attempt = 0; ; attempt++) {
         if (task.operation.isCancelled) throw const TransferCancelled();
-        if (task.operation.isPaused) await task.operation.pauseFuture;
+        while (task.operation.isPaused && !task.operation.isCancelled) {
+          final resumed = task.operation.pauseFuture;
+          if (resumed == null) break;
+          await Future.any([resumed, task.operation.cancellationFuture]);
+        }
         if (task.operation.isCancelled) throw const TransferCancelled();
         final provider = task.providerName;
         if (provider != null) {
