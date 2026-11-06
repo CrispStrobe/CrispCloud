@@ -171,11 +171,22 @@ OPFS support produce explicit errors, and cancelled/failed spools are removed.
 - Filen processes its encrypted chunks sequentially and verifies plaintext size
   and hash. FTP/FTPS transfers own separate sessions so cancelling one transfer
   does not close a browsing connection.
+- Internxt streams its existing continuous encryption format through private
+  native/OPFS staging and verifies size, checksums and registered identity. Its
+  SDK's 20 GiB upload limit and single-shard layout remain explicit; see
+  [Internxt transfer behavior](INTERNXT_TRANSFERS.md).
 - CrispCloud's optional AES-GCM wrapper keeps the existing encrypted format.
   Decrypted content remains in a private spool until its authentication tag
   verifies. This requires temporary disk space before plaintext can be read.
   The format supports at most 68,719,476,704 plaintext bytes per encrypted file.
   Cancellation interrupts an unfinished authenticated download.
+
+All production cloud adapters provide their own transfer streams. A legacy
+adapter without a real streaming download is rejected. Its compatibility upload
+accepts at most 32 MiB, checks exact EOF before committing, and checks the original
+account/endpoint throughout. This ceiling does not replace the real adapters'
+provider-specific limits. Plaintext lengths from encrypted/transforming adapters
+are kept separate from stored object sizes.
 
 Large-tree preview reports incremental progress and supports pause/cancel, with
 limits of 200,000 planned entries and 256 directory levels. Split a larger job

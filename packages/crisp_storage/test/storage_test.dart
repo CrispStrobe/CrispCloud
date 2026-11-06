@@ -275,9 +275,85 @@ void main() {
       );
       await Future<void>.delayed(Duration.zero);
       expect(ran, isFalse);
-      q.cancel('1');
-      expect(await done.future, isA<TransferCancelled>());
+      op.cancel();
+      expect(
+        await done.future.timeout(const Duration(seconds: 1)),
+        isA<TransferCancelled>(),
+      );
+      expect(q.pendingCount, 0);
+      expect(q.activeCount, 0);
     });
+    test('resuming pending work wakes it without occupying a slot', () async {
+      final q = TransferScheduler<Operation>(maxConcurrent: 1);
+      addTearDown(q.dispose);
+      final paused = Operation()..pause();
+      final resumedDone = Completer<Object?>();
+      final otherDone = Completer<Object?>();
+      final order = <String>[];
+      q.enqueue(
+        ScheduledTransfer(
+          id: 'paused',
+          operation: paused,
+          execute: () async => order.add('resumed'),
+          onDone: resumedDone.complete,
+        ),
+      );
+      expect(q.activeCount, 0);
+      q.enqueue(
+        ScheduledTransfer(
+          id: 'ready',
+          operation: Operation(),
+          execute: () async => order.add('ready'),
+          onDone: otherDone.complete,
+        ),
+      );
+      expect(await otherDone.future, isNull);
+      expect(order, ['ready']);
+      paused.resume();
+      expect(
+        await resumedDone.future.timeout(const Duration(seconds: 1)),
+        isNull,
+      );
+      expect(order, ['ready', 'resumed']);
+      expect(q.pendingCount, 0);
+    });
+    test(
+      'direct batch cancellation completes every queued row exactly once',
+      () async {
+        final q = TransferScheduler<Operation>(maxConcurrent: 0);
+        addTearDown(q.dispose);
+        final operation = Operation()..pause();
+        final outcomes = <String, List<Object?>>{};
+        final finished = Completer<void>();
+        for (final id in ['a', 'b']) {
+          q.enqueue(
+            ScheduledTransfer(
+              id: id,
+              operation: operation,
+              execute: () async => fail('Cancelled queued work must not run'),
+              onDone: (error) {
+                outcomes.putIfAbsent(id, () => []).add(error);
+                if (outcomes.length == 2 && !finished.isCompleted) {
+                  finished.complete();
+                }
+              },
+            ),
+          );
+        }
+        q.setPendingPriority('a', 5);
+        operation.cancel();
+        await finished.future.timeout(const Duration(seconds: 1));
+        q.setMaxConcurrent(2);
+        q.cancelAll();
+        await Future<void>.delayed(Duration.zero);
+        expect(q.pendingCount, 0);
+        expect(q.activeCount, 0);
+        expect(outcomes.keys, unorderedEquals(['a', 'b']));
+        for (final result in outcomes.values) {
+          expect(result, [isA<TransferCancelled>()]);
+        }
+      },
+    );
     test(
       'per-provider limit allows another provider to make progress',
       () async {

@@ -35,17 +35,13 @@ class _MemInner implements CloudStorageClient {
   Uint8List? stored;
 
   @override
-  String get providerName => 'memory';
-
+  String get providerName => 'memory-crypto-fixture';
   @override
   String get rootPath => '/';
-
   @override
   bool get isAuthenticated => true;
-
   @override
-  String? get userId => null;
-
+  String? get userId => 'crypto-fixture-account';
   @override
   String? get bucketId => null;
 

@@ -66,7 +66,7 @@ implementation status, not a claim of universal Total/Double Commander parity.
 - [x] Persist queued jobs and validated resumable transfer state.
 - [x] Resume interrupted/retry remaining/restart with source-version checks.
 - [x] Queue reorder/priority/concurrency controls and waiting-for-decision state.
-- [ ] Bounded streaming/spooling and incremental large-tree planning.
+- [x] Bounded streaming/spooling and incremental large-tree planning.
 - [x] Explicit recovery copies, cancellation outcomes and ambiguous-failure handling.
 
 ## 6. Complete desktop workflows
@@ -107,8 +107,11 @@ implementation status, not a claim of universal Total/Double Commander parity.
   file-panel command bar are in progress.
 - Native allocation/copy-on-write and cancellable bounded planning are integrated.
   Conditional object-store staging, Drive/Dropbox/WebDAV bounded streams, dedicated
-  FTP/FTPS transfer sessions and disk/OPFS spooling are integrated. The remaining
-  pCloud/B2 streams and persisted S3 session binding are in progress.
+  FTP/FTPS transfer sessions and disk/OPFS spooling are integrated.
+  pCloud/B2/Nextcloud/SMB/Filen/Internxt streams, large S3 parts and exact saved
+  multipart-session binding are integrated. The optional AES-GCM wrapper
+  authenticates private spools before exposing plaintext; each provider retains
+  its documented encryption format. Unbounded adapter defaults are rejected.
 - Rename, selection, lists, transfer/recovery and workspace screens are localized
   across all nine app languages, with narrow German/Arabic layout regressions.
   Viewer/archive/comparison/integrity menus and extension UI are being finished.
