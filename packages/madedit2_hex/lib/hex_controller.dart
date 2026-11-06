@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:math' as math;
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -48,8 +47,9 @@ class HexEditorController extends ChangeNotifier {
 
   void _remember() {
     _positions[document.revision] = (_caret, _anchor, _nibble);
-    if (_positions.length > document.maxUndoSteps * 3)
+    if (_positions.length > document.maxUndoSteps * 3) {
       _positions.remove(_positions.keys.first);
+    }
   }
 
   void _editable() {
@@ -93,6 +93,7 @@ class HexEditorController extends ChangeNotifier {
     HexArea? area,
     int nibble = 0,
   }) => _run(() {
+    _invalidateSearch();
     _caret = offset.clamp(0, document.length);
     if (!extend) _anchor = _caret;
     _nibble = _caret == document.length ? 0 : nibble.clamp(0, 1);
@@ -101,6 +102,7 @@ class HexEditorController extends ChangeNotifier {
   });
   Future<bool> selectRange(int start, int end) => _run(() {
     RangeError.checkValidRange(start, end, document.length);
+    _invalidateSearch();
     _anchor = start;
     _caret = end;
     _nibble = 0;
@@ -108,12 +110,14 @@ class HexEditorController extends ChangeNotifier {
   });
   Future<bool> selectAll() => selectRange(0, document.length);
   Future<bool> move(int bytes, {bool extend = false}) => _run(() {
+    _invalidateSearch();
     _caret = (_caret + bytes).clamp(0, document.length);
     if (!extend) _anchor = _caret;
     _nibble = 0;
     _pendingNibble = null;
   });
   Future<bool> moveNibble(int delta, {bool extend = false}) => _run(() {
+    _invalidateSearch();
     if (_area == HexArea.ascii || extend) {
       _caret = (_caret + delta).clamp(0, document.length);
       _nibble = 0;
@@ -181,10 +185,11 @@ class HexEditorController extends ChangeNotifier {
     final count = selectionLength > 0
         ? selectionLength
         : (_insert || at == document.length ? 0 : bytes.length);
-    if (at + count > document.length)
+    if (at + count > document.length) {
       throw StateError(
         'Not enough bytes to overwrite. Switch to Insert mode to grow the file.',
       );
+    }
     _remember();
     document.replace(at, count, bytes);
     _caret = at + bytes.length;
@@ -243,8 +248,9 @@ class HexEditorController extends ChangeNotifier {
         ? 1
         : 0;
     if (count == 0) return;
-    if (count > document.maxSingleEditBytes)
+    if (count > document.maxSingleEditBytes) {
       throw StateError('Selection exceeds the clipboard size limit.');
+    }
     final bytes = await document.read(at, count);
     final text = _area == HexArea.hex
         ? bytes.map((b) => hexNumber(b, 2)).join(' ')
@@ -264,22 +270,28 @@ class HexEditorController extends ChangeNotifier {
     final data = await Clipboard.getData(Clipboard.kTextPlain);
     final text = data?.text;
     if (text == null || text.isEmpty) return;
-    if (text.length > document.maxSingleEditBytes * 4)
+    if (text.length > document.maxSingleEditBytes * 4) {
       throw StateError('Clipboard exceeds the edit size limit.');
+    }
     if (_area == HexArea.hex) {
       _write(parseHexBytes(text));
     } else {
-      if (text.runes.any((c) => c > (_latin1 ? 255 : 127)))
+      if (text.runes.any((c) => c > (_latin1 ? 255 : 127))) {
         throw StateError(
           'Clipboard contains characters outside the selected byte encoding.',
         );
+      }
       _write(text.codeUnits);
     }
   });
 
-  void cancelSearch() {
+  void _invalidateSearch() {
     _searchGeneration++;
     _searching = false;
+  }
+
+  void cancelSearch() {
+    _invalidateSearch();
     _notify();
   }
 
@@ -309,8 +321,21 @@ class HexEditorController extends ChangeNotifier {
         if (found != null && found >= start) found = null;
       }
       if (cancelled()) return null;
-      if (found != null) {
-        await selectRange(found, found + pattern.length);
+      final match = found;
+      if (match != null) {
+        var applied = false;
+        // Commands queued during a source read retain priority over its result.
+        // Recheck inside the command queue: navigation or edits may complete
+        // between the search finishing and this selection being applied.
+        await _run(() {
+          if (cancelled()) return;
+          _anchor = match;
+          _caret = match + pattern.length;
+          _nibble = 0;
+          _pendingNibble = null;
+          applied = true;
+        });
+        if (!applied) return null;
       } else {
         _error = 'No matching bytes found.';
       }

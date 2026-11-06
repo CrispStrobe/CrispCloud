@@ -53,10 +53,22 @@ void main() {
     await tester.tap(find.text('Open fixture'));
     await pumpUntil(
       tester,
-      () => find.byType(LinearProgressIndicator).evaluate().isEmpty,
+      () =>
+          find.byType(HexEditor).evaluate().isNotEmpty ||
+          find
+              .text('The original file has not been modified.')
+              .evaluate()
+              .isNotEmpty,
       reason: 'The host did not finish opening its source.',
     );
-    expect(find.byType(HexEditor), findsOneWidget);
+    expect(
+      find.byType(HexEditor),
+      findsOneWidget,
+      reason: tester
+          .widgetList<SelectableText>(find.byType(SelectableText))
+          .map((text) => text.data ?? '')
+          .join('\n'),
+    );
     return tester.widget<HexEditor>(find.byType(HexEditor)).controller;
   }
 
