@@ -361,7 +361,17 @@ class _HexEditorState extends State<HexEditor> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context), colors = Theme.of(context).colorScheme;
     final style = TextStyle(
-      fontFamily: 'monospace',
+      // A generic 'monospace' family is not resolved reliably on macOS or
+      // Windows. Pin real monospace faces and keep a generic fallback.
+      fontFamily: 'Menlo',
+      fontFamilyFallback: const [
+        'Menlo',
+        'SF Mono',
+        'Consolas',
+        'DejaVu Sans Mono',
+        'Liberation Mono',
+        'monospace',
+      ],
       fontSize: 14,
       color: colors.onSurface,
     );
