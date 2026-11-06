@@ -38,6 +38,7 @@ import 'services/cert_pinning_service.dart';
 import 'services/crash_reporting_service.dart';
 import 'services/file_cache_service.dart';
 import 'services/log_service.dart';
+import 'services/installation_identity.dart';
 import 'services/thumbnail_service.dart';
 import 'services/proxy_service.dart';
 import 'services/pdf_font_licenses.dart';
@@ -56,6 +57,7 @@ Future<void> main() async {
   CrashReportingService? crashReporting;
   runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
+    await InstallationIdentityService.instance.initialize();
     registerBundledEditorAssets();
     registerPdfFontLicenses();
     registerMediaVideoLicenses();

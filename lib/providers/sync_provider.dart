@@ -30,6 +30,7 @@ class SyncNotifier extends ChangeNotifier {
   late final SyncWatcherService _watcher;
   final TrayService _tray = TrayService();
   bool _watchEnabled = false;
+  bool _disposed = false;
   bool _trayInitialized = false;
 
   List<SyncPair> _pairs = [];
@@ -42,8 +43,8 @@ class SyncNotifier extends ChangeNotifier {
 
   // Bandwidth scheduling
   bool _syncOnlyOnWifi = false;
-  int _syncStartHour = 0;  // 0 = no restriction
-  int _syncEndHour = 0;    // 0 = no restriction
+  int _syncStartHour = 0; // 0 = no restriction
+  int _syncEndHour = 0; // 0 = no restriction
 
   static const _autoEvictDaysKey = 'sync_auto_evict_days';
   static const _syncOnlyOnWifiKey = 'sync_only_on_wifi';
@@ -131,7 +132,7 @@ class SyncNotifier extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       _log.warn('operation failed', e);
-      }
+    }
   }
 
   Future<void> _loadBandwidthSchedule() async {
@@ -142,7 +143,7 @@ class SyncNotifier extends ChangeNotifier {
       _syncEndHour = prefs.getInt(_syncEndHourKey) ?? 0;
     } catch (e) {
       _log.warn('operation failed', e);
-      }
+    }
   }
 
   /// Set bandwidth scheduling: sync only on WiFi.
@@ -201,14 +202,17 @@ class SyncNotifier extends ChangeNotifier {
   Future<void> _loadBackgroundSyncState() async {
     if (!BackgroundSyncService.isSupported) return;
     _backgroundSyncEnabled = await BackgroundSyncService.isScheduled();
-    _backgroundSyncIntervalMinutes = await BackgroundSyncService.getIntervalMinutes();
+    _backgroundSyncIntervalMinutes =
+        await BackgroundSyncService.getIntervalMinutes();
     notifyListeners();
   }
 
   /// Enable background sync with an optional custom [intervalMinutes].
   Future<void> enableBackgroundSync({int intervalMinutes = 15}) async {
     if (!BackgroundSyncService.isSupported) return;
-    await BackgroundSyncService.schedulePeriodicSync(intervalMinutes: intervalMinutes);
+    await BackgroundSyncService.schedulePeriodicSync(
+      intervalMinutes: intervalMinutes,
+    );
     _backgroundSyncEnabled = true;
     _backgroundSyncIntervalMinutes = intervalMinutes;
     _log.info('Background sync enabled — interval: $intervalMinutes min');
@@ -266,17 +270,19 @@ class SyncNotifier extends ChangeNotifier {
     String excludePatterns = '',
     bool usePlaceholders = false,
   }) async {
-    await _db.insertPair(SyncPairsCompanion.insert(
-      name: name,
-      localPath: localPath,
-      remotePath: remotePath,
-      provider: provider,
-      conflictPolicy: Value(conflictPolicy.name),
-      direction: Value(direction.name),
-      includePatterns: Value(includePatterns),
-      excludePatterns: Value(excludePatterns),
-      usePlaceholders: Value(usePlaceholders),
-    ));
+    await _db.insertPair(
+      SyncPairsCompanion.insert(
+        name: name,
+        localPath: localPath,
+        remotePath: remotePath,
+        provider: provider,
+        conflictPolicy: Value(conflictPolicy.name),
+        direction: Value(direction.name),
+        includePatterns: Value(includePatterns),
+        excludePatterns: Value(excludePatterns),
+        usePlaceholders: Value(usePlaceholders),
+      ),
+    );
     await _loadPairs();
   }
 
@@ -287,8 +293,9 @@ class SyncNotifier extends ChangeNotifier {
   }
 
   Future<void> togglePair(int id, bool enabled) async {
-    await (_db.update(_db.syncPairs)..where((t) => t.id.equals(id)))
-        .write(SyncPairsCompanion(enabled: Value(enabled)));
+    await (_db.update(_db.syncPairs)..where((t) => t.id.equals(id))).write(
+      SyncPairsCompanion(enabled: Value(enabled)),
+    );
     await _loadPairs();
   }
 
@@ -298,7 +305,9 @@ class SyncNotifier extends ChangeNotifier {
   Future<SyncResult> syncAll() async {
     if (_isSyncing) return const SyncResult();
     if (!isSyncAllowedNow) {
-      _log.info('Sync skipped: outside allowed schedule ($_syncStartHour:00-$_syncEndHour:00)');
+      _log.info(
+        'Sync skipped: outside allowed schedule ($_syncStartHour:00-$_syncEndHour:00)',
+      );
       return const SyncResult();
     }
 
@@ -320,12 +329,21 @@ class SyncNotifier extends ChangeNotifier {
         _updateTray();
 
         try {
-          final result = await _engine.syncPair(pair, client);
+          final result = await _engine.syncPair(
+            pair,
+            client,
+            isCurrent: () =>
+                !_disposed && identical(_ref.read(authProvider).client, client),
+          );
           totalResult = totalResult + result;
         } catch (e) {
           _log.error('Error syncing "${pair.name}"', e);
-          _ref.read(errorProvider).addError('Sync failed for "${pair.name}": $e');
-          totalResult = totalResult + SyncResult(errors: 1, errorMessages: ['${pair.name}: $e']);
+          _ref
+              .read(errorProvider)
+              .addError('Sync failed for "${pair.name}": $e');
+          totalResult =
+              totalResult +
+              SyncResult(errors: 1, errorMessages: ['${pair.name}: $e']);
         }
       }
     } finally {
@@ -356,7 +374,18 @@ class SyncNotifier extends ChangeNotifier {
       _currentPairName = pair.name;
       notifyListeners();
 
-      final result = await _engine.syncPair(pair, auth.client);
+      if (auth.currentProvider.name != pair.provider) {
+        throw StateError(
+          'Connect to the ${pair.provider} account for this pair.',
+        );
+      }
+      final client = auth.client;
+      final result = await _engine.syncPair(
+        pair,
+        client,
+        isCurrent: () =>
+            !_disposed && identical(_ref.read(authProvider).client, client),
+      );
       _lastResult = result;
       return result;
     } catch (e) {
@@ -368,6 +397,69 @@ class SyncNotifier extends ChangeNotifier {
       _currentPairName = null;
       notifyListeners();
       await _loadPairs();
+    }
+  }
+
+  /// Compare without changing files or database state. The returned plan
+  /// retains the connection that was active at the start of comparison.
+  Future<SyncPlan> planOne(int pairId, {bool Function()? isCancelled}) async {
+    if (_disposed || _isSyncing) throw StateError('Synchronization is busy.');
+    _isSyncing = true;
+    notifyListeners();
+    try {
+      final pair = await _db.getPair(pairId);
+      if (_disposed) throw StateError('Synchronization was closed.');
+      final auth = _ref.read(authProvider);
+      if (auth.currentProvider.name != pair.provider) {
+        throw StateError(
+          'Connect to the ${pair.provider} account for this pair.',
+        );
+      }
+      final client = auth.client;
+      final userId = client.userId;
+      final bucket = client.bucketId;
+      return await _engine.planPair(
+        pair,
+        client,
+        isCancelled: isCancelled,
+        isCurrent: () =>
+            !_disposed &&
+            identical(_ref.read(authProvider).client, client) &&
+            client.userId == userId &&
+            client.bucketId == bucket,
+      );
+    } finally {
+      _isSyncing = false;
+      if (!_disposed) notifyListeners();
+    }
+  }
+
+  Future<SyncResult> executeReviewedPlan(
+    SyncPlan plan, {
+    Map<String, SyncActionType> decisions = const {},
+    bool Function()? isCancelled,
+    void Function(int completed, int total, String path)? onProgress,
+  }) async {
+    if (_disposed || _isSyncing) throw StateError('Synchronization is busy.');
+    _isSyncing = true;
+    _currentPairName = plan.pair.name;
+    notifyListeners();
+    try {
+      final result = await _engine.executePlan(
+        plan,
+        decisions: decisions,
+        isCancelled: isCancelled,
+        onProgress: onProgress,
+      );
+      _lastResult = result;
+      return result;
+    } finally {
+      _isSyncing = false;
+      _currentPairName = null;
+      if (!_disposed) {
+        await _loadPairs();
+        notifyListeners();
+      }
     }
   }
 
@@ -395,14 +487,22 @@ class SyncNotifier extends ChangeNotifier {
   Future<List<SyncEntry>> getConflicts(int pairId) => _db.getConflicts(pairId);
 
   /// Resolve a conflict by choosing a side.
-  Future<void> resolveConflict(int pairId, String relativePath, SyncActionType resolution) async {
-    final status = resolution == SyncActionType.upload ? 'pendingUpload' : 'pendingDownload';
-    await _db.upsertEntry(SyncEntriesCompanion.insert(
-      pairId: pairId,
-      relativePath: relativePath,
-      status: Value(status),
-      error: const Value(null),
-    ));
+  Future<void> resolveConflict(
+    int pairId,
+    String relativePath,
+    SyncActionType resolution,
+  ) async {
+    final status = resolution == SyncActionType.upload
+        ? 'pendingUpload'
+        : 'pendingDownload';
+    await _db.upsertEntry(
+      SyncEntriesCompanion.insert(
+        pairId: pairId,
+        relativePath: relativePath,
+        status: Value(status),
+        error: const Value(null),
+      ),
+    );
     notifyListeners();
   }
 
@@ -415,12 +515,14 @@ class SyncNotifier extends ChangeNotifier {
     required String path,
     String? targetPath,
   }) async {
-    await _db.enqueueOffline(OfflineQueueCompanion.insert(
-      pairId: pairId,
-      operation: operation,
-      path: path,
-      targetPath: Value(targetPath),
-    ));
+    await _db.enqueueOffline(
+      OfflineQueueCompanion.insert(
+        pairId: pairId,
+        operation: operation,
+        path: path,
+        targetPath: Value(targetPath),
+      ),
+    );
     notifyListeners();
   }
 
@@ -448,7 +550,9 @@ class SyncNotifier extends ChangeNotifier {
         final pendingOps = await _db.getPendingOfflineOps(pair.id);
         if (pendingOps.isEmpty) continue;
 
-        _log.info('Replaying ${pendingOps.length} offline ops for "${pair.name}"');
+        _log.info(
+          'Replaying ${pendingOps.length} offline ops for "${pair.name}"',
+        );
 
         for (final op in pendingOps) {
           try {
@@ -456,17 +560,29 @@ class SyncNotifier extends ChangeNotifier {
             if (op.operation == 'upload') {
               final remote = await client.resolvePath(op.path);
               if (remote != null) {
-                final remoteModStr = remote['modificationTime'] ?? remote['lastModified'];
+                final remoteModStr =
+                    remote['modificationTime'] ?? remote['lastModified'];
                 if (remoteModStr != null) {
                   DateTime? remoteMod;
                   if (remoteModStr is int) {
-                    remoteMod = DateTime.fromMillisecondsSinceEpoch(remoteModStr);
+                    remoteMod = DateTime.fromMillisecondsSinceEpoch(
+                      remoteModStr,
+                    );
                   } else {
                     remoteMod = DateTime.tryParse(remoteModStr.toString());
                   }
                   if (remoteMod != null && remoteMod.isAfter(op.createdAt)) {
-                    _log.warn('Conflict detected: ${op.path} modified on server since offline op queued');
-                    result = result + SyncResult(conflicts: 1, errorMessages: ['Conflict: ${op.path} modified on server']);
+                    _log.warn(
+                      'Conflict detected: ${op.path} modified on server since offline op queued',
+                    );
+                    result =
+                        result +
+                        SyncResult(
+                          conflicts: 1,
+                          errorMessages: [
+                            'Conflict: ${op.path} modified on server',
+                          ],
+                        );
                     continue; // Skip this op, leave it in queue for manual resolution
                   }
                 }
@@ -477,11 +593,17 @@ class SyncNotifier extends ChangeNotifier {
             await _db.markOfflineCompleted(op.id);
             result = result + const SyncResult(uploaded: 1);
           } catch (e) {
-            _log.error('Offline replay failed for ${op.operation} ${op.path}', e);
+            _log.error(
+              'Offline replay failed for ${op.operation} ${op.path}',
+              e,
+            );
             // Mark the op with an error but leave it in the queue
-            await (_db.update(_db.offlineQueue)..where((t) => t.id.equals(op.id)))
+            await (_db.update(_db.offlineQueue)
+                  ..where((t) => t.id.equals(op.id)))
                 .write(OfflineQueueCompanion(error: Value(e.toString())));
-            result = result + SyncResult(errors: 1, errorMessages: ['${op.path}: $e']);
+            result =
+                result +
+                SyncResult(errors: 1, errorMessages: ['${op.path}: $e']);
           }
         }
       }
@@ -516,7 +638,11 @@ class SyncNotifier extends ChangeNotifier {
         final bytes = await file.readAsBytes();
         final fileName = op.path.split('/').last;
         final targetDir = remotePath.substring(0, remotePath.lastIndexOf('/'));
-        await client.uploadFile(bytes, fileName, targetDir.isEmpty ? '/' : targetDir);
+        await client.uploadFile(
+          bytes,
+          fileName,
+          targetDir.isEmpty ? '/' : targetDir,
+        );
         break;
       case 'download':
         final remotePath = '$remoteBase/${op.path}';
@@ -549,8 +675,9 @@ class SyncNotifier extends ChangeNotifier {
 
   /// Toggle placeholder mode for a sync pair.
   Future<void> setPlaceholders(int pairId, bool enabled) async {
-    await (_db.update(_db.syncPairs)..where((t) => t.id.equals(pairId)))
-        .write(SyncPairsCompanion(usePlaceholders: Value(enabled)));
+    await (_db.update(_db.syncPairs)..where((t) => t.id.equals(pairId))).write(
+      SyncPairsCompanion(usePlaceholders: Value(enabled)),
+    );
     await _loadPairs();
   }
 
@@ -617,6 +744,7 @@ class SyncNotifier extends ChangeNotifier {
 
   @override
   void dispose() {
+    _disposed = true;
     _watcher.dispose();
     _tray.dispose();
     _db.close();

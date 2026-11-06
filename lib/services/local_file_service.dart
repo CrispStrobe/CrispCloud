@@ -7,8 +7,9 @@
 
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
+
 import 'package:flutter/foundation.dart';
+
 import '../models/file_item.dart';
 
 import 'local_file_service_native.dart'
@@ -108,6 +109,41 @@ extension LocalFileEditorOperations on LocalFileService {
     return kIsWeb
         ? LocalFileSaveResult.downloadedCopy
         : LocalFileSaveResult.written;
+  }
+}
+
+/// Optional bounded transfer operations. Folder cleanup must be nonrecursive.
+abstract interface class LocalTransferFileOperations {
+  Stream<List<int>> readTransferStream(String path);
+  Future<void> writeTransferStream(String path, Stream<List<int>> data, int? length,
+      {required bool replace});
+  Future<void> deleteDirectoryIfEmpty(String path);
+}
+
+/// Optional per-invocation scope used by concurrent file operations.
+abstract interface class ScopedLocalFileOperations {
+  Future<T> withFileOperationAccess<T>(
+    String path,
+    Future<T> Function() action,
+  );
+}
+
+extension LocalFileOperationScopes on LocalFileService {
+  Future<T> withFileOperationAccess<T>(
+    String path,
+    Future<T> Function() action,
+  ) async {
+    final service = this;
+    if (service is ScopedLocalFileOperations) {
+      return (service as ScopedLocalFileOperations).withFileOperationAccess(
+        path,
+        action,
+      );
+    }
+    if (!await ensureAccess(path)) {
+      throw FileSystemException('Access to this path was not granted.', path);
+    }
+    return action();
   }
 }
 

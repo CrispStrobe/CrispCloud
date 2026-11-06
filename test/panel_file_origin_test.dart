@@ -1,9 +1,12 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'support/workflow_fake_client.dart';
+
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/panel_source_provider.dart';
+import 'package:crisp_cloud/services/storage_identity.dart';
 import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:crisp_cloud/services/directory_cache_service.dart';
@@ -31,11 +34,12 @@ class _Local extends Fake implements LocalFileService {
 }
 
 class _Cloud extends Fake implements CloudStorageClient {
-  _Cloud(this.providerName);
+  _Cloud(this.providerName, {this.accountId = 'account-a'});
+  final String accountId;
   @override
   final String providerName;
   @override
-  String? get userId => 'account-a';
+  String? get userId => accountId;
   @override
   String? get bucketId => 'bucket-a';
   @override
@@ -43,8 +47,16 @@ class _Cloud extends Fake implements CloudStorageClient {
   bool authenticated = true;
   @override
   bool get isAuthenticated => authenticated;
+  @override
+  Future<void> logout() async {
+    authenticated = false;
+  }
+
   Completer<Map<String, dynamic>>? pending;
+  Completer<void>? pendingCreate;
   final paths = <String>[];
+  final created = <String>[];
+  List<String> get createdPaths => created;
 
   static Map<String, dynamic> get listing => {
     'folders': <Map<String, dynamic>>[],
@@ -58,12 +70,32 @@ class _Cloud extends Fake implements CloudStorageClient {
     paths.add(path);
     return pending == null ? listing : await pending!.future;
   }
+
+  @override
+  Future<void> createFolderPath(String path) async {
+    created.add(path);
+    await pendingCreate?.future;
+  }
+}
+
+class _WritableCloud extends _Cloud with CloudTransferOperations {
+  _WritableCloud(super.providerName, {super.accountId});
+  final deletedEmptyPaths = <String>[];
+
+  @override
+  StorageTransferCapabilities get transferCapabilities =>
+      const StorageTransferCapabilities(deleteEmptyDirectory: true);
+
+  @override
+  Future<void> deleteDirectoryIfEmpty(String path) async {
+    deletedEmptyPaths.add(path);
+  }
 }
 
 class _Auth extends ChangeNotifier implements AuthNotifier {
   _Auth(this.client);
   @override
-  final _Cloud client;
+  final CloudStorageClient client;
   @override
   bool isConnected = true;
   @override
@@ -73,7 +105,7 @@ class _Auth extends ChangeNotifier implements AuthNotifier {
 
   void connection(bool connected) {
     isConnected = connected;
-    client.authenticated = connected;
+    if (client is _Cloud) (client as _Cloud).authenticated = connected;
     notifyListeners();
   }
 
@@ -102,6 +134,120 @@ void main() {
   });
 
   tearDown(() => container.dispose());
+
+  test(
+    'legacy copy and move use staged queue operations on their captured cloud',
+    () async {
+      final memory = WorkflowFakeClient()..put('/source.txt', [1, 2, 3]);
+      memory.directories.addAll(['/copied', '/moved']);
+      final scoped = ProviderContainer(
+        overrides: [
+          authProvider.overrideWith((_) => _Auth(memory)),
+          localFileServiceProvider.overrideWithValue(local),
+        ],
+      );
+      addTearDown(scoped.dispose);
+      final panel = scoped.read(panelProvider(PanelSide.remote));
+      await panel.refresh();
+      await panel.copyFiles([
+        panel.files!.firstWhere((file) => file.name == 'source.txt'),
+      ], '/copied');
+      expect(memory.files['/copied/source.txt'], [1, 2, 3]);
+      expect(memory.files['/source.txt'], [1, 2, 3]);
+      expect(scoped.read(transferProvider).savedJobs, hasLength(1));
+      await panel.moveFiles([
+        panel.files!.firstWhere((file) => file.name == 'source.txt'),
+      ], '/moved');
+      expect(memory.files['/moved/source.txt'], [1, 2, 3]);
+      expect(memory.files.containsKey('/source.txt'), isFalse);
+      expect(scoped.read(transferProvider).savedJobs, hasLength(2));
+    },
+  );
+
+  test(
+    'create folder uses the verified remote listing despite a local label',
+    () async {
+      final panel = container.read(panelProvider(PanelSide.remote));
+      await panel.refresh();
+      await panel.createFolder(' new folder ');
+      expect(actual.created, ['/ new folder ']);
+    },
+  );
+
+  test(
+    'create folder in the left pane targets its registered account',
+    () async {
+      final panel = container.read(panelProvider(PanelSide.local));
+      await Future<void>.delayed(Duration.zero);
+      final other = _Cloud('Secondary provider', accountId: 'other-account');
+      final registry = container.read(multiCloudProvider);
+      registry.addConnection(
+        id: 'secondary',
+        label: 'Second',
+        provider: CloudProvider.s3,
+        client: other,
+      );
+      container
+          .read(panelSourceProvider(PanelSide.local).notifier)
+          .setSource(
+            RemotePanelSource(
+              providerName: other.providerName,
+              client: other,
+              path: '/documents',
+            ),
+          );
+      await Future<void>.delayed(Duration.zero);
+      await panel.refresh();
+      await panel.createFolder('created');
+      expect(other.created, ['/documents/created']);
+      expect(actual.created, isEmpty);
+    },
+  );
+
+  test(
+    'disconnect during new-folder lookup cannot mutate the new account',
+    () async {
+      final panel = container.read(panelProvider(PanelSide.remote));
+      await panel.refresh();
+      actual.pending = Completer<Map<String, dynamic>>();
+      final operation = panel.createFolder('created');
+      await Future<void>.delayed(Duration.zero);
+      auth.connection(false);
+      auth.connection(true);
+      actual.pending!.complete(_Cloud.listing);
+      await operation;
+      expect(actual.created, isEmpty);
+    },
+  );
+
+  test('new-folder names cannot escape the captured parent', () async {
+    final panel = container.read(panelProvider(PanelSide.remote));
+    await panel.refresh();
+    for (final name in [
+      '',
+      '.',
+      '..',
+      '../outside',
+      'nested/name',
+      r'nested\name',
+    ]) {
+      await panel.createFolder(name);
+    }
+    expect(actual.created, isEmpty);
+  });
+
+  test(
+    'legacy copy and move reject replacement objects before any operation',
+    () async {
+      final panel = container.read(panelProvider(PanelSide.remote));
+      await panel.refresh();
+      final unverified = panel.files!.single.copyWith();
+      await panel.copyFiles([unverified], '/target');
+      await panel.moveFiles([unverified], '/target');
+      expect(actual.created, isEmpty);
+      expect(container.read(transferProvider).operations, isEmpty);
+    },
+  );
 
   test(
     'native metadata publication records the exact local file origin',
@@ -285,7 +431,7 @@ void main() {
   );
 
   test(
-    'unverified account-shared cache entries stay uneditable after failure',
+    'unverified account-scoped cache entries stay uneditable after failure',
     () async {
       final cached = FileItem(
         name: 'sample.pdf',
@@ -293,7 +439,7 @@ void main() {
         uuid: 'pdf-id',
       );
       container.read(directoryCacheProvider).put(
-        DirectoryCacheService.key('remote:${actual.providerName}', '/'),
+        DirectoryCacheService.key(storageReferenceForClient(actual).id, '/'),
         [cached],
       );
       final request = Completer<Map<String, dynamic>>();
@@ -334,5 +480,194 @@ void main() {
     expect(panel.originForFile(original), isNull);
     expect(panel.selection.single, same(replacement));
     expect(panel.lastSelected, same(replacement));
+  });
+
+  test(
+    'registered secondary account drives listings and exact saved references',
+    () async {
+      final other = _Cloud(actual.providerName, accountId: 'account-b');
+      final registry = container.read(multiCloudProvider);
+      registry.addConnection(
+        id: 'second',
+        label: 'Same provider, second account',
+        provider: CloudProvider.s3,
+        client: other,
+      );
+      final panel = container.read(panelProvider(PanelSide.remote));
+      await panel.refresh();
+      final original = panel.captureCurrentOrigin();
+      container
+          .read(panelSourceProvider(PanelSide.remote).notifier)
+          .setSource(
+            RemotePanelSource(
+              providerName: other.providerName,
+              client: other,
+              path: '/other',
+            ),
+          );
+      await Future<void>.delayed(Duration.zero);
+      await panel.refresh();
+      final source = panel.captureCurrentOrigin();
+      expect((source.source as RemotePanelSource).client, same(other));
+      expect(other.paths.last, '/other');
+      expect(source.storageReference, isNot(original.storageReference));
+      final resolved = panel.resolveStorageReference(
+        original.storageReference,
+        '/saved',
+      );
+      expect((resolved!.source as RemotePanelSource).client, same(actual));
+      await panel.navigateToPath('/saved', origin: resolved);
+      expect(
+        (panel.captureCurrentOrigin().source as RemotePanelSource).client,
+        same(actual),
+      );
+      expect(actual.paths.last, '/saved');
+    },
+  );
+
+  for (final side in PanelSide.values) {
+    test(
+      'new folder and undo keep the captured secondary account in ${side.name} pane',
+      () async {
+        final other = _WritableCloud(
+          actual.providerName,
+          accountId: 'account-b',
+        );
+        container
+            .read(multiCloudProvider)
+            .addConnection(
+              id: 'second',
+              label: 'Second account',
+              provider: CloudProvider.s3,
+              client: other,
+            );
+        final panel = container.read(panelProvider(side));
+        await Future<void>.delayed(Duration.zero);
+        container
+            .read(panelSourceProvider(side).notifier)
+            .setSource(
+              RemotePanelSource(
+                providerName: other.providerName,
+                client: other,
+                path: '/documents',
+              ),
+            );
+        await Future<void>.delayed(Duration.zero);
+        await panel.refresh();
+        final original = panel.captureCurrentOrigin();
+
+        other.pendingCreate = Completer<void>();
+        final pending = panel.createFolder('new-folder');
+        await Future<void>.delayed(Duration.zero);
+        expect(other.createdPaths, ['/documents/new-folder']);
+        expect(actual.createdPaths, isEmpty);
+        container
+            .read(panelSourceProvider(side).notifier)
+            .setSource(
+              RemotePanelSource(
+                providerName: actual.providerName,
+                client: actual,
+                path: '/elsewhere',
+              ),
+            );
+        await Future<void>.delayed(Duration.zero);
+        await panel.refresh();
+        other.pendingCreate!.complete();
+        await pending;
+
+        final history = container.read(actionHistoryProvider);
+        final action = history.lastAction!;
+        expect(action.originalPath, '/documents/new-folder');
+        expect(action.metadata['storage'], original.storageReference.toJson());
+        expect(history.canUndo(action), isTrue);
+        final fallbackDeletes = <String>[];
+        final undone = await history.undo(
+          action.id,
+          UndoContext(remoteDelete: (path) async => fallbackDeletes.add(path)),
+        );
+        expect(undone.success, isTrue);
+        expect(other.deletedEmptyPaths, ['/documents/new-folder']);
+        expect(fallbackDeletes, isEmpty);
+        expect(actual.createdPaths, isEmpty);
+      },
+    );
+  }
+
+  test(
+    'new folder rejects virtual lists without mutating their source',
+    () async {
+      final panel = container.read(panelProvider(PanelSide.remote));
+      await panel.refresh();
+      panel.showSearchResults(
+        panel.files!,
+        origin: panel.captureCurrentOrigin(),
+      );
+      await panel.createFolder('not-a-list-item');
+      expect(actual.createdPaths, isEmpty);
+      expect(container.read(actionHistoryProvider).history, isEmpty);
+      expect(
+        container.read(errorProvider).lastError,
+        contains('real directory'),
+      );
+    },
+  );
+
+  test('new folder undo requires safe empty-directory deletion', () async {
+    final panel = container.read(panelProvider(PanelSide.remote));
+    await panel.refresh();
+    await panel.createFolder('new-folder');
+    expect(actual.createdPaths, ['/new-folder']);
+    final history = container.read(actionHistoryProvider);
+    final action = history.lastAction!;
+    expect(history.canUndo(action), isFalse);
+    final fallbackDeletes = <String>[];
+    final result = await history.undo(
+      action.id,
+      UndoContext(remoteDelete: (path) async => fallbackDeletes.add(path)),
+    );
+    expect(result.success, isFalse);
+    expect(fallbackDeletes, isEmpty);
+  });
+
+  test('secondary sessions work without primary login and old origins stay invalid after reconnect', () async {
+    final other = _Cloud('Secondary', accountId: 'account-b');
+    final registry = container.read(multiCloudProvider);
+    registry.addConnection(
+      id: 'second',
+      label: 'Second',
+      provider: CloudProvider.s3,
+      client: other,
+    );
+    final panel = container.read(panelProvider(PanelSide.remote));
+    await panel.refresh();
+    auth.connection(false);
+    container
+        .read(panelSourceProvider(PanelSide.remote).notifier)
+        .setSource(
+          RemotePanelSource(
+            providerName: other.providerName,
+            client: other,
+            path: '/',
+          ),
+        );
+    await Future<void>.delayed(Duration.zero);
+    await panel.refresh();
+    final origin = panel.captureCurrentOrigin();
+    expect(origin.isCurrent, isTrue);
+    await registry.removeConnection('second');
+    expect(origin.isCurrent, isFalse);
+    expect(panel.resolveStorageReference(origin.storageReference, '/'), isNull);
+    other.authenticated = true;
+    registry.addConnection(
+      id: 'second',
+      label: 'Second',
+      provider: CloudProvider.s3,
+      client: other,
+    );
+    expect(origin.isCurrent, isFalse);
+    expect(
+      panel.resolveStorageReference(origin.storageReference, '/')!.isCurrent,
+      isTrue,
+    );
   });
 }

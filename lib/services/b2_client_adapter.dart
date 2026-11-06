@@ -12,12 +12,13 @@
 //
 // Authentication uses HTTP Basic auth (keyId:applicationKey → Base64).
 // All uploads include a SHA1 checksum in X-Bz-Content-Sha1.
-// Files > 100 MB are split into parts automatically.
+// Uploads use one bounded private spool per part, with validated SHA1 acknowledgements.
 // 429 / 503 responses are retried with Retry-After back-off.
 
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
@@ -26,14 +27,12 @@ import 'package:path/path.dart' as p;
 
 import 'b2_config_service.dart';
 import 'cloud_storage_interface.dart';
+import 'bounded_http_transfer.dart';
+import 'bounded_transfer_stream.dart';
+import 'transfer_spool.dart';
+import 'spooled_http_upload.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
-
-/// Threshold above which we switch to the large-file (multipart) upload path.
-const int _largeFileThreshold = 100 * 1024 * 1024; // 100 MB
-
-/// Minimum part size for large-file uploads (5 MB, B2 minimum).
-const int _minPartSize = 5 * 1024 * 1024; // 5 MB
 
 /// Default part size for large-file uploads (10 MB).
 const int _defaultPartSize = 10 * 1024 * 1024; // 10 MB
@@ -41,7 +40,15 @@ const int _defaultPartSize = 10 * 1024 * 1024; // 10 MB
 /// Maximum number of auto-retries on 429 / 503.
 const int _maxRetries = 5;
 
-class B2ClientAdapter extends CloudStorageClient {
+class B2ClientAdapter extends CloudStorageClient
+    with CloudTransferOperations
+    implements ObjectStorageNamespace {
+  @override
+  StorageTransferCapabilities get transferCapabilities =>
+      const StorageTransferCapabilities(
+        boundedUpload: true,
+        boundedDownload: true,
+      );
   static const _log = Log('B2Client');
 
   final B2ConfigService _config;
@@ -54,11 +61,12 @@ class B2ClientAdapter extends CloudStorageClient {
   String? _bucketId;
   String? _bucketName;
   bool _authenticated = false;
+  int _authEpoch = 0;
 
   B2ClientAdapter({required dynamic config})
-      : _config = (config is B2ConfigService)
-            ? config
-            : B2ConfigService(secureStorage: InMemorySecureStorage());
+    : _config = (config is B2ConfigService)
+          ? config
+          : B2ConfigService(secureStorage: InMemorySecureStorage());
 
   // ---------------------------------------------------------------------------
   // CloudStorageClient — metadata
@@ -115,8 +123,15 @@ class B2ClientAdapter extends CloudStorageClient {
   ///
   /// The optional [twoFactorCode] is ignored (B2 does not use 2FA on API keys).
   @override
-  Future<void> login(String email, String password,
-      {String? twoFactorCode}) async {
+  Future<void> login(
+    String email,
+    String password, {
+    String? twoFactorCode,
+  }) async {
+    _authEpoch++;
+    _authenticated = false;
+    _bucketId = null;
+    _bucketName = null;
     _keyId = email;
     _applicationKey = password;
 
@@ -128,6 +143,7 @@ class B2ClientAdapter extends CloudStorageClient {
 
   @override
   Future<void> logout() async {
+    _authEpoch++;
     _keyId = null;
     _applicationKey = null;
     _bucketId = null;
@@ -142,32 +158,43 @@ class B2ClientAdapter extends CloudStorageClient {
   // ---------------------------------------------------------------------------
 
   Future<void> _authorizeAccount() async {
-    _log.info('b2_authorize_account for keyId=$_keyId');
+    final epoch = _authEpoch;
+    final key = _keyId;
+    final applicationKey = _applicationKey;
+    final saved = await _config.readCredentials();
+    if (epoch != _authEpoch) {
+      throw StateError('B2 authentication was superseded.');
+    }
+    _log.info('b2_authorize_account');
 
-    final credentials = base64Encode(utf8.encode('$_keyId:$_applicationKey'));
+    final credentials = base64Encode(utf8.encode('$key:$applicationKey'));
     final resp = await _retryableGet(
-      Uri.parse(
-          'https://api.backblazeb2.com/b2api/v3/b2_authorize_account'),
-      headers: {
-        'Authorization': 'Basic $credentials',
-      },
+      Uri.parse('https://api.backblazeb2.com/b2api/v3/b2_authorize_account'),
+      headers: {'Authorization': 'Basic $credentials'},
       authRefreshAllowed: false,
     );
 
+    if (epoch != _authEpoch ||
+        key != _keyId ||
+        applicationKey != _applicationKey) {
+      throw StateError('B2 authentication was superseded.');
+    }
     _ensureSuccess(resp, 'b2_authorize_account');
 
     final body = _decodeJson(resp.body);
-    final apiUrl = body['apiInfo']?['storageApi']?['apiUrl'] as String? ??
+    final apiUrl =
+        body['apiInfo']?['storageApi']?['apiUrl'] as String? ??
         body['apiUrl'] as String?;
     final downloadUrl =
         body['apiInfo']?['storageApi']?['downloadUrl'] as String? ??
-            body['downloadUrl'] as String?;
+        body['downloadUrl'] as String?;
     final authToken = body['authorizationToken'] as String?;
     final accountId = body['accountId'] as String?;
 
     if (apiUrl == null || downloadUrl == null || authToken == null) {
       throw StateError(
-          'b2_authorize_account response missing required fields: $body');
+        'b2_authorize_account response missing required fields: $body',
+      );
     }
 
     _config.cacheAuthResponse(
@@ -177,6 +204,11 @@ class B2ClientAdapter extends CloudStorageClient {
       accountId: accountId ?? '',
     );
 
+    // Retain a bucket selected for this same key across session restoration.
+    if (saved?['keyId'] == key) {
+      _bucketId ??= saved?['bucketId'];
+      _bucketName ??= saved?['bucketName'];
+    }
     // Save credentials so they can be restored across sessions.
     await _config.saveCredentials(
       keyId: _keyId!,
@@ -185,8 +217,11 @@ class B2ClientAdapter extends CloudStorageClient {
       bucketName: _bucketName,
     );
 
+    if (epoch != _authEpoch) {
+      throw StateError('B2 authentication was superseded.');
+    }
     _authenticated = true;
-    _log.info('B2 authenticated, apiUrl=$apiUrl');
+    _log.info('B2 authenticated');
   }
 
   /// Re-run authorize_account (called after a 401 response).
@@ -269,8 +304,7 @@ class B2ClientAdapter extends CloudStorageClient {
 
     final folders = rawFolders.map<Map<String, dynamic>>((f) {
       final folderPath = f as String;
-      final name =
-          p.basename(folderPath.replaceAll(RegExp(r'/$'), ''));
+      final name = p.basename(folderPath.replaceAll(RegExp(r'/$'), ''));
       return {
         'name': name,
         'isFolder': true,
@@ -286,8 +320,118 @@ class B2ClientAdapter extends CloudStorageClient {
   }
 
   // ---------------------------------------------------------------------------
-  // File upload
+  // Bounded transfer operations
   // ---------------------------------------------------------------------------
+
+  Future<_B2TransferContext> _captureTransfer({
+    bool needBucketName = false,
+  }) async {
+    final epoch = _authEpoch;
+    final key = _keyId;
+    final token = _config.authToken;
+    final account = _config.accountId;
+    final api = _config.getApiUrl();
+    final download = _config.getDownloadUrl();
+    if (!_authenticated ||
+        key == null ||
+        token == null ||
+        account == null ||
+        api == null ||
+        download == null) {
+      throw StateError('Backblaze B2 is not authenticated.');
+    }
+    final bucket = await _resolveBucketId();
+    final name = needBucketName ? await _resolveBucketName() : _bucketName;
+    final captured = _B2TransferContext(
+      epoch,
+      key,
+      token,
+      account,
+      bucket,
+      name,
+      api,
+      download,
+    );
+    _checkTransfer(captured);
+    return captured;
+  }
+
+  void _checkTransfer(_B2TransferContext captured) {
+    if (!_authenticated ||
+        _authEpoch != captured.epoch ||
+        _keyId != captured.key ||
+        _bucketId != captured.bucket ||
+        _config.authToken != captured.token ||
+        _config.accountId != captured.account ||
+        _config.getApiUrl() != captured.api ||
+        _config.getDownloadUrl() != captured.download) {
+      throw StateError(
+        'The original Backblaze B2 account is no longer connected.',
+      );
+    }
+  }
+
+  Uri _transferAddress(String address, String operation) {
+    final uri = Uri.tryParse(address);
+    if (uri == null ||
+        uri.scheme != 'https' ||
+        uri.host.isEmpty ||
+        uri.userInfo.isNotEmpty ||
+        uri.hasFragment) {
+      throw StateError('B2 $operation returned an invalid secure address.');
+    }
+    return uri;
+  }
+
+  Map<String, dynamic> _transferMetadata(
+    http.Response response,
+    String operation,
+  ) {
+    if (response.statusCode != 200) {
+      throw StateError('B2 $operation failed (${response.statusCode}).');
+    }
+    final Object? decoded;
+    try {
+      decoded = json.decode(response.body);
+    } catch (_) {
+      throw StateError('B2 $operation returned invalid metadata.');
+    }
+    if (decoded is! Map<String, dynamic>) {
+      throw StateError('B2 $operation returned invalid metadata.');
+    }
+    return decoded;
+  }
+
+  Future<Map<String, dynamic>> _callTransfer(
+    _B2TransferContext captured,
+    String endpoint,
+    Map<String, dynamic> body,
+  ) async {
+    _checkTransfer(captured);
+    final client = http.Client();
+    try {
+      final request =
+          http.Request(
+              'POST',
+              _transferAddress('${captured.api}/b2api/v3/$endpoint', endpoint),
+            )
+            ..followRedirects = false
+            ..headers.addAll({
+              'authorization': captured.token,
+              'content-type': 'application/json',
+            })
+            ..body = json.encode(body);
+      final response = await sendTransferRequest(
+        client,
+        request,
+        operation: 'B2 $endpoint',
+      );
+      _checkTransfer(captured);
+      return _transferMetadata(response, endpoint);
+    } finally {
+      client.close();
+    }
+  }
 
   @override
   Future<void> uploadFile(
@@ -295,134 +439,291 @@ class B2ClientAdapter extends CloudStorageClient {
     String fileName,
     String targetPath, {
     Function(int, int)? onProgress,
-  }) async {
-    final bytes = Uint8List.fromList(fileData);
+  }) => uploadStream(
+    Stream.value(fileData),
+    fileData.length,
+    fileName,
+    targetPath,
+    onProgress: onProgress,
+  );
 
-    if (bytes.length > _largeFileThreshold) {
-      await _uploadLargeFile(bytes, fileName, targetPath,
-          onProgress: onProgress);
-    } else {
-      await _uploadSmallFile(bytes, fileName, targetPath,
-          onProgress: onProgress);
-    }
-  }
-
-  Future<void> _uploadSmallFile(
-    Uint8List bytes,
+  @override
+  Future<void> uploadStream(
+    Stream<List<int>> dataStream,
+    int length,
     String fileName,
     String targetPath, {
     Function(int, int)? onProgress,
   }) async {
-    final bucketId = await _resolveBucketId();
-    final uploadInfo = await _getUploadUrl(bucketId: bucketId);
-
-    final uploadUrl = uploadInfo['uploadUrl'] as String;
-    final uploadAuthToken = uploadInfo['authorizationToken'] as String;
-
-    final b2FileName =
-        _buildB2FileName(targetPath, fileName);
-    final sha1 = _sha1Hex(bytes);
+    if (length < 0) throw ArgumentError.value(length, 'length');
+    final minimumForPartLimit = (length + 9999) ~/ 10000;
+    final partSize = minimumForPartLimit > _defaultPartSize
+        ? minimumForPartLimit
+        : _defaultPartSize;
+    if (partSize > 5000000000) {
+      throw UnsupportedError('B2 supports at most 10,000 parts of 5 GB each.');
+    }
+    final captured = await _captureTransfer();
+    final name = _buildB2FileName(targetPath, fileName);
     final contentType = _guessContentType(fileName);
-
-    _log.debug(
-        'Uploading small file $b2FileName (${bytes.length} bytes) sha1=$sha1');
-
-    final resp = await _retryablePost(
-      Uri.parse(uploadUrl),
-      headers: {
-        'Authorization': uploadAuthToken,
-        'X-Bz-File-Name': Uri.encodeComponent(b2FileName),
-        'Content-Type': contentType,
-        'Content-Length': '${bytes.length}',
-        'X-Bz-Content-Sha1': sha1,
-      },
-      body: bytes,
-      authRefreshAllowed: true,
+    final large = length > _defaultPartSize;
+    final reader = _B2PartReader(
+      validatedTransferParts(dataStream, length, 64 * 1024),
     );
-
-    _ensureSuccess(resp, 'b2_upload_file');
-    _log.info('Uploaded $b2FileName');
-
-    onProgress?.call(bytes.length, bytes.length);
+    String? fileId;
+    var completed = false;
+    try {
+      if (large) {
+        final start = await _callTransfer(captured, 'b2_start_large_file', {
+          'bucketId': captured.bucket,
+          'fileName': name,
+          'contentType': contentType,
+        });
+        final id = start['fileId'];
+        if (id is! String ||
+            id.isEmpty ||
+            start['fileName'] != name ||
+            start['bucketId'] != captured.bucket ||
+            start['action'] != 'start') {
+          throw StateError('B2 did not identify the new multipart upload.');
+        }
+        fileId = id;
+      }
+      final partHashes = <String>[];
+      var uploaded = 0;
+      final count = large ? (length + partSize - 1) ~/ partSize : 1;
+      for (var index = 0; index < count; index++) {
+        _checkTransfer(captured);
+        final bytes = (length - uploaded).clamp(0, partSize);
+        final digest = _B2DigestSink();
+        final hash = sha1.startChunkedConversion(digest);
+        // A part is backed by private disk/OPFS storage, so adaptive parts can
+        // grow to the API's size limit without allocating that much memory.
+        final spool = await createTransferSpool(
+          reader.takeBytes(bytes).map((chunk) {
+            _checkTransfer(captured);
+            hash.add(chunk);
+            return chunk;
+          }),
+          expectedLength: bytes,
+          checkpoint: () async => _checkTransfer(captured),
+        );
+        try {
+          if (index == count - 1) await reader.verifyEnd();
+          hash.close();
+          final checksum = digest.value!.toString();
+          await _uploadPreparedPart(
+            captured,
+            spool,
+            name,
+            contentType,
+            checksum,
+            fileId: fileId,
+            partNumber: index + 1,
+          );
+          partHashes.add(checksum);
+          uploaded += bytes;
+          onProgress?.call(uploaded, length);
+        } finally {
+          await spool.dispose();
+        }
+      }
+      if (fileId != null) {
+        Map<String, dynamic> result;
+        try {
+          result = await _callTransfer(captured, 'b2_finish_large_file', {
+            'fileId': fileId,
+            'partSha1Array': partHashes,
+          });
+          _verifyUploadedFile(result, captured, name, length, fileId: fileId);
+        } catch (error, stack) {
+          // B2 documents that a lost finish reply is reconciled by the exact
+          // new file ID. Never retry finish as a new upload or remove a version.
+          try {
+            result = await _callTransfer(captured, 'b2_get_file_info', {
+              'fileId': fileId,
+            });
+            _verifyUploadedFile(result, captured, name, length, fileId: fileId);
+          } catch (_) {
+            Error.throwWithStackTrace(error, stack);
+          }
+        }
+      }
+      _checkTransfer(captured);
+      completed = true;
+    } catch (error, stack) {
+      if (fileId != null && !completed) {
+        try {
+          // This endpoint cancels only an unfinished upload owned by this call.
+          // A completed file version is never deleted after an uncertain reply.
+          await _callTransfer(captured, 'b2_cancel_large_file', {
+            'fileId': fileId,
+          });
+        } catch (_) {
+          /* Preserve the original failure and any server-side data. */
+        }
+      }
+      Error.throwWithStackTrace(error, stack);
+    } finally {
+      await reader.cancel();
+    }
   }
 
-  // ---------------------------------------------------------------------------
-  // Large file upload (> 100 MB)
-  // ---------------------------------------------------------------------------
+  Future<void> _uploadPreparedPart(
+    _B2TransferContext captured,
+    TransferSpool spool,
+    String name,
+    String contentType,
+    String checksum, {
+    String? fileId,
+    required int partNumber,
+  }) async {
+    for (var attempt = 0; ; attempt++) {
+      final info = await _callTransfer(
+        captured,
+        fileId == null ? 'b2_get_upload_url' : 'b2_get_upload_part_url',
+        fileId == null ? {'bucketId': captured.bucket} : {'fileId': fileId},
+      );
+      final address = info['uploadUrl'];
+      final token = info['authorizationToken'];
+      if (address is! String ||
+          token is! String ||
+          token.isEmpty ||
+          (info['bucketId'] != null && info['bucketId'] != captured.bucket) ||
+          (info['fileId'] != null && info['fileId'] != fileId)) {
+        throw StateError('B2 returned an invalid upload session.');
+      }
+      final uri = _transferAddress(address, 'upload');
+      final headers = {
+        'authorization': token,
+        'content-length': spool.length.toString(),
+        'content-type': contentType,
+        'x-bz-content-sha1': checksum,
+        if (fileId == null)
+          'x-bz-file-name': Uri.encodeComponent(name)
+        else
+          'x-bz-part-number': partNumber.toString(),
+      };
+      _checkTransfer(captured);
+      http.Response response;
+      if (kIsWeb) {
+        response = await uploadSpooledHttpBody(
+          uri,
+          spool,
+          operation: 'B2 upload',
+          checkCurrent: () => _checkTransfer(captured),
+          method: 'POST',
+          headers: headers,
+        );
+      } else {
+        final client = http.Client();
+        try {
+          final request = _B2UploadRequest(
+            uri,
+            spool.openRead().map((part) {
+              _checkTransfer(captured);
+              return part;
+            }),
+            spool.length,
+          )..headers.addAll(headers);
+          response = await sendTransferRequest(
+            client,
+            request,
+            operation: 'B2 upload',
+          );
+        } finally {
+          client.close();
+        }
+      }
+      _checkTransfer(captured);
+      if ((response.statusCode == 429 || response.statusCode == 503) &&
+          attempt < _maxRetries) {
+        final retry = _parseRetryAfter(response);
+        await Future<void>.delayed(
+          retry > const Duration(seconds: 30)
+              ? const Duration(seconds: 30)
+              : retry,
+        );
+        continue;
+      }
+      final result = _transferMetadata(response, 'upload');
+      if (fileId != null) {
+        if (result['fileId'] != fileId ||
+            result['partNumber'] != partNumber ||
+            result['contentLength'] != spool.length ||
+            result['contentSha1'] != checksum) {
+          throw StateError(
+            'B2 did not verify the uploaded part identity, length, and checksum.',
+          );
+        }
+      } else {
+        _verifyUploadedFile(result, captured, name, spool.length);
+        if (result['contentSha1'] != checksum) {
+          throw StateError('B2 did not verify the uploaded file checksum.');
+        }
+      }
+      return;
+    }
+  }
 
-  Future<void> _uploadLargeFile(
-    Uint8List bytes,
-    String fileName,
-    String targetPath, {
+  void _verifyUploadedFile(
+    Map<String, dynamic> result,
+    _B2TransferContext captured,
+    String name,
+    int length, {
+    String? fileId,
+  }) {
+    if (result['fileId'] is! String ||
+        (result['fileId'] as String).isEmpty ||
+        (fileId != null && result['fileId'] != fileId) ||
+        result['fileName'] != name ||
+        result['bucketId'] != captured.bucket ||
+        result['contentLength'] != length ||
+        result['action'] != 'upload') {
+      throw StateError(
+        'B2 did not confirm the completed file identity and length.',
+      );
+    }
+  }
+
+  @override
+  Stream<List<int>> downloadStream(
+    String remotePath, {
+    Function(int, int)? onProgress,
+  }) async* {
+    final captured = await _captureTransfer(needBucketName: true);
+    final norm = _normalizePath(remotePath);
+    final path = norm.startsWith('/') ? norm.substring(1) : norm;
+    final uri = _transferAddress(
+      '${captured.download}/file/${Uri.encodeComponent(captured.bucketName!)}/${_encodeFilePath(path)}',
+      'download',
+    );
+    await for (final part in streamHttpDownload(
+      uri,
+      operation: 'B2 download',
+      headers: {'authorization': captured.token},
+      onProgress: onProgress,
+    )) {
+      _checkTransfer(captured);
+      yield part;
+    }
+    _checkTransfer(captured);
+  }
+
+  @override
+  Future<Uint8List> downloadFileBytes(
+    String remotePath, {
     Function(int, int)? onProgress,
   }) async {
-    final bucketId = await _resolveBucketId();
-    final b2FileName = _buildB2FileName(targetPath, fileName);
-    final contentType = _guessContentType(fileName);
-
-    _log.info(
-        'Starting large file upload for $b2FileName (${bytes.length} bytes)');
-
-    // 1. Start large file
-    final startResp = await _callApi('b2_start_large_file', {
-      'bucketId': bucketId,
-      'fileName': b2FileName,
-      'contentType': contentType,
-    });
-    final fileId = startResp['fileId'] as String;
-
-    // 2. Split into parts
-    final partSize = _defaultPartSize.clamp(_minPartSize, bytes.length);
-    final partCount = (bytes.length / partSize).ceil();
-    final partSha1s = <String>[];
-    int uploaded = 0;
-
-    for (int i = 0; i < partCount; i++) {
-      final start = i * partSize;
-      final end = (start + partSize).clamp(0, bytes.length);
-      final part = bytes.sublist(start, end);
-
-      // Get upload part URL
-      final partUrlResp = await _callApi('b2_get_upload_part_url', {
-        'fileId': fileId,
-      });
-      final partUploadUrl = partUrlResp['uploadUrl'] as String;
-      final partAuthToken = partUrlResp['authorizationToken'] as String;
-
-      final partSha1 = _sha1Hex(part);
-
-      _log.debug(
-          'Uploading part ${i + 1}/$partCount size=${part.length} sha1=$partSha1');
-
-      final partResp = await _retryablePost(
-        Uri.parse(partUploadUrl),
-        headers: {
-          'Authorization': partAuthToken,
-          'X-Bz-Part-Number': '${i + 1}',
-          'Content-Length': '${part.length}',
-          'X-Bz-Content-Sha1': partSha1,
-        },
-        body: part,
-        authRefreshAllowed: true,
-      );
-      _ensureSuccess(partResp, 'b2_upload_part');
-      partSha1s.add(partSha1);
-      uploaded += part.length;
-      onProgress?.call(uploaded, bytes.length);
+    final bytes = BytesBuilder(copy: false);
+    await for (final part in downloadStream(
+      remotePath,
+      onProgress: onProgress,
+    )) {
+      bytes.add(part);
     }
-
-    // 3. Finish large file
-    await _callApi('b2_finish_large_file', {
-      'fileId': fileId,
-      'partSha1Array': partSha1s,
-    });
-
-    _log.info('Large file upload complete: $b2FileName');
+    return bytes.takeBytes();
   }
-
-  // ---------------------------------------------------------------------------
-  // Download
-  // ---------------------------------------------------------------------------
 
   @override
   Future<void> downloadFileByPath(
@@ -430,36 +731,21 @@ class B2ClientAdapter extends CloudStorageClient {
     String localPath, {
     Function(int, int)? onProgress,
   }) async {
-    final bytes = await downloadFileBytes(remotePath, onProgress: onProgress);
-    if (!kIsWeb) {
-      await File(localPath).writeAsBytes(bytes);
+    if (kIsWeb) {
+      throw UnsupportedError('Use browser file storage to save this download.');
     }
-  }
-
-  @override
-  Future<Uint8List> downloadFileBytes(String remotePath,
-      {Function(int, int)? onProgress}) async {
-    final downloadUrl = _config.getDownloadUrl();
-    if (downloadUrl == null) throw StateError('Not authenticated');
-
-    final bucketName = await _resolveBucketName();
-    final norm = _normalizePath(remotePath);
-    final filePath = norm.startsWith('/') ? norm.substring(1) : norm;
-
-    final url = Uri.parse(
-        '$downloadUrl/file/${Uri.encodeComponent(bucketName)}/${_encodeFilePath(filePath)}');
-
-    _log.debug('Downloading $filePath from $url');
-
-    final resp = await _retryableGet(
-      url,
-      headers: {'Authorization': _config.authToken ?? ''},
-      authRefreshAllowed: true,
-    );
-
-    _ensureSuccess(resp, 'b2_download_file_by_name');
-    onProgress?.call(resp.bodyBytes.length, resp.bodyBytes.length);
-    return resp.bodyBytes;
+    final writer = await File(localPath).open(mode: FileMode.write);
+    try {
+      await for (final part in downloadStream(
+        remotePath,
+        onProgress: onProgress,
+      )) {
+        await writer.writeFrom(part);
+      }
+      await writer.flush();
+    } finally {
+      await writer.close();
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -578,8 +864,10 @@ class B2ClientAdapter extends CloudStorageClient {
   // ---------------------------------------------------------------------------
 
   Future<Map<String, dynamic>> _callApi(
-      String endpoint, Map<String, dynamic> body,
-      {bool authRefreshAllowed = true}) async {
+    String endpoint,
+    Map<String, dynamic> body, {
+    bool authRefreshAllowed = true,
+  }) async {
     final apiUrl = _config.getApiUrl();
     if (apiUrl == null) throw StateError('Not authenticated');
 
@@ -643,19 +931,19 @@ class B2ClientAdapter extends CloudStorageClient {
       throw StateError('No accountId — call login first');
     }
 
-    final resp = await _callApi('b2_list_buckets', {
-      'accountId': accountId,
-    });
+    final resp = await _callApi('b2_list_buckets', {'accountId': accountId});
 
     final buckets = (resp['buckets'] as List<dynamic>? ?? [])
         .whereType<Map<String, dynamic>>()
-        .map((b) => {
-              'name': b['bucketName'] as String? ?? '',
-              'uuid': b['bucketId'] as String? ?? '',
-              'isFolder': true,
-              'path': '/${b['bucketName']}',
-              'bucketType': b['bucketType'],
-            })
+        .map(
+          (b) => {
+            'name': b['bucketName'] as String? ?? '',
+            'uuid': b['bucketId'] as String? ?? '',
+            'isFolder': true,
+            'path': '/${b['bucketName']}',
+            'bucketType': b['bucketType'],
+          },
+        )
         .toList();
 
     return {'files': buckets};
@@ -668,8 +956,15 @@ class B2ClientAdapter extends CloudStorageClient {
   Future<String> _resolveBucketId() async {
     if (_bucketId != null) return _bucketId!;
 
-    // Try loading from persisted config
+    // Try loading from persisted config, bound to this connection generation.
+    final epoch = _authEpoch;
+    final key = _keyId;
     final creds = await _config.readCredentials();
+    if (epoch != _authEpoch ||
+        key != _keyId ||
+        (key != null && creds?['keyId'] != key)) {
+      throw StateError('The B2 account changed while resolving the bucket.');
+    }
     if (creds != null && creds['bucketId'] != null) {
       _bucketId = creds['bucketId'];
       _bucketName = creds['bucketName'];
@@ -677,13 +972,21 @@ class B2ClientAdapter extends CloudStorageClient {
     }
 
     throw StateError(
-        'No bucketId configured. Set it via B2ConfigService.saveCredentials.');
+      'No bucketId configured. Set it via B2ConfigService.saveCredentials.',
+    );
   }
 
   Future<String> _resolveBucketName() async {
     if (_bucketName != null) return _bucketName!;
 
+    final epoch = _authEpoch;
+    final key = _keyId;
     final creds = await _config.readCredentials();
+    if (epoch != _authEpoch ||
+        key != _keyId ||
+        (key != null && creds?['keyId'] != key)) {
+      throw StateError('The B2 account changed while resolving the bucket.');
+    }
     if (creds != null && creds['bucketName'] != null) {
       _bucketName = creds['bucketName'];
       _bucketId ??= creds['bucketId'];
@@ -691,7 +994,8 @@ class B2ClientAdapter extends CloudStorageClient {
     }
 
     throw StateError(
-        'No bucketName configured. Set it via B2ConfigService.saveCredentials.');
+      'No bucketName configured. Set it via B2ConfigService.saveCredentials.',
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -717,8 +1021,9 @@ class B2ClientAdapter extends CloudStorageClient {
           attempt < _maxRetries) {
         final delay = _parseRetryAfter(resp);
         _log.warn(
-            'B2 rate-limited (${resp.statusCode}), retrying in ${delay.inSeconds}s '
-            '(attempt ${attempt + 1}/$_maxRetries)');
+          'B2 rate-limited (${resp.statusCode}), retrying in ${delay.inSeconds}s '
+          '(attempt ${attempt + 1}/$_maxRetries)',
+        );
         await Future.delayed(delay);
         attempt++;
         continue;
@@ -752,8 +1057,9 @@ class B2ClientAdapter extends CloudStorageClient {
           attempt < _maxRetries) {
         final delay = _parseRetryAfter(resp);
         _log.warn(
-            'B2 rate-limited (${resp.statusCode}), retrying in ${delay.inSeconds}s '
-            '(attempt ${attempt + 1}/$_maxRetries)');
+          'B2 rate-limited (${resp.statusCode}), retrying in ${delay.inSeconds}s '
+          '(attempt ${attempt + 1}/$_maxRetries)',
+        );
         await Future.delayed(delay);
         attempt++;
         continue;
@@ -768,9 +1074,10 @@ class B2ClientAdapter extends CloudStorageClient {
 
   void _ensureSuccess(http.Response resp, String operation) {
     if (resp.statusCode < 200 || resp.statusCode >= 300) {
-      final body = resp.body.length > 500 ? resp.body.substring(0, 500) : resp.body;
-      throw StateError(
-          'B2 $operation failed with ${resp.statusCode}: $body');
+      final body = resp.body.length > 500
+          ? resp.body.substring(0, 500)
+          : resp.body;
+      throw StateError('B2 $operation failed with ${resp.statusCode}: $body');
     }
   }
 
@@ -799,15 +1106,12 @@ class B2ClientAdapter extends CloudStorageClient {
   /// Encode a forward-slash-delimited file path for use in B2 URLs while
   /// preserving the path separators.
   static String _encodeFilePath(String filePath) {
-    return filePath
-        .split('/')
-        .map(Uri.encodeComponent)
-        .join('/');
+    return filePath.split('/').map(Uri.encodeComponent).join('/');
   }
 
-  /// Strip leading/trailing slashes and normalise double slashes.
+  /// Normalize repeated separators while preserving literal filename spaces.
   static String _normalizePath(String path) {
-    return path.replaceAll(RegExp(r'/+'), '/').trim();
+    return path.replaceAll(RegExp(r'/+'), '/');
   }
 
   /// Combine [targetPath] and [fileName] into a B2 object name.
@@ -877,8 +1181,8 @@ class B2ClientAdapter extends CloudStorageClient {
       'isFolder': action == 'folder' || fileName.endsWith('/'),
       'size': size,
       if (uploadTimestamp != null)
-        'lastModified':
-            DateTime.fromMillisecondsSinceEpoch(uploadTimestamp).toIso8601String(),
+        'lastModified': DateTime.fromMillisecondsSinceEpoch(uploadTimestamp)
+            .toIso8601String(),
       'action': action,
       'contentType': info['contentType'],
       'sha1': info['contentSha1'],
@@ -905,7 +1209,82 @@ class B2ClientAdapter extends CloudStorageClient {
   static String publicNormalizePath(String path) => _normalizePath(path);
 
   /// Public wrapper for [_fileInfoToMap] — used in tests.
-  static Map<String, dynamic> publicFileInfoToMap(
-          Map<String, dynamic> info) =>
+  static Map<String, dynamic> publicFileInfoToMap(Map<String, dynamic> info) =>
       _fileInfoToMap(info);
+}
+
+class _B2TransferContext {
+  const _B2TransferContext(
+    this.epoch,
+    this.key,
+    this.token,
+    this.account,
+    this.bucket,
+    this.bucketName,
+    this.api,
+    this.download,
+  );
+  final int epoch;
+  final String key, token, account, bucket, api, download;
+  final String? bucketName;
+}
+
+class _B2UploadRequest extends http.BaseRequest {
+  _B2UploadRequest(Uri uri, this.body, int length) : super('POST', uri) {
+    contentLength = length;
+    followRedirects = false;
+  }
+  final Stream<List<int>> body;
+  @override
+  http.ByteStream finalize() {
+    super.finalize();
+    return http.ByteStream(body);
+  }
+}
+
+class _B2DigestSink implements Sink<Digest> {
+  Digest? value;
+  @override
+  void add(Digest data) {
+    value = data;
+  }
+
+  @override
+  void close() {}
+}
+
+/// Holds at most one validated 64KiB source chunk while each part is spooled.
+class _B2PartReader {
+  _B2PartReader(Stream<Uint8List> source) : chunks = StreamIterator(source);
+  final StreamIterator<Uint8List> chunks;
+  Uint8List? current;
+  int offset = 0;
+
+  Stream<List<int>> takeBytes(int length) async* {
+    var remaining = length;
+    while (remaining > 0) {
+      if (current == null || offset == current!.length) {
+        if (!await chunks.moveNext()) {
+          throw StateError('B2 upload source ended early.');
+        }
+        current = chunks.current;
+        offset = 0;
+      }
+      final count = remaining < current!.length - offset
+          ? remaining
+          : current!.length - offset;
+      yield Uint8List.sublistView(current!, offset, offset + count);
+      offset += count;
+      remaining -= count;
+    }
+  }
+
+  Future<void> verifyEnd() async {
+    if ((current != null && offset != current!.length) ||
+        await chunks.moveNext()) {
+      throw StateError('B2 upload source exceeded its declared length.');
+    }
+  }
+
+  Future<void> cancel() => chunks.cancel();
 }

@@ -1,3 +1,6 @@
+import '../models/storage_reference.dart';
+import 'storage_identity.dart';
+
 // lib/services/encrypted_storage_wrapper.dart
 import 'dart:io';
 import 'dart:typed_data';
@@ -6,6 +9,8 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'cloud_storage_interface.dart';
 import 'encryption_service.dart';
+import 'gcm_transfer_stream.dart';
+import 'transfer_spool.dart';
 import 'web_crypto_provider.dart';
 // On the web build, bulk AES-GCM runs on the browser's native crypto
 // (~1000 MB/s vs ~1 MB/s for pointycastle in dart2js); native/VM keeps
@@ -26,9 +31,18 @@ import 'web_crypto_factory_io.dart'
 /// );
 /// ```
 class EncryptedStorageWrapper
-    implements CloudStorageClient, FreshCloudDirectoryReader {
+    with CloudTransferOperations
+    implements
+        CloudStorageClient,
+        StorageNamespaceIdentity,
+        FreshCloudDirectoryReader {
+  @override
+  String get storageNamespace =>
+      'encrypted:${storageReferenceForClient(_inner).id}';
+
   final CloudStorageClient _inner;
   final Uint8List _key;
+  int _sessionEpoch = 0;
 
   /// Access the unwrapped inner client (used by disableEncryption).
   CloudStorageClient get inner => _inner;
@@ -50,23 +64,30 @@ class EncryptedStorageWrapper
     required Uint8List encryptionKey,
     this.encryptFilenames = false,
     WebCryptoProvider? cryptoProvider,
-  })  : _inner = inner,
-        _key = encryptionKey,
-        _crypto = cryptoProvider ?? defaultWebCryptoProvider();
+    // Preserve the public named argument while keeping the captured client private.
+    // ignore: prefer_initializing_formals
+  }) : _inner = inner,
+       _key = Uint8List.fromList(encryptionKey),
+       _crypto = cryptoProvider ?? defaultWebCryptoProvider();
 
   // ---------------------------------------------------------------------------
   // Pass-through: authentication
   // ---------------------------------------------------------------------------
 
   @override
-  Future<void> login(String email, String password, {String? twoFactorCode}) =>
-      _inner.login(email, password, twoFactorCode: twoFactorCode);
+  Future<void> login(String email, String password, {String? twoFactorCode}) {
+    _sessionEpoch++;
+    return _inner.login(email, password, twoFactorCode: twoFactorCode);
+  }
 
   @override
   Future<bool> is2faNeeded(String email) => _inner.is2faNeeded(email);
 
   @override
-  Future<void> logout() => _inner.logout();
+  Future<void> logout() {
+    _sessionEpoch++;
+    return _inner.logout();
+  }
 
   @override
   bool get isAuthenticated => _inner.isAuthenticated;
@@ -130,18 +151,20 @@ class EncryptedStorageWrapper
     if (files is! List) return listing;
     return {
       ...listing,
-      'files': [
-        for (final entry in files) _withPlaintextSize(entry),
-      ],
+      'files': [for (final entry in files) _withPlaintextSize(entry)],
     };
   }
 
   static dynamic _withPlaintextSize(dynamic entry) {
-    if (entry is! Map || entry['isFolder'] == true || entry['type'] == 'folder') {
+    if (entry is! Map ||
+        entry['isFolder'] == true ||
+        entry['type'] == 'folder') {
       return entry;
     }
     final metadata = entry['metadata'] is Map ? entry['metadata'] as Map : null;
-    final size = int.tryParse('${entry['downloadSize'] ?? metadata?['downloadSize'] ?? entry['size'] ?? metadata?['size']}');
+    final size = int.tryParse(
+      '${entry['downloadSize'] ?? metadata?['downloadSize'] ?? entry['size'] ?? metadata?['size']}',
+    );
     if (size == null) return entry;
     // EncryptionService and both crypto backends use a 12-byte nonce and a
     // 16-byte GCM tag. Retain stored size for the editor's pre-download cap;
@@ -174,13 +197,22 @@ class EncryptedStorageWrapper
     String targetPath, {
     Function(int, int)? onProgress,
   }) async {
-    final encrypted =
-        await _crypto.encrypt(await _gcmKey(), Uint8List.fromList(fileData));
+    final check = _captureTransfer();
+    final encrypted = await _crypto.encrypt(
+      await _gcmKey(),
+      Uint8List.fromList(fileData),
+    );
+    check();
     final uploadName = encryptFilenames
         ? EncryptionService.encryptFilename(fileName, _key)
         : fileName;
-    await _inner.uploadFile(encrypted, uploadName, targetPath,
-        onProgress: onProgress);
+    await _inner.uploadFile(
+      encrypted,
+      uploadName,
+      targetPath,
+      onProgress: onProgress,
+    );
+    check();
   }
 
   // ---------------------------------------------------------------------------
@@ -188,11 +220,19 @@ class EncryptedStorageWrapper
   // ---------------------------------------------------------------------------
 
   @override
-  Future<Uint8List> downloadFileBytes(String remotePath,
-      {Function(int, int)? onProgress}) async {
-    final encrypted =
-        await _inner.downloadFileBytes(remotePath, onProgress: onProgress);
-    return _crypto.decrypt(await _gcmKey(), encrypted);
+  Future<Uint8List> downloadFileBytes(
+    String remotePath, {
+    Function(int, int)? onProgress,
+  }) async {
+    final check = _captureTransfer();
+    final encrypted = await _inner.downloadFileBytes(
+      remotePath,
+      onProgress: onProgress,
+    );
+    check();
+    final plaintext = await _crypto.decrypt(await _gcmKey(), encrypted);
+    check();
+    return plaintext;
   }
 
   @override
@@ -201,23 +241,55 @@ class EncryptedStorageWrapper
     String localPath, {
     Function(int, int)? onProgress,
   }) async {
-    // Download encrypted bytes, decrypt, then write to local path.
-    final encrypted =
-        await _inner.downloadFileBytes(remotePath, onProgress: onProgress);
-    final decrypted = await _crypto.decrypt(await _gcmKey(), encrypted);
-
     if (kIsWeb) {
-      throw UnsupportedError('downloadFileByPath is not supported on web. '
-          'Use downloadFileBytes instead.');
+      throw UnsupportedError('Use downloadStream on web.');
     }
-
-    final file = await File(localPath).create(recursive: true);
-    await file.writeAsBytes(decrypted);
+    final check = _captureTransfer();
+    final spool = await createAuthenticatedGcmSpool(
+      _inner.downloadStream(remotePath, onProgress: onProgress),
+      _key,
+      check,
+    );
+    try {
+      check();
+      final file = await File(localPath).create(recursive: true);
+      final sink = file.openWrite();
+      try {
+        await sink.addStream(spool.openRead());
+        await sink.flush();
+      } finally {
+        await sink.close();
+      }
+    } finally {
+      await spool.dispose();
+    }
   }
 
-  // ---------------------------------------------------------------------------
-  // Stream-based (buffers for GCM, which needs full plaintext)
-  // ---------------------------------------------------------------------------
+  // The existing wire format is one AES-GCM message. Decryption therefore
+  // authenticates a private disk/browser spool before releasing plaintext.
+  @override
+  StorageTransferCapabilities get transferCapabilities =>
+      StorageTransferCapabilities(
+        boundedUpload: _inner.transferCapabilities.boundedUpload,
+        boundedDownload: _inner.transferCapabilities.boundedDownload,
+      );
+
+  void Function() _captureTransfer() {
+    final storage = storageReferenceForClient(_inner);
+    final epoch = _sessionEpoch;
+    void check() {
+      if (_sessionEpoch != epoch ||
+          !_inner.isAuthenticated ||
+          storageReferenceForClient(_inner) != storage) {
+        throw StateError(
+          'The original encrypted-storage account is no longer available.',
+        );
+      }
+    }
+
+    check();
+    return check;
+  }
 
   @override
   Future<void> uploadStream(
@@ -227,23 +299,42 @@ class EncryptedStorageWrapper
     String targetPath, {
     Function(int, int)? onProgress,
   }) async {
-    // GCM requires the full plaintext, so buffer the stream first.
-    final builder = BytesBuilder(copy: false);
-    await for (final chunk in dataStream) {
-      builder.add(chunk);
+    final check = _captureTransfer();
+    final encrypted = encryptGcmTransfer(dataStream, length, _key, check);
+    final spool = await createTransferSpool(
+      encrypted,
+      expectedLength: length + 28,
+      checkpoint: () async => check(),
+    );
+    try {
+      check();
+      final uploadName = encryptFilenames
+          ? EncryptionService.encryptFilename(fileName, _key)
+          : fileName;
+      await _inner.uploadStream(
+        spool.openRead(),
+        spool.length,
+        uploadName,
+        targetPath,
+        onProgress: onProgress,
+      );
+      check();
+    } finally {
+      await spool.dispose();
     }
-    await uploadFile(builder.takeBytes(), fileName, targetPath,
-        onProgress: onProgress);
   }
 
   @override
   Stream<List<int>> downloadStream(
     String remotePath, {
     Function(int, int)? onProgress,
-  }) async* {
-    final decrypted =
-        await downloadFileBytes(remotePath, onProgress: onProgress);
-    yield decrypted;
+  }) {
+    final check = _captureTransfer();
+    return authenticatedGcmDownload(
+      _inner.downloadStream(remotePath, onProgress: onProgress),
+      _key,
+      check,
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -267,18 +358,31 @@ class EncryptedStorageWrapper
 
   @override
   Future<void> copyPath(String sourcePath, String targetPath) async {
-    // Cannot use server-side copy because data is encrypted; download, re-encrypt, upload.
-    final bytes = await downloadFileBytes(sourcePath);
-    final fileName = sourcePath.split('/').last;
-    await uploadFile(bytes, fileName, targetPath);
+    final check = _captureTransfer();
+    final spool = await createTransferSpool(
+      downloadStream(sourcePath),
+      checkpoint: () async => check(),
+    );
+    try {
+      check();
+      await uploadStream(
+        spool.openRead(),
+        spool.length,
+        sourcePath.split('/').last,
+        targetPath,
+      );
+      check();
+    } finally {
+      await spool.dispose();
+    }
   }
 
   @override
-  bool get supportsFullTextSearch =>
-      false; // encrypted content can't be searched server-side
+  bool get supportsFullTextSearch => false; // encrypted content can't be searched server-side
 
   @override
   Future<List<Map<String, dynamic>>> fullTextSearch(
-          String query, String remotePath) async =>
-      [];
+    String query,
+    String remotePath,
+  ) async => [];
 }

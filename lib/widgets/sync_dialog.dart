@@ -5,19 +5,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/commander_strings.dart';
 import '../providers/providers.dart';
 import '../services/background_sync_service.dart';
 import '../services/sync_database.dart';
 import '../l10n/app_localizations.dart';
+import 'sync_plan_dialog.dart';
 
 // Auto-evict options: 0=disabled, then days
 const _kAutoEvictOptions = [0, 7, 14, 30, 60, 90];
 
 void showSyncDialog(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (_) => const _SyncManagerDialog(),
-  );
+  showDialog(context: context, builder: (_) => const _SyncManagerDialog());
 }
 
 class _SyncManagerDialog extends ConsumerWidget {
@@ -28,12 +27,12 @@ class _SyncManagerDialog extends ConsumerWidget {
     final sync = ref.watch(syncProvider);
 
     return AlertDialog(
+      scrollable: true,
       title: Row(
         children: [
           const Icon(Icons.sync),
           const SizedBox(width: 8),
-          const Text('Sync Pairs'),
-          const Spacer(),
+          Expanded(child: Text(context.commanderTr("Sync Pairs"))),
           // Watch toggle
           IconButton(
             icon: Icon(
@@ -41,7 +40,9 @@ class _SyncManagerDialog extends ConsumerWidget {
               size: 18,
               color: sync.isWatchEnabled ? Colors.green : null,
             ),
-            tooltip: sync.isWatchEnabled ? 'Disable Auto-Sync' : 'Enable Auto-Sync (watch for changes)',
+            tooltip: sync.isWatchEnabled
+                ? context.commanderTr("Disable Auto-Sync")
+                : context.commanderTr("Enable Auto-Sync (watch for changes)"),
             onPressed: () {
               if (sync.isWatchEnabled) {
                 ref.read(syncProvider).disableWatch();
@@ -51,12 +52,18 @@ class _SyncManagerDialog extends ConsumerWidget {
             },
           ),
           if (sync.isSyncing)
-            const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+            const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
           else
             IconButton(
               icon: const Icon(Icons.sync, size: 20),
-              tooltip: 'Sync All',
-              onPressed: sync.pairs.isEmpty ? null : () => ref.read(syncProvider).syncAll(),
+              tooltip: context.commanderTr("Sync All"),
+              onPressed: sync.pairs.isEmpty
+                  ? null
+                  : () => ref.read(syncProvider).syncAll(),
             ),
         ],
       ),
@@ -75,8 +82,15 @@ class _SyncManagerDialog extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  'Last sync: ${sync.lastResult!.uploaded} up, ${sync.lastResult!.downloaded} down, '
-                  '${sync.lastResult!.conflicts} conflicts, ${sync.lastResult!.errors} errors',
+                  context.commanderTr(
+                    "Last sync: {0} up, {1} down, {2} conflicts, {3} errors",
+                    [
+                      sync.lastResult!.uploaded,
+                      sync.lastResult!.downloaded,
+                      sync.lastResult!.conflicts,
+                      sync.lastResult!.errors,
+                    ],
+                  ),
                   style: const TextStyle(fontSize: 12),
                 ),
               ),
@@ -91,16 +105,24 @@ class _SyncManagerDialog extends ConsumerWidget {
             _AutoEvictTile(sync: sync),
             const Divider(height: 20),
             if (sync.pairs.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 24),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
                 child: Column(
                   children: [
-                    Icon(Icons.sync_disabled, size: 48, color: Colors.grey),
-                    SizedBox(height: 8),
-                    Text('No sync pairs configured'),
-                    SizedBox(height: 4),
-                    Text('Add a pair to keep local and remote folders in sync.',
-                        style: TextStyle(fontSize: 12, color: Colors.grey)),
+                    const Icon(
+                      Icons.sync_disabled,
+                      size: 48,
+                      color: Colors.grey,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(context.commanderTr("No sync pairs configured")),
+                    const SizedBox(height: 4),
+                    Text(
+                      context.commanderTr(
+                        "Add a pair to keep local and remote folders in sync.",
+                      ),
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
                   ],
                 ),
               )
@@ -126,23 +148,37 @@ class _SyncManagerDialog extends ConsumerWidget {
         ),
         TextButton.icon(
           icon: const Icon(Icons.replay, size: 16),
-          label: const Text('Replay Offline'),
-          onPressed: sync.isSyncing ? null : () async {
-            final result = await ref.read(syncProvider).replayOfflineQueue();
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(
-                  result.hasChanges || result.errors > 0
-                      ? 'Replayed: ${result.uploaded + result.downloaded} ops, ${result.errors} errors'
-                      : 'No offline operations to replay',
-                )),
-              );
-            }
-          },
+          label: Text(context.commanderTr("Replay Offline")),
+          onPressed: sync.isSyncing
+              ? null
+              : () async {
+                  final result = await ref
+                      .read(syncProvider)
+                      .replayOfflineQueue();
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          result.hasChanges || result.errors > 0
+                              ? context.commanderTr(
+                                  "Replayed: {0} ops, {1} errors",
+                                  [
+                                    result.uploaded + result.downloaded,
+                                    result.errors,
+                                  ],
+                                )
+                              : context.commanderTr(
+                                  "No offline operations to replay",
+                                ),
+                        ),
+                      ),
+                    );
+                  }
+                },
         ),
         ElevatedButton.icon(
           icon: const Icon(Icons.add, size: 18),
-          label: const Text('Add Pair'),
+          label: Text(context.commanderTr("Add Pair")),
           onPressed: () => _showAddPairDialog(context, ref),
         ),
       ],
@@ -165,7 +201,7 @@ class _SyncManagerDialog extends ConsumerWidget {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setState) => AlertDialog(
-          title: const Text('New Sync Pair'),
+          title: Text(context.commanderTr("New Sync Pair")),
           content: SizedBox(
             width: 400,
             child: SingleChildScrollView(
@@ -174,88 +210,119 @@ class _SyncManagerDialog extends ConsumerWidget {
                 children: [
                   TextField(
                     controller: nameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Name',
-                      hintText: 'e.g., Documents Sync',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: context.commanderTr("Name"),
+                      hintText: context.commanderTr("e.g., Documents Sync"),
+                      border: const OutlineInputBorder(),
                     ),
                     autofocus: true,
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: localController,
-                    decoration: const InputDecoration(
-                      labelText: 'Local Folder Path',
-                      hintText: '/home/user/Documents',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.folder),
+                    decoration: InputDecoration(
+                      labelText: context.commanderTr("Local Folder Path"),
+                      hintText: context.commanderTr("/home/user/Documents"),
+                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.folder),
                     ),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: remoteController,
-                    decoration: const InputDecoration(
-                      labelText: 'Remote Folder Path',
-                      hintText: '/Documents',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.cloud),
+                    decoration: InputDecoration(
+                      labelText: context.commanderTr("Remote Folder Path"),
+                      hintText: context.commanderTr("/Documents"),
+                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.cloud),
                     ),
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<ConflictPolicy>(
                     initialValue: policy,
-                    decoration: const InputDecoration(
-                      labelText: 'Conflict Policy',
-                      border: OutlineInputBorder(),
+                    isExpanded: true,
+                    decoration: InputDecoration(
+                      labelText: context.commanderTr("Conflict Policy"),
+                      border: const OutlineInputBorder(),
                     ),
-                    items: ConflictPolicy.values.map((p) => DropdownMenuItem(
-                      value: p,
-                      child: Text(_policyLabel(p)),
-                    )).toList(),
+                    items: ConflictPolicy.values
+                        .map(
+                          (p) => DropdownMenuItem(
+                            value: p,
+                            child: Text(
+                              context.commanderTr(_policyLabel(p)),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        )
+                        .toList(),
                     onChanged: (v) => setState(() => policy = v ?? policy),
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<SyncDirection>(
                     initialValue: direction,
-                    decoration: const InputDecoration(
-                      labelText: 'Direction',
-                      border: OutlineInputBorder(),
+                    isExpanded: true,
+                    decoration: InputDecoration(
+                      labelText: context.commanderTr("Direction"),
+                      border: const OutlineInputBorder(),
                     ),
-                    items: const [
-                      DropdownMenuItem(value: SyncDirection.twoWay, child: Text('Two-Way')),
-                      DropdownMenuItem(value: SyncDirection.uploadOnly, child: Text('Upload Only')),
-                      DropdownMenuItem(value: SyncDirection.downloadOnly, child: Text('Download Only')),
+                    items: [
+                      DropdownMenuItem(
+                        value: SyncDirection.twoWay,
+                        child: Text(context.commanderTr("Two-Way")),
+                      ),
+                      DropdownMenuItem(
+                        value: SyncDirection.uploadOnly,
+                        child: Text(context.commanderTr("Upload Only")),
+                      ),
+                      DropdownMenuItem(
+                        value: SyncDirection.downloadOnly,
+                        child: Text(context.commanderTr("Download Only")),
+                      ),
                     ],
-                    onChanged: (v) => setState(() => direction = v ?? direction),
+                    onChanged: (v) =>
+                        setState(() => direction = v ?? direction),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: includeController,
-                    decoration: const InputDecoration(
-                      labelText: 'Include Patterns (optional)',
-                      hintText: '*.dart, *.yaml, lib/**',
-                      helperText: 'Comma-separated globs. Empty = all files.',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.filter_alt),
+                    decoration: InputDecoration(
+                      labelText: context.commanderTr(
+                        "Include Patterns (optional)",
+                      ),
+                      hintText: context.commanderTr("*.dart, *.yaml, lib/**"),
+                      helperText: context.commanderTr(
+                        "Comma-separated globs. Empty = all files.",
+                      ),
+                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.filter_alt),
                     ),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: excludeController,
-                    decoration: const InputDecoration(
-                      labelText: 'Exclude Patterns (optional)',
-                      hintText: '.git/**, *.tmp, node_modules/**',
-                      helperText: 'Comma-separated globs to skip.',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.filter_alt_off),
+                    decoration: InputDecoration(
+                      labelText: context.commanderTr(
+                        "Exclude Patterns (optional)",
+                      ),
+                      hintText: context.commanderTr(
+                        ".git/**, *.tmp, node_modules/**",
+                      ),
+                      helperText: context.commanderTr(
+                        "Comma-separated globs to skip.",
+                      ),
+                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.filter_alt_off),
                     ),
                   ),
                   const SizedBox(height: 12),
                   SwitchListTile(
-                    title: const Text('Cloud-only files'),
-                    subtitle: const Text(
-                      'New remote files appear as lightweight stubs. '
-                      'Download on demand to save disk space.',
+                    title: Text(context.commanderTr("Cloud-only files")),
+                    subtitle: Text(
+                      context.commanderTr(
+                        "New remote files appear as lightweight stubs. Download on demand to save disk space.",
+                      ),
                     ),
                     secondary: const Icon(Icons.cloud_outlined),
                     value: usePlaceholders,
@@ -267,24 +334,32 @@ class _SyncManagerDialog extends ConsumerWidget {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppLocalizations.of(context)!.cancel)),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(AppLocalizations.of(context)!.cancel),
+            ),
             ElevatedButton(
               onPressed: () async {
-                if (nameController.text.isEmpty || localController.text.isEmpty) return;
-                await ref.read(syncProvider).addPair(
-                  name: nameController.text,
-                  localPath: localController.text,
-                  remotePath: remoteController.text,
-                  provider: auth.currentProvider.name,
-                  conflictPolicy: policy,
-                  direction: direction,
-                  includePatterns: includeController.text,
-                  excludePatterns: excludeController.text,
-                  usePlaceholders: usePlaceholders,
-                );
+                if (nameController.text.isEmpty ||
+                    localController.text.isEmpty) {
+                  return;
+                }
+                await ref
+                    .read(syncProvider)
+                    .addPair(
+                      name: nameController.text,
+                      localPath: localController.text,
+                      remotePath: remoteController.text,
+                      provider: auth.currentProvider.name,
+                      conflictPolicy: policy,
+                      direction: direction,
+                      includePatterns: includeController.text,
+                      excludePatterns: excludeController.text,
+                      usePlaceholders: usePlaceholders,
+                    );
                 if (ctx.mounted) Navigator.pop(ctx);
               },
-              child: const Text('Create'),
+              child: Text(context.commanderTr("Create")),
             ),
           ],
         ),
@@ -294,11 +369,16 @@ class _SyncManagerDialog extends ConsumerWidget {
 
   String _policyLabel(ConflictPolicy p) {
     switch (p) {
-      case ConflictPolicy.newestWins: return 'Newest Wins';
-      case ConflictPolicy.localWins: return 'Local Wins';
-      case ConflictPolicy.remoteWins: return 'Remote Wins';
-      case ConflictPolicy.keepBoth: return 'Keep Both';
-      case ConflictPolicy.manual: return 'Ask Me';
+      case ConflictPolicy.newestWins:
+        return 'Newest Wins';
+      case ConflictPolicy.localWins:
+        return 'Local Wins';
+      case ConflictPolicy.remoteWins:
+        return 'Remote Wins';
+      case ConflictPolicy.keepBoth:
+        return 'Keep Both';
+      case ConflictPolicy.manual:
+        return 'Ask Me';
     }
   }
 }
@@ -312,7 +392,8 @@ class _BackgroundSyncTile extends ConsumerStatefulWidget {
   const _BackgroundSyncTile({required this.sync});
 
   @override
-  ConsumerState<_BackgroundSyncTile> createState() => _BackgroundSyncTileState();
+  ConsumerState<_BackgroundSyncTile> createState() =>
+      _BackgroundSyncTileState();
 }
 
 class _BackgroundSyncTileState extends ConsumerState<_BackgroundSyncTile> {
@@ -334,20 +415,22 @@ class _BackgroundSyncTileState extends ConsumerState<_BackgroundSyncTile> {
       children: [
         SwitchListTile(
           secondary: const Icon(Icons.sync_lock),
-          title: const Text('Background Sync'),
+          title: Text(context.commanderTr("Background Sync")),
           subtitle: Text(
             enabled
-                ? 'Syncing every $_intervalMinutes min'
-                : 'Sync only when the app is open',
+                ? context.commanderTr("Syncing every {0} min", [
+                    _intervalMinutes,
+                  ])
+                : context.commanderTr("Sync only when the app is open"),
             style: const TextStyle(fontSize: 12),
           ),
           value: enabled,
           contentPadding: EdgeInsets.zero,
           onChanged: (v) async {
             if (v) {
-              await ref.read(syncProvider).enableBackgroundSync(
-                    intervalMinutes: _intervalMinutes,
-                  );
+              await ref
+                  .read(syncProvider)
+                  .enableBackgroundSync(intervalMinutes: _intervalMinutes);
             } else {
               await ref.read(syncProvider).disableBackgroundSync();
             }
@@ -358,23 +441,38 @@ class _BackgroundSyncTileState extends ConsumerState<_BackgroundSyncTile> {
             padding: const EdgeInsets.only(left: 4, bottom: 4),
             child: Row(
               children: [
-                const Text('Interval:', style: TextStyle(fontSize: 12)),
+                Text(
+                  context.commanderTr("Interval:"),
+                  style: const TextStyle(fontSize: 12),
+                ),
                 const SizedBox(width: 8),
                 DropdownButton<int>(
                   value: _intervalMinutes,
                   isDense: true,
-                  items: const [
-                    DropdownMenuItem(value: 15, child: Text('15 min')),
-                    DropdownMenuItem(value: 30, child: Text('30 min')),
-                    DropdownMenuItem(value: 60, child: Text('1 hour')),
-                    DropdownMenuItem(value: 120, child: Text('2 hours')),
+                  items: [
+                    DropdownMenuItem(
+                      value: 15,
+                      child: Text(context.commanderTr("15 min")),
+                    ),
+                    DropdownMenuItem(
+                      value: 30,
+                      child: Text(context.commanderTr("30 min")),
+                    ),
+                    DropdownMenuItem(
+                      value: 60,
+                      child: Text(context.commanderTr("1 hour")),
+                    ),
+                    DropdownMenuItem(
+                      value: 120,
+                      child: Text(context.commanderTr("2 hours")),
+                    ),
                   ],
                   onChanged: (v) async {
                     if (v == null) return;
                     setState(() => _intervalMinutes = v);
-                    await ref.read(syncProvider).enableBackgroundSync(
-                          intervalMinutes: v,
-                        );
+                    await ref
+                        .read(syncProvider)
+                        .enableBackgroundSync(intervalMinutes: v);
                   },
                 ),
               ],
@@ -398,71 +496,114 @@ class _SyncPairTile extends ConsumerWidget {
     final sync = ref.watch(syncProvider);
     final isActive = sync.isSyncing && sync.currentPairName == pair.name;
 
-    return ListTile(
-      leading: Icon(
-        pair.enabled ? Icons.sync : Icons.sync_disabled,
-        color: isActive ? Theme.of(context).colorScheme.primary : null,
-      ),
-      title: Row(
-        children: [
-          Text(pair.name),
-          if (pair.usePlaceholders) ...[
-            const SizedBox(width: 6),
-            Tooltip(
-              message: 'Cloud-only mode: files download on demand',
-              child: Icon(Icons.cloud_outlined, size: 14,
-                  color: Theme.of(context).colorScheme.primary),
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  pair.enabled ? Icons.sync : Icons.sync_disabled,
+                  color: isActive
+                      ? Theme.of(context).colorScheme.primary
+                      : null,
+                ),
+                const SizedBox(width: 8),
+                Expanded(child: Text(pair.name)),
+                if (pair.usePlaceholders) ...[
+                  const SizedBox(width: 6),
+                  Tooltip(
+                    message: context.commanderTr(
+                      "Cloud-only mode: files download on demand",
+                    ),
+                    child: Icon(
+                      Icons.cloud_outlined,
+                      size: 14,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            Text(
+              context.commanderTr("{0} ↔ {1}\nLast sync: {2}", [
+                pair.localPath,
+                pair.remotePath,
+                pair.lastSyncAt != null
+                    ? _formatTime(context, pair.lastSyncAt!)
+                    : context.commanderTr("Never"),
+              ]),
+              style: const TextStyle(fontSize: 11),
+            ),
+            Wrap(
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                if (pair.usePlaceholders)
+                  IconButton(
+                    icon: const Icon(Icons.cloud_download, size: 18),
+                    tooltip: context.commanderTr(
+                      "Download All Cloud-Only Files",
+                    ),
+                    onPressed: isActive
+                        ? null
+                        : () async {
+                            final count = await ref
+                                .read(syncProvider)
+                                .hydrateAllPlaceholders(pair.id);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    context.commanderTr(
+                                      "Downloaded {0} files",
+                                      [count],
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }
+                          },
+                  ),
+                Semantics(
+                  label: context.commanderTr("Enabled"),
+                  child: Switch(
+                    value: pair.enabled,
+                    onChanged: (v) =>
+                        ref.read(syncProvider).togglePair(pair.id, v),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.sync, size: 18),
+                  tooltip: context.commanderTr("Compare and Review"),
+                  onPressed: isActive
+                      ? null
+                      : () => showSyncPlanDialog(context, pair.id),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete, size: 18),
+                  tooltip: context.commanderTr("Remove"),
+                  onPressed: () => ref.read(syncProvider).removePair(pair.id),
+                ),
+              ],
             ),
           ],
-        ],
-      ),
-      subtitle: Text(
-        '${pair.localPath} ↔ ${pair.remotePath}\n'
-        'Last sync: ${pair.lastSyncAt != null ? _formatTime(pair.lastSyncAt!) : 'Never'}',
-        style: const TextStyle(fontSize: 11),
-      ),
-      isThreeLine: true,
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (pair.usePlaceholders)
-            IconButton(
-              icon: const Icon(Icons.cloud_download, size: 18),
-              tooltip: 'Download All Cloud-Only Files',
-              onPressed: isActive ? null : () async {
-                final count = await ref.read(syncProvider).hydrateAllPlaceholders(pair.id);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Downloaded $count files')),
-                  );
-                }
-              },
-            ),
-          Switch(
-            value: pair.enabled,
-            onChanged: (v) => ref.read(syncProvider).togglePair(pair.id, v),
-          ),
-          IconButton(
-            icon: const Icon(Icons.sync, size: 18),
-            tooltip: 'Sync Now',
-            onPressed: isActive ? null : () => ref.read(syncProvider).syncOne(pair.id),
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete, size: 18),
-            tooltip: 'Remove',
-            onPressed: () => ref.read(syncProvider).removePair(pair.id),
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  String _formatTime(DateTime dt) {
+  String _formatTime(BuildContext context, DateTime dt) {
     final diff = DateTime.now().difference(dt);
-    if (diff.inMinutes < 1) return 'Just now';
-    if (diff.inHours < 1) return '${diff.inMinutes}m ago';
-    if (diff.inDays < 1) return '${diff.inHours}h ago';
-    return '${diff.inDays}d ago';
+    if (diff.inMinutes < 1) return context.commanderTr("Just now");
+    if (diff.inHours < 1) {
+      return context.commanderTr("{0} min ago", [diff.inMinutes]);
+    }
+    if (diff.inDays < 1) {
+      return context.commanderTr("{0} h ago", [diff.inHours]);
+    }
+    return context.commanderTr("{0} d ago", [diff.inDays]);
   }
 }
 
@@ -478,32 +619,56 @@ class _AutoEvictTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final days = ref.watch(syncProvider).autoEvictDays;
 
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Icon(Icons.auto_delete_outlined, size: 20),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Auto-evict cloud-only files',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
-              Text(
-                days == 0
-                    ? 'Disabled — synced files are kept locally'
-                    : 'Free up space after $days days without access',
-                style: const TextStyle(fontSize: 11, color: Colors.grey),
+        Row(
+          children: [
+            const Icon(Icons.auto_delete_outlined, size: 20),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.commanderTr("Auto-evict cloud-only files"),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Text(
+                    days == 0
+                        ? context.commanderTr(
+                            "Disabled — synced files are kept locally",
+                          )
+                        : context.commanderTr(
+                            "Free up space after {0} days without access",
+                            [days],
+                          ),
+                    style: const TextStyle(fontSize: 11, color: Colors.grey),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
         DropdownButton<int>(
           value: days,
           isDense: true,
-          items: _kAutoEvictOptions.map((d) => DropdownMenuItem(
-            value: d,
-            child: Text(d == 0 ? 'Off' : '${d}d'),
-          )).toList(),
+          isExpanded: true,
+          items: _kAutoEvictOptions
+              .map(
+                (d) => DropdownMenuItem(
+                  value: d,
+                  child: Text(
+                    d == 0
+                        ? context.commanderTr("Off")
+                        : context.commanderTr("{0} d", [d]),
+                  ),
+                ),
+              )
+              .toList(),
           onChanged: (v) {
             if (v != null) ref.read(syncProvider).setAutoEvictDays(v);
           },

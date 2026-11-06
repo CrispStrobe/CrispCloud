@@ -12,14 +12,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
+import 'bookmark_actions.dart';
 
 /// A volume/drive entry shown in the drive bar.
 class DriveEntry {
   final String path;
   final String label;
   final IconData icon;
+  final Bookmark? bookmark;
 
-  const DriveEntry({required this.path, required this.label, required this.icon});
+  const DriveEntry({required this.path, required this.label, required this.icon, this.bookmark});
 }
 
 /// Provider that caches the list of local drives/volumes.
@@ -131,18 +133,20 @@ class DriveBar extends ConsumerWidget {
     final panel = ref.watch(panelProvider(side));
     final currentPath = panel.currentPath;
     final theme = Theme.of(context);
+    final storage = bookmarkStorage(panel);
+    if (storage == null) return const SizedBox.shrink();
 
     // Remote panel: show bookmarks
-    if (side == PanelSide.remote) {
+    if (!storage.isLocal) {
       final bookmarksNotifier = ref.watch(bookmarksProvider);
       final bookmarks = bookmarksNotifier.bookmarks;
       if (bookmarks.isEmpty) return const SizedBox.shrink();
       return _DriveBarRow(
         entries: bookmarks
-            .map((b) => DriveEntry(path: b.path, label: b.name, icon: Icons.bookmark))
+            .map((b) => DriveEntry(path: b.path, label: b.name, icon: Icons.bookmark, bookmark: b))
             .toList(),
         currentPath: currentPath,
-        onTap: (entry) => panel.navigateToPath(entry.path),
+        onTap: (entry) => openBookmark(context, ref, entry.bookmark!, side: side),
         theme: theme,
       );
     }

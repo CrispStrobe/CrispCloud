@@ -16,14 +16,22 @@ import '../providers/panel_source_provider.dart' show panelSourceProvider;
 import '../providers/toolbar_provider.dart' show panelViewModeProvider;
 import '../services/panel_view_mode_service.dart' show PanelViewMode;
 import '../services/panel_swap_service.dart';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path/path.dart' as p;
 
 import '../services/archive_service.dart';
 
 import '../widgets/command_palette.dart';
+import '../widgets/bookmark_actions.dart';
+import '../widgets/pattern_selection_dialog.dart';
+import '../widgets/file_list_dialog.dart';
+import '../widgets/file_clipboard_actions.dart';
 import '../widgets/file_context_menu.dart'
-    show openWithSystemEditor, showPropertiesDialog, showFileContextMenu;
+    show
+        openListedFileWithSystemEditor,
+        showPropertiesDialog,
+        showFileContextMenu;
 import '../widgets/file_toolbar.dart' show showPanelFilterDialog;
 import '../widgets/search_dialogs.dart' show showSearchDialog;
 import 'screen_dialogs.dart';
@@ -54,7 +62,8 @@ KeyEventResult handleKeyEvent(
     return KeyEventResult.ignored;
   }
 
-  final isCtrl = HardwareKeyboard.instance.isControlPressed ||
+  final isCtrl =
+      HardwareKeyboard.instance.isControlPressed ||
       HardwareKeyboard.instance.isMetaPressed;
   final isShift = HardwareKeyboard.instance.isShiftPressed;
   final activePanel = ref.read(activePanelProvider);
@@ -86,8 +95,9 @@ KeyEventResult handleKeyEvent(
 
   // Ctrl+Tab / Ctrl+PgDn - Next tab
   // Ctrl+Shift+Tab / Ctrl+PgUp - Previous tab
-  if (isCtrl && (event.logicalKey == LogicalKeyboardKey.tab ||
-      event.logicalKey == LogicalKeyboardKey.pageDown)) {
+  if (isCtrl &&
+      (event.logicalKey == LogicalKeyboardKey.tab ||
+          event.logicalKey == LogicalKeyboardKey.pageDown)) {
     if (isShift || event.logicalKey == LogicalKeyboardKey.pageUp) {
       panel.previousTab();
     } else {
@@ -107,14 +117,16 @@ KeyEventResult handleKeyEvent(
   }
 
   // Alt+Left - Navigate back in history
-  if (!isCtrl && HardwareKeyboard.instance.isAltPressed &&
+  if (!isCtrl &&
+      HardwareKeyboard.instance.isAltPressed &&
       event.logicalKey == LogicalKeyboardKey.arrowLeft) {
     panel.navigateBack();
     return KeyEventResult.handled;
   }
 
   // Alt+Right - Navigate forward in history
-  if (!isCtrl && HardwareKeyboard.instance.isAltPressed &&
+  if (!isCtrl &&
+      HardwareKeyboard.instance.isAltPressed &&
       event.logicalKey == LogicalKeyboardKey.arrowRight) {
     panel.navigateForward();
     return KeyEventResult.handled;
@@ -122,7 +134,9 @@ KeyEventResult handleKeyEvent(
 
   // Ctrl+= - Sync opposite panel to current panel's path (DC convention)
   if (isCtrl && !isShift && event.logicalKey == LogicalKeyboardKey.equal) {
-    final oppositePanel = activePanel == PanelSide.local ? PanelSide.remote : PanelSide.local;
+    final oppositePanel = activePanel == PanelSide.local
+        ? PanelSide.remote
+        : PanelSide.local;
     ref.read(panelProvider(oppositePanel)).navigateToPath(panel.currentPath);
     return KeyEventResult.handled;
   }
@@ -136,6 +150,18 @@ KeyEventResult handleKeyEvent(
   // Ctrl+Shift+N - Copy selected file names to clipboard
   if (isCtrl && isShift && event.logicalKey == LogicalKeyboardKey.keyN) {
     _copySelectionToClipboard(ref, panel, namesOnly: true);
+    return KeyEventResult.handled;
+  }
+
+  // Ctrl+M - Multi-rename with a full plan preview.
+  if (isCtrl && !isShift && event.logicalKey == LogicalKeyboardKey.keyM) {
+    showMultiRenameFromSelection(context, ref);
+    return KeyEventResult.handled;
+  }
+
+  // Ctrl+Shift+L - Import an actionable list of original paths.
+  if (isCtrl && isShift && event.logicalKey == LogicalKeyboardKey.keyL) {
+    showFileListDialog(context, ref, activePanel, importMode: true);
     return KeyEventResult.handled;
   }
 
@@ -196,9 +222,10 @@ KeyEventResult handleKeyEvent(
   }
 
   // Space / Insert — DC-style: toggle mark on cursor item, advance
-  if (!isCtrl && !isShift &&
+  if (!isCtrl &&
+      !isShift &&
       (event.logicalKey == LogicalKeyboardKey.space ||
-       event.logicalKey == LogicalKeyboardKey.insert)) {
+          event.logicalKey == LogicalKeyboardKey.insert)) {
     panel.spaceSelectAndAdvance();
     return KeyEventResult.handled;
   }
@@ -218,21 +245,24 @@ KeyEventResult handleKeyEvent(
           event.logicalKey == LogicalKeyboardKey.arrowRight)) {
     final PanelSide targetSide;
     if (event.logicalKey == LogicalKeyboardKey.enter) {
-      targetSide =
-          activePanel == PanelSide.local ? PanelSide.remote : PanelSide.local;
+      targetSide = activePanel == PanelSide.local
+          ? PanelSide.remote
+          : PanelSide.local;
     } else {
       targetSide = event.logicalKey == LogicalKeyboardKey.arrowLeft
           ? PanelSide.local
           : PanelSide.remote;
     }
-    unawaited(_openCursorInPanel(
-      context,
-      ref,
-      panel,
-      activePanel,
-      targetSide,
-      onPanelSwitch: onPanelSwitch,
-    ));
+    unawaited(
+      _openCursorInPanel(
+        context,
+        ref,
+        panel,
+        activePanel,
+        targetSide,
+        onPanelSwitch: onPanelSwitch,
+      ),
+    );
     return KeyEventResult.handled;
   }
 
@@ -256,13 +286,23 @@ KeyEventResult handleKeyEvent(
 
   // Numpad + - Select by pattern (e.g. *.dart)
   if (event.logicalKey == LogicalKeyboardKey.numpadAdd) {
-    _showPatternDialog(context, panel, select: true);
+    showPatternSelectionDialog(
+      context,
+      ref,
+      activePanel,
+      initialAction: SelectionAction.select,
+    );
     return KeyEventResult.handled;
   }
 
   // Numpad - - Deselect by pattern
   if (event.logicalKey == LogicalKeyboardKey.numpadSubtract) {
-    _showPatternDialog(context, panel, select: false);
+    showPatternSelectionDialog(
+      context,
+      ref,
+      activePanel,
+      initialAction: SelectionAction.deselect,
+    );
     return KeyEventResult.handled;
   }
 
@@ -317,9 +357,11 @@ KeyEventResult handleKeyEvent(
       // Open with system editor
       final activePanel = ref.read(activePanelProvider);
       final pnl = ref.read(panelProvider(activePanel));
-      final target = pnl.selection.isEmpty ? pnl.cursorItem : pnl.selection.first;
+      final target = pnl.selection.isEmpty
+          ? pnl.cursorItem
+          : pnl.selection.first;
       if (target?.path != null && !kIsWeb) {
-        openWithSystemEditor(context, target!.path!);
+        openListedFileWithSystemEditor(context, ref, target!);
       }
     } else {
       editSelectedFile(context, ref);
@@ -328,15 +370,14 @@ KeyEventResult handleKeyEvent(
   }
 
   // F5 - Copy to opposite panel (DC orthodox FM convention; Ctrl+R stays as Refresh)
-  // Shift+F5 - Copy here (same dir, prompts for new name) = same as batch rename
   if (!isCtrl && !isShift && event.logicalKey == LogicalKeyboardKey.f5) {
     showCopyDialogFromSelection(context, ref);
     return KeyEventResult.handled;
   }
 
-  // Shift+F5 - Copy to same directory (= duplicate with new name)
+  // Shift+F5 also opens copy options; Keep both can duplicate in the same folder.
   if (isShift && event.logicalKey == LogicalKeyboardKey.f5) {
-    showRenameDialog(context, ref); // Opens rename dialog for the selected item
+    showCopyDialogFromSelection(context, ref);
     return KeyEventResult.handled;
   }
 
@@ -358,15 +399,19 @@ KeyEventResult handleKeyEvent(
     return KeyEventResult.handled;
   }
 
-  // Ctrl+C - Copy to...
+  // Native file clipboard; F5/F6 remain the reviewed Commander dialogs.
   if (isCtrl && event.logicalKey == LogicalKeyboardKey.keyC) {
-    showCopyDialogFromSelection(context, ref);
+    copyFilesToClipboard(context, ref, activePanel);
     return KeyEventResult.handled;
   }
 
   // Ctrl+X - Move
   if (isCtrl && event.logicalKey == LogicalKeyboardKey.keyX) {
-    showMoveDialogFromSelection(context, ref);
+    copyFilesToClipboard(context, ref, activePanel, cut: true);
+    return KeyEventResult.handled;
+  }
+  if (isCtrl && event.logicalKey == LogicalKeyboardKey.keyV) {
+    pasteFilesFromClipboard(context, ref, activePanel);
     return KeyEventResult.handled;
   }
 
@@ -390,7 +435,9 @@ KeyEventResult handleKeyEvent(
 
   // Tab (without Ctrl) - Switch panels
   if (!isCtrl && event.logicalKey == LogicalKeyboardKey.tab) {
-    final newPanel = activePanel == PanelSide.local ? PanelSide.remote : PanelSide.local;
+    final newPanel = activePanel == PanelSide.local
+        ? PanelSide.remote
+        : PanelSide.local;
     ref.read(activePanelProvider.notifier).state = newPanel;
     onPanelSwitch?.call(newPanel);
     return KeyEventResult.handled;
@@ -403,42 +450,53 @@ KeyEventResult handleKeyEvent(
     final rightSrc = ref.read(panelSourceProvider(PanelSide.remote));
     if (service.canSwap(leftSrc, rightSrc)) {
       final (newLeft, newRight) = service.swap(leftSrc, rightSrc);
-      ref.read(panelSourceProvider(PanelSide.local).notifier).setSource(newLeft);
-      ref.read(panelSourceProvider(PanelSide.remote).notifier).setSource(newRight);
+      ref
+          .read(panelSourceProvider(PanelSide.local).notifier)
+          .setSource(newLeft);
+      ref
+          .read(panelSourceProvider(PanelSide.remote).notifier)
+          .setSource(newRight);
     }
     return KeyEventResult.handled;
   }
 
   // Ctrl+D - Download
-  if (isCtrl && event.logicalKey == LogicalKeyboardKey.keyD && ref.read(authProvider).isConnected) {
+  if (isCtrl &&
+      event.logicalKey == LogicalKeyboardKey.keyD &&
+      ref.read(authProvider).isConnected) {
     downloadSelected(context, ref);
     return KeyEventResult.handled;
   }
 
   // Ctrl+1 - Brief view mode for active panel
   if (isCtrl && event.logicalKey == LogicalKeyboardKey.digit1) {
-    ref.read(panelViewModeProvider(activePanel).notifier)
+    ref
+        .read(panelViewModeProvider(activePanel).notifier)
         .setMode(PanelViewMode.brief);
     return KeyEventResult.handled;
   }
 
   // Ctrl+2 - Full view mode for active panel
   if (isCtrl && event.logicalKey == LogicalKeyboardKey.digit2) {
-    ref.read(panelViewModeProvider(activePanel).notifier)
+    ref
+        .read(panelViewModeProvider(activePanel).notifier)
         .setMode(PanelViewMode.full);
     return KeyEventResult.handled;
   }
 
   // Ctrl+3 - Tree view mode for active panel
   if (isCtrl && event.logicalKey == LogicalKeyboardKey.digit3) {
-    ref.read(panelViewModeProvider(activePanel).notifier)
+    ref
+        .read(panelViewModeProvider(activePanel).notifier)
         .setMode(PanelViewMode.tree);
     return KeyEventResult.handled;
   }
 
   // Space - Toggle preview pane
   if (event.logicalKey == LogicalKeyboardKey.space && !isCtrl) {
-    ref.read(showPreviewProvider.notifier).state = !ref.read(showPreviewProvider);
+    ref.read(showPreviewProvider.notifier).state = !ref.read(
+      showPreviewProvider,
+    );
     return KeyEventResult.handled;
   }
 
@@ -468,7 +526,8 @@ KeyEventResult handleKeyEvent(
 
   // Ctrl+I / Alt+Enter - Show properties for cursor item (DC convention)
   if ((isCtrl && event.logicalKey == LogicalKeyboardKey.keyI) ||
-      (HardwareKeyboard.instance.isAltPressed && event.logicalKey == LogicalKeyboardKey.enter)) {
+      (HardwareKeyboard.instance.isAltPressed &&
+          event.logicalKey == LogicalKeyboardKey.enter)) {
     final item = panel.cursorItem;
     if (item != null && item.name != '..') {
       showPropertiesDialog(context, item);
@@ -478,15 +537,7 @@ KeyEventResult handleKeyEvent(
 
   // Ctrl+B - Toggle bookmark for current directory
   if (isCtrl && !isShift && event.logicalKey == LogicalKeyboardKey.keyB) {
-    final bm = ref.read(bookmarksProvider);
-    final currentPath = panel.currentPath;
-    final p = panel.currentPath.split('/').last;
-    final name = p.isEmpty ? '/' : p;
-    if (bm.isBookmarked(currentPath, activePanel)) {
-      bm.remove(currentPath, activePanel);
-    } else {
-      bm.add(name, currentPath, activePanel);
-    }
+    togglePanelBookmark(context, ref, activePanel);
     return KeyEventResult.handled;
   }
 
@@ -565,10 +616,8 @@ Future<void> _openCursorInPanel(
     return;
   }
 
-  final sourceIsLocal =
-      ref.read(panelSourceProvider(sourceSide)).isLocal;
-  final targetIsLocal =
-      ref.read(panelSourceProvider(targetSide)).isLocal;
+  final sourceIsLocal = ref.read(panelSourceProvider(sourceSide)).isLocal;
+  final targetIsLocal = ref.read(panelSourceProvider(targetSide)).isLocal;
   if (sourceIsLocal != targetIsLocal) {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -607,13 +656,19 @@ Future<void> _openCursorInPanel(
 // ---------------------------------------------------------------------------
 
 /// Copy names or full paths of the current selection to the system clipboard.
-void _copySelectionToClipboard(WidgetRef ref, PanelNotifier panel, {required bool namesOnly}) {
+void _copySelectionToClipboard(
+  WidgetRef ref,
+  PanelNotifier panel, {
+  required bool namesOnly,
+}) {
   final selection = panel.selection;
   final items = selection.isEmpty
       ? (panel.cursorItem != null ? {panel.cursorItem!} : <FileItem>{})
       : selection;
   if (items.isEmpty) return;
-  final lines = items.map((f) => namesOnly ? f.name : (f.path ?? f.name)).join('\n');
+  final lines = items
+      .map((f) => namesOnly ? f.name : (f.path ?? f.name))
+      .join('\n');
   Clipboard.setData(ClipboardData(text: lines));
 }
 
@@ -623,7 +678,11 @@ void _copySelectionToClipboard(WidgetRef ref, PanelNotifier panel, {required boo
 
 /// Undo the most-recent action from [ActionHistoryNotifier] and show a
 /// SnackBar with the result.
-void _undoLastAction(BuildContext context, WidgetRef ref, PanelSide activePanel) {
+void _undoLastAction(
+  BuildContext context,
+  WidgetRef ref,
+  PanelSide activePanel,
+) {
   final historyNotifier = ref.read(actionHistoryProvider.notifier);
   final last = historyNotifier.lastAction;
   if (last == null) {
@@ -655,7 +714,9 @@ void _undoLastAction(BuildContext context, WidgetRef ref, PanelSide activePanel)
       SnackBar(
         content: Text(result.message),
         duration: const Duration(seconds: 3),
-        backgroundColor: result.success ? null : Theme.of(context).colorScheme.error,
+        backgroundColor: result.success
+            ? null
+            : Theme.of(context).colorScheme.error,
       ),
     );
     if (result.success) {
@@ -674,44 +735,8 @@ UndoContext _buildUndoContext(WidgetRef ref, PanelSide side) {
   final client = ref.read(authProvider).client;
   return UndoContext(
     remoteRename: (currentPath, name) => client.renamePath(currentPath, name),
-    remoteMove: (currentPath, targetDir) => client.movePath(currentPath, targetDir),
+    remoteMove: (currentPath, targetDir) =>
+        client.movePath(currentPath, targetDir),
     remoteDelete: (path) => client.deletePath(path),
-  );
-}
-
-void _showPatternDialog(BuildContext context, PanelNotifier panel, {required bool select}) {
-  final ctrl = TextEditingController(text: '*.*');
-  showDialog<void>(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      title: Text(select ? 'Select by pattern' : 'Deselect by pattern'),
-      content: TextField(
-        controller: ctrl,
-        autofocus: true,
-        decoration: const InputDecoration(hintText: 'e.g. *.dart, doc*, *test*'),
-        onSubmitted: (v) {
-          if (select) {
-            panel.selectByPattern(v);
-          } else {
-            panel.deselectByPattern(v);
-          }
-          Navigator.pop(ctx);
-        },
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-        ElevatedButton(
-          onPressed: () {
-            if (select) {
-              panel.selectByPattern(ctrl.text);
-            } else {
-              panel.deselectByPattern(ctrl.text);
-            }
-            Navigator.pop(ctx);
-          },
-          child: Text(select ? 'Select' : 'Deselect'),
-        ),
-      ],
-    ),
   );
 }

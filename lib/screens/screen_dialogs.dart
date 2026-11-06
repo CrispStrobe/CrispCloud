@@ -1,3 +1,4 @@
+import '../widgets/file_delete_dialog.dart';
 // lib/screens/screen_dialogs.dart
 //
 // Dialog helpers for the file browser screen.
@@ -5,10 +6,8 @@
 
 import 'dart:async';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:universal_html/html.dart' as html;
 import 'package:path/path.dart' as p;
 
 import '../models/file_item.dart';
@@ -18,14 +17,13 @@ import '../widgets/azure_connection_dialog.dart';
 import '../widgets/b2_connection_dialog.dart';
 import '../widgets/connection_dialog.dart';
 import '../widgets/file_editor_dialog.dart' show showFileEditorDialog;
+import '../widgets/file_operation_dialog.dart';
+import '../widgets/archive_workspace_dialog.dart';
+import '../widgets/batch_rename_dialog.dart' show showBatchRenameDialog;
+import '../services/file_operation_service.dart';
 import '../widgets/internal_viewer_dialog.dart'
     show InternalViewerAction, showInternalViewer;
 import '../l10n/app_localizations.dart';
-import '../l10n/image_editor_strings.dart';
-import '../services/image_edit_session.dart' show isImageEditorFileName;
-import '../services/log_service.dart';
-
-const _log = Log('ScreenDialogs');
 
 /// Explicit selection, or the cursor item when nothing is marked. This mirrors
 /// Total Commander: F5/F6/F8 operate on the item under the cursor when there
@@ -36,11 +34,9 @@ List<FileItem> _selectedOrCursor(PanelNotifier panel) {
   if (cursor != null && cursor.name != '..') return <FileItem>[cursor];
   return const <FileItem>[];
 }
+
 void showConnectionDialogScreen(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (context) => const ConnectionDialog(),
-  );
+  showDialog(context: context, builder: (context) => const ConnectionDialog());
 }
 
 /// Directly open the Azure Blob Storage connection dialog.
@@ -111,9 +107,9 @@ void showKeyboardShortcutsHelp(BuildContext context) {
             _shortcutRow('F3', 'View file (full-screen)'),
             _shortcutRow('F4', 'Edit file (built-in)'),
             _shortcutRow('Shift+F4', 'Open with system editor'),
-            _shortcutRow('F5 / Ctrl+C', 'Copy to…'),
+            _shortcutRow('F5', 'Copy with options…'),
             _shortcutRow('Ctrl+R', 'Refresh'),
-            _shortcutRow('F6 / Ctrl+X', 'Move to…'),
+            _shortcutRow('F6', 'Move with options…'),
             _shortcutRow('F7 / Ctrl+N', 'New folder'),
             _shortcutRow('F8 / Delete', 'Delete selected'),
             const Divider(),
@@ -128,21 +124,27 @@ void showKeyboardShortcutsHelp(BuildContext context) {
             _shortcutRow('Ctrl+G / Ctrl+L', 'Go to path'),
             _shortcutRow('Alt+F7', 'Search all files'),
             _shortcutRow('Ctrl+F', 'Filter files'),
-            _shortcutRow('Type letters', 'Quick search / filter (see Settings)'),
+            _shortcutRow(
+              'Type letters',
+              'Quick search / filter (see Settings)',
+            ),
             _shortcutRow('↑ / ↓ while searching', 'Previous / next match'),
             const Divider(),
             // Selection
             _shortcutRow('Ctrl+A', 'Select all'),
             _shortcutRow('Numpad *', 'Invert selection'),
-            _shortcutRow('Numpad +', 'Select by pattern'),
-            _shortcutRow('Numpad -', 'Deselect by pattern'),
+            _shortcutRow('Numpad +', 'Select by wildcard or regex'),
+            _shortcutRow('Numpad -', 'Deselect by wildcard or regex'),
             _shortcutRow('Space / Insert', 'Mark + advance'),
             _shortcutRow('Numpad 5', 'Select all'),
             _shortcutRow('Shift+↑/↓', 'Extend selection'),
             _shortcutRow('Escape', 'Clear selection / type-ahead'),
             const Divider(),
             // File operations
-            _shortcutRow('Ctrl+C', 'Copy to…'),
+            _shortcutRow('Ctrl+C / Ctrl+X', 'Copy / cut files to clipboard'),
+            _shortcutRow('Ctrl+V', 'Paste files with options…'),
+            _shortcutRow('Ctrl+M', 'Multi-Rename'),
+            _shortcutRow('Ctrl+Shift+L', 'Import file list'),
             _shortcutRow('Ctrl+Z', 'Undo last action'),
             _shortcutRow('Ctrl+Shift+C', 'Copy paths to clipboard'),
             _shortcutRow('Ctrl+Shift+N', 'Copy names to clipboard'),
@@ -175,7 +177,10 @@ void showKeyboardShortcutsHelp(BuildContext context) {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Close'),
+        ),
       ],
     ),
   );
@@ -188,7 +193,13 @@ Widget _shortcutRow(String keys, String description) {
       children: [
         SizedBox(
           width: 120,
-          child: Text(keys, style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'monospace')),
+          child: Text(
+            keys,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontFamily: 'monospace',
+            ),
+          ),
         ),
         Expanded(child: Text(description)),
       ],
@@ -199,52 +210,31 @@ Widget _shortcutRow(String keys, String description) {
 void uploadSelected(BuildContext context, WidgetRef ref) {
   final panel = ref.read(panelProvider(PanelSide.local));
   if (panel.selection.isEmpty) return;
-  ref.read(transferProvider).uploadFiles(panel.selection.toList());
+  showFileOperationDialog(
+    context,
+    ref,
+    PanelSide.local,
+    panel.selection.toList(),
+    kind: FileOperationKind.copy,
+  );
 }
 
 void downloadSelected(BuildContext context, WidgetRef ref) {
   final panel = ref.read(panelProvider(PanelSide.remote));
   if (panel.selection.isEmpty) return;
-  ref.read(transferProvider).downloadFiles(panel.selection.toList());
+  showFileOperationDialog(
+    context,
+    ref,
+    PanelSide.remote,
+    panel.selection.toList(),
+    kind: FileOperationKind.copy,
+  );
 }
 
 void confirmDeleteSelected(BuildContext context, WidgetRef ref) {
-  final activePanel = ref.read(activePanelProvider);
-  final panel = ref.read(panelProvider(activePanel));
-  final targets = _selectedOrCursor(panel);
-  _log.debug('confirmDeleteSelected: ${targets.length} items, side=${activePanel.name}');
-  if (targets.isEmpty) return;
-
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Confirm Delete'),
-      content: Text('Delete ${targets.length} item(s)?'),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.cancel)),
-        ElevatedButton(
-          onPressed: () async {
-            final files = targets;
-            await panel.deleteFiles(files);
-            if (context.mounted) {
-              Navigator.pop(context);
-              _showUndoSnackBar(
-                context,
-                ref,
-                activePanel,
-                'Deleted ${files.length} item(s)',
-              );
-            }
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.error,
-            foregroundColor: Theme.of(context).colorScheme.onError,
-          ),
-          child: const Text('Delete'),
-        ),
-      ],
-    ),
-  );
+  final side = ref.read(activePanelProvider);
+  final panel = ref.read(panelProvider(side));
+  showFileDeleteDialog(context, ref, side, _selectedOrCursor(panel));
 }
 
 void showRenameDialog(BuildContext context, WidgetRef ref) {
@@ -261,7 +251,12 @@ void showRenameDialog(BuildContext context, WidgetRef ref) {
       await panel.renameFile(file, value);
       if (context.mounted) {
         Navigator.pop(context);
-        _showUndoSnackBar(context, ref, activePanel, 'Renamed "${file.name}" to "$value"');
+        _showUndoSnackBar(
+          context,
+          ref,
+          activePanel,
+          'Renamed "${file.name}" to "$value"',
+        );
       }
     }
   }
@@ -272,12 +267,18 @@ void showRenameDialog(BuildContext context, WidgetRef ref) {
       title: const Text('Rename'),
       content: TextField(
         controller: controller,
-        decoration: const InputDecoration(labelText: 'New name', border: OutlineInputBorder()),
+        decoration: const InputDecoration(
+          labelText: 'New name',
+          border: OutlineInputBorder(),
+        ),
         autofocus: true,
         onSubmitted: doRename,
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.cancel)),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(AppLocalizations.of(context)!.cancel),
+        ),
         ElevatedButton(
           onPressed: () => doRename(controller.text),
           child: const Text('Rename'),
@@ -292,7 +293,8 @@ void viewSelectedFile(BuildContext context, WidgetRef ref) {
   final activePanel = ref.read(activePanelProvider);
   final panel = ref.read(panelProvider(activePanel));
   // TC/DC view the file under the cursor, not the selection set.
-  final target = panel.cursorItem ??
+  final target =
+      panel.cursorItem ??
       (panel.selection.isNotEmpty ? panel.selection.first : null);
   if (target == null || target.isFolder) return;
   // Full-screen DC-style viewer: text/ASCII/binary/hex/image/markdown/PDF/
@@ -307,6 +309,7 @@ Future<void> _viewFile(
   PanelSide side,
   FileItem target,
 ) async {
+  var viewedFile = target;
   try {
     InternalViewerAction action = InternalViewerAction.close;
     if (panel.isInArchive) {
@@ -322,21 +325,26 @@ Future<void> _viewFile(
         displayName: target.name,
       );
     } else {
-      action = await showInternalViewer(context, file: target, side: side);
+      action = await showInternalViewer(
+        context,
+        file: target,
+        side: side,
+        onFileChanged: (file) => viewedFile = file,
+      );
     }
     if (action == InternalViewerAction.edit && context.mounted) {
-      await _editFile(context, ref, panel, side, target);
+      await _editFile(context, ref, panel, side, viewedFile);
     }
   } catch (e) {
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Cannot view ${target.name}: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Cannot view ${target.name}: $e')));
     }
   } finally {
     // Keep the file selected and the panel keyboard-focused after the viewer
     // closes, so F3/F4 can be pressed again immediately.
-    panel.restoreCursorAndFocus(target);
+    panel.restoreCursorAndFocus(viewedFile);
   }
 }
 
@@ -344,7 +352,8 @@ Future<void> _viewFile(
 void editSelectedFile(BuildContext context, WidgetRef ref) {
   final activePanel = ref.read(activePanelProvider);
   final panel = ref.read(panelProvider(activePanel));
-  final target = panel.cursorItem ??
+  final target =
+      panel.cursorItem ??
       (panel.selection.isNotEmpty ? panel.selection.first : null);
   if (target == null || target.isFolder) return;
   unawaited(_editFile(context, ref, panel, activePanel, target));
@@ -359,20 +368,13 @@ Future<void> _editFile(
 ) async {
   try {
     if (panel.isInArchive) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              isImageEditorFileName(target.name)
-                  ? context.imageTr(
-                      'Extract this file from its archive or container before editing.',
-                    )
-                  : 'Editing files inside an archive is not supported. '
-                      'Extract the file first.',
-            ),
-          ),
-        );
-      }
+      await showCurrentArchiveWorkspaceDialog(
+        context,
+        ref,
+        side,
+        action: ArchiveWorkspaceAction.edit,
+        focusedMember: target,
+      );
       return;
     }
     await showFileEditorDialog(context, ref, target, side);
@@ -382,126 +384,69 @@ Future<void> _editFile(
 }
 
 void showCopyDialogFromSelection(BuildContext context, WidgetRef ref) {
-  final activePanel = ref.read(activePanelProvider);
-  final panel = ref.read(panelProvider(activePanel));
-  final targets = _selectedOrCursor(panel);
-  if (targets.isEmpty) return;
-
-  // On web: if the opposite panel has a local folder open, copy there.
-  // Otherwise download via browser.
-  if (kIsWeb) {
-    final opposite = activePanel == PanelSide.local ? PanelSide.remote : PanelSide.local;
-    final oppositePanel = ref.read(panelProvider(opposite));
-    final oppPath = oppositePanel.currentPath;
-    _log.debug('web copy: active=${activePanel.name} oppPath=$oppPath selection=${targets.length}');
-
-    // If the opposite panel has a local folder open (not just '/'), copy there.
-    if (oppPath.length > 1) {
-      panel.copyFiles(targets, oppPath).then((_) {
-        oppositePanel.refresh();
-      });
-      return;
-    }
-    // Fallback: download via browser.
-    _downloadFilesOnWeb(ref, targets);
+  final side = ref.read(activePanelProvider);
+  final panel = ref.read(panelProvider(side));
+  if (panel.isInArchive) {
+    unawaited(
+      showCurrentArchiveWorkspaceDialog(
+        context,
+        ref,
+        side,
+        action: ArchiveWorkspaceAction.copyOut,
+      ),
+    );
     return;
   }
-
-  _showPathDialog(context, ref, activePanel, panel, targets, 'Copy', panel.copyFiles);
-}
-
-/// Download local files via browser on web.
-void _downloadFilesOnWeb(WidgetRef ref, List<FileItem> files) {
-  final localSvc = ref.read(localFileServiceProvider);
-  for (final file in files) {
-    if (file.isFolder || file.path == null) continue;
-    localSvc.readFile(file.path!, fileItem: file).then((bytes) {
-      final blob = html.Blob([bytes]);
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      html.AnchorElement(href: url)
-        ..setAttribute('download', file.name)
-        ..click();
-      html.Url.revokeObjectUrl(url);
-    }).catchError((_) {});
-  }
-}
-
-void showMoveDialogFromSelection(BuildContext context, WidgetRef ref) {
-  final activePanel = ref.read(activePanelProvider);
-  final panel = ref.read(panelProvider(activePanel));
-  final targets = _selectedOrCursor(panel);
-  _log.debug('showMoveDialogFromSelection: ${targets.length} items, side=${activePanel.name}');
-  if (targets.isEmpty) return;
-
-  // On web: move to opposite panel's directory automatically.
-  if (kIsWeb) {
-    final opposite = activePanel == PanelSide.local ? PanelSide.remote : PanelSide.local;
-    final oppositePanel = ref.read(panelProvider(opposite));
-    final oppPath = oppositePanel.currentPath;
-    _log.debug('web move: active=${activePanel.name} oppPath=$oppPath selection=${targets.length}');
-
-    if (oppPath.length > 1) {
-      panel.moveFiles(targets, oppPath).then((_) {
-        oppositePanel.refresh();
-      });
-      return;
-    }
-  }
-
-  _showPathDialog(context, ref, activePanel, panel, targets, 'Move', panel.moveFiles);
-}
-
-void _showPathDialog(
-  BuildContext context,
-  WidgetRef ref,
-  PanelSide activePanel,
-  PanelNotifier panel,
-  List<FileItem> files,
-  String operation,
-  Future<void> Function(List<FileItem>, String) action,
-) {
-  final controller = TextEditingController(text: panel.currentPath);
-
-  Future<void> doAction(String value) async {
-    if (value.isNotEmpty) {
-      await action(files, value);
-      // Refresh opposite panel in case the target path is there.
-      final opposite = activePanel == PanelSide.local ? PanelSide.remote : PanelSide.local;
-      ref.read(panelProvider(opposite)).refresh();
-      if (context.mounted) {
-        Navigator.pop(context);
-        _showUndoSnackBar(
-          context,
-          ref,
-          activePanel,
-          '${operation}d ${files.length} item(s) to $value',
-        );
-      }
-    }
-  }
-
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Text('$operation ${files.length} item(s)'),
-      content: TextField(
-        controller: controller,
-        decoration: const InputDecoration(labelText: 'Target path', border: OutlineInputBorder()),
-        autofocus: true,
-        onSubmitted: doAction,
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.cancel)),
-        ElevatedButton(
-          onPressed: () => doAction(controller.text),
-          child: Text(operation),
-        ),
-      ],
-    ),
+  final files = _selectedOrCursor(panel);
+  showFileOperationDialog(
+    context,
+    ref,
+    side,
+    files,
+    kind: FileOperationKind.copy,
   );
 }
 
-void showCreateFolderDialog(BuildContext context, WidgetRef ref, PanelSide side) {
+void showMoveDialogFromSelection(BuildContext context, WidgetRef ref) {
+  final side = ref.read(activePanelProvider);
+  final panel = ref.read(panelProvider(side));
+  if (panel.isInArchive) {
+    unawaited(
+      showCurrentArchiveWorkspaceDialog(
+        context,
+        ref,
+        side,
+        action: ArchiveWorkspaceAction.moveOut,
+      ),
+    );
+    return;
+  }
+  final files = _selectedOrCursor(panel);
+  showFileOperationDialog(
+    context,
+    ref,
+    side,
+    files,
+    kind: FileOperationKind.move,
+  );
+}
+
+void showMultiRenameFromSelection(BuildContext context, WidgetRef ref) {
+  final side = ref.read(activePanelProvider);
+  final panel = ref.read(panelProvider(side));
+  final files = panel.selection.isEmpty
+      ? _selectedOrCursor(panel)
+      : (panel.displayedFiles ?? const <FileItem>[])
+            .where((item) => panel.selection.contains(item))
+            .toList();
+  if (files.isNotEmpty) showBatchRenameDialog(context, ref, side, files);
+}
+
+void showCreateFolderDialog(
+  BuildContext context,
+  WidgetRef ref,
+  PanelSide side,
+) {
   final panel = ref.read(panelProvider(side));
   final controller = TextEditingController();
 
@@ -521,12 +466,18 @@ void showCreateFolderDialog(BuildContext context, WidgetRef ref, PanelSide side)
       title: const Text('New Folder'),
       content: TextField(
         controller: controller,
-        decoration: const InputDecoration(labelText: 'Folder name', border: OutlineInputBorder()),
+        decoration: const InputDecoration(
+          labelText: 'Folder name',
+          border: OutlineInputBorder(),
+        ),
         autofocus: true,
         onSubmitted: doCreate,
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.cancel)),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(AppLocalizations.of(context)!.cancel),
+        ),
         ElevatedButton(
           onPressed: () => doCreate(controller.text),
           child: const Text('Create'),
@@ -549,16 +500,29 @@ void showReceivedFilesDialog(BuildContext context, List<String> files) {
         children: [
           Text('Upload ${files.length} file(s) to Cloud?'),
           const SizedBox(height: 8),
-          ...files.take(5).map((path) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
-                child: Text('• ${p.basename(path)}', style: const TextStyle(fontSize: 12)),
-              )),
+          ...files
+              .take(5)
+              .map(
+                (path) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  child: Text(
+                    '• ${p.basename(path)}',
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ),
+              ),
           if (files.length > 5)
-            Text('... and ${files.length - 5} more', style: const TextStyle(fontSize: 12)),
+            Text(
+              '... and ${files.length - 5} more',
+              style: const TextStyle(fontSize: 12),
+            ),
         ],
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.cancel)),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(AppLocalizations.of(context)!.cancel),
+        ),
         ElevatedButton(
           onPressed: () {
             // Will be wired when receive service is connected to Riverpod
@@ -602,7 +566,10 @@ void showGoToDialog(BuildContext context, WidgetRef ref) {
         },
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppLocalizations.of(context)!.cancel)),
+        TextButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: Text(AppLocalizations.of(context)!.cancel),
+        ),
         ElevatedButton(
           onPressed: () {
             if (controller.text.isNotEmpty) {
@@ -671,7 +638,8 @@ UndoContext _buildUndoCtx(WidgetRef ref, PanelSide side) {
   final client = ref.read(authProvider).client;
   return UndoContext(
     remoteRename: (currentPath, name) => client.renamePath(currentPath, name),
-    remoteMove: (currentPath, targetDir) => client.movePath(currentPath, targetDir),
+    remoteMove: (currentPath, targetDir) =>
+        client.movePath(currentPath, targetDir),
     remoteDelete: (path) => client.deletePath(path),
   );
 }

@@ -42,6 +42,46 @@ void main() {
     await adapter.logout();
   });
 
+  test(
+    'concurrent listings cannot interleave working-directory commands',
+    () async {
+      final entered = Completer<void>();
+      final release = Completer<void>();
+      connection.beforeListing = () async {
+        if (connection.directory == '/first') {
+          entered.complete();
+          await release.future;
+        }
+      };
+      final first = adapter.listPath('/first');
+      await entered.future;
+      final second = adapter.listPath('/second');
+      await Future<void>.delayed(Duration.zero);
+      expect(connection.changedDirectories, ['/first']);
+      release.complete();
+      expect((await first)['files'].single['name'], 'first.txt');
+      expect((await second)['files'].single['name'], 'second.txt');
+      expect(connection.changedDirectories, ['/first', '/second']);
+    },
+  );
+
+  test('queued operations cannot reconnect or retarget after logout', () async {
+    final entered = Completer<void>();
+    final release = Completer<void>();
+    connection.beforeListing = () async {
+      entered.complete();
+      await release.future;
+    };
+    final first = adapter.listPath('/first');
+    final firstFailed = expectLater(first, throwsA(anything));
+    await entered.future;
+    final queued = expectLater(adapter.listPath('/second'), throwsA(anything));
+    await adapter.logout();
+    release.complete();
+    await Future.wait([firstFailed, queued]);
+    expect(connection.changedDirectories, ['/first']);
+  });
+
   test('uploads pass complete root and nested paths without changing server directory', () async {
     connection.directory = '/unrelated';
     final progress = <(int, int)>[];
@@ -171,6 +211,7 @@ class _FTPConnection implements FTPConnect {
   final changedDirectories = <String?>[];
   String directory = '/';
   Future<bool> Function(String path, File file)? afterDownloadWrite;
+  Future<void> Function()? beforeListing;
 
   @override
   Future<bool> connect() async => true;
@@ -183,6 +224,17 @@ class _FTPConnection implements FTPConnect {
     changedDirectories.add(path);
     directory = path!;
     return true;
+  }
+
+  @override
+  Future<List<FTPEntry>> listDirectoryContent() async {
+    await beforeListing?.call();
+    return [
+      FTPEntry.parse(
+        'type=file;size=3; ${p.posix.basename(directory)}.txt',
+        ListCommand.mlsd,
+      ),
+    ];
   }
 
   @override

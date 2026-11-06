@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/operation_progress.dart';
 import '../providers/providers.dart';
 import '../utils/formatters.dart' show formatBytes, formatSpeed;
+import 'transfer_history_dialog.dart';
 
 class OperationsPanel extends ConsumerStatefulWidget {
   const OperationsPanel({super.key});
@@ -21,8 +22,31 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
   Widget build(BuildContext context) {
     final transfers = ref.watch(transferProvider);
 
-    if (transfers.operations.isEmpty) {
+    if (transfers.operations.isEmpty &&
+        transfers.savedJobs.isEmpty &&
+        transfers.recoveryError == null) {
       return const SizedBox.shrink();
+    }
+
+    final order = transfers.queuedIds;
+    final operations = transfers.operations.toList()
+      ..sort((a, b) {
+        final ai = order.indexOf(a.id);
+        final bi = order.indexOf(b.id);
+        if (ai >= 0 && bi >= 0) return ai.compareTo(bi);
+        if (ai >= 0) return -1;
+        if (bi >= 0) return 1;
+        return 0;
+      });
+    Future<void> action(Future<void> Function() run) async {
+      try {
+        await run();
+      } catch (error) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text('$error')));
+        }
+      }
     }
 
     int totalBytes = 0;
@@ -45,49 +69,136 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
       }
     }
 
-    final overallProgress =
-        totalBytes > 0 ? transferredBytes / totalBytes : 0.0;
+    final overallProgress = totalBytes > 0
+        ? transferredBytes / totalBytes
+        : 0.0;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
-      ),
+    return Material(
+      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+      shape: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
       child: ExpansionTile(
-        title: _buildPanelHeader(context, transfers, activeCount, completeCount,
-            errorCount, overallProgress, transferredBytes, totalBytes),
+        title: _buildPanelHeader(
+          context,
+          transfers,
+          activeCount,
+          completeCount,
+          errorCount,
+          overallProgress,
+          transferredBytes,
+          totalBytes,
+        ),
         initiallyExpanded: true,
         onExpansionChanged: (isExpanded) =>
             setState(() => _isPanelExpanded = isExpanded),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (activeCount > 0)
-              IconButton(
-                icon: const Icon(Icons.stop_circle_outlined, size: 20),
-                tooltip: 'Cancel all active transfers',
-                onPressed: () => transfers.cancelAllOperations(),
-              ),
-            if (completeCount > 0 || errorCount > 0)
-              IconButton(
-                icon: const Icon(Icons.clear_all, size: 20),
-                tooltip: 'Clear finished transfers',
-                onPressed: () => transfers.clearCompletedOperations(),
-              ),
-            Icon(_isPanelExpanded ? Icons.expand_less : Icons.expand_more),
-          ],
+        trailing: Icon(
+          _isPanelExpanded ? Icons.expand_less : Icons.expand_more,
         ),
         children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            child: Wrap(
+              spacing: 12,
+              runSpacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                TextButton.icon(
+                  onPressed: () => showTransferHistoryDialog(context, ref),
+                  icon: const Icon(Icons.history),
+                  label: const Text('History and recovery'),
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('Parallel transfers: '),
+                    DropdownButton<int>(
+                      value: transfers.maxConcurrent,
+                      items: [
+                        for (final limit in {
+                          0,
+                          1,
+                          2,
+                          3,
+                          4,
+                          6,
+                          8,
+                          12,
+                          16,
+                          transfers.maxConcurrent,
+                        }.toList()..sort())
+                          DropdownMenuItem(
+                            value: limit,
+                            child: Text(limit == 0 ? 'Queue only' : '$limit'),
+                          ),
+                      ],
+                      onChanged: (limit) {
+                        if (limit != null) {
+                          action(() => transfers.setConcurrency(limit));
+                        }
+                      },
+                    ),
+                  ],
+                ),
+                if (activeCount > 0)
+                  TextButton.icon(
+                    onPressed: transfers.cancelAllOperations,
+                    icon: const Icon(Icons.stop_circle_outlined),
+                    label: const Text('Cancel active'),
+                  ),
+                if (completeCount > 0 || errorCount > 0)
+                  TextButton.icon(
+                    onPressed: transfers.clearCompletedOperations,
+                    icon: const Icon(Icons.clear_all),
+                    label: const Text('Hide finished'),
+                  ),
+              ],
+            ),
+          ),
+          if (transfers.recoveryError != null)
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Text(
+                transfers.recoveryError!,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ),
           Container(
             constraints: const BoxConstraints(maxHeight: 250),
             child: ListView.builder(
               shrinkWrap: true,
-              itemCount: transfers.operations.length,
+              itemCount: operations.length,
               itemBuilder: (context, index) {
-                final op = transfers.operations[index];
+                final op = operations[index];
                 final isExpanded = _expandedOperationId == op.id;
                 return _OperationTile(
                   operation: op,
+                  statusLabel: transfers.isQueued(op.id) || op.isComplete
+                      ? transfers.statusLabel(op.id)
+                      : null,
+                  onReview:
+                      transfers.savedJob(op.id) != null &&
+                          !transfers.isJobLive(op.id)
+                      ? () => showTransferHistoryDialog(
+                          context,
+                          ref,
+                          jobId: op.id,
+                        )
+                      : null,
+                  onQueueAction: transfers.isQueued(op.id)
+                      ? (choice) => action(() async {
+                          switch (choice) {
+                            case 'first':
+                              await transfers.moveQueuedFirst(op.id);
+                            case 'last':
+                              await transfers.moveQueuedLast(op.id);
+                            case 'high':
+                              await transfers.setPriority(op.id, 10);
+                            case 'normal':
+                              await transfers.setPriority(op.id, 0);
+                            case 'low':
+                              await transfers.setPriority(op.id, -10);
+                          }
+                        })
+                      : null,
                   isExpanded: isExpanded,
                   onToggleExpanded: () => setState(() {
                     _expandedOperationId = isExpanded ? null : op.id;
@@ -117,121 +228,46 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
     int transferredBytes,
     int totalBytes,
   ) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(
+    final speed = transfers.operations
+        .where((op) => !op.isComplete && !op.isCancelled)
+        .fold<double>(0, (sum, op) => sum + op.currentSpeed);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            activeCount > 0 ? Icons.sync : Icons.check_circle,
-            size: 20,
-            color: errorCount > 0
-                ? Theme.of(context).colorScheme.error
-                : activeCount > 0
-                    ? Theme.of(context).colorScheme.primary
-                    : Colors.green,
+          Text(
+            '${transfers.operations.length} operation(s) · ${transfers.queuedCount} queued',
+            style: const TextStyle(fontWeight: FontWeight.w600),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      '${transfers.operations.length} operation(s)',
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyMedium
-                          ?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    if (activeCount > 0) ...[
-                      const SizedBox(width: 8),
-                      Text('• ${(overallProgress * 100).toStringAsFixed(0)}%',
-                          style: Theme.of(context).textTheme.bodyMedium),
-                      const SizedBox(width: 8),
-                      Text(
-                          '${formatBytes(transferredBytes)} / ${formatBytes(totalBytes)}',
-                          style: Theme.of(context).textTheme.bodySmall),
-                      // Aggregate speed
-                      Builder(builder: (_) {
-                        final totalSpeed = transfers.operations
-                            .where((op) => !op.isComplete && !op.isCancelled)
-                            .fold<double>(0, (s, op) => s + op.currentSpeed);
-                        if (totalSpeed > 0) {
-                          return Padding(
-                            padding: const EdgeInsets.only(left: 8),
-                            child: Text(formatSpeed(totalSpeed),
-                                style: TextStyle(
-                                    fontSize: 11,
-                                    color:
-                                        Theme.of(context).colorScheme.primary)),
-                          );
-                        }
-                        return const SizedBox.shrink();
-                      }),
-                    ],
-                    if (completeCount > 0) ...[
-                      const SizedBox(width: 8),
-                      Text('✓ $completeCount',
-                          style: TextStyle(color: Colors.green[700])),
-                    ],
-                    if (errorCount > 0) ...[
-                      const SizedBox(width: 8),
-                      Text('✗ $errorCount',
-                          style: TextStyle(
-                              color: Theme.of(context).colorScheme.error)),
-                    ],
-                  ],
+          const SizedBox(height: 4),
+          Wrap(
+            spacing: 12,
+            runSpacing: 4,
+            children: [
+              if (activeCount > 0)
+                Text(
+                  '${formatBytes(transferredBytes)} / ${formatBytes(totalBytes)}',
                 ),
-                const SizedBox(height: 6),
-                SizedBox(
-                  height: 8,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: Stack(
-                      children: [
-                        Container(color: Colors.grey[300]),
-                        Row(
-                          children: transfers.operations.map((op) {
-                            final segmentWidth = totalBytes > 0
-                                ? op.totalBytes / totalBytes
-                                : 1.0 / transfers.operations.length;
-                            Color segmentColor;
-                            if (op.isCancelled) {
-                              segmentColor = Colors.orange;
-                            } else if (op.error != null) {
-                              segmentColor =
-                                  Theme.of(context).colorScheme.error;
-                            } else if (op.isComplete) {
-                              segmentColor = Colors.green;
-                            } else {
-                              segmentColor =
-                                  Theme.of(context).colorScheme.primary;
-                            }
-                            return Expanded(
-                              flex: (segmentWidth * 1000).toInt(),
-                              child: Container(
-                                margin:
-                                    const EdgeInsets.symmetric(horizontal: 0.5),
-                                child: LinearProgressIndicator(
-                                  value: op.progress,
-                                  backgroundColor: Colors.grey[300],
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                      segmentColor),
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      ],
-                    ),
-                  ),
+              if (speed > 0) Text(formatSpeed(speed)),
+              if (completeCount > 0)
+                Text(
+                  '$completeCount complete',
+                  style: TextStyle(color: Colors.green[700]),
                 ),
-              ],
-            ),
+              if (errorCount > 0)
+                Text(
+                  '$errorCount need review',
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              if (transfers.operations.isEmpty)
+                Text('${transfers.savedJobs.length} saved transfer(s)'),
+            ],
           ),
-          const SizedBox(width: 12),
+          if (activeCount > 0) ...[
+            const SizedBox(height: 6),
+            LinearProgressIndicator(value: overallProgress.clamp(0, 1)),
+          ],
         ],
       ),
     );
@@ -246,6 +282,9 @@ class _OperationTile extends StatelessWidget {
   final VoidCallback? onCancel;
   final VoidCallback onPause;
   final VoidCallback onResume;
+  final String? statusLabel;
+  final VoidCallback? onReview;
+  final void Function(String)? onQueueAction;
 
   const _OperationTile({
     required this.operation,
@@ -255,6 +294,9 @@ class _OperationTile extends StatelessWidget {
     this.onCancel,
     required this.onPause,
     required this.onResume,
+    this.statusLabel,
+    this.onReview,
+    this.onQueueAction,
   });
 
   @override
@@ -268,12 +310,12 @@ class _OperationTile extends StatelessWidget {
     } else if (operation.isPaused) {
       icon = Icons.pause_circle;
       color = Colors.blue;
+    } else if (operation.error != null) {
+      icon = Icons.error;
+      color = Theme.of(context).colorScheme.error;
     } else if (operation.isComplete) {
       icon = Icons.check_circle;
       color = Colors.green;
-    } else if (operation.error != null) {
-      icon = Icons.error;
-      color = Colors.red;
     } else {
       icon = operation.type == OperationType.upload
           ? Icons.upload
@@ -289,15 +331,20 @@ class _OperationTile extends StatelessWidget {
           title: Row(
             children: [
               Expanded(
-                  child: Text(operation.fileName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 13))),
+                child: Text(
+                  operation.fileName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 13),
+                ),
+              ),
               if (operation.isBatch) ...[
                 const SizedBox(width: 8),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.primaryContainer,
                     borderRadius: BorderRadius.circular(10),
@@ -305,9 +352,9 @@ class _OperationTile extends StatelessWidget {
                   child: Text(
                     '${operation.completedFiles}/${operation.totalFiles} files',
                     style: TextStyle(
-                        fontSize: 10,
-                        color:
-                            Theme.of(context).colorScheme.onPrimaryContainer),
+                      fontSize: 10,
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    ),
                   ),
                 ),
               ],
@@ -320,24 +367,27 @@ class _OperationTile extends StatelessWidget {
                   operation.error == null &&
                   !operation.isCancelled)
                 LinearProgressIndicator(
-                    value: operation.progress,
-                    backgroundColor: Colors.grey[300]),
+                  value: operation.progress.clamp(0, 1),
+                  backgroundColor: Colors.grey[300],
+                ),
               const SizedBox(height: 2),
               Text(
                 operation.isCancelled
                     ? 'Cancelled'
                     : operation.isPaused
-                        ? 'Paused'
-                        : operation.error ?? _getStatusText(operation),
+                    ? 'Paused'
+                    : statusLabel ??
+                          operation.error ??
+                          _getStatusText(operation),
                 style: TextStyle(
                   fontSize: 11,
                   color: operation.error != null
                       ? Colors.red
                       : operation.isCancelled
-                          ? Colors.orange
-                          : operation.isPaused
-                              ? Colors.blue
-                              : null,
+                      ? Colors.orange
+                      : operation.isPaused
+                      ? Colors.blue
+                      : null,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -347,11 +397,34 @@ class _OperationTile extends StatelessWidget {
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              if (onReview != null)
+                IconButton(
+                  icon: const Icon(Icons.history, size: 20),
+                  tooltip: 'Review saved transfer',
+                  onPressed: onReview,
+                ),
+              if (onQueueAction != null)
+                PopupMenuButton<String>(
+                  tooltip: 'Queue order and priority',
+                  onSelected: onQueueAction,
+                  itemBuilder: (_) => const [
+                    PopupMenuItem(value: 'first', child: Text('Run next')),
+                    PopupMenuItem(value: 'last', child: Text('Move to end')),
+                    PopupMenuDivider(),
+                    PopupMenuItem(value: 'high', child: Text('High priority')),
+                    PopupMenuItem(
+                      value: 'normal',
+                      child: Text('Normal priority'),
+                    ),
+                    PopupMenuItem(value: 'low', child: Text('Low priority')),
+                  ],
+                ),
               if (!operation.isComplete && !operation.isCancelled)
                 IconButton(
                   icon: Icon(
-                      operation.isPaused ? Icons.play_arrow : Icons.pause,
-                      size: 20),
+                    operation.isPaused ? Icons.play_arrow : Icons.pause,
+                    size: 20,
+                  ),
                   tooltip: operation.isPaused ? 'Resume' : 'Pause',
                   color: Colors.blue,
                   onPressed: operation.isPaused ? onResume : onPause,
@@ -360,22 +433,26 @@ class _OperationTile extends StatelessWidget {
                   !operation.isCancelled &&
                   onCancel != null)
                 IconButton(
-                    icon: const Icon(Icons.cancel, size: 20),
-                    tooltip: 'Cancel',
-                    color: Colors.red,
-                    onPressed: onCancel),
+                  icon: const Icon(Icons.cancel, size: 20),
+                  tooltip: 'Cancel',
+                  color: Colors.red,
+                  onPressed: onCancel,
+                ),
               if (operation.isBatch)
                 IconButton(
-                    icon: Icon(
-                        isExpanded ? Icons.expand_less : Icons.expand_more,
-                        size: 20),
-                    onPressed: onToggleExpanded),
+                  icon: Icon(
+                    isExpanded ? Icons.expand_less : Icons.expand_more,
+                    size: 20,
+                  ),
+                  onPressed: onToggleExpanded,
+                ),
               if (operation.isComplete ||
                   operation.error != null ||
                   operation.isCancelled)
                 IconButton(
-                    icon: const Icon(Icons.close, size: 20),
-                    onPressed: onRemove),
+                  icon: const Icon(Icons.close, size: 20),
+                  onPressed: onRemove,
+                ),
             ],
           ),
         ),
@@ -397,24 +474,34 @@ class _OperationTile extends StatelessWidget {
                         file.error != null
                             ? Icons.error
                             : file.isComplete
-                                ? Icons.check_circle
-                                : Icons.pending,
+                            ? Icons.check_circle
+                            : Icons.pending,
                         size: 12,
                         color: file.error != null
                             ? Colors.red
                             : file.isComplete
-                                ? Colors.green
-                                : Colors.grey,
+                            ? Colors.green
+                            : Colors.grey,
                       ),
                       const SizedBox(width: 8),
                       Expanded(
-                          child: Text(file.name,
-                              style: const TextStyle(fontSize: 11),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis)),
-                      Text(formatBytes(file.size),
-                          style:
-                              TextStyle(fontSize: 10, color: Colors.grey[600])),
+                        child: Text(
+                          file.name,
+                          style: const TextStyle(fontSize: 11),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Tooltip(
+                        message: file.error ?? file.path,
+                        child: Text(
+                          file.statusLabel ?? formatBytes(file.size),
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 );
@@ -426,11 +513,12 @@ class _OperationTile extends StatelessWidget {
   }
 
   String _getStatusText(OperationProgress op) {
-    if (op.isComplete) return 'Complete';
     if (op.error != null) return 'Error: ${op.error}';
+    if (op.isComplete) return 'Complete';
     final percent = (op.progress * 100).toStringAsFixed(0);
-    final speedStr =
-        op.currentSpeed > 0 ? ' • ${formatSpeed(op.currentSpeed)}' : '';
+    final speedStr = op.currentSpeed > 0
+        ? ' • ${formatSpeed(op.currentSpeed)}'
+        : '';
     final etaStr = op.estimatedSecondsRemaining > 0
         ? ' • ${_formatEta(op.estimatedSecondsRemaining)}'
         : '';

@@ -2,6 +2,31 @@
 
 Audit trail of bugs found, issues discovered, and fixes applied.
 
+## 2026-11-05 — Commander workflow completion and regression fixes
+
+- Exposed Commander mask dialects, date/variable controls, transformation
+  pipelines, editable/imported proposed names, row ordering/exclusion, and
+  previewed collision numbering in Multi-Rename. Added whole-batch undo with
+  captured target metadata, safe retry of remaining rows, and history retention
+  when a dialog closes during execution.
+- Added per-tab selection memory and persisted recent wildcard/regex criteria.
+  Corrected Select all, invert, and range selection to use visible rows; protected
+  file-list identity and UTF-8 path interchange against ambiguous sources and
+  encoded control characters.
+- Unified normal-folder and search-result panel drops through the source-bound
+  transfer preview. Fixed cross-source destination-mask overlaps, skipped-folder
+  ancestry, conflict-decision revalidation, incompatible profile controls, and
+  incomplete background-operation status.
+- Used native no-replace rename for panel renames. Protected asynchronous undo
+  from concurrent history clearing/trimming and duplicate undo requests.
+- Added focused service, real-filesystem, and widget regressions. Pushed work in
+  reviewable increments. The final pass uses
+  `feature/commander-workflow-polish`, preserving concurrent work from
+  `feature/commander-file-operations` through `cb58160`.
+- Local Flutter execution is unavailable in this managed host because the Dart
+  VM cannot obtain process/stack metadata. Executable validation is delegated to
+  GitHub CI with the pinned Flutter 3.47.8 / Dart 3.13.7 toolchain.
+
 ## 2026-11-05 — Image gallery, tiles, viewer and batch image exports
 
 - Added persistent per-panel Icons, Tiles and image-only Gallery layouts with

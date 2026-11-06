@@ -11,3 +11,4 @@ dynamic callMethod(dynamic object, String method, List args) => throw Unimplemen
 Future<dynamic> promiseToFuture(dynamic promise) => throw UnimplementedError();
 bool hasProperty(dynamic object, dynamic name) => throw UnimplementedError();
 dynamic jsify(dynamic object) => throw UnimplementedError();
+dynamic callConstructor(dynamic constructor, List args) => throw UnimplementedError();

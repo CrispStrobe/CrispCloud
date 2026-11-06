@@ -16,13 +16,18 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/file_item.dart';
 import '../models/operation_progress.dart';
+import '../models/transfer_job.dart';
 import '../models/panel_side.dart';
 import '../services/audit_service.dart';
+import '../services/file_operation_service.dart';
 import '../services/s3_client_adapter.dart';
 import '../services/transfer_queue.dart';
+import '../services/transfer_journal.dart';
+import '../services/transfer_recovery_service.dart';
 import '../services/web_streaming_service.dart';
 import '../services/log_service.dart';
 import 'auth_provider.dart';
@@ -40,18 +45,220 @@ class TransferNotifier extends ChangeNotifier {
 
   final TransferQueue _queue = TransferQueue();
   final List<OperationProgress> _operations = [];
+  final Map<String, FileOperationControl> _fileOperationControls = {};
 
-  TransferNotifier(this._ref);
+  late final TransferJournal _journal;
+  late final Future<void> ready;
+  String? recoveryError;
 
-  List<OperationProgress> get operations => _operations;
+  TransferNotifier(this._ref) {
+    _journal = _ref.read(transferJournalProvider);
+    _queue.addListener(notifyListeners);
+    ready = _restore();
+  }
+
+  List<OperationProgress> get operations => List.unmodifiable(_operations);
+  List<TransferJobRecord> get savedJobs => _journal.jobs;
+  List<String> get recoveryWarnings => List.unmodifiable(_journal.warnings);
+  TransferJobRecord? savedJob(String id) => _journal.job(id);
   bool get hasActiveOperations => _operations.any((op) => !op.isComplete);
+  bool isJobLive(String id) => _fileOperationControls.containsKey(id);
+  int get maxConcurrent => _queue.maxConcurrent;
+  int get queuedCount => _queue.pendingCount;
+  List<String> get queuedIds =>
+      _queue.pendingTasks.map((task) => task.id).toList();
+  bool isQueued(String id) => _queue.pendingTasks.any((task) => task.id == id);
+  int priorityOf(String id) => _journal.job(id)?.priority ?? 0;
+
+  Future<void> _restore() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final limit = prefs.getInt('commander_transfer_concurrency') ?? 3;
+      _queue.setMaxConcurrent(limit.clamp(0, 16));
+    } catch (error) {
+      _log.warn('Could not load transfer concurrency', error);
+    }
+    try {
+      await _journal.initialize();
+      if (_disposed) return;
+      for (final job in _journal.jobs.where((job) => job.needsReview)) {
+        _operations.add(_savedProgress(job));
+      }
+    } catch (error) {
+      recoveryError = 'Saved transfer history could not be read: $error';
+      _log.warn('Transfer recovery unavailable', error);
+    }
+    notifyListeners();
+  }
+
+  OperationProgress _savedProgress(TransferJobRecord job) {
+    final files = job.entries
+        .map(
+          (entry) => FileProgress(
+            name: entry.source.name,
+            path: entry.source.path!,
+            size: entry.source.isFolder ? 0 : entry.source.size ?? 0,
+            isComplete: const [
+              FileOperationOutcome.copied,
+              FileOperationOutcome.moved,
+              FileOperationOutcome.directoryCreated,
+            ].contains(entry.outcome),
+            error:
+                const [
+                  FileOperationOutcome.failed,
+                  FileOperationOutcome.metadataFailed,
+                ].contains(entry.outcome)
+                ? entry.message
+                : null,
+            statusLabel: entry.outcome.name,
+          ),
+        )
+        .toList();
+    final complete = job.status == TransferJobStatus.completed;
+    return OperationProgress(
+      id: job.id,
+      type: job.options.kind == FileOperationKind.move
+          ? OperationType.move
+          : OperationType.copy,
+      sourcePath: job.sourceLabel,
+      targetPath: job.targetDirectory,
+      fileName: '${files.length} saved items',
+      files: files,
+      totalBytes: files.fold(0, (sum, file) => sum + file.size),
+      currentBytes: files
+          .where((file) => file.isComplete)
+          .fold(0, (sum, file) => sum + file.size),
+      status: complete ? OperationStatus.completed : OperationStatus.failed,
+      errorMessage: complete
+          ? null
+          : job.message ?? transferStatusLabel(job.status),
+    );
+  }
+
+  String? statusLabel(String id) {
+    final job = _journal.job(id);
+    if (job == null) return null;
+    if (isQueued(id)) return 'Queued · priority ${job.priority}';
+    return transferStatusLabel(job.status);
+  }
+
+  Future<void> setConcurrency(int limit) async {
+    if (limit < 0 || limit > 16) throw ArgumentError.value(limit, 'limit');
+    await ready;
+    final prefs = await SharedPreferences.getInstance();
+    if (!await prefs.setInt('commander_transfer_concurrency', limit)) {
+      throw StateError('Could not save transfer concurrency.');
+    }
+    _queue.setMaxConcurrent(limit);
+  }
+
+  Future<void> setPriority(String id, int priority) async {
+    if (!isQueued(id)) return;
+    final job = _journal.job(id);
+    if (job != null) {
+      await _journal.updateQueue(id, priority: priority);
+    }
+    _queue.setPendingPriority(id, priority);
+    await _saveQueueOrder();
+  }
+
+  Future<void> reorderPending(int oldIndex, int newIndex) async {
+    _queue.reorderPending(oldIndex, newIndex);
+    await _saveQueueOrder();
+  }
+
+  Future<void> moveQueuedFirst(String id) async {
+    _queue.movePendingToTop(id);
+    await _saveQueueOrder();
+  }
+
+  Future<void> moveQueuedLast(String id) async {
+    _queue.movePendingToBottom(id);
+    await _saveQueueOrder();
+  }
+
+  Future<void> _saveQueueOrder() async {
+    final ids = queuedIds;
+    for (var i = 0; i < ids.length; i++) {
+      final job = _journal.job(ids[i]);
+      if (job != null) {
+        await _journal.updateQueue(job.id, queueOrder: i);
+      }
+    }
+    notifyListeners();
+  }
+
+  Future<void> dismissSavedJob(String id) async {
+    await ready;
+    if (isJobLive(id)) {
+      throw StateError('Finish or cancel this transfer first.');
+    }
+    await _journal.dismiss(id);
+    _operations.removeWhere((operation) => operation.id == id);
+    notifyListeners();
+  }
+
+  Future<void> clearSavedCompleted() async {
+    await ready;
+    for (final job in _journal.jobs.where((job) => job.isFinished)) {
+      if (!isJobLive(job.id)) await _journal.dismiss(job.id);
+    }
+    await _journal.compact();
+    _operations.removeWhere(
+      (operation) => operation.status == OperationStatus.completed,
+    );
+    notifyListeners();
+  }
+
+  /// Restores a reviewed backup only into a vacant original location. The
+  /// rename intent is durable before the storage operation starts.
+  Future<void> restoreSavedBackup(
+    String id,
+    int index,
+    FileOperationBackend destination,
+    FileOperationControl control,
+  ) async {
+    await ready;
+    final job = _journal.job(id);
+    if (job == null || isJobLive(id)) {
+      throw StateError('Transfer is unavailable or active.');
+    }
+    final saved = job.entries[index];
+    final entry =
+        FileOperationEntry(
+            saved.source,
+            saved.destination,
+            existing: saved.existing,
+          )
+          ..outcome = saved.outcome
+          ..message = saved.message
+          ..recovery = Map.of(saved.recovery);
+    await const TransferRecoveryService().restoreBackup(
+      job,
+      saved,
+      destination,
+      control,
+      checkpoint: (phase) async {
+        entry.recovery = {...?entry.recovery, 'phase': phase};
+        if (phase == 'backupRestored') {
+          entry.message = 'Previous destination restored from verified backup.';
+        }
+        await _journal.checkpoint(id, index, entry, phase);
+      },
+    );
+    notifyListeners();
+  }
 
   void clearCompletedOperations() {
     _operations.removeWhere((op) => op.isComplete || op.isCancelled);
+    _queue.clearCompleted();
     notifyListeners();
   }
 
   void cancelAllOperations() {
+    for (final control in _fileOperationControls.values) {
+      control.cancel();
+    }
     _queue.cancelAll();
     for (final operation in _operations.where((op) => !op.isComplete)) {
       operation.cancel();
@@ -64,34 +271,314 @@ class TransferNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
-  void pauseOperation(String operationId) {
+  Future<void> _saveLiveStatus(String id, TransferJobStatus status) async {
+    if (!_fileOperationControls.containsKey(id)) return;
     try {
-      final operation = _operations.firstWhere((op) => op.id == operationId);
-      operation.pause();
-      notifyListeners();
-    } catch (e) {
-      _log.warn('pauseOperation failed', e);
+      await _journal.setStatus(
+        id,
+        status,
+        onlyIf: const {
+          TransferJobStatus.queued,
+          TransferJobStatus.running,
+          TransferJobStatus.paused,
+        },
+      );
+    } catch (error) {
+      recoveryError = 'Could not save the transfer state: $error';
+      _fileOperationControls[id]?.cancel();
     }
+    notifyListeners();
+  }
+
+  void pauseOperation(String operationId) {
+    _fileOperationControls[operationId]?.pause();
+    for (final operation in _operations.where((op) => op.id == operationId)) {
+      operation.pause();
+    }
+    unawaited(_saveLiveStatus(operationId, TransferJobStatus.paused));
+    _queue.refresh();
   }
 
   void resumeOperation(String operationId) {
-    try {
-      final operation = _operations.firstWhere((op) => op.id == operationId);
+    _fileOperationControls[operationId]?.resume();
+    for (final operation in _operations.where((op) => op.id == operationId)) {
       operation.resume();
-      notifyListeners();
-    } catch (e) {
-      _log.warn('resumeOperation failed', e);
     }
+    unawaited(
+      _saveLiveStatus(
+        operationId,
+        isQueued(operationId)
+            ? TransferJobStatus.queued
+            : TransferJobStatus.running,
+      ),
+    );
+    _queue.refresh();
   }
 
   void cancelOperation(String operationId) {
-    try {
-      final operation = _operations.firstWhere((op) => op.id == operationId);
+    _fileOperationControls[operationId]?.cancel();
+    for (final operation in _operations.where((op) => op.id == operationId)) {
       operation.cancel();
-      notifyListeners();
-    } catch (e) {
-      _log.warn('cancelOperation failed', e);
     }
+    for (final task in [..._queue.pendingTasks, ..._queue.activeTasks]) {
+      if (task.operation.id == operationId) _queue.cancel(task.id);
+    }
+    notifyListeners();
+  }
+
+  /// The journal is flushed before a queue item can mutate storage. Recovery
+  /// reuses the same stable entry indices and never auto-retries a partial job.
+  Future<void> runFileOperation(
+    FileOperationPlan plan, {
+    required FileOperationControl control,
+    FileConflictResolver? resolveConflict,
+    DetailedFileConflictResolver? resolveDetailedConflict,
+    void Function(FileOperationEntry, int, int?)? onProgress,
+    void Function(FileOperationEntry)? onEntryComplete,
+    String? recoveryJobId,
+    int priority = 0,
+  }) async {
+    await ready;
+    if (recoveryError != null) throw StateError(recoveryError!);
+    if (!plan.canExecute && (recoveryJobId == null || plan.errors.isNotEmpty)) {
+      throw StateError('Review a valid operation plan first.');
+    }
+    if (_disposed) throw StateError('The transfer queue is closed.');
+    final id =
+        recoveryJobId ?? 'commander_${DateTime.now().microsecondsSinceEpoch}';
+    if (isJobLive(id)) throw StateError('This transfer is already queued.');
+    TransferJobRecord job;
+    if (recoveryJobId == null) {
+      job = await _journal.create(id, plan, priority: priority);
+    } else {
+      final saved = _journal.job(id);
+      if (saved == null ||
+          !saved.ready ||
+          saved.entries.length != plan.entries.length ||
+          saved.source != plan.source.storageReference ||
+          saved.destination != plan.destination.storageReference) {
+        throw StateError('The recovery plan does not belong to this transfer.');
+      }
+      job = saved;
+      for (var i = 0; i < saved.entries.length; i++) {
+        if (saved.entries[i].source.path != plan.entries[i].source.path) {
+          throw StateError('Recovery must retain the original source entries.');
+        }
+      }
+      if (saved.protectedDestinationPaths.any(
+        (path) => !plan.protectedDestinationPaths.contains(path),
+      )) {
+        throw StateError('Recovery must retain protected selected sources.');
+      }
+      await _journal.saveReviewedOptions(id, plan.options);
+      await _journal.saveEntries(id, plan.entries);
+      await _journal.setStatus(id, TransferJobStatus.queued);
+      priority = saved.priority;
+    }
+    _operations.removeWhere((operation) => operation.id == id);
+    // A lost response can be reconciled entirely by read-only verification.
+    if (!plan.canExecute) {
+      await _journal.setStatus(
+        id,
+        TransferJobStatus.completed,
+        message: 'All remaining items reconciled or explicitly excluded.',
+      );
+      _operations.add(_savedProgress(job));
+      for (final entry in plan.entries) {
+        onEntryComplete?.call(entry);
+      }
+      notifyListeners();
+      return;
+    }
+    final rows = {
+      for (final entry in plan.entries)
+        entry: FileProgress(
+          name: entry.source.name,
+          path: entry.source.path!,
+          size: entry.source.isFolder ? 0 : entry.source.size ?? 0,
+          isComplete: entry.completed,
+          statusLabel: entry.outcome == FileOperationOutcome.pending
+              ? null
+              : entry.outcome.name,
+        ),
+    };
+    final operation = OperationProgress(
+      id: id,
+      type: plan.options.kind == FileOperationKind.move
+          ? OperationType.move
+          : OperationType.copy,
+      sourcePath: plan.source.label,
+      targetPath: plan.targetDirectory,
+      fileName: '${plan.fileCount} files',
+      totalBytes: plan.entries
+          .where((entry) => !entry.source.isFolder)
+          .fold(0, (sum, entry) => sum + (entry.source.size ?? 0)),
+      files: rows.values.toList(),
+    );
+    final done = Completer<void>();
+    final audit = _ref.read(auditServiceProvider);
+    _operations.add(operation);
+    _fileOperationControls[operation.id] = control;
+    notifyListeners();
+    var completedBytes = rows.values
+        .where((row) => row.isComplete)
+        .fold(0, (sum, row) => sum + row.size);
+    final counted = plan.entries.where((entry) => entry.completed).toSet();
+    final transferSizes = {
+      for (final entry in plan.entries) entry: rows[entry]!.size,
+    };
+    var started = false;
+    _queue.enqueue(
+      TransferTask(
+        id: id,
+        operation: operation,
+        providerName:
+            plan.destination.persistentStorageId ?? plan.destination.label,
+        priority: priority,
+        execute: () async {
+          started = true;
+          // The service records failures. Do not return them to the queue's
+          // transient-network retry loop after partial destructive work.
+          try {
+            await JournaledTransferRunner(_journal).execute(
+              id,
+              plan,
+              control: control,
+              resolveConflict: resolveConflict,
+              resolveDetailedConflict: resolveDetailedConflict,
+              onPhase: (_, phase) {
+                notifyListeners();
+              },
+              onProgress: (entry, bytes, total) {
+                if (total != null && total != transferSizes[entry]) {
+                  operation.totalBytes += total - transferSizes[entry]!;
+                  transferSizes[entry] = total;
+                }
+                operation.updateProgress(completedBytes + bytes);
+                onProgress?.call(entry, bytes, total);
+                notifyListeners();
+              },
+              onEntryComplete: (entry) {
+                final row = rows[entry]!;
+                row.isComplete = entry.completed;
+                row.error =
+                    entry.failed ||
+                        entry.outcome == FileOperationOutcome.needsDecision
+                    ? entry.message
+                    : null;
+                row.statusLabel =
+                    entry.outcome == FileOperationOutcome.needsDecision
+                    ? 'Waiting for a conflict decision'
+                    : entry.outcome.name;
+                if (entry.completed && counted.add(entry)) {
+                  completedBytes += transferSizes[entry]!;
+                }
+                operation.currentBytes = completedBytes;
+                onEntryComplete?.call(entry);
+                notifyListeners();
+              },
+            );
+            final waiting = plan.entries.any(
+              (entry) => entry.outcome == FileOperationOutcome.needsDecision,
+            );
+            if (control.isCancelled) {
+              operation.cancel();
+            } else if (waiting) {
+              // A background conflict stops the service with remaining rows
+              // still pending. Never report that partially executed plan as
+              // complete, or invite a retry of the already completed rows.
+              for (final entry in plan.entries.where(
+                (entry) => entry.outcome == FileOperationOutcome.pending,
+              )) {
+                rows[entry]!.statusLabel =
+                    'Not started (awaiting conflict decision)';
+              }
+              operation.fail(
+                'Waiting for a conflict decision. Review the saved transfer to continue.',
+              );
+            } else if (plan.entries.any((entry) => entry.failed)) {
+              operation.fail(
+                '${plan.entries.where((entry) => entry.failed).length} item(s) need review.',
+              );
+            } else {
+              operation.status = OperationStatus.completed;
+              operation.totalBytes = completedBytes;
+              operation.currentBytes = completedBytes;
+            }
+            // Audit failures must not turn a verified transfer into a retry.
+            try {
+              for (final entry in plan.entries) {
+                if (entry.completed) {
+                  await audit.logSuccess(
+                    operation: entry.outcome == FileOperationOutcome.moved
+                        ? AuditOperation.move
+                        : AuditOperation.copy,
+                    sourcePath: entry.source.path!,
+                    targetPath: entry.destination,
+                    provider: plan.destination.label,
+                    sizeBytes: entry.source.size,
+                  );
+                } else if (entry.failed) {
+                  await audit.logError(
+                    operation: plan.options.kind == FileOperationKind.move
+                        ? AuditOperation.move
+                        : AuditOperation.copy,
+                    sourcePath: entry.source.path!,
+                    targetPath: entry.destination,
+                    provider: plan.destination.label,
+                    error: entry.message ?? 'Operation failed',
+                  );
+                }
+              }
+            } catch (error) {
+              _log.warn('Transfer audit could not be saved', error);
+            }
+          } catch (error) {
+            operation.fail(error.toString());
+          }
+        },
+        onDone: (error) async {
+          try {
+            if (!started || operation.isCancelled || control.isCancelled) {
+              control.cancel();
+              for (final entry in plan.entries.where(
+                (entry) => entry.outcome == FileOperationOutcome.pending,
+              )) {
+                entry.outcome = FileOperationOutcome.cancelled;
+                entry.message = 'Cancelled before starting.';
+                rows[entry]!.statusLabel = 'cancelled';
+                onEntryComplete?.call(entry);
+              }
+              await _journal.saveEntries(id, plan.entries);
+              await _journal.setStatus(
+                id,
+                TransferJobStatus.cancelled,
+                message:
+                    'Cancelled. Review the saved transfer to retry unfinished items.',
+              );
+            }
+            if (error != null && error is! TransferCancelled) {
+              operation.fail(error.toString());
+            }
+          } catch (error) {
+            recoveryError = 'Could not save transfer completion: $error';
+            operation.fail(recoveryError!);
+          } finally {
+            _fileOperationControls.remove(id);
+            notifyListeners();
+            if (!done.isCompleted) done.complete();
+          }
+        },
+      ),
+    );
+    unawaited(
+      Future.any([control.cancellationFuture, done.future]).then((_) {
+        if (control.isCancelled && _fileOperationControls.containsKey(id)) {
+          cancelOperation(id);
+        }
+      }),
+    );
+    await done.future;
   }
 
   Future<void> uploadFiles(List<FileItem> files, {String? targetPath}) async {
@@ -114,16 +601,18 @@ class TransferNotifier extends ChangeNotifier {
       } else {
         fileSize = file.size ?? 0;
       }
-      fileProgresses
-          .add(FileProgress(name: file.name, path: file.path!, size: fileSize));
+      fileProgresses.add(
+        FileProgress(name: file.name, path: file.path!, size: fileSize),
+      );
       totalBytes += fileSize;
     }
 
     final operation = OperationProgress(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       type: OperationType.upload,
-      sourcePath:
-          files.length == 1 ? files.first.path! : '${files.length} files',
+      sourcePath: files.length == 1
+          ? files.first.path!
+          : '${files.length} files',
       targetPath: target,
       fileName: files.length == 1 ? files.first.name : '${files.length} files',
       totalBytes: totalBytes,
@@ -141,63 +630,38 @@ class TransferNotifier extends ChangeNotifier {
       final fileProgress = fileProgresses[i];
       final taskId = '${operation.id}_upload_$i';
 
-      _queue.enqueue(TransferTask(
-        id: taskId,
-        operation: operation,
-        execute: () async {
-          if (operation.isCancelled) return;
-          if (operation.isPaused) await operation.pauseFuture;
-          if (operation.isCancelled) return;
+      _queue.enqueue(
+        TransferTask(
+          id: taskId,
+          operation: operation,
+          execute: () async {
+            if (operation.isCancelled) return;
+            if (operation.isPaused) await operation.pauseFuture;
+            if (operation.isCancelled) return;
 
-          if (file.path == null) {
-            fileProgress.error = 'No path';
-            return;
-          }
+            if (file.path == null) {
+              fileProgress.error = 'No path';
+              return;
+            }
 
-          final audit = _ref.read(auditServiceProvider);
-          try {
-            if (file.isFolder) {
-              await _uploadFolder(
-                  file.path!, target, operation, client, localFileService);
-            } else if (!kIsWeb && file.path != null) {
-              final localFile = File(file.path!);
-              final length = await localFile.length();
-              await client.uploadStream(
-                localFile.openRead().asyncMap((chunk) async {
-                  await _checkpoint(operation);
-                  return chunk;
-                }),
-                length,
-                file.name,
-                target,
-                onProgress: (current, total) {
-                  operation.currentBytes = completedBytes + current;
-                  notifyListeners();
-                },
-              );
-            } else {
-              // Web upload path.
-              // When a raw Blob reference exists (e.g. from directory-picker
-              // grant), stream it in chunks rather than reading the whole file
-              // into memory.
-              final webStreaming = WebStreamingService();
-              final blobRef =
-                  kIsWeb ? localFileService.getWebFileRef(file.path!) : null;
-
-              if (kIsWeb && webStreaming.isSupported && blobRef != null) {
-                int sent = 0;
-                final blobStream = webStreaming.streamFromBlob(blobRef);
-                final trackedStream = blobStream.asyncMap((chunk) async {
-                  await _checkpoint(operation);
-                  sent += chunk.length;
-                  operation.currentBytes = completedBytes + sent;
-                  notifyListeners();
-                  return chunk;
-                });
-
-                final length = file.size ?? 0;
+            final audit = _ref.read(auditServiceProvider);
+            try {
+              if (file.isFolder) {
+                await _uploadFolder(
+                  file.path!,
+                  target,
+                  operation,
+                  client,
+                  localFileService,
+                );
+              } else if (!kIsWeb && file.path != null) {
+                final localFile = File(file.path!);
+                final length = await localFile.length();
                 await client.uploadStream(
-                  trackedStream,
+                  localFile.openRead().asyncMap((chunk) async {
+                    await _checkpoint(operation);
+                    return chunk;
+                  }),
                   length,
                   file.name,
                   target,
@@ -207,63 +671,98 @@ class TransferNotifier extends ChangeNotifier {
                   },
                 );
               } else {
-                // Fallback for web: buffer-based upload (no Blob ref or older
-                // browser without streaming support).
-                final fileData =
-                    await localFileService.readFile(file.path!, fileItem: file);
-                await client.uploadFile(
-                  fileData,
-                  file.name,
-                  target,
-                  onProgress: (current, total) {
-                    operation.currentBytes = completedBytes + current;
-                    notifyListeners();
-                  },
-                );
-              }
-            }
-            await audit.logSuccess(
-              operation: AuditOperation.upload,
-              sourcePath: file.path ?? file.name,
-              targetPath: target,
-              provider: client.providerName,
-              sizeBytes: file.size,
-            );
-          } catch (e) {
-            _log.warn('operation failed', e);
-            fileProgress.error = e.toString();
-            // If an S3 multipart upload was interrupted, persist state
-            // for future resume.
-            if (client is S3ClientAdapter) {
-              try {
-                await client.persistInterruptedUploads();
-              } catch (e) {
-                _log.warn('operation failed', e);
-              }
-            }
-            await audit.logError(
-              operation: AuditOperation.upload,
-              sourcePath: file.path ?? file.name,
-              targetPath: target,
-              provider: client.providerName,
-              error: e.toString(),
-            );
-            rethrow;
-          }
+                // Web upload path.
+                // When a raw Blob reference exists (e.g. from directory-picker
+                // grant), stream it in chunks rather than reading the whole file
+                // into memory.
+                final webStreaming = WebStreamingService();
+                final blobRef = kIsWeb
+                    ? localFileService.getWebFileRef(file.path!)
+                    : null;
 
-          fileProgress.isComplete = true;
-          completedBytes += fileProgress.size;
-          operation.currentBytes = completedBytes;
-        },
-        onDone: (error) {
-          fileProgress.error = error?.toString();
-          tasksFinished++;
-          if (tasksFinished == files.length) {
-            _finalizeBatch(operation, fileProgresses);
-            if (!_disposed) unawaited(_refreshAfterTransfer());
-          }
-        },
-      ));
+                if (kIsWeb && webStreaming.isSupported && blobRef != null) {
+                  int sent = 0;
+                  final blobStream = webStreaming.streamFromBlob(blobRef);
+                  final trackedStream = blobStream.asyncMap((chunk) async {
+                    await _checkpoint(operation);
+                    sent += chunk.length;
+                    operation.currentBytes = completedBytes + sent;
+                    notifyListeners();
+                    return chunk;
+                  });
+
+                  final length = file.size ?? 0;
+                  await client.uploadStream(
+                    trackedStream,
+                    length,
+                    file.name,
+                    target,
+                    onProgress: (current, total) {
+                      operation.currentBytes = completedBytes + current;
+                      notifyListeners();
+                    },
+                  );
+                } else {
+                  // Fallback for web: buffer-based upload (no Blob ref or older
+                  // browser without streaming support).
+                  final fileData = await localFileService.readFile(
+                    file.path!,
+                    fileItem: file,
+                  );
+                  await client.uploadFile(
+                    fileData,
+                    file.name,
+                    target,
+                    onProgress: (current, total) {
+                      operation.currentBytes = completedBytes + current;
+                      notifyListeners();
+                    },
+                  );
+                }
+              }
+              await audit.logSuccess(
+                operation: AuditOperation.upload,
+                sourcePath: file.path ?? file.name,
+                targetPath: target,
+                provider: client.providerName,
+                sizeBytes: file.size,
+              );
+            } catch (e) {
+              _log.warn('operation failed', e);
+              fileProgress.error = e.toString();
+              // If an S3 multipart upload was interrupted, persist state
+              // for future resume.
+              if (client is S3ClientAdapter) {
+                try {
+                  await client.persistInterruptedUploads();
+                } catch (e) {
+                  _log.warn('operation failed', e);
+                }
+              }
+              await audit.logError(
+                operation: AuditOperation.upload,
+                sourcePath: file.path ?? file.name,
+                targetPath: target,
+                provider: client.providerName,
+                error: e.toString(),
+              );
+              rethrow;
+            }
+
+            fileProgress.isComplete = true;
+            completedBytes += fileProgress.size;
+            operation.currentBytes = completedBytes;
+          },
+          onDone: (error) {
+            fileProgress.error = error?.toString();
+            tasksFinished++;
+            if (tasksFinished == files.length) {
+              _finalizeBatch(operation, fileProgresses);
+              if (!_disposed) unawaited(_refreshAfterTransfer());
+            }
+          },
+        ),
+      );
     }
   }
 
@@ -279,16 +778,22 @@ class TransferNotifier extends ChangeNotifier {
     final remotePath = _ref.read(panelProvider(PanelSide.remote)).currentPath;
 
     final fileProgresses = files
-        .map((f) => FileProgress(
-            name: f.name, path: f.uuid ?? f.name, size: f.size ?? 0))
+        .map(
+          (f) => FileProgress(
+            name: f.name,
+            path: f.uuid ?? f.name,
+            size: f.size ?? 0,
+          ),
+        )
         .toList();
     final totalBytes = files.fold(0, (sum, f) => sum + (f.size ?? 0));
 
     final operation = OperationProgress(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       type: OperationType.download,
-      sourcePath:
-          files.length == 1 ? files.first.name : '${files.length} files',
+      sourcePath: files.length == 1
+          ? files.first.name
+          : '${files.length} files',
       targetPath: target,
       fileName: files.length == 1 ? files.first.name : '${files.length} files',
       totalBytes: totalBytes,
@@ -306,145 +811,152 @@ class TransferNotifier extends ChangeNotifier {
       final fileProgress = fileProgresses[i];
       final taskId = '${operation.id}_download_$i';
 
-      _queue.enqueue(TransferTask(
-        id: taskId,
-        operation: operation,
-        execute: () async {
-          if (operation.isCancelled) return;
-          if (operation.isPaused) await operation.pauseFuture;
-          if (operation.isCancelled) return;
+      _queue.enqueue(
+        TransferTask(
+          id: taskId,
+          operation: operation,
+          execute: () async {
+            if (operation.isCancelled) return;
+            if (operation.isPaused) await operation.pauseFuture;
+            if (operation.isCancelled) return;
 
-          final fileRemotePath =
-              file.path ?? p.posix.join(remotePath, file.name);
-          final audit = _ref.read(auditServiceProvider);
+            final fileRemotePath =
+                file.path ?? p.posix.join(remotePath, file.name);
+            final audit = _ref.read(auditServiceProvider);
 
-          try {
-            if (file.isFolder) {
-              if (!kIsWeb) {
-                await _downloadFolder(
-                    fileRemotePath, target, operation, client);
-              }
-            } else if (!kIsWeb) {
-              // Streaming download on desktop/mobile — pipe chunks to disk
-              // without buffering the entire file in memory.
-              final localFilePath = _localTarget(target, file.name);
-              final sink = File(localFilePath).openWrite();
-              int received = 0;
-
-              try {
-                await for (final chunk in client.downloadStream(
-                  fileRemotePath,
-                  onProgress: (current, total) {
-                    // Some providers report progress via this callback;
-                    // we also track via byte counting below.
-                  },
-                )) {
-                  await _checkpoint(operation);
-                  sink.add(chunk);
-                  await sink.flush();
-                  received += chunk.length;
-                  operation.currentBytes = completedBytes + received;
-                  notifyListeners();
+            try {
+              if (file.isFolder) {
+                if (!kIsWeb) {
+                  await _downloadFolder(
+                    fileRemotePath,
+                    target,
+                    operation,
+                    client,
+                  );
                 }
-              } finally {
-                await sink.close();
-              }
-
-              if (file.updatedAt != null) {
-                try {
-                  final f = File(localFilePath);
-                  if (await f.exists()) {
-                    await f.setLastModified(file.updatedAt!);
-                  }
-                } catch (e) {
-                  _log.warn('operation failed', e);
-                }
-              }
-            } else {
-              // Web download path.
-              // Prefer streaming via showSaveFilePicker + WritableStream so the
-              // browser never buffers the entire file as a Blob in memory.
-              final webStreaming = WebStreamingService();
-              if (kIsWeb && webStreaming.isSupported) {
+              } else if (!kIsWeb) {
+                // Streaming download on desktop/mobile — pipe chunks to disk
+                // without buffering the entire file in memory.
+                final localFilePath = _localTarget(target, file.name);
+                final sink = File(localFilePath).openWrite();
                 int received = 0;
-                final rawStream = client.downloadStream(
-                  fileRemotePath,
-                  onProgress: (current, total) {},
-                );
 
-                // Wrap the raw stream so we can track progress before piping
-                // to the writable stream.
-                final trackedStream = rawStream.asyncMap((chunk) async {
-                  await _checkpoint(operation);
-                  received += chunk.length;
-                  operation.currentBytes = completedBytes + received;
-                  notifyListeners();
-                  return chunk;
-                });
+                try {
+                  await for (final chunk in client.downloadStream(
+                    fileRemotePath,
+                    onProgress: (current, total) {
+                      // Some providers report progress via this callback;
+                      // we also track via byte counting below.
+                    },
+                  )) {
+                    await _checkpoint(operation);
+                    sink.add(chunk);
+                    await sink.flush();
+                    received += chunk.length;
+                    operation.currentBytes = completedBytes + received;
+                    notifyListeners();
+                  }
+                } finally {
+                  await sink.close();
+                }
 
-                final saved = await webStreaming.downloadWithWritableStream(
-                  trackedStream,
-                  file.name,
-                  totalSize: file.size,
-                );
-
-                if (!saved) {
-                  // User cancelled the picker — treat as a no-op (not an error).
-                  _log.info('DOWNLOAD: web streaming cancelled by user',
-                      {'file': file.name});
+                if (file.updatedAt != null) {
+                  try {
+                    final f = File(localFilePath);
+                    if (await f.exists()) {
+                      await f.setLastModified(file.updatedAt!);
+                    }
+                  } catch (e) {
+                    _log.warn('operation failed', e);
+                  }
                 }
               } else {
-                // Fallback for web browsers without showSaveFilePicker: load
-                // into memory and hand off to the local file service (which on
-                // web triggers a download-link click).
-                final bytes = await client.downloadFileBytes(
-                  fileRemotePath,
-                  onProgress: (current, total) {
-                    if (total > 0) {
-                      operation.currentBytes = completedBytes + current;
-                      notifyListeners();
-                    }
-                  },
-                );
+                // Web download path.
+                // Prefer streaming via showSaveFilePicker + WritableStream so the
+                // browser never buffers the entire file as a Blob in memory.
+                final webStreaming = WebStreamingService();
+                if (kIsWeb && webStreaming.isSupported) {
+                  int received = 0;
+                  final rawStream = client.downloadStream(
+                    fileRemotePath,
+                    onProgress: (current, total) {},
+                  );
 
-                await _checkpoint(operation);
-                final localFilePath = _localTarget(target, file.name);
-                await localFileService.saveFile(localFilePath, bytes);
+                  // Wrap the raw stream so we can track progress before piping
+                  // to the writable stream.
+                  final trackedStream = rawStream.asyncMap((chunk) async {
+                    await _checkpoint(operation);
+                    received += chunk.length;
+                    operation.currentBytes = completedBytes + received;
+                    notifyListeners();
+                    return chunk;
+                  });
+
+                  final saved = await webStreaming.downloadWithWritableStream(
+                    trackedStream,
+                    file.name,
+                    totalSize: file.size,
+                  );
+
+                  if (!saved) {
+                    // User cancelled the picker — treat as a no-op (not an error).
+                    _log.info('DOWNLOAD: web streaming cancelled by user', {
+                      'file': file.name,
+                    });
+                  }
+                } else {
+                  // Fallback for web browsers without showSaveFilePicker: load
+                  // into memory and hand off to the local file service (which on
+                  // web triggers a download-link click).
+                  final bytes = await client.downloadFileBytes(
+                    fileRemotePath,
+                    onProgress: (current, total) {
+                      if (total > 0) {
+                        operation.currentBytes = completedBytes + current;
+                        notifyListeners();
+                      }
+                    },
+                  );
+
+                  await _checkpoint(operation);
+                  final localFilePath = _localTarget(target, file.name);
+                  await localFileService.saveFile(localFilePath, bytes);
+                }
               }
+              await audit.logSuccess(
+                operation: AuditOperation.download,
+                sourcePath: fileRemotePath,
+                targetPath: target,
+                provider: client.providerName,
+                sizeBytes: file.size,
+              );
+            } catch (e) {
+              _log.warn('operation failed', e);
+              fileProgress.error = e.toString();
+              await audit.logError(
+                operation: AuditOperation.download,
+                sourcePath: fileRemotePath,
+                targetPath: target,
+                provider: client.providerName,
+                error: e.toString(),
+              );
+              rethrow;
             }
-            await audit.logSuccess(
-              operation: AuditOperation.download,
-              sourcePath: fileRemotePath,
-              targetPath: target,
-              provider: client.providerName,
-              sizeBytes: file.size,
-            );
-          } catch (e) {
-            _log.warn('operation failed', e);
-            fileProgress.error = e.toString();
-            await audit.logError(
-              operation: AuditOperation.download,
-              sourcePath: fileRemotePath,
-              targetPath: target,
-              provider: client.providerName,
-              error: e.toString(),
-            );
-            rethrow;
-          }
 
-          fileProgress.isComplete = true;
-          completedBytes += fileProgress.size;
-          operation.currentBytes = completedBytes;
-        },
-        onDone: (error) {
-          fileProgress.error = error?.toString();
-          tasksFinished++;
-          if (tasksFinished == files.length) {
-            _finalizeBatch(operation, fileProgresses);
-            if (!_disposed) unawaited(_refreshAfterTransfer());
-          }
-        },
-      ));
+            fileProgress.isComplete = true;
+            completedBytes += fileProgress.size;
+            operation.currentBytes = completedBytes;
+          },
+          onDone: (error) {
+            fileProgress.error = error?.toString();
+            tasksFinished++;
+            if (tasksFinished == files.length) {
+              _finalizeBatch(operation, fileProgresses);
+              if (!_disposed) unawaited(_refreshAfterTransfer());
+            }
+          },
+        ),
+      );
     }
   }
 
@@ -460,13 +972,18 @@ class TransferNotifier extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    for (final control in _fileOperationControls.values) {
+      control.cancel();
+    }
     _queue.dispose();
     super.dispose();
   }
 
   // --- Helpers ---
   void _finalizeBatch(
-      OperationProgress operation, List<FileProgress> fileProgresses) {
+    OperationProgress operation,
+    List<FileProgress> fileProgresses,
+  ) {
     if (operation.isCancelled) {
       operation.fail('Cancelled by user');
     } else {
@@ -483,7 +1000,9 @@ class TransferNotifier extends ChangeNotifier {
   }
 
   Future<int> _calculateFolderSize(
-      String folderPath, dynamic localFileService) async {
+    String folderPath,
+    dynamic localFileService,
+  ) async {
     try {
       final entities = await localFileService.listDirectory(folderPath);
       if (entities == null) return 0;
@@ -496,8 +1015,10 @@ class TransferNotifier extends ChangeNotifier {
             _log.warn('operation failed', e);
           }
         } else if (entity is Directory) {
-          totalSize +=
-              await _calculateFolderSize(entity.path, localFileService);
+          totalSize += await _calculateFolderSize(
+            entity.path,
+            localFileService,
+          );
         }
       }
       return totalSize;
@@ -539,7 +1060,12 @@ class TransferNotifier extends ChangeNotifier {
         }
       } else if (entity is Directory) {
         await _uploadFolder(
-            entity.path, newRemotePath, operation, client, localFileService);
+          entity.path,
+          newRemotePath,
+          operation,
+          client,
+          localFileService,
+        );
       }
     }
   }
@@ -578,8 +1104,9 @@ class TransferNotifier extends ChangeNotifier {
       final fileName = file['name'];
       final sink = File(_localTarget(newLocalPath, fileName)).openWrite();
       try {
-        await for (final chunk
-            in client.downloadStream(p.posix.join(remotePath, fileName))) {
+        await for (final chunk in client.downloadStream(
+          p.posix.join(remotePath, fileName),
+        )) {
           await _checkpoint(operation);
           sink.add(chunk);
           await sink.flush();
@@ -594,8 +1121,12 @@ class TransferNotifier extends ChangeNotifier {
 
     for (final folder in contents['folders']) {
       await _checkpoint(operation);
-      await _downloadFolder(p.posix.join(remotePath, folder['name']),
-          newLocalPath, operation, client);
+      await _downloadFolder(
+        p.posix.join(remotePath, folder['name']),
+        newLocalPath,
+        operation,
+        client,
+      );
     }
   }
 }

@@ -17,14 +17,13 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:quds_office_editor/quds_office_editor.dart';
 
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
-import '../services/file_bytes_loader.dart';
+import '../services/captured_file_target.dart';
 import '../services/log_service.dart';
 import '../l10n/office_editor_strings.dart';
 import '../services/office_editor_menu.dart';
@@ -108,6 +107,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
   OfficeController? _controller;
   OfficeEditorKind _kind = OfficeEditorKind.unsupported;
   Uint8List? _loadedBytes;
+  CapturedFileTarget? _target;
   bool _loading = true;
   bool _saving = false;
   bool _dirty = false;
@@ -184,13 +184,15 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
     });
     try {
       await OfficeHostFonts.ensureRegistered();
-      final bytes = widget.bytesOverride ??
-          await loadFileBytes(
-            ref,
-            widget.file,
-            widget.side,
-            capBytes: _kOfficeEditorCap,
-          );
+      final Uint8List bytes;
+      if (widget.bytesOverride case final supplied?) {
+        bytes = supplied;
+      } else {
+        final target = _target ??= ref
+            .read(panelProvider(widget.side))
+            .captureFileTarget(widget.file, maxBytes: _kOfficeEditorCap);
+        bytes = await target.load();
+      }
       if (!mounted) return;
 
       final kind = _kindFor(widget.file.name);
@@ -205,17 +207,17 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
 
       final controller = switch (kind) {
         OfficeEditorKind.word => WordEditorController.fromBytes(
-            bytes,
-            config: _config,
-          ),
+          bytes,
+          config: _config,
+        ),
         OfficeEditorKind.sheet => SheetEditorController.fromBytes(
-            bytes,
-            config: _config,
-          ),
+          bytes,
+          config: _config,
+        ),
         OfficeEditorKind.slides => SlideEditorController.fromBytes(
-            bytes,
-            config: _config,
-          ),
+          bytes,
+          config: _config,
+        ),
         OfficeEditorKind.unsupported => null,
       };
       if (!mounted) {
@@ -256,18 +258,19 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
     try {
       await _saveSnapshot();
       final bytes = await controller.saveBytesAsync();
-      final path = widget.file.path;
-      if (widget.side == PanelSide.local && path != null) {
-        await ref.read(localFileServiceProvider).saveFile(path, bytes);
-      } else {
-        final remotePath = path ?? '/${widget.file.name}';
-        final client = ref.read(authProvider).client;
-        await client.uploadFile(
-          bytes,
-          p.posix.basename(remotePath),
-          p.posix.dirname(remotePath),
+      final target = _target;
+      if (target == null) {
+        throw StateError(
+          'This preview has no verified save target. Reopen the original file.',
         );
       }
+      final outcome = await target.save(bytes);
+      if (outcome != FileWriteOutcome.savedOriginal) {
+        throw const FileTargetConflict(
+          'A copy was downloaded. The original is unchanged.',
+        );
+      }
+      _loadedBytes = bytes;
       controller.markClean();
       if (!mounted) return;
       setState(() {
@@ -302,7 +305,9 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(context.tr('Unsaved changes')),
-        content: Text('${context.tr('Save changes to')} ${widget.file.name} ${context.tr('before closing?')}'),
+        content: Text(
+          '${context.tr('Save changes to')} ${widget.file.name} ${context.tr('before closing?')}',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, 'cancel'),
@@ -334,10 +339,11 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       final support = await getApplicationSupportDirectory();
       final dir = Directory('${support.path}/editor_snapshots');
       if (!await dir.exists()) await dir.create(recursive: true);
-      final safeName =
-          widget.file.name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
-      final name =
-          '${DateTime.now().millisecondsSinceEpoch}_$safeName';
+      final safeName = widget.file.name.replaceAll(
+        RegExp(r'[^A-Za-z0-9._-]'),
+        '_',
+      );
+      final name = '${DateTime.now().millisecondsSinceEpoch}_$safeName';
       await File('${dir.path}/$name').writeAsBytes(bytes, flush: true);
     } catch (_) {
       // Snapshots are best-effort.
@@ -403,17 +409,15 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
             _wordShortcut((WmlRunProps p) => p.italic = !p.italic),
         const SingleActivator(LogicalKeyboardKey.keyU, control: true): () =>
             _wordShortcut(
-              (WmlRunProps p) => p.underline =
-                  p.underline == WmlUnderline.none
-                      ? WmlUnderline.single
-                      : WmlUnderline.none,
+              (WmlRunProps p) => p.underline = p.underline == WmlUnderline.none
+                  ? WmlUnderline.single
+                  : WmlUnderline.none,
             ),
         const SingleActivator(LogicalKeyboardKey.keyU, meta: true): () =>
             _wordShortcut(
-              (WmlRunProps p) => p.underline =
-                  p.underline == WmlUnderline.none
-                      ? WmlUnderline.single
-                      : WmlUnderline.none,
+              (WmlRunProps p) => p.underline = p.underline == WmlUnderline.none
+                  ? WmlUnderline.single
+                  : WmlUnderline.none,
             ),
         const SingleActivator(LogicalKeyboardKey.keyZ, control: true): () =>
             _controller?.undo(),
@@ -425,11 +429,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
             _controller?.redo(),
       },
       child: Scaffold(
-        body: SafeArea(
-          top: true,
-          bottom: false,
-          child: _buildBody(theme),
-        ),
+        body: SafeArea(top: true, bottom: false, child: _buildBody(theme)),
       ),
     );
   }
@@ -444,36 +444,41 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
     }
     if (_kind == OfficeEditorKind.unsupported) {
       return _messagePane(
-        context.tr('This Office format cannot be edited safely. Use F3 to view it, or save it as .docx / .xlsx / .pptx and edit that.'),
+        context.tr(
+          'This Office format cannot be edited safely. Use F3 to view it, or save it as .docx / .xlsx / .pptx and edit that.',
+        ),
         theme,
       );
     }
     final controller = _controller;
     if (controller == null) {
-      return _messagePane(context.tr('The document could not be loaded.'), theme);
+      return _messagePane(
+        context.tr('The document could not be loaded.'),
+        theme,
+      );
     }
     final Widget editor = switch (_kind) {
       OfficeEditorKind.word => QudsWordEditor(
-          controller: controller as WordEditorController,
-          config: _config,
-          focusNode: _focusNode,
-          findBarBuilder: (BuildContext context, WordEditorController c) =>
-              OfficeFindBar(controller: c),
-        ),
+        controller: controller as WordEditorController,
+        config: _config,
+        focusNode: _focusNode,
+        findBarBuilder: (BuildContext context, WordEditorController c) =>
+            OfficeFindBar(controller: c),
+      ),
       OfficeEditorKind.sheet => QudsSheetEditor(
-          controller: controller as SheetEditorController,
-          config: _config,
-          focusNode: _focusNode,
-          findBarBuilder: (BuildContext context, SheetEditorController c) =>
-              OfficeFindBar(controller: c),
-        ),
+        controller: controller as SheetEditorController,
+        config: _config,
+        focusNode: _focusNode,
+        findBarBuilder: (BuildContext context, SheetEditorController c) =>
+            OfficeFindBar(controller: c),
+      ),
       OfficeEditorKind.slides => QudsSlideEditor(
-          controller: controller as SlideEditorController,
-          config: _config,
-          focusNode: _focusNode,
-          findBarBuilder: (BuildContext context, SlideEditorController c) =>
-              OfficeFindBar(controller: c),
-        ),
+        controller: controller as SlideEditorController,
+        config: _config,
+        focusNode: _focusNode,
+        findBarBuilder: (BuildContext context, SlideEditorController c) =>
+            OfficeFindBar(controller: c),
+      ),
       OfficeEditorKind.unsupported => const SizedBox.shrink(),
     };
     return Column(
@@ -530,5 +535,3 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
     );
   }
 }
-
-

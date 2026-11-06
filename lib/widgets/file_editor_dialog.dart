@@ -27,6 +27,7 @@ import '../l10n/image_editor_strings.dart';
 import '../l10n/media_editor_strings.dart';
 import '../services/media_capabilities.dart';
 import '../services/code_editor_menu.dart';
+import '../services/captured_file_target.dart';
 import '../services/editor_document.dart';
 import '../services/editor_highlighting.dart';
 import '../services/image_edit_session.dart' show isImageEditorFileName;
@@ -131,7 +132,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
   EditorDocument? _document;
   Uint8List? _originalBytes;
   Timer? _autoSaveTimer;
-  DateTime? _loadedAt;
+  CapturedFileTarget? _target;
   String? _language;
   String? _error;
   CodeLines? _lastCodeLines;
@@ -344,34 +345,6 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     });
   }
 
-  /// Check if the remote file was modified since we loaded it.
-  Future<bool> _checkForConflict() async {
-    if (_loadedAt == null || widget.side == PanelSide.local) return false;
-    try {
-      final client = ref.read(authProvider).client;
-      final remotePath = widget.file.path ?? '/${widget.file.name}';
-      final info = await client.resolvePath(remotePath);
-      if (info == null) return false;
-
-      final rawDate = info['modificationTime'] ?? info['lastModified'];
-      if (rawDate == null) return false;
-
-      DateTime? remoteModified;
-      if (rawDate is int) {
-        remoteModified = DateTime.fromMillisecondsSinceEpoch(rawDate);
-      } else {
-        remoteModified = DateTime.tryParse(rawDate.toString());
-      }
-
-      if (remoteModified != null && remoteModified.isAfter(_loadedAt!)) {
-        return true; // File was modified on server since we loaded it
-      }
-    } catch (e) {
-      // Can't check — proceed without conflict detection
-    }
-    return false;
-  }
-
   Future<void> _loadFile() async {
     _log.debug(
       'loadFile: ${widget.file.name} side=${widget.side.name} web=$kIsWeb',
@@ -390,30 +363,10 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
       _document = null;
     });
     try {
-      final client = ref.read(authProvider).client;
-      Uint8List bytes;
-
-      if (widget.side == PanelSide.local && widget.file.path != null) {
-        final service = ref.read(localFileServiceProvider);
-        final path = widget.file.path!;
-        try {
-          bytes = await service.readFile(path, fileItem: widget.file);
-        } on FileSystemException catch (e) {
-          if (kIsWeb || !_isPermissionDenied(e)) rethrow;
-          final granted = await service.ensureAccess(path);
-          if (!granted) {
-            throw FileSystemException(
-              'Access to "$path" was not granted. Grant access to its folder '
-              'and try again.',
-              path,
-            );
-          }
-          bytes = await service.readFile(path, fileItem: widget.file);
-        }
-      } else {
-        final remotePath = widget.file.path ?? '/${widget.file.name}';
-        bytes = await client.downloadFileBytes(remotePath);
-      }
+      final target = _target ??= ref
+          .read(panelProvider(widget.side))
+          .captureFileTarget(widget.file);
+      final bytes = await target.load();
 
       if (!mounted) return;
 
@@ -422,7 +375,6 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
       setState(() {
         _loading = false;
         _error = null;
-        _loadedAt = DateTime.now();
         _conflictDetected = false;
       });
       _publishMenu();
@@ -502,11 +454,6 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     if (!manual && _saveState.isSaving) return;
     if (!force && !_saveState.isDirty && !_saveState.isSaving) return;
 
-    if (!force && await _checkForConflict()) {
-      if (!mounted) return;
-      setState(() => _conflictDetected = true);
-      return;
-    }
     if (!mounted) return;
 
     final result = await _saveState.save(
@@ -525,7 +472,6 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
         final bytes = snapshot.value.encode();
         await _uploadBytes(bytes);
         _originalBytes = bytes;
-        _loadedAt = DateTime.now();
       },
     );
 
@@ -560,32 +506,21 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
   }
 
   Future<void> _uploadBytes(Uint8List bytes) async {
-    if (widget.side == PanelSide.local && widget.file.path != null) {
-      // Always go through the service: it maintains the macOS security
-      // scope for sandboxed paths (web uses the FSA bridge).
-      final service = ref.read(localFileServiceProvider);
-      final path = widget.file.path!;
-      try {
-        await service.saveFile(path, bytes);
-      } on FileSystemException catch (e) {
-        if (!_isPermissionDenied(e)) rethrow;
-        // The grant may have failed to resolve after a rebuild, or a symlink
-        // may now point outside the granted folder. Ask again and retry once.
-        final granted = await service.ensureAccess(path);
-        if (!granted) rethrow;
-        await service.saveFile(path, bytes);
-      }
-      return;
+    final target = _target;
+    if (target == null) throw StateError('Reopen this file before saving.');
+    final result = await target.save(bytes);
+    if (result == FileWriteOutcome.downloadedCopy) {
+      throw const FileTargetConflict(
+        'A copy was downloaded. The original file is unchanged and your edits remain unsaved.',
+      );
     }
-    final client = ref.read(authProvider).client;
-    final remotePath = widget.file.path ?? '/${widget.file.name}';
-    final fileName = p.basename(remotePath);
-    final targetDir = p.posix.dirname(remotePath);
-    await client.uploadFile(bytes, fileName, targetDir);
   }
 
   void _showSaveError(Object? error) {
     if (!mounted) return;
+    if (error is FileTargetConflict) {
+      setState(() => _conflictDetected = true);
+    }
     if (error is EditorEncodingException) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -881,8 +816,8 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
             if (_conflictDetected)
               MaterialBanner(
                 content: const Text(
-                  'This file was modified on the server since you opened it. '
-                  'Saving will overwrite the remote version.',
+                  'The original file could not be safely saved. Your edits are '
+                  'still here. Retry after reconnecting, or reload the original.',
                 ),
                 leading: const Icon(Icons.warning, color: Colors.orange),
                 actions: [
@@ -891,7 +826,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
                       setState(() => _conflictDetected = false);
                       unawaited(_saveFile(force: true));
                     },
-                    child: const Text('Save Anyway'),
+                    child: const Text('Retry save'),
                   ),
                   TextButton(
                     onPressed: () {
@@ -1044,12 +979,6 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
       onEncodingSelected: _setEncoding,
     );
   }
-}
-
-bool _isPermissionDenied(FileSystemException error) {
-  if (error is PathAccessException) return true;
-  final code = error.osError?.errorCode;
-  return code == 1 || code == 13;
 }
 
 enum _EditorMenuAction { find, replace, goToLine, wordWrap, highlight, reload }

@@ -173,7 +173,9 @@ jobs:
       - run: flutter pub get
 
       - name: Headless crypto tests (native FFI assertions + cross-path interop)
-        run: flutter test test/native_ffi_crypto_test.dart test/crypto_paths_test.dart
+        run: >-
+          flutter test test/native_ffi_crypto_test.dart test/crypto_paths_test.dart
+          test/gcm_transfer_stream_test.dart test/encrypted_storage_wrapper_test.dart
 
   # ---------- Multi-platform builds (matrix) ----------
   # Linux, Android, and Web build on ubuntu-latest.

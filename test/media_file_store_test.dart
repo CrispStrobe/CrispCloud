@@ -964,6 +964,12 @@ class _Cloud extends CloudStorageClient {
   void Function()? afterUpload;
 
   @override
+  String get rootPath => '/';
+
+  @override
+  String get providerName => 'fixture-cloud';
+
+  @override
   bool get isAuthenticated => true;
   @override
   String? get userId => accountUserId;

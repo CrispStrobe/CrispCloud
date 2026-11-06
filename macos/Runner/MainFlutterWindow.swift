@@ -80,6 +80,68 @@ class MainFlutterWindow: NSWindow {
 
     RegisterGeneratedPlugins(registry: flutterViewController)
 
+    let files = FlutterMethodChannel(
+      name: "crispcloud/files",
+      binaryMessenger: flutterViewController.engine.binaryMessenger
+    )
+    files.setMethodCallHandler { call, result in
+      let args = call.arguments as? [String: Any] ?? [:]
+      let manager = FileManager.default
+      do {
+        switch call.method {
+        case "trash":
+          guard let path = args["path"] as? String, path.hasPrefix("/") else {
+            throw NSError(domain: "CrispCloud", code: 1,
+                          userInfo: [NSLocalizedDescriptionKey: "An absolute file path is required."])
+          }
+          var recycled: NSURL?
+          try manager.trashItem(at: URL(fileURLWithPath: path), resultingItemURL: &recycled)
+          guard let recycled = recycled else {
+            throw NSError(domain: "CrispCloud", code: 2,
+                          userInfo: [NSLocalizedDescriptionKey: "The system did not return the recycled item's location."])
+          }
+          result(["originalPath": path, "trashId": (recycled as URL).absoluteString])
+        case "restoreTrash":
+          guard let path = args["originalPath"] as? String,
+                let value = args["trashId"] as? String,
+                let recycled = URL(string: value), recycled.isFileURL,
+                path.hasPrefix("/") else {
+            throw NSError(domain: "CrispCloud", code: 3,
+                          userInfo: [NSLocalizedDescriptionKey: "Invalid trash receipt."])
+          }
+          // moveItem refuses an occupied destination; it never replaces it.
+          try manager.moveItem(at: recycled, to: URL(fileURLWithPath: path))
+          result(nil)
+        case "writeClipboard":
+          guard let paths = args["paths"] as? [String], !paths.isEmpty,
+                paths.allSatisfy({ $0.hasPrefix("/") }) else {
+            throw NSError(domain: "CrispCloud", code: 4,
+                          userInfo: [NSLocalizedDescriptionKey: "Select local files to copy."])
+          }
+          let board = NSPasteboard.general
+          board.clearContents()
+          guard board.writeObjects(paths.map { URL(fileURLWithPath: $0) as NSURL }) else {
+            throw NSError(domain: "CrispCloud", code: 5,
+                          userInfo: [NSLocalizedDescriptionKey: "Could not write the file clipboard."])
+          }
+          board.setString((args["cut"] as? Bool == true) ? "cut" : "copy",
+                          forType: NSPasteboard.PasteboardType("com.crispcloud.file-operation"))
+          result(nil)
+        case "readClipboard":
+          let board = NSPasteboard.general
+          let urls = board.readObjects(forClasses: [NSURL.self],
+                                       options: [.urlReadingFileURLsOnly: true]) as? [URL] ?? []
+          let cut = board.string(forType: NSPasteboard.PasteboardType("com.crispcloud.file-operation")) == "cut"
+          result(["paths": urls.map { $0.path }, "cut": cut])
+        default:
+          result(FlutterMethodNotImplemented)
+        }
+      } catch {
+        result(FlutterError(code: "file_operation_failed",
+                            message: error.localizedDescription, details: nil))
+      }
+    }
+
     super.awakeFromNib()
   }
 }

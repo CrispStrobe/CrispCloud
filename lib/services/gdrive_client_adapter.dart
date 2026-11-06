@@ -16,12 +16,15 @@ import 'package:path/path.dart' as p;
 import 'package:url_launcher/url_launcher.dart';
 
 import 'cloud_storage_interface.dart';
+import 'bounded_http_transfer.dart';
+import 'bounded_transfer_stream.dart';
 import 'gdrive_config_service.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
+import 'storage_trash.dart';
 
 class GDriveClientAdapter extends CloudStorageClient
-    implements FreshCloudDirectoryReader {
+    implements StorageTrashOperations, FreshCloudDirectoryReader {
   static const _log = Log('GDriveClient');
 
   final GDriveConfigService _config;
@@ -45,12 +48,16 @@ class GDriveClientAdapter extends CloudStorageClient
   static const _authUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
   static const _tokenUrl = 'https://oauth2.googleapis.com/token';
   static const _scopes = 'https://www.googleapis.com/auth/drive';
-  static const _redirectPort = 43823; // Arbitrary high port for localhost redirect
+  static const _redirectPort =
+      43823; // Arbitrary high port for localhost redirect
 
   GDriveClientAdapter({required dynamic config})
-      : _config = (config is GDriveConfigService)
-            ? config
-            : GDriveConfigService(configPath: '', secureStorage: InMemorySecureStorage());
+    : _config = (config is GDriveConfigService)
+          ? config
+          : GDriveConfigService(
+              configPath: '',
+              secureStorage: InMemorySecureStorage(),
+            );
 
   @override
   String get providerName => 'Google Drive';
@@ -87,11 +94,17 @@ class GDriveClientAdapter extends CloudStorageClient
   bool get supportsServerSideCopy => true;
   @override
   bool get supportsFullTextSearch => true;
+  @override
+  bool get supportsStreaming => true;
 
   // --- Auth ---
 
   @override
-  Future<void> login(String identity, String password, {String? twoFactorCode}) async {
+  Future<void> login(
+    String identity,
+    String password, {
+    String? twoFactorCode,
+  }) async {
     // identity format: "clientId|clientSecret" or just "clientId" for public clients
     // password: not used (OAuth2 — handled via browser redirect)
 
@@ -121,7 +134,9 @@ class GDriveClientAdapter extends CloudStorageClient
 
     // Browser-based OAuth2 flow
     if (kIsWeb) {
-      throw Exception('Google Drive OAuth2 on web requires a different redirect flow. Use desktop or mobile.');
+      throw Exception(
+        'Google Drive OAuth2 on web requires a different redirect flow. Use desktop or mobile.',
+      );
     }
 
     await _browserOAuthFlow();
@@ -147,7 +162,9 @@ class GDriveClientAdapter extends CloudStorageClient
     // Optionally revoke the token
     if (_accessToken != null) {
       try {
-        await http.post(Uri.parse('https://oauth2.googleapis.com/revoke?token=$_accessToken'));
+        await http.post(
+          Uri.parse('https://oauth2.googleapis.com/revoke?token=$_accessToken'),
+        );
       } catch (_) {}
     }
     _accessToken = null;
@@ -165,7 +182,10 @@ class GDriveClientAdapter extends CloudStorageClient
     if (fileId == null) return null;
     try {
       final uri = Uri.parse('$_apiBase/files/$fileId?fields=thumbnailLink');
-      final resp = await http.get(uri, headers: {'Authorization': 'Bearer $_accessToken'});
+      final resp = await http.get(
+        uri,
+        headers: {'Authorization': 'Bearer $_accessToken'},
+      );
       if (resp.statusCode != 200) return null;
       final data = json.decode(resp.body);
       final thumbUrl = data['thumbnailLink'] as String?;
@@ -179,7 +199,9 @@ class GDriveClientAdapter extends CloudStorageClient
   /// Restore credentials from secure storage for auto-login.
   Future<bool> restoreCredentials() async {
     final creds = await _config.readCredentials();
-    if (creds == null || creds['refresh_token'] == null || creds['refresh_token']!.isEmpty) {
+    if (creds == null ||
+        creds['refresh_token'] == null ||
+        creds['refresh_token']!.isEmpty) {
       return false;
     }
     _clientId = creds['client_id'];
@@ -226,15 +248,20 @@ class GDriveClientAdapter extends CloudStorageClient
       }
 
       // Query for folder with this name under parent
-      final query = "name='${_escapeQuery(segment)}' and '$parentId' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false";
-      final resp = await _apiGet('/files', queryParams: {
-        'q': query,
-        'fields': 'files(id,name)',
-        'pageSize': '1',
-      });
+      final query =
+          "name='${_escapeQuery(segment)}' and '$parentId' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false";
+      final resp = await _apiGet(
+        '/files',
+        queryParams: {'q': query, 'fields': 'files(id,name)', 'pageSize': '2'},
+      );
 
       final files = (resp['files'] as List?) ?? [];
       if (files.isEmpty) return null;
+      if (files.length > 1) {
+        throw StateError(
+          'Google Drive contains multiple folders at this path.',
+        );
+      }
 
       final folderId = files[0]['id'] as String;
       _pathToId[accumulated] = folderId;
@@ -274,7 +301,8 @@ class GDriveClientAdapter extends CloudStorageClient
     do {
       final params = <String, String>{
         'q': query,
-        'fields': 'nextPageToken,files(id,name,mimeType,size,modifiedTime,parents)',
+        'fields':
+            'nextPageToken,files(id,name,mimeType,size,modifiedTime,parents)',
         'pageSize': '1000',
         'orderBy': 'folder,name',
       };
@@ -284,7 +312,8 @@ class GDriveClientAdapter extends CloudStorageClient
 
       for (final item in (resp['files'] as List?) ?? []) {
         final map = item as Map<String, dynamic>;
-        final isFolder = map['mimeType'] == 'application/vnd.google-apps.folder';
+        final isFolder =
+            map['mimeType'] == 'application/vnd.google-apps.folder';
         final name = map['name'] as String? ?? 'Unknown';
         final id = map['id'] as String;
 
@@ -297,7 +326,8 @@ class GDriveClientAdapter extends CloudStorageClient
           'name': name,
           'uuid': id,
           if (map['modifiedTime'] != null) 'lastModified': map['modifiedTime'],
-          if (map['size'] != null) 'size': int.tryParse(map['size'].toString()) ?? 0,
+          if (map['size'] != null)
+            'size': int.tryParse(map['size'].toString()) ?? 0,
         };
 
         if (isFolder) {
@@ -363,7 +393,8 @@ class GDriveClientAdapter extends CloudStorageClient
     do {
       final params = <String, String>{
         'q': query,
-        'fields': 'nextPageToken,files(id,name,mimeType,size,modifiedTime,parents)',
+        'fields':
+            'nextPageToken,files(id,name,mimeType,size,modifiedTime,parents)',
         'pageSize': '1000',
         'orderBy': 'folder,name',
         'corpora': 'drive',
@@ -377,7 +408,8 @@ class GDriveClientAdapter extends CloudStorageClient
 
       for (final item in (resp['files'] as List?) ?? []) {
         final map = item as Map<String, dynamic>;
-        final isFolder = map['mimeType'] == 'application/vnd.google-apps.folder';
+        final isFolder =
+            map['mimeType'] == 'application/vnd.google-apps.folder';
         final name = map['name'] as String? ?? 'Unknown';
         final id = map['id'] as String;
 
@@ -385,7 +417,8 @@ class GDriveClientAdapter extends CloudStorageClient
           'name': name,
           'uuid': id,
           if (map['modifiedTime'] != null) 'lastModified': map['modifiedTime'],
-          if (map['size'] != null) 'size': int.tryParse(map['size'].toString()) ?? 0,
+          if (map['size'] != null)
+            'size': int.tryParse(map['size'].toString()) ?? 0,
         };
 
         if (isFolder) {
@@ -402,7 +435,10 @@ class GDriveClientAdapter extends CloudStorageClient
   }
 
   /// Resolve a path inside a shared drive to a folder ID.
-  Future<String?> _resolveSharedDrivePathToId(String driveId, String path) async {
+  Future<String?> _resolveSharedDrivePathToId(
+    String driveId,
+    String path,
+  ) async {
     if (path == '/' || path.isEmpty) return driveId;
 
     final segments = path.split('/').where((s) => s.isNotEmpty).toList();
@@ -412,15 +448,18 @@ class GDriveClientAdapter extends CloudStorageClient
       final query =
           "name='${_escapeQuery(segment)}' and '$parentId' in parents "
           "and mimeType='application/vnd.google-apps.folder' and trashed=false";
-      final resp = await _apiGet('/files', queryParams: {
-        'q': query,
-        'fields': 'files(id,name)',
-        'pageSize': '1',
-        'corpora': 'drive',
-        'driveId': driveId,
-        'includeItemsFromAllDrives': 'true',
-        'supportsAllDrives': 'true',
-      });
+      final resp = await _apiGet(
+        '/files',
+        queryParams: {
+          'q': query,
+          'fields': 'files(id,name)',
+          'pageSize': '1',
+          'corpora': 'drive',
+          'driveId': driveId,
+          'includeItemsFromAllDrives': 'true',
+          'supportsAllDrives': 'true',
+        },
+      );
 
       final files = (resp['files'] as List?) ?? [];
       if (files.isEmpty) return null;
@@ -454,9 +493,12 @@ class GDriveClientAdapter extends CloudStorageClient
         results.add({
           'name': map['name'] as String? ?? 'Unknown',
           'uuid': map['id'] as String,
-          'type': map['mimeType'] == 'application/vnd.google-apps.folder' ? 'folder' : 'file',
+          'type': map['mimeType'] == 'application/vnd.google-apps.folder'
+              ? 'folder'
+              : 'file',
           if (map['modifiedTime'] != null) 'lastModified': map['modifiedTime'],
-          if (map['size'] != null) 'size': int.tryParse(map['size'].toString()) ?? 0,
+          if (map['size'] != null)
+            'size': int.tryParse(map['size'].toString()) ?? 0,
         });
       }
 
@@ -483,6 +525,119 @@ class GDriveClientAdapter extends CloudStorageClient
   // --- Upload ---
 
   @override
+  Future<void> uploadStream(
+    Stream<List<int>> dataStream,
+    int length,
+    String fileName,
+    String targetPath, {
+    Function(int, int)? onProgress,
+  }) async {
+    if (length < 0) throw ArgumentError.value(length, 'length');
+    if (length == 0) {
+      await validatedTransferParts(dataStream, 0, 1).drain<void>();
+      return uploadFile(const [], fileName, targetPath, onProgress: onProgress);
+    }
+    await _ensureToken();
+    final parentId = await _resolvePathToId(targetPath);
+    if (parentId == null) {
+      throw StateError('The upload destination no longer exists.');
+    }
+    final existingId = await _findFileInFolder(parentId, fileName);
+    final path = existingId == null ? '/files' : '/files/$existingId';
+    final request =
+        http.Request(
+            existingId == null ? 'POST' : 'PATCH',
+            Uri.parse('$_uploadBase$path').replace(
+              queryParameters: {'uploadType': 'resumable', 'fields': 'id,size'},
+            ),
+          )
+          ..followRedirects = false
+          ..headers.addAll({
+            'Authorization': 'Bearer $_accessToken',
+            'Content-Type': 'application/json; charset=UTF-8',
+            'X-Upload-Content-Type': 'application/octet-stream',
+            'X-Upload-Content-Length': '$length',
+          })
+          ..body = json.encode({
+            if (existingId == null) 'name': fileName,
+            if (existingId == null) 'parents': [parentId],
+          });
+    final client = http.Client();
+    try {
+      final session = await sendTransferRequest(
+        client,
+        request,
+        operation: 'Google Drive upload session',
+      );
+      if (session.statusCode != 200 && session.statusCode != 201) {
+        throw StateError(
+          'Google Drive upload session failed (${session.statusCode}).',
+        );
+      }
+      final location = Uri.tryParse(session.headers['location'] ?? '');
+      if (location == null ||
+          location.scheme != 'https' ||
+          location.userInfo.isNotEmpty ||
+          location.port != 443 ||
+          !(location.host == 'googleapis.com' ||
+              location.host.endsWith('.googleapis.com'))) {
+        throw StateError('Google Drive returned an invalid upload session.');
+      }
+      var offset = 0;
+      await for (final part in validatedTransferParts(
+        dataStream,
+        length,
+        2 * 1024 * 1024,
+      )) {
+        await _ensureToken();
+        final end = offset + part.length;
+        final chunk = http.Request('PUT', location)
+          ..followRedirects = false
+          ..headers.addAll({
+            'Authorization': 'Bearer $_accessToken',
+            'Content-Type': 'application/octet-stream',
+            'Content-Range': 'bytes $offset-${end - 1}/$length',
+          })
+          ..bodyBytes = part;
+        final response = await sendTransferRequest(
+          client,
+          chunk,
+          operation: 'Google Drive upload',
+        );
+        if (end < length) {
+          final range = RegExp(
+            r'^bytes=0-(\d+)$',
+          ).firstMatch(response.headers['range'] ?? '');
+          if (response.statusCode != 308 ||
+              range == null ||
+              int.tryParse(range.group(1)!) != end - 1) {
+            throw StateError(
+              'Google Drive did not acknowledge the uploaded range.',
+            );
+          }
+        } else {
+          if (response.statusCode != 200 && response.statusCode != 201) {
+            throw StateError(
+              'Google Drive did not confirm upload completion (${response.statusCode}).',
+            );
+          }
+          final metadata = json.decode(response.body) as Map<String, dynamic>;
+          if (metadata['id'] is! String ||
+              int.tryParse('${metadata['size']}') != length) {
+            throw StateError(
+              'Google Drive upload completion could not be verified.',
+            );
+          }
+        }
+        offset = end;
+        onProgress?.call(offset, length);
+      }
+    } finally {
+      client.close();
+    }
+  }
+
+  @override
   Future<void> uploadFile(
     List<int> fileData,
     String fileName,
@@ -491,7 +646,10 @@ class GDriveClientAdapter extends CloudStorageClient
   }) async {
     await _ensureToken();
 
-    final parentId = await _resolvePathToId(targetPath) ?? 'root';
+    final parentId = await _resolvePathToId(targetPath);
+    if (parentId == null) {
+      throw StateError('The upload destination no longer exists.');
+    }
 
     // Check if file already exists — update instead of create
     final existingId = await _findFileInFolder(parentId, fileName);
@@ -506,7 +664,9 @@ class GDriveClientAdapter extends CloudStorageClient
 
       final resp = await http.Response.fromStream(await req.send());
       if (resp.statusCode != 200) {
-        throw Exception('GDrive upload update failed (${resp.statusCode}): ${resp.body}');
+        throw Exception(
+          'GDrive upload update failed (${resp.statusCode}): ${resp.body}',
+        );
       }
     } else {
       // Multipart upload: metadata + file content
@@ -537,7 +697,11 @@ class GDriveClientAdapter extends CloudStorageClient
       );
       final endPart = utf8.encode('\r\n--$boundary--');
 
-      final bodyBytes = Uint8List.fromList([...metaPart, ...fileData, ...endPart]);
+      final bodyBytes = Uint8List.fromList([
+        ...metaPart,
+        ...fileData,
+        ...endPart,
+      ]);
 
       final uri = Uri.parse('$_uploadBase/files?uploadType=multipart');
       final req = http.Request('POST', uri);
@@ -547,7 +711,9 @@ class GDriveClientAdapter extends CloudStorageClient
 
       final resp = await http.Response.fromStream(await req.send());
       if (resp.statusCode != 200) {
-        throw Exception('GDrive upload failed (${resp.statusCode}): ${resp.body}');
+        throw Exception(
+          'GDrive upload failed (${resp.statusCode}): ${resp.body}',
+        );
       }
     }
 
@@ -558,11 +724,15 @@ class GDriveClientAdapter extends CloudStorageClient
 
   /// Google Apps MIME types that require export (can't be downloaded directly).
   static const _googleDocsMimeTypes = <String, String>{
-    'application/vnd.google-apps.document': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'application/vnd.google-apps.spreadsheet': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    'application/vnd.google-apps.presentation': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'application/vnd.google-apps.document':
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.google-apps.spreadsheet':
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.google-apps.presentation':
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
     'application/vnd.google-apps.drawing': 'application/pdf',
-    'application/vnd.google-apps.script': 'application/vnd.google-apps.script+json',
+    'application/vnd.google-apps.script':
+        'application/vnd.google-apps.script+json',
   };
 
   /// File extensions for exported Google Docs.
@@ -587,24 +757,35 @@ class GDriveClientAdapter extends CloudStorageClient
   /// [fileId] — the Google Drive file ID.
   /// [exportMimeType] — the target MIME type (e.g., 'application/pdf').
   /// Defaults to the standard export format for the document type.
-  Future<Uint8List> exportGoogleDoc(String fileId, {String? exportMimeType}) async {
+  Future<Uint8List> exportGoogleDoc(
+    String fileId, {
+    String? exportMimeType,
+  }) async {
     await _ensureToken();
 
     // Get file metadata to determine MIME type
-    final meta = await _apiGet('/files/$fileId', queryParams: {
-      'fields': 'mimeType',
-    });
+    final meta = await _apiGet(
+      '/files/$fileId',
+      queryParams: {'fields': 'mimeType'},
+    );
     final docMimeType = meta['mimeType'] as String? ?? '';
     final targetMime = exportMimeType ?? _googleDocsMimeTypes[docMimeType];
     if (targetMime == null) {
       throw Exception('Not a Google Docs file or unknown type: $docMimeType');
     }
 
-    final uri = Uri.parse('$_apiBase/files/$fileId/export?mimeType=${Uri.encodeComponent(targetMime)}');
-    final resp = await http.get(uri, headers: {'Authorization': 'Bearer $_accessToken'});
+    final uri = Uri.parse(
+      '$_apiBase/files/$fileId/export?mimeType=${Uri.encodeComponent(targetMime)}',
+    );
+    final resp = await http.get(
+      uri,
+      headers: {'Authorization': 'Bearer $_accessToken'},
+    );
 
     if (resp.statusCode != 200) {
-      throw Exception('GDrive export failed (${resp.statusCode}): ${resp.body}');
+      throw Exception(
+        'GDrive export failed (${resp.statusCode}): ${resp.body}',
+      );
     }
 
     return resp.bodyBytes;
@@ -615,7 +796,12 @@ class GDriveClientAdapter extends CloudStorageClient
     switch (mimeType) {
       case 'application/vnd.google-apps.document':
         return [
-          {'mimeType': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'ext': '.docx', 'label': 'Word'},
+          {
+            'mimeType':
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'ext': '.docx',
+            'label': 'Word',
+          },
           {'mimeType': 'application/pdf', 'ext': '.pdf', 'label': 'PDF'},
           {'mimeType': 'text/plain', 'ext': '.txt', 'label': 'Plain Text'},
           {'mimeType': 'application/rtf', 'ext': '.rtf', 'label': 'Rich Text'},
@@ -624,14 +810,28 @@ class GDriveClientAdapter extends CloudStorageClient
         ];
       case 'application/vnd.google-apps.spreadsheet':
         return [
-          {'mimeType': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'ext': '.xlsx', 'label': 'Excel'},
+          {
+            'mimeType':
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'ext': '.xlsx',
+            'label': 'Excel',
+          },
           {'mimeType': 'application/pdf', 'ext': '.pdf', 'label': 'PDF'},
           {'mimeType': 'text/csv', 'ext': '.csv', 'label': 'CSV'},
-          {'mimeType': 'text/tab-separated-values', 'ext': '.tsv', 'label': 'TSV'},
+          {
+            'mimeType': 'text/tab-separated-values',
+            'ext': '.tsv',
+            'label': 'TSV',
+          },
         ];
       case 'application/vnd.google-apps.presentation':
         return [
-          {'mimeType': 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'ext': '.pptx', 'label': 'PowerPoint'},
+          {
+            'mimeType':
+                'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'ext': '.pptx',
+            'label': 'PowerPoint',
+          },
           {'mimeType': 'application/pdf', 'ext': '.pdf', 'label': 'PDF'},
           {'mimeType': 'text/plain', 'ext': '.txt', 'label': 'Plain Text'},
         ];
@@ -655,10 +855,14 @@ class GDriveClientAdapter extends CloudStorageClient
   Future<List<Map<String, dynamic>>> listVersions(String fileId) async {
     await _ensureToken();
 
-    final resp = await _apiGet('/files/$fileId/revisions', queryParams: {
-      'fields': 'revisions(id,modifiedTime,originalFilename,mimeType,size,lastModifyingUser/displayName,keepForever)',
-      'pageSize': '1000',
-    });
+    final resp = await _apiGet(
+      '/files/$fileId/revisions',
+      queryParams: {
+        'fields':
+            'revisions(id,modifiedTime,originalFilename,mimeType,size,lastModifyingUser/displayName,keepForever)',
+        'pageSize': '1000',
+      },
+    );
 
     final revisions = (resp['revisions'] as List?) ?? [];
     return revisions.map((r) {
@@ -666,9 +870,11 @@ class GDriveClientAdapter extends CloudStorageClient
       return <String, dynamic>{
         'id': rev['id'],
         'modifiedTime': rev['modifiedTime'],
-        if (rev['originalFilename'] != null) 'originalFilename': rev['originalFilename'],
+        if (rev['originalFilename'] != null)
+          'originalFilename': rev['originalFilename'],
         if (rev['mimeType'] != null) 'mimeType': rev['mimeType'],
-        if (rev['size'] != null) 'size': int.tryParse(rev['size'].toString()) ?? 0,
+        if (rev['size'] != null)
+          'size': int.tryParse(rev['size'].toString()) ?? 0,
         if (rev['lastModifyingUser'] != null)
           'lastModifyingUser': (rev['lastModifyingUser'] as Map)['displayName'],
         'keepForever': rev['keepForever'] ?? false,
@@ -680,11 +886,18 @@ class GDriveClientAdapter extends CloudStorageClient
   Future<Uint8List> downloadVersion(String fileId, String revisionId) async {
     await _ensureToken();
 
-    final uri = Uri.parse('$_apiBase/files/$fileId/revisions/$revisionId?alt=media');
-    final resp = await http.get(uri, headers: {'Authorization': 'Bearer $_accessToken'});
+    final uri = Uri.parse(
+      '$_apiBase/files/$fileId/revisions/$revisionId?alt=media',
+    );
+    final resp = await http.get(
+      uri,
+      headers: {'Authorization': 'Bearer $_accessToken'},
+    );
 
     if (resp.statusCode != 200) {
-      throw Exception('GDrive revision download failed (${resp.statusCode}): ${resp.body}');
+      throw Exception(
+        'GDrive revision download failed (${resp.statusCode}): ${resp.body}',
+      );
     }
 
     return resp.bodyBytes;
@@ -705,7 +918,9 @@ class GDriveClientAdapter extends CloudStorageClient
     );
 
     if (resp.statusCode != 200) {
-      throw Exception('GDrive pin revision failed (${resp.statusCode}): ${resp.body}');
+      throw Exception(
+        'GDrive pin revision failed (${resp.statusCode}): ${resp.body}',
+      );
     }
   }
 
@@ -714,26 +929,35 @@ class GDriveClientAdapter extends CloudStorageClient
     await _ensureToken();
 
     final uri = Uri.parse('$_apiBase/files/$fileId/revisions/$revisionId');
-    final resp = await http.delete(uri, headers: {'Authorization': 'Bearer $_accessToken'});
+    final resp = await http.delete(
+      uri,
+      headers: {'Authorization': 'Bearer $_accessToken'},
+    );
 
     if (resp.statusCode != 200 && resp.statusCode != 204) {
-      throw Exception('GDrive delete revision failed (${resp.statusCode}): ${resp.body}');
+      throw Exception(
+        'GDrive delete revision failed (${resp.statusCode}): ${resp.body}',
+      );
     }
   }
 
   // --- Download ---
 
   @override
-  Future<Uint8List> downloadFileBytes(String remotePath, {Function(int, int)? onProgress}) async {
+  Future<Uint8List> downloadFileBytes(
+    String remotePath, {
+    Function(int, int)? onProgress,
+  }) async {
     await _ensureToken();
 
     final fileId = await _resolveFileId(remotePath);
     if (fileId == null) throw Exception('File not found: $remotePath');
 
     // Check if this is a Google Docs file that needs export
-    final meta = await _apiGet('/files/$fileId', queryParams: {
-      'fields': 'mimeType',
-    });
+    final meta = await _apiGet(
+      '/files/$fileId',
+      queryParams: {'fields': 'mimeType'},
+    );
     final mimeType = meta['mimeType'] as String? ?? '';
 
     if (isGoogleDocsMimeType(mimeType)) {
@@ -744,10 +968,15 @@ class GDriveClientAdapter extends CloudStorageClient
     }
 
     final uri = Uri.parse('$_apiBase/files/$fileId?alt=media');
-    final resp = await http.get(uri, headers: {'Authorization': 'Bearer $_accessToken'});
+    final resp = await http.get(
+      uri,
+      headers: {'Authorization': 'Bearer $_accessToken'},
+    );
 
     if (resp.statusCode != 200) {
-      throw Exception('GDrive download failed (${resp.statusCode}): ${resp.body}');
+      throw Exception(
+        'GDrive download failed (${resp.statusCode}): ${resp.body}',
+      );
     }
 
     onProgress?.call(resp.bodyBytes.length, resp.bodyBytes.length);
@@ -755,10 +984,53 @@ class GDriveClientAdapter extends CloudStorageClient
   }
 
   @override
-  Future<void> downloadFileByPath(String remotePath, String localPath, {Function(int, int)? onProgress}) async {
-    final bytes = await downloadFileBytes(remotePath, onProgress: onProgress);
-    final file = File(localPath);
-    await file.writeAsBytes(bytes);
+  Future<void> downloadFileByPath(
+    String remotePath,
+    String localPath, {
+    Function(int, int)? onProgress,
+  }) async {
+    final sink = File(localPath).openWrite();
+    try {
+      await sink.addStream(downloadStream(remotePath, onProgress: onProgress));
+      await sink.flush();
+    } finally {
+      await sink.close();
+    }
+  }
+
+  @override
+  Stream<List<int>> downloadStream(
+    String remotePath, {
+    Function(int, int)? onProgress,
+  }) async* {
+    await _ensureToken();
+    final fileId = await _resolveFileId(remotePath);
+    if (fileId == null) {
+      throw StateError('The download source no longer exists.');
+    }
+    final metadata = await _apiGet(
+      '/files/$fileId',
+      queryParams: {'fields': 'mimeType,size'},
+    );
+    final mime = metadata['mimeType'] as String?;
+    final exportMime = _googleDocsMimeTypes[mime];
+    if (mime == 'application/vnd.google-apps.folder') {
+      throw StateError('Cannot download a folder as file bytes.');
+    }
+    final uri = exportMime == null
+        ? Uri.parse('$_apiBase/files/$fileId?alt=media')
+        : Uri.parse(
+            '$_apiBase/files/$fileId/export',
+          ).replace(queryParameters: {'mimeType': exportMime});
+    yield* streamHttpDownload(
+      uri,
+      operation: 'Google Drive download',
+      headers: {'Authorization': 'Bearer $_accessToken'},
+      expectedLength: exportMime == null
+          ? int.tryParse('${metadata['size']}')
+          : null,
+      onProgress: onProgress,
+    );
   }
 
   // --- Folder ---
@@ -794,7 +1066,11 @@ class GDriveClientAdapter extends CloudStorageClient
         'parents': [parentId],
       });
 
-      final resp = await _apiPost('/files', body: metadata, contentType: 'application/json');
+      final resp = await _apiPost(
+        '/files',
+        body: metadata,
+        contentType: 'application/json',
+      );
       final id = resp['id'] as String;
       _pathToId[accumulated] = id;
       parentId = id;
@@ -833,15 +1109,89 @@ class GDriveClientAdapter extends CloudStorageClient
 
   @override
   Future<void> deletePath(String path) async {
+    await trashPath(path);
+  }
+
+  @override
+  Future<TrashReceipt> trashPath(String path) async {
     await _ensureToken();
-    final fileId = await _resolveFileId(path);
+    final fileId = await _resolveTrashFileId(path);
+    if (fileId == null) throw StateError('Not found: $path');
+    await _setTrashed(fileId, true);
+    _pathToId.removeWhere((key, _) => key == path || key.startsWith('$path/'));
+    return TrashReceipt(originalPath: path, trashId: fileId);
+  }
+
+  @override
+  Future<void> restoreTrash(TrashReceipt receipt) async {
+    await _ensureToken();
+    if (await _resolveTrashFileId(receipt.originalPath) != null) {
+      throw StateError(
+        'The original path is occupied. Choose another location before restoring.',
+      );
+    }
+    await _setTrashed(receipt.trashId, false);
+    _pathToId[receipt.originalPath] = receipt.trashId;
+  }
+
+  Future<String?> _resolveTrashFileId(String path) async {
+    if (!path.startsWith('/') || path == '/' || path.contains('\u0000')) {
+      throw ArgumentError('Select a file or folder below the storage root.');
+    }
+    final parent = await _resolvePathToId(p.posix.dirname(path));
+    if (parent == null) {
+      throw StateError('The original parent folder is unavailable.');
+    }
+    final name = _escapeQuery(p.posix.basename(path));
+    final result = await _apiGet(
+      '/files',
+      queryParams: {
+        'q': "name='$name' and '$parent' in parents and trashed=false",
+        'fields': 'files(id,name),nextPageToken',
+        'pageSize': '2',
+      },
+    );
+    final files = result['files'] as List? ?? [];
+    if (files.length > 1 || result['nextPageToken'] != null) {
+      throw StateError(
+        'This path identifies multiple Google Drive items. Rename them before deleting.',
+      );
+    }
+    return files.isEmpty ? null : (files.single as Map)['id'] as String;
+  }
+
+  Future<void> _setTrashed(String fileId, bool trashed) async {
+    final response = await http.patch(
+      Uri.parse('$_apiBase/files/$fileId?supportsAllDrives=true'),
+      headers: {
+        'Authorization': 'Bearer $_accessToken',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({'trashed': trashed}),
+    );
+    if (response.statusCode != 200) {
+      throw StateError(
+        'Google Drive ${trashed ? 'trash' : 'restore'} failed (${response.statusCode}).',
+      );
+    }
+  }
+
+  @override
+  Future<void> deletePermanently(String path) async {
+    await _ensureToken();
+    final fileId = await _resolveTrashFileId(path);
     if (fileId == null) throw Exception('Not found: $path');
 
     final uri = Uri.parse('$_apiBase/files/$fileId');
-    final resp = await http.delete(uri, headers: {'Authorization': 'Bearer $_accessToken'});
+    final resp = await http.delete(
+      uri,
+      headers: {'Authorization': 'Bearer $_accessToken'},
+    );
 
     if (resp.statusCode != 204 && resp.statusCode != 200) {
-      throw Exception('GDrive delete failed (${resp.statusCode}): ${resp.body}');
+      throw Exception(
+        'GDrive delete failed (${resp.statusCode}): ${resp.body}',
+      );
     }
 
     // Invalidate cache
@@ -855,15 +1205,23 @@ class GDriveClientAdapter extends CloudStorageClient
     if (fileId == null) throw Exception('Not found: $sourcePath');
 
     // Get current parents
-    final meta = await _apiGet('/files/$fileId', queryParams: {'fields': 'parents'});
+    final meta = await _apiGet(
+      '/files/$fileId',
+      queryParams: {'fields': 'parents'},
+    );
     final currentParents = ((meta['parents'] as List?) ?? []).join(',');
 
     // Resolve new parent
     final newParentId = await _resolvePathToId(targetPath) ?? 'root';
 
     // Move via PATCH
-    final uri = Uri.parse('$_apiBase/files/$fileId?addParents=$newParentId&removeParents=$currentParents');
-    final resp = await http.patch(uri, headers: {'Authorization': 'Bearer $_accessToken'});
+    final uri = Uri.parse(
+      '$_apiBase/files/$fileId?addParents=$newParentId&removeParents=$currentParents',
+    );
+    final resp = await http.patch(
+      uri,
+      headers: {'Authorization': 'Bearer $_accessToken'},
+    );
 
     if (resp.statusCode != 200) {
       throw Exception('GDrive move failed (${resp.statusCode}): ${resp.body}');
@@ -890,7 +1248,9 @@ class GDriveClientAdapter extends CloudStorageClient
     );
 
     if (resp.statusCode != 200) {
-      throw Exception('GDrive rename failed (${resp.statusCode}): ${resp.body}');
+      throw Exception(
+        'GDrive rename failed (${resp.statusCode}): ${resp.body}',
+      );
     }
 
     _pathToId.remove(path);
@@ -915,7 +1275,8 @@ class GDriveClientAdapter extends CloudStorageClient
     do {
       final params = <String, String>{
         'q': q,
-        'fields': 'nextPageToken,files(id,name,mimeType,size,modifiedTime,parents)',
+        'fields':
+            'nextPageToken,files(id,name,mimeType,size,modifiedTime,parents)',
         'pageSize': '100',
       };
       if (pageToken != null) params['pageToken'] = pageToken;
@@ -924,7 +1285,8 @@ class GDriveClientAdapter extends CloudStorageClient
 
       for (final item in (resp['files'] as List?) ?? []) {
         final map = item as Map<String, dynamic>;
-        final isFolder = map['mimeType'] == 'application/vnd.google-apps.folder';
+        final isFolder =
+            map['mimeType'] == 'application/vnd.google-apps.folder';
         if (isFolder) continue; // Skip folders for content search
 
         final name = map['name'] as String? ?? 'Unknown';
@@ -969,7 +1331,9 @@ class GDriveClientAdapter extends CloudStorageClient
 
     final resp = await http.post(Uri.parse(_tokenUrl), body: body);
     if (resp.statusCode != 200) {
-      throw Exception('Token refresh failed (${resp.statusCode}): ${resp.body}');
+      throw Exception(
+        'Token refresh failed (${resp.statusCode}): ${resp.body}',
+      );
     }
 
     final data = json.decode(resp.body) as Map<String, dynamic>;
@@ -981,17 +1345,22 @@ class GDriveClientAdapter extends CloudStorageClient
   Future<void> _browserOAuthFlow() async {
     const redirectUri = 'http://localhost:$_redirectPort';
 
-    final authUri = Uri.parse(_authUrl).replace(queryParameters: {
-      'client_id': _clientId!,
-      'redirect_uri': redirectUri,
-      'response_type': 'code',
-      'scope': _scopes,
-      'access_type': 'offline',
-      'prompt': 'consent',
-    });
+    final authUri = Uri.parse(_authUrl).replace(
+      queryParameters: {
+        'client_id': _clientId!,
+        'redirect_uri': redirectUri,
+        'response_type': 'code',
+        'scope': _scopes,
+        'access_type': 'offline',
+        'prompt': 'consent',
+      },
+    );
 
     // Start local server to capture redirect
-    final server = await HttpServer.bind(InternetAddress.loopbackIPv4, _redirectPort);
+    final server = await HttpServer.bind(
+      InternetAddress.loopbackIPv4,
+      _redirectPort,
+    );
 
     // Open browser
     if (await canLaunchUrl(authUri)) {
@@ -1012,7 +1381,9 @@ class GDriveClientAdapter extends CloudStorageClient
           request.response
             ..statusCode = 200
             ..headers.contentType = ContentType.html
-            ..write('<html><body><h2>Authorization denied: $error</h2><p>You can close this window.</p></body></html>');
+            ..write(
+              '<html><body><h2>Authorization denied: $error</h2><p>You can close this window.</p></body></html>',
+            );
           await request.response.close();
           break;
         }
@@ -1022,7 +1393,9 @@ class GDriveClientAdapter extends CloudStorageClient
           request.response
             ..statusCode = 200
             ..headers.contentType = ContentType.html
-            ..write('<html><body><h2>Authorization successful!</h2><p>You can close this window and return to CrispCloud.</p></body></html>');
+            ..write(
+              '<html><body><h2>Authorization successful!</h2><p>You can close this window and return to CrispCloud.</p></body></html>',
+            );
           await request.response.close();
           break;
         }
@@ -1052,7 +1425,9 @@ class GDriveClientAdapter extends CloudStorageClient
 
     final tokenResp = await http.post(Uri.parse(_tokenUrl), body: tokenBody);
     if (tokenResp.statusCode != 200) {
-      throw Exception('Token exchange failed (${tokenResp.statusCode}): ${tokenResp.body}');
+      throw Exception(
+        'Token exchange failed (${tokenResp.statusCode}): ${tokenResp.body}',
+      );
     }
 
     final tokenData = json.decode(tokenResp.body) as Map<String, dynamic>;
@@ -1082,30 +1457,34 @@ class GDriveClientAdapter extends CloudStorageClient
 
     final parentPath = p.posix.dirname(path);
     final fileName = p.posix.basename(path);
-    final parentId = await _resolvePathToId(parentPath) ?? 'root';
+    final parentId = await _resolvePathToId(parentPath);
+    if (parentId == null) return null;
 
     return await _findFileInFolder(parentId, fileName);
   }
 
   Future<String?> _findFileInFolder(String parentId, String name) async {
-    final query = "name='${_escapeQuery(name)}' and '$parentId' in parents and trashed=false";
-    final resp = await _apiGet('/files', queryParams: {
-      'q': query,
-      'fields': 'files(id)',
-      'pageSize': '1',
-    });
+    final query =
+        "name='${_escapeQuery(name)}' and '$parentId' in parents and trashed=false";
+    final resp = await _apiGet(
+      '/files',
+      queryParams: {'q': query, 'fields': 'files(id)', 'pageSize': '2'},
+    );
     final files = (resp['files'] as List?) ?? [];
     if (files.isEmpty) return null;
+    if (files.length > 1) {
+      throw StateError('Google Drive contains multiple items at this path.');
+    }
     return files[0]['id'] as String;
   }
 
   Future<String?> _findFolderInParent(String parentId, String name) async {
-    final query = "name='${_escapeQuery(name)}' and '$parentId' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false";
-    final resp = await _apiGet('/files', queryParams: {
-      'q': query,
-      'fields': 'files(id)',
-      'pageSize': '1',
-    });
+    final query =
+        "name='${_escapeQuery(name)}' and '$parentId' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false";
+    final resp = await _apiGet(
+      '/files',
+      queryParams: {'q': query, 'fields': 'files(id)', 'pageSize': '1'},
+    );
     final files = (resp['files'] as List?) ?? [];
     if (files.isEmpty) return null;
     return files[0]['id'] as String;
@@ -1115,16 +1494,29 @@ class GDriveClientAdapter extends CloudStorageClient
 
   // --- HTTP helpers ---
 
-  Future<Map<String, dynamic>> _apiGet(String endpoint, {Map<String, String>? queryParams}) async {
-    final uri = Uri.parse('$_apiBase$endpoint').replace(queryParameters: queryParams);
-    final resp = await http.get(uri, headers: {'Authorization': 'Bearer $_accessToken'});
+  Future<Map<String, dynamic>> _apiGet(
+    String endpoint, {
+    Map<String, String>? queryParams,
+  }) async {
+    final uri = Uri.parse(
+      '$_apiBase$endpoint',
+    ).replace(queryParameters: queryParams);
+    final resp = await http.get(
+      uri,
+      headers: {'Authorization': 'Bearer $_accessToken'},
+    );
 
     if (resp.statusCode == 401) {
       // Try refresh
       await _refreshAccessToken();
-      final retryResp = await http.get(uri, headers: {'Authorization': 'Bearer $_accessToken'});
+      final retryResp = await http.get(
+        uri,
+        headers: {'Authorization': 'Bearer $_accessToken'},
+      );
       if (retryResp.statusCode != 200) {
-        throw Exception('GDrive API error (${retryResp.statusCode}): ${retryResp.body}');
+        throw Exception(
+          'GDrive API error (${retryResp.statusCode}): ${retryResp.body}',
+        );
       }
       return json.decode(retryResp.body) as Map<String, dynamic>;
     }
@@ -1136,7 +1528,11 @@ class GDriveClientAdapter extends CloudStorageClient
     return json.decode(resp.body) as Map<String, dynamic>;
   }
 
-  Future<Map<String, dynamic>> _apiPost(String endpoint, {required String body, String contentType = 'application/json'}) async {
+  Future<Map<String, dynamic>> _apiPost(
+    String endpoint, {
+    required String body,
+    String contentType = 'application/json',
+  }) async {
     final uri = Uri.parse('$_apiBase$endpoint');
     final resp = await http.post(
       uri,

@@ -6,6 +6,10 @@ class FileItem {
   final String name;
   final String? path;
   final String? uuid;
+
+  /// Storage/account scope for rows in collections and cross-source results.
+  /// Unscoped legacy rows remain comparable only with other unscoped rows.
+  final String? storageId;
   final bool isFolder;
   final int? size;
   final DateTime? updatedAt;
@@ -27,6 +31,7 @@ class FileItem {
     required this.name,
     this.path,
     this.uuid,
+    this.storageId,
     required this.isFolder,
     this.size,
     this.updatedAt,
@@ -38,8 +43,9 @@ class FileItem {
   });
 
   /// File extension (lowercase), or empty string for folders / files without extension.
-  String get extension =>
-      isFolder ? '' : (name.contains('.') ? name.split('.').last.toLowerCase() : '');
+  String get extension => isFolder
+      ? ''
+      : (name.contains('.') ? name.split('.').last.toLowerCase() : '');
 
   /// Display size: uses [calculatedSize] if available, else [size].
   int? get displaySize => calculatedSize ?? size;
@@ -60,6 +66,7 @@ class FileItem {
     String? name,
     String? path,
     String? uuid,
+    String? storageId,
     bool? isFolder,
     int? size,
     DateTime? updatedAt,
@@ -73,6 +80,7 @@ class FileItem {
       name: name ?? this.name,
       path: path ?? this.path,
       uuid: uuid ?? this.uuid,
+      storageId: storageId ?? this.storageId,
       isFolder: isFolder ?? this.isFolder,
       size: size ?? this.size,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -89,8 +97,13 @@ class FileItem {
       identical(this, other) ||
       other is FileItem &&
           runtimeType == other.runtimeType &&
-          (uuid != null ? uuid == other.uuid : path == other.path);
+          storageId == other.storageId &&
+          (uuid != null
+              ? uuid == other.uuid
+              : other.uuid == null && path != null && path == other.path);
 
   @override
-  int get hashCode => uuid?.hashCode ?? path.hashCode;
+  int get hashCode => uuid == null && path == null
+      ? identityHashCode(this)
+      : Object.hash(storageId, uuid ?? path);
 }

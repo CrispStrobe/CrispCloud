@@ -1,20 +1,23 @@
 import 'package:flutter/foundation.dart';
 import 'package:crisp_storage/crisp_storage.dart' as shared;
+
 import '../models/operation_progress.dart';
 
 typedef TransferTask = shared.ScheduledTransfer<OperationProgress>;
 
 class TransferQueue extends ChangeNotifier {
   late final shared.TransferScheduler<OperationProgress> _queue;
-  TransferQueue(
-      {int maxConcurrent = 3,
-      int maxRetries = 3,
-      Duration retryBaseDelay = const Duration(seconds: 2)}) {
+  TransferQueue({
+    int maxConcurrent = 3,
+    int maxRetries = 3,
+    Duration retryBaseDelay = const Duration(seconds: 2),
+  }) {
     _queue = shared.TransferScheduler(
-        maxConcurrent: maxConcurrent,
-        maxRetries: maxRetries,
-        retryBaseDelay: retryBaseDelay,
-        onChanged: notifyListeners);
+      maxConcurrent: maxConcurrent,
+      maxRetries: maxRetries,
+      retryBaseDelay: retryBaseDelay,
+      onChanged: notifyListeners,
+    );
   }
   int get maxConcurrent => _queue.maxConcurrent;
   int get maxRetries => _queue.maxRetries;
@@ -29,6 +32,11 @@ class TransferQueue extends ChangeNotifier {
       _queue.setProviderLimit(provider, limit);
   void setProviderRateLimit(String provider, {int minDelayMs = 100}) =>
       _queue.setProviderRateLimit(provider, minDelayMs: minDelayMs);
+  void setMaxConcurrent(int limit) => _queue.setMaxConcurrent(limit);
+  void refresh() => _queue.refresh();
+  void setPendingPriority(String id, int priority) =>
+      _queue.setPendingPriority(id, priority);
+  void cancel(String id) => _queue.cancel(id);
   void enqueue(TransferTask task) => _queue.enqueue(task);
   void reorderPending(int oldIndex, int newIndex) =>
       _queue.reorderPending(oldIndex, newIndex);
