@@ -20,6 +20,9 @@ SyncPair _makePair({required int id, String localPath = '/tmp/sync'}) {
     conflictPolicy: 'newestWins',
     direction: 'twoWay',
     enabled: true,
+    includePatterns: '',
+    excludePatterns: '',
+    usePlaceholders: false,
     createdAt: DateTime(2026, 1, 1),
   );
 }
@@ -32,7 +35,9 @@ void main() {
     late SyncWatcherService watcher;
 
     setUp(() {
-      watcher = SyncWatcherService(debounceDelay: const Duration(milliseconds: 100));
+      watcher = SyncWatcherService(
+        debounceDelay: const Duration(milliseconds: 100),
+      );
     });
 
     tearDown(() {
@@ -69,7 +74,9 @@ void main() {
       expect(w1.debounceDelay, const Duration(seconds: 10));
       w1.dispose();
 
-      final w2 = SyncWatcherService(debounceDelay: const Duration(milliseconds: 500));
+      final w2 = SyncWatcherService(
+        debounceDelay: const Duration(milliseconds: 500),
+      );
       expect(w2.debounceDelay, const Duration(milliseconds: 500));
       w2.dispose();
     });
@@ -88,7 +95,9 @@ void main() {
     late PollingWatcherService poller;
 
     setUp(() {
-      poller = PollingWatcherService(interval: const Duration(milliseconds: 50));
+      poller = PollingWatcherService(
+        interval: const Duration(milliseconds: 50),
+      );
     });
 
     tearDown(() {

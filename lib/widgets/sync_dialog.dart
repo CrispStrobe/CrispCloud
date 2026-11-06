@@ -9,6 +9,7 @@ import '../l10n/commander_strings.dart';
 import '../providers/providers.dart';
 import '../services/background_sync_service.dart';
 import '../services/sync_database.dart';
+import '../services/storage_identity.dart';
 import '../l10n/app_localizations.dart';
 import 'sync_plan_dialog.dart';
 
@@ -129,13 +130,12 @@ class _SyncManagerDialog extends ConsumerWidget {
             else
               ConstrainedBox(
                 constraints: const BoxConstraints(maxHeight: 300),
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: sync.pairs.length,
-                  itemBuilder: (context, index) {
-                    final pair = sync.pairs[index];
-                    return _SyncPairTile(pair: pair);
-                  },
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      for (final pair in sync.pairs) _SyncPairTile(pair: pair),
+                    ],
+                  ),
                 ),
               ),
           ],
@@ -162,10 +162,7 @@ class _SyncManagerDialog extends ConsumerWidget {
                           result.hasChanges || result.errors > 0
                               ? context.commanderTr(
                                   "Replayed: {0} ops, {1} errors",
-                                  [
-                                    result.uploaded + result.downloaded,
-                                    result.errors,
-                                  ],
+                                  [result.replayed, result.errors],
                                 )
                               : context.commanderTr(
                                   "No offline operations to replay",
@@ -194,6 +191,8 @@ class _SyncManagerDialog extends ConsumerWidget {
     var policy = ConflictPolicy.newestWins;
     var direction = SyncDirection.twoWay;
     var usePlaceholders = false;
+    String? creationError;
+    var creating = false;
 
     final auth = ref.read(authProvider);
 
@@ -208,6 +207,16 @@ class _SyncManagerDialog extends ConsumerWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  if (creationError != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Text(
+                        creationError!,
+                        style: TextStyle(
+                          color: Theme.of(ctx).colorScheme.error,
+                        ),
+                      ),
+                    ),
                   TextField(
                     controller: nameController,
                     decoration: InputDecoration(
@@ -339,26 +348,41 @@ class _SyncManagerDialog extends ConsumerWidget {
               child: Text(AppLocalizations.of(context)!.cancel),
             ),
             ElevatedButton(
-              onPressed: () async {
-                if (nameController.text.isEmpty ||
-                    localController.text.isEmpty) {
-                  return;
-                }
-                await ref
-                    .read(syncProvider)
-                    .addPair(
-                      name: nameController.text,
-                      localPath: localController.text,
-                      remotePath: remoteController.text,
-                      provider: auth.currentProvider.name,
-                      conflictPolicy: policy,
-                      direction: direction,
-                      includePatterns: includeController.text,
-                      excludePatterns: excludeController.text,
-                      usePlaceholders: usePlaceholders,
-                    );
-                if (ctx.mounted) Navigator.pop(ctx);
-              },
+              onPressed: creating
+                  ? null
+                  : () async {
+                      if (nameController.text.isEmpty ||
+                          localController.text.isEmpty) {
+                        return;
+                      }
+                      setState(() {
+                        creating = true;
+                        creationError = null;
+                      });
+                      try {
+                        await ref
+                            .read(syncProvider)
+                            .addPair(
+                              name: nameController.text,
+                              localPath: localController.text,
+                              remotePath: remoteController.text,
+                              provider: auth.currentProvider.name,
+                              conflictPolicy: policy,
+                              direction: direction,
+                              includePatterns: includeController.text,
+                              excludePatterns: excludeController.text,
+                              usePlaceholders: usePlaceholders,
+                            );
+                        if (ctx.mounted) Navigator.pop(ctx);
+                      } catch (error) {
+                        if (ctx.mounted) {
+                          setState(() {
+                            creating = false;
+                            creationError = error.toString();
+                          });
+                        }
+                      }
+                    },
               child: Text(context.commanderTr("Create")),
             ),
           ],
@@ -494,6 +518,8 @@ class _SyncPairTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sync = ref.watch(syncProvider);
+    final auth = ref.watch(authProvider);
+    final bound = sync.isPairBound(pair);
     final isActive = sync.isSyncing && sync.currentPairName == pair.name;
 
     return Card(
@@ -537,6 +563,16 @@ class _SyncPairTile extends ConsumerWidget {
               ]),
               style: const TextStyle(fontSize: 11),
             ),
+            if (!bound)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  context.commanderTr(
+                    'Account review required. Connect the saved account or bind this pair again.',
+                  ),
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ),
             Wrap(
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
@@ -546,7 +582,7 @@ class _SyncPairTile extends ConsumerWidget {
                     tooltip: context.commanderTr(
                       "Download All Cloud-Only Files",
                     ),
-                    onPressed: isActive
+                    onPressed: sync.isSyncing || !bound
                         ? null
                         : () async {
                             final count = await ref
@@ -577,9 +613,19 @@ class _SyncPairTile extends ConsumerWidget {
                 IconButton(
                   icon: const Icon(Icons.sync, size: 18),
                   tooltip: context.commanderTr("Compare and Review"),
-                  onPressed: isActive
+                  onPressed: sync.isSyncing || !bound
                       ? null
                       : () => showSyncPlanDialog(context, pair.id),
+                ),
+                TextButton.icon(
+                  icon: const Icon(Icons.link, size: 18),
+                  label: Text(context.commanderTr('Bind to connected account')),
+                  onPressed:
+                      sync.isSyncing ||
+                          !auth.client.isAuthenticated ||
+                          auth.currentProvider.name != pair.provider
+                      ? null
+                      : () => _rebind(context, ref),
                 ),
                 IconButton(
                   icon: const Icon(Icons.delete, size: 18),
@@ -592,6 +638,53 @@ class _SyncPairTile extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _rebind(BuildContext context, WidgetRef ref) async {
+    final auth = ref.read(authProvider);
+    final client = auth.client;
+    final reviewedRemote = storageReferenceForClient(client);
+    final approved = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(context.commanderTr('Bind sync sources')),
+        content: Text(
+          context.commanderTr(
+            'Use this device and {0} account {1} for this pair?\nLocal: {2}\nRemote: {3}\nThe old comparison baseline is cleared. Existing queued operations keep their original account binding and must be reviewed again.',
+            [
+              client.providerName,
+              client.userId ?? '',
+              pair.localPath,
+              pair.remotePath,
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(context.commanderTr('Bind sources')),
+          ),
+        ],
+      ),
+    );
+    if (approved != true || !context.mounted) return;
+    try {
+      if (!identical(ref.read(authProvider).client, client)) {
+        throw StateError('The connected account changed during review.');
+      }
+      await ref
+          .read(syncProvider)
+          .rebindPair(pair.id, reviewedRemote: reviewedRemote);
+    } catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(error.toString())));
+      }
+    }
   }
 
   String _formatTime(BuildContext context, DateTime dt) {

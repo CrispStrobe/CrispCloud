@@ -26,6 +26,7 @@ import 'transfer_recovery_service.dart';
 import 'log_service.dart';
 import 'placeholder_service.dart';
 import 'sync_database.dart';
+import 'sync_source_binding.dart';
 
 /// A single action the sync engine wants to perform.
 class SyncAction {
@@ -80,6 +81,9 @@ class SyncResult {
   final int deletedRemote;
   final int conflicts;
   final int errors;
+
+  /// Offline actions successfully completed, including rename/move/delete.
+  final int replayed;
   final List<String> errorMessages;
   final bool cancelled;
 
@@ -90,6 +94,7 @@ class SyncResult {
     this.deletedRemote = 0,
     this.conflicts = 0,
     this.errors = 0,
+    this.replayed = 0,
     this.errorMessages = const [],
     this.cancelled = false,
   });
@@ -101,12 +106,19 @@ class SyncResult {
     deletedRemote: deletedRemote + other.deletedRemote,
     conflicts: conflicts + other.conflicts,
     errors: errors + other.errors,
+    replayed: replayed + other.replayed,
     errorMessages: [...errorMessages, ...other.errorMessages],
     cancelled: cancelled || other.cancelled,
   );
 
   bool get hasChanges =>
-      uploaded + downloaded + deletedLocal + deletedRemote + conflicts > 0;
+      uploaded +
+          downloaded +
+          deletedLocal +
+          deletedRemote +
+          conflicts +
+          replayed >
+      0;
 
   @override
   String toString() =>
@@ -241,11 +253,14 @@ class SyncEngine {
     bool Function()? isCancelled,
     bool verifyContents = true,
   }) async {
+    final binding = SyncSourceBinding.require(pair, client);
+    await _assertSavedPair(pair);
     final account = storageReferenceForClient(client);
     bool current() =>
         (isCurrent?.call() ?? true) &&
         client.isAuthenticated &&
-        storageReferenceForClient(client) == account;
+        storageReferenceForClient(client) == account &&
+        binding.matches(pair, client);
     void check() {
       if (isCancelled?.call() ?? false) throw const SyncCancelledException();
       if (!current()) throw StateError('The synchronization source changed.');
@@ -388,6 +403,7 @@ class SyncEngine {
     var result = const SyncResult();
     try {
       check();
+      await _assertSavedPair(plan.pair);
       final local = await _scan(
         plan.localSource,
         plan.pair.localPath,
@@ -502,6 +518,7 @@ class SyncEngine {
             path,
             (await plan.localSource.stat(p.join(plan.pair.localPath, path)))!,
             local[path]!.size,
+            localHash: plan._fingerprints['local:$path'],
             remote: remote[path],
           );
         }
@@ -543,6 +560,7 @@ class SyncEngine {
     FileOperationControl control,
     void Function() check,
   ) async {
+    await _assertSavedPair(plan.pair);
     for (final (label, source, root, expected) in [
       ('local', plan.localSource, plan.pair.localPath, plan._local[path]),
       ('remote', plan.remoteSource, plan.pair.remotePath, plan._remote[path]),
@@ -580,23 +598,48 @@ class SyncEngine {
   }) async {
     final result = <String, String>{};
     final control = operationControl ?? _SyncOperationControl(check);
-    for (final path in paths.toSet()) {
-      for (final (label, source, info) in [
-        ('local', localSource, local[path]),
-        ('remote', remoteSource, remote[path]),
-      ]) {
-        check();
-        if (info != null && !info.isFolder) {
-          result['$label:$path'] = await transferDigest(
-            source,
-            info.file!,
-            control,
-          );
+    final cancellation = operationControl == null
+        ? Timer.periodic(const Duration(milliseconds: 50), (_) {
+            try {
+              check();
+            } catch (_) {
+              control.cancel();
+            }
+          })
+        : null;
+    try {
+      for (final path in paths.toSet()) {
+        for (final (label, source, info) in [
+          ('local', localSource, local[path]),
+          ('remote', remoteSource, remote[path]),
+        ]) {
+          check();
+          if (info != null && !info.isFolder) {
+            result['$label:$path'] = await transferDigest(
+              source,
+              info.file!,
+              control,
+            );
+          }
         }
       }
+      check();
+      return result;
+    } on FileOperationCancelled {
+      check();
+      rethrow;
+    } finally {
+      cancellation?.cancel();
     }
-    check();
-    return result;
+  }
+
+  Future<void> _assertSavedPair(SyncPair pair) async {
+    final saved = await db.getPair(pair.id);
+    if (saved.sourceBinding != pair.sourceBinding ||
+        saved.localPath != pair.localPath ||
+        saved.remotePath != pair.remotePath) {
+      throw StateError('The sync pair was rebound or changed. Compare again.');
+    }
   }
 
   /// Determine what action to take for a given path.
@@ -611,6 +654,12 @@ class SyncEngine {
     final existsLocal = local != null;
     final existsRemote = remote != null;
     final existsInDb = known != null;
+
+    // A cloud-only stub deliberately has no original local file. It must
+    // never become a request to propagate a local deletion to cloud storage.
+    if (known?.status == 'placeholder' && local == null) {
+      return SyncAction(type: SyncActionType.skip, relativePath: relativePath);
+    }
 
     // Directories are containers, not conflicting byte streams. A file/folder
     // type conflict requires a deliberate decision; never overwrite either.
@@ -964,11 +1013,14 @@ class SyncEngine {
             action.relativePath,
             (await plan.localSource.stat(localPath))!,
             written.size ?? plan._local[action.relativePath]!.size,
+            localHash: plan._fingerprints['local:${action.relativePath}'],
             remote: _FileInfo.fromItem(written),
           );
           return const SyncResult(uploaded: 1);
         case SyncActionType.download:
-          if (pair.usePlaceholders && action.dbEntry == null) {
+          if (pair.usePlaceholders &&
+              action.dbEntry == null &&
+              plan._local[action.relativePath] == null) {
             final placeholder = PlaceholderService(db);
             await placeholder.createPlaceholder(
               pairId: pair.id,
@@ -1001,6 +1053,7 @@ class SyncEngine {
             action.relativePath,
             written,
             written.size ?? plan._remote[action.relativePath]!.size,
+            localHash: plan._fingerprints['remote:${action.relativePath}'],
             remote: plan._remote[action.relativePath],
           );
           return const SyncResult(downloaded: 1);
@@ -1085,6 +1138,7 @@ class SyncEngine {
     String relativePath,
     FileItem local,
     int size, {
+    String? localHash,
     String? remoteContentHash,
     DateTime? remoteModified,
     _FileInfo? remote,
@@ -1094,6 +1148,7 @@ class SyncEngine {
         pairId: pairId,
         relativePath: relativePath,
         localModified: Value(local.updatedAt),
+        localHash: Value(localHash),
         remoteModified: Value(remote?.modified ?? remoteModified),
         localSize: Value(size),
         remoteSize: Value(size),
@@ -1123,6 +1178,11 @@ class SyncEngine {
     late String copyRelative, localCopyPath, remoteCopyPath;
     while (true) {
       check();
+      if (suffix > 10000) {
+        throw StateError(
+          'No unused conflict name was found after 10000 attempts.',
+        );
+      }
       final name =
           '$basename (local conflict${suffix == 1 ? '' : ' $suffix'})$extension';
       copyRelative = p.posix.normalize(p.posix.join(parent, name));
@@ -1165,6 +1225,7 @@ class SyncEngine {
       copyRelative,
       copy,
       copy.size!,
+      localHash: plan._fingerprints['local:${action.relativePath}'],
       remote: _FileInfo.fromItem(remoteCopy),
     );
     await _validateRow(plan, action.relativePath, control, check);
@@ -1185,6 +1246,7 @@ class SyncEngine {
       action.relativePath,
       written,
       written.size!,
+      localHash: plan._fingerprints['remote:${action.relativePath}'],
       remote: plan._remote[action.relativePath],
     );
     return const SyncResult(uploaded: 1, downloaded: 1);
@@ -1197,6 +1259,7 @@ class SyncEngine {
     required void Function() check,
   }) async {
     check();
+    root = source.paths.normalize(root);
     final directory = await source.stat(root);
     if (directory == null ||
         !directory.isFolder ||
@@ -1215,6 +1278,9 @@ class SyncEngine {
       }
       for (final item in await source.list(path)) {
         check();
+        // Private staged writes and verified replacement backups belong to
+        // transfer recovery, never to the synchronized user tree.
+        if (_transferArtifact.hasMatch(item.name)) continue;
         if (item.path == null ||
             !source.isWithin(root, item.path!) ||
             source.paths.dirname(item.path!) != path) {
@@ -1247,6 +1313,10 @@ class SyncEngine {
     check();
     return found;
   }
+
+  static final _transferArtifact = RegExp(
+    r'^\.crisp-(?:transfer-[0-9a-f-]{36}\.tmp|replaced-[0-9a-f-]{36}\.bak)$',
+  );
 }
 
 /// Internal file info record for comparison.
@@ -1289,8 +1359,13 @@ class _SyncOperationControl extends FileOperationControl {
   final void Function() check;
   @override
   Future<void> checkpoint() async {
-    check();
-    await super.checkpoint();
-    check();
+    try {
+      check();
+      await super.checkpoint();
+      check();
+    } catch (_) {
+      cancel();
+      rethrow;
+    }
   }
 }

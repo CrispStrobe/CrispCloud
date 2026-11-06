@@ -107,8 +107,8 @@ class SyncTransferService {
           }
           if (phase == 'backedUp') originalBackedUp = true;
           if (!const ['failed', 'cancelled', 'complete'].contains(phase)) {
-            check();
             await control.checkpoint();
+            check();
           }
           if (const [
             'writing',
@@ -152,7 +152,6 @@ class SyncTransferService {
           message: entry.message,
         );
       }
-      check();
       if (!entry.completed) {
         if (control.isCancelled) throw const FileOperationCancelled();
         throw StateError(entry.message ?? 'The sync copy did not complete.');

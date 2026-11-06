@@ -12,13 +12,15 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'log_service.dart';
+import 'installation_identity.dart';
 import 'sync_database.dart';
 import 'sync_engine.dart';
 
 // Workmanager and flutter_local_notifications are only used on Android/iOS.
 // Conditional imports prevent compilation errors on web/desktop.
 import 'background_sync_stub.dart'
-    if (dart.library.io) 'background_sync_mobile.dart' as mobile;
+    if (dart.library.io) 'background_sync_mobile.dart'
+    as mobile;
 
 /// Unique task name registered with Workmanager.
 const kBackgroundSyncTaskName = 'crisp_cloud_background_sync';
@@ -43,8 +45,7 @@ class BackgroundSyncService {
   static const _log = Log('BackgroundSyncService');
 
   /// Whether this service can do anything on the current platform.
-  static bool get isSupported =>
-      !kIsWeb && mobile.isMobileSupported;
+  static bool get isSupported => !kIsWeb && mobile.isMobileSupported;
 
   // -------------------------------------------------------------------------
   // Initialization
@@ -134,6 +135,9 @@ class BackgroundSyncService {
 
     SyncDatabase? db;
     try {
+      // Background isolates must resolve the same persisted installation as
+      // foreground pairs. An uninitialized session identity cannot bind paths.
+      await InstallationIdentityService.instance.initialize();
       // 1. Open database
       db = SyncDatabase();
 
@@ -156,7 +160,9 @@ class BackgroundSyncService {
         try {
           final client = await mobile.buildClientForProvider(pair.provider);
           if (client == null) {
-            _log.warn('Could not build client for provider "${pair.provider}" — skipping "${pair.name}"');
+            _log.warn(
+              'Could not build client for provider "${pair.provider}" — skipping "${pair.name}"',
+            );
             continue;
           }
           final result = await engine.syncPair(pair, client);
@@ -187,7 +193,9 @@ class BackgroundSyncService {
         );
       }
 
-      _log.info('Background sync task finished. conflicts=$conflicts errors=$errors');
+      _log.info(
+        'Background sync task finished. conflicts=$conflicts errors=$errors',
+      );
       return true;
     } catch (e, st) {
       _log.error('Background sync task failed', e, st);
@@ -212,7 +220,9 @@ class BackgroundSyncService {
     required List<String> errorMessages,
   }) {
     final parts = <String>[];
-    if (conflicts > 0) parts.add('$conflicts conflict${conflicts == 1 ? '' : 's'}');
+    if (conflicts > 0) {
+      parts.add('$conflicts conflict${conflicts == 1 ? '' : 's'}');
+    }
     if (errors > 0) parts.add('$errors error${errors == 1 ? '' : 's'}');
     if (errorMessages.isNotEmpty) {
       parts.add(errorMessages.first);

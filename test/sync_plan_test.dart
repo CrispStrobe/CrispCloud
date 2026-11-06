@@ -8,6 +8,7 @@ import 'package:crisp_cloud/services/sync_database.dart';
 import 'package:crisp_cloud/services/sync_engine.dart';
 
 import 'support/workflow_fake_client.dart';
+import 'support/sync_test_binding.dart';
 
 void main() {
   late Directory local;
@@ -29,6 +30,7 @@ void main() {
     );
     pair = await db.getPair(id);
     cloud = WorkflowFakeClient();
+    pair = await bindTestPair(db, pair, cloud);
     engine = SyncEngine(db);
     await File(p.join(local.path, 'a.txt')).writeAsString('left');
     cloud.put('/docs/a.txt', 'right'.codeUnits);
@@ -125,11 +127,15 @@ void main() {
   test(
     'missing local root never becomes an implicit delete-all request',
     () async {
-      final missing = pair.copyWith(localPath: p.join(local.path, 'missing'));
-      await expectLater(
-        engine.planPair(missing, cloud),
-        throwsA(isA<FileSystemException>()),
-      );
+      await local.delete(recursive: true);
+      try {
+        await expectLater(
+          engine.planPair(pair, cloud),
+          throwsA(isA<FileSystemException>()),
+        );
+      } finally {
+        await local.create();
+      }
       expect(cloud.files, hasLength(1));
     },
   );
