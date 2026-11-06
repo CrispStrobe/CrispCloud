@@ -24,6 +24,8 @@ const _groupInformation = 2;
 const _daclInformation = 4;
 const _protectedDaclInformation = 0x80000000;
 const _unprotectedDaclInformation = 0x20000000;
+const _daclAutoInheritRequest = 0x0100;
+const _daclAutoInherited = 0x0400;
 const _daclProtected = 0x1000;
 const _saclPresent = 0x10;
 const _reparsePoint = 0x400;
@@ -164,6 +166,8 @@ typedef _ControlD = int Function(
   Pointer<Uint16>,
   Pointer<Uint32>,
 );
+typedef _SetControlN = Int32 Function(Pointer<Void>, Uint16, Uint16);
+typedef _SetControlD = int Function(Pointer<Void>, int, int);
 typedef _DescriptorSidN = Int32 Function(
   Pointer<Void>,
   Pointer<Pointer<Void>>,
@@ -584,6 +588,23 @@ Pointer<Void> _parseAcl(_WindowsApi api, String? value, String path) {
     if (control & _saclPresent != 0 ||
         !api.descriptorDacl(descriptor.value, path).present) {
       throw const FormatException('Only a discretionary ACL can be preserved.');
+    }
+    if (control & _daclAutoInherited != 0) {
+      // The native setter retains the stored AI bit only when its set-only
+      // AR command bit accompanies it. This changes the input descriptor in
+      // memory; NtSetSecurityObject still writes only the checked object.
+      // https://github.com/pciutils/pciutils/blob/master/lib/win32-helpers.c
+      // https://learn.microsoft.com/windows/win32/api/securitybaseapi/nf-securitybaseapi-setsecuritydescriptorcontrol
+      if (api.security.lookupFunction<_SetControlN, _SetControlD>(
+            'SetSecurityDescriptorControl',
+          )(
+            descriptor.value,
+            _daclAutoInheritRequest,
+            _daclAutoInheritRequest,
+          ) ==
+          0) {
+        api.fail('Cannot preserve automatic ACL inheritance', path);
+      }
     }
     success = true;
     return descriptor.value;

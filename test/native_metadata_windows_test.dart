@@ -184,12 +184,7 @@ void main() {
         final file = await File(p.join(root.path, 'acl.txt'))
             .writeAsString('acl data');
         if (autoInherited) {
-          await _powershell(file.path, r'''
-$item = Get-Item -Force -LiteralPath $env:CRISP_METADATA_TEST_PATH
-$acl = $item.GetAccessControl()
-$acl.SetAccessRuleProtection($false, $false)
-$item.SetAccessControl($acl)
-''');
+          await _enableAutomaticInheritance(file.path);
         }
         final before = await backend.readMetadata(file.path);
         final original = await _inspect(file.path);
@@ -253,14 +248,19 @@ $item.SetAccessControl($acl)
       });
     }
 
-    test(
-      'a directory ACL edit does not rewrite existing descendant ACLs',
-      () async {
+    for (final autoInherited in [false, true]) {
+      test('a directory ACL edit does not rewrite existing descendant ACLs'
+          '${autoInherited ? ' with auto-inherited ACEs' : ''}', () async {
         final directory = await Directory(p.join(root.path, 'directory'))
             .create();
+        if (autoInherited) {
+          await _enableAutomaticInheritance(directory.path);
+        }
         final child = await File(p.join(directory.path, 'child.txt'))
             .writeAsString('child data');
         final before = await backend.readMetadata(directory.path);
+        final original = await _inspect(directory.path);
+        if (autoInherited) expect(original['dacl'], contains('AI'));
         final childBefore = await _inspect(child.path);
         final nativeChildBefore = await backend.readMetadata(child.path);
         addTearDown(
@@ -269,7 +269,9 @@ $item.SetAccessControl($acl)
             TransferMetadata(acl: before.acl),
           ),
         );
-        final dacl = 'D:P(A;OICI;FA;;;${before.owner})(A;OICI;FR;;;WD)';
+        final dacl =
+            'D:P${autoInherited ? 'AI' : ''}'
+            '(A;OICI;FA;;;${before.owner})(A;OICI;FR;;;WD)';
         await backend.writeMetadata(
           directory.path,
           TransferMetadata(acl: 'windows-sddl-v1:$dacl'),
@@ -292,9 +294,18 @@ $item.SetAccessControl($acl)
           nativeChildBefore.acl,
           reason: 'The handle-based reader must also retain the child ACL.',
         );
+        if (autoInherited) {
+          expect((await _inspect(directory.path))['dacl'], contains('AI'));
+        }
+        await backend.writeMetadata(
+          directory.path,
+          TransferMetadata(acl: before.acl),
+        );
+        expect((await _inspect(directory.path))['dacl'], original['dacl']);
+        expect((await _inspect(child.path))['dacl'], childBefore['dacl']);
         expect(await child.readAsString(), 'child data');
-      },
-    );
+      });
+    }
 
     test('masked DOS attributes preserve unrelated native bits on files and directories', () async {
       final file = await File(p.join(root.path, 'attributes.txt'))
@@ -501,6 +512,15 @@ Future<String> _powershell(String path, String script) async {
   );
   expect(result.exitCode, 0, reason: '${result.stdout}\n${result.stderr}');
   return result.stdout.toString().trim();
+}
+
+Future<void> _enableAutomaticInheritance(String path) async {
+  await _powershell(path, r'''
+$item = Get-Item -Force -LiteralPath $env:CRISP_METADATA_TEST_PATH
+$acl = $item.GetAccessControl()
+$acl.SetAccessRuleProtection($false, $false)
+$item.SetAccessControl($acl)
+''');
 }
 
 Future<Map<String, dynamic>> _inspect(String path) async => jsonDecode(
