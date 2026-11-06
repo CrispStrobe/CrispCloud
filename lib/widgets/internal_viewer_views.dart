@@ -191,8 +191,7 @@ class _StreamingSafeViewState extends State<StreamingSafeView> {
 
   int get _unit => widget.rawText ? viewerCodeUnitBytes(widget.encoding) : 1;
   double get _rowExtent => 13.0 * widget.fontScale * 1.5;
-  int get _offsetDigits => (widget.source.size - 1)
-      .clamp(0, 0x7fffffffffffffff)
+  int get _offsetDigits => (widget.source.size > 0 ? widget.source.size - 1 : 0)
       .toRadixString(16)
       .length
       .clamp(8, 16);
