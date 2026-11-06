@@ -1,9 +1,10 @@
-# flutter_pty2: desktop-only integration
+# flutter_pty2: desktop integration
 
 CrispCloud reuses the native PTY implementation from `flutter_pty2` **3.0.0**.
 This directory contains the published package's runtime Dart, C and build-hook
-sources. Desktop transport behavior is unchanged. CrispCloud supplies the
-terminal emulator, session ownership, UI, and SSH transport separately.
+sources, with a desktop platform allowlist and a Windows standard-handle fix
+described below. CrispCloud supplies the terminal emulator, session ownership,
+UI, and SSH transport separately.
 
 ## Provenance and license
 
@@ -19,7 +20,9 @@ terminal emulator, session ownership, UI, and SSH transport separately.
 - Bundled Dart SDK API headers and C shim in `src/include/`: BSD 3-Clause;
   see `DART_SDK_LICENSE.txt`. Their upstream copyright headers are preserved.
 
-## Why this local patch exists
+## Local patches
+
+### Desktop-only native assets
 
 CrispCloud exposes local shells on Linux, macOS and Windows, and uses SSH on
 Android and iOS. Upstream's build hook also compiles a local subprocess library
@@ -34,26 +37,48 @@ allowlist at two boundaries:
 2. `Pty.spawn` returns `PtyUnsupportedException` on other platforms before
    initializing any FFI bindings.
 
-All C sources and desktop PTY behavior remain identical to the published
-archive. There is no substitute C stub and no new local-shell functionality on
-mobile. The web path continues to use CrispCloud's conditional Dart stub.
+There is no substitute C stub and no new local-shell functionality on mobile.
+The web path continues to use CrispCloud's conditional Dart stub.
 
 This patch intentionally omits functionality CrispCloud does not use on mobile.
 It does **not** claim that the upstream package necessarily fails to compile for
 physical iOS devices. Upstream documents simulator verification separately from
 physical-device runtime verification.
 
+### Windows standard-handle isolation
+
+`patches/0002-conpty-standard-handles.patch` sets `STARTF_USESTDHANDLES` in
+`src/windows/pty_windows_spawn.c`. The zero-initialized standard handles remain
+null so Windows assigns the child's input, output and error streams to ConPTY.
+Without this flag, Windows can duplicate a parent's redirected standard handles
+into a console child even when `bInheritHandles` is false. That sends shell output
+to the parent runner's pipes instead of the PTY and leaves the terminal unable to
+interact with the child. Microsoft's console maintainer describes this exact
+case and correction in
+<https://github.com/microsoft/terminal/discussions/15814>.
+
+The failure was exposed by the Windows Flutter test runner, whose standard
+streams are redirected. The terminal smoke test now uses the application's
+actual emulator/session to answer terminal queries, captures raw PTY diagnostics,
+and requires a rendered command-output line plus the expected exit code.
+The native correction is separate from the emulator's normal DA1/CPR replies.
+
+Only `hook/build.dart`, `lib/src/pty.dart`, and
+`src/windows/pty_windows_spawn.c` differ from the reviewed runtime archive.
+Every other C source remains byte-for-byte identical to that release.
+
 ## Reproduction and updates
 
 To reconstruct this directory, download the archive, verify the SHA-256 above,
-and copy its `lib/`, `hook/`, `src/`, `pubspec.yaml` and `LICENSE`. Apply the patch
+and copy its `lib/`, `hook/`, `src/`, `pubspec.yaml` and `LICENSE`. Apply both patches
 from the resulting package directory:
 
 ```sh
 patch -p1 < patches/0001-desktop-only.patch
+patch -p1 < patches/0002-conpty-standard-handles.patch
 ```
 
-Keep this provenance file, the supplementary Dart license, patch, and the
+Keep this provenance file, the supplementary Dart license, both patches, and the
 local `tool/verify_mobile_assets.dart` regression when updating the archive.
 Keep the application's dependency and override pinned to the reviewed release;
 review source and licensing again before changing that version.
@@ -84,3 +109,5 @@ build or a macOS/Windows runtime test.
 - Dart hooks and native asset bundling: <https://dart.dev/tools/hooks>
 - Dart 3.13 native library tree shaking:
   <https://dart.dev/blog/announcing-dart-3-13>
+- ConPTY with redirected parent standard streams:
+  <https://github.com/microsoft/terminal/discussions/15814>

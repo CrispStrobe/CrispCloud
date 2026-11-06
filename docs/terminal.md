@@ -22,16 +22,17 @@ The reviewed versions are `xterm2` **5.4.0**, `xterm2_core` **1.0.0**,
 `flutter_pty2` **3.0.0**, and the existing `dartssh2` **4.1.0**. All four packages
 are MIT licensed. The new direct dependencies, `xterm2` and `flutter_pty2`, are
 pinned to these releases; `flutter_pty2` uses a local
-override based on that exact release, with a desktop-only build hook and spawn
-guard. This keeps unused subprocess native code out of the SSH-only mobile
-apps. Its desktop backend is unchanged; see
+override based on that exact release. A desktop-only build hook and spawn guard
+keep unused subprocess native code out of the SSH-only mobile apps. A separate
+Windows fix makes child standard handles connect to ConPTY even when the parent
+application's input/output is redirected. The Unix backend is unchanged; see
 [`packages/flutter_pty2/UPSTREAM.md`](../packages/flutter_pty2/UPSTREAM.md).
 The application lockfile records the complete resolved dependency graph.
 
 | Option considered | License | Decision |
 | --- | --- | --- |
 | [xterm2 5.4.0](https://pub.dev/packages/xterm2) | MIT | Selected. Native Flutter rendering, a pure-Dart core, and recent maintenance without a WebView. |
-| [flutter_pty2 3.0.0](https://pub.dev/packages/flutter_pty2) | MIT; bundled Dart native API is BSD-3-Clause | Selected with a maintained desktop-only override. Uses Unix PTYs and Windows ConPTY, bounded I/O queues and a native-assets build hook. |
+| [flutter_pty2 3.0.0](https://pub.dev/packages/flutter_pty2) | MIT; bundled Dart native API is BSD-3-Clause | Selected with small patches for desktop-only assets and Windows standard handles. Uses Unix PTYs and Windows ConPTY, bounded I/O queues and a native-assets build hook. |
 | [dartssh2 4.1.0](https://pub.dev/packages/dartssh2) | MIT | Retained. Already supplies SSH, PTY allocation, window-size updates and the verified host-key connection path. |
 | [Original xterm 4.0.0](https://pub.dev/packages/xterm) | MIT | Established codebase, but the latest original release is older and xterm2 continues its maintenance. |
 | [terminal_view 0.5.0](https://pub.dev/packages/terminal_view) | MIT | Viable mobile-focused xterm fork; keep as an alternative if device testing identifies a rendering problem. |
@@ -78,6 +79,11 @@ by default.
 
 Windows ConPTY is implemented upstream, but upstream 3.0.0 still marks Windows
 as experimental. A packaged Windows run remains part of the release smoke test.
+The local Windows patch explicitly sets `STARTF_USESTDHANDLES` while leaving
+the standard handles null, so Windows assigns the child to its pseudoconsole
+instead of duplicating the parent's redirected handles. This follows the
+[Microsoft terminal maintainer's guidance](https://github.com/microsoft/terminal/discussions/15814)
+and fixes the case exposed by Flutter's headless test runner.
 
 ## Data flow and ownership
 
@@ -208,7 +214,10 @@ and a native PTY smoke test in the existing Linux/macOS/Windows matrix so
 platform failures are visible early. Windows and macOS build jobs retain the
 full terminal regression checks before packaging; all packaged builds still
 require the complete Linux suite to pass.
-The Windows case exercises the actual ConPTY backend rather than a fake process.
+The Windows case exercises the actual ConPTY backend through `TerminalSession`,
+including emulator replies to startup queries, interactive input, a separately
+rendered command-output line and the exit code. Its runner redirects standard
+I/O, so it also covers the Windows handle-assignment patch.
 
 Run the terminal unit/widget tests and static analysis, then exercise the
 packaged app on each enabled target. Automated checks are not a substitute for

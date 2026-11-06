@@ -324,6 +324,11 @@ int pty_windows_create_process(const PtySpawnOptions *options,
         }
     }
     startup_info.StartupInfo.cb = sizeof(startup_info);
+    // Explicit null standard handles make Windows attach all three streams to
+    // ConPTY. Otherwise redirected parent handles can be duplicated into the
+    // child even with bInheritHandles == FALSE. The structure was zeroed above.
+    // https://github.com/microsoft/terminal/discussions/15814
+    startup_info.StartupInfo.dwFlags |= STARTF_USESTDHANDLES;
     startup_info.lpAttributeList = attributes;
     if (!CreateProcessW(NULL,
                         command,
