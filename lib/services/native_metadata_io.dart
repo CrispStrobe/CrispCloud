@@ -94,7 +94,7 @@ typedef _GetattrN = Int32 Function(
   Pointer<_AttrList>,
   Pointer<Uint32>,
   Size,
-  UnsignedLong,
+  Uint32,
 );
 typedef _GetattrD = int Function(
   int,
@@ -235,9 +235,9 @@ final class _Timespec extends Struct {
 }
 
 bool get _mac => Platform.isMacOS;
-int _errno(DynamicLibrary lib) => lib
-    .lookupFunction<_ErrnoN, _ErrnoD>(_mac ? '__error' : '__errno_location')()
-    .value;
+final _ErrnoD _errnoLocation = DynamicLibrary.process()
+    .lookupFunction<_ErrnoN, _ErrnoD>(_mac ? '__error' : '__errno_location');
+int _errno(DynamicLibrary _) => _errnoLocation().value;
 bool _absent(int code) => code == (_mac ? 93 : 61);
 bool _unsupported(int code) =>
     (_mac ? const [45, 78] : const [38, 95]).contains(code);
@@ -263,9 +263,13 @@ T _withDescriptor<T>(
     );
   }
   final lib = DynamicLibrary.process();
+  // Resolve the thread-local accessor before any operation whose errno is
+  // needed; symbol resolution and freeing buffers must not replace that error.
+  final errnoAddress = _errnoLocation();
   final pathOnly = !_mac && lib.providesSymbol('statx');
   final name = path.toNativeUtf8();
   late int fd;
+  late int openError;
   try {
     // Linux O_PATH does not require read permission on the object's data.
     // statx verifies its actual type before /proc/self/fd operations below.
@@ -280,10 +284,11 @@ T _withDescriptor<T>(
           : 0xa0800,
       0,
     );
+    openError = fd < 0 ? errnoAddress.value : 0;
   } finally {
     calloc.free(name);
   }
-  if (fd < 0) _fail('Opening metadata failed', path, _errno(lib));
+  if (fd < 0) _fail('Opening metadata failed', path, openError);
   try {
     if (pathOnly) {
       final mode = _statxMetadata(lib, fd, path, 1).getUint16(28, Endian.host);
