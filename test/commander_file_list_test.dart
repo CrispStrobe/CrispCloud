@@ -21,6 +21,7 @@ import 'package:crisp_cloud/models/panel_tab.dart';
 import 'package:crisp_cloud/models/storage_reference.dart';
 import 'package:crisp_cloud/models/file_search_query.dart';
 import 'package:crisp_cloud/widgets/pattern_selection_dialog.dart';
+import 'package:crisp_cloud/widgets/file_list_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -1200,4 +1201,227 @@ void main() {
     );
     expect(panel.selection, isEmpty);
   });
+
+  test('same-name and extension actions match verified visible rows, including extensionless names', () async {
+    final panel = await remote();
+    panel.showSearchResults([
+      for (final path in [
+        '/one/report.txt',
+        '/one/report.pdf',
+        '/two/report.TXT',
+        '/two/photo.txt',
+        '/one/README',
+        '/one/.gitignore',
+      ])
+        item(path),
+      FileItem(name: 'folder.txt', path: '/one/folder.txt', isFolder: true),
+    ], origin: panel.captureRemoteSearchOrigin());
+    final rows = {for (final row in panel.files!) row.path!: row};
+    panel.setCursorToItem(rows['/one/report.txt']!);
+    expect(panel.selectSameName(), 3);
+    expect(
+      panel.selection.map((f) => f.path),
+      unorderedEquals([
+        '/one/report.txt',
+        '/one/report.pdf',
+        '/two/report.TXT',
+      ]),
+    );
+    expect(panel.selectSameExtension(action: SelectionAction.replace), 3);
+    expect(
+      panel.selection.map((f) => f.path),
+      unorderedEquals(['/one/report.txt', '/two/report.TXT', '/two/photo.txt']),
+    );
+    expect(
+      panel.selectSameExtension(
+        caseSensitive: true,
+        action: SelectionAction.deselect,
+      ),
+      2,
+    );
+    expect(panel.selection.single.path, '/two/report.TXT');
+    expect(
+      panel.selectSameExtension(
+        focused: rows['/one/README'],
+        action: SelectionAction.replace,
+      ),
+      2,
+    );
+    expect(
+      panel.selection.map((f) => f.name),
+      unorderedEquals(['README', '.gitignore']),
+    );
+    panel.setFilter('photo');
+    expect(
+      panel.selectSameExtension(
+        focused: rows['/one/report.txt'],
+        action: SelectionAction.replace,
+      ),
+      1,
+    );
+    expect(panel.selection.single.path, '/two/photo.txt');
+    expect(
+      panel.selectSameName(focused: rows['/one/report.txt']!.copyWith()),
+      0,
+    );
+    expect(panel.selection.single.path, '/two/photo.txt');
+  });
+
+  test(
+    'shared saved exclusions prune directory ancestors in a flat result list',
+    () async {
+      final panel = await remote();
+      panel.showSearchResults([
+        for (final path in [
+          '/docs/keep/a.txt',
+          '/docs/cache/a.txt',
+          '/docs/deep/cache/b.txt',
+          '/docs/.private/c.txt',
+        ])
+          item(path),
+      ], origin: panel.captureRemoteSearchOrigin());
+      const criteria = FileSearchQuery(
+        namePattern: '*.txt',
+        includeHidden: false,
+        excludeDirectories: 'cache',
+      );
+      expect(panel.matchingCriteriaFiles(criteria).map((f) => f.path), [
+        '/docs/keep/a.txt',
+      ]);
+      expect(panel.applyCriteriaSelection(criteria), 1);
+      expect(panel.selection.single.path, '/docs/keep/a.txt');
+    },
+  );
+
+  test('path-list marks preserve listing, cursor and location and validate before changing marks', () async {
+    final panel = await remote();
+    final rows = List<FileItem>.of(panel.files!);
+    final path = panel.currentPath;
+    panel.setCursorToItem(rows.last);
+    final cursor = panel.cursorItem;
+    final calls = cloud.paths.length;
+    final source = panel.pathSelectionSources.single;
+    final result = panel.selectPathsFromList(
+      'a.txt\n/missing.txt\na.txt',
+      source: source,
+    );
+    expect(result.loaded, 1);
+    expect(result.failures.keys, ['/missing.txt']);
+    expect(panel.selection.single.path, '/a.txt');
+    expect(panel.files, rows);
+    expect(identical(panel.cursorItem, cursor), isTrue);
+    expect(panel.currentPath, path);
+    expect(panel.showingSearchResults, isFalse);
+    expect(cloud.paths.length, calls);
+    expect(
+      () => panel.selectPathsFromList(
+        'b.txt\nhttps://example.test/file',
+        source: source,
+        action: SelectionAction.replace,
+      ),
+      throwsFormatException,
+    );
+    expect(panel.selection.single.path, '/a.txt');
+    panel.setFilter('b');
+    expect(panel.selectPathsFromList('a.txt', source: source).loaded, 0);
+    expect(panel.selection.single.path, '/a.txt');
+    panel.clearFilter();
+    await panel.refresh();
+    expect(
+      () => panel.selectPathsFromList('b.txt', source: source),
+      throwsStateError,
+    );
+  });
+
+  test('same parent and imported marks never alias another account with the same path', () async {
+    final panel = await remote();
+    final localPanel = container.read(panelProvider(PanelSide.local));
+    await localPanel.refresh();
+    final cloudOrigin = panel.captureRemoteSearchOrigin();
+    final localOrigin = localPanel.captureCurrentOrigin();
+    final cloudRows = [item('/one/same.txt'), item('/one/other.txt')];
+    final localRow = item('/one/same.txt');
+    panel.showSearchResults(
+      [...cloudRows, localRow],
+      originForFile: (row) =>
+          identical(row, localRow) ? localOrigin : cloudOrigin,
+    );
+    final cloudFile = panel.files!.firstWhere(
+      (f) => f.storageId == cloudOrigin.storageId,
+    );
+    expect(panel.selectSameParent(focused: cloudFile), 2);
+    expect(
+      panel.selection.every((f) => f.storageId == cloudOrigin.storageId),
+      isTrue,
+    );
+    panel.selectAll();
+    expect(() => panel.selectPathsFromList('/one/same.txt'), throwsStateError);
+    expect(panel.selection, hasLength(3));
+    final source = panel.pathSelectionSources.firstWhere(
+      (s) => s.origin.storageId == cloudOrigin.storageId,
+    );
+    panel.selectPathsFromList(
+      '/one/same.txt',
+      source: source,
+      action: SelectionAction.replace,
+    );
+    expect(panel.selection, hasLength(2));
+    expect(panel.selection.every((f) => f.path == '/one/same.txt'), isTrue);
+    expect(
+      () => localPanel.selectPathsFromList('/one/same.txt', source: source),
+      throwsStateError,
+    );
+    auth.connection(false);
+    expect(
+      () => panel.selectPathsFromList('/one/same.txt', source: source),
+      throwsStateError,
+    );
+  });
+
+  testWidgets(
+    'path-list selection mode applies marks without replacing the panel',
+    (tester) async {
+      final panel = await remote();
+      final original = List<FileItem>.of(panel.files!);
+      tester.view.physicalSize = const Size(360, 780);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            home: Scaffold(
+              body: Consumer(
+                builder: (context, ref, _) => TextButton(
+                  onPressed: () => showFileListDialog(
+                    context,
+                    ref,
+                    PanelSide.remote,
+                    selectionMode: true,
+                  ),
+                  child: const Text('Open'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      final input = find.byKey(const ValueKey('import-file-list'));
+      await tester.ensureVisible(input);
+      await tester.enterText(input, 'a.txt');
+      final apply = find.byKey(const ValueKey('file-list-apply'));
+      await tester.ensureVisible(apply);
+      await tester.tap(apply);
+      await tester.pumpAndSettle();
+      expect(panel.selection.single.path, '/a.txt');
+      expect(panel.files, original);
+      expect(panel.showingSearchResults, isFalse);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
 }

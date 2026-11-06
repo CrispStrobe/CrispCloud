@@ -39,6 +39,7 @@ import '../services/cloud_storage_interface.dart' show CloudStorageClient;
 import '../services/directory_cache_service.dart';
 import '../services/file_operation_backend.dart';
 import '../services/file_selection_pattern.dart';
+import '../services/file_search_path_filter.dart';
 import '../services/file_list_paths.dart';
 import '../services/local_file_service.dart';
 import '../services/log_service.dart';
@@ -2599,10 +2600,7 @@ class PanelNotifier extends ChangeNotifier {
 
   /// Reuse the search model for visible-row name and metadata criteria.
   /// Content/archive searches require the search engine before feeding a list.
-  int applyCriteriaSelection(
-    FileSearchQuery criteria, {
-    SelectionAction action = SelectionAction.select,
-  }) {
+  List<FileItem> matchingCriteriaFiles(FileSearchQuery criteria) {
     criteria.validate();
     if (criteria.contentPattern.isNotEmpty || criteria.searchArchives) {
       throw const FormatException(
@@ -2610,16 +2608,41 @@ class PanelNotifier extends ChangeNotifier {
       );
     }
     final pattern = criteria.nameMatcher;
-    final matches = (displayedFiles ?? const <FileItem>[])
-        .where(
-          (file) =>
-              file.name != '..' &&
-              file.name != '.' &&
-              (criteria.includeHidden || !file.name.startsWith('.')) &&
-              pattern.matches(file) &&
-              criteria.matchesMetadata(file),
-        )
-        .toList();
+    final filters = <String, FileSearchPathFilter>{};
+    return (displayedFiles ?? const <FileItem>[]).where((file) {
+      final origin = originForOperation(file);
+      if (origin == null ||
+          !pattern.matches(file) ||
+          !criteria.matchesMetadata(file)) {
+        return false;
+      }
+      final filter = filters.putIfAbsent(
+        origin.storageId,
+        () => FileSearchPathFilter(
+          criteria,
+          paths: origin.source.isLocal && !kIsWeb ? p.context : p.posix,
+        ),
+      );
+      final root = _showingSearchResults
+          ? (_collectionSearch?.storage == origin.storageReference
+                ? _collectionSearch!.directory
+                : _fileListOrigin?.source.currentPath ??
+                      origin.storageReference.root)
+          : origin.source.currentPath;
+      return filter.allows(file, root: root);
+    }).toList();
+  }
+
+  int applyCriteriaSelection(
+    FileSearchQuery criteria, {
+    SelectionAction action = SelectionAction.select,
+  }) => _applySelectionMatches(matchingCriteriaFiles(criteria), action);
+
+  int _applySelectionMatches(
+    List<FileItem> matches,
+    SelectionAction action, {
+    String? replaceStorageId,
+  }) {
     switch (action) {
       case SelectionAction.select:
         _selection.addAll(matches);
@@ -2630,13 +2653,180 @@ class PanelNotifier extends ChangeNotifier {
           if (!_selection.remove(file)) _selection.add(file);
         }
       case SelectionAction.replace:
-        _selection
-          ..clear()
-          ..addAll(matches);
+        if (replaceStorageId == null) {
+          _selection.clear();
+        } else {
+          _selection.removeWhere(
+            (file) => originForOperation(file)?.storageId == replaceStorageId,
+          );
+        }
+        _selection.addAll(matches);
     }
     _lastSelected = null;
+    _rememberFileListTab();
     notifyListeners();
     return matches.length;
+  }
+
+  /// Same-name follows Commander semantics: ignore the final file extension.
+  /// Dotfiles without another dot are extensionless; folders use their full name.
+  int selectSameName({
+    FileItem? focused,
+    bool caseSensitive = false,
+    SelectionAction action = SelectionAction.select,
+  }) => _selectRelated('name', focused, caseSensitive, action);
+
+  int selectSameExtension({
+    FileItem? focused,
+    bool caseSensitive = false,
+    SelectionAction action = SelectionAction.select,
+  }) => _selectRelated('extension', focused, caseSensitive, action);
+
+  /// A directory path on another account is never the same containing folder.
+  int selectSameParent({
+    FileItem? focused,
+    SelectionAction action = SelectionAction.select,
+  }) => _selectRelated('parent', focused, true, action);
+
+  int _selectRelated(
+    String kind,
+    FileItem? focused,
+    bool caseSensitive,
+    SelectionAction action,
+  ) {
+    focused ??= cursorItem;
+    if (focused == null) return 0;
+    final origin = originForOperation(focused);
+    if (origin == null || (kind == 'extension' && focused.isFolder)) return 0;
+    final paths = origin.source.isLocal && !kIsWeb ? p.context : p.posix;
+    String stem(FileItem file) {
+      final dot = file.name.lastIndexOf('.');
+      return file.isFolder || dot <= 0
+          ? file.name
+          : file.name.substring(0, dot);
+    }
+
+    String value(FileItem file) {
+      if (kind == 'parent') {
+        return paths.dirname(
+          file.path ?? paths.join(origin.source.currentPath, file.name),
+        );
+      }
+      final result = kind == 'name'
+          ? stem(file)
+          : file.name.substring(stem(file).length);
+      return caseSensitive ? result : result.toLowerCase();
+    }
+
+    final target = value(focused);
+    final matches = (displayedFiles ?? const <FileItem>[]).where((file) {
+      final candidate = originForOperation(file);
+      if (candidate == null) return false;
+      if (kind == 'parent') {
+        if (candidate.storageReference != origin.storageReference) return false;
+      } else if (file.isFolder != focused!.isFolder) {
+        return false;
+      }
+      return value(file) == target;
+    }).toList();
+    return _applySelectionMatches(matches, action);
+  }
+
+  /// A path-only list must be applied to an explicitly captured storage account.
+  /// The dialog chooses one source for mixed collections. Captures expire after
+  /// navigation/refresh rather than redirecting marks to a replacement listing.
+  List<PathSelectionSource> get pathSelectionSources {
+    if (!_canUseSelectionMemory) return const [];
+    final sources = <String, PanelFileOrigin>{};
+    try {
+      final current = captureCurrentOrigin();
+      sources[current.storageId] = current;
+    } on StateError {
+      // Mixed collections have no common source; collect their verified rows.
+    }
+    for (final file in displayedFiles ?? const <FileItem>[]) {
+      final origin = originForOperation(file);
+      if (origin != null) sources.putIfAbsent(origin.storageId, () => origin);
+    }
+    final generation = _listingGeneration;
+    final tab = _activeTabId;
+    return [
+      for (final origin in sources.values)
+        PathSelectionSource._(
+          this,
+          origin,
+          () =>
+              _canUseSelectionMemory &&
+              generation == _listingGeneration &&
+              tab == _activeTabId &&
+              origin.isCurrent,
+        ),
+    ];
+  }
+
+  FileListImportResult selectPathsFromList(
+    String text, {
+    PathSelectionSource? source,
+    SelectionAction action = SelectionAction.select,
+  }) {
+    if (source == null) {
+      final sources = pathSelectionSources;
+      if (sources.length != 1) {
+        throw StateError(
+          'Choose the original storage account for this path list.',
+        );
+      }
+      source = sources.single;
+    }
+    if (!identical(source._owner, this) || !source.isCurrent) {
+      throw StateError(
+        'The panel or source changed. Open path selection again.',
+      );
+    }
+    final origin = source.origin;
+    final backend = fileOperationBackend(
+      source: origin.source,
+      local: _localFileService,
+      isCurrent: () => origin.isCurrent,
+    );
+    final requested = FileListPaths.parse(
+      text,
+      basePath: origin.source.currentPath,
+      local: origin.source.isLocal,
+    );
+    final candidates = <String, List<FileItem>>{};
+    for (final file in displayedFiles ?? const <FileItem>[]) {
+      final current = originForOperation(file);
+      if (current == null ||
+          current.storageReference != origin.storageReference) {
+        continue;
+      }
+      final path =
+          file.path ??
+          backend.paths.join(current.source.currentPath, file.name);
+      candidates.putIfAbsent(backend.pathKey(path), () => []).add(file);
+    }
+    final matches = <FileItem>[];
+    final failures = <String, String>{};
+    for (final path in requested) {
+      final rows = candidates[backend.pathKey(path)] ?? const <FileItem>[];
+      if (rows.length == 1) {
+        matches.add(rows.single);
+      } else {
+        failures[path] = rows.isEmpty
+            ? 'No visible, verified row in the chosen source.'
+            : 'Several rows identify this path; refresh before selecting it.';
+      }
+    }
+    // Resolve/validate the entire list before changing any selection marks.
+    if (!source.isCurrent) {
+      throw StateError('The source changed during path selection.');
+    }
+    _applySelectionMatches(matches, action, replaceStorageId: origin.storageId);
+    return FileListImportResult(
+      loaded: matches.length,
+      failures: Map.unmodifiable(failures),
+    );
   }
 
   /// Compatibility entry points used by existing keypad commands.
@@ -5099,6 +5289,16 @@ class FileListImportResult {
   const FileListImportResult({required this.loaded, required this.failures});
   final int loaded;
   final Map<String, String> failures;
+}
+
+class PathSelectionSource {
+  PathSelectionSource._(this._owner, this.origin, this._isCurrent);
+  final PanelNotifier _owner;
+  final PanelFileOrigin origin;
+  final bool Function() _isCurrent;
+  bool get isCurrent => _isCurrent();
+  String get label => _owner.storageDisplayName(origin.storageReference);
+  String get basePath => origin.source.currentPath;
 }
 
 class _SelectionMemoryEntry {

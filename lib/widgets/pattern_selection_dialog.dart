@@ -11,6 +11,7 @@ import '../providers/panel_provider.dart';
 import '../services/file_selection_pattern.dart';
 import '../services/log_service.dart';
 import '../services/selection_pattern_history.dart';
+import 'file_list_dialog.dart';
 
 export '../services/file_selection_pattern.dart' show SelectionAction;
 
@@ -53,6 +54,7 @@ class _PatternSelectionDialogState
   final _after = TextEditingController();
   final _before = TextEditingController();
   final _extensions = TextEditingController();
+  final _excludedDirectories = TextEditingController();
   bool _includeHidden = true;
   List<SavedSearch> _presets = const [];
 
@@ -100,7 +102,14 @@ class _PatternSelectionDialogState
   @override
   void dispose() {
     _controller.dispose();
-    for (final c in [_minimum, _maximum, _after, _before, _extensions]) {
+    for (final c in [
+      _minimum,
+      _maximum,
+      _after,
+      _before,
+      _extensions,
+      _excludedDirectories,
+    ]) {
       c.dispose();
     }
     super.dispose();
@@ -146,6 +155,7 @@ class _PatternSelectionDialogState
       includeFiles: _kind != 'folders',
       includeFolders: _kind != 'files',
       includeHidden: _includeHidden,
+      excludeDirectories: _excludedDirectories.text.trim(),
       minSize: size(_minimum.text),
       maxSize: size(_maximum.text),
       modifiedAfter: date(_after.text),
@@ -186,6 +196,7 @@ class _PatternSelectionDialogState
       _after.text = query.modifiedAfter?.toIso8601String() ?? '';
       _before.text = query.modifiedBefore?.toIso8601String() ?? '';
       _extensions.text = query.extensions.join('; ');
+      _excludedDirectories.text = query.excludeDirectories;
       _includeHidden = query.includeHidden;
       _memoryMessage = (context) => context.commanderTr(
         "Loaded {0}. Selection applies to visible rows only.",
@@ -289,18 +300,9 @@ class _PatternSelectionDialogState
     } on FormatException catch (e) {
       error = e.message;
     }
-    final displayed = panel.displayedFiles ?? [];
-    final matches = pattern == null
+    final matches = criteria == null
         ? 0
-        : displayed
-              .where(
-                (file) =>
-                    file.name != '..' &&
-                    pattern!.matches(file) &&
-                    criteria!.matchesMetadata(file) &&
-                    (criteria.includeHidden || !file.name.startsWith('.')),
-              )
-              .length;
+        : panel.matchingCriteriaFiles(criteria).length;
     final restorable = panel.restorableSelectionCount;
 
     return AlertDialog(
@@ -504,6 +506,11 @@ class _PatternSelectionDialogState
                         context.commanderTr("Extensions (; separated)"),
                         'selection-extensions',
                       ),
+                      _criterionField(
+                        _excludedDirectories,
+                        context.commanderTr("Exclude directories"),
+                        'selection-excluded-directories',
+                      ),
                     ],
                   ),
                   CheckboxListTile(
@@ -555,6 +562,65 @@ class _PatternSelectionDialogState
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               const Divider(height: 24),
+              Text(context.commanderTr("Match the focused item")),
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: [
+                  for (final kind in ['extension', 'name', 'parent'])
+                    TextButton(
+                      key: ValueKey('selection-same-$kind'),
+                      onPressed:
+                          panel.cursorItem == null ||
+                              panel.originForOperation(panel.cursorItem!) ==
+                                  null ||
+                              (kind == 'extension' &&
+                                  panel.cursorItem!.isFolder)
+                          ? null
+                          : () {
+                              final count = switch (kind) {
+                                'extension' => panel.selectSameExtension(
+                                  caseSensitive: _caseSensitive,
+                                  action: _action,
+                                ),
+                                'name' => panel.selectSameName(
+                                  caseSensitive: _caseSensitive,
+                                  action: _action,
+                                ),
+                                _ => panel.selectSameParent(action: _action),
+                              };
+                              setState(
+                                () => _memoryMessage = (context) =>
+                                    context.commanderTr(
+                                      "Updated marks for {0} matching item(s).",
+                                      [count],
+                                    ),
+                              );
+                            },
+                      child: Text(
+                        context.commanderTr(switch (kind) {
+                          'extension' => 'Same extension',
+                          'name' => 'Same name (without extension)',
+                          _ => 'Same containing folder',
+                        }),
+                      ),
+                    ),
+                  TextButton.icon(
+                    key: const ValueKey('selection-load-paths'),
+                    onPressed: () => showFileListDialog(
+                      context,
+                      ref,
+                      widget.side,
+                      importMode: true,
+                      selectionMode: true,
+                    ),
+                    icon: const Icon(Icons.playlist_add_check),
+                    label: Text(
+                      context.commanderTr("Load selection from paths…"),
+                    ),
+                  ),
+                ],
+              ),
               Wrap(
                 spacing: 8,
                 runSpacing: 4,
