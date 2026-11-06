@@ -33,6 +33,7 @@ import '../services/log_service.dart';
 import 'auth_provider.dart';
 import 'core_providers.dart';
 import 'panel_provider.dart';
+import '../services/provider_workflow_failure.dart';
 
 class TransferNotifier extends ChangeNotifier {
   static const _log = Log('TransferNotifier');

@@ -24,6 +24,7 @@ import 'gdrive_operation_failure.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
 import 'storage_trash.dart';
+import './connection_failure.dart';
 
 class GDriveClientAdapter extends CloudStorageClient
     implements StorageTrashOperations, FreshCloudDirectoryReader {

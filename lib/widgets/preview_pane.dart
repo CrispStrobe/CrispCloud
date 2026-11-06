@@ -40,6 +40,7 @@ import 'package:flutter_highlight/themes/monokai-sublime.dart';
 import 'package:flutter_highlight/themes/github.dart';
 
 import '../services/log_service.dart';
+import '../l10n/preview_media_strings.dart';
 
 /// File types we can preview inline.
 enum PreviewType {
@@ -171,9 +172,11 @@ String? _highlightLang(String filename) {
 
 /// Extract readable text from Office documents (DOCX, XLSX, PPTX, ODT, EPUB).
 /// Shared implementation lives in preview_media.dart.
-Future<String> _extractOfficeText(Uint8List bytes, String filename,
-        PreviewMediaStrings strings) =>
-    extractOfficeText(bytes, filename, strings: strings);
+Future<String> _extractOfficeText(
+  Uint8List bytes,
+  String filename,
+  PreviewMediaStrings strings,
+) => extractOfficeText(bytes, filename, strings: strings);
 String _mimeTypeForExt(String ext) => mimeTypeForExt(ext);
 
 class PreviewPane extends ConsumerStatefulWidget {
@@ -345,7 +348,11 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
         _pdfDocument = document;
         _pdfController = PdfController(document: Future.value(document));
       } else if (type == PreviewType.office) {
-        final text = await _extractOfficeText(bytes, file.name);
+        final text = await _extractOfficeText(
+          bytes,
+          file.name,
+          PreviewMediaStrings(context),
+        );
         if (!_sameRequest(file, token)) return;
         if (!origin.isCurrent) {
           throw const FileBytesLoadException(
@@ -808,7 +815,11 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
             const SizedBox(height: 12),
           ],
           if (file.size != null)
-            _infoRow(context, PreviewMediaStrings(context).text('size'), formatBytes(file.size!)),
+            _infoRow(
+              context,
+              PreviewMediaStrings(context).text('size'),
+              formatBytes(file.size!),
+            ),
           if (file.updatedAt != null)
             _infoRow(context, 'Modified', formatDateFull(file.updatedAt!)),
           if (file.path != null) _infoRow(context, 'Path', file.path!),

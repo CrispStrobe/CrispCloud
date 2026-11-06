@@ -16,6 +16,7 @@ import '../services/log_service.dart';
 import '../services/file_comparison_service.dart';
 import '../services/file_operation_backend.dart';
 import '../services/file_operation_service.dart';
+import '../l10n/diff_viewer_strings.dart';
 export '../services/file_comparison_service.dart' show DiffLine, DiffType;
 
 /// Show a diff dialog comparing two raw text strings.

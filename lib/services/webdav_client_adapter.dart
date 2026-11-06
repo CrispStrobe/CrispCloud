@@ -16,6 +16,7 @@ import 'secure_storage_service.dart';
 import 'webdav_config_service.dart';
 
 import 'dart:io' as dart_io;
+import './webdav_operation_failure.dart';
 
 class WebDavClientAdapter extends CloudStorageClient
     with CloudTransferOperations {

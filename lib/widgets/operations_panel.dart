@@ -219,7 +219,6 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
             ),
           ),
         ],
-        ),
       ),
     );
   }
@@ -358,7 +357,10 @@ class _OperationTile extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
-                    strings.format('Files: {done}/{total}', {'done': operation.completedFiles, 'total': operation.totalFiles}),
+                    strings.format('Files: {done}/{total}', {
+                      'done': operation.completedFiles,
+                      'total': operation.totalFiles,
+                    }),
                     style: TextStyle(
                       fontSize: 10,
                       color: Theme.of(context).colorScheme.onPrimaryContainer,
@@ -386,7 +388,7 @@ class _OperationTile extends StatelessWidget {
                     ? 'Paused'
                     : statusLabel ??
                           operation.error ??
-                          _getStatusText(operation),
+                          _getStatusText(context, operation),
                 style: TextStyle(
                   fontSize: 11,
                   color: operation.error != null
@@ -520,7 +522,8 @@ class _OperationTile extends StatelessWidget {
     );
   }
 
-  String _getStatusText(OperationProgress op) {
+  String _getStatusText(BuildContext context, OperationProgress op) {
+    final strings = OperationsStrings(context);
     if (op.error != null) return 'Error: ${op.error}';
     if (op.isComplete) return 'Complete';
     final percent = (op.progress * 100).toStringAsFixed(0);
@@ -532,5 +535,4 @@ class _OperationTile extends StatelessWidget {
         : '';
     return '$percent% • ${formatBytes(op.transferredBytes)} / ${formatBytes(op.totalBytes)}$speedStr$etaStr';
   }
-
 }

@@ -25,6 +25,7 @@ import 'cloud_storage_interface.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
 import 'bounded_transfer_stream.dart';
+import './azure_hetzner_failure.dart';
 
 // ────────────────────────────────────────────────────────────────────────────
 // Auth mode enum
@@ -303,8 +304,9 @@ class AzureBlobAdapter extends CloudStorageClient
     final info = AzureConfigService.parseConnectionString(connectionString);
     if (info == null) {
       throw AzureHetznerArgumentError(
-          AzureHetznerErrorCode.azureConnectionString,
-          'Invalid Azure connection string');
+        AzureHetznerErrorCode.azureConnectionString,
+        'Invalid Azure connection string',
+      );
     }
     final creds = <String, String>{
       'auth_mode': 'sharedKey',
@@ -628,8 +630,9 @@ class AzureBlobAdapter extends CloudStorageClient
           ? name.substring(0, name.length - 1)
           : name;
       // Strip leading path to get the leaf segment
-      final leaf =
-          cleanName.contains('/') ? cleanName.split('/').last : cleanName;
+      final leaf = cleanName.contains('/')
+          ? cleanName.split('/').last
+          : cleanName;
       folders.add({
         'name': leaf,
         'path': name, // full prefix
@@ -927,7 +930,9 @@ class AzureBlobAdapter extends CloudStorageClient
     final c = _effectiveContainer(container);
     if (blob.isEmpty)
       throw AzureHetznerArgumentError(
-          AzureHetznerErrorCode.azureBlobPath, 'blobPath must point to a blob');
+        AzureHetznerErrorCode.azureBlobPath,
+        'blobPath must point to a blob',
+      );
 
     final uri = _buildUri(c, blob: blob, queryParams: {'comp': 'tier'});
     final headers = _baseHeaders(extra: {'x-ms-access-tier': tier.headerValue});
@@ -943,6 +948,77 @@ class AzureBlobAdapter extends CloudStorageClient
 
   // ── Streaming overrides ───────────────────────────────────────────────────────
 
+  Future<Uint8List> readFileRange(
+    String remotePath,
+    int offset,
+    int length,
+  ) async {
+    if (offset < 0 || length < 0 || length > 256 * 1024) {
+      throw AzureHetznerArgumentError(
+        AzureHetznerErrorCode.azureReadRange,
+        'Invalid bounded read range',
+      );
+    }
+    if (length == 0) return Uint8List(0);
+    final (:container, :blob) = _splitPath(remotePath);
+    final uri = _buildUri(_effectiveContainer(container), blob: blob);
+    final headers = _baseHeaders()
+      ..['Range'] = 'bytes=$offset-${offset + length - 1}';
+    _addSharedKeyAuth(headers, 'GET', uri, const []);
+    final transport = http.Client();
+    try {
+      final response = await transport.send(
+        http.Request('GET', uri)..headers.addAll(headers),
+      );
+      if (response.statusCode == 416 &&
+          RegExp(r'^bytes \*/[0-9]+$')
+              .hasMatch(response.headers['content-range'] ?? '')) {
+        final size = int.parse(
+          response.headers['content-range']!.split('/').last,
+        );
+        if (offset >= size) return Uint8List(0);
+      }
+      final range = RegExp(r'^bytes ([0-9]+)-([0-9]+)/([0-9]+)$')
+          .firstMatch(response.headers['content-range'] ?? '');
+      if (response.statusCode != 206 ||
+          range == null ||
+          int.parse(range[1]!) != offset) {
+        throw AzureHetznerStateError(
+          AzureHetznerErrorCode.azureReadRangeIgnored,
+          'Azure did not honor the bounded read range',
+        );
+      }
+      final end = int.parse(range[2]!);
+      final total = int.parse(range[3]!);
+      final expectedEnd = (offset + length - 1).clamp(0, total - 1);
+      if (total <= offset || end != expectedEnd) {
+        throw AzureHetznerStateError(
+          AzureHetznerErrorCode.azureReadRangeInvalid,
+          'Azure returned an invalid read range',
+        );
+      }
+      final bytes = BytesBuilder(copy: false);
+      await for (final chunk in response.stream) {
+        if (bytes.length + chunk.length > end - offset + 1) {
+          throw AzureHetznerStateError(
+            AzureHetznerErrorCode.azureReadRangeExceeded,
+            'Azure exceeded the requested read range',
+          );
+        }
+        bytes.add(chunk);
+      }
+      if (bytes.length != end - offset + 1) {
+        throw AzureHetznerStateError(
+          AzureHetznerErrorCode.azureReadRangeTruncated,
+          'Azure returned a truncated read range',
+        );
+      }
+      return bytes.takeBytes();
+    } finally {
+      transport.close();
+    }
+  }
+
   @override
   Stream<List<int>> downloadStream(
     String remotePath, {
@@ -952,8 +1028,9 @@ class AzureBlobAdapter extends CloudStorageClient
     final c = _effectiveContainer(container);
     if (blob.isEmpty)
       throw AzureHetznerArgumentError(
-          AzureHetznerErrorCode.azureStreamContainer,
-          'Cannot stream a container');
+        AzureHetznerErrorCode.azureStreamContainer,
+        'Cannot stream a container',
+      );
 
     final uri = _buildUri(c, blob: blob);
     final headers = _baseHeaders();
@@ -963,9 +1040,10 @@ class AzureBlobAdapter extends CloudStorageClient
     final streamed = await request.send();
     if (streamed.statusCode >= 400) {
       throw AzureHetznerException(
-          AzureHetznerErrorCode.azureStream,
-          'Azure download stream error ${streamed.statusCode}',
-          {'status': streamed.statusCode});
+        AzureHetznerErrorCode.azureStream,
+        'Azure download stream error ${streamed.statusCode}',
+        {'status': streamed.statusCode},
+      );
     }
 
     int received = 0;
@@ -1049,8 +1127,10 @@ class AzureBlobAdapter extends CloudStorageClient
     }
 
     if (_accountName == null || _accountName!.isEmpty) {
-      throw AzureHetznerStateError(AzureHetznerErrorCode.azureAccount,
-          'Azure credentials missing account_name');
+      throw AzureHetznerStateError(
+        AzureHetznerErrorCode.azureAccount,
+        'Azure credentials missing account_name',
+      );
     }
     _authenticated = true;
     _log.info('Azure Blob authenticated [$mode] account=$_accountName');

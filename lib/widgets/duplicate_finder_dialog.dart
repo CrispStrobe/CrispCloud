@@ -4,7 +4,9 @@
 // For local files, computes MD5 hashes to confirm true duplicates.
 
 import 'package:flutter/material.dart';
+
 import 'file_delete_dialog.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/file_item.dart';
@@ -142,6 +144,7 @@ class _DuplicateFinderDialogState
 
   @override
   Widget build(BuildContext context) {
+    final strings = DuplicateFinderStrings(context);
     final totalDuplicates = _duplicateGroups.fold<int>(
       0,
       (s, g) => s + g.length - 1,
@@ -258,7 +261,10 @@ class _DuplicateFinderDialogState
                               style: const TextStyle(fontSize: 13),
                             ),
                             subtitle: Text(
-                              strings.text('copies', {'count': group.length, 'size': formatBytes(group.first.size ?? 0)}),
+                              strings.text('copies', {
+                                'count': group.length,
+                                'size': formatBytes(group.first.size ?? 0),
+                              }),
                               style: const TextStyle(fontSize: 11),
                             ),
                             children: group

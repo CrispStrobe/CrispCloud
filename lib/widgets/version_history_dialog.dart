@@ -27,6 +27,7 @@ import '../utils/formatters.dart';
 import 'diff_viewer_dialog.dart';
 import '../l10n/provider_operation_strings.dart';
 import '../l10n/version_history_strings.dart';
+import '../l10n/app_localizations.dart';
 
 void showVersionHistoryDialog(
   BuildContext context,
@@ -60,7 +61,8 @@ class _VersionMessage implements Exception {
   const _VersionMessage(this.template, [this.values = const {}]);
   final String template;
   final Map<String, Object?> values;
-  String localized(VersionHistoryStrings strings) => strings.format(template, values);
+  String localized(VersionHistoryStrings strings) =>
+      strings.format(template, values);
 }
 
 class _VersionHistoryDialog extends ConsumerStatefulWidget {
@@ -139,7 +141,7 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
       _log.error('Failed to load versions', e);
       if (mounted) {
         setState(() {
-          _error = e;
+          _error = e.toString();
           _loading = false;
         });
       }
@@ -485,7 +487,8 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
     try {
       // Download the old version
       final oldContent = await _downloadVersionContent(version);
-      if (oldContent == null) throw const _VersionMessage('Failed to download version');
+      if (oldContent == null)
+        throw const _VersionMessage('Failed to download version');
 
       // Download the current version
       final client = capturedRemoteClient(widget.origin);

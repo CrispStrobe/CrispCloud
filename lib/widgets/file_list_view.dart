@@ -398,7 +398,11 @@ class FileListView extends ConsumerWidget {
           children: [
             const Icon(Icons.error, size: 48, color: Colors.red),
             const SizedBox(height: 16),
-            Text(strings.format('Error loading files: {error}', {'error': localizedProviderError(context, e)})),
+            Text(
+              strings.format('Error loading files: {error}', {
+                'error': localizedProviderError(context, e),
+              }),
+            ),
             const SizedBox(height: 8),
             ElevatedButton(
               onPressed: () => panel.refresh(),
@@ -491,6 +495,7 @@ class FileListTile extends ConsumerWidget {
       ],
     );
 
+    final strings = FileListStrings(context);
     final tile = GestureDetector(
       onSecondaryTapDown: onSecondaryTap,
       child: Focus(
@@ -503,7 +508,12 @@ class FileListTile extends ConsumerWidget {
           return KeyEventResult.ignored;
         },
         child: Semantics(
-          label: strings.semantic(folder: file.isFolder, name: file.name, size: file.size == null ? null : formatBytes(file.size!), selected: isSelected),
+          label: strings.semantic(
+            folder: file.isFolder,
+            name: file.name,
+            size: file.size == null ? null : formatBytes(file.size!),
+            selected: isSelected,
+          ),
           selected: isSelected,
           focused: isCursor,
           button: true,

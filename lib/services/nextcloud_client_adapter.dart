@@ -30,6 +30,18 @@ import 'delta_sync_service.dart';
 import 'log_service.dart';
 import 'nextcloud_config_service.dart';
 import 'secure_storage_service.dart';
+import './connection_failure.dart';
+import './nextcloud_operation_failure.dart';
+
+class NextcloudAuthenticationException implements Exception {
+  const NextcloudAuthenticationException();
+
+  @override
+  String toString() =>
+      'Authentication failed. Check your username and password. '
+      'If your account uses two-factor authentication, create an app password '
+      'in Nextcloud security settings.';
+}
 
 class NextcloudClientAdapter extends CloudStorageClient
     with CloudTransferOperations {
@@ -113,7 +125,10 @@ class NextcloudClientAdapter extends CloudStorageClient
   }) async {
     final parsed = _parseIdentity(email);
     if (parsed == null) {
-      throw NextcloudOperationFailure(NextcloudOperationCode.invalidIdentity, 'Format must be username@https://nextcloud.example.com');
+      throw NextcloudOperationFailure(
+        NextcloudOperationCode.invalidIdentity,
+        'Format must be username@https://nextcloud.example.com',
+      );
     }
     final username = parsed.$1;
     final serverUrl = parsed.$2;
@@ -126,12 +141,19 @@ class NextcloudClientAdapter extends CloudStorageClient
         throw const NextcloudAuthenticationException();
       }
       if (resp.statusCode != 207) {
-        throw ConnectionFailure(ConnectionFailureCode.nextcloudHttp,
-            'Connection test failed (HTTP ${resp.statusCode})', {'status': resp.statusCode});
+        throw ConnectionFailure(
+          ConnectionFailureCode.nextcloudHttp,
+          'Connection test failed (HTTP ${resp.statusCode})',
+          {'status': resp.statusCode},
+        );
       }
     } catch (e) {
       if (e is Exception) rethrow;
-      throw NextcloudOperationFailure(NextcloudOperationCode.connectionFailed, 'Connection failed: $e', {'error': e});
+      throw NextcloudOperationFailure(
+        NextcloudOperationCode.connectionFailed,
+        'Connection failed: $e',
+        {'error': e},
+      );
     }
 
     _username = username;
@@ -257,7 +279,11 @@ class NextcloudClientAdapter extends CloudStorageClient
 
     final resp = await _propfind(uri, _username!, _password!, depth: '1');
     if (resp.statusCode != 207) {
-      throw NextcloudOperationFailure(NextcloudOperationCode.list, 'Failed to list path "$path" (HTTP ${resp.statusCode})', {'path': path, 'status': resp.statusCode});
+      throw NextcloudOperationFailure(
+        NextcloudOperationCode.list,
+        'Failed to list path "$path" (HTTP ${resp.statusCode})',
+        {'path': path, 'status': resp.statusCode},
+      );
     }
 
     final items = _parsePropfind(resp.body);
@@ -618,7 +644,10 @@ class NextcloudClientAdapter extends CloudStorageClient
       if (urlNode != null) return urlNode.innerText;
     } catch (_) {}
 
-    throw NextcloudOperationFailure(NextcloudOperationCode.shareParse, 'Failed to parse share URL from OCS response');
+    throw NextcloudOperationFailure(
+      NextcloudOperationCode.shareParse,
+      'Failed to parse share URL from OCS response',
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -636,7 +665,11 @@ class NextcloudClientAdapter extends CloudStorageClient
     final resp = await _propfind(uri, _username!, _password!, depth: '1');
 
     if (resp.statusCode != 207) {
-      throw NextcloudOperationFailure(NextcloudOperationCode.listVersions, 'Failed to list versions (HTTP ${resp.statusCode})', {'status': resp.statusCode});
+      throw NextcloudOperationFailure(
+        NextcloudOperationCode.listVersions,
+        'Failed to list versions (HTTP ${resp.statusCode})',
+        {'status': resp.statusCode},
+      );
     }
 
     final items = _parsePropfind(resp.body);
@@ -697,7 +730,10 @@ class NextcloudClientAdapter extends CloudStorageClient
         creds['username'] == null ||
         creds['password'] == null ||
         creds['serverUrl'] == null) {
-      throw NextcloudOperationFailure(NextcloudOperationCode.notAuthenticated, 'Not authenticated. Please connect to Nextcloud first.');
+      throw NextcloudOperationFailure(
+        NextcloudOperationCode.notAuthenticated,
+        'Not authenticated. Please connect to Nextcloud first.',
+      );
     }
 
     _username = creds['username'];
@@ -759,7 +795,11 @@ class NextcloudClientAdapter extends CloudStorageClient
       final streamed = await req.send();
       return await http.Response.fromStream(streamed);
     } catch (e) {
-      throw NextcloudOperationFailure(NextcloudOperationCode.propfind, 'PROPFIND failed for $uri: $e', {'uri': uri, 'error': e});
+      throw NextcloudOperationFailure(
+        NextcloudOperationCode.propfind,
+        'PROPFIND failed for $uri: $e',
+        {'uri': uri, 'error': e},
+      );
     }
   }
 
@@ -956,7 +996,11 @@ class NextcloudClientAdapter extends CloudStorageClient
     mkcolReq.headers['Authorization'] = authHeader;
     final mkcolResp = await http.Response.fromStream(await mkcolReq.send());
     if (mkcolResp.statusCode != 201 && mkcolResp.statusCode != 405) {
-      throw NextcloudOperationFailure(NextcloudOperationCode.chunkCreate, 'Chunked MKCOL failed (${mkcolResp.statusCode})', {'status': mkcolResp.statusCode});
+      throw NextcloudOperationFailure(
+        NextcloudOperationCode.chunkCreate,
+        'Chunked MKCOL failed (${mkcolResp.statusCode})',
+        {'status': mkcolResp.statusCode},
+      );
     }
 
     // 2. PUT — upload chunks
@@ -998,7 +1042,11 @@ class NextcloudClientAdapter extends CloudStorageClient
     moveReq.headers['Overwrite'] = 'T';
     final moveResp = await http.Response.fromStream(await moveReq.send());
     if (moveResp.statusCode != 201 && moveResp.statusCode != 204) {
-      throw NextcloudOperationFailure(NextcloudOperationCode.chunkFinish, 'Chunked MOVE failed (${moveResp.statusCode})', {'status': moveResp.statusCode});
+      throw NextcloudOperationFailure(
+        NextcloudOperationCode.chunkFinish,
+        'Chunked MOVE failed (${moveResp.statusCode})',
+        {'status': moveResp.statusCode},
+      );
     }
 
     _log.info('Chunked upload complete: $remotePath ($fileSize bytes)');

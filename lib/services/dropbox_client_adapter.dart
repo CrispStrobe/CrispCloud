@@ -31,6 +31,7 @@ import 'dropbox_config_service.dart';
 import 'dropbox_operation_failure.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
+import './connection_failure.dart';
 
 class DropboxClientAdapter extends CloudStorageClient
     with CloudTransferOperations {

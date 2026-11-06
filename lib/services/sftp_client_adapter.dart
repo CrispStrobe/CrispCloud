@@ -144,8 +144,8 @@ class SFTPClientAdapter extends CloudStorageClient
   /// Preserve configured bridge URLs and bracket raw IPv6 hosts correctly.
   static Uri webSocketEndpoint(String host, int port) =>
       host.startsWith('ws://') || host.startsWith('wss://')
-          ? Uri.parse(host)
-          : Uri(scheme: 'wss', host: host, port: port);
+      ? Uri.parse(host)
+      : Uri(scheme: 'wss', host: host, port: port);
 
   /// Build the adapter's login identity without treating IPv6 colons as a
   /// port separator. WebSocket bridge paths remain part of the endpoint.
@@ -159,14 +159,20 @@ class SFTPClientAdapter extends CloudStorageClient
     final cleanHost = host.trim();
     if (cleanUser.isEmpty || cleanHost.isEmpty || port < 1 || port > 65535) {
       throw SftpOperationFormatException(
-          SftpOperationCode.invalidAddress, 'Invalid SFTP server address');
+        SftpOperationCode.invalidAddress,
+        'Invalid SFTP server address',
+      );
     }
     try {
-      final isBridge = web &&
+      final isBridge =
+          web &&
           (cleanHost.startsWith('ws://') || cleanHost.startsWith('wss://'));
       if (isBridge) {
         final uri = Uri.parse(cleanHost);
-        if (uri.host.isEmpty || uri.userInfo.isNotEmpty || uri.hasQuery || uri.hasFragment) {
+        if (uri.host.isEmpty ||
+            uri.userInfo.isNotEmpty ||
+            uri.hasQuery ||
+            uri.hasFragment) {
           throw const FormatException();
         }
         return '$cleanUser@${uri.replace(port: port)}';
@@ -179,7 +185,9 @@ class SFTPClientAdapter extends CloudStorageClient
       return '$cleanUser@${uri.authority}';
     } on FormatException {
       throw SftpOperationFormatException(
-          SftpOperationCode.invalidAddress, 'Invalid SFTP server address');
+        SftpOperationCode.invalidAddress,
+        'Invalid SFTP server address',
+      );
     }
   }
 
@@ -231,7 +239,11 @@ class SFTPClientAdapter extends CloudStorageClient
     }
     if (credentials != null) await _closeConnection();
     final creds = credentials ?? await _config.readCredentials();
-    if (creds == null) throw SftpOperationException(SftpOperationCode.notLoggedIn, 'Not logged in');
+    if (creds == null)
+      throw SftpOperationException(
+        SftpOperationCode.notLoggedIn,
+        'Not logged in',
+      );
 
     _username = creds['username'];
     _host = creds['host'];
@@ -239,8 +251,13 @@ class SFTPClientAdapter extends CloudStorageClient
     final privateKey = creds['privateKey'];
     _port = int.tryParse(creds['port'] ?? '22') ?? 22;
 
-    if (_host == null || _username == null || (password == null && privateKey == null)) {
-      throw SftpOperationException(SftpOperationCode.incompleteCredentials, 'Incomplete credentials');
+    if (_host == null ||
+        _username == null ||
+        (password == null && privateKey == null)) {
+      throw SftpOperationException(
+        SftpOperationCode.incompleteCredentials,
+        'Incomplete credentials',
+      );
     }
 
     List<SSHKeyPair>? identities;
@@ -249,8 +266,10 @@ class SFTPClientAdapter extends CloudStorageClient
         identities = SSHKeyPair.fromPem(privateKey, creds['keyPassphrase']);
         if (identities.isEmpty) throw const FormatException();
       } catch (_) {
-        throw SftpOperationFormatException(SftpOperationCode.invalidPrivateKey,
-            'Invalid SSH private key or passphrase');
+        throw SftpOperationFormatException(
+          SftpOperationCode.invalidPrivateKey,
+          'Invalid SSH private key or passphrase',
+        );
       }
     }
 
@@ -320,6 +339,30 @@ class SFTPClientAdapter extends CloudStorageClient
     String password, {
     String? twoFactorCode,
   }) async {
+    final credentials = _identityCredentials(email)..['password'] = password;
+    await _loginWithCredentials(credentials);
+  }
+
+  /// Authenticate using a user-selected PEM key. The key and optional
+  /// passphrase are saved through the configured secure storage after login.
+  Future<void> loginWithPrivateKey(
+    String identity,
+    String privateKey,
+    String? passphrase,
+  ) async {
+    if (privateKey.isEmpty || utf8.encode(privateKey).length > 1024 * 1024) {
+      throw SftpOperationFormatException(
+        SftpOperationCode.invalidPrivateKey,
+        'Invalid SSH private key or passphrase',
+      );
+    }
+    final credentials = _identityCredentials(identity)
+      ..['privateKey'] = privateKey
+      ..['keyPassphrase'] = passphrase ?? '';
+    await _loginWithCredentials(credentials);
+  }
+
+  Map<String, String> _identityCredentials(String email) {
     String user = email;
     String host = '';
     String port = '22';
@@ -344,19 +387,19 @@ class SFTPClientAdapter extends CloudStorageClient
           (!bridge && endpoint.path.isNotEmpty) ||
           int.parse(port) < 1 ||
           int.parse(port) > 65535) {
-        throw SftpOperationFormatException(SftpOperationCode.invalidAddress, 'Invalid SFTP server address');
+        throw SftpOperationFormatException(
+          SftpOperationCode.invalidAddress,
+          'Invalid SFTP server address',
+        );
       }
     } else {
-      throw Exception(
+      throw SftpOperationException(
+        SftpOperationCode.invalidIdentity,
         'Format must be user@host (e.g. u12345@u123.your-storagebox.de)',
       );
     }
 
-    return {
-      'username': user,
-      'host': host,
-      'port': port,
-    };
+    return {'username': user, 'host': host, 'port': port};
   }
 
   Future<void> _loginWithCredentials(Map<String, String> credentials) async {
@@ -464,7 +507,11 @@ class SFTPClientAdapter extends CloudStorageClient
       }
     } catch (e) {
       _log.error('List error', e);
-      throw SftpOperationException(SftpOperationCode.listFailed, 'Failed to list path $path: $e', {'path': path, 'error': e});
+      throw SftpOperationException(
+        SftpOperationCode.listFailed,
+        'Failed to list path $path: $e',
+        {'path': path, 'error': e},
+      );
     }
 
     return {'folders': folders, 'files': files};
@@ -646,7 +693,11 @@ class SFTPClientAdapter extends CloudStorageClient
     );
     final output = String.fromCharCodes(result).trim();
     if (output.isNotEmpty && !output.contains('OK')) {
-      throw SftpOperationException(SftpOperationCode.chmodFailed, 'chmod failed: $output', {'output': output});
+      throw SftpOperationException(
+        SftpOperationCode.chmodFailed,
+        'chmod failed: $output',
+        {'output': output},
+      );
     }
     _log.info('chmod $path to $mode');
   }
@@ -660,7 +711,11 @@ class SFTPClientAdapter extends CloudStorageClient
     );
     final output = String.fromCharCodes(result).trim();
     if (output.isNotEmpty) {
-      throw SftpOperationException(SftpOperationCode.chownFailed, 'chown failed: $output', {'output': output});
+      throw SftpOperationException(
+        SftpOperationCode.chownFailed,
+        'chown failed: $output',
+        {'output': output},
+      );
     }
     _log.info('chown $path to $owner');
   }

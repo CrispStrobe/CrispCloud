@@ -66,6 +66,12 @@ import 'internal_viewer_views.dart';
 import 'pptx_slide_viewer.dart';
 import 'preview_media.dart';
 import 'xml_tree_view.dart';
+import '../l10n/internal_viewer_strings.dart';
+import '../l10n/office_preview_strings.dart';
+import '../l10n/file_bytes_error_strings.dart';
+import '../l10n/archive_viewer_error_strings.dart';
+import '../l10n/native_preview_error_strings.dart';
+import '../l10n/office_pdf_error_strings.dart';
 
 const _log = Log('InternalViewer');
 
@@ -623,7 +629,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     }
     if (error is FileBytesTooLargeException) {
       return '${localizedFileBytesError(context, error)}\n\n' +
-          InternalViewerStrings(context).withNumber('remoteLimit', formatBytes(kViewerFullDataCap));
+          InternalViewerStrings(context)
+              .withNumber('remoteLimit', formatBytes(kViewerFullDataCap));
     }
     return localizedFileBytesError(context, error);
   }
@@ -709,7 +716,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
             var cut = text.lastIndexOf('\n', _kRichRenderCap);
             if (cut <= 0) cut = _kRichRenderCap;
             text = text.substring(0, cut);
-            note = InternalViewerStrings(context).withNumber('truncated', formatBytes(_kRichRenderCap));
+            note = InternalViewerStrings(context)
+                .withNumber('truncated', formatBytes(_kRichRenderCap));
           }
           _richText = text;
           setState(() {
@@ -932,11 +940,14 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       } on ArchivePasswordRequiredException catch (e) {
         if (!mounted || token != _prepareToken) return;
         setState(() => _preparing = false);
-        if (e.wrongPassword) _showSnack(InternalViewerStrings(context).text('incorrectPassword'));
+        if (e.wrongPassword)
+          _showSnack(InternalViewerStrings(context).text('incorrectPassword'));
         final entered = await _promptArchivePassword(wrong: e.wrongPassword);
         if (!mounted || token != _prepareToken) return;
         if (entered == null) {
-          setState(() => _richError = InternalViewerStrings(context).text('protected'));
+          setState(
+            () => _richError = InternalViewerStrings(context).text('protected'),
+          );
           return;
         }
         password = entered;
@@ -1210,7 +1221,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     final result = await showDialog<String>(
       context: context,
       builder: (_) => _TextPromptDialog(
-        title: offsetMode ? InternalViewerStrings(context).text('goOffset') : InternalViewerStrings(context).text('goLine'),
+        title: offsetMode
+            ? InternalViewerStrings(context).text('goOffset')
+            : InternalViewerStrings(context).text('goLine'),
         hintText: offsetMode
             ? context.commanderTr(
                 "Offset — 0x… for hex, plain number for decimal",
@@ -1257,7 +1270,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     final result = await showDialog<String>(
       context: context,
       builder: (_) => _TextPromptDialog(
-        title: wrong ? InternalViewerStrings(context).text('wrongPassword') : InternalViewerStrings(context).text('passwordRequired'),
+        title: wrong
+            ? InternalViewerStrings(context).text('wrongPassword')
+            : InternalViewerStrings(context).text('passwordRequired'),
         label: InternalViewerStrings(context).text('archivePassword'),
         obscureText: true,
       ),
@@ -1718,7 +1733,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       return;
     }
     await Clipboard.setData(ClipboardData(text: text));
-    _showSnack(InternalViewerStrings(context).withNumber('copied', text.length));
+    _showSnack(
+      InternalViewerStrings(context).withNumber('copied', text.length),
+    );
   }
 
   Future<void> _openArchiveMember(ViewerArchiveMember member) async {
@@ -2090,11 +2107,20 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
               child: Row(
                 children: [
                   _modeChip('Auto', null),
-                  _modeChip(InternalViewerStrings(context).text('text'), ViewerMode.text),
+                  _modeChip(
+                    InternalViewerStrings(context).text('text'),
+                    ViewerMode.text,
+                  ),
                   _modeChip('ASCII', ViewerMode.ascii),
-                  _modeChip(InternalViewerStrings(context).text('binary'), ViewerMode.binary),
+                  _modeChip(
+                    InternalViewerStrings(context).text('binary'),
+                    ViewerMode.binary,
+                  ),
                   _modeChip('Hex', ViewerMode.hex),
-                  _modeChip(InternalViewerStrings(context).text('image'), ViewerMode.image),
+                  _modeChip(
+                    InternalViewerStrings(context).text('image'),
+                    ViewerMode.image,
+                  ),
                   for (final mode in extraModes)
                     _modeChip(_modeLabelOf(mode), mode),
                   if (_mode == ViewerMode.pdf) _pdfViewToggle(),
@@ -2338,7 +2364,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     if (_richError != null) return _messagePane(_richError!, theme);
 
     final source = _source;
-    if (source == null) return _messagePane(InternalViewerStrings(context).text('noData'), theme);
+    if (source == null)
+      return _messagePane(InternalViewerStrings(context).text('noData'), theme);
 
     switch (_mode) {
       case ViewerMode.text:
@@ -2376,7 +2403,11 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         return _buildMediaBody();
       case ViewerMode.font:
         final data = _fullData;
-        if (data == null) return _messagePane(InternalViewerStrings(context).text('fontUnavailable'), theme);
+        if (data == null)
+          return _messagePane(
+            InternalViewerStrings(context).text('fontUnavailable'),
+            theme,
+          );
         return FontPreview(fontBytes: data, filename: _viewName);
       case ViewerMode.csv:
         return CsvTableView(content: _richText ?? '', filename: _viewName);
@@ -2582,8 +2613,11 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       await _systemPreviewService.show(data, _viewName);
     } catch (e) {
       if (!mounted) return;
-      _showSnack(InternalViewerStrings(context).withNumber(
-          'previewError', localizedNativePreviewError(context, e)));
+      _showSnack(
+        InternalViewerStrings(
+          context,
+        ).withNumber('previewError', localizedNativePreviewError(context, e)),
+      );
     }
   }
 
@@ -2643,7 +2677,11 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   String _localizedOfficeText(OfficeDocument document) {
     final locale = Localizations.localeOf(context);
     final strings = OfficePreviewStrings(locale);
-    return strings.headings(strings.text(document), document.textHeadings, locale);
+    return strings.headings(
+      strings.text(document),
+      document.textHeadings,
+      locale,
+    );
   }
 
   Widget _buildOfficeContent(OfficeDocument document, ThemeData theme) {
@@ -2700,7 +2738,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         final csv = document.csv;
         if (csv != null && csv.isNotEmpty) {
           final locale = Localizations.localeOf(context);
-          final localized = OfficePreviewStrings(locale).headings(csv, document.csvHeadings, locale);
+          final localized = OfficePreviewStrings(locale)
+              .headings(csv, document.csvHeadings, locale);
           return CsvTableView(content: localized, filename: _viewName);
         }
         return _buildOfficeText(document, theme);
@@ -2831,11 +2870,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       setState(() {
         _pdfTextLoading = false;
         if (text == null) {
-          _pdfTextError =
-              InternalViewerStrings(context).text('pdfUnsupported');
+          _pdfTextError = InternalViewerStrings(context).text('pdfUnsupported');
         } else if (text.trim().isEmpty) {
-          _pdfTextError =
-              InternalViewerStrings(context).text('pdfNoText');
+          _pdfTextError = InternalViewerStrings(context).text('pdfNoText');
         } else {
           _pdfText = text;
         }
@@ -2844,8 +2881,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       if (!mounted) return;
       setState(() {
         _pdfTextLoading = false;
-        _pdfTextError = InternalViewerStrings(context).withNumber(
-            'pdfError', localizedNativePreviewError(context, e));
+        _pdfTextError = InternalViewerStrings(context)
+            .withNumber('pdfError', localizedNativePreviewError(context, e));
       });
     }
   }
@@ -2853,7 +2890,10 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   Widget _buildImageBody() {
     final data = _fullData;
     if (data == null) {
-      return _messagePane(InternalViewerStrings(context).text('imageUnavailable'), Theme.of(context));
+      return _messagePane(
+        InternalViewerStrings(context).text('imageUnavailable'),
+        Theme.of(context),
+      );
     }
     final lower = _viewName.toLowerCase();
     final isSvg = lower.endsWith('.svg') || lower.endsWith('.svgz');
@@ -2933,7 +2973,10 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       );
     }
     if (files.isEmpty) {
-      return _messagePane(InternalViewerStrings(context).text('emptyArchive'), theme);
+      return _messagePane(
+        InternalViewerStrings(context).text('emptyArchive'),
+        theme,
+      );
     }
     return ListView.builder(
       itemCount: files.length,
@@ -3058,7 +3101,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       if (_canChangeEncoding && _encoding != null) _encoding!,
       if (_viewNote != null)
         if (_mode == ViewerMode.office && _officeDoc != null)
-          OfficePreviewStrings(Localizations.localeOf(context)).note(_officeDoc!)!
+          OfficePreviewStrings(Localizations.localeOf(context))
+              .note(_officeDoc!)!
         else
           _viewNote!,
       if (_mode == ViewerMode.hex && _selectedByte != null) _selectedByteText(),

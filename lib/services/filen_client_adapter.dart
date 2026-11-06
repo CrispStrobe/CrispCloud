@@ -10,6 +10,7 @@ import 'package:flutter/foundation.dart'; // for kIsWeb
 import 'log_service.dart';
 import 'upload_temp_file.dart';
 import 'filen_stream_transfer.dart';
+import './filen_operation_failure.dart';
 
 class FilenClientAdapter extends CloudStorageClient
     with CloudTransferOperations

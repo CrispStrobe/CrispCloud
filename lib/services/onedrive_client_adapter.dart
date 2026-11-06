@@ -24,6 +24,7 @@ import 'log_service.dart';
 import 'onedrive_config_service.dart';
 import 'onedrive_operation_failure.dart';
 import 'secure_storage_service.dart';
+import './connection_failure.dart';
 
 class OneDriveClientAdapter extends CloudStorageClient {
   static const _log = Log('OneDriveClient');

@@ -11,6 +11,7 @@ import '../services/background_sync_service.dart';
 import '../services/sync_database.dart';
 import '../l10n/app_localizations.dart';
 import 'sync_plan_dialog.dart';
+import '../l10n/sync_dialog_strings.dart';
 
 // Auto-evict options: 0=disabled, then days
 const _kAutoEvictOptions = [0, 7, 14, 30, 60, 90];
@@ -252,7 +253,7 @@ class _SyncManagerDialog extends ConsumerWidget {
                           (p) => DropdownMenuItem(
                             value: p,
                             child: Text(
-                              context.commanderTr(_policyLabel(p)),
+                              _policyLabel(p, SyncDialogStrings(context)),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -372,15 +373,15 @@ class _SyncManagerDialog extends ConsumerWidget {
   String _policyLabel(ConflictPolicy p, SyncDialogStrings t) {
     switch (p) {
       case ConflictPolicy.newestWins:
-        return 'Newest Wins';
+        return t.text('newest');
       case ConflictPolicy.localWins:
-        return 'Local Wins';
+        return t.text('localWins');
       case ConflictPolicy.remoteWins:
-        return 'Remote Wins';
+        return t.text('remoteWins');
       case ConflictPolicy.keepBoth:
-        return 'Keep Both';
+        return t.text('keepBoth');
       case ConflictPolicy.manual:
-        return 'Ask Me';
+        return t.text('askMe');
     }
   }
 }

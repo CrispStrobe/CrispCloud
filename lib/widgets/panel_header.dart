@@ -38,6 +38,8 @@ import '../widgets/search_dialogs.dart' show showSearchDialog, showFindDialog;
 import '../widgets/settings_dialog.dart';
 import '../widgets/drive_bar.dart' show drivesProvider, DriveEntry;
 import '../widgets/panel_source_selector.dart';
+import '../l10n/browser_menu_strings.dart';
+import '../l10n/panel_header_strings.dart';
 
 class PanelHeader extends ConsumerStatefulWidget {
   const PanelHeader({

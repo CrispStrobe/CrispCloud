@@ -42,6 +42,8 @@ import 'delta_sync_service.dart';
 import 'pcloud_config_service.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
+import './connection_failure.dart';
+import './pcloud_operation_failure.dart';
 
 class PCloudClientAdapter extends CloudStorageClient
     with CloudTransferOperations

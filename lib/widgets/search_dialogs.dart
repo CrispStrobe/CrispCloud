@@ -633,7 +633,7 @@ class _FindDialogState extends State<_FindDialog> {
               children: [
                 for (final category in FileTypeCategory.values)
                   FilterChip(
-                    label: Text(_categoryLabel(category)),
+                    label: Text(_categoryLabel(context, category)),
                     selected: _selectedCategories.contains(category),
                     onSelected: _running
                         ? null
