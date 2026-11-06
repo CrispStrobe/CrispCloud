@@ -105,4 +105,75 @@ void main() {
       expect(OperationType.values, contains(OperationType.delete));
     });
   });
+
+  test('pause, resume and a restarted stream reset throughput and ETA', () {
+    var clock = DateTime.utc(2026);
+    final operation = OperationProgress(
+      id: 'rate',
+      type: OperationType.copy,
+      sourcePath: '/a',
+      targetPath: '/b',
+      fileName: 'a',
+      totalBytes: 1000,
+      now: () => clock,
+    );
+    operation.updateProgress(0);
+    clock = clock.add(const Duration(seconds: 1));
+    operation.updateProgress(100);
+    expect(operation.currentSpeed, 100);
+    expect(operation.estimatedSecondsRemaining, 9);
+    operation.pause();
+    expect(operation.currentSpeed, 0);
+    expect(operation.estimatedSecondsRemaining, 0);
+    clock = clock.add(const Duration(hours: 1));
+    operation.resume();
+    operation.updateProgress(100);
+    clock = clock.add(const Duration(seconds: 1));
+    operation.updateProgress(200);
+    expect(operation.currentSpeed, 100);
+    operation.updateProgress(0);
+    expect(operation.currentSpeed, 0);
+    expect(operation.estimatedSecondsRemaining, 0);
+    clock = clock.add(const Duration(seconds: 1));
+    operation.updateProgress(100);
+    expect(operation.currentSpeed, 100);
+    operation.complete();
+    expect(operation.currentSpeed, 0);
+    expect(operation.estimatedSecondsRemaining, 0);
+  });
+
+  test('processed counts distinguish skipped rows from successful copies', () {
+    final operation = OperationProgress(
+      id: 'filtered',
+      type: OperationType.copy,
+      sourcePath: '/source',
+      targetPath: '/target',
+      fileName: 'batch',
+      files: [
+        FileProgress(
+          name: 'copied',
+          path: '/copied',
+          size: 10,
+          isComplete: true,
+        ),
+        FileProgress(
+          name: 'skip',
+          path: '/skip',
+          size: 10,
+          statusLabel: 'skipped',
+        ),
+        FileProgress(
+          name: 'filter',
+          path: '/filter',
+          size: 10,
+          statusLabel: 'filtered',
+        ),
+        FileProgress(name: 'pending', path: '/pending', size: 10),
+      ],
+    );
+    expect(operation.completedFiles, 1);
+    expect(operation.skippedFiles, 2);
+    expect(operation.processedFiles, 3);
+    expect(operation.totalFiles, 4);
+  });
 }

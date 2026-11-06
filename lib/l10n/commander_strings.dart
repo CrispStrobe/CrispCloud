@@ -5,6 +5,7 @@ import 'commander_translations.dart';
 import 'commander_completion_translations.dart';
 import 'image_editor_translations.dart';
 import 'workspace_translations.dart';
+import 'transfer_queue_translations.dart';
 
 /// Locale-aware chrome for Commander workflows. Stored paths, masks, provider
 /// identifiers and names are passed as arguments, never used as translation keys.
@@ -25,6 +26,7 @@ abstract final class CommanderStrings {
       ...commanderTranslations,
       ...workspaceTranslations,
       ...commanderCompletionTranslations,
+      ...transferQueueTranslations,
     }.entries)
       _normalize(entry.key): entry.value,
   };

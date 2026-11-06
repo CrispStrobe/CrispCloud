@@ -18,6 +18,7 @@ import '../services/file_operation_profiles.dart';
 import '../services/read_only_operation_backend.dart';
 import '../services/saved_search_service.dart';
 import 'file_operation_conflict_dialog.dart';
+import 'transfer_schedule_dialog.dart';
 
 /// Returns the completed foreground plan for callers that need to apply a
 /// follow-up operation to successful entries. Cancellation/background is null.
@@ -625,7 +626,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     );
   }
 
-  Future<void> _start({bool background = false}) async {
+  Future<void> _start({bool background = false, DateTime? notBefore}) async {
     if (background &&
         (widget.sourceBackend != null || !widget.allowBackground)) {
       return;
@@ -653,6 +654,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     final future = notifier.runFileOperation(
       plan,
       control: _control,
+      notBefore: notBefore,
       resolveDetailedConflict: background ? null : _resolve,
       onQueued: background
           ? () {
@@ -1560,6 +1562,29 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
               onPressed: _preparing || _sourceOrigin == null ? null : _preview,
               child: Text(context.commanderTr("Preview")),
             ),
+            if (widget.allowBackground && widget.sourceBackend == null)
+              Tooltip(
+                message: context.commanderTr(
+                  'Starts while CrispCloud is open. Restored jobs require review.',
+                ),
+                child: TextButton.icon(
+                  key: const ValueKey('transfer-schedule-background'),
+                  icon: const Icon(Icons.schedule),
+                  onPressed:
+                      !_finished &&
+                          (plan?.canExecute ?? false) &&
+                          !_preparing &&
+                          backgroundCanWait
+                      ? () async {
+                          final start = await showTransferStartPicker(context);
+                          if (start != null && mounted && !_busy) {
+                            await _start(background: true, notBefore: start);
+                          }
+                        }
+                      : null,
+                  label: Text(context.commanderTr('Schedule…')),
+                ),
+              ),
             if (widget.allowBackground && widget.sourceBackend == null)
               Tooltip(
                 message: !backgroundCanWait

@@ -220,6 +220,11 @@ class TransferJournal {
         }
         job.priority = event['priority'] as int? ?? job.priority;
         job.queueOrder = event['queueOrder'] as int? ?? job.queueOrder;
+        if (event.containsKey('scheduledAt')) {
+          job.scheduledAt = event['scheduledAt'] == null
+              ? null
+              : DateTime.parse(event['scheduledAt'] as String).toUtc();
+        }
       case 'options':
         final job = _jobs[id];
         if (job == null) {
@@ -245,6 +250,7 @@ class TransferJournal {
     String id,
     FileOperationPlan plan, {
     int priority = 0,
+    DateTime? scheduledAt,
   }) async {
     return _mutate(() async {
       final now = DateTime.now().toUtc();
@@ -260,6 +266,7 @@ class TransferJournal {
         protectedDestinationPaths: plan.protectedDestinationPaths,
         expectedEntries: plan.entries.length,
         priority: priority,
+        scheduledAt: scheduledAt?.toUtc(),
         queueOrder: now.microsecondsSinceEpoch,
         canRecover:
             plan.source.canRecover &&
@@ -327,13 +334,24 @@ class TransferJournal {
     );
   }
 
-  Future<void> updateQueue(String id, {int? priority, int? queueOrder}) async {
+  Future<void> updateQueue(
+    String id, {
+    int? priority,
+    int? queueOrder,
+    DateTime? scheduledAt,
+    bool clearScheduledAt = false,
+  }) async {
+    if (scheduledAt != null && clearScheduledAt) {
+      throw ArgumentError('A schedule cannot be set and cleared together.');
+    }
     return _mutate(
       () => _append({
         'kind': 'queue',
         'id': id,
         'priority': priority,
         'queueOrder': queueOrder,
+        if (scheduledAt != null || clearScheduledAt)
+          'scheduledAt': scheduledAt?.toUtc().toIso8601String(),
       }),
     );
   }

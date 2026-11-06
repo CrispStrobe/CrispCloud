@@ -44,6 +44,7 @@ class TransferJobRecord {
     this.status = TransferJobStatus.preparing,
     this.priority = 0,
     this.queueOrder = 0,
+    this.scheduledAt,
     this.ready = false,
     this.message,
     List<TransferEntryRecord>? entries,
@@ -66,6 +67,10 @@ class TransferJobRecord {
   TransferJobStatus status;
   int priority;
   int queueOrder;
+
+  /// Earliest dispatch time. It is persisted as UTC, but never authorizes
+  /// unattended recovery after a process restart.
+  DateTime? scheduledAt;
   bool ready;
   String? message;
 
@@ -90,6 +95,7 @@ class TransferJobRecord {
     'status': status.name,
     'priority': priority,
     'queueOrder': queueOrder,
+    'scheduledAt': scheduledAt?.toUtc().toIso8601String(),
     'ready': ready,
     'message': message,
   };
@@ -131,6 +137,9 @@ class TransferJobRecord {
       status: TransferJobStatus.values.byName(json['status'] as String),
       priority: json['priority'] as int? ?? 0,
       queueOrder: json['queueOrder'] as int? ?? 0,
+      scheduledAt: json['scheduledAt'] == null
+          ? null
+          : DateTime.parse(json['scheduledAt'] as String).toUtc(),
       ready: json['ready'] == true,
       message: json['message'] as String?,
     );

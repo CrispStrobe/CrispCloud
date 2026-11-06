@@ -2,6 +2,42 @@
 
 Audit trail of bugs found, issues discovered, and fixes applied.
 
+## 2026-11-06 — Copy/move job queue and batch controls
+
+- Added independent, persisted queue pause; operation-level priority/order;
+  one-time scheduled starts; search/status filters; and eligible bulk
+  pause/resume/cancel actions. Kept deferred conflicts and interrupted work in
+  an attention state, with cancellation visibly settling before dismissal.
+- Admitted one owner per journaled job before asynchronous mutation and retained
+  ownership through completion saving. Reserved normalized source/destination
+  paths by storage identity, including parent/child overlaps, staged outputs,
+  keep-both destinations and move cleanup. Both endpoints participate in
+  scheduler capacity and pacing. Indexed path claims avoid pairwise scans for
+  large selections and are reused when priority/start time changes.
+- Held scheduler reservations through asynchronous finalizers, ensured one
+  completion callback under cancellation/disposal, and reported callback errors
+  without replaying completed I/O. Journaled copy/move jobs use reviewed recovery
+  instead of whole-task retries after partial destructive work. History clearing
+  retains live finalizers, and backup restoration holds dispatch after active
+  workers settle.
+- Separated distinct job counts and current-work bytes from retained history;
+  exposed current file/phase and admission blockers; corrected skipped-item
+  totals and pause/retry throughput samples. Added queue captions for all
+  supported Commander locales and responsive batch details.
+- Persisted schedule instants as UTC while keeping post-restart recovery
+  explicit. Documented behavior, platform limits, and the rclone/Robocopy
+  comparison in `docs/transfer-queue.md`. Existing provider adapters execute
+  transfers; no external command-line executor or dependency change was added.
+- Validation with the pinned Flutter 3.47.8 / Dart 3.13.7 toolchain: 304 focused
+  Flutter tests across 18 files and 7 shared scheduler contract tests passed.
+  The 20 changed Dart files analyze without issues; repository-wide analysis
+  has zero errors under the existing nonfatal-warning/info policy. Regressions
+  include two 10,000-file selections, asynchronous completion and cancellation,
+  backup-restoration exclusion, schedule persistence, recovery and 320-pixel UI.
+  Tests used the package-hash-verified cached SQLite binary through a temporary
+  supported hook setting, removed byte-for-byte before commit. Native platform
+  builds and live-provider behavior were not validated by this local run.
+
 ## 2026-11-05 — Commander workflow completion and regression fixes
 
 - Exposed Commander mask dialects, date/variable controls, transformation
