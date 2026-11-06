@@ -453,7 +453,9 @@ void main() {
       }
     });
 
-    testWidgets('hides terminal button on mobile platform', (tester) async {
+    testWidgets('opens the SSH terminal from the mobile toolbar', (
+      tester,
+    ) async {
       // android is the default in flutter_test, but be explicit.
       debugDefaultTargetPlatformOverride = TargetPlatform.android;
       try {
@@ -462,35 +464,53 @@ void main() {
         );
         await tester.pump();
 
-        // The real terminal is available on mobile as an SSH gateway.
+        // Mobile exposes the SSH terminal without offering a local shell.
         expect(find.byTooltip('Show Terminal'), findsOneWidget);
         expect(find.byTooltip('Hide Terminal'), findsNothing);
-      } finally {
-        debugDefaultTargetPlatformOverride = null;
-      }
-    });
-
-    testWidgets('hides terminal and mount in overflow menu on mobile', (
-      tester,
-    ) async {
-      debugDefaultTargetPlatformOverride = TargetPlatform.android;
-      try {
-        await tester.pumpWidget(
-          _wrapScreen(width: 600, overrides: _baseOverrides()),
-        );
-        await tester.pump();
-
-        await tester.tap(find.byTooltip('More actions'));
+        await tester.tap(find.byTooltip('Show Terminal'));
         await tester.pump(const Duration(milliseconds: 300));
-
-        // The SSH terminal remains available on mobile; native mounts do not.
-        expect(find.text('Show Terminal'), findsOneWidget);
-        expect(find.text('Hide Terminal'), findsNothing);
-        expect(find.text('Mount as Drive'), findsNothing);
+        expect(find.byTooltip('Hide Terminal'), findsOneWidget);
+        expect(find.byTooltip('Connect via SSH'), findsOneWidget);
       } finally {
         debugDefaultTargetPlatformOverride = null;
       }
     });
+
+    testWidgets(
+      'offers mobile SSH in overflow while keeping mount desktop-only',
+      (tester) async {
+        debugDefaultTargetPlatformOverride = TargetPlatform.android;
+        try {
+          await tester.pumpWidget(
+            _wrapScreen(width: 600, overrides: _baseOverrides()),
+          );
+          await tester.pump();
+
+          await tester.tap(find.byTooltip('More actions'));
+          await tester.pump(const Duration(milliseconds: 300));
+
+          // The SSH terminal remains available on mobile; native mounts do not.
+          expect(find.text('Show Terminal'), findsOneWidget);
+          expect(find.text('Hide Terminal'), findsNothing);
+          expect(find.text('Mount as Drive'), findsNothing);
+          await Scrollable.ensureVisible(
+            tester.element(find.text('Show Terminal')),
+            alignment: 0.5,
+          );
+          // Finish the popup's opening animation before hit-testing the item.
+          await tester.pump(const Duration(milliseconds: 300));
+          await tester.tap(find.text('Show Terminal'));
+          await tester.pump(const Duration(milliseconds: 300));
+          expect(find.byTooltip('Connect via SSH'), findsOneWidget);
+          await tester.tap(find.byTooltip('More actions'));
+          await tester.pump(const Duration(milliseconds: 300));
+          expect(find.text('Hide Terminal'), findsOneWidget);
+          expect(find.text('Mount as Drive'), findsNothing);
+        } finally {
+          debugDefaultTargetPlatformOverride = null;
+        }
+      },
+    );
   });
 
   // =========================================================================

@@ -141,7 +141,7 @@ jobs:
           path: coverage/lcov.info
           retention-days: 14
 
-  # ---------- Crypto gate (headless, all three desktop OSes) ----------
+  # ---------- Native desktop gate (headless, all three OSes) ----------
   # Standing per-PR gate for the file-crypto stack on Linux, Windows and macOS.
   # native_ffi_crypto_test ASSERTS the OS's system-crypto binding loads + is
   # byte-exact + interoperable with existing pointycastle files (Linux->OpenSSL,
@@ -183,6 +183,11 @@ jobs:
           test/file_collection_paging_store_test.dart
           test/native_metadata_windows_test.dart
           test/local_file_service_symlink_test.dart
+
+      # Surface native PTY/ConPTY failures before the full Linux suite finishes.
+      # Packaged builds retain their complete terminal regression checks below.
+      - name: Native terminal smoke tests
+        run: flutter test test/terminal_process_test.dart
 
   collection-browser:
     name: Browser storage + terminal (Chrome)

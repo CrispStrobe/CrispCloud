@@ -204,7 +204,10 @@ flutter build web --release
 ```
 
 CI runs the terminal tests in the Linux suite, the browser tests in Chromium,
-and native PTY/input tests in the existing macOS and Windows build jobs.
+and a native PTY smoke test in the existing Linux/macOS/Windows matrix so
+platform failures are visible early. Windows and macOS build jobs retain the
+full terminal regression checks before packaging; all packaged builds still
+require the complete Linux suite to pass.
 The Windows case exercises the actual ConPTY backend rather than a fake process.
 
 Run the terminal unit/widget tests and static analysis, then exercise the
