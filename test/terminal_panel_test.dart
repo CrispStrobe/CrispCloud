@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -14,6 +15,7 @@ import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:crisp_cloud/widgets/terminal_panel.dart';
 import 'package:crisp_cloud/widgets/terminal_process_native.dart' as proc;
+import 'package:crisp_cloud/widgets/terminal_shell.dart';
 
 class _Local extends Fake implements LocalFileService {
   @override
@@ -81,7 +83,7 @@ class _Auth extends ChangeNotifier implements AuthNotifier {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-class _FakeShell implements proc.ShellProcess {
+class _FakeShell implements TerminalShell {
   final _controller = StreamController<String>.broadcast();
   final commands = <String>[];
 
@@ -89,6 +91,8 @@ class _FakeShell implements proc.ShellProcess {
   Stream<String> get outputStream => _controller.stream;
   @override
   void writeln(String command) => commands.add(command);
+  void emit(String text) => _controller.add(text);
+
   @override
   void kill() {}
 }
@@ -156,6 +160,8 @@ void main() {
       ),
     );
     await tester.pump(const Duration(milliseconds: 100));
+    fake.emit('% ');
+    await tester.pump(const Duration(milliseconds: 50));
 
     await tester.enterText(find.byType(TextField), 'ls');
     await tester.testTextInput.receiveAction(TextInputAction.done);

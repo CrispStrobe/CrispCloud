@@ -2,8 +2,10 @@
 //
 // Web stub — terminal is not available on web.
 
+import 'terminal_shell.dart';
+
 /// Abstract shell process handle.
-class ShellProcess {
+class ShellProcess implements TerminalShell {
   Stream<String> get outputStream => const Stream.empty();
   void writeln(String command) {}
   void kill() {}

@@ -15,8 +15,10 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 
+import 'terminal_shell.dart';
+
 /// Common terminal backend interface.
-abstract class ShellProcess {
+abstract class ShellProcess implements TerminalShell {
   Stream<String> get outputStream;
   void writeln(String command);
   void kill();

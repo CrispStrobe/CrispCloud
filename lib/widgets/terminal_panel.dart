@@ -15,11 +15,12 @@ import '../l10n/terminal_mount_error_strings.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../providers/terminal_provider.dart';
+import 'terminal_shell.dart';
 import 'terminal_process_stub.dart'
     if (dart.library.io) 'terminal_process_native.dart'
     as proc;
 
-typedef TerminalShellStarter = Future<proc.ShellProcess?> Function(
+typedef TerminalShellStarter = Future<TerminalShell?> Function(
   String workingDirectory,
 );
 
@@ -38,8 +39,11 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   final _inputController = TextEditingController();
   final _inputFocusNode = FocusNode();
   final _output = StringBuffer();
-  proc.ShellProcess? _shell;
+  TerminalShell? _shell;
   bool _isRunning = false;
+  bool _shellReady = false;
+  Timer? _readyTimer;
+  final List<String> _pendingCommands = <String>[];
   String? _shellError;
   String? _sshSessionId;
   String? _sshLabel;
@@ -112,20 +116,32 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
       }
 
       _isRunning = true;
-      _appendOutput('${strings.text('started')}\n\$ ');
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _inputFocusNode.requestFocus();
-      });
-
+      _shellReady = false;
+      _pendingCommands.clear();
+      _appendOutput('${strings.text('starting')}\n');
+      _readyTimer?.cancel();
+      _readyTimer = Timer(const Duration(seconds: 3), _markShellReady);
       _shell!.outputStream.listen(
-        (data) => _appendOutput(data),
+        (data) {
+          final clean = _stripAnsi(data);
+          if (!_shellReady && RegExp(r'[%$#]\s*$').hasMatch(clean)) {
+            _markShellReady();
+          }
+          _appendOutput(data);
+        },
         onDone: () {
           if (mounted) {
             _appendOutput('\n[${strings.text('exited')}]\n');
-            setState(() => _isRunning = false);
+            setState(() {
+              _isRunning = false;
+              _shellReady = false;
+            });
           }
         },
       );
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _inputFocusNode.requestFocus();
+      });
     } catch (e) {
       try {
         final panel = ref.read(panelProvider(PanelSide.local));
@@ -135,6 +151,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
       }
       if (_shell != null) {
         _isRunning = true;
+        _shellReady = true;
         _appendOutput(
           '[${strings.text('builtIn')}]\n${strings.text('started')}\n\$ ',
         );
@@ -149,6 +166,22 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
       _shellError = _friendlyShellError(e, strings);
       _appendOutput('[${strings.value('shellError', e)}]\n');
     }
+  }
+
+  void _markShellReady() {
+    _readyTimer?.cancel();
+    _readyTimer = null;
+    if (!mounted || _shellReady || _shell == null) return;
+    _shellReady = true;
+    _appendOutput('${TerminalStrings(context).text('started')}\n\$ ');
+    final pending = List<String>.of(_pendingCommands);
+    _pendingCommands.clear();
+    for (final command in pending) {
+      _shell!.writeln(command);
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _inputFocusNode.requestFocus();
+    });
   }
 
   String _friendlyShellError(Object error, TerminalStrings strings) {
@@ -272,12 +305,18 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     }
     final shell = _shell;
     if (shell == null) return;
-    shell.writeln(command);
+    if (!_shellReady) {
+      _pendingCommands.add(command);
+    } else {
+      shell.writeln(command);
+    }
     _inputController.clear();
   }
 
   @override
   void deactivate() {
+    _readyTimer?.cancel();
+    _readyTimer = null;
     ref.read(terminalInputFocusedProvider.notifier).state = false;
     if (_scopeHeld) {
       _scopeHeld = false;
@@ -297,6 +336,8 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
 
   @override
   void dispose() {
+    _readyTimer?.cancel();
+    _readyTimer = null;
     _inputFocusNode.removeListener(_onInputFocusChanged);
     _shell?.kill();
     _outputController.dispose();
@@ -382,6 +423,8 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                   _output.clear();
                   _shellError = null;
                   _isRunning = false;
+                  _shellReady = false;
+                  _pendingCommands.clear();
                   if (_scopeHeld) {
                     _scopeHeld = false;
                     unawaited(
