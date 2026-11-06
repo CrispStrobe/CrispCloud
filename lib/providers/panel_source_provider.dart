@@ -14,6 +14,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/panel_side.dart';
 import '../services/fkey_action_service.dart';
 import '../services/panel_source_service.dart';
+import '../services/panel_swap_service.dart';
 import 'auth_provider.dart';
 import 'core_providers.dart';
 import 'multi_cloud_provider.dart';
@@ -28,6 +29,29 @@ import '../services/log_service.dart';
 PanelSide oppositePanel(PanelSide side) =>
     side == PanelSide.local ? PanelSide.remote : PanelSide.local;
 
+/// Exchange the two pane sources and force both panes to show the swapped
+/// location. This bypasses tab locks, which otherwise create a new tab and
+/// leave the visible pane unchanged.
+Future<void> swapPanelSources(WidgetRef ref) async {
+  const service = PanelSwapService();
+  final left = ref.read(panelSourceProvider(PanelSide.local));
+  final right = ref.read(panelSourceProvider(PanelSide.remote));
+  if (!service.canSwap(left, right)) return;
+  final (newLeft, newRight) = service.swap(left, right);
+  ref.read(panelSourceProvider(PanelSide.local).notifier).setSource(newLeft);
+  ref.read(panelSourceProvider(PanelSide.remote).notifier).setSource(newRight);
+  final active = ref.read(activePanelProvider);
+  ref.read(activePanelProvider.notifier).state = active == PanelSide.local
+      ? PanelSide.remote
+      : PanelSide.local;
+  await ref
+      .read(panelProvider(PanelSide.local))
+      .navigateToPath(newLeft.currentPath, bypassTabLock: true);
+  await ref
+      .read(panelProvider(PanelSide.remote))
+      .navigateToPath(newRight.currentPath, bypassTabLock: true);
+}
+
 // ---------------------------------------------------------------------------
 // panelSourceProvider — family StateNotifier
 // ---------------------------------------------------------------------------
@@ -37,8 +61,7 @@ class PanelSourceNotifier extends StateNotifier<PanelSource> {
 
   final PanelSide side;
 
-  PanelSourceNotifier(this.side)
-      : super(const LocalPanelSource('/')) {
+  PanelSourceNotifier(this.side) : super(const LocalPanelSource('/')) {
     _restore();
   }
 
@@ -46,7 +69,9 @@ class PanelSourceNotifier extends StateNotifier<PanelSource> {
 
   /// Replace the current source entirely.
   void setSource(PanelSource source) {
-    _log.debug('setSource: ${source.displayName} path=${source.currentPath} side=$side');
+    _log.debug(
+      'setSource: ${source.displayName} path=${source.currentPath} side=$side',
+    );
     state = source;
     _persist();
   }
@@ -112,15 +137,15 @@ class PanelSourceNotifier extends StateNotifier<PanelSource> {
       }
     } catch (e) {
       // Pref error (non-critical)
-      }
+    }
   }
 }
 
 /// Family provider: one [PanelSourceNotifier] per [PanelSide].
 final panelSourceProvider =
     StateNotifierProvider.family<PanelSourceNotifier, PanelSource, PanelSide>(
-  (ref, side) => PanelSourceNotifier(side),
-);
+      (ref, side) => PanelSourceNotifier(side),
+    );
 
 // ---------------------------------------------------------------------------
 // fkeyBarVisibleProvider — persistent toggle
@@ -139,7 +164,7 @@ class _FKeyBarVisibilityNotifier extends StateNotifier<bool> {
       state = prefs.getBool(_prefKey) ?? true;
     } catch (e) {
       // Pref error (non-critical)
-      }
+    }
   }
 
   Future<void> toggle() async {
@@ -149,7 +174,7 @@ class _FKeyBarVisibilityNotifier extends StateNotifier<bool> {
       await prefs.setBool(_prefKey, state);
     } catch (e) {
       // Pref error (non-critical)
-      }
+    }
   }
 
   Future<void> setVisible(bool visible) async {
@@ -159,14 +184,14 @@ class _FKeyBarVisibilityNotifier extends StateNotifier<bool> {
       await prefs.setBool(_prefKey, state);
     } catch (e) {
       // Pref error (non-critical)
-      }
+    }
   }
 }
 
 final fkeyBarVisibleProvider =
     StateNotifierProvider<_FKeyBarVisibilityNotifier, bool>(
-  (ref) => _FKeyBarVisibilityNotifier(),
-);
+      (ref) => _FKeyBarVisibilityNotifier(),
+    );
 
 // ---------------------------------------------------------------------------
 // availableSourcesProvider
@@ -200,15 +225,17 @@ final availableSourcesProvider = Provider<List<AvailableSource>>((ref) {
   // Add the primary auth provider connection if connected.
   final auth = ref.watch(authProvider);
   if (auth.isConnected) {
-    sources.add(AvailableSource(
-      key: 'remote:${auth.providerName}',
-      label: auth.providerName,
-      source: RemotePanelSource(
-        providerName: auth.providerName,
-        client: auth.client,
-        path: '/',
+    sources.add(
+      AvailableSource(
+        key: 'remote:${auth.providerName}',
+        label: auth.providerName,
+        source: RemotePanelSource(
+          providerName: auth.providerName,
+          client: auth.client,
+          path: '/',
+        ),
       ),
-    ));
+    );
   }
 
   // Add all multi-cloud connections (skip duplicates).
@@ -216,15 +243,17 @@ final availableSourcesProvider = Provider<List<AvailableSource>>((ref) {
   for (final conn in multiCloud.connections) {
     final key = 'remote:${conn.id}';
     if (sources.any((s) => s.key == key)) continue;
-    sources.add(AvailableSource(
-      key: key,
-      label: conn.label,
-      source: RemotePanelSource(
-        providerName: conn.label,
-        client: conn.client,
-        path: '/',
+    sources.add(
+      AvailableSource(
+        key: key,
+        label: conn.label,
+        source: RemotePanelSource(
+          providerName: conn.label,
+          client: conn.client,
+          path: '/',
+        ),
       ),
-    ));
+    );
   }
 
   return sources;
@@ -247,8 +276,10 @@ final activeFKeyContextProvider = Provider<FKeyContext?>((ref) {
   final selected = panel.selection.toList();
 
   if (selected.isNotEmpty) {
-    debugPrint('[FKeyContext] rebuilt: ${selected.length} selected, '
-        'hasSingleFile=${selected.length == 1 && !selected.first.isFolder}');
+    debugPrint(
+      '[FKeyContext] rebuilt: ${selected.length} selected, '
+      'hasSingleFile=${selected.length == 1 && !selected.first.isFolder}',
+    );
   }
 
   return FKeyContext(

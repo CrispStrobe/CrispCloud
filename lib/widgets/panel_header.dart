@@ -393,7 +393,13 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
                 children: <Widget>[
                   Icon(entry.icon, size: 17),
                   const SizedBox(width: 8),
-                  Expanded(child: Text(entry.icon == Icons.home && entry.label == 'Home' ? m.text('Home') : entry.label)),
+                  Expanded(
+                    child: Text(
+                      entry.icon == Icons.home && entry.label == 'Home'
+                          ? m.text('Home')
+                          : entry.label,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -447,7 +453,9 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
     final bool desktop =
         !kIsWeb && (Platform.isMacOS || Platform.isWindows || Platform.isLinux);
     final AuthNotifier auth = ref.watch(authProvider);
-    final l = AppLocalizations.of(context) ?? lookupAppLocalizations(const Locale('en'));
+    final l =
+        AppLocalizations.of(context) ??
+        lookupAppLocalizations(const Locale('en'));
     final m = BrowserMenuStrings(context);
     final h = PanelHeaderStrings(context);
 
@@ -465,7 +473,9 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
           _menuItem(
             'toggle_top_toolbar',
             topVisible ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-            topVisible ? h.text('Hide top toolbar') : h.text('Show top toolbar'),
+            topVisible
+                ? h.text('Hide top toolbar')
+                : h.text('Show top toolbar'),
           ),
         if (desktop) const PopupMenuDivider(),
         _menuItem('up', Icons.arrow_upward, 'Up'),
@@ -541,7 +551,13 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
         children: <Widget>[
           Icon(icon, size: 17),
           const SizedBox(width: 10),
-          Flexible(child: Text(label, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12.5))),
+          Flexible(
+            child: Text(
+              label,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 12.5),
+            ),
+          ),
         ],
       ),
     );
@@ -624,25 +640,7 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
       case 'settings':
         await showSettingsDialog(context);
       case 'swap':
-        const PanelSwapService service = PanelSwapService();
-        final PanelSource left = ref.read(panelSourceProvider(PanelSide.local));
-        final PanelSource right = ref.read(
-          panelSourceProvider(PanelSide.remote),
-        );
-        if (service.canSwap(left, right)) {
-          final (PanelSource newLeft, PanelSource newRight) = service.swap(
-            left,
-            right,
-          );
-          ref
-              .read(panelSourceProvider(PanelSide.local).notifier)
-              .setSource(newLeft);
-          ref
-              .read(panelSourceProvider(PanelSide.remote).notifier)
-              .setSource(newRight);
-          ref.read(activePanelProvider.notifier).state =
-              active == PanelSide.local ? PanelSide.remote : PanelSide.local;
-        }
+        await swapPanelSources(ref);
       case 'terminal':
         ref.read(showTerminalProvider.notifier).state = !ref.read(
           showTerminalProvider,

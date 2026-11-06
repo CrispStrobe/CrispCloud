@@ -17,7 +17,7 @@ import '../models/panel_side.dart';
 import '../models/file_item.dart';
 import '../providers/providers.dart';
 import '../providers/panel_source_provider.dart'
-    show fkeyBarVisibleProvider, panelSourceProvider;
+    show fkeyBarVisibleProvider, panelSourceProvider, swapPanelSources;
 import '../providers/toolbar_provider.dart' show panelViewModeProvider;
 import '../services/panel_swap_service.dart';
 import '../services/platform_diagnostics_service.dart';
@@ -2281,27 +2281,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
 
   /// Exchange the left (local) and right (remote) panel sources.
   /// Called by the AppBar swap button and Ctrl+U.
-  void _swapPanels() {
-    const service = PanelSwapService();
-    final leftSrc = ref.read(panelSourceProvider(PanelSide.local));
-    final rightSrc = ref.read(panelSourceProvider(PanelSide.remote));
-    if (!service.canSwap(leftSrc, rightSrc)) return;
-    final (newLeft, newRight) = service.swap(leftSrc, rightSrc);
-    ref.read(panelSourceProvider(PanelSide.local).notifier).setSource(newLeft);
-    ref
-        .read(panelSourceProvider(PanelSide.remote).notifier)
-        .setSource(newRight);
-    // Also toggle the active panel so the user sees the swap happen.
-    final active = ref.read(activePanelProvider);
-    final newActive = active == PanelSide.local
-        ? PanelSide.remote
-        : PanelSide.local;
-    ref.read(activePanelProvider.notifier).state = newActive;
-    // Update mobile tab if in single-panel mode.
-    setState(() => _activePanelMobile = newActive);
-    // Refresh both panels to reflect new sources.
-    ref.read(panelProvider(PanelSide.local)).refresh();
-    ref.read(panelProvider(PanelSide.remote)).refresh();
+  Future<void> _swapPanels() async {
+    await swapPanelSources(ref);
   }
 
   void _handleFKeyAction(
