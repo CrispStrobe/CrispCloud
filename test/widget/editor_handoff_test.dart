@@ -9,6 +9,7 @@ import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:crisp_cloud/widgets/file_editor_dialog.dart';
 import 'package:crisp_cloud/widgets/hex_editor_dialog.dart';
+import 'package:flutter/foundation.dart' show debugPrintSynchronously, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -171,6 +172,13 @@ Future<_Fixture> _open(
   );
   addTearDown(container.dispose);
   final panel = container.read(panelProvider(PanelSide.remote));
+  // Browser tab restoration is asynchronous and refreshes the initial listing.
+  // Let it finish before capturing the exact row that authorizes the editor.
+  await _pumpUntil(
+    tester,
+    () => panel.tabs.isNotEmpty && !panel.isLoading,
+    settle: false,
+  );
   await panel.refresh();
   final file = panel.files!.singleWhere((file) => file.name == 'note.txt');
   final closed = Completer<void>();
@@ -209,6 +217,11 @@ Future<_Fixture> _open(
       ),
     ),
   );
+  expect(
+    panel.originForOperation(file),
+    isNotNull,
+    reason: 'Open the verified row after initial tab restoration has settled.',
+  );
   await tester.tap(find.text('Open fixture'));
   if (waitForReady) {
     await _pumpUntil(
@@ -228,6 +241,17 @@ HexEditorController _hexController(WidgetTester tester) =>
     tester.widget<HexEditor>(find.byType(HexEditor)).controller;
 
 void main() {
+  if (kIsWeb) {
+    final originalReporter = reportTestException;
+    reportTestException = (details, description) {
+      debugPrintSynchronously(
+        'EDITOR_HANDOFF_BROWSER_FAILURE: $description\n'
+        '${details.exceptionAsString()}\n${details.stack ?? ''}',
+      );
+      originalReporter(details, description);
+    };
+  }
+
   testWidgets(
     'text and hex handoffs retain storage after saves replace IDs and rows refresh',
     (tester) async {
