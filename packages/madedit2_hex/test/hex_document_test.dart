@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:madedit2_hex/hex_document.dart';
 
@@ -32,7 +33,9 @@ void main() {
     document.insert(0, [1, 2]);
     document.insert(2, [3]);
     expect(await document.read(0, 3), [1, 2, 3]);
-    expect(await document.snapshot.chunks().toList(), [Uint8List.fromList([1, 2, 3])]);
+    expect(await document.snapshot.chunks().toList(), [
+      Uint8List.fromList([1, 2, 3]),
+    ]);
   });
 
   test('rejects invalid ranges and bytes', () {

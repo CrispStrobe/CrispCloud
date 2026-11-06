@@ -80,9 +80,8 @@ Future<void> openListedFileWithSystemEditor(
     });
   } catch (error) {
     if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('$error')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('$error')));
     }
   }
 }
@@ -154,9 +153,8 @@ void _showResultListContextMenu(
         await action();
       } catch (error) {
         if (context.mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(error.toString())));
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(error.toString())));
         }
       }
     }),
@@ -353,9 +351,8 @@ void showFileContextMenu(
         await withNativeFileAction(ref, origin, paths, action);
       } catch (error) {
         if (context.mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('$error')));
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text('$error')));
         }
       }
     }());
@@ -423,13 +420,21 @@ void showFileContextMenu(
 
   // Specialized editors and text/code editing for a single file.
   if (!isMultiSelect && !isSingleFolder) {
-    items.add(PopupMenuItem(
-      child: const Row(children: [Icon(Icons.hexagon_outlined), SizedBox(width: 8),
-        Expanded(child: Text('Edit as Hex'))]),
-      onTap: () => Future.delayed(Duration.zero, () {
-        if (context.mounted && current()) showHexEditorDialog(context, ref, file, side);
-      }),
-    ));
+    items.add(
+      PopupMenuItem(
+        child: const Row(
+          children: [
+            Icon(Icons.hexagon_outlined),
+            SizedBox(width: 8),
+            Expanded(child: Text('Edit as Hex')),
+          ],
+        ),
+        onTap: () => Future.delayed(Duration.zero, () {
+          if (context.mounted && current())
+            showHexEditorDialog(context, ref, file, side);
+        }),
+      ),
+    );
     final preferExternal = native && ref.read(preferExternalEditorProvider);
     if (isImageEditorFileName(file.name)) {
       items.add(
@@ -1674,9 +1679,8 @@ Future<void> _downloadFilesOnWeb(
     }
   } catch (error) {
     if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('$error')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('$error')));
     }
   }
 }
@@ -1992,9 +1996,8 @@ Widget _propertyRow(
       children: [
         Text(
           label,
-          style: Theme.of(context).textTheme.labelMedium?.copyWith(
-            color: Theme.of(context).colorScheme.primary,
-          ),
+          style: Theme.of(context).textTheme.labelMedium
+              ?.copyWith(color: Theme.of(context).colorScheme.primary),
         ),
         const SizedBox(height: 4),
         SelectableText(

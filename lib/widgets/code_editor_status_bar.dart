@@ -128,40 +128,97 @@ class CodeEditorStatusBar extends StatelessWidget {
               PopupMenuButton<String>(
                 tooltip: 'Line endings',
                 onSelected: (value) {
-                  if (value == 'preserve') { onPolicySelected?.call(EditorLineEndingPolicy.preserve); }
-                  else if (value.startsWith('new:')) {
-                    onNewLineEndingSelected?.call(EditorLineEnding.values.byName(value.substring(4)));
-                  } else { onLineEndingSelected(EditorLineEnding.values.byName(value)); }
+                  if (value == 'preserve') {
+                    onPolicySelected?.call(EditorLineEndingPolicy.preserve);
+                  } else if (value.startsWith('new:')) {
+                    onNewLineEndingSelected?.call(
+                      EditorLineEnding.values.byName(value.substring(4)),
+                    );
+                  } else {
+                    onLineEndingSelected(EditorLineEnding.values.byName(value));
+                  }
                 },
                 itemBuilder: (context) => [
-                  if (onPolicySelected != null) PopupMenuItem(value: 'preserve',
-                    child: Text('${lineEndingPolicy == EditorLineEndingPolicy.preserve ? '✓ ' : ''}Preserve existing line endings')),
-                  for (final style in EditorLineEnding.values) PopupMenuItem(value: style.name,
-                    child: Text('Convert ALL line endings to ${style.label}')),
+                  if (onPolicySelected != null)
+                    PopupMenuItem(
+                      value: 'preserve',
+                      child: Text(
+                        '${lineEndingPolicy == EditorLineEndingPolicy.preserve ? '✓ ' : ''}Preserve existing line endings',
+                      ),
+                    ),
+                  for (final style in EditorLineEnding.values)
+                    PopupMenuItem(
+                      value: style.name,
+                      child: Text('Convert ALL line endings to ${style.label}'),
+                    ),
                   if (onNewLineEndingSelected != null) ...[
                     const PopupMenuDivider(),
-                    for (final style in EditorLineEnding.values) PopupMenuItem(value: 'new:${style.name}',
-                      child: Text('${lineEnding == style ? '✓ ' : ''}New breaks: ${style.label}')),
+                    for (final style in EditorLineEnding.values)
+                      PopupMenuItem(
+                        value: 'new:${style.name}',
+                        child: Text(
+                          '${lineEnding == style ? '✓ ' : ''}New breaks: ${style.label}',
+                        ),
+                      ),
                   ],
                 ],
-                child: Padding(padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                  child: Text(lineEnding.label, style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant))),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 4,
+                  ),
+                  child: Text(
+                    lineEnding.label,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
               ),
               const SizedBox(width: 6),
               PopupMenuButton<String>(
                 tooltip: 'File encoding',
                 onSelected: (value) {
-                  if (value == 'bom') { onToggleBom?.call(); }
-                  else { onEncodingSelected(EditorEncoding.values.byName(value)); }
+                  if (value == 'bom') {
+                    onToggleBom?.call();
+                  } else {
+                    onEncodingSelected(EditorEncoding.values.byName(value));
+                  }
                 },
                 itemBuilder: (context) => [
-                  for (final value in EditorEncoding.values) PopupMenuItem(value: value.name,
-                    child: Text('${value == encoding ? '✓ ' : ''}${value.label}')),
-                  if (onToggleBom != null) ...[const PopupMenuDivider(),
-                    PopupMenuItem(value: 'bom', child: Text(writesBom ? 'Remove byte-order mark (BOM)' : 'Write byte-order mark (BOM)'))],
+                  for (final value in EditorEncoding.values)
+                    PopupMenuItem(
+                      value: value.name,
+                      child: Text(
+                        '${value == encoding ? '✓ ' : ''}${value.label}',
+                      ),
+                    ),
+                  if (onToggleBom != null) ...[
+                    const PopupMenuDivider(),
+                    PopupMenuItem(
+                      value: 'bom',
+                      child: Text(
+                        writesBom
+                            ? 'Remove byte-order mark (BOM)'
+                            : 'Write byte-order mark (BOM)',
+                      ),
+                    ),
+                  ],
                 ],
-                child: Padding(padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                  child: Text(encoding.label, style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant))),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 4,
+                  ),
+                  child: Text(
+                    encoding.label,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
               ),
               if (showStatusText) ...[
                 const SizedBox(width: 12),

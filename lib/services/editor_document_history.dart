@@ -8,10 +8,16 @@ class EditorDocumentHistory {
   void remember(Object historyValue, EditorDocument document) {
     _states[historyValue] = document;
   }
-  EditorDocument apply(Object historyValue, String text, EditorDocument current) {
+
+  EditorDocument apply(
+    Object historyValue,
+    String text,
+    EditorDocument current,
+  ) {
     final remembered = _states[historyValue];
     final next = remembered != null && remembered.text == text
-        ? current.restoreText(remembered) : current.copyWith(text: text);
+        ? current.restoreText(remembered)
+        : current.copyWith(text: text);
     _states[historyValue] = next;
     return next;
   }

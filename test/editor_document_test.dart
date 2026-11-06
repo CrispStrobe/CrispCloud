@@ -63,7 +63,12 @@ void main() {
 
     test('explicit line-ending conversion normalizes mixed endings', () {
       final document = EditorDocument.decode(utf8.encode('a\r\nb\nc\r'));
-      expect(utf8.decode(document.copyWith(lineEnding: EditorLineEnding.lf).encode()), 'a\nb\nc\n');
+      expect(
+        utf8.decode(
+          document.copyWith(lineEnding: EditorLineEnding.lf).encode(),
+        ),
+        'a\nb\nc\n',
+      );
     });
 
     test('a CRLF/LF tie prefers CRLF', () {

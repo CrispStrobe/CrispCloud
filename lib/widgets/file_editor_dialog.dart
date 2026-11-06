@@ -66,9 +66,15 @@ Future<void> showFileEditorDialog(
       if (MediaCapabilities.canEdit(mediaKind)) {
         await showMediaEditorDialog(context, ref, file, side);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(
-          context.mediaTr('This media format cannot be edited on this platform.'),
-        )));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              context.mediaTr(
+                'This media format cannot be edited on this platform.',
+              ),
+            ),
+          ),
+        );
       }
       return;
     }
@@ -559,8 +565,10 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
 
   void _setLineEnding(EditorLineEnding lineEnding) {
     final document = _document;
-    if (document == null || (document.lineEnding == lineEnding &&
-        document.lineEndingPolicy == EditorLineEndingPolicy.normalize)) return;
+    if (document == null ||
+        (document.lineEnding == lineEnding &&
+            document.lineEndingPolicy == EditorLineEndingPolicy.normalize))
+      return;
     setState(() => _document = document.copyWith(lineEnding: lineEnding));
     _saveState.markChanged();
     _scheduleAutoSave();
@@ -586,23 +594,37 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
   void _toggleBom() {
     final document = _document;
     if (document == null || document.encoding == EditorEncoding.latin1) return;
-    setState(() => _document = document.copyWith(
-      encoding: document.encoding == EditorEncoding.utf8 ? EditorEncoding.utf8Bom :
-        document.encoding == EditorEncoding.utf8Bom ? EditorEncoding.utf8 : document.encoding,
-      hadBom: !document.writesBom,
-    ));
+    setState(
+      () => _document = document.copyWith(
+        encoding: document.encoding == EditorEncoding.utf8
+            ? EditorEncoding.utf8Bom
+            : document.encoding == EditorEncoding.utf8Bom
+            ? EditorEncoding.utf8
+            : document.encoding,
+        hadBom: !document.writesBom,
+      ),
+    );
     _saveState.markChanged();
     _scheduleAutoSave();
   }
 
   Future<void> _reopenEncoding() async {
     if (!await _confirmDiscard() || !mounted) return;
-    final encoding = await showDialog<EditorEncoding>(context: context, builder: (ctx) => SimpleDialog(
-      title: const Text('Reopen saved bytes using encoding'),
-      children: [for (final value in EditorEncoding.values) SimpleDialogOption(
-        onPressed: () => Navigator.pop(ctx, value), child: Text(value.label))],
-    ));
-    if (encoding != null && mounted) await _loadFile(encodingOverride: encoding);
+    final encoding = await showDialog<EditorEncoding>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: const Text('Reopen saved bytes using encoding'),
+        children: [
+          for (final value in EditorEncoding.values)
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(ctx, value),
+              child: Text(value.label),
+            ),
+        ],
+      ),
+    );
+    if (encoding != null && mounted)
+      await _loadFile(encodingOverride: encoding);
   }
 
   void _toggleHighlighting() {
@@ -1022,7 +1044,9 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
       onPolicySelected: _setEndingPolicy,
       onNewLineEndingSelected: _setNewLineEnding,
       writesBom: document.writesBom,
-      onToggleBom: document.encoding == EditorEncoding.latin1 ? null : _toggleBom,
+      onToggleBom: document.encoding == EditorEncoding.latin1
+          ? null
+          : _toggleBom,
       cursorLine: _cursorLine,
       cursorColumn: _cursorColumn,
       lineCount: _lineCount,
@@ -1038,4 +1062,12 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
   }
 }
 
-enum _EditorMenuAction { find, replace, goToLine, wordWrap, highlight, reload, reopenEncoding }
+enum _EditorMenuAction {
+  find,
+  replace,
+  goToLine,
+  wordWrap,
+  highlight,
+  reload,
+  reopenEncoding,
+}
