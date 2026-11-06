@@ -47,12 +47,46 @@ import 'screen_dialogs.dart';
 ///
 /// [onPanelSwitch] is called when Tab is pressed on narrow screens
 /// to sync the mobile panel tab state.
+bool _isGlobalFunctionKey(LogicalKeyboardKey key) =>
+    key == LogicalKeyboardKey.f1 ||
+    key == LogicalKeyboardKey.f2 ||
+    key == LogicalKeyboardKey.f3 ||
+    key == LogicalKeyboardKey.f4 ||
+    key == LogicalKeyboardKey.f5 ||
+    key == LogicalKeyboardKey.f6 ||
+    key == LogicalKeyboardKey.f7 ||
+    key == LogicalKeyboardKey.f8 ||
+    key == LogicalKeyboardKey.f9 ||
+    key == LogicalKeyboardKey.f10 ||
+    key == LogicalKeyboardKey.f11 ||
+    key == LogicalKeyboardKey.f12;
+
+bool _isEditingText() {
+  final focus = FocusManager.instance.primaryFocus;
+  final context = focus?.context;
+  if (context == null) return false;
+  return context.widget is EditableText ||
+      context.findAncestorWidgetOfExactType<EditableText>() != null ||
+      context.findAncestorStateOfType<EditableTextState>() != null;
+}
+
 KeyEventResult handleKeyEvent(
   BuildContext context,
   WidgetRef ref,
   KeyEvent event, {
   void Function(PanelSide)? onPanelSwitch,
 }) {
+  // A focused text field (terminal command line, search box, dialog input)
+  // must receive printable keys, arrows and editing keys. The file browser
+  // only keeps global function keys and modified shortcuts while editing.
+  if (_isEditingText() &&
+      !HardwareKeyboard.instance.isControlPressed &&
+      !HardwareKeyboard.instance.isMetaPressed &&
+      !HardwareKeyboard.instance.isAltPressed &&
+      !_isGlobalFunctionKey(event.logicalKey)) {
+    return KeyEventResult.ignored;
+  }
+
   // Allow key-repeat only for navigation keys; block for everything else
   if (event is KeyRepeatEvent) {
     final k = event.logicalKey;
@@ -610,7 +644,9 @@ Future<void> _openCursorInPanel(
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(ViewerActionStrings(context).archiveOtherPanelUnsupported),
+          content: Text(
+            ViewerActionStrings(context).archiveOtherPanelUnsupported,
+          ),
         ),
       );
     }
@@ -697,7 +733,11 @@ void _undoLastAction(
   if (!historyNotifier.canUndo(last)) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(CommandStrings(context).text('cannotUndo', {'action': UndoPresentation(context).description(last)})),
+        content: Text(
+          CommandStrings(context).text('cannotUndo', {
+            'action': UndoPresentation(context).description(last),
+          }),
+        ),
         duration: const Duration(seconds: 3),
       ),
     );
