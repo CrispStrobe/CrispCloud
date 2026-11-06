@@ -1,0 +1,17 @@
+name: madedit2_hex
+description: Native Flutter binary editing with a windowed byte source and undo history, extracted from MadEdit2.
+version: 0.1.0
+publish_to: 'none'
+
+environment:
+  sdk: '>=3.13.0 <4.0.0'
+  flutter: '>=3.47.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
