@@ -85,15 +85,41 @@ typedef _GetattrD = int Function(
 typedef _ChownN = Int32 Function(Int32, Uint32, Uint32);
 typedef _ChownD = int Function(int, int, int);
 typedef _ChmodN = Int32 Function(Int32, Uint32);
+typedef _ChmodMacN = Int32 Function(Int32, Uint16);
 typedef _ChmodD = int Function(int, int);
+typedef _ChmodPathN = Int32 Function(Pointer<Utf8>, Uint32);
+typedef _ChmodPathD = int Function(Pointer<Utf8>, int);
+typedef _ChownPathN = Int32 Function(Pointer<Utf8>, Uint32, Uint32);
+typedef _ChownPathD = int Function(Pointer<Utf8>, int, int);
 typedef _TimesN = Int32 Function(Int32, Pointer<_Timespec>);
 typedef _TimesD = int Function(int, Pointer<_Timespec>);
+typedef _TimesPathN = Int32 Function(
+  Int32,
+  Pointer<Utf8>,
+  Pointer<_Timespec>,
+  Int32,
+);
+typedef _TimesPathD = int Function(int, Pointer<Utf8>, Pointer<_Timespec>, int);
 typedef _ListN = IntPtr Function(Int32, Pointer<Uint8>, Size);
 typedef _ListD = int Function(int, Pointer<Uint8>, int);
+typedef _ListPathN = IntPtr Function(Pointer<Utf8>, Pointer<Uint8>, Size);
+typedef _ListPathD = int Function(Pointer<Utf8>, Pointer<Uint8>, int);
 typedef _ListMacN = IntPtr Function(Int32, Pointer<Uint8>, Size, Int32);
 typedef _ListMacD = int Function(int, Pointer<Uint8>, int, int);
 typedef _GetN = IntPtr Function(Int32, Pointer<Utf8>, Pointer<Uint8>, Size);
 typedef _GetD = int Function(int, Pointer<Utf8>, Pointer<Uint8>, int);
+typedef _GetPathN = IntPtr Function(
+  Pointer<Utf8>,
+  Pointer<Utf8>,
+  Pointer<Uint8>,
+  Size,
+);
+typedef _GetPathD = int Function(
+  Pointer<Utf8>,
+  Pointer<Utf8>,
+  Pointer<Uint8>,
+  int,
+);
 typedef _GetMacN = IntPtr Function(
   Int32,
   Pointer<Utf8>,
@@ -118,6 +144,20 @@ typedef _SetN = Int32 Function(
   Int32,
 );
 typedef _SetD = int Function(int, Pointer<Utf8>, Pointer<Uint8>, int, int);
+typedef _SetPathN = Int32 Function(
+  Pointer<Utf8>,
+  Pointer<Utf8>,
+  Pointer<Uint8>,
+  Size,
+  Int32,
+);
+typedef _SetPathD = int Function(
+  Pointer<Utf8>,
+  Pointer<Utf8>,
+  Pointer<Uint8>,
+  int,
+  int,
+);
 typedef _SetMacN = Int32 Function(
   Int32,
   Pointer<Utf8>,
@@ -136,6 +176,8 @@ typedef _SetMacD = int Function(
 );
 typedef _RemoveN = Int32 Function(Int32, Pointer<Utf8>);
 typedef _RemoveD = int Function(int, Pointer<Utf8>);
+typedef _RemovePathN = Int32 Function(Pointer<Utf8>, Pointer<Utf8>);
+typedef _RemovePathD = int Function(Pointer<Utf8>, Pointer<Utf8>);
 typedef _GetAclN = Pointer<Void> Function(Int32, Int32);
 typedef _GetAclD = Pointer<Void> Function(int, int);
 typedef _AclTextN = Pointer<Utf8> Function(Pointer<Void>, Pointer<IntPtr>);
@@ -176,11 +218,15 @@ int _errno(DynamicLibrary lib) => lib
     .lookupFunction<_ErrnoN, _ErrnoD>(_mac ? '__error' : '__errno_location')()
     .value;
 bool _absent(int code) => code == (_mac ? 93 : 61);
-bool _unsupported(int code) => const [38, 45, 78, 95].contains(code);
+bool _unsupported(int code) =>
+    (_mac ? const [45, 78] : const [38, 95]).contains(code);
 Never _fail(String operation, String path, int code) =>
     throw FileSystemException(operation, path, OSError('OS error $code', code));
 
-T _withDescriptor<T>(String path, T Function(DynamicLibrary, int) action) {
+T _withDescriptor<T>(
+  String path,
+  T Function(DynamicLibrary, int, String?) action,
+) {
   if (!supportsNativeMetadata) {
     throw UnsupportedError('Native metadata is unavailable on this platform.');
   }
@@ -196,13 +242,21 @@ T _withDescriptor<T>(String path, T Function(DynamicLibrary, int) action) {
     );
   }
   final lib = DynamicLibrary.process();
+  final pathOnly = !_mac && lib.providesSymbol('statx');
   final name = path.toNativeUtf8();
   late int fd;
   try {
-    // O_RDONLY | O_NOFOLLOW | O_NONBLOCK; directories need no write handle.
+    // Linux O_PATH does not require read permission on the object's data.
+    // statx verifies its actual type before /proc/self/fd operations below.
+    // O_NOFOLLOW | O_CLOEXEC applies to every descriptor. Older libc versions
+    // without statx retain the read-handle path rather than weakening checks.
     fd = lib.lookupFunction<_OpenN, _OpenD>('open')(
       name,
-      _mac ? 0x104 : 0x20800,
+      _mac
+          ? 0x1000104
+          : pathOnly
+          ? 0x2a0000
+          : 0xa0800,
       0,
     );
   } finally {
@@ -210,9 +264,84 @@ T _withDescriptor<T>(String path, T Function(DynamicLibrary, int) action) {
   }
   if (fd < 0) _fail('Opening metadata failed', path, _errno(lib));
   try {
-    return action(lib, fd);
+    if (pathOnly) {
+      final mode = _statxMetadata(lib, fd, path, 1).getUint16(28, Endian.host);
+      if ((mode & 0xf000) != 0x8000 && (mode & 0xf000) != 0x4000) {
+        throw FileSystemException(
+          'Metadata requires a regular file or directory.',
+          path,
+        );
+      }
+    } else if (_mac && lib.providesSymbol('fgetattrlist')) {
+      final attrs = calloc<_AttrList>();
+      final buffer = calloc<Uint32>(2);
+      try {
+        attrs.ref
+          ..bitmapCount = 5
+          ..common = 8; // ATTR_CMN_OBJTYPE: vtype_t (VREG=1, VDIR=2).
+        if (lib.lookupFunction<_GetattrN, _GetattrD>('fgetattrlist')(
+              fd,
+              attrs,
+              buffer,
+              8,
+              0,
+            ) !=
+            0) {
+          _fail('Reading descriptor type failed', path, _errno(lib));
+        }
+        if (buffer[0] != 8 || (buffer[1] != 1 && buffer[1] != 2)) {
+          throw FileSystemException(
+            'Metadata requires a regular file or directory.',
+            path,
+          );
+        }
+      } finally {
+        calloc.free(attrs);
+        calloc.free(buffer);
+      }
+    }
+    // Never fall back to the original pathname if procfs is unavailable: it
+    // could have been replaced since open. The descriptor keeps this inode
+    // stable even when its original pathname is renamed or unlinked.
+    return action(lib, fd, pathOnly ? '/proc/self/fd/$fd' : null);
   } finally {
     lib.lookupFunction<_CloseN, _CloseD>('close')(fd);
+  }
+}
+
+T _withPath<T>(String path, T Function(Pointer<Utf8>) action) {
+  final name = path.toNativeUtf8();
+  try {
+    return action(name);
+  } finally {
+    calloc.free(name);
+  }
+}
+
+ByteData _statxMetadata(DynamicLibrary lib, int fd, String path, int mask) {
+  final empty = ''.toNativeUtf8();
+  final buffer = calloc<Uint8>(256);
+  try {
+    if (lib.lookupFunction<_StatxN, _StatxD>('statx')(
+          fd,
+          empty,
+          0x1100,
+          mask,
+          buffer,
+        ) !=
+        0) {
+      _fail('Reading descriptor metadata failed', path, _errno(lib));
+    }
+    final values = ByteData.sublistView(
+      Uint8List.fromList(buffer.asTypedList(256)),
+    );
+    if ((values.getUint32(0, Endian.host) & mask) != mask) {
+      throw FileSystemException('Descriptor metadata is unavailable.', path);
+    }
+    return values;
+  } finally {
+    calloc.free(empty);
+    calloc.free(buffer);
   }
 }
 
@@ -244,41 +373,42 @@ T _withDescriptor<T>(String path, T Function(DynamicLibrary, int) action) {
   }
   // statx has an architecture-independent ABI, unlike libc's struct stat.
   // AT_EMPTY_PATH binds the query to the already-open descriptor.
-  final empty = ''.toNativeUtf8();
-  final buffer = calloc<Uint8>(256);
-  try {
-    final result = lib.lookupFunction<_StatxN, _StatxD>('statx')(
-      fd,
-      empty,
-      0x1000,
-      0x18,
-      buffer,
-    );
-    if (result != 0) _fail('Reading ownership failed', path, _errno(lib));
-    final values = ByteData.sublistView(buffer.asTypedList(256));
-    if ((values.getUint32(0, Endian.host) & 0x18) != 0x18) {
-      throw FileSystemException('Ownership metadata is unavailable.', path);
-    }
-    return (
-      '${values.getUint32(20, Endian.host)}',
-      '${values.getUint32(24, Endian.host)}',
-    );
-  } finally {
-    calloc.free(empty);
-    calloc.free(buffer);
-  }
+  final values = _statxMetadata(lib, fd, path, 0x18);
+  return (
+    '${values.getUint32(20, Endian.host)}',
+    '${values.getUint32(24, Endian.host)}',
+  );
 }
 
-int _list(DynamicLibrary lib, int fd, Pointer<Uint8> bytes, int size) => _mac
+int _list(
+  DynamicLibrary lib,
+  int fd,
+  Pointer<Uint8> bytes,
+  int size,
+  String? descriptorPath,
+) => descriptorPath != null
+    ? _withPath(
+        descriptorPath,
+        (path) => lib.lookupFunction<_ListPathN, _ListPathD>('listxattr')(
+          path,
+          bytes,
+          size,
+        ),
+      )
+    : _mac
     ? lib.lookupFunction<_ListMacN, _ListMacD>('flistxattr')(fd, bytes, size, 0)
     : lib.lookupFunction<_ListN, _ListD>('flistxattr')(fd, bytes, size);
 
-List<String> _attributeNames(DynamicLibrary lib, int fd, String path) {
+List<String> _attributeNames(
+  DynamicLibrary lib,
+  int fd,
+  String path,
+  String? descriptorPath,
+) {
   for (var attempt = 0; attempt < 3; attempt++) {
-    final length = _list(lib, fd, nullptr, 0);
+    final length = _list(lib, fd, nullptr, 0, descriptorPath);
     if (length < 0) {
       final code = _errno(lib);
-      if (_unsupported(code)) return const [];
       _fail('Listing extended attributes failed', path, code);
     }
     if (length == 0) return const [];
@@ -290,7 +420,7 @@ List<String> _attributeNames(DynamicLibrary lib, int fd, String path) {
     }
     final data = calloc<Uint8>(length);
     try {
-      final count = _list(lib, fd, data, length);
+      final count = _list(lib, fd, data, length, descriptorPath);
       if (count < 0) {
         if (_errno(lib) == 34) {
           continue; // ERANGE: names changed during reading.
@@ -318,7 +448,18 @@ int _get(
   Pointer<Utf8> name,
   Pointer<Uint8> data,
   int length,
-) => _mac
+  String? descriptorPath,
+) => descriptorPath != null
+    ? _withPath(
+        descriptorPath,
+        (path) => lib.lookupFunction<_GetPathN, _GetPathD>('getxattr')(
+          path,
+          name,
+          data,
+          length,
+        ),
+      )
+    : _mac
     ? lib.lookupFunction<_GetMacN, _GetMacD>('fgetxattr')(
         fd,
         name,
@@ -335,14 +476,15 @@ Uint8List? _attribute(
   String path,
   String name, {
   bool optional = false,
+  String? descriptorPath,
 }) {
   final nativeName = name.toNativeUtf8();
   try {
     for (var attempt = 0; attempt < 3; attempt++) {
-      final length = _get(lib, fd, nativeName, nullptr, 0);
+      final length = _get(lib, fd, nativeName, nullptr, 0, descriptorPath);
       if (length < 0) {
         final code = _errno(lib);
-        if (optional && (_absent(code) || _unsupported(code))) return null;
+        if (optional && _absent(code)) return null;
         _fail('Reading extended attribute $name failed', path, code);
       }
       if (length > _maxValue) {
@@ -354,7 +496,7 @@ Uint8List? _attribute(
       if (length == 0) return Uint8List(0);
       final data = calloc<Uint8>(length);
       try {
-        final count = _get(lib, fd, nativeName, data, length);
+        final count = _get(lib, fd, nativeName, data, length, descriptorPath);
         if (count < 0) {
           if (_errno(lib) == 34) continue;
           _fail('Reading extended attribute $name failed', path, _errno(lib));
@@ -378,10 +520,43 @@ bool _isAclAttribute(String name) =>
     name == _linuxDefault ||
     name == 'com.apple.system.Security';
 
-String _readAcl(DynamicLibrary lib, int fd, String path) {
+String? _readAcl(
+  DynamicLibrary lib,
+  int fd,
+  String path,
+  String? descriptorPath,
+) {
+  try {
+    return _readSupportedAcl(lib, fd, path, descriptorPath);
+  } on FileSystemException catch (error) {
+    if (_unsupported(error.osError?.errorCode ?? -1)) return null;
+    rethrow;
+  }
+}
+
+String _readSupportedAcl(
+  DynamicLibrary lib,
+  int fd,
+  String path,
+  String? descriptorPath,
+) {
   if (!_mac) {
-    final access = _attribute(lib, fd, path, _linuxAccess, optional: true);
-    final defaults = _attribute(lib, fd, path, _linuxDefault, optional: true);
+    final access = _attribute(
+      lib,
+      fd,
+      path,
+      _linuxAccess,
+      optional: true,
+      descriptorPath: descriptorPath,
+    );
+    final defaults = _attribute(
+      lib,
+      fd,
+      path,
+      _linuxDefault,
+      optional: true,
+      descriptorPath: descriptorPath,
+    );
     return '$_linuxAclPrefix${jsonEncode({'access': access == null ? null : base64Encode(access), 'default': defaults == null ? null : base64Encode(defaults)})}';
   }
   final acl = lib.lookupFunction<_GetAclN, _GetAclD>('acl_get_fd_np')(
@@ -411,16 +586,22 @@ TransferMetadata _read(
   required bool ownership,
   required bool extendedAttributes,
   required bool acl,
-}) => _withDescriptor(path, (lib, fd) {
+}) => _withDescriptor(path, (lib, fd, descriptorPath) {
   final owners = ownership && supportsNativeOwnership
       ? _ownership(lib, fd, path)
       : null;
   final attributes = <String, Uint8List>{};
   var total = 0;
   if (extendedAttributes && supportsNativeExtendedAttributes) {
-    for (final name in _attributeNames(lib, fd, path)) {
+    for (final name in _attributeNames(lib, fd, path, descriptorPath)) {
       if (_isAclAttribute(name)) continue;
-      final bytes = _attribute(lib, fd, path, name)!;
+      final bytes = _attribute(
+        lib,
+        fd,
+        path,
+        name,
+        descriptorPath: descriptorPath,
+      )!;
       total += bytes.length;
       if (total > _maxMetadata) {
         throw FileSystemException('Extended attributes exceed 32 MiB.', path);
@@ -433,7 +614,7 @@ TransferMetadata _read(
     group: owners?.$2,
     extendedAttributes: attributes,
     acl: acl && supportsNativeAccessControlLists
-        ? _readAcl(lib, fd, path)
+        ? _readAcl(lib, fd, path, descriptorPath)
         : null,
   );
 });
@@ -455,8 +636,9 @@ void _setAttribute(
   int fd,
   String path,
   String name,
-  Uint8List? value,
-) {
+  Uint8List? value, {
+  String? descriptorPath,
+}) {
   final nativeName = name.toNativeUtf8();
   Pointer<Uint8> bytes = nullptr;
   try {
@@ -464,17 +646,31 @@ void _setAttribute(
     if (value == null) {
       // Only Linux ACL removal uses this path. Ordinary xattrs are merged;
       // unrelated destination metadata is not removed by preservation.
-      result = lib.lookupFunction<_RemoveN, _RemoveD>('fremovexattr')(
-        fd,
-        nativeName,
-      );
-      if (result != 0 && (_absent(_errno(lib)) || _unsupported(_errno(lib)))) {
+      result = descriptorPath != null
+          ? _withPath(
+              descriptorPath,
+              (descriptor) => lib.lookupFunction<_RemovePathN, _RemovePathD>(
+                'removexattr',
+              )(descriptor, nativeName),
+            )
+          : lib.lookupFunction<_RemoveN, _RemoveD>('fremovexattr')(
+              fd,
+              nativeName,
+            );
+      if (result != 0 && _absent(_errno(lib))) {
         return;
       }
     } else {
       bytes = calloc<Uint8>(value.isEmpty ? 1 : value.length);
       bytes.asTypedList(value.length).setAll(0, value);
-      result = _mac
+      result = descriptorPath != null
+          ? _withPath(
+              descriptorPath,
+              (descriptor) => lib.lookupFunction<_SetPathN, _SetPathD>(
+                'setxattr',
+              )(descriptor, nativeName, bytes, value.length, 0),
+            )
+          : _mac
           ? lib.lookupFunction<_SetMacN, _SetMacD>('fsetxattr')(
               fd,
               nativeName,
@@ -543,86 +739,186 @@ Map<String, Uint8List?>? _validate(TransferMetadata metadata) {
       !parsed.containsKey('default')) {
     throw const FormatException('Invalid Linux ACL metadata.');
   }
-  return {
+  if (parsed.values.any((value) => value != null && value is! String)) {
+    throw const FormatException('Invalid Linux ACL value.');
+  }
+  final values = {
     for (final key in ['access', 'default'])
       key: parsed[key] == null ? null : base64Decode(parsed[key] as String),
   };
+  for (final value in values.values) {
+    if (value != null) _validateLinuxAcl(value);
+  }
+  return values;
+}
+
+void _validateLinuxAcl(Uint8List value) {
+  if (value.length < 4 ||
+      value.length > _maxValue ||
+      (value.length - 4) % 8 != 0) {
+    throw const FormatException('Invalid Linux ACL entry length.');
+  }
+  final data = ByteData.sublistView(value);
+  if (data.getUint32(0, Endian.little) != 2) {
+    throw const FormatException('Unsupported Linux ACL version.');
+  }
+  if (value.length == 4) return; // The kernel accepts an empty ACL as removal.
+  final required = <int>{1, 4, 32};
+  final singleton = <int>{};
+  var previousTag = 0;
+  var named = false;
+  for (var offset = 4; offset < value.length; offset += 8) {
+    final tag = data.getUint16(offset, Endian.little);
+    final permissions = data.getUint16(offset + 2, Endian.little);
+    final id = data.getUint32(offset + 4, Endian.little);
+    if (!const [1, 2, 4, 8, 16, 32].contains(tag) ||
+        permissions > 7 ||
+        tag < previousTag) {
+      throw const FormatException('Invalid Linux ACL entry.');
+    }
+    if (tag == 2 || tag == 8) {
+      named = true;
+      if (id == 0xffffffff) {
+        throw const FormatException('Invalid Linux ACL identity.');
+      }
+    } else {
+      if (id != 0xffffffff || !singleton.add(tag)) {
+        throw const FormatException('Invalid Linux ACL base entry.');
+      }
+      required.remove(tag);
+    }
+    previousTag = tag;
+  }
+  if (required.isNotEmpty || (named && !singleton.contains(16))) {
+    throw const FormatException('Linux ACL is missing required entries.');
+  }
 }
 
 void _write(String path, TransferMetadata metadata) {
   final linuxAcl = _validate(metadata);
-  _withDescriptor(path, (lib, fd) {
-    if (metadata.owner != null || metadata.group != null) {
-      final result = lib.lookupFunction<_ChownN, _ChownD>('fchown')(
-        fd,
-        _numericOwner(metadata.owner, 'Owner'),
-        _numericOwner(metadata.group, 'Group'),
-      );
-      if (result != 0) _fail('Setting ownership failed', path, _errno(lib));
+  final process = DynamicLibrary.process();
+  Pointer<Void> darwinAcl = nullptr;
+  if (_mac && metadata.acl != null) {
+    darwinAcl = _withPath(
+      metadata.acl!.substring(_darwinAclPrefix.length),
+      (text) =>
+          process.lookupFunction<_AclFromN, _AclFromD>('acl_from_text')(text),
+    );
+    if (darwinAcl == nullptr) {
+      throw const FormatException('Invalid macOS ACL metadata.');
     }
-    for (final entry in metadata.extendedAttributes.entries) {
-      _setAttribute(lib, fd, path, entry.key, entry.value);
+    if (process.lookupFunction<_FreeAclN, _FreeAclD>('acl_valid')(darwinAcl) !=
+        0) {
+      process.lookupFunction<_FreeAclN, _FreeAclD>('acl_free')(darwinAcl);
+      throw const FormatException('Invalid macOS ACL metadata.');
     }
-    // Ownership can clear set-id bits, so explicitly requested modes follow it.
-    if (metadata.mode != null) {
-      if (lib.lookupFunction<_ChmodN, _ChmodD>('fchmod')(
-            fd,
-            metadata.mode! & 0xfff,
-          ) !=
-          0) {
-        _fail('Setting permissions failed', path, _errno(lib));
+  }
+  try {
+    _withDescriptor(path, (lib, fd, descriptorPath) {
+      if (metadata.owner != null || metadata.group != null) {
+        final owner = _numericOwner(metadata.owner, 'Owner');
+        final group = _numericOwner(metadata.group, 'Group');
+        final result = descriptorPath != null
+            ? _withPath(
+                descriptorPath,
+                (descriptor) => lib.lookupFunction<_ChownPathN, _ChownPathD>(
+                  'chown',
+                )(descriptor, owner, group),
+              )
+            : lib.lookupFunction<_ChownN, _ChownD>('fchown')(fd, owner, group);
+        if (result != 0) _fail('Setting ownership failed', path, _errno(lib));
       }
-    }
-    if (metadata.acl != null) {
-      if (_mac) {
-        final text = metadata.acl!
-            .substring(_darwinAclPrefix.length)
-            .toNativeUtf8();
-        Pointer<Void> acl = nullptr;
-        try {
-          acl = lib.lookupFunction<_AclFromN, _AclFromD>('acl_from_text')(text);
-          if (acl == nullptr) _fail('Parsing ACL failed', path, _errno(lib));
+      for (final entry in metadata.extendedAttributes.entries) {
+        _setAttribute(
+          lib,
+          fd,
+          path,
+          entry.key,
+          entry.value,
+          descriptorPath: descriptorPath,
+        );
+      }
+      // Ownership can clear set-id bits, so explicitly requested modes follow it.
+      if (metadata.mode != null) {
+        final mode = metadata.mode! & 0xfff;
+        final result = descriptorPath != null
+            ? _withPath(
+                descriptorPath,
+                (descriptor) => lib.lookupFunction<_ChmodPathN, _ChmodPathD>(
+                  'chmod',
+                )(descriptor, mode),
+              )
+            : _mac
+            ? lib.lookupFunction<_ChmodMacN, _ChmodD>('fchmod')(fd, mode)
+            : lib.lookupFunction<_ChmodN, _ChmodD>('fchmod')(fd, mode);
+        if (result != 0) {
+          _fail('Setting permissions failed', path, _errno(lib));
+        }
+      }
+      if (metadata.acl != null) {
+        if (_mac) {
           if (lib.lookupFunction<_SetAclN, _SetAclD>('acl_set_fd_np')(
                 fd,
-                acl,
+                darwinAcl,
                 0x100,
               ) !=
               0) {
             _fail('Setting ACL failed', path, _errno(lib));
           }
+        } else {
+          _setAttribute(
+            lib,
+            fd,
+            path,
+            _linuxAccess,
+            linuxAcl!['access'],
+            descriptorPath: descriptorPath,
+          );
+          _setAttribute(
+            lib,
+            fd,
+            path,
+            _linuxDefault,
+            linuxAcl['default'],
+            descriptorPath: descriptorPath,
+          );
+        }
+      }
+      if (metadata.modified != null || metadata.accessed != null) {
+        final times = calloc<_Timespec>(2);
+        try {
+          for (var index = 0; index < 2; index++) {
+            final date = index == 0 ? metadata.accessed : metadata.modified;
+            if (date == null) {
+              times[index].nanoseconds = _mac ? -2 : 1073741822; // UTIME_OMIT
+            } else {
+              final micros = date.toUtc().microsecondsSinceEpoch;
+              final remainder = micros % 1000000;
+              final seconds = (micros - remainder) ~/ 1000000;
+              times[index]
+                ..seconds = seconds
+                ..nanoseconds = remainder * 1000;
+            }
+          }
+          final result = descriptorPath != null
+              ? _withPath(
+                  descriptorPath,
+                  (descriptor) => lib.lookupFunction<_TimesPathN, _TimesPathD>(
+                    'utimensat',
+                  )(-100, descriptor, times, 0),
+                )
+              : lib.lookupFunction<_TimesN, _TimesD>('futimens')(fd, times);
+          if (result != 0) {
+            _fail('Setting timestamps failed', path, _errno(lib));
+          }
         } finally {
-          if (acl != nullptr) {
-            lib.lookupFunction<_FreeAclN, _FreeAclD>('acl_free')(acl);
-          }
-          calloc.free(text);
+          calloc.free(times);
         }
-      } else {
-        _setAttribute(lib, fd, path, _linuxAccess, linuxAcl!['access']);
-        _setAttribute(lib, fd, path, _linuxDefault, linuxAcl['default']);
       }
+    });
+  } finally {
+    if (darwinAcl != nullptr) {
+      process.lookupFunction<_FreeAclN, _FreeAclD>('acl_free')(darwinAcl);
     }
-    if (metadata.modified != null || metadata.accessed != null) {
-      final times = calloc<_Timespec>(2);
-      try {
-        for (var index = 0; index < 2; index++) {
-          final date = index == 0 ? metadata.accessed : metadata.modified;
-          if (date == null) {
-            times[index].nanoseconds = _mac ? -2 : 1073741822; // UTIME_OMIT
-          } else {
-            final micros = date.toUtc().microsecondsSinceEpoch;
-            final remainder = micros % 1000000;
-            final seconds = (micros - remainder) ~/ 1000000;
-            times[index]
-              ..seconds = seconds
-              ..nanoseconds = remainder * 1000;
-          }
-        }
-        if (lib.lookupFunction<_TimesN, _TimesD>('futimens')(fd, times) != 0) {
-          _fail('Setting timestamps failed', path, _errno(lib));
-        }
-      } finally {
-        calloc.free(times);
-      }
-    }
-  });
+  }
 }

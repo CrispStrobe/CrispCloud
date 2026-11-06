@@ -162,6 +162,96 @@ void main() {
   );
 
   test(
+    'Linux metadata edits can restore mode 0000 without opening file data',
+    () async {
+      final file = await File('${root.path}/locked')
+          .writeAsString('retain payload');
+      final directory = await Directory('${root.path}/locked-directory')
+          .create();
+      final original = await backend.readMetadata(file.path);
+      try {
+        await backend.writeMetadata(file.path, const TransferMetadata(mode: 0));
+        await backend.writeMetadata(
+          directory.path,
+          const TransferMetadata(mode: 0),
+        );
+        expect((await file.stat()).mode & 0xfff, 0);
+        expect((await directory.stat()).mode & 0xfff, 0);
+        final owners = await readNativeMetadata(
+          file.path,
+          ownership: true,
+          extendedAttributes: false,
+          acl: false,
+        );
+        expect(owners.owner, original.owner);
+        expect(owners.group, original.group);
+        final modified = DateTime.utc(2024, 5, 6, 7, 8, 9);
+        await backend.writeMetadata(
+          file.path,
+          TransferMetadata(
+            mode: 0x180,
+            owner: original.owner,
+            group: original.group,
+            modified: modified,
+          ),
+        );
+        await backend.writeMetadata(
+          directory.path,
+          const TransferMetadata(mode: 0x1c0),
+        );
+        expect((await file.stat()).mode & 0xfff, 0x180);
+        expect((await file.stat()).modified.toUtc(), modified);
+        expect((await directory.stat()).mode & 0xfff, 0x1c0);
+        expect(await file.readAsString(), 'retain payload');
+      } finally {
+        // Cleanup remains possible if a future regression reintroduces a data
+        // read permission requirement. chmod itself only requires ownership.
+        await Process.run('chmod', ['600', file.path]);
+        await Process.run('chmod', ['700', directory.path]);
+      }
+    },
+    skip: !Platform.isLinux || !supportsNativeOwnership,
+  );
+
+  test(
+    'unsupported Linux filesystem ACLs remain unavailable, not an empty ACL',
+    () async {
+      final metadata = await readNativeMetadata(
+        '/proc/version',
+        ownership: false,
+        extendedAttributes: false,
+        acl: true,
+      );
+      expect(metadata.acl, isNull);
+    },
+    skip: !Platform.isLinux || !supportsNativeAccessControlLists,
+  );
+
+  test('invalid native ACL contents are rejected before changing permissions', () async {
+    final file = await File('${root.path}/invalid-acl').writeAsString('retain');
+    final before = await file.stat();
+    final malformed = Platform.isMacOS
+        ? 'darwin-acl-v1:not a valid ACL'
+        : 'linux-posix-v1:${jsonEncode({
+            'access': base64Encode([2, 0, 0, 0, 1, 0, 7, 0, 255, 255, 255, 255]),
+            'default': null,
+          })}';
+    try {
+      await expectLater(
+        backend.writeMetadata(
+          file.path,
+          TransferMetadata(acl: malformed, mode: 0),
+        ),
+        throwsFormatException,
+      );
+      expect((await file.stat()).mode, before.mode);
+      expect(await file.readAsString(), 'retain');
+    } finally {
+      await Process.run('chmod', ['600', file.path]);
+    }
+  }, skip: !supportsNativeAccessControlLists);
+
+  test(
     'malformed ownership or ACL payload is rejected before mode changes',
     () async {
       final file = await File('${root.path}/validated').writeAsString('data');
