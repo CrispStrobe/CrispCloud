@@ -8,7 +8,7 @@ import '../utils/formatters.dart' show formatBytes;
 
 enum OperationType { upload, download, copy, move, delete }
 
-enum OperationStatus { inProgress, completed, failed }
+enum OperationStatus { inProgress, waitingForDecision, completed, failed }
 
 class OperationProgress implements TransferOperation {
   static const _log = Log('OperationProgress');
@@ -60,6 +60,11 @@ class OperationProgress implements TransferOperation {
   bool get isComplete =>
       status == OperationStatus.completed || status == OperationStatus.failed;
 
+  bool get isWaitingForDecision => status == OperationStatus.waitingForDecision;
+
+  /// Waiting conflicts release the scheduler worker and have no active I/O.
+  bool get isActive => status == OperationStatus.inProgress && !_isCancelled;
+
   // Compatibility getters
   String? get error => errorMessage;
   int get transferredBytes => currentBytes;
@@ -95,7 +100,7 @@ class OperationProgress implements TransferOperation {
 
   // Pause operation
   void pause() {
-    if (!_isPaused && !isComplete && !_isCancelled) {
+    if (!_isPaused && isActive) {
       _isPaused = true;
       _pauseCompleter = Completer<void>();
       _log.debug('Operation paused: $fileName');
@@ -149,6 +154,15 @@ class OperationProgress implements TransferOperation {
   void fail(String error) {
     status = OperationStatus.failed;
     errorMessage = error;
+  }
+
+  void waitForDecision() {
+    resume();
+    status = OperationStatus.waitingForDecision;
+    errorMessage = null;
+    _currentSpeed = 0;
+    _lastSpeedUpdate = null;
+    _lastSpeedBytes = currentBytes;
   }
 
   /// Current transfer speed in bytes per second.
@@ -238,6 +252,10 @@ class OperationProgress implements TransferOperation {
 
     if (status == OperationStatus.completed) {
       return '$displayName - All complete';
+    }
+
+    if (isWaitingForDecision) {
+      return '$displayName - Waiting for a conflict decision';
     }
 
     return '$displayName - $completedFiles/$totalFiles complete';

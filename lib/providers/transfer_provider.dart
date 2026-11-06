@@ -61,7 +61,7 @@ class TransferNotifier extends ChangeNotifier {
   List<TransferJobRecord> get savedJobs => _journal.jobs;
   List<String> get recoveryWarnings => List.unmodifiable(_journal.warnings);
   TransferJobRecord? savedJob(String id) => _journal.job(id);
-  bool get hasActiveOperations => _operations.any((op) => !op.isComplete);
+  bool get hasActiveOperations => _operations.any((op) => op.isActive);
   bool isJobLive(String id) => _fileOperationControls.containsKey(id);
   int get maxConcurrent => _queue.maxConcurrent;
   int get queuedCount => _queue.pendingCount;
@@ -110,11 +110,14 @@ class TransferNotifier extends ChangeNotifier {
                 ].contains(entry.outcome)
                 ? entry.message
                 : null,
-            statusLabel: entry.outcome.name,
+            statusLabel: entry.outcome == FileOperationOutcome.needsDecision
+                ? 'Waiting for a conflict decision'
+                : entry.outcome.name,
           ),
         )
         .toList();
     final complete = job.status == TransferJobStatus.completed;
+    final waiting = job.status == TransferJobStatus.waitingForDecision;
     return OperationProgress(
       id: job.id,
       type: job.options.kind == FileOperationKind.move
@@ -128,8 +131,12 @@ class TransferNotifier extends ChangeNotifier {
       currentBytes: files
           .where((file) => file.isComplete)
           .fold(0, (sum, file) => sum + file.size),
-      status: complete ? OperationStatus.completed : OperationStatus.failed,
-      errorMessage: complete
+      status: complete
+          ? OperationStatus.completed
+          : waiting
+          ? OperationStatus.waitingForDecision
+          : OperationStatus.failed,
+      errorMessage: complete || waiting
           ? null
           : job.message ?? transferStatusLabel(job.status),
     );
@@ -256,6 +263,11 @@ class TransferNotifier extends ChangeNotifier {
   }
 
   void cancelAllOperations() {
+    for (final operation in _operations.where(
+      (op) => op.isWaitingForDecision,
+    )) {
+      unawaited(_cancelWaitingJob(operation.id));
+    }
     for (final control in _fileOperationControls.values) {
       control.cancel();
     }
@@ -316,12 +328,31 @@ class TransferNotifier extends ChangeNotifier {
   }
 
   void cancelOperation(String operationId) {
+    if (_operations.any(
+      (op) => op.id == operationId && op.isWaitingForDecision,
+    )) {
+      unawaited(_cancelWaitingJob(operationId));
+    }
     _fileOperationControls[operationId]?.cancel();
     for (final operation in _operations.where((op) => op.id == operationId)) {
       operation.cancel();
     }
     for (final task in [..._queue.pendingTasks, ..._queue.activeTasks]) {
       if (task.operation.id == operationId) _queue.cancel(task.id);
+    }
+    notifyListeners();
+  }
+
+  Future<void> _cancelWaitingJob(String id) async {
+    try {
+      await _journal.setStatus(
+        id,
+        TransferJobStatus.cancelled,
+        message: 'Cancelled while waiting for a conflict decision. Saved progress can be reviewed later.',
+        onlyIf: const {TransferJobStatus.waitingForDecision},
+      );
+    } catch (error) {
+      recoveryError = 'Could not save the transfer state: $error';
     }
     notifyListeners();
   }
@@ -335,6 +366,7 @@ class TransferNotifier extends ChangeNotifier {
     DetailedFileConflictResolver? resolveDetailedConflict,
     void Function(FileOperationEntry, int, int?)? onProgress,
     void Function(FileOperationEntry)? onEntryComplete,
+    VoidCallback? onQueued,
     String? recoveryJobId,
     int priority = 0,
   }) async {
@@ -461,11 +493,7 @@ class TransferNotifier extends ChangeNotifier {
               onEntryComplete: (entry) {
                 final row = rows[entry]!;
                 row.isComplete = entry.completed;
-                row.error =
-                    entry.failed ||
-                        entry.outcome == FileOperationOutcome.needsDecision
-                    ? entry.message
-                    : null;
+                row.error = entry.failed ? entry.message : null;
                 row.statusLabel =
                     entry.outcome == FileOperationOutcome.needsDecision
                     ? 'Waiting for a conflict decision'
@@ -493,9 +521,7 @@ class TransferNotifier extends ChangeNotifier {
                 rows[entry]!.statusLabel =
                     'Not started (awaiting conflict decision)';
               }
-              operation.fail(
-                'Waiting for a conflict decision. Review the saved transfer to continue.',
-              );
+              operation.waitForDecision();
             } else if (plan.entries.any((entry) => entry.failed)) {
               operation.fail(
                 '${plan.entries.where((entry) => entry.failed).length} item(s) need review.',
@@ -553,8 +579,7 @@ class TransferNotifier extends ChangeNotifier {
               await _journal.setStatus(
                 id,
                 TransferJobStatus.cancelled,
-                message:
-                    'Cancelled. Review the saved transfer to retry unfinished items.',
+                message: 'Cancelled. Review the saved transfer to retry unfinished items.',
               );
             }
             if (error != null && error is! TransferCancelled) {
@@ -571,6 +596,7 @@ class TransferNotifier extends ChangeNotifier {
         },
       ),
     );
+    onQueued?.call();
     unawaited(
       Future.any([control.cancellationFuture, done.future]).then((_) {
         if (control.isCancelled && _fileOperationControls.containsKey(id)) {

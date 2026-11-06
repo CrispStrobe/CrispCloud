@@ -623,6 +623,17 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     final plan = _plan;
     final sourceOrigin = _sourceOrigin;
     if (plan == null || !plan.canExecute || sourceOrigin == null) return;
+    if (background &&
+        (plan.options.fileConflict == FileConflictPolicy.ask ||
+            plan.options.directoryConflict == DirectoryConflictPolicy.ask) &&
+        (!plan.source.canRecover || !plan.destination.canRecover)) {
+      setState(
+        () => _error = context.commanderTr(
+          "Background conflict review is unavailable for this storage. Choose a conflict policy or keep this dialog open.",
+        ),
+      );
+      return;
+    }
     final notifier = ref.read(transferProvider);
     final targetPanel = ref.read(panelProvider(_destinationSide!));
     setState(() {
@@ -633,6 +644,11 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
       plan,
       control: _control,
       resolveDetailedConflict: background ? null : _resolve,
+      onQueued: background
+          ? () {
+              if (mounted) Navigator.pop(context);
+            }
+          : null,
       onProgress: (entry, bytes, total) {
         if (mounted) {
           setState(() {
@@ -651,7 +667,6 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
         if (mounted) setState(() {});
       },
     );
-    if (background && mounted) Navigator.pop(context);
     try {
       await future;
       await _panel.refresh();
@@ -713,6 +728,13 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     final supportsAllocation =
         destinationBackend?.capabilities.preallocate ?? false;
     final plan = _plan;
+    final asksConflicts =
+        _fileConflict == FileConflictPolicy.ask ||
+        _directoryConflict == DirectoryConflictPolicy.ask;
+    final backgroundCanWait =
+        !asksConflicts ||
+        ((sourceBackend?.canRecover ?? false) &&
+            (destinationBackend?.canRecover ?? false));
     final completed =
         plan?.entries.where((entry) => entry.completed).length ?? 0;
     final failed = plan?.entries.where((entry) => entry.failed).length ?? 0;
@@ -1518,16 +1540,28 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
               onPressed: _preparing || _sourceOrigin == null ? null : _preview,
               child: Text(context.commanderTr("Preview")),
             ),
-            if (widget.allowBackground &&
-                widget.sourceBackend == null &&
-                _fileConflict != FileConflictPolicy.ask &&
-                _directoryConflict != DirectoryConflictPolicy.ask)
-              TextButton(
-                onPressed:
-                    !_finished && (plan?.canExecute ?? false) && !_preparing
-                    ? () => _start(background: true)
-                    : null,
-                child: Text(context.commanderTr("Queue in background")),
+            if (widget.allowBackground && widget.sourceBackend == null)
+              Tooltip(
+                message: !backgroundCanWait
+                    ? context.commanderTr(
+                        "Background conflict review is unavailable for this storage. Choose a conflict policy or keep this dialog open.",
+                      )
+                    : asksConflicts
+                    ? context.commanderTr(
+                        "Background conflicts wait in the queue. Use Resolve conflict in the operations panel to continue.",
+                      )
+                    : '',
+                child: TextButton(
+                  key: const ValueKey('transfer-queue-background'),
+                  onPressed:
+                      !_finished &&
+                          (plan?.canExecute ?? false) &&
+                          !_preparing &&
+                          backgroundCanWait
+                      ? () => _start(background: true)
+                      : null,
+                  child: Text(context.commanderTr("Queue in background")),
+                ),
               ),
             FilledButton(
               onPressed:

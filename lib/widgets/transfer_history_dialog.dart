@@ -21,17 +21,24 @@ Future<void> showTransferHistoryDialog(
   BuildContext context,
   WidgetRef ref, {
   String? jobId,
+  bool reviewOnOpen = false,
 }) => showDialog<void>(
   context: context,
   barrierDismissible: false,
-  builder: (_) => TransferHistoryDialog(jobId: jobId),
+  builder: (_) =>
+      TransferHistoryDialog(jobId: jobId, reviewOnOpen: reviewOnOpen),
 );
 
 /// Review saved intents before reattaching live accounts. Opening this dialog
 /// or starting the app never automatically resumes a destructive operation.
 class TransferHistoryDialog extends ConsumerStatefulWidget {
-  const TransferHistoryDialog({super.key, this.jobId});
+  const TransferHistoryDialog({
+    super.key,
+    this.jobId,
+    this.reviewOnOpen = false,
+  });
   final String? jobId;
+  final bool reviewOnOpen;
 
   @override
   ConsumerState<TransferHistoryDialog> createState() => _TransferHistoryState();
@@ -54,6 +61,22 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
   void initState() {
     super.initState();
     _selected = widget.jobId;
+    if (widget.reviewOnOpen && widget.jobId != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
+        final transfers = ref.read(transferProvider);
+        await transfers.ready;
+        if (!mounted) return;
+        final job = transfers.savedJob(widget.jobId!);
+        if (job != null &&
+            job.canRecover &&
+            job.ready &&
+            !job.isFinished &&
+            !transfers.isJobLive(job.id)) {
+          await _review(job);
+        }
+      });
+    }
   }
 
   @override
@@ -556,7 +579,10 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
                                           FileOperationOutcome.pending,
                                     )
                                 ? context.commanderTr(
-                                    "Run reviewed remaining items",
+                                    job.status ==
+                                            TransferJobStatus.waitingForDecision
+                                        ? "Resolve conflicts and continue"
+                                        : "Run reviewed remaining items",
                                   )
                                 : context.commanderTr(
                                     "Record recovered completion",

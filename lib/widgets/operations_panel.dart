@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/commander_strings.dart';
 import '../models/operation_progress.dart';
 import '../providers/providers.dart';
 import '../utils/formatters.dart' show formatBytes, formatSpeed;
@@ -54,11 +55,14 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
     int activeCount = 0;
     int completeCount = 0;
     int errorCount = 0;
+    int waitingCount = 0;
 
     for (final op in transfers.operations) {
       totalBytes += op.totalBytes;
       transferredBytes += op.transferredBytes;
-      if (op.isCancelled) {
+      if (op.isWaitingForDecision) {
+        waitingCount++;
+      } else if (op.isCancelled) {
         errorCount++;
       } else if (op.error != null) {
         errorCount++;
@@ -83,6 +87,7 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
           activeCount,
           completeCount,
           errorCount,
+          waitingCount,
           overallProgress,
           transferredBytes,
           totalBytes,
@@ -171,7 +176,10 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
                 final isExpanded = _expandedOperationId == op.id;
                 return _OperationTile(
                   operation: op,
-                  statusLabel: transfers.isQueued(op.id) || op.isComplete
+                  statusLabel:
+                      transfers.isQueued(op.id) ||
+                          op.isComplete ||
+                          op.isWaitingForDecision
                       ? transfers.statusLabel(op.id)
                       : null,
                   onReview:
@@ -181,6 +189,7 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
                           context,
                           ref,
                           jobId: op.id,
+                          reviewOnOpen: op.isWaitingForDecision,
                         )
                       : null,
                   onQueueAction: transfers.isQueued(op.id)
@@ -224,12 +233,13 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
     int activeCount,
     int completeCount,
     int errorCount,
+    int waitingCount,
     double overallProgress,
     int transferredBytes,
     int totalBytes,
   ) {
     final speed = transfers.operations
-        .where((op) => !op.isComplete && !op.isCancelled)
+        .where((op) => op.isActive)
         .fold<double>(0, (sum, op) => sum + op.currentSpeed);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -259,6 +269,12 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
                 Text(
                   '$errorCount need review',
                   style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              if (waitingCount > 0)
+                Text(
+                  context.commanderTr("{0} waiting for a decision", [
+                    waitingCount,
+                  ]),
                 ),
               if (transfers.operations.isEmpty)
                 Text('${transfers.savedJobs.length} saved transfer(s)'),
@@ -304,7 +320,10 @@ class _OperationTile extends StatelessWidget {
     IconData icon;
     Color? color;
 
-    if (operation.isCancelled) {
+    if (operation.isWaitingForDecision) {
+      icon = Icons.help_outline;
+      color = Theme.of(context).colorScheme.primary;
+    } else if (operation.isCancelled) {
       icon = Icons.cancel;
       color = Colors.orange;
     } else if (operation.isPaused) {
@@ -363,7 +382,7 @@ class _OperationTile extends StatelessWidget {
           subtitle: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (!operation.isComplete &&
+              if (operation.isActive &&
                   operation.error == null &&
                   !operation.isCancelled)
                 LinearProgressIndicator(
@@ -399,8 +418,13 @@ class _OperationTile extends StatelessWidget {
             children: [
               if (onReview != null)
                 IconButton(
-                  icon: const Icon(Icons.history, size: 20),
-                  tooltip: 'Review saved transfer',
+                  icon: Icon(
+                    operation.isWaitingForDecision ? Icons.rule : Icons.history,
+                    size: 20,
+                  ),
+                  tooltip: operation.isWaitingForDecision
+                      ? context.commanderTr("Resolve conflict")
+                      : 'Review saved transfer',
                   onPressed: onReview,
                 ),
               if (onQueueAction != null)
@@ -419,7 +443,7 @@ class _OperationTile extends StatelessWidget {
                     PopupMenuItem(value: 'low', child: Text('Low priority')),
                   ],
                 ),
-              if (!operation.isComplete && !operation.isCancelled)
+              if (operation.isActive)
                 IconButton(
                   icon: Icon(
                     operation.isPaused ? Icons.play_arrow : Icons.pause,
@@ -513,6 +537,7 @@ class _OperationTile extends StatelessWidget {
   }
 
   String _getStatusText(OperationProgress op) {
+    if (op.isWaitingForDecision) return 'Waiting for a conflict decision';
     if (op.error != null) return 'Error: ${op.error}';
     if (op.isComplete) return 'Complete';
     final percent = (op.progress * 100).toStringAsFixed(0);
