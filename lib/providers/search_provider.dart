@@ -480,20 +480,12 @@ class SearchNotifier extends ChangeNotifier {
           final index = _searchResults.indexWhere(
             (item) => item.path == match.file.path,
           );
-          var file = match.file;
+          final file = match.groupedFile(
+            index < 0 ? null : _searchResults[index],
+          );
           var snippet = match.snippet;
           if (match.archiveMember != null) {
             snippet = '${match.archiveMember}: $snippet';
-            final previous = index < 0 ? null : _searchResults[index];
-            file = file.copyWith(
-              metadata: {
-                ...?file.metadata,
-                'matchingArchiveMembers': [
-                  ...?(previous?.metadata?['matchingArchiveMembers'] as List?),
-                  match.archiveMember,
-                ],
-              },
-            );
           }
           if (index < 0) {
             _searchResults.add(file);

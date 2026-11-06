@@ -221,7 +221,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.byTooltip('Edit (F4)'), findsNothing);
+    expect(find.byTooltip('Edit (F4)'), findsOneWidget);
   });
   testWidgets(
     'captured cloud checksum and split dialogs produce verified outputs',

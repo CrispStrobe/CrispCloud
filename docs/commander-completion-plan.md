@@ -8,6 +8,56 @@ in the parity audit. Development checkpoints are pushed incrementally to
 Baseline: `0728973` (the first Commander implementation). This document records
 implementation status, not a claim of universal Total/Double Commander parity.
 
+## Implementation and acceptance
+
+[PR #15](https://github.com/CrispStrobe/CrispCloud/pull/15) records the follow-up
+implementation and its checkpoint results; its
+[checks](https://github.com/CrispStrobe/CrispCloud/pull/15/checks) report current
+automated acceptance. The earlier
+checkboxes recorded broad areas as delivered but did not establish that each
+promised workflow worked. A source-level review on 6 November found missing
+selection actions, buffered sync transfers, incomplete directory/native metadata,
+archive filtering and nested-navigation gaps, background conflict handling,
+and viewer/comparison limits. This follow-up implements those behaviors. The
+table records implemented behavior and focused evidence; final source-specific
+test and build results are maintained in the pull request.
+
+| Workflow | Current follow-up state | Acceptance evidence |
+| --- | --- | --- |
+| Sync copy, move and Keep both | Staged streaming, reviewed-row validation and optional full-content comparison | Stream-only 33 MiB upload, failed replacement, same-size/time edits, stale equal rows, ambiguous baselines, cancellation |
+| Saved sync sources and cloud-only files | Account/device/root binding, explicit legacy rebind, safe placeholders and hydration | Wrong account/endpoint/bucket/device, old queued token, placeholder must not delete remote original, verified eviction |
+| Transfer metadata | Post-order folder metadata, source retention, selective reads; Windows SID/DACL/attribute/creation-time implementation integrated | Three-OS native gates passed at `ed7c867` (114 passed / 17 skipped each), including raw ACL restoration, null-ACL inheritance and unchanged child ACLs |
+| Duplicate names and rate controls | Configurable template and cancellable client stream rate | Preview/late collision/recovery consistency; pause/cancel/multiple-file byte pacing |
+| Selection and saved filters | Same extension/stem/parent, paths as marks, exclusion consistency | Captured source, same path on different accounts, list/cursor unchanged, Shift+Numpad routes |
+| Content and archive search | Full-stream literal search; bounded regex/Office/archive extraction with reported limits | Hit beyond 64 MiB, split encodings, late read failure, archive dates/exclusions and retained member evidence |
+| Background Ask transfers | Waiting state and Resolve action; does not occupy a worker | Restart/revalidate/resolve, durable cancel, later jobs continue |
+| Bulk attributes | Reviewed mode/owner/time edits and masked Windows attributes | Stale source/revision/metadata, directory access-time enumeration, child-before-parent, unrelated Windows flags retained, German/Arabic controls |
+| Large-file viewer | Full-file decoded/byte search, complete match navigation and bounded Unicode text windows | Match after 64 MiB, 2,002-match navigation, split UTF-8/16, reload/debounce cancellation, decimal/hex offsets |
+| Nested archives | Integrated bounded browser snapshots and owned nested workspaces | Generated 257 MiB native stream, exact member identity, parent restoration, nested save/retry and outer-file conflict |
+| Text/binary comparison | Integrated per-side decoding, guarded merge and full binary-range navigation | BOM-less UTF-16/32, repeated CRLF saves, sparse difference index, all range navigation, cancellation, German/Arabic layout |
+| Background sync recovery | Integrated isolated leased journals and idempotent foreground discovery | Same-process isolate exclusion, process kill, import retry/receipt/compaction, successful and failed background tasks; OS checks in desktop CI |
+| Split/combine review | Complete effective manifest definition rechecked before destination writes | Same-path/same-size/mtime replacement blocked, harmless formatting accepted, explicit new review required |
+| Split/combine restart recovery | Durable intent and discovery, dedicated review/continue controls in history, menus and the keyboard palette | Three-OS process-exit restart at `ed7c867`; unchanged verified-part identity, changed-source/part/account rejection, lost-response reconciliation and German/Arabic review layouts; combined collection host checks passed |
+| Large saved collections | Lazy native/IndexedDB catalog and pages, aggregate cache bounds, global sort/filter/gallery queries, complete marks and captured operations | Store/CAS/migration/restart tests passed on all three desktop OSes; 19 panel tests, 26 gallery/layout compatibility tests and 17 combined host/layout/gallery/catalog tests passed; dedicated Chrome acceptance is included in CI |
+| Legacy rename/New Folder routes | Integrated captured prompts and shared durable rename/Undo | Same-size replacements, original destination retained after navigation, account switch blocked, visible failure/retry and cancellable fingerprinting |
+| Final integration | Source-specific acceptance recorded in PR #15 and its checks | Whole-project analysis, default-discovery deterministic tests, real Chrome persistence, three-OS native gates and six platform builds; earlier baseline results do not establish acceptance of later code |
+
+## Delivery history
+
+The implementation reached `main` through
+[PR #13](https://github.com/CrispStrobe/CrispCloud/pull/13) at `0b35b16` on
+6 November 2026. The original [PR #12](https://github.com/CrispStrobe/CrispCloud/pull/12)
+was closed after that integration. Its final documentation and S3 spool-cleanup
+regression checkpoints are retained on `feature/commander-file-operations`,
+reconciled with the merged fixes for follow-up review.
+
+The [merged-head CI run](https://github.com/CrispStrobe/CrispCloud/actions/runs/42139152722)
+passed the deterministic application suite (6,006 passed, 12 skipped), storage
+and CLI contracts, desktop crypto checks, and all six platform builds. These
+results describe `0b35b16`; validation of a later follow-up belongs to that
+follow-up's own CI run. See the [workflow guide](commander-file-operations.md#verification)
+for the validation scope and platform boundaries.
+
 ## Delivery rules
 
 - Keep the Riverpod/service boundaries and existing storage adapters.
@@ -38,6 +88,7 @@ implementation status, not a claim of universal Total/Double Commander parity.
 - [x] Versioned operation records with completed/staged/failed/recovery states.
 - [x] Batch rename history, reverse preview and complete-batch undo.
 - [x] Named collections with original source identity and missing/offline states.
+- [x] Incremental loading of large collections with bounded resident memory.
 - [x] Refresh collection items separately from rerunning saved search definitions.
 - [x] Saved tabs/bookmarks retain storage identity; selection save/restore.
 
@@ -58,7 +109,7 @@ implementation status, not a claim of universal Total/Double Commander parity.
 - [x] Additional size/date/content decisions and filter templates.
 - [x] Native and provider-side exact-destination fast paths with completion checks.
 - [x] Safe empty-directory cleanup and empty-result exclusion.
-- [x] Capability-based metadata, link, allocation and copy-on-write behavior.
+- [x] Capability-based metadata, link, allocation and copy-on-write behavior implemented; three-OS runtime acceptance tracked above.
 - [x] Separate data-copy and metadata-failure outcomes.
 
 ## 5. Recovery, queue and scale
@@ -77,10 +128,11 @@ implementation status, not a claim of universal Total/Double Commander parity.
 - [x] Consistent archive member copy-out and supported edit/repack operations.
 - [x] Native file clipboard copy/cut/paste integration.
 - [x] Selected-file viewer navigation, reload/tail and remote read capabilities.
-- [ ] Functional custom-command configuration/execution and extension lifecycle.
+- [x] Functional custom-command configuration/execution and extension lifecycle.
 - [x] Tab groups/locks, paired source-aware locations and column profiles.
 - [x] Checksum/split manifests, missing-part checks and cancellation.
-- [ ] Keyboard/accessibility/localization completion for the added workflows.
+- [x] Discoverable split/combine restart recovery with reviewed continuation.
+- [x] Keyboard/accessibility/localization completion for the added workflows.
 
 ## Acceptance scenarios
 
@@ -103,8 +155,9 @@ implementation status, not a claim of universal Total/Double Commander parity.
   tail, checksums and verified split/combine are integrated and pushed.
 - Tab lock/order/label/source snapshots, named groups, paired bookmarks, editable
   column/view profiles and their managers are integrated. Custom command editing,
-  review and bounded execution are integrated; extension lifecycle and the active
-  file-panel command bar are in progress.
+  review, bounded execution, extension lifecycle and the active file-panel
+  command bar are integrated. Native/overflow/palette and both ordinary/collection
+  context menus reach the verified action hosts.
 - Native allocation/copy-on-write and cancellable bounded planning are integrated.
   Conditional object-store staging, Drive/Dropbox/WebDAV bounded streams, dedicated
   FTP/FTPS transfer sessions and disk/OPFS spooling are integrated.
@@ -112,9 +165,12 @@ implementation status, not a claim of universal Total/Double Commander parity.
   multipart-session binding are integrated. The optional AES-GCM wrapper
   authenticates private spools before exposing plaintext; each provider retains
   its documented encryption format. Unbounded adapter defaults are rejected.
-- Rename, selection, lists, transfer/recovery and workspace screens are localized
+- Rename, selection, lists, transfer/recovery, workspaces, viewers, archives,
+  comparison, integrity, extension and provider-action controls are localized
   across all nine app languages, with narrow German/Arabic layout regressions.
-  Viewer/archive/comparison/integrity menus and extension UI are being finished.
-  Final broad tests, web build and platform CI follow integration.
+  Command palette keyboard navigation, locale changes and dialog handoff are
+  covered by focused tests. New follow-up controls are checked against the
+  expanded catalog and are included in the final integration gate.
 - Parallel lanes use isolated worktrees. Finished checkpoints are integrated and
-  pushed separately. Unchecked items are not represented as complete.
+  pushed separately. Platform/provider boundaries remain explicit in the
+  [workflow guide](commander-file-operations.md).

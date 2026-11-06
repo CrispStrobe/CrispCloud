@@ -25,6 +25,7 @@ class _SyncPlanDialogState extends ConsumerState<_SyncPlanDialog> {
   final _decisions = <String, SyncActionType>{};
   bool _busy = true;
   bool _cancel = false;
+  bool _compareContents = false;
   String? _error;
   SyncResult? _result;
   String Function(BuildContext) _progress = (context) =>
@@ -48,13 +49,32 @@ class _SyncPlanDialogState extends ConsumerState<_SyncPlanDialog> {
       _cancel = false;
       _error = null;
       _result = null;
-      _progress = (context) =>
-          context.commanderTr("Comparing directories and file contents…");
+      _plan = null;
+      _decisions.clear();
+      _progress = (context) => context.commanderTr(
+        _compareContents
+            ? 'Reading full file contents…'
+            : 'Comparing folders and changed files…',
+      );
     });
     try {
       final plan = await ref
           .read(syncProvider)
-          .planOne(widget.pairId, isCancelled: () => _cancel);
+          .planOne(
+            widget.pairId,
+            isCancelled: () => _cancel,
+            compareContents: _compareContents,
+            onCompareProgress: (done, total, path) {
+              if (mounted) {
+                setState(
+                  () => _progress = (context) => context.commanderTr(
+                    'Reading file {0} / {1}: {2}',
+                    [done, total, path],
+                  ),
+                );
+              }
+            },
+          );
       if (mounted) {
         setState(() {
           _plan = plan;
@@ -166,6 +186,22 @@ class _SyncPlanDialogState extends ConsumerState<_SyncPlanDialog> {
                   "Compare first, choose an action for each row, then apply. Changed files or connections invalidate the plan.",
                 ),
               ),
+              SwitchListTile.adaptive(
+                contentPadding: EdgeInsets.zero,
+                title: Text(context.commanderTr('Compare full file contents')),
+                subtitle: Text(
+                  context.commanderTr(
+                    'Read included files even when size and modification time match. This may download more data.',
+                  ),
+                ),
+                value: _compareContents,
+                onChanged: _busy
+                    ? null
+                    : (value) {
+                        setState(() => _compareContents = value);
+                        _compare();
+                      },
+              ),
               if (_busy) ...[
                 const LinearProgressIndicator(),
                 Semantics(liveRegion: true, child: Text(_progress(context))),
@@ -204,7 +240,9 @@ class _SyncPlanDialogState extends ConsumerState<_SyncPlanDialog> {
                 if (_plan!.actions.isEmpty)
                   Text(
                     context.commanderTr(
-                      "No changes required. Applying will record the verified baseline.",
+                      _compareContents
+                          ? "No changes required. Applying will record the verified baseline."
+                          : 'No changes found by the fast comparison. Enable full contents to check files with matching metadata.',
                     ),
                   ),
               ],

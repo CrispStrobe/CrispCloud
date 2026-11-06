@@ -36,7 +36,6 @@ import 'file_origin_actions.dart';
 import 'command_extension_actions.dart';
 import '../services/cloud_storage_interface.dart'
     show CloudStorageClientCapabilities;
-import '../services/file_split_service.dart';
 import '../services/image_edit_session.dart' show isImageEditorFileName;
 import '../services/link_service.dart';
 import '../services/secure_wipe_service.dart';
@@ -50,9 +49,11 @@ import 'package:path/path.dart' as p;
 
 import 'batch_rename_dialog.dart' show showBatchRenameDialog;
 import 'file_operation_dialog.dart';
+import 'file_name_dialog.dart';
 import 'file_clipboard_actions.dart';
 import 'archive_workspace_dialog.dart';
 import 'integrity_dialogs.dart';
+import 'integrity_recovery_dialog.dart';
 import '../services/file_operation_service.dart';
 import 'diff_viewer_dialog.dart' show showDiffViewerDialog;
 import 'hex_editor_dialog.dart' show showHexEditorDialog;
@@ -61,6 +62,7 @@ import 'pdf_editor_dialog.dart' show isPdfFileName;
 import 'pdf_operations_dialog.dart';
 import 'share_link_dialog.dart' show showShareLinkDialog;
 import 'permissions_dialog.dart' show showPermissionsDialog;
+import 'file_attributes_dialog.dart';
 import 'version_history_dialog.dart' show showVersionHistoryDialog;
 
 const _log = Log('FileContextMenu');
@@ -130,6 +132,7 @@ void _showResultListContextMenu(
   } catch (_) {
     verified = false;
   }
+  if (panel.isPagedCollection && !panel.collectionBusy) verified = true;
   final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
   PopupMenuItem<void> command(
     String label,
@@ -150,6 +153,8 @@ void _showResultListContextMenu(
         return;
       }
       try {
+        if (requiresSource) files = await panel.prepareOperationFiles(files);
+        if (!context.mounted) return;
         await action();
       } catch (error) {
         if (context.mounted) {
@@ -189,6 +194,11 @@ void _showResultListContextMenu(
           context.commanderTr("Checksums…"),
           Icons.fingerprint,
           () => showChecksumToolsDialog(context, ref, side, files),
+        ),
+        command(
+          context.commanderTr("Split/combine recovery…"),
+          Icons.restore,
+          () => showIntegrityRecoveryDialog(context, ref),
         ),
         if (files.every((file) => isChecksumManifest(file.name)))
           command(
@@ -254,6 +264,11 @@ void _showResultListContextMenu(
               .where(files.contains)
               .toList(),
         ),
+      ),
+      command(
+        context.commanderTr("Change attributes…"),
+        Icons.tune,
+        () => showFileAttributesDialog(context, ref, side, files),
       ),
       ...buildCommandExtensionMenuItems<void>(context, ref, side, files),
       const PopupMenuDivider(),
@@ -1082,6 +1097,29 @@ void showFileContextMenu(
     );
   }
 
+  items.add(
+    PopupMenuItem(
+      child: Row(
+        children: [
+          const Icon(Icons.tune),
+          const SizedBox(width: 8),
+          Expanded(child: Text(context.commanderTr("Change attributes…"))),
+        ],
+      ),
+      onTap: () => Future.delayed(Duration.zero, () {
+        if (context.mounted) {
+          showFileAttributesDialog(
+            context,
+            ref,
+            side,
+            files,
+            sourceOrigin: origin,
+          );
+        }
+      }),
+    ),
+  );
+
   // Permissions (SFTP only, single file)
   if (!isMultiSelect && remote != null) {
     if (remote.client is SFTPClientAdapter) {
@@ -1415,6 +1453,13 @@ void showFileContextMenu(
         () => showChecksumToolsDialog(context, ref, side, files),
       ),
     );
+    items.add(
+      integrityCommand(
+        'Split/combine recovery…',
+        Icons.restore,
+        () => showIntegrityRecoveryDialog(context, ref),
+      ),
+    );
     if (files.every((entry) => isChecksumManifest(entry.name))) {
       items.add(
         integrityCommand(
@@ -1548,95 +1593,13 @@ void showFileContextMenu(
   );
 }
 
-void showRenameDialog(
+Future<void> showRenameDialog(
   BuildContext context,
   WidgetRef ref,
   PanelSide side,
   FileItem file,
-) {
-  final controller = TextEditingController(text: file.name);
-
-  // Select filename without extension
-  final dotIndex = file.name.lastIndexOf('.');
-  if (dotIndex > 0 && !file.isFolder) {
-    controller.selection = TextSelection(baseOffset: 0, extentOffset: dotIndex);
-  } else {
-    controller.selection = TextSelection(
-      baseOffset: 0,
-      extentOffset: file.name.length,
-    );
-  }
-
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Text(AppLocalizations.of(context)!.rename),
-      content: TextField(
-        controller: controller,
-        decoration: InputDecoration(
-          labelText: context.commanderTr("New name"),
-          border: const OutlineInputBorder(),
-          prefixIcon: Icon(
-            file.isFolder ? Icons.folder : Icons.insert_drive_file,
-          ),
-        ),
-        autofocus: true,
-        onSubmitted: (value) async {
-          if (value.isNotEmpty && value != file.name) {
-            try {
-              await ref.read(panelProvider(side)).renameFile(file, value);
-              if (context.mounted) {
-                Navigator.pop(context);
-              }
-            } catch (e) {
-              _log.warn('operation failed', e);
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      '${AppLocalizations.of(context)!.renameFailed}: $e',
-                    ),
-                  ),
-                );
-              }
-            }
-          }
-        },
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(AppLocalizations.of(context)!.cancel),
-        ),
-        ElevatedButton(
-          onPressed: () async {
-            if (controller.text.isNotEmpty && controller.text != file.name) {
-              try {
-                await ref
-                    .read(panelProvider(side))
-                    .renameFile(file, controller.text);
-                if (context.mounted) {
-                  Navigator.pop(context);
-                }
-              } catch (e) {
-                _log.warn('operation failed', e);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        '${AppLocalizations.of(context)!.renameFailed}: $e',
-                      ),
-                    ),
-                  );
-                }
-              }
-            }
-          },
-          child: Text(AppLocalizations.of(context)!.rename),
-        ),
-      ],
-    ),
-  );
+) async {
+  await showCapturedRenameDialog(context, ref.read(panelProvider(side)), file);
 }
 
 /// Download local files on web via browser download.
@@ -1974,6 +1937,21 @@ class _PropertiesDialogState extends ConsumerState<_PropertiesDialog> {
         ),
       ),
       actions: [
+        if (_origin?.isCurrent == true)
+          TextButton.icon(
+            icon: const Icon(Icons.tune),
+            label: Text(context.commanderTr("Change attributes…")),
+            onPressed: () async {
+              await showFileAttributesDialog(
+                context,
+                ref,
+                ref.read(activePanelProvider),
+                [file],
+                sourceOrigin: _origin,
+              );
+              if (mounted) await _loadStat();
+            },
+          ),
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: Text(context.commanderTr("Close")),

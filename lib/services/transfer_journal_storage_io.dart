@@ -51,6 +51,15 @@ class NativeTransferJournalStorage implements TransferJournalStorage {
     await file.parent.create(recursive: true);
     final handle = await file.open(mode: FileMode.append);
     try {
+      final length = await handle.length();
+      if (length > 0) {
+        await handle.setPosition(length - 1);
+        final lastByte = await handle.readByte();
+        // A complete checksummed record can survive a crash without its last
+        // newline. Preserve that accepted record instead of joining the next
+        // event to it and turning both into a corrupt tail on the next load.
+        if (lastByte != 10) await handle.writeByte(10);
+      }
       await handle.writeString('$line\n');
       await handle.flush();
     } finally {

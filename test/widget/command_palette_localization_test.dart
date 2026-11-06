@@ -6,6 +6,8 @@ import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:crisp_cloud/services/secure_storage_service.dart';
+import 'package:crisp_cloud/services/transfer_journal.dart';
+import 'package:crisp_cloud/services/transfer_journal_storage.dart';
 import 'package:crisp_cloud/widgets/command_palette.dart';
 import 'package:crisp_cloud/widgets/connection_dialog.dart';
 import 'package:flutter/material.dart';
@@ -52,6 +54,9 @@ void main() {
     container = ProviderContainer(
       overrides: [
         secureStorageProvider.overrideWithValue(InMemorySecureStorage()),
+        transferJournalProvider.overrideWithValue(
+          TransferJournal(MemoryTransferJournalStorage()),
+        ),
         authProvider.overrideWith((_) => _Auth()),
         localFileServiceProvider.overrideWithValue(_Local()),
       ],
@@ -105,6 +110,29 @@ void main() {
   }
 
   for (final language in ['de', 'ar']) {
+    testWidgets(
+      'split/combine recovery opens from the keyboard palette in $language',
+      (tester) async {
+        locale.value = Locale(language);
+        await tester.runAsync(() => container.read(transferProvider).ready);
+        await open(tester);
+        await tester.enterText(
+          find.byType(TextField),
+          tr('Split/combine recovery'),
+        );
+        await tester.pump();
+        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+        await tester.pump();
+        await tester.runAsync(
+          () => container.read(transferProvider).refreshIntegrityHistory(),
+        );
+        await tester.pumpAndSettle();
+        expect(find.byType(CommandPalette), findsNothing);
+        expect(find.text(tr('Split/combine recovery')), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
+
     testWidgets(
       'empty command search handles arrows, Enter and Escape in $language',
       (tester) async {

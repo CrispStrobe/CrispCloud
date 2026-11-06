@@ -118,6 +118,7 @@ class FileCollectionService {
     FileCollection collection,
     CollectionBackendResolver resolve, {
     bool acceptReplacements = false,
+    Set<String>? acceptedReplacementKeys,
     bool Function()? isCancelled,
     void Function(int complete, int total)? onProgress,
   }) async {
@@ -163,7 +164,13 @@ class FileCollectionService {
           }
           final parent = backend.paths.dirname(path);
           final key = '${reference.storage.id}\u0000$parent';
+          // Refresh is page-scoped. Also bound retained provider listings: a
+          // collection may contain one row from thousands of large folders.
+          if (!directories.containsKey(key) && directories.length >= 4) {
+            directories.remove(directories.keys.first);
+          }
           final siblings = await (directories[key] ??= backend.list(parent));
+          if (siblings.length > 10000) directories.remove(key);
           check();
           if (!backend.isCurrent) {
             throw StateError('The storage account disconnected.');
@@ -200,7 +207,11 @@ class FileCollectionService {
             final differentType =
                 current.isFolder != entry.file.isFolder ||
                 (current.isSymlink == true) != (entry.file.isSymlink == true);
-            if ((differentObject || differentType) && !acceptReplacements) {
+            final accepted =
+                acceptReplacements &&
+                (acceptedReplacementKeys == null ||
+                    acceptedReplacementKeys.contains(entry.key));
+            if ((differentObject || differentType) && !accepted) {
               entries.add(
                 unavailable(
                   CollectionItemState.changed,
@@ -215,7 +226,19 @@ class FileCollectionService {
                   current.size != entry.file.size ||
                   current.updatedAt != entry.file.updatedAt ||
                   version(current) != reference.version;
-              final captured = capture(current, reference.storage);
+              final captured = capture(
+                !changed &&
+                        entry.file.metadata?['matchingArchiveMembers'] is List
+                    ? current.copyWith(
+                        metadata: {
+                          ...?current.metadata,
+                          'matchingArchiveMembers':
+                              entry.file.metadata!['matchingArchiveMembers'],
+                        },
+                      )
+                    : current,
+                reference.storage,
+              );
               entries.add(
                 FileCollectionEntry(
                   reference: captured.reference,
@@ -283,7 +306,11 @@ class FileCollectionService {
     }
     final unique = <String, FileCollectionEntry>{};
     for (final match in result.matches) {
-      final entry = capture(match.file, search.storage);
+      final key = '${search.storage.id}\u0000${match.file.path}';
+      final entry = capture(
+        match.groupedFile(unique[key]?.file),
+        search.storage,
+      );
       unique[entry.key] = entry;
     }
     return CollectionRefreshResult(

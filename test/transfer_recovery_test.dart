@@ -320,7 +320,11 @@ void main() {
       );
       final job = transfers.savedJobs.single;
       expect(job.status, TransferJobStatus.waitingForDecision);
-      expect(transfers.operations.single.status, OperationStatus.failed);
+      expect(transfers.operations.single.status, OperationStatus.waitingForDecision);
+      expect(transfers.operations.single.isComplete, isFalse);
+      expect(transfers.operations.single.error, isNull);
+      expect(transfers.operations.single.failedFiles, 0);
+      expect(transfers.hasActiveOperations, isFalse);
       expect(target.writes, 0);
       final preview = await const TransferRecoveryService().prepare(
         job,
@@ -340,6 +344,146 @@ void main() {
       expect(target.bytes['/target/a (1)'], utf8.encode('new'));
     },
   );
+
+  test('waiting conflicts release the only worker and survive restart without failure', () async {
+    final storage = MemoryTransferJournalStorage();
+    final journal = TransferJournal(storage);
+    final container = ProviderContainer(
+      overrides: [transferJournalProvider.overrideWithValue(journal)],
+    );
+    addTearDown(container.dispose);
+    final transfers = container.read(transferProvider);
+    await transfers.setConcurrency(1);
+    final source = _MemoryBackend('a')
+      ..file('/first', 'first')
+      ..file('/conflict', 'new')
+      ..file('/last', 'last');
+    final target = _MemoryBackend('b')..file('/target/conflict', 'old');
+    final prepared = await plan(source, target);
+    var queued = false;
+    final first = transfers.runFileOperation(
+      prepared,
+      control: FileOperationControl(),
+      onQueued: () {
+        queued = true;
+        expect(journal.jobs.single.ready, isTrue);
+      },
+    );
+    final otherSource = _MemoryBackend('c')..file('/other', 'other');
+    final otherTarget = _MemoryBackend('d');
+    final second = transfers.runFileOperation(
+      await plan(otherSource, otherTarget),
+      control: FileOperationControl(),
+    );
+    await Future.wait([first, second]);
+    expect(queued, isTrue);
+    final waiting = transfers.savedJobs.singleWhere(
+      (job) => job.status == TransferJobStatus.waitingForDecision,
+    );
+    expect(target.writes, 1);
+    expect(target.bytes['/target/first'], utf8.encode('first'));
+    expect(target.bytes['/target/conflict'], utf8.encode('old'));
+    expect(target.bytes.containsKey('/target/last'), isFalse);
+    expect(otherTarget.bytes['/target/other'], utf8.encode('other'));
+    expect(transfers.queuedCount, 0);
+    expect(transfers.hasActiveOperations, isFalse);
+    transfers.clearCompletedOperations();
+    expect(transfers.operations.single.isWaitingForDecision, isTrue);
+
+    final restarted = ProviderContainer(overrides: [
+      transferJournalProvider.overrideWithValue(TransferJournal(storage)),
+    ]);
+    addTearDown(restarted.dispose);
+    final recovered = restarted.read(transferProvider);
+    await recovered.ready;
+    expect(recovered.operations.single.isWaitingForDecision, isTrue);
+    expect(recovered.operations.single.error, isNull);
+    final preview = await const TransferRecoveryService().prepare(
+      recovered.savedJob(waiting.id)!,
+      source: source,
+      destination: target,
+      control: FileOperationControl(),
+    );
+    expect(preview.issues, isEmpty);
+    await recovered.runFileOperation(
+      preview.plan,
+      recoveryJobId: waiting.id,
+      control: FileOperationControl(),
+      resolveConflict: (_, _) async => FileConflictDecision.keepBoth,
+    );
+    expect(target.writes, 3);
+    expect(target.bytes['/target/conflict (1)'], utf8.encode('new'));
+    expect(target.bytes['/target/last'], utf8.encode('last'));
+    expect(recovered.savedJob(waiting.id)!.status, TransferJobStatus.completed);
+  });
+
+  test('cancelling a waiting conflict persists without touching its files', () async {
+    final storage = MemoryTransferJournalStorage();
+    final journal = TransferJournal(storage);
+    final container = ProviderContainer(overrides: [
+      transferJournalProvider.overrideWithValue(journal),
+    ]);
+    addTearDown(container.dispose);
+    final source = _MemoryBackend('a')..file('/a', 'new');
+    final target = _MemoryBackend('b')..file('/target/a', 'old');
+    final transfers = container.read(transferProvider);
+    await transfers.runFileOperation(
+      await plan(source, target),
+      control: FileOperationControl(),
+    );
+    final job = transfers.savedJobs.single;
+    transfers.cancelOperation(job.id);
+    await waitFor(transfers, () => job.status == TransferJobStatus.cancelled);
+    expect(transfers.operations.single.isCancelled, isTrue);
+    expect(target.writes, 0);
+    expect(source.bytes['/a'], utf8.encode('new'));
+    expect(target.bytes['/target/a'], utf8.encode('old'));
+    final restarted = TransferJournal(storage);
+    await restarted.initialize();
+    expect(restarted.job(job.id)!.status, TransferJobStatus.cancelled);
+  });
+
+  test('restart retains custom duplicate names and original collision base', () async {
+    final storage = MemoryTransferJournalStorage();
+    final journal = TransferJournal(storage);
+    final source = _MemoryBackend('source')..file('/a.txt', 'source');
+    final target = _MemoryBackend('target')..file('/target/a.txt', 'old');
+    final prepared = await plan(
+      source,
+      target,
+      options: const FileOperationOptions(
+        fileConflict: FileConflictPolicy.keepBoth,
+        duplicateNameTemplate: '{name}_copy-{counter:000}{ext}',
+        clientBytesPerSecond: 128 * 1024,
+      ),
+    );
+    expect(prepared.entries.single.destination, '/target/a_copy-001.txt');
+    await journal.create('custom-copy', prepared);
+    final restarted = TransferJournal(storage);
+    await restarted.initialize();
+    final restored = restarted.job('custom-copy')!;
+    expect(restored.options.duplicateNameTemplate, '{name}_copy-{counter:000}{ext}');
+    expect(restored.options.clientBytesPerSecond, 128 * 1024);
+    final preview = await const TransferRecoveryService().prepare(
+      restored,
+      source: source,
+      destination: target,
+      control: FileOperationControl(),
+    );
+    expect(preview.issues, isEmpty);
+    expect(preview.plan.entries.single.recovery!['duplicateNameBase'], '/target/a.txt');
+    expect(preview.plan.options.clientBytesPerSecond, 128 * 1024);
+    // Another actor can take the reviewed name after recovery's revalidation.
+    target.file('/target/a_copy-001.txt', 'late arrival');
+    await JournaledTransferRunner(restarted).execute(
+      'custom-copy',
+      preview.plan,
+      control: FileOperationControl(),
+    );
+    expect(restored.status, TransferJobStatus.completed);
+    expect(target.bytes['/target/a_copy-001.txt'], utf8.encode('late arrival'));
+    expect(target.bytes['/target/a_copy-002.txt'], utf8.encode('source'));
+  });
 
   test(
     'read-only reconciliation completes without re-running a lost-ack move',
@@ -716,6 +860,28 @@ void main() {
       expect(again.job('job')!.status, TransferJobStatus.cancelled);
     },
   );
+
+  test('a truncated compacted plan cannot retain a ready header', () async {
+    final source = _MemoryBackend('a')..file('/file', 'data');
+    final storage = MemoryTransferJournalStorage();
+    final journal = TransferJournal(storage);
+    await journal.create('job', await plan(source, _MemoryBackend('b')));
+    await journal.compact();
+    final header = decodeTransferEvent(storage.lines.first);
+    expect((header['job'] as Map)['ready'], isFalse);
+    // Old compacted journals persisted ready=true in their header. A valid
+    // header alone must not authorize execution when its entries were lost.
+    (header['job'] as Map)['ready'] = true;
+    storage.lines
+      ..clear()
+      ..add(encodeTransferEvent(header));
+    final restored = TransferJournal(storage);
+    await restored.initialize();
+    expect(restored.job('job')!.ready, isFalse);
+    expect(restored.job('job')!.status, TransferJobStatus.failed);
+    expect(restored.warnings, isNotEmpty);
+    expect(restored.job('job')!.expectedEntries, 1);
+  });
 
   test(
     'a corrupt middle checkpoint blocks recovery instead of skipping an intent',

@@ -13,8 +13,13 @@ class GalleryCatalogService extends ChangeNotifier {
   Future<void>? _initializing;
   Future<void> _tail = Future.value();
   bool _disposed = false;
+  int _revision = 0;
 
-  GalleryRecord get(String assetId) => _records[assetId] ?? const GalleryRecord();
+  /// Changes only when a loaded or durably saved catalog becomes visible.
+  int get revision => _revision;
+
+  GalleryRecord get(String assetId) =>
+      _records[assetId] ?? const GalleryRecord();
 
   Future<void> load() => _initializing ??= _load();
 
@@ -30,9 +35,12 @@ class GalleryCatalogService extends ChangeNotifier {
       _records = {
         for (final entry in value.entries)
           if (entry.value is Map<String, dynamic>)
-            entry.key: GalleryRecord.fromJson(entry.value as Map<String, dynamic>),
+            entry.key: GalleryRecord.fromJson(
+              entry.value as Map<String, dynamic>,
+            ),
       };
     }
+    _revision++;
     if (!_disposed) notifyListeners();
   }
 
@@ -52,8 +60,14 @@ class GalleryCatalogService extends ChangeNotifier {
       for (final id in ids) {
         final old = get(id);
         final record = old.copyWith(
-          rating: rating, color: color, favorite: favorite,
-          tags: tags == null ? null : replaceTags ? tags : [...old.tags, ...tags],
+          rating: rating,
+          color: color,
+          favorite: favorite,
+          tags: tags == null
+              ? null
+              : replaceTags
+              ? tags
+              : [...old.tags, ...tags],
         );
         if (record.isEmpty) {
           updated.remove(id);
@@ -62,11 +76,15 @@ class GalleryCatalogService extends ChangeNotifier {
         }
       }
       final prefs = await SharedPreferences.getInstance();
-      final written = await prefs.setString(preferencesKey, jsonEncode({
-        for (final entry in updated.entries) entry.key: entry.value.toJson(),
-      }));
+      final written = await prefs.setString(
+        preferencesKey,
+        jsonEncode({
+          for (final entry in updated.entries) entry.key: entry.value.toJson(),
+        }),
+      );
       if (!written) throw StateError('Gallery catalog could not be saved');
       _records = updated;
+      _revision++;
       if (!_disposed) notifyListeners();
     });
     // A failed write is returned to the caller; subsequent writes can retry.
@@ -80,7 +98,11 @@ class GalleryCatalogService extends ChangeNotifier {
         'version': 1,
         'items': [
           for (final entry in namesByAssetId.entries)
-            {'assetId': entry.key, 'name': entry.value, ...get(entry.key).toJson()},
+            {
+              'assetId': entry.key,
+              'name': entry.value,
+              ...get(entry.key).toJson(),
+            },
         ],
       });
 

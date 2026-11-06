@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/operation_progress.dart';
+import 'package:crisp_cloud/models/transfer_job.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/models/file_search_query.dart';
 import 'package:crisp_cloud/providers/panel_source_provider.dart';
@@ -13,11 +14,11 @@ import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:crisp_cloud/services/file_operation_backend.dart';
 import 'package:crisp_cloud/services/file_operation_profiles.dart';
 import 'package:crisp_cloud/services/file_operation_service.dart';
-import 'package:crisp_cloud/services/file_operation_backend.dart';
-import 'package:crisp_cloud/services/file_operation_profiles.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:crisp_cloud/services/panel_source_service.dart';
 import 'package:crisp_cloud/services/saved_search_service.dart';
+import 'package:crisp_cloud/services/transfer_journal.dart';
+import 'package:crisp_cloud/services/transfer_journal_storage.dart';
 import 'package:crisp_cloud/widgets/file_operation_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -140,6 +141,15 @@ class _Cloud extends Fake implements CloudStorageClient {
   }
 }
 
+class _JournalStorage extends MemoryTransferJournalStorage {
+  bool failWrites = false;
+  @override
+  Future<void> append(String line) async {
+    if (failWrites) throw StateError('Transfer history could not be saved');
+    await super.append(line);
+  }
+}
+
 class _Auth extends ChangeNotifier implements AuthNotifier {
   _Auth(this.client);
   @override
@@ -167,15 +177,18 @@ void main() {
   late _Auth auth;
   late ProviderContainer container;
   late List<FileItem> files;
+  late _JournalStorage journalStorage;
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     cloud = _Cloud();
     auth = _Auth(cloud);
+    journalStorage = _JournalStorage();
     container = ProviderContainer(
       overrides: [
         authProvider.overrideWith((_) => auth),
         localFileServiceProvider.overrideWithValue(_Local()),
+        transferJournalProvider.overrideWithValue(TransferJournal(journalStorage)),
       ],
     );
     final remote = container.read(panelProvider(PanelSide.remote));
@@ -207,11 +220,19 @@ void main() {
     double textScale = 1,
     FileOperationBackend? sourceBackend,
     PanelFileOrigin? sourceOrigin,
+    bool inRoute = false,
   }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
+    final dialog = FileOperationDialog(
+      side: PanelSide.remote,
+      files: files,
+      kind: kind,
+      sourceBackend: sourceBackend,
+      sourceOrigin: sourceOrigin,
+    );
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
@@ -225,18 +246,24 @@ void main() {
             child: child!,
           ),
           home: Scaffold(
-            body: FileOperationDialog(
-              side: PanelSide.remote,
-              files: files,
-              kind: kind,
-              sourceBackend: sourceBackend,
-              sourceOrigin: sourceOrigin,
-            ),
+            body: inRoute
+                ? Builder(builder: (context) => TextButton(
+                    onPressed: () => showDialog<void>(
+                      context: context,
+                      builder: (_) => dialog,
+                    ),
+                    child: const Text('Open transfer'),
+                  ))
+                : dialog,
           ),
         ),
       ),
     );
     await tester.pumpAndSettle();
+    if (inRoute) {
+      await tester.tap(find.text('Open transfer'));
+      await tester.pumpAndSettle();
+    }
   }
 
   Future<void> useCloudDestination(WidgetTester tester) async {
@@ -555,6 +582,7 @@ void main() {
         preserveOwnership: true,
         preserveExtendedAttributes: true,
         preserveAcl: true,
+        preserveWindowsAttributes: true,
       ),
     );
     await open(tester);
@@ -571,6 +599,7 @@ void main() {
       'Preserve owner/group',
       'Preserve extended attributes',
       'Preserve ACL',
+      'Preserve Windows attributes',
     ]) {
       final row = find.ancestor(of: find.text(label), matching: find.byType(Row)).first;
       final checkbox = find.descendant(of: row, matching: find.byType(Checkbox));
@@ -593,6 +622,7 @@ void main() {
     expect(defaults.preserveOwnership, isTrue);
     expect(defaults.preserveExtendedAttributes, isTrue);
     expect(defaults.preserveAcl, isTrue);
+    expect(defaults.preserveWindowsAttributes, isTrue);
   });
 
   test('an unanswered background conflict is reported as incomplete', () async {
@@ -611,8 +641,10 @@ void main() {
       control: FileOperationControl(),
     ).timeout(const Duration(seconds: 5));
     final operation = transfers.operations.single;
-    expect(operation.status, OperationStatus.failed);
-    expect(operation.error, contains('Waiting for a conflict decision'));
+    expect(operation.status, OperationStatus.waitingForDecision);
+    expect(operation.error, isNull);
+    expect(operation.isComplete, isFalse);
+    expect(operation.failedFiles, 0);
     expect(plan.entries.first.outcome, FileOperationOutcome.needsDecision);
     expect(plan.entries.last.outcome, FileOperationOutcome.pending);
     expect(operation.files!.first.statusLabel, 'Waiting for a conflict decision');
@@ -684,16 +716,20 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Keep both (number new copies)').last);
       await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const ValueKey('transfer-duplicate-name-template')),
+        '{name}_copy-{counter:000}{ext}',
+      );
       await tester.enterText(field('File filter'), '*.txt');
       await toggle(tester, 'Verify contents (SHA-256)');
       await tester.tap(find.text('Preview'));
       await tester.pumpAndSettle();
       await runOperation(tester, FileOperationKind.copy);
       expect(cloud.files['/target/one.txt'], existing);
-      expect(cloud.files['/target/one (1).txt'], utf8.encode('one\n'));
+      expect(cloud.files['/target/one_copy-001.txt'], utf8.encode('one\n'));
       expect(cloud.files.containsKey('/target/two.bin'), isFalse);
       expect(cloud.files['/one.txt'], utf8.encode('one\n'));
-      expect(cloud.reads, contains('/target/one (1).txt'));
+      expect(cloud.reads, contains('/target/one_copy-001.txt'));
       expect(
         find.text('1 completed · 1 skipped/filtered · 0 failed'),
         findsOneWidget,
@@ -701,6 +737,110 @@ void main() {
       expect(container.read(transferProvider).operations.single.error, isNull);
     },
   );
+
+  testWidgets('Ask can queue in background and waits without failing or copying later rows', (tester) async {
+    cloud.files['/target/one.txt'] = utf8.encode('existing');
+    await open(tester, inRoute: true);
+    await useCloudDestination(tester);
+    await tester.tap(find.text('Preview'));
+    await tester.pumpAndSettle();
+    final queue = find.byKey(const ValueKey('transfer-queue-background'));
+    expect(tester.widget<TextButton>(queue).onPressed, isNotNull);
+    await tester.tap(queue);
+    await tester.pumpAndSettle();
+    expect(find.byType(FileOperationDialog), findsNothing);
+    final transfers = container.read(transferProvider);
+    expect(transfers.operations.single.status, OperationStatus.waitingForDecision);
+    expect(transfers.operations.single.error, isNull);
+    expect(transfers.hasActiveOperations, isFalse);
+    expect(transfers.savedJobs.single.status, TransferJobStatus.waitingForDecision);
+    expect(cloud.files['/target/one.txt'], utf8.encode('existing'));
+    expect(cloud.files.containsKey('/target/two.bin'), isFalse);
+    expect(cloud.uploads, isEmpty);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('background dialog stays open if saving the queued plan fails', (tester) async {
+    await open(tester, inRoute: true);
+    await useCloudDestination(tester);
+    await tester.tap(find.text('Preview'));
+    await tester.pumpAndSettle();
+    journalStorage.failWrites = true;
+    await tester.tap(find.byKey(const ValueKey('transfer-queue-background')));
+    await tester.pumpAndSettle();
+    expect(find.byType(FileOperationDialog), findsOneWidget);
+    expect(find.textContaining('Transfer history could not be saved'), findsOneWidget);
+    expect(cloud.uploads, isEmpty);
+    expect(container.read(transferProvider).operations, isEmpty);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('duplicate templates load, save and reject invalid defaults', (tester) async {
+    await FileOperationProfiles().save(
+      '@default:copy',
+      const FileOperationOptions(duplicateNameTemplate: '{name}-backup{counter}{ext}'),
+    );
+    await open(tester);
+    final template = find.byKey(const ValueKey('transfer-duplicate-name-template'));
+    expect(
+      tester.widget<TextField>(template).controller!.text,
+      '{name}-backup{counter}{ext}',
+    );
+    await tester.enterText(template, '{name}_copy-{counter:000}{ext}');
+    await tester.ensureVisible(find.text('Save as defaults'));
+    await tester.tap(find.text('Save as defaults'));
+    await tester.pumpAndSettle();
+    expect(
+      (await FileOperationProfiles().load())['@default:copy']!.duplicateNameTemplate,
+      '{name}_copy-{counter:000}{ext}',
+    );
+    await tester.enterText(template, '../{counter}');
+    await tester.ensureVisible(find.text('Save as defaults'));
+    await tester.tap(find.text('Save as defaults'));
+    await tester.pumpAndSettle();
+    expect(
+      (await FileOperationProfiles().load())['@default:copy']!.duplicateNameTemplate,
+      '{name}_copy-{counter:000}{ext}',
+    );
+    expect(find.textContaining('FormatException'), findsOneWidget);
+    expect(cloud.uploads, isEmpty);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('client streaming rate loads and saves exact fractional KiB values', (tester) async {
+    await FileOperationProfiles().save(
+      '@default:copy',
+      const FileOperationOptions(clientBytesPerSecond: 512),
+    );
+    await open(tester);
+    final rate = find.byKey(const ValueKey('transfer-client-rate'));
+    expect(tester.widget<TextField>(rate).controller!.text, '0.5');
+    expect(
+      find.text('Limits bytes fed to the copy stream. Verification and native/server-side copies are not limited; buffered uploads may still burst.'),
+      findsOneWidget,
+    );
+    await tester.ensureVisible(rate);
+    await tester.enterText(rate, '1.25');
+    await tester.ensureVisible(find.text('Save as defaults'));
+    await tester.tap(find.text('Save as defaults'));
+    await tester.pumpAndSettle();
+    expect((await FileOperationProfiles().load())['@default:copy']!.clientBytesPerSecond, 1280);
+    await tester.ensureVisible(rate);
+    await tester.enterText(rate, '0');
+    await tester.ensureVisible(find.text('Save as defaults'));
+    await tester.tap(find.text('Save as defaults'));
+    await tester.pumpAndSettle();
+    expect((await FileOperationProfiles().load())['@default:copy']!.clientBytesPerSecond, 1280);
+    expect(find.textContaining('positive client streaming rate'), findsOneWidget);
+    await tester.ensureVisible(rate);
+    await tester.enterText(rate, '');
+    await tester.ensureVisible(find.text('Save as defaults'));
+    await tester.tap(find.text('Save as defaults'));
+    await tester.pumpAndSettle();
+    expect((await FileOperationProfiles().load())['@default:copy']!.clientBytesPerSecond, isNull);
+    expect(cloud.uploads, isEmpty);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets('move deletes only files that pass the configured filter', (
     tester,

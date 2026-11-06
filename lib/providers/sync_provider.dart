@@ -4,19 +4,22 @@
 // triggers sync runs, and exposes sync status to the UI.
 
 import 'dart:async';
-import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../models/storage_reference.dart';
 import '../services/background_sync_service.dart';
-import '../services/cloud_storage_interface.dart';
 import '../services/placeholder_service.dart';
 import '../services/sync_database.dart';
 import '../services/sync_engine.dart';
+import '../services/sync_offline_service.dart';
+import '../services/sync_source_binding.dart';
+import '../services/storage_identity.dart';
 import '../services/sync_watcher.dart';
+import '../services/transfer_journal.dart';
 import '../services/tray_service.dart';
 import '../services/log_service.dart';
 import 'auth_provider.dart';
@@ -53,7 +56,7 @@ class SyncNotifier extends ChangeNotifier {
 
   SyncNotifier(this._ref) {
     _db = SyncDatabase();
-    _engine = SyncEngine(_db);
+    _engine = SyncEngine(_db, journal: _ref.read(transferJournalProvider));
     _watcher = SyncWatcherService();
     _loadPairs();
     _loadBackgroundSyncState();
@@ -66,7 +69,7 @@ class SyncNotifier extends ChangeNotifier {
   @visibleForTesting
   SyncNotifier.forTesting(this._ref, SyncDatabase db) {
     _db = db;
-    _engine = SyncEngine(_db);
+    _engine = SyncEngine(_db, journal: _ref.read(transferJournalProvider));
     _watcher = SyncWatcherService();
     // Do NOT call _loadPairs / _loadBackgroundSyncState etc. in tests.
   }
@@ -183,8 +186,18 @@ class SyncNotifier extends ChangeNotifier {
   Future<int> runAutoEviction() async {
     if (_autoEvictDays <= 0) return 0;
     try {
-      final service = PlaceholderService(_db);
-      final count = await service.autoEvict(_autoEvictDays, _db);
+      final service = PlaceholderService(
+        _db,
+        journal: _ref.read(transferJournalProvider),
+      );
+      final client = _ref.read(authProvider).client;
+      final count = await service.autoEvict(
+        _autoEvictDays,
+        _db,
+        client: client,
+        isCurrent: () =>
+            !_disposed && identical(_ref.read(authProvider).client, client),
+      );
       if (count > 0) {
         _log.info('Auto-eviction freed $count file(s)');
         await _loadPairs();
@@ -245,13 +258,17 @@ class SyncNotifier extends ChangeNotifier {
     // Auto-start watchers for enabled pairs if watching is on
     if (_watchEnabled) {
       for (final pair in _pairs) {
-        if (pair.enabled && !_watcher.isWatching(pair.id)) {
+        if (pair.enabled &&
+            isPairLocallyBound(pair) &&
+            !_watcher.isWatching(pair.id)) {
           _watcher.watchPair(pair, (pairId) => syncOne(pairId));
         }
       }
       // Stop watching disabled/removed pairs
       for (final id in _watcher.watchedPairIds.toList()) {
-        if (!_pairs.any((p) => p.id == id && p.enabled)) {
+        if (!_pairs.any(
+          (p) => p.id == id && p.enabled && isPairLocallyBound(p),
+        )) {
           _watcher.unwatchPair(id);
         }
       }
@@ -270,12 +287,24 @@ class SyncNotifier extends ChangeNotifier {
     String excludePatterns = '',
     bool usePlaceholders = false,
   }) async {
+    final auth = _ref.read(authProvider);
+    if (auth.currentProvider.name != provider) {
+      throw StateError(
+        'Connect the selected provider before creating a sync pair.',
+      );
+    }
+    final binding = SyncSourceBinding.capture(
+      localPath: localPath,
+      remotePath: remotePath,
+      client: auth.client,
+    );
     await _db.insertPair(
       SyncPairsCompanion.insert(
         name: name,
         localPath: localPath,
         remotePath: remotePath,
         provider: provider,
+        sourceBinding: Value(binding.encode()),
         conflictPolicy: Value(conflictPolicy.name),
         direction: Value(direction.name),
         includePatterns: Value(includePatterns),
@@ -286,8 +315,40 @@ class SyncNotifier extends ChangeNotifier {
     await _loadPairs();
   }
 
+  bool isPairLocallyBound(SyncPair pair) =>
+      SyncSourceBinding.decode(pair.sourceBinding)?.matchesLocal(pair) ?? false;
+
+  bool isPairBound(SyncPair pair) {
+    final auth = _ref.read(authProvider);
+    return auth.currentProvider.name == pair.provider &&
+        (SyncSourceBinding.decode(pair.sourceBinding)
+                ?.matches(pair, auth.client) ??
+            false);
+  }
+
+  Future<void> rebindPair(int id, {StorageReference? reviewedRemote}) async {
+    if (_disposed || _isSyncing) throw StateError('Synchronization is busy.');
+    final pair = await _db.getPair(id);
+    final auth = _ref.read(authProvider);
+    if (reviewedRemote != null &&
+        reviewedRemote != storageReferenceForClient(auth.client)) {
+      throw StateError('The connected account changed during review.');
+    }
+    if (auth.currentProvider.name != pair.provider) {
+      throw StateError(
+        'Connect the ${pair.provider} account before binding this pair.',
+      );
+    }
+    final binding = SyncSourceBinding.capture(
+      localPath: pair.localPath,
+      remotePath: pair.remotePath,
+      client: auth.client,
+    );
+    await _db.rebindPair(id, binding.encode());
+    await _loadPairs();
+  }
+
   Future<void> removePair(int id) async {
-    await _db.deleteEntriesForPair(id);
     await _db.deletePair(id);
     await _loadPairs();
   }
@@ -402,7 +463,12 @@ class SyncNotifier extends ChangeNotifier {
 
   /// Compare without changing files or database state. The returned plan
   /// retains the connection that was active at the start of comparison.
-  Future<SyncPlan> planOne(int pairId, {bool Function()? isCancelled}) async {
+  Future<SyncPlan> planOne(
+    int pairId, {
+    bool Function()? isCancelled,
+    bool compareContents = false,
+    void Function(int completed, int total, String path)? onCompareProgress,
+  }) async {
     if (_disposed || _isSyncing) throw StateError('Synchronization is busy.');
     _isSyncing = true;
     notifyListeners();
@@ -422,6 +488,8 @@ class SyncNotifier extends ChangeNotifier {
         pair,
         client,
         isCancelled: isCancelled,
+        compareContents: compareContents,
+        onCompareProgress: onCompareProgress,
         isCurrent: () =>
             !_disposed &&
             identical(_ref.read(authProvider).client, client) &&
@@ -469,7 +537,9 @@ class SyncNotifier extends ChangeNotifier {
   void enableWatch() {
     _watchEnabled = true;
     for (final pair in _pairs) {
-      if (pair.enabled && !_watcher.isWatching(pair.id)) {
+      if (pair.enabled &&
+          isPairLocallyBound(pair) &&
+          !_watcher.isWatching(pair.id)) {
         _watcher.watchPair(pair, (pairId) => syncOne(pairId));
       }
     }
@@ -515,13 +585,11 @@ class SyncNotifier extends ChangeNotifier {
     required String path,
     String? targetPath,
   }) async {
-    await _db.enqueueOffline(
-      OfflineQueueCompanion.insert(
-        pairId: pairId,
-        operation: operation,
-        path: path,
-        targetPath: Value(targetPath),
-      ),
+    await SyncOfflineService(_db).enqueue(
+      pairId: pairId,
+      operation: operation,
+      path: path,
+      targetPath: targetPath,
     );
     notifyListeners();
   }
@@ -556,42 +624,20 @@ class SyncNotifier extends ChangeNotifier {
 
         for (final op in pendingOps) {
           try {
-            // Check for conflicts before replaying upload operations
-            if (op.operation == 'upload') {
-              final remote = await client.resolvePath(op.path);
-              if (remote != null) {
-                final remoteModStr =
-                    remote['modificationTime'] ?? remote['lastModified'];
-                if (remoteModStr != null) {
-                  DateTime? remoteMod;
-                  if (remoteModStr is int) {
-                    remoteMod = DateTime.fromMillisecondsSinceEpoch(
-                      remoteModStr,
-                    );
-                  } else {
-                    remoteMod = DateTime.tryParse(remoteModStr.toString());
-                  }
-                  if (remoteMod != null && remoteMod.isAfter(op.createdAt)) {
-                    _log.warn(
-                      'Conflict detected: ${op.path} modified on server since offline op queued',
-                    );
-                    result =
-                        result +
-                        SyncResult(
-                          conflicts: 1,
-                          errorMessages: [
-                            'Conflict: ${op.path} modified on server',
-                          ],
-                        );
-                    continue; // Skip this op, leave it in queue for manual resolution
-                  }
-                }
-              }
-            }
-
-            await _executeOfflineOp(op, pair, client);
+            final step =
+                await SyncOfflineService(
+                  _db,
+                  journal: _ref.read(transferJournalProvider),
+                ).execute(
+                  op,
+                  pair,
+                  client,
+                  isCurrent: () =>
+                      !_disposed &&
+                      identical(_ref.read(authProvider).client, client),
+                );
             await _db.markOfflineCompleted(op.id);
-            result = result + const SyncResult(uploaded: 1);
+            result += step;
           } catch (e) {
             _log.error(
               'Offline replay failed for ${op.operation} ${op.path}',
@@ -620,57 +666,6 @@ class SyncNotifier extends ChangeNotifier {
     return result;
   }
 
-  /// Execute a single offline operation.
-  Future<void> _executeOfflineOp(
-    OfflineQueueEntry op,
-    SyncPair pair,
-    CloudStorageClient client,
-  ) async {
-    final localBase = pair.localPath;
-    final remoteBase = pair.remotePath;
-
-    switch (op.operation) {
-      case 'upload':
-        final localPath = '$localBase/${op.path}';
-        final remotePath = '$remoteBase/${op.path}';
-        final file = File(localPath);
-        if (!await file.exists()) return; // file was deleted since queue
-        final bytes = await file.readAsBytes();
-        final fileName = op.path.split('/').last;
-        final targetDir = remotePath.substring(0, remotePath.lastIndexOf('/'));
-        await client.uploadFile(
-          bytes,
-          fileName,
-          targetDir.isEmpty ? '/' : targetDir,
-        );
-        break;
-      case 'download':
-        final remotePath = '$remoteBase/${op.path}';
-        final localPath = '$localBase/${op.path}';
-        final bytes = await client.downloadFileBytes(remotePath);
-        final file = File(localPath);
-        await file.parent.create(recursive: true);
-        await file.writeAsBytes(bytes);
-        break;
-      case 'delete':
-        final remotePath = '$remoteBase/${op.path}';
-        await client.deletePath(remotePath);
-        break;
-      case 'rename':
-        final remotePath = '$remoteBase/${op.path}';
-        final newName = op.targetPath ?? op.path.split('/').last;
-        await client.renamePath(remotePath, newName);
-        break;
-      case 'move':
-        final sourcePath = '$remoteBase/${op.path}';
-        final targetPath = '$remoteBase/${op.targetPath ?? op.path}';
-        await client.movePath(sourcePath, targetPath);
-        break;
-      default:
-        throw UnsupportedError('Unknown offline operation: ${op.operation}');
-    }
-  }
-
   // --- Placeholder / Cloud-Only Files ---
 
   /// Toggle placeholder mode for a sync pair.
@@ -686,12 +681,18 @@ class SyncNotifier extends ChangeNotifier {
     try {
       final pair = await _db.getPair(pairId);
       final auth = _ref.read(authProvider);
-      final placeholder = PlaceholderService(_db);
+      final client = auth.client;
+      final placeholder = PlaceholderService(
+        _db,
+        journal: _ref.read(transferJournalProvider),
+      );
       final localPath = await placeholder.hydrate(
         pairId: pairId,
         localBasePath: pair.localPath,
         relativePath: relativePath,
-        client: auth.client,
+        client: client,
+        isCurrent: () =>
+            !_disposed && identical(_ref.read(authProvider).client, client),
       );
       notifyListeners();
       return localPath;
@@ -707,13 +708,20 @@ class SyncNotifier extends ChangeNotifier {
     try {
       final pair = await _db.getPair(pairId);
       final remoteBase = pair.remotePath;
-      final placeholder = PlaceholderService(_db);
+      final client = _ref.read(authProvider).client;
+      final placeholder = PlaceholderService(
+        _db,
+        journal: _ref.read(transferJournalProvider),
+      );
       await placeholder.dehydrate(
         pairId: pairId,
         localBasePath: pair.localPath,
         relativePath: relativePath,
         remotePath: '$remoteBase/$relativePath',
         provider: pair.provider,
+        client: client,
+        isCurrent: () =>
+            !_disposed && identical(_ref.read(authProvider).client, client),
       );
       notifyListeners();
     } catch (e) {
@@ -727,11 +735,17 @@ class SyncNotifier extends ChangeNotifier {
     try {
       final pair = await _db.getPair(pairId);
       final auth = _ref.read(authProvider);
-      final placeholder = PlaceholderService(_db);
+      final client = auth.client;
+      final placeholder = PlaceholderService(
+        _db,
+        journal: _ref.read(transferJournalProvider),
+      );
       final count = await placeholder.hydrateAll(
         pairId: pairId,
         localBasePath: pair.localPath,
-        client: auth.client,
+        client: client,
+        isCurrent: () =>
+            !_disposed && identical(_ref.read(authProvider).client, client),
       );
       notifyListeners();
       return count;

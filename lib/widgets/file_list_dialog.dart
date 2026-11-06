@@ -9,16 +9,22 @@ import '../l10n/commander_strings.dart';
 import '../models/panel_side.dart';
 import '../providers/panel_provider.dart';
 import '../services/file_list_export.dart';
+import '../services/file_selection_pattern.dart';
 
 Future<void> showFileListDialog(
   BuildContext context,
   WidgetRef ref,
   PanelSide side, {
   bool importMode = false,
+  bool selectionMode = false,
 }) async {
   await showDialog<void>(
     context: context,
-    builder: (_) => _FileListDialog(side: side, importMode: importMode),
+    builder: (_) => _FileListDialog(
+      side: side,
+      importMode: importMode || selectionMode,
+      selectionMode: selectionMode,
+    ),
   );
   if (context.mounted) ref.read(panelProvider(side)).focusList();
 }
@@ -30,9 +36,9 @@ Future<void> copyFileListPaths(
   bool selectedOnly = false,
 }) async {
   try {
-    final text = ref
+    final text = await ref
         .read(panelProvider(side))
-        .exportFileListPaths(selectedOnly: selectedOnly);
+        .exportAllFileListPaths(selectedOnly: selectedOnly);
     await Clipboard.setData(ClipboardData(text: text));
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -48,9 +54,14 @@ Future<void> copyFileListPaths(
 }
 
 class _FileListDialog extends ConsumerStatefulWidget {
-  const _FileListDialog({required this.side, required this.importMode});
+  const _FileListDialog({
+    required this.side,
+    required this.importMode,
+    required this.selectionMode,
+  });
   final PanelSide side;
   final bool importMode;
+  final bool selectionMode;
 
   @override
   ConsumerState<_FileListDialog> createState() => _FileListDialogState();
@@ -60,18 +71,25 @@ class _FileListDialogState extends ConsumerState<_FileListDialog> {
   final _input = TextEditingController();
   final _output = TextEditingController();
   late bool _importMode = widget.importMode;
+  late bool _selectionMode = widget.selectionMode;
+  late final List<PathSelectionSource> _sources;
+  PathSelectionSource? _source;
+  SelectionAction _selectionAction = SelectionAction.select;
   bool _selectedOnly = false;
   bool _busy = false;
   bool _cancelled = false;
   String? _error;
   String? _message;
   FileListImportResult? _result;
+  int _exportRequest = 0;
 
   @override
   void initState() {
     super.initState();
     final panel = ref.read(panelProvider(widget.side));
     _selectedOnly = panel.selection.isNotEmpty;
+    _sources = panel.pathSelectionSources;
+    if (_sources.length == 1) _source = _sources.single;
     _refreshExport();
   }
 
@@ -83,14 +101,24 @@ class _FileListDialogState extends ConsumerState<_FileListDialog> {
     super.dispose();
   }
 
-  void _refreshExport() {
+  Future<void> _refreshExport() async {
+    final request = ++_exportRequest;
+    setState(() => _busy = true);
     try {
-      _output.text = ref
+      final text = await ref
           .read(panelProvider(widget.side))
-          .exportFileListPaths(selectedOnly: _selectedOnly);
-      _error = null;
+          .exportAllFileListPaths(selectedOnly: _selectedOnly);
+      if (!mounted || request != _exportRequest) return;
+      setState(() {
+        _output.text = text;
+        _error = null;
+      });
     } catch (error) {
-      _error = error.toString();
+      if (mounted && request == _exportRequest) {
+        setState(() => _error = error.toString());
+      }
+    } finally {
+      if (mounted && request == _exportRequest) setState(() => _busy = false);
     }
   }
 
@@ -127,16 +155,31 @@ class _FileListDialogState extends ConsumerState<_FileListDialog> {
       _result = null;
     });
     try {
-      final result = await ref
-          .read(panelProvider(widget.side))
-          .importFileListPaths(
-            _input.text,
-            isCancelled: () => _cancelled || !mounted,
-          );
+      final panel = ref.read(panelProvider(widget.side));
+      if (_selectionMode && _source == null) {
+        throw StateError(
+          'Choose the original storage account for this path list.',
+        );
+      }
+      final result = _selectionMode
+          ? await panel.selectPathsFromListAsync(
+              _input.text,
+              source: _source,
+              action: _selectionAction,
+              isCancelled: () => _cancelled || !mounted,
+            )
+          : await panel.importFileListPaths(
+              _input.text,
+              isCancelled: () => _cancelled || !mounted,
+            );
       if (!mounted) return;
       setState(() {
         _result = result;
-        _message = '${result.loaded} item(s) loaded into the panel.';
+        _message = _selectionMode
+            ? context.commanderTr("Updated marks for {0} matching item(s).", [
+                result.loaded,
+              ])
+            : '${result.loaded} item(s) loaded into the panel.';
       });
       if (result.failures.isEmpty) Navigator.pop(context);
     } catch (error) {
@@ -168,7 +211,9 @@ class _FileListDialogState extends ConsumerState<_FileListDialog> {
     return PopScope(
       canPop: !_busy,
       child: AlertDialog(
-        title: Text(context.commanderTr("File list")),
+        title: Text(
+          context.commanderTr(_selectionMode ? "Load selection" : "File list"),
+        ),
         content: SizedBox(
           width: 620,
           child: SingleChildScrollView(
@@ -200,6 +245,95 @@ class _FileListDialogState extends ConsumerState<_FileListDialog> {
                         }),
                 ),
                 const SizedBox(height: 12),
+                if (_importMode) ...[
+                  CheckboxListTile(
+                    key: const ValueKey('file-list-selection-mode'),
+                    contentPadding: EdgeInsets.zero,
+                    value: _selectionMode,
+                    title: Text(
+                      context.commanderTr("Apply paths as selection marks"),
+                    ),
+                    onChanged: _busy
+                        ? null
+                        : (value) => setState(() => _selectionMode = value!),
+                  ),
+                  if (_selectionMode) ...[
+                    Text(
+                      context.commanderTr(
+                        "Only visible, verified rows in the chosen source are marked. The panel contents stay in place.",
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<PathSelectionSource>(
+                      key: const ValueKey('file-list-selection-source'),
+                      initialValue: _source,
+                      isExpanded: true,
+                      decoration: InputDecoration(
+                        labelText: context.commanderTr("Storage source"),
+                      ),
+                      items: [
+                        for (final source in _sources)
+                          DropdownMenuItem(
+                            value: source,
+                            child: Text(
+                              source.label,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                      ],
+                      onChanged: _busy
+                          ? null
+                          : (source) => setState(() => _source = source),
+                    ),
+                    if (_source != null)
+                      Text(
+                        context.commanderTr("Relative paths start at {0}", [
+                          _source!.basePath,
+                        ]),
+                      ),
+                    if (_source?.isCurrent == false)
+                      Text(
+                        context.commanderTr(
+                          "The panel changed. Close and reopen this dialog.",
+                        ),
+                      ),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<SelectionAction>(
+                      key: const ValueKey('file-list-selection-action'),
+                      initialValue: _selectionAction,
+                      isExpanded: true,
+                      decoration: InputDecoration(
+                        labelText: context.commanderTr("Action"),
+                      ),
+                      items: [
+                        for (final action in SelectionAction.values)
+                          DropdownMenuItem(
+                            value: action,
+                            child: Text(
+                              context.commanderTr(switch (action) {
+                                SelectionAction.select =>
+                                  'Add matches to selection',
+                                SelectionAction.deselect =>
+                                  'Remove matches from selection',
+                                SelectionAction.invert =>
+                                  'Invert matching marks',
+                                SelectionAction.replace =>
+                                  'Replace marks in this source',
+                              }),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                      ],
+                      onChanged: _busy
+                          ? null
+                          : (value) =>
+                                setState(() => _selectionAction = value!),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                ],
                 Text(
                   _importMode
                       ? context.commanderTr(
@@ -353,8 +487,15 @@ class _FileListDialogState extends ConsumerState<_FileListDialog> {
           ),
           if (_importMode)
             FilledButton(
-              onPressed: _busy ? null : _loadList,
-              child: Text(context.commanderTr("Load into panel")),
+              key: const ValueKey('file-list-apply'),
+              onPressed: _busy || (_selectionMode && _source?.isCurrent != true)
+                  ? null
+                  : _loadList,
+              child: Text(
+                context.commanderTr(
+                  _selectionMode ? "Apply selection marks" : "Load into panel",
+                ),
+              ),
             ),
         ],
       ),

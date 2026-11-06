@@ -4,12 +4,16 @@
 // parameterised so it renders pure data (lines/bytes) with optional search
 // highlights, and stays independent of dialog state.
 
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:pdfx/pdfx.dart';
 
 import '../services/file_bytes_loader.dart';
 import '../services/internal_viewer_service.dart';
+import '../services/viewer_search_service.dart';
+import '../services/viewer_text_decoder.dart';
+import '../l10n/commander_strings.dart';
 
 /// Monospace text style helper shared by the line-mode views.
 TextStyle monoTextStyle(double fontSize, Color color) {
@@ -87,8 +91,9 @@ class MonoLineListView extends StatelessWidget {
           final cs = s.clamp(0, line.length);
           final ce = e.clamp(cs, line.length);
           final matchStyle = style.copyWith(
-            backgroundColor:
-                theme.colorScheme.tertiaryContainer.withValues(alpha: 0.9),
+            backgroundColor: theme.colorScheme.tertiaryContainer.withValues(
+              alpha: 0.9,
+            ),
           );
           lineSpan = TextSpan(
             children: [
@@ -127,9 +132,9 @@ class MonoLineListView extends StatelessWidget {
 // Streaming safe-byte view (arbitrarily large local files)
 // ---------------------------------------------------------------------------
 
-/// Bytes scanned for line offsets (cap keeps UI responsive). Beyond the cap,
-/// remaining bytes require the Hex mode.
-const int kMaxIndexedBytes = 64 * 1024 * 1024;
+/// One text window's byte budget. Paging and goto rebase the window anywhere in
+/// the file; this is a memory bound, not a limit on which bytes can be viewed.
+const int kMaxIndexedBytes = 4 * 1024 * 1024;
 const int kMaxLineRenderBytes = 8 * 1024;
 
 /// Line-indexed view over a [ViewBytesSource]: lines are discovered by scans
@@ -140,6 +145,7 @@ class StreamingSafeView extends StatefulWidget {
   final ViewBytesSource source;
   final bool binaryMode;
   final bool rawText;
+  final String encoding;
   final double fontScale;
   final ScrollController? controller;
 
@@ -151,6 +157,9 @@ class StreamingSafeView extends StatefulWidget {
   /// containing it — used by goto/match navigation from the dialog.
   final int? scrollToByte;
 
+  /// Distinguishes repeated explicit jumps from unrelated parent rebuilds.
+  final int scrollRequest;
+
   const StreamingSafeView({
     super.key,
     required this.source,
@@ -158,9 +167,11 @@ class StreamingSafeView extends StatefulWidget {
     this.controller,
     this.binaryMode = false,
     this.rawText = false,
+    this.encoding = 'utf8',
     this.matchStart,
     this.matchEnd,
     this.scrollToByte,
+    this.scrollRequest = 0,
   });
 
   @override
@@ -169,62 +180,75 @@ class StreamingSafeView extends StatefulWidget {
 
 class _StreamingSafeViewState extends State<StreamingSafeView> {
   final List<int> _lineOffsets = [0];
+  int _windowStart = 0;
+  int _windowEnd = 0;
   int _indexedBytes = 0;
-  bool _fullyIndexed = false;
-  int? _lastHandledScrollTo;
+  int? _pendingTarget;
+  bool _windowDone = false;
+  String? _error;
+  static const int _indexChunk = 128 * 1024;
+  static const int _maximumLines = 200000;
 
-  /// Bytes indexed per frame; keeps a 64 MB scan from freezing the UI.
-  static const int _indexChunk = 2 * 1024 * 1024;
+  int get _unit => widget.rawText ? viewerCodeUnitBytes(widget.encoding) : 1;
+  double get _rowExtent => 13.0 * widget.fontScale * 1.5;
+  int get _offsetDigits => (widget.source.size > 0 ? widget.source.size - 1 : 0)
+      .toRadixString(16)
+      .length
+      .clamp(8, 16);
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _indexMore());
+    _resetWindow(widget.scrollToByte ?? 0, center: widget.scrollToByte != null);
   }
 
   @override
   void didUpdateWidget(StreamingSafeView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (!identical(oldWidget.source, widget.source)) {
-      _lineOffsets
-        ..clear()
-        ..add(0);
-      _indexedBytes = 0;
-      _fullyIndexed = false;
-      _lastHandledScrollTo = null;
-      WidgetsBinding.instance.addPostFrameCallback((_) => _indexMore());
+    if (!identical(oldWidget.source, widget.source) ||
+        oldWidget.encoding != widget.encoding ||
+        oldWidget.rawText != widget.rawText) {
+      _resetWindow(
+        widget.scrollToByte ?? 0,
+        center: widget.scrollToByte != null,
+      );
       return;
     }
     final target = widget.scrollToByte;
-    if (target != null && target != _lastHandledScrollTo) {
+    if (target != null &&
+        (target != oldWidget.scrollToByte ||
+            widget.scrollRequest != oldWidget.scrollRequest)) {
       _jumpToByte(target);
     }
   }
 
-  void _jumpToByte(int byteOffset) {
-    _lastHandledScrollTo = byteOffset;
-    final line = _lineIndexOfOffset(byteOffset);
-    final controller = widget.controller;
-    if (controller == null || !controller.hasClients) return;
-    final positions = controller.positions;
-    if (positions.length != 1) return;
-    final position = positions.first;
-    final target = 4.0 + line * _rowExtent;
-    position.jumpTo(target.clamp(0.0, position.maxScrollExtent));
-  }
-
-  double get _fontSize => 13.0 * widget.fontScale;
-  double get _rowExtent => _fontSize * 1.5;
-
-  /// Offset column width: 8 digits up to 4 GiB, wider beyond that.
-  int get _offsetDigits {
-    final maxOffset = widget.source.size <= 0 ? 0 : widget.source.size - 1;
-    final digits = maxOffset.toRadixString(16).length;
-    return digits < 8 ? 8 : digits;
+  void _resetWindow(int requested, {bool center = false}) {
+    final size = widget.source.size;
+    final target = requested.clamp(0, size > 0 ? size - 1 : 0);
+    var start = (target - (center ? 128 * 1024 : 0)).clamp(0, size);
+    if (widget.rawText) {
+      start = alignViewerTextOffset(widget.source, start, widget.encoding);
+    }
+    _windowStart = start;
+    _windowEnd = (start + kMaxIndexedBytes).clamp(0, size);
+    if (widget.rawText && _windowEnd < size) {
+      _windowEnd = alignViewerTextOffset(
+        widget.source,
+        _windowEnd,
+        widget.encoding,
+      );
+    }
+    _indexedBytes = start;
+    _lineOffsets
+      ..clear()
+      ..add(start);
+    _windowDone = false;
+    _error = null;
+    _pendingTarget = target;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _indexMore());
   }
 
   int _lineIndexOfOffset(int byteOffset) {
-    // Binary search: last line whose start <= byteOffset.
     var lo = 0;
     var hi = _lineOffsets.length - 1;
     while (lo < hi) {
@@ -238,140 +262,218 @@ class _StreamingSafeViewState extends State<StreamingSafeView> {
     return lo;
   }
 
-  void _indexMore() {
-    if (!mounted) return;
-    final size = widget.source.size;
-    final cap = size < kMaxIndexedBytes ? size : kMaxIndexedBytes;
-    if (_indexedBytes < cap) {
-      final end = (_indexedBytes + _indexChunk) > cap
-          ? cap
-          : _indexedBytes + _indexChunk;
-      if (end > _indexedBytes) {
-        final chunk =
-            widget.source.readSync(_indexedBytes, end - _indexedBytes);
-        for (var i = 0; i < chunk.length; i++) {
-          if (chunk[i] == 0x0A) {
-            _lineOffsets.add(_indexedBytes + i + 1);
-          }
-        }
-        _indexedBytes = end;
-      }
+  void _jumpToByte(int requested) {
+    final offset = requested.clamp(
+      0,
+      widget.source.size > 0 ? widget.source.size - 1 : 0,
+    );
+    if (offset < _windowStart || offset >= _windowEnd) {
+      setState(() => _resetWindow(offset, center: true));
+      return;
     }
-    _fullyIndexed = _indexedBytes >= size;
-    if (mounted) setState(() {});
-    if (!_fullyIndexed && _indexedBytes < cap) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _indexMore());
+    if (offset >= _indexedBytes && !_windowDone) {
+      _pendingTarget = offset;
+      return;
     }
+    _pendingTarget = null;
+    final controller = widget.controller;
+    if (controller == null ||
+        !controller.hasClients ||
+        controller.positions.length != 1) {
+      return;
+    }
+    final target = 4.0 + _lineIndexOfOffset(offset) * _rowExtent;
+    controller.jumpTo(target.clamp(0.0, controller.position.maxScrollExtent));
   }
 
-  String _renderLine(int line) {
-    final start = _lineOffsets[line];
-    final lineEnd = line + 1 < _lineOffsets.length
-        ? _lineOffsets[line + 1]
-        : widget.source.size;
-    var readEnd = (start + kMaxLineRenderBytes) < lineEnd
-        ? start + kMaxLineRenderBytes
-        : lineEnd;
-    if (readEnd < start) readEnd = start;
-    final truncated = readEnd < lineEnd;
-    final bytes = widget.source.readSync(start, readEnd - start);
-    var text = widget.rawText
-        ? InternalViewerService.decodeTextForView(bytes).text
-        : InternalViewerService.renderSafeBytes(
-            bytes,
-            binaryMode: widget.binaryMode,
-          );
-    // The slice includes the terminating LF (so CRLF collapses correctly);
-    // strip it for single-row rendering.
-    if (text.endsWith('\n')) text = text.substring(0, text.length - 1);
-    if (text.endsWith('\r')) text = text.substring(0, text.length - 1);
-    return truncated ? '$text…' : text;
+  bool _newline(List<int> bytes, int index) {
+    if (_unit == 1) return bytes[index] == 10;
+    if (index + _unit > bytes.length) return false;
+    final big = widget.encoding.endsWith('be');
+    for (var j = 0; j < _unit; j++) {
+      if (bytes[index + j] != (j == (big ? _unit - 1 : 0) ? 10 : 0)) {
+        return false;
+      }
+    }
+    return true;
   }
+
+  void _indexMore() {
+    if (!mounted || _windowDone || _error != null) return;
+    try {
+      final end = (_indexedBytes + _indexChunk).clamp(0, _windowEnd);
+      final bytes = widget.source.readSync(_indexedBytes, end - _indexedBytes);
+      var consumed = bytes.length;
+      for (var i = 0; i < bytes.length; i += _unit) {
+        final next = _indexedBytes + i + _unit;
+        final newline = _newline(bytes, i);
+        final longLine = next - _lineOffsets.last >= kMaxLineRenderBytes;
+        final boundary =
+            !widget.rawText ||
+            !longLine ||
+            alignViewerTextOffset(widget.source, next, widget.encoding) == next;
+        if (next <= end && (newline || (longLine && boundary))) {
+          _lineOffsets.add(next);
+          if (_lineOffsets.length >= _maximumLines) {
+            consumed = i + _unit;
+            _windowEnd = _indexedBytes + consumed;
+            break;
+          }
+        }
+      }
+      _indexedBytes += consumed;
+      _windowDone = _indexedBytes >= _windowEnd;
+    } catch (error) {
+      _error = '$error';
+      _windowDone = true;
+    }
+    setState(() {});
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final target = _pendingTarget;
+      if (target != null && (target < _indexedBytes || _windowDone)) {
+        _jumpToByte(target);
+      }
+      if (!_windowDone) _indexMore();
+    });
+  }
+
+  String _decode(List<int> bytes) => widget.rawText
+      ? InternalViewerService.decodeTextForView(
+          Uint8List.fromList(bytes),
+          encoding: widget.encoding,
+        ).text
+      : InternalViewerService.renderSafeBytes(
+          Uint8List.fromList(bytes),
+          binaryMode: widget.binaryMode,
+        );
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final fontSize = 13.0 * widget.fontScale;
-    final rowExtent = fontSize * 1.5;
-    final style = monoTextStyle(fontSize, theme.colorScheme.onSurface);
-    final dimStyle = style.copyWith(
-      color: theme.colorScheme.onSurfaceVariant,
-      fontSize: fontSize * 0.85,
-      height: 1.2,
+    final style = monoTextStyle(
+      13 * widget.fontScale,
+      theme.colorScheme.onSurface,
     );
-
-    final pendingRows = _fullyIndexed ? 0 : 1;
-    final rows = _lineOffsets.length + pendingRows;
-
-    return ListView.builder(
-      controller: widget.controller,
-      itemCount: rows,
-      itemExtent: rowExtent,
-      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-      itemBuilder: (context, i) {
-        if (i >= _lineOffsets.length) {
-          final msg = widget.source.size > kMaxIndexedBytes
-              ? '(indexed to ${kMaxIndexedBytes ~/ (1024 * 1024)} MB — use Hex mode for deeper offsets)'
-              : '(loading…)';
-          return Row(
+    final dim = style.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+      fontSize: style.fontSize! * .85,
+    );
+    return Column(
+      children: [
+        if (_windowStart > 0 || _windowEnd < widget.source.size)
+          Wrap(
+            spacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              Text('…', style: dimStyle),
-              const SizedBox(width: 8),
-              Expanded(child: Text(msg, style: dimStyle, maxLines: 1)),
+              TextButton(
+                onPressed: _windowStart == 0
+                    ? null
+                    : () => setState(
+                        () => _resetWindow(
+                          (_windowStart - kMaxIndexedBytes).clamp(
+                            0,
+                            widget.source.size,
+                          ),
+                        ),
+                      ),
+                child: Text(context.commanderTr("Previous text window")),
+              ),
+              Text(
+                context.commanderTr("Bytes {0}–{1} of {2}", [
+                  _windowStart,
+                  _windowEnd,
+                  widget.source.size,
+                ]),
+                style: dim,
+              ),
+              TextButton(
+                onPressed: !_windowDone || _windowEnd >= widget.source.size
+                    ? null
+                    : () => setState(() => _resetWindow(_windowEnd)),
+                child: Text(context.commanderTr("Next text window")),
+              ),
             ],
-          );
-        }
-        final lineStart = _lineOffsets[i];
-        final text = _renderLine(i);
-
-        InlineSpan span = TextSpan(text: text);
-        final ms = widget.matchStart;
-        final me = widget.matchEnd;
-        if (ms != null &&
-            me != null &&
-            me > lineStart &&
-            ms < lineStart + text.length) {
-          final s = (ms - lineStart).clamp(0, text.length);
-          final e = (me - lineStart).clamp(s, text.length);
-          if (e > s) {
-            span = TextSpan(children: [
-              TextSpan(text: text.substring(0, s)),
-              TextSpan(
-                text: text.substring(s, e),
-                style: style.copyWith(
-                  backgroundColor: theme.colorScheme.tertiaryContainer
-                      .withValues(alpha: 0.9),
-                ),
-              ),
-              TextSpan(text: text.substring(e)),
-            ]);
-          }
-        }
-
-        return Row(
-          children: [
-            Text(
-              lineStart
-                  .toRadixString(16)
-                  .toUpperCase()
-                  .padLeft(_offsetDigits, '0'),
-              style: dimStyle,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Text.rich(
-                  span,
-                  style: style,
-                  softWrap: false,
-                  maxLines: 1,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
+          ),
+        if (!_windowDone) const LinearProgressIndicator(),
+        if (_error != null)
+          Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
+        Expanded(
+          child: ListView.builder(
+            controller: widget.controller,
+            itemCount: _lineOffsets.length,
+            itemExtent: _rowExtent,
+            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+            itemBuilder: (context, i) {
+              final start = _lineOffsets[i];
+              final end = i + 1 < _lineOffsets.length
+                  ? _lineOffsets[i + 1]
+                  : _indexedBytes;
+              final bytes = widget.source.readSync(
+                start,
+                (end - start).clamp(0, kMaxLineRenderBytes + 4),
+              );
+              var text = _decode(bytes);
+              if (text.endsWith('\n')) {
+                text = text.substring(0, text.length - 1);
+              }
+              if (text.endsWith('\r')) {
+                text = text.substring(0, text.length - 1);
+              }
+              InlineSpan span = TextSpan(text: text);
+              final ms = widget.matchStart;
+              final me = widget.matchEnd;
+              if (ms != null &&
+                  me != null &&
+                  me > start &&
+                  ms < start + bytes.length) {
+                final byteStart = (ms - start).clamp(0, bytes.length);
+                final byteEnd = (me - start).clamp(byteStart, bytes.length);
+                final first = _decode(bytes.sublist(0, byteStart)).length
+                    .clamp(0, text.length);
+                final last = _decode(bytes.sublist(0, byteEnd)).length
+                    .clamp(first, text.length);
+                span = TextSpan(
+                  children: [
+                    TextSpan(text: text.substring(0, first)),
+                    TextSpan(
+                      text: text.substring(first, last),
+                      style: style.copyWith(
+                        backgroundColor: theme.colorScheme.tertiaryContainer
+                            .withValues(alpha: .9),
+                      ),
+                    ),
+                    TextSpan(text: text.substring(last)),
+                  ],
+                );
+              }
+              return Row(
+                children: [
+                  Text(
+                    start
+                        .toRadixString(16)
+                        .toUpperCase()
+                        .padLeft(_offsetDigits, '0'),
+                    style: dim,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Text.rich(
+                        span,
+                        style: style,
+                        softWrap: false,
+                        maxLines: 1,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

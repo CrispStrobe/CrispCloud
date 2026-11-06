@@ -63,12 +63,12 @@ class _StatusBarState extends ConsumerState<StatusBar> {
     final selectedCount = panel.selection.length;
     final selectedSize = panel.selection.fold<int>(0, (s, f) => s + (f.size ?? 0));
 
-    final activeOps = transfers.operations.where((op) => !op.isComplete).length;
+    final activeOps = transfers.operations.where((op) => op.isActive).length;
     final totalTransferred = transfers.operations
-        .where((op) => !op.isComplete)
+        .where((op) => op.isActive)
         .fold<int>(0, (s, op) => s + op.transferredBytes);
     final totalSize = transfers.operations
-        .where((op) => !op.isComplete)
+        .where((op) => op.isActive)
         .fold<int>(0, (s, op) => s + op.totalBytes);
 
     // Lazy-fetch quota when connected

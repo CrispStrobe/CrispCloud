@@ -37,6 +37,7 @@ void main() {
       kind: FileOperationKind.move,
       fileConflict: FileConflictPolicy.resumeVerified,
       destinationMask: '[N]_[C:000].[E]',
+      duplicateNameTemplate: '{name}_copy-{counter:000}{ext}',
       minimumSize: 2,
       maximumSize: 50,
       modifiedAfter: DateTime.utc(2025),
@@ -56,9 +57,11 @@ void main() {
       excludedDirectories: FileSelectionPattern('cache;tmp'),
       excludeEmptyDirectories: true,
       preservePermissions: true,
+      preserveWindowsAttributes: true,
       verifyContents: true,
       copyMethod: FileCopyMethod.stream,
       preallocate: true,
+      clientBytesPerSecond: 128 * 1024,
     );
     expect(
       FileOperationOptions.fromJson(options.toJson()).toJson(),
@@ -75,15 +78,75 @@ void main() {
           destinationName: 'one.txt',
           relativeBase: '/private/source',
           destinationMask: '*.bak',
+          duplicateNameTemplate: '{name}_backup-{counter:000}{ext}',
           fileConflict: FileConflictPolicy.keepBoth,
+          clientBytesPerSecond: 512,
+          preserveWindowsAttributes: true,
         ),
       );
       final stored = (await profiles.load())['@default:copy']!;
       expect(stored.destinationName, isNull);
       expect(stored.relativeBase, isNull);
       expect(stored.destinationMask, '*.bak');
+      expect(stored.duplicateNameTemplate, '{name}_backup-{counter:000}{ext}');
+      expect(stored.clientBytesPerSecond, 512);
+      expect(stored.preserveWindowsAttributes, isTrue);
       await profiles.remove('@default:copy');
       expect(await profiles.load(), isEmpty);
+    },
+  );
+
+  test('old saved options retain the original numbered duplicate names', () {
+    final legacy = const FileOperationOptions().toJson()
+      ..remove('duplicateNameTemplate')
+      ..remove('clientBytesPerSecond')
+      ..remove('preserveWindowsAttributes');
+    expect(FileOperationOptions.fromJson(legacy).clientBytesPerSecond, isNull);
+    expect(
+      FileOperationOptions.fromJson(legacy).preserveWindowsAttributes,
+      isFalse,
+    );
+    expect(
+      FileOperationOptions.fromJson(legacy).duplicateNameTemplate,
+      '{name} ({counter}){ext}',
+    );
+  });
+
+  test('invalid streaming rates cannot be restored or saved', () async {
+    for (final rate in [
+      0,
+      -1,
+      FileOperationOptions.maximumClientBytesPerSecond + 1,
+    ]) {
+      final invalid = FileOperationOptions(clientBytesPerSecond: rate);
+      expect(invalid.validateTransferSettings, throwsFormatException);
+      expect(
+        () => FileOperationOptions.fromJson(invalid.toJson()),
+        throwsFormatException,
+      );
+      await expectLater(
+        FileOperationProfiles().save('invalid', invalid),
+        throwsFormatException,
+      );
+    }
+    expect(await FileOperationProfiles().load(), isEmpty);
+  });
+
+  test(
+    'invalid saved templates cannot enter profiles or restored jobs',
+    () async {
+      const invalid = FileOperationOptions(
+        duplicateNameTemplate: '../{name}-{counter}',
+      );
+      expect(
+        () => FileOperationOptions.fromJson(invalid.toJson()),
+        throwsFormatException,
+      );
+      await expectLater(
+        FileOperationProfiles().save('invalid', invalid),
+        throwsFormatException,
+      );
+      expect(await FileOperationProfiles().load(), isEmpty);
     },
   );
 }

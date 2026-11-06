@@ -51,6 +51,7 @@ import '../services/file_operation_backend.dart';
 import '../services/file_operation_service.dart';
 import '../services/viewer_spool.dart';
 import '../services/viewer_tail_service.dart';
+import '../services/viewer_search_service.dart';
 import '../services/internal_viewer_service.dart';
 import '../services/local_file_service.dart';
 import '../services/log_service.dart';
@@ -77,7 +78,6 @@ const int kAutoFullLoadBytes = 16 * 1024 * 1024;
 const int kViewerFullDataCap = 64 * 1024 * 1024;
 
 const int _kSearchMaxMatches = 2000;
-const int _kStreamSearchCap = 64 * 1024 * 1024;
 const int _kHighlightMaxChars = 400 * 1024;
 
 /// Rich rendered modes (markdown/CSV/office) are truncated above this size so
@@ -297,14 +297,24 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   final FocusNode _searchFocus = FocusNode();
   Timer? _searchDebounce;
   bool _searchOpen = false;
+  bool _searching = false;
+  int _searchGeneration = 0;
+  int _searchBytesScanned = 0;
   bool _isByteSearch = false;
   Uint8List? _searchBytes;
   List<int> _matches = const [];
+  List<int> _matchEnds = const [];
+  int _matchBase = 0;
+  int _totalMatches = 0;
+  int? _nextSearchOffset;
+  int? _nextTextOffset;
+  bool _matchCase = false;
   int _matchIndex = -1;
   String? _searchNote;
   int? _matchHighlightStart;
   int? _matchHighlightEnd;
   int? _streamScrollTo;
+  int _streamScrollRequest = 0;
   int? _selectedByte;
 
   // Cache for the safe-view char offset of the active match.
@@ -348,18 +358,11 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
 
   int get _dataSize => _source?.size ?? widget.file.size ?? 0;
 
-  bool get _isByteMode =>
-      _mode == ViewerMode.hex ||
-      _mode == ViewerMode.ascii ||
-      _mode == ViewerMode.binary ||
-      (_mode == ViewerMode.text && _isStreamed);
-
   bool get _canChangeEncoding =>
-      !_isStreamed &&
       (_mode == ViewerMode.text ||
-          _mode == ViewerMode.markdown ||
-          _mode == ViewerMode.csv ||
-          _mode == ViewerMode.office);
+      _mode == ViewerMode.markdown ||
+      _mode == ViewerMode.csv ||
+      _mode == ViewerMode.office);
 
   bool get _usingHighlightView =>
       _mode == ViewerMode.text &&
@@ -389,6 +392,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
 
   @override
   void dispose() {
+    _searchGeneration++;
     ++_loadToken;
     ++_prepareToken;
     _tailTimer?.cancel();
@@ -558,6 +562,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   }
 
   Future<void> _useMemorySource(Uint8List data) async {
+    _resetSearchResults();
     _source?.dispose();
     _fullData = data;
     final source = ViewBytesSource.memory(data);
@@ -630,6 +635,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
 
   void _selectMode(ViewerMode mode) {
     if (!mounted) return;
+    _resetSearchResults();
     if (_tailEnabled) {
       _reload(preferredMode: mode);
       return;
@@ -663,7 +669,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       _pdfTextError = null;
     });
 
-    final query = _searchController.text.trim();
+    final query = _searchController.text;
     if (_searchOpen && query.isNotEmpty) {
       _runSearch(query);
     }
@@ -1219,15 +1225,15 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     if (text.isEmpty) return;
 
     if (offsetMode) {
-      final offset = _parseOffset(
-        text,
-        defaultRadix: _mode == ViewerMode.hex ? 16 : 10,
-      );
+      final offset = _parseOffset(text, defaultRadix: 10);
       if (offset == null || offset < 0) return;
       if (_mode == ViewerMode.hex) {
         _scrollToRow(offset ~/ _bytesPerLine);
       } else if (_isStreamed) {
-        setState(() => _streamScrollTo = offset);
+        setState(() {
+          _streamScrollTo = offset;
+          _streamScrollRequest++;
+        });
       }
       return;
     }
@@ -1267,28 +1273,44 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   // Search
   // ---------------------------------------------------------------------------
 
+  void _resetSearchResults({bool cancel = true}) {
+    if (cancel) {
+      _searchGeneration++;
+      _searchDebounce?.cancel();
+    }
+    _searching = false;
+    _matches = const [];
+    _matchEnds = const [];
+    _matchIndex = -1;
+    _matchBase = 0;
+    _totalMatches = 0;
+    _nextSearchOffset = null;
+    _nextTextOffset = null;
+    _searchNote = null;
+    _matchHighlightStart = null;
+    _matchHighlightEnd = null;
+    _isByteSearch = false;
+    _searchBytes = null;
+    _cachedSafeMatchIndex = null;
+    _cachedSafeMatchBinary = null;
+    _cachedSafeMatchOffset = null;
+  }
+
   void _toggleSearch() {
+    _resetSearchResults();
     if (_searchOpen) {
       _searchDebounce?.cancel();
       setState(() {
         _searchOpen = false;
-        _matches = const [];
-        _matchIndex = -1;
-        _searchNote = null;
-        _matchHighlightStart = null;
-        _matchHighlightEnd = null;
         _searchController.clear();
       });
       return;
     }
-
     setState(() => _searchOpen = true);
     if (_mode != ViewerMode.text &&
         _mode != ViewerMode.ascii &&
         _mode != ViewerMode.binary &&
         _mode != ViewerMode.hex) {
-      // Rendered modes (markdown/CSV/office/archive/image/…) don't support
-      // match highlighting; fall back to the text view.
       _selectMode(ViewerMode.text);
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1298,14 +1320,13 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
 
   void _onSearchChanged(String value) {
     _searchDebounce?.cancel();
-    if (_isStreamed) {
-      setState(() {
-        _searchNote = value.trim().isEmpty
-            ? null
-            : 'Press Enter to scan the file';
-      });
-      return;
-    }
+    setState(() {
+      _resetSearchResults();
+      if (_isStreamed && value.isNotEmpty) {
+        _searchNote = 'Press Enter to scan the file';
+      }
+    });
+    if (_isStreamed || value.isEmpty) return;
     _searchDebounce = Timer(const Duration(milliseconds: 350), () {
       if (mounted) _runSearch(value);
     });
@@ -1316,82 +1337,126 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     _runSearch(value);
   }
 
-  void _runSearch(String raw) {
-    final query = raw.trim();
+  Future<void> _runSearch(
+    String raw, {
+    int startOffset = 0,
+    int startTextOffset = 0,
+    int skipMatches = 0,
+    int matchBase = 0,
+    bool selectLast = false,
+  }) async {
     if (!mounted) return;
-
-    if (query.isEmpty) {
+    _searchDebounce?.cancel();
+    final generation = ++_searchGeneration;
+    final textMode = _mode == ViewerMode.text;
+    // Spaces and strings beginning with "0x" remain literal in Text mode.
+    final query =
+        _mode == ViewerMode.hex ||
+            (!textMode && raw.trimLeft().toLowerCase().startsWith('0x'))
+        ? raw.trim()
+        : raw;
+    final source = _source;
+    setState(() => _resetSearchResults(cancel: false));
+    if (query.isEmpty || source == null) return;
+    try {
+      String? encoding;
+      if (textMode) {
+        if (!source.isStreamed) _ensureText();
+        encoding =
+            _encodingOverride ??
+            (!source.isStreamed ? _encoding : null) ??
+            viewerSourceEncoding(source);
+      }
+      final pattern = textMode ? null : _patternFor(query);
       setState(() {
-        _matches = const [];
-        _matchIndex = -1;
-        _searchNote = null;
-        _matchHighlightStart = null;
-        _matchHighlightEnd = null;
-        _isByteSearch = false;
-        _searchBytes = null;
+        _isByteSearch = !textMode || source.isStreamed;
+        _searchBytes = pattern;
+        _searching = true;
+        _searchBytesScanned = startOffset;
       });
-      return;
-    }
-
-    if (_isByteMode) {
-      final pattern = _patternFor(query);
-      if (pattern.isEmpty) return;
-      _searchBytes = pattern;
-      _isByteSearch = true;
-
-      List<int> found;
-      if (_isStreamed) {
-        found = _scanSource(pattern);
-      } else {
-        final data = _fullData;
-        if (data == null) return;
-        found = InternalViewerService.findBytes(
-          data,
-          pattern,
-          maxMatches: _kSearchMaxMatches,
-        );
+      bool cancelled() =>
+          !mounted ||
+          generation != _searchGeneration ||
+          !identical(_source, source);
+      void checkSource() {
+        if (_origin?.isCurrent == false) {
+          throw StateError('The viewed source is unavailable.');
+        }
       }
 
+      void progress(int bytes, int total) {
+        if (!cancelled()) setState(() => _searchBytesScanned = bytes);
+      }
+
+      final result = textMode
+          ? await searchViewerText(
+              source,
+              query,
+              encoding: encoding!,
+              caseSensitive: _matchCase,
+              skipBom: _encodingOverride == null,
+              maximumOffsets: _kSearchMaxMatches,
+              startOffset: startOffset,
+              startTextOffset: startTextOffset,
+              skipMatches: skipMatches,
+              isCancelled: cancelled,
+              checkSource: checkSource,
+              onProgress: progress,
+            )
+          : await searchViewerBytes(
+              source,
+              pattern!,
+              maximumOffsets: _kSearchMaxMatches,
+              startOffset: startOffset,
+              skipMatches: skipMatches,
+              isCancelled: cancelled,
+              checkSource: checkSource,
+              onProgress: progress,
+            );
+      if (cancelled()) return;
+      final characterOffsets = textMode && !source.isStreamed;
+      final found = characterOffsets ? result.textOffsets : result.offsets;
+      final ends = characterOffsets ? result.textEndOffsets : result.endOffsets;
+      final total = startOffset == 0
+          ? result.totalMatches
+          : matchBase + result.totalMatches;
       setState(() {
         _matches = found;
-        _matchIndex = found.isEmpty ? -1 : 0;
-        _searchNote = _isStreamed
-            ? context.commanderTr("Searched first {0}", [
-                formatBytes(_kStreamSearchCap),
+        _matchEnds = ends;
+        _matchIndex = found.isEmpty
+            ? -1
+            : selectLast
+            ? found.length - 1
+            : 0;
+        _matchBase = matchBase;
+        _totalMatches = total;
+        _nextSearchOffset = result.nextOffset;
+        _nextTextOffset = result.nextTextOffset;
+        _searchNote = total > found.length && found.isNotEmpty
+            ? context.commanderTr("Showing matches {0}–{1} of {2}", [
+                matchBase + 1,
+                matchBase + found.length,
+                total,
               ])
-            : null;
-        _cachedSafeMatchIndex = null;
-        _cachedSafeMatchBinary = null;
-        _cachedSafeMatchOffset = null;
-        _matchHighlightStart = null;
-        _matchHighlightEnd = null;
+            : context.commanderTr("Searched entire file ({0})", [
+                formatBytes(source.size),
+              ]);
       });
       if (_matchIndex >= 0) _navigateToMatch();
-      return;
+    } on ViewerSearchCancelled {
+      // The action that invalidated this scan has already cleared its results.
+    } catch (error) {
+      if (mounted && generation == _searchGeneration) {
+        setState(() {
+          _resetSearchResults(cancel: false);
+          _searchNote = '$error';
+        });
+      }
+    } finally {
+      if (mounted && generation == _searchGeneration) {
+        setState(() => _searching = false);
+      }
     }
-
-    _isByteSearch = false;
-    _searchBytes = null;
-    final text = _ensureText();
-    final haystack = text.toLowerCase();
-    final needle = query.toLowerCase();
-    final found = <int>[];
-    var from = 0;
-    while (found.length < _kSearchMaxMatches) {
-      final at = haystack.indexOf(needle, from);
-      if (at < 0) break;
-      found.add(at);
-      from = at + 1;
-    }
-
-    setState(() {
-      _matches = found;
-      _matchIndex = found.isEmpty ? -1 : 0;
-      _searchNote = null;
-      _matchHighlightStart = null;
-      _matchHighlightEnd = null;
-    });
-    if (_matchIndex >= 0) _navigateToMatch();
   }
 
   Uint8List _patternFor(String query) {
@@ -1404,47 +1469,47 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     return Uint8List.fromList(utf8.encode(query));
   }
 
-  List<int> _scanSource(Uint8List pattern) {
-    final source = _source;
-    final out = <int>[];
-    if (source == null) return out;
-    final limit = source.size < _kStreamSearchCap
-        ? source.size
-        : _kStreamSearchCap;
-    const chunk = 1 << 20;
-    var position = 0;
-    while (position < limit && out.length < _kSearchMaxMatches) {
-      final remaining = limit - position;
-      final readLength = remaining > chunk + pattern.length - 1
-          ? chunk + pattern.length - 1
-          : remaining;
-      if (readLength <= 0) break;
-      final data = source.readSync(position, readLength);
-      if (data.isEmpty) break;
-      final hits = InternalViewerService.findBytes(
-        data,
-        pattern,
-        maxMatches: _kSearchMaxMatches - out.length,
-      );
-      for (final hit in hits) {
-        final absolute = position + hit;
-        if (absolute >= limit) continue;
-        // Skip matches re-found in the previous chunk's overlap tail.
-        if (out.isNotEmpty && absolute <= out.last) continue;
-        out.add(absolute);
-      }
-      position += chunk;
-    }
-    return out;
-  }
-
   void _gotoMatch(int step) {
-    if (_matches.isEmpty) return;
-    var next = _matchIndex + step;
-    if (next < 0) next = _matches.length - 1;
-    if (next >= _matches.length) next = 0;
-    setState(() => _matchIndex = next);
-    _navigateToMatch();
+    if (_searching || _matches.isEmpty) return;
+    final next = _matchIndex + step;
+    if (next >= 0 && next < _matches.length) {
+      setState(() => _matchIndex = next);
+      _navigateToMatch();
+      return;
+    }
+    if (_totalMatches <= _matches.length) {
+      setState(() => _matchIndex = next < 0 ? _matches.length - 1 : 0);
+      _navigateToMatch();
+      return;
+    }
+    if (step > 0 &&
+        _matchBase + _matches.length < _totalMatches &&
+        _nextSearchOffset != null) {
+      unawaited(
+        _runSearch(
+          _searchController.text,
+          startOffset: _nextSearchOffset!,
+          startTextOffset: _nextTextOffset ?? 0,
+          matchBase: _matchBase + _matches.length,
+        ),
+      );
+      return;
+    }
+    // Previous/last pages rescan with a bounded result index instead of keeping
+    // every earlier match in memory. Forward pages resume at their exact cursor.
+    final base = step > 0
+        ? 0
+        : _matchBase > 0
+        ? (_matchBase - _kSearchMaxMatches).clamp(0, _totalMatches)
+        : ((_totalMatches - 1) ~/ _kSearchMaxMatches) * _kSearchMaxMatches;
+    unawaited(
+      _runSearch(
+        _searchController.text,
+        skipMatches: base,
+        matchBase: base,
+        selectLast: step < 0,
+      ),
+    );
   }
 
   void _navigateToMatch() {
@@ -1452,7 +1517,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     final offset = _matches[_matchIndex];
 
     if (_isByteSearch) {
-      final end = offset + (_searchBytes?.length ?? 1);
+      final end = _matchEnds.length > _matchIndex
+          ? _matchEnds[_matchIndex]
+          : offset + 1;
       setState(() {
         _matchHighlightStart = offset;
         _matchHighlightEnd = end;
@@ -1470,7 +1537,10 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       return;
     }
     if (_isStreamed) {
-      setState(() => _streamScrollTo = offset);
+      setState(() {
+        _streamScrollTo = offset;
+        _streamScrollRequest++;
+      });
       return;
     }
 
@@ -1513,6 +1583,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   // ---------------------------------------------------------------------------
 
   void _reload({ViewerMode? preferredMode}) {
+    _resetSearchResults();
     _tailTimer?.cancel();
     _tailEnabled = false;
     _tailService = null;
@@ -1555,6 +1626,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   }
 
   void _toggleTail() {
+    _resetSearchResults();
     if (_tailEnabled) {
       _reload();
       return;
@@ -1936,6 +2008,14 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                                 child: Text(context.commanderTr("UTF-16 BE")),
                               ),
                               PopupMenuItem(
+                                value: 'utf32le',
+                                child: Text(context.commanderTr("UTF-32 LE")),
+                              ),
+                              PopupMenuItem(
+                                value: 'utf32be',
+                                child: Text(context.commanderTr("UTF-32 BE")),
+                              ),
+                              PopupMenuItem(
                                 value: 'latin1',
                                 child: Text(context.commanderTr("Latin-1")),
                               ),
@@ -2244,8 +2324,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   }
 
   Widget _inlineSearch(ThemeData theme) {
-    final total = _matches.length;
-    final position = _matchIndex >= 0 ? '${_matchIndex + 1}' : '0';
+    final total = _totalMatches;
+    final position = _matchIndex >= 0 ? '${_matchBase + _matchIndex + 1}' : '0';
     return SizedBox(
       width: math.min(340, MediaQuery.sizeOf(context).width),
       child: Padding(
@@ -2254,6 +2334,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           children: [
             Expanded(
               child: TextField(
+                key: const ValueKey('viewer-search-input'),
                 controller: _searchController,
                 focusNode: _searchFocus,
                 style: const TextStyle(fontSize: 13),
@@ -2263,7 +2344,11 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                       ? context.commanderTr(
                           "Hex bytes (e.g. DE AD BE EF) or text",
                         )
-                      : context.commanderTr("Search text or 0x… bytes"),
+                      : context.commanderTr(
+                          _mode == ViewerMode.text
+                              ? "Search text"
+                              : "Search text or 0x… bytes",
+                        ),
                   border: const OutlineInputBorder(),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 8,
@@ -2274,6 +2359,18 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                 onSubmitted: _onSearchSubmitted,
               ),
             ),
+            if (_mode == ViewerMode.text)
+              IconButton(
+                key: const ValueKey('viewer-match-case'),
+                tooltip: context.commanderTr("Match case"),
+                isSelected: _matchCase,
+                icon: const Icon(Icons.text_fields, size: 18),
+                visualDensity: VisualDensity.compact,
+                onPressed: () {
+                  setState(() => _matchCase = !_matchCase);
+                  _runSearch(_searchController.text);
+                },
+              ),
             const SizedBox(width: 4),
             Text(
               '$position/$total',
@@ -2282,10 +2379,22 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
+            if (_searching)
+              IconButton(
+                tooltip: context.commanderTr("Stop search"),
+                icon: const Icon(Icons.stop_circle_outlined, size: 18),
+                onPressed: () => setState(() {
+                  _resetSearchResults();
+                  _searchNote = context.commanderTr("Search cancelled");
+                }),
+                visualDensity: VisualDensity.compact,
+              ),
             IconButton(
               tooltip: context.commanderTr("Previous match (Shift+F3)"),
               icon: const Icon(Icons.keyboard_arrow_up, size: 18),
-              onPressed: total == 0 ? null : () => _gotoMatch(-1),
+              onPressed: _searching || _matches.isEmpty
+                  ? null
+                  : () => _gotoMatch(-1),
               visualDensity: VisualDensity.compact,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
@@ -2293,7 +2402,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
             IconButton(
               tooltip: context.commanderTr("Next match (F3)"),
               icon: const Icon(Icons.keyboard_arrow_down, size: 18),
-              onPressed: total == 0 ? null : () => _gotoMatch(1),
+              onPressed: _searching || _matches.isEmpty
+                  ? null
+                  : () => _gotoMatch(1),
               visualDensity: VisualDensity.compact,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
@@ -2386,11 +2497,13 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         child: StreamingSafeView(
           source: source,
           rawText: true,
+          encoding: viewerSourceEncoding(source, override: _encodingOverride),
           fontScale: _zoom,
           controller: _vScroll,
           matchStart: _isByteSearch ? _matchHighlightStart : null,
           matchEnd: _isByteSearch ? _matchHighlightEnd : null,
           scrollToByte: _streamScrollTo,
+          scrollRequest: _streamScrollRequest,
         ),
       );
     }
@@ -2450,6 +2563,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           matchStart: _isByteSearch ? _matchHighlightStart : null,
           matchEnd: _isByteSearch ? _matchHighlightEnd : null,
           scrollToByte: _streamScrollTo,
+          scrollRequest: _streamScrollRequest,
         ),
       );
     }
@@ -2506,6 +2620,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         return StreamingSafeView(
           source: source,
           rawText: true,
+          encoding: viewerSourceEncoding(source, override: _encodingOverride),
           fontScale: _zoom,
           controller: _vScroll,
         );
@@ -3083,9 +3198,15 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
 
   String? get _searchStatusText {
     if (!_searchOpen && _matches.isEmpty) return null;
+    if (_searching) {
+      return context.commanderTr("Searching {0} of {1}", [
+        formatBytes(_searchBytesScanned),
+        formatBytes(_dataSize),
+      ]);
+    }
     final base = _matches.isEmpty
         ? context.commanderTr("No matches")
-        : '${_matchIndex + 1}/${_matches.length}';
+        : '${_matchBase + _matchIndex + 1}/$_totalMatches';
     if (_searchNote == null) return base;
     return '$base (${context.commanderTr(_searchNote!)})';
   }
@@ -3102,8 +3223,10 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     final offset = _matches[_matchIndex];
     final line = _lineIndexOfOffset(starts, offset);
     final local = offset - starts[line];
-    final length = _searchController.text.trim().length;
-    return _MatchSpan(line, local, local + (length < 1 ? 1 : length));
+    final end = _matchEnds.length > _matchIndex
+        ? _matchEnds[_matchIndex]
+        : offset + 1;
+    return _MatchSpan(line, local, local + end - offset);
   }
 
   _MatchSpan? _safeMatchSpan(bool binary) {

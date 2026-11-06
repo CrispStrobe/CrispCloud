@@ -14,6 +14,7 @@ import '../services/log_service.dart';
 import '../services/file_comparison_service.dart';
 import '../services/file_operation_backend.dart';
 import '../services/file_operation_service.dart';
+import '../services/editor_document.dart';
 export '../services/file_comparison_service.dart' show DiffLine, DiffType;
 
 /// Show a diff dialog comparing two raw text strings.
@@ -76,8 +77,10 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
   static const _log = Log('DiffViewer');
   final _scroll = ScrollController();
   final _merged = TextEditingController();
+  final _binaryAddress = TextEditingController(text: '0');
   FileOperationBackend? _leftSource;
   FileOperationBackend? _rightSource;
+  FileItem? _leftVersion, _rightVersion;
   PanelFileOrigin? _leftOrigin;
   PanelFileOrigin? _writeOrigin;
   bool _swapped = false;
@@ -88,6 +91,12 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
   MergeDocumentSession? _leftDocument;
   MergeDocumentSession? _rightDocument;
   BinaryComparison? _binaryResult;
+  BinaryComparisonSession? _binarySession;
+  BinaryComparisonWindow? _binaryWindow;
+  BinaryDifferenceRange? _binaryRange;
+  int _binaryRangeIndex = 0;
+  bool _binaryBusy = false;
+  EditorEncoding? _leftEncoding, _rightEncoding;
   List<DiffLine> _rows = [];
   List<DiffHunk> _hunks = [];
   int _hunkIndex = 0;
@@ -125,6 +134,12 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
       _cancel = false;
       _error = null;
       _comparedBytes = 0;
+      _binaryResult = null;
+      _binarySession = null;
+      _binaryWindow = null;
+      _binaryRange = null;
+      _rows = [];
+      _hunks = [];
     });
     try {
       _leftOrigin ??= ref
@@ -136,26 +151,51 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
           .read(panelProvider(_rightSide))
           .originForOperation(_rightFile);
       if (_binary) {
-        _binaryResult = await compareBinaryFiles(
+        var lastProgress = 0;
+        _binarySession = await BinaryComparisonSession.open(
           _leftSource!,
-          _leftFile,
+          _leftVersion ?? _leftFile,
           _rightSource!,
-          _rightFile,
+          _rightVersion ?? _rightFile,
           isCancelled: () =>
               _cancel || !_leftSource!.isCurrent || !_rightSource!.isCurrent,
           onProgress: (bytes) {
-            if (mounted) setState(() => _comparedBytes = bytes);
+            if (mounted && bytes - lastProgress >= 256 * 1024) {
+              lastProgress = bytes;
+              setState(() => _comparedBytes = bytes);
+            }
           },
         );
+        _binaryResult = _binarySession!.result;
+        _binaryRangeIndex = 0;
+        if (_binaryResult!.rangeCount > 0) {
+          _binaryRange = await _binarySession!.difference(
+            0,
+            isCancelled: () => _cancel || !mounted,
+          );
+        }
+        _binaryWindow = await _binarySession!.window(
+          ((_binaryRange?.start ?? 0) ~/ 16) * 16,
+          isCancelled: () => _cancel || !mounted,
+        );
+        _binaryAddress.text = _binaryWindow!.offset.toString();
       } else {
+        _leftDocument = null;
+        _rightDocument = null;
         _leftDocument = await MergeDocumentSession.open(
           _leftSource!,
-          _leftFile,
+          _leftVersion ?? _leftFile,
+          encodingOverride: _leftEncoding,
+          isCancelled: () => _cancel || !mounted,
         );
         _rightDocument = await MergeDocumentSession.open(
           _rightSource!,
-          _rightFile,
+          _rightVersion ?? _rightFile,
+          encodingOverride: _rightEncoding,
+          isCancelled: () => _cancel || !mounted,
         );
+        _leftVersion = _leftDocument!.file;
+        _rightVersion = _rightDocument!.file;
         _merged.text = _rightDocument!.document.text;
         _dirty = false;
         _recompute();
@@ -167,6 +207,101 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
       if (mounted) setState(() => _loading = false);
     }
   }
+
+  Future<void> _navigateBinary({int? difference, int? offset}) async {
+    final session = _binarySession;
+    if (session == null || _loading || _binaryBusy) return;
+    setState(() {
+      _binaryBusy = true;
+      _cancel = false;
+      _error = null;
+    });
+    try {
+      var range = _binaryRange;
+      var rangeIndex = _binaryRangeIndex;
+      if (difference != null) {
+        range = await session.difference(
+          difference,
+          isCancelled: () => _cancel || !mounted,
+        );
+        rangeIndex = difference;
+        offset = (range.start ~/ 16) * 16;
+      }
+      final window = await session.window(
+        offset ?? 0,
+        isCancelled: () => _cancel || !mounted,
+      );
+      if (!mounted) return;
+      setState(() {
+        _binaryRange = range;
+        _binaryRangeIndex = rangeIndex;
+        _binaryWindow = window;
+        _binaryAddress.text = window.offset.toString();
+      });
+    } catch (error) {
+      if (mounted) setState(() => _error = error.toString());
+    } finally {
+      if (mounted) setState(() => _binaryBusy = false);
+    }
+  }
+
+  void _goToByte(String value) {
+    final input = value.trim();
+    final offset = input.toLowerCase().startsWith('0x')
+        ? int.tryParse(input.substring(2), radix: 16)
+        : int.tryParse(input);
+    if (offset == null ||
+        offset < 0 ||
+        offset >= (_binarySession?.totalBytes ?? 0)) {
+      setState(
+        () => _error = context.commanderTr(
+          'Enter a byte offset inside the file (decimal or 0x hexadecimal).',
+        ),
+      );
+      return;
+    }
+    _navigateBinary(offset: offset);
+  }
+
+  Widget _encodingPicker(bool left) => SizedBox(
+    width: 190,
+    child: DropdownButtonFormField<String>(
+      key: ValueKey(
+        'diff-${left ? "left" : "right"}-${(left ? _leftEncoding : _rightEncoding)?.name ?? "auto"}',
+      ),
+      initialValue: (left ? _leftEncoding : _rightEncoding)?.name ?? 'auto',
+      isExpanded: true,
+      decoration: InputDecoration(
+        labelText: context.commanderTr(
+          left ? 'Left encoding' : 'Right encoding',
+        ),
+      ),
+      items: [
+        DropdownMenuItem(
+          value: 'auto',
+          child: Text(context.commanderTr('Auto-detect')),
+        ),
+        for (final encoding in EditorEncoding.values)
+          DropdownMenuItem(value: encoding.name, child: Text(encoding.label)),
+      ],
+      onChanged: _loading || _dirty
+          ? null
+          : (value) {
+              if (value == null) return;
+              setState(() {
+                final encoding = value == 'auto'
+                    ? null
+                    : EditorEncoding.values.byName(value);
+                if (left) {
+                  _leftEncoding = encoding;
+                } else {
+                  _rightEncoding = encoding;
+                }
+              });
+              _loadFiles();
+            },
+    ),
+  );
 
   void _recompute() {
     _rows = compareTextLines(
@@ -220,6 +355,7 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
     });
     try {
       await _rightDocument!.save(_merged.text);
+      _rightVersion = _rightDocument!.file;
       if (!mounted) return;
       setState(() {
         _dirty = false;
@@ -234,7 +370,7 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
   }
 
   Future<void> _close() async {
-    if (_loading) {
+    if (_loading || _binaryBusy) {
       setState(() => _cancel = true);
       return;
     }
@@ -262,7 +398,7 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
 
   @override
   Widget build(BuildContext context) => PopScope(
-    canPop: !_loading && !_dirty,
+    canPop: !_loading && !_binaryBusy && !_dirty,
     child: Dialog(
       child: SizedBox(
         width: MediaQuery.sizeOf(context).width * .9,
@@ -283,10 +419,12 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
                   ),
                   IconButton(
                     onPressed: _close,
-                    tooltip: _loading
+                    tooltip: _loading || _binaryBusy
                         ? context.commanderTr("Stop comparison")
                         : context.commanderTr("Close"),
-                    icon: Icon(_loading ? Icons.stop : Icons.close),
+                    icon: Icon(
+                      _loading || _binaryBusy ? Icons.stop : Icons.close,
+                    ),
                   ),
                 ],
               ),
@@ -307,6 +445,7 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
                       ),
                       onPressed:
                           _loading ||
+                              _binaryBusy ||
                               _dirty ||
                               _leftSource == null ||
                               _rightSource == null
@@ -320,6 +459,12 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
                                 final previousLeftOrigin = _leftOrigin;
                                 _leftOrigin = _writeOrigin;
                                 _writeOrigin = previousLeftOrigin;
+                                final previousVersion = _leftVersion;
+                                _leftVersion = _rightVersion;
+                                _rightVersion = previousVersion;
+                                final previousEncoding = _leftEncoding;
+                                _leftEncoding = _rightEncoding;
+                                _rightEncoding = previousEncoding;
                                 _leftDocument = null;
                                 _rightDocument = null;
                                 _rows = [];
@@ -332,7 +477,7 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
                     FilterChip(
                       label: Text(context.commanderTr("Binary")),
                       selected: _binary,
-                      onSelected: _loading || _dirty
+                      onSelected: _loading || _binaryBusy || _dirty
                           ? null
                           : (value) {
                               setState(() => _binary = value);
@@ -340,10 +485,15 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
                             },
                     ),
                     if (!_binary) ...[
+                      _encodingPicker(true),
+                      _encodingPicker(false),
                       FilterChip(
                         label: Text(context.commanderTr("Ignore whitespace")),
                         selected: _ignoreWhitespace,
-                        onSelected: _loading || _leftDocument == null
+                        onSelected:
+                            _loading ||
+                                _leftDocument == null ||
+                                _rightDocument == null
                             ? null
                             : (value) => setState(() {
                                 _ignoreWhitespace = value;
@@ -353,7 +503,10 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
                       FilterChip(
                         label: Text(context.commanderTr("Ignore case")),
                         selected: _ignoreCase,
-                        onSelected: _loading || _leftDocument == null
+                        onSelected:
+                            _loading ||
+                                _leftDocument == null ||
+                                _rightDocument == null
                             ? null
                             : (value) => setState(() {
                                 _ignoreCase = value;
@@ -390,7 +543,7 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
                           context.commanderTr("Edit merged right file"),
                         ),
                         selected: _edit,
-                        onSelected: _loading
+                        onSelected: _loading || _rightDocument == null
                             ? null
                             : (value) => setState(() {
                                 _edit = value;
@@ -419,7 +572,7 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
                   style: TextStyle(color: Theme.of(context).colorScheme.error),
                 ),
               ),
-            if (_loading) ...[
+            if (_loading || _binaryBusy) ...[
               const LinearProgressIndicator(),
               if (_binary)
                 Text(
@@ -441,27 +594,270 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
 
   Widget _binaryView() {
     final result = _binaryResult;
-    if (result == null) {
-      return Center(child: Text(context.commanderTr("No comparison result.")));
+    final window = _binaryWindow;
+    final session = _binarySession;
+    if (result == null || window == null || session == null) {
+      return Center(child: Text(context.commanderTr('No comparison result.')));
     }
-    return Center(
-      child: SelectableText(
-        result.equal
-            ? context.commanderTr(
-                "Files are byte-for-byte identical ({0} bytes).",
-                [result.leftBytes],
-              )
-            : context.commanderTr(
-                "Files differ in {0} byte positions.\nFirst difference: byte {1} (0x{2}).\nLeft: {3} bytes • Right: {4} bytes.\nComparison streams both files without loading the entire contents.",
-                [
-                  result.differingBytes,
-                  result.firstDifference,
-                  result.firstDifference!.toRadixString(16),
-                  result.leftBytes,
-                  result.rightBytes,
+    final disabled = _loading || _binaryBusy;
+    final scale = MediaQuery.textScalerOf(context).scale(12) / 12;
+    final range = _binaryRange;
+    return Column(
+      children: [
+        ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(context).height * .28,
+          ),
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Column(
+                children: [
+                  SelectableText(
+                    result.equal
+                        ? context.commanderTr(
+                            'Files are byte-for-byte identical ({0} bytes).',
+                            [result.leftBytes],
+                          )
+                        : context.commanderTr(
+                            '{0} differing bytes in {1} ranges',
+                            [result.differingBytes, result.rangeCount],
+                          ),
+                  ),
+                  if (range != null)
+                    Text(
+                      context.commanderTr(
+                        'Difference {0} / {1}: bytes {2}–{3}',
+                        [
+                          _binaryRangeIndex + 1,
+                          result.rangeCount,
+                          range.start,
+                          range.end - 1,
+                        ],
+                      ),
+                    ),
+                  Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 4,
+                    children: [
+                      IconButton(
+                        tooltip: context.commanderTr('First difference'),
+                        icon: const Icon(Icons.first_page),
+                        onPressed:
+                            disabled ||
+                                result.rangeCount == 0 ||
+                                _binaryRangeIndex == 0
+                            ? null
+                            : () => _navigateBinary(difference: 0),
+                      ),
+                      IconButton(
+                        tooltip: context.commanderTr('Previous difference'),
+                        icon: const Icon(Icons.arrow_upward),
+                        onPressed:
+                            disabled ||
+                                result.rangeCount == 0 ||
+                                _binaryRangeIndex == 0
+                            ? null
+                            : () => _navigateBinary(
+                                difference: _binaryRangeIndex - 1,
+                              ),
+                      ),
+                      IconButton(
+                        tooltip: context.commanderTr('Next difference'),
+                        icon: const Icon(Icons.arrow_downward),
+                        onPressed:
+                            disabled ||
+                                _binaryRangeIndex + 1 >= result.rangeCount
+                            ? null
+                            : () => _navigateBinary(
+                                difference: _binaryRangeIndex + 1,
+                              ),
+                      ),
+                      IconButton(
+                        tooltip: context.commanderTr('Last difference'),
+                        icon: const Icon(Icons.last_page),
+                        onPressed:
+                            disabled ||
+                                _binaryRangeIndex + 1 >= result.rangeCount
+                            ? null
+                            : () => _navigateBinary(
+                                difference: result.rangeCount - 1,
+                              ),
+                      ),
+                      SizedBox(
+                        width: 175,
+                        child: TextField(
+                          controller: _binaryAddress,
+                          enabled: !disabled,
+                          decoration: InputDecoration(
+                            labelText: context.commanderTr('Go to byte'),
+                            hintText: '0x1000',
+                          ),
+                          onSubmitted: _goToByte,
+                          textInputAction: TextInputAction.go,
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: context.commanderTr('Previous bytes'),
+                        icon: const Icon(Icons.chevron_left),
+                        onPressed: disabled || window.offset == 0
+                            ? null
+                            : () => _navigateBinary(
+                                offset: (window.offset - 1024).clamp(
+                                  0,
+                                  session.totalBytes,
+                                ),
+                              ),
+                      ),
+                      IconButton(
+                        tooltip: context.commanderTr('Next bytes'),
+                        icon: const Icon(Icons.chevron_right),
+                        onPressed:
+                            disabled ||
+                                window.offset + window.length >=
+                                    session.totalBytes
+                            ? null
+                            : () => _navigateBinary(
+                                offset: window.offset + window.length,
+                              ),
+                      ),
+                      Text(
+                        context.commanderTr('Bytes {0}–{1} of {2}', [
+                          window.offset,
+                          window.offset + window.length,
+                          session.totalBytes,
+                        ]),
+                      ),
+                    ],
+                  ),
                 ],
               ),
+            ),
+          ),
+        ),
+        Expanded(
+          child: Directionality(
+            textDirection: TextDirection.ltr,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: SizedBox(
+                width: 1160 * scale,
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: 140 * scale,
+                          child: Text(context.commanderTr('Offset')),
+                        ),
+                        Expanded(
+                          child: Text(
+                            _leftFile.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Expanded(
+                          child: Text(
+                            _rightFile.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Divider(height: 8),
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: (window.length + 15) ~/ 16,
+                        itemExtent: 28 * scale,
+                        itemBuilder: (context, row) {
+                          final start = row * 16;
+                          return Row(
+                            key: ValueKey(
+                              'binary-row-${window.offset + start}',
+                            ),
+                            children: [
+                              SizedBox(
+                                width: 140 * scale,
+                                child: Text(
+                                  (window.offset + start)
+                                      .toRadixString(16)
+                                      .padLeft(12, '0'),
+                                  style: const TextStyle(
+                                    fontFamily: 'monospace',
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: _hexBytes(
+                                  window.left,
+                                  window.right,
+                                  start,
+                                ),
+                              ),
+                              Expanded(
+                                child: _hexBytes(
+                                  window.right,
+                                  window.left,
+                                  start,
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _hexBytes(List<int> bytes, List<int> other, int start) {
+    final colors = Theme.of(context).colorScheme;
+    TextStyle? highlight(int index) =>
+        (index < bytes.length || index < other.length) &&
+            (index >= bytes.length ||
+                index >= other.length ||
+                bytes[index] != other[index])
+        ? TextStyle(
+            backgroundColor: colors.errorContainer,
+            color: colors.onErrorContainer,
+          )
+        : null;
+    return SelectableText.rich(
+      TextSpan(
+        style: TextStyle(
+          fontFamily: 'monospace',
+          fontSize: 12,
+          color: colors.onSurface,
+        ),
+        children: [
+          for (var i = start; i < start + 16; i++)
+            TextSpan(
+              text:
+                  '${i < bytes.length ? bytes[i].toRadixString(16).padLeft(2, '0') : '--'} ',
+              style: highlight(i),
+            ),
+          const TextSpan(text: '  '),
+          for (var i = start; i < start + 16; i++)
+            TextSpan(
+              text: i >= bytes.length
+                  ? ' '
+                  : bytes[i] >= 32 && bytes[i] < 127
+                  ? String.fromCharCode(bytes[i])
+                  : '.',
+              style: highlight(i),
+            ),
+        ],
       ),
+      maxLines: 1,
     );
   }
 
@@ -530,6 +926,7 @@ class _DiffViewerDialogState extends ConsumerState<_DiffViewerDialog> {
     _cancel = true;
     _scroll.dispose();
     _merged.dispose();
+    _binaryAddress.dispose();
     super.dispose();
   }
 }

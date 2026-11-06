@@ -50,6 +50,7 @@ class EditorDocument {
     this.originalLineEndings,
     this.originalNormalizedText,
     this.lineEndingPolicy = EditorLineEndingPolicy.preserve,
+    this.writeBom,
   });
 
   final String text;
@@ -58,6 +59,7 @@ class EditorDocument {
   final EditorLineEndingPolicy lineEndingPolicy;
   final bool hadMixedLineEndings;
   final bool hadBom;
+  final bool? writeBom;
 
   // Retain the public names from the first checkpoint, but keep this map in
   // sync with this snapshot's text. Never keep mapping new edits to load-time
@@ -67,10 +69,11 @@ class EditorDocument {
 
   bool get hasFinalNewline => text.endsWith('\n');
   bool get writesBom =>
-      encoding == EditorEncoding.utf8Bom ||
-      (encoding != EditorEncoding.utf8 &&
-          encoding != EditorEncoding.latin1 &&
-          hadBom);
+      writeBom ??
+      (encoding == EditorEncoding.utf8Bom ||
+          (encoding != EditorEncoding.utf8 &&
+              encoding != EditorEncoding.latin1 &&
+              hadBom));
   List<EditorLineEnding> get lineEndings =>
       originalLineEndings ??
       List.filled(_newlines(text), lineEnding, growable: false);
@@ -82,71 +85,33 @@ class EditorDocument {
   /// BOM-less UTF-16/32 is deliberately NOT guessed. Pass [encoding] explicitly
   /// to reopen a known encoding. A malformed BOM-marked file is rejected, never
   /// decoded with replacements and subsequently written over the original.
-  factory EditorDocument.decode(List<int> bytes, {EditorEncoding? encoding}) {
-    if (bytes.any((byte) => byte < 0 || byte > 255)) {
-      throw RangeError('File bytes must be in 0..255.');
-    }
+  factory EditorDocument.decode(
+    List<int> bytes, {
+    EditorEncoding? encoding,
+    EditorEncoding? encodingOverride,
+  }) {
     final data = bytes is Uint8List ? bytes : Uint8List.fromList(bytes);
-    final bom = _bom(data);
-    final selected = encoding ?? bom?.$1 ?? _unmarkedEncoding(data);
-    final skip = encoding != null
-        ? _explicitBomLength(data, selected)
-        : bom != null && _sameEncoding(selected, bom.$1)
-        ? bom.$2
-        : 0;
-    final payload = Uint8List.sublistView(data, skip);
-    String decoded;
+    final requested = encodingOverride ?? encoding;
+    final detection = requested == null
+        ? _detectEncoding(data)
+        : _explicitEncoding(data, requested);
+    late final String decoded;
     try {
-      switch (selected) {
-        case EditorEncoding.utf8:
-        case EditorEncoding.utf8Bom:
-          decoded = utf8.decode(payload, allowMalformed: false);
-        case EditorEncoding.latin1:
-          decoded = latin1.decode(payload);
-        case EditorEncoding.utf16le:
-        case EditorEncoding.utf16be:
-          if (payload.length.isOdd)
-            throw const FormatException('Truncated UTF-16 code unit.');
-          final view = ByteData.sublistView(payload);
-          final endian = selected == EditorEncoding.utf16le
-              ? Endian.little
-              : Endian.big;
-          decoded = String.fromCharCodes([
-            for (var i = 0; i < payload.length; i += 2)
-              view.getUint16(i, endian),
-          ]);
-          _validateUnicode(decoded);
-        case EditorEncoding.utf32le:
-        case EditorEncoding.utf32be:
-          if (payload.length % 4 != 0)
-            throw const FormatException('Truncated UTF-32 code point.');
-          final view = ByteData.sublistView(payload);
-          final endian = selected == EditorEncoding.utf32le
-              ? Endian.little
-              : Endian.big;
-          final points = <int>[];
-          for (var i = 0; i < payload.length; i += 4) {
-            final point = view.getUint32(i, endian);
-            if (point > 0x10ffff || (point >= 0xd800 && point <= 0xdfff)) {
-              throw const FormatException('Invalid UTF-32 code point.');
-            }
-            points.add(point);
-          }
-          decoded = String.fromCharCodes(points);
-      }
+      decoded = detection.decode(data);
     } on FormatException catch (error) {
       throw EditorEncodingException(
-        selected,
-        'Invalid ${selected.label}: ${error.message} Open in Hex, or reopen with the correct encoding; the original has not been changed.',
+        detection.encoding,
+        'Invalid ${detection.encoding.label}: ${error.message} Open in Hex, or reopen with the correct encoding; the original has not been changed.',
       );
     }
     final parsed = _parse(decoded);
     return EditorDocument(
       text: parsed.$1,
-      encoding: selected,
+      encoding: detection.encoding,
       lineEnding: _dominant(parsed.$2),
       hadMixedLineEndings: parsed.$2.toSet().length > 1,
-      hadBom: skip != 0,
+      hadBom: detection.bomLength > 0,
+      writeBom: detection.bomLength > 0,
       originalNormalizedText: parsed.$1,
       originalLineEndings: List.unmodifiable(parsed.$2),
     );
@@ -162,6 +127,7 @@ class EditorDocument {
     bool? hadMixedLineEndings,
     bool? hadBom,
     EditorLineEndingPolicy? lineEndingPolicy,
+    bool? writeBom,
   }) {
     final nextText = _parse(text ?? this.text).$1;
     final preference = lineEnding ?? this.lineEnding;
@@ -190,6 +156,11 @@ class EditorDocument {
               : this.hadBom),
       originalNormalizedText: nextText,
       originalLineEndings: List.unmodifiable(map),
+      writeBom:
+          writeBom ??
+          (encoding != null && encoding != this.encoding
+              ? null
+              : this.writeBom),
     );
   }
 
@@ -460,4 +431,268 @@ int _explicitBomLength(Uint8List data, EditorEncoding encoding) {
     if (data[i] != prefix[i]) return 0;
   }
   return prefix.length;
+}
+
+class _EncodingDetection {
+  const _EncodingDetection({
+    required this.encoding,
+    required this.bomLength,
+    required this.decode,
+  });
+
+  final EditorEncoding encoding;
+  final int bomLength;
+  final String Function(Uint8List bytes) decode;
+}
+
+_EncodingDetection _explicitEncoding(Uint8List bytes, EditorEncoding encoding) {
+  final bom = switch (encoding) {
+    EditorEncoding.utf8 || EditorEncoding.utf8Bom => const [0xEF, 0xBB, 0xBF],
+    EditorEncoding.utf16le => const [0xFF, 0xFE],
+    EditorEncoding.utf16be => const [0xFE, 0xFF],
+    EditorEncoding.utf32le => const [0xFF, 0xFE, 0, 0],
+    EditorEncoding.utf32be => const [0, 0, 0xFE, 0xFF],
+    EditorEncoding.latin1 => const <int>[],
+  };
+  final length = bom.isNotEmpty && _startsWith(bytes, bom) ? bom.length : 0;
+  return _EncodingDetection(
+    encoding: encoding == EditorEncoding.utf8 && length > 0
+        ? EditorEncoding.utf8Bom
+        : encoding,
+    bomLength: length,
+    decode: (data) => switch (encoding) {
+      EditorEncoding.utf8 ||
+      EditorEncoding.utf8Bom => utf8.decode(_slice(data, length)),
+      EditorEncoding.utf16le => _decodeUtf16(
+        data,
+        littleEndian: true,
+        bomLength: length,
+      ),
+      EditorEncoding.utf16be => _decodeUtf16(
+        data,
+        littleEndian: false,
+        bomLength: length,
+      ),
+      EditorEncoding.utf32le => _decodeUtf32(
+        data,
+        littleEndian: true,
+        bomLength: length,
+      ),
+      EditorEncoding.utf32be => _decodeUtf32(
+        data,
+        littleEndian: false,
+        bomLength: length,
+      ),
+      EditorEncoding.latin1 => latin1.decode(data),
+    },
+  );
+}
+
+_EncodingDetection _detectEncoding(Uint8List bytes) {
+  if (_startsWith(bytes, const [0x00, 0x00, 0xFE, 0xFF])) {
+    return _EncodingDetection(
+      encoding: EditorEncoding.utf32be,
+      bomLength: 4,
+      decode: (data) => _decodeUtf32(data, littleEndian: false),
+    );
+  }
+  if (_startsWith(bytes, const [0xFF, 0xFE, 0x00, 0x00])) {
+    return _EncodingDetection(
+      encoding: EditorEncoding.utf32le,
+      bomLength: 4,
+      decode: (data) => _decodeUtf32(data, littleEndian: true),
+    );
+  }
+  if (_startsWith(bytes, const [0xFE, 0xFF])) {
+    return _EncodingDetection(
+      encoding: EditorEncoding.utf16be,
+      bomLength: 2,
+      decode: (data) => _decodeUtf16(data, littleEndian: false),
+    );
+  }
+  if (_startsWith(bytes, const [0xFF, 0xFE])) {
+    return _EncodingDetection(
+      encoding: EditorEncoding.utf16le,
+      bomLength: 2,
+      decode: (data) => _decodeUtf16(data, littleEndian: true),
+    );
+  }
+  if (_startsWith(bytes, const [0xEF, 0xBB, 0xBF])) {
+    return _EncodingDetection(
+      encoding: EditorEncoding.utf8Bom,
+      bomLength: 3,
+      decode: (data) => utf8.decode(_slice(data, 3)),
+    );
+  }
+  // BOM-less UTF-16 is common for legacy Windows text. Detect it
+  // conservatively by the NUL-byte pattern before treating the bytes as UTF-8.
+  if (bytes.length >= 4 && bytes.length.isEven) {
+    var evenNuls = 0;
+    var oddNuls = 0;
+    for (var i = 0; i < bytes.length; i++) {
+      if (bytes[i] == 0) {
+        if (i.isEven) {
+          evenNuls++;
+        } else {
+          oddNuls++;
+        }
+      }
+    }
+    final half = bytes.length ~/ 2;
+    if (oddNuls > half * 0.3 && evenNuls < half * 0.1) {
+      return _EncodingDetection(
+        encoding: EditorEncoding.utf16le,
+        bomLength: 0,
+        decode: (data) => _decodeUtf16(data, littleEndian: true, bomLength: 0),
+      );
+    }
+    if (evenNuls > half * 0.3 && oddNuls < half * 0.1) {
+      return _EncodingDetection(
+        encoding: EditorEncoding.utf16be,
+        bomLength: 0,
+        decode: (data) => _decodeUtf16(data, littleEndian: false, bomLength: 0),
+      );
+    }
+  }
+  try {
+    utf8.decode(bytes);
+  } on FormatException {
+    // Preserve the bytes of a legacy single-byte file instead of emitting
+    // replacement characters. Detecting Latin-1 here (rather than merely
+    // decoding with it) is what lets a save write the same bytes back.
+    return _EncodingDetection(
+      encoding: EditorEncoding.latin1,
+      bomLength: 0,
+      decode: latin1.decode,
+    );
+  }
+  return _EncodingDetection(
+    encoding: EditorEncoding.utf8,
+    bomLength: 0,
+    decode: utf8.decode,
+  );
+}
+
+bool _startsWith(Uint8List bytes, List<int> prefix) {
+  if (bytes.length < prefix.length) return false;
+  for (var i = 0; i < prefix.length; i++) {
+    if (bytes[i] != prefix[i]) return false;
+  }
+  return true;
+}
+
+Uint8List _slice(Uint8List bytes, int start) {
+  return Uint8List.sublistView(bytes, start);
+}
+
+String _decodeUtf16(
+  Uint8List bytes, {
+  required bool littleEndian,
+  int bomLength = 2,
+}) {
+  final data = _slice(bytes, bomLength);
+  if (data.length.isOdd) {
+    throw const FormatException('Incomplete UTF-16 code unit.');
+  }
+  final units = <int>[];
+  for (var i = 0; i + 1 < data.length; i += 2) {
+    units.add(
+      littleEndian
+          ? data[i] | (data[i + 1] << 8)
+          : (data[i] << 8) | data[i + 1],
+    );
+  }
+  for (var i = 0; i < units.length; i++) {
+    final unit = units[i];
+    if (unit >= 0xD800 && unit <= 0xDBFF) {
+      if (i + 1 >= units.length ||
+          units[i + 1] < 0xDC00 ||
+          units[i + 1] > 0xDFFF) {
+        throw const FormatException('Unpaired UTF-16 surrogate.');
+      }
+      i++;
+    } else if (unit >= 0xDC00 && unit <= 0xDFFF) {
+      throw const FormatException('Unpaired UTF-16 surrogate.');
+    }
+  }
+  return String.fromCharCodes(units);
+}
+
+String _decodeUtf32(
+  Uint8List bytes, {
+  required bool littleEndian,
+  int bomLength = 4,
+}) {
+  final data = _slice(bytes, bomLength);
+  if (data.length % 4 != 0) {
+    throw const FormatException('Incomplete UTF-32 code point.');
+  }
+  final runes = <int>[];
+  for (var i = 0; i + 3 < data.length; i += 4) {
+    final value = littleEndian
+        ? data[i] |
+              (data[i + 1] << 8) |
+              (data[i + 2] << 16) |
+              (data[i + 3] << 24)
+        : (data[i] << 24) |
+              (data[i + 1] << 16) |
+              (data[i + 2] << 8) |
+              data[i + 3];
+    if (!_isValidRune(value)) {
+      throw const FormatException('Invalid UTF-32 code point.');
+    }
+    runes.add(value);
+  }
+  return String.fromCharCodes(runes);
+}
+
+bool _isValidRune(int value) {
+  return value >= 0 &&
+      value <= 0x10FFFF &&
+      !(value >= 0xD800 && value <= 0xDFFF);
+}
+
+class _LineEndingCounts {
+  _LineEndingCounts(this.crlf, this.cr, this.lf);
+
+  final int crlf;
+  final int cr;
+  final int lf;
+
+  bool get isMixed {
+    var kinds = 0;
+    if (crlf > 0) kinds++;
+    if (cr > 0) kinds++;
+    if (lf > 0) kinds++;
+    return kinds > 1;
+  }
+
+  EditorLineEnding get dominant {
+    if (crlf == 0 && cr == 0 && lf == 0) return EditorLineEnding.lf;
+    // Prefer CRLF on a tie: Windows-style documents commonly mix in a few
+    // LF-only generated lines, and retaining CRLF minimizes the diff.
+    if (crlf >= lf && crlf >= cr) return EditorLineEnding.crlf;
+    if (lf >= cr) return EditorLineEnding.lf;
+    return EditorLineEnding.cr;
+  }
+}
+
+_LineEndingCounts _countLineEndings(String text) {
+  var crlf = 0;
+  var cr = 0;
+  var lf = 0;
+  for (var i = 0; i < text.length; i++) {
+    final unit = text.codeUnitAt(i);
+    if (unit == 0x0D) {
+      if (i + 1 < text.length && text.codeUnitAt(i + 1) == 0x0A) {
+        crlf++;
+        i++;
+      } else {
+        cr++;
+      }
+    } else if (unit == 0x0A) {
+      lf++;
+    }
+  }
+  return _LineEndingCounts(crlf, cr, lf);
 }

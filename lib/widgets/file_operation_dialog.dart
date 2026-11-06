@@ -37,11 +37,18 @@ Future<FileOperationPlan?> showFileOperationDialog(
   var groups = sourceGroups;
   if (groups == null && sourceOrigin == null && sourceBackend == null) {
     try {
-      groups = ref.read(panelProvider(side)).captureOperationGroups(files);
-    } catch (_) {
-      /* The single dialog displays the precise validation error. */
+      final panel = ref.read(panelProvider(side));
+      files = await panel.prepareOperationFiles(files);
+      groups = panel.captureOperationGroups(files);
+    } catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('$error')));
+      }
+      return null;
     }
   }
+  if (!context.mounted) return null;
   if (groups != null && groups.length > 1) {
     if (sourceBackend != null) {
       throw ArgumentError('A snapshot copy uses one captured source.');
@@ -180,6 +187,10 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
   final _relativeBase = TextEditingController();
   final _mask = TextEditingController(text: '*');
   final _nameMask = TextEditingController(text: '*.*');
+  final _duplicateNameTemplate = TextEditingController(
+    text: const FileOperationOptions().duplicateNameTemplate,
+  );
+  final _clientRate = TextEditingController();
   final _targetName = TextEditingController();
   final _minimumSize = TextEditingController();
   final _maximumSize = TextEditingController();
@@ -198,6 +209,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
   bool _preserveOwnership = false;
   bool _preserveXattrs = false;
   bool _preserveAcl = false;
+  bool _preserveWindowsAttributes = false;
   FileOperationControl _control = FileOperationControl();
   final _origins = <PanelSide, PanelFileOrigin>{};
   late final PanelNotifier _panel;
@@ -297,6 +309,8 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     _mask.dispose();
     for (final controller in [
       _nameMask,
+      _duplicateNameTemplate,
+      _clientRate,
       _targetName,
       _minimumSize,
       _maximumSize,
@@ -383,10 +397,12 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     preserveOwnership: _preserveOwnership,
     preserveExtendedAttributes: _preserveXattrs,
     preserveAcl: _preserveAcl,
+    preserveWindowsAttributes: _preserveWindowsAttributes,
     destinationName: _targetName.text.trim().isEmpty
         ? null
         : _targetName.text.trim(),
     destinationMask: _nameMask.text,
+    duplicateNameTemplate: _duplicateNameTemplate.text,
     minimumSize: _minimumSize.text.trim().isEmpty
         ? null
         : int.parse(_minimumSize.text.trim()),
@@ -410,6 +426,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     preferNative: _native,
     copyMethod: _copyMethod,
     preallocate: _preallocate,
+    clientBytesPerSecond: _clientRateBytes(),
     searchCriteria: _searchCriteria,
     pattern: FileSelectionPattern(
       _mask.text,
@@ -418,6 +435,25 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
       matchFullPath: _matchPath,
     ),
   );
+
+  int? _clientRateBytes() {
+    final text = _clientRate.text.trim();
+    if (text.isEmpty) return null;
+    final kibibytes = double.tryParse(text);
+    if (kibibytes == null || !kibibytes.isFinite || kibibytes <= 0) {
+      throw const FormatException(
+        'Enter a positive client streaming rate or leave it empty for unlimited.',
+      );
+    }
+    final bytes = kibibytes * 1024;
+    // Bound the conversion before round(), including on the web runtime.
+    if (bytes < 1 || bytes > FileOperationOptions.maximumClientBytesPerSecond) {
+      throw const FormatException(
+        'The client streaming rate must be between 1 byte/s and 1 TiB/s.',
+      );
+    }
+    return bytes.round();
+  }
 
   void _applyProfile(FileOperationOptions options) {
     _fileConflict = options.fileConflict;
@@ -429,6 +465,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     _preserveOwnership = options.preserveOwnership;
     _preserveXattrs = options.preserveExtendedAttributes;
     _preserveAcl = options.preserveAcl;
+    _preserveWindowsAttributes = options.preserveWindowsAttributes;
     _verify = options.verifyContents;
     _stopOnError = options.stopOnError;
     _copyLinks = options.copySymbolicLinks;
@@ -437,6 +474,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     _caseSensitive = options.pattern?.caseSensitive ?? false;
     _matchPath = options.pattern?.matchFullPath ?? false;
     _nameMask.text = options.destinationMask;
+    _duplicateNameTemplate.text = options.duplicateNameTemplate;
     _minimumSize.text = options.minimumSize?.toString() ?? '';
     _maximumSize.text = options.maximumSize?.toString() ?? '';
     _modifiedAfter.text = options.modifiedAfter?.toIso8601String() ?? '';
@@ -447,6 +485,12 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     _native = options.preferNative;
     _copyMethod = options.copyMethod;
     _preallocate = options.preallocate;
+    final rate = options.clientBytesPerSecond;
+    _clientRate.text = rate == null
+        ? ''
+        : rate % 1024 == 0
+        ? (rate ~/ 1024).toString()
+        : (rate / 1024).toString();
     _searchCriteria = options.searchCriteria;
   }
 
@@ -521,6 +565,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
   Future<void> _saveProfile({bool defaults = false}) async {
     try {
       final options = _options();
+      options.validateTransferSettings();
       String? name = '@default:${widget.kind.name}';
       if (!defaults) {
         final controller = TextEditingController();
@@ -588,6 +633,17 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     final plan = _plan;
     final sourceOrigin = _sourceOrigin;
     if (plan == null || !plan.canExecute || sourceOrigin == null) return;
+    if (background &&
+        (plan.options.fileConflict == FileConflictPolicy.ask ||
+            plan.options.directoryConflict == DirectoryConflictPolicy.ask) &&
+        (!plan.source.canRecover || !plan.destination.canRecover)) {
+      setState(
+        () => _error = context.commanderTr(
+          "Background conflict review is unavailable for this storage. Choose a conflict policy or keep this dialog open.",
+        ),
+      );
+      return;
+    }
     final notifier = ref.read(transferProvider);
     final targetPanel = ref.read(panelProvider(_destinationSide!));
     setState(() {
@@ -598,6 +654,11 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
       plan,
       control: _control,
       resolveDetailedConflict: background ? null : _resolve,
+      onQueued: background
+          ? () {
+              if (mounted) Navigator.pop(context);
+            }
+          : null,
       onProgress: (entry, bytes, total) {
         if (mounted) {
           setState(() {
@@ -616,7 +677,6 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
         if (mounted) setState(() {});
       },
     );
-    if (background && mounted) Navigator.pop(context);
     try {
       await future;
       await _panel.refresh();
@@ -663,13 +723,17 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     final supportsAcl =
         (sourceBackend?.capabilities.accessControlLists ?? false) &&
         (destinationBackend?.capabilities.accessControlLists ?? false);
+    final supportsWindowsAttributes =
+        (sourceBackend?.capabilities.windowsAttributes ?? false) &&
+        (destinationBackend?.capabilities.windowsAttributes ?? false);
     final hasUnsupportedSettings =
         (_preserveTime && !supportsTime) ||
         (_copyLinks && !supportsLinks) ||
         (_preservePermissions && !supportsPermissions) ||
         (_preserveOwnership && !supportsOwnership) ||
         (_preserveXattrs && !supportsXattrs) ||
-        (_preserveAcl && !supportsAcl);
+        (_preserveAcl && !supportsAcl) ||
+        (_preserveWindowsAttributes && !supportsWindowsAttributes);
     final supportsClone =
         sourceBackend != null &&
         destinationBackend != null &&
@@ -678,6 +742,13 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     final supportsAllocation =
         destinationBackend?.capabilities.preallocate ?? false;
     final plan = _plan;
+    final asksConflicts =
+        _fileConflict == FileConflictPolicy.ask ||
+        _directoryConflict == DirectoryConflictPolicy.ask;
+    final backgroundCanWait =
+        !asksConflicts ||
+        ((sourceBackend?.canRecover ?? false) &&
+            (destinationBackend?.canRecover ?? false));
     final completed =
         plan?.entries.where((entry) => entry.completed).length ?? 0;
     final failed = plan?.entries.where((entry) => entry.failed).length ?? 0;
@@ -757,6 +828,24 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                   enabled: !_busy,
                   decoration: InputDecoration(
                     labelText: context.commanderTr("Destination directory"),
+                    border: const OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  onChanged: (_) => _change(() {}),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  key: const ValueKey('transfer-duplicate-name-template'),
+                  controller: _duplicateNameTemplate,
+                  enabled: !_busy,
+                  decoration: InputDecoration(
+                    labelText: context.commanderTr(
+                      "Keep both filename template",
+                    ),
+                    helperText: context.commanderTr(
+                      "{name} is the filename without extension; {ext} includes the dot. A {counter} or {counter:000} is required.",
+                    ),
+                    helperMaxLines: 4,
                     border: const OutlineInputBorder(),
                     isDense: true,
                   ),
@@ -1195,6 +1284,12 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                       (v) => _preserveAcl = v,
                       enabled: supportsAcl,
                     ),
+                    _toggle(
+                      context.commanderTr("Preserve Windows attributes"),
+                      _preserveWindowsAttributes,
+                      (v) => _preserveWindowsAttributes = v,
+                      enabled: supportsWindowsAttributes,
+                    ),
                   ],
                 ),
                 if (hasUnsupportedSettings)
@@ -1256,6 +1351,28 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                             }
                           });
                         },
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  key: const ValueKey('transfer-client-rate'),
+                  controller: _clientRate,
+                  enabled: !_busy,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: context.commanderTr(
+                      "Client streaming rate (KiB/s)",
+                    ),
+                    hintText: context.commanderTr("Unlimited"),
+                    helperText: context.commanderTr(
+                      "Limits bytes fed to the copy stream. Verification and native/server-side copies are not limited; buffered uploads may still burst.",
+                    ),
+                    helperMaxLines: 5,
+                    border: const OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  onChanged: (_) => _change(() {}),
                 ),
                 _toggle(
                   context.commanderTr(
@@ -1443,16 +1560,28 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
               onPressed: _preparing || _sourceOrigin == null ? null : _preview,
               child: Text(context.commanderTr("Preview")),
             ),
-            if (widget.allowBackground &&
-                widget.sourceBackend == null &&
-                _fileConflict != FileConflictPolicy.ask &&
-                _directoryConflict != DirectoryConflictPolicy.ask)
-              TextButton(
-                onPressed:
-                    !_finished && (plan?.canExecute ?? false) && !_preparing
-                    ? () => _start(background: true)
-                    : null,
-                child: Text(context.commanderTr("Queue in background")),
+            if (widget.allowBackground && widget.sourceBackend == null)
+              Tooltip(
+                message: !backgroundCanWait
+                    ? context.commanderTr(
+                        "Background conflict review is unavailable for this storage. Choose a conflict policy or keep this dialog open.",
+                      )
+                    : asksConflicts
+                    ? context.commanderTr(
+                        "Background conflicts wait in the queue. Use Resolve conflict in the operations panel to continue.",
+                      )
+                    : '',
+                child: TextButton(
+                  key: const ValueKey('transfer-queue-background'),
+                  onPressed:
+                      !_finished &&
+                          (plan?.canExecute ?? false) &&
+                          !_preparing &&
+                          backgroundCanWait
+                      ? () => _start(background: true)
+                      : null,
+                  child: Text(context.commanderTr("Queue in background")),
+                ),
               ),
             FilledButton(
               onPressed:

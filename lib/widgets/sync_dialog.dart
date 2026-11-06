@@ -9,6 +9,7 @@ import '../l10n/commander_strings.dart';
 import '../providers/providers.dart';
 import '../services/background_sync_service.dart';
 import '../services/sync_database.dart';
+import '../services/storage_identity.dart';
 import '../l10n/app_localizations.dart';
 import 'sync_plan_dialog.dart';
 
@@ -98,7 +99,7 @@ class _SyncManagerDialog extends ConsumerWidget {
             ],
             // Background sync toggle (Android / iOS only)
             if (BackgroundSyncService.isSupported) ...[
-              _BackgroundSyncTile(sync: sync),
+              const BackgroundSyncSettings(),
               const Divider(height: 20),
             ],
             // Auto-evict setting (applies to all pairs with placeholders)
@@ -129,13 +130,12 @@ class _SyncManagerDialog extends ConsumerWidget {
             else
               ConstrainedBox(
                 constraints: const BoxConstraints(maxHeight: 300),
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: sync.pairs.length,
-                  itemBuilder: (context, index) {
-                    final pair = sync.pairs[index];
-                    return _SyncPairTile(pair: pair);
-                  },
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      for (final pair in sync.pairs) _SyncPairTile(pair: pair),
+                    ],
+                  ),
                 ),
               ),
           ],
@@ -162,10 +162,7 @@ class _SyncManagerDialog extends ConsumerWidget {
                           result.hasChanges || result.errors > 0
                               ? context.commanderTr(
                                   "Replayed: {0} ops, {1} errors",
-                                  [
-                                    result.uploaded + result.downloaded,
-                                    result.errors,
-                                  ],
+                                  [result.replayed, result.errors],
                                 )
                               : context.commanderTr(
                                   "No offline operations to replay",
@@ -194,6 +191,8 @@ class _SyncManagerDialog extends ConsumerWidget {
     var policy = ConflictPolicy.newestWins;
     var direction = SyncDirection.twoWay;
     var usePlaceholders = false;
+    String? creationError;
+    var creating = false;
 
     final auth = ref.read(authProvider);
 
@@ -208,6 +207,16 @@ class _SyncManagerDialog extends ConsumerWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  if (creationError != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Text(
+                        creationError!,
+                        style: TextStyle(
+                          color: Theme.of(ctx).colorScheme.error,
+                        ),
+                      ),
+                    ),
                   TextField(
                     controller: nameController,
                     decoration: InputDecoration(
@@ -339,26 +348,41 @@ class _SyncManagerDialog extends ConsumerWidget {
               child: Text(AppLocalizations.of(context)!.cancel),
             ),
             ElevatedButton(
-              onPressed: () async {
-                if (nameController.text.isEmpty ||
-                    localController.text.isEmpty) {
-                  return;
-                }
-                await ref
-                    .read(syncProvider)
-                    .addPair(
-                      name: nameController.text,
-                      localPath: localController.text,
-                      remotePath: remoteController.text,
-                      provider: auth.currentProvider.name,
-                      conflictPolicy: policy,
-                      direction: direction,
-                      includePatterns: includeController.text,
-                      excludePatterns: excludeController.text,
-                      usePlaceholders: usePlaceholders,
-                    );
-                if (ctx.mounted) Navigator.pop(ctx);
-              },
+              onPressed: creating
+                  ? null
+                  : () async {
+                      if (nameController.text.isEmpty ||
+                          localController.text.isEmpty) {
+                        return;
+                      }
+                      setState(() {
+                        creating = true;
+                        creationError = null;
+                      });
+                      try {
+                        await ref
+                            .read(syncProvider)
+                            .addPair(
+                              name: nameController.text,
+                              localPath: localController.text,
+                              remotePath: remoteController.text,
+                              provider: auth.currentProvider.name,
+                              conflictPolicy: policy,
+                              direction: direction,
+                              includePatterns: includeController.text,
+                              excludePatterns: excludeController.text,
+                              usePlaceholders: usePlaceholders,
+                            );
+                        if (ctx.mounted) Navigator.pop(ctx);
+                      } catch (error) {
+                        if (ctx.mounted) {
+                          setState(() {
+                            creating = false;
+                            creationError = error.toString();
+                          });
+                        }
+                      }
+                    },
               child: Text(context.commanderTr("Create")),
             ),
           ],
@@ -387,22 +411,46 @@ class _SyncManagerDialog extends ConsumerWidget {
 // Background sync tile
 // ---------------------------------------------------------------------------
 
-class _BackgroundSyncTile extends ConsumerStatefulWidget {
-  final SyncNotifier sync;
-  const _BackgroundSyncTile({required this.sync});
+/// Mobile background scheduling controls, reflecting acknowledged service state.
+class BackgroundSyncSettings extends ConsumerStatefulWidget {
+  const BackgroundSyncSettings({super.key});
 
   @override
-  ConsumerState<_BackgroundSyncTile> createState() =>
-      _BackgroundSyncTileState();
+  ConsumerState<BackgroundSyncSettings> createState() =>
+      _BackgroundSyncSettingsState();
 }
 
-class _BackgroundSyncTileState extends ConsumerState<_BackgroundSyncTile> {
-  late int _intervalMinutes;
+class _BackgroundSyncSettingsState
+    extends ConsumerState<BackgroundSyncSettings> {
+  bool _updating = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _intervalMinutes = widget.sync.backgroundSyncIntervalMinutes;
+  Future<void> _changeSchedule({bool? enabled, int? interval}) async {
+    if (_updating) return;
+    setState(() => _updating = true);
+    try {
+      final sync = ref.read(syncProvider);
+      if (enabled == false) {
+        await sync.disableBackgroundSync();
+      } else {
+        await sync.enableBackgroundSync(
+          intervalMinutes: interval ?? sync.backgroundSyncIntervalMinutes,
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              context.commanderTr("Background sync could not be updated: {0}", [
+                error,
+              ]),
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _updating = false);
+    }
   }
 
   @override
@@ -418,37 +466,43 @@ class _BackgroundSyncTileState extends ConsumerState<_BackgroundSyncTile> {
           title: Text(context.commanderTr("Background Sync")),
           subtitle: Text(
             enabled
-                ? context.commanderTr("Syncing every {0} min", [
-                    _intervalMinutes,
-                  ])
+                ? context.commanderTr(
+                    "Background sync requested every {0} min",
+                    [sync.backgroundSyncIntervalMinutes],
+                  )
                 : context.commanderTr("Sync only when the app is open"),
             style: const TextStyle(fontSize: 12),
           ),
           value: enabled,
           contentPadding: EdgeInsets.zero,
-          onChanged: (v) async {
-            if (v) {
-              await ref
-                  .read(syncProvider)
-                  .enableBackgroundSync(intervalMinutes: _intervalMinutes);
-            } else {
-              await ref.read(syncProvider).disableBackgroundSync();
-            }
-          },
+          onChanged: _updating
+              ? null
+              : (value) => _changeSchedule(enabled: value),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Text(
+            context.commanderTr(
+              "FTP/FTPS and WebDAV only. The operating system decides when tasks run.",
+            ),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
         ),
         if (enabled)
           Padding(
-            padding: const EdgeInsets.only(left: 4, bottom: 4),
-            child: Row(
+            padding: const EdgeInsetsDirectional.only(start: 4, bottom: 4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   context.commanderTr("Interval:"),
                   style: const TextStyle(fontSize: 12),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(height: 8),
                 DropdownButton<int>(
-                  value: _intervalMinutes,
+                  value: sync.backgroundSyncIntervalMinutes,
                   isDense: true,
+                  isExpanded: true,
                   items: [
                     DropdownMenuItem(
                       value: 15,
@@ -467,13 +521,11 @@ class _BackgroundSyncTileState extends ConsumerState<_BackgroundSyncTile> {
                       child: Text(context.commanderTr("2 hours")),
                     ),
                   ],
-                  onChanged: (v) async {
-                    if (v == null) return;
-                    setState(() => _intervalMinutes = v);
-                    await ref
-                        .read(syncProvider)
-                        .enableBackgroundSync(intervalMinutes: v);
-                  },
+                  onChanged: _updating
+                      ? null
+                      : (value) {
+                          if (value != null) _changeSchedule(interval: value);
+                        },
                 ),
               ],
             ),
@@ -494,6 +546,8 @@ class _SyncPairTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sync = ref.watch(syncProvider);
+    final auth = ref.watch(authProvider);
+    final bound = sync.isPairBound(pair);
     final isActive = sync.isSyncing && sync.currentPairName == pair.name;
 
     return Card(
@@ -537,6 +591,16 @@ class _SyncPairTile extends ConsumerWidget {
               ]),
               style: const TextStyle(fontSize: 11),
             ),
+            if (!bound)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  context.commanderTr(
+                    'Account review required. Connect the saved account or bind this pair again.',
+                  ),
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ),
             Wrap(
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
@@ -546,7 +610,7 @@ class _SyncPairTile extends ConsumerWidget {
                     tooltip: context.commanderTr(
                       "Download All Cloud-Only Files",
                     ),
-                    onPressed: isActive
+                    onPressed: sync.isSyncing || !bound
                         ? null
                         : () async {
                             final count = await ref
@@ -577,9 +641,19 @@ class _SyncPairTile extends ConsumerWidget {
                 IconButton(
                   icon: const Icon(Icons.sync, size: 18),
                   tooltip: context.commanderTr("Compare and Review"),
-                  onPressed: isActive
+                  onPressed: sync.isSyncing || !bound
                       ? null
                       : () => showSyncPlanDialog(context, pair.id),
+                ),
+                TextButton.icon(
+                  icon: const Icon(Icons.link, size: 18),
+                  label: Text(context.commanderTr('Bind to connected account')),
+                  onPressed:
+                      sync.isSyncing ||
+                          !auth.client.isAuthenticated ||
+                          auth.currentProvider.name != pair.provider
+                      ? null
+                      : () => _rebind(context, ref),
                 ),
                 IconButton(
                   icon: const Icon(Icons.delete, size: 18),
@@ -592,6 +666,53 @@ class _SyncPairTile extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _rebind(BuildContext context, WidgetRef ref) async {
+    final auth = ref.read(authProvider);
+    final client = auth.client;
+    final reviewedRemote = storageReferenceForClient(client);
+    final approved = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(context.commanderTr('Bind sync sources')),
+        content: Text(
+          context.commanderTr(
+            'Use this device and {0} account {1} for this pair?\nLocal: {2}\nRemote: {3}\nThe old comparison baseline is cleared. Existing queued operations keep their original account binding and must be reviewed again.',
+            [
+              client.providerName,
+              client.userId ?? '',
+              pair.localPath,
+              pair.remotePath,
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(context.commanderTr('Bind sources')),
+          ),
+        ],
+      ),
+    );
+    if (approved != true || !context.mounted) return;
+    try {
+      if (!identical(ref.read(authProvider).client, client)) {
+        throw StateError('The connected account changed during review.');
+      }
+      await ref
+          .read(syncProvider)
+          .rebindPair(pair.id, reviewedRemote: reviewedRemote);
+    } catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(error.toString())));
+      }
+    }
   }
 
   String _formatTime(BuildContext context, DateTime dt) {

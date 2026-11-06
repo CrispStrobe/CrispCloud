@@ -13,6 +13,7 @@ import 'package:crisp_cloud/services/installation_identity.dart';
 import 'package:crisp_cloud/services/secure_storage_service.dart';
 import 'package:crisp_cloud/services/transfer_journal.dart';
 import 'package:crisp_cloud/services/transfer_journal_storage.dart';
+import 'package:crisp_cloud/services/transfer_recovery_service.dart';
 import 'package:crisp_cloud/widgets/operations_panel.dart';
 import 'package:crisp_cloud/widgets/transfer_history_dialog.dart';
 import 'package:flutter/material.dart';
@@ -116,6 +117,65 @@ void main() {
     });
     await tester.pumpAndSettle();
   }
+
+  Future<void> untilVisible(WidgetTester tester, Finder finder) async {
+    for (var pass = 0; pass < 100; pass++) {
+      await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+      await tester.pump(const Duration(milliseconds: 20));
+      if (finder.evaluate().isNotEmpty) return;
+    }
+    fail('Expected the asynchronous review to show $finder');
+  }
+
+  testWidgets('Resolve conflict reviews a waiting job and continues it with the chosen decision', (tester) async {
+    await tester.runAsync(() async {
+      await journal.setStatus('saved_move', TransferJobStatus.completed);
+      await destination.writeAsString('existing destination');
+      final backend = LocalOperationBackend(
+        container.read(localFileServiceProvider),
+        isCurrent: () => true,
+      );
+      final plan = await const FileOperationService().prepare(
+        source: backend,
+        destination: backend,
+        targetDirectory: destination.parent.path,
+        files: [(await backend.stat(source.path))!],
+      );
+      await journal.create('waiting_copy', plan);
+      await JournaledTransferRunner(journal).execute(
+        'waiting_copy', plan, control: FileOperationControl(),
+      );
+    });
+    expect(journal.job('waiting_copy')!.status, TransferJobStatus.waitingForDecision);
+    await show(tester, const OperationsPanel());
+    expect(find.byIcon(Icons.error), findsNothing);
+    expect(find.text('1 waiting for a decision'), findsOneWidget);
+    expect(find.byTooltip('Pause'), findsNothing);
+    expect(find.byTooltip('Resolve conflict'), findsOneWidget);
+    await tester.tap(find.byTooltip('Resolve conflict'));
+    final continueButton = find.widgetWithText(FilledButton, 'Resolve conflicts and continue');
+    await untilVisible(tester, continueButton);
+    expect(await tester.runAsync(destination.readAsString), 'existing destination');
+    expect(await tester.runAsync(source.exists), isTrue);
+    Future<void>? running;
+    await tester.runAsync(() async {
+      final dynamic callback = tester.widget<FilledButton>(continueButton).onPressed;
+      running = callback() as Future<void>;
+    });
+    await untilVisible(tester, find.widgetWithText(TextButton, 'Keep both'));
+    await tester.tap(find.widgetWithText(TextButton, 'Keep both'));
+    await tester.pump();
+    await tester.runAsync(() => running!);
+    await tester.pumpAndSettle();
+    expect(journal.job('waiting_copy')!.status, TransferJobStatus.completed);
+    expect(await tester.runAsync(destination.readAsString), 'existing destination');
+    expect(
+      await tester.runAsync(() => File(p.join(destination.parent.path, 'a (1).txt')).readAsString()),
+      'verified payload',
+    );
+    expect(await tester.runAsync(source.exists), isTrue);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets('review and finish a verified saved move without copying again', (
     tester,

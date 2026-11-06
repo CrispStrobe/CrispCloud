@@ -1,23 +1,14 @@
-// lib/services/background_sync_mobile.dart
-//
-// Mobile implementation of background sync helpers.
-// This file is only compiled on Android and iOS (dart.library.io guard in
-// the conditional import in background_sync_service.dart).
-//
-// Workmanager runs the callback in a separate Dart isolate — there is no
-// Flutter widget tree, no Riverpod, and no Platform channel access unless
-// the plugin specifically supports it. We therefore reconstruct a minimal
-// storage client from SharedPreferences (non-sensitive prefs only; tokens
-// stored in flutter_secure_storage are not accessible without the full
-// Flutter engine, so providers that rely solely on secure storage will be
-// skipped gracefully).
+// Mobile background workers have their own Flutter engine and plugin registry.
+// Restore only supported provider sessions from the same secure maps as the
+// foreground app. Worker-local credential copies keep logout and transient
+// connection failures from changing the foreground account's stored secrets.
 
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:webdav_client/webdav_client.dart' as webdav;
 import 'package:workmanager/workmanager.dart';
 
 import 'background_sync_service.dart';
@@ -31,52 +22,57 @@ import 'webdav_config_service.dart';
 
 const _log = Log('BackgroundSyncMobile');
 
-/// True on all dart:io platforms — further narrowed to Android/iOS by the
-/// conditional import guard in [BackgroundSyncService].
-bool get isMobileSupported =>
-    !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+bool get isMobileSupported => !kIsWeb && (Platform.isAndroid || Platform.isIOS);
 
-// ---------------------------------------------------------------------------
-// Workmanager top-level callback
-// ---------------------------------------------------------------------------
-
-/// Top-level callback registered with Workmanager.
-///
-/// Must be a top-level function (not a closure or static method) so that
-/// Workmanager can call it from its own isolate.
+/// Both engines invoke this top-level entry point after native plugins are
+/// registered. Workmanager also initializes the widget binding before dispatch.
 @pragma('vm:entry-point')
 void callbackDispatcher() {
-  Workmanager().executeTask((taskName, inputData) async {
-    _log.info('Background task woken: $taskName');
-    if (taskName == kBackgroundSyncTaskName) {
-      return BackgroundSyncService.executeBackgroundTask();
-    }
-    return Future.value(true);
-  });
+  WidgetsFlutterBinding.ensureInitialized();
+  Workmanager().executeTask(dispatchBackgroundSyncTask);
 }
 
-// ---------------------------------------------------------------------------
-// Platform helpers called by BackgroundSyncService
-// ---------------------------------------------------------------------------
+/// Android delivers taskId; Apple delivers the registered uniqueName. Accept
+/// the previous name as well so already-enqueued Android work can complete.
+Future<bool> dispatchBackgroundSyncTask(
+  String taskName,
+  Map<String, dynamic>? inputData, {
+  Future<bool> Function()? execute,
+}) async {
+  _log.info('Background task woken: $taskName');
+  if (taskName != kBackgroundSyncTaskId &&
+      taskName != kBackgroundSyncTaskName) {
+    _log.warn('Unknown background task was not executed: $taskName');
+    return false;
+  }
+  return (execute ?? BackgroundSyncService.executeBackgroundTask)();
+}
 
 Future<void> initializeWorkmanager() async {
-  await Workmanager().initialize(
-    callbackDispatcher,
-  );
+  await Workmanager().initialize(callbackDispatcher);
 }
 
 Future<void> scheduleWorkmanagerTask({
   required String uniqueName,
   required String taskId,
   required int intervalMinutes,
+  TargetPlatform? targetPlatform,
 }) async {
-  // Cancel any pre-existing task with the same name before re-registering so
-  // that interval changes take effect immediately.
-  await Workmanager().cancelByUniqueName(uniqueName);
+  if (intervalMinutes < 15) {
+    throw ArgumentError.value(intervalMinutes, 'intervalMinutes', 'Minimum 15');
+  }
+  final isApple =
+      (targetPlatform ?? defaultTargetPlatform) == TargetPlatform.iOS;
+  // workmanager_apple schedules BGAppRefreshTask by uniqueName, not taskId.
+  // This name must match AppDelegate and BGTaskSchedulerPermittedIdentifiers.
+  final scheduledName = isApple ? taskId : uniqueName;
+  // Both schedulers replace an existing request with this identifier. Do not
+  // cancel first: a failed reschedule must retain the previous pending work.
   await Workmanager().registerPeriodicTask(
-    uniqueName,
+    scheduledName,
     taskId,
     frequency: Duration(minutes: intervalMinutes),
+    initialDelay: Duration(minutes: intervalMinutes),
     constraints: Constraints(
       networkType: NetworkType.connected,
       requiresBatteryNotLow: true,
@@ -85,118 +81,155 @@ Future<void> scheduleWorkmanagerTask({
     backoffPolicy: BackoffPolicy.linear,
     backoffPolicyDelay: const Duration(minutes: 5),
   );
+  // The pinned Apple plugin logs submit errors instead of returning them over
+  // its channel. This proves a pending wake exists, not that a replacement was
+  // accepted: an older request may remain after a swallowed submit failure.
+  // The saved interval is the desired cadence; AppDelegate reads it on every
+  // wake and uses it for the next reschedule, including a retained old request.
+  if (isApple && !await Workmanager().isScheduledByUniqueName(scheduledName)) {
+    throw StateError(
+      'iOS did not accept the background sync request. '
+      'Check Background App Refresh and retry.',
+    );
+  }
 }
 
-Future<void> cancelWorkmanagerTask(String uniqueName) async {
+Future<void> cancelWorkmanagerTask(
+  String uniqueName, {
+  TargetPlatform? targetPlatform,
+}) async {
   await Workmanager().cancelByUniqueName(uniqueName);
+  if ((targetPlatform ?? defaultTargetPlatform) == TargetPlatform.iOS &&
+      uniqueName != kBackgroundSyncTaskId) {
+    await Workmanager().cancelByUniqueName(kBackgroundSyncTaskId);
+  }
 }
 
-// ---------------------------------------------------------------------------
-// Client reconstruction for background isolate
-// ---------------------------------------------------------------------------
+/// A credential/connection failure safe to display without exposing secrets.
+class BackgroundSyncClientException implements Exception {
+  const BackgroundSyncClientException(this.message);
+  final String message;
+  @override
+  String toString() => message;
+}
 
-/// Attempt to build a [CloudStorageClient] from persisted (non-sensitive)
-/// preferences for [provider].
-///
-/// Providers that require OAuth tokens or encryption keys from
-/// flutter_secure_storage cannot be reconstructed without the full Flutter
-/// engine, so they return `null` (the background task skips them).
-///
-/// Currently supported in background:
-///   - FTP / FTPS  (credentials may be in shared prefs)
-///   - WebDAV      (credentials may be in shared prefs)
-///
-/// All OAuth providers (Dropbox, GDrive, OneDrive, pCloud) and
-/// end-to-end-encrypted providers (Filen, Internxt) return `null` because
-/// their tokens live in flutter_secure_storage which requires the full
-/// Flutter plugin infrastructure.
-Future<CloudStorageClient?> buildClientForProvider(String provider) async {
-  final prefs = await SharedPreferences.getInstance();
-
-  // We use the same SharedPreferences keys the respective ConfigService classes
-  // use to persist non-secret fields.
-  switch (provider.toLowerCase()) {
+/// Restore a private, authenticated FTP/FTPS or WebDAV session. No preference
+/// fallback, credential migration, login parsing, or write to [secureStorage]
+/// happens here. Provider changes are still checked against SyncSourceBinding
+/// by the sync engine before any file operation.
+Future<CloudStorageClient> buildClientForProvider(
+  String provider, {
+  SecureStorage? secureStorage,
+  FTPClientFactory? ftpClientFactory,
+  webdav.Client Function(String, String, String)? webDavClientFactory,
+  String remotePath = '/',
+}) async {
+  final kind = provider.toLowerCase();
+  final String credentialKey;
+  switch (kind) {
     case 'ftp':
-      return _buildFtpClient(prefs);
+    case 'ftps':
+      credentialKey = 'ftp_credentials';
     case 'webdav':
-      return _buildWebDavClient(prefs);
+      credentialKey = 'webdav_credentials';
     default:
-      // Providers with tokens in secure storage cannot be reached from an
-      // isolate that has no Flutter engine platform channels.
-      _log.warn('Cannot reconstruct client for provider "$provider" in background — '
-          'provider uses secure-storage tokens. Skipping.');
-      return null;
+      throw BackgroundSyncClientException(
+        'Background sync is unavailable for "$provider". '
+        'Open CrispCloud to sync this pair.',
+      );
   }
-}
-
-Future<CloudStorageClient?> _buildFtpClient(SharedPreferences prefs) async {
-  // FTPConfigService persists host/port/username in SharedPreferences;
-  // password may be in secure storage. We read what we can and attempt
-  // an anonymous / guest connection if the password is unavailable.
-  final host = prefs.getString('ftp_host');
-  final username = prefs.getString('ftp_username');
-  final password = prefs.getString('ftp_password'); // populated if persisted
-  final port = prefs.getInt('ftp_port') ?? 21;
-
-  if (host == null || host.isEmpty) {
-    _log.warn('FTP host not found in SharedPreferences');
-    return null;
-  }
-
+  Map<String, String>? credentials;
   try {
-    // Use a minimal SecureStorage backed by SharedPreferences for the isolate.
-    final secureStorage = _SharedPrefsSecureStorage(prefs);
-    final configService = FTPConfigService(
-      configPath: '',
-      secureStorage: secureStorage,
+    credentials = await (secureStorage ?? PlatformSecureStorage()).readMap(
+      credentialKey,
     );
-    // Populate the config with whatever we have.
-    if (host.isNotEmpty) await prefs.setString('ftp_host', host);
-    if (username != null) await prefs.setString('ftp_username', username);
-    if (password != null) await prefs.setString('ftp_password', password);
-    await prefs.setInt('ftp_port', port);
-
-    final client = FTPClientAdapter(config: configService);
-    _log.info('Built FTP client for background sync');
-    return client;
-  } catch (e) {
-    _log.error('Failed to build FTP client', e);
-    return null;
+  } catch (_) {
+    throw const BackgroundSyncClientException(
+      'The secure credential store is unavailable. Unlock the device and '
+      'open CrispCloud before retrying background sync.',
+    );
   }
-}
-
-Future<CloudStorageClient?> _buildWebDavClient(SharedPreferences prefs) async {
-  final url = prefs.getString('webdav_url');
-  final username = prefs.getString('webdav_username');
-  final password = prefs.getString('webdav_password');
-
-  if (url == null || url.isEmpty) {
-    _log.warn('WebDAV URL not found in SharedPreferences');
-    return null;
+  if (credentials == null || !_validCredentials(kind, credentials)) {
+    throw BackgroundSyncClientException(
+      'Saved $provider credentials are missing or incomplete. '
+      'Open CrispCloud and reconnect this account.',
+    );
   }
 
+  // Each adapter may clear its config during logout. Only this worker's copy
+  // can be affected, including after a connection/authentication failure.
+  final privateCredentials = InMemorySecureStorage();
+  await privateCredentials.writeMap(credentialKey, Map.of(credentials));
+  CloudStorageClient? client;
   try {
-    final secureStorage = _SharedPrefsSecureStorage(prefs);
-    final configService = WebDavConfigService(
-      configPath: '',
-      secureStorage: secureStorage,
-    );
-    if (url.isNotEmpty) await prefs.setString('webdav_url', url);
-    if (username != null) await prefs.setString('webdav_username', username);
-    if (password != null) await prefs.setString('webdav_password', password);
-
-    final client = WebDavClientAdapter(config: configService);
-    _log.info('Built WebDAV client for background sync');
+    if (kind == 'webdav') {
+      final adapter = WebDavClientAdapter(
+        config: WebDavConfigService(
+          configPath: '',
+          secureStorage: privateCredentials,
+        ),
+        clientFactory: webDavClientFactory,
+      );
+      client = adapter;
+      await adapter.restoreSession(remotePath: remotePath);
+    } else {
+      final adapter = FTPClientAdapter(
+        config: FTPConfigService(
+          configPath: '',
+          secureStorage: privateCredentials,
+        ),
+        clientFactory: ftpClientFactory,
+      );
+      client = adapter;
+      await adapter.restoreSession();
+    }
+    if (!client.isAuthenticated) {
+      throw StateError('The provider did not authenticate the saved session.');
+    }
     return client;
-  } catch (e) {
-    _log.error('Failed to build WebDAV client', e);
-    return null;
+  } catch (_) {
+    try {
+      await client?.logout();
+    } catch (_) {
+      // Preserve the connection failure, without exposing transport secrets.
+    }
+    await privateCredentials.deleteAll();
+    throw BackgroundSyncClientException(
+      'Could not connect to the saved $provider account. '
+      'Check the connection and sign-in in CrispCloud, then retry.',
+    );
   }
 }
 
-// ---------------------------------------------------------------------------
-// Local notifications
-// ---------------------------------------------------------------------------
+bool _validCredentials(String provider, Map<String, String> credentials) {
+  final host = credentials['host'];
+  final user = credentials['username'];
+  if (host == null ||
+      host.isEmpty ||
+      host.trim() != host ||
+      user == null ||
+      user.isEmpty ||
+      credentials['password'] == null ||
+      RegExp(r'[\x00\r\n]').hasMatch(host) ||
+      RegExp(r'[\x00\r\n]').hasMatch(user)) {
+    return false;
+  }
+  if (provider == 'webdav') {
+    final uri = Uri.tryParse(host);
+    return uri != null &&
+        (uri.scheme == 'http' || uri.scheme == 'https') &&
+        uri.host.isNotEmpty &&
+        uri.userInfo.isEmpty &&
+        !uri.hasFragment;
+  }
+  final port = int.tryParse(credentials['port'] ?? '');
+  final tls = credentials['useTLS'];
+  return port != null &&
+      port > 0 &&
+      port <= 65535 &&
+      (tls == 'true' || tls == 'false') &&
+      (provider != 'ftps' || tls == 'true');
+}
 
 Future<void> showLocalNotification({
   required int id,
@@ -245,55 +278,4 @@ Future<void> showLocalNotification({
   );
 
   await plugin.show(id, title, body, notifDetails);
-}
-
-// ---------------------------------------------------------------------------
-// Minimal SecureStorage backed by SharedPreferences (isolate-safe fallback)
-// ---------------------------------------------------------------------------
-
-/// A [SecureStorage] implementation that reads/writes SharedPreferences.
-///
-/// This is intentionally insecure and is only used inside a background
-/// isolate where flutter_secure_storage is unavailable. In practice the
-/// only values stored here are FTP/WebDAV credentials that the user has
-/// explicitly chosen to persist.
-class _SharedPrefsSecureStorage implements SecureStorage {
-  final SharedPreferences _prefs;
-
-  _SharedPrefsSecureStorage(this._prefs);
-
-  @override
-  Future<String?> read(String key) async => _prefs.getString('_ss_$key');
-
-  @override
-  Future<void> write(String key, String value) async =>
-      _prefs.setString('_ss_$key', value);
-
-  @override
-  Future<void> delete(String key) async => _prefs.remove('_ss_$key');
-
-  @override
-  Future<bool> containsKey(String key) async =>
-      _prefs.containsKey('_ss_$key');
-
-  @override
-  Future<void> deleteAll() async {
-    final keys = _prefs.getKeys().where((k) => k.startsWith('_ss_')).toList();
-    for (final k in keys) {
-      await _prefs.remove(k);
-    }
-  }
-
-  @override
-  Future<void> writeMap(String key, Map<String, String> data) async {
-    await write(key, json.encode(data));
-  }
-
-  @override
-  Future<Map<String, String>?> readMap(String key) async {
-    final raw = await read(key);
-    if (raw == null) return null;
-    final decoded = json.decode(raw) as Map<String, dynamic>;
-    return decoded.map((k, v) => MapEntry(k, v.toString()));
-  }
 }

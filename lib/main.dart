@@ -387,8 +387,9 @@ class _AppLockGateState extends ConsumerState<_AppLockGate>
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.hidden) {
       _lastPaused = DateTime.now();
-    } else if (state == AppLifecycleState.resumed && _lastPaused != null) {
-      _checkAutoLock();
+    } else if (state == AppLifecycleState.resumed) {
+      if (_lastPaused != null) _checkAutoLock();
+      unawaited(ref.read(transferProvider).refreshBackgroundRecovery());
     }
   }
 

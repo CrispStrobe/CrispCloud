@@ -29,6 +29,8 @@ class FileCollectionEntry {
       'updatedAt': file.updatedAt?.toIso8601String(),
       'isSymlink': file.isSymlink,
       'symlinkTarget': file.symlinkTarget,
+      if (file.metadata?['matchingArchiveMembers'] case final List members)
+        'matchingArchiveMembers': members.whereType<String>().toList(),
     },
     'state': state.name,
     'detail': detail,
@@ -42,6 +44,11 @@ class FileCollectionEntry {
     final data = Map<String, dynamic>.from(json['file'] as Map);
     if (data['name'] is! String || data['isFolder'] is! bool) {
       throw const FormatException('Invalid collection item.');
+    }
+    final members = data['matchingArchiveMembers'];
+    if (members != null &&
+        (members is! List || members.any((member) => member is! String))) {
+      throw const FormatException('Invalid saved archive search matches.');
     }
     return FileCollectionEntry(
       reference: reference,
@@ -57,6 +64,9 @@ class FileCollectionEntry {
             : DateTime.parse(data['updatedAt'] as String),
         isSymlink: data['isSymlink'] as bool?,
         symlinkTarget: data['symlinkTarget'] as String?,
+        metadata: members == null
+            ? null
+            : {'matchingArchiveMembers': List<String>.from(members as List)},
       ),
       state: CollectionItemState.values.byName(
         json['state'] as String? ?? 'offline',

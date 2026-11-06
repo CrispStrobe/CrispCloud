@@ -8,8 +8,10 @@ import '../models/file_item.dart';
 import '../models/storage_reference.dart';
 import 'file_operation_options.dart';
 import 'destination_name_mask.dart';
+import 'duplicate_name_template.dart';
 import 'file_selection_pattern.dart';
 import 'storage_transfer_contract.dart';
+import 'stream_rate_limiter.dart';
 
 export 'file_operation_options.dart';
 
@@ -122,6 +124,38 @@ abstract class FileOperationBackend {
 
   Future<TransferMetadata> readMetadata(String path) async =>
       const TransferMetadata();
+
+  /// Read only the fields requested by a transfer. Native adapters override
+  /// this to avoid probing unrelated filesystem features (for example ACLs
+  /// when the user only requested permissions).
+  Future<TransferMetadata> readMetadataFields(
+    String path, {
+    bool permissions = true,
+    bool modified = true,
+    bool accessed = true,
+    bool created = true,
+    bool ownership = true,
+    bool extendedAttributes = true,
+    bool acl = true,
+    bool windowsAttributes = true,
+  }) async {
+    final metadata = await readMetadata(path);
+    return TransferMetadata(
+      mode: permissions ? metadata.mode : null,
+      modified: modified ? metadata.modified : null,
+      accessed: accessed ? metadata.accessed : null,
+      created: created ? metadata.created : null,
+      owner: ownership ? metadata.owner : null,
+      group: ownership ? metadata.group : null,
+      extendedAttributes: extendedAttributes
+          ? metadata.extendedAttributes
+          : const {},
+      acl: acl ? metadata.acl : null,
+      windowsAttributes: windowsAttributes ? metadata.windowsAttributes : null,
+      windowsAttributesMask: metadata.windowsAttributesMask,
+    );
+  }
+
   Future<void> writeMetadata(String path, TransferMetadata metadata) async =>
       throw UnsupportedError(
         'This storage cannot preserve the requested metadata.',
@@ -231,34 +265,45 @@ class FileOperationPlan {
       .fold(0, (sum, entry) => sum + (entry.source.size ?? 0));
 }
 
-class FileOperationControl {
+class FileOperationControl implements StreamRateControl {
   bool _cancelled = false;
   final Completer<void> _cancellation = Completer<void>();
-  final StreamController<bool> _cancelEvents = StreamController<bool>.broadcast(
+  final StreamController<void> _changeEvents = StreamController<void>.broadcast(
     sync: true,
   );
   Future<void> get cancellationFuture => _cancellation.future;
+  @override
+  Stream<void> get changes => _changeEvents.stream;
   Completer<void>? _paused;
+  @override
   bool get isCancelled => _cancelled;
+  @override
   bool get isPaused => _paused != null;
   void cancel() {
     if (_cancelled) return;
     _cancelled = true;
     if (!_cancellation.isCompleted) _cancellation.complete();
-    _cancelEvents.add(true);
-    resume();
+    final pause = _paused;
+    _paused = null;
+    pause?.complete();
+    _changeEvents.add(null);
   }
 
   void pause() {
-    if (!_cancelled) _paused ??= Completer<void>();
+    if (_cancelled || _paused != null) return;
+    _paused = Completer<void>();
+    _changeEvents.add(null);
   }
 
   void resume() {
     final pause = _paused;
+    if (pause == null) return;
     _paused = null;
-    pause?.complete();
+    pause.complete();
+    _changeEvents.add(null);
   }
 
+  @override
   Future<void> checkpoint() async {
     if (_cancelled) throw const FileOperationCancelled();
     await _paused?.future;
@@ -270,7 +315,7 @@ class FileOperationControl {
   Stream<T> bind<T>(Stream<T> input) {
     late StreamController<T> output;
     StreamSubscription<T>? source;
-    StreamSubscription<bool>? cancelled;
+    StreamSubscription<void>? cancelled;
     void stopSource() {
       final pending = source?.cancel();
       if (pending != null) unawaited(pending.catchError((Object _) {}));
@@ -284,7 +329,8 @@ class FileOperationControl {
           unawaited(output.close());
           return;
         }
-        cancelled = _cancelEvents.stream.listen((_) {
+        cancelled = _changeEvents.stream.listen((_) {
+          if (!_cancelled) return;
           if (!output.isClosed) {
             output.addError(const FileOperationCancelled());
             unawaited(output.close());
@@ -351,11 +397,10 @@ class FileConflictResolution {
   final bool applyToAll;
 }
 
-typedef DetailedFileConflictResolver =
-    Future<FileConflictResolution> Function(
-      FileOperationEntry entry,
-      FileItem existing,
-    );
+typedef DetailedFileConflictResolver = Future<FileConflictResolution> Function(
+  FileOperationEntry entry,
+  FileItem existing,
+);
 
 class FileOperationNeedsDecision implements Exception {
   const FileOperationNeedsDecision();
@@ -363,16 +408,19 @@ class FileOperationNeedsDecision implements Exception {
   String toString() => 'Waiting for a conflict decision.';
 }
 
-typedef FileConflictResolver =
-    Future<FileConflictDecision> Function(
-      FileOperationEntry entry,
-      FileItem existing,
-    );
+typedef FileConflictResolver = Future<FileConflictDecision> Function(
+  FileOperationEntry entry,
+  FileItem existing,
+);
 
 /// Previews all paths, then executes in order. Directory moves are file-by-file:
 /// only empty source directories are removed, so filters/skips never lose data.
 class FileOperationService {
-  const FileOperationService();
+  const FileOperationService({
+    this.rateLimiterFactory = createStreamRateLimiter,
+  });
+
+  final StreamRateLimiter Function(int bytesPerSecond) rateLimiterFactory;
 
   void _checkSources(FileOperationBackend source, FileOperationBackend target) {
     if (!source.isCurrent || !target.isCurrent) {
@@ -414,6 +462,8 @@ class FileOperationService {
     final sourceMetadata = _PlanningMetadata(source, maxEntries);
     final targetMetadata = _PlanningMetadata(destination, maxEntries);
     options.validateSearchCriteria();
+    options.validateTransferSettings();
+    final duplicateNames = DuplicateNameTemplate(options.duplicateNameTemplate);
     final criteria = options.searchCriteria;
     final criteriaMatcher = criteria?.nameMatcher;
     final criteriaExcluded =
@@ -504,6 +554,12 @@ class FileOperationService {
             destination.capabilities.accessControlLists,
         'access control lists',
       ),
+      (
+        options.preserveWindowsAttributes,
+        source.capabilities.windowsAttributes &&
+            destination.capabilities.windowsAttributes,
+        'Windows attributes',
+      ),
     ]) {
       if (requirement.$1 && !requirement.$2) {
         errors.add('Both storages must support preserving ${requirement.$3}.');
@@ -587,6 +643,7 @@ class FileOperationService {
         return;
       }
       final file = current.copyWith(path: path);
+      String? duplicateNameBase;
       if (!file.isFolder &&
           !(options.destinationName != null && roots.containsKey(path))) {
         output = destination.paths.join(
@@ -599,9 +656,11 @@ class FileOperationService {
           !file.isFolder &&
           options.kind == FileOperationKind.copy &&
           options.fileConflict == FileConflictPolicy.keepBoth) {
+        duplicateNameBase = output;
         output = await _availableName(
           output,
           destination,
+          template: duplicateNames,
           reserved: reservedDestinations,
           stat: targetMetadata.stat,
           nextSuffix: nextCopySuffix,
@@ -614,6 +673,9 @@ class FileOperationService {
         return;
       }
       final entry = FileOperationEntry(file, output);
+      if (duplicateNameBase != null) {
+        entry.recovery = {'duplicateNameBase': duplicateNameBase};
+      }
       entries.add(entry);
       if (file.isSymlink == true && !options.copySymbolicLinks) {
         entry.outcome = FileOperationOutcome.skipped;
@@ -649,16 +711,20 @@ class FileOperationService {
       if (file.isFolder &&
           !options.matchesSharedCriteria(file, matcher: criteriaMatcher)) {
         entry.outcome = FileOperationOutcome.filtered;
-        entry.message =
-            'Folder excluded by shared criteria; matching descendants remain eligible.';
+        entry.message = 'Folder excluded by shared criteria; matching descendants remain eligible.';
       }
       final previous = destinations[destination.destinationPathKey(output)];
       if (previous != null && !(previous.source.isFolder && file.isFolder)) {
         if (options.fileConflict == FileConflictPolicy.keepBoth &&
             !file.isFolder) {
+          entry.recovery = {
+            ...?entry.recovery,
+            'duplicateNameBase': duplicateNameBase ?? output,
+          };
           output = await _availableName(
-            output,
+            duplicateNameBase ?? output,
             destination,
+            template: duplicateNames,
             reserved: reservedDestinations,
             stat: targetMetadata.stat,
             nextSuffix: nextCopySuffix,
@@ -701,9 +767,16 @@ class FileOperationService {
           options.fileConflict == FileConflictPolicy.keepBoth) {
         // Show the actual planned copy name, including names already reserved
         // by earlier entries. execute still rechecks for changes after preview.
+        duplicateNameBase ??= entry.recovery?['duplicateNameBase'] as String?;
+        duplicateNameBase ??= output;
+        entry.recovery = {
+          ...?entry.recovery,
+          'duplicateNameBase': duplicateNameBase,
+        };
         output = await _availableName(
-          output,
+          duplicateNameBase,
           destination,
+          template: duplicateNames,
           reserved: reservedDestinations,
           stat: targetMetadata.stat,
           nextSuffix: nextCopySuffix,
@@ -864,9 +937,14 @@ class FileOperationService {
   }) async {
     if (!plan.canExecute) throw StateError(plan.errors.join('\n'));
     plan.options.validateSearchCriteria();
+    plan.options.validateTransferSettings();
     final source = plan.source;
     final target = plan.destination;
     final options = plan.options;
+    final rateLimiter = options.clientBytesPerSecond == null
+        ? null
+        : rateLimiterFactory(options.clientBytesPerSecond!);
+    final duplicateNames = DuplicateNameTemplate(options.duplicateNameTemplate);
     final skippedDirectories = <String>[];
     final reserved = plan.entries
         .map((entry) => target.destinationPathKey(entry.destination))
@@ -988,9 +1066,21 @@ class FileOperationService {
             );
           }
           if (decision == FileConflictDecision.keepBoth) {
+            final base =
+                entry.recovery?['duplicateNameBase'] as String? ??
+                entry.destination;
+            if (!target.paths.isAbsolute(base) ||
+                !target.samePath(
+                  target.paths.dirname(base),
+                  target.paths.dirname(entry.destination),
+                )) {
+              throw StateError('The saved duplicate-name base is invalid.');
+            }
+            entry.recovery = {...?entry.recovery, 'duplicateNameBase': base};
             entry.destination = await _availableName(
-              entry.destination,
+              base,
               target,
+              template: duplicateNames,
               reserved: reserved,
             );
             reserved.add(target.destinationPathKey(entry.destination));
@@ -1107,6 +1197,20 @@ class FileOperationService {
         if (entry.source.isFolder && entry.source.isSymlink != true) {
           await _ensureDirectory(target, entry.destination);
           entry.outcome = FileOperationOutcome.directoryCreated;
+          if (options.requestsMetadataPreservation) {
+            final directory = await target.stat(entry.destination);
+            _checkSources(source, target);
+            if (directory == null ||
+                !directory.isFolder ||
+                directory.isSymlink == true) {
+              throw StateError('The destination directory changed.');
+            }
+            entry.recovery = {
+              ...?entry.recovery,
+              'directoryMetadataApplied': false,
+              'directoryTargetObjectId': directory.uuid,
+            };
+          }
           entry.message = existing == null
               ? 'Directory created.'
               : 'Merged into existing directory.';
@@ -1157,6 +1261,10 @@ class FileOperationService {
               recoveredStagePath == null &&
               recoveredUploadPath == null &&
               !options.verifyContents &&
+              // A native move consumes the source before a later metadata
+              // write can fail. Keep it until every explicitly requested
+              // preservation step has succeeded.
+              !options.requestsMetadataPreservation &&
               source.identity == target.identity &&
               options.kind == FileOperationKind.move) {
             nativeMoved = await source.moveNoReplace(
@@ -1253,7 +1361,10 @@ class FileOperationService {
             if (!nativeCopied) {
               Stream<List<int>> tracked() async* {
                 try {
-                  await for (final chunk in control.bind(contents())) {
+                  final input = control.bind(contents());
+                  final limited =
+                      rateLimiter?.bind(input, control: control) ?? input;
+                  await for (final chunk in limited) {
                     await control.checkpoint();
                     _checkSources(source, target);
                     sent += chunk.length;
@@ -1372,22 +1483,81 @@ class FileOperationService {
       }
       onEntryComplete?.call(entry);
     }
-    if (options.preserveModified && !control.isCancelled) {
+    if (options.requestsMetadataPreservation && !control.isCancelled) {
+      // Restrictive modes/ACLs are applied after children. Do not lock a
+      // directory while an unfinished child still needs a write or retry.
+      final incompleteDirectories = <String>{};
+      void retainAncestors(String path) {
+        var parent = source.paths.dirname(path);
+        while (incompleteDirectories.add(source.pathKey(parent))) {
+          final next = source.paths.dirname(parent);
+          if (next == parent) break;
+          parent = next;
+        }
+      }
+
+      for (final entry in plan.entries) {
+        if (entry.failed ||
+            entry.outcome == FileOperationOutcome.pending ||
+            entry.outcome == FileOperationOutcome.needsDecision ||
+            entry.outcome == FileOperationOutcome.cancelled) {
+          retainAncestors(entry.source.path!);
+        }
+      }
       for (final entry in plan.entries.reversed.where(
         (entry) =>
             entry.source.isFolder &&
-            entry.completed &&
-            entry.source.updatedAt != null,
+            entry.source.isSymlink != true &&
+            entry.outcome == FileOperationOutcome.directoryCreated &&
+            entry.recovery?['directoryMetadataApplied'] != true,
       )) {
+        if (incompleteDirectories.contains(
+          source.pathKey(entry.source.path!),
+        )) {
+          continue;
+        }
         try {
           await control.checkpoint();
           _checkSources(source, target);
           plan.assertDestinationUnprotected(entry.destination);
-          await target.setModified(entry.destination, entry.source.updatedAt!);
+          final currentSource = await source.stat(entry.source.path!);
+          final currentTarget = await target.stat(entry.destination);
+          _checkSources(source, target);
+          final expectedTargetId = entry.recovery?['directoryTargetObjectId'];
+          if (currentSource == null ||
+              !currentSource.isFolder ||
+              currentSource.isSymlink == true ||
+              // Child moves can legitimately change a directory revision.
+              // Its stable object identity must still match the reviewed one.
+              (entry.source.uuid != null &&
+                  currentSource.uuid != entry.source.uuid) ||
+              currentTarget == null ||
+              !currentTarget.isFolder ||
+              currentTarget.isSymlink == true ||
+              (expectedTargetId != null &&
+                  currentTarget.uuid != expectedTargetId)) {
+            throw StateError(
+              'A directory changed before its metadata could be preserved.',
+            );
+          }
+          await checkpoint?.call(entry, 'directoryMetadata');
+          await _preserveMetadata(source, target, entry, options);
+          entry.recovery = {
+            ...?entry.recovery,
+            'directoryMetadataApplied': true,
+          };
+          await checkpoint?.call(entry, 'complete');
+          onEntryComplete?.call(entry);
+        } on FileOperationCancelled {
+          // The job remains cancelled with its unfinished metadata checkpoint;
+          // cancellation is not a metadata error and must not remove sources.
+          break;
         } catch (error) {
           entry.outcome = FileOperationOutcome.metadataFailed;
           entry.message =
-              'Contents copied; directory timestamp could not be preserved: $error';
+              'Directory contents copied; metadata could not be preserved: '
+              '$error. Source directory retained.';
+          retainAncestors(entry.source.path!);
           await checkpoint?.call(entry, 'metadataFailed');
           onEntryComplete?.call(entry);
         }
@@ -1397,7 +1567,9 @@ class FileOperationService {
       for (final entry in plan.entries.reversed.where(
         (entry) =>
             entry.source.isFolder &&
-            entry.outcome == FileOperationOutcome.directoryCreated,
+            entry.outcome == FileOperationOutcome.directoryCreated &&
+            (!options.requestsMetadataPreservation ||
+                entry.recovery?['directoryMetadataApplied'] == true),
       )) {
         try {
           await control.checkpoint();
@@ -1429,23 +1601,58 @@ class FileOperationService {
   ) async {
     try {
       if (entry.source.isSymlink == true &&
-          (options.preserveModified ||
-              options.preservePermissions ||
-              options.preserveOwnership ||
-              options.preserveExtendedAttributes ||
-              options.preserveAcl)) {
+          options.requestsMetadataPreservation) {
         throw UnsupportedError(
           'Link metadata cannot be changed without following the target.',
         );
       }
-      if (options.preserveModified && entry.source.updatedAt != null) {
-        await target.setModified(entry.destination, entry.source.updatedAt!);
+      if (options.preserveModified && entry.source.updatedAt == null) {
+        throw StateError(
+          'The reviewed source has no modification timestamp to preserve: '
+          '${entry.source.path}.',
+        );
       }
+      TransferMetadata? metadata;
       if (options.preservePermissions ||
           options.preserveOwnership ||
           options.preserveExtendedAttributes ||
-          options.preserveAcl) {
-        final metadata = await source.readMetadata(entry.source.path!);
+          options.preserveAcl ||
+          options.preserveWindowsAttributes) {
+        metadata = await source.readMetadataFields(
+          entry.source.path!,
+          permissions: options.preservePermissions,
+          modified: false,
+          accessed: false,
+          created: false,
+          ownership: options.preserveOwnership,
+          extendedAttributes: options.preserveExtendedAttributes,
+          acl: options.preserveAcl,
+          windowsAttributes: options.preserveWindowsAttributes,
+        );
+        _checkSources(source, target);
+        final missing = [
+          if (options.preservePermissions && metadata.mode == null)
+            'permissions',
+          if (options.preserveOwnership &&
+              (metadata.owner == null || metadata.group == null))
+            'ownership',
+          if (options.preserveAcl && metadata.acl == null)
+            'access control list',
+          if (options.preserveWindowsAttributes &&
+              metadata.windowsAttributes == null)
+            'Windows attributes',
+        ];
+        if (missing.isNotEmpty) {
+          throw StateError(
+            'The source did not return requested ${missing.join(', ')} '
+            'metadata for ${entry.source.path}.',
+          );
+        }
+      }
+      if (options.preserveModified && entry.source.updatedAt != null) {
+        await target.setModified(entry.destination, entry.source.updatedAt!);
+      }
+      if (metadata != null) {
         await target.writeMetadata(
           entry.destination,
           TransferMetadata(
@@ -1456,6 +1663,10 @@ class FileOperationService {
                 ? metadata.extendedAttributes
                 : const {},
             acl: options.preserveAcl ? metadata.acl : null,
+            windowsAttributes: options.preserveWindowsAttributes
+                ? metadata.windowsAttributes
+                : null,
+            windowsAttributesMask: 0x27,
           ),
         );
       }
@@ -1636,19 +1847,17 @@ class FileOperationService {
   Future<String> _availableName(
     String original,
     FileOperationBackend backend, {
+    required DuplicateNameTemplate template,
     Set<String> reserved = const {},
     Future<FileItem?> Function(String path)? stat,
     Map<String, int>? nextSuffix,
   }) async {
     final name = backend.paths.basename(original);
-    final dot = name.lastIndexOf('.');
-    final stem = dot > 0 ? name.substring(0, dot) : name;
-    final extension = dot > 0 ? name.substring(dot) : '';
     final key = backend.destinationPathKey(original);
     for (var index = nextSuffix?[key] ?? 1; index < 1000000; index++) {
       final candidate = backend.paths.join(
         backend.paths.dirname(original),
-        '$stem ($index)$extension',
+        template.apply(name, index: index),
       );
       if (!reserved.contains(backend.destinationPathKey(candidate)) &&
           await (stat ?? backend.stat)(candidate) == null) {

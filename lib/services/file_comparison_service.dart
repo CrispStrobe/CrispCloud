@@ -6,6 +6,7 @@ import 'package:crypto/crypto.dart';
 import '../models/file_item.dart';
 import 'editor_document.dart';
 import 'file_operation_service.dart';
+import 'transfer_recovery_service.dart';
 
 enum DiffType { equal, added, removed }
 
@@ -213,17 +214,33 @@ String mergeHunk(String left, String right, DiffHunk hunk) {
   return output.join('\n');
 }
 
+/// One contiguous run of unequal byte positions, including an unmatched tail.
+class BinaryDifferenceRange {
+  const BinaryDifferenceRange(this.index, this.start, this.end);
+  final int index;
+  final int start;
+  final int end;
+  int get length => end - start;
+}
+
 class BinaryComparison {
   const BinaryComparison(
     this.leftBytes,
     this.rightBytes,
     this.differingBytes,
-    this.firstDifference,
-  );
+    this.firstDifference, {
+    this.rangeCount = 0,
+    this.ranges = const [],
+  });
   final int leftBytes;
   final int rightBytes;
   final int differingBytes;
   final int? firstDifference;
+  final int rangeCount;
+
+  /// A bounded sparse index, including the first and last difference. Missing
+  /// ranges are resolved from the nearest preceding checkpoint on demand.
+  final List<BinaryDifferenceRange> ranges;
   bool get equal => firstDifference == null;
 }
 
@@ -234,45 +251,43 @@ Future<BinaryComparison> compareBinaryFiles(
   FileItem rightFile, {
   bool Function()? isCancelled,
   void Function(int bytes)? onProgress,
+  int maxIndexedRanges = 4096,
 }) async {
   void check() {
-    if (isCancelled?.call() ?? false) {
-      throw StateError('Comparison cancelled.');
-    }
+    if (isCancelled?.call() ?? false) throw StateError('Comparison cancelled.');
     if (!left.isCurrent || !right.isCurrent) {
       throw StateError('A comparison source changed.');
     }
   }
 
-  bool same(FileItem? before, FileItem? after) =>
-      before != null &&
-      after != null &&
-      !before.isFolder &&
-      !after.isFolder &&
-      before.uuid == after.uuid &&
-      before.size == after.size &&
-      before.updatedAt == after.updatedAt &&
-      (before.metadata?['etag'] ?? before.metadata?['versionId']) ==
-          (after.metadata?['etag'] ?? after.metadata?['versionId']);
-
   check();
   final beforeLeft = await left.stat(leftFile.path!);
   final beforeRight = await right.stat(rightFile.path!);
-  if (!same(leftFile, beforeLeft) || !same(rightFile, beforeRight)) {
+  if (beforeLeft == null ||
+      beforeRight == null ||
+      !sameTransferVersion(leftFile, beforeLeft) ||
+      !sameTransferVersion(rightFile, beforeRight) ||
+      beforeLeft.isFolder ||
+      beforeRight.isFolder) {
     throw StateError('A file changed before comparison. Reload both files.');
   }
   final result = await compareBinaryStreams(
-    left.readFile(beforeLeft!),
-    right.readFile(beforeRight!),
+    left.readFile(beforeLeft),
+    right.readFile(beforeRight),
     isCancelled: () {
       check();
       return false;
     },
     onProgress: onProgress,
+    maxIndexedRanges: maxIndexedRanges,
   );
   check();
-  if (!same(beforeLeft, await left.stat(leftFile.path!)) ||
-      !same(beforeRight, await right.stat(rightFile.path!)) ||
+  final afterLeft = await left.stat(leftFile.path!);
+  final afterRight = await right.stat(rightFile.path!);
+  if (afterLeft == null ||
+      afterRight == null ||
+      !sameTransferVersion(beforeLeft, afterLeft) ||
+      !sameTransferVersion(beforeRight, afterRight) ||
       (beforeLeft.size != null && result.leftBytes != beforeLeft.size) ||
       (beforeRight.size != null && result.rightBytes != beforeRight.size)) {
     throw StateError('A file changed during comparison. Compare again.');
@@ -285,52 +300,340 @@ Future<BinaryComparison> compareBinaryStreams(
   Stream<List<int>> right, {
   bool Function()? isCancelled,
   void Function(int bytes)? onProgress,
+  int maxIndexedRanges = 4096,
+}) => _scanBinaryStreams(
+  left,
+  right,
+  isCancelled: isCancelled,
+  onProgress: onProgress,
+  maxIndexedRanges: maxIndexedRanges,
+);
+
+Future<BinaryComparison> _scanBinaryStreams(
+  Stream<List<int>> left,
+  Stream<List<int>> right, {
+  bool Function()? isCancelled,
+  void Function(int bytes)? onProgress,
+  int maxIndexedRanges = 4096,
+  int startOffset = 0,
+  int startRangeIndex = 0,
+  int? stopAfterRange,
 }) async {
-  final a = StreamIterator(left), b = StreamIterator(right);
+  if (maxIndexedRanges < 2) {
+    throw ArgumentError.value(maxIndexedRanges, 'maxIndexedRanges');
+  }
+  final control = FileOperationControl();
+  Object? halted;
+  void check() {
+    if (halted != null) throw halted!;
+    if (isCancelled?.call() ?? false) throw StateError('Comparison cancelled.');
+  }
+
+  final watcher = isCancelled == null
+      ? null
+      : Timer.periodic(const Duration(milliseconds: 50), (_) {
+          try {
+            check();
+          } catch (error) {
+            halted = error;
+            control.cancel();
+          }
+        });
+  final a = StreamIterator(control.bind(left)),
+      b = StreamIterator(control.bind(right));
   var chunkA = <int>[], chunkB = <int>[];
-  var indexA = 0, indexB = 0, sizeA = 0, sizeB = 0, offset = 0, different = 0;
-  int? first;
-  var endedA = false, endedB = false;
+  var indexA = 0, indexB = 0, sizeA = 0, sizeB = 0;
+  var offset = startOffset, different = 0, rangeCount = 0, stride = 1;
+  var lastYield = offset;
+  int? first, rangeStart;
+  var endedA = false, endedB = false, stop = false;
+  final ranges = <BinaryDifferenceRange>[];
+  BinaryDifferenceRange? lastRange;
+  void finishRange(int end) {
+    if (rangeStart == null) return;
+    final range = BinaryDifferenceRange(
+      startRangeIndex + rangeCount,
+      rangeStart!,
+      end,
+    );
+    rangeCount++;
+    rangeStart = null;
+    lastRange = range;
+    if (range.index % stride == 0) ranges.add(range);
+    if (ranges.length > maxIndexedRanges) {
+      stride *= 2;
+      ranges.removeWhere((item) => item.index % stride != 0);
+    }
+    if (range.index == stopAfterRange) stop = true;
+  }
+
   try {
-    while (true) {
-      if (isCancelled?.call() ?? false) {
-        throw StateError('Comparison cancelled.');
-      }
+    while (!stop) {
+      check();
       while (indexA == chunkA.length && !endedA) {
         endedA = !await a.moveNext();
         chunkA = endedA ? [] : a.current;
         indexA = 0;
         sizeA += chunkA.length;
+        check();
       }
       while (indexB == chunkB.length && !endedB) {
         endedB = !await b.moveNext();
         chunkB = endedB ? [] : b.current;
         indexB = 0;
         sizeB += chunkB.length;
+        check();
       }
       if (endedA && endedB) break;
-      final count = endedA
+      final available = endedA
           ? chunkB.length - indexB
           : endedB
           ? chunkA.length - indexA
           : (chunkA.length - indexA < chunkB.length - indexB
                 ? chunkA.length - indexA
                 : chunkB.length - indexB);
+      final count = available > 64 * 1024 ? 64 * 1024 : available;
+      var processed = 0;
       for (var i = 0; i < count; i++) {
         if (endedA || endedB || chunkA[indexA + i] != chunkB[indexB + i]) {
           first ??= offset + i;
+          rangeStart ??= offset + i;
           different++;
+        } else {
+          finishRange(offset + i);
+          if (stop) break;
         }
+        processed++;
       }
-      if (!endedA) indexA += count;
-      if (!endedB) indexB += count;
-      offset += count;
+      if (!endedA) indexA += processed;
+      if (!endedB) indexB += processed;
+      offset += processed;
       onProgress?.call(offset);
+      if (offset - lastYield >= 1024 * 1024) {
+        await Future<void>.delayed(Duration.zero);
+        lastYield = offset;
+      }
     }
-    return BinaryComparison(sizeA, sizeB, different, first);
+    finishRange(offset);
+    check();
+    if (lastRange != null &&
+        (ranges.isEmpty || ranges.last.index != lastRange!.index)) {
+      ranges.add(lastRange!);
+    }
+    return BinaryComparison(
+      sizeA,
+      sizeB,
+      different,
+      first,
+      rangeCount: rangeCount,
+      ranges: List.unmodifiable(ranges),
+    );
+  } on FileOperationCancelled {
+    check();
+    throw StateError('Comparison cancelled.');
   } finally {
-    await a.cancel();
-    await b.cancel();
+    watcher?.cancel();
+    // Completed cursors already released their subscriptions. For an early
+    // stop, drain the bound cursors; FileOperationControl requests upstream
+    // cleanup without waiting indefinitely for a stalled provider.
+    await Future.wait([
+      if (!endedA) a.cancel().catchError((Object _) {}),
+      if (!endedB) b.cancel().catchError((Object _) {}),
+    ]);
+  }
+}
+
+class BinaryComparisonWindow {
+  const BinaryComparisonWindow(this.offset, this.left, this.right);
+  final int offset;
+  final Uint8List left;
+  final Uint8List right;
+  int get length => left.length > right.length ? left.length : right.length;
+}
+
+/// Navigates every difference in arbitrarily large files with a bounded index
+/// and small hex windows. Non-range providers stream to the requested offset.
+class BinaryComparisonSession {
+  BinaryComparisonSession._(
+    this.left,
+    this.leftFile,
+    this.right,
+    this.rightFile,
+    this.result,
+  );
+  final FileOperationBackend left, right;
+  final FileItem leftFile, rightFile;
+  final BinaryComparison result;
+  final _recent = <int, BinaryDifferenceRange>{};
+  int get totalBytes => result.leftBytes > result.rightBytes
+      ? result.leftBytes
+      : result.rightBytes;
+
+  static Future<BinaryComparisonSession> open(
+    FileOperationBackend left,
+    FileItem leftFile,
+    FileOperationBackend right,
+    FileItem rightFile, {
+    bool Function()? isCancelled,
+    void Function(int bytes)? onProgress,
+    int maxIndexedRanges = 4096,
+  }) async {
+    final a = await left.stat(leftFile.path!);
+    final b = await right.stat(rightFile.path!);
+    if (a == null ||
+        b == null ||
+        !sameTransferVersion(leftFile, a) ||
+        !sameTransferVersion(rightFile, b)) {
+      throw StateError('A file changed before comparison. Reload both files.');
+    }
+    final result = await compareBinaryFiles(
+      left,
+      a,
+      right,
+      b,
+      isCancelled: isCancelled,
+      onProgress: onProgress,
+      maxIndexedRanges: maxIndexedRanges,
+    );
+    return BinaryComparisonSession._(left, a, right, b, result);
+  }
+
+  void _check(bool Function()? cancelled) {
+    if (cancelled?.call() ?? false) throw StateError('Comparison cancelled.');
+    if (!left.isCurrent || !right.isCurrent) {
+      throw StateError('A comparison source changed.');
+    }
+  }
+
+  Future<void> _validate(bool Function()? cancelled) async {
+    _check(cancelled);
+    final a = await left.stat(leftFile.path!);
+    final b = await right.stat(rightFile.path!);
+    if (a == null ||
+        b == null ||
+        !sameTransferVersion(leftFile, a) ||
+        !sameTransferVersion(rightFile, b)) {
+      throw StateError(
+        'A compared file changed. Compare again before navigating.',
+      );
+    }
+    _check(cancelled);
+  }
+
+  Stream<List<int>> _suffix(
+    FileOperationBackend backend,
+    FileItem file,
+    int size,
+    int offset,
+  ) => offset >= size ? const Stream.empty() : backend.readRange(file, offset);
+
+  Future<BinaryDifferenceRange> difference(
+    int index, {
+    bool Function()? isCancelled,
+  }) async {
+    if (index < 0 || index >= result.rangeCount) {
+      throw RangeError.index(
+        index,
+        result.ranges,
+        'difference',
+        null,
+        result.rangeCount,
+      );
+    }
+    await _validate(isCancelled);
+    BinaryDifferenceRange? preceding;
+    for (final range in [...result.ranges, ..._recent.values]) {
+      if (range.index == index) return range;
+      if (range.index < index &&
+          (preceding == null || range.index > preceding.index)) {
+        preceding = range;
+      }
+    }
+    final offset = preceding?.end ?? 0;
+    final scan = await _scanBinaryStreams(
+      _suffix(left, leftFile, result.leftBytes, offset),
+      _suffix(right, rightFile, result.rightBytes, offset),
+      startOffset: offset,
+      startRangeIndex: (preceding?.index ?? -1) + 1,
+      stopAfterRange: index,
+      maxIndexedRanges: 2,
+      isCancelled: () {
+        _check(isCancelled);
+        return false;
+      },
+    );
+    await _validate(isCancelled);
+    if (scan.ranges.isEmpty || scan.ranges.last.index != index) {
+      throw StateError('The compared contents changed. Compare again.');
+    }
+    final found = scan.ranges.last;
+    _recent[index] = found;
+    if (_recent.length > 128) _recent.remove(_recent.keys.first);
+    return found;
+  }
+
+  Future<BinaryComparisonWindow> window(
+    int offset, {
+    int length = 1024,
+    bool Function()? isCancelled,
+  }) async {
+    if (offset < 0 || offset > totalBytes) {
+      throw RangeError.range(offset, 0, totalBytes, 'offset');
+    }
+    if (length < 1 || length > 64 * 1024) {
+      throw RangeError.range(length, 1, 64 * 1024, 'length');
+    }
+    await _validate(isCancelled);
+    final control = FileOperationControl();
+    Object? halted;
+    final watcher = Timer.periodic(const Duration(milliseconds: 50), (_) {
+      try {
+        _check(isCancelled);
+      } catch (error) {
+        halted = error;
+        control.cancel();
+      }
+    });
+    Future<Uint8List> read(
+      FileOperationBackend backend,
+      FileItem file,
+      int size,
+    ) async {
+      final expected = (size - offset).clamp(0, length);
+      final bytes = BytesBuilder(copy: false);
+      if (expected == 0) return bytes.takeBytes();
+      final cursor = StreamIterator(
+        control.bind(_suffix(backend, file, size, offset)),
+      );
+      try {
+        while (bytes.length < expected && await cursor.moveNext()) {
+          _check(isCancelled);
+          final chunk = cursor.current;
+          final remaining = expected - bytes.length;
+          bytes.add(
+            chunk.length > remaining ? chunk.sublist(0, remaining) : chunk,
+          );
+        }
+      } finally {
+        unawaited(cursor.cancel().catchError((Object _) {}));
+      }
+      if (bytes.length != expected) {
+        throw StateError('The compared file became shorter.');
+      }
+      return bytes.takeBytes();
+    }
+
+    try {
+      final a = await read(left, leftFile, result.leftBytes);
+      final b = await read(right, rightFile, result.rightBytes);
+      await _validate(isCancelled);
+      return BinaryComparisonWindow(offset, a, b);
+    } on FileOperationCancelled {
+      if (halted != null) throw halted!;
+      throw StateError('Comparison cancelled.');
+    } finally {
+      watcher.cancel();
+    }
   }
 }
 
@@ -344,39 +647,87 @@ class MergeDocumentSession {
     this._fingerprint,
   );
   final FileOperationBackend source;
-  final FileItem file;
+  FileItem file;
   EditorDocument document;
   String _fingerprint;
   static const maxTextBytes = 8 * 1024 * 1024;
 
   static Future<Uint8List> readTextBytes(
     FileOperationBackend source,
-    FileItem file,
-  ) async {
-    if (!source.isCurrent) throw StateError('The comparison source changed.');
+    FileItem file, {
+    bool Function()? isCancelled,
+  }) async {
+    void check() {
+      if (!source.isCurrent) throw StateError('The comparison source changed.');
+      if (isCancelled?.call() ?? false) {
+        throw StateError('Comparison cancelled.');
+      }
+    }
+
+    check();
     if ((file.size ?? 0) > maxTextBytes) {
       throw StateError('Use binary comparison for files larger than 8 MiB.');
     }
-    final bytes = BytesBuilder(copy: false);
-    await for (final chunk in source.readFile(file)) {
-      if (!source.isCurrent) throw StateError('The comparison source changed.');
-      if (bytes.length + chunk.length > maxTextBytes) {
-        throw StateError('Text merge exceeds 8 MiB. Use binary comparison.');
-      }
-      bytes.add(chunk);
+    final before = await source.stat(file.path!);
+    if (before == null ||
+        !sameTransferVersion(file, before) ||
+        before.isFolder) {
+      throw StateError(
+        'The compared file changed. Reload it before continuing.',
+      );
     }
-    return bytes.takeBytes();
+    final bytes = BytesBuilder(copy: false);
+    final control = FileOperationControl();
+    Object? halted;
+    final watcher = Timer.periodic(const Duration(milliseconds: 50), (_) {
+      try {
+        check();
+      } catch (error) {
+        halted = error;
+        control.cancel();
+      }
+    });
+    try {
+      await for (final chunk in control.bind(source.readFile(before))) {
+        check();
+        if (bytes.length + chunk.length > maxTextBytes) {
+          throw StateError('Text merge exceeds 8 MiB. Use binary comparison.');
+        }
+        bytes.add(chunk);
+      }
+      check();
+      final after = await source.stat(file.path!);
+      if (after == null ||
+          !sameTransferVersion(before, after) ||
+          (before.size != null && bytes.length != before.size)) {
+        throw StateError(
+          'The compared file changed or could not be read completely.',
+        );
+      }
+      return bytes.takeBytes();
+    } on FileOperationCancelled {
+      if (halted != null) throw halted!;
+      throw StateError('Comparison cancelled.');
+    } finally {
+      watcher.cancel();
+    }
   }
 
   static Future<MergeDocumentSession> open(
     FileOperationBackend source,
-    FileItem file,
-  ) async {
-    final bytes = await readTextBytes(source, file);
+    FileItem file, {
+    EditorEncoding? encodingOverride,
+    bool Function()? isCancelled,
+  }) async {
+    final bytes = await readTextBytes(source, file, isCancelled: isCancelled);
+    final snapshot = await source.stat(file.path!);
+    if (snapshot == null || !sameTransferVersion(file, snapshot)) {
+      throw StateError('The compared file changed while opening it.');
+    }
     return MergeDocumentSession._(
       source,
-      file,
-      EditorDocument.decode(bytes),
+      snapshot,
+      EditorDocument.decode(bytes, encodingOverride: encodingOverride),
       sha256.convert(bytes).toString(),
     );
   }
@@ -423,15 +774,15 @@ class MergeDocumentSession {
       );
     }
     if (!source.isCurrent) throw StateError('Source changed while saving.');
-    final verified = await readTextBytes(
-      source,
-      file.copyWith(size: bytes.length),
-    );
+    final written = await source.stat(file.path!);
+    if (written == null) throw StateError('The saved file is unavailable.');
+    final verified = await readTextBytes(source, written);
     if (sha256.convert(verified).toString() !=
         sha256.convert(bytes).toString()) {
       throw StateError('The saved content could not be verified.');
     }
     _fingerprint = sha256.convert(bytes).toString();
+    file = written;
     document = document.copyWith(text: text);
   }
 }

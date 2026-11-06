@@ -180,7 +180,8 @@ class MacosFileService
   ///
   /// A symlink under a granted folder can point into an ungranted volume. The
   /// sandbox then denies the target even though the link's path looks covered.
-  Future<String> _accessPath(String path) async {
+  Future<String> _accessPath(String path, {int depth = 0}) async {
+    if (depth >= 64) return path;
     // realpath resolves links in every path component, but the sandbox can
     // deny it when the target volume is not granted yet. Fall back to reading
     // the final symlink itself, which only needs access to the granted parent.
@@ -191,6 +192,16 @@ class MacosFileService
       for (var i = 0; i < 10; i++) {
         try {
           final type = await FileSystemEntity.type(current, followLinks: false);
+          if (type == FileSystemEntityType.notFound) {
+            // realpath cannot resolve a new output yet. Resolve its parent
+            // first, including ancestor links, before choosing a bookmark.
+            final parent = p.dirname(current);
+            if (parent == current) return current;
+            return p.join(
+              await _accessPath(parent, depth: depth + 1),
+              p.basename(current),
+            );
+          }
           if (type != FileSystemEntityType.link) return current;
           final target = await Link(current).target();
           current = p.normalize(
@@ -226,7 +237,15 @@ class MacosFileService
       if (type == FileSystemEntityType.notFound) {
         // A missing file is not a permission problem when a scope already
         // covers its folder; saving a new file there is still allowed.
-        return scope != null;
+        if (scope != null) return true;
+        // App-owned folders can be accessible without a bookmark (for example
+        // the container's temporary directory). Probe the resolved, immediate
+        // parent rather than asking the user to grant a file that does not
+        // exist. The actual creation still enforces the parent's write rights.
+        final parent = p.dirname(path);
+        if (parent == path) return false;
+        await Directory(parent).list(followLinks: false).take(1).drain<void>();
+        return true;
       }
       if (type == FileSystemEntityType.directory) {
         return await Directory(path).exists();

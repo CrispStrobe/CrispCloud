@@ -15,6 +15,7 @@ import '../l10n/extension_translations.dart';
 import 'extensions_dialog.dart';
 import '../services/panel_view_mode_service.dart' show PanelViewMode;
 import 'file_view_selector.dart';
+import 'file_name_dialog.dart';
 import 'search_dialogs.dart' show showSearchDialog, showFindDialog;
 
 // Re-export decomposed widgets for backward compatibility
@@ -83,7 +84,7 @@ class FileToolbar extends ConsumerWidget {
         icon: const Icon(Icons.create_new_folder),
         tooltip: l.newFolderTooltip,
         color: Theme.of(context).colorScheme.onPrimaryContainer,
-        onPressed: () => _showCreateFolderDialog(context, panel),
+        onPressed: () => showCapturedCreateFolderDialog(context, panel),
       ),
 
       if (side == PanelSide.remote && auth.isConnected) ...[
@@ -289,42 +290,7 @@ class FileToolbar extends ConsumerWidget {
   void _showFilterBar(BuildContext context, PanelNotifier panel) =>
       showPanelFilterDialog(context, panel);
 
-  void _showCreateFolderDialog(BuildContext context, PanelNotifier panel) {
-    final controller = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.newFolder),
-        content: TextField(
-          controller: controller,
-          decoration: InputDecoration(
-            labelText: AppLocalizations.of(context)!.folderName,
-            border: const OutlineInputBorder(),
-            prefixIcon: const Icon(Icons.folder),
-          ),
-          autofocus: true,
-          onSubmitted: (value) async {
-            if (value.isNotEmpty) {
-              await panel.createFolder(value);
-              if (context.mounted) Navigator.pop(context);
-            }
-          },
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.cancel)),
-          ElevatedButton(
-            onPressed: () async {
-              if (controller.text.isNotEmpty) {
-                await panel.createFolder(controller.text);
-                if (context.mounted) Navigator.pop(context);
-              }
-            },
-            child: Text(AppLocalizations.of(context)!.create),
-          ),
-        ],
-      ),
-    );
-  }
+
 }
 
 /// Show the panel filter dialog — also callable from keyboard shortcuts (Ctrl+F).

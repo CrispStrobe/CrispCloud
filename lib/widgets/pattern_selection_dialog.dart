@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,6 +12,7 @@ import '../providers/panel_provider.dart';
 import '../services/file_selection_pattern.dart';
 import '../services/log_service.dart';
 import '../services/selection_pattern_history.dart';
+import 'file_list_dialog.dart';
 
 export '../services/file_selection_pattern.dart' show SelectionAction;
 
@@ -53,6 +55,7 @@ class _PatternSelectionDialogState
   final _after = TextEditingController();
   final _before = TextEditingController();
   final _extensions = TextEditingController();
+  final _excludedDirectories = TextEditingController();
   bool _includeHidden = true;
   List<SavedSearch> _presets = const [];
 
@@ -63,6 +66,11 @@ class _PatternSelectionDialogState
   bool _matchFullPath = false;
   String _kind = 'all';
   String Function(BuildContext)? _memoryMessage;
+  Future<int>? _collectionCount;
+  String? _collectionCountKey;
+  int _countRequest = 0;
+  bool _applying = false;
+  String? _applyError;
 
   @override
   void initState() {
@@ -100,7 +108,14 @@ class _PatternSelectionDialogState
   @override
   void dispose() {
     _controller.dispose();
-    for (final c in [_minimum, _maximum, _after, _before, _extensions]) {
+    for (final c in [
+      _minimum,
+      _maximum,
+      _after,
+      _before,
+      _extensions,
+      _excludedDirectories,
+    ]) {
       c.dispose();
     }
     super.dispose();
@@ -146,6 +161,7 @@ class _PatternSelectionDialogState
       includeFiles: _kind != 'folders',
       includeFolders: _kind != 'files',
       includeHidden: _includeHidden,
+      excludeDirectories: _excludedDirectories.text.trim(),
       minSize: size(_minimum.text),
       maxSize: size(_maximum.text),
       modifiedAfter: date(_after.text),
@@ -186,6 +202,7 @@ class _PatternSelectionDialogState
       _after.text = query.modifiedAfter?.toIso8601String() ?? '';
       _before.text = query.modifiedBefore?.toIso8601String() ?? '';
       _extensions.text = query.extensions.join('; ');
+      _excludedDirectories.text = query.excludeDirectories;
       _includeHidden = query.includeHidden;
       _memoryMessage = (context) => context.commanderTr(
         "Loaded {0}. Selection applies to visible rows only.",
@@ -289,18 +306,23 @@ class _PatternSelectionDialogState
     } on FormatException catch (e) {
       error = e.message;
     }
-    final displayed = panel.displayedFiles ?? [];
-    final matches = pattern == null
+    final matches = criteria == null
         ? 0
-        : displayed
-              .where(
-                (file) =>
-                    file.name != '..' &&
-                    pattern!.matches(file) &&
-                    criteria!.matchesMetadata(file) &&
-                    (criteria.includeHidden || !file.name.startsWith('.')),
-              )
-              .length;
+        : panel.isPagedCollection
+        ? 0
+        : panel.matchingCriteriaFiles(criteria).length;
+    if (criteria != null && panel.isPagedCollection) {
+      final key =
+          '${panel.activeCollectionId}:${panel.collectionRevision}:${panel.collectionQueryRevision}:${panel.filterQuery}:${jsonEncode(criteria.toJson())}';
+      if (key != _collectionCountKey) {
+        _collectionCountKey = key;
+        final request = ++_countRequest;
+        _collectionCount = panel.countCollectionCriteria(
+          criteria,
+          isCancelled: () => !mounted || request != _countRequest,
+        );
+      }
+    }
     final restorable = panel.restorableSelectionCount;
 
     return AlertDialog(
@@ -504,6 +526,11 @@ class _PatternSelectionDialogState
                         context.commanderTr("Extensions (; separated)"),
                         'selection-extensions',
                       ),
+                      _criterionField(
+                        _excludedDirectories,
+                        context.commanderTr("Exclude directories"),
+                        'selection-excluded-directories',
+                      ),
                     ],
                   ),
                   CheckboxListTile(
@@ -547,50 +574,146 @@ class _PatternSelectionDialogState
                   ),
                 ],
               ),
-              Text(
-                context.commanderTr(
-                  "{0} matching item(s) in the visible list",
-                  [matches],
+              if (panel.isPagedCollection && criteria != null)
+                FutureBuilder<int>(
+                  future: _collectionCount,
+                  builder: (context, snapshot) => Text(
+                    snapshot.hasError
+                        ? '${snapshot.error}'
+                        : snapshot.hasData
+                        ? context.commanderTr(
+                            "{0} matching item(s) across collection pages",
+                            [snapshot.data!],
+                          )
+                        : context.commanderTr("Checking collection pages…"),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                )
+              else
+                Text(
+                  context.commanderTr(
+                    "{0} matching item(s) in the visible list",
+                    [matches],
+                  ),
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
               const Divider(height: 24),
+              Text(context.commanderTr("Match the focused item")),
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: [
+                  for (final kind in ['extension', 'name', 'parent'])
+                    TextButton(
+                      key: ValueKey('selection-same-$kind'),
+                      onPressed:
+                          _applying ||
+                              panel.collectionBusy ||
+                              panel.cursorItem == null ||
+                              panel.originForOperation(panel.cursorItem!) ==
+                                  null ||
+                              (kind == 'extension' &&
+                                  panel.cursorItem!.isFolder)
+                          ? null
+                          : () async {
+                              try {
+                                final count = await panel
+                                    .selectRelatedCollection(
+                                      kind: kind,
+                                      caseSensitive: _caseSensitive,
+                                      action: _action,
+                                    );
+                                if (!mounted) return;
+                                setState(
+                                  () => _memoryMessage = (context) =>
+                                      context.commanderTr(
+                                        "Updated marks for {0} matching item(s).",
+                                        [count],
+                                      ),
+                                );
+                              } catch (error) {
+                                if (mounted) {
+                                  setState(() => _applyError = '$error');
+                                }
+                              }
+                            },
+                      child: Text(
+                        context.commanderTr(switch (kind) {
+                          'extension' => 'Same extension',
+                          'name' => 'Same name (without extension)',
+                          _ => 'Same containing folder',
+                        }),
+                      ),
+                    ),
+                  TextButton.icon(
+                    key: const ValueKey('selection-load-paths'),
+                    onPressed: () => showFileListDialog(
+                      context,
+                      ref,
+                      widget.side,
+                      importMode: true,
+                      selectionMode: true,
+                    ),
+                    icon: const Icon(Icons.playlist_add_check),
+                    label: Text(
+                      context.commanderTr("Load selection from paths…"),
+                    ),
+                  ),
+                ],
+              ),
               Wrap(
                 spacing: 8,
                 runSpacing: 4,
                 children: [
                   TextButton.icon(
                     key: const ValueKey('remember-panel-selection'),
-                    onPressed: panel.selection.isEmpty
+                    onPressed: panel.selection.isEmpty || panel.collectionBusy
                         ? null
-                        : () {
-                            final count = panel.rememberSelection();
-                            setState(() {
-                              _memoryMessage = (context) => count == 0
-                                  ? context.commanderTr(
-                                      "Refresh the source before remembering its selection.",
-                                    )
-                                  : context.commanderTr(
-                                      "Remembered {0} selected item(s) for this tab.",
-                                      [count],
-                                    );
-                            });
+                        : () async {
+                            try {
+                              final count = await panel
+                                  .rememberCollectionSelection();
+                              if (!mounted) return;
+                              setState(() {
+                                _memoryMessage = (context) => count == 0
+                                    ? context.commanderTr(
+                                        "Refresh the source before remembering its selection.",
+                                      )
+                                    : context.commanderTr(
+                                        "Remembered {0} selected item(s) for this tab.",
+                                        [count],
+                                      );
+                              });
+                            } catch (error) {
+                              if (mounted) {
+                                setState(() => _applyError = '$error');
+                              }
+                            }
                           },
                     icon: const Icon(Icons.bookmark_add_outlined),
                     label: Text(context.commanderTr("Remember selection")),
                   ),
                   TextButton.icon(
                     key: const ValueKey('restore-panel-selection'),
-                    onPressed: restorable == 0
+                    onPressed: restorable == 0 || panel.collectionBusy
                         ? null
-                        : () {
-                            final count = panel.restoreSelection();
-                            setState(() {
-                              _memoryMessage = (context) => context.commanderTr(
-                                "Restored {0} selected item(s).",
-                                [count],
-                              );
-                            });
+                        : () async {
+                            try {
+                              final count = await panel
+                                  .restoreCollectionSelection();
+                              if (!mounted) return;
+                              setState(() {
+                                _memoryMessage = (context) =>
+                                    context.commanderTr(
+                                      "Restored {0} selected item(s).",
+                                      [count],
+                                    );
+                              });
+                            } catch (error) {
+                              if (mounted) {
+                                setState(() => _applyError = '$error');
+                              }
+                            }
                           },
                     icon: const Icon(Icons.restore),
                     label: Text(
@@ -608,33 +731,57 @@ class _PatternSelectionDialogState
                     ),
                 style: Theme.of(context).textTheme.bodySmall,
               ),
+              if (panel.collectionBusy)
+                LinearProgressIndicator(
+                  semanticsLabel: panel.collectionProgress,
+                ),
+              if (_applyError != null)
+                Text(
+                  _applyError!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
             ],
           ),
         ),
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            if (panel.collectionBusy) panel.cancelCollectionRefresh();
+            Navigator.pop(context);
+          },
           child: Text(context.commanderTr("Cancel")),
         ),
         FilledButton(
           key: const ValueKey('apply-pattern-selection'),
-          onPressed: pattern == null ? null : () => _apply(pattern!),
+          onPressed: pattern == null || _applying || panel.collectionBusy
+              ? null
+              : () => _apply(pattern!),
           child: Text(context.commanderTr("Apply")),
         ),
       ],
     );
   }
 
-  void _apply(FileSelectionPattern pattern) {
-    ref
-        .read(panelProvider(widget.side))
-        .applyCriteriaSelection(_criteria(), action: _action);
-    unawaited(
-      _history.remember(pattern).catchError((Object error) {
-        _log.warn('Selection pattern history could not be saved', error);
-      }),
-    );
-    Navigator.pop(context);
+  Future<void> _apply(FileSelectionPattern pattern) async {
+    setState(() {
+      _applying = true;
+      _applyError = null;
+    });
+    try {
+      await ref
+          .read(panelProvider(widget.side))
+          .applyCollectionCriteriaSelection(_criteria(), action: _action);
+      unawaited(
+        _history.remember(pattern).catchError((Object error) {
+          _log.warn('Selection pattern history could not be saved', error);
+        }),
+      );
+      if (mounted) Navigator.pop(context);
+    } catch (error) {
+      if (mounted) setState(() => _applyError = '$error');
+    } finally {
+      if (mounted) setState(() => _applying = false);
+    }
   }
 }

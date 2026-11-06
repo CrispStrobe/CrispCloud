@@ -54,16 +54,30 @@ class RenameFingerprint {
             RegExp(r'^[A-Za-z]:[\\/]').hasMatch(file.uuid!)
         ? null
         : file.uuid,
-    version:
-        file.metadata?['version']?.toString() ??
-        file.metadata?['eTag']?.toString() ??
-        file.metadata?['etag']?.toString(),
+    version: _metadataValue(file, const [
+      'version',
+      'eTag',
+      'etag',
+      'versionId',
+      'revision',
+      'rev',
+      'cTag',
+      'generation',
+    ]),
     size: file.size,
     modified: file.updatedAt,
     link: file.isSymlink == true,
     linkTarget: file.symlinkTarget,
-    digest: digest,
+    digest: digest ?? _metadataValue(file, const ['content_hash']),
   );
+
+  static String? _metadataValue(FileItem file, List<String> keys) {
+    for (final key in keys) {
+      final value = file.metadata?[key]?.toString();
+      if (value != null && value.trim().isNotEmpty) return value;
+    }
+    return null;
+  }
 
   bool matches(RenameFingerprint other, {bool afterMove = false}) {
     if (folder != other.folder || link != other.link) return false;

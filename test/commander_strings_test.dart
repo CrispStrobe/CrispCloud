@@ -1,9 +1,9 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/l10n/commander_strings.dart';
 import 'package:crisp_cloud/l10n/commander_translations.dart';
+import 'package:crisp_cloud/l10n/commander_completion_translations.dart';
 import 'package:crisp_cloud/models/rename_batch.dart';
 import 'package:crisp_cloud/models/transfer_job.dart';
 import 'package:crisp_cloud/services/file_operation_options.dart';
@@ -44,7 +44,10 @@ void main() {
           .toSet(),
     );
     final parameters = RegExp(r'\{(?:\d+|[A-Za-z][A-Za-z0-9_]*)\}');
-    for (final entry in commanderTranslations.entries) {
+    for (final entry in {
+      ...commanderTranslations,
+      ...commanderCompletionTranslations,
+    }.entries) {
       expect(entry.value, hasLength(8), reason: entry.key);
       final expected = parameters
           .allMatches(entry.key)
@@ -113,7 +116,9 @@ void main() {
   );
 
   test('Commander workflow captions have explicit translations', () {
-    final calls = RegExp(r'\.commanderTr\(\s*("(?:\\.|[^"\\])*\")');
+    final calls = RegExp(
+      r'''\.commanderTr\(\s*(r?)("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')''',
+    );
     for (final name in [
       'batch_rename_dialog',
       'rename_names_dialog',
@@ -128,7 +133,11 @@ void main() {
       'file_collections_dialog',
       'archive_workspace_dialog',
       'integrity_dialogs',
+      'integrity_recovery_dialog',
       'internal_viewer_dialog',
+      'internal_viewer_views',
+      'file_attributes_dialog',
+      'file_name_dialog',
       'diff_viewer_dialog',
       'directory_comparison_dialog',
       'sync_dialog',
@@ -144,7 +153,41 @@ void main() {
       final matches = calls.allMatches(source).toList();
       expect(matches, isNotEmpty, reason: name);
       for (final match in matches) {
-        final english = jsonDecode(match[1]!.replaceAll(r'\$', r'$')) as String;
+        final literal = match[2]!;
+        final inner = literal.substring(1, literal.length - 1);
+        final english = match[1] == 'r'
+            ? inner
+            : inner.replaceAllMapped(
+                RegExp(
+                  r'\\(u\{[0-9a-fA-F]+\}|u[0-9a-fA-F]{4}|x[0-9a-fA-F]{2}|.)',
+                  dotAll: true,
+                ),
+                (escape) {
+                  final value = escape[1]!;
+                  if (value.startsWith('u{')) {
+                    return String.fromCharCode(
+                      int.parse(
+                        value.substring(2, value.length - 1),
+                        radix: 16,
+                      ),
+                    );
+                  }
+                  if (value.startsWith('u') || value.startsWith('x')) {
+                    return String.fromCharCode(
+                      int.parse(value.substring(1), radix: 16),
+                    );
+                  }
+                  return const {
+                        'n': '\n',
+                        'r': '\r',
+                        't': '\t',
+                        'b': '\b',
+                        'f': '\f',
+                        'v': '\v',
+                      }[value] ??
+                      value;
+                },
+              );
         expect(
           CommanderStrings.contains(english),
           isTrue,
@@ -191,6 +234,15 @@ void main() {
       'Create local folder',
       'Create cloud folder',
       'Unresolved conflict',
+      'Read-only',
+      'Hidden',
+      'System',
+      'Archive attribute',
+      'Match case',
+      'Search text',
+      'Left encoding',
+      'Right encoding',
+      'Auto-detect',
       'Newest Wins',
       'Local Wins',
       'Remote Wins',

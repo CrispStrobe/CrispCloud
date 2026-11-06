@@ -25,10 +25,13 @@ class StorageTransferCapabilities {
     this.resumableUpload = false,
     this.append = false,
     this.setModifiedTime = false,
+    this.setAccessedTime = false,
+    this.setCreatedTime = false,
     this.permissions = false,
     this.ownership = false,
     this.extendedAttributes = false,
     this.accessControlLists = false,
+    this.windowsAttributes = false,
     this.symbolicLinks = false,
     this.deleteEmptyDirectory = false,
     this.boundedUpload = false,
@@ -53,10 +56,13 @@ class StorageTransferCapabilities {
   final bool resumableUpload;
   final bool append;
   final bool setModifiedTime;
+  final bool setAccessedTime;
+  final bool setCreatedTime;
   final bool permissions;
   final bool ownership;
   final bool extendedAttributes;
   final bool accessControlLists;
+  final bool windowsAttributes;
   final bool symbolicLinks;
   final bool deleteEmptyDirectory;
   final bool boundedUpload;
@@ -95,6 +101,8 @@ class TransferMetadata {
     this.group,
     this.extendedAttributes = const {},
     this.acl,
+    this.windowsAttributes,
+    this.windowsAttributesMask = 0x27,
   });
   final DateTime? modified;
   final DateTime? accessed;
@@ -104,6 +112,12 @@ class TransferMetadata {
   final String? group;
   final Map<String, Uint8List> extendedAttributes;
   final String? acl;
+
+  /// Native Windows file attributes. Writes apply only [windowsAttributesMask]
+  /// and preserve every other attribute already present on the destination.
+  /// The writable bits are read-only, hidden, system, and archive (0x27).
+  final int? windowsAttributes;
+  final int windowsAttributesMask;
 }
 
 typedef TransferCheckpoint = Future<void> Function();
