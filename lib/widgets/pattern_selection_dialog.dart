@@ -62,7 +62,7 @@ class _PatternSelectionDialogState
   bool _caseSensitive = false;
   bool _matchFullPath = false;
   String _kind = 'all';
-  String? _memoryMessage;
+  String Function(BuildContext)? _memoryMessage;
 
   @override
   void initState() {
@@ -120,7 +120,9 @@ class _PatternSelectionDialogState
       if (raw.trim().isEmpty) return null;
       final value = int.tryParse(raw.trim());
       if (value == null || value < 0) {
-        throw const FormatException('Enter a nonnegative size in bytes.');
+        throw FormatException(
+          context.commanderTr("Enter a nonnegative size in bytes."),
+        );
       }
       return value;
     }
@@ -129,7 +131,9 @@ class _PatternSelectionDialogState
       if (raw.trim().isEmpty) return null;
       final value = DateTime.tryParse(raw.trim());
       if (value == null) {
-        throw const FormatException('Enter an ISO date or date and time.');
+        throw FormatException(
+          context.commanderTr("Enter an ISO date or date and time."),
+        );
       }
       return value;
     }
@@ -169,7 +173,9 @@ class _PatternSelectionDialogState
         );
     if (query.contentPattern.isNotEmpty || query.searchArchives) {
       setState(
-        () => _memoryMessage = 'Run this content or archive search first, then select its result rows.',
+        () => _memoryMessage = (context) => context.commanderTr(
+          "Run this content or archive search first, then select its result rows.",
+        ),
       );
       return;
     }
@@ -181,8 +187,10 @@ class _PatternSelectionDialogState
       _before.text = query.modifiedBefore?.toIso8601String() ?? '';
       _extensions.text = query.extensions.join('; ');
       _includeHidden = query.includeHidden;
-      _memoryMessage =
-          'Loaded ${saved.name}. Selection applies to visible rows only.';
+      _memoryMessage = (context) => context.commanderTr(
+        "Loaded {0}. Selection applies to visible rows only.",
+        [saved.name],
+      );
     });
   }
 
@@ -234,13 +242,19 @@ class _PatternSelectionDialogState
       await _loadHistory();
       if (mounted) {
         setState(
-          () => _memoryMessage =
-              'Saved $value for search, selection, and transfer filters.',
+          () => _memoryMessage = (context) => context.commanderTr(
+            "Saved {0} for search, selection, and transfer filters.",
+            [value],
+          ),
         );
       }
     } catch (error) {
       if (mounted) {
-        setState(() => _memoryMessage = 'Could not save criteria: $error');
+        setState(
+          () =>
+              _memoryMessage = (context) =>
+                  context.commanderTr("Could not save criteria: {0}", [error]),
+        );
       }
     }
   }
@@ -343,7 +357,7 @@ class _PatternSelectionDialogState
                         PopupMenuItem(
                           value: recent,
                           child: Text(
-                            '${recent.mode == FilePatternMode.regex ? 'Regex' : 'Wildcards'}: ${recent.expression}',
+                            '${recent.mode == FilePatternMode.regex ? context.commanderTr("Regex") : context.commanderTr("Wildcards")}: ${recent.expression}',
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -552,9 +566,14 @@ class _PatternSelectionDialogState
                         : () {
                             final count = panel.rememberSelection();
                             setState(() {
-                              _memoryMessage = count == 0
-                                  ? 'Refresh the source before remembering its selection.'
-                                  : 'Remembered $count selected item(s) for this tab.';
+                              _memoryMessage = (context) => count == 0
+                                  ? context.commanderTr(
+                                      "Refresh the source before remembering its selection.",
+                                    )
+                                  : context.commanderTr(
+                                      "Remembered {0} selected item(s) for this tab.",
+                                      [count],
+                                    );
                             });
                           },
                     icon: const Icon(Icons.bookmark_add_outlined),
@@ -567,8 +586,10 @@ class _PatternSelectionDialogState
                         : () {
                             final count = panel.restoreSelection();
                             setState(() {
-                              _memoryMessage =
-                                  'Restored $count selected item(s).';
+                              _memoryMessage = (context) => context.commanderTr(
+                                "Restored {0} selected item(s).",
+                                [count],
+                              );
                             });
                           },
                     icon: const Icon(Icons.restore),
@@ -581,7 +602,7 @@ class _PatternSelectionDialogState
                 ],
               ),
               Text(
-                _memoryMessage ??
+                _memoryMessage?.call(context) ??
                     context.commanderTr(
                       "Remembered marks stay in this tab for the current session. Restore includes only visible, verified original paths.",
                     ),

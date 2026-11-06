@@ -535,13 +535,13 @@ class LocalOperationBackend extends FileOperationBackend {
       final staging = await Directory(paths.dirname(path))
           .createTemp('.crisp-transfer-');
       final staged = File(paths.join(staging.path, 'payload'));
-      await checkpoint?.call({
-        'phase': 'staging',
-        'destination': path,
-        'stagedPath': staged.path,
-        'stagingDirectory': staging.path,
-      });
       try {
+        await checkpoint?.call({
+          'phase': 'staging',
+          'destination': path,
+          'stagedPath': staged.path,
+          'stagingDirectory': staging.path,
+        });
         int? originalMode;
         if (initialType == FileSystemEntityType.file) {
           final mode = (await destination.stat()).mode;

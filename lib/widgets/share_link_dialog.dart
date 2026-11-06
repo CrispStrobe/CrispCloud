@@ -3,6 +3,8 @@
 // Generates a shareable link for a remote file via the provider's native API.
 // Supports password protection and expiration for providers that support it.
 
+import '../l10n/commander_strings.dart';
+
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -297,7 +299,7 @@ class _ShareLinkDialogState extends ConsumerState<_ShareLinkDialog> {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Share — ${widget.file.name}',
+              context.commanderTr("Share — {0}", [widget.file.name]),
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -328,18 +330,22 @@ class _ShareLinkDialogState extends ConsumerState<_ShareLinkDialog> {
         if (!_generated && !_loading)
           ElevatedButton.icon(
             icon: const Icon(Icons.link, size: 16),
-            label: const Text('Generate Link'),
+            label: Text(context.commanderTr("Generate Link")),
             onPressed: _generateLink,
           ),
         if (_generated && _shareUrl != null)
           ElevatedButton.icon(
             icon: const Icon(Icons.copy, size: 16),
-            label: const Text('Copy Link'),
+            label: Text(context.commanderTr("Copy Link")),
             onPressed: () {
               Clipboard.setData(ClipboardData(text: _shareUrl ?? ''));
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Link copied to clipboard')),
+                SnackBar(
+                  content: Text(
+                    context.commanderTr("Link copied to clipboard"),
+                  ),
+                ),
               );
             },
           ),
@@ -352,14 +358,17 @@ class _ShareLinkDialogState extends ConsumerState<_ShareLinkDialog> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Share Options', style: theme.textTheme.titleSmall),
+        Text(
+          context.commanderTr("Share Options"),
+          style: theme.textTheme.titleSmall,
+        ),
         const SizedBox(height: 12),
 
         // Password protection
         if (_supportsPassword) ...[
           SwitchListTile(
-            title: const Text('Password Protection'),
-            subtitle: const Text('Require password to access'),
+            title: Text(context.commanderTr("Password Protection")),
+            subtitle: Text(context.commanderTr("Require password to access")),
             value: _usePassword,
             onChanged: (v) => setState(() => _usePassword = v),
             dense: true,
@@ -370,10 +379,10 @@ class _ShareLinkDialogState extends ConsumerState<_ShareLinkDialog> {
               padding: const EdgeInsets.only(left: 16, bottom: 8),
               child: TextField(
                 controller: _passwordController,
-                decoration: const InputDecoration(
-                  labelText: 'Link Password',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock),
+                decoration: InputDecoration(
+                  labelText: context.commanderTr("Link Password"),
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.lock),
                   isDense: true,
                 ),
                 obscureText: true,
@@ -384,11 +393,13 @@ class _ShareLinkDialogState extends ConsumerState<_ShareLinkDialog> {
         // Expiration
         if (_supportsExpiration) ...[
           SwitchListTile(
-            title: const Text('Expiration'),
+            title: Text(context.commanderTr("Expiration")),
             subtitle: Text(
               _useExpiration
-                  ? 'Expires in $_expirationDays days'
-                  : 'Link never expires',
+                  ? context.commanderTr("Expires in {0} days", [
+                      _expirationDays,
+                    ])
+                  : context.commanderTr("Link never expires"),
             ),
             value: _useExpiration,
             onChanged: (v) => setState(() => _useExpiration = v),
@@ -398,19 +409,39 @@ class _ShareLinkDialogState extends ConsumerState<_ShareLinkDialog> {
           if (_useExpiration)
             Padding(
               padding: const EdgeInsets.only(left: 16, bottom: 8),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Expires in: '),
-                  const SizedBox(width: 8),
+                  Text(context.commanderTr("Expires in: ")),
+                  const SizedBox(height: 8),
                   DropdownButton<int>(
+                    isExpanded: true,
                     value: _expirationDays,
-                    items: const [
-                      DropdownMenuItem(value: 1, child: Text('1 day')),
-                      DropdownMenuItem(value: 3, child: Text('3 days')),
-                      DropdownMenuItem(value: 7, child: Text('7 days')),
-                      DropdownMenuItem(value: 14, child: Text('14 days')),
-                      DropdownMenuItem(value: 30, child: Text('30 days')),
-                      DropdownMenuItem(value: 90, child: Text('90 days')),
+                    items: [
+                      DropdownMenuItem(
+                        value: 1,
+                        child: Text(context.commanderTr("1 day")),
+                      ),
+                      DropdownMenuItem(
+                        value: 3,
+                        child: Text(context.commanderTr("3 days")),
+                      ),
+                      DropdownMenuItem(
+                        value: 7,
+                        child: Text(context.commanderTr("7 days")),
+                      ),
+                      DropdownMenuItem(
+                        value: 14,
+                        child: Text(context.commanderTr("14 days")),
+                      ),
+                      DropdownMenuItem(
+                        value: 30,
+                        child: Text(context.commanderTr("30 days")),
+                      ),
+                      DropdownMenuItem(
+                        value: 90,
+                        child: Text(context.commanderTr("90 days")),
+                      ),
                     ],
                     onChanged: (v) => setState(() => _expirationDays = v ?? 7),
                   ),
@@ -421,7 +452,9 @@ class _ShareLinkDialogState extends ConsumerState<_ShareLinkDialog> {
 
         if (!_supportsPassword && !_supportsExpiration)
           Text(
-            'This provider does not support password or expiration options.',
+            context.commanderTr(
+              "This provider does not support password or expiration options.",
+            ),
             style: TextStyle(
               fontSize: 12,
               color: theme.colorScheme.onSurfaceVariant,
@@ -438,16 +471,21 @@ class _ShareLinkDialogState extends ConsumerState<_ShareLinkDialog> {
         TextField(
           controller: _urlController,
           readOnly: true,
+          textDirection: TextDirection.ltr,
           decoration: InputDecoration(
             border: const OutlineInputBorder(),
-            labelText: 'Share URL',
+            labelText: context.commanderTr("Share URL"),
             suffixIcon: IconButton(
               icon: const Icon(Icons.copy),
-              tooltip: 'Copy to clipboard',
+              tooltip: context.commanderTr("Copy to clipboard"),
               onPressed: () {
                 Clipboard.setData(ClipboardData(text: _shareUrl ?? ''));
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Link copied to clipboard')),
+                  SnackBar(
+                    content: Text(
+                      context.commanderTr("Link copied to clipboard"),
+                    ),
+                  ),
                 );
               },
             ),
@@ -455,12 +493,13 @@ class _ShareLinkDialogState extends ConsumerState<_ShareLinkDialog> {
         ),
         const SizedBox(height: 12),
         if (_usePassword)
-          Row(
+          Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Icon(Icons.lock, size: 14, color: theme.colorScheme.primary),
               const SizedBox(width: 4),
               Text(
-                'Password protected',
+                context.commanderTr("Password protected"),
                 style: TextStyle(
                   fontSize: 12,
                   color: theme.colorScheme.primary,
@@ -469,12 +508,13 @@ class _ShareLinkDialogState extends ConsumerState<_ShareLinkDialog> {
             ],
           ),
         if (_useExpiration)
-          Row(
+          Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Icon(Icons.timer, size: 14, color: theme.colorScheme.tertiary),
               const SizedBox(width: 4),
               Text(
-                'Expires in $_expirationDays days',
+                context.commanderTr("Expires in {0} days", [_expirationDays]),
                 style: TextStyle(
                   fontSize: 12,
                   color: theme.colorScheme.tertiary,
@@ -484,7 +524,13 @@ class _ShareLinkDialogState extends ConsumerState<_ShareLinkDialog> {
           ),
         const SizedBox(height: 8),
         Text(
-          'Anyone with this link can access the file.',
+          _usePassword
+              ? context.commanderTr(
+                  "Anyone with this link and password can access the file.",
+                )
+              : context.commanderTr(
+                  "Anyone with this link can access the file.",
+                ),
           style: TextStyle(
             fontSize: 12,
             color: theme.colorScheme.onSurfaceVariant,
