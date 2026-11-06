@@ -13,6 +13,7 @@ import 'file_operation_service.dart';
 import 'local_file_service.dart';
 import 'panel_source_service.dart';
 import 'native_file_primitives.dart';
+import 'native_metadata.dart';
 import 'storage_identity.dart';
 import 'transfer_spool.dart';
 
@@ -64,6 +65,7 @@ class LocalOperationBackend extends FileOperationBackend {
     noReplaceMove: !kIsWeb && supportsNativeExclusiveRename,
     readRanges: !kIsWeb,
     setModifiedTime: !kIsWeb,
+    setAccessedTime: !kIsWeb,
     symbolicLinks: !kIsWeb,
     deleteEmptyDirectory: !kIsWeb || service is LocalTransferFileOperations,
     boundedUpload: !kIsWeb || service is LocalTransferFileOperations,
@@ -71,6 +73,9 @@ class LocalOperationBackend extends FileOperationBackend {
     preallocate: !kIsWeb && supportsNativePreallocation,
     copyOnWrite: !kIsWeb && supportsNativeCopyOnWrite,
     permissions: !kIsWeb && supportsNativePermissions,
+    ownership: !kIsWeb && supportsNativeOwnership,
+    extendedAttributes: !kIsWeb && supportsNativeExtendedAttributes,
+    accessControlLists: !kIsWeb && supportsNativeAccessControlLists,
   );
   @override
   String get label => 'Local';
@@ -695,21 +700,51 @@ class LocalOperationBackend extends FileOperationBackend {
               before.updatedAt!.isAtSameMomentAs(after.updatedAt!)));
 
   @override
-  Future<TransferMetadata> readMetadata(String path) async {
+  Future<TransferMetadata> readMetadata(String path) =>
+      readMetadataFields(path);
+
+  @override
+  Future<TransferMetadata> readMetadataFields(
+    String path, {
+    bool permissions = true,
+    bool modified = true,
+    bool accessed = true,
+    bool ownership = true,
+    bool extendedAttributes = true,
+    bool acl = true,
+  }) async {
     if (kIsWeb) return super.readMetadata(path);
     return service.withFileOperationAccess(path, () async {
       _check();
-      if (await FileSystemEntity.type(path, followLinks: false) ==
-          FileSystemEntityType.link) {
-        throw UnsupportedError(
-          'Link permissions cannot be read through their target.',
+      final type = await FileSystemEntity.type(path, followLinks: false);
+      if (type != FileSystemEntityType.file &&
+          type != FileSystemEntityType.directory) {
+        throw FileSystemException(
+          'Metadata requires a regular file or directory.',
+          path,
         );
       }
       final info = await FileStat.stat(path);
+      final extra =
+          supportsNativeMetadata && (ownership || extendedAttributes || acl)
+          ? await readNativeMetadata(
+              path,
+              ownership: ownership,
+              extendedAttributes: extendedAttributes,
+              acl: acl,
+            )
+          : const TransferMetadata();
+      _check();
       return TransferMetadata(
-        modified: info.modified,
-        accessed: info.accessed,
-        mode: capabilities.permissions ? info.mode & 0xfff : null,
+        modified: modified ? info.modified : null,
+        accessed: accessed ? info.accessed : null,
+        mode: permissions && capabilities.permissions
+            ? info.mode & 0xfff
+            : null,
+        owner: extra.owner,
+        group: extra.group,
+        extendedAttributes: extra.extendedAttributes,
+        acl: extra.acl,
       );
     });
   }
@@ -717,19 +752,32 @@ class LocalOperationBackend extends FileOperationBackend {
   @override
   Future<void> writeMetadata(String path, TransferMetadata metadata) async {
     if (kIsWeb) return super.writeMetadata(path, metadata);
-    if (metadata.owner != null ||
-        metadata.group != null ||
-        metadata.extendedAttributes.isNotEmpty ||
-        metadata.acl != null) {
+    if (!supportsNativeMetadata &&
+        (metadata.owner != null ||
+            metadata.group != null ||
+            metadata.extendedAttributes.isNotEmpty ||
+            metadata.acl != null)) {
       throw UnsupportedError(
         'This native backend does not implement the requested ownership, attributes, or ACL.',
       );
     }
     await service.withFileOperationAccess(path, () async {
       _check();
+      if (supportsNativeMetadata) {
+        await writeNativeMetadata(path, metadata);
+        _check();
+        return;
+      }
+      if (await FileSystemEntity.type(path, followLinks: false) ==
+          FileSystemEntityType.link) {
+        throw UnsupportedError('Metadata on symbolic links is not changed.');
+      }
       if (metadata.mode != null) await setNativeFileMode(path, metadata.mode!);
       if (metadata.modified != null) {
         await setModified(path, metadata.modified!);
+      }
+      if (metadata.accessed != null) {
+        await File(path).setLastAccessed(metadata.accessed!);
       }
     });
   }
@@ -777,7 +825,9 @@ class LocalOperationBackend extends FileOperationBackend {
     _check();
     await service.withFileOperationAccess(
       path,
-      () => File(path).setLastModified(modified),
+      () => supportsNativeMetadata
+          ? writeNativeMetadata(path, TransferMetadata(modified: modified))
+          : File(path).setLastModified(modified),
     );
   }
 

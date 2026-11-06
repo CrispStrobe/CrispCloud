@@ -25,6 +25,7 @@ class StorageTransferCapabilities {
     this.resumableUpload = false,
     this.append = false,
     this.setModifiedTime = false,
+    this.setAccessedTime = false,
     this.permissions = false,
     this.ownership = false,
     this.extendedAttributes = false,
@@ -53,6 +54,7 @@ class StorageTransferCapabilities {
   final bool resumableUpload;
   final bool append;
   final bool setModifiedTime;
+  final bool setAccessedTime;
   final bool permissions;
   final bool ownership;
   final bool extendedAttributes;
