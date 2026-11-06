@@ -203,12 +203,7 @@ void main() {
           await localContents('file.txt', 'edit');
         }
         final fast = await engine.planPair(pair, cloud);
-        expect(
-          fast.actions.single.type,
-          deletedLocal
-              ? SyncActionType.deleteRemote
-              : SyncActionType.deleteLocal,
-        );
+        expect(fast.actions.single.type, SyncActionType.conflict);
         final plan = await engine.planPair(pair, cloud, compareContents: true);
         expect(plan.actions.single.type, SyncActionType.conflict);
         final result = await engine.executePlan(plan);
@@ -218,6 +213,98 @@ void main() {
         } else {
           expect(await file.readAsString(), 'edit');
         }
+      },
+    );
+  }
+
+  test('fast deletion review protects changed surviving bytes without reading unchanged rows', () async {
+    final file = await synced('changed.txt', 'base');
+    await synced('unchanged.txt', 'safe');
+    await configure(policy: 'newestWins');
+    await file.delete();
+    cloud.put('/docs/changed.txt', 'edit'.codeUnits, date: timestamp);
+    cloud.reads.clear();
+    final plan = await engine.planPair(pair, cloud);
+    expect(plan.compareContents, isFalse);
+    expect(plan.actions.single.type, SyncActionType.conflict);
+    expect(cloud.reads, ['/docs/changed.txt']);
+    final result = await engine.executePlan(plan);
+    expect(result.conflicts, 1);
+    expect(result.deletedRemote, 0);
+    expect(cloud.files['/docs/changed.txt'], 'edit'.codeUnits);
+    expect(cloud.files['/docs/unchanged.txt'], 'safe'.codeUnits);
+    expect(
+      (await engine.planPair(pair, cloud)).actions.single.type,
+      SyncActionType.conflict,
+    );
+  });
+
+  test('persisted conflicts remain visible until equal candidate bytes are applied as a baseline', () async {
+    await synced('file.txt', 'base');
+    await localContents('file.txt', 'left');
+    cloud.put('/docs/file.txt', 'rght'.codeUnits, date: timestamp);
+    final conflict = await engine.planPair(pair, cloud, compareContents: true);
+    expect((await engine.executePlan(conflict)).conflicts, 1);
+    expect(
+      (await engine.planPair(pair, cloud)).actions.single.type,
+      SyncActionType.conflict,
+    );
+    cloud.put('/docs/file.txt', 'left'.codeUnits, date: timestamp);
+    final equal = await engine.planPair(pair, cloud);
+    expect(equal.actions, isEmpty);
+    expect(
+      (await database.getEntriesForPair(pair.id)).single.status,
+      'conflict',
+    );
+    expect((await engine.executePlan(equal)).errors, 0);
+    expect((await database.getEntriesForPair(pair.id)).single.status, 'synced');
+    expect(cloud.writes, isEmpty);
+  });
+
+  test(
+    'candidate digests expose a hidden second edit before a fast replacement',
+    () async {
+      final file = await synced('changed.txt', 'base');
+      await synced('unchanged.txt', 'safe');
+      await configure(policy: 'newestWins');
+      await file.writeAsString('locl');
+      await file.setLastModified(timestamp.add(const Duration(days: 1)));
+      cloud.put('/docs/changed.txt', 'rght'.codeUnits, date: timestamp);
+      cloud.reads.clear();
+      final plan = await engine.planPair(pair, cloud);
+      expect(plan.actions.single.type, SyncActionType.conflict);
+      expect(cloud.reads, ['/docs/changed.txt']);
+      final result = await engine.executePlan(plan);
+      expect(result.conflicts, 1);
+      expect(cloud.writes, isEmpty);
+      expect(cloud.files['/docs/changed.txt'], 'rght'.codeUnits);
+      expect(await file.readAsString(), 'locl');
+      final full = await engine.planPair(pair, cloud, compareContents: true);
+      expect(full.actions.single.type, SyncActionType.conflict);
+    },
+  );
+
+  for (final uploadOnly in [false, true]) {
+    test(
+      'fast candidate hashes distinguish a metadata-only source change from edited destination bytes${uploadOnly ? " in a one-way pair" : ""}',
+      () async {
+        final file = await synced('file.txt', 'base');
+        await configure(
+          policy: 'newestWins',
+          direction: uploadOnly ? 'uploadOnly' : 'twoWay',
+        );
+        await file.setLastModified(timestamp.add(const Duration(days: 1)));
+        cloud.put('/docs/file.txt', 'edit'.codeUnits, date: timestamp);
+        final plan = await engine.planPair(pair, cloud);
+        expect(
+          plan.actions.single.type,
+          uploadOnly ? SyncActionType.conflict : SyncActionType.download,
+        );
+        final result = await engine.executePlan(plan);
+        expect(result.errors, 0, reason: result.errorMessages.join('\n'));
+        expect(cloud.files['/docs/file.txt'], 'edit'.codeUnits);
+        expect(cloud.writes, isEmpty);
+        expect(await file.readAsString(), uploadOnly ? 'base' : 'edit');
       },
     );
   }

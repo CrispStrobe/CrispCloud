@@ -349,8 +349,7 @@ class SyncEngine {
       );
     }
 
-    final actions = <SyncAction>[];
-    for (final path in selectedPaths) {
+    SyncAction classify(String path, {required bool contents}) {
       final local = localFiles[path];
       final remote = remoteFiles[path];
       final known = dbMap[path];
@@ -364,14 +363,14 @@ class SyncEngine {
         known,
         policy: policy,
         direction: direction,
-        compareContents: compareContents,
+        compareContents: contents,
         localDigest: localDigest,
         remoteDigest: remoteDigest,
       );
       // A one-way pair may intentionally ignore edits on its receiving side.
-      // Full comparison still exposes those unequal bytes for review, with
+      // Content evidence still exposes those unequal bytes for review, with
       // only the directions allowed by this pair offered as choices.
-      if (compareContents &&
+      if (contents &&
           localDigest != null &&
           remoteDigest != null &&
           localDigest != remoteDigest &&
@@ -384,6 +383,12 @@ class SyncEngine {
           ConflictPolicy.manual,
         );
       }
+      return action;
+    }
+
+    final actions = <SyncAction>[];
+    for (final path in selectedPaths) {
+      final action = classify(path, contents: compareContents);
       if (action.type != SyncActionType.skip) {
         actions.add(action);
       }
@@ -404,6 +409,18 @@ class SyncEngine {
         check,
         onProgress: onCompareProgress,
       );
+      // Fast comparison already pays for these candidate digests to bind the
+      // review to exact bytes. Use that evidence against the common baseline
+      // before proposing a replacement or deletion; unchanged rows still need
+      // no reads. Initial pairs without a verified baseline keep their chosen
+      // first-sync policy (full comparison exposes them for explicit review).
+      for (var i = 0; i < actions.length; i++) {
+        final path = actions[i].relativePath;
+        if (_knownContentDigest(dbMap[path]) != null) {
+          actions[i] = classify(path, contents: true);
+        }
+      }
+      actions.removeWhere((action) => action.type == SyncActionType.skip);
     }
     final adopted = <String>[];
     if (verifyContents || compareContents) {
@@ -707,6 +724,13 @@ class SyncEngine {
     }
   }
 
+  String? _knownContentDigest(SyncEntry? known) {
+    final hash = known?.localHash;
+    return hash != null && _sha256Pattern.hasMatch(hash)
+        ? hash.toLowerCase()
+        : null;
+  }
+
   /// Determine what action to take for a given path.
   SyncAction _computeAction(
     String relativePath,
@@ -759,15 +783,35 @@ class SyncEngine {
     // local/cloud contents. Provider hashes use different algorithms and
     // cannot serve as a cross-provider content baseline. Older baselines
     // without this evidence require a choice when the two copies differ.
-    final recordedHash = known?.localHash;
-    final baselineDigest =
-        recordedHash != null && _sha256Pattern.hasMatch(recordedHash)
-        ? recordedHash.toLowerCase()
-        : null;
+    final baselineDigest = _knownContentDigest(known);
     if (compareContents &&
         baselineDigest == null &&
         policy == ConflictPolicy.newestWins) {
       policy = ConflictPolicy.manual;
+    }
+    if (compareContents &&
+        baselineDigest != null &&
+        policy == ConflictPolicy.newestWins) {
+      final localHiddenEdit =
+          local != null &&
+          !local.isFolder &&
+          localDigest != baselineDigest &&
+          !_isModified(local, known!.localModified, known.localSize);
+      final remoteHiddenEdit =
+          remote != null &&
+          !remote.isFolder &&
+          remoteDigest != baselineDigest &&
+          !_isRemoteModified(
+            remote,
+            known!.remoteModified,
+            known.remoteSize,
+            knownHash: known.remoteHash,
+          );
+      if (localHiddenEdit || remoteHiddenEdit) {
+        // Once bytes prove that a timestamp missed an edit, that timestamp
+        // cannot choose a winner in an edit/delete or two-edit conflict.
+        policy = ConflictPolicy.manual;
+      }
     }
 
     if (known?.status == 'pendingUpload' && local != null && !local.isFolder) {
@@ -788,6 +832,18 @@ class SyncEngine {
         remoteSize: remote.size,
         remoteContentHash: remote.contentHash,
         dbEntry: known,
+      );
+    }
+    if (known?.status == 'conflict' && (existsLocal || existsRemote)) {
+      // Recording the latest timestamps for a conflict does not resolve it.
+      // Keep the row in fast comparisons until an explicit pending decision
+      // is applied or the candidate digests prove both copies equal.
+      return _resolveConflict(
+        relativePath,
+        local,
+        remote,
+        known,
+        ConflictPolicy.manual,
       );
     }
     if (direction == SyncDirection.uploadOnly) {
