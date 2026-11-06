@@ -428,25 +428,28 @@ void main() {
       expect(result, local);
     });
 
-    test('nested archive: exit inner returns outer archive, exit outer returns local', () {
-      const localParent = LocalPanelSource('/docs');
-      const outerArchive = ArchivePanelSource(
-        archivePath: '/docs/outer.zip',
-        innerPath: '',
-        parent: localParent,
-      );
-      const innerArchive = ArchivePanelSource(
-        archivePath: '/docs/outer.zip',
-        innerPath: 'inner/',
-        parent: outerArchive,
-      );
+    test(
+      'nested archive: exit inner returns outer archive, exit outer returns local',
+      () {
+        const localParent = LocalPanelSource('/docs');
+        const outerArchive = ArchivePanelSource(
+          archivePath: '/docs/outer.zip',
+          innerPath: '',
+          parent: localParent,
+        );
+        const innerArchive = ArchivePanelSource(
+          archivePath: '/docs/outer.zip',
+          innerPath: 'inner/',
+          parent: outerArchive,
+        );
 
-      final afterFirstExit = service.exitToParent(innerArchive);
-      expect(afterFirstExit, outerArchive);
+        final afterFirstExit = service.exitToParent(innerArchive);
+        expect(afterFirstExit, outerArchive);
 
-      final afterSecondExit = service.exitToParent(afterFirstExit);
-      expect(afterSecondExit, localParent);
-    });
+        final afterSecondExit = service.exitToParent(afterFirstExit);
+        expect(afterSecondExit, localParent);
+      },
+    );
   });
 
   // ---- Both panels same type -----------------------------------------------
@@ -605,65 +608,72 @@ void main() {
       expect({a, b}.length, 2);
     });
 
-    test('archive and container equality retains parent account and unlocked session', () {
-      final a = RemotePanelSource(
-        providerName: 'X',
-        client: StubCloudClient('X'),
-        path: '/',
-      );
-      final b = RemotePanelSource(
-        providerName: 'X',
-        client: StubCloudClient('X'),
-        path: '/',
-      );
-      expect(
-        ArchivePanelSource(archivePath: '/same.zip', innerPath: '', parent: a),
-        isNot(
+    test(
+      'archive and container equality retains parent account and unlocked session',
+      () {
+        final a = RemotePanelSource(
+          providerName: 'X',
+          client: StubCloudClient('X'),
+          path: '/',
+        );
+        final b = RemotePanelSource(
+          providerName: 'X',
+          client: StubCloudClient('X'),
+          path: '/',
+        );
+        expect(
           ArchivePanelSource(
             archivePath: '/same.zip',
             innerPath: '',
-            parent: b,
+            parent: a,
           ),
-        ),
-      );
-      final session = Object();
-      final first = ContainerPanelSource(
-        containerPath: '/same.vc',
-        innerPath: '',
-        parent: a,
-        unlockSession: session,
-      );
-      expect(
-        first,
-        ContainerPanelSource(
+          isNot(
+            ArchivePanelSource(
+              archivePath: '/same.zip',
+              innerPath: '',
+              parent: b,
+            ),
+          ),
+        );
+        final session = Object();
+        final first = ContainerPanelSource(
           containerPath: '/same.vc',
           innerPath: '',
           parent: a,
           unlockSession: session,
-        ),
-      );
-      expect(
-        first,
-        isNot(
+        );
+        expect(
+          first,
           ContainerPanelSource(
             containerPath: '/same.vc',
             innerPath: '',
             parent: a,
-            unlockSession: Object(),
-          ),
-        ),
-      );
-      expect(
-        first,
-        isNot(
-          ContainerPanelSource(
-            containerPath: '/same.vc',
-            innerPath: '',
-            parent: b,
             unlockSession: session,
           ),
-        ),
-      );
-    });
+        );
+        expect(
+          first,
+          isNot(
+            ContainerPanelSource(
+              containerPath: '/same.vc',
+              innerPath: '',
+              parent: a,
+              unlockSession: Object(),
+            ),
+          ),
+        );
+        expect(
+          first,
+          isNot(
+            ContainerPanelSource(
+              containerPath: '/same.vc',
+              innerPath: '',
+              parent: b,
+              unlockSession: session,
+            ),
+          ),
+        );
+      },
+    );
   });
 }

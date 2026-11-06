@@ -26,7 +26,8 @@ Presets record a syntax mode so ambiguous date and range tokens retain their mea
 | Full path | `[A]` and `[A...]` ranges; the final transformed basename must still be valid |
 | CrispCloud/TC dates | `[YMD]`, `[hms]`, or individual `[Y]`, `[M]`, `[D]`, `[h]`, `[m]`, `[s]`, `[v]` fields |
 | DC dates | `[YYYY][MM][DD]`, `[hh][nn][ss]`; unpadded numeric fields and abbreviated/full English month/day names are supported |
-| Date source | `[T1]` modified, `[T2]` created, `[T3]` accessed, `[T4]` captured, `[T5]` time the batch was opened; offsets such as `[T4+60m]` are supported |
+| CrispCloud/DC date source | `[T1]` modified, `[T2]` created, `[T3]` accessed, `[T4]` captured, `[T5]` time the batch was opened; offsets such as `[T4+60m]` are supported |
+| TC date source | `[T1]` modified, `[T2]` time the dialog opened, `[T3]` last options-change time, `[T4]` captured; `[T5]` is not a TC token |
 | Captured metadata | `[meta:artist]`, `[meta:exif.DateTimeOriginal]`; nested keys and direct metadata keys are supported |
 | Built-in content fields | `[=tc.name]`, `[=tc.ext]`, `[=tc.fullname]`, `[=tc.path]`, `[=tc.size]`, and write/create/access date fields with optional date format |
 | Variables and identifiers | `[V:Project]` uses a `Project=value` variable; `[G]` generates a deterministic GUID-shaped value tied to the transformation's input path and fixed batch time |

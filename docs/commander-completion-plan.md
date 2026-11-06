@@ -8,6 +8,22 @@ in the parity audit. Development checkpoints are pushed incrementally to
 Baseline: `0728973` (the first Commander implementation). This document records
 implementation status, not a claim of universal Total/Double Commander parity.
 
+## Delivery status
+
+The implementation reached `main` through
+[PR #13](https://github.com/CrispStrobe/CrispCloud/pull/13) at `0b35b16` on
+6 November 2026. The original [PR #12](https://github.com/CrispStrobe/CrispCloud/pull/12)
+was closed after that integration. Its final documentation and S3 spool-cleanup
+regression checkpoints are retained on `feature/commander-file-operations`,
+reconciled with the merged fixes for follow-up review.
+
+The [merged-head CI run](https://github.com/CrispStrobe/CrispCloud/actions/runs/42139152722)
+passed the deterministic application suite (6,006 passed, 12 skipped), storage
+and CLI contracts, desktop crypto checks, and all six platform builds. These
+results describe `0b35b16`; validation of a later follow-up belongs to that
+follow-up's own CI run. See the [workflow guide](commander-file-operations.md#verification)
+for the validation scope and platform boundaries.
+
 ## Delivery rules
 
 - Keep the Riverpod/service boundaries and existing storage adapters.

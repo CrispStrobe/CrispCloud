@@ -15,14 +15,15 @@ import 'log_service.dart';
 import 'secure_storage_service.dart';
 import 'ftp_transfer_session.dart';
 
-typedef FTPClientFactory = FTPConnect Function(
-  String host, {
-  required int port,
-  required String user,
-  required String pass,
-  required SecurityType securityType,
-  required int timeout,
-});
+typedef FTPClientFactory =
+    FTPConnect Function(
+      String host, {
+      required int port,
+      required String user,
+      required String pass,
+      required SecurityType securityType,
+      required int timeout,
+    });
 
 class FTPClientAdapter extends CloudStorageClient
     with CloudTransferOperations

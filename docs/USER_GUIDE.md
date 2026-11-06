@@ -145,8 +145,8 @@ S3 uploads larger than 5 MB automatically use multipart upload with per-part pro
 
 ### Move and Copy
 
-- **Move**: select files, drag them to the target panel or folder. Alternatively, select → **F6** (Move).
-- **Copy**: select files → **F5** (Copy) or drag while holding **Ctrl** on desktop.
+- **Move**: select files and press **F6** to review move options, or **Ctrl+X** followed by **Ctrl+V** in the destination.
+- **Copy**: select files and press **F5**, drag them to the other pane, or use **Ctrl+C** followed by **Ctrl+V**. Each route opens copy options before starting a transfer.
 - **Copy/move with options**: F5/F6 opens a preview with destination, conflict, recursion, filter, metadata, and verification controls. Cloud transfers through this dialog use the provider streaming contracts and may transfer data through your device; providers without streaming support may buffer it.
 
 ### Delete
@@ -178,7 +178,9 @@ Right-click a file on an SFTP connection → **Permissions** to open the permiss
 
 ### Undo
 
-Use **Ctrl+Z** or Edit → **Undo Last Action** for a reversible action in the history. The history keeps the last 50 records. Multi-Rename records successful renames individually and binds undo to the original storage account. Copy/move with options reports each completed, skipped, or failed item; it does not offer whole-batch rollback. Delete recovery depends on the provider and available trash support.
+Use **Ctrl+Z** or Edit → **Undo Last Action** for a reversible action in the history. The history keeps the last 50 actions for the current session. Multi-Rename records the completed batch as one action, including batches of more than 50 files, and binds undo to the original storage account. Undo refuses occupied original names and can retry the remaining items after a partial failure. Copy/move with options reports each completed, skipped, or failed item; it does not offer whole-batch rollback. Delete recovery depends on the provider and available trash support.
+
+Multi-Rename also has **History / recovery**, which keeps its batch records across restarts. Reconnect the original storage account to inspect, resume, or restore a recorded batch. Its checks still apply to the current files and occupied names; recovery is a sequence of checked operations, not an atomic rollback. See [Multi-rename and recovery](MULTI_RENAME.md).
 
 ---
 
@@ -421,8 +423,10 @@ Use **Arrow keys** to navigate and **Enter** to execute. The palette is context-
 | Shortcut | Action |
 |----------|--------|
 | F2 | Rename selected file |
-| F5 / Ctrl+C | Open copy options for selected files |
-| F6 / Ctrl+X | Open move options for selected files |
+| F5 / Shift+F5 | Open copy options for selected files |
+| F6 | Open move options for selected files |
+| Ctrl+C / Ctrl+X | Copy / cut the captured file selection |
+| Ctrl+V | Paste through reviewed copy/move options |
 | F7 | Create new folder |
 | F8 / Delete | Delete selected files |
 | Ctrl+Z | Undo last action |
@@ -487,7 +491,7 @@ The generated URL is copied to your clipboard. On mobile, the native share sheet
 
 Select files, then press **Ctrl+M** or choose **More actions → Multi-Rename**. The normal multi-selection context menu also opens this tool through **Batch Rename**.
 
-Use name and extension masks, counters, literal or regex find/replace, and case conversion to compose new names. The preview shows original paths, proposed names, and validation errors before execution. See [Multi-rename](commander-file-operations.md#multi-rename) for mask examples, presets, and collision handling.
+Use name and extension masks, counters, literal or regex find/replace, and case conversion to compose new names. Advanced controls select the CrispCloud/Total Commander/Double Commander mask dialect, dates, variables, and collision numbering. You can chain transformation steps, edit proposed names, import names from clipboard or a text file, reorder rows, or exclude items before execution. The preview shows original paths, proposed names, and validation errors. See [Multi-rename](commander-file-operations.md#multi-rename) for examples, presets, and undo.
 
 ---
 

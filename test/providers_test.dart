@@ -76,6 +76,17 @@ class _TestLocalFileService implements LocalFileService {
   }) async => const <FileItem>[];
 }
 
+// Publish rows through the panel API and retain the displayed objects. The
+// panel deliberately copies input rows and only accepts its current objects
+// for selection; detached or stale same-path objects are not valid clicks.
+List<FileItem> _publishSelectionRows(PanelNotifier panel, List<String> names) {
+  panel.showSearchResults([
+    for (final name in names)
+      FileItem(name: name, isFolder: false, path: '/selection-fixture/$name'),
+  ]);
+  return panel.files!;
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late ProviderContainer container;
@@ -240,9 +251,10 @@ void main() {
       item1 = panel.files![0];
       item2 = panel.files![1];
       panel.toggleSelection(item1);
+      expect(panel.selection.single, same(item1));
       panel.toggleSelection(item2);
       expect(panel.selection.length, equals(1));
-      expect(panel.selection.contains(item2), isTrue);
+      expect(panel.selection.single, same(item2));
     });
 
     test('toggleSelection with ctrlKey adds to selection', () {
@@ -254,7 +266,7 @@ void main() {
       item2 = panel.files![1];
       panel.toggleSelection(item1);
       panel.toggleSelection(item2, ctrlKey: true);
-      expect(panel.selection.length, equals(2));
+      expect(panel.selection, unorderedEquals([item1, item2]));
     });
 
     test('toggleSelection with ctrlKey removes already-selected', () {
@@ -263,6 +275,7 @@ void main() {
       panel.showSearchResults([item]);
       item = panel.files!.single;
       panel.toggleSelection(item);
+      expect(panel.selection.single, same(item));
       panel.toggleSelection(item, ctrlKey: true);
       expect(panel.selection.contains(item), isFalse);
     });
@@ -273,6 +286,7 @@ void main() {
       panel.showSearchResults([item]);
       item = panel.files!.single;
       panel.toggleSelection(item);
+      expect(panel.selection.single, same(item));
       panel.clearSelection();
       expect(panel.selection, isEmpty);
     });
@@ -290,6 +304,24 @@ void main() {
       final panel = container.read(panelProvider(PanelSide.local));
       var item = FileItem(name: 'test.txt', isFolder: false);
       expect(panel.isSelected(item), isFalse);
+    });
+
+    test('toggleSelection rejects detached and stale same-path rows', () {
+      final panel = container.read(panelProvider(PanelSide.local));
+      final old = _publishSelectionRows(panel, ['test.txt']).single;
+      panel.toggleSelection(old.copyWith());
+      expect(panel.selection, isEmpty);
+      panel.toggleSelection(old);
+      expect(panel.selection.single, same(old));
+
+      final current = _publishSelectionRows(panel, ['test.txt']).single;
+      expect(identical(current, old), isFalse);
+      panel.toggleSelection(old);
+      expect(panel.selection, isEmpty);
+      panel.toggleSelection(current);
+      expect(panel.selection.single, same(current));
+      panel.toggleSelection(old, ctrlKey: true);
+      expect(panel.selection.single, same(current));
     });
 
     test('sort defaults to name ascending', () {

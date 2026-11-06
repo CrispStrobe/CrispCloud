@@ -21,6 +21,8 @@ import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/services/file_bytes_loader.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
 
+import 'support/workflow_fake_client.dart';
+
 void main() {
   group('ViewBytesSource.memory', () {
     test('open exposes size and readSync slices and clamps at EOF', () async {
@@ -56,6 +58,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          authProvider.overrideWith((_) => _LocalTestAuth()),
           localFileServiceProvider.overrideWithValue(fake),
           secureStorageProvider.overrideWithValue(secure),
           configPathProvider.overrideWithValue(''),
@@ -92,6 +95,7 @@ void main() {
     expect(bytes, <int>[1, 2, 3]);
     expect(fake.scopeAttempts, greaterThanOrEqualTo(2));
     expect(fake.accessRequests, 1);
+    await tester.pumpWidget(const SizedBox());
   });
 
   group('ViewBytesSource.file', () {
@@ -145,16 +149,33 @@ void main() {
   });
 }
 
+class _LocalTestAuth extends ChangeNotifier implements AuthNotifier {
+  @override
+  final WorkflowFakeClient client = WorkflowFakeClient()..current = false;
+
+  @override
+  bool get isConnected => false;
+
+  @override
+  String? get userEmail => null;
+
+  @override
+  String get providerName => client.providerName;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 class _RetryLocalService
     implements LocalFileService, ScopedLocalFileOperations {
   int scopeAttempts = 0;
   int accessRequests = 0;
 
   @override
-  String currentPath = '/';
+  bool get isConnected => false;
 
   @override
-  String? get grantedBasePath => '/';
+  String? get userEmail => null;
 
   @override
   Future<T> withFileOperationAccess<T>(

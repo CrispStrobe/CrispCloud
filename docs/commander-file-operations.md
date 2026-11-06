@@ -84,6 +84,9 @@ search roots never replace the reviewed source list. Content/archive criteria
 must run as a search first, then feed verified results into a panel. They are
 not silently discarded by a selection or transfer.
 
+Clipboard copy/cut captures the source selection. Paste opens the same reviewed
+transfer options at the destination; it does not immediately overwrite files.
+
 ## Multi-rename
 
 The [multi-rename guide](MULTI_RENAME.md) documents syntax and recovery.
@@ -268,7 +271,10 @@ Tests exercise captured accounts, persistent collections, rename staging/undo,
 restart/recovery, failed transfers, native temporary files, mocked provider
 protocols, archives, integrity manifests and narrow widget layouts. Provider
 tests use fixtures, not live credentials. Validation uses Flutter 3.47.8 /
-Dart 3.13.7. These checkpoints do not deploy or merge the feature branch.
+Dart 3.13.7. The implementation was merged through
+[PR #13](https://github.com/CrispStrobe/CrispCloud/pull/13); historical development
+checkpoints are recorded in the closed
+[PR #12](https://github.com/CrispStrobe/CrispCloud/pull/12).
 
 The deterministic application gate excludes explicitly tagged benchmarks, live
 provider/deployment tests, integration fixtures and goldens. Run the same scope
@@ -284,8 +290,19 @@ flutter build web --no-pub --release --no-wasm-dry-run
 CI separately runs shared-storage and CLI contracts, desktop crypto checks on
 Linux/Windows/macOS, and native platform builds. Analysis follows the repository's
 errors-only policy; a successful check does not mean all existing lint notices
-have been removed. Checkpoint results and outstanding platform checks are
-recorded in [the feature PR](https://github.com/CrispStrobe/CrispCloud/pull/12).
+have been removed.
+
+At merged commit `0b35b16`, the
+[main CI run](https://github.com/CrispStrobe/CrispCloud/actions/runs/42139152722)
+passed 6,006 deterministic application tests with 12 skipped, 14 shared-storage
+contracts, 104 CLI contracts, and 44 crypto tests on each desktop OS. Release
+builds passed for Web, Linux, Windows, macOS, Android and unsigned iOS. The macOS
+job also passed 102 regression tests and a 12-second release-app startup check.
+The [image-editor workflow](https://github.com/CrispStrobe/CrispCloud/actions/runs/42139152665)
+and [PDF-editor workflow](https://github.com/CrispStrobe/CrispCloud/actions/runs/42139152677)
+passed for the same commit. These are merged-head results, not validation of a
+later follow-up commit. Builds and startup checks do not replace interactive
+provider testing or signed-device validation.
 
 Reference behavior:
 

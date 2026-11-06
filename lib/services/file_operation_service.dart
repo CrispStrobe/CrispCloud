@@ -351,10 +351,11 @@ class FileConflictResolution {
   final bool applyToAll;
 }
 
-typedef DetailedFileConflictResolver = Future<FileConflictResolution> Function(
-  FileOperationEntry entry,
-  FileItem existing,
-);
+typedef DetailedFileConflictResolver =
+    Future<FileConflictResolution> Function(
+      FileOperationEntry entry,
+      FileItem existing,
+    );
 
 class FileOperationNeedsDecision implements Exception {
   const FileOperationNeedsDecision();
@@ -362,10 +363,11 @@ class FileOperationNeedsDecision implements Exception {
   String toString() => 'Waiting for a conflict decision.';
 }
 
-typedef FileConflictResolver = Future<FileConflictDecision> Function(
-  FileOperationEntry entry,
-  FileItem existing,
-);
+typedef FileConflictResolver =
+    Future<FileConflictDecision> Function(
+      FileOperationEntry entry,
+      FileItem existing,
+    );
 
 /// Previews all paths, then executes in order. Directory moves are file-by-file:
 /// only empty source directories are removed, so filters/skips never lose data.
@@ -647,7 +649,8 @@ class FileOperationService {
       if (file.isFolder &&
           !options.matchesSharedCriteria(file, matcher: criteriaMatcher)) {
         entry.outcome = FileOperationOutcome.filtered;
-        entry.message = 'Folder excluded by shared criteria; matching descendants remain eligible.';
+        entry.message =
+            'Folder excluded by shared criteria; matching descendants remain eligible.';
       }
       final previous = destinations[destination.destinationPathKey(output)];
       if (previous != null && !(previous.source.isFolder && file.isFolder)) {

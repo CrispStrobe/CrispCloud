@@ -461,8 +461,15 @@ class TransferNotifier extends ChangeNotifier {
               onEntryComplete: (entry) {
                 final row = rows[entry]!;
                 row.isComplete = entry.completed;
-                row.error = entry.failed ? entry.message : null;
-                row.statusLabel = entry.outcome.name;
+                row.error =
+                    entry.failed ||
+                        entry.outcome == FileOperationOutcome.needsDecision
+                    ? entry.message
+                    : null;
+                row.statusLabel =
+                    entry.outcome == FileOperationOutcome.needsDecision
+                    ? 'Waiting for a conflict decision'
+                    : entry.outcome.name;
                 if (entry.completed && counted.add(entry)) {
                   completedBytes += transferSizes[entry]!;
                 }
@@ -477,6 +484,15 @@ class TransferNotifier extends ChangeNotifier {
             if (control.isCancelled) {
               operation.cancel();
             } else if (waiting) {
+              // A background conflict stops the service with remaining rows
+              // still pending. Never report that partially executed plan as
+              // complete, or invite a retry of the already completed rows.
+              for (final entry in plan.entries.where(
+                (entry) => entry.outcome == FileOperationOutcome.pending,
+              )) {
+                rows[entry]!.statusLabel =
+                    'Not started (awaiting conflict decision)';
+              }
               operation.fail(
                 'Waiting for a conflict decision. Review the saved transfer to continue.',
               );
@@ -537,7 +553,8 @@ class TransferNotifier extends ChangeNotifier {
               await _journal.setStatus(
                 id,
                 TransferJobStatus.cancelled,
-                message: 'Cancelled. Review the saved transfer to retry unfinished items.',
+                message:
+                    'Cancelled. Review the saved transfer to retry unfinished items.',
               );
             }
             if (error != null && error is! TransferCancelled) {

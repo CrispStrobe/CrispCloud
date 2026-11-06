@@ -305,6 +305,28 @@ void main() {
       expect(target.writeAttempts, isEmpty);
       expect(target.text('/target/report.txt'), 'appeared after preview');
     });
+
+    test('staged writes cannot use another selected source as scratch space', () async {
+      source.file('/source/report.txt', 'new contents');
+      final guarded = _StagedPathBackend('/target/selected.txt')
+        ..directory('/target')
+        ..file('/target/selected.txt', 'protected contents');
+      final plan = await service.prepare(
+        files: [source.item('/source/report.txt')],
+        source: source,
+        destination: guarded,
+        targetDirectory: '/target',
+        protectedDestinationPaths: ['/target/selected.txt'],
+      );
+      expect(plan.canExecute, isTrue);
+      await execute(plan);
+      expect(plan.entries.single.failed, isTrue);
+      expect(plan.entries.single.message, contains('another selected source'));
+      expect(guarded.writeAttempts, isEmpty);
+      expect(guarded.text('/target/selected.txt'), 'protected contents');
+      expect(guarded.contains('/target/report.txt'), isFalse);
+      expect(source.text('/source/report.txt'), 'new contents');
+    });
   });
 
   group('shared search criteria', () {
@@ -1490,6 +1512,37 @@ class _CaseInsensitiveMemoryBackend extends _MemoryBackend {
       if (pathKey(entry.key) == pathKey(path)) return entry.value.item;
     }
     return null;
+  }
+}
+
+/// Reports its proposed staging path before writing any file content.
+class _StagedPathBackend extends _MemoryBackend {
+  _StagedPathBackend(this.stagedPath) : super('target');
+
+  final String stagedPath;
+
+  @override
+  Future<void> writePreparedFile(
+    String path,
+    Stream<List<int>> data,
+    int? length, {
+    required bool replace,
+    Future<void> Function(FileItem staged)? verifyStaged,
+    Future<void> Function(Map<String, dynamic> state)? checkpoint,
+  }) async {
+    await checkpoint?.call({
+      'phase': 'writing',
+      'stagedPath': stagedPath,
+      'destination': path,
+    });
+    await super.writePreparedFile(
+      path,
+      data,
+      length,
+      replace: replace,
+      verifyStaged: verifyStaged,
+      checkpoint: checkpoint,
+    );
   }
 }
 

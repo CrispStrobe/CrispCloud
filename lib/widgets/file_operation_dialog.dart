@@ -651,6 +651,25 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     final supportsLinks =
         (destinationBackend?.supportsSymbolicLinks ?? false) &&
         (sourceBackend?.supportsSymbolicLinks ?? false);
+    final supportsPermissions =
+        (sourceBackend?.capabilities.permissions ?? false) &&
+        (destinationBackend?.capabilities.permissions ?? false);
+    final supportsOwnership =
+        (sourceBackend?.capabilities.ownership ?? false) &&
+        (destinationBackend?.capabilities.ownership ?? false);
+    final supportsXattrs =
+        (sourceBackend?.capabilities.extendedAttributes ?? false) &&
+        (destinationBackend?.capabilities.extendedAttributes ?? false);
+    final supportsAcl =
+        (sourceBackend?.capabilities.accessControlLists ?? false) &&
+        (destinationBackend?.capabilities.accessControlLists ?? false);
+    final hasUnsupportedSettings =
+        (_preserveTime && !supportsTime) ||
+        (_copyLinks && !supportsLinks) ||
+        (_preservePermissions && !supportsPermissions) ||
+        (_preserveOwnership && !supportsOwnership) ||
+        (_preserveXattrs && !supportsXattrs) ||
+        (_preserveAcl && !supportsAcl);
     final supportsClone =
         sourceBackend != null &&
         destinationBackend != null &&
@@ -1156,45 +1175,32 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                       context.commanderTr("Preserve permissions"),
                       _preservePermissions,
                       (v) => _preservePermissions = v,
-                      enabled:
-                          (sourceBackend?.capabilities.permissions ?? false) &&
-                          (destinationBackend?.capabilities.permissions ??
-                              false),
+                      enabled: supportsPermissions,
                     ),
                     _toggle(
                       context.commanderTr("Preserve owner/group"),
                       _preserveOwnership,
                       (v) => _preserveOwnership = v,
-                      enabled:
-                          (sourceBackend?.capabilities.ownership ?? false) &&
-                          (destinationBackend?.capabilities.ownership ?? false),
+                      enabled: supportsOwnership,
                     ),
                     _toggle(
                       context.commanderTr("Preserve extended attributes"),
                       _preserveXattrs,
                       (v) => _preserveXattrs = v,
-                      enabled:
-                          (sourceBackend?.capabilities.extendedAttributes ??
-                              false) &&
-                          (destinationBackend
-                                  ?.capabilities
-                                  .extendedAttributes ??
-                              false),
+                      enabled: supportsXattrs,
                     ),
                     _toggle(
                       context.commanderTr("Preserve ACL"),
                       _preserveAcl,
                       (v) => _preserveAcl = v,
-                      enabled:
-                          (sourceBackend?.capabilities.accessControlLists ??
-                              false) &&
-                          (destinationBackend
-                                  ?.capabilities
-                                  .accessControlLists ??
-                              false),
+                      enabled: supportsAcl,
                     ),
                   ],
                 ),
+                if (hasUnsupportedSettings)
+                  const Text(
+                    'Some selected preservation settings are unavailable for these storages. Clear those settings or choose compatible storage before starting.',
+                  ),
                 DropdownButtonFormField<FileCopyMethod>(
                   key: const ValueKey('transfer-copy-method'),
                   initialValue: _copyMethod,
@@ -1484,13 +1490,16 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
     bool value,
     ValueChanged<bool> change, {
     bool enabled = true,
-  }) => MergeSemantics(
-    child: Row(
+  }) {
+    final row = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Checkbox(
           value: value,
-          onChanged: _busy || !enabled
+          // Profiles can request capabilities unavailable on the current
+          // storage. Keep those requests visible and allow clearing them;
+          // unchecked unsupported options remain unavailable.
+          onChanged: _busy || (!enabled && !value)
               ? null
               : (value) => _change(() => change(value!)),
         ),
@@ -1498,6 +1507,14 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
           child: Text(text, style: Theme.of(context).textTheme.bodySmall),
         ),
       ],
-    ),
-  );
+    );
+    return enabled
+        ? row
+        : Tooltip(
+            message: value
+                ? 'Unavailable for these storages. Clear this setting or choose compatible storage.'
+                : 'Unavailable for these storages.',
+            child: row,
+          );
+  }
 }

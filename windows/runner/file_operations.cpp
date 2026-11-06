@@ -2,6 +2,7 @@
 #include "utils.h"
 #include <windows.h>
 #include <shellapi.h>
+#include <shlobj.h>
 #include <shobjidl.h>
 #include <wrl/client.h>
 #include <flutter/method_channel.h>

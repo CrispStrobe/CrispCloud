@@ -36,6 +36,7 @@ import 'file_origin_actions.dart';
 import 'command_extension_actions.dart';
 import '../services/cloud_storage_interface.dart'
     show CloudStorageClientCapabilities;
+import '../services/file_split_service.dart';
 import '../services/image_edit_session.dart' show isImageEditorFileName;
 import '../services/link_service.dart';
 import '../services/secure_wipe_service.dart';
@@ -78,8 +79,9 @@ Future<void> openListedFileWithSystemEditor(
     });
   } catch (error) {
     if (context.mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('$error')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('$error')));
     }
   }
 }
@@ -151,8 +153,9 @@ void _showResultListContextMenu(
         await action();
       } catch (error) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text(error.toString())));
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(error.toString())));
         }
       }
     }),
@@ -349,8 +352,9 @@ void showFileContextMenu(
         await withNativeFileAction(ref, origin, paths, action);
       } catch (error) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text('$error')));
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('$error')));
         }
       }
     }());
@@ -1662,8 +1666,9 @@ Future<void> _downloadFilesOnWeb(
     }
   } catch (error) {
     if (context.mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('$error')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('$error')));
     }
   }
 }
@@ -1979,8 +1984,9 @@ Widget _propertyRow(
       children: [
         Text(
           label,
-          style: Theme.of(context).textTheme.labelMedium
-              ?.copyWith(color: Theme.of(context).colorScheme.primary),
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+            color: Theme.of(context).colorScheme.primary,
+          ),
         ),
         const SizedBox(height: 4),
         SelectableText(

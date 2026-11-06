@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:crisp_cloud/l10n/app_localizations.dart';
@@ -5,6 +6,7 @@ import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/models/rename_batch.dart';
 import 'package:crisp_cloud/providers/providers.dart';
+import 'package:crisp_cloud/providers/action_history_provider.dart';
 import 'package:crisp_cloud/providers/panel_source_provider.dart';
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
@@ -35,6 +37,9 @@ class _Local extends Fake implements LocalFileService {
 class _Cloud extends Fake implements CloudStorageClient {
   final paths = <String>{'/first.txt', '/second.txt'};
   final renames = <String>[];
+  final rejectedRenames = <String>{};
+  final sizes = <String, int>{};
+  Future<void> Function(String path)? afterRename;
   String account = 'rename-account';
   bool pathUuids = false;
   @override
@@ -57,7 +62,7 @@ class _Cloud extends Fake implements CloudStorageClient {
           {
             'name': p.posix.basename(file),
             'path': file,
-            'size': 5,
+            'size': sizes[file] ?? 5,
             if (pathUuids) 'uuid': file,
           },
     ],
@@ -65,6 +70,9 @@ class _Cloud extends Fake implements CloudStorageClient {
 
   @override
   Future<void> renamePath(String path, String newName) async {
+    if (rejectedRenames.contains(path)) {
+      throw StateError('Rename refused before mutation');
+    }
     final target = p.posix.join(p.posix.dirname(path), newName);
     if (!paths.contains(path) || paths.contains(target)) {
       throw StateError('Missing source or occupied destination');
@@ -72,6 +80,7 @@ class _Cloud extends Fake implements CloudStorageClient {
     paths.remove(path);
     paths.add(target);
     renames.add(path);
+    await afterRename?.call(path);
   }
 }
 
@@ -215,6 +224,28 @@ void main() {
     );
   });
 
+  testWidgets('changed source metadata blocks the batch before any rename', (
+    tester,
+  ) async {
+    await open(tester);
+    cloud.sizes['/second.txt'] = 9;
+    await tester.enterText(
+      find.byKey(const ValueKey('rename-name-mask')),
+      '[N]_new',
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('rename-apply')));
+    await tester.pumpAndSettle();
+    expect(cloud.renames, isEmpty);
+    expect(cloud.paths, {'/first.txt', '/second.txt'});
+    expect(
+      find.text(
+        'Nothing was renamed. Resolve the path errors shown in the preview.',
+      ),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('presets persist and restore the actual mask settings', (
     tester,
   ) async {
@@ -296,6 +327,160 @@ void main() {
     await tester.pumpAndSettle();
     expect(cloud.renames, ['/second.txt', '/first.txt']);
     expect(cloud.paths, {'/manual-first.txt', '/manual-second.txt'});
+  });
+
+  testWidgets('a completed batch is one source-bound undo action', (
+    tester,
+  ) async {
+    await open(tester);
+    await tester.enterText(
+      find.byKey(const ValueKey('rename-name-mask')),
+      '[N]_new',
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('rename-apply')));
+    await tester.pumpAndSettle();
+    final history = container.read(actionHistoryProvider);
+    expect(history.history, hasLength(1));
+    expect(history.history.single.description, 'Renamed batch of 2 items');
+    // Closing the dialog must not invalidate the captured undo callback.
+    await tester.pumpWidget(const SizedBox.shrink());
+    final undone = await history.undoLast(const UndoContext());
+    expect(undone?.success, isTrue);
+    expect(cloud.paths, {'/first.txt', '/second.txt'});
+    expect(history.history, isEmpty);
+  });
+
+  testWidgets('disposing an active dialog retains undo for completed rows', (
+    tester,
+  ) async {
+    final firstRenamed = Completer<void>();
+    final continueOperation = Completer<void>();
+    cloud.afterRename = (path) async {
+      if (path == '/first.txt') {
+        firstRenamed.complete();
+        await continueOperation.future;
+      }
+    };
+    await open(tester);
+    await tester.enterText(
+      find.byKey(const ValueKey('rename-name-mask')),
+      '[N]_new',
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('rename-apply')));
+    await tester.pump();
+    expect(firstRenamed.isCompleted, isTrue);
+    await tester.pumpWidget(const SizedBox.shrink());
+    continueOperation.complete();
+    await tester.pumpAndSettle();
+    expect(cloud.paths, {'/first_new.txt', '/second.txt'});
+    final history = container.read(actionHistoryProvider);
+    expect(history.history, hasLength(1));
+    final undone = await history.undoLast(const UndoContext());
+    expect(undone?.success, isTrue);
+    expect(cloud.paths, {'/first.txt', '/second.txt'});
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('disposing during the final rename records one complete undo', (
+    tester,
+  ) async {
+    final lastRenamed = Completer<void>();
+    final finishOperation = Completer<void>();
+    cloud.afterRename = (path) async {
+      if (path == '/second.txt') {
+        lastRenamed.complete();
+        await finishOperation.future;
+      }
+    };
+    await open(tester);
+    await tester.enterText(
+      find.byKey(const ValueKey('rename-name-mask')),
+      '[N]_new',
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('rename-apply')));
+    await tester.pump();
+    expect(lastRenamed.isCompleted, isTrue);
+    await tester.pumpWidget(const SizedBox.shrink());
+    finishOperation.complete();
+    await tester.pumpAndSettle();
+    expect(cloud.paths, {'/first_new.txt', '/second_new.txt'});
+    final history = container.read(actionHistoryProvider);
+    expect(history.history, hasLength(1));
+    final record =
+        (await container.read(renameBatchStoreProvider).list()).single;
+    expect(record.isComplete, isTrue);
+    expect(history.history.single.metadata['renameBatchId'], record.id);
+    expect((await history.undoLast(const UndoContext()))?.success, isTrue);
+    expect(cloud.paths, {'/first.txt', '/second.txt'});
+    expect(history.history, isEmpty);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a partially failed batch keeps undo for its completed rows', (
+    tester,
+  ) async {
+    cloud.rejectedRenames.add('/second.txt');
+    await open(tester);
+    await tester.enterText(
+      find.byKey(const ValueKey('rename-name-mask')),
+      '[N]_new',
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('rename-apply')));
+    await tester.pumpAndSettle();
+    expect(cloud.paths, {'/first_new.txt', '/second.txt'});
+    expect(cloud.renames, ['/first.txt']);
+    final history = container.read(actionHistoryProvider);
+    expect(history.history, hasLength(1));
+    final store = container.read(renameBatchStoreProvider);
+    final record = (await store.list()).single;
+    expect(record.state, RenameBatchState.failed);
+    await tester.pumpWidget(const SizedBox.shrink());
+    expect((await history.undoLast(const UndoContext()))?.success, isTrue);
+    expect(cloud.paths, {'/first.txt', '/second.txt'});
+    expect(cloud.renames, ['/first.txt', '/first_new.txt']);
+    expect((await store.read(record.id))!.isRestored, isTrue);
+    expect(history.history, isEmpty);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('one journal-backed undo restores all 75 renamed items', (
+    tester,
+  ) async {
+    final originals = {
+      for (var index = 0; index < 75; index++) '/file-$index.txt',
+    };
+    cloud.paths
+      ..clear()
+      ..addAll(originals);
+    final panel = container.read(panelProvider(PanelSide.remote));
+    await panel.refresh();
+    files = panel.files!.where((file) => !file.isFolder).toList();
+    await open(tester);
+    await tester.enterText(
+      find.byKey(const ValueKey('rename-name-mask')),
+      '[N]_new',
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('rename-apply')));
+    await tester.pumpAndSettle();
+    final history = container.read(actionHistoryProvider);
+    expect(history.history, hasLength(1));
+    expect(history.history.single.metadata['renameBatchCount'], 75);
+    expect(cloud.renames, hasLength(75));
+    expect(
+      (await container.read(renameBatchStoreProvider).list()).single.items,
+      hasLength(75),
+    );
+    await tester.pumpWidget(const SizedBox.shrink());
+    expect((await history.undoLast(const UndoContext()))?.success, isTrue);
+    expect(cloud.paths, originals);
+    expect(cloud.renames, hasLength(150));
+    expect(history.history, isEmpty);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('excluding a row keeps its file and reallocates the counter', (

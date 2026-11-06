@@ -3410,16 +3410,28 @@ class PanelNotifier extends ChangeNotifier {
     await renameFile(item, trimmed);
   }
 
-  Future<bool> operationPathExists(String path, PanelFileOrigin origin) async {
+  Future<bool> operationPathExists(String path, PanelFileOrigin origin) async =>
+      await operationFileInfo(path, origin) != null;
+
+  /// Read fresh metadata at an original path, including after a rename.
+  /// Captured operations and undo must not resolve against a different pane
+  /// source or accept metadata fetched across an account change.
+  Future<FileItem?> operationFileInfo(
+    String path,
+    PanelFileOrigin origin,
+  ) async {
     if (!origin.isCurrent) throw StateError('The storage account changed.');
     final backend = fileOperationBackend(
       source: origin.source,
       local: _localFileService,
       isCurrent: () => origin.isCurrent,
     );
-    final item = await backend.stat(path);
+    if (!backend.paths.isAbsolute(path)) {
+      throw const FormatException('Use an absolute original file path.');
+    }
+    final item = await backend.stat(backend.paths.normalize(path));
     if (!origin.isCurrent) throw StateError('The storage account changed.');
-    return item != null;
+    return item;
   }
 
   /// Read siblings from the storage captured when an operation was opened.
@@ -3588,13 +3600,13 @@ class PanelNotifier extends ChangeNotifier {
 
   Future<void> createFolder(String name) async {
     final audit = _ref.read(auditServiceProvider);
-    String? folderPath;
-    String? providerName;
+    final actionHistory = _ref.read(actionHistoryProvider.notifier);
+    var providerName = 'unknown';
+    var folderPath = name;
+    var createdPath = folderPath;
     try {
       if (_showingSearchResults) {
-        throw StateError(
-          'Open the destination folder before creating a folder.',
-        );
+        throw StateError('Open a real directory before creating a folder.');
       }
       if (name.isEmpty ||
           name == '.' ||
@@ -3613,7 +3625,8 @@ class PanelNotifier extends ChangeNotifier {
         isCurrent: () => origin.isCurrent,
       );
       providerName = backend.label;
-      folderPath = backend.paths.join(origin.source.currentPath, name);
+      createdPath = backend.paths.join(origin.source.currentPath, name);
+      folderPath = createdPath;
       if (await backend.stat(folderPath) != null) {
         throw StateError('An item already exists with that name.');
       }
@@ -3631,21 +3644,26 @@ class PanelNotifier extends ChangeNotifier {
         sourcePath: folderPath,
         provider: providerName,
       );
-      _ref
-          .read(actionHistoryProvider.notifier)
-          .record(
-            type: ActionType.createFolder,
-            originalPath: folderPath,
-            provider: providerName,
-            metadata: {
-              'name': name,
-              'storage': origin.storageReference.toJson(),
-            },
-            isCurrent: () => origin.isCurrent,
-          );
-      if (!_isDisposed) await refresh();
+      actionHistory.record(
+        type: ActionType.createFolder,
+        originalPath: folderPath,
+        provider: providerName,
+        metadata: {'name': name, 'storage': origin.storageReference.toJson()},
+        // Undo must use the same captured account and must never fall back to
+        // deleting a remote directory recursively through the active client.
+        isCurrent: () =>
+            origin.isCurrent && backend.capabilities.deleteEmptyDirectory,
+        undoAction: () async {
+          if (!origin.isCurrent) {
+            return const UndoResult.failure('The storage account changed.');
+          }
+          await backend.deleteEmptyDirectory(createdPath);
+          return UndoResult.success('Deleted folder $name.');
+        },
+      );
+      await refresh();
     } catch (error) {
-      _log.warn('create folder failed', error);
+      _log.warn('operation failed', error);
       if (!_isDisposed) {
         _ref.read(errorProvider).addError('Create folder failed: $error');
       }

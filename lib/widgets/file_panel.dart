@@ -134,7 +134,8 @@ class _FilePanelState extends ConsumerState<FilePanel> {
         layout == ViewMode.grid ||
         layout == ViewMode.tiles ||
         layout == ViewMode.gallery;
-    // Web/empty state: show action buttons instead of spinner
+    // Web/empty state: show action buttons instead of spinner. Visual layouts
+    // keep their search/view controls usable in empty folders.
     if (kIsWeb &&
         !visualLayout &&
         (files == null || files.isEmpty) &&
@@ -200,54 +201,53 @@ class _FilePanelState extends ConsumerState<FilePanel> {
     // Flutter DragTarget for cross-panel drops
     final Widget content = DragTarget<PanelDragData>(
       onWillAcceptWithDetails: (details) {
-        // Accept drops from the OTHER panel only
-        final source = ref.read(panelProvider(details.data.sourceSide));
-        return details.data.sourceSide != widget.side &&
-            !panel.showingSearchResults &&
-            source.canOperateOnFileList;
+        if (details.data.sourceSide == widget.side ||
+            panel.showingSearchResults) {
+          return false;
+        }
+        try {
+          ref
+              .read(panelProvider(details.data.sourceSide))
+              .captureOperationOrigin(details.data.files);
+          panel.captureCurrentOrigin();
+          return true;
+        } catch (_) {
+          return false;
+        }
       },
       onAcceptWithDetails: (details) async {
         final data = details.data;
         final sourcePanel = ref.read(panelProvider(data.sourceSide));
-        if (!sourcePanel.canOperateOnFileList || panel.showingSearchResults) {
+        if (data.sourceSide == widget.side || panel.showingSearchResults) {
           return;
         }
-        if (sourcePanel.showingSearchResults) {
-          try {
-            sourcePanel.captureOperationOrigin(data.files);
-          } catch (error) {
-            ref.read(errorProvider).addError(error.toString());
-            return;
-          }
-        }
-        if (sourcePanel.showingSearchResults) {
-          showFileOperationDialog(
+        try {
+          // PanelSide is a visual position. Both normal folders and virtual
+          // lists must retain their actual storage/account through the dialog.
+          final source = sourcePanel.captureOperationOrigin(data.files);
+          final destination = panel.captureCurrentOrigin();
+          await showFileOperationDialog(
             context,
             ref,
             data.sourceSide,
             data.files,
             kind: FileOperationKind.copy,
+            sourceOrigin: source,
+            destinationOrigin: destination,
+            destinationPath: destination.source.currentPath,
           );
-          return;
-        }
-        final transfers = ref.read(transferProvider);
-        if (data.sourceSide == PanelSide.local &&
-            widget.side == PanelSide.remote) {
-          await transfers.uploadFiles(data.files);
-        } else if (data.sourceSide == PanelSide.remote &&
-            widget.side == PanelSide.local) {
-          await transfers.downloadFiles(data.files);
+        } catch (error) {
+          if (context.mounted) {
+            ref.read(errorProvider).addError(error.toString());
+          }
         }
       },
       builder: (context, candidateData, rejectedData) {
         final isDropTarget = candidateData.isNotEmpty;
         if (!isDropTarget) return panelContent;
 
-        // Determine operation hint
-        final sourceIsLocal =
-            candidateData.first?.sourceSide == PanelSide.local;
-        final opIcon = sourceIsLocal ? Icons.upload : Icons.download;
-        final opLabel = sourceIsLocal ? 'Upload' : 'Download';
+        const opIcon = Icons.copy_outlined;
+        const opLabel = 'Copy';
         final fileCount = candidateData.first?.files.length ?? 0;
 
         return Stack(
@@ -260,8 +260,9 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                     color: Theme.of(context).colorScheme.primary,
                     width: 2,
                   ),
-                  color: Theme.of(context).colorScheme.primary
-                      .withValues(alpha: 0.08),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.08),
                 ),
                 child: Center(
                   child: Column(
@@ -380,8 +381,6 @@ class _FilePanelState extends ConsumerState<FilePanel> {
         side: side,
         files: files,
         scrollController: _scrollController,
-        galleryOnly: viewMode == ViewMode.gallery,
-        tileLayout: viewMode == ViewMode.tiles,
       );
     }
     if (viewMode == ViewMode.column) {
@@ -505,8 +504,9 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                 }
               } catch (error) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context)
-                      .showSnackBar(SnackBar(content: Text('$error')));
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('$error')));
                 }
               }
             },
@@ -674,8 +674,9 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                               Icon(
                                 Icons.cloud_off,
                                 size: 56,
-                                color: Theme.of(context).colorScheme.onSurface
-                                    .withValues(alpha: 0.3),
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withValues(alpha: 0.3),
                               ),
                               const SizedBox(height: 12),
                               Text(
@@ -692,8 +693,9 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                               ElevatedButton.icon(
                                 icon: const Icon(Icons.login, size: 18),
                                 label: Text(
-                                  AppLocalizations.of(context)!
-                                      .connectToCloudShort,
+                                  AppLocalizations.of(
+                                    context,
+                                  )!.connectToCloudShort,
                                 ),
                                 onPressed: () =>
                                     showConnectionDialogScreen(context),
@@ -715,8 +717,9 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                           right: 0,
                           bottom: 0,
                           child: Container(
-                            color: Theme.of(context).colorScheme.inverseSurface
-                                .withValues(alpha: 0.9),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.inverseSurface.withValues(alpha: 0.9),
                             padding: const EdgeInsets.symmetric(
                               horizontal: 12,
                               vertical: 4,
@@ -728,9 +731,9 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                                       ? Icons.filter_list
                                       : Icons.search,
                                   size: 16,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onInverseSurface,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onInverseSurface,
                                 ),
                                 const SizedBox(width: 8),
                                 Expanded(
@@ -741,9 +744,9 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                                         panel.filterQuery,
                                     style: TextStyle(
                                       fontSize: 13,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onInverseSurface,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onInverseSurface,
                                     ),
                                   ),
                                 ),
@@ -755,9 +758,9 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                                       '${panel.typeaheadMatchCount}',
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onInverseSurface,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onInverseSurface,
                                       ),
                                     ),
                                   ),
@@ -766,9 +769,9 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                                   child: Icon(
                                     Icons.close,
                                     size: 16,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onInverseSurface,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onInverseSurface,
                                   ),
                                 ),
                               ],

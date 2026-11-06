@@ -801,8 +801,9 @@ class PCloudClientAdapter extends CloudStorageClient
     final epoch = _authEpoch;
     final token = _accessToken!;
     final base = _apiBase;
-    final uri = Uri.parse('$base/userinfo')
-        .replace(queryParameters: {'access_token': token});
+    final uri = Uri.parse(
+      '$base/userinfo',
+    ).replace(queryParameters: {'access_token': token});
     final resp = await http.get(uri);
     if (epoch != _authEpoch || token != _accessToken || base != _apiBase) {
       throw StateError('The pCloud account changed during authentication.');

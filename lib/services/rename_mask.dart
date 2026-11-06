@@ -25,6 +25,7 @@ class RenameMaskContext {
     required this.counterStep,
     required this.counterWidth,
     required this.referenceTime,
+    this.optionsChangedAt,
     this.dialect = RenameMaskDialect.crispCloud,
     this.dateSource = RenameDateSource.modified,
     this.dateZone = RenameDateZone.original,
@@ -42,6 +43,7 @@ class RenameMaskContext {
   final int counterStep;
   final int counterWidth;
   final DateTime referenceTime;
+  final DateTime? optionsChangedAt;
   final RenameMaskDialect dialect;
   final RenameDateSource dateSource;
   final RenameDateZone dateZone;
@@ -54,13 +56,18 @@ class RenameMaskContext {
 /// Expand a mask without I/O. Date/metadata values must have been captured
 /// before preview, and [RenameMaskContext.referenceTime] stays fixed for the
 /// whole preview/execution batch (including generated GUIDs).
-String expandRenameMask(String mask, RenameMaskContext context) {
+String expandRenameMask(
+  String mask,
+  RenameMaskContext context, {
+  bool allowUnavailableValues = false,
+}) {
   final result = StringBuffer();
   var position = 0;
   var letterCase = '';
   var titleStart = true;
   var dateSource = context.dateSource;
-  var offset = Duration(minutes: context.dateOffsetMinutes);
+  var currentTime = context.referenceTime;
+  var offset = _checkedOffset(context.dateOffsetMinutes);
   void append(String text) {
     if (letterCase == 'F') {
       for (final rune in text.runes) {
@@ -112,24 +119,47 @@ String expandRenameMask(String mask, RenameMaskContext context) {
         letterCase = token == 'n' ? '' : token;
         if (token == 'F') titleStart = true;
       } else if (time != null) {
-        dateSource = switch (time[1]) {
-          '1' => RenameDateSource.modified,
-          '2' => RenameDateSource.created,
-          '3' => RenameDateSource.accessed,
-          '4' => RenameDateSource.captured,
-          _ => RenameDateSource.current,
-        };
-        final count = int.tryParse(time[2] ?? '0') ?? 0;
-        offset =
-            Duration(minutes: context.dateOffsetMinutes) +
-            switch (time[3]) {
-              'd' => Duration(days: count),
-              'h' => Duration(hours: count),
-              'm' => Duration(minutes: count),
-              _ => Duration(seconds: count),
-            };
+        if (context.dialect == RenameMaskDialect.totalCommander) {
+          // TC's switches distinguish dialog-open and options-change time.
+          // https://www.ghisler.com/android/help.htm (Multi-Rename Tool)
+          dateSource = switch (time[1]) {
+            '1' => RenameDateSource.modified,
+            '2' || '3' => RenameDateSource.current,
+            '4' => RenameDateSource.captured,
+            _ => throw FormatException('Unknown mask token [$token].'),
+          };
+          currentTime = time[1] == '3'
+              ? context.optionsChangedAt ?? context.referenceTime
+              : context.referenceTime;
+        } else {
+          dateSource = switch (time[1]) {
+            '1' => RenameDateSource.modified,
+            '2' => RenameDateSource.created,
+            '3' => RenameDateSource.accessed,
+            '4' => RenameDateSource.captured,
+            _ => RenameDateSource.current,
+          };
+        }
+        final count = int.tryParse(time[2] ?? '0');
+        if (count == null) {
+          throw const FormatException(
+            'The date offset is outside the supported range.',
+          );
+        }
+        offset = _checkedOffset(
+          context.dateOffsetMinutes,
+          count: count,
+          unit: time[3],
+        );
       } else {
-        append(_expandToken(token, context, dateSource, offset));
+        try {
+          append(_expandToken(token, context, dateSource, offset, currentTime));
+        } on _UnavailableRenameValue {
+          // A manual target replaces this row's computed name, but the rest
+          // of the mask still needs syntax validation. Never suppress an
+          // unknown token, malformed range, or other configuration error.
+          if (!allowUnavailableValues) rethrow;
+        }
       }
       position = end + 1;
     } else {
@@ -140,11 +170,16 @@ String expandRenameMask(String mask, RenameMaskContext context) {
   return result.toString();
 }
 
+class _UnavailableRenameValue extends FormatException {
+  const _UnavailableRenameValue(String message) : super(message);
+}
+
 String _expandToken(
   String token,
   RenameMaskContext context,
   RenameDateSource dateSource,
   Duration offset,
+  DateTime currentTime,
 ) {
   if (token == 'N') return context.name;
   if (token == 'E') return context.extension;
@@ -176,7 +211,9 @@ String _expandToken(
   if (token.startsWith('meta:') || token.startsWith('=meta.')) {
     final key = token.substring(token.startsWith('meta:') ? 5 : 6);
     final value = _metadata(context.file, [key]);
-    if (value == null) throw FormatException('Metadata "$key" is unavailable.');
+    if (value == null) {
+      throw _UnavailableRenameValue('Metadata "$key" is unavailable.');
+    }
     return value.toString();
   }
   if (token.startsWith('=tc.')) {
@@ -194,7 +231,7 @@ String _expandToken(
         return context.paths.dirname(context.sourcePath);
       case 'size':
         if (context.file.size == null) {
-          throw const FormatException('File size is unavailable.');
+          throw const _UnavailableRenameValue('File size is unavailable.');
         }
         return context.file.size.toString();
       case 'writedate':
@@ -208,7 +245,7 @@ String _expandToken(
           'Unsupported content field [$token]. Use [meta:key] for captured metadata.',
         );
     }
-    final date = _date(context, dateSource).add(offset);
+    final date = _dateWithOffset(context, dateSource, offset, currentTime);
     return _dateFormat(
       pieces.length == 1 ? 'Y-M-D' : pieces.skip(1).join('.'),
       date,
@@ -257,7 +294,7 @@ String _expandToken(
   }
 
   if (_isDateToken(token, context.dialect)) {
-    final date = _date(context, dateSource).add(offset);
+    final date = _dateWithOffset(context, dateSource, offset, currentTime);
     if (context.dialect == RenameMaskDialect.doubleCommander) {
       return _doubleCommanderDate(token, date);
     }
@@ -339,10 +376,64 @@ bool _isDateToken(String token, RenameMaskDialect dialect) =>
       }.contains(token)
     : RegExp(r'^[YMDhmsv]+$').hasMatch(token);
 
-DateTime _date(RenameMaskContext context, RenameDateSource source) {
+// DateTime supports 100,000,000 days on either side of the Unix epoch.
+// Check before constructing/adding Durations: a sufficiently large native
+// integer can otherwise overflow and silently become a different offset.
+const _maxDateMilliseconds = 8640000000000000;
+final _maxDateMicroseconds =
+    BigInt.from(_maxDateMilliseconds) *
+    BigInt.from(Duration.microsecondsPerMillisecond);
+
+Duration _checkedOffset(int minutes, {int count = 0, String? unit}) {
+  final units = switch (unit) {
+    'd' => Duration.microsecondsPerDay,
+    'h' => Duration.microsecondsPerHour,
+    'm' => Duration.microsecondsPerMinute,
+    _ => Duration.microsecondsPerSecond,
+  };
+  final microseconds =
+      BigInt.from(minutes) * BigInt.from(Duration.microsecondsPerMinute) +
+      BigInt.from(count) * BigInt.from(units);
+  if (microseconds.abs() > _maxDateMicroseconds) {
+    throw const FormatException(
+      'The date offset is outside the supported range.',
+    );
+  }
+  return Duration(microseconds: microseconds.toInt());
+}
+
+DateTime _dateWithOffset(
+  RenameMaskContext context,
+  RenameDateSource source,
+  Duration offset,
+  DateTime currentTime,
+) {
+  final date = _date(context, source, currentTime);
+  final target =
+      BigInt.from(date.microsecondsSinceEpoch) +
+      BigInt.from(offset.inMicroseconds);
+  if (target.abs() > _maxDateMicroseconds) {
+    throw _UnavailableRenameValue(
+      'The ${source.name} time with this offset is outside the supported date range.',
+    );
+  }
+  try {
+    return date.add(offset);
+  } on ArgumentError {
+    throw _UnavailableRenameValue(
+      'The ${source.name} time with this offset is outside the supported date range.',
+    );
+  }
+}
+
+DateTime _date(
+  RenameMaskContext context,
+  RenameDateSource source,
+  DateTime currentTime,
+) {
   final Object? value = switch (source) {
     RenameDateSource.modified => context.file.updatedAt,
-    RenameDateSource.current => context.referenceTime,
+    RenameDateSource.current => currentTime,
     RenameDateSource.created => _metadata(context.file, [
       'createdAt',
       'creationTime',
@@ -365,7 +456,16 @@ DateTime _date(RenameMaskContext context, RenameDateSource source) {
   DateTime? date;
   DateTime? originalWallClock;
   if (value is DateTime) date = value;
-  if (value is num) date = DateTime.fromMillisecondsSinceEpoch(value.toInt());
+  if (value is num) {
+    if (!value.isFinite ||
+        value < -_maxDateMilliseconds ||
+        value > _maxDateMilliseconds) {
+      throw _UnavailableRenameValue(
+        'The ${source.name} time is outside the supported date range.',
+      );
+    }
+    date = DateTime.fromMillisecondsSinceEpoch(value.toInt());
+  }
   if (value is String) {
     date = DateTime.tryParse(value);
     if (date == null && RegExp(r'^\d{4}:\d{2}:\d{2} ').hasMatch(value)) {
@@ -384,7 +484,7 @@ DateTime _date(RenameMaskContext context, RenameDateSource source) {
     }
   }
   if (date == null) {
-    throw FormatException(
+    throw _UnavailableRenameValue(
       'This item has no ${source.name} time for the date mask.',
     );
   }

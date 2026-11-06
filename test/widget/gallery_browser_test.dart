@@ -28,6 +28,7 @@ class _Local extends Fake implements LocalFileService {
   @override
   Future<void> refresh() async {}
 }
+
 class _Cloud extends Fake implements CloudStorageClient {
   @override
   bool get isAuthenticated => false;
@@ -38,6 +39,7 @@ class _Cloud extends Fake implements CloudStorageClient {
   @override
   String? get bucketId => null;
 }
+
 class _Auth extends ChangeNotifier implements AuthNotifier {
   @override
   final CloudStorageClient client = _Cloud();
@@ -59,18 +61,36 @@ void main() {
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
-    container = ProviderContainer(overrides: [
-      localFileServiceProvider.overrideWithValue(_Local()),
-      authProvider.overrideWith((_) => _Auth()),
-    ]);
+    container = ProviderContainer(
+      overrides: [
+        localFileServiceProvider.overrideWithValue(_Local()),
+        authProvider.overrideWith((_) => _Auth()),
+      ],
+    );
     panel = container.read(panelProvider(PanelSide.local));
     await panel.refresh();
     files = [
       FileItem(name: '..', path: '/', isFolder: true),
-      FileItem(name: 'photo10.raw', path: '/gallery-test/photo10.raw', isFolder: false),
-      FileItem(name: 'notes.txt', path: '/gallery-test/notes.txt', isFolder: false),
-      FileItem(name: 'photo2.raw', path: '/gallery-test/photo2.raw', isFolder: false),
-      FileItem(name: 'photo3.raw', path: '/gallery-test/photo3.raw', isFolder: false),
+      FileItem(
+        name: 'photo10.raw',
+        path: '/gallery-test/photo10.raw',
+        isFolder: false,
+      ),
+      FileItem(
+        name: 'notes.txt',
+        path: '/gallery-test/notes.txt',
+        isFolder: false,
+      ),
+      FileItem(
+        name: 'photo2.raw',
+        path: '/gallery-test/photo2.raw',
+        isFolder: false,
+      ),
+      FileItem(
+        name: 'photo3.raw',
+        path: '/gallery-test/photo3.raw',
+        isFolder: false,
+      ),
     ];
     panel.showSearchResults(files);
     // File-list ingestion binds fresh rendered rows to their original source.
@@ -79,62 +99,109 @@ void main() {
   });
   tearDown(() => container.dispose());
 
-  Future<void> mount(WidgetTester tester, {bool tiles = false, double width = 700}) async {
+  Future<void> mount(
+    WidgetTester tester, {
+    bool tiles = false,
+    double width = 700,
+  }) async {
     final scroll = ScrollController();
     addTearDown(scroll.dispose);
-    await tester.pumpWidget(UncontrolledProviderScope(container: container,
-      child: MaterialApp(localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(body: SizedBox(width: width, child: Consumer(builder: (context, ref, _) =>
-          FileGridView(side: PanelSide.local, files: ref.watch(panelProvider(PanelSide.local)).filteredFiles ?? [],
-            scrollController: scroll, galleryOnly: !tiles, tileLayout: tiles)))))));
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: SizedBox(
+              width: width,
+              child: Consumer(
+                builder: (context, ref, _) => FileGridView(
+                  side: PanelSide.local,
+                  files:
+                      ref.watch(panelProvider(PanelSide.local)).filteredFiles ??
+                      [],
+                  scrollController: scroll,
+                  galleryOnly: !tiles,
+                  tileLayout: tiles,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
     await tester.pumpAndSettle();
   }
 
-  testWidgets('gallery hides documents and Select all selects only visible images', (tester) async {
-    await mount(tester);
-    expect(find.text('notes.txt'), findsNothing);
-    await tester.tap(find.text('photo2.raw'));
-    await tester.pump(const Duration(milliseconds: 350));
-    await tester.pumpAndSettle();
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyA);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
-    expect(panel.selection.map((f) => f.name).toSet(), {'photo2.raw', 'photo3.raw', 'photo10.raw'});
-    expect(panel.selection.any((f) => f.name == '..'), isFalse);
-    await tester.pumpWidget(const SizedBox());
-  });
+  testWidgets(
+    'gallery hides documents and Select all selects only visible images',
+    (tester) async {
+      await mount(tester);
+      expect(find.text('notes.txt'), findsNothing);
+      await tester.tap(find.text('photo2.raw'));
+      await tester.pump(const Duration(milliseconds: 350));
+      await tester.pumpAndSettle();
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyA);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      expect(panel.selection.map((f) => f.name).toSet(), {
+        'photo2.raw',
+        'photo3.raw',
+        'photo10.raw',
+      });
+      expect(panel.selection.any((f) => f.name == '..'), isFalse);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
 
-  testWidgets('shift range follows natural visual order, excluding hidden files', (tester) async {
-    await mount(tester);
-    await tester.tap(find.text('photo2.raw'));
-    await tester.pump(const Duration(milliseconds: 350));
-    await tester.pumpAndSettle();
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
-    await tester.tap(find.text('photo3.raw'));
-    await tester.pump(const Duration(milliseconds: 350));
-    await tester.pumpAndSettle();
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
-    expect(panel.selection.map((f) => f.name).toSet(), {'photo2.raw', 'photo3.raw'});
-    await tester.pumpWidget(const SizedBox());
-  });
+  testWidgets(
+    'shift range follows natural visual order, excluding hidden files',
+    (tester) async {
+      await mount(tester);
+      await tester.tap(find.text('photo2.raw'));
+      await tester.pump(const Duration(milliseconds: 350));
+      await tester.pumpAndSettle();
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.tap(find.text('photo3.raw'));
+      await tester.pump(const Duration(milliseconds: 350));
+      await tester.pumpAndSettle();
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+      expect(panel.selection.map((f) => f.name).toSet(), {
+        'photo2.raw',
+        'photo3.raw',
+      });
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
 
-  testWidgets('filtering removes hidden selections and does not hijack typing', (tester) async {
-    await mount(tester);
-    await tester.tap(find.text('photo2.raw'));
-    await tester.pump(const Duration(milliseconds: 350));
-    await tester.pumpAndSettle();
-    await tester.enterText(find.byKey(const ValueKey('gallery-search-local')), 'photo10');
-    await tester.pumpAndSettle();
-    expect(panel.selection, isEmpty);
-    expect(find.text('photo2.raw'), findsNothing);
-    expect(find.text('photo10.raw'), findsOneWidget);
-    expect(container.read(galleryQueryProvider(PanelSide.local)).text, 'photo10');
-    expect(tester.takeException(), isNull);
-    await tester.pumpWidget(const SizedBox());
-  });
+  testWidgets(
+    'filtering removes hidden selections and does not hijack typing',
+    (tester) async {
+      await mount(tester);
+      await tester.tap(find.text('photo2.raw'));
+      await tester.pump(const Duration(milliseconds: 350));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const ValueKey('gallery-search-local')),
+        'photo10',
+      );
+      await tester.pumpAndSettle();
+      expect(panel.selection, isEmpty);
+      expect(find.text('photo2.raw'), findsNothing);
+      expect(find.text('photo10.raw'), findsOneWidget);
+      expect(
+        container.read(galleryQueryProvider(PanelSide.local)).text,
+        'photo10',
+      );
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
 
-  testWidgets('tiles show mixed files in a narrow panel without overflow', (tester) async {
+  testWidgets('tiles show mixed files in a narrow panel without overflow', (
+    tester,
+  ) async {
     await mount(tester, tiles: true, width: 240);
     expect(find.text('notes.txt'), findsOneWidget);
     await tester.tap(find.byTooltip('Filters'));
@@ -143,28 +210,51 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
-  test('explicit projection ignores forged same-path objects and parent entries', () {
-    panel.selectVisibleItems([files[0], files[1].copyWith(), files[3]], cursor: files[3]);
-    expect(panel.selection, {files[3]});
-    expect(panel.cursorItem, same(files[3]));
-  });
+  test(
+    'explicit projection ignores forged same-path objects and parent entries',
+    () {
+      final rows = panel.files!;
+      panel.selectVisibleItems([
+        files[0],
+        rows[1].copyWith(),
+        rows[2],
+      ], cursor: rows[2]);
+      expect(panel.selection, {rows[2]});
+      expect(panel.cursorItem, same(rows[2]));
+    },
+  );
 
-  testWidgets('view selector exposes Gallery and Tiles without changing selection', (tester) async {
-    panel.selectVisibleItems([files[1]], cursor: files[1]);
-    await tester.pumpWidget(UncontrolledProviderScope(container: container,
-      child: const MaterialApp(home: Scaffold(body: FileViewSelector(side: PanelSide.local)))));
-    await tester.tap(find.byTooltip('View'));
-    await tester.pumpAndSettle();
-    expect(find.text('Gallery'), findsOneWidget);
-    expect(find.text('Tiles'), findsOneWidget);
-    await tester.tap(find.text('Gallery'));
-    await tester.pumpAndSettle();
-    expect(container.read(localViewModeProvider), ViewMode.gallery);
-    expect(panel.selection, {files[1]});
-    // The fixture created its preference futures before entering the widget
-    // test's fake clock; let that real microtask queue finish persistence.
-    await tester.runAsync(() => Future<void>.delayed(Duration.zero));
-    expect((await SharedPreferences.getInstance()).getString('file_layout_local_v1'), 'gallery');
-    await tester.pumpWidget(const SizedBox());
-  });
+  testWidgets(
+    'view selector exposes Gallery and Tiles without changing selection',
+    (tester) async {
+      final row = panel.files![1];
+      panel.selectVisibleItems([row], cursor: row);
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const MaterialApp(
+            home: Scaffold(body: FileViewSelector(side: PanelSide.local)),
+          ),
+        ),
+      );
+      await tester.tap(find.byTooltip('View'));
+      await tester.pumpAndSettle();
+      expect(find.text('Gallery'), findsOneWidget);
+      expect(find.text('Tiles'), findsOneWidget);
+      await tester.tap(find.text('Gallery'));
+      await tester.pumpAndSettle();
+      expect(container.read(localViewModeProvider), ViewMode.gallery);
+      expect(panel.selection, {row});
+      // The fixture created its preference futures before entering the widget
+      // test's fake clock; let that real microtask queue finish persistence.
+      await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+      expect(
+        (await SharedPreferences.getInstance()).getString(
+          'file_layout_local_v1',
+        ),
+        'gallery',
+      );
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
 }

@@ -238,6 +238,8 @@ void main() {
 
   test('select all, invert and shift-click change only visible rows', () async {
     final panel = await remote();
+    // Extension filtering uses substring matching; the app defaults to prefix
+    // matching, which correctly would not match ".txt" against "a.txt".
     await container
         .read(quickSearchSettingsProvider.notifier)
         .setMatchFromStart(false);
@@ -249,6 +251,7 @@ void main() {
     ], origin: panel.captureRemoteSearchOrigin());
     final rows = {for (final file in panel.files!) file.name: file};
     panel.setFilter('.txt');
+    expect(panel.displayedFiles!.map((file) => file.name), ['a.txt', 'c.txt']);
     panel.selectAll();
     expect(panel.selection.map((file) => file.name).toSet(), {
       'a.txt',
@@ -520,6 +523,36 @@ void main() {
       await expectLater(listing, throwsStateError);
     },
   );
+
+  test('operation metadata stays source-bound and rejects relative or stale lookups', () async {
+    final panel = await remote();
+    final origin = panel.captureCurrentOrigin();
+    container
+        .read(panelSourceProvider(PanelSide.remote).notifier)
+        .setSource(const LocalPanelSource('/local'));
+    await panel.refresh();
+
+    final info = await panel.operationFileInfo('/a.txt', origin);
+    expect(info?.path, '/a.txt');
+    expect(info?.size, 10);
+    expect(panel.captureCurrentOrigin().source, isA<LocalPanelSource>());
+    expect(await panel.operationFileInfo('/missing.txt', origin), isNull);
+    expect(await panel.operationPathExists('/missing.txt', origin), isFalse);
+    final requests = cloud.paths.length;
+    await expectLater(
+      panel.operationFileInfo('a.txt', origin),
+      throwsFormatException,
+    );
+    expect(cloud.paths.length, requests);
+
+    cloud.delay = Completer<void>();
+    final pending = panel.operationFileInfo('/b.txt', origin);
+    await Future<void>.delayed(Duration.zero);
+    auth.connection(false);
+    auth.connection(true);
+    cloud.delay!.complete();
+    await expectLater(pending, throwsStateError);
+  });
 
   test(
     'native panel rename cannot replace a target created after preview',

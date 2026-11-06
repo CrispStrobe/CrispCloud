@@ -47,15 +47,19 @@ class _MemInner implements CloudStorageClient {
 
   @override
   Future<void> uploadFile(
-      List<int> fileData, String fileName, String targetPath,
-      {Function(int, int)? onProgress}) async {
+    List<int> fileData,
+    String fileName,
+    String targetPath, {
+    Function(int, int)? onProgress,
+  }) async {
     stored = Uint8List.fromList(fileData);
   }
 
   @override
-  Future<Uint8List> downloadFileBytes(String remotePath,
-          {Function(int, int)? onProgress}) async =>
-      stored!;
+  Future<Uint8List> downloadFileBytes(
+    String remotePath, {
+    Function(int, int)? onProgress,
+  }) async => stored!;
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -63,10 +67,7 @@ class _MemInner implements CloudStorageClient {
 
 /// A real binary file (the app icon PNG); falls back to a synthetic blob.
 Uint8List _realFile() {
-  for (final p in [
-    'assets/images/app_icon.png',
-    'web/icons/Icon-512.png',
-  ]) {
+  for (final p in ['assets/images/app_icon.png', 'web/icons/Icon-512.png']) {
     final f = File(p);
     if (f.existsSync()) return f.readAsBytesSync();
   }
@@ -100,28 +101,45 @@ void main() {
     paths = [
       // The original on-disk format (sync pointycastle via EncryptionService).
       _Path(
-          'pointycastle-static',
-          (d) async => EncryptionService.encrypt(d, rawKey),
-          (d) async => EncryptionService.decrypt(d, rawKey)),
-      _Path('pointycastle-provider', (d) => pcProvider.encrypt(pcKey, d),
-          (d) => pcProvider.decrypt(pcKey, d)),
-      _Path('cryptography', (d) => cgProvider.encrypt(cgKey, d),
-          (d) => cgProvider.decrypt(cgKey, d)),
+        'pointycastle-static',
+        (d) async => EncryptionService.encrypt(d, rawKey),
+        (d) async => EncryptionService.decrypt(d, rawKey),
+      ),
+      _Path(
+        'pointycastle-provider',
+        (d) => pcProvider.encrypt(pcKey, d),
+        (d) => pcProvider.decrypt(pcKey, d),
+      ),
+      _Path(
+        'cryptography',
+        (d) => cgProvider.encrypt(cgKey, d),
+        (d) => cgProvider.decrypt(cgKey, d),
+      ),
     ];
     // OpenSSL libcrypto via FFI — present on CI Linux + dev machines with a
     // system/Homebrew libcrypto. Skipped where unavailable.
     final ossl = OpenSslCryptoProvider.tryCreate();
     if (ossl != null) {
       final osslKey = await ossl.importKey(rawKey);
-      paths.add(_Path('openssl-ffi', (d) => ossl.encrypt(osslKey, d),
-          (d) => ossl.decrypt(osslKey, d)));
+      paths.add(
+        _Path(
+          'openssl-ffi',
+          (d) => ossl.encrypt(osslKey, d),
+          (d) => ossl.decrypt(osslKey, d),
+        ),
+      );
     }
     // BCrypt/CNG via FFI — present on Windows (skipped elsewhere).
     final bcrypt = BCryptCryptoProvider.tryCreate();
     if (bcrypt != null) {
       final bcryptKey = await bcrypt.importKey(rawKey);
-      paths.add(_Path('bcrypt-ffi', (d) => bcrypt.encrypt(bcryptKey, d),
-          (d) => bcrypt.decrypt(bcryptKey, d)));
+      paths.add(
+        _Path(
+          'bcrypt-ffi',
+          (d) => bcrypt.encrypt(bcryptKey, d),
+          (d) => bcrypt.decrypt(bcryptKey, d),
+        ),
+      );
     }
   });
 
@@ -130,49 +148,65 @@ void main() {
       for (final path in paths) {
         // real file
         final enc = await path.enc(realFile);
-        expect(_bytesEqual(await path.dec(enc), realFile), isTrue,
-            reason: '${path.name}: real-file round-trip not byte-exact');
+        expect(
+          _bytesEqual(await path.dec(enc), realFile),
+          isTrue,
+          reason: '${path.name}: real-file round-trip not byte-exact',
+        );
         // edge sizes
         for (final n in sizes) {
           final data = Uint8List(n)
             ..setAll(0, List.generate(n, (i) => (i * 13 + 5) & 0xff));
           final e = await path.enc(data);
-          expect(_bytesEqual(await path.dec(e), data), isTrue,
-              reason: '${path.name}: $n-byte round-trip not byte-exact');
+          expect(
+            _bytesEqual(await path.dec(e), data),
+            isTrue,
+            reason: '${path.name}: $n-byte round-trip not byte-exact',
+          );
         }
       }
     });
   });
 
   group('cross-path interop matrix (wire-format compatibility)', () {
-    test('every path decrypts every other path\'s output, byte-exact',
-        () async {
-      final payloads = <Uint8List>[
-        realFile,
-        Uint8List(0),
-        Uint8List(16)..setAll(0, List.generate(16, (i) => i)),
-        Uint8List(4097)..setAll(0, List.generate(4097, (i) => (i * 3) & 0xff)),
-      ];
-      for (final enc in paths) {
-        for (final dec in paths) {
-          for (final data in payloads) {
-            final ct = await enc.enc(data);
-            final back = await dec.dec(ct);
-            expect(_bytesEqual(back, data), isTrue,
-                reason: 'encrypt=${enc.name} -> decrypt=${dec.name} '
-                    '(${data.length}B) not byte-exact');
+    test(
+      'every path decrypts every other path\'s output, byte-exact',
+      () async {
+        final payloads = <Uint8List>[
+          realFile,
+          Uint8List(0),
+          Uint8List(16)..setAll(0, List.generate(16, (i) => i)),
+          Uint8List(4097)
+            ..setAll(0, List.generate(4097, (i) => (i * 3) & 0xff)),
+        ];
+        for (final enc in paths) {
+          for (final dec in paths) {
+            for (final data in payloads) {
+              final ct = await enc.enc(data);
+              final back = await dec.dec(ct);
+              expect(
+                _bytesEqual(back, data),
+                isTrue,
+                reason:
+                    'encrypt=${enc.name} -> decrypt=${dec.name} '
+                    '(${data.length}B) not byte-exact',
+              );
+            }
           }
         }
-      }
-    });
+      },
+    );
 
     test('a tampered tag is rejected (GCM integrity) on every path', () async {
       for (final path in paths) {
         final ct = await path.enc(realFile);
         final tampered = Uint8List.fromList(ct)
           ..[ct.length - 1] ^= 0xff; // flip a tag bit
-        expect(() => path.dec(tampered), throwsA(anything),
-            reason: '${path.name}: tampered ciphertext must not decrypt');
+        expect(
+          () => path.dec(tampered),
+          throwsA(anything),
+          reason: '${path.name}: tampered ciphertext must not decrypt',
+        );
       }
     });
   });
@@ -194,8 +228,11 @@ void main() {
         expect(_bytesEqual(stored, realFile), isFalse);
         // Round-trip back through the wrapper.
         final out = await wrapper.downloadFileBytes('/icon.png');
-        expect(_bytesEqual(out, realFile), isTrue,
-            reason: 'wrapper round-trip not byte-exact');
+        expect(
+          _bytesEqual(out, realFile),
+          isTrue,
+          reason: 'wrapper round-trip not byte-exact',
+        );
       });
     }
   });

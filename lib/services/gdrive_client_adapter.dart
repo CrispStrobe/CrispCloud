@@ -605,8 +605,9 @@ class GDriveClientAdapter extends CloudStorageClient
           operation: 'Google Drive upload',
         );
         if (end < length) {
-          final range = RegExp(r'^bytes=0-(\d+)$')
-              .firstMatch(response.headers['range'] ?? '');
+          final range = RegExp(
+            r'^bytes=0-(\d+)$',
+          ).firstMatch(response.headers['range'] ?? '');
           if (response.statusCode != 308 ||
               range == null ||
               int.tryParse(range.group(1)!) != end - 1) {
@@ -723,10 +724,12 @@ class GDriveClientAdapter extends CloudStorageClient
 
   /// Google Apps MIME types that require export (can't be downloaded directly).
   static const _googleDocsMimeTypes = <String, String>{
-    'application/vnd.google-apps.document': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.google-apps.document':
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     'application/vnd.google-apps.spreadsheet':
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    'application/vnd.google-apps.presentation': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'application/vnd.google-apps.presentation':
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
     'application/vnd.google-apps.drawing': 'application/pdf',
     'application/vnd.google-apps.script':
         'application/vnd.google-apps.script+json',
@@ -794,7 +797,8 @@ class GDriveClientAdapter extends CloudStorageClient
       case 'application/vnd.google-apps.document':
         return [
           {
-            'mimeType': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'mimeType':
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             'ext': '.docx',
             'label': 'Word',
           },
@@ -807,7 +811,8 @@ class GDriveClientAdapter extends CloudStorageClient
       case 'application/vnd.google-apps.spreadsheet':
         return [
           {
-            'mimeType': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'mimeType':
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             'ext': '.xlsx',
             'label': 'Excel',
           },
@@ -822,7 +827,8 @@ class GDriveClientAdapter extends CloudStorageClient
       case 'application/vnd.google-apps.presentation':
         return [
           {
-            'mimeType': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'mimeType':
+                'application/vnd.openxmlformats-officedocument.presentationml.presentation',
             'ext': '.pptx',
             'label': 'PowerPoint',
           },
@@ -852,7 +858,8 @@ class GDriveClientAdapter extends CloudStorageClient
     final resp = await _apiGet(
       '/files/$fileId/revisions',
       queryParams: {
-        'fields': 'revisions(id,modifiedTime,originalFilename,mimeType,size,lastModifyingUser/displayName,keepForever)',
+        'fields':
+            'revisions(id,modifiedTime,originalFilename,mimeType,size,lastModifyingUser/displayName,keepForever)',
         'pageSize': '1000',
       },
     );
@@ -1012,8 +1019,9 @@ class GDriveClientAdapter extends CloudStorageClient
     }
     final uri = exportMime == null
         ? Uri.parse('$_apiBase/files/$fileId?alt=media')
-        : Uri.parse('$_apiBase/files/$fileId/export')
-              .replace(queryParameters: {'mimeType': exportMime});
+        : Uri.parse(
+            '$_apiBase/files/$fileId/export',
+          ).replace(queryParameters: {'mimeType': exportMime});
     yield* streamHttpDownload(
       uri,
       operation: 'Google Drive download',
@@ -1490,8 +1498,9 @@ class GDriveClientAdapter extends CloudStorageClient
     String endpoint, {
     Map<String, String>? queryParams,
   }) async {
-    final uri = Uri.parse('$_apiBase$endpoint')
-        .replace(queryParameters: queryParams);
+    final uri = Uri.parse(
+      '$_apiBase$endpoint',
+    ).replace(queryParameters: queryParams);
     final resp = await http.get(
       uri,
       headers: {'Authorization': 'Bearer $_accessToken'},
