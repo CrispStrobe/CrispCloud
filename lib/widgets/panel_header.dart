@@ -38,6 +38,9 @@ import '../widgets/search_dialogs.dart' show showSearchDialog, showFindDialog;
 import '../widgets/settings_dialog.dart';
 import '../widgets/drive_bar.dart' show drivesProvider, DriveEntry;
 import '../widgets/panel_source_selector.dart';
+import '../l10n/browser_menu_strings.dart';
+import '../l10n/panel_header_strings.dart';
+import '../l10n/shortcut_strings.dart';
 
 class PanelHeader extends ConsumerStatefulWidget {
   const PanelHeader({
@@ -72,6 +75,8 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
     final String path = panel.currentPath;
     final bool isLocal = source.isLocal;
     final ThemeData theme = Theme.of(context);
+    final m = BrowserMenuStrings(context);
+    final h = PanelHeaderStrings(context);
 
     return Material(
       color: theme.colorScheme.primaryContainer,
@@ -170,6 +175,8 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
   }
 
   Widget _pathEditor(PanelNotifier panel) {
+    final h = PanelHeaderStrings(context);
+    final l = AppLocalizations.of(context);
     return Row(
       children: <Widget>[
         Expanded(
@@ -336,6 +343,9 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
 
   Widget _volumeButton(PanelNotifier panel, bool isLocal) {
     final ThemeData theme = Theme.of(context);
+    final h = PanelHeaderStrings(context);
+    final m = BrowserMenuStrings(context);
+    final l = AppLocalizations.of(context);
     if (!isLocal) {
       final bookmarks = ref.watch(bookmarksProvider);
       return PopupMenuButton<Bookmark>(
@@ -371,7 +381,7 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
           orElse: () => <DriveEntry>[
             DriveEntry(
               path: Platform.environment['HOME'] ?? '/',
-              label: 'Home',
+              label: m.text('Home'),
               icon: Icons.home,
             ),
           ],
@@ -384,7 +394,13 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
                 children: <Widget>[
                   Icon(entry.icon, size: 17),
                   const SizedBox(width: 8),
-                  Expanded(child: Text(entry.label)),
+                  Expanded(
+                    child: Text(
+                      entry.icon == Icons.home && entry.label == 'Home'
+                          ? m.text('Home')
+                          : entry.label,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -438,6 +454,11 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
     final bool desktop =
         !kIsWeb && (Platform.isMacOS || Platform.isWindows || Platform.isLinux);
     final AuthNotifier auth = ref.watch(authProvider);
+    final l =
+        AppLocalizations.of(context) ??
+        lookupAppLocalizations(const Locale('en'));
+    final m = BrowserMenuStrings(context);
+    final h = PanelHeaderStrings(context);
 
     return PopupMenuButton<String>(
       tooltip: context.commanderTr("More commands"),
@@ -453,7 +474,9 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
           _menuItem(
             'toggle_top_toolbar',
             topVisible ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-            topVisible ? 'Hide top toolbar' : 'Show top toolbar',
+            topVisible
+                ? h.text('Hide top toolbar')
+                : h.text('Show top toolbar'),
           ),
         if (desktop) const PopupMenuDivider(),
         _menuItem('up', Icons.arrow_upward, 'Up'),
@@ -467,11 +490,11 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
         _menuItem('select_all', Icons.select_all, 'Select all'),
         _menuItem('invert_selection', Icons.flip_to_back, 'Invert selection'),
         const PopupMenuDivider(),
-        _menuItem('sort_name', Icons.sort_by_alpha, 'Sort by name'),
-        _menuItem('sort_size', Icons.data_usage, 'Sort by size'),
-        _menuItem('sort_date', Icons.access_time, 'Sort by date'),
-        _menuItem('sort_ext', Icons.category, 'Sort by extension'),
-        _menuItem('sort_order', Icons.swap_vert, 'Reverse sort order'),
+        _menuItem('sort_name', Icons.sort_by_alpha, l.sortByName),
+        _menuItem('sort_size', Icons.data_usage, l.sortBySize),
+        _menuItem('sort_date', Icons.access_time, l.sortByDate),
+        _menuItem('sort_ext', Icons.category, l.sortByExtension),
+        _menuItem('sort_order', Icons.swap_vert, m.text('Reverse Sort Order')),
         const PopupMenuDivider(),
         _menuItem('density', Icons.density_medium, 'Toggle row density'),
         _menuItem(
@@ -497,25 +520,25 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
           _menuItem(
             'grant_access',
             Icons.lock_open,
-            'Grant access to this folder…',
+            h.text('Grant access to this folder…'),
           ),
         const PopupMenuDivider(),
-        _menuItem('goto_path', Icons.route, 'Go to path…'),
-        _menuItem('search', Icons.search, 'Search all files…'),
-        _menuItem('find', Icons.find_in_page, 'Find by pattern…'),
-        _menuItem('command_palette', Icons.terminal, 'Command palette…'),
-        _menuItem('settings', Icons.settings, 'Settings…'),
+        _menuItem('goto_path', Icons.route, h.text('Go to path…')),
+        _menuItem('search', Icons.search, h.text('Search all files…')),
+        _menuItem('find', Icons.find_in_page, h.text('Find by pattern…')),
+        _menuItem('command_palette', Icons.terminal, '${l.commandPalette}…'),
+        _menuItem('settings', Icons.settings, '${l.settings}…'),
         if (desktop) ...<PopupMenuEntry<String>>[
           const PopupMenuDivider(),
-          _menuItem('swap', Icons.swap_horiz, 'Swap panels'),
-          _menuItem('terminal', Icons.terminal, 'Toggle terminal'),
-          _menuItem('dual', Icons.view_column, 'Toggle dual panel'),
-          _menuItem('tree', Icons.account_tree, 'Toggle tree sidebar'),
-          _menuItem('preview', Icons.visibility, 'Toggle preview'),
+          _menuItem('swap', Icons.swap_horiz, h.text('Swap panels')),
+          _menuItem('terminal', Icons.terminal, m.text('Toggle Terminal')),
+          _menuItem('dual', Icons.view_column, m.text('Toggle Dual Panel')),
+          _menuItem('tree', Icons.account_tree, m.text('Toggle Tree Sidebar')),
+          _menuItem('preview', Icons.visibility, m.text('Toggle Preview')),
           if (!auth.isConnected)
-            _menuItem('connect', Icons.login, 'Connect…')
+            _menuItem('connect', Icons.login, '${l.connect}…')
           else
-            _menuItem('logout', Icons.logout, 'Logout'),
+            _menuItem('logout', Icons.logout, l.logout),
         ],
       ],
     );
@@ -529,7 +552,21 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
         children: <Widget>[
           Icon(icon, size: 17),
           const SizedBox(width: 10),
-          Text(label, style: const TextStyle(fontSize: 12.5)),
+          Flexible(
+            child: Text(
+              value == 'up'
+                  ? (AppLocalizations.of(context) ??
+                            lookupAppLocalizations(const Locale('en')))
+                        .upTooltip
+                  : value == 'invert_selection'
+                  ? ShortcutStrings(context).description(20)
+                  : context.commanderTr(
+                      PanelHeaderStrings(context).text(label),
+                    ),
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 12.5),
+            ),
+          ),
         ],
       ),
     );
@@ -612,29 +649,9 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
       case 'settings':
         await showSettingsDialog(context);
       case 'swap':
-        const PanelSwapService service = PanelSwapService();
-        final PanelSource left = ref.read(panelSourceProvider(PanelSide.local));
-        final PanelSource right = ref.read(
-          panelSourceProvider(PanelSide.remote),
-        );
-        if (service.canSwap(left, right)) {
-          final (PanelSource newLeft, PanelSource newRight) = service.swap(
-            left,
-            right,
-          );
-          ref
-              .read(panelSourceProvider(PanelSide.local).notifier)
-              .setSource(newLeft);
-          ref
-              .read(panelSourceProvider(PanelSide.remote).notifier)
-              .setSource(newRight);
-          ref.read(activePanelProvider.notifier).state =
-              active == PanelSide.local ? PanelSide.remote : PanelSide.local;
-        }
+        await swapPanelSources(ref);
       case 'terminal':
-        ref.read(showTerminalProvider.notifier).state = !ref.read(
-          showTerminalProvider,
-        );
+        setTerminalVisible(ref, !ref.read(showTerminalProvider));
       case 'dual':
         ref.read(showDualPanelProvider.notifier).state = !ref.read(
           showDualPanelProvider,

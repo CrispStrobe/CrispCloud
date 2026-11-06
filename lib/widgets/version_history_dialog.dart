@@ -25,6 +25,8 @@ import '../services/onedrive_client_adapter.dart';
 import '../services/log_service.dart';
 import '../utils/formatters.dart';
 import 'diff_viewer_dialog.dart';
+import '../l10n/provider_operation_strings.dart';
+import '../l10n/version_history_strings.dart';
 import '../l10n/app_localizations.dart';
 
 void showVersionHistoryDialog(
@@ -53,6 +55,14 @@ void showVersionHistoryDialog(
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text('$error')));
   }
+}
+
+class _VersionMessage implements Exception {
+  const _VersionMessage(this.template, [this.values = const {}]);
+  final String template;
+  final Map<String, Object?> values;
+  String localized(VersionHistoryStrings strings) =>
+      strings.format(template, values);
 }
 
 class _VersionHistoryDialog extends ConsumerStatefulWidget {
@@ -245,6 +255,7 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
   // --- Restore Methods ---
 
   Future<void> _restoreVersion(Map<String, dynamic> version) async {
+    final strings = VersionHistoryStrings(context);
     final provider = version['provider'] as String;
     final confirm = await showDialog<bool>(
       context: context,
@@ -476,7 +487,8 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
     try {
       // Download the old version
       final oldContent = await _downloadVersionContent(version);
-      if (oldContent == null) throw Exception('Failed to download version');
+      if (oldContent == null)
+        throw const _VersionMessage('Failed to download version');
 
       // Download the current version
       final client = capturedRemoteClient(widget.origin);
@@ -526,6 +538,7 @@ class _VersionHistoryDialogState extends ConsumerState<_VersionHistoryDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = VersionHistoryStrings(context);
 
     return AlertDialog(
       title: Row(

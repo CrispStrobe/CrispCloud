@@ -21,10 +21,12 @@
 // (added in the AppDelegate update below).
 
 import 'dart:io' show Platform;
+import 'dart:ui' show Locale;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
+import '../l10n/platform_message_strings.dart';
 import 'log_service.dart';
 
 const _log = Log('SiriShortcutsService');
@@ -71,26 +73,30 @@ class SiriShortcut {
 }
 
 /// Built-in shortcut definitions for CrispCloud.
-const _kShortcuts = [
-  SiriShortcut(
-    identifier:                SiriShortcutId.uploadToCloud,
-    title:                     'Upload to CrispCloud',
-    subtitle:                  'Pick a file and upload it to your active cloud storage',
-    suggestedInvocationPhrase: 'Upload to CrispCloud',
-  ),
-  SiriShortcut(
-    identifier:                SiriShortcutId.showRecentFiles,
-    title:                     'Show recent files',
-    subtitle:                  'Open CrispCloud and display your most recent files',
-    suggestedInvocationPhrase: 'Show my recent files in CrispCloud',
-  ),
-  SiriShortcut(
-    identifier:                SiriShortcutId.syncNow,
-    title:                     'Sync now',
-    subtitle:                  'Trigger an immediate sync with your cloud providers',
-    suggestedInvocationPhrase: 'Sync CrispCloud now',
-  ),
-];
+@visibleForTesting
+List<SiriShortcut> shortcutsForLocale(Locale? locale) {
+  final strings = PlatformMessageStrings(locale);
+  return [
+    SiriShortcut(
+      identifier: SiriShortcutId.uploadToCloud,
+      title: strings.text('uploadTitle'),
+      subtitle: strings.text('uploadSubtitle'),
+      suggestedInvocationPhrase: strings.text('uploadPhrase'),
+    ),
+    SiriShortcut(
+      identifier: SiriShortcutId.showRecentFiles,
+      title: strings.text('recentTitle'),
+      subtitle: strings.text('recentSubtitle'),
+      suggestedInvocationPhrase: strings.text('recentPhrase'),
+    ),
+    SiriShortcut(
+      identifier: SiriShortcutId.syncNow,
+      title: strings.text('syncShortcut'),
+      subtitle: strings.text('syncSubtitle'),
+      suggestedInvocationPhrase: strings.text('syncPhrase'),
+    ),
+  ];
+}
 
 /// Service that manages Siri Shortcuts / App Shortcuts for CrispCloud.
 ///
@@ -128,15 +134,15 @@ class SiriShortcutsService {
   ///
   /// Safe to call on every launch — the native side is idempotent.
   /// No-op on non-iOS platforms.
-  Future<void> registerShortcuts() async {
+  Future<void> registerShortcuts({Locale? locale}) async {
     if (!isAvailable) return;
 
     _setupCallHandler();
 
     try {
-      final payload = _kShortcuts.map((s) => s.toMap()).toList();
+      final payload = shortcutsForLocale(locale).map((s) => s.toMap()).toList();
       await _channel.invokeMethod('registerShortcuts', {'shortcuts': payload});
-      _log.info('Registered ${_kShortcuts.length} Siri shortcut(s)');
+      _log.info('Registered ${payload.length} Siri shortcut(s)');
     } on PlatformException catch (e) {
       _log.warn('Failed to register Siri shortcuts: ${e.message}');
     } on MissingPluginException {
@@ -146,10 +152,10 @@ class SiriShortcutsService {
 
   /// Donate one specific shortcut interaction to Siri (call after the user
   /// actually performs the action in-app to increase suggestion relevance).
-  Future<void> donateShortcut(String shortcutId) async {
+  Future<void> donateShortcut(String shortcutId, {Locale? locale}) async {
     if (!isAvailable) return;
 
-    final shortcut = _kShortcuts.cast<SiriShortcut?>()
+    final shortcut = shortcutsForLocale(locale).cast<SiriShortcut?>()
         .firstWhere((s) => s?.identifier == shortcutId, orElse: () => null);
     if (shortcut == null) {
       _log.warn('donateShortcut: unknown id "$shortcutId"');

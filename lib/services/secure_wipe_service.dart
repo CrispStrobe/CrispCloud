@@ -1,3 +1,4 @@
+import 'web_file_failure.dart';
 // lib/services/secure_wipe_service.dart
 //
 // Multi-pass overwrite before delete for local files.
@@ -19,7 +20,7 @@ class SecureWipeService {
     int passes = 3,
     void Function(int currentPass, int totalPasses)? onProgress,
   }) async {
-    if (kIsWeb) throw UnsupportedError('Secure wipe not supported on Web');
+    if (kIsWeb) throw WebFileUnsupportedError(WebFileFailureCode.wipeUnsupported, 'Secure wipe not supported on Web');
     if (passes < 1) throw ArgumentError('passes must be >= 1');
 
     final file = File(path);
@@ -73,7 +74,7 @@ class SecureWipeService {
     int passes = 3,
     void Function(String currentFile, int filesProcessed, int totalFiles)? onProgress,
   }) async {
-    if (kIsWeb) throw UnsupportedError('Secure wipe not supported on Web');
+    if (kIsWeb) throw WebFileUnsupportedError(WebFileFailureCode.wipeUnsupported, 'Secure wipe not supported on Web');
 
     final dir = Directory(path);
     if (!await dir.exists()) return;

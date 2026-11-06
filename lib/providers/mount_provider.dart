@@ -16,6 +16,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/cloud_storage_interface.dart';
 import '../services/fuse_mount_service.dart';
 import '../services/log_service.dart';
+import '../services/provider_workflow_failure.dart';
 import 'auth_provider.dart';
 import 'error_provider.dart';
 
@@ -31,6 +32,8 @@ class MountNotifier extends ChangeNotifier {
   /// Cached result of the last FUSE availability check.
   /// null = not yet checked, empty string = available, otherwise the error.
   String? _availabilityError;
+  Object? _lastMountFailure;
+  Object? get lastMountFailure => _lastMountFailure;
 
   MountNotifier(this._ref) : _service = FuseMountService() {
     _service.onChanged = notifyListeners;
@@ -102,21 +105,60 @@ class MountNotifier extends ChangeNotifier {
     required String remotePath,
     required String mountPoint,
     String? label,
+    MacFuseBackend macBackend = MacFuseBackend.automatic,
+    bool fuseTNonCommercialAcknowledged = false,
   }) async {
+    _lastMountFailure = null;
     if (!isSupported) {
-      _ref.read(errorProvider).addError('FUSE mounts are not supported on this platform.');
+      _ref
+          .read(errorProvider)
+          .addError(
+            'FUSE mounts are not supported on this platform.',
+            cause: const MountWorkflowFailure(
+              MountWorkflowCode.unsupported,
+              'FUSE mounts are not supported on this platform.',
+            ),
+          );
       return null;
     }
 
     if (_availabilityError != null && _availabilityError!.isNotEmpty) {
-      _ref.read(errorProvider).addError(_availabilityError!);
+      _ref
+          .read(errorProvider)
+          .addError(
+            _availabilityError!,
+            cause: MountWorkflowFailure(
+              MountWorkflowCode.availability,
+              _availabilityError!,
+              cause: _availabilityError,
+            ),
+          );
       return null;
     }
 
     try {
+      if (macBackend == MacFuseBackend.rcloneNfs) {
+        final entry = await _service.mount(
+          client: null,
+          remotePath: remotePath,
+          mountPoint: mountPoint,
+          label: label,
+          macBackend: macBackend,
+        );
+        notifyListeners();
+        return entry;
+      }
       final auth = _ref.read(authProvider);
       if (!auth.isConnected) {
-        _ref.read(errorProvider).addError('Connect to a cloud provider before mounting.');
+        _ref
+            .read(errorProvider)
+            .addError(
+              'Connect to a cloud provider before mounting.',
+              cause: const MountWorkflowFailure(
+                MountWorkflowCode.connectFirst,
+                'Connect to a cloud provider before mounting.',
+              ),
+            );
         return null;
       }
       final entry = await _service.mount(
@@ -124,16 +166,36 @@ class MountNotifier extends ChangeNotifier {
         remotePath: remotePath,
         mountPoint: mountPoint,
         label: label,
+        macBackend: macBackend,
+        fuseTNonCommercialAcknowledged: fuseTNonCommercialAcknowledged,
       );
       if (entry.status == MountStatus.error) {
-        _ref.read(errorProvider).addError(
-            'Mount failed: ${entry.errorMessage ?? "unknown error"}');
+        _ref
+            .read(errorProvider)
+            .addError(
+              'Mount failed: ${entry.errorMessage ?? "unknown error"}',
+              cause: MountWorkflowFailure(
+                MountWorkflowCode.mount,
+                'Mount failed: ${entry.errorMessage ?? "unknown error"}',
+                cause: entry,
+              ),
+            );
       }
       notifyListeners();
       return entry;
     } catch (e) {
       _log.error('mount() failed', e);
-      _ref.read(errorProvider).addError('Mount failed: $e');
+      _lastMountFailure = e;
+      _ref
+          .read(errorProvider)
+          .addError(
+            'Mount failed: $e',
+            cause: MountWorkflowFailure(
+              MountWorkflowCode.mount,
+              'Mount failed: $e',
+              cause: e,
+            ),
+          );
       return null;
     }
   }
@@ -144,9 +206,19 @@ class MountNotifier extends ChangeNotifier {
     required String remotePath,
     required String mountPoint,
     String? label,
+    MacFuseBackend macBackend = MacFuseBackend.automatic,
+    bool fuseTNonCommercialAcknowledged = false,
   }) async {
     if (!isSupported) {
-      _ref.read(errorProvider).addError('FUSE mounts are not supported on this platform.');
+      _ref
+          .read(errorProvider)
+          .addError(
+            'FUSE mounts are not supported on this platform.',
+            cause: const MountWorkflowFailure(
+              MountWorkflowCode.unsupported,
+              'FUSE mounts are not supported on this platform.',
+            ),
+          );
       return null;
     }
     try {
@@ -155,16 +227,35 @@ class MountNotifier extends ChangeNotifier {
         remotePath: remotePath,
         mountPoint: mountPoint,
         label: label,
+        macBackend: macBackend,
+        fuseTNonCommercialAcknowledged: fuseTNonCommercialAcknowledged,
       );
       if (entry.status == MountStatus.error) {
-        _ref.read(errorProvider).addError(
-            'Mount failed: ${entry.errorMessage ?? "unknown error"}');
+        _ref
+            .read(errorProvider)
+            .addError(
+              'Mount failed: ${entry.errorMessage ?? "unknown error"}',
+              cause: MountWorkflowFailure(
+                MountWorkflowCode.mount,
+                'Mount failed: ${entry.errorMessage ?? "unknown error"}',
+                cause: entry,
+              ),
+            );
       }
       notifyListeners();
       return entry;
     } catch (e) {
       _log.error('mountWithClient() failed', e);
-      _ref.read(errorProvider).addError('Mount failed: $e');
+      _ref
+          .read(errorProvider)
+          .addError(
+            'Mount failed: $e',
+            cause: MountWorkflowFailure(
+              MountWorkflowCode.mount,
+              'Mount failed: $e',
+              cause: e,
+            ),
+          );
       return null;
     }
   }
@@ -176,7 +267,16 @@ class MountNotifier extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       _log.error('unmount() failed', e);
-      _ref.read(errorProvider).addError('Unmount failed: $e');
+      _ref
+          .read(errorProvider)
+          .addError(
+            'Unmount failed: $e',
+            cause: MountWorkflowFailure(
+              MountWorkflowCode.unmount,
+              'Unmount failed: $e',
+              cause: e,
+            ),
+          );
     }
   }
 
@@ -187,7 +287,16 @@ class MountNotifier extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       _log.error('removeMount() failed', e);
-      _ref.read(errorProvider).addError('Remove mount failed: $e');
+      _ref
+          .read(errorProvider)
+          .addError(
+            'Remove mount failed: $e',
+            cause: MountWorkflowFailure(
+              MountWorkflowCode.remove,
+              'Remove mount failed: $e',
+              cause: e,
+            ),
+          );
     }
   }
 

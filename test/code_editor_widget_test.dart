@@ -7,6 +7,40 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:re_editor/re_editor.dart';
 
 void main() {
+  testWidgets(
+    'mobile cursor reveal is cancelled when a focused editor is removed immediately',
+    (tester) async {
+      final controller = CodeLineEditingController.fromText('one');
+      final focus = FocusNode();
+      addTearDown(() {
+        focus.dispose();
+        controller.dispose();
+      });
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: CodeEditor(controller: controller, focusNode: focus),
+          ),
+        ),
+      );
+      focus.requestFocus();
+      await tester.pump();
+      expect(focus.hasFocus, isTrue);
+
+      // Match the host's leaving guard, then remove the route without an
+      // animation. Unfocus cannot cancel an untracked delayed cursor reveal.
+      focus.canRequestFocus = false;
+      focus.unfocus();
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(milliseconds: 150));
+      expect(tester.takeException(), isNull);
+    },
+    variant: const TargetPlatformVariant({
+      TargetPlatform.android,
+      TargetPlatform.iOS,
+    }),
+  );
+
   testWidgets('CodeEditor mounts with highlighting and preserves edits', (
     tester,
   ) async {

@@ -1,3 +1,4 @@
+import 'dart:ui' show Locale;
 // lib/services/web_push_service_web.dart
 //
 // Web implementation of WebPushService using the browser Notification API.
@@ -7,6 +8,8 @@ import 'package:flutter/foundation.dart';
 import 'package:universal_html/html.dart' as html;
 
 import 'log_service.dart';
+import '../l10n/platform_message_strings.dart';
+
 import 'web_push_service.dart';
 
 WebPushService createWebPushService() => _WebPushServiceImpl();
@@ -93,25 +96,25 @@ class _WebPushServiceImpl implements WebPushService {
   }
 
   @override
-  Future<void> notifyTransferComplete(String fileName) => showNotification(
+  Future<void> notifyTransferComplete(String fileName, {Locale? locale}) => showNotification(
         type: PushNotificationType.transferComplete,
-        title: 'Transfer complete',
-        body: '$fileName has been transferred successfully.',
+        title: PlatformMessageStrings(locale).text('transferTitle'),
+        body: PlatformMessageStrings(locale).value('transferBody', fileName),
         tag: 'transfer-complete',
       );
 
   @override
-  Future<void> notifySyncComplete(String providerName) => showNotification(
+  Future<void> notifySyncComplete(String providerName, {Locale? locale}) => showNotification(
         type: PushNotificationType.syncComplete,
-        title: 'Sync complete',
-        body: '$providerName is up to date.',
+        title: PlatformMessageStrings(locale).text('syncTitle'),
+        body: PlatformMessageStrings(locale).value('syncBody', providerName),
         tag: 'sync-complete',
       );
 
   @override
-  Future<void> notifyError(String message) => showNotification(
+  Future<void> notifyError(String message, {Locale? locale}) => showNotification(
         type: PushNotificationType.error,
-        title: 'CrispCloud – Error',
+        title: PlatformMessageStrings(locale).text('errorTitle'),
         body: message,
         tag: 'error',
       );

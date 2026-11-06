@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'dart:io';
 
+import '../l10n/misc_ui_strings.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import 'bookmark_actions.dart';
@@ -107,7 +108,9 @@ class FileBreadcrumbs extends ConsumerWidget {
             ),
           ), // Semantics (back)
           // Forward button (Alt+Right)
-          ConstrainedBox(
+          Tooltip(
+            message: MiscUiStrings(context).text('forward'),
+            child: ConstrainedBox(
             constraints: BoxConstraints(minWidth: minTap, minHeight: minTap),
             child: InkWell(
               onTap: canForward ? () => panel.navigateForward() : null,
@@ -122,8 +125,10 @@ class FileBreadcrumbs extends ConsumerWidget {
                 ),
               ),
             ),
-          ),
-          ConstrainedBox(
+          )),
+          Tooltip(
+            message: MiscUiStrings(context).text('home'),
+            child: ConstrainedBox(
             constraints: BoxConstraints(minWidth: minTap, minHeight: minTap),
             child: InkWell(
               onTap: () {
@@ -147,7 +152,7 @@ class FileBreadcrumbs extends ConsumerWidget {
                 ),
               ),
             ),
-          ),
+          )),
           // Bookmark star (Ctrl+B to toggle)
           ConstrainedBox(
             constraints: BoxConstraints(minWidth: minTap, minHeight: minTap),

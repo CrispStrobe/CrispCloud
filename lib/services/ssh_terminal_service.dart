@@ -23,6 +23,7 @@ import 'log_service.dart';
 import 'secure_storage_service.dart';
 import 'ssh_gateway.dart';
 import 'terminal_output.dart';
+import 'terminal_mount_failure.dart';
 
 export 'ssh_gateway.dart' show sshGatewayValidationMessage;
 
@@ -195,7 +196,10 @@ class SshTerminalService {
 
   void _checkPlatform(Uri? gateway) {
     if (!isSupported) {
-      throw UnsupportedError('SSH terminal is not supported on this platform.');
+      throw TerminalMountUnsupportedError(
+        TerminalMountCode.sshUnsupported,
+        'SSH terminal is not supported on this platform.',
+      );
     }
     final validation = sshGatewayValidationMessage(gateway, required: kIsWeb);
     if (validation != null) throw ArgumentError(validation);
@@ -237,7 +241,10 @@ class SshTerminalService {
   }) async {
     final keyPair = _parseKeyPair(privateKey);
     if (keyPair == null) {
-      throw const FormatException('Invalid SSH private key');
+      throw const TerminalMountFormatException(
+        TerminalMountCode.sshInvalidKey,
+        'Invalid SSH private key',
+      );
     }
     return _connect(
       host,
@@ -312,7 +319,16 @@ class SshTerminalService {
         } catch (_) {}
       }
       _log.error('SSH connect failed', error);
-      rethrow;
+      // Keep cancellation as a StateError for the session lifecycle. Transport
+      // failures carry stable codes so the UI can translate them at display time.
+      if (_disposed || generation != _connectionGeneration) rethrow;
+      throw TerminalMountException(
+        identities == null
+            ? TerminalMountCode.sshConnection
+            : TerminalMountCode.sshKeyConnection,
+        'SSH connection failed: $error',
+        {'error': error},
+      );
     } finally {
       _pendingConnections--;
     }
@@ -379,11 +395,15 @@ class SshTerminalService {
     final state = _requireSession(sessionId);
     final client = state.client;
     if (client.isClosed) {
-      throw StateError('Session $sessionId is not connected');
+      throw TerminalMountStateError(
+        TerminalMountCode.sshDisconnected,
+        'Session $sessionId is not connected',
+        {'session': sessionId},
+      );
     }
 
     _touch(sessionId);
-    _log.info('execute($sessionId): $command');
+    _log.info('execute($sessionId)');
 
     try {
       final result = await client.run(command);
@@ -391,7 +411,11 @@ class SshTerminalService {
       return output;
     } catch (e) {
       _log.error('execute error', e);
-      throw Exception('Command execution failed: $e');
+      throw TerminalMountException(
+        TerminalMountCode.sshCommand,
+        'Command execution failed: $e',
+        {'error': e},
+      );
     }
   }
 
@@ -412,7 +436,11 @@ class SshTerminalService {
     final state = _requireSession(sessionId);
     final client = state.client;
     if (client.isClosed) {
-      throw StateError('Session $sessionId is not connected');
+      throw TerminalMountStateError(
+        TerminalMountCode.sshDisconnected,
+        'Session $sessionId is not connected',
+        {'session': sessionId},
+      );
     }
 
     _touch(sessionId);
@@ -471,7 +499,11 @@ class SshTerminalService {
     final state = _requireSession(sessionId);
     final shell = state.shellSession;
     if (shell == null) {
-      throw StateError('No active shell for session $sessionId');
+      throw TerminalMountStateError(
+        TerminalMountCode.sshNoShell,
+        'No active shell for session $sessionId',
+        {'session': sessionId},
+      );
     }
 
     _touch(sessionId);
@@ -487,7 +519,11 @@ class SshTerminalService {
     final state = _requireSession(sessionId);
     final shell = state.shellSession;
     if (shell == null) {
-      throw StateError('No active shell for session $sessionId');
+      throw TerminalMountStateError(
+        TerminalMountCode.sshNoShell,
+        'No active shell for session $sessionId',
+        {'session': sessionId},
+      );
     }
 
     _touch(sessionId);
@@ -526,8 +562,10 @@ class SshTerminalService {
 
   void _checkPoolCapacity() {
     if (_sessions.length + _pendingConnections >= maxSessions) {
-      throw StateError(
+      throw TerminalMountStateError(
+        TerminalMountCode.sshPoolFull,
         'SSH session pool is full (max $maxSessions concurrent sessions).',
+        {'max': maxSessions},
       );
     }
   }
@@ -535,7 +573,11 @@ class SshTerminalService {
   _SessionState _requireSession(String sessionId) {
     final state = _sessions[sessionId];
     if (state == null) {
-      throw ArgumentError('Unknown session id: $sessionId');
+      throw TerminalMountArgumentError(
+        TerminalMountCode.sshUnknownSession,
+        'Unknown session id: $sessionId',
+        {'session': sessionId},
+      );
     }
     return state;
   }

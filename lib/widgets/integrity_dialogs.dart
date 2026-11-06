@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/commander_strings.dart';
+import '../l10n/checksum_error_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
@@ -51,8 +52,9 @@ List<_IntegrityFile> _captureFiles(
 
 void _showIntegrityError(BuildContext context, Object error) {
   if (context.mounted) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text('$error')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(localizedChecksumError(context, error))),
+    );
   }
 }
 
@@ -255,13 +257,13 @@ class _ChecksumDialogState extends ConsumerState<_ChecksumDialog> {
               (result) => (
                 name: '${file.file.name}: ${result.filename}',
                 digest: result.actual,
-                detail:
-                    result.error ??
-                    (result.ok
-                        ? null
-                        : context.commanderTr("Expected {0}", [
-                            result.expected,
-                          ])),
+                detail: result.error != null
+                    ? localizedChecksumError(context, result.error!)
+                    : (result.ok
+                          ? null
+                          : context.commanderTr("Expected {0}", [
+                              result.expected,
+                            ])),
                 ok: result.ok,
               ),
             ),

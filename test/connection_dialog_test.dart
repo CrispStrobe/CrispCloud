@@ -105,7 +105,7 @@ void main() {
       await tester.pumpWidget(_wrap(const AzureConnectionDialog()));
       await _openDialog(tester);
 
-      expect(find.text('Test Connection'), findsOneWidget);
+      expect(find.text('Check Format'), findsOneWidget);
     });
   });
 
@@ -284,7 +284,7 @@ void main() {
       await tester.pumpWidget(_wrap(const AzureConnectionDialog()));
       await _openDialog(tester);
 
-      await tester.tap(find.text('Test Connection'));
+      await tester.tap(find.text('Check Format'));
       await tester.pumpAndSettle();
 
       expect(find.textContaining('required'), findsWidgets);
@@ -331,7 +331,7 @@ void main() {
 
       expect(find.text('Connect'), findsOneWidget);
       expect(find.text('Cancel'), findsOneWidget);
-      expect(find.text('Test Connection'), findsOneWidget);
+      expect(find.text('Check Format'), findsOneWidget);
     });
 
     testWidgets('renders field labels', (tester) async {
@@ -377,7 +377,7 @@ void main() {
       await tester.pumpWidget(_wrap(const B2ConnectionDialog()));
       await _openDialog(tester);
 
-      await tester.tap(find.text('Test Connection'));
+      await tester.tap(find.text('Check Format'));
       await tester.pumpAndSettle();
 
       expect(find.textContaining('required'), findsWidgets);

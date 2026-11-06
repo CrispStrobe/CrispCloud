@@ -1,10 +1,12 @@
 import 'dart:convert';
+import 'dart:io' show FileSystemException;
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:path/path.dart' as p;
 
 import '../models/file_item.dart';
+import 'checksum_file_failure.dart';
 import 'file_integrity_service.dart';
 import 'file_operation_backend.dart';
 import 'file_operation_service.dart';
@@ -23,7 +25,9 @@ class ChecksumVerifyResult {
   final String filename;
   final String expected;
   final String actual;
-  final String? error;
+
+  /// Preserve typed failures so the UI can localize them without parsing logs.
+  final Object? error;
   bool get ok =>
       error == null && expected.toLowerCase() == actual.toLowerCase();
 }
@@ -43,9 +47,34 @@ class ChecksumService {
   static FileItem _file(String path) =>
       FileItem(name: p.basename(path), path: path, isFolder: false);
   static Future<String> md5File(String path) =>
-      hashIntegrityFile(_local(), _file(path), ChecksumAlgorithm.md5);
+      hashFile(_local(), _file(path), ChecksumAlgorithm.md5);
   static Future<String> sha256File(String path) =>
-      hashIntegrityFile(_local(), _file(path), ChecksumAlgorithm.sha256);
+      hashFile(_local(), _file(path), ChecksumAlgorithm.sha256);
+
+  static Future<T> _fileAction<T>(
+    ChecksumFileAction action,
+    String path,
+    Future<T> Function() run,
+  ) async {
+    try {
+      return await run();
+    } on FileIntegrityUnavailable catch (error, stack) {
+      Error.throwWithStackTrace(
+        ChecksumFileException(
+          action,
+          path,
+          FileSystemException(error.message, error.filePath),
+        ),
+        stack,
+      );
+    } on FileSystemException catch (error, stack) {
+      if (error is ChecksumFileException) rethrow;
+      Error.throwWithStackTrace(
+        ChecksumFileException(action, path, error),
+        stack,
+      );
+    }
+  }
 
   static Future<String> hashFile(
     FileOperationBackend source,
@@ -53,12 +82,16 @@ class ChecksumService {
     ChecksumAlgorithm algorithm, {
     bool Function()? isCancelled,
     void Function(int bytes, int? total)? onProgress,
-  }) => hashIntegrityFile(
-    source,
-    file,
-    algorithm,
-    isCancelled: isCancelled,
-    onProgress: onProgress,
+  }) => _fileAction(
+    ChecksumFileAction.read,
+    file.path ?? file.name,
+    () => hashIntegrityFile(
+      source,
+      file,
+      algorithm,
+      isCancelled: isCancelled,
+      onProgress: onProgress,
+    ),
   );
 
   static String _escape(String filename) => filename
@@ -244,12 +277,16 @@ class ChecksumService {
       );
       entries.add(ChecksumManifestEntry(entry.name, digest));
     }
-    await writeIntegrityBytes(
-      source,
+    await _fileAction(
+      ChecksumFileAction.write,
       output,
-      utf8.encode(formatManifest(entries, algorithm)),
-      replace: false,
-      isCancelled: isCancelled,
+      () => writeIntegrityBytes(
+        source,
+        output,
+        utf8.encode(formatManifest(entries, algorithm)),
+        replace: false,
+        isCancelled: isCancelled,
+      ),
     );
     return output;
   }
@@ -264,7 +301,11 @@ class ChecksumService {
     final selectedAlgorithm =
         algorithm ?? ChecksumAlgorithm.forName(manifest.name);
     final text = utf8.decode(
-      await readIntegrityBytes(source, manifest, isCancelled: isCancelled),
+      await _fileAction(
+        ChecksumFileAction.read,
+        manifest.path ?? manifest.name,
+        () => readIntegrityBytes(source, manifest, isCancelled: isCancelled),
+      ),
     );
     final entries = parseManifest(text, selectedAlgorithm);
     final base = source.paths.dirname(manifest.path!);
@@ -309,7 +350,7 @@ class ChecksumService {
             filename: entry.filename,
             expected: entry.digest,
             actual: '(unavailable)',
-            error: '$error',
+            error: error,
           ),
         );
       }

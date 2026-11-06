@@ -67,7 +67,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get clear => 'クリア';
 
   @override
-  String get ok => 'OK';
+  String get ok => '確認';
 
   @override
   String get yes => 'はい';
@@ -432,7 +432,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get darkTheme => 'ダーク';
 
   @override
-  String get oledTheme => 'OLED Black';
+  String get oledTheme => 'OLED ブラック';
 
   @override
   String get nordTheme => 'Nord';
@@ -524,714 +524,709 @@ class AppLocalizationsJa extends AppLocalizations {
   String get compareProviders => 'プロバイダーを比較';
 
   @override
-  String get singlePanel => 'Single Panel';
+  String get singlePanel => 'シングルパネル';
 
   @override
-  String get dualPanel => 'Dual Panel';
+  String get dualPanel => 'デュアルパネル';
 
   @override
-  String get showTreeSidebar => 'Show Tree Sidebar';
+  String get showTreeSidebar => 'ツリーサイドバーを表示';
 
   @override
-  String get hideTreeSidebar => 'Hide Tree Sidebar';
+  String get hideTreeSidebar => 'ツリーサイドバーを隠す';
 
   @override
-  String get detailsList => 'Details List';
+  String get detailsList => '詳細リスト';
 
   @override
-  String get largeItems => 'Large Items';
+  String get largeItems => '大きい項目';
 
   @override
-  String get compactItems => 'Compact Items';
+  String get compactItems => 'コンパクト表示';
 
   @override
-  String get showPreview => 'Show Preview';
+  String get showPreview => 'プレビューを表示';
 
   @override
-  String get hidePreview => 'Hide Preview';
+  String get hidePreview => 'プレビューを隠す';
 
   @override
-  String get showTerminal => 'Show Terminal';
+  String get showTerminal => 'ターミナルを表示';
 
   @override
-  String get hideTerminal => 'Hide Terminal';
+  String get hideTerminal => 'ターミナルを隠す';
 
   @override
-  String get moreActions => 'More actions';
+  String get moreActions => 'その他の操作';
 
   @override
-  String get mountAsDrive => 'Mount as Drive';
+  String get mountAsDrive => 'ドライブとしてマウント';
 
   @override
-  String get auditLog => 'Audit Log';
+  String get auditLog => '監査ログ';
 
   @override
-  String get systemLog => 'System Log';
+  String get systemLog => 'システムログ';
 
   @override
-  String get cacheSettings => 'Cache Settings';
+  String get cacheSettings => 'キャッシュ設定';
 
   @override
-  String get keyboardShortcuts => 'Keyboard Shortcuts';
+  String get keyboardShortcuts => 'キーボードショートカット';
 
   @override
-  String get swapPanels => 'Swap Panels';
+  String get swapPanels => 'パネルを入れ替え';
 
   @override
-  String get connectToCloud => 'Connect to Cloud';
+  String get connectToCloud => 'クラウドに接続';
 
   @override
   String browseProvider(String provider) {
-    return 'Browse $provider';
+    return '$provider を参照';
   }
 
   @override
-  String get pleaseConnectRemote => 'Please connect to access remote files';
+  String get pleaseConnectRemote => 'リモートファイルにアクセスするには接続してください';
 
   @override
-  String get notConnected => 'Not connected';
+  String get notConnected => '未接続';
 
   @override
-  String get connectToCloudShort => 'Connect to cloud';
+  String get connectToCloudShort => 'クラウドに接続';
 
   @override
-  String get loggedIn => 'Logged in';
+  String get loggedIn => 'ログイン済み';
 
   @override
-  String get localFiles => 'Local Files';
+  String get localFiles => 'ローカルファイル';
 
   @override
-  String get remoteFiles => 'Remote Files';
+  String get remoteFiles => 'リモートファイル';
 
   @override
-  String get bookmarkFolder => 'Bookmark current folder';
+  String get bookmarkFolder => '現在のフォルダーをブックマーク';
 
   @override
-  String get noFolders => 'No folders';
+  String get noFolders => 'フォルダーがありません';
 
   @override
-  String get selectFileToPreview => 'Select a file to preview';
+  String get selectFileToPreview => 'プレビューするファイルを選択';
 
   @override
   String fileTooLarge(String size) {
-    return 'File too large to preview ($size)';
+    return 'ファイルが大きすぎてプレビューできません（$size）';
   }
 
   @override
   String previewFailed(String error) {
-    return 'Preview failed: $error';
+    return 'プレビューに失敗しました: $error';
   }
 
   @override
-  String get firstPage => 'First page';
+  String get firstPage => '最初のページ';
 
   @override
-  String get previousPage => 'Previous page';
+  String get previousPage => '前のページ';
 
   @override
-  String get nextPage => 'Next page';
+  String get nextPage => '次のページ';
 
   @override
-  String get lastPage => 'Last page';
+  String get lastPage => '最後のページ';
 
   @override
-  String get playAudio => 'Play Audio';
+  String get playAudio => '音声を再生';
 
   @override
-  String get playVideo => 'Play Video';
+  String get playVideo => '動画を再生';
 
   @override
-  String get emptyFile => 'Empty file';
+  String get emptyFile => '空のファイル';
 
   @override
   String systemLogTitle(int count) {
-    return 'System Log ($count entries)';
+    return 'システムログ（$count 件）';
   }
 
   @override
-  String get minimumLevel => 'Minimum level';
+  String get minimumLevel => '最低レベル';
 
   @override
-  String get pauseAutoScroll => 'Pause auto-scroll';
+  String get pauseAutoScroll => '自動スクロールを一時停止';
 
   @override
-  String get resumeAutoScroll => 'Resume auto-scroll';
+  String get resumeAutoScroll => '自動スクロールを再開';
 
   @override
-  String get copyVisible => 'Copy visible';
+  String get copyVisible => '表示中をコピー';
 
   @override
-  String get copyAll => 'Copy all';
+  String get copyAll => 'すべてコピー';
 
   @override
-  String get filterLogs => 'Filter logs...';
+  String get filterLogs => 'ログを絞り込み...';
 
   @override
-  String get visibleLinesCopied => 'Visible lines copied';
+  String get visibleLinesCopied => '表示中の行をコピーしました';
 
   @override
-  String get allLogsCopied => 'All logs copied';
+  String get allLogsCopied => 'すべてのログをコピーしました';
 
   @override
-  String get open => 'Open';
+  String get open => '開く';
 
   @override
-  String get editSystemEditor => 'Edit (System Editor)';
+  String get editSystemEditor => '編集（システムエディター）';
 
   @override
-  String get editBuiltIn => 'Edit (Built-in)';
+  String get editBuiltIn => '編集（内蔵エディター）';
 
   @override
-  String get openWithSystemApp => 'Open with System App';
+  String get openWithSystemApp => 'システムアプリで開く';
 
   @override
-  String get verifyAgainstRemote => 'Verify against remote';
+  String get verifyAgainstRemote => 'リモートファイルと照合';
 
   @override
-  String get browseArchive => 'Browse Archive';
+  String get browseArchive => 'アーカイブを参照';
 
   @override
-  String get archiveExtracted => 'Archive extracted successfully';
+  String get archiveExtracted => 'アーカイブを展開しました';
 
   @override
-  String get revealInFinder => 'Reveal in Finder';
+  String get revealInFinder => 'Finder に表示';
 
   @override
-  String get showInExplorer => 'Show in Explorer';
+  String get showInExplorer => 'エクスプローラーに表示';
 
   @override
-  String get openContainingFolder => 'Open containing folder';
+  String get openContainingFolder => '保存先フォルダーを開く';
 
   @override
-  String get properties => 'Properties';
+  String get properties => 'プロパティ';
 
   @override
-  String get copyNames => 'Copy name(s)';
+  String get copyNames => '名前をコピー';
 
   @override
-  String get copyPaths => 'Copy path(s)';
+  String get copyPaths => 'パスをコピー';
 
   @override
-  String get createMd5 => 'Create .md5 file';
+  String get createMd5 => '.md5 ファイルを作成';
 
   @override
-  String get verifyChecksumFile => 'Verify checksum file';
+  String get verifyChecksumFile => 'チェックサムファイルを検証';
 
   @override
-  String get splitFile => 'Split File';
+  String get splitFile => 'ファイルを分割';
 
   @override
-  String get combineParts => 'Combine Parts';
+  String get combineParts => '分割ファイルを結合';
 
   @override
-  String get createLink => 'Create Link...';
+  String get createLink => 'リンクを作成...';
 
   @override
-  String get secureWipe => 'Secure Wipe';
+  String get secureWipe => '安全に消去';
 
   @override
   String confirmDeleteBody(int count) {
-    return 'Are you sure you want to delete $count item(s)?';
+    return '$count 件の項目を削除しますか？';
   }
 
   @override
   String totalSize(String size) {
-    return 'Total size: $size';
+    return '合計サイズ: $size';
   }
 
   @override
-  String get cannotBeUndone => 'This action cannot be undone.';
+  String get cannotBeUndone => 'この操作は元に戻せません。';
 
   @override
   String nItems(int count) {
-    return '$count items';
+    return '$count 項目';
   }
 
   @override
   String nTransfers(int count) {
-    return '$count transfer(s)';
+    return '転送 $count 件';
   }
 
   @override
-  String get syncing => 'Syncing';
+  String get syncing => '同期中';
 
   @override
   String lastSyncChanges(int count) {
-    return 'Last sync: $count changes';
+    return '前回の同期: $count 件の変更';
   }
 
   @override
   String nPairs(int count) {
-    return '$count pair(s)';
+    return 'ペア $count 件';
   }
 
   @override
-  String get hidden => 'Hidden';
+  String get hidden => '非表示';
 
   @override
   String free(String size) {
-    return 'Free: $size';
+    return '空き: $size';
   }
 
   @override
-  String get aboutLegal => 'About / Legal';
+  String get aboutLegal => '概要 / 法的情報';
 
   @override
-  String get appDescription =>
-      'An unofficial, open-source client for Filen.io, SFTP & WebDAV.';
+  String get appDescription => 'Filen.io、SFTP、WebDAV 向けの非公式オープンソースクライアントです。';
 
   @override
-  String get serviceProvider => 'Service Provider';
+  String get serviceProvider => 'サービスプロバイダー';
 
   @override
-  String get contact => 'Contact';
+  String get contact => 'お問い合わせ';
 
   @override
-  String get disclaimer => 'Disclaimer';
+  String get disclaimer => '免責事項';
 
   @override
   String get disclaimerText =>
-      'This software is provided \"as is\", without warranty of any kind. This app is not affiliated with Filen.io, or any other cloud provider.';
+      '本ソフトウェアは無保証で現状のまま提供されます。本アプリは Filen.io や他のクラウドプロバイダーとは関係ありません。';
 
   @override
-  String get sourceCode => 'Source Code (GitHub)';
+  String get sourceCode => 'ソースコード（GitHub）';
 
   @override
-  String get website => 'Website';
+  String get website => 'ウェブサイト';
 
   @override
-  String get viewLicenses => 'View Open Source Licenses';
+  String get viewLicenses => 'オープンソースライセンスを表示';
 
   @override
-  String get flatView => 'Flat View (all subdirectories)';
+  String get flatView => 'フラット表示（すべてのサブフォルダー）';
 
   @override
-  String get exitFlatView => 'Exit Flat View';
+  String get exitFlatView => 'フラット表示を終了';
 
   @override
-  String get showHiddenFiles => 'Show hidden files';
+  String get showHiddenFiles => '隠しファイルを表示';
 
   @override
-  String get hideHiddenFiles => 'Hide hidden files';
+  String get hideHiddenFiles => '隠しファイルを隠す';
 
   @override
-  String get touchFriendlyView => 'Switch to touch-friendly view';
+  String get touchFriendlyView => 'タッチ向け表示に切り替え';
 
   @override
-  String get compactView => 'Switch to compact view';
+  String get compactView => 'コンパクト表示に切り替え';
 
   @override
-  String get sort => 'Sort';
+  String get sort => '並べ替え';
 
   @override
-  String get secondarySort => 'Secondary Sort';
+  String get secondarySort => '二次並べ替え';
 
   @override
-  String get none => 'None';
+  String get none => 'なし';
 
   @override
-  String get byName => 'by Name';
+  String get byName => '名前順';
 
   @override
-  String get bySize => 'by Size';
+  String get bySize => 'サイズ順';
 
   @override
-  String get byDate => 'by Date';
+  String get byDate => '日付順';
 
   @override
-  String get enterPath => 'Enter path...';
+  String get enterPath => 'パスを入力...';
 
   @override
-  String get editPath => 'Edit path';
+  String get editPath => 'パスを編集';
 
   @override
-  String get searchResults => 'Search results';
+  String get searchResults => '検索結果';
 
   @override
   String nFiles(int count) {
-    return '$count file(s)';
+    return '$count ファイル';
   }
 
   @override
   String copyNItems(int count) {
-    return 'Copy $count item(s)';
+    return '$count 件の項目をコピー';
   }
 
   @override
   String moveNItems(int count) {
-    return 'Move $count item(s)';
+    return '$count 件の項目を移動';
   }
 
   @override
-  String get targetPath => 'Target path';
+  String get targetPath => '移動先のパス';
 
   @override
   String saved(String name) {
-    return 'Saved $name';
+    return '$name を保存しました';
   }
 
   @override
   String saveFailed(String error) {
-    return 'Save failed: $error';
+    return '保存に失敗しました: $error';
   }
 
   @override
-  String get unsavedChanges => 'Unsaved Changes';
+  String get unsavedChanges => '未保存の変更';
 
   @override
-  String get discardChanges => 'You have unsaved changes. Discard them?';
+  String get discardChanges => '未保存の変更があります。破棄しますか？';
 
   @override
-  String get discard => 'Discard';
+  String get discard => '破棄';
 
   @override
-  String get saveShortcut => 'Save (Ctrl+S)';
+  String get saveShortcut => '保存（Ctrl+S）';
 
   @override
-  String get fileModifiedOnServer =>
-      'This file was modified on the server since you opened it.';
+  String get fileModifiedOnServer => 'このファイルは開いてからサーバー上で変更されました。';
 
   @override
-  String get saveAnyway => 'Save Anyway';
+  String get saveAnyway => '上書き保存';
 
   @override
-  String get reload => 'Reload';
+  String get reload => '再読み込み';
 
   @override
-  String get saveProfile => 'Save Profile';
+  String get saveProfile => 'プロファイルを保存';
 
   @override
-  String get profileName => 'Profile Name';
+  String get profileName => 'プロファイル名';
 
   @override
-  String get profileNameHint => 'e.g., Work S3, Personal SFTP';
+  String get profileNameHint => '例: 仕事用 S3、個人用 SFTP';
 
   @override
   String profileSaved(String name) {
-    return 'Profile \"$name\" saved';
+    return 'プロファイル「$name」を保存しました';
   }
 
   @override
-  String get connectToCloudStorage => 'Connect to Cloud Storage';
+  String get connectToCloudStorage => 'クラウドストレージに接続';
 
   @override
-  String get savedProfiles => 'Saved Profiles';
+  String get savedProfiles => '保存済みプロファイル';
 
   @override
-  String get loadProfile => 'Load a saved profile...';
+  String get loadProfile => '保存済みプロファイルを読み込み...';
 
   @override
-  String get deleteProfile => 'Delete Profile';
+  String get deleteProfile => 'プロファイルを削除';
 
   @override
-  String get saveAsProfile => 'Save as Profile';
+  String get saveAsProfile => 'プロファイルとして保存';
 
   @override
-  String get enableEncryption => 'Enable Client-Side Encryption';
+  String get enableEncryption => 'クライアント側の暗号化を有効化';
 
   @override
-  String get encryptBeforeUpload => 'Encrypt files before upload (AES-256-GCM)';
+  String get encryptBeforeUpload => 'アップロード前にファイルを暗号化（AES-256-GCM）';
 
   @override
-  String get encryptionPassphrase => 'Encryption Passphrase';
+  String get encryptionPassphrase => '暗号化パスフレーズ';
 
   @override
-  String get appLocked => 'CrispCloud is Locked';
+  String get appLocked => 'CrispCloudはロックされています';
 
   @override
-  String get enterPinToContinue => 'Enter your PIN or password to continue';
+  String get enterPinToContinue => '続行するにはPINまたはパスワードを入力してください';
 
   @override
-  String get pinPassword => 'PIN / Password';
+  String get pinPassword => 'PIN / パスワード';
 
   @override
-  String get incorrectPin => 'Incorrect PIN or password';
+  String get incorrectPin => 'PINまたはパスワードが正しくありません';
 
   @override
-  String get tooManyAttempts =>
-      'Too many failed attempts. Restart the app to try again.';
+  String get tooManyAttempts => '失敗回数が多すぎます。アプリを再起動して再試行してください。';
 
   @override
   String attemptsRemaining(int count) {
-    return '$count attempts remaining';
+    return '残り試行回数: $count回';
   }
 
   @override
-  String get appLockSetup => 'Set Up App Lock';
+  String get appLockSetup => 'アプリロックを設定';
 
   @override
-  String get changeAppLockCode => 'Change App Lock';
+  String get changeAppLockCode => 'アプリロックを変更';
 
   @override
-  String get currentPin => 'Current PIN / Password';
+  String get currentPin => '現在のPIN / パスワード';
 
   @override
-  String get newPin => 'New PIN / Password';
+  String get newPin => '新しいPIN / パスワード';
 
   @override
-  String get confirmPin => 'Confirm PIN / Password';
+  String get confirmPin => 'PIN / パスワードを確認';
 
   @override
-  String get minFourChars => 'Minimum 4 characters';
+  String get minFourChars => '4文字以上';
 
   @override
-  String get codesDoNotMatch => 'Codes do not match';
+  String get codesDoNotMatch => 'コードが一致しません';
 
   @override
-  String get autoLockAfter => 'Auto-lock after';
+  String get autoLockAfter => '自動ロックまでの時間';
 
   @override
-  String get immediately => 'Immediately';
+  String get immediately => 'すぐに';
 
   @override
-  String get oneMinute => '1 minute';
+  String get oneMinute => '1分';
 
   @override
-  String get fiveMinutes => '5 minutes';
+  String get fiveMinutes => '5分';
 
   @override
-  String get fifteenMinutes => '15 minutes';
+  String get fifteenMinutes => '15分';
 
   @override
-  String get thirtyMinutes => '30 minutes';
+  String get thirtyMinutes => '30分';
 
   @override
-  String get oneHour => '1 hour';
+  String get oneHour => '1時間';
 
   @override
-  String get connectToHetzner => 'Connect to Hetzner Storage Box';
+  String get connectToHetzner => 'Hetzner Storage Box に接続';
 
   @override
-  String get sftpPort23 => 'SFTP (port 23)';
+  String get sftpPort23 => 'SFTP（ポート 23）';
 
   @override
-  String get webdavHttps => 'WebDAV (HTTPS)';
+  String get webdavHttps => 'WebDAV（HTTPS）';
 
   @override
-  String get testConnection => 'Test Connection';
+  String get testConnection => '接続テスト';
 
   @override
-  String get connectionSuccessful => 'Connection successful';
+  String get connectionSuccessful => '接続に成功しました';
 
   @override
   String testFailed(String error) {
-    return 'Test failed: $error';
+    return 'テストに失敗しました: $error';
   }
 
   @override
-  String get connectToAzure => 'Connect to Azure Blob Storage';
+  String get connectToAzure => 'Azure Blob Storage に接続';
 
   @override
-  String get authenticationMode => 'Authentication Mode';
+  String get authenticationMode => '認証方式';
 
   @override
-  String get accountName => 'Account Name';
+  String get accountName => 'アカウント名';
 
   @override
-  String get container => 'Container';
+  String get container => 'コンテナー';
 
   @override
   String get sasUrl => 'SAS URL';
 
   @override
-  String get sasToken => 'SAS Token';
+  String get sasToken => 'SAS トークン';
 
   @override
-  String get connectToB2 => 'Connect to Backblaze B2';
+  String get connectToB2 => 'Backblaze B2 に接続';
 
   @override
-  String get applicationKeyId => 'Application Key ID';
+  String get applicationKeyId => 'アプリケーションキー ID';
 
   @override
-  String get applicationKey => 'Application Key';
+  String get applicationKey => 'アプリケーションキー';
 
   @override
-  String get bucketNameOptional => 'Bucket Name (optional)';
+  String get bucketNameOptional => 'バケット名（任意）';
 
   @override
-  String get mount => 'Mount';
+  String get mount => 'マウント';
 
   @override
-  String get unmount => 'Unmount';
+  String get unmount => 'マウント解除';
 
   @override
-  String get displayName => 'Display Name';
+  String get displayName => '表示名';
 
   @override
-  String get localMountPoint => 'Local Mount Point';
+  String get localMountPoint => 'ローカルマウントポイント';
 
   @override
-  String get newMount => 'New Mount';
+  String get newMount => '新しいマウント';
 
   @override
-  String get noMountsConfigured => 'No mounts configured';
+  String get noMountsConfigured => 'マウントが設定されていません';
 
   @override
   String get fuseDesktopOnly =>
-      'FUSE mounts are only available on macOS, Linux, and Windows desktop.';
+      'FUSE マウントは macOS、Linux、Windows のデスクトップでのみ利用できます。';
 
   @override
-  String get multiCloud => 'Multi-Cloud';
+  String get multiCloud => 'マルチクラウド';
 
   @override
-  String get connections => 'Connections';
+  String get connections => '接続';
 
   @override
-  String get transfer => 'Transfer';
+  String get transfer => '転送';
 
   @override
-  String get compareAndSearch => 'Compare & Search';
+  String get compareAndSearch => '比較と検索';
 
   @override
-  String get noConnectionsYet => 'No connections registered yet.';
+  String get noConnectionsYet => '登録された接続はありません。';
 
   @override
-  String get startTransfer => 'Start Transfer';
+  String get startTransfer => '転送を開始';
 
   @override
-  String get syncPairs => 'Sync Pairs';
+  String get syncPairs => '同期ペア';
 
   @override
-  String get enableAutoSync => 'Enable Auto-Sync';
+  String get enableAutoSync => '自動同期を有効化';
 
   @override
-  String get disableAutoSync => 'Disable Auto-Sync';
+  String get disableAutoSync => '自動同期を無効化';
 
   @override
-  String get noSyncPairs => 'No sync pairs configured';
+  String get noSyncPairs => '同期ペアが設定されていません';
 
   @override
-  String get replayOffline => 'Replay Offline';
+  String get replayOffline => 'オフライン操作を再実行';
 
   @override
-  String get newSyncPair => 'New Sync Pair';
+  String get newSyncPair => '新しい同期ペア';
 
   @override
-  String get cacheUsage => 'Cache Usage';
+  String get cacheUsage => 'キャッシュ使用量';
 
   @override
-  String get maximumCacheSize => 'Maximum Cache Size';
+  String get maximumCacheSize => '最大キャッシュサイズ';
 
   @override
-  String get clearCacheConfirm =>
-      'Remove all cached files? They will be re-downloaded when needed.';
+  String get clearCacheConfirm => 'キャッシュされたファイルをすべて削除しますか？必要に応じて再ダウンロードされます。';
 
   @override
   String batchRenameTitle(int count) {
-    return 'Batch Rename ($count files)';
+    return '一括名前変更（$count ファイル）';
   }
 
   @override
-  String get findReplace => 'Find/Replace';
+  String get findReplace => '検索/置換';
 
   @override
-  String get number => 'Number';
+  String get number => '番号付け';
 
   @override
-  String get prefixSuffix => 'Prefix/Suffix';
+  String get prefixSuffix => '接頭辞/接尾辞';
 
   @override
-  String get extension => 'Extension';
+  String get extension => '拡張子';
 
   @override
-  String get duplicateFinder => 'Duplicate Finder';
+  String get duplicateFinder => '重複ファイル検索';
 
   @override
-  String get noDuplicatesFound => 'No duplicates found!';
+  String get noDuplicatesFound => '重複ファイルはありません！';
 
   @override
-  String get chooseTheme => 'Choose Theme';
+  String get chooseTheme => 'テーマを選択';
 
   @override
-  String get checkForUpdates => 'Check for Updates';
+  String get checkForUpdates => '更新を確認';
 
   @override
-  String get youAreUpToDate => 'You\'re up to date';
+  String get youAreUpToDate => '最新バージョンです';
 
   @override
-  String get updateAvailable => 'Update available';
+  String get updateAvailable => '更新があります';
 
   @override
-  String get releaseNotes => 'Release notes';
+  String get releaseNotes => 'リリースノート';
 
   @override
-  String get checkNow => 'Check Now';
+  String get checkNow => '今すぐ確認';
 
   @override
-  String get general => 'General';
+  String get general => '一般';
 
   @override
-  String get accessibility => 'Accessibility';
+  String get accessibility => 'アクセシビリティ';
 
   @override
-  String get privacy => 'Privacy';
+  String get privacy => 'プライバシー';
 
   @override
-  String get advanced => 'Advanced';
+  String get advanced => '詳細設定';
 
   @override
-  String get showFKeyButtons =>
-      'Show F3-F8 shortcut buttons at the bottom of the screen';
+  String get showFKeyButtons => '画面下部に F3〜F8 のショートカットを表示';
 
   @override
-  String get exportKeys => 'Export/Import Encryption Keys';
+  String get exportKeys => '暗号化キーをエクスポート/インポート';
 
   @override
-  String get backupRecovery => 'BIP39 Mnemonic Backup and Recovery';
+  String get backupRecovery => 'BIP39 復元フレーズのバックアップと復元';
 
   @override
-  String get noActiveOperations => 'No active operations';
+  String get noActiveOperations => '実行中の操作はありません';
 
   @override
-  String get refreshAll => 'Refresh All';
+  String get refreshAll => 'すべて更新';
 
   @override
-  String get newName => 'New name';
+  String get newName => '新しい名前';
 
   @override
-  String get items => 'Items:';
+  String get items => '項目:';
 
   @override
   String andMore(int count) {
-    return '... and $count more';
+    return '...他 $count 件';
   }
 
   @override
-  String get searchPattern => 'Search Pattern';
+  String get searchPattern => '検索パターン';
 
   @override
-  String get findPattern => 'Find Pattern';
+  String get findPattern => '検索パターン';
 
   @override
-  String get searchHint => 'Search for files...';
+  String get searchHint => 'ファイルを検索...';
 
   @override
-  String get findHint => 'e.g., *.pdf, report*';
+  String get findHint => '例: *.pdf, report*';
 
   @override
-  String get noResultsFound => 'No results found';
+  String get noResultsFound => '結果がありません';
 
   @override
-  String get size => 'Size';
+  String get size => 'サイズ';
 
   @override
-  String get date => 'Date';
+  String get date => '日付';
 
   @override
-  String get name => 'Name';
+  String get name => '名前';
 
   @override
-  String get type => 'Type';
+  String get type => '種類';
 
   @override
-  String get created => 'Created';
+  String get created => '作成日時';
 
   @override
-  String get accessed => 'Accessed';
+  String get accessed => 'アクセス日時';
 
   @override
-  String get computeMd5 => 'Compute MD5';
+  String get computeMd5 => 'MD5 を計算';
 
   @override
-  String get protocol => 'Protocol';
+  String get protocol => 'プロトコル';
 }

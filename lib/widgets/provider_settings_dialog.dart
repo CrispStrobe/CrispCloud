@@ -8,6 +8,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../providers/providers.dart';
+import '../l10n/app_localizations.dart';
+import '../l10n/provider_settings_strings.dart';
 
 void showProviderSettingsDialog(BuildContext context, WidgetRef ref) {
   showDialog(
@@ -71,13 +73,14 @@ class _ProviderSettingsDialogState extends ConsumerState<_ProviderSettingsDialog
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authProvider);
+    final strings = ProviderSettingsStrings(context);
 
     return AlertDialog(
       title: Row(
         children: [
           const Icon(Icons.settings, size: 20),
           const SizedBox(width: 8),
-          Text('${auth.providerName} Settings'),
+          Text(strings.text('settings', {'provider': auth.providerName})),
         ],
       ),
       content: SizedBox(
@@ -88,33 +91,33 @@ class _ProviderSettingsDialogState extends ConsumerState<_ProviderSettingsDialog
           children: [
             TextField(
               controller: _timeoutController,
-              decoration: const InputDecoration(
-                labelText: 'Request Timeout (seconds)',
-                border: OutlineInputBorder(),
-                helperText: 'Default: 30 seconds',
+              decoration: InputDecoration(
+                labelText: strings.text('timeout'),
+                border: const OutlineInputBorder(),
+                helperText: strings.text('default'),
               ),
               keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 16),
             TextField(
               controller: _customHeadersController,
-              decoration: const InputDecoration(
-                labelText: 'Custom Headers',
-                border: OutlineInputBorder(),
-                helperText: 'One per line: Header-Name: value',
+              decoration: InputDecoration(
+                labelText: strings.text('headers'),
+                border: const OutlineInputBorder(),
+                helperText: strings.text('headerHelp'),
               ),
               maxLines: 3,
             ),
             const SizedBox(height: 16),
             SwitchListTile(
-              title: const Text('Follow Redirects'),
+              title: Text(strings.text('redirects')),
               value: _followRedirects,
               onChanged: (v) => setState(() => _followRedirects = v),
               dense: true,
             ),
             SwitchListTile(
-              title: const Text('Verify SSL Certificates'),
-              subtitle: const Text('Disable only for self-signed certs'),
+              title: Text(strings.text('verify')),
+              subtitle: Text(strings.text('verifyHelp')),
               value: _verifySSL,
               onChanged: (v) => setState(() => _verifySSL = v),
               dense: true,
@@ -123,8 +126,8 @@ class _ProviderSettingsDialogState extends ConsumerState<_ProviderSettingsDialog
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-        ElevatedButton(onPressed: _saveSettings, child: const Text('Save')),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.cancel)),
+        ElevatedButton(onPressed: _saveSettings, child: Text(AppLocalizations.of(context)!.save)),
       ],
     );
   }

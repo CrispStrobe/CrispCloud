@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/panel_tab.dart';
+import '../l10n/panel_tab_strings.dart';
 import 'file_list_view.dart' show PanelDragData;
 
 class PanelTabBar extends StatelessWidget {
@@ -42,6 +43,7 @@ class PanelTabBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = PanelTabStrings(context);
     return Container(
       height: 34,
       decoration: BoxDecoration(
@@ -73,9 +75,9 @@ class PanelTabBar extends StatelessWidget {
                       onFilesDroppedOnTab?.call(tab.id, details.data.files),
                   builder: (context, candidates, rejected) => Tooltip(
                     message:
-                        '${tab.storage?.provider ?? 'Location'}: ${tab.path}'
-                        '${tab.isLocked ? '\n${tab.lockMode.label}' : ''}'
-                        '${tab.lockedPath != null && tab.lockedPath != tab.path ? '\nLocked location: ${tab.lockedPath}' : ''}',
+                        '${tab.storage?.provider ?? strings.text('location')}: ${tab.path}'
+                        '${tab.isLocked ? '\n${strings.text('lock_${tab.lockMode.name}')}' : ''}'
+                        '${tab.lockedPath != null && tab.lockedPath != tab.path ? '\n${strings.value('lockedLocation', {'path': tab.lockedPath!})}' : ''}',
                     child: GestureDetector(
                       onSecondaryTapDown: (details) =>
                           _menu(context, tab, details.globalPosition),
@@ -166,7 +168,7 @@ class PanelTabBar extends StatelessWidget {
             ),
           ),
           IconButton(
-            tooltip: 'New tab',
+            tooltip: strings.text('newTab'),
             visualDensity: VisualDensity.compact,
             iconSize: 17,
             onPressed: onNewTab,
@@ -174,7 +176,7 @@ class PanelTabBar extends StatelessWidget {
           ),
           if (onWorkspace != null)
             IconButton(
-              tooltip: 'Workspaces, bookmarks and views',
+              tooltip: strings.text('workspaces'),
               visualDensity: VisualDensity.compact,
               iconSize: 17,
               onPressed: onWorkspace,
@@ -191,6 +193,7 @@ class PanelTabBar extends StatelessWidget {
     Offset position,
   ) async {
     final index = tabs.indexWhere((value) => value.id == tab.id);
+    final strings = PanelTabStrings(context);
     final action = await showMenu<String>(
       context: context,
       position: RelativeRect.fromLTRB(
@@ -201,16 +204,19 @@ class PanelTabBar extends StatelessWidget {
       ),
       items: [
         if (onTabRenamed != null)
-          const PopupMenuItem(value: 'rename', child: Text('Rename tab…')),
-        const PopupMenuItem(
+          PopupMenuItem(
+            value: 'rename',
+            child: Text('${strings.text('renameTab')}…'),
+          ),
+        PopupMenuItem(
           value: 'duplicate',
-          child: Text('Duplicate this tab'),
+          child: Text(strings.text('duplicate')),
         ),
         if (onTabPinToggle != null)
           CheckedPopupMenuItem(
             value: 'pin',
             checked: tab.isPinned,
-            child: const Text('Pin tab'),
+            child: Text(strings.text('pin')),
           ),
         if (onTabLockChanged != null) ...[
           const PopupMenuDivider(),
@@ -218,7 +224,7 @@ class PanelTabBar extends StatelessWidget {
             CheckedPopupMenuItem(
               value: 'lock:${mode.name}',
               checked: tab.lockMode == mode,
-              child: Text(mode.label),
+              child: Text(strings.text('lock_${mode.name}')),
             ),
         ],
         if (onTabReordered != null) ...[
@@ -226,28 +232,30 @@ class PanelTabBar extends StatelessWidget {
           PopupMenuItem(
             value: 'left',
             enabled: index > 0,
-            child: const Text('Move tab left'),
+            child: Text(strings.text('moveLeft')),
           ),
           PopupMenuItem(
             value: 'right',
             enabled: index < tabs.length - 1,
-            child: const Text('Move tab right'),
+            child: Text(strings.text('moveRight')),
           ),
         ],
         const PopupMenuDivider(),
         PopupMenuItem(
           value: 'close',
           enabled: tabs.length > 1,
-          child: Text(tab.isProtected ? 'Close protected tab…' : 'Close tab'),
+          child: Text(
+            strings.text(tab.isProtected ? 'closeProtected' : 'closeTab'),
+          ),
         ),
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 'others',
-          child: Text('Close other unprotected tabs'),
+          child: Text(strings.text('closeOthers')),
         ),
         if (onCloseDuplicates != null)
-          const PopupMenuItem(
+          PopupMenuItem(
             value: 'duplicates',
-            child: Text('Close duplicate tabs'),
+            child: Text(strings.text('closeDuplicates')),
           ),
       ],
     );
@@ -285,16 +293,21 @@ class PanelTabBar extends StatelessWidget {
           final confirmed = await showDialog<bool>(
             context: context,
             builder: (context) => AlertDialog(
-              title: const Text('Close protected tab?'),
-              content: Text('Close "${tab.label}" at ${tab.path}?'),
+              title: Text(strings.text('closeProtectedQuestion')),
+              content: Text(
+                strings.value('closeConfirm', {
+                  'title': tab.label,
+                  'path': tab.path,
+                }),
+              ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context, false),
-                  child: const Text('Cancel'),
+                  child: Text(PanelTabStrings(context).text('cancel')),
                 ),
                 FilledButton(
                   onPressed: () => Navigator.pop(context, true),
-                  child: const Text('Close tab'),
+                  child: Text(strings.text('closeTab')),
                 ),
               ],
             ),
@@ -328,28 +341,28 @@ class _TabNameDialogState extends State<_TabNameDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: const Text('Rename tab'),
+    title: Text(PanelTabStrings(context).text('renameTab')),
     content: TextField(
       controller: controller,
       autofocus: true,
-      decoration: const InputDecoration(
-        labelText: 'Tab title',
-        helperText: 'Leave empty to use the folder name.',
+      decoration: InputDecoration(
+        labelText: PanelTabStrings(context).text('tabName'),
+        helperText: PanelTabStrings(context).text('folderHint'),
       ),
       onSubmitted: (value) => Navigator.pop(context, value),
     ),
     actions: [
       TextButton(
         onPressed: () => Navigator.pop(context),
-        child: const Text('Cancel'),
+        child: Text(PanelTabStrings(context).text('cancel')),
       ),
       TextButton(
         onPressed: () => Navigator.pop(context, ''),
-        child: const Text('Use folder name'),
+        child: Text(PanelTabStrings(context).text('useFolder')),
       ),
       FilledButton(
         onPressed: () => Navigator.pop(context, controller.text),
-        child: const Text('Save'),
+        child: Text(PanelTabStrings(context).text('save')),
       ),
     ],
   );

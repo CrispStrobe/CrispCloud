@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/commander_strings.dart';
+import '../l10n/transfer_error_strings.dart';
+import '../l10n/provider_operation_strings.dart';
 import '../models/operation_progress.dart';
 import '../models/transfer_job.dart';
 import '../providers/providers.dart';
@@ -713,6 +715,13 @@ class _OperationTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = TransferErrorStrings(context);
+    final error = strings.error(operation);
+    final title =
+        operation.isBatch &&
+            operation.fileName == '${operation.totalFiles} files'
+        ? strings.text('batchFiles', {'count': operation.totalFiles})
+        : operation.fileName;
     final color = switch (state) {
       _JobState.needsReview => theme.colorScheme.error,
       _JobState.cancelled => theme.colorScheme.onSurfaceVariant,
@@ -764,9 +773,7 @@ class _OperationTile extends StatelessWidget {
             Row(
               children: [
                 Semantics(
-                  label: context.commanderTr('Select {0}', [
-                    operation.fileName,
-                  ]),
+                  label: context.commanderTr('Select {0}', [title]),
                   child: Checkbox(
                     key: ValueKey('queue-select-${operation.id}'),
                     value: selected,
@@ -777,7 +784,7 @@ class _OperationTile extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    operation.fileName,
+                    title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodyMedium?.copyWith(
@@ -991,13 +998,13 @@ class _OperationTile extends StatelessWidget {
                 style: theme.textTheme.bodySmall,
               ),
             ],
-            if (operation.error != null && state == _JobState.needsReview)
+            if (error != null && state == _JobState.needsReview)
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Tooltip(
-                  message: operation.error!,
+                  message: error,
                   child: Text(
-                    operation.error!,
+                    error,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodySmall?.copyWith(
@@ -1064,7 +1071,14 @@ class _OperationTile extends StatelessWidget {
                 Flexible(
                   flex: 2,
                   child: Tooltip(
-                    message: file.error ?? file.path,
+                    message: file.errorCause == null
+                        ? file.error ?? file.path
+                        : localizedKnownProviderError(
+                                context,
+                                file.errorCause!,
+                              ) ??
+                              file.error ??
+                              file.path,
                     child: Text(
                       label == null
                           ? formatBytes(file.size)

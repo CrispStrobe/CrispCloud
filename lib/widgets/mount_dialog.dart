@@ -12,17 +12,42 @@
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+
+import '../l10n/access_and_fkey_strings.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/mount_provider.dart';
 import '../services/fuse_mount_service.dart';
 import '../l10n/app_localizations.dart';
+import '../l10n/mount_dialog_strings.dart';
+import '../l10n/mount_backend_strings.dart';
+import '../l10n/mount_error_presentation.dart';
+import '../l10n/terminal_mount_error_strings.dart';
 
 void showMountDialog(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (_) => const _MountManagerDialog(),
-  );
+  showDialog(context: context, builder: (_) => const _MountManagerDialog());
+}
+
+Future<bool> _confirmFuseT(BuildContext context) async {
+  final strings = MountBackendStrings(context);
+  return await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(strings.fuseTTitle),
+          content: SelectableText(strings.fuseTMessage),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(AppLocalizations.of(dialogContext)!.cancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(strings.fuseTAccept),
+            ),
+          ],
+        ),
+      ) ??
+      false;
 }
 
 // ---------------------------------------------------------------------------
@@ -41,7 +66,7 @@ class _MountManagerDialog extends ConsumerWidget {
         children: [
           const Icon(Icons.storage_rounded),
           const SizedBox(width: 8),
-          const Text('Mount as Drive'),
+          Text(MountDialogStrings(context).text('mountDrive')),
           const Spacer(),
           if (mount.isCheckingAvailability)
             const SizedBox(
@@ -53,8 +78,12 @@ class _MountManagerDialog extends ConsumerWidget {
               mount.availabilityError != null &&
               mount.availabilityError!.isNotEmpty)
             Tooltip(
-              message: mount.availabilityError!,
-              child: const Icon(Icons.warning_amber, color: Colors.orange, size: 20),
+              message: localizedMountError(context, mount.availabilityError!),
+              child: const Icon(
+                Icons.warning_amber,
+                color: Colors.orange,
+                size: 20,
+              ),
             ),
         ],
       ),
@@ -67,14 +96,23 @@ class _MountManagerDialog extends ConsumerWidget {
             // Platform warning banner
             if (!mount.isSupported)
               _PlatformUnsupportedBanner()
-            else if (mount.availabilityError != null && mount.availabilityError!.isNotEmpty)
-              _FuseUnavailableBanner(message: mount.availabilityError!),
+            else if (mount.availabilityError != null &&
+                mount.availabilityError!.isNotEmpty)
+              _FuseUnavailableBanner(
+                message: localizedMountError(context, mount.availabilityError!),
+              ),
 
             const SizedBox(height: 8),
 
             // Active / configured mounts
             if (mount.mounts.isEmpty)
-              const _EmptyMountList()
+              _EmptyMountList(
+                showExperimental:
+                    !kIsWeb &&
+                    defaultTargetPlatform == TargetPlatform.macOS &&
+                    !mount.isCheckingAvailability &&
+                    mount.availabilityError != FuseMountService.bridgeMissing,
+              )
             else
               ConstrainedBox(
                 constraints: const BoxConstraints(maxHeight: 280),
@@ -96,8 +134,10 @@ class _MountManagerDialog extends ConsumerWidget {
         if (mount.isSupported)
           ElevatedButton.icon(
             icon: const Icon(Icons.add, size: 18),
-            label: const Text('New Mount'),
-            onPressed: mount.availabilityError != null && mount.availabilityError!.isNotEmpty
+            label: Text(MountDialogStrings(context).text('newMount')),
+            onPressed:
+                mount.availabilityError != null &&
+                    mount.availabilityError!.isNotEmpty
                 ? null
                 : () => _showAddMountDialog(context, ref),
           ),
@@ -106,10 +146,7 @@ class _MountManagerDialog extends ConsumerWidget {
   }
 
   void _showAddMountDialog(BuildContext context, WidgetRef ref) {
-    showDialog(
-      context: context,
-      builder: (_) => const _AddMountDialog(),
-    );
+    showDialog(context: context, builder: (_) => const _AddMountDialog());
   }
 }
 
@@ -130,6 +167,7 @@ class _AddMountDialogState extends ConsumerState<_AddMountDialog> {
   final _labelController = TextEditingController();
   bool _mounting = false;
   String? _error;
+  MacFuseBackend _backend = MacFuseBackend.automatic;
 
   @override
   void dispose() {
@@ -142,30 +180,67 @@ class _AddMountDialogState extends ConsumerState<_AddMountDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('New Mount'),
+      title: Text(MountDialogStrings(context).text('newMount')),
       content: SizedBox(
         width: 400,
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              if (!kIsWeb && defaultTargetPlatform == TargetPlatform.macOS) ...[
+                if (_backend != MacFuseBackend.rcloneNfs) Row(
+                  children: [
+                    const Icon(Icons.info_outline, color: Colors.orange),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        MountDialogStrings(context).text('readOnlyWarning'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<MacFuseBackend>(
+                  initialValue: _backend,
+                  decoration: InputDecoration(
+                    labelText: MountBackendStrings(context).title,
+                    border: const OutlineInputBorder(),
+                  ),
+                  items: MacFuseBackend.values.map((backend) => DropdownMenuItem(
+                    value: backend,
+                    child: Text(MountBackendStrings(context).label(backend)),
+                  )).toList(),
+                  onChanged: _mounting ? null : (value) {
+                    if (value != null) setState(() => _backend = value);
+                  },
+                ),
+                if (_backend == MacFuseBackend.macFuseKernel) ...[
+                  const SizedBox(height: 8),
+                  Text(MountBackendStrings(context).kernelWarning),
+                ],
+                if (_backend == MacFuseBackend.rcloneNfs) ...[
+                  const SizedBox(height: 8),
+                  Text(MountBackendStrings(context).rcloneHint),
+                ],
+                const SizedBox(height: 12),
+              ],
               TextField(
                 controller: _labelController,
-                decoration: const InputDecoration(
-                  labelText: 'Display Name (optional)',
-                  hintText: 'e.g., My Dropbox Drive',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: MountDialogStrings(context).text('displayName'),
+                  hintText: MountDialogStrings(context).text('nameHint'),
+                  border: const OutlineInputBorder(),
                 ),
                 autofocus: true,
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: _remoteController,
-                decoration: const InputDecoration(
-                  labelText: 'Remote Path',
-                  hintText: '/ or /Documents',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.cloud),
+                decoration: InputDecoration(
+                  labelText: MountDialogStrings(context).text('remotePath'),
+                  hintText: AccessAndFKeyStrings(Localizations.localeOf(context)).remotePathHint,
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.cloud),
                 ),
               ),
               const SizedBox(height: 12),
@@ -174,18 +249,21 @@ class _AddMountDialogState extends ConsumerState<_AddMountDialog> {
                   Expanded(
                     child: TextField(
                       controller: _mountPointController,
-                      decoration: const InputDecoration(
-                        labelText: 'Local Mount Point',
+                      decoration: InputDecoration(
+                        labelText: MountDialogStrings(context)
+                            .text('mountPoint'),
                         hintText: '/mnt/mycloud',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.folder_outlined),
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.folder_outlined),
                       ),
                     ),
                   ),
                   const SizedBox(width: 8),
-                  _BrowseButton(onSelected: (path) {
-                    setState(() => _mountPointController.text = path);
-                  }),
+                  _BrowseButton(
+                    onSelected: (path) {
+                      setState(() => _mountPointController.text = path);
+                    },
+                  ),
                 ],
               ),
               if (_error != null) ...[
@@ -199,11 +277,20 @@ class _AddMountDialogState extends ConsumerState<_AddMountDialog> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.error_outline, color: Colors.red, size: 16),
+                      const Icon(
+                        Icons.error_outline,
+                        color: Colors.red,
+                        size: 16,
+                      ),
                       const SizedBox(width: 6),
                       Expanded(
-                        child: Text(_error!,
-                            style: const TextStyle(fontSize: 12, color: Colors.red)),
+                        child: Text(
+                          _error!,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.red,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -226,7 +313,7 @@ class _AddMountDialogState extends ConsumerState<_AddMountDialog> {
                   height: 18,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Text('Mount'),
+              : Text(MountDialogStrings(context).text('mount')),
         ),
       ],
     );
@@ -237,10 +324,17 @@ class _AddMountDialogState extends ConsumerState<_AddMountDialog> {
     final mp = _mountPointController.text.trim();
 
     if (mp.isEmpty) {
-      setState(() => _error = 'Please specify a local mount point directory.');
+      setState(() => _error = MountDialogStrings(context).text('required'));
+      return;
+    }
+    if (_backend == MacFuseBackend.rcloneNfs &&
+        !FuseMountService.isValidRcloneRemote(remote)) {
+      setState(() => _error = MountBackendStrings(context).rcloneHint);
       return;
     }
 
+    if (_backend.usesFuseT && !await _confirmFuseT(context)) return;
+    if (!context.mounted) return;
     setState(() {
       _mounting = true;
       _error = null;
@@ -251,21 +345,36 @@ class _AddMountDialogState extends ConsumerState<_AddMountDialog> {
         : _labelController.text.trim();
 
     try {
-      final entry = await ref.read(mountProvider).mount(
+      final entry = await ref
+          .read(mountProvider)
+          .mount(
             remotePath: remote.isEmpty ? '/' : remote,
             mountPoint: mp,
             label: label,
+            macBackend: _backend,
+            fuseTNonCommercialAcknowledged: _backend.usesFuseT,
           );
       if (!context.mounted) return;
       if (entry == null || entry.status == MountStatus.error) {
-        setState(() => _error = entry?.errorMessage ?? 'Mount failed');
+        final failure = ref.read(mountProvider).lastMountFailure;
+        setState(
+          () => _error = entry?.errorMessage == null
+              ? (failure == null
+                    ? MountDialogStrings(context).text('failed')
+                    : localizedTerminalMountError(context, failure))
+              : localizedMountEntryError(context, entry!),
+        );
       } else {
         Navigator.pop(context);
       }
     } catch (e) {
-      if (mounted) setState(() => _error = e.toString());
+      if (mounted) {
+        setState(() => _error = localizedTerminalMountError(context, e));
+      }
     } finally {
-      if (mounted) setState(() => _mounting = false);
+      if (mounted) {
+        setState(() => _mounting = false);
+      }
     }
   }
 }
@@ -280,7 +389,8 @@ class _MountTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isBusy = entry.status == MountStatus.mounting ||
+    final isBusy =
+        entry.status == MountStatus.mounting ||
         entry.status == MountStatus.unmounting;
 
     return ListTile(
@@ -298,8 +408,14 @@ class _MountTile extends ConsumerWidget {
         children: [
           if (entry.status == MountStatus.error)
             Tooltip(
-              message: entry.errorMessage ?? 'Unknown error',
-              child: const Icon(Icons.info_outline, size: 16, color: Colors.red),
+              message: entry.errorMessage == null
+                  ? MountDialogStrings(context).text('unknown')
+                  : localizedMountEntryError(context, entry),
+              child: const Icon(
+                Icons.info_outline,
+                size: 16,
+                color: Colors.red,
+              ),
             ),
           if (isBusy)
             const SizedBox(
@@ -307,21 +423,23 @@ class _MountTile extends ConsumerWidget {
               height: 20,
               child: CircularProgressIndicator(strokeWidth: 2),
             )
-          else if (entry.status == MountStatus.mounted)
+          else if (entry.status == MountStatus.mounted ||
+              (entry.status == MountStatus.error && entry.helperPid != null))
             IconButton(
               icon: const Icon(Icons.eject, size: 20),
-              tooltip: 'Unmount',
-              onPressed: () => ref.read(mountProvider).unmount(entry.mountPoint),
+              tooltip: MountDialogStrings(context).text('unmount'),
+              onPressed: () =>
+                  ref.read(mountProvider).unmount(entry.mountPoint),
             )
           else
             IconButton(
               icon: const Icon(Icons.play_arrow, size: 20),
-              tooltip: 'Mount',
+              tooltip: MountDialogStrings(context).text('mount'),
               onPressed: () => _remount(context, ref, entry),
             ),
           IconButton(
             icon: const Icon(Icons.delete_outline, size: 18),
-            tooltip: 'Remove',
+            tooltip: MountDialogStrings(context).text('remove'),
             onPressed: isBusy
                 ? null
                 : () => ref.read(mountProvider).removeMount(entry.mountPoint),
@@ -332,11 +450,20 @@ class _MountTile extends ConsumerWidget {
   }
 
   Future<void> _remount(
-      BuildContext context, WidgetRef ref, MountEntry entry) async {
-    await ref.read(mountProvider).mount(
+    BuildContext context,
+    WidgetRef ref,
+    MountEntry entry,
+  ) async {
+    if (entry.macBackend.usesFuseT && !await _confirmFuseT(context)) return;
+    if (!context.mounted) return;
+    await ref
+        .read(mountProvider)
+        .mount(
           remotePath: entry.remotePath,
           mountPoint: entry.mountPoint,
           label: entry.label,
+          macBackend: entry.macBackend,
+          fuseTNonCommercialAcknowledged: entry.macBackend.usesFuseT,
         );
   }
 }
@@ -384,11 +511,11 @@ class _BrowseButton extends StatelessWidget {
 
     return OutlinedButton.icon(
       icon: const Icon(Icons.folder_open, size: 16),
-      label: const Text('Browse'),
+      label: Text(MountDialogStrings(context).text('browse')),
       onPressed: () async {
         try {
           final path = await getDirectoryPath(
-            confirmButtonText: 'Select Mount Point',
+            confirmButtonText: MountDialogStrings(context).text('selectPoint'),
           );
           if (path != null) onSelected(path);
         } catch (_) {
@@ -412,7 +539,7 @@ class _PlatformUnsupportedBanner extends StatelessWidget {
       borderColor: Colors.orange.shade300,
       icon: Icons.warning_amber,
       iconColor: Colors.orange,
-      message: 'FUSE mounts are only available on macOS, Linux, and Windows desktop.',
+      message: MountDialogStrings(context).text('unsupported'),
     );
   }
 }
@@ -434,21 +561,24 @@ class _FuseUnavailableBanner extends StatelessWidget {
 }
 
 class _EmptyMountList extends StatelessWidget {
-  const _EmptyMountList();
+  const _EmptyMountList({required this.showExperimental});
+
+  final bool showExperimental;
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 24),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 24),
       child: Column(
         children: [
-          Icon(Icons.storage_outlined, size: 48, color: Colors.grey),
-          SizedBox(height: 8),
-          Text('No mounts configured'),
-          SizedBox(height: 4),
+          const Icon(Icons.storage_outlined, size: 48, color: Colors.grey),
+          const SizedBox(height: 8),
+          Text(MountDialogStrings(context).text('empty')),
+          const SizedBox(height: 4),
           Text(
-            'Add a mount to expose your cloud storage as a local drive.',
-            style: TextStyle(fontSize: 12, color: Colors.grey),
+            MountDialogStrings(context)
+                .text(showExperimental ? 'readOnlyWarning' : 'bridgeMissing'),
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
             textAlign: TextAlign.center,
           ),
         ],
@@ -486,9 +616,7 @@ class _Banner extends StatelessWidget {
         children: [
           Icon(icon, color: iconColor, size: 18),
           const SizedBox(width: 8),
-          Expanded(
-            child: Text(message, style: const TextStyle(fontSize: 12)),
-          ),
+          Expanded(child: Text(message, style: const TextStyle(fontSize: 12))),
         ],
       ),
     );

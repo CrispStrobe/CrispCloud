@@ -38,6 +38,7 @@ class HexOperationCancelled implements Exception {
 class HexFileSession {
   HexFileSession._(
     this.backend,
+    this._identity,
     this.path,
     this.source,
     this._spool,
@@ -46,6 +47,7 @@ class HexFileSession {
     this.maxBytes,
   );
   final FileOperationBackend backend;
+  final Object _identity;
   final String path;
   final HexByteSource source;
   final TransferSpool? _spool;
@@ -53,8 +55,14 @@ class HexFileSession {
   FileItem _baseline;
   String _digest;
   bool _closed = false;
+  bool _closeRequested = false;
+  Future<void>? _closing;
   Completer<void>? _writeDone;
-  bool get canSave => backend.isCurrent && backend.supportsStagedVerification;
+  bool get canSave =>
+      !_closeRequested &&
+      backend.isCurrent &&
+      backend.identity == _identity &&
+      backend.supportsStagedVerification;
 
   static Future<HexFileSession> open({
     required FileOperationBackend backend,
@@ -67,8 +75,9 @@ class HexFileSession {
         maxBytes ?? (kIsWeb ? kHexWebInputLimit : kHexNativeInputLimit);
     if (limit < 1 || (kIsWeb && limit > kHexWebInputLimit))
       throw ArgumentError('Invalid hex input limit.');
+    final identity = backend.identity;
     void check() {
-      if (!backend.isCurrent)
+      if (!backend.isCurrent || backend.identity != identity)
         throw const HexSaveConflict(
           'The original storage is no longer connected.',
         );
@@ -147,6 +156,7 @@ class HexFileSession {
         );
       final session = HexFileSession._(
         backend,
+        identity,
         path,
         source,
         spool,
@@ -167,7 +177,7 @@ class HexFileSession {
 
   void _check([bool Function()? cancelled]) {
     if (_closed) throw StateError('The hex session is closed.');
-    if (!backend.isCurrent)
+    if (!backend.isCurrent || backend.identity != _identity)
       throw const HexSaveConflict(
         'The original account or storage changed. Reopen it before saving.',
       );
@@ -251,6 +261,7 @@ class HexFileSession {
     bool Function()? cancelled,
     void Function(int done, int total)? onProgress,
   }) async {
+    if (_closeRequested) throw StateError('The hex session is closing.');
     _check(cancelled);
     if (_writeDone != null) throw StateError('A save is already running.');
     if (!backend.supportsStagedVerification) {
@@ -333,7 +344,10 @@ class HexFileSession {
     }
   }
 
-  Future<void> close() async {
+  Future<void> close() => _closing ??= _close();
+
+  Future<void> _close() async {
+    _closeRequested = true;
     await _writeDone?.future;
     if (_closed) return;
     _closed = true;

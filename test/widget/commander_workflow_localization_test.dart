@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:archive/archive.dart';
 import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/l10n/commander_strings.dart';
+import 'package:crisp_cloud/l10n/internal_viewer_strings.dart';
+import 'package:crisp_cloud/l10n/sync_dialog_strings.dart';
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/panel_source_provider.dart';
@@ -59,28 +61,24 @@ class _Auth extends ChangeNotifier implements AuthNotifier {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-class _Pair extends Fake implements SyncPair {
-  @override
-  int get id => 1;
-  @override
-  String get name => 'Keep {1} filenames';
-  @override
-  String get localPath => '/local';
-  @override
-  String get remotePath => '/cloud';
-  @override
-  String get provider => 'sftp';
-  @override
-  bool get enabled => true;
-  @override
-  bool get usePlaceholders => false;
-  @override
-  DateTime? get lastSyncAt => null;
-}
+SyncPair _pair() => SyncPair(
+  id: 1,
+  name: 'Keep {1} filenames',
+  localPath: '/local',
+  remotePath: '/cloud',
+  provider: 'sftp',
+  conflictPolicy: 'newestWins',
+  direction: 'twoWay',
+  enabled: true,
+  createdAt: DateTime.utc(2026, 1, 1),
+  includePatterns: '',
+  excludePatterns: '',
+  usePlaceholders: false,
+);
 
 class _Plan extends Fake implements SyncPlan {
   @override
-  final pair = _Pair();
+  final pair = _pair();
   @override
   final actions = [
     SyncAction(type: SyncActionType.conflict, relativePath: 'Cancel {1}.txt'),
@@ -97,7 +95,7 @@ class _Plan extends Fake implements SyncPlan {
 
 class _Sync extends ChangeNotifier implements SyncNotifier {
   @override
-  List<SyncPair> get pairs => [_Pair()];
+  List<SyncPair> get pairs => [_pair()];
   @override
   bool get isWatchEnabled => false;
   @override
@@ -246,10 +244,11 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
       final policy = find.byType(DropdownButtonFormField<ConflictPolicy>);
+      final policyStrings = SyncDialogStrings(tester.element(policy));
       await tester.ensureVisible(policy);
       await tester.tap(policy);
       await tester.pumpAndSettle();
-      expect(find.text(tr(language, 'Newest Wins')), findsWidgets);
+      expect(find.text(policyStrings.text('newest')), findsWidgets);
       expect(tester.takeException(), isNull);
     });
     testWidgets(
@@ -409,9 +408,12 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.keyG);
       await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
       await tester.pumpAndSettle();
-      expect(find.text(tr(language, 'Go to line')), findsOneWidget);
+      final dialogStrings = InternalViewerStrings(
+        tester.element(find.byType(AlertDialog).last),
+      );
+      expect(find.text(dialogStrings.text('goLine')), findsOneWidget);
       expect(tester.takeException(), isNull);
-      await tester.tap(find.text(tr(language, 'Cancel')));
+      await tester.tap(find.text(dialogStrings.text('cancel')));
       await tester.pumpAndSettle();
     });
 

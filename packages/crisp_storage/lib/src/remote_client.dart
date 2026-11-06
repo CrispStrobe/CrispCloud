@@ -7,11 +7,83 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:xml/xml.dart';
 
-class RemoteException implements Exception {
+enum RemoteErrorCode {
+  accessDenied,
+  redirects,
+  httpStatus,
+  unreachable,
+  sftpConnect,
+  smbAuth,
+  smbNotFound,
+  smbRequest,
+  smbPaused,
+  closed,
+  paused,
+  outsideRoot,
+  invalidPath,
+  folderTooLarge,
+  libraryTooLarge,
+  invalidFile,
+  fileChanged,
+  incomplete,
+  linksUnsupported,
+  chooseFile,
+  interrupted,
+  deleteRoot,
+  encodedAudio,
+  invalidRange,
+  inconsistentLength,
+  downloadLimit,
+  invalidCredentials,
+  invalidUrl,
+  invalidShare,
+  invalidFingerprint,
+  smbWebUnsupported,
+  sftpOffsetRequired,
+}
+
+abstract interface class RemoteLocalizedFailure {
+  RemoteErrorCode? get code;
+  Map<String, Object> get arguments;
+}
+
+class RemoteFormatException extends FormatException
+    implements RemoteLocalizedFailure {
+  const RemoteFormatException(
+    super.message,
+    this.code, {
+    this.arguments = const {},
+  });
+  @override
+  final RemoteErrorCode code;
+  @override
+  final Map<String, Object> arguments;
+}
+
+class RemoteUnsupportedError extends UnsupportedError
+    implements RemoteLocalizedFailure {
+  RemoteUnsupportedError(super.message, this.code, {this.arguments = const {}});
+  @override
+  final RemoteErrorCode code;
+  @override
+  final Map<String, Object> arguments;
+}
+
+class RemoteException implements Exception, RemoteLocalizedFailure {
   final String message;
   final bool retryable;
   final Object? cause;
-  const RemoteException(this.message, {this.retryable = false, this.cause});
+  @override
+  final RemoteErrorCode? code;
+  @override
+  final Map<String, Object> arguments;
+  const RemoteException(
+    this.message, {
+    this.retryable = false,
+    this.cause,
+    this.code,
+    this.arguments = const {},
+  });
   @override
   String toString() => message;
 }
@@ -48,8 +120,9 @@ class RemoteConnection {
         username.contains(':') ||
         secret.contains('\r') ||
         secret.contains('\n')) {
-      throw const FormatException(
+      throw const RemoteFormatException(
         'Enter a connection name and valid credentials.',
+        RemoteErrorCode.invalidCredentials,
       );
     }
   }
@@ -71,8 +144,9 @@ class RemoteConnection {
                   !(uri.scheme == 'http' &&
                       localHttp &&
                       isLocalHost(uri.host))))) {
-      throw const FormatException(
+      throw const RemoteFormatException(
         'Use smb://host/share/ for SMB, sftp:// for SFTP, or HTTPS for Plex/WebDAV. Local HTTP requires explicit opt-in.',
+        RemoteErrorCode.invalidUrl,
       );
     }
     final result = uri.replace(
@@ -84,7 +158,10 @@ class RemoteConnection {
             result.pathSegments.any((s) => s.contains('/')) ||
             (result.hasPort && result.port <= 0) ||
             result.port > 65535)) {
-      throw const FormatException('Enter an SMB share: smb://host/share/.');
+      throw const RemoteFormatException(
+        'Enter an SMB share: smb://host/share/.',
+        RemoteErrorCode.invalidShare,
+      );
     }
     return result;
   }
@@ -108,7 +185,10 @@ class RemoteConnection {
     if (decoded.contains('\\') ||
         decoded.contains('\u0000') ||
         decoded.split('/').any((s) => s == '..' || s == '.')) {
-      throw const FormatException('Invalid server path.');
+      throw const RemoteFormatException(
+        'Invalid server path.',
+        RemoteErrorCode.invalidPath,
+      );
     }
   }
 
@@ -187,6 +267,7 @@ class RemoteClient {
         )) {
       throw const RemoteException(
         'The server returned a URL outside this connection.',
+        code: RemoteErrorCode.outsideRoot,
       );
     }
     RemoteConnection._safePath(result);
@@ -200,7 +281,11 @@ class RemoteClient {
     bool allowRangeEnd = false,
   }) async {
     try {
-      if (_closed) throw const RemoteException('Download paused.');
+      if (_closed)
+        throw const RemoteException(
+          'Download paused.',
+          code: RemoteErrorCode.paused,
+        );
       final request = await _http
           .openUrl(
             listing && connection.kind == 'webdav' ? 'PROPFIND' : 'GET',
@@ -242,12 +327,21 @@ class RemoteClient {
           !(allowRangeEnd && response.statusCode == 416)) {
         final status = response.statusCode;
         await response.drain<void>().timeout(const Duration(seconds: 5));
-        throw RemoteException(switch (status) {
-          401 || 403 => 'Access denied. Check the connection credentials.',
-          >= 300 && < 400 =>
-            'Use the final server URL; redirects are not followed.',
-          _ => 'Server request failed (HTTP $status).',
-        }, retryable: status == 429 || status >= 500);
+        throw RemoteException(
+          switch (status) {
+            401 || 403 => 'Access denied. Check the connection credentials.',
+            >= 300 && < 400 =>
+              'Use the final server URL; redirects are not followed.',
+            _ => 'Server request failed (HTTP $status).',
+          },
+          retryable: status == 429 || status >= 500,
+          code: status == 401 || status == 403
+              ? RemoteErrorCode.accessDenied
+              : status >= 300 && status < 400
+              ? RemoteErrorCode.redirects
+              : RemoteErrorCode.httpStatus,
+          arguments: {'status': status},
+        );
       }
       return response;
     } on RemoteException {
@@ -258,6 +352,7 @@ class RemoteClient {
       throw const RemoteException(
         'Could not reach the server. Check its address and network access.',
         retryable: true,
+        code: RemoteErrorCode.unreachable,
       );
     }
   }
@@ -268,7 +363,10 @@ class RemoteClient {
     await for (final bytes in response.timeout(const Duration(seconds: 20))) {
       data.add(bytes);
       if (data.length > 16 * 1024 * 1024) {
-        throw const RemoteException('Server listing is too large.');
+        throw const RemoteException(
+          'Server listing is too large.',
+          code: RemoteErrorCode.folderTooLarge,
+        );
       }
     }
     return utf8.decode(data.takeBytes());
@@ -297,6 +395,7 @@ class RemoteClient {
       if (rows.length >= 10000) {
         throw const RemoteException(
           'Library is too large. Open a smaller library.',
+          code: RemoteErrorCode.libraryTooLarge,
         );
       }
     }
@@ -304,7 +403,11 @@ class RemoteClient {
   }
 
   Future<List<RemoteEntry>> browse(String path) async {
-    if (_closed) throw const RemoteException('Connection closed.');
+    if (_closed)
+      throw const RemoteException(
+        'Connection closed.',
+        code: RemoteErrorCode.closed,
+      );
     if (connection.kind == 'smb') {
       return (_smb ??= SmbSession(connection)).browse(path);
     }
@@ -472,7 +575,11 @@ class RemoteClient {
     String path, {
     void Function(int, int)? onProgress,
   }) async* {
-    if (_closed) throw const RemoteException('Connection closed.');
+    if (_closed)
+      throw const RemoteException(
+        'Connection closed.',
+        code: RemoteErrorCode.closed,
+      );
     if (connection.kind == 'smb') {
       yield* (_smb ??= SmbSession(
         connection,
@@ -480,7 +587,10 @@ class RemoteClient {
       return;
     }
     if (connection.kind == 'sftp') {
-      throw UnsupportedError('Use SFTP offset download for this source');
+      throw RemoteUnsupportedError(
+        'Use SFTP offset download for this source',
+        RemoteErrorCode.sftpOffsetRequired,
+      );
     }
     final response = await _request(path);
     var received = 0;
@@ -490,7 +600,11 @@ class RemoteClient {
       yield bytes;
     }
     if (response.contentLength >= 0 && received != response.contentLength) {
-      throw const RemoteException('Download was incomplete.', retryable: true);
+      throw const RemoteException(
+        'Download was incomplete.',
+        code: RemoteErrorCode.incomplete,
+        retryable: true,
+      );
     }
   }
 
@@ -500,7 +614,11 @@ class RemoteClient {
     void Function(int)? onBytes,
     int limit = 64 * 1024 * 1024 * 1024,
   }) async {
-    if (_closed) throw const RemoteException('Connection closed.');
+    if (_closed)
+      throw const RemoteException(
+        'Connection closed.',
+        code: RemoteErrorCode.closed,
+      );
     if (connection.kind == 'smb') {
       return (_smb ??= SmbSession(
         connection,
@@ -560,6 +678,7 @@ class RemoteClient {
     if (encoding != null && encoding != 'identity') {
       throw const RemoteException(
         'Server returned encoded audio; an uncompressed transfer is required.',
+        code: RemoteErrorCode.encodedAudio,
       );
     }
     int? total;
@@ -577,6 +696,7 @@ class RemoteClient {
         await response.drain<void>().timeout(const Duration(seconds: 5));
         throw const RemoteException(
           'Server returned an invalid resume range. Retry the download.',
+          code: RemoteErrorCode.invalidRange,
         );
       }
       total = int.parse(range[3]!);
@@ -584,6 +704,7 @@ class RemoteClient {
           response.contentLength != total - offset) {
         throw const RemoteException(
           'Server returned an inconsistent download length.',
+          code: RemoteErrorCode.inconsistentLength,
         );
       }
     } else {
@@ -591,7 +712,10 @@ class RemoteClient {
       total = response.contentLength >= 0 ? response.contentLength : null;
     }
     if (total != null && total > limit) {
-      throw const RemoteException('File exceeds the download limit.');
+      throw const RemoteException(
+        'File exceeds the download limit.',
+        code: RemoteErrorCode.downloadLimit,
+      );
     }
     final sink = output.openWrite(
       mode: offset > 0 ? FileMode.append : FileMode.write,
@@ -606,7 +730,10 @@ class RemoteClient {
       await for (final bytes in response.timeout(const Duration(seconds: 30))) {
         received += bytes.length;
         if (received > limit) {
-          throw const RemoteException('File exceeds the download limit.');
+          throw const RemoteException(
+            'File exceeds the download limit.',
+            code: RemoteErrorCode.downloadLimit,
+          );
         }
         sink.add(bytes);
         if (received % (1024 * 1024) < bytes.length) await sink.flush();
@@ -616,6 +743,7 @@ class RemoteClient {
       if (received == 0 || (total != null && received != total)) {
         throw const RemoteException(
           'Download was incomplete.',
+          code: RemoteErrorCode.incomplete,
           retryable: true,
         );
       }

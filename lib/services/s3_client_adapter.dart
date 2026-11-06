@@ -19,6 +19,7 @@ import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'cloud_storage_interface.dart';
+import 's3_operation_failure.dart';
 import 'delta_sync_service.dart';
 import 'log_service.dart';
 import 's3_config_service.dart';
@@ -1117,9 +1118,9 @@ class S3ClientAdapter extends CloudStorageClient
 
       if (response.statusCode != 200) {
         await _config.clearCredentials();
-        throw Exception(
+        throw S3OperationFailure(S3OperationCode.connection,
           'S3 connection test failed (HTTP ${response.statusCode}): ${response.body}',
-        );
+          {'status': response.statusCode, 'body': response.body});
       }
 
       _authenticated = true;
@@ -1611,9 +1612,9 @@ class S3ClientAdapter extends CloudStorageClient
       final response = await _signedRequest('GET', uri, boundedResponse: true);
 
       if (response.statusCode != 200) {
-        throw Exception(
+        throw S3OperationFailure(S3OperationCode.listParts,
           'S3 ListParts failed (HTTP ${response.statusCode}): ${response.body}',
-        );
+          {'status': response.statusCode, 'body': response.body});
       }
 
       final root = xml.XmlDocument.parse(response.body).rootElement;
@@ -1693,7 +1694,7 @@ class S3ClientAdapter extends CloudStorageClient
         .where((record) => record['key'] == key)
         .toList();
     if (tracked.isEmpty) {
-      throw Exception('No interrupted upload found for $remotePath');
+      throw S3OperationFailure(S3OperationCode.missingInterruptedUpload, 'No interrupted upload found for $remotePath', {'path': remotePath});
     }
     final matching = tracked
         .where(
@@ -1997,7 +1998,7 @@ class S3ClientAdapter extends CloudStorageClient
     );
 
     if (response.statusCode != 206 && response.statusCode != 200) {
-      throw Exception('S3 range download failed (HTTP ${response.statusCode})');
+      throw S3OperationFailure(S3OperationCode.rangeDownload, 'S3 range download failed (HTTP ${response.statusCode})', {'status': response.statusCode});
     }
     return response.bodyBytes;
   }
@@ -2149,7 +2150,7 @@ class S3ClientAdapter extends CloudStorageClient
 
   void _ensureAuth() {
     if (!_authenticated || _accessKey == null || _secretKey == null) {
-      throw Exception('Not authenticated. Call login() first.');
+      throw S3OperationFailure(S3OperationCode.notAuthenticated, 'Not authenticated. Call login() first.');
     }
   }
 

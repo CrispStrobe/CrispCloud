@@ -22,6 +22,7 @@ import '../services/rename_preset_store.dart';
 import 'rename_history_dialog.dart';
 import 'rename_names_dialog.dart';
 import 'rename_text_dialog.dart';
+import '../l10n/batch_rename_strings.dart';
 
 /// A single, reviewable plan combines masks, counters, replacement and case.
 /// The storage origin is captured when the dialog opens and never re-resolved
@@ -235,6 +236,9 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
       _preset = null;
     });
   }
+
+  String _t(String key, [Map<String, Object> values = const {}]) =>
+      BatchRenameStrings(context).text(key, values);
 
   @override
   Widget build(BuildContext context) {

@@ -12,16 +12,80 @@
 //   • Cache TTL behaviour
 //   • FuseHelperScript content validation
 
+import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:crisp_cloud/services/fuse_mount_service.dart';
 import 'package:crisp_cloud/services/fuse_helper_script.dart';
 
+class _AvailableFuseMountService extends FuseMountService {
+  @override
+  Future<String?> checkFuseAvailability() async => null;
+}
+
+class _PausedMountProbeService extends _AvailableFuseMountService {
+  final entered = Completer<void>();
+  final continueProbe = Completer<void>();
+
+  @override
+  Future<bool> isPlatformMountPoint(String mountPoint) async {
+    entered.complete();
+    await continueProbe.future;
+    return false;
+  }
+}
+
+class _OccupiedMountProbeService extends _AvailableFuseMountService {
+  @override
+  Future<bool> isPlatformMountPoint(String mountPoint) async => true;
+}
+
+class _ExitedHelperService extends _AvailableFuseMountService {
+  _ExitedHelperService(this.helper);
+  final String helper;
+
+  @override
+  String get macBridgePath => helper;
+
+  @override
+  Future<bool> isPlatformMountPoint(String mountPoint) async => false;
+}
+
+class _PausedUnmountService extends _AvailableFuseMountService {
+  _PausedUnmountService(this.helper);
+  final String helper;
+  final entered = Completer<void>();
+  final continueUnmount = Completer<void>();
+  int probes = 0;
+
+  @override
+  String get macBridgePath => helper;
+
+  @override
+  Future<bool> isPlatformMountPoint(String mountPoint) async => probes++ > 0;
+
+  @override
+  Future<void> performPlatformUnmount(String mountPoint) async {
+    entered.complete();
+    await continueUnmount.future;
+  }
+}
+
+class _TestCloudClient implements CloudStorageClient {
+  @override
+  String get providerName => 'Test';
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   // ---------------------------------------------------------------------------
   // Platform support guard
   // ---------------------------------------------------------------------------
@@ -104,6 +168,7 @@ void main() {
         label: 'RT',
         provider: 'OneDrive',
         remotePath: '/Docs',
+        macBackend: MacFuseBackend.macFuseKernel,
       );
       final m = e.toMap();
       expect(m['mountPoint'], '/mnt/roundtrip');
@@ -116,6 +181,11 @@ void main() {
       expect(restored.label, e.label);
       expect(restored.provider, e.provider);
       expect(restored.remotePath, e.remotePath);
+      expect(restored.macBackend, MacFuseBackend.macFuseKernel);
+      expect(restored.copyWith(status: MountStatus.error).macBackend,
+          MacFuseBackend.macFuseKernel);
+      m.remove('macBackend');
+      expect(MountEntry.fromMap(m).macBackend, MacFuseBackend.automatic);
       expect(restored.status, MountStatus.unmounted); // default
     });
 
@@ -136,13 +206,16 @@ void main() {
 
   group('MountStatus', () {
     test('all values are present', () {
-      expect(MountStatus.values, containsAll([
-        MountStatus.unmounted,
-        MountStatus.mounting,
-        MountStatus.mounted,
-        MountStatus.unmounting,
-        MountStatus.error,
-      ]));
+      expect(
+        MountStatus.values,
+        containsAll([
+          MountStatus.unmounted,
+          MountStatus.mounting,
+          MountStatus.mounted,
+          MountStatus.unmounting,
+          MountStatus.error,
+        ]),
+      );
     });
   });
 
@@ -151,6 +224,180 @@ void main() {
   // ---------------------------------------------------------------------------
 
   group('FuseMountService state', () {
+    test('unmountAll waits for a separately initiated unmount', () async {
+      if (!Platform.isMacOS) return;
+      SharedPreferences.setMockInitialValues({});
+      final root = await Directory.systemTemp.createTemp('unmount_drain_test_');
+      final helper = File('${root.path}/helper');
+      await helper.writeAsString('#!/bin/sh\nprintf "MOUNTED\\n"\nexec /bin/sleep 30\n');
+      expect((await Process.run('/bin/chmod', ['700', helper.path])).exitCode, 0);
+      final service = _PausedUnmountService(helper.path);
+      addTearDown(() async {
+        if (!service.continueUnmount.isCompleted) service.continueUnmount.complete();
+        await service.unmountAll();
+        await root.delete(recursive: true);
+      });
+      final mountPoint = '${root.path}/mount';
+      final entry = await service.mount(
+        client: _TestCloudClient(), remotePath: '/', mountPoint: mountPoint,
+      );
+      expect(entry.status, MountStatus.mounted);
+      final unmount = service.unmount(mountPoint);
+      await service.entered.future;
+      var drained = false;
+      final drain = service.unmountAll().then((_) => drained = true);
+      await Future<void>.delayed(Duration.zero);
+      expect(drained, isFalse);
+      service.continueUnmount.complete();
+      await unmount;
+      await drain;
+      expect(drained, isTrue);
+      expect(service.getMounts().single.status, MountStatus.unmounted);
+    });
+    test('unmountAll waits for an in-flight mount before completing', () async {
+      if (!FuseMountService.isSupported) return;
+      SharedPreferences.setMockInitialValues({});
+      final root = await Directory.systemTemp.createTemp('mount_drain_test_');
+      addTearDown(() => root.delete(recursive: true));
+      final service = _PausedMountProbeService();
+      final mount = service.mount(
+        client: _TestCloudClient(), remotePath: '/', mountPoint: '${root.path}/one',
+      );
+      await service.entered.future;
+      var drained = false;
+      final drain = service.unmountAll().then((_) => drained = true);
+      await Future<void>.delayed(Duration.zero);
+      expect(drained, isFalse);
+      await expectLater(
+        service.mount(client: _TestCloudClient(), remotePath: '/', mountPoint: '${root.path}/two'),
+        throwsStateError,
+      );
+      service.continueProbe.complete();
+      await mount;
+      await drain;
+      expect(drained, isTrue);
+    });
+    test('reports a helper that exits after announcing readiness', () async {
+      if (!Platform.isMacOS) return;
+      SharedPreferences.setMockInitialValues({});
+      final root = await Directory.systemTemp.createTemp('mount_exited_test_');
+      addTearDown(() => root.delete(recursive: true));
+      final helper = File('${root.path}/helper');
+      await helper.writeAsString('#!/bin/sh\nprintf "MOUNTED\\n"\nexit 17\n');
+      expect((await Process.run('/bin/chmod', ['700', helper.path])).exitCode, 0);
+      final service = _ExitedHelperService(helper.path);
+      final entry = await service.mount(
+        client: _TestCloudClient(),
+        remotePath: '/',
+        mountPoint: '${root.path}/mount',
+      );
+      expect(entry.status, MountStatus.error);
+      expect(entry.errorKey, 'helperExited');
+      expect(entry.errorValues['code'], 17);
+    });
+    test('rclone accepts configured names without inline credentials', () {
+      expect(FuseMountService.isValidRcloneRemote('work:documents'), isTrue);
+      expect(FuseMountService.isValidRcloneRemote(':local:/tmp/fixture'), isTrue);
+      expect(FuseMountService.isValidRcloneRemote(':s3,secret=secret:bucket'), isFalse);
+      expect(FuseMountService.isValidRcloneRemote('/'), isFalse);
+      expect(FuseMountService.isValidRcloneRemote('--option:foo'), isFalse);
+    });
+    test('automatic selection never chooses FUSE-T', () {
+      expect(FuseMountService.macFuseRuntime(MacFuseBackend.automatic), 'macfuse-fskit');
+      expect(FuseMountService.macFuseRuntime(MacFuseBackend.fuseT), 'fuse-t');
+      expect(FuseMountService.macFuseRuntime(MacFuseBackend.fuseTSmb), 'fuse-t-smb');
+    });
+    test('FUSE-T cannot start without the non-commercial acknowledgement', () async {
+      if (!FuseMountService.isSupported) return;
+      final service = FuseMountService();
+      for (final backend in [MacFuseBackend.fuseT, MacFuseBackend.fuseTSmb]) {
+        await expectLater(
+          service.mount(
+            client: _TestCloudClient(),
+            remotePath: '/',
+            mountPoint: '/tmp/crispcloud-fuse-no-consent',
+            macBackend: backend,
+          ),
+          throwsArgumentError,
+        );
+      }
+      expect(service.getMounts(), isEmpty);
+    });
+    test('rejects a second request while a mount is still mounting', () async {
+      if (!FuseMountService.isSupported) return;
+      SharedPreferences.setMockInitialValues({});
+      final root = await Directory.systemTemp.createTemp('mount_race_test_');
+      addTearDown(() => root.delete(recursive: true));
+      final mountPoint = '${root.path}/cloud';
+      final service = _PausedMountProbeService();
+      final first = service.mount(
+        client: _TestCloudClient(),
+        remotePath: '/',
+        mountPoint: mountPoint,
+      );
+      await service.entered.future;
+      expect(service.getMounts().single.status, MountStatus.mounting);
+      await expectLater(service.removeMount(mountPoint), throwsStateError);
+      expect(service.getMounts().single.status, MountStatus.mounting);
+      await expectLater(
+        service.mount(
+          client: _TestCloudClient(),
+          remotePath: '/',
+          mountPoint: mountPoint,
+        ),
+        throwsA(isA<ArgumentError>()),
+      );
+      service.continueProbe.complete();
+      expect((await first).status, MountStatus.error);
+    });
+
+    test(
+      'refuses an OS mount before creating or changing its directory',
+      () async {
+        if (!FuseMountService.isSupported) return;
+        SharedPreferences.setMockInitialValues({});
+        final root = await Directory.systemTemp.createTemp(
+          'mount_occupied_test_',
+        );
+        addTearDown(() => root.delete(recursive: true));
+        final mountPoint = '${root.path}/other-filesystem';
+        final service = _OccupiedMountProbeService();
+        final entry = await service.mount(
+          client: _TestCloudClient(),
+          remotePath: '/',
+          mountPoint: mountPoint,
+        );
+        expect(entry.status, MountStatus.error);
+        expect(entry.errorMessage, contains('already in use'));
+        expect(entry.errorKey, 'mountPointOccupied');
+        expect(entry.errorValues['path'], mountPoint);
+        expect(await Directory(mountPoint).exists(), isFalse);
+        await service.unmount(mountPoint);
+        expect(service.getMounts().single.status, MountStatus.error);
+      },
+    );
+
+    test('OS mount probe recognizes the system root', () async {
+      if (!Platform.isMacOS && !Platform.isLinux) return;
+      expect(await FuseMountService().isPlatformMountPoint('/'), isTrue);
+    });
+
+    test('does not report a mount when the native bridge is absent', () async {
+      if (!FuseMountService.isSupported) return;
+      SharedPreferences.setMockInitialValues({});
+      addTearDown(() => SharedPreferences.setMockInitialValues({}));
+      final directory = await Directory.systemTemp.createTemp('mount_test_');
+      addTearDown(() => directory.delete(recursive: true));
+      final service = _AvailableFuseMountService();
+      final mount = await service.mount(
+        client: _TestCloudClient(),
+        remotePath: '/',
+        mountPoint: directory.path,
+      );
+      expect(mount.status, MountStatus.error);
+      expect(mount.errorMessage, contains('native FUSE bridge'));
+      expect(service.isMounted(directory.path), isFalse);
+    });
     test('getMounts is empty initially', () {
       final svc = FuseMountService();
       expect(svc.getMounts(), isEmpty);
@@ -343,10 +590,7 @@ void main() {
     });
 
     test('deep path is joined correctly', () {
-      expect(
-        _fullRemotePath('/bucket', '/a/b/c.txt'),
-        '/bucket/a/b/c.txt',
-      );
+      expect(_fullRemotePath('/bucket', '/a/b/c.txt'), '/bucket/a/b/c.txt');
     });
   });
 
@@ -359,7 +603,7 @@ void main() {
       final result = {
         'items': [
           {'name': 'a.txt', 'type': 'file'},
-        ]
+        ],
       };
       expect(_extractItems(result).length, 1);
       expect(_extractItems(result).first['name'], 'a.txt');
@@ -369,7 +613,7 @@ void main() {
       final result = {
         'files': [
           {'name': 'b.txt', 'type': 'file'},
-        ]
+        ],
       };
       expect(_extractItems(result).length, 1);
     });
@@ -379,7 +623,7 @@ void main() {
         'children': [
           {'name': 'c', 'type': 'folder'},
           {'name': 'd.pdf', 'type': 'file'},
-        ]
+        ],
       };
       expect(_extractItems(result).length, 2);
     });
@@ -403,7 +647,9 @@ void main() {
 
   group('DirCache TTL', () {
     test('new cache entry is not expired', () {
-      final cache = _TestDirCache([{'name': 'a'}]);
+      final cache = _TestDirCache([
+        {'name': 'a'},
+      ]);
       expect(cache.isExpired, false);
     });
 
@@ -499,8 +745,9 @@ void main() {
   group('FuseHelperScript', () {
     test('writeScript creates a non-empty file on disk', () async {
       if (!FuseMountService.isSupported) return;
-      final path =
-          await FuseHelperScript.writeScript('/tmp/crispcloud_test_mount');
+      final path = await FuseHelperScript.writeScript(
+        '/tmp/crispcloud_test_mount',
+      );
       final file = File(path);
       addTearDown(() async {
         if (await file.exists()) await file.delete();
@@ -572,7 +819,10 @@ Uint8List _encodeAttr({
   view.setUint32(0, mode, Endian.big);
   view.setUint64(4, size, Endian.big);
   view.setUint64(
-      12, modTimeMs ?? DateTime.now().millisecondsSinceEpoch, Endian.big);
+    12,
+    modTimeMs ?? DateTime.now().millisecondsSinceEpoch,
+    Endian.big,
+  );
   view.setUint32(20, isDir ? 2 : 1, Endian.big);
   return out;
 }
@@ -582,8 +832,7 @@ Uint8List _encodeDir(List<Map<String, dynamic>> items) {
   for (final item in items) {
     final name = (item['name'] as String?) ?? '';
     final nameBytes = name.codeUnits;
-    final isDir =
-        item['type'] == 'folder' || item['type'] == 'directory';
+    final isDir = item['type'] == 'folder' || item['type'] == 'directory';
     final size = (item['size'] as num?)?.toInt() ?? 0;
     final attr = _encodeAttr(isDir: isDir, size: size);
     final entry = Uint8List(1 + nameBytes.length + 24);
@@ -670,7 +919,7 @@ class _TestDirCache {
   static const ttl = Duration(seconds: 30);
 
   _TestDirCache(this.entries, {DateTime? fetchedAt})
-      : fetchedAt = fetchedAt ?? DateTime.now();
+    : fetchedAt = fetchedAt ?? DateTime.now();
 
   bool get isExpired => DateTime.now().difference(fetchedAt) > ttl;
 }

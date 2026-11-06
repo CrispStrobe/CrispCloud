@@ -26,6 +26,16 @@ import 'storage_identity.dart';
 
 export 'storage_transfer_contract.dart';
 
+/// Optional capability for genuinely bounded random-access downloads.
+///
+/// Implementations must fetch at most [length] bytes without buffering the whole
+/// remote object. Return fewer bytes only at EOF; offsets beyond EOF return an
+/// empty list. This is deliberately independent of supportsStreaming, whose
+/// default download implementation buffers the whole object.
+abstract interface class CloudStorageRangeReader {
+  Future<Uint8List> readFileRange(String remotePath, int offset, int length);
+}
+
 /// Optional fresh-directory contract for editors that must verify source size
 /// and copy destinations. Cached providers invalidate relevant listing/path
 /// caches before implementing this operation. Pagination tokens must remain in

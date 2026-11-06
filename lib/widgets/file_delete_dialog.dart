@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/app_localizations.dart';
+import '../l10n/file_delete_strings.dart';
+import '../l10n/provider_operation_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/action_history_provider.dart';
@@ -18,8 +21,9 @@ Future<void> showFileDeleteDialog(
     files = await panel.prepareOperationFiles(files);
   } catch (error) {
     if (context.mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('$error')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(localizedProviderError(context, error))),
+      );
     }
     return;
   }
@@ -34,13 +38,19 @@ Future<void> showFileDeleteDialog(
     barrierDismissible: false,
     builder: (dialogContext) => StatefulBuilder(
       builder: (context, setState) {
+        final strings = FileDeleteStrings(context);
+        final l =
+            AppLocalizations.of(context) ??
+            lookupAppLocalizations(const Locale('en'));
         return AlertDialog(
-          title: Text(permanent ? 'Delete without restore' : 'Move to trash'),
+          title: Text(
+            strings.text(permanent ? 'permanentTitle' : 'trashTitle'),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('${files.length} selected item(s)'),
+              Text(strings.count('selected', files.length)),
               const SizedBox(height: 12),
               if (canTrash)
                 CheckboxListTile(
@@ -48,21 +58,17 @@ Future<void> showFileDeleteDialog(
                   onChanged: busy
                       ? null
                       : (value) => setState(() => permanent = value ?? false),
-                  title: const Text('Delete permanently'),
-                  subtitle: const Text('Bypass trash and disable Undo.'),
+                  title: Text(strings.text('permanent')),
+                  subtitle: Text(strings.text('skipTrash')),
                   contentPadding: EdgeInsets.zero,
                 ),
-              Text(
-                permanent
-                    ? 'CrispCloud cannot restore this deletion. The provider may retain its own versions or trash.'
-                    : 'Files go to the system or provider trash. Undo restores them if their original paths remain available.',
-              ),
+              Text(strings.text(permanent ? 'permanentHelp' : 'trashHelp')),
             ],
           ),
           actions: [
             TextButton(
               onPressed: busy ? null : () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: Text(l.cancel),
             ),
             FilledButton(
               onPressed: busy
@@ -84,10 +90,10 @@ Future<void> showFileDeleteDialog(
                     },
               child: Text(
                 busy
-                    ? 'Working…'
+                    ? strings.text('working')
                     : permanent
-                    ? 'Delete'
-                    : 'Move to trash',
+                    ? l.delete
+                    : strings.text('trashTitle'),
               ),
             ),
           ],
@@ -105,9 +111,11 @@ Future<void> showFileDeleteDialog(
       history.canUndo(action)) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('$deletedCount item(s) moved to trash.'),
+        content: Text(
+          FileDeleteStrings(context).count('deleted', deletedCount),
+        ),
         action: SnackBarAction(
-          label: 'Undo last',
+          label: FileDeleteStrings(context).text('undo'),
           onPressed: () async {
             final result = await ref
                 .read(actionHistoryProvider)

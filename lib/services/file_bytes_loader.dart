@@ -20,10 +20,15 @@ import 'file_operation_service.dart';
 import 'panel_source_service.dart';
 import './log_service.dart';
 
+/// App-authored byte-loading failures that can be localized at the UI boundary.
+enum FileBytesErrorCode { tooLarge, notFound, couldNotRead, accessDenied }
+
 /// Something went wrong loading bytes for preview.
 class FileBytesLoadException implements Exception {
   final String message;
-  const FileBytesLoadException(this.message);
+  final FileBytesErrorCode? code;
+  final Map<String, Object> arguments;
+  const FileBytesLoadException(this.message, {this.code, this.arguments = const {}});
 
   @override
   String toString() => message;

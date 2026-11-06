@@ -19,6 +19,7 @@ import 'file_list_view.dart' show getFileIcon;
 import 'saved_searches_dialog.dart'
     show showSavedSearchesDialog, showSaveSearchDialog;
 import '../l10n/app_localizations.dart';
+import '../l10n/search_dialog_strings.dart';
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -77,7 +78,7 @@ void showSearchResultsDialog(
     context: context,
     builder: (ctx) => StatefulBuilder(
       builder: (ctx, update) => AlertDialog(
-        title: Text('Search Results for "$query"'),
+        title: Text(SearchDialogStrings(ctx).value('results', query)),
         content: SizedBox(
           width: 720,
           height: 420,
@@ -148,7 +149,7 @@ void showSearchResultsDialog(
                 ),
               Expanded(
                 child: allItems.isEmpty
-                    ? const Center(child: Text('No results found.'))
+                    ? Center(child: Text(SearchDialogStrings(ctx).text('none')))
                     : ListView.builder(
                         itemCount: allItems.length,
                         itemBuilder: (ctx2, index) {
@@ -637,7 +638,7 @@ class _FindDialogState extends State<_FindDialog> {
               children: [
                 for (final category in FileTypeCategory.values)
                   FilterChip(
-                    label: Text(_categoryLabel(category)),
+                    label: Text(_categoryLabel(context, category)),
                     selected: _selectedCategories.contains(category),
                     onSelected: _running
                         ? null
@@ -856,19 +857,19 @@ class _DatePickerTile extends StatelessWidget {
 // Helpers
 // ---------------------------------------------------------------------------
 
-String _categoryLabel(FileTypeCategory cat) {
+String _categoryLabel(BuildContext context, FileTypeCategory cat) {
   switch (cat) {
     case FileTypeCategory.documents:
-      return 'Documents';
+      return SearchDialogStrings(context).text('documents');
     case FileTypeCategory.images:
-      return 'Images';
+      return SearchDialogStrings(context).text('images');
     case FileTypeCategory.videos:
-      return 'Videos';
+      return SearchDialogStrings(context).text('videos');
     case FileTypeCategory.audio:
-      return 'Audio';
+      return SearchDialogStrings(context).text('audio');
     case FileTypeCategory.archives:
-      return 'Archives';
+      return SearchDialogStrings(context).text('archives');
     case FileTypeCategory.code:
-      return 'Code';
+      return SearchDialogStrings(context).text('code');
   }
 }

@@ -1,3 +1,4 @@
+import 'oauth_callback_page.dart';
 // lib/services/onedrive_client_adapter.dart
 //
 // OneDrive / SharePoint adapter using Microsoft Graph API v1.0.
@@ -21,7 +22,9 @@ import 'bounded_http_transfer.dart';
 import 'bounded_transfer_stream.dart';
 import 'log_service.dart';
 import 'onedrive_config_service.dart';
+import 'onedrive_operation_failure.dart';
 import 'secure_storage_service.dart';
+import './connection_failure.dart';
 
 class OneDriveClientAdapter extends CloudStorageClient {
   static const _log = Log('OneDriveClient');
@@ -106,7 +109,8 @@ class OneDriveClientAdapter extends CloudStorageClient {
     _clientSecret = parts.length > 1 ? parts[1].trim() : null;
 
     if (_clientId == null || _clientId!.isEmpty) {
-      throw Exception('Application (Client) ID is required');
+      throw OneDriveOperationFailure(OneDriveOperationCode.clientIdRequired,
+          'Application (Client) ID is required');
     }
 
     // Try stored refresh token first
@@ -594,12 +598,16 @@ class OneDriveClientAdapter extends CloudStorageClient {
     final downloadUrl = meta['@microsoft.graph.downloadUrl'] as String?;
 
     if (downloadUrl == null) {
-      throw Exception('No download URL for: $remotePath');
+      throw OneDriveOperationFailure(OneDriveOperationCode.downloadUrl,
+          'No download URL for: $remotePath', {'path': remotePath});
     }
 
     final resp = await http.get(Uri.parse(downloadUrl));
     if (resp.statusCode != 200) {
-      throw Exception('OneDrive download failed (${resp.statusCode})');
+      throw OneDriveOperationFailure(
+          OneDriveOperationCode.download,
+          'OneDrive download failed (${resp.statusCode})',
+          {'status': resp.statusCode});
     }
 
     onProgress?.call(resp.bodyBytes.length, resp.bodyBytes.length);
@@ -837,7 +845,9 @@ class OneDriveClientAdapter extends CloudStorageClient {
   };
 
   Future<void> _ensureToken() async {
-    if (_accessToken == null) throw Exception('Not authenticated');
+    if (_accessToken == null)
+      throw OneDriveOperationFailure(
+          OneDriveOperationCode.notAuthenticated, 'Not authenticated');
     if (_tokenExpiry != null && DateTime.now().isAfter(_tokenExpiry!)) {
       await _refreshAccessToken();
     }
@@ -845,7 +855,8 @@ class OneDriveClientAdapter extends CloudStorageClient {
 
   Future<void> _refreshAccessToken() async {
     if (_refreshToken == null || _clientId == null) {
-      throw Exception('Cannot refresh: missing refresh token or client ID');
+      throw OneDriveOperationFailure(OneDriveOperationCode.refreshCredentials,
+          'Cannot refresh: missing refresh token or client ID');
     }
 
     final body = <String, String>{
@@ -896,12 +907,16 @@ class OneDriveClientAdapter extends CloudStorageClient {
       await launchUrl(authUri, mode: LaunchMode.externalApplication);
     } else {
       await server.close();
-      throw Exception('Could not open browser for Microsoft authorization');
+      throw const ConnectionFailure(
+          ConnectionFailureCode.oauthBrowserUnavailable,
+          'Could not open browser for Microsoft authorization',
+          {'provider': 'Microsoft'});
     }
 
     String? authCode;
     try {
       await for (final request in server) {
+        final page = await OAuthCallbackPage.effective();
         final code = request.uri.queryParameters['code'];
         final error = request.uri.queryParameters['error'];
 
@@ -930,7 +945,7 @@ class OneDriveClientAdapter extends CloudStorageClient {
 
         request.response
           ..statusCode = 404
-          ..write('Not found');
+          ..write(page.notFound);
         await request.response.close();
       }
     } finally {
@@ -938,7 +953,10 @@ class OneDriveClientAdapter extends CloudStorageClient {
     }
 
     if (authCode == null) {
-      throw Exception('Microsoft authorization was cancelled or failed');
+      throw const ConnectionFailure(
+          ConnectionFailureCode.oauthCancelled,
+          'Microsoft authorization was cancelled or failed',
+          {'provider': 'Microsoft'});
     }
 
     // Exchange code for tokens
@@ -1112,7 +1130,10 @@ class OneDriveClientAdapter extends CloudStorageClient {
     }
 
     if (resp.statusCode != 200) {
-      throw Exception('Graph API error (${resp.statusCode}): ${resp.body}');
+      throw OneDriveOperationFailure(
+          OneDriveOperationCode.graph,
+          'Graph API error (${resp.statusCode}): ${resp.body}',
+          {'status': resp.statusCode, 'body': resp.body});
     }
 
     return json.decode(resp.body) as Map<String, dynamic>;

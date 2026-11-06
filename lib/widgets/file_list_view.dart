@@ -8,9 +8,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/provider_operation_strings.dart';
+import '../l10n/file_list_strings.dart';
 import '../models/file_item.dart';
 import '../models/file_view_configuration.dart';
 import '../models/panel_side.dart';
+import '../providers/focus_area_provider.dart';
 import '../providers/providers.dart';
 import '../providers/toolbar_provider.dart'
     show columnWidthsProvider, panelViewModeProvider, fileColumnsProvider;
@@ -94,6 +97,7 @@ class FileListView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final strings = FileListStrings(context);
     final panel = ref.watch(panelProvider(side));
     final viewMode = ref.watch(panelViewModeProvider(side));
     final double fontSize = ref.watch(fontSizeProvider);
@@ -156,7 +160,7 @@ class FileListView extends ConsumerWidget {
 
     try {
       if (files.isEmpty) {
-        return const Center(child: Text('Empty folder'));
+        return Center(child: Text(strings.text('Empty folder')));
       }
 
       final selectedFiles = panel.selection.toList();
@@ -171,6 +175,17 @@ class FileListView extends ConsumerWidget {
               final file = files[index];
               final isSelected = panel.isSelected(file);
               final isCursor = index == cursorIndex;
+
+              if (panel.renamingItem == file) {
+                return _InlineRenameField(
+                  file: file,
+                  side: side,
+                  isCursor: isCursor,
+                  isSelected: isSelected,
+                  height: itemHeight,
+                  keepExtension: panel.renameKeepExtension,
+                );
+              }
 
               if (isCompact) {
                 final origin = panel.originForOperation(file);
@@ -234,7 +249,8 @@ class FileListView extends ConsumerWidget {
       // ListView's own Shortcuts handler consumes them for scrolling.
       // autofocus = true when this is the active panel so compact tiles
       // (which have no inner Focus widget) still drive key events here.
-      final isActivePanel = ref.read(activePanelProvider) == side;
+      final focusArea = ref.read(focusAreaProvider);
+      final isActivePanel = focusArea.panelSide == side;
       if (isActivePanel) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!context.mounted) return;
@@ -258,8 +274,9 @@ class FileListView extends ConsumerWidget {
             if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
               return KeyEventResult.ignored;
             }
-            final activePanel = ref.read(activePanelProvider);
-            if (side != activePanel) return KeyEventResult.ignored;
+            if (ref.read(focusAreaProvider).panelSide != side) {
+              return KeyEventResult.ignored;
+            }
 
             final isShift = HardwareKeyboard.instance.isShiftPressed;
             final p = ref.read(panelProvider(side));
@@ -401,11 +418,15 @@ class FileListView extends ConsumerWidget {
           children: [
             const Icon(Icons.error, size: 48, color: Colors.red),
             const SizedBox(height: 16),
-            Text('Error loading files: $e'),
+            Text(
+              strings.format('Error loading files: {error}', {
+                'error': localizedProviderError(context, e),
+              }),
+            ),
             const SizedBox(height: 8),
             ElevatedButton(
               onPressed: () => panel.refresh(),
-              child: const Text('Retry'),
+              child: Text(strings.text('Retry')),
             ),
           ],
         ),
@@ -472,6 +493,7 @@ class FileListTile extends ConsumerWidget {
         side: side,
         isCursor: isCursor,
         isSelected: isSelected,
+        keepExtension: ref.read(panelProvider(side)).renameKeepExtension,
       );
     }
 
@@ -494,6 +516,7 @@ class FileListTile extends ConsumerWidget {
       ],
     );
 
+    final strings = FileListStrings(context);
     final tile = GestureDetector(
       onSecondaryTapDown: onSecondaryTap,
       child: Focus(
@@ -506,7 +529,12 @@ class FileListTile extends ConsumerWidget {
           return KeyEventResult.ignored;
         },
         child: Semantics(
-          label: _buildSemanticLabel(file, isSelected, isCursor),
+          label: strings.semantic(
+            folder: file.isFolder,
+            name: file.name,
+            size: file.size == null ? null : formatBytes(file.size!),
+            selected: isSelected,
+          ),
           selected: isSelected,
           focused: isCursor,
           button: true,
@@ -714,6 +742,7 @@ class CompactFileTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final strings = FileListStrings(context);
     final colorService = ref.watch(fileTypeColorProvider);
     final fileColor = colorService.colorForFile(file);
     final theme = Theme.of(context);
@@ -751,15 +780,16 @@ class CompactFileTile extends ConsumerWidget {
               : '<DIR>')
         : (file.displaySize != null ? formatBytes(file.displaySize!) : '');
 
-    final semanticType = file.isFolder ? 'Folder' : 'File';
-    final semanticSize = file.isFolder
-        ? ''
-        : ', ${sizeStr.isNotEmpty ? sizeStr : 'unknown size'}';
-    final semanticSel = isSelected ? ', selected' : '';
+    final semantic = strings.semantic(
+      folder: file.isFolder,
+      name: file.name,
+      size: sizeStr.isEmpty ? null : sizeStr,
+      selected: isSelected,
+    );
     final collection = file.metadata?['collectionSource'];
     final status = _collectionStatusLabel(file);
     final semanticLabel =
-        '$semanticType ${file.name}$semanticSize$semanticSel${collection == null ? '' : ', $collection, ${file.path}'}${status.isEmpty ? '' : ', $status'}';
+        '$semantic${collection == null ? '' : ', $collection, ${file.path}'}${status.isEmpty ? '' : ', $status'}';
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -846,11 +876,19 @@ class _InlineRenameField extends ConsumerStatefulWidget {
   final bool isCursor;
   final bool isSelected;
 
+  /// Exact row height when the field replaces a list row.
+  final double? height;
+
+  /// Select only the base name so the extension is preserved.
+  final bool keepExtension;
+
   const _InlineRenameField({
     required this.file,
     required this.side,
     required this.isCursor,
     required this.isSelected,
+    this.height,
+    this.keepExtension = false,
   });
 
   @override
@@ -873,7 +911,7 @@ class _InlineRenameFieldState extends ConsumerState<_InlineRenameField> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _focus.requestFocus();
       final dotIdx = name.lastIndexOf('.');
-      if (!widget.file.isFolder && dotIdx > 0) {
+      if (widget.keepExtension && !widget.file.isFolder && dotIdx > 0) {
         _ctrl.selection = TextSelection(baseOffset: 0, extentOffset: dotIdx);
       } else {
         _ctrl.selection = TextSelection(
@@ -904,9 +942,11 @@ class _InlineRenameFieldState extends ConsumerState<_InlineRenameField> {
         : theme.colorScheme.primaryContainer.withValues(alpha: 0.2);
 
     return Container(
-      height: ref.read(panelViewModeProvider(widget.side)) == PanelViewMode.full
-          ? 26.0
-          : 64.0,
+      height:
+          widget.height ??
+          (ref.read(panelViewModeProvider(widget.side)) == PanelViewMode.full
+              ? 26.0
+              : 64.0),
       color: bgColor,
       alignment: Alignment.centerLeft,
       padding: const EdgeInsets.symmetric(horizontal: 8),

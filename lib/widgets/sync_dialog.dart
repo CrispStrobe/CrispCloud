@@ -12,6 +12,7 @@ import '../services/sync_database.dart';
 import '../services/storage_identity.dart';
 import '../l10n/app_localizations.dart';
 import 'sync_plan_dialog.dart';
+import '../l10n/sync_dialog_strings.dart';
 
 // Auto-evict options: 0=disabled, then days
 const _kAutoEvictOptions = [0, 7, 14, 30, 60, 90];
@@ -25,6 +26,7 @@ class _SyncManagerDialog extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final t = SyncDialogStrings(context);
     final sync = ref.watch(syncProvider);
 
     return AlertDialog(
@@ -183,6 +185,7 @@ class _SyncManagerDialog extends ConsumerWidget {
   }
 
   void _showAddPairDialog(BuildContext context, WidgetRef ref) {
+    final t = SyncDialogStrings(context);
     final nameController = TextEditingController();
     final localController = TextEditingController();
     final remoteController = TextEditingController(text: '/');
@@ -259,7 +262,7 @@ class _SyncManagerDialog extends ConsumerWidget {
                           (p) => DropdownMenuItem(
                             value: p,
                             child: Text(
-                              context.commanderTr(_policyLabel(p)),
+                              _policyLabel(p, SyncDialogStrings(context)),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -391,18 +394,18 @@ class _SyncManagerDialog extends ConsumerWidget {
     );
   }
 
-  String _policyLabel(ConflictPolicy p) {
+  String _policyLabel(ConflictPolicy p, SyncDialogStrings t) {
     switch (p) {
       case ConflictPolicy.newestWins:
-        return 'Newest Wins';
+        return t.text('newest');
       case ConflictPolicy.localWins:
-        return 'Local Wins';
+        return t.text('localWins');
       case ConflictPolicy.remoteWins:
-        return 'Remote Wins';
+        return t.text('remoteWins');
       case ConflictPolicy.keepBoth:
-        return 'Keep Both';
+        return t.text('keepBoth');
       case ConflictPolicy.manual:
-        return 'Ask Me';
+        return t.text('ask');
     }
   }
 }
@@ -455,6 +458,7 @@ class _BackgroundSyncSettingsState
 
   @override
   Widget build(BuildContext context) {
+    final t = SyncDialogStrings(context);
     final sync = ref.watch(syncProvider);
     final enabled = sync.isBackgroundSyncEnabled;
 
@@ -545,6 +549,7 @@ class _SyncPairTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final t = SyncDialogStrings(context);
     final sync = ref.watch(syncProvider);
     final auth = ref.watch(authProvider);
     final bound = sync.isPairBound(pair);
@@ -738,6 +743,7 @@ class _AutoEvictTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final t = SyncDialogStrings(context);
     final days = ref.watch(syncProvider).autoEvictDays;
 
     return Column(

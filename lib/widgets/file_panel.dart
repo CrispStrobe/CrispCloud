@@ -11,6 +11,7 @@ import '../models/file_item.dart';
 import '../services/log_service.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
+import '../l10n/panel_error_strings.dart';
 import '../providers/panel_source_provider.dart' show panelSourceProvider;
 import '../providers/toolbar_provider.dart' show panelViewModeProvider;
 import '../services/panel_source_service.dart' show RemotePanelSource;
@@ -32,6 +33,8 @@ import 'file_tree_view_stub.dart' if (dart.library.io) 'file_tree_view.dart';
 import 'panel_tab_bar.dart';
 import 'panel_header.dart';
 import '../l10n/app_localizations.dart';
+import '../l10n/access_and_fkey_strings.dart';
+import '../l10n/file_panel_strings.dart';
 import '../screens/screen_dialogs.dart' show showConnectionDialogScreen;
 
 class FilePanel extends ConsumerStatefulWidget {
@@ -73,13 +76,15 @@ class _FilePanelState extends ConsumerState<FilePanel> {
   Widget build(BuildContext context) {
     final panel = ref.watch(panelProvider(widget.side));
     final errors = ref.watch(errorProvider);
-    final lastError = errors.lastError;
+    final lastAppError = errors.lastAppError;
+    final lastError = lastAppError?.message;
 
     // Show each error once. Without clearing it, every rebuild re-queued a
     // snackbar and the message appeared to never go away.
     if (lastError != null &&
         lastError.isNotEmpty &&
         widget.side == PanelSide.local &&
+        lastAppError?.code != PanelErrorCode.permissionDenied &&
         lastError != _lastShownError) {
       _lastShownError = lastError;
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -92,13 +97,13 @@ class _FilePanelState extends ConsumerState<FilePanel> {
             lastError.contains('No such file') ||
             lastError.contains('not found');
         final actionLabel = panel.isInArchive
-            ? 'Exit archive'
+            ? FilePanelStrings(context).text('exitArchive')
             : missingPath
             ? 'Home'
             : 'Grant access';
         messenger.showSnackBar(
           SnackBar(
-            content: Text(lastError),
+            content: Text(localizedPanelError(context, lastAppError!)),
             showCloseIcon: true,
             behavior: SnackBarBehavior.floating,
             action: SnackBarAction(
@@ -277,7 +282,7 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        '$opLabel ${fileCount > 1 ? "$fileCount files" : "file"}',
+                        '$opLabel ${FilePanelStrings(context).value('files', fileCount)}',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -376,13 +381,27 @@ class _FilePanelState extends ConsumerState<FilePanel> {
         ? ref.watch(localViewModeProvider)
         : ref.watch(remoteViewModeProvider);
 
-    if (viewMode == ViewMode.grid ||
-        viewMode == ViewMode.tiles ||
-        viewMode == ViewMode.gallery) {
+    if (viewMode == ViewMode.grid) {
       return FileGridView(
         side: side,
         files: files,
         scrollController: _scrollController,
+      );
+    }
+    if (viewMode == ViewMode.tiles) {
+      return FileGridView(
+        side: side,
+        files: files,
+        scrollController: _scrollController,
+        tileLayout: true,
+      );
+    }
+    if (viewMode == ViewMode.gallery) {
+      return FileGridView(
+        side: side,
+        files: files,
+        scrollController: _scrollController,
+        galleryOnly: true,
       );
     }
     if (viewMode == ViewMode.column) {
@@ -712,6 +731,8 @@ class _FilePanelState extends ConsumerState<FilePanel> {
     String currentPath,
     Set<FileItem> selection,
   ) {
+    final panelSource = ref.watch(panelSourceProvider(widget.side));
+    final sourceIsRemote = !panelSource.isLocal;
     final layout = widget.side == PanelSide.local
         ? ref.watch(localViewModeProvider)
         : ref.watch(remoteViewModeProvider);
@@ -783,7 +804,7 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                 ? const Center(child: CircularProgressIndicator())
                 : files.isEmpty && !visualLayout
                 ? Center(
-                    child: _isDragging && widget.side == PanelSide.remote
+                    child: _isDragging && sourceIsRemote
                         ? Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -801,8 +822,7 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                           )
                         : panel.showingSearchResults
                         ? Text(context.commanderTr("This file list is empty."))
-                        : widget.side == PanelSide.remote &&
-                              !ref.read(authProvider).isConnected
+                        : sourceIsRemote && !ref.read(authProvider).isConnected
                         ? Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -832,6 +852,31 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                                 ),
                                 onPressed: () =>
                                     showConnectionDialogScreen(context),
+                              ),
+                            ],
+                          )
+                        : ref.watch(errorProvider).lastAppError?.code ==
+                              PanelErrorCode.permissionDenied
+                        ? Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.lock_outline, size: 56),
+                              const SizedBox(height: 12),
+                              Text(
+                                AppLocalizations.of(context)!.permissionDenied,
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              const SizedBox(height: 16),
+                              ElevatedButton.icon(
+                                icon: const Icon(Icons.folder_open, size: 18),
+                                label: Text(
+                                  AccessAndFKeyStrings(
+                                    Localizations.localeOf(context),
+                                  ).grantAccess,
+                                ),
+                                onPressed: () =>
+                                    panel.grantAccessToCurrentPath(),
                               ),
                             ],
                           )

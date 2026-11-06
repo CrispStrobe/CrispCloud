@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:re_editor/re_editor.dart';
 
 import '../services/search_replace.dart';
+import '../l10n/code_search_panel_strings.dart';
 
 class CodeEditorFindPanel extends StatelessWidget
     implements PreferredSizeWidget {
@@ -66,13 +67,14 @@ class CodeEditorFindPanel extends StatelessWidget
 
   Widget _buildFindRow(BuildContext context, CodeFindValue value) {
     final theme = Theme.of(context);
+    final strings = CodeSearchPanelStrings(context);
     final result = value.result;
     final invalidRegex = value.option.regex && value.option.regExp == null;
     final String status;
     if (invalidRegex) {
-      status = 'Invalid regex';
+      status = strings.text('invalidRegex');
     } else if (value.searching) {
-      status = 'Searching…';
+      status = strings.text('searching');
     } else if (result == null) {
       status = '0/0';
     } else {
@@ -90,10 +92,10 @@ class CodeEditorFindPanel extends StatelessWidget
             focusNode: controller.findInputFocusNode,
             autofocus: true,
             style: const TextStyle(fontSize: 13),
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               isDense: true,
               border: InputBorder.none,
-              hintText: 'Find',
+              hintText: strings.text('find'),
             ),
             onSubmitted: (_) {
               if (result != null && result.matches.isNotEmpty) {
@@ -113,38 +115,40 @@ class CodeEditorFindPanel extends StatelessWidget
         ),
         _ToggleTextButton(
           label: 'Aa',
-          tooltip: 'Match case',
+          tooltip: strings.text('matchCase'),
           selected: value.option.caseSensitive,
           onPressed: controller.toggleCaseSensitive,
         ),
         _ToggleTextButton(
           label: '.*',
-          tooltip: 'Use regular expression',
+          tooltip: strings.text('regex'),
           selected: value.option.regex,
           onPressed: controller.toggleRegex,
         ),
         _IconAction(
           icon: Icons.arrow_upward,
-          tooltip: 'Previous match',
+          tooltip: strings.text('previous'),
           onPressed: result == null || result.matches.isEmpty
               ? null
               : controller.previousMatch,
         ),
         _IconAction(
           icon: Icons.arrow_downward,
-          tooltip: 'Next match',
+          tooltip: strings.text('next'),
           onPressed: result == null || result.matches.isEmpty
               ? null
               : controller.nextMatch,
         ),
         _IconAction(
           icon: Icons.swap_vert,
-          tooltip: value.replaceMode ? 'Hide replace' : 'Show replace',
+          tooltip: value.replaceMode
+              ? strings.text('hideReplace')
+              : strings.text('showReplace'),
           onPressed: controller.toggleMode,
         ),
         _IconAction(
           icon: Icons.close,
-          tooltip: 'Close find',
+          tooltip: strings.text('closeFind'),
           onPressed: controller.close,
         ),
         const SizedBox(width: 4),
@@ -153,6 +157,7 @@ class CodeEditorFindPanel extends StatelessWidget
   }
 
   Widget _buildReplaceRow(BuildContext context, CodeFindValue value) {
+    final strings = CodeSearchPanelStrings(context);
     final result = value.result;
     final canReplace = !readOnly && result != null && result.matches.isNotEmpty;
     return Row(
@@ -169,28 +174,31 @@ class CodeEditorFindPanel extends StatelessWidget
             controller: controller.replaceInputController,
             focusNode: controller.replaceInputFocusNode,
             style: const TextStyle(fontSize: 13),
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               isDense: true,
               border: InputBorder.none,
-              hintText: 'Replace',
+              hintText: strings.text('replace'),
             ),
           ),
         ),
         if (readOnly)
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8),
-            child: Text('Read only', style: TextStyle(fontSize: 12)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Text(
+              strings.text('readOnly'),
+              style: const TextStyle(fontSize: 12),
+            ),
           )
         else
           _IconAction(
             icon: Icons.done,
-            tooltip: 'Replace',
+            tooltip: strings.text('replace'),
             onPressed: canReplace ? _replaceCurrent : null,
           ),
         if (!readOnly)
           _IconAction(
             icon: Icons.done_all,
-            tooltip: 'Replace all',
+            tooltip: strings.text('replaceAll'),
             onPressed: canReplace ? _replaceAll : null,
           ),
         const SizedBox(width: 4),

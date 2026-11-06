@@ -16,6 +16,7 @@ import 'secure_storage_service.dart';
 import 'webdav_config_service.dart';
 
 import 'dart:io' as dart_io;
+import './webdav_operation_failure.dart';
 
 class WebDavClientAdapter extends CloudStorageClient
     with CloudTransferOperations {
@@ -211,14 +212,14 @@ class WebDavClientAdapter extends CloudStorageClient
       user = email.substring(0, splitIndex);
       host = email.substring(splitIndex + 1);
     } else {
-      throw Exception('Format must be user@ServerURL');
+      throw WebDavException(WebDavOperationCode.invalidIdentity, 'Format must be user@ServerURL');
     }
 
     try {
       final tempClient = _clientFactory(host, user, password);
       await tempClient.readDir('/');
     } catch (e) {
-      throw Exception('Connection failed: $e');
+      throw WebDavException(WebDavOperationCode.connectionFailed, 'Connection failed: $e', {'error': e});
     }
 
     await _config.saveCredentials({
@@ -317,7 +318,7 @@ class WebDavClientAdapter extends CloudStorageClient
     if (_client != null) return;
 
     final creds = await _config.readCredentials();
-    if (creds == null) throw Exception('Not logged in');
+    if (creds == null) throw WebDavException(WebDavOperationCode.notLoggedIn, 'Not logged in');
 
     _user = creds['username'];
     _host = creds['host'];
@@ -384,7 +385,7 @@ class WebDavClientAdapter extends CloudStorageClient
       }
     } catch (e) {
       _log.error('List error', e);
-      throw Exception('Failed to list path $path: $e');
+      throw WebDavException(WebDavOperationCode.listFailed, 'Failed to list path $path: $e', {'path': path, 'error': e});
     }
 
     return {'folders': folders, 'files': files};
@@ -470,7 +471,7 @@ class WebDavClientAdapter extends CloudStorageClient
     await _ensureClient();
 
     if (kIsWeb) {
-      throw UnsupportedError('Use the browser download stream on web');
+      throw WebDavUnsupportedError(WebDavOperationCode.webDownload, 'Use the browser download stream on web');
     }
     final sink = dart_io.File(localPath).openWrite();
     try {

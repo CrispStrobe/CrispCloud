@@ -91,11 +91,12 @@ _Node? _join(_Node? a, _Node? b) {
   if (offset == 0) return (null, node);
   if (offset == node.length) return (node, null);
   final piece = node.piece;
-  if (piece != null)
+  if (piece != null) {
     return (
       _Node.leaf(piece.slice(0, offset)),
       _Node.leaf(piece.slice(offset, piece.length - offset)),
     );
+  }
   final leftLength = node.left!.length;
   if (offset < leftLength) {
     final halves = _split(node.left, offset);
@@ -144,13 +145,15 @@ class HexSnapshot {
               piece.start,
               piece.start + piece.length,
             );
-      if (bytes.length != piece.length)
+      if (bytes.length != piece.length) {
         throw StateError('The original byte source returned a short read.');
+      }
       result.setRange(written, written + bytes.length, bytes);
       written += bytes.length;
     }
-    if (written != count)
+    if (written != count) {
       throw StateError('The document range could not be read completely.');
+    }
     return result;
   }
 
@@ -215,14 +218,62 @@ class HexSearchCancelled implements Exception {
   const HexSearchCancelled();
 }
 
+/// Tracks buffers reachable from history roots without repeatedly walking
+/// shared subtrees. A node's children are retained only while that node is
+/// reachable; different leaves can still share the same inserted buffer.
+class _HistoryStorage {
+  final Map<_Node, int> _nodes = Map.identity();
+  final Map<Uint8List, int> _buffers = Map.identity();
+  int bytes = 0;
+
+  void retain(_Node? node) {
+    if (node == null) return;
+    final users = _nodes[node] ?? 0;
+    _nodes[node] = users + 1;
+    if (users != 0) return;
+    final data = node.piece?.data;
+    if (data != null) {
+      final references = _buffers[data] ?? 0;
+      if (references == 0) bytes += data.length;
+      _buffers[data] = references + 1;
+    }
+    retain(node.left);
+    retain(node.right);
+  }
+
+  void release(_Node? node) {
+    if (node == null) return;
+    final users = _nodes[node]!;
+    if (users > 1) {
+      _nodes[node] = users - 1;
+      return;
+    }
+    _nodes.remove(node);
+    final data = node.piece?.data;
+    if (data != null) {
+      final references = _buffers[data]!;
+      if (references == 1) {
+        _buffers.remove(data);
+        bytes -= data.length;
+      } else {
+        _buffers[data] = references - 1;
+      }
+    }
+    release(node.left);
+    release(node.right);
+  }
+}
+
 class HexDocument {
   HexDocument(
     HexByteSource source, {
     this.maxUndoSteps = 500,
     this.maxSingleEditBytes = 16 * 1024 * 1024,
+    this.maxUndoBytes = 64 * 1024 * 1024,
   }) : _source = source {
-    if (maxUndoSteps < 1 || maxSingleEditBytes < 1)
+    if (maxUndoSteps < 1 || maxSingleEditBytes < 1 || maxUndoBytes < 0) {
       throw ArgumentError('Invalid editor limits.');
+    }
     // Native/web must agree on exact byte offsets (JS's largest safe integer).
     if (source.length < 0 || source.length > 0x1fffffffffffff) {
       throw RangeError(
@@ -234,21 +285,36 @@ class HexDocument {
   final Object _owner = Object();
   final HexByteSource _source;
   final int maxUndoSteps, maxSingleEditBytes;
+
+  /// Maximum unique inserted-byte storage referenced by undo and redo states.
+  ///
+  /// Shared buffers count once, including their full allocation when a state
+  /// uses only a slice. Original-source ranges cost no bytes. Current content
+  /// and caller-held snapshots may retain additional storage outside this
+  /// budget. Zero permits only history that references original-source bytes.
+  final int maxUndoBytes;
+
   _Node? _root;
   int _revision = 0, _nextRevision = 0, _savedRevision = 0;
   final List<HexSnapshot> _undo = [], _redo = [];
+  final _HistoryStorage _history = _HistoryStorage();
   int get length => _root?.length ?? 0;
   int get revision => _revision;
   bool get isDirty => _revision != _savedRevision;
   bool get canUndo => _undo.isNotEmpty;
   bool get canRedo => _redo.isNotEmpty;
+
+  /// Unique inserted-buffer bytes currently retained by undo and redo.
+  int get historyBytes => _history.bytes;
+
   HexSnapshot get snapshot => HexSnapshot._(_owner, _source, _root, _revision);
   Future<Uint8List> read(int offset, int count) => snapshot.read(offset, count);
   int get debugTreeHeight => _height(_root);
 
   void markSaved(HexSnapshot saved) {
-    if (!identical(saved._owner, _owner))
+    if (!identical(saved._owner, _owner)) {
       throw ArgumentError('Snapshot belongs to another document.');
+    }
     _savedRevision = saved.revision;
   }
 
@@ -266,12 +332,14 @@ class HexDocument {
     bool coalesce = false,
   }) {
     _checkRange(offset, count, length);
-    if (bytes.length > maxSingleEditBytes)
+    if (bytes.length > maxSingleEditBytes) {
       throw StateError('This edit exceeds the configured byte limit.');
+    }
     final added = _copyBytes(bytes);
     if (count == 0 && added.isEmpty) return;
-    if (length - count + added.length > 0x1fffffffffffff)
+    if (length - count + added.length > 0x1fffffffffffff) {
       throw RangeError('Document too large.');
+    }
     final before = snapshot;
     final first = _split(_root, offset);
     final second = _split(first.$2, count);
@@ -283,26 +351,56 @@ class HexDocument {
         _undo.isEmpty ||
         _redo.isNotEmpty ||
         _revision == _savedRevision) {
-      _undo.add(before);
-      if (_undo.length > maxUndoSteps) _undo.removeAt(0);
+      _retainHistory(_undo, before);
     }
-    _redo.clear();
+    _clearHistory(_redo);
     _root = next;
     _revision = ++_nextRevision;
+    _trimHistory();
   }
 
   bool undo() {
     if (_undo.isEmpty) return false;
-    _redo.add(snapshot);
-    _restore(_undo.removeLast());
+    _retainHistory(_redo, snapshot);
+    _restore(_takeHistory(_undo));
+    _trimHistory();
     return true;
   }
 
   bool redo() {
     if (_redo.isEmpty) return false;
-    _undo.add(snapshot);
-    _restore(_redo.removeLast());
+    _retainHistory(_undo, snapshot);
+    _restore(_takeHistory(_redo));
+    _trimHistory();
     return true;
+  }
+
+  void _retainHistory(List<HexSnapshot> entries, HexSnapshot value) {
+    entries.add(value);
+    _history.retain(value._root);
+  }
+
+  HexSnapshot _takeHistory(List<HexSnapshot> entries) {
+    final value = entries.removeLast();
+    _history.release(value._root);
+    return value;
+  }
+
+  void _clearHistory(List<HexSnapshot> entries) {
+    for (final value in entries) {
+      _history.release(value._root);
+    }
+    entries.clear();
+  }
+
+  void _trimHistory() {
+    while (_undo.length + _redo.length > maxUndoSteps ||
+        _history.bytes > maxUndoBytes) {
+      // Keep the nearest reachable undo/redo states. Redo is a stack, so its
+      // first element is the farthest future state and is discarded last.
+      final entries = _undo.isNotEmpty ? _undo : _redo;
+      _history.release(entries.removeAt(0)._root);
+    }
   }
 
   void _restore(HexSnapshot value) {

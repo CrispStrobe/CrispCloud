@@ -16,6 +16,7 @@ import '../providers/providers.dart';
 import '../widgets/azure_connection_dialog.dart';
 import '../widgets/b2_connection_dialog.dart';
 import '../widgets/connection_dialog.dart';
+import '../widgets/editor_chooser_dialog.dart';
 import '../widgets/file_editor_dialog.dart' show showFileEditorDialog;
 import '../widgets/file_operation_dialog.dart';
 import '../widgets/archive_workspace_dialog.dart';
@@ -26,6 +27,10 @@ import '../widgets/internal_viewer_dialog.dart'
     show InternalViewerAction, showInternalViewer;
 import '../l10n/app_localizations.dart';
 import '../l10n/commander_strings.dart';
+import '../l10n/command_strings.dart';
+import '../l10n/screen_dialog_strings.dart';
+import '../l10n/shortcut_strings.dart';
+import '../l10n/undo_presentation.dart';
 
 /// Explicit selection, or the cursor item when nothing is marked. This mirrors
 /// Total Commander: F5/F6/F8 operate on the item under the cursor when there
@@ -61,8 +66,8 @@ void confirmLogoutRiverpod(BuildContext context, WidgetRef ref) {
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Confirm Logout'),
-      content: const Text('Are you sure you want to logout from Cloud?'),
+      title: Text(ScreenDialogStrings(context).text('logoutTitle')),
+      content: Text(ScreenDialogStrings(context).text('logoutConfirm')),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
@@ -74,7 +79,9 @@ void confirmLogoutRiverpod(BuildContext context, WidgetRef ref) {
             if (context.mounted) {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Logged out successfully')),
+                SnackBar(
+                  content: Text(CommandStrings(context).text('loggedOut')),
+                ),
               );
             }
           },
@@ -82,7 +89,7 @@ void confirmLogoutRiverpod(BuildContext context, WidgetRef ref) {
             backgroundColor: Theme.of(context).colorScheme.error,
             foregroundColor: Theme.of(context).colorScheme.onError,
           ),
-          child: const Text('Logout'),
+          child: Text(AppLocalizations.of(context)!.logout),
         ),
       ],
     ),
@@ -97,7 +104,7 @@ void showKeyboardShortcutsHelp(BuildContext context) {
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Keyboard Shortcuts'),
+      title: Text(AppLocalizations.of(context)!.keyboardShortcuts),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -108,7 +115,7 @@ void showKeyboardShortcutsHelp(BuildContext context) {
             _shortcutRow('F2 / Shift+F6', 'Rename (in-place)'),
             _shortcutRow('F3', 'View file (full-screen)'),
             _shortcutRow('F4', 'Edit file (built-in)'),
-            _shortcutRow('Shift+F4', 'Open with system editor'),
+            _shortcutRow('Shift+F4', 'Choose editor (text, hex, system)'),
             _shortcutRow('F5', 'Copy with options…'),
             _shortcutRow('Ctrl+R', 'Refresh'),
             _shortcutRow('F6', 'Move with options…'),
@@ -118,7 +125,10 @@ void showKeyboardShortcutsHelp(BuildContext context) {
             // Navigation
             _shortcutRow('Alt+← / Alt+→', 'Back / Forward (history)'),
             _shortcutRow('Backspace', 'Navigate up / leave archive'),
-            _shortcutRow('Esc (in archive)', 'Exit archive'),
+            _shortcutRow(
+              'Esc (${ShortcutStrings(context).extra('archive')})',
+              'Exit archive',
+            ),
             _shortcutRow('Enter', 'Open folder / file'),
             _shortcutRow('Ctrl+Enter', 'Open item in the other panel'),
             _shortcutRow('Ctrl+← / Ctrl+→', 'Open item in left / right panel'),
@@ -127,10 +137,13 @@ void showKeyboardShortcutsHelp(BuildContext context) {
             _shortcutRow('Alt+F7', 'Search all files'),
             _shortcutRow('Ctrl+F', 'Filter files'),
             _shortcutRow(
-              'Type letters',
+              ShortcutStrings(context).keyLabel('type'),
               'Quick search / filter (see Settings)',
             ),
-            _shortcutRow('↑ / ↓ while searching', 'Previous / next match'),
+            _shortcutRow(
+              ShortcutStrings(context).keyLabel('arrows'),
+              'Previous / next match',
+            ),
             const Divider(),
             // Selection
             _shortcutRow('Ctrl+A', 'Select all'),
@@ -153,43 +166,58 @@ void showKeyboardShortcutsHelp(BuildContext context) {
             _shortcutRow('Ctrl+=', 'Sync opposite panel to here'),
             const Divider(),
             // Sort
-            _shortcutRow('Ctrl+F3', 'Sort by name'),
-            _shortcutRow('Ctrl+F4', 'Sort by extension'),
-            _shortcutRow('Ctrl+F5', 'Sort by date'),
-            _shortcutRow('Ctrl+F6', 'Sort by size'),
-            _shortcutRow('Ctrl+. / Ctrl+H', 'Toggle hidden files'),
-            _shortcutRow('Ctrl+B', 'Toggle bookmark for current folder'),
-            _shortcutRow('Ctrl+I / Alt+Enter', 'File properties'),
-            _shortcutRow('Shift+F10', 'Context menu'),
+            _shortcutRow('Ctrl+F3', ShortcutStrings(context).description(30)),
+            _shortcutRow('Ctrl+F4', ShortcutStrings(context).description(31)),
+            _shortcutRow('Ctrl+F5', ShortcutStrings(context).description(32)),
+            _shortcutRow('Ctrl+F6', ShortcutStrings(context).description(33)),
+            _shortcutRow(
+              'Ctrl+. / Ctrl+H',
+              ShortcutStrings(context).description(34),
+            ),
+            _shortcutRow('Ctrl+B', ShortcutStrings(context).description(35)),
+            _shortcutRow(
+              'Ctrl+I / Alt+Enter',
+              ShortcutStrings(context).description(36),
+            ),
+            _shortcutRow(
+              'Shift+F10',
+              ShortcutStrings(context).extra('contextMenu'),
+            ),
             const Divider(),
             // View / Tabs
-            _shortcutRow('Ctrl+1', 'Brief view mode'),
-            _shortcutRow('Ctrl+2', 'Full view mode'),
-            _shortcutRow('Ctrl+3', 'Tree view mode'),
-            _shortcutRow('Ctrl+T', 'New tab'),
-            _shortcutRow('Ctrl+W', 'Close tab'),
-            _shortcutRow('Ctrl+Tab', 'Next tab'),
-            _shortcutRow('Ctrl+Shift+Tab', 'Previous tab'),
-            _shortcutRow('Ctrl+Shift+P', 'Command palette'),
+            _shortcutRow('Ctrl+1', ShortcutStrings(context).description(37)),
+            _shortcutRow('Ctrl+2', ShortcutStrings(context).description(38)),
+            _shortcutRow('Ctrl+3', ShortcutStrings(context).description(39)),
+            _shortcutRow('Ctrl+T', ShortcutStrings(context).description(40)),
+            _shortcutRow('Ctrl+W', ShortcutStrings(context).description(41)),
+            _shortcutRow('Ctrl+Tab', ShortcutStrings(context).description(42)),
+            _shortcutRow(
+              'Ctrl+Shift+Tab',
+              ShortcutStrings(context).description(43),
+            ),
+            _shortcutRow(
+              'Ctrl+Shift+P',
+              ShortcutStrings(context).description(44),
+            ),
             const Divider(),
             // Transfer
-            _shortcutRow('Ctrl+U', 'Upload'),
-            _shortcutRow('Ctrl+D', 'Download'),
+            _shortcutRow('Ctrl+U', ShortcutStrings(context).description(45)),
+            _shortcutRow('Ctrl+D', ShortcutStrings(context).description(46)),
           ],
         ),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Close'),
+          child: Text(AppLocalizations.of(context)!.close),
         ),
       ],
     ),
   );
 }
 
-Widget _shortcutRow(String keys, String description) {
-  return Padding(
+Widget _shortcutRow(String keys, String description) => Builder(
+  builder: (context) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 4),
     child: Row(
       children: [
@@ -203,11 +231,13 @@ Widget _shortcutRow(String keys, String description) {
             ),
           ),
         ),
-        Expanded(child: Text(description)),
+        Expanded(
+          child: Text(ShortcutStrings(context).descriptionFor(description)),
+        ),
       ],
     ),
-  );
-}
+  ),
+);
 
 void uploadSelected(BuildContext context, WidgetRef ref) {
   final panel = ref.read(panelProvider(PanelSide.local));
@@ -271,9 +301,9 @@ void viewSelectedFile(BuildContext context, WidgetRef ref) {
   final activePanel = ref.read(activePanelProvider);
   final panel = ref.read(panelProvider(activePanel));
   // TC/DC view the file under the cursor, not the selection set.
-  final target =
-      panel.cursorItem ??
-      (panel.selection.isNotEmpty ? panel.selection.first : null);
+  final target = panel.selection.isNotEmpty
+      ? panel.selection.first
+      : panel.cursorItem;
   if (target == null || target.isFolder) return;
   // Full-screen DC-style viewer: text/ASCII/binary/hex/image/markdown/PDF/
   // media/font/CSV/office/archive with streaming hex for huge local files.
@@ -326,6 +356,17 @@ Future<void> _viewFile(
   }
 }
 
+/// Shift+F4: choose the text/code editor, hex editor or system editor.
+void chooseEditorForSelection(BuildContext context, WidgetRef ref) {
+  final activePanel = ref.read(activePanelProvider);
+  final panel = ref.read(panelProvider(activePanel));
+  final target =
+      panel.cursorItem ??
+      (panel.selection.isNotEmpty ? panel.selection.first : null);
+  if (target == null || target.isFolder) return;
+  unawaited(showEditorChooser(context, ref, target, activePanel));
+}
+
 /// F4: Open cursor item in the file editor.
 void editSelectedFile(BuildContext context, WidgetRef ref) {
   final activePanel = ref.read(activePanelProvider);
@@ -356,6 +397,12 @@ Future<void> _editFile(
       return;
     }
     await showFileEditorDialog(context, ref, target, side);
+  } catch (error) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not open editor: $error')));
+    }
   } finally {
     panel.restoreCursorAndFocus(target);
   }
@@ -439,12 +486,14 @@ void showReceivedFilesDialog(BuildContext context, List<String> files) {
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Received Files'),
+      title: Text(ScreenDialogStrings(context).text('received')),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Upload ${files.length} file(s) to Cloud?'),
+          Text(
+            ScreenDialogStrings(context).value('uploadConfirm', files.length),
+          ),
           const SizedBox(height: 8),
           ...files
               .take(5)
@@ -474,7 +523,7 @@ void showReceivedFilesDialog(BuildContext context, List<String> files) {
             // Will be wired when receive service is connected to Riverpod
             Navigator.pop(context);
           },
-          child: const Text('Upload'),
+          child: Text(AppLocalizations.of(context)!.upload),
         ),
       ],
     ),
@@ -495,12 +544,12 @@ void showGoToDialog(BuildContext context, WidgetRef ref) {
   showDialog(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: const Text('Go to Path'),
+      title: Text(ScreenDialogStrings(context).text('goPath')),
       content: TextField(
         controller: controller,
         autofocus: true,
-        decoration: const InputDecoration(
-          labelText: 'Path',
+        decoration: InputDecoration(
+          labelText: ScreenDialogStrings(context).text('path'),
           border: OutlineInputBorder(),
           prefixIcon: Icon(Icons.folder_open),
         ),
@@ -523,7 +572,7 @@ void showGoToDialog(BuildContext context, WidgetRef ref) {
               Navigator.pop(ctx);
             }
           },
-          child: const Text('Go'),
+          child: Text(ScreenDialogStrings(context).text('go')),
         ),
       ],
     ),
@@ -553,14 +602,14 @@ void _showUndoSnackBar(
       duration: const Duration(seconds: 4),
       action: canUndo
           ? SnackBarAction(
-              label: 'Undo',
+              label: ScreenDialogStrings(context).text('undo'),
               onPressed: () {
                 final undoCtx = _buildUndoCtx(ref, side);
                 historyNotifier.undo(last.id, undoCtx).then((result) {
                   if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(result.message),
+                      content: Text(UndoPresentation(context).result(result)),
                       duration: const Duration(seconds: 3),
                       backgroundColor: result.success
                           ? null

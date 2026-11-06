@@ -8,6 +8,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../l10n/app_localizations.dart';
+import '../l10n/misc_ui_strings.dart';
 import '../utils/app_version.dart';
 
 class AboutAppDialog extends StatefulWidget {
@@ -43,6 +44,8 @@ class _AboutAppDialogState extends State<AboutAppDialog> {
     version: _packageInfo?.version ?? _fallbackVersion,
     buildNumber: _packageInfo?.buildNumber,
     gitHash: _gitHash,
+    versionLabel: MiscUiStrings(context).text('version'),
+    buildLabel: MiscUiStrings(context).text('build'),
   );
 
   Future<void> _launchURL(String urlString) async {

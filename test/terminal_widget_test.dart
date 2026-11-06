@@ -389,6 +389,8 @@ class _Connection implements TerminalConnection {
   final input = <String>[];
   int closeCount = 0;
   @override
+  bool get isSandbox => false;
+  @override
   Stream<String> get output => controller.stream;
   @override
   Future<int?> get exitCode async => null;

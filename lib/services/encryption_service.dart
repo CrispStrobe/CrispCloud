@@ -5,6 +5,21 @@ import 'dart:math';
 import 'package:bip39/bip39.dart' as bip39;
 import 'package:pointycastle/export.dart';
 
+/// Structured validation failures retain FormatException compatibility while
+/// allowing the UI to render app-authored messages in the selected locale.
+enum EncryptionFormatError {
+  dataTooShort, keyLength, invalidHex, invalidMnemonic,
+  verificationFailed, verificationMnemonic, hexLength,
+}
+
+class EncryptionFormatException extends FormatException {
+  final EncryptionFormatError code;
+  final Map<String, Object> arguments;
+
+  const EncryptionFormatException(super.message, this.code,
+      [this.arguments = const {}]);
+}
+
 /// Standalone, stateless encryption utility for client-side file encryption.
 /// Uses AES-256-GCM with PBKDF2 key derivation.
 class EncryptionService {
@@ -57,7 +72,7 @@ class EncryptionService {
   static Uint8List decrypt(Uint8List data, Uint8List key) {
     // Minimum: 12 (nonce) + 0 (plaintext) + 16 (tag) = 28 bytes
     if (data.length < 28) {
-      throw const FormatException('Data too short for AES-GCM');
+      throw const EncryptionFormatException('Data too short for AES-GCM', EncryptionFormatError.dataTooShort);
     }
 
     final nonce = data.sublist(0, 12);
@@ -103,11 +118,12 @@ class EncryptionService {
   static Uint8List importKeyFromHex(String hex) {
     final clean = hex.replaceAll(RegExp(r'\s+'), '').toLowerCase();
     if (clean.length != 64) {
-      throw FormatException(
-          'Key must be 64 hex characters (32 bytes), got ${clean.length}');
+      throw EncryptionFormatException(
+          'Key must be 64 hex characters (32 bytes), got ${clean.length}',
+          EncryptionFormatError.keyLength, {'count': clean.length});
     }
     if (!RegExp(r'^[0-9a-f]+$').hasMatch(clean)) {
-      throw const FormatException('Key contains invalid hex characters');
+      throw const EncryptionFormatException('Key contains invalid hex characters', EncryptionFormatError.invalidHex);
     }
     final bytes = Uint8List(32);
     for (var i = 0; i < 32; i++) {
@@ -137,7 +153,7 @@ class EncryptionService {
   static Uint8List recoverKeyFromMnemonic(String mnemonic) {
     final clean = mnemonic.trim().toLowerCase();
     if (!bip39.validateMnemonic(clean)) {
-      throw const FormatException('Invalid BIP39 mnemonic phrase');
+      throw const EncryptionFormatException('Invalid BIP39 mnemonic phrase', EncryptionFormatError.invalidMnemonic);
     }
     final entropyHex = bip39.mnemonicToEntropy(clean);
     return importKeyFromHex(entropyHex);
@@ -179,12 +195,12 @@ class EncryptionService {
         final decrypted = decrypt(verifyEnc, key);
         final text = utf8.decode(decrypted);
         if (text != 'CrispCloud-verify') {
-          throw const FormatException('Key verification failed');
+          throw const EncryptionFormatException('Key verification failed', EncryptionFormatError.verificationFailed);
         }
       } catch (e) {
         if (e is FormatException) rethrow;
-        throw const FormatException(
-            'Key verification failed — mnemonic may be incorrect');
+        throw const EncryptionFormatException(
+            'Key verification failed — mnemonic may be incorrect', EncryptionFormatError.verificationMnemonic);
       }
     }
 
@@ -195,7 +211,7 @@ class EncryptionService {
   static Uint8List _hexToBytes(String hex) {
     final clean = hex.replaceAll(RegExp(r'\s+'), '').toLowerCase();
     if (clean.length % 2 != 0) {
-      throw FormatException('Hex string must have even length, got ${clean.length}');
+      throw EncryptionFormatException('Hex string must have even length, got ${clean.length}', EncryptionFormatError.hexLength, {'count': clean.length});
     }
     final bytes = Uint8List(clean.length ~/ 2);
     for (var i = 0; i < bytes.length; i++) {

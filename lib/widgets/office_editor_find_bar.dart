@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:quds_office_editor/quds_office_editor.dart';
 
 import '../l10n/office_editor_strings.dart';
+import '../l10n/office_replace_status_strings.dart';
 
 class OfficeFindBar extends StatefulWidget {
   const OfficeFindBar({
@@ -109,7 +110,7 @@ class _OfficeFindBarState extends State<OfficeFindBar> {
     ScaffoldMessenger.maybeOf(context)?.showSnackBar(
       SnackBar(
         content: Text(
-          '${context.tr('Replaced')} $count ${context.tr('occurrence(s).')}',
+          officeReplaceStatus(Localizations.localeOf(context), count),
         ),
       ),
     );

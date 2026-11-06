@@ -8,6 +8,8 @@ analyzer:
     - packages/filen_client/**
     # Upstream PTY runtime keeps its own analysis and native lifecycle tests.
     - packages/flutter_pty2/**
+    # Pinned upstream text editor style; host lifecycle regressions run in CI.
+    - packages/re_editor/**
     # The maintained image editor fork has its own analysis/test workflow.
     - packages/pro_image_editor/**
     # Pinned native video engine; host adapters and tests run in media-editor CI.

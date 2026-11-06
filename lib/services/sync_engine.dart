@@ -74,6 +74,20 @@ enum SyncActionType {
 }
 
 /// Result of a sync run.
+/// Retains the original error alongside the legacy string representation.
+class SyncFailureDetail {
+  const SyncFailureDetail({
+    required this.location,
+    this.cause,
+    this.providerUnavailable = false,
+    this.provider,
+  });
+  final String location;
+  final Object? cause;
+  final bool providerUnavailable;
+  final String? provider;
+}
+
 class SyncResult {
   final int uploaded;
   final int downloaded;
@@ -86,6 +100,7 @@ class SyncResult {
   final int replayed;
   final List<String> errorMessages;
   final bool cancelled;
+  final List<SyncFailureDetail> failureDetails;
 
   const SyncResult({
     this.uploaded = 0,
@@ -97,6 +112,7 @@ class SyncResult {
     this.replayed = 0,
     this.errorMessages = const [],
     this.cancelled = false,
+    this.failureDetails = const [],
   });
 
   SyncResult operator +(SyncResult other) => SyncResult(
@@ -109,6 +125,7 @@ class SyncResult {
     replayed: replayed + other.replayed,
     errorMessages: [...errorMessages, ...other.errorMessages],
     cancelled: cancelled || other.cancelled,
+    failureDetails: [...failureDetails, ...other.failureDetails],
   );
 
   bool get hasChanges =>
@@ -1292,6 +1309,9 @@ class SyncEngine {
       return SyncResult(
         errors: 1,
         errorMessages: ['${action.relativePath}: $error'],
+        failureDetails: [
+          SyncFailureDetail(location: action.relativePath, cause: error),
+        ],
       );
     }
   }

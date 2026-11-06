@@ -2,6 +2,7 @@
 
 import 'dart:io';
 import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:crisp_cloud/services/checksum_service.dart';
 
@@ -32,7 +33,9 @@ void main() {
       final result = ChecksumService.sha256Hash(Uint8List(0));
       expect(
         result,
-        equals('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'),
+        equals(
+          'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+        ),
       );
     });
 
@@ -41,7 +44,9 @@ void main() {
       final result = ChecksumService.sha256Hash(data);
       expect(
         result,
-        equals('ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad'),
+        equals(
+          'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad',
+        ),
       );
     });
 
@@ -52,7 +57,9 @@ void main() {
       final result = ChecksumService.sha256Hash(data);
       expect(
         result,
-        equals('d7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592'),
+        equals(
+          'd7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592',
+        ),
       );
     });
 
@@ -120,6 +127,20 @@ void main() {
         expect(results.length, 1);
         expect(results.first.ok, isFalse);
       });
+
+      test(
+        'missing file retains its failure rather than a fake checksum',
+        () async {
+          final list = File('${tempDir.path}/missing.md5');
+          await list.writeAsString(
+            'd41d8cd98f00b204e9800998ecf8427e  missing.txt\n',
+          );
+          final result = (await ChecksumService.verifyChecksumFile(list.path))
+              .single;
+          expect(result.ok, isFalse);
+          expect(result.error, isA<FileSystemException>());
+        },
+      );
 
       test('generateSha256File creates .sha256 sidecar file', () async {
         final testFile = File('${tempDir.path}/sha256test.txt');

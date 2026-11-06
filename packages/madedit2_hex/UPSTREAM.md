@@ -2,7 +2,7 @@
 
 Maintained fork: https://github.com/CrispStrobe/madedit2
 Fork branch: `feature/crispcloud-hex-package`
-Pinned package revision: `a2e0fe3e5d63a7b769ec190f6fb92a6949004fb6`
+Pinned package revision: `50d033cc70d9121819c890fe587f8b3dc4c82311`
 Package path in the fork: `packages/madedit2_hex`
 
 Upstream: https://github.com/madedit/madedit2
@@ -33,7 +33,10 @@ copy the reviewed package changes here and update the pin/fingerprints together.
 Keep host-specific staging, account identity, conflict checks and UI routing in
 CrispCloud. Fork and application main branches remain unchanged by this work.
 
+The pinned revision includes a 64 MiB shared undo/redo byte budget, navigation
+cancellation for stale search results, and horizontal caret reveal. These fixes
+were committed to the fork before copying the exact package source here.
+
 Validation is separate from provenance: matching source fingerprints does not
-mean tests passed. The preceding CrispCloud run passed package and native
-contracts on Linux and Windows, but three browser host tests failed and the
-macOS job was cancelled. Those are still release gates; consult current CI.
+mean tests passed. See `docs/hex-editor-validation.md` in CrispCloud for the
+executed package and host results and remaining platform acceptance checks.

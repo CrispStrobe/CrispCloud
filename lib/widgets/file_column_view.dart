@@ -62,10 +62,12 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
     panel.navigateInto(folder);
 
     // We'll add a placeholder column; the actual files will come from the panel
-    _columns.add(_ColumnData(
-      parentFolder: folder,
-      files: null, // Will be populated on next build via panel state
-    ));
+    _columns.add(
+      _ColumnData(
+        parentFolder: folder,
+        files: null, // Will be populated on next build via panel state
+      ),
+    );
 
     setState(() {});
 
@@ -90,7 +92,8 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
     // Select the file
     final panel = ref.read(panelProvider(widget.side));
     final shiftPressed = HardwareKeyboard.instance.isShiftPressed;
-    final ctrlPressed = HardwareKeyboard.instance.isControlPressed ||
+    final ctrlPressed =
+        HardwareKeyboard.instance.isControlPressed ||
         HardwareKeyboard.instance.isMetaPressed;
     panel.toggleSelection(file, shiftKey: shiftPressed, ctrlKey: ctrlPressed);
 
@@ -110,13 +113,14 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
     return SingleChildScrollView(
       controller: _horizontalScroll,
       scrollDirection: Axis.horizontal,
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildColumn(context, currentFiles, panel, 0),
-          ],
-        ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            width: 220,
+            child: _buildColumn(context, currentFiles, panel, 0),
+          ),
+        ],
       ),
     );
   }
@@ -131,7 +135,6 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
     const columnWidth = 220.0;
 
     return Container(
-      width: columnWidth,
       decoration: BoxDecoration(
         border: Border(
           right: BorderSide(
@@ -140,81 +143,90 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
           ),
         ),
       ),
-      child: Builder(builder: (ctx) {
-        final isMobile = Theme.of(ctx).platform == TargetPlatform.android ||
-            Theme.of(ctx).platform == TargetPlatform.iOS;
-        return ListView.builder(
-        itemCount: files.length,
-        itemExtent: isMobile ? 48.0 : 32.0,
-        itemBuilder: (context, index) {
-          final file = files[index];
-          final isSelected = panel.isSelected(file);
-          final isCursor = panel.cursorItem == file;
+      child: Builder(
+        builder: (ctx) {
+          final isMobile =
+              Theme.of(ctx).platform == TargetPlatform.android ||
+              Theme.of(ctx).platform == TargetPlatform.iOS;
+          return ListView.builder(
+            itemCount: files.length,
+            itemExtent: isMobile ? 48.0 : 32.0,
+            itemBuilder: (context, index) {
+              final file = files[index];
+              final isSelected = panel.isSelected(file);
+              final isCursor = panel.cursorItem == file;
 
-          return GestureDetector(
-            onSecondaryTapDown: (details) => showFileContextMenu(
-                context, ref, widget.side, file, details.globalPosition),
-            child: InkWell(
-              onTap: () {
-                if (file.isFolder) {
-                  _onFolderTap(file, columnIndex);
-                } else {
-                  _onFileTap(file, columnIndex);
-                }
-              },
-              onDoubleTap: () => panel.navigateInto(file),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                color: isSelected
-                    ? theme.colorScheme.primaryContainer.withValues(alpha: 0.5)
-                    : isCursor
+              return GestureDetector(
+                onSecondaryTapDown: (details) => showFileContextMenu(
+                  context,
+                  ref,
+                  widget.side,
+                  file,
+                  details.globalPosition,
+                ),
+                child: InkWell(
+                  onTap: () {
+                    if (file.isFolder) {
+                      _onFolderTap(file, columnIndex);
+                    } else {
+                      _onFileTap(file, columnIndex);
+                    }
+                  },
+                  onDoubleTap: () => panel.navigateInto(file),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    color: isSelected
+                        ? theme.colorScheme.primaryContainer.withValues(
+                            alpha: 0.5,
+                          )
+                        : isCursor
                         ? theme.colorScheme.primary.withValues(alpha: 0.16)
                         : null,
-                child: Row(
-                  children: [
-                    Icon(
-                      file.isFolder
-                          ? Icons.folder
-                          : getFileIcon(file.name),
-                      size: 16,
-                      color: file.isFolder
-                          ? Colors.amber
-                          : theme.colorScheme.onSurfaceVariant,
-                    ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        file.name,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight:
-                              isSelected ? FontWeight.w600 : FontWeight.normal,
+                    child: Row(
+                      children: [
+                        Icon(
+                          file.isFolder ? Icons.folder : getFileIcon(file.name),
+                          size: 16,
+                          color: file.isFolder
+                              ? Colors.amber
+                              : theme.colorScheme.onSurfaceVariant,
                         ),
-                      ),
-                    ),
-                    if (!file.isFolder && file.size != null)
-                      Text(
-                        formatBytes(file.size!),
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: theme.colorScheme.onSurfaceVariant,
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            file.name,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
+                            ),
+                          ),
                         ),
-                      ),
-                    if (file.isFolder)
-                      Icon(
-                        Icons.chevron_right,
-                        size: 14,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                  ],
+                        if (!file.isFolder && file.size != null)
+                          Text(
+                            formatBytes(file.size!),
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        if (file.isFolder)
+                          Icon(
+                            Icons.chevron_right,
+                            size: 14,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-            ),
+              );
+            },
           );
         },
-      );
-      }),
+      ),
     );
   }
 }

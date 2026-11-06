@@ -1,10 +1,12 @@
 // lib/widgets/duplicate_finder_dialog.dart
 //
-// Scans files in the current panel for duplicates by size + name pattern.
-// For local files, computes MD5 hashes to confirm true duplicates.
+// Groups same-size candidates in the current panel, then verifies contents.
+// Streams SHA-256 hashes for local and cloud candidates to verify duplicates.
 
 import 'package:flutter/material.dart';
+
 import 'file_delete_dialog.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/file_item.dart';
@@ -14,6 +16,7 @@ import '../services/file_operation_backend.dart';
 import '../services/duplicate_finder_service.dart';
 import '../utils/formatters.dart';
 import '../l10n/app_localizations.dart';
+import '../l10n/duplicate_finder_strings.dart';
 
 void showDuplicateFinderDialog(BuildContext context, WidgetRef ref) {
   showDialog(context: context, builder: (_) => const _DuplicateFinderDialog());
@@ -102,18 +105,27 @@ class _DuplicateFinderDialogState
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete verified duplicate?'),
+        title: Text(DuplicateFinderStrings(context).text('deleteVerified')),
         content: Text(
-          'Delete ${file.path ?? file.name}? Another verified copy will be retained.',
+          DuplicateFinderStrings(context)
+              .text('retainCopy', {'path': file.path ?? file.name}),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(
+              (AppLocalizations.of(context) ??
+                      lookupAppLocalizations(const Locale('en')))
+                  .cancel,
+            ),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
+            child: Text(
+              (AppLocalizations.of(context) ??
+                      lookupAppLocalizations(const Locale('en')))
+                  .delete,
+            ),
           ),
         ],
       ),
@@ -130,7 +142,7 @@ class _DuplicateFinderDialogState
       (copies) => copies.contains(file) && copies.length > 1,
     )) {
       setState(
-        () => _errors = ['The files changed. Scan again before deleting.'],
+        () => _errors = [DuplicateFinderStrings(context).text('filesChanged')],
       );
       return;
     }
@@ -141,6 +153,7 @@ class _DuplicateFinderDialogState
 
   @override
   Widget build(BuildContext context) {
+    final strings = DuplicateFinderStrings(context);
     final totalDuplicates = _duplicateGroups.fold<int>(
       0,
       (s, g) => s + g.length - 1,
@@ -151,11 +164,11 @@ class _DuplicateFinderDialogState
     });
 
     return AlertDialog(
-      title: const Row(
+      title: Row(
         children: [
-          Icon(Icons.find_replace, size: 20),
-          SizedBox(width: 8),
-          Text('Duplicate Finder'),
+          const Icon(Icons.find_replace, size: 20),
+          const SizedBox(width: 8),
+          Text(strings.text('finder')),
         ],
       ),
       content: SizedBox(
@@ -170,7 +183,10 @@ class _DuplicateFinderDialogState
               ),
               const SizedBox(height: 8),
               Text(
-                'Scanning... $_scannedCount / $_totalCount files',
+                strings.text('scanning', {
+                  'done': _scannedCount,
+                  'total': _totalCount,
+                }),
                 style: const TextStyle(fontSize: 12),
               ),
             ] else if (_done) ...[
@@ -198,9 +214,13 @@ class _DuplicateFinderDialogState
                       child: Text(
                         _duplicateGroups.isEmpty
                             ? (_cancelled
-                                  ? 'Scan cancelled.'
-                                  : 'No verified duplicates found.')
-                            : '$totalDuplicates duplicate files in ${_duplicateGroups.length} groups (${formatBytes(wastedBytes)} duplicate content)',
+                                  ? strings.text('cancelled')
+                                  : strings.text('verifiedNone'))
+                            : strings.text('verifiedSummary', {
+                                'count': totalDuplicates,
+                                'groups': _duplicateGroups.length,
+                                'size': formatBytes(wastedBytes),
+                              }),
                         style: const TextStyle(fontSize: 12),
                       ),
                     ),
@@ -209,14 +229,16 @@ class _DuplicateFinderDialogState
               ),
             ] else ...[
               Text(
-                'Compare file contents using SHA-256. Cloud candidates are downloaded '
-                'for verification. Only verified matches are listed.',
+                strings.text('verification'),
                 style: const TextStyle(fontSize: 12),
               ),
             ],
             if (_errors.isNotEmpty)
               Text(
-                '${_errors.length} items could not be verified. ${_errors.first}',
+                strings.text('unverified', {
+                  'count': _errors.length,
+                  'error': _errors.first,
+                }),
                 maxLines: 3,
                 style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
@@ -257,7 +279,10 @@ class _DuplicateFinderDialogState
                               style: const TextStyle(fontSize: 13),
                             ),
                             subtitle: Text(
-                              '${group.length} copies • ${formatBytes(group.first.size ?? 0)} each',
+                              strings.text('copies', {
+                                'count': group.length,
+                                'size': formatBytes(group.first.size ?? 0),
+                              }),
                               style: const TextStyle(fontSize: 11),
                             ),
                             children: group
@@ -286,7 +311,7 @@ class _DuplicateFinderDialogState
                                         size: 16,
                                         color: Colors.red,
                                       ),
-                                      tooltip: 'Delete this copy',
+                                      tooltip: strings.text('delete'),
                                       onPressed:
                                           group.length < 2 ||
                                               _origin?.isCurrent != true
@@ -312,12 +337,12 @@ class _DuplicateFinderDialogState
         if (_scanning)
           TextButton(
             onPressed: () => setState(() => _cancelled = true),
-            child: const Text('Cancel scan'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
         if (!_scanning)
           ElevatedButton.icon(
             icon: const Icon(Icons.search, size: 16),
-            label: Text(_done ? 'Scan Again' : 'Scan'),
+            label: Text(strings.text(_done ? 'scanAgain' : 'scan')),
             onPressed: _scan,
           ),
       ],

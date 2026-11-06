@@ -137,6 +137,7 @@ class MultiCloudService {
     required String targetPath,
     required List<FileItem> files,
     void Function(String fileName, int current, int total)? onFileProgress,
+    void Function(OperationProgress operation)? onCompleted,
   }) async {
     _log.info(
       'Cloud-to-cloud transfer: ${files.length} files '
@@ -160,6 +161,12 @@ class MultiCloudService {
 
     int completedBytes = 0;
     int tasksFinished = 0;
+
+    if (files.isEmpty) {
+      operation.complete();
+      onCompleted?.call(operation);
+      return operation;
+    }
 
     for (int i = 0; i < files.length; i++) {
       final file = files[i];
@@ -225,11 +232,18 @@ class MultiCloudService {
           } catch (e, st) {
             _log.error('Transfer failed for ${file.name}', e, st);
             fileProgress.error = e.toString();
+            fileProgress.errorCause = e;
           }
-
+        },
+        onDone: (error) {
+          if (error != null && !operation.isCancelled) {
+            fileProgress.error = error.toString();
+            fileProgress.errorCause = error;
+          }
           tasksFinished++;
           if (tasksFinished == files.length) {
             _finalizeBatch(operation, fileProgresses);
+            onCompleted?.call(operation);
           }
         },
       ));
@@ -240,12 +254,16 @@ class MultiCloudService {
 
   void _finalizeBatch(OperationProgress operation, List<FileProgress> fileProgresses) {
     if (operation.isCancelled) {
-      operation.fail('Cancelled by user');
+      operation.fail('Cancelled by user', code: TransferErrorCode.cancelled);
       return;
     }
     final failed = fileProgresses.where((f) => f.error != null).length;
     if (failed == fileProgresses.length) {
-      operation.fail('All files failed');
+      operation.fail('All files failed', code: TransferErrorCode.allFilesFailed);
+    } else if (failed > 0) {
+      operation.fail('$failed of ${fileProgresses.length} files failed',
+          code: TransferErrorCode.someFilesFailed,
+          arguments: {'failed': failed, 'total': fileProgresses.length});
     } else {
       operation.complete();
     }

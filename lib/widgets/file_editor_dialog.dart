@@ -14,6 +14,9 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+
+import '../l10n/provider_operation_strings.dart';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
@@ -23,15 +26,18 @@ import '../l10n/app_localizations.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
-import '../l10n/image_editor_strings.dart';
+import '../l10n/file_editor_strings.dart';
+import '../l10n/code_document_ui_strings.dart';
 import '../l10n/media_editor_strings.dart';
 import '../services/media_capabilities.dart';
 import '../services/code_editor_menu.dart';
 import '../services/captured_file_target.dart';
 import '../services/editor_document.dart';
 import '../services/editor_document_history.dart';
+import '../services/editor_kind.dart';
 import 'hex_editor_dialog.dart';
 import '../services/editor_highlighting.dart';
+import '../services/file_operation_backend.dart';
 import '../services/image_edit_session.dart' show isImageEditorFileName;
 import '../services/log_service.dart';
 import '../services/save_coordinator.dart';
@@ -49,53 +55,74 @@ Future<void> showFileEditorDialog(
   BuildContext context,
   WidgetRef ref,
   FileItem file,
-  PanelSide side,
-) async {
+  PanelSide side, {
+  bool forceText = false,
+}) async {
   if (file.isFolder) return;
   try {
-    if (isImageEditorFileName(file.name)) {
-      await showImageEditorDialog(context, ref, file, side);
-      return;
-    }
-    if (isPdfFileName(file.name)) {
-      await showPdfEditorDialog(context, ref, file, side);
-      return;
-    }
-    final mediaKind = mediaKindForFileName(file.name);
-    if (mediaKind != null) {
-      if (MediaCapabilities.canEdit(mediaKind)) {
-        await showMediaEditorDialog(context, ref, file, side);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              context.mediaTr(
-                'This media format cannot be edited on this platform.',
+    if (!forceText) {
+      if (isImageEditorFileName(file.name)) {
+        await showImageEditorDialog(context, ref, file, side);
+        return;
+      }
+      if (isPdfFileName(file.name)) {
+        await showPdfEditorDialog(context, ref, file, side);
+        return;
+      }
+      final mediaKind = mediaKindForFileName(file.name);
+      if (mediaKind != null) {
+        if (MediaCapabilities.canEdit(mediaKind)) {
+          await showMediaEditorDialog(context, ref, file, side);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                context.mediaTr(
+                  'This media format cannot be edited on this platform.',
+                ),
               ),
             ),
-          ),
-        );
+          );
+        }
+        return;
       }
-      return;
+      // Office documents get the rich Word/Sheet/Slides editor instead of the
+      // plain-text editor.
+      if (isOfficeFileName(file.name)) {
+        await showOfficeEditorDialog(context, ref, file, side);
+        return;
+      }
+      // F4 and the native menu can be invoked even when the viewer's Edit
+      // button is disabled. Never decode an unsupported binary file as text.
+      if (!isTextEditableName(file.name)) {
+        await showTextHexEditorSession(
+          context,
+          ref,
+          file,
+          side,
+          initialEditor: EditorKind.hex,
+        );
+        return;
+      }
     }
-    // Office documents get the rich Word/Sheet/Slides editor instead of the
-    // plain-text editor.
-    if (isOfficeFileName(file.name)) {
-      await showOfficeEditorDialog(context, ref, file, side);
-      return;
-    }
-    // F4 and the native menu can be invoked even when the viewer's Edit button
-    // is disabled. Never decode an unsupported binary file as editable text.
-    if (!isTextEditableName(file.name)) {
-      await showHexEditorDialog(context, ref, file, side);
-      return;
-    }
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        fullscreenDialog: true,
-        builder: (_) => _FileEditorPage(file: file, side: side),
-      ),
+    await showTextHexEditorSession(
+      context,
+      ref,
+      file,
+      side,
+      initialEditor: EditorKind.text,
     );
+  } catch (error) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            FileEditorStrings(context)
+                .value('loadError', localizedProviderError(context, error)),
+          ),
+        ),
+      );
+    }
   } finally {
     // Returning from any editor should land back on the same file with the
     // panel ready for the next F3/F4, including when opened from a context
@@ -108,11 +135,94 @@ Future<void> showFileEditorDialog(
   }
 }
 
+/// Keep the verified storage and path for the whole text/hex editor chain.
+///
+/// A panel refresh replaces its exact row identities, and saving can replace a
+/// remote file's object ID. Switching editors therefore reopens the captured
+/// path through the same backend, never recaptures a row from the current pane.
+Future<void> showTextHexEditorSession(
+  BuildContext context,
+  WidgetRef ref,
+  FileItem file,
+  PanelSide side, {
+  required EditorKind initialEditor,
+}) async {
+  if (initialEditor == EditorKind.system) {
+    throw ArgumentError.value(initialEditor, 'initialEditor');
+  }
+  final panel = ref.read(panelProvider(side));
+  final origin = panel.originForOperation(file);
+  if (origin == null || !origin.isCurrent) {
+    throw const FileTargetConflict(
+      'Refresh or reopen the original file before editing. Its storage could not be verified.',
+    );
+  }
+  final target = panel.captureFileTarget(file);
+  final backend = fileOperationBackend(
+    source: origin.source,
+    local: ref.read(localFileServiceProvider),
+    isCurrent: () => origin.isCurrent,
+  );
+  final identity = backend.identity;
+  final path = target.reference.path;
+  final navigator = Navigator.of(context);
+  var currentFile = file.copyWith(path: path);
+  var editor = initialEditor;
+
+  void checkStorage() {
+    if (!origin.isCurrent || backend.identity != identity) {
+      throw const FileTargetConflict(
+        'The original storage account changed. Reopen this file.',
+      );
+    }
+  }
+
+  try {
+    while (context.mounted) {
+      checkStorage();
+      final openedFile = currentFile;
+      final openedEditor = editor;
+      final next = await navigator.push<EditorKind>(
+        MaterialPageRoute(
+          fullscreenDialog: true,
+          builder: (_) => openedEditor == EditorKind.hex
+              ? HexFileEditorPage(file: openedFile, backend: backend)
+              : _FileEditorPage(file: openedFile, side: side, target: target),
+        ),
+      );
+      if (next == null || next == EditorKind.system || !context.mounted) break;
+      checkStorage();
+      final fresh = await backend.stat(path);
+      checkStorage();
+      if (fresh == null || fresh.isFolder || fresh.isSymlink == true) {
+        throw const FileTargetConflict(
+          'The original file is no longer available. Reopen it before editing.',
+        );
+      }
+      currentFile = fresh.copyWith(path: path);
+      editor = next;
+    }
+  } finally {
+    // Invalidate previews and refresh once the complete chain has closed.
+    try {
+      await ref.read(fileCacheProvider).remove(path, origin.storageId);
+    } catch (_) {}
+    try {
+      await panel.refresh();
+    } catch (_) {}
+  }
+}
+
 class _FileEditorPage extends ConsumerStatefulWidget {
   final FileItem file;
   final PanelSide side;
+  final CapturedFileTarget target;
 
-  const _FileEditorPage({required this.file, required this.side});
+  const _FileEditorPage({
+    required this.file,
+    required this.side,
+    required this.target,
+  });
 
   @override
   ConsumerState<_FileEditorPage> createState() => _FileEditorPageState();
@@ -133,7 +243,6 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
   final _documentHistory = EditorDocumentHistory();
   Uint8List? _originalBytes;
   Timer? _autoSaveTimer;
-  CapturedFileTarget? _target;
   String? _language;
   String? _error;
   CodeLines? _lastCodeLines;
@@ -143,6 +252,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
   bool _conflictDetected = false;
   bool _highlightEnabled = true;
   bool _wordWrap = false;
+  bool _closing = false, _canPop = false;
   int _cursorLine = 1;
   int _cursorColumn = 1;
   int _lineCount = 1;
@@ -220,24 +330,26 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
       hasSelection,
       !_loading,
       _language != null,
+      _closing,
     ].join('|');
     if (signature == _menuSignature && _menuActions != null) return;
     _menuSignature = signature;
     final actions = CodeEditorMenuActions(
       perform: _performMenuAction,
-      canSave: _isModified && !_loading,
+      canSave: _isModified && !_loading && !_closing,
       canUndo: _controller.canUndo,
       canRedo: _controller.canRedo,
       hasSelection: hasSelection,
-      canReload: !_loading,
+      canReload: !_loading && !_closing,
       canHighlight: _language != null,
-      busy: _loading,
+      busy: _loading || _closing,
     );
     _menuActions = actions;
     container.read(codeEditorMenuProvider.notifier).state = actions;
   }
 
   void _performMenuAction(CodeEditorMenuAction action) {
+    if (_closing) return;
     switch (action) {
       case CodeEditorMenuAction.save:
         unawaited(_saveFile());
@@ -284,11 +396,72 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     }
   }
 
-  Future<void> _closeEditor() async {
-    if (await _confirmDiscard()) {
+  Future<void> _closeEditor() => _leaveEditor();
+
+  Future<void> _switchToHexEditor() => _leaveEditor(EditorKind.hex);
+
+  Future<void> _leaveEditor([EditorKind? next]) async {
+    if (_closing || (next != null && _loading)) return;
+    // Stop input before waiting for saves or a confirmation. A late file load
+    // must not reopen the keyboard while this route is leaving.
+    _focusNode.canRequestFocus = false;
+    _focusNode.unfocus();
+    setState(() => _closing = true);
+    _autoSaveTimer?.cancel();
+    _publishMenu();
+    try {
+      await _saveState.idle;
       if (!mounted) return;
-      Navigator.of(context).pop();
+      final confirmed = next == null
+          ? await _confirmDiscard()
+          : await _confirmSwitch();
+      if (!confirmed || !mounted) return;
+      setState(() => _canPop = true);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) Navigator.of(context).pop(next);
+      });
+    } finally {
+      if (mounted && !_canPop) {
+        _focusNode.canRequestFocus = true;
+        setState(() => _closing = false);
+        _publishMenu();
+        if (!_loading) _focusNode.requestFocus();
+        if (_isModified) _scheduleAutoSave();
+      }
     }
+  }
+
+  Future<bool> _confirmSwitch() async {
+    if (!_isModified) return true;
+    final choice = await showDialog<_SwitchChoice>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Save changes before switching editors?'),
+        content: const Text(
+          'The hex editor reads the saved file. You can save first, discard '
+          'your edits, or keep editing.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, _SwitchChoice.discard),
+            child: Text(AppLocalizations.of(context)!.discard),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, _SwitchChoice.save),
+            child: const Text('Save and switch'),
+          ),
+        ],
+      ),
+    );
+    if (choice == _SwitchChoice.save) {
+      await _saveFile();
+      return !_isModified;
+    }
+    return choice == _SwitchChoice.discard;
   }
 
   Future<void> _reloadFromDisk() async {
@@ -348,6 +521,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
 
   void _scheduleAutoSave() {
     _autoSaveTimer?.cancel();
+    if (_closing) return;
     _autoSaveTimer = Timer(_autoSaveDelay, () {
       if (!mounted) return;
       if (_saveState.isDirty && !_saveState.isSaving) {
@@ -357,6 +531,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
   }
 
   Future<void> _loadFile({EditorEncoding? encodingOverride}) async {
+    if (_closing) return;
     _log.debug(
       'loadFile: ${widget.file.name} side=${widget.side.name} web=$kIsWeb',
     );
@@ -366,7 +541,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     // dirty based on the previous document's revision.
     if (_saveState.isSaving) {
       await _saveState.idle;
-      if (!mounted) return;
+      if (!mounted || _closing) return;
     }
     setState(() {
       _loading = true;
@@ -374,12 +549,9 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
       _document = null;
     });
     try {
-      final target = _target ??= ref
-          .read(panelProvider(widget.side))
-          .captureFileTarget(widget.file);
-      final bytes = await target.load();
+      final bytes = await widget.target.load();
 
-      if (!mounted) return;
+      if (!mounted || _canPop) return;
 
       final document = EditorDocument.decode(bytes, encoding: encodingOverride);
       _applyDocument(document, bytes);
@@ -389,12 +561,13 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
         _conflictDetected = false;
       });
       _publishMenu();
-      _focusNode.requestFocus();
+      if (!_closing) _focusNode.requestFocus();
     } catch (e) {
       _log.warn('operation failed', e);
-      if (!mounted) return;
+      if (!mounted || _canPop) return;
       setState(() {
-        _error = 'Failed to load file: $e';
+        _error = FileEditorStrings(context)
+            .value('loadError', localizedProviderError(context, e));
         _loading = false;
       });
       _publishMenu();
@@ -498,7 +671,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Saved ${widget.file.name} — newer edits are still unsaved.',
+              CodeDocumentUiStrings(context).value('newer', widget.file.name),
             ),
           ),
         );
@@ -509,17 +682,19 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     setState(() {
       _conflictDetected = false;
     });
-    ref.read(panelProvider(widget.side)).refreshFiles();
     if (manual) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Saved ${widget.file.name}')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            FileEditorStrings(context).value('saved', widget.file.name),
+          ),
+        ),
+      );
     }
   }
 
   Future<void> _uploadBytes(Uint8List bytes) async {
-    final target = _target;
-    if (target == null) throw StateError('Reopen this file before saving.');
-    final result = await target.save(bytes);
+    final result = await widget.target.save(bytes);
     if (result == FileWriteOutcome.downloadedCopy) {
       throw const FileTargetConflict(
         'A copy was downloaded. The original file is unchanged and your edits remain unsaved.',
@@ -535,9 +710,12 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     if (error is EditorEncodingException) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(error.message),
+          content: Text(
+            CodeDocumentUiStrings(context)
+                .value('encodingError', error.encoding.label),
+          ),
           action: SnackBarAction(
-            label: 'Use UTF-8',
+            label: CodeDocumentUiStrings(context).text('utf8'),
             onPressed: () {
               _setEncoding(EditorEncoding.utf8);
               unawaited(_saveFile(force: true));
@@ -549,7 +727,9 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Save failed: $error'),
+        content: Text(
+          FileEditorStrings(context).value('saveError', error ?? ''),
+        ),
         backgroundColor: Theme.of(context).colorScheme.error,
       ),
     );
@@ -567,8 +747,9 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     final document = _document;
     if (document == null ||
         (document.lineEnding == lineEnding &&
-            document.lineEndingPolicy == EditorLineEndingPolicy.normalize))
+            document.lineEndingPolicy == EditorLineEndingPolicy.normalize)) {
       return;
+    }
     setState(() => _document = document.copyWith(lineEnding: lineEnding));
     _saveState.markChanged();
     _scheduleAutoSave();
@@ -623,8 +804,9 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
         ],
       ),
     );
-    if (encoding != null && mounted)
+    if (encoding != null && mounted) {
       await _loadFile(encodingOverride: encoding);
+    }
   }
 
   void _toggleHighlighting() {
@@ -655,7 +837,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     final line = await showDialog<int>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Go to line'),
+        title: Text(CodeDocumentUiStrings(context).text('goLine')),
         content: TextField(
           autofocus: true,
           keyboardType: TextInputType.number,
@@ -676,7 +858,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(int.tryParse(input)),
-            child: const Text('Go'),
+            child: Text(CodeDocumentUiStrings(context).text('go')),
           ),
         ],
       ),
@@ -699,7 +881,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(AppLocalizations.of(context)!.unsavedChanges),
-        content: const Text('You have unsaved changes. Discard them?'),
+        content: Text(FileEditorStrings(context).text('unsaved')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -767,20 +949,16 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     final document = _document;
 
     return PopScope(
-      canPop: !_isModified,
-      onPopInvokedWithResult: (didPop, _) async {
-        if (didPop) return;
-        if (await _confirmDiscard()) {
-          if (!context.mounted) return;
-          Navigator.of(context).pop();
-        }
+      canPop: _canPop,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) unawaited(_closeEditor());
       },
       child: Scaffold(
         appBar: AppBar(
           leading: IconButton(
             icon: const Icon(Icons.close),
             tooltip: AppLocalizations.of(context)!.close,
-            onPressed: () => unawaited(_closeEditor()),
+            onPressed: _closing ? null : () => unawaited(_closeEditor()),
           ),
           title: Row(
             children: [
@@ -803,7 +981,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
-                    'Modified',
+                    FileEditorStrings(context).text('modified'),
                     style: TextStyle(
                       fontSize: 10,
                       color: theme.colorScheme.onPrimary,
@@ -820,11 +998,17 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
                   _highlightEnabled ? Icons.code : Icons.code_off,
                   size: 20,
                 ),
-                tooltip: _highlightEnabled
-                    ? 'Disable syntax highlighting'
-                    : 'Enable syntax highlighting',
+                tooltip: FileEditorStrings(context)
+                    .text(_highlightEnabled ? 'disable' : 'enable'),
                 onPressed: _toggleHighlighting,
               ),
+            IconButton(
+              icon: const Icon(Icons.hexagon_outlined, size: 20),
+              tooltip: 'Open in Hex Editor',
+              onPressed: _loading || _isSaving || _closing
+                  ? null
+                  : () => unawaited(_switchToHexEditor()),
+            ),
             _isSaving
                 ? const Padding(
                     padding: EdgeInsets.all(12),
@@ -839,44 +1023,49 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
                       Icons.save,
                       color: _isModified ? theme.colorScheme.primary : null,
                     ),
-                    tooltip: 'Save (Ctrl/Cmd+S)',
-                    onPressed: _isModified
+                    tooltip: FileEditorStrings(context).text('saveShortcut'),
+                    onPressed: _isModified && !_closing
                         ? () => unawaited(_saveFile())
                         : null,
                   ),
             PopupMenuButton<_EditorMenuAction>(
-              tooltip: 'Editor options',
+              enabled: !_closing,
+              tooltip: CodeDocumentUiStrings(context).text('options'),
               onSelected: _handleMenuAction,
-              itemBuilder: (context) => const [
+              itemBuilder: (context) => [
                 PopupMenuItem(
                   value: _EditorMenuAction.find,
-                  child: Text('Find…'),
+                  child: Text(CodeDocumentUiStrings(context).text('find')),
                 ),
                 PopupMenuItem(
                   value: _EditorMenuAction.replace,
-                  child: Text('Find and replace…'),
+                  child: Text(CodeDocumentUiStrings(context).text('replace')),
                 ),
                 PopupMenuItem(
                   value: _EditorMenuAction.goToLine,
-                  child: Text('Go to line…'),
+                  child: Text(CodeDocumentUiStrings(context).text('goMenu')),
                 ),
-                PopupMenuDivider(),
+                const PopupMenuDivider(),
                 PopupMenuItem(
                   value: _EditorMenuAction.wordWrap,
-                  child: Text('Toggle word wrap'),
+                  child: Text(CodeDocumentUiStrings(context).text('wrap')),
                 ),
                 PopupMenuItem(
                   value: _EditorMenuAction.highlight,
-                  child: Text('Toggle syntax highlighting'),
+                  child: Text(CodeDocumentUiStrings(context).text('highlight')),
                 ),
-                PopupMenuDivider(),
+                const PopupMenuItem(
+                  value: _EditorMenuAction.hex,
+                  child: Text('Open in Hex Editor'),
+                ),
+                const PopupMenuDivider(),
                 const PopupMenuItem(
                   value: _EditorMenuAction.reopenEncoding,
                   child: Text('Reopen using encoding…'),
                 ),
                 PopupMenuItem(
                   value: _EditorMenuAction.reload,
-                  child: Text('Reload from disk'),
+                  child: Text(CodeDocumentUiStrings(context).text('reload')),
                 ),
               ],
             ),
@@ -922,6 +1111,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
   }
 
   Future<void> _handleMenuAction(_EditorMenuAction action) async {
+    if (_closing) return;
     switch (action) {
       case _EditorMenuAction.find:
         _openFind();
@@ -937,6 +1127,9 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
         break;
       case _EditorMenuAction.highlight:
         _toggleHighlighting();
+        break;
+      case _EditorMenuAction.hex:
+        await _switchToHexEditor();
         break;
       case _EditorMenuAction.reopenEncoding:
         await _reopenEncoding();
@@ -973,8 +1166,9 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
     }
 
     return CallbackShortcuts(
-      bindings: _shortcuts,
+      bindings: _closing ? const {} : _shortcuts,
       child: CodeEditor(
+        readOnly: _closing,
         controller: _controller,
         findController: _findController,
         scrollController: _scrollController,
@@ -1068,6 +1262,9 @@ enum _EditorMenuAction {
   goToLine,
   wordWrap,
   highlight,
+  hex,
   reload,
   reopenEncoding,
 }
+
+enum _SwitchChoice { save, discard }

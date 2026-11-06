@@ -1747,12 +1747,13 @@ class RenderReportDataExplorer extends RenderBox {
   void describeSemanticsConfiguration(SemanticsConfiguration config) {
     super.describeSemanticsConfiguration(config);
     final ReportDataTableView t = _controller.dataTable;
+    final strings = _controller.strings;
     config
       ..isSemanticBoundary = true
-      ..textDirection = TextDirection.ltr
-      ..label = 'Report data explorer'
-      ..value =
-          '${t.title}: ${t.rows.length} rows, ${t.columns.length} columns';
+      ..textDirection = strings.direction
+      ..label = strings.t('Report data explorer')
+      ..value = '${t.title}: ${strings.count(t.rows.length, 'row')}, '
+          '${strings.count(t.columns.length, 'column')}';
   }
 }
 

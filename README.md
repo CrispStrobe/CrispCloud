@@ -2,7 +2,7 @@
 
 **Cross-platform dual-panel cloud file manager** built with Flutter. Open-source, privacy-first, running on macOS, Windows, Linux, Android, iOS, and Web/PWA.
 
-14 cloud providers. 4,000+ tests. Block-level delta sync. End-to-end encryption. 9 languages. Full i18n (EN/DE + 7 fallback).
+14 cloud providers. 4,000+ tests. Block-level delta sync. End-to-end encryption. 9 UI languages, with English fallback for untranslated messages.
 
 ## Providers
 
@@ -49,14 +49,14 @@ We also maintain patched Nextcloud and ownCloud desktop clients with delta sync 
 - **Backup engine:** scheduled backups with versioning
 - **Preview pane:** images (zoom/pan), SVG, PDF (page navigation), syntax-highlighted code (30+ languages), markdown, CSV/TSV tables, DOCX/XLSX/PPTX/ODT text, fonts (TTF/OTF/WOFF2), audio/video
 - **Archive browsing:** browse ZIP/TAR/TGZ files like folders (including on web)
-- **Built-in editor:** F4 text/code editor with syntax highlighting, synchronized line numbers, save/undo, and F3-viewer Edit handoff; F3 also previews archive members
-- **Interactive terminal:** local desktop PTY/Windows ConPTY and SSH sessions with ANSI colors, full-screen programs, live resizing, raw control keys, scrollback, and mobile extra keys. Browser SSH uses your own secure WebSocket gateway. [Terminal design, licensing, and platform support](docs/terminal.md)
+- **Built-in editors:** F4 text/code and hex editors with explicit chooser and handoff, bounded edit history, and save/recovery tied to the original file and account. Text editing includes syntax highlighting, line numbers, encoding and newline controls; F3 also previews archive members
+- **Interactive terminal:** desktop PTY/Windows ConPTY, a built-in shell for sandboxed macOS, and SSH sessions with ANSI colors, full-screen programs, live resizing, raw control keys, scrollback, and mobile extra keys. Browser SSH uses your own secure WebSocket gateway. [Terminal design, licensing, and platform support](docs/terminal.md)
 - **Office editing:** DOCX/XLSX/PPTX editing through the patched Quds engine, with independent Word round-trip verification and archive members kept view-only
 - **PDF editor:** annotate, fill standard PDF forms, edit page content, and organize pages from F4, the file menu, or the preview pane. Includes conflict checks, save-copy/export recovery, and password-protected input; see [PDF editing](docs/pdf-editor.md) for supported behavior and limits.
 - **Web support:** full file operations (open folder, copy, move, delete, download) via File System Access API with Safari/Firefox fallback
 - **CLI companion** (`crisp`): headless S3/SFTP/WebDAV operations, 9 commands, shell completions
 - **Plugin system** with local REST API and automation rules
-- **FUSE mounts** for mounting remote storage as local drives
+- **Experimental macOS mounts:** read-only macFUSE FSKit, explicitly selected FUSE-T, or a separately configured rclone NFS remote. Runtime installation, limitations and current test status are described in the [mount guide](docs/USER_GUIDE.md#fuse-mounted-drives). Linux and Windows mounting is not yet implemented.
 - **Unified Settings:** one surface for language, theme/accent, file-list fonts, quick search, cache, proxy/provider networking, accessibility, privacy and advanced options
 - **9 languages:** EN, DE, FR, ES, PT, ZH, JA, KO, AR — persisted in-app language switch, ~256 localized strings
 - **Accessibility:** 48dp touch targets on mobile, Semantics on file list items, tooltips on all buttons

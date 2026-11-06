@@ -6,8 +6,12 @@
 import '../l10n/commander_strings.dart';
 
 import 'package:flutter/material.dart';
+
+import '../l10n/provider_operation_strings.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/permissions_strings.dart';
 import '../models/file_item.dart';
 import '../providers/providers.dart';
 import 'file_origin_actions.dart';
@@ -103,8 +107,10 @@ class _PermissionsDialogState extends ConsumerState<_PermissionsDialog> {
       _log.error('Failed to load permissions', e);
       if (mounted) {
         setState(() {
-          _error = (context) =>
-              context.commanderTr("Failed to load permissions: {0}", [e]);
+          _error = (context) => context.commanderTr(
+            "Failed to load permissions: {0}",
+            [localizedProviderError(context, e)],
+          );
           _loading = false;
         });
       }
@@ -143,6 +149,7 @@ class _PermissionsDialogState extends ConsumerState<_PermissionsDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = PermissionsStrings(context);
 
     return AlertDialog(
       title: Row(
@@ -325,6 +332,7 @@ class _PermissionsDialogState extends ConsumerState<_PermissionsDialog> {
   }
 
   Future<void> _save() async {
+    final strings = PermissionsStrings(context);
     setState(() => _saving = true);
 
     try {

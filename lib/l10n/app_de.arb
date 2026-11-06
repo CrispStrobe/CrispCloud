@@ -267,10 +267,10 @@
   "totalSize": "Gesamtgroesse: {size}",
   "cannotBeUndone": "Diese Aktion kann nicht rueckgaengig gemacht werden.",
 
-  "nItems": "{count} Eintraege",
-  "nTransfers": "{count} Transfer(s)",
-  "syncing": "Synchronisiere",
-  "lastSyncChanges": "Letzte Sync: {count} Aenderungen",
+  "nItems": "{count} Einträge",
+  "nTransfers": "{count} Übertragung(en)",
+  "syncing": "Synchronisierung",
+  "lastSyncChanges": "Letzte Synchronisierung: {count} Änderungen",
   "nPairs": "{count} Paar(e)",
   "hidden": "Versteckt",
   "free": "Frei: {size}",
@@ -366,8 +366,8 @@
   "sasToken": "SAS-Token",
 
   "connectToB2": "Mit Backblaze B2 verbinden",
-  "applicationKeyId": "Application Key ID",
-  "applicationKey": "Application Key",
+  "applicationKeyId": "Anwendungsschlüssel-ID",
+  "applicationKey": "Anwendungsschlüssel",
   "bucketNameOptional": "Bucket-Name (optional)",
 
   "mount": "Einbinden",

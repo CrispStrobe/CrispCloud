@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/pdf_operations_strings.dart';
+import '../l10n/command_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
@@ -621,6 +622,8 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
               child: Focus(
                 onKeyEvent: (node, event) {
                   if (event is! KeyDownEvent) return KeyEventResult.ignored;
+                  if (_filtered.isEmpty && (event.logicalKey == LogicalKeyboardKey.arrowDown ||
+                      event.logicalKey == LogicalKeyboardKey.arrowUp)) return KeyEventResult.handled;
                   if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
                     _moveSelection(1);
                     return KeyEventResult.handled;

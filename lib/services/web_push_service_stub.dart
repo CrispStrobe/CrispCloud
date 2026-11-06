@@ -1,3 +1,4 @@
+import 'dart:ui' show Locale;
 // lib/services/web_push_service_stub.dart
 //
 // No-op stub compiled on non-web platforms (native, desktop, CLI tests).
@@ -22,11 +23,11 @@ class _StubWebPushService implements WebPushService {
   }) async {}
 
   @override
-  Future<void> notifyTransferComplete(String fileName) async {}
+  Future<void> notifyTransferComplete(String fileName, {Locale? locale}) async {}
 
   @override
-  Future<void> notifySyncComplete(String providerName) async {}
+  Future<void> notifySyncComplete(String providerName, {Locale? locale}) async {}
 
   @override
-  Future<void> notifyError(String message) async {}
+  Future<void> notifyError(String message, {Locale? locale}) async {}
 }

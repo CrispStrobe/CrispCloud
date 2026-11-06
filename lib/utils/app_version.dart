@@ -8,11 +8,13 @@ String formatAppVersion({
   required String version,
   String? buildNumber,
   String? gitHash,
+  String versionLabel = 'Version',
+  String buildLabel = 'build',
 }) {
   final parts = <String>[];
   final build = buildNumber?.trim();
   if (build != null && build.isNotEmpty && build != '0') {
-    parts.add('build $build');
+    parts.add('$buildLabel $build');
   }
   final hash = gitHash?.trim();
   if (hash != null && hash.isNotEmpty) {
@@ -21,6 +23,6 @@ String formatAppVersion({
     parts.add(hash.length > 12 ? hash.substring(0, 12) : hash);
   }
   return parts.isEmpty
-      ? 'Version $version'
-      : 'Version $version (${parts.join(', ')})';
+      ? '$versionLabel $version'
+      : '$versionLabel $version (${parts.join(', ')})';
 }
