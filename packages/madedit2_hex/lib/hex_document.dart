@@ -93,6 +93,7 @@ class HexDocument {
   List<_Piece> _pieces;
   int _length;
   int _revision = 0;
+  int _nextRevision = 0;
   int _savedRevision = 0;
   final List<HexSnapshot> _undo = [];
   final List<HexSnapshot> _redo = [];
@@ -159,7 +160,7 @@ class HexDocument {
     }
     _pieces = next;
     _length += replacement.length - count;
-    _revision++;
+    _revision = ++_nextRevision;
   }
 
   bool undo() {
