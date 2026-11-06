@@ -27,6 +27,7 @@ import '../services/file_operation_service.dart';
 import '../services/s3_client_adapter.dart';
 import '../services/transfer_queue.dart';
 import '../services/transfer_journal.dart';
+import '../services/background_transfer_journal.dart';
 import '../services/transfer_recovery_service.dart';
 import '../services/web_streaming_service.dart';
 import '../services/log_service.dart';
@@ -50,6 +51,7 @@ class TransferNotifier extends ChangeNotifier {
   late final TransferJournal _journal;
   late final Future<void> ready;
   String? recoveryError;
+  Future<void>? _backgroundRefresh;
 
   TransferNotifier(this._ref) {
     _journal = _ref.read(transferJournalProvider);
@@ -80,6 +82,7 @@ class TransferNotifier extends ChangeNotifier {
     }
     try {
       await _journal.initialize();
+      await _importBackgroundRecovery(addProgress: false);
       if (_disposed) return;
       for (final job in _journal.jobs.where((job) => job.needsReview)) {
         _operations.add(_savedProgress(job));
@@ -89,6 +92,41 @@ class TransferNotifier extends ChangeNotifier {
       _log.warn('Transfer recovery unavailable', error);
     }
     notifyListeners();
+  }
+
+  Future<void> refreshBackgroundRecovery() =>
+      _backgroundRefresh ??= _refreshBackgroundRecovery().whenComplete(
+        () => _backgroundRefresh = null,
+      );
+
+  Future<void> _refreshBackgroundRecovery() async {
+    await ready;
+    if (_disposed) return;
+    await _importBackgroundRecovery();
+    notifyListeners();
+  }
+
+  Future<void> _importBackgroundRecovery({bool addProgress = true}) async {
+    try {
+      final result = await importBackgroundTransferJournals(_journal);
+      for (final warning in result.warnings) {
+        if (!_journal.warnings.contains(warning)) {
+          _journal.warnings.add(warning);
+        }
+      }
+      if (addProgress && !_disposed) {
+        for (final job in _journal.jobs.where((job) => job.needsReview)) {
+          if (!_operations.any((operation) => operation.id == job.id)) {
+            _operations.add(_savedProgress(job));
+          }
+        }
+      }
+    } catch (error) {
+      final warning =
+          'Background transfer history could not be imported: $error';
+      if (!_journal.warnings.contains(warning)) _journal.warnings.add(warning);
+      _log.warn('Background transfer recovery retained its journal', error);
+    }
   }
 
   OperationProgress _savedProgress(TransferJobRecord job) {

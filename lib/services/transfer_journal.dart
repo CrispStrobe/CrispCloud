@@ -18,6 +18,7 @@ class TransferJournal {
   final TransferJournalStorage storage;
   final AsyncLock _lock = AsyncLock();
   final Map<String, TransferJobRecord> _jobs = {};
+  final Set<String> _imported = {};
   final List<String> warnings = [];
   Future<void>? _initializing;
   int _sequence = 0;
@@ -26,6 +27,7 @@ class TransferJournal {
       _jobs.values.toList()..sort((a, b) => b.created.compareTo(a.created));
   TransferJobRecord? job(String id) => _jobs[id];
   Future<void> initialize() => _initializing ??= _load();
+  Future<void> flushPending() => _lock.synchronized(() async {});
 
   Future<void> _load() async {
     final lines = await storage.readLines();
@@ -48,6 +50,7 @@ class TransferJournal {
         );
         await storage.rewrite(valid);
         _jobs.clear();
+        _imported.clear();
         _sequence = 0;
         for (final line in valid) {
           _apply(decodeTransferEvent(line));
@@ -148,6 +151,8 @@ class TransferJournal {
         );
       case 'dismiss':
         _jobs.remove(id);
+      case 'imported':
+        _imported.add(id);
       default:
         throw const FormatException('Unknown transfer journal event.');
     }
@@ -287,6 +292,74 @@ class TransferJournal {
     });
   }
 
+  /// A stopped background writer imports through this instance's normal lock
+  /// and sequence allocator. Import receipts survive compaction and dismissal,
+  /// so rediscovery cannot resurrect dismissed jobs or replace resumed state.
+  Future<bool> importRecord(
+    TransferJobRecord source, {
+    required String importedId,
+  }) async {
+    if (!RegExp(r'^bg_[a-f0-9]{64}$').hasMatch(importedId)) {
+      throw const FormatException('Invalid imported transfer identifier.');
+    }
+    await initialize();
+    return _lock.synchronized(() async {
+      if (_imported.contains(importedId)) return false;
+      final existing = _jobs[importedId];
+      if (existing != null &&
+          (existing.created != source.created ||
+              existing.expectedEntries != source.expectedEntries ||
+              existing.targetDirectory != source.targetDirectory ||
+              jsonEncode(existing.source?.toJson()) !=
+                  jsonEncode(source.source?.toJson()) ||
+              jsonEncode(existing.destination?.toJson()) !=
+                  jsonEncode(source.destination?.toJson()))) {
+        throw StateError('A background import conflicts with an existing job.');
+      }
+      if (existing == null) {
+        final header = source.toHeaderJson()
+          ..['id'] = importedId
+          ..['ready'] = false
+          ..['status'] = TransferJobStatus.preparing.name;
+        await _append({'kind': 'header', 'id': importedId, 'job': header});
+      }
+      // A prior import may have flushed its final state before the receipt
+      // failed. Never replace progress that could already have been reviewed.
+      if (_jobs[importedId]!.ready != true) {
+        for (var start = 0; start < source.entries.length; start += 128) {
+          final end = (start + 128).clamp(0, source.entries.length);
+          await _append({
+            'kind': 'entries',
+            'id': importedId,
+            'entries': [
+              for (var i = start; i < end; i++) source.entries[i].toJson(),
+            ],
+          });
+        }
+        final ready =
+            source.ready && source.entries.length == source.expectedEntries;
+        final stoppedStatus =
+            const [
+              TransferJobStatus.running,
+              TransferJobStatus.queued,
+              TransferJobStatus.paused,
+            ].contains(source.status)
+            ? TransferJobStatus.interrupted
+            : source.status;
+        await _append({
+          'kind': 'state',
+          'id': importedId,
+          'status': (ready ? stoppedStatus : TransferJobStatus.failed).name,
+          'updated': source.updated.toUtc().toIso8601String(),
+          'ready': ready,
+          'message': ready ? source.message : 'The background plan was not completely saved. Review retained evidence.',
+        });
+      }
+      await _append({'kind': 'imported', 'id': importedId});
+      return true;
+    });
+  }
+
   /// Explicit history maintenance keeps the write-ahead log bounded without
   /// losing any unfinished entry or replacing it with a summary.
   Future<void> compact() async {
@@ -322,6 +395,9 @@ class TransferJournal {
             'message': job.message,
           });
         }
+      }
+      for (final id in _imported) {
+        add({'kind': 'imported', 'id': id});
       }
       await storage.rewrite(lines);
       _sequence = sequence;

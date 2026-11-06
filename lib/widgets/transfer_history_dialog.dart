@@ -61,22 +61,20 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
   void initState() {
     super.initState();
     _selected = widget.jobId;
-    if (widget.reviewOnOpen && widget.jobId != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
-        if (!mounted) return;
-        final transfers = ref.read(transferProvider);
-        await transfers.ready;
-        if (!mounted) return;
-        final job = transfers.savedJob(widget.jobId!);
-        if (job != null &&
-            job.canRecover &&
-            job.ready &&
-            !job.isFinished &&
-            !transfers.isJobLive(job.id)) {
-          await _review(job);
-        }
-      });
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      final transfers = ref.read(transferProvider);
+      await transfers.refreshBackgroundRecovery();
+      if (!mounted || !widget.reviewOnOpen || widget.jobId == null) return;
+      final job = transfers.savedJob(widget.jobId!);
+      if (job != null &&
+          job.canRecover &&
+          job.ready &&
+          !job.isFinished &&
+          !transfers.isJobLive(job.id)) {
+        await _review(job);
+      }
+    });
   }
 
   @override

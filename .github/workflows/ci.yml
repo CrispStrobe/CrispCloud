@@ -177,6 +177,7 @@ jobs:
           flutter test test/native_ffi_crypto_test.dart test/crypto_paths_test.dart
           test/gcm_transfer_stream_test.dart test/encrypted_storage_wrapper_test.dart
           test/native_metadata_test.dart
+          test/background_transfer_journal_test.dart
 
   # ---------- Multi-platform builds (matrix) ----------
   # Linux, Android, and Web build on ubuntu-latest.
