@@ -272,7 +272,13 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     );
     final terminal = _session.terminal;
     await connecting;
-    if (mounted && identical(_session.terminal, terminal)) _focusIfVisible();
+    if (mounted && identical(_session.terminal, terminal)) {
+      // The connected session replaces the idle terminal and rebuilds
+      // TerminalView. Request focus after that rebuild, not before it.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _focusIfVisible();
+      });
+    }
   }
 
   Future<void> _connectSsh() async {
@@ -711,36 +717,40 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                 child: Stack(
                   children: [
                     Positioned.fill(
-                      child: Focus(
-                        canRequestFocus: false,
-                        skipTraversal: true,
-                        // Unhandled terminal keys must reach the IME, never the file
-                        // browser's Enter/F-key/delete handlers higher in the focus tree.
-                        onKeyEvent: (_, __) =>
-                            KeyEventResult.skipRemainingHandlers,
-                        child: TerminalView(
-                          _session.terminal,
-                          controller: _controller,
-                          focusNode: _focus,
-                          scrollController: _scroll,
-                          readOnly: !_session.isConnected,
-                          autofocus: false,
-                          deleteDetection: _mobile,
-                          keyboardType: TextInputType.multiline,
-                          keyboardAppearance: Brightness.dark,
-                          textStyle: const TerminalStyle(
-                            fontFamily: 'AppMono',
-                            fontSize: 13,
+                      child: Listener(
+                        behavior: HitTestBehavior.translucent,
+                        onPointerDown: (_) => _focus.requestFocus(),
+                        child: Focus(
+                          canRequestFocus: false,
+                          skipTraversal: true,
+                          // Unhandled terminal keys must reach the IME, never the file
+                          // browser's Enter/F-key/delete handlers higher in the focus tree.
+                          onKeyEvent: (_, __) =>
+                              KeyEventResult.skipRemainingHandlers,
+                          child: TerminalView(
+                            _session.terminal,
+                            controller: _controller,
+                            focusNode: _focus,
+                            scrollController: _scroll,
+                            readOnly: !_session.isConnected,
+                            autofocus: false,
+                            deleteDetection: _mobile,
+                            keyboardType: TextInputType.multiline,
+                            keyboardAppearance: Brightness.dark,
+                            textStyle: const TerminalStyle(
+                              fontFamily: 'AppMono',
+                              fontSize: 13,
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            shiftOverridesMouseReporting: true,
+                            dragOverridesMouseReporting: _mobile,
+                            onCopy: _copyText,
+                            onPaste: _paste,
+                            onKeyEvent: _onTerminalKey,
                           ),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          shiftOverridesMouseReporting: true,
-                          dragOverridesMouseReporting: _mobile,
-                          onCopy: _copyText,
-                          onPaste: _paste,
-                          onKeyEvent: _onTerminalKey,
                         ),
                       ),
                     ),

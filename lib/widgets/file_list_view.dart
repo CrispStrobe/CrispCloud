@@ -14,6 +14,7 @@ import '../models/file_item.dart';
 import '../models/file_view_configuration.dart';
 import '../models/panel_side.dart';
 import '../providers/focus_area_provider.dart';
+import '../providers/terminal_provider.dart' show showTerminalProvider;
 import '../providers/providers.dart';
 import '../providers/toolbar_provider.dart'
     show columnWidthsProvider, panelViewModeProvider, fileColumnsProvider;
@@ -250,10 +251,12 @@ class FileListView extends ConsumerWidget {
       // autofocus = true when this is the active panel so compact tiles
       // (which have no inner Focus widget) still drive key events here.
       final focusArea = ref.read(focusAreaProvider);
-      final isActivePanel = focusArea.panelSide == side;
+      final terminalVisible = ref.watch(showTerminalProvider);
+      final isActivePanel = focusArea.panelSide == side && !terminalVisible;
       if (isActivePanel) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!context.mounted) return;
+          if (ref.read(showTerminalProvider)) return;
           if (ModalRoute.of(context)?.isCurrent != true) return;
           if (!panel.listFocusNode.hasFocus) {
             panel.listFocusNode.requestFocus();

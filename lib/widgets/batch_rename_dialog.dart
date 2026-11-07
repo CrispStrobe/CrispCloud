@@ -282,9 +282,8 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             _presetBar(),
-                            _advancedOptions(half),
-                            _pipelineBar(),
                             const SizedBox(height: 12),
+                            _sectionTitle(context, "New name"),
                             Wrap(
                               spacing: 12,
                               runSpacing: 12,
@@ -337,6 +336,7 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                               ],
                             ),
                             const SizedBox(height: 12),
+                            _sectionTitle(context, "Numbering"),
                             Row(
                               children: [
                                 Expanded(
@@ -368,6 +368,7 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                               ],
                             ),
                             const SizedBox(height: 12),
+                            _sectionTitle(context, "Search and replace"),
                             Wrap(
                               spacing: 12,
                               runSpacing: 12,
@@ -480,6 +481,10 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
                                 ),
                                 style: theme.textTheme.bodySmall,
                               ),
+                            const SizedBox(height: 8),
+                            _advancedOptions(half),
+                            _pipelineBar(),
+                            const SizedBox(height: 8),
                             ExpansionTile(
                               tilePadding: EdgeInsets.zero,
                               title: Text(
@@ -744,6 +749,14 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
       ),
     );
   }
+
+  Widget _sectionTitle(BuildContext context, String title) => Padding(
+    padding: const EdgeInsets.only(bottom: 6),
+    child: Text(
+      context.commanderTr(title),
+      style: Theme.of(context).textTheme.titleSmall,
+    ),
+  );
 
   Widget _advancedOptions(double width) => ExpansionTile(
     key: const ValueKey('rename-advanced'),

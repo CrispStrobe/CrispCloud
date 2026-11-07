@@ -22,4 +22,5 @@ export 'accessibility_provider.dart';
 export 'keyboard_shortcut_provider.dart';
 export 'plugin_provider.dart';
 export 'ssh_terminal_provider.dart';
+export 'terminal_provider.dart';
 export 'ui_chrome_provider.dart';

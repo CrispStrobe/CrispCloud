@@ -558,6 +558,7 @@ class _FileGridViewState extends ConsumerState<FileGridView> {
   @override
   Widget build(BuildContext context) {
     final panel = ref.watch(panelProvider(widget.side));
+    final terminalVisible = ref.watch(showTerminalProvider);
     ref.watch(authProvider);
     ref.watch(multiCloudProvider);
     final source = ref.watch(panelSourceProvider(widget.side));
@@ -632,7 +633,9 @@ class _FileGridViewState extends ConsumerState<FileGridView> {
               _scrollToCursor(columns, rowHeight + 8);
               return Focus(
                 focusNode: panel.listFocusNode,
-                autofocus: ref.read(activePanelProvider) == widget.side,
+                autofocus:
+                    !terminalVisible &&
+                    ref.read(activePanelProvider) == widget.side,
                 skipTraversal: true,
                 onKeyEvent: (_, event) => _onKey(event, columns, rowHeight + 8),
                 child: visible.isEmpty
