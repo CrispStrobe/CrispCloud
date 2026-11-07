@@ -1,12 +1,11 @@
 /// Configuration and state management for the Filen CLI.
 import 'dart:convert';
-import 'dart:ffi';
 import 'dart:io';
-
-import 'package:ffi/ffi.dart';
 
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:path/path.dart' as p;
+
+import 'posix_chmod.dart';
 
 import 'package:filen_client/config_storage.dart';
 import 'package:filen_client/credential_crypto.dart' as cred;
@@ -61,20 +60,9 @@ class ConfigService {
   /// (relies on user-profile ACLs) and if `chmod` isn't available. The path is
   /// the only argv — no secret is exposed.
   void _restrictPerms(String path, String mode) {
-    if (Platform.isWindows) return;
     final parsed = int.tryParse(mode, radix: 8);
     if (parsed == null) return;
-    final nativePath = path.toNativeUtf8();
-    try {
-      final chmod = DynamicLibrary.process().lookupFunction<
-          Int32 Function(Pointer<Utf8>, Uint32),
-          int Function(Pointer<Utf8>, int)>('chmod');
-      chmod(nativePath, parsed);
-    } catch (_) {
-      // Best effort; some platforms do not expose chmod.
-    } finally {
-      calloc.free(nativePath);
-    }
+    chmodPath(path, parsed);
   }
 
   (String, String) _wrappingSecretForSave() {
