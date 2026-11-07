@@ -90,13 +90,15 @@
 		</dict>
 	</array>
 
-	<!-- Export compliance: the app includes standard client-side and provider
-	     encryption implemented outside Apple OS APIs. Keep the questionnaire
-	     enabled until the final build and territories have been assessed in
-	     App Store Connect. This flag does not require a BIS report or CCATS;
-	     see docs/export-compliance.md for the current no-report routes. -->
+	<!-- Export compliance: the shipped app uses standard, published
+	     cryptography in third-party libraries and no proprietary algorithms.
+	     France is excluded from App Store availability for this release.
+	     Apple refuses an app encryption declaration for third-party-only
+	     cryptography when France is excluded, so this records the matching
+	     no-documentation answer. Revisit before enabling France or adding
+	     proprietary/non-standard cryptography; see docs/export-compliance.md. -->
 	<key>ITSAppUsesNonExemptEncryption</key>
-	<true/>
+	<false/>
 
 	<!-- Stage Manager / Multi-Window (iPadOS 13+) -->
 	<key>UIApplicationSceneManifest</key>
