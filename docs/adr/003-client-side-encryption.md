@@ -18,11 +18,11 @@ Several design decisions needed to be made:
 
 **Server-side encryption** was rejected because it requires the server to hold the key, which defeats the purpose for untrusted providers.
 
-**AES-128-CBC** was rejected: 128-bit keys are not future-proof, and CBC without explicit authentication is vulnerable to padding oracle attacks. An authenticated cipher is required.
+**AES-CBC** requires a separate, correctly composed authentication mechanism. This application uses AES-256-GCM for authenticated encryption and its existing file-format compatibility; this is not a claim that a 128-bit AES key is intrinsically insecure.
 
 **ChaCha20-Poly1305** was considered. It is excellent (used in TLS 1.3, WireGuard) but AES-256-GCM is more widely understood, more universally supported in hardware (AES-NI), and the `cryptography` package exposes it through OS-accelerated implementations on all platforms.
 
-**Argon2id** and **scrypt** are memory-hard KDFs better suited to password hashing. PBKDF2 with a high iteration count (100,000) is the NIST-recommended approach for key derivation and is universally supported. The threat model here is offline brute-force of the passphrase given the encrypted ciphertext — PBKDF2 with 100K iterations provides adequate resistance for passphrases of reasonable length.
+**Argon2id** and **scrypt** are memory-hard alternatives. The existing format uses PBKDF2-HMAC-SHA256 with 100,000 iterations by default. This is an implementation parameter, not a general guarantee of resistance to offline password guessing. A future KDF upgrade requires versioned parameters and migration so existing files remain decryptable.
 
 ---
 
@@ -30,7 +30,7 @@ Several design decisions needed to be made:
 
 ### Cipher: AES-256-GCM
 
-AES-256-GCM provides authenticated encryption: the 128-bit authentication tag detects any tampering with the ciphertext before decryption begins. A random 96-bit nonce is generated per file using a cryptographically secure random number generator. The nonce is prepended to the ciphertext and stored with it.
+AES-256-GCM provides authenticated encryption: the 128-bit authentication tag is verified before plaintext is returned to callers. A random 96-bit nonce is generated per file using a cryptographically secure random number generator. The nonce is prepended to the ciphertext and stored with it.
 
 The wire format for each encrypted file:
 ```
@@ -44,7 +44,7 @@ When the user enters a passphrase:
 - PBKDF2-HMAC-SHA256 is applied with 100,000 iterations to derive a 256-bit master key.
 - The master key is held in memory for the session and never written to disk.
 
-The `cryptography` package (`pub.dev/packages/cryptography`) is used for all primitives. It delegates to OS-level crypto libraries on each platform: CryptoKit on macOS/iOS, BouncyCastle on Android, OS CNG on Windows. This provides hardware-accelerated AES on any platform with AES-NI.
+PointyCastle implements the portable AES-GCM and PBKDF2 paths. Selected file-crypto paths use `cryptography`/`cryptography_flutter`, WebCrypto, Windows CNG or Linux OpenSSL. Provider metadata and key derivation still include Dart implementations; native acceleration does not establish an Apple-OS-only crypto build. See [the current inventory](../crypto-inventory.json).
 
 ### Architecture: `EncryptedStorageWrapper`
 
@@ -82,6 +82,6 @@ The `KeyManagementDialog` offers export, import, and a verification step to conf
 
 - The client holds the key in memory. On mobile, the OS can evict the app; on reconnect, the user must re-enter the passphrase. App lock + biometric unlock mitigates friction.
 - Encrypted filenames break the provider's web UI and mobile apps entirely — files appear as gibberish strings.
-- There is no compatibility with Cryptomator vault format (a future goal). A user who also uses Cryptomator Desktop cannot share the same encrypted folder.
-- Streaming encryption (chunking a large file into individually encrypted segments) is not yet implemented. Currently, the entire file is buffered in memory for encryption. This is a memory concern for very large files and is tracked as a future improvement.
+- The generic encrypted wrapper is not a Cryptomator vault filesystem. Separate format helpers now implement authenticated Cryptomator primitives; full vault file I/O remains outside that wrapper. See [the audit](../crypto-audit.md).
+- Streaming transfers preserve the existing single-message GCM format. Decryption uses a private spool until the final authentication tag verifies; it does not release unauthenticated plaintext to the destination. This is distinct from a new independently authenticated chunk format.
 - Key loss means permanent data loss. The BIP39 backup process is shown in the UI, but cannot be enforced.

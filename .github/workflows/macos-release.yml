@@ -55,7 +55,18 @@ jobs:
         run: flutter config --no-enable-swift-package-manager
 
       - name: Resolve dependencies
-        run: flutter pub get
+        run: flutter pub get --enforce-lockfile
+
+      - name: Check crypto release inputs and compatibility
+        run: |
+          python3 tool/crypto_release_evidence.py --check
+          flutter test --no-pub test/aes_siv_test.dart test/cryptomator_test.dart \
+            test/veracrypt_header_vectors_test.dart test/internxt_secure_config_test.dart \
+            test/crypto_paths_test.dart test/filen_adapter_test.dart \
+            test/filen_bounded_transfer_test.dart test/internxt_rewire_test.dart \
+            test/internxt_download_path_test.dart test/internxt_bounded_transfer_test.dart \
+            test/tls_verification_test.dart test/custom_ca_test.dart \
+            test/backup_encryption_security_test.dart
 
       - name: Import signing certificates into a temp keychain
         # NOT DIST_CERT_P12_BASE64: that one holds only the Apple Distribution
@@ -124,7 +135,7 @@ jobs:
           # FLUTTER_BUILD_NAME/NUMBER are defined only for the Runner target, so
           # the Finder extension's Info.plist would resolve CFBundleVersion to
           # empty (ITMS-90360/90056 on the iOS side). Inject globally.
-          PATH="/usr/bin:$PATH" flutter build macos --release \
+          PATH="/usr/bin:$PATH" flutter build macos --release --no-pub \
             --build-name="$VER" --build-number="$BUILD" \
             --dart-define=APP_VERSION="$VER" \
             --dart-define=GIT_HASH="$(git rev-parse --short HEAD)"
@@ -232,11 +243,21 @@ jobs:
           echo "PKG=$PKG" >> "$GITHUB_ENV"
           pkgutil --check-signature "$PKG" | head -5
 
-      - name: Upload .pkg artifact
+      - name: Record the submitted package's crypto release evidence
+        run: |
+          set -euo pipefail
+          mkdir -p build/export-compliance
+          dart pub deps --json > build/export-compliance/dependencies.json
+          python3 tool/crypto_release_evidence.py --platform macos --require-clean \
+            --artifact "$PKG" --dependencies build/export-compliance/dependencies.json
+
+      - name: Upload .pkg artifact and crypto evidence
         uses: actions/upload-artifact@v4
         with:
           name: CrispCloud-macos-pkg
-          path: ${{ env.PKG }}
+          path: |
+            ${{ env.PKG }}
+            build/export-compliance/
           if-no-files-found: error
 
       - name: Validate with altool

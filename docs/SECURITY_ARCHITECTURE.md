@@ -26,6 +26,11 @@ Keystore, libsecret, or Windows credential protection. Profiles contain
 non-secret connection metadata separately. Secrets must never be written to
 ordinary preferences, logs, audit events, transfer history, or crash reports.
 
+Internxt configuration now uses the host secure store, with verified migration
+from the SDK's legacy credential envelope. Backup passphrases are likewise
+stored separately from plan metadata. Failed migration preserves the original
+recovery copy; see [the crypto audit](crypto-audit.md) for tests and limits.
+
 Web storage cannot provide the same operating-system boundary. Users should
 treat the browser profile as part of the trusted computing base and avoid
 shared browser profiles.
@@ -42,6 +47,16 @@ test in `tool/macos_startup_smoke.sh` enforce this release invariant.
 Encryption does not hide provider-visible metadata such as object size,
 transfer timing, or the account being used. Sharing encrypted provider objects
 directly is disabled because recipients would receive ciphertext.
+
+## Transport trust
+
+TLS uses the native verifier for certificate signatures, hostname and validity,
+with system roots and any explicitly imported custom CAs. Minimum TLS settings
+are applied to the security context. The former certificate-pinning option did
+not enforce real pins and could weaken certificate verification; it is now
+disabled and migrated off. No bad-certificate callback overrides failed trust
+checks. SSH connections retain the existing endpoint-scoped host-key
+verification before authentication.
 
 ## Diagnostics and privacy
 

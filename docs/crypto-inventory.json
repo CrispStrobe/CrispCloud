@@ -1,0 +1,171 @@
+{
+  "schema_version": 1,
+  "review_date": "2026-11-07",
+  "repository": "https://github.com/CrispStrobe/CrispCloud",
+  "scope": "Source-level inventory of the finished application, including bundled helpers. Runtime reachability and platform behavior are described in crypto-audit.md. This inventory is not an export classification or a binary scan.",
+  "required_providers": [
+    "filen_client",
+    "internxt_client"
+  ],
+  "crypto_packages": [
+    "pointycastle",
+    "crypto",
+    "cryptography",
+    "cryptography_flutter",
+    "bip39",
+    "dartssh2",
+    "dart_pg",
+    "dart_smb2",
+    "archive",
+    "koni_archive",
+    "flutter_secure_storage"
+  ],
+  "features": [
+    {
+      "name": "Optional CrispCloud file and filename encryption",
+      "algorithms": [
+        "AES-256-GCM",
+        "PBKDF2-HMAC-SHA256 (100000 iterations by default)",
+        "BIP39 key encoding",
+        "cryptographically secure random 96-bit nonces"
+      ],
+      "implementations": [
+        "PointyCastle",
+        "cryptography / cryptography_flutter",
+        "WebCrypto",
+        "OpenSSL on Linux",
+        "Windows CNG"
+      ],
+      "note": "Existing wire format is preserved. Native acceleration does not eliminate Dart crypto or make Apple builds OS-only."
+    },
+    {
+      "name": "Filen provider",
+      "algorithms": [
+        "AES-256-GCM metadata and file chunks",
+        "PBKDF2-HMAC-SHA512 login",
+        "HMAC-SHA256 filenames",
+        "SHA-512 file hashes"
+      ],
+      "sources": [
+        "packages/filen_client/UPSTREAM.md",
+        "https://pub.dev/packages/filen_client/versions/0.2.2"
+      ],
+      "note": "Required provider; retain protocol compatibility and host secure credential storage."
+    },
+    {
+      "name": "Internxt provider",
+      "algorithms": [
+        "AES-256-CTR files",
+        "BIP39 / SHA-512 file-key derivation",
+        "PBKDF2-HMAC-SHA1 login",
+        "AES-256-CBC / PKCS7 legacy text",
+        "EVP_BytesToKey with MD5 legacy derivation",
+        "AES-256-GCM / PBKDF2-HMAC-SHA512 private-key wrapper",
+        "OpenPGP / Ed25519 / Curve25519"
+      ],
+      "sources": [
+        "https://pub.dev/packages/internxt_client/versions/0.2.3",
+        "https://github.com/CrispStrobe/internxt-dart"
+      ],
+      "note": "Required provider. Published legacy modes are preserved for interoperability; standard/public does not mean every construction provides modern authenticated encryption. See residual risks in crypto-audit.md."
+    },
+    {
+      "name": "Cryptomator format helpers",
+      "algorithms": [
+        "RFC 5297 AES-SIV (CMAC/S2V and AES-CTR)",
+        "scrypt",
+        "RFC 3394 AES key unwrap",
+        "HMAC-SHA256 vault config",
+        "AES-256-GCM file headers",
+        "SHA-1 directory hashes"
+      ],
+      "sources": [
+        "https://docs.cryptomator.org/en/latest/security/architecture/",
+        "https://www.rfc-editor.org/rfc/rfc5297"
+      ],
+      "note": "Format primitives and authenticated config/header parsing, not a complete cloud vault filesystem."
+    },
+    {
+      "name": "VeraCrypt helpers and desktop CLI",
+      "algorithms": [
+        "AES-XTS header decryption",
+        "PBKDF2-HMAC-SHA512",
+        "PBKDF2-HMAC-SHA256",
+        "PBKDF2-HMAC-Whirlpool",
+        "CRC-32 format validation"
+      ],
+      "sources": [
+        "https://veracrypt.io/en/VeraCrypt%20Volume%20Format%20Specification.html"
+      ],
+      "note": "Bundled parser supports a limited set of volume headers. Full mounting is a separately installed desktop executable and unavailable in App Store/mobile builds. CRC is a format check, not cryptographic authentication."
+    },
+    {
+      "name": "Transport, accounts, and remote storage",
+      "algorithms": [
+        "TLS via platform/Dart networking",
+        "SSH via dartssh2",
+        "SMB signing and SMB3 encryption via dart_smb2 / libsmb2",
+        "S3/Azure signing and SAS credentials",
+        "platform secure storage",
+        "WebCrypto browser storage"
+      ],
+      "sources": [
+        "https://pub.dev/packages/dartssh2",
+        "https://pub.dev/packages/dart_smb2",
+        "https://github.com/sahlberg/libsmb2"
+      ],
+      "note": "Review negotiated algorithms and native dependency sources as part of each resolved release; TLS is not the complete app crypto scope."
+    },
+    {
+      "name": "Documents, archives, backups, and transitive crypto",
+      "algorithms": [
+        "PDF password protection (legacy RC4 and AES variants)",
+        "Office AES-CBC password encryption and SHA-family derivation",
+        "ZIP / 7z / RAR password handling",
+        "encrypted account backup and profile data"
+      ],
+      "note": "Bundled source contains additional compatibility crypto. Inventory the dependency graph and native archive/SMB sources; this list is not an assertion that every algorithm is reachable on every platform or fully audited."
+    }
+  ],
+  "reviewed_files": [
+    "lib/services/encryption_service.dart",
+    "lib/services/encrypted_storage_wrapper.dart",
+    "lib/services/gcm_transfer_stream.dart",
+    "lib/services/cryptomator_service.dart",
+    "lib/services/aes_siv.dart",
+    "lib/services/veracrypt_service.dart",
+    "lib/services/veracrypt_mount_service.dart",
+    "lib/services/web_crypto_provider.dart",
+    "lib/services/web_crypto_factory_io.dart",
+    "lib/services/web_crypto_subtle.dart",
+    "lib/services/cryptography_crypto_provider.dart",
+    "lib/services/openssl_aesgcm.dart",
+    "lib/services/bcrypt_aesgcm.dart",
+    "lib/services/filen_client_adapter.dart",
+    "lib/services/filen_config_service.dart",
+    "lib/services/filen_stream_transfer.dart",
+    "lib/services/internxt_client_adapter.dart",
+    "lib/services/internxt_streaming_transfer.dart",
+    "lib/services/secure_storage_service.dart",
+    "lib/services/secure_storage_web.dart",
+    "lib/services/proxy_service.dart",
+    "lib/services/cert_pinning_service.dart",
+    "lib/services/plugin_service.dart",
+    "lib/services/local_api_service.dart",
+    "packages/filen_client/lib/crypto.dart",
+    "packages/filen_client/lib/credential_crypto.dart",
+    "packages/filen_client/lib/aes_gcm_backend.dart",
+    "packages/filen_client/UPSTREAM.md",
+    "packages/crisp_storage/lib/src/host_keys.dart",
+    "packages/crisp_storage/NOTICE-LIBSMB2.txt",
+    "packages/quds_office_engine/lib/src/opc/crypto/office_crypto.dart",
+    "packages/quds_office_engine/lib/src/pdf/file/crypto/pdf_security.dart",
+    "lib/services/internxt_flutter/secure_config_storage.dart",
+    "lib/services/internxt_flutter/legacy_config_io.dart",
+    "lib/services/internxt_flutter/legacy_config_web.dart",
+    "lib/services/backup_service.dart",
+    "packages/crisp_ios_shell/tool/sources.json",
+    "packages/crisp_ios_shell/UPSTREAM.md",
+    "packages/crisp_ios_shell/ios/crisp_ios_shell.podspec"
+  ]
+}

@@ -25,6 +25,18 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Resolve dependencies and check crypto compatibility
+        run: |
+          flutter pub get --enforce-lockfile
+          python3 tool/crypto_release_evidence.py --check
+          flutter test --no-pub test/aes_siv_test.dart test/cryptomator_test.dart \
+            test/veracrypt_header_vectors_test.dart test/internxt_secure_config_test.dart \
+            test/crypto_paths_test.dart test/filen_adapter_test.dart \
+            test/filen_bounded_transfer_test.dart test/internxt_rewire_test.dart \
+            test/internxt_download_path_test.dart test/internxt_bounded_transfer_test.dart \
+            test/tls_verification_test.dart test/custom_ca_test.dart \
+            test/backup_encryption_security_test.dart
+
       - name: Configure Play upload signing
         env:
           KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
@@ -49,9 +61,8 @@ jobs:
       - name: Build signed Android App Bundle
         run: |
           set -euo pipefail
-          flutter pub get
           set +e
-          flutter build appbundle --release \
+          flutter build appbundle --release --no-pub \
             --dart-define=APP_VERSION="$(sed -n 's/^version:[[:space:]]*//p' pubspec.yaml)" \
             --dart-define=GIT_HASH="$(git rev-parse --short HEAD)"
           build_status=$?
@@ -77,10 +88,20 @@ jobs:
           cp "$AAB" "$bundle_path"
           echo "BUNDLE_PATH=$bundle_path" >> "$GITHUB_ENV"
 
-      - name: Upload Play bundle artifact
+      - name: Record the Play bundle's crypto release evidence
+        run: |
+          set -euo pipefail
+          mkdir -p build/export-compliance
+          dart pub deps --json > build/export-compliance/dependencies.json
+          python3 tool/crypto_release_evidence.py --platform android --require-clean \
+            --artifact "$BUNDLE_PATH" --dependencies build/export-compliance/dependencies.json
+
+      - name: Upload Play bundle artifact and crypto evidence
         uses: actions/upload-artifact@v4
         with:
           name: crispcloud-google-play-aab
-          path: ${{ env.BUNDLE_PATH }}
+          path: |
+            ${{ env.BUNDLE_PATH }}
+            build/export-compliance/
           if-no-files-found: error
           retention-days: 30

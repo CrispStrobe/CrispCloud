@@ -135,6 +135,11 @@ jobs:
 
       - run: flutter pub get
 
+      - name: Check crypto release inputs
+        run: |
+          python3 -m unittest discover -s tool -p test_crypto_release_evidence.py -v
+          python3 tool/crypto_release_evidence.py --check
+
       - name: Analyze
         run: |
           flutter analyze --no-fatal-warnings 2>&1 | grep -v "cli/" | tee analyze.log || true
@@ -559,14 +564,14 @@ jobs:
           storeFile=play-upload.jks
           EOF
 
-      - run: flutter pub get
+      - run: flutter pub get --enforce-lockfile
 
       - name: Build APK
         run: |
           # flutter build apk reports "failed to produce" when the APK path
           # doesn't match its expectation, but Gradle does build it successfully.
           # We allow the exit code and verify the APK exists ourselves.
-          flutter build apk --release --dart-define=GIT_HASH="$(git rev-parse --short HEAD)" || true
+          flutter build apk --release --no-pub --dart-define=GIT_HASH="$(git rev-parse --short HEAD)" || true
           echo "=== Searching for APKs ==="
           find . -name "app-release.apk" -not -path "*/intermediates/*" -type f 2>/dev/null
 
@@ -603,15 +608,28 @@ jobs:
           sed -n 's/.*certificate SHA-256 digest: //p' signing.txt | head -1 > crispcloud-android-signing-cert.sha256.txt
           rm -f android/play-upload.jks android/key.properties
 
+      - name: Record the APK's crypto release evidence
+        run: |
+          set -euo pipefail
+          mkdir -p build/export-compliance
+          dart pub deps --json > build/export-compliance/dependencies.json
+          python3 tool/crypto_release_evidence.py --platform android --require-clean \
+            --artifact crispcloud-android.apk --dependencies build/export-compliance/dependencies.json
+
       - uses: actions/upload-artifact@v5
         with:
           name: crispcloud-android
-          path: crispcloud-android.apk
+          path: |
+            crispcloud-android.apk
+            build/export-compliance/
 
       - name: Upload to Release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "${{ needs.create-release.outputs.tag }}" crispcloud-android.apk crispcloud-android-signing-cert.sha256.txt --clobber
+        run: >-
+          gh release upload "${{ needs.create-release.outputs.tag }}"
+          crispcloud-android.apk crispcloud-android-signing-cert.sha256.txt
+          build/export-compliance/crypto-evidence.json --clobber
 
   # ---------- iOS (unsigned .app for later signing/export) ----------
   build-ios:

@@ -28,6 +28,17 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
+  crypto-release-inputs:
+    name: Crypto release evidence
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - name: Verify release evidence failure paths
+        run: python3 -m unittest discover -s tool -p test_crypto_release_evidence.py -v
+      - name: Check provider dependencies and Apple declaration
+        run: python3 tool/crypto_release_evidence.py --check
+
   # ---------- Analyze + Test with coverage ----------
   analyze:
     name: Analyze + Test (Linux)
@@ -192,6 +203,26 @@ jobs:
         run: python3 -m unittest discover -s tool -p test_with_ci_system_sqlite.py
 
       - run: flutter pub get
+
+      - name: Crypto audit regressions (published vectors and credential migration)
+        run: >-
+          flutter test --no-pub
+          test/aes_siv_test.dart test/cryptomator_test.dart
+          test/veracrypt_test.dart test/veracrypt_header_vectors_test.dart
+          test/encryption_service_test.dart test/internxt_secure_config_test.dart
+          test/internxt_rewire_test.dart test/internxt_download_path_test.dart
+          test/internxt_bounded_transfer_test.dart
+          test/filen_adapter_test.dart test/filen_bounded_transfer_test.dart
+          test/tls_verification_test.dart test/custom_ca_test.dart
+          test/infrastructure_test.dart test/proxy_service_test.dart
+          test/proxy_settings_i18n_test.dart
+          test/backup_service_test.dart test/backup_encryption_security_test.dart
+
+      - name: Office encrypted-package integrity
+        working-directory: packages/quds_office_engine
+        run: |
+          dart pub get
+          dart test test/office_crypto_test.dart
 
       - name: Headless crypto tests (native FFI assertions + cross-path interop)
         run: >-
