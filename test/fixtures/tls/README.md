@@ -13,7 +13,25 @@ No production certificate or credential is included.
   make it trusted.
 - All leaf certificates share `server.key`. CA private keys are not stored.
 
-The non-expired certificates are valid from 2020-01-01 through 2049-12-31.
-They use RSA-2048 signatures with SHA-256, BasicConstraints, appropriate KeyUsage
-and leaf SubjectAlternativeName/ExtendedKeyUsage. Tests run without an external
-network or a certificate-generation subprocess.
+The valid leaf certificates last one year, currently from 2026-11-06 through
+2027-11-06. Renew them before that expiry. Apple rejects post-July-2019 TLS leaf
+certificates whose lifetime exceeds 825 days, even if their current dates are
+valid. These tests use an explicitly imported private trust anchor.
+The test CA certificates last from 2020-01-01 through 2049-12-31.
+
+They use RSA-2048 signatures with SHA-256, BasicConstraints, appropriate KeyUsage,
+SubjectKeyIdentifier/AuthorityKeyIdentifier, and leaf
+SubjectAlternativeName/ExtendedKeyUsage. Tests run without an external network
+or a certificate-generation subprocess.
+
+To renew, run `python3 test/fixtures/tls/generate.py` from the repository root in
+an environment with Python's `cryptography` package installed. The script reuses
+the public test server key and generates fresh in-memory CA keys; it does not
+save any CA private key. Commit the six regenerated certificates together,
+update the validity dates in this file, and run the TLS tests on all three
+desktop platforms. The expired and forged fixtures remain invalid by design.
+
+Apple's certificate requirements:
+
+- https://support.apple.com/en-ie/103769
+- https://support.apple.com/en-gb/102028
