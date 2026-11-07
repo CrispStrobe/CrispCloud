@@ -222,8 +222,9 @@ class CryptomatorService {
         masterkeyFile.version > 0xffffffff) {
       throw const FormatException('Invalid Cryptomator masterkey file');
     }
-    // 1. Derive KEK from password via scrypt
-    final passwordBytes = Uint8List.fromList(utf8.encode(password));
+    // 1. Format 6 and later normalize passwords to NFC before UTF-8/scrypt.
+    // https://docs.cryptomator.org/misc/vault-format-history/#format-6
+    final passwordBytes = Uint8List.fromList(utf8.encode(unorm.nfc(password)));
     final kek = _scrypt(
       passwordBytes,
       masterkeyFile.scryptSalt,
@@ -726,7 +727,7 @@ class CryptomatorService {
       List.generate(32, (_) => random.nextInt(256)),
     );
 
-    final passwordBytes = Uint8List.fromList(utf8.encode(password));
+    final passwordBytes = Uint8List.fromList(utf8.encode(unorm.nfc(password)));
     final kek = _scrypt(
       passwordBytes,
       salt,

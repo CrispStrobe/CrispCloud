@@ -349,6 +349,100 @@ void main() {
       expect(unlocked.encKey, equals(encKey));
     });
 
+    // Independent fixture: Python unicodedata.normalize('NFC', password),
+    // hashlib.scrypt(n=16, r=1, p=1, dklen=32), cryptography.aes_key_wrap,
+    // and hmac.digest with SHA-256. Salt is bytes 0..31; encKey is 1..32;
+    // macKey is 33..64. NFC UTF-8 is c3a42dc3852de285a0 and the KEK is
+    // 8deef1058bb68fcfd9ebffead71d028ac0d7ed83f660db5781f1280b2f27cdde.
+    // Cryptomator has required NFC passwords since vault format 6:
+    // https://docs.cryptomator.org/misc/vault-format-history/#format-6
+    const nfcMasterkeyJson = '''{
+      "version": 999,
+      "scryptSalt": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+      "scryptCostParam": 16,
+      "scryptBlockSize": 1,
+      "primaryMasterKey": "9dn6SEdDc8JseB4roUE7G5kQpM6UPe5nBxiAOtBUuTxanFORzgJ2PQ==",
+      "hmacMasterKey": "dp6AlLdAnaaZCl6l1JqEUr2oCKrWQefmQAu1ru25iw3lcbAsi1IS1g==",
+      "versionMac": "2YWeJKrYJPlk4eHzUcof0MWu1Rd33T4rG4q6uzIBX5c="
+    }''';
+    const nfcConfig =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Im1hc3RlcmtleWZpbGU6bWFzdGVya2V5LmNyeXB0b21hdG9yIn0.'
+        'eyJmb3JtYXQiOjgsImNpcGhlckNvbWJvIjoiU0lWX0dDTSIsInNob3J0ZW5pbmdUaHJlc2hvbGQiOjIyMCwianRpIjoiaW5kZXBlbmRlbnQtbmZjLWZpeHR1cmUifQ.'
+        'jaHK1YMACL-tCbddWAax-5nc6T0cOrE4HkCeWadfM7M';
+
+    test('independent masterkey fixture accepts both NFC password forms', () {
+      final mf = MasterkeyFile.fromJson(nfcMasterkeyJson);
+      for (final password in [
+        '\u00e4-\u00c5-\u2160',
+        'a\u0308-A\u030a-\u2160',
+      ]) {
+        final unlocked = CryptomatorService.unlockVault(
+          vaultMeta,
+          mf,
+          password,
+          vaultConfigJwt: nfcConfig,
+        );
+        expect(
+          unlocked.encKey,
+          Uint8List.fromList(List.generate(32, (i) => i + 1)),
+        );
+        expect(
+          unlocked.macKey,
+          Uint8List.fromList(List.generate(32, (i) => i + 33)),
+        );
+        expect(unlocked.vault.shorteningThreshold, 220);
+      }
+    });
+
+    test(
+      'password normalization preserves compatibility-distinct characters',
+      () {
+        // U+2160 ROMAN NUMERAL ONE becomes ASCII I under NFKC, but not NFC.
+        expect(
+          () => CryptomatorService.unlockVault(
+            vaultMeta,
+            MasterkeyFile.fromJson(nfcMasterkeyJson),
+            '\u00e4-\u00c5-I',
+            vaultConfigJwt: nfcConfig,
+          ),
+          throwsFormatException,
+        );
+      },
+    );
+
+    test('independent JWT fixture requires encryption key before MAC key', () {
+      final reversedKeyConfig = nfcConfig.replaceFirst(
+        'jaHK1YMACL-tCbddWAax-5nc6T0cOrE4HkCeWadfM7M',
+        'MNnLfIJe1nObZr8ZSDgCV61bPxhzUcG00xgQ6TCaR3I',
+      );
+      expect(
+        () => CryptomatorService.unlockVault(
+          vaultMeta,
+          MasterkeyFile.fromJson(nfcMasterkeyJson),
+          '\u00e4-\u00c5-\u2160',
+          vaultConfigJwt: reversedKeyConfig,
+        ),
+        throwsFormatException,
+      );
+    });
+
+    test(
+      'masterkey creation normalizes decomposed passwords before wrapping',
+      () {
+        final encKey = Uint8List.fromList(List.generate(32, (i) => i + 1));
+        final macKey = Uint8List.fromList(List.generate(32, (i) => i + 33));
+        final mf = makeMasterkeyFile(encKey, macKey, 'a\u0308-A\u030a-\u2160');
+        final unlocked = CryptomatorService.unlockVault(
+          vaultMeta,
+          mf,
+          '\u00e4-\u00c5-\u2160',
+          vaultConfigJwt: nfcConfig,
+        );
+        expect(unlocked.encKey, encKey);
+        expect(unlocked.macKey, macKey);
+      },
+    );
+
     test('unlocks vault and returns original mac key', () {
       final encKey = Uint8List(32);
       final macKey = Uint8List.fromList(List.generate(32, (i) => i + 80));
