@@ -48,6 +48,13 @@ class AppDelegate: FlutterAppDelegate {
     if setStatus != errSecSuccess {
       NSLog("[AppDelegate] Could not select custom keychain %@ (status %d)", path, setStatus)
     }
+    // SecItemAdd uses the default keychain, but SecItemCopyMatching searches
+    // the search list. Keep the app's credential storage isolated to the
+    // selected keychain so reads and deletes find what writes created.
+    let listStatus = SecKeychainSetSearchList([keychain] as CFArray)
+    if listStatus != errSecSuccess {
+      NSLog("[AppDelegate] Could not set custom keychain search list (status %d)", listStatus)
+    }
   }
 
   private func sendUrlToFlutter(_ url: URL) {
