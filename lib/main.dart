@@ -546,6 +546,11 @@ Future<CredentialStorageSetupResult> _runFirstRunCredentialSetup() {
       },
     ),
   );
+  // The release startup smoke test must distinguish a healthy first-run
+  // chooser from a crashed app that never mounts the main profile.
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    _log.info('Credential setup UI rendered');
+  });
   return completer.future;
 }
 
