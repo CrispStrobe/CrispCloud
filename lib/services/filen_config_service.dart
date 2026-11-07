@@ -1,5 +1,6 @@
 // services/filen_config_service.dart
 import 'dart:convert';
+
 import 'dart:io';
 
 import 'package:filen_client/config_storage.dart';
@@ -96,7 +97,7 @@ class FilenConfigService {
   Future<void> _deleteLegacyCredentialsFile() async {
     try {
       final legacy = File(p.join(configPath, 'credentials.json'));
-      if (await legacy.exists()) await legacy.delete();
+      if (legacy.existsSync()) legacy.deleteSync();
     } catch (_) {
       // The secure entry is authoritative; a leftover legacy file is removed
       // again on the next successful login/logout.
@@ -196,7 +197,7 @@ class _FilenSecureConfigStorage implements ConfigStorage {
   Future<void> _deleteLegacy() async {
     try {
       final legacy = File(p.join(_configPath, 'credentials.json'));
-      if (await legacy.exists()) await legacy.delete();
+      if (legacy.existsSync()) legacy.deleteSync();
     } catch (_) {
       // Retried on the next save/logout.
     }
