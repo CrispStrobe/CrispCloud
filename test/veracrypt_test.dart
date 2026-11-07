@@ -91,7 +91,10 @@ void main() {
     });
 
     test('returns true for .hc with size >= 512', () {
-      expect(VeraCryptService.detectContainerStrict('/v.hc', 1024 * 1024), isTrue);
+      expect(
+        VeraCryptService.detectContainerStrict('/v.hc', 1024 * 1024),
+        isTrue,
+      );
     });
 
     test('returns false for .vc with size < 512', () {
@@ -99,8 +102,10 @@ void main() {
     });
 
     test('returns false for unknown extension even with large size', () {
-      expect(VeraCryptService.detectContainerStrict('/v.bin', 10 * 1024 * 1024),
-          isFalse);
+      expect(
+        VeraCryptService.detectContainerStrict('/v.bin', 10 * 1024 * 1024),
+        isFalse,
+      );
     });
   });
 
@@ -188,18 +193,26 @@ void main() {
       expect(s, 'VERA');
     });
 
-    test('tryDecryptHeader returns null for all-zero header (no VERA magic)', () {
-      final header = Uint8List(512);
-      // Use testIterations: 1 to avoid 500K-iteration PBKDF2 per algorithm
-      expect(
-        VeraCryptService.tryDecryptHeader(header, 'anypassword', testIterations: 1),
-        isNull,
-      );
-    });
+    test(
+      'tryDecryptHeader returns null for all-zero header (no VERA magic)',
+      () {
+        final header = Uint8List(512);
+        // Use testIterations: 1 to avoid 500K-iteration PBKDF2 per algorithm
+        expect(
+          VeraCryptService.tryDecryptHeader(
+            header,
+            'anypassword',
+            testIterations: 1,
+          ),
+          isNull,
+        );
+      },
+    );
 
     test('tryDecryptHeader returns null for random-looking bytes', () {
       final header = Uint8List.fromList(
-          List.generate(512, (i) => (i * 37 + 13) & 0xFF));
+        List.generate(512, (i) => (i * 37 + 13) & 0xFF),
+      );
       expect(
         VeraCryptService.tryDecryptHeader(header, 'pw', testIterations: 1),
         isNull,
@@ -217,11 +230,14 @@ void main() {
     });
 
     test('includes AES-256-XTS', () {
-      expect(VeraCryptService.getSupportedAlgorithms(), contains('AES-256-XTS'));
+      expect(
+        VeraCryptService.getSupportedAlgorithms(),
+        contains('AES-256-XTS'),
+      );
     });
 
-    test('returns at least 3 algorithms', () {
-      expect(VeraCryptService.getSupportedAlgorithms().length, greaterThanOrEqualTo(3));
+    test('advertises only the implemented AES-XTS decryptor', () {
+      expect(VeraCryptService.getSupportedAlgorithms(), ['AES-256-XTS']);
     });
 
     test('all entries are non-empty strings', () {
@@ -237,15 +253,24 @@ void main() {
     });
 
     test('includes SHA-512', () {
-      expect(VeraCryptService.getSupportedHashAlgorithms(), contains('SHA-512'));
+      expect(
+        VeraCryptService.getSupportedHashAlgorithms(),
+        contains('SHA-512'),
+      );
     });
 
     test('includes SHA-256', () {
-      expect(VeraCryptService.getSupportedHashAlgorithms(), contains('SHA-256'));
+      expect(
+        VeraCryptService.getSupportedHashAlgorithms(),
+        contains('SHA-256'),
+      );
     });
 
     test('includes Whirlpool', () {
-      expect(VeraCryptService.getSupportedHashAlgorithms(), contains('Whirlpool'));
+      expect(
+        VeraCryptService.getSupportedHashAlgorithms(),
+        contains('Whirlpool'),
+      );
     });
 
     test('all entries are non-empty strings', () {
@@ -260,61 +285,138 @@ void main() {
   // ---------------------------------------------------------------------------
 
   group('deriveKey', () {
+    test('rejects unknown KDFs instead of silently selecting SHA-512', () {
+      for (final algorithm in ['RIPEMD-160', 'Argon2id', 'unknown']) {
+        expect(
+          () => VeraCryptService.deriveKey(
+            'password',
+            Uint8List(64),
+            hashAlgorithm: algorithm,
+            iterations: 1,
+          ),
+          throwsArgumentError,
+        );
+      }
+    });
+
+    test('validates salt length and iteration count', () {
+      expect(
+        () => VeraCryptService.deriveKey(
+          'password',
+          Uint8List(63),
+          iterations: 1,
+        ),
+        throwsArgumentError,
+      );
+      expect(
+        () => VeraCryptService.deriveKey(
+          'password',
+          Uint8List(64),
+          iterations: 0,
+        ),
+        throwsArgumentError,
+      );
+    });
+
     test('returns 64 bytes (512 bits)', () {
       final salt = Uint8List(64);
-      final key = VeraCryptService.deriveKey('password', salt,
-          hashAlgorithm: 'SHA-512', iterations: 1);
+      final key = VeraCryptService.deriveKey(
+        'password',
+        salt,
+        hashAlgorithm: 'SHA-512',
+        iterations: 1,
+      );
       expect(key.length, 64);
     });
 
     test('returns 64 bytes with SHA-256', () {
       final salt = Uint8List(64);
-      final key = VeraCryptService.deriveKey('password', salt,
-          hashAlgorithm: 'SHA-256', iterations: 1);
+      final key = VeraCryptService.deriveKey(
+        'password',
+        salt,
+        hashAlgorithm: 'SHA-256',
+        iterations: 1,
+      );
       expect(key.length, 64);
     });
 
     test('returns 64 bytes with Whirlpool', () {
       final salt = Uint8List(64);
-      final key = VeraCryptService.deriveKey('password', salt,
-          hashAlgorithm: 'Whirlpool', iterations: 1);
+      final key = VeraCryptService.deriveKey(
+        'password',
+        salt,
+        hashAlgorithm: 'Whirlpool',
+        iterations: 1,
+      );
       expect(key.length, 64);
     });
 
     test('same inputs produce same key (deterministic)', () {
       final salt = Uint8List.fromList(List.generate(64, (i) => i));
-      final k1 = VeraCryptService.deriveKey('same', salt,
-          hashAlgorithm: 'SHA-512', iterations: 1);
-      final k2 = VeraCryptService.deriveKey('same', salt,
-          hashAlgorithm: 'SHA-512', iterations: 1);
+      final k1 = VeraCryptService.deriveKey(
+        'same',
+        salt,
+        hashAlgorithm: 'SHA-512',
+        iterations: 1,
+      );
+      final k2 = VeraCryptService.deriveKey(
+        'same',
+        salt,
+        hashAlgorithm: 'SHA-512',
+        iterations: 1,
+      );
       expect(k1, equals(k2));
     });
 
     test('different passwords produce different keys', () {
       final salt = Uint8List(64);
-      final k1 = VeraCryptService.deriveKey('password1', salt,
-          hashAlgorithm: 'SHA-512', iterations: 1);
-      final k2 = VeraCryptService.deriveKey('password2', salt,
-          hashAlgorithm: 'SHA-512', iterations: 1);
+      final k1 = VeraCryptService.deriveKey(
+        'password1',
+        salt,
+        hashAlgorithm: 'SHA-512',
+        iterations: 1,
+      );
+      final k2 = VeraCryptService.deriveKey(
+        'password2',
+        salt,
+        hashAlgorithm: 'SHA-512',
+        iterations: 1,
+      );
       expect(k1, isNot(equals(k2)));
     });
 
     test('different salts produce different keys', () {
       final s1 = Uint8List.fromList(List.filled(64, 0x01));
       final s2 = Uint8List.fromList(List.filled(64, 0x02));
-      final k1 = VeraCryptService.deriveKey('pw', s1,
-          hashAlgorithm: 'SHA-512', iterations: 1);
-      final k2 = VeraCryptService.deriveKey('pw', s2,
-          hashAlgorithm: 'SHA-512', iterations: 1);
+      final k1 = VeraCryptService.deriveKey(
+        'pw',
+        s1,
+        hashAlgorithm: 'SHA-512',
+        iterations: 1,
+      );
+      final k2 = VeraCryptService.deriveKey(
+        'pw',
+        s2,
+        hashAlgorithm: 'SHA-512',
+        iterations: 1,
+      );
       expect(k1, isNot(equals(k2)));
     });
 
     test('SHA-512 and SHA-256 produce different keys for same inputs', () {
       final salt = Uint8List(64);
-      final k1 = VeraCryptService.deriveKey('pw', salt,
-          hashAlgorithm: 'SHA-512', iterations: 1);
-      final k2 = VeraCryptService.deriveKey('pw', salt,
-          hashAlgorithm: 'SHA-256', iterations: 1);
+      final k1 = VeraCryptService.deriveKey(
+        'pw',
+        salt,
+        hashAlgorithm: 'SHA-512',
+        iterations: 1,
+      );
+      final k2 = VeraCryptService.deriveKey(
+        'pw',
+        salt,
+        hashAlgorithm: 'SHA-256',
+        iterations: 1,
+      );
       expect(k1, isNot(equals(k2)));
     });
   });
@@ -410,11 +512,19 @@ void main() {
         volumeSize: 1024,
       );
       final map = header.toJson();
-      expect(map.keys, containsAll([
-        'salt', 'encryptedAreaOffset', 'encryptedAreaSize',
-        'sectorSize', 'version', 'encryptionAlgorithmId',
-        'hashAlgorithmId', 'volumeSize',
-      ]));
+      expect(
+        map.keys,
+        containsAll([
+          'salt',
+          'encryptedAreaOffset',
+          'encryptedAreaSize',
+          'sectorSize',
+          'version',
+          'encryptionAlgorithmId',
+          'hashAlgorithmId',
+          'volumeSize',
+        ]),
+      );
     });
 
     test('sectorSize defaults to 512 from parseHeader', () {

@@ -1,10 +1,6 @@
-// SharedPreferences-backed implementation of internxt_client's
-// ConfigStorage interface, for cloud-dart's Flutter Web build
-// (where dart:io File is unavailable).
-//
-// Native builds (macOS/iOS/Android/Linux/Windows) keep using the
-// default FileConfigStorage from the published package — this
-// class only ships through the kIsWeb branch in the adapter.
+// Legacy SharedPreferences backend, retained only to migrate web configs.
+// New application credentials use InternxtSecureConfigStorage backed by the
+// host's unlocked WebEncryptedStorage. Do not use this backend for new secrets.
 
 import 'package:internxt_client/internxt_client.dart' show ConfigStorage;
 import 'package:shared_preferences/shared_preferences.dart';

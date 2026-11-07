@@ -57,7 +57,18 @@ jobs:
         run: flutter config --no-enable-swift-package-manager
 
       - name: Resolve dependencies
-        run: flutter pub get
+        run: flutter pub get --enforce-lockfile
+
+      - name: Check crypto release inputs and compatibility
+        run: |
+          python3 tool/crypto_release_evidence.py --check
+          flutter test --no-pub test/aes_siv_test.dart test/cryptomator_test.dart \
+            test/veracrypt_header_vectors_test.dart test/internxt_secure_config_test.dart \
+            test/crypto_paths_test.dart test/filen_adapter_test.dart \
+            test/filen_bounded_transfer_test.dart test/internxt_rewire_test.dart \
+            test/internxt_download_path_test.dart test/internxt_bounded_transfer_test.dart \
+            test/tls_verification_test.dart test/custom_ca_test.dart \
+            test/backup_encryption_security_test.dart
 
       - name: Import signing certificate into a temp keychain
         env:
@@ -145,7 +156,7 @@ jobs:
           # FlutterGeneratedPluginSwiftPackage) and the CocoaPods integration
           # WITHOUT building — this sets the Flutter.framework search paths that a
           # bare xcodebuild would otherwise miss in the SPM/CocoaPods hybrid.
-          PATH="/usr/bin:$PATH" flutter build ios --release --config-only --no-codesign \
+          PATH="/usr/bin:$PATH" flutter build ios --release --no-pub --config-only --no-codesign \
             --dart-define=GIT_HASH="$(git rev-parse --short HEAD)"
           PATH="/usr/bin:$PATH" env -u GEM_HOME -u GEM_PATH -u RUBYOPT \
             pod install --project-directory=ios
@@ -219,11 +230,34 @@ jobs:
           ( cd "$WORK" && zip -qr "$RESIGNED" Payload )
           echo "IPA=$RESIGNED" >> "$GITHUB_ENV"
 
-      - name: Upload IPA artifact
+      - name: Record the submitted IPA's crypto release evidence
+        run: |
+          set -euo pipefail
+          mkdir -p build/export-compliance
+          dart pub deps --json > build/export-compliance/dependencies.json
+          python3 tool/crypto_release_evidence.py --platform ios --require-clean --record-generated-metadata \
+            --artifact "$IPA" --dependencies build/export-compliance/dependencies.json
+
+      - name: Capture unapproved iOS project changes on failure
+        if: failure()
+        run: python3 tool/record_native_project_diagnostics.py ios
+
+      - name: Upload iOS source diagnostics
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: numbernebula-ipa
-          path: build/ios/ipa/*.ipa
+          name: ios-release-source-diagnostics
+          path: build/source-diagnostics/ios/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Upload IPA artifact and crypto evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: CrispCloud-ios-ipa
+          path: |
+            ${{ env.IPA }}
+            build/export-compliance/
           if-no-files-found: error
 
       - name: Upload to App Store Connect

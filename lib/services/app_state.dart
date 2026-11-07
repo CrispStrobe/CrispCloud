@@ -24,6 +24,7 @@ import 'ftp_config_service.dart';
 import 'dropbox_config_service.dart';
 import 'gdrive_config_service.dart';
 import 'internxt_client.dart';
+import 'internxt_flutter/secure_config_storage.dart';
 import 'onedrive_config_service.dart';
 import 'internxt_client_adapter.dart';
 import 'local_file_service.dart';
@@ -586,7 +587,10 @@ class AppState extends ChangeNotifier {
       } else if (provider == CloudProvider.smb) {
         _config = SmbConfigService(_secureStorage);
       } else if (provider == CloudProvider.internxt) {
-        _config = ConfigService(configPath: _configPath);
+        _config = createSecureInternxtConfig(
+          configPath: _configPath,
+          secureStorage: _secureStorage,
+        );
       }
 
       // 3. Create Client

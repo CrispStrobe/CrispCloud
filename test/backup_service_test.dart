@@ -13,6 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:crisp_cloud/services/backup_service.dart';
+import 'package:crisp_cloud/services/secure_storage_service.dart';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -30,21 +31,20 @@ BackupPlan _makePlan({
   String? encryptionKey,
   bool enabled = true,
   List<String> excludePatterns = const [],
-}) =>
-    BackupPlan(
-      id: 'plan-001',
-      name: name,
-      sourcePath: sourcePath,
-      destinationPath: destinationPath,
-      provider: provider,
-      schedule: schedule,
-      maxVersions: maxVersions,
-      encryptionEnabled: encryptionEnabled,
-      encryptionKey: encryptionKey,
-      enabled: enabled,
-      excludePatterns: excludePatterns,
-      createdAt: DateTime(2026, 1, 1),
-    );
+}) => BackupPlan(
+  id: 'plan-001',
+  name: name,
+  sourcePath: sourcePath,
+  destinationPath: destinationPath,
+  provider: provider,
+  schedule: schedule,
+  maxVersions: maxVersions,
+  encryptionEnabled: encryptionEnabled,
+  encryptionKey: encryptionKey,
+  enabled: enabled,
+  excludePatterns: excludePatterns,
+  createdAt: DateTime(2026, 1, 1),
+);
 
 /// Returns a minimal valid BackupSnapshot.
 BackupSnapshot _makeSnapshot({
@@ -54,17 +54,16 @@ BackupSnapshot _makeSnapshot({
   List<BackupFileEntry>? files,
   int fileCount = 2,
   int totalBytes = 1024,
-}) =>
-    BackupSnapshot(
-      id: id,
-      planId: planId,
-      timestamp: DateTime(2026, 5, 1, 2, 0),
-      fileCount: fileCount,
-      totalBytes: totalBytes,
-      status: status,
-      files: files ?? [],
-      durationMs: 150,
-    );
+}) => BackupSnapshot(
+  id: id,
+  planId: planId,
+  timestamp: DateTime(2026, 5, 1, 2, 0),
+  fileCount: fileCount,
+  totalBytes: totalBytes,
+  status: status,
+  files: files ?? [],
+  durationMs: 150,
+);
 
 /// Returns a BackupFileEntry with sensible defaults.
 BackupFileEntry _makeEntry({
@@ -73,14 +72,13 @@ BackupFileEntry _makeEntry({
   String md5Hash = 'abc123',
   BackupFileStatus status = BackupFileStatus.added,
   String backupPath = '/backup/plan-001/snap-001/doc.txt',
-}) =>
-    BackupFileEntry(
-      relativePath: relativePath,
-      sizeBytes: sizeBytes,
-      md5Hash: md5Hash,
-      status: status,
-      backupPath: backupPath,
-    );
+}) => BackupFileEntry(
+  relativePath: relativePath,
+  sizeBytes: sizeBytes,
+  md5Hash: md5Hash,
+  status: status,
+  backupPath: backupPath,
+);
 
 // ---------------------------------------------------------------------------
 // Main
@@ -206,10 +204,12 @@ void main() {
     });
 
     test('files list round-trips', () {
-      final snap = _makeSnapshot(files: [
-        _makeEntry(relativePath: 'a.txt', status: BackupFileStatus.added),
-        _makeEntry(relativePath: 'b.txt', status: BackupFileStatus.unchanged),
-      ]);
+      final snap = _makeSnapshot(
+        files: [
+          _makeEntry(relativePath: 'a.txt', status: BackupFileStatus.added),
+          _makeEntry(relativePath: 'b.txt', status: BackupFileStatus.unchanged),
+        ],
+      );
       final restored = BackupSnapshot.fromJson(snap.toJson());
       expect(restored.files.length, 2);
       expect(restored.files[0].relativePath, 'a.txt');
@@ -227,7 +227,10 @@ void main() {
 
     test('copyWithStatus propagates new error', () {
       final snap = _makeSnapshot();
-      final failed = snap.copyWithStatus(BackupSnapshotStatus.failed, error: 'oops');
+      final failed = snap.copyWithStatus(
+        BackupSnapshotStatus.failed,
+        error: 'oops',
+      );
       expect(failed.error, 'oops');
     });
   });
@@ -251,25 +254,29 @@ void main() {
       expect(json['enabled'], true);
     });
 
-    test('fromJson round-trips all fields', () {
-      final original = _makePlan(
-        excludePatterns: ['*.tmp', '.git/**'],
-        encryptionEnabled: true,
-        encryptionKey: 'secret',
-      );
-      final restored = BackupPlan.fromJson(original.toJson());
-      expect(restored.id, original.id);
-      expect(restored.name, original.name);
-      expect(restored.sourcePath, original.sourcePath);
-      expect(restored.destinationPath, original.destinationPath);
-      expect(restored.provider, original.provider);
-      expect(restored.schedule, original.schedule);
-      expect(restored.maxVersions, original.maxVersions);
-      expect(restored.encryptionEnabled, true);
-      expect(restored.encryptionKey, 'secret');
-      expect(restored.excludePatterns, ['*.tmp', '.git/**']);
-      expect(restored.createdAt, original.createdAt);
-    });
+    test(
+      'fromJson round-trips metadata without serializing the passphrase',
+      () {
+        final original = _makePlan(
+          excludePatterns: ['*.tmp', '.git/**'],
+          encryptionEnabled: true,
+          encryptionKey: 'secret',
+        );
+        final restored = BackupPlan.fromJson(original.toJson());
+        expect(restored.id, original.id);
+        expect(restored.name, original.name);
+        expect(restored.sourcePath, original.sourcePath);
+        expect(restored.destinationPath, original.destinationPath);
+        expect(restored.provider, original.provider);
+        expect(restored.schedule, original.schedule);
+        expect(restored.maxVersions, original.maxVersions);
+        expect(restored.encryptionEnabled, true);
+        expect(original.toJson().containsKey('encryptionKey'), isFalse);
+        expect(restored.encryptionKey, isNull);
+        expect(restored.excludePatterns, ['*.tmp', '.git/**']);
+        expect(restored.createdAt, original.createdAt);
+      },
+    );
 
     test('fromJson uses defaults for missing optional fields', () {
       final minimal = {
@@ -359,7 +366,10 @@ void main() {
         isNotNull,
       );
       expect(
-        _makePlan(encryptionEnabled: true, encryptionKey: 'passphrase').validate(),
+        _makePlan(
+          encryptionEnabled: true,
+          encryptionKey: 'passphrase',
+        ).validate(),
         isNull,
       );
     });
@@ -373,7 +383,7 @@ void main() {
     late BackupService service;
 
     setUp(() {
-      service = BackupService();
+      service = BackupService(secureStorage: InMemorySecureStorage());
     });
 
     test('getPlans returns empty list initially', () async {
@@ -500,7 +510,7 @@ void main() {
     late BackupService service;
 
     setUp(() {
-      service = BackupService();
+      service = BackupService(secureStorage: InMemorySecureStorage());
     });
 
     test('getSnapshots returns empty list for unknown plan', () async {
@@ -526,7 +536,7 @@ void main() {
     late BackupService service;
 
     setUp(() {
-      service = BackupService();
+      service = BackupService(secureStorage: InMemorySecureStorage());
     });
 
     test('pruneSnapshots returns 0 when no snapshots', () async {
@@ -597,7 +607,7 @@ void main() {
 
   group('verifySnapshot logic', () {
     test('verifySnapshot returns empty map when snapshot not found', () async {
-      final service = BackupService();
+      final service = BackupService(secureStorage: InMemorySecureStorage());
       final result = await service.verifySnapshot('nonexistent-snapshot');
       expect(result, isEmpty);
     });
@@ -609,7 +619,7 @@ void main() {
 
   group('getRestorePreview', () {
     test('returns empty list when snapshot not found', () async {
-      final service = BackupService();
+      final service = BackupService(secureStorage: InMemorySecureStorage());
       final preview = await service.getRestorePreview('unknown-id');
       expect(preview, isEmpty);
     });
@@ -622,7 +632,9 @@ void main() {
   group('Glob exclusion patterns', () {
     // We test the BackupPlan model stores them and the validation passes.
     test('excludePatterns are preserved in toJson/fromJson', () {
-      final plan = _makePlan(excludePatterns: ['*.tmp', 'node_modules/**', '.git/**']);
+      final plan = _makePlan(
+        excludePatterns: ['*.tmp', 'node_modules/**', '.git/**'],
+      );
       final restored = BackupPlan.fromJson(plan.toJson());
       expect(restored.excludePatterns, ['*.tmp', 'node_modules/**', '.git/**']);
     });
@@ -648,7 +660,7 @@ void main() {
 
     setUp(() async {
       tempDir = await Directory.systemTemp.createTemp('backup_test_');
-      service = BackupService();
+      service = BackupService(secureStorage: InMemorySecureStorage());
     });
 
     tearDown(() async {
@@ -667,28 +679,32 @@ void main() {
       return files;
     }
 
-    test('backup of empty directory produces empty completed snapshot', () async {
-      // Create plan pointing at empty tempDir
-      await service.createPlan(
-        name: 'Empty Backup',
-        sourcePath: tempDir.path,
-        destinationPath: '/cloud/empty',
-        provider: 'filen',
-        maxVersions: 5,
-      );
-      final plans = await service.getPlans();
-      final planId = plans.first.id;
+    test(
+      'backup of empty directory produces empty completed snapshot',
+      () async {
+        // Create plan pointing at empty tempDir
+        await service.createPlan(
+          name: 'Empty Backup',
+          sourcePath: tempDir.path,
+          destinationPath: '/cloud/empty',
+          provider: 'filen',
+          maxVersions: 5,
+        );
+        final plans = await service.getPlans();
+        final planId = plans.first.id;
 
-      final snapshot = await service.runBackup(
-        planId,
-        uploadFile: (relativePath, bytes) async => '/cloud/empty/$relativePath',
-      );
+        final snapshot = await service.runBackup(
+          planId,
+          uploadFile: (relativePath, bytes) async =>
+              '/cloud/empty/$relativePath',
+        );
 
-      expect(snapshot.status, BackupSnapshotStatus.completed);
-      expect(snapshot.fileCount, 0);
-      expect(snapshot.totalBytes, 0);
-      expect(snapshot.files, isEmpty);
-    });
+        expect(snapshot.status, BackupSnapshotStatus.completed);
+        expect(snapshot.fileCount, 0);
+        expect(snapshot.totalBytes, 0);
+        expect(snapshot.files, isEmpty);
+      },
+    );
 
     test('first backup marks all files as added', () async {
       await _createFiles({'a.txt': 'hello', 'b.txt': 'world'});
@@ -740,8 +756,9 @@ void main() {
       );
 
       expect(snap2.status, BackupSnapshotStatus.completed);
-      final unchanged =
-          snap2.files.where((f) => f.status == BackupFileStatus.unchanged);
+      final unchanged = snap2.files.where(
+        (f) => f.status == BackupFileStatus.unchanged,
+      );
       expect(unchanged.length, 1);
       expect(unchanged.first.relativePath, 'a.txt');
     });
@@ -774,8 +791,9 @@ void main() {
         uploadFile: (rel, bytes) async => '/cloud/mod/snap2/$rel',
       );
 
-      final modified =
-          snap2.files.where((f) => f.status == BackupFileStatus.modified);
+      final modified = snap2.files.where(
+        (f) => f.status == BackupFileStatus.modified,
+      );
       expect(modified.length, 1);
       expect(modified.first.relativePath, 'a.txt');
     });
@@ -806,7 +824,9 @@ void main() {
         uploadFile: (rel, bytes) async => '/cloud/nf/snap2/$rel',
       );
 
-      final added = snap2.files.where((f) => f.status == BackupFileStatus.added);
+      final added = snap2.files.where(
+        (f) => f.status == BackupFileStatus.added,
+      );
       expect(added.map((f) => f.relativePath), contains('new.txt'));
     });
 
@@ -832,7 +852,9 @@ void main() {
       );
 
       // Delete one file
-      final toDelete = files.firstWhere((f) => f.path.endsWith('delete_me.txt'));
+      final toDelete = files.firstWhere(
+        (f) => f.path.endsWith('delete_me.txt'),
+      );
       await toDelete.delete();
 
       final snap2 = await service.runBackup(
@@ -840,7 +862,9 @@ void main() {
         uploadFile: (rel, bytes) async => '/cloud/del/snap2/$rel',
       );
 
-      final deleted = snap2.files.where((f) => f.status == BackupFileStatus.deleted);
+      final deleted = snap2.files.where(
+        (f) => f.status == BackupFileStatus.deleted,
+      );
       expect(deleted.length, 1);
       expect(deleted.first.relativePath, contains('delete_me.txt'));
     });
@@ -965,28 +989,32 @@ void main() {
       // Auto-prune runs after each backup; manually verify count
       await service.pruneSnapshots(planId);
       final snaps = await service.getSnapshots(planId);
-      final completed =
-          snaps.where((s) => s.status == BackupSnapshotStatus.completed).toList();
+      final completed = snaps
+          .where((s) => s.status == BackupSnapshotStatus.completed)
+          .toList();
       expect(completed.length, lessThanOrEqualTo(2));
     });
 
-    test('snapshot status transitions: pending → running → completed', () async {
-      await service.createPlan(
-        name: 'Status Test',
-        sourcePath: tempDir.path,
-        destinationPath: '/cloud/status',
-        provider: 'filen',
-      );
-      final plans = await service.getPlans();
-      final planId = plans.first.id;
+    test(
+      'snapshot status transitions: pending → running → completed',
+      () async {
+        await service.createPlan(
+          name: 'Status Test',
+          sourcePath: tempDir.path,
+          destinationPath: '/cloud/status',
+          provider: 'filen',
+        );
+        final plans = await service.getPlans();
+        final planId = plans.first.id;
 
-      final snapshot = await service.runBackup(
-        planId,
-        uploadFile: (rel, bytes) async => '/cloud/status/$rel',
-      );
-      // After a successful run, status should be completed
-      expect(snapshot.status, BackupSnapshotStatus.completed);
-    });
+        final snapshot = await service.runBackup(
+          planId,
+          uploadFile: (rel, bytes) async => '/cloud/status/$rel',
+        );
+        // After a successful run, status should be completed
+        expect(snapshot.status, BackupSnapshotStatus.completed);
+      },
+    );
 
     test('failed backup marks snapshot as failed', () async {
       await service.createPlan(
@@ -1080,45 +1108,54 @@ void main() {
       expect(previewPaths, isNot(contains('gone.txt')));
     });
 
-    test('multiple plans are independent — backups do not cross-pollinate', () async {
-      final dirA = await Directory.systemTemp.createTemp('backup_a_');
-      final dirB = await Directory.systemTemp.createTemp('backup_b_');
+    test(
+      'multiple plans are independent — backups do not cross-pollinate',
+      () async {
+        final dirA = await Directory.systemTemp.createTemp('backup_a_');
+        final dirB = await Directory.systemTemp.createTemp('backup_b_');
 
-      try {
-        await File('${dirA.path}/fileA.txt').writeAsString('content A');
-        await File('${dirB.path}/fileB.txt').writeAsString('content B');
+        try {
+          await File('${dirA.path}/fileA.txt').writeAsString('content A');
+          await File('${dirB.path}/fileB.txt').writeAsString('content B');
 
-        final pA = await service.createPlan(
-          name: 'Plan A',
-          sourcePath: dirA.path,
-          destinationPath: '/cloud/a',
-          provider: 'filen',
-        );
-        final pB = await service.createPlan(
-          name: 'Plan B',
-          sourcePath: dirB.path,
-          destinationPath: '/cloud/b',
-          provider: 'filen',
-        );
+          final pA = await service.createPlan(
+            name: 'Plan A',
+            sourcePath: dirA.path,
+            destinationPath: '/cloud/a',
+            provider: 'filen',
+          );
+          final pB = await service.createPlan(
+            name: 'Plan B',
+            sourcePath: dirB.path,
+            destinationPath: '/cloud/b',
+            provider: 'filen',
+          );
 
-        final snapA = await service.runBackup(
-          pA.id,
-          uploadFile: (rel, bytes) async => '/cloud/a/$rel',
-        );
-        final snapB = await service.runBackup(
-          pB.id,
-          uploadFile: (rel, bytes) async => '/cloud/b/$rel',
-        );
+          final snapA = await service.runBackup(
+            pA.id,
+            uploadFile: (rel, bytes) async => '/cloud/a/$rel',
+          );
+          final snapB = await service.runBackup(
+            pB.id,
+            uploadFile: (rel, bytes) async => '/cloud/b/$rel',
+          );
 
-        expect(snapA.files.map((f) => f.relativePath), contains('fileA.txt'));
-        expect(snapA.files.map((f) => f.relativePath), isNot(contains('fileB.txt')));
-        expect(snapB.files.map((f) => f.relativePath), contains('fileB.txt'));
-        expect(snapB.files.map((f) => f.relativePath), isNot(contains('fileA.txt')));
-      } finally {
-        await dirA.delete(recursive: true);
-        await dirB.delete(recursive: true);
-      }
-    });
+          expect(snapA.files.map((f) => f.relativePath), contains('fileA.txt'));
+          expect(
+            snapA.files.map((f) => f.relativePath),
+            isNot(contains('fileB.txt')),
+          );
+          expect(snapB.files.map((f) => f.relativePath), contains('fileB.txt'));
+          expect(
+            snapB.files.map((f) => f.relativePath),
+            isNot(contains('fileA.txt')),
+          );
+        } finally {
+          await dirA.delete(recursive: true);
+          await dirB.delete(recursive: true);
+        }
+      },
+    );
   });
 
   // -------------------------------------------------------------------------
@@ -1131,16 +1168,19 @@ void main() {
     // and the kIsWeb guard pattern used throughout the service.
 
     test('BackupService instantiates without error', () {
-      expect(() => BackupService(), returnsNormally);
+      expect(
+        () => BackupService(secureStorage: InMemorySecureStorage()),
+        returnsNormally,
+      );
     });
 
     test('isRunning is false initially', () {
-      final service = BackupService();
+      final service = BackupService(secureStorage: InMemorySecureStorage());
       expect(service.isRunning, isFalse);
     });
 
     test('isRunningPlan returns false for unknown plan', () {
-      final service = BackupService();
+      final service = BackupService(secureStorage: InMemorySecureStorage());
       expect(service.isRunningPlan('any-id'), isFalse);
     });
   });

@@ -18,72 +18,31 @@ import 'package:crisp_cloud/services/file_cache_service.dart';
 import 'package:crisp_cloud/services/thumbnail_service.dart';
 
 void main() {
-  // --- CertPinningService Tests ---
-  group('CertPinningService', () {
-    late CertPinningService service;
+  group('Certificate pinning migration', () {
+    setUp(() => SharedPreferences.setMockInitialValues({}));
 
-    setUp(() {
-      SharedPreferences.setMockInitialValues({});
-      service = CertPinningService();
+    test('unsupported pinning cannot be enabled', () async {
+      final service = CertPinningService();
+      expect(service.isEnabled, isFalse);
+      await expectLater(service.setEnabled(true), throwsUnsupportedError);
+      expect(service.isEnabled, isFalse);
     });
 
-    test('disabled by default', () {
-      expect(service.isEnabled, false);
-    });
-
-    test('enable and disable', () async {
-      await service.setEnabled(true);
-      expect(service.isEnabled, true);
-
-      await service.setEnabled(false);
-      expect(service.isEnabled, false);
-    });
-
-    test('getPinnedProviders returns known providers', () {
-      final providers = service.getPinnedProviders();
-      expect(providers.length, greaterThanOrEqualTo(4));
-      final names = providers.map((p) => p['name'] as String).toSet();
-      expect(names, contains('Google'));
-      expect(names, contains('Microsoft'));
-      expect(names, contains('Dropbox'));
-      expect(names, contains('Amazon S3'));
-    });
-
-    test('validate always passes when disabled', () {
-      // Even with a fake cert, should pass when disabled
-      expect(service.isEnabled, false);
-      // We can't easily create a real X509Certificate in tests,
-      // but we verify the service reports as disabled
-    });
-  });
-
-  // --- CertPinSet Tests ---
-  group('CertPinSet', () {
-    test('matchesHost exact', () {
-      const ps = CertPinSet(name: 'Test', hostPatterns: ['example.com'], pins: {});
-      expect(ps.matchesHost('example.com'), true);
-      expect(ps.matchesHost('other.com'), false);
-    });
-
-    test('matchesHost subdomain', () {
-      const ps = CertPinSet(name: 'Test', hostPatterns: ['example.com'], pins: {});
-      expect(ps.matchesHost('api.example.com'), true);
-      expect(ps.matchesHost('sub.api.example.com'), true);
-      expect(ps.matchesHost('notexample.com'), false);
-    });
-
-    test('matchesHost case insensitive', () {
-      const ps = CertPinSet(name: 'Test', hostPatterns: ['Example.COM'], pins: {});
-      expect(ps.matchesHost('example.com'), true);
-      expect(ps.matchesHost('EXAMPLE.COM'), true);
-    });
-
-    test('matchesHost multiple patterns', () {
-      const ps = CertPinSet(name: 'Test', hostPatterns: ['a.com', 'b.com'], pins: {});
-      expect(ps.matchesHost('a.com'), true);
-      expect(ps.matchesHost('b.com'), true);
-      expect(ps.matchesHost('c.com'), false);
-    });
+    test(
+      'old enabled preference is removed without disabling TLS trust',
+      () async {
+        SharedPreferences.setMockInitialValues({'cert_pinning_enabled': true});
+        final service = CertPinningService();
+        await service.load();
+        expect(service.isEnabled, isFalse);
+        final prefs = await SharedPreferences.getInstance();
+        expect(prefs.getBool('cert_pinning_enabled'), isNull);
+        expect(
+          service.configureSecurityContext(null).minimumTlsProtocolVersion,
+          TlsProtocolVersion.tls1_2,
+        );
+      },
+    );
   });
 
   // --- FileCacheService Tests ---
@@ -188,72 +147,90 @@ void main() {
     }
 
     test('same hash means not modified', () {
-      expect(isRemoteModified(
-        fileSize: 100,
-        fileModified: DateTime(2026, 1, 2),
-        fileHash: 'abc123',
-        knownModified: DateTime(2026, 1, 1),
-        knownSize: 100,
-        knownHash: 'abc123',
-      ), false);
+      expect(
+        isRemoteModified(
+          fileSize: 100,
+          fileModified: DateTime(2026, 1, 2),
+          fileHash: 'abc123',
+          knownModified: DateTime(2026, 1, 1),
+          knownSize: 100,
+          knownHash: 'abc123',
+        ),
+        false,
+      );
     });
 
     test('different hash means modified', () {
-      expect(isRemoteModified(
-        fileSize: 100,
-        fileModified: DateTime(2026, 1, 1),
-        fileHash: 'abc123',
-        knownModified: DateTime(2026, 1, 1),
-        knownSize: 100,
-        knownHash: 'xyz789',
-      ), true);
+      expect(
+        isRemoteModified(
+          fileSize: 100,
+          fileModified: DateTime(2026, 1, 1),
+          fileHash: 'abc123',
+          knownModified: DateTime(2026, 1, 1),
+          knownSize: 100,
+          knownHash: 'xyz789',
+        ),
+        true,
+      );
     });
 
     test('hash takes precedence over timestamp', () {
       // Same hash but different timestamp → not modified (hash wins)
-      expect(isRemoteModified(
-        fileSize: 100,
-        fileModified: DateTime(2026, 6, 1),
-        fileHash: 'same',
-        knownModified: DateTime(2026, 1, 1),
-        knownSize: 100,
-        knownHash: 'same',
-      ), false);
+      expect(
+        isRemoteModified(
+          fileSize: 100,
+          fileModified: DateTime(2026, 6, 1),
+          fileHash: 'same',
+          knownModified: DateTime(2026, 1, 1),
+          knownSize: 100,
+          knownHash: 'same',
+        ),
+        false,
+      );
     });
 
     test('no hash falls back to timestamp', () {
       // No hashes, different timestamp → modified
-      expect(isRemoteModified(
-        fileSize: 100,
-        fileModified: DateTime(2026, 6, 1),
-        fileHash: null,
-        knownModified: DateTime(2026, 1, 1),
-        knownSize: 100,
-        knownHash: null,
-      ), true);
+      expect(
+        isRemoteModified(
+          fileSize: 100,
+          fileModified: DateTime(2026, 6, 1),
+          fileHash: null,
+          knownModified: DateTime(2026, 1, 1),
+          knownSize: 100,
+          knownHash: null,
+        ),
+        true,
+      );
     });
 
     test('no hash, same timestamp and size → not modified', () {
       final t = DateTime(2026, 1, 1);
-      expect(isRemoteModified(
-        fileSize: 100,
-        fileModified: t,
-        fileHash: null,
-        knownModified: t,
-        knownSize: 100,
-        knownHash: null,
-      ), false);
+      expect(
+        isRemoteModified(
+          fileSize: 100,
+          fileModified: t,
+          fileHash: null,
+          knownModified: t,
+          knownSize: 100,
+          knownHash: null,
+        ),
+        false,
+      );
     });
 
     test('only remote has hash, falls back to timestamp', () {
-      expect(isRemoteModified(
-        fileSize: 100,
-        fileModified: DateTime(2026, 6, 1),
-        fileHash: 'abc',
-        knownModified: DateTime(2026, 1, 1),
-        knownSize: 100,
-        knownHash: null,
-      ), true);
+      expect(
+        isRemoteModified(
+          fileSize: 100,
+          fileModified: DateTime(2026, 6, 1),
+          fileHash: 'abc',
+          knownModified: DateTime(2026, 1, 1),
+          knownSize: 100,
+          knownHash: null,
+        ),
+        true,
+      );
     });
   });
 }

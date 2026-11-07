@@ -276,7 +276,64 @@ abstract final class _Agile {
       _cryptValue(p, hn, _secretKeyBlock, p.encryptedKeyValue, decrypt: true),
       p.keyBytes,
     );
+    _verifyDataIntegrity(p, secret, pack);
     return _decryptPackage(p, secret, pack);
+  }
+
+  /// MS-OFFCRYPTO 2.3.4.14 authenticates the complete EncryptedPackage stream,
+  /// including its eight-byte StreamSize. Password verification alone does
+  /// not authenticate the document's CBC ciphertext.
+  static void _verifyDataIntegrity(
+    _AgileParams p,
+    Uint8List secret,
+    Uint8List pack,
+  ) {
+    final int hashSize = _Hash.digest(p.hashName, const <int>[]).length;
+    if (p.hashSize != hashSize ||
+        p.blockSize != 16 ||
+        p.keyDataSaltSize <= 0 ||
+        p.keyDataSaltSize != p.keyDataSalt.length ||
+        p.encryptedHmacKey.length < p.keyDataSaltSize ||
+        p.encryptedHmacValue.length < hashSize ||
+        p.encryptedHmacKey.length % 16 != 0 ||
+        p.encryptedHmacValue.length % 16 != 0) {
+      throw const OfficePasswordException(
+        'Invalid Office data integrity metadata',
+      );
+    }
+    // MS-OFFCRYPTO 2.3.4.14 uses a KeyData.saltSize-byte HMAC key. Our existing
+    // writer instead uses hashSize bytes with PKCS#7 padding. Preserve those
+    // files only when the exact legacy key prefix also produces a valid HMAC.
+    // Never guess a key length by unpadding random decrypted key bytes.
+    final Uint8List keyBytes = Aes.cbcDecrypt(
+      secret,
+      _iv(p.hashName, p.keyDataSalt, _hmacKeyBlock, p.blockSize),
+      p.encryptedHmacKey,
+      unpad: false,
+    );
+    final Uint8List expected = Aes.cbcDecrypt(
+      secret,
+      _iv(p.hashName, p.keyDataSalt, _hmacValueBlock, p.blockSize),
+      p.encryptedHmacValue,
+      unpad: false,
+      keep: hashSize,
+    );
+    for (final int keySize in <int>{p.keyDataSaltSize, hashSize}) {
+      if (keySize > keyBytes.length) {
+        continue;
+      }
+      final List<int> actual = _Hash.hmacDigest(
+        p.hashName,
+        Uint8List.sublistView(keyBytes, 0, keySize),
+        pack,
+      );
+      if (_equal(expected, actual)) {
+        return;
+      }
+    }
+    throw const OfficePasswordException(
+      'Office package integrity check failed',
+    );
   }
 
   /// encrypt API.
@@ -300,6 +357,7 @@ abstract final class _Agile {
       keyBits: keyBits,
       blockSize: blockSize,
       saltSize: saltSize,
+      keyDataSaltSize: saltSize,
       spinCount: spinCount,
       keyDataSalt: keySalt,
       encryptedSalt: encSalt,
@@ -495,6 +553,7 @@ abstract final class _Agile {
     var keyBits = 256;
     var blockSize = 16;
     var saltSize = 16;
+    var keyDataSaltSize = 16;
     var spinCount = 100000;
     Uint8List keySalt = Uint8List(16);
     Uint8List encSalt = Uint8List(16);
@@ -512,7 +571,9 @@ abstract final class _Agile {
         hashSize = int.parse(reader.getAttribute('hashSize') ?? '$hashSize');
         keyBits = int.parse(reader.getAttribute('keyBits') ?? '$keyBits');
         blockSize = int.parse(reader.getAttribute('blockSize') ?? '$blockSize');
-        saltSize = int.parse(reader.getAttribute('saltSize') ?? '$saltSize');
+        keyDataSaltSize = int.parse(
+          reader.getAttribute('saltSize') ?? '$keyDataSaltSize',
+        );
         final String? salt = reader.getAttribute('saltValue');
         if (salt != null) {
           keySalt = Uint8List.fromList(base64.decode(salt));
@@ -557,6 +618,7 @@ abstract final class _Agile {
       keyBits: keyBits,
       blockSize: blockSize,
       saltSize: saltSize,
+      keyDataSaltSize: keyDataSaltSize,
       spinCount: spinCount,
       keyDataSalt: keySalt,
       encryptedSalt: encSalt,
@@ -607,6 +669,7 @@ class _AgileParams {
     required this.keyBits,
     required this.blockSize,
     required this.saltSize,
+    required this.keyDataSaltSize,
     required this.spinCount,
     required this.keyDataSalt,
     required this.encryptedSalt,
@@ -631,6 +694,9 @@ class _AgileParams {
 
   /// saltSize API.
   final int saltSize;
+
+  /// Size of the keyData salt, which can differ from the password salt.
+  final int keyDataSaltSize;
 
   /// spinCount API.
   final int spinCount;

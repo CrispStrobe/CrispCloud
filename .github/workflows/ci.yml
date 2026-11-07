@@ -28,6 +28,17 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
+  crypto-release-inputs:
+    name: Crypto release evidence
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - name: Verify release evidence failure paths
+        run: python3 -m unittest discover -s tool -p test_crypto_release_evidence.py -v
+      - name: Check provider dependencies and Apple declaration
+        run: python3 tool/crypto_release_evidence.py --check
+
   # ---------- Analyze + Test with coverage ----------
   analyze:
     name: Analyze + Test (Linux)
@@ -175,6 +186,10 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Verify native plist comparison and evidence failure paths
+        if: runner.os == 'macOS'
+        run: python3 -m unittest discover -s tool -p test_crypto_release_evidence.py -v
+
       - uses: subosito/flutter-action@v2
         with:
           channel: ${{ env.FLUTTER_CHANNEL }}
@@ -192,6 +207,26 @@ jobs:
         run: python3 -m unittest discover -s tool -p test_with_ci_system_sqlite.py
 
       - run: flutter pub get
+
+      - name: Crypto audit regressions (published vectors and credential migration)
+        run: >-
+          flutter test --no-pub
+          test/aes_siv_test.dart test/cryptomator_test.dart
+          test/veracrypt_test.dart test/veracrypt_header_vectors_test.dart
+          test/encryption_service_test.dart test/internxt_secure_config_test.dart
+          test/internxt_rewire_test.dart test/internxt_download_path_test.dart
+          test/internxt_bounded_transfer_test.dart
+          test/filen_adapter_test.dart test/filen_bounded_transfer_test.dart
+          test/tls_verification_test.dart test/custom_ca_test.dart
+          test/infrastructure_test.dart test/proxy_service_test.dart
+          test/proxy_settings_i18n_test.dart
+          test/backup_service_test.dart test/backup_encryption_security_test.dart
+
+      - name: Office encrypted-package integrity
+        working-directory: packages/quds_office_engine
+        run: |
+          dart pub get
+          dart test test/office_crypto_test.dart
 
       - name: Headless crypto tests (native FFI assertions + cross-path interop)
         run: >-
@@ -353,6 +388,23 @@ jobs:
           echo "Found APK: $APK ($(stat -c%s "$APK") bytes)"
           cp "$APK" crispcloud-android.apk
 
+      - name: Record Android build crypto evidence
+        if: matrix.platform == 'android'
+        run: |
+          mkdir -p build/export-compliance
+          dart pub deps --json > build/export-compliance/dependencies.json
+          python3 tool/crypto_release_evidence.py --platform android --require-clean --record-generated-metadata \
+            --artifact crispcloud-android.apk --dependencies build/export-compliance/dependencies.json
+
+      - name: Upload Android crypto evidence
+        if: matrix.platform == 'android'
+        uses: actions/upload-artifact@v4
+        with:
+          name: crispcloud-android-crypto-evidence
+          path: build/export-compliance/
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Upload ${{ matrix.platform }} artifact
         uses: actions/upload-artifact@v4
         with:
@@ -463,6 +515,8 @@ jobs:
           git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
 
       - run: flutter config --enable-macos-desktop
+      - name: Match App Store dependency integration
+        run: flutter config --no-enable-swift-package-manager
       - run: flutter pub get
       - name: Check macOS startup smoke test behavior
         run: bash test/macos_startup_smoke_test.sh
@@ -501,10 +555,33 @@ jobs:
             zip -r -y "$GITHUB_WORKSPACE/crispcloud-macos-release.zip" "$APP_NAME"
           fi
 
+      - name: Record macOS build crypto evidence
+        run: |
+          mkdir -p build/export-compliance
+          dart pub deps --json > build/export-compliance/dependencies.json
+          python3 tool/crypto_release_evidence.py --platform macos --require-clean --record-generated-metadata \
+            --artifact crispcloud-macos-release.zip --dependencies build/export-compliance/dependencies.json
+
+      - name: Capture unapproved macOS project changes on failure
+        if: failure()
+        run: python3 tool/record_native_project_diagnostics.py macos
+
+      - name: Upload macOS source diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-source-diagnostics
+          path: build/source-diagnostics/macos/
+          if-no-files-found: ignore
+          retention-days: 14
+
       - uses: actions/upload-artifact@v4
         with:
           name: crispcloud-macos-release
-          path: crispcloud-macos-release.zip
+          path: |
+            crispcloud-macos-release.zip
+            build/export-compliance/
+          if-no-files-found: error
           retention-days: 14
 
   ios-terminal-native:
@@ -571,6 +648,9 @@ jobs:
           TOKEN="${{ secrets.GH_PAT || github.token }}"
           git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
 
+      - name: Match App Store dependency integration
+        run: flutter config --no-enable-swift-package-manager
+
       - run: flutter pub get
 
       - name: Build iOS (no code sign)
@@ -597,8 +677,31 @@ jobs:
             zip -r -y crispcloud-ios-nosign.zip build/ios/iphoneos/
           fi
 
+      - name: Record unsigned iOS build crypto evidence
+        run: |
+          mkdir -p build/export-compliance
+          dart pub deps --json > build/export-compliance/dependencies.json
+          python3 tool/crypto_release_evidence.py --platform ios --require-clean --record-generated-metadata \
+            --artifact crispcloud-ios-nosign.zip --dependencies build/export-compliance/dependencies.json
+
+      - name: Capture unapproved iOS project changes on failure
+        if: failure()
+        run: python3 tool/record_native_project_diagnostics.py ios
+
+      - name: Upload iOS source diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-source-diagnostics
+          path: build/source-diagnostics/ios/
+          if-no-files-found: ignore
+          retention-days: 14
+
       - uses: actions/upload-artifact@v4
         with:
           name: crispcloud-ios-nosign
-          path: crispcloud-ios-nosign.zip
+          path: |
+            crispcloud-ios-nosign.zip
+            build/export-compliance/
+          if-no-files-found: error
           retention-days: 14

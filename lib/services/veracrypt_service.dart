@@ -13,18 +13,21 @@
 //   [0..3]     Magic "VERA" (0x56455241)
 //   [4..5]     Header format version
 //   [6..7]     Minimum program version
-//   [8..11]    CRC-32 of header bytes [188..511]
-//   [64..67]   Volume flags
-//   [68..71]   Volume sector size
-//   [100..107] Encrypted area offset (bytes from start of volume)
-//   [108..115] Encrypted area size (bytes)
-//   [252..259] Volume size (bytes)
-//   [260..267] Encryption algorithm ID
-//   [268..271] Hash algorithm ID
+//   [8..11]    CRC-32 of decrypted key material [192..447]
+//   [36..43]   Volume size (bytes)
+//   [44..51]   Encrypted area offset (bytes from start of volume)
+//   [52..59]   Encrypted area size (bytes)
+//   [60..63]   Volume flags
+//   [64..67]   Volume sector size
+//   [188..191] CRC-32 of decrypted header [0..187]
+//   [192..447] Volume key material (NOT algorithm identifiers)
+//
+// https://veracrypt.io/en/VeraCrypt%20Volume%20Format%20Specification.html
 
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:archive/archive.dart' show getCrc32;
 import 'package:pointycastle/export.dart';
 
 // ---------------------------------------------------------------------------
@@ -53,22 +56,21 @@ class VeraCryptContainer {
     String? encryptionAlgorithm,
     String? hashAlgorithm,
     bool? mounted,
-  }) =>
-      VeraCryptContainer(
-        path: path ?? this.path,
-        sizeBytes: sizeBytes ?? this.sizeBytes,
-        encryptionAlgorithm: encryptionAlgorithm ?? this.encryptionAlgorithm,
-        hashAlgorithm: hashAlgorithm ?? this.hashAlgorithm,
-        mounted: mounted ?? this.mounted,
-      );
+  }) => VeraCryptContainer(
+    path: path ?? this.path,
+    sizeBytes: sizeBytes ?? this.sizeBytes,
+    encryptionAlgorithm: encryptionAlgorithm ?? this.encryptionAlgorithm,
+    hashAlgorithm: hashAlgorithm ?? this.hashAlgorithm,
+    mounted: mounted ?? this.mounted,
+  );
 
   Map<String, dynamic> toJson() => {
-        'path': path,
-        'sizeBytes': sizeBytes,
-        'encryptionAlgorithm': encryptionAlgorithm,
-        'hashAlgorithm': hashAlgorithm,
-        'mounted': mounted,
-      };
+    'path': path,
+    'sizeBytes': sizeBytes,
+    'encryptionAlgorithm': encryptionAlgorithm,
+    'hashAlgorithm': hashAlgorithm,
+    'mounted': mounted,
+  };
 
   factory VeraCryptContainer.fromJson(Map<String, dynamic> map) =>
       VeraCryptContainer(
@@ -103,10 +105,10 @@ class VeraCryptVolumeHeader {
   /// Header format version.
   final int version;
 
-  /// Encryption algorithm identifier.
+  /// Locally resolved algorithm identifier (not a field stored in the header).
   final int encryptionAlgorithmId;
 
-  /// Hash algorithm identifier.
+  /// Locally resolved KDF identifier (not a field stored in the header).
   final int hashAlgorithmId;
 
   /// Total volume size in bytes.
@@ -124,15 +126,15 @@ class VeraCryptVolumeHeader {
   });
 
   Map<String, dynamic> toJson() => {
-        'salt': base64.encode(salt),
-        'encryptedAreaOffset': encryptedAreaOffset,
-        'encryptedAreaSize': encryptedAreaSize,
-        'sectorSize': sectorSize,
-        'version': version,
-        'encryptionAlgorithmId': encryptionAlgorithmId,
-        'hashAlgorithmId': hashAlgorithmId,
-        'volumeSize': volumeSize,
-      };
+    'salt': base64.encode(salt),
+    'encryptedAreaOffset': encryptedAreaOffset,
+    'encryptedAreaSize': encryptedAreaSize,
+    'sectorSize': sectorSize,
+    'version': version,
+    'encryptionAlgorithmId': encryptionAlgorithmId,
+    'hashAlgorithmId': hashAlgorithmId,
+    'volumeSize': volumeSize,
+  };
 
   @override
   String toString() =>
@@ -146,9 +148,11 @@ class VeraCryptVolumeHeader {
 
 /// VeraCrypt container detection, header parsing, and key derivation.
 ///
-/// Supported encryption algorithms: AES-256-XTS (and cascade variants).
+/// Supported encryption algorithm: AES-256-XTS only.
 /// Supported KDF algorithms: SHA-512, SHA-256, Whirlpool.
 ///
+/// This parser covers version-5 file-container headers with default PBKDF2
+/// parameters. Cascades, other KDFs, custom PIMs and keyfiles are not supported.
 /// Full mount operations are delegated to the OS-level `veracrypt` CLI.
 class VeraCryptService {
   static const int _headerSize = 512;
@@ -163,7 +167,6 @@ class VeraCryptService {
     'SHA-512': 500000,
     'SHA-256': 500000,
     'Whirlpool': 500000,
-    'RIPEMD-160': 655331,
   };
 
   // ---------------------------------------------------------------------------
@@ -206,8 +209,9 @@ class VeraCryptService {
   static VeraCryptVolumeHeader parseHeader(Uint8List headerBytes) {
     if (headerBytes.length < _headerSize) {
       throw FormatException(
-          'VeraCrypt header must be at least $_headerSize bytes, '
-          'got ${headerBytes.length}');
+        'VeraCrypt header must be at least $_headerSize bytes, '
+        'got ${headerBytes.length}',
+      );
     }
 
     final salt = headerBytes.sublist(0, _saltSize);
@@ -240,7 +244,20 @@ class VeraCryptService {
     String hashAlgorithm = 'SHA-512',
     int? iterations,
   }) {
-    final iters = iterations ?? (_defaultIterations[hashAlgorithm] ?? 500000);
+    if (!_defaultIterations.containsKey(hashAlgorithm)) {
+      throw ArgumentError.value(
+        hashAlgorithm,
+        'hashAlgorithm',
+        'Unsupported VeraCrypt KDF',
+      );
+    }
+    if (salt.length != _saltSize) {
+      throw ArgumentError('VeraCrypt header salt must be 64 bytes');
+    }
+    final iters = iterations ?? _defaultIterations[hashAlgorithm]!;
+    if (iters < 1) {
+      throw ArgumentError.value(iters, 'iterations', 'Must be positive');
+    }
     final passwordBytes = Uint8List.fromList(utf8.encode(password));
 
     final Digest digest;
@@ -255,10 +272,11 @@ class VeraCryptService {
         blockLength = 64;
         break;
       case 'SHA-512':
-      default:
         digest = SHA512Digest();
         blockLength = 128;
         break;
+      default:
+        throw ArgumentError.value(hashAlgorithm, 'hashAlgorithm');
     }
 
     final params = Pbkdf2Parameters(salt, iters, 64); // 512 bits output
@@ -276,7 +294,9 @@ class VeraCryptService {
   /// Tries all supported hash algorithms and returns the first successfully
   /// parsed [VeraCryptVolumeHeader], or null if no combination works.
   ///
-  /// A header is considered valid when the decrypted magic bytes are "VERA".
+  /// Checks the magic, both format CRC-32 checksums, version and basic geometry.
+  /// VeraCrypt XTS headers do not provide cryptographic authentication; CRCs
+  /// detect accidental corruption and are not a substitute for an AEAD tag.
   ///
   /// [testIterations] may be provided to override the PBKDF2 iteration count
   /// for each hash algorithm — useful only for unit tests where full iteration
@@ -289,8 +309,12 @@ class VeraCryptService {
     if (headerBytes.length < _headerSize) return null;
 
     for (final hashAlgo in getSupportedHashAlgorithms()) {
-      final result =
-          _tryDecryptWithAlgo(headerBytes, password, hashAlgo, testIterations);
+      final result = _tryDecryptWithAlgo(
+        headerBytes,
+        password,
+        hashAlgo,
+        testIterations,
+      );
       if (result != null) return result;
     }
     return null;
@@ -305,17 +329,28 @@ class VeraCryptService {
   ) {
     try {
       final salt = headerBytes.sublist(0, _saltSize);
-      final encryptedArea =
-          headerBytes.sublist(_encryptedHeaderOffset, _headerSize);
+      final encryptedArea = headerBytes.sublist(
+        _encryptedHeaderOffset,
+        _headerSize,
+      );
 
       // Derive 64-byte key: first 32 = primary key, next 32 = tweak key (XTS)
-      final keyMaterial = deriveKey(password, salt,
-          hashAlgorithm: hashAlgorithm, iterations: testIterations);
+      final keyMaterial = deriveKey(
+        password,
+        salt,
+        hashAlgorithm: hashAlgorithm,
+        iterations: testIterations,
+      );
       final key1 = keyMaterial.sublist(0, 32);
       final key2 = keyMaterial.sublist(32, 64);
 
       // Decrypt with AES-256-XTS (sector 0)
-      final decrypted = _aesXtsDecrypt(encryptedArea, key1, key2, sectorIndex: 0);
+      final decrypted = _aesXtsDecrypt(
+        encryptedArea,
+        key1,
+        key2,
+        sectorIndex: 0,
+      );
 
       // Verify magic "VERA"
       if (!_checkMagic(decrypted)) return null;
@@ -327,30 +362,50 @@ class VeraCryptService {
   }
 
   /// Parse the decrypted header area into a [VeraCryptVolumeHeader].
-  static VeraCryptVolumeHeader _parseDecryptedHeader(
+  static VeraCryptVolumeHeader? _parseDecryptedHeader(
     Uint8List decrypted,
     Uint8List salt,
     String hashAlgorithm,
   ) {
     final bd = ByteData.sublistView(decrypted);
 
-    // Offsets relative to decrypted area start
+    // Offsets below are relative to byte 64 in the complete 512-byte header.
+    // CRC-32s cover both the header fields and the encrypted volume keys.
+    if (bd.getUint32(8, Endian.big) != getCrc32(decrypted.sublist(192, 448)) ||
+        bd.getUint32(188, Endian.big) != getCrc32(decrypted.sublist(0, 188))) {
+      return null;
+    }
     final version = bd.getUint16(4, Endian.big);
-    final sectorSize = bd.getUint32(68, Endian.big);
-    final encryptedAreaOffset = bd.getInt64(100, Endian.big);
-    final encryptedAreaSize = bd.getInt64(108, Endian.big);
-    final volumeSize = bd.getInt64(252, Endian.big);
-    final encAlgoId = bd.getUint32(260, Endian.big);
-    final hashAlgoId = bd.getUint32(268, Endian.big);
+    final sectorSize = bd.getUint32(64, Endian.big);
+    final encryptedAreaOffset = bd.getInt64(44, Endian.big);
+    final encryptedAreaSize = bd.getInt64(52, Endian.big);
+    final volumeSize = bd.getInt64(36, Endian.big);
+    if (version != 5 ||
+        sectorSize < 512 ||
+        sectorSize > 4096 ||
+        sectorSize % 512 != 0 ||
+        volumeSize <= 0 ||
+        encryptedAreaOffset < 0 ||
+        encryptedAreaSize <= 0 ||
+        encryptedAreaSize > volumeSize ||
+        volumeSize % sectorSize != 0 ||
+        encryptedAreaOffset % sectorSize != 0 ||
+        encryptedAreaSize % sectorSize != 0) {
+      return null;
+    }
+    // The successful trial identifies the algorithm and KDF. Reading these
+    // values from offsets 260/268 would instead expose random volume-key bytes.
+    const hashIds = {'SHA-512': 1, 'Whirlpool': 2, 'SHA-256': 3};
 
     return VeraCryptVolumeHeader(
       salt: salt,
       encryptedAreaOffset: encryptedAreaOffset,
       encryptedAreaSize: encryptedAreaSize,
-      sectorSize: sectorSize > 0 ? sectorSize : 512,
+      sectorSize: sectorSize,
       version: version,
-      encryptionAlgorithmId: encAlgoId,
-      hashAlgorithmId: hashAlgoId,
+      encryptionAlgorithmId:
+          1, // AES-256-XTS is the only candidate implemented.
+      hashAlgorithmId: hashIds[hashAlgorithm]!,
       volumeSize: volumeSize,
     );
   }
@@ -425,24 +480,14 @@ class VeraCryptService {
   // ---------------------------------------------------------------------------
 
   /// Returns list of supported encryption algorithm names.
-  static List<String> getSupportedAlgorithms() => const [
-        'AES-256-XTS',
-        'Serpent-256-XTS',
-        'Twofish-256-XTS',
-        'AES-Twofish',
-        'AES-Twofish-Serpent',
-        'Serpent-AES',
-        'Serpent-Twofish-AES',
-        'Twofish-Serpent',
-      ];
+  static List<String> getSupportedAlgorithms() => const ['AES-256-XTS'];
 
   /// Returns list of supported hash/KDF algorithm names.
   static List<String> getSupportedHashAlgorithms() => const [
-        'SHA-512',
-        'SHA-256',
-        'Whirlpool',
-        'RIPEMD-160',
-      ];
+    'SHA-512',
+    'SHA-256',
+    'Whirlpool',
+  ];
 
   /// Map an encryption algorithm ID (from the volume header) to a human-readable name.
   static String encryptionAlgorithmName(int id) {

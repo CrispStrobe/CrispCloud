@@ -9,6 +9,7 @@ import 'package:crisp_cloud/services/internxt_streaming_transfer.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:internxt_client/internxt_client.dart' as sdk;
+import 'package:path/path.dart' as p;
 
 const _mnemonic =
     'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about';
@@ -629,9 +630,10 @@ void main() {
         throwsStateError,
       );
       expect(await target.readAsBytes(), [9, 8, 7]);
-      expect((await temp.list().toList()).map((item) => item.path), [
-        target.path,
-      ]);
+      expect(
+        (await temp.list().toList()).map((item) => p.normalize(item.path)),
+        [p.normalize(target.path)],
+      );
     }),
   );
 }

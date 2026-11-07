@@ -28,7 +28,7 @@ import 'services/dropbox_config_service.dart';
 import 'services/filen_config_service.dart';
 import 'services/ftp_config_service.dart';
 import 'services/gdrive_config_service.dart';
-import 'services/internxt_client.dart' show ConfigService, ConfigStorage;
+import 'services/internxt_flutter/secure_config_storage.dart';
 import 'services/onedrive_config_service.dart';
 import 'services/s3_config_service.dart';
 import 'services/nextcloud_config_service.dart';
@@ -370,9 +370,9 @@ Future<dynamic> _createConfigService(
         return SmbConfigService(secureStorage);
       case CloudProvider.internxt:
         if (CloudStorageFactory.isInternxtSupported) {
-          return ConfigService(
+          return createSecureInternxtConfig(
             configPath: configPath,
-            storage: kIsWeb ? _InMemoryConfigStorage() : null,
+            secureStorage: secureStorage,
           );
         } else {
           return FilenConfigService(
@@ -683,29 +683,5 @@ class WebMasterPasswordGateState extends ConsumerState<WebMasterPasswordGate> {
     _confirmationController.dispose();
     _controller.dispose();
     super.dispose();
-  }
-}
-
-/// No-op ConfigStorage for web — avoids dart:io Platform.environment calls.
-class _InMemoryConfigStorage extends ConfigStorage {
-  final Map<String, String> _store = {};
-
-  @override
-  void init(String dataDir, List<String> subDirs) {}
-
-  @override
-  Future<bool> exists(String key) async => _store.containsKey(key);
-
-  @override
-  Future<String?> read(String key) async => _store[key];
-
-  @override
-  Future<void> write(String key, String value) async {
-    _store[key] = value;
-  }
-
-  @override
-  Future<void> delete(String key) async {
-    _store.remove(key);
   }
 }

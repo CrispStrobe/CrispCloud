@@ -76,12 +76,17 @@ Connect starts asking for it.
 
 ## Remaining review risks to verify before submission
 
-1. **Export compliance.** `ITSAppUsesNonExemptEncryption` is now `true` in both
-   apps. The distributed code includes AES-256-GCM/PBKDF2 file encryption,
-   Cryptomator vault support and VeraCrypt container support, so leaving the key
-   false would only hide the App Store Connect prompt. See
-   `docs/export-compliance.md` for the BIS self-classification versus CCATS
-   routes and the option of removing those features from the App Store binary.
+1. **Export compliance.** `ITSAppUsesNonExemptEncryption` remains `true` in
+   both apps so the final build goes through Apple's questionnaire. Filen and
+   Internxt require client-side encryption outside Apple's OS APIs; removing
+   vault UI would not create an OS-only build. A finished mass-market app using
+   published, standard cryptography can qualify for internal self-classification
+   without an annual BIS self-classification report or a CCATS. See
+   [the export decision and source references](export-compliance.md) for the
+   conditions, the separate public-source route, and France's declaration.
+   Preserve the source, resolved dependencies and crypto release evidence for
+   the exact submitted build. Do not invent an Apple compliance code or infer
+   a documentation exemption from the lack of a BIS filing requirement.
 2. **Process-based helpers.** Normal file operations no longer shell out:
    free space uses `statfs`/`GetDiskFreeSpaceEx`, hard links use `link(2)`,
    owner/mode checks use libc `stat`/`getuid`/`chmod`, Windows drives are

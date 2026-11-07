@@ -5,10 +5,10 @@
 // Creates a real VeraCrypt-format header with AES-256-XTS encryption,
 // writes it to a temp file, then tests detection → parsing → decryption
 // round-trip.
-
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:archive/archive.dart' show getCrc32;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pointycastle/export.dart';
 
@@ -50,28 +50,24 @@ Uint8List _buildVeraCryptHeader({
   // Minimum program version (offset 6)
   bd.setUint16(6, 0x0700, Endian.big);
 
-  // Sector size (offset 68, uint32 big-endian)
-  bd.setUint32(68, 512, Endian.big);
+  // Offsets here are relative to byte 64 of the complete header.
+  // Sector size (absolute offset 128, uint32 big-endian)
+  bd.setUint32(64, 512, Endian.big);
 
-  // Encrypted area offset (offset 100, int64 big-endian) — after header
-  bd.setInt64(100, 131072, Endian.big); // 128 KB typical
+  // Encrypted area offset (absolute offset 108) — after header
+  bd.setInt64(44, 131072, Endian.big); // 128 KB typical
 
-  // Encrypted area size (offset 108, int64 big-endian)
-  bd.setInt64(108, volumeSize, Endian.big);
+  // Encrypted area size (absolute offset 116)
+  bd.setInt64(52, volumeSize, Endian.big);
 
-  // Volume size (offset 252, int64 big-endian)
-  bd.setInt64(252, volumeSize, Endian.big);
+  // Volume size (absolute offset 100)
+  bd.setInt64(36, volumeSize, Endian.big);
 
-  // Encryption algorithm: AES-256-XTS = 1 (offset 260, uint32 big-endian)
-  bd.setUint32(260, 1, Endian.big);
-
-  // Hash algorithm: SHA-512 = 1, Whirlpool = 2, SHA-256 = 3
-  final hashId = hashAlgorithm == 'SHA-256'
-      ? 3
-      : hashAlgorithm == 'Whirlpool'
-          ? 2
-          : 1;
-  bd.setUint32(268, hashId, Endian.big);
+  // Key area, absolute offset 256. The algorithm/KDF are inferred by trials;
+  // they are not stored in this area. Both format CRCs are required.
+  clearHeader.setRange(192, 448, List.generate(256, (i) => i));
+  bd.setUint32(8, getCrc32(clearHeader.sublist(192)), Endian.big);
+  bd.setUint32(188, getCrc32(clearHeader.sublist(0, 188)), Endian.big);
 
   // 3. Derive key (64 bytes = two 32-byte keys for XTS)
   final keyMaterial = VeraCryptService.deriveKey(
@@ -84,7 +80,12 @@ Uint8List _buildVeraCryptHeader({
   final key2 = keyMaterial.sublist(32, 64);
 
   // 4. Encrypt header with AES-256-XTS (sector 0)
-  final encryptedHeader = _aesXtsEncrypt(clearHeader, key1, key2, sectorIndex: 0);
+  final encryptedHeader = _aesXtsEncrypt(
+    clearHeader,
+    key1,
+    key2,
+    sectorIndex: 0,
+  );
 
   // 5. Combine: salt (64) + encrypted header (448) = 512 bytes
   final header = Uint8List(512);
@@ -174,8 +175,9 @@ void main() {
       // Detection
       expect(VeraCryptService.detectContainer(file.path), isTrue);
       expect(
-          VeraCryptService.detectContainerStrict(file.path, container.length),
-          isTrue);
+        VeraCryptService.detectContainerStrict(file.path, container.length),
+        isTrue,
+      );
 
       // Parse raw header
       final parsed = VeraCryptService.parseHeader(header);
@@ -268,7 +270,10 @@ void main() {
       // Detection by extension fails
       expect(VeraCryptService.detectContainer(file.path), isFalse);
       // But detection by size works
-      expect(VeraCryptService.detectContainer(file.path, fileSize: 2048), isTrue);
+      expect(
+        VeraCryptService.detectContainer(file.path, fileSize: 2048),
+        isTrue,
+      );
 
       // Direct header decryption still works
       final decrypted = VeraCryptService.tryDecryptHeader(
@@ -302,7 +307,10 @@ void main() {
     });
 
     test('encryption algorithm name mapping', () {
-      expect(VeraCryptService.encryptionAlgorithmName(1), equals('AES-256-XTS'));
+      expect(
+        VeraCryptService.encryptionAlgorithmName(1),
+        equals('AES-256-XTS'),
+      );
     });
 
     test('hash algorithm name mapping', () {

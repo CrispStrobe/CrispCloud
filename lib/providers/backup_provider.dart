@@ -13,13 +13,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../services/backup_service.dart';
 import '../services/log_service.dart';
+import 'core_providers.dart' show secureStorageProvider;
 
 // ---------------------------------------------------------------------------
 // Singleton service provider
 // ---------------------------------------------------------------------------
 
 final backupServiceProvider = Provider<BackupService>((ref) {
-  return BackupService();
+  return BackupService(secureStorage: ref.watch(secureStorageProvider));
 });
 
 // ---------------------------------------------------------------------------
@@ -108,21 +109,24 @@ class BackupPlansNotifier extends StateNotifier<AsyncValue<List<BackupPlan>>> {
 }
 
 final backupPlansProvider =
-    StateNotifierProvider<BackupPlansNotifier, AsyncValue<List<BackupPlan>>>((ref) {
-  return BackupPlansNotifier(ref.watch(backupServiceProvider));
-});
+    StateNotifierProvider<BackupPlansNotifier, AsyncValue<List<BackupPlan>>>((
+      ref,
+    ) {
+      return BackupPlansNotifier(ref.watch(backupServiceProvider));
+    });
 
 // ---------------------------------------------------------------------------
 // Snapshots family provider
 // ---------------------------------------------------------------------------
 
-class BackupSnapshotsNotifier extends StateNotifier<AsyncValue<List<BackupSnapshot>>> {
+class BackupSnapshotsNotifier
+    extends StateNotifier<AsyncValue<List<BackupSnapshot>>> {
   static const _log = Log('BackupSnapshotsNotifier');
   final BackupService _service;
   final String planId;
 
   BackupSnapshotsNotifier(this._service, this.planId)
-      : super(const AsyncValue.loading()) {
+    : super(const AsyncValue.loading()) {
     _load();
   }
 
@@ -141,10 +145,15 @@ class BackupSnapshotsNotifier extends StateNotifier<AsyncValue<List<BackupSnapsh
 }
 
 /// Family provider: returns snapshots for a given [planId].
-final backupSnapshotsProvider = StateNotifierProvider.family<
-    BackupSnapshotsNotifier, AsyncValue<List<BackupSnapshot>>, String>(
-  (ref, planId) => BackupSnapshotsNotifier(ref.watch(backupServiceProvider), planId),
-);
+final backupSnapshotsProvider =
+    StateNotifierProvider.family<
+      BackupSnapshotsNotifier,
+      AsyncValue<List<BackupSnapshot>>,
+      String
+    >(
+      (ref, planId) =>
+          BackupSnapshotsNotifier(ref.watch(backupServiceProvider), planId),
+    );
 
 // ---------------------------------------------------------------------------
 // Running state notifier
@@ -167,8 +176,8 @@ class BackupRunningNotifier extends StateNotifier<Set<String>> {
 
 final backupRunningProvider =
     StateNotifierProvider<BackupRunningNotifier, Set<String>>((ref) {
-  return BackupRunningNotifier();
-});
+      return BackupRunningNotifier();
+    });
 
 // ---------------------------------------------------------------------------
 // Convenience action provider
@@ -186,7 +195,8 @@ class BackupController {
   /// Run a backup for [planId], updating running state and refreshing snapshots.
   Future<BackupSnapshot?> runBackup(
     String planId, {
-    required Future<String> Function(String relativePath, List<int> bytes) uploadFile,
+    required Future<String> Function(String relativePath, List<int> bytes)
+    uploadFile,
     List<int> Function(List<int> bytes, String key)? encryptBytes,
   }) async {
     if (kIsWeb) return null;
@@ -217,7 +227,10 @@ class BackupController {
     String snapshotId, {
     Future<void> Function(List<String>)? deleteRemoteFiles,
   }) async {
-    await _service.deleteSnapshot(snapshotId, deleteRemoteFiles: deleteRemoteFiles);
+    await _service.deleteSnapshot(
+      snapshotId,
+      deleteRemoteFiles: deleteRemoteFiles,
+    );
     await _ref.read(backupSnapshotsProvider(planId).notifier).refresh();
   }
 
@@ -226,7 +239,10 @@ class BackupController {
     String planId, {
     Future<void> Function(List<String>)? deleteRemoteFiles,
   }) async {
-    final pruned = await _service.pruneSnapshots(planId, deleteRemoteFiles: deleteRemoteFiles);
+    final pruned = await _service.pruneSnapshots(
+      planId,
+      deleteRemoteFiles: deleteRemoteFiles,
+    );
     await _ref.read(backupSnapshotsProvider(planId).notifier).refresh();
     return pruned;
   }

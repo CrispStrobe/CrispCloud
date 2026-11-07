@@ -53,13 +53,13 @@ class ProxyConfig {
   }
 
   Map<String, dynamic> toJson() => {
-        'type': type.name,
-        'host': host,
-        'port': port,
-        if (username != null) 'username': username,
-        if (password != null) 'password': password,
-        'noProxy': noProxy,
-      };
+    'type': type.name,
+    'host': host,
+    'port': port,
+    if (username != null) 'username': username,
+    if (password != null) 'password': password,
+    'noProxy': noProxy,
+  };
 
   factory ProxyConfig.fromJson(Map<String, dynamic> json) {
     return ProxyConfig(
@@ -78,11 +78,13 @@ class ProxyConfig {
   /// Create from environment variables (HTTP_PROXY, HTTPS_PROXY, NO_PROXY).
   factory ProxyConfig.fromEnvironment() {
     if (kIsWeb) return const ProxyConfig();
-    final proxyUrl = Platform.environment['HTTPS_PROXY'] ??
+    final proxyUrl =
+        Platform.environment['HTTPS_PROXY'] ??
         Platform.environment['https_proxy'] ??
         Platform.environment['HTTP_PROXY'] ??
         Platform.environment['http_proxy'];
-    final noProxy = Platform.environment['NO_PROXY'] ??
+    final noProxy =
+        Platform.environment['NO_PROXY'] ??
         Platform.environment['no_proxy'] ??
         '';
 
@@ -99,7 +101,9 @@ class ProxyConfig {
         port: uri.port > 0 ? uri.port : (isSocks ? 1080 : 8080),
         username: uri.userInfo.contains(':')
             ? Uri.decodeComponent(uri.userInfo.split(':')[0])
-            : (uri.userInfo.isNotEmpty ? Uri.decodeComponent(uri.userInfo) : null),
+            : (uri.userInfo.isNotEmpty
+                  ? Uri.decodeComponent(uri.userInfo)
+                  : null),
         password: uri.userInfo.contains(':')
             ? Uri.decodeComponent(uri.userInfo.split(':')[1])
             : null,
@@ -113,11 +117,11 @@ class ProxyConfig {
   static const ProxyConfig disabled = ProxyConfig();
 }
 
-/// Global HttpOverrides that handles proxy routing and certificate pinning.
+/// Global HttpOverrides for proxy routing and platform TLS verification.
 ///
 /// When installed via [HttpOverrides.global], this affects all dart:io HTTP
 /// clients including those created by the `http` package. This means all
-/// `http.get/post/put/delete` calls automatically use the proxy and cert pins.
+/// `http.get/post/put/delete` calls use the proxy and configured trust anchors.
 class ProxyHttpOverrides extends HttpOverrides {
   final ProxyConfig config;
   final CertPinningService? certPinning;
@@ -126,25 +130,7 @@ class ProxyHttpOverrides extends HttpOverrides {
 
   @override
   HttpClient createHttpClient(SecurityContext? context) {
-    // Apply TLS version enforcement via SecurityContext
-    SecurityContext? secCtx = context;
-    if (certPinning != null) {
-      final minTls = certPinning!.getMinTlsVersion();
-      if (minTls != TlsVersion.any) {
-        secCtx ??= SecurityContext(withTrustedRoots: true);
-        // Disable legacy unsafe renegotiation for TLS 1.2+
-        secCtx.allowLegacyUnsafeRenegotiation = false;
-        // Add custom CA certs to the SecurityContext
-        for (final caPem in certPinning!.getCustomCaCerts()) {
-          try {
-            secCtx.setTrustedCertificatesBytes(caPem);
-          } catch (_) {
-            // Cert may not be valid PEM for SecurityContext; handled at
-            // badCertificateCallback level instead.
-          }
-        }
-      }
-    }
+    final secCtx = certPinning?.configureSecurityContext(context) ?? context;
     final client = super.createHttpClient(secCtx);
 
     // Proxy configuration
@@ -170,34 +156,13 @@ class ProxyHttpOverrides extends HttpOverrides {
           config.host,
           config.port,
           'Basic',
-          HttpClientBasicCredentials(
-            config.username!,
-            config.password ?? '',
-          ),
+          HttpClientBasicCredentials(config.username!, config.password ?? ''),
         );
       }
     }
 
-    // Certificate pinning and custom CA validation
-    if (certPinning != null) {
-      final hasPinning = certPinning!.isEnabled;
-      final hasCustomCAs = certPinning!.getCustomCaCerts().isNotEmpty;
-      if (hasPinning || hasCustomCAs) {
-        client.badCertificateCallback = (cert, host, port) {
-          // badCertificateCallback is called when the system rejects the cert.
-          // First check if cert passes standard pinning validation.
-          if (hasPinning && certPinning!.validateCertificate(cert, host)) {
-            return true;
-          }
-          // Then check if cert chains to a custom CA.
-          if (hasCustomCAs && certPinning!.validateWithCustomCAs(cert)) {
-            return true;
-          }
-          return false;
-        };
-      }
-    }
-
+    // Deliberately leave badCertificateCallback unset: custom trust anchors
+    // still require valid signatures, certificate dates and the correct host.
     return client;
   }
 }
@@ -214,7 +179,7 @@ class ProxyService {
   CertPinningService? get certPinning => _certPinning;
 
   ProxyService([ProxyConfig? initial, this._certPinning])
-      : _config = initial ?? const ProxyConfig();
+    : _config = initial ?? const ProxyConfig();
 
   /// Load proxy config from SharedPreferences, falling back to environment.
   Future<void> load() async {
@@ -224,7 +189,9 @@ class ProxyService {
       try {
         final map = Map<String, dynamic>.from(jsonDecode(raw) as Map);
         _config = ProxyConfig.fromJson(map);
-        _log.info('Loaded proxy config: ${_config.type.name} ${_config.host}:${_config.port}');
+        _log.info(
+          'Loaded proxy config: ${_config.type.name} ${_config.host}:${_config.port}',
+        );
         return;
       } catch (e) {
         _log.warn('Failed to load saved proxy config', e);
@@ -236,7 +203,9 @@ class ProxyService {
       final envConfig = ProxyConfig.fromEnvironment();
       if (envConfig.isEnabled) {
         _config = envConfig;
-        _log.info('Using proxy from environment: ${_config.type.name} ${_config.host}:${_config.port}');
+        _log.info(
+          'Using proxy from environment: ${_config.type.name} ${_config.host}:${_config.port}',
+        );
       }
     }
   }
@@ -247,7 +216,9 @@ class ProxyService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_prefsKey, jsonEncode(config.toJson()));
     _installOverrides();
-    _log.info('Saved proxy config: ${config.type.name} ${config.host}:${config.port}');
+    _log.info(
+      'Saved proxy config: ${config.type.name} ${config.host}:${config.port}',
+    );
   }
 
   /// Clear saved proxy config and remove global overrides.
@@ -270,14 +241,19 @@ class ProxyService {
   void _installOverrides() {
     if (kIsWeb) return;
     final needsProxy = _config.isEnabled;
-    final needsPinning = _certPinning != null && _certPinning!.isEnabled;
+    final needsTlsPolicy = _certPinning != null;
 
-    if (needsProxy || needsPinning) {
-      HttpOverrides.global = ProxyHttpOverrides(_config, certPinning: _certPinning);
+    if (needsProxy || needsTlsPolicy) {
+      HttpOverrides.global = ProxyHttpOverrides(
+        _config,
+        certPinning: _certPinning,
+      );
       if (needsProxy) {
-        _log.info('Installed global overrides: proxy=${_config.type.name} ${_config.host}:${_config.port}, pinning=$needsPinning');
+        _log.info(
+          'Installed global overrides: proxy=${_config.type.name} ${_config.host}:${_config.port}, TLS policy=$needsTlsPolicy',
+        );
       } else {
-        _log.info('Installed global overrides: pinning=$needsPinning');
+        _log.info('Installed global overrides: platform TLS verification');
       }
     } else {
       HttpOverrides.global = null;
@@ -289,43 +265,20 @@ class ProxyService {
   ///
   /// On web, always returns a plain client (browsers handle proxies natively).
   http.Client createHttpClient() {
-    if (kIsWeb || !_config.isEnabled) {
+    if (kIsWeb || (!_config.isEnabled && _certPinning == null)) {
       return http.Client();
     }
 
-    final ioClient = HttpClient();
+    // Apply this service's TLS settings even when callers have not installed
+    // the global override, and when no proxy is configured.
+    final ioClient = ProxyHttpOverrides(
+      _config,
+      certPinning: _certPinning,
+    ).createHttpClient(null);
 
-    // Build no-proxy bypass set
-    final noProxyHosts = _config.noProxy
-        .split(',')
-        .map((h) => h.trim().toLowerCase())
-        .where((h) => h.isNotEmpty)
-        .toSet();
-
-    ioClient.findProxy = (uri) {
-      final host = uri.host.toLowerCase();
-      for (final bypass in noProxyHosts) {
-        if (host == bypass || host.endsWith('.$bypass')) {
-          return 'DIRECT';
-        }
-      }
-      return _config.toProxyString();
-    };
-
-    // Set proxy authentication if credentials provided
-    if (_config.username != null) {
-      ioClient.addProxyCredentials(
-        _config.host,
-        _config.port,
-        'Basic',
-        HttpClientBasicCredentials(
-          _config.username!,
-          _config.password ?? '',
-        ),
-      );
-    }
-
-    _log.debug('Created proxy HTTP client: ${_config.type.name} ${_config.host}:${_config.port}');
+    _log.debug(
+      'Created proxy HTTP client: ${_config.type.name} ${_config.host}:${_config.port}',
+    );
     return IOClient(ioClient);
   }
 }
