@@ -37,6 +37,15 @@ tests, command wrappers, and project planning documents were not all copied.
 `CRISPCLOUD_PATCH.md` records the original macOS patch; this document records
 the complete current source differences.
 
+The credential-storage follow-up additionally changes `lib/config.dart` to
+skip CLI directory creation and permission handling when a host supplies a
+`ConfigStorage`. CrispCloud injects the same verified `FilenConfigService`
+backend into the SDK; session-only and browser logins therefore do not attempt
+native filesystem initialization. Default standalone CLI storage behavior and
+the Filen credential fields/wire formats are unchanged. This difference is
+covered by the application's `config_services_test.dart` and
+`filen_adapter_test.dart` regressions.
+
 Relevant CrispCloud history:
 
 - [Initial vendoring and macOS loader guard](https://github.com/CrispStrobe/CrispCloud/commit/c5ca26dabaf64e2d8d21103e5f93dba67e792f01).

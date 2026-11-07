@@ -6,6 +6,7 @@
 
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
@@ -25,14 +26,35 @@ class AppLockService {
 
   final SecureStorage _storage;
   final LocalAuthentication _localAuth;
+  final Future<void> Function()? _beforeSetup;
 
-  AppLockService(this._storage, {LocalAuthentication? localAuth})
-      : _localAuth = localAuth ?? LocalAuthentication();
+  AppLockService(
+    this._storage, {
+    LocalAuthentication? localAuth,
+    Future<void> Function()? beforeSetup,
+  }) : _localAuth = localAuth ?? LocalAuthentication(),
+       _beforeSetup = beforeSetup;
 
   /// Check if app lock is configured.
   Future<bool> isEnabled() async {
     final val = await _storage.read(_enabledKey);
-    return val == 'true';
+    if (val == 'false') return false;
+    if (val != null && val != 'true') {
+      throw StateError('Stored app-lock policy is invalid.');
+    }
+    final hash = await _storage.read(_hashKey);
+    final salt = await _storage.read(_saltKey);
+    if (val == null && hash == null && salt == null) return false;
+    if (val != 'true' || hash == null || salt == null ||
+        !RegExp(r'^[0-9a-f]{64}$').hasMatch(hash)) {
+      throw StateError('Stored app-lock policy is incomplete.');
+    }
+    try {
+      if (base64Decode(salt).length != 16) throw const FormatException();
+    } on FormatException {
+      throw StateError('Stored app-lock policy is invalid.');
+    }
+    return true;
   }
 
   /// Get auto-lock timeout in seconds (0 = immediate, -1 = disabled).
@@ -51,12 +73,19 @@ class AppLockService {
     if (code.length < 4) {
       throw ArgumentError('Code must be at least 4 characters');
     }
-
-    // Generate random salt
-    final saltBytes = Uint8List(16);
-    for (int i = 0; i < 16; i++) {
-      saltBytes[i] = DateTime.now().microsecond % 256 ^ (i * 17 + 31);
+    if (!_storage.isPersistent) {
+      throw StateError(
+        'App lock requires persistent credential storage. Session-only '
+        'storage cannot preserve a lock across restarts.',
+      );
     }
+    await _beforeSetup?.call();
+
+    // Preserve the existing verification format while using a real CSPRNG.
+    final random = Random.secure();
+    final saltBytes = Uint8List.fromList(
+      List<int>.generate(16, (_) => random.nextInt(256)),
+    );
     final salt = base64Encode(saltBytes);
 
     // Hash: SHA-256(salt + code)

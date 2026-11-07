@@ -13,6 +13,7 @@ import 'package:workmanager/workmanager.dart';
 
 import 'background_sync_service.dart';
 import 'cloud_storage_interface.dart';
+import 'credential_storage_config.dart';
 import 'ftp_client_adapter.dart';
 import 'ftp_config_service.dart';
 import 'log_service.dart';
@@ -137,6 +138,25 @@ Future<CloudStorageClient> buildClientForProvider(
         'Background sync is unavailable for "$provider". '
         'Open CrispCloud to sync this pair.',
       );
+  }
+  if (secureStorage == null) {
+    final CredentialStorageMode mode;
+    try {
+      mode = await CredentialStorageConfig.readMode();
+    } catch (_) {
+      throw const BackgroundSyncClientException(
+        'Credential-storage settings are unavailable. Open CrispCloud before '
+        'retrying background sync.',
+      );
+    }
+    if (mode != CredentialStorageMode.systemKeychain) {
+      // A worker cannot unlock a password vault or reuse an in-memory session.
+      // In particular it must not reconnect using an obsolete keychain login.
+      throw const BackgroundSyncClientException(
+        'Unattended sync requires system-keychain credential storage. '
+        'Open CrispCloud to sync with the selected storage mode.',
+      );
+    }
   }
   Map<String, String>? credentials;
   try {

@@ -11,6 +11,7 @@
 //   • Network      — proxy, TLS and provider request settings
 //   • Accessibility, Privacy, File Colors and Advanced
 
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -23,6 +24,10 @@ import '../providers/delta_sync_provider.dart';
 import '../providers/file_type_color_provider.dart';
 import '../providers/panel_source_provider.dart';
 import '../providers/core_providers.dart';
+import '../services/credential_storage_config.dart';
+import '../services/app_lock_service.dart';
+import '../services/secure_storage_macos_keychain.dart';
+import 'credential_storage_setup.dart';
 import '../providers/quick_search_provider.dart';
 import 'cache_settings_dialog.dart';
 import 'provider_settings_dialog.dart';
@@ -77,6 +82,8 @@ class SettingsDialog extends ConsumerWidget {
             const Divider(height: 1),
             _NetworkSection(),
             const Divider(height: 1),
+            const CredentialStorageSettingsSection(),
+            const Divider(height: 1),
             _AccessibilitySection(),
             const Divider(height: 1),
             _PrivacySection(),
@@ -111,15 +118,21 @@ class _GeneralSection extends ConsumerWidget {
       title: s.text('General'),
       icon: Icons.tune,
       children: [
-        ListTile(leading: const Icon(Icons.terminal),
+        ListTile(
+          leading: const Icon(Icons.terminal),
           title: Text(CommanderStrings.translate(context, 'Custom commands')),
-          onTap: () => showCustomCommandsDialog(context, ref,
-            ref.read(activePanelProvider))),
+          onTap: () => showCustomCommandsDialog(
+            context,
+            ref,
+            ref.read(activePanelProvider),
+          ),
+        ),
         ListTile(
           key: const ValueKey('settings-extensions'),
           leading: const Icon(Icons.extension),
           title: Text(context.extensionTr('Extensions')),
-          onTap: () => showExtensionsDialog(context, ref, ref.read(activePanelProvider)),
+          onTap: () =>
+              showExtensionsDialog(context, ref, ref.read(activePanelProvider)),
         ),
         SwitchListTile(
           key: const Key('settings_fkey_bar_toggle'),
@@ -571,6 +584,171 @@ class _NetworkSectionState extends ConsumerState<_NetworkSection> {
 }
 
 // ---------------------------------------------------------------------------
+// Section: Credential storage
+// ---------------------------------------------------------------------------
+
+/// Shows the backend in use separately from a saved choice for the next launch.
+class CredentialStorageSettingsSection extends ConsumerStatefulWidget {
+  const CredentialStorageSettingsSection({super.key});
+
+  @override
+  ConsumerState<CredentialStorageSettingsSection> createState() =>
+      _CredentialStorageSettingsSectionState();
+}
+
+class _CredentialStorageSettingsSectionState
+    extends ConsumerState<CredentialStorageSettingsSection> {
+  late Future<CredentialStorageSelection> _selection =
+      CredentialStorageConfig.readSelection();
+  bool _busy = false;
+
+  String _label(SettingsStrings s, CredentialStorageMode mode) =>
+      switch (mode) {
+        CredentialStorageMode.systemKeychain => s.text('System keychain'),
+        CredentialStorageMode.encryptedFile => s.text(
+          'Encrypted file (master password)',
+        ),
+        CredentialStorageMode.sessionOnly => s.text('This session only'),
+      };
+
+  String? get _activeKeychainPath {
+    final storage = ref.read(secureStorageProvider);
+    return storage is MacOsCustomKeychainStorage ? storage.path : null;
+  }
+
+  void _notice(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(SettingsStrings(context).text(message))),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (kIsWeb) return const SizedBox.shrink();
+    final s = SettingsStrings(context);
+    final active = ref.watch(credentialStorageModeProvider);
+    final pending = ref.watch(credentialStoragePendingModeProvider);
+    final changedKeychain = ref.watch(
+      credentialStorageKeychainRestartRequiredProvider,
+    );
+    final activePath = active == CredentialStorageMode.systemKeychain
+        ? _activeKeychainPath
+        : null;
+    return FutureBuilder<CredentialStorageSelection>(
+      future: _selection,
+      builder: (context, snapshot) => _Section(
+        title: s.text('Credentials'),
+        icon: Icons.key_outlined,
+        children: [
+          ListTile(
+            key: const ValueKey('settings-credential-storage'),
+            leading: const Icon(Icons.lock_outline),
+            title: Text(s.text('Credential storage')),
+            subtitle: Text(
+              [
+                s
+                    .text('Current session: {mode}')
+                    .replaceAll('{mode}', _label(s, active)),
+                if (activePath != null) activePath,
+                if (active == CredentialStorageMode.sessionOnly)
+                  s.text('Credentials are forgotten when CrispCloud exits.'),
+                if (pending != null || changedKeychain) ...[
+                  s
+                      .text('After restart: {mode}')
+                      .replaceAll('{mode}', _label(s, pending ?? active)),
+                  if ((pending ?? active) ==
+                          CredentialStorageMode.systemKeychain &&
+                      snapshot.data?.customKeychainPath != null)
+                    snapshot.data!.customKeychainPath!,
+                  s.text(
+                    'The current session keeps using its original storage until restart.',
+                  ),
+                ],
+                if (snapshot.hasError)
+                  s.text(
+                    'Could not read credential-storage settings. Try again.',
+                  ),
+              ].join('\n'),
+            ),
+            trailing: _busy
+                ? const Icon(Icons.hourglass_empty)
+                : const Icon(Icons.chevron_right),
+            onTap: _busy ? null : _change,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _change() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      final lock = AppLockService(ref.read(secureStorageProvider));
+      if (await lock.isEnabled()) {
+        _notice(
+          'Disable App Lock before changing credential storage, then enable it again after restarting.',
+        );
+        return;
+      }
+      final previous = await CredentialStorageConfig.readSelection();
+      if (!mounted) return;
+      final active = ref.read(credentialStorageModeProvider);
+      // Keep the operation guarded through both the dialog and the awaited
+      // post-dialog verification/save. The static busy icon needs no animation.
+      final result = await showCredentialStorageSetupDialog(
+        context,
+        initialMode: previous.mode ?? active,
+        initialKeychainPath: previous.customKeychainPath,
+      );
+      if (result == null || !mounted) return;
+      // Recheck after the dialog: another action may have enabled the lock.
+      // A read failure is an error, never permission to use another store.
+      if (await lock.isEnabled()) {
+        _notice(
+          'Disable App Lock before changing credential storage, then enable it again after restarting.',
+        );
+        return;
+      }
+      final path = result.mode == CredentialStorageMode.systemKeychain
+          ? result.keychainPath
+          : previous.customKeychainPath;
+      await CredentialStorageConfig.writeSelection(
+        mode: result.mode,
+        customKeychainPath: path,
+        // A missing already-selected vault is not permission to replace it.
+        // Only this authenticated switch from another mode grants creation;
+        // revisiting an unconsumed choice preserves its existing intent.
+        createFileVault:
+            result.mode == CredentialStorageMode.encryptedFile &&
+            active != CredentialStorageMode.encryptedFile &&
+            (previous.mode != CredentialStorageMode.encryptedFile ||
+                previous.createFileVault),
+      );
+      if (!mounted) return;
+      ref.read(credentialStoragePendingModeProvider.notifier).state =
+          result.mode == active ? null : result.mode;
+      ref
+              .read(credentialStorageKeychainRestartRequiredProvider.notifier)
+              .state =
+          result.mode == CredentialStorageMode.systemKeychain &&
+          path != _activeKeychainPath;
+      setState(() => _selection = CredentialStorageConfig.readSelection());
+      _notice(
+        'Restart CrispCloud to apply. Existing credentials stay in their original store; sign in again if needed.',
+      );
+    } catch (_) {
+      _notice(
+        'Could not verify App Lock or save credential-storage settings. Your active storage is unchanged. Try again.',
+      );
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Section: Accessibility
 // ---------------------------------------------------------------------------
 
@@ -669,9 +847,8 @@ class _PrivacySection extends ConsumerWidget {
             child: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Theme.of(
-                  context,
-                ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                color: Theme.of(context).colorScheme.surfaceContainerHighest
+                    .withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(

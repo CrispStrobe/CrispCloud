@@ -2,6 +2,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:crisp_cloud/services/secure_storage_service.dart';
 
+class _PersistentTestStorage extends InMemorySecureStorage {
+  bool ignoreWrites = false;
+  bool failWrites = false;
+
+  @override
+  bool get isPersistent => true;
+
+  @override
+  Future<void> write(String key, String value) async {
+    if (failWrites) throw StateError('Synthetic storage failure');
+    if (!ignoreWrites) await super.write(key, value);
+  }
+}
+
 void main() {
   group('InMemorySecureStorage', () {
     late InMemorySecureStorage storage;
@@ -64,11 +78,11 @@ void main() {
   });
 
   group('CredentialMigration', () {
-    late InMemorySecureStorage secure;
+    late _PersistentTestStorage secure;
 
     setUp(() {
       SharedPreferences.setMockInitialValues({});
-      secure = InMemorySecureStorage();
+      secure = _PersistentTestStorage();
     });
 
     test('migrates credentials from SharedPreferences', () async {
@@ -122,5 +136,79 @@ void main() {
       await CredentialMigration.migrateIfNeeded(secure);
       expect(await secure.readMap('filen_credentials'), isNull);
     });
+
+    test('session-only mode leaves saved credentials and marker untouched', () async {
+      const key = 'filen_credentials';
+      const raw = '{"email":"persisted@example.test"}';
+      SharedPreferences.setMockInitialValues({key: raw});
+      final ephemeral = InMemorySecureStorage();
+
+      await CredentialMigration.migrateIfNeeded(ephemeral);
+
+      expect(ephemeral.isPersistent, isFalse);
+      expect(await ephemeral.read(key), isNull);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString(key), raw);
+      expect(prefs.containsKey('secure_storage_migration_v1'), isFalse);
+
+      // Choosing a persistent store later can still complete migration.
+      await CredentialMigration.migrateIfNeeded(secure);
+      expect(await secure.read(key), raw);
+      expect(prefs.containsKey(key), isFalse);
+      expect(prefs.getBool('secure_storage_migration_v1'), isTrue);
+    });
+
+    test('an existing secure login wins without deleting the legacy copy', () async {
+      const key = 'filen_credentials';
+      const legacy = '{"email":"old@example.test"}';
+      const current = '{"email":"current@example.test"}';
+      SharedPreferences.setMockInitialValues({key: legacy});
+      await secure.write(key, current);
+
+      await CredentialMigration.migrateIfNeeded(secure);
+
+      expect(await secure.read(key), current);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString(key), legacy);
+      expect(prefs.getBool('secure_storage_migration_v1'), isNot(true));
+    });
+
+    test('an identical verified secure copy permits legacy cleanup', () async {
+      const key = 'filen_credentials';
+      const raw = '{"email":"same@example.test"}';
+      SharedPreferences.setMockInitialValues({key: raw});
+      await secure.write(key, raw);
+      secure.failWrites = true;
+
+      await CredentialMigration.migrateIfNeeded(secure);
+
+      expect(await secure.read(key), raw);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.containsKey(key), isFalse);
+    });
+
+    for (final failure in ['drop', 'throw']) {
+      test('a $failure write keeps the durable legacy copy and retries', () async {
+        const key = 'filen_credentials';
+        const raw = '{"email":"preserved@example.test"}';
+        SharedPreferences.setMockInitialValues({key: raw});
+        secure.ignoreWrites = failure == 'drop';
+        secure.failWrites = failure == 'throw';
+
+        await expectLater(
+          CredentialMigration.migrateIfNeeded(secure),
+          throwsStateError,
+        );
+
+        final prefs = await SharedPreferences.getInstance();
+        expect(prefs.getString(key), raw);
+        expect(prefs.getBool('secure_storage_migration_v1'), isNot(true));
+        secure.ignoreWrites = false;
+        secure.failWrites = false;
+        await CredentialMigration.migrateIfNeeded(secure);
+        expect(await secure.read(key), raw);
+        expect(prefs.containsKey(key), isFalse);
+      });
+    }
   });
 }

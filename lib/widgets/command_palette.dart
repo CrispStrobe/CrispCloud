@@ -18,6 +18,7 @@ import '../screens/screen_dialogs.dart'
     show
         showGoToDialog,
         showConnectionDialogScreen,
+        confirmLogoutRiverpod,
         showMultiRenameFromSelection,
         showCopyDialogFromSelection,
         showMoveDialogFromSelection,
@@ -457,7 +458,7 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
         _Command(
           name: context.commanderTr("Disconnect"),
           icon: Icons.cloud_off,
-          action: () => ref.read(authProvider).logout(),
+          action: () => confirmLogoutRiverpod(widget.parentContext, ref),
         ),
 
       // Sorting

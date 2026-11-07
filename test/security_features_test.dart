@@ -16,6 +16,19 @@ import 'package:crisp_cloud/services/proxy_service.dart';
 import 'package:crisp_cloud/services/app_lock_service.dart';
 import 'package:crisp_cloud/services/secure_storage_service.dart';
 
+class _PersistentLockStorage extends InMemorySecureStorage {
+  bool unreadable = false;
+
+  @override
+  bool get isPersistent => true;
+
+  @override
+  Future<String?> read(String key) {
+    if (unreadable) throw StateError('Synthetic lock-policy read failure');
+    return super.read(key);
+  }
+}
+
 void main() {
   // --- ProxyConfig Tests ---
   group('ProxyConfig', () {
@@ -155,11 +168,11 @@ void main() {
 
   // --- AppLockService Tests ---
   group('AppLockService', () {
-    late InMemorySecureStorage storage;
+    late _PersistentLockStorage storage;
     late AppLockService lockService;
 
     setUp(() {
-      storage = InMemorySecureStorage();
+      storage = _PersistentLockStorage();
       lockService = AppLockService(storage);
     });
 
@@ -167,9 +180,62 @@ void main() {
       expect(await lockService.isEnabled(), false);
     });
 
+    test('a malformed enabled flag is an error, never a disabled lock', () async {
+      for (final value in ['', 'TRUE', 'yes', 'damaged']) {
+        await storage.write('app_lock_enabled', value);
+        await expectLater(lockService.isEnabled(), throwsStateError);
+      }
+    });
+
+    test('partial or damaged lock metadata remains fail-closed', () async {
+      await storage.write('app_lock_salt', base64Encode(List.filled(16, 0)));
+      await expectLater(lockService.isEnabled(), throwsStateError);
+      await storage.write('app_lock_enabled', 'true');
+      await expectLater(lockService.isEnabled(), throwsStateError);
+      await lockService.setup('1234');
+      await storage.write('app_lock_salt', 'damaged-base64');
+      await expectLater(lockService.isEnabled(), throwsStateError);
+    });
+
+    test('an unavailable policy is surfaced instead of reported disabled', () async {
+      storage.unreadable = true;
+      await expectLater(
+        lockService.isEnabled(),
+        throwsA(isA<StateError>().having(
+          (error) => error.message,
+          'message',
+          'Synthetic lock-policy read failure',
+        )),
+      );
+    });
+
     test('setup enables lock', () async {
       await lockService.setup('1234');
       expect(await lockService.isEnabled(), true);
+    });
+
+    test('session-only mode rejects a lock that would disappear on restart', () async {
+      final ephemeral = InMemorySecureStorage();
+      final service = AppLockService(ephemeral);
+      await expectLater(service.setup('1234'), throwsStateError);
+      expect(await service.isEnabled(), isFalse);
+      expect(await ephemeral.containsKey('app_lock_hash'), isFalse);
+      expect(await ephemeral.containsKey('app_lock_salt'), isFalse);
+    });
+
+    test('a pending-storage setup guard prevents any lock writes', () async {
+      var checked = false;
+      final service = AppLockService(storage, beforeSetup: () async {
+        checked = true;
+        throw StateError('Synthetic pending credential-storage change');
+      });
+
+      await expectLater(service.setup('1234'), throwsStateError);
+
+      expect(checked, isTrue);
+      expect(await storage.containsKey('app_lock_hash'), isFalse);
+      expect(await storage.containsKey('app_lock_salt'), isFalse);
+      expect(await storage.containsKey('app_lock_enabled'), isFalse);
     });
 
     test('verify correct code', () async {

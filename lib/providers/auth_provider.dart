@@ -173,8 +173,19 @@ class AuthNotifier extends ChangeNotifier {
 
   Future<void> logout() async {
     _log.info('logout: provider=$providerName');
-    await _cloudClient.logout();
-    await _clearCredentials();
+    try {
+      await _cloudClient.logout();
+      // The Filen adapter performs and verifies its own credential cleanup.
+      if (_currentProvider != CloudProvider.filen) await _clearCredentials();
+    } on FilenCredentialDeletionFailure {
+      // Filen has already discarded its API key and master keys. Retain this
+      // adapter so the same logout operation can retry durable cleanup, while
+      // reporting the actual disconnected session state to the rest of the UI.
+      _isConnected = false;
+      _userEmail = null;
+      notifyListeners();
+      rethrow;
+    }
     _isConnected = false;
     _userEmail = null;
     notifyListeners();

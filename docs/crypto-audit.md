@@ -41,6 +41,101 @@ spools plaintext until tag verification. This branch preserves that existing
 wire format. Cross-backend tests cover PointyCastle, `cryptography` and available
 native implementations; real-device acceleration remains a separate test.
 
+## PR26 follow-up: credential-storage backends
+
+The follow-up review includes PR26 source `f2536648aed5c3b4050de92cce22235f0143d58e`
+and the concurrently added first-run/create-keychain UI at
+`dcba7255a6c5015a145e2ecb15950b193ba75500`, plus the later recovery and Filen
+persistence changes through `8316994`. The scope here is backend selection,
+credential preservation, local cryptographic storage and its application gates;
+it is not a fresh audit of every provider or dependency. The integrated behavior
+is described in [credential-storage.md](credential-storage.md).
+
+| Finding in the PR26 inputs | Correction and regression scope |
+| --- | --- |
+| Custom file-keychain selection called `SecKeychainSetDefault` and replaced the user's search list, including at startup independently of the active mode. A failed custom selection could still probe the default store, and the generic Flutter service was not an app-specific namespace in a file keychain. | Remove the global setters/duplicate channel. Use explicit keychain references for every SecItem operation and `com.crispcloud.credentials.v1` for the custom backend. Leave experimental generic-service entries untouched. Browse retains a security-scoped bookmark; creation rejects occupied/alias/symlink/reserved paths and checks unlock plus scoped read/write/delete. Native temporary-keychain tests check creation and CRUD without changing default/search-list preferences or foreign services. |
+| The encrypted-file backend cached whole-file state, permitting stale instances to lose writes, and could treat malformed/empty existing data as a new store. Unlock failures and unauthenticated values could become apparent absence. | Reload committed state inside an OS-locked transaction, stage/flush and atomically replace without deleting the previous file, reject unsupported paths and corruption, and invalidate stale vault generations. Validate metadata/KDF bounds before derivation and keep failed unlocks locked. File/codec tests cover overlapping writers, separate-isolate contention, failed publication, restart, corruption, metadata changes and independent legacy data. |
+| Credential AES-GCM authenticated a value without binding its storage key. Copying a valid record to a different credential/policy key could change its meaning without breaking the GCM tag. | New `v2:` writes encrypt and authenticate the key together with the value. An inner binary marker prevents a prefix-stripping downgrade to legacy UTF-8. Transposition/prefix-tampering tests exercise the check. Existing unbound values remain readable and become bound on rewrite; the patch does not claim that untouched legacy entries gained binding. |
+| Automatic backend fallback or treating an unreadable lock policy as disabled could expose an existing profile without its policy. Settings could label a different pending mode as already active, and separately saved mode/path preferences could split one intended selection. | Existing or ambiguous profiles retry the configured store. A separately checked fresh-profile path retains first-run choice. App Lock policy errors stop the gate; session-only cannot enable a persistent lock. Settings keeps active/pending state distinct, rechecks App Lock before saving a change, and writes/reloads a single versioned selection record. Bootstrap, gate, config and chooser regressions cover these boundaries. |
+| A later startup recovery action offered replacement storage while the existing store and its App Lock policy were unreadable. A warning cannot establish that changing stores is authorized by the old policy. | Restrict recovery to regranting access to the same configured macOS file keychain. Native code validates canonical path plus readable file/volume identities before replacing its bookmark; cancellation or a different/missing file does not mutate bookmarks. Recheck selection before/after the picker, then retry the original policy gate. Default OS stores retain OS repair guidance and Retry. Pure service, Dart bridge and native helper regressions cover the boundary; interactive sandbox access still needs a signed-app smoke test. |
+| Treating an absent vault as first use could create an empty replacement after the original vault and its App Lock metadata disappeared. Retaining a creation grant after a completed or failed attempt could let a stale startup recreate it later. | Version-3 selection records carry an explicit creation grant; existing version-2 selections imply no grant. Only verified fresh setup or an authenticated switch from another backend grants creation. Check the selection snapshot, consume through a verified preference write before the creator runs, and never regrant after failure. Existing unlock also retires unused intent. Browser fresh setup requires empty preferences and browser storage. Config/bootstrap/gate tests cover stale grants, failed consumption, creation ordering and blocked missing existing vaults. |
+| Generic and Internxt migrations could import persistent credentials into a session store, delete the durable source or mark migration complete after only an in-memory write. | `SecureStorage.isPersistent` distinguishes ephemeral stores. Session mode skips those imports/cleanup markers. Persistent migration verifies readback before legacy deletion and preserves conflicting secure values. Secure-storage and Internxt regressions check session isolation and preservation on failure. |
+| The Filen SDK could use its default credential file independently of the app's selected host store. Later cleanup trusted an unverified write and could delete durable legacy credentials in session mode; native cleanup also leaked into browser paths. | Inject the same host-store adapter into the production SDK. Verify exact credential readback before persistent cleanup; preserve legacy files/preferences in session mode. Reject corrupt reads and failed writes with fixed errors, serialize app/SDK credential operations, and keep filesystem cleanup behind a native-only implementation. Config, adapter and browser regressions cover failed writes, preservation, error redaction and SDK persistence. |
+
+Filen logout now propagates a safe error when saved-credential deletion or its
+readback cannot be verified. It discards session keys, preserves the adapter for
+retry, and shows cleanup failure instead of a success message. Persistent
+logout removes retained legacy preferences and the old SDK credential file
+before the secure entry to prevent reimport; ephemeral logout does not touch
+those durable sources. Config, adapter,
+auth-state and dialog regressions are in `test/filen_adapter_test.dart`.
+
+Fresh-profile detection now preserves filesystem inspection failures instead
+of trusting `FileSystemEntity.type`'s ambiguous `notFound` result. It rejects
+unavailable ancestors, symlink suffixes and parent traversal, rechecks the
+preferences snapshot after asynchronous filesystem inspection, and revalidates
+freshness before accepting a first-run chooser result. Settings retains its
+operation guard through the modal and the subsequent save; cancelling a pending
+switch back to the active file vault does not authorize recreating that vault.
+Credential startup, recovery and vault errors use fixed messages before unlock
+rather than displaying arbitrary storage exceptions.
+
+For this post-`8316994` review, locally completed checks were:
+
+- Dart 3.13.0 parsing/formatting of the changed Dart files. The standalone SDK
+  does not provide the Flutter framework, analysis dependencies or widget test
+  runtime, so this is not a `flutter analyze` or Flutter-test success claim.
+- The release-evidence tool's 36 tests: 34 passed, with two Apple `plutil` tests
+  skipped on Linux. The source-input check retained both Filen and Internxt.
+- An isolated Dart harness importing the real Filen legacy-cleanup helper and
+  the locked public `path` 1.9.1 dependency: 21 Linux filesystem checks passed,
+  including real permission errors, link-target preservation, normalized
+  suffixes and parent-traversal refusal. The initial run reproduced a
+  trailing-separator symlink deletion bug; the corrected helper passes those
+  cases, which are also represented in the committed config-service tests.
+
+The focused Flutter/browser/native tests are wired into CI and the Apple store
+preflight workflows. Their results must be checked at the PR's final commit;
+earlier local build claims and queued CI runs do not validate these changes.
+
+Filen and Internxt retain their foreground account and transfer protocols. The
+new backend choice does not remove their encryption or require a plaintext
+provider mode. It also does not create an OS-only application: the shared vault
+and other bundled implementations remain in the inventory. The conditional
+export-release analysis is unchanged; this follow-up supplies engineering
+evidence, not an additional BIS or Apple classification.
+
+Important limits remain:
+
+- **App Lock and the password vault are different mechanisms.** App Lock retains
+  its legacy 10,000-round SHA-256 salt/PIN verifier format; this review does not
+  replace it with a modern password KDF. The credential vault separately uses
+  PBKDF2-HMAC-SHA256 and AES-256-GCM. App Lock is an application access gate, not
+  a guarantee against an attacker controlling the user's process or profile.
+- **File transactions do not supply anti-rollback or full-map authentication.**
+  Storage-key names/sizes remain visible, deleted entries are not detected as a
+  cryptographic failure, and old valid records/vaults can be restored. Legacy
+  unbound records retain their old limitation. Browser localStorage has no
+  native file transaction spanning multiple tabs. OS/device failures can also
+  defeat durability; a post-replacement sync error reports an uncertain commit.
+- **Consuming creation permission can leave a blocked interrupted setup.**
+  The grant is retired before vault initialization. A crash or failure before
+  vault publication can require restoring the vault or an authorized return to
+  the prior backend; startup does not automatically grant another attempt.
+  Selection verification and serialization apply within one isolate, not as
+  cross-process compare-and-swap or a transaction across browser tabs. Editable
+  preferences are not cryptographic authorization against a local attacker.
+- **Password/session modes require foreground availability.** A separate
+  background worker cannot unlock the file vault or inherit session memory.
+  The mobile worker refuses those modes instead of using stale OS credentials;
+  its existing supported providers remain FTP/FTPS and WebDAV. This does not add
+  unattended Filen or Internxt sync.
+- **Native helper tests are bounded.** They use temporary keychains and test
+  scope, failure and preference preservation. Interactive save/open panels,
+  bookmark persistence across signed sandbox launches, OS ACL prompts and live
+  provider accounts still need platform smoke testing. Consult the final CI
+  revision for actual native/Dart results; source inspection is not a test pass.
+
 ## Existing feature boundaries, not new removals
 
 The names of service classes overstate what the initial app actually exposed:

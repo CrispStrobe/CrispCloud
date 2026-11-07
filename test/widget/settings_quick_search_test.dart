@@ -13,6 +13,7 @@ import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/services/theme_service.dart';
 import 'package:crisp_cloud/providers/quick_search_provider.dart';
 import 'package:crisp_cloud/widgets/settings_dialog.dart';
+import 'package:crisp_cloud/services/secure_storage_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -20,7 +21,9 @@ void main() {
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
-    container = ProviderContainer();
+    container = ProviderContainer(overrides: [
+      secureStorageProvider.overrideWithValue(InMemorySecureStorage()),
+    ]);
   });
 
   tearDown(() {

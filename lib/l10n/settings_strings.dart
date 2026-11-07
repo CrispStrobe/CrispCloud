@@ -19,6 +19,59 @@ class SettingsStrings {
 
 const _translations = <String, Map<String, String>>{
   "de": {
+    "Credentials": "Zugangsdaten",
+    "Credential storage": "Speicherung von Zugangsdaten",
+    "Choose credential storage": "Speicher für Zugangsdaten wählen",
+    "Choose where CrispCloud keeps provider credentials. You can change this later in Settings.":
+        "Wählen Sie, wo CrispCloud die Zugangsdaten Ihrer Anbieter speichert. Sie können dies später in den Einstellungen ändern.",
+    "Where should CrispCloud keep provider credentials after the next restart?":
+        "Wo soll CrispCloud die Zugangsdaten nach dem nächsten Neustart speichern?",
+    "System keychain": "Schlüsselbund des Systems",
+    "Use macOS secure storage or choose a separate keychain file.":
+        "Verwenden Sie den sicheren macOS-Speicher oder wählen Sie eine separate Schlüsselbunddatei.",
+    "The operating-system keychain or credential manager.":
+        "Der Schlüsselbund oder die Anmeldeinformationsverwaltung des Betriebssystems.",
+    "Encrypted file (master password)": "Verschlüsselte Datei (Master-Passwort)",
+    "An encrypted file unlocked with your master password. No OS keychain is needed.":
+        "Eine verschlüsselte Datei, die mit Ihrem Master-Passwort entsperrt wird. Ein Schlüsselbund des Betriebssystems ist nicht erforderlich.",
+    "This session only": "Nur für diese Sitzung",
+    "Credentials are forgotten when CrispCloud exits.":
+        "Die Zugangsdaten werden beim Beenden von CrispCloud vergessen.",
+    "Other keychain file…": "Andere Schlüsselbunddatei…",
+    "Choose a .keychain-db file": "Eine .keychain-db-Datei auswählen",
+    "Create a new keychain…": "Neuen Schlüsselbund erstellen…",
+    "Browse…": "Durchsuchen…",
+    "New keychain file": "Neue Schlüsselbunddatei",
+    "Keychain password": "Schlüsselbund-Passwort",
+    "Show password": "Passwort anzeigen",
+    "Hide password": "Passwort ausblenden",
+    "Master password": "Master-Passwort",
+    "Confirm master password": "Master-Passwort bestätigen",
+    "Continue": "Weiter",
+    "Save and restart later": "Speichern und später neu starten",
+    "Could not open the keychain chooser.":
+        "Die Schlüsselbundauswahl konnte nicht geöffnet werden.",
+    "Use at least 8 characters for the master password.":
+        "Verwenden Sie mindestens 8 Zeichen für das Master-Passwort.",
+    "Master passwords do not match.": "Die Master-Passwörter stimmen nicht überein.",
+    "Select a keychain file.": "Wählen Sie eine Schlüsselbunddatei.",
+    "Enter a path and password for the new keychain.":
+        "Geben Sie einen Pfad und ein Passwort für den neuen Schlüsselbund ein.",
+    "The system keychain is unavailable. Choose an encrypted file or session-only storage.":
+        "Der Schlüsselbund des Systems ist nicht verfügbar. Wählen Sie eine verschlüsselte Datei oder die Speicherung nur für diese Sitzung.",
+    "Current session: {mode}": "Aktuelle Sitzung: {mode}",
+    "After restart: {mode}": "Nach dem Neustart: {mode}",
+    "The current session keeps using its original storage until restart.":
+        "Die aktuelle Sitzung verwendet bis zum Neustart weiterhin ihren ursprünglichen Speicher.",
+    "Could not read credential-storage settings. Try again.":
+        "Die Einstellungen zur Speicherung von Zugangsdaten konnten nicht gelesen werden. Versuchen Sie es erneut.",
+    "Disable App Lock before changing credential storage, then enable it again after restarting.":
+        "Deaktivieren Sie die App-Sperre, bevor Sie den Speicher für Zugangsdaten ändern, und aktivieren Sie sie nach dem Neustart wieder.",
+    "Restart CrispCloud to apply. Existing credentials stay in their original store; sign in again if needed.":
+        "Starten Sie CrispCloud neu, um die Änderung anzuwenden. Vorhandene Zugangsdaten bleiben im ursprünglichen Speicher; melden Sie sich bei Bedarf erneut an.",
+    "Could not verify App Lock or save credential-storage settings. Your active storage is unchanged. Try again.":
+        "Die App-Sperre konnte nicht geprüft oder die Einstellung zur Speicherung von Zugangsdaten nicht gespeichert werden. Ihr aktiver Speicher ist unverändert. Versuchen Sie es erneut.",
+
     "Select every matching file": "Alle passenden Dateien auswählen",
     "Select": "Auswählen",
     "Appearance": "Darstellung",
@@ -108,6 +161,60 @@ const _translations = <String, Map<String, String>>{
     "Reset to Defaults": "Auf Standard zurücksetzen",
   },
   "fr": {
+    "Credentials": "Identifiants",
+    "Credential storage": "Stockage des identifiants",
+    "Choose credential storage": "Choisir le stockage des identifiants",
+    "Choose where CrispCloud keeps provider credentials. You can change this later in Settings.":
+        "Choisissez où CrispCloud conserve les identifiants de vos fournisseurs. Vous pourrez modifier ce choix dans les paramètres.",
+    "Where should CrispCloud keep provider credentials after the next restart?":
+        "Où CrispCloud doit-il conserver les identifiants après le prochain redémarrage ?",
+    "System keychain": "Trousseau du système",
+    "Use macOS secure storage or choose a separate keychain file.":
+        "Utilisez le stockage sécurisé de macOS ou choisissez un fichier de trousseau distinct.",
+    "The operating-system keychain or credential manager.":
+        "Le trousseau ou le gestionnaire d’identifiants du système d’exploitation.",
+    "Encrypted file (master password)": "Fichier chiffré (mot de passe principal)",
+    "An encrypted file unlocked with your master password. No OS keychain is needed.":
+        "Un fichier chiffré déverrouillé avec votre mot de passe principal. Aucun trousseau du système n’est nécessaire.",
+    "This session only": "Cette session uniquement",
+    "Credentials are forgotten when CrispCloud exits.":
+        "Les identifiants sont oubliés à la fermeture de CrispCloud.",
+    "Other keychain file…": "Autre fichier de trousseau…",
+    "Choose a .keychain-db file": "Choisir un fichier .keychain-db",
+    "Create a new keychain…": "Créer un trousseau…",
+    "Browse…": "Parcourir…",
+    "New keychain file": "Nouveau fichier de trousseau",
+    "Keychain password": "Mot de passe du trousseau",
+    "Show password": "Afficher le mot de passe",
+    "Hide password": "Masquer le mot de passe",
+    "Master password": "Mot de passe principal",
+    "Confirm master password": "Confirmer le mot de passe principal",
+    "Continue": "Continuer",
+    "Save and restart later": "Enregistrer et redémarrer plus tard",
+    "Could not open the keychain chooser.":
+        "Impossible d’ouvrir le sélecteur de trousseau.",
+    "Use at least 8 characters for the master password.":
+        "Utilisez au moins 8 caractères pour le mot de passe principal.",
+    "Master passwords do not match.":
+        "Les mots de passe principaux ne correspondent pas.",
+    "Select a keychain file.": "Sélectionnez un fichier de trousseau.",
+    "Enter a path and password for the new keychain.":
+        "Saisissez un chemin et un mot de passe pour le nouveau trousseau.",
+    "The system keychain is unavailable. Choose an encrypted file or session-only storage.":
+        "Le trousseau du système est indisponible. Choisissez un fichier chiffré ou un stockage limité à cette session.",
+    "Current session: {mode}": "Session actuelle : {mode}",
+    "After restart: {mode}": "Après redémarrage : {mode}",
+    "The current session keeps using its original storage until restart.":
+        "La session actuelle continue d’utiliser son stockage initial jusqu’au redémarrage.",
+    "Could not read credential-storage settings. Try again.":
+        "Impossible de lire les paramètres de stockage des identifiants. Réessayez.",
+    "Disable App Lock before changing credential storage, then enable it again after restarting.":
+        "Désactivez le verrouillage de l’application avant de modifier le stockage des identifiants, puis réactivez-le après le redémarrage.",
+    "Restart CrispCloud to apply. Existing credentials stay in their original store; sign in again if needed.":
+        "Redémarrez CrispCloud pour appliquer la modification. Les identifiants existants restent dans leur stockage initial ; reconnectez-vous si nécessaire.",
+    "Could not verify App Lock or save credential-storage settings. Your active storage is unchanged. Try again.":
+        "Impossible de vérifier le verrouillage de l’application ou d’enregistrer les paramètres de stockage des identifiants. Le stockage actif est inchangé. Réessayez.",
+
     "Select every matching file":
         "Sélectionner tous les fichiers correspondants",
     "Select": "Sélectionner",
@@ -196,6 +303,58 @@ const _translations = <String, Map<String, String>>{
     "Reset to Defaults": "Rétablir les valeurs par défaut",
   },
   "es": {
+    "Credentials": "Credenciales",
+    "Credential storage": "Almacenamiento de credenciales",
+    "Choose credential storage": "Elegir almacenamiento de credenciales",
+    "Choose where CrispCloud keeps provider credentials. You can change this later in Settings.":
+        "Elige dónde guarda CrispCloud las credenciales de tus proveedores. Puedes cambiarlo más adelante en Ajustes.",
+    "Where should CrispCloud keep provider credentials after the next restart?":
+        "¿Dónde debe guardar CrispCloud las credenciales después del próximo reinicio?",
+    "System keychain": "Llavero del sistema",
+    "Use macOS secure storage or choose a separate keychain file.":
+        "Usa el almacenamiento seguro de macOS o elige un archivo de llavero independiente.",
+    "The operating-system keychain or credential manager.":
+        "El llavero o administrador de credenciales del sistema operativo.",
+    "Encrypted file (master password)": "Archivo cifrado (contraseña maestra)",
+    "An encrypted file unlocked with your master password. No OS keychain is needed.":
+        "Un archivo cifrado que se desbloquea con tu contraseña maestra. No necesita el llavero del sistema.",
+    "This session only": "Solo esta sesión",
+    "Credentials are forgotten when CrispCloud exits.":
+        "Las credenciales se olvidan al cerrar CrispCloud.",
+    "Other keychain file…": "Otro archivo de llavero…",
+    "Choose a .keychain-db file": "Elegir un archivo .keychain-db",
+    "Create a new keychain…": "Crear un llavero…",
+    "Browse…": "Examinar…",
+    "New keychain file": "Nuevo archivo de llavero",
+    "Keychain password": "Contraseña del llavero",
+    "Show password": "Mostrar contraseña",
+    "Hide password": "Ocultar contraseña",
+    "Master password": "Contraseña maestra",
+    "Confirm master password": "Confirmar contraseña maestra",
+    "Continue": "Continuar",
+    "Save and restart later": "Guardar y reiniciar más tarde",
+    "Could not open the keychain chooser.": "No se pudo abrir el selector de llavero.",
+    "Use at least 8 characters for the master password.":
+        "Usa al menos 8 caracteres para la contraseña maestra.",
+    "Master passwords do not match.": "Las contraseñas maestras no coinciden.",
+    "Select a keychain file.": "Selecciona un archivo de llavero.",
+    "Enter a path and password for the new keychain.":
+        "Introduce una ruta y una contraseña para el nuevo llavero.",
+    "The system keychain is unavailable. Choose an encrypted file or session-only storage.":
+        "El llavero del sistema no está disponible. Elige un archivo cifrado o almacenamiento solo para esta sesión.",
+    "Current session: {mode}": "Sesión actual: {mode}",
+    "After restart: {mode}": "Después de reiniciar: {mode}",
+    "The current session keeps using its original storage until restart.":
+        "La sesión actual seguirá usando su almacenamiento original hasta que reinicies.",
+    "Could not read credential-storage settings. Try again.":
+        "No se pudo leer la configuración del almacenamiento de credenciales. Inténtalo de nuevo.",
+    "Disable App Lock before changing credential storage, then enable it again after restarting.":
+        "Desactiva el bloqueo de aplicación antes de cambiar el almacenamiento de credenciales y vuelve a activarlo después de reiniciar.",
+    "Restart CrispCloud to apply. Existing credentials stay in their original store; sign in again if needed.":
+        "Reinicia CrispCloud para aplicar el cambio. Las credenciales existentes se mantienen en su almacenamiento original; vuelve a iniciar sesión si es necesario.",
+    "Could not verify App Lock or save credential-storage settings. Your active storage is unchanged. Try again.":
+        "No se pudo verificar el bloqueo de aplicación o guardar la configuración del almacenamiento de credenciales. El almacenamiento activo no ha cambiado. Inténtalo de nuevo.",
+
     "Select every matching file": "Seleccionar todos los archivos coincidentes",
     "Select": "Seleccionar",
     "Appearance": "Apariencia",
@@ -284,6 +443,58 @@ const _translations = <String, Map<String, String>>{
     "Reset to Defaults": "Restablecer valores predeterminados",
   },
   "pt": {
+    "Credentials": "Credenciais",
+    "Credential storage": "Armazenamento de credenciais",
+    "Choose credential storage": "Escolher armazenamento de credenciais",
+    "Choose where CrispCloud keeps provider credentials. You can change this later in Settings.":
+        "Escolha onde o CrispCloud guarda as credenciais dos seus provedores. Você pode alterar isso depois nas Configurações.",
+    "Where should CrispCloud keep provider credentials after the next restart?":
+        "Onde o CrispCloud deve guardar as credenciais após a próxima reinicialização?",
+    "System keychain": "Chaves do sistema",
+    "Use macOS secure storage or choose a separate keychain file.":
+        "Use o armazenamento seguro do macOS ou escolha um arquivo de chaves separado.",
+    "The operating-system keychain or credential manager.":
+        "As chaves ou o gerenciador de credenciais do sistema operacional.",
+    "Encrypted file (master password)": "Arquivo criptografado (senha mestra)",
+    "An encrypted file unlocked with your master password. No OS keychain is needed.":
+        "Um arquivo criptografado desbloqueado com sua senha mestra. Não requer as chaves do sistema.",
+    "This session only": "Somente nesta sessão",
+    "Credentials are forgotten when CrispCloud exits.":
+        "As credenciais são esquecidas ao fechar o CrispCloud.",
+    "Other keychain file…": "Outro arquivo de chaves…",
+    "Choose a .keychain-db file": "Escolher um arquivo .keychain-db",
+    "Create a new keychain…": "Criar novas chaves…",
+    "Browse…": "Procurar…",
+    "New keychain file": "Novo arquivo de chaves",
+    "Keychain password": "Senha das chaves",
+    "Show password": "Mostrar senha",
+    "Hide password": "Ocultar senha",
+    "Master password": "Senha mestra",
+    "Confirm master password": "Confirmar senha mestra",
+    "Continue": "Continuar",
+    "Save and restart later": "Salvar e reiniciar depois",
+    "Could not open the keychain chooser.": "Não foi possível abrir o seletor de chaves.",
+    "Use at least 8 characters for the master password.":
+        "Use pelo menos 8 caracteres para a senha mestra.",
+    "Master passwords do not match.": "As senhas mestras não coincidem.",
+    "Select a keychain file.": "Selecione um arquivo de chaves.",
+    "Enter a path and password for the new keychain.":
+        "Digite um caminho e uma senha para as novas chaves.",
+    "The system keychain is unavailable. Choose an encrypted file or session-only storage.":
+        "As chaves do sistema estão indisponíveis. Escolha um arquivo criptografado ou armazenamento somente para esta sessão.",
+    "Current session: {mode}": "Sessão atual: {mode}",
+    "After restart: {mode}": "Após reiniciar: {mode}",
+    "The current session keeps using its original storage until restart.":
+        "A sessão atual continua usando o armazenamento original até a reinicialização.",
+    "Could not read credential-storage settings. Try again.":
+        "Não foi possível ler as configurações de armazenamento de credenciais. Tente novamente.",
+    "Disable App Lock before changing credential storage, then enable it again after restarting.":
+        "Desative o bloqueio do aplicativo antes de alterar o armazenamento de credenciais e ative-o novamente após reiniciar.",
+    "Restart CrispCloud to apply. Existing credentials stay in their original store; sign in again if needed.":
+        "Reinicie o CrispCloud para aplicar a alteração. As credenciais existentes permanecem no armazenamento original; entre novamente se necessário.",
+    "Could not verify App Lock or save credential-storage settings. Your active storage is unchanged. Try again.":
+        "Não foi possível verificar o bloqueio do aplicativo ou salvar as configurações de armazenamento de credenciais. O armazenamento ativo não foi alterado. Tente novamente.",
+
     "Select every matching file":
         "Selecionar todos os ficheiros correspondentes",
     "Select": "Selecionar",
@@ -374,6 +585,53 @@ const _translations = <String, Map<String, String>>{
     "Reset to Defaults": "Repor predefinições",
   },
   "zh": {
+    "Credentials": "凭据",
+    "Credential storage": "凭据存储",
+    "Choose credential storage": "选择凭据存储方式",
+    "Choose where CrispCloud keeps provider credentials. You can change this later in Settings.":
+        "选择 CrispCloud 保存云服务凭据的位置。你可以稍后在设置中更改。",
+    "Where should CrispCloud keep provider credentials after the next restart?":
+        "下次重启后，CrispCloud 应将凭据保存在哪里？",
+    "System keychain": "系统钥匙串",
+    "Use macOS secure storage or choose a separate keychain file.":
+        "使用 macOS 安全存储，或选择单独的钥匙串文件。",
+    "The operating-system keychain or credential manager.": "操作系统的钥匙串或凭据管理器。",
+    "Encrypted file (master password)": "加密文件（主密码）",
+    "An encrypted file unlocked with your master password. No OS keychain is needed.":
+        "使用主密码解锁的加密文件，无需系统钥匙串。",
+    "This session only": "仅此会话",
+    "Credentials are forgotten when CrispCloud exits.": "退出 CrispCloud 时将清除本次会话中的凭据。",
+    "Other keychain file…": "其他钥匙串文件…",
+    "Choose a .keychain-db file": "选择 .keychain-db 文件",
+    "Create a new keychain…": "创建新钥匙串…",
+    "Browse…": "浏览…",
+    "New keychain file": "新钥匙串文件",
+    "Keychain password": "钥匙串密码",
+    "Show password": "显示密码",
+    "Hide password": "隐藏密码",
+    "Master password": "主密码",
+    "Confirm master password": "确认主密码",
+    "Continue": "继续",
+    "Save and restart later": "保存并稍后重启",
+    "Could not open the keychain chooser.": "无法打开钥匙串选择器。",
+    "Use at least 8 characters for the master password.": "主密码至少需要 8 个字符。",
+    "Master passwords do not match.": "两次输入的主密码不一致。",
+    "Select a keychain file.": "请选择钥匙串文件。",
+    "Enter a path and password for the new keychain.": "请输入新钥匙串的路径和密码。",
+    "The system keychain is unavailable. Choose an encrypted file or session-only storage.":
+        "系统钥匙串不可用。请选择加密文件，或仅在本次会话中保存凭据。",
+    "Current session: {mode}": "当前会话：{mode}",
+    "After restart: {mode}": "重启后：{mode}",
+    "The current session keeps using its original storage until restart.":
+        "在重启之前，当前会话将继续使用原来的存储方式。",
+    "Could not read credential-storage settings. Try again.": "无法读取凭据存储设置。请重试。",
+    "Disable App Lock before changing credential storage, then enable it again after restarting.":
+        "更改凭据存储方式前，请先关闭应用锁定，并在重启后重新启用。",
+    "Restart CrispCloud to apply. Existing credentials stay in their original store; sign in again if needed.":
+        "重启 CrispCloud 以应用更改。现有凭据仍保存在原来的存储位置；如有需要，请重新登录。",
+    "Could not verify App Lock or save credential-storage settings. Your active storage is unchanged. Try again.":
+        "无法验证应用锁定或保存凭据存储设置。当前使用的存储方式未更改。请重试。",
+
     "Select every matching file": "选择所有匹配的文件",
     "Select": "选择",
     "Appearance": "外观",
@@ -453,6 +711,54 @@ const _translations = <String, Map<String, String>>{
     "Reset to Defaults": "恢复默认设置",
   },
   "ja": {
+    "Credentials": "認証情報",
+    "Credential storage": "認証情報の保存先",
+    "Choose credential storage": "認証情報の保存先を選択",
+    "Choose where CrispCloud keeps provider credentials. You can change this later in Settings.":
+        "CrispCloud が各プロバイダーの認証情報を保存する場所を選択してください。後から設定で変更できます。",
+    "Where should CrispCloud keep provider credentials after the next restart?":
+        "次回の再起動後、CrispCloud の認証情報をどこに保存しますか？",
+    "System keychain": "システムキーチェーン",
+    "Use macOS secure storage or choose a separate keychain file.":
+        "macOS の安全なストレージを使用するか、別のキーチェーンファイルを選択します。",
+    "The operating-system keychain or credential manager.": "OS のキーチェーンまたは資格情報マネージャー。",
+    "Encrypted file (master password)": "暗号化ファイル（マスターパスワード）",
+    "An encrypted file unlocked with your master password. No OS keychain is needed.":
+        "マスターパスワードでロック解除する暗号化ファイルです。OS のキーチェーンは不要です。",
+    "This session only": "このセッションのみ",
+    "Credentials are forgotten when CrispCloud exits.": "CrispCloud を終了すると認証情報は失われます。",
+    "Other keychain file…": "別のキーチェーンファイル…",
+    "Choose a .keychain-db file": ".keychain-db ファイルを選択",
+    "Create a new keychain…": "新しいキーチェーンを作成…",
+    "Browse…": "参照…",
+    "New keychain file": "新しいキーチェーンファイル",
+    "Keychain password": "キーチェーンのパスワード",
+    "Show password": "パスワードを表示",
+    "Hide password": "パスワードを隠す",
+    "Master password": "マスターパスワード",
+    "Confirm master password": "マスターパスワードの確認",
+    "Continue": "続ける",
+    "Save and restart later": "保存して後で再起動",
+    "Could not open the keychain chooser.": "キーチェーンの選択画面を開けませんでした。",
+    "Use at least 8 characters for the master password.": "マスターパスワードには 8 文字以上を使用してください。",
+    "Master passwords do not match.": "マスターパスワードが一致しません。",
+    "Select a keychain file.": "キーチェーンファイルを選択してください。",
+    "Enter a path and password for the new keychain.": "新しいキーチェーンのパスとパスワードを入力してください。",
+    "The system keychain is unavailable. Choose an encrypted file or session-only storage.":
+        "システムキーチェーンを利用できません。暗号化ファイルまたはこのセッションのみの保存を選択してください。",
+    "Current session: {mode}": "現在のセッション：{mode}",
+    "After restart: {mode}": "再起動後：{mode}",
+    "The current session keeps using its original storage until restart.":
+        "現在のセッションは、再起動するまで元の保存先を使用し続けます。",
+    "Could not read credential-storage settings. Try again.":
+        "認証情報の保存設定を読み込めませんでした。もう一度お試しください。",
+    "Disable App Lock before changing credential storage, then enable it again after restarting.":
+        "認証情報の保存先を変更する前にアプリロックを無効にし、再起動後に再度有効にしてください。",
+    "Restart CrispCloud to apply. Existing credentials stay in their original store; sign in again if needed.":
+        "変更を適用するには CrispCloud を再起動してください。既存の認証情報は元の保存先に残ります。必要に応じて再度サインインしてください。",
+    "Could not verify App Lock or save credential-storage settings. Your active storage is unchanged. Try again.":
+        "アプリロックの確認または認証情報の保存設定の保存に失敗しました。現在の保存先は変更されていません。もう一度お試しください。",
+
     "Select every matching file": "一致するファイルをすべて選択",
     "Select": "選択",
     "Appearance": "外観",
@@ -534,6 +840,54 @@ const _translations = <String, Map<String, String>>{
     "Reset to Defaults": "既定値に戻す",
   },
   "ko": {
+    "Credentials": "자격 증명",
+    "Credential storage": "자격 증명 저장소",
+    "Choose credential storage": "자격 증명 저장소 선택",
+    "Choose where CrispCloud keeps provider credentials. You can change this later in Settings.":
+        "CrispCloud에서 공급자 자격 증명을 저장할 위치를 선택하세요. 나중에 설정에서 변경할 수 있습니다.",
+    "Where should CrispCloud keep provider credentials after the next restart?":
+        "다음에 다시 시작한 후 CrispCloud에서 자격 증명을 어디에 저장할까요?",
+    "System keychain": "시스템 키체인",
+    "Use macOS secure storage or choose a separate keychain file.":
+        "macOS 보안 저장소를 사용하거나 별도의 키체인 파일을 선택하세요.",
+    "The operating-system keychain or credential manager.": "운영체제의 키체인 또는 자격 증명 관리자.",
+    "Encrypted file (master password)": "암호화 파일(마스터 비밀번호)",
+    "An encrypted file unlocked with your master password. No OS keychain is needed.":
+        "마스터 비밀번호로 잠금을 해제하는 암호화 파일입니다. 운영체제 키체인이 필요하지 않습니다.",
+    "This session only": "이번 세션만",
+    "Credentials are forgotten when CrispCloud exits.": "CrispCloud를 종료하면 자격 증명이 사라집니다.",
+    "Other keychain file…": "다른 키체인 파일…",
+    "Choose a .keychain-db file": ".keychain-db 파일 선택",
+    "Create a new keychain…": "새 키체인 만들기…",
+    "Browse…": "찾아보기…",
+    "New keychain file": "새 키체인 파일",
+    "Keychain password": "키체인 비밀번호",
+    "Show password": "비밀번호 표시",
+    "Hide password": "비밀번호 숨기기",
+    "Master password": "마스터 비밀번호",
+    "Confirm master password": "마스터 비밀번호 확인",
+    "Continue": "계속",
+    "Save and restart later": "저장하고 나중에 다시 시작",
+    "Could not open the keychain chooser.": "키체인 선택 창을 열 수 없습니다.",
+    "Use at least 8 characters for the master password.": "마스터 비밀번호는 8자 이상으로 입력하세요.",
+    "Master passwords do not match.": "마스터 비밀번호가 일치하지 않습니다.",
+    "Select a keychain file.": "키체인 파일을 선택하세요.",
+    "Enter a path and password for the new keychain.": "새 키체인의 경로와 비밀번호를 입력하세요.",
+    "The system keychain is unavailable. Choose an encrypted file or session-only storage.":
+        "시스템 키체인을 사용할 수 없습니다. 암호화 파일 또는 이번 세션만 저장을 선택하세요.",
+    "Current session: {mode}": "현재 세션: {mode}",
+    "After restart: {mode}": "다시 시작 후: {mode}",
+    "The current session keeps using its original storage until restart.":
+        "현재 세션은 다시 시작할 때까지 원래 저장소를 계속 사용합니다.",
+    "Could not read credential-storage settings. Try again.":
+        "자격 증명 저장소 설정을 읽을 수 없습니다. 다시 시도하세요.",
+    "Disable App Lock before changing credential storage, then enable it again after restarting.":
+        "자격 증명 저장소를 변경하기 전에 앱 잠금을 끄고, 다시 시작한 후 다시 켜세요.",
+    "Restart CrispCloud to apply. Existing credentials stay in their original store; sign in again if needed.":
+        "변경 사항을 적용하려면 CrispCloud를 다시 시작하세요. 기존 자격 증명은 원래 저장소에 유지됩니다. 필요한 경우 다시 로그인하세요.",
+    "Could not verify App Lock or save credential-storage settings. Your active storage is unchanged. Try again.":
+        "앱 잠금을 확인하거나 자격 증명 저장소 설정을 저장할 수 없습니다. 현재 저장소는 변경되지 않았습니다. 다시 시도하세요.",
+
     "Select every matching file": "일치하는 모든 파일 선택",
     "Select": "선택",
     "Appearance": "모양",
@@ -615,6 +969,58 @@ const _translations = <String, Map<String, String>>{
     "Reset to Defaults": "기본값으로 재설정",
   },
   "ar": {
+    "Credentials": "بيانات الاعتماد",
+    "Credential storage": "تخزين بيانات الاعتماد",
+    "Choose credential storage": "اختيار تخزين بيانات الاعتماد",
+    "Choose where CrispCloud keeps provider credentials. You can change this later in Settings.":
+        "اختر المكان الذي يحفظ فيه CrispCloud بيانات اعتماد موفري الخدمة. يمكنك تغيير ذلك لاحقًا في الإعدادات.",
+    "Where should CrispCloud keep provider credentials after the next restart?":
+        "أين تريد أن يحفظ CrispCloud بيانات الاعتماد بعد إعادة التشغيل التالية؟",
+    "System keychain": "سلسلة مفاتيح النظام",
+    "Use macOS secure storage or choose a separate keychain file.":
+        "استخدم التخزين الآمن في macOS أو اختر ملف سلسلة مفاتيح منفصلًا.",
+    "The operating-system keychain or credential manager.":
+        "سلسلة المفاتيح أو مدير بيانات الاعتماد في نظام التشغيل.",
+    "Encrypted file (master password)": "ملف مشفر (كلمة مرور رئيسية)",
+    "An encrypted file unlocked with your master password. No OS keychain is needed.":
+        "ملف مشفر يُفتح بكلمة المرور الرئيسية. لا يتطلب سلسلة مفاتيح نظام التشغيل.",
+    "This session only": "هذه الجلسة فقط",
+    "Credentials are forgotten when CrispCloud exits.":
+        "تُنسى بيانات الاعتماد عند إغلاق CrispCloud.",
+    "Other keychain file…": "ملف سلسلة مفاتيح آخر…",
+    "Choose a .keychain-db file": "اختيار ملف ‎.keychain-db",
+    "Create a new keychain…": "إنشاء سلسلة مفاتيح جديدة…",
+    "Browse…": "استعراض…",
+    "New keychain file": "ملف سلسلة مفاتيح جديد",
+    "Keychain password": "كلمة مرور سلسلة المفاتيح",
+    "Show password": "إظهار كلمة المرور",
+    "Hide password": "إخفاء كلمة المرور",
+    "Master password": "كلمة المرور الرئيسية",
+    "Confirm master password": "تأكيد كلمة المرور الرئيسية",
+    "Continue": "متابعة",
+    "Save and restart later": "حفظ وإعادة التشغيل لاحقًا",
+    "Could not open the keychain chooser.": "تعذر فتح نافذة اختيار سلسلة المفاتيح.",
+    "Use at least 8 characters for the master password.":
+        "استخدم 8 أحرف على الأقل لكلمة المرور الرئيسية.",
+    "Master passwords do not match.": "كلمتا المرور الرئيسيتان غير متطابقتين.",
+    "Select a keychain file.": "اختر ملف سلسلة مفاتيح.",
+    "Enter a path and password for the new keychain.":
+        "أدخل مسارًا وكلمة مرور لسلسلة المفاتيح الجديدة.",
+    "The system keychain is unavailable. Choose an encrypted file or session-only storage.":
+        "سلسلة مفاتيح النظام غير متاحة. اختر ملفًا مشفرًا أو التخزين لهذه الجلسة فقط.",
+    "Current session: {mode}": "الجلسة الحالية: {mode}",
+    "After restart: {mode}": "بعد إعادة التشغيل: {mode}",
+    "The current session keeps using its original storage until restart.":
+        "تستمر الجلسة الحالية في استخدام التخزين الأصلي حتى إعادة التشغيل.",
+    "Could not read credential-storage settings. Try again.":
+        "تعذرت قراءة إعدادات تخزين بيانات الاعتماد. حاول مرة أخرى.",
+    "Disable App Lock before changing credential storage, then enable it again after restarting.":
+        "عطّل قفل التطبيق قبل تغيير تخزين بيانات الاعتماد، ثم فعّله مجددًا بعد إعادة التشغيل.",
+    "Restart CrispCloud to apply. Existing credentials stay in their original store; sign in again if needed.":
+        "أعد تشغيل CrispCloud لتطبيق التغيير. تبقى بيانات الاعتماد الحالية في تخزينها الأصلي؛ سجّل الدخول مجددًا عند الحاجة.",
+    "Could not verify App Lock or save credential-storage settings. Your active storage is unchanged. Try again.":
+        "تعذر التحقق من قفل التطبيق أو حفظ إعدادات تخزين بيانات الاعتماد. لم يتغير التخزين النشط. حاول مرة أخرى.",
+
     "Select every matching file": "تحديد كل الملفات المطابقة",
     "Select": "تحديد",
     "Appearance": "المظهر",

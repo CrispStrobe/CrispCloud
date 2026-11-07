@@ -190,6 +190,15 @@ jobs:
         if: runner.os == 'macOS'
         run: python3 -m unittest discover -s tool -p test_crypto_release_evidence.py -v
 
+      - name: Verify custom keychain isolation without changing user defaults
+        if: runner.os == 'macOS'
+        run: |
+          swiftc -swift-version 5 -parse-as-library macos/Runner/CustomKeychainStore.swift \
+            test/native/custom_keychain_store_test.swift -framework Security \
+            -o "$RUNNER_TEMP/crispcloud-keychain-tests"
+          codesign --force --sign - "$RUNNER_TEMP/crispcloud-keychain-tests"
+          "$RUNNER_TEMP/crispcloud-keychain-tests"
+
       - uses: subosito/flutter-action@v2
         with:
           channel: ${{ env.FLUTTER_CHANNEL }}
@@ -210,12 +219,27 @@ jobs:
 
       - name: Crypto audit regressions (published vectors and credential migration)
         run: >-
-          flutter test --no-pub
+          python3 tool/with_ci_system_sqlite.py flutter test --no-pub
           test/aes_siv_test.dart test/cryptomator_test.dart
           test/veracrypt_test.dart test/veracrypt_header_vectors_test.dart
           test/encryption_service_test.dart test/internxt_secure_config_test.dart
+          test/secure_storage_test.dart
+          test/secure_storage_file_test.dart
+          test/secure_storage_web_test.dart
+          test/secure_storage_macos_keychain_test.dart
+          test/credential_storage_config_test.dart
+          test/credential_storage_bootstrap_test.dart
+          test/credential_storage_first_setup_test.dart
+          test/credential_storage_recovery_test.dart
+          test/credential_storage_recovery_widget_test.dart
+          test/credential_storage_setup_test.dart
+          test/credential_storage_settings_test.dart
+          test/web_master_password_gate_test.dart
+          test/background_sync_mobile_test.dart
+          test/security_features_test.dart
           test/internxt_rewire_test.dart test/internxt_download_path_test.dart
           test/internxt_bounded_transfer_test.dart
+          test/config_services_test.dart
           test/filen_adapter_test.dart test/filen_bounded_transfer_test.dart
           test/tls_verification_test.dart test/custom_ca_test.dart
           test/infrastructure_test.dart test/proxy_service_test.dart
@@ -270,6 +294,12 @@ jobs:
           test/terminal_session_test.dart test/terminal_widget_test.dart
           test/ssh_gateway_test.dart test/ssh_terminal_gateway_test.dart
           test/terminal_workspace_web_test.dart
+
+      - name: Browser credential vault authentication and compatibility
+        run: >-
+          flutter test --no-pub --reporter expanded --platform chrome --concurrency=1
+          test/secure_storage_web_test.dart
+          test/filen_secure_config_browser_test.dart
 
   # ---------- Multi-platform builds (matrix) ----------
   # Linux, Android, and Web build on ubuntu-latest.

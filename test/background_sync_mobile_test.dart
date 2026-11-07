@@ -6,6 +6,7 @@ import 'package:crisp_cloud/services/background_sync_mobile.dart' as mobile;
 import 'package:crisp_cloud/services/background_sync_service.dart';
 import 'package:crisp_cloud/services/background_transfer_journal.dart';
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
+import 'package:crisp_cloud/services/credential_storage_config.dart';
 import 'package:crisp_cloud/services/ftp_client_adapter.dart';
 import 'package:crisp_cloud/services/ftp_config_service.dart';
 import 'package:crisp_cloud/services/locale_preference.dart';
@@ -418,6 +419,39 @@ void main() {
       expect(methods, ['read']);
     },
   );
+
+  for (final mode in [
+    CredentialStorageMode.sessionOnly,
+    CredentialStorageMode.encryptedFile,
+  ]) {
+    test('background worker does not read old keychain credentials in ${mode.name}', () async {
+      await CredentialStorageConfig.writeMode(mode);
+      const channel = MethodChannel(
+        'plugins.it_nomads.com/flutter_secure_storage',
+      );
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      var reads = 0;
+      messenger.setMockMethodCallHandler(channel, (call) async {
+        reads++;
+        return jsonEncode(_ftpCredentials);
+      });
+      addTearDown(() => messenger.setMockMethodCallHandler(channel, null));
+      final network = _FtpNetwork();
+
+      await expectLater(
+        mobile.buildClientForProvider('ftp', ftpClientFactory: _ftpFactory(network)),
+        throwsA(isA<mobile.BackgroundSyncClientException>().having(
+          (error) => error.message,
+          'message',
+          contains('selected storage mode'),
+        )),
+      );
+
+      expect(reads, 0);
+      expect(network.connects, 0);
+    });
+  }
 
   test(
     'failed reschedule retains the accepted Apple task and saved interval',

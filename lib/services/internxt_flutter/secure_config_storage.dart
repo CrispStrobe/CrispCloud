@@ -32,6 +32,7 @@ ConfigService createSecureInternxtConfig({
 /// Legacy files/preferences are read only when no secure entry exists. A
 /// verified secure write precedes cleanup. A durable tombstone on deletion
 /// prevents a failed cleanup from resurrecting credentials on next launch.
+/// Ephemeral sessions never read or clean up a persistent legacy config.
 class InternxtSecureConfigStorage implements ConfigStorage {
   InternxtSecureConfigStorage({
     required SecureStorage secureStorage,
@@ -111,6 +112,7 @@ class InternxtSecureConfigStorage implements ConfigStorage {
   }
 
   Future<void> _cleanLegacy(String key) async {
+    if (!_secure.isPersistent) return;
     try {
       await _legacy.delete(key);
     } catch (_) {
@@ -168,6 +170,7 @@ class InternxtSecureConfigStorage implements ConfigStorage {
       await _cleanLegacy(key);
       return value;
     }
+    if (!_secure.isPersistent) return null;
     final old = await _legacy.read(key);
     if (old == null) return null;
     final value = relative == _credentialsName

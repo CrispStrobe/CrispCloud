@@ -28,6 +28,236 @@ class AppDelegate: FlutterAppDelegate {
 
   // MARK: - Private helpers
 
+  private let customKeychainStore = CustomKeychainStore()
+  private var customKeychainChannel: FlutterMethodChannel?
+
+  // MainFlutterWindow registers this during engine setup, before startup can
+  // request credentials. Merely registering the channel touches no keychain.
+  func registerCustomKeychainChannel(binaryMessenger: FlutterBinaryMessenger) {
+    guard customKeychainChannel == nil else { return }
+    let channel = FlutterMethodChannel(
+      name: "com.crispcloud/custom_keychain", binaryMessenger: binaryMessenger)
+    channel.setMethodCallHandler { [weak self] call, result in
+      guard let self else {
+        result(FlutterError(code: "custom_keychain_unavailable",
+                            message: "The selected keychain is unavailable.", details: nil))
+        return
+      }
+      let arguments = call.arguments as? [String: Any] ?? [:]
+      if call.method == "chooseKeychain" {
+        self.chooseCustomKeychain(initialPath: arguments["initialPath"] as? String,
+                                  result: result)
+        return
+      }
+      if call.method == "restoreKeychainAccess" {
+        guard let path = arguments["path"] as? String else {
+          result(FlutterError(code: "custom_keychain_invalid_path",
+                              message: "A configured keychain path is required.", details: nil))
+          return
+        }
+        self.restoreCustomKeychainAccess(configuredPath: path, result: result)
+        return
+      }
+      if call.method == "createKeychain" {
+        guard let password = arguments["password"] as? String, !password.isEmpty else {
+          result(FlutterError(code: "custom_keychain_invalid_password",
+                              message: "Enter a password for the new keychain.", details: nil))
+          return
+        }
+        self.createCustomKeychain(initialPath: arguments["initialPath"] as? String,
+                                  password: password, result: result)
+        return
+      }
+      if call.method == "listKeychains" {
+        do {
+          result(try self.customKeychainStore.listKeychains())
+        } catch {
+          result(self.customKeychainFailure(error))
+        }
+        return
+      }
+      guard let path = arguments["path"] as? String else {
+        result(FlutterError(code: "custom_keychain_invalid_path",
+                            message: "A keychain path is required.", details: nil))
+        return
+      }
+      do {
+        switch call.method {
+        case "initialize":
+          try self.customKeychainStore.initialize(path: path)
+          result(nil)
+        case "read", "write", "delete", "containsKey":
+          guard let key = arguments["key"] as? String else {
+            throw CustomKeychainStoreError(
+              code: "custom_keychain_invalid_key", message: "A credential key is required.",
+              status: nil)
+          }
+          switch call.method {
+          case "read":
+            result(try self.customKeychainStore.read(path: path, key: key))
+          case "write":
+            guard let value = arguments["value"] as? String else {
+              throw CustomKeychainStoreError(
+                code: "custom_keychain_invalid_value", message: "A credential value is required.",
+                status: nil)
+            }
+            try self.customKeychainStore.write(path: path, key: key, value: value)
+            result(nil)
+          case "delete":
+            try self.customKeychainStore.delete(path: path, key: key)
+            result(nil)
+          default:
+            result(try self.customKeychainStore.containsKey(path: path, key: key))
+          }
+        case "readAll":
+          result(try self.customKeychainStore.readAll(path: path))
+        case "deleteAll":
+          try self.customKeychainStore.deleteAll(path: path)
+          result(nil)
+        default:
+          result(FlutterMethodNotImplemented)
+        }
+      } catch {
+        result(self.customKeychainFailure(error))
+      }
+    }
+    customKeychainChannel = channel
+  }
+
+  private func customKeychainFailure(_ error: Error) -> FlutterError {
+    if let failure = error as? CustomKeychainStoreError {
+      return FlutterError(code: failure.code, message: failure.message,
+                          details: failure.status.map { ["status": Int($0)] })
+    }
+    return FlutterError(code: "custom_keychain_unavailable",
+                        message: "The selected keychain is unavailable.", details: nil)
+  }
+
+  private func chooseCustomKeychain(initialPath: String?, result: @escaping FlutterResult) {
+    let panel = NSOpenPanel()
+    panel.canChooseFiles = true
+    panel.canChooseDirectories = false
+    panel.allowsMultipleSelection = false
+    panel.allowedFileTypes = ["keychain", "keychain-db"]
+    panel.prompt = NSLocalizedString("Choose", comment: "Select a custom keychain file")
+    if let path = initialPath, let url = try? CustomKeychainStore.fileURL(for: path) {
+      panel.directoryURL = url.deletingLastPathComponent()
+    }
+    let completed: (NSApplication.ModalResponse) -> Void = { [weak self] response in
+      guard response == .OK, let url = panel.url else {
+        result(nil)
+        return
+      }
+      guard let self else {
+        result(FlutterError(code: "custom_keychain_unavailable",
+                            message: "The selected keychain is unavailable.", details: nil))
+        return
+      }
+      defer { url.stopAccessingSecurityScopedResource() }
+      do {
+        try self.customKeychainStore.rememberAccess(to: url)
+        result(url.standardizedFileURL.path)
+      } catch {
+        result(self.customKeychainFailure(error))
+      }
+    }
+    if let window = mainFlutterWindow {
+      panel.beginSheetModal(for: window, completionHandler: completed)
+    } else {
+      panel.begin(completionHandler: completed)
+    }
+  }
+
+  private func createCustomKeychain(initialPath: String?, password: String,
+                                    result: @escaping FlutterResult) {
+    let panel = NSSavePanel()
+    // Use the modern suffix so macOS need not create an upgraded sibling
+    // outside the exact file URL authorized by the save panel.
+    panel.allowedFileTypes = ["keychain-db"]
+    panel.allowsOtherFileTypes = false
+    panel.canCreateDirectories = true
+    panel.isExtensionHidden = false
+    panel.nameFieldStringValue = "CrispCloud.keychain-db"
+    panel.prompt = NSLocalizedString("Create", comment: "Create a private keychain file")
+    panel.message = NSLocalizedString(
+      "Choose a new keychain file. Existing files will not be replaced.",
+      comment: "New custom keychain destination")
+    if let path = initialPath, let url = try? CustomKeychainStore.fileURL(for: path) {
+      panel.directoryURL = url.deletingLastPathComponent()
+      let name = url.lastPathComponent
+      panel.nameFieldStringValue = name.hasSuffix(".keychain") ? name + "-db" : name
+    }
+    let completed: (NSApplication.ModalResponse) -> Void = { [weak self] response in
+      guard response == .OK, let url = panel.url else {
+        result(nil)
+        return
+      }
+      guard let self else {
+        result(FlutterError(code: "custom_keychain_unavailable",
+                            message: "Keychain creation is unavailable.", details: nil))
+        return
+      }
+      defer { url.stopAccessingSecurityScopedResource() }
+      do {
+        let path = try self.customKeychainStore.create(path: url.path, password: password)
+        try self.customKeychainStore.rememberAccess(to: URL(fileURLWithPath: path))
+        result(path)
+      } catch {
+        result(self.customKeychainFailure(error))
+      }
+    }
+    if let window = mainFlutterWindow {
+      panel.beginSheetModal(for: window, completionHandler: completed)
+    } else {
+      panel.begin(completionHandler: completed)
+    }
+  }
+
+  private func restoreCustomKeychainAccess(configuredPath: String,
+                                           result: @escaping FlutterResult) {
+    let configuredURL: URL
+    do {
+      configuredURL = try CustomKeychainStore.fileURL(for: configuredPath)
+    } catch {
+      result(customKeychainFailure(error))
+      return
+    }
+    let panel = NSOpenPanel()
+    panel.canChooseFiles = true
+    panel.canChooseDirectories = false
+    panel.allowsMultipleSelection = false
+    panel.allowedFileTypes = ["keychain", "keychain-db"]
+    panel.directoryURL = configuredURL.deletingLastPathComponent()
+    panel.prompt = NSLocalizedString("Restore access", comment: "Regrant access to the configured keychain")
+    panel.message = NSLocalizedString(
+      "Choose the originally selected keychain file at its original location. This does not change credential storage.",
+      comment: "Restore access to the same custom keychain file")
+    let completed: (NSApplication.ModalResponse) -> Void = { [weak self] response in
+      guard response == .OK, let url = panel.url else {
+        result(false)
+        return
+      }
+      defer { url.stopAccessingSecurityScopedResource() }
+      guard let self else {
+        result(FlutterError(code: "custom_keychain_restore_unavailable",
+                            message: "Keychain access could not be restored.", details: nil))
+        return
+      }
+      do {
+        try self.customKeychainStore.restoreAccess(
+          configuredPath: configuredPath, selectedURL: url)
+        result(true)
+      } catch {
+        result(self.customKeychainFailure(error))
+      }
+    }
+    if let window = mainFlutterWindow {
+      panel.beginSheetModal(for: window, completionHandler: completed)
+    } else {
+      panel.begin(completionHandler: completed)
+    }
+  }
+
   private func sendUrlToFlutter(_ url: URL) {
     guard let controller = mainFlutterWindow?.contentViewController as? FlutterViewController else {
       NSLog("[AppDelegate] Flutter view controller not available — queuing URL for later.")

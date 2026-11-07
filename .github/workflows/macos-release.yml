@@ -45,6 +45,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Verify scoped custom keychain storage
+        run: |
+          swiftc -swift-version 5 -parse-as-library macos/Runner/CustomKeychainStore.swift \
+            test/native/custom_keychain_store_test.swift -framework Security \
+            -o "$RUNNER_TEMP/crispcloud-keychain-tests"
+          codesign --force --sign - "$RUNNER_TEMP/crispcloud-keychain-tests"
+          "$RUNNER_TEMP/crispcloud-keychain-tests"
+
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
@@ -66,6 +74,21 @@ jobs:
             test/filen_bounded_transfer_test.dart test/internxt_rewire_test.dart \
             test/internxt_download_path_test.dart test/internxt_bounded_transfer_test.dart \
             test/tls_verification_test.dart test/custom_ca_test.dart \
+            test/secure_storage_test.dart \
+            test/secure_storage_file_test.dart \
+            test/secure_storage_web_test.dart \
+            test/secure_storage_macos_keychain_test.dart \
+            test/credential_storage_config_test.dart \
+            test/credential_storage_bootstrap_test.dart \
+            test/credential_storage_first_setup_test.dart \
+            test/credential_storage_recovery_test.dart \
+            test/credential_storage_recovery_widget_test.dart \
+            test/config_services_test.dart \
+            test/credential_storage_setup_test.dart \
+            test/credential_storage_settings_test.dart \
+            test/web_master_password_gate_test.dart \
+            test/background_sync_mobile_test.dart \
+            test/security_features_test.dart \
             test/backup_encryption_security_test.dart
 
       - name: Import signing certificates into a temp keychain

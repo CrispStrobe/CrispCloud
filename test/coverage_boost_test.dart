@@ -46,6 +46,11 @@ import 'package:crisp_cloud/models/file_item.dart';
 // Shared helpers / mocks
 // ============================================================================
 
+class _PersistentLockStorage extends InMemorySecureStorage {
+  @override
+  bool get isPersistent => true;
+}
+
 /// Minimal CloudStorageClient mock used by MultiCloudService tests.
 class _MockClient extends CloudStorageClient {
   final String _name;
@@ -1572,7 +1577,7 @@ void _appLockTests() {
     late AppLockService svc;
 
     setUp(() {
-      storage = InMemorySecureStorage();
+      storage = _PersistentLockStorage();
       svc = AppLockService(storage);
     });
 
