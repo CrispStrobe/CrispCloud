@@ -44,13 +44,17 @@ class ConfigService {
     _encryptCredentials = storage == null;
     _storage = storage ?? FileConfigStorage(credentialsFile: credentialsFile);
 
-    try {
-      Directory(configDir).createSync(recursive: true);
-      Directory(batchStateDir).createSync(recursive: true);
-    } catch (e) {
-      print("⚠️ Warning: Could not create config directory: $e");
+    if (_encryptCredentials) {
+      // An injected host store owns persistence. Do not create CLI directories
+      // for a browser, a session-only login, or an OS-keychain-backed app.
+      try {
+        Directory(configDir).createSync(recursive: true);
+        Directory(batchStateDir).createSync(recursive: true);
+      } catch (e) {
+        print("⚠️ Warning: Could not create config directory: $e");
+      }
+      _restrictPerms(configDir, '700');
     }
-    if (_encryptCredentials) _restrictPerms(configDir, '700');
   }
 
   /// The active credential storage backend (FileConfigStorage by default).

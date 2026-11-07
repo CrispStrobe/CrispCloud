@@ -9,15 +9,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:crisp_cloud/services/filen_client_adapter.dart';
 import 'package:crisp_cloud/services/filen_config_service.dart';
 import 'package:crisp_cloud/services/secure_storage_service.dart';
+import 'package:filen_client/filen_client.dart' as sdk;
 
 class _FilenLogoutStorage extends InMemorySecureStorage {
   String failure = '';
+  int deleteCalls = 0;
 
   @override
   bool get isPersistent => true;
 
   @override
   Future<void> delete(String key) async {
+    deleteCalls++;
     if (failure == 'throw') throw StateError('Synthetic private platform detail');
     if (failure == 'drop') return;
     await super.delete(key);
@@ -30,11 +33,54 @@ class _FilenLogoutStorage extends InMemorySecureStorage {
   }
 }
 
+class _SeparateSdkStorage extends sdk.InMemoryConfigStorage {
+  String failure = '';
+
+  @override
+  Future<void> clearCredentials() async {
+    if (failure == 'throw') throw StateError('Synthetic private SDK detail');
+    if (failure == 'drop') return;
+    await super.clearCredentials();
+  }
+
+  @override
+  Future<Map<String, dynamic>?> readCredentials() async {
+    if (failure == 'read') throw StateError('Synthetic private SDK read detail');
+    return super.readCredentials();
+  }
+}
+
+class _FilenSaveStorage extends InMemorySecureStorage {
+  bool failReadback = false;
+
+  @override
+  Future<String?> read(String key) async {
+    if (failReadback) throw StateError('Synthetic private readback detail');
+    return super.read(key);
+  }
+}
+
+class _LoginFilenClient extends sdk.FilenClient {
+  _LoginFilenClient(FilenConfigService config)
+    : super(config: sdk.ConfigService(
+        configPath: config.configPath,
+        storage: config.sdkStorage,
+      ));
+
+  @override
+  Future<Map<String, dynamic>> login(
+    String email,
+    String password, {
+    String twoFactorCode = 'XXXXXX',
+  }) async => {..._savedFilenCredentials, 'email': email};
+}
+
 const _savedFilenCredentials = {
   'email': 'fixture@example.test',
   'apiKey': 'synthetic-filen-api-key',
   'masterKeys': 'synthetic-key-one|synthetic-key-two',
   'baseFolderUUID': 'synthetic-folder',
+  'userId': '123',
 };
 
 void main() {
@@ -87,6 +133,92 @@ void main() {
       // Now logout
       await adapter.logout();
       expect(adapter.isAuthenticated, isFalse);
+      expect(adapter.client.baseFolderUUID, isEmpty);
+      expect(adapter.client.email, isEmpty);
+    });
+
+    test('production SDK uses the same store and logout deletes it once', () async {
+      final storage = _FilenLogoutStorage();
+      final config = FilenConfigService(configPath: 'fixture', secureStorage: storage);
+      final client = FilenClientAdapter(config: config);
+      expect(client.client.config.storage, same(config.sdkStorage));
+      await client.client.config.saveCredentials(_savedFilenCredentials);
+      expect(await config.readCredentials(), _savedFilenCredentials);
+      client.client.setAuth(_savedFilenCredentials);
+
+      await client.logout();
+
+      expect(storage.deleteCalls, 1);
+      expect(await client.client.config.readCredentials(), isNull);
+      expect(await config.readCredentials(), isNull);
+    });
+
+    for (final failure in ['throw', 'drop', 'read']) {
+      test('separately injected SDK $failure cleanup failure is reported and retryable', () async {
+        final storage = _SeparateSdkStorage();
+        await storage.saveCredentials(_savedFilenCredentials);
+        final sdkClient = sdk.FilenClient(config: sdk.ConfigService(
+          configPath: 'unused-sdk-fixture',
+          storage: storage,
+        ));
+        final client = FilenClientAdapter.withClient(sdkClient, config: configService);
+        sdkClient.setAuth(_savedFilenCredentials);
+        storage.failure = failure;
+
+        await expectLater(
+          client.logout(),
+          throwsA(isA<FilenCredentialDeletionFailure>().having(
+            (error) => error.toString(),
+            'redacted failure',
+            isNot(contains('private')),
+          )),
+        );
+        expect(client.isAuthenticated, isFalse);
+        expect(sdkClient.masterKeys, isEmpty);
+        expect(sdkClient.baseFolderUUID, isEmpty);
+        expect(sdkClient.email, isEmpty);
+        storage.failure = '';
+        if (failure != 'read') {
+          expect(await storage.readCredentials(), _savedFilenCredentials);
+        }
+
+        await client.logout();
+        expect(await storage.readCredentials(), isNull);
+      });
+    }
+
+    test('login retains the SDK credential format in the host store', () async {
+      final sdkClient = _LoginFilenClient(configService);
+      final client = FilenClientAdapter.withClient(sdkClient, config: configService);
+
+      await client.login(_savedFilenCredentials['email']!, 'synthetic-password');
+
+      expect(client.isAuthenticated, isTrue);
+      expect(await configService.readCredentials(), _savedFilenCredentials);
+      expect(await sdkClient.config.readCredentials(), _savedFilenCredentials);
+      expect(sdkClient.masterKeys, ['synthetic-key-one', 'synthetic-key-two']);
+    });
+
+    test('failed login persistence discards session keys but preserves committed data', () async {
+      final storage = _FilenSaveStorage();
+      final config = FilenConfigService(configPath: 'fixture', secureStorage: storage);
+      final sdkClient = _LoginFilenClient(config);
+      final client = FilenClientAdapter.withClient(sdkClient, config: config);
+      storage.failReadback = true;
+
+      await expectLater(
+        client.login(_savedFilenCredentials['email']!, 'synthetic-password'),
+        throwsA(isA<FilenCredentialSaveFailure>()),
+      );
+
+      expect(client.isAuthenticated, isFalse);
+      expect(sdkClient.masterKeys, isEmpty);
+      expect(sdkClient.baseFolderUUID, isEmpty);
+      expect(sdkClient.email, isEmpty);
+      storage.failReadback = false;
+      expect(await config.readCredentials(), _savedFilenCredentials);
+      await client.login(_savedFilenCredentials['email']!, 'synthetic-password');
+      expect(client.isAuthenticated, isTrue);
     });
 
     for (final failure in ['throw', 'drop', 'read']) {

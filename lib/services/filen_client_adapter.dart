@@ -159,22 +159,30 @@ class FilenClientAdapter extends CloudStorageClient
     // Set auth on the client instance immediately
     _client.setAuth(credentials);
 
-    // Ensure we have the base folder UUID
-    if (credentials['baseFolderUUID'] == null ||
-        credentials['baseFolderUUID'].isEmpty) {
-      final rootUUID = await _client.fetchBaseFolderUUID();
-      credentials['baseFolderUUID'] = rootUUID;
-      _client.baseFolderUUID = rootUUID;
-    }
+    try {
+      // Ensure we have the base folder UUID
+      if (credentials['baseFolderUUID'] == null ||
+          credentials['baseFolderUUID'].isEmpty) {
+        final rootUUID = await _client.fetchBaseFolderUUID();
+        credentials['baseFolderUUID'] = rootUUID;
+        _client.baseFolderUUID = rootUUID;
+      }
 
-    // Save using the ConfigService
-    await filenConfig.saveCredentials({
-      'email': email,
-      'apiKey': credentials['apiKey'] ?? '',
-      'masterKeys': credentials['masterKeys'] ?? '',
-      'baseFolderUUID': credentials['baseFolderUUID'] ?? '',
-      'userId': credentials['userId'] ?? '',
-    });
+      // Save using the same verified store as the injected SDK ConfigService.
+      await filenConfig.saveCredentials({
+        'email': email,
+        'apiKey': credentials['apiKey'] ?? '',
+        'masterKeys': credentials['masterKeys'] ?? '',
+        'baseFolderUUID': credentials['baseFolderUUID'] ?? '',
+        'userId': credentials['userId'] ?? '',
+      });
+    } catch (_) {
+      // A failed login must not leave a usable session behind the error dialog.
+      // Keep any durable entry intact: a failed readback may follow a write
+      // that actually committed, and deleting it would make recovery harder.
+      _client.setAuth({});
+      rethrow;
+    }
   }
 
   @override
@@ -210,15 +218,19 @@ class FilenClientAdapter extends CloudStorageClient
 
   @override
   Future<void> logout() async {
-    _client.apiKey = '';
-    _client.masterKeys = [];
-    _client.baseFolderUUID = '';
-    await filenConfig.clearCredentials();
+    _client.setAuth({});
     try {
-      await _client.config.clearCredentials();
+      await filenConfig.clearCredentials();
+      if (!identical(_client.config.storage, filenConfig.sdkStorage)) {
+        // withClient can supply a separate SDK backend. It must not silently
+        // retain a login even though the app's own secure entry was removed.
+        await _client.config.clearCredentials();
+        if (await _client.config.storage.readCredentials() != null) {
+          throw const FilenCredentialDeletionFailure();
+        }
+      }
     } catch (_) {
-      // The secure adapter is the same store; the explicit app clear above is
-      // authoritative if the SDK cleanup fails.
+      throw const FilenCredentialDeletionFailure();
     }
   }
 
