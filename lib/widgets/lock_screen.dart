@@ -31,6 +31,7 @@ class _LockScreenState extends State<LockScreen> {
   bool _isVerifying = false;
   int _attempts = 0;
   bool _biometricAvailable = false;
+  bool _obscureCode = true;
   String _biometricLabel = 'Biometric';
 
   @override
@@ -95,14 +96,13 @@ class _LockScreenState extends State<LockScreen> {
                 color: theme.colorScheme.primary,
               ),
               const SizedBox(height: 24),
-              Text(
-                l10n.appLocked,
-                style: theme.textTheme.headlineSmall,
-              ),
+              Text(l10n.appLocked, style: theme.textTheme.headlineSmall),
               const SizedBox(height: 8),
               Text(
                 _biometricAvailable
-                    ? extra.useOrPin(BiometricStrings(context).label(_biometricLabel))
+                    ? extra.useOrPin(
+                        BiometricStrings(context).label(_biometricLabel),
+                      )
                     : l10n.enterPinToContinue,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
@@ -119,7 +119,11 @@ class _LockScreenState extends State<LockScreen> {
                         ? null
                         : _authenticateBiometric,
                     icon: Icon(_biometricIcon),
-                    label: Text(extra.unlockWith(BiometricStrings(context).label(_biometricLabel))),
+                    label: Text(
+                      extra.unlockWith(
+                        BiometricStrings(context).label(_biometricLabel),
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -151,14 +155,19 @@ class _LockScreenState extends State<LockScreen> {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.error_outline,
-                          color: theme.colorScheme.error, size: 18),
+                      Icon(
+                        Icons.error_outline,
+                        color: theme.colorScheme.error,
+                        size: 18,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           _error!,
                           style: TextStyle(
-                              color: theme.colorScheme.error, fontSize: 13),
+                            color: theme.colorScheme.error,
+                            fontSize: 13,
+                          ),
                         ),
                       ),
                     ],
@@ -167,7 +176,9 @@ class _LockScreenState extends State<LockScreen> {
               TextField(
                 controller: _codeController,
                 focusNode: _focusNode,
-                obscureText: true,
+                obscureText: _obscureCode,
+                autocorrect: false,
+                enableSuggestions: false,
                 enabled: !isLocked && !_isVerifying,
                 decoration: InputDecoration(
                   labelText: l10n.pinPassword,
@@ -182,7 +193,18 @@ class _LockScreenState extends State<LockScreen> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           ),
                         )
-                      : null,
+                      : IconButton(
+                          tooltip: _obscureCode
+                              ? 'Show password'
+                              : 'Hide password',
+                          icon: Icon(
+                            _obscureCode
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                          ),
+                          onPressed: () =>
+                              setState(() => _obscureCode = !_obscureCode),
+                        ),
                 ),
                 onSubmitted: isLocked ? null : (_) => _verify(),
               ),
@@ -191,9 +213,11 @@ class _LockScreenState extends State<LockScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: isLocked || _isVerifying ? null : _verify,
-                  child: Text(isLocked
-                      ? extra.lockedButton
-                      : WebVaultStrings(context).unlock),
+                  child: Text(
+                    isLocked
+                        ? extra.lockedButton
+                        : WebVaultStrings(context).unlock,
+                  ),
                 ),
               ),
               if (_attempts > 0 && !isLocked)
@@ -271,6 +295,9 @@ class AppLockSetupDialog extends StatefulWidget {
 }
 
 class _AppLockSetupDialogState extends State<AppLockSetupDialog> {
+  bool _obscureCurrent = true;
+  bool _obscureNew = true;
+  bool _obscureConfirm = true;
   final _currentController = TextEditingController();
   final _newController = TextEditingController();
   final _confirmController = TextEditingController();
@@ -290,8 +317,9 @@ class _AppLockSetupDialogState extends State<AppLockSetupDialog> {
     final t = await widget.lockService.getTimeout();
     final bioAvail = await widget.lockService.isBiometricAvailable();
     final bioEnabled = await widget.lockService.isBiometricEnabled();
-    final label =
-        bioAvail ? await widget.lockService.getBiometricLabel() : 'Biometric';
+    final label = bioAvail
+        ? await widget.lockService.getBiometricLabel()
+        : 'Biometric';
     if (mounted) {
       setState(() {
         _timeout = t;
@@ -307,8 +335,9 @@ class _AppLockSetupDialogState extends State<AppLockSetupDialog> {
     final l10n = AppLocalizations.of(context)!;
     final extra = LockExtraStrings(context);
     return AlertDialog(
-      title:
-          Text(widget.isChanging ? l10n.changeAppLockCode : l10n.appLockSetup),
+      title: Text(
+        widget.isChanging ? l10n.changeAppLockCode : l10n.appLockSetup,
+      ),
       scrollable: true,
       content: SizedBox(
         width: 350,
@@ -320,36 +349,69 @@ class _AppLockSetupDialogState extends State<AppLockSetupDialog> {
                 padding: const EdgeInsets.all(8),
                 margin: const EdgeInsets.only(bottom: 12),
                 color: Colors.red.shade100,
-                child: Text(_error!,
-                    style: const TextStyle(color: Colors.red, fontSize: 13)),
+                child: Text(
+                  _error!,
+                  style: const TextStyle(color: Colors.red, fontSize: 13),
+                ),
               ),
             if (widget.isChanging) ...[
               TextField(
                 controller: _currentController,
-                obscureText: true,
+                obscureText: _obscureCurrent,
+                autocorrect: false,
+                enableSuggestions: false,
                 decoration: InputDecoration(
                   labelText: l10n.currentPin,
                   border: const OutlineInputBorder(),
+                  suffixIcon: IconButton(
+                    tooltip: _obscureCurrent
+                        ? 'Show password'
+                        : 'Hide password',
+                    icon: Icon(
+                      _obscureCurrent ? Icons.visibility : Icons.visibility_off,
+                    ),
+                    onPressed: () =>
+                        setState(() => _obscureCurrent = !_obscureCurrent),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
             ],
             TextField(
               controller: _newController,
-              obscureText: true,
+              obscureText: _obscureNew,
+              autocorrect: false,
+              enableSuggestions: false,
               decoration: InputDecoration(
                 labelText: l10n.newPin,
                 border: const OutlineInputBorder(),
                 helperText: l10n.minFourChars,
+                suffixIcon: IconButton(
+                  tooltip: _obscureNew ? 'Show password' : 'Hide password',
+                  icon: Icon(
+                    _obscureNew ? Icons.visibility : Icons.visibility_off,
+                  ),
+                  onPressed: () => setState(() => _obscureNew = !_obscureNew),
+                ),
               ),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: _confirmController,
-              obscureText: true,
+              obscureText: _obscureConfirm,
+              autocorrect: false,
+              enableSuggestions: false,
               decoration: InputDecoration(
                 labelText: l10n.confirmPin,
                 border: const OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  tooltip: _obscureConfirm ? 'Show password' : 'Hide password',
+                  icon: Icon(
+                    _obscureConfirm ? Icons.visibility : Icons.visibility_off,
+                  ),
+                  onPressed: () =>
+                      setState(() => _obscureConfirm = !_obscureConfirm),
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -372,18 +434,24 @@ class _AppLockSetupDialogState extends State<AppLockSetupDialog> {
             if (_biometricAvailable) ...[
               const SizedBox(height: 16),
               SwitchListTile(
-                title: Text(extra.unlockWith(BiometricStrings(context).label(_biometricLabel))),
+                title: Text(
+                  extra.unlockWith(
+                    BiometricStrings(context).label(_biometricLabel),
+                  ),
+                ),
                 subtitle: Text(
-                  extra.alternative(BiometricStrings(context).label(_biometricLabel)),
+                  extra.alternative(
+                    BiometricStrings(context).label(_biometricLabel),
+                  ),
                 ),
                 secondary: Icon(
                   _biometricLabel == 'Windows Hello'
                       ? Icons.verified_user
                       : _biometricLabel == 'Face ID'
-                          ? Icons.face
-                          : _biometricLabel == 'Fingerprint'
-                              ? Icons.fingerprint
-                              : Icons.security,
+                      ? Icons.face
+                      : _biometricLabel == 'Fingerprint'
+                      ? Icons.fingerprint
+                      : Icons.security,
                 ),
                 value: _biometricEnabled,
                 onChanged: (v) => setState(() => _biometricEnabled = v),
@@ -420,8 +488,10 @@ class _AppLockSetupDialogState extends State<AppLockSetupDialog> {
     }
 
     if (widget.isChanging) {
-      final ok =
-          await widget.lockService.changeCode(_currentController.text, newCode);
+      final ok = await widget.lockService.changeCode(
+        _currentController.text,
+        newCode,
+      );
       if (!ok) {
         setState(() => _error = LockExtraStrings(context).incorrectCurrent);
         return;

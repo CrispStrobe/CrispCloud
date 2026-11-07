@@ -59,7 +59,7 @@ import 'services/credential_storage_bootstrap.dart';
 import 'services/credential_storage_config.dart';
 import 'services/credential_storage_first_setup.dart';
 import 'services/credential_storage_first_setup_io.dart';
-import 'widgets/credential_storage_first_setup.dart';
+import 'widgets/credential_storage_setup.dart';
 import 'widgets/lock_screen.dart';
 import 'services/media_video_backend.dart' show registerMediaVideoLicenses;
 
@@ -319,9 +319,10 @@ Future<void> main() async {
   );
 }
 
-Future<CredentialStorageSelection> _initializeNativeSecureStorage({
+Future<CredentialStorageBootstrapResult> _initializeNativeSecureStorage({
   required bool allowFirstSetup,
 }) async {
+  String? firstVaultPassword;
   final bootstrap = CredentialStorageBootstrap(
     openKeychain: (customPath) async {
       try {
@@ -339,42 +340,56 @@ Future<CredentialStorageSelection> _initializeNativeSecureStorage({
         throw const CredentialStorageUnavailable();
       }
     },
-    openFileVault: createEncryptedFileStorage,
+    openFileVault: () {
+      final password = firstVaultPassword;
+      firstVaultPassword = null;
+      return createEncryptedFileStorage(masterPassword: password);
+    },
   );
-  CredentialStorageMode? firstSetupChoice;
+  CredentialStorageSetupResult? pendingSelection;
+  var showFirstSetup = false;
   while (true) {
     CredentialStorageMode? attemptedMode;
     try {
-      final mode = firstSetupChoice ?? await CredentialStorageConfig.readMode();
+      final configured = await CredentialStorageConfig.readSelection();
+      if (allowFirstSetup && (showFirstSetup || configured.mode == null)) {
+        pendingSelection ??= await _runFirstRunCredentialSetup();
+        showFirstSetup = false;
+      }
+      final selection = pendingSelection;
+      if (selection != null) {
+        // Persist the user's explicit intent before creating a file vault. An
+        // interrupted setup then resumes the selected backend's unlock gate.
+        // The password never enters preferences and is used at most once.
+        await CredentialStorageConfig.writeSelection(
+          mode: selection.mode,
+          customKeychainPath: selection.keychainPath,
+        );
+        firstVaultPassword = selection.masterPassword;
+        pendingSelection = null;
+      }
+      final mode = selection?.mode ??
+          configured.mode ??
+          CredentialStorageMode.systemKeychain;
       attemptedMode = mode;
       final customPath = Platform.isMacOS
-          ? await CredentialStorageConfig.readCustomKeychainPath()
+          ? (selection != null
+                ? selection.keychainPath
+                : configured.customKeychainPath)
           : null;
       final selected = await bootstrap.open(
         mode: mode,
         customKeychainPath: customPath,
       );
-      // A fresh-install alternative is persisted only after the user chose it
-      // and its backend was constructed successfully. Never persist a fallback.
-      if (firstSetupChoice != null) await CredentialStorageConfig.writeMode(mode);
       return selected;
     } catch (error) {
       _log.warn('The selected credential store could not be opened.');
       if (allowFirstSetup &&
           attemptedMode == CredentialStorageMode.systemKeychain &&
           error is CredentialStorageUnavailable) {
-        final choice = Completer<CredentialStorageMode?>();
-        runApp(
-          CredentialStorageFirstSetupApp(
-            onSelected: (mode) {
-              if (!choice.isCompleted) choice.complete(mode);
-            },
-            onRetry: () {
-              if (!choice.isCompleted) choice.complete(null);
-            },
-          ),
-        );
-        firstSetupChoice = await choice.future;
+        // This process has not exposed an initialized profile. Only the
+        // independently verified fresh-setup path may choose another backend.
+        showFirstSetup = true;
         continue;
       }
       final retry = Completer<void>();
@@ -391,6 +406,18 @@ Future<CredentialStorageSelection> _initializeNativeSecureStorage({
       await retry.future;
     }
   }
+}
+
+Future<CredentialStorageSetupResult> _runFirstRunCredentialSetup() {
+  final completer = Completer<CredentialStorageSetupResult>();
+  runApp(
+    CredentialStorageSetupScreen(
+      onComplete: (result) {
+        if (!completer.isCompleted) completer.complete(result);
+      },
+    ),
+  );
+  return completer.future;
 }
 
 Future<CloudProvider> _getDefaultProvider() async {
@@ -521,7 +548,36 @@ Future<dynamic> _createConfigService(
 
 /// App lock service provider.
 final appLockServiceProvider = Provider<AppLockService>((ref) {
-  return AppLockService(ref.watch(secureStorageProvider));
+  return AppLockService(
+    ref.watch(secureStorageProvider),
+    beforeSetup: () async {
+      if (ref.read(credentialStoragePendingModeProvider) != null ||
+          ref.read(credentialStorageKeychainRestartRequiredProvider)) {
+        throw StateError(
+          'Restart CrispCloud before enabling App Lock after changing credential storage.',
+        );
+      }
+      if (!kIsWeb) {
+        // A preference write can reach disk even if its acknowledgement fails,
+        // or another process can change it without updating our UI providers.
+        // Read failures and differences both block enabling an old-store lock.
+        final configured = await CredentialStorageConfig.readSelection();
+        final activeMode = ref.read(credentialStorageModeProvider);
+        final activeStore = ref.read(secureStorageProvider);
+        final activePath = activeStore is MacOsCustomKeychainStorage
+            ? activeStore.path
+            : null;
+        if ((configured.mode ?? CredentialStorageMode.systemKeychain) != activeMode ||
+            (Platform.isMacOS &&
+                activeMode == CredentialStorageMode.systemKeychain &&
+                configured.customKeychainPath != activePath)) {
+          throw StateError(
+            'Restart CrispCloud before enabling App Lock after changing credential storage.',
+          );
+        }
+      }
+    },
+  );
 });
 
 /// Certificate pinning service provider.
@@ -721,6 +777,8 @@ class WebMasterPasswordGateState extends ConsumerState<WebMasterPasswordGate> {
   bool _loading = true;
   bool _isNewVault = false;
   bool _inspectionFailed = false;
+  bool _obscurePassword = true;
+  bool _obscureConfirmation = true;
 
   @override
   void initState() {
@@ -753,9 +811,9 @@ class WebMasterPasswordGateState extends ConsumerState<WebMasterPasswordGate> {
 
   Future<void> _submit() async {
     if (_loading || _inspectionFailed) return;
-    final password = _controller.text.trim();
+    final password = _controller.text;
     if (password.isEmpty) return;
-    if (_isNewVault && password != _confirmationController.text.trim()) {
+    if (_isNewVault && password != _confirmationController.text) {
       setState(() => _error = WebVaultStrings(context).mismatch);
       return;
     }
@@ -836,12 +894,27 @@ class WebMasterPasswordGateState extends ConsumerState<WebMasterPasswordGate> {
                     const SizedBox(height: 24),
                     TextField(
                       controller: _controller,
-                      obscureText: true,
+                      autocorrect: false,
+                      enableSuggestions: false,
+                      obscureText: _obscurePassword,
                       autofocus: true,
                       decoration: InputDecoration(
                         labelText: strings.password,
                         errorText: _error,
                         border: const OutlineInputBorder(),
+                        suffixIcon: IconButton(
+                          tooltip: _obscurePassword
+                              ? 'Show password'
+                              : 'Hide password',
+                          icon: Icon(
+                            _obscurePassword
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                          ),
+                          onPressed: () => setState(
+                            () => _obscurePassword = !_obscurePassword,
+                          ),
+                        ),
                       ),
                       onSubmitted: (_) => _submit(),
                     ),
@@ -849,10 +922,26 @@ class WebMasterPasswordGateState extends ConsumerState<WebMasterPasswordGate> {
                       const SizedBox(height: 16),
                       TextField(
                         controller: _confirmationController,
-                        obscureText: true,
+                        autocorrect: false,
+                        enableSuggestions: false,
+                        obscureText: _obscureConfirmation,
                         decoration: InputDecoration(
                           labelText: strings.confirmation,
                           border: const OutlineInputBorder(),
+                          suffixIcon: IconButton(
+                            tooltip: _obscureConfirmation
+                                ? 'Show password'
+                                : 'Hide password',
+                            icon: Icon(
+                              _obscureConfirmation
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
+                            ),
+                            onPressed: () => setState(
+                              () =>
+                                  _obscureConfirmation = !_obscureConfirmation,
+                            ),
+                          ),
                         ),
                         onSubmitted: (_) => _submit(),
                       ),

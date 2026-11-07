@@ -89,6 +89,11 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Create vault'), findsOneWidget);
     expect(find.text('Confirm master password'), findsOneWidget);
+    expect(tester.widget<TextField>(find.byType(TextField).first).obscureText, isTrue);
+    await tester.tap(find.byIcon(Icons.visibility).first);
+    await tester.pump();
+    expect(tester.widget<TextField>(find.byType(TextField).first).obscureText, isFalse);
+    expect(tester.widget<TextField>(find.byType(TextField).last).obscureText, isTrue);
     await tester.enterText(find.byType(TextField).first, 'password');
     await tester.enterText(find.byType(TextField).last, 'different');
     await tester.tap(find.text('Create vault'));
@@ -117,11 +122,11 @@ void main() {
     expect(storage.isInitialized, isFalse);
   });
 
-  testWidgets('unreadable app-lock policy stays blocked after vault unlock',
+  testWidgets('unreadable app-lock policy stays blocked after exact-password vault unlock',
       (tester) async {
     final backend = InMemoryWebStorageBackend();
     final original = WebEncryptedStorage(backend, newVaultIterations: 10);
-    await original.initialize('correct');
+    await original.initialize('  correct  ');
     await original.write('app_lock_enabled', 'true');
     await backend.setItem('crisp_enc_app_lock_enabled', 'damaged-ciphertext');
     final storage = WebEncryptedStorage(backend, newVaultIterations: 10);
@@ -130,12 +135,13 @@ void main() {
       child: const MaterialApp(home: WebMasterPasswordGate()),
     ));
     await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextField), 'correct');
+    await tester.enterText(find.byType(TextField), '  correct  ');
     await tester.tap(find.text('Unlock'));
     await tester.pumpAndSettle();
 
     expect(find.text('Retry'), findsOneWidget);
     expect(find.byType(TextField), findsNothing);
+    expect(storage.isInitialized, isTrue);
     expect(tester.takeException(), isNull);
     expect(await backend.getItem('crisp_enc_app_lock_enabled'), 'damaged-ciphertext');
   });

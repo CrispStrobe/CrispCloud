@@ -34,6 +34,135 @@ final class CustomKeychainStore {
     return URL(fileURLWithPath: expanded).standardizedFileURL
   }
 
+  /// Discovery never selects a keychain or grants sandbox access. A path from
+  /// this list must still pass the same scoped initialization as a manual path.
+  func listKeychains() throws -> [[String: String]] {
+    var searchList: CFArray?
+    let status = SecKeychainCopySearchList(&searchList)
+    guard status == errSecSuccess else { throw securityError(status, operation: "list") }
+    guard let keychains = searchList as? [SecKeychain] else {
+      throw CustomKeychainStoreError(
+        code: "custom_keychain_unavailable", message: "Could not list keychain files.", status: nil)
+    }
+    var paths = Set<String>()
+    for keychain in keychains { paths.insert(try keychainURL(keychain).path) }
+    let manager = FileManager.default
+    let directories = [
+      manager.homeDirectoryForCurrentUser.appendingPathComponent("Library/Keychains"),
+      URL(fileURLWithPath: "/Library/Keychains", isDirectory: true),
+    ]
+    for directory in directories {
+      // Sandboxed apps may not enumerate these folders. Browse remains
+      // available and grants access only to the file explicitly selected.
+      guard let entries = try? manager.contentsOfDirectory(
+        at: directory, includingPropertiesForKeys: [.isRegularFileKey]) else { continue }
+      for entry in entries where Self.isKeychainFilename(entry.lastPathComponent) {
+        if (try? entry.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) == true {
+          paths.insert(entry.path)
+        }
+      }
+    }
+    return paths.sorted().map { path in
+      let name = URL(fileURLWithPath: path).lastPathComponent
+      let label = name.hasSuffix(".keychain-db") ? String(name.dropLast(12))
+        : (name.hasSuffix(".keychain") ? String(name.dropLast(9)) : name)
+      return ["path": path, "label": label]
+    }
+  }
+
+  private static func isKeychainFilename(_ name: String) -> Bool {
+    let lower = name.lowercased()
+    return lower.hasSuffix(".keychain") || lower.hasSuffix(".keychain-db")
+  }
+
+  private func keychainURL(_ keychain: SecKeychain) throws -> URL {
+    var length: UInt32 = 4096
+    var buffer = [CChar](repeating: 0, count: Int(length))
+    let status = SecKeychainGetPath(keychain, &length, &buffer)
+    guard status == errSecSuccess else { throw securityError(status, operation: "locate") }
+    return try Self.fileURL(for: String(cString: buffer))
+  }
+
+  private func requireUnoccupied(_ url: URL) throws {
+    do {
+      _ = try FileManager.default.attributesOfItem(atPath: url.path)
+    } catch let error as NSError where error.domain == NSCocoaErrorDomain &&
+      (error.code == NSFileNoSuchFileError || error.code == NSFileReadNoSuchFileError) {
+      return
+    } catch {
+      throw CustomKeychainStoreError(
+        code: "custom_keychain_access_required",
+        message: "The destination could not be checked. Choose an accessible folder.", status: nil)
+    }
+    // attributesOfItem also detects symlinks, including dangling symlinks.
+    throw CustomKeychainStoreError(
+      code: "custom_keychain_exists",
+      message: "A file already exists at this keychain destination. Choose another name.", status: nil)
+  }
+
+  /// Creates a new private file keychain without replacing an existing file,
+  /// changing the user's default/search list, or selecting an app backend.
+  /// The caller retains a bookmark after creation when using a save panel.
+  func create(path: String, password: String) throws -> String {
+    let requested = try Self.fileURL(for: path)
+    guard Self.isKeychainFilename(requested.lastPathComponent) else {
+      throw CustomKeychainStoreError(
+        code: "custom_keychain_invalid_path",
+        message: "Use a .keychain or .keychain-db filename.", status: nil)
+    }
+    let resolved = requested.resolvingSymlinksInPath()
+    let lowerPath = resolved.path.lowercased()
+    // Apple's file-keychain implementation treats login/System specially and
+    // may update user preferences when creating them. Only private names are
+    // accepted here; a symlinked parent cannot bypass this check.
+    guard !lowerPath.contains("/login.keychain"),
+          !lowerPath.contains("/system.keychain") else {
+      throw CustomKeychainStoreError(
+        code: "custom_keychain_invalid_path",
+        message: "Choose a private keychain name, not login or System.", status: nil)
+    }
+    guard !password.isEmpty, password.utf8.count <= Int(UInt32.max) else {
+      throw CustomKeychainStoreError(
+        code: "custom_keychain_invalid_password",
+        message: "Enter a password for the new keychain.", status: nil)
+    }
+    var isDirectory: ObjCBool = false
+    guard FileManager.default.fileExists(
+      atPath: requested.deletingLastPathComponent().path, isDirectory: &isDirectory),
+      isDirectory.boolValue else {
+      throw CustomKeychainStoreError(
+        code: "custom_keychain_invalid_path",
+        message: "Choose an existing, accessible folder for the keychain.", status: nil)
+    }
+    let accessing = requested.startAccessingSecurityScopedResource()
+    defer { if accessing { requested.stopAccessingSecurityScopedResource() } }
+    try requireUnoccupied(requested)
+    // macOS can map .keychain to its upgraded .keychain-db counterpart.
+    // Refuse both spellings so creation cannot reset or shadow an old store.
+    let counterpart = requested.path.lowercased().hasSuffix("-db")
+      ? String(requested.path.dropLast(3)) : requested.path + "-db"
+    try requireUnoccupied(URL(fileURLWithPath: counterpart))
+
+    let bytes = Array(password.utf8)
+    var created: SecKeychain?
+    let status = requested.path.withCString { fileName in
+      bytes.withUnsafeBytes { buffer in
+        SecKeychainCreate(fileName, UInt32(bytes.count), buffer.baseAddress, false, nil, &created)
+      }
+    }
+    guard status == errSecSuccess, let created else {
+      throw securityError(status, operation: "create")
+    }
+    // After creation, never delete the new file as error recovery: the user
+    // may already be accessing it from another application. Report failures.
+    let unlocked = bytes.withUnsafeBytes { buffer in
+      SecKeychainUnlock(created, UInt32(bytes.count), buffer.baseAddress, true)
+    }
+    guard unlocked == errSecSuccess else { throw securityError(unlocked, operation: "unlock") }
+    try probe(created)
+    return try keychainURL(created).path
+  }
+
   /// Browse grants access only. The Dart settings dialog saves the selected
   /// backend/path separately, after the user confirms their choice.
   func rememberAccess(to url: URL) throws {
@@ -151,22 +280,24 @@ final class CustomKeychainStore {
   }
 
   func initialize(path: String) throws {
-    try withKeychain(path: path) { keychain in
-      let key = "__crispcloud_custom_keychain_probe__\(UUID().uuidString)"
-      let value = UUID().uuidString
-      try write(keychain, key: key, value: value)
-      do {
-        guard try read(keychain, key: key) == value else {
-          throw CustomKeychainStoreError(
-            code: "custom_keychain_probe_failed",
-            message: "The selected keychain did not return the value it stored.", status: nil)
-        }
-      } catch {
-        try? delete(keychain, key: key)
-        throw error
+    try withKeychain(path: path) { try probe($0) }
+  }
+
+  private func probe(_ keychain: SecKeychain) throws {
+    let key = "__crispcloud_custom_keychain_probe__\(UUID().uuidString)"
+    let value = UUID().uuidString
+    try write(keychain, key: key, value: value)
+    do {
+      guard try read(keychain, key: key) == value else {
+        throw CustomKeychainStoreError(
+          code: "custom_keychain_probe_failed",
+          message: "The selected keychain did not return the value it stored.", status: nil)
       }
-      try delete(keychain, key: key)
+    } catch {
+      try? delete(keychain, key: key)
+      throw error
     }
+    try delete(keychain, key: key)
   }
 
   func read(path: String, key: String) throws -> String? {

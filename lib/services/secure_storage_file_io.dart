@@ -315,9 +315,18 @@ class EncryptedFileStorage extends WebEncryptedStorage {
   EncryptedFileStorage(File file) : super(FileStorageBackend(file));
 }
 
-Future<SecureStorage> createEncryptedFileStorage() async {
+Future<SecureStorage> createEncryptedFileStorage({
+  String? masterPassword,
+}) async {
   final directory = await getApplicationSupportDirectory();
-  return EncryptedFileStorage(
+  final storage = EncryptedFileStorage(
     File(p.join(directory.path, 'credential-vault.json')),
   );
+  if (masterPassword != null) {
+    // A password supplied by first-run setup authorizes creation only. Check
+    // that expectation inside the file transaction, including a vault created
+    // by another instance after the chooser inspected the directory.
+    await storage.initialize(masterPassword, expectedExisting: false);
+  }
+  return storage;
 }

@@ -4,8 +4,6 @@ import 'dart:io';
 import 'package:crisp_cloud/services/credential_storage_config.dart';
 import 'package:crisp_cloud/services/credential_storage_first_setup.dart';
 import 'package:crisp_cloud/services/credential_storage_first_setup_io.dart';
-import 'package:crisp_cloud/widgets/credential_storage_first_setup.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -81,6 +79,35 @@ void main() {
     expect(await capture(), isFalse);
   });
 
+  test('an explicit keychain path can resume interrupted fresh setup', () async {
+    SharedPreferences.setMockInitialValues({
+      CredentialStorageFirstSetup.pendingKey: true,
+      'custom_keychain_path': '/synthetic/keychains/selected.keychain-db',
+    });
+    expect(await capture(), isTrue);
+    await CredentialStorageFirstSetup.complete();
+    expect(await capture(), isFalse);
+  });
+
+  test('atomic selection intent resumes only when its complete schema is valid', () async {
+    SharedPreferences.setMockInitialValues({
+      CredentialStorageFirstSetup.pendingKey: true,
+    });
+    await CredentialStorageConfig.writeSelection(
+      mode: CredentialStorageMode.encryptedFile,
+    );
+    expect(await capture(), isTrue);
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('credential_storage_selection_v2', jsonEncode({
+      'version': 2,
+      'mode': 'encryptedFile',
+      'customKeychainPath': null,
+      'unrecognized': 'existing-profile-data',
+    }));
+    expect(await capture(), isFalse);
+  });
+
   test('unknown or malformed pending choices do not authorize a fallback', () async {
     for (final value in ['unknown', 123]) {
       SharedPreferences.setMockInitialValues({
@@ -120,25 +147,4 @@ void main() {
     expect(await capture(), isFalse);
   }, skip: !(Platform.isLinux || Platform.isWindows));
 
-  testWidgets('fresh setup permits an explicit session or encrypted-file choice', (tester) async {
-    CredentialStorageMode? selected;
-    var retries = 0;
-    await tester.pumpWidget(CredentialStorageFirstSetupApp(
-      onSelected: (mode) => selected = mode,
-      onRetry: () => retries++,
-    ));
-    await tester.pumpAndSettle();
-    await tester.ensureVisible(find.byType(OutlinedButton));
-    await tester.tap(find.byType(OutlinedButton));
-    expect(selected, CredentialStorageMode.sessionOnly);
-    await tester.ensureVisible(find.byType(ElevatedButton));
-    await tester.tap(find.byType(ElevatedButton));
-    expect(selected, CredentialStorageMode.encryptedFile);
-    await tester.ensureVisible(find.byType(TextButton));
-    await tester.tap(find.byType(TextButton));
-    expect(retries, 1);
-    // The choice UI itself cannot persist an uninitialized/failed backend.
-    final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getKeys(), isEmpty);
-  });
 }

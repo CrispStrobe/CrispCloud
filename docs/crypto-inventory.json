@@ -122,6 +122,32 @@
       "note": "Review negotiated algorithms and native dependency sources as part of each resolved release; TLS is not the complete app crypto scope."
     },
     {
+      "name": "Application credential storage and App Lock gates",
+      "algorithms": [
+        "AES-256-GCM credential values with 96-bit nonces and 128-bit tags",
+        "PBKDF2-HMAC-SHA256: 600000 iterations for new credential vaults; complete iterationless legacy vaults use 100000",
+        "Version 2 encrypted record envelope binding each new value to its storage key",
+        "Legacy App Lock verifier: 10000-round SHA-256 salt/PIN loop, separate from the credential-vault KDF"
+      ],
+      "implementations": [
+        "Existing native crypto provider selection and WebCrypto browser provider",
+        "flutter_secure_storage platform backend; macOS data-protection keychain by default",
+        "Security.framework SecItem operations scoped to an explicit macOS file-keychain reference and com.crispcloud.credentials.v1 service",
+        "Transactional native JSON file backend with OS locks and atomic replacement",
+        "InMemorySecureStorage for explicit session-only operation"
+      ],
+      "sources": [
+        "docs/credential-storage.md",
+        "lib/services/secure_storage_web.dart",
+        "lib/services/secure_storage_file_io.dart",
+        "lib/services/secure_storage_macos_keychain.dart",
+        "macos/Runner/CustomKeychainStore.swift",
+        "https://developer.apple.com/documentation/technotes/tn3137-on-mac-keychains",
+        "https://developer.apple.com/documentation/security/accessing-files-from-the-macos-app-sandbox"
+      ],
+      "note": "PR26 follow-up: configured-store failures are explicit, not an automatic backend switch; settings distinguish active/pending selection and guard App Lock. Session-only does not import or delete persistent legacy credentials. File-vault metadata is validated before KDF work, with a 2000000-iteration ceiling; new version 2 values reject cross-key substitution, while legacy unbound values remain readable until rewritten. Native transactions do not imply browser cross-tab atomicity or whole-vault anti-rollback protection. Custom keychain creation refuses occupied/reserved paths and retains security-scoped access without global default/search-list setters. File/session backends require foreground availability and do not unlock unattended workers. This entry does not grant a new export classification or an OS-only Apple exemption."
+    },
+    {
       "name": "Archive password compatibility",
       "algorithms": [
         "Traditional PKWARE ZipCrypto legacy stream cipher (read only)",
@@ -198,6 +224,26 @@
     "lib/services/backup_service.dart",
     "packages/crisp_ios_shell/tool/sources.json",
     "packages/crisp_ios_shell/UPSTREAM.md",
-    "packages/crisp_ios_shell/ios/crisp_ios_shell.podspec"
+    "packages/crisp_ios_shell/ios/crisp_ios_shell.podspec",
+    "lib/main.dart",
+    "lib/services/credential_storage_config.dart",
+    "lib/services/credential_storage_bootstrap.dart",
+    "lib/services/credential_storage_first_setup.dart",
+    "lib/services/credential_storage_first_setup_io.dart",
+    "lib/services/secure_storage_file.dart",
+    "lib/services/secure_storage_file_io.dart",
+    "lib/services/secure_storage_file_stub.dart",
+    "lib/services/secure_storage_macos_keychain.dart",
+    "lib/services/macos_keychain_service.dart",
+    "lib/services/macos_keychain_service_io.dart",
+    "lib/services/macos_keychain_service_stub.dart",
+    "lib/services/app_lock_service.dart",
+    "lib/services/background_sync_mobile.dart",
+    "lib/widgets/credential_storage_setup.dart",
+    "lib/widgets/settings_dialog.dart",
+    "lib/widgets/lock_screen.dart",
+    "macos/Runner/CustomKeychainStore.swift",
+    "macos/Runner/AppDelegate.swift",
+    "macos/Runner/MainFlutterWindow.swift"
   ]
 }

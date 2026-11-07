@@ -25,6 +25,9 @@ import '../providers/file_type_color_provider.dart';
 import '../providers/panel_source_provider.dart';
 import '../providers/core_providers.dart';
 import '../services/credential_storage_config.dart';
+import '../services/app_lock_service.dart';
+import '../services/secure_storage_macos_keychain.dart';
+import 'credential_storage_setup.dart';
 import '../providers/quick_search_provider.dart';
 import 'cache_settings_dialog.dart';
 import 'provider_settings_dialog.dart';
@@ -79,7 +82,7 @@ class SettingsDialog extends ConsumerWidget {
             const Divider(height: 1),
             _NetworkSection(),
             const Divider(height: 1),
-            _CredentialStorageSection(),
+            const CredentialStorageSettingsSection(),
             const Divider(height: 1),
             _AccessibilitySection(),
             const Divider(height: 1),
@@ -584,171 +587,126 @@ class _NetworkSectionState extends ConsumerState<_NetworkSection> {
 // Section: Credential storage
 // ---------------------------------------------------------------------------
 
-class _CredentialStorageSection extends ConsumerWidget {
+/// Shows the backend in use separately from a saved choice for the next launch.
+class CredentialStorageSettingsSection extends ConsumerStatefulWidget {
+  const CredentialStorageSettingsSection({super.key});
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CredentialStorageSettingsSection> createState() =>
+      _CredentialStorageSettingsSectionState();
+}
+
+class _CredentialStorageSettingsSectionState
+    extends ConsumerState<CredentialStorageSettingsSection> {
+  late Future<CredentialStorageSelection> _selection =
+      CredentialStorageConfig.readSelection();
+  bool _busy = false;
+
+  String _label(SettingsStrings s, CredentialStorageMode mode) => switch (mode) {
+    CredentialStorageMode.systemKeychain => s.text('System keychain'),
+    CredentialStorageMode.encryptedFile => s.text('Encrypted file (master password)'),
+    CredentialStorageMode.sessionOnly => s.text('This session only'),
+  };
+
+  String? get _activeKeychainPath {
+    final storage = ref.read(secureStorageProvider);
+    return storage is MacOsCustomKeychainStorage ? storage.path : null;
+  }
+
+  void _notice(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(SettingsStrings(context).text(message))),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     if (kIsWeb) return const SizedBox.shrink();
     final s = SettingsStrings(context);
-    final mode = ref.watch(credentialStorageModeProvider);
-    final isMac = defaultTargetPlatform == TargetPlatform.macOS;
-
-    String label() => switch (mode) {
-      CredentialStorageMode.systemKeychain => s.text('System keychain'),
-      CredentialStorageMode.encryptedFile => s.text(
-        'Encrypted file (master password)',
-      ),
-      CredentialStorageMode.sessionOnly => s.text('This session only'),
-    };
-
-    String detail() => switch (mode) {
-      CredentialStorageMode.systemKeychain => s.text(
-        'Stored in the operating-system keychain or credential manager.',
-      ),
-      CredentialStorageMode.encryptedFile => s.text(
-        'AES-256-GCM vault in the app support folder, unlocked by a master password.',
-      ),
-      CredentialStorageMode.sessionOnly => s.text(
-        'Credentials are forgotten when CrispCloud exits.',
-      ),
-    };
-
-    return _Section(
-      title: s.text('Credentials'),
-      icon: Icons.key_outlined,
-      children: [
-        ListTile(
-          key: const ValueKey('settings-credential-storage'),
-          leading: const Icon(Icons.lock_outline),
-          title: Text(s.text('Credential storage')),
-          subtitle: Text('${label()}\n${detail()}'),
-          isThreeLine: true,
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => _chooseMode(context, ref, mode),
-        ),
-        if (isMac && mode == CredentialStorageMode.systemKeychain)
-          FutureBuilder<String?>(
-            future: CredentialStorageConfig.readCustomKeychainPath(),
-            builder: (context, snapshot) {
-              final path = snapshot.data;
-              return ListTile(
-                key: const ValueKey('settings-custom-keychain'),
-                leading: const Icon(Icons.account_balance_outlined),
-                title: Text(s.text('Custom keychain path')),
-                subtitle: Text(
-                  path == null || path.isEmpty
-                      ? s.text(
-                          'Use a non-default keychain such as Brickwright. Empty uses the system default.',
-                        )
-                      : path,
-                ),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => _editCustomKeychain(context, ref, path),
-              );
-            },
-          ),
-      ],
-    );
-  }
-
-  Future<void> _chooseMode(
-    BuildContext context,
-    WidgetRef ref,
-    CredentialStorageMode current,
-  ) async {
-    final chosen = await showDialog<CredentialStorageMode>(
-      context: context,
-      builder: (context) => SimpleDialog(
-        title: Text(SettingsStrings(context).text('Credential storage')),
+    final active = ref.watch(credentialStorageModeProvider);
+    final pending = ref.watch(credentialStoragePendingModeProvider);
+    final changedKeychain = ref.watch(credentialStorageKeychainRestartRequiredProvider);
+    final activePath = active == CredentialStorageMode.systemKeychain
+        ? _activeKeychainPath : null;
+    return FutureBuilder<CredentialStorageSelection>(
+      future: _selection,
+      builder: (context, snapshot) => _Section(
+        title: s.text('Credentials'),
+        icon: Icons.key_outlined,
         children: [
-          for (final mode in CredentialStorageMode.values)
-            RadioListTile<CredentialStorageMode>(
-              value: mode,
-              groupValue: current,
-              title: Text(switch (mode) {
-                CredentialStorageMode.systemKeychain => SettingsStrings(
-                  context,
-                ).text('System keychain'),
-                CredentialStorageMode.encryptedFile => SettingsStrings(
-                  context,
-                ).text('Encrypted file (master password)'),
-                CredentialStorageMode.sessionOnly => SettingsStrings(
-                  context,
-                ).text('This session only'),
-              }),
-              subtitle: Text(switch (mode) {
-                CredentialStorageMode.systemKeychain =>
-                  SettingsStrings(context).text(
-                    'Stored in the operating-system keychain or credential manager.',
-                  ),
-                CredentialStorageMode.encryptedFile =>
-                  SettingsStrings(context).text(
-                    'AES-256-GCM vault in the app support folder, unlocked by a master password.',
-                  ),
-                CredentialStorageMode.sessionOnly => SettingsStrings(
-                  context,
-                ).text('Credentials are forgotten when CrispCloud exits.'),
-              }),
-              onChanged: (value) => Navigator.pop(context, value),
-            ),
+          ListTile(
+            key: const ValueKey('settings-credential-storage'),
+            leading: const Icon(Icons.lock_outline),
+            title: Text(s.text('Credential storage')),
+            subtitle: Text([
+              s.text('Current session: {mode}').replaceAll('{mode}', _label(s, active)),
+              if (activePath != null) activePath,
+              if (active == CredentialStorageMode.sessionOnly)
+                s.text('Credentials are forgotten when CrispCloud exits.'),
+              if (pending != null || changedKeychain) ...[
+                s.text('After restart: {mode}').replaceAll('{mode}', _label(s, pending ?? active)),
+                if ((pending ?? active) == CredentialStorageMode.systemKeychain &&
+                    snapshot.data?.customKeychainPath != null)
+                  snapshot.data!.customKeychainPath!,
+                s.text('The current session keeps using its original storage until restart.'),
+              ],
+              if (snapshot.hasError)
+                s.text('Could not read credential-storage settings. Try again.'),
+            ].join('\n')),
+            trailing: _busy
+                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                : const Icon(Icons.chevron_right),
+            onTap: _busy ? null : _change,
+          ),
         ],
-      ),
-    );
-    if (chosen == null || chosen == current || !context.mounted) return;
-    await CredentialStorageConfig.writeMode(chosen);
-    ref.read(credentialStorageModeProvider.notifier).state = chosen;
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          SettingsStrings(context)
-              .text('Restart CrispCloud to apply credential-storage changes.'),
-        ),
       ),
     );
   }
 
-  Future<void> _editCustomKeychain(
-    BuildContext context,
-    WidgetRef ref,
-    String? current,
-  ) async {
-    final controller = TextEditingController(text: current ?? '');
-    final value = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(SettingsStrings(context).text('Custom keychain path')),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: InputDecoration(
-            hintText: '~/Library/Keychains/brickwright.keychain-db',
-            border: const OutlineInputBorder(),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(SettingsStrings(context).text('Cancel')),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, controller.text.trim()),
-            child: Text(SettingsStrings(context).text('Save')),
-          ),
-        ],
-      ),
-    );
-    controller.dispose();
-    if (value == null || !context.mounted) return;
-    await CredentialStorageConfig.writeCustomKeychainPath(value);
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          SettingsStrings(context)
-              .text('Restart CrispCloud to apply credential-storage changes.'),
-        ),
-      ),
-    );
+  Future<void> _change() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      final lock = AppLockService(ref.read(secureStorageProvider));
+      if (await lock.isEnabled()) {
+        _notice('Disable App Lock before changing credential storage, then enable it again after restarting.');
+        return;
+      }
+      final previous = await CredentialStorageConfig.readSelection();
+      if (!mounted) return;
+      final active = ref.read(credentialStorageModeProvider);
+      final result = await showCredentialStorageSetupDialog(
+        context,
+        initialMode: previous.mode ?? active,
+        initialKeychainPath: previous.customKeychainPath,
+      );
+      if (result == null || !mounted) return;
+      // Recheck after the dialog: another action may have enabled the lock.
+      // A read failure is an error, never permission to use another store.
+      if (await lock.isEnabled()) {
+        _notice('Disable App Lock before changing credential storage, then enable it again after restarting.');
+        return;
+      }
+      final path = result.mode == CredentialStorageMode.systemKeychain
+          ? result.keychainPath : previous.customKeychainPath;
+      await CredentialStorageConfig.writeSelection(
+        mode: result.mode,
+        customKeychainPath: path,
+      );
+      if (!mounted) return;
+      ref.read(credentialStoragePendingModeProvider.notifier).state =
+          result.mode == active ? null : result.mode;
+      ref.read(credentialStorageKeychainRestartRequiredProvider.notifier).state =
+          result.mode == CredentialStorageMode.systemKeychain &&
+          path != _activeKeychainPath;
+      setState(() => _selection = CredentialStorageConfig.readSelection());
+      _notice('Restart CrispCloud to apply. Existing credentials stay in their original store; sign in again if needed.');
+    } catch (_) {
+      _notice('Could not verify App Lock or save credential-storage settings. Your active storage is unchanged. Try again.');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 }
 

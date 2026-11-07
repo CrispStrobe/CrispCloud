@@ -1,9 +1,10 @@
 import 'credential_storage_config.dart';
 import 'secure_storage_service.dart';
+import 'secure_storage_web.dart';
 
 /// A selected backend and the gate it needs before any provider is created.
-class CredentialStorageSelection {
-  const CredentialStorageSelection({
+class CredentialStorageBootstrapResult {
+  const CredentialStorageBootstrapResult({
     required this.storage,
     required this.mode,
     required this.requiresUnlock,
@@ -28,26 +29,32 @@ class CredentialStorageBootstrap {
   final Future<SecureStorage> Function() openFileVault;
   final Future<void> Function(SecureStorage) _migrate;
 
-  Future<CredentialStorageSelection> open({
+  Future<CredentialStorageBootstrapResult> open({
     required CredentialStorageMode mode,
     String? customKeychainPath,
   }) async {
     final SecureStorage storage;
+    var requiresUnlock = false;
     switch (mode) {
       case CredentialStorageMode.systemKeychain:
         storage = await openKeychain(customKeychainPath);
         await _migrate(storage);
       case CredentialStorageMode.encryptedFile:
-        // Migrate only after the master-password gate has unlocked the vault.
         storage = await openFileVault();
+        requiresUnlock =
+            storage is! WebEncryptedStorage || !storage.isInitialized;
+        // First-run creation can return an already unlocked vault. Complete
+        // migration before skipping the password gate; ordinary reopen waits
+        // for that gate to unlock the store before importing anything.
+        if (!requiresUnlock) await _migrate(storage);
       case CredentialStorageMode.sessionOnly:
         // No import of durable credentials or global migration marker.
         storage = InMemorySecureStorage();
     }
-    return CredentialStorageSelection(
+    return CredentialStorageBootstrapResult(
       storage: storage,
       mode: mode,
-      requiresUnlock: mode == CredentialStorageMode.encryptedFile,
+      requiresUnlock: requiresUnlock,
     );
   }
 }
@@ -60,6 +67,5 @@ class CredentialStorageUnavailable implements Exception {
   @override
   String toString() =>
       'The selected credential store is unavailable. Restore access or unlock '
-      'it, then retry. The selected storage and existing credentials have not '
-      'been changed.';
+      'it, then retry.';
 }

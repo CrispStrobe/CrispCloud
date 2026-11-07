@@ -8,7 +8,16 @@ import 'credential_storage_config.dart';
 class CredentialStorageFirstSetup {
   static const pendingKey = 'credential_storage_first_setup_pending_v1';
   static const _modeKey = 'credential_storage_mode_v1';
+  static const _keychainPathKey = 'custom_keychain_path';
+  static const _selectionKey = 'credential_storage_selection_v2';
   static const _migrationKey = 'secure_storage_migration_v1';
+  static const _setupKeys = {
+    pendingKey,
+    _modeKey,
+    _keychainPathKey,
+    _selectionKey,
+    _migrationKey,
+  };
 
   static Future<bool> capture({
     required Future<bool> Function(Map<String, Object?> setupPreferences)
@@ -21,15 +30,22 @@ class CredentialStorageFirstSetup {
       if (pending) {
         // An interrupted selection can contain only data written by this
         // pre-profile setup. Any unrelated preference makes it ambiguous.
-        if (prefs.getKeys().any(
-          (key) => !{pendingKey, _modeKey, _migrationKey}.contains(key),
-        )) {
+        if (prefs.getKeys().any((key) => !_setupKeys.contains(key))) {
           return false;
         }
         final mode = prefs.getString(_modeKey);
         if (mode != null &&
             !CredentialStorageMode.values.any((value) => value.name == mode)) {
           return false;
+        }
+        final keychainPath = prefs.getString(_keychainPathKey);
+        if (keychainPath != null &&
+            (keychainPath.trim().isEmpty || keychainPath.contains('\u0000'))) {
+          return false;
+        }
+        final selection = prefs.getString(_selectionKey);
+        if (selection != null) {
+          CredentialStorageConfig.decodeSelection(selection);
         }
         if (prefs.containsKey(_migrationKey) &&
             prefs.getBool(_migrationKey) != true) {

@@ -1,6 +1,8 @@
 import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/l10n/settings_strings.dart';
 import 'package:crisp_cloud/widgets/settings_dialog.dart';
+import 'package:crisp_cloud/providers/core_providers.dart';
+import 'package:crisp_cloud/services/secure_storage_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -41,6 +43,7 @@ void main() {
     testWidgets('settings title follows ${entry.key} locale', (tester) async {
       SharedPreferences.setMockInitialValues({});
       await tester.pumpWidget(ProviderScope(
+        overrides: [secureStorageProvider.overrideWithValue(InMemorySecureStorage())],
         child: MaterialApp(
           locale: Locale(entry.key),
           supportedLocales: AppLocalizations.supportedLocales,

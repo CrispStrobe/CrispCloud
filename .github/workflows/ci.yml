@@ -223,7 +223,18 @@ jobs:
           test/aes_siv_test.dart test/cryptomator_test.dart
           test/veracrypt_test.dart test/veracrypt_header_vectors_test.dart
           test/encryption_service_test.dart test/internxt_secure_config_test.dart
+          test/secure_storage_test.dart
+          test/secure_storage_file_test.dart
+          test/secure_storage_web_test.dart
           test/secure_storage_macos_keychain_test.dart
+          test/credential_storage_config_test.dart
+          test/credential_storage_bootstrap_test.dart
+          test/credential_storage_first_setup_test.dart
+          test/credential_storage_setup_test.dart
+          test/credential_storage_settings_test.dart
+          test/web_master_password_gate_test.dart
+          test/background_sync_mobile_test.dart
+          test/security_features_test.dart
           test/internxt_rewire_test.dart test/internxt_download_path_test.dart
           test/internxt_bounded_transfer_test.dart
           test/filen_adapter_test.dart test/filen_bounded_transfer_test.dart

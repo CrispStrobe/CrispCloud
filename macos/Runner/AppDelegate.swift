@@ -49,6 +49,24 @@ class AppDelegate: FlutterAppDelegate {
                                   result: result)
         return
       }
+      if call.method == "createKeychain" {
+        guard let password = arguments["password"] as? String, !password.isEmpty else {
+          result(FlutterError(code: "custom_keychain_invalid_password",
+                              message: "Enter a password for the new keychain.", details: nil))
+          return
+        }
+        self.createCustomKeychain(initialPath: arguments["initialPath"] as? String,
+                                  password: password, result: result)
+        return
+      }
+      if call.method == "listKeychains" {
+        do {
+          result(try self.customKeychainStore.listKeychains())
+        } catch {
+          result(self.customKeychainFailure(error))
+        }
+        return
+      }
       guard let path = arguments["path"] as? String else {
         result(FlutterError(code: "custom_keychain_invalid_path",
                             message: "A keychain path is required.", details: nil))
@@ -126,9 +144,55 @@ class AppDelegate: FlutterAppDelegate {
                             message: "The selected keychain is unavailable.", details: nil))
         return
       }
+      defer { url.stopAccessingSecurityScopedResource() }
       do {
         try self.customKeychainStore.rememberAccess(to: url)
         result(url.standardizedFileURL.path)
+      } catch {
+        result(self.customKeychainFailure(error))
+      }
+    }
+    if let window = mainFlutterWindow {
+      panel.beginSheetModal(for: window, completionHandler: completed)
+    } else {
+      panel.begin(completionHandler: completed)
+    }
+  }
+
+  private func createCustomKeychain(initialPath: String?, password: String,
+                                    result: @escaping FlutterResult) {
+    let panel = NSSavePanel()
+    // Use the modern suffix so macOS need not create an upgraded sibling
+    // outside the exact file URL authorized by the save panel.
+    panel.allowedFileTypes = ["keychain-db"]
+    panel.allowsOtherFileTypes = false
+    panel.canCreateDirectories = true
+    panel.isExtensionHidden = false
+    panel.nameFieldStringValue = "CrispCloud.keychain-db"
+    panel.prompt = NSLocalizedString("Create", comment: "Create a private keychain file")
+    panel.message = NSLocalizedString(
+      "Choose a new keychain file. Existing files will not be replaced.",
+      comment: "New custom keychain destination")
+    if let path = initialPath, let url = try? CustomKeychainStore.fileURL(for: path) {
+      panel.directoryURL = url.deletingLastPathComponent()
+      let name = url.lastPathComponent
+      panel.nameFieldStringValue = name.hasSuffix(".keychain") ? name + "-db" : name
+    }
+    let completed: (NSApplication.ModalResponse) -> Void = { [weak self] response in
+      guard response == .OK, let url = panel.url else {
+        result(nil)
+        return
+      }
+      guard let self else {
+        result(FlutterError(code: "custom_keychain_unavailable",
+                            message: "Keychain creation is unavailable.", details: nil))
+        return
+      }
+      defer { url.stopAccessingSecurityScopedResource() }
+      do {
+        let path = try self.customKeychainStore.create(path: url.path, password: password)
+        try self.customKeychainStore.rememberAccess(to: URL(fileURLWithPath: path))
+        result(path)
       } catch {
         result(self.customKeychainFailure(error))
       }

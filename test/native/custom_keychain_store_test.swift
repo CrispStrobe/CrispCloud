@@ -50,18 +50,15 @@ private struct TemporaryKeychain {
   // Used only for a newly created temporary keychain, never for a real one.
   private let password: String
 
-  init(directory: URL, name: String) throws {
+  init(directory: URL, name: String, store: CustomKeychainStore) throws {
     let filePath = directory.appendingPathComponent("\(name).keychain").path
-    let secret = "crispcloud-native-test-\(UUID().uuidString)"
+    let secret = "  crispcloud-native-test-\(UUID().uuidString)-\u{00e4}  "
+    let createdPath = try store.create(path: filePath, password: secret)
     var keychain: SecKeychain?
-    let status = filePath.withCString { fileName in
-      secret.withCString { bytes in
-        SecKeychainCreate(fileName, UInt32(secret.utf8.count), bytes, false, nil, &keychain)
-      }
-    }
-    try success(status, "Create temporary keychain")
+    let status = createdPath.withCString { SecKeychainOpen($0, &keychain) }
+    try success(status, "Open newly created temporary keychain")
     guard let keychain else { throw TestFailure(description: "Missing temporary keychain") }
-    path = filePath
+    path = createdPath
     password = secret
     reference = keychain
     do {
@@ -74,7 +71,7 @@ private struct TemporaryKeychain {
 
   func unlock() throws {
     let status = password.withCString {
-      SecKeychainUnlock(reference, UInt32(password.utf8.count), $0, false)
+      SecKeychainUnlock(reference, UInt32(password.utf8.count), $0, true)
     }
     try success(status, "Unlock temporary keychain")
   }
@@ -141,14 +138,16 @@ private struct CustomKeychainStoreTests {
       }
     }
 
-    let first = try TemporaryKeychain(directory: directory, name: "first")
-    fixtures.append(first)
-    let second = try TemporaryKeychain(directory: directory, name: "second")
-    fixtures.append(second)
-    // SecKeychainCreate manages its new file in the search list. Capture after
-    // fixture creation to detect any preference side effects of the real store.
-    let beforeOperations = try PreferencesSnapshot.capture()
     let store = CustomKeychainStore(defaults: defaults)
+    let first = try TemporaryKeychain(directory: directory, name: "first", store: store)
+    fixtures.append(first)
+    let second = try TemporaryKeychain(directory: directory, name: "second", store: store)
+    fixtures.append(second)
+    // Private-keychain creation itself must not change user preferences.
+    let beforeOperations = try PreferencesSnapshot.capture()
+    try expect(beforeOperations == originalPreferences,
+               "Creating private keychains changed the user's keychain preferences")
+    _ = try store.listKeychains()
     let key = "shared-test-account-\(UUID().uuidString)"
 
     try store.initialize(path: first.path)
@@ -185,6 +184,43 @@ private struct CustomKeychainStoreTests {
     }
     try expect(try store.read(path: second.path, key: key) == "second value", "deleteAll escaped first keychain")
 
+    try expectStoreError("custom_keychain_exists") {
+      _ = try store.create(path: second.path, password: "must not replace")
+    }
+    try expect(try store.read(path: second.path, key: key) == "second value",
+               "Creation replaced an existing keychain")
+    let sentinel = directory.appendingPathComponent("existing.keychain-db")
+    let sentinelData = Data("do not overwrite this file".utf8)
+    try sentinelData.write(to: sentinel)
+    try expectStoreError("custom_keychain_exists") {
+      _ = try store.create(path: sentinel.path, password: "must not replace")
+    }
+    try expect(try Data(contentsOf: sentinel) == sentinelData, "Creation overwrote a file")
+    try expectStoreError("custom_keychain_exists") {
+      _ = try store.create(path: String(sentinel.path.dropLast(3)), password: "alias collision")
+    }
+    try expect(try Data(contentsOf: sentinel) == sentinelData, "Creation replaced a keychain alias")
+    let dangling = directory.appendingPathComponent("dangling.keychain")
+    let missingTarget = directory.appendingPathComponent("must-not-be-created")
+    try FileManager.default.createSymbolicLink(at: dangling, withDestinationURL: missingTarget)
+    try expectStoreError("custom_keychain_exists") {
+      _ = try store.create(path: dangling.path, password: "symlink collision")
+    }
+    try expect(!FileManager.default.fileExists(atPath: missingTarget.path),
+               "Creation followed a dangling destination symlink")
+    for name in ["login.keychain", "System.keychain-db"] {
+      let reserved = directory.appendingPathComponent(name)
+      try expectStoreError("custom_keychain_invalid_path") {
+        _ = try store.create(path: reserved.path, password: "reserved name")
+      }
+      try expect(!FileManager.default.fileExists(atPath: reserved.path),
+                 "Creation accepted a reserved keychain name")
+    }
+    try expectStoreError("custom_keychain_invalid_password") {
+      _ = try store.create(path: directory.appendingPathComponent("empty.keychain").path,
+                           password: "")
+    }
+
     let missing = directory.appendingPathComponent("missing.keychain").path
     try expectStoreError("custom_keychain_unavailable") { try store.initialize(path: missing) }
     try expectStoreError("custom_keychain_unavailable") {
@@ -215,6 +251,6 @@ private struct CustomKeychainStoreTests {
 
     try expect(try PreferencesSnapshot.capture() == beforeOperations,
                "Custom store changed the user's default keychain or search list")
-    print("Custom keychain native tests passed: scope, namespace, updates, missing/locked paths, bookmarks and unchanged preferences.")
+    print("Custom keychain native tests passed: creation, scope, namespace, updates, collisions, missing/locked paths, bookmarks and unchanged preferences.")
   }
 }

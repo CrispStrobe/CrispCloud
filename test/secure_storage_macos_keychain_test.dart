@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:crisp_cloud/services/secure_storage_macos_keychain.dart';
+import 'package:crisp_cloud/services/macos_keychain_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -150,5 +151,91 @@ void main() {
     messenger.setMockMethodCallHandler(channel, (_) async => null);
     await expectLater(storage.containsKey('credential'), throwsFormatException);
     await expectLater(storage.readAll(), throwsFormatException);
+  });
+
+  test('compatibility selector probes the scoped adapter without global selection', () async {
+    await MacosKeychainService.selectKeychain(path);
+    expect(calls.single.method, 'initialize');
+    expect(calls.single.arguments, {'path': path});
+  });
+
+  test('discovery is read only and selection errors do not fall back', () async {
+    messenger.setMockMethodCallHandler(channel, (call) async {
+      calls.add(call);
+      if (call.method == 'listKeychains') {
+        return [{'path': path, 'label': 'private'}];
+      }
+      throw PlatformException(code: 'custom_keychain_locked');
+    });
+    final discovered = await MacosKeychainService.listKeychains();
+    expect(discovered.single.path, path);
+    expect(discovered.single.label, 'private');
+    expect(calls.single.method, 'listKeychains');
+    await expectLater(MacosKeychainService.selectKeychain(path),
+        throwsA(isA<PlatformException>()));
+    expect(calls.map((call) => call.method), ['listKeychains', 'initialize']);
+  });
+
+  test('creation returns actual path and preserves password bytes or cancellation', () async {
+    String? created = path;
+    messenger.setMockMethodCallHandler(channel, (call) async {
+      calls.add(call);
+      return created;
+    });
+    const initialPath = '~/Library/Keychains/new.keychain-db';
+    const password = '  exact password ä  ';
+    expect(await MacosKeychainService.createKeychain(initialPath, password), path);
+    expect(calls.single.method, 'createKeychain');
+    expect(calls.single.arguments, {
+      'initialPath': initialPath,
+      'password': password,
+    });
+    created = null;
+    expect(await MacosKeychainService.createKeychain(initialPath, password), isNull);
+    expect(calls.map((call) => call.method), ['createKeychain', 'createKeychain']);
+    calls.clear();
+    await expectLater(MacosKeychainService.createKeychain(initialPath, ''), throwsArgumentError);
+    expect(calls, isEmpty);
+  });
+
+  test('creation failures propagate and no automatic selection follows', () async {
+    messenger.setMockMethodCallHandler(channel, (call) async {
+      calls.add(call);
+      throw PlatformException(code: 'custom_keychain_exists');
+    });
+    await expectLater(MacosKeychainService.createKeychain(path, 'password'),
+        throwsA(isA<PlatformException>().having(
+            (error) => error.code, 'code', 'custom_keychain_exists')));
+    expect(calls.single.method, 'createKeychain');
+  });
+
+  test('compatibility Browse uses the saved-bookmark picker', () async {
+    messenger.setMockMethodCallHandler(channel, (call) async {
+      calls.add(call);
+      return path;
+    });
+    expect(await MacosKeychainService.chooseKeychain(initialPath: '/old.keychain'), path);
+    expect(calls.single.method, 'chooseKeychain');
+    expect(calls.single.arguments, {'initialPath': '/old.keychain'});
+  });
+
+  test('discovery and creation reject malformed native results', () async {
+    messenger.setMockMethodCallHandler(channel, (_) async => [
+      {'path': path, 'label': 7},
+    ]);
+    await expectLater(MacosKeychainService.listKeychains(), throwsFormatException);
+    messenger.setMockMethodCallHandler(channel, (_) async => '');
+    await expectLater(MacosKeychainService.createKeychain(path, 'password'),
+        throwsFormatException);
+  });
+
+  test('compatibility methods never invoke macOS methods on other platforms', () async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    expect(MacosKeychainService.isSupported, isFalse);
+    expect(await MacosKeychainService.listKeychains(), isEmpty);
+    await expectLater(MacosKeychainService.selectKeychain(path), throwsUnsupportedError);
+    await expectLater(MacosKeychainService.chooseKeychain(), throwsUnsupportedError);
+    await expectLater(MacosKeychainService.createKeychain(path, 'password'), throwsUnsupportedError);
+    expect(calls, isEmpty);
   });
 }

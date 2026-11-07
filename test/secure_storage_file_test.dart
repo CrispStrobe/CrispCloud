@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:isolate';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:crisp_cloud/services/credential_storage_config.dart';
@@ -71,6 +72,52 @@ void main() {
       directory = Directory.systemTemp.createTempSync('crisp-vault-');
       file = File('${directory.path}/credential-vault.json');
       addTearDown(() => directory.deleteSync(recursive: true));
+    });
+
+    test('first-run password factory refuses an already existing vault', () async {
+      final original = vault();
+      await original.initialize('same-password');
+      await original.write('internxt', 'preserve-this-secret');
+      final before = await file.readAsBytes();
+      final previous = PathProviderPlatform.instance;
+      PathProviderPlatform.instance = _VaultPaths(directory.path);
+      addTearDown(() => PathProviderPlatform.instance = previous);
+
+      // Even the correct password must not turn first-run creation into an
+      // existing-vault unlock, which could incorrectly reset app-lock policy.
+      await expectLater(
+        createEncryptedFileStorage(masterPassword: 'same-password'),
+        throwsStateError,
+      );
+      expect(await file.readAsBytes(), before);
+      final returned = await createEncryptedFileStorage();
+      expect(returned, isA<EncryptedFileStorage>());
+      final locked = returned as EncryptedFileStorage;
+      expect(locked.isInitialized, isFalse);
+      expect(await locked.hasVault(), isTrue);
+      expect(await file.readAsBytes(), before);
+    });
+
+    test('first-run factory preserves a vault created during path lookup', () async {
+      final previous = PathProviderPlatform.instance;
+      late List<int> committed;
+      PathProviderPlatform.instance = _VaultPaths(directory.path,
+        beforeLookupCompletes: () async {
+          final competitor = vault();
+          await competitor.initialize('same-password');
+          await competitor.write('filen', 'concurrently-created-secret');
+          committed = await file.readAsBytes();
+        },
+      );
+      addTearDown(() => PathProviderPlatform.instance = previous);
+      await expectLater(
+        createEncryptedFileStorage(masterPassword: 'same-password'),
+        throwsStateError,
+      );
+      expect(await file.readAsBytes(), committed);
+      final restarted = vault();
+      await restarted.initialize('same-password', expectedExisting: true);
+      expect(await restarted.read('filen'), 'concurrently-created-secret');
     });
 
     test('two unlocked instances preserve sequential and overlapping writes', () async {
@@ -345,5 +392,17 @@ void _holdVaultTransaction((String, SendPort, SendPort) args) async {
     complete.send(error.toString());
   } finally {
     release.close();
+  }
+}
+
+class _VaultPaths extends PathProviderPlatform {
+  _VaultPaths(this.path, {this.beforeLookupCompletes});
+  final String path;
+  final Future<void> Function()? beforeLookupCompletes;
+
+  @override
+  Future<String?> getApplicationSupportPath() async {
+    await beforeLookupCompletes?.call();
+    return path;
   }
 }

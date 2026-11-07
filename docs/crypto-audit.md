@@ -41,6 +41,54 @@ spools plaintext until tag verification. This branch preserves that existing
 wire format. Cross-backend tests cover PointyCastle, `cryptography` and available
 native implementations; real-device acceleration remains a separate test.
 
+## PR26 follow-up: credential-storage backends
+
+The follow-up review includes PR26 source `f2536648aed5c3b4050de92cce22235f0143d58e`
+and the concurrently added first-run/create-keychain UI at
+`dcba7255a6c5015a145e2ecb15950b193ba75500`. The scope here is backend selection,
+credential preservation, local cryptographic storage and its application gates;
+it is not a fresh audit of every provider or dependency. The integrated behavior
+is described in [credential-storage.md](credential-storage.md).
+
+| Finding in the PR26 inputs | Correction and regression scope |
+| --- | --- |
+| Custom file-keychain selection called `SecKeychainSetDefault` and replaced the user's search list, including at startup independently of the active mode. A failed custom selection could still probe the default store, and the generic Flutter service was not an app-specific namespace in a file keychain. | Remove the global setters/duplicate channel. Use explicit keychain references for every SecItem operation and `com.crispcloud.credentials.v1` for the custom backend. Leave experimental generic-service entries untouched. Browse retains a security-scoped bookmark; creation rejects occupied/alias/symlink/reserved paths and checks unlock plus scoped read/write/delete. Native temporary-keychain tests check creation and CRUD without changing default/search-list preferences or foreign services. |
+| The encrypted-file backend cached whole-file state, permitting stale instances to lose writes, and could treat malformed/empty existing data as a new store. Unlock failures and unauthenticated values could become apparent absence. | Reload committed state inside an OS-locked transaction, stage/flush and atomically replace without deleting the previous file, reject unsupported paths and corruption, and invalidate stale vault generations. Validate metadata/KDF bounds before derivation and keep failed unlocks locked. File/codec tests cover overlapping writers, separate-isolate contention, failed publication, restart, corruption, metadata changes and independent legacy data. |
+| Credential AES-GCM authenticated a value without binding its storage key. Copying a valid record to a different credential/policy key could change its meaning without breaking the GCM tag. | New `v2:` writes encrypt and authenticate the key together with the value. An inner binary marker prevents a prefix-stripping downgrade to legacy UTF-8. Transposition/prefix-tampering tests exercise the check. Existing unbound values remain readable and become bound on rewrite; the patch does not claim that untouched legacy entries gained binding. |
+| Automatic backend fallback or treating an unreadable lock policy as disabled could expose an existing profile without its policy. Settings could label a different pending mode as already active, and separately saved mode/path preferences could split one intended selection. | Existing or ambiguous profiles retry the configured store. A separately checked fresh-profile path retains first-run choice. App Lock policy errors stop the gate; session-only cannot enable a persistent lock. Settings keeps active/pending state distinct, rechecks App Lock before saving a change, and writes/reloads a single versioned selection record. Bootstrap, gate, config and chooser regressions cover these boundaries. |
+| Generic and Internxt migrations could import persistent credentials into a session store, delete the durable source or mark migration complete after only an in-memory write. | `SecureStorage.isPersistent` distinguishes ephemeral stores. Session mode skips those imports/cleanup markers. Persistent migration verifies readback before legacy deletion and preserves conflicting secure values. Secure-storage and Internxt regressions check session isolation and preservation on failure. |
+
+Filen and Internxt retain their foreground account and transfer protocols. The
+new backend choice does not remove their encryption or require a plaintext
+provider mode. It also does not create an OS-only application: the shared vault
+and other bundled implementations remain in the inventory. The conditional
+export-release analysis is unchanged; this follow-up supplies engineering
+evidence, not an additional BIS or Apple classification.
+
+Important limits remain:
+
+- **App Lock and the password vault are different mechanisms.** App Lock retains
+  its legacy 10,000-round SHA-256 salt/PIN verifier format; this review does not
+  replace it with a modern password KDF. The credential vault separately uses
+  PBKDF2-HMAC-SHA256 and AES-256-GCM. App Lock is an application access gate, not
+  a guarantee against an attacker controlling the user's process or profile.
+- **File transactions do not supply anti-rollback or full-map authentication.**
+  Storage-key names/sizes remain visible, deleted entries are not detected as a
+  cryptographic failure, and old valid records/vaults can be restored. Legacy
+  unbound records retain their old limitation. Browser localStorage has no
+  native file transaction spanning multiple tabs. OS/device failures can also
+  defeat durability; a post-replacement sync error reports an uncertain commit.
+- **Password/session modes require foreground availability.** A separate
+  background worker cannot unlock the file vault or inherit session memory.
+  The mobile worker refuses those modes instead of using stale OS credentials;
+  its existing supported providers remain FTP/FTPS and WebDAV. This does not add
+  unattended Filen or Internxt sync.
+- **Native helper tests are bounded.** They use temporary keychains and test
+  scope, failure and preference preservation. Interactive save/open panels,
+  bookmark persistence across signed sandbox launches, OS ACL prompts and live
+  provider accounts still need platform smoke testing. Consult the final CI
+  revision for actual native/Dart results; source inspection is not a test pass.
+
 ## Existing feature boundaries, not new removals
 
 The names of service classes overstate what the initial app actually exposed:
