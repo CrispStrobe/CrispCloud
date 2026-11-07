@@ -1,6 +1,5 @@
 import Cocoa
 import FlutterMacOS
-import Security
 
 @main
 class AppDelegate: FlutterAppDelegate {
@@ -29,31 +28,115 @@ class AppDelegate: FlutterAppDelegate {
 
   // MARK: - Private helpers
 
-  /// Optional non-login keychain selected in Settings. SecItemAdd/Read from
-  /// flutter_secure_storage use the process default keychain, so setting it
-  /// before Flutter starts lets the app use e.g. a dedicated keychain.
-  private func configureCustomKeychain() {
-    guard let rawPath = UserDefaults.standard.string(forKey: "flutter.custom_keychain_path"),
-          !rawPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-      return
+  private let customKeychainStore = CustomKeychainStore()
+  private var customKeychainChannel: FlutterMethodChannel?
+
+  // MainFlutterWindow registers this during engine setup, before startup can
+  // request credentials. Merely registering the channel touches no keychain.
+  func registerCustomKeychainChannel(binaryMessenger: FlutterBinaryMessenger) {
+    guard customKeychainChannel == nil else { return }
+    let channel = FlutterMethodChannel(
+      name: "com.crispcloud/custom_keychain", binaryMessenger: binaryMessenger)
+    channel.setMethodCallHandler { [weak self] call, result in
+      guard let self else {
+        result(FlutterError(code: "custom_keychain_unavailable",
+                            message: "The selected keychain is unavailable.", details: nil))
+        return
+      }
+      let arguments = call.arguments as? [String: Any] ?? [:]
+      if call.method == "chooseKeychain" {
+        self.chooseCustomKeychain(initialPath: arguments["initialPath"] as? String,
+                                  result: result)
+        return
+      }
+      guard let path = arguments["path"] as? String else {
+        result(FlutterError(code: "custom_keychain_invalid_path",
+                            message: "A keychain path is required.", details: nil))
+        return
+      }
+      do {
+        switch call.method {
+        case "initialize":
+          try self.customKeychainStore.initialize(path: path)
+          result(nil)
+        case "read", "write", "delete", "containsKey":
+          guard let key = arguments["key"] as? String else {
+            throw CustomKeychainStoreError(
+              code: "custom_keychain_invalid_key", message: "A credential key is required.",
+              status: nil)
+          }
+          switch call.method {
+          case "read":
+            result(try self.customKeychainStore.read(path: path, key: key))
+          case "write":
+            guard let value = arguments["value"] as? String else {
+              throw CustomKeychainStoreError(
+                code: "custom_keychain_invalid_value", message: "A credential value is required.",
+                status: nil)
+            }
+            try self.customKeychainStore.write(path: path, key: key, value: value)
+            result(nil)
+          case "delete":
+            try self.customKeychainStore.delete(path: path, key: key)
+            result(nil)
+          default:
+            result(try self.customKeychainStore.containsKey(path: path, key: key))
+          }
+        case "readAll":
+          result(try self.customKeychainStore.readAll(path: path))
+        case "deleteAll":
+          try self.customKeychainStore.deleteAll(path: path)
+          result(nil)
+        default:
+          result(FlutterMethodNotImplemented)
+        }
+      } catch {
+        result(self.customKeychainFailure(error))
+      }
     }
-    let path = (rawPath as NSString).expandingTildeInPath
-    var keychain: SecKeychain?
-    let status = SecKeychainOpen(path, &keychain)
-    guard status == errSecSuccess, let keychain else {
-      NSLog("[AppDelegate] Could not open custom keychain at %@ (status %d)", path, status)
-      return
+    customKeychainChannel = channel
+  }
+
+  private func customKeychainFailure(_ error: Error) -> FlutterError {
+    if let failure = error as? CustomKeychainStoreError {
+      return FlutterError(code: failure.code, message: failure.message,
+                          details: failure.status.map { ["status": Int($0)] })
     }
-    let setStatus = SecKeychainSetDefault(keychain)
-    if setStatus != errSecSuccess {
-      NSLog("[AppDelegate] Could not select custom keychain %@ (status %d)", path, setStatus)
+    return FlutterError(code: "custom_keychain_unavailable",
+                        message: "The selected keychain is unavailable.", details: nil)
+  }
+
+  private func chooseCustomKeychain(initialPath: String?, result: @escaping FlutterResult) {
+    let panel = NSOpenPanel()
+    panel.canChooseFiles = true
+    panel.canChooseDirectories = false
+    panel.allowsMultipleSelection = false
+    panel.allowedFileTypes = ["keychain", "keychain-db"]
+    panel.prompt = NSLocalizedString("Choose", comment: "Select a custom keychain file")
+    if let path = initialPath, let url = try? CustomKeychainStore.fileURL(for: path) {
+      panel.directoryURL = url.deletingLastPathComponent()
     }
-    // SecItemAdd uses the default keychain, but SecItemCopyMatching searches
-    // the search list. Keep the app's credential storage isolated to the
-    // selected keychain so reads and deletes find what writes created.
-    let listStatus = SecKeychainSetSearchList([keychain] as CFArray)
-    if listStatus != errSecSuccess {
-      NSLog("[AppDelegate] Could not set custom keychain search list (status %d)", listStatus)
+    let completed: (NSApplication.ModalResponse) -> Void = { [weak self] response in
+      guard response == .OK, let url = panel.url else {
+        result(nil)
+        return
+      }
+      guard let self else {
+        result(FlutterError(code: "custom_keychain_unavailable",
+                            message: "The selected keychain is unavailable.", details: nil))
+        return
+      }
+      do {
+        try self.customKeychainStore.rememberAccess(to: url)
+        result(url.standardizedFileURL.path)
+      } catch {
+        result(self.customKeychainFailure(error))
+      }
+    }
+    if let window = mainFlutterWindow {
+      panel.beginSheetModal(for: window, completionHandler: completed)
+    } else {
+      panel.begin(completionHandler: completed)
     }
   }
 
@@ -78,7 +161,6 @@ class AppDelegate: FlutterAppDelegate {
   private var pendingUrl: URL?
 
   override func applicationDidFinishLaunching(_ notification: Notification) {
-    configureCustomKeychain()
     // If a URL arrived very early (before the engine finished), deliver it
     // once the engine reports it is ready.  We poll via a short delay;
     // a production app could use FlutterEngine callbacks instead.

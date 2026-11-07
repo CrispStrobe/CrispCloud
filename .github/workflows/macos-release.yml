@@ -45,6 +45,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Verify scoped custom keychain storage
+        run: |
+          swiftc -swift-version 5 -parse-as-library macos/Runner/CustomKeychainStore.swift \
+            test/native/custom_keychain_store_test.swift -framework Security \
+            -o "$RUNNER_TEMP/crispcloud-keychain-tests"
+          codesign --force --sign - "$RUNNER_TEMP/crispcloud-keychain-tests"
+          "$RUNNER_TEMP/crispcloud-keychain-tests"
+
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}

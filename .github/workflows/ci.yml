@@ -190,6 +190,15 @@ jobs:
         if: runner.os == 'macOS'
         run: python3 -m unittest discover -s tool -p test_crypto_release_evidence.py -v
 
+      - name: Verify custom keychain isolation without changing user defaults
+        if: runner.os == 'macOS'
+        run: |
+          swiftc -swift-version 5 -parse-as-library macos/Runner/CustomKeychainStore.swift \
+            test/native/custom_keychain_store_test.swift -framework Security \
+            -o "$RUNNER_TEMP/crispcloud-keychain-tests"
+          codesign --force --sign - "$RUNNER_TEMP/crispcloud-keychain-tests"
+          "$RUNNER_TEMP/crispcloud-keychain-tests"
+
       - uses: subosito/flutter-action@v2
         with:
           channel: ${{ env.FLUTTER_CHANNEL }}
@@ -214,6 +223,7 @@ jobs:
           test/aes_siv_test.dart test/cryptomator_test.dart
           test/veracrypt_test.dart test/veracrypt_header_vectors_test.dart
           test/encryption_service_test.dart test/internxt_secure_config_test.dart
+          test/secure_storage_macos_keychain_test.dart
           test/internxt_rewire_test.dart test/internxt_download_path_test.dart
           test/internxt_bounded_transfer_test.dart
           test/filen_adapter_test.dart test/filen_bounded_transfer_test.dart

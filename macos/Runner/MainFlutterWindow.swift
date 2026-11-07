@@ -12,6 +12,8 @@ class MainFlutterWindow: NSWindow {
     let windowFrame = self.frame
     self.contentViewController = flutterViewController
     self.setFrame(windowFrame, display: true)
+    (NSApplication.shared.delegate as? AppDelegate)?.registerCustomKeychainChannel(
+      binaryMessenger: flutterViewController.engine.binaryMessenger)
 
     // PDF text layer extraction (PDFKit). Scanned PDFs return an empty string.
     let pdfTextChannel = FlutterMethodChannel(
