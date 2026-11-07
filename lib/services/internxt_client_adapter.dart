@@ -8,7 +8,7 @@
 // of the protocol (see ../internxt_client.dart pre-rewire). Now
 // constructs a real InternxtClient from the package, passing:
 //   - URL overrides for kIsWeb (Vercel proxy paths)
-//   - SharedPreferencesStorage for kIsWeb (file-IO unavailable)
+//   - Host secure storage for credentials on native and web
 // Bounded transfers reuse the package's cryptography with private spooling.
 // Directory/path reads use request-local caches so newly uploaded objects are
 // immediately visible without relying on the SDK session's one-hour cache.
@@ -23,7 +23,8 @@ import 'package:internxt_client/internxt_client.dart';
 import 'cloud_storage_interface.dart';
 import 'internxt_client.dart' show InternxtUrls;
 import 'internxt_operation_failure.dart';
-import 'internxt_flutter/shared_prefs_storage.dart';
+import 'internxt_flutter/secure_config_storage.dart';
+import 'secure_storage_service.dart';
 import 'log_service.dart';
 import 'internxt_streaming_transfer.dart';
 import 'internxt_transfer_platform.dart';
@@ -59,10 +60,8 @@ class InternxtClientAdapter extends CloudStorageClient
   InternxtClientAdapter({required ConfigService config})
     : _streaming = const InternxtStreamingTransfer(),
       _client = InternxtClient(
-        // Adapter accepts whatever ConfigService AppState constructed.
-        // For Web that means a ConfigService whose storage is
-        // SharedPreferencesStorage; for native it's the default
-        // FileConfigStorage. Either way, just pass it through.
+        // Production callers inject the host's secure ConfigStorage. Keep the
+        // ConfigService seam so isolated tests can supply their own backend.
         config: config,
         networkUrl: InternxtUrls.networkUrl,
         driveApiUrl: InternxtUrls.driveApiUrl,
@@ -77,10 +76,15 @@ class InternxtClientAdapter extends CloudStorageClient
   /// Convenience constructor that builds the right ConfigService
   /// for the host platform. Use this when AppState doesn't already
   /// have one in hand.
-  factory InternxtClientAdapter.forHost({required String configPath}) {
-    final storage = kIsWeb ? SharedPreferencesStorage() : null;
+  factory InternxtClientAdapter.forHost({
+    required String configPath,
+    required SecureStorage secureStorage,
+  }) {
     return InternxtClientAdapter(
-      config: ConfigService(configPath: configPath, storage: storage),
+      config: createSecureInternxtConfig(
+        configPath: configPath,
+        secureStorage: secureStorage,
+      ),
     );
   }
 
@@ -138,8 +142,8 @@ class InternxtClientAdapter extends CloudStorageClient
   @override
   Future<void> logout() async {
     _authGeneration++;
-    _client.userId = null;
-    _client.bucketId = null;
+    _client.setAuth({});
+    _lastLoginResponse = null;
     await _client.config.clearCredentials();
   }
 
