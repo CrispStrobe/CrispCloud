@@ -1,0 +1,291 @@
+import 'dart:async';
+import 'dart:io';
+
+import 'package:crisp_cloud/models/file_item.dart';
+import 'package:crisp_cloud/models/panel_side.dart';
+import 'package:crisp_cloud/models/storage_reference.dart';
+import 'package:crisp_cloud/providers/providers.dart';
+import 'package:crisp_cloud/providers/terminal_workspace_provider.dart';
+import 'package:crisp_cloud/services/cloud_storage_interface.dart';
+import 'package:crisp_cloud/services/local_file_service.dart';
+import 'package:crisp_cloud/services/secure_storage_service.dart';
+import 'package:crisp_cloud/services/terminal_session.dart';
+import 'package:crisp_cloud/services/terminal_workspace_service.dart';
+import 'package:crisp_cloud/widgets/terminal_panel.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'support/workflow_fake_client.dart';
+
+class _Local extends Fake
+    implements LocalFileService, ScopedLocalFileOperations {
+  int leases = 0;
+  @override
+  String currentPath = '/Documents';
+  @override
+  String? get grantedBasePath => currentPath;
+  @override
+  Future<String> getInitialPath() async => currentPath;
+  @override
+  Future<String> getSafeFallbackDirectory() async => currentPath;
+  @override
+  Future<List<FileSystemEntity>?> listDirectory(String path) async => [];
+  @override
+  Future<void> refresh() async {}
+  @override
+  Future<T> withFileOperationAccess<T>(
+    String path,
+    Future<T> Function() action,
+  ) async {
+    leases++;
+    try {
+      return await action();
+    } finally {
+      leases--;
+    }
+  }
+}
+
+class _Auth extends ChangeNotifier implements AuthNotifier {
+  _Auth(this.client);
+  @override
+  final CloudStorageClient client;
+  @override
+  bool isConnected = true;
+  @override
+  String? get userEmail => 'owner@example.test';
+  @override
+  String get providerName => client.providerName;
+  void disconnect() {
+    isConnected = false;
+    notifyListeners();
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _Workspaces extends Fake implements TerminalWorkspaceService {
+  CloudStorageClient? stagedClient;
+  CloudStorageClient? uploadedClient;
+  List<FileItem>? stagedItems;
+  bool Function()? current;
+  Completer<TerminalWorkspace>? pending;
+  TerminalWorkspace? workspace;
+  @override
+  bool get isSupported => true;
+  @override
+  List<String> get warnings => const [];
+  @override
+  Future<TerminalWorkspace> stage({
+    required CloudStorageClient client,
+    required String remoteRoot,
+    required List<FileItem> items,
+    required bool Function() isCurrent,
+    StorageReference? storage,
+    String? title,
+    bool Function()? isCancelled,
+    void Function(int, int)? onProgress,
+  }) async {
+    stagedClient = client;
+    stagedItems = items;
+    current = isCurrent;
+    expect(isCurrent(), isTrue);
+    expect(isCancelled?.call(), isFalse);
+    onProgress?.call(1, 1);
+    workspace = TerminalWorkspace(
+      id: 'ws-123e4567-e89b-12d3-a456-426614174000',
+      title: 'Cloud project',
+      storage: storage!,
+      remoteRoot: remoteRoot,
+      remoteRootFingerprint: TerminalWorkspaceFingerprint(isDirectory: true),
+      directoryPath: '/Documents/workspaces/project/files',
+      createdAt: DateTime.utc(2026),
+      updatedAt: DateTime.utc(2026),
+      revision: 1,
+      status: TerminalWorkspaceStatus.ready,
+      entries: const [],
+    );
+    return pending == null ? workspace! : pending!.future;
+  }
+
+  @override
+  Future<List<TerminalWorkspace>> list({StorageReference? storage}) async => [
+    if (workspace != null) workspace!,
+  ];
+  @override
+  Future<TerminalWorkspace?> load(String id) async =>
+      workspace?.id == id ? workspace : null;
+  @override
+  Future<List<TerminalWorkspaceChange>> inspect(String id) async => [
+    TerminalWorkspaceChange(
+      workspaceId: id,
+      manifestRevision: 1,
+      relativePath: 'input.txt',
+      remotePath: '/input.txt',
+      kind: TerminalWorkspaceChangeKind.modified,
+      digest: 'a' * 64,
+      size: 3,
+    ),
+  ];
+  @override
+  Future<TerminalWorkspaceUploadResult> uploadReviewed({
+    required String workspaceId,
+    required CloudStorageClient client,
+    required List<TerminalWorkspaceChange> changes,
+    required bool Function() isCurrent,
+    bool Function()? isCancelled,
+  }) async {
+    expect(isCurrent(), isTrue);
+    expect(changes.single.relativePath, 'input.txt');
+    uploadedClient = client;
+    return TerminalWorkspaceUploadResult(
+      workspace: workspace!,
+      uploadedPaths: const ['input.txt'],
+      skippedPaths: const [],
+      failures: const {},
+    );
+  }
+}
+
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  const channel = MethodChannel('crisp_ios_shell/control');
+  late WorkflowFakeClient cloud;
+  late _Auth auth;
+  late _Local local;
+  late _Workspaces workspaces;
+  late ProviderContainer container;
+  late TerminalSession session;
+  late Completer<Map<String, Object?>> output;
+  String? shellDirectory;
+
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    cloud = WorkflowFakeClient()..put('/input.txt', [1, 2, 3]);
+    auth = _Auth(cloud);
+    local = _Local();
+    workspaces = _Workspaces();
+    session = TerminalSession();
+    output = Completer<Map<String, Object?>>();
+    shellDirectory = null;
+    container = ProviderContainer(
+      overrides: [
+        authProvider.overrideWith((_) => auth),
+        secureStorageProvider.overrideWithValue(InMemorySecureStorage()),
+        localFileServiceProvider.overrideWithValue(local),
+        terminalWorkspaceServiceProvider.overrideWithValue(workspaces),
+      ],
+    );
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+          switch (call.method) {
+            case 'start':
+              shellDirectory =
+                  (call.arguments as Map)['workingDirectory'] as String;
+              return {'sessionId': 'native-test'};
+            case 'read':
+              return output.future;
+            case 'close':
+              if (!output.isCompleted) {
+                output.complete({'data': Uint8List(0), 'exitCode': 0});
+              }
+              return null;
+            default:
+              return null;
+          }
+        });
+  });
+
+  tearDown(() async {
+    await session.disconnect();
+    session.dispose();
+    container.dispose();
+    debugDefaultTargetPlatformOverride = null;
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, null);
+  });
+
+  Future<void> mount(WidgetTester tester) async {
+    final panel = container.read(panelProvider(PanelSide.remote));
+    await panel.refresh();
+    panel.toggleSelection(
+      panel.files!.singleWhere((file) => file.name == 'input.txt'),
+    );
+    container.read(activePanelProvider.notifier).state = PanelSide.remote;
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          home: Scaffold(body: TerminalPanel(session: session)),
+        ),
+      ),
+    );
+    await tester.pump();
+  }
+
+  Future<void> action(WidgetTester tester, String title) async {
+    await tester.tap(find.byKey(const ValueKey('terminal-actions')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(title));
+    await tester.pump();
+  }
+
+  testWidgets(
+    'stage opens the native shell and reviewed uploads keep the original account',
+    (tester) async {
+      await mount(tester);
+      await action(tester, 'Stage selected files');
+      await tester.pumpAndSettle();
+      expect(workspaces.stagedClient, same(cloud));
+      expect(workspaces.stagedItems!.single.path, '/input.txt');
+      expect(shellDirectory, '/Documents/workspaces/project/files');
+      expect(session.kind, TerminalSessionKind.ios);
+      expect(local.leases, 1);
+      expect(find.text('iOS shell · Cloud project'), findsOneWidget);
+
+      container.read(activePanelProvider.notifier).state = PanelSide.local;
+      await action(tester, 'Review uploads');
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Upload selected'));
+      await tester.pumpAndSettle();
+      expect(workspaces.uploadedClient, same(cloud));
+      expect(find.text('Uploaded: input.txt'), findsOneWidget);
+      await tester.tap(find.text('Close'));
+      await tester.pumpAndSettle();
+      // Start cancellation in the same FakeAsync zone as the pending native
+      // read, then pump its channel responses before awaiting the final future.
+      final disconnecting = session.disconnect();
+      await tester.pump();
+      await tester.runAsync(() => disconnecting);
+      expect(local.leases, 0);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+    },
+  );
+
+  testWidgets(
+    'account disconnection invalidates a staging request without opening a shell',
+    (tester) async {
+      workspaces.pending = Completer<TerminalWorkspace>();
+      await mount(tester);
+      await action(tester, 'Stage selected files');
+      await tester.pump();
+      expect(workspaces.current!(), isTrue);
+      auth.disconnect();
+      expect(workspaces.current!(), isFalse);
+      workspaces.pending!.completeError(
+        const TerminalWorkspaceException('Original account disconnected.'),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Original account disconnected.'), findsOneWidget);
+      expect(shellDirectory, isNull);
+      expect(local.leases, 0);
+    },
+  );
+}

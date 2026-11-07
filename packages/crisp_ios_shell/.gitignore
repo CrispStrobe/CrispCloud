@@ -1,0 +1,7 @@
+.dart_tool/
+.packages
+pubspec.lock
+build/
+.build/
+ios/Frameworks/
+ios/Resources/BuildProvenance.json

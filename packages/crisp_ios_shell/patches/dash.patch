@@ -1,0 +1,115 @@
+--- a/src/var.c
++++ b/src/var.c
+@@ -328,7 +328,13 @@
+ char *
+ lookupvar(const char *name)
+ {
+-	struct var *v;
++    // The app owns terminal dimensions; read them from this live session.
++#if TARGET_OS_IPHONE
++    if (!strcmp(name, "COLUMNS") || !strcmp(name, "COLUMNS=")) return ios_getenv("COLUMNS");
++    if (!strcmp(name, "LINES") || !strcmp(name, "LINES=")) return ios_getenv("LINES");
++    if (!strcmp(name, "ROWS") || !strcmp(name, "ROWS=")) return ios_getenv("ROWS");
++#endif
++    struct var *v;
+ 
+ 	if ((v = *findvar(hashvar(name), name)) && !(v->flags & VUNSET)) {
+ #ifdef WITH_LINENO
+--- a/src/input.c
++++ b/src/input.c
+@@ -150,6 +150,41 @@
+ }
+ 
+ 
++#if TARGET_OS_IPHONE
++#include <poll.h>
++extern int crisp_take_shell_interrupt(void);
++
++void crisp_shell_check_interrupt(void)
++{
++    if (crisp_take_shell_interrupt()) {
++        // Only the interactive root is registered as interruptRoot. Never raise
++        // an OS signal: onint executes on that root at a known safe boundary.
++        exitstatus = 130;
++        exraise(EXINT);
++    }
++}
++
++ssize_t crisp_shell_read(int fd, void *buffer, size_t size)
++{
++    size_t used = 0;
++    int canonical = iflag && fd == fileno(thread_stdin) && size > 1;
++    for (;;) {
++        crisp_shell_check_interrupt();
++        struct pollfd item = { fd, POLLIN, 0 };
++        int ready = poll(&item, 1, 100);
++        if (ready < 0 && errno == EINTR) continue;
++        if (ready < 0) return -1;
++        if (ready == 0) continue;
++        crisp_shell_check_interrupt();
++        ssize_t count = read(fd, (char *)buffer + used, canonical ? 1 : size);
++        if (count <= 0) return used ? (ssize_t)used : count;
++        used += count;
++        if (!canonical || used == size || ((char *)buffer)[used - 1] == 10)
++            return (ssize_t)used;
++    }
++}
++#endif
++
+ static int
+ preadfd(void)
+ {
+@@ -185,7 +220,12 @@
+ 
+ 	} else
+ #endif
+-		nr = read(parsefile->fd, buf, IBUFSIZ - 1);
++#if TARGET_OS_IPHONE
++        nr = crisp_shell_read(parsefile->fd == 0 ? fileno(thread_stdin) : parsefile->fd,
++                              buf, IBUFSIZ - 1);
++#else
++        nr = read(parsefile->fd, buf, IBUFSIZ - 1);
++#endif
+ 
+ 
+ 	if (nr < 0) {
+--- a/src/input.h
++++ b/src/input.h
+@@ -99,3 +99,8 @@
+ void popfile(void);
+ void unwindfiles(struct parsefile *);
+ void popallfiles(void);
++
++#if TARGET_OS_IPHONE
++void crisp_shell_check_interrupt(void);
++ssize_t crisp_shell_read(int fd, void *buffer, size_t size);
++#endif
+--- a/src/eval.c
++++ b/src/eval.c
+@@ -91,6 +91,7 @@
+ 	pthread_cleanup_push(wait_cancelled_command, &pid);
+ 	ios_waitpid(pid);
+ 	pthread_cleanup_pop(0);
++	crisp_shell_check_interrupt();
+ }
+ #define ios_waitpid pipeline_waitpid
+ #endif
+@@ -240,6 +241,7 @@
+ 	// Native iOS commands are pthreads; builtin-only loops have no blocking syscall.
+ #if TARGET_OS_IPHONE
+ 	pthread_testcancel();
++	crisp_shell_check_interrupt();
+ 	if (pipeline_stdout && ferror(pipeline_stdout)) {
+ 		exitstatus = 128 + SIGPIPE;
+ 		exraise(EXPIPE);
+--- a/src/miscbltin.c
++++ b/src/miscbltin.c
+@@ -154,7 +154,7 @@
+ #if !TARGET_OS_IPHONE
+ 		switch (read(0, &c, 1)) {
+ #else
+-		switch (read(fileno(thread_stdin), &c, 1)) {
++		switch (crisp_shell_read(fileno(thread_stdin), &c, 1)) {
+ #endif
+ 		case 1:
+ 			break;

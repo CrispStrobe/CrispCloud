@@ -9,15 +9,21 @@ import 'package:xterm2/xterm.dart';
 
 import '../l10n/terminal_strings.dart';
 import '../l10n/terminal_mount_error_strings.dart';
+import '../l10n/terminal_workspace_strings.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../providers/terminal_provider.dart';
+import '../providers/terminal_workspace_provider.dart';
 import '../providers/focus_area_provider.dart';
 import '../services/ssh_terminal_service.dart';
 import '../services/terminal_backends.dart';
 import '../services/terminal_menu.dart';
 import '../services/terminal_session.dart';
 import '../services/terminal_mount_failure.dart';
+import '../services/terminal_directory.dart';
+import '../services/panel_source_service.dart';
+import '../services/terminal_workspace_service.dart';
+import 'terminal_workspace_dialog.dart';
 
 final _terminalFocusOwnerProvider = StateProvider<Object?>((ref) => null);
 
@@ -63,7 +69,16 @@ class TerminalPanel extends ConsumerStatefulWidget {
   ConsumerState<TerminalPanel> createState() => _TerminalPanelState();
 }
 
-enum _PanelAction { local, copy, paste, disconnect, hide }
+enum _PanelAction {
+  local,
+  stage,
+  workspaces,
+  review,
+  copy,
+  paste,
+  disconnect,
+  hide,
+}
 
 class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   final _focus = FocusNode(debugLabel: 'Terminal input');
@@ -82,6 +97,8 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   void Function(String)? _titleHandler;
   String? _title;
   bool _menuUpdateScheduled = false;
+  TerminalWorkspace? _workspace;
+  int _connectionRequest = 0;
 
   bool get _desktop =>
       !kIsWeb &&
@@ -167,6 +184,8 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   void didUpdateWidget(TerminalPanel oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (!identical(oldWidget.session, widget.session)) {
+      _connectionRequest++;
+      _workspace = null;
       _session.removeListener(_onSessionChanged);
       _detachTitleHandler();
       if (_ownsSession) _session.dispose();
@@ -259,15 +278,45 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     }
   }
 
-  Future<void> _startLocal() async {
+  List<PanelSource> _localSources() {
+    final active = ref.read(activePanelProvider);
+    final sources = <PanelSource>[];
+    for (final side in {active, PanelSide.local, PanelSide.remote}) {
+      try {
+        sources.add(
+          ref.read(panelProvider(side)).captureCurrentOrigin().source,
+        );
+      } on StateError {
+        // A loading/archived/stale listing cannot authorize a local path.
+      }
+    }
+    return sources;
+  }
+
+  Future<void> _startLocal({TerminalWorkspace? workspace}) async {
     if (!mounted) return;
-    final directory = ref.read(panelProvider(PanelSide.local)).currentPath;
+    final request = ++_connectionRequest;
+    _workspace = workspace;
     final files = ref.read(localFileServiceProvider);
+    final sources = workspace == null ? _localSources() : <PanelSource>[];
     final connecting = _session.connect(
-      (columns, rows) => kIsWeb
-          ? openLocalTerminal(directory, columns, rows)
-          : openScopedLocalTerminal(files, directory, columns, rows),
-      kind: TerminalSessionKind.local,
+      (columns, rows) async {
+        final directory =
+            workspace?.directoryPath ??
+            await resolveTerminalDirectory(
+              sources,
+              fallback: files.getInitialPath,
+            );
+        if (!mounted || request != _connectionRequest) {
+          throw StateError('Shell connection was cancelled.');
+        }
+        return kIsWeb
+            ? openLocalTerminal(directory, columns, rows)
+            : openScopedLocalTerminal(files, directory, columns, rows);
+      },
+      kind: !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
+          ? TerminalSessionKind.ios
+          : TerminalSessionKind.local,
       label: context.terminalTr('Local shell'),
     );
     final terminal = _session.terminal;
@@ -281,6 +330,83 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     }
   }
 
+  TerminalWorkspaceBinding? _resolveWorkspace(TerminalWorkspace workspace) {
+    if (!mounted) return null;
+    final origin = ref
+        .read(panelProvider(ref.read(activePanelProvider)))
+        .resolveStorageReference(workspace.storage, workspace.remoteRoot);
+    final source = origin?.source;
+    if (origin == null || source is! RemotePanelSource || !origin.isCurrent) {
+      return null;
+    }
+    return TerminalWorkspaceBinding(
+      client: source.client,
+      isCurrent: () => origin.isCurrent,
+    );
+  }
+
+  Future<void> _stageSelected() async {
+    final service = ref.read(terminalWorkspaceServiceProvider);
+    try {
+      final panel = ref.read(panelProvider(ref.read(activePanelProvider)));
+      final items = panel.selection.isNotEmpty
+          ? panel.selection.toList()
+          : [if (panel.cursorItem != null) panel.cursorItem!];
+      final origin = panel.captureOperationOrigin(items);
+      final source = origin.source;
+      if (source is! RemotePanelSource) {
+        throw StateError(
+          context.workspaceTr('Choose cloud files in the file panel first.'),
+        );
+      }
+      final workspace = await showTerminalWorkspaceTask<TerminalWorkspace>(
+        context,
+        title: context.workspaceTr('Staging files…'),
+        task: (cancelled, progress) => service.stage(
+          client: source.client,
+          remoteRoot: source.currentPath,
+          items: items,
+          storage: origin.storageReference,
+          isCurrent: () => origin.isCurrent,
+          isCancelled: cancelled,
+          onProgress: progress,
+        ),
+      );
+      if (mounted && widget.visible && workspace != null) {
+        await _startLocal(workspace: workspace);
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(error.toString())));
+      }
+    }
+  }
+
+  Future<void> _showWorkspaces() async {
+    final workspace = await showDialog<TerminalWorkspace>(
+      context: context,
+      builder: (_) => TerminalWorkspacesDialog(
+        service: ref.read(terminalWorkspaceServiceProvider),
+        resolve: _resolveWorkspace,
+      ),
+    );
+    if (mounted && widget.visible && workspace != null) {
+      await _startLocal(workspace: workspace);
+    }
+  }
+
+  Future<void> _reviewWorkspace() async {
+    final workspace = _workspace;
+    if (workspace == null) return;
+    await reviewTerminalWorkspace(
+      context,
+      service: ref.read(terminalWorkspaceServiceProvider),
+      workspace: workspace,
+      resolve: _resolveWorkspace,
+    );
+  }
+
   Future<void> _connectSsh() async {
     if (_session.isConnecting) return;
     final config = await showDialog<SshTerminalConfig>(
@@ -288,6 +414,8 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
       builder: (_) => const SshTerminalConnectDialog(),
     );
     if (!mounted || config == null || !widget.visible) return;
+    _connectionRequest++;
+    _workspace = null;
 
     final previousPrompt = _ssh.confirmHostKey;
     Terminal? connectingTerminal;
@@ -437,6 +565,8 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     TerminalSessionStatus.connected =>
       _session.isSandbox
           ? context.terminalTr('Sandbox shell')
+          : _session.kind == TerminalSessionKind.ios
+          ? context.workspaceTr('iOS shell')
           : context.terminalTr('Connected'),
     TerminalSessionStatus.disconnected => context.terminalTr('Disconnected'),
     TerminalSessionStatus.waitingForExit => context.terminalTr(
@@ -475,6 +605,12 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     switch (action) {
       case _PanelAction.local:
         unawaited(_startLocal());
+      case _PanelAction.stage:
+        unawaited(_stageSelected());
+      case _PanelAction.workspaces:
+        unawaited(_showWorkspaces());
+      case _PanelAction.review:
+        unawaited(_reviewWorkspace());
       case _PanelAction.copy:
         unawaited(_copySelection());
       case _PanelAction.paste:
@@ -488,15 +624,20 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
 
   Widget _buildHeader() {
     final theme = Theme.of(context);
-    final connectionLabel =
-        (_session.kind == TerminalSessionKind.ssh ? _session.label : null) ??
-        context.terminalTr(
-          _session.kind == TerminalSessionKind.sandbox
-              ? 'Built-in shell'
-              : _desktop
-              ? 'Local shell'
-              : 'Terminal',
-        );
+    final backendLabel = _session.kind == TerminalSessionKind.ios
+        ? context.workspaceTr('iOS shell')
+        : context.terminalTr(
+            _session.kind == TerminalSessionKind.sandbox
+                ? 'Built-in shell'
+                : _desktop
+                ? 'Local shell'
+                : 'Terminal',
+          );
+    final connectionLabel = _session.kind == TerminalSessionKind.ssh
+        ? _session.label ?? backendLabel
+        : _workspace == null
+        ? backendLabel
+        : '$backendLabel · ${_workspace!.title}';
     // The remote OSC title supplements the trusted endpoint label. It must
     // never replace the host identity shown by the connection UI.
     final title = _title?.isNotEmpty == true
@@ -563,19 +704,47 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                         value: _PanelAction.local,
                         child: Text(
                           context.terminalTr(
-                            _session.kind == TerminalSessionKind.sandbox
+                            _workspace != null
+                                ? _session.kind == TerminalSessionKind.sandbox
+                                      ? 'Start built-in shell'
+                                      : 'Start local shell'
+                                : _session.kind == TerminalSessionKind.sandbox
                                 ? _canDisconnect
                                       ? 'Restart built-in shell'
                                       : 'Start built-in shell'
-                                : _session.kind == TerminalSessionKind.local &&
+                                : (_session.kind == TerminalSessionKind.local ||
+                                          _session.kind ==
+                                              TerminalSessionKind.ios) &&
                                       _canDisconnect
                                 ? 'Restart local shell'
-                                : _desktop
+                                : _desktop ||
+                                      (!kIsWeb &&
+                                          defaultTargetPlatform ==
+                                              TargetPlatform.iOS)
                                 ? 'Start local shell'
                                 : 'Start built-in shell',
                           ),
                         ),
                       ),
+                      if (ref
+                          .read(terminalWorkspaceServiceProvider)
+                          .isSupported) ...[
+                        PopupMenuItem(
+                          value: _PanelAction.stage,
+                          child: Text(
+                            context.workspaceTr('Stage selected files'),
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: _PanelAction.workspaces,
+                          child: Text(context.workspaceTr('Staged workspaces')),
+                        ),
+                        if (_workspace != null)
+                          PopupMenuItem(
+                            value: _PanelAction.review,
+                            child: Text(context.workspaceTr('Review uploads')),
+                          ),
+                      ],
                       PopupMenuItem(
                         value: _PanelAction.copy,
                         enabled: _canCopy,
@@ -808,6 +977,7 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
 
   @override
   void dispose() {
+    _connectionRequest++;
     _focus.removeListener(_onInputFocusChanged);
     _controller.removeListener(_scheduleMenuUpdate);
     _session.removeListener(_onSessionChanged);

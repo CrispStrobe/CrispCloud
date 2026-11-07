@@ -1,0 +1,350 @@
+--- a/ios_system.m
++++ b/ios_system.m
+@@ -405,6 +405,7 @@
+     struct _functionParameters *ownedNext;
+     pthread_t ownedThread;
+     bool ownedRunning, commandStarted, storeMainThread;
++    bool interruptCancelled, ownerRoot;
+ } functionParameters;
+ 
+ static pthread_mutex_t commandSignalMutex = PTHREAD_MUTEX_INITIALIZER;
+@@ -434,6 +435,9 @@
+     FILE *streams[3];
+     unsigned active;
+     bool cancelled;
++    bool interrupting;
++    pthread_t interruptRoot;
++    pthread_t rootThread;
+     functionParameters *commands;
+     pthread_cond_t idle;
+     struct ownedStreams *next;
+@@ -453,6 +457,9 @@
+     entry->streams[2] = error;
+     entry->active = 0;
+     entry->cancelled = false;
++    entry->interrupting = false;
++    entry->interruptRoot = NULL;
++    entry->rootThread = NULL;
+     entry->commands = NULL;
+     pthread_mutex_lock(&ownedStreamsMutex);
+     entry->next = registeredStreams;
+@@ -501,6 +508,8 @@
+     }
+     parameters->ownedStreams = found;
+     parameters->ownedRunning = false;
++    parameters->ownerRoot = found && currentOwnedStreams == NULL;
++    parameters->interruptCancelled = found && found->interrupting;
+     parameters->commandStarted = false;
+     parameters->ownedThread = NULL;
+     parameters->ownedNext = NULL;
+@@ -548,10 +557,59 @@
+     return error;
+ }
+ 
++// CrispCloud: interrupt the foreground shell without delivering a process signal.
++// The interactive Dash checks the pending flag at safe parser/evaluator boundaries.
++// Descendants are cancelled and joined by the existing owned-stream cleanup.
++pthread_t crisp_wait_owned_root(void *registration) {
++    ownedStreams *entry = registration;
++    if (!entry) return NULL;
++    pthread_mutex_lock(&ownedStreamsMutex);
++    while (entry->active && !entry->rootThread)
++        pthread_cond_wait(&entry->idle, &ownedStreamsMutex);
++    pthread_t root = entry->rootThread;
++    pthread_mutex_unlock(&ownedStreamsMutex);
++    return root;
++}
++
++int crisp_interrupt_owned_streams(void *registration, pthread_t root) {
++    ownedStreams *entry = registration;
++    if (!entry || !root) return EINVAL;
++    pthread_mutex_lock(&ownedStreamsMutex);
++    entry->interrupting = true;
++    entry->interruptRoot = root;
++    for (functionParameters *command = entry->commands; command; command = command->ownedNext) {
++        if (command->ownedThread && pthread_equal(command->ownedThread, root)) continue;
++        command->interruptCancelled = true;
++        if (command->ownedRunning) pthread_cancel(command->ownedThread);
++    }
++    pthread_mutex_unlock(&ownedStreamsMutex);
++    return 0;
++}
++
++int crisp_take_shell_interrupt(void) {
++    int pending = 0;
++    pthread_mutex_lock(&ownedStreamsMutex);
++    ownedStreams *entry = currentOwnedStreams;
++    if (entry && entry->interrupting && pthread_equal(entry->interruptRoot, pthread_self())) {
++        // Do not longjmp across a live pipeline: its descendants must finish
++        // their existing cleanup before Dash unwinds redirects and parser state.
++        bool descendants = false;
++        for (functionParameters *command = entry->commands; command; command = command->ownedNext)
++            if (!command->ownedThread || !pthread_equal(command->ownedThread, pthread_self()))
++                descendants = true;
++        if (!descendants) {
++            entry->interrupting = false;
++            pending = 1;
++        }
++    }
++    pthread_mutex_unlock(&ownedStreamsMutex);
++    return pending;
++}
++
+ static bool ownedCommandCancelled(functionParameters *parameters) {
+     pthread_mutex_lock(&ownedStreamsMutex);
+     ownedStreams *entry = parameters->ownedStreams;
+-    bool cancelled = entry && entry->cancelled;
++    bool cancelled = entry && (entry->cancelled || parameters->interruptCancelled);
+     pthread_mutex_unlock(&ownedStreamsMutex);
+     return cancelled;
+ }
+@@ -895,6 +953,13 @@
+     currentWebAssemblyCommandOrder = p->webAssemblyOrder;
+     p->commandStarted = true;
+     currentOwnedStreams = p->ownedStreams;
++    pthread_mutex_lock(&ownedStreamsMutex);
++    p->ownedThread = pthread_self();
++    if (currentOwnedStreams && p->ownerRoot) {
++        currentOwnedStreams->rootThread = pthread_self();
++        pthread_cond_broadcast(&currentOwnedStreams->idle);
++    }
++    pthread_mutex_unlock(&ownedStreamsMutex);
+     NSLog(@"Storing thread_id: %x pid: %d isPipeOut: %x isPipeErr: %x stdin %d stdout %d stderr %d command= %s\n", pthread_self(), ios_currentPid(), p->isPipeOut, p->isPipeErr,
+           (p->stdin == nil) ? -1 : fileno(p->stdin),
+           (p->stdout == nil) ? -1 : fileno(p->stdout),
+@@ -922,9 +987,8 @@
+         if (currentSession != nil) currentSession->activePager = TRUE;
+     }
+ 
+-    signal(SIGSEGV, crash_handler);
+-    signal(SIGBUS, crash_handler);
+-    signal(SIGPIPE, crash_handler);
++    // CrispCloud keeps the host application crash and signal handlers intact.
++    // Its terminal sockets and pipeline descriptors suppress SIGPIPE locally.
+ 
+     // Because some commands change argv, keep a local copy for release.
+     p->argv_ref = (char **)malloc(sizeof(char*) * (p->argc + 1));
+@@ -965,7 +1029,7 @@
+     @try
+     {
+         pthread_mutex_lock(&ownedStreamsMutex);
+-        bool cancelled = currentOwnedStreams && currentOwnedStreams->cancelled;
++        bool cancelled = currentOwnedStreams && (currentOwnedStreams->cancelled || p->interruptCancelled);
+         p->ownedThread = pthread_self();
+         p->ownedRunning = !cancelled;
+         pthread_mutex_unlock(&ownedStreamsMutex);
+@@ -993,6 +1057,7 @@
+ static NSString* miniRoot = nil; // limit operations to below a certain directory (~, usually).
+ static NSArray<NSString*> *allowedPaths = nil;
+ static NSDictionary *commandList = nil;
++void crisp_set_command_list(NSDictionary *commands) { commandList = [commands copy]; }
+ NSArray *backgroundCommandList = nil;
+ // do recompute directoriesInPath only if $PATH has changed
+ static NSString* fullCommandPath = @"";
+@@ -2593,7 +2658,13 @@
+     if (sessionList == nil) return;
+     id sessionKey = @((NSUInteger)sessionId);
+     @synchronized(sessionList) {
++        sessionParameters *removed = (sessionParameters *)[[sessionList objectForKey:sessionKey] pointerValue];
+         [sessionList removeObjectForKey: sessionKey];
++        if (removed) {
++            for (int i = 0; i < removed->numCommandsAllocated; i++) free(removed->commandName[i]);
++            free(removed->commandName);
++            free(removed);
++        }
+     }
+     currentSession = NULL;
+ }
+@@ -2830,7 +2901,7 @@
+     NSDictionary* newCommandList = [NSPropertyListSerialization propertyListWithData:dataLoadedFromFile options:NSPropertyListImmutable format:NULL error:&error];
+     if (!newCommandList) return error;
+     // merge the two dictionaries:
+-    NSMutableDictionary *mutableDict = [commandList mutableCopy];
++    NSMutableDictionary *mutableDict = [commandList mutableCopy] ?: [NSMutableDictionary new];
+     [mutableDict addEntriesFromDictionary:newCommandList];
+     commandList = [mutableDict copy];
+     return NULL;
+@@ -3834,27 +3905,11 @@
+         int (*function)(int ac, char** av) = NULL;
+         if (commandList == nil) initializeCommandList();
+         NSString* commandName = [NSString stringWithCString:argv[0] encoding:NSUTF8StringEncoding];
++        // CrispCloud always uses the real Dash parser, including sh -c.
+         if ([commandName isEqualToString:@"sh"]) {
+-            // if it's sh -c commands (or sh -c command1 || command2), we continue using our own sh_main
+-            // (for continuity: keep our known bugs, rather than break things).
+-            // otherwise we use dash_main:
+-            bool cflag = false;
+-            // Technically, "-c" should be the first argument of sh, so no need to scan through all arguments
+-            // But we're being extra careful.
+-            for (int i = 1; i < argc; i++) {
+-                if (argv[i][0] == '-') {
+-                    if (strlen(argv[i]) == 1) continue;
+-                    if (strchr(argv[i], 'c') != NULL) {
+-                        cflag = true;
+-                        break;
+-                    }
+-                } else break;
+-            }
+-            if (!cflag) { // We need to know it's dash, not sh.
+-                commandName = @"dash";
+-                argv[0] = realloc(argv[0], 5);
+-                strcpy(argv[0], "dash");
+-            }
++            commandName = @"dash";
++            argv[0] = realloc(argv[0], 5);
++            strcpy(argv[0], "dash");
+         }
+         //
+         NSArray* commandStructure = [commandList objectForKey: commandName];
+--- a/ios_system.xcodeproj/project.pbxproj
++++ b/ios_system.xcodeproj/project.pbxproj
+@@ -3907,69 +3907,35 @@
+ 			buildActionMask = 2147483647;
+ 			files = (
+ 				2224F2A32C22D94E00E0BA40 /* b64.c in Sources */,
+-				226AAB5F249135D900492AFD /* edit.c in Sources */,
+-				226AAB782491360D00492AFD /* optfunc.c in Sources */,
+-				226AAB922491363800492AFD /* ttyin.c in Sources */,
+-				226AAB7F2491361700492AFD /* opttbl.c in Sources */,
+-				226AAB53249135C300492AFD /* ch.c in Sources */,
+ 				2282650C2067F19F002F9671 /* cmp.c in Sources */,
+ 				228265052067F184002F9671 /* utils.c in Sources */,
+-				226AAB972491392600492AFD /* line.c in Sources */,
+-				226AAB56249135CB00492AFD /* cmdbuf.c in Sources */,
+ 				228265032067F17A002F9671 /* zopen.c in Sources */,
+ 				228264F92067F15C002F9671 /* print.c in Sources */,
+-				226AAB51249135C300492AFD /* charset.c in Sources */,
+-				226AAB792491360D00492AFD /* option.c in Sources */,
+ 				228265122067F1B8002F9671 /* rm.c in Sources */,
+ 				228265142067F1BF002F9671 /* stat.c in Sources */,
+-				226AAB57249135CB00492AFD /* command.c in Sources */,
+-				226AAB952491363F00492AFD /* version.c in Sources */,
+-				226AAB52249135C300492AFD /* brac.c in Sources */,
+-				226AAB802491361700492AFD /* os.c in Sources */,
+-				226AAB902491363800492AFD /* screen.c in Sources */,
+ 				228264F22067F151002F9671 /* chmod.c in Sources */,
+-				226AAB6B249135F100492AFD /* lessecho.c in Sources */,
+ 				228264F62067F15C002F9671 /* crc.c in Sources */,
+ 				2282650A2067F193002F9671 /* gzip.c in Sources */,
+ 				228265102067F1AF002F9671 /* mkdir.c in Sources */,
+-				226AAB67249135E100492AFD /* input.c in Sources */,
+-				226AAB5B249135D200492AFD /* decode.c in Sources */,
+ 				228264F12067F14B002F9671 /* chflags.c in Sources */,
+-				226AAB932491363800492AFD /* search.c in Sources */,
+-				226AAB60249135D900492AFD /* forwback.c in Sources */,
+-				226AAB69249135E800492AFD /* jump.c in Sources */,
+ 				228265132067F1BB002F9671 /* rmdir.c in Sources */,
+ 				228264F42067F156002F9671 /* chown.c in Sources */,
+-				226AAB65249135E100492AFD /* ifile.c in Sources */,
+ 				228264FA2067F15C002F9671 /* sum1.c in Sources */,
+ 				2282650D2067F1A3002F9671 /* ls.c in Sources */,
+ 				228264F52067F15C002F9671 /* cksum.c in Sources */,
+-				226AAB812491361700492AFD /* pattern.c in Sources */,
+-				226AAB66249135E100492AFD /* help.c in Sources */,
+ 				228265042067F180002F9671 /* cp.c in Sources */,
+ 				228265022067F17A002F9671 /* compress.c in Sources */,
+-				226AAB5A249135D200492AFD /* cvt.c in Sources */,
+ 				228265092067F193002F9671 /* futimens.c in Sources */,
+ 				228265112067F1B4002F9671 /* mv.c in Sources */,
+ 				228265152067F1C3002F9671 /* touch.c in Sources */,
+-				226AAB6F249135F900492AFD /* linenum.c in Sources */,
+ 				228264F72067F15C002F9671 /* crc32.c in Sources */,
+ 				228264FB2067F15C002F9671 /* sum2.c in Sources */,
+ 				228264F32067F151002F9671 /* chmod_acl.c in Sources */,
+-				226AAB8E2491363800492AFD /* signal.c in Sources */,
+-				226AAB8F2491363800492AFD /* tags.c in Sources */,
+ 				228265082067F18D002F9671 /* du.c in Sources */,
+-				226AAB73249135FF00492AFD /* mark.c in Sources */,
+ 				228264F02067F143002F9671 /* humanize_number.c in Sources */,
+-				226AAB71249135F900492AFD /* main.c in Sources */,
+-				226AAB832491361F00492AFD /* position.c in Sources */,
+ 				2282650F2067F1AA002F9671 /* util.c in Sources */,
+ 				228265062067F189002F9671 /* df.c in Sources */,
+-				226AAB70249135F900492AFD /* lsystem.c in Sources */,
+-				226AAB7E2491361700492AFD /* output.c in Sources */,
+-				226AAB61249135D900492AFD /* filename.c in Sources */,
+ 				2282650E2067F1A6002F9671 /* print.c in Sources */,
+-				226AAB852491362800492AFD /* prompt.c in Sources */,
+ 				228265072067F189002F9671 /* vfslist.c in Sources */,
+ 				2282650B2067F19B002F9671 /* ln.c in Sources */,
+ 			);
+@@ -3979,59 +3945,41 @@
+ 			isa = PBXSourcesBuildPhase;
+ 			buildActionMask = 2147483647;
+ 			files = (
+-				225E4F302C569AB400D5E1A9 /* m3_api_wasi.c in Sources */,
+ 				22C505872098ADD800FDDFA9 /* ls.c in Sources */,
+ 				227633AC29B0A61B00DBF1C6 /* util.c in Sources */,
+ 				222CC4DC218CBF2300D3A11C /* strnsubst.c in Sources */,
+ 				22F6A11E2068395B00E618F9 /* fmt.c in Sources */,
+-				225E4F292C569AB400D5E1A9 /* m3_bind.c in Sources */,
+ 				22F6A1212068395B00E618F9 /* w.c in Sources */,
+ 				227633A229B0A60500DBF1C6 /* gfmt.c in Sources */,
+ 				227633A829B0A60E00DBF1C6 /* print.c in Sources */,
+ 				22C505882098ADD800FDDFA9 /* misc.c in Sources */,
+-				225E4F2C2C569AB400D5E1A9 /* m3_module.c in Sources */,
+-				225E4F282C569AB400D5E1A9 /* m3_exec.c in Sources */,
+-				225E4F332C569AB400D5E1A9 /* m3_api_libc.c in Sources */,
+ 				227633A729B0A60E00DBF1C6 /* key.c in Sources */,
+-				225E4F2E2C569AB400D5E1A9 /* m3_env.c in Sources */,
+-				225E4F2B2C569AB400D5E1A9 /* m3_function.c in Sources */,
+ 				227633A029B0A5FE00DBF1C6 /* cchar.c in Sources */,
+ 				22F6A11A2068394B00E618F9 /* id.c in Sources */,
+-				22D0BD3E297A7CE2006907FC /* jsc.swift in Sources */,
+ 				22C5058A2098ADD800FDDFA9 /* function.c in Sources */,
+ 				22F6A11F2068395B00E618F9 /* pr_time.c in Sources */,
+ 				22C5058B2098ADD800FDDFA9 /* operator.c in Sources */,
+-				225E4F152C56989C00D5E1A9 /* wasm3.c in Sources */,
+ 				224DF7532B7956FF00F13C58 /* basename.c in Sources */,
+ 				22C5058C2098ADD800FDDFA9 /* main.c in Sources */,
+ 				22F6A1202068395B00E618F9 /* proc_compare.c in Sources */,
+ 				22480B9F2DE739F200BF9F3F /* realpath.c in Sources */,
+-				225E4F252C569AB400D5E1A9 /* m3_compile.c in Sources */,
+ 				224DF7512B7945E600F13C58 /* dirname.c in Sources */,
+ 				22F6A11B2068394E00E618F9 /* printenv.c in Sources */,
+-				224B48F4279491FE00D310A8 /* source.swift in Sources */,
+ 				22F6A1152068393E00E618F9 /* echo.c in Sources */,
+ 				22F6A11C2068395200E618F9 /* pwd.c in Sources */,
+ 				227633A629B0A60E00DBF1C6 /* modes.c in Sources */,
+ 				22C505862098ADD800FDDFA9 /* find.c in Sources */,
+-				225E4F262C569AB400D5E1A9 /* m3_parse.c in Sources */,
+ 				227633AA29B0A61500DBF1C6 /* stty.c in Sources */,
+-				225E4F2F2C569AB400D5E1A9 /* m3_core.c in Sources */,
+-				225E4F2A2C569AB400D5E1A9 /* m3_info.c in Sources */,
+-				225E4F312C569AB400D5E1A9 /* m3_api_meta_wasi.c in Sources */,
+ 				22F6A1172068394200E618F9 /* vary.c in Sources */,
+ 				22C505852098ADD800FDDFA9 /* y.tab.c in Sources */,
+-				225E4F2D2C569AB400D5E1A9 /* m3_code.c in Sources */,
+ 				22F6A1182068394700E618F9 /* env.c in Sources */,
+ 				22F6A1162068394200E618F9 /* date.c in Sources */,
+-				225E4F272C569AB400D5E1A9 /* m3_api_tracer.c in Sources */,
+ 				22F6A1142068393900E618F9 /* tee.c in Sources */,
+ 				22D99CC325AB5C83007F56C9 /* sleep.c in Sources */,
+ 				22F6A11D2068395600E618F9 /* uname.c in Sources */,
+ 				222CC4DF218CBF2900D3A11C /* xargs.c in Sources */,
+ 				22F6A1192068394700E618F9 /* envopts.c in Sources */,
+ 				22C505892098ADD800FDDFA9 /* option.c in Sources */,
+-				225E4F322C569AB400D5E1A9 /* m3_api_uvwasi.c in Sources */,
+ 			);
+ 			runOnlyForDeploymentPostprocessing = 0;
+ 		};
+--- a/awk-awk-35/src/run.c
++++ b/awk-awk-35/src/run.c
+@@ -266,6 +266,7 @@
+ 	if (u == NULL)
+ 		return(True);
+ 	for (a = u; ; a = a->nnext) {
++        pthread_testcancel(); // CrispCloud: bounded cancellation of builtin AWK loops.
+ 		curnode = a;
+ 		if (isvalue(a)) {
+ 			x = (Cell *) (a->narg[0]);
+--- a/text_cmds/sed/process.c
++++ b/text_cmds/sed/process.c
+@@ -104,6 +104,7 @@
+ 		cp = prog;
+ redirect:
+ 		while (cp != NULL) {
++            pthread_testcancel(); // CrispCloud: interrupt branches which never read another line.
+ 			if (!applies(cp)) {
+ 				cp = cp->next;
+ 				continue;

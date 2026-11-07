@@ -40,6 +40,11 @@ dependencies:
   # Pin reviewed releases; see docs/terminal.md for license provenance.
   xterm2: 5.4.0
   flutter_pty2: 3.0.0
+  # Native iOS folder grants and the in-process ios_system + Dash runtime.
+  crisp_ios_files:
+    path: packages/crisp_ios_files
+  crisp_ios_shell:
+    path: packages/crisp_ios_shell
 
   # Web specific
   universal_html: ^2.2.4

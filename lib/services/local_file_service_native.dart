@@ -6,6 +6,8 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+import 'package:crisp_ios_files/crisp_ios_files.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -15,6 +17,7 @@ import 'package:macos_secure_bookmarks/macos_secure_bookmarks.dart';
 import '../models/file_item.dart';
 import 'bookmark_service.dart';
 import 'local_file_service.dart';
+import 'ios_file_listing.dart';
 import 'macos_bookmark_service.dart';
 import '../utils/path_access.dart';
 
@@ -744,7 +747,25 @@ class DesktopFileService
 
 // --- Mobile (Android/iOS) Implementation ---
 class MobileFileService
-    implements LocalFileService, LocalFileSaveReporter, LocalMediaFileAccess {
+    implements
+        LocalFileService,
+        LocalFileSaveReporter,
+        LocalMediaFileAccess,
+        ScopedLocalFileOperations {
+  MobileFileService({
+    IosFilesClient? iosFiles,
+    bool? isIOS,
+    Future<Directory> Function()? documentsDirectory,
+  }) : _isIOS = isIOS ?? Platform.isIOS,
+       _iosFiles = iosFiles ?? IosFilesClient(),
+       _documentsDirectory =
+           documentsDirectory ?? getApplicationDocumentsDirectory;
+
+  final bool _isIOS;
+  final IosFilesClient _iosFiles;
+  final Future<Directory> Function() _documentsDirectory;
+  final List<IosAccessLease> _streamLeases = [];
+  int _streamUsers = 0;
   String? _grantedBasePath;
   static const String _mobileBookmarkKey = 'mobile_bookmark_data';
   final _bookmarks = SecureBookmarks();
@@ -783,6 +804,18 @@ class MobileFileService
 
   @override
   Future<String> getInitialPath() async {
+    if (_isIOS) {
+      String? restored;
+      try {
+        restored = await _iosFiles.restoreLastDirectory();
+      } catch (error) {
+        debugPrint('Could not restore iOS folder access: $error');
+      }
+      final path = restored ?? (await _documentsDirectory()).path;
+      _grantedBasePath = path;
+      currentPath = path;
+      return path;
+    }
     if (await _loadAndResolveBookmark()) {
       try {
         if (await _resolvedBookmarkFile!.exists()) {
@@ -801,7 +834,7 @@ class MobileFileService
       }
     }
 
-    final dir = await getApplicationDocumentsDirectory();
+    final dir = await _documentsDirectory();
     _grantedBasePath = dir.path;
     currentPath = dir.path;
     return dir.path;
@@ -809,6 +842,16 @@ class MobileFileService
 
   @override
   Future<String?> requestDirectoryAccess({String? initialDirectory}) async {
+    if (_isIOS) {
+      final path = await _iosFiles.pickDirectory(
+        initialDirectory: initialDirectory,
+      );
+      if (path != null) {
+        _grantedBasePath = path;
+        currentPath = path;
+      }
+      return path;
+    }
     final path = await FilePicker.platform.getDirectoryPath(
       dialogTitle: 'Select a Folder',
       initialDirectory: initialDirectory,
@@ -831,6 +874,14 @@ class MobileFileService
 
   @override
   Future<List<FileSystemEntity>?> listDirectory(String path) async {
+    if (_isIOS) {
+      final entries = await _iosOperation(
+        path,
+        () => _iosFiles.listDirectory(path),
+      );
+      currentPath = normalizeIosFilePath(path);
+      return entries.map(iosListingEntity).toList(growable: false);
+    }
     currentPath = path;
 
     if (_resolvedBookmarkFile == null) await _loadAndResolveBookmark();
@@ -867,6 +918,7 @@ class MobileFileService
 
   @override
   Future<Uint8List> readFile(String path, {FileItem? fileItem}) async {
+    if (_isIOS) return _iosOperation(path, () => _iosFiles.readFile(path));
     if (_resolvedBookmarkFile == null) await _loadAndResolveBookmark();
 
     if (_resolvedBookmarkFile != null &&
@@ -895,6 +947,9 @@ class MobileFileService
 
   @override
   Future<void> saveFile(String path, Uint8List data) async {
+    if (_isIOS) {
+      return _iosOperation(path, () => _iosFiles.writeFile(path, data));
+    }
     if (_resolvedBookmarkFile == null) await _loadAndResolveBookmark();
 
     if (_resolvedBookmarkFile != null &&
@@ -904,8 +959,9 @@ class MobileFileService
           _resolvedBookmarkFile!,
         );
         final file = File(path);
-        if (!await file.parent.exists())
+        if (!await file.parent.exists()) {
           await file.parent.create(recursive: true);
+        }
         await file.writeAsBytes(data);
         await _bookmarks.stopAccessingSecurityScopedResource(
           _resolvedBookmarkFile!,
@@ -931,6 +987,13 @@ class MobileFileService
     Uint8List data, {
     bool overwrite = true,
   }) async {
+    if (_isIOS) {
+      await _iosOperation(
+        path,
+        () => _iosFiles.writeFile(path, data, overwrite: overwrite),
+      );
+      return LocalFileSaveResult.written;
+    }
     if (_resolvedBookmarkFile == null) await _loadAndResolveBookmark();
     final scope = _resolvedBookmarkFile;
     final activeScope = scope != null && isSameOrUnderPath(path, scope.path)
@@ -959,6 +1022,16 @@ class MobileFileService
     Future<T> Function(String accessiblePath) operation, {
     bool forWrite = false,
   }) async {
+    if (_isIOS) {
+      final normalized = normalizeIosFilePath(path);
+      final accessPath = forWrite ? p.posix.dirname(normalized) : normalized;
+      return _withIosAccess(accessPath, (accessible) {
+        final output = forWrite
+            ? p.posix.join(accessible, p.posix.basename(normalized))
+            : accessible;
+        return operation(output);
+      });
+    }
     if (_resolvedBookmarkFile == null) await _loadAndResolveBookmark();
     final scope = _resolvedBookmarkFile;
     final accessRoot = forWrite ? p.dirname(path) : path;
@@ -985,9 +1058,17 @@ class MobileFileService
 
   @override
   Future<bool> hasAccessToPath(String path) async {
+    if (_isIOS) {
+      try {
+        return await _iosFiles.hasAccess(path);
+      } catch (_) {
+        return false;
+      }
+    }
     if (path.startsWith(currentPath)) return true;
-    if (_grantedBasePath != null && path.startsWith(_grantedBasePath!))
+    if (_grantedBasePath != null && path.startsWith(_grantedBasePath!)) {
       return true;
+    }
     try {
       await Directory(path).stat();
       return true;
@@ -998,11 +1079,20 @@ class MobileFileService
 
   @override
   Future<void> createDirectory(String path) async {
+    if (_isIOS) {
+      return _iosOperation(path, () => _iosFiles.createDirectory(path));
+    }
     await Directory(path).create(recursive: true);
   }
 
   @override
   Future<void> deleteEntry(String path, bool isFolder) async {
+    if (_isIOS) {
+      return _iosOperation(
+        path,
+        () => _iosFiles.deleteEntry(path, isFolder: isFolder),
+      );
+    }
     if (isFolder) {
       await Directory(path).delete(recursive: true);
     } else {
@@ -1012,7 +1102,7 @@ class MobileFileService
 
   @override
   Future<String> getSafeFallbackDirectory() async {
-    return (await getApplicationDocumentsDirectory()).path;
+    return (await _documentsDirectory()).path;
   }
 
   @override
@@ -1020,20 +1110,121 @@ class MobileFileService
     String path, {
     bool includeHidden = false,
     int maxItems = 10000,
-  }) => walkLocalFiles(path, includeHidden: includeHidden, maxItems: maxItems);
+  }) async {
+    if (_isIOS) {
+      final entries = await _iosOperation(
+        path,
+        () => _iosFiles.walkFiles(
+          path,
+          includeHidden: includeHidden,
+          maxItems: maxItems,
+        ),
+      );
+      return entries
+          .map(
+            (entry) => FileItem(
+              name: p.posix.basename(entry.path),
+              path: entry.path,
+              isFolder: false,
+              size: entry.size,
+              updatedAt: entry.modifiedAt,
+            ),
+          )
+          .toList(growable: false);
+    }
+    return walkLocalFiles(
+      path,
+      includeHidden: includeHidden,
+      maxItems: maxItems,
+    );
+  }
 
   @override
-  Future<bool> ensureAccess(String path) async => true;
+  Future<T> withFileOperationAccess<T>(
+    String path,
+    Future<T> Function() action,
+  ) async {
+    if (!_isIOS) return action();
+    return _withIosAccess(path, (_) => action());
+  }
 
   @override
-  Future<bool> beginStreamAccess(String path) async => true;
+  Future<bool> ensureAccess(String path) async =>
+      _isIOS ? hasAccessToPath(path) : true;
 
   @override
-  Future<void> endStreamAccess() async {}
+  Future<bool> beginStreamAccess(String path) async {
+    if (!_isIOS) return true;
+    try {
+      final lease = await _iosFiles.acquireAccess(path);
+      _streamLeases.add(lease);
+      _streamUsers += 1;
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  @override
+  Future<void> endStreamAccess() async {
+    if (!_isIOS || _streamUsers == 0) return;
+    _streamUsers -= 1;
+    if (_streamUsers > 0) return;
+    // The legacy stream API has no caller token. Retain all overlapping scopes
+    // until its last consumer ends, regardless of the consumers' finish order.
+    final leases = List<IosAccessLease>.of(_streamLeases);
+    _streamLeases.clear();
+    for (final lease in leases) {
+      await _releaseIosLease(lease);
+    }
+  }
+
+  Future<T> _withIosAccess<T>(
+    String path,
+    Future<T> Function(String accessiblePath) action,
+  ) async {
+    final lease = await _iosOperation(
+      path,
+      () => _iosFiles.acquireAccess(path),
+    );
+    try {
+      return await action(lease.path);
+    } finally {
+      await _releaseIosLease(lease);
+    }
+  }
+
+  Future<void> _releaseIosLease(IosAccessLease lease) async {
+    try {
+      await lease.release();
+    } catch (_) {
+      try {
+        await lease.release();
+      } catch (error) {
+        debugPrint('Could not release iOS operation access: $error');
+      }
+    }
+  }
+
+  Future<T> _iosOperation<T>(String path, Future<T> Function() action) async {
+    try {
+      return await action();
+    } on PlatformException catch (error) {
+      if (error.code == 'access_denied') {
+        throw PathAccessException(
+          path,
+          const OSError('Permission denied', 13),
+          error.message ?? '',
+        );
+      }
+      throw FileSystemException(error.message ?? error.code, path);
+    }
+  }
 
   @override
   Future<int?> fileLength(String path) async {
     try {
+      if (_isIOS) return await _iosFiles.fileLength(path);
       return await File(path).length();
     } catch (_) {
       return null;

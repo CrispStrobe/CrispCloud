@@ -200,6 +200,20 @@ packages:
       relative: true
     source: path
     version: "0.1.0"
+  crisp_ios_files:
+    dependency: "direct main"
+    description:
+      path: "packages/crisp_ios_files"
+      relative: true
+    source: path
+    version: "0.1.0"
+  crisp_ios_shell:
+    dependency: "direct main"
+    description:
+      path: "packages/crisp_ios_shell"
+      relative: true
+    source: path
+    version: "0.1.0"
   crisp_storage:
     dependency: "direct main"
     description:

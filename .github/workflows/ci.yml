@@ -71,6 +71,11 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: iOS plugin Dart contracts
+        run: |
+          (cd packages/crisp_ios_files && flutter pub get && flutter analyze && flutter test --coverage)
+          (cd packages/crisp_ios_shell && flutter pub get && flutter analyze && flutter test --coverage)
+
       - name: Resolve vendored package development dependencies
         run: |
           (cd packages/quds_office_engine && dart pub get)
@@ -498,10 +503,22 @@ jobs:
           path: crispcloud-macos-release.zip
           retention-days: 14
 
+  ios-terminal-native:
+    name: iOS folder and embedded shell tests
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - name: Native folder-grant and coordinated-access unit tests
+        run: swift test --package-path packages/crisp_ios_files/ios/ScopeCore
+      - name: Pinned shell source preparation
+        run: python3 packages/crisp_ios_shell/tool/prepare.py
+      - name: Real ios_system and Dash simulator tests
+        run: bash packages/crisp_ios_shell/tool/test_native.sh
+
   build-ios:
     name: Build iOS (no-codesign)
     runs-on: macos-latest
-    continue-on-error: true  # macOS runners scarce on free tier
     timeout-minutes: 40
     needs: analyze
 
@@ -533,6 +550,17 @@ jobs:
 
       - name: Build iOS (no code sign)
         run: flutter build ios --release --no-codesign
+
+      - name: Verify embedded shell framework loading
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess
+          apps = list(Path('build/ios/iphoneos').glob('*.app'))
+          if len(apps) != 1:
+              raise SystemExit(f'Expected one iOS app, found {len(apps)}')
+          subprocess.run(['python3', 'packages/crisp_ios_shell/tool/check_packaging.py', str(apps[0])], check=True)
+          PY
 
       - name: Archive .app for later signing
         run: |
