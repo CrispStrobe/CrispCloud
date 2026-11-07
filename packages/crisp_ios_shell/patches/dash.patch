@@ -135,3 +135,22 @@
  int main(int, char **);
  
  /*
+--- a/src/exec.c
++++ b/src/exec.c
+@@ -493,6 +493,16 @@
+ 	/* We failed.  If there was an entry for this command, delete it */
+ 	if (cmdp && updatetbl)
+ 		delete_cmd_entry();
++#if TARGET_OS_IPHONE
++	// Signed framework commands have no executable file in PATH on a device.
++	// Keep Dash functions, builtins and explicit paths ahead of this registry
++	// fallback; membership does not grant execution to an arbitrary binary.
++	if (ios_executable(name)) {
++		entry->cmdtype = CMDNORMAL;
++		entry->u.index = -1;
++		return;
++	}
++#endif
+ 	if (act & DO_ERR)
+ #if TARGET_OS_IPHONE
+ 		// Don't write "not found" errors yet.

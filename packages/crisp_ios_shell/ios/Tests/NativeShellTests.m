@@ -8,10 +8,12 @@
 #import <stdio.h>
 #import <stdlib.h>
 #import <string.h>
+#import <dlfcn.h>
 #import <unistd.h>
 
 static NSURL *CommandsURL, *FrameworksURL;
 static NSString *TestDirectory;
+static NSString *EmptyCommandPath;
 static NSUInteger Checks;
 static volatile sig_atomic_t WindowSignals;
 static dispatch_semaphore_t LeaseProbeEntered, LeaseProbeCleanup, LeaseProbeContinue;
@@ -246,6 +248,13 @@ static void TestRealShell(void) {
   Send(session, @"v='kept'; f(){ printf '%s\\n' \"$1\"; }; for x in 1 2; do f \"$x\"; done; if [ \"$v\" = kept ]; then printf 'YES\\n'; fi; printf '__SYNTAX__\\n'\n");
   NSString *output = TextThrough(session, @"__SYNTAX__\n");
   Has(output, @"1\n2\nYES\n", @"Dash language");
+  Send(session, [NSString stringWithFormat:@"PATH='%@'; command -v cat; printf 'bundled-without-host-files\\n' | cat; cat(){ printf 'shell-function-first\\n'; }; cat; unset -f cat; type pwd; command -v crisp-unregistered-command >/dev/null; printf 'unknown:%%s\\n' \"$?\"; printf '__REGISTRY__\\n'\n", EmptyCommandPath]);
+  output = TextThrough(session, @"__REGISTRY__\n");
+  Has(output, @"cat\n", @"Registry commands are discoverable without a host executable in PATH");
+  Has(output, @"bundled-without-host-files\n", @"Bundled utility executes with an empty PATH directory");
+  Has(output, @"shell-function-first\n", @"Shell function takes precedence over the native registry");
+  Has(output, @"pwd is a shell builtin", @"Shell builtin takes precedence over the native registry");
+  Has(output, @"unknown:127", @"Unregistered names do not become native executables");
   Send(session, @"mkdir 'nested space 漢字'; cd 'nested space 漢字'; printf 'alpha\\nbeta\\n' > 'hello world.txt'; cat 'hello world.txt' | grep beta | tr 'a-z' 'A-Z'; pwd; printf '__PIPE__\\n'\n");
   output = TextThrough(session, @"__PIPE__\n");
   Has(output, @"BETA\n", @"Native pipeline");
@@ -266,6 +275,8 @@ static void TestRealShell(void) {
   Require([@"#!/bin/sh\nprintf 'script:%s\\n' \"$1\"\n" writeToFile:script atomically:YES encoding:NSUTF8StringEncoding error:nil], @"Create test script");
   Send(session, @"sh './script space.sh' 'argument Ω'; printf '__SCRIPT__\\n'\n");
   Has(TextThrough(session, @"__SCRIPT__\n"), @"script:argument Ω", @"Script path and argument quoting");
+  Send(session, @"chmod +x './script space.sh'; './script space.sh' 'direct Ω'; printf '__DIRECT_SCRIPT__\\n'\n");
+  Has(TextThrough(session, @"__DIRECT_SCRIPT__\n"), @"script:direct Ω", @"Explicit script path bypasses command registry lookup");
   NSError *error;
   struct sigaction originalWindowAction, windowAction = {0};
   windowAction.sa_handler = WindowSignal;
@@ -379,6 +390,8 @@ static id Call(CISShellBridge *bridge, NSString *method, NSDictionary *arguments
 }
 
 static void TestLeaseDuringDetach(void) {
+  Require(dlsym(RTLD_MAIN_ONLY, "CISLeaseProbeMain") == (void *)&CISLeaseProbeMain,
+      @"Test-only native lease probe is exported from the executable");
   atomic_int releases = 0;
   atomic_int *counter = &releases;
   LeaseProbeEntered = dispatch_semaphore_create(0);
@@ -400,7 +413,8 @@ static void TestLeaseDuringDetach(void) {
   NSDictionary *args = @{@"sessionId":identifier};
   Call(bridge, @"read", args, nil);
   Call(bridge, @"write", @{@"sessionId":identifier,
-      @"data":[@"crisp-lease-probe\n" dataUsingEncoding:NSUTF8StringEncoding]}, nil);
+      @"data":[[NSString stringWithFormat:@"PATH='%@'; crisp-lease-probe\n", EmptyCommandPath]
+          dataUsingEncoding:NSUTF8StringEncoding]}, nil);
   Wait(LeaseProbeEntered, @"native lease probe command");
   Require(atomic_load(counter) == 0, @"Native command owns folder access while running");
   [bridge shutdown];
@@ -537,6 +551,9 @@ int main(int argc, char **argv) {
     TestDirectory = [NSTemporaryDirectory() stringByAppendingPathComponent:[@"Crisp shell Ω " stringByAppendingString:NSUUID.UUID.UUIDString]];
     NSError *error;
     Require([NSFileManager.defaultManager createDirectoryAtPath:TestDirectory withIntermediateDirectories:YES attributes:nil error:&error], @"Create test working directory");
+    EmptyCommandPath = [TestDirectory stringByAppendingPathComponent:@"empty command search path"];
+    Require([NSFileManager.defaultManager createDirectoryAtPath:EmptyCommandPath withIntermediateDirectories:NO attributes:nil error:&error],
+        @"Create empty PATH directory so simulator host utilities cannot satisfy command lookup");
     for (size_t i = 0; i < caseCount; i++) {
       if (selected && strcmp(selected, NativeCases[i].name) != 0) continue;
       fprintf(stdout, "BEGIN: native case %s\n", NativeCases[i].name);

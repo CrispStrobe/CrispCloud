@@ -62,15 +62,21 @@ binary compatibility or the ability to install arbitrary native executables.
   its framework paths to the signed app's Frameworks directory.
 - Use Dash for `sh -c` as well as interactive `sh`; bypass the upstream minimal
   sh command parser.
+- Resolve manifest commands even when no corresponding executable exists in
+  PATH. Dash functions/builtins retain precedence, explicit script paths retain
+  their normal handling, and unregistered names gain no execution capability.
 - Export the embedded Dash entry point as `dash_main`; verify every curated
   command's export in every device and simulator architecture before packaging.
 - Borrow input/output/error streams under ios_system's owned-stream leases and
   wait for all descendants to clean up before closing them.
 - Preserve the host application's crash handlers instead of installing the
   upstream command crash handlers process-wide.
-- Cooperatively interrupt the interactive root at safe parser/evaluator
+- Cooperatively handle Ctrl-C on the interactive root at safe parser/evaluator
   boundaries, after its cancelled descendants have drained. No SIGINT is sent
   to Flutter and no arbitrary thread is forcefully terminated.
+- On whole-session cancellation, unlock the PID notification mutex before the
+  parent shell's cancellation handler waits for child cleanup. Closing still
+  retains stream ownership and folder access until every descendant has exited.
 - Add cancellation points to AWK evaluation and sed's branch loop.
 - Suppress SIGPIPE on each native pipe descriptor so an early/cancelled reader
   cannot deliver a process signal to the Flutter host.
@@ -104,6 +110,11 @@ native writes independently of Dart listeners, retaining a bounded tail and
 reporting truncation if necessary. Backgrounding or detaching the plugin cancels
 the session; this is not a persistent background shell service. Ctrl-D closes the
 input stream permanently, unlike transient terminal VEOF on a real PTY.
+
+Ctrl-C preserves the interactive shell and its variables. Closing, backgrounding,
+or detaching ends the whole owned command tree with deferred pthread cancellation;
+the root shell's cleanup handlers wait for its children before any borrowed
+streams or folder grants are released. These are different lifecycle operations.
 
 ## Build and verification
 

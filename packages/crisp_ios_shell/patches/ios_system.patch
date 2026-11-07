@@ -358,6 +358,32 @@
  int ios_fflush(FILE *stream) {
      if (stream == NULL) return 0;
      if (thread_stdout == NULL) thread_stdout = stdout;
+@@ -190,6 +206,10 @@
+ static _Atomic int command_status[IOS_MAX_THREADS];
+ static pthread_mutex_t thread_completion_mutex = PTHREAD_MUTEX_INITIALIZER;
+ static pthread_cond_t thread_completed = PTHREAD_COND_INITIALIZER;
++
++static void crisp_unlock_wait_mutex(void *mutex) {
++    pthread_mutex_unlock((pthread_mutex_t *)mutex);
++}
+ 
+ static void notify_thread_completion(void) {
+     pthread_mutex_lock(&thread_completion_mutex);
+@@ -706,9 +726,13 @@
+     // Include the allocated-but-not-started (-1) state and recheck under the
+     // notification mutex to avoid losing an exit between the check and wait.
+     pthread_mutex_lock(&thread_completion_mutex);
++    // Cancellation reacquires this mutex before running cleanup handlers. Drop
++    // it before Dash's outer handler re-waits for its child, whose completion
++    // notification also needs the mutex. Child/stream ownership is unchanged.
++    pthread_cleanup_push(crisp_unlock_wait_mutex, &thread_completion_mutex);
+     while (atomic_load(&thread_ids[pid]) != 0)
+         pthread_cond_wait(&thread_completed, &thread_completion_mutex);
+-    pthread_mutex_unlock(&thread_completion_mutex);
++    pthread_cleanup_pop(1);
+     // fprintf(stderr, "Returning from ios_waitpid for %d \n", pid);
+     return;
+ }
 --- a/ios_system.xcodeproj/project.pbxproj
 +++ b/ios_system.xcodeproj/project.pbxproj
 @@ -3907,69 +3907,35 @@
