@@ -25,9 +25,14 @@ enum _KeychainChoice { login, existing, newKeychain }
 /// user chooses a working backend instead of being auto-dropped into a keychain
 /// failure.
 class CredentialStorageSetupScreen extends StatelessWidget {
-  const CredentialStorageSetupScreen({super.key, required this.onComplete});
+  const CredentialStorageSetupScreen({
+    super.key,
+    required this.onComplete,
+    this.recovery = false,
+  });
 
   final ValueChanged<CredentialStorageSetupResult> onComplete;
+  final bool recovery;
 
   @override
   Widget build(BuildContext context) {
@@ -51,6 +56,7 @@ class CredentialStorageSetupScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(24),
                   child: CredentialStorageSetupPanel(
                     firstRun: true,
+                    recovery: recovery,
                     onComplete: onComplete,
                   ),
                 ),
@@ -95,12 +101,14 @@ class CredentialStorageSetupPanel extends StatefulWidget {
     super.key,
     required this.onComplete,
     this.firstRun = false,
+    this.recovery = false,
     this.initialMode = CredentialStorageMode.systemKeychain,
     this.initialKeychainPath,
   });
 
   final ValueChanged<CredentialStorageSetupResult> onComplete;
   final bool firstRun;
+  final bool recovery;
   final CredentialStorageMode initialMode;
   final String? initialKeychainPath;
 
@@ -207,7 +215,9 @@ class _CredentialStorageSetupPanelState
         }
         final password = _masterPassword.text;
         if (password.length < 8) {
-          throw const FormatException('Use at least 8 characters for the master password.');
+          throw const FormatException(
+            'Use at least 8 characters for the master password.',
+          );
         }
         if (password != _masterConfirmation.text) {
           throw const FormatException('Master passwords do not match.');
@@ -296,7 +306,9 @@ class _CredentialStorageSetupPanelState
       if (mounted) {
         setState(() {
           _busy = false;
-          _error = _text(error.toString().replaceFirst('FormatException: ', ''));
+          _error = _text(
+            error.toString().replaceFirst('FormatException: ', ''),
+          );
         });
       }
     }
@@ -334,6 +346,22 @@ class _CredentialStorageSetupPanelState
           ),
           style: theme.textTheme.bodyMedium,
         ),
+        if (widget.recovery) ...[
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.errorContainer,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              _text(
+                'The previous credential store is unavailable. If it contained an App Lock, that lock cannot be verified until the original store is restored. Only choose another store if you accept that.',
+              ),
+              style: TextStyle(color: theme.colorScheme.onErrorContainer),
+            ),
+          ),
+        ],
         const SizedBox(height: 20),
         _modeTile(
           CredentialStorageMode.systemKeychain,
@@ -400,9 +428,11 @@ class _CredentialStorageSetupPanelState
       title: Text(_text(title)),
       subtitle: Text(_text(subtitle)),
       secondary: Icon(icon),
-      onChanged: _busy ? null : (selected) {
-        if (selected != null) setState(() => _mode = selected);
-      },
+      onChanged: _busy
+          ? null
+          : (selected) {
+              if (selected != null) setState(() => _mode = selected);
+            },
     );
   }
 
@@ -418,8 +448,11 @@ class _CredentialStorageSetupPanelState
               value: _KeychainChoice.login,
               groupValue: _keychainChoice,
               title: Text(_text('System keychain')),
-              onChanged: _busy ? null : (value) =>
-                  setState(() => _keychainChoice = value ?? _keychainChoice),
+              onChanged: _busy
+                  ? null
+                  : (value) => setState(
+                      () => _keychainChoice = value ?? _keychainChoice,
+                    ),
             ),
             for (final keychain in _keychains)
               ListTile(
@@ -438,10 +471,12 @@ class _CredentialStorageSetupPanelState
                         _existingPath.text == keychain.path
                     ? const Icon(Icons.check)
                     : null,
-                onTap: _busy ? null : () => setState(() {
-                  _keychainChoice = _KeychainChoice.existing;
-                  _existingPath.text = keychain.path;
-                }),
+                onTap: _busy
+                    ? null
+                    : () => setState(() {
+                        _keychainChoice = _KeychainChoice.existing;
+                        _existingPath.text = keychain.path;
+                      }),
               ),
             ListTile(
               leading: const Icon(Icons.folder_open),
@@ -458,8 +493,11 @@ class _CredentialStorageSetupPanelState
               value: _KeychainChoice.newKeychain,
               groupValue: _keychainChoice,
               title: Text(_text('Create a new keychain…')),
-              onChanged: _busy ? null : (value) =>
-                  setState(() => _keychainChoice = value ?? _keychainChoice),
+              onChanged: _busy
+                  ? null
+                  : (value) => setState(
+                      () => _keychainChoice = value ?? _keychainChoice,
+                    ),
             ),
             if (_keychainChoice == _KeychainChoice.existing &&
                 _existingPath.text.isNotEmpty)

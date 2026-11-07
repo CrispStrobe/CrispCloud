@@ -31,7 +31,10 @@ class FilenClientAdapter extends CloudStorageClient
   FilenClientAdapter({required FilenConfigService config})
     : filenConfig = config,
       _client = FilenClient(
-        config: ConfigService(configPath: config.configPath),
+        config: ConfigService(
+          configPath: config.configPath,
+          storage: config.sdkStorage,
+        ),
       );
 
   @visibleForTesting
@@ -209,7 +212,14 @@ class FilenClientAdapter extends CloudStorageClient
   Future<void> logout() async {
     _client.apiKey = '';
     _client.masterKeys = [];
+    _client.baseFolderUUID = '';
     await filenConfig.clearCredentials();
+    try {
+      await _client.config.clearCredentials();
+    } catch (_) {
+      // The secure adapter is the same store; the explicit app clear above is
+      // authoritative if the SDK cleanup fails.
+    }
   }
 
   @override

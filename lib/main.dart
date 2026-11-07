@@ -71,11 +71,13 @@ class StartupFailureApp extends StatelessWidget {
     required this.error,
     this.locale,
     this.onRetry,
+    this.onChangeStorage,
   });
 
   final Object error;
   final Locale? locale;
   final VoidCallback? onRetry;
+  final VoidCallback? onChangeStorage;
 
   @override
   Widget build(BuildContext context) => MaterialApp(
@@ -102,6 +104,20 @@ class StartupFailureApp extends StatelessWidget {
                     child: Text(AppLocalizations.of(context)!.retry),
                   ),
                 ],
+                if (onChangeStorage != null) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    'If the saved keychain no longer exists, you can choose '
+                    'another credential store. An existing App Lock in the old '
+                    'store cannot be verified until that store is restored.',
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  OutlinedButton(
+                    onPressed: onChangeStorage,
+                    child: const Text('Change credential storage'),
+                  ),
+                ],
               ],
             ),
           ),
@@ -125,11 +141,11 @@ Future<void> main() async {
       WidgetsFlutterBinding.ensureInitialized();
       // First-install evidence must precede all startup preference/log/cache
       // writes. An interrupted storage choice has not exposed a profile yet.
-      final firstSetup = !kIsWeb &&
+      final firstSetup =
+          !kIsWeb &&
           await CredentialStorageFirstSetup.capture(
-            profileIsEmpty: (preferences) => nativeCredentialProfileIsEmpty(
-              setupPreferences: preferences,
-            ),
+            profileIsEmpty: (preferences) =>
+                nativeCredentialProfileIsEmpty(setupPreferences: preferences),
           );
       final nativeStorage = kIsWeb
           ? null
@@ -349,13 +365,18 @@ Future<CredentialStorageBootstrapResult> _initializeNativeSecureStorage({
   );
   CredentialStorageSetupResult? pendingSelection;
   var showFirstSetup = false;
+  var recoveryRequested = false;
   while (true) {
     CredentialStorageMode? attemptedMode;
     try {
       final configured = await CredentialStorageConfig.readSelection();
-      if (allowFirstSetup && (showFirstSetup || configured.mode == null)) {
-        pendingSelection ??= await _runFirstRunCredentialSetup();
+      if (recoveryRequested ||
+          (allowFirstSetup && (showFirstSetup || configured.mode == null))) {
+        pendingSelection ??= await _runFirstRunCredentialSetup(
+          recovery: recoveryRequested,
+        );
         showFirstSetup = false;
+        recoveryRequested = false;
       }
       final selection = pendingSelection;
       if (selection != null) {
@@ -369,7 +390,8 @@ Future<CredentialStorageBootstrapResult> _initializeNativeSecureStorage({
         firstVaultPassword = selection.masterPassword;
         pendingSelection = null;
       }
-      final mode = selection?.mode ??
+      final mode =
+          selection?.mode ??
           configured.mode ??
           CredentialStorageMode.systemKeychain;
       attemptedMode = mode;
@@ -393,26 +415,48 @@ Future<CredentialStorageBootstrapResult> _initializeNativeSecureStorage({
         showFirstSetup = true;
         continue;
       }
+      if (error is CredentialStorageUnavailable) {
+        final action = Completer<bool>();
+        runApp(
+          StartupFailureApp(
+            error: const CredentialStorageUnavailable(),
+            onRetry: () {
+              if (!action.isCompleted) action.complete(false);
+            },
+            onChangeStorage: () {
+              if (!action.isCompleted) action.complete(true);
+            },
+          ),
+        );
+        if (await action.future) {
+          // Explicit recovery. The warning explains that an App Lock stored in
+          // the inaccessible backend cannot be verified until it is restored.
+          recoveryRequested = true;
+          continue;
+        }
+        continue;
+      }
       final retry = Completer<void>();
       runApp(
         StartupFailureApp(
-          error: const CredentialStorageUnavailable(),
+          error: error,
           onRetry: () {
             if (!retry.isCompleted) retry.complete();
           },
         ),
       );
-      // Retry the same configured store. Offering a different empty backend
-      // here could bypass an app lock held in the inaccessible store.
       await retry.future;
     }
   }
 }
 
-Future<CredentialStorageSetupResult> _runFirstRunCredentialSetup() {
+Future<CredentialStorageSetupResult> _runFirstRunCredentialSetup({
+  bool recovery = false,
+}) {
   final completer = Completer<CredentialStorageSetupResult>();
   runApp(
     CredentialStorageSetupScreen(
+      recovery: recovery,
       onComplete: (result) {
         if (!completer.isCompleted) completer.complete(result);
       },
@@ -568,7 +612,8 @@ final appLockServiceProvider = Provider<AppLockService>((ref) {
         final activePath = activeStore is MacOsCustomKeychainStorage
             ? activeStore.path
             : null;
-        if ((configured.mode ?? CredentialStorageMode.systemKeychain) != activeMode ||
+        if ((configured.mode ?? CredentialStorageMode.systemKeychain) !=
+                activeMode ||
             (Platform.isMacOS &&
                 activeMode == CredentialStorageMode.systemKeychain &&
                 configured.customKeychainPath != activePath)) {
@@ -744,9 +789,8 @@ class _CredentialGateFailure extends StatelessWidget {
             const Icon(Icons.lock_outline, size: 48),
             const SizedBox(height: 16),
             Text(
-              WebVaultStrings(context).failure(
-                const CredentialStorageUnavailable(),
-              ),
+              WebVaultStrings(context)
+                  .failure(const CredentialStorageUnavailable()),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),

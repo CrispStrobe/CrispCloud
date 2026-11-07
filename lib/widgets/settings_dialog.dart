@@ -602,11 +602,14 @@ class _CredentialStorageSettingsSectionState
       CredentialStorageConfig.readSelection();
   bool _busy = false;
 
-  String _label(SettingsStrings s, CredentialStorageMode mode) => switch (mode) {
-    CredentialStorageMode.systemKeychain => s.text('System keychain'),
-    CredentialStorageMode.encryptedFile => s.text('Encrypted file (master password)'),
-    CredentialStorageMode.sessionOnly => s.text('This session only'),
-  };
+  String _label(SettingsStrings s, CredentialStorageMode mode) =>
+      switch (mode) {
+        CredentialStorageMode.systemKeychain => s.text('System keychain'),
+        CredentialStorageMode.encryptedFile => s.text(
+          'Encrypted file (master password)',
+        ),
+        CredentialStorageMode.sessionOnly => s.text('This session only'),
+      };
 
   String? get _activeKeychainPath {
     final storage = ref.read(secureStorageProvider);
@@ -626,9 +629,12 @@ class _CredentialStorageSettingsSectionState
     final s = SettingsStrings(context);
     final active = ref.watch(credentialStorageModeProvider);
     final pending = ref.watch(credentialStoragePendingModeProvider);
-    final changedKeychain = ref.watch(credentialStorageKeychainRestartRequiredProvider);
+    final changedKeychain = ref.watch(
+      credentialStorageKeychainRestartRequiredProvider,
+    );
     final activePath = active == CredentialStorageMode.systemKeychain
-        ? _activeKeychainPath : null;
+        ? _activeKeychainPath
+        : null;
     return FutureBuilder<CredentialStorageSelection>(
       future: _selection,
       builder: (context, snapshot) => _Section(
@@ -639,23 +645,38 @@ class _CredentialStorageSettingsSectionState
             key: const ValueKey('settings-credential-storage'),
             leading: const Icon(Icons.lock_outline),
             title: Text(s.text('Credential storage')),
-            subtitle: Text([
-              s.text('Current session: {mode}').replaceAll('{mode}', _label(s, active)),
-              if (activePath != null) activePath,
-              if (active == CredentialStorageMode.sessionOnly)
-                s.text('Credentials are forgotten when CrispCloud exits.'),
-              if (pending != null || changedKeychain) ...[
-                s.text('After restart: {mode}').replaceAll('{mode}', _label(s, pending ?? active)),
-                if ((pending ?? active) == CredentialStorageMode.systemKeychain &&
-                    snapshot.data?.customKeychainPath != null)
-                  snapshot.data!.customKeychainPath!,
-                s.text('The current session keeps using its original storage until restart.'),
-              ],
-              if (snapshot.hasError)
-                s.text('Could not read credential-storage settings. Try again.'),
-            ].join('\n')),
+            subtitle: Text(
+              [
+                s
+                    .text('Current session: {mode}')
+                    .replaceAll('{mode}', _label(s, active)),
+                if (activePath != null) activePath,
+                if (active == CredentialStorageMode.sessionOnly)
+                  s.text('Credentials are forgotten when CrispCloud exits.'),
+                if (pending != null || changedKeychain) ...[
+                  s
+                      .text('After restart: {mode}')
+                      .replaceAll('{mode}', _label(s, pending ?? active)),
+                  if ((pending ?? active) ==
+                          CredentialStorageMode.systemKeychain &&
+                      snapshot.data?.customKeychainPath != null)
+                    snapshot.data!.customKeychainPath!,
+                  s.text(
+                    'The current session keeps using its original storage until restart.',
+                  ),
+                ],
+                if (snapshot.hasError)
+                  s.text(
+                    'Could not read credential-storage settings. Try again.',
+                  ),
+              ].join('\n'),
+            ),
             trailing: _busy
-                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
                 : const Icon(Icons.chevron_right),
             onTap: _busy ? null : _change,
           ),
@@ -670,12 +691,17 @@ class _CredentialStorageSettingsSectionState
     try {
       final lock = AppLockService(ref.read(secureStorageProvider));
       if (await lock.isEnabled()) {
-        _notice('Disable App Lock before changing credential storage, then enable it again after restarting.');
+        _notice(
+          'Disable App Lock before changing credential storage, then enable it again after restarting.',
+        );
         return;
       }
       final previous = await CredentialStorageConfig.readSelection();
       if (!mounted) return;
       final active = ref.read(credentialStorageModeProvider);
+      // The modal blocks interaction; do not leave an indeterminate progress
+      // animation running behind it (and in widget tests).
+      setState(() => _busy = false);
       final result = await showCredentialStorageSetupDialog(
         context,
         initialMode: previous.mode ?? active,
@@ -685,11 +711,14 @@ class _CredentialStorageSettingsSectionState
       // Recheck after the dialog: another action may have enabled the lock.
       // A read failure is an error, never permission to use another store.
       if (await lock.isEnabled()) {
-        _notice('Disable App Lock before changing credential storage, then enable it again after restarting.');
+        _notice(
+          'Disable App Lock before changing credential storage, then enable it again after restarting.',
+        );
         return;
       }
       final path = result.mode == CredentialStorageMode.systemKeychain
-          ? result.keychainPath : previous.customKeychainPath;
+          ? result.keychainPath
+          : previous.customKeychainPath;
       await CredentialStorageConfig.writeSelection(
         mode: result.mode,
         customKeychainPath: path,
@@ -697,13 +726,19 @@ class _CredentialStorageSettingsSectionState
       if (!mounted) return;
       ref.read(credentialStoragePendingModeProvider.notifier).state =
           result.mode == active ? null : result.mode;
-      ref.read(credentialStorageKeychainRestartRequiredProvider.notifier).state =
+      ref
+              .read(credentialStorageKeychainRestartRequiredProvider.notifier)
+              .state =
           result.mode == CredentialStorageMode.systemKeychain &&
           path != _activeKeychainPath;
       setState(() => _selection = CredentialStorageConfig.readSelection());
-      _notice('Restart CrispCloud to apply. Existing credentials stay in their original store; sign in again if needed.');
+      _notice(
+        'Restart CrispCloud to apply. Existing credentials stay in their original store; sign in again if needed.',
+      );
     } catch (_) {
-      _notice('Could not verify App Lock or save credential-storage settings. Your active storage is unchanged. Try again.');
+      _notice(
+        'Could not verify App Lock or save credential-storage settings. Your active storage is unchanged. Try again.',
+      );
     } finally {
       if (mounted) setState(() => _busy = false);
     }

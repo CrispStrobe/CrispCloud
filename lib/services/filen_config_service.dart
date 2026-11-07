@@ -1,6 +1,11 @@
 // services/filen_config_service.dart
 import 'dart:convert';
+import 'dart:io';
+
+import 'package:filen_client/config_storage.dart';
+import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
+
 import 'log_service.dart';
 import 'secure_storage_service.dart';
 
@@ -20,8 +25,15 @@ class FilenConfigService {
   final String configPath;
   final SecureStorage _secure;
 
-  FilenConfigService({required this.configPath, required SecureStorage secureStorage})
-      : _secure = secureStorage;
+  FilenConfigService({
+    required this.configPath,
+    required SecureStorage secureStorage,
+  }) : _secure = secureStorage;
+
+  /// The SDK's ConfigService can use the same host secure store instead of
+  /// writing its legacy plaintext credentials file.
+  ConfigStorage get sdkStorage =>
+      _FilenSecureConfigStorage(_secure, configPath);
 
   // --- Credential operations (secure storage) ---
 
@@ -43,6 +55,7 @@ class FilenConfigService {
   Future<void> saveCredentials(Map<String, String> credentials) async {
     try {
       await _secure.writeMap('filen_credentials', credentials);
+      await _deleteLegacyCredentialsFile();
       // Credentials saved (do not log sensitive data)
     } catch (e) {
       _log.error('Error saving credentials', e);
@@ -72,6 +85,7 @@ class FilenConfigService {
       if (await _secure.read('filen_credentials') != null) {
         throw const FilenCredentialDeletionFailure();
       }
+      await _deleteLegacyCredentialsFile();
       _log.debug('Cleared credentials');
     } catch (_) {
       _log.warn('Saved Filen credentials could not be removed.');
@@ -79,15 +93,32 @@ class FilenConfigService {
     }
   }
 
+  Future<void> _deleteLegacyCredentialsFile() async {
+    try {
+      final legacy = File(p.join(configPath, 'credentials.json'));
+      if (await legacy.exists()) await legacy.delete();
+    } catch (_) {
+      // The secure entry is authoritative; a leftover legacy file is removed
+      // again on the next successful login/logout.
+    }
+  }
+
   // --- Non-credential operations (SharedPreferences) ---
 
-  String generateBatchId(String operation, List<String> sources, String target) {
+  String generateBatchId(
+    String operation,
+    List<String> sources,
+    String target,
+  ) {
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final hash = sources.join('|').hashCode;
     return 'filen_${operation}_${timestamp}_$hash';
   }
 
-  Future<void> saveBatchState(String batchId, Map<String, dynamic> state) async {
+  Future<void> saveBatchState(
+    String batchId,
+    Map<String, dynamic> state,
+  ) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final stateJson = json.encode(state);
@@ -152,5 +183,43 @@ class FilenConfigService {
       _log.warn('Error getting provider preference', e);
       return null;
     }
+  }
+}
+
+/// Adapts the Filen SDK's legacy ConfigStorage interface to the host secure
+/// store. The SDK never sees the plaintext credentials file.
+class _FilenSecureConfigStorage implements ConfigStorage {
+  _FilenSecureConfigStorage(this._secure, this._configPath);
+  final SecureStorage _secure;
+  final String _configPath;
+
+  Future<void> _deleteLegacy() async {
+    try {
+      final legacy = File(p.join(_configPath, 'credentials.json'));
+      if (await legacy.exists()) await legacy.delete();
+    } catch (_) {
+      // Retried on the next save/logout.
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>?> readCredentials() async {
+    final stored = await _secure.readMap('filen_credentials');
+    return stored?.cast<String, dynamic>();
+  }
+
+  @override
+  Future<void> saveCredentials(Map<String, dynamic> data) async {
+    await _secure.writeMap(
+      'filen_credentials',
+      data.map((key, value) => MapEntry(key, value.toString())),
+    );
+    await _deleteLegacy();
+  }
+
+  @override
+  Future<void> clearCredentials() async {
+    await _secure.delete('filen_credentials');
+    await _deleteLegacy();
   }
 }

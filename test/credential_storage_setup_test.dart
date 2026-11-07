@@ -164,5 +164,6 @@ void main() {
     expect(result?.keychainPath, isNull);
     expect(customCalls, ['listKeychains']);
     expect(values, isEmpty, reason: 'The availability probe must clean up its record.');
+    debugDefaultTargetPlatformOverride = null;
   });
 }
