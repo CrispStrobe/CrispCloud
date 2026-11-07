@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/services/file_collection_storage.dart';
-import 'package:crisp_cloud/services/file_operation_service.dart';
 import 'package:crisp_cloud/services/storage_scan_backend.dart';
 import 'package:crisp_cloud/services/storage_scan_service.dart';
 import 'package:crisp_cloud/services/storage_scan_snapshot_store.dart';
@@ -71,7 +70,7 @@ class _PendingScan extends StorageScanService {
 
   @override
   Future<StorageScanResult> scan(
-    FileOperationBackend source,
+    StorageScanSource source,
     String rootPath, {
     bool Function()? isCancelled,
     void Function(StorageScanProgress)? onProgress,

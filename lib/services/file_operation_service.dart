@@ -12,13 +12,15 @@ import 'duplicate_name_template.dart';
 import 'file_selection_pattern.dart';
 import 'storage_transfer_contract.dart';
 import 'stream_rate_limiter.dart';
+import 'storage_scan_source.dart';
 
 export 'file_operation_options.dart';
 
 /// Storage adapter whose identity and authentication are captured before work.
 /// [stat] and [list] must propagate access/network errors, never report them as
 /// missing files. writeFile must not delete an existing destination on failure.
-abstract class FileOperationBackend {
+abstract class FileOperationBackend implements StorageScanSource {
+  @override
   Object get identity;
   String? get persistentStorageId => null;
   StorageReference? get storageReference => null;
@@ -29,25 +31,33 @@ abstract class FileOperationBackend {
   StorageTransferCapabilities get capabilities =>
       const StorageTransferCapabilities();
   String get label;
+  @override
   p.Context get paths;
+  @override
   String pathKey(String path) => paths.normalize(path);
 
   /// Collision comparison may be more conservative than source identity.
   /// Never use this key to discard case-distinct selected source items.
   String destinationPathKey(String path) => pathKey(path);
+  @override
   bool samePath(String first, String second) =>
       pathKey(first) == pathKey(second);
+  @override
   bool isWithin(String parent, String child) =>
       paths.isWithin(pathKey(parent), pathKey(child));
+  @override
   bool get isCurrent;
   bool get supportsModifiedTime => false;
+  @override
   bool get supportsSymbolicLinks => false;
 
   /// Listing-backed metadata can share fresh directory snapshots during
   /// preview. Execution always calls [stat] again without that cache.
   bool get statRequiresDirectoryListing => false;
   bool isRootPath(String path) => paths.dirname(path) == path;
+  @override
   Future<FileItem?> stat(String path);
+  @override
   Future<List<FileItem>> list(String path);
   Future<void> createDirectory(String path);
   Stream<List<int>> readFile(FileItem file);

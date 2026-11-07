@@ -53,7 +53,10 @@ FileOperationBackend storageScanBackend({
 }
 
 class _LocalStorageScanBackend extends LocalOperationBackend
-    implements StorageScanDirectoryReader {
+    implements
+        StorageScanDirectoryReader,
+        StorageScanDirectoryGuard,
+        StorageScanSessionFactory {
   _LocalStorageScanBackend(
     super.service, {
     required super.isCurrent,
@@ -65,6 +68,23 @@ class _LocalStorageScanBackend extends LocalOperationBackend
   // A read-only census must not use conservative destination collision keys.
   @override
   String pathKey(String path) => paths.normalize(path);
+
+  @override
+  bool get verifiesStorageScanDirectoryType => !kIsWeb;
+
+  @override
+  Future<StorageScanSession?> openStorageScanSession() async {
+    if (kIsWeb) return null;
+    if (!isCurrent) throw StateError('The selected local folder changed.');
+    final worker = await NativeStorageScanWorker.start();
+    try {
+      if (!isCurrent) throw StateError('The selected local folder changed.');
+      return _LocalStorageScanSession(service, worker, () => isCurrent);
+    } catch (_) {
+      await worker.close();
+      rethrow;
+    }
+  }
 
   @override
   Future<StorageScanDirectory> listForStorageScan(String path) async {
@@ -98,6 +118,38 @@ class _LocalStorageScanBackend extends LocalOperationBackend
           : const [],
     );
   }
+}
+
+class _LocalStorageScanSession
+    implements StorageScanSession, StorageScanDirectoryGuard {
+  _LocalStorageScanSession(this._service, this._worker, this._isCurrent);
+
+  final LocalFileService _service;
+  final NativeStorageScanWorker _worker;
+  final bool Function() _isCurrent;
+
+  @override
+  bool get verifiesStorageScanDirectoryType => true;
+
+  void _check() {
+    if (!_isCurrent()) throw StateError('The selected local folder changed.');
+  }
+
+  @override
+  Future<StorageScanDirectory> listForStorageScan(String path) async {
+    _check();
+    final result = await _service.withFileOperationAccess(path, () async {
+      _check();
+      final listing = await _worker.readDirectory(path);
+      _check();
+      return listing;
+    });
+    _check();
+    return result;
+  }
+
+  @override
+  Future<void> close() => _worker.close();
 }
 
 /// A scan-specific cloud adapter retains incomplete pages as partial results.

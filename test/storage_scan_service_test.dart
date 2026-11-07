@@ -139,6 +139,214 @@ void main() {
     expect(source.listed, ['/data']);
   });
 
+  for (final guarded in [false, true]) {
+    test(
+      'only an explicitly guarded reader replaces descendant stat ($guarded)',
+      () async {
+        final source = _DirectoryReaderBackend({
+          '/data': [_folder('/data/sub')],
+          '/data/sub': [_file('/data/sub/file', 7)],
+        }, verifiesStorageScanDirectoryType: guarded);
+        final result = await scanner.scan(source, '/data');
+        expect(result.isComplete, isTrue);
+        expect(result.root.bytes, 7);
+        expect(source.inspected, guarded ? ['/data'] : ['/data', '/data/sub']);
+        expect(source.listed, ['/data', '/data/sub']);
+      },
+    );
+  }
+
+  for (final sessionGuarded in [false, true]) {
+    test(
+      'the chosen session owns the directory guard ($sessionGuarded)',
+      () async {
+        final directories = {
+          '/data': [_folder('/data/sub')],
+          '/data/sub': [_file('/data/sub/file', 7)],
+        };
+        final session = _TestScanSession(
+          directories,
+          verifiesStorageScanDirectoryType: sessionGuarded,
+        );
+        final source = _SessionBackend(
+          directories,
+          createSession: () async => session,
+          verifiesStorageScanDirectoryType: !sessionGuarded,
+        );
+        final result = await scanner.scan(source, '/data');
+        expect(result.isComplete, isTrue);
+        expect(result.root.bytes, 7);
+        expect(
+          source.inspected,
+          sessionGuarded ? ['/data'] : ['/data', '/data/sub'],
+        );
+        expect(source.listed, isEmpty);
+        expect(session.listed, ['/data', '/data/sub']);
+        expect(source.openCount, 1);
+        expect(session.closeCount, 1);
+      },
+    );
+  }
+
+  test('a null session falls back to the original reader', () async {
+    final source = _SessionBackend({
+      '/data': [_file('/data/file', 7)],
+    }, createSession: () async => null);
+    final result = await scanner.scan(source, '/data');
+    expect(result.isComplete, isTrue);
+    expect(result.root.bytes, 7);
+    expect(source.openCount, 1);
+    expect(source.listed, ['/data']);
+  });
+
+  for (final rootMissing in [false, true]) {
+    test(
+      'closes a session when ${rootMissing ? 'root stat' : 'listing'} fails',
+      () async {
+        final session = _TestScanSession({});
+        final source = _SessionBackend({
+          '/data': [],
+        }, createSession: () async => session);
+        if (rootMissing) source.statOverrides['/data'] = null;
+        final result = await scanner.scan(source, '/data');
+        expect(result.isComplete, isFalse);
+        expect(
+          result.issues.single.code,
+          rootMissing
+              ? StorageScanIssueCode.rootUnavailable
+              : StorageScanIssueCode.unreadableDirectory,
+        );
+        expect(session.closeCount, 1);
+      },
+    );
+  }
+
+  test(
+    'a close failure preserves collected metadata and marks it incomplete',
+    () async {
+      final directories = {
+        '/data': [_file('/data/file', 7)],
+      };
+      final session = _TestScanSession(directories)
+        ..onClose = () async => throw StateError('worker disconnected');
+      final source = _SessionBackend(
+        directories,
+        createSession: () async => session,
+      );
+      final result = await scanner.scan(source, '/data');
+      expect(result.root.bytes, 7);
+      expect(result.root.fileCount, 1);
+      expect(result.isComplete, isFalse);
+      expect(result.issues.single.code, StorageScanIssueCode.incompleteListing);
+      expect(session.closeCount, 1);
+    },
+  );
+
+  for (final disconnect in [false, true]) {
+    test(
+      'a ${disconnect ? 'source change' : 'cancellation'} during session close invalidates a small scan',
+      () async {
+        final entered = Completer<void>();
+        final release = Completer<void>();
+        final directories = {
+          '/data': [_file('/data/file', 7)],
+        };
+        final session = _TestScanSession(directories)
+          ..onClose = () async {
+            entered.complete();
+            await release.future;
+          };
+        final source = _SessionBackend(
+          directories,
+          createSession: () async => session,
+        );
+        var cancelled = false;
+        final running = scanner.scan(
+          source,
+          '/data',
+          isCancelled: () => cancelled,
+        );
+        await entered.future;
+        if (disconnect) {
+          source.storageIdentity = 'replacement';
+        } else {
+          cancelled = true;
+        }
+        release.complete();
+        final result = await running;
+        expect(result.root.bytes, 7);
+        expect(result.isComplete, isFalse);
+        expect(result.cancelled, !disconnect);
+        expect(result.sourceChanged, disconnect);
+        expect(session.closeCount, 1);
+      },
+    );
+  }
+
+  test('overlapping scans own independent sessions and discard late cancelled entries', () async {
+    final entered = Completer<void>();
+    final release = Completer<void>();
+    final directories = {
+      '/data': [_file('/data/file', 7)],
+    };
+    final first = _TestScanSession(directories)
+      ..onRead = (_) async {
+        entered.complete();
+        await release.future;
+      };
+    final second = _TestScanSession(directories);
+    var opened = 0;
+    final source = _SessionBackend(
+      directories,
+      createSession: () async => opened++ == 0 ? first : second,
+    );
+    var cancelled = false;
+    final oldScan = scanner.scan(source, '/data', isCancelled: () => cancelled);
+    await entered.future;
+    final newResult = await scanner.scan(source, '/data');
+    expect(newResult.isComplete, isTrue);
+    expect(newResult.root.bytes, 7);
+    expect(second.closeCount, 1);
+    expect(first.closeCount, 0);
+    cancelled = true;
+    release.complete();
+    final oldResult = await oldScan;
+    expect(oldResult.cancelled, isTrue);
+    expect(oldResult.root.children, isEmpty);
+    expect(first.closeCount, 1);
+    expect(second.closeCount, 1);
+  });
+
+  for (final readable in [false, true]) {
+    test(
+      'event-loop cancellation interrupts a ${readable ? 'cached' : 'denied'} directory-only tree',
+      () async {
+        final source = _DirectoryReaderBackend({
+          '/data': [for (var i = 0; i < 200; i++) _folder('/data/dir-$i')],
+          if (readable)
+            for (var i = 0; i < 200; i++) '/data/dir-$i': [],
+        }, verifiesStorageScanDirectoryType: true);
+        var cancelled = false;
+        var scheduled = false;
+        source.onList = (path) async {
+          if (path != '/data' && !scheduled) {
+            scheduled = true;
+            Timer.run(() => cancelled = true);
+          }
+        };
+        final result = await scanner.scan(
+          source,
+          '/data',
+          isCancelled: () => cancelled,
+        );
+        expect(result.cancelled, isTrue);
+        expect(result.isComplete, isFalse);
+        expect(source.listed.length, lessThanOrEqualTo(33));
+        expect(source.listed.length, greaterThanOrEqualTo(2));
+      },
+    );
+  }
+
   test('retains readable siblings when a directory is denied', () async {
     final source = _MetadataBackend({
       '/data': [_folder('/data/good'), _folder('/data/denied')],
@@ -365,12 +573,163 @@ void main() {
     expect(result.root.bytes, 3);
   });
 
+  test(
+    'canonical child validation preserves POSIX names and excludes path tricks',
+    () async {
+      final invalid = <FileItem>[
+        _file('/data-sibling/file', 999),
+        _file('/data//file', 999),
+        _file('/data/./file', 999),
+        _file('/data/a/../file', 999),
+        _file('/data/unlisted/file', 999),
+        FileItem(
+          name: 'different',
+          path: '/data/file',
+          isFolder: false,
+          size: 999,
+        ),
+        FileItem(
+          name: 'two/parts',
+          path: '/data/two/parts',
+          isFolder: false,
+          size: 999,
+        ),
+        FileItem(name: '.', path: '/data/.', isFolder: false, size: 999),
+        FileItem(name: '..', path: '/data/..', isFolder: false, size: 999),
+        FileItem(
+          name: 'nul\u0000',
+          path: '/data/nul\u0000',
+          isFolder: false,
+          size: 999,
+        ),
+        FileItem(name: 'missing', isFolder: false, size: 999),
+      ];
+      final source = _MetadataBackend({
+        '/data': [
+          _file('/data/日本語🪷.txt', 7),
+          _file(r'/data/literal\backslash', 3),
+          _file('/data/zero', 0),
+          ...invalid,
+        ],
+      });
+      final result = await scanner.scan(source, '/data/');
+      expect(result.root.bytes, 10);
+      expect(result.root.fileCount, 3);
+      expect(result.root.children.map((node) => node.name), [
+        '日本語🪷.txt',
+        r'literal\backslash',
+        'zero',
+      ]);
+      expect(result.issues, hasLength(invalid.length));
+      expect(
+        result.issues.every(
+          (issue) => issue.code == StorageScanIssueCode.invalidEntry,
+        ),
+        isTrue,
+      );
+    },
+  );
+
+  for (final root in [r'C:\', r'\\server\share']) {
+    test('canonical child validation supports Windows root $root', () async {
+      final paths = p.Context(style: p.Style.windows);
+      final file = paths.join(root, '日本語.txt');
+      final source = _MetadataBackend({
+        root: [
+          FileItem(name: '日本語.txt', path: file, isFolder: false, size: 11),
+        ],
+      }, paths: paths);
+      final result = await scanner.scan(source, root);
+      expect(result.isComplete, isTrue);
+      expect(result.root.bytes, 11);
+      expect(result.root.children.single.path, file);
+    });
+  }
+
+  test(
+    'Windows comparison aliases use backend rules and deduplicate aliases',
+    () async {
+      final source = _CaseInsensitiveMetadataBackend({
+        r'C:\Data': [
+          FileItem(
+            name: 'File',
+            path: r'c:\data\File',
+            isFolder: false,
+            size: 7,
+          ),
+          FileItem(
+            name: 'FILE',
+            path: r'C:\Data\FILE',
+            isFolder: false,
+            size: 700,
+          ),
+          FileItem(
+            name: 'escape',
+            path: r'C:\DataSibling\escape',
+            isFolder: false,
+            size: 700,
+          ),
+          FileItem(
+            name: r'two\parts',
+            path: r'C:\Data\two\parts',
+            isFolder: false,
+            size: 700,
+          ),
+          FileItem(
+            name: 'bad',
+            path: r'C:\Data\..\bad',
+            isFolder: false,
+            size: 700,
+          ),
+        ],
+      });
+      final result = await scanner.scan(source, r'C:\Data');
+      expect(result.root.bytes, 7);
+      expect(result.root.fileCount, 1);
+      expect(
+        result.issues.where(
+          (issue) => issue.code == StorageScanIssueCode.duplicateEntry,
+        ),
+        hasLength(1),
+      );
+      expect(
+        result.issues.where(
+          (issue) => issue.code == StorageScanIssueCode.invalidEntry,
+        ),
+        hasLength(3),
+      );
+    },
+  );
+
+  test('non-filesystem path styles keep the full backend validation', () async {
+    final source = _MetadataBackend({
+      'https://example.test/data': [
+        FileItem(
+          name: 'file',
+          path: 'https://example.test/data/file',
+          isFolder: false,
+          size: 7,
+        ),
+        FileItem(
+          name: 'file',
+          path: 'https://other.test/data/file',
+          isFolder: false,
+          size: 700,
+        ),
+      ],
+    }, paths: p.Context(style: p.Style.url));
+    final result = await scanner.scan(source, 'https://example.test/data');
+    expect(result.root.bytes, 7);
+    expect(result.root.fileCount, 1);
+    expect(result.issues.single.code, StorageScanIssueCode.invalidEntry);
+  });
+
   for (final disconnect in [false, true]) {
     test(
       'a late ${disconnect ? 'account change' : 'cancellation'} during aggregation invalidates the final snapshot',
       () async {
         final source = _MetadataBackend({
-          '/data': [for (var i = 0; i < 800; i++) _file('/data/file-$i', 1)],
+          '/data': [for (var i = 0; i < 2000; i++) _file('/data/file-$i', 1)],
         });
         var cancelled = false;
         var scheduled = false;
@@ -380,10 +739,10 @@ void main() {
           progressInterval: Duration.zero,
           isCancelled: () => cancelled,
           onProgress: (progress) {
-            if (progress.files != 800 || scheduled) return;
+            if (progress.files != 2000 || scheduled) return;
             scheduled = true;
-            // Allow traversal's final yield to finish first, then deliver the
-            // signal while a large tree is being converted to its final snapshot.
+            // Deliver the signal after two event-loop turns, while this large
+            // tree is being converted to its final snapshot.
             unawaited(
               Future<void>.delayed(Duration.zero, () async {
                 await Future<void>.delayed(Duration.zero);
@@ -396,8 +755,8 @@ void main() {
             );
           },
         );
-        expect(result.root.bytes, 800);
-        expect(result.root.fileCount, 800);
+        expect(result.root.bytes, 2000);
+        expect(result.root.fileCount, 2000);
         expect(result.isComplete, isFalse);
         expect(result.root.isComplete, isFalse);
         expect(result.cancelled, !disconnect);
@@ -804,6 +1163,80 @@ class _MetadataBackend extends FileOperationBackend {
     int? length, {
     required bool replace,
   }) async => _mutation();
+}
+
+class _DirectoryReaderBackend extends _MetadataBackend
+    implements StorageScanDirectoryReader, StorageScanDirectoryGuard {
+  _DirectoryReaderBackend(
+    super.directories, {
+    this.verifiesStorageScanDirectoryType = false,
+  });
+
+  @override
+  final bool verifiesStorageScanDirectoryType;
+
+  @override
+  Future<StorageScanDirectory> listForStorageScan(String path) async =>
+      StorageScanDirectory(entries: await list(path));
+}
+
+class _SessionBackend extends _DirectoryReaderBackend
+    implements StorageScanSessionFactory {
+  _SessionBackend(
+    super.directories, {
+    required this.createSession,
+    super.verifiesStorageScanDirectoryType,
+  });
+
+  final Future<StorageScanSession?> Function() createSession;
+  int openCount = 0;
+
+  @override
+  Future<StorageScanSession?> openStorageScanSession() {
+    openCount++;
+    return createSession();
+  }
+}
+
+class _TestScanSession
+    implements StorageScanSession, StorageScanDirectoryGuard {
+  _TestScanSession(
+    this.directories, {
+    this.verifiesStorageScanDirectoryType = false,
+  });
+
+  final Map<String, List<FileItem>> directories;
+  final listed = <String>[];
+  Future<void> Function(String)? onRead;
+  Future<void> Function()? onClose;
+  int closeCount = 0;
+
+  @override
+  final bool verifiesStorageScanDirectoryType;
+
+  @override
+  Future<StorageScanDirectory> listForStorageScan(String path) async {
+    if (closeCount > 0) throw StateError('Session is already closed.');
+    listed.add(path);
+    await onRead?.call(path);
+    final entries = directories[path];
+    if (entries == null) throw StateError('Permission denied: $path');
+    return StorageScanDirectory(entries: entries);
+  }
+
+  @override
+  Future<void> close() async {
+    closeCount++;
+    await onClose?.call();
+  }
+}
+
+class _CaseInsensitiveMetadataBackend extends _MetadataBackend {
+  _CaseInsensitiveMetadataBackend(super.directories)
+    : super(paths: p.Context(style: p.Style.windows));
+
+  @override
+  String pathKey(String path) => paths.normalize(path).toLowerCase();
 }
 
 class _CloudMetadataClient extends CloudStorageClient

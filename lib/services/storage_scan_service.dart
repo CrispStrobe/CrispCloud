@@ -1,10 +1,13 @@
 import 'dart:collection';
 
+import 'package:path/path.dart' as p;
+
 import '../models/file_item.dart';
 import '../models/storage_analysis.dart';
-import 'file_operation_service.dart';
+import 'storage_scan_source.dart';
 
 export '../models/storage_analysis.dart';
+export 'storage_scan_source.dart';
 
 /// Reads directory metadata only. Scans never download, hash, or mutate files.
 /// Results remain useful after cancellation and inaccessible subdirectories,
@@ -17,7 +20,7 @@ class StorageScanService {
   static const maxReportedBytes = 9007199254740991;
 
   Future<StorageScanResult> scan(
-    FileOperationBackend source,
+    StorageScanSource source,
     String rootPath, {
     bool Function()? isCancelled,
     void Function(StorageScanProgress)? onProgress,
@@ -57,6 +60,9 @@ class StorageScanService {
     var examined = 0;
     var currentPath = root;
     _NodeBuilder? activeDirectory;
+    StorageScanSession? session;
+    var directoriesSinceYield = 0;
+    var lastYieldMilliseconds = 0;
 
     void issue(StorageScanIssue value) {
       if (issues.length < maxIssues) {
@@ -98,6 +104,22 @@ class StorageScanService {
           !source.paths.isAbsolute(root)) {
         throw const _RootUnavailable('Use an absolute directory path.');
       }
+      if (source is StorageScanSessionFactory) {
+        try {
+          session = await (source as StorageScanSessionFactory)
+              .openStorageScanSession();
+        } catch (_) {
+          check();
+          rethrow;
+        }
+        check();
+      }
+      final reader = session ?? source;
+      final verifiesDirectoryType =
+          reader is StorageScanDirectoryReader &&
+          reader is StorageScanDirectoryGuard &&
+          (reader as StorageScanDirectoryGuard)
+              .verifiesStorageScanDirectoryType;
       FileItem? rootItem;
       try {
         rootItem = await source.stat(root);
@@ -119,15 +141,29 @@ class StorageScanService {
 
       while (pending.isNotEmpty) {
         check();
+        // Native/provider I/O already lets the event loop run. A bounded yield
+        // budget also handles cached or empty-directory trees whose futures
+        // finish in microtasks, including repeated unreadable directories.
+        if (directoriesSinceYield >= 32 ||
+            clock.elapsedMilliseconds - lastYieldMilliseconds >= 8) {
+          await Future<void>.delayed(Duration.zero);
+          directoriesSinceYield = 0;
+          lastYieldMilliseconds = clock.elapsedMilliseconds;
+          check();
+        }
+        directoriesSinceYield++;
         final (directory, depth) = pending.removeLast();
         activeDirectory = directory;
         currentPath = directory.item.path!;
+        final canonicalChild = _CanonicalChildPath(source.paths, currentPath);
         progress();
         StorageScanDirectory listing;
         try {
           // A listed folder may have become a link before descent.
           // Recheck without following links wherever the backend supports it.
-          if (depth > 0 && source.supportsSymbolicLinks) {
+          if (depth > 0 &&
+              source.supportsSymbolicLinks &&
+              !verifiesDirectoryType) {
             final fresh = await source.stat(currentPath);
             check();
             if (fresh == null || !fresh.isFolder || fresh.isSymlink == true) {
@@ -135,10 +171,8 @@ class StorageScanService {
             }
           }
           check();
-          listing = source is StorageScanDirectoryReader
-              ? await (source as StorageScanDirectoryReader).listForStorageScan(
-                  currentPath,
-                )
+          listing = reader is StorageScanDirectoryReader
+              ? await reader.listForStorageScan(currentPath)
               : StorageScanDirectory(entries: await source.list(currentPath));
           check();
         } on _ScanCancelled {
@@ -180,6 +214,8 @@ class StorageScanService {
           if (examined % 256 == 0) {
             progress();
             await Future<void>.delayed(Duration.zero);
+            directoriesSinceYield = 0;
+            lastYieldMilliseconds = clock.elapsedMilliseconds;
             check();
           }
           final itemPath = item.path;
@@ -189,11 +225,15 @@ class StorageScanService {
               item.name == '..' ||
               item.name.contains('\u0000') ||
               itemPath.contains('\u0000') ||
-              !source.paths.isAbsolute(itemPath) ||
-              source.paths.normalize(itemPath) != itemPath ||
-              !source.isWithin(root, itemPath) ||
-              !source.samePath(source.paths.dirname(itemPath), currentPath) ||
-              source.paths.basename(itemPath) != item.name) {
+              (!canonicalChild.matches(item.name, itemPath) &&
+                  (!source.paths.isAbsolute(itemPath) ||
+                      source.paths.normalize(itemPath) != itemPath ||
+                      !source.isWithin(root, itemPath) ||
+                      !source.samePath(
+                        source.paths.dirname(itemPath),
+                        currentPath,
+                      ) ||
+                      source.paths.basename(itemPath) != item.name))) {
             directory.complete = false;
             issue(
               StorageScanIssue(
@@ -263,8 +303,6 @@ class StorageScanService {
           progress();
         }
         activeDirectory = null;
-        // Cheap directory-only trees must also remain cancellable.
-        await Future<void>.delayed(Duration.zero);
         check();
       }
       check();
@@ -295,6 +333,49 @@ class StorageScanService {
           message: error is _RootUnavailable ? error.message : error.toString(),
         ),
       );
+    } finally {
+      try {
+        if (session != null) await session.close();
+      } catch (error) {
+        rootBuilder.complete = false;
+        issue(
+          StorageScanIssue(
+            path: root,
+            code: StorageScanIssueCode.incompleteListing,
+            message: 'Could not close the directory scan session: $error',
+          ),
+        );
+      }
+    }
+
+    // Closing a worker can itself await a message. Account/cancellation changes
+    // during that wait must invalidate even a tiny tree with no aggregate yield.
+    if (!cancelled && !sourceChanged) {
+      try {
+        check();
+      } on _ScanCancelled {
+        cancelled = true;
+        rootBuilder.complete = false;
+      } on _ScanSourceChanged {
+        sourceChanged = true;
+        rootBuilder.complete = false;
+        issue(
+          StorageScanIssue(
+            path: root,
+            code: StorageScanIssueCode.sourceChanged,
+            message: 'The original storage connection changed during the scan.',
+          ),
+        );
+      } catch (error) {
+        rootBuilder.complete = false;
+        issue(
+          StorageScanIssue(
+            path: root,
+            code: StorageScanIssueCode.rootUnavailable,
+            message: error.toString(),
+          ),
+        );
+      }
     }
 
     // Iterative postorder avoids recursion limits and preserves all completed
@@ -349,37 +430,83 @@ class _NodeBuilder {
   StorageNode? frozen;
 
   void freeze() {
-    final nodes = children.map((child) => child.frozen!).toList();
+    final link = item.isSymlink == true;
+    final file = !item.isFolder && !link;
+    if (children.isEmpty) {
+      frozen = StorageNode(
+        item: item,
+        bytes: file && sizeKnown ? item.size! : 0,
+        fileCount: file ? 1 : 0,
+        folderCount: 0,
+        unknownSizeCount: file && !sizeKnown ? 1 : 0,
+        skippedLinkCount: link ? 1 : 0,
+        isComplete: complete,
+      );
+      return;
+    }
+    final nodes = <StorageNode>[];
+    var bytes = 0;
+    var files = 0;
+    var folders = 0;
+    var unknown = 0;
+    var links = 0;
+    var allComplete = true;
+    for (final child in children) {
+      final node = child.frozen!;
+      nodes.add(node);
+      bytes += node.bytes;
+      files += node.fileCount;
+      folders +=
+          node.folderCount +
+          (node.isFolder && node.item.isSymlink != true ? 1 : 0);
+      unknown += node.unknownSizeCount;
+      links += node.skippedLinkCount;
+      allComplete = allComplete && node.isComplete;
+    }
     nodes.sort((a, b) {
       final bySize = b.bytes.compareTo(a.bytes);
       return bySize != 0 ? bySize : a.path.compareTo(b.path);
     });
-    final link = item.isSymlink == true;
-    final file = !item.isFolder && !link;
     frozen = StorageNode(
       item: item,
       children: nodes,
-      bytes: file && sizeKnown
-          ? item.size!
-          : nodes.fold(0, (sum, child) => sum + child.bytes),
-      fileCount: file
-          ? 1
-          : nodes.fold(0, (sum, child) => sum + child.fileCount),
-      folderCount: nodes.fold(
-        0,
-        (sum, child) =>
-            sum +
-            child.folderCount +
-            (child.isFolder && child.item.isSymlink != true ? 1 : 0),
-      ),
-      unknownSizeCount: file && !sizeKnown
-          ? 1
-          : nodes.fold(0, (sum, child) => sum + child.unknownSizeCount),
-      skippedLinkCount: link
-          ? 1
-          : nodes.fold(0, (sum, child) => sum + child.skippedLinkCount),
-      isComplete: complete && nodes.every((child) => child.isComplete),
+      bytes: file && sizeKnown ? item.size! : bytes,
+      fileCount: file ? 1 : files,
+      folderCount: folders,
+      unknownSizeCount: file && !sizeKnown ? 1 : unknown,
+      skippedLinkCount: link ? 1 : links,
+      isComplete: complete && allComplete,
     );
+  }
+}
+
+/// The parent is already normalized and accepted inside the scan root. For
+/// ordinary POSIX/Windows names, exact parent + separator + one component
+/// proves absolute, normalized, direct-child membership without reparsing the
+/// same long path six times. Aliases and other path styles use the original
+/// backend predicates, preserving their comparison rules.
+class _CanonicalChildPath {
+  _CanonicalChildPath(p.Context paths, String parent)
+    : _windows = paths.style == p.Style.windows,
+      _prefix = paths.style == p.Style.posix
+          ? (parent.endsWith('/') ? parent : '$parent/')
+          : paths.style == p.Style.windows
+          ? (parent.endsWith(r'\') ? parent : '$parent\\')
+          : null;
+
+  final bool _windows;
+  final String? _prefix;
+
+  bool matches(String name, String path) {
+    final prefix = _prefix;
+    if (prefix == null ||
+        name.contains('/') ||
+        (_windows && (name.contains(r'\') || name.contains(':')))) {
+      return false;
+    }
+    return path.length == prefix.length + name.length &&
+        path.startsWith(prefix) &&
+        path.endsWith(name);
   }
 }
 

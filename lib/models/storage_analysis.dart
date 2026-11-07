@@ -119,3 +119,21 @@ class StorageScanDirectory {
 abstract interface class StorageScanDirectoryReader {
   Future<StorageScanDirectory> listForStorageScan(String path);
 }
+
+/// A reader that checks the requested directory without following links before
+/// and after its listing. Only that chosen reader can replace the scanner's
+/// otherwise necessary pre-descent stat; a backend's unrelated session cannot.
+abstract interface class StorageScanDirectoryGuard {
+  bool get verifiesStorageScanDirectoryType;
+}
+
+/// A scan owns its reader session. Overlapping scans never close or reuse each
+/// other's workers. A null session uses the source's ordinary listing API.
+abstract interface class StorageScanSessionFactory {
+  Future<StorageScanSession?> openStorageScanSession();
+}
+
+abstract interface class StorageScanSession
+    implements StorageScanDirectoryReader {
+  Future<void> close();
+}

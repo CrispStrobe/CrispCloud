@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:isolate';
 
@@ -12,6 +13,146 @@ import '../models/storage_analysis.dart';
 /// every type/stat check. No file contents or provider credentials are passed.
 Future<StorageScanDirectory> readNativeStorageScanDirectory(String path) =>
     Isolate.run(() => _readDirectory(path));
+
+/// One metadata worker for one scan. Only paths and metadata cross the isolate
+/// boundary; the caller keeps platform access scopes on the originating isolate.
+/// Closing drains submitted reads before stopping the worker, so an access scope
+/// is never released while its filesystem operation is still running.
+class NativeStorageScanWorker {
+  NativeStorageScanWorker._() {
+    _events.listen(_onEvent);
+  }
+
+  final ReceivePort _events = ReceivePort();
+  final Completer<SendPort?> _ready = Completer<SendPort?>();
+  final Completer<void> _exited = Completer<void>();
+  final Map<int, Completer<StorageScanDirectory>> _pending = {};
+  Isolate? _isolate;
+  SendPort? _commands;
+  Object? _failure;
+  StackTrace? _failureStack;
+  int _nextRequest = 0;
+  bool _closing = false;
+  Future<void>? _closeFuture;
+
+  static Future<NativeStorageScanWorker> start() async {
+    final worker = NativeStorageScanWorker._();
+    try {
+      worker._isolate = await Isolate.spawn<SendPort>(
+        _runStorageScanWorker,
+        worker._events.sendPort,
+        onError: worker._events.sendPort,
+        onExit: worker._events.sendPort,
+        errorsAreFatal: true,
+        debugName: 'Storage metadata scan',
+      );
+      // A failed startup completes with null instead of an unhandled error
+      // while Isolate.spawn itself is still being awaited.
+      if (await worker._ready.future == null) {
+        Error.throwWithStackTrace(
+          worker._failure ?? StateError('The metadata worker could not start.'),
+          worker._failureStack ?? StackTrace.current,
+        );
+      }
+      return worker;
+    } catch (_) {
+      worker._isolate?.kill(priority: Isolate.immediate);
+      worker._events.close();
+      rethrow;
+    }
+  }
+
+  Future<StorageScanDirectory> readDirectory(String path) {
+    if (_closing || _exited.isCompleted || _failure != null) {
+      return Future.error(StateError('The metadata worker is closed.'));
+    }
+    final id = _nextRequest++;
+    final result = Completer<StorageScanDirectory>();
+    _pending[id] = result;
+    _commands!.send((id, path));
+    return result.future;
+  }
+
+  Future<void> close() => _closeFuture ??= _shutdown();
+
+  Future<void> _shutdown() async {
+    _closing = true;
+    // Retain any caller's original read error while still finishing cleanup.
+    await Future.wait(
+      _pending.values.map(
+        (pending) => pending.future.then<void>(
+          (_) {},
+          onError: (Object _, StackTrace _) {},
+        ),
+      ),
+    );
+    if (_exited.isCompleted) return;
+    _commands!.send(null);
+    await _exited.future;
+  }
+
+  void _onEvent(dynamic message) {
+    if (message is SendPort) {
+      _commands = message;
+      if (!_ready.isCompleted) _ready.complete(message);
+    } else if (message case (
+      final int id,
+      final StorageScanDirectory? result,
+      final String? error,
+      final String? stack,
+    )) {
+      final pending = _pending.remove(id);
+      if (pending == null) return;
+      if (result != null) {
+        pending.complete(result);
+      } else {
+        pending.completeError(
+          RemoteError(error ?? 'Could not read the directory.', stack ?? ''),
+        );
+      }
+    } else if (message is List && message.length == 2) {
+      _fail(
+        RemoteError(message[0].toString(), message[1].toString()),
+        StackTrace.fromString(message[1].toString()),
+      );
+    } else if (message == null) {
+      if (!_closing || _pending.isNotEmpty || !_ready.isCompleted) {
+        _fail(StateError('The metadata worker exited unexpectedly.'));
+      }
+      if (!_ready.isCompleted) _ready.complete(null);
+      if (!_exited.isCompleted) _exited.complete();
+      _events.close();
+    }
+  }
+
+  void _fail(Object error, [StackTrace? stack]) {
+    _failure ??= error;
+    _failureStack ??= stack ?? StackTrace.current;
+    if (!_ready.isCompleted) _ready.complete(null);
+    for (final pending in _pending.values) {
+      pending.completeError(_failure!, _failureStack);
+    }
+    _pending.clear();
+  }
+}
+
+void _runStorageScanWorker(SendPort events) {
+  final commands = ReceivePort();
+  events.send(commands.sendPort);
+  commands.listen((dynamic command) {
+    if (command == null) {
+      commands.close();
+      return;
+    }
+    final (int id, String path) = command as (int, String);
+    try {
+      events.send((id, _readDirectory(path), null, null));
+    } catch (error, stack) {
+      // A failed directory must not discard healthy siblings or end the scan.
+      events.send((id, null, error.toString(), stack.toString()));
+    }
+  });
+}
 
 StorageScanDirectory _readDirectory(String path) {
   final entries = <FileItem>[];
@@ -78,7 +219,7 @@ StorageScanDirectory _readDirectory(String path) {
     } catch (error) {
       failed(entryPath, error);
       // Keep known names visible, but never invent a size for failed metadata.
-      // Unknown folders are rechecked by StorageScanService before descent.
+      // Unknown folders are rechecked by the reader before descent.
       entries.add(
         FileItem(
           name: name,

@@ -112,6 +112,48 @@ void main() {
     },
   );
 
+  test('persistent scan session retains the scope until listing and release finish', () async {
+    final local = _ScopedLocal()
+      ..listingCompleted = Completer<StorageScanDirectory>()
+      ..allowScopeRelease = Completer<void>();
+    final source = storageScanBackend(
+      source: LocalPanelSource(root.path),
+      local: local,
+      isCurrent: () => true,
+    );
+    final session = await (source as StorageScanSessionFactory)
+        .openStorageScanSession();
+    expect(session, isNotNull);
+    expect(
+      (session! as StorageScanDirectoryGuard).verifiesStorageScanDirectoryType,
+      isTrue,
+    );
+    var returnedToCaller = false;
+    final pending = session.listForStorageScan(root.path).then((result) {
+      returnedToCaller = true;
+      return result;
+    });
+
+    try {
+      final result = await local.listingCompleted!.future;
+      expect(result.entries.single.size, 4);
+      expect(local.activeAtListingCompletion, [1]);
+      expect(local.activeScopes, 1);
+      expect(local.releasedScopes, 0);
+      expect(returnedToCaller, isFalse);
+    } finally {
+      local.allowScopeRelease!.complete();
+    }
+    try {
+      final result = await pending;
+      expect(result, same(local.listingResults.single));
+      expect(local.activeScopes, 0);
+      expect(local.releasedScopes, 1);
+    } finally {
+      await session.close();
+    }
+  });
+
   test(
     'source invalidation during scope release discards the finished listing',
     () async {
