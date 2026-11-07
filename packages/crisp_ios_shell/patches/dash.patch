@@ -104,7 +104,15 @@
  		exraise(EXPIPE);
 --- a/src/miscbltin.c
 +++ b/src/miscbltin.c
-@@ -154,7 +154,7 @@
+@@ -47,6 +47,7 @@
+ #include <inttypes.h>
+ 
+ #include "shell.h"
++#include "input.h"
+ #include "options.h"
+ #include "var.h"
+ #include "output.h"
+@@ -154,7 +155,7 @@
  #if !TARGET_OS_IPHONE
  		switch (read(0, &c, 1)) {
  #else
