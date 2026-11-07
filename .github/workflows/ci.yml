@@ -32,7 +32,9 @@ jobs:
   analyze:
     name: Analyze + Test (Linux)
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # The full suite plus plugin contracts can reach 20 minutes before cache
+    # cleanup finishes; leave room to report the completed test result.
+    timeout-minutes: 30
 
     steps:
       - uses: actions/checkout@v5
@@ -70,6 +72,12 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
+
+      - name: iOS plugin Dart contracts
+        run: |
+          (cd packages/crisp_ios_files && flutter pub get && flutter analyze && flutter test --coverage)
+          (cd packages/crisp_ios_shell && flutter pub get && flutter analyze && flutter test --coverage)
+          python3 -m unittest discover -s packages/crisp_ios_shell/tool/tests -v
 
       - name: Resolve vendored package development dependencies
         run: |
@@ -226,6 +234,7 @@ jobs:
           flutter test --no-pub --reporter expanded --platform chrome --concurrency=1
           test/terminal_session_test.dart test/terminal_widget_test.dart
           test/ssh_gateway_test.dart test/ssh_terminal_gateway_test.dart
+          test/terminal_workspace_web_test.dart
 
   # ---------- Multi-platform builds (matrix) ----------
   # Linux, Android, and Web build on ubuntu-latest.
@@ -498,15 +507,48 @@ jobs:
           path: crispcloud-macos-release.zip
           retention-days: 14
 
+  ios-terminal-native:
+    name: iOS folder and embedded shell tests
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - name: Cache verified embedded shell frameworks
+        uses: actions/cache@v5
+        with:
+          path: |
+            packages/crisp_ios_shell/ios/Frameworks
+            packages/crisp_ios_shell/ios/Resources/BuildProvenance.json
+            packages/crisp_ios_shell/.build/downloads
+          key: ios-shell-${{ runner.arch }}-${{ hashFiles('packages/crisp_ios_shell/tool/**', 'packages/crisp_ios_shell/patches/**', 'packages/crisp_ios_shell/ios/Resources/commands.plist') }}
+          restore-keys: |
+            ios-shell-${{ runner.arch }}-
+      - name: Native folder-grant and coordinated-access unit tests
+        run: swift test --package-path packages/crisp_ios_files/ios/ScopeCore
+      - name: Pinned shell source preparation
+        run: python3 packages/crisp_ios_shell/tool/prepare.py
+      - name: Real ios_system and Dash simulator tests
+        run: bash packages/crisp_ios_shell/tool/test_native.sh
+
   build-ios:
     name: Build iOS (no-codesign)
     runs-on: macos-latest
-    continue-on-error: true  # macOS runners scarce on free tier
-    timeout-minutes: 40
+    timeout-minutes: 60
     needs: analyze
 
     steps:
       - uses: actions/checkout@v5
+
+      - name: Cache verified embedded shell frameworks
+        uses: actions/cache@v5
+        with:
+          path: |
+            packages/crisp_ios_shell/ios/Frameworks
+            packages/crisp_ios_shell/ios/Resources/BuildProvenance.json
+            packages/crisp_ios_shell/.build/downloads
+          key: ios-shell-${{ runner.arch }}-${{ hashFiles('packages/crisp_ios_shell/tool/**', 'packages/crisp_ios_shell/patches/**', 'packages/crisp_ios_shell/ios/Resources/commands.plist') }}
+          restore-keys: |
+            ios-shell-${{ runner.arch }}-
 
       - name: Cache Flutter SDK + pub
         uses: actions/cache@v5
@@ -533,6 +575,17 @@ jobs:
 
       - name: Build iOS (no code sign)
         run: flutter build ios --release --no-codesign
+
+      - name: Verify embedded shell framework loading
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess
+          apps = list(Path('build/ios/iphoneos').glob('*.app'))
+          if len(apps) != 1:
+              raise SystemExit(f'Expected one iOS app, found {len(apps)}')
+          subprocess.run(['python3', 'packages/crisp_ios_shell/tool/check_packaging.py', str(apps[0])], check=True)
+          PY
 
       - name: Archive .app for later signing
         run: |
