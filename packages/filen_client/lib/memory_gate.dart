@@ -119,29 +119,9 @@ class MemoryGate {
   }
 
   static Future<int?> _getMacOSAvailableMemory() async {
-    try {
-      final result = await Process.run('vm_stat', []);
-      if (result.exitCode != 0) return null;
-
-      final output = result.stdout.toString();
-      int freePages = 0;
-
-      for (final line in output.split('\n')) {
-        if (line.contains('Pages free:') ||
-            line.contains('Pages inactive:') ||
-            line.contains('Pages purgeable:')) {
-          final match =
-              RegExp(r'(\d+)').firstMatch(line.substring(line.indexOf(':')));
-          if (match != null) {
-            freePages += int.tryParse(match.group(1)!) ?? 0;
-          }
-        }
-      }
-
-      // macOS page size is typically 16384 on ARM, 4096 on Intel
-      final pageSize = Platform.version.contains('arm') ? 16384 : 4096;
-      return freePages * pageSize;
-    } catch (_) {}
+    // Dynamic host-memory probing would require a Mach FFI call. The gate's
+    // fixed byte budget still bounds in-flight transfers; returning null keeps
+    // this path free of the `vm_stat` subprocess.
     return null;
   }
 }

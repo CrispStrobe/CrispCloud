@@ -37,6 +37,7 @@ import 'package:unorm_dart/unorm_dart.dart' as unorm;
 
 import 'cloud_storage_interface.dart';
 import 'log_service.dart';
+import 'native_system.dart';
 
 // ---------------------------------------------------------------------------
 // Cache models
@@ -203,9 +204,11 @@ class FuseFilesystem {
       _socketDirectory = await tempRoot.createTemp('crispcloud_fuse_');
       // createTemp follows the process umask on some platforms. The IPC
       // directory must be private before the socket is created.
-      final permissions = await Process.run('/bin/chmod', ['700', _socketDirectory!.path]);
-      if (permissions.exitCode != 0) {
-        throw FileSystemException('Could not restrict FUSE IPC directory permissions', _socketDirectory!.path);
+      if (!setFileMode(_socketDirectory!.path, 0x1c0 /* 0700 */)) {
+        throw FileSystemException(
+          'Could not restrict FUSE IPC directory permissions',
+          _socketDirectory!.path,
+        );
       }
       _ensureActive();
       _socketPath = p.join(_socketDirectory!.path, 'ipc.sock');

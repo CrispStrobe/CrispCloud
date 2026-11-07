@@ -27,6 +27,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'cloud_storage_interface.dart';
 import 'fuse_filesystem.dart';
 import 'log_service.dart';
+import 'native_system.dart';
 import 'macos_app_store.dart';
 
 // ---------------------------------------------------------------------------
@@ -238,8 +239,7 @@ class FuseMountService {
   Future<String?> _checkLinuxFuse() async {
     // Try fusermount3 first (fuse3), fall back to fusermount (fuse2).
     for (final cmd in ['fusermount3', 'fusermount']) {
-      final result = await Process.run('which', [cmd]);
-      if (result.exitCode == 0) return null; // found
+      if (commandExists(cmd)) return null; // found
     }
     return linuxMissing;
   }
@@ -586,13 +586,7 @@ class FuseMountService {
       physicalPath = await Directory(mountPoint).resolveSymbolicLinks();
     }
     if (Platform.isMacOS) {
-      final result = await Process.run('/sbin/mount', []);
-      if (result.exitCode != 0) {
-        throw StateError('mount returned ${result.exitCode}: ${result.stderr}');
-      }
-      return (result.stdout as String)
-          .split('\n')
-          .any((line) => line.contains(' on $physicalPath ('));
+      return isMountPoint(physicalPath);
     }
     if (Platform.isLinux) {
       final lines = await File('/proc/self/mountinfo').readAsLines();

@@ -5,6 +5,8 @@ import 'dart:io';
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:path/path.dart' as p;
 
+import 'posix_chmod.dart';
+
 import 'package:filen_client/config_storage.dart';
 import 'package:filen_client/credential_crypto.dart' as cred;
 
@@ -58,10 +60,9 @@ class ConfigService {
   /// (relies on user-profile ACLs) and if `chmod` isn't available. The path is
   /// the only argv — no secret is exposed.
   void _restrictPerms(String path, String mode) {
-    if (Platform.isWindows) return;
-    try {
-      Process.runSync('chmod', [mode, path]);
-    } catch (_) {/* best effort */}
+    final parsed = int.tryParse(mode, radix: 8);
+    if (parsed == null) return;
+    chmodPath(path, parsed);
   }
 
   (String, String) _wrappingSecretForSave() {

@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'link_operation_failure.dart';
+import 'native_system.dart';
 
 class LinkService {
   /// Create a symbolic link at [linkPath] pointing to [target].
@@ -21,10 +22,12 @@ class LinkService {
     if (Platform.isWindows) {
       throw LinkUnsupportedError(LinkOperationCode.windowsHardlink, 'Hard links on Windows require elevated privileges');
     }
-    // Use the ln command on POSIX
-    final result = await Process.run('ln', [target, linkPath]);
-    if (result.exitCode != 0) {
-      throw LinkOperationException(LinkOperationCode.hardlinkFailed, 'Failed to create hard link: ${result.stderr}', {'detail': result.stderr.toString()});
+    if (!createHardLink(target, linkPath)) {
+      throw LinkOperationException(
+        LinkOperationCode.hardlinkFailed,
+        'Failed to create hard link: $target → $linkPath',
+        {'detail': 'link(2) failed'},
+      );
     }
   }
 

@@ -2,7 +2,7 @@
 //
 // Windows Explorer shell integration for CrispCloud.
 // Manages the "Upload to CrispCloud" right-click context menu entry by writing
-// to HKCU\Software\Classes\*\shell\CrispCloud via the `reg` command-line tool.
+// to HKCU\Software\Classes\*\shell\CrispCloud through the Win32 registry API.
 //
 // All public methods are no-ops on non-Windows platforms.
 
@@ -11,14 +11,14 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 
 import 'log_service.dart';
+import 'windows_registry.dart';
 
 class WindowsIntegrationService {
   static const _log = Log('WindowsIntegrationService');
 
   /// Registry key path for the CrispCloud shell entry (user-level).
-  static const _shellKey = r'HKCU\Software\Classes\*\shell\CrispCloud';
-  static const _commandKey =
-      r'HKCU\Software\Classes\*\shell\CrispCloud\command';
+  static const _shellKey = r'Software\Classes\*\shell\CrispCloud';
+  static const _commandKey = r'Software\Classes\*\shell\CrispCloud\command';
 
   /// Returns true when running on Windows (not web).
   static bool get isSupported => !kIsWeb && Platform.isWindows;
@@ -29,8 +29,8 @@ class WindowsIntegrationService {
 
   /// Register the "Upload to CrispCloud" context menu entry.
   ///
-  /// Writes the required HKCU registry keys via `reg add`. No admin rights
-  /// are needed for HKCU writes.
+  /// Writes the required HKCU registry keys through the Win32 API. No admin
+  /// rights are needed for HKCU writes.
   ///
   /// Returns true on success.
   Future<bool> registerContextMenu() async {
@@ -51,7 +51,9 @@ class WindowsIntegrationService {
 
       // 2. Shell key — icon (exe,0 resource syntax).
       if (!await _regAdd(_shellKey, 'Icon', '$exePath,0')) {
-        _log.warn('Failed to write Icon value — proceeding without custom icon');
+        _log.warn(
+          'Failed to write Icon value — proceeding without custom icon',
+        );
         // Non-fatal.
       }
 
@@ -101,8 +103,7 @@ class WindowsIntegrationService {
     if (!isSupported) return false;
 
     try {
-      final result = await Process.run('reg', ['query', _shellKey, '/ve']);
-      return result.exitCode == 0;
+      return registryKeyExists(_shellKey);
     } catch (e) {
       _log.warn('Failed to query context menu registration', e);
       return false;
@@ -113,31 +114,14 @@ class WindowsIntegrationService {
   // Private helpers
   // ---------------------------------------------------------------------------
 
-  /// Runs `reg add <key> [/v <valueName>] /d <data> /f`.
-  /// Pass [valueName] as null to write the default value (/ve).
+  /// Writes a REG_SZ value. A null [valueName] writes the default value.
   Future<bool> _regAdd(
-      String registryKey, String? valueName, String data) async {
-    final args = [
-      'add',
-      registryKey,
-      if (valueName != null) ...['/v', valueName] else '/ve',
-      '/d',
-      data,
-      '/f',
-    ];
-    final result = await Process.run('reg', args);
-    return result.exitCode == 0;
-  }
+    String registryKey,
+    String? valueName,
+    String data,
+  ) async => registrySetString(registryKey, valueName, data);
 
-  /// Runs `reg delete <key> /f`. Returns true when the key was deleted or
-  /// was already absent.
-  Future<bool> _deleteKey(String registryKey) async {
-    final result = await Process.run('reg', ['delete', registryKey, '/f']);
-    if (result.exitCode == 0) return true;
-    // "unable to find" means the key was not present — treat as success.
-    final stderr = result.stderr.toString();
-    return stderr.contains('unable to find') ||
-        stderr.contains('not found') ||
-        stderr.contains('ERROR: The system was unable to find');
-  }
+  /// Deletes the key and its children. Missing keys count as success.
+  Future<bool> _deleteKey(String registryKey) async =>
+      registryDeleteTree(registryKey);
 }
