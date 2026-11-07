@@ -36,6 +36,7 @@ import '../services/storage_trash.dart';
 import '../services/trash_history_store.dart';
 import 'trash_history_provider.dart';
 import '../services/native_file_operations.dart';
+import '../services/native_system.dart';
 import '../services/multi_rename_service.dart';
 import '../services/rename_batch_service.dart';
 import '../services/rename_batch_storage.dart';
@@ -6869,12 +6870,7 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   void _updateFreeSpace(String path) {
-    // Skip in test environments to avoid pending OS-process timers that
-    // cause "test failed after it had already completed" assertions.
     if (kIsWeb) return;
-    if (Platform.environment.containsKey('FLUTTER_TEST')) return;
-    // `df` is a Unix utility — skip on Windows to avoid a crash.
-    if (Platform.isWindows) return;
     // Debounce: skip if same path was checked within the last 5 seconds.
     final now = DateTime.now();
     if (_lastFreeSpacePath == path &&
@@ -6884,21 +6880,10 @@ class PanelNotifier extends ChangeNotifier {
     }
     _lastFreeSpacePath = path;
     _lastFreeSpaceTime = now;
-    Process.run('df', ['-k', path])
-        .then((result) {
-          final lines = result.stdout.toString().trim().split('\n');
-          if (lines.length >= 2) {
-            final parts = lines.last.trim().split(RegExp(r'\s+'));
-            if (parts.length >= 4) {
-              final kb = int.tryParse(parts[3]);
-              if (kb != null) {
-                _freeBytes = kb * 1024;
-                notifyListeners();
-              }
-            }
-          }
-        })
-        .catchError((_) {});
+    final bytes = freeDiskBytes(path);
+    if (bytes == null) return;
+    _freeBytes = bytes;
+    notifyListeners();
   }
 
   Future<void> _loadRemoteFiles() async {

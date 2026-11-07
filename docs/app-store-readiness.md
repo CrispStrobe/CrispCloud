@@ -76,21 +76,23 @@ Connect starts asking for it.
 
 ## Remaining review risks to verify before submission
 
-1. **Export compliance.** `Info.plist` currently says
-   `ITSAppUsesNonExemptEncryption = false`. The app implements more than HTTPS:
-   SSH, symmetric file encryption and VeraCrypt-compatible containers. Review
-   whether the mass-market/standard-algorithm exemption applies. If it does not,
-   set the key to `true` and file the required self-classification or CCATS
-   documentation in App Store Connect. Do not leave it false merely to avoid the
-   prompt.
-2. **Process-based helpers outside the guarded features.** Search for
-   `Process.run` / `Process.start` before each submission. The remaining uses
-   include `df` for free space, `ln` for hard links, `id`/`stat` for ownership
-   checks and `open -R` to reveal a file in Finder. They may work in the
-   sandbox, but the App Store-safe replacements are, respectively, `statfs`,
-   a POSIX `link(2)` FFI call, `FileStat`/FFI and `NSWorkspace`
-   (`activateFileViewerSelecting`). Replace them if review or a sandbox test
-   reports failures.
+1. **Export compliance.** `ITSAppUsesNonExemptEncryption` is now `true` in both
+   apps. The distributed code includes AES-256-GCM/PBKDF2 file encryption,
+   Cryptomator vault support and VeraCrypt container support, so leaving the key
+   false would only hide the App Store Connect prompt. See
+   `docs/export-compliance.md` for the BIS self-classification versus CCATS
+   routes and the option of removing those features from the App Store binary.
+2. **Process-based helpers.** Normal file operations no longer shell out:
+   free space uses `statfs`/`GetDiskFreeSpaceEx`, hard links use `link(2)`,
+   owner/mode checks use libc `stat`/`getuid`/`chmod`, Windows drives are
+   probed directly, and reveal-in-file-manager opens the containing folder
+   through `url_launcher`. Remaining subprocesses are the features that are
+   themselves external-tool integrations: the FUSE helper/rclone and unmount
+   tools, the VeraCrypt CLI, user-defined toolbar/automation commands, and the
+   Windows Explorer registry integration. The first three are already disabled
+   in the Mac App Store build; the registry path is replaced with Win32 APIs.
+   Audit with:
+   `grep -rn "Process\.\(run\|start\|runSync\)" lib`.
 3. **Local WebDAV server.** `com.apple.security.network.server` is allowed, but
    explain the user-initiated local server in the review notes. If the server is
    not needed on macOS, removing the entitlement and the feature is the

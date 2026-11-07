@@ -16,8 +16,10 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import 'log_service.dart';
+import 'native_system.dart';
 
 // ---------------------------------------------------------------------------
 // Urgency levels for D-Bus notifications
@@ -35,7 +37,8 @@ class LinuxIntegrationService {
   // XDG paths (resolved lazily so tests can override via [home]).
   final String? _overrideHome;
 
-  LinuxIntegrationService({String? overrideHome}) : _overrideHome = overrideHome;
+  LinuxIntegrationService({String? overrideHome})
+    : _overrideHome = overrideHome;
 
   /// Returns true when running on Linux (not web).
   static bool get isLinux => !kIsWeb && Platform.isLinux;
@@ -149,7 +152,12 @@ fi
       await file.parent.create(recursive: true);
       await file.writeAsString(scriptContent);
       // Make the script executable.
-      await _runProcess('chmod', ['+x', _nautilusScriptPath]);
+      if (!setFileMode(_nautilusScriptPath, 0x1ed /* 0755 */)) {
+        throw FileSystemException(
+          'Could not mark the Nautilus script executable',
+          _nautilusScriptPath,
+        );
+      }
       _log.info('Nautilus script installed successfully');
       return true;
     } catch (e, st) {
@@ -294,7 +302,9 @@ Exec=crispcloud upload %U
         // Insert before the closing </actions> tag.
         if (existing.contains('</actions>')) {
           content = existing.replaceFirst(
-              '</actions>', '$actionXml\n</actions>');
+            '</actions>',
+            '$actionXml\n</actions>',
+          );
         } else {
           // Malformed or empty — replace entirely.
           content = _thunarUcaTemplate(actionXml);
@@ -312,7 +322,8 @@ Exec=crispcloud upload %U
     }
   }
 
-  String _thunarUcaTemplate(String actionXml) => '''<?xml version="1.0" encoding="UTF-8"?>
+  String _thunarUcaTemplate(String actionXml) =>
+      '''<?xml version="1.0" encoding="UTF-8"?>
 <actions>
 $actionXml
 </actions>
@@ -422,9 +433,8 @@ Keywords=cloud;storage;files;upload;download;sync;
       await file.parent.create(recursive: true);
       await file.writeAsString(desktopContent);
 
-      // Register with the MIME database (best-effort).
-      await _runProcess('update-desktop-database',
-          ['$_home/.local/share/applications']);
+      // Desktop environments pick up new entries automatically; avoiding the
+      // command also keeps this path free of subprocesses.
 
       _log.info('Desktop file installed successfully');
       return true;
@@ -456,43 +466,38 @@ Keywords=cloud;storage;files;upload;download;sync;
       return false;
     }
 
-    final urgencyStr = _urgencyString(urgency);
     _log.debug('Sending notification', {
       'title': title,
       'body': body,
-      'urgency': urgencyStr,
+      'urgency': urgency.name,
     });
 
-    final args = [
-      '--app-name=CrispCloud',
-      '--icon=$icon',
-      '--urgency=$urgencyStr',
-      title,
-      body,
-    ];
-
     try {
-      final ok = await _runProcess('notify-send', args);
-      if (ok) {
-        _log.debug('Notification sent successfully');
-      } else {
-        _log.warn('notify-send exited with non-zero status');
-      }
-      return ok;
+      final plugin = FlutterLocalNotificationsPlugin();
+      await plugin.initialize(
+        const InitializationSettings(
+          linux: LinuxInitializationSettings(defaultActionName: 'Open'),
+        ),
+      );
+      await plugin.show(
+        0,
+        title,
+        body,
+        NotificationDetails(
+          linux: LinuxNotificationDetails(
+            icon: ThemeLinuxIcon(icon),
+            urgency: switch (urgency) {
+              NotificationUrgency.low => LinuxNotificationUrgency.low,
+              NotificationUrgency.normal => LinuxNotificationUrgency.normal,
+              NotificationUrgency.critical => LinuxNotificationUrgency.critical,
+            },
+          ),
+        ),
+      );
+      return true;
     } catch (e, st) {
       _log.error('Failed to send notification', e, st);
       return false;
-    }
-  }
-
-  String _urgencyString(NotificationUrgency urgency) {
-    switch (urgency) {
-      case NotificationUrgency.low:
-        return 'low';
-      case NotificationUrgency.normal:
-        return 'normal';
-      case NotificationUrgency.critical:
-        return 'critical';
     }
   }
 
@@ -500,35 +505,6 @@ Keywords=cloud;storage;files;upload;download;sync;
   // Private helpers
   // ---------------------------------------------------------------------------
 
-  /// Runs [command] with [args] and returns true if the exit code is 0.
-  Future<bool> _runProcess(String command, List<String> args) async {
-    try {
-      final result = await Process.run(command, args);
-      if (result.exitCode != 0) {
-        _log.warn('Process exited non-zero', {
-          'command': command,
-          'args': args,
-          'exitCode': result.exitCode,
-          'stderr': result.stderr.toString().trim(),
-        });
-      }
-      return result.exitCode == 0;
-    } on ProcessException catch (e) {
-      _log.warn('Process execution failed', {'command': command, 'error': e.message});
-      return false;
-    } catch (e, st) {
-      _log.error('Unexpected error running process', e, st);
-      return false;
-    }
-  }
-
-  /// Returns true if [command] is found in PATH via `which`.
-  Future<bool> _commandExists(String command) async {
-    try {
-      final result = await Process.run('which', [command]);
-      return result.exitCode == 0;
-    } catch (_) {
-      return false;
-    }
-  }
+  /// Returns true if [command] is found in PATH.
+  bool _commandExists(String command) => commandExists(command);
 }

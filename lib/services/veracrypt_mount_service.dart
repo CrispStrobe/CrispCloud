@@ -18,6 +18,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 
 import 'log_service.dart';
+import 'native_system.dart';
 import 'macos_app_store.dart';
 
 // ---------------------------------------------------------------------------
@@ -251,14 +252,8 @@ class VeraCryptMountService {
       if (kIsWeb) return false;
       return File(candidate).existsSync();
     }
-    // Use `which` (Unix) / `where` (Windows) for PATH lookup.
-    try {
-      final whichCmd = (!kIsWeb && Platform.isWindows) ? 'where' : 'which';
-      final result = await Process.run(whichCmd, [candidate]);
-      return result.exitCode == 0;
-    } catch (_) {
-      return false;
-    }
+    if (kIsWeb) return false;
+    return commandExists(candidate);
   }
 
   // ---------------------------------------------------------------------------
