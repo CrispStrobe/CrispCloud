@@ -179,6 +179,7 @@ class _LockScreenState extends State<LockScreen> {
                 obscureText: _obscureCode,
                 autocorrect: false,
                 enableSuggestions: false,
+                enableIMEPersonalizedLearning: false,
                 enabled: !isLocked && !_isVerifying,
                 decoration: InputDecoration(
                   labelText: l10n.pinPassword,
@@ -360,6 +361,7 @@ class _AppLockSetupDialogState extends State<AppLockSetupDialog> {
                 obscureText: _obscureCurrent,
                 autocorrect: false,
                 enableSuggestions: false,
+                enableIMEPersonalizedLearning: false,
                 decoration: InputDecoration(
                   labelText: l10n.currentPin,
                   border: const OutlineInputBorder(),
@@ -382,6 +384,7 @@ class _AppLockSetupDialogState extends State<AppLockSetupDialog> {
               obscureText: _obscureNew,
               autocorrect: false,
               enableSuggestions: false,
+              enableIMEPersonalizedLearning: false,
               decoration: InputDecoration(
                 labelText: l10n.newPin,
                 border: const OutlineInputBorder(),
@@ -401,6 +404,7 @@ class _AppLockSetupDialogState extends State<AppLockSetupDialog> {
               obscureText: _obscureConfirm,
               autocorrect: false,
               enableSuggestions: false,
+              enableIMEPersonalizedLearning: false,
               decoration: InputDecoration(
                 labelText: l10n.confirmPin,
                 border: const OutlineInputBorder(),

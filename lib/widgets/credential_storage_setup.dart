@@ -195,6 +195,7 @@ class _CredentialStorageSetupPanelState
     });
     try {
       if (_macKeychain && _keychains.isEmpty) await _loadKeychains();
+      if (!mounted) return;
       if (_mode == CredentialStorageMode.encryptedFile) {
         if (!widget.firstRun) {
           _complete(
@@ -250,6 +251,7 @@ class _CredentialStorageSetupPanelState
               );
             }
             path = await MacosKeychainService.createKeychain(path, password);
+            if (!mounted) return;
             if (path == null) {
               if (mounted) setState(() => _busy = false);
               return;
@@ -494,6 +496,7 @@ class _CredentialStorageSetupPanelState
                 enabled: !_busy,
                 autocorrect: false,
                 enableSuggestions: false,
+                enableIMEPersonalizedLearning: false,
                 obscureText: _obscureNew,
                 decoration: InputDecoration(
                   labelText: _text('Keychain password'),
@@ -526,6 +529,7 @@ class _CredentialStorageSetupPanelState
             enabled: !_busy,
             autocorrect: false,
             enableSuggestions: false,
+            enableIMEPersonalizedLearning: false,
             obscureText: _obscureMaster,
             decoration: InputDecoration(
               labelText: _text('Master password'),
@@ -548,6 +552,7 @@ class _CredentialStorageSetupPanelState
             enabled: !_busy,
             autocorrect: false,
             enableSuggestions: false,
+            enableIMEPersonalizedLearning: false,
             obscureText: _obscureConfirmation,
             decoration: InputDecoration(
               labelText: _text('Confirm master password'),

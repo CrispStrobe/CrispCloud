@@ -896,6 +896,7 @@ class WebMasterPasswordGateState extends ConsumerState<WebMasterPasswordGate> {
                       controller: _controller,
                       autocorrect: false,
                       enableSuggestions: false,
+                      enableIMEPersonalizedLearning: false,
                       obscureText: _obscurePassword,
                       autofocus: true,
                       decoration: InputDecoration(
@@ -924,6 +925,7 @@ class WebMasterPasswordGateState extends ConsumerState<WebMasterPasswordGate> {
                         controller: _confirmationController,
                         autocorrect: false,
                         enableSuggestions: false,
+                        enableIMEPersonalizedLearning: false,
                         obscureText: _obscureConfirmation,
                         decoration: InputDecoration(
                           labelText: strings.confirmation,
