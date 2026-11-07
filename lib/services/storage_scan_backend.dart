@@ -7,6 +7,7 @@ import 'file_operation_backend.dart';
 import 'file_operation_service.dart';
 import 'local_file_service.dart';
 import 'panel_source_service.dart';
+import 'storage_scan_native.dart';
 
 /// Read metadata from the exact source captured by the initiating panel.
 /// Mutation backends deliberately make conservative name/size choices; the
@@ -67,6 +68,17 @@ class _LocalStorageScanBackend extends LocalOperationBackend
 
   @override
   Future<StorageScanDirectory> listForStorageScan(String path) async {
+    if (!isCurrent) throw StateError('The selected local folder changed.');
+    if (!kIsWeb) {
+      final result = await service.withFileOperationAccess(path, () async {
+        if (!isCurrent) throw StateError('The selected local folder changed.');
+        final listing = await readNativeStorageScanDirectory(path);
+        if (!isCurrent) throw StateError('The selected local folder changed.');
+        return listing;
+      });
+      if (!isCurrent) throw StateError('The selected local folder changed.');
+      return result;
+    }
     final entries = await super.list(path);
     if (!isCurrent) throw StateError('The selected local folder changed.');
     return StorageScanDirectory(
