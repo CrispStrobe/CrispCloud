@@ -51,6 +51,12 @@ class AppLockService {
     if (code.length < 4) {
       throw ArgumentError('Code must be at least 4 characters');
     }
+    if (!_storage.isPersistent) {
+      throw StateError(
+        'App lock requires persistent credential storage. Session-only '
+        'storage cannot preserve a lock across restarts.',
+      );
+    }
 
     // Generate random salt
     final saltBytes = Uint8List(16);

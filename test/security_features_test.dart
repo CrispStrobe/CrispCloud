@@ -16,6 +16,11 @@ import 'package:crisp_cloud/services/proxy_service.dart';
 import 'package:crisp_cloud/services/app_lock_service.dart';
 import 'package:crisp_cloud/services/secure_storage_service.dart';
 
+class _PersistentLockStorage extends InMemorySecureStorage {
+  @override
+  bool get isPersistent => true;
+}
+
 void main() {
   // --- ProxyConfig Tests ---
   group('ProxyConfig', () {
@@ -159,7 +164,7 @@ void main() {
     late AppLockService lockService;
 
     setUp(() {
-      storage = InMemorySecureStorage();
+      storage = _PersistentLockStorage();
       lockService = AppLockService(storage);
     });
 
@@ -170,6 +175,15 @@ void main() {
     test('setup enables lock', () async {
       await lockService.setup('1234');
       expect(await lockService.isEnabled(), true);
+    });
+
+    test('session-only mode rejects a lock that would disappear on restart', () async {
+      final ephemeral = InMemorySecureStorage();
+      final service = AppLockService(ephemeral);
+      await expectLater(service.setup('1234'), throwsStateError);
+      expect(await service.isEnabled(), isFalse);
+      expect(await ephemeral.containsKey('app_lock_hash'), isFalse);
+      expect(await ephemeral.containsKey('app_lock_salt'), isFalse);
     });
 
     test('verify correct code', () async {

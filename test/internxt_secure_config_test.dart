@@ -26,7 +26,7 @@ const _credentials = <String, dynamic>{
 
 class _LegacyStorage implements sdk.ConfigStorage {
   final values = <String, String>{};
-  int initializations = 0, writes = 0, deletes = 0;
+  int initializations = 0, reads = 0, writes = 0, deletes = 0;
   bool failDeletes = false;
   Completer<void>? readStarted, releaseRead;
 
@@ -40,6 +40,7 @@ class _LegacyStorage implements sdk.ConfigStorage {
 
   @override
   Future<String?> read(String key) async {
+    reads++;
     final value = values[key];
     readStarted?.complete();
     await releaseRead?.future;
@@ -141,6 +142,42 @@ void main() {
       expect(secure.values, hasLength(1));
       expect(legacy.initializations, 0);
       expect(legacy.writes, 0);
+      expect(legacy.values, isEmpty);
+    },
+  );
+
+  test(
+    'session-only login and logout never read or clean persistent legacy data',
+    () async {
+      sdk.ConfigService sessionConfig(SecureStorage storage) => sdk.ConfigService(
+        configPath: 'fixture-config',
+        storage: InternxtSecureConfigStorage(
+          secureStorage: storage,
+          legacyStorage: legacy,
+        ),
+      );
+
+      final session = sessionConfig(InMemorySecureStorage());
+      final old = _legacyEnvelope();
+      legacy.values[session.credentialsFile] = old;
+      expect(await session.readCredentials(), isNull);
+      expect(legacy.reads, 0);
+
+      await session.saveCredentials(_credentials);
+      expect(await session.readCredentials(), _credentials);
+      await session.clearCredentials();
+      expect(await session.readCredentials(), isNull);
+      expect(legacy.reads, 0);
+      expect(legacy.writes, 0);
+      expect(legacy.deletes, 0);
+      expect(legacy.values[session.credentialsFile], old);
+
+      // A new ephemeral process cannot resurrect the saved legacy login.
+      final restarted = sessionConfig(InMemorySecureStorage());
+      expect(await restarted.readCredentials(), isNull);
+      expect(legacy.reads, 0);
+      // Choosing durable storage later still migrates the original copy.
+      expect(await config.readCredentials(), _credentials);
       expect(legacy.values, isEmpty);
     },
   );

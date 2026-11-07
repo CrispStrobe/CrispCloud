@@ -54,16 +54,27 @@ import 'services/terminal_licenses.dart';
 import 'services/secure_storage_service.dart';
 import 'services/secure_storage_web.dart';
 import 'services/secure_storage_file.dart';
+import 'services/secure_storage_macos_keychain.dart';
+import 'services/credential_storage_bootstrap.dart';
 import 'services/credential_storage_config.dart';
+import 'services/credential_storage_first_setup.dart';
+import 'services/credential_storage_first_setup_io.dart';
+import 'widgets/credential_storage_first_setup.dart';
 import 'widgets/lock_screen.dart';
 import 'services/media_video_backend.dart' show registerMediaVideoLicenses;
 
 /// Displays initialization failures without depending on app providers.
 class StartupFailureApp extends StatelessWidget {
-  const StartupFailureApp({super.key, required this.error, this.locale});
+  const StartupFailureApp({
+    super.key,
+    required this.error,
+    this.locale,
+    this.onRetry,
+  });
 
   final Object error;
   final Locale? locale;
+  final VoidCallback? onRetry;
 
   @override
   Widget build(BuildContext context) => MaterialApp(
@@ -75,10 +86,22 @@ class StartupFailureApp extends StatelessWidget {
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(32),
-            child: Text(
-              '${StartupFailureStrings(context).title}\n${localizedProviderError(context, error)}',
-              style: const TextStyle(color: Colors.red, fontSize: 16),
-              textAlign: TextAlign.center,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '${StartupFailureStrings(context).title}\n${localizedProviderError(context, error)}',
+                  style: const TextStyle(color: Colors.red, fontSize: 16),
+                  textAlign: TextAlign.center,
+                ),
+                if (onRetry != null) ...[
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: onRetry,
+                    child: Text(AppLocalizations.of(context)!.retry),
+                  ),
+                ],
+              ],
             ),
           ),
         ),
@@ -95,9 +118,22 @@ const _appVersion = String.fromEnvironment(
 
 Future<void> main() async {
   CrashReportingService? crashReporting;
+  var applicationMounted = false;
   runZonedGuarded(
     () async {
       WidgetsFlutterBinding.ensureInitialized();
+      // First-install evidence must precede all startup preference/log/cache
+      // writes. An interrupted storage choice has not exposed a profile yet.
+      final firstSetup = !kIsWeb &&
+          await CredentialStorageFirstSetup.capture(
+            profileIsEmpty: (preferences) => nativeCredentialProfileIsEmpty(
+              setupPreferences: preferences,
+            ),
+          );
+      final nativeStorage = kIsWeb
+          ? null
+          : await _initializeNativeSecureStorage(allowFirstSetup: firstSetup);
+      if (!kIsWeb) await CredentialStorageFirstSetup.complete();
       await InstallationIdentityService.instance.initialize();
       registerBundledEditorAssets();
       registerPdfFontLicenses();
@@ -136,9 +172,8 @@ Future<void> main() async {
 
       _log.info('App starting...');
 
-      // Initialize secure storage and migrate credentials.
-      // On web, use encrypted localStorage with a master password.
-      // On native platforms, use OS-level secure storage (Keychain, etc.).
+      // Open exactly the selected storage. Unavailable keychains must not
+      // silently fall back to a store that lacks the existing app-lock policy.
       final SecureStorage secureStorage;
       var vaultRequired = false;
       var effectiveMode = CredentialStorageMode.systemKeychain;
@@ -148,47 +183,10 @@ Future<void> main() async {
         // We pass the un-initialized storage and let the gate handle it.
         secureStorage = webStorage;
       } else {
-        CredentialStorageMode preferredMode;
-        String? customKeychain;
-        try {
-          preferredMode = await CredentialStorageConfig.readMode();
-          customKeychain =
-              await CredentialStorageConfig.readCustomKeychainPath();
-        } catch (error) {
-          _log.warn(
-            'Could not read credential-storage mode; using keychain.',
-            error,
-          );
-          preferredMode = CredentialStorageMode.systemKeychain;
-          customKeychain = null;
-        }
-        effectiveMode = preferredMode;
-        if (preferredMode == CredentialStorageMode.sessionOnly) {
-          secureStorage = InMemorySecureStorage();
-        } else if (preferredMode == CredentialStorageMode.encryptedFile) {
-          secureStorage = await createEncryptedFileStorage();
-          vaultRequired = true;
-        } else {
-          final keychain = PlatformSecureStorage(
-            // A selected custom keychain is addressed through the process
-            // default keychain, not the data-protection keychain.
-            useDataProtectionKeyChain: customKeychain == null,
-          );
-          if (await keychain.isAvailable()) {
-            secureStorage = keychain;
-            await CredentialMigration.migrateIfNeeded(secureStorage);
-          } else {
-            _log.warn(
-              'OS keychain is unavailable; switching to the encrypted file vault.',
-            );
-            secureStorage = await createEncryptedFileStorage();
-            vaultRequired = true;
-            effectiveMode = CredentialStorageMode.encryptedFile;
-            // Keep the fallback sticky so credentials do not disappear when a
-            // transient keychain lock clears on the next launch.
-            await CredentialStorageConfig.writeMode(effectiveMode);
-          }
-        }
+        final selected = nativeStorage!;
+        secureStorage = selected.storage;
+        effectiveMode = selected.mode;
+        vaultRequired = selected.requiresUnlock;
       }
       crashReporting!.reportBreadcrumb('Secure storage ready', 'startup');
 
@@ -286,6 +284,7 @@ Future<void> main() async {
             child: const MyApp(),
           ),
         );
+        applicationMounted = true;
         crashReporting!.reportBreadcrumb('Application UI mounted', 'startup');
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _log.info('Startup UI rendered');
@@ -313,8 +312,85 @@ Future<void> main() async {
           ),
         );
       }
+      // Storage preferences, support-directory lookup, and other early startup
+      // work run before the config-service catch. Always render those failures.
+      if (!applicationMounted) runApp(StartupFailureApp(error: error));
     },
   );
+}
+
+Future<CredentialStorageSelection> _initializeNativeSecureStorage({
+  required bool allowFirstSetup,
+}) async {
+  final bootstrap = CredentialStorageBootstrap(
+    openKeychain: (customPath) async {
+      try {
+        if (Platform.isMacOS && customPath != null) {
+          final custom = MacOsCustomKeychainStorage(path: customPath);
+          await custom.initialize();
+          return custom;
+        }
+        final keychain = PlatformSecureStorage();
+        if (!await keychain.isAvailable()) {
+          throw const CredentialStorageUnavailable();
+        }
+        return keychain;
+      } catch (_) {
+        throw const CredentialStorageUnavailable();
+      }
+    },
+    openFileVault: createEncryptedFileStorage,
+  );
+  CredentialStorageMode? firstSetupChoice;
+  while (true) {
+    CredentialStorageMode? attemptedMode;
+    try {
+      final mode = firstSetupChoice ?? await CredentialStorageConfig.readMode();
+      attemptedMode = mode;
+      final customPath = Platform.isMacOS
+          ? await CredentialStorageConfig.readCustomKeychainPath()
+          : null;
+      final selected = await bootstrap.open(
+        mode: mode,
+        customKeychainPath: customPath,
+      );
+      // A fresh-install alternative is persisted only after the user chose it
+      // and its backend was constructed successfully. Never persist a fallback.
+      if (firstSetupChoice != null) await CredentialStorageConfig.writeMode(mode);
+      return selected;
+    } catch (error) {
+      _log.warn('The selected credential store could not be opened.');
+      if (allowFirstSetup &&
+          attemptedMode == CredentialStorageMode.systemKeychain &&
+          error is CredentialStorageUnavailable) {
+        final choice = Completer<CredentialStorageMode?>();
+        runApp(
+          CredentialStorageFirstSetupApp(
+            onSelected: (mode) {
+              if (!choice.isCompleted) choice.complete(mode);
+            },
+            onRetry: () {
+              if (!choice.isCompleted) choice.complete(null);
+            },
+          ),
+        );
+        firstSetupChoice = await choice.future;
+        continue;
+      }
+      final retry = Completer<void>();
+      runApp(
+        StartupFailureApp(
+          error: const CredentialStorageUnavailable(),
+          onRetry: () {
+            if (!retry.isCompleted) retry.complete();
+          },
+        ),
+      );
+      // Retry the same configured store. Offering a different empty backend
+      // here could bypass an app lock held in the inaccessible store.
+      await retry.future;
+    }
+  }
 }
 
 Future<CloudProvider> _getDefaultProvider() async {
@@ -495,6 +571,7 @@ class _AppLockGateState extends ConsumerState<_AppLockGate>
     with WidgetsBindingObserver {
   bool _isLocked = false;
   bool _isChecking = true;
+  bool _checkFailed = false;
   DateTime? _lastPaused;
 
   @override
@@ -505,13 +582,29 @@ class _AppLockGateState extends ConsumerState<_AppLockGate>
   }
 
   Future<void> _checkLock() async {
-    final lockService = ref.read(appLockServiceProvider);
-    final enabled = await lockService.isEnabled();
     if (mounted) {
       setState(() {
-        _isLocked = enabled;
-        _isChecking = false;
+        _isChecking = true;
+        _checkFailed = false;
       });
+    }
+    try {
+      final lockService = ref.read(appLockServiceProvider);
+      final enabled = await lockService.isEnabled();
+      if (mounted) {
+        setState(() {
+          _isLocked = enabled;
+          _isChecking = false;
+        });
+      }
+    } catch (_) {
+      // An unavailable policy is not evidence that app lock is disabled.
+      if (mounted) {
+        setState(() {
+          _checkFailed = true;
+          _isChecking = false;
+        });
+      }
     }
   }
 
@@ -521,21 +614,31 @@ class _AppLockGateState extends ConsumerState<_AppLockGate>
         state == AppLifecycleState.hidden) {
       _lastPaused = DateTime.now();
     } else if (state == AppLifecycleState.resumed) {
-      if (_lastPaused != null) _checkAutoLock();
-      unawaited(ref.read(transferProvider).refreshBackgroundRecovery());
+      unawaited(_resume());
+    }
+  }
+
+  Future<void> _resume() async {
+    if (_lastPaused != null) await _checkAutoLock();
+    if (mounted && !_isChecking && !_checkFailed && !_isLocked) {
+      await ref.read(transferProvider).refreshBackgroundRecovery();
     }
   }
 
   Future<void> _checkAutoLock() async {
     if (_isLocked) return;
-    final lockService = ref.read(appLockServiceProvider);
-    final enabled = await lockService.isEnabled();
-    if (!enabled) return;
+    try {
+      final lockService = ref.read(appLockServiceProvider);
+      final enabled = await lockService.isEnabled();
+      if (!enabled) return;
 
-    final timeout = await lockService.getTimeout();
-    final elapsed = DateTime.now().difference(_lastPaused!).inSeconds;
-    if (elapsed >= timeout) {
-      if (mounted) setState(() => _isLocked = true);
+      final timeout = await lockService.getTimeout();
+      final elapsed = DateTime.now().difference(_lastPaused!).inSeconds;
+      if (elapsed >= timeout) {
+        if (mounted) setState(() => _isLocked = true);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _checkFailed = true);
     }
   }
 
@@ -543,6 +646,10 @@ class _AppLockGateState extends ConsumerState<_AppLockGate>
   Widget build(BuildContext context) {
     if (_isChecking) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (_checkFailed) {
+      return _CredentialGateFailure(onRetry: _checkLock);
     }
 
     if (_isLocked) {
@@ -562,8 +669,43 @@ class _AppLockGateState extends ConsumerState<_AppLockGate>
   }
 }
 
-/// Gate widget shown on web that prompts for a master password to unlock
-/// encrypted credential storage before proceeding to the app.
+/// Shows a retryable credential failure without exposing the app or treating
+/// unreadable lock/vault metadata as an empty new profile.
+class _CredentialGateFailure extends StatelessWidget {
+  const _CredentialGateFailure({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    body: Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.lock_outline, size: 48),
+            const SizedBox(height: 16),
+            Text(
+              WebVaultStrings(context).failure(
+                const CredentialStorageUnavailable(),
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: onRetry,
+              child: Text(AppLocalizations.of(context)?.retry ?? 'Retry'),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+/// Prompts for a master password on web and native encrypted-file backends
+/// before proceeding to provider authentication or the app-lock gate.
 class WebMasterPasswordGate extends ConsumerStatefulWidget {
   const WebMasterPasswordGate({super.key});
 
@@ -578,6 +720,7 @@ class WebMasterPasswordGateState extends ConsumerState<WebMasterPasswordGate> {
   String? _error;
   bool _loading = true;
   bool _isNewVault = false;
+  bool _inspectionFailed = false;
 
   @override
   void initState() {
@@ -587,13 +730,19 @@ class WebMasterPasswordGateState extends ConsumerState<WebMasterPasswordGate> {
 
   /// Decide whether to create or unlock a vault before the app saves secrets.
   Future<void> _checkIfGateNeeded() async {
+    if (mounted) {
+      setState(() {
+        _loading = true;
+        _inspectionFailed = false;
+      });
+    }
     try {
       final storage = ref.read(secureStorageProvider) as WebEncryptedStorage;
-      final backend = storage.backend;
-      final existingSalt = await backend.getItem('crisp_enc_salt');
-      _isNewVault = existingSalt == null;
+      _isNewVault = !await storage.hasVault();
     } catch (_) {
-      // If check fails, show the gate as a safe default.
+      // Corrupt/inaccessible metadata must never lead to a create/overwrite
+      // prompt or to provider initialization without an unlocked vault.
+      _inspectionFailed = true;
     }
     if (mounted) {
       setState(() {
@@ -603,6 +752,7 @@ class WebMasterPasswordGateState extends ConsumerState<WebMasterPasswordGate> {
   }
 
   Future<void> _submit() async {
+    if (_loading || _inspectionFailed) return;
     final password = _controller.text.trim();
     if (password.isEmpty) return;
     if (_isNewVault && password != _confirmationController.text.trim()) {
@@ -617,7 +767,8 @@ class WebMasterPasswordGateState extends ConsumerState<WebMasterPasswordGate> {
 
     try {
       final storage = ref.read(secureStorageProvider) as WebEncryptedStorage;
-      await storage.initialize(password);
+      await storage.initialize(password, expectedExisting: !_isNewVault);
+      if (!storage.isInitialized) throw const CredentialStorageUnavailable();
       await CredentialMigration.migrateIfNeeded(storage);
       if (mounted) {
         Navigator.of(context).pushReplacement(
@@ -629,6 +780,7 @@ class WebMasterPasswordGateState extends ConsumerState<WebMasterPasswordGate> {
         setState(() {
           _error =
               e.message == 'Incorrect master password' ||
+                  e.message == 'Incorrect master password or damaged vault' ||
                   e.message == 'Master password verification failed'
               ? WebVaultStrings(context).incorrect
               : WebVaultStrings(context).failure(e.message);
@@ -650,6 +802,9 @@ class WebMasterPasswordGateState extends ConsumerState<WebMasterPasswordGate> {
     // While checking if gate is needed, show a loading screen
     if (_loading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    if (_inspectionFailed) {
+      return _CredentialGateFailure(onRetry: _checkIfGateNeeded);
     }
 
     final strings = WebVaultStrings(context);

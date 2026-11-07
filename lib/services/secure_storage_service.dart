@@ -2,31 +2,27 @@
 //
 // Abstraction over platform-specific secure storage.
 //
-// Native (macOS/iOS/Android/Linux/Windows): uses flutter_secure_storage
-// which delegates to Keychain, Keystore, libsecret, DPAPI respectively.
-//
-// Web: uses SharedPreferences with a warning — browser storage is not
-// truly secure, but it's the best we can do without a server-side component.
-// A future iteration should encrypt values client-side before storing.
-//
-// Non-credential data (provider preference, batch state) stays in
-// SharedPreferences via the config services directly.
+// Persistent implementations encrypt at rest or delegate to OS credential
+// storage. Session-only storage deliberately keeps no durable credentials.
 
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../utils/async_lock.dart';
 import 'log_service.dart';
 
 const _secureLog = Log('SecureStorage');
 
 /// Abstract interface for secure key-value storage of credentials.
 ///
-/// Implementations must encrypt data at rest (or delegate to a platform
-/// mechanism that does).
+/// Persistent implementations must encrypt data at rest (or delegate to a
+/// platform mechanism that does). Ephemeral implementations must override
+/// [isPersistent] so migration never treats an in-memory write as durable.
 abstract class SecureStorage {
+  bool get isPersistent => true;
+
   Future<String?> read(String key);
   Future<void> write(String key, String value);
   Future<void> delete(String key);
@@ -51,15 +47,12 @@ abstract class SecureStorage {
   }
 }
 
-/// Production implementation backed by flutter_secure_storage (native)
-/// or SharedPreferences (web, with a logged warning).
+/// Native implementation backed by flutter_secure_storage.
 class PlatformSecureStorage extends SecureStorage {
   // flutter_secure_storage handles Keychain (macOS/iOS), Keystore (Android),
   // libsecret (Linux), DPAPI (Windows).
   //
-  // On Web, flutter_secure_storage uses localStorage (unencrypted), which is
-  // equivalent to SharedPreferences. We accept this limitation for now and
-  // log a warning so it's visible during development.
+  // Browser startup uses WebEncryptedStorage instead of this implementation.
   PlatformSecureStorage({bool useDataProtectionKeyChain = true})
     : _storage = FlutterSecureStorage(
         aOptions: const AndroidOptions(encryptedSharedPreferences: true),
@@ -104,9 +97,13 @@ class PlatformSecureStorage extends SecureStorage {
   Future<void> deleteAll() => _storage.deleteAll();
 }
 
-/// In-memory implementation for tests.
+/// Ephemeral storage for session-only mode and tests. No legacy credentials
+/// may be imported or deleted on the strength of writes to this store.
 class InMemorySecureStorage extends SecureStorage {
   final Map<String, String> _store = {};
+
+  @override
+  bool get isPersistent => false;
 
   @override
   Future<String?> read(String key) async => _store[key];
@@ -136,8 +133,16 @@ class InMemorySecureStorage extends SecureStorage {
 /// are removed so the migration is idempotent.
 class CredentialMigration {
   static const _migrationDoneKey = 'secure_storage_migration_v1';
+  static final _lock = AsyncLock();
 
-  static Future<void> migrateIfNeeded(SecureStorage secure) async {
+  static Future<void> migrateIfNeeded(SecureStorage secure) {
+    // An ephemeral session must neither reconnect using saved credentials nor
+    // erase the only persistent copy or mark migration complete globally.
+    if (!secure.isPersistent) return Future<void>.value();
+    return _lock.synchronized(() => _migrate(secure));
+  }
+
+  static Future<void> _migrate(SecureStorage secure) async {
     final prefs = await SharedPreferences.getInstance();
 
     if (prefs.getBool(_migrationDoneKey) == true) return;
@@ -146,7 +151,9 @@ class CredentialMigration {
       'Migrating credentials from SharedPreferences to SecureStorage...',
     );
 
-    // Migrate each provider's credentials
+    var complete = true;
+    // Migrate each provider's credentials. An existing secure value is
+    // authoritative: an old preference must never overwrite a newer login.
     for (final key in [
       'dropbox_credentials',
       'filen_credentials',
@@ -161,13 +168,30 @@ class CredentialMigration {
     ]) {
       final raw = prefs.getString(key);
       if (raw != null) {
-        await secure.write(key, raw);
-        await prefs.remove(key);
+        final existing = await secure.read(key);
+        if (existing != null && existing != raw) {
+          complete = false;
+          _secureLog.warn(
+            'Retained a legacy credential because a different secure value exists.',
+          );
+          continue;
+        }
+        if (existing == null) await secure.write(key, raw);
+        if (await secure.read(key) != raw) {
+          throw StateError('Credential migration could not verify secure storage.');
+        }
+        if (!await prefs.remove(key)) {
+          throw StateError('Credential migration could not remove a legacy entry.');
+        }
         _secureLog.debug('Migrated $key');
       }
     }
 
-    await prefs.setBool(_migrationDoneKey, true);
-    _secureLog.info('Credential migration complete');
+    if (complete) {
+      if (!await prefs.setBool(_migrationDoneKey, true)) {
+        throw StateError('Credential migration status could not be saved.');
+      }
+      _secureLog.info('Credential migration complete');
+    }
   }
 }

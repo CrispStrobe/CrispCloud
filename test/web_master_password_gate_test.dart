@@ -5,8 +5,79 @@ import 'package:crisp_cloud/services/secure_storage_web.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class _TemporarilyUnavailableBackend extends InMemoryWebStorageBackend {
+  bool unavailable = true;
+
+  @override
+  Future<String?> getItem(String key) async {
+    if (unavailable) throw StateError('Synthetic unavailable store');
+    return super.getItem(key);
+  }
+}
 
 void main() {
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
+
+  testWidgets('unreadable storage offers retry without a create prompt',
+      (tester) async {
+    final backend = _TemporarilyUnavailableBackend();
+    final storage = WebEncryptedStorage(backend, newVaultIterations: 10);
+    await tester.pumpWidget(ProviderScope(
+      overrides: [secureStorageProvider.overrideWithValue(storage)],
+      child: const MaterialApp(home: WebMasterPasswordGate()),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text('Retry'), findsOneWidget);
+    expect(find.byType(TextField), findsNothing);
+    expect(find.text('Create vault'), findsNothing);
+    expect(storage.isInitialized, isFalse);
+
+    backend.unavailable = false;
+    await tester.tap(find.text('Retry'));
+    await tester.pumpAndSettle();
+    expect(find.text('Create vault'), findsOneWidget);
+    expect(await backend.allKeys(), isEmpty);
+  });
+
+  testWidgets('partial existing metadata never offers to replace a vault',
+      (tester) async {
+    final backend = InMemoryWebStorageBackend();
+    await backend.setItem('crisp_enc_salt', 'incomplete-existing-vault');
+    final storage = WebEncryptedStorage(backend, newVaultIterations: 10);
+    await tester.pumpWidget(ProviderScope(
+      overrides: [secureStorageProvider.overrideWithValue(storage)],
+      child: const MaterialApp(home: WebMasterPasswordGate()),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text('Retry'), findsOneWidget);
+    expect(find.byType(TextField), findsNothing);
+    expect(find.text('Create vault'), findsNothing);
+    await tester.tap(find.text('Retry'));
+    await tester.pumpAndSettle();
+    expect(await backend.getItem('crisp_enc_salt'), 'incomplete-existing-vault');
+    expect(await backend.getItem('crisp_enc_verify'), isNull);
+    expect(storage.isInitialized, isFalse);
+  });
+
+  testWidgets('startup storage failure retries without selecting a new backend',
+      (tester) async {
+    var retries = 0;
+    await tester.pumpWidget(StartupFailureApp(
+      error: StateError('Synthetic unavailable selected store'),
+      onRetry: () => retries++,
+    ));
+    await tester.pumpAndSettle();
+    expect(find.byType(ElevatedButton), findsOneWidget);
+    expect(find.text('Retry'), findsOneWidget);
+    await tester.tap(find.text('Retry'));
+    expect(retries, 1);
+    expect(find.text('Create vault'), findsNothing);
+  });
+
   testWidgets('first visit asks to create a vault before saving credentials',
       (tester) async {
     final storage = WebEncryptedStorage(InMemoryWebStorageBackend(),
@@ -44,6 +115,54 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Incorrect master password'), findsOneWidget);
     expect(storage.isInitialized, isFalse);
+  });
+
+  testWidgets('unreadable app-lock policy stays blocked after vault unlock',
+      (tester) async {
+    final backend = InMemoryWebStorageBackend();
+    final original = WebEncryptedStorage(backend, newVaultIterations: 10);
+    await original.initialize('correct');
+    await original.write('app_lock_enabled', 'true');
+    await backend.setItem('crisp_enc_app_lock_enabled', 'damaged-ciphertext');
+    final storage = WebEncryptedStorage(backend, newVaultIterations: 10);
+    await tester.pumpWidget(ProviderScope(
+      overrides: [secureStorageProvider.overrideWithValue(storage)],
+      child: const MaterialApp(home: WebMasterPasswordGate()),
+    ));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'correct');
+    await tester.tap(find.text('Unlock'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Retry'), findsOneWidget);
+    expect(find.byType(TextField), findsNothing);
+    expect(tester.takeException(), isNull);
+    expect(await backend.getItem('crisp_enc_app_lock_enabled'), 'damaged-ciphertext');
+  });
+
+  testWidgets('an existing unlock form cannot create a replacement vault',
+      (tester) async {
+    final backend = InMemoryWebStorageBackend();
+    await WebEncryptedStorage(backend, newVaultIterations: 10)
+        .initialize('correct');
+    final storage = WebEncryptedStorage(backend, newVaultIterations: 10);
+    await tester.pumpWidget(ProviderScope(
+      overrides: [secureStorageProvider.overrideWithValue(storage)],
+      child: const MaterialApp(home: WebMasterPasswordGate()),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text('Unlock'), findsOneWidget);
+    for (final key in await backend.allKeys()) {
+      await backend.removeItem(key);
+    }
+
+    await tester.enterText(find.byType(TextField), 'correct');
+    await tester.tap(find.text('Unlock'));
+    await tester.pumpAndSettle();
+
+    expect(storage.isInitialized, isFalse);
+    expect(await backend.allKeys(), isEmpty);
+    expect(find.text('Create vault'), findsNothing);
   });
   testWidgets('vault setup and validation follow the selected locale',
       (tester) async {
