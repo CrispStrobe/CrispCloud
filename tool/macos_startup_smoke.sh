@@ -61,7 +61,7 @@ if grep -Eqi \
   exit 1
 fi
 
-if ! grep -Fq '[Main] Startup UI rendered' "$LOG_FILE"; then
+if ! grep -Eq '\[Main\] (Startup UI rendered|Credential setup UI rendered)' "$LOG_FILE"; then
   echo "error: CrispCloud did not render its startup UI within ${WATCH_SECONDS}s" >&2
   print_failure_diagnostics
   exit 1
