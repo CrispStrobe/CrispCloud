@@ -14,6 +14,7 @@ Pod::Spec.new do |s|
   s.vendored_frameworks = 'Frameworks/*.xcframework'
   s.resource_bundles = { 'CrispIosShellResources' => ['Resources/*'] }
   s.dependency 'Flutter'
+  s.dependency 'crisp_ios_files'
   # Commands are embedded, but must be dlopened/dlclosed by ios_system so legacy
   # globals reset. Referencing them through LC_LOAD_DYLIB would keep them alive.
   s.pod_target_xcconfig = {

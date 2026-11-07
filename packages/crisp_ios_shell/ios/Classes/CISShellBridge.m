@@ -16,15 +16,22 @@ static BOOL CISInteger(id value) {
   dispatch_queue_t _controlQueue, _writeQueue, _readQueue, _closeQueue;
   BOOL _suspended, _detached;
   NSUInteger _queuedWrites;
+  CISDirectoryLeaseProvider _leaseProvider;
 }
 @end
 
 @implementation CISShellBridge
 - (instancetype)initWithCommandsURL:(NSURL *)commandsURL frameworksURL:(NSURL *)frameworksURL {
+  return [self initWithCommandsURL:commandsURL frameworksURL:frameworksURL leaseProvider:nil];
+}
+
+- (instancetype)initWithCommandsURL:(NSURL *)commandsURL frameworksURL:(NSURL *)frameworksURL
+                     leaseProvider:(CISDirectoryLeaseProvider)leaseProvider {
   self = [super init];
   if (self) {
     _commandsURL = commandsURL;
     _frameworksURL = frameworksURL;
+    _leaseProvider = [leaseProvider copy];
     _lock = [[NSLock alloc] init];
     _sessions = [NSMutableDictionary dictionary];
     _pendingReads = [NSMutableSet set];
@@ -64,7 +71,8 @@ static BOOL CISInteger(id value) {
       NSError *error;
       CISShellSession *session = [CISShellSession sessionWithDirectory:args[@"workingDirectory"]
           columns:[args[@"columns"] integerValue] rows:[args[@"rows"] integerValue]
-          commandsURL:self->_commandsURL frameworksURL:self->_frameworksURL error:&error];
+          commandsURL:self->_commandsURL frameworksURL:self->_frameworksURL
+          leaseProvider:self->_leaseProvider error:&error];
       if (!session) { reply(nil, error); return; }
       [self->_lock lock];
       self->_sessions[session.sessionID] = session;

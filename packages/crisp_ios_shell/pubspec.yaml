@@ -9,6 +9,8 @@ dependencies:
   flutter:
     sdk: flutter
   characters: ^1.4.0
+  crisp_ios_files:
+    path: ../crisp_ios_files
 dev_dependencies:
   flutter_test:
     sdk: flutter

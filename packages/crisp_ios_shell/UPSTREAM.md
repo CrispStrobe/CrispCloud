@@ -88,8 +88,13 @@ of the environment are per command. App file operations must use absolute paths.
 The original process cwd and engine flags are restored after the command tree
 has completed; restoring them while a command still runs would be unsafe.
 
-The caller retains any security-scoped folder grant through `exitCode`. The
-native engine neither obtains nor extends access to other applications' folders.
+The caller retains its folder lease through `exitCode`. The production native
+adapter also resolves the existing saved folder bookmark through
+`crisp_ios_files` and holds an independent access lease. This native reference
+survives Flutter engine detach and ends only after all native descendants,
+streams, and cwd restoration have completed. Plugin detach order therefore
+cannot revoke a running command's grant. This does not authorize a new folder:
+the lease requires an existing saved picker grant or an app sandbox path.
 For provider files use CrispCloud's staged workspace and explicit sync flow.
 The app sandbox remains the operating-system access boundary; the shell is not
 an additional security boundary inside the app.

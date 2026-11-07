@@ -27,6 +27,13 @@ folder. Engine teardown drains remaining leases. `withAccess` holds a lease
 until its asynchronous callback finishes, including error paths; release errors
 do not turn a completed write into an apparent failure.
 
+Native shell commands use `CrispNativeDirectoryLease`, which resolves a fresh
+bookmark snapshot through a separate scope manager. The shell owns this lease
+until its command tree finishes cleanup. Detaching the Flutter files plugin can
+drain that plugin's grants without revoking the native command's access. Stale
+bookmark refresh stays inside the native lease's snapshot, preserving any newer
+durable selection made by the file picker.
+
 Path checks compare components, resolve symbolic links after starting access,
 and recheck coordinated URLs inside accessors. Prefix lookalikes such as
 `/folder-copy` do not inherit `/folder` authorization. Writes reject symbolic

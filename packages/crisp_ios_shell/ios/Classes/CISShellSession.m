@@ -21,6 +21,32 @@ static const NSUInteger CISChunkSize = 16 * 1024;
 static const NSUInteger CISInputLimit = 128 * 1024;
 static CISShellSession *CISActiveSession;
 
+@interface CISDirectoryLease () {
+  NSRecursiveLock *_releaseLock;
+  dispatch_block_t _releaseBlock;
+}
+@end
+
+@implementation CISDirectoryLease
+- (instancetype)initWithPath:(NSString *)path onRelease:(dispatch_block_t)release {
+  self = [super init];
+  if (self) {
+    _path = [path copy];
+    _releaseLock = [[NSRecursiveLock alloc] init];
+    _releaseBlock = [release copy];
+  }
+  return self;
+}
+- (void)close {
+  [_releaseLock lock];
+  dispatch_block_t release = _releaseBlock;
+  _releaseBlock = nil;
+  @try { if (release) release(); }
+  @finally { [_releaseLock unlock]; }
+}
+- (void)dealloc { [self close]; }
+@end
+
 NSError *CISShellError(NSString *code, NSString *message) {
   return [NSError errorWithDomain:@"crisp_ios_shell" code:1
                         userInfo:@{@"code": code, NSLocalizedDescriptionKey: message}];
@@ -58,6 +84,7 @@ static BOOL CISSocketPair(int pair[2]) {
   pthread_t _rootThread;
   char *_sessionKey;
   NSError *_startupError, *_outputError;
+  CISDirectoryLease *_directoryLease;
 }
 @end
 
@@ -65,6 +92,34 @@ static BOOL CISSocketPair(int pair[2]) {
 
 + (BOOL)engineInUse {
   @synchronized(self) { return CISActiveSession != nil; }
+}
+
++ (instancetype)sessionWithDirectory:(NSString *)directory
+                            columns:(NSInteger)columns
+                               rows:(NSInteger)rows
+                        commandsURL:(NSURL *)commandsURL
+                      frameworksURL:(NSURL *)frameworksURL
+                      leaseProvider:(CISDirectoryLeaseProvider)leaseProvider
+                              error:(NSError **)error {
+  NSError *leaseError;
+  CISDirectoryLease *lease = leaseProvider ? leaseProvider(directory, &leaseError) : nil;
+  if (leaseProvider && !lease) {
+    if (error) *error = leaseError ?: CISShellError(@"access_denied", @"The native shell could not retain folder access.");
+    return nil;
+  }
+  CISShellSession *session;
+  @try {
+    session = [self sessionWithDirectory:lease ? lease.path : directory
+        columns:columns rows:rows commandsURL:commandsURL frameworksURL:frameworksURL error:error];
+  } @catch (NSException *exception) {
+    [lease close];
+    if (error) *error = CISShellError(@"engine_error", exception.reason ?: @"Native shell reservation failed.");
+    return nil;
+  }
+  if (!session) { [lease close]; return nil; }
+  // No caller can launch/cancel this session before this method returns.
+  session->_directoryLease = lease;
+  return session;
 }
 
 + (instancetype)sessionWithDirectory:(NSString *)directory
@@ -115,7 +170,7 @@ static BOOL CISSocketPair(int pair[2]) {
     }
     NSMutableArray *entry = [definition mutableCopy];
     NSString *library = entry[0];
-    if (![library isEqualToString:@"SELF"]) {
+    if (![library isEqualToString:@"SELF"] && ![library isEqualToString:@"MAIN"]) {
       if (library.isAbsolutePath || [library.pathComponents containsObject:@".."] || library.pathComponents.count != 2) {
         if (error) *error = CISShellError(@"engine_error", @"Bundled commands must reference app frameworks.");
         return nil;
@@ -344,6 +399,11 @@ static BOOL CISSocketPair(int pair[2]) {
   if (_input) { fclose(_input); _input = NULL; }
   if (_output) { fclose(_output); _output = NULL; }
   if (_error) { fclose(_error); _error = NULL; }
+  // A published files plugin may already have detached and released its Dart
+  // leases. This independent native reference ends only after descendants,
+  // redirected streams and process cwd have all finished their cleanup.
+  [_directoryLease close];
+  _directoryLease = nil;
   @synchronized(CISShellSession.class) {
     if (CISActiveSession == self) CISActiveSession = nil;
   }

@@ -2,6 +2,9 @@
 #import "CISShellSession.h"
 #import "CISShellBridge.h"
 #import <signal.h>
+#import <stdatomic.h>
+#import <pthread.h>
+#import <poll.h>
 #import <stdio.h>
 #import <stdlib.h>
 #import <unistd.h>
@@ -10,6 +13,26 @@ static NSURL *CommandsURL, *FrameworksURL;
 static NSString *TestDirectory;
 static NSUInteger Checks;
 static volatile sig_atomic_t WindowSignals;
+static dispatch_semaphore_t LeaseProbeEntered, LeaseProbeCleanup, LeaseProbeContinue;
+
+static void LeaseProbeUnwind(void *context) {
+  (void)context;
+  pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+  dispatch_semaphore_signal(LeaseProbeCleanup);
+  dispatch_semaphore_wait(LeaseProbeContinue, DISPATCH_TIME_FOREVER);
+}
+
+// Only the test's command dictionary exposes this executable entry point. Its
+// cancellation cleanup deliberately blocks before ios_system can release the
+// descendant, making folder-lease ownership during engine detach observable.
+int CISLeaseProbeMain(int argc, char **argv) {
+  (void)argc; (void)argv;
+  pthread_cleanup_push(LeaseProbeUnwind, NULL);
+  dispatch_semaphore_signal(LeaseProbeEntered);
+  for (;;) { poll(NULL, 0, 100); pthread_testcancel(); }
+  pthread_cleanup_pop(1);
+  return 0;
+}
 
 static void WindowSignal(int signalNumber) {
   (void)signalNumber;
@@ -87,6 +110,85 @@ static void Stop(CISShellSession *session) {
 }
 static void Has(NSString *output, NSString *expected, NSString *operation) {
   Require([output containsString:expected], [NSString stringWithFormat:@"%@: expected %@ in %@", operation, expected, output]);
+}
+
+static CISDirectoryLeaseProvider CountedLease(atomic_int *releases) {
+  return ^CISDirectoryLease *(NSString *directory, NSError **error) {
+    (void)error;
+    return [[CISDirectoryLease alloc] initWithPath:directory onRelease:^{
+      atomic_fetch_add(releases, 1);
+    }];
+  };
+}
+
+static void TestNativeLeaseOwnership(void) {
+  atomic_int releases = 0;
+  atomic_int *counter = &releases;
+  NSMutableString *path = [TestDirectory mutableCopy];
+  CISDirectoryLease *lease = [[CISDirectoryLease alloc] initWithPath:path onRelease:^{
+    atomic_fetch_add(counter, 1);
+  }];
+  [path appendString:@"/mutated"];
+  Require([lease.path isEqual:TestDirectory], @"Native lease copies its canonical path");
+  [lease close]; [lease close];
+  Require(atomic_load(counter) == 1, @"Native lease close is idempotent");
+  lease = nil;
+  Require(atomic_load(counter) == 1, @"Closed lease deallocation does not release twice");
+  @autoreleasepool {
+    CISDirectoryLease *automatic = [[CISDirectoryLease alloc] initWithPath:TestDirectory onRelease:^{
+      atomic_fetch_add(counter, 1);
+    }];
+    Require([automatic.path isEqual:TestDirectory], @"Untransferred lease is valid");
+  }
+  Require(atomic_load(counter) == 2, @"Untransferred lease deallocation releases its grant");
+
+  NSError *error;
+  CISDirectoryLeaseProvider denied = ^CISDirectoryLease *(NSString *directory, NSError **failure) {
+    (void)directory;
+    if (failure) *failure = CISShellError(@"access_denied", @"Revoked test grant");
+    return nil;
+  };
+  Require([CISShellSession sessionWithDirectory:TestDirectory columns:80 rows:24
+      commandsURL:CommandsURL frameworksURL:FrameworksURL leaseProvider:denied error:&error] == nil,
+      @"Missing native grant prevents command reservation");
+  Require([error.userInfo[@"code"] isEqual:@"access_denied"], @"Native grant error is preserved");
+  Require(!CISShellSession.engineInUse, @"Grant failure never reserves the engine");
+
+  atomic_store(counter, 0);
+  Require([CISShellSession sessionWithDirectory:@"/missing-native-lease-directory" columns:80 rows:24
+      commandsURL:CommandsURL frameworksURL:FrameworksURL leaseProvider:CountedLease(counter) error:&error] == nil,
+      @"Directory validation can fail after lease acquisition");
+  Require(atomic_load(counter) == 1, @"Directory creation failure releases the native lease");
+  atomic_store(counter, 0);
+  Require([CISShellSession sessionWithDirectory:TestDirectory columns:80 rows:24
+      commandsURL:[NSURL fileURLWithPath:@"/missing-manifest"] frameworksURL:FrameworksURL
+      leaseProvider:CountedLease(counter) error:&error] == nil, @"Manifest validation can fail after lease acquisition");
+  Require(atomic_load(counter) == 1, @"Engine creation failure releases the native lease");
+
+  atomic_store(counter, 0);
+  CISShellSession *session = [CISShellSession sessionWithDirectory:TestDirectory columns:80 rows:24
+      commandsURL:CommandsURL frameworksURL:FrameworksURL leaseProvider:CountedLease(counter) error:&error];
+  Require(session != nil && atomic_load(counter) == 0, @"Reserved shell holds its native lease");
+  [session cancel];
+  [session waitUntilClosed];
+  Require(Drain(session, nil) == 130 && atomic_load(counter) == 1,
+      @"Cancellation during startup drains and releases exactly one native lease");
+
+  atomic_store(counter, 0);
+  session = [CISShellSession sessionWithDirectory:TestDirectory columns:80 rows:24
+      commandsURL:CommandsURL frameworksURL:FrameworksURL leaseProvider:CountedLease(counter) error:&error];
+  Require(session != nil, @"Create native-leased shell for natural completion");
+  dispatch_semaphore_t ready = dispatch_semaphore_create(0);
+  [session launchWithCompletion:^(NSError *failure) {
+    Require(failure == nil, @"Native-leased shell starts"); dispatch_semaphore_signal(ready);
+  }];
+  Wait(ready, @"native-leased shell startup");
+  TextThrough(session, @"crisp$ ");
+  Require(atomic_load(counter) == 0, @"Running shell keeps its native lease");
+  Send(session, @"exit 0\n");
+  Require(Drain(session, nil) == 0 && atomic_load(counter) == 1,
+      @"Natural completion releases the native lease before exit acknowledgment");
+  [session waitUntilClosed];
 }
 
 static void TestValidation(void) {
@@ -271,6 +373,85 @@ static id Call(CISShellBridge *bridge, NSString *method, NSDictionary *arguments
   else Require(failure == nil, [NSString stringWithFormat:@"Bridge %@ failed: %@", method, failure]);
   return result;
 }
+
+static void TestLeaseDuringDetach(void) {
+  atomic_int releases = 0;
+  atomic_int *counter = &releases;
+  LeaseProbeEntered = dispatch_semaphore_create(0);
+  LeaseProbeCleanup = dispatch_semaphore_create(0);
+  LeaseProbeContinue = dispatch_semaphore_create(0);
+  NSError *error;
+  NSData *manifest = [NSData dataWithContentsOfURL:CommandsURL];
+  NSMutableDictionary *commands = [[NSPropertyListSerialization propertyListWithData:manifest
+      options:NSPropertyListImmutable format:NULL error:&error] mutableCopy];
+  Require(commands != nil, @"Load test-only command manifest");
+  commands[@"crisp-lease-probe"] = @[@"MAIN", @"CISLeaseProbeMain", @"", @"no"];
+  NSURL *testManifest = [NSURL fileURLWithPath:[TestDirectory stringByAppendingPathComponent:@"lease-commands.plist"]];
+  NSData *encoded = [NSPropertyListSerialization dataWithPropertyList:commands
+      format:NSPropertyListXMLFormat_v1_0 options:0 error:&error];
+  Require([encoded writeToURL:testManifest options:NSDataWritingAtomic error:&error], @"Write test-only command manifest");
+  CISShellBridge *bridge = [[CISShellBridge alloc] initWithCommandsURL:testManifest
+      frameworksURL:FrameworksURL leaseProvider:CountedLease(counter)];
+  NSString *identifier = Call(bridge, @"start", @{@"workingDirectory":TestDirectory, @"columns":@80, @"rows":@24}, nil)[@"sessionId"];
+  NSDictionary *args = @{@"sessionId":identifier};
+  Call(bridge, @"read", args, nil);
+  Call(bridge, @"write", @{@"sessionId":identifier,
+      @"data":[@"crisp-lease-probe\n" dataUsingEncoding:NSUTF8StringEncoding]}, nil);
+  Wait(LeaseProbeEntered, @"native lease probe command");
+  Require(atomic_load(counter) == 0, @"Native command owns folder access while running");
+  [bridge shutdown];
+  Wait(LeaseProbeCleanup, @"native descendant cancellation cleanup");
+  Require(atomic_load(counter) == 0, @"Engine detach retains the lease while descendant cleanup is blocked");
+  dispatch_semaphore_t closed = dispatch_semaphore_create(0);
+  [bridge call:@"close" arguments:args reply:^(id value, NSError *failure) {
+    (void)value;
+    Require(failure == nil, @"Detached shell close is acknowledged after cleanup");
+    dispatch_semaphore_signal(closed);
+  }];
+  Require(dispatch_semaphore_wait(closed, DISPATCH_TIME_NOW) != 0,
+      @"Close cannot acknowledge a descendant whose cleanup is still pending");
+  Require(atomic_load(counter) == 0, @"Pending close still holds the independent native lease");
+  dispatch_semaphore_signal(LeaseProbeContinue);
+  Wait(closed, @"native cleanup after engine detach");
+  Require(atomic_load(counter) == 1, @"Completed native cleanup releases exactly one folder grant");
+  Require(!CISShellSession.engineInUse, @"Detached native cleanup releases the engine");
+  while (!Call(bridge, @"read", args, nil)[@"exitCode"]) {}
+  [bridge shutdown];
+  Require(atomic_load(counter) == 1, @"Repeated detach does not release a grant twice");
+}
+
+static void TestLeaseDuringStartupDetach(void) {
+  atomic_int releases = 0;
+  atomic_int *counter = &releases;
+  dispatch_semaphore_t acquired = dispatch_semaphore_create(0);
+  dispatch_semaphore_t proceed = dispatch_semaphore_create(0);
+  dispatch_semaphore_t completed = dispatch_semaphore_create(0);
+  CISShellBridge *bridge = [[CISShellBridge alloc] initWithCommandsURL:CommandsURL
+      frameworksURL:FrameworksURL leaseProvider:^CISDirectoryLease *(NSString *directory, NSError **error) {
+        (void)error;
+        CISDirectoryLease *lease = [[CISDirectoryLease alloc] initWithPath:directory onRelease:^{
+          atomic_fetch_add(counter, 1);
+        }];
+        dispatch_semaphore_signal(acquired);
+        dispatch_semaphore_wait(proceed, DISPATCH_TIME_FOREVER);
+        return lease;
+      }];
+  [bridge call:@"start" arguments:@{@"workingDirectory":TestDirectory, @"columns":@80, @"rows":@24}
+      reply:^(id value, NSError *failure) {
+        Require(value == nil && [failure.userInfo[@"code"] isEqual:@"session_closed"],
+            @"Detach during native acquisition cancels startup");
+        Require(atomic_load(counter) == 1, @"Startup failure reply follows native lease release");
+        dispatch_semaphore_signal(completed);
+      }];
+  Wait(acquired, @"independent native lease acquisition");
+  [bridge shutdown];
+  Require(atomic_load(counter) == 0, @"Detach cannot revoke an in-flight native acquisition");
+  dispatch_semaphore_signal(proceed);
+  Wait(completed, @"startup cancellation and native lease cleanup");
+  Require(atomic_load(counter) == 1 && !CISShellSession.engineInUse,
+      @"Cancelled startup releases its grant and engine");
+}
+
 static void TestBridgeAndLifecycle(void) {
   CISShellBridge *bridge = [[CISShellBridge alloc] initWithCommandsURL:CommandsURL frameworksURL:FrameworksURL];
   NSDictionary *start = @{@"workingDirectory":TestDirectory, @"columns":@80, @"rows":@24};
@@ -324,10 +505,13 @@ int main(int argc, char **argv) {
     NSError *error;
     Require([NSFileManager.defaultManager createDirectoryAtPath:TestDirectory withIntermediateDirectories:YES attributes:nil error:&error], @"Create test working directory");
     TestValidation();
+    TestNativeLeaseOwnership();
     TestRealShell();
     TestInterrupts();
     TestBackpressureAndClose();
     TestBridgeAndLifecycle();
+    TestLeaseDuringDetach();
+    TestLeaseDuringStartupDetach();
     Require(!CISShellSession.engineInUse, @"All tests release the runtime");
     [NSFileManager.defaultManager removeItemAtPath:TestDirectory error:nil];
     alarm(0);

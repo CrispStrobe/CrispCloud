@@ -29,6 +29,7 @@ public final class CrispIosFilesPlugin: NSObject, FlutterPlugin,
         let channel = FlutterMethodChannel(name: "crisp_ios_files", binaryMessenger: registrar.messenger())
         let instance = CrispIosFilesPlugin(viewController: registrar.viewController())
         registrar.addMethodCallDelegate(instance, channel: channel)
+        registrar.publish(instance)
     }
 
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {

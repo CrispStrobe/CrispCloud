@@ -49,10 +49,12 @@ fallback.
 
 Each operation receives its own access lease. A terminal keeps its grant until
 the engine exits; a concurrent transfer, preview or second reader cannot release
-the terminal's access. File-browser reads and mutations use native coordination
-for document-provider URLs. A long-running terminal grant does not hold a
-provider-wide coordination lock. Symlinks and path ancestry are checked at the
-grant boundary; a textual path prefix is not proof of access.
+the terminal's access. The native shell also owns an independently resolved
+bookmark lease through command cleanup, so Flutter engine teardown cannot revoke
+its grant by detaching the file plugin first. File-browser reads and mutations
+use native coordination for document-provider URLs. A long-running terminal
+grant does not hold a provider-wide coordination lock. Symlinks and path ancestry
+are checked at the grant boundary; a textual path prefix is not proof of access.
 
 The terminal chooses a verified local source, starting with the active pane.
 Either pane can display remote storage, so neither the pane label nor a remote

@@ -48,7 +48,7 @@ xcrun --sdk iphonesimulator clang \
   -fobjc-arc -fblocks -Wall -Wextra -Werror=return-type \
   -I "$PACKAGE_DIR/ios/Classes" -F "$TEST_APP/Frameworks" \
   -framework ios_system -framework Foundation -framework UIKit \
-  -Wl,-rpath,@executable_path/Frameworks \
+  -Wl,-rpath,@executable_path/Frameworks -Wl,-export_dynamic \
   "$PACKAGE_DIR/ios/Classes/CISShellSession.m" \
   "$PACKAGE_DIR/ios/Classes/CISShellBridge.m" \
   "$PACKAGE_DIR/ios/Tests/NativeShellTests.m" \

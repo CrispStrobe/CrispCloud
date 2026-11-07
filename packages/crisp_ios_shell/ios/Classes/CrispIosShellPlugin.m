@@ -1,6 +1,7 @@
 #import "CrispIosShellPlugin.h"
 #import "CISShellBridge.h"
 #import <UIKit/UIKit.h>
+#import <crisp_ios_files/crisp_ios_files-Swift.h>
 
 @interface CrispIosShellPlugin ()
 @property(nonatomic, strong) CISShellBridge *bridge;
@@ -20,7 +21,12 @@
   // stub. The podspec and mandatory native tests also verify their preparation.
   if (!commands) commands = [NSURL fileURLWithPath:@"/missing-crisp-shell-commands.plist"];
   instance.bridge = [[CISShellBridge alloc] initWithCommandsURL:commands
-      frameworksURL:[NSURL fileURLWithPath:NSBundle.mainBundle.privateFrameworksPath isDirectory:YES]];
+      frameworksURL:[NSURL fileURLWithPath:NSBundle.mainBundle.privateFrameworksPath isDirectory:YES]
+      leaseProvider:^CISDirectoryLease *(NSString *directory, NSError **error) {
+        CrispNativeDirectoryLease *native = [CrispNativeDirectoryLease acquire:directory error:error];
+        if (!native) return nil;
+        return [[CISDirectoryLease alloc] initWithPath:native.path onRelease:^{ [native close]; }];
+      }];
   [registrar addMethodCallDelegate:instance channel:channel];
   [registrar publish:instance];
   [NSNotificationCenter.defaultCenter addObserver:instance selector:@selector(didEnterBackground:)
