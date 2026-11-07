@@ -1,8 +1,7 @@
-// test/custom_ca_test.dart
-//
-// Tests for custom CA certificate support and TLS version enforcement.
-
+// Tests use real X.509 certificates. PEM labels and issuer-name matching are
+// never an alternative to native certificate parsing and TLS chain validation.
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -10,17 +9,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:crisp_cloud/services/cert_pinning_service.dart';
 
-/// A fake PEM certificate with embedded Subject and CN fields.
-Uint8List _fakePem({String cn = 'My Custom CA', String? subject}) {
-  final text = '''
------BEGIN CERTIFICATE-----
-Subject: ${subject ?? 'CN=$cn, O=TestOrg'}
-Issuer: CN=$cn, O=TestOrg
-MIIBkTCB+wIJALRiMLAh7DAMB8wHQYDVQQDDBZNeSBDdXN0b20gQ0E=
------END CERTIFICATE-----
-''';
-  return Uint8List.fromList(utf8.encode(text));
-}
+Uint8List _fixture(String name) =>
+    File('test/fixtures/tls/$name').readAsBytesSync();
+
+Uint8List _der(Uint8List pem) => base64Decode(
+  utf8
+      .decode(pem)
+      .replaceAll('-----BEGIN CERTIFICATE-----', '')
+      .replaceAll('-----END CERTIFICATE-----', '')
+      .replaceAll(RegExp(r'\s'), ''),
+);
 
 void main() {
   late CertPinningService service;
@@ -30,209 +28,163 @@ void main() {
     service = CertPinningService();
   });
 
-  // ---------------------------------------------------------------------------
-  // Custom CA certificate management
-  // ---------------------------------------------------------------------------
-
-  group('Custom CA certificates -', () {
-    test('initially empty', () {
-      expect(service.getCustomCaCerts(), isEmpty);
+  group('Custom CA certificates', () {
+    test('valid PEM and DER certificates can be imported', () async {
+      await service.addCustomCaCert(_fixture('ca.pem'));
+      await service.addCustomCaCert(_der(_fixture('other-ca.pem')));
+      expect(service.getCustomCaCerts(), hasLength(2));
+      expect(
+        service.getCustomCaCertInfos().first.subjectDn,
+        startsWith('SHA-256: '),
+      );
     });
 
-    test('add a custom CA cert', () async {
-      await service.addCustomCaCert(_fakePem());
-      expect(service.getCustomCaCerts(), hasLength(1));
-    });
-
-    test('add multiple custom CA certs', () async {
-      await service.addCustomCaCert(_fakePem(cn: 'CA 1'));
-      await service.addCustomCaCert(_fakePem(cn: 'CA 2'));
-      await service.addCustomCaCert(_fakePem(cn: 'CA 3'));
-      expect(service.getCustomCaCerts(), hasLength(3));
-    });
-
-    test('remove custom CA cert by index', () async {
-      await service.addCustomCaCert(_fakePem(cn: 'CA A'));
-      await service.addCustomCaCert(_fakePem(cn: 'CA B'));
-      await service.removeCustomCaCert(0);
-      final certs = service.getCustomCaCerts();
-      expect(certs, hasLength(1));
-      final text = utf8.decode(certs.first);
-      expect(text, contains('CA B'));
-    });
-
-    test('remove at invalid index is no-op', () async {
-      await service.addCustomCaCert(_fakePem());
-      await service.removeCustomCaCert(-1);
-      await service.removeCustomCaCert(5);
-      expect(service.getCustomCaCerts(), hasLength(1));
-    });
-
-    test('getCustomCaCerts returns unmodifiable list', () async {
-      await service.addCustomCaCert(_fakePem());
-      final list = service.getCustomCaCerts();
-      expect(() => list.add(Uint8List(0)), throwsUnsupportedError);
-    });
-
-    test('getCustomCaCertInfos extracts subject', () async {
-      await service.addCustomCaCert(_fakePem(cn: 'Test CA'));
-      final infos = service.getCustomCaCertInfos();
-      expect(infos, hasLength(1));
-      expect(infos.first.subjectDn, contains('Test CA'));
-    });
-  });
-
-  // ---------------------------------------------------------------------------
-  // Custom CA persistence
-  // ---------------------------------------------------------------------------
-
-  group('Custom CA persistence -', () {
-    test('save and load round-trip', () async {
-      await service.addCustomCaCert(_fakePem(cn: 'Persisted CA'));
-      await service.addCustomCaCert(_fakePem(cn: 'Another CA'));
-
-      // Create a new service and load from SharedPreferences
-      final service2 = CertPinningService();
-      await service2.loadCustomCaCerts();
-      final certs = service2.getCustomCaCerts();
-      expect(certs, hasLength(2));
-
-      final text1 = utf8.decode(certs[0]);
-      final text2 = utf8.decode(certs[1]);
-      expect(text1, contains('Persisted CA'));
-      expect(text2, contains('Another CA'));
-    });
-
-    test('save stores base64 in SharedPreferences', () async {
-      final pem = _fakePem(cn: 'Base64 Test');
-      await service.addCustomCaCert(pem);
-
-      final prefs = await SharedPreferences.getInstance();
-      final stored = prefs.getStringList('custom_ca_certs');
-      expect(stored, isNotNull);
-      expect(stored, hasLength(1));
-
-      // Verify it's valid base64 that decodes back to original
-      final decoded = base64Decode(stored!.first);
-      expect(decoded, equals(pem));
-    });
-
-    test('load with empty prefs yields empty list', () async {
-      final fresh = CertPinningService();
-      await fresh.loadCustomCaCerts();
-      expect(fresh.getCustomCaCerts(), isEmpty);
-    });
-
-    test('load ignores corrupt base64 entries', () async {
-      final prefs = await SharedPreferences.getInstance();
-      final validPem = _fakePem(cn: 'Good');
-      await prefs.setStringList('custom_ca_certs', [
-        base64Encode(validPem),
-        '!!!not-base64!!!',
+    test('PEM bundle creates separate removable trust anchors', () async {
+      final bundle = Uint8List.fromList([
+        ..._fixture('ca.pem'),
+        ..._fixture('other-ca.pem'),
       ]);
-
-      final fresh = CertPinningService();
-      await fresh.loadCustomCaCerts();
-      expect(fresh.getCustomCaCerts(), hasLength(1));
+      await service.addCustomCaCert(bundle);
+      expect(service.getCustomCaCerts(), hasLength(2));
+      await service.removeCustomCaCert(0);
+      expect(
+        _der(service.getCustomCaCerts().single),
+        equals(_der(_fixture('other-ca.pem'))),
+      );
+      await service.removeCustomCaCert(-1);
+      await service.removeCustomCaCert(99);
+      expect(service.getCustomCaCerts(), hasLength(1));
     });
+
+    test(
+      'malformed PEM with fake Subject text is rejected before persistence',
+      () async {
+        final fake = Uint8List.fromList(
+          utf8.encode('''
+-----BEGIN CERTIFICATE-----
+Subject: CN=My Custom CA
+Issuer: CN=My Custom CA
+MIIBkTCB+wIJALRiMLAh7DAMB8wHQYDVQQDDBZNeSBDdXN0b20gQ0E=
+-----END CERTIFICATE-----
+'''),
+        );
+        await expectLater(service.addCustomCaCert(fake), throwsFormatException);
+        expect(service.getCustomCaCerts(), isEmpty);
+        final prefs = await SharedPreferences.getInstance();
+        expect(prefs.getStringList('custom_ca_certs'), isNull);
+      },
+    );
+
+    test(
+      'an invalid certificate prevents partial import of a bundle',
+      () async {
+        final mixed = Uint8List.fromList([
+          ..._fixture('ca.pem'),
+          ...utf8.encode(
+            '-----BEGIN CERTIFICATE-----\nAA==\n'
+            '-----END CERTIFICATE-----\n',
+          ),
+        ]);
+        await expectLater(
+          service.addCustomCaCert(mixed),
+          throwsFormatException,
+        );
+        expect(service.getCustomCaCerts(), isEmpty);
+      },
+    );
+
+    test('unsigned PEM metadata cannot spoof the display identifier', () async {
+      await service.addCustomCaCert(
+        Uint8List.fromList([
+          ...utf8.encode('Subject: CN=Untrusted display name\n'),
+          ..._fixture('ca.pem'),
+        ]),
+      );
+      final info = service.getCustomCaCertInfos().single;
+      expect(info.subjectDn, startsWith('SHA-256: '));
+      expect(info.subjectDn, isNot(contains('Untrusted display name')));
+      expect(utf8.decode(info.pemBytes), isNot(contains('Subject:')));
+    });
+
+    test('callers cannot mutate a previously validated certificate', () async {
+      await service.addCustomCaCert(_fixture('ca.pem'));
+      final snapshot = service.getCustomCaCerts();
+      expect(() => snapshot.add(Uint8List(0)), throwsUnsupportedError);
+      snapshot.single.fillRange(0, snapshot.single.length, 0);
+      expect(
+        _der(service.getCustomCaCerts().single),
+        equals(_der(_fixture('ca.pem'))),
+      );
+    });
+
+    test(
+      'valid certificates persist; corrupt and invalid old entries do not load',
+      () async {
+        await service.addCustomCaCert(_fixture('ca.pem'));
+        final prefs = await SharedPreferences.getInstance();
+        final stored = prefs.getStringList('custom_ca_certs')!;
+        await prefs.setStringList('custom_ca_certs', [
+          ...stored,
+          '!!!not-base64!!!',
+          base64Encode(utf8.encode('Subject: CN=Fake CA')),
+        ]);
+        final restored = CertPinningService();
+        await restored.load();
+        expect(restored.getCustomCaCerts(), hasLength(1));
+        expect(
+          _der(restored.getCustomCaCerts().single),
+          equals(_der(_fixture('ca.pem'))),
+        );
+      },
+    );
   });
 
-  // ---------------------------------------------------------------------------
-  // Custom CA validation
-  // ---------------------------------------------------------------------------
+  group('TLS policy', () {
+    test(
+      'default config requires TLS 1.2 and rejects unsafe renegotiation',
+      () {
+        final context = service.configureSecurityContext(null);
+        expect(context.minimumTlsProtocolVersion, TlsProtocolVersion.tls1_2);
+        expect(context.allowLegacyUnsafeRenegotiation, isFalse);
+      },
+    );
 
-  group('Custom CA validation -', () {
-    // We cannot construct a real X509Certificate in tests without dart:io
-    // network operations, but we can test the structural logic.
+    test(
+      'TLS 1.3 selection reaches the native context and survives reload',
+      () async {
+        await service.setMinTlsVersion(TlsVersion.tls13);
+        final restored = CertPinningService();
+        await restored.load();
+        expect(restored.getMinTlsVersion(), TlsVersion.tls13);
+        expect(
+          restored.configureSecurityContext(null).minimumTlsProtocolVersion,
+          TlsProtocolVersion.tls1_3,
+        );
+      },
+    );
 
-    test('validateWithCustomCAs returns false when no CAs stored', () async {
-      // No certs added, so validation should return false for any cert.
-      // We test indirectly by verifying the list is empty.
-      expect(service.getCustomCaCerts(), isEmpty);
+    test('caller TLS 1.3 policy is not weakened by TLS 1.2 preference', () {
+      final context = SecurityContext()
+        ..minimumTlsProtocolVersion = TlsProtocolVersion.tls1_3;
+      expect(
+        service.configureSecurityContext(context).minimumTlsProtocolVersion,
+        TlsProtocolVersion.tls1_3,
+      );
     });
 
-    test('adding CA then checking info shows correct subject', () async {
-      await service.addCustomCaCert(_fakePem(cn: 'Corp Internal CA'));
-      final infos = service.getCustomCaCertInfos();
-      expect(infos.first.subjectDn, contains('Corp Internal CA'));
-      expect(infos.first.issuerDn, contains('Corp Internal CA'));
-    });
-  });
-
-  // ---------------------------------------------------------------------------
-  // TLS version enforcement
-  // ---------------------------------------------------------------------------
-
-  group('TLS version -', () {
-    test('default is TLS 1.2', () {
-      expect(service.getMinTlsVersion(), equals(TlsVersion.tls12));
-    });
-
-    test('set to TLS 1.3', () async {
-      await service.setMinTlsVersion(TlsVersion.tls13);
-      expect(service.getMinTlsVersion(), equals(TlsVersion.tls13));
-    });
-
-    test('set to any', () async {
+    test('legacy any selection uses the supported platform default', () async {
       await service.setMinTlsVersion(TlsVersion.any);
-      expect(service.getMinTlsVersion(), equals(TlsVersion.any));
+      expect(
+        service.configureSecurityContext(null).minimumTlsProtocolVersion,
+        TlsProtocolVersion.tls1_2,
+      );
     });
 
-    test('persistence round-trip', () async {
-      await service.setMinTlsVersion(TlsVersion.tls13);
-
-      final service2 = CertPinningService();
-      await service2.load();
-      expect(service2.getMinTlsVersion(), equals(TlsVersion.tls13));
-    });
-
-    test('invalid stored value falls back to tls12', () async {
+    test('invalid stored TLS value falls back to TLS 1.2', () async {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('min_tls_version', 'bogus_value');
-
-      final fresh = CertPinningService();
-      await fresh.load();
-      expect(fresh.getMinTlsVersion(), equals(TlsVersion.tls12));
-    });
-
-    test('TlsVersion enum has expected values', () {
-      expect(TlsVersion.values, hasLength(3));
-      expect(TlsVersion.values, contains(TlsVersion.any));
-      expect(TlsVersion.values, contains(TlsVersion.tls12));
-      expect(TlsVersion.values, contains(TlsVersion.tls13));
-    });
-  });
-
-  // ---------------------------------------------------------------------------
-  // CertPinSet host matching (existing, but good to verify not broken)
-  // ---------------------------------------------------------------------------
-
-  group('CertPinSet -', () {
-    test('matchesHost with exact match', () {
-      const ps = CertPinSet(
-        name: 'Test',
-        hostPatterns: ['example.com'],
-        pins: {'abc='},
-      );
-      expect(ps.matchesHost('example.com'), isTrue);
-    });
-
-    test('matchesHost with suffix match', () {
-      const ps = CertPinSet(
-        name: 'Test',
-        hostPatterns: ['example.com'],
-        pins: {'abc='},
-      );
-      expect(ps.matchesHost('api.example.com'), isTrue);
-    });
-
-    test('matchesHost rejects non-matching host', () {
-      const ps = CertPinSet(
-        name: 'Test',
-        hostPatterns: ['example.com'],
-        pins: {'abc='},
-      );
-      expect(ps.matchesHost('other.com'), isFalse);
+      await prefs.setString('min_tls_version', 'bogus');
+      await service.load();
+      expect(service.getMinTlsVersion(), TlsVersion.tls12);
     });
   });
 }

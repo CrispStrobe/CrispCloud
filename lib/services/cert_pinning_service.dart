@@ -1,16 +1,9 @@
 // lib/services/cert_pinning_service.dart
 //
-// Certificate pinning for known cloud provider endpoints.
-//
-// Validates that TLS certificates for major providers (Google, Microsoft,
-// Dropbox, Amazon) match expected Subject Public Key Info (SPKI) SHA-256
-// fingerprints. This prevents MITM attacks even with a compromised CA.
-//
-// Pinning is opt-in and can be disabled in settings. When enabled, connections
-// to pinned hosts that present unexpected certificates are rejected.
-//
-// Note: Certificate pins must be updated when providers rotate their certs.
-// The service supports multiple pins per host for rotation tolerance.
+// Saved TLS trust settings. The historical service name is retained for callers,
+// but provider certificate pinning is not supported by the current transport.
+// Trust is established only by the platform TLS verifier, with optional custom
+// trust anchors. A rejected certificate is never accepted by a name comparison.
 
 import 'dart:convert';
 import 'dart:io';
@@ -21,20 +14,23 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'log_service.dart';
 
-/// Minimum TLS version enforcement preference.
+/// Minimum TLS version preference.
 enum TlsVersion {
-  /// Allow any TLS version (legacy override).
+  /// Use the platform default (TLS 1.2 or later).
+  /// The historical name remains for existing saved preferences.
   any,
 
   /// Require TLS 1.2 or higher (default).
   tls12,
 
-  /// Require TLS 1.3 or higher (strict).
+  /// Require TLS 1.3 or higher.
   tls13,
 }
 
-/// Information about a stored custom CA certificate.
+/// Information about an explicitly imported trust anchor.
 class CustomCaCertInfo {
+  /// Display identifier. Use a DER certificate fingerprint, never unverified
+  /// Subject/Issuer text outside the certificate's signed ASN.1 structure.
   final String subjectDn;
   final String issuerDn;
   final Uint8List pemBytes;
@@ -46,320 +42,190 @@ class CustomCaCertInfo {
   });
 }
 
-/// Known provider certificate pins.
-///
-/// Each entry maps a hostname pattern to a set of SHA-256 fingerprints
-/// of the Subject Public Key Info (SPKI). Multiple pins per host allow
-/// for cert rotation without breaking connectivity.
-///
-/// These are the root/intermediate CA pins (more stable than leaf pins).
-/// Sources: Google Trust Services, Microsoft PKI, DigiCert, Amazon Trust.
-class CertPinSet {
-  /// Hostnames this pin set applies to (supports suffix matching).
-  final List<String> hostPatterns;
-
-  /// SHA-256 hashes of acceptable SPKI (base64-encoded).
-  /// At least one must match for the connection to proceed.
-  final Set<String> pins;
-
-  /// Human-readable name for logging.
-  final String name;
-
-  const CertPinSet({
-    required this.hostPatterns,
-    required this.pins,
-    required this.name,
-  });
-
-  bool matchesHost(String host) {
-    final h = host.toLowerCase();
-    for (final pattern in hostPatterns) {
-      final p = pattern.toLowerCase();
-      if (h == p || h.endsWith('.$p')) return true;
-    }
-    return false;
-  }
-}
-
-/// Known provider pin sets.
-/// These pin the intermediate/root CAs used by each provider.
-const _knownPins = <CertPinSet>[
-  // Google (googleapis.com, accounts.google.com) — Google Trust Services roots
-  CertPinSet(
-    name: 'Google',
-    hostPatterns: ['googleapis.com', 'google.com', 'accounts.google.com'],
-    pins: {
-      // GTS Root R1
-      'hxqRlPTu1bMS/0DITB1SSu0vd4u/8l8TjPgfaAp63Gc=',
-      // GTS Root R2
-      'Vfd95BwDeSQo+NUYxVEEIBvvpOKEPWMRq/RCr4jowgk=',
-      // GlobalSign Root CA
-      'cGuxAXyFXFkWm61cF4HPWX8S0srS9j0aSqN0k4AP+4A=',
-    },
-  ),
-  // Microsoft (graph.microsoft.com, login.microsoftonline.com) — DigiCert / Microsoft roots
-  CertPinSet(
-    name: 'Microsoft',
-    hostPatterns: ['microsoft.com', 'microsoftonline.com', 'live.com', 'office.com'],
-    pins: {
-      // DigiCert Global Root G2
-      'i7WTqTvh0OioIruIfFR4kMPnBqrS2rdiVPl/s2uC/CY=',
-      // DigiCert Global Root CA
-      'r/mIkG3eEpVdm+u/ko/cwxzOMo1bk4TyHIlByibiA5E=',
-      // Baltimore CyberTrust Root (legacy, still seen)
-      'Y9mvm0exBk1JoQ57f9Vm28jKo5lFm/woKcVxrYxu80o=',
-    },
-  ),
-  // Dropbox (api.dropboxapi.com, content.dropboxapi.com) — DigiCert
-  CertPinSet(
-    name: 'Dropbox',
-    hostPatterns: ['dropboxapi.com', 'dropbox.com'],
-    pins: {
-      // DigiCert Global Root G2
-      'i7WTqTvh0OioIruIfFR4kMPnBqrS2rdiVPl/s2uC/CY=',
-      // DigiCert Global Root CA
-      'r/mIkG3eEpVdm+u/ko/cwxzOMo1bk4TyHIlByibiA5E=',
-    },
-  ),
-  // Amazon S3 (s3.amazonaws.com, *.s3.*.amazonaws.com) — Amazon Trust Services
-  CertPinSet(
-    name: 'Amazon S3',
-    hostPatterns: ['amazonaws.com', 'amazon.com'],
-    pins: {
-      // Amazon Root CA 1
-      '++MBgDH5WGvL9Bcn5Be30cRcL0f5O+NyoXuWtQdX1aI=',
-      // Amazon Root CA 2
-      'f0KW/FtqTjs108NpYj42SrGvOB2PpxIVM8nWxjPqJGE=',
-      // Starfield Services Root CA
-      'KwccWaCgrnaw6tsrrSO61FgLacNgG2MMLq8GE6+oP5I=',
-    },
-  ),
-];
-
 class CertPinningService {
   static const _log = Log('CertPinning');
   static const _enabledKey = 'cert_pinning_enabled';
   static const _customCaCertsKey = 'custom_ca_certs';
   static const _minTlsVersionKey = 'min_tls_version';
+  static final _pemCertificate = RegExp(
+    r'-----BEGIN CERTIFICATE-----\s*([A-Za-z0-9+/=\s]+?)-----END CERTIFICATE-----',
+  );
 
-  bool _enabled = false;
-  bool get isEnabled => _enabled;
+  /// The old bad-certificate callback did not implement pinning and weakened
+  /// certificate validation. Do not claim protection until a transport can
+  /// enforce real pins, together with normal TLS validation, before HTTP data.
+  bool get isEnabled => false;
 
   final List<Uint8List> _customCaCerts = [];
   TlsVersion _minTlsVersion = TlsVersion.tls12;
 
-  /// Load setting from SharedPreferences.
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
-    _enabled = prefs.getBool(_enabledKey) ?? false;
+    if (prefs.getBool(_enabledKey) == true) {
+      _log.warn(
+        'Removed unsupported certificate-pinning preference; '
+        'normal TLS certificate validation remains enabled.',
+      );
+    }
+    await prefs.remove(_enabledKey);
     await loadCustomCaCerts();
     await _loadMinTlsVersion();
   }
 
-  /// Enable or disable certificate pinning.
+  /// Kept for settings migration. Enabling unsupported pinning must not report
+  /// success or install a permissive bad-certificate callback.
   Future<void> setEnabled(bool enabled) async {
-    _enabled = enabled;
+    if (enabled) {
+      throw UnsupportedError(
+        'Certificate pinning is unavailable. '
+        'TLS certificates are still verified.',
+      );
+    }
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_enabledKey, enabled);
-    _log.info('Certificate pinning ${enabled ? 'enabled' : 'disabled'}');
+    await prefs.remove(_enabledKey);
   }
 
-  /// Validate a certificate against known pins.
+  /// Configure platform chain, hostname and validity verification. Custom CAs
+  /// apply independently of proxy and TLS-version settings.
   ///
-  /// Returns true if the cert is acceptable:
-  /// - If pinning is disabled, always returns true
-  /// - If the host is not in any pin set, returns true (unpinned hosts pass)
-  /// - If the host is pinned, at least one SPKI pin must match
-  bool validateCertificate(X509Certificate cert, String host) {
-    if (!_enabled) return true;
-
-    // Find matching pin set
-    CertPinSet? pinSet;
-    for (final ps in _knownPins) {
-      if (ps.matchesHost(host)) {
-        pinSet = ps;
-        break;
+  /// Keep an explicitly stricter caller context; never mutate defaultContext.
+  SecurityContext configureSecurityContext(SecurityContext? context) {
+    final result = context ?? SecurityContext(withTrustedRoots: true);
+    result.allowLegacyUnsafeRenegotiation = false;
+    if (_minTlsVersion == TlsVersion.tls13) {
+      result.minimumTlsProtocolVersion = TlsProtocolVersion.tls1_3;
+    } else if (_minTlsVersion == TlsVersion.tls12 &&
+        result.minimumTlsProtocolVersion != TlsProtocolVersion.tls1_3) {
+      result.minimumTlsProtocolVersion = TlsProtocolVersion.tls1_2;
+    }
+    for (final pem in _customCaCerts) {
+      for (final der in _decodeCertificates(pem)) {
+        _addTrustAnchor(result, der);
       }
     }
-
-    // No pins for this host — allow
-    if (pinSet == null) return true;
-
-    // Compute SPKI SHA-256 hash from the certificate's DER encoding
-    final spkiHash = _computeSpkiHash(cert);
-    if (spkiHash == null) {
-      _log.warn('Failed to compute SPKI hash for $host');
-      return false;
-    }
-
-    final matches = pinSet.pins.contains(spkiHash);
-    if (!matches) {
-      _log.warn('Certificate pin mismatch for $host (${pinSet.name}). '
-          'Got: $spkiHash. Expected one of: ${pinSet.pins}');
-    }
-    return matches;
+    return result;
   }
 
-  /// Compute the Base64-encoded SHA-256 of the certificate's DER-encoded
-  /// Subject Public Key Info.
-  String? _computeSpkiHash(X509Certificate cert) {
-    try {
-      // X509Certificate.der gives us the full DER-encoded certificate
-      final der = cert.der;
-
-      // Hash the entire certificate for now.
-      // A proper implementation would extract the SPKI from the ASN.1 structure,
-      // but for the Dart stdlib X509Certificate, we hash the full cert as a
-      // fingerprint. Pin values would need to match this approach.
-      final hash = sha256.convert(der);
-      return base64Encode(hash.bytes);
-    } catch (e) {
-      _log.error('Error computing cert hash', e);
-      return null;
-    }
-  }
-
-  // ---------------------------------------------------------------------------
-  // Custom CA certificates
-  // ---------------------------------------------------------------------------
-
-  /// Add a custom CA certificate from PEM-encoded bytes.
-  Future<void> addCustomCaCert(Uint8List pemBytes) async {
-    _customCaCerts.add(pemBytes);
+  /// Import PEM (including bundles) or DER only after the native X.509 parser
+  /// accepts every certificate. No user-provided label can establish trust.
+  Future<void> addCustomCaCert(Uint8List bytes) async {
+    final certificates = _validateAndNormalize(bytes);
+    _customCaCerts.addAll(certificates);
     await saveCustomCaCerts();
-    _log.info('Added custom CA certificate (${_customCaCerts.length} total)');
+    _log.info('Added ${certificates.length} custom CA certificate(s)');
   }
 
-  /// Remove a custom CA certificate by index.
   Future<void> removeCustomCaCert(int index) async {
     if (index < 0 || index >= _customCaCerts.length) return;
     _customCaCerts.removeAt(index);
     await saveCustomCaCerts();
-    _log.info('Removed custom CA certificate (${_customCaCerts.length} remaining)');
   }
 
-  /// Return list of stored custom CA certs (PEM bytes).
-  List<Uint8List> getCustomCaCerts() => List.unmodifiable(_customCaCerts);
+  /// Defensive copies prevent callers from changing already validated anchors.
+  List<Uint8List> getCustomCaCerts() =>
+      List.unmodifiable(_customCaCerts.map((cert) => Uint8List.fromList(cert)));
 
-  /// Get descriptive info for each stored custom CA cert for UI display.
   List<CustomCaCertInfo> getCustomCaCertInfos() {
     return _customCaCerts.map((pem) {
-      final text = utf8.decode(pem, allowMalformed: true);
-      final subject = _extractPemField(text, 'Subject:') ??
-          _extractCnFromPem(text) ??
-          'Unknown';
-      final issuer = _extractPemField(text, 'Issuer:') ?? subject;
+      final der = _decodeCertificates(pem).single;
       return CustomCaCertInfo(
-        subjectDn: subject,
-        issuerDn: issuer,
-        pemBytes: pem,
+        subjectDn: 'SHA-256: ${sha256.convert(der)}',
+        issuerDn: '',
+        pemBytes: Uint8List.fromList(pem),
       );
     }).toList();
   }
 
-  /// Load custom CA certs from SharedPreferences.
   Future<void> loadCustomCaCerts() async {
     final prefs = await SharedPreferences.getInstance();
-    final stored = prefs.getStringList(_customCaCertsKey);
+    final stored = prefs.getStringList(_customCaCertsKey) ?? const <String>[];
     _customCaCerts.clear();
-    if (stored != null) {
-      for (final b64 in stored) {
-        try {
-          _customCaCerts.add(base64Decode(b64));
-        } catch (e) {
-          _log.warn('Skipping corrupt custom CA cert entry', e);
-        }
+    for (final encoded in stored) {
+      try {
+        _customCaCerts.addAll(_validateAndNormalize(base64Decode(encoded)));
+      } catch (e) {
+        // Invalid old entries are not trust anchors and must never fall back to
+        // matching a Subject/CN string from PEM metadata.
+        _log.warn('Skipping invalid custom CA certificate', e);
       }
-    }
-    if (_customCaCerts.isNotEmpty) {
-      _log.info('Loaded ${_customCaCerts.length} custom CA certificate(s)');
     }
   }
 
-  /// Save custom CA certs to SharedPreferences as base64 list.
   Future<void> saveCustomCaCerts() async {
     final prefs = await SharedPreferences.getInstance();
-    final encoded = _customCaCerts.map((b) => base64Encode(b)).toList();
-    await prefs.setStringList(_customCaCertsKey, encoded);
+    await prefs.setStringList(
+      _customCaCertsKey,
+      _customCaCerts.map(base64Encode).toList(),
+    );
   }
 
-  /// Validate a certificate against custom CAs.
-  ///
-  /// Returns true if the cert's issuer DN contains the subject DN (or CN)
-  /// of any stored custom CA, indicating the cert chains to a trusted
-  /// custom CA.
-  bool validateWithCustomCAs(X509Certificate cert) {
-    if (_customCaCerts.isEmpty) return false;
-    final certIssuer = cert.issuer.toLowerCase();
-    for (final caPem in _customCaCerts) {
-      final caText = utf8.decode(caPem, allowMalformed: true);
-      final caSubject = (_extractPemField(caText, 'Subject:') ??
-              _extractCnFromPem(caText) ??
-              '')
-          .toLowerCase();
-      if (caSubject.isNotEmpty && certIssuer.contains(caSubject)) {
-        _log.info('Certificate accepted via custom CA: $caSubject');
-        return true;
+  static List<Uint8List> _validateAndNormalize(Uint8List bytes) {
+    try {
+      final certificates = _decodeCertificates(bytes);
+      final verifier = SecurityContext();
+      for (final der in certificates) {
+        _addTrustAnchor(verifier, der);
       }
-      // Also match if the full PEM subject appears as a substring of the issuer
-      final caCn = (_extractCnFromPem(caText) ?? '').toLowerCase();
-      if (caCn.isNotEmpty && certIssuer.contains(caCn)) {
-        _log.info('Certificate accepted via custom CA CN: $caCn');
-        return true;
-      }
+      return certificates.map(_encodePem).toList();
+    } catch (_) {
+      throw const FormatException('Import a valid PEM or DER certificate.');
     }
-    return false;
   }
 
-  /// Extract a labelled field from PEM text (e.g. "Subject: ...").
-  static String? _extractPemField(String text, String label) {
-    final idx = text.indexOf(label);
-    if (idx < 0) return null;
-    final start = idx + label.length;
-    var end = text.indexOf('\n', start);
-    if (end < 0) end = text.length;
-    return text.substring(start, end).trim();
+  static List<Uint8List> _decodeCertificates(Uint8List bytes) {
+    if (bytes.isEmpty) throw const FormatException('Empty certificate');
+    final text = utf8.decode(bytes, allowMalformed: true);
+    if (text.contains('-----BEGIN')) {
+      final matches = _pemCertificate.allMatches(text).toList();
+      if (matches.isEmpty ||
+          '-----BEGIN CERTIFICATE-----'.allMatches(text).length !=
+              matches.length ||
+          '-----END CERTIFICATE-----'.allMatches(text).length !=
+              matches.length) {
+        throw const FormatException('Malformed PEM certificate');
+      }
+      return matches
+          .map(
+            (match) =>
+                base64Decode(match.group(1)!.replaceAll(RegExp(r'\s'), '')),
+          )
+          .toList();
+    }
+    // The native parser below checks that these bytes are an X.509 certificate.
+    return [Uint8List.fromList(bytes)];
   }
 
-  /// Try to extract a CN= value from PEM text.
-  static String? _extractCnFromPem(String text) {
-    final re = RegExp(r'CN\s*=\s*([^\n,/]+)', caseSensitive: false);
-    final match = re.firstMatch(text);
-    return match?.group(1)?.trim();
+  static Uint8List _encodePem(Uint8List der) {
+    final encoded = base64Encode(der);
+    final pem = StringBuffer('-----BEGIN CERTIFICATE-----\n');
+    for (var start = 0; start < encoded.length; start += 64) {
+      final end = start + 64 < encoded.length ? start + 64 : encoded.length;
+      pem.writeln(encoded.substring(start, end));
+    }
+    pem.writeln('-----END CERTIFICATE-----');
+    return Uint8List.fromList(utf8.encode(pem.toString()));
   }
 
-  // ---------------------------------------------------------------------------
-  // TLS version enforcement
-  // ---------------------------------------------------------------------------
+  static void _addTrustAnchor(SecurityContext context, Uint8List der) {
+    // dart:io requires one DER certificate at a time on iOS. Other supported
+    // platforms accept PEM. Preserve normal platform certificate verification.
+    context.setTrustedCertificatesBytes(Platform.isIOS ? der : _encodePem(der));
+  }
 
-  /// Get the current minimum TLS version setting.
   TlsVersion getMinTlsVersion() => _minTlsVersion;
 
-  /// Set the minimum TLS version and persist.
   Future<void> setMinTlsVersion(TlsVersion version) async {
     _minTlsVersion = version;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_minTlsVersionKey, version.name);
-    _log.info('Minimum TLS version set to ${version.name}');
   }
 
   Future<void> _loadMinTlsVersion() async {
     final prefs = await SharedPreferences.getInstance();
     final stored = prefs.getString(_minTlsVersionKey);
-    if (stored != null) {
-      _minTlsVersion = TlsVersion.values.firstWhere(
-        (v) => v.name == stored,
-        orElse: () => TlsVersion.tls12,
-      );
-    }
-  }
-
-  /// Get info about what's pinned for display in UI.
-  List<Map<String, dynamic>> getPinnedProviders() {
-    return _knownPins.map((ps) => {
-      'name': ps.name,
-      'hosts': ps.hostPatterns,
-      'pinCount': ps.pins.length,
-    }).toList();
+    _minTlsVersion = TlsVersion.values.firstWhere(
+      (value) => value.name == stored,
+      orElse: () => TlsVersion.tls12,
+    );
   }
 }
