@@ -1,0 +1,121 @@
+import 'file_item.dart';
+
+/// A metadata snapshot. [bytes] is the sum of known file sizes, never allocated
+/// filesystem blocks, free space, or a provider's account quota.
+class StorageNode {
+  StorageNode({
+    required this.item,
+    List<StorageNode> children = const [],
+    required this.bytes,
+    required this.fileCount,
+    required this.folderCount,
+    this.unknownSizeCount = 0,
+    this.skippedLinkCount = 0,
+    this.isComplete = true,
+  }) : children = List.unmodifiable(children);
+
+  final FileItem item;
+  final List<StorageNode> children;
+  final int bytes;
+  final int fileCount;
+
+  /// Descendant directories, excluding this node and symbolic links.
+  final int folderCount;
+  final int unknownSizeCount;
+  final int skippedLinkCount;
+
+  /// False when files have unknown sizes, or any subtree could not be scanned.
+  /// Intentionally excluded symbolic links are counted separately.
+  final bool isComplete;
+
+  String get name => item.name;
+  String get path => item.path ?? item.name;
+  bool get isFolder => item.isFolder;
+}
+
+enum StorageScanIssueCode {
+  rootUnavailable,
+  unreadableDirectory,
+  incompleteListing,
+  invalidEntry,
+  duplicateEntry,
+  depthLimit,
+  entryLimit,
+  byteLimit,
+  sourceChanged,
+}
+
+class StorageScanIssue {
+  const StorageScanIssue({
+    required this.path,
+    required this.code,
+    required this.message,
+  });
+
+  final String path;
+  final StorageScanIssueCode code;
+  final String message;
+}
+
+class StorageScanProgress {
+  const StorageScanProgress({
+    required this.files,
+    required this.folders,
+    required this.bytes,
+    required this.currentPath,
+  });
+
+  final int files;
+
+  /// Discovered descendant directories, excluding the scan root and links.
+  final int folders;
+  final int bytes;
+  final String currentPath;
+}
+
+class StorageScanResult {
+  StorageScanResult({
+    required this.root,
+    List<StorageScanIssue> issues = const [],
+    required this.cancelled,
+    required this.limited,
+    required this.sourceChanged,
+    required this.startedAt,
+    required this.completedAt,
+    this.suppressedIssueCount = 0,
+  }) : issues = List.unmodifiable(issues);
+
+  final StorageNode root;
+  final List<StorageScanIssue> issues;
+  final bool cancelled;
+  final bool limited;
+  final bool sourceChanged;
+  final DateTime startedAt;
+  final DateTime completedAt;
+
+  /// Diagnostics are bounded independently of the tree; no errors are silently
+  /// treated as successful scans when the detail limit is reached.
+  final int suppressedIssueCount;
+
+  bool get isComplete =>
+      root.isComplete && !cancelled && !limited && !sourceChanged;
+}
+
+/// Providers with pagination/error metadata can retain partial entries without
+/// claiming their directory listing is complete.
+class StorageScanDirectory {
+  StorageScanDirectory({
+    required List<FileItem> entries,
+    List<StorageScanIssue> issues = const [],
+    this.isComplete = true,
+  }) : entries = List.unmodifiable(entries),
+       issues = List.unmodifiable(issues);
+
+  final List<FileItem> entries;
+  final List<StorageScanIssue> issues;
+  final bool isComplete;
+}
+
+abstract interface class StorageScanDirectoryReader {
+  Future<StorageScanDirectory> listForStorageScan(String path);
+}
