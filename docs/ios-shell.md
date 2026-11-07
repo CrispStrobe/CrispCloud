@@ -111,6 +111,7 @@ python3 packages/crisp_ios_shell/tool/prepare.py
 
 (cd packages/crisp_ios_shell && flutter pub get && flutter test --coverage)
 (cd packages/crisp_ios_files && flutter pub get && flutter test --coverage)
+python3 -m unittest discover -s packages/crisp_ios_shell/tool/tests -v
 
 flutter test test/ios_terminal_connection_test.dart \
   test/terminal_backend_metadata_test.dart \
@@ -122,7 +123,12 @@ flutter test test/ios_terminal_connection_test.dart \
   test/terminal_workspace_integration_review_test.dart \
   test/ios_local_file_service_test.dart \
   test/terminal_session_test.dart \
-  test/terminal_scoped_access_test.dart
+  test/terminal_scoped_access_test.dart \
+  test/file_operation_backend_test.dart \
+  test/file_operation_phase_guard_test.dart \
+  test/transfer_recovery_test.dart
+
+flutter test --platform chrome test/terminal_workspace_web_test.dart
 
 swift test --package-path packages/crisp_ios_files/ios/ScopeCore
 packages/crisp_ios_shell/tool/test_native.sh SIMULATOR_UDID

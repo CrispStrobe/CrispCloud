@@ -7,11 +7,11 @@ abstract interface class TerminalConnection {
   /// Buffered until listened to; closes only after final output has drained.
   Stream<String> get output;
 
-  /// Settles after the owned process/runtime has released its resources.
-  /// Scoped transports may release directory grants once this settles, even
-  /// when it completes with an output/transport error. A failed [close] must
-  /// leave this pending while native cleanup is still unconfirmed.
   /// Null when the transport does not expose a process exit status.
+  /// For a scoped local transport, this must settle only after the owned
+  /// runtime has released its resources, even when it reports a transport
+  /// error: the wrapper releases its folder grant at that point. A failed
+  /// [close] leaves it pending while native cleanup is unconfirmed.
   Future<int?> get exitCode;
 
   Future<void> write(String data);

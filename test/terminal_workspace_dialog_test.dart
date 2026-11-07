@@ -70,6 +70,7 @@ class _Service extends Fake implements TerminalWorkspaceService {
   int loads = 0;
   int resumes = 0;
   int uploads = 0;
+  List<String> uploadWarnings = const [];
   CloudStorageClient? uploadedClient;
   List<TerminalWorkspaceChange>? uploadedChanges;
   @override
@@ -123,7 +124,7 @@ class _Service extends Fake implements TerminalWorkspaceService {
     uploadedClient = client;
     uploadedChanges = changes;
     return TerminalWorkspaceUploadResult(
-      workspace: saved.single,
+      workspace: saved.single.copyWith(warnings: uploadWarnings),
       uploadedPaths: [changes.first.relativePath],
       skippedPaths: const [],
       failures: const {'conflict.txt': 'Remote file changed.'},
@@ -396,7 +397,8 @@ void main() {
   testWidgets('review resolves the original account only after selection', (
     tester,
   ) async {
-    final service = _Service();
+    final service = _Service()
+      ..uploadWarnings = ['Recovery copy retained at /cloud/backup.txt'];
     final client = _Client();
     var resolutions = 0;
     await _launch(
@@ -424,6 +426,10 @@ void main() {
     expect(service.uploadedChanges, [same(service.changes.single)]);
     expect(find.text('Uploaded: file.txt'), findsOneWidget);
     expect(find.textContaining('Remote file changed.'), findsOneWidget);
+    expect(
+      find.text('Recovery copy retained at /cloud/backup.txt'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('a missing account keeps reviewed changes local', (tester) async {

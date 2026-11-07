@@ -220,6 +220,11 @@ Future<void> reviewTerminalWorkspace(
                     '${context.workspaceTr('Kept locally')}: ${entry.key}\n${entry.value}',
                   ),
                 ),
+              for (final warning in result.workspace.warnings)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: SelectableText(warning),
+                ),
             ],
           ),
         ),

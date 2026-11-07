@@ -165,6 +165,7 @@ void main() {
   late ProviderContainer container;
   late TerminalSession session;
   late Completer<Map<String, Object?>> output;
+  late bool cleanupFails;
   String? shellDirectory;
 
   setUp(() {
@@ -175,6 +176,7 @@ void main() {
     workspaces = _Workspaces();
     session = TerminalSession();
     output = Completer<Map<String, Object?>>();
+    cleanupFails = false;
     shellDirectory = null;
     container = ProviderContainer(
       overrides: [
@@ -194,6 +196,9 @@ void main() {
             case 'read':
               return output.future;
             case 'close':
+              if (cleanupFails) {
+                throw PlatformException(code: 'cleanup_unconfirmed');
+              }
               if (!output.isCompleted) {
                 output.complete({'data': Uint8List(0), 'exitCode': 0});
               }
@@ -205,6 +210,7 @@ void main() {
   });
 
   tearDown(() async {
+    cleanupFails = false;
     await session.disconnect();
     session.dispose();
     container.dispose();
@@ -277,6 +283,50 @@ void main() {
     },
     variant: TargetPlatformVariant.only(TargetPlatform.iOS),
   );
+
+  testWidgets('cleanup failure stays visible with a working disconnect retry', (
+    tester,
+  ) async {
+    await mount(tester);
+    await action(tester, 'Stage selected files');
+    await tester.pumpAndSettle();
+    expect(local.leases, 1);
+
+    cleanupFails = true;
+    await action(tester, 'Disconnect');
+    await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Shell cleanup failed'), findsOneWidget);
+    expect(session.status, TerminalSessionStatus.failed);
+    expect(local.leases, 1);
+
+    await tester.tap(find.byKey(const ValueKey('terminal-actions')));
+    await tester.pumpAndSettle();
+    final disconnectItem = find.ancestor(
+      of: find.text('Disconnect'),
+      matching: find.byWidgetPredicate(
+        (widget) => widget is PopupMenuItem<dynamic>,
+      ),
+    );
+    expect(
+      tester.widget<PopupMenuItem<dynamic>>(disconnectItem).enabled,
+      isTrue,
+    );
+    cleanupFails = false;
+    await tester.tap(find.text('Disconnect'));
+    // The original pending native read belongs to setUp's real event loop;
+    // flush it as well as the widget clock to finish the retry handshake.
+    await tester.pump();
+    await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Shell cleanup failed'), findsNothing);
+    expect(find.text('Disconnected'), findsOneWidget);
+    expect(session.error, isNull);
+    expect(session.canDisconnect, isFalse);
+    expect(local.leases, 0);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
 
   testWidgets(
     'account disconnection invalidates a staging request without opening a shell',
