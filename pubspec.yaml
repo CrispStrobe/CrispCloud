@@ -162,6 +162,7 @@ dependencies:
   flutter_widget_from_html_core: ^0.17.4
   quds_office_engine: ^1.5.0
   quds_office_editor: ^1.6.0
+  win32: ^5.15.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

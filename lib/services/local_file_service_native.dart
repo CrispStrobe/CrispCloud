@@ -15,6 +15,7 @@ import 'package:macos_secure_bookmarks/macos_secure_bookmarks.dart';
 import '../models/file_item.dart';
 import 'bookmark_service.dart';
 import 'local_file_service.dart';
+import 'native_system.dart';
 import 'macos_bookmark_service.dart';
 import '../utils/path_access.dart';
 
@@ -463,25 +464,11 @@ class MacosFileService
 
   int? _currentUid() {
     if (_cachedUid != null) return _cachedUid;
-    try {
-      final result = Process.runSync('/usr/bin/id', <String>['-u']);
-      _cachedUid = int.tryParse(result.stdout.toString().trim());
-    } catch (_) {
-      _cachedUid = null;
-    }
+    _cachedUid = currentUserId();
     return _cachedUid;
   }
 
-  int? _ownerUid(String path) {
-    try {
-      final result = Platform.isMacOS
-          ? Process.runSync('/usr/bin/stat', <String>['-f', '%u', path])
-          : Process.runSync('/usr/bin/stat', <String>['-c', '%u', path]);
-      return int.tryParse(result.stdout.toString().trim());
-    } catch (_) {
-      return null;
-    }
-  }
+  int? _ownerUid(String path) => fileOwnerUserId(path);
 
   /// A root-owned item with no group/other read bit cannot be opened by a
   /// normal user no matter what folder grant is issued. Do not loop the

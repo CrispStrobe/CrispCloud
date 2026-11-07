@@ -1348,14 +1348,11 @@ void showFileContextMenu(
         onTap: () async {
           try {
             requireCurrentOrigin(origin);
-            if (Platform.isMacOS) {
-              await Process.run('open', ['-R', file.path!]);
-            } else if (Platform.isWindows) {
-              await Process.run('explorer', ['/select,', file.path!]);
-            } else if (Platform.isLinux) {
-              final dir = file.isFolder ? file.path! : p.dirname(file.path!);
-              await Process.run('xdg-open', [dir]);
-            }
+            final dir = file.isFolder ? file.path! : p.dirname(file.path!);
+            await launchUrl(
+              Uri.file(dir),
+              mode: LaunchMode.externalApplication,
+            );
           } catch (e) {
             _log.warn('operation failed', e);
           }

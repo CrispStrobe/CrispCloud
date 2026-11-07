@@ -4,7 +4,7 @@
 // On macOS: enumerates /Volumes; Linux: /proc/mounts; Windows: drive letters.
 // On remote panels: shows bookmarks.
 
-import 'dart:io' show Directory, File, Platform, Process;
+import 'dart:io' show Directory, File, Platform;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -134,33 +134,22 @@ Future<List<DriveEntry>> _linuxMounts() async {
 }
 
 Future<List<DriveEntry>> _windowsDrives() async {
-  try {
-    final result = await Process.run('wmic', [
-      'logicaldisk',
-      'get',
-      'DeviceID,Description',
-    ]);
-    final entries = <DriveEntry>[];
-    final lines = result.stdout.toString().trim().split('\n');
-    for (final line in lines.skip(1)) {
-      final parts = line.trim().split(RegExp(r'\s{2,}'));
-      if (parts.isEmpty || parts.first.isEmpty) continue;
-      final desc = parts.first.trim();
-      final letter = parts.length > 1 ? parts.last.trim() : desc;
-      if (letter.length >= 2 && letter[1] == ':') {
-        final icon = desc.toLowerCase().contains('cd')
-            ? Icons.album
-            : desc.toLowerCase().contains('removable')
-            ? Icons.usb
-            : Icons.storage;
-        entries.add(DriveEntry(path: '$letter\\', label: letter, icon: icon));
-      }
+  final entries = <DriveEntry>[];
+  // Probe drive roots directly. wmic is absent on recent Windows builds and
+  // is blocked by some enterprise policies.
+  for (var index = 0; index < 26; index++) {
+    final letter = String.fromCharCode(65 + index);
+    final root = '$letter:\\';
+    try {
+      if (!Directory(root).existsSync()) continue;
+      entries.add(
+        DriveEntry(path: root, label: '$letter:', icon: Icons.storage),
+      );
+    } catch (_) {
+      // An empty removable drive can throw; skip it.
     }
-    return entries;
-  } catch (e) {
-    // TODO: add logging
-    return [];
   }
+  return entries;
 }
 
 class DriveBar extends ConsumerWidget {
