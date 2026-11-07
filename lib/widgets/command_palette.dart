@@ -34,6 +34,8 @@ import 'transfer_history_dialog.dart';
 import 'integrity_dialogs.dart';
 import 'integrity_recovery_dialog.dart';
 import 'directory_comparison_dialog.dart';
+import 'storage_analyzer_dialog.dart';
+import '../l10n/storage_analyzer_strings.dart';
 import 'file_clipboard_actions.dart';
 import 'pdf_editor_dialog.dart';
 import 'pdf_operations_dialog.dart';
@@ -408,6 +410,11 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
       ),
 
       // Operations
+      _Command(
+        name: StorageAnalyzerStrings(context).text('title'),
+        icon: Icons.space_dashboard_outlined,
+        action: () => showStorageAnalyzerDialog(widget.parentContext, ref),
+      ),
       if (pdfFiles.length == 1 &&
           !pdfFiles.single.isFolder &&
           isPdfFileName(pdfFiles.single.name))
