@@ -672,11 +672,7 @@ class _CredentialStorageSettingsSectionState
               ].join('\n'),
             ),
             trailing: _busy
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
+                ? const Icon(Icons.hourglass_empty)
                 : const Icon(Icons.chevron_right),
             onTap: _busy ? null : _change,
           ),
@@ -699,9 +695,8 @@ class _CredentialStorageSettingsSectionState
       final previous = await CredentialStorageConfig.readSelection();
       if (!mounted) return;
       final active = ref.read(credentialStorageModeProvider);
-      // The modal blocks interaction; do not leave an indeterminate progress
-      // animation running behind it (and in widget tests).
-      setState(() => _busy = false);
+      // Keep the operation guarded through both the dialog and the awaited
+      // post-dialog verification/save. The static busy icon needs no animation.
       final result = await showCredentialStorageSetupDialog(
         context,
         initialMode: previous.mode ?? active,
@@ -722,6 +717,14 @@ class _CredentialStorageSettingsSectionState
       await CredentialStorageConfig.writeSelection(
         mode: result.mode,
         customKeychainPath: path,
+        // A missing already-selected vault is not permission to replace it.
+        // Only this authenticated switch from another mode grants creation;
+        // revisiting an unconsumed choice preserves its existing intent.
+        createFileVault:
+            result.mode == CredentialStorageMode.encryptedFile &&
+            active != CredentialStorageMode.encryptedFile &&
+            (previous.mode != CredentialStorageMode.encryptedFile ||
+                previous.createFileVault),
       );
       if (!mounted) return;
       ref.read(credentialStoragePendingModeProvider.notifier).state =

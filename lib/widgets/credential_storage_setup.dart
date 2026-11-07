@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../l10n/settings_strings.dart';
+import '../l10n/startup_failure_strings.dart';
 import '../l10n/app_localizations.dart';
 import '../services/credential_storage_config.dart';
 import '../services/macos_keychain_service.dart';
@@ -25,14 +26,9 @@ enum _KeychainChoice { login, existing, newKeychain }
 /// user chooses a working backend instead of being auto-dropped into a keychain
 /// failure.
 class CredentialStorageSetupScreen extends StatelessWidget {
-  const CredentialStorageSetupScreen({
-    super.key,
-    required this.onComplete,
-    this.recovery = false,
-  });
+  const CredentialStorageSetupScreen({super.key, required this.onComplete});
 
   final ValueChanged<CredentialStorageSetupResult> onComplete;
-  final bool recovery;
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +52,6 @@ class CredentialStorageSetupScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(24),
                   child: CredentialStorageSetupPanel(
                     firstRun: true,
-                    recovery: recovery,
                     onComplete: onComplete,
                   ),
                 ),
@@ -101,14 +96,12 @@ class CredentialStorageSetupPanel extends StatefulWidget {
     super.key,
     required this.onComplete,
     this.firstRun = false,
-    this.recovery = false,
     this.initialMode = CredentialStorageMode.systemKeychain,
     this.initialKeychainPath,
   });
 
   final ValueChanged<CredentialStorageSetupResult> onComplete;
   final bool firstRun;
-  final bool recovery;
   final CredentialStorageMode initialMode;
   final String? initialKeychainPath;
 
@@ -171,6 +164,14 @@ class _CredentialStorageSetupPanelState
 
   String _text(String value) => SettingsStrings(context).text(value);
 
+  static const _validationMessages = {
+    'Use at least 8 characters for the master password.',
+    'Master passwords do not match.',
+    'Select a keychain file.',
+    'Enter a path and password for the new keychain.',
+    'The system keychain is unavailable. Choose an encrypted file or session-only storage.',
+  };
+
   Future<void> _pickExistingKeychain() async {
     try {
       final path = await MacosKeychainService.chooseKeychain(
@@ -197,6 +198,7 @@ class _CredentialStorageSetupPanelState
   }
 
   Future<void> _submit() async {
+    if (_busy) return;
     setState(() {
       _error = null;
       _busy = true;
@@ -295,20 +297,17 @@ class _CredentialStorageSetupPanelState
           keychainPath: path,
         ),
       );
-    } on FlutterError catch (error) {
-      if (mounted) {
-        setState(() {
-          _busy = false;
-          _error = error.message ?? error.toString();
-        });
-      }
     } catch (error) {
       if (mounted) {
         setState(() {
           _busy = false;
-          _error = _text(
-            error.toString().replaceFirst('FormatException: ', ''),
-          );
+          // Show only our fixed validation messages. Platform and parse
+          // exceptions can include private paths or credential contents.
+          _error =
+              error is FormatException &&
+                  _validationMessages.contains(error.message)
+              ? _text(error.message)
+              : StartupFailureStrings(context).credentialStorageUnavailable;
         });
       }
     }
@@ -346,22 +345,6 @@ class _CredentialStorageSetupPanelState
           ),
           style: theme.textTheme.bodyMedium,
         ),
-        if (widget.recovery) ...[
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.errorContainer,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              _text(
-                'The previous credential store is unavailable. If it contained an App Lock, that lock cannot be verified until the original store is restored. Only choose another store if you accept that.',
-              ),
-              style: TextStyle(color: theme.colorScheme.onErrorContainer),
-            ),
-          ),
-        ],
         const SizedBox(height: 20),
         _modeTile(
           CredentialStorageMode.systemKeychain,

@@ -55,7 +55,7 @@
         "packages/filen_client/UPSTREAM.md",
         "https://pub.dev/packages/filen_client/versions/0.2.2"
       ],
-      "note": "Required provider; retain protocol compatibility and host secure credential storage."
+      "note": "Required provider; retain protocol compatibility. The production SDK uses the same injected host secure credential store as the app, verifies saved bytes before persistent legacy-file cleanup, and preserves durable legacy credentials in session mode. The standalone SDK CLI's default credential wrapping is not a substitute for host secure storage."
     },
     {
       "name": "Internxt provider",
@@ -141,11 +141,12 @@
         "lib/services/secure_storage_web.dart",
         "lib/services/secure_storage_file_io.dart",
         "lib/services/secure_storage_macos_keychain.dart",
+        "lib/services/credential_storage_recovery.dart",
         "macos/Runner/CustomKeychainStore.swift",
         "https://developer.apple.com/documentation/technotes/tn3137-on-mac-keychains",
         "https://developer.apple.com/documentation/security/accessing-files-from-the-macos-app-sandbox"
       ],
-      "note": "PR26 follow-up: configured-store failures are explicit, not an automatic backend switch; settings distinguish active/pending selection and guard App Lock. Session-only does not import or delete persistent legacy credentials. File-vault metadata is validated before KDF work, with a 2000000-iteration ceiling; new version 2 values reject cross-key substitution, while legacy unbound values remain readable until rewritten. Native transactions do not imply browser cross-tab atomicity or whole-vault anti-rollback protection. Custom keychain creation refuses occupied/reserved paths and retains security-scoped access without global default/search-list setters. File/session backends require foreground availability and do not unlock unattended workers. This entry does not grant a new export classification or an OS-only Apple exemption."
+      "note": "PR26 follow-up: configured-store failures are explicit, not an automatic backend switch; settings distinguish active/pending selection and guard App Lock. Startup recovery can regrant access only to the same existing configured macOS keychain, verified before bookmark replacement, and then retries its original policy gate. A missing existing vault blocks startup. Version-3 selections carry an explicit fresh-setup/authenticated-switch creation grant, consumed through a verified write before initialization and never automatically restored after failure; version-2 selections imply no grant. Preference serialization is not cross-process compare-and-swap. Session-only does not import or delete persistent legacy credentials. File-vault metadata is validated before KDF work, with a 2000000-iteration ceiling; new version 2 credential values reject cross-key substitution, while legacy unbound values remain readable until rewritten. Native transactions do not imply browser cross-tab atomicity or whole-vault anti-rollback protection. Custom keychain creation refuses occupied/reserved paths and retains security-scoped access without global default/search-list setters. File/session backends require foreground availability and do not unlock unattended workers. This entry does not grant a new export classification or an OS-only Apple exemption."
     },
     {
       "name": "Archive password compatibility",
@@ -195,6 +196,8 @@
     "lib/services/bcrypt_aesgcm.dart",
     "lib/services/filen_client_adapter.dart",
     "lib/services/filen_config_service.dart",
+    "lib/services/filen_legacy_credentials_io.dart",
+    "lib/services/filen_legacy_credentials_stub.dart",
     "lib/services/filen_stream_transfer.dart",
     "lib/services/internxt_client_adapter.dart",
     "lib/services/internxt_streaming_transfer.dart",
@@ -211,6 +214,7 @@
     "lib/widgets/archive_workspace_dialog.dart",
     "lib/widgets/internal_viewer_dialog.dart",
     "packages/filen_client/lib/crypto.dart",
+    "packages/filen_client/lib/config.dart",
     "packages/filen_client/lib/credential_crypto.dart",
     "packages/filen_client/lib/aes_gcm_backend.dart",
     "packages/filen_client/UPSTREAM.md",
@@ -228,6 +232,7 @@
     "lib/main.dart",
     "lib/services/credential_storage_config.dart",
     "lib/services/credential_storage_bootstrap.dart",
+    "lib/services/credential_storage_recovery.dart",
     "lib/services/credential_storage_first_setup.dart",
     "lib/services/credential_storage_first_setup_io.dart",
     "lib/services/secure_storage_file.dart",

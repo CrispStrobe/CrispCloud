@@ -58,6 +58,7 @@ import 'services/secure_storage_file.dart';
 import 'services/secure_storage_macos_keychain.dart';
 import 'services/credential_storage_bootstrap.dart';
 import 'services/credential_storage_config.dart';
+import 'services/credential_storage_recovery.dart';
 import 'services/credential_storage_first_setup.dart';
 import 'services/credential_storage_first_setup_io.dart';
 import 'widgets/credential_storage_setup.dart';
@@ -71,13 +72,27 @@ class StartupFailureApp extends StatelessWidget {
     required this.error,
     this.locale,
     this.onRetry,
-    this.onChangeStorage,
+    this.onRestoreStorageAccess,
   });
 
   final Object error;
   final Locale? locale;
   final VoidCallback? onRetry;
-  final VoidCallback? onChangeStorage;
+  final VoidCallback? onRestoreStorageAccess;
+
+  String _message(BuildContext context) {
+    final strings = StartupFailureStrings(context);
+    if (error is CredentialStorageUnavailable) {
+      return strings.credentialStorageUnavailable;
+    }
+    if (error is CredentialStorageRecoveryException) {
+      return (error as CredentialStorageRecoveryException).reason ==
+              CredentialStorageRecoveryFailure.selectionChanged
+          ? strings.credentialSelectionChanged
+          : strings.credentialStorageUnavailable;
+    }
+    return localizedProviderError(context, error);
+  }
 
   @override
   Widget build(BuildContext context) => MaterialApp(
@@ -93,7 +108,7 @@ class StartupFailureApp extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  '${StartupFailureStrings(context).title}\n${localizedProviderError(context, error)}',
+                  '${StartupFailureStrings(context).title}\n${_message(context)}',
                   style: const TextStyle(color: Colors.red, fontSize: 16),
                   textAlign: TextAlign.center,
                 ),
@@ -104,18 +119,18 @@ class StartupFailureApp extends StatelessWidget {
                     child: Text(AppLocalizations.of(context)!.retry),
                   ),
                 ],
-                if (onChangeStorage != null) ...[
+                if (onRestoreStorageAccess != null) ...[
                   const SizedBox(height: 12),
                   Text(
-                    'If the saved keychain no longer exists, you can choose '
-                    'another credential store. An existing App Lock in the old '
-                    'store cannot be verified until that store is restored.',
+                    StartupFailureStrings(context).restoreOriginalKeychain,
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   OutlinedButton(
-                    onPressed: onChangeStorage,
-                    child: const Text('Change credential storage'),
+                    onPressed: onRestoreStorageAccess,
+                    child: Text(
+                      StartupFailureStrings(context).restoreKeychainAccess,
+                    ),
                   ),
                 ],
               ],
@@ -141,6 +156,10 @@ Future<void> main() async {
       WidgetsFlutterBinding.ensureInitialized();
       // First-install evidence must precede all startup preference/log/cache
       // writes. An interrupted storage choice has not exposed a profile yet.
+      final browserBackend = kIsWeb ? LocalStorageBackend() : null;
+      final webSelection = browserBackend == null
+          ? null
+          : await _initializeWebVaultSelection(browserBackend);
       final firstSetup =
           !kIsWeb &&
           await CredentialStorageFirstSetup.capture(
@@ -150,6 +169,13 @@ Future<void> main() async {
       final nativeStorage = kIsWeb
           ? null
           : await _initializeNativeSecureStorage(allowFirstSetup: firstSetup);
+      final Future<void> Function()? consumeVaultCreation = kIsWeb
+          ? (webSelection?.createFileVault == true
+                ? () => CredentialStorageConfig.consumeFileVaultCreation(
+                    expected: webSelection!,
+                  )
+                : null)
+          : nativeStorage?.consumeFileVaultCreation;
       if (!kIsWeb) await CredentialStorageFirstSetup.complete();
       await InstallationIdentityService.instance.initialize();
       registerBundledEditorAssets();
@@ -195,7 +221,7 @@ Future<void> main() async {
       var vaultRequired = false;
       var effectiveMode = CredentialStorageMode.systemKeychain;
       if (kIsWeb) {
-        final webStorage = WebEncryptedStorage(LocalStorageBackend());
+        final webStorage = WebEncryptedStorage(browserBackend!);
         // The master password prompt is handled by WebMasterPasswordGate below.
         // We pass the un-initialized storage and let the gate handle it.
         secureStorage = webStorage;
@@ -281,6 +307,9 @@ Future<void> main() async {
               credentialVaultRequiredProvider.overrideWith(
                 (ref) => vaultRequired,
               ),
+              credentialVaultCreationProvider.overrideWith(
+                (ref) => consumeVaultCreation,
+              ),
               configPathProvider.overrideWithValue(configPath),
               proxyServiceProvider.overrideWithValue(proxyService),
               certPinningProvider.overrideWithValue(certPinning),
@@ -336,10 +365,34 @@ Future<void> main() async {
   );
 }
 
+Future<CredentialStorageSelection> _initializeWebVaultSelection(
+  WebStorageBackend backend,
+) async {
+  while (true) {
+    try {
+      return await CredentialStorageFirstSetup.captureWebVaultCreation(
+        readVaultKeys: backend.allKeys,
+      );
+    } catch (_) {
+      final retry = Completer<void>();
+      runApp(
+        StartupFailureApp(
+          error: const CredentialStorageUnavailable(),
+          onRetry: () {
+            if (!retry.isCompleted) retry.complete();
+          },
+        ),
+      );
+      await retry.future;
+    }
+  }
+}
+
 Future<CredentialStorageBootstrapResult> _initializeNativeSecureStorage({
   required bool allowFirstSetup,
 }) async {
   String? firstVaultPassword;
+  var freshSetupAllowed = allowFirstSetup;
   final bootstrap = CredentialStorageBootstrap(
     openKeychain: (customPath) async {
       try {
@@ -365,27 +418,44 @@ Future<CredentialStorageBootstrapResult> _initializeNativeSecureStorage({
   );
   CredentialStorageSetupResult? pendingSelection;
   var showFirstSetup = false;
-  var recoveryRequested = false;
   while (true) {
     CredentialStorageMode? attemptedMode;
+    CredentialStorageSelection? attemptedSelection;
     try {
       final configured = await CredentialStorageConfig.readSelection();
-      if (recoveryRequested ||
-          (allowFirstSetup && (showFirstSetup || configured.mode == null))) {
-        pendingSelection ??= await _runFirstRunCredentialSetup(
-          recovery: recoveryRequested,
-        );
+      attemptedSelection = configured;
+      if (freshSetupAllowed && (showFirstSetup || configured.mode == null)) {
+        pendingSelection ??= await _runFirstRunCredentialSetup();
         showFirstSetup = false;
-        recoveryRequested = false;
       }
       final selection = pendingSelection;
       if (selection != null) {
+        // The chooser can remain open while another instance establishes a
+        // profile. Recheck the fresh-profile evidence before saving its choice.
+        freshSetupAllowed = await CredentialStorageFirstSetup.capture(
+          profileIsEmpty: (preferences) =>
+              nativeCredentialProfileIsEmpty(setupPreferences: preferences),
+        );
+        if (!freshSetupAllowed) {
+          pendingSelection = null;
+          firstVaultPassword = null;
+          showFirstSetup = false;
+          continue;
+        }
         // Persist the user's explicit intent before creating a file vault. An
         // interrupted setup then resumes the selected backend's unlock gate.
         // The password never enters preferences and is used at most once.
         await CredentialStorageConfig.writeSelection(
           mode: selection.mode,
           customKeychainPath: selection.keychainPath,
+          createFileVault:
+              selection.mode == CredentialStorageMode.encryptedFile,
+        );
+        attemptedSelection = CredentialStorageSelection(
+          mode: selection.mode,
+          customKeychainPath: selection.keychainPath,
+          createFileVault:
+              selection.mode == CredentialStorageMode.encryptedFile,
         );
         firstVaultPassword = selection.masterPassword;
         pendingSelection = null;
@@ -400,14 +470,23 @@ Future<CredentialStorageBootstrapResult> _initializeNativeSecureStorage({
                 ? selection.keychainPath
                 : configured.customKeychainPath)
           : null;
+      final expectedSelection = attemptedSelection;
       final selected = await bootstrap.open(
         mode: mode,
         customKeychainPath: customPath,
+        createFileVault: expectedSelection.createFileVault,
+        createFileVaultImmediately: firstVaultPassword != null,
+        consumeFileVaultCreation: expectedSelection.createFileVault
+            ? () => CredentialStorageConfig.consumeFileVaultCreation(
+                expected: expectedSelection,
+              )
+            : null,
       );
       return selected;
     } catch (error) {
+      firstVaultPassword = null;
       _log.warn('The selected credential store could not be opened.');
-      if (allowFirstSetup &&
+      if (freshSetupAllowed &&
           attemptedMode == CredentialStorageMode.systemKeychain &&
           error is CredentialStorageUnavailable) {
         // This process has not exposed an initialized profile. Only the
@@ -415,48 +494,53 @@ Future<CredentialStorageBootstrapResult> _initializeNativeSecureStorage({
         showFirstSetup = true;
         continue;
       }
-      if (error is CredentialStorageUnavailable) {
+      // Access repair must never select an empty replacement store: its absent
+      // App Lock policy would open the existing profile without authentication.
+      // Only a verified fresh profile above may use the first-run chooser.
+      final recovery = attemptedSelection == null
+          ? null
+          : CredentialStorageRecovery(
+              failedSelection: attemptedSelection,
+              supportsCustomKeychains: Platform.isMacOS,
+              restoreAccess: MacOsCustomKeychainStorage.restoreKeychainAccess,
+            );
+      Object safeFailure = const CredentialStorageUnavailable();
+      while (true) {
         final action = Completer<bool>();
         runApp(
           StartupFailureApp(
-            error: const CredentialStorageUnavailable(),
+            // Parse, migration, filesystem and platform exceptions may include
+            // credentials or paths. Do not render them before profile unlock.
+            error: safeFailure,
             onRetry: () {
               if (!action.isCompleted) action.complete(false);
             },
-            onChangeStorage: () {
-              if (!action.isCompleted) action.complete(true);
-            },
+            onRestoreStorageAccess: recovery?.canRestoreKeychainAccess == true
+                ? () {
+                    if (!action.isCompleted) action.complete(true);
+                  }
+                : null,
           ),
         );
-        if (await action.future) {
-          // Explicit recovery. The warning explains that an App Lock stored in
-          // the inaccessible backend cannot be verified until it is restored.
-          recoveryRequested = true;
-          continue;
+        if (!await action.future) break;
+        try {
+          // A successful grant only retries this store through the ordinary
+          // bootstrap and App Lock gates. Cancellation preserves the failure UI.
+          if (await recovery!.restoreKeychainAccess()) break;
+        } on CredentialStorageRecoveryException catch (failure) {
+          safeFailure = failure;
+        } catch (_) {
+          safeFailure = const CredentialStorageUnavailable();
         }
-        continue;
       }
-      final retry = Completer<void>();
-      runApp(
-        StartupFailureApp(
-          error: error,
-          onRetry: () {
-            if (!retry.isCompleted) retry.complete();
-          },
-        ),
-      );
-      await retry.future;
     }
   }
 }
 
-Future<CredentialStorageSetupResult> _runFirstRunCredentialSetup({
-  bool recovery = false,
-}) {
+Future<CredentialStorageSetupResult> _runFirstRunCredentialSetup() {
   final completer = Completer<CredentialStorageSetupResult>();
   runApp(
     CredentialStorageSetupScreen(
-      recovery: recovery,
       onComplete: (result) {
         if (!completer.isCompleted) completer.complete(result);
       },
@@ -592,6 +676,13 @@ Future<dynamic> _createConfigService(
 }
 
 /// App lock service provider.
+/// A one-use, persisted creation intent bound to the selection inspected during
+/// startup. An absent vault alone must never authorize replacing a profile's
+/// unreadable App Lock policy with an empty one.
+final credentialVaultCreationProvider = StateProvider<Future<void> Function()?>(
+  (ref) => null,
+);
+
 final appLockServiceProvider = Provider<AppLockService>((ref) {
   return AppLockService(
     ref.watch(secureStorageProvider),
@@ -612,7 +703,8 @@ final appLockServiceProvider = Provider<AppLockService>((ref) {
         final activePath = activeStore is MacOsCustomKeychainStorage
             ? activeStore.path
             : null;
-        if ((configured.mode ?? CredentialStorageMode.systemKeychain) !=
+        if (configured.createFileVault ||
+            (configured.mode ?? CredentialStorageMode.systemKeychain) !=
                 activeMode ||
             (Platform.isMacOS &&
                 activeMode == CredentialStorageMode.systemKeychain &&
@@ -789,8 +881,7 @@ class _CredentialGateFailure extends StatelessWidget {
             const Icon(Icons.lock_outline, size: 48),
             const SizedBox(height: 16),
             Text(
-              WebVaultStrings(context)
-                  .failure(const CredentialStorageUnavailable()),
+              StartupFailureStrings(context).credentialStorageUnavailable,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -842,6 +933,9 @@ class WebMasterPasswordGateState extends ConsumerState<WebMasterPasswordGate> {
     try {
       final storage = ref.read(secureStorageProvider) as WebEncryptedStorage;
       _isNewVault = !await storage.hasVault();
+      if (_isNewVault && ref.read(credentialVaultCreationProvider) == null) {
+        throw const CredentialStorageUnavailable();
+      }
     } catch (_) {
       // Corrupt/inaccessible metadata must never lead to a create/overwrite
       // prompt or to provider initialization without an unlocked vault.
@@ -859,9 +953,11 @@ class WebMasterPasswordGateState extends ConsumerState<WebMasterPasswordGate> {
     final password = _controller.text;
     if (password.isEmpty) return;
     if (_isNewVault && password.length < 8) {
-      setState(() => _error = SettingsStrings(context).text(
-        'Use at least 8 characters for the master password.',
-      ));
+      setState(
+        () =>
+            _error = SettingsStrings(context)
+                .text('Use at least 8 characters for the master password.'),
+      );
       return;
     }
     if (_isNewVault && password != _confirmationController.text) {
@@ -876,8 +972,20 @@ class WebMasterPasswordGateState extends ConsumerState<WebMasterPasswordGate> {
 
     try {
       final storage = ref.read(secureStorageProvider) as WebEncryptedStorage;
+      final consumeCreation = ref.read(credentialVaultCreationProvider);
+      if (_isNewVault && consumeCreation == null) {
+        throw const CredentialStorageUnavailable();
+      }
+      if (consumeCreation != null) {
+        // Consume before writing a vault: a stale or unacknowledged grant must
+        // never leave an empty replacement vault that a restart could trust.
+        // Neither a failed consume nor a failed creation restores this grant.
+        ref.read(credentialVaultCreationProvider.notifier).state = null;
+        await consumeCreation();
+      }
       await storage.initialize(password, expectedExisting: !_isNewVault);
       if (!storage.isInitialized) throw const CredentialStorageUnavailable();
+      _isNewVault = false;
       await CredentialMigration.migrateIfNeeded(storage);
       if (mounted) {
         Navigator.of(context).pushReplacement(
@@ -887,19 +995,23 @@ class WebMasterPasswordGateState extends ConsumerState<WebMasterPasswordGate> {
     } on StateError catch (e) {
       if (mounted) {
         setState(() {
+          _inspectionFailed =
+              _isNewVault && ref.read(credentialVaultCreationProvider) == null;
           _error =
               e.message == 'Incorrect master password' ||
                   e.message == 'Incorrect master password or damaged vault' ||
                   e.message == 'Master password verification failed'
               ? WebVaultStrings(context).incorrect
-              : WebVaultStrings(context).failure(e.message);
+              : WebVaultStrings(context).failure;
           _loading = false;
         });
       }
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         setState(() {
-          _error = WebVaultStrings(context).failure(e);
+          _inspectionFailed =
+              _isNewVault && ref.read(credentialVaultCreationProvider) == null;
+          _error = WebVaultStrings(context).failure;
           _loading = false;
         });
       }

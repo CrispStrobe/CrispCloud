@@ -19,9 +19,18 @@ class CredentialStorageFirstSetup {
     _migrationKey,
   };
 
+  /// Browser first use has no native directory scanner. Require both the
+  /// complete preferences and localStorage inventories to be empty before
+  /// recording a single creation attempt; pending v3 intents can resume.
+  static Future<CredentialStorageSelection> captureWebVaultCreation({
+    required Future<List<String>> Function() readVaultKeys,
+  }) => CredentialStorageConfig.captureWebVaultCreation(
+    readVaultKeys: readVaultKeys,
+  );
+
   static Future<bool> capture({
     required Future<bool> Function(Map<String, Object?> setupPreferences)
-        profileIsEmpty,
+    profileIsEmpty,
   }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -58,10 +67,16 @@ class CredentialStorageFirstSetup {
         for (final key in prefs.getKeys()) key: prefs.get(key),
       };
       if (!await profileIsEmpty(setupPreferences)) return false;
+      // Filesystem evidence is asynchronous. A profile or selection created
+      // while it was being inspected invalidates the original empty snapshot.
+      await prefs.reload();
+      if (!_matchesSnapshot(prefs, setupPreferences)) return false;
       if (!pending) {
         if (!await prefs.setBool(pendingKey, true)) return false;
         await prefs.reload();
-        if (prefs.getBool(pendingKey) != true) return false;
+        if (!_matchesSnapshot(prefs, {...setupPreferences, pendingKey: true})) {
+          return false;
+        }
       }
       return true;
     } catch (_) {
@@ -69,6 +84,16 @@ class CredentialStorageFirstSetup {
       return false;
     }
   }
+
+  static bool _matchesSnapshot(
+    SharedPreferences prefs,
+    Map<String, Object?> expected,
+  ) =>
+      prefs.getKeys().length == expected.length &&
+      expected.entries.every(
+        (entry) =>
+            prefs.containsKey(entry.key) && prefs.get(entry.key) == entry.value,
+      );
 
   /// Called before any provider or initialized app profile is exposed.
   static Future<void> complete() async {

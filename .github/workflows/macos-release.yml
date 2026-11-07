@@ -81,6 +81,9 @@ jobs:
             test/credential_storage_config_test.dart \
             test/credential_storage_bootstrap_test.dart \
             test/credential_storage_first_setup_test.dart \
+            test/credential_storage_recovery_test.dart \
+            test/credential_storage_recovery_widget_test.dart \
+            test/config_services_test.dart \
             test/credential_storage_setup_test.dart \
             test/credential_storage_settings_test.dart \
             test/web_master_password_gate_test.dart \

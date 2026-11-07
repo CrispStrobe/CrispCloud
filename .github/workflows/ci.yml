@@ -230,6 +230,8 @@ jobs:
           test/credential_storage_config_test.dart
           test/credential_storage_bootstrap_test.dart
           test/credential_storage_first_setup_test.dart
+          test/credential_storage_recovery_test.dart
+          test/credential_storage_recovery_widget_test.dart
           test/credential_storage_setup_test.dart
           test/credential_storage_settings_test.dart
           test/web_master_password_gate_test.dart
@@ -237,6 +239,7 @@ jobs:
           test/security_features_test.dart
           test/internxt_rewire_test.dart test/internxt_download_path_test.dart
           test/internxt_bounded_transfer_test.dart
+          test/config_services_test.dart
           test/filen_adapter_test.dart test/filen_bounded_transfer_test.dart
           test/tls_verification_test.dart test/custom_ca_test.dart
           test/infrastructure_test.dart test/proxy_service_test.dart
@@ -296,6 +299,7 @@ jobs:
         run: >-
           flutter test --no-pub --reporter expanded --platform chrome --concurrency=1
           test/secure_storage_web_test.dart
+          test/filen_secure_config_browser_test.dart
 
   # ---------- Multi-platform builds (matrix) ----------
   # Linux, Android, and Web build on ubuntu-latest.

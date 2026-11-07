@@ -17,7 +17,8 @@ class WebVaultStrings {
   String get unlock => _values[6];
   String get mismatch => _values[7];
   String get incorrect => _values[8];
-  String failure(Object error) => '${_values[9]}: $error';
+  // Never interpolate a storage exception before the vault is unlocked.
+  String get failure => _values[9];
 
   static const _translations = <String, List<String>>{
     'en': [

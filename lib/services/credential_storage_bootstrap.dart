@@ -8,11 +8,18 @@ class CredentialStorageBootstrapResult {
     required this.storage,
     required this.mode,
     required this.requiresUnlock,
+    this.createFileVault = false,
+    this.consumeFileVaultCreation,
   });
 
   final SecureStorage storage;
   final CredentialStorageMode mode;
   final bool requiresUnlock;
+  final bool createFileVault;
+
+  /// Only a still-pending authorized creation attempt has this callback. The
+  /// password gate must consume it before creating any missing vault metadata.
+  final Future<void> Function()? consumeFileVaultCreation;
 }
 
 /// Opens only the configured backend. An unavailable store must not cause an
@@ -32,21 +39,48 @@ class CredentialStorageBootstrap {
   Future<CredentialStorageBootstrapResult> open({
     required CredentialStorageMode mode,
     String? customKeychainPath,
+    bool createFileVault = false,
+    bool createFileVaultImmediately = false,
+    Future<void> Function()? consumeFileVaultCreation,
   }) async {
+    if ((createFileVault || createFileVaultImmediately) &&
+        mode != CredentialStorageMode.encryptedFile) {
+      throw const CredentialStorageUnavailable();
+    }
+    if (createFileVault != (consumeFileVaultCreation != null) ||
+        (createFileVaultImmediately && !createFileVault)) {
+      throw const CredentialStorageUnavailable();
+    }
     final SecureStorage storage;
     var requiresUnlock = false;
+    var pendingCreation = createFileVault;
     switch (mode) {
       case CredentialStorageMode.systemKeychain:
         storage = await openKeychain(customKeychainPath);
         await _migrate(storage);
       case CredentialStorageMode.encryptedFile:
+        if (createFileVaultImmediately) {
+          // The factory may create metadata as soon as it receives the initial
+          // password. Retire durable permission first; never regrant it when
+          // opening, initialization or migration later fails.
+          await consumeFileVaultCreation!();
+          pendingCreation = false;
+        }
         storage = await openFileVault();
         requiresUnlock =
             storage is! WebEncryptedStorage || !storage.isInitialized;
         // First-run creation can return an already unlocked vault. Complete
         // migration before skipping the password gate; ordinary reopen waits
         // for that gate to unlock the store before importing anything.
-        if (!requiresUnlock) await _migrate(storage);
+        if (!requiresUnlock) {
+          // An already-existing unlocked vault no longer needs creation intent.
+          // Retire any pending grant before exposing this profile as well.
+          if (pendingCreation) {
+            await consumeFileVaultCreation!();
+            pendingCreation = false;
+          }
+          await _migrate(storage);
+        }
       case CredentialStorageMode.sessionOnly:
         // No import of durable credentials or global migration marker.
         storage = InMemorySecureStorage();
@@ -55,6 +89,10 @@ class CredentialStorageBootstrap {
       storage: storage,
       mode: mode,
       requiresUnlock: requiresUnlock,
+      createFileVault: pendingCreation,
+      consumeFileVaultCreation: pendingCreation
+          ? consumeFileVaultCreation
+          : null,
     );
   }
 }

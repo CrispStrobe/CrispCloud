@@ -30,10 +30,22 @@ Unreadable vault metadata or App Lock policy is an error, not an empty profile
 or a disabled lock. Otherwise, changing stores could bypass the old store's
 policy and hide saved credentials.
 
+For a configured custom macOS keychain, **Restore keychain access**
+opens a permission picker for that same existing file. Native validation checks
+its canonical path and readable file/volume identities before saving a new
+bookmark under the original configured path. A different or missing file is
+rejected; restore a moved file to its original location first. Cancellation does
+not change the selection or bookmarks. Recovery rechecks the configured
+selection before and after the picker, then retries the original store and its
+App Lock policy. It cannot select a replacement store, create a new vault or
+disable a lock. Default OS stores use their normal OS unlock/repair controls
+followed by **Retry**.
+
 **Settings → Credentials → Credential storage** saves a pending next-launch
 choice. The running application continues using its active store until restart.
-Mode and custom path are written as one versioned preference record, reloaded
-and verified before success is reported. App Lock must be disabled to change
+Mode, custom path and any explicit vault-creation intent are written as one
+versioned preference record, reloaded and verified before success is reported.
+App Lock must be disabled to change
 stores; its state is checked both before and after the chooser. A policy-read
 error blocks the change. Re-enable App Lock after restarting with the intended
 persistent store. Session-only storage cannot enable persistent App Lock.
@@ -83,6 +95,49 @@ probe/bookmark operation fails after creation, the new file is retained rather
 than deleted as error recovery.
 
 ## Encrypted file and browser vaults
+
+### Creation requires explicit authorization
+
+A missing vault in an existing profile blocks startup. It does not authorize
+creating an empty replacement that could omit the original App Lock policy.
+Native first-run setup can authorize creation after its fresh-profile checks.
+An authenticated Settings switch from another storage mode can authorize one
+pending encrypted-file creation attempt; creation is deferred until the next
+launch. Selecting the already configured encrypted-file mode, or cancelling a
+pending switch to return to the currently active file vault, does not grant
+replacement permission. Browser first setup records creation intent only when
+both the profile preferences and browser storage are empty, checked before
+startup writes identity, settings or caches.
+
+Selection format version 3 adds the Boolean `createFileVault` under the same
+preference key used for version 2. Existing version-2 selections remain
+readable and imply `false`; upgrading or finding a missing file does not grant
+permission. A pending grant is bound to the inspected selection. Before any
+initialization that can create vault metadata, the code verifies that this
+selection still matches, writes the grant as `false` and verifies the persisted
+result. Native first-run creation consumes it before invoking the factory;
+deferred creation consumes it in the password gate. An existing vault also
+retires any outstanding grant before its unlock or exposure to the application.
+
+Older PR26 builds that accept only version 2 cannot read the new selection
+record. They reject it instead of falling back to stale legacy preferences.
+Keep the updated build after saving version-3 settings; do not delete or edit
+selection metadata as a shortcut around a credential-store or App Lock failure.
+
+A stale, already consumed, failed or unverified grant cannot authorize creation.
+Creation failure never restores the grant. An interruption after consumption
+but before vault publication can therefore leave startup blocked even though
+no vault was created. Recovery can require restoring the vault or an authorized
+return to the previous backend; retrying startup does not silently issue a new
+creation grant. An intent that has not yet been consumed can survive a restart.
+
+These preference checks serialize operations within one isolate and verify
+readback. They are not an atomic compare-and-swap across processes or browser
+tabs, and they do not authenticate preferences against a local attacker who
+can replace the profile. The native vault's separate file transaction controls
+its data writes.
+
+### Credential encryption
 
 `EncryptedFileStorage` shares the `WebEncryptedStorage` credential codec:
 
@@ -142,8 +197,9 @@ native transaction guarantees across tabs.
 ## Session-only and migration
 
 `InMemorySecureStorage.isPersistent` is false. Generic credential migration and
-Internxt legacy handling therefore do not import saved logins, delete durable
-legacy entries or mark persistent migration complete for session-only mode.
+Filen/Internxt legacy handling therefore do not import saved logins, delete
+durable legacy entries or mark persistent migration complete for session-only
+mode.
 Session logout leaves prior stores intact. This is not an incognito mode for
 preferences, caches, downloaded files or sync state.
 
@@ -153,11 +209,22 @@ or cleanup are reported. Internxt retains its logout tombstone against failed
 legacy deletion. These provider-specific migrations are distinct from copying
 accounts between newly selected backends.
 
+Filen's production SDK client receives an adapter to the same selected host
+store. It does not use the SDK's default credential file or create CLI storage
+directories. Credential writes verify the exact saved bytes before persistent
+mode removes an old `credentials.json` file. Session mode leaves that file
+untouched. Native cleanup accepts only a regular file in the expected directory;
+unexpected links, directories and access errors are failures, not successful
+deletion. Browser builds use a separate no-filesystem cleanup implementation.
+Unreadable records and unverifiable saves report fixed, non-sensitive errors
+instead of appearing to be an absent login or a successful save.
+
 Filen logout discards its in-memory API key and master keys, then verifies
-removal of saved credentials. Persistent mode removes any retained legacy
-preference before the secure entry so an old login cannot migrate back after
-successful logout; session-only mode leaves that durable preference untouched.
-Cleanup failure is shown in the logout dialog with a retry action and is not
+removal of saved credentials. Persistent mode removes retained legacy
+preferences and the old SDK credential file before the secure entry so an old
+login cannot migrate back after successful logout; session-only mode leaves
+those durable sources untouched. Cleanup failure is shown in the logout dialog
+with a retry action and is not
 reported as successful logout. The disconnected adapter remains available for
 that retry (`test/filen_adapter_test.dart`).
 
@@ -174,10 +241,21 @@ foreground once the selected store is ready.
 ## Validation and references
 
 Focused regressions are in the secure-storage, bootstrap, first-setup, chooser,
-Internxt, App Lock and master-password-gate tests. In particular,
+Filen/Internxt, App Lock and master-password-gate tests.
+`test/credential_storage_recovery_test.dart` checks the immutable configured
+selection, cancellation, concurrent preference changes and sanitized errors.
+Config/bootstrap regressions check version-2 compatibility, strict consumption,
+failed readback, stale attempts, consumption before the creator and preservation
+of a consumed state after creation failure. Password-gate and Settings tests
+exercise the fresh/existing-profile boundary and deferred creation.
+The macOS bridge tests check the restricted method arguments and explicit
+failure replies. In particular,
 `test/native/custom_keychain_store_test.swift` uses temporary keychains to check
 creation, scoped CRUD, collisions, foreign-service preservation, locked/missing
-paths and unchanged user preferences. Consult CI for the exact tested revision.
+paths, same-file recovery validation and unchanged user preferences. Filen
+config/adapter tests cover verified writes and cleanup failures; its focused
+browser test covers the injected SDK store without native filesystem access.
+Consult CI for the exact tested revision.
 This helper test does not establish interactive bookmark behavior in every
 signed sandbox environment or live provider login behavior.
 

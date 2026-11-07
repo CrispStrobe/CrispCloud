@@ -7,8 +7,6 @@ import 'package:crisp_cloud/services/secure_storage_web.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:crisp_cloud/main.dart' show appLockServiceProvider;
-import 'package:crisp_cloud/providers/core_providers.dart';
 
 class _PersistentTestStorage extends InMemorySecureStorage {
   @override
@@ -164,6 +162,284 @@ void main() {
         bootstrap.open(mode: CredentialStorageMode.encryptedFile),
         throwsStateError,
       );
+    },
+  );
+
+  test(
+    'immediate creation requires both an explicit grant and its consumer',
+    () async {
+      var opens = 0;
+      final bootstrap = CredentialStorageBootstrap(
+        openKeychain: (_) async =>
+            throw StateError('Unexpected keychain access'),
+        openFileVault: () async {
+          opens++;
+          return InMemorySecureStorage();
+        },
+        migrate: (_) async => throw StateError('Unexpected migration'),
+      );
+      for (final granted in [false, true]) {
+        await expectLater(
+          bootstrap.open(
+            mode: CredentialStorageMode.encryptedFile,
+            createFileVault: granted,
+            createFileVaultImmediately: true,
+          ),
+          throwsA(isA<CredentialStorageUnavailable>()),
+        );
+      }
+      await expectLater(
+        bootstrap.open(
+          mode: CredentialStorageMode.encryptedFile,
+          createFileVaultImmediately: true,
+          consumeFileVaultCreation: () async {},
+        ),
+        throwsA(isA<CredentialStorageUnavailable>()),
+      );
+      expect(opens, 0);
+    },
+  );
+
+  test(
+    'first-run creation consumes durable permission before any vault write',
+    () async {
+      await CredentialStorageConfig.writeSelection(
+        mode: CredentialStorageMode.encryptedFile,
+        createFileVault: true,
+      );
+      final expected = await CredentialStorageConfig.readSelection();
+      final backend = InMemoryWebStorageBackend();
+      final storage = WebEncryptedStorage(backend, newVaultIterations: 10);
+      final operations = <String>[];
+      final bootstrap = CredentialStorageBootstrap(
+        openKeychain: (_) async =>
+            throw StateError('Unexpected keychain access'),
+        openFileVault: () async {
+          expect(
+            await CredentialStorageConfig.readFileVaultCreationAllowed(),
+            isFalse,
+          );
+          expect(await backend.allKeys(), isEmpty);
+          operations.add('create');
+          await storage.initialize(
+            'public fixture password',
+            expectedExisting: false,
+          );
+          return storage;
+        },
+        migrate: (_) async {
+          expect(storage.isInitialized, isTrue);
+          operations.add('migrate');
+        },
+      );
+      final opened = await bootstrap.open(
+        mode: CredentialStorageMode.encryptedFile,
+        createFileVault: true,
+        createFileVaultImmediately: true,
+        consumeFileVaultCreation: () async {
+          await CredentialStorageConfig.consumeFileVaultCreation(
+            expected: expected,
+          );
+          operations.add('consume');
+        },
+      );
+      expect(operations, ['consume', 'create', 'migrate']);
+      expect(opened.requiresUnlock, isFalse);
+      expect(opened.createFileVault, isFalse);
+      expect(opened.consumeFileVaultCreation, isNull);
+    },
+  );
+
+  test(
+    'failed authorization consumption invokes neither creator nor migration',
+    () async {
+      var opens = 0;
+      final bootstrap = CredentialStorageBootstrap(
+        openKeychain: (_) async =>
+            throw StateError('Unexpected keychain access'),
+        openFileVault: () async {
+          opens++;
+          return InMemorySecureStorage();
+        },
+        migrate: (_) async => throw StateError('Unexpected migration'),
+      );
+      await expectLater(
+        bootstrap.open(
+          mode: CredentialStorageMode.encryptedFile,
+          createFileVault: true,
+          createFileVaultImmediately: true,
+          consumeFileVaultCreation: () async =>
+              throw StateError('Synthetic rejected consumption'),
+        ),
+        throwsStateError,
+      );
+      expect(opens, 0);
+    },
+  );
+
+  test('failed creation never restores permission after restart', () async {
+    await CredentialStorageConfig.writeSelection(
+      mode: CredentialStorageMode.encryptedFile,
+      createFileVault: true,
+    );
+    final expected = await CredentialStorageConfig.readSelection();
+    final backend = InMemoryWebStorageBackend();
+    var creates = 0;
+    final bootstrap = CredentialStorageBootstrap(
+      openKeychain: (_) async => throw StateError('Unexpected keychain access'),
+      openFileVault: () async {
+        creates++;
+        throw StateError('Synthetic creation failure before commit');
+      },
+      migrate: (_) async => throw StateError('Unexpected migration'),
+    );
+    Future<void> consume() =>
+        CredentialStorageConfig.consumeFileVaultCreation(expected: expected);
+    await expectLater(
+      bootstrap.open(
+        mode: CredentialStorageMode.encryptedFile,
+        createFileVault: true,
+        createFileVaultImmediately: true,
+        consumeFileVaultCreation: consume,
+      ),
+      throwsStateError,
+    );
+    expect(
+      await CredentialStorageConfig.readFileVaultCreationAllowed(),
+      isFalse,
+    );
+    await expectLater(
+      bootstrap.open(
+        mode: CredentialStorageMode.encryptedFile,
+        createFileVault: true,
+        createFileVaultImmediately: true,
+        consumeFileVaultCreation: consume,
+      ),
+      throwsStateError,
+    );
+    expect(creates, 1);
+
+    final restarted = await CredentialStorageBootstrap(
+      openKeychain: (_) async => throw StateError('Unexpected keychain access'),
+      openFileVault: () async =>
+          WebEncryptedStorage(backend, newVaultIterations: 10),
+      migrate: (_) async => throw StateError('Unexpected migration'),
+    ).open(mode: CredentialStorageMode.encryptedFile);
+    expect(restarted.requiresUnlock, isTrue);
+    expect(restarted.createFileVault, isFalse);
+    expect(restarted.consumeFileVaultCreation, isNull);
+    expect(await backend.allKeys(), isEmpty);
+  });
+
+  test(
+    'a deferred gate receives only a still-pending grant without spending it',
+    () async {
+      var consumed = false;
+      Future<void> consume() async {
+        consumed = true;
+      }
+
+      final storage = WebEncryptedStorage(
+        InMemoryWebStorageBackend(),
+        newVaultIterations: 10,
+      );
+      final opened =
+          await CredentialStorageBootstrap(
+            openKeychain: (_) async =>
+                throw StateError('Unexpected keychain access'),
+            openFileVault: () async => storage,
+            migrate: (_) async => throw StateError('Unexpected migration'),
+          ).open(
+            mode: CredentialStorageMode.encryptedFile,
+            createFileVault: true,
+            consumeFileVaultCreation: consume,
+          );
+      expect(opened.requiresUnlock, isTrue);
+      expect(opened.createFileVault, isTrue);
+      expect(opened.consumeFileVaultCreation, same(consume));
+      expect(consumed, isFalse);
+      expect(await storage.hasVault(), isFalse);
+    },
+  );
+
+  test('an existing unlocked vault retires unused creation intent before migration', () async {
+    final storage = WebEncryptedStorage(
+      InMemoryWebStorageBackend(),
+      newVaultIterations: 10,
+    );
+    await storage.initialize(
+      'public fixture password',
+      expectedExisting: false,
+    );
+    final operations = <String>[];
+    final opened =
+        await CredentialStorageBootstrap(
+          openKeychain: (_) async =>
+              throw StateError('Unexpected keychain access'),
+          openFileVault: () async => storage,
+          migrate: (_) async {
+            operations.add('migrate');
+          },
+        ).open(
+          mode: CredentialStorageMode.encryptedFile,
+          createFileVault: true,
+          consumeFileVaultCreation: () async {
+            operations.add('consume');
+          },
+        );
+    expect(operations, ['consume', 'migrate']);
+    expect(opened.createFileVault, isFalse);
+    expect(opened.consumeFileVaultCreation, isNull);
+  });
+
+  test(
+    'a stale startup cannot recreate a later-deleted protected vault',
+    () async {
+      await CredentialStorageConfig.writeSelection(
+        mode: CredentialStorageMode.encryptedFile,
+        createFileVault: true,
+      );
+      final stale = await CredentialStorageConfig.readSelection();
+      final backend = InMemoryWebStorageBackend();
+      final storage = WebEncryptedStorage(backend, newVaultIterations: 10);
+      await CredentialStorageConfig.consumeFileVaultCreation(expected: stale);
+      await storage.initialize('original password', expectedExisting: false);
+      await storage.write('app_lock_enabled', 'true');
+      await storage.write('app_lock_hash', 'public fixture original lock');
+      // Models a missing selected file, not a request to reset the old profile.
+      for (final key in await backend.allKeys()) {
+        await backend.removeItem(key);
+      }
+      var creations = 0;
+      final staleStartup = CredentialStorageBootstrap(
+        openKeychain: (_) async =>
+            throw StateError('Unexpected keychain access'),
+        openFileVault: () async {
+          creations++;
+          final replacement = WebEncryptedStorage(
+            backend,
+            newVaultIterations: 10,
+          );
+          await replacement.initialize(
+            'replacement password',
+            expectedExisting: false,
+          );
+          return replacement;
+        },
+        migrate: (_) async => throw StateError('Must not expose old profile'),
+      );
+      await expectLater(
+        staleStartup.open(
+          mode: CredentialStorageMode.encryptedFile,
+          createFileVault: true,
+          createFileVaultImmediately: true,
+          consumeFileVaultCreation: () =>
+              CredentialStorageConfig.consumeFileVaultCreation(expected: stale),
+        ),
+        throwsStateError,
+      );
+      expect(creations, 0);
+      expect(await backend.allKeys(), isEmpty);
     },
   );
 

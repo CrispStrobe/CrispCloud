@@ -315,46 +315,74 @@ void main() {
       },
     );
 
-    for (final linkDirectory in [false, true]) {
-      test(
-        'legacy cleanup refuses ${linkDirectory ? 'directory' : 'file'} symlinks',
-        () async {
-          final directory = Directory.systemTemp.createTempSync(
-            'crisp-filen-link-',
-          );
-          addTearDown(() => directory.deleteSync(recursive: true));
-          final targetDirectory = Directory(p.join(directory.path, 'target'))
-            ..createSync();
-          final target = File(p.join(targetDirectory.path, 'credentials.json'))
-            ..writeAsStringSync('preserve linked data');
-          final configDirectory = p.join(directory.path, 'config');
-          final Link link;
-          if (linkDirectory) {
-            link = Link(configDirectory)..createSync(targetDirectory.path);
-          } else {
-            Directory(configDirectory).createSync();
-            link = Link(p.join(configDirectory, 'credentials.json'))
-              ..createSync(target.path);
-          }
-          final config = FilenConfigService(
-            configPath: configDirectory,
-            secureStorage: _FilenPersistentStorage(),
-          );
+    for (final configSuffix in ['', '/', '/./']) {
+      for (final linkDirectory in [false, true]) {
+        test(
+          'legacy cleanup refuses ${linkDirectory ? 'directory' : 'file'} symlinks with suffix "$configSuffix"',
+          () async {
+            final directory = Directory.systemTemp.createTempSync(
+              'crisp-filen-link-',
+            );
+            addTearDown(() => directory.deleteSync(recursive: true));
+            final targetDirectory = Directory(p.join(directory.path, 'target'))
+              ..createSync();
+            final target = File(
+              p.join(targetDirectory.path, 'credentials.json'),
+            )..writeAsStringSync('preserve linked data');
+            final configDirectory = p.join(directory.path, 'config');
+            final Link link;
+            if (linkDirectory) {
+              link = Link(configDirectory)..createSync(targetDirectory.path);
+            } else {
+              Directory(configDirectory).createSync();
+              link = Link(p.join(configDirectory, 'credentials.json'))
+                ..createSync(target.path);
+            }
+            final config = FilenConfigService(
+              configPath: '$configDirectory$configSuffix',
+              secureStorage: _FilenPersistentStorage(),
+            );
 
-          await expectLater(
-            config.saveCredentials(_filenCredentials),
-            throwsA(isA<FilenCredentialSaveFailure>()),
-          );
-          await expectLater(
-            config.clearCredentials(),
-            throwsA(isA<FilenCredentialDeletionFailure>()),
-          );
-          expect(link.existsSync(), isTrue);
-          expect(target.readAsStringSync(), 'preserve linked data');
-        },
-        skip: Platform.isWindows,
-      ); // Windows symlink creation needs extra privileges.
+            await expectLater(
+              config.saveCredentials(_filenCredentials),
+              throwsA(isA<FilenCredentialSaveFailure>()),
+            );
+            await expectLater(
+              config.clearCredentials(),
+              throwsA(isA<FilenCredentialDeletionFailure>()),
+            );
+            expect(link.existsSync(), isTrue);
+            expect(target.readAsStringSync(), 'preserve linked data');
+          },
+          skip: Platform.isWindows,
+        ); // Windows symlink creation needs extra privileges.
+      }
     }
+
+    test('legacy cleanup rejects parent traversal without changing either directory', () async {
+      final directory = Directory.systemTemp.createTempSync(
+        'crisp-filen-parent-',
+      );
+      addTearDown(() => directory.deleteSync(recursive: true));
+      Directory(p.join(directory.path, 'child')).createSync();
+      final target = File(p.join(directory.path, 'credentials.json'))
+        ..writeAsStringSync('preserve parent data');
+      final config = FilenConfigService(
+        configPath: '${directory.path}${p.separator}child${p.separator}..',
+        secureStorage: _FilenPersistentStorage(),
+      );
+
+      await expectLater(
+        config.saveCredentials(_filenCredentials),
+        throwsA(isA<FilenCredentialSaveFailure>()),
+      );
+      await expectLater(
+        config.clearCredentials(),
+        throwsA(isA<FilenCredentialDeletionFailure>()),
+      );
+      expect(target.readAsStringSync(), 'preserve parent data');
+      expect(Directory(p.join(directory.path, 'child')).existsSync(), isTrue);
+    });
 
     for (final invalid in <Object?>[
       null,
