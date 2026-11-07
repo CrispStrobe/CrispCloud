@@ -50,6 +50,9 @@ final class CoordinatedFileAccessTests: XCTestCase {
         try? fm.removeItem(at: outside)
     }
     func path(_ name: String) -> String { root.appendingPathComponent(name).path }
+    func canonicalPath(_ path: String) -> String {
+        FoundationBookmarkRuntime().canonicalURL(URL(fileURLWithPath: path)).path
+    }
     @discardableResult func file(_ name: String, bytes: String = "hello") throws -> URL {
         let url = root.appendingPathComponent(name)
         try fm.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
@@ -78,7 +81,8 @@ final class CoordinatedFileAccessTests: XCTestCase {
         XCTAssertEqual(entries.map { $0.kind }, ["directory", "file", "link"])
         XCTAssertEqual(entries[1].size, 5)
         XCTAssertGreaterThan(entries[1].modifiedMs, 0)
-        XCTAssertEqual(entries[1].dictionary["path"] as? String, path("file.txt"))
+        let metadataPath = try XCTUnwrap(entries[1].dictionary["path"] as? String)
+        XCTAssertEqual(canonicalPath(metadataPath), canonicalPath(path("file.txt")))
         XCTAssertEqual(coordinator.reads, 1)
     }
 
@@ -89,8 +93,8 @@ final class CoordinatedFileAccessTests: XCTestCase {
         try file(".secret/child")
         try fm.createSymbolicLink(atPath: path("external"), withDestinationPath: outside.path)
         try fm.createSymbolicLink(atPath: path("cycle"), withDestinationPath: root.path)
-        let visible = try access.walkFiles(root.path).map { $0.path }
-        XCTAssertEqual(Set(visible), Set([path("visible"), path("sub/child")]))
+        let visible = try access.walkFiles(root.path).map { canonicalPath($0.path) }
+        XCTAssertEqual(Set(visible), Set([path("visible"), path("sub/child")].map(canonicalPath)))
         XCTAssertEqual(try access.walkFiles(root.path, includeHidden: true).count, 4)
         XCTAssertEqual(try access.walkFiles(root.path, maxItems: 1).count, 1)
         XCTAssertTrue(try access.walkFiles(root.path, maxItems: 0).isEmpty)
@@ -144,8 +148,47 @@ final class CoordinatedFileAccessTests: XCTestCase {
         try fm.createSymbolicLink(atPath: path("external"), withDestinationPath: outside.path)
         let escaped = path("external/new")
         XCTAssertThrowsError(try access.writeFile(escaped, data: Data("bad".utf8)))
-        XCTAssertThrowsError(try access.createDirectory(escaped))
+        XCTAssertThrowsError(try access.createDirectory(escaped)) { error in
+            XCTAssertEqual((error as? IosFileAccessError)?.code, "access_denied")
+        }
         XCTAssertFalse(fm.fileExists(atPath: outside.appendingPathComponent("new").path))
+    }
+
+    func testMultipleMissingDirectoriesBehindSymlinkCannotEscapeGrant() throws {
+        try fm.createSymbolicLink(atPath: path("external"), withDestinationPath: outside.path)
+        XCTAssertThrowsError(try access.createDirectory(path("external/new/deeper"))) { error in
+            XCTAssertEqual((error as? IosFileAccessError)?.code, "access_denied")
+        }
+        XCTAssertTrue(try fm.contentsOfDirectory(atPath: outside.path).isEmpty)
+    }
+
+    func testDirectoryAncestorReplacedBySymlinkDuringCoordinationIsRejected() throws {
+        try fm.createDirectory(atPath: path("parent"), withIntermediateDirectories: false)
+        coordinator.beforeAccess = {
+            try self.fm.removeItem(atPath: self.path("parent"))
+            try self.fm.createSymbolicLink(atPath: self.path("parent"),
+                                           withDestinationPath: self.outside.path)
+        }
+        XCTAssertThrowsError(try access.createDirectory(path("parent/new/deeper")))
+        XCTAssertEqual(coordinator.writes, 1)
+        XCTAssertTrue(try fm.contentsOfDirectory(atPath: outside.path).isEmpty)
+    }
+
+    func testMissingDirectoryReplacedBySymlinkDuringCoordinationIsRejected() throws {
+        coordinator.beforeAccess = {
+            try self.fm.createSymbolicLink(atPath: self.path("new"),
+                                           withDestinationPath: self.outside.path)
+        }
+        XCTAssertThrowsError(try access.createDirectory(path("new/deeper")))
+        XCTAssertEqual(coordinator.writes, 1)
+        XCTAssertTrue(try fm.contentsOfDirectory(atPath: outside.path).isEmpty)
+    }
+
+    func testDanglingSymlinkAncestorDoesNotCreateItsDestination() throws {
+        let absent = outside.appendingPathComponent("absent")
+        try fm.createSymbolicLink(atPath: path("external"), withDestinationPath: absent.path)
+        XCTAssertThrowsError(try access.createDirectory(path("external/new/deeper")))
+        XCTAssertFalse(fm.fileExists(atPath: absent.path))
     }
 
     func testDeleteHonorsTypeAndDeletesLinkItself() throws {

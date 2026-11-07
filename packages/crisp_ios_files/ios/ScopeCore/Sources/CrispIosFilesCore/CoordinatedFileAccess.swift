@@ -173,12 +173,42 @@ public final class CoordinatedFileAccess {
     }
 
     public func createDirectory(_ path: String) throws {
-        try writing(path, kind: .update) { url in
-            if let attributes = try self.attributesIfPresent(url),
-               attributes[.type] as? FileAttributeType != .typeDirectory {
-                throw IosFileAccessError.wrongEntryType(url.path)
+        let lease = try scopes.acquire(path)
+        defer { scopes.release(lease.token) }
+        var ancestor = try ScopedPath.url(lease.path)
+        var missing: [String] = []
+        // Foundation may leave symlinks unresolved when the final component
+        // does not exist. Find an existing ancestor while access is active,
+        // then resolve and validate that ancestor before creating anything.
+        while try attributesIfPresent(ancestor) == nil {
+            let parent = ancestor.deletingLastPathComponent()
+            guard parent.path != ancestor.path else {
+                throw IosFileAccessError.notDirectory(ancestor.path)
             }
-            try self.files.createDirectory(at: url, withIntermediateDirectories: true)
+            missing.append(ancestor.lastPathComponent)
+            ancestor = parent
+        }
+        let anchor = try scopes.validate(ancestor.path, for: lease.token)
+        try coordinatedWrite(anchor, kind: .update) { coordinated in
+            var current = try self.scopes.validate(coordinated.path, for: lease.token)
+            guard try self.attributesIfPresent(current)?[.type] as? FileAttributeType == .typeDirectory else {
+                throw IosFileAccessError.wrongEntryType(current.path)
+            }
+            for component in missing.reversed() {
+                current = try self.scopes.validate(current.path, for: lease.token)
+                let next = current.appendingPathComponent(component)
+                _ = try self.scopes.validate(next.path, for: lease.token)
+                if let attributes = try self.attributesIfPresent(next) {
+                    guard attributes[.type] as? FileAttributeType == .typeDirectory else {
+                        throw IosFileAccessError.wrongEntryType(next.path)
+                    }
+                } else {
+                    // Never hand an unchecked chain of missing components to
+                    // recursive mkdir: an existing link may lead outside.
+                    try self.files.createDirectory(at: next, withIntermediateDirectories: false)
+                }
+                current = try self.scopes.validate(next.path, for: lease.token)
+            }
         }
     }
 
@@ -212,15 +242,6 @@ public final class CoordinatedFileAccess {
         }
         guard let result = result else { throw IosFileAccessError.coordinationFailed }
         return try result.get()
-    }
-
-    private func writing(_ path: String, kind: CoordinatedWriteKind,
-                         operation: (URL) throws -> Void) throws {
-        let lease = try scopes.acquire(path)
-        defer { scopes.release(lease.token) }
-        try coordinatedWrite(try ScopedPath.url(lease.path), kind: kind) { url in
-            try operation(self.scopes.validate(url.path, for: lease.token))
-        }
     }
 
     private func coordinatedWrite(_ url: URL, kind: CoordinatedWriteKind,
