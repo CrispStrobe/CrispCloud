@@ -53,6 +53,8 @@ import 'services/pdf_font_licenses.dart';
 import 'services/terminal_licenses.dart';
 import 'services/secure_storage_service.dart';
 import 'services/secure_storage_web.dart';
+import 'services/secure_storage_file.dart';
+import 'services/credential_storage_config.dart';
 import 'widgets/lock_screen.dart';
 import 'services/media_video_backend.dart' show registerMediaVideoLicenses;
 
@@ -138,14 +140,55 @@ Future<void> main() async {
       // On web, use encrypted localStorage with a master password.
       // On native platforms, use OS-level secure storage (Keychain, etc.).
       final SecureStorage secureStorage;
+      var vaultRequired = false;
+      var effectiveMode = CredentialStorageMode.systemKeychain;
       if (kIsWeb) {
         final webStorage = WebEncryptedStorage(LocalStorageBackend());
         // The master password prompt is handled by WebMasterPasswordGate below.
         // We pass the un-initialized storage and let the gate handle it.
         secureStorage = webStorage;
       } else {
-        secureStorage = PlatformSecureStorage();
-        await CredentialMigration.migrateIfNeeded(secureStorage);
+        CredentialStorageMode preferredMode;
+        String? customKeychain;
+        try {
+          preferredMode = await CredentialStorageConfig.readMode();
+          customKeychain =
+              await CredentialStorageConfig.readCustomKeychainPath();
+        } catch (error) {
+          _log.warn(
+            'Could not read credential-storage mode; using keychain.',
+            error,
+          );
+          preferredMode = CredentialStorageMode.systemKeychain;
+          customKeychain = null;
+        }
+        effectiveMode = preferredMode;
+        if (preferredMode == CredentialStorageMode.sessionOnly) {
+          secureStorage = InMemorySecureStorage();
+        } else if (preferredMode == CredentialStorageMode.encryptedFile) {
+          secureStorage = await createEncryptedFileStorage();
+          vaultRequired = true;
+        } else {
+          final keychain = PlatformSecureStorage(
+            // A selected custom keychain is addressed through the process
+            // default keychain, not the data-protection keychain.
+            useDataProtectionKeyChain: customKeychain == null,
+          );
+          if (await keychain.isAvailable()) {
+            secureStorage = keychain;
+            await CredentialMigration.migrateIfNeeded(secureStorage);
+          } else {
+            _log.warn(
+              'OS keychain is unavailable; switching to the encrypted file vault.',
+            );
+            secureStorage = await createEncryptedFileStorage();
+            vaultRequired = true;
+            effectiveMode = CredentialStorageMode.encryptedFile;
+            // Keep the fallback sticky so credentials do not disappear when a
+            // transient keychain lock clears on the next launch.
+            await CredentialStorageConfig.writeMode(effectiveMode);
+          }
+        }
       }
       crashReporting!.reportBreadcrumb('Secure storage ready', 'startup');
 
@@ -217,6 +260,12 @@ Future<void> main() async {
                     LocaleNotifier(initialLocale: savedLocale, load: false),
               ),
               secureStorageProvider.overrideWithValue(secureStorage),
+              credentialStorageModeProvider.overrideWith(
+                (ref) => effectiveMode,
+              ),
+              credentialVaultRequiredProvider.overrideWith(
+                (ref) => vaultRequired,
+              ),
               configPathProvider.overrideWithValue(configPath),
               proxyServiceProvider.overrideWithValue(proxyService),
               certPinningProvider.overrideWithValue(certPinning),
@@ -427,7 +476,9 @@ class MyApp extends ConsumerWidget {
       ],
       locale: ref.watch(localeProvider),
       supportedLocales: AppLocalizations.supportedLocales,
-      home: kIsWeb ? const WebMasterPasswordGate() : const _AppLockGate(),
+      home: kIsWeb || ref.watch(credentialVaultRequiredProvider)
+          ? const WebMasterPasswordGate()
+          : const _AppLockGate(),
     );
   }
 }
@@ -567,6 +618,7 @@ class WebMasterPasswordGateState extends ConsumerState<WebMasterPasswordGate> {
     try {
       final storage = ref.read(secureStorageProvider) as WebEncryptedStorage;
       await storage.initialize(password);
+      await CredentialMigration.migrateIfNeeded(storage);
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute<void>(builder: (_) => const _AppLockGate()),

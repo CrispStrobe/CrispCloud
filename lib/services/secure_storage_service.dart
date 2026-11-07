@@ -13,9 +13,11 @@
 // SharedPreferences via the config services directly.
 
 import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import 'log_service.dart';
 
 const _secureLog = Log('SecureStorage');
@@ -58,16 +60,30 @@ class PlatformSecureStorage extends SecureStorage {
   // On Web, flutter_secure_storage uses localStorage (unencrypted), which is
   // equivalent to SharedPreferences. We accept this limitation for now and
   // log a warning so it's visible during development.
-  static const _storage = FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
-    iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
-  );
-
-  PlatformSecureStorage() {
-    if (kIsWeb) {
-      _secureLog.warn(
-        'Running on Web — credentials are stored in localStorage (not encrypted at rest). This is a known limitation.',
+  PlatformSecureStorage({bool useDataProtectionKeyChain = true})
+    : _storage = FlutterSecureStorage(
+        aOptions: const AndroidOptions(encryptedSharedPreferences: true),
+        iOptions: const IOSOptions(
+          accessibility: KeychainAccessibility.first_unlock,
+        ),
+        mOptions: MacOsOptions(
+          useDataProtectionKeyChain: useDataProtectionKeyChain,
+        ),
       );
+
+  final FlutterSecureStorage _storage;
+
+  /// Probe the OS keychain without exposing a secret. A locked or unavailable
+  /// keychain throws/returns false instead of making every later read fail.
+  Future<bool> isAvailable() async {
+    const key = '__crispcloud_keychain_probe__';
+    try {
+      await _storage.write(key: key, value: 'ok');
+      final value = await _storage.read(key: key);
+      await _storage.delete(key: key);
+      return value == 'ok';
+    } catch (_) {
+      return false;
     }
   }
 
@@ -126,10 +142,23 @@ class CredentialMigration {
 
     if (prefs.getBool(_migrationDoneKey) == true) return;
 
-    _secureLog.info('Migrating credentials from SharedPreferences to SecureStorage...');
+    _secureLog.info(
+      'Migrating credentials from SharedPreferences to SecureStorage...',
+    );
 
     // Migrate each provider's credentials
-    for (final key in ['dropbox_credentials', 'filen_credentials', 'ftp_credentials', 'gdrive_credentials', 'nextcloud_credentials', 'onedrive_credentials', 'pcloud_credentials', 's3_credentials', 'sftp_credentials', 'webdav_credentials']) {
+    for (final key in [
+      'dropbox_credentials',
+      'filen_credentials',
+      'ftp_credentials',
+      'gdrive_credentials',
+      'nextcloud_credentials',
+      'onedrive_credentials',
+      'pcloud_credentials',
+      's3_credentials',
+      'sftp_credentials',
+      'webdav_credentials',
+    ]) {
       final raw = prefs.getString(key);
       if (raw != null) {
         await secure.write(key, raw);

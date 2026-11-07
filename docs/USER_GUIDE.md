@@ -52,7 +52,7 @@ Download the latest release for your platform from the GitHub Releases page:
 4. Enter credentials for your chosen provider (see [Provider Setup Guide](PROVIDER_SETUP.md) for details).
 5. Click **Connect**. The remote panel populates with your files.
 
-CrispCloud saves credentials securely using your OS keychain (Keychain on macOS, Keystore on Android, Credential Manager on Windows, libsecret on Linux). You will not be asked to re-enter credentials on subsequent launches.
+CrispCloud saves credentials using your OS keychain (Keychain on macOS, Keystore on Android, Credential Manager on Windows, libsecret on Linux) by default. If no keychain is usable, choose **Settings → Credentials → Credential storage** and select the encrypted file vault (master password) or session-only mode. See [credential-storage.md](credential-storage.md). You will not be asked to re-enter credentials on subsequent launches when a persistent backend is used.
 
 ### Multiple Connections
 

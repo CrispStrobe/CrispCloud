@@ -1,5 +1,6 @@
 import Cocoa
 import FlutterMacOS
+import Security
 
 @main
 class AppDelegate: FlutterAppDelegate {
@@ -28,6 +29,27 @@ class AppDelegate: FlutterAppDelegate {
 
   // MARK: - Private helpers
 
+  /// Optional non-login keychain selected in Settings. SecItemAdd/Read from
+  /// flutter_secure_storage use the process default keychain, so setting it
+  /// before Flutter starts lets the app use e.g. a dedicated keychain.
+  private func configureCustomKeychain() {
+    guard let rawPath = UserDefaults.standard.string(forKey: "flutter.custom_keychain_path"),
+          !rawPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+      return
+    }
+    let path = (rawPath as NSString).expandingTildeInPath
+    var keychain: SecKeychain?
+    let status = SecKeychainOpen(path, &keychain)
+    guard status == errSecSuccess, let keychain else {
+      NSLog("[AppDelegate] Could not open custom keychain at %@ (status %d)", path, status)
+      return
+    }
+    let setStatus = SecKeychainSetDefault(keychain)
+    if setStatus != errSecSuccess {
+      NSLog("[AppDelegate] Could not select custom keychain %@ (status %d)", path, setStatus)
+    }
+  }
+
   private func sendUrlToFlutter(_ url: URL) {
     guard let controller = mainFlutterWindow?.contentViewController as? FlutterViewController else {
       NSLog("[AppDelegate] Flutter view controller not available — queuing URL for later.")
@@ -49,6 +71,7 @@ class AppDelegate: FlutterAppDelegate {
   private var pendingUrl: URL?
 
   override func applicationDidFinishLaunching(_ notification: Notification) {
+    configureCustomKeychain()
     // If a URL arrived very early (before the engine finished), deliver it
     // once the engine reports it is ready.  We poll via a short delay;
     // a production app could use FlutterEngine callbacks instead.
