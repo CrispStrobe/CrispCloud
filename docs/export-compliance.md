@@ -159,7 +159,11 @@ Before each release:
    retain artifact hashes and build logs alongside it. A source inventory does
    not prove the contents of an unbuilt binary. The store workflows retain exact
    generated native lockfiles/Android plugin registration, their hashes and
-   differences from the source revision. Review any newly resolved native
+   differences from the source revision. A CocoaPods reserialization of the iOS
+   project is recorded only when Apple's parser establishes that every parsed
+   value and array order matches the source revision; the exact bytes and diff
+   are retained. Changed project settings or references still fail the gate.
+   Review any newly resolved native
    dependencies and their source availability; recording a change does not
    establish its classification.
 3. Complete the decision record below for those artifacts. Resolve any failed

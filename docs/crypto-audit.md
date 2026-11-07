@@ -165,9 +165,17 @@ decision for the exact artifacts using the template in the export guide.
 `--record-generated-metadata` to preserve the target's regenerated CocoaPods
 lockfile and the Android plugin registrant that `pub get` can regenerate even
 on Apple hosts, including each file's original identity, actual
-contents, SHA-256 and diff. Authored source, `pubspec.lock`, Podfiles and Xcode
-projects remain strict. A changed native dependency graph still needs release
-review and corresponding public source; recording it does not approve it.
+contents, SHA-256 and diff. Authored code, `pubspec.lock`, Podfiles and the macOS
+project remain strict. For the iOS project only, Apple's `plutil` must establish
+that the complete parsed project data is unchanged before a reserialization can
+be recorded. Dictionary ordering and comments may differ; array ordering,
+scalar types, build settings, scripts and references must match. Exact original
+and built bytes and their diff remain in the evidence. This describes Xcode
+project data for this build, not equivalence for every text-based source tool.
+Parser failures or changed project data stop the release. Apple build workflows
+retain separate source diagnostics on failure so the rejected delta can be
+reviewed. A changed native dependency graph still needs release review and
+corresponding public source; recording it does not approve it.
 The CI target builds exercise this evidence path on their actual artifacts.
 The Apple CI builds use the same CocoaPods setting as the store workflows to
 avoid unreviewed automatic Swift Package Manager project migrations.

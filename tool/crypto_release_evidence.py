@@ -5,7 +5,8 @@ This is evidence collection, not an ECCN classifier or a cryptographic audit.
 It makes no network calls, submits no forms, and never reads signing secrets.
 Run after dependency resolution; use --require-clean on release builds.
 The optional --record-generated-metadata flag records exact native resolution
-and registration changes without permitting changes to authored inputs.
+and registration changes, plus verified iOS project reserialization, without
+permitting changes to authored build settings or code.
 """
 
 from __future__ import annotations
@@ -38,6 +39,13 @@ GENERATED_METADATA = {
     "macos": COMMON_GENERATED_METADATA | {"macos/Podfile.lock"},
     "android": COMMON_GENERATED_METADATA,
 }
+# CocoaPods may serialize this project differently without changing its parsed
+# data. All other authored project files remain subject to the clean-source gate.
+XCODE_RESERIALIZATION = {"ios": "ios/Runner.xcodeproj/project.pbxproj"}
+XCODE_COMPARISON_METHOD = (
+    "/usr/bin/plutil -convert json -o - -- -; canonical JSON with sorted dictionary "
+    "keys, preserving array order and scalar types/values"
+)
 
 
 class EvidenceError(ValueError):
@@ -109,7 +117,48 @@ def validate(root: Path) -> dict:
     return inventory
 
 
-def generated_metadata_record(root: Path, relative: str) -> dict:
+def canonical_xcode_project(data: bytes, relative: str, version: str) -> bytes:
+    """Parse exact bytes with Apple's parser; never approximate OpenStep syntax."""
+    try:
+        result = subprocess.run(
+            ["/usr/bin/plutil", "-convert", "json", "-o", "-", "--", "-"],
+            input=data, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            check=True, timeout=30,
+        )
+    except (OSError, subprocess.SubprocessError) as error:
+        raise EvidenceError(
+            f"Cannot verify Xcode project data: /usr/bin/plutil unavailable or failed "
+            f"for {version} {relative}: {error}"
+        ) from error
+
+    def unique_object(pairs):
+        value = {}
+        for key, item in pairs:
+            if key in value:
+                raise ValueError("duplicate JSON dictionary key")
+            value[key] = item
+        return value
+
+    def reject_constant(value):
+        raise ValueError(f"non-JSON numeric constant: {value}")
+
+    try:
+        parsed = json.loads(result.stdout, object_pairs_hook=unique_object,
+                            parse_constant=reject_constant)
+        if not isinstance(parsed, dict):
+            raise ValueError("Xcode project must parse to a dictionary")
+        # Comparing Python objects directly would equate True with 1. Canonical
+        # JSON ignores only dictionary order, retaining scalar types and arrays.
+        return json.dumps(parsed, sort_keys=True, separators=(",", ":"),
+                          allow_nan=False).encode("utf-8")
+    except (ValueError, TypeError, UnicodeError) as error:
+        raise EvidenceError(
+            f"Malformed /usr/bin/plutil JSON output for {version} {relative}: {error}"
+        ) from error
+
+
+def generated_metadata_record(root: Path, relative: str,
+                              verify_xcode_data: bool = False) -> dict:
     """Record an existing generated file, never a missing or redirected input."""
     path = repository_file(root, relative)
     # repository_file checks the final file and repository boundary. A link in
@@ -131,6 +180,20 @@ def generated_metadata_record(root: Path, relative: str) -> dict:
     built_bytes = path.read_bytes()
     if not built_bytes:
         raise EvidenceError(f"Generated metadata must not be empty: {relative}")
+    semantic_record = {}
+    if verify_xcode_data:
+        head_bytes = git_bytes(root, "cat-file", "blob", head_blob)
+        baseline_data = canonical_xcode_project(head_bytes, relative, "HEAD")
+        built_data = canonical_xcode_project(built_bytes, relative, "built")
+        if baseline_data != built_data:
+            raise EvidenceError(
+                f"Xcode project parsed data differs from HEAD; review and commit this input: {relative}"
+            )
+        semantic_record = {
+            "record_reason": "Parsed Xcode project data unchanged; serialization-only for this build",
+            "comparison_method": XCODE_COMPARISON_METHOD,
+            "canonical_json_sha256": hashlib.sha256(baseline_data).hexdigest(),
+        }
     diff = git_bytes(root, "diff", "--no-ext-diff", "--no-textconv", "--binary",
                      "--no-renames", "HEAD", "--", relative)
     return {
@@ -143,6 +206,7 @@ def generated_metadata_record(root: Path, relative: str) -> dict:
         "diff_file": f"generated/diff/{relative}.patch",
         "diff_sha256": hashlib.sha256(diff).hexdigest(),
         "diff": diff.decode("utf-8"),
+        **semantic_record,
     }
 
 
@@ -162,7 +226,10 @@ def collect(root: Path, platform: str, artifacts: list[Path],
                     "docs", "test", ".github", "pubspec.yaml", "pubspec.lock", ".fvmrc")
     dirty_paths = set(dirty.splitlines())
     untracked_paths = set(untracked.splitlines())
-    allowed_generated = GENERATED_METADATA.get(platform, set()) if record_generated_metadata else set()
+    allowed_generated = set(GENERATED_METADATA.get(platform, set())) if record_generated_metadata else set()
+    xcode_project = XCODE_RESERIALIZATION.get(platform) if record_generated_metadata else None
+    if xcode_project:
+        allowed_generated.add(xcode_project)
     generated_paths = dirty_paths & allowed_generated
     authored_changes = dirty_paths - generated_paths
     if require_clean and (authored_changes or untracked_paths):
@@ -172,7 +239,8 @@ def collect(root: Path, platform: str, artifacts: list[Path],
             + ", ".join(changed)
         )
     generated_records = {
-        name: generated_metadata_record(root, name) for name in sorted(generated_paths)
+        name: generated_metadata_record(root, name, verify_xcode_data=name == xcode_project)
+        for name in sorted(generated_paths)
     }
     resolved_dependencies = None
     if dependencies:
@@ -219,6 +287,7 @@ def collect(root: Path, platform: str, artifacts: list[Path],
         "generated_metadata_changes": generated_records,
         "generated_metadata_review_note": (
             "Generated native dependency locks and plugin registration describe the actual build. "
+            "Recorded iOS project reserialization must preserve its parsed Xcode data. "
             "Review their resolved dependencies and corresponding sources before release; "
             "recording these changes is not approval or a legal classification."
         ),

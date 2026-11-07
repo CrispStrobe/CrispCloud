@@ -251,6 +251,19 @@ jobs:
           python3 tool/crypto_release_evidence.py --platform macos --require-clean --record-generated-metadata \
             --artifact "$PKG" --dependencies build/export-compliance/dependencies.json
 
+      - name: Capture unapproved macOS project changes on failure
+        if: failure()
+        run: python3 tool/record_native_project_diagnostics.py macos
+
+      - name: Upload macOS source diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-release-source-diagnostics
+          path: build/source-diagnostics/macos/
+          if-no-files-found: ignore
+          retention-days: 14
+
       - name: Upload .pkg artifact and crypto evidence
         uses: actions/upload-artifact@v4
         with:

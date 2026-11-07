@@ -186,6 +186,10 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Verify native plist comparison and evidence failure paths
+        if: runner.os == 'macOS'
+        run: python3 -m unittest discover -s tool -p test_crypto_release_evidence.py -v
+
       - uses: subosito/flutter-action@v2
         with:
           channel: ${{ env.FLUTTER_CHANNEL }}
@@ -558,6 +562,19 @@ jobs:
           python3 tool/crypto_release_evidence.py --platform macos --require-clean --record-generated-metadata \
             --artifact crispcloud-macos-release.zip --dependencies build/export-compliance/dependencies.json
 
+      - name: Capture unapproved macOS project changes on failure
+        if: failure()
+        run: python3 tool/record_native_project_diagnostics.py macos
+
+      - name: Upload macOS source diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-source-diagnostics
+          path: build/source-diagnostics/macos/
+          if-no-files-found: ignore
+          retention-days: 14
+
       - uses: actions/upload-artifact@v4
         with:
           name: crispcloud-macos-release
@@ -666,6 +683,19 @@ jobs:
           dart pub deps --json > build/export-compliance/dependencies.json
           python3 tool/crypto_release_evidence.py --platform ios --require-clean --record-generated-metadata \
             --artifact crispcloud-ios-nosign.zip --dependencies build/export-compliance/dependencies.json
+
+      - name: Capture unapproved iOS project changes on failure
+        if: failure()
+        run: python3 tool/record_native_project_diagnostics.py ios
+
+      - name: Upload iOS source diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-source-diagnostics
+          path: build/source-diagnostics/ios/
+          if-no-files-found: ignore
+          retention-days: 14
 
       - uses: actions/upload-artifact@v4
         with:
