@@ -75,9 +75,8 @@ List<TreemapRect<T>> squarifyTreemap<T>(
     var end = start + 1;
     var rowArea = weighted[start].area;
     final largest = rowArea;
-    var smallest = rowArea;
     final side = math.min(remaining.width, remaining.height);
-    var worst = _worstRatio(rowArea, largest, smallest, side);
+    var worst = _worstRatio(rowArea, largest, largest, side);
     while (end < weighted.length) {
       final candidate = weighted[end].area;
       final nextWorst = _worstRatio(
@@ -88,7 +87,6 @@ List<TreemapRect<T>> squarifyTreemap<T>(
       );
       if (nextWorst > worst) break;
       rowArea += candidate;
-      smallest = candidate;
       worst = nextWorst;
       end++;
     }
@@ -233,13 +231,19 @@ List<StorageTreemapTile> layoutStorageTreemap(
   final bounds = Offset.zero & size;
   if (!root.isFolder) {
     return root.bytes > 0
-        ? [StorageTreemapTile(node: root, rect: bounds, depth: 0, bytes: root.bytes)]
+        ? [
+            StorageTreemapTile(
+              node: root,
+              rect: bounds,
+              depth: 0,
+              bytes: root.bytes,
+            ),
+          ]
         : const [];
   }
 
   final result = <StorageTreemapTile>[];
-  final pending = Queue<_FolderRegion>()
-    ..add(_FolderRegion(root, bounds, 0));
+  final pending = Queue<_FolderRegion>()..add(_FolderRegion(root, bounds, 0));
   while (pending.isNotEmpty && result.length < maxTiles) {
     final folder = pending.removeFirst();
     final nodes = folder.node.children.where((node) => node.bytes > 0).toList()
@@ -266,7 +270,9 @@ List<StorageTreemapTile> layoutStorageTreemap(
       if (individualCount < nodes.length)
         _LayoutEntry(
           folder.node,
-          nodes.skip(individualCount).fold<int>(0, (sum, node) => sum + node.bytes),
+          nodes
+              .skip(individualCount)
+              .fold<int>(0, (sum, node) => sum + node.bytes),
           nodes.length - individualCount,
         ),
     ];
@@ -277,7 +283,9 @@ List<StorageTreemapTile> layoutStorageTreemap(
     );
     if (rectangles.isEmpty) continue;
     if (folder.tileIndex != null) {
-      result[folder.tileIndex!] = result[folder.tileIndex!]._expanded(folder.rect);
+      result[folder.tileIndex!] = result[folder.tileIndex!]._expanded(
+        folder.rect,
+      );
     }
     for (final cell in rectangles) {
       final entry = cell.value;

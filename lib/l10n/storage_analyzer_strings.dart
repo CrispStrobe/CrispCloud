@@ -79,7 +79,8 @@ class StorageAnalyzerStrings {
     },
     'de': {
       'title': 'Speicheranalyse',
-      'intro': 'Speicherbelegung dieses Ordners und seiner Unterordner anzeigen.',
+      'intro':
+          'Speicherbelegung dieses Ordners und seiner Unterordner anzeigen.',
       'scope': 'Versteckte Dateien werden berücksichtigt. Verwendet gemeldete Dateigrößen, ohne Dateiinhalte herunterzuladen. Die Summe kann von der Datenträgerbelegung oder dem Kontingent abweichen.',
       'openFolderFirst': 'Öffnen Sie einen lokalen oder verbundenen Cloud-Ordner und warten Sie, bis er geladen ist. Archive und Suchsammlungen können nicht als Ausgangspunkt verwendet werden.',
       'close': 'Schließen',
@@ -129,15 +130,18 @@ class StorageAnalyzerStrings {
       'largestCount': '{shown} von {total} Dateien, größte zuerst',
       'typesHint': 'Wählen Sie einen Dateityp, um die Liste der größten Dateien zu filtern.',
       'revealFailed': 'Das ursprüngliche Element konnte nicht geöffnet werden. Prüfen Sie die Verbindung zum ursprünglichen Speicherkonto.',
-      'moreIssues': '{count} weitere Analyseprobleme werden nicht einzeln aufgelistet.',
+      'moreIssues':
+          '{count} weitere Analyseprobleme werden nicht einzeln aufgelistet.',
       'rootUnavailable': 'Der Ausgangsordner ist nicht verfügbar',
       'unreadableDirectory': 'Dieser Ordner konnte nicht gelesen werden',
-      'incompleteListing': 'Der Anbieter hat eine unvollständige Liste zurückgegeben',
+      'incompleteListing':
+          'Der Anbieter hat eine unvollständige Liste zurückgegeben',
       'invalidEntry': 'Ein ungültiger Eintrag oder ein Eintrag außerhalb des Ordners wurde ausgeschlossen',
       'duplicateEntry': 'Ein wiederholter Eintrag wurde ausgeschlossen',
       'depthLimit': 'Maximale Ordnertiefe erreicht',
       'entryLimit': 'Maximale Anzahl von Elementen erreicht',
-      'byteLimit': 'Die gemeldete Größe überschreitet den unterstützten Bereich',
+      'byteLimit':
+          'Die gemeldete Größe überschreitet den unterstützten Bereich',
     },
     'fr': {'title': 'Analyse du stockage'},
     'es': {'title': 'Analizador de almacenamiento'},

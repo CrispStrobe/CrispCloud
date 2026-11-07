@@ -39,11 +39,29 @@ Future<void> showStorageAnalyzerDialog(
         sourceLabel: origin.source.displayName,
         onReveal: (node) async {
           if (!origin.isCurrent) throw StateError('Storage changed.');
+          final directory = node.isFolder
+              ? node.path
+              : source.paths.dirname(node.path);
           await panel.navigateToPath(
-            node.isFolder ? node.path : source.paths.dirname(node.path),
+            directory,
             origin: origin,
             selectItem: node.isFolder ? null : node.item,
           );
+          // Locked tabs, declined folder grants and failed listings can return
+          // normally. Keep the report open unless reveal actually succeeded.
+          final navigated = panel.captureCurrentOrigin();
+          if (!origin.isCurrent ||
+              navigated.storageId != origin.storageId ||
+              !source.samePath(navigated.source.currentPath, directory) ||
+              (!node.isFolder &&
+                  !panel.selection.any(
+                    (file) =>
+                        (file.path != null &&
+                            source.samePath(file.path!, node.path)) ||
+                        (node.item.uuid != null && file.uuid == node.item.uuid),
+                  ))) {
+            throw StateError('The original item could not be revealed.');
+          }
         },
       ),
     );
@@ -89,6 +107,7 @@ class StorageAnalyzerDialog extends StatefulWidget {
 class _StorageAnalyzerDialogState extends State<StorageAnalyzerDialog> {
   bool _scanning = false;
   bool _cancelled = false;
+  bool _revealing = false;
   StorageScanProgress? _progress;
   StorageScanResult? _result;
   String? _error;
@@ -132,17 +151,22 @@ class _StorageAnalyzerDialogState extends State<StorageAnalyzerDialog> {
   }
 
   Future<void> _reveal(StorageNode node) async {
+    if (_revealing || widget.onReveal == null) return;
     final strings = StorageAnalyzerStrings(context);
+    final route = ModalRoute.of(context);
+    setState(() => _revealing = true);
     try {
       if (!widget.source.isCurrent) throw StateError('Storage changed.');
-      await widget.onReveal?.call(node);
-      if (mounted) Navigator.of(context).pop();
+      await widget.onReveal!(node);
+      if (mounted && route?.isCurrent == true) Navigator.of(context).pop();
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          SnackBar(content: Text(strings.text('revealFailed'))),
-        );
+        ScaffoldMessenger.maybeOf(
+          context,
+        )?.showSnackBar(SnackBar(content: Text(strings.text('revealFailed'))));
       }
+    } finally {
+      if (mounted) setState(() => _revealing = false);
     }
   }
 
@@ -164,15 +188,19 @@ class _StorageAnalyzerDialogState extends State<StorageAnalyzerDialog> {
               padding: const EdgeInsets.fromLTRB(16, 10, 8, 8),
               child: Row(
                 children: [
-                  Icon(Icons.space_dashboard_outlined,
-                      color: theme.colorScheme.primary),
+                  Icon(
+                    Icons.space_dashboard_outlined,
+                    color: theme.colorScheme.primary,
+                  ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(strings.text('title'),
-                            style: theme.textTheme.titleLarge),
+                        Text(
+                          strings.text('title'),
+                          style: theme.textTheme.titleLarge,
+                        ),
                         Text(
                           widget.sourceLabel,
                           style: theme.textTheme.bodySmall,
@@ -195,7 +223,12 @@ class _StorageAnalyzerDialogState extends State<StorageAnalyzerDialog> {
               child: result != null
                   ? StorageAnalysisView(
                       analysis: result,
-                      onReveal: widget.onReveal == null ? null : _reveal,
+                      onReveal:
+                          widget.onReveal == null ||
+                              _revealing ||
+                              result.sourceChanged
+                          ? null
+                          : _reveal,
                     )
                   : Center(
                       child: SingleChildScrollView(
@@ -214,9 +247,11 @@ class _StorageAnalyzerDialogState extends State<StorageAnalyzerDialog> {
                               ),
                               const SizedBox(height: 20),
                               Text(
-                                strings.text(_error == null
-                                    ? (_cancelled ? 'stopping' : 'scanning')
-                                    : 'failed'),
+                                strings.text(
+                                  _error == null
+                                      ? (_cancelled ? 'stopping' : 'scanning')
+                                      : 'failed',
+                                ),
                                 style: theme.textTheme.titleMedium,
                                 textAlign: TextAlign.center,
                               ),
@@ -224,11 +259,13 @@ class _StorageAnalyzerDialogState extends State<StorageAnalyzerDialog> {
                               if (_scanning) ...[
                                 const LinearProgressIndicator(),
                                 const SizedBox(height: 12),
-                                Text(strings.text('progress', {
-                                  'files': _progress?.files ?? 0,
-                                  'folders': _progress?.folders ?? 0,
-                                  'size': formatBytes(_progress?.bytes ?? 0),
-                                })),
+                                Text(
+                                  strings.text('progress', {
+                                    'files': _progress?.files ?? 0,
+                                    'folders': _progress?.folders ?? 0,
+                                    'size': formatBytes(_progress?.bytes ?? 0),
+                                  }),
+                                ),
                               ],
                               const SizedBox(height: 8),
                               Text(
@@ -238,12 +275,16 @@ class _StorageAnalyzerDialogState extends State<StorageAnalyzerDialog> {
                                 textAlign: TextAlign.center,
                               ),
                               const SizedBox(height: 16),
-                              Text(strings.text('scope'),
-                                  textAlign: TextAlign.center),
+                              Text(
+                                strings.text('scope'),
+                                textAlign: TextAlign.center,
+                              ),
                               if (_error != null) ...[
                                 const SizedBox(height: 12),
-                                SelectableText(_error!,
-                                    style: theme.textTheme.bodySmall),
+                                SelectableText(
+                                  _error!,
+                                  style: theme.textTheme.bodySmall,
+                                ),
                               ],
                             ],
                           ),
@@ -275,7 +316,9 @@ class _StorageAnalyzerDialogState extends State<StorageAnalyzerDialog> {
                     )
                   else
                     OutlinedButton.icon(
-                      onPressed: widget.source.isCurrent ? _scan : null,
+                      onPressed: widget.source.isCurrent && !_revealing
+                          ? _scan
+                          : null,
                       icon: const Icon(Icons.refresh, size: 18),
                       label: Text(strings.text('scanAgain')),
                     ),

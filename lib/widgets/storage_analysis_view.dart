@@ -10,11 +10,7 @@ import 'storage_treemap.dart';
 
 /// Browses a completed or partial scan without issuing further storage reads.
 class StorageAnalysisView extends StatefulWidget {
-  const StorageAnalysisView({
-    super.key,
-    required this.analysis,
-    this.onReveal,
-  });
+  const StorageAnalysisView({super.key, required this.analysis, this.onReveal});
 
   final StorageScanResult analysis;
   final Future<void> Function(StorageNode)? onReveal;
@@ -33,6 +29,8 @@ class _StorageAnalysisViewState extends State<StorageAnalysisView>
   late StorageNode _selected;
   List<StorageNode> _children = [];
   List<StorageNode> _files = [];
+  List<StorageNode> _shownFiles = [];
+  int _matchingFileCount = 0;
   List<_FileType> _types = [];
   String? _extension;
   String _query = '';
@@ -109,6 +107,21 @@ class _StorageAnalysisViewState extends State<StorageAnalysisView>
     _extension = null;
     _query = '';
     _queryController.clear();
+    _updateFileFilter();
+  }
+
+  // Selection and map updates must not re-walk a 200,000-file snapshot.
+  void _updateFileFilter() {
+    final query = _query.toLowerCase();
+    _shownFiles = [];
+    _matchingFileCount = 0;
+    for (final node in _files) {
+      if (_extension != null && node.item.extension != _extension) continue;
+      if (query.isNotEmpty && !node.path.toLowerCase().contains(query))
+        continue;
+      _matchingFileCount++;
+      if (_shownFiles.length < 200) _shownFiles.add(node);
+    }
   }
 
   void _openFolder(StorageNode node) {
@@ -184,7 +197,9 @@ class _StorageAnalysisViewState extends State<StorageAnalysisView>
     final result = widget.analysis;
     final status = result.cancelled
         ? 'cancelled'
-        : result.isComplete ? 'complete' : 'partial';
+        : result.isComplete
+        ? 'complete'
+        : 'partial';
     return Container(
       width: double.infinity,
       color: theme.colorScheme.surfaceContainerLow,
@@ -197,17 +212,26 @@ class _StorageAnalysisViewState extends State<StorageAnalysisView>
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(strings.text('knownSize'), style: theme.textTheme.labelSmall),
-              Text(formatBytes(_folder.bytes), style: theme.textTheme.headlineSmall),
+              Text(
+                strings.text('knownSize'),
+                style: theme.textTheme.labelSmall,
+              ),
+              Text(
+                formatBytes(_folder.bytes),
+                style: theme.textTheme.headlineSmall,
+              ),
             ],
           ),
           Text('${_folder.fileCount} ${strings.text('files')}'),
           Text('${_folder.folderCount} ${strings.text('folders')}'),
           TextButton.icon(
             onPressed: () => _showDetails(strings),
-            icon: Icon(result.isComplete
-                ? Icons.check_circle_outline
-                : Icons.info_outline, size: 18),
+            icon: Icon(
+              result.isComplete
+                  ? Icons.check_circle_outline
+                  : Icons.info_outline,
+              size: 18,
+            ),
             label: Text(strings.text(status)),
           ),
         ],
@@ -234,9 +258,9 @@ class _StorageAnalysisViewState extends State<StorageAnalysisView>
                   if (index > 0) const Icon(Icons.chevron_right, size: 16),
                   TextButton(
                     onPressed: () => _openFolder(_trail[index]),
-                    child: Text(index == 0
-                        ? strings.text('home')
-                        : _trail[index].name),
+                    child: Text(
+                      index == 0 ? strings.text('home') : _trail[index].name,
+                    ),
                   ),
                 ],
               ],
@@ -282,7 +306,10 @@ class _StorageAnalysisViewState extends State<StorageAnalysisView>
           controller: _compactTabs,
           isScrollable: true,
           tabAlignment: TabAlignment.start,
-          tabs: [Tab(text: strings.text('treemap')), ..._detailTabLabels(strings)],
+          tabs: [
+            Tab(text: strings.text('treemap')),
+            ..._detailTabLabels(strings),
+          ],
         ),
         Expanded(
           child: TabBarView(
@@ -323,38 +350,49 @@ class _StorageAnalysisViewState extends State<StorageAnalysisView>
               selected: _selected,
               onSelected: (node) => setState(() => _selected = node),
               onOpenFolder: _openFolder,
-              aggregateLabel: (count) => strings.text('aggregate', {'count': count}),
+              aggregateLabel: (count) =>
+                  strings.text('aggregate', {'count': count}),
               emptyLabel: strings.text('noBytes'),
             ),
           ),
           const SizedBox(height: 8),
-          Text(strings.text('mapHint'),
-              style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            strings.text('mapHint'),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
         ],
       ),
     );
   }
 
-  Widget _nodeRow(StorageNode node, StorageAnalyzerStrings strings,
-      {bool showPath = false}) {
+  Widget _nodeRow(
+    StorageNode node,
+    StorageAnalyzerStrings strings, {
+    bool showPath = false,
+  }) {
     final theme = Theme.of(context);
     return ListTile(
       selected: identical(node, _selected),
       leading: Icon(
         node.item.isSymlink == true
             ? Icons.link
-            : node.isFolder ? Icons.folder_outlined : Icons.insert_drive_file_outlined,
+            : node.isFolder
+            ? Icons.folder_outlined
+            : Icons.insert_drive_file_outlined,
         color: node.isFolder
             ? theme.colorScheme.primary
-            : storageExtensionColor(node.item.extension, brightness: theme.brightness),
+            : storageExtensionColor(
+                node.item.extension,
+                brightness: theme.brightness,
+              ),
       ),
       title: Text(node.name, maxLines: 1, overflow: TextOverflow.ellipsis),
       subtitle: Text(
         showPath
             ? node.path
             : node.isFolder
-                ? strings.text('fileCount', {'count': node.fileCount})
-                : strings.text('share', {'percent': _percentage(node.bytes)}),
+            ? strings.text('fileCount', {'count': node.fileCount})
+            : strings.text('share', {'percent': _percentage(node.bytes)}),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
@@ -363,11 +401,13 @@ class _StorageAnalysisViewState extends State<StorageAnalysisView>
         children: [
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 95),
-            child: Text(_sizeLabel(node, strings),
-                style: theme.textTheme.labelMedium,
-                maxLines: 2,
-                textAlign: TextAlign.end,
-                overflow: TextOverflow.ellipsis),
+            child: Text(
+              _sizeLabel(node, strings),
+              style: theme.textTheme.labelMedium,
+              maxLines: 2,
+              textAlign: TextAlign.end,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
           if (node.isFolder && node.item.isSymlink != true)
             IconButton(
@@ -383,19 +423,17 @@ class _StorageAnalysisViewState extends State<StorageAnalysisView>
   }
 
   Widget _largestFiles(StorageAnalyzerStrings strings) {
-    final query = _query.toLowerCase();
-    final matching = _files.where((node) =>
-        (_extension == null || node.item.extension == _extension) &&
-        (query.isEmpty || node.path.toLowerCase().contains(query)));
-    final shown = matching.take(200).toList();
-    final total = matching.length;
+    final shown = _shownFiles;
     return Column(
       children: [
         Padding(
           padding: const EdgeInsets.all(8),
           child: TextField(
             controller: _queryController,
-            onChanged: (value) => setState(() => _query = value),
+            onChanged: (value) => setState(() {
+              _query = value;
+              _updateFileFilter();
+            }),
             decoration: InputDecoration(
               isDense: true,
               prefixIcon: const Icon(Icons.search),
@@ -408,26 +446,38 @@ class _StorageAnalysisViewState extends State<StorageAnalysisView>
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
             child: InputChip(
-              label: Text(strings.text('typeFilter', {
-                'type': _typeName(_extension!, strings),
-              })),
-              onDeleted: () => setState(() => _extension = null),
+              label: Text(
+                strings.text('typeFilter', {
+                  'type': _typeName(_extension!, strings),
+                }),
+              ),
+              onDeleted: () => setState(() {
+                _extension = null;
+                _updateFileFilter();
+              }),
               deleteButtonTooltipMessage: strings.text('clearFilter'),
             ),
           ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          child: Text(strings.text('largestCount', {
-            'shown': shown.length, 'total': total,
-          }), style: Theme.of(context).textTheme.bodySmall),
+          child: Text(
+            strings.text('largestCount', {
+              'shown': shown.length,
+              'total': _matchingFileCount,
+            }),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
         ),
         Expanded(
           child: shown.isEmpty
               ? _empty(strings.text('noMatches'))
               : ListView.builder(
-                  key: PageStorageKey('storage-largest-${_folder.path}-$_extension-$_query'),
+                  key: ValueKey(
+                    'storage-largest-${_folder.path}-$_extension-$_query',
+                  ),
                   itemCount: shown.length,
-                  itemBuilder: (_, index) => _nodeRow(shown[index], strings, showPath: true),
+                  itemBuilder: (_, index) =>
+                      _nodeRow(shown[index], strings, showPath: true),
                 ),
         ),
       ],
@@ -441,7 +491,10 @@ class _StorageAnalysisViewState extends State<StorageAnalysisView>
       children: [
         Padding(
           padding: const EdgeInsets.all(12),
-          child: Text(strings.text('typesHint'), style: theme.textTheme.bodySmall),
+          child: Text(
+            strings.text('typesHint'),
+            style: theme.textTheme.bodySmall,
+          ),
         ),
         Expanded(
           child: ListView.builder(
@@ -450,17 +503,38 @@ class _StorageAnalysisViewState extends State<StorageAnalysisView>
               final type = _types[index];
               return ListTile(
                 leading: Container(
-                  width: 18, height: 18,
+                  width: 18,
+                  height: 18,
                   decoration: BoxDecoration(
-                    color: storageExtensionColor(type.extension, brightness: theme.brightness),
+                    color: storageExtensionColor(
+                      type.extension,
+                      brightness: theme.brightness,
+                    ),
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
-                title: Text(_typeName(type.extension, strings)),
-                subtitle: Text(strings.text('fileCount', {'count': type.count})),
-                trailing: Text('${formatBytes(type.bytes)}${type.unknown > 0 ? ' + ?' : ''}'),
+                title: Text(
+                  _typeName(type.extension, strings),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                subtitle: Text(
+                  strings.text('fileCount', {'count': type.count}),
+                ),
+                trailing: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 110),
+                  child: Text(
+                    '${formatBytes(type.bytes)}${type.unknown > 0 ? ' + ?' : ''}',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.end,
+                  ),
+                ),
                 onTap: () {
-                  setState(() => _extension = type.extension);
+                  setState(() {
+                    _extension = type.extension;
+                    _updateFileFilter();
+                  });
                   _wideTabs.animateTo(1);
                   _compactTabs.animateTo(2);
                 },
@@ -483,19 +557,25 @@ class _StorageAnalysisViewState extends State<StorageAnalysisView>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(node.path,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            node.path,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
           Row(
             children: [
               Expanded(
-                child: Text(_sizeLabel(node, strings),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleSmall),
+                child: Text(
+                  _sizeLabel(node, strings),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
               ),
-              if (node.isFolder && node.item.isSymlink != true && node != _folder)
+              if (node.isFolder &&
+                  node.item.isSymlink != true &&
+                  node != _folder)
                 IconButton(
                   tooltip: strings.text('openFolder'),
                   onPressed: () => _openFolder(node),
@@ -560,9 +640,11 @@ class _StorageAnalysisViewState extends State<StorageAnalysisView>
     await showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(strings.text('issues', {
-          'count': result.issues.length + result.suppressedIssueCount,
-        })),
+        title: Text(
+          strings.text('issues', {
+            'count': result.issues.length + result.suppressedIssueCount,
+          }),
+        ),
         content: SizedBox(
           width: 600,
           height: math.min(440, MediaQuery.sizeOf(context).height * 0.6),
@@ -576,7 +658,11 @@ class _StorageAnalysisViewState extends State<StorageAnalysisView>
               for (final issue in result.issues)
                 ExpansionTile(
                   title: Text(strings.text(issue.code.name)),
-                  subtitle: Text(issue.path, maxLines: 2, overflow: TextOverflow.ellipsis),
+                  subtitle: Text(
+                    issue.path,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                   children: [
                     Padding(
                       padding: const EdgeInsets.all(12),

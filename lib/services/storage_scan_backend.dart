@@ -48,6 +48,39 @@ class CloudStorageScanBackend extends CloudOperationBackend
       (await listForStorageScan(path)).entries;
 
   @override
+  Future<FileItem?> stat(String path) async {
+    _check();
+    path = paths.normalize(path);
+    if (isRootPath(path)) {
+      return FileItem(name: paths.basename(path), path: path, isFolder: true);
+    }
+    // Scan source names exactly first. The mutation backend intentionally uses
+    // conservative collision matching; that would reject two real A/a folders
+    // on a case-sensitive remote with an unknown case capability. Reading one
+    // direct parent also avoids recursively relisting every ancestor.
+    final listing = await listForStorageScan(paths.dirname(path));
+    _check();
+    final name = paths.basename(path);
+    var matches = listing.entries.where((item) => item.name == name).toList();
+    if (matches.isEmpty &&
+        capabilities.caseSensitivity == StorageCaseSensitivity.insensitive) {
+      matches = listing.entries
+          .where((item) => item.name.toLowerCase() == name.toLowerCase())
+          .toList();
+    }
+    if (matches.length > 1) {
+      throw StateError('The provider returned ambiguous entries for $path.');
+    }
+    if (matches.isNotEmpty) return matches.single;
+    if (!listing.isComplete) {
+      throw StateError(
+        listing.issues.isNotEmpty ? listing.issues.first.message : 'The directory could not be found in an incomplete parent listing.',
+      );
+    }
+    return null;
+  }
+
+  @override
   Future<StorageScanDirectory> listForStorageScan(String path) async {
     _check();
     final identityBefore = identity;
@@ -58,7 +91,9 @@ class CloudStorageScanBackend extends CloudOperationBackend
     }
     if (listing['success'] == false ||
         (listing['error'] != null && listing['error'] != false)) {
-      throw StateError('The provider could not return a verified directory listing.');
+      throw StateError(
+        'The provider could not return a verified directory listing.',
+      );
     }
 
     final issues = <StorageScanIssue>[];
@@ -72,10 +107,13 @@ class CloudStorageScanBackend extends CloudOperationBackend
       );
     }
     final entries = <FileItem>[];
+    var excludedBucketIndex = false;
     void invalidEntry() {
       // Report malformed data once per directory instead of allocating a
       // diagnostic for every bad row in a large provider response.
-      if (!issues.any((issue) => issue.code == StorageScanIssueCode.invalidEntry)) {
+      if (!issues.any(
+        (issue) => issue.code == StorageScanIssueCode.invalidEntry,
+      )) {
         issues.add(_invalidEntry(path));
       }
     }
@@ -93,10 +131,28 @@ class CloudStorageScanBackend extends CloudOperationBackend
           continue;
         }
         final item = Map<String, dynamic>.from(raw);
-        final folder = group == 'folders' ||
+        final folder =
+            group == 'folders' ||
             item['isFolder'] == true ||
             item['type'] == 'folder' ||
             item['type'] == 'directory';
+        if (isRootPath(path) && folder && item.containsKey('bucketType')) {
+          // Native B2 exposes bucket-index rows at /, while its child path API
+          // addresses prefixes within one configured bucket. Descending these
+          // virtual rows would measure unrelated prefixes as empty buckets.
+          // Detect the metadata shape rather than a provider display name.
+          if (!excludedBucketIndex) {
+            issues.add(
+              StorageScanIssue(
+                path: path,
+                code: StorageScanIssueCode.incompleteListing,
+                message: 'This root lists virtual buckets. Use an S3-compatible connection to scan the bucket contents.',
+              ),
+            );
+            excludedBucketIndex = true;
+          }
+          continue;
+        }
         final originalName = item['name'];
         if (originalName is! String || originalName.isEmpty) {
           invalidEntry();
@@ -130,7 +186,8 @@ class CloudStorageScanBackend extends CloudOperationBackend
             // downloadSize is a transformed stream's length, not the storage
             // size. The analyzer intentionally uses the original size field.
             size: folder ? null : _size(rawSize),
-            isSymlink: item['isSymlink'] == true ||
+            isSymlink:
+                item['isSymlink'] == true ||
                 item['type'] == 'symlink' ||
                 item['type'] == 'link',
             updatedAt: _modified(item),
@@ -154,7 +211,10 @@ class CloudStorageScanBackend extends CloudOperationBackend
 
   static int? _size(dynamic value) {
     if (value is int) return value >= 0 ? value : null;
-    if (value is num && value.isFinite && value >= 0 && value == value.truncateToDouble()) {
+    if (value is num &&
+        value.isFinite &&
+        value >= 0 &&
+        value == value.truncateToDouble()) {
       return value.toInt();
     }
     if (value is String && RegExp(r'^\d+$').hasMatch(value)) {
@@ -164,7 +224,8 @@ class CloudStorageScanBackend extends CloudOperationBackend
   }
 
   static DateTime? _modified(Map<String, dynamic> item) {
-    final value = item['modificationTime'] ??
+    final value =
+        item['modificationTime'] ??
         item['lastModified'] ??
         item['updatedAt'] ??
         item['timestamp'];

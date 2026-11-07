@@ -125,21 +125,20 @@ class StorageScanService {
         progress();
         StorageScanDirectory listing;
         try {
-          // A listed local/SFTP folder may have become a link before descent.
+          // A listed folder may have become a link before descent.
           // Recheck without following links wherever the backend supports it.
           if (depth > 0 && source.supportsSymbolicLinks) {
             final fresh = await source.stat(currentPath);
             check();
-            if (fresh == null ||
-                !fresh.isFolder ||
-                fresh.isSymlink == true) {
+            if (fresh == null || !fresh.isFolder || fresh.isSymlink == true) {
               throw StateError('The directory changed before it was scanned.');
             }
           }
           check();
           listing = source is StorageScanDirectoryReader
-              ? await (source as StorageScanDirectoryReader)
-                    .listForStorageScan(currentPath)
+              ? await (source as StorageScanDirectoryReader).listForStorageScan(
+                  currentPath,
+                )
               : StorageScanDirectory(entries: await source.list(currentPath));
           check();
         } on _ScanCancelled {
@@ -211,7 +210,8 @@ class StorageScanService {
               StorageScanIssue(
                 path: itemPath,
                 code: StorageScanIssueCode.duplicateEntry,
-                message: 'A repeated or ambiguous path was excluded from the scan.',
+                message:
+                    'A repeated or ambiguous path was excluded from the scan.',
               ),
             );
             continue;
@@ -231,7 +231,8 @@ class StorageScanService {
                 StorageScanIssue(
                   path: itemPath,
                   code: StorageScanIssueCode.depthLimit,
-                  message: 'The scan reached its $maxDepth directory depth limit.',
+                  message:
+                      'The scan reached its $maxDepth directory depth limit.',
                 ),
               );
             } else {
@@ -298,7 +299,31 @@ class StorageScanService {
 
     // Iterative postorder avoids recursion limits and preserves all completed
     // descendants even when a later directory fails or the scan is stopped.
+    var aggregated = 0;
     for (final builder in builders.reversed) {
+      // Keep repaint/cancellation responsive while finalizing a large tree.
+      // The root is frozen last, after any late cancellation/source change,
+      // so each node still needs only one immutable snapshot.
+      if (++aggregated % 512 == 0) {
+        await Future<void>.delayed(Duration.zero);
+        if (!cancelled && !sourceChanged) {
+          if (isCancelled?.call() ?? false) {
+            cancelled = true;
+            rootBuilder.complete = false;
+          } else if (!source.isCurrent || source.identity != identity) {
+            sourceChanged = true;
+            rootBuilder.complete = false;
+            issue(
+              StorageScanIssue(
+                path: root,
+                code: StorageScanIssueCode.sourceChanged,
+                message:
+                    'The original storage connection changed during the scan.',
+              ),
+            );
+          }
+        }
+      }
       builder.freeze();
     }
     progress(force: true);
@@ -337,7 +362,9 @@ class _NodeBuilder {
       bytes: file && sizeKnown
           ? item.size!
           : nodes.fold(0, (sum, child) => sum + child.bytes),
-      fileCount: file ? 1 : nodes.fold(0, (sum, child) => sum + child.fileCount),
+      fileCount: file
+          ? 1
+          : nodes.fold(0, (sum, child) => sum + child.fileCount),
       folderCount: nodes.fold(
         0,
         (sum, child) =>

@@ -171,6 +171,7 @@ class _StorageTreemapState extends State<StorageTreemap> {
           },
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
+            excludeFromSemantics: true,
             onTapDown: (details) => _selectAt(details.localPosition),
             onDoubleTapDown: (details) {
               _doubleTapPosition = details.localPosition;
@@ -192,7 +193,8 @@ class _StorageTreemapState extends State<StorageTreemap> {
                           colors: theme.colorScheme,
                           textDirection: textDirection,
                           fontSize: fontSize,
-                          aggregateName: _aggregateName,
+                          aggregateName:
+                              widget.aggregateLabel ?? _aggregateName,
                           description: _tileDescription,
                           onSelected: widget.onSelected,
                           onOpenFolder: widget.onOpenFolder,
@@ -215,8 +217,12 @@ class _StorageTreemapState extends State<StorageTreemap> {
     final colors = Theme.of(context).colorScheme;
     final width = math.min(310.0, size.width - 16);
     return Positioned(
-      left: (_hoverPosition.dx + 12).clamp(8.0, size.width - width - 8),
-      top: (_hoverPosition.dy + 18).clamp(8.0, math.max(8.0, size.height - 94)),
+      left: (_hoverPosition.dx + 12)
+          .clamp(8.0, size.width - width - 8)
+          .toDouble(),
+      top: (_hoverPosition.dy + 18)
+          .clamp(8.0, math.max(8.0, size.height - 94))
+          .toDouble(),
       width: width,
       child: IgnorePointer(
         child: ExcludeSemantics(
@@ -367,7 +373,7 @@ class _TreemapPainter extends CustomPainter {
       textDirection: textDirection,
       maxLines: 1,
       ellipsis: '…',
-    )..layout(maxWidth: math.max(0, labelRect.width - 12));
+    )..layout(maxWidth: math.max(0.0, labelRect.width - 12));
     canvas.save();
     canvas.clipRect(labelRect);
     label.paint(canvas, labelRect.topLeft + const Offset(6, 4));
@@ -380,7 +386,7 @@ class _TreemapPainter extends CustomPainter {
         textDirection: textDirection,
         maxLines: 1,
         ellipsis: '…',
-      )..layout(maxWidth: math.max(0, labelRect.width - 12));
+      )..layout(maxWidth: math.max(0.0, labelRect.width - 12));
       bytes.paint(canvas, labelRect.topLeft + Offset(6, fontSize * 1.4 + 6));
       bytes.dispose();
     }
@@ -389,30 +395,31 @@ class _TreemapPainter extends CustomPainter {
   }
 
   @override
-  SemanticsBuilderCallback get semanticsBuilder => (size) => [
-    for (final tile in tiles)
-      if (tile.rect.width >= 20 && tile.rect.height >= 20)
-        CustomPainterSemantics(
-          rect: tile.isExpanded
-              ? Rect.fromLTRB(
-                  tile.rect.left,
-                  tile.rect.top,
-                  tile.rect.right,
-                  tile.contentRect!.top,
-                )
-              : tile.rect,
-          properties: SemanticsProperties(
-            label: description(tile),
-            textDirection: textDirection,
-            button: true,
-            selected: _isSelected(tile),
-            onTap: () => onSelected(tile.node),
-            onLongPress: tile.node.isFolder
-                ? () => onOpenFolder(tile.node)
-                : null,
-          ),
-        ),
-  ];
+  SemanticsBuilderCallback get semanticsBuilder =>
+      (size) => [
+        for (final tile in tiles)
+          if (tile.rect.width >= 20 && tile.rect.height >= 20)
+            CustomPainterSemantics(
+              rect: tile.isExpanded
+                  ? Rect.fromLTRB(
+                      tile.rect.left,
+                      tile.rect.top,
+                      tile.rect.right,
+                      tile.contentRect!.top,
+                    )
+                  : tile.rect,
+              properties: SemanticsProperties(
+                label: description(tile),
+                textDirection: textDirection,
+                button: true,
+                selected: _isSelected(tile),
+                onTap: () => onSelected(tile.node),
+                onLongPress: tile.node.isFolder
+                    ? () => onOpenFolder(tile.node)
+                    : null,
+              ),
+            ),
+      ];
 
   @override
   bool shouldRepaint(_TreemapPainter oldDelegate) =>
@@ -426,5 +433,7 @@ class _TreemapPainter extends CustomPainter {
 
   @override
   bool shouldRebuildSemantics(_TreemapPainter oldDelegate) =>
-      shouldRepaint(oldDelegate);
+      shouldRepaint(oldDelegate) ||
+      oldDelegate.onSelected != onSelected ||
+      oldDelegate.onOpenFolder != onOpenFolder;
 }
