@@ -9,8 +9,14 @@
 	     with "no resource of type 'builds'", which reads like a bad build
 	     id and is not. ios/Runner/Info.plist has always carried it; the
 	     Flutter macOS template does not. -->
+	<!-- Export compliance: the distributed app contains client-side
+	     AES-256-GCM/PBKDF2 file encryption, Cryptomator vault support and
+	     VeraCrypt container support. Unless those features are removed from
+	     the App Store build, this must be true and App Store Connect needs a
+	     BIS self-classification report (or a CCATS). See
+	     docs/export-compliance.md. -->
 	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
+	<true/>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.utilities</string>
 	<key>CFBundleDevelopmentRegion</key>
