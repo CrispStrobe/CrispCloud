@@ -10,6 +10,14 @@ local folders, browser-granted local folders, and connected cloud providers.
 The screenshot uses a test fixture, not a live account. A
 [compact dark layout](images/storage-analyzer-compact.png) is also shown.
 
+The same scan can also be explored as a sunburst. Switching views never rescans
+the source:
+
+![Sunburst showing folder depth and the sizes of a synthetic file tree](images/storage-analyzer-sunburst-desktop.png)
+
+A [compact dark sunburst](images/storage-analyzer-sunburst-compact.png) is
+available as well.
+
 ## Open and explore
 
 1. Navigate to the folder to analyze and wait for its listing to finish loading.
@@ -30,6 +38,10 @@ The screenshot uses a test fixture, not a live account. A
    navigates the original panel and selects the original file; existing file
    manager actions can then manage it. **Scan again** refreshes the same captured
    folder and storage account.
+7. Select **Treemap** or **Sunburst** above the map. In the sunburst, angular
+   span represents known bytes and rings show folder depth. Click to select;
+   double-click or hold a folder to zoom. Click the center to go up. Selecting
+   a hatched group opens its folder list.
 
 Desktop layouts show the map beside the lists. Narrow layouts expose the map
 and lists as tabs. All entries remain available in the folder list, including
@@ -37,6 +49,46 @@ empty files and items that have no measurable map area. Controls follow the app
 theme, support keyboard focus, and include tooltips and semantic labels. New
 tool text is translated in English and German; other app locales use English
 fallback for messages without a translation.
+
+## Save, reopen, and update
+
+Choose **Save scan** after a completed or partial scan. **Saved scans** opens
+the saved history. A report can be explored without the original drive,
+folder grant, or cloud account, including both maps and all detail lists.
+Historical reports show their scan time; partial results remain partial.
+
+![Saved scan history with synthetic offline and partial examples](images/storage-analyzer-history.png)
+
+Each save creates a separate immutable snapshot. **Rescan original folder**
+performs a full new scan when the original source and root match the captured
+live panel. Choose **Save scan** again to retain the new result alongside the
+previous one. This is a full refresh, not change-journal-based incremental
+updating. A folder's modification time alone is not used to skip descendants.
+
+Saved data includes Unicode names, exact zero-byte sizes, explicit empty
+directories, timestamps, unknown-size markers, skipped links, scan diagnostics,
+and an opaque storage reference. No client, access token, grant, file contents,
+or arbitrary provider metadata is serialized. Saving a scan does not write to
+the scanned folder or cloud account.
+
+Native installations store independent records in application support storage;
+the browser stores them in IndexedDB. These are local saved reports, without
+automatic cross-device synchronization or portable export. This analyzer does
+not currently import or export Cathy `.caf` files. The native snapshot format
+is independent of catalog interchange formats.
+
+Opening history never grants access to the original source. Reveal and rescan
+require a matching live source and root; a different account stays read-only.
+Browser-local snapshots use a grant-session identity, so a later picker grant
+with the same folder name cannot activate an older report's live actions.
+When no real scan source is available, opening the analyzer opens history.
+
+Pages are immutable and checksummed. A small atomic history update publishes
+them only after the complete snapshot has been written. Failed saves retain
+earlier reports; corruption and unsupported versions produce explicit errors.
+History admits 100 saved scans, with up to 200,001 nodes and 128 MiB of page
+data per scan. Reaching a limit does not erase previous reports. Deleting a
+history item removes only that saved metadata, without deleting source files.
 
 ## Reading the map and totals
 
@@ -93,9 +145,72 @@ Default scan limits are 200,000 entries, 200 levels of directories, and 1,000
 individual diagnostics. Additional diagnostics are counted. Sizes and totals
 must remain within the exact shared VM/JavaScript integer range
 (`2^53 - 1` bytes). A limit produces a partial result; choose a smaller folder
-to inspect the remainder. The map renders at most 1,000 tiles and the
-largest-files list displays at most 200 matches. These display limits do not
-change scan totals or the browsable folder list.
+to inspect the remainder. The treemap renders at most 1,000 tiles; the sunburst
+renders at most 600 sectors and five rings. The largest-files list displays at
+most 200 matches. These display limits do not change scan totals or the
+browsable folder list.
+
+Native directory metadata is read synchronously in a background isolate while
+the original access scope remains held. This avoids per-file asynchronous I/O
+scheduling and reuses the initial no-follow type from enumeration. A final type
+check detects visible entry changes; strict root and folder-descent checks are
+retained. Good siblings remain visible when one entry's metadata fails.
+Cancellation is applied after the current directory finishes. A single very
+large directory is still fully listed before the global entry budget applies.
+The result is an observed metadata snapshot, not an atomic filesystem snapshot.
+
+## Measured local performance
+
+On 2026-11-07, a warm synthetic Linux overlay-filesystem fixture contained
+24,000 sparse files, 460 directories, and 359,116,800 logical bytes. Measurements
+used Flutter 3.47.8 / Dart 3.13.7 in the Flutter test VM, an AMD EPYC 9V74 host
+with nine CPUs visible to the process, one warmup and five measured runs, and
+no hashing. Startup/compilation and correctness validation were outside the
+timed interval. Each measured scan validated every file path and size against
+an independently generated manifest, plus exact counts and total bytes.
+
+| Operation | Median | Measured range |
+| --- | ---: | ---: |
+| Previous native adapter, complete scan and aggregation | 6,435.569 ms | 6,188.108–7,263.964 ms |
+| Background native adapter, complete scan and aggregation | 899.095 ms | 876.555–944.697 ms |
+| Save existing result through native disk storage | 464.079 ms | 459.854–492.449 ms |
+| Load and validate native saved result | 422.782 ms | 403.498–446.355 ms |
+
+The scan time is about **7.16× faster** on this fixture. Save and load were
+measured separately through the real native storage implementation, including
+flush, atomic publication, checksums and validation. All 24,461 nodes, file and
+directory metadata, scan times, and diagnostics survived exact round trips.
+The richer native snapshot occupied approximately 7.8 MB per report.
+
+A directory-heavy fixture with 1,010 empty directories also improved:
+1,151.184 ms to 855.743 ms median. The gain is smaller because directory access,
+strict descent checks, and worker startup dominate when there are few files.
+
+These are measured fixture results, not cold-drive, network-mount, cloud API,
+or release-build guarantees. Provider listing latency remains a separate
+constraint. Raw CrispCloud measurements are recorded in
+[the benchmark data](benchmarks/storage-scan-linux-2026-11-07.json).
+
+Reproduce the metadata benchmark with a new disposable directory:
+
+```sh
+python3 tool/create_storage_scan_fixture.py /tmp/crisp-scan-fixture
+STORAGE_SCAN_BENCHMARK_ROOT=/tmp/crisp-scan-fixture \
+STORAGE_SCAN_BENCHMARK_MANIFEST=/tmp/crisp-scan-fixture.manifest.json \
+flutter test --no-pub --tags benchmark --run-skipped \
+  test/storage_scan_benchmark_test.dart
+```
+
+Set `STORAGE_SCAN_BENCHMARK_LEGACY=1` for the earlier operation-backend path,
+which is equivalent to the prior scan adapter on the ASCII Linux fixture.
+To measure actual native save/load instead, use the same root and manifest with
+`test/storage_scan_snapshot_benchmark_test.dart`. Run the two benchmarks
+separately to avoid competing for filesystem and CPU resources. The persistence
+benchmark creates and removes its own temporary records, leaving app history
+and the scanned directory untouched.
+The benchmark is opt-in and excluded from ordinary CI. On Linux CI, the
+existing `tool/with_ci_system_sqlite.py` wrapper supplies the system SQLite
+library when the environment requires it.
 
 ## Implementation and verification
 
@@ -108,15 +223,24 @@ change scan totals or the browsable folder list.
   requests. Filtering is cached separately from item selection.
 - `StorageTreemap` uses a bounded squarified layout with a canvas renderer,
   hit testing, hover details, and semantic actions.
+- `StorageSunburst` uses a bounded angular hierarchy with the same snapshot and
+  selection model, grouped small items, hit testing and semantic navigation.
+- `StorageScanSnapshotStore` stores versioned, bounded pages and an atomic
+  history index through the existing native/IndexedDB record storage.
 
 Run the focused deterministic checks with the Flutter version in `.fvmrc`:
 
 ```sh
 flutter test test/storage_scan_service_test.dart \
+  test/storage_scan_native_test.dart \
+  test/storage_scan_access_test.dart \
   test/s3_listing_completeness_test.dart \
   test/storage_treemap_test.dart \
+  test/storage_sunburst_test.dart \
   test/storage_analyzer_widget_test.dart \
-  test/storage_analyzer_origin_test.dart
+  test/storage_analyzer_origin_test.dart \
+  test/storage_scan_snapshot_store_test.dart \
+  test/storage_scan_snapshot_widget_test.dart
 ```
 
 These checks use local fixtures and fake providers; live account scans and

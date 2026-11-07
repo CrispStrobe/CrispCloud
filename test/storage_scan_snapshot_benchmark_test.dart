@@ -65,8 +65,9 @@ void main() {
   test(
     'native saved analyzer snapshot benchmark',
     () async {
-      if (root == null)
+      if (root == null) {
         throw StateError('Set STORAGE_SCAN_BENCHMARK_ROOT to opt in.');
+      }
       final runs =
           int.tryParse(
             Platform.environment['STORAGE_SCAN_BENCHMARK_RUNS'] ?? '',

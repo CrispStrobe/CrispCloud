@@ -43,7 +43,7 @@ We also maintain patched Nextcloud and ownCloud desktop clients with delta sync 
 ## Key Features
 
 - **Flexible layout:** dual/single panel toggle, tree sidebar toggle, grid/list toggle, density toggle — all independent and composable
-- **Storage analyzer:** interactive treemap for local and cloud folders, folder drill-down, largest files, extension breakdowns and filters, with cancellable scans and explicit partial results. See [storage analysis](docs/storage-analyzer.md) for controls, size semantics and limits.
+- **Storage analyzer:** interactive treemap and sunburst for local and cloud folders, folder drill-down, largest files, extension filters, faster background native scans, and lossless saved scans for offline browsing. Cancellable scans retain explicit partial results; saved history survives full rescans. See [storage analysis](docs/storage-analyzer.md) for controls, measured performance, size semantics and limits.
 - **Image gallery and tiles:** adjustable thumbnails, image-only gallery, natural sorting and catalog filters, 0–5 ratings, color labels, favorites and tags. Fullscreen filmstrip/slideshow, linked 2–4-image comparison, image-editor handoff, batch conversion/resizing and contact-sheet export. See [image gallery](docs/image-gallery.md) for controls, format coverage and limits.
 - **Encryption:** AES-256-GCM file encryption, Filen/Internxt E2EE, and Cryptomator/VeraCrypt format helpers. See the [crypto audit](docs/crypto-audit.md) for supported operations and remaining limits, and the [store export guide](docs/export-compliance.md) for the no-report release route.
 - **Sync engine:** background sync, conflict resolution, selective sync

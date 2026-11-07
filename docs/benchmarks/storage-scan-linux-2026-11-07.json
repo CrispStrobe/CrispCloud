@@ -1,0 +1,183 @@
+{
+  "date": "2026-11-07",
+  "system": {
+    "os": "Linux-6.18.57-x86_64-with-glibc2.41",
+    "filesystem": "Linux overlay",
+    "cpu": "AMD EPYC 9V74",
+    "visible_cpus": 9,
+    "flutter": "3.47.8",
+    "mode": "Flutter test VM (JIT); compilation excluded"
+  },
+  "protocol": {
+    "warmups": 1,
+    "measured_runs": 5,
+    "content_hashing": false,
+    "cache": "warm",
+    "scan_validation": "All relative file paths and sizes match independent SHA256 fixture manifest; counts and logical bytes exact. Validation outside timing."
+  },
+  "scans": [
+    {
+      "benchmark": "storage_scan",
+      "backend": "legacy_operation",
+      "files": 24000,
+      "folders": 460,
+      "logicalBytes": 359116800,
+      "filesDigest": "e7ed6c33c6e466ee9bc3b995660946a9cc70dbf173712a94cd80c8099e481d9e",
+      "milliseconds": [
+        7263.964,
+        7110.562,
+        6196.821,
+        6188.108,
+        6435.569
+      ],
+      "medianMilliseconds": 6435.569,
+      "minimumMilliseconds": 6188.108,
+      "maximumMilliseconds": 7263.964,
+      "runtime": "3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
+      "operatingSystem": "linux",
+      "fixture": "fixture"
+    },
+    {
+      "benchmark": "storage_scan",
+      "backend": "native_scan",
+      "files": 24000,
+      "folders": 460,
+      "logicalBytes": 359116800,
+      "filesDigest": "e7ed6c33c6e466ee9bc3b995660946a9cc70dbf173712a94cd80c8099e481d9e",
+      "milliseconds": [
+        944.697,
+        892.53,
+        899.095,
+        909.423,
+        876.555
+      ],
+      "medianMilliseconds": 899.095,
+      "minimumMilliseconds": 876.555,
+      "maximumMilliseconds": 944.697,
+      "runtime": "3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
+      "operatingSystem": "linux",
+      "fixture": "fixture"
+    },
+    {
+      "benchmark": "storage_scan",
+      "backend": "legacy_operation",
+      "files": 0,
+      "folders": 1010,
+      "logicalBytes": 0,
+      "filesDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "milliseconds": [
+        1191.714,
+        1126.183,
+        1151.184,
+        1168.682,
+        1064.827
+      ],
+      "medianMilliseconds": 1151.184,
+      "minimumMilliseconds": 1064.827,
+      "maximumMilliseconds": 1191.714,
+      "runtime": "3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
+      "operatingSystem": "linux",
+      "fixture": "directories"
+    },
+    {
+      "benchmark": "storage_scan",
+      "backend": "native_scan",
+      "files": 0,
+      "folders": 1010,
+      "logicalBytes": 0,
+      "filesDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "milliseconds": [
+        930.643,
+        840.308,
+        855.743,
+        818.92,
+        864.953
+      ],
+      "medianMilliseconds": 855.743,
+      "minimumMilliseconds": 818.92,
+      "maximumMilliseconds": 930.643,
+      "runtime": "3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
+      "operatingSystem": "linux",
+      "fixture": "directories"
+    }
+  ],
+  "native_snapshot": {
+    "storage": "NativeFileCollectionStorage (atomic files, flush, CAS lease)",
+    "runtime": "3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
+    "source_scan_excluded": true,
+    "runs": [
+      {
+        "run": 0,
+        "warmup": true,
+        "save_ms": 523.463,
+        "load_ms": 457.489,
+        "nodes": 24461,
+        "files": 24000,
+        "folders": 460,
+        "logical_bytes": 359116800,
+        "all_metadata_fingerprint": "caad3573e7cedea6e0acdef9fc6113da33eddfec97ba104c8d4e242dffb5e642",
+        "exact_roundtrip": true
+      },
+      {
+        "run": 1,
+        "warmup": false,
+        "save_ms": 464.079,
+        "load_ms": 427.85,
+        "nodes": 24461,
+        "files": 24000,
+        "folders": 460,
+        "logical_bytes": 359116800,
+        "all_metadata_fingerprint": "caad3573e7cedea6e0acdef9fc6113da33eddfec97ba104c8d4e242dffb5e642",
+        "exact_roundtrip": true
+      },
+      {
+        "run": 2,
+        "warmup": false,
+        "save_ms": 459.854,
+        "load_ms": 446.355,
+        "nodes": 24461,
+        "files": 24000,
+        "folders": 460,
+        "logical_bytes": 359116800,
+        "all_metadata_fingerprint": "caad3573e7cedea6e0acdef9fc6113da33eddfec97ba104c8d4e242dffb5e642",
+        "exact_roundtrip": true
+      },
+      {
+        "run": 3,
+        "warmup": false,
+        "save_ms": 492.449,
+        "load_ms": 422.782,
+        "nodes": 24461,
+        "files": 24000,
+        "folders": 460,
+        "logical_bytes": 359116800,
+        "all_metadata_fingerprint": "caad3573e7cedea6e0acdef9fc6113da33eddfec97ba104c8d4e242dffb5e642",
+        "exact_roundtrip": true
+      },
+      {
+        "run": 4,
+        "warmup": false,
+        "save_ms": 462.844,
+        "load_ms": 403.498,
+        "nodes": 24461,
+        "files": 24000,
+        "folders": 460,
+        "logical_bytes": 359116800,
+        "all_metadata_fingerprint": "caad3573e7cedea6e0acdef9fc6113da33eddfec97ba104c8d4e242dffb5e642",
+        "exact_roundtrip": true
+      },
+      {
+        "run": 5,
+        "warmup": false,
+        "save_ms": 465.896,
+        "load_ms": 421.643,
+        "nodes": 24461,
+        "files": 24000,
+        "folders": 460,
+        "logical_bytes": 359116800,
+        "all_metadata_fingerprint": "caad3573e7cedea6e0acdef9fc6113da33eddfec97ba104c8d4e242dffb5e642",
+        "exact_roundtrip": true
+      }
+    ]
+  }
+}
