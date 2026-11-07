@@ -1,4 +1,6 @@
 .dart_tool/
 build/
+# Android Gradle/CMake intermediates; authored native sources live in src/.
+/android/.cxx/
 __pycache__/
 *.pyc

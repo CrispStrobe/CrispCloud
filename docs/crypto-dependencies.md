@@ -123,6 +123,71 @@ on the peer. Implemented legacy compatibility algorithms in the dependency
 are not all enabled by these defaults. The application verifies server keys
 before authentication through its endpoint-scoped known-hosts flow.
 
+## Archive password compatibility
+
+The archive viewer and editable workspace reach password cryptography in the
+resolved `koni_archive` 0.9.0 family. These public package archives were
+downloaded and their SHA-256 digests verified against `pubspec.lock`:
+
+| Package | Exact published archive | SHA-256 |
+| --- | --- | --- |
+| `koni_archive` | [0.9.0](https://pub.dev/api/archives/koni_archive-0.9.0.tar.gz) | `fc63ef9271f6d5ab5f6e866b8fb41e63ffa35786f0c9cf201537f04cb8091335` |
+| `koni_archive_core` | [0.9.0](https://pub.dev/api/archives/koni_archive_core-0.9.0.tar.gz) | `f323296866d6224725839e2b8ef25dfeba5e0c2476877fa7726f4b966a4c7a84` |
+| `koni_codecs` | [0.9.0](https://pub.dev/api/archives/koni_codecs-0.9.0.tar.gz) | `0a0ffa23f62f627bc50db6de79e88a6a41e019d3a21c6a455ac5ae7c1677a8bd` |
+| `koni_zip` | [0.9.0](https://pub.dev/api/archives/koni_zip-0.9.0.tar.gz) | `a0b234fd56678a2a277e0fc52987396a1ded52a04224de49bf5257ffca29700f` |
+| `koni_sevenz` | [0.9.0](https://pub.dev/api/archives/koni_sevenz-0.9.0.tar.gz) | `058428e9328361849aea9f4b1f75803473248b33dbdc434ffbcc205c83c82d4b` |
+| `koni_rar` | [0.9.0](https://pub.dev/api/archives/koni_rar-0.9.0.tar.gz) | `c8f1a5b2f1b9d8f6cfd981c67e8c34298f722806f7288f06faabb40004362f56` |
+| `archive` | [4.6.0](https://pub.dev/api/archives/archive-4.6.0.tar.gz) | `de5ac590b8155e4e676088d714bd41ea620449a6adc0f7950c5073874b287ddb` |
+
+Each listed Koni archive includes an MIT `LICENSE`, copyright 2026 the
+`koni_archive` authors, and identifies
+[zenbaku/koni_archive](https://github.com/zenbaku/koni_archive) as its repository.
+The separate `archive` package includes an MIT `LICENSE`, copyright 2013–2021
+Brendan Duncan, and identifies
+[brendan-duncan/archive](https://github.com/brendan-duncan/archive). Preserve
+those notices and use the exact archives above for release-source provenance.
+
+[`archive_viewer_service.dart`](../lib/services/archive_viewer_service.dart)
+passes the user's password through `ArchiveReadOptions` to
+`koni.builtInFormats.openReader`, then reads members through the selected
+reader. [`archive_service.dart`](../lib/services/archive_service.dart),
+[`archive_viewer_file_io.dart`](../lib/services/archive_viewer_file_io.dart),
+[`archive_workspace.dart`](../lib/services/archive_workspace.dart) and the
+[archive workspace dialog](../lib/widgets/archive_workspace_dialog.dart)
+connect that path to extraction, file viewing and editing. Workspace repacking
+selects `ZipWriteFormat` or `SevenZWriteFormat`, retaining the password when the
+archive is encrypted and enabling encrypted 7z headers. These are portable
+Dart paths, including mobile, rather than desktop-only external utilities.
+
+The source paths below are inside the corresponding exact package archives:
+
+| Active format path | Algorithms and direction | Reviewed dependency source |
+| --- | --- | --- |
+| Traditional ZIP encryption | **ZipCrypto reading**: the published legacy PKWARE stream cipher with three 32-bit state words and CRC-32-based updates. It is a distinct cipher, not AES with ZIP framing. The writer does not emit ZipCrypto. | `koni_zip/lib/src/zip_reader.dart` (`_decryptedContent`, `_zipCryptoContent`), `lib/src/zip_crypto.dart` (`ZipCryptoCipher`). |
+| WinZip AES ZIP | **Reading AES-128/192/256; writing AES-256 AE-2**. AES-CTR with the format's little-endian counter, PBKDF2-HMAC-SHA1 with 1,000 iterations, and a 10-byte truncated HMAC-SHA1 over ciphertext. | `koni_zip/lib/src/zip_crypto.dart`, `lib/src/zip_writer.dart`. |
+| 7z encrypted data and headers | **Reading and writing AES-256-CBC**, with the published 7z SHA-256 KDF, not PBKDF2: one hash context absorbs salt, UTF-16LE password and a little-endian counter for `2^numCyclesPower` rounds. The writer uses power 19. | `koni_sevenz/lib/src/sevenz_crypto.dart`, `lib/src/sevenz_reader.dart`, `lib/src/sevenz_writer.dart`. |
+| RAR3/4 encrypted data and headers | **Reading AES-128-CBC**, with the published format-specific SHA-1 password KDF, not PBKDF2: 262,144 rounds and intermediate digest bytes for the IV. | `koni_rar/lib/src/rar_crypto.dart` (`Rar4Keys`), `lib/src/rar_reader.dart`, `lib/src/rar4_container.dart`. |
+| RAR5 encrypted data and headers | **Reading AES-256-CBC**, with an HMAC-SHA256 PBKDF2-style chain producing the AES key at `2^lg2Count` iterations and checksum/password-check material at subsequent milestones. | `koni_rar/lib/src/rar_crypto.dart` (`Rar5Keys`), `lib/src/rar_reader.dart`, `lib/src/rar5_container.dart`. |
+
+`koni_rar`'s encrypted-entry dispatch accepts the salted RAR3/4 AES path and
+RAR5 AES-256 records; older RAR1.x/2.x proprietary ciphers were not found in
+this implementation. Its RAR2 decompressor is not an encryption algorithm.
+The separate `archive` 4.6.0 source also contains traditional ZIP and AES code
+in `lib/src/codecs/zip/zip_file.dart` and an AES writer in
+`lib/src/codecs/zip_encoder.dart`; the direct application `ZipEncoder` calls
+reviewed do not supply passwords. The password-capable viewer/workspace path
+above is sufficient to establish active ZipCrypto and AES compatibility.
+
+**Classification precision:** published legacy algorithms and internationally
+standardized algorithms are different claims. The active ZipCrypto reader
+precludes describing all archive encryption as AES, while the published 7z/RAR
+KDFs and format framing should not be mistaken for undisclosed block ciphers.
+This inventory records source and reachability; it does not itself determine
+an Apple/BIS classification or an automatic CCATS requirement. Archive
+compatibility is preserved. The resolved Koni API has no built-in legacy-cipher
+allowlist or `allowZipCrypto` switch; any future policy change needs an explicit
+implementation and interoperability review.
+
 ## Native SMB library
 
 `dart_smb2` 0.2.1's `hook/build.dart` downloads **libsmb2-r9** from the public

@@ -33,7 +33,7 @@ encryption formats, login key derivation and transfer APIs are preserved.
 | `CryptomatorService` labelled a custom truncated-HMAC/AES-CTR construction AES-SIV; directory and content-key helpers did not follow the format. Vault config was read without authenticating its JWT. | Incompatible filenames/paths and misleading standards claims; untrusted configuration could influence unlock behavior. | Implement RFC 5297 CMAC/S2V and correctly masked AES-CTR, authenticate the tag, use Cryptomator's NFC/base64url filenames, directory hash and shortened-name metadata, verify the vault JWT and version MAC, and extract content keys only from an authenticated GCM header. Bound hostile scrypt parameters. Use independent RFC 5297 vectors, independently generated AES-SIV vectors and an upstream Cryptomator header fixture. |
 | VeraCrypt parser read geometry and algorithm IDs from incorrect offsets and accepted decrypted magic without checking both header CRCs. It advertised algorithms it did not implement. | Incorrect metadata, false acceptance of damaged headers, and inaccurate supported-feature claims. | Use the published layout, check both CRCs, header version and geometry, resolve algorithms from the successful decryption attempt, and reject unsupported KDFs. Restrict advertised parser support to AES-XTS and implemented KDFs. Independent AES-XTS/PBKDF2 fixtures and corruption tests are in `test/veracrypt_header_vectors_test.dart`. CRC remains a format check, not an authentication tag. |
 | Backup encryption silently returned plaintext when a codec callback or key was missing, serialized backup passphrases into ordinary preferences, and allowed encryption changes that invalidated existing snapshots. | A plan marked encrypted could upload plaintext; saved passphrases were recoverable from settings; retained snapshots could lose their decryption key or be restored as ciphertext. | Fail before file I/O without an encryptor/decryptor and key. Store keys separately in `SecureStorage`, verify migration before rewriting metadata, preserve legacy recovery data on failure/conflict, and keep ordinary plaintext plans independent of the keychain. Reject mode/key changes while snapshots exist or a backup is active. `test/backup_encryption_security_test.dart` tests plaintext-upload prevention, destination preservation, key persistence and original-key recovery after a denied update. |
-| The Office Agile decryptor parsed integrity fields but did not verify the encrypted package's HMAC. | CBC document ciphertext and the stream-size header could be changed without the integrity check required by the format. | Verify HMAC over the complete `EncryptedPackage` before returning decrypted document bytes. Reject missing, malformed or mismatched integrity metadata. Accept the standard `KeyData.saltSize` HMAC key length and existing writer's `hashSize` length only when the full HMAC verifies. An independent short-key fixture and negative tests cover package data, stream size and missing integrity metadata in `packages/quds_office_engine/test/office_crypto_test.dart`. |
+| The Office Agile decryptor parsed integrity fields but did not verify the encrypted package's HMAC. | CBC document ciphertext and the stream-size header could be changed without checking the integrity metadata already present. | Verify HMAC over the complete `EncryptedPackage` before returning decrypted document bytes. Reject missing, malformed or mismatched integrity metadata. Accept the standard `KeyData.saltSize` HMAC key length and existing writer's `hashSize` length only when the full HMAC verifies. An independent short-key fixture and negative tests cover package data, stream size and missing integrity metadata in `packages/quds_office_engine/test/office_crypto_test.dart`. |
 
 The original optional file wrapper uses standard AES-256-GCM, verifies its tag
 and draws nonces/salts from `Random.secure()`. The streaming path privately
@@ -89,6 +89,11 @@ automatic fallback would conceal format and authentication failures.
    not a Microsoft-produced file. Existing round trips alone do not prove
    Microsoft Office interoperability. Treat these as open compatibility issues
    when claiming support for password-protected documents.
+   The [Agile schema](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-offcrypto/87020a34-e73f-4139-99bc-bbdf6cf6fa55) permits omitting `dataIntegrity`; this reader deliberately
+   rejects that unauthenticated variant so stripping the element cannot bypass
+   authentication. [Microsoft documents](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-offcrypto/6b4a08cb-195a-442e-b31c-7c94624a8c29) that Office-generated Agile documents
+   include the element. This is a compatibility policy, not a claim that every
+   schema-valid Agile file contains an HMAC.
 3. **Password strength and KDF parameters still matter.** The optional file
    wrapper defaults to PBKDF2-HMAC-SHA256 with 100,000 iterations. Changing that
    default alone would derive different keys for existing settings. Any KDF
@@ -110,6 +115,14 @@ automatic fallback would conceal format and authentication failures.
    local entropy failure needs upstream hardening. No fault-injection exploit
    or remote trigger was established; see the pinned sources in the dependency
    review.
+7. **Archive compatibility includes published legacy crypto.** Traditional
+   PKWARE ZipCrypto decoding is active through `koni_zip`, alongside AES ZIP,
+   7z and RAR formats with published format-specific key derivation. ZipCrypto
+   is a distinct legacy cipher, not AES framing. New encrypted ZIP output uses
+   AES-256 AE-2. Retaining compatibility does not justify describing every
+   active algorithm as internationally standardized. Equally, lack of a formal
+   standard does not alone establish the legal category "non-standard
+   cryptography"; use the full published inventory and export guide.
 
 No production credentials were used, no live provider account was mutated,
 and no government notification/report, CCATS request or store submission was
@@ -150,11 +163,14 @@ decision for the exact artifacts using the template in the export guide.
 
 `--require-clean` normally rejects every tracked change. Release workflows use
 `--record-generated-metadata` to preserve the target's regenerated CocoaPods
-lockfile or Android plugin registrant, including its original identity, actual
+lockfile and the Android plugin registrant that `pub get` can regenerate even
+on Apple hosts, including each file's original identity, actual
 contents, SHA-256 and diff. Authored source, `pubspec.lock`, Podfiles and Xcode
 projects remain strict. A changed native dependency graph still needs release
 review and corresponding public source; recording it does not approve it.
 The CI target builds exercise this evidence path on their actual artifacts.
+The Apple CI builds use the same CocoaPods setting as the store workflows to
+avoid unreviewed automatic Swift Package Manager project migrations.
 
 ## Technical reference sources
 

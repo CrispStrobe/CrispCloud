@@ -4,8 +4,8 @@
 This is evidence collection, not an ECCN classifier or a cryptographic audit.
 It makes no network calls, submits no forms, and never reads signing secrets.
 Run after dependency resolution; use --require-clean on release builds.
-The optional --record-generated-metadata flag records one target's exact native
-resolution/registration changes without permitting changes to authored inputs.
+The optional --record-generated-metadata flag records exact native resolution
+and registration changes without permitting changes to authored inputs.
 """
 
 from __future__ import annotations
@@ -28,12 +28,15 @@ NATIVE_EVIDENCE = (
     "ios/Podfile.lock", "macos/Podfile.lock",
     "packages/crisp_ios_shell/ios/Resources/BuildProvenance.json",
 )
+# Flutter dependency resolution can regenerate Android's registrant even when
+# building an Apple target. Native dependency locks remain target-specific.
+COMMON_GENERATED_METADATA = {
+    "android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java",
+}
 GENERATED_METADATA = {
-    "ios": {"ios/Podfile.lock"},
-    "macos": {"macos/Podfile.lock"},
-    "android": {
-        "android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java",
-    },
+    "ios": COMMON_GENERATED_METADATA | {"ios/Podfile.lock"},
+    "macos": COMMON_GENERATED_METADATA | {"macos/Podfile.lock"},
+    "android": COMMON_GENERATED_METADATA,
 }
 
 
@@ -259,7 +262,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--require-clean", action="store_true")
     parser.add_argument(
         "--record-generated-metadata", action="store_true",
-        help="With --require-clean, retain the target's exact generated native metadata changes for review",
+        help="With --require-clean, retain exact generated native metadata changes for review",
     )
     args = parser.parse_args(argv)
     try:

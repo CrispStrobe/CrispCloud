@@ -94,6 +94,16 @@ represented as HTTPS-only or Apple-OS-only. Complete the actual questionnaire
 for the final binary and territories; do not invent a BIS receipt or CCATS
 identifier to support the proposed no-filing decision.
 
+The complete inventory also includes active traditional PKWARE ZipCrypto
+decoding and published archive-specific key derivation. Do not label this
+"only internationally standardized algorithms." Apple itself quotes the EAR
+definition of non-standard cryptography, including the "not otherwise
+published" qualification. PKWARE publishes the traditional cipher in APPNOTE
+section 6.1. Lack of formal standardization alone does not establish an
+automatic CCATS requirement; preserve this source evidence and assess the
+whole product. This guide does not predict Apple's questionnaire result for a
+specific release. [4][15][16]
+
 If Apple's questionnaire determines that no documentation is required, retain
 that result before using a plist shortcut. When documentation is reviewed,
 `ITSEncryptionExportComplianceCode` takes the **Apple-issued code**, not a
@@ -212,3 +222,5 @@ Checked 2026-11-07. BIS regulation pages displayed an eCFR currency date of
 12. [ANSSI: controls for cryptology products](https://cyber.gouv.fr/reglementation/reglementation-identite-confiance-numerique/controles-reglementaires-cryptographie/controle-moyen-de-cryptologie/).
 13. [Regulation (EU) 2021/821, consolidated 2026-09-21: Annex I notes, definitions and Category 5 Part 2](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:02021R0821-20260921).
 14. [European Commission Recommendation (EU) 2021/1700: public-domain software guidance](https://eur-lex.europa.eu/legal-content/DE/ALL/?uri=CELEX:32021H1700).
+15. [Apple: overview of export compliance and its quoted non-standard-cryptography definition](https://developer.apple.com/help/app-store-connect/manage-app-information/overview-of-export-compliance).
+16. [PKWARE APPNOTE 6.3.10: published ZIP format and traditional encryption, section 6.1](https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT).
