@@ -419,7 +419,11 @@ final class CustomKeychainStore {
   }
 
   private func delete(_ keychain: SecKeychain, key: String?) throws {
-    let status = SecItemDelete(query(keychain, key: key) as CFDictionary)
+    var attributes = query(keychain, key: key)
+    // File-based keychains default to one match even for SecItemDelete.
+    // Explicitly remove every app-owned item for a service-wide deletion.
+    attributes[kSecMatchLimit] = key == nil ? kSecMatchLimitAll : kSecMatchLimitOne
+    let status = SecItemDelete(attributes as CFDictionary)
     guard status == errSecSuccess || status == errSecItemNotFound else {
       throw securityError(status, operation: "delete from")
     }
@@ -432,7 +436,9 @@ final class CustomKeychainStore {
   func readAll(path: String) throws -> [String: String] {
     try withKeychain(path: path) { keychain in
       var attributes = query(keychain)
-      attributes[kSecReturnData] = true
+      // File-based password keychains reject ReturnData with MatchLimitAll.
+      // Enumerate only account attributes, then read each password separately
+      // through the same explicitly scoped keychain and service query.
       attributes[kSecReturnAttributes] = true
       attributes[kSecMatchLimit] = kSecMatchLimitAll
       var items: CFTypeRef?
@@ -447,11 +453,15 @@ final class CustomKeychainStore {
       var values: [String: String] = [:]
       for record in records {
         guard let key = record[kSecAttrAccount as String] as? String,
-              let data = record[kSecValueData as String] as? Data,
-              let value = String(data: data, encoding: .utf8) else {
+              !key.isEmpty, values[key] == nil else {
           throw CustomKeychainStoreError(
             code: "custom_keychain_invalid_data",
             message: "The selected keychain contains an unreadable credential.", status: nil)
+        }
+        guard let value = try read(keychain, key: key) else {
+          // A concurrent deletion must not turn a failed enumeration into a
+          // successful partial result that looks like a complete credential set.
+          throw securityError(errSecItemNotFound, operation: "read")
         }
         values[key] = value
       }

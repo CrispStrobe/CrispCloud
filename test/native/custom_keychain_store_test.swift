@@ -82,15 +82,15 @@ private struct TemporaryKeychain {
   }
 }
 
-private func insertOtherService(_ keychain: SecKeychain, service: String, key: String) throws {
+private func insertRawItem(_ keychain: SecKeychain, service: String, key: String, data: Data) throws {
   let attributes: [CFString: Any] = [
     kSecClass: kSecClassGenericPassword,
     kSecUseKeychain: keychain,
     kSecAttrService: service,
     kSecAttrAccount: key,
-    kSecValueData: Data("other-service-sentinel".utf8),
+    kSecValueData: data,
   ]
-  try success(SecItemAdd(attributes as CFDictionary, nil), "Insert separate-service sentinel")
+  try success(SecItemAdd(attributes as CFDictionary, nil), "Insert raw test credential")
 }
 
 private func otherServiceExists(_ keychain: SecKeychain, service: String, key: String) throws -> Bool {
@@ -169,20 +169,38 @@ private struct CustomKeychainStoreTests {
 
     let otherServices = ["flutter_secure_storage_service", "crispcloud-tests-other-service"]
     for service in otherServices {
-      try insertOtherService(first.reference, service: service, key: key)
+      try insertRawItem(first.reference, service: service, key: key,
+                        data: Data("other-service-sentinel".utf8))
     }
     try store.write(path: first.path, key: key, value: "deleteAll target")
     try store.write(path: first.path, key: "unicode-\u{00e4}", value: "value-\u{1f512}")
+    try store.write(path: first.path, key: "empty-value", value: "")
     try expect(try store.readAll(path: first.path) == [
-      key: "deleteAll target", "unicode-\u{00e4}": "value-\u{1f512}",
-    ], "readAll included another service")
+      key: "deleteAll target", "unicode-\u{00e4}": "value-\u{1f512}", "empty-value": "",
+    ], "readAll did not return exactly the scoped credentials")
     try store.deleteAll(path: first.path)
+    for deletedKey in [key, "unicode-\u{00e4}", "empty-value"] {
+      try expect(try store.read(path: first.path, key: deletedKey) == nil,
+                 "deleteAll left a credential behind")
+    }
     try expect(try store.readAll(path: first.path).isEmpty, "deleteAll left scoped items")
+    try store.deleteAll(path: first.path)
     for service in otherServices {
       try expect(try otherServiceExists(first.reference, service: service, key: key),
                  "deleteAll removed another service: \(service)")
     }
     try expect(try store.read(path: second.path, key: key) == "second value", "deleteAll escaped first keychain")
+
+    // Attribute enumeration must still fail if an individual password cannot
+    // be decoded, rather than returning a partial or apparently empty store.
+    try store.write(path: first.path, key: "valid-value", value: "retained")
+    try insertRawItem(first.reference, service: CustomKeychainStore.service,
+                      key: "invalid-utf8", data: Data([0xff]))
+    try expectStoreError("custom_keychain_invalid_data") { _ = try store.readAll(path: first.path) }
+    try expect(try store.read(path: first.path, key: "valid-value") == "retained",
+               "Failed enumeration changed a credential")
+    try store.deleteAll(path: first.path)
+    try expect(try store.readAll(path: first.path).isEmpty, "deleteAll could not clear malformed data")
 
     try expectStoreError("custom_keychain_exists") {
       _ = try store.create(path: second.path, password: "must not replace")
@@ -236,6 +254,7 @@ private struct CustomKeychainStoreTests {
     try success(SecKeychainLock(first.reference), "Lock temporary keychain")
     try expectStoreError("custom_keychain_locked") { try store.initialize(path: first.path) }
     try expectStoreError("custom_keychain_locked") { _ = try store.read(path: first.path, key: key) }
+    try expectStoreError("custom_keychain_locked") { _ = try store.readAll(path: first.path) }
     try expectStoreError("custom_keychain_locked") {
       try store.write(path: first.path, key: key, value: "locked write")
     }
