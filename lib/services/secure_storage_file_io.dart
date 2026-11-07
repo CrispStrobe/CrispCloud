@@ -90,9 +90,15 @@ class EncryptedFileStorage extends WebEncryptedStorage {
   EncryptedFileStorage(File file) : super(FileStorageBackend(file));
 }
 
-Future<SecureStorage> createEncryptedFileStorage() async {
+Future<SecureStorage> createEncryptedFileStorage({
+  String? masterPassword,
+}) async {
   final directory = await getApplicationSupportDirectory();
-  return EncryptedFileStorage(
+  final storage = EncryptedFileStorage(
     File(p.join(directory.path, 'credential-vault.json')),
   );
+  if (masterPassword != null) {
+    await storage.initialize(masterPassword);
+  }
+  return storage;
 }

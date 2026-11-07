@@ -55,6 +55,7 @@ import 'services/secure_storage_service.dart';
 import 'services/secure_storage_web.dart';
 import 'services/secure_storage_file.dart';
 import 'services/credential_storage_config.dart';
+import 'widgets/credential_storage_setup.dart';
 import 'widgets/lock_screen.dart';
 import 'services/media_video_backend.dart' show registerMediaVideoLicenses;
 
@@ -139,6 +140,24 @@ Future<void> main() async {
       // Initialize secure storage and migrate credentials.
       // On web, use encrypted localStorage with a master password.
       // On native platforms, use OS-level secure storage (Keychain, etc.).
+      CredentialStorageSetupResult? firstRunSelection;
+      if (!kIsWeb) {
+        try {
+          final configured =
+              await CredentialStorageConfig.readModeIfConfigured();
+          if (configured == null) {
+            firstRunSelection = await _runFirstRunCredentialSetup();
+            await CredentialStorageConfig.writeMode(firstRunSelection.mode);
+            await CredentialStorageConfig.writeCustomKeychainPath(
+              firstRunSelection.keychainPath,
+            );
+          }
+        } catch (error, stack) {
+          _log.error('First-run credential setup failed', error, stack);
+          rethrow;
+        }
+      }
+
       final SecureStorage secureStorage;
       var vaultRequired = false;
       var effectiveMode = CredentialStorageMode.systemKeychain;
@@ -166,8 +185,10 @@ Future<void> main() async {
         if (preferredMode == CredentialStorageMode.sessionOnly) {
           secureStorage = InMemorySecureStorage();
         } else if (preferredMode == CredentialStorageMode.encryptedFile) {
-          secureStorage = await createEncryptedFileStorage();
-          vaultRequired = true;
+          secureStorage = await createEncryptedFileStorage(
+            masterPassword: firstRunSelection?.masterPassword,
+          );
+          vaultRequired = firstRunSelection?.masterPassword == null;
         } else {
           final keychain = PlatformSecureStorage(
             // A selected custom keychain is addressed through the process
@@ -315,6 +336,18 @@ Future<void> main() async {
       }
     },
   );
+}
+
+Future<CredentialStorageSetupResult> _runFirstRunCredentialSetup() {
+  final completer = Completer<CredentialStorageSetupResult>();
+  runApp(
+    CredentialStorageSetupScreen(
+      onComplete: (result) {
+        if (!completer.isCompleted) completer.complete(result);
+      },
+    ),
+  );
+  return completer.future;
 }
 
 Future<CloudProvider> _getDefaultProvider() async {
@@ -578,6 +611,8 @@ class WebMasterPasswordGateState extends ConsumerState<WebMasterPasswordGate> {
   String? _error;
   bool _loading = true;
   bool _isNewVault = false;
+  bool _obscurePassword = true;
+  bool _obscureConfirmation = true;
 
   @override
   void initState() {
@@ -681,12 +716,25 @@ class WebMasterPasswordGateState extends ConsumerState<WebMasterPasswordGate> {
                     const SizedBox(height: 24),
                     TextField(
                       controller: _controller,
-                      obscureText: true,
+                      obscureText: _obscurePassword,
                       autofocus: true,
                       decoration: InputDecoration(
                         labelText: strings.password,
                         errorText: _error,
                         border: const OutlineInputBorder(),
+                        suffixIcon: IconButton(
+                          tooltip: _obscurePassword
+                              ? 'Show password'
+                              : 'Hide password',
+                          icon: Icon(
+                            _obscurePassword
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                          ),
+                          onPressed: () => setState(
+                            () => _obscurePassword = !_obscurePassword,
+                          ),
+                        ),
                       ),
                       onSubmitted: (_) => _submit(),
                     ),
@@ -694,10 +742,24 @@ class WebMasterPasswordGateState extends ConsumerState<WebMasterPasswordGate> {
                       const SizedBox(height: 16),
                       TextField(
                         controller: _confirmationController,
-                        obscureText: true,
+                        obscureText: _obscureConfirmation,
                         decoration: InputDecoration(
                           labelText: strings.confirmation,
                           border: const OutlineInputBorder(),
+                          suffixIcon: IconButton(
+                            tooltip: _obscureConfirmation
+                                ? 'Show password'
+                                : 'Hide password',
+                            icon: Icon(
+                              _obscureConfirmation
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
+                            ),
+                            onPressed: () => setState(
+                              () =>
+                                  _obscureConfirmation = !_obscureConfirmation,
+                            ),
+                          ),
                         ),
                         onSubmitted: (_) => _submit(),
                       ),

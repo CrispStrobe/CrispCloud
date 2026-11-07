@@ -20,14 +20,18 @@ class CredentialStorageConfig {
   static const _modeKey = 'credential_storage_mode_v1';
   static const _customKeychainPathKey = 'custom_keychain_path';
 
-  static Future<CredentialStorageMode> readMode() async {
+  static Future<CredentialStorageMode?> readModeIfConfigured() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_modeKey);
+    if (raw == null) return null;
     return CredentialStorageMode.values.firstWhere(
       (mode) => mode.name == raw,
       orElse: () => CredentialStorageMode.systemKeychain,
     );
   }
+
+  static Future<CredentialStorageMode> readMode() async =>
+      await readModeIfConfigured() ?? CredentialStorageMode.systemKeychain;
 
   static Future<void> writeMode(CredentialStorageMode mode) async {
     final prefs = await SharedPreferences.getInstance();

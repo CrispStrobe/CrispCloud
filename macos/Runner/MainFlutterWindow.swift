@@ -2,11 +2,13 @@ import Cocoa
 import FlutterMacOS
 import PDFKit
 import Quartz
+import Security
 
 class MainFlutterWindow: NSWindow {
   private var systemPreviewWindow: NSWindow?
   private var systemPreviewView: QLPreviewView?
   private var systemPreviewChannel: FlutterMethodChannel?
+  private var keychainChannel: FlutterMethodChannel?
   override func awakeFromNib() {
     let flutterViewController = FlutterViewController()
     let windowFrame = self.frame
@@ -142,6 +144,129 @@ class MainFlutterWindow: NSWindow {
       }
     }
 
+    // Credential keychain selection. The default login keychain is represented
+    // by an empty/absent path; custom keychains are file-based .keychain-db.
+    keychainChannel = FlutterMethodChannel(
+      name: "crispcloud/keychain",
+      binaryMessenger: flutterViewController.engine.binaryMessenger
+    )
+    keychainChannel?.setMethodCallHandler { [weak self] call, result in
+      guard let self else {
+        result(FlutterError(code: "keychain_unavailable",
+                            message: "The window is no longer available.",
+                            details: nil))
+        return
+      }
+      let args = call.arguments as? [String: Any] ?? [:]
+      switch call.method {
+      case "listKeychains":
+        let manager = FileManager.default
+        let home = manager.homeDirectoryForCurrentUser.path
+        var paths = Set<String>()
+        for directory in ["\(home)/Library/Keychains", "/Library/Keychains"] {
+          if let entries = try? manager.contentsOfDirectory(atPath: directory) {
+            for entry in entries where entry.hasSuffix(".keychain-db") {
+              paths.insert("\(directory)/\(entry)")
+            }
+          }
+        }
+        let items: [[String: String]] = paths.sorted().map { path in
+          let name = (path as NSString).lastPathComponent
+            .replacingOccurrences(of: ".keychain-db", with: "")
+          return ["path": path, "label": name]
+        }
+        result(items)
+      case "selectKeychain":
+        guard let path = args["path"] as? String, !path.isEmpty else {
+          result(FlutterError(code: "invalid_keychain",
+                              message: "A keychain path is required.",
+                              details: nil))
+          return
+        }
+        if let error = self.selectKeychain(path) {
+          result(error)
+        } else {
+          result(nil)
+        }
+      case "createKeychain":
+        guard let path = args["path"] as? String, !path.isEmpty,
+              let password = args["password"] as? String, !password.isEmpty else {
+          result(FlutterError(code: "invalid_keychain",
+                              message: "A path and password are required.",
+                              details: nil))
+          return
+        }
+        if let error = self.createKeychain(path, password: password) {
+          result(error)
+        } else {
+          result(nil)
+        }
+      default:
+        result(FlutterMethodNotImplemented)
+      }
+    }
+
     super.awakeFromNib()
+  }
+
+  private func selectKeychain(_ path: String) -> FlutterError? {
+    let expanded = (path as NSString).expandingTildeInPath
+    var keychain: SecKeychain?
+    let status = SecKeychainOpen(expanded, &keychain)
+    guard status == errSecSuccess, let keychain else {
+      return FlutterError(
+        code: "keychain_open_failed",
+        message: "Could not open the selected keychain.",
+        details: status
+      )
+    }
+    let defaultStatus = SecKeychainSetDefault(keychain)
+    let listStatus = SecKeychainSetSearchList([keychain] as CFArray)
+    guard defaultStatus == errSecSuccess, listStatus == errSecSuccess else {
+      return FlutterError(
+        code: "keychain_select_failed",
+        message: "Could not select the keychain for this process.",
+        details: [defaultStatus, listStatus]
+      )
+    }
+    return nil
+  }
+
+  private func createKeychain(_ path: String, password: String) -> FlutterError? {
+    let expanded = (path as NSString).expandingTildeInPath
+    let parent = (expanded as NSString).deletingLastPathComponent
+    try? FileManager.default.createDirectory(
+      atPath: parent,
+      withIntermediateDirectories: true
+    )
+    var keychain: SecKeychain?
+    let bytes = Array(password.utf8)
+    let status = bytes.withUnsafeBytes { buffer -> OSStatus in
+      let createStatus = SecKeychainCreate(
+        expanded,
+        UInt32(bytes.count),
+        buffer.baseAddress,
+        false,
+        nil,
+        &keychain
+      )
+      if createStatus == errSecSuccess, let keychain {
+        SecKeychainUnlock(
+          keychain,
+          UInt32(bytes.count),
+          buffer.baseAddress,
+          true
+        )
+      }
+      return createStatus
+    }
+    guard status == errSecSuccess else {
+      return FlutterError(
+        code: "keychain_create_failed",
+        message: "Could not create the keychain.",
+        details: status
+      )
+    }
+    return selectKeychain(expanded)
   }
 }

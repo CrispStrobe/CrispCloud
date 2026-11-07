@@ -1,8 +1,8 @@
 # Credential storage backends
 
-CrispCloud supports three persistence modes, selectable in
-**Settings → Credentials → Credential storage**. The choice is stored in
-SharedPreferences; secrets are never stored there.
+CrispCloud supports three persistence modes. The choice is made on **first
+start** and can be changed in **Settings → Credentials → Credential storage**.
+The choice is stored in SharedPreferences; secrets are never stored there.
 
 | Mode | Where secrets live | Survives restart | Requires OS keychain |
 | --- | --- | --- | --- |
@@ -18,13 +18,21 @@ missing keychain service, sandbox denial — the app automatically switches to t
 encrypted file vault, shows the master-password gate, and records that fallback
 mode so credentials do not disappear on the next launch.
 
-### Custom keychain on macOS
+### Choosing a keychain on macOS
 
-A non-default keychain path (for example a dedicated Brickwright keychain) can
-be entered in Settings. On the next launch, `AppDelegate` opens that keychain
-and makes it the process default before Flutter starts. The secure-storage
-plugin is then configured with `useDataProtectionKeyChain: false`, so its
-generic-password items use the selected keychain.
+The first-start and Settings chooser lists the keychains found in
+`~/Library/Keychains` and `/Library/Keychains`, including the login keychain.
+It also supports:
+
+- another `.keychain-db` file via the file picker
+- creating a new keychain with its own password
+- the default system/data-protection keychain
+
+The selected keychain is opened through Security.framework and made the
+process default and search list. The secure-storage plugin is configured with
+`useDataProtectionKeyChain: false`, so generic-password reads, writes and
+deletes all resolve to that keychain. The keychain must be unlocked before the
+startup probe.
 
 The keychain must be unlocked (for example in Keychain Access) before the
 startup probe. If it cannot be opened or written, the app falls back to the
@@ -42,8 +50,9 @@ web vault:
 - file mode `0600`
 - unencrypted salt, iteration count and verification token only
 
-The master password is entered at launch and is never stored. Losing it means
-the vault cannot be recovered.
+The master password is entered at launch and is never stored. Password fields
+have an eye button to reveal the text while typing. Losing the master password
+means the vault cannot be recovered.
 
 ## Session-only
 
