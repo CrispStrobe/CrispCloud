@@ -1263,6 +1263,10 @@ class CloudOperationBackend extends FileOperationBackend {
           'destination': path,
           'stagedPath': stagedPath,
           'backupPath': backupPath,
+          // Native moves do not pass through backupCopied. Persist the
+          // verified destination revision for either relocation route.
+          'backupVersion': _fileVersion(capturedBackup!),
+          'backupId': capturedBackup!.uuid,
         });
       }
       _check();
@@ -1346,7 +1350,7 @@ class CloudOperationBackend extends FileOperationBackend {
               'stagedPath': stagedPath,
               'backupPath': backupPath,
             });
-            await _relocateStagedFile(
+            final restored = await _relocateStagedFile(
               backupToRestore,
               path,
               checkpoint: (state) async => checkpoint?.call({
@@ -1358,6 +1362,21 @@ class CloudOperationBackend extends FileOperationBackend {
               purpose: 'restore',
             );
             originalBackedUp = false;
+            if (capabilities.nativeMove &&
+                capabilities.atomicMove &&
+                capabilities.noReplaceMove) {
+              // A rename may change the provider revision. Record the verified
+              // restored revision so a later reviewed retry can recognize it.
+              await checkpoint?.call({
+                'phase': 'restoringBackup',
+                'destination': path,
+                'stagedPath': stagedPath,
+                'backupPath': backupPath,
+                'restoreMovePath': path,
+                'restoreMoveVersion': _fileVersion(restored),
+                'restoreMoveId': restored.uuid,
+              });
+            }
           }
         } catch (_) {
           /* Report the preserved recovery location below. */

@@ -54,16 +54,21 @@ listed on a dependency's package page.
 | macOS desktop | Unix PTY in an unsandboxed build; built-in sandbox shell in the App Store build | Direct SSH TCP connection |
 | Windows desktop | ConPTY with the available Windows command shell; built-in shell if ConPTY fails | Direct SSH TCP connection |
 | Android | Built-in sandbox shell (no host process) | Direct SSH TCP connection |
-| iOS | Built-in sandbox shell (no host process) | Direct SSH TCP connection |
+| iOS | Embedded `ios_system` + Dash with bundled commands (no host process) | Direct SSH TCP connection |
 | Web/PWA | Built-in in-memory shell | SSH through an explicitly configured secure WebSocket gateway |
 
-The built-in shell is the normal local terminal wherever an App Sandbox, mobile
-OS or browser forbids spawning a host shell. It is implemented in Dart over a
+The built-in Dart shell is used on Android, the web, and sandboxed desktop
+builds that cannot spawn a host shell. It is implemented in Dart over a
 small filesystem boundary (`sandbox_shell_fs.dart`), never launches a process
 and therefore does not weaken App Sandbox or App Store review. On desktop the
 real PTY is still preferred; if `forkpty`/`tcsetattr` is denied, the terminal
 falls back to the built-in shell instead of failing. The status line says
 "Sandbox shell" so the distinction is visible.
+
+The iOS backend is separately labelled **iOS shell** and uses a bundled native
+runtime. Its directory grants and explicitly reviewed cloud workspaces are
+described in [Embedded iOS shell and staged workspaces](ios-shell.md). It has no
+companion-app dependency. Workspaces are also available in other native builds.
 
 The built-in shell supports navigation and file inspection (`pwd`, `cd`, `ls`,
 `cat`, `head`, `tail`, `wc`, `grep`, `find`, `stat`, `file`, `xxd`/`hexdump`),

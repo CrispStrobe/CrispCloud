@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
+
 import '../widgets/terminal_process_stub.dart'
     if (dart.library.io) '../widgets/terminal_process_native.dart'
     as local;
@@ -9,6 +11,7 @@ import 'sandbox_shell.dart';
 import 'sandbox_shell_connection.dart';
 import 'ssh_terminal_service.dart';
 import 'terminal_connection.dart';
+import 'ios_terminal_connection.dart';
 
 typedef HostShellStarter = Future<local.ShellProcess?> Function(
   String directory, {
@@ -78,7 +81,8 @@ Future<TerminalConnection> openScopedLocalTerminal(
   return attempt(directory, allowFallback: true);
 }
 
-class _ScopedTerminalConnection implements TerminalConnection {
+class _ScopedTerminalConnection
+    implements TerminalConnection, TerminalConnectionMetadata {
   _ScopedTerminalConnection(this.inner, this.release) {
     _exitCode = _waitForExit();
     unawaited(_exitCode.then<void>((_) {}, onError: (Object _) {}));
@@ -103,6 +107,8 @@ class _ScopedTerminalConnection implements TerminalConnection {
   @override
   bool get isSandbox => inner.isSandbox;
   @override
+  TerminalBackend get backend => inner.terminalBackend;
+  @override
   Stream<String> get output => inner.output;
   @override
   Future<int?> get exitCode => _exitCode;
@@ -111,15 +117,14 @@ class _ScopedTerminalConnection implements TerminalConnection {
   @override
   Future<void> resize(int columns, int rows) => inner.resize(columns, rows);
   @override
-  Future<void> close() => _closeFuture ??= _close();
-
-  Future<void> _close() async {
-    try {
-      await inner.close();
-    } finally {
-      await _release();
-    }
-  }
+  Future<void> close() => _closeFuture ??= Future<void>.sync(inner.close)
+      .then((_) => _release())
+      .onError((Object error, StackTrace stack) {
+        // Unconfirmed native shutdown must retain the grant. A later explicit
+        // close can retry; a settled exit also releases through _waitForExit.
+        _closeFuture = null;
+        Error.throwWithStackTrace(error, stack);
+      });
 }
 
 Future<TerminalConnection> openLocalTerminal(
@@ -127,7 +132,17 @@ Future<TerminalConnection> openLocalTerminal(
   int columns,
   int rows, {
   HostShellStarter? startHostShell,
+  LocalTerminalOpener? startIosShell,
 }) async {
+  if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+    // Native startup errors are actionable (including a busy engine). Do not
+    // silently substitute a different interpreter after a failed iOS start.
+    return (startIosShell ?? IosTerminalConnection.open)(
+      directory,
+      columns,
+      rows,
+    );
+  }
   Object? hostFailure;
   final appStore = isMacAppStoreBuild();
   if (!appStore) {
@@ -143,8 +158,8 @@ Future<TerminalConnection> openLocalTerminal(
     }
   }
 
-  // App Sandbox denies PTY terminal attributes; iOS/Android have no process
-  // spawn at all. The built-in shell keeps a useful terminal available on every
+  // App Sandbox denies PTY terminal attributes; Android cannot spawn a host
+  // shell. The built-in shell keeps a useful terminal available on every
   // platform without weakening the sandbox. Real host shells remain available
   // in an unsandboxed desktop build and real remote shells over SSH.
   final shell = await SandboxShell.create(startPath: directory);
@@ -180,7 +195,8 @@ class _LocalTerminalConnection implements TerminalConnection {
   Future<void> close() => process.dispose();
 }
 
-class SshTerminalConnection implements TerminalConnection {
+class SshTerminalConnection
+    implements TerminalConnection, TerminalConnectionMetadata {
   SshTerminalConnection(this.service, this.sessionId, this.output);
   final SshTerminalService service;
   final String sessionId;
@@ -189,6 +205,9 @@ class SshTerminalConnection implements TerminalConnection {
 
   @override
   bool get isSandbox => false;
+
+  @override
+  TerminalBackend get backend => TerminalBackend.ssh;
 
   // The service can reap a shell after its channels drain but before the UI
   // consumes their buffered output. Late layout/input must not turn that

@@ -1,0 +1,60 @@
+{
+  "schema": 1,
+  "ios_deployment_target": "15.0",
+  "sources": {
+    "ios_system": {
+      "repository": "https://github.com/holzschu/ios_system",
+      "commit": "77e13cbd0f05e45c50d5f7cc8594eed1d00f574b",
+      "url": "https://github.com/holzschu/ios_system/archive/77e13cbd0f05e45c50d5f7cc8594eed1d00f574b.tar.gz",
+      "sha256": "b5d60598688e0c61a4cec2760609a0f9571b464ca8743ff6dd87cb6ef22e3820"
+    },
+    "dash": {
+      "repository": "https://github.com/holzschu/dash_iOS",
+      "commit": "c95f39a9ac177a8964b91cd7474e972884376b76",
+      "url": "https://github.com/holzschu/dash_iOS/archive/c95f39a9ac177a8964b91cd7474e972884376b76.tar.gz",
+      "sha256": "4977c6b7fb3ff075fc93aec272059355f9bb4b7e46591a2ce0ee2b9b810c0500"
+    }
+  },
+  "targets": [
+    "ios_system",
+    "files",
+    "text",
+    "shell",
+    "awk",
+    "tar"
+  ],
+  "dash_variants": [
+    "dash",
+    "dashA",
+    "dashB",
+    "dashC",
+    "dashD",
+    "dashE"
+  ],
+  "build_helpers": {
+    "automake-missing": {
+      "repository": "https://github.com/autotools-mirror/automake",
+      "commit": "db43dd473361d90d8b00362cfef5bac8e722000d",
+      "url": "https://raw.githubusercontent.com/autotools-mirror/automake/db43dd473361d90d8b00362cfef5bac8e722000d/lib/missing",
+      "sha256": "b1a337b731bbb58846d31ca2f5143c293a455fa41b481e236e89a9016d96b034"
+    },
+    "automake-compile": {
+      "repository": "https://github.com/autotools-mirror/automake",
+      "commit": "db43dd473361d90d8b00362cfef5bac8e722000d",
+      "url": "https://raw.githubusercontent.com/autotools-mirror/automake/db43dd473361d90d8b00362cfef5bac8e722000d/lib/compile",
+      "sha256": "41856428226c049fa0ea4ca7a574c28416de2769b55ed7feea4ab5e60283af16"
+    },
+    "automake-install-sh": {
+      "repository": "https://github.com/autotools-mirror/automake",
+      "commit": "db43dd473361d90d8b00362cfef5bac8e722000d",
+      "url": "https://raw.githubusercontent.com/autotools-mirror/automake/db43dd473361d90d8b00362cfef5bac8e722000d/lib/install-sh",
+      "sha256": "d7c113e5484fce8b48f9a34a7a91e385ec279247d415b0b7d749bd56ad8ee8a2"
+    },
+    "automake-depcomp": {
+      "repository": "https://github.com/autotools-mirror/automake",
+      "commit": "db43dd473361d90d8b00362cfef5bac8e722000d",
+      "url": "https://raw.githubusercontent.com/autotools-mirror/automake/db43dd473361d90d8b00362cfef5bac8e722000d/lib/depcomp",
+      "sha256": "786149ab4493e86b837077ebaecab65ef6230ae8a619b17fa5c1695564a427e9"
+    }
+  }
+}
