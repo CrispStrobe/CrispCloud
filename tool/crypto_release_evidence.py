@@ -110,10 +110,36 @@ def validate(root: Path) -> dict:
     for relative in ("ios/Runner/Info.plist", "macos/Runner/Info.plist"):
         with repository_file(root, relative).open("rb") as source:
             plist = plistlib.load(source)
-        # Current reviewed policy. A future questionnaire-based exemption must
-        # update this policy and its evidence, not silently flip the Boolean.
-        if plist.get("ITSAppUsesNonExemptEncryption") is not True:
-            raise EvidenceError(f"Keep the reviewed Apple questionnaire setting in {relative}")
+        # The Apple answer must match its evidence. A true answer links to an
+        # Apple-issued code; the reviewed no-documentation answer is only valid
+        # with the France-exclusion decision recorded in the guide.
+        value = plist.get("ITSAppUsesNonExemptEncryption")
+        code = plist.get("ITSEncryptionExportComplianceCode")
+        if value is True:
+            if not isinstance(code, str) or not code.strip():
+                raise EvidenceError(
+                    f"Apple non-exempt declaration in {relative} needs "
+                    "the Apple-issued ITSEncryptionExportComplianceCode"
+                )
+        elif value is False:
+            if code:
+                raise EvidenceError(
+                    f"Apple no-documentation answer in {relative} must not "
+                    "carry ITSEncryptionExportComplianceCode"
+                )
+            guide = repository_file(root, "docs/export-compliance.md").read_text()
+            if (
+                "availableOnFrenchStore=false" not in guide
+                or "ITSAppUsesNonExemptEncryption=false" not in guide
+            ):
+                raise EvidenceError(
+                    f"Apple no-documentation answer in {relative} needs the "
+                    "France-exclusion decision in docs/export-compliance.md"
+                )
+        else:
+            raise EvidenceError(
+                f"Set a reviewed ITSAppUsesNonExemptEncryption answer in {relative}"
+            )
     return inventory
 
 

@@ -53,13 +53,17 @@ class ReleaseEvidenceTests(unittest.TestCase):
             "reviewed_files": ["lib/crypto.dart"],
         }
         self.write("docs/crypto-inventory.json", json.dumps(self.inventory))
-        self.write("docs/export-compliance.md", "Release review fixture\n")
+        self.write(
+            "docs/export-compliance.md",
+            "Release review fixture\navailableOnFrenchStore=false\n"
+            "ITSAppUsesNonExemptEncryption=false\n",
+        )
         self.write("lib/crypto.dart", "// reviewed fixture\n")
         self.write("pubspec.yaml", "name: fixture\n")
         self.write("pubspec.lock", "packages:\n  filen_client:\n  internxt_client:\n  pointycastle:\n")
         self.write(".fvmrc", '{"flutter":"3.47.8"}')
         for name in ("ios/Runner/Info.plist", "macos/Runner/Info.plist"):
-            self.write(name, plistlib.dumps({"ITSAppUsesNonExemptEncryption": True}))
+            self.write(name, plistlib.dumps({"ITSAppUsesNonExemptEncryption": False}))
 
     def write(self, name, contents):
         path = self.root / name
@@ -141,9 +145,17 @@ class ReleaseEvidenceTests(unittest.TestCase):
                 with self.assertRaisesRegex(evidence.EvidenceError, name):
                     evidence.validate(self.root)
 
-    def test_false_apple_declaration_fails(self):
-        self.write("ios/Runner/Info.plist", plistlib.dumps({"ITSAppUsesNonExemptEncryption": False}))
-        with self.assertRaisesRegex(evidence.EvidenceError, "questionnaire"):
+    def test_reviewed_false_apple_declaration_passes(self):
+        evidence.validate(self.root)
+
+    def test_false_apple_declaration_without_france_evidence_fails(self):
+        self.write("docs/export-compliance.md", "Release review fixture\n")
+        with self.assertRaisesRegex(evidence.EvidenceError, "France-exclusion"):
+            evidence.validate(self.root)
+
+    def test_true_apple_declaration_without_code_fails(self):
+        self.write("ios/Runner/Info.plist", plistlib.dumps({"ITSAppUsesNonExemptEncryption": True}))
+        with self.assertRaisesRegex(evidence.EvidenceError, "ComplianceCode"):
             evidence.validate(self.root)
 
     def test_unreviewed_local_dependency_override_fails(self):
