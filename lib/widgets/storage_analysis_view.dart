@@ -6,7 +6,10 @@ import 'package:flutter/services.dart';
 import '../l10n/storage_analyzer_strings.dart';
 import '../models/storage_analysis.dart';
 import '../utils/formatters.dart';
+import 'storage_sunburst.dart';
 import 'storage_treemap.dart';
+
+enum _StorageVisualization { treemap, sunburst }
 
 /// Browses a completed or partial scan without issuing further storage reads.
 class StorageAnalysisView extends StatefulWidget {
@@ -34,6 +37,7 @@ class _StorageAnalysisViewState extends State<StorageAnalysisView>
   List<_FileType> _types = [];
   String? _extension;
   String _query = '';
+  _StorageVisualization _visualization = _StorageVisualization.treemap;
 
   StorageNode get _folder => _trail.last;
 
@@ -308,7 +312,7 @@ class _StorageAnalysisViewState extends State<StorageAnalysisView>
           isScrollable: true,
           tabAlignment: TabAlignment.start,
           tabs: [
-            Tab(text: strings.text('treemap')),
+            Tab(text: strings.text('visualization')),
             ..._detailTabLabels(strings),
           ],
         ),
@@ -341,27 +345,100 @@ class _StorageAnalysisViewState extends State<StorageAnalysisView>
   ];
 
   Widget _map(StorageAnalyzerStrings strings) {
+    final controls = Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 4,
+        children: [
+          for (final mode in _StorageVisualization.values)
+            ChoiceChip(
+              key: ValueKey('storage-view-${mode.name}'),
+              showCheckmark: false,
+              avatar: Icon(
+                mode == _StorageVisualization.treemap
+                    ? Icons.grid_view
+                    : Icons.donut_large,
+                size: 18,
+              ),
+              label: Text(strings.text(mode.name)),
+              selected: _visualization == mode,
+              onSelected: (_) => setState(() => _visualization = mode),
+            ),
+        ],
+      ),
+    );
+    final map = _visualization == _StorageVisualization.treemap
+        ? StorageTreemap(
+            root: _folder,
+            selected: _selected,
+            onSelected: (node) => setState(() => _selected = node),
+            onOpenFolder: _openFolder,
+            aggregateLabel: (count) =>
+                strings.text('aggregate', {'count': count}),
+            emptyLabel: strings.text('noBytes'),
+          )
+        : StorageSunburst(
+            root: _folder,
+            selected: _selected,
+            onSelected: (node) => setState(() => _selected = node),
+            onOpenFolder: _openFolder,
+            onOpenParent: _trail.length > 1
+                ? () => _openFolder(_trail[_trail.length - 2])
+                : null,
+            onInspectGroup: (folder) {
+              _openFolder(folder);
+              _wideTabs.animateTo(0);
+              _compactTabs.animateTo(1);
+            },
+            aggregateLabel: (count) =>
+                strings.text('aggregate', {'count': count}),
+            shareLabel: (percent) =>
+                strings.text('share', {'percent': percent}),
+            centerLabel: strings.text(_trail.length > 1 ? 'up' : 'home'),
+            emptyLabel: strings.text('noBytes'),
+          );
+    final hint = Text(
+      strings.text(
+        _visualization == _StorageVisualization.treemap
+            ? 'mapHint'
+            : 'sunburstHint',
+      ),
+      style: Theme.of(context).textTheme.bodySmall,
+    );
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-      child: Column(
-        children: [
-          Expanded(
-            child: StorageTreemap(
-              root: _folder,
-              selected: _selected,
-              onSelected: (node) => setState(() => _selected = node),
-              onOpenFolder: _openFolder,
-              aggregateLabel: (count) =>
-                  strings.text('aggregate', {'count': count}),
-              emptyLabel: strings.text('noBytes'),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            strings.text('mapHint'),
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-        ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Help text and view choices can exceed a compact panel at large
+          // text scales. Keep a useful map height and scroll the entire panel.
+          if (MediaQuery.textScalerOf(context).scale(1) > 1.5 ||
+              constraints.maxHeight < 240) {
+            return SingleChildScrollView(
+              child: Column(
+                children: [
+                  controls,
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: math.min(360, constraints.maxWidth),
+                    child: map,
+                  ),
+                  const SizedBox(height: 8),
+                  hint,
+                ],
+              ),
+            );
+          }
+          return Column(
+            children: [
+              controls,
+              const SizedBox(height: 8),
+              Expanded(child: map),
+              const SizedBox(height: 8),
+              hint,
+            ],
+          );
+        },
       ),
     );
   }
