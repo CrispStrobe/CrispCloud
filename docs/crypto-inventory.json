@@ -244,6 +244,9 @@
     "lib/widgets/lock_screen.dart",
     "macos/Runner/CustomKeychainStore.swift",
     "macos/Runner/AppDelegate.swift",
-    "macos/Runner/MainFlutterWindow.swift"
+    "macos/Runner/MainFlutterWindow.swift",
+    "lib/providers/auth_provider.dart",
+    "lib/screens/screen_dialogs.dart",
+    "lib/widgets/command_palette.dart"
   ]
 }

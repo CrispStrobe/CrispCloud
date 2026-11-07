@@ -153,6 +153,14 @@ or cleanup are reported. Internxt retains its logout tombstone against failed
 legacy deletion. These provider-specific migrations are distinct from copying
 accounts between newly selected backends.
 
+Filen logout discards its in-memory API key and master keys, then verifies
+removal of saved credentials. Persistent mode removes any retained legacy
+preference before the secure entry so an old login cannot migrate back after
+successful logout; session-only mode leaves that durable preference untouched.
+Cleanup failure is shown in the logout dialog with a retry action and is not
+reported as successful logout. The disconnected adapter remains available for
+that retry (`test/filen_adapter_test.dart`).
+
 ## Foreground and background limits
 
 A file vault requires foreground master-password entry; that password is not

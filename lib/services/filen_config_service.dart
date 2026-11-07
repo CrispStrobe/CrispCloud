@@ -4,6 +4,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
 
+/// A safe logout error; never contains credentials or platform error details.
+class FilenCredentialDeletionFailure implements Exception {
+  const FilenCredentialDeletionFailure();
+
+  @override
+  String toString() =>
+      'Saved Filen credentials could not be removed. Restore access to '
+      'credential storage and retry logout before closing CrispCloud.';
+}
+
 class FilenConfigService {
   static const _log = Log('FilenConfig');
 
@@ -42,10 +52,30 @@ class FilenConfigService {
 
   Future<void> clearCredentials() async {
     try {
+      if (_secure.isPersistent) {
+        // A conflicting old preference may have been retained by migration.
+        // Remove it before the secure entry so it cannot be reimported after a
+        // successful logout. Session-only mode must leave durable data alone.
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.reload();
+        if (prefs.containsKey('filen_credentials')) {
+          if (!await prefs.remove('filen_credentials')) {
+            throw const FilenCredentialDeletionFailure();
+          }
+          await prefs.reload();
+          if (prefs.containsKey('filen_credentials')) {
+            throw const FilenCredentialDeletionFailure();
+          }
+        }
+      }
       await _secure.delete('filen_credentials');
+      if (await _secure.read('filen_credentials') != null) {
+        throw const FilenCredentialDeletionFailure();
+      }
       _log.debug('Cleared credentials');
-    } catch (e) {
-      _log.warn('Error clearing credentials', e);
+    } catch (_) {
+      _log.warn('Saved Filen credentials could not be removed.');
+      throw const FilenCredentialDeletionFailure();
     }
   }
 

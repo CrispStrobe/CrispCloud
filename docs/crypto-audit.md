@@ -58,6 +58,13 @@ is described in [credential-storage.md](credential-storage.md).
 | Automatic backend fallback or treating an unreadable lock policy as disabled could expose an existing profile without its policy. Settings could label a different pending mode as already active, and separately saved mode/path preferences could split one intended selection. | Existing or ambiguous profiles retry the configured store. A separately checked fresh-profile path retains first-run choice. App Lock policy errors stop the gate; session-only cannot enable a persistent lock. Settings keeps active/pending state distinct, rechecks App Lock before saving a change, and writes/reloads a single versioned selection record. Bootstrap, gate, config and chooser regressions cover these boundaries. |
 | Generic and Internxt migrations could import persistent credentials into a session store, delete the durable source or mark migration complete after only an in-memory write. | `SecureStorage.isPersistent` distinguishes ephemeral stores. Session mode skips those imports/cleanup markers. Persistent migration verifies readback before legacy deletion and preserves conflicting secure values. Secure-storage and Internxt regressions check session isolation and preservation on failure. |
 
+Filen logout now propagates a safe error when saved-credential deletion or its
+readback cannot be verified. It discards session keys, preserves the adapter for
+retry, and shows cleanup failure instead of a success message. Persistent
+logout removes retained legacy preferences before the secure entry to prevent
+reimport; ephemeral logout does not touch those preferences. Config, adapter,
+auth-state and dialog regressions are in `test/filen_adapter_test.dart`.
+
 Filen and Internxt retain their foreground account and transfer protocols. The
 new backend choice does not remove their encryption or require a plaintext
 provider mode. It also does not create an OS-only application: the shared vault

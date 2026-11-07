@@ -23,6 +23,7 @@ import '../widgets/archive_workspace_dialog.dart';
 import '../widgets/batch_rename_dialog.dart' show showBatchRenameDialog;
 import '../widgets/file_name_dialog.dart';
 import '../services/file_operation_service.dart';
+import '../services/filen_config_service.dart';
 import '../widgets/internal_viewer_dialog.dart'
     show InternalViewerAction, showInternalViewer;
 import '../l10n/app_localizations.dart';
@@ -63,24 +64,55 @@ void showB2ConnectionDialog(BuildContext context) {
 }
 
 void confirmLogoutRiverpod(BuildContext context, WidgetRef ref) {
+  // The command palette closes its own route before this dialog is used.
+  // Capture the root-scoped notifier while its WidgetRef is still usable.
+  final auth = ref.read(authProvider);
+  String? cleanupError;
+  var busy = false;
   showDialog(
     context: context,
-    builder: (context) => AlertDialog(
+    builder: (context) => StatefulBuilder(
+      builder: (context, setState) => AlertDialog(
       title: Text(ScreenDialogStrings(context).text('logoutTitle')),
-      content: Text(ScreenDialogStrings(context).text('logoutConfirm')),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(ScreenDialogStrings(context).text('logoutConfirm')),
+          if (cleanupError != null) ...[
+            const SizedBox(height: 12),
+            Text(cleanupError!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+          ],
+        ],
+      ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: busy ? null : () => Navigator.pop(context),
           child: Text(AppLocalizations.of(context)!.cancel),
         ),
         ElevatedButton(
-          onPressed: () async {
-            await ref.read(authProvider).logout();
+          onPressed: busy ? null : () async {
+            setState(() => busy = true);
+            try {
+              await auth.logout();
+            } on FilenCredentialDeletionFailure catch (error) {
+              if (context.mounted) {
+                setState(() {
+                  cleanupError = error.toString();
+                  busy = false;
+                });
+              }
+              return;
+            } catch (_) {
+              if (context.mounted) setState(() => busy = false);
+              rethrow;
+            }
             if (context.mounted) {
+              final messenger = ScaffoldMessenger.of(context);
+              final message = CommandStrings(context).text('loggedOut');
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
+              messenger.showSnackBar(
                 SnackBar(
-                  content: Text(CommandStrings(context).text('loggedOut')),
+                  content: Text(message),
                 ),
               );
             }
@@ -89,9 +121,12 @@ void confirmLogoutRiverpod(BuildContext context, WidgetRef ref) {
             backgroundColor: Theme.of(context).colorScheme.error,
             foregroundColor: Theme.of(context).colorScheme.onError,
           ),
-          child: Text(AppLocalizations.of(context)!.logout),
+          child: Text(cleanupError == null
+              ? AppLocalizations.of(context)!.logout
+              : AppLocalizations.of(context)!.retry),
         ),
       ],
+      ),
     ),
   );
 }

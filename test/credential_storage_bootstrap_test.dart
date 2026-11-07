@@ -1,3 +1,5 @@
+import 'package:crisp_cloud/main.dart' show appLockServiceProvider;
+import 'package:crisp_cloud/providers/core_providers.dart';
 import 'package:crisp_cloud/services/credential_storage_bootstrap.dart';
 import 'package:crisp_cloud/services/credential_storage_config.dart';
 import 'package:crisp_cloud/services/secure_storage_service.dart';
@@ -169,5 +171,3 @@ void main() {
     expect(await storage.containsKey('app_lock_enabled'), isFalse);
   });
 }
-import 'package:crisp_cloud/main.dart' show appLockServiceProvider;
-import 'package:crisp_cloud/providers/core_providers.dart';

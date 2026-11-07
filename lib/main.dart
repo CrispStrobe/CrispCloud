@@ -5,6 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'l10n/app_localizations.dart';
 import 'l10n/web_vault_strings.dart';
+import 'l10n/settings_strings.dart';
 import 'l10n/startup_failure_strings.dart';
 import 'l10n/provider_operation_strings.dart';
 
@@ -813,6 +814,12 @@ class WebMasterPasswordGateState extends ConsumerState<WebMasterPasswordGate> {
     if (_loading || _inspectionFailed) return;
     final password = _controller.text;
     if (password.isEmpty) return;
+    if (_isNewVault && password.length < 8) {
+      setState(() => _error = SettingsStrings(context).text(
+        'Use at least 8 characters for the master password.',
+      ));
+      return;
+    }
     if (_isNewVault && password != _confirmationController.text) {
       setState(() => _error = WebVaultStrings(context).mismatch);
       return;

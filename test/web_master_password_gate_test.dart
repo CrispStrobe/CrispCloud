@@ -22,6 +22,23 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
+  testWidgets('new vaults reject short passwords before writing any metadata', (tester) async {
+    final backend = InMemoryWebStorageBackend();
+    final storage = WebEncryptedStorage(backend, newVaultIterations: 10);
+    await tester.pumpWidget(ProviderScope(
+      overrides: [secureStorageProvider.overrideWithValue(storage)],
+      child: const MaterialApp(home: WebMasterPasswordGate()),
+    ));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).first, 'short');
+    await tester.enterText(find.byType(TextField).last, 'short');
+    await tester.tap(find.text('Create vault'));
+    await tester.pumpAndSettle();
+    expect(find.text('Use at least 8 characters for the master password.'), findsOneWidget);
+    expect(storage.isInitialized, isFalse);
+    expect(await backend.allKeys(), isEmpty);
+  });
+
   testWidgets('unreadable storage offers retry without a create prompt',
       (tester) async {
     final backend = _TemporarilyUnavailableBackend();

@@ -219,7 +219,7 @@ jobs:
 
       - name: Crypto audit regressions (published vectors and credential migration)
         run: >-
-          flutter test --no-pub
+          python3 tool/with_ci_system_sqlite.py flutter test --no-pub
           test/aes_siv_test.dart test/cryptomator_test.dart
           test/veracrypt_test.dart test/veracrypt_header_vectors_test.dart
           test/encryption_service_test.dart test/internxt_secure_config_test.dart
