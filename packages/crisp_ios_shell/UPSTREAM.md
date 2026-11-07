@@ -68,6 +68,8 @@ binary compatibility or the ability to install arbitrary native executables.
 - Preserve literal argument vectors from Dash at the native exec boundary;
   script names and arguments are not reparsed as another command string.
   Allocate rewritten shebang paths by their UTF8 byte length.
+- Keep command-name metadata in stable, path-sized slots and bound both copies;
+  direct script paths can exceed the length limit of a single filename.
 - Export the embedded Dash entry point as `dash_main`; verify every curated
   command's export in every device and simulator architecture before packaging.
 - Borrow input/output/error streams under ios_system's owned-stream leases and

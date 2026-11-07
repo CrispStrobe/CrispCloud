@@ -9,6 +9,8 @@
 #import <stdlib.h>
 #import <string.h>
 #import <dlfcn.h>
+#import <limits.h>
+#import <sys/param.h>
 #import <unistd.h>
 
 static NSURL *CommandsURL, *FrameworksURL;
@@ -287,6 +289,24 @@ static void TestRealShell(void) {
   Send(session, [NSString stringWithFormat:@"chmod +x %@; %@ %@; printf '__LITERAL_SCRIPT__\\n'\n", quotedName, quotedName, quotedArgument]);
   Has(TextThrough(session, @"__LITERAL_SCRIPT__\n"), [@"script:" stringByAppendingString:literalArgument],
       @"Direct script name and arguments remain literal UTF8 bytes across native dispatch");
+  NSString *longDirectory = [[script stringByDeletingLastPathComponent] stringByAppendingPathComponent:@"long-path"];
+  NSString *longPath = [longDirectory stringByAppendingPathComponent:@"script.sh"];
+  while ([longPath lengthOfBytesUsingEncoding:NSUTF8StringEncoding] <= NAME_MAX) {
+    longDirectory = [longDirectory stringByAppendingPathComponent:@"segment-01234567890123456789"];
+    longPath = [longDirectory stringByAppendingPathComponent:@"script.sh"];
+  }
+  NSUInteger longPathBytes = [longPath lengthOfBytesUsingEncoding:NSUTF8StringEncoding];
+  Require(longPath.isAbsolutePath && longPathBytes > NAME_MAX && longPathBytes < MAXPATHLEN,
+      @"Direct script regression uses a legal absolute path longer than one filename");
+  Require([NSFileManager.defaultManager createDirectoryAtPath:longDirectory withIntermediateDirectories:YES attributes:nil error:nil],
+      @"Create nested directories for long absolute script path");
+  Require([@"#!/bin/sh\nprintf 'script:%s\\n' \"$1\"\n" writeToFile:longPath atomically:YES encoding:NSUTF8StringEncoding error:nil],
+      @"Create script at long absolute path");
+  NSString *quotedLongPath = [NSString stringWithFormat:@"'%@'", [longPath stringByReplacingOccurrencesOfString:@"'" withString:@"'\\''"]];
+  Send(session, [NSString stringWithFormat:@"chmod +x %@; %@ 'long absolute path'; printf 'long-script-status:%%s\\n' \"$?\"; printf '__LONG_SCRIPT__\\n'\n", quotedLongPath, quotedLongPath]);
+  output = TextThrough(session, @"__LONG_SCRIPT__\n");
+  Has(output, @"script:long absolute path\n", @"Direct absolute script path survives command metadata storage");
+  Has(output, @"long-script-status:0\n", @"Shell continues after long absolute script dispatch");
   NSError *error;
   struct sigaction originalWindowAction, windowAction = {0};
   windowAction.sa_handler = WindowSignal;

@@ -1,6 +1,19 @@
 --- a/ios_system.m
 +++ b/ios_system.m
-@@ -282,6 +282,19 @@
+@@ -110,9 +110,11 @@
+     sp->nativeTTY = false;
+     sp->context = nil;
+     sp->numCommandsAllocated = 10; // 10 slots available to store commands, will realloc if more needed.
++    // Metadata may contain a full script path. Keep each slot at a stable
++    // address for ios_progname borrowers, with room for every valid iOS path.
+     sp->commandName = malloc(sizeof(char*) * sp->numCommandsAllocated);
+     for (int i = 0; i < sp->numCommandsAllocated; i++) {
+-        sp->commandName[i] = malloc(sizeof(char) * NAME_MAX);
++        sp->commandName[i] = malloc(sizeof(char) * MAXPATHLEN);
+     }
+     sp->commandName[0][0] = 0;
+     sp->numCommand = 0;
+@@ -282,6 +284,19 @@
  }
  
  #undef getenv
@@ -20,7 +33,7 @@
  void ios_setWindowSize(int width, int height, const void* sessionId) {
      // You can set the window size for a session that is not currently running (e.g. because "sh_session" is running).
      // So we set it without calling ios_switchSession:
-@@ -296,19 +309,10 @@
+@@ -296,19 +311,10 @@
          return;
      }
  
@@ -44,7 +57,7 @@
  }
  
  int ios_getWindowSize(int *columns, int *rows, const void* sessionId) {
-@@ -316,8 +320,10 @@
+@@ -316,8 +322,10 @@
      id sessionKey = @((NSUInteger)sessionId);
      sessionParameters* session = (sessionParameters*)[[sessionList objectForKey: sessionKey] pointerValue];
      if (session == NULL) return ENOENT;
@@ -55,7 +68,7 @@
      return 0;
  }
  
-@@ -326,13 +332,13 @@
+@@ -326,13 +334,13 @@
  char * ios_getenv(const char *name) {
      // intercept calls to getenv("COLUMNS") / getenv("LINES")
      if (strcmp(name, "COLUMNS") == 0) {
@@ -72,7 +85,7 @@
      }
      if (strcmp(name, "PWD") == 0) {
          return currentSession->currentDir;
-@@ -405,6 +411,7 @@
+@@ -405,6 +413,7 @@
      struct _functionParameters *ownedNext;
      pthread_t ownedThread;
      bool ownedRunning, commandStarted, storeMainThread;
@@ -80,7 +93,7 @@
  } functionParameters;
  
  static pthread_mutex_t commandSignalMutex = PTHREAD_MUTEX_INITIALIZER;
-@@ -434,6 +441,9 @@
+@@ -434,6 +443,9 @@
      FILE *streams[3];
      unsigned active;
      bool cancelled;
@@ -90,7 +103,7 @@
      functionParameters *commands;
      pthread_cond_t idle;
      struct ownedStreams *next;
-@@ -453,6 +463,9 @@
+@@ -453,6 +465,9 @@
      entry->streams[2] = error;
      entry->active = 0;
      entry->cancelled = false;
@@ -100,7 +113,7 @@
      entry->commands = NULL;
      pthread_mutex_lock(&ownedStreamsMutex);
      entry->next = registeredStreams;
-@@ -501,6 +514,8 @@
+@@ -501,6 +516,8 @@
      }
      parameters->ownedStreams = found;
      parameters->ownedRunning = false;
@@ -109,7 +122,7 @@
      parameters->commandStarted = false;
      parameters->ownedThread = NULL;
      parameters->ownedNext = NULL;
-@@ -548,10 +563,59 @@
+@@ -548,10 +565,59 @@
      return error;
  }
  
@@ -170,7 +183,7 @@
      pthread_mutex_unlock(&ownedStreamsMutex);
      return cancelled;
  }
-@@ -653,9 +717,9 @@
+@@ -653,9 +719,9 @@
          currentSession->activePager = FALSE;
      }
      if (p->commandStarted) {
@@ -183,7 +196,7 @@
          fflush(thread_stdin);
          fflush(thread_stdout);
          fflush(thread_stderr);
-@@ -895,6 +959,13 @@
+@@ -895,6 +961,13 @@
      currentWebAssemblyCommandOrder = p->webAssemblyOrder;
      p->commandStarted = true;
      currentOwnedStreams = p->ownedStreams;
@@ -197,7 +210,7 @@
      NSLog(@"Storing thread_id: %x pid: %d isPipeOut: %x isPipeErr: %x stdin %d stdout %d stderr %d command= %s\n", pthread_self(), ios_currentPid(), p->isPipeOut, p->isPipeErr,
            (p->stdin == nil) ? -1 : fileno(p->stdin),
            (p->stdout == nil) ? -1 : fileno(p->stdout),
-@@ -922,9 +993,8 @@
+@@ -922,9 +995,8 @@
          if (currentSession != nil) currentSession->activePager = TRUE;
      }
  
@@ -209,7 +222,7 @@
  
      // Because some commands change argv, keep a local copy for release.
      p->argv_ref = (char **)malloc(sizeof(char*) * (p->argc + 1));
-@@ -965,7 +1035,7 @@
+@@ -965,7 +1037,7 @@
      @try
      {
          pthread_mutex_lock(&ownedStreamsMutex);
@@ -218,7 +231,7 @@
          p->ownedThread = pthread_self();
          p->ownedRunning = !cancelled;
          pthread_mutex_unlock(&ownedStreamsMutex);
-@@ -993,6 +1063,7 @@
+@@ -993,6 +1065,7 @@
  static NSString* miniRoot = nil; // limit operations to below a certain directory (~, usually).
  static NSArray<NSString*> *allowedPaths = nil;
  static NSDictionary *commandList = nil;
@@ -226,7 +239,7 @@
  NSArray *backgroundCommandList = nil;
  // do recompute directoriesInPath only if $PATH has changed
  static NSString* fullCommandPath = @"";
-@@ -1751,8 +1822,8 @@
+@@ -1751,8 +1824,8 @@
      while ((command[0] == ' ') && strlen(command) > 0) command++;
      if (pipe(fd) < 0) { return NULL; } // Nothing we can do if pipe fails
      // F_SETNOSIGPIPE: don't cause a signal 13 if the pipe is already closed
@@ -237,7 +250,7 @@
      // NOTES: fd[0] is set up for reading, fd[1] is set up for writing
      // fpout = fdopen(fd[1], "w");
      // fpin = fdopen(fd[0], "r");
-@@ -2335,11 +2406,15 @@
+@@ -2335,11 +2408,15 @@
  }
  
  
@@ -254,7 +267,7 @@
      free(cmd);
      return returnValue;
  }
-@@ -2364,7 +2439,7 @@
+@@ -2364,7 +2441,7 @@
      }
      // Add our own variables: ROWS, PWD (COLUMNS and LINES are already set):
      NSString* rowVariable = @"ROWS=";
@@ -263,7 +276,7 @@
      [dictionary addObject: rowVariable];
      NSString* pwdVariable = @"PWD=";
      pwdVariable = [pwdVariable stringByAppendingString: [NSString stringWithCString: currentSession->currentDir]];
-@@ -2593,7 +2668,13 @@
+@@ -2593,7 +2670,13 @@
      if (sessionList == nil) return;
      id sessionKey = @((NSUInteger)sessionId);
      @synchronized(sessionList) {
@@ -277,7 +290,7 @@
      }
      currentSession = NULL;
  }
-@@ -2830,7 +2911,7 @@
+@@ -2830,7 +2913,7 @@
      NSDictionary* newCommandList = [NSPropertyListSerialization propertyListWithData:dataLoadedFromFile options:NSPropertyListImmutable format:NULL error:&error];
      if (!newCommandList) return error;
      // merge the two dictionaries:
@@ -286,7 +299,7 @@
      [mutableDict addEntriesFromDictionary:newCommandList];
      commandList = [mutableDict copy];
      return NULL;
-@@ -3096,6 +3177,10 @@
+@@ -3096,6 +3179,10 @@
  
  
  int ios_system(const char* inputCmd) {
@@ -297,7 +310,7 @@
      NSLog(@"command = %s pid= %d\n", inputCmd, ios_currentPid());
  
      char* command;
-@@ -3137,7 +3222,7 @@
+@@ -3137,7 +3224,7 @@
      char* maxPointer = cmd + strlen(cmd);
      char* originalCommand = cmd;
      // fprintf(thread_stderr, "Command sent: %s \n", cmd); fflush(stderr);
@@ -306,7 +319,7 @@
          // Command was enclosed in quotes (almost always with Vim)
          // It can also be the executable enclose in quotes
          char* endCmd = strstr(cmd + 1, "\""); // find closing quote
-@@ -3148,7 +3233,7 @@
+@@ -3148,7 +3235,7 @@
          }
          // assert(cmd + strlen(cmd) < maxPointer);
      }
@@ -315,7 +328,7 @@
          // Standard vim encoding: command between parentheses
          command = cmd + 1;
          char* endCmd = strstrquoted(command, ")"); // remove closing parenthesis
-@@ -3163,7 +3248,7 @@
+@@ -3163,7 +3250,7 @@
      char* commandForParsing = strdup(command);
      char* commandForParsingFree = commandForParsing;
      char* firstSpace = strstrquoted(commandForParsing, " ");
@@ -324,7 +337,7 @@
          *firstSpace = 0;
          char* equalSign = strchr(commandForParsing, '=');
          if (equalSign == NULL) break;
-@@ -3175,7 +3260,7 @@
+@@ -3175,7 +3262,7 @@
      }
      free(commandForParsingFree);
      // Is the command an environment variable?
@@ -333,7 +346,7 @@
          const char* newName = ios_getenv(command + 1);
          if (newName != NULL) {
              free(originalCommand);
-@@ -3185,7 +3270,7 @@
+@@ -3185,7 +3272,7 @@
          }
      }
      // alias expansion *before* input, output and error redirection.
@@ -342,7 +355,7 @@
          // \command = cancel aliasing, get the original command
          char* commandForParsing = strdup(command);
          char* firstSpace = strstrquoted(commandForParsing, " ");
-@@ -3274,7 +3359,7 @@
+@@ -3274,7 +3361,7 @@
      params->stderr = child_stderr;
      params->session = currentSession;
      NSLog(@"After params creation, stdout %x stderr %x \n", params->stdout,  params->stderr);
@@ -351,7 +364,7 @@
      params->numInterpreter = 0;
      params->webAssemblyOrder = 0;
      params->storeMainThread = false;
-@@ -3287,7 +3372,7 @@
+@@ -3287,7 +3374,7 @@
      // Only scan for input / output if there is no argument marker
      char recordSeparator = 0x1e;
      char* recordSeparatorPosition = strchr(inputFileMarker, recordSeparator);
@@ -360,7 +373,7 @@
          // scan until first "<" (input file)
          inputFileMarker = strstrquoted(inputFileMarker, "<");
          // scan until first non-space character:
-@@ -3496,45 +3581,60 @@
+@@ -3496,45 +3583,60 @@
      if (params->stderr == NULL) params->stderr = thread_stderr;
      NSLog(@"After files parsing, stdout %x stderr %x \n", params->stdout,  params->stderr);
      int argc = 0;
@@ -460,7 +473,7 @@
      if (argc != 0) {
          // So far, all arguments are pointers into originalCommand.
          // We need to change them (environment variables expansion, ~ expansion, etc)
-@@ -3581,7 +3681,7 @@
+@@ -3581,7 +3683,7 @@
          // - is argv[0] a command that refers to a file? (either absolute path, or in $PATH)
          //   if so, does it exist, does it have +x bit set, does it have #! python or #! lua on the first line?
          //   if yes to all, call the relevant interpreter. Works for hg, for example.
@@ -469,7 +482,28 @@
              // Just remove the \ at the beginning
              // There can be several versions of a command (e.g. ls as precompiled and ls written in Python)
              // The executable file has precedence, unless the user has specified they want the original
-@@ -3613,7 +3713,7 @@
+@@ -3595,7 +3697,7 @@
+             // strcpy(currentSession->commandName, argv[0]);
+             // store into heap:
+             if ((currentSession->numCommand <= 0) && (strlen(currentSession->commandName[0]) == 0)) {
+-                strcpy(currentSession->commandName[0], argv[0]);
++                strlcpy(currentSession->commandName[0], argv[0], MAXPATHLEN);
+                 currentSession->numCommand = 1;
+             } else {
+                 if (currentSession->numCommand >= currentSession->numCommandsAllocated) {
+@@ -3603,17 +3705,17 @@
+                     currentSession->numCommandsAllocated += 10;
+                     currentSession->commandName = realloc(currentSession->commandName, sizeof(char*) * currentSession->numCommandsAllocated);
+                     for (int i = oldCommandsAllocated; i < currentSession->numCommandsAllocated; i++) {
+-                        currentSession->commandName[i] = malloc(sizeof(char) * NAME_MAX);
++                        currentSession->commandName[i] = malloc(sizeof(char) * MAXPATHLEN);
+                     }
+                 }
+-                strcpy(currentSession->commandName[currentSession->numCommand], argv[0]);
++                strlcpy(currentSession->commandName[currentSession->numCommand], argv[0], MAXPATHLEN);
+                 currentSession->numCommand += 1;
+             }
+             BOOL isDir = false;
              bool cmdIsAFile = false;
              bool cmdIsReal = false;
              bool cmdIsAPath = false;
@@ -478,7 +512,7 @@
                  NSString* replacement_string = [NSString stringWithCString:(getenv("HOME")) encoding:NSUTF8StringEncoding];
                  NSString* test_string = @"~";
                  commandName = [commandName stringByReplacingOccurrencesOfString:test_string withString:replacement_string options:NULL range:NSMakeRange(0, 1)];
-@@ -3777,7 +3877,7 @@
+@@ -3777,7 +3879,7 @@
                                      for (int i = argc; i >= numComponents; i--) { argv[i] = argv[i-numComponents]; }
                                      // Change the location of the file (from "command" to "/actual/full/path/command"):
                                      // This pointer existed before
@@ -487,7 +521,7 @@
                                      strcpy(argv[numComponents], locationName.UTF8String);
                                      // Copy all arguments without change (except the first):
                                      for (int i = 0; i < numComponents; i++) {
-@@ -3834,27 +3934,11 @@
+@@ -3834,27 +3936,11 @@
          int (*function)(int ac, char** av) = NULL;
          if (commandList == nil) initializeCommandList();
          NSString* commandName = [NSString stringWithCString:argv[0] encoding:NSUTF8StringEncoding];
