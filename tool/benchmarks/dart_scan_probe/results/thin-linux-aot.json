@@ -1,0 +1,180 @@
+{
+  "prototype": true,
+  "runtimeMode": "aot",
+  "runtime": "3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
+  "os": "Linux 6.18.57 #1 SMP Tue Oct 20 21:56:04 UTC 2026",
+  "cpusReported": 9,
+  "root": "scan-benchmark-fixture",
+  "files": 24000,
+  "foldersExcludingRoot": 460,
+  "logicalBytes": 359116800,
+  "filesSizeMtimeDigest": "95be37ac32d86031340e23be1ce52f590df954f35a57a367a7d1fa36827e0f0e",
+  "mtimeUnit": "microseconds since Unix epoch; Python st_mtime_ns // 1000",
+  "protocol": "One unmeasured warmup and 5 measured scans per variant. Process/runtime startup, compilation, independent manifest read, full path/size/microsecond-mtime and tree verification, and digest hashing excluded. No content reads. Warm synthetic filesystem fixture. No production edits. No security-scope, source-identity, cancellation/progress, limits or issue retention implemented in prototypes.",
+  "results": [
+    {
+      "variant": "recursive_sync_flat",
+      "description": "Directory.listSync(recursive:true, followLinks:false); FileStat.statSync per file; flat entries and size buckets; returned paths.",
+      "warmupMilliseconds": 216.215,
+      "milliseconds": [
+        203.301,
+        200.256,
+        203.645,
+        201.854,
+        206.427
+      ],
+      "medianMilliseconds": 203.301,
+      "minimumMilliseconds": 200.256,
+      "maximumMilliseconds": 206.427,
+      "filesPerSecond": 118051.5590184013,
+      "validated": true,
+      "filesSizeMtimeDigest": "95be37ac32d86031340e23be1ce52f590df954f35a57a367a7d1fa36827e0f0e"
+    },
+    {
+      "variant": "iterative_sync_flat",
+      "description": "Iterative per-directory listSync(followLinks:false); FileStat.statSync per file; flat entries and size buckets; returned paths.",
+      "warmupMilliseconds": 200.948,
+      "milliseconds": [
+        200.121,
+        204.754,
+        207.99,
+        199.956,
+        201.462
+      ],
+      "medianMilliseconds": 201.462,
+      "minimumMilliseconds": 199.956,
+      "maximumMilliseconds": 207.99,
+      "filesPerSecond": 119129.1657980165,
+      "validated": true,
+      "filesSizeMtimeDigest": "95be37ac32d86031340e23be1ce52f590df954f35a57a367a7d1fa36827e0f0e"
+    },
+    {
+      "variant": "iterative_sync_flat_path",
+      "description": "Thin iterative scan plus package:path normalize and basename for each file.",
+      "warmupMilliseconds": 232.869,
+      "milliseconds": [
+        238.596,
+        220.782,
+        227.403,
+        222.429,
+        218.892
+      ],
+      "medianMilliseconds": 222.429,
+      "minimumMilliseconds": 218.892,
+      "maximumMilliseconds": 238.596,
+      "filesPerSecond": 107899.59942273714,
+      "validated": true,
+      "filesSizeMtimeDigest": "95be37ac32d86031340e23be1ce52f590df954f35a57a367a7d1fa36827e0f0e"
+    },
+    {
+      "variant": "recursive_async_sync_stat_flat",
+      "description": "Directory.list(recursive:true, followLinks:false) stream; synchronous FileStat.statSync per file; flat entries and buckets.",
+      "warmupMilliseconds": 205.171,
+      "milliseconds": [
+        201.766,
+        192.773,
+        194.882,
+        190.436,
+        197.932
+      ],
+      "medianMilliseconds": 194.882,
+      "minimumMilliseconds": 190.436,
+      "maximumMilliseconds": 201.766,
+      "filesPerSecond": 123151.44549009143,
+      "validated": true,
+      "filesSizeMtimeDigest": "95be37ac32d86031340e23be1ce52f590df954f35a57a367a7d1fa36827e0f0e"
+    },
+    {
+      "variant": "recursive_async_stat_flat",
+      "description": "Directory.list(recursive:true, followLinks:false) stream; await FileStat.stat per file; flat entries and buckets.",
+      "warmupMilliseconds": 845.952,
+      "milliseconds": [
+        820.76,
+        776.362,
+        879.4,
+        787.128,
+        855.726
+      ],
+      "medianMilliseconds": 820.76,
+      "minimumMilliseconds": 776.362,
+      "maximumMilliseconds": 879.4,
+      "filesPerSecond": 29241.191091183784,
+      "validated": true,
+      "filesSizeMtimeDigest": "95be37ac32d86031340e23be1ce52f590df954f35a57a367a7d1fa36827e0f0e"
+    },
+    {
+      "variant": "iterative_sync_checked_tree",
+      "description": "Whole iterative sync traversal; stat files/directories; post-stat no-follow type checks; before/after directory checks; tree and size buckets; postorder totals; returned paths.",
+      "warmupMilliseconds": 248.674,
+      "milliseconds": [
+        247.059,
+        249.169,
+        252.471,
+        248.797,
+        267.995
+      ],
+      "medianMilliseconds": 249.169,
+      "minimumMilliseconds": 247.059,
+      "maximumMilliseconds": 267.995,
+      "filesPerSecond": 96320.16823922719,
+      "validated": true,
+      "filesSizeMtimeDigest": "95be37ac32d86031340e23be1ce52f590df954f35a57a367a7d1fa36827e0f0e"
+    },
+    {
+      "variant": "iterative_sync_checked_tree_path",
+      "description": "Checked tree plus package:path normalize/basename for each entry.",
+      "warmupMilliseconds": 266.678,
+      "milliseconds": [
+        268.698,
+        266.114,
+        277.543,
+        276.95,
+        265.528
+      ],
+      "medianMilliseconds": 268.698,
+      "minimumMilliseconds": 265.528,
+      "maximumMilliseconds": 277.543,
+      "filesPerSecond": 89319.6078869214,
+      "validated": true,
+      "filesSizeMtimeDigest": "95be37ac32d86031340e23be1ce52f590df954f35a57a367a7d1fa36827e0f0e"
+    },
+    {
+      "variant": "iterative_sync_checked_tree_validated",
+      "description": "Checked tree plus normalize/basename and production-like lexical containment/parent/duplicate checks.",
+      "warmupMilliseconds": 399.77,
+      "milliseconds": [
+        373.944,
+        375.608,
+        365.559,
+        341.701,
+        356.544
+      ],
+      "medianMilliseconds": 365.559,
+      "minimumMilliseconds": 341.701,
+      "maximumMilliseconds": 375.608,
+      "filesPerSecond": 65652.87682699646,
+      "validated": true,
+      "filesSizeMtimeDigest": "95be37ac32d86031340e23be1ce52f590df954f35a57a367a7d1fa36827e0f0e"
+    },
+    {
+      "variant": "whole_isolate_checked_tree",
+      "description": "Checked tree in one Isolate.run per whole scan (including worker creation and result delivery); no per-directory spawn.",
+      "warmupMilliseconds": 251.013,
+      "milliseconds": [
+        256.222,
+        277.719,
+        259.28,
+        273.034,
+        262.687
+      ],
+      "medianMilliseconds": 262.687,
+      "minimumMilliseconds": 256.222,
+      "maximumMilliseconds": 277.719,
+      "filesPerSecond": 91363.48582152904,
+      "validated": true,
+      "filesSizeMtimeDigest": "95be37ac32d86031340e23be1ce52f590df954f35a57a367a7d1fa36827e0f0e"
+    }
+  ],
+  "recordedOn": "2026-11-07",
+  "locationNote": "Synthetic fixture location redacted to its portable name; all measurements and validation digests unchanged."
+}

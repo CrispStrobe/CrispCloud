@@ -1,0 +1,31 @@
+{
+  "timingIncludedInScanResults": false,
+  "builds": [
+    {
+      "kind": "exe",
+      "command": [
+        "dart",
+        "compile",
+        "exe",
+        "bin/scan_probe.dart",
+        "-o",
+        "build/scan_probe"
+      ],
+      "elapsedSeconds": 1.4794614879938308,
+      "artifactBytes": 6951336
+    },
+    {
+      "kind": "kernel",
+      "command": [
+        "dart",
+        "compile",
+        "kernel",
+        "bin/scan_probe.dart",
+        "-o",
+        "build/scan_probe.dill"
+      ],
+      "elapsedSeconds": 0.30517521999718156,
+      "artifactBytes": 8912160
+    }
+  ]
+}

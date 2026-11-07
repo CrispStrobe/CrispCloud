@@ -1,0 +1,1826 @@
+[
+  {
+    "mode": "original",
+    "run": 0,
+    "warmup": true,
+    "wall_ms": 926.313,
+    "profile": {},
+    "worker": null,
+    "tree_digest": "cb4a29355c1a484b08a7b8996ad0341e676a5cf706327c510c23e95031a20f24"
+  },
+  {
+    "mode": "original",
+    "run": 1,
+    "warmup": false,
+    "wall_ms": 861.388,
+    "profile": {},
+    "worker": null,
+    "tree_digest": "cb4a29355c1a484b08a7b8996ad0341e676a5cf706327c510c23e95031a20f24"
+  },
+  {
+    "mode": "original",
+    "run": 2,
+    "warmup": false,
+    "wall_ms": 889.515,
+    "profile": {},
+    "worker": null,
+    "tree_digest": "cb4a29355c1a484b08a7b8996ad0341e676a5cf706327c510c23e95031a20f24"
+  },
+  {
+    "mode": "original",
+    "run": 3,
+    "warmup": false,
+    "wall_ms": 868.979,
+    "profile": {},
+    "worker": null,
+    "tree_digest": "cb4a29355c1a484b08a7b8996ad0341e676a5cf706327c510c23e95031a20f24"
+  },
+  {
+    "mode": "native_instrumented",
+    "run": 0,
+    "warmup": true,
+    "wall_ms": 960.417,
+    "profile": {
+      "source_identity": {
+        "ms": 6.872435,
+        "calls": 26910
+      },
+      "paths_normalize": {
+        "ms": 6.339273,
+        "calls": 24461
+      },
+      "paths_basename": {
+        "ms": 17.906964,
+        "calls": 24461
+      },
+      "pathKey": {
+        "ms": 5.853669,
+        "calls": 24461
+      },
+      "source_isCurrent": {
+        "ms": 1.905746,
+        "calls": 26909
+      },
+      "scanner_source_checks": {
+        "ms": 17.581571,
+        "calls": 26862
+      },
+      "paths_isAbsolute": {
+        "ms": 1.631331,
+        "calls": 24461
+      },
+      "source_stat": {
+        "ms": 215.862546,
+        "calls": 461
+      },
+      "native_spawn_worker_handoff": {
+        "ms": 468.732326,
+        "calls": 461
+      },
+      "native_worker": {
+        "ms": 336.332279,
+        "calls": 461
+      },
+      "source_listing": {
+        "ms": 481.481224,
+        "calls": 461
+      },
+      "isWithin": {
+        "ms": 15.682976,
+        "calls": 24460
+      },
+      "paths_dirname": {
+        "ms": 26.238923,
+        "calls": 24460
+      },
+      "samePath": {
+        "ms": 9.993045,
+        "calls": 24460
+      },
+      "scanner_validation": {
+        "ms": 117.623973,
+        "calls": 24460
+      },
+      "scanner_node_processing": {
+        "ms": 4.00573,
+        "calls": 24460
+      },
+      "yield_directories": {
+        "ms": 48.937455,
+        "calls": 461
+      },
+      "yield_entries": {
+        "ms": 10.626866,
+        "calls": 95
+      },
+      "scanner_aggregation": {
+        "ms": 24.744167,
+        "calls": 24461
+      },
+      "yield_aggregation": {
+        "ms": 4.077964,
+        "calls": 47
+      }
+    },
+    "worker": null,
+    "tree_digest": "cb4a29355c1a484b08a7b8996ad0341e676a5cf706327c510c23e95031a20f24"
+  },
+  {
+    "mode": "native_instrumented",
+    "run": 1,
+    "warmup": false,
+    "wall_ms": 908.816,
+    "profile": {
+      "source_identity": {
+        "ms": 6.47506,
+        "calls": 26910
+      },
+      "paths_normalize": {
+        "ms": 5.432169,
+        "calls": 24461
+      },
+      "paths_basename": {
+        "ms": 16.329087,
+        "calls": 24461
+      },
+      "pathKey": {
+        "ms": 4.966887,
+        "calls": 24461
+      },
+      "source_isCurrent": {
+        "ms": 1.656419,
+        "calls": 26909
+      },
+      "scanner_source_checks": {
+        "ms": 15.167329,
+        "calls": 26862
+      },
+      "paths_isAbsolute": {
+        "ms": 1.220664,
+        "calls": 24461
+      },
+      "source_stat": {
+        "ms": 203.009878,
+        "calls": 461
+      },
+      "native_spawn_worker_handoff": {
+        "ms": 452.204962,
+        "calls": 461
+      },
+      "native_worker": {
+        "ms": 319.529559,
+        "calls": 461
+      },
+      "source_listing": {
+        "ms": 464.156284,
+        "calls": 461
+      },
+      "isWithin": {
+        "ms": 12.538823,
+        "calls": 24460
+      },
+      "paths_dirname": {
+        "ms": 23.483617,
+        "calls": 24460
+      },
+      "samePath": {
+        "ms": 8.570767,
+        "calls": 24460
+      },
+      "scanner_validation": {
+        "ms": 104.349573,
+        "calls": 24460
+      },
+      "scanner_node_processing": {
+        "ms": 3.267272,
+        "calls": 24460
+      },
+      "yield_directories": {
+        "ms": 48.028754,
+        "calls": 461
+      },
+      "yield_entries": {
+        "ms": 9.817915,
+        "calls": 95
+      },
+      "scanner_aggregation": {
+        "ms": 24.075893,
+        "calls": 24461
+      },
+      "yield_aggregation": {
+        "ms": 4.15763,
+        "calls": 47
+      }
+    },
+    "worker": null,
+    "tree_digest": "cb4a29355c1a484b08a7b8996ad0341e676a5cf706327c510c23e95031a20f24"
+  },
+  {
+    "mode": "native_instrumented",
+    "run": 2,
+    "warmup": false,
+    "wall_ms": 911.008,
+    "profile": {
+      "source_identity": {
+        "ms": 6.028606,
+        "calls": 26910
+      },
+      "paths_normalize": {
+        "ms": 5.310913,
+        "calls": 24461
+      },
+      "paths_basename": {
+        "ms": 14.430252,
+        "calls": 24461
+      },
+      "pathKey": {
+        "ms": 4.981523,
+        "calls": 24461
+      },
+      "source_isCurrent": {
+        "ms": 1.630937,
+        "calls": 26909
+      },
+      "scanner_source_checks": {
+        "ms": 14.376864,
+        "calls": 26862
+      },
+      "paths_isAbsolute": {
+        "ms": 1.151471,
+        "calls": 24461
+      },
+      "source_stat": {
+        "ms": 192.879607,
+        "calls": 461
+      },
+      "native_spawn_worker_handoff": {
+        "ms": 467.105662,
+        "calls": 461
+      },
+      "native_worker": {
+        "ms": 325.832352,
+        "calls": 461
+      },
+      "source_listing": {
+        "ms": 478.182056,
+        "calls": 461
+      },
+      "isWithin": {
+        "ms": 12.418649,
+        "calls": 24460
+      },
+      "paths_dirname": {
+        "ms": 23.171191,
+        "calls": 24460
+      },
+      "samePath": {
+        "ms": 8.49311,
+        "calls": 24460
+      },
+      "scanner_validation": {
+        "ms": 100.645916,
+        "calls": 24460
+      },
+      "scanner_node_processing": {
+        "ms": 3.256441,
+        "calls": 24460
+      },
+      "yield_directories": {
+        "ms": 45.328906,
+        "calls": 461
+      },
+      "yield_entries": {
+        "ms": 10.146536,
+        "calls": 95
+      },
+      "scanner_aggregation": {
+        "ms": 25.155373,
+        "calls": 24461
+      },
+      "yield_aggregation": {
+        "ms": 4.808692,
+        "calls": 47
+      }
+    },
+    "worker": null,
+    "tree_digest": "cb4a29355c1a484b08a7b8996ad0341e676a5cf706327c510c23e95031a20f24"
+  },
+  {
+    "mode": "native_instrumented",
+    "run": 3,
+    "warmup": false,
+    "wall_ms": 953.298,
+    "profile": {
+      "source_identity": {
+        "ms": 6.32563,
+        "calls": 26910
+      },
+      "paths_normalize": {
+        "ms": 5.545762,
+        "calls": 24461
+      },
+      "paths_basename": {
+        "ms": 16.097364,
+        "calls": 24461
+      },
+      "pathKey": {
+        "ms": 5.371307,
+        "calls": 24461
+      },
+      "source_isCurrent": {
+        "ms": 1.556806,
+        "calls": 26909
+      },
+      "scanner_source_checks": {
+        "ms": 15.194605,
+        "calls": 26862
+      },
+      "paths_isAbsolute": {
+        "ms": 1.280825,
+        "calls": 24461
+      },
+      "source_stat": {
+        "ms": 215.978136,
+        "calls": 461
+      },
+      "native_spawn_worker_handoff": {
+        "ms": 486.82694,
+        "calls": 461
+      },
+      "native_worker": {
+        "ms": 349.931477,
+        "calls": 461
+      },
+      "source_listing": {
+        "ms": 498.125227,
+        "calls": 461
+      },
+      "isWithin": {
+        "ms": 12.77109,
+        "calls": 24460
+      },
+      "paths_dirname": {
+        "ms": 23.146918,
+        "calls": 24460
+      },
+      "samePath": {
+        "ms": 8.751982,
+        "calls": 24460
+      },
+      "scanner_validation": {
+        "ms": 104.348507,
+        "calls": 24460
+      },
+      "scanner_node_processing": {
+        "ms": 2.844579,
+        "calls": 24460
+      },
+      "yield_directories": {
+        "ms": 48.150151,
+        "calls": 461
+      },
+      "yield_entries": {
+        "ms": 9.919292,
+        "calls": 95
+      },
+      "scanner_aggregation": {
+        "ms": 23.328802,
+        "calls": 24461
+      },
+      "yield_aggregation": {
+        "ms": 4.405753,
+        "calls": 47
+      }
+    },
+    "worker": null,
+    "tree_digest": "cb4a29355c1a484b08a7b8996ad0341e676a5cf706327c510c23e95031a20f24"
+  },
+  {
+    "mode": "cached",
+    "run": 0,
+    "warmup": true,
+    "wall_ms": 269.994,
+    "profile": {
+      "source_identity": {
+        "ms": 7.36361,
+        "calls": 26910
+      },
+      "paths_normalize": {
+        "ms": 5.778672,
+        "calls": 24461
+      },
+      "paths_basename": {
+        "ms": 19.601778,
+        "calls": 24461
+      },
+      "pathKey": {
+        "ms": 5.913642,
+        "calls": 24461
+      },
+      "source_isCurrent": {
+        "ms": 2.852669,
+        "calls": 26909
+      },
+      "scanner_source_checks": {
+        "ms": 18.763401,
+        "calls": 26862
+      },
+      "paths_isAbsolute": {
+        "ms": 1.374813,
+        "calls": 24461
+      },
+      "source_stat": {
+        "ms": 6.802866,
+        "calls": 461
+      },
+      "source_listing": {
+        "ms": 4.464702,
+        "calls": 461
+      },
+      "isWithin": {
+        "ms": 12.880229,
+        "calls": 24460
+      },
+      "paths_dirname": {
+        "ms": 31.196342,
+        "calls": 24460
+      },
+      "samePath": {
+        "ms": 9.143566,
+        "calls": 24460
+      },
+      "scanner_validation": {
+        "ms": 126.58332,
+        "calls": 24460
+      },
+      "scanner_node_processing": {
+        "ms": 3.933285,
+        "calls": 24460
+      },
+      "yield_directories": {
+        "ms": 43.12622,
+        "calls": 461
+      },
+      "yield_entries": {
+        "ms": 6.431402,
+        "calls": 95
+      },
+      "scanner_aggregation": {
+        "ms": 18.581094,
+        "calls": 24461
+      },
+      "yield_aggregation": {
+        "ms": 3.124542,
+        "calls": 47
+      }
+    },
+    "worker": null,
+    "tree_digest": "cb4a29355c1a484b08a7b8996ad0341e676a5cf706327c510c23e95031a20f24"
+  },
+  {
+    "mode": "cached",
+    "run": 1,
+    "warmup": false,
+    "wall_ms": 222.944,
+    "profile": {
+      "source_identity": {
+        "ms": 5.934326,
+        "calls": 26910
+      },
+      "paths_normalize": {
+        "ms": 5.084964,
+        "calls": 24461
+      },
+      "paths_basename": {
+        "ms": 19.058766,
+        "calls": 24461
+      },
+      "pathKey": {
+        "ms": 6.841447,
+        "calls": 24461
+      },
+      "source_isCurrent": {
+        "ms": 2.095516,
+        "calls": 26909
+      },
+      "scanner_source_checks": {
+        "ms": 14.967752,
+        "calls": 26862
+      },
+      "paths_isAbsolute": {
+        "ms": 1.111464,
+        "calls": 24461
+      },
+      "source_stat": {
+        "ms": 5.655506,
+        "calls": 461
+      },
+      "source_listing": {
+        "ms": 3.72291,
+        "calls": 461
+      },
+      "isWithin": {
+        "ms": 12.260946,
+        "calls": 24460
+      },
+      "paths_dirname": {
+        "ms": 22.019662,
+        "calls": 24460
+      },
+      "samePath": {
+        "ms": 8.120336,
+        "calls": 24460
+      },
+      "scanner_validation": {
+        "ms": 111.350504,
+        "calls": 24460
+      },
+      "scanner_node_processing": {
+        "ms": 4.945701,
+        "calls": 24460
+      },
+      "yield_directories": {
+        "ms": 26.809303,
+        "calls": 461
+      },
+      "yield_entries": {
+        "ms": 5.332549,
+        "calls": 95
+      },
+      "scanner_aggregation": {
+        "ms": 17.127317,
+        "calls": 24461
+      },
+      "yield_aggregation": {
+        "ms": 2.72421,
+        "calls": 47
+      }
+    },
+    "worker": null,
+    "tree_digest": "cb4a29355c1a484b08a7b8996ad0341e676a5cf706327c510c23e95031a20f24"
+  },
+  {
+    "mode": "cached",
+    "run": 2,
+    "warmup": false,
+    "wall_ms": 241.373,
+    "profile": {
+      "source_identity": {
+        "ms": 5.169261,
+        "calls": 26910
+      },
+      "paths_normalize": {
+        "ms": 5.145687,
+        "calls": 24461
+      },
+      "paths_basename": {
+        "ms": 25.346944,
+        "calls": 24461
+      },
+      "pathKey": {
+        "ms": 5.103306,
+        "calls": 24461
+      },
+      "source_isCurrent": {
+        "ms": 2.054423,
+        "calls": 26909
+      },
+      "scanner_source_checks": {
+        "ms": 16.888497,
+        "calls": 26862
+      },
+      "paths_isAbsolute": {
+        "ms": 1.201149,
+        "calls": 24461
+      },
+      "source_stat": {
+        "ms": 5.907365,
+        "calls": 461
+      },
+      "source_listing": {
+        "ms": 3.784415,
+        "calls": 461
+      },
+      "isWithin": {
+        "ms": 12.435335,
+        "calls": 24460
+      },
+      "paths_dirname": {
+        "ms": 24.503962,
+        "calls": 24460
+      },
+      "samePath": {
+        "ms": 8.737038,
+        "calls": 24460
+      },
+      "scanner_validation": {
+        "ms": 114.939887,
+        "calls": 24460
+      },
+      "scanner_node_processing": {
+        "ms": 3.702515,
+        "calls": 24460
+      },
+      "yield_directories": {
+        "ms": 38.198498,
+        "calls": 461
+      },
+      "yield_entries": {
+        "ms": 5.423212,
+        "calls": 95
+      },
+      "scanner_aggregation": {
+        "ms": 14.98029,
+        "calls": 24461
+      },
+      "yield_aggregation": {
+        "ms": 2.672747,
+        "calls": 47
+      }
+    },
+    "worker": null,
+    "tree_digest": "cb4a29355c1a484b08a7b8996ad0341e676a5cf706327c510c23e95031a20f24"
+  },
+  {
+    "mode": "cached",
+    "run": 3,
+    "warmup": false,
+    "wall_ms": 237.618,
+    "profile": {
+      "source_identity": {
+        "ms": 5.286831,
+        "calls": 26910
+      },
+      "paths_normalize": {
+        "ms": 6.971466,
+        "calls": 24461
+      },
+      "paths_basename": {
+        "ms": 18.706707,
+        "calls": 24461
+      },
+      "pathKey": {
+        "ms": 4.969898,
+        "calls": 24461
+      },
+      "source_isCurrent": {
+        "ms": 2.016923,
+        "calls": 26909
+      },
+      "scanner_source_checks": {
+        "ms": 14.927001,
+        "calls": 26862
+      },
+      "paths_isAbsolute": {
+        "ms": 1.182089,
+        "calls": 24461
+      },
+      "source_stat": {
+        "ms": 5.586698,
+        "calls": 461
+      },
+      "source_listing": {
+        "ms": 3.722282,
+        "calls": 461
+      },
+      "isWithin": {
+        "ms": 12.571551,
+        "calls": 24460
+      },
+      "paths_dirname": {
+        "ms": 33.98425,
+        "calls": 24460
+      },
+      "samePath": {
+        "ms": 8.660828,
+        "calls": 24460
+      },
+      "scanner_validation": {
+        "ms": 120.01637,
+        "calls": 24460
+      },
+      "scanner_node_processing": {
+        "ms": 3.969695,
+        "calls": 24460
+      },
+      "yield_directories": {
+        "ms": 30.689681,
+        "calls": 461
+      },
+      "yield_entries": {
+        "ms": 5.102017,
+        "calls": 95
+      },
+      "scanner_aggregation": {
+        "ms": 20.816509,
+        "calls": 24461
+      },
+      "yield_aggregation": {
+        "ms": 2.751809,
+        "calls": 47
+      }
+    },
+    "worker": null,
+    "tree_digest": "cb4a29355c1a484b08a7b8996ad0341e676a5cf706327c510c23e95031a20f24"
+  },
+  {
+    "mode": "cached_cheap_identity",
+    "run": 0,
+    "warmup": true,
+    "wall_ms": 246.021,
+    "profile": {
+      "source_identity": {
+        "ms": 1.253932,
+        "calls": 26910
+      },
+      "paths_normalize": {
+        "ms": 5.677658,
+        "calls": 24461
+      },
+      "paths_basename": {
+        "ms": 17.819941,
+        "calls": 24461
+      },
+      "pathKey": {
+        "ms": 6.285135,
+        "calls": 24461
+      },
+      "source_isCurrent": {
+        "ms": 1.204517,
+        "calls": 26909
+      },
+      "scanner_source_checks": {
+        "ms": 9.764366,
+        "calls": 26862
+      },
+      "paths_isAbsolute": {
+        "ms": 1.39864,
+        "calls": 24461
+      },
+      "source_stat": {
+        "ms": 5.654047,
+        "calls": 461
+      },
+      "source_listing": {
+        "ms": 3.894887,
+        "calls": 461
+      },
+      "isWithin": {
+        "ms": 12.696695,
+        "calls": 24460
+      },
+      "paths_dirname": {
+        "ms": 24.753091,
+        "calls": 24460
+      },
+      "samePath": {
+        "ms": 8.625264,
+        "calls": 24460
+      },
+      "scanner_validation": {
+        "ms": 118.828917,
+        "calls": 24460
+      },
+      "scanner_node_processing": {
+        "ms": 20.169111,
+        "calls": 24460
+      },
+      "yield_directories": {
+        "ms": 26.7435,
+        "calls": 461
+      },
+      "yield_entries": {
+        "ms": 5.362743,
+        "calls": 95
+      },
+      "scanner_aggregation": {
+        "ms": 17.208999,
+        "calls": 24461
+      },
+      "yield_aggregation": {
+        "ms": 2.965525,
+        "calls": 47
+      }
+    },
+    "worker": null,
+    "tree_digest": "cb4a29355c1a484b08a7b8996ad0341e676a5cf706327c510c23e95031a20f24"
+  },
+  {
+    "mode": "cached_cheap_identity",
+    "run": 1,
+    "warmup": false,
+    "wall_ms": 239.868,
+    "profile": {
+      "source_identity": {
+        "ms": 1.329099,
+        "calls": 26910
+      },
+      "paths_normalize": {
+        "ms": 5.483381,
+        "calls": 24461
+      },
+      "paths_basename": {
+        "ms": 16.198041,
+        "calls": 24461
+      },
+      "pathKey": {
+        "ms": 5.069816,
+        "calls": 24461
+      },
+      "source_isCurrent": {
+        "ms": 1.213046,
+        "calls": 26909
+      },
+      "scanner_source_checks": {
+        "ms": 10.109566,
+        "calls": 26862
+      },
+      "paths_isAbsolute": {
+        "ms": 3.132741,
+        "calls": 24461
+      },
+      "source_stat": {
+        "ms": 7.086852,
+        "calls": 461
+      },
+      "source_listing": {
+        "ms": 4.151138,
+        "calls": 461
+      },
+      "isWithin": {
+        "ms": 13.242297,
+        "calls": 24460
+      },
+      "paths_dirname": {
+        "ms": 31.63327,
+        "calls": 24460
+      },
+      "samePath": {
+        "ms": 9.850195,
+        "calls": 24460
+      },
+      "scanner_validation": {
+        "ms": 121.335489,
+        "calls": 24460
+      },
+      "scanner_node_processing": {
+        "ms": 3.645252,
+        "calls": 24460
+      },
+      "yield_directories": {
+        "ms": 33.078783,
+        "calls": 461
+      },
+      "yield_entries": {
+        "ms": 5.510379,
+        "calls": 95
+      },
+      "scanner_aggregation": {
+        "ms": 19.370256,
+        "calls": 24461
+      },
+      "yield_aggregation": {
+        "ms": 3.149106,
+        "calls": 47
+      }
+    },
+    "worker": null,
+    "tree_digest": "cb4a29355c1a484b08a7b8996ad0341e676a5cf706327c510c23e95031a20f24"
+  },
+  {
+    "mode": "cached_cheap_identity",
+    "run": 2,
+    "warmup": false,
+    "wall_ms": 241.737,
+    "profile": {
+      "source_identity": {
+        "ms": 1.509069,
+        "calls": 26910
+      },
+      "paths_normalize": {
+        "ms": 5.386228,
+        "calls": 24461
+      },
+      "paths_basename": {
+        "ms": 15.979152,
+        "calls": 24461
+      },
+      "pathKey": {
+        "ms": 4.974257,
+        "calls": 24461
+      },
+      "source_isCurrent": {
+        "ms": 1.419934,
+        "calls": 26909
+      },
+      "scanner_source_checks": {
+        "ms": 9.856597,
+        "calls": 26862
+      },
+      "paths_isAbsolute": {
+        "ms": 1.249787,
+        "calls": 24461
+      },
+      "source_stat": {
+        "ms": 6.080203,
+        "calls": 461
+      },
+      "source_listing": {
+        "ms": 5.481419,
+        "calls": 461
+      },
+      "isWithin": {
+        "ms": 12.565952,
+        "calls": 24460
+      },
+      "paths_dirname": {
+        "ms": 25.810873,
+        "calls": 24460
+      },
+      "samePath": {
+        "ms": 8.655281,
+        "calls": 24460
+      },
+      "scanner_validation": {
+        "ms": 122.558136,
+        "calls": 24460
+      },
+      "scanner_node_processing": {
+        "ms": 3.793585,
+        "calls": 24460
+      },
+      "yield_directories": {
+        "ms": 28.826849,
+        "calls": 461
+      },
+      "yield_entries": {
+        "ms": 5.470312,
+        "calls": 95
+      },
+      "scanner_aggregation": {
+        "ms": 17.055093,
+        "calls": 24461
+      },
+      "yield_aggregation": {
+        "ms": 2.694592,
+        "calls": 47
+      }
+    },
+    "worker": null,
+    "tree_digest": "cb4a29355c1a484b08a7b8996ad0341e676a5cf706327c510c23e95031a20f24"
+  },
+  {
+    "mode": "cached_cheap_identity",
+    "run": 3,
+    "warmup": false,
+    "wall_ms": 232.862,
+    "profile": {
+      "source_identity": {
+        "ms": 1.370694,
+        "calls": 26910
+      },
+      "paths_normalize": {
+        "ms": 5.166428,
+        "calls": 24461
+      },
+      "paths_basename": {
+        "ms": 23.827807,
+        "calls": 24461
+      },
+      "pathKey": {
+        "ms": 4.855309,
+        "calls": 24461
+      },
+      "source_isCurrent": {
+        "ms": 1.235263,
+        "calls": 26909
+      },
+      "scanner_source_checks": {
+        "ms": 10.846766,
+        "calls": 26862
+      },
+      "paths_isAbsolute": {
+        "ms": 1.221272,
+        "calls": 24461
+      },
+      "source_stat": {
+        "ms": 5.907882,
+        "calls": 461
+      },
+      "source_listing": {
+        "ms": 4.100236,
+        "calls": 461
+      },
+      "isWithin": {
+        "ms": 12.581779,
+        "calls": 24460
+      },
+      "paths_dirname": {
+        "ms": 24.873408,
+        "calls": 24460
+      },
+      "samePath": {
+        "ms": 8.318084,
+        "calls": 24460
+      },
+      "scanner_validation": {
+        "ms": 119.939374,
+        "calls": 24460
+      },
+      "scanner_node_processing": {
+        "ms": 4.951295,
+        "calls": 24460
+      },
+      "yield_directories": {
+        "ms": 29.48962,
+        "calls": 461
+      },
+      "yield_entries": {
+        "ms": 5.04451,
+        "calls": 95
+      },
+      "scanner_aggregation": {
+        "ms": 17.874125,
+        "calls": 24461
+      },
+      "yield_aggregation": {
+        "ms": 3.83693,
+        "calls": 47
+      }
+    },
+    "worker": null,
+    "tree_digest": "cb4a29355c1a484b08a7b8996ad0341e676a5cf706327c510c23e95031a20f24"
+  },
+  {
+    "mode": "cached_cheap_path",
+    "run": 0,
+    "warmup": true,
+    "wall_ms": 212.919,
+    "profile": {
+      "source_identity": {
+        "ms": 1.2718,
+        "calls": 26910
+      },
+      "paths_normalize": {
+        "ms": 5.409332,
+        "calls": 24461
+      },
+      "paths_basename": {
+        "ms": 18.01427,
+        "calls": 24461
+      },
+      "pathKey": {
+        "ms": 1.082209,
+        "calls": 24461
+      },
+      "source_isCurrent": {
+        "ms": 1.366731,
+        "calls": 26909
+      },
+      "scanner_source_checks": {
+        "ms": 11.553994,
+        "calls": 26862
+      },
+      "paths_isAbsolute": {
+        "ms": 1.174973,
+        "calls": 24461
+      },
+      "source_stat": {
+        "ms": 6.221264,
+        "calls": 461
+      },
+      "source_listing": {
+        "ms": 4.081706,
+        "calls": 461
+      },
+      "isWithin": {
+        "ms": 4.943581,
+        "calls": 24460
+      },
+      "paths_dirname": {
+        "ms": 25.743264,
+        "calls": 24460
+      },
+      "samePath": {
+        "ms": 1.508344,
+        "calls": 24460
+      },
+      "scanner_validation": {
+        "ms": 96.186041,
+        "calls": 24460
+      },
+      "scanner_node_processing": {
+        "ms": 5.844418,
+        "calls": 24460
+      },
+      "yield_directories": {
+        "ms": 25.879083,
+        "calls": 461
+      },
+      "yield_entries": {
+        "ms": 5.480355,
+        "calls": 95
+      },
+      "scanner_aggregation": {
+        "ms": 17.457316,
+        "calls": 24461
+      },
+      "yield_aggregation": {
+        "ms": 3.22415,
+        "calls": 47
+      }
+    },
+    "worker": null,
+    "tree_digest": "cb4a29355c1a484b08a7b8996ad0341e676a5cf706327c510c23e95031a20f24"
+  },
+  {
+    "mode": "cached_cheap_path",
+    "run": 1,
+    "warmup": false,
+    "wall_ms": 191.039,
+    "profile": {
+      "source_identity": {
+        "ms": 1.310971,
+        "calls": 26910
+      },
+      "paths_normalize": {
+        "ms": 5.178839,
+        "calls": 24461
+      },
+      "paths_basename": {
+        "ms": 18.486915,
+        "calls": 24461
+      },
+      "pathKey": {
+        "ms": 1.07044,
+        "calls": 24461
+      },
+      "source_isCurrent": {
+        "ms": 1.31889,
+        "calls": 26909
+      },
+      "scanner_source_checks": {
+        "ms": 9.89929,
+        "calls": 26862
+      },
+      "paths_isAbsolute": {
+        "ms": 1.173683,
+        "calls": 24461
+      },
+      "source_stat": {
+        "ms": 6.196987,
+        "calls": 461
+      },
+      "source_listing": {
+        "ms": 3.797722,
+        "calls": 461
+      },
+      "isWithin": {
+        "ms": 4.959844,
+        "calls": 24460
+      },
+      "paths_dirname": {
+        "ms": 26.283407,
+        "calls": 24460
+      },
+      "samePath": {
+        "ms": 1.506942,
+        "calls": 24460
+      },
+      "scanner_validation": {
+        "ms": 88.841205,
+        "calls": 24460
+      },
+      "scanner_node_processing": {
+        "ms": 3.526831,
+        "calls": 24460
+      },
+      "yield_directories": {
+        "ms": 27.081029,
+        "calls": 461
+      },
+      "yield_entries": {
+        "ms": 4.791491,
+        "calls": 95
+      },
+      "scanner_aggregation": {
+        "ms": 13.930962,
+        "calls": 24461
+      },
+      "yield_aggregation": {
+        "ms": 2.473123,
+        "calls": 47
+      }
+    },
+    "worker": null,
+    "tree_digest": "cb4a29355c1a484b08a7b8996ad0341e676a5cf706327c510c23e95031a20f24"
+  },
+  {
+    "mode": "cached_cheap_path",
+    "run": 2,
+    "warmup": false,
+    "wall_ms": 197.399,
+    "profile": {
+      "source_identity": {
+        "ms": 1.321819,
+        "calls": 26910
+      },
+      "paths_normalize": {
+        "ms": 5.379075,
+        "calls": 24461
+      },
+      "paths_basename": {
+        "ms": 15.044616,
+        "calls": 24461
+      },
+      "pathKey": {
+        "ms": 1.07419,
+        "calls": 24461
+      },
+      "source_isCurrent": {
+        "ms": 1.197079,
+        "calls": 26909
+      },
+      "scanner_source_checks": {
+        "ms": 12.903513,
+        "calls": 26862
+      },
+      "paths_isAbsolute": {
+        "ms": 1.527486,
+        "calls": 24461
+      },
+      "source_stat": {
+        "ms": 5.479534,
+        "calls": 461
+      },
+      "source_listing": {
+        "ms": 3.93565,
+        "calls": 461
+      },
+      "isWithin": {
+        "ms": 7.589413,
+        "calls": 24460
+      },
+      "paths_dirname": {
+        "ms": 26.511472,
+        "calls": 24460
+      },
+      "samePath": {
+        "ms": 1.520291,
+        "calls": 24460
+      },
+      "scanner_validation": {
+        "ms": 89.970643,
+        "calls": 24460
+      },
+      "scanner_node_processing": {
+        "ms": 3.509057,
+        "calls": 24460
+      },
+      "yield_directories": {
+        "ms": 24.271446,
+        "calls": 461
+      },
+      "yield_entries": {
+        "ms": 4.92358,
+        "calls": 95
+      },
+      "scanner_aggregation": {
+        "ms": 14.509774,
+        "calls": 24461
+      },
+      "yield_aggregation": {
+        "ms": 2.745314,
+        "calls": 47
+      }
+    },
+    "worker": null,
+    "tree_digest": "cb4a29355c1a484b08a7b8996ad0341e676a5cf706327c510c23e95031a20f24"
+  },
+  {
+    "mode": "cached_cheap_path",
+    "run": 3,
+    "warmup": false,
+    "wall_ms": 196.801,
+    "profile": {
+      "source_identity": {
+        "ms": 1.325865,
+        "calls": 26910
+      },
+      "paths_normalize": {
+        "ms": 5.293583,
+        "calls": 24461
+      },
+      "paths_basename": {
+        "ms": 15.581068,
+        "calls": 24461
+      },
+      "pathKey": {
+        "ms": 1.059248,
+        "calls": 24461
+      },
+      "source_isCurrent": {
+        "ms": 1.192436,
+        "calls": 26909
+      },
+      "scanner_source_checks": {
+        "ms": 10.162158,
+        "calls": 26862
+      },
+      "paths_isAbsolute": {
+        "ms": 1.199574,
+        "calls": 24461
+      },
+      "source_stat": {
+        "ms": 5.401735,
+        "calls": 461
+      },
+      "source_listing": {
+        "ms": 3.762534,
+        "calls": 461
+      },
+      "isWithin": {
+        "ms": 4.637476,
+        "calls": 24460
+      },
+      "paths_dirname": {
+        "ms": 30.612324,
+        "calls": 24460
+      },
+      "samePath": {
+        "ms": 1.373836,
+        "calls": 24460
+      },
+      "scanner_validation": {
+        "ms": 94.67239,
+        "calls": 24460
+      },
+      "scanner_node_processing": {
+        "ms": 3.714495,
+        "calls": 24460
+      },
+      "yield_directories": {
+        "ms": 24.678768,
+        "calls": 461
+      },
+      "yield_entries": {
+        "ms": 5.823196,
+        "calls": 95
+      },
+      "scanner_aggregation": {
+        "ms": 16.179674,
+        "calls": 24461
+      },
+      "yield_aggregation": {
+        "ms": 2.705353,
+        "calls": 47
+      }
+    },
+    "worker": null,
+    "tree_digest": "cb4a29355c1a484b08a7b8996ad0341e676a5cf706327c510c23e95031a20f24"
+  },
+  {
+    "mode": "cached_cloud_guard",
+    "run": 0,
+    "warmup": true,
+    "wall_ms": 382.343,
+    "profile": {
+      "source_identity": {
+        "ms": 68.898409,
+        "calls": 26910
+      },
+      "paths_normalize": {
+        "ms": 5.589829,
+        "calls": 24461
+      },
+      "paths_basename": {
+        "ms": 15.130251,
+        "calls": 24461
+      },
+      "pathKey": {
+        "ms": 6.829267,
+        "calls": 24461
+      },
+      "source_isCurrent": {
+        "ms": 75.800274,
+        "calls": 26909
+      },
+      "scanner_source_checks": {
+        "ms": 153.173424,
+        "calls": 26862
+      },
+      "paths_isAbsolute": {
+        "ms": 1.29747,
+        "calls": 24461
+      },
+      "source_stat": {
+        "ms": 6.756091,
+        "calls": 461
+      },
+      "source_listing": {
+        "ms": 4.022368,
+        "calls": 461
+      },
+      "isWithin": {
+        "ms": 14.238636,
+        "calls": 24460
+      },
+      "paths_dirname": {
+        "ms": 32.573626,
+        "calls": 24460
+      },
+      "samePath": {
+        "ms": 10.670717,
+        "calls": 24460
+      },
+      "scanner_validation": {
+        "ms": 122.702747,
+        "calls": 24460
+      },
+      "scanner_node_processing": {
+        "ms": 3.469833,
+        "calls": 24460
+      },
+      "yield_directories": {
+        "ms": 28.656541,
+        "calls": 461
+      },
+      "yield_entries": {
+        "ms": 5.715991,
+        "calls": 95
+      },
+      "scanner_aggregation": {
+        "ms": 16.395528,
+        "calls": 24461
+      },
+      "yield_aggregation": {
+        "ms": 2.817399,
+        "calls": 47
+      }
+    },
+    "worker": null,
+    "tree_digest": "cb4a29355c1a484b08a7b8996ad0341e676a5cf706327c510c23e95031a20f24"
+  },
+  {
+    "mode": "cached_cloud_guard",
+    "run": 1,
+    "warmup": false,
+    "wall_ms": 351.661,
+    "profile": {
+      "source_identity": {
+        "ms": 58.780644,
+        "calls": 26910
+      },
+      "paths_normalize": {
+        "ms": 5.733434,
+        "calls": 24461
+      },
+      "paths_basename": {
+        "ms": 15.936838,
+        "calls": 24461
+      },
+      "pathKey": {
+        "ms": 5.933684,
+        "calls": 24461
+      },
+      "source_isCurrent": {
+        "ms": 62.036968,
+        "calls": 26909
+      },
+      "scanner_source_checks": {
+        "ms": 129.462308,
+        "calls": 26862
+      },
+      "paths_isAbsolute": {
+        "ms": 1.181411,
+        "calls": 24461
+      },
+      "source_stat": {
+        "ms": 6.567204,
+        "calls": 461
+      },
+      "source_listing": {
+        "ms": 6.391067,
+        "calls": 461
+      },
+      "isWithin": {
+        "ms": 13.600637,
+        "calls": 24460
+      },
+      "paths_dirname": {
+        "ms": 24.175072,
+        "calls": 24460
+      },
+      "samePath": {
+        "ms": 9.141969,
+        "calls": 24460
+      },
+      "scanner_validation": {
+        "ms": 114.693425,
+        "calls": 24460
+      },
+      "scanner_node_processing": {
+        "ms": 9.242446,
+        "calls": 24460
+      },
+      "yield_directories": {
+        "ms": 28.574138,
+        "calls": 461
+      },
+      "yield_entries": {
+        "ms": 6.400414,
+        "calls": 95
+      },
+      "scanner_aggregation": {
+        "ms": 15.314622,
+        "calls": 24461
+      },
+      "yield_aggregation": {
+        "ms": 2.569401,
+        "calls": 47
+      }
+    },
+    "worker": null,
+    "tree_digest": "cb4a29355c1a484b08a7b8996ad0341e676a5cf706327c510c23e95031a20f24"
+  },
+  {
+    "mode": "cached_cloud_guard",
+    "run": 2,
+    "warmup": false,
+    "wall_ms": 338.709,
+    "profile": {
+      "source_identity": {
+        "ms": 50.685018,
+        "calls": 26910
+      },
+      "paths_normalize": {
+        "ms": 5.474298,
+        "calls": 24461
+      },
+      "paths_basename": {
+        "ms": 16.673189,
+        "calls": 24461
+      },
+      "pathKey": {
+        "ms": 5.652433,
+        "calls": 24461
+      },
+      "source_isCurrent": {
+        "ms": 70.503845,
+        "calls": 26909
+      },
+      "scanner_source_checks": {
+        "ms": 129.025889,
+        "calls": 26862
+      },
+      "paths_isAbsolute": {
+        "ms": 1.179292,
+        "calls": 24461
+      },
+      "source_stat": {
+        "ms": 5.579844,
+        "calls": 461
+      },
+      "source_listing": {
+        "ms": 3.745685,
+        "calls": 461
+      },
+      "isWithin": {
+        "ms": 12.666905,
+        "calls": 24460
+      },
+      "paths_dirname": {
+        "ms": 23.233446,
+        "calls": 24460
+      },
+      "samePath": {
+        "ms": 8.915176,
+        "calls": 24460
+      },
+      "scanner_validation": {
+        "ms": 111.705862,
+        "calls": 24460
+      },
+      "scanner_node_processing": {
+        "ms": 3.493863,
+        "calls": 24460
+      },
+      "yield_directories": {
+        "ms": 25.038976,
+        "calls": 461
+      },
+      "yield_entries": {
+        "ms": 5.661994,
+        "calls": 95
+      },
+      "scanner_aggregation": {
+        "ms": 17.525958,
+        "calls": 24461
+      },
+      "yield_aggregation": {
+        "ms": 2.667421,
+        "calls": 47
+      }
+    },
+    "worker": null,
+    "tree_digest": "cb4a29355c1a484b08a7b8996ad0341e676a5cf706327c510c23e95031a20f24"
+  },
+  {
+    "mode": "cached_cloud_guard",
+    "run": 3,
+    "warmup": false,
+    "wall_ms": 344.397,
+    "profile": {
+      "source_identity": {
+        "ms": 55.724737,
+        "calls": 26910
+      },
+      "paths_normalize": {
+        "ms": 5.49272,
+        "calls": 24461
+      },
+      "paths_basename": {
+        "ms": 19.137814,
+        "calls": 24461
+      },
+      "pathKey": {
+        "ms": 6.03077,
+        "calls": 24461
+      },
+      "source_isCurrent": {
+        "ms": 59.839831,
+        "calls": 26909
+      },
+      "scanner_source_checks": {
+        "ms": 124.407818,
+        "calls": 26862
+      },
+      "paths_isAbsolute": {
+        "ms": 1.33963,
+        "calls": 24461
+      },
+      "source_stat": {
+        "ms": 6.007479,
+        "calls": 461
+      },
+      "source_listing": {
+        "ms": 3.943082,
+        "calls": 461
+      },
+      "isWithin": {
+        "ms": 18.428719,
+        "calls": 24460
+      },
+      "paths_dirname": {
+        "ms": 31.215816,
+        "calls": 24460
+      },
+      "samePath": {
+        "ms": 8.784046,
+        "calls": 24460
+      },
+      "scanner_validation": {
+        "ms": 123.551095,
+        "calls": 24460
+      },
+      "scanner_node_processing": {
+        "ms": 3.474073,
+        "calls": 24460
+      },
+      "yield_directories": {
+        "ms": 26.82679,
+        "calls": 461
+      },
+      "yield_entries": {
+        "ms": 5.18565,
+        "calls": 95
+      },
+      "scanner_aggregation": {
+        "ms": 16.822155,
+        "calls": 24461
+      },
+      "yield_aggregation": {
+        "ms": 2.669787,
+        "calls": 47
+      }
+    },
+    "worker": null,
+    "tree_digest": "cb4a29355c1a484b08a7b8996ad0341e676a5cf706327c510c23e95031a20f24"
+  },
+  {
+    "mode": "single_worker_read_only",
+    "run": 0,
+    "warmup": true,
+    "wall_ms": 326.311,
+    "profile": {},
+    "worker": {
+      "worker_ms": 324.41,
+      "files": 24000,
+      "folders": 460,
+      "bytes": 359116800,
+      "listings": 461
+    },
+    "tree_digest": null
+  },
+  {
+    "mode": "single_worker_read_only",
+    "run": 1,
+    "warmup": false,
+    "wall_ms": 300.352,
+    "profile": {},
+    "worker": {
+      "worker_ms": 299.77,
+      "files": 24000,
+      "folders": 460,
+      "bytes": 359116800,
+      "listings": 461
+    },
+    "tree_digest": null
+  },
+  {
+    "mode": "single_worker_read_only",
+    "run": 2,
+    "warmup": false,
+    "wall_ms": 324.964,
+    "profile": {},
+    "worker": {
+      "worker_ms": 324.459,
+      "files": 24000,
+      "folders": 460,
+      "bytes": 359116800,
+      "listings": 461
+    },
+    "tree_digest": null
+  },
+  {
+    "mode": "single_worker_read_only",
+    "run": 3,
+    "warmup": false,
+    "wall_ms": 293.339,
+    "profile": {},
+    "worker": {
+      "worker_ms": 292.781,
+      "files": 24000,
+      "folders": 460,
+      "bytes": 359116800,
+      "listings": 461
+    },
+    "tree_digest": null
+  },
+  {
+    "mode": "single_worker_full_scan",
+    "run": 0,
+    "warmup": true,
+    "wall_ms": 456.432,
+    "profile": {
+      "whole_worker_core": {
+        "ms": 435.213334,
+        "calls": 1
+      }
+    },
+    "worker": null,
+    "tree_digest": "cb4a29355c1a484b08a7b8996ad0341e676a5cf706327c510c23e95031a20f24"
+  },
+  {
+    "mode": "single_worker_full_scan",
+    "run": 1,
+    "warmup": false,
+    "wall_ms": 462.355,
+    "profile": {
+      "whole_worker_core": {
+        "ms": 446.514023,
+        "calls": 1
+      }
+    },
+    "worker": null,
+    "tree_digest": "cb4a29355c1a484b08a7b8996ad0341e676a5cf706327c510c23e95031a20f24"
+  },
+  {
+    "mode": "single_worker_full_scan",
+    "run": 2,
+    "warmup": false,
+    "wall_ms": 443.088,
+    "profile": {
+      "whole_worker_core": {
+        "ms": 426.512761,
+        "calls": 1
+      }
+    },
+    "worker": null,
+    "tree_digest": "cb4a29355c1a484b08a7b8996ad0341e676a5cf706327c510c23e95031a20f24"
+  },
+  {
+    "mode": "single_worker_full_scan",
+    "run": 3,
+    "warmup": false,
+    "wall_ms": 463.627,
+    "profile": {
+      "whole_worker_core": {
+        "ms": 443.548026,
+        "calls": 1
+      }
+    },
+    "worker": null,
+    "tree_digest": "cb4a29355c1a484b08a7b8996ad0341e676a5cf706327c510c23e95031a20f24"
+  }
+]

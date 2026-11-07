@@ -1,0 +1,98 @@
+{
+  "benchmark": "actual_production_storage_scan_service",
+  "runtimeMode": "aot",
+  "runtime": "3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
+  "os": "Linux 6.18.57 #1 SMP Tue Oct 20 21:56:04 UTC 2026",
+  "root": "scan-benchmark-fixture",
+  "files": 24000,
+  "foldersExcludingRoot": 460,
+  "logicalBytes": 359116800,
+  "filesSizeMtimeDigest": "95be37ac32d86031340e23be1ce52f590df954f35a57a367a7d1fa36827e0f0e",
+  "protocol": "One unmeasured warmup and 5 measured scans per variant. Exact repository scanner/native helper/models. Default scanner limits, yielding, path checks, immutable sorted aggregation, progress/cancel callbacks and awaited worker cleanup retained. Watch includes worker creation and shutdown. Independent full file path/size/microsecond-mtime plus all folder metadata/aggregate verification outside watch. Source adapter mirrors local identity/path semantics and normal stat checks; platform access-scope/plugin work is omitted and belongs to the separate genuine Flutter-backend benchmark.",
+  "build": {
+    "repositoryCommit": "dec6e90e83532612b326d5b7c7ff76c0ccfbd966",
+    "productionSourceSha256": {
+      "lib/services/storage_scan_service.dart": "98fa179f8d553a0cefd0b37dcdc6b677387ec2e7f8e8cc473488e125abf02400",
+      "lib/services/storage_scan_source.dart": "c62c9383b9a72e1ad0a0a929b1478bc5f151df006c96eadbf41dfcc6e8f5ae66",
+      "lib/services/storage_scan_native_io.dart": "c75a7815741f882428e7b60d087fde238900b0544bb1025fff64a025aed2fc6f",
+      "lib/models/storage_analysis.dart": "871aaa153166c7501116018a9cf361d72649e7e516c427d7403e6ad54cad97a0",
+      "lib/models/file_item.dart": "9b28464d5a0ad393b5350715fceef19f23a0afba6e721ee426ecca7025f5a3e3",
+      "lib/models/storage_reference.dart": "8ae6727928ed7245427c7df2eab14147e6f8acabfaf5c03271b5e5e87860d830"
+    },
+    "compileCommand": [
+      "dart",
+      "compile",
+      "exe",
+      "bin/production_probe.dart",
+      "-o",
+      "build/production_probe"
+    ],
+    "compileSeconds": 1.6511521749998792,
+    "compilationIncludedInScanTime": false,
+    "artifactBytes": 7014184
+  },
+  "results": [
+    {
+      "variant": "production_per_directory_guarded",
+      "warmupMilliseconds": 405.473,
+      "milliseconds": [
+        409.145,
+        413.856,
+        403.24,
+        389.029,
+        394.475
+      ],
+      "medianMilliseconds": 403.24,
+      "minimumMilliseconds": 389.029,
+      "maximumMilliseconds": 413.856,
+      "filesPerSecond": 59517.90496974506,
+      "filesSizeMtimeDigest": "95be37ac32d86031340e23be1ce52f590df954f35a57a367a7d1fa36827e0f0e",
+      "validated": true,
+      "sourceCallsPerScan": {
+        "statCalls": 1,
+        "listingCalls": 461,
+        "sessionWorkersStarted": 0,
+        "sessionWorkersClosed": 0
+      },
+      "progressCallbacks": [
+        5,
+        5,
+        5,
+        5,
+        5
+      ]
+    },
+    {
+      "variant": "production_persistent_guarded",
+      "warmupMilliseconds": 376.06,
+      "milliseconds": [
+        370.359,
+        390.577,
+        394.638,
+        384.623,
+        373.247
+      ],
+      "medianMilliseconds": 384.623,
+      "minimumMilliseconds": 370.359,
+      "maximumMilliseconds": 394.638,
+      "filesPerSecond": 62398.76450446281,
+      "filesSizeMtimeDigest": "95be37ac32d86031340e23be1ce52f590df954f35a57a367a7d1fa36827e0f0e",
+      "validated": true,
+      "sourceCallsPerScan": {
+        "statCalls": 1,
+        "listingCalls": 461,
+        "sessionWorkersStarted": 1,
+        "sessionWorkersClosed": 1
+      },
+      "progressCallbacks": [
+        5,
+        5,
+        5,
+        5,
+        5
+      ]
+    }
+  ],
+  "recordedOn": "2026-11-07",
+  "locationNote": "Synthetic fixture location replaced by its portable name; timing samples, source hashes and validation digests unchanged."
+}

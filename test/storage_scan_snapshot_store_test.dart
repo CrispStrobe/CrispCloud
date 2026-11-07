@@ -1,0 +1,407 @@
+import 'dart:convert';
+
+import 'package:crisp_cloud/models/file_item.dart';
+import 'package:crisp_cloud/models/storage_analysis.dart';
+import 'package:crisp_cloud/services/file_collection_storage.dart';
+import 'package:crisp_cloud/services/storage_scan_snapshot_store.dart';
+import 'package:crypto/crypto.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as p;
+
+StorageNode _file(String path, int? size, {bool link = false}) => StorageNode(
+  item: FileItem(
+    name: path.split('/').last,
+    path: path,
+    isFolder: false,
+    size: size,
+    isSymlink: link,
+    symlinkTarget: link ? '/elsewhere' : null,
+    updatedAt: DateTime.utc(2026, 11, 7),
+    uuid: 'inert-object-id',
+    metadata: {'accessToken': 'never-save-this'},
+    storageId: 'untrusted-item-scope',
+  ),
+  bytes: link ? 0 : size ?? 0,
+  fileCount: link ? 0 : 1,
+  folderCount: 0,
+  skippedLinkCount: link ? 1 : 0,
+  unknownSizeCount: !link && size == null ? 1 : 0,
+  isComplete: link || size != null,
+);
+
+StorageNode _folder(String path, List<StorageNode> children) => StorageNode(
+  item: FileItem(
+    name: path == '/' ? '/' : path.split('/').last,
+    path: path,
+    isFolder: true,
+  ),
+  children: children,
+  bytes: children.fold(0, (sum, child) => sum + child.bytes),
+  fileCount: children.fold(0, (sum, child) => sum + child.fileCount),
+  folderCount: children.fold(
+    0,
+    (sum, child) => sum + child.folderCount + (child.isFolder ? 1 : 0),
+  ),
+  unknownSizeCount: children.fold(
+    0,
+    (sum, child) => sum + child.unknownSizeCount,
+  ),
+  skippedLinkCount: children.fold(
+    0,
+    (sum, child) => sum + child.skippedLinkCount,
+  ),
+  isComplete: children.every((child) => child.isComplete),
+);
+
+StorageScanResult _result({int count = 1}) => StorageScanResult(
+  root: _folder('/資料', [
+    _folder('/資料/空', []),
+    for (var i = 0; i < count; i++) _file('/資料/文書-$i.txt', i),
+    _file('/資料/unknown', null),
+    _file('/資料/link', 999, link: true),
+  ]),
+  cancelled: true,
+  limited: false,
+  sourceChanged: false,
+  startedAt: DateTime.utc(2026, 11, 7, 8),
+  completedAt: DateTime.utc(2026, 11, 7, 9),
+  suppressedIssueCount: 1234,
+  issues: const [
+    StorageScanIssue(
+      path: '/資料/不明',
+      code: StorageScanIssueCode.unreadableDirectory,
+      message: 'Permission denied — 読み取り',
+    ),
+  ],
+);
+
+Future<StorageScanSnapshotSummary> _save(
+  StorageScanSnapshotStore store, {
+  int count = 1,
+}) => store.save(
+  result: _result(count: count),
+  storageId: 'opaque-source',
+  sourceLabel: 'Travel archive 📁',
+);
+
+class _FailingStorage extends MemoryFileCollectionStorage {
+  bool failPages = false;
+  bool throwAfterCommit = false;
+  bool blindAfterCommit = false;
+  bool blind = false;
+
+  @override
+  Future<void> write(String key, String value) async {
+    if (failPages && key.endsWith(':page:1')) throw StateError('Disk full');
+    await super.write(key, value);
+  }
+
+  @override
+  Future<String?> read(String key, {required int maxBytes}) async {
+    if (blind) throw StateError('Temporarily unavailable');
+    return super.read(key, maxBytes: maxBytes);
+  }
+
+  @override
+  Future<bool> compareAndSwap(
+    String key,
+    String? expected,
+    String value,
+  ) async {
+    final accepted = await super.compareAndSwap(key, expected, value);
+    if (accepted && throwAfterCommit) {
+      if (blindAfterCommit) blind = true;
+      throw StateError('Acknowledgement lost');
+    }
+    return accepted;
+  }
+}
+
+void main() {
+  test('round trip preserves Unicode, empty directories, zero/unknown sizes, links and diagnostics', () async {
+    final storage = MemoryFileCollectionStorage();
+    final store = StorageScanSnapshotStore(storage: storage);
+    final summary = await _save(store);
+    final snapshot = await store.load(summary.id);
+    expect(snapshot.summary.sourceLabel, 'Travel archive 📁');
+    expect(snapshot.summary.storageId, 'opaque-source');
+    expect(snapshot.result.root.path, '/資料');
+    expect(snapshot.result.root.children.map((node) => node.name), [
+      '空',
+      '文書-0.txt',
+      'unknown',
+      'link',
+    ]);
+    expect(snapshot.result.root.children.first.children, isEmpty);
+    expect(snapshot.result.root.children[1].item.size, 0);
+    expect(snapshot.result.root.children[2].item.size, isNull);
+    expect(snapshot.result.root.children[3].item.symlinkTarget, '/elsewhere');
+    expect(snapshot.result.root.unknownSizeCount, 1);
+    expect(snapshot.result.root.skippedLinkCount, 1);
+    expect(snapshot.result.cancelled, isTrue);
+    expect(snapshot.result.suppressedIssueCount, 1234);
+    expect(snapshot.result.issues.single.message, 'Permission denied — 読み取り');
+    expect(
+      snapshot.result.issues.single.code,
+      StorageScanIssueCode.unreadableDirectory,
+    );
+    expect(snapshot.result.startedAt, DateTime.utc(2026, 11, 7, 8));
+    expect(snapshot.result.root.children[1].item.metadata, isNull);
+    expect(snapshot.result.root.children[1].item.storageId, isNull);
+    expect(storage.values.values.join(), isNot(contains('never-save-this')));
+    expect(storage.values.values.join(), isNot(contains('accessToken')));
+    expect(
+      storage.values.values.join(),
+      isNot(contains('untrusted-item-scope')),
+    );
+  });
+
+  test('history reads only a small index; large snapshots use bounded independent pages', () async {
+    final storage = MemoryFileCollectionStorage();
+    final store = StorageScanSnapshotStore(storage: storage);
+    final saved = await _save(store, count: 1200);
+    final pageKeys = storage.values.keys
+        .where((key) => key.contains(':page:'))
+        .toList();
+    expect(pageKeys.length, 3);
+    for (final key in pageKeys) {
+      expect(
+        utf8.encode(storage.values[key]!).length,
+        lessThanOrEqualTo(StorageScanSnapshotStore.pageByteLimit),
+      );
+    }
+    storage.reads.clear();
+    expect((await store.list()).single.nodeCount, 1204);
+    expect(storage.reads, [StorageScanSnapshotStore.indexKey]);
+    final loaded = await store.load(saved.id);
+    expect(loaded.result.root.fileCount, 1201);
+    expect(loaded.result.root.bytes, 719400);
+  });
+
+  test(
+    'failed page write keeps the previous published scan readable',
+    () async {
+      final storage = _FailingStorage();
+      final store = StorageScanSnapshotStore(storage: storage);
+      final previous = await _save(store);
+      final committed = storage.values[StorageScanSnapshotStore.indexKey];
+      storage.failPages = true;
+      await expectLater(_save(store, count: 1200), throwsStateError);
+      expect(storage.values[StorageScanSnapshotStore.indexKey], committed);
+      expect((await store.load(previous.id)).result.root.fileCount, 2);
+      expect((await store.list()).length, 1);
+      expect(
+        storage.values.keys.where((key) => key.contains(':page:')).length,
+        1,
+      );
+    },
+  );
+
+  test('commit acknowledgement loss is resolved by readback without deleting published pages', () async {
+    final storage = _FailingStorage()..throwAfterCommit = true;
+    final store = StorageScanSnapshotStore(storage: storage);
+    final saved = await _save(store);
+    expect((await store.load(saved.id)).result.root.fileCount, 2);
+  });
+
+  test('unknown commit outcome retains candidate pages until storage can be read again', () async {
+    final storage = _FailingStorage()
+      ..throwAfterCommit = true
+      ..blindAfterCommit = true;
+    final store = StorageScanSnapshotStore(storage: storage);
+    await expectLater(_save(store), throwsStateError);
+    storage.blind = false;
+    final saved = (await store.list()).single;
+    expect((await store.load(saved.id)).result.root.fileCount, 2);
+  });
+
+  test(
+    'concurrent saves merge through CAS rather than losing either scan',
+    () async {
+      final storage = MemoryFileCollectionStorage();
+      final first = StorageScanSnapshotStore(storage: storage);
+      final second = StorageScanSnapshotStore(storage: storage);
+      await Future.wait([_save(first), _save(second, count: 2)]);
+      final history = await first.list();
+      expect(history.length, 2);
+      expect(history.map((entry) => entry.fileCount).toSet(), {2, 3});
+      for (final saved in history) {
+        await first.load(saved.id);
+      }
+    },
+  );
+
+  test('missing or modified pages are rejected instead of returning partial fake totals', () async {
+    final storage = MemoryFileCollectionStorage();
+    final store = StorageScanSnapshotStore(storage: storage);
+    final saved = await _save(store);
+    final key = storage.values.keys.singleWhere(
+      (key) => key.contains(':page:'),
+    );
+    final original = storage.values[key]!;
+    storage.values[key] = original.replaceFirst('文書', 'altered');
+    await expectLater(store.load(saved.id), throwsFormatException);
+    storage.values.remove(key);
+    await expectLater(store.load(saved.id), throwsFormatException);
+  });
+
+  test('unsupported versions and node-limit violations are rejected before page reads', () async {
+    final storage = MemoryFileCollectionStorage();
+    final store = StorageScanSnapshotStore(storage: storage);
+    final saved = await _save(store);
+    final original = storage.values[StorageScanSnapshotStore.indexKey]!;
+    final index = jsonDecode(original) as Map<String, dynamic>;
+    index['version'] = 99;
+    storage.values[StorageScanSnapshotStore.indexKey] = jsonEncode(index);
+    await expectLater(store.list(), throwsFormatException);
+    index['version'] = 1;
+    (index['snapshots'] as List).first['nodes'] = 200002;
+    storage.values[StorageScanSnapshotStore.indexKey] = jsonEncode(index);
+    storage.reads.clear();
+    await expectLater(store.load(saved.id), throwsFormatException);
+    expect(storage.reads, [StorageScanSnapshotStore.indexKey]);
+  });
+
+  test('valid page digest cannot disguise invalid parent references or numeric precision', () async {
+    final storage = MemoryFileCollectionStorage();
+    final store = StorageScanSnapshotStore(storage: storage);
+    final saved = await _save(store);
+    final pageKey = storage.values.keys.singleWhere(
+      (key) => key.contains(':page:'),
+    );
+    final manifestKey = storage.values.keys.singleWhere(
+      (key) => key.contains(':manifest'),
+    );
+    final page = jsonDecode(storage.values[pageKey]!) as Map<String, dynamic>;
+    final manifest =
+        jsonDecode(storage.values[manifestKey]!) as Map<String, dynamic>;
+    void commitCorruption() {
+      final raw = jsonEncode(page);
+      storage.values[pageKey] = raw;
+      final descriptor =
+          (manifest['pages'] as List).first as Map<String, dynamic>;
+      descriptor['bytes'] = utf8.encode(raw).length;
+      descriptor['sha256'] = sha256.convert(utf8.encode(raw)).toString();
+      storage.values[manifestKey] = jsonEncode(manifest);
+    }
+
+    final node = (page['nodes'] as List)[1] as Map<String, dynamic>;
+    node['parent'] = 1;
+    commitCorruption();
+    await expectLater(store.load(saved.id), throwsFormatException);
+    node['parent'] = 0;
+    node['bytes'] = '9007199254740992';
+    commitCorruption();
+    await expectLater(store.load(saved.id), throwsFormatException);
+    node['bytes'] = 0;
+    commitCorruption();
+    await expectLater(store.load(saved.id), throwsFormatException);
+  });
+
+  test(
+    'maximum exact byte count survives decimal encoding without rounding',
+    () async {
+      const bytes = 9007199254740991;
+      final store = StorageScanSnapshotStore(
+        storage: MemoryFileCollectionStorage(),
+      );
+      final result = StorageScanResult(
+        root: _folder('/', [_file('/huge', bytes)]),
+        cancelled: false,
+        limited: false,
+        sourceChanged: false,
+        startedAt: DateTime.utc(2026),
+        completedAt: DateTime.utc(2026),
+      );
+      final saved = await store.save(
+        result: result,
+        storageId: 'test',
+        sourceLabel: 'Exact',
+      );
+      expect((await store.load(saved.id)).result.root.bytes, bytes);
+    },
+  );
+
+  test(
+    'Windows roots and Unicode empty folders round trip on every host',
+    () async {
+      final store = StorageScanSnapshotStore(
+        storage: MemoryFileCollectionStorage(),
+      );
+      final root = StorageNode(
+        item: FileItem(name: '資料', path: r'C:\資料', isFolder: true),
+        children: [
+          StorageNode(
+            item: FileItem(name: '空', path: r'C:\資料\空', isFolder: true),
+            bytes: 0,
+            fileCount: 0,
+            folderCount: 0,
+          ),
+        ],
+        bytes: 0,
+        fileCount: 0,
+        folderCount: 1,
+      );
+      final result = StorageScanResult(
+        root: root,
+        cancelled: false,
+        limited: false,
+        sourceChanged: false,
+        startedAt: DateTime.utc(2026),
+        completedAt: DateTime.utc(2026),
+      );
+      final saved = await store.save(
+        result: result,
+        storageId: 'win',
+        sourceLabel: 'Windows',
+        pathStyle: p.Style.windows,
+      );
+      expect(
+        (await store.load(saved.id)).result.root.children.single.path,
+        r'C:\資料\空',
+      );
+    },
+  );
+
+  test('deleting one historical snapshot leaves another readable', () async {
+    final storage = MemoryFileCollectionStorage();
+    final store = StorageScanSnapshotStore(storage: storage);
+    final first = await _save(store);
+    final second = await _save(store, count: 2);
+    await store.delete(first.id);
+    expect((await store.list()).single.id, second.id);
+    expect((await store.load(second.id)).result.root.fileCount, 3);
+    await expectLater(store.load(first.id), throwsFormatException);
+  });
+
+  test(
+    'deletion acknowledges an already committed CAS after a lost reply',
+    () async {
+      final storage = _FailingStorage();
+      final store = StorageScanSnapshotStore(storage: storage);
+      final saved = await _save(store);
+      storage.throwAfterCommit = true;
+      await store.delete(saved.id);
+      expect(await store.list(), isEmpty);
+      expect(
+        storage.values.keys.where((key) => key.contains(':page:')),
+        isEmpty,
+      );
+    },
+  );
+
+  test('uncertain deletion outcome never removes candidate pages', () async {
+    final storage = _FailingStorage();
+    final store = StorageScanSnapshotStore(storage: storage);
+    final saved = await _save(store);
+    storage.throwAfterCommit = true;
+    storage.blindAfterCommit = true;
+    await expectLater(store.delete(saved.id), throwsStateError);
+    expect(
+      storage.values.keys.where((key) => key.contains(':page:')),
+      isNotEmpty,
+    );
+    storage.blind = false;
+    expect(await store.list(), isEmpty);
+  });
+}

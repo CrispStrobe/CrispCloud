@@ -61,6 +61,8 @@ import '../widgets/file_toolbar.dart' show showPanelFilterDialog;
 import '../widgets/file_context_menu.dart' show showPropertiesDialog;
 import '../widgets/status_bar.dart';
 import '../widgets/duplicate_finder_dialog.dart';
+import '../widgets/storage_analyzer_dialog.dart';
+import '../l10n/storage_analyzer_strings.dart';
 import '../widgets/key_management_dialog.dart';
 import '../widgets/multi_cloud_dialog.dart';
 import '../widgets/mount_dialog.dart';
@@ -802,6 +804,10 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             label: context.commanderTr("Find Duplicates"),
             onSelected: () => showDuplicateFinderDialog(context, ref),
           ),
+          PlatformMenuItem(
+            label: StorageAnalyzerStrings(context).text('title'),
+            onSelected: () => showStorageAnalyzerDialog(context, ref),
+          ),
         ],
       ),
       PlatformMenuItemGroup(
@@ -935,6 +941,10 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           PlatformMenuItem(
             label: context.commanderTr("Find Duplicates"),
             onSelected: () => showDuplicateFinderDialog(context, ref),
+          ),
+          PlatformMenuItem(
+            label: StorageAnalyzerStrings(context).text('title'),
+            onSelected: () => showStorageAnalyzerDialog(context, ref),
           ),
           PlatformMenuItem(
             label: context.commanderTr("Multi-Cloud..."),
@@ -2037,6 +2047,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             showMountDialog(context);
           case 'duplicates':
             showDuplicateFinderDialog(context, ref);
+          case 'storage_analyzer':
+            showStorageAnalyzerDialog(context, ref);
           case 'audit':
             showAuditLogDialog(context);
           case 'syslog':
@@ -2292,6 +2304,13 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         PopupMenuItem(
           value: 'duplicates',
           child: _overflowItem(Icons.find_replace, l.findDuplicates),
+        ),
+        PopupMenuItem(
+          value: 'storage_analyzer',
+          child: _overflowItem(
+            Icons.space_dashboard_outlined,
+            StorageAnalyzerStrings(context).text('title'),
+          ),
         ),
         PopupMenuItem(
           value: 'audit',

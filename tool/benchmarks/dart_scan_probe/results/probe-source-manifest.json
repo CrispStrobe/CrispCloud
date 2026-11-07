@@ -1,0 +1,12 @@
+{
+  "files": 24000,
+  "foldersExcludingRoot": 460,
+  "logicalBytes": 359116800,
+  "metadataDigest": "95be37ac32d86031340e23be1ce52f590df954f35a57a367a7d1fa36827e0f0e",
+  "sha256SourceFiles": {
+    "bin/thin_probe.dart": "abe37ad1c2b911b5cd08221dd1df4ec88ec06c37fb95dcd04823c9c5dec21763",
+    "bin/production_probe.dart": "233afbb97293c0f54ce72e1492bd0468348474a3f6e408fd43e48bc9b3513dad",
+    "generate_oracle.py": "5a046a197d82ca3e61e4585dd7c1f7049917912ea4727fa61d62431cbbebc86c"
+  },
+  "note": "Production source digests and exact repository commit are included in production-linux-aot.json; thin probe is standalone exploratory source."
+}

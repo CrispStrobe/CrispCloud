@@ -1,0 +1,38 @@
+{
+  "repository": "https://github.com/CrispStrobe/CrispCloud",
+  "sourceCommit": "ed79f873e1dc945641655689df94ebaac1dd6cb9",
+  "recordedAtUtc": "2026-11-07",
+  "runtime": "Flutter 3.47.8 / Dart 3.13.7, flutter test (JIT)",
+  "platform": "Linux x86_64, Debian 13.6, kernel 6.18.57",
+  "cpu": "AMD EPYC 9V74 80-Core Processor (shared execution environment)",
+  "fixture": {
+    "files": 24000,
+    "foldersExcludingRoot": 460,
+    "logicalBytes": 359116800,
+    "emptyFolders": 20,
+    "generator": "tool/create_storage_scan_fixture.py",
+    "contents": "sparse files, ASCII names, no links"
+  },
+  "protocol": {
+    "warmupRunsPerMode": 1,
+    "timedRunsPerMode": 3,
+    "cache": "warm filesystem cache",
+    "concurrency": "serialized against other benchmark/compiler jobs",
+    "includesStartup": false,
+    "includesFixtureCreation": false,
+    "includesResultDigestValidation": false
+  },
+  "fidelity": {
+    "fullScanModes": "match baseline full absolute-path, folder/file, byte/count/unknown/link/completeness digest",
+    "digestIncludesModificationTime": false,
+    "readOnlyMode": "checks only aggregate file/folder/logical-byte counts; not a full analyzed tree"
+  },
+  "portableHarnessChanges": "Imports, fixture/output paths, comments, lint annotations, braces, and formatting were made portable/lint-clean; the measured algorithm is unchanged and recorded results were not regenerated.",
+  "originalHarnessSha256": {
+    "profile_scan_test.dart": "b9b00d0adcd589e6eb0e0f9f3ad6b3b1c562b283f1d5ec5a51b91d26b3339240",
+    "profiled_scan_service.dart": "93066f309a18e8ec42efab8711ad080eb42ace86408dac2d31e6c6d12440379d",
+    "profiled_native_read.dart": "1b62d386d5159444913871afb2d3c0589f260eb056f669e632bfa0eb8e420a83",
+    "scan_profile.dart": "32aecead5ba56df9b50e08cf490aeb230a4c8fa5e441e02d6c418610732e3587"
+  },
+  "rawResultsSha256": "cae6a4d5c0f40bbdbf31172bd0926cd94af8b4ade486129705fb06c36fc25fb8"
+}

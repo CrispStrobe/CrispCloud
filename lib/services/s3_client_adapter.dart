@@ -1282,6 +1282,8 @@ class S3ClientAdapter extends CloudStorageClient
     final files = <Map<String, dynamic>>[];
 
     String? continuationToken;
+    final seenContinuationTokens = <String>{};
+    var incompleteListing = false;
 
     do {
       final params = <String, String>{
@@ -1376,13 +1378,25 @@ class S3ClientAdapter extends CloudStorageClient
             .findAllElements('NextContinuationToken')
             .firstOrNull;
         continuationToken = tokenEl?.innerText;
-        if (continuationToken == null) break;
+        if (continuationToken == null ||
+            continuationToken.trim().isEmpty ||
+            !seenContinuationTokens.add(continuationToken)) {
+          // Preserve the rows already received, but do not let callers mistake
+          // a broken/truncated S3 response for a complete directory census.
+          // Repeated tokens must not trap a metadata scan in an endless loop.
+          incompleteListing = true;
+          break;
+        }
       } else {
         continuationToken = null;
       }
     } while (continuationToken != null);
 
-    return {'folders': folders, 'files': files};
+    return {
+      'folders': folders,
+      'files': files,
+      if (incompleteListing) 'isTruncated': true,
+    };
   }
 
   @override
