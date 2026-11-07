@@ -117,15 +117,14 @@ class _ScopedTerminalConnection
   @override
   Future<void> resize(int columns, int rows) => inner.resize(columns, rows);
   @override
-  Future<void> close() => _closeFuture ??= _close();
-
-  Future<void> _close() async {
-    try {
-      await inner.close();
-    } finally {
-      await _release();
-    }
-  }
+  Future<void> close() => _closeFuture ??= Future<void>.sync(inner.close)
+      .then((_) => _release())
+      .onError((Object error, StackTrace stack) {
+        // Unconfirmed native shutdown must retain the grant. A later explicit
+        // close can retry; a settled exit also releases through _waitForExit.
+        _closeFuture = null;
+        Error.throwWithStackTrace(error, stack);
+      });
 }
 
 Future<TerminalConnection> openLocalTerminal(

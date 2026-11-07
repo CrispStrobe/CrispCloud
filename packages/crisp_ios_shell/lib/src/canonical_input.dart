@@ -24,6 +24,11 @@ class CanonicalInput {
     for (final character in input.characters) {
       if (_escape.isNotEmpty) {
         _escape += character;
+        if (_escape.length > 32) {
+          _escape = '';
+          result.add(const InputAction('echo', '\x07'));
+          continue;
+        }
         if (_escape == '\x1b[' || _escape == '\x1bO') continue;
         if (RegExp(r'^\x1b\[[0-9;]*$').hasMatch(_escape)) continue;
         _handleEscape(_escape, result);
@@ -44,7 +49,8 @@ class CanonicalInput {
         case '\n':
         case '\r\n':
           final value = _line.join();
-          if (value.isNotEmpty && (_history.isEmpty || _history.last != value)) {
+          if (value.isNotEmpty &&
+              (_history.isEmpty || _history.last != value)) {
             _history.add(value);
             if (_history.length > 100) _history.removeAt(0);
           }
@@ -128,8 +134,10 @@ class CanonicalInput {
       case '\x1b[A':
         if (_history.isNotEmpty) {
           if (_historyIndex == null) _draft = _line.join();
-          _historyIndex = ((_historyIndex ?? _history.length) - 1)
-              .clamp(0, _history.length - 1);
+          _historyIndex = ((_historyIndex ?? _history.length) - 1).clamp(
+            0,
+            _history.length - 1,
+          );
           _replace(_history[_historyIndex!], actions);
         }
       case '\x1b[B':
@@ -166,12 +174,16 @@ class CanonicalInput {
 
   void _move(int index, List<InputAction> actions) {
     final next = index.clamp(0, _line.length);
-    final width = _length(_line.sublist(
-      next < _cursor ? next : _cursor,
-      next > _cursor ? next : _cursor,
-    ));
+    final width = _length(
+      _line.sublist(
+        next < _cursor ? next : _cursor,
+        next > _cursor ? next : _cursor,
+      ),
+    );
     if (width != 0) {
-      actions.add(InputAction('echo', '\x1b[$width${next < _cursor ? 'D' : 'C'}'));
+      actions.add(
+        InputAction('echo', '\x1b[$width${next < _cursor ? 'D' : 'C'}'),
+      );
     }
     _cursor = next;
   }

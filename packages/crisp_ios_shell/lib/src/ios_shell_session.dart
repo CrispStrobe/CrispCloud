@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -24,11 +23,14 @@ class IosShellSession {
         return close();
       },
     );
-    _decoder = const Utf8Decoder(allowMalformed: true)
-        .startChunkedConversion(_TextSink(_emitNative));
+    _decoder = const Utf8Decoder(
+      allowMalformed: true,
+    ).startChunkedConversion(_TextSink(_emitNative));
     // Exit may fail before a UI has attached its observer. Preserve that error
     // for callers while preventing an unhandled asynchronous error race.
-    unawaited(_exit.future.then<void>((_) {}, onError: (Object _, StackTrace __) {}));
+    unawaited(
+      _exit.future.then<void>((_) {}, onError: (Object _, StackTrace __) {}),
+    );
   }
 
   static const _defaultChannel = MethodChannel('crisp_ios_shell/control');
@@ -40,6 +42,7 @@ class IosShellSession {
   late final ByteConversionSink _decoder;
   Future<void>? _pump;
   Future<void>? _close;
+  Future<void>? _cleanupRequest;
   Future<void> _writeTail = Future.value();
   Completer<void>? _resumeWaiter;
   bool _paused = false;
@@ -47,6 +50,10 @@ class IosShellSession {
   bool _discard = false;
   bool _ended = false;
   bool _previousCr = false;
+  bool _cleanupAcknowledged = false;
+  bool _failureReported = false;
+  Object? _pendingFailure;
+  StackTrace? _pendingStack;
 
   /// Starts Dash in an existing absolute directory. Native errors are explicit:
   /// `session_busy`, `invalid_directory`, `engine_error`, or `invalid_arguments`.
@@ -56,9 +63,13 @@ class IosShellSession {
     int rows = 24,
     @visibleForTesting MethodChannel channel = _defaultChannel,
   }) async {
-    if (!workingDirectory.startsWith('/') || workingDirectory.contains('\x00')) {
-      throw ArgumentError.value(workingDirectory, 'workingDirectory',
-          'An absolute directory without NUL is required');
+    if (!workingDirectory.startsWith('/') ||
+        workingDirectory.contains('\x00')) {
+      throw ArgumentError.value(
+        workingDirectory,
+        'workingDirectory',
+        'An absolute directory without NUL is required',
+      );
     }
     _validateSize(columns, rows);
     final reply = await channel.invokeMapMethod<String, Object?>('start', {
@@ -68,7 +79,9 @@ class IosShellSession {
     });
     final id = reply?['sessionId'];
     if (id is! String || id.isEmpty) {
-      throw const FormatException('Native shell returned no session identifier');
+      throw const FormatException(
+        'Native shell returned no session identifier',
+      );
     }
     return IosShellSession._(channel, id);
   }
@@ -91,7 +104,9 @@ class IosShellSession {
           case 'echo':
             _emit(action.text);
           case 'write':
-            await _invoke('write', {'data': Uint8List.fromList(utf8.encode(action.text))});
+            await _invoke('write', {
+              'data': Uint8List.fromList(utf8.encode(action.text)),
+            });
           case 'interrupt':
             await interrupt();
           case 'eof':
@@ -125,25 +140,70 @@ class IosShellSession {
   /// Idempotently cancels the command tree, releases native resources, and drains
   /// remaining output. Closing a paused/unlistened stream discards its tail so
   /// resource cleanup cannot depend on a subscriber resuming.
-  Future<void> close() => _close ??= _closeSession();
+  ///
+  /// If the native channel cannot acknowledge cleanup, this throws
+  /// `cleanup_unconfirmed`. [exitCode] stays pending so the caller retains any
+  /// security-scoped grant; a subsequent [close] retries the acknowledgement.
+  Future<void> close() {
+    if (_ended) return Future.value();
+    final existing = _close;
+    if (existing != null) return existing;
+    final operation = _closeSession();
+    _close = operation;
+    unawaited(
+      operation.then<void>(
+        (_) {},
+        onError: (Object _, StackTrace __) {
+          if (!_cleanupAcknowledged && identical(_close, operation)) {
+            _close = null;
+          }
+        },
+      ),
+    );
+    return operation;
+  }
 
   Future<void> _closeSession() async {
     if (_ended) return;
     _closing = true;
     if (_paused || !_controller.hasListener) _discard = true;
     _resume();
-    final cancellation = _invoke('close');
-    _startPump();
     try {
-      await cancellation;
-    } catch (error, stack) {
-      _fail(error, stack);
+      await _acknowledgeCleanup();
+    } catch (error) {
+      throw PlatformException(
+        code: 'cleanup_unconfirmed',
+        message:
+            'Native shell cleanup could not be acknowledged. Retry closing the session.',
+        details: error.toString(),
+      );
     }
+    if (_pendingFailure != null) {
+      _finishFailure();
+      return;
+    }
+    _startPump();
     await _exit.future;
   }
 
-  Future<void> _invoke(String method, [Map<String, Object?> fields = const {}]) =>
-      _channel.invokeMethod<void>(method, {'sessionId': _id, ...fields});
+  Future<void> _acknowledgeCleanup() async {
+    if (_cleanupAcknowledged) return;
+    final existing = _cleanupRequest;
+    if (existing != null) return existing;
+    final request = _invoke('close');
+    _cleanupRequest = request;
+    try {
+      await request;
+      _cleanupAcknowledged = true;
+    } finally {
+      _cleanupRequest = null;
+    }
+  }
+
+  Future<void> _invoke(
+    String method, [
+    Map<String, Object?> fields = const {},
+  ]) => _channel.invokeMethod<void>(method, {'sessionId': _id, ...fields});
 
   void _startPump() {
     _pump ??= _readLoop();
@@ -163,14 +223,28 @@ class IosShellSession {
           await _resumeWaiter!.future;
           continue;
         }
-        final reply = await _channel.invokeMapMethod<String, Object?>('read', {'sessionId': _id});
-        if (reply == null) throw const FormatException('Native shell returned no read result');
+        final reply = await _channel.invokeMapMethod<String, Object?>('read', {
+          'sessionId': _id,
+        });
+        if (_ended) return;
+        if (reply == null) {
+          throw const FormatException('Native shell returned no read result');
+        }
         final data = reply['data'];
-        if (data is! Uint8List) throw const FormatException('Native shell returned invalid output');
+        if (data is! Uint8List) {
+          throw const FormatException('Native shell returned invalid output');
+        }
         if (data.isNotEmpty) _decoder.add(data);
         final status = reply['exitCode'];
         if (status != null) {
-          if (status is! int) throw const FormatException('Native shell returned invalid exit code');
+          if (status is! int) {
+            throw const FormatException(
+              'Native shell returned invalid exit code',
+            );
+          }
+          // Native read only includes exitCode after all commands and the output
+          // reader have finished. This is also an acknowledgement of cleanup.
+          _cleanupAcknowledged = true;
           _decoder.close();
           _ended = true;
           if (!_exit.isCompleted) _exit.complete(status);
@@ -178,12 +252,21 @@ class IosShellSession {
         }
       }
     } catch (error, stack) {
-      _fail(error, stack);
-      // A failed transport must still attempt cancellation; never hide the
-      // original error or keep the native singleton reserved indefinitely.
+      _pendingFailure ??= error;
+      _pendingStack ??= stack;
+      _closing = true;
+      _resume();
+      // A scope lease must outlive actual native cleanup, even when decoding or
+      // a platform response fails. Do not publish a failed exit prematurely.
       try {
-        await _invoke('close');
-      } catch (_) {}
+        await _acknowledgeCleanup();
+        _finishFailure();
+      } catch (_) {
+        // Keep exitCode pending. A later close can retry; native lifecycle
+        // cancellation remains a backstop if the Flutter engine detaches.
+        _reportFailure();
+        _pump = null;
+      }
     }
   }
 
@@ -201,11 +284,20 @@ class IosShellSession {
     if (!_ended && !_discard && text.isNotEmpty) _controller.add(text);
   }
 
-  void _fail(Object error, StackTrace stack) {
+  void _reportFailure() {
+    if (_failureReported || _pendingFailure == null) return;
+    _failureReported = true;
+    if (!_discard) _controller.addError(_pendingFailure!, _pendingStack);
+  }
+
+  void _finishFailure() {
     if (_ended) return;
+    assert(_cleanupAcknowledged);
+    _reportFailure();
     _ended = true;
-    if (!_discard) _controller.addError(error, stack);
-    if (!_exit.isCompleted) _exit.completeError(error, stack);
+    if (!_exit.isCompleted) {
+      _exit.completeError(_pendingFailure!, _pendingStack);
+    }
     _resume();
     unawaited(_controller.close());
   }

@@ -116,11 +116,15 @@ def prepare_sources(manifest: dict) -> dict[str, Path]:
         result[name] = destination
     # The pinned Dash archive has one absolute symlink to its author's automake.
     # Omit that specific build-only link and substitute the reviewed exact file.
-    helper = PACKAGE / "tool/automake-missing"
-    if sha256(helper) != manifest["build_helpers"]["automake-missing"]["sha256"]:
-        raise RuntimeError("Vendored automake support script digest mismatch")
-    shutil.copy2(helper, result["dash"] / "missing")
-    (result["dash"] / "missing").chmod(0o755)
+    # The archive also omits compile/install-sh/depcomp required by its generated
+    # configure/Makefile.in files. Vendor the matching immutable automake version.
+    for filename, record in manifest["build_helpers"].items():
+        helper = PACKAGE / "tool" / filename
+        if sha256(helper) != record["sha256"]:
+            raise RuntimeError(f"Vendored automake support script digest mismatch: {filename}")
+        destination = result["dash"] / filename.removeprefix("automake-")
+        shutil.copy2(helper, destination)
+        destination.chmod(0o755)
     # Dash and the runtime must use exactly the same stream/getopt/exec API.
     shutil.copy2(result["ios_system"] / "ios_error.h", result["dash"] / "ios_error.h")
     return result
@@ -157,6 +161,25 @@ def source_notices(sources: dict[str, Path]) -> str:
                 for comment in re.findall(r"/\*.*?\*/", content, re.S):
                     if re.search(r"copyright|redistribution|general public license|permission is hereby", comment, re.I):
                         groups.setdefault(comment.strip(), []).append(relative)
+    # These pinned build-only shell helpers carry licenses/exceptions in '#'
+    # headers rather than C comments. Retain those conditions in the aggregate
+    # notices as well as in each redistributed source file.
+    helpers = json.loads(MANIFEST.read_text())["build_helpers"]
+    for filename in sorted(helpers):
+        header = []
+        for line in (PACKAGE / "tool" / filename).read_text().splitlines():
+            if line.startswith("#!") or line.startswith("scriptversion="):
+                continue
+            if line.startswith("#"):
+                header.append(line[1:].removeprefix(" "))
+            elif not line.strip():
+                header.append("")
+            else:
+                break
+        notice = "\n".join(header).strip()
+        if not notice or "Copyright" not in notice:
+            raise RuntimeError(f"Missing vendored build-helper notice: {filename}")
+        groups.setdefault(notice, []).append(f"tool/{filename}")
     for notice, origins in sorted(groups.items(), key=lambda pair: pair[1][0]):
         sections.append("Sources: " + ", ".join(sorted(set(origins))) + "\n\n" + notice)
     own = (PACKAGE / "licenses/CrispCloud-AGPL-3.0.txt").read_text()
@@ -166,6 +189,8 @@ def source_notices(sources: dict[str, Path]) -> str:
         "CrispCloud integration code is licensed under AGPL-3.0. Third-party components retain\n"
         "their own terms below. Dash COPYING explicitly identifies GPL-2.0-or-later material\n"
         "in the output of mksignames.c; do not describe the entire binary as BSD-only.\n"
+        "Pinned Automake build helpers retain their GPL-2.0-or-later distribution exception\n"
+        "and X Consortium notices below; these scripts are corresponding build source.\n"
         "Exact corresponding source, patches and reproducible build instructions: tool/sources.json,\n"
         "patches/, tool/prepare.py and UPSTREAM.md in packages/crisp_ios_shell at\n"
         "https://github.com/CrispStrobe/CrispCloud\n\n"
@@ -269,6 +294,26 @@ def build_dash(source: Path, products: dict[str, Path], manifest: dict) -> None:
             (framework / "Modules/module.modulemap").write_text(f'framework module {name} {{\n  umbrella header "{name}.h"\n  export *\n}}\n')
 
 
+def validate_command_symbols(products: dict[str, Path], manifest: dict) -> None:
+    """Fail before packaging if a command's actual image cannot export its entry point."""
+    commands = plistlib.loads((PACKAGE / "ios/Resources/commands.plist").read_bytes())
+    expected: dict[str, set[str]] = {name: {"dash_main"} for name in manifest["dash_variants"]}
+    for library, symbol, _, _ in commands.values():
+        name = "ios_system" if library == "SELF" else Path(library).name
+        expected.setdefault(name, set()).add(symbol)
+    for sdk, folder in products.items():
+        architectures = ("arm64", "x86_64") if sdk == "iphonesimulator" else ("arm64",)
+        for name, symbols in sorted(expected.items()):
+            binary = folder / f"{name}.framework" / name
+            for architecture in architectures:
+                listing = subprocess.check_output(
+                    ["xcrun", "nm", "-arch", architecture, "-gU", str(binary)], text=True)
+                exported = {line.split()[-1] for line in listing.splitlines() if line.split()}
+                missing = {symbol for symbol in symbols if f"_{symbol}" not in exported}
+                if missing:
+                    raise RuntimeError(f"{sdk}/{architecture}/{name} is missing command exports: {', '.join(sorted(missing))}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--verify-only", action="store_true", help="verify/extract/patch sources and refresh notices without Xcode")
@@ -299,6 +344,7 @@ def main() -> None:
         return
     products = build_runtime(sources["ios_system"], manifest)
     build_dash(sources["dash"], products, manifest)
+    validate_command_symbols(products, manifest)
     with tempfile.TemporaryDirectory(prefix="frameworks-", dir=BUILD) as staging_name:
         staging = Path(staging_name)
         for name in manifest["targets"] + manifest["dash_variants"]:

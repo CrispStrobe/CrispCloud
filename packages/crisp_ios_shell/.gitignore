@@ -5,3 +5,6 @@ build/
 .build/
 ios/Frameworks/
 ios/Resources/BuildProvenance.json
+
+__pycache__/
+coverage/

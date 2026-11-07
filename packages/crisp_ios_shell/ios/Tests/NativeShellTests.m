@@ -2,11 +2,19 @@
 #import "CISShellSession.h"
 #import "CISShellBridge.h"
 #import <signal.h>
+#import <stdio.h>
+#import <stdlib.h>
 #import <unistd.h>
 
 static NSURL *CommandsURL, *FrameworksURL;
 static NSString *TestDirectory;
 static NSUInteger Checks;
+static volatile sig_atomic_t WindowSignals;
+
+static void WindowSignal(int signalNumber) {
+  (void)signalNumber;
+  WindowSignals++;
+}
 
 static void Require(BOOL condition, NSString *message) {
   Checks++;
@@ -112,6 +120,20 @@ static void TestValidation(void) {
   [reserved sendEOF];
   [reserved waitUntilClosed];
   Require(![reserved writeData:[NSData data] error:&error], @"Write after close is rejected");
+
+  NSString *vanishing = [TestDirectory stringByAppendingPathComponent:@"vanishing"];
+  Require([NSFileManager.defaultManager createDirectoryAtPath:vanishing withIntermediateDirectories:NO attributes:nil error:nil], @"Create disappearing directory");
+  CISShellSession *removed = [CISShellSession sessionWithDirectory:vanishing columns:80 rows:24 commandsURL:CommandsURL frameworksURL:FrameworksURL error:&error];
+  Require(removed != nil, @"Reserve session before directory removal");
+  [NSFileManager.defaultManager removeItemAtPath:vanishing error:nil];
+  dispatch_semaphore_t failed = dispatch_semaphore_create(0);
+  __block NSError *directoryError;
+  [removed launchWithCompletion:^(NSError *failure) { directoryError = failure; dispatch_semaphore_signal(failed); }];
+  Wait(failed, @"directory removed during startup");
+  Require([directoryError.userInfo[@"code"] isEqual:@"invalid_directory"], @"Disappearing directory cannot fall back to another cwd");
+  [removed waitUntilClosed];
+  Drain(removed, nil);
+  Require(!CISShellSession.engineInUse, @"Directory failure releases singleton");
 }
 
 static void TestRealShell(void) {
@@ -125,6 +147,8 @@ static void TestRealShell(void) {
   output = TextThrough(session, @"__PIPE__\n");
   Has(output, @"BETA\n", @"Native pipeline");
   Has(output, @"nested space 漢字", @"Unicode cwd");
+  Send(session, @"while :; do printf x; done | head -c 1; printf '__EARLY__\\n'\n");
+  Has(TextThrough(session, @"__EARLY__\n"), @"x__EARLY__", @"Early pipeline reader cannot signal the host");
   NSString *created = [TestDirectory stringByAppendingPathComponent:@"nested space 漢字/hello world.txt"];
   Require([[NSString stringWithContentsOfFile:created encoding:NSUTF8StringEncoding error:nil] isEqual:@"alpha\nbeta\n"], @"Redirection creates real file");
   Send(session, @"ls 'does-not-exist' 2> errors.txt; if [ -s errors.txt ]; then printf 'stderr-captured\\n'; fi; printf '__REDIRECT__\\n'\n");
@@ -140,9 +164,19 @@ static void TestRealShell(void) {
   Send(session, @"sh './script space.sh' 'argument Ω'; printf '__SCRIPT__\\n'\n");
   Has(TextThrough(session, @"__SCRIPT__\n"), @"script:argument Ω", @"Script path and argument quoting");
   NSError *error;
+  struct sigaction originalWindowAction, windowAction = {0};
+  windowAction.sa_handler = WindowSignal;
+  sigemptyset(&windowAction.sa_mask);
+  Require(sigaction(SIGWINCH, &windowAction, &originalWindowAction) == 0, @"Observe host resize signals");
+  WindowSignals = 0;
   Require([session resizeColumns:123 rows:45 error:&error], @"Resize succeeds");
   Send(session, @"printf '<%s,%s>\\n' \"$COLUMNS\" \"$LINES\"; printf '__SIZE__\\n'\n");
   Has(TextThrough(session, @"__SIZE__\n"), @"<123,45>", @"Live shell dimensions");
+  Require(WindowSignals == 0, @"Canonical resize does not signal the host or borrowed command threads");
+  struct sigaction observedWindowAction;
+  Require(sigaction(SIGWINCH, NULL, &observedWindowAction) == 0 && observedWindowAction.sa_handler == WindowSignal,
+      @"Resize leaves the host signal handler intact");
+  Require(sigaction(SIGWINCH, &originalWindowAction, NULL) == 0, @"Restore resize signal observation");
   Send(session, @"printf 'κόσμε 漢字 😀\\n'; printf '\\377'; printf '__BYTES__\\n'\n");
   NSData *bytes = ReadThrough(session, @"__BYTES__\n");
   unsigned char invalid = 255;

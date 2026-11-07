@@ -45,6 +45,22 @@ void main() {
   );
 
   group('remote fingerprints', () {
+    test('uses the transfer backend revision precedence and preserves alternate tags', () {
+      final fingerprint = TerminalWorkspaceFingerprint.fromFile(
+        FileItem(
+          name: 'file',
+          isFolder: false,
+          metadata: {
+            'version': 'preferred',
+            'etag': 'alternate',
+            'cTag': 'content-tag',
+          },
+        ),
+      );
+      expect(fingerprint.version, 'preferred');
+      expect(fingerprint.metadata['etag'], 'alternate');
+      expect(fingerprint.metadata['cTag'], 'content-tag');
+    });
     test(
       'extracts stable identity and revision fields but never credentials',
       () {

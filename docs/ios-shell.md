@@ -30,7 +30,14 @@ silently switch the user to a different interpreter.
 Output is drained before the native session is released. Closing an unlistened
 or paused output stream still releases its native resources. Hiding the
 terminal preserves its session; disconnecting or disposing it closes that
-session. App suspension remains subject to normal iOS lifecycle rules.
+session. Moving the app to the background cancels the embedded session and
+releases its resources; saved workspace files remain available when the app
+returns to the foreground.
+
+If native shutdown cannot yet be confirmed, folder access remains leased and
+the terminal reports a cleanup failure. Disconnect retries cleanup; a new
+local session also waits for cleanup before starting the singleton runtime.
+Disposing the viewport does not discard an unfinished native shutdown.
 
 ## iOS folder access
 
@@ -94,6 +101,9 @@ Use the Flutter version pinned in `.fvmrc`. The iOS app requires iOS 15 or newer
 The shell package preparation tool downloads only pinned upstream source archives,
 verifies their hashes, and applies the reviewed local patches before compiling.
 It is a build-time operation, not a runtime code downloader.
+The package's [provenance and license notes](../packages/crisp_ios_shell/UPSTREAM.md)
+include the native utilities' own notices and Dash's GPL-2.0-or-later generated
+code; the runtime is not described as uniformly BSD licensed.
 
 ```sh
 flutter pub get
@@ -106,6 +116,11 @@ flutter test test/ios_terminal_connection_test.dart \
   test/terminal_backend_metadata_test.dart \
   test/terminal_directory_test.dart \
   test/terminal_workspace_dialog_test.dart \
+  test/terminal_workspace_panel_test.dart \
+  test/terminal_workspace_model_test.dart \
+  test/terminal_workspace_service_test.dart \
+  test/terminal_workspace_integration_review_test.dart \
+  test/ios_local_file_service_test.dart \
   test/terminal_session_test.dart \
   test/terminal_scoped_access_test.dart
 
@@ -118,7 +133,7 @@ The package suites cover the native-channel contract, input, stream decoding,
 backpressure, errors and lifecycle. Workspace tests use real temporary files and
 fake cloud backends to exercise recovery, identity, containment, reviewed content
 and remote conflicts. Folder tests cover bookmark/lease ownership and coordinated
-operations. Native XCTest tests execute the actual embedded runtime on an iOS
+operations. Native simulator tests execute the actual embedded runtime on an iOS
 simulator; the device build separately checks the arm64 application linkage.
 
 Before release, exercise the signed app on a physical iPhone or iPad: choose an

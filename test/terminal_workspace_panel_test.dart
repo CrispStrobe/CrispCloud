@@ -121,7 +121,10 @@ class _Workspaces extends Fake implements TerminalWorkspaceService {
   Future<TerminalWorkspace?> load(String id) async =>
       workspace?.id == id ? workspace : null;
   @override
-  Future<List<TerminalWorkspaceChange>> inspect(String id) async => [
+  Future<List<TerminalWorkspaceChange>> inspect(
+    String id, {
+    bool Function()? isCancelled,
+  }) async => [
     TerminalWorkspaceChange(
       workspaceId: id,
       manifestRevision: 1,
@@ -166,7 +169,6 @@ void main() {
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
-    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
     cloud = WorkflowFakeClient()..put('/input.txt', [1, 2, 3]);
     auth = _Auth(cloud);
     local = _Local();
@@ -206,7 +208,6 @@ void main() {
     await session.disconnect();
     session.dispose();
     container.dispose();
-    debugDefaultTargetPlatformOverride = null;
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, null);
   });
@@ -258,15 +259,23 @@ void main() {
       expect(find.text('Uploaded: input.txt'), findsOneWidget);
       await tester.tap(find.text('Close'));
       await tester.pumpAndSettle();
-      // Start cancellation in the same FakeAsync zone as the pending native
-      // read, then pump its channel responses before awaiting the final future.
-      final disconnecting = session.disconnect();
+      // The pending native reply was created by setUp on the real event loop.
+      // Flush both clocks before awaiting the close future; awaiting it solely
+      // inside FakeAsync prevents its read/close handshake from progressing.
+      var disconnected = false;
+      final disconnecting = session.disconnect().then((_) {
+        disconnected = true;
+      });
       await tester.pump();
-      await tester.runAsync(() => disconnecting);
+      await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+      await tester.pump();
+      expect(disconnected, isTrue);
+      await disconnecting;
       expect(local.leases, 0);
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump();
     },
+    variant: TargetPlatformVariant.only(TargetPlatform.iOS),
   );
 
   testWidgets(
@@ -286,6 +295,11 @@ void main() {
       expect(find.text('Original account disconnected.'), findsOneWidget);
       expect(shellDirectory, isNull);
       expect(local.leases, 0);
+      await tester.tap(find.text('Close'));
+      await tester.pumpAndSettle();
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
     },
+    variant: TargetPlatformVariant.only(TargetPlatform.iOS),
   );
 }

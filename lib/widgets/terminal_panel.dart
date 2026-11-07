@@ -12,7 +12,6 @@ import '../l10n/terminal_mount_error_strings.dart';
 import '../l10n/terminal_workspace_strings.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
-import '../providers/terminal_provider.dart';
 import '../providers/terminal_workspace_provider.dart';
 import '../providers/focus_area_provider.dart';
 import '../services/ssh_terminal_service.dart';
@@ -581,6 +580,10 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
   String? _message() {
     final error = _session.error;
     if (error != null) {
+      if (error is TerminalCleanupFailure) {
+        return '${context.workspaceTr('Shell cleanup failed')}: '
+            '${localizedTerminalMountError(context, error.cause)}';
+      }
       if (error is TerminalMountFailure) {
         return localizedTerminalMountError(context, error);
       }

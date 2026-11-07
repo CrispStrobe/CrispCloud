@@ -88,8 +88,14 @@ class _Service extends Fake implements TerminalWorkspaceService {
   }
 
   @override
-  Future<List<TerminalWorkspaceChange>> inspect(String workspaceId) async =>
-      changes;
+  Future<List<TerminalWorkspaceChange>> inspect(
+    String workspaceId, {
+    bool Function()? isCancelled,
+  }) async {
+    expect(isCancelled?.call(), isFalse);
+    return changes;
+  }
+
   @override
   Future<TerminalWorkspace> resumeStage({
     required String workspaceId,
@@ -154,6 +160,10 @@ void main() {
         isNot('Stage selected files'),
       );
       expect(strings.text('Review uploads'), isNotEmpty);
+      expect(
+        strings.text('Shell cleanup failed'),
+        isNot('Shell cleanup failed'),
+      );
       expect(strings.text('provider detail'), 'provider detail');
     }
     expect(

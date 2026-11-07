@@ -45,7 +45,10 @@ abstract class TerminalWorkspaceService {
     required bool Function() isCurrent,
     bool Function()? isCancelled,
   });
-  Future<List<TerminalWorkspaceChange>> inspect(String workspaceId);
+  Future<List<TerminalWorkspaceChange>> inspect(
+    String workspaceId, {
+    bool Function()? isCancelled,
+  });
   Future<TerminalWorkspaceUploadResult> uploadReviewed({
     required String workspaceId,
     required CloudStorageClient client,

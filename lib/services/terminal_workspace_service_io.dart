@@ -686,8 +686,21 @@ class NativeTerminalWorkspaceService extends TerminalWorkspaceService {
   }
 
   @override
-  Future<List<TerminalWorkspaceChange>> inspect(String workspaceId) async {
+  Future<List<TerminalWorkspaceChange>> inspect(
+    String workspaceId, {
+    bool Function()? isCancelled,
+  }) async {
+    void check() {
+      if (isCancelled?.call() == true) {
+        throw const TerminalWorkspaceException(
+          'Workspace inspection cancelled. Local work has been retained.',
+        );
+      }
+    }
+
+    check();
     final workspace = await _required(workspaceId);
+    check();
     final originals = {
       for (final entry in workspace.entries) entry.relativePath: entry,
     };
@@ -715,6 +728,7 @@ class NativeTerminalWorkspaceService extends TerminalWorkspaceService {
       reason: reason,
     );
     Future<void> walk(String relative, int depth) async {
+      check();
       if (depth > maxDepth) {
         throw const TerminalWorkspaceException(
           'Workspace inspection depth limit exceeded.',
@@ -725,6 +739,7 @@ class NativeTerminalWorkspaceService extends TerminalWorkspaceService {
         relative.isEmpty ? 'files' : 'files/$relative',
       );
       await for (final entity in Directory(path).list(followLinks: false)) {
+        check();
         if (++count > maxEntries) {
           throw const TerminalWorkspaceException(
             'Workspace inspection entry limit exceeded.',
@@ -780,7 +795,7 @@ class NativeTerminalWorkspaceService extends TerminalWorkspaceService {
                   child,
                   TerminalWorkspaceChangeKind.added,
                   directory: true,
-                  reason: 'Create this folder remotely before uploading files inside it.',
+                  reason: 'Folders are not created remotely; files inside require an existing remote folder.',
                 ),
               );
             }
@@ -800,7 +815,7 @@ class NativeTerminalWorkspaceService extends TerminalWorkspaceService {
             final digest = await _hashLocal(
               workspaceId,
               'files/$child',
-              () {},
+              check,
               limit: maxTotalBytes - bytes,
             );
             bytes += digest.length;
@@ -837,6 +852,9 @@ class NativeTerminalWorkspaceService extends TerminalWorkspaceService {
             );
           }
         } catch (error) {
+          // Cancellation is an operation outcome, not an unsafe-file row.
+          // Do not continue walking or hashing the remainder of the workspace.
+          check();
           changes.add(
             change(
               child,
@@ -850,6 +868,7 @@ class NativeTerminalWorkspaceService extends TerminalWorkspaceService {
 
     await walk('', 0);
     for (final original in workspace.entries) {
+      check();
       if (!seen.contains(original.relativePath) &&
           original.status == TerminalWorkspaceEntryStatus.ready) {
         changes.add(
@@ -880,6 +899,7 @@ class NativeTerminalWorkspaceService extends TerminalWorkspaceService {
         )
         .toList();
     reviewed.sort((a, b) => a.relativePath.compareTo(b.relativePath));
+    check();
     return List.unmodifiable(reviewed);
   }
 
@@ -927,7 +947,8 @@ class NativeTerminalWorkspaceService extends TerminalWorkspaceService {
     // Validate the whole review before any cloud mutation. Each payload is
     // still revalidated when taking its sealed per-file snapshot below.
     final actual = {
-      for (final value in await inspect(workspaceId)) value.relativePath: value,
+      for (final value in await inspect(workspaceId, isCancelled: isCancelled))
+        value.relativePath: value,
     };
     for (final change in changes) {
       final current = actual[change.relativePath];
@@ -1029,15 +1050,19 @@ class NativeTerminalWorkspaceService extends TerminalWorkspaceService {
             current = fresh;
           }
         }
+        final restoredPath =
+            pending?['restoreCopyPath'] ?? pending?['restoreMovePath'];
+        final restoredVersion =
+            pending?['restoreCopyVersion'] ?? pending?['restoreMoveVersion'];
         if (pending != null &&
             original?.originalDigest != null &&
             current != null &&
             !current.isFolder &&
             current.isSymlink != true &&
-            pending['restoreCopyPath'] == change.remotePath &&
-            pending['restoreCopyVersion'] is String &&
+            restoredPath == change.remotePath &&
+            restoredVersion is String &&
             TerminalWorkspaceFingerprint.fromFile(current).version ==
-                pending['restoreCopyVersion']) {
+                restoredVersion) {
           final restored = await _hashRemote(backend, current, check);
           if (restored.digest == original!.originalDigest &&
               restored.length == original.originalSize) {
@@ -1056,7 +1081,8 @@ class NativeTerminalWorkspaceService extends TerminalWorkspaceService {
             change.remotePath,
             backup: true,
           );
-          final backupVersion = pending['backupCopyVersion'];
+          final backupVersion =
+              pending['backupVersion'] ?? pending['backupCopyVersion'];
           if (backupPath != null &&
               backupVersion is String &&
               const [
@@ -1338,8 +1364,9 @@ class NativeTerminalWorkspaceService extends TerminalWorkspaceService {
     required bool backup,
   }) {
     if (value is! String ||
-        p.posix.dirname(value) != p.posix.dirname(destination))
+        p.posix.dirname(value) != p.posix.dirname(destination)) {
       return null;
+    }
     final pattern = backup
         ? r'^\.crisp-replaced-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.bak$'
         : r'^\.crisp-transfer-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.tmp$';
@@ -1355,8 +1382,9 @@ class NativeTerminalWorkspaceService extends TerminalWorkspaceService {
     final existing = workspace.entries
         .where((entry) => entry.relativePath == change.relativePath)
         .firstOrNull;
-    if (existing != null)
+    if (existing != null) {
       workspace = await _rememberRecoveryCopies(workspace, existing, backend);
+    }
     return _replaceEntry(
       workspace,
       TerminalWorkspaceEntry(

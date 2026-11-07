@@ -113,3 +113,16 @@
  #endif
  		case 1:
  			break;
+--- a/src/main.c
++++ b/src/main.c
+@@ -80,6 +80,10 @@
+ STATIC void read_profile(const char *);
+ STATIC char *find_dot_file(char *);
+ static int cmdloop(int);
++#if TARGET_OS_IPHONE
++// A distinct exported name prevents ambiguity with the embedding app entry point.
++#define main dash_main
++#endif
+ int main(int, char **);
+ 
+ /*

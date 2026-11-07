@@ -42,8 +42,10 @@ class UnsupportedTerminalWorkspaceService extends TerminalWorkspaceService {
     bool Function()? isCancelled,
   }) async => _unsupported();
   @override
-  Future<List<TerminalWorkspaceChange>> inspect(String workspaceId) async =>
-      _unsupported();
+  Future<List<TerminalWorkspaceChange>> inspect(
+    String workspaceId, {
+    bool Function()? isCancelled,
+  }) async => _unsupported();
   @override
   Future<TerminalWorkspaceUploadResult> uploadReviewed({
     required String workspaceId,

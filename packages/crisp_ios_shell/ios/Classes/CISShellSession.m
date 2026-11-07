@@ -1,9 +1,13 @@
 #import "CISShellSession.h"
+#import <pthread.h>
 #import <ios_system/ios_system.h>
 #import <dlfcn.h>
 #import <errno.h>
 #import <fcntl.h>
 #import <poll.h>
+#import <stdio.h>
+#import <stdlib.h>
+#import <string.h>
 #import <sys/socket.h>
 #import <sys/param.h>
 #import <unistd.h>
@@ -91,7 +95,7 @@ static BOOL CISSocketPair(int pair[2]) {
   }
   NSError *resourceError;
   NSData *data = [NSData dataWithContentsOfURL:commandsURL options:0 error:&resourceError];
-  NSDictionary *source = data ? [NSPropertyListSerialization propertyListWithData:data options:NSPropertyListImmutable format:nil error:&resourceError] : nil;
+  NSDictionary *source = data ? [NSPropertyListSerialization propertyListWithData:data options:NSPropertyListImmutable format:NULL error:&resourceError] : nil;
   if (![source isKindOfClass:NSDictionary.class] || !source[@"dash"]) {
     if (error) *error = CISShellError(@"engine_error", @"The bundled shell command manifest is missing or invalid. Run tool/prepare.py before building.");
     return nil;
@@ -264,13 +268,19 @@ static BOOL CISSocketPair(int pair[2]) {
       ios_setStreams(_input, _output, _error);
       ios_settty(_input);
       ios_useNativeTTY(false);
-      ios_setDirectoryURL([NSURL fileURLWithPath:_workingDirectory isDirectory:YES]);
-      ios_setWindowSize((int)_columns, (int)_rows, _sessionKey);
-      int registrationError = ashell_register_owned_streams(_input, _output, _error, &_registration);
-      if (registrationError) {
-        failure = CISShellError(@"engine_error", @"Cannot register native shell stream ownership.");
+      // Recheck at dispatch: a provider/user can remove the directory after
+      // validation. Never execute a command in an unintended fallback cwd.
+      if (![NSFileManager.defaultManager changeCurrentDirectoryPath:_workingDirectory]) {
+        failure = CISShellError(@"invalid_directory", @"The shell working directory disappeared before startup.");
       } else {
-        _runtimeReady = YES;
+        ios_setDirectoryURL([NSURL fileURLWithPath:_workingDirectory isDirectory:YES]);
+        ios_setWindowSize((int)_columns, (int)_rows, _sessionKey);
+        int registrationError = ashell_register_owned_streams(_input, _output, _error, &_registration);
+        if (registrationError) {
+          failure = CISShellError(@"engine_error", @"Cannot register native shell stream ownership.");
+        } else {
+          _runtimeReady = YES;
+        }
       }
       } @finally { [_runtime unlock]; }
       if (!failure) {

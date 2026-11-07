@@ -12,6 +12,7 @@ import 'package:crisp_cloud/services/terminal_workspace_service.dart';
 import 'package:crisp_cloud/services/terminal_workspace_service_stub.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
+import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -63,6 +64,62 @@ void main() {
   });
 
   group('native staging and persistence', () {
+    test(
+      'the default workspace directory is persistent app Documents storage',
+      () async {
+        final previous = PathProviderPlatform.instance;
+        PathProviderPlatform.instance = _DocumentsPath(temporary.path);
+        addTearDown(() => PathProviderPlatform.instance = previous);
+        service = TerminalWorkspaceService();
+        final workspace = await stage();
+        expect(
+          p.isWithin(
+            p.join(temporary.path, 'CrispCloudTerminalWorkspaces'),
+            workspace.directoryPath,
+          ),
+          isTrue,
+        );
+        expect(
+          (await TerminalWorkspaceService().load(workspace.id))!.directoryPath,
+          workspace.directoryPath,
+        );
+      },
+    );
+
+    test(
+      'rebuilds local paths when an app container is relocated after restart',
+      () async {
+        final workspace = await stage();
+        final relocated = p.join(temporary.path, 'relocated-container');
+        await Directory(root).rename(relocated);
+        service = TerminalWorkspaceService(rootDirectory: relocated);
+        final recovered = (await service.load(workspace.id))!;
+        expect(
+          recovered.directoryPath,
+          p.join(relocated, workspace.id, 'files'),
+        );
+        expect(
+          await File(p.join(recovered.directoryPath, 'a.txt')).readAsString(),
+          'original',
+        );
+        expect(await service.inspect(recovered.id), isEmpty);
+      },
+    );
+
+    test(
+      'persisted transfer errors redact signed URLs and credentials',
+      () async {
+        client.onDownloadChunk = (_) => throw StateError(
+          'download failed at https://name:password@example.test/object?secret=signed-token',
+        );
+        await expectLater(stage(), throwsA(isA<TerminalWorkspaceException>()));
+        final saved = (await service.list()).single;
+        expect(saved.error, contains('[remote endpoint]'));
+        expect(saved.toJson().toString(), isNot(contains('signed-token')));
+        expect(saved.toJson().toString(), isNot(contains('password')));
+      },
+    );
+
     test('streams into persistent files with identity and fingerprints outside cwd', () async {
       final progress = <(int, int)>[];
       final workspace = await service.stage(
@@ -487,6 +544,33 @@ void main() {
   });
 
   group('local inspection and containment', () {
+    test('inspection cancellation stops before enumeration and between file chunks', () async {
+      final workspace = await stage();
+      await expectLater(
+        service.inspect(workspace.id, isCancelled: () => true),
+        throwsA(
+          predicate(
+            (error) => error.toString().contains('inspection cancelled'),
+          ),
+        ),
+      );
+      final local = File(p.join(workspace.directoryPath, 'a.txt'));
+      await local.writeAsBytes(Uint8List(2 * 1024 * 1024));
+      var checks = 0;
+      await expectLater(
+        service.inspect(workspace.id, isCancelled: () => ++checks >= 8),
+        throwsA(
+          predicate(
+            (error) => error.toString().contains('inspection cancelled'),
+          ),
+        ),
+      );
+      expect(checks, inInclusiveRange(8, 10));
+      expect(await local.length(), 2 * 1024 * 1024);
+      expect((await service.load(workspace.id))!.revision, workspace.revision);
+      expect(client.uploads, isEmpty);
+    });
+
     test(
       'binary and empty files round-trip through streaming staging and upload',
       () async {
@@ -786,6 +870,77 @@ void main() {
   });
 
   group('reviewed uploads and recovery', () {
+    test('conditional native-move backup receipt survives interruption after backedUp', () async {
+      client.mode = _Mode.conditionalMove;
+      client.versionChangesOnMove = true;
+      final workspace = await stage();
+      await edit(workspace, 'a.txt', 'reviewed native replacement');
+      final review = await service.inspect(workspace.id);
+      var interrupted = false;
+      final manifest = File(p.join(root, workspace.id, 'manifest.json'));
+      bool activeUntilBackedUp() {
+        if (interrupted) return false;
+        final envelope = jsonDecode(manifest.readAsStringSync()) as Map;
+        final record = jsonDecode(envelope['payload'] as String) as Map;
+        final entry = (record['entries'] as List).single as Map;
+        if ((entry['pendingUpload'] as Map?)?['phase'] == 'backedUp') {
+          interrupted = true;
+          return false;
+        }
+        return true;
+      }
+
+      final failed = await service.uploadReviewed(
+        workspaceId: workspace.id,
+        client: client,
+        changes: review,
+        isCurrent: activeUntilBackedUp,
+      );
+      expect(interrupted, isTrue);
+      expect(failed.succeeded, isFalse);
+      expect(client.objects.containsKey('/cloud/a.txt'), isFalse);
+      final receipt = failed.workspace.entries.single.pendingUpload!;
+      expect(receipt['phase'], 'backedUp');
+      expect(receipt['backupCopyVersion'], isNull);
+      final backup = receipt['backupPath'] as String;
+      expect(receipt['backupVersion'], client.objects[backup]!.version);
+      expect(client.text(backup), 'original');
+      service = TerminalWorkspaceService(rootDirectory: root);
+      final recovered = await upload(workspace);
+      expect(recovered.succeeded, isTrue);
+      expect(client.text('/cloud/a.txt'), 'reviewed native replacement');
+      expect(client.text(backup), 'original');
+      expect(recovered.workspace.warnings.join(), contains(backup));
+    });
+
+    test(
+      'native-move restoration records a changed revision for a safe retry',
+      () async {
+        client.mode = _Mode.conditionalMove;
+        client.versionChangesOnMove = true;
+        final workspace = await stage();
+        await edit(workspace, 'a.txt', 'replacement');
+        client.failCommit = true;
+        final failed = await upload(workspace);
+        expect(failed.succeeded, isFalse);
+        expect(client.text('/cloud/a.txt'), 'original');
+        final receipt = failed.workspace.entries.single.pendingUpload!;
+        expect(receipt['restoreMovePath'], '/cloud/a.txt');
+        expect(
+          receipt['restoreMoveVersion'],
+          client.objects['/cloud/a.txt']!.version,
+        );
+        expect(
+          receipt['restoreMoveVersion'],
+          isNot(workspace.entries.single.fingerprint.version),
+        );
+        client.failCommit = false;
+        service = TerminalWorkspaceService(rootDirectory: root);
+        expect((await upload(workspace)).succeeded, isTrue);
+        expect(client.text('/cloud/a.txt'), 'replacement');
+      },
+    );
+
     test('conditional native moves protect replacements and unsafe preferred move routes are rejected', () async {
       client.mode = _Mode.conditionalMove;
       final workspace = await stage();
@@ -1219,6 +1374,23 @@ void main() {
       final missing = await upload(workspace);
       expect(missing.failures['a.txt'], contains('changed since staging'));
       expect(client.uploads, isEmpty);
+      const backup =
+          '/cloud/.crisp-replaced-00000000-0000-4000-8000-000000000000.bak';
+      client.put(backup, 'original');
+      final review = (await service.inspect(workspace.id)).single;
+      await _editManifest(root, workspace.id, (json) {
+        ((json['entries'] as List).single as Map)['pendingUpload'] = {
+          'digest': review.digest,
+          'length': review.size,
+          'phase': 'backedUp',
+          'backupPath': backup,
+          'backupCopyVersion': 'an-old-revision',
+        };
+      });
+      final mismatched = await upload(workspace);
+      expect(mismatched.succeeded, isFalse);
+      expect(client.uploads, isEmpty);
+      expect(client.text(backup), 'original');
     });
 
     test('account switching before and during upload prohibits replacement-account writes', () async {
@@ -1300,6 +1472,15 @@ void main() {
     'web stub reports unsupported and has no native workspace operations',
     () async {
       final unsupported = UnsupportedTerminalWorkspaceService();
+      expect(
+        createTerminalWorkspaceService(
+          rootDirectory: root,
+          maxEntries: 1,
+          maxDepth: 1,
+          maxTotalBytes: 1,
+        ).isSupported,
+        isFalse,
+      );
       expect(unsupported.isSupported, isFalse);
       expect(unsupported.warnings, isEmpty);
       expect(await unsupported.list(), isEmpty);
@@ -1333,6 +1514,13 @@ void main() {
       );
     },
   );
+}
+
+class _DocumentsPath extends PathProviderPlatform {
+  _DocumentsPath(this.path);
+  final String path;
+  @override
+  Future<String?> getApplicationDocumentsPath() async => path;
 }
 
 Future<void> _editManifest(
@@ -1396,6 +1584,7 @@ class _Cloud extends CloudStorageClient
   bool failUpload = false;
   bool failCommit = false;
   bool failBackupDeletion = false;
+  bool versionChangesOnMove = false;
   bool corruptUpload = false;
   bool loseCommitReply = false;
   String? failDownload;
@@ -1536,8 +1725,9 @@ class _Cloud extends CloudStorageClient
 
   @override
   Future<Map<String, dynamic>> readDirectoryForEdit(String path) async {
-    if (!directories.containsKey(path))
+    if (!directories.containsKey(path)) {
       throw StateError('Directory unavailable');
+    }
     return {
       'folders': directories.keys
           .where((entry) => entry != path && p.posix.dirname(entry) == path)
@@ -1646,11 +1836,13 @@ class _Cloud extends CloudStorageClient
     await checkpoint?.call();
     await beforeCopy?.call(sourcePath, destinationPath);
     final source = objects[sourcePath];
-    if (source == null || expectedSourceVersion != source.version)
+    if (source == null || expectedSourceVersion != source.version) {
       throw StateError('Conditional source version changed');
+    }
     if (objects.containsKey(destinationPath) ||
-        directories.containsKey(destinationPath))
+        directories.containsKey(destinationPath)) {
       throw StateError('Destination exists');
+    }
     expect(replace, isFalse);
     copies.add((
       source: sourcePath,
@@ -1662,8 +1854,9 @@ class _Cloud extends CloudStorageClient
     }
     putBytes(destinationPath, source.bytes);
     final copied = objects[destinationPath]!;
-    if (loseCommitReply && sourcePath.contains('.crisp-transfer-'))
+    if (loseCommitReply && sourcePath.contains('.crisp-transfer-')) {
       throw StateError('Commit acknowledgement lost');
+    }
     return CloudTransferResult(
       path: destinationPath,
       id: copied.id,
@@ -1683,15 +1876,22 @@ class _Cloud extends CloudStorageClient
   }) async {
     await checkpoint?.call();
     if (objects.containsKey(destinationPath) ||
-        directories.containsKey(destinationPath))
+        directories.containsKey(destinationPath)) {
       throw StateError('Destination exists');
+    }
     expect(replace, isFalse);
-    final source = objects[sourcePath]!;
+    var source = objects[sourcePath]!;
     if (expectedSourceVersion != null &&
         expectedSourceVersion != source.version) {
       throw StateError('Move source version changed');
     }
+    if (failCommit && sourcePath.contains('.crisp-transfer-')) {
+      throw StateError('Commit failed before promotion');
+    }
     objects.remove(sourcePath);
+    if (versionChangesOnMove) {
+      source = _CloudObject(source.bytes, source.id, 'move-${++revision}');
+    }
     objects[destinationPath] = source;
     return CloudTransferResult(
       path: destinationPath,
@@ -1709,8 +1909,9 @@ class _Cloud extends CloudStorageClient
     if (failBackupDeletion && path.contains('.crisp-replaced-')) {
       throw StateError('Backup cleanup failed');
     }
-    if (objects[path]?.version != expectedVersion)
+    if (objects[path]?.version != expectedVersion) {
       throw StateError('Delete version changed');
+    }
     deletes.add(path);
     objects.remove(path);
   }

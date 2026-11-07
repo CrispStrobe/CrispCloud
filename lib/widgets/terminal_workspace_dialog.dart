@@ -155,7 +155,8 @@ Future<void> reviewTerminalWorkspace(
       await showTerminalWorkspaceTask<List<TerminalWorkspaceChange>>(
         context,
         title: context.workspaceTr('Review uploads'),
-        task: (_, _) => service.inspect(workspace.id),
+        task: (cancelled, _) =>
+            service.inspect(workspace.id, isCancelled: cancelled),
       );
   if (!context.mounted || changes == null) return;
   final selected = await showDialog<List<TerminalWorkspaceChange>>(

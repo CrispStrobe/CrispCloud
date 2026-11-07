@@ -12,6 +12,16 @@ class TerminalWorkspaceStrings {
 
   static const _languages = ['de', 'fr', 'es', 'pt', 'zh', 'ja', 'ko', 'ar'];
   static const _values = <String, List<String>>{
+    'Shell cleanup failed': [
+      'Shell konnte nicht beendet werden',
+      'Impossible de terminer le shell',
+      'No se pudo cerrar el shell',
+      'Não foi possível encerrar o shell',
+      'Shell 关闭失败',
+      'シェルを終了できませんでした',
+      '셸을 종료하지 못했습니다',
+      'تعذر إنهاء الصدفة',
+    ],
     'iOS shell': [
       'iOS-Shell',
       'Shell iOS',

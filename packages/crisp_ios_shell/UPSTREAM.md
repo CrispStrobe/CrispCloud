@@ -23,6 +23,13 @@ and the GPL text are preserved. Distributors must keep the corresponding source
 available, including the pinned upstream archives, these patches and build
 scripts. The build does not silently rewrite or relicense third-party notices.
 
+The pinned Automake `missing`, `compile`, and `depcomp` build helpers carry
+GPL-2.0-or-later terms with their explicit Autoconf distribution exception.
+`install-sh` retains the X Consortium permission notice and identifies the FSF
+changes as public domain. Their complete header notices are retained both in
+the source scripts and in the aggregate LICENSE; they are build tools rather
+than code linked into the iOS frameworks.
+
 `LICENSE` combines the integration license and all copyright/license notices
 collected from the relevant upstream source directories. Flutter includes this
 package's LICENSE in its application license registry. The same text is bundled
@@ -55,6 +62,8 @@ binary compatibility or the ability to install arbitrary native executables.
   its framework paths to the signed app's Frameworks directory.
 - Use Dash for `sh -c` as well as interactive `sh`; bypass the upstream minimal
   sh command parser.
+- Export the embedded Dash entry point as `dash_main`; verify every curated
+  command's export in every device and simulator architecture before packaging.
 - Borrow input/output/error streams under ios_system's owned-stream leases and
   wait for all descendants to clean up before closing them.
 - Preserve the host application's crash handlers instead of installing the
@@ -63,9 +72,12 @@ binary compatibility or the ability to install arbitrary native executables.
   boundaries, after its cancelled descendants have drained. No SIGINT is sent
   to Flutter and no arbitrary thread is forcefully terminated.
 - Add cancellation points to AWK evaluation and sed's branch loop.
+- Suppress SIGPIPE on each native pipe descriptor so an early/cancelled reader
+  cannot deliver a process signal to the Flutter host.
 - Read canonical shell input a line at a time so pasted `read` input is not
   swallowed by Dash's parser buffer, and poll the input for cancellation.
-- Read COLUMNS/LINES/ROWS from the live native session after a resize.
+- Read COLUMNS/LINES/ROWS from the live native session after a resize, with
+  synchronized copies and without delivering process signals to the app.
 - Release session bookkeeping only after all owned commands have completed.
 
 ## Process and lifecycle constraints

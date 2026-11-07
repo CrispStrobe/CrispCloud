@@ -1,6 +1,78 @@
 --- a/ios_system.m
 +++ b/ios_system.m
-@@ -405,6 +405,7 @@
+@@ -282,6 +282,19 @@
+ }
+ 
+ #undef getenv
++// CrispCloud uses canonical streams, not a PTY. Dimension updates must not
++// signal a borrowed pthread ID which command cleanup may concurrently release.
++static pthread_mutex_t crispWindowMutex = PTHREAD_MUTEX_INITIALIZER;
++static __thread char crispColumns[5], crispLines[5];
++static char *crisp_window_value(bool columns) {
++    if (!currentSession) return NULL;
++    char *value = columns ? crispColumns : crispLines;
++    pthread_mutex_lock(&crispWindowMutex);
++    memcpy(value, columns ? currentSession->columns : currentSession->lines, 5);
++    pthread_mutex_unlock(&crispWindowMutex);
++    return value;
++}
++
+ void ios_setWindowSize(int width, int height, const void* sessionId) {
+     // You can set the window size for a session that is not currently running (e.g. because "sh_session" is running).
+     // So we set it without calling ios_switchSession:
+@@ -296,19 +309,10 @@
+         return;
+     }
+ 
+-    sprintf(resizedSession->columns, "%d", MIN(width, 9999));
+-    sprintf(resizedSession->lines, "%d", MIN(height, 9999));
+-    // Also send SIGWINCH to the main thread of resizedSession:
+-    if (resizedSession->current_command_root_thread != NULL) {
+-        pthread_kill(resizedSession->current_command_root_thread, SIGWINCH);
+-    }
+-    if (resizedSession->lastThreadId != NULL) {
+-        pthread_kill(resizedSession->lastThreadId, SIGWINCH);
+-    }
+-    pthread_t mainThread = resizedSession->mainThreadId; // one load: cleanup_function can clear it in between
+-    if (mainThread != NULL) {
+-        pthread_kill(mainThread, SIGWINCH);
+-    }
++    pthread_mutex_lock(&crispWindowMutex);
++    snprintf(resizedSession->columns, sizeof(resizedSession->columns), "%d", MAX(1, MIN(width, 9999)));
++    snprintf(resizedSession->lines, sizeof(resizedSession->lines), "%d", MAX(1, MIN(height, 9999)));
++    pthread_mutex_unlock(&crispWindowMutex);
+ }
+ 
+ int ios_getWindowSize(int *columns, int *rows, const void* sessionId) {
+@@ -316,8 +320,10 @@
+     id sessionKey = @((NSUInteger)sessionId);
+     sessionParameters* session = (sessionParameters*)[[sessionList objectForKey: sessionKey] pointerValue];
+     if (session == NULL) return ENOENT;
++    pthread_mutex_lock(&crispWindowMutex);
+     *columns = atoi(session->columns);
+     *rows = atoi(session->lines);
++    pthread_mutex_unlock(&crispWindowMutex);
+     return 0;
+ }
+ 
+@@ -326,13 +332,13 @@
+ char * ios_getenv(const char *name) {
+     // intercept calls to getenv("COLUMNS") / getenv("LINES")
+     if (strcmp(name, "COLUMNS") == 0) {
+-        return currentSession->columns;
++        return crisp_window_value(true);
+     }
+     if (strcmp(name, "LINES") == 0) {
+-        return currentSession->lines;
++        return crisp_window_value(false);
+     }
+     if (strcmp(name, "ROWS") == 0) {
+-        return currentSession->lines;
++        return crisp_window_value(false);
+     }
+     if (strcmp(name, "PWD") == 0) {
+         return currentSession->currentDir;
+@@ -405,6 +411,7 @@
      struct _functionParameters *ownedNext;
      pthread_t ownedThread;
      bool ownedRunning, commandStarted, storeMainThread;
@@ -8,7 +80,7 @@
  } functionParameters;
  
  static pthread_mutex_t commandSignalMutex = PTHREAD_MUTEX_INITIALIZER;
-@@ -434,6 +435,9 @@
+@@ -434,6 +441,9 @@
      FILE *streams[3];
      unsigned active;
      bool cancelled;
@@ -18,7 +90,7 @@
      functionParameters *commands;
      pthread_cond_t idle;
      struct ownedStreams *next;
-@@ -453,6 +457,9 @@
+@@ -453,6 +463,9 @@
      entry->streams[2] = error;
      entry->active = 0;
      entry->cancelled = false;
@@ -28,7 +100,7 @@
      entry->commands = NULL;
      pthread_mutex_lock(&ownedStreamsMutex);
      entry->next = registeredStreams;
-@@ -501,6 +508,8 @@
+@@ -501,6 +514,8 @@
      }
      parameters->ownedStreams = found;
      parameters->ownedRunning = false;
@@ -37,7 +109,7 @@
      parameters->commandStarted = false;
      parameters->ownedThread = NULL;
      parameters->ownedNext = NULL;
-@@ -548,10 +557,59 @@
+@@ -548,10 +563,59 @@
      return error;
  }
  
@@ -98,7 +170,20 @@
      pthread_mutex_unlock(&ownedStreamsMutex);
      return cancelled;
  }
-@@ -895,6 +953,13 @@
+@@ -653,9 +717,9 @@
+         currentSession->activePager = FALSE;
+     }
+     if (p->commandStarted) {
+-        fcntl(fileno(thread_stdin), F_SETNOSIGPIPE);
+-        fcntl(fileno(thread_stdout), F_SETNOSIGPIPE);
+-        fcntl(fileno(thread_stderr), F_SETNOSIGPIPE);
++        fcntl(fileno(thread_stdin), F_SETNOSIGPIPE, 1);
++        fcntl(fileno(thread_stdout), F_SETNOSIGPIPE, 1);
++        fcntl(fileno(thread_stderr), F_SETNOSIGPIPE, 1);
+         fflush(thread_stdin);
+         fflush(thread_stdout);
+         fflush(thread_stderr);
+@@ -895,6 +959,13 @@
      currentWebAssemblyCommandOrder = p->webAssemblyOrder;
      p->commandStarted = true;
      currentOwnedStreams = p->ownedStreams;
@@ -112,7 +197,7 @@
      NSLog(@"Storing thread_id: %x pid: %d isPipeOut: %x isPipeErr: %x stdin %d stdout %d stderr %d command= %s\n", pthread_self(), ios_currentPid(), p->isPipeOut, p->isPipeErr,
            (p->stdin == nil) ? -1 : fileno(p->stdin),
            (p->stdout == nil) ? -1 : fileno(p->stdout),
-@@ -922,9 +987,8 @@
+@@ -922,9 +993,8 @@
          if (currentSession != nil) currentSession->activePager = TRUE;
      }
  
@@ -124,7 +209,7 @@
  
      // Because some commands change argv, keep a local copy for release.
      p->argv_ref = (char **)malloc(sizeof(char*) * (p->argc + 1));
-@@ -965,7 +1029,7 @@
+@@ -965,7 +1035,7 @@
      @try
      {
          pthread_mutex_lock(&ownedStreamsMutex);
@@ -133,7 +218,7 @@
          p->ownedThread = pthread_self();
          p->ownedRunning = !cancelled;
          pthread_mutex_unlock(&ownedStreamsMutex);
-@@ -993,6 +1057,7 @@
+@@ -993,6 +1063,7 @@
  static NSString* miniRoot = nil; // limit operations to below a certain directory (~, usually).
  static NSArray<NSString*> *allowedPaths = nil;
  static NSDictionary *commandList = nil;
@@ -141,7 +226,27 @@
  NSArray *backgroundCommandList = nil;
  // do recompute directoriesInPath only if $PATH has changed
  static NSString* fullCommandPath = @"";
-@@ -2593,7 +2658,13 @@
+@@ -1751,8 +1822,8 @@
+     while ((command[0] == ' ') && strlen(command) > 0) command++;
+     if (pipe(fd) < 0) { return NULL; } // Nothing we can do if pipe fails
+     // F_SETNOSIGPIPE: don't cause a signal 13 if the pipe is already closed
+-    fcntl(fd[0], F_SETNOSIGPIPE);
+-    fcntl(fd[1], F_SETNOSIGPIPE);
++    fcntl(fd[0], F_SETNOSIGPIPE, 1);
++    fcntl(fd[1], F_SETNOSIGPIPE, 1);
+     // NOTES: fd[0] is set up for reading, fd[1] is set up for writing
+     // fpout = fdopen(fd[1], "w");
+     // fpin = fdopen(fd[0], "r");
+@@ -2364,7 +2435,7 @@
+     }
+     // Add our own variables: ROWS, PWD (COLUMNS and LINES are already set):
+     NSString* rowVariable = @"ROWS=";
+-    rowVariable = [rowVariable stringByAppendingString: [NSString stringWithCString: currentSession->columns]];
++    rowVariable = [rowVariable stringByAppendingString: [NSString stringWithUTF8String:ios_getenv("COLUMNS")]];
+     [dictionary addObject: rowVariable];
+     NSString* pwdVariable = @"PWD=";
+     pwdVariable = [pwdVariable stringByAppendingString: [NSString stringWithCString: currentSession->currentDir]];
+@@ -2593,7 +2664,13 @@
      if (sessionList == nil) return;
      id sessionKey = @((NSUInteger)sessionId);
      @synchronized(sessionList) {
@@ -155,7 +260,7 @@
      }
      currentSession = NULL;
  }
-@@ -2830,7 +2901,7 @@
+@@ -2830,7 +2907,7 @@
      NSDictionary* newCommandList = [NSPropertyListSerialization propertyListWithData:dataLoadedFromFile options:NSPropertyListImmutable format:NULL error:&error];
      if (!newCommandList) return error;
      // merge the two dictionaries:
@@ -164,7 +269,7 @@
      [mutableDict addEntriesFromDictionary:newCommandList];
      commandList = [mutableDict copy];
      return NULL;
-@@ -3834,27 +3905,11 @@
+@@ -3834,27 +3911,11 @@
          int (*function)(int ac, char** av) = NULL;
          if (commandList == nil) initializeCommandList();
          NSString* commandName = [NSString stringWithCString:argv[0] encoding:NSUTF8StringEncoding];
@@ -196,6 +301,63 @@
          }
          //
          NSArray* commandStructure = [commandList objectForKey: commandName];
+--- a/ios_error.h
++++ b/ios_error.h
+@@ -84,6 +84,7 @@
+ #define execvp ios_execv
+ #define execve ios_execve
+ #define dup2 ios_dup2
++#define pipe ios_pipe
+ #define getenv ios_getenv
+ #define setenv ios_setenv
+ #define unsetenv ios_unsetenv
+@@ -101,6 +102,7 @@
+ extern int ios_execv(const char *path, char* const argv[]);
+ extern int ios_execve(const char *path, char* const argv[], char** envlist);
+ extern int ios_dup2(int fd1, int fd2);
++extern int ios_pipe(int fds[2]);
+ extern char * ios_getenv(const char *name);
+ extern int ios_setenv(const char* variableName, const char* value, int overwrite);
+ int ios_unsetenv(const char* variableName);
+--- a/libc_replacement.c
++++ b/libc_replacement.c
+@@ -11,6 +11,7 @@
+ #include <wchar.h>
+ #include <unistd.h>
+ #include <errno.h>
++#include <fcntl.h>
+ #include <string.h>
+ #include <sys/wait.h>
+ #include <sys/param.h>
+@@ -18,6 +19,7 @@
+ #include <dlfcn.h>  // for dlopen()/dlsym()/dlclose()
+ 
+ #include "ios_error.h"
++#undef pipe
+ #undef write
+ #undef fwrite
+ #undef puts
+@@ -119,6 +121,20 @@
+     va_end (ap);
+     return (count);
+ }
++// CrispCloud: a cancelled/early pipeline reader must not send SIGPIPE into
++// the host application. Use Darwin's per-descriptor policy, not a process signal.
++int ios_pipe(int fds[2]) {
++    if (pipe(fds) != 0) return -1;
++    if (fcntl(fds[0], F_SETNOSIGPIPE, 1) < 0 || fcntl(fds[1], F_SETNOSIGPIPE, 1) < 0) {
++        int saved = errno;
++        close(fds[0]);
++        close(fds[1]);
++        errno = saved;
++        return -1;
++    }
++    return 0;
++}
++
+ int ios_fflush(FILE *stream) {
+     if (stream == NULL) return 0;
+     if (thread_stdout == NULL) thread_stdout = stdout;
 --- a/ios_system.xcodeproj/project.pbxproj
 +++ b/ios_system.xcodeproj/project.pbxproj
 @@ -3907,69 +3907,35 @@
