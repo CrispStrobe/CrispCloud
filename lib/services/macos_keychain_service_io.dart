@@ -29,16 +29,22 @@ class MacosKeychainService {
     if (raw == null) {
       throw const FormatException('The keychain list returned no result.');
     }
-    return raw.map((item) {
-      if (item is! Map || item['path'] is! String ||
-          item['label'] is! String || (item['path'] as String).isEmpty) {
-        throw const FormatException('The keychain list contains an invalid entry.');
-      }
-      return MacosKeychainInfo(
-        path: item['path'] as String,
-        label: item['label'] as String,
-      );
-    }).toList(growable: false);
+    return raw
+        .map((item) {
+          if (item is! Map ||
+              item['path'] is! String ||
+              item['label'] is! String ||
+              (item['path'] as String).isEmpty) {
+            throw const FormatException(
+              'The keychain list contains an invalid entry.',
+            );
+          }
+          return MacosKeychainInfo(
+            path: item['path'] as String,
+            label: item['label'] as String,
+          );
+        })
+        .toList(growable: false);
   }
 
   /// Validates only this file with the scoped adapter. The caller decides
@@ -61,6 +67,13 @@ class MacosKeychainService {
     channel: channel,
   );
 
+  /// Repairs sandbox access to the configured file without changing stores.
+  static Future<bool> restoreKeychainAccess(
+    String path, {
+    MethodChannel? channel,
+  }) =>
+      MacOsCustomKeychainStorage.restoreKeychainAccess(path, channel: channel);
+
   /// Shows the native save panel and creates a new private keychain with the
   /// exact password supplied. Returns the actual bookmarked file path, or null
   /// on cancellation. Existing files are never replaced; no backend is saved.
@@ -75,10 +88,10 @@ class MacosKeychainService {
     if (password.isEmpty) {
       throw ArgumentError('Enter a password for the new keychain.');
     }
-    final path = await (channel ?? _channel).invokeMethod<String>('createKeychain', {
-      'initialPath': initialPath,
-      'password': password,
-    });
+    final path = await (channel ?? _channel).invokeMethod<String>(
+      'createKeychain',
+      {'initialPath': initialPath, 'password': password},
+    );
     if (path != null && path.isEmpty) {
       throw const FormatException('Keychain creation returned an empty path.');
     }

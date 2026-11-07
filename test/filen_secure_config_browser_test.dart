@@ -26,44 +26,53 @@ const _credentials = <String, String>{
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('browser Filen SDK uses the host store without filesystem operations', () async {
-    expect(kIsWeb, isTrue);
-    SharedPreferences.setMockInitialValues({});
-    final storage = _PersistentBrowserFixture();
-    final config = FilenConfigService(configPath: '', secureStorage: storage);
-    final adapter = FilenClientAdapter(config: config);
+  test(
+    'browser Filen SDK uses the host store without filesystem operations',
+    () async {
+      expect(kIsWeb, isTrue);
+      SharedPreferences.setMockInitialValues({});
+      final storage = _PersistentBrowserFixture();
+      final config = FilenConfigService(configPath: '', secureStorage: storage);
+      final adapter = FilenClientAdapter(config: config);
 
-    expect(adapter.client.config.storage, same(config.sdkStorage));
-    await adapter.client.config.saveCredentials(_credentials);
-    expect(await config.readCredentials(), _credentials);
-    adapter.client.setAuth((await adapter.client.config.readCredentials())!);
-    expect(adapter.client.masterKeys, ['synthetic-key-one', 'synthetic-key-two']);
+      expect(adapter.client.config.storage, same(config.sdkStorage));
+      await adapter.client.config.saveCredentials(_credentials);
+      expect(await config.readCredentials(), _credentials);
+      adapter.client.setAuth((await adapter.client.config.readCredentials())!);
+      expect(adapter.client.masterKeys, [
+        'synthetic-key-one',
+        'synthetic-key-two',
+      ]);
 
-    await adapter.logout();
+      await adapter.logout();
 
-    expect(adapter.isAuthenticated, isFalse);
-    expect(adapter.client.masterKeys, isEmpty);
-    expect(await adapter.client.config.readCredentials(), isNull);
-    expect(await storage.read('filen_credentials'), isNull);
-  });
+      expect(adapter.isAuthenticated, isFalse);
+      expect(adapter.client.masterKeys, isEmpty);
+      expect(await adapter.client.config.readCredentials(), isNull);
+      expect(await storage.read('filen_credentials'), isNull);
+    },
+  );
 
-  test('browser session-only SDK operations preserve durable preferences', () async {
-    const legacy = '{"apiKey":"durable-old-key"}';
-    SharedPreferences.setMockInitialValues({'filen_credentials': legacy});
-    final config = FilenConfigService(
-      configPath: '',
-      secureStorage: InMemorySecureStorage(),
-    );
-    final adapter = FilenClientAdapter(config: config);
-    expect(await adapter.client.config.readCredentials(), isNull);
+  test(
+    'browser session-only SDK operations preserve durable preferences',
+    () async {
+      const legacy = '{"apiKey":"durable-old-key"}';
+      SharedPreferences.setMockInitialValues({'filen_credentials': legacy});
+      final config = FilenConfigService(
+        configPath: '',
+        secureStorage: InMemorySecureStorage(),
+      );
+      final adapter = FilenClientAdapter(config: config);
+      expect(await adapter.client.config.readCredentials(), isNull);
 
-    await adapter.client.config.saveCredentials(_credentials);
-    adapter.client.setAuth(_credentials);
-    await adapter.logout();
+      await adapter.client.config.saveCredentials(_credentials);
+      adapter.client.setAuth(_credentials);
+      await adapter.logout();
 
-    final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getString('filen_credentials'), legacy);
-    expect(prefs.containsKey('secure_storage_migration_v1'), isFalse);
-    expect(await config.readCredentials(), isNull);
-  });
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('filen_credentials'), legacy);
+      expect(prefs.containsKey('secure_storage_migration_v1'), isFalse);
+      expect(await config.readCredentials(), isNull);
+    },
+  );
 }

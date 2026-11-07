@@ -242,6 +242,47 @@ private struct CustomKeychainStoreTests {
     try expectStoreError("custom_keychain_locked") { try store.deleteAll(path: first.path) }
     try first.unlock()
 
+    let firstURL = URL(fileURLWithPath: first.path)
+    let firstSelectionKey = try CustomKeychainStore.fileURL(for: first.path).path
+    try expect(try CustomKeychainStore.restoredSelectionKey(
+      configuredPath: first.path, selectedURL: firstURL) == firstSelectionKey,
+      "Restoring the same file changed the configured selection key")
+    let alias = directory.appendingPathComponent("first-alias.keychain")
+    try FileManager.default.createSymbolicLink(at: alias, withDestinationURL: firstURL)
+    let aliasSelectionKey = try CustomKeychainStore.fileURL(for: alias.path).path
+    try expect(try CustomKeychainStore.restoredSelectionKey(
+      configuredPath: alias.path, selectedURL: firstURL) == aliasSelectionKey,
+      "Canonical-file verification lost the original configured alias")
+    try expect(try CustomKeychainStore.restoredSelectionKey(
+      configuredPath: first.path, selectedURL: alias) == firstSelectionKey,
+      "Selecting a canonical alias changed the configured keychain")
+
+    // A failed recovery must leave all existing bookmarks untouched. These
+    // deliberately invalid bytes are never resolved by the validation helper.
+    let preservedBookmarks: [String: Data] = [
+      firstSelectionKey: Data([7, 8, 9]), "unrelated-selection": Data([4, 5, 6]),
+    ]
+    defaults.set(preservedBookmarks, forKey: CustomKeychainStore.bookmarksPreference)
+    try expectStoreError("custom_keychain_different_file") {
+      try store.restoreAccess(configuredPath: first.path,
+                              selectedURL: URL(fileURLWithPath: second.path))
+    }
+    try expectStoreError("custom_keychain_restore_unavailable") {
+      try store.restoreAccess(configuredPath: missing,
+                              selectedURL: URL(fileURLWithPath: missing))
+    }
+    try expectStoreError("custom_keychain_restore_unavailable") {
+      try store.restoreAccess(configuredPath: directory.path, selectedURL: directory)
+    }
+    try expectStoreError("custom_keychain_restore_unavailable") {
+      try store.restoreAccess(configuredPath: first.path,
+                              selectedURL: URL(string: "https://example.invalid/keychain")!)
+    }
+    try expect((defaults.dictionary(forKey: CustomKeychainStore.bookmarksPreference)
+      as? [String: Data]) == preservedBookmarks,
+      "Rejected access recovery mutated bookmarks")
+    defaults.removeObject(forKey: CustomKeychainStore.bookmarksPreference)
+
     let selectedPath = try CustomKeychainStore.fileURL(for: first.path).path
     defaults.set([selectedPath: Data([0, 1, 2])],
                  forKey: CustomKeychainStore.bookmarksPreference)
@@ -251,6 +292,6 @@ private struct CustomKeychainStoreTests {
 
     try expect(try PreferencesSnapshot.capture() == beforeOperations,
                "Custom store changed the user's default keychain or search list")
-    print("Custom keychain native tests passed: creation, scope, namespace, updates, collisions, missing/locked paths, bookmarks and unchanged preferences.")
+    print("Custom keychain native tests passed: creation, scope, namespace, updates, collisions, missing/locked paths, same-file recovery, bookmarks and unchanged preferences.")
   }
 }

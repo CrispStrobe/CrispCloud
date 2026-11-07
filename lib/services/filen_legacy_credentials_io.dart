@@ -10,10 +10,15 @@ void deleteLegacyFilenCredentials(String configPath) {
   if (configPath.isEmpty || configPath.contains('\u0000')) {
     throw StateError('The Filen credential directory is invalid.');
   }
-  final directoryType = FileSystemEntity.typeSync(configPath, followLinks: false);
+  final directoryType = FileSystemEntity.typeSync(
+    configPath,
+    followLinks: false,
+  );
   if (directoryType != FileSystemEntityType.directory &&
       directoryType != FileSystemEntityType.notFound) {
-    throw StateError('The Filen credential directory is not a regular directory.');
+    throw StateError(
+      'The Filen credential directory is not a regular directory.',
+    );
   }
 
   // typeSync returns notFound for lookup errors too. Listing distinguishes a
@@ -34,12 +39,14 @@ void deleteLegacyFilenCredentials(String configPath) {
   final path = p.join(configPath, 'credentials.json');
   final type = FileSystemEntity.typeSync(path, followLinks: false);
   if (type != FileSystemEntityType.file) {
-    throw StateError('The legacy Filen credential entry is not a regular file.');
+    throw StateError(
+      'The legacy Filen credential entry is not a regular file.',
+    );
   }
   File(path).deleteSync();
-  if (Directory(configPath).listSync(followLinks: false).any(
-    (entry) => p.basename(entry.path) == 'credentials.json',
-  )) {
+  if (Directory(configPath)
+      .listSync(followLinks: false)
+      .any((entry) => p.basename(entry.path) == 'credentials.json')) {
     throw StateError('The legacy Filen credential file could not be removed.');
   }
 }

@@ -166,6 +166,59 @@ final class CustomKeychainStore {
   /// Browse grants access only. The Dart settings dialog saves the selected
   /// backend/path separately, after the user confirms their choice.
   func rememberAccess(to url: URL) throws {
+    try rememberAccess(to: url, selectionKey: url.standardizedFileURL.path)
+  }
+
+  /// A recovery picker may repair access only to the configured existing file.
+  /// Canonical paths must match and both file/volume identities must be readable
+  /// and equal. A moved or missing original is not permission to select another
+  /// store whose App Lock policy may differ.
+  static func restoredSelectionKey(configuredPath: String, selectedURL: URL) throws -> String {
+    let configured = try fileURL(for: configuredPath)
+    let unavailable = CustomKeychainStoreError(
+      code: "custom_keychain_restore_unavailable",
+      message: "Could not verify the original keychain file. Restore it to its original location and choose it again.",
+      status: nil)
+    guard selectedURL.isFileURL else { throw unavailable }
+    let expected = configured.resolvingSymlinksInPath()
+    let selected = selectedURL.standardizedFileURL.resolvingSymlinksInPath()
+    guard expected.path == selected.path else {
+      throw CustomKeychainStoreError(
+        code: "custom_keychain_different_file",
+        message: "Choose the originally selected keychain file. A different file cannot restore access to this profile.",
+        status: nil)
+    }
+    let keys: Set<URLResourceKey> = [
+      .isRegularFileKey, .fileResourceIdentifierKey, .volumeIdentifierKey,
+    ]
+    do {
+      let originalValues = try expected.resourceValues(forKeys: keys)
+      let selectedValues = try selected.resourceValues(forKeys: keys)
+      guard originalValues.isRegularFile == true, selectedValues.isRegularFile == true,
+            let originalFile = originalValues.fileResourceIdentifier as? NSObject,
+            let selectedFile = selectedValues.fileResourceIdentifier as? NSObject,
+            let originalVolume = originalValues.volumeIdentifier as? NSObject,
+            let selectedVolume = selectedValues.volumeIdentifier as? NSObject,
+            originalFile.isEqual(selectedFile), originalVolume.isEqual(selectedVolume) else {
+        throw unavailable
+      }
+    } catch {
+      // Filesystem paths, bookmark contents and underlying OS errors do not
+      // belong in the recovery UI or diagnostic logs.
+      throw unavailable
+    }
+    return configured.path
+  }
+
+  func restoreAccess(configuredPath: String, selectedURL: URL) throws {
+    let selectionKey = try Self.restoredSelectionKey(
+      configuredPath: configuredPath, selectedURL: selectedURL)
+    // Preserve the original selection key even for a canonical path alias.
+    // Validation precedes both bookmark creation and preference mutation.
+    try rememberAccess(to: selectedURL, selectionKey: selectionKey)
+  }
+
+  private func rememberAccess(to url: URL, selectionKey: String) throws {
     guard url.isFileURL else {
       throw CustomKeychainStoreError(
         code: "custom_keychain_invalid_path",
@@ -177,7 +230,7 @@ final class CustomKeychainStore {
         options: .withSecurityScope, includingResourceValuesForKeys: nil,
         relativeTo: nil)
       var bookmarks = defaults.dictionary(forKey: Self.bookmarksPreference) ?? [:]
-      bookmarks[selected.path] = bookmark
+      bookmarks[selectionKey] = bookmark
       defaults.set(bookmarks, forKey: Self.bookmarksPreference)
     } catch {
       throw CustomKeychainStoreError(

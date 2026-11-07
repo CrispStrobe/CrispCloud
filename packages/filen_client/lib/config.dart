@@ -97,8 +97,11 @@ class ConfigService {
     }
     final (src, secret) = _wrappingSecretForSave();
     final ct = cred.encryptTextWithKey(json.encode(data), secret);
-    await _storage
-        .saveCredentials({'fmt': credentialsFmt, 'src': src, 'ct': ct});
+    await _storage.saveCredentials({
+      'fmt': credentialsFmt,
+      'src': src,
+      'ct': ct,
+    });
     _restrictPerms(credentialsFile, '600');
   }
 
@@ -116,7 +119,9 @@ class ConfigService {
       // Legacy plaintext-JSON credentials → migrate to the encrypted envelope.
       try {
         await saveCredentials(stored);
-      } catch (_) {/* keep legacy on failure */}
+      } catch (_) {
+        /* keep legacy on failure */
+      }
       return stored;
     } catch (_) {
       return null;
@@ -155,7 +160,10 @@ class ConfigService {
   // --- Batch state management ---
 
   String generateBatchId(
-      String operationType, List<String> sources, String target) {
+    String operationType,
+    List<String> sources,
+    String target,
+  ) {
     final input = '$operationType-${sources.join('|')}-$target';
     final bytes = utf8.encode(input);
     final digest = crypto.sha1.convert(bytes);
@@ -183,7 +191,9 @@ class ConfigService {
   }
 
   Future<void> saveBatchState(
-      String batchId, Map<String, dynamic> state) async {
+    String batchId,
+    Map<String, dynamic> state,
+  ) async {
     final filePath = getBatchStateFilePath(batchId);
     final file = File(filePath);
     try {

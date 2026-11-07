@@ -208,175 +208,240 @@ void main() {
 
     for (final source in ['app', 'SDK']) {
       for (final failure in ['throw', 'drop', 'alter', 'read']) {
-        test('$source $failure save failure preserves the legacy file', () async {
-          final directory = Directory.systemTemp.createTempSync('crisp-filen-');
+        test(
+          '$source $failure save failure preserves the legacy file',
+          () async {
+            final directory = Directory.systemTemp.createTempSync(
+              'crisp-filen-',
+            );
+            addTearDown(() => directory.deleteSync(recursive: true));
+            const legacyContents = '{"apiKey":"legacy-private-key"}';
+            final legacy = File(p.join(directory.path, 'credentials.json'))
+              ..writeAsStringSync(legacyContents);
+            final storage = _FilenPersistentStorage()..failure = failure;
+            final config = FilenConfigService(
+              configPath: directory.path,
+              secureStorage: storage,
+            );
+
+            await expectLater(
+              source == 'app'
+                  ? config.saveCredentials(_filenCredentials)
+                  : config.sdkStorage.saveCredentials(_filenCredentials),
+              throwsA(
+                isA<FilenCredentialSaveFailure>().having(
+                  (error) => error.toString(),
+                  'redacted failure',
+                  isNot(contains('private')),
+                ),
+              ),
+            );
+
+            expect(legacy.readAsStringSync(), legacyContents);
+            storage.failure = '';
+            await config.sdkStorage.saveCredentials(_filenCredentials);
+            expect(legacy.existsSync(), isFalse);
+            expect(await config.readCredentials(), _filenCredentials);
+          },
+        );
+      }
+    }
+
+    test(
+      'session-only app and SDK operations preserve durable legacy data',
+      () async {
+        final directory = Directory.systemTemp.createTempSync(
+          'crisp-filen-session-',
+        );
+        addTearDown(() => directory.deleteSync(recursive: true));
+        const legacyContents = '{"apiKey":"durable-old-key"}';
+        final legacy = File(p.join(directory.path, 'credentials.json'))
+          ..writeAsStringSync(legacyContents);
+        SharedPreferences.setMockInitialValues({
+          'filen_credentials': legacyContents,
+        });
+        final config = FilenConfigService(
+          configPath: directory.path,
+          secureStorage: secure,
+        );
+
+        expect(await config.sdkStorage.readCredentials(), isNull);
+        await config.sdkStorage.saveCredentials(_filenCredentials);
+        expect(await config.readCredentials(), _filenCredentials);
+        await config.sdkStorage.clearCredentials();
+        await config.saveCredentials(_filenCredentials);
+        await config.clearCredentials();
+
+        expect(await config.sdkStorage.readCredentials(), isNull);
+        expect(legacy.readAsStringSync(), legacyContents);
+        final prefs = await SharedPreferences.getInstance();
+        expect(prefs.getString('filen_credentials'), legacyContents);
+        expect(prefs.containsKey('secure_storage_migration_v1'), isFalse);
+      },
+    );
+
+    test(
+      'unexpected legacy directory fails save and logout without removing data',
+      () async {
+        final directory = Directory.systemTemp.createTempSync(
+          'crisp-filen-directory-',
+        );
+        addTearDown(() => directory.deleteSync(recursive: true));
+        final unexpected = Directory(p.join(directory.path, 'credentials.json'))
+          ..createSync();
+        final sentinel = File(p.join(unexpected.path, 'keep.txt'))
+          ..writeAsStringSync('keep');
+        final storage = _FilenPersistentStorage();
+        final config = FilenConfigService(
+          configPath: directory.path,
+          secureStorage: storage,
+        );
+
+        await expectLater(
+          config.sdkStorage.saveCredentials(_filenCredentials),
+          throwsA(isA<FilenCredentialSaveFailure>()),
+        );
+        expect(await config.readCredentials(), _filenCredentials);
+        await expectLater(
+          config.sdkStorage.clearCredentials(),
+          throwsA(isA<FilenCredentialDeletionFailure>()),
+        );
+        expect(sentinel.readAsStringSync(), 'keep');
+        expect(await config.readCredentials(), _filenCredentials);
+
+        unexpected.deleteSync(recursive: true);
+        await config.sdkStorage.clearCredentials();
+        expect(await config.readCredentials(), isNull);
+      },
+    );
+
+    for (final linkDirectory in [false, true]) {
+      test(
+        'legacy cleanup refuses ${linkDirectory ? 'directory' : 'file'} symlinks',
+        () async {
+          final directory = Directory.systemTemp.createTempSync(
+            'crisp-filen-link-',
+          );
           addTearDown(() => directory.deleteSync(recursive: true));
-          const legacyContents = '{"apiKey":"legacy-private-key"}';
-          final legacy = File(p.join(directory.path, 'credentials.json'))
-            ..writeAsStringSync(legacyContents);
-          final storage = _FilenPersistentStorage()..failure = failure;
+          final targetDirectory = Directory(p.join(directory.path, 'target'))
+            ..createSync();
+          final target = File(p.join(targetDirectory.path, 'credentials.json'))
+            ..writeAsStringSync('preserve linked data');
+          final configDirectory = p.join(directory.path, 'config');
+          final Link link;
+          if (linkDirectory) {
+            link = Link(configDirectory)..createSync(targetDirectory.path);
+          } else {
+            Directory(configDirectory).createSync();
+            link = Link(p.join(configDirectory, 'credentials.json'))
+              ..createSync(target.path);
+          }
           final config = FilenConfigService(
-            configPath: directory.path,
-            secureStorage: storage,
+            configPath: configDirectory,
+            secureStorage: _FilenPersistentStorage(),
           );
 
           await expectLater(
-            source == 'app'
-                ? config.saveCredentials(_filenCredentials)
-                : config.sdkStorage.saveCredentials(_filenCredentials),
-            throwsA(isA<FilenCredentialSaveFailure>().having(
-              (error) => error.toString(),
-              'redacted failure',
-              isNot(contains('private')),
-            )),
+            config.saveCredentials(_filenCredentials),
+            throwsA(isA<FilenCredentialSaveFailure>()),
           );
-
-          expect(legacy.readAsStringSync(), legacyContents);
-          storage.failure = '';
-          await config.sdkStorage.saveCredentials(_filenCredentials);
-          expect(legacy.existsSync(), isFalse);
-          expect(await config.readCredentials(), _filenCredentials);
-        });
-      }
+          await expectLater(
+            config.clearCredentials(),
+            throwsA(isA<FilenCredentialDeletionFailure>()),
+          );
+          expect(link.existsSync(), isTrue);
+          expect(target.readAsStringSync(), 'preserve linked data');
+        },
+        skip: Platform.isWindows,
+      ); // Windows symlink creation needs extra privileges.
     }
 
-    test('session-only app and SDK operations preserve durable legacy data', () async {
-      final directory = Directory.systemTemp.createTempSync('crisp-filen-session-');
-      addTearDown(() => directory.deleteSync(recursive: true));
-      const legacyContents = '{"apiKey":"durable-old-key"}';
-      final legacy = File(p.join(directory.path, 'credentials.json'))
-        ..writeAsStringSync(legacyContents);
-      SharedPreferences.setMockInitialValues({'filen_credentials': legacyContents});
-      final config = FilenConfigService(
-        configPath: directory.path,
-        secureStorage: secure,
+    for (final invalid in <Object?>[
+      null,
+      42,
+      ['private-key'],
+      {'key': 'private-key'},
+    ]) {
+      test(
+        'SDK rejects ${invalid.runtimeType} credential values without changing storage',
+        () async {
+          final config = FilenConfigService(
+            configPath: 'unused',
+            secureStorage: secure,
+          );
+          await config.saveCredentials(_filenCredentials);
+          final before = await secure.read('filen_credentials');
+
+          await expectLater(
+            config.sdkStorage.saveCredentials({
+              ..._filenCredentials,
+              'masterKeys': invalid,
+            }),
+            throwsA(
+              isA<FormatException>().having(
+                (error) => error.toString(),
+                'redacted failure',
+                isNot(contains('private')),
+              ),
+            ),
+          );
+          expect(await secure.read('filen_credentials'), before);
+        },
       );
+    }
 
-      expect(await config.sdkStorage.readCredentials(), isNull);
-      await config.sdkStorage.saveCredentials(_filenCredentials);
-      expect(await config.readCredentials(), _filenCredentials);
-      await config.sdkStorage.clearCredentials();
-      await config.saveCredentials(_filenCredentials);
-      await config.clearCredentials();
-
-      expect(await config.sdkStorage.readCredentials(), isNull);
-      expect(legacy.readAsStringSync(), legacyContents);
-      final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getString('filen_credentials'), legacyContents);
-      expect(prefs.containsKey('secure_storage_migration_v1'), isFalse);
-    });
-
-    test('unexpected legacy directory fails save and logout without removing data', () async {
-      final directory = Directory.systemTemp.createTempSync('crisp-filen-directory-');
-      addTearDown(() => directory.deleteSync(recursive: true));
-      final unexpected = Directory(p.join(directory.path, 'credentials.json'))
-        ..createSync();
-      final sentinel = File(p.join(unexpected.path, 'keep.txt'))
-        ..writeAsStringSync('keep');
-      final storage = _FilenPersistentStorage();
-      final config = FilenConfigService(
-        configPath: directory.path,
-        secureStorage: storage,
-      );
-
-      await expectLater(
-        config.sdkStorage.saveCredentials(_filenCredentials),
-        throwsA(isA<FilenCredentialSaveFailure>()),
-      );
-      expect(await config.readCredentials(), _filenCredentials);
-      await expectLater(
-        config.sdkStorage.clearCredentials(),
-        throwsA(isA<FilenCredentialDeletionFailure>()),
-      );
-      expect(sentinel.readAsStringSync(), 'keep');
-      expect(await config.readCredentials(), _filenCredentials);
-
-      unexpected.deleteSync(recursive: true);
-      await config.sdkStorage.clearCredentials();
-      expect(await config.readCredentials(), isNull);
-    });
-
-    for (final linkDirectory in [false, true]) {
-      test('legacy cleanup refuses ${linkDirectory ? 'directory' : 'file'} symlinks', () async {
-        final directory = Directory.systemTemp.createTempSync('crisp-filen-link-');
-        addTearDown(() => directory.deleteSync(recursive: true));
-        final targetDirectory = Directory(p.join(directory.path, 'target'))
-          ..createSync();
-        final target = File(p.join(targetDirectory.path, 'credentials.json'))
-          ..writeAsStringSync('preserve linked data');
-        final configDirectory = p.join(directory.path, 'config');
-        final Link link;
-        if (linkDirectory) {
-          link = Link(configDirectory)..createSync(targetDirectory.path);
-        } else {
-          Directory(configDirectory).createSync();
-          link = Link(p.join(configDirectory, 'credentials.json'))
-            ..createSync(target.path);
-        }
+    test(
+      'malformed stored credentials fail closed through app and SDK',
+      () async {
         final config = FilenConfigService(
-          configPath: configDirectory,
-          secureStorage: _FilenPersistentStorage(),
+          configPath: 'unused',
+          secureStorage: secure,
         );
+        for (final raw in [
+          'private invalid JSON',
+          '[]',
+          '{"masterKeys":["private-key"]}',
+        ]) {
+          await secure.write('filen_credentials', raw);
+
+          await expectLater(
+            config.readCredentials(),
+            throwsA(isA<FilenCredentialReadFailure>()),
+          );
+          await expectLater(
+            config.sdkStorage.readCredentials(),
+            throwsA(isA<FilenCredentialReadFailure>()),
+          );
+          expect(await secure.read('filen_credentials'), raw);
+        }
+      },
+    );
+
+    test(
+      'SDK logout verifies deletion and permits retry after a no-op',
+      () async {
+        final directory = Directory.systemTemp.createTempSync(
+          'crisp-filen-delete-',
+        );
+        addTearDown(() => directory.deleteSync(recursive: true));
+        final storage = _FilenPersistentStorage();
+        final config = FilenConfigService(
+          configPath: directory.path,
+          secureStorage: storage,
+        );
+        await config.sdkStorage.saveCredentials(_filenCredentials);
+        storage.failure = 'drop-delete';
 
         await expectLater(
-          config.saveCredentials(_filenCredentials),
-          throwsA(isA<FilenCredentialSaveFailure>()),
-        );
-        await expectLater(
-          config.clearCredentials(),
+          config.sdkStorage.clearCredentials(),
           throwsA(isA<FilenCredentialDeletionFailure>()),
         );
-        expect(link.existsSync(), isTrue);
-        expect(target.readAsStringSync(), 'preserve linked data');
-      }, skip: Platform.isWindows); // Windows symlink creation needs extra privileges.
-    }
-
-    for (final invalid in <Object?>[null, 42, ['private-key'], {'key': 'private-key'}]) {
-      test('SDK rejects ${invalid.runtimeType} credential values without changing storage', () async {
-        final config = FilenConfigService(configPath: 'unused', secureStorage: secure);
-        await config.saveCredentials(_filenCredentials);
-        final before = await secure.read('filen_credentials');
-
-        await expectLater(
-          config.sdkStorage.saveCredentials({..._filenCredentials, 'masterKeys': invalid}),
-          throwsA(isA<FormatException>().having(
-            (error) => error.toString(),
-            'redacted failure',
-            isNot(contains('private')),
-          )),
-        );
-        expect(await secure.read('filen_credentials'), before);
-      });
-    }
-
-    test('malformed stored credentials fail closed through app and SDK', () async {
-      final config = FilenConfigService(configPath: 'unused', secureStorage: secure);
-      for (final raw in ['private invalid JSON', '[]', '{"masterKeys":["private-key"]}']) {
-        await secure.write('filen_credentials', raw);
-
-        await expectLater(config.readCredentials(), throwsA(isA<FilenCredentialReadFailure>()));
-        await expectLater(config.sdkStorage.readCredentials(), throwsA(isA<FilenCredentialReadFailure>()));
-        expect(await secure.read('filen_credentials'), raw);
-      }
-    });
-
-    test('SDK logout verifies deletion and permits retry after a no-op', () async {
-      final directory = Directory.systemTemp.createTempSync('crisp-filen-delete-');
-      addTearDown(() => directory.deleteSync(recursive: true));
-      final storage = _FilenPersistentStorage();
-      final config = FilenConfigService(configPath: directory.path, secureStorage: storage);
-      await config.sdkStorage.saveCredentials(_filenCredentials);
-      storage.failure = 'drop-delete';
-
-      await expectLater(
-        config.sdkStorage.clearCredentials(),
-        throwsA(isA<FilenCredentialDeletionFailure>()),
-      );
-      expect(await config.readCredentials(), _filenCredentials);
-      storage.failure = '';
-      await config.sdkStorage.clearCredentials();
-      expect(await config.readCredentials(), isNull);
-    });
+        expect(await config.readCredentials(), _filenCredentials);
+        storage.failure = '';
+        await config.sdkStorage.clearCredentials();
+        expect(await config.readCredentials(), isNull);
+      },
+    );
   });
 
   group('SFTPConfigService', () {

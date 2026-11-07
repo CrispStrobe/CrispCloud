@@ -18,7 +18,9 @@ class MacOsCustomKeychainStorage extends SecureStorage {
 
   static void _checkPlatform() {
     if (kIsWeb || defaultTargetPlatform != TargetPlatform.macOS) {
-      throw UnsupportedError('Custom keychain files are available only on macOS.');
+      throw UnsupportedError(
+        'Custom keychain files are available only on macOS.',
+      );
     }
   }
 
@@ -53,10 +55,33 @@ class MacOsCustomKeychainStorage extends SecureStorage {
     MethodChannel? channel,
   }) async {
     _checkPlatform();
-    return (channel ?? _defaultChannel).invokeMethod<String>(
-      'chooseKeychain',
-      {if (initialPath != null) 'initialPath': initialPath},
+    return (channel ?? _defaultChannel).invokeMethod<String>('chooseKeychain', {
+      if (initialPath != null) 'initialPath': initialPath,
+    });
+  }
+
+  /// Regrants access only to the same configured existing file. Native code
+  /// verifies the selected path and identity before replacing its bookmark.
+  /// This does not initialize/select a store or change its App Lock policy.
+  /// Cancellation is false; malformed replies and failures are explicit errors.
+  static Future<bool> restoreKeychainAccess(
+    String originalPath, {
+    MethodChannel? channel,
+  }) async {
+    _checkPlatform();
+    if (originalPath.trim().isEmpty) {
+      throw ArgumentError('A configured keychain path is required.');
+    }
+    final restored = await (channel ?? _defaultChannel).invokeMethod<bool>(
+      'restoreKeychainAccess',
+      {'path': originalPath},
     );
+    if (restored == null) {
+      throw const FormatException(
+        'Keychain access restoration returned no result.',
+      );
+    }
+    return restored;
   }
 
   @override

@@ -49,6 +49,15 @@ class AppDelegate: FlutterAppDelegate {
                                   result: result)
         return
       }
+      if call.method == "restoreKeychainAccess" {
+        guard let path = arguments["path"] as? String else {
+          result(FlutterError(code: "custom_keychain_invalid_path",
+                              message: "A configured keychain path is required.", details: nil))
+          return
+        }
+        self.restoreCustomKeychainAccess(configuredPath: path, result: result)
+        return
+      }
       if call.method == "createKeychain" {
         guard let password = arguments["password"] as? String, !password.isEmpty else {
           result(FlutterError(code: "custom_keychain_invalid_password",
@@ -193,6 +202,51 @@ class AppDelegate: FlutterAppDelegate {
         let path = try self.customKeychainStore.create(path: url.path, password: password)
         try self.customKeychainStore.rememberAccess(to: URL(fileURLWithPath: path))
         result(path)
+      } catch {
+        result(self.customKeychainFailure(error))
+      }
+    }
+    if let window = mainFlutterWindow {
+      panel.beginSheetModal(for: window, completionHandler: completed)
+    } else {
+      panel.begin(completionHandler: completed)
+    }
+  }
+
+  private func restoreCustomKeychainAccess(configuredPath: String,
+                                           result: @escaping FlutterResult) {
+    let configuredURL: URL
+    do {
+      configuredURL = try CustomKeychainStore.fileURL(for: configuredPath)
+    } catch {
+      result(customKeychainFailure(error))
+      return
+    }
+    let panel = NSOpenPanel()
+    panel.canChooseFiles = true
+    panel.canChooseDirectories = false
+    panel.allowsMultipleSelection = false
+    panel.allowedFileTypes = ["keychain", "keychain-db"]
+    panel.directoryURL = configuredURL.deletingLastPathComponent()
+    panel.prompt = NSLocalizedString("Restore access", comment: "Regrant access to the configured keychain")
+    panel.message = NSLocalizedString(
+      "Choose the originally selected keychain file at its original location. This does not change credential storage.",
+      comment: "Restore access to the same custom keychain file")
+    let completed: (NSApplication.ModalResponse) -> Void = { [weak self] response in
+      guard response == .OK, let url = panel.url else {
+        result(false)
+        return
+      }
+      defer { url.stopAccessingSecurityScopedResource() }
+      guard let self else {
+        result(FlutterError(code: "custom_keychain_restore_unavailable",
+                            message: "Keychain access could not be restored.", details: nil))
+        return
+      }
+      do {
+        try self.customKeychainStore.restoreAccess(
+          configuredPath: configuredPath, selectedURL: url)
+        result(true)
       } catch {
         result(self.customKeychainFailure(error))
       }
