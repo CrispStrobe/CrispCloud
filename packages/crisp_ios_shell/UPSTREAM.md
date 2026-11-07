@@ -120,6 +120,11 @@ booted simulator UDID; otherwise it selects/boots an available iPhone simulator.
 It runs the real engine, not a substitute availability implementation. Flutter
 transport/editor tests run with `flutter test` from this package.
 
+The required native gate runs all cases in one process, with named progress
+labels. If that suite fails, the runner also launches each case separately to
+reveal later failures in the same CI run, then returns the original failure.
+Those diagnostic runs cannot turn a failed full suite into a passing gate.
+
 The frameworks are embedded but command images must be loaded on demand, so the
 pod uses `-dead_strip_dylibs` to prevent eager linkage of unused command images.
 The native test suite verifies repeated sessions and nested Dash invocation.

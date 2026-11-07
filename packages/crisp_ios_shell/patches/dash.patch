@@ -1,15 +1,16 @@
 --- a/src/var.c
 +++ b/src/var.c
-@@ -328,7 +328,13 @@
+@@ -328,7 +328,14 @@
  char *
  lookupvar(const char *name)
  {
 -	struct var *v;
-+    // The app owns terminal dimensions; read them from this live session.
++    // Expansion tokens contain an '=' followed by parser control bytes or a
++    // default value. Use Dash's name comparator, not whole-token strcmp.
 +#if TARGET_OS_IPHONE
-+    if (!strcmp(name, "COLUMNS") || !strcmp(name, "COLUMNS=")) return ios_getenv("COLUMNS");
-+    if (!strcmp(name, "LINES") || !strcmp(name, "LINES=")) return ios_getenv("LINES");
-+    if (!strcmp(name, "ROWS") || !strcmp(name, "ROWS=")) return ios_getenv("ROWS");
++    if (varequal("COLUMNS=", name)) return ios_getenv("COLUMNS");
++    if (varequal("LINES=", name)) return ios_getenv("LINES");
++    if (varequal("ROWS=", name)) return ios_getenv("ROWS");
 +#endif
 +    struct var *v;
  

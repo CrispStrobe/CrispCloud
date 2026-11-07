@@ -7,6 +7,7 @@
 #import <poll.h>
 #import <stdio.h>
 #import <stdlib.h>
+#import <string.h>
 #import <unistd.h>
 
 static NSURL *CommandsURL, *FrameworksURL;
@@ -274,6 +275,9 @@ static void TestRealShell(void) {
   Require([session resizeColumns:123 rows:45 error:&error], @"Resize succeeds");
   Send(session, @"printf '<%s,%s>\\n' \"$COLUMNS\" \"$LINES\"; printf '__SIZE__\\n'\n");
   Has(TextThrough(session, @"__SIZE__\n"), @"<123,45>", @"Live shell dimensions");
+  Send(session, @"COLUMNS_EXTRA=kept; printf '<%s,%s,%s,%s>\\n' \"${COLUMNS:-missing}\" \"${LINES:-missing}\" \"$((ROWS + 1))\" \"$COLUMNS_EXTRA\"; printf '__SIZE_FORMS__\\n'\n");
+  Has(TextThrough(session, @"__SIZE_FORMS__\n"), @"<123,45,46,kept>",
+      @"Dimensions support expansion defaults and arithmetic without matching longer variable names");
   Require(WindowSignals == 0, @"Canonical resize does not signal the host or borrowed command threads");
   struct sigaction observedWindowAction;
   Require(sigaction(SIGWINCH, NULL, &observedWindowAction) == 0 && observedWindowAction.sa_handler == WindowSignal,
@@ -495,7 +499,36 @@ static void TestBridgeAndLifecycle(void) {
   Require(!CISShellSession.engineInUse, @"Detach acknowledges native cleanup");
 }
 
+static const struct {
+  const char *name;
+  void (*run)(void);
+} NativeCases[] = {
+  {"validation", TestValidation},
+  {"native-lease-ownership", TestNativeLeaseOwnership},
+  {"real-shell", TestRealShell},
+  {"interrupts", TestInterrupts},
+  {"backpressure-and-close", TestBackpressureAndClose},
+  {"bridge-and-lifecycle", TestBridgeAndLifecycle},
+  {"lease-during-detach", TestLeaseDuringDetach},
+  {"lease-during-startup-detach", TestLeaseDuringStartupDetach},
+};
+
 int main(int argc, char **argv) {
+  const size_t caseCount = sizeof(NativeCases) / sizeof(NativeCases[0]);
+  const char *selected = argc == 2 ? argv[1] : NULL;
+  if (selected && strcmp(selected, "--list") == 0) {
+    for (size_t i = 0; i < caseCount; i++) puts(NativeCases[i].name);
+    return 0;
+  }
+  BOOL known = selected == NULL && argc == 1;
+  for (size_t i = 0; selected && i < caseCount; i++) {
+    if (strcmp(selected, NativeCases[i].name) == 0) known = YES;
+  }
+  if (!known) {
+    fprintf(stderr, "Usage: NativeShellTests [--list | case-name]\n");
+    return 64;
+  }
+  setvbuf(stdout, NULL, _IONBF, 0);
   @autoreleasepool {
     signal(SIGALRM, Watchdog);
     alarm(150);
@@ -504,14 +537,15 @@ int main(int argc, char **argv) {
     TestDirectory = [NSTemporaryDirectory() stringByAppendingPathComponent:[@"Crisp shell Ω " stringByAppendingString:NSUUID.UUID.UUIDString]];
     NSError *error;
     Require([NSFileManager.defaultManager createDirectoryAtPath:TestDirectory withIntermediateDirectories:YES attributes:nil error:&error], @"Create test working directory");
-    TestValidation();
-    TestNativeLeaseOwnership();
-    TestRealShell();
-    TestInterrupts();
-    TestBackpressureAndClose();
-    TestBridgeAndLifecycle();
-    TestLeaseDuringDetach();
-    TestLeaseDuringStartupDetach();
+    for (size_t i = 0; i < caseCount; i++) {
+      if (selected && strcmp(selected, NativeCases[i].name) != 0) continue;
+      fprintf(stdout, "BEGIN: native case %s\n", NativeCases[i].name);
+      NSUInteger before = Checks;
+      NativeCases[i].run();
+      Require(!CISShellSession.engineInUse, @"Completed native case releases the runtime");
+      fprintf(stdout, "PASS: native case %s (%lu assertions)\n", NativeCases[i].name,
+          (unsigned long)(Checks - before));
+    }
     Require(!CISShellSession.engineInUse, @"All tests release the runtime");
     [NSFileManager.defaultManager removeItemAtPath:TestDirectory error:nil];
     alarm(0);

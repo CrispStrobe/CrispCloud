@@ -83,4 +83,4 @@ for framework in "$TEST_APP"/Frameworks/*.framework; do
 done
 codesign --force --sign - "$TEST_APP"
 python3 "$PACKAGE_DIR/tool/check_packaging.py" "$TEST_APP"
-xcrun simctl spawn "$SIMULATOR_UDID" "$TEST_APP/NativeShellTests"
+bash "$PACKAGE_DIR/tool/run_native_tests.sh" "$SIMULATOR_UDID" "$TEST_APP/NativeShellTests"
