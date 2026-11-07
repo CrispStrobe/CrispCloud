@@ -76,10 +76,10 @@ route, not a claim that public hosting removes the need for assessment.
 
 ## 3. Apple: disclose the actual encryption and territories
 
-The iOS and macOS `ITSAppUsesNonExemptEncryption` setting remains `true`.
-Do not flip it merely to suppress questions or because a BIS filing is
-unnecessary. Apple assesses third-party libraries too. Its current table
-states: [9][10]
+The iOS and macOS plist answer depends on the declared territories and the
+actual cryptography. Do not flip it merely to suppress questions or because a
+BIS filing is unnecessary. Apple assesses third-party libraries too. Its
+current table states: [9][10]
 
 | Encryption used | App Store Connect documentation |
 | --- | --- |
@@ -89,6 +89,17 @@ states: [9][10]
 
 For a build whose inventory and tests establish the standard-algorithm case,
 answer **yes, the app uses encryption**, and disclose its standard algorithms.
+If France is excluded, App Store Connect will **not create an encryption
+declaration** for this combination. Its API returns HTTP 409 unless
+`containsProprietaryCryptography` is true or both
+`containsThirdPartyCryptography` and `availableOnFrenchStore` are true
+(observed 2026-11-07). The matching no-documentation answer for the shipped
+plist is then `ITSAppUsesNonExemptEncryption=false`, with the standard-
+algorithm/France-exclusion evidence retained. This is not a claim that the app
+contains no encryption. If France is included, create the declaration with
+`availableOnFrenchStore=true`, provide the required French documentation, and
+use the Apple-issued code. Do not use the `false` answer while distributing in
+France.
 Filen/Internxt E2EE, local file encryption and bundled vault crypto must not be
 represented as HTTPS-only or Apple-OS-only. Complete the actual questionnaire
 for the final binary and territories; do not invent a BIS receipt or CCATS
@@ -111,8 +122,9 @@ self-created reference. [10][11]
 
 France remains a separate distribution assessment. Keep an applicable French
 declaration or supported exemption determination. ANSSI regulates supply and
-import of cryptology products subject to exceptions. This change does not
-alter existing territories. Excluding France is a product decision and is not
+import of cryptology products subject to exceptions. The 2026-11-07 release
+decision excludes France from App Store availability; confirm that territory
+setting before upload. Excluding France is a product decision and is not
 necessary to avoid the two **BIS** filings. [9][12]
 
 Germany-based developers still face Apple's export process: Apple explains
@@ -188,28 +200,26 @@ has no app encryption declaration for the app
 (`GET /v1/appEncryptionDeclarations?filter[app]=6789570314` returned an empty
 list). The build was **not uploaded**, so no duplicate build was created.
 
-Do not resolve this by blindly flipping the plist to `false` or inventing a
-code. Before the next TestFlight attempt, either:
+A declaration create request with `containsProprietaryCryptography=false`,
+`containsThirdPartyCryptography=true` and `availableOnFrenchStore=false` was
+then rejected with HTTP 409:
+*"Cannot create appEncryptionDeclarations unless either
+containsProprietaryCryptography is True or containsThirdPartyCryptography and
+availableOnFrenchStore are both True."* This confirms Apple's no-
+documentation route for third-party-only cryptography outside France.
 
-1. complete Apple's encryption questionnaire/declaration for the actual
-   binary, obtain the Apple-issued `codeValue`, and add it as
-   `ITSEncryptionExportComplianceCode` while keeping the declaration true; or
-2. establish that the app qualifies for the no-documentation answer and is
-   not distributed in France, then record that decision and use the matching
-   plist answer.
+**Release decision (2026-11-07):** exclude France from App Store availability
+for this release and set `ITSAppUsesNonExemptEncryption=false` in the iOS and
+macOS plists, with no `ITSEncryptionExportComplianceCode`. The evidence is the
+third-party-only, non-proprietary inventory and the France exclusion. Revisit
+the answer before enabling France or adding proprietary/non-standard
+cryptography; in those cases a declaration, French documentation and the
+Apple-issued code are required. The BIS 5D992.c assessment above is separate
+from Apple's plist answer.
 
 The macOS release workflow is otherwise healthy: the clean-runner startup
 smoke test now recognizes the first-run credential chooser instead of treating
 it as a crash.
-
-**Release decision (2026-11-07):** create an App Store Connect app encryption
-declaration for the actual binary with `containsProprietaryCryptography=false`,
-`containsThirdPartyCryptography=true` and `availableOnFrenchStore=false`; keep
-France out of App Store availability for this release. This is the no-French-
-declaration route. Record the Apple-issued `codeValue`, add it as
-`ITSEncryptionExportComplianceCode`, and keep
-`ITSAppUsesNonExemptEncryption=true`. Revisit the declaration before enabling
-France or changing the cryptographic inventory.
 
 ### Internal release decision record
 
