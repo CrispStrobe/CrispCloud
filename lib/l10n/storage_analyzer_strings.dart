@@ -18,7 +18,7 @@ class StorageAnalyzerStrings {
     'en': {
       'title': 'Storage analyzer',
       'intro': 'Find what takes up space in this folder and its subfolders.',
-      'scope': 'Includes hidden files. Uses reported file sizes without downloading file contents. Totals can differ from disk allocation or account quota.',
+      'scope': 'Uses reported file sizes without downloading file contents. Native and cloud scans include hidden files; browser folder snapshots may be incomplete. Totals can differ from disk allocation or account quota.',
       'openFolderFirst': 'Open a local or connected cloud folder and wait for it to finish loading before analyzing storage. Archives and search collections are not scan roots.',
       'close': 'Close',
       'cancel': 'Stop scan',
@@ -81,7 +81,7 @@ class StorageAnalyzerStrings {
       'title': 'Speicheranalyse',
       'intro':
           'Speicherbelegung dieses Ordners und seiner Unterordner anzeigen.',
-      'scope': 'Versteckte Dateien werden berücksichtigt. Verwendet gemeldete Dateigrößen, ohne Dateiinhalte herunterzuladen. Die Summe kann von der Datenträgerbelegung oder dem Kontingent abweichen.',
+      'scope': 'Verwendet gemeldete Dateigrößen, ohne Dateiinhalte herunterzuladen. Native und Cloud-Scans berücksichtigen versteckte Dateien; Browser-Ordnerlisten können unvollständig sein. Die Summe kann von der Datenträgerbelegung oder dem Kontingent abweichen.',
       'openFolderFirst': 'Öffnen Sie einen lokalen oder verbundenen Cloud-Ordner und warten Sie, bis er geladen ist. Archive und Suchsammlungen können nicht als Ausgangspunkt verwendet werden.',
       'close': 'Schließen',
       'cancel': 'Scan stoppen',

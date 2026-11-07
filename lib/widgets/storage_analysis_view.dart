@@ -117,8 +117,9 @@ class _StorageAnalysisViewState extends State<StorageAnalysisView>
     _matchingFileCount = 0;
     for (final node in _files) {
       if (_extension != null && node.item.extension != _extension) continue;
-      if (query.isNotEmpty && !node.path.toLowerCase().contains(query))
+      if (query.isNotEmpty && !node.path.toLowerCase().contains(query)) {
         continue;
+      }
       _matchingFileCount++;
       if (_shownFiles.length < 200) _shownFiles.add(node);
     }

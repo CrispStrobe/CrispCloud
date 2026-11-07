@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/storage_analyzer_strings.dart';
-import '../models/storage_analysis.dart';
 import '../providers/providers.dart';
 import '../services/file_operation_service.dart';
 import '../services/storage_scan_backend.dart';
@@ -134,7 +133,7 @@ class _StorageAnalyzerDialogState extends State<StorageAnalyzerDialog> {
       _error = null;
     });
     try {
-      final result = await (widget.service ?? StorageScanService()).scan(
+      final result = await (widget.service ?? const StorageScanService()).scan(
         widget.source,
         widget.rootPath,
         isCancelled: () => _cancelled || !mounted,

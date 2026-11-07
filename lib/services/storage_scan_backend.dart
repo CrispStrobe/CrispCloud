@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 import '../models/file_item.dart';
 import '../models/storage_analysis.dart';
 import 'cloud_storage_interface.dart';
@@ -15,7 +17,33 @@ FileOperationBackend storageScanBackend({
   required bool Function() isCurrent,
 }) {
   if (source is LocalPanelSource) {
-    return _LocalStorageScanBackend(local, isCurrent: isCurrent);
+    final grantSource = local is LocalFileSourceIdentity
+        ? local as LocalFileSourceIdentity
+        : null;
+    final capturedGrant = grantSource?.sourceIdentityForPath(
+      source.currentPath,
+    );
+    if (kIsWeb && capturedGrant == null) {
+      throw UnsupportedError(
+        'Open a selected local folder before scanning browser storage.',
+      );
+    }
+    var grantLost = false;
+    return _LocalStorageScanBackend(
+      local,
+      scanRoot: source.currentPath,
+      isCurrent: () {
+        if (!isCurrent()) return false;
+        if (grantSource != null &&
+            !identical(
+              capturedGrant,
+              grantSource.sourceIdentityForPath(source.currentPath),
+            )) {
+          grantLost = true;
+        }
+        return !grantLost;
+      },
+    );
   }
   if (source is RemotePanelSource) {
     return CloudStorageScanBackend(source.client, isCurrent: isCurrent);
@@ -23,13 +51,41 @@ FileOperationBackend storageScanBackend({
   throw UnsupportedError('Open a local or cloud folder before scanning.');
 }
 
-class _LocalStorageScanBackend extends LocalOperationBackend {
-  _LocalStorageScanBackend(super.service, {required super.isCurrent});
+class _LocalStorageScanBackend extends LocalOperationBackend
+    implements StorageScanDirectoryReader {
+  _LocalStorageScanBackend(
+    super.service, {
+    required super.isCurrent,
+    required this.scanRoot,
+  });
+  final String scanRoot;
 
   // A case-sensitive macOS/Windows volume may legitimately contain A and a.
   // A read-only census must not use conservative destination collision keys.
   @override
   String pathKey(String path) => paths.normalize(path);
+
+  @override
+  Future<StorageScanDirectory> listForStorageScan(String path) async {
+    final entries = await super.list(path);
+    if (!isCurrent) throw StateError('The selected local folder changed.');
+    return StorageScanDirectory(
+      entries: entries,
+      // Browser-local listings currently expose cached picker snapshots, omit
+      // hidden entries in the FSA path, and may suppress enumeration errors.
+      // Do not describe that legacy API as a complete/live directory census.
+      isComplete: !kIsWeb,
+      issues: kIsWeb && samePath(path, scanRoot)
+          ? [
+              StorageScanIssue(
+                path: path,
+                code: StorageScanIssueCode.incompleteListing,
+                message: 'Browser-local results use a cached folder snapshot. Hidden entries and access failures may be omitted; use the installed app for a complete local scan.',
+              ),
+            ]
+          : const [],
+    );
+  }
 }
 
 /// A scan-specific cloud adapter retains incomplete pages as partial results.

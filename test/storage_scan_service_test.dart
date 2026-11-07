@@ -413,6 +413,24 @@ void main() {
     expect(source.pathKey('/data/A'), isNot(source.pathKey('/data/a')));
   });
 
+  test('a replaced local folder grant cannot rebind a captured scan', () async {
+    final local = _GrantedLocalService();
+    final originalGrant = local.grant;
+    final source = storageScanBackend(
+      source: const LocalPanelSource('/selected'),
+      local: local,
+      isCurrent: () => true,
+    );
+    expect(source.isCurrent, isTrue);
+    local.grant = Object();
+    final result = await scanner.scan(source, '/selected');
+    expect(result.sourceChanged, isTrue);
+    expect(result.root.bytes, 0);
+    expect(source.isCurrent, isFalse);
+    local.grant = originalGrant;
+    expect(source.isCurrent, isFalse);
+  });
+
   group('cloud metadata adapter', () {
     test(
       'scans an exact case-distinct root without repeatedly listing ancestors',
@@ -661,8 +679,9 @@ class _MetadataBackend extends FileOperationBackend {
   Future<List<FileItem>> list(String path) async {
     listed.add(path);
     await onList?.call(path);
-    if (!directories.containsKey(path))
+    if (!directories.containsKey(path)) {
       throw StateError('Permission denied: $path');
+    }
     return directories[path]!;
   }
 
@@ -752,4 +771,11 @@ class _CloudMetadataClient extends CloudStorageClient
   dynamic noSuchMethod(Invocation invocation) => throw UnsupportedError(
     'Unexpected provider operation: ${invocation.memberName}',
   );
+}
+
+class _GrantedLocalService extends Fake
+    implements LocalFileService, LocalFileSourceIdentity {
+  Object grant = Object();
+  @override
+  Object? sourceIdentityForPath(String path) => grant;
 }

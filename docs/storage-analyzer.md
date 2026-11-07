@@ -44,8 +44,9 @@ fallback for messages without a translation.
   rectangle. Their combined bytes remain represented. Use the folder list or
   zoom into that branch to inspect them individually.
 - A folder total is the sum of its known descendant file sizes, not a size
-  returned for the directory itself. Hidden files are included, regardless of
-  the panel's display filters.
+  returned for the directory itself. Native and cloud scans include hidden files,
+  regardless of the panel's display filters. Browser-local snapshots have the
+  limitations described below.
 - **Partial results** and `+ ?` indicate that some sizes are unknown or some
   entries could not be scanned. Click the scan status for details about skipped
   links, unreadable folders, incomplete provider listings, or traversal limits.
@@ -67,6 +68,13 @@ container views, search results and saved collections are not scan roots. An
 account disconnect or replacement stops the scan and marks the result partial;
 it cannot redirect the analyzer or its reveal action into a different account.
 Locked tabs, declined folder access and failed reveals keep the report open.
+
+Browser-local scans require a selected folder. The existing browser file service
+can return cached listings, omit hidden names and suppress listing failures, so
+these results are explicitly marked partial rather than claiming a complete
+disk census. The selected folder grant is captured; replacing it invalidates the
+scan instead of redirecting reads into a new folder. Native local and cloud
+scans use their regular metadata listing contracts.
 
 Most provider adapters consume all listing pages themselves. When an adapter
 exposes another page or reports an incomplete response, the analyzer retains
