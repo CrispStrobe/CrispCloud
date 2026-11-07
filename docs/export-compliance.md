@@ -177,6 +177,31 @@ Before each release:
 This workflow generates engineering evidence. It does not email authorities,
 file a report, request CCATS, submit an app or change store territories.
 
+### Observed store blocker (2026-11-07)
+
+The signed macOS `1.1.0 (10)` package built from `79dbb56` reached
+`altool --validate-app` but Apple rejected it with **ITMS-90592 / 90592**
+(*Invalid Export Compliance Code*). The package contains
+`ITSAppUsesNonExemptEncryption=true` and no
+`ITSEncryptionExportComplianceCode`, while App Store Connect app `6789570314`
+has no app encryption declaration for the app
+(`GET /v1/appEncryptionDeclarations?filter[app]=6789570314` returned an empty
+list). The build was **not uploaded**, so no duplicate build was created.
+
+Do not resolve this by blindly flipping the plist to `false` or inventing a
+code. Before the next TestFlight attempt, either:
+
+1. complete Apple's encryption questionnaire/declaration for the actual
+   binary, obtain the Apple-issued `codeValue`, and add it as
+   `ITSEncryptionExportComplianceCode` while keeping the declaration true; or
+2. establish that the app qualifies for the no-documentation answer and is
+   not distributed in France, then record that decision and use the matching
+   plist answer.
+
+The macOS release workflow is otherwise healthy: the clean-runner startup
+smoke test now recognizes the first-run credential chooser instead of treating
+it as a crash.
+
 ### Internal release decision record
 
 Fill in facts and references; checked boxes without evidence do not establish
