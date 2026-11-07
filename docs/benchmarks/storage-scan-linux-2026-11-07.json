@@ -35,7 +35,9 @@
       "maximumMilliseconds": 7263.964,
       "runtime": "3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
       "operatingSystem": "linux",
-      "fixture": "fixture"
+      "fixture": "fixture",
+      "sourceCommit": "ed79f873e1dc945641655689df94ebaac1dd6cb9",
+      "implementation": "legacy_operation_backend"
     },
     {
       "benchmark": "storage_scan",
@@ -56,7 +58,9 @@
       "maximumMilliseconds": 944.697,
       "runtime": "3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
       "operatingSystem": "linux",
-      "fixture": "fixture"
+      "fixture": "fixture",
+      "sourceCommit": "ed79f873e1dc945641655689df94ebaac1dd6cb9",
+      "implementation": "per_directory_isolate"
     },
     {
       "benchmark": "storage_scan",
@@ -77,7 +81,9 @@
       "maximumMilliseconds": 1191.714,
       "runtime": "3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
       "operatingSystem": "linux",
-      "fixture": "directories"
+      "fixture": "directories",
+      "sourceCommit": "ed79f873e1dc945641655689df94ebaac1dd6cb9",
+      "implementation": "legacy_operation_backend"
     },
     {
       "benchmark": "storage_scan",
@@ -98,7 +104,55 @@
       "maximumMilliseconds": 930.643,
       "runtime": "3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
       "operatingSystem": "linux",
-      "fixture": "directories"
+      "fixture": "directories",
+      "sourceCommit": "ed79f873e1dc945641655689df94ebaac1dd6cb9",
+      "implementation": "per_directory_isolate"
+    },
+    {
+      "benchmark": "storage_scan",
+      "backend": "native_scan",
+      "files": 24000,
+      "folders": 460,
+      "logicalBytes": 359116800,
+      "filesDigest": "e7ed6c33c6e466ee9bc3b995660946a9cc70dbf173712a94cd80c8099e481d9e",
+      "milliseconds": [
+        516.123,
+        500.381,
+        496.166,
+        506.102,
+        487.567
+      ],
+      "medianMilliseconds": 500.381,
+      "minimumMilliseconds": 487.567,
+      "maximumMilliseconds": 516.123,
+      "runtime": "3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
+      "operatingSystem": "linux",
+      "fixture": "fixture",
+      "sourceCommit": "dec6e90e83532612b326d5b7c7ff76c0ccfbd966",
+      "implementation": "persistent_scan_session"
+    },
+    {
+      "benchmark": "storage_scan",
+      "backend": "native_scan",
+      "files": 0,
+      "folders": 1010,
+      "logicalBytes": 0,
+      "filesDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "milliseconds": [
+        162.179,
+        155.165,
+        122.488,
+        156.489,
+        127.173
+      ],
+      "medianMilliseconds": 155.165,
+      "minimumMilliseconds": 122.488,
+      "maximumMilliseconds": 162.179,
+      "runtime": "3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
+      "operatingSystem": "linux",
+      "fixture": "directories",
+      "sourceCommit": "dec6e90e83532612b326d5b7c7ff76c0ccfbd966",
+      "implementation": "persistent_scan_session"
     }
   ],
   "native_snapshot": {

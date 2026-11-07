@@ -150,11 +150,15 @@ renders at most 600 sectors and five rings. The largest-files list displays at
 most 200 matches. These display limits do not change scan totals or the
 browsable folder list.
 
-Native directory metadata is read synchronously in a background isolate while
-the original access scope remains held. This avoids per-file asynchronous I/O
-scheduling and reuses the initial no-follow type from enumeration. A final type
-check detects visible entry changes; strict root and folder-descent checks are
-retained. Good siblings remain visible when one entry's metadata fails.
+Native directory metadata is read synchronously in one reusable background
+isolate per scan while the original access scope remains held for each directory.
+This avoids per-file asynchronous I/O scheduling and repeated worker startup.
+The reader reuses the initial no-follow type from enumeration and checks again
+after reading metadata. It checks each directory before and after listing, so
+the scanner can omit a redundant generic pre-descent stat only for readers
+that explicitly provide that guard. Good siblings remain visible when one
+entry's metadata fails. Each scan closes its own worker after pending reads
+finish, including cancellation, source changes, and access errors.
 Cancellation is applied after the current directory finishes. A single very
 large directory is still fully listed before the global entry budget applies.
 The result is an observed metadata snapshot, not an atomic filesystem snapshot.
@@ -172,24 +176,40 @@ an independently generated manifest, plus exact counts and total bytes.
 | Operation | Median | Measured range |
 | --- | ---: | ---: |
 | Previous native adapter, complete scan and aggregation | 6,435.569 ms | 6,188.108–7,263.964 ms |
-| Background native adapter, complete scan and aggregation | 899.095 ms | 876.555–944.697 ms |
+| First background adapter, one worker per directory | 899.095 ms | 876.555–944.697 ms |
+| Current Dart adapter, one reusable worker per scan | **500.381 ms** | **487.567–516.123 ms** |
 | Save existing result through native disk storage | 464.079 ms | 459.854–492.449 ms |
 | Load and validate native saved result | 422.782 ms | 403.498–446.355 ms |
 
-The scan time is about **7.16× faster** on this fixture. Save and load were
-measured separately through the real native storage implementation, including
+The current complete scan is **1.80× faster** than the first background adapter
+and **12.86× faster** than the original operation backend on this fixture.
+The current measurement includes worker creation, directory access wrappers,
+source checks, path validation, progress/cancellation checkpoints, immutable
+tree aggregation, and awaited worker shutdown. It uses commit
+`dec6e90e83532612b326d5b7c7ff76c0ccfbd966`.
+Save and load were measured separately through the real native storage implementation, including
 flush, atomic publication, checksums and validation. All 24,461 nodes, file and
 directory metadata, scan times, and diagnostics survived exact round trips.
 The richer native snapshot occupied approximately 7.8 MB per report.
 
-A directory-heavy fixture with 1,010 empty directories also improved:
-1,151.184 ms to 855.743 ms median. The gain is smaller because directory access,
-strict descent checks, and worker startup dominate when there are few files.
+A directory-heavy fixture with 1,010 empty directories improved from
+1,151.184 ms through the original backend to 855.743 ms with the first
+background adapter, then to **155.165 ms** (122.488–162.179 ms) with the current
+per-scan worker. This additional **5.52×** improvement reflects the removal of
+repeated worker startup, duplicate folder metadata calls, and unconditional
+per-directory event-loop delays. The scanner still yields periodically even
+for cached or failed listings.
 
 These are measured fixture results, not cold-drive, network-mount, cloud API,
 or release-build guarantees. Provider listing latency remains a separate
 constraint. Raw CrispCloud measurements are recorded in
 [the benchmark data](benchmarks/storage-scan-linux-2026-11-07.json).
+
+The separate [scan engine comparison](storage-scan-performance.md) examines
+the remaining Rust/Dart gap, AOT compilation, matched tree workloads, and a
+bounded Rust-to-Dart FFI prototype. The FFI experiment is reproducible under
+`tool/benchmarks/native_scan_lab`; it is not an app dependency or a shipping
+scan backend. The app's scanner remains pure Dart.
 
 Reproduce the metadata benchmark with a new disposable directory:
 
@@ -233,6 +253,7 @@ Run the focused deterministic checks with the Flutter version in `.fvmrc`:
 ```sh
 flutter test test/storage_scan_service_test.dart \
   test/storage_scan_native_test.dart \
+  test/storage_scan_worker_test.dart \
   test/storage_scan_access_test.dart \
   test/s3_listing_completeness_test.dart \
   test/storage_treemap_test.dart \
