@@ -1,0 +1,6 @@
+/reference/
+/target/
+/.dart_tool/
+/build/
+/__pycache__/
+/ffi-contract-*/

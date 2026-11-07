@@ -1,0 +1,8 @@
+name: native_scan_lab
+publish_to: none
+description: Benchmark-only Rust/Dart scan comparison; not an app dependency.
+environment:
+  sdk: '>=3.13.0 <4.0.0'
+dependencies:
+  cross_file: 0.3.5+2
+  path: 1.9.1

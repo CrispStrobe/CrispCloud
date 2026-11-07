@@ -1,0 +1,30 @@
+[package]
+name = "scanner-native-lab"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+# The fetched reference modules contain their upstream unit tests and dev-only
+# dependencies. This package runs its own ABI checks using Python instead.
+test = false
+doctest = false
+
+[[bin]]
+name = "scanner-native-lab"
+path = "src/main.rs"
+test = false
+
+[dependencies]
+serde = { version = "=1.0.228", features = ["derive"] }
+serde_json = "=1.0.150"
+rayon = "=1.12.0"
+jwalk = "=0.8.1"
+md-5 = "=0.10.6"
+sha1 = "=0.10.6"
+sha2 = "=0.10.9"
+hex = "=0.4.3"
+
+[profile.release]
+lto = "thin"
+

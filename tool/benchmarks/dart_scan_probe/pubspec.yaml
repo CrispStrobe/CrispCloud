@@ -1,0 +1,8 @@
+name: crispcloud_scan_benchmarks
+publish_to: none
+environment:
+  sdk: '>=3.13.0 <4.0.0'
+dependencies:
+  crypto: ^3.0.7
+  path: ^1.9.1
+  cross_file: ^0.3.5+2

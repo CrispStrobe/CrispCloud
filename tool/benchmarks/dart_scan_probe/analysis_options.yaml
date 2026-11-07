@@ -1,0 +1,10 @@
+# A standalone Dart CLI package. The production imports are deliberately
+# relative to this checkout, without depending on the Flutter app package.
+analyzer:
+  exclude:
+    - build/**
+linter:
+  rules:
+    - always_declare_return_types
+    - avoid_empty_else
+    - unnecessary_this

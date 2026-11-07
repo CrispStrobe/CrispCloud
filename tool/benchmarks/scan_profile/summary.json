@@ -1,0 +1,808 @@
+{
+  "original": {
+    "medianMs": 868.979,
+    "minMs": 861.388,
+    "maxMs": 889.515,
+    "timedRuns": 3,
+    "profile": {}
+  },
+  "native_instrumented": {
+    "medianMs": 911.008,
+    "minMs": 908.816,
+    "maxMs": 953.298,
+    "timedRuns": 3,
+    "profile": {
+      "source_identity": {
+        "medianMs": 6.32563,
+        "calls": [
+          26910,
+          26910,
+          26910
+        ]
+      },
+      "paths_normalize": {
+        "medianMs": 5.432169,
+        "calls": [
+          24461,
+          24461,
+          24461
+        ]
+      },
+      "paths_basename": {
+        "medianMs": 16.097364,
+        "calls": [
+          24461,
+          24461,
+          24461
+        ]
+      },
+      "pathKey": {
+        "medianMs": 4.981523,
+        "calls": [
+          24461,
+          24461,
+          24461
+        ]
+      },
+      "source_isCurrent": {
+        "medianMs": 1.630937,
+        "calls": [
+          26909,
+          26909,
+          26909
+        ]
+      },
+      "scanner_source_checks": {
+        "medianMs": 15.167329,
+        "calls": [
+          26862,
+          26862,
+          26862
+        ]
+      },
+      "paths_isAbsolute": {
+        "medianMs": 1.220664,
+        "calls": [
+          24461,
+          24461,
+          24461
+        ]
+      },
+      "source_stat": {
+        "medianMs": 203.009878,
+        "calls": [
+          461,
+          461,
+          461
+        ]
+      },
+      "native_spawn_worker_handoff": {
+        "medianMs": 467.105662,
+        "calls": [
+          461,
+          461,
+          461
+        ]
+      },
+      "native_worker": {
+        "medianMs": 325.832352,
+        "calls": [
+          461,
+          461,
+          461
+        ]
+      },
+      "source_listing": {
+        "medianMs": 478.182056,
+        "calls": [
+          461,
+          461,
+          461
+        ]
+      },
+      "isWithin": {
+        "medianMs": 12.538823,
+        "calls": [
+          24460,
+          24460,
+          24460
+        ]
+      },
+      "paths_dirname": {
+        "medianMs": 23.171191,
+        "calls": [
+          24460,
+          24460,
+          24460
+        ]
+      },
+      "samePath": {
+        "medianMs": 8.570767,
+        "calls": [
+          24460,
+          24460,
+          24460
+        ]
+      },
+      "scanner_validation": {
+        "medianMs": 104.348507,
+        "calls": [
+          24460,
+          24460,
+          24460
+        ]
+      },
+      "scanner_node_processing": {
+        "medianMs": 3.256441,
+        "calls": [
+          24460,
+          24460,
+          24460
+        ]
+      },
+      "yield_directories": {
+        "medianMs": 48.028754,
+        "calls": [
+          461,
+          461,
+          461
+        ]
+      },
+      "yield_entries": {
+        "medianMs": 9.919292,
+        "calls": [
+          95,
+          95,
+          95
+        ]
+      },
+      "scanner_aggregation": {
+        "medianMs": 24.075893,
+        "calls": [
+          24461,
+          24461,
+          24461
+        ]
+      },
+      "yield_aggregation": {
+        "medianMs": 4.405753,
+        "calls": [
+          47,
+          47,
+          47
+        ]
+      }
+    }
+  },
+  "cached": {
+    "medianMs": 237.618,
+    "minMs": 222.944,
+    "maxMs": 241.373,
+    "timedRuns": 3,
+    "profile": {
+      "source_identity": {
+        "medianMs": 5.286831,
+        "calls": [
+          26910,
+          26910,
+          26910
+        ]
+      },
+      "paths_normalize": {
+        "medianMs": 5.145687,
+        "calls": [
+          24461,
+          24461,
+          24461
+        ]
+      },
+      "paths_basename": {
+        "medianMs": 19.058766,
+        "calls": [
+          24461,
+          24461,
+          24461
+        ]
+      },
+      "pathKey": {
+        "medianMs": 5.103306,
+        "calls": [
+          24461,
+          24461,
+          24461
+        ]
+      },
+      "source_isCurrent": {
+        "medianMs": 2.054423,
+        "calls": [
+          26909,
+          26909,
+          26909
+        ]
+      },
+      "scanner_source_checks": {
+        "medianMs": 14.967752,
+        "calls": [
+          26862,
+          26862,
+          26862
+        ]
+      },
+      "paths_isAbsolute": {
+        "medianMs": 1.182089,
+        "calls": [
+          24461,
+          24461,
+          24461
+        ]
+      },
+      "source_stat": {
+        "medianMs": 5.655506,
+        "calls": [
+          461,
+          461,
+          461
+        ]
+      },
+      "source_listing": {
+        "medianMs": 3.72291,
+        "calls": [
+          461,
+          461,
+          461
+        ]
+      },
+      "isWithin": {
+        "medianMs": 12.435335,
+        "calls": [
+          24460,
+          24460,
+          24460
+        ]
+      },
+      "paths_dirname": {
+        "medianMs": 24.503962,
+        "calls": [
+          24460,
+          24460,
+          24460
+        ]
+      },
+      "samePath": {
+        "medianMs": 8.660828,
+        "calls": [
+          24460,
+          24460,
+          24460
+        ]
+      },
+      "scanner_validation": {
+        "medianMs": 114.939887,
+        "calls": [
+          24460,
+          24460,
+          24460
+        ]
+      },
+      "scanner_node_processing": {
+        "medianMs": 3.969695,
+        "calls": [
+          24460,
+          24460,
+          24460
+        ]
+      },
+      "yield_directories": {
+        "medianMs": 30.689681,
+        "calls": [
+          461,
+          461,
+          461
+        ]
+      },
+      "yield_entries": {
+        "medianMs": 5.332549,
+        "calls": [
+          95,
+          95,
+          95
+        ]
+      },
+      "scanner_aggregation": {
+        "medianMs": 17.127317,
+        "calls": [
+          24461,
+          24461,
+          24461
+        ]
+      },
+      "yield_aggregation": {
+        "medianMs": 2.72421,
+        "calls": [
+          47,
+          47,
+          47
+        ]
+      }
+    }
+  },
+  "cached_cheap_identity": {
+    "medianMs": 239.868,
+    "minMs": 232.862,
+    "maxMs": 241.737,
+    "timedRuns": 3,
+    "profile": {
+      "source_identity": {
+        "medianMs": 1.370694,
+        "calls": [
+          26910,
+          26910,
+          26910
+        ]
+      },
+      "paths_normalize": {
+        "medianMs": 5.386228,
+        "calls": [
+          24461,
+          24461,
+          24461
+        ]
+      },
+      "paths_basename": {
+        "medianMs": 16.198041,
+        "calls": [
+          24461,
+          24461,
+          24461
+        ]
+      },
+      "pathKey": {
+        "medianMs": 4.974257,
+        "calls": [
+          24461,
+          24461,
+          24461
+        ]
+      },
+      "source_isCurrent": {
+        "medianMs": 1.235263,
+        "calls": [
+          26909,
+          26909,
+          26909
+        ]
+      },
+      "scanner_source_checks": {
+        "medianMs": 10.109566,
+        "calls": [
+          26862,
+          26862,
+          26862
+        ]
+      },
+      "paths_isAbsolute": {
+        "medianMs": 1.249787,
+        "calls": [
+          24461,
+          24461,
+          24461
+        ]
+      },
+      "source_stat": {
+        "medianMs": 6.080203,
+        "calls": [
+          461,
+          461,
+          461
+        ]
+      },
+      "source_listing": {
+        "medianMs": 4.151138,
+        "calls": [
+          461,
+          461,
+          461
+        ]
+      },
+      "isWithin": {
+        "medianMs": 12.581779,
+        "calls": [
+          24460,
+          24460,
+          24460
+        ]
+      },
+      "paths_dirname": {
+        "medianMs": 25.810873,
+        "calls": [
+          24460,
+          24460,
+          24460
+        ]
+      },
+      "samePath": {
+        "medianMs": 8.655281,
+        "calls": [
+          24460,
+          24460,
+          24460
+        ]
+      },
+      "scanner_validation": {
+        "medianMs": 121.335489,
+        "calls": [
+          24460,
+          24460,
+          24460
+        ]
+      },
+      "scanner_node_processing": {
+        "medianMs": 3.793585,
+        "calls": [
+          24460,
+          24460,
+          24460
+        ]
+      },
+      "yield_directories": {
+        "medianMs": 29.48962,
+        "calls": [
+          461,
+          461,
+          461
+        ]
+      },
+      "yield_entries": {
+        "medianMs": 5.470312,
+        "calls": [
+          95,
+          95,
+          95
+        ]
+      },
+      "scanner_aggregation": {
+        "medianMs": 17.874125,
+        "calls": [
+          24461,
+          24461,
+          24461
+        ]
+      },
+      "yield_aggregation": {
+        "medianMs": 3.149106,
+        "calls": [
+          47,
+          47,
+          47
+        ]
+      }
+    }
+  },
+  "cached_cheap_path": {
+    "medianMs": 196.801,
+    "minMs": 191.039,
+    "maxMs": 197.399,
+    "timedRuns": 3,
+    "profile": {
+      "source_identity": {
+        "medianMs": 1.321819,
+        "calls": [
+          26910,
+          26910,
+          26910
+        ]
+      },
+      "paths_normalize": {
+        "medianMs": 5.293583,
+        "calls": [
+          24461,
+          24461,
+          24461
+        ]
+      },
+      "paths_basename": {
+        "medianMs": 15.581068,
+        "calls": [
+          24461,
+          24461,
+          24461
+        ]
+      },
+      "pathKey": {
+        "medianMs": 1.07044,
+        "calls": [
+          24461,
+          24461,
+          24461
+        ]
+      },
+      "source_isCurrent": {
+        "medianMs": 1.197079,
+        "calls": [
+          26909,
+          26909,
+          26909
+        ]
+      },
+      "scanner_source_checks": {
+        "medianMs": 10.162158,
+        "calls": [
+          26862,
+          26862,
+          26862
+        ]
+      },
+      "paths_isAbsolute": {
+        "medianMs": 1.199574,
+        "calls": [
+          24461,
+          24461,
+          24461
+        ]
+      },
+      "source_stat": {
+        "medianMs": 5.479534,
+        "calls": [
+          461,
+          461,
+          461
+        ]
+      },
+      "source_listing": {
+        "medianMs": 3.797722,
+        "calls": [
+          461,
+          461,
+          461
+        ]
+      },
+      "isWithin": {
+        "medianMs": 4.959844,
+        "calls": [
+          24460,
+          24460,
+          24460
+        ]
+      },
+      "paths_dirname": {
+        "medianMs": 26.511472,
+        "calls": [
+          24460,
+          24460,
+          24460
+        ]
+      },
+      "samePath": {
+        "medianMs": 1.506942,
+        "calls": [
+          24460,
+          24460,
+          24460
+        ]
+      },
+      "scanner_validation": {
+        "medianMs": 89.970643,
+        "calls": [
+          24460,
+          24460,
+          24460
+        ]
+      },
+      "scanner_node_processing": {
+        "medianMs": 3.526831,
+        "calls": [
+          24460,
+          24460,
+          24460
+        ]
+      },
+      "yield_directories": {
+        "medianMs": 24.678768,
+        "calls": [
+          461,
+          461,
+          461
+        ]
+      },
+      "yield_entries": {
+        "medianMs": 4.92358,
+        "calls": [
+          95,
+          95,
+          95
+        ]
+      },
+      "scanner_aggregation": {
+        "medianMs": 14.509774,
+        "calls": [
+          24461,
+          24461,
+          24461
+        ]
+      },
+      "yield_aggregation": {
+        "medianMs": 2.705353,
+        "calls": [
+          47,
+          47,
+          47
+        ]
+      }
+    }
+  },
+  "cached_cloud_guard": {
+    "medianMs": 344.397,
+    "minMs": 338.709,
+    "maxMs": 351.661,
+    "timedRuns": 3,
+    "profile": {
+      "source_identity": {
+        "medianMs": 55.724737,
+        "calls": [
+          26910,
+          26910,
+          26910
+        ]
+      },
+      "paths_normalize": {
+        "medianMs": 5.49272,
+        "calls": [
+          24461,
+          24461,
+          24461
+        ]
+      },
+      "paths_basename": {
+        "medianMs": 16.673189,
+        "calls": [
+          24461,
+          24461,
+          24461
+        ]
+      },
+      "pathKey": {
+        "medianMs": 5.933684,
+        "calls": [
+          24461,
+          24461,
+          24461
+        ]
+      },
+      "source_isCurrent": {
+        "medianMs": 62.036968,
+        "calls": [
+          26909,
+          26909,
+          26909
+        ]
+      },
+      "scanner_source_checks": {
+        "medianMs": 129.025889,
+        "calls": [
+          26862,
+          26862,
+          26862
+        ]
+      },
+      "paths_isAbsolute": {
+        "medianMs": 1.181411,
+        "calls": [
+          24461,
+          24461,
+          24461
+        ]
+      },
+      "source_stat": {
+        "medianMs": 6.007479,
+        "calls": [
+          461,
+          461,
+          461
+        ]
+      },
+      "source_listing": {
+        "medianMs": 3.943082,
+        "calls": [
+          461,
+          461,
+          461
+        ]
+      },
+      "isWithin": {
+        "medianMs": 13.600637,
+        "calls": [
+          24460,
+          24460,
+          24460
+        ]
+      },
+      "paths_dirname": {
+        "medianMs": 24.175072,
+        "calls": [
+          24460,
+          24460,
+          24460
+        ]
+      },
+      "samePath": {
+        "medianMs": 8.915176,
+        "calls": [
+          24460,
+          24460,
+          24460
+        ]
+      },
+      "scanner_validation": {
+        "medianMs": 114.693425,
+        "calls": [
+          24460,
+          24460,
+          24460
+        ]
+      },
+      "scanner_node_processing": {
+        "medianMs": 3.493863,
+        "calls": [
+          24460,
+          24460,
+          24460
+        ]
+      },
+      "yield_directories": {
+        "medianMs": 26.82679,
+        "calls": [
+          461,
+          461,
+          461
+        ]
+      },
+      "yield_entries": {
+        "medianMs": 5.661994,
+        "calls": [
+          95,
+          95,
+          95
+        ]
+      },
+      "scanner_aggregation": {
+        "medianMs": 16.822155,
+        "calls": [
+          24461,
+          24461,
+          24461
+        ]
+      },
+      "yield_aggregation": {
+        "medianMs": 2.667421,
+        "calls": [
+          47,
+          47,
+          47
+        ]
+      }
+    }
+  },
+  "single_worker_read_only": {
+    "medianMs": 300.352,
+    "minMs": 293.339,
+    "maxMs": 324.964,
+    "timedRuns": 3,
+    "profile": {}
+  },
+  "single_worker_full_scan": {
+    "medianMs": 462.355,
+    "minMs": 443.088,
+    "maxMs": 463.627,
+    "timedRuns": 3,
+    "profile": {
+      "whole_worker_core": {
+        "medianMs": 443.548026,
+        "calls": [
+          1,
+          1,
+          1
+        ]
+      }
+    }
+  }
+}

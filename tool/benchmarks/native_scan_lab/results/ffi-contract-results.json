@@ -1,0 +1,17 @@
+{
+  "passed": 6,
+  "checks": [
+    "links skipped; FIFO retained unknown; partial diagnostics; hidden/Unicode/backslash/empty preserved",
+    "symlink root rejected without traversal",
+    "missing root retained as incomplete diagnostic",
+    "pre-cancelled job returns partial root and cancellation flag",
+    "depth limit retains discovered directory boundary and marks partial",
+    "diagnostic cap preserves suppressed count and all unknown nodes"
+  ],
+  "limitations": [
+    "No permission-denial oracle while running as root.",
+    "No concurrent replacement-race test; prototype is not race-proof.",
+    "Entry and memory limits inspected but not stress-tested here.",
+    "macOS/Windows/mobile scope and ABI builds not tested."
+  ]
+}
