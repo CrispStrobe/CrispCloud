@@ -2,13 +2,17 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:uuid/uuid.dart';
 
 import '../l10n/storage_analyzer_strings.dart';
 import '../providers/providers.dart';
 import '../services/file_operation_service.dart';
+import '../services/panel_source_service.dart';
 import '../services/storage_scan_backend.dart';
 import '../services/storage_scan_service.dart';
+import '../services/storage_scan_snapshot_store.dart';
 import '../utils/formatters.dart';
 import 'storage_analysis_view.dart';
 
@@ -36,6 +40,12 @@ Future<void> showStorageAnalyzerDialog(
         source: source,
         rootPath: origin.source.currentPath,
         sourceLabel: origin.source.displayName,
+        // A later browser picker grant may reuse the same display path and
+        // installation ID while referring to an entirely different folder.
+        // Only this dialog's captured grant may activate its saved live actions.
+        storageId: kIsWeb && origin.source is LocalPanelSource
+            ? 'browser-grant-session:${const Uuid().v4()}'
+            : origin.storageId,
         onReveal: (node) async {
           if (!origin.isCurrent) throw StateError('Storage changed.');
           final directory = node.isFolder
@@ -69,15 +79,9 @@ Future<void> showStorageAnalyzerDialog(
     if (!context.mounted) return;
     await showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(strings.text('title')),
-        content: Text(strings.text('openFolderFirst')),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(strings.text('close')),
-          ),
-        ],
+      builder: (_) => StorageAnalyzerDialog(
+        sourceLabel: strings.text('historyOnly'),
+        historyOnly: true,
       ),
     );
   }
@@ -87,18 +91,26 @@ Future<void> showStorageAnalyzerDialog(
 class StorageAnalyzerDialog extends StatefulWidget {
   const StorageAnalyzerDialog({
     super.key,
-    required this.source,
-    required this.rootPath,
-    required this.sourceLabel,
+    this.source,
+    this.rootPath = '',
+    this.sourceLabel = '',
+    this.storageId,
+    this.historyOnly = false,
     this.onReveal,
     this.service,
+    this.snapshotStore,
   });
 
-  final FileOperationBackend source;
+  final FileOperationBackend? source;
   final String rootPath;
   final String sourceLabel;
+
+  /// A stable opaque account/endpoint reference; never a client or credential.
+  final String? storageId;
+  final bool historyOnly;
   final Future<void> Function(StorageNode)? onReveal;
   final StorageScanService? service;
+  final StorageScanSnapshotStore? snapshotStore;
 
   @override
   State<StorageAnalyzerDialog> createState() => _StorageAnalyzerDialogState();
@@ -108,6 +120,18 @@ class _StorageAnalyzerDialogState extends State<StorageAnalyzerDialog> {
   bool _scanning = false;
   bool _cancelled = false;
   bool _revealing = false;
+  bool _saving = false;
+  bool _showHistory = false;
+  bool _historyLoading = false;
+  bool _openingSnapshot = false;
+  int _generation = 0;
+  int _historyGeneration = 0;
+  late final StorageScanSnapshotStore _snapshots;
+  late final Object? _sourceIdentity;
+  late final String _storageId;
+  List<StorageScanSnapshotSummary> _history = [];
+  StorageScanSnapshotSummary? _saved;
+  String? _historyError;
   StorageScanProgress? _progress;
   StorageScanResult? _result;
   String? _error;
@@ -115,39 +139,238 @@ class _StorageAnalyzerDialogState extends State<StorageAnalyzerDialog> {
   @override
   void initState() {
     super.initState();
-    unawaited(_scan());
+    _snapshots = widget.snapshotStore ?? StorageScanSnapshotStore();
+    _sourceIdentity = widget.source?.identity;
+    _storageId =
+        widget.storageId ??
+        widget.source?.persistentStorageId ??
+        'session:${const Uuid().v4()}';
+    if (widget.historyOnly || widget.source == null) {
+      _showHistory = true;
+      unawaited(_loadHistory());
+    } else {
+      unawaited(_scan());
+    }
   }
 
   @override
   void dispose() {
     _cancelled = true;
+    _generation++;
+    _historyGeneration++;
     super.dispose();
   }
 
   Future<void> _scan() async {
-    if (_scanning) return;
+    final source = widget.source;
+    if (_scanning || source == null || !_canUseSource) return;
+    final generation = ++_generation;
     setState(() {
       _scanning = true;
       _cancelled = false;
       _result = null;
       _progress = null;
       _error = null;
+      _saved = null;
+      _showHistory = false;
     });
     try {
       final result = await (widget.service ?? const StorageScanService()).scan(
-        widget.source,
+        source,
         widget.rootPath,
-        isCancelled: () => _cancelled || !mounted,
+        isCancelled: () => _cancelled || !mounted || generation != _generation,
         onProgress: (progress) {
-          if (mounted) setState(() => _progress = progress);
+          if (mounted && generation == _generation) {
+            setState(() => _progress = progress);
+          }
         },
       );
-      if (mounted) setState(() => _result = result);
+      if (mounted && generation == _generation) {
+        setState(() => _result = result);
+      }
     } catch (error) {
-      if (mounted) setState(() => _error = error.toString());
+      if (mounted && generation == _generation) {
+        setState(() => _error = error.toString());
+      }
     } finally {
-      if (mounted) setState(() => _scanning = false);
+      if (mounted && generation == _generation) {
+        setState(() => _scanning = false);
+      }
     }
+  }
+
+  bool get _canUseSource {
+    final source = widget.source;
+    if (source == null ||
+        !source.isCurrent ||
+        source.identity != _sourceIdentity) {
+      return false;
+    }
+    final saved = _saved;
+    return saved == null ||
+        (saved.storageId == _storageId &&
+            source.samePath(
+              saved.rootPath,
+              source.paths.normalize(widget.rootPath),
+            ));
+  }
+
+  Future<void> _loadHistory() async {
+    final generation = ++_historyGeneration;
+    setState(() {
+      _historyLoading = true;
+      _historyError = null;
+    });
+    try {
+      final entries = await _snapshots.list();
+      if (mounted && generation == _historyGeneration) {
+        setState(() => _history = entries);
+      }
+    } catch (error) {
+      if (mounted && generation == _historyGeneration) {
+        setState(() => _historyError = error.toString());
+      }
+    } finally {
+      if (mounted && generation == _historyGeneration) {
+        setState(() => _historyLoading = false);
+      }
+    }
+  }
+
+  void _historyView() {
+    setState(() => _showHistory = !_showHistory);
+    if (_showHistory) unawaited(_loadHistory());
+  }
+
+  Future<void> _openSaved(StorageScanSnapshotSummary summary) async {
+    final generation = ++_generation;
+    setState(() {
+      _cancelled = true;
+      _scanning = false;
+      _openingSnapshot = true;
+      _result = null;
+      _progress = null;
+      _error = null;
+      _showHistory = false;
+    });
+    try {
+      final snapshot = await _snapshots.load(summary.id);
+      if (!mounted || generation != _generation) return;
+      setState(() {
+        _saved = snapshot.summary;
+        _result = snapshot.result;
+      });
+    } catch (error) {
+      if (mounted && generation == _generation) {
+        setState(() => _error = error.toString());
+      }
+    } finally {
+      if (mounted && generation == _generation) {
+        setState(() => _openingSnapshot = false);
+      }
+    }
+  }
+
+  Future<void> _save() async {
+    final result = _result;
+    if (result == null || _saving || _saved != null) return;
+    final generation = _generation;
+    final strings = StorageAnalyzerStrings(context);
+    setState(() => _saving = true);
+    try {
+      final saved = await _snapshots.save(
+        result: result,
+        storageId: _storageId,
+        sourceLabel: widget.sourceLabel,
+        pathStyle: widget.source?.paths.style,
+      );
+      if (!mounted) return;
+      if (generation == _generation) setState(() => _saved = saved);
+      ScaffoldMessenger.maybeOf(context)
+          ?.showSnackBar(SnackBar(content: Text(strings.text('scanSaved'))));
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+          SnackBar(
+            content: Text(
+              strings.text('snapshotFailed', {'error': error.toString()}),
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _deleteSaved(StorageScanSnapshotSummary summary) async {
+    try {
+      await _snapshots.delete(summary.id);
+      if (mounted) await _loadHistory();
+    } catch (error) {
+      if (mounted) setState(() => _historyError = error.toString());
+    }
+  }
+
+  String _time(DateTime time) {
+    final local = time.toLocal();
+    final text = MaterialLocalizations.of(context);
+    return '${text.formatMediumDate(local)} ${text.formatTimeOfDay(TimeOfDay.fromDateTime(local))}';
+  }
+
+  Widget _historyBody(StorageAnalyzerStrings strings) {
+    if (_historyLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_historyError != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: SelectableText(
+            strings.text('snapshotFailed', {'error': _historyError!}),
+          ),
+        ),
+      );
+    }
+    if (_history.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(
+            strings.text('noSavedScans'),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      itemCount: _history.length,
+      itemBuilder: (context, index) {
+        final saved = _history[index];
+        return ListTile(
+          key: ValueKey('saved-scan-${saved.id}'),
+          leading: const Icon(Icons.history),
+          title: Text(
+            saved.sourceLabel.isEmpty ? saved.rootPath : saved.sourceLabel,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          subtitle: Text(
+            '${saved.rootPath}\n${strings.text('savedScanAt', {'time': _time(saved.savedAt)})}'
+            ' · ${formatBytes(saved.bytes)}${saved.isComplete ? '' : ' · ${strings.text('partial')}'}',
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+          ),
+          onTap: () => _openSaved(saved),
+          trailing: IconButton(
+            tooltip: strings.text('deleteSavedScan'),
+            icon: const Icon(Icons.delete_outline),
+            onPressed: () => _deleteSaved(saved),
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _reveal(StorageNode node) async {
@@ -156,9 +379,9 @@ class _StorageAnalyzerDialogState extends State<StorageAnalyzerDialog> {
     final route = ModalRoute.of(context);
     setState(() => _revealing = true);
     try {
-      if (!widget.source.isCurrent) throw StateError('Storage changed.');
+      if (!_canUseSource) throw StateError('Storage changed.');
       await widget.onReveal!(node);
-      if (!widget.source.isCurrent) throw StateError('Storage changed.');
+      if (!_canUseSource) throw StateError('Storage changed.');
       if (mounted && route?.isCurrent == true) Navigator.of(context).pop();
     } catch (_) {
       if (mounted) {
@@ -203,11 +426,20 @@ class _StorageAnalyzerDialogState extends State<StorageAnalyzerDialog> {
                           style: theme.textTheme.titleLarge,
                         ),
                         Text(
-                          widget.sourceLabel,
+                          _saved?.sourceLabel ?? widget.sourceLabel,
                           style: theme.textTheme.bodySmall,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
+                        if (_saved != null)
+                          Text(
+                            strings.text('historicalScan', {
+                              'time': _time(_saved!.completedAt),
+                            }),
+                            style: theme.textTheme.bodySmall,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                       ],
                     ),
                   ),
@@ -221,12 +453,16 @@ class _StorageAnalyzerDialogState extends State<StorageAnalyzerDialog> {
             ),
             const Divider(height: 1),
             Expanded(
-              child: result != null
+              child: _showHistory
+                  ? _historyBody(strings)
+                  : result != null
                   ? StorageAnalysisView(
+                      key: ValueKey(result),
                       analysis: result,
                       onReveal:
                           widget.onReveal == null ||
                               _revealing ||
+                              !_canUseSource ||
                               result.sourceChanged
                           ? null
                           : _reveal,
@@ -250,23 +486,32 @@ class _StorageAnalyzerDialogState extends State<StorageAnalyzerDialog> {
                               Text(
                                 strings.text(
                                   _error == null
-                                      ? (_cancelled ? 'stopping' : 'scanning')
+                                      ? (_openingSnapshot
+                                            ? 'loadingSavedScans'
+                                            : _scanning
+                                            ? (_cancelled
+                                                  ? 'stopping'
+                                                  : 'scanning')
+                                            : 'historyOnly')
                                       : 'failed',
                                 ),
                                 style: theme.textTheme.titleMedium,
                                 textAlign: TextAlign.center,
                               ),
                               const SizedBox(height: 12),
-                              if (_scanning) ...[
+                              if (_scanning || _openingSnapshot) ...[
                                 const LinearProgressIndicator(),
                                 const SizedBox(height: 12),
-                                Text(
-                                  strings.text('progress', {
-                                    'files': _progress?.files ?? 0,
-                                    'folders': _progress?.folders ?? 0,
-                                    'size': formatBytes(_progress?.bytes ?? 0),
-                                  }),
-                                ),
+                                if (_scanning)
+                                  Text(
+                                    strings.text('progress', {
+                                      'files': _progress?.files ?? 0,
+                                      'folders': _progress?.folders ?? 0,
+                                      'size': formatBytes(
+                                        _progress?.bytes ?? 0,
+                                      ),
+                                    }),
+                                  ),
                               ],
                               const SizedBox(height: 8),
                               Text(
@@ -296,33 +541,73 @@ class _StorageAnalyzerDialogState extends State<StorageAnalyzerDialog> {
             const Divider(height: 1),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Expanded(
-                    child: Text(
-                      widget.rootPath,
-                      style: theme.textTheme.bodySmall,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                  Text(
+                    _showHistory
+                        ? strings.text('offlineScan')
+                        : _result?.root.path ?? widget.rootPath,
+                    style: theme.textTheme.bodySmall,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(width: 8),
-                  if (_scanning)
-                    OutlinedButton.icon(
-                      onPressed: _cancelled
-                          ? null
-                          : () => setState(() => _cancelled = true),
-                      icon: const Icon(Icons.stop, size: 18),
-                      label: Text(strings.text('cancel')),
-                    )
-                  else
-                    OutlinedButton.icon(
-                      onPressed: widget.source.isCurrent && !_revealing
-                          ? _scan
-                          : null,
-                      icon: const Icon(Icons.refresh, size: 18),
-                      label: Text(strings.text('scanAgain')),
-                    ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    alignment: WrapAlignment.end,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: _saving || _openingSnapshot || _revealing
+                            ? null
+                            : _historyView,
+                        icon: const Icon(Icons.history, size: 18),
+                        label: Text(strings.text('savedScans')),
+                      ),
+                      if (!_showHistory && result != null)
+                        OutlinedButton.icon(
+                          onPressed: _saving || _saved != null ? null : _save,
+                          icon: Icon(
+                            _saved == null ? Icons.save_outlined : Icons.check,
+                            size: 18,
+                          ),
+                          label: Text(
+                            strings.text(
+                              _saving
+                                  ? 'savingScan'
+                                  : _saved == null
+                                  ? 'saveScan'
+                                  : 'scanSaved',
+                            ),
+                          ),
+                        ),
+                      if (_scanning)
+                        OutlinedButton.icon(
+                          onPressed: _cancelled
+                              ? null
+                              : () => setState(() => _cancelled = true),
+                          icon: const Icon(Icons.stop, size: 18),
+                          label: Text(strings.text('cancel')),
+                        )
+                      else if (widget.source != null)
+                        OutlinedButton.icon(
+                          onPressed:
+                              _canUseSource &&
+                                  !_revealing &&
+                                  !_saving &&
+                                  !_openingSnapshot
+                              ? _scan
+                              : null,
+                          icon: const Icon(Icons.refresh, size: 18),
+                          label: Text(
+                            strings.text(
+                              _saved == null ? 'scanAgain' : 'updateSavedScan',
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ],
               ),
             ),
