@@ -277,6 +277,16 @@ static void TestRealShell(void) {
   Has(TextThrough(session, @"__SCRIPT__\n"), @"script:argument Ω", @"Script path and argument quoting");
   Send(session, @"chmod +x './script space.sh'; './script space.sh' 'direct Ω'; printf '__DIRECT_SCRIPT__\\n'\n");
   Has(TextThrough(session, @"__DIRECT_SCRIPT__\n"), @"script:direct Ω", @"Explicit script path bypasses command registry lookup");
+  NSString *literalName = @"./script Ω '\" $;|<>.sh";
+  NSString *literalArgument = @"arg Ω '\" $HOME ; | < > * ? \\";
+  NSString *literalPath = [[script stringByDeletingLastPathComponent] stringByAppendingPathComponent:[literalName substringFromIndex:2]];
+  Require([@"#!/bin/sh\nprintf 'script:%s\\n' \"$1\"\n" writeToFile:literalPath atomically:YES encoding:NSUTF8StringEncoding error:nil],
+      @"Create direct script with UTF8 and literal shell metacharacters");
+  NSString *quotedName = [NSString stringWithFormat:@"'%@'", [literalName stringByReplacingOccurrencesOfString:@"'" withString:@"'\\''"]];
+  NSString *quotedArgument = [NSString stringWithFormat:@"'%@'", [literalArgument stringByReplacingOccurrencesOfString:@"'" withString:@"'\\''"]];
+  Send(session, [NSString stringWithFormat:@"chmod +x %@; %@ %@; printf '__LITERAL_SCRIPT__\\n'\n", quotedName, quotedName, quotedArgument]);
+  Has(TextThrough(session, @"__LITERAL_SCRIPT__\n"), [@"script:" stringByAppendingString:literalArgument],
+      @"Direct script name and arguments remain literal UTF8 bytes across native dispatch");
   NSError *error;
   struct sigaction originalWindowAction, windowAction = {0};
   windowAction.sa_handler = WindowSignal;

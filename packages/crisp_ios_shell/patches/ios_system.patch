@@ -237,7 +237,24 @@
      // NOTES: fd[0] is set up for reading, fd[1] is set up for writing
      // fpout = fdopen(fd[1], "w");
      // fpin = fdopen(fd[0], "r");
-@@ -2364,7 +2435,7 @@
+@@ -2335,11 +2406,15 @@
+ }
+ 
+ 
++static int crisp_system_with_argv(const char *inputCmd, char *const literalArgv[]);
++
+ int ios_execv(const char *path, char* const argv[]) {
+     // path and argv[0] are the same (not in theory, but in practice, since Python wrote the command)
+     // start "child" with the child streams:
++    // Dash already resolved syntax and redirection. Preserve every argv byte;
++    // the reconstructed string is diagnostic text, never another shell parse.
+     char* cmd = concatenateArgv(argv);
+-    int returnValue = ios_system(cmd);
++    int returnValue = crisp_system_with_argv(cmd, argv);
+     free(cmd);
+     return returnValue;
+ }
+@@ -2364,7 +2439,7 @@
      }
      // Add our own variables: ROWS, PWD (COLUMNS and LINES are already set):
      NSString* rowVariable = @"ROWS=";
@@ -246,7 +263,7 @@
      [dictionary addObject: rowVariable];
      NSString* pwdVariable = @"PWD=";
      pwdVariable = [pwdVariable stringByAppendingString: [NSString stringWithCString: currentSession->currentDir]];
-@@ -2593,7 +2664,13 @@
+@@ -2593,7 +2668,13 @@
      if (sessionList == nil) return;
      id sessionKey = @((NSUInteger)sessionId);
      @synchronized(sessionList) {
@@ -260,7 +277,7 @@
      }
      currentSession = NULL;
  }
-@@ -2830,7 +2907,7 @@
+@@ -2830,7 +2911,7 @@
      NSDictionary* newCommandList = [NSPropertyListSerialization propertyListWithData:dataLoadedFromFile options:NSPropertyListImmutable format:NULL error:&error];
      if (!newCommandList) return error;
      // merge the two dictionaries:
@@ -269,7 +286,208 @@
      [mutableDict addEntriesFromDictionary:newCommandList];
      commandList = [mutableDict copy];
      return NULL;
-@@ -3834,27 +3911,11 @@
+@@ -3096,6 +3177,10 @@
+ 
+ 
+ int ios_system(const char* inputCmd) {
++    return crisp_system_with_argv(inputCmd, NULL);
++}
++
++static int crisp_system_with_argv(const char *inputCmd, char *const literalArgv[]) {
+     NSLog(@"command = %s pid= %d\n", inputCmd, ios_currentPid());
+ 
+     char* command;
+@@ -3137,7 +3222,7 @@
+     char* maxPointer = cmd + strlen(cmd);
+     char* originalCommand = cmd;
+     // fprintf(thread_stderr, "Command sent: %s \n", cmd); fflush(stderr);
+-    if (cmd[0] == '"') {
++    if (!literalArgv && cmd[0] == '"') {
+         // Command was enclosed in quotes (almost always with Vim)
+         // It can also be the executable enclose in quotes
+         char* endCmd = strstr(cmd + 1, "\""); // find closing quote
+@@ -3148,7 +3233,7 @@
+         }
+         // assert(cmd + strlen(cmd) < maxPointer);
+     }
+-    if (cmd[0] == '(') {
++    if (!literalArgv && cmd[0] == '(') {
+         // Standard vim encoding: command between parentheses
+         command = cmd + 1;
+         char* endCmd = strstrquoted(command, ")"); // remove closing parenthesis
+@@ -3163,7 +3248,7 @@
+     char* commandForParsing = strdup(command);
+     char* commandForParsingFree = commandForParsing;
+     char* firstSpace = strstrquoted(commandForParsing, " ");
+-    while (firstSpace != NULL) {
++    while (!literalArgv && firstSpace != NULL) {
+         *firstSpace = 0;
+         char* equalSign = strchr(commandForParsing, '=');
+         if (equalSign == NULL) break;
+@@ -3175,7 +3260,7 @@
+     }
+     free(commandForParsingFree);
+     // Is the command an environment variable?
+-    if (command[0] == '$') {
++    if (!literalArgv && command[0] == '$') {
+         const char* newName = ios_getenv(command + 1);
+         if (newName != NULL) {
+             free(originalCommand);
+@@ -3185,7 +3270,7 @@
+         }
+     }
+     // alias expansion *before* input, output and error redirection.
+-    if ((command[0] != '\\') && (aliasDictionary != nil)) {
++    if (!literalArgv && (command[0] != '\\') && (aliasDictionary != nil)) {
+         // \command = cancel aliasing, get the original command
+         char* commandForParsing = strdup(command);
+         char* firstSpace = strstrquoted(commandForParsing, " ");
+@@ -3274,7 +3359,7 @@
+     params->stderr = child_stderr;
+     params->session = currentSession;
+     NSLog(@"After params creation, stdout %x stderr %x \n", params->stdout,  params->stderr);
+-    params->backgroundCommand = isBackgroundCommand(command);
++    params->backgroundCommand = !literalArgv && isBackgroundCommand(command);
+     params->numInterpreter = 0;
+     params->webAssemblyOrder = 0;
+     params->storeMainThread = false;
+@@ -3287,7 +3372,7 @@
+     // Only scan for input / output if there is no argument marker
+     char recordSeparator = 0x1e;
+     char* recordSeparatorPosition = strchr(inputFileMarker, recordSeparator);
+-    if (recordSeparatorPosition == NULL) {
++    if (!literalArgv && recordSeparatorPosition == NULL) {
+         // scan until first "<" (input file)
+         inputFileMarker = strstrquoted(inputFileMarker, "<");
+         // scan until first non-space character:
+@@ -3496,45 +3581,60 @@
+     if (params->stderr == NULL) params->stderr = thread_stderr;
+     NSLog(@"After files parsing, stdout %x stderr %x \n", params->stdout,  params->stderr);
+     int argc = 0;
+-    size_t numSpaces = 0;
+-    // the number of arguments is *at most* the number of spaces plus one
+-    char* str = command;
+-    while(*str) if (*str++ == ' ') ++numSpaces;
+-    char** argv = (char **)malloc(sizeof(char*) * (numSpaces + 3));
+-    bool* dontExpand = malloc(sizeof(bool) * (numSpaces + 3));
+-    // n spaces = n+1 arguments, plus null at the end, plus an extra slot for "alias a=c d"
+-    str = command;
+-    while (*str) {
+-        argv[argc] = str;
+-        dontExpand[argc] = false;
+-        argc += 1;
+-        if ((argc == 2) && (strcmp(argv[0], "export") == 0)) break; // don't try to unquote the argument of export.
+-        if ((argc == 2) && (strcmp(argv[0], "alias") == 0)) {
+-            // avoid issues with the syntax alias thing="other ~stuff", where ~stuff gets expanded.
+-            // We do that by changing it into alias thing "other ~stuff"
+-            char* equalSignPosition = strchr(str, '=');
+-            char* spacePosition = strchr(str, ' ');
+-            if ((spacePosition != NULL) && (equalSignPosition != NULL)) {
+-                // There is both a space and an equal sign
+-                if (spacePosition > equalSignPosition) {
+-                    // the space happens after the equal sign
+-                    *equalSignPosition = ' ';
+-                }
+-            }
+-        }
+-        char* end = getLastCharacterOfArgument(str);
+-        bool mustBreak = (end == NULL) || (strlen(end) == 0);
+-        if (!mustBreak) end[0] = 0x0;
+-        if ((str[0] == '\'') || (str[0] == '"') || (str[0] == recordSeparator)) {
+-            dontExpand[argc-1] = true; // don't expand arguments in quotes
+-        }
+-        argv[argc-1] = unquoteArgument(argv[argc-1]);
+-        if (mustBreak) break;
+-        str = end + 1;
+-        assert(argc < numSpaces + 2);
+-        while (str && (str[0] == ' ')) str++; // skip multiple spaces
+-    }
+-    argv[argc] = NULL;
++    char **argv;
++    bool *dontExpand;
++    if (literalArgv) {
++        while (literalArgv[argc]) argc++;
++        argv = malloc(sizeof(char *) * (argc + 1));
++        dontExpand = malloc(sizeof(bool) * (argc + 1));
++        for (int i = 0; i < argc; i++) {
++            argv[i] = literalArgv[i];
++            dontExpand[i] = true;
++        }
++        argv[argc] = NULL;
++        // The common argv_copy block below takes owned strdup copies before
++        // script rewriting or dispatch; caller-owned strings are never changed.
++    } else {
++        size_t numSpaces = 0;
++        // the number of arguments is *at most* the number of spaces plus one
++        char* str = command;
++        while(*str) if (*str++ == ' ') ++numSpaces;
++        argv = (char **)malloc(sizeof(char*) * (numSpaces + 3));
++        dontExpand = malloc(sizeof(bool) * (numSpaces + 3));
++        // n spaces = n+1 arguments, plus null at the end, plus an extra slot for "alias a=c d"
++        str = command;
++        while (*str) {
++            argv[argc] = str;
++            dontExpand[argc] = false;
++            argc += 1;
++            if ((argc == 2) && (strcmp(argv[0], "export") == 0)) break; // don't try to unquote the argument of export.
++            if ((argc == 2) && (strcmp(argv[0], "alias") == 0)) {
++                // avoid issues with the syntax alias thing="other ~stuff", where ~stuff gets expanded.
++                // We do that by changing it into alias thing "other ~stuff"
++                char* equalSignPosition = strchr(str, '=');
++                char* spacePosition = strchr(str, ' ');
++                if ((spacePosition != NULL) && (equalSignPosition != NULL)) {
++                    // There is both a space and an equal sign
++                    if (spacePosition > equalSignPosition) {
++                        // the space happens after the equal sign
++                        *equalSignPosition = ' ';
++                    }
++                }
++            }
++            char* end = getLastCharacterOfArgument(str);
++            bool mustBreak = (end == NULL) || (strlen(end) == 0);
++            if (!mustBreak) end[0] = 0x0;
++            if ((str[0] == '\'') || (str[0] == '"') || (str[0] == recordSeparator)) {
++                dontExpand[argc-1] = true; // don't expand arguments in quotes
++            }
++            argv[argc-1] = unquoteArgument(argv[argc-1]);
++            if (mustBreak) break;
++            str = end + 1;
++            assert(argc < numSpaces + 2);
++            while (str && (str[0] == ' ')) str++; // skip multiple spaces
++        }
++        argv[argc] = NULL;
++    }
+     if (argc != 0) {
+         // So far, all arguments are pointers into originalCommand.
+         // We need to change them (environment variables expansion, ~ expansion, etc)
+@@ -3581,7 +3681,7 @@
+         // - is argv[0] a command that refers to a file? (either absolute path, or in $PATH)
+         //   if so, does it exist, does it have +x bit set, does it have #! python or #! lua on the first line?
+         //   if yes to all, call the relevant interpreter. Works for hg, for example.
+-        if (argv[0][0] == '\\') {
++        if (!literalArgv && argv[0][0] == '\\') {
+             // Just remove the \ at the beginning
+             // There can be several versions of a command (e.g. ls as precompiled and ls written in Python)
+             // The executable file has precedence, unless the user has specified they want the original
+@@ -3613,7 +3713,7 @@
+             bool cmdIsAFile = false;
+             bool cmdIsReal = false;
+             bool cmdIsAPath = false;
+-            if ([commandName hasPrefix:@"~/"]) {
++            if (!literalArgv && [commandName hasPrefix:@"~/"]) {
+                 NSString* replacement_string = [NSString stringWithCString:(getenv("HOME")) encoding:NSUTF8StringEncoding];
+                 NSString* test_string = @"~";
+                 commandName = [commandName stringByReplacingOccurrencesOfString:test_string withString:replacement_string options:NULL range:NSMakeRange(0, 1)];
+@@ -3777,7 +3877,7 @@
+                                     for (int i = argc; i >= numComponents; i--) { argv[i] = argv[i-numComponents]; }
+                                     // Change the location of the file (from "command" to "/actual/full/path/command"):
+                                     // This pointer existed before
+-                                    argv[numComponents] = realloc(argv[numComponents], locationName.length + 1);
++                                    argv[numComponents] = realloc(argv[numComponents], strlen(locationName.UTF8String) + 1);
+                                     strcpy(argv[numComponents], locationName.UTF8String);
+                                     // Copy all arguments without change (except the first):
+                                     for (int i = 0; i < numComponents; i++) {
+@@ -3834,27 +3934,11 @@
          int (*function)(int ac, char** av) = NULL;
          if (commandList == nil) initializeCommandList();
          NSString* commandName = [NSString stringWithCString:argv[0] encoding:NSUTF8StringEncoding];
