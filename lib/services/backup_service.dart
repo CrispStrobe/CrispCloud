@@ -221,6 +221,7 @@ class BackupPlan {
     'schedule': schedule,
     'maxVersions': maxVersions,
     'encryptionEnabled': encryptionEnabled,
+    if (encryptionKey != null) 'hasEncryptionKey': true,
     if (lastRun != null) 'lastRun': lastRun!.toIso8601String(),
     if (nextRun != null) 'nextRun': nextRun!.toIso8601String(),
     'enabled': enabled,
@@ -411,7 +412,15 @@ class BackupService {
       for (final json in list) {
         final plan = BackupPlan.fromJson(json);
         final legacyKey = plan.encryptionKey;
-        var storedKey = await _secureStorage.read(_planKey(plan.id));
+        // Ordinary plaintext plans do not depend on an unlocked keychain.
+        // The marker preserves access to a retained key when encryption is
+        // disabled, rather than discarding it during metadata-only updates.
+        var storedKey =
+            plan.encryptionEnabled ||
+                legacyKey != null ||
+                json['hasEncryptionKey'] == true
+            ? await _secureStorage.read(_planKey(plan.id))
+            : null;
         if (legacyKey != null) {
           // Preserve both sources if an interrupted/manual migration left
           // conflicting keys. Never overwrite a potentially needed key.
@@ -515,13 +524,16 @@ class BackupService {
     if (kIsWeb) return;
 
     final plans = await getPlans();
+    final removed = plans.where((p) => p.id == planId).toList();
     plans.removeWhere((p) => p.id == planId);
     await _savePlans(plans);
 
     // Remove all snapshots for this plan
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_snapshotsKey(planId));
-    await _secureStorage.delete(_planKey(planId));
+    if (removed.any((p) => p.encryptionEnabled || p.encryptionKey != null)) {
+      await _secureStorage.delete(_planKey(planId));
+    }
 
     _log.info('Deleted backup plan $planId and all its snapshots');
   }

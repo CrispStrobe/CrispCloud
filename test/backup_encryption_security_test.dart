@@ -13,6 +13,18 @@ class _FailingSecretStore extends InMemorySecureStorage {
   }
 }
 
+class _UnavailableSecretStore extends InMemorySecureStorage {
+  @override
+  Future<String?> read(String key) async => throw StateError('Keychain locked');
+
+  @override
+  Future<void> write(String key, String value) async =>
+      throw StateError('Keychain locked');
+
+  @override
+  Future<void> delete(String key) async => throw StateError('Keychain locked');
+}
+
 BackupPlan _legacyPlan(String source) => BackupPlan(
   id: 'legacy-plan',
   name: 'Legacy encrypted backup',
@@ -141,6 +153,36 @@ void main() {
     await restarted.deletePlan(plan.id);
     expect(await secure.read('backup_plan_key_${plan.id}'), isNull);
   });
+
+  test('ordinary unencrypted plans do not require keychain access', () async {
+    final ordinary = BackupService(secureStorage: _UnavailableSecretStore());
+    final plan = await ordinary.createPlan(
+      name: 'Plain',
+      sourcePath: temp.path,
+      destinationPath: '/backup',
+      provider: 'filen',
+    );
+    expect((await ordinary.getPlan(plan.id))!.encryptionEnabled, isFalse);
+    await ordinary.deletePlan(plan.id);
+    expect(await ordinary.getPlans(), isEmpty);
+  });
+
+  test(
+    'metadata updates preserve a key retained by a disabled encrypted plan',
+    () async {
+      final plan = await createEncryptedPlan();
+      await service.updatePlan(plan.copyWith(encryptionEnabled: false));
+      final restarted = BackupService(secureStorage: secure);
+      final loaded = (await restarted.getPlan(plan.id))!;
+      expect(loaded.encryptionEnabled, isFalse);
+      expect(loaded.encryptionKey, 'new-test-passphrase');
+      await restarted.updatePlan(loaded.copyWith(name: 'Renamed'));
+      expect(
+        (await service.getPlan(plan.id))!.encryptionKey,
+        'new-test-passphrase',
+      );
+    },
+  );
 
   test(
     'legacy plaintext keys migrate only after a verified secure write',

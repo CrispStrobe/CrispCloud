@@ -276,7 +276,52 @@ abstract final class _Agile {
       _cryptValue(p, hn, _secretKeyBlock, p.encryptedKeyValue, decrypt: true),
       p.keyBytes,
     );
+    _verifyDataIntegrity(p, secret, pack);
     return _decryptPackage(p, secret, pack);
+  }
+
+  /// MS-OFFCRYPTO 2.3.4.14 authenticates the complete EncryptedPackage stream,
+  /// including its eight-byte StreamSize. Password verification alone does
+  /// not authenticate the document's CBC ciphertext.
+  static void _verifyDataIntegrity(
+    _AgileParams p,
+    Uint8List secret,
+    Uint8List pack,
+  ) {
+    final int hashSize = _Hash.digest(p.hashName, const <int>[]).length;
+    if (p.hashSize != hashSize ||
+        p.blockSize != 16 ||
+        p.encryptedHmacKey.length < hashSize ||
+        p.encryptedHmacValue.length < hashSize ||
+        p.encryptedHmacKey.length % 16 != 0 ||
+        p.encryptedHmacValue.length % 16 != 0) {
+      throw const OfficePasswordException(
+        'Invalid Office data integrity metadata',
+      );
+    }
+    // Read exactly the hash-sized values. The current writer appends PKCS#7
+    // padding; the Office format may use block padding instead. Never infer
+    // the content length by inspecting random decrypted HMAC/key bytes.
+    final Uint8List hmacKey = Aes.cbcDecrypt(
+      secret,
+      _iv(p.hashName, p.keyDataSalt, _hmacKeyBlock, p.blockSize),
+      p.encryptedHmacKey,
+      unpad: false,
+      keep: hashSize,
+    );
+    final Uint8List expected = Aes.cbcDecrypt(
+      secret,
+      _iv(p.hashName, p.keyDataSalt, _hmacValueBlock, p.blockSize),
+      p.encryptedHmacValue,
+      unpad: false,
+      keep: hashSize,
+    );
+    final List<int> actual = _Hash.hmacDigest(p.hashName, hmacKey, pack);
+    if (!_equal(expected, actual)) {
+      throw const OfficePasswordException(
+        'Office package integrity check failed',
+      );
+    }
   }
 
   /// encrypt API.

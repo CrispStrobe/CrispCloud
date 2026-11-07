@@ -1,9 +1,72 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:test/test.dart';
 
 void main() {
+  group('Agile encryption data integrity', () {
+    late Uint8List locked;
+    late Uint8List plaintext;
+
+    setUp(() {
+      plaintext = Uint8List.fromList(List.generate(128, (i) => i));
+      locked = OfficeCrypto.encrypt(plaintext, 'integrity-test', spinCount: 10);
+    });
+
+    Uint8List rewrite({Uint8List? package, Uint8List? info}) {
+      final file = CfbfFile.fromBytes(locked);
+      final writer = CfbfWriter();
+      writer.addStream(
+        'EncryptionInfo',
+        info ?? file.readStream('EncryptionInfo')!,
+      );
+      writer.addStream(
+        'EncryptedPackage',
+        package ?? file.readStream('EncryptedPackage')!,
+      );
+      return writer.build();
+    }
+
+    test('authenticates before returning plaintext', () {
+      expect(OfficeCrypto.decrypt(locked, 'integrity-test'), plaintext);
+      final pack = CfbfFile.fromBytes(locked).readStream('EncryptedPackage')!;
+      // The password verifier is untouched; only file ciphertext changes.
+      pack[24] ^= 1;
+      expect(
+        () => OfficeCrypto.decrypt(rewrite(package: pack), 'integrity-test'),
+        throwsA(isA<OfficePasswordException>()),
+      );
+    });
+
+    test('authenticates StreamSize as well as ciphertext', () {
+      final pack = CfbfFile.fromBytes(locked).readStream('EncryptedPackage')!;
+      pack[0] ^= 1;
+      expect(
+        () => OfficeCrypto.decrypt(rewrite(package: pack), 'integrity-test'),
+        throwsA(isA<OfficePasswordException>()),
+      );
+    });
+
+    test(
+      'missing integrity metadata cannot downgrade to unauthenticated CBC',
+      () {
+        final info = CfbfFile.fromBytes(locked).readStream('EncryptionInfo')!;
+        final xml = utf8
+            .decode(info.sublist(8))
+            .replaceFirst(RegExp(r'<dataIntegrity\s[^>]*/>'), '');
+        final stripped = Uint8List.fromList([
+          ...info.sublist(0, 8),
+          ...utf8.encode(xml),
+        ]);
+        expect(
+          () => OfficeCrypto.decrypt(rewrite(info: stripped), 'integrity-test'),
+          throwsA(isA<OfficePasswordException>()),
+        );
+      },
+    );
+  });
+
   test('AES-128 ECB matches the FIPS-197 Appendix C.1 vector', () {
     final Uint8List key = Uint8List.fromList(<int>[
       0x00,
