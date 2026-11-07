@@ -187,6 +187,7 @@ void main() {
         find.textContaining('The selected credential store is unavailable'),
         findsOneWidget,
       );
+      debugDefaultTargetPlatformOverride = null;
     },
   );
 
