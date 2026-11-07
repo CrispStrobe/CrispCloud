@@ -58,6 +58,53 @@ void main() {
     );
   });
 
+  // Independent Python cryptography AESSIV vectors with key = macKey||encKey.
+  // macKey is bytes 0..keySize-1 and encKey is 64..64+keySize-1. Associated
+  // data consists of an empty string and bytes 128..167, exercising empty
+  // and multi-block CMAC inputs for every AES key size. Plaintext is empty
+  // or bytes 0..39, so both S2V final-input branches have fixed answers.
+  const vectors = <int, List<String>>{
+    16: [
+      '563145d8b21805c6d4fae7c19d1b123c',
+      '44c1bfb68c0568e865a3e22b93d3a2ed8f0d371971d28a959c3959a646a8ffa8'
+          '318d940d1ff29a2ee489020a25c1db894fa7af12cd6d209e',
+    ],
+    24: [
+      '7d2b2799ce26f1a43580b7a828dcb75b',
+      'a5c470a4de8e57044123322d31b0e6c010bdd6e9c8795cd4ceee36156ce779a1'
+          'ff0bc92769ba62d7372c7723ac8e1a8765ca257137fff3c3',
+    ],
+    32: [
+      'd9b007557eaeb953df6ff942adbd2bec',
+      '3eea755f5b067ff38fe330951f4184ad5a8f574e751549e914d6ffb3c242aba93'
+          '0e19bc67b8b206e9b06515a6adcde7767a8052591610f11',
+    ],
+  };
+  for (final entry in vectors.entries) {
+    for (final size in [0, 40]) {
+      test('independent AES-${entry.key * 8}-SIV vector, $size bytes', () {
+        final macKey = Uint8List.fromList(List.generate(entry.key, (i) => i));
+        final encKey = Uint8List.fromList(
+          List.generate(entry.key, (i) => i + 64),
+        );
+        final ad = [
+          Uint8List(0),
+          Uint8List.fromList(List.generate(40, (i) => i + 128)),
+        ];
+        final plaintext = Uint8List.fromList(List.generate(size, (i) => i));
+        final expected = _hex(entry.value[size == 0 ? 0 : 1]);
+        expect(
+          AesSiv.encrypt(plaintext, encKey, macKey, associatedData: ad),
+          expected,
+        );
+        expect(
+          AesSiv.decrypt(expected, encKey, macKey, associatedData: ad),
+          plaintext,
+        );
+      });
+    }
+  }
+
   test('rejects tag, ciphertext, associated-data and key changes', () {
     final encKey = _hex('f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff');
     final macKey = _hex('fffefdfcfbfaf9f8f7f6f5f4f3f2f1f0');

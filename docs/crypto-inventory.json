@@ -2,7 +2,7 @@
   "schema_version": 1,
   "review_date": "2026-11-07",
   "repository": "https://github.com/CrispStrobe/CrispCloud",
-  "scope": "Source-level inventory of the finished application, including bundled helpers. Runtime reachability and platform behavior are described in crypto-audit.md. This inventory is not an export classification or a binary scan.",
+  "scope": "Source-level inventory of the finished application, including portable helpers. Runtime reachability and platform behavior are described in crypto-audit.md. This inventory is not an export classification or a binary scan.",
   "required_providers": [
     "filen_client",
     "internxt_client"
@@ -75,7 +75,7 @@
         "RFC 5297 AES-SIV (CMAC/S2V and AES-CTR)",
         "scrypt",
         "RFC 3394 AES key unwrap",
-        "HMAC-SHA256 vault config",
+        "HMAC-SHA256 / SHA384 / SHA512 vault config",
         "AES-256-GCM file headers",
         "SHA-1 directory hashes"
       ],

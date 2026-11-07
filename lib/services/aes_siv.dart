@@ -9,7 +9,9 @@ import 'package:pointycastle/export.dart';
 /// half (CTR). Associated-data strings remain separate S2V inputs. The result
 /// is the 16-byte synthetic IV followed by the ciphertext.
 ///
-/// This implementation uses PointyCastle's AES-CMAC and AES-CTR primitives.
+/// CMAC follows NIST SP 800-38B using PointyCastle's AES block/CBC primitives;
+/// CTR also uses PointyCastle. The CBC IV is always one 16-byte AES block,
+/// independent of key size.
 /// RFC 5297 appendix A vectors are in test/aes_siv_test.dart.
 class AesSiv {
   static Uint8List encrypt(
@@ -68,8 +70,35 @@ class AesSiv {
   }
 
   static Uint8List _cmac(Uint8List key, Uint8List input) {
-    final mac = CMac(AESEngine(), 128)..init(KeyParameter(key));
-    return mac.process(input);
+    // PointyCastle 4.0.0 CMac.init incorrectly sizes its CBC IV using the key
+    // length, rejecting AES-192/256. Its API cannot accept an explicit IV.
+    // Use SP 800-38B sections 6.1–6.2 directly with a block-sized zero IV.
+    final aes = AESEngine()..init(true, KeyParameter(key));
+    final l = Uint8List(16);
+    aes.processBlock(Uint8List(16), 0, l, 0);
+    final k1 = _double(l);
+    final complete = input.isNotEmpty && input.length % 16 == 0;
+    final lastOffset = complete
+        ? input.length - 16
+        : input.length - input.length % 16;
+    final last = Uint8List(16);
+    final tailLength = input.length - lastOffset;
+    last.setRange(0, tailLength, input, lastOffset);
+    if (!complete) {
+      last[tailLength] = 0x80;
+    }
+    final subkey = complete ? k1 : _double(k1);
+    for (var i = 0; i < 16; i++) {
+      last[i] ^= subkey[i];
+    }
+    final cbc = CBCBlockCipher(AESEngine())
+      ..init(true, ParametersWithIV(KeyParameter(key), Uint8List(16)));
+    final tag = Uint8List(16);
+    for (var offset = 0; offset < lastOffset; offset += 16) {
+      cbc.processBlock(input, offset, tag, 0);
+    }
+    cbc.processBlock(last, 0, tag, 0);
+    return tag;
   }
 
   static Uint8List _s2v(

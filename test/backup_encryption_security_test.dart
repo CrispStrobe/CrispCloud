@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -23,6 +24,20 @@ class _UnavailableSecretStore extends InMemorySecureStorage {
 
   @override
   Future<void> delete(String key) async => throw StateError('Keychain locked');
+}
+
+class _BlockingSecretStore extends InMemorySecureStorage {
+  final writeEntered = Completer<void>();
+  final allowWrite = Completer<void>();
+
+  @override
+  Future<void> write(String key, String value) async {
+    if (value == 'replacement-passphrase') {
+      writeEntered.complete();
+      await allowWrite.future;
+    }
+    await super.write(key, value);
+  }
 }
 
 BackupPlan _legacyPlan(String source) => BackupPlan(
@@ -179,6 +194,198 @@ void main() {
       await restarted.updatePlan(loaded.copyWith(name: 'Renamed'));
       expect(
         (await service.getPlan(plan.id))!.encryptionKey,
+        'new-test-passphrase',
+      );
+    },
+  );
+
+  for (final change in ['disable encryption', 'replace key']) {
+    test('cannot $change while snapshots need the original key', () async {
+      const cleartext = 'private data that must remain recoverable';
+      await File('${temp.path}/secret.txt').writeAsString(cleartext);
+      final plan = await createEncryptedPlan();
+      final uploaded = <String, List<int>>{};
+      final snapshot = await service.runBackup(
+        plan.id,
+        uploadFile: (path, bytes) async {
+          uploaded['/backup/$path'] = List<int>.from(bytes);
+          return '/backup/$path';
+        },
+        // A reversible test fixture, not a production encryption algorithm.
+        encryptBytes: (bytes, key) => bytes.map((b) => b ^ 0xff).toList(),
+      );
+      final prefs = await SharedPreferences.getInstance();
+      final savedPlans = prefs.getString('backup_plans');
+      final savedSnapshots = prefs.getString('backup_snapshots_${plan.id}');
+      final updated = change == 'disable encryption'
+          ? plan.copyWith(encryptionEnabled: false)
+          : plan.copyWith(encryptionKey: 'replacement-passphrase');
+      await expectLater(service.updatePlan(updated), throwsStateError);
+      expect(prefs.getString('backup_plans'), savedPlans);
+      expect(prefs.getString('backup_snapshots_${plan.id}'), savedSnapshots);
+      expect(
+        await secure.read('backup_plan_key_${plan.id}'),
+        'new-test-passphrase',
+      );
+
+      final target = await Directory('${temp.path}/restore').create();
+      final destination = File('${target.path}/secret.txt');
+      await destination.writeAsString('keep existing contents');
+      var downloads = 0;
+      Future<List<int>> download(String path) async {
+        downloads++;
+        return uploaded[path]!;
+      }
+
+      // The denied update must not let restore treat ciphertext as plaintext.
+      await expectLater(
+        service.restoreSnapshot(
+          snapshot.id,
+          target.path,
+          downloadFile: download,
+        ),
+        throwsStateError,
+      );
+      expect(downloads, 0);
+      expect(await destination.readAsString(), 'keep existing contents');
+      expect(
+        await service.restoreSnapshot(
+          snapshot.id,
+          target.path,
+          downloadFile: download,
+          decryptBytes: (bytes, key) {
+            expect(key, 'new-test-passphrase');
+            return bytes.map((b) => b ^ 0xff).toList();
+          },
+        ),
+        1,
+      );
+      expect(await destination.readAsString(), cleartext);
+    });
+  }
+
+  test('plaintext snapshots cannot be relabelled as encrypted', () async {
+    final plan = await service.createPlan(
+      name: 'Plain',
+      sourcePath: temp.path,
+      destinationPath: '/backup',
+      provider: 'filen',
+    );
+    await service.runBackup(plan.id, uploadFile: (path, bytes) async => path);
+    final prefs = await SharedPreferences.getInstance();
+    final savedPlans = prefs.getString('backup_plans');
+    await expectLater(
+      service.updatePlan(
+        plan.copyWith(encryptionEnabled: true, encryptionKey: 'new-key'),
+      ),
+      throwsStateError,
+    );
+    expect(prefs.getString('backup_plans'), savedPlans);
+    expect(await secure.read('backup_plan_key_${plan.id}'), isNull);
+  });
+
+  test('snapshots do not block name, schedule or enabled updates', () async {
+    final plan = await createEncryptedPlan();
+    await service.runBackup(
+      plan.id,
+      uploadFile: (path, bytes) async => path,
+      encryptBytes: (bytes, key) => bytes.map((b) => b ^ 0xff).toList(),
+    );
+    final current = (await service.getPlan(plan.id))!;
+    await service.updatePlan(
+      current.copyWith(name: 'Renamed', schedule: '0 3 * * *', enabled: false),
+    );
+    final updated = (await service.getPlan(plan.id))!;
+    expect(updated.name, 'Renamed');
+    expect(updated.schedule, '0 3 * * *');
+    expect(updated.enabled, isFalse);
+    expect(updated.encryptionEnabled, isTrue);
+    expect(updated.encryptionKey, 'new-test-passphrase');
+    expect(await service.getSnapshots(plan.id), hasLength(1));
+  });
+
+  test(
+    'backup cannot start during an asynchronous encryption-key update',
+    () async {
+      final blocked = _BlockingSecretStore();
+      secure = blocked;
+      service = BackupService(secureStorage: blocked);
+      await File('${temp.path}/secret.txt').writeAsString('private data');
+      final plan = await createEncryptedPlan();
+      final updating = service.updatePlan(
+        plan.copyWith(encryptionKey: 'replacement-passphrase'),
+      );
+      await blocked.writeEntered.future.timeout(const Duration(seconds: 5));
+      var touched = false;
+      try {
+        await expectLater(
+          service.runBackup(
+            plan.id,
+            uploadFile: (path, bytes) async {
+              touched = true;
+              return path;
+            },
+            encryptBytes: (bytes, key) {
+              touched = true;
+              return bytes.map((b) => b ^ 0xff).toList();
+            },
+          ),
+          throwsStateError,
+        );
+        expect(touched, isFalse);
+        expect(await service.getSnapshots(plan.id), isEmpty);
+      } finally {
+        blocked.allowWrite.complete();
+        await updating;
+      }
+      // Releasing the update exclusion makes a new backup use the new key.
+      final snapshot = await service.runBackup(
+        plan.id,
+        uploadFile: (path, bytes) async => path,
+        encryptBytes: (bytes, key) {
+          expect(key, 'replacement-passphrase');
+          return bytes.map((b) => b ^ 0xff).toList();
+        },
+      );
+      expect(snapshot.status, BackupSnapshotStatus.completed);
+    },
+  );
+
+  test(
+    'rejected legacy update preserves settings and secure store untouched',
+    () async {
+      final plan = _legacyPlan(temp.path);
+      final legacy = jsonEncode([
+        {...plan.toJson(), 'encryptionKey': plan.encryptionKey},
+      ]);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('backup_plans', legacy);
+      // Any retained snapshot blocks changes, regardless of its status.
+      await prefs.setString('backup_snapshots_${plan.id}', '[{}]');
+      await expectLater(
+        service.updatePlan(plan.copyWith(encryptionKey: 'replacement')),
+        throwsStateError,
+      );
+      expect(prefs.getString('backup_plans'), legacy);
+      expect(prefs.getString('backup_snapshots_${plan.id}'), '[{}]');
+      expect(await secure.read('backup_plan_key_${plan.id}'), isNull);
+    },
+  );
+
+  test(
+    'damaged snapshot metadata cannot authorize an encryption change',
+    () async {
+      final plan = await createEncryptedPlan();
+      final prefs = await SharedPreferences.getInstance();
+      final savedPlans = prefs.getString('backup_plans');
+      await prefs.setString('backup_snapshots_${plan.id}', 'damaged JSON');
+      await expectLater(
+        service.updatePlan(plan.copyWith(encryptionKey: 'replacement')),
+        throwsFormatException,
+      );
+      expect(prefs.getString('backup_plans'), savedPlans);
+      expect(
+        await secure.read('backup_plan_key_${plan.id}'),
         'new-test-passphrase',
       );
     },

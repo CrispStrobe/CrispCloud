@@ -28,6 +28,7 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:crisp_cloud/services/internxt_client_adapter.dart';
+import 'package:crisp_cloud/services/secure_storage_service.dart';
 
 // ---------- credential loading ----------
 
@@ -100,7 +101,11 @@ void main() {
 
     setUpAll(() async {
       tmpCfg = Directory.systemTemp.createTempSync('cloud-dart-rewire-live-');
-      adapter = InternxtClientAdapter.forHost(configPath: tmpCfg.path);
+      adapter = InternxtClientAdapter.forHost(
+        configPath: tmpCfg.path,
+        // This opt-in test keeps session secrets in memory for this run.
+        secureStorage: InMemorySecureStorage(),
+      );
 
       // is2faNeeded should not fail for a real account, regardless of
       // whether 2FA is enabled. Confirms the adapter's auth path

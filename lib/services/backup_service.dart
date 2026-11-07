@@ -391,6 +391,10 @@ class BackupService {
   /// Tracks which plan IDs are actively running a backup.
   final Set<String> _runningPlanIds = {};
 
+  // Hold through update persistence, including asynchronous secure writes.
+  // A new backup must not observe a partly changed encryption configuration.
+  final Set<String> _updatingPlanIds = {};
+
   bool get isRunning => _runningPlanIds.isNotEmpty;
   bool isRunningPlan(String planId) => _runningPlanIds.contains(planId);
 
@@ -400,7 +404,9 @@ class BackupService {
 
   /// Load plan metadata and hydrate its separately stored encryption keys.
   /// Legacy plaintext keys are removed only after a verified secure write.
-  Future<List<BackupPlan>> getPlans() async {
+  Future<List<BackupPlan>> getPlans() => _loadPlans();
+
+  Future<List<BackupPlan>> _loadPlans({bool migrateLegacyKeys = true}) async {
     if (kIsWeb) return [];
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -429,9 +435,11 @@ class BackupService {
               'Conflicting encryption keys for backup plan ${plan.id}',
             );
           }
-          await _persistKey(plan.id, legacyKey);
+          if (migrateLegacyKeys) {
+            await _persistKey(plan.id, legacyKey);
+            migrated = true;
+          }
           storedKey = legacyKey;
-          migrated = true;
         }
         plans.add(plan.copyWith(encryptionKey: storedKey));
       }
@@ -503,20 +511,56 @@ class BackupService {
     return plan;
   }
 
-  /// Update an existing plan. Throws [StateError] if plan not found.
+  /// Update an existing plan. Encryption settings cannot change while any
+  /// snapshots exist: snapshots currently inherit their plan's mode and key.
+  /// Create a separate plan to use different encryption settings safely.
+  /// Throws [StateError] if the plan is missing or such a change is unsafe.
   Future<BackupPlan> updatePlan(BackupPlan updated) async {
     if (kIsWeb) throw UnsupportedError('Backup plans are not supported on web');
 
     final validationError = updated.validate();
     if (validationError != null) throw ArgumentError(validationError);
 
-    final plans = await getPlans();
-    final idx = plans.indexWhere((p) => p.id == updated.id);
-    if (idx == -1) throw StateError('Plan ${updated.id} not found');
-    plans[idx] = updated;
-    await _savePlans(plans);
-    _log.info('Updated backup plan "${updated.name}"');
-    return updated;
+    // Acquire synchronously before the first await; runBackup checks this set
+    // before acquiring its own synchronous running guard.
+    if (!_updatingPlanIds.add(updated.id)) {
+      throw StateError('An update for plan ${updated.id} is already running');
+    }
+    try {
+      // A rejected update must not migrate or overwrite any recovery key or
+      // settings. An accepted update persists/migrates keys in _savePlans.
+      final plans = await _loadPlans(migrateLegacyKeys: false);
+      final idx = plans.indexWhere((p) => p.id == updated.id);
+      if (idx == -1) throw StateError('Plan ${updated.id} not found');
+      final previous = plans[idx];
+      if (previous.encryptionEnabled != updated.encryptionEnabled ||
+          previous.encryptionKey != updated.encryptionKey) {
+        if (isRunningPlan(updated.id)) {
+          throw StateError(
+            'Cannot change encryption while a backup is running',
+          );
+        }
+        final prefs = await SharedPreferences.getInstance();
+        final raw = prefs.getString(_snapshotsKey(updated.id));
+        if (raw != null) {
+          // Do not use getSnapshots here: its display-oriented error fallback
+          // returns [], which would let damaged metadata bypass this guard.
+          final records = jsonDecode(raw);
+          if (records is! List || records.isNotEmpty) {
+            throw StateError(
+              'Cannot change backup encryption while snapshots exist; '
+              'create a new plan instead',
+            );
+          }
+        }
+      }
+      plans[idx] = updated;
+      await _savePlans(plans);
+      _log.info('Updated backup plan "${updated.name}"');
+      return updated;
+    } finally {
+      _updatingPlanIds.remove(updated.id);
+    }
   }
 
   /// Delete a plan and all its snapshots. Throws [StateError] if not found.
@@ -750,6 +794,9 @@ class BackupService {
 
     if (_runningPlanIds.contains(planId)) {
       throw StateError('Backup for plan $planId is already running');
+    }
+    if (_updatingPlanIds.contains(planId)) {
+      throw StateError('Cannot start a backup while its plan is being updated');
     }
 
     // Add synchronously BEFORE the first await so a concurrent caller

@@ -22,6 +22,7 @@ URL alone does not identify the exact package source used by a release.
 | Internxt SDK | [internxt_client 0.2.3 archive](https://pub.dev/api/archives/internxt_client-0.2.3.tar.gz); [CrispStrobe/internxt-dart](https://github.com/CrispStrobe/internxt-dart) | `c730aeb1779104bd42b27c6215bcf1b62b73c2979e9d570a5e61ed187b760469` | MPL-2.0. Hosted package, with application storage and transfer adapters. |
 | OpenPGP dependency | [dart_pg 2.1.0 archive](https://pub.dev/api/archives/dart_pg-2.1.0.tar.gz); [web-of-trust/dart-pg](https://github.com/web-of-trust/dart-pg) | `9f4f5a41c8282ac5f6a32e816a1fe4a5f2d54ec6527b57ce11d1f328140eda0c` | BSD-3-Clause text in the archive. Internxt's active key-generation path uses this implementation. |
 | SMB Dart wrapper | [dart_smb2 0.2.1 archive](https://pub.dev/api/archives/dart_smb2-0.2.1.tar.gz); [ales-drnz/dart_smb2](https://github.com/ales-drnz/dart_smb2) | `ba54193d234f49a92e54222e5300bc4c901063457e8af2abfb4ac3153ac923eb` | BSD-3-Clause wrapper; separate LGPL native library, detailed below. |
+| SSH/SFTP | [dartssh2 4.1.0 archive](https://pub.dev/api/archives/dartssh2-4.1.0.tar.gz); [vicajilau/dartssh2](https://github.com/vicajilau/dartssh2) | `39359aceafcf5940b868249e3c9c6d86e4e0f989eec7417d033c943157c84c51` | MIT. Pure Dart protocol using PointyCastle and PineNaCl. |
 | Local database | [CrispStrobe/libdbm](https://github.com/CrispStrobe/libdbm/tree/547b5bfce1d3cd663810a3ceae35336857956139), version 0.2.1 | Git `547b5bfce1d3cd663810a3ceae35336857956139` | Apache-2.0. Pure Dart database; no native assets or cryptographic package dependencies at this revision. |
 
 `libdbm` is declared with a moving `main` override in `pubspec.yaml`, but the
@@ -109,6 +110,18 @@ Apple acceleration can use `cryptography_flutter`. Windows CNG and Linux
 OpenSSL are desktop-specific backends. The application still bundles portable
 crypto on App Store/Android paths. An assertion that the finished mobile app
 uses *only* the operating system's encryption would not match this source.
+
+The app's [SSH client factory](../packages/crisp_storage/lib/src/host_keys.dart)
+uses the verified `dartssh2` archive's default `SSHAlgorithms` rather than
+supplying a compatibility override. The offered key exchanges are Curve25519,
+ECDH over NIST P-256/P-384/P-521, and SHA-256 Diffie-Hellman group exchange/group
+14. Host signatures use Ed25519, RSA-SHA256/SHA512, and ECDSA over those NIST
+curves. Offered ciphers are AES-256/128-GCM, OpenSSH ChaCha20-Poly1305 and
+AES-256/128-CTR; separate MAC choices include HMAC-SHA256/SHA512 (with
+encrypt-then-MAC preferred) and HMAC-SHA1. The actual negotiated suite depends
+on the peer. Implemented legacy compatibility algorithms in the dependency
+are not all enabled by these defaults. The application verifies server keys
+before authentication through its endpoint-scoped known-hosts flow.
 
 ## Native SMB library
 

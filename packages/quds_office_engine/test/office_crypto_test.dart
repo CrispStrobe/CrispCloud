@@ -67,6 +67,92 @@ void main() {
     );
   });
 
+  group('Independent Agile DataIntegrity fixture', () {
+    // Generated with Python hashlib/hmac and cryptography AES-CBC, without
+    // this library. Plaintext is bytes 128..159; secret is bytes 32..63;
+    // KeyData salt is 0..15, password salt is 16..39, verifier is 64..87.
+    // Ten SHA-512 password iterations use "independent-integrity-fixture".
+    // The 16-byte HMAC key is 606162636465666768696a6b6c6d6e01: its final
+    // 0x01 is key material, not padding. DataIntegrity follows MS-OFFCRYPTO
+    // 2.3.4.14, including the StreamSize in HMAC-SHA512 and no extra block
+    // when encrypting an already aligned HMAC key/value.
+    //
+    // Password wrapping deliberately reproduces the library's existing
+    // block keys, hashed IVs and PKCS#7 padding so this isolated integrity
+    // regression does not claim complete Microsoft Office interoperability.
+    // In particular, the existing secret block is 146e0be7accad1d6.
+    const xml =
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        '<encryption xmlns="http://schemas.microsoft.com/office/2006/encryption" '
+        'xmlns:p="http://schemas.microsoft.com/office/2006/keyEncryptor/password">'
+        '<keyData saltSize="16" blockSize="16" keyBits="256" hashSize="64" '
+        'cipherAlgorithm="AES" cipherChaining="ChainingModeCBC" '
+        'hashAlgorithm="SHA512" saltValue="AAECAwQFBgcICQoLDA0ODw=="/>'
+        '<dataIntegrity encryptedHmacKey="AdJImdiEiyt0NVAixdsfdw==" '
+        'encryptedHmacValue="t4N/GSW7EwzpYhTtrSXeJRbxDr9sMh68XVaesSDOnPPX+zjaiYqs5OuZBsFuZNn4ny7w7zBd/9SpZVivsc+bnQ=="/>'
+        '<keyEncryptors><keyEncryptor '
+        'uri="http://schemas.microsoft.com/office/2006/keyEncryptor/password">'
+        '<p:encryptedKey spinCount="10" saltSize="24" blockSize="16" '
+        'keyBits="256" hashSize="64" cipherAlgorithm="AES" '
+        'cipherChaining="ChainingModeCBC" hashAlgorithm="SHA512" '
+        'saltValue="EBESExQVFhcYGRobHB0eHyAhIiMkJSYn" '
+        'encryptedVerifierHashInput="ixeFej6bQY0s14E1hNj1gl0bsLamQXU6S+8UANv+2Y4=" '
+        'encryptedVerifierHashValue="SHuc4rhX0HKID1sfEtzFVxVuWs606TLxLkduxyWKiWIUtvidO+nKnSigrGY0ABoPBx81bgFdj5yQyfxvEzDnq3A4SVXY/7pdMAK90pRpHv0=" '
+        'encryptedKeyValue="DDW3DU7GjGOSYoPc7n/ItNmKhgwUcKpR/GMquRNUgQh9OP57YMnP9YyeoMUqAPwh"/>'
+        '</keyEncryptor></keyEncryptors></encryption>';
+
+    Uint8List fixture({bool tamperPackage = false, String info = xml}) {
+      final pack = base64.decode(
+        'IAAAAAAAAACfKqSVyLtDNvmBSIexjZyfZp/nTHkX4pmRugnzpqJC0A==',
+      );
+      if (tamperPackage) {
+        pack[8] ^= 1;
+      }
+      final writer = CfbfWriter();
+      writer.addStream(
+        'EncryptionInfo',
+        Uint8List.fromList([4, 0, 4, 0, 0x40, 0, 0, 0, ...utf8.encode(info)]),
+      );
+      writer.addStream('EncryptedPackage', pack);
+      return writer.build();
+    }
+
+    test('uses KeyData salt size, not password salt size or hash size', () {
+      expect(
+        OfficeCrypto.decrypt(fixture(), 'independent-integrity-fixture'),
+        Uint8List.fromList(List.generate(32, (i) => i + 128)),
+      );
+    });
+
+    test('short-key compatibility still requires a valid package HMAC', () {
+      expect(
+        () => OfficeCrypto.decrypt(
+          fixture(tamperPackage: true),
+          'independent-integrity-fixture',
+        ),
+        throwsA(isA<OfficePasswordException>()),
+      );
+    });
+
+    test(
+      'rejects a declared KeyData salt size that disagrees with its salt',
+      () {
+        expect(
+          () => OfficeCrypto.decrypt(
+            fixture(
+              info: xml.replaceFirst(
+                '<keyData saltSize="16"',
+                '<keyData saltSize="15"',
+              ),
+            ),
+            'independent-integrity-fixture',
+          ),
+          throwsA(isA<OfficePasswordException>()),
+        );
+      },
+    );
+  });
+
   test('AES-128 ECB matches the FIPS-197 Appendix C.1 vector', () {
     final Uint8List key = Uint8List.fromList(<int>[
       0x00,
