@@ -1,10 +1,14 @@
 """Failure-path tests for release evidence, independent of Flutter/signing."""
 
 import hashlib
+import io
 import json
+import os
 import plistlib
+import subprocess
 import tempfile
 import unittest
+from contextlib import redirect_stdout
 from pathlib import Path
 from unittest.mock import patch
 
@@ -24,6 +28,7 @@ class ReleaseEvidenceTests(unittest.TestCase):
             "reviewed_files": ["lib/crypto.dart"],
         }
         self.write("docs/crypto-inventory.json", json.dumps(self.inventory))
+        self.write("docs/export-compliance.md", "Release review fixture\n")
         self.write("lib/crypto.dart", "// reviewed fixture\n")
         self.write("pubspec.yaml", "name: fixture\n")
         self.write("pubspec.lock", "packages:\n  filen_client:\n  internxt_client:\n  pointycastle:\n")
@@ -46,6 +51,32 @@ class ReleaseEvidenceTests(unittest.TestCase):
         if args == ("rev-parse", "HEAD^{tree}"):
             return "b" * 40
         return ""
+
+    def prepare_generated_metadata(self):
+        """Use real Git object identities and diffs for native provenance tests."""
+        for paths in evidence.GENERATED_METADATA.values():
+            for name in paths:
+                self.write(name, f"Baseline generated fixture: {name}\n")
+        for name in ("ios/Podfile", "macos/Podfile", "ios/Runner.xcodeproj/project.pbxproj",
+                     "macos/Runner.xcodeproj/project.pbxproj",
+                     "android/app/src/main/java/example/Authored.java"):
+            self.write(name, "Authored build fixture\n")
+        self.write(".gitignore", "build/\n")
+        subprocess.run(["git", "init", "-q", str(self.root)], check=True)
+        evidence.git(self.root, "config", "user.name", "Release Evidence Test")
+        evidence.git(self.root, "config", "user.email", "test@example.invalid")
+        evidence.git(self.root, "config", "core.fileMode", "true")
+        evidence.git(self.root, "config", "core.autocrlf", "false")
+        evidence.git(self.root, "add", ".")
+        evidence.git(self.root, "commit", "-qm", "Reviewed fixture baseline")
+        self.artifact = self.write("build/app.fixture", b"built application fixture")
+        self.dependencies = self.write("build/deps.json", json.dumps({"packages": [
+            {"name": "filen_client"}, {"name": "internxt_client"},
+        ]}))
+
+    def record_generated(self, platform):
+        return evidence.collect(self.root, platform, [self.artifact], self.dependencies, True,
+                                record_generated_metadata=True)
 
     def test_mandatory_provider_cannot_be_removed(self):
         self.inventory["required_providers"].remove("internxt_client")
@@ -139,6 +170,139 @@ class ReleaseEvidenceTests(unittest.TestCase):
         with patch.object(evidence, "git", side_effect=self.git_fixture):
             with self.assertRaisesRegex(evidence.EvidenceError, "nonempty built artifact"):
                 evidence.collect(self.root, "ios", [artifact], None, True)
+
+    def test_generated_metadata_requires_explicit_opt_in(self):
+        self.prepare_generated_metadata()
+        self.write("ios/Podfile.lock", "Actual resolved native dependency graph\n")
+        with self.assertRaisesRegex(evidence.EvidenceError, "differs from HEAD"):
+            evidence.collect(self.root, "ios", [self.artifact], self.dependencies, True)
+
+    def test_generated_recording_requires_strict_target_evidence(self):
+        for platform, require_clean in (("source", True), ("ios", False)):
+            with self.subTest(platform=platform, require_clean=require_clean):
+                with self.assertRaisesRegex(evidence.EvidenceError, "--require-clean and a target"):
+                    evidence.collect(self.root, platform, [], None, require_clean,
+                                     record_generated_metadata=True)
+
+    def test_exact_target_generated_files_retain_baseline_actual_and_patch(self):
+        self.prepare_generated_metadata()
+        for platform, paths in evidence.GENERATED_METADATA.items():
+            for name in paths:
+                with self.subTest(platform=platform, name=name):
+                    path = self.root / name
+                    baseline = path.read_bytes()
+                    actual = baseline + b"Actual generated build contents\n"
+                    path.write_bytes(actual)
+                    result = self.record_generated(platform)
+                    self.assertFalse(result["source_checkout_clean"])
+                    self.assertEqual(result["tracked_changes"], [name])
+                    self.assertEqual(result["authored_source_changes"], [])
+                    self.assertEqual(set(result["generated_metadata_changes"]), {name})
+                    record = result["generated_metadata_changes"][name]
+                    self.assertEqual(record["head_blob"], evidence.git(self.root, "rev-parse", f"HEAD:{name}"))
+                    self.assertEqual(record["built_sha256"], hashlib.sha256(actual).hexdigest())
+                    self.assertEqual(record["built_bytes"], len(actual))
+                    self.assertIn("+Actual generated build contents", record["diff"])
+                    output = self.root / "build" / platform
+                    evidence.write_generated_metadata(self.root, output, result)
+                    self.assertEqual((output / record["head_file"]).read_bytes(), baseline)
+                    self.assertEqual((output / record["built_file"]).read_bytes(), actual)
+                    self.assertEqual((output / record["diff_file"]).read_text(), record["diff"])
+                    self.assertEqual(evidence.sha256(output / record["diff_file"]), record["diff_sha256"])
+                    path.write_bytes(baseline)
+
+    def test_generated_opt_in_does_not_allow_other_platform_metadata(self):
+        self.prepare_generated_metadata()
+        self.write("macos/Podfile.lock", "Changed macOS graph\n")
+        with self.assertRaisesRegex(evidence.EvidenceError, "macos/Podfile.lock"):
+            self.record_generated("ios")
+
+    def test_generated_opt_in_still_rejects_authored_inputs_and_dependency_locks(self):
+        self.prepare_generated_metadata()
+        self.write("ios/Podfile.lock", "Resolved iOS graph\n")
+        for name in ("lib/crypto.dart", "pubspec.yaml", "pubspec.lock", "ios/Podfile", "macos/Podfile",
+                     "ios/Runner.xcodeproj/project.pbxproj", "macos/Runner.xcodeproj/project.pbxproj",
+                     "android/app/src/main/java/example/Authored.java"):
+            with self.subTest(name=name):
+                path = self.root / name
+                baseline = path.read_bytes()
+                path.write_bytes(baseline + b"\n# Unreviewed input change\n")
+                with self.assertRaisesRegex(evidence.EvidenceError, "differs from HEAD"):
+                    self.record_generated("ios")
+                path.write_bytes(baseline)
+
+    def test_generated_opt_in_rejects_untracked_authored_source(self):
+        self.prepare_generated_metadata()
+        self.write("ios/Podfile.lock", "Resolved iOS graph\n")
+        self.write("lib/unreviewed.dart", "Unreviewed application code\n")
+        with self.assertRaisesRegex(evidence.EvidenceError, "lib/unreviewed.dart"):
+            self.record_generated("ios")
+
+    def test_generated_opt_in_rejects_untracked_metadata_without_head_identity(self):
+        self.prepare_generated_metadata()
+        evidence.git(self.root, "rm", "--cached", "ios/Podfile.lock")
+        evidence.git(self.root, "commit", "-qm", "No tracked native baseline")
+        with self.assertRaisesRegex(evidence.EvidenceError, "differs from HEAD"):
+            self.record_generated("ios")
+
+    def test_generated_opt_in_rejects_deleted_empty_and_directory_replacements(self):
+        self.prepare_generated_metadata()
+        path = self.root / "ios/Podfile.lock"
+        path.unlink()
+        with self.assertRaisesRegex(evidence.EvidenceError, "Missing or non-regular"):
+            self.record_generated("ios")
+        path.write_bytes(b"")
+        with self.assertRaisesRegex(evidence.EvidenceError, "must not be empty"):
+            self.record_generated("ios")
+        path.unlink()
+        path.mkdir()
+        with self.assertRaisesRegex(evidence.EvidenceError, "Missing or non-regular"):
+            self.record_generated("ios")
+
+    def test_generated_opt_in_rejects_symlink_replacement(self):
+        self.prepare_generated_metadata()
+        path = self.root / "ios/Podfile.lock"
+        path.unlink()
+        try:
+            path.symlink_to(self.root / "macos/Podfile.lock")
+        except OSError:
+            self.skipTest("Symlinks unavailable on this test host")
+        with self.assertRaisesRegex(evidence.EvidenceError, "Missing or non-regular|symlinks"):
+            self.record_generated("ios")
+
+    @unittest.skipIf(os.name == "nt", "POSIX executable mode fixture")
+    def test_generated_opt_in_rejects_file_mode_change(self):
+        self.prepare_generated_metadata()
+        path = self.root / "ios/Podfile.lock"
+        path.chmod(0o755)
+        with self.assertRaisesRegex(evidence.EvidenceError, "type and mode"):
+            self.record_generated("ios")
+
+    def test_generated_file_cannot_change_between_collection_and_copy(self):
+        self.prepare_generated_metadata()
+        self.write("ios/Podfile.lock", "Actual resolved graph\n")
+        result = self.record_generated("ios")
+        self.write("ios/Podfile.lock", "Different graph after hashing\n")
+        with self.assertRaisesRegex(evidence.EvidenceError, "changed during evidence collection"):
+            evidence.write_generated_metadata(self.root, self.root / "build/evidence", result)
+
+    def test_cli_writes_generated_copies_and_an_honest_manifest(self):
+        self.prepare_generated_metadata()
+        relative = next(iter(evidence.GENERATED_METADATA["android"]))
+        self.write(relative, "Actual generated Java registration\n")
+        output = self.root / "build/evidence"
+        with patch.object(evidence, "ROOT", self.root), redirect_stdout(io.StringIO()):
+            code = evidence.main([
+                "--platform", "android", "--require-clean", "--record-generated-metadata",
+                "--artifact", str(self.artifact), "--dependencies", str(self.dependencies),
+                "--output-dir", str(output),
+            ])
+        self.assertEqual(code, 0)
+        manifest = json.loads((output / "crypto-evidence.json").read_text())
+        self.assertFalse(manifest["source_checkout_clean"])
+        record = manifest["generated_metadata_changes"][relative]
+        self.assertEqual((output / record["built_file"]).read_bytes(), (self.root / relative).read_bytes())
+        self.assertIn("not approval", manifest["generated_metadata_review_note"])
 
 
 if __name__ == "__main__":

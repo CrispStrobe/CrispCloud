@@ -384,6 +384,23 @@ jobs:
           echo "Found APK: $APK ($(stat -c%s "$APK") bytes)"
           cp "$APK" crispcloud-android.apk
 
+      - name: Record Android build crypto evidence
+        if: matrix.platform == 'android'
+        run: |
+          mkdir -p build/export-compliance
+          dart pub deps --json > build/export-compliance/dependencies.json
+          python3 tool/crypto_release_evidence.py --platform android --require-clean --record-generated-metadata \
+            --artifact crispcloud-android.apk --dependencies build/export-compliance/dependencies.json
+
+      - name: Upload Android crypto evidence
+        if: matrix.platform == 'android'
+        uses: actions/upload-artifact@v4
+        with:
+          name: crispcloud-android-crypto-evidence
+          path: build/export-compliance/
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Upload ${{ matrix.platform }} artifact
         uses: actions/upload-artifact@v4
         with:
@@ -532,10 +549,20 @@ jobs:
             zip -r -y "$GITHUB_WORKSPACE/crispcloud-macos-release.zip" "$APP_NAME"
           fi
 
+      - name: Record macOS build crypto evidence
+        run: |
+          mkdir -p build/export-compliance
+          dart pub deps --json > build/export-compliance/dependencies.json
+          python3 tool/crypto_release_evidence.py --platform macos --require-clean --record-generated-metadata \
+            --artifact crispcloud-macos-release.zip --dependencies build/export-compliance/dependencies.json
+
       - uses: actions/upload-artifact@v4
         with:
           name: crispcloud-macos-release
-          path: crispcloud-macos-release.zip
+          path: |
+            crispcloud-macos-release.zip
+            build/export-compliance/
+          if-no-files-found: error
           retention-days: 14
 
   ios-terminal-native:
@@ -628,8 +655,18 @@ jobs:
             zip -r -y crispcloud-ios-nosign.zip build/ios/iphoneos/
           fi
 
+      - name: Record unsigned iOS build crypto evidence
+        run: |
+          mkdir -p build/export-compliance
+          dart pub deps --json > build/export-compliance/dependencies.json
+          python3 tool/crypto_release_evidence.py --platform ios --require-clean --record-generated-metadata \
+            --artifact crispcloud-ios-nosign.zip --dependencies build/export-compliance/dependencies.json
+
       - uses: actions/upload-artifact@v4
         with:
           name: crispcloud-ios-nosign
-          path: crispcloud-ios-nosign.zip
+          path: |
+            crispcloud-ios-nosign.zip
+            build/export-compliance/
+          if-no-files-found: error
           retention-days: 14

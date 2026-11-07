@@ -102,6 +102,14 @@ automatic fallback would conceal format and authentication failures.
    archive readers, PDF/Office crypto, provider credentials and native assets
    all belong in release review. A public dependency or AES primitive alone
    does not establish the classification of a whole product or custom protocol.
+6. **Native SMB has an exceptional desktop RNG-failure path.** The pinned
+   library ignores the random-generator failure status when creating CCM
+   nonces and can fall back to a weak PRNG after desktop entropy sources fail.
+   The published Apple/Android configuration excludes that fallback. CCM needs
+   nonce uniqueness; predictability alone is not a break. Repetition risk under
+   local entropy failure needs upstream hardening. No fault-injection exploit
+   or remote trigger was established; see the pinned sources in the dependency
+   review.
 
 No production credentials were used, no live provider account was mutated,
 and no government notification/report, CCATS request or store submission was
@@ -132,13 +140,21 @@ the APK evidence. Example for an already built artifact:
 ```sh
 mkdir -p build/export-compliance
 dart pub deps --json > build/export-compliance/dependencies.json
-python3 tool/crypto_release_evidence.py --platform android --require-clean \
+python3 tool/crypto_release_evidence.py --platform android --require-clean --record-generated-metadata \
   --artifact path/to/app.aab --dependencies build/export-compliance/dependencies.json
 ```
 
 The script records facts; it cannot decide an ECCN, verify store territories,
 prove remote source availability, or grant an exemption. Keep an internal
 decision for the exact artifacts using the template in the export guide.
+
+`--require-clean` normally rejects every tracked change. Release workflows use
+`--record-generated-metadata` to preserve the target's regenerated CocoaPods
+lockfile or Android plugin registrant, including its original identity, actual
+contents, SHA-256 and diff. Authored source, `pubspec.lock`, Podfiles and Xcode
+projects remain strict. A changed native dependency graph still needs release
+review and corresponding public source; recording it does not approve it.
+The CI target builds exercise this evidence path on their actual artifacts.
 
 ## Technical reference sources
 

@@ -613,7 +613,7 @@ jobs:
           set -euo pipefail
           mkdir -p build/export-compliance
           dart pub deps --json > build/export-compliance/dependencies.json
-          python3 tool/crypto_release_evidence.py --platform android --require-clean \
+          python3 tool/crypto_release_evidence.py --platform android --require-clean --record-generated-metadata \
             --artifact crispcloud-android.apk --dependencies build/export-compliance/dependencies.json
 
       - uses: actions/upload-artifact@v5

@@ -235,7 +235,7 @@ jobs:
           set -euo pipefail
           mkdir -p build/export-compliance
           dart pub deps --json > build/export-compliance/dependencies.json
-          python3 tool/crypto_release_evidence.py --platform ios --require-clean \
+          python3 tool/crypto_release_evidence.py --platform ios --require-clean --record-generated-metadata \
             --artifact "$IPA" --dependencies build/export-compliance/dependencies.json
 
       - name: Upload IPA artifact and crypto evidence

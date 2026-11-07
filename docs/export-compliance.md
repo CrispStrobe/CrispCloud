@@ -147,7 +147,11 @@ Before each release:
    dependencies. Generate evidence with
    [`tool/crypto_release_evidence.py`](../tool/crypto_release_evidence.py);
    retain artifact hashes and build logs alongside it. A source inventory does
-   not prove the contents of an unbuilt binary.
+   not prove the contents of an unbuilt binary. The store workflows retain exact
+   generated native lockfiles/Android plugin registration, their hashes and
+   differences from the source revision. Review any newly resolved native
+   dependencies and their source availability; recording a change does not
+   establish its classification.
 3. Complete the decision record below for those artifacts. Resolve any failed
    condition before relying on the route; do not silently substitute a report
    or CCATS application.

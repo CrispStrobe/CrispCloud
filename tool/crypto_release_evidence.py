@@ -4,6 +4,8 @@
 This is evidence collection, not an ECCN classifier or a cryptographic audit.
 It makes no network calls, submits no forms, and never reads signing secrets.
 Run after dependency resolution; use --require-clean on release builds.
+The optional --record-generated-metadata flag records one target's exact native
+resolution/registration changes without permitting changes to authored inputs.
 """
 
 from __future__ import annotations
@@ -26,6 +28,13 @@ NATIVE_EVIDENCE = (
     "ios/Podfile.lock", "macos/Podfile.lock",
     "packages/crisp_ios_shell/ios/Resources/BuildProvenance.json",
 )
+GENERATED_METADATA = {
+    "ios": {"ios/Podfile.lock"},
+    "macos": {"macos/Podfile.lock"},
+    "android": {
+        "android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java",
+    },
+}
 
 
 class EvidenceError(ValueError):
@@ -36,6 +45,10 @@ def git(root: Path, *args: str) -> str:
     return subprocess.check_output(
         ["git", "-C", str(root), *args], text=True, encoding="utf-8"
     ).strip()
+
+
+def git_bytes(root: Path, *args: str) -> bytes:
+    return subprocess.check_output(["git", "-C", str(root), *args])
 
 
 def sha256(path: Path) -> str:
@@ -93,8 +106,48 @@ def validate(root: Path) -> dict:
     return inventory
 
 
+def generated_metadata_record(root: Path, relative: str) -> dict:
+    """Record an existing generated file, never a missing or redirected input."""
+    path = repository_file(root, relative)
+    # repository_file checks the final file and repository boundary. A link in
+    # a parent directory must not redirect a recorded generated input either.
+    parts = Path(relative).parts
+    if any(root.joinpath(*parts[:end]).is_symlink()
+           for end in range(1, len(parts) + 1)):
+        raise EvidenceError(f"Generated metadata cannot contain symlinks: {relative}")
+    entry = git(root, "ls-tree", "HEAD", "--", relative)
+    baseline = re.fullmatch(r"(100644|100755) blob ([0-9a-f]{40})\t" + re.escape(relative), entry)
+    if not baseline:
+        raise EvidenceError(f"Generated metadata must be a tracked regular file at HEAD: {relative}")
+    head_mode, head_blob = baseline.groups()
+    raw = git(root, "diff", "--raw", "--no-renames", "HEAD", "--", relative)
+    fields = raw.split("\t", 1)[0].split()
+    if (len(fields) != 5 or fields[0] != f":{head_mode}"
+            or fields[1] != head_mode or fields[4] != "M"):
+        raise EvidenceError(f"Generated metadata must preserve its tracked type and mode: {relative}")
+    built_bytes = path.read_bytes()
+    if not built_bytes:
+        raise EvidenceError(f"Generated metadata must not be empty: {relative}")
+    diff = git_bytes(root, "diff", "--no-ext-diff", "--no-textconv", "--binary",
+                     "--no-renames", "HEAD", "--", relative)
+    return {
+        "head_blob": head_blob,
+        "head_mode": head_mode,
+        "built_sha256": hashlib.sha256(built_bytes).hexdigest(),
+        "built_bytes": len(built_bytes),
+        "head_file": f"generated/head/{relative}",
+        "built_file": f"generated/actual/{relative}",
+        "diff_file": f"generated/diff/{relative}.patch",
+        "diff_sha256": hashlib.sha256(diff).hexdigest(),
+        "diff": diff.decode("utf-8"),
+    }
+
+
 def collect(root: Path, platform: str, artifacts: list[Path],
-            dependencies: Path | None, require_clean: bool) -> dict:
+            dependencies: Path | None, require_clean: bool,
+            record_generated_metadata: bool = False) -> dict:
+    if record_generated_metadata and (not require_clean or platform not in GENERATED_METADATA):
+        raise EvidenceError("Generated metadata recording requires --require-clean and a target platform")
     inventory = validate(root)
     commit = git(root, "rev-parse", "HEAD")
     if not re.fullmatch(r"[0-9a-f]{40}", commit):
@@ -104,12 +157,20 @@ def collect(root: Path, platform: str, artifacts: list[Path],
     untracked = git(root, "ls-files", "--others", "--exclude-standard", "--",
                     "lib", "packages", "ios", "macos", "android", "tool",
                     "docs", "test", ".github", "pubspec.yaml", "pubspec.lock", ".fvmrc")
-    if require_clean and (dirty or untracked):
-        changed = sorted(set(dirty.splitlines() + untracked.splitlines()))
+    dirty_paths = set(dirty.splitlines())
+    untracked_paths = set(untracked.splitlines())
+    allowed_generated = GENERATED_METADATA.get(platform, set()) if record_generated_metadata else set()
+    generated_paths = dirty_paths & allowed_generated
+    authored_changes = dirty_paths - generated_paths
+    if require_clean and (authored_changes or untracked_paths):
+        changed = sorted(authored_changes | untracked_paths)
         raise EvidenceError(
             "Release source differs from HEAD; review and commit these inputs: "
             + ", ".join(changed)
         )
+    generated_records = {
+        name: generated_metadata_record(root, name) for name in sorted(generated_paths)
+    }
     resolved_dependencies = None
     if dependencies:
         resolved_dependencies = json.loads(dependencies.read_text())
@@ -149,6 +210,15 @@ def collect(root: Path, platform: str, artifacts: list[Path],
         "source_publication_note": "Verify public access and corresponding dependency sources before release",
         "tracked_changes": dirty.splitlines(),
         "untracked_files": untracked.splitlines(),
+        "source_checkout_clean": not (dirty_paths or untracked_paths),
+        "authored_source_changes": sorted(authored_changes),
+        "generated_metadata_recording_enabled": record_generated_metadata,
+        "generated_metadata_changes": generated_records,
+        "generated_metadata_review_note": (
+            "Generated native dependency locks and plugin registration describe the actual build. "
+            "Review their resolved dependencies and corresponding sources before release; "
+            "recording these changes is not approval or a legal classification."
+        ),
         "required_providers": sorted(REQUIRED_PROVIDERS),
         "apple_source_questionnaire_enabled": True,
         "inventory_sha256": sha256(root / INVENTORY),
@@ -162,6 +232,23 @@ def collect(root: Path, platform: str, artifacts: list[Path],
     }
 
 
+def write_generated_metadata(root: Path, output: Path, evidence: dict) -> None:
+    """Keep full baseline/built files and exact patches alongside their hashes."""
+    for relative, record in evidence["generated_metadata_changes"].items():
+        actual = repository_file(root, relative).read_bytes()
+        if hashlib.sha256(actual).hexdigest() != record["built_sha256"]:
+            raise EvidenceError(f"Generated metadata changed during evidence collection: {relative}")
+        contents = {
+            "head_file": git_bytes(root, "cat-file", "blob", record["head_blob"]),
+            "built_file": actual,
+            "diff_file": record["diff"].encode("utf-8"),
+        }
+        for field, data in contents.items():
+            target = output / record[field]
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(data)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true", help="Validate reviewed build inputs only")
@@ -170,23 +257,29 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--artifact", type=Path, action="append", default=[])
     parser.add_argument("--dependencies", type=Path, help="Output of dart pub deps --json")
     parser.add_argument("--require-clean", action="store_true")
+    parser.add_argument(
+        "--record-generated-metadata", action="store_true",
+        help="With --require-clean, retain the target's exact generated native metadata changes for review",
+    )
     args = parser.parse_args(argv)
     try:
         if args.check:
             validate(ROOT)
             print("Crypto release inputs checked; Filen and Internxt dependencies present.")
             return 0
-        evidence = collect(ROOT, args.platform, args.artifact, args.dependencies, args.require_clean)
+        evidence = collect(ROOT, args.platform, args.artifact, args.dependencies, args.require_clean,
+                           record_generated_metadata=args.record_generated_metadata)
         args.output_dir.mkdir(parents=True, exist_ok=True)
-        (args.output_dir / "crypto-evidence.json").write_text(
-            json.dumps(evidence, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-        )
         for name in ("pubspec.lock", "docs/crypto-inventory.json", "docs/export-compliance.md"):
             shutil.copyfile(ROOT / name, args.output_dir / Path(name).name)
         for name in evidence["native_evidence_sha256"]:
             target = args.output_dir / "native" / name
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(ROOT / name, target)
+        write_generated_metadata(ROOT, args.output_dir, evidence)
+        (args.output_dir / "crypto-evidence.json").write_text(
+            json.dumps(evidence, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
         print(f"Crypto release evidence written to {args.output_dir}")
         return 0
     except (EvidenceError, OSError, ValueError, KeyError, TypeError, subprocess.CalledProcessError) as error:

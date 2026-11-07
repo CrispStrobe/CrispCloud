@@ -170,6 +170,20 @@ applies to any unrecorded native library replacement during packaging. A source
 link and permissive availability are distinct from fulfilling each dependency's
 license conditions.
 
+**Conditional desktop hardening issue:** the pinned
+[`smb2_random_bytes`](https://github.com/sahlberg/libsmb2/blob/e94eee9465d55ed094ace2c038a8705b4822dada/lib/init.c)
+returns an error after falling back to `random()` when strong sources fail, but
+[`smb3_encrypt_pdu`](https://github.com/sahlberg/libsmb2/blob/e94eee9465d55ed094ace2c038a8705b4822dada/lib/smb3-seal.c)
+ignores that status when generating the 11-byte CCM nonce. The pinned build
+[configuration](https://github.com/ales-drnz/libsmb2-scripts/blob/f2695f24c0db8984cd0593738b72004ab48cfe1b/scripts/shared/config/config.h)
+uses `arc4random_buf` on Apple/Android and compiles out this fallback there.
+Linux requires both `getrandom` and `/dev/urandom` to fail; the Windows
+[CSPRNG patch](https://github.com/ales-drnz/libsmb2-scripts/blob/f2695f24c0db8984cd0593738b72004ab48cfe1b/patches/libsmb2/windows/patch_windows_csprng.py)
+also permits fallback after BCrypt failure. CCM requires unique nonces per
+key, so the concern is repetition risk from weak/resettable PRNG state, not
+predictability alone. Propagate failure and stop encryption upstream. This
+review did not demonstrate a remote trigger or run native fault-injection tests.
+
 ## Embedded iOS shell
 
 The iOS shell introduced in main's PR #23 adds native source, including checksum
