@@ -1,248 +1,342 @@
-// lib/services/secure_storage_web.dart
-//
-// Web-specific SecureStorage implementation that encrypts credentials
-// client-side using AES-256-GCM before persisting to localStorage.
-//
-// On native platforms, flutter_secure_storage delegates to OS keychains.
-// On web, there is no OS keychain, so we derive an AES-256 key from a
-// user-provided master password via PBKDF2 and encrypt every value
-// before writing it to localStorage.
-//
-// Storage format per key:
-//   localStorage["crisp_enc_<key>"] = base64(nonce‖ciphertext‖tag)
-//   localStorage["crisp_enc_salt"]  = base64(salt)  (unencrypted, for KDF)
-//   localStorage["crisp_enc_verify"] = encrypted verification token
+// Shared password vault codec for browser storage and the native file backend.
+// AES-256-GCM values retain the existing nonce(12) | ciphertext | tag(16)
+// format; PBKDF2-HMAC-SHA256 metadata remains compatible with legacy vaults.
 
 import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:universal_html/html.dart' as html;
 
+import '../utils/async_lock.dart';
 import 'encryption_service.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
 import 'web_crypto_provider.dart';
-// Picks the native WebCrypto (crypto.subtle) provider on the web build and the
-// pure-Dart pointycastle provider on the Dart VM / native (so tests run without
-// a browser).
 import 'web_crypto_factory_io.dart'
     if (dart.library.js_interop) 'web_crypto_factory_web.dart';
 
 const _log = Log('WebEncryptedStorage');
-
-/// Prefix for all encrypted entries in the backing store.
 const _keyPrefix = 'crisp_enc_';
-
-/// Key under which the PBKDF2 salt is stored (unencrypted).
 const _saltKey = '${_keyPrefix}salt';
-
-/// Key under which a verification token is stored so we can detect
-/// an incorrect master password without corrupting real data.
 const _verifyKey = '${_keyPrefix}verify';
-
-/// Key under which the PBKDF2 iteration count is stored (unencrypted), so the
-/// count can be raised over time without locking out existing data.
 const _iterationsKey = '${_keyPrefix}iterations';
-
-/// The plaintext we encrypt as a verification token.
 const _verifyPlaintext = 'CrispCloud-web-verify';
-
-/// PBKDF2 iterations for NEW vaults — OWASP 2023 for PBKDF2-HMAC-SHA256.
-/// Affordable because WebCrypto derives natively (~ms); the pointycastle
-/// fallback (tests/native) is only ever used at the lower legacy count.
 const _pbkdf2Iterations = 600000;
-
-/// Iteration count assumed for a pre-existing vault that has no stored count
-/// (the original hard-coded EncryptionService.deriveKey default).
 const _legacyIterations = 100000;
 
-/// Web-specific [SecureStorage] that encrypts values with AES-256-GCM
-/// using a key derived from a master password.
+// ':' cannot occur in legacy base64. The authenticated inner 0xff byte cannot
+// occur in the UTF-8 plaintext of a legacy String value, so stripping 'v2:'
+// cannot downgrade a bound record into a valid legacy credential.
+const _boundRecordPrefix = 'v2:';
+const _boundRecordMagic = <int>[0xff, 0x43, 0x43, 0x56, 0x02];
+
+
+// A corrupt or hostile vault must not choose unbounded work before password
+// verification. Existing positive counts up to this ceiling stay readable;
+// increasing it is an explicit compatibility/performance review. The public
+// app creates vaults at 600,000, while tests can inject a lower positive count.
+const _maxPbkdf2Iterations = 2000000;
+
+/// Password-unlocked AES-256-GCM credential storage.
 ///
-/// Usage:
-/// ```dart
-/// final storage = WebEncryptedStorage(backingStore);
-/// await storage.initialize('my-master-password');
-/// await storage.write('token', 'secret-value');
-/// ```
-///
-/// The [backingStore] is a simple string key-value map (backed by
-/// localStorage, IndexedDB, or an in-memory map for tests).
+/// The file backend supplies an atomic transaction covering metadata, key
+/// verification, and every credential operation. Other backends retain their
+/// own persistence guarantees; in particular localStorage is not a transaction
+/// spanning browser tabs. Metadata changes invalidate an unlocked handle.
+/// New credential values authenticate their storage key in a versioned binary
+/// envelope; existing UTF-8/base64 values remain readable and become bound when
+/// rewritten. Verification metadata keeps the original format.
 class WebEncryptedStorage extends SecureStorage {
-  /// Pluggable backing store so tests can inject an in-memory map
-  /// instead of requiring a browser environment.
   final WebStorageBackend _backend;
-
-  /// Expose the backing store for checking if credentials exist
-  /// (e.g., to decide whether to show the master password gate).
   WebStorageBackend get backend => _backend;
-
-  /// Crypto backend: native WebCrypto (non-extractable key) on the web build,
-  /// pointycastle on the Dart VM / native (tests). Injectable for tests.
   final WebCryptoProvider _crypto;
-
-  /// Opaque derived AES-256-GCM key — a non-extractable CryptoKey under
-  /// WebCrypto (the raw bytes never enter JS memory), a Uint8List under
-  /// pointycastle. Held in memory only, never persisted.
-  Object? _cryptoKey;
-
-  /// PBKDF2 iteration count for a NEW vault. Defaults to the SOTA
-  /// [_pbkdf2Iterations]; tests override it low so the pure-Dart pointycastle
-  /// fallback (no WebCrypto in the VM) stays fast. Production web never lowers
-  /// it — WebCrypto derives 600k natively in ~ms.
   final int _newVaultIterations;
+  final _operations = AsyncLock();
+  Object? _cryptoKey;
+  _VaultMetadata? _metadata;
 
-  WebEncryptedStorage(this._backend,
-      {WebCryptoProvider? cryptoProvider,
-      int newVaultIterations = _pbkdf2Iterations})
-      : _crypto = cryptoProvider ?? defaultWebCryptoProvider(),
-        _newVaultIterations = newVaultIterations;
+  WebEncryptedStorage(
+    this._backend, {
+    WebCryptoProvider? cryptoProvider,
+    int newVaultIterations = _pbkdf2Iterations,
+  }) : _crypto = cryptoProvider ?? defaultWebCryptoProvider(),
+       _newVaultIterations = newVaultIterations;
 
-  // ---------------------------------------------------------------------------
-  // Initialization
-  // ---------------------------------------------------------------------------
-
-  /// Whether [initialize] has been called successfully.
   bool get isInitialized => _cryptoKey != null;
 
-  /// Derive the encryption key from [masterPassword] and either create a new
-  /// salt (first run) or load the existing one.
-  ///
-  /// If a verification token already exists, this method will attempt to
-  /// decrypt it. A mismatch throws [StateError] (wrong password).
-  Future<void> initialize(String masterPassword) async {
-    Uint8List salt;
-    int iterations;
-    final existingSalt = await _backend.getItem(_saltKey);
-
-    if (existingSalt != null) {
-      // Returning user — load existing salt + its iteration count. A vault
-      // created before iteration-versioning has no stored count → it was
-      // derived at the legacy 100k, so we must derive at 100k to decrypt it.
-      salt = base64.decode(existingSalt);
-      final storedIters = await _backend.getItem(_iterationsKey);
-      iterations = int.tryParse(storedIters ?? '') ?? _legacyIterations;
-    } else {
-      // First run — new salt + SOTA iteration count, both persisted.
-      salt = EncryptionService.generateSalt();
-      iterations = _newVaultIterations;
-      await _backend.setItem(_saltKey, base64.encode(salt));
-      await _backend.setItem(_iterationsKey, iterations.toString());
+  Future<T> _withBackend<T>(
+    Future<T> Function(WebStorageBackend) action,
+  ) {
+    final backend = _backend;
+    if (backend is TransactionalWebStorageBackend) {
+      return backend.transaction(action);
     }
+    return action(backend);
+  }
 
-    final key = await _crypto.deriveKey(masterPassword, salt, iterations);
+  /// Inspect existing-vs-new state without deriving a key or changing storage.
+  /// Partial, malformed, or unsupported metadata throws instead of offering to
+  /// create a vault over damaged credentials. Missing iterations are accepted
+  /// only for a complete legacy salt/verification pair (100,000 iterations).
+  Future<bool> hasVault() => _operations.synchronized(
+    () => _withBackend((backend) async =>
+        await _readMetadata(backend) != null),
+  );
 
-    // Verify against existing token (if any).
-    final existingVerify = await _backend.getItem(_verifyKey);
-    if (existingVerify != null) {
-      try {
-        final decrypted =
-            await _crypto.decrypt(key, base64.decode(existingVerify));
-        if (utf8.decode(decrypted) != _verifyPlaintext) {
-          throw StateError('Master password verification failed');
+  /// Unlock an existing vault or atomically initialize a new file vault.
+  /// A failed attempt always leaves this handle locked. Neither a wrong
+  /// password nor incomplete metadata writes a replacement verification token.
+  Future<void> initialize(String masterPassword, {bool? expectedExisting}) =>
+      _operations.synchronized(() async {
+        _cryptoKey = null;
+        _metadata = null;
+        try {
+          final unlocked = await _withBackend((backend) async {
+            var metadata = await _readMetadata(backend);
+            if (expectedExisting != null &&
+                (metadata != null) != expectedExisting) {
+              throw StateError('Credential vault state changed; inspect it again');
+            }
+            final salt = metadata?.saltBytes ?? EncryptionService.generateSalt();
+            final iterations = metadata?.iterations ?? _newVaultIterations;
+            _validateIterations(iterations);
+            final key = await _crypto.deriveKey(masterPassword, salt, iterations);
+            if (metadata != null) {
+              try {
+                final verified = await _crypto.decrypt(
+                  key,
+                  base64.decode(metadata.verify),
+                );
+                if (utf8.decode(verified) != _verifyPlaintext) {
+                  throw StateError('Master password verification failed');
+                }
+              } catch (_) {
+                throw StateError('Incorrect master password or damaged vault');
+              }
+            } else {
+              // Finish crypto before making any writes. A transactional backend
+              // publishes all three metadata fields together, or none of them.
+              final verified = await _crypto.encrypt(
+                key,
+                Uint8List.fromList(utf8.encode(_verifyPlaintext)),
+              );
+              metadata = _VaultMetadata(
+                base64.encode(salt),
+                base64.encode(verified),
+                iterations.toString(),
+                salt,
+                iterations,
+              );
+              await backend.setItem(_saltKey, metadata.salt);
+              await backend.setItem(_iterationsKey, metadata.storedIterations!);
+              await backend.setItem(_verifyKey, metadata.verify);
+            }
+            return (key: key, metadata: metadata);
+          });
+          // File transaction commit must succeed before the handle is unlocked.
+          _cryptoKey = unlocked.key;
+          _metadata = unlocked.metadata;
+          _log.info('Encrypted credential storage initialized');
+        } catch (_) {
+          _cryptoKey = null;
+          _metadata = null;
+          rethrow;
         }
-      } catch (e) {
-        if (e is StateError) rethrow;
-        throw StateError('Incorrect master password');
+      });
+
+  static void _validateIterations(int iterations) {
+    if (iterations < 1 || iterations > _maxPbkdf2Iterations) {
+      throw StateError('Unsupported credential vault PBKDF2 iteration count');
+    }
+  }
+
+  Future<_VaultMetadata?> _readMetadata(WebStorageBackend backend) async {
+    final salt = await backend.getItem(_saltKey);
+    final verify = await backend.getItem(_verifyKey);
+    final storedIterations = await backend.getItem(_iterationsKey);
+    if (salt == null && verify == null && storedIterations == null) {
+      if ((await backend.allKeys()).any((key) => key.startsWith(_keyPrefix))) {
+        throw StateError('Credential vault is missing encryption metadata');
       }
-    } else {
-      // First run — store a verification token.
-      final encrypted = await _crypto.encrypt(
-        key,
-        Uint8List.fromList(utf8.encode(_verifyPlaintext)),
-      );
-      await _backend.setItem(_verifyKey, base64.encode(encrypted));
-    }
-
-    _cryptoKey = key;
-    _log.info('Web encrypted storage initialized');
-  }
-
-  // ---------------------------------------------------------------------------
-  // SecureStorage interface
-  // ---------------------------------------------------------------------------
-
-  void _checkInit() {
-    if (!isInitialized) {
-      throw StateError(
-        'WebEncryptedStorage not initialized — call initialize() first',
-      );
-    }
-  }
-
-  String _storageKey(String key) => '$_keyPrefix$key';
-
-  @override
-  Future<String?> read(String key) async {
-    // If not initialized (first-time user who skipped the gate),
-    // return null — there are no stored credentials to read.
-    if (!isInitialized) return null;
-    final raw = await _backend.getItem(_storageKey(key));
-    if (raw == null) return null;
-    try {
-      final decrypted = await _crypto.decrypt(_cryptoKey!, base64.decode(raw));
-      return utf8.decode(decrypted);
-    } catch (e) {
-      _log.warn('Failed to decrypt value for key "$key"', e);
       return null;
     }
-  }
-
-  @override
-  Future<void> write(String key, String value) async {
-    if (!isInitialized) {
-      throw StateError(
-        'Set a master password before saving credentials. '
-        'Go to Settings to configure encrypted storage.',
-      );
+    if (salt == null || verify == null) {
+      throw StateError('Credential vault has incomplete encryption metadata');
     }
-    final encrypted = await _crypto.encrypt(
-      _cryptoKey!,
-      Uint8List.fromList(utf8.encode(value)),
-    );
-    await _backend.setItem(_storageKey(key), base64.encode(encrypted));
+    Uint8List saltBytes;
+    try {
+      // The existing format always writes a 16-byte salt and a fixed-size
+      // encrypted verification token. Bound decoding before allocating data.
+      if (salt.length != 24 ||
+          verify.length != ((28 + _verifyPlaintext.length + 2) ~/ 3) * 4) {
+        throw const FormatException('Invalid metadata length');
+      }
+      saltBytes = base64.decode(salt);
+      final verifyBytes = base64.decode(verify);
+      if (saltBytes.length != 16 || base64.encode(saltBytes) != salt ||
+          verifyBytes.length != 28 + _verifyPlaintext.length ||
+          base64.encode(verifyBytes) != verify) {
+        throw const FormatException('Invalid metadata encoding');
+      }
+    } on FormatException {
+      throw StateError('Credential vault has malformed encryption metadata');
+    }
+    var iterations = _legacyIterations;
+    if (storedIterations != null) {
+      if (!RegExp(r'^[1-9][0-9]{0,6}$').hasMatch(storedIterations)) {
+        throw StateError('Credential vault has an invalid PBKDF2 count');
+      }
+      iterations = int.parse(storedIterations);
+      _validateIterations(iterations);
+    }
+    return _VaultMetadata(salt, verify, storedIterations, saltBytes, iterations);
   }
 
-  @override
-  Future<void> delete(String key) async {
-    _checkInit();
-    await _backend.removeItem(_storageKey(key));
+  Future<Object> _currentKey(WebStorageBackend backend) async {
+    final key = _cryptoKey;
+    if (key == null) {
+      throw StateError('Credential vault is locked; unlock it before use');
+    }
+    try {
+      final current = await _readMetadata(backend);
+      if (current == null || !current.sameGeneration(_metadata)) {
+        throw StateError('Credential vault changed; unlock it again before use');
+      }
+      return key;
+    } catch (_) {
+      _cryptoKey = null;
+      _metadata = null;
+      rethrow;
+    }
   }
 
-  @override
-  Future<bool> containsKey(String key) async {
-    if (!isInitialized) return false;
-    return await _backend.getItem(_storageKey(key)) != null;
+  String _storageKey(String key) {
+    final stored = '$_keyPrefix$key';
+    if (stored == _saltKey || stored == _verifyKey || stored == _iterationsKey) {
+      throw ArgumentError.value(key, 'key', 'Reserved credential vault key');
+    }
+    return stored;
   }
 
-  @override
-  Future<void> deleteAll() async {
-    _checkInit();
-    // Remove all keys with our prefix, except the salt, iteration count and
-    // verify token, so the master password still works after clearing creds.
-    final keys = await _backend.allKeys();
-    for (final k in keys) {
-      if (k.startsWith(_keyPrefix) &&
-          k != _saltKey &&
-          k != _verifyKey &&
-          k != _iterationsKey) {
-        await _backend.removeItem(k);
+  static Uint8List _encodeBoundRecord(String storedKey, String value) {
+    final payload = utf8.encode(jsonEncode({'key': storedKey, 'value': value}));
+    return Uint8List.fromList([..._boundRecordMagic, ...payload]);
+  }
+
+  static String _decodeBoundRecord(String storedKey, Uint8List plaintext) {
+    if (plaintext.length < _boundRecordMagic.length) {
+      throw const FormatException('Invalid bound credential record');
+    }
+    for (var index = 0; index < _boundRecordMagic.length; index++) {
+      if (plaintext[index] != _boundRecordMagic[index]) {
+        throw const FormatException('Invalid bound credential record');
       }
     }
+    final record = jsonDecode(utf8.decode(plaintext.sublist(_boundRecordMagic.length)));
+    if (record is! Map || record.length != 2 ||
+        record['key'] != storedKey || record['value'] is! String) {
+      throw const FormatException('Credential record belongs to a different key');
+    }
+    return record['value'] as String;
   }
+
+  @override
+  Future<String?> read(String key) => _operations.synchronized(
+    () => _withBackend((backend) async {
+      final stored = _storageKey(key);
+      final cryptoKey = await _currentKey(backend);
+      final raw = await backend.getItem(stored);
+      if (raw == null) return null;
+      try {
+        final bound = raw.startsWith(_boundRecordPrefix);
+        final ciphertext = bound ? raw.substring(_boundRecordPrefix.length) : raw;
+        final decrypted = await _crypto.decrypt(cryptoKey, base64.decode(ciphertext));
+        return bound ? _decodeBoundRecord(stored, decrypted) : utf8.decode(decrypted);
+      } catch (_) {
+        // Absence and authentication failure are different states. Returning
+        // null here allowed legacy migration to overwrite damaged credentials.
+        throw StateError('Stored credential could not be authenticated');
+      }
+    }),
+  );
+
+  @override
+  Future<void> write(String key, String value) => _operations.synchronized(
+    () => _withBackend((backend) async {
+      final stored = _storageKey(key);
+      final cryptoKey = await _currentKey(backend);
+      final encrypted = await _crypto.encrypt(
+        cryptoKey,
+        _encodeBoundRecord(stored, value),
+      );
+      await backend.setItem(stored, '$_boundRecordPrefix${base64.encode(encrypted)}');
+    }),
+  );
+
+  @override
+  Future<void> delete(String key) => _operations.synchronized(
+    () => _withBackend((backend) async {
+      final stored = _storageKey(key);
+      await _currentKey(backend);
+      await backend.removeItem(stored);
+    }),
+  );
+
+  @override
+  Future<bool> containsKey(String key) => _operations.synchronized(
+    () => _withBackend((backend) async {
+      final stored = _storageKey(key);
+      await _currentKey(backend);
+      return await backend.getItem(stored) != null;
+    }),
+  );
+
+  @override
+  Future<void> deleteAll() => _operations.synchronized(
+    () => _withBackend((backend) async {
+      await _currentKey(backend);
+      for (final key in await backend.allKeys()) {
+        if (key.startsWith(_keyPrefix) && key != _saltKey &&
+            key != _verifyKey && key != _iterationsKey) {
+          await backend.removeItem(key);
+        }
+      }
+    }),
+  );
 }
 
-// ---------------------------------------------------------------------------
-// Backing store abstraction
-// ---------------------------------------------------------------------------
+class _VaultMetadata {
+  const _VaultMetadata(
+    this.salt, this.verify, this.storedIterations,
+    this.saltBytes, this.iterations,
+  );
+  final String salt;
+  final String verify;
+  final String? storedIterations;
+  final Uint8List saltBytes;
+  final int iterations;
 
-/// Minimal key-value backend so [WebEncryptedStorage] can work both in
-/// the browser (localStorage / IndexedDB) and in unit tests.
+  bool sameGeneration(_VaultMetadata? other) => other != null &&
+      salt == other.salt && verify == other.verify &&
+      storedIterations == other.storedIterations;
+}
+
+/// Minimal string backend. Implementations must distinguish failed reads from
+/// missing values; silently discarding malformed data is not safe for a vault.
 abstract class WebStorageBackend {
   Future<String?> getItem(String key);
   Future<void> setItem(String key, String value);
   Future<void> removeItem(String key);
   Future<List<String>> allKeys();
+}
+
+/// Optional all-or-nothing read/modify/write boundary, used by native files.
+/// [action] receives an isolated staged backend and must not retain it. A
+/// callback failure discards every staged change. A successful future means
+/// commit completed; a commit error must describe an uncertain result if the
+/// atomic replacement already happened. The callback may perform async crypto.
+abstract class TransactionalWebStorageBackend implements WebStorageBackend {
+  Future<T> transaction<T>(Future<T> Function(WebStorageBackend) action);
 }
 
 /// In-memory backend for unit tests.
