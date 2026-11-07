@@ -11,6 +11,7 @@
 //
 // Persistence:
 //   Plans    → SharedPreferences key 'backup_plans'       (JSON list)
+//   Keys     → SecureStorage key 'backup_plan_key_<planId>'
 //   Snapshots → SharedPreferences key 'backup_snapshots_<planId>' (JSON list)
 //
 // Platform guard: all mutating operations are no-ops on web (kIsWeb).
@@ -24,25 +25,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 import 'log_service.dart';
+import 'secure_storage_service.dart';
 
 // ---------------------------------------------------------------------------
 // Enums
 // ---------------------------------------------------------------------------
 
-enum BackupFileStatus {
-  added,
-  modified,
-  unchanged,
-  deleted,
-}
+enum BackupFileStatus { added, modified, unchanged, deleted }
 
-enum BackupSnapshotStatus {
-  pending,
-  running,
-  completed,
-  failed,
-  verifying,
-}
+enum BackupSnapshotStatus { pending, running, completed, failed, verifying }
 
 // ---------------------------------------------------------------------------
 // BackupFileEntry
@@ -67,14 +58,15 @@ class BackupFileEntry {
   });
 
   Map<String, dynamic> toJson() => {
-        'relativePath': relativePath,
-        'sizeBytes': sizeBytes,
-        'md5Hash': md5Hash,
-        'status': status.name,
-        'backupPath': backupPath,
-      };
+    'relativePath': relativePath,
+    'sizeBytes': sizeBytes,
+    'md5Hash': md5Hash,
+    'status': status.name,
+    'backupPath': backupPath,
+  };
 
-  factory BackupFileEntry.fromJson(Map<String, dynamic> json) => BackupFileEntry(
+  factory BackupFileEntry.fromJson(Map<String, dynamic> json) =>
+      BackupFileEntry(
         relativePath: json['relativePath'] as String,
         sizeBytes: json['sizeBytes'] as int,
         md5Hash: json['md5Hash'] as String,
@@ -87,7 +79,9 @@ class BackupFileEntry {
 
   @override
   bool operator ==(Object other) =>
-      other is BackupFileEntry && relativePath == other.relativePath && md5Hash == other.md5Hash;
+      other is BackupFileEntry &&
+      relativePath == other.relativePath &&
+      md5Hash == other.md5Hash;
 
   @override
   int get hashCode => Object.hash(relativePath, md5Hash);
@@ -122,48 +116,50 @@ class BackupSnapshot {
   });
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'planId': planId,
-        'timestamp': timestamp.toIso8601String(),
-        'fileCount': fileCount,
-        'totalBytes': totalBytes,
-        'status': status.name,
-        'files': files.map((f) => f.toJson()).toList(),
-        'durationMs': durationMs,
-        if (error != null) 'error': error,
-      };
+    'id': id,
+    'planId': planId,
+    'timestamp': timestamp.toIso8601String(),
+    'fileCount': fileCount,
+    'totalBytes': totalBytes,
+    'status': status.name,
+    'files': files.map((f) => f.toJson()).toList(),
+    'durationMs': durationMs,
+    if (error != null) 'error': error,
+  };
 
   factory BackupSnapshot.fromJson(Map<String, dynamic> json) => BackupSnapshot(
-        id: json['id'] as String,
-        planId: json['planId'] as String,
-        timestamp: DateTime.parse(json['timestamp'] as String),
-        fileCount: json['fileCount'] as int,
-        totalBytes: json['totalBytes'] as int,
-        status: BackupSnapshotStatus.values.firstWhere(
-          (s) => s.name == json['status'],
-          orElse: () => BackupSnapshotStatus.pending,
-        ),
-        files: (json['files'] as List)
-            .cast<Map<String, dynamic>>()
-            .map(BackupFileEntry.fromJson)
-            .toList(),
-        durationMs: json['durationMs'] as int? ?? 0,
-        error: json['error'] as String?,
-      );
+    id: json['id'] as String,
+    planId: json['planId'] as String,
+    timestamp: DateTime.parse(json['timestamp'] as String),
+    fileCount: json['fileCount'] as int,
+    totalBytes: json['totalBytes'] as int,
+    status: BackupSnapshotStatus.values.firstWhere(
+      (s) => s.name == json['status'],
+      orElse: () => BackupSnapshotStatus.pending,
+    ),
+    files: (json['files'] as List)
+        .cast<Map<String, dynamic>>()
+        .map(BackupFileEntry.fromJson)
+        .toList(),
+    durationMs: json['durationMs'] as int? ?? 0,
+    error: json['error'] as String?,
+  );
 
   /// Return a copy with a modified status.
-  BackupSnapshot copyWithStatus(BackupSnapshotStatus newStatus, {String? error}) =>
-      BackupSnapshot(
-        id: id,
-        planId: planId,
-        timestamp: timestamp,
-        fileCount: fileCount,
-        totalBytes: totalBytes,
-        status: newStatus,
-        files: files,
-        durationMs: durationMs,
-        error: error ?? this.error,
-      );
+  BackupSnapshot copyWithStatus(
+    BackupSnapshotStatus newStatus, {
+    String? error,
+  }) => BackupSnapshot(
+    id: id,
+    planId: planId,
+    timestamp: timestamp,
+    fileCount: fileCount,
+    totalBytes: totalBytes,
+    status: newStatus,
+    files: files,
+    durationMs: durationMs,
+    error: error ?? this.error,
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -186,7 +182,8 @@ class BackupPlan {
 
   final bool encryptionEnabled;
 
-  /// Passphrase used when encryptionEnabled == true.
+  /// In-memory passphrase, persisted separately in SecureStorage. Legacy JSON
+  /// can still be read so BackupService can migrate without losing recovery.
   final String? encryptionKey;
 
   final DateTime? lastRun;
@@ -216,38 +213,41 @@ class BackupPlan {
   });
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'sourcePath': sourcePath,
-        'destinationPath': destinationPath,
-        'provider': provider,
-        'schedule': schedule,
-        'maxVersions': maxVersions,
-        'encryptionEnabled': encryptionEnabled,
-        if (encryptionKey != null) 'encryptionKey': encryptionKey,
-        if (lastRun != null) 'lastRun': lastRun!.toIso8601String(),
-        if (nextRun != null) 'nextRun': nextRun!.toIso8601String(),
-        'enabled': enabled,
-        'excludePatterns': excludePatterns,
-        'createdAt': createdAt.toIso8601String(),
-      };
+    'id': id,
+    'name': name,
+    'sourcePath': sourcePath,
+    'destinationPath': destinationPath,
+    'provider': provider,
+    'schedule': schedule,
+    'maxVersions': maxVersions,
+    'encryptionEnabled': encryptionEnabled,
+    if (lastRun != null) 'lastRun': lastRun!.toIso8601String(),
+    if (nextRun != null) 'nextRun': nextRun!.toIso8601String(),
+    'enabled': enabled,
+    'excludePatterns': excludePatterns,
+    'createdAt': createdAt.toIso8601String(),
+  };
 
   factory BackupPlan.fromJson(Map<String, dynamic> json) => BackupPlan(
-        id: json['id'] as String,
-        name: json['name'] as String,
-        sourcePath: json['sourcePath'] as String,
-        destinationPath: json['destinationPath'] as String,
-        provider: json['provider'] as String,
-        schedule: json['schedule'] as String,
-        maxVersions: json['maxVersions'] as int? ?? 10,
-        encryptionEnabled: json['encryptionEnabled'] as bool? ?? false,
-        encryptionKey: json['encryptionKey'] as String?,
-        lastRun: json['lastRun'] != null ? DateTime.parse(json['lastRun'] as String) : null,
-        nextRun: json['nextRun'] != null ? DateTime.parse(json['nextRun'] as String) : null,
-        enabled: json['enabled'] as bool? ?? true,
-        excludePatterns: (json['excludePatterns'] as List?)?.cast<String>() ?? [],
-        createdAt: DateTime.parse(json['createdAt'] as String),
-      );
+    id: json['id'] as String,
+    name: json['name'] as String,
+    sourcePath: json['sourcePath'] as String,
+    destinationPath: json['destinationPath'] as String,
+    provider: json['provider'] as String,
+    schedule: json['schedule'] as String,
+    maxVersions: json['maxVersions'] as int? ?? 10,
+    encryptionEnabled: json['encryptionEnabled'] as bool? ?? false,
+    encryptionKey: json['encryptionKey'] as String?,
+    lastRun: json['lastRun'] != null
+        ? DateTime.parse(json['lastRun'] as String)
+        : null,
+    nextRun: json['nextRun'] != null
+        ? DateTime.parse(json['nextRun'] as String)
+        : null,
+    enabled: json['enabled'] as bool? ?? true,
+    excludePatterns: (json['excludePatterns'] as List?)?.cast<String>() ?? [],
+    createdAt: DateTime.parse(json['createdAt'] as String),
+  );
 
   BackupPlan copyWith({
     String? name,
@@ -262,33 +262,35 @@ class BackupPlan {
     DateTime? nextRun,
     bool? enabled,
     List<String>? excludePatterns,
-  }) =>
-      BackupPlan(
-        id: id,
-        name: name ?? this.name,
-        sourcePath: sourcePath ?? this.sourcePath,
-        destinationPath: destinationPath ?? this.destinationPath,
-        provider: provider ?? this.provider,
-        schedule: schedule ?? this.schedule,
-        maxVersions: maxVersions ?? this.maxVersions,
-        encryptionEnabled: encryptionEnabled ?? this.encryptionEnabled,
-        encryptionKey: encryptionKey ?? this.encryptionKey,
-        lastRun: lastRun ?? this.lastRun,
-        nextRun: nextRun ?? this.nextRun,
-        enabled: enabled ?? this.enabled,
-        excludePatterns: excludePatterns ?? this.excludePatterns,
-        createdAt: createdAt,
-      );
+  }) => BackupPlan(
+    id: id,
+    name: name ?? this.name,
+    sourcePath: sourcePath ?? this.sourcePath,
+    destinationPath: destinationPath ?? this.destinationPath,
+    provider: provider ?? this.provider,
+    schedule: schedule ?? this.schedule,
+    maxVersions: maxVersions ?? this.maxVersions,
+    encryptionEnabled: encryptionEnabled ?? this.encryptionEnabled,
+    encryptionKey: encryptionKey ?? this.encryptionKey,
+    lastRun: lastRun ?? this.lastRun,
+    nextRun: nextRun ?? this.nextRun,
+    enabled: enabled ?? this.enabled,
+    excludePatterns: excludePatterns ?? this.excludePatterns,
+    createdAt: createdAt,
+  );
 
   /// Validate plan configuration. Returns null if valid, error string otherwise.
   String? validate() {
     if (sourcePath.trim().isEmpty) return 'sourcePath must not be empty';
-    if (destinationPath.trim().isEmpty) return 'destinationPath must not be empty';
+    if (destinationPath.trim().isEmpty)
+      return 'destinationPath must not be empty';
     if (name.trim().isEmpty) return 'name must not be empty';
     if (maxVersions < 1) return 'maxVersions must be at least 1';
     if (schedule.trim().isEmpty) return 'schedule must not be empty';
-    if (!_isValidCron(schedule)) return 'schedule is not a valid cron expression';
-    if (encryptionEnabled && (encryptionKey == null || encryptionKey!.trim().isEmpty)) {
+    if (!_isValidCron(schedule))
+      return 'schedule is not a valid cron expression';
+    if (encryptionEnabled &&
+        (encryptionKey == null || encryptionKey!.trim().isEmpty)) {
       return 'encryptionKey is required when encryptionEnabled is true';
     }
     return null;
@@ -377,7 +379,13 @@ class BackupService {
   static const _uuid = Uuid();
 
   static const _plansKey = 'backup_plans';
+  static String _planKey(String planId) => 'backup_plan_key_$planId';
   static String _snapshotsKey(String planId) => 'backup_snapshots_$planId';
+
+  final SecureStorage _secureStorage;
+
+  BackupService({SecureStorage? secureStorage})
+    : _secureStorage = secureStorage ?? PlatformSecureStorage();
 
   /// Tracks which plan IDs are actively running a backup.
   final Set<String> _runningPlanIds = {};
@@ -389,7 +397,8 @@ class BackupService {
   // Plan CRUD
   // ---------------------------------------------------------------------------
 
-  /// Load all backup plans from SharedPreferences.
+  /// Load plan metadata and hydrate its separately stored encryption keys.
+  /// Legacy plaintext keys are removed only after a verified secure write.
   Future<List<BackupPlan>> getPlans() async {
     if (kIsWeb) return [];
     try {
@@ -397,10 +406,39 @@ class BackupService {
       final raw = prefs.getString(_plansKey);
       if (raw == null) return [];
       final list = (jsonDecode(raw) as List).cast<Map<String, dynamic>>();
-      return list.map(BackupPlan.fromJson).toList();
+      final plans = <BackupPlan>[];
+      var migrated = false;
+      for (final json in list) {
+        final plan = BackupPlan.fromJson(json);
+        final legacyKey = plan.encryptionKey;
+        var storedKey = await _secureStorage.read(_planKey(plan.id));
+        if (legacyKey != null) {
+          // Preserve both sources if an interrupted/manual migration left
+          // conflicting keys. Never overwrite a potentially needed key.
+          if (storedKey != null && storedKey != legacyKey) {
+            throw StateError(
+              'Conflicting encryption keys for backup plan ${plan.id}',
+            );
+          }
+          await _persistKey(plan.id, legacyKey);
+          storedKey = legacyKey;
+          migrated = true;
+        }
+        plans.add(plan.copyWith(encryptionKey: storedKey));
+      }
+      if (migrated) {
+        final saved = await prefs.setString(
+          _plansKey,
+          jsonEncode(plans.map((p) => p.toJson()).toList()),
+        );
+        if (!saved) throw StateError('Could not finish backup key migration');
+      }
+      return plans;
     } catch (e) {
       _log.error('Failed to load backup plans', e);
-      return [];
+      // Returning [] would let createPlan overwrite existing plans when the
+      // keychain is temporarily locked or migration/storage fails.
+      rethrow;
     }
   }
 
@@ -483,13 +521,35 @@ class BackupService {
     // Remove all snapshots for this plan
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_snapshotsKey(planId));
+    await _secureStorage.delete(_planKey(planId));
 
     _log.info('Deleted backup plan $planId and all its snapshots');
   }
 
   Future<void> _savePlans(List<BackupPlan> plans) async {
+    // Secure keys first. A failed secure write must never produce metadata
+    // claiming that an encrypted plan was successfully persisted.
+    for (final plan in plans) {
+      if (plan.encryptionKey != null) {
+        await _persistKey(plan.id, plan.encryptionKey!);
+      }
+    }
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_plansKey, jsonEncode(plans.map((p) => p.toJson()).toList()));
+    final saved = await prefs.setString(
+      _plansKey,
+      jsonEncode(plans.map((p) => p.toJson()).toList()),
+    );
+    if (!saved) throw StateError('Could not save backup plans');
+  }
+
+  Future<void> _persistKey(String planId, String key) async {
+    final storageKey = _planKey(planId);
+    if (await _secureStorage.read(storageKey) != key) {
+      await _secureStorage.write(storageKey, key);
+    }
+    if (await _secureStorage.read(storageKey) != key) {
+      throw StateError('Backup encryption key could not be stored securely');
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -522,7 +582,10 @@ class BackupService {
     }
   }
 
-  Future<void> _saveSnapshots(String planId, List<BackupSnapshot> snapshots) async {
+  Future<void> _saveSnapshots(
+    String planId,
+    List<BackupSnapshot> snapshots,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(
       _snapshotsKey(planId),
@@ -575,7 +638,10 @@ class BackupService {
         try {
           await deleteRemoteFiles(remotePaths);
         } catch (e) {
-          _log.warn('Failed to delete remote files for snapshot $snapshotId', e);
+          _log.warn(
+            'Failed to delete remote files for snapshot $snapshotId',
+            e,
+          );
         }
       }
 
@@ -602,10 +668,11 @@ class BackupService {
     final snapshots = await getSnapshots(planId);
 
     // Only prune completed snapshots; keep failed/pending/running as-is.
-    final completed = snapshots
-        .where((s) => s.status == BackupSnapshotStatus.completed)
-        .toList()
-      ..sort((a, b) => b.timestamp.compareTo(a.timestamp)); // newest first
+    final completed =
+        snapshots
+            .where((s) => s.status == BackupSnapshotStatus.completed)
+            .toList()
+          ..sort((a, b) => b.timestamp.compareTo(a.timestamp)); // newest first
 
     if (completed.length <= plan.maxVersions) return 0;
 
@@ -621,7 +688,10 @@ class BackupService {
         try {
           await deleteRemoteFiles(paths);
         } catch (e) {
-          _log.warn('pruneSnapshots: failed to delete remote files for ${old.id}', e);
+          _log.warn(
+            'pruneSnapshots: failed to delete remote files for ${old.id}',
+            e,
+          );
         }
       }
       await _removeSnapshotRecord(planId, old.id);
@@ -644,13 +714,14 @@ class BackupService {
   /// the remote path where the file was stored. This keeps the service
   /// provider-agnostic.
   ///
-  /// [encryptBytes] is an optional callback to encrypt file bytes before
-  /// upload (used when [BackupPlan.encryptionEnabled] is true).
+  /// [encryptBytes] must be supplied for encrypted plans. Missing callbacks
+  /// or unavailable keys fail before scanning files or invoking uploadFile.
   ///
   /// Returns the resulting [BackupSnapshot].
   Future<BackupSnapshot> runBackup(
     String planId, {
-    required Future<String> Function(String relativePath, List<int> bytes) uploadFile,
+    required Future<String> Function(String relativePath, List<int> bytes)
+    uploadFile,
     List<int> Function(List<int> bytes, String key)? encryptBytes,
   }) async {
     if (kIsWeb) {
@@ -678,6 +749,7 @@ class BackupService {
       if (plan == null) {
         throw StateError('Plan $planId not found');
       }
+      _requireEncryption(plan, encryptBytes != null, 'encrypt');
 
       return await _runBackupInternal(planId, plan, uploadFile, encryptBytes);
     } finally {
@@ -707,16 +779,23 @@ class BackupService {
     await _upsertSnapshot(snapshot);
 
     try {
-      _log.info('Starting backup for plan "${plan.name}" (snapshot $snapshotId)');
+      _log.info(
+        'Starting backup for plan "${plan.name}" (snapshot $snapshotId)',
+      );
 
       // Load previous snapshot to enable incremental detection
       final previousSnapshots = await getSnapshots(planId);
       final previousCompleted = previousSnapshots
-          .where((s) =>
-              s.status == BackupSnapshotStatus.completed && s.id != snapshotId)
+          .where(
+            (s) =>
+                s.status == BackupSnapshotStatus.completed &&
+                s.id != snapshotId,
+          )
           .toList();
       previousCompleted.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-      final previous = previousCompleted.isNotEmpty ? previousCompleted.first : null;
+      final previous = previousCompleted.isNotEmpty
+          ? previousCompleted.first
+          : null;
 
       // Build lookup from previous snapshot: relativePath → BackupFileEntry
       final previousFiles = <String, BackupFileEntry>{};
@@ -732,7 +811,11 @@ class BackupService {
         throw StateError('Source directory does not exist: ${plan.sourcePath}');
       }
 
-      final scannedFiles = await _scanDirectory(sourceDir, plan.sourcePath, plan.excludePatterns);
+      final scannedFiles = await _scanDirectory(
+        sourceDir,
+        plan.sourcePath,
+        plan.excludePatterns,
+      );
 
       // Compare against previous snapshot → build entries
       final entries = <BackupFileEntry>[];
@@ -750,13 +833,15 @@ class BackupService {
 
         if (isUnchanged) {
           // Carry forward the previous backup path — no upload needed.
-          entries.add(BackupFileEntry(
-            relativePath: relativePath,
-            sizeBytes: sizeBytes,
-            md5Hash: hash,
-            status: BackupFileStatus.unchanged,
-            backupPath: prev.backupPath,
-          ));
+          entries.add(
+            BackupFileEntry(
+              relativePath: relativePath,
+              sizeBytes: sizeBytes,
+              md5Hash: hash,
+              status: BackupFileStatus.unchanged,
+              backupPath: prev.backupPath,
+            ),
+          );
           totalBytes += sizeBytes;
           continue;
         }
@@ -765,13 +850,15 @@ class BackupService {
         final bytesToUpload = _applyEncryption(localBytes, plan, encryptBytes);
         final remotePath = await uploadFile(relativePath, bytesToUpload);
 
-        entries.add(BackupFileEntry(
-          relativePath: relativePath,
-          sizeBytes: sizeBytes,
-          md5Hash: hash,
-          status: isNew ? BackupFileStatus.added : BackupFileStatus.modified,
-          backupPath: remotePath,
-        ));
+        entries.add(
+          BackupFileEntry(
+            relativePath: relativePath,
+            sizeBytes: sizeBytes,
+            md5Hash: hash,
+            status: isNew ? BackupFileStatus.added : BackupFileStatus.modified,
+            backupPath: remotePath,
+          ),
+        );
         totalBytes += sizeBytes;
       }
 
@@ -779,19 +866,22 @@ class BackupService {
       final scannedRelPaths = scannedFiles.map((f) => f.relativePath).toSet();
       for (final prevEntry in previousFiles.values) {
         if (!scannedRelPaths.contains(prevEntry.relativePath)) {
-          entries.add(BackupFileEntry(
-            relativePath: prevEntry.relativePath,
-            sizeBytes: 0,
-            md5Hash: prevEntry.md5Hash,
-            status: BackupFileStatus.deleted,
-            backupPath: prevEntry.backupPath,
-          ));
+          entries.add(
+            BackupFileEntry(
+              relativePath: prevEntry.relativePath,
+              sizeBytes: 0,
+              md5Hash: prevEntry.md5Hash,
+              status: BackupFileStatus.deleted,
+              backupPath: prevEntry.backupPath,
+            ),
+          );
         }
       }
 
       final durationMs = DateTime.now().difference(startTime).inMilliseconds;
-      final nonDeletedEntries =
-          entries.where((e) => e.status != BackupFileStatus.deleted).toList();
+      final nonDeletedEntries = entries
+          .where((e) => e.status != BackupFileStatus.deleted)
+          .toList();
 
       snapshot = BackupSnapshot(
         id: snapshotId,
@@ -824,7 +914,10 @@ class BackupService {
       return snapshot;
     } catch (e, st) {
       _log.error('Backup failed for plan "${plan.name}"', e, st);
-      final failed = snapshot.copyWithStatus(BackupSnapshotStatus.failed, error: e.toString());
+      final failed = snapshot.copyWithStatus(
+        BackupSnapshotStatus.failed,
+        error: e.toString(),
+      );
       await _upsertSnapshot(failed);
       return failed;
     }
@@ -852,7 +945,9 @@ class BackupService {
       _log.info('Verifying snapshot $snapshotId for plan "${plan.name}"');
 
       // Mark as verifying
-      await _upsertSnapshot(snapshot.copyWithStatus(BackupSnapshotStatus.verifying));
+      await _upsertSnapshot(
+        snapshot.copyWithStatus(BackupSnapshotStatus.verifying),
+      );
 
       final result = <String, String>{};
 
@@ -873,7 +968,9 @@ class BackupService {
       }
 
       // Restore completed status
-      await _upsertSnapshot(snapshot.copyWithStatus(BackupSnapshotStatus.completed));
+      await _upsertSnapshot(
+        snapshot.copyWithStatus(BackupSnapshotStatus.completed),
+      );
 
       _log.info(
         'Verification done for $snapshotId: '
@@ -912,8 +1009,8 @@ class BackupService {
   ///
   /// [downloadFile] is a callback that downloads bytes from a remote path.
   ///
-  /// [decryptBytes] is an optional callback to decrypt file bytes after
-  /// download when [BackupPlan.encryptionEnabled] is true.
+  /// [decryptBytes] must be supplied for encrypted plans. Missing callbacks
+  /// or unavailable keys fail before downloading or touching destination files.
   ///
   /// Returns the number of files restored.
   Future<int> restoreSnapshot(
@@ -929,6 +1026,7 @@ class BackupService {
       final snapshot = await _getSnapshot(plan.id, snapshotId);
       if (snapshot == null) continue;
 
+      _requireEncryption(plan, decryptBytes != null, 'decrypt');
       _log.info('Restoring snapshot $snapshotId to $targetPath');
 
       int restored = 0;
@@ -937,8 +1035,8 @@ class BackupService {
 
         try {
           var bytes = await downloadFile(entry.backupPath);
-          if (plan.encryptionEnabled && decryptBytes != null && plan.encryptionKey != null) {
-            bytes = decryptBytes(bytes, plan.encryptionKey!);
+          if (plan.encryptionEnabled) {
+            bytes = decryptBytes!(bytes, plan.encryptionKey!);
           }
 
           final destPath = '$targetPath/${entry.relativePath}';
@@ -970,9 +1068,24 @@ class BackupService {
     List<int> Function(List<int>, String)? encryptBytes,
   ) {
     if (!plan.encryptionEnabled) return bytes;
-    if (encryptBytes == null) return bytes;
-    if (plan.encryptionKey == null || plan.encryptionKey!.isEmpty) return bytes;
-    return encryptBytes(bytes, plan.encryptionKey!);
+    _requireEncryption(plan, encryptBytes != null, 'encrypt');
+    return encryptBytes!(bytes, plan.encryptionKey!);
+  }
+
+  static void _requireEncryption(
+    BackupPlan plan,
+    bool hasCallback,
+    String operation,
+  ) {
+    if (!plan.encryptionEnabled) return;
+    if (!hasCallback) {
+      throw StateError(
+        'Encrypted backup requires a configured $operation callback',
+      );
+    }
+    if (plan.encryptionKey == null || plan.encryptionKey!.trim().isEmpty) {
+      throw StateError('The backup encryption key is unavailable');
+    }
   }
 }
 
@@ -995,7 +1108,10 @@ Future<List<_ScannedFile>> _scanDirectory(
 ) async {
   final results = <_ScannedFile>[];
 
-  await for (final entity in rootDir.list(recursive: true, followLinks: false)) {
+  await for (final entity in rootDir.list(
+    recursive: true,
+    followLinks: false,
+  )) {
     if (entity is! File) continue;
 
     final absolutePath = entity.path;
