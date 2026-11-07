@@ -1,12 +1,11 @@
 // lib/services/cryptomator_service.dart
 //
-// Cryptomator vault format v8 compatibility layer.
+// Cryptomator vault format v8 cryptographic primitives (SIV_GCM).
 //
-// Supports SIV_GCM cipher combo, directory ID hashing (SHA-1 → base32),
-// 220-character shortened filenames, and AES key unwrapping (RFC 3394).
-//
-// Actual scrypt KDF uses the `pointycastle` package which is already in pubspec.
-// Full file content encryption is delegated to EncryptionService (AES-256-GCM).
+// This is not a complete vault filesystem. Traversal needs dir.c9r metadata;
+// shortened names need name.c9s metadata; file data needs Cryptomator's chunk
+// framing and AAD. EncryptionService's whole-file format is NOT that format.
+// See https://docs.cryptomator.org/security/vault/.
 
 import 'dart:convert';
 import 'dart:math';
@@ -14,6 +13,9 @@ import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:pointycastle/export.dart';
+import 'package:unorm_dart/unorm_dart.dart' as unorm;
+
+import 'aes_siv.dart';
 
 // ---------------------------------------------------------------------------
 // Models
@@ -40,8 +42,8 @@ class CryptomatorVault {
       'CryptomatorVault(path=$vaultPath, version=$version, cipher=$cipherCombo)';
 }
 
-/// Parsed from the `vault.cryptomator` JWT payload (base64-decoded header only —
-/// no JWT signature verification needed for offline vault detection).
+/// Unverified discovery metadata from `vault.cryptomator`.
+/// [CryptomatorService.unlockVault] verifies the signature before using it.
 class VaultConfig {
   final int version;
   final String cipherCombo;
@@ -59,25 +61,34 @@ class VaultConfig {
   /// Does NOT verify the JWT signature — for detection/info purposes only.
   factory VaultConfig.fromJwt(String jwt) {
     final parts = jwt.split('.');
-    if (parts.length < 2) {
+    if (parts.length != 3 || parts.any((part) => part.isEmpty)) {
       throw const FormatException('Invalid vault.cryptomator JWT format');
     }
-    // JWT uses base64url without padding
-    final payload = _base64UrlDecode(parts[1]);
-    final map = json.decode(utf8.decode(payload)) as Map<String, dynamic>;
+    final header = _decodeJwtObject(parts[0]);
+    final map = _decodeJwtObject(parts[1]);
+    if (map['format'] is! int ||
+        map['cipherCombo'] is! String ||
+        map['shorteningThreshold'] is! int ||
+        (header['kid'] != null && header['kid'] is! String)) {
+      throw const FormatException('Invalid vault.cryptomator configuration');
+    }
     return VaultConfig(
-      version: (map['format'] as num?)?.toInt() ?? 8,
-      cipherCombo: map['cipherCombo'] as String? ?? 'SIV_GCM',
-      shorteningThreshold:
-          (map['shorteningThreshold'] as num?)?.toInt() ?? 220,
-      keyId: map['kid'] as String?,
+      version: map['format'] as int,
+      cipherCombo: map['cipherCombo'] as String,
+      shorteningThreshold: map['shorteningThreshold'] as int,
+      keyId: header['kid'] as String?,
     );
   }
 
-  static Uint8List _base64UrlDecode(String s) {
-    // Add padding if needed
-    final padded = s.padRight((s.length + 3) & ~3, '=');
-    return base64Url.decode(padded);
+  static Map<String, dynamic> _decodeJwtObject(String segment) {
+    if (!RegExp(r'^[A-Za-z0-9_-]+$').hasMatch(segment)) {
+      throw const FormatException('Invalid JWT base64url segment');
+    }
+    final decoded = json.decode(utf8.decode(base64Url.decode(segment)));
+    if (decoded is! Map<String, dynamic>) {
+      throw const FormatException('JWT segment must be a JSON object');
+    }
+    return decoded;
   }
 
   @override
@@ -120,14 +131,14 @@ class MasterkeyFile {
   }
 
   Map<String, dynamic> toJson() => {
-        'version': version,
-        'scryptSalt': base64.encode(scryptSalt),
-        'scryptCostParam': scryptCostParam,
-        'scryptBlockSize': scryptBlockSize,
-        'primaryMasterKey': base64.encode(primaryMasterKey),
-        'hmacMasterKey': base64.encode(hmacMasterKey),
-        'versionMac': versionMac,
-      };
+    'version': version,
+    'scryptSalt': base64.encode(scryptSalt),
+    'scryptCostParam': scryptCostParam,
+    'scryptBlockSize': scryptBlockSize,
+    'primaryMasterKey': base64.encode(primaryMasterKey),
+    'hmacMasterKey': base64.encode(hmacMasterKey),
+    'versionMac': versionMac,
+  };
 }
 
 /// Represents an unlocked vault with derived master keys ready for use.
@@ -143,12 +154,23 @@ class UnlockedVault {
   });
 }
 
+/// A shortened entry must persist [fullName] as its `name.c9s` file before
+/// writing content. Returning both names avoids losing the reverse mapping.
+class CryptomatorEncryptedName {
+  final String fullName;
+  final String entryName;
+
+  const CryptomatorEncryptedName(this.fullName, this.entryName);
+
+  bool get isShortened => fullName != entryName;
+}
+
 // ---------------------------------------------------------------------------
 // Service
 // ---------------------------------------------------------------------------
 
-/// Cryptomator v8 vault operations: detection, unlock, filename and path
-/// encryption/decryption.
+/// Cryptomator v8 primitives: detection, authenticated unlock, filename and
+/// directory-ID encryption, and authenticated file-header key extraction.
 ///
 /// Key points of the v8 format:
 /// - Masterkey file uses scrypt KDF to wrap two 256-bit AES keys via RFC 3394.
@@ -169,10 +191,10 @@ class CryptomatorService {
   /// (both `vault.cryptomator` and `masterkey.cryptomator` are present in
   /// the file listing [files]).
   static bool detectVault(String path, List<String> files) {
-    final hasVaultConfig =
-        files.any((f) => _basename(f) == _vaultConfigFilename);
-    final hasMasterkey =
-        files.any((f) => _basename(f) == _masterkeyFilename);
+    final hasVaultConfig = files.any(
+      (f) => _basename(f) == _vaultConfigFilename,
+    );
+    final hasMasterkey = files.any((f) => _basename(f) == _masterkeyFilename);
     return hasVaultConfig && hasMasterkey;
   }
 
@@ -188,8 +210,16 @@ class CryptomatorService {
   static UnlockedVault unlockVault(
     CryptomatorVault vaultMeta,
     MasterkeyFile masterkeyFile,
-    String password,
-  ) {
+    String password, {
+    required String vaultConfigJwt,
+  }) {
+    final config = VaultConfig.fromJwt(vaultConfigJwt);
+    if (masterkeyFile.primaryMasterKey.length != 40 ||
+        masterkeyFile.hmacMasterKey.length != 40 ||
+        masterkeyFile.version < 0 ||
+        masterkeyFile.version > 0xffffffff) {
+      throw const FormatException('Invalid Cryptomator masterkey file');
+    }
     // 1. Derive KEK from password via scrypt
     final passwordBytes = Uint8List.fromList(utf8.encode(password));
     final kek = _scrypt(
@@ -210,209 +240,252 @@ class CryptomatorService {
     //    where versionBytes = big-endian uint32 of the version number
     final versionBytes = ByteData(4)
       ..setUint32(0, masterkeyFile.version, Endian.big);
-    final expectedMac = crypto.Hmac(crypto.sha256, macKey)
-        .convert(versionBytes.buffer.asUint8List())
-        .bytes;
+    final expectedMac = crypto.Hmac(
+      crypto.sha256,
+      macKey,
+    ).convert(versionBytes.buffer.asUint8List()).bytes;
     final storedMac = base64.decode(masterkeyFile.versionMac);
     if (!_constantTimeEquals(Uint8List.fromList(expectedMac), storedMac)) {
       throw const FormatException(
-          'Vault unlock failed: wrong password or corrupted masterkey file');
+        'Vault unlock failed: wrong password or corrupted masterkey file',
+      );
     }
 
-    return UnlockedVault(vault: vaultMeta, encKey: encKey, macKey: macKey);
+    _verifyVaultConfig(vaultConfigJwt, encKey, macKey);
+    if (config.version != 8 || config.cipherCombo != 'SIV_GCM') {
+      throw UnsupportedError('Only Cryptomator format 8 SIV_GCM is supported');
+    }
+    if (config.keyId != 'masterkeyfile:masterkey.cryptomator' ||
+        config.shorteningThreshold < 32 ||
+        config.shorteningThreshold > 255) {
+      throw const FormatException(
+        'Unsupported Cryptomator vault configuration',
+      );
+    }
+    // Values obtained during detection are untrusted. Use only the values
+    // authenticated by the vault's JWT after recovering the master keys.
+    final authenticatedMeta = CryptomatorVault(
+      vaultPath: vaultMeta.vaultPath,
+      masterkeyFilePath: vaultMeta.masterkeyFilePath,
+      version: config.version,
+      cipherCombo: config.cipherCombo,
+      shorteningThreshold: config.shorteningThreshold,
+    );
+    return UnlockedVault(
+      vault: authenticatedMeta,
+      encKey: encKey,
+      macKey: macKey,
+    );
+  }
+
+  static void _verifyVaultConfig(
+    String jwt,
+    Uint8List encKey,
+    Uint8List macKey,
+  ) {
+    final parts = jwt.split('.');
+    final header = VaultConfig._decodeJwtObject(parts[0]);
+    final crypto.Hash hash;
+    switch (header['alg']) {
+      case 'HS256':
+        hash = crypto.sha256;
+        break;
+      case 'HS384':
+        hash = crypto.sha384;
+        break;
+      case 'HS512':
+        hash = crypto.sha512;
+        break;
+      default:
+        throw const FormatException(
+          'Unsupported vault JWT signature algorithm',
+        );
+    }
+    if (header.containsKey('crit') || header.containsKey('b64')) {
+      throw const FormatException('Unsupported vault JWT extensions');
+    }
+    if (!RegExp(r'^[A-Za-z0-9_-]+$').hasMatch(parts[2])) {
+      throw const FormatException('Invalid vault JWT signature encoding');
+    }
+    final signature = base64Url.decode(parts[2]);
+    final expected = crypto.Hmac(
+      hash,
+      _concat(encKey, macKey),
+    ).convert(ascii.encode('${parts[0]}.${parts[1]}')).bytes;
+    if (!_constantTimeEquals(Uint8List.fromList(expected), signature)) {
+      throw const FormatException('Vault configuration signature is invalid');
+    }
   }
 
   // ---------------------------------------------------------------------------
   // Filename encryption / decryption (SIV mode)
   // ---------------------------------------------------------------------------
 
-  /// Encrypt [name] in the context of [dirId] using [vault.encKey].
+  /// Encrypt a UTF-8/NFC filename with RFC 5297 AES-SIV and the parent
+  /// directory ID as a distinct associated-data string.
   ///
-  /// SIV (Synthetic IV / AES-SIV, RFC 5297) is approximated here using
-  /// HMAC-SHA256 as the PRF: the SIV is HMAC(macKey, dirId || name), then
-  /// AES-CTR encryption is performed with the SIV as IV.
-  ///
-  /// Returns a base32-encoded string (upper-case, no padding) suitable for
-  /// use as a filesystem entry name. Appends `.c9r` extension per v8 spec.
+  /// For a `.c9s` result, use [encryptFilenameMetadata] and persist its
+  /// `fullName` in the entry's `name.c9s` reverse-mapping file.
   static String encryptFilename(
     String name,
     String dirId,
     UnlockedVault vault,
+  ) => encryptFilenameMetadata(name, dirId, vault).entryName;
+
+  static CryptomatorEncryptedName encryptFilenameMetadata(
+    String name,
+    String dirId,
+    UnlockedVault vault,
   ) {
-    final plaintext = Uint8List.fromList(utf8.encode(name));
-    final dirIdBytes = Uint8List.fromList(utf8.encode(dirId));
-
-    // SIV = HMAC-SHA256(macKey, dirId || plaintext) truncated to 16 bytes (IV)
-    final siv = _hmacSha256(vault.macKey, _concat(dirIdBytes, plaintext))
-        .sublist(0, 16);
-
-    // Encrypt with AES-CTR using SIV as the counter/nonce
-    final ciphertext = _aesCtr(plaintext, vault.encKey, siv);
-
-    // Output: base32(siv || ciphertext) + ".c9r"
-    final raw = _concat(siv, ciphertext);
-    final encoded = _base32Encode(raw);
-
-    // Apply shortening threshold
-    final withExt = '$encoded.c9r';
-    if (withExt.length > vault.vault.shorteningThreshold) {
-      return _shortenFilename(withExt, vault);
-    }
-    return withExt;
+    _validateKeys(vault);
+    final plaintext = Uint8List.fromList(utf8.encode(unorm.nfc(name)));
+    final raw = AesSiv.encrypt(
+      plaintext,
+      vault.encKey,
+      vault.macKey,
+      associatedData: [Uint8List.fromList(utf8.encode(dirId))],
+    );
+    final fullName = '${base64Url.encode(raw)}.c9r';
+    final entryName = fullName.length > vault.vault.shorteningThreshold
+        ? '${base64Url.encode(crypto.sha1.convert(utf8.encode(fullName)).bytes)}.c9s'
+        : fullName;
+    return CryptomatorEncryptedName(fullName, entryName);
   }
 
-  /// Decrypt an encrypted filename (without `.c9r` extension) back to the
-  /// original name.
+  /// Decrypt a full `.c9r` name (or the bytes read from `name.c9s`).
+  ///
+  /// Legacy CrispCloud HMAC/CTR placeholders were not Cryptomator ciphertext.
+  /// There is intentionally no fallback to that unaudited format.
   static String decryptFilename(
     String encrypted,
     String dirId,
     UnlockedVault vault,
   ) {
-    // Strip .c9r or .c9s extension
+    _validateKeys(vault);
     var encoded = encrypted;
     if (encoded.endsWith('.c9r')) {
       encoded = encoded.substring(0, encoded.length - 4);
     } else if (encoded.endsWith('.c9s')) {
       throw const FormatException(
-          'Shortened filename (.c9s) cannot be decrypted without metadata');
+        'Shortened filename requires its name.c9s reverse-mapping file',
+      );
     }
-
-    final raw = _base32Decode(encoded);
-    if (raw.length < 16) {
-      throw const FormatException('Encrypted filename too short');
+    if (!RegExp(r'^[A-Za-z0-9_-]+={0,2}$').hasMatch(encoded)) {
+      throw const FormatException('Invalid base64url Cryptomator filename');
     }
-
-    final siv = raw.sublist(0, 16);
-    final ciphertext = raw.sublist(16);
-
-    // Decrypt with AES-CTR using SIV
-    final plaintext = _aesCtr(ciphertext, vault.encKey, siv);
-
-    // Verify SIV
-    final dirIdBytes = Uint8List.fromList(utf8.encode(dirId));
-    final expectedSiv =
-        _hmacSha256(vault.macKey, _concat(dirIdBytes, plaintext)).sublist(0, 16);
-    if (!_constantTimeEquals(siv, expectedSiv)) {
-      throw const FormatException(
-          'Filename decryption failed: SIV verification error');
-    }
-
+    final plaintext = AesSiv.decrypt(
+      base64Url.decode(encoded),
+      vault.encKey,
+      vault.macKey,
+      associatedData: [Uint8List.fromList(utf8.encode(dirId))],
+    );
     return utf8.decode(plaintext);
   }
 
   // ---------------------------------------------------------------------------
-  // Path encryption / decryption
+  // Root path convenience helpers
   // ---------------------------------------------------------------------------
 
-  /// Encrypt each component of [clearPath] and return a vault-internal path
-  /// of the form `d/<2-char>/<30-char>/<enc1>/<enc2>/.../<encN>`.
+  /// Resolve a single root filename to `d/<2>/<30>/<encrypted name>`.
   ///
-  /// The `d/<2>/<30>/` prefix is derived from the directory ID of the final
-  /// path component's parent directory. Intermediate encrypted names are
-  /// appended, separated by `/`, so that [decryptPath] can reconstruct the
-  /// original path in a single pass.
-  ///
-  /// Each component is encrypted in the context of its parent directory ID,
-  /// following the Cryptomator v8 convention.
+  /// Nested paths cannot be resolved from a plaintext path alone: the random
+  /// ID of each subdirectory must first be read from its `dir.c9r` file. The
+  /// old deterministic path helper invented these IDs and was incompatible
+  /// with Cryptomator. It is deliberately not used as a migration fallback.
   static String encryptPath(String clearPath, UnlockedVault vault) {
     final parts = _splitPath(clearPath);
     if (parts.isEmpty) return '';
-
-    // Root directory ID is always the empty string
-    String parentDirId = '';
-    final encryptedParts = <String>[];
-
-    for (final part in parts) {
-      final encName = encryptFilename(part, parentDirId, vault);
-      // Derive the child directory ID from (parentDirId || part)
-      final partBytes = Uint8List.fromList(utf8.encode(part));
-      final parentBytes = Uint8List.fromList(utf8.encode(parentDirId));
-      final childDirId =
-          base64Url.encode(_hmacSha256(vault.macKey, _concat(parentBytes, partBytes)));
-      parentDirId = childDirId;
-      encryptedParts.add(encName);
+    if (parts.length != 1) {
+      throw UnsupportedError('Nested vault paths require dir.c9r metadata');
     }
-
-    // The directory hash of the *parent* of the first component (i.e. root)
-    // provides the `d/<2>/<30>/` prefix.
-    final rootDirHash = _hashDirectoryId('', vault.macKey);
-    final prefix = 'd/${rootDirHash.substring(0, 2)}/${rootDirHash.substring(2)}';
-    return '$prefix/${encryptedParts.join('/')}';
+    final name = encryptFilenameMetadata(parts.single, '', vault);
+    if (name.isShortened) {
+      throw UnsupportedError('Shortened vault paths require name.c9s metadata');
+    }
+    final hash = hashDirectoryId('', vault);
+    return 'd/${hash.substring(0, 2)}/${hash.substring(2)}/${name.entryName}';
   }
 
-  /// Decrypt the vault-internal path produced by [encryptPath] back to the
-  /// original clear path.
-  ///
-  /// Strips the leading `d/<2>/<30>/` prefix (if present), then decrypts
-  /// each encrypted component in order.
+  /// Reverse [encryptPath] for root files only, checking the root directory
+  /// hash. Nested/shortened paths require vault filesystem metadata.
   static String decryptPath(String encPath, UnlockedVault vault) {
-    // Strip leading d/XX/YYYYYY/ prefix if present
-    String working = encPath;
-    final dPrefix = RegExp(r'^d/[A-Z2-7]{2}/[A-Z2-7]{30}/');
-    working = working.replaceFirst(dPrefix, '');
-
-    final parts = working.split('/').where((p) => p.isNotEmpty).toList();
-    if (parts.isEmpty) return '';
-
-    String parentDirId = '';
-    final clearParts = <String>[];
-
-    for (final part in parts) {
-      final clearName = decryptFilename(part, parentDirId, vault);
-      final partBytes = Uint8List.fromList(utf8.encode(clearName));
-      final parentBytes = Uint8List.fromList(utf8.encode(parentDirId));
-      parentDirId =
-          base64Url.encode(_hmacSha256(vault.macKey, _concat(parentBytes, partBytes)));
-      clearParts.add(clearName);
+    if (encPath.isEmpty) return '';
+    var working = encPath;
+    if (working.startsWith('d/')) {
+      final hash = hashDirectoryId('', vault);
+      final prefix = 'd/${hash.substring(0, 2)}/${hash.substring(2)}/';
+      if (!working.startsWith(prefix)) {
+        throw const FormatException('Path does not belong to the vault root');
+      }
+      working = working.substring(prefix.length);
     }
-
-    return clearParts.join('/');
+    if (working.contains('/') || working.contains('\\')) {
+      throw UnsupportedError('Nested vault paths require dir.c9r metadata');
+    }
+    return decryptFilename(working, '', vault);
   }
 
   // ---------------------------------------------------------------------------
-  // Per-file content key
+  // File header and directory IDs
   // ---------------------------------------------------------------------------
 
-  /// Derive the per-file content key from [headerNonce] and the vault
-  /// master encryption key. This content key is used for AES-GCM file content.
-  static Uint8List getContentKey(Uint8List headerNonce, UnlockedVault vault) {
-    // Content key = HMAC-SHA256(encKey, "fileKey" || headerNonce) truncated to 32 bytes
-    final label = Uint8List.fromList(utf8.encode('fileKey'));
-    return _hmacSha256(vault.encKey, _concat(label, headerNonce));
-  }
-
-  // ---------------------------------------------------------------------------
-  // Directory ID hashing (SHA-1 → base32)
-  // ---------------------------------------------------------------------------
-
-  /// Hash a directory ID to produce the `d/<2>/<30>` path component.
+  /// Authenticate a complete 68-byte SIV_GCM file header and extract its
+  /// randomly generated content key. A nonce alone is not sufficient.
   ///
-  /// Per Cryptomator v8: HMAC-SHA256(macKey, dirId) → SHA-1 → base32(upper, no pad)
-  /// Result is always 32 upper-case base32 characters.
-  static String hashDirectoryId(String dirId, Uint8List macKey) {
-    return _hashDirectoryId(dirId, macKey);
+  /// Layout: 12-byte nonce || AES-GCM(8 reserved bytes || 32-byte key) || tag.
+  /// The old HMAC("fileKey" || nonce) helper was not the Cryptomator format.
+  /// Content chunks must separately authenticate their chunk index and the
+  /// header nonce as AAD; EncryptionService is not a vault content codec.
+  static Uint8List getContentKey(Uint8List fileHeader, UnlockedVault vault) {
+    _validateKeys(vault);
+    if (fileHeader.length != 68) {
+      throw const FormatException(
+        'A complete 68-byte Cryptomator header is required',
+      );
+    }
+    final cipher = GCMBlockCipher(AESEngine())
+      ..init(
+        false,
+        AEADParameters(
+          KeyParameter(vault.encKey),
+          128,
+          fileHeader.sublist(0, 12),
+          Uint8List(0),
+        ),
+      );
+    final Uint8List payload;
+    try {
+      payload = cipher.process(fileHeader.sublist(12));
+    } on InvalidCipherTextException {
+      throw const FormatException(
+        'Cryptomator file header authentication failed',
+      );
+    }
+    return payload.sublist(8, 40);
   }
 
-  static String _hashDirectoryId(String dirId, Uint8List macKey) {
-    final dirIdBytes = Uint8List.fromList(utf8.encode(dirId));
-    // Step 1: HMAC-SHA256 the directory ID with the MAC key
-    final hmacResult = _hmacSha256(macKey, dirIdBytes);
-    // Step 2: SHA-1 hash of the HMAC result
-    final sha1Result = crypto.sha1.convert(hmacResult).bytes;
-    // Step 3: base32 encode (upper-case, no padding) → 32 chars
-    return _base32Encode(Uint8List.fromList(sha1Result));
+  /// Cryptomator directory ID hash: base32(SHA-1(AES-SIV(dirId))).
+  /// AES-SIV has NO associated-data inputs here (distinct from an empty AD
+  /// string used for root filenames) and requires both master keys.
+  static String hashDirectoryId(String dirId, UnlockedVault vault) {
+    _validateKeys(vault);
+    final encrypted = AesSiv.encrypt(
+      Uint8List.fromList(utf8.encode(dirId)),
+      vault.encKey,
+      vault.macKey,
+    );
+    return _base32Encode(
+      Uint8List.fromList(crypto.sha1.convert(encrypted).bytes),
+    );
   }
 
-  // ---------------------------------------------------------------------------
-  // Shortened filenames
-  // ---------------------------------------------------------------------------
-
-  /// Return a shortened `.c9s` filename for entries exceeding the threshold.
-  static String _shortenFilename(String fullName, UnlockedVault vault) {
-    // The shortened name is the base32(sha1(fullName)) + ".c9s"
-    final nameBytes = Uint8List.fromList(utf8.encode(fullName));
-    final hash = crypto.sha1.convert(nameBytes).bytes;
-    return '${_base32Encode(Uint8List.fromList(hash))}.c9s';
+  static void _validateKeys(UnlockedVault vault) {
+    if (vault.encKey.length != 32 || vault.macKey.length != 32) {
+      throw ArgumentError('Cryptomator requires two 32-byte master keys');
+    }
+    if (vault.vault.version != 8 || vault.vault.cipherCombo != 'SIV_GCM') {
+      throw UnsupportedError('Only Cryptomator format 8 SIV_GCM is supported');
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -427,6 +500,21 @@ class CryptomatorService {
     int p, // parallelisation
     int dkLen, // derived key length
   ) {
+    // Masterkey files are untrusted until after derivation. Bound their work
+    // before allocating the scrypt table (the default N=32768, r=8 is 32 MiB).
+    // This primitive supports at most 128 MiB of scrypt working memory.
+    const maxWorkingBytes = 128 * 1024 * 1024;
+    if (N < 2 ||
+        N > 1048576 ||
+        (N & (N - 1)) != 0 ||
+        r < 1 ||
+        r > 64 ||
+        p != 1 ||
+        128 * r * (N + 3) > maxWorkingBytes) {
+      throw const FormatException(
+        'scrypt parameters exceed supported resource limits',
+      );
+    }
     final params = ScryptParameters(N, r, p, dkLen, salt);
     final kdf = Scrypt();
     kdf.init(params);
@@ -446,12 +534,16 @@ class CryptomatorService {
   static Uint8List _aesKeyUnwrap(Uint8List wrappedKey, Uint8List kek) {
     if (wrappedKey.length < 24 || (wrappedKey.length - 8) % 8 != 0) {
       throw const FormatException(
-          'Invalid wrapped key length for AES Key Unwrap');
+        'Invalid wrapped key length for AES Key Unwrap',
+      );
     }
 
     final n = (wrappedKey.length ~/ 8) - 1; // number of 64-bit blocks
     final a = wrappedKey.sublist(0, 8).toList(); // integrity value
-    final r = List.generate(n, (i) => wrappedKey.sublist(8 + i * 8, 16 + i * 8).toList());
+    final r = List.generate(
+      n,
+      (i) => wrappedKey.sublist(8 + i * 8, 16 + i * 8).toList(),
+    );
 
     final aes = AESEngine();
     aes.init(false, KeyParameter(kek)); // decrypt mode
@@ -483,7 +575,8 @@ class CryptomatorService {
     const iv = [0xA6, 0xA6, 0xA6, 0xA6, 0xA6, 0xA6, 0xA6, 0xA6];
     if (!_constantTimeEquals(Uint8List.fromList(a), Uint8List.fromList(iv))) {
       throw const FormatException(
-          'AES Key Unwrap integrity check failed: wrong KEK');
+        'AES Key Unwrap integrity check failed: wrong KEK',
+      );
     }
 
     // Reconstruct the key
@@ -505,13 +598,18 @@ class CryptomatorService {
   ///
   /// Useful for creating test masterkey files without external tooling.
   static Uint8List aesKeyWrap(Uint8List keyToWrap, Uint8List kek) {
-    if (keyToWrap.length % 8 != 0) {
-      throw const FormatException('Key to wrap must be a multiple of 8 bytes');
+    if (keyToWrap.length < 16 || keyToWrap.length % 8 != 0) {
+      throw const FormatException(
+        'RFC 3394 requires at least two 8-byte key blocks',
+      );
     }
 
     final n = keyToWrap.length ~/ 8;
     final a = List<int>.filled(8, 0xA6); // integrity check value
-    final r = List.generate(n, (i) => keyToWrap.sublist(i * 8, (i + 1) * 8).toList());
+    final r = List.generate(
+      n,
+      (i) => keyToWrap.sublist(i * 8, (i + 1) * 8).toList(),
+    );
 
     final aes = AESEngine();
     aes.init(true, KeyParameter(kek)); // encrypt mode
@@ -547,27 +645,6 @@ class CryptomatorService {
   }
 
   // ---------------------------------------------------------------------------
-  // AES-CTR (used for SIV-mode filename encryption)
-  // ---------------------------------------------------------------------------
-
-  static Uint8List _aesCtr(Uint8List data, Uint8List key, Uint8List iv) {
-    final params = ParametersWithIV(KeyParameter(key), iv);
-    final cipher = StreamCipher('AES/CTR')..init(true, params);
-    final out = Uint8List(data.length);
-    cipher.processBytes(data, 0, data.length, out, 0);
-    return out;
-  }
-
-  // ---------------------------------------------------------------------------
-  // HMAC-SHA256 helper
-  // ---------------------------------------------------------------------------
-
-  static Uint8List _hmacSha256(Uint8List key, Uint8List data) {
-    final hmac = crypto.Hmac(crypto.sha256, key);
-    return Uint8List.fromList(hmac.convert(data).bytes);
-  }
-
-  // ---------------------------------------------------------------------------
   // Base32 (RFC 4648, upper-case, no padding)
   // ---------------------------------------------------------------------------
 
@@ -590,24 +667,6 @@ class CryptomatorService {
       sb.write(_base32Alphabet[(buffer << (5 - bitsLeft)) & 0x1F]);
     }
     return sb.toString();
-  }
-
-  static Uint8List _base32Decode(String s) {
-    final upper = s.toUpperCase().replaceAll('=', '');
-    final bytes = <int>[];
-    var buffer = 0;
-    var bitsLeft = 0;
-    for (final char in upper.split('')) {
-      final idx = _base32Alphabet.indexOf(char);
-      if (idx < 0) continue;
-      buffer = (buffer << 5) | idx;
-      bitsLeft += 5;
-      if (bitsLeft >= 8) {
-        bitsLeft -= 8;
-        bytes.add((buffer >> bitsLeft) & 0xFF);
-      }
-    }
-    return Uint8List.fromList(bytes);
   }
 
   // ---------------------------------------------------------------------------
@@ -636,7 +695,11 @@ class CryptomatorService {
   }
 
   static List<String> _splitPath(String path) {
-    return path.replaceAll('\\', '/').split('/').where((p) => p.isNotEmpty).toList();
+    return path
+        .replaceAll('\\', '/')
+        .split('/')
+        .where((p) => p.isNotEmpty)
+        .toList();
   }
 
   // ---------------------------------------------------------------------------
@@ -651,13 +714,25 @@ class CryptomatorService {
     String password, {
     int scryptCostParam = 32768,
     int scryptBlockSize = 8,
-    int vaultVersion = 8,
+    int vaultVersion = 999,
   }) {
+    if (encKey.length != 32 || macKey.length != 32) {
+      throw ArgumentError('Cryptomator requires two 32-byte master keys');
+    }
     final random = Random.secure();
-    final salt = Uint8List.fromList(List.generate(32, (_) => random.nextInt(256)));
+    final salt = Uint8List.fromList(
+      List.generate(32, (_) => random.nextInt(256)),
+    );
 
     final passwordBytes = Uint8List.fromList(utf8.encode(password));
-    final kek = _scrypt(passwordBytes, salt, scryptCostParam, scryptBlockSize, 1, 32);
+    final kek = _scrypt(
+      passwordBytes,
+      salt,
+      scryptCostParam,
+      scryptBlockSize,
+      1,
+      32,
+    );
 
     final wrappedEnc = aesKeyWrap(encKey, kek);
     final wrappedMac = aesKeyWrap(macKey, kek);
@@ -665,7 +740,10 @@ class CryptomatorService {
     // Generate version MAC
     final versionBytes = ByteData(4)..setUint32(0, vaultVersion, Endian.big);
     final versionMac = base64.encode(
-      crypto.Hmac(crypto.sha256, macKey).convert(versionBytes.buffer.asUint8List()).bytes,
+      crypto.Hmac(
+        crypto.sha256,
+        macKey,
+      ).convert(versionBytes.buffer.asUint8List()).bytes,
     );
 
     return MasterkeyFile(

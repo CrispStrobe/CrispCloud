@@ -30,17 +30,14 @@ class DetectedVaultsState {
   DetectedVaultsState copyWith({
     List<CryptomatorVault>? cryptomatorVaults,
     List<VeraCryptContainer>? veraCryptContainers,
-  }) =>
-      DetectedVaultsState(
-        cryptomatorVaults: cryptomatorVaults ?? this.cryptomatorVaults,
-        veraCryptContainers: veraCryptContainers ?? this.veraCryptContainers,
-      );
+  }) => DetectedVaultsState(
+    cryptomatorVaults: cryptomatorVaults ?? this.cryptomatorVaults,
+    veraCryptContainers: veraCryptContainers ?? this.veraCryptContainers,
+  );
 
-  bool get isEmpty =>
-      cryptomatorVaults.isEmpty && veraCryptContainers.isEmpty;
+  bool get isEmpty => cryptomatorVaults.isEmpty && veraCryptContainers.isEmpty;
 
-  int get totalCount =>
-      cryptomatorVaults.length + veraCryptContainers.length;
+  int get totalCount => cryptomatorVaults.length + veraCryptContainers.length;
 }
 
 class DetectedVaultsNotifier extends Notifier<DetectedVaultsState> {
@@ -57,7 +54,9 @@ class DetectedVaultsNotifier extends Notifier<DetectedVaultsState> {
         masterkeyFilePath: masterkeyPath,
       );
       // Avoid duplicates
-      final already = state.cryptomatorVaults.any((v) => v.vaultPath == dirPath);
+      final already = state.cryptomatorVaults.any(
+        (v) => v.vaultPath == dirPath,
+      );
       if (!already) {
         state = state.copyWith(
           cryptomatorVaults: [...state.cryptomatorVaults, vault],
@@ -69,12 +68,8 @@ class DetectedVaultsNotifier extends Notifier<DetectedVaultsState> {
   /// Check a file path/size for VeraCrypt container markers and register it.
   void checkFileForContainer(String filePath, int fileSize) {
     if (VeraCryptService.detectContainerStrict(filePath, fileSize)) {
-      final container = VeraCryptContainer(
-        path: filePath,
-        sizeBytes: fileSize,
-      );
-      final already =
-          state.veraCryptContainers.any((c) => c.path == filePath);
+      final container = VeraCryptContainer(path: filePath, sizeBytes: fileSize);
+      final already = state.veraCryptContainers.any((c) => c.path == filePath);
       if (!already) {
         state = state.copyWith(
           veraCryptContainers: [...state.veraCryptContainers, container],
@@ -95,16 +90,18 @@ class DetectedVaultsNotifier extends Notifier<DetectedVaultsState> {
   /// Remove a detected vault entry (e.g., after the directory is no longer visible).
   void removeVault(String vaultPath) {
     state = state.copyWith(
-      cryptomatorVaults:
-          state.cryptomatorVaults.where((v) => v.vaultPath != vaultPath).toList(),
+      cryptomatorVaults: state.cryptomatorVaults
+          .where((v) => v.vaultPath != vaultPath)
+          .toList(),
     );
   }
 
   /// Remove a detected container entry.
   void removeContainer(String containerPath) {
     state = state.copyWith(
-      veraCryptContainers:
-          state.veraCryptContainers.where((c) => c.path != containerPath).toList(),
+      veraCryptContainers: state.veraCryptContainers
+          .where((c) => c.path != containerPath)
+          .toList(),
     );
   }
 
@@ -116,8 +113,8 @@ class DetectedVaultsNotifier extends Notifier<DetectedVaultsState> {
 /// during directory browsing.
 final detectedVaultsProvider =
     NotifierProvider<DetectedVaultsNotifier, DetectedVaultsState>(
-  DetectedVaultsNotifier.new,
-);
+      DetectedVaultsNotifier.new,
+    );
 
 // ---------------------------------------------------------------------------
 // Unlocked vault sessions
@@ -150,12 +147,14 @@ class UnlockedVaultsNotifier extends Notifier<UnlockedVaultsState> {
   void unlockVault(
     CryptomatorVault vaultMeta,
     MasterkeyFile masterkeyFile,
-    String password,
-  ) {
+    String password, {
+    required String vaultConfigJwt,
+  }) {
     final unlocked = CryptomatorService.unlockVault(
       vaultMeta,
       masterkeyFile,
       password,
+      vaultConfigJwt: vaultConfigJwt,
     );
     final updated = Map<String, UnlockedVault>.from(state.sessions);
     updated[vaultMeta.vaultPath] = unlocked;
@@ -182,5 +181,5 @@ class UnlockedVaultsNotifier extends Notifier<UnlockedVaultsState> {
 /// Provider that manages unlocked Cryptomator vault sessions.
 final unlockedVaultsProvider =
     NotifierProvider<UnlockedVaultsNotifier, UnlockedVaultsState>(
-  UnlockedVaultsNotifier.new,
-);
+      UnlockedVaultsNotifier.new,
+    );
