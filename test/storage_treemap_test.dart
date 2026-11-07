@@ -425,23 +425,27 @@ void main() {
     tester,
   ) async {
     final semantics = tester.ensureSemantics();
-    addTearDown(semantics.dispose);
-    final report = _file('/root/docs/report.pdf', 4000);
-    final folder = _folder('/root/docs', [report]);
-    await tester.pumpWidget(_host(root: _folder('/root', [folder])));
-    final fileData = tester
-        .getSemantics(
-          find.bySemanticsLabel('${report.path}\n${formatBytes(report.bytes)}'),
-        )
-        .getSemanticsData();
-    expect(fileData.hasAction(SemanticsAction.tap), isTrue);
-    final folderData = tester
-        .getSemantics(
-          find.bySemanticsLabel('${folder.path}\n${formatBytes(folder.bytes)}'),
-        )
-        .getSemanticsData();
-    expect(folderData.hasAction(SemanticsAction.tap), isTrue);
-    expect(folderData.hasAction(SemanticsAction.longPress), isTrue);
+    try {
+      final report = _file('/root/docs/report.pdf', 4000);
+      final folder = _folder('/root/docs', [report]);
+      await tester.pumpWidget(_host(root: _folder('/root', [folder])));
+      // CustomPainter creates semantic nodes without corresponding widgets.
+      final fileNodes = find.semantics
+          .byLabel('${report.path}\n${formatBytes(report.bytes)}')
+          .evaluate();
+      expect(fileNodes, hasLength(1));
+      final fileData = fileNodes.single.getSemanticsData();
+      expect(fileData.hasAction(SemanticsAction.tap), isTrue);
+      final folderNodes = find.semantics
+          .byLabel('${folder.path}\n${formatBytes(folder.bytes)}')
+          .evaluate();
+      expect(folderNodes, hasLength(1));
+      final folderData = folderNodes.single.getSemanticsData();
+      expect(folderData.hasAction(SemanticsAction.tap), isTrue);
+      expect(folderData.hasAction(SemanticsAction.longPress), isTrue);
+    } finally {
+      semantics.dispose();
+    }
   });
 
   testWidgets('supports narrow RTL layouts and larger text without overflow', (

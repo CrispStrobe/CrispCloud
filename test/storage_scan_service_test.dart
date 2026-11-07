@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
@@ -9,8 +10,10 @@ import 'package:crisp_cloud/services/storage_scan_backend.dart';
 import 'package:crisp_cloud/services/storage_scan_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   const scanner = StorageScanService();
 
   test('sums nested files, including hidden and empty files, without reading contents', () async {
@@ -411,6 +414,83 @@ void main() {
       isCurrent: () => true,
     );
     expect(source.pathKey('/data/A'), isNot(source.pathKey('/data/a')));
+  });
+
+  test('native directory scan includes hidden and empty files without changing contents', () async {
+    SharedPreferences.setMockInitialValues({});
+    final temporary = await Directory.systemTemp.createTemp(
+      'crisp-storage-scan-',
+    );
+    addTearDown(() async {
+      if (await temporary.exists()) await temporary.delete(recursive: true);
+    });
+    // macOS may expose its temporary directory through a /var symlink. Use
+    // the real grant path so this tests the scanned tree, not an ancestor alias.
+    final root = Directory(await temporary.resolveSymbolicLinks());
+    await Directory(p.join(root.path, 'nested', 'empty'))
+        .create(recursive: true);
+    final originalBytes = <String, List<int>>{
+      p.join(root.path, '.hidden'): [1, 2, 3, 4],
+      p.join(root.path, 'zero.bin'): [],
+      p.join(root.path, 'small.bin'): [10, 20, 30],
+      p.join(root.path, 'nested', 'payload.bin'): List<int>.generate(
+        17,
+        (index) => index,
+      ),
+    };
+    for (final entry in originalBytes.entries) {
+      await File(entry.key).writeAsBytes(entry.value);
+    }
+    // Creating links on Windows can require developer mode or an elevated
+    // token. The file/tree integration still runs there without that fixture.
+    if (!Platform.isWindows) {
+      await Link(p.join(root.path, 'cycle')).create(root.path);
+    }
+
+    final backend = storageScanBackend(
+      source: LocalPanelSource(root.path),
+      local: LocalFileService(),
+      isCurrent: () => true,
+    );
+    final result = await scanner.scan(backend, root.path);
+    expect(result.isComplete, isTrue);
+    expect(result.issues, isEmpty);
+    expect(result.root.bytes, 24);
+    expect(result.root.fileCount, 4);
+    expect(result.root.folderCount, 2);
+    expect(result.root.unknownSizeCount, 0);
+    expect(result.root.skippedLinkCount, Platform.isWindows ? 0 : 1);
+    expect(result.root.children.any((node) => node.name == '.hidden'), isTrue);
+    final zero = result.root.children.singleWhere(
+      (node) => node.name == 'zero.bin',
+    );
+    expect(zero.bytes, 0);
+    expect(zero.isComplete, isTrue);
+    final nested = result.root.children.singleWhere(
+      (node) => node.name == 'nested',
+    );
+    expect(nested.bytes, 17);
+    expect(nested.fileCount, 1);
+    expect(nested.folderCount, 1);
+    expect(nested.children.map((node) => node.name).toSet(), {
+      'payload.bin',
+      'empty',
+    });
+    if (!Platform.isWindows) {
+      final cycle = result.root.children.singleWhere(
+        (node) => node.name == 'cycle',
+      );
+      expect(cycle.item.isSymlink, isTrue);
+      expect(cycle.children, isEmpty);
+      expect(await Link(cycle.path).target(), root.path);
+    }
+    for (final entry in originalBytes.entries) {
+      expect(
+        await File(entry.key).readAsBytes(),
+        entry.value,
+        reason: entry.key,
+      );
+    }
   });
 
   test('a replaced local folder grant cannot rebind a captured scan', () async {

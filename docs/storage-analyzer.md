@@ -5,6 +5,11 @@ folder in the active file panel. It recursively reads folder metadata and shows
 which files and subfolders account for the most space. The same view works with
 local folders, browser-granted local folders, and connected cloud providers.
 
+![Storage analyzer with a nested sample folder tree](images/storage-analyzer-desktop.png)
+
+The screenshot uses a test fixture, not a live account. A
+[compact dark layout](images/storage-analyzer-compact.png) is also shown.
+
 ## Open and explore
 
 1. Navigate to the folder to analyze and wait for its listing to finish loading.

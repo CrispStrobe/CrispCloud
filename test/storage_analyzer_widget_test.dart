@@ -116,6 +116,8 @@ void main() {
           ),
         ),
       );
+      await tester.ensureVisible(find.text('File types'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('File types'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('.mp4'));

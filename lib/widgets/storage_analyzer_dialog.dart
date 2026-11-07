@@ -50,6 +50,7 @@ Future<void> showStorageAnalyzerDialog(
           // normally. Keep the report open unless reveal actually succeeded.
           final navigated = panel.captureCurrentOrigin();
           if (!origin.isCurrent ||
+              !source.isCurrent ||
               navigated.storageId != origin.storageId ||
               !source.samePath(navigated.source.currentPath, directory) ||
               (!node.isFolder &&
@@ -157,6 +158,7 @@ class _StorageAnalyzerDialogState extends State<StorageAnalyzerDialog> {
     try {
       if (!widget.source.isCurrent) throw StateError('Storage changed.');
       await widget.onReveal!(node);
+      if (!widget.source.isCurrent) throw StateError('Storage changed.');
       if (mounted && route?.isCurrent == true) Navigator.of(context).pop();
     } catch (_) {
       if (mounted) {

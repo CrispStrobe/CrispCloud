@@ -191,6 +191,8 @@ class _StorageTreemapState extends State<StorageTreemap> {
                           selected: widget.selected,
                           hovered: hover,
                           colors: theme.colorScheme,
+                          textStyle:
+                              theme.textTheme.bodySmall ?? const TextStyle(),
                           textDirection: textDirection,
                           fontSize: fontSize,
                           aggregateName:
@@ -252,6 +254,7 @@ class _TreemapPainter extends CustomPainter {
     required this.selected,
     required this.hovered,
     required this.colors,
+    required this.textStyle,
     required this.textDirection,
     required this.fontSize,
     required this.aggregateName,
@@ -264,6 +267,7 @@ class _TreemapPainter extends CustomPainter {
   final StorageNode? selected;
   final StorageTreemapTile? hovered;
   final ColorScheme colors;
+  final TextStyle textStyle;
   final TextDirection textDirection;
   final double fontSize;
   final String Function(int) aggregateName;
@@ -355,16 +359,16 @@ class _TreemapPainter extends CustomPainter {
         ? Rect.fromLTRB(rect.left, rect.top, rect.right, tile.contentRect!.top)
         : rect;
     if (labelRect.width < 42 || labelRect.height < fontSize + 6) return;
-    final prefix = tile.node.isFolder && !tile.isAggregate
-        ? (tile.isExpanded ? '▾ ' : '▸ ')
-        : '';
+    final folderMarker = tile.node.isFolder && !tile.isAggregate;
+    final markerSize = fontSize * 0.55;
+    final markerSpace = folderMarker ? markerSize + 5 : 0.0;
     final name = tile.isAggregate
         ? aggregateName(tile.aggregateCount)
-        : '$prefix${tile.node.name}';
+        : tile.node.name;
     final label = TextPainter(
       text: TextSpan(
         text: name,
-        style: TextStyle(
+        style: textStyle.copyWith(
           color: color,
           fontSize: fontSize,
           fontWeight: tile.node.isFolder ? FontWeight.w600 : FontWeight.w500,
@@ -373,21 +377,61 @@ class _TreemapPainter extends CustomPainter {
       textDirection: textDirection,
       maxLines: 1,
       ellipsis: '…',
-    )..layout(maxWidth: math.max(0.0, labelRect.width - 12));
+    )..layout(maxWidth: math.max(0.0, labelRect.width - 12 - markerSpace));
     canvas.save();
     canvas.clipRect(labelRect);
-    label.paint(canvas, labelRect.topLeft + const Offset(6, 4));
+    if (folderMarker) {
+      final left = textDirection == TextDirection.rtl
+          ? labelRect.right - 6 - markerSize
+          : labelRect.left + 6;
+      final top = labelRect.top + 4 + (label.height - markerSize) / 2;
+      final marker = Path();
+      if (tile.isExpanded) {
+        marker
+          ..moveTo(left, top)
+          ..lineTo(left + markerSize, top)
+          ..lineTo(left + markerSize / 2, top + markerSize);
+      } else if (textDirection == TextDirection.rtl) {
+        marker
+          ..moveTo(left + markerSize, top)
+          ..lineTo(left + markerSize, top + markerSize)
+          ..lineTo(left, top + markerSize / 2);
+      } else {
+        marker
+          ..moveTo(left, top)
+          ..lineTo(left, top + markerSize)
+          ..lineTo(left + markerSize, top + markerSize / 2);
+      }
+      canvas.drawPath(marker..close(), Paint()..color = color);
+    }
+    label.paint(
+      canvas,
+      Offset(
+        textDirection == TextDirection.rtl
+            ? labelRect.right - 6 - markerSpace - label.width
+            : labelRect.left + 6 + markerSpace,
+        labelRect.top + 4,
+      ),
+    );
     if (!tile.isExpanded && labelRect.height >= fontSize * 2.6 + 8) {
       final bytes = TextPainter(
         text: TextSpan(
           text: formatBytes(tile.bytes),
-          style: TextStyle(color: color, fontSize: fontSize * 0.9),
+          style: textStyle.copyWith(color: color, fontSize: fontSize * 0.9),
         ),
         textDirection: textDirection,
         maxLines: 1,
         ellipsis: '…',
       )..layout(maxWidth: math.max(0.0, labelRect.width - 12));
-      bytes.paint(canvas, labelRect.topLeft + Offset(6, fontSize * 1.4 + 6));
+      bytes.paint(
+        canvas,
+        Offset(
+          textDirection == TextDirection.rtl
+              ? labelRect.right - 6 - bytes.width
+              : labelRect.left + 6,
+          labelRect.top + fontSize * 1.4 + 6,
+        ),
+      );
       bytes.dispose();
     }
     canvas.restore();
@@ -427,6 +471,7 @@ class _TreemapPainter extends CustomPainter {
       oldDelegate.selected != selected ||
       !identical(oldDelegate.hovered, hovered) ||
       oldDelegate.colors != colors ||
+      oldDelegate.textStyle != textStyle ||
       oldDelegate.textDirection != textDirection ||
       oldDelegate.fontSize != fontSize ||
       oldDelegate.aggregateName != aggregateName;
