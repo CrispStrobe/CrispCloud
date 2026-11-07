@@ -202,6 +202,15 @@ The macOS release workflow is otherwise healthy: the clean-runner startup
 smoke test now recognizes the first-run credential chooser instead of treating
 it as a crash.
 
+**Release decision (2026-11-07):** create an App Store Connect app encryption
+declaration for the actual binary with `containsProprietaryCryptography=false`,
+`containsThirdPartyCryptography=true` and `availableOnFrenchStore=false`; keep
+France out of App Store availability for this release. This is the no-French-
+declaration route. Record the Apple-issued `codeValue`, add it as
+`ITSEncryptionExportComplianceCode`, and keep
+`ITSAppUsesNonExemptEncryption=true`. Revisit the declaration before enabling
+France or changing the cryptographic inventory.
+
 ### Internal release decision record
 
 Fill in facts and references; checked boxes without evidence do not establish
