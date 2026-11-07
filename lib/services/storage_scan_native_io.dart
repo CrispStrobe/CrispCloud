@@ -101,7 +101,10 @@ StorageScanDirectory _readDirectory(String path) {
       FileSystemEntityType.directory) {
     // A changed root invalidates the entire listing: its apparent children
     // could have come from a replacement link target under the same names.
-    throw FileSystemException('The directory changed during enumeration.', path);
+    throw FileSystemException(
+      'The directory changed during enumeration.',
+      path,
+    );
   }
   return StorageScanDirectory(
     entries: entries,

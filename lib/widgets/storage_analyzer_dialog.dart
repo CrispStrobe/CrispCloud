@@ -306,7 +306,17 @@ class _StorageAnalyzerDialogState extends State<StorageAnalyzerDialog> {
   Future<void> _deleteSaved(StorageScanSnapshotSummary summary) async {
     try {
       await _snapshots.delete(summary.id);
-      if (mounted) await _loadHistory();
+      if (mounted) {
+        if (_saved?.id == summary.id) {
+          setState(() {
+            _generation++;
+            _saved = null;
+            _result = null;
+            _showHistory = true;
+          });
+        }
+        await _loadHistory();
+      }
     } catch (error) {
       if (mounted) setState(() => _historyError = error.toString());
     }
@@ -377,10 +387,12 @@ class _StorageAnalyzerDialogState extends State<StorageAnalyzerDialog> {
     if (_revealing || widget.onReveal == null) return;
     final strings = StorageAnalyzerStrings(context);
     final route = ModalRoute.of(context);
+    final generation = _generation;
     setState(() => _revealing = true);
     try {
       if (!_canUseSource) throw StateError('Storage changed.');
       await widget.onReveal!(node);
+      if (!mounted || generation != _generation) return;
       if (!_canUseSource) throw StateError('Storage changed.');
       if (mounted && route?.isCurrent == true) Navigator.of(context).pop();
     } catch (_) {

@@ -301,4 +301,99 @@ void main() {
     expect(find.byType(StorageAnalysisView), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets(
+    'deleting the displayed snapshot clears its saved claim and provenance',
+    (tester) async {
+      _viewport(tester);
+      final store = StorageScanSnapshotStore(
+        storage: MemoryFileCollectionStorage(),
+      );
+      await store.save(
+        result: _report('old.txt', 5),
+        storageId: 'foreign',
+        sourceLabel: 'To delete',
+      );
+      await tester.pumpWidget(
+        _app(StorageAnalyzerDialog(snapshotStore: store, historyOnly: true)),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(ListTile, 'To delete'));
+      await tester.pumpAndSettle();
+      expect(find.byType(StorageAnalysisView), findsOneWidget);
+      await tester.tap(find.text('Saved scans'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Delete saved scan'));
+      await tester.pumpAndSettle();
+      expect(await store.list(), isEmpty);
+      expect(find.byType(StorageAnalysisView), findsNothing);
+      expect(find.text('Scan saved'), findsNothing);
+      await tester.tap(find.text('Saved scans'));
+      await tester.pumpAndSettle();
+      expect(find.byType(StorageAnalysisView), findsNothing);
+      expect(find.text('Save scan'), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'an older reveal completion cannot close a subsequently opened snapshot',
+    (tester) async {
+      _viewport(tester);
+      final store = StorageScanSnapshotStore(
+        storage: MemoryFileCollectionStorage(),
+      );
+      await store.save(
+        result: _report('historical.txt', 5),
+        storageId: 'account',
+        sourceLabel: 'History',
+      );
+      final client = WorkflowFakeClient()..put('/live.txt', [1]);
+      final release = Completer<void>();
+      await tester.pumpWidget(
+        _app(
+          Builder(
+            builder: (context) => TextButton(
+              onPressed: () => showDialog<void>(
+                context: context,
+                builder: (_) => StorageAnalyzerDialog(
+                  source: CloudStorageScanBackend(
+                    client,
+                    isCurrent: () => client.current,
+                  ),
+                  rootPath: '/',
+                  sourceLabel: 'Live',
+                  storageId: 'account',
+                  snapshotStore: store,
+                  onReveal: (_) => release.future,
+                ),
+              ),
+              child: const Text('Open analyzer'),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Open analyzer'));
+      await tester.pumpAndSettle();
+      // Capture an already queued UI callback before reveal disables its button.
+      final historyAction = tester
+          .widget<OutlinedButton>(
+            find.widgetWithText(OutlinedButton, 'Saved scans'),
+          )
+          .onPressed!;
+      await tester.tap(find.text('Show in file panel'));
+      historyAction();
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(ListTile, 'History'));
+      await tester.pumpAndSettle();
+      release.complete();
+      await tester.pumpAndSettle();
+      expect(find.byType(StorageAnalyzerDialog), findsOneWidget);
+      final result = tester
+          .widget<StorageAnalysisView>(find.byType(StorageAnalysisView))
+          .analysis;
+      expect(result.root.children.single.name, 'historical.txt');
+      expect(tester.takeException(), isNull);
+    },
+  );
 }
