@@ -84,7 +84,9 @@ class VaultConfig {
     if (!RegExp(r'^[A-Za-z0-9_-]+$').hasMatch(segment)) {
       throw const FormatException('Invalid JWT base64url segment');
     }
-    final decoded = json.decode(utf8.decode(base64Url.decode(segment)));
+    final decoded = json.decode(
+      utf8.decode(base64Url.decode(base64Url.normalize(segment))),
+    );
     if (decoded is! Map<String, dynamic>) {
       throw const FormatException('JWT segment must be a JSON object');
     }
@@ -307,7 +309,7 @@ class CryptomatorService {
     if (!RegExp(r'^[A-Za-z0-9_-]+$').hasMatch(parts[2])) {
       throw const FormatException('Invalid vault JWT signature encoding');
     }
-    final signature = base64Url.decode(parts[2]);
+    final signature = base64Url.decode(base64Url.normalize(parts[2]));
     final expected = crypto.Hmac(
       hash,
       _concat(encKey, macKey),
@@ -374,7 +376,7 @@ class CryptomatorService {
       throw const FormatException('Invalid base64url Cryptomator filename');
     }
     final plaintext = AesSiv.decrypt(
-      base64Url.decode(encoded),
+      base64Url.decode(base64Url.normalize(encoded)),
       vault.encKey,
       vault.macKey,
       associatedData: [Uint8List.fromList(utf8.encode(dirId))],
