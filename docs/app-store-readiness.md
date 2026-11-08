@@ -76,17 +76,27 @@ Connect starts asking for it.
 
 ## Remaining review risks to verify before submission
 
-1. **Export compliance.** `ITSAppUsesNonExemptEncryption` remains `true` in
-   both apps so the final build goes through Apple's questionnaire. Filen and
-   Internxt require client-side encryption outside Apple's OS APIs; removing
-   vault UI would not create an OS-only build. A finished mass-market app using
-   published, standard cryptography can qualify for internal self-classification
-   without an annual BIS self-classification report or a CCATS. See
-   [the export decision and source references](export-compliance.md) for the
-   conditions, the separate public-source route, and France's declaration.
-   Preserve the source, resolved dependencies and crypto release evidence for
-   the exact submitted build. Do not invent an Apple compliance code or infer
-   a documentation exemption from the lack of a BIS filing requirement.
+1. **Export compliance (reviewed 2026-11-08).** The iOS and macOS source plists
+   currently set `ITSAppUsesNonExemptEncryption=false` for the intended
+   outside-France/no-documentation route. This is conditional: the
+   [`apple-export-policy.json`](apple-export-policy.json)
+   `prior_distribution_review` remains pending. Do not upload until the full
+   inventory supports the actual Apple answers, the historical French-user
+   and other-channel review is complete, live full App Store Connect
+   availability confirms France is excluded, and the packaged app's plist
+   matches the policy. Removing France from today's storefront does not stop
+   updates to previous French customers. Filen, Internxt, vaults and bundled
+   archive/document crypto make an OS-only or HTTPS-only description incorrect;
+   the inventory also includes published legacy algorithms, so do not claim
+   they are all internationally standardized. A qualifying finished mass-market
+   app can still avoid an annual BIS self-classification report and CCATS; that
+   does not determine Apple's answer or French obligations. A France-enabled
+   release needs the applicable French process and Apple's documentation route;
+   a `true` answer must match its Apple-issued code and approved declaration.
+   See [the export decision, upload requirements and official sources](export-compliance.md).
+   Preserve the source, resolved dependencies, exact artifact hashes and release
+   evidence. Source checks and a historical HTTP 409 do not establish live
+   distribution, classification approval or readiness of the current binary.
 2. **Process-based helpers.** Normal file operations no longer shell out:
    free space uses `statfs`/`GetDiskFreeSpaceEx`, hard links use `link(2)`,
    owner/mode checks use libc `stat`/`getuid`/`chmod`, Windows drives are

@@ -2,22 +2,16 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- Mac App Store requires a category UTI. Matches the iOS
-	     primary category (UTILITIES) set on the app record. -->
-	<!-- Without this the upload lands as MISSING_EXPORT_COMPLIANCE and
-	     cannot be assigned to ANY TestFlight group — the assignment 404s
-	     with "no resource of type 'builds'", which reads like a bad build
-	     id and is not. ios/Runner/Info.plist has always carried it; the
-	     Flutter macOS template does not. -->
-	<!-- Export compliance: the shipped app uses standard, published
-	     cryptography in third-party libraries and no proprietary algorithms.
-	     France is excluded from App Store availability for this release.
-	     Apple refuses an app encryption declaration for third-party-only
-	     cryptography when France is excluded, so this records the matching
-	     no-documentation answer. Revisit before enabling France or adding
-	     proprietary/non-standard cryptography; see docs/export-compliance.md. -->
+	<!-- Export compliance: intended outside-France/no-documentation route.
+	     The app includes third-party and published legacy cryptography; it is
+	     not OS-only. False is conditional on the complete encryption assessment,
+	     historical/channel review and current availability. The distribution
+	     review remains pending in docs/apple-export-policy.json. A historical
+	     declaration API rejection is not approval. Before upload, verify the
+	     policy and final binary; see docs/export-compliance.md. -->
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<!-- Mac App Store category UTI; verify the corresponding store metadata. -->
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.utilities</string>
 	<key>CFBundleDevelopmentRegion</key>
