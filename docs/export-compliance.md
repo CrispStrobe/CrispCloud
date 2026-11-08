@@ -398,8 +398,9 @@ ruby tool/testflight_external.rb
 For an iOS build, use `ASC_PLATFORM='IOS'`. The guard verifies the selected
 external group belongs to this app, its public-link state, and the uploaded
 build's identity, processing state and encryption answer before every write.
-The marketing version comes from the reviewed checkout's `pubspec.yaml`; the
-live build's platform and marketing version must match it. `ASC_BUILD_ID`, or
+The marketing version and build counter come from the reviewed checkout's
+`pubspec.yaml`; `ASC_BUILD_NUMBER` must equal that counter, and the live build's
+platform and marketing version must also match. `ASC_BUILD_ID`, or
 the workflow's `build_id` input, selects an exact build ID. It may be omitted
 only when the complete response contains one matching candidate. Ambiguous or
 partially paginated results never silently select the newest build.
@@ -472,6 +473,10 @@ the applicable French process and Apple declaration with
 plist answer to `true`, and upload a new build. The source fixes in this audit
 also require a newly built artifact; an already uploaded build does not gain
 them when this branch changes.
+
+This audit branch advances the source version to `1.1.0+11` for that rebuilt
+artifact. This reserves a new source build counter; it does not claim that
+build 11 has been built, uploaded or approved.
 
 ### Internal release decision record
 

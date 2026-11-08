@@ -19,6 +19,10 @@ saved incrementally in [PR 34](https://github.com/CrispStrobe/CrispCloud/pull/34
 The branch incorporates main's subsequent PR 35 build-10 distribution record
 through `5a63e7be85f60122ed8ea6a72cce37c50157d519` without treating that
 historical record as live account or binary verification.
+The audited source advances to `1.1.0+11`, because the repository records a
+prior upload of build 10. The fixes require a new artifact; the existing upload
+does not acquire them. TestFlight selection must match both version and build
+counter from this reviewed checkout.
 It found additional implementation and evidence defects; the presence of
 AES-GCM or a previous audit did not establish that every path was correct.
 
