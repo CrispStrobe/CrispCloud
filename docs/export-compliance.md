@@ -211,11 +211,22 @@ documentation route for third-party-only cryptography outside France.
 **Release decision (2026-11-07):** exclude France from App Store availability
 for this release and set `ITSAppUsesNonExemptEncryption=false` in the iOS and
 macOS plists, with no `ITSEncryptionExportComplianceCode`. The evidence is the
-third-party-only, non-proprietary inventory and the France exclusion. Revisit
-the answer before enabling France or adding proprietary/non-standard
-cryptography; in those cases a declaration, French documentation and the
-Apple-issued code are required. The BIS 5D992.c assessment above is separate
-from Apple's plist answer.
+third-party-only, non-proprietary inventory and the France exclusion. This is
+Apple's "no documentation required / exempt from providing documentation"
+answer, not a claim that the binary contains no cryptography and not the BIS
+5D992.c classification itself. Revisit the answer before enabling France or
+adding proprietary/non-standard cryptography; in those cases a declaration,
+French documentation and the Apple-issued code are required.
+
+**Build-specific condition:** macOS `1.1.0 (10)` was uploaded with this
+`false` answer. It is valid only while France is excluded. App Store Connect
+had no `appAvailabilities` resource for the still-unreleased app when checked,
+so France cannot yet be confirmed excluded through the API; set France
+unavailable in App Store availability before any App Store submission. If
+France is enabled instead, do **not** reuse build 10: create the declaration
+with `availableOnFrenchStore=true`, upload the French declaration, add the
+Apple-issued code, set the plist answer back to `true`, and upload a new
+build.
 
 The macOS release workflow is otherwise healthy: the clean-runner startup
 smoke test now recognizes the first-run credential chooser instead of treating
