@@ -260,6 +260,7 @@
     "packages/filen_client/lib/bcrypt_aesgcm.dart",
     "tool/apple_export_preflight.py",
     "tool/crypto_release_evidence.py",
-    "tool/testflight_external.rb"
+    "tool/testflight_external.rb",
+    "tool/testflight_export_guard.rb"
   ]
 }

@@ -13,7 +13,13 @@
     "prior_distribution_review": "pending",
     "reference": null
   },
-  "inventory_sha256": "5ef7af5664f25fe648c04f01c3e9dc35684e391045bf49521965bde0f0674a76",
+  "inventory_sha256": "db7392a4c6f94305bece8f17e5d629091073583ca81fec0d264e914ec377c3f0",
   "pubspec_lock_sha256": "fa21f7c5c4c21958bf38ee02a3de09fc54a050a80714e767c7769f9dd20caa11",
-  "reviewed_source_sha256": "3a080e07d87b35945e9f331c5386f355673f2a8871cdcafd7c2af314becee4c0"
+  "reviewed_source_sha256": "7a848593adf1050297dffe27e50c7c2a42a950c0b90b6175e9d0491d2ca8ba0c",
+  "testflight": {
+    "distribution_review": "pending",
+    "reference": null,
+    "external_group_ids": [],
+    "allow_public_links": false
+  }
 }

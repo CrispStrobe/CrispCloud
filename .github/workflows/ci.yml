@@ -40,8 +40,11 @@ jobs:
           python3 -m unittest discover -s tool -p test_apple_export_preflight.py -v
       - name: Check provider dependencies and Apple declaration
         run: python3 tool/crypto_release_evidence.py --check
-      - name: Check TestFlight policy guard syntax
-        run: ruby -c tool/testflight_external.rb
+      - name: Verify TestFlight distribution failure paths
+        run: |
+          ruby -c tool/testflight_external.rb
+          ruby -c tool/testflight_export_guard.rb
+          ruby tool/test_testflight_export_guard.rb
 
   # ---------- Analyze + Test with coverage ----------
   analyze:
