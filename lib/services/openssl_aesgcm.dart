@@ -162,6 +162,12 @@ class OpenSslAesGcm {
   /// returned in `.$2`; for decrypt, [tagIn] is the expected tag and `.$2` is null.
   (Uint8List, Uint8List?) _gcm(bool encrypting, Uint8List key, Uint8List nonce,
       Uint8List input, Uint8List? tagIn) {
+    // EVP_aes_256_gcm reads 32 bytes from keyP; EVP_EncryptInit_ex does not
+    // receive the Dart allocation's length. Reject short keys before FFI can
+    // read outside that allocation, and long keys instead of truncating them.
+    if (key.length != 32) {
+      throw ArgumentError('AES-256-GCM requires a 32-byte key');
+    }
     final ctx = _ctxNew();
     if (ctx == nullptr) throw StateError('EVP_CIPHER_CTX_new failed');
     final keyP = malloc<Uint8>(key.length);
