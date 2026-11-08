@@ -7,14 +7,21 @@ import 'package:crisp_cloud/services/secure_storage_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class _FailingSecretStore extends InMemorySecureStorage {
+// A test double for the persistent-storage contract. Keeping this instance
+// across service reconstruction models stored state without using a real keychain.
+class _PersistentSecretStore extends InMemorySecureStorage {
+  @override
+  bool get isPersistent => true;
+}
+
+class _FailingSecretStore extends _PersistentSecretStore {
   @override
   Future<void> write(String key, String value) async {
     throw StateError('Keychain unavailable');
   }
 }
 
-class _UnavailableSecretStore extends InMemorySecureStorage {
+class _UnavailableSecretStore extends _PersistentSecretStore {
   @override
   Future<String?> read(String key) async => throw StateError('Keychain locked');
 
@@ -26,7 +33,7 @@ class _UnavailableSecretStore extends InMemorySecureStorage {
   Future<void> delete(String key) async => throw StateError('Keychain locked');
 }
 
-class _BlockingSecretStore extends InMemorySecureStorage {
+class _BlockingSecretStore extends _PersistentSecretStore {
   final writeEntered = Completer<void>();
   final allowWrite = Completer<void>();
 
@@ -36,6 +43,23 @@ class _BlockingSecretStore extends InMemorySecureStorage {
       writeEntered.complete();
       await allowWrite.future;
     }
+    await super.write(key, value);
+  }
+}
+
+class _SessionSecretStore extends InMemorySecureStorage {
+  int reads = 0;
+  int writes = 0;
+
+  @override
+  Future<String?> read(String key) async {
+    reads++;
+    return super.read(key);
+  }
+
+  @override
+  Future<void> write(String key, String value) async {
+    writes++;
     await super.write(key, value);
   }
 }
@@ -62,7 +86,7 @@ void main() {
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     temp = await Directory.systemTemp.createTemp('backup-encryption-');
-    secure = InMemorySecureStorage();
+    secure = _PersistentSecretStore();
     service = BackupService(secureStorage: secure);
   });
 
@@ -76,6 +100,116 @@ void main() {
     encryptionEnabled: true,
     encryptionKey: 'new-test-passphrase',
   );
+
+  test('session storage cannot publish an encrypted or key-bearing plan', () async {
+    final session = _SessionSecretStore();
+    final ephemeral = BackupService(secureStorage: session);
+    final prefs = await SharedPreferences.getInstance();
+    for (final enabled in [true, false]) {
+      await expectLater(
+        ephemeral.createPlan(
+          name: 'Must remain recoverable',
+          sourcePath: temp.path,
+          destinationPath: '/backup',
+          provider: 'filen',
+          encryptionEnabled: enabled,
+          encryptionKey: 'test-only-recovery-key',
+        ),
+        throwsStateError,
+      );
+    }
+    expect(prefs.getString('backup_plans'), isNull);
+    expect(session.reads, 0);
+    expect(session.writes, 0);
+  });
+
+  test('session storage preserves legacy recovery keys and preferences', () async {
+    final plan = _legacyPlan(temp.path);
+    final legacy = jsonEncode([
+      {...plan.toJson(), 'encryptionKey': plan.encryptionKey},
+    ]);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('backup_plans', legacy);
+    await prefs.setString('backup_snapshots_${plan.id}', '[{}]');
+    final session = _SessionSecretStore();
+    final ephemeral = BackupService(secureStorage: session);
+    await expectLater(ephemeral.getPlans(), throwsStateError);
+    await expectLater(
+      ephemeral.updatePlan(plan.copyWith(name: 'Must not migrate')),
+      throwsStateError,
+    );
+    expect(prefs.getString('backup_plans'), legacy);
+    expect(prefs.getString('backup_snapshots_${plan.id}'), '[{}]');
+    expect(session.reads, 0);
+    expect(session.writes, 0);
+    expect(await session.containsKey('backup_plan_key_${plan.id}'), isFalse);
+    // The original recovery key is still available to a persistent backend.
+    expect((await service.getPlan(plan.id))!.encryptionKey, plan.encryptionKey);
+  });
+
+  test('a matching session key cannot authorize an encrypted backup', () async {
+    final plan = await createEncryptedPlan();
+    final prefs = await SharedPreferences.getInstance();
+    final originalPlans = prefs.getString('backup_plans');
+    final session = _SessionSecretStore();
+    await session.write('backup_plan_key_${plan.id}', plan.encryptionKey!);
+    final ephemeral = BackupService(secureStorage: session);
+    var invoked = false;
+    await expectLater(
+      ephemeral.runBackup(
+        plan.id,
+        uploadFile: (path, bytes) async {
+          invoked = true;
+          return path;
+        },
+        encryptBytes: (bytes, key) {
+          invoked = true;
+          return bytes;
+        },
+      ),
+      throwsStateError,
+    );
+    expect(invoked, isFalse);
+    expect(ephemeral.isRunning, isFalse);
+    expect(prefs.getString('backup_plans'), originalPlans);
+    expect(prefs.getString('backup_snapshots_${plan.id}'), isNull);
+    expect(session.reads, 0);
+    expect(session.writes, 1, reason: 'Only the deliberate fixture setup write');
+  });
+
+  test('session storage supports plaintext plans but cannot enable encryption', () async {
+    final session = _SessionSecretStore();
+    final ephemeral = BackupService(secureStorage: session);
+    await File('${temp.path}/plain.txt').writeAsString('ordinary plaintext');
+    final plan = await ephemeral.createPlan(
+      name: 'Plain',
+      sourcePath: temp.path,
+      destinationPath: '/backup',
+      provider: 'filen',
+    );
+    final prefs = await SharedPreferences.getInstance();
+    final originalPlans = prefs.getString('backup_plans');
+    await expectLater(
+      ephemeral.updatePlan(
+        plan.copyWith(encryptionEnabled: true, encryptionKey: 'session-key'),
+      ),
+      throwsStateError,
+    );
+    expect(prefs.getString('backup_plans'), originalPlans);
+    var uploads = 0;
+    final snapshot = await ephemeral.runBackup(
+      plan.id,
+      uploadFile: (path, bytes) async {
+        uploads++;
+        expect(utf8.decode(bytes), 'ordinary plaintext');
+        return '/backup/$path';
+      },
+    );
+    expect(snapshot.status, BackupSnapshotStatus.completed);
+    expect(uploads, 1);
+    expect(session.reads, 0);
+    expect(session.writes, 0);
+  });
 
   test(
     'missing encrypt callback never uploads plaintext or records success',

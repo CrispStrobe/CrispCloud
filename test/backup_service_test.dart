@@ -19,6 +19,11 @@ import 'package:crisp_cloud/services/secure_storage_service.dart';
 // Helpers
 // ---------------------------------------------------------------------------
 
+class _PersistentBackupStore extends InMemorySecureStorage {
+  @override
+  bool get isPersistent => true;
+}
+
 /// Returns a minimal valid BackupPlan with sane defaults.
 BackupPlan _makePlan({
   String name = 'Test Plan',
@@ -939,6 +944,7 @@ void main() {
     });
 
     test('encryption flag is propagated to the upload callback', () async {
+      service = BackupService(secureStorage: _PersistentBackupStore());
       await _createFiles({'secret.txt': 'top secret'});
 
       final encryptCalled = <bool>[];

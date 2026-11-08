@@ -421,10 +421,11 @@ class BackupService {
         // Ordinary plaintext plans do not depend on an unlocked keychain.
         // The marker preserves access to a retained key when encryption is
         // disabled, rather than discarding it during metadata-only updates.
-        var storedKey =
-            plan.encryptionEnabled ||
-                legacyKey != null ||
-                json['hasEncryptionKey'] == true
+        final needsKey = plan.encryptionEnabled ||
+            legacyKey != null ||
+            json['hasEncryptionKey'] == true;
+        if (needsKey) _requirePersistentKeyStorage();
+        var storedKey = needsKey
             ? await _secureStorage.read(_planKey(plan.id))
             : null;
         if (legacyKey != null) {
@@ -503,6 +504,9 @@ class BackupService {
 
     final validationError = plan.validate();
     if (validationError != null) throw ArgumentError(validationError);
+    if (plan.encryptionEnabled || plan.encryptionKey != null) {
+      _requirePersistentKeyStorage();
+    }
 
     final plans = await getPlans();
     plans.add(plan);
@@ -583,6 +587,9 @@ class BackupService {
   }
 
   Future<void> _savePlans(List<BackupPlan> plans) async {
+    if (plans.any((plan) => plan.encryptionEnabled || plan.encryptionKey != null)) {
+      _requirePersistentKeyStorage();
+    }
     // Secure keys first. A failed secure write must never produce metadata
     // claiming that an encrypted plan was successfully persisted.
     for (final plan in plans) {
@@ -599,12 +606,22 @@ class BackupService {
   }
 
   Future<void> _persistKey(String planId, String key) async {
+    _requirePersistentKeyStorage();
     final storageKey = _planKey(planId);
     if (await _secureStorage.read(storageKey) != key) {
       await _secureStorage.write(storageKey, key);
     }
     if (await _secureStorage.read(storageKey) != key) {
       throw StateError('Backup encryption key could not be stored securely');
+    }
+  }
+
+  void _requirePersistentKeyStorage() {
+    // Plans and snapshots outlive this process. Successful readback from a
+    // session-only store cannot establish recoverability after a restart and
+    // must never authorize deleting a legacy persistent recovery key.
+    if (!_secureStorage.isPersistent) {
+      throw StateError('Encrypted backups require persistent secure storage');
     }
   }
 
