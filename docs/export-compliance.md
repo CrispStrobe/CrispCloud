@@ -390,6 +390,7 @@ unlike the Python preflight, it performs those App Store Connect writes.
 ```sh
 export ASC_PLATFORM='MAC_OS'
 export ASC_BUILD_NUMBER='REVIEWED_BUILD_NUMBER'
+export ASC_BUILD_ID='REVIEWED_APP_STORE_CONNECT_BUILD_ID'
 export TESTFLIGHT_GROUP_ID='REVIEWED_EXTERNAL_GROUP_ID'
 ruby tool/testflight_external.rb
 ```
@@ -397,6 +398,11 @@ ruby tool/testflight_external.rb
 For an iOS build, use `ASC_PLATFORM='IOS'`. The guard verifies the selected
 external group belongs to this app, its public-link state, and the uploaded
 build's identity, processing state and encryption answer before every write.
+The marketing version comes from the reviewed checkout's `pubspec.yaml`; the
+live build's platform and marketing version must match it. `ASC_BUILD_ID`, or
+the workflow's `build_id` input, selects an exact build ID. It may be omitted
+only when the complete response contains one matching candidate. Ambiguous or
+partially paginated results never silently select the newest build.
 For the non-exempt route it also checks the build's matching approved Apple
 declaration. `france_covered` additionally requires
 `availableOnFrenchStore=true` in that declaration, even if the App Store

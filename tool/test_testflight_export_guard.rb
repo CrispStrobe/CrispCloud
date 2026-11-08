@@ -7,7 +7,7 @@ require_relative 'testflight_external'
 class TestFlightExportGuardTest < Minitest::Test
   class FakeClient
     attr_reader :posts, :gets
-    attr_accessor :group, :build, :declaration
+    attr_accessor :group, :build, :declaration, :prerelease
 
     def initialize
       @posts, @gets = [], []
@@ -18,6 +18,8 @@ class TestFlightExportGuardTest < Minitest::Test
       @build = { 'type' => 'builds', 'id' => 'build-1',
                  'attributes' => { 'version' => '10', 'processingState' => 'VALID', 'usesNonExemptEncryption' => false },
                  'relationships' => { 'app' => { 'data' => app } } }
+      @prerelease = { 'type' => 'preReleaseVersions', 'id' => 'prerelease-1',
+                      'attributes' => { 'version' => '1.1.0', 'platform' => 'MAC_OS' } }
       @declaration = { 'type' => 'appEncryptionDeclarations', 'id' => 'declaration-1',
                        'attributes' => { 'appEncryptionDeclarationState' => 'APPROVED', 'codeValue' => 'issued-code',
                                          'platform' => 'MAC_OS', 'usesEncryption' => true, 'exempt' => false,
@@ -29,6 +31,7 @@ class TestFlightExportGuardTest < Minitest::Test
       data = case path
              when '/v1/betaGroups/group-1' then @group
              when '/v1/builds/build-1' then @build
+             when '/v1/builds/build-1/preReleaseVersion' then @prerelease
              when '/v1/builds/build-1/appEncryptionDeclaration' then @declaration
              else raise "Unexpected read #{path}"
              end
@@ -52,7 +55,7 @@ class TestFlightExportGuardTest < Minitest::Test
 
   def guard
     TestFlightExportGuard.new(client: @client, policy: @policy, app_id: 'app-1', build_id: 'build-1',
-                             build_number: '10', platform: 'MAC_OS', group_id: 'group-1')
+                             build_number: '10', marketing_version: '1.1.0', platform: 'MAC_OS', group_id: 'group-1')
   end
 
   def localization
@@ -138,6 +141,7 @@ class TestFlightExportGuardTest < Minitest::Test
     assert_equal 3, @client.posts.length
     assert_equal 3, @client.gets.count('/v1/betaGroups/group-1')
     assert_equal 3, @client.gets.count('/v1/builds/build-1')
+    assert_equal 3, @client.gets.count('/v1/builds/build-1/preReleaseVersion')
   end
 
   def test_group_must_be_external_and_belong_to_the_same_app
@@ -151,7 +155,8 @@ class TestFlightExportGuardTest < Minitest::Test
 
   def test_optional_name_check_cannot_select_an_unreviewed_id
     checked = TestFlightExportGuard.new(client: @client, policy: @policy, app_id: 'app-1', build_id: 'build-1',
-                                       build_number: '10', platform: 'MAC_OS', group_id: 'group-1', group_name: 'Different group')
+                                       build_number: '10', marketing_version: '1.1.0', platform: 'MAC_OS',
+                                       group_id: 'group-1', group_name: 'Different group')
     assert_raises(TestFlightExportGuard::Error) { checked.verify! }
   end
 
@@ -174,6 +179,55 @@ class TestFlightExportGuardTest < Minitest::Test
     @client.group['attributes']['publicLinkEnabled'] = true
     guard.post('/v1/betaGroups/group-1/relationships/builds', assignment)
     assert_equal 1, @client.posts.length
+  end
+
+  def test_build_platform_and_marketing_version_are_read_not_inferred_from_filters
+    @client.prerelease['attributes']['platform'] = 'IOS'
+    assert_raises(TestFlightExportGuard::Error) { guard.post('/v1/betaBuildLocalizations', localization) }
+    @client.prerelease['attributes']['platform'] = 'MAC_OS'
+    @client.prerelease['attributes']['version'] = '1.0.0'
+    assert_raises(TestFlightExportGuard::Error) { guard.post('/v1/betaBuildLocalizations', localization) }
+    assert_empty @client.posts
+  end
+
+  def candidate(id, number = '10')
+    { 'type' => 'builds', 'id' => id, 'attributes' => { 'version' => number } }
+  end
+
+  def candidates(*builds)
+    { 'data' => builds, 'links' => { 'next' => nil }, 'meta' => { 'paging' => { 'total' => builds.length } } }
+  end
+
+  def test_build_selector_waits_for_none_and_accepts_one_complete_candidate
+    assert_nil TestFlightExportGuard.select_build!(candidates, build_number: '10')
+    selected = TestFlightExportGuard.select_build!(candidates(candidate('first')), build_number: '10')
+    assert_equal 'first', selected['id']
+  end
+
+  def test_build_selector_never_selects_the_newest_of_multiple_candidates
+    response = candidates(candidate('old'), candidate('new'))
+    response['data'][1]['attributes']['uploadedDate'] = '2099-01-01T00:00:00Z'
+    assert_raises(TestFlightExportGuard::Error) { TestFlightExportGuard.select_build!(response, build_number: '10') }
+    selected = TestFlightExportGuard.select_build!(response, build_number: '10', requested_id: 'old')
+    assert_equal 'old', selected['id']
+    assert_raises(TestFlightExportGuard::Error) do
+      TestFlightExportGuard.select_build!(response, build_number: '10', requested_id: 'absent')
+    end
+  end
+
+  def test_build_selector_rejects_partial_pages_incorrect_totals_and_duplicate_ids
+    partial = candidates(candidate('first'))
+    partial['links']['next'] = 'https://api.appstoreconnect.apple.com/v1/builds?cursor=second'
+    assert_raises(TestFlightExportGuard::Error) { TestFlightExportGuard.select_build!(partial, build_number: '10') }
+    partial['links']['next'] = nil
+    partial['meta']['paging']['total'] = 2
+    assert_raises(TestFlightExportGuard::Error) { TestFlightExportGuard.select_build!(partial, build_number: '10') }
+    assert_raises(TestFlightExportGuard::Error) do
+      TestFlightExportGuard.select_build!(candidates(candidate('same'), candidate('same')), build_number: '10', requested_id: 'same')
+    end
+    assert_raises(TestFlightExportGuard::Error) do
+      TestFlightExportGuard.select_build!(candidates(candidate('wrong', '11')), build_number: '10')
+    end
   end
 
   def test_french_route_still_rejects_unapproved_or_mismatched_declarations

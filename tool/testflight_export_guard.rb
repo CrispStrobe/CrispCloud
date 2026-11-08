@@ -38,6 +38,10 @@ class TestFlightExportGuard
     unless non_exempt == true || non_exempt == false
       raise Error, 'TestFlight policy needs an explicit encryption answer'
     end
+    if non_exempt && (policy.dig('documentation', 'status') != 'approved' ||
+                      !text?(policy.dig('documentation', 'compliance_code')))
+      raise Error, 'Non-exempt TestFlight distribution requires an approved Apple code'
+    end
     if review['distribution_review'] == 'no_france'
       raise Error, 'A no-France TestFlight review cannot allow public links' unless review['allow_public_links'] == false
     elsif non_exempt != true || policy.dig('documentation', 'status') != 'approved' ||
@@ -61,14 +65,55 @@ class TestFlightExportGuard
     requested_id
   end
 
-  def initialize(client:, policy:, app_id:, build_id:, build_number:, platform:, group_id:, group_name: '')
+  # Never infer identity from the newest result or a partial page. An exact
+  # requested ID can disambiguate a complete response; otherwise require one
+  # candidate. Callers also filter by app, marketing version and platform.
+  def self.select_build!(response, build_number:, requested_id: '')
+    unless requested_id.empty? || identifier?(requested_id)
+      raise Error, 'ASC_BUILD_ID must be an exact App Store Connect resource ID'
+    end
+    builds, links = response['data'], response['links']
+    unless builds.is_a?(Array) && links.is_a?(Hash)
+      raise Error, 'Cannot select a TestFlight build from an incomplete API response'
+    end
+    unless links['next'].nil?
+      raise Error, 'TestFlight build candidates span multiple pages; provide ASC_BUILD_ID instead of selecting a partial result'
+    end
+    meta = response['meta']
+    if !meta.nil? && (!meta.is_a?(Hash) || (!meta['paging'].nil? && !meta['paging'].is_a?(Hash)))
+      raise Error, 'Invalid TestFlight build pagination metadata'
+    end
+    total = meta&.dig('paging', 'total')
+    if !total.nil? && (!total.is_a?(Integer) || total != builds.length)
+      raise Error, 'TestFlight build response does not contain every reported candidate'
+    end
+    unless builds.all? { |build| build.is_a?(Hash) && build['type'] == 'builds' && identifier?(build['id']) &&
+                         build.dig('attributes', 'version') == build_number }
+      raise Error, 'TestFlight build candidates do not match the requested build number'
+    end
+    if builds.map { |build| build['id'] }.uniq.length != builds.length
+      raise Error, 'TestFlight build response contains duplicate IDs'
+    end
+    return nil if builds.empty?
+    unless requested_id.empty?
+      exact = builds.select { |build| build['id'] == requested_id }
+      raise Error, 'ASC_BUILD_ID does not identify a returned candidate for this release' unless exact.one?
+      return exact.first
+    end
+    raise Error, 'Multiple TestFlight builds match; provide ASC_BUILD_ID explicitly' unless builds.one?
+    builds.first
+  end
+
+  def initialize(client:, policy:, app_id:, build_id:, build_number:, marketing_version:, platform:, group_id:, group_name: '')
     self.class.validate_policy!(policy)
     unless [app_id, build_id, group_id].all? { |id| self.class.identifier?(id) }
       raise Error, 'TestFlight app, build and group IDs must be explicit resource IDs'
     end
     raise Error, 'Unsupported TestFlight application platform' unless %w[IOS MAC_OS].include?(platform)
+    raise Error, 'The reviewed marketing version is required' unless self.class.text?(marketing_version)
     @client, @policy = client, policy
     @app_id, @build_id, @build_number, @platform = app_id, build_id, build_number, platform
+    @marketing_version = marketing_version
     @group_id, @group_name = group_id, group_name
   end
 
@@ -113,6 +158,14 @@ class TestFlightExportGuard
            build.dig('attributes', 'processingState') == 'VALID' &&
            build.dig('attributes', 'usesNonExemptEncryption') == @policy.fetch('uses_non_exempt_encryption')
       raise Error, 'Uploaded TestFlight build identity, processing state or encryption answer differs from the review'
+    end
+    prerelease = @client.get(
+      "/v1/builds/#{encoded(@build_id)}/preReleaseVersion", 'fields[preReleaseVersions]' => 'version,platform'
+    ).fetch('data')
+    unless prerelease.is_a?(Hash) && prerelease['type'] == 'preReleaseVersions' &&
+           prerelease.dig('attributes', 'platform') == @platform &&
+           prerelease.dig('attributes', 'version') == @marketing_version
+      raise Error, 'Uploaded TestFlight build platform or marketing version differs from the reviewed release'
     end
     if @policy.fetch('uses_non_exempt_encryption')
       declaration = @client.get("/v1/builds/#{encoded(@build_id)}/appEncryptionDeclaration").fetch('data')
