@@ -7,8 +7,16 @@ on:
         description: 'Uploaded macOS CFBundleVersion'
         required: true
         type: string
+      build_id:
+        description: 'Exact App Store Connect build ID (required when the number matches multiple builds)'
+        required: false
+        type: string
+      group_id:
+        description: 'Reviewed external group ID (optional only when policy lists exactly one ID)'
+        required: false
+        type: string
       group:
-        description: 'Exact external group name (leave blank when only one exists)'
+        description: 'Optional name cross-check for the reviewed external group ID'
         required: false
         type: string
 
@@ -35,6 +43,8 @@ jobs:
           ASC_BUNDLE_ID: com.CrispStrobe.cloud
           ASC_PLATFORM: MAC_OS
           ASC_BUILD_NUMBER: ${{ inputs.build_number }}
+          ASC_BUILD_ID: ${{ inputs.build_id }}
+          TESTFLIGHT_GROUP_ID: ${{ inputs.group_id }}
           TESTFLIGHT_GROUP: ${{ inputs.group }}
           TESTFLIGHT_WHAT_TO_TEST: >-
             Please verify launch reliability, sign-in, cloud browsing,

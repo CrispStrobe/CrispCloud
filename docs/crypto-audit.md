@@ -16,6 +16,9 @@ in [crypto-dependencies.md](crypto-dependencies.md).
 The follow-up starts from main `7985a1fb77ccda59e9636f16ad964f453e0f8d7c`
 on remote branch `security/crypto-export-compliance-2026-11-08`, with changes
 saved incrementally in [PR 34](https://github.com/CrispStrobe/CrispCloud/pull/34).
+The branch incorporates main's subsequent PR 35 build-10 distribution record
+through `5a63e7be85f60122ed8ea6a72cce37c50157d519` without treating that
+historical record as live account or binary verification.
 It found additional implementation and evidence defects; the presence of
 AES-GCM or a previous audit did not establish that every path was correct.
 
@@ -27,6 +30,7 @@ AES-GCM or a previous audit did not establish that every path was correct.
 | Generic file encryption generated a fresh salt and session key while the file envelope carried no recovery parameters. The UI could activate without backup confirmation; active-key import silently did nothing while reporting success. | Require re-entry of the exact 24-word recovery phrase before new connection activation, reject empty passphrases, and install the same prepared key after login. Reject a different key import while active; copy imported/exported key material defensively and retire it on logout/provider switch. | `file_encryption_recovery_test.dart` includes an independently verified AES-GCM ciphertext and all nine locales; `encryption_key_lifecycle_test.dart` covers mutation, wrong keys, import refusal and session retirement. |
 | Encrypted backup keys could be migrated or published into a session-only store despite persistent plan/snapshot metadata. Readback alone does not prove restart recovery. | Require `SecureStorage.isPersistent` before key-bearing plan hydration, migration, publication or key persistence. Preserve old recovery material and keep key-free plaintext plans usable. | `backup_encryption_security_test.dart` covers ephemeral refusal before secret I/O, migration preservation and plaintext operation; persistent failure/readback cases remain. |
 | The Apple source gate treated two Markdown substrings as evidence, never inspected the submitted plist, and never verified live French availability. The guide overinterpreted a declaration API 409. | Use a structured policy bound to inventory, resolved dependency lock and reviewed source hashes; inspect actual IPA/ZIP/pkg metadata; require a separate GET-only live check immediately before upload. Retain pending history/channel facts explicitly. | `test_apple_export_preflight.py` covers stale policy/source, tampered metadata, exact app/build/platform, France/history/approval checks, pagination and token-origin boundaries. Existing release-evidence tests cover the integration. |
+| External TestFlight distribution could select or create a group by name and mutate build metadata without verifying the audience's separate French coverage. Storefront exclusion does not restrict beta recipients. | Require a completed channel review and exact external-group allowlist; deny public links on the no-France route. Recheck the live group, uploaded build and any required approved declaration before each allowed mutation. Remove implicit group creation and keep account access out of import-time code. | `test_testflight_export_guard.rb` covers pending reviews, ambiguous/unreviewed groups, public links, changed state between writes, wrong builds and unapproved declarations. The CLI's JWT lifetime now includes its clock-skew allowance within Apple's limit. |
 
 The valid `nonce (12 bytes) | ciphertext | GCM tag (16 bytes)` file format is
 unchanged. Previously encrypted files require their original raw key, mnemonic
@@ -55,6 +59,8 @@ expansion, native crypto, Flutter widgets and platform builds must pass the
 final PR checks. Dart/Flutter and Ruby are absent from this review workspace;
 no local device or live-provider pass is claimed. The prior review's different
 bootstrap limitation below is historical, not a new approval rejection.
+The Ruby TestFlight failure-path tests are wired into the source-evidence CI
+job; a pending or queued workflow is not a passing result.
 
 The distribution history and future external TestFlight audience have not
 been established from this repository. The policy deliberately retains pending
