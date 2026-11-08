@@ -475,8 +475,12 @@ also require a newly built artifact; an already uploaded build does not gain
 them when this branch changes.
 
 This audit branch advances the source version to `1.1.0+11` for that rebuilt
-artifact. This reserves a new source build counter; it does not claim that
-build 11 has been built, uploaded or approved.
+artifact. On 2026-11-08, build 11 was built, passed the live App Store Connect
+preflight, uploaded to App Store Connect, assigned to the reviewed external
+TestFlight group `b044f8c9-394b-47dd-a470-796fd052580a`, and submitted for Beta
+App Review (`WAITING_FOR_REVIEW`). Build 10 was expired so it could not remain
+the active review in the same train. These are operational records, not an
+Apple approval or a legal classification.
 
 ### Internal release decision record
 
