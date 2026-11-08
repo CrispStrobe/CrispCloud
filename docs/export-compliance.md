@@ -514,6 +514,28 @@ Matching approved declaration and live verification, if required:
 Responsible exporter/reviewer and decision date:
 ```
 
+## 6. Applied store evidence (2026-11-08)
+
+The following live App Store Connect state was applied and read back on
+2026-11-08 for app `6789570314` (`com.CrispStrobe.cloud`):
+
+- App availability was created with the full territory list. France (`FRA`)
+  is explicitly `available=false` with content status `CANNOT_SELL`; all
+  other territories were submitted as available. The API returned the full
+  territory-availability set for the app.
+- The app has two App Store versions, macOS and iOS `1.0.0`, both in
+  `PREPARE_FOR_SUBMISSION`; there is no released App Store version and no
+  public storefront listing. This establishes the current no-prior-App-Store-
+  distribution basis, not a prediction about future distribution.
+- The previous external TestFlight group with a public link has had its public
+  link disabled. A new invitation-only external group
+  `b044f8c9-394b-47dd-a470-796fd052580a` was created and contains exactly the
+  project owner (`cstr+beta@mailbox.org`), who is outside France. The old
+  public-link group is not used for build 11.
+- These are live-state records. Re-run the preflight immediately before any
+  upload; the evidence is not a legal opinion and does not establish future
+  tester locations.
+
 ## Official sources
 
 Apple, ANSSI, French legislation and cited EAR text rechecked 2026-11-08. BIS
