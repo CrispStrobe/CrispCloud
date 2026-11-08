@@ -49,10 +49,11 @@ void main() {
 
   test('encoded keys with invalid byte lengths fail before cipher use', () {
     for (final length in [0, 1, 16, 24, 31, 33, 48, 64]) {
-      final encoded = base64.encode(Uint8List(length));
-      // Exactly 32 alphabet characters denotes Filen's raw-key format,
-      // irrespective of whether that string can also be decoded as base64.
-      if (encoded.length == 32) continue;
+      // '/' in base64 prevents these fixtures from also being valid raw
+      // 32-character keys or 64-character hexadecimal keys.
+      final encoded = base64.encode(
+        Uint8List(length)..fillRange(0, length, 0xff),
+      );
       expect(() => crypto.decodeUniversalKey(encoded), throwsFormatException);
     }
     for (final malformed in ['', '!', 'abcde', 'not a Filen file key']) {

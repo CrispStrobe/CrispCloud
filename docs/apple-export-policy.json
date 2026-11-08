@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "reviewed_on": "2026-11-08",
+  "bundle_id": "com.CrispStrobe.cloud",
+  "uses_non_exempt_encryption": false,
+  "documentation": {
+    "status": "not_required",
+    "reference": "docs/export-compliance.md: intended published-cryptography outside-France route; conditional source assessment, not an Apple or government approval. The historical HTTP 409 does not validate the classification.",
+    "compliance_code": null
+  },
+  "france": {
+    "store_availability": "excluded",
+    "prior_distribution_review": "pending",
+    "reference": null
+  },
+  "inventory_sha256": "a75b3a1a6cb2ce80faf162cb1fdeb95dceb79d7c800497fc0d88f8c7c5fd5139",
+  "pubspec_lock_sha256": "fa21f7c5c4c21958bf38ee02a3de09fc54a050a80714e767c7769f9dd20caa11",
+  "reviewed_source_sha256": "d8d3e0700db606eefe7a430bd2a89f122445032e337cc0e11a5a0e40c77a5965"
+}
