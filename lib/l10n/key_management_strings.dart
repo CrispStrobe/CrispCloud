@@ -16,6 +16,8 @@ class KeyManagementStrings {
 
   static const Map<String, Map<String, String>> _strings = {
     'en': {
+      "fileEncryptionDelegated":
+          "File encryption is configured separately for this provider. Connect first, then import a backed-up key in Key Management before uploading encrypted files.",
       "fileRecoveryTitle": "Back up your file encryption key",
       "fileRecoveryWarning":
           "This key is kept only for this session. Your passphrase alone cannot recover files encrypted with it after a restart. Save these 24 words somewhere safe before uploading encrypted files. Anyone with the words can decrypt those files.",
@@ -72,6 +74,8 @@ class KeyManagementStrings {
       "hexLength": "Hex string must have even length, got {count}",
     },
     'de': {
+      "fileEncryptionDelegated":
+          "Für diesen Anbieter wird die Dateiverschlüsselung separat eingerichtet. Stellen Sie zuerst die Verbindung her und importieren Sie dann einen gesicherten Schlüssel in der Schlüsselverwaltung, bevor Sie verschlüsselte Dateien hochladen.",
       "fileRecoveryTitle": "Dateiverschlüsselungsschlüssel sichern",
       "fileRecoveryWarning":
           "Dieser Schlüssel wird nur für diese Sitzung gespeichert. Ihre Passphrase allein kann damit verschlüsselte Dateien nach einem Neustart nicht wiederherstellen. Bewahren Sie diese 24 Wörter sicher auf, bevor Sie verschlüsselte Dateien hochladen. Wer die Wörter kennt, kann diese Dateien entschlüsseln.",
@@ -133,6 +137,8 @@ class KeyManagementStrings {
           "Die Hexadezimalzeichenfolge muss eine gerade Länge haben, erhalten: {count}",
     },
     'fr': {
+      "fileEncryptionDelegated":
+          "Le chiffrement des fichiers se configure séparément pour ce fournisseur. Connectez-vous, puis importez une clé sauvegardée dans la gestion des clés avant de téléverser des fichiers chiffrés.",
       "fileRecoveryTitle": "Sauvegardez votre clé de chiffrement de fichiers",
       "fileRecoveryWarning":
           "Cette clé est conservée uniquement pour cette session. Après un redémarrage, votre phrase secrète seule ne permet pas de récupérer les fichiers chiffrés avec cette clé. Conservez ces 24 mots en lieu sûr avant de téléverser des fichiers chiffrés. Toute personne connaissant ces mots peut déchiffrer ces fichiers.",
@@ -191,6 +197,8 @@ class KeyManagementStrings {
           "La chaîne hexadécimale doit avoir une longueur paire ; reçu : {count}",
     },
     'es': {
+      "fileEncryptionDelegated":
+          "El cifrado de archivos se configura por separado para este proveedor. Conéctate y luego importa una clave guardada en Gestión de claves antes de subir archivos cifrados.",
       "fileRecoveryTitle": "Guarda tu clave de cifrado de archivos",
       "fileRecoveryWarning":
           "Esta clave se conserva solo durante esta sesión. Tras reiniciar, tu frase de contraseña por sí sola no puede recuperar los archivos cifrados con ella. Guarda estas 24 palabras en un lugar seguro antes de subir archivos cifrados. Cualquiera que conozca las palabras puede descifrar esos archivos.",
@@ -249,6 +257,8 @@ class KeyManagementStrings {
           "La cadena hexadecimal debe tener longitud par; recibida: {count}",
     },
     'pt': {
+      "fileEncryptionDelegated":
+          "A criptografia de arquivos é configurada separadamente para este provedor. Conecte-se e importe uma chave de backup no Gerenciamento de chaves antes de enviar arquivos criptografados.",
       "fileRecoveryTitle": "Faça backup da sua chave de criptografia de arquivos",
       "fileRecoveryWarning":
           "Esta chave é mantida apenas durante esta sessão. Após reiniciar, sua frase de senha sozinha não pode recuperar os arquivos criptografados com ela. Guarde estas 24 palavras em um lugar seguro antes de enviar arquivos criptografados. Quem tiver as palavras poderá descriptografar esses arquivos.",
@@ -308,6 +318,7 @@ class KeyManagementStrings {
           "A sequência hexadecimal deve ter tamanho par; recebido: {count}",
     },
     'zh': {
+      "fileEncryptionDelegated": "此提供商的文件加密需单独设置。请先连接，再在密钥管理中导入已备份的密钥，然后上传加密文件。",
       "fileRecoveryTitle": "备份文件加密密钥",
       "fileRecoveryWarning":
           "此密钥仅保留在当前会话中。重启后，仅凭密码短语无法恢复用此密钥加密的文件。上传加密文件前，请将这 24 个单词妥善保存。任何获得这些单词的人都能解密这些文件。",
@@ -354,6 +365,7 @@ class KeyManagementStrings {
       "hexLength": "十六进制字符串的长度必须为偶数，实际为 {count}",
     },
     'ja': {
+      "fileEncryptionDelegated": "このプロバイダーのファイル暗号化は別途設定します。まず接続し、キー管理でバックアップ済みのキーをインポートしてから、暗号化したファイルをアップロードしてください。",
       "fileRecoveryTitle": "ファイル暗号化キーをバックアップ",
       "fileRecoveryWarning":
           "このキーは現在のセッション中のみ保持されます。再起動後は、パスフレーズだけではこのキーで暗号化したファイルを復元できません。暗号化したファイルをアップロードする前に、この 24 語を安全な場所に保存してください。この単語を知っている人は、それらのファイルを復号できます。",
@@ -401,6 +413,7 @@ class KeyManagementStrings {
       "hexLength": "16 進文字列の長さは偶数である必要があります。入力: {count}",
     },
     'ko': {
+      "fileEncryptionDelegated": "이 공급자의 파일 암호화는 별도로 설정합니다. 먼저 연결한 뒤 키 관리에서 백업한 키를 가져온 후 암호화된 파일을 업로드하세요.",
       "fileRecoveryTitle": "파일 암호화 키 백업",
       "fileRecoveryWarning":
           "이 키는 현재 세션에만 보관됩니다. 재시작 후에는 암호문구만으로 이 키로 암호화한 파일을 복구할 수 없습니다. 암호화된 파일을 업로드하기 전에 이 24개 단어를 안전한 곳에 보관하세요. 이 단어를 아는 사람은 누구나 해당 파일을 복호화할 수 있습니다.",
@@ -448,6 +461,8 @@ class KeyManagementStrings {
       "hexLength": "16진수 문자열 길이는 짝수여야 합니다. 입력: {count}",
     },
     'ar': {
+      "fileEncryptionDelegated":
+          "يُضبط تشفير الملفات بشكل منفصل لهذا المزوّد. اتصل أولًا، ثم استورد مفتاحًا محفوظًا احتياطيًا من إدارة المفاتيح قبل رفع الملفات المشفّرة.",
       "fileRecoveryTitle": "احتفظ بنسخة احتياطية من مفتاح تشفير الملفات",
       "fileRecoveryWarning":
           "يُحتفظ بهذا المفتاح خلال هذه الجلسة فقط. بعد إعادة التشغيل، لا تكفي عبارة المرور وحدها لاستعادة الملفات المشفّرة به. احفظ هذه الكلمات الأربع والعشرين في مكان آمن قبل رفع الملفات المشفّرة. يمكن لأي شخص لديه هذه الكلمات فك تشفير تلك الملفات.",

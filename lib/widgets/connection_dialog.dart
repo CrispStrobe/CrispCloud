@@ -1,7 +1,6 @@
 import '../services/sftp_client_adapter.dart';
 import '../services/smb_client_adapter.dart';
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 // lib/widgets/connection_dialog.dart
@@ -366,6 +365,11 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                         }
                         setState(() {
                           _selectedProvider = value;
+                          if (value == CloudProvider.azure ||
+                              value == CloudProvider.b2) {
+                            _enableEncryption = false;
+                            _passphraseController.clear();
+                          }
                           _error = null;
                           _needs2fa = false;
                         });
@@ -1125,41 +1129,47 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
             ),
 
             // --- Encryption Toggle ---
-            const Divider(),
-            CheckboxListTile(
-              key: const Key('connection_file_encryption_toggle'),
-              value: _enableEncryption,
-              onChanged: _isLoading
-                  ? null
-                  : (v) => setState(() => _enableEncryption = v ?? false),
-              title: Text(t.text('clientEncryption'),
-                  style: const TextStyle(fontSize: 14)),
-              subtitle: Text(t.text('encryptHelp'),
-                  style: const TextStyle(fontSize: 12)),
-              secondary: Icon(
-                _enableEncryption ? Icons.lock : Icons.lock_open,
-                color: _enableEncryption
-                    ? Theme.of(context).colorScheme.primary
-                    : null,
-              ),
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-            ),
-            if (_enableEncryption) ...[
-              const SizedBox(height: 8),
-              TextField(
-                key: const Key('connection_file_encryption_passphrase'),
-                controller: _passphraseController,
-                obscureText: true,
-                decoration: InputDecoration(
-                  labelText: t.text('passphrase'),
-                  border: const OutlineInputBorder(),
-                  prefixIcon: const Icon(Icons.key),
-                  helperText: t.text('passphraseHelp'),
+            if (!isAzure && !isB2) ...[
+              const Divider(),
+              CheckboxListTile(
+                key: const Key('connection_file_encryption_toggle'),
+                value: _enableEncryption,
+                onChanged: _isLoading
+                    ? null
+                    : (v) => setState(() => _enableEncryption = v ?? false),
+                title: Text(t.text('clientEncryption'),
+                    style: const TextStyle(fontSize: 14)),
+                subtitle: Text(t.text('encryptHelp'),
+                    style: const TextStyle(fontSize: 12)),
+                secondary: Icon(
+                  _enableEncryption ? Icons.lock : Icons.lock_open,
+                  color: _enableEncryption
+                      ? Theme.of(context).colorScheme.primary
+                      : null,
                 ),
-                enabled: !_isLoading,
+                dense: true,
+                contentPadding: EdgeInsets.zero,
               ),
-            ],
+              if (_enableEncryption) ...[
+                const SizedBox(height: 8),
+                TextField(
+                  key: const Key('connection_file_encryption_passphrase'),
+                  controller: _passphraseController,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    labelText: t.text('passphrase'),
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.key),
+                    helperText: t.text('passphraseHelp'),
+                  ),
+                  enabled: !_isLoading,
+                ),
+              ],
+            ] else
+              Text(
+                KeyManagementStrings(context).text('fileEncryptionDelegated'),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
           ],
         ),
       ),
@@ -1218,6 +1228,14 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
     final t = ConnectionDialogExtraStrings(context);
     final encryptionRequested = _enableEncryption;
     final encryptionPassphrase = _passphraseController.text;
+    if (encryptionRequested &&
+        (_selectedProvider == CloudProvider.azure ||
+            _selectedProvider == CloudProvider.b2)) {
+      setState(() {
+        _error = KeyManagementStrings(context).text('fileEncryptionDelegated');
+      });
+      return;
+    }
     if (encryptionRequested && encryptionPassphrase.trim().isEmpty) {
       setState(() {
         _error = KeyManagementStrings(context).text('passphraseRequired');
@@ -1530,7 +1548,9 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = e is NextcloudAuthenticationException
+          _error = e is EncryptionFormatException
+              ? KeyManagementStrings(context).text(e.code.name, e.arguments)
+              : e is NextcloudAuthenticationException
               ? ConnectionStrings.of(context).authenticationFailed
               : localizedKnownProviderError(context, e) ??
                   localizedConnectionFailure(context, e) ??

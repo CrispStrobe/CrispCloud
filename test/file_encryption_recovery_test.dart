@@ -204,6 +204,7 @@ void main() {
     expect(tester.widget<FilledButton>(find.byKey(_confirm)).onPressed, isNull);
     await tester.tap(find.byKey(_cancel));
     await tester.pumpAndSettle();
+    SecureClipboard.cancelAutoClear();
   });
 
   testWidgets('empty selected passphrase stops before authentication', (
@@ -252,7 +253,10 @@ void main() {
     await tester.pumpAndSettle();
     await tester.enterText(find.byKey(_passphrase), 'a test-only passphrase');
     await tester.tap(find.widgetWithText(ElevatedButton, 'Connect'));
-    await tester.pumpAndSettle();
+    // The underlying connection dialog deliberately remains busy while the
+    // recovery dialog is open, so its progress animation cannot settle.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
     expect(find.byType(FileEncryptionRecoveryDialog), findsOneWidget);
     expect(auth.preflight.twoFactorChecks, 1);
     expect(auth.loginCalls, 0);
@@ -270,10 +274,48 @@ void main() {
     );
   });
 
+  testWidgets('delegated providers hide and reset generic encryption setup', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _connectionHost(InMemorySecureStorage(), const []),
+    );
+    await tester.tap(find.text('Open connection'));
+    await tester.pumpAndSettle();
+    final providerField = find.byType(DropdownButtonFormField<CloudProvider>);
+    for (final provider in [CloudProvider.azure, CloudProvider.b2]) {
+      await tester.ensureVisible(find.byKey(_toggle));
+      await tester.tap(find.byKey(_toggle));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(_passphrase), 'discarded setup secret');
+      tester.widget<DropdownButtonFormField<CloudProvider>>(providerField)
+          .onChanged!(provider);
+      await tester.pumpAndSettle();
+      expect(find.byKey(_toggle), findsNothing);
+      expect(find.byKey(_passphrase), findsNothing);
+      expect(find.textContaining('configured separately'), findsOneWidget);
+      tester.widget<DropdownButtonFormField<CloudProvider>>(providerField)
+          .onChanged!(CloudProvider.filen);
+      await tester.pumpAndSettle();
+      expect(tester.widget<CheckboxListTile>(find.byKey(_toggle)).value, isFalse);
+      expect(find.byKey(_passphrase), findsNothing);
+      await tester.ensureVisible(find.byKey(_toggle));
+      await tester.tap(find.byKey(_toggle));
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<TextField>(find.byKey(_passphrase)).controller!.text,
+        isEmpty,
+      );
+      await tester.tap(find.byKey(_toggle));
+      await tester.pumpAndSettle();
+    }
+  });
+
   testWidgets('all recovery and active-key messages cover all nine locales', (
     tester,
   ) async {
     const keys = [
+      'fileEncryptionDelegated',
       'fileRecoveryTitle',
       'fileRecoveryWarning',
       'fileRecoveryConfirm',
