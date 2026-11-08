@@ -1,6 +1,7 @@
 import '../services/sftp_client_adapter.dart';
 import '../services/smb_client_adapter.dart';
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 // lib/widgets/connection_dialog.dart
@@ -11,11 +12,13 @@ import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../services/cloud_storage_interface.dart';
 import '../services/connection_profiles.dart';
+import '../services/encryption_service.dart';
 import '../services/log_service.dart';
 import '../services/s3_client_adapter.dart';
 import 'azure_connection_dialog.dart';
 import 'b2_connection_dialog.dart';
 import 'proxy_settings_dialog.dart';
+import 'file_encryption_recovery_dialog.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/s3_storage_class_strings.dart';
 import '../l10n/connection_dialog_extra_strings.dart';
@@ -23,6 +26,7 @@ import '../l10n/connection_strings.dart';
 import '../l10n/connection_failure_strings.dart';
 import '../l10n/provider_operation_strings.dart';
 import '../l10n/sftp_key_strings.dart';
+import '../l10n/key_management_strings.dart';
 import '../services/nextcloud_client_adapter.dart';
 
 class ConnectionDialog extends ConsumerStatefulWidget {
@@ -1123,8 +1127,11 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
             // --- Encryption Toggle ---
             const Divider(),
             CheckboxListTile(
+              key: const Key('connection_file_encryption_toggle'),
               value: _enableEncryption,
-              onChanged: (v) => setState(() => _enableEncryption = v ?? false),
+              onChanged: _isLoading
+                  ? null
+                  : (v) => setState(() => _enableEncryption = v ?? false),
               title: Text(t.text('clientEncryption'),
                   style: const TextStyle(fontSize: 14)),
               subtitle: Text(t.text('encryptHelp'),
@@ -1141,6 +1148,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
             if (_enableEncryption) ...[
               const SizedBox(height: 8),
               TextField(
+                key: const Key('connection_file_encryption_passphrase'),
                 controller: _passphraseController,
                 obscureText: true,
                 decoration: InputDecoration(
@@ -1206,7 +1214,16 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
   }
 
   Future<void> _handleLogin() async {
+    if (_isLoading) return;
     final t = ConnectionDialogExtraStrings(context);
+    final encryptionRequested = _enableEncryption;
+    final encryptionPassphrase = _passphraseController.text;
+    if (encryptionRequested && encryptionPassphrase.trim().isEmpty) {
+      setState(() {
+        _error = KeyManagementStrings(context).text('passphraseRequired');
+      });
+      return;
+    }
     if (_selectedProvider == CloudProvider.sftp &&
         _sftpUsePrivateKey && _sftpPrivateKey == null) {
       setState(() => _error = SftpKeyStrings(context).keyRequired);
@@ -1218,12 +1235,18 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
     });
 
     final auth = ref.read(authProvider);
+    // Keep post-login settings independent of controllers that may be disposed
+    // if the connection dialog is closed while authentication is in progress.
+    final s3Encryption = _s3Encryption;
+    final s3KmsKeyId = _s3KmsKeyIdController.text.trim();
+    final s3StorageClass = _s3StorageClass;
 
     try {
       // 1. Switch provider if needed
       if (auth.currentProvider != _selectedProvider) {
         await auth.switchProvider(_selectedProvider);
       }
+      if (!mounted) return;
 
       // 2. Prepare Credentials
       String identity;
@@ -1405,6 +1428,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
       if (!_needs2fa && !skipTwoFa && auth.client.isAuthenticated == false) {
         try {
           final needs2fa = await auth.client.is2faNeeded(identity);
+          if (!mounted) return;
           if (needs2fa) {
             setState(() {
               _needs2fa = true;
@@ -1414,6 +1438,30 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
           }
         } catch (e) {
           _log.debug('2FA check skipped/failed: $e');
+        }
+      }
+      if (!mounted) return;
+
+      // Prepare once, then require recovery of this exact key before login.
+      // The ciphertext format does not carry the derivation salt and the key
+      // is session-only, so deriving another key on a later login loses access.
+      Uint8List? preparedKey;
+      Uint8List? preparedSalt;
+      if (encryptionRequested && !auth.isEncryptionEnabled) {
+        preparedSalt = EncryptionService.generateSalt();
+        preparedKey = EncryptionService.deriveKey(
+          encryptionPassphrase,
+          preparedSalt,
+        );
+        final confirmed = await showFileEncryptionRecoveryDialog(
+          context,
+          encryptionKey: preparedKey,
+          salt: preparedSalt,
+        );
+        if (!mounted) return;
+        if (!confirmed) {
+          setState(() => _isLoading = false);
+          return;
         }
       }
 
@@ -1458,22 +1506,23 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
       if (_selectedProvider == CloudProvider.s3) {
         final client = auth.client;
         if (client is S3ClientAdapter) {
-          client.encryption = _s3Encryption;
-          if (_s3Encryption == S3Encryption.sseKms &&
-              _s3KmsKeyIdController.text.isNotEmpty) {
-            client.kmsKeyId = _s3KmsKeyIdController.text.trim();
+          client.encryption = s3Encryption;
+          if (s3Encryption == S3Encryption.sseKms && s3KmsKeyId.isNotEmpty) {
+            client.kmsKeyId = s3KmsKeyId;
           }
-          client.storageClass = _s3StorageClass;
+          client.storageClass = s3StorageClass;
         }
       }
 
-      // 6. Refresh remote panel after login
-      await ref.read(panelProvider(PanelSide.remote)).refresh();
-
-      // 7. Enable encryption if toggled
-      if (_enableEncryption && _passphraseController.text.isNotEmpty) {
-        auth.enableEncryption(_passphraseController.text);
+      // 6. Activate only the key whose recovery phrase was confirmed. This
+      // must happen even if this dialog closed during a successful login.
+      if (preparedKey != null && preparedSalt != null) {
+        auth.enableEncryptionWithKey(preparedKey, preparedSalt);
       }
+      if (!mounted) return;
+
+      // 7. Refresh through the wrapper, after encryption has been installed.
+      await ref.read(panelProvider(PanelSide.remote)).refresh();
 
       if (mounted) {
         Navigator.pop(context);

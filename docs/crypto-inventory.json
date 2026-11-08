@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "review_date": "2026-11-07",
+  "review_date": "2026-11-08",
   "repository": "https://github.com/CrispStrobe/CrispCloud",
   "scope": "Source-level inventory of the finished application, including portable helpers. Runtime reachability and platform behavior are described in crypto-audit.md. This inventory is not an export classification or a binary scan.",
   "required_providers": [
@@ -41,7 +41,7 @@
         "OpenSSL on Linux",
         "Windows CNG"
       ],
-      "note": "Existing wire format is preserved. Native acceleration does not eliminate Dart crypto or make Apple builds OS-only."
+      "note": "Existing nonce/ciphertext/tag wire format is preserved. The optional key is session-only and the envelope does not contain its derivation salt; new connection setup requires confirmation of the exact recovery mnemonic before activation. Native acceleration does not eliminate Dart crypto or make Apple builds OS-only."
     },
     {
       "name": "Filen provider",
@@ -252,6 +252,14 @@
     "macos/Runner/MainFlutterWindow.swift",
     "lib/providers/auth_provider.dart",
     "lib/screens/screen_dialogs.dart",
-    "lib/widgets/command_palette.dart"
+    "lib/widgets/command_palette.dart",
+    "lib/widgets/connection_dialog.dart",
+    "lib/widgets/file_encryption_recovery_dialog.dart",
+    "lib/l10n/key_management_strings.dart",
+    "packages/filen_client/lib/openssl_aesgcm.dart",
+    "packages/filen_client/lib/bcrypt_aesgcm.dart",
+    "tool/apple_export_preflight.py",
+    "tool/crypto_release_evidence.py",
+    "tool/testflight_external.rb"
   ]
 }
