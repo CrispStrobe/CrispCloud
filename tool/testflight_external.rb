@@ -5,6 +5,7 @@ require 'base64'
 require 'json'
 require 'net/http'
 require 'openssl'
+require 'open3'
 require 'time'
 require 'uri'
 
@@ -81,12 +82,23 @@ def linkage(type, id)
   { type: type, id: id }
 end
 
+# A TestFlight distribution can reach France even when the storefront does not.
+# Validate the recorded channel/history review before any API mutation. This
+# cannot infer testers' locations; the release owner must substantiate the record.
+root = File.expand_path('..', __dir__)
+check = "import pathlib,sys; sys.path.insert(0,'tool'); " \
+        "import apple_export_preflight as a; a.validate_policy(pathlib.Path('.'), submission=True)"
+stdout, stderr, status = Open3.capture3('python3', '-c', check, chdir: root)
+abort "Apple export policy blocks TestFlight distribution: #{stderr.strip}" unless status.success?
+policy = JSON.parse(File.read(File.join(root, 'docs/apple-export-policy.json')))
+
 client = AppStoreConnect.new(
   key_id: required_env('ASC_KEY_ID'),
   issuer_id: required_env('ASC_ISSUER_ID'),
   key_path: required_env('ASC_KEY_PATH')
 )
 bundle_id = ENV.fetch('ASC_BUNDLE_ID', 'com.CrispStrobe.cloud')
+abort 'TestFlight bundle ID differs from the reviewed export policy' unless bundle_id == policy.fetch('bundle_id')
 platform = ENV.fetch('ASC_PLATFORM', 'MAC_OS')
 build_number = required_env('ASC_BUILD_NUMBER')
 group_name = ENV.fetch('TESTFLIGHT_GROUP', '').strip
@@ -125,6 +137,18 @@ loop do
   sleep 30
 end
 build_id = build.fetch('id')
+expected_encryption = policy.fetch('uses_non_exempt_encryption')
+unless build.dig('attributes', 'usesNonExemptEncryption') == expected_encryption
+  abort 'Uploaded TestFlight build encryption answer differs from the reviewed policy'
+end
+if expected_encryption
+  declaration = client.get("/v1/builds/#{build_id}/appEncryptionDeclaration").fetch('data')
+  attributes = declaration&.fetch('attributes', {}) || {}
+  unless attributes['appEncryptionDeclarationState'] == 'APPROVED' &&
+         attributes['codeValue'] == policy.fetch('documentation').fetch('compliance_code')
+    abort 'TestFlight build must have the matching approved Apple encryption declaration'
+  end
+end
 
 localizations = client.get(
   '/v1/betaBuildLocalizations',

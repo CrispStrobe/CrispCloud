@@ -30,6 +30,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+import xml.parsers.expat
 import zipfile
 from pathlib import Path, PurePosixPath
 
@@ -42,6 +43,30 @@ MAX_RESPONSE_BYTES = 8 * 1024 * 1024
 SOURCE_PLISTS = {"ios": "ios/Runner/Info.plist", "macos": "macos/Runner/Info.plist"}
 BUILT_PLATFORMS = {"ios": "iPhoneOS", "macos": "MacOSX"}
 API_PLATFORMS = {"ios": "IOS", "macos": "MAC_OS"}
+# These are Apple's documented restriction statuses, not proof of exclusion on
+# their own. We require available=false separately. Active/pending and unknown
+# statuses fail closed. An old release date is permitted after that check.
+# https://developer.apple.com/documentation/appstoreconnectapi/territoryavailability/attributes-data.dictionary
+RESTRICTED_TERRITORY_STATUSES = set("""
+MISSING_RATING CANNOT_SELL_RESTRICTED_RATING BRAZIL_REQUIRED_TAX_ID
+BRAZIL_GAMBLING_NOT_VERIFIED MISSING_GRN UNVERIFIED_GRN ICP_NUMBER_INVALID
+ICP_NUMBER_MISSING TRADER_STATUS_NOT_PROVIDED TRADER_STATUS_VERIFICATION_FAILED
+TRADER_STATUS_VERIFICATION_STATUS_MISSING CANNOT_SELL_SEVENTEEN_PLUS_APPS
+CANNOT_SELL_SEXUALLY_EXPLICIT CANNOT_SELL_NON_IOS_GAMES
+CANNOT_SELL_SEVENTEEN_PLUS_GAMES CANNOT_SELL_CASINO CANNOT_SELL_CASINO_WITHOUT_GRAC
+CANNOT_SELL_CASINO_WITHOUT_AGE_VERIFICATION CANNOT_SELL_ADULT_ONLY
+CANNOT_SELL_GAMBLING_CONTESTS CANNOT_SELL_GAMBLING CANNOT_SELL_CONTESTS
+CANNOT_SELL_NINETEEN_PLUS_WITHOUT_GRAC CANNOT_SELL
+CANNOT_SELL_FREQUENT_INTENSE_GAMBLING CANNOT_SELL_FREQUENT_INTENSE_ALCOHOL_TOBACCO_DRUGS
+CANNOT_SELL_FREQUENT_INTENSE_VIOLENCE CANNOT_SELL_FREQUENT_INTENSE_SEXUAL_CONTENT_NUDITY
+CANNOT_SELL_INFREQUENT_MILD_ALCOHOL_TOBACCO_DRUGS
+CANNOT_SELL_INFREQUENT_MILD_SEXUAL_CONTENT_NUDITY CANNOT_SELL_FREQUENT_INTENSE
+CANNOT_SELL_FREQUENT_INTENSE_WITHOUT_GRAC CANNOT_SELL_FREQUENT_GAMBLING
+CANNOT_SELL_FREQUENT_ALCOHOL_TOBACCO_DRUGS CANNOT_SELL_FREQUENT_VIOLENCE
+CANNOT_SELL_FREQUENT_SEXUAL_CONTENT_NUDITY CANNOT_SELL_INFREQUENT_ALCOHOL_TOBACCO_DRUGS
+CANNOT_SELL_INFREQUENT_SEXUAL_CONTENT_NUDITY CANNOT_SELL_FREQUENT
+CANNOT_SELL_FREQUENT_WITHOUT_GRAC
+""".split())
 
 
 class PreflightError(ValueError):
@@ -81,10 +106,22 @@ def text_value(value) -> bool:
 
 def source_file(root: Path, relative: str) -> Path:
     path = root / relative
-    if (not path.is_file() or path.is_symlink()
+    if (Path(relative).is_absolute() or not path.is_file() or path.is_symlink()
             or not path.resolve().is_relative_to(root.resolve())):
         raise PreflightError(f"Expected a regular repository file: {relative}")
     return path
+
+
+def reviewed_source_sha256(root: Path) -> str:
+    """Bind the inventory's reviewed paths to the actual reviewed file bytes."""
+    inventory = decode_json(source_file(root, "docs/crypto-inventory.json").read_bytes())
+    paths = inventory.get("reviewed_files")
+    if (not isinstance(paths, list) or not paths or not all(text_value(path) for path in paths)
+            or len(paths) != len(set(paths))):
+        raise PreflightError("Crypto inventory needs a nonempty, unique reviewed_files list")
+    hashes = {name: sha256(source_file(root, name)) for name in sorted(paths)}
+    canonical = json.dumps(hashes, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(canonical).hexdigest()
 
 
 def validate_policy(root: Path, submission: bool = False) -> dict:
@@ -109,6 +146,11 @@ def validate_policy(root: Path, submission: bool = False) -> dict:
             raise PreflightError(f"Apple export policy needs a SHA-256 value for {field}")
         if sha256(source_file(root, relative)) != expected:
             raise PreflightError(f"Apple export review is stale: {relative} changed; review and update the policy")
+    expected_source = policy.get("reviewed_source_sha256")
+    if not isinstance(expected_source, str) or not re.fullmatch(r"[0-9a-f]{64}", expected_source):
+        raise PreflightError("Apple export policy needs a SHA-256 value for reviewed_source_sha256")
+    if reviewed_source_sha256(root) != expected_source:
+        raise PreflightError("Apple export review is stale: reviewed crypto source changed; review and update the policy")
     documentation = policy.get("documentation")
     france = policy.get("france")
     if not isinstance(documentation, dict) or not isinstance(france, dict):
@@ -168,7 +210,7 @@ def load_plist(data: bytes, label: str) -> dict:
         raise PreflightError(f"Missing or oversized Info.plist: {label}")
     try:
         value = plistlib.loads(data)
-    except (ValueError, TypeError, plistlib.InvalidFileException, OverflowError) as error:
+    except (ValueError, TypeError, plistlib.InvalidFileException, OverflowError, xml.parsers.expat.ExpatError) as error:
         raise PreflightError(f"Invalid Info.plist: {label}") from error
     if not isinstance(value, dict):
         raise PreflightError(f"Info.plist must be a dictionary: {label}")
@@ -416,6 +458,37 @@ class AppStoreConnect:
         raise PreflightError("App Store Connect pagination exceeded the evidence page limit")
 
 
+def verify_france_exclusion(attributes: dict) -> None:
+    """Require explicit current exclusion without an active or pending release."""
+    if attributes.get("available") is not False:
+        raise PreflightError("France does not have explicit current store exclusion")
+    preorder = attributes.get("preOrderEnabled")
+    statuses = attributes.get("contentStatuses")
+    if (preorder is not None and preorder is not False) or (statuses is not None and (
+            not isinstance(statuses, list) or not all(isinstance(item, str) and item in RESTRICTED_TERRITORY_STATUSES
+                                                     for item in statuses))):
+        raise PreflightError("France has scheduled, preorder, or unresolved availability; verify exclusion before upload")
+    now = dt.datetime.now(dt.timezone.utc)
+    for field in ("releaseDate", "preOrderPublishDate"):
+        value = attributes.get(field)
+        if value is None:
+            continue
+        try:
+            if not isinstance(value, str) or not value:
+                raise ValueError("invalid date")
+            if re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
+                future = dt.date.fromisoformat(value) > now.date()
+            else:
+                parsed = dt.datetime.fromisoformat(value.replace("Z", "+00:00"))
+                if parsed.tzinfo is None:
+                    raise ValueError("date-time needs a timezone")
+                future = parsed > now
+        except (ValueError, TypeError) as error:
+            raise PreflightError(f"France has an unrecognized {field}; verify availability before upload") from error
+        if future:
+            raise PreflightError("France has scheduled, preorder, or unresolved availability; verify exclusion before upload")
+
+
 def live_store_evidence(client: AppStoreConnect, platform: str, policy: dict,
                         expected_app_id: str | None = None) -> dict:
     apps = client.all_pages("/v1/apps", {"filter[bundleId]": policy["bundle_id"],
@@ -455,12 +528,7 @@ def live_store_evidence(client: AppStoreConnect, platform: str, policy: dict,
     if attributes.get("available") is not expected_available:
         raise PreflightError("Live French App Store availability disagrees with the reviewed release policy")
     if not expected_available:
-        # A selected, scheduled, transitional, or otherwise ambiguous French
-        # release is not evidence of an explicitly excluded territory.
-        if (attributes.get("preOrderEnabled") not in (False, None)
-                or attributes.get("releaseDate") or attributes.get("preOrderPublishDate")
-                or attributes.get("contentStatuses") not in (None, [])):
-            raise PreflightError("France has scheduled, preorder, or unresolved availability; verify exclusion before upload")
+        verify_france_exclusion(attributes)
     declaration_evidence = None
     if policy["uses_non_exempt_encryption"]:
         declarations = client.all_pages("/v1/appEncryptionDeclarations", {
@@ -508,7 +576,8 @@ def preflight(root: Path, platform: str, artifact: Path, client: AppStoreConnect
     return {"schema_version": 1, "purpose": "Engineering release preflight; not a legal classification or filing",
             "live_store_checked": True, "checked_at": dt.datetime.now(dt.timezone.utc).isoformat(),
             "policy_sha256": policy_hash, "inventory_sha256": policy["inventory_sha256"],
-            "pubspec_lock_sha256": policy["pubspec_lock_sha256"], "artifact": built, "app_store_connect": store}
+            "pubspec_lock_sha256": policy["pubspec_lock_sha256"],
+            "reviewed_source_sha256": policy["reviewed_source_sha256"], "artifact": built, "app_store_connect": store}
 
 
 def main(argv: list[str] | None = None) -> int:
