@@ -14,12 +14,13 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import plistlib
 import re
 import shutil
 import subprocess
 import sys
 from pathlib import Path
+
+import apple_export_preflight as apple_export
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -107,39 +108,12 @@ def validate(root: Path) -> dict:
     if overrides:
         names = ", ".join(str(p.relative_to(root)) for p in overrides)
         raise EvidenceError(f"Remove local dependency overrides for release evidence: {names}")
-    for relative in ("ios/Runner/Info.plist", "macos/Runner/Info.plist"):
-        with repository_file(root, relative).open("rb") as source:
-            plist = plistlib.load(source)
-        # The Apple answer must match its evidence. A true answer links to an
-        # Apple-issued code; the reviewed no-documentation answer is only valid
-        # with the France-exclusion decision recorded in the guide.
-        value = plist.get("ITSAppUsesNonExemptEncryption")
-        code = plist.get("ITSEncryptionExportComplianceCode")
-        if value is True:
-            if not isinstance(code, str) or not code.strip():
-                raise EvidenceError(
-                    f"Apple non-exempt declaration in {relative} needs "
-                    "the Apple-issued ITSEncryptionExportComplianceCode"
-                )
-        elif value is False:
-            if code:
-                raise EvidenceError(
-                    f"Apple no-documentation answer in {relative} must not "
-                    "carry ITSEncryptionExportComplianceCode"
-                )
-            guide = repository_file(root, "docs/export-compliance.md").read_text()
-            if (
-                "availableOnFrenchStore=false" not in guide
-                or "ITSAppUsesNonExemptEncryption=false" not in guide
-            ):
-                raise EvidenceError(
-                    f"Apple no-documentation answer in {relative} needs the "
-                    "France-exclusion decision in docs/export-compliance.md"
-                )
-        else:
-            raise EvidenceError(
-                f"Set a reviewed ITSAppUsesNonExemptEncryption answer in {relative}"
-            )
+    try:
+        policy = apple_export.validate_policy(root)
+        for relative in apple_export.SOURCE_PLISTS.values():
+            apple_export.validate_source_plist(root, relative, policy)
+    except apple_export.PreflightError as error:
+        raise EvidenceError(str(error)) from error
     return inventory
 
 
@@ -294,6 +268,7 @@ def collect(root: Path, platform: str, artifacts: list[Path],
         for name in sorted(set(inventory["reviewed_files"]) | {
             str(INVENTORY), "pubspec.yaml", "pubspec.lock", ".fvmrc",
             "ios/Runner/Info.plist", "macos/Runner/Info.plist",
+            apple_export.POLICY_PATH,
         })
     }
     return {
@@ -318,7 +293,13 @@ def collect(root: Path, platform: str, artifacts: list[Path],
             "recording these changes is not approval or a legal classification."
         ),
         "required_providers": sorted(REQUIRED_PROVIDERS),
-        "apple_source_questionnaire_enabled": True,
+        "apple_source_declarations_match_policy": True,
+        "apple_export_policy_sha256": sha256(root / apple_export.POLICY_PATH),
+        "apple_distribution_verified": False,
+        "apple_distribution_note": (
+            "Source checks do not approve distribution. Retain the separate exact-artifact "
+            "and live App Store Connect preflight; complete the France history/channel review."
+        ),
         "inventory_sha256": sha256(root / INVENTORY),
         "reviewed_files_sha256": reviewed_files,
         "native_evidence_sha256": {
@@ -368,7 +349,8 @@ def main(argv: list[str] | None = None) -> int:
         evidence = collect(ROOT, args.platform, args.artifact, args.dependencies, args.require_clean,
                            record_generated_metadata=args.record_generated_metadata)
         args.output_dir.mkdir(parents=True, exist_ok=True)
-        for name in ("pubspec.lock", "docs/crypto-inventory.json", "docs/export-compliance.md"):
+        for name in ("pubspec.lock", "docs/crypto-inventory.json", "docs/export-compliance.md",
+                     apple_export.POLICY_PATH):
             shutil.copyfile(ROOT / name, args.output_dir / Path(name).name)
         for name in evidence["native_evidence_sha256"]:
             target = args.output_dir / "native" / name

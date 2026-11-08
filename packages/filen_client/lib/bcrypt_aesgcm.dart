@@ -185,6 +185,9 @@ class BCryptAesGcm {
 
   /// Encrypt: returns [nonce(12) | ciphertext | tag(16)].
   Uint8List encrypt(Uint8List key, Uint8List plaintext) {
+    if (key.length != 32) {
+      throw ArgumentError('AES-256-GCM requires a 32-byte key');
+    }
     final nonce =
         Uint8List.fromList(List.generate(12, (_) => _rng.nextInt(256)));
     return using((a) {
@@ -220,6 +223,9 @@ class BCryptAesGcm {
 
   /// Decrypt [nonce(12) | ciphertext | tag(16)]; throws on auth failure.
   Uint8List decrypt(Uint8List key, Uint8List data) {
+    if (key.length != 32) {
+      throw ArgumentError('AES-256-GCM requires a 32-byte key');
+    }
     if (data.length < 28) {
       throw const FormatException('Data too short for AES-GCM');
     }

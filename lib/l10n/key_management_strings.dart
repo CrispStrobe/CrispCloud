@@ -16,6 +16,23 @@ class KeyManagementStrings {
 
   static const Map<String, Map<String, String>> _strings = {
     'en': {
+      "fileEncryptionDelegated":
+          "File encryption is configured separately for this provider. Connect first, then import a backed-up key in Key Management before uploading encrypted files.",
+      "fileRecoveryTitle": "Back up your file encryption key",
+      "fileRecoveryWarning":
+          "This key is kept only for this session. Your passphrase alone cannot recover files encrypted with it after a restart. Save these 24 words somewhere safe before uploading encrypted files. Anyone with the words can decrypt those files.",
+      "fileRecoveryConfirm": "Re-enter the 24 saved words",
+      "fileRecoveryConfirmHelp":
+          "Enter all 24 words in order to confirm your backup.",
+      "fileRecoveryMismatch":
+          "The words do not match. Re-enter the saved phrase in the same order.",
+      "fileRecoveryContinue": "Confirm backup and connect",
+      "fileRecoveryCopyFailed":
+          "Could not copy the recovery phrase. Write down the words before continuing.",
+      "passphraseRequired":
+          "Enter a passphrase before enabling file encryption.",
+      "encryptionAlreadyEnabled":
+          "Disable file encryption before importing a different key. Keep a backup of your current key.",
       "keyManagement": "Key Management",
       "inactive":
           "Encryption is not active. Enable it in the connection dialog, or import an existing key below.",
@@ -57,6 +74,23 @@ class KeyManagementStrings {
       "hexLength": "Hex string must have even length, got {count}",
     },
     'de': {
+      "fileEncryptionDelegated":
+          "Für diesen Anbieter wird die Dateiverschlüsselung separat eingerichtet. Stellen Sie zuerst die Verbindung her und importieren Sie dann einen gesicherten Schlüssel in der Schlüsselverwaltung, bevor Sie verschlüsselte Dateien hochladen.",
+      "fileRecoveryTitle": "Dateiverschlüsselungsschlüssel sichern",
+      "fileRecoveryWarning":
+          "Dieser Schlüssel wird nur für diese Sitzung gespeichert. Ihre Passphrase allein kann damit verschlüsselte Dateien nach einem Neustart nicht wiederherstellen. Bewahren Sie diese 24 Wörter sicher auf, bevor Sie verschlüsselte Dateien hochladen. Wer die Wörter kennt, kann diese Dateien entschlüsseln.",
+      "fileRecoveryConfirm": "Die 24 gesicherten Wörter erneut eingeben",
+      "fileRecoveryConfirmHelp":
+          "Geben Sie alle 24 Wörter in der richtigen Reihenfolge ein, um die Sicherung zu bestätigen.",
+      "fileRecoveryMismatch":
+          "Die Wörter stimmen nicht überein. Geben Sie die gesicherte Phrase in derselben Reihenfolge erneut ein.",
+      "fileRecoveryContinue": "Sicherung bestätigen und verbinden",
+      "fileRecoveryCopyFailed":
+          "Die Wiederherstellungsphrase konnte nicht kopiert werden. Schreiben Sie die Wörter auf, bevor Sie fortfahren.",
+      "passphraseRequired":
+          "Geben Sie eine Passphrase ein, bevor Sie die Dateiverschlüsselung aktivieren.",
+      "encryptionAlreadyEnabled":
+          "Deaktivieren Sie die Dateiverschlüsselung, bevor Sie einen anderen Schlüssel importieren. Bewahren Sie eine Sicherung Ihres aktuellen Schlüssels auf.",
       "keyManagement": "Schlüsselverwaltung",
       "inactive":
           "Verschlüsselung ist nicht aktiv. Aktivieren Sie sie im Verbindungsdialog oder importieren Sie unten einen Schlüssel.",
@@ -103,6 +137,23 @@ class KeyManagementStrings {
           "Die Hexadezimalzeichenfolge muss eine gerade Länge haben, erhalten: {count}",
     },
     'fr': {
+      "fileEncryptionDelegated":
+          "Le chiffrement des fichiers se configure séparément pour ce fournisseur. Connectez-vous, puis importez une clé sauvegardée dans la gestion des clés avant de téléverser des fichiers chiffrés.",
+      "fileRecoveryTitle": "Sauvegardez votre clé de chiffrement de fichiers",
+      "fileRecoveryWarning":
+          "Cette clé est conservée uniquement pour cette session. Après un redémarrage, votre phrase secrète seule ne permet pas de récupérer les fichiers chiffrés avec cette clé. Conservez ces 24 mots en lieu sûr avant de téléverser des fichiers chiffrés. Toute personne connaissant ces mots peut déchiffrer ces fichiers.",
+      "fileRecoveryConfirm": "Saisissez à nouveau les 24 mots sauvegardés",
+      "fileRecoveryConfirmHelp":
+          "Saisissez les 24 mots dans l’ordre pour confirmer votre sauvegarde.",
+      "fileRecoveryMismatch":
+          "Les mots ne correspondent pas. Saisissez à nouveau la phrase sauvegardée dans le même ordre.",
+      "fileRecoveryContinue": "Confirmer la sauvegarde et se connecter",
+      "fileRecoveryCopyFailed":
+          "Impossible de copier la phrase de récupération. Notez les mots avant de continuer.",
+      "passphraseRequired":
+          "Saisissez une phrase secrète avant d’activer le chiffrement des fichiers.",
+      "encryptionAlreadyEnabled":
+          "Désactivez le chiffrement des fichiers avant d’importer une autre clé. Conservez une sauvegarde de votre clé actuelle.",
       "keyManagement": "Gestion des clés",
       "inactive":
           "Le chiffrement n’est pas actif. Activez-le dans la connexion ou importez une clé ci-dessous.",
@@ -146,6 +197,23 @@ class KeyManagementStrings {
           "La chaîne hexadécimale doit avoir une longueur paire ; reçu : {count}",
     },
     'es': {
+      "fileEncryptionDelegated":
+          "El cifrado de archivos se configura por separado para este proveedor. Conéctate y luego importa una clave guardada en Gestión de claves antes de subir archivos cifrados.",
+      "fileRecoveryTitle": "Guarda tu clave de cifrado de archivos",
+      "fileRecoveryWarning":
+          "Esta clave se conserva solo durante esta sesión. Tras reiniciar, tu frase de contraseña por sí sola no puede recuperar los archivos cifrados con ella. Guarda estas 24 palabras en un lugar seguro antes de subir archivos cifrados. Cualquiera que conozca las palabras puede descifrar esos archivos.",
+      "fileRecoveryConfirm": "Vuelve a introducir las 24 palabras guardadas",
+      "fileRecoveryConfirmHelp":
+          "Introduce las 24 palabras en orden para confirmar la copia.",
+      "fileRecoveryMismatch":
+          "Las palabras no coinciden. Vuelve a introducir la frase guardada en el mismo orden.",
+      "fileRecoveryContinue": "Confirmar copia y conectar",
+      "fileRecoveryCopyFailed":
+          "No se pudo copiar la frase de recuperación. Anota las palabras antes de continuar.",
+      "passphraseRequired":
+          "Introduce una frase de contraseña antes de activar el cifrado de archivos.",
+      "encryptionAlreadyEnabled":
+          "Desactiva el cifrado de archivos antes de importar una clave diferente. Guarda una copia de tu clave actual.",
       "keyManagement": "Gestión de claves",
       "inactive":
           "El cifrado no está activo. Actívalo en el diálogo de conexión o importa una clave abajo.",
@@ -189,6 +257,23 @@ class KeyManagementStrings {
           "La cadena hexadecimal debe tener longitud par; recibida: {count}",
     },
     'pt': {
+      "fileEncryptionDelegated":
+          "A criptografia de arquivos é configurada separadamente para este provedor. Conecte-se e importe uma chave de backup no Gerenciamento de chaves antes de enviar arquivos criptografados.",
+      "fileRecoveryTitle": "Faça backup da sua chave de criptografia de arquivos",
+      "fileRecoveryWarning":
+          "Esta chave é mantida apenas durante esta sessão. Após reiniciar, sua frase de senha sozinha não pode recuperar os arquivos criptografados com ela. Guarde estas 24 palavras em um lugar seguro antes de enviar arquivos criptografados. Quem tiver as palavras poderá descriptografar esses arquivos.",
+      "fileRecoveryConfirm": "Digite novamente as 24 palavras salvas",
+      "fileRecoveryConfirmHelp":
+          "Digite todas as 24 palavras na ordem para confirmar o backup.",
+      "fileRecoveryMismatch":
+          "As palavras não correspondem. Digite novamente a frase salva na mesma ordem.",
+      "fileRecoveryContinue": "Confirmar backup e conectar",
+      "fileRecoveryCopyFailed":
+          "Não foi possível copiar a frase de recuperação. Anote as palavras antes de continuar.",
+      "passphraseRequired":
+          "Digite uma frase de senha antes de ativar a criptografia de arquivos.",
+      "encryptionAlreadyEnabled":
+          "Desative a criptografia de arquivos antes de importar uma chave diferente. Mantenha um backup da chave atual.",
       "keyManagement": "Gerenciamento de chaves",
       "inactive":
           "A criptografia não está ativa. Ative-a na conexão ou importe uma chave abaixo.",
@@ -233,6 +318,17 @@ class KeyManagementStrings {
           "A sequência hexadecimal deve ter tamanho par; recebido: {count}",
     },
     'zh': {
+      "fileEncryptionDelegated": "此提供商的文件加密需单独设置。请先连接，再在密钥管理中导入已备份的密钥，然后上传加密文件。",
+      "fileRecoveryTitle": "备份文件加密密钥",
+      "fileRecoveryWarning":
+          "此密钥仅保留在当前会话中。重启后，仅凭密码短语无法恢复用此密钥加密的文件。上传加密文件前，请将这 24 个单词妥善保存。任何获得这些单词的人都能解密这些文件。",
+      "fileRecoveryConfirm": "重新输入已保存的 24 个单词",
+      "fileRecoveryConfirmHelp": "按顺序输入全部 24 个单词以确认备份。",
+      "fileRecoveryMismatch": "单词不匹配。请按相同顺序重新输入已保存的恢复短语。",
+      "fileRecoveryContinue": "确认备份并连接",
+      "fileRecoveryCopyFailed": "无法复制恢复短语。请先记下这些单词再继续。",
+      "passphraseRequired": "启用文件加密前，请输入密码短语。",
+      "encryptionAlreadyEnabled": "导入其他密钥前，请先禁用文件加密，并保留当前密钥的备份。",
       "keyManagement": "密钥管理",
       "inactive": "加密未启用。请在连接对话框中启用，或在下方导入现有密钥。",
       "exportTab": "导出 / 备份",
@@ -269,6 +365,17 @@ class KeyManagementStrings {
       "hexLength": "十六进制字符串的长度必须为偶数，实际为 {count}",
     },
     'ja': {
+      "fileEncryptionDelegated": "このプロバイダーのファイル暗号化は別途設定します。まず接続し、キー管理でバックアップ済みのキーをインポートしてから、暗号化したファイルをアップロードしてください。",
+      "fileRecoveryTitle": "ファイル暗号化キーをバックアップ",
+      "fileRecoveryWarning":
+          "このキーは現在のセッション中のみ保持されます。再起動後は、パスフレーズだけではこのキーで暗号化したファイルを復元できません。暗号化したファイルをアップロードする前に、この 24 語を安全な場所に保存してください。この単語を知っている人は、それらのファイルを復号できます。",
+      "fileRecoveryConfirm": "保存した 24 語を再入力",
+      "fileRecoveryConfirmHelp": "バックアップを確認するため、24 語すべてを順番に入力してください。",
+      "fileRecoveryMismatch": "単語が一致しません。保存したフレーズを同じ順序で再入力してください。",
+      "fileRecoveryContinue": "バックアップを確認して接続",
+      "fileRecoveryCopyFailed": "復元フレーズをコピーできませんでした。続行する前に単語を書き留めてください。",
+      "passphraseRequired": "ファイル暗号化を有効にする前にパスフレーズを入力してください。",
+      "encryptionAlreadyEnabled": "別のキーをインポートする前にファイル暗号化を無効にし、現在のキーのバックアップを保管してください。",
       "keyManagement": "キー管理",
       "inactive": "暗号化は有効ではありません。接続画面で有効にするか、以下から既存のキーをインポートしてください。",
       "exportTab": "エクスポート / バックアップ",
@@ -306,6 +413,17 @@ class KeyManagementStrings {
       "hexLength": "16 進文字列の長さは偶数である必要があります。入力: {count}",
     },
     'ko': {
+      "fileEncryptionDelegated": "이 공급자의 파일 암호화는 별도로 설정합니다. 먼저 연결한 뒤 키 관리에서 백업한 키를 가져온 후 암호화된 파일을 업로드하세요.",
+      "fileRecoveryTitle": "파일 암호화 키 백업",
+      "fileRecoveryWarning":
+          "이 키는 현재 세션에만 보관됩니다. 재시작 후에는 암호문구만으로 이 키로 암호화한 파일을 복구할 수 없습니다. 암호화된 파일을 업로드하기 전에 이 24개 단어를 안전한 곳에 보관하세요. 이 단어를 아는 사람은 누구나 해당 파일을 복호화할 수 있습니다.",
+      "fileRecoveryConfirm": "저장한 24개 단어 다시 입력",
+      "fileRecoveryConfirmHelp": "백업을 확인하려면 24개 단어를 모두 순서대로 입력하세요.",
+      "fileRecoveryMismatch": "단어가 일치하지 않습니다. 저장한 문구를 같은 순서로 다시 입력하세요.",
+      "fileRecoveryContinue": "백업 확인 후 연결",
+      "fileRecoveryCopyFailed": "복구 문구를 복사할 수 없습니다. 계속하기 전에 단어를 적어 두세요.",
+      "passphraseRequired": "파일 암호화를 활성화하기 전에 암호문구를 입력하세요.",
+      "encryptionAlreadyEnabled": "다른 키를 가져오기 전에 파일 암호화를 비활성화하세요. 현재 키의 백업을 보관하세요.",
       "keyManagement": "키 관리",
       "inactive": "암호화가 활성화되어 있지 않습니다. 연결 대화상자에서 활성화하거나 아래에서 기존 키를 가져오세요.",
       "exportTab": "내보내기 / 백업",
@@ -343,6 +461,22 @@ class KeyManagementStrings {
       "hexLength": "16진수 문자열 길이는 짝수여야 합니다. 입력: {count}",
     },
     'ar': {
+      "fileEncryptionDelegated":
+          "يُضبط تشفير الملفات بشكل منفصل لهذا المزوّد. اتصل أولًا، ثم استورد مفتاحًا محفوظًا احتياطيًا من إدارة المفاتيح قبل رفع الملفات المشفّرة.",
+      "fileRecoveryTitle": "احتفظ بنسخة احتياطية من مفتاح تشفير الملفات",
+      "fileRecoveryWarning":
+          "يُحتفظ بهذا المفتاح خلال هذه الجلسة فقط. بعد إعادة التشغيل، لا تكفي عبارة المرور وحدها لاستعادة الملفات المشفّرة به. احفظ هذه الكلمات الأربع والعشرين في مكان آمن قبل رفع الملفات المشفّرة. يمكن لأي شخص لديه هذه الكلمات فك تشفير تلك الملفات.",
+      "fileRecoveryConfirm": "أعد إدخال الكلمات الأربع والعشرين المحفوظة",
+      "fileRecoveryConfirmHelp":
+          "أدخل الكلمات الأربع والعشرين كلها بالترتيب لتأكيد النسخة الاحتياطية.",
+      "fileRecoveryMismatch":
+          "الكلمات غير متطابقة. أعد إدخال العبارة المحفوظة بالترتيب نفسه.",
+      "fileRecoveryContinue": "تأكيد النسخة الاحتياطية والاتصال",
+      "fileRecoveryCopyFailed":
+          "تعذّر نسخ عبارة الاستعادة. دوّن الكلمات قبل المتابعة.",
+      "passphraseRequired": "أدخل عبارة مرور قبل تفعيل تشفير الملفات.",
+      "encryptionAlreadyEnabled":
+          "عطّل تشفير الملفات قبل استيراد مفتاح مختلف. احتفظ بنسخة احتياطية من مفتاحك الحالي.",
       "keyManagement": "إدارة المفاتيح",
       "inactive":
           "التشفير غير نشط. فعّله في نافذة الاتصال أو استورد مفتاحًا موجودًا أدناه.",

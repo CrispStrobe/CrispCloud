@@ -62,8 +62,29 @@ class ReleaseEvidenceTests(unittest.TestCase):
         self.write("pubspec.yaml", "name: fixture\n")
         self.write("pubspec.lock", "packages:\n  filen_client:\n  internxt_client:\n  pointycastle:\n")
         self.write(".fvmrc", '{"flutter":"3.47.8"}')
+        self.policy = {
+            "schema_version": 1,
+            "reviewed_on": "2026-11-08",
+            "bundle_id": "com.CrispStrobe.cloud",
+            "uses_non_exempt_encryption": False,
+            "documentation": {"status": "not_required", "reference": "Reviewed fixture",
+                              "compliance_code": None},
+            "france": {"store_availability": "excluded", "prior_distribution_review": "pending",
+                       "reference": None},
+        }
+        self.refresh_policy()
         for name in ("ios/Runner/Info.plist", "macos/Runner/Info.plist"):
             self.write(name, plistlib.dumps({"ITSAppUsesNonExemptEncryption": False}))
+
+    def refresh_policy(self):
+        self.policy["inventory_sha256"] = evidence.sha256(self.root / "docs/crypto-inventory.json")
+        self.policy["pubspec_lock_sha256"] = evidence.sha256(self.root / "pubspec.lock")
+        files = {name: evidence.sha256(self.root / name)
+                 for name in sorted(self.inventory["reviewed_files"])}
+        self.policy["reviewed_source_sha256"] = hashlib.sha256(
+            json.dumps(files, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        ).hexdigest()
+        self.write("docs/apple-export-policy.json", json.dumps(self.policy))
 
     def write(self, name, contents):
         path = self.root / name
@@ -148,15 +169,39 @@ class ReleaseEvidenceTests(unittest.TestCase):
     def test_reviewed_false_apple_declaration_passes(self):
         evidence.validate(self.root)
 
-    def test_false_apple_declaration_without_france_evidence_fails(self):
-        self.write("docs/export-compliance.md", "Release review fixture\n")
-        with self.assertRaisesRegex(evidence.EvidenceError, "France-exclusion"):
+    def test_false_apple_declaration_without_structured_evidence_fails(self):
+        # Historical or negated prose must never authorize a release.
+        self.write("docs/export-compliance.md", "Rejected example: availableOnFrenchStore=false "
+                   "and ITSAppUsesNonExemptEncryption=false. Current distribution unknown.")
+        (self.root / "docs/apple-export-policy.json").unlink()
+        with self.assertRaisesRegex(evidence.EvidenceError, "apple-export-policy"):
             evidence.validate(self.root)
 
-    def test_true_apple_declaration_without_code_fails(self):
-        self.write("ios/Runner/Info.plist", plistlib.dumps({"ITSAppUsesNonExemptEncryption": True}))
-        with self.assertRaisesRegex(evidence.EvidenceError, "ComplianceCode"):
+    def test_false_apple_declaration_cannot_enable_france(self):
+        self.policy["france"]["store_availability"] = "included"
+        self.refresh_policy()
+        with self.assertRaisesRegex(evidence.EvidenceError, "France"):
             evidence.validate(self.root)
+
+    def test_source_plist_must_match_structured_answer(self):
+        self.write("ios/Runner/Info.plist", plistlib.dumps({"ITSAppUsesNonExemptEncryption": True}))
+        with self.assertRaisesRegex(evidence.EvidenceError, "disagrees"):
+            evidence.validate(self.root)
+
+    def test_non_exempt_apple_declaration_requires_issued_code(self):
+        self.policy["uses_non_exempt_encryption"] = True
+        self.policy["documentation"]["status"] = "approved"
+        self.refresh_policy()
+        with self.assertRaisesRegex(evidence.EvidenceError, "compliance_code"):
+            evidence.validate(self.root)
+
+    def test_pending_distribution_review_is_not_source_approval(self):
+        with patch.object(evidence, "git", side_effect=self.git_fixture):
+            result = evidence.collect(self.root, "source", [], None, False)
+        self.assertTrue(result["apple_source_declarations_match_policy"])
+        self.assertFalse(result["apple_distribution_verified"])
+        self.assertEqual(result["apple_export_policy_sha256"],
+                         evidence.sha256(self.root / "docs/apple-export-policy.json"))
 
     def test_unreviewed_local_dependency_override_fails(self):
         self.write("packages/client/pubspec_overrides.yaml", "dependency_overrides: {}\n")
@@ -318,7 +363,7 @@ class ReleaseEvidenceTests(unittest.TestCase):
                 path = self.root / name
                 baseline = path.read_bytes()
                 path.write_bytes(baseline + b"\n# Unreviewed input change\n")
-                with self.assertRaisesRegex(evidence.EvidenceError, "differs from HEAD"):
+                with self.assertRaisesRegex(evidence.EvidenceError, "differs from HEAD|review is stale"):
                     self.record_generated("ios")
                 path.write_bytes(baseline)
 

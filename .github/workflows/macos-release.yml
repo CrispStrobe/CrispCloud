@@ -71,6 +71,8 @@ jobs:
           flutter test --no-pub test/aes_siv_test.dart test/cryptomator_test.dart \
             test/veracrypt_header_vectors_test.dart test/internxt_secure_config_test.dart \
             test/crypto_paths_test.dart test/filen_adapter_test.dart \
+            test/filen_crypto_validation_test.dart test/encryption_key_lifecycle_test.dart \
+            test/file_encryption_recovery_test.dart \
             test/filen_bounded_transfer_test.dart test/internxt_rewire_test.dart \
             test/internxt_download_path_test.dart test/internxt_bounded_transfer_test.dart \
             test/tls_verification_test.dart test/custom_ca_test.dart \
@@ -273,6 +275,8 @@ jobs:
           dart pub deps --json > build/export-compliance/dependencies.json
           python3 tool/crypto_release_evidence.py --platform macos --require-clean --record-generated-metadata \
             --artifact "$PKG" --dependencies build/export-compliance/dependencies.json
+          python3 tool/apple_export_preflight.py --platform macos --check-artifact \
+            --artifact "$PKG" --output build/export-compliance/apple-artifact.json
 
       - name: Capture unapproved macOS project changes on failure
         if: failure()
@@ -305,8 +309,16 @@ jobs:
 
       - name: Upload to App Store Connect
         if: github.event_name == 'push' || inputs.dry_run == false
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_APP_ID: ${{ secrets.ASC_APP_ID }}
+          ASC_KEY_PATH: .appstoreconnect/AuthKey_${{ secrets.ASC_KEY_ID }}.p8
         run: |
           set -euo pipefail
+          # GET-only check of the exact signed artifact and live store evidence.
+          # Any missing/pending France review stops before the upload command.
+          python3 tool/apple_export_preflight.py --platform macos --artifact "$PKG"
           xcrun altool --upload-package "$PKG" --type macos \
             --apple-id "${{ secrets.ASC_APP_ID }}" \
             --bundle-id "${{ env.BUNDLE_ID }}" \
@@ -317,3 +329,12 @@ jobs:
       - name: Note when the upload was skipped
         if: github.event_name != 'push' && inputs.dry_run != false
         run: echo "::notice::dry_run — built and signed, upload SKIPPED. Re-run with dry_run=false to upload."
+
+      - name: Retain live Apple export preflight evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-apple-export-preflight
+          path: build/export-compliance/apple-export-preflight.json
+          if-no-files-found: ignore
+          retention-days: 90

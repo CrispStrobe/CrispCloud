@@ -52,13 +52,16 @@ void main() {
     List<int> plain, {
     String? hash,
     int? size,
+    bool includeHash = true,
+    int? reportedChunks,
+    List<int>? chunkOrder,
   }) async {
     final metadata = await client.crypto.encryptMetadata002(
       jsonEncode({
         'name': 'source.bin',
         'size': size ?? plain.length,
         'key': _fileKey,
-        'hash': hash ?? sha512.convert(plain).toString(),
+        if (includeHash) 'hash': hash ?? sha512.convert(plain).toString(),
       }),
       _master,
     );
@@ -83,7 +86,7 @@ void main() {
             'data': {
               'uuid': 'source-id',
               'metadata': metadata,
-              'chunks': chunks.length,
+              'chunks': reportedChunks ?? chunks.length,
               'region': 'region',
               'bucket': 'bucket',
             },
@@ -93,8 +96,9 @@ void main() {
       }
       expect(request.url.host, 'egest.filen.io');
       expect(request.headers['authorization'], isNull);
+      final index = int.parse(request.url.pathSegments.last);
       return http.Response.bytes(
-        chunks[int.parse(request.url.pathSegments.last)],
+        chunks[chunkOrder?[index] ?? index],
         200,
       );
     };
@@ -107,6 +111,20 @@ void main() {
     masterKeys: [_master],
     checkCurrent: check ?? () {},
   );
+
+  FilenClientAdapter downloadAdapter() {
+    client.cache.pathCache['source.bin'] = {
+      'type': 'file',
+      'uuid': 'source-id',
+    };
+    return FilenClientAdapter.withClient(
+      client,
+      config: FilenConfigService(
+        configPath: directory.path,
+        secureStorage: InMemorySecureStorage(),
+      ),
+    );
+  }
 
   Future<void> upload(
     Stream<List<int>> source,
@@ -151,6 +169,93 @@ void main() {
       await expectLater(download().drain<void>(), throwsStateError);
     },
   );
+
+  test('buffered adapter rejects reordered or duplicated valid GCM chunks', () async {
+    final plain = Uint8List(_chunkSize * 2)
+      ..fillRange(0, _chunkSize, 0x11)
+      ..fillRange(_chunkSize, _chunkSize * 2, 0x22);
+    final adapter = downloadAdapter();
+    for (final order in [[1, 0], [0, 0]]) {
+      await prepareDownload(plain, chunkOrder: order);
+      await expectLater(
+        adapter.downloadFileBytes('/source.bin'),
+        throwsStateError,
+      );
+    }
+  });
+
+  test('buffered adapter rejects truncated manifests and wrong hashes', () async {
+    final adapter = downloadAdapter();
+    await prepareDownload(Uint8List(_chunkSize + 1), reportedChunks: 1);
+    await expectLater(adapter.downloadFileBytes('/source.bin'), throwsStateError);
+    expect(requests.length, 1, reason: 'Reject a changed count before chunk I/O');
+    await prepareDownload([1, 2, 3], hash: 'wrong');
+    await expectLater(adapter.downloadFileBytes('/source.bin'), throwsStateError);
+    await prepareDownload([1, 2, 3], size: 4);
+    await expectLater(adapter.downloadFileBytes('/source.bin'), throwsStateError);
+  });
+
+  test('file adapter preserves the destination until final verification', () async {
+    final adapter = downloadAdapter();
+    final destination = File('${directory.path}/destination.bin');
+    await destination.writeAsBytes([9, 8, 7]);
+    await prepareDownload([1, 2, 3], hash: 'wrong');
+    await expectLater(
+      adapter.downloadFileByPath('/source.bin', destination.path),
+      throwsStateError,
+    );
+    expect(await destination.readAsBytes(), [9, 8, 7]);
+    expect(
+      await directory.list().where(
+        (entry) => entry is Directory &&
+            entry.path.contains('.crisp-internxt-download-'),
+      ).toList(),
+      isEmpty,
+      reason: 'Failed authenticated downloads must remove private staging',
+    );
+
+    await prepareDownload([1, 2, 3]);
+    await adapter.downloadFileByPath('/source.bin', destination.path);
+    expect(await destination.readAsBytes(), [1, 2, 3]);
+  });
+
+  test('failed file verification does not create a new destination', () async {
+    final adapter = downloadAdapter();
+    final destination = File('${directory.path}/new-destination.bin');
+    await prepareDownload([1, 2, 3], hash: 'wrong');
+    await expectLater(
+      adapter.downloadFileByPath('/source.bin', destination.path),
+      throwsStateError,
+    );
+    expect(await destination.exists(), isFalse);
+  });
+
+  test('adapter readers retain size-checked legacy files without a hash', () async {
+    final adapter = downloadAdapter();
+    final destination = File('${directory.path}/legacy.bin');
+    await prepareDownload([1, 2, 3], includeHash: false);
+    expect(await adapter.downloadFileBytes('/source.bin'), [1, 2, 3]);
+    await adapter.downloadFileByPath('/source.bin', destination.path);
+    expect(await destination.readAsBytes(), [1, 2, 3]);
+    await prepareDownload([1, 2, 3], includeHash: false, size: 4);
+    await expectLater(adapter.downloadFileBytes('/source.bin'), throwsStateError);
+  });
+
+  test('account changes cannot publish a file after its last chunk', () async {
+    final adapter = downloadAdapter();
+    final destination = File('${directory.path}/destination.bin');
+    await destination.writeAsBytes([9]);
+    await prepareDownload([1, 2, 3]);
+    await expectLater(
+      adapter.downloadFileByPath(
+        '/source.bin',
+        destination.path,
+        onProgress: (_, _) => client.apiKey = 'different-account-token',
+      ),
+      throwsStateError,
+    );
+    expect(await destination.readAsBytes(), [9]);
+  });
 
   test(
     'download rejects oversized encrypted chunks before decrypting',

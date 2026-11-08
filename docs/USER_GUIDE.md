@@ -333,20 +333,23 @@ On desktop, a system tray icon shows sync status. On Android, a foreground servi
 
 ## Client-Side Encryption
 
-CrispCloud can encrypt all file data before upload and decrypt on download, regardless of the provider. The provider never sees plaintext.
+The optional encryption wrapper encrypts file contents before upload and decrypts them on download. It applies to transfers through the active encrypted connection; provider-native encryption, background jobs and other connections are separate. File names and sizes remain visible in ordinary setup.
 
 ### Enabling Encryption
 
-1. Open the connection dialog for any provider.
+1. Open a provider connection dialog that offers client-side encryption. The dedicated Azure/B2 dialogs do not expose this option.
 2. Toggle **Enable client-side encryption**.
 3. Enter a passphrase. CrispCloud derives a 256-bit AES-GCM key using PBKDF2 with 100,000 iterations.
-4. Connect. Every file uploaded through this connection is encrypted; every download is decrypted transparently.
+4. Save the displayed 24-word recovery phrase somewhere safe and re-enter it to confirm. Cancelling does not activate file encryption.
+5. Connect. The exact confirmed key encrypts uploads and decrypts downloads through this connection. Keep separate connections for existing plaintext files.
+
+The key is kept for this session only. Restarting and entering the same passphrase generates a different salt/key; it will not recover old files. Import the original recovery phrase, raw key or backup bundle to regain access. Logging out or changing providers retires the active encryption session.
 
 When encryption is active, a lock icon appears in the status bar. Provider capabilities that require server-side access (sharing, thumbnails, full-text search) are automatically disabled for encrypted connections.
 
 ### Encrypted Filenames
 
-In the connection dialog, toggle **Encrypt filenames** to store filenames as base64url-encoded ciphertext on the server. This prevents the provider from inferring content from filenames.
+Ordinary setup encrypts file contents and leaves filenames visible. The code contains filename-encryption helpers, but the current connection dialog does not offer a filename-encryption toggle or a complete encrypted-name directory view.
 
 ### Key Management
 
@@ -355,7 +358,9 @@ Go to **Settings → Encryption → Manage Keys** (or press the key icon when co
 - **Export master key**: copies the 64-character hex key to the clipboard for backup.
 - **BIP39 mnemonic**: generates a 24-word recovery phrase from your master key. Store this offline.
 - **Import key**: restore a key from hex or a 24-word mnemonic.
-- **Backup bundle**: export an encrypted bundle containing key verification data.
+- **Backup bundle**: export readable JSON containing the key mnemonic, salt and an encrypted verification value. The bundle itself is **not encrypted**; protect it like the raw key.
+
+Disable an active encryption connection before importing a different key, and retain the old key for its existing files. Importing the current key again does not replace it.
 
 Losing your key means losing access to all encrypted files. Always keep a BIP39 backup.
 

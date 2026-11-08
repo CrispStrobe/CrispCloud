@@ -35,9 +35,16 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Verify release evidence failure paths
-        run: python3 -m unittest discover -s tool -p test_crypto_release_evidence.py -v
+        run: |
+          python3 -m unittest discover -s tool -p test_crypto_release_evidence.py -v
+          python3 -m unittest discover -s tool -p test_apple_export_preflight.py -v
       - name: Check provider dependencies and Apple declaration
         run: python3 tool/crypto_release_evidence.py --check
+      - name: Verify TestFlight distribution failure paths
+        run: |
+          ruby -c tool/testflight_external.rb
+          ruby -c tool/testflight_export_guard.rb
+          ruby tool/test_testflight_export_guard.rb
 
   # ---------- Analyze + Test with coverage ----------
   analyze:
@@ -188,7 +195,9 @@ jobs:
 
       - name: Verify native plist comparison and evidence failure paths
         if: runner.os == 'macOS'
-        run: python3 -m unittest discover -s tool -p test_crypto_release_evidence.py -v
+        run: |
+          python3 -m unittest discover -s tool -p test_crypto_release_evidence.py -v
+          python3 -m unittest discover -s tool -p test_apple_export_preflight.py -v
 
       - name: Verify custom keychain isolation without changing user defaults
         if: runner.os == 'macOS'
@@ -222,7 +231,9 @@ jobs:
           python3 tool/with_ci_system_sqlite.py flutter test --no-pub
           test/aes_siv_test.dart test/cryptomator_test.dart
           test/veracrypt_test.dart test/veracrypt_header_vectors_test.dart
-          test/encryption_service_test.dart test/internxt_secure_config_test.dart
+          test/encryption_service_test.dart test/filen_crypto_validation_test.dart
+          test/encryption_key_lifecycle_test.dart test/file_encryption_recovery_test.dart
+          test/internxt_secure_config_test.dart
           test/secure_storage_test.dart
           test/secure_storage_file_test.dart
           test/secure_storage_web_test.dart
@@ -591,6 +602,8 @@ jobs:
           dart pub deps --json > build/export-compliance/dependencies.json
           python3 tool/crypto_release_evidence.py --platform macos --require-clean --record-generated-metadata \
             --artifact crispcloud-macos-release.zip --dependencies build/export-compliance/dependencies.json
+          python3 tool/apple_export_preflight.py --platform macos --check-artifact \
+            --artifact crispcloud-macos-release.zip --output build/export-compliance/apple-artifact.json
 
       - name: Capture unapproved macOS project changes on failure
         if: failure()
@@ -713,6 +726,8 @@ jobs:
           dart pub deps --json > build/export-compliance/dependencies.json
           python3 tool/crypto_release_evidence.py --platform ios --require-clean --record-generated-metadata \
             --artifact crispcloud-ios-nosign.zip --dependencies build/export-compliance/dependencies.json
+          python3 tool/apple_export_preflight.py --platform ios --check-artifact \
+            --artifact crispcloud-ios-nosign.zip --output build/export-compliance/apple-artifact.json
 
       - name: Capture unapproved iOS project changes on failure
         if: failure()

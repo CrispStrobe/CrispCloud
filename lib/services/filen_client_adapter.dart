@@ -1,4 +1,6 @@
 // lib/services/filen_client_adapter.dart
+import 'dart:typed_data';
+
 import 'cloud_storage_interface.dart';
 
 import 'package:filen_client/filen_client.dart';
@@ -10,6 +12,7 @@ import 'package:flutter/foundation.dart'; // for kIsWeb
 import 'log_service.dart';
 import 'upload_temp_file.dart';
 import 'filen_stream_transfer.dart';
+import 'internxt_transfer_platform.dart' show saveInternxtDownload;
 import './filen_operation_failure.dart';
 
 class FilenClientAdapter extends CloudStorageClient
@@ -196,24 +199,17 @@ class FilenClientAdapter extends CloudStorageClient
     String remotePath, {
     Function(int, int)? onProgress,
   }) async {
-    // 1. Resolve remote path to UUID
-    final resolved = await _client.resolvePath(remotePath);
-    if (resolved['type'] != 'file') {
-      throw FilenOperationFailure(
-        FilenOperationCode.notFile,
-        'Remote path is not a file',
-      );
+    // Consume through EOF before returning any bytes. Chunk GCM tags do not
+    // bind their order: the verified stream also checks the authenticated size
+    // and whole-file hash when the provider metadata contains one.
+    final bytes = BytesBuilder(copy: false);
+    await for (final chunk in downloadStream(
+      remotePath,
+      onProgress: onProgress,
+    )) {
+      bytes.add(chunk);
     }
-    final uuid = resolved['uuid'];
-
-    // 2. Download bytes directly
-    // Note: FilenClient needs a method for this.
-    // Assuming you have added `downloadFileBytes(uuid)` to FilenClient as discussed,
-    // or use the internal HTTP client logic here.
-
-    // If FilenClient doesn't support this yet, you must add it there.
-    // Here is how you would call it:
-    return await _client.downloadFileBytes(uuid, onProgress: onProgress);
+    return bytes.takeBytes();
   }
 
   @override
@@ -345,23 +341,15 @@ class FilenClientAdapter extends CloudStorageClient
     String localPath, {
     Function(int, int)? onProgress,
   }) async {
-    // 1. Resolve remote path to UUID
-    final resolved = await _client.resolvePath(remotePath);
-    if (resolved['type'] != 'file') {
-      throw FilenOperationFailure(
-        FilenOperationCode.notFile,
-        'Remote path is not a file',
-      );
-    }
-    final uuid = resolved['uuid'];
-
-    // 2. Download using UUID to specific destination
-    // FilenClient.downloadFile signature:
-    // Future<Map<String, dynamic>> downloadFile(String uuid, {String? savePath, Function(int, int)? onProgress})
-    await _client.downloadFile(
-      uuid,
-      savePath: localPath,
-      onProgress: onProgress,
+    final captured = _captureTransfer();
+    // Reuse the existing platform publisher: private staging until stream EOF,
+    // then atomic replacement (or a verified copy for selected-file access).
+    // A bad final hash, truncated transfer or account switch must not overwrite
+    // an existing destination with partially verified plaintext.
+    await saveInternxtDownload(
+      downloadStream(remotePath, onProgress: onProgress),
+      localPath,
+      checkCurrent: captured.$4,
     );
   }
 

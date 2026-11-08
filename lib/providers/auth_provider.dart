@@ -98,9 +98,14 @@ class AuthNotifier extends ChangeNotifier {
       await prefs.setString('cloud_provider', provider.name);
 
       // Create config service for new provider
-      _config = _createConfigForProvider(provider);
+      final config = _createConfigForProvider(provider);
+      final client = CloudStorageFactory.create(provider, config: config);
+      // Recovery can install a key before login. Retire that disconnected
+      // session too, only after the replacement client was constructed.
+      disableEncryption();
+      _config = config;
       _currentProvider = provider;
-      _cloudClient = CloudStorageFactory.create(provider, config: _config);
+      _cloudClient = client;
 
       await _attemptAutoLogin();
       notifyListeners();
@@ -188,6 +193,9 @@ class AuthNotifier extends ChangeNotifier {
     }
     _isConnected = false;
     _userEmail = null;
+    // Session encryption must not follow a later account/provider login, or
+    // leave key-management UI displaying a key for an unwrapped client.
+    disableEncryption();
     notifyListeners();
   }
 
@@ -196,29 +204,35 @@ class AuthNotifier extends ChangeNotifier {
   Uint8List? _encryptionSalt;
 
   /// The current encryption key (null if encryption is disabled).
-  Uint8List? get encryptionKey => _encryptionKey;
+  Uint8List? get encryptionKey => _encryptionKey == null
+      ? null : Uint8List.fromList(_encryptionKey!);
 
   /// The salt used to derive the encryption key.
-  Uint8List? get encryptionSalt => _encryptionSalt;
+  Uint8List? get encryptionSalt => _encryptionSalt == null
+      ? null : Uint8List.fromList(_encryptionSalt!);
 
   void enableEncryption(String passphrase) {
     if (_cloudClient is EncryptedStorageWrapper) return;
+    if (passphrase.isEmpty) {
+      throw ArgumentError('File encryption requires a nonempty passphrase');
+    }
     final salt = EncryptionService.generateSalt();
     final key = EncryptionService.deriveKey(passphrase, salt);
-    _encryptionKey = key;
-    _encryptionSalt = salt;
-    _cloudClient = EncryptedStorageWrapper(
-      inner: _cloudClient,
-      encryptionKey: key,
-    );
-    notifyListeners();
+    enableEncryptionWithKey(key, salt);
   }
 
   /// Enable encryption with a pre-existing key and salt (e.g. from mnemonic recovery).
   void enableEncryptionWithKey(Uint8List key, Uint8List salt) {
-    if (_cloudClient is EncryptedStorageWrapper) return;
-    _encryptionKey = key;
-    _encryptionSalt = salt;
+    EncryptionService.validateKey(key);
+    if (_cloudClient is EncryptedStorageWrapper) {
+      if (listEquals(_encryptionKey, key)) return;
+      throw const EncryptionFormatException(
+        'Disable file encryption before importing a different key',
+        EncryptionFormatError.encryptionAlreadyEnabled,
+      );
+    }
+    _encryptionKey = Uint8List.fromList(key);
+    _encryptionSalt = Uint8List.fromList(salt);
     _cloudClient = EncryptedStorageWrapper(
       inner: _cloudClient,
       encryptionKey: key,
@@ -227,12 +241,14 @@ class AuthNotifier extends ChangeNotifier {
   }
 
   void disableEncryption() {
+    final hadEncryption = isEncryptionEnabled ||
+        _encryptionKey != null || _encryptionSalt != null;
     if (_cloudClient is EncryptedStorageWrapper) {
       _cloudClient = (_cloudClient as EncryptedStorageWrapper).inner;
-      _encryptionKey = null;
-      _encryptionSalt = null;
-      notifyListeners();
     }
+    _encryptionKey = null;
+    _encryptionSalt = null;
+    if (hadEncryption) notifyListeners();
   }
 
   // --- Ensure authenticated (used by transfer provider) ---

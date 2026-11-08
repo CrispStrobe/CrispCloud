@@ -57,11 +57,15 @@ class FilenCrypto {
   // File-chunk AES-256-GCM, [iv(12) | ciphertext | tag(16)]. Delegated to the
   // selected backend (hardware where available); the wire format is unchanged,
   // so existing Filen-encrypted chunks remain readable.
-  Future<Uint8List> encryptData(Uint8List data, Uint8List key) =>
-      _aesGcm.encryptData(key, data);
+  Future<Uint8List> encryptData(Uint8List data, Uint8List key) {
+    AesGcmBackend.validateKey(key);
+    return _aesGcm.encryptData(key, data);
+  }
 
-  Future<Uint8List> decryptData(Uint8List data, Uint8List key) =>
-      _aesGcm.decryptData(key, data);
+  Future<Uint8List> decryptData(Uint8List data, Uint8List key) {
+    AesGcmBackend.validateKey(key);
+    return _aesGcm.decryptData(key, data);
+  }
 
   // --- Key decoding ---
 
@@ -73,16 +77,21 @@ class FilenCrypto {
     if (k.length == 32 && RegExp(r'^[A-Za-z0-9\-_]+$').hasMatch(k)) {
       return Uint8List.fromList(utf8.encode(k));
     }
-    try {
-      return base64Url.decode(base64Url.normalize(k));
-    } catch (_) {}
-    try {
-      return base64.decode(base64.normalize(k));
-    } catch (_) {}
-    try {
+    // A 64-character hex key is also syntactically valid base64, but decoding
+    // it as base64 produces 48 different bytes. Resolve that ambiguity before
+    // base64 and only accept representations of one complete AES-256 key.
+    if (RegExp(r'^[0-9a-fA-F]{64}$').hasMatch(k)) {
       return Uint8List.fromList(HEX.decode(k));
+    }
+    try {
+      final decoded = base64Url.decode(base64Url.normalize(k));
+      if (decoded.length == 32) return decoded;
     } catch (_) {}
-    throw Exception('Key decode failed');
+    try {
+      final decoded = base64.decode(base64.normalize(k));
+      if (decoded.length == 32) return decoded;
+    } catch (_) {}
+    throw const FormatException('Filen file keys must decode to 32 bytes');
   }
 
   /// Try decrypting with all available master keys (newest first).

@@ -19,9 +19,47 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:crisp_cloud/services/openssl_aesgcm.dart';
 import 'package:crisp_cloud/services/bcrypt_aesgcm.dart';
 import 'package:crisp_cloud/services/encryption_service.dart';
+import 'package:filen_client/bcrypt_aesgcm.dart' as filen_bcrypt;
 import 'package:filen_client/openssl_aesgcm.dart' as filen_openssl;
 
 void main() {
+  test('native AES-256-GCM rejects invalid keys before the FFI call', () {
+    final providers = <String, dynamic>{
+      'app OpenSSL': OpenSslAesGcm.tryLoad(),
+      'Filen OpenSSL': filen_openssl.OpenSslAesGcm.tryLoad(),
+      'app BCrypt': BCryptAesGcm.tryLoad(),
+      'Filen BCrypt': filen_bcrypt.BCryptAesGcm.tryLoad(),
+    }..removeWhere((_, provider) => provider == null);
+    if (Platform.isLinux) {
+      expect(providers.keys, containsAll(['app OpenSSL', 'Filen OpenSSL']));
+    } else if (Platform.isWindows) {
+      expect(providers.keys, containsAll(['app BCrypt', 'Filen BCrypt']));
+    } else if (providers.isEmpty) {
+      markTestSkipped('No supported native FFI AES-GCM backend on this OS');
+      return;
+    }
+
+    final key = Uint8List(32);
+    final plaintext = Uint8List.fromList([1, 2, 3]);
+    for (final entry in providers.entries) {
+      final dynamic provider = entry.value;
+      final ciphertext = provider.encrypt(key, plaintext) as Uint8List;
+      for (final length in [0, 1, 16, 24, 31, 33, 48, 64]) {
+        final invalidKey = Uint8List(length);
+        expect(
+          () => provider.encrypt(invalidKey, plaintext),
+          throwsArgumentError,
+          reason: '${entry.key} must reject a $length-byte encryption key',
+        );
+        expect(
+          () => provider.decrypt(invalidKey, ciphertext),
+          throwsArgumentError,
+          reason: '${entry.key} must reject a $length-byte decryption key',
+        );
+      }
+    }
+  });
+
   test('platform native FFI AES-GCM loads + byte-exact + pointycastle interop',
       () {
     // Pick the binding that MUST work on this OS.

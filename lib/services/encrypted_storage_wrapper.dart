@@ -68,7 +68,9 @@ class EncryptedStorageWrapper
     // ignore: prefer_initializing_formals
   }) : _inner = inner,
        _key = Uint8List.fromList(encryptionKey),
-       _crypto = cryptoProvider ?? defaultWebCryptoProvider();
+       _crypto = cryptoProvider ?? defaultWebCryptoProvider() {
+    EncryptionService.validateKey(_key);
+  }
 
   // ---------------------------------------------------------------------------
   // Pass-through: authentication

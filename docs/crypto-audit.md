@@ -1,6 +1,6 @@
 # Crypto audit and store-release engineering
 
-Review date: **2026-11-07**. Initial source: `c1dc32161ed5a429c356c06e930966954faa4fbf`.
+Initial review: **2026-11-07**. Initial source: `c1dc32161ed5a429c356c06e930966954faa4fbf`.
 The feature branch also incorporates main's iOS shell/folder-access changes
 through `c4847d284665ad04b253ce925dbf387ff7123402`.
 
@@ -10,6 +10,67 @@ servers, or a government export classification. The legal release decision is
 in [export-compliance.md](export-compliance.md). The machine-readable scope is
 [crypto-inventory.json](crypto-inventory.json); exact dependency provenance is
 in [crypto-dependencies.md](crypto-dependencies.md).
+
+## 8 November 2026 follow-up: concrete defects and release controls
+
+The follow-up starts from main `7985a1fb77ccda59e9636f16ad964f453e0f8d7c`
+on remote branch `security/crypto-export-compliance-2026-11-08`, with changes
+saved incrementally in [PR 34](https://github.com/CrispStrobe/CrispCloud/pull/34).
+The branch incorporates main's subsequent PR 35 build-10 distribution record
+through `5a63e7be85f60122ed8ea6a72cce37c50157d519` without treating that
+historical record as live account or binary verification.
+The audited source advances to `1.1.0+11`, because the repository records a
+prior upload of build 10. The fixes require a new artifact; the existing upload
+does not acquire them. TestFlight selection must match both version and build
+counter from this reviewed checkout.
+It found additional implementation and evidence defects; the presence of
+AES-GCM or a previous audit did not establish that every path was correct.
+
+| Finding | Correction | Regression evidence |
+| --- | --- | --- |
+| Both OpenSSL bindings allocated the supplied key length but selected `EVP_aes_256_gcm`, which reads 32 bytes. Short keys could read beyond the native allocation; long keys were truncated. BCrypt could accept a different AES strength. | Reject every non-32-byte key before native cipher use in both application and Filen copies. No remote exploit is asserted. | `native_ffi_crypto_test.dart` checks both copies on Linux/Windows; the Apple path keeps external OpenSSL disabled. |
+| Filen decoded 64-character hexadecimal keys as base64 first, producing 48 incorrect bytes; portable backends did not consistently enforce AES-256. | Preserve the provider's raw 32-character convention, recognize exact hexadecimal first, and require decoded 32-byte keys in every backend. | `filen_crypto_validation_test.dart` covers encodings, same-ciphertext decryption, wrong lengths and truncated envelopes. |
+| Filen buffered and destination-file downloads bypassed whole-file checks, concatenating individually valid GCM chunks. Those tags do not bind a chunk's position. | Consume the existing size/hash-verified stream to completion before returning bytes; stage file output privately before publication. Bad hash, truncation, duplication, reordering and account changes leave destinations intact. | `filen_bounded_transfer_test.dart` exercises valid and adversarial chunk sequences and destination preservation. |
+| Generic file encryption generated a fresh salt and session key while the file envelope carried no recovery parameters. The UI could activate without backup confirmation; active-key import silently did nothing while reporting success. | Require re-entry of the exact 24-word recovery phrase before new connection activation, reject empty passphrases, and install the same prepared key after login. Reject a different key import while active; copy imported/exported key material defensively and retire it on logout/provider switch. | `file_encryption_recovery_test.dart` includes an independently verified AES-GCM ciphertext and all nine locales; `encryption_key_lifecycle_test.dart` covers mutation, wrong keys, import refusal and session retirement. |
+| Encrypted backup keys could be migrated or published into a session-only store despite persistent plan/snapshot metadata. Readback alone does not prove restart recovery. | Require `SecureStorage.isPersistent` before key-bearing plan hydration, migration, publication or key persistence. Preserve old recovery material and keep key-free plaintext plans usable. | `backup_encryption_security_test.dart` covers ephemeral refusal before secret I/O, migration preservation and plaintext operation; persistent failure/readback cases remain. |
+| The Apple source gate treated two Markdown substrings as evidence, never inspected the submitted plist, and never verified live French availability. The guide overinterpreted a declaration API 409. | Use a structured policy bound to inventory, resolved dependency lock and reviewed source hashes; inspect actual IPA/ZIP/pkg metadata; require a separate GET-only live check immediately before upload. Retain pending history/channel facts explicitly. | `test_apple_export_preflight.py` covers stale policy/source, tampered metadata, exact app/build/platform, France/history/approval checks, pagination and token-origin boundaries. Existing release-evidence tests cover the integration. |
+| External TestFlight distribution could select or create a group by name and mutate build metadata without verifying the audience's separate French coverage. Storefront exclusion does not restrict beta recipients. | Require a completed channel review and exact external-group allowlist; deny public links on the no-France route. Recheck the live group, uploaded build and any required approved declaration before each allowed mutation. Remove implicit group creation and keep account access out of import-time code. | `test_testflight_export_guard.rb` covers pending reviews, ambiguous/unreviewed groups, public links, changed state between writes, wrong builds and unapproved declarations. The CLI's JWT lifetime now includes its clock-skew allowance within Apple's limit. |
+
+The valid `nonce (12 bytes) | ciphertext | GCM tag (16 bytes)` file format is
+unchanged. Previously encrypted files require their original raw key, mnemonic
+or backup bundle. Re-entering the passphrase alone creates a different salt/key;
+this patch cannot recover already-lost keys. The backup bundle contains the
+raw-key mnemonic in readable JSON and must be protected as a secret.
+
+Filen's official SDK declares `FileMetadata.hash` optional
+([pinned source](https://github.com/FilenCloudDienste/filen-sdk-ts/blob/6f272ffac11802d5d1a64fb8796871b402db6a71/src/types.ts)).
+For hash-absent metadata, chunk authentication and file size still work, but
+same-sized chunk reordering cannot be detected. Streaming consumers must read
+to completion and handle the final error; individual yielded chunks are not a
+complete-file integrity result. The hardened buffered/file application paths
+honor that distinction. Standalone vendored SDK CLI/WebDAV download methods
+remain outside this application-path fix and must not be described as audited
+or fixed by it.
+
+### Follow-up validation status
+
+The local Python checks passed: **37 Apple preflight tests**, and **39 release-
+evidence tests with 2 additional macOS-only tests skipped**. Source policy,
+plist parsing, workflow YAML parsing and whitespace checks also passed at the
+checkpoint. These results use synthetic API fixtures and an ephemeral local
+OpenSSL signing key, not App Store Connect credentials. Actual macOS package
+expansion, native crypto, Flutter widgets and platform builds must pass the
+final PR checks. Dart/Flutter and Ruby are absent from this review workspace;
+no local device or live-provider pass is claimed. The prior review's different
+bootstrap limitation below is historical, not a new approval rejection.
+The Ruby TestFlight failure-path tests are wired into the source-evidence CI
+job; a pending or queued workflow is not a passing result.
+
+The distribution history and future external TestFlight audience have not
+been established from this repository. The policy deliberately retains pending
+facts. No France availability change, Apple submission, ANSSI declaration or
+BIS filing was performed. See [the export guide](export-compliance.md) for the
+specific evidence needed to complete a release.
 
 ## Product decision
 
