@@ -93,12 +93,16 @@ def run_testflight
   # Validate the recorded channel/history review before any API mutation. This
   # cannot infer testers' locations; the release owner must substantiate the record.
   root = File.expand_path('..', __dir__)
-  check = "import pathlib,sys; sys.path.insert(0,'tool'); " \
+  check = "import json,pathlib,sys; sys.path.insert(0,'tool'); " \
           "import apple_export_preflight as a; a.validate_policy(pathlib.Path('.'), submission=True); " \
-          "print(a.release_version(pathlib.Path('.'))[0])"
+          "print(json.dumps(a.release_version(pathlib.Path('.'))))"
   stdout, stderr, status = Open3.capture3('python3', '-c', check, chdir: root)
   abort "Apple export policy blocks TestFlight distribution: #{stderr.strip}" unless status.success?
-  marketing_version = stdout.strip
+  marketing_version, reviewed_build_number = JSON.parse(stdout)
+  build_number = required_env('ASC_BUILD_NUMBER')
+  unless build_number == reviewed_build_number
+    abort "ASC_BUILD_NUMBER #{build_number} differs from the reviewed checkout build #{reviewed_build_number}"
+  end
   policy = JSON.parse(File.read(File.join(root, 'docs/apple-export-policy.json')))
   group_id = TestFlightExportGuard.selected_group_id(
     policy, requested_id: ENV.fetch('TESTFLIGHT_GROUP_ID', '').strip
@@ -113,7 +117,6 @@ def run_testflight
   abort 'TestFlight bundle ID differs from the reviewed export policy' unless bundle_id == policy.fetch('bundle_id')
   platform = ENV.fetch('ASC_PLATFORM', 'MAC_OS')
   abort 'Unsupported TestFlight application platform' unless %w[IOS MAC_OS].include?(platform)
-  build_number = required_env('ASC_BUILD_NUMBER')
   requested_build_id = ENV.fetch('ASC_BUILD_ID', '').strip
   group_name = ENV.fetch('TESTFLIGHT_GROUP', '').strip
   what_to_test = ENV.fetch(
