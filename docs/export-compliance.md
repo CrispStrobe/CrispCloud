@@ -260,9 +260,12 @@ request CCATS, submit an app or change store territories.
 
 The machine-readable release decision is
 [`apple-export-policy.json`](apple-export-policy.json). Its
-`prior_distribution_review` is currently **pending**. The existing `false`
+`france.prior_distribution_review` and `testflight.distribution_review` are
+currently **pending**. The existing `false`
 source-plist values express the intended outside-France route, not a completed
-review. Do not upload while required evidence remains pending.
+review. The live upload and external TestFlight gates block their respective
+pending reviews; source and offline artifact checks can still run. Do not
+change a pending value merely to make a gate pass.
 
 The publication gate must enforce these requirements, separately from ordinary
 source checks:
@@ -286,6 +289,128 @@ source checks:
 These are required checks, not a claim that the current build, availability,
 questionnaire or policy review has passed them. An upload gate cannot make a
 government classification or prove that a human's supplied answers are true.
+
+### Completing the structured policy
+
+Record the actual evidence and responsible review before updating these fields.
+An evidence reference should identify a retained decision or document, with its
+scope and date; a filled-in reference is not itself proof of that decision.
+
+| Policy field | Interpretation |
+| --- | --- |
+| `reviewed_on`, `bundle_id` | Review date and exact application identity. A review date does not establish that a later artifact or distribution change is covered. |
+| `uses_non_exempt_encryption` | Expected boolean in both source and packaged plists, based on the completed Apple assessment. It does not say whether encryption exists. |
+| `documentation.status`, `reference`, `compliance_code` | `unreviewed` blocks upload. `not_required` records the substantiated no-documentation route with a `null` code. `approved` requires the actual Apple-issued code and retained approval evidence; the live gate verifies the matching declaration. |
+| `france.store_availability` | Intended App Store state, `excluded` or `included`, which the live gate compares with the explicit French territory record. It does not restrict TestFlight or establish past availability. |
+| `france.prior_distribution_review`, `reference` | Leave `pending` until history and relevant channels have been reviewed. Use `no_prior_distribution` only with evidence supporting that conclusion. Use `covered` when French distribution is covered by the documented compliance route; this requires the approved-code route, including French coverage in the live declaration. |
+| `inventory_sha256`, `pubspec_lock_sha256`, `reviewed_source_sha256` | Bind the policy to the inventory, dependency lock and reviewed source files. A change requires reassessment before refreshing fingerprints. Matching fingerprints establish source consistency, not correspondence with an uploaded binary. |
+
+### Running offline and live artifact checks
+
+Run these commands from the repository root, replacing the example artifact
+paths with the exact release files. The tool accepts an iOS `.ipa`, a macOS
+`.pkg`, or a `.zip` containing one main application. Inspecting `.pkg` requires
+macOS and `pkgutil`.
+
+```sh
+python3 tool/apple_export_preflight.py --platform ios --check-artifact \
+  --artifact /absolute/path/to/CrispCloud.ipa \
+  --output build/export-compliance/ios-artifact.json
+
+python3 tool/apple_export_preflight.py --platform macos --check-artifact \
+  --artifact /absolute/path/to/CrispCloud.pkg \
+  --output build/export-compliance/macos-artifact.json
+```
+
+`--check-artifact` needs no App Store Connect credentials or network access. It
+checks the policy fingerprints, source and packaged encryption declarations,
+bundle identity, version/build and target platform, and records artifact and
+plist hashes. Pending distribution reviews do not turn that offline result
+into permission to distribute. It does not establish signing validity, inspect
+all executable crypto, or prove which source produced the binary.
+
+For the live preflight, provide the real API key identifiers and the path to
+the private `.p8` file through the environment. `ASC_APP_ID` is an optional
+additional identity check; set it to the reviewed app ID when known. The tool
+also needs OpenSSL for API authentication. These example values are
+placeholders, not credentials or approval evidence.
+
+```sh
+export ASC_KEY_ID='YOUR_KEY_ID'
+export ASC_ISSUER_ID='YOUR_ISSUER_ID'
+export ASC_KEY_PATH='/absolute/path/to/AuthKey_YOUR_KEY_ID.p8'
+export ASC_APP_ID='YOUR_REVIEWED_APP_ID'
+
+python3 tool/apple_export_preflight.py --platform ios \
+  --artifact /absolute/path/to/CrispCloud.ipa \
+  --output build/export-compliance/ios-live-preflight.json
+
+python3 tool/apple_export_preflight.py --platform macos \
+  --artifact /absolute/path/to/CrispCloud.pkg \
+  --output build/export-compliance/macos-live-preflight.json
+```
+
+Without `--check-artifact`, the tool first requires the completed policy review,
+then checks the same artifact and performs authenticated **GET-only** requests
+for current app identity, fully paginated availability and any required Apple
+declaration. It does not upload, submit, change territories or file documents.
+The current pending France history review stops this mode before API access.
+Missing availability, including the absence of an `appAvailabilities` resource,
+does not pass as France exclusion. Retain the output with the artifact, build
+logs and release evidence; run the live check again immediately before upload.
+
+### External TestFlight: separate recipient review
+
+The `testflight` object records a separate distribution decision. Its current
+values are `distribution_review: "pending"`, `reference: null`,
+`external_group_ids: []` and `allow_public_links: false`; they intentionally do
+not authorize external distribution. The normal policy/history checks must
+also pass before [`tool/testflight_external.rb`](../tool/testflight_external.rb)
+can proceed.
+
+| TestFlight field | Required completed review |
+| --- | --- |
+| `distribution_review` | `no_france` means the reviewed recipients exclude France. `france_covered` means the applicable French process is covered and the Apple-approved-code route is used. |
+| `reference` | Evidence identifying the intended recipients, distribution scope and basis for the selected conclusion. A private group or email address alone does not establish a recipient's location. |
+| `external_group_ids` | Nonempty, unique allowlist of exact App Store Connect external group resource IDs for this app. A group name is not an identifier or an authorization. |
+| `allow_public_links` | Must be `false` for `no_france`, and the live group must explicitly have public links disabled. For `france_covered`, an enabled public link is permitted only when this field is explicitly `true`; the guard does not enable links. |
+
+Select one reviewed ID with `TESTFLIGHT_GROUP_ID`, or the external TestFlight
+workflow's `group_id` input. If omitted, the script can select the allowlist's
+sole ID; multiple reviewed IDs require an explicit selection. `TESTFLIGHT_GROUP`
+and the workflow's `group` input are optional exact-name cross-checks only.
+They cannot discover a group, substitute for an allowlisted ID or create one.
+
+After the evidence is complete, this example uses the API environment above
+to distribute an already uploaded macOS build. Replace the build and group
+placeholders with the reviewed values. This command can create missing test
+instructions, assign the build to the group and submit it for beta review;
+unlike the Python preflight, it performs those App Store Connect writes.
+
+```sh
+export ASC_PLATFORM='MAC_OS'
+export ASC_BUILD_NUMBER='REVIEWED_BUILD_NUMBER'
+export TESTFLIGHT_GROUP_ID='REVIEWED_EXTERNAL_GROUP_ID'
+ruby tool/testflight_external.rb
+```
+
+For an iOS build, use `ASC_PLATFORM='IOS'`. The guard verifies the selected
+external group belongs to this app, its public-link state, and the uploaded
+build's identity, processing state and encryption answer before every write.
+For the non-exempt route it also checks the build's matching approved Apple
+declaration. `france_covered` additionally requires
+`availableOnFrenchStore=true` in that declaration, even if the App Store
+storefront itself is excluded. An unknown public-link state or a changed group
+blocks further writes. These checks are repeated preflights, not an atomic
+transaction or proof of every tester's location.
+
+**Uploaded-build provenance remains a separate requirement.** A matching
+`usesNonExemptEncryption` boolean, app ID or build number does not prove that
+the uploaded binary was built from this branch or contains its crypto fixes.
+The TestFlight guard does not download and compare that binary. Retain the
+exact artifact hash, source commit, dependency/build evidence and upload record
+that connect the reviewed artifact to the selected App Store Connect build.
+Source review and a passing API check cannot replace that release evidence.
 
 ### Observed store blocker (2026-11-07)
 
