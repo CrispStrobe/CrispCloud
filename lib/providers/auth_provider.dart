@@ -98,9 +98,14 @@ class AuthNotifier extends ChangeNotifier {
       await prefs.setString('cloud_provider', provider.name);
 
       // Create config service for new provider
-      _config = _createConfigForProvider(provider);
+      final config = _createConfigForProvider(provider);
+      final client = CloudStorageFactory.create(provider, config: config);
+      // Recovery can install a key before login. Retire that disconnected
+      // session too, only after the replacement client was constructed.
+      disableEncryption();
+      _config = config;
       _currentProvider = provider;
-      _cloudClient = CloudStorageFactory.create(provider, config: _config);
+      _cloudClient = client;
 
       await _attemptAutoLogin();
       notifyListeners();
@@ -236,12 +241,14 @@ class AuthNotifier extends ChangeNotifier {
   }
 
   void disableEncryption() {
+    final hadEncryption = isEncryptionEnabled ||
+        _encryptionKey != null || _encryptionSalt != null;
     if (_cloudClient is EncryptedStorageWrapper) {
       _cloudClient = (_cloudClient as EncryptedStorageWrapper).inner;
-      _encryptionKey = null;
-      _encryptionSalt = null;
-      notifyListeners();
     }
+    _encryptionKey = null;
+    _encryptionSalt = null;
+    if (hadEncryption) notifyListeners();
   }
 
   // --- Ensure authenticated (used by transfer provider) ---

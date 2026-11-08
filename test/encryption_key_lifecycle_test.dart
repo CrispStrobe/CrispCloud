@@ -102,4 +102,14 @@ void main() {
     expect(auth.encryptionKey, isNull);
     expect(auth.encryptionSalt, isNull);
   });
+
+  test('switching a disconnected provider retires recovered session keys', () async {
+    auth.enableEncryptionWithKey(Uint8List(32), Uint8List(16));
+    expect(auth.isConnected, isFalse);
+    await auth.switchProvider(CloudProvider.s3);
+    expect(auth.currentProvider, CloudProvider.s3);
+    expect(auth.isEncryptionEnabled, isFalse);
+    expect(auth.encryptionKey, isNull);
+    expect(auth.encryptionSalt, isNull);
+  });
 }
