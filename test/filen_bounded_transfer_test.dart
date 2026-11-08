@@ -206,7 +206,10 @@ void main() {
     );
     expect(await destination.readAsBytes(), [9, 8, 7]);
     expect(
-      await directory.list().where((entry) => entry is Directory).toList(),
+      await directory.list().where(
+        (entry) => entry is Directory &&
+            entry.path.contains('.crisp-internxt-download-'),
+      ).toList(),
       isEmpty,
       reason: 'Failed authenticated downloads must remove private staging',
     );

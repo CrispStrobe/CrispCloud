@@ -10,6 +10,7 @@ import 'package:pointycastle/export.dart';
 enum EncryptionFormatError {
   dataTooShort, keyLength, invalidHex, invalidMnemonic,
   verificationFailed, verificationMnemonic, hexLength,
+  encryptionAlreadyEnabled,
 }
 
 class EncryptionFormatException extends FormatException {
@@ -23,6 +24,13 @@ class EncryptionFormatException extends FormatException {
 /// Standalone, stateless encryption utility for client-side file encryption.
 /// Uses AES-256-GCM with PBKDF2 key derivation.
 class EncryptionService {
+  /// File encryption and recovery always use one complete AES-256 key.
+  static void validateKey(Uint8List key) {
+    if (key.length != 32) {
+      throw ArgumentError('AES-256-GCM requires a 32-byte key');
+    }
+  }
+
   /// Derive a 256-bit key from a passphrase using PBKDF2 with HMAC-SHA256.
   static Uint8List deriveKey(String passphrase, Uint8List salt,
       {int iterations = 100000}) {
@@ -48,6 +56,7 @@ class EncryptionService {
   ///
   /// Returns: nonce (12 bytes) + ciphertext + GCM tag (16 bytes).
   static Uint8List encrypt(Uint8List plaintext, Uint8List key) {
+    validateKey(key);
     final nonce = generateNonce();
     final cipher = GCMBlockCipher(AESEngine());
     cipher.init(
@@ -70,6 +79,7 @@ class EncryptionService {
   /// Throws [FormatException] if data is too short.
   /// Throws on authentication failure (wrong key or tampered data).
   static Uint8List decrypt(Uint8List data, Uint8List key) {
+    validateKey(key);
     // Minimum: 12 (nonce) + 0 (plaintext) + 16 (tag) = 28 bytes
     if (data.length < 28) {
       throw const EncryptionFormatException('Data too short for AES-GCM', EncryptionFormatError.dataTooShort);
@@ -135,10 +145,12 @@ class EncryptionService {
   /// Generate a BIP39 mnemonic phrase (24 words) that encodes the key.
   ///
   /// The key (32 bytes = 256 bits) maps directly to a 24-word mnemonic.
-  /// The salt is prepended so recovery only requires the mnemonic.
+  /// The mnemonic contains the raw key, not the salt or passphrase. It alone
+  /// can recover that key; the separate salt preserves derivation metadata.
   ///
   /// Returns a map with 'mnemonic' (24 words) and 'salt' (hex string).
   static Map<String, String> generateMnemonic(Uint8List key, Uint8List salt) {
+    validateKey(key);
     // BIP39 with 256 bits of entropy → 24-word mnemonic
     final mnemonic = bip39.entropyToMnemonic(exportKeyAsHex(key));
     return {
