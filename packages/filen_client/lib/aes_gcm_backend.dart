@@ -33,6 +33,14 @@ import 'openssl_aesgcm_stub.dart' if (dart.library.ffi) 'openssl_aesgcm.dart';
 abstract class AesGcmBackend {
   String get name;
 
+  /// Filen file chunks use AES-256, including on backends that also support
+  /// AES-128/192. Never truncate, pad or otherwise reinterpret an invalid key.
+  static void validateKey(Uint8List key) {
+    if (key.length != 32) {
+      throw ArgumentError('AES-256-GCM requires a 32-byte key');
+    }
+  }
+
   /// Returns [iv(12) | ciphertext | tag(16)].
   Future<Uint8List> encryptData(Uint8List key, Uint8List data);
 
@@ -84,6 +92,7 @@ class CryptographyBackend implements AesGcmBackend {
   String get name => 'cryptography';
   @override
   Future<Uint8List> encryptData(Uint8List key, Uint8List data) async {
+    AesGcmBackend.validateKey(key);
     final sk = await _algo.newSecretKeyFromBytes(key);
     final nonce = _algo.newNonce(); // 12 bytes
     final box = await _algo.encrypt(data, secretKey: sk, nonce: nonce);
@@ -92,6 +101,7 @@ class CryptographyBackend implements AesGcmBackend {
 
   @override
   Future<Uint8List> decryptData(Uint8List key, Uint8List data) async {
+    AesGcmBackend.validateKey(key);
     if (data.length < 28) {
       throw const FormatException('Data too short for AES-GCM');
     }
@@ -116,6 +126,7 @@ class PointycastleBackend implements AesGcmBackend {
   String get name => 'pointycastle';
   @override
   Future<Uint8List> encryptData(Uint8List key, Uint8List data) async {
+    AesGcmBackend.validateKey(key);
     final iv = _randomBytes(12);
     final c = GCMBlockCipher(AESEngine())
       ..init(true, AEADParameters(KeyParameter(key), 128, iv, Uint8List(0)));
@@ -124,6 +135,10 @@ class PointycastleBackend implements AesGcmBackend {
 
   @override
   Future<Uint8List> decryptData(Uint8List key, Uint8List data) async {
+    AesGcmBackend.validateKey(key);
+    if (data.length < 28) {
+      throw const FormatException('Data too short for AES-GCM');
+    }
     final c = GCMBlockCipher(AESEngine())
       ..init(
           false,
