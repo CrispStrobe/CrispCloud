@@ -297,7 +297,9 @@ package built from `79dbb56` reached
 `ITSEncryptionExportComplianceCode`, while App Store Connect app `6789570314`
 had no app encryption declaration for the app at that time
 (`GET /v1/appEncryptionDeclarations?filter[app]=6789570314` returned an empty
-list). The build was **not uploaded**, so no duplicate build was created.
+list). That initial validation attempt did **not** upload the package. The
+later build-specific record below describes a subsequent upload using the
+changed plist answer.
 
 A declaration create request with `containsProprietaryCryptography=false`,
 `containsThirdPartyCryptography=true` and `availableOnFrenchStore=false` was
@@ -321,6 +323,24 @@ these external facts are established. Before enabling France, complete its
 applicable declaration/documentation route; before adding proprietary or
 non-standard crypto, reassess both US and Apple requirements. The BIS 5D992.c
 assessment remains separate from Apple's plist answer.
+
+**Later build-specific record, incorporated from PR #35:** macOS `1.1.0 (10)`
+was subsequently uploaded with `ITSAppUsesNonExemptEncryption=false`. The
+record says App Store Connect had no `appAvailabilities` resource for the
+still-unreleased app when checked, so it did not establish that France was
+excluded. This audit has not independently verified that uploaded binary or
+live account state. Treat its outside-France answer as conditional: establish
+the actual exclusion and complete the historical/channel review before App
+Store submission or external TestFlight distribution. The new upload gate
+rejects missing availability evidence; absence of a resource is not evidence
+of an excluded territory.
+
+If France is enabled instead, do **not** reuse that build 10 artifact: complete
+the applicable French process and Apple declaration with
+`availableOnFrenchStore=true`, obtain the Apple-issued code, set the matching
+plist answer to `true`, and upload a new build. The source fixes in this audit
+also require a newly built artifact; an already uploaded build does not gain
+them when this branch changes.
 
 ### Internal release decision record
 
