@@ -65,6 +65,9 @@ jobs:
       - name: Resolve dependencies
         run: flutter pub get --enforce-lockfile
 
+      - name: Prime dart_smb2 Apple asset cache
+        run: tool/prime_dart_smb2_cache.sh
+
       - name: Check crypto release inputs and compatibility
         run: |
           python3 tool/crypto_release_evidence.py --check
