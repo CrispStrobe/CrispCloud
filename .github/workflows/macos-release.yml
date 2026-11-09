@@ -66,6 +66,8 @@ jobs:
         run: flutter pub get --enforce-lockfile
 
       - name: Prime dart_smb2 Apple asset cache
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: tool/prime_dart_smb2_cache.sh
 
       - name: Check crypto release inputs and compatibility
