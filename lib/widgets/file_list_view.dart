@@ -674,7 +674,7 @@ class FileListTile extends ConsumerWidget {
   }
 }
 
-/// Compact single-line tile for "Full" view mode — like Double Commander.
+/// Compact single-line tile for the full file-list layout.
 /// Shows: icon | name | (spacer) | size | date — all on one 26px row.
 class CompactFileTile extends ConsumerWidget {
   final FileItem file;

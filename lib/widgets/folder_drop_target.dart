@@ -221,7 +221,14 @@ class PanelFileDragSource extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (file.name == '..' || file.name == '.') return child;
+    // Display-only rows still expose their localized semantics and callbacks.
+    // A row without a path cannot authorize a drag or initialize its source.
+    if (file.name == '..' ||
+        file.name == '.' ||
+        file.path == null ||
+        file.path!.isEmpty) {
+      return child;
+    }
     final panel = ref.watch(panelProvider(side));
     final files = panel.isSelected(file) ? panel.selection.toList() : [file];
     if (!panel.recognizesCollectionRows([file])) {
