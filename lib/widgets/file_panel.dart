@@ -138,14 +138,29 @@ class _FilePanelState extends ConsumerState<FilePanel> {
     final visualLayout =
         layout == ViewMode.grid ||
         layout == ViewMode.tiles ||
-        layout == ViewMode.gallery;
+        layout == ViewMode.gallery ||
+        layout == ViewMode.column;
+    var hasRemoteListing = false;
+    if (kIsWeb) {
+      try {
+        hasRemoteListing = panel.captureCurrentOrigin().source.isRemote;
+      } on StateError {
+        // No verified listing yet; the source picker still identifies a
+        // selected remote account and must not display the local welcome UI.
+      }
+    }
     // Web/empty state: show action buttons instead of spinner. Visual layouts
     // keep their search/view controls usable in empty folders.
     if (kIsWeb &&
         !visualLayout &&
         (files == null || files.isEmpty) &&
         !panel.isLoading &&
-        !panel.showingSearchResults) {
+        !panel.showingSearchResults &&
+        !panel.isInArchive &&
+        currentPath == '/' &&
+        panel.filterQuery.isEmpty &&
+        ref.watch(panelSourceProvider(widget.side)).isLocal &&
+        !hasRemoteListing) {
       final auth = ref.watch(authProvider);
       final l = AppLocalizations.of(context)!;
       return Center(
@@ -739,7 +754,11 @@ class _FilePanelState extends ConsumerState<FilePanel> {
     final visualLayout =
         layout == ViewMode.grid ||
         layout == ViewMode.tiles ||
-        layout == ViewMode.gallery;
+        layout == ViewMode.gallery ||
+        layout == ViewMode.column;
+    final retainColumns = layout == ViewMode.column &&
+        !panel.showingSearchResults &&
+        ref.watch(panelViewModeProvider(widget.side)) != PanelViewMode.tree;
     return Container(
       decoration: BoxDecoration(
         color: widget.isActive ? null : Colors.black.withValues(alpha: 0.02),
@@ -758,6 +777,8 @@ class _FilePanelState extends ConsumerState<FilePanel> {
             onNewTab: () => panel.addTab(),
             onTabPinToggle: (id) => panel.toggleTabPin(id),
             onTabRenamed: (id, name) => panel.renameTab(id, name),
+            onReopenClosedTab: panel.reopenClosedTab,
+            canReopenClosedTab: panel.canReopenClosedTab,
             onTabLockChanged: (id, mode) => panel.setTabLock(id, mode),
             onTabDuplicated: (id) => panel.duplicateTab(id),
             onTabReordered: panel.reorderTabs,
@@ -800,9 +821,9 @@ class _FilePanelState extends ConsumerState<FilePanel> {
           // Loading indicator shown while directory listing is in progress
           if (panel.isLoading) const LinearProgressIndicator(minHeight: 2),
           Expanded(
-            child: files == null
+            child: files == null && !retainColumns
                 ? const Center(child: CircularProgressIndicator())
-                : files.isEmpty && !visualLayout
+                : files != null && files.isEmpty && !visualLayout
                 ? Center(
                     child: _isDragging && sourceIsRemote
                         ? Column(
@@ -887,7 +908,7 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                     children: [
                       RefreshIndicator(
                         onRefresh: () => panel.refresh(),
-                        child: _buildFileView(widget.side, files),
+                        child: _buildFileView(widget.side, files ?? const []),
                       ),
                       if (panel.isTypeahead)
                         Positioned(

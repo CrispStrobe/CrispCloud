@@ -1665,9 +1665,17 @@ class PanelNotifier extends ChangeNotifier {
     final tabId = _activeTabId;
     final generation = _listingGeneration;
     if (isPagedCollection) {
+      final session = _collectionMarks!;
+      final original = session.manifest.summary.id;
+      final pageIndex = collectionPageIndex;
       await flushCollectionMarks();
+      if (_isDisposed ||
+          tabId != _activeTabId ||
+          generation != _listingGeneration ||
+          !identical(session, _collectionMarks)) {
+        throw StateError('The collection changed. Reopen it before saving.');
+      }
       final store = _ref.read(fileCollectionStoreProvider);
-      final original = _collectionId!;
       if (selectedOnly || createNew) {
         final id = const Uuid().v4();
         await store.copyCollection(
@@ -1676,8 +1684,12 @@ class PanelNotifier extends ChangeNotifier {
           name: name.trim(),
           selectedOnly: selectedOnly,
         );
-        if (!selectedOnly && !_isDisposed && tabId == _activeTabId) {
-          await openCollection(id, pageIndex: collectionPageIndex);
+        if (!selectedOnly &&
+            !_isDisposed &&
+            tabId == _activeTabId &&
+            generation == _listingGeneration &&
+            identical(session, _collectionMarks)) {
+          await openCollection(id, pageIndex: pageIndex);
         }
         return id;
       }
@@ -1725,8 +1737,12 @@ class PanelNotifier extends ChangeNotifier {
   Future<void> appendToCollection(String id, {bool selectedOnly = true}) async {
     final panels = _collectionPanels();
     if (isPagedCollection) {
+      final session = _collectionMarks!;
+      final sourceId = session.manifest.summary.id;
       await flushCollectionMarks();
-      final sourceId = _collectionId!;
+      if (_isDisposed || !identical(session, _collectionMarks)) {
+        throw StateError('The collection changed. Reopen it before continuing.');
+      }
       await _prepareCollectionMutation(id, panels: panels);
       await _ref
           .read(fileCollectionStoreProvider)
@@ -1840,11 +1856,13 @@ class PanelNotifier extends ChangeNotifier {
     int pageIndex = 0,
   }) async {
     final requestedTab = _activeTabId;
-    final requestedGeneration = _listingGeneration;
+    final requestedNavigation = _navigationRevision;
+    var request = ++_collectionRequest;
     bool stillRequested() =>
         !_isDisposed &&
         requestedTab == _activeTabId &&
-        requestedGeneration == _listingGeneration;
+        requestedNavigation == _navigationRevision &&
+        request == _collectionRequest;
     await flushCollectionMarks();
     if (!stillRequested()) return;
     final store = _ref.read(fileCollectionStoreProvider);
@@ -1866,10 +1884,13 @@ class PanelNotifier extends ChangeNotifier {
         _currentDirectoryOrigin?.storageReference,
       );
     }
-    final request = ++_collectionRequest;
+    request = ++_collectionRequest;
     final tab = _activeTabId;
     bool cancelled() =>
-        _isDisposed || request != _collectionRequest || tab != _activeTabId;
+        _isDisposed ||
+        request != _collectionRequest ||
+        tab != _activeTabId ||
+        requestedNavigation != _navigationRevision;
     _collectionBusy = true;
     _collectionLoadError = null;
     _collectionProgress = '';
@@ -2334,12 +2355,20 @@ class PanelNotifier extends ChangeNotifier {
     Set<String>? acceptedReplacementKeys,
     CollectionReplacementReview? review,
   }) async {
+    final session = _collectionMarks!;
+    final tab = _activeTabId;
+    final generation = _listingGeneration;
     await flushCollectionMarks();
+    if (_isDisposed ||
+        !identical(session, _collectionMarks) ||
+        tab != _activeTabId ||
+        generation != _listingGeneration) {
+      throw StateError('The collection changed. Refresh it again.');
+    }
     if (review != null && !review._isCurrent(true)) {
       throw StateError('The collection changed. Review its replacement items again.');
     }
     final store = _ref.read(fileCollectionStoreProvider);
-    final session = _collectionMarks!;
     final id = session.manifest.summary.id;
     final pageIndex = collectionPageIndex;
     final request = ++_collectionRequest;

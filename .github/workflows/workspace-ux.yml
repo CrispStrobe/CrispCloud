@@ -1,0 +1,84 @@
+name: File workspace UX
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'lib/**'
+      - 'test/**'
+      - '.github/workflows/workspace-ux.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: workspace-ux-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  workspace:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.8'
+          channel: stable
+          cache: true
+      - name: Resolve dependencies
+        run: flutter pub get
+      - name: Install SQLite for isolated filesystem tests
+        run: sudo apt-get update && sudo apt-get install -y libsqlite3-dev
+      - name: Check formatting and preserve a reviewable correction patch
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || 'origin/main' }}
+        run: |
+          mapfile -t changed < <(git diff --name-only --diff-filter=ACM "$BASE_SHA" HEAD -- '*.dart')
+          if ((${#changed[@]})); then dart format "${changed[@]}"; fi
+          git diff --binary > workspace-format.patch
+      - name: Upload formatting corrections
+        uses: actions/upload-artifact@v4
+        with:
+          name: workspace-format
+          path: workspace-format.patch
+          retention-days: 7
+      - name: Analyze workspace implementation
+        run: >-
+          flutter analyze --no-fatal-infos --no-fatal-warnings
+          lib/providers/panel_provider.dart
+          lib/providers/panel_source_provider.dart
+          lib/providers/recent_locations_provider.dart
+          lib/providers/keyboard_shortcut_provider.dart
+          lib/services/keyboard_shortcut_service.dart
+          lib/screens/keyboard_shortcuts.dart
+          lib/widgets/file_column_view.dart
+          lib/widgets/file_collections_dialog.dart
+          lib/widgets/command_palette.dart
+      - name: Workspace behavior regressions
+        run: |
+          candidates=(
+            test/panel_source_restore_test.dart
+            test/commander_file_list_test.dart
+            test/keyboard_shortcut_test.dart
+            test/workspace_keyboard_test.dart
+            test/panel_navigation_model_test.dart
+            test/panel_navigation_recovery_test.dart
+            test/recent_locations_identity_test.dart
+            test/file_collection_panel_paging_test.dart
+            test/file_collection_paging_store_test.dart
+            test/command_search_test.dart
+            test/widget/file_column_view_test.dart
+            test/widget/navigation_recovery_ui_test.dart
+            test/widget/keyboard_shortcut_dialog_test.dart
+            test/widget/command_palette_localization_test.dart
+            test/widget/screen_dialog_localization_test.dart
+          )
+          tests=()
+          for path in "${candidates[@]}"; do if [[ -f "$path" ]]; then tests+=("$path"); fi; done
+          python3 tool/with_ci_system_sqlite.py flutter test --no-pub "${tests[@]}"
+      - name: Require committed formatting
+        run: git diff --exit-code

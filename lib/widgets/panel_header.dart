@@ -20,6 +20,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/gallery_strings.dart';
 import 'file_view_selector.dart';
+import 'panel_history_button.dart';
 import '../models/panel_side.dart';
 import '../models/file_item.dart';
 import '../providers/providers.dart';
@@ -104,6 +105,7 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
                   ? panel.navigateForward
                   : null,
             ),
+            PanelHistoryButton(panel: panel, compact: true),
             _volumeButton(panel, isLocal),
             if (panel.isInArchive)
               _navButton(

@@ -33,11 +33,17 @@ final keyboardShortcutServiceProvider =
 class ShortcutBindingsNotifier
     extends StateNotifier<Map<ShortcutAction, ShortcutBinding>> {
   ShortcutBindingsNotifier(this._service)
-      : super(_service.getBindings());
+      : super(_service.getBindings()) {
+    _service.load().then((_) {
+      if (mounted) _refresh();
+    });
+  }
 
   final KeyboardShortcutService _service;
 
-  void _refresh() => state = _service.getBindings();
+  void _refresh() {
+    if (mounted) state = _service.getBindings();
+  }
 
   Future<void> setBinding(ShortcutAction action, ShortcutBinding binding) async {
     await _service.setBinding(action, binding);
@@ -87,7 +93,6 @@ final shortcutBindingsProvider = StateNotifierProvider<ShortcutBindingsNotifier,
 /// e.g. "Ctrl+Shift+P".
 final shortcutDisplayProvider =
     Provider.family<String, ShortcutAction>((ref, action) {
-  final bindings = ref.watch(shortcutBindingsProvider);
-  final binding = bindings[action];
-  return binding?.toDisplayString() ?? '';
+  ref.watch(shortcutBindingsProvider);
+  return ref.watch(keyboardShortcutServiceProvider).browserDisplay(action);
 });

@@ -18,6 +18,7 @@ import '../services/gallery_device_export.dart';
 import '../services/gallery_catalog_service.dart';
 import '../services/gallery_media_service.dart';
 import '../services/panel_source_service.dart';
+import '../services/keyboard_shortcut_service.dart';
 import '../utils/formatters.dart';
 import 'batch_rename_dialog.dart';
 import 'file_context_menu.dart';
@@ -415,6 +416,10 @@ class _FileGridViewState extends ConsumerState<FileGridView> {
     final modifier = keyboard.isControlPressed || keyboard.isMetaPressed;
     final key = event.logicalKey;
     final panel = ref.read(panelProvider(widget.side));
+    final shortcuts = ref.read(keyboardShortcutServiceProvider);
+    final command = shortcuts.resolveBrowser(event,
+        isCtrl: keyboard.isControlPressed, isMeta: keyboard.isMetaPressed,
+        isShift: keyboard.isShiftPressed, isAlt: keyboard.isAltPressed);
     const fileCommandKeys = [
       LogicalKeyboardKey.delete,
       LogicalKeyboardKey.f2,
@@ -422,7 +427,11 @@ class _FileGridViewState extends ConsumerState<FileGridView> {
       LogicalKeyboardKey.f6,
       LogicalKeyboardKey.f8,
     ];
-    if ((fileCommandKeys.contains(key) ||
+    if (([ShortcutAction.delete, ShortcutAction.rename,
+              ShortcutAction.copy, ShortcutAction.cut, ShortcutAction.paste,
+              ShortcutAction.copyWithOptions, ShortcutAction.moveWithOptions]
+            .contains(command) ||
+            (!modifier && !keyboard.isAltPressed && fileCommandKeys.contains(key)) ||
             modifier &&
                 [
                   LogicalKeyboardKey.keyC,
@@ -433,13 +442,19 @@ class _FileGridViewState extends ConsumerState<FileGridView> {
       _unavailableActions();
       return KeyEventResult.handled;
     }
-    if (modifier && key == LogicalKeyboardKey.keyA) {
+    if (command == ShortcutAction.selectAll) {
       _selectAll();
       return KeyEventResult.handled;
     }
-    if (modifier && key == LogicalKeyboardKey.keyF) {
+    if (command == ShortcutAction.filter) {
       _searchFocus.requestFocus();
       return KeyEventResult.handled;
+    }
+    if (command != null || modifier || keyboard.isAltPressed ||
+        shortcuts.suppressesDefault(event,
+            isCtrl: keyboard.isControlPressed, isMeta: keyboard.isMetaPressed,
+            isShift: keyboard.isShiftPressed, isAlt: keyboard.isAltPressed)) {
+      return KeyEventResult.ignored;
     }
     if (key == LogicalKeyboardKey.escape) {
       panel.clearSelection();

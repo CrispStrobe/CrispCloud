@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/panel_tab.dart';
 import '../l10n/panel_tab_strings.dart';
+import '../l10n/navigation_strings.dart';
 import 'file_list_view.dart' show PanelDragData;
 
 class PanelTabBar extends StatelessWidget {
@@ -22,6 +23,8 @@ class PanelTabBar extends StatelessWidget {
     this.onFilesDroppedOnTab,
     this.activeSelectionCount = 0,
     this.onTabRenamed,
+    this.onReopenClosedTab,
+    this.canReopenClosedTab = false,
   });
 
   final List<PanelTab> tabs;
@@ -39,6 +42,8 @@ class PanelTabBar extends StatelessWidget {
   final void Function(String, List<dynamic>)? onFilesDroppedOnTab;
   final int activeSelectionCount;
   final void Function(String, String)? onTabRenamed;
+  final VoidCallback? onReopenClosedTab;
+  final bool canReopenClosedTab;
 
   @override
   Widget build(BuildContext context) {
@@ -257,6 +262,12 @@ class PanelTabBar extends StatelessWidget {
             value: 'duplicates',
             child: Text(strings.text('closeDuplicates')),
           ),
+        if (onReopenClosedTab != null)
+          PopupMenuItem(
+            value: 'reopen',
+            enabled: canReopenClosedTab,
+            child: Text(NavigationStrings(context).text('reopen')),
+          ),
       ],
     );
     if (!context.mounted || action == null) return;
@@ -320,6 +331,8 @@ class PanelTabBar extends StatelessWidget {
         }
       case 'duplicates':
         onCloseDuplicates?.call();
+      case 'reopen':
+        if (canReopenClosedTab) onReopenClosedTab?.call();
     }
   }
 }

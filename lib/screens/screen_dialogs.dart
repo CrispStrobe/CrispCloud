@@ -32,6 +32,9 @@ import '../l10n/command_strings.dart';
 import '../l10n/screen_dialog_strings.dart';
 import '../l10n/shortcut_strings.dart';
 import '../l10n/undo_presentation.dart';
+import '../l10n/workspace_ux_strings.dart';
+import '../services/keyboard_shortcut_service.dart';
+import '../widgets/keyboard_shortcut_dialog.dart';
 
 /// Explicit selection, or the cursor item when nothing is marked. This mirrors
 /// Total Commander: F5/F6/F8 operate on the item under the cursor when there
@@ -236,12 +239,18 @@ void showKeyboardShortcutsHelp(BuildContext context) {
             ),
             const Divider(),
             // Transfer
-            _shortcutRow('Ctrl+U', ShortcutStrings(context).description(45)),
+            _shortcutRow('Ctrl+U', context.commanderTr('Swap Panels')),
             _shortcutRow('Ctrl+D', ShortcutStrings(context).description(46)),
+            _shortcutRow('Ctrl+Shift+T', WorkspaceUxStrings(context).text('reopen')),
+            _shortcutRow('Ctrl+Alt+P', context.commanderTr('Toggle Preview')),
           ],
         ),
       ),
       actions: [
+        TextButton(
+          onPressed: () => showKeyboardShortcutSettings(context),
+          child: Text(WorkspaceUxStrings(context).text('customize')),
+        ),
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: Text(AppLocalizations.of(context)!.close),
@@ -251,15 +260,55 @@ void showKeyboardShortcutsHelp(BuildContext context) {
   );
 }
 
-Widget _shortcutRow(String keys, String description) => Builder(
-  builder: (context) => Padding(
+Widget _shortcutRow(String keys, String description) => Consumer(
+  builder: (context, ref, _) {
+    ref.watch(shortcutBindingsProvider);
+    final service = ref.watch(keyboardShortcutServiceProvider);
+    String key(ShortcutAction action) => service.browserDisplay(action);
+    final liveKeys = switch (keys) {
+      'F2 / Shift+F6' => '${key(ShortcutAction.rename)} / Shift+F6',
+      'F3' => key(ShortcutAction.preview),
+      'F4' => key(ShortcutAction.edit),
+      'F5' => key(ShortcutAction.copyWithOptions),
+      'F6' => key(ShortcutAction.moveWithOptions),
+      'F7 / Ctrl+N' => '${key(ShortcutAction.newFolder)} / Ctrl+N',
+      'F8 / Delete' => 'F8 / ${key(ShortcutAction.delete)}',
+      'Alt+← / Alt+→' => '${key(ShortcutAction.back)} / ${key(ShortcutAction.forward)}',
+      'Backspace' => key(ShortcutAction.up),
+      'Tab' => key(ShortcutAction.switchPanel),
+      'Ctrl+G / Ctrl+L' => '${key(ShortcutAction.goToFolder)} / Ctrl+L',
+      'Alt+F7' => key(ShortcutAction.search),
+      'Ctrl+F' => key(ShortcutAction.filter),
+      'Ctrl+A' => key(ShortcutAction.selectAll),
+      'Numpad +' => key(ShortcutAction.findPattern),
+      'Ctrl+C / Ctrl+X' => '${key(ShortcutAction.copy)} / ${key(ShortcutAction.cut)}',
+      'Ctrl+V' => key(ShortcutAction.paste),
+      'Ctrl+M' => key(ShortcutAction.multiRename),
+      'Ctrl+Z' => key(ShortcutAction.undo),
+      'Ctrl+R' => key(ShortcutAction.refresh),
+      'Ctrl+F3' => key(ShortcutAction.sortByName),
+      'Ctrl+F4' => key(ShortcutAction.sortByExtension),
+      'Ctrl+F5' => key(ShortcutAction.sortByDate),
+      'Ctrl+F6' => key(ShortcutAction.sortBySize),
+      'Ctrl+. / Ctrl+H' => '${key(ShortcutAction.toggleHidden)} / Ctrl+H',
+      'Ctrl+B' => key(ShortcutAction.bookmark),
+      'Ctrl+T' => key(ShortcutAction.newTab),
+      'Ctrl+W' => key(ShortcutAction.closeTab),
+      'Ctrl+Tab' => key(ShortcutAction.nextTab),
+      'Ctrl+Shift+Tab' => key(ShortcutAction.prevTab),
+      'Ctrl+Shift+P' => key(ShortcutAction.commandPalette),
+      'Ctrl+Shift+T' => key(ShortcutAction.reopenClosedTab),
+      'Ctrl+Alt+P' => key(ShortcutAction.togglePreview),
+      _ => keys,
+    };
+    return Padding(
     padding: const EdgeInsets.symmetric(vertical: 4),
     child: Row(
       children: [
         SizedBox(
           width: 120,
           child: Text(
-            keys,
+            liveKeys,
             style: const TextStyle(
               fontWeight: FontWeight.bold,
               fontFamily: 'monospace',
@@ -271,7 +320,7 @@ Widget _shortcutRow(String keys, String description) => Builder(
         ),
       ],
     ),
-  ),
+  );},
 );
 
 void uploadSelected(BuildContext context, WidgetRef ref) {

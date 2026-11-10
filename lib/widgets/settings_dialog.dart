@@ -37,6 +37,8 @@ import '../l10n/commander_strings.dart';
 import 'custom_command_dialog.dart';
 import '../l10n/extension_translations.dart';
 import 'extensions_dialog.dart';
+import 'keyboard_shortcut_dialog.dart';
+import '../l10n/workspace_ux_strings.dart';
 
 // ---------------------------------------------------------------------------
 // Public entry point
@@ -118,6 +120,12 @@ class _GeneralSection extends ConsumerWidget {
       title: s.text('General'),
       icon: Icons.tune,
       children: [
+        ListTile(
+          key: const ValueKey('settings-keyboard-shortcuts'),
+          leading: const Icon(Icons.keyboard_outlined),
+          title: Text(WorkspaceUxStrings(context).text('customize')),
+          onTap: () => showKeyboardShortcutSettings(context),
+        ),
         ListTile(
           leading: const Icon(Icons.terminal),
           title: Text(CommanderStrings.translate(context, 'Custom commands')),

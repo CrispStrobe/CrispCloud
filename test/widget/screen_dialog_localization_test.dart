@@ -2,13 +2,16 @@ import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/screens/screen_dialogs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   testWidgets('keyboard shortcut descriptions follow the selected locale', (
     tester,
   ) async {
+    SharedPreferences.setMockInitialValues({});
     await tester.pumpWidget(
-      MaterialApp(
+      ProviderScope(child: MaterialApp(
         locale: const Locale('es'),
         supportedLocales: AppLocalizations.supportedLocales,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -20,7 +23,7 @@ void main() {
             ),
           ),
         ),
-      ),
+      )),
     );
     await tester.tap(find.text('Show'));
     await tester.pumpAndSettle();

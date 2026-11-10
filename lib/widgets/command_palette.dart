@@ -44,18 +44,29 @@ import 'file_view_editor_dialog.dart';
 import 'custom_command_dialog.dart';
 import 'extensions_dialog.dart';
 import '../l10n/extension_translations.dart';
+import '../l10n/navigation_strings.dart';
+import '../l10n/workspace_ux_strings.dart';
+import '../services/keyboard_shortcut_service.dart';
+import '../services/command_search.dart';
+import 'keyboard_shortcut_dialog.dart';
 
 class _Command {
   final String name;
   final String? shortcut;
   final IconData icon;
   final VoidCallback action;
+  final ShortcutAction? binding;
+  final String keywords;
+  final bool enabled;
 
   const _Command({
     required this.name,
     this.shortcut,
     required this.icon,
     required this.action,
+    this.binding,
+    this.keywords = '',
+    this.enabled = true,
   });
 }
 
@@ -92,10 +103,7 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     _allCommands = _buildCommands();
-    final query = _controller.text.toLowerCase();
-    _filtered = _allCommands
-        .where((command) => command.name.toLowerCase().contains(query))
-        .toList();
+    _filtered = _rankCommands(_controller.text);
     _selectedIndex = 0;
   }
 
@@ -118,20 +126,47 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
     return [
       // Navigation
       _Command(
+        name: WorkspaceUxStrings(context).text('back'),
+        binding: ShortcutAction.back,
+        icon: Icons.arrow_back,
+        enabled: panel.canNavigateBack,
+        action: () => panel.navigateBack(),
+      ),
+      _Command(
+        name: WorkspaceUxStrings(context).text('forward'),
+        binding: ShortcutAction.forward,
+        icon: Icons.arrow_forward,
+        enabled: panel.canNavigateForward,
+        action: () => panel.navigateForward(),
+      ),
+      _Command(
+        name: NavigationStrings(context).text('reopen'),
+        binding: ShortcutAction.reopenClosedTab,
+        icon: Icons.restore,
+        enabled: panel.canReopenClosedTab,
+        action: () => panel.reopenClosedTab(),
+      ),
+      _Command(
+        name: WorkspaceUxStrings(context).text('customize'),
+        icon: Icons.keyboard_outlined,
+        keywords: 'keyboard keys bindings shortcuts',
+        action: () => showKeyboardShortcutSettings(widget.parentContext),
+      ),
+      _Command(
         name: context.commanderTr("Navigate Up"),
-        shortcut: 'Backspace',
+        binding: ShortcutAction.up,
         icon: Icons.arrow_upward,
         action: () => panel.navigateUp(),
       ),
       _Command(
         name: context.commanderTr("Refresh Panel"),
-        shortcut: 'Ctrl+R',
+        binding: ShortcutAction.refresh,
         icon: Icons.refresh,
         action: () => panel.refresh(),
       ),
       _Command(
         name: context.commanderTr("Switch Panel"),
-        shortcut: 'Tab',
+        binding: ShortcutAction.switchPanel,
         icon: Icons.swap_horiz,
         action: () {
           ref.read(activePanelProvider.notifier).state = side == PanelSide.local
@@ -149,7 +184,7 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
       // Go to path
       _Command(
         name: context.commanderTr("Go to Path"),
-        shortcut: 'Ctrl+G',
+        binding: ShortcutAction.goToFolder,
         icon: Icons.folder_open,
         action: () {
           showGoToDialog(widget.parentContext, ref);
@@ -180,7 +215,7 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
       // Selection
       _Command(
         name: context.commanderTr("Select by Wildcard or Regex"),
-        shortcut: 'Num +',
+        binding: ShortcutAction.findPattern,
         icon: Icons.rule,
         action: () =>
             showPatternSelectionDialog(widget.parentContext, ref, side),
@@ -230,38 +265,38 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
       ),
       _Command(
         name: context.commanderTr("Multi-Rename"),
-        shortcut: 'Ctrl+M',
+        binding: ShortcutAction.multiRename,
         icon: Icons.drive_file_rename_outline,
         action: () => showMultiRenameFromSelection(widget.parentContext, ref),
       ),
       _Command(
         name: context.commanderTr("Copy with Options"),
-        shortcut: 'F5',
+        binding: ShortcutAction.copyWithOptions,
         icon: Icons.copy,
         action: () => showCopyDialogFromSelection(widget.parentContext, ref),
       ),
       _Command(
         name: context.commanderTr("Move with Options"),
-        shortcut: 'F6',
+        binding: ShortcutAction.moveWithOptions,
         icon: Icons.drive_file_move,
         action: () => showMoveDialogFromSelection(widget.parentContext, ref),
       ),
       _Command(
         name: context.commanderTr("Copy Files to Clipboard"),
-        shortcut: 'Ctrl+C',
+        binding: ShortcutAction.copy,
         icon: Icons.content_copy,
         action: () => copyFilesToClipboard(widget.parentContext, ref, side),
       ),
       _Command(
         name: context.commanderTr("Cut Files to Clipboard"),
-        shortcut: 'Ctrl+X',
+        binding: ShortcutAction.cut,
         icon: Icons.content_cut,
         action: () =>
             copyFilesToClipboard(widget.parentContext, ref, side, cut: true),
       ),
       _Command(
         name: context.commanderTr("Paste Files with Options"),
-        shortcut: 'Ctrl+V',
+        binding: ShortcutAction.paste,
         icon: Icons.content_paste,
         action: () => pasteFilesFromClipboard(widget.parentContext, ref, side),
       ),
@@ -354,7 +389,7 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
         ),
       _Command(
         name: context.commanderTr("Select All"),
-        shortcut: 'Ctrl+A',
+        binding: ShortcutAction.selectAll,
         icon: Icons.select_all,
         action: () => panel.selectAll(),
       ),
@@ -368,13 +403,13 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
       // Tabs
       _Command(
         name: context.commanderTr("New Tab"),
-        shortcut: 'Ctrl+T',
+        binding: ShortcutAction.newTab,
         icon: Icons.add,
         action: () => panel.addTab(),
       ),
       _Command(
         name: context.commanderTr("Close Tab"),
-        shortcut: 'Ctrl+W',
+        binding: ShortcutAction.closeTab,
         icon: Icons.close,
         action: () {
           panel.closeTab(panel.activeTabId);
@@ -385,7 +420,6 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
       if (ref.read(panelProvider(PanelSide.local)).selection.isNotEmpty)
         _Command(
           name: context.commanderTr("Upload Selected"),
-          shortcut: 'Ctrl+U',
           icon: Icons.upload,
           action: () => uploadSelected(widget.parentContext, ref),
         ),
@@ -400,7 +434,7 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
       // View
       _Command(
         name: context.commanderTr("Toggle Preview"),
-        shortcut: 'Space',
+        binding: ShortcutAction.togglePreview,
         icon: Icons.visibility,
         action: () {
           ref.read(showPreviewProvider.notifier).state = !ref.read(
@@ -500,26 +534,37 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
 
   void _onQueryChanged(String query) {
     setState(() {
-      if (query.isEmpty) {
-        _filtered = _allCommands;
-      } else {
-        final lower = query.toLowerCase();
-        _filtered = _allCommands
-            .where((c) => c.name.toLowerCase().contains(lower))
-            .toList();
-      }
-      _selectedIndex = 0;
+      _filtered = _rankCommands(query);
+      _selectedIndex = _filtered.indexWhere((command) => command.enabled);
+      if (_selectedIndex < 0) _selectedIndex = 0;
     });
+  }
+
+  String? _shortcut(_Command command) => command.binding == null
+      ? command.shortcut
+      : ref.read(keyboardShortcutServiceProvider).browserDisplay(command.binding!);
+
+  List<_Command> _rankCommands(String query) {
+    final ranked = <({int index, int score, _Command command})>[];
+    for (var i = 0; i < _allCommands.length; i++) {
+      final command = _allCommands[i];
+      final score = commandSearchScore(query, command.name,
+        keywords: '${command.keywords} ${command.binding == null ? '' : CommanderStrings.labelForEnum(command.binding!)} ${_shortcut(command) ?? ''}');
+      if (score != null) ranked.add((index: i, score: score, command: command));
+    }
+    ranked.sort((a, b) {
+      final byScore = b.score.compareTo(a.score);
+      return byScore == 0 ? a.index.compareTo(b.index) : byScore;
+    });
+    return ranked.map((entry) => entry.command).toList();
   }
 
   void _moveSelection(int delta) {
     if (_filtered.isEmpty) return;
-    setState(
-      () => _selectedIndex = (_selectedIndex + delta).clamp(
-        0,
-        _filtered.length - 1,
-      ),
-    );
+    var next = _selectedIndex + delta;
+    while (next >= 0 && next < _filtered.length && !_filtered[next].enabled) next += delta;
+    if (next < 0 || next >= _filtered.length) return;
+    setState(() => _selectedIndex = next);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final rowContext = _selectedRow.currentContext;
       if (mounted && rowContext != null) {
@@ -535,7 +580,7 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
   }
 
   void _executeSelected() {
-    if (_filtered.isNotEmpty && _selectedIndex < _filtered.length) {
+    if (_filtered.isNotEmpty && _selectedIndex < _filtered.length && _filtered[_selectedIndex].enabled) {
       Navigator.of(context).pop();
       _filtered[_selectedIndex].action();
     }
@@ -543,6 +588,7 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
 
   Widget _commandRow(int index, ThemeData theme) {
     final command = _filtered[index];
+    final shortcutLabel = _shortcut(command);
     final selected = index == _selectedIndex;
     final compact =
         MediaQuery.sizeOf(context).width < 500 ||
@@ -555,7 +601,7 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
         child: Text(
-          command.shortcut!,
+          shortcutLabel!,
           textDirection: TextDirection.ltr,
           style: TextStyle(
             fontSize: 11,
@@ -569,8 +615,9 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
       key: selected ? _selectedRow : ValueKey('command-$index'),
       button: true,
       selected: selected,
+      enabled: command.enabled,
       child: InkWell(
-        onTap: () {
+        onTap: !command.enabled ? null : () {
           setState(() => _selectedIndex = index);
           _executeSelected();
         },
@@ -591,8 +638,9 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(command.name, style: const TextStyle(fontSize: 13)),
-                    if (compact && command.shortcut != null)
+                    Text(command.name, style: TextStyle(fontSize: 13,
+                        color: command.enabled ? null : theme.disabledColor)),
+                    if (compact && shortcutLabel != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
                         child: shortcut(),
@@ -600,7 +648,7 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
                   ],
                 ),
               ),
-              if (!compact && command.shortcut != null) shortcut(),
+              if (!compact && shortcutLabel != null) shortcut(),
             ],
           ),
         ),
@@ -611,6 +659,13 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final side = ref.watch(activePanelProvider);
+    ref.watch(panelProvider(side));
+    ref.watch(authProvider);
+    ref.watch(shortcutBindingsProvider);
+    _allCommands = _buildCommands();
+    _filtered = _rankCommands(_controller.text);
+    if (_selectedIndex >= _filtered.length) _selectedIndex = 0;
 
     return Dialog(
       alignment: Alignment.topCenter,

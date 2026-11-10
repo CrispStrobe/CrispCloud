@@ -17,11 +17,12 @@ import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../providers/panel_source_provider.dart'
-    show panelSourceProvider, swapPanelSources;
+    show swapPanelSources;
 import '../providers/focus_area_provider.dart';
 import '../providers/terminal_provider.dart';
 import '../providers/toolbar_provider.dart' show panelViewModeProvider;
 import '../services/panel_view_mode_service.dart' show PanelViewMode;
+import '../services/keyboard_shortcut_service.dart';
 
 import 'package:path/path.dart' as p;
 
@@ -45,20 +46,6 @@ import 'screen_dialogs.dart';
 ///
 /// [onPanelSwitch] is called when Tab is pressed on narrow screens
 /// to sync the mobile panel tab state.
-bool _isGlobalFunctionKey(LogicalKeyboardKey key) =>
-    key == LogicalKeyboardKey.f1 ||
-    key == LogicalKeyboardKey.f2 ||
-    key == LogicalKeyboardKey.f3 ||
-    key == LogicalKeyboardKey.f4 ||
-    key == LogicalKeyboardKey.f5 ||
-    key == LogicalKeyboardKey.f6 ||
-    key == LogicalKeyboardKey.f7 ||
-    key == LogicalKeyboardKey.f8 ||
-    key == LogicalKeyboardKey.f9 ||
-    key == LogicalKeyboardKey.f10 ||
-    key == LogicalKeyboardKey.f11 ||
-    key == LogicalKeyboardKey.f12;
-
 bool _isEditingText() {
   final focus = FocusManager.instance.primaryFocus;
   final context = focus?.context;
@@ -74,13 +61,13 @@ KeyEventResult handleKeyEvent(
   KeyEvent event, {
   void Function(PanelSide)? onPanelSwitch,
 }) {
-  // A focused text field (terminal command line, search box, dialog input)
-  // must receive printable keys, arrows and editing keys. The file browser
-  // only keeps global function keys and modified shortcuts while editing.
+  // Text fields, dialogs and terminal sessions own all of their keys,
+  // including function keys. Browser commands must never edit a selected file
+  // while another surface is receiving input.
+  if (ModalRoute.of(context)?.isCurrent == false) return KeyEventResult.ignored;
   final terminalOwnsFocus = ref.read(focusAreaProvider) == FocusArea.terminal;
   final terminalTyping = ref.read(terminalInputFocusedProvider);
-  if ((terminalOwnsFocus || terminalTyping || _isEditingText()) &&
-      !_isGlobalFunctionKey(event.logicalKey)) {
+  if (terminalOwnsFocus || terminalTyping || _isEditingText()) {
     return KeyEventResult.ignored;
   }
 
@@ -101,8 +88,23 @@ KeyEventResult handleKeyEvent(
       HardwareKeyboard.instance.isControlPressed ||
       HardwareKeyboard.instance.isMetaPressed;
   final isShift = HardwareKeyboard.instance.isShiftPressed;
+  final isAlt = HardwareKeyboard.instance.isAltPressed;
   final activePanel = ref.read(activePanelProvider);
   final panel = ref.read(panelProvider(activePanel));
+
+  final shortcuts = ref.read(keyboardShortcutServiceProvider);
+  final shortcutAction = shortcuts.resolveBrowser(event,
+      isCtrl: HardwareKeyboard.instance.isControlPressed,
+      isMeta: HardwareKeyboard.instance.isMetaPressed,
+      isShift: isShift, isAlt: isAlt);
+  if (shortcutAction != null) {
+    return executeBrowserShortcut(context, ref, shortcutAction,
+        onPanelSwitch: onPanelSwitch);
+  }
+  if (shortcuts.suppressesDefault(event,
+      isCtrl: HardwareKeyboard.instance.isControlPressed,
+      isMeta: HardwareKeyboard.instance.isMetaPressed,
+      isShift: isShift, isAlt: isAlt)) return KeyEventResult.handled;
 
   // Ctrl+Shift+P - Command palette
   if (isCtrl && isShift && event.logicalKey == LogicalKeyboardKey.keyP) {
@@ -172,7 +174,7 @@ KeyEventResult handleKeyEvent(
     final oppositePanel = activePanel == PanelSide.local
         ? PanelSide.remote
         : PanelSide.local;
-    ref.read(panelProvider(oppositePanel)).navigateToPath(panel.currentPath);
+    unawaited(_mirrorLocation(ref, panel, oppositePanel));
     return KeyEventResult.handled;
   }
 
@@ -266,7 +268,7 @@ KeyEventResult handleKeyEvent(
   }
 
   // Enter — open cursor item
-  if (!isCtrl && event.logicalKey == LogicalKeyboardKey.enter) {
+  if (!isCtrl && !isAlt && event.logicalKey == LogicalKeyboardKey.enter) {
     final item = panel.cursorItem;
     if (item != null) panel.navigateInto(item);
     return KeyEventResult.handled;
@@ -383,14 +385,14 @@ KeyEventResult handleKeyEvent(
   }
 
   // F3 - View file with internal viewer / preview pane
-  if (event.logicalKey == LogicalKeyboardKey.f3) {
+  if (!isCtrl && !isShift && !isAlt && event.logicalKey == LogicalKeyboardKey.f3) {
     viewSelectedFile(context, ref);
     return KeyEventResult.handled;
   }
 
   // F4 - Edit file in internal editor
   // Shift+F4 - Edit file in system editor
-  if (event.logicalKey == LogicalKeyboardKey.f4) {
+  if (!isCtrl && !isAlt && event.logicalKey == LogicalKeyboardKey.f4) {
     if (isShift) {
       chooseEditorForSelection(context, ref);
     } else {
@@ -406,25 +408,25 @@ KeyEventResult handleKeyEvent(
   }
 
   // Shift+F5 also opens copy options; Keep both can duplicate in the same folder.
-  if (isShift && event.logicalKey == LogicalKeyboardKey.f5) {
+  if (!isCtrl && !isAlt && isShift && event.logicalKey == LogicalKeyboardKey.f5) {
     showCopyDialogFromSelection(context, ref);
     return KeyEventResult.handled;
   }
 
   // F6 - Move
-  if (event.logicalKey == LogicalKeyboardKey.f6) {
+  if (!isCtrl && !isShift && !isAlt && event.logicalKey == LogicalKeyboardKey.f6) {
     showMoveDialogFromSelection(context, ref);
     return KeyEventResult.handled;
   }
 
   // F7 - New folder
-  if (event.logicalKey == LogicalKeyboardKey.f7) {
+  if (!isCtrl && !isShift && !isAlt && event.logicalKey == LogicalKeyboardKey.f7) {
     showCreateFolderDialog(context, ref, activePanel);
     return KeyEventResult.handled;
   }
 
   // F8 - Delete
-  if (event.logicalKey == LogicalKeyboardKey.f8) {
+  if (!isCtrl && !isShift && !isAlt && event.logicalKey == LogicalKeyboardKey.f8) {
     confirmDeleteSelected(context, ref);
     return KeyEventResult.handled;
   }
@@ -512,14 +514,6 @@ KeyEventResult handleKeyEvent(
     ref
         .read(panelViewModeProvider(activePanel).notifier)
         .setMode(PanelViewMode.tree);
-    return KeyEventResult.handled;
-  }
-
-  // Space - Toggle preview pane
-  if (event.logicalKey == LogicalKeyboardKey.space && !isCtrl) {
-    ref.read(showPreviewProvider.notifier).state = !ref.read(
-      showPreviewProvider,
-    );
     return KeyEventResult.handled;
   }
 
@@ -612,6 +606,77 @@ KeyEventResult handleKeyEvent(
   return KeyEventResult.ignored;
 }
 
+Future<void> _mirrorLocation(WidgetRef ref, PanelNotifier source, PanelSide target) async {
+  try {
+    final origin = source.captureCurrentOrigin();
+    await ref.read(panelProvider(target)).navigateToPath(source.currentPath, origin: origin);
+  } catch (error) {
+    if (ref.context.mounted) ref.read(errorProvider).addError(error.toString(), cause: error);
+  }
+}
+
+/// Shared browser command execution for the binding resolver and command UI.
+/// Editor-only actions deliberately remain outside the file-operation host.
+KeyEventResult executeBrowserShortcut(BuildContext context, WidgetRef ref,
+    ShortcutAction action, {void Function(PanelSide)? onPanelSwitch}) {
+  final side = ref.read(activePanelProvider);
+  final panel = ref.read(panelProvider(side));
+  switch (action) {
+    case ShortcutAction.newTab: panel.addTab();
+    case ShortcutAction.closeTab: panel.closeTab(panel.activeTabId);
+    case ShortcutAction.nextTab: panel.nextTab();
+    case ShortcutAction.prevTab: panel.previousTab();
+    case ShortcutAction.reopenClosedTab: unawaited(panel.reopenClosedTab());
+    case ShortcutAction.commandPalette: showCommandPalette(context, ref);
+    case ShortcutAction.goToFolder: showGoToDialog(context, ref);
+    case ShortcutAction.filter: showPanelFilterDialog(context, panel);
+    case ShortcutAction.selectAll: panel.selectAll();
+    case ShortcutAction.delete: confirmDeleteSelected(context, ref);
+    case ShortcutAction.rename:
+      final cursor = panel.cursorItem;
+      if (cursor != null && cursor.name != '..') {
+        panel.startRename(cursor);
+      } else {
+        showRenameDialog(context, ref);
+      }
+    case ShortcutAction.newFolder: showCreateFolderDialog(context, ref, side);
+    case ShortcutAction.refresh: unawaited(panel.refresh());
+    case ShortcutAction.preview: viewSelectedFile(context, ref);
+    case ShortcutAction.edit: editSelectedFile(context, ref);
+    case ShortcutAction.undo: _undoLastAction(context, ref, side);
+    case ShortcutAction.redo: return KeyEventResult.ignored;
+    case ShortcutAction.switchPanel:
+      final next = side == PanelSide.local ? PanelSide.remote : PanelSide.local;
+      ref.read(activePanelProvider.notifier).state = next;
+      onPanelSwitch?.call(next);
+    case ShortcutAction.copy: copyFilesToClipboard(context, ref, side);
+    case ShortcutAction.cut: copyFilesToClipboard(context, ref, side, cut: true);
+    case ShortcutAction.paste: pasteFilesFromClipboard(context, ref, side);
+    case ShortcutAction.toggleTreeView:
+      ref.read(showTreeSidebarProvider.notifier).state = !ref.read(showTreeSidebarProvider);
+    case ShortcutAction.cycleLayout:
+      ref.read(panelViewModeProvider(side).notifier).cycleMode();
+    case ShortcutAction.search: showSearchDialog(context, ref);
+    case ShortcutAction.findPattern: showPatternSelectionDialog(context, ref, side);
+    case ShortcutAction.copyWithOptions: showCopyDialogFromSelection(context, ref);
+    case ShortcutAction.moveWithOptions: showMoveDialogFromSelection(context, ref);
+    case ShortcutAction.back: unawaited(panel.navigateBack());
+    case ShortcutAction.forward: unawaited(panel.navigateForward());
+    case ShortcutAction.up:
+      if (panel.isTypeahead) { panel.typeaheadBackspace(); } else { panel.navigateUp(); }
+    case ShortcutAction.togglePreview:
+      ref.read(showPreviewProvider.notifier).state = !ref.read(showPreviewProvider);
+    case ShortcutAction.toggleHidden: panel.toggleShowHiddenFiles();
+    case ShortcutAction.sortByName: panel.setSortBy(SortBy.name);
+    case ShortcutAction.sortByExtension: panel.setSortBy(SortBy.extension);
+    case ShortcutAction.sortByDate: panel.setSortBy(SortBy.date);
+    case ShortcutAction.sortBySize: panel.setSortBy(SortBy.size);
+    case ShortcutAction.bookmark: togglePanelBookmark(context, ref, side);
+    case ShortcutAction.multiRename: showMultiRenameFromSelection(context, ref);
+  }
+  return KeyEventResult.handled;
+}
+
 /// Open the cursor item (folder, archive, or file) in [targetSide]. Archives
 /// are entered on the target panel, and files are selected in their parent
 /// directory so the destination pane lands on the same item.
@@ -638,37 +703,33 @@ Future<void> _openCursorInPanel(
     return;
   }
 
-  final sourceIsLocal = ref.read(panelSourceProvider(sourceSide)).isLocal;
-  final targetIsLocal = ref.read(panelSourceProvider(targetSide)).isLocal;
-  if (sourceIsLocal != targetIsLocal) {
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(ViewerActionStrings(context).incompatiblePanelSources),
-        ),
-      );
-    }
-    return;
-  }
-
   final path = item.path;
   if (path == null || path.isEmpty) return;
   final targetPanel = ref.read(panelProvider(targetSide));
-  final parent = targetIsLocal ? p.dirname(path) : p.posix.dirname(path);
-
-  if (item.isFolder) {
-    await targetPanel.navigateToPath(path);
-  } else if (ArchiveService.isArchive(item.name)) {
-    await targetPanel.navigateToPath(parent);
-    await targetPanel.enterArchive(item);
-  } else {
-    await targetPanel.navigateToPath(parent, selectItem: item);
+  try {
+    final origin = sourcePanel.captureOperationOrigin([item]);
+    final parent = origin.source.isLocal ? p.dirname(path) : p.posix.dirname(path);
+    final destination = item.isFolder ? path : parent;
+    final navigation = targetPanel.navigateToPath(destination,
+        selectItem: item.isFolder ? null : item, origin: origin);
+    final targetTab = targetPanel.activeTabId;
+    await navigation;
+    if (!context.mounted || !origin.isCurrent ||
+        targetPanel.activeTabId != targetTab || targetPanel.currentPath != destination ||
+        ref.read(activePanelProvider) != sourceSide ||
+        targetPanel.captureCurrentOrigin().storageReference != origin.storageReference) return;
+    if (!item.isFolder && ArchiveService.isArchive(item.name)) {
+      final fresh = targetPanel.files?.where((file) => file.path == path).firstOrNull;
+      if (fresh == null || fresh.isFolder) return;
+      await targetPanel.enterArchive(fresh);
+    }
+    if (!context.mounted || ref.read(activePanelProvider) != sourceSide) return;
+    ref.read(activePanelProvider.notifier).state = targetSide;
+    onPanelSwitch?.call(targetSide);
+    targetPanel.restoreCursorAndFocus(item);
+  } catch (error) {
+    if (context.mounted) ref.read(errorProvider).addError(error.toString(), cause: error);
   }
-
-  if (!context.mounted) return;
-  ref.read(activePanelProvider.notifier).state = targetSide;
-  onPanelSwitch?.call(targetSide);
-  targetPanel.restoreCursorAndFocus(item);
 }
 
 // ---------------------------------------------------------------------------

@@ -20,6 +20,7 @@ import '../providers/toolbar_provider.dart'
     show columnWidthsProvider, panelViewModeProvider, fileColumnsProvider;
 import '../services/log_service.dart';
 import '../services/panel_view_mode_service.dart' show PanelViewMode;
+import '../services/keyboard_shortcut_service.dart';
 import '../utils/formatters.dart';
 import 'file_context_menu.dart';
 import 'pattern_selection_dialog.dart';
@@ -178,7 +179,7 @@ class FileListView extends ConsumerWidget {
               final isCursor = index == cursorIndex;
 
               if (panel.renamingItem == file) {
-                return _InlineRenameField(
+                return FileInlineRenameField(
                   file: file,
                   side: side,
                   isCursor: isCursor,
@@ -283,6 +284,24 @@ class FileListView extends ConsumerWidget {
 
             final isShift = HardwareKeyboard.instance.isShiftPressed;
             final p = ref.read(panelProvider(side));
+            if (p.renamingItem != null) return KeyEventResult.ignored;
+            final keyboard = HardwareKeyboard.instance;
+            final shortcuts = ref.read(keyboardShortcutServiceProvider);
+            final command = shortcuts.resolveBrowser(event,
+                isCtrl: keyboard.isControlPressed,
+                isMeta: keyboard.isMetaPressed,
+                isShift: isShift, isAlt: keyboard.isAltPressed);
+            final editingQuery = p.isTypeahead &&
+                event.logicalKey == LogicalKeyboardKey.backspace &&
+                !shortcuts.isCustomized(ShortcutAction.up);
+            if ((!editingQuery && command != null) ||
+                keyboard.isControlPressed || keyboard.isMetaPressed ||
+                keyboard.isAltPressed || shortcuts.suppressesDefault(event,
+                    isCtrl: keyboard.isControlPressed,
+                    isMeta: keyboard.isMetaPressed,
+                    isShift: isShift, isAlt: keyboard.isAltPressed)) {
+              return KeyEventResult.ignored;
+            }
 
             // Selection shortcuts must run before printable-character quick search.
             if (event.logicalKey == LogicalKeyboardKey.numpadAdd ||
@@ -491,7 +510,7 @@ class FileListTile extends ConsumerWidget {
 
     // Inline rename mode: replace the whole tile with an editable field
     if (isRenaming) {
-      return _InlineRenameField(
+      return FileInlineRenameField(
         file: file,
         side: side,
         isCursor: isCursor,
@@ -525,7 +544,13 @@ class FileListTile extends ConsumerWidget {
       child: Focus(
         onKeyEvent: (node, event) {
           if (event is KeyDownEvent &&
-              event.logicalKey == LogicalKeyboardKey.enter) {
+              event.logicalKey == LogicalKeyboardKey.enter &&
+              !HardwareKeyboard.instance.isControlPressed &&
+              !HardwareKeyboard.instance.isMetaPressed &&
+              !HardwareKeyboard.instance.isAltPressed &&
+              !HardwareKeyboard.instance.isShiftPressed &&
+              ref.read(keyboardShortcutServiceProvider).resolveBrowser(event,
+                  isCtrl: false, isShift: false, isAlt: false, isMeta: false) == null) {
             onDoubleTap();
             return KeyEventResult.handled;
           }
@@ -873,7 +898,7 @@ class CompactFileTile extends ConsumerWidget {
 }
 
 /// Inline rename text field shown in-place of the filename when F2 is pressed.
-class _InlineRenameField extends ConsumerStatefulWidget {
+class FileInlineRenameField extends ConsumerStatefulWidget {
   final FileItem file;
   final PanelSide side;
   final bool isCursor;
@@ -885,7 +910,7 @@ class _InlineRenameField extends ConsumerStatefulWidget {
   /// Select only the base name so the extension is preserved.
   final bool keepExtension;
 
-  const _InlineRenameField({
+  const FileInlineRenameField({
     required this.file,
     required this.side,
     required this.isCursor,
@@ -895,10 +920,10 @@ class _InlineRenameField extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<_InlineRenameField> createState() => _InlineRenameFieldState();
+  ConsumerState<FileInlineRenameField> createState() => FileInlineRenameFieldState();
 }
 
-class _InlineRenameFieldState extends ConsumerState<_InlineRenameField> {
+class FileInlineRenameFieldState extends ConsumerState<FileInlineRenameField> {
   late final TextEditingController _ctrl;
   late final FocusNode _focus;
   late final FocusNode _keyboardListenerFocus;

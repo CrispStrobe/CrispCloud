@@ -12,6 +12,7 @@ import '../l10n/misc_ui_strings.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import 'bookmark_actions.dart';
+import 'panel_history_button.dart';
 
 class FileBreadcrumbs extends ConsumerWidget {
   final PanelSide side;
@@ -126,6 +127,7 @@ class FileBreadcrumbs extends ConsumerWidget {
               ),
             ),
           )),
+          PanelHistoryButton(panel: panel, compact: !isMobile),
           Tooltip(
             message: MiscUiStrings(context).text('home'),
             child: ConstrainedBox(
