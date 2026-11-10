@@ -19,6 +19,7 @@ import '../services/panel_source_service.dart';
 import '../utils/formatters.dart';
 import 'file_context_menu.dart';
 import 'folder_drop_target.dart';
+import 'panel_listing_placeholder.dart';
 import 'file_list_view.dart'
     show FileListView, FileInlineRenameField, getFileIcon;
 
@@ -426,8 +427,14 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
     final selected = ref.watch(panelSourceProvider(widget.side));
     ref.watch(fontSizeProvider);
     ref.watch(fontFamilyProvider);
+    ref.watch(authProvider);
+    ref.watch(multiCloudProvider);
+    final listingState = panelListingState(panel);
     if (panel.isInArchive || panel.showingSearchResults || panel.isFlatView) {
       if (_columns.isNotEmpty) _resetTrail();
+      if (listingState != null) {
+        return PanelListingPlaceholder(side: widget.side, state: listingState);
+      }
       return FileListView(
         side: widget.side,
         files: widget.files,
@@ -451,11 +458,10 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
         autofocus: active && !terminal,
         skipTraversal: true,
         onKeyEvent: _onKeyEvent,
-        child: _columns.isEmpty
-            ? Center(
-                child: panel.isLoading
-                    ? const CircularProgressIndicator()
-                    : Text(FileListStrings(context).text('Empty folder')),
+        child: _columns.isEmpty || listingState?.blocksListing == true
+            ? PanelListingPlaceholder(
+                side: widget.side,
+                state: listingState ?? PanelListingState.unavailable,
               )
             : Scrollbar(
                 controller: _horizontalScroll,
@@ -468,7 +474,13 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       for (var index = 0; index < _columns.length; index++)
-                        _buildColumn(context, panel, index, active),
+                        _buildColumn(
+                          context,
+                          panel,
+                          index,
+                          active,
+                          listingState,
+                        ),
                     ],
                   ),
                 ),
@@ -482,6 +494,7 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
     PanelNotifier panel,
     int index,
     bool active,
+    PanelListingState? listingState,
   ) {
     final column = _columns[index];
     final current = index == _columns.length - 1;
@@ -533,7 +546,12 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
               ),
             ),
             Expanded(
-              child: files.isEmpty
+              child: current && listingState != null
+                  ? PanelListingPlaceholder(
+                      side: widget.side,
+                      state: listingState,
+                    )
+                  : files.isEmpty
                   ? Center(child: Text(strings.text('Empty folder')))
                   : ListView.builder(
                       key: PageStorageKey('column-list:${column.path}'),

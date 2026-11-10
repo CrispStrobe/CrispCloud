@@ -159,6 +159,7 @@ class _FKeyButton extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         textScaler: MediaQuery.textScalerOf(context),
         text: TextSpan(
+          style: DefaultTextStyle.of(context).style,
           children: [
             TextSpan(
               text: '$shortcut ',

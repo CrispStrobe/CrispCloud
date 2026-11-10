@@ -68,6 +68,10 @@ jobs:
           lib/widgets/file_clipboard_actions.dart
           lib/widgets/file_operation_dialog.dart
           lib/widgets/file_column_view.dart
+          lib/widgets/file_panel.dart
+          lib/widgets/panel_listing_placeholder.dart
+          lib/widgets/panel_source_selector.dart
+          lib/widgets/panel_header.dart
           lib/widgets/file_collections_dialog.dart
           lib/widgets/command_palette.dart
       - name: Workspace behavior regressions
@@ -75,6 +79,11 @@ jobs:
           candidates=(
             test/panel_source_restore_test.dart
             test/panel_file_origin_test.dart
+            test/panel_listing_presentation_test.dart
+            test/panel_refresh_lifecycle_test.dart
+            test/panel_swap_test.dart
+            test/panel_swap_view_test.dart
+            test/panel_swap_virtual_test.dart
             test/commander_file_list_test.dart
             test/keyboard_shortcut_test.dart
             test/workspace_keyboard_test.dart
@@ -96,6 +105,8 @@ jobs:
             test/widget/responsive_toolbar_widget_test.dart
             test/widget/folder_drop_target_test.dart
             test/widget/panel_drop_options_test.dart
+            test/widget/panel_source_selector_widget_test.dart
+            test/widget/panel_listing_placeholder_test.dart
             test/file_clipboard_test.dart
             test/file_list_i18n_test.dart
             test/widget/file_operation_dialog_test.dart

@@ -14,9 +14,7 @@ import '../models/panel_side.dart';
 import '../models/panel_drag_data.dart';
 import '../providers/providers.dart';
 import '../l10n/panel_error_strings.dart';
-import '../providers/panel_source_provider.dart' show panelSourceProvider;
 import '../providers/toolbar_provider.dart' show panelViewModeProvider;
-import '../services/panel_source_service.dart' show RemotePanelSource;
 import '../services/panel_view_mode_service.dart' show PanelViewMode;
 import 'file_column_view.dart';
 import 'file_column_header.dart';
@@ -34,10 +32,9 @@ import 'pattern_selection_dialog.dart';
 import 'file_tree_view_stub.dart' if (dart.library.io) 'file_tree_view.dart';
 import 'panel_tab_bar.dart';
 import 'panel_header.dart';
+import 'panel_listing_placeholder.dart';
 import '../l10n/app_localizations.dart';
-import '../l10n/access_and_fkey_strings.dart';
 import '../l10n/file_panel_strings.dart';
-import '../screens/screen_dialogs.dart' show showConnectionDialogScreen;
 
 class FilePanel extends ConsumerStatefulWidget {
   final PanelSide side;
@@ -59,7 +56,7 @@ class _FilePanelState extends ConsumerState<FilePanel> {
   static const _log = Log('FilePanel');
 
   bool _isDragging = false;
-  String? _lastShownError;
+  AppError? _lastShownError;
   late final ScrollController _scrollController;
 
   @override
@@ -85,46 +82,30 @@ class _FilePanelState extends ConsumerState<FilePanel> {
     // snackbar and the message appeared to never go away.
     if (lastError != null &&
         lastError.isNotEmpty &&
-        widget.side == PanelSide.local &&
+        widget.side == ref.watch(activePanelProvider) &&
         lastAppError?.code != PanelErrorCode.permissionDenied &&
-        lastError != _lastShownError) {
-      _lastShownError = lastError;
+        !identical(lastAppError, _lastShownError)) {
+      _lastShownError = lastAppError;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!context.mounted) return;
+        if (!context.mounted ||
+            !identical(ref.read(errorProvider).lastAppError, lastAppError)) {
+          return;
+        }
         final messenger = ScaffoldMessenger.of(context);
         messenger.hideCurrentSnackBar();
-        final panel = ref.read(panelProvider(widget.side));
-        final missingPath =
-            lastError.contains('PathNotFound') ||
-            lastError.contains('No such file') ||
-            lastError.contains('not found');
-        final actionLabel = panel.isInArchive
-            ? FilePanelStrings(context).text('exitArchive')
-            : missingPath
-            ? 'Home'
-            : 'Grant access';
         messenger.showSnackBar(
           SnackBar(
             content: Text(localizedPanelError(context, lastAppError!)),
             showCloseIcon: true,
             behavior: SnackBarBehavior.floating,
-            action: SnackBarAction(
-              label: actionLabel,
-              onPressed: () {
-                if (panel.isInArchive) {
-                  panel.exitArchive();
-                } else if (missingPath) {
-                  panel.navigateHome();
-                } else {
-                  panel.grantAccessToCurrentPath();
-                }
-              },
-            ),
             duration: const Duration(seconds: 8),
           ),
         );
-        // Consume it so it is not shown again on the next build.
-        ref.read(errorProvider).clearLastError();
+        // Only consume the error this callback actually displayed. A newer
+        // failure may have arrived between scheduling and showing the notice.
+        if (identical(ref.read(errorProvider).lastAppError, lastAppError)) {
+          ref.read(errorProvider).clearLastError();
+        }
       });
     } else if (lastError == null) {
       _lastShownError = null;
@@ -133,83 +114,6 @@ class _FilePanelState extends ConsumerState<FilePanel> {
     final files = panel.filteredFiles;
     final currentPath = panel.currentPath;
     final selection = panel.selection;
-
-    final layout = widget.side == PanelSide.local
-        ? ref.watch(localViewModeProvider)
-        : ref.watch(remoteViewModeProvider);
-    final visualLayout =
-        layout == ViewMode.grid ||
-        layout == ViewMode.tiles ||
-        layout == ViewMode.gallery ||
-        layout == ViewMode.column;
-    var hasRemoteListing = false;
-    if (kIsWeb) {
-      try {
-        hasRemoteListing = panel.captureCurrentOrigin().source.isRemote;
-      } on StateError {
-        // No verified listing yet; the source picker still identifies a
-        // selected remote account and must not display the local welcome UI.
-      }
-    }
-    // Web/empty state: show action buttons instead of spinner. Visual layouts
-    // keep their search/view controls usable in empty folders.
-    if (kIsWeb &&
-        !visualLayout &&
-        (files == null || files.isEmpty) &&
-        !panel.isLoading &&
-        !panel.showingSearchResults &&
-        !panel.isInArchive &&
-        currentPath == '/' &&
-        panel.filterQuery.isEmpty &&
-        ref.watch(panelSourceProvider(widget.side)).isLocal &&
-        !hasRemoteListing) {
-      final auth = ref.watch(authProvider);
-      final l = AppLocalizations.of(context)!;
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.folder_open,
-              size: 64,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            const SizedBox(height: 16),
-            Text(l.noFolderSelected),
-            const SizedBox(height: 12),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.folder_open),
-              onPressed: () => panel.pickLocalDirectory(),
-              label: Text(l.openLocalFolder),
-            ),
-            const SizedBox(height: 8),
-            if (!auth.isConnected)
-              OutlinedButton.icon(
-                icon: const Icon(Icons.cloud),
-                onPressed: () => showConnectionDialogScreen(context),
-                label: Text(l.connectToCloud),
-              )
-            else
-              OutlinedButton.icon(
-                icon: const Icon(Icons.cloud_done),
-                onPressed: () {
-                  // Switch this panel to the connected remote source.
-                  ref
-                      .read(panelSourceProvider(widget.side).notifier)
-                      .setSource(
-                        RemotePanelSource(
-                          providerName: auth.providerName,
-                          client: auth.client,
-                          path: '/',
-                        ),
-                      );
-                },
-                label: Text(l.browseProvider(auth.providerName)),
-              ),
-          ],
-        ),
-      );
-    }
 
     // Wrap in DragTarget for inter-panel file dragging
     final panelContent = _buildPanelContent(
@@ -758,8 +662,12 @@ class _FilePanelState extends ConsumerState<FilePanel> {
     String currentPath,
     Set<FileItem> selection,
   ) {
-    final panelSource = ref.watch(panelSourceProvider(widget.side));
-    final sourceIsRemote = !panelSource.isLocal;
+    // Observe account changes even if they invalidate an existing listing
+    // without publishing new rows. Status uses that listing's actual source.
+    ref.watch(authProvider);
+    ref.watch(multiCloudProvider);
+    final sourceIsRemote = panel.directoryStorage?.isLocal == false;
+    final listingState = panelListingState(panel);
     final layout = widget.side == PanelSide.local
         ? ref.watch(localViewModeProvider)
         : ref.watch(remoteViewModeProvider);
@@ -834,87 +742,19 @@ class _FilePanelState extends ConsumerState<FilePanel> {
           // Loading indicator shown while directory listing is in progress
           if (panel.isLoading) const LinearProgressIndicator(minHeight: 2),
           Expanded(
-            child: files == null && !retainColumns
-                ? const Center(child: CircularProgressIndicator())
-                : files != null && files.isEmpty && !visualLayout
-                ? Center(
-                    child: _isDragging && sourceIsRemote
-                        ? Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.upload_file,
-                                size: 64,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                AppLocalizations.of(context)!.dropFilesToUpload,
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                            ],
-                          )
-                        : panel.showingSearchResults
-                        ? Text(context.commanderTr("This file list is empty."))
-                        : sourceIsRemote && !ref.read(authProvider).isConnected
-                        ? Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.cloud_off,
-                                size: 56,
-                                color: Theme.of(context).colorScheme.onSurface
-                                    .withValues(alpha: 0.3),
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                AppLocalizations.of(context)!.notConnected,
-                                style: Theme.of(context).textTheme.titleMedium
-                                    ?.copyWith(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface
-                                          .withValues(alpha: 0.5),
-                                    ),
-                              ),
-                              const SizedBox(height: 16),
-                              ElevatedButton.icon(
-                                icon: const Icon(Icons.login, size: 18),
-                                label: Text(
-                                  AppLocalizations.of(context)!
-                                      .connectToCloudShort,
-                                ),
-                                onPressed: () =>
-                                    showConnectionDialogScreen(context),
-                              ),
-                            ],
-                          )
-                        : ref.watch(errorProvider).lastAppError?.code ==
-                              PanelErrorCode.permissionDenied
-                        ? Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.lock_outline, size: 56),
-                              const SizedBox(height: 12),
-                              Text(
-                                AppLocalizations.of(context)!.permissionDenied,
-                                textAlign: TextAlign.center,
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                              const SizedBox(height: 16),
-                              ElevatedButton.icon(
-                                icon: const Icon(Icons.folder_open, size: 18),
-                                label: Text(
-                                  AccessAndFKeyStrings(
-                                    Localizations.localeOf(context),
-                                  ).grantAccess,
-                                ),
-                                onPressed: () =>
-                                    panel.grantAccessToCurrentPath(),
-                              ),
-                            ],
-                          )
-                        : Text(AppLocalizations.of(context)!.emptyFolder),
+            child:
+                !retainColumns &&
+                    listingState != null &&
+                    (listingState.blocksListing ||
+                        (!visualLayout &&
+                            listingState != PanelListingState.loading) ||
+                        (listingState == PanelListingState.loading &&
+                            (files == null ||
+                                !files.any((file) => file.name != '..'))))
+                ? PanelListingPlaceholder(
+                    side: widget.side,
+                    state: listingState,
+                    dropHint: _isDragging && sourceIsRemote,
                   )
                 // Pull-to-refresh on mobile, with type-ahead overlay
                 : Stack(

@@ -83,6 +83,28 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
+  testWidgets('action labels inherit the application font family', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          theme: ThemeData(fontFamily: 'WorkspaceTestFont'),
+          home: Scaffold(body: FKeyBar(overrideContext: _singleFileContext())),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final label = tester.widget<RichText>(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is RichText && widget.text.toPlainText().startsWith('F3 '),
+      ),
+    );
+    expect(label.text.style?.fontFamily, 'WorkspaceTestFont');
+    expect(tester.takeException(), isNull);
+  });
+
   // -------------------------------------------------------------------------
   // Visibility
   // -------------------------------------------------------------------------

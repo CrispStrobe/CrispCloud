@@ -131,6 +131,9 @@ class PanelNotifier extends ChangeNotifier {
   bool _settingSwapSource = false;
   PanelFileOrigin? _currentDirectoryOrigin;
   PanelSource? _requestedListingSource;
+  ({int generation, String tabId, PanelFileOrigin origin})?
+  _directoryPresentationRequest;
+  AppError? _directoryListingFailure;
   late final Set<FileItem> _selection = PanelSelection(
     paged: () => _collectionPage != null,
     canMutate: () =>
@@ -433,6 +436,95 @@ class PanelNotifier extends ChangeNotifier {
 
   // --- Getters ---
   List<FileItem>? get files => _files;
+
+  bool get _hasCurrentDirectoryRequest {
+    final request = _directoryPresentationRequest;
+    return request != null &&
+        request.generation == _listingGeneration &&
+        request.tabId == _activeTabId;
+  }
+
+  /// Identity for directory-state presentation, including a saved tab whose
+  /// account is unavailable. Never infer this from the pane's visual position.
+  StorageReference? get directoryStorage {
+    if (isInArchive || _showingSearchResults || _isFlatView) return null;
+    if (_pendingTabStorage != null) return _pendingTabStorage;
+    if (_verifiedListingGeneration == _listingGeneration &&
+        _currentDirectoryOrigin != null) {
+      return _currentDirectoryOrigin!.storageReference;
+    }
+    if (_hasCurrentDirectoryRequest) {
+      return _directoryPresentationRequest!.origin.storageReference;
+    }
+    return activeTab?.storage ??
+        storageReferenceForSource(_ref.read(panelSourceProvider(side)));
+  }
+
+  /// The exact source of the current request/listing. A missing source remains
+  /// missing; another connected account must not supply its empty/error state.
+  PanelSource? get directorySource {
+    final storage = directoryStorage;
+    if (storage == null) return null;
+    if (_pendingTabStorage == null) {
+      if (_verifiedListingGeneration == _listingGeneration &&
+          _currentDirectoryOrigin != null) {
+        return _currentDirectoryOrigin!.source;
+      }
+      if (_hasCurrentDirectoryRequest) {
+        return _directoryPresentationRequest!.origin.source;
+      }
+    }
+    return resolveStorageReference(
+      storage,
+      activeTab?.path ?? currentPath,
+    )?.source;
+  }
+
+  bool get directorySourceAvailable {
+    final storage = directoryStorage;
+    if (storage == null) return false;
+    if (_pendingTabStorage == null) {
+      if (_verifiedListingGeneration == _listingGeneration &&
+          _currentDirectoryOrigin != null) {
+        return _currentDirectoryOrigin!.isCurrent;
+      }
+      if (_hasCurrentDirectoryRequest) {
+        return _directoryPresentationRequest!.origin.isCurrent;
+      }
+    }
+    return resolveStorageReference(
+          storage,
+          activeTab?.path ?? currentPath,
+        )?.isCurrent ==
+        true;
+  }
+
+  bool get hasVerifiedDirectoryListing =>
+      !isInArchive &&
+      !_showingSearchResults &&
+      !_isFlatView &&
+      _pendingTabStorage == null &&
+      _verifiedListingGeneration == _listingGeneration &&
+      _currentDirectoryOrigin?.isCurrent == true;
+
+  /// Failures belong to the directory request that produced them. Reading a
+  /// different tab, collection, archive, or generation cannot revive one.
+  AppError? get directoryListingError =>
+      directoryStorage != null &&
+          _pendingTabStorage == null &&
+          _hasCurrentDirectoryRequest &&
+          _directoryPresentationRequest!.origin.isCurrent
+      ? _directoryListingFailure
+      : null;
+
+  void _beginDirectoryPresentation(int generation, PanelFileOrigin origin) {
+    _directoryPresentationRequest = (
+      generation: generation,
+      tabId: _activeTabId,
+      origin: origin,
+    );
+    _directoryListingFailure = null;
+  }
 
   /// Returns an origin only for this exact object in the current verified
   /// listing. A same-path object from search, an archive, an old listing, or
@@ -6788,6 +6880,7 @@ class PanelNotifier extends ChangeNotifier {
       if (origin == null) {
         _pendingTabStorage = storage;
         _files = [];
+        _isLoading = false;
         _selection.clear();
         _currentDirectoryOrigin = null;
         _listingGeneration++;
@@ -7299,6 +7392,7 @@ class PanelNotifier extends ChangeNotifier {
       LocalPanelSource(listingPath),
       () => !_isDisposed,
     );
+    _beginDirectoryPresentation(generation, origin);
     _log.debug('_loadLocalFiles: $currentPath (web=$kIsWeb)');
     _isLoading = true;
     notifyListeners();
@@ -7345,6 +7439,10 @@ class PanelNotifier extends ChangeNotifier {
       if (entities == null) {
         _files = [];
         _isLoading = false;
+        _directoryListingFailure = AppError(
+          'Local file access is not supported on this platform.',
+          code: PanelErrorCode.localUnsupported,
+        );
         if (!kIsWeb) {
           _ref
               .read(errorProvider)
@@ -7544,6 +7642,11 @@ class PanelNotifier extends ChangeNotifier {
           (e is PathAccessException ||
               e.toString().contains('Operation not permitted'))) {
         _files = [];
+        _directoryListingFailure = AppError(
+          'Permission denied. Use the Browse button to grant access.',
+          code: PanelErrorCode.permissionDenied,
+          cause: e,
+        );
         _ref
             .read(errorProvider)
             .addError(
@@ -7554,6 +7657,7 @@ class PanelNotifier extends ChangeNotifier {
         return;
       }
       _files = [];
+      _directoryListingFailure = AppError(e.toString(), cause: e);
       _ref.read(errorProvider).addError(e.toString(), cause: e);
       notifyListeners();
     }
@@ -7643,6 +7747,7 @@ class PanelNotifier extends ChangeNotifier {
     final listingPath = _remotePath;
     final origin = _remoteOrigin(client, providerName, listingPath);
     _requestedListingSource = origin.source;
+    _beginDirectoryPresentation(generation, origin);
 
     _isLoading = true;
     notifyListeners();
@@ -7812,6 +7917,7 @@ class PanelNotifier extends ChangeNotifier {
       if (_files == null || _files!.isEmpty) {
         _files = [];
       }
+      _directoryListingFailure = AppError(e.toString(), cause: e);
       _ref.read(errorProvider).addError(e.toString(), cause: e);
       notifyListeners();
     }
