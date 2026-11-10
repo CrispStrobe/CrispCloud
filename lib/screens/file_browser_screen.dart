@@ -89,6 +89,9 @@ import 'about_dialog.dart';
 import 'keyboard_shortcuts.dart';
 import 'screen_dialogs.dart';
 import '../services/log_service.dart';
+import '../services/keyboard_shortcut_service.dart';
+import '../services/browser_menu_shortcut.dart';
+import '../l10n/navigation_strings.dart';
 
 class FileBrowserScreen extends ConsumerStatefulWidget {
   const FileBrowserScreen({super.key});
@@ -100,9 +103,77 @@ class FileBrowserScreen extends ConsumerStatefulWidget {
 class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
   static const _log = Log('FileBrowser');
   PanelSide _activePanelMobile = PanelSide.local;
+  bool _textInputFocused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    FocusManager.instance.addListener(_updateMenuFocus);
+  }
+
+  void _updateMenuFocus() {
+    final focused = browserTextInputHasFocus();
+    if (focused == _textInputFocused) return;
+    _textInputFocused = focused;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    FocusManager.instance.removeListener(_updateMenuFocus);
+    super.dispose();
+  }
+
+  bool _browserOwnsInput(BuildContext context, WidgetRef ref) =>
+      ModalRoute.of(context)?.isCurrent != false &&
+      !browserTextInputHasFocus() &&
+      ref.read(focusAreaProvider) != FocusArea.terminal &&
+      !ref.read(terminalInputFocusedProvider) &&
+      ref.read(officeEditorMenuProvider) == null &&
+      ref.read(imageEditorMenuProvider) == null &&
+      ref.read(pdfEditorMenuProvider) == null &&
+      ref.read(codeEditorMenuProvider) == null &&
+      ref.read(mediaEditorMenuProvider) == null;
+
+  PlatformMenuItem _browserMenuCommand(
+    BuildContext context,
+    WidgetRef ref,
+    ShortcutAction action,
+    String label,
+  ) {
+    final panel = _activePanel(ref);
+    final available =
+        _browserOwnsInput(context, ref) &&
+        switch (action) {
+          ShortcutAction.back => panel.canNavigateBack,
+          ShortcutAction.forward => panel.canNavigateForward,
+          ShortcutAction.reopenClosedTab => panel.canReopenClosedTab,
+          ShortcutAction.closeTab =>
+            panel.tabs.length > 1 && panel.activeTab?.isProtected != true,
+          _ => true,
+        };
+    return PlatformMenuItem(
+      label: label,
+      shortcut: available
+          ? browserMenuShortcut(
+              ref.read(keyboardShortcutServiceProvider),
+              action,
+            )
+          : null,
+      onSelected: !available
+          ? null
+          : () {
+              if (_browserOwnsInput(context, ref))
+                executeBrowserShortcut(context, ref, action);
+            },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(shortcutBindingsProvider);
     final l = AppLocalizations.of(context)!;
     final OfficeEditorMenuActions? officeEditor = ref.watch(
       officeEditorMenuProvider,
@@ -364,69 +435,73 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     final PanelSide activeSide = ref.read(activePanelProvider);
 
     final List<PlatformMenuItem> browserFileMenus = <PlatformMenuItem>[
-      PlatformMenuItem(
-        label: context.commanderTr("New Tab"),
-        shortcut: const SingleActivator(LogicalKeyboardKey.keyT, meta: true),
-        onSelected: () {
-          final side = ref.read(activePanelProvider);
-          ref.read(panelProvider(side)).addTab();
-        },
+      _browserMenuCommand(
+        context,
+        ref,
+        ShortcutAction.reopenClosedTab,
+        NavigationStrings(context).text('reopen'),
       ),
-      PlatformMenuItem(
-        label: context.commanderTr("Close Tab"),
-        shortcut: const SingleActivator(LogicalKeyboardKey.keyW, meta: true),
-        onSelected: () {
-          final side = ref.read(activePanelProvider);
-          final panel = ref.read(panelProvider(side));
-          final tab = panel.activeTab;
-          if (tab != null) panel.closeTab(tab.id);
-        },
+      _browserMenuCommand(
+        context,
+        ref,
+        ShortcutAction.newTab,
+        context.commanderTr("New Tab"),
+      ),
+      _browserMenuCommand(
+        context,
+        ref,
+        ShortcutAction.closeTab,
+        context.commanderTr("Close Tab"),
       ),
       PlatformMenuItem(
         label: context.commanderTr("Open"),
-        shortcut: const SingleActivator(LogicalKeyboardKey.enter),
         onSelected: () => viewSelectedFile(context, ref),
       ),
-      PlatformMenuItem(
-        label: context.commanderTr("Edit"),
-        shortcut: const SingleActivator(LogicalKeyboardKey.f4),
-        onSelected: () => editSelectedFile(context, ref),
+      _browserMenuCommand(
+        context,
+        ref,
+        ShortcutAction.edit,
+        context.commanderTr("Edit"),
       ),
       PlatformMenuItem(
         label: context.commanderTr("Edit with…"),
-        shortcut: const SingleActivator(LogicalKeyboardKey.f4, shift: true),
         onSelected: () => chooseEditorForSelection(context, ref),
       ),
       PlatformMenuItemGroup(
         members: <PlatformMenuItem>[
-          PlatformMenuItem(
-            label: context.commanderTr("Copy..."),
-            shortcut: const SingleActivator(LogicalKeyboardKey.f5),
-            onSelected: () => showCopyDialogFromSelection(context, ref),
+          _browserMenuCommand(
+            context,
+            ref,
+            ShortcutAction.copyWithOptions,
+            context.commanderTr("Copy..."),
           ),
-          PlatformMenuItem(
-            label: context.commanderTr("Move..."),
-            shortcut: const SingleActivator(LogicalKeyboardKey.f6),
-            onSelected: () => showMoveDialogFromSelection(context, ref),
+          _browserMenuCommand(
+            context,
+            ref,
+            ShortcutAction.moveWithOptions,
+            context.commanderTr("Move..."),
           ),
-          PlatformMenuItem(
-            label: context.commanderTr("Delete..."),
-            shortcut: const SingleActivator(LogicalKeyboardKey.f8),
-            onSelected: () => confirmDeleteSelected(context, ref),
+          _browserMenuCommand(
+            context,
+            ref,
+            ShortcutAction.delete,
+            context.commanderTr("Delete..."),
           ),
-          PlatformMenuItem(
-            label: context.commanderTr("Rename..."),
-            shortcut: const SingleActivator(LogicalKeyboardKey.f6, shift: true),
-            onSelected: () => showRenameDialog(context, ref),
+          _browserMenuCommand(
+            context,
+            ref,
+            ShortcutAction.rename,
+            context.commanderTr("Rename..."),
           ),
         ],
       ),
       PlatformMenuItemGroup(
         members: <PlatformMenuItem>[
-          PlatformMenuItem(
-            label: context.commanderTr("New Folder..."),
-            shortcut: const SingleActivator(LogicalKeyboardKey.f7),
-            onSelected: () => showCreateFolderDialog(context, ref, activeSide),
+          _browserMenuCommand(
+            context,
+            ref,
+            ShortcutAction.newFolder,
+            context.commanderTr("New Folder..."),
           ),
           PlatformMenuItem(
             label: context.commanderTr("Properties"),
@@ -442,30 +517,28 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       ),
       PlatformMenuItemGroup(
         members: <PlatformMenuItem>[
-          PlatformMenuItem(
-            label: context.commanderTr("Go to Path..."),
-            shortcut: const SingleActivator(
-              LogicalKeyboardKey.keyG,
-              meta: true,
-            ),
-            onSelected: () => showGoToDialog(context, ref),
+          _browserMenuCommand(
+            context,
+            ref,
+            ShortcutAction.goToFolder,
+            context.commanderTr("Go to Path..."),
           ),
-          PlatformMenuItem(
-            label: context.commanderTr("Connect..."),
-            shortcut: const SingleActivator(
-              LogicalKeyboardKey.keyK,
-              meta: true,
-            ),
-            onSelected: () => showConnectionDialogScreen(context),
+          _browserMenuCommand(
+            context,
+            ref,
+            ShortcutAction.connect,
+            context.commanderTr("Connect..."),
           ),
         ],
       ),
     ];
 
     final List<PlatformMenuItem> browserEditMenus = <PlatformMenuItem>[
-      PlatformMenuItem(
-        label: context.commanderTr("Select by Wildcard or Regex..."),
-        onSelected: () => showPatternSelectionDialog(context, ref, activeSide),
+      _browserMenuCommand(
+        context,
+        ref,
+        ShortcutAction.findPattern,
+        context.commanderTr("Select by Wildcard or Regex..."),
       ),
       PlatformMenuItem(
         label: context.commanderTr("Deselect by Wildcard or Regex..."),
@@ -497,10 +570,11 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         label: context.commanderTr("Change attributes…"),
         onSelected: () => showFileAttributesFromSelection(context, ref),
       ),
-      PlatformMenuItem(
-        label: context.commanderTr("Multi-Rename..."),
-        shortcut: const SingleActivator(LogicalKeyboardKey.keyM, control: true),
-        onSelected: () => showMultiRenameFromSelection(context, ref),
+      _browserMenuCommand(
+        context,
+        ref,
+        ShortcutAction.multiRename,
+        context.commanderTr("Multi-Rename..."),
       ),
       PlatformMenuItem(
         label: context.commanderTr("Trash History and Restore..."),
@@ -573,35 +647,29 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         onSelected: () => _activePanel(ref).restoreSelection(),
       ),
 
-      PlatformMenuItem(
-        label: context.commanderTr("Select All"),
-        shortcut: const SingleActivator(LogicalKeyboardKey.keyA, meta: true),
-        onSelected: () => _activePanel(ref).selectAll(),
+      _browserMenuCommand(
+        context,
+        ref,
+        ShortcutAction.selectAll,
+        context.commanderTr("Select All"),
       ),
-      PlatformMenuItem(
-        label: context.commanderTr("Copy Files"),
-        shortcut: const SingleActivator(LogicalKeyboardKey.keyC, meta: true),
-        onSelected: () =>
-            copyFilesToClipboard(context, ref, ref.read(activePanelProvider)),
+      _browserMenuCommand(
+        context,
+        ref,
+        ShortcutAction.copy,
+        context.commanderTr("Copy Files"),
       ),
-      PlatformMenuItem(
-        label: context.commanderTr("Cut Files"),
-        shortcut: const SingleActivator(LogicalKeyboardKey.keyX, meta: true),
-        onSelected: () => copyFilesToClipboard(
-          context,
-          ref,
-          ref.read(activePanelProvider),
-          cut: true,
-        ),
+      _browserMenuCommand(
+        context,
+        ref,
+        ShortcutAction.cut,
+        context.commanderTr("Cut Files"),
       ),
-      PlatformMenuItem(
-        label: context.commanderTr("Paste Files..."),
-        shortcut: const SingleActivator(LogicalKeyboardKey.keyV, meta: true),
-        onSelected: () => pasteFilesFromClipboard(
-          context,
-          ref,
-          ref.read(activePanelProvider),
-        ),
+      _browserMenuCommand(
+        context,
+        ref,
+        ShortcutAction.paste,
+        context.commanderTr("Paste Files..."),
       ),
       PlatformMenuItem(
         label: context.commanderTr("Invert Selection"),
@@ -609,44 +677,49 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       ),
       PlatformMenuItemGroup(
         members: <PlatformMenuItem>[
-          PlatformMenuItem(
-            label: context.commanderTr("Copy..."),
-            onSelected: () => showCopyDialogFromSelection(context, ref),
+          _browserMenuCommand(
+            context,
+            ref,
+            ShortcutAction.copyWithOptions,
+            context.commanderTr("Copy..."),
           ),
-          PlatformMenuItem(
-            label: context.commanderTr("Move..."),
-            onSelected: () => showMoveDialogFromSelection(context, ref),
+          _browserMenuCommand(
+            context,
+            ref,
+            ShortcutAction.moveWithOptions,
+            context.commanderTr("Move..."),
           ),
-          PlatformMenuItem(
-            label: context.commanderTr("Delete..."),
-            onSelected: () => confirmDeleteSelected(context, ref),
+          _browserMenuCommand(
+            context,
+            ref,
+            ShortcutAction.delete,
+            context.commanderTr("Delete..."),
           ),
-          PlatformMenuItem(
-            label: context.commanderTr("Rename..."),
-            onSelected: () => showRenameDialog(context, ref),
+          _browserMenuCommand(
+            context,
+            ref,
+            ShortcutAction.rename,
+            context.commanderTr("Rename..."),
           ),
         ],
       ),
       PlatformMenuItemGroup(
         members: <PlatformMenuItem>[
-          PlatformMenuItem(
-            label: context.commanderTr("Filter Files..."),
-            shortcut: const SingleActivator(
-              LogicalKeyboardKey.keyF,
-              control: true,
-            ),
-            onSelected: () {
-              final panel = _activePanel(ref);
-              showPanelFilterDialog(context, panel);
-            },
+          _browserMenuCommand(
+            context,
+            ref,
+            ShortcutAction.filter,
+            context.commanderTr("Filter Files..."),
           ),
           PlatformMenuItem(
             label: context.commanderTr("Find by Pattern..."),
             onSelected: () => showFindDialog(context, ref),
           ),
-          PlatformMenuItem(
-            label: context.commanderTr("Search All Files..."),
-            onSelected: () => showSearchDialog(context, ref),
+          _browserMenuCommand(
+            context,
+            ref,
+            ShortcutAction.search,
+            context.commanderTr("Search All Files..."),
           ),
         ],
       ),
@@ -658,20 +731,17 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           label: context.commanderTr("Toggle Reading View"),
           onSelected: () => editor.perform(OfficeEditorAction.readingView),
         ),
-      PlatformMenuItem(
-        label: context.commanderTr("Toggle Preview"),
-        shortcut: const SingleActivator(LogicalKeyboardKey.space),
-        onSelected: () {
-          final current = ref.read(showPreviewProvider);
-          ref.read(showPreviewProvider.notifier).state = !current;
-        },
+      _browserMenuCommand(
+        context,
+        ref,
+        ShortcutAction.togglePreview,
+        context.commanderTr("Toggle Preview"),
       ),
-      PlatformMenuItem(
-        label: context.commanderTr("Toggle Tree Sidebar"),
-        onSelected: () {
-          final current = ref.read(showTreeSidebarProvider);
-          ref.read(showTreeSidebarProvider.notifier).state = !current;
-        },
+      _browserMenuCommand(
+        context,
+        ref,
+        ShortcutAction.toggleTreeView,
+        context.commanderTr("Toggle Tree Sidebar"),
       ),
       PlatformMenuItem(
         label: context.commanderTr("Toggle Dual Panel"),
@@ -740,21 +810,29 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       if (editor == null)
         PlatformMenuItemGroup(
           members: <PlatformMenuItem>[
-            PlatformMenuItem(
-              label: context.commanderTr("Sort by Name"),
-              onSelected: () => _activePanel(ref).setSortBy(SortBy.name),
+            _browserMenuCommand(
+              context,
+              ref,
+              ShortcutAction.sortByName,
+              context.commanderTr("Sort by Name"),
             ),
-            PlatformMenuItem(
-              label: context.commanderTr("Sort by Size"),
-              onSelected: () => _activePanel(ref).setSortBy(SortBy.size),
+            _browserMenuCommand(
+              context,
+              ref,
+              ShortcutAction.sortBySize,
+              context.commanderTr("Sort by Size"),
             ),
-            PlatformMenuItem(
-              label: context.commanderTr("Sort by Date"),
-              onSelected: () => _activePanel(ref).setSortBy(SortBy.date),
+            _browserMenuCommand(
+              context,
+              ref,
+              ShortcutAction.sortByDate,
+              context.commanderTr("Sort by Date"),
             ),
-            PlatformMenuItem(
-              label: context.commanderTr("Sort by Extension"),
-              onSelected: () => _activePanel(ref).setSortBy(SortBy.extension),
+            _browserMenuCommand(
+              context,
+              ref,
+              ShortcutAction.sortByExtension,
+              context.commanderTr("Sort by Extension"),
             ),
             PlatformMenuItem(
               label: context.commanderTr("Reverse Sort Order"),
@@ -765,21 +843,21 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       if (editor == null)
         PlatformMenuItemGroup(
           members: <PlatformMenuItem>[
-            PlatformMenuItem(
-              label: context.commanderTr("Show Hidden Files"),
-              onSelected: () => _activePanel(ref).toggleShowHiddenFiles(),
+            _browserMenuCommand(
+              context,
+              ref,
+              ShortcutAction.toggleHidden,
+              context.commanderTr("Show Hidden Files"),
             ),
             PlatformMenuItem(
               label: context.commanderTr("Flat View"),
               onSelected: () => _activePanel(ref).toggleFlatView(),
             ),
-            PlatformMenuItem(
-              label: context.commanderTr("Refresh"),
-              shortcut: const SingleActivator(
-                LogicalKeyboardKey.f5,
-                control: true,
-              ),
-              onSelected: () => _activePanel(ref).refresh(),
+            _browserMenuCommand(
+              context,
+              ref,
+              ShortcutAction.refresh,
+              context.commanderTr("Refresh"),
             ),
             PlatformMenuItem(
               label: context.commanderTr("Refresh All"),
@@ -812,40 +890,34 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       ),
       PlatformMenuItemGroup(
         members: <PlatformMenuItem>[
-          PlatformMenuItem(
-            label: context.commanderTr("Command Palette"),
-            shortcut: const SingleActivator(
-              LogicalKeyboardKey.keyP,
-              meta: true,
-              shift: true,
-            ),
-            onSelected: () => showCommandPalette(context, ref),
+          _browserMenuCommand(
+            context,
+            ref,
+            ShortcutAction.commandPalette,
+            context.commanderTr("Command Palette"),
           ),
         ],
       ),
     ];
 
     final List<PlatformMenuItem> browserGoMenus = <PlatformMenuItem>[
-      PlatformMenuItem(
-        label: context.commanderTr("Back"),
-        shortcut: const SingleActivator(
-          LogicalKeyboardKey.arrowLeft,
-          alt: true,
-        ),
-        onSelected: () => _activePanel(ref).navigateBack(),
+      _browserMenuCommand(
+        context,
+        ref,
+        ShortcutAction.back,
+        context.commanderTr("Back"),
       ),
-      PlatformMenuItem(
-        label: context.commanderTr("Forward"),
-        shortcut: const SingleActivator(
-          LogicalKeyboardKey.arrowRight,
-          alt: true,
-        ),
-        onSelected: () => _activePanel(ref).navigateForward(),
+      _browserMenuCommand(
+        context,
+        ref,
+        ShortcutAction.forward,
+        context.commanderTr("Forward"),
       ),
-      PlatformMenuItem(
-        label: context.commanderTr("Up"),
-        shortcut: const SingleActivator(LogicalKeyboardKey.arrowUp, alt: true),
-        onSelected: () => _activePanel(ref).navigateUp(),
+      _browserMenuCommand(
+        context,
+        ref,
+        ShortcutAction.up,
+        context.commanderTr("Up"),
       ),
       PlatformMenuItemGroup(
         members: <PlatformMenuItem>[
@@ -871,22 +943,22 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             label: context.commanderTr("Root"),
             onSelected: () => _activePanel(ref).navigateToPath('/'),
           ),
-          PlatformMenuItem(
-            label: context.commanderTr("Go to Path..."),
-            shortcut: const SingleActivator(
-              LogicalKeyboardKey.keyG,
-              meta: true,
-            ),
-            onSelected: () => showGoToDialog(context, ref),
+          _browserMenuCommand(
+            context,
+            ref,
+            ShortcutAction.goToFolder,
+            context.commanderTr("Go to Path..."),
           ),
         ],
       ),
     ];
 
     final List<PlatformMenuItem> browserToolsMenus = <PlatformMenuItem>[
-      PlatformMenuItem(
-        label: context.commanderTr("Search All Files..."),
-        onSelected: () => showSearchDialog(context, ref),
+      _browserMenuCommand(
+        context,
+        ref,
+        ShortcutAction.search,
+        context.commanderTr("Search All Files..."),
       ),
       PlatformMenuItem(
         label: context.commanderTr("Find by Pattern..."),
@@ -958,9 +1030,11 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       ),
       PlatformMenuItemGroup(
         members: <PlatformMenuItem>[
-          PlatformMenuItem(
-            label: context.commanderTr("Command Palette..."),
-            onSelected: () => showCommandPalette(context, ref),
+          _browserMenuCommand(
+            context,
+            ref,
+            ShortcutAction.commandPalette,
+            context.commanderTr("Command Palette..."),
           ),
           PlatformMenuItem(
             label: context.commanderTr("Keyboard Shortcuts..."),

@@ -11,16 +11,23 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  Future<ProviderContainer> open(WidgetTester tester, {String locale = 'en'}) async {
+  Future<ProviderContainer> open(
+    WidgetTester tester, {
+    String locale = 'en',
+  }) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
-    await tester.pumpWidget(UncontrolledProviderScope(container: container,
-      child: MaterialApp(locale: Locale(locale),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: const Scaffold(body: KeyboardShortcutDialog()),
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          locale: Locale(locale),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(body: KeyboardShortcutDialog()),
+        ),
       ),
-    ));
+    );
     await tester.pumpAndSettle();
     return container;
   }
@@ -35,7 +42,10 @@ void main() {
     await tester.pump();
     await tester.tap(find.text('Save'));
     await tester.pumpAndSettle();
-    expect(container.read(shortcutBindingsProvider)[ShortcutAction.refresh]!.key, 'F9');
+    expect(
+      container.read(shortcutBindingsProvider)[ShortcutAction.refresh]!.key,
+      'F9',
+    );
     expect(find.text('F9'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
@@ -51,15 +61,43 @@ void main() {
     await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
     await tester.pump();
     expect(find.textContaining('Already assigned to'), findsOneWidget);
-    expect(tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'Save')).onPressed, isNull);
-    expect(container.read(shortcutBindingsProvider)[ShortcutAction.refresh]!.key, 'R');
+    expect(
+      tester
+          .widget<FilledButton>(find.widgetWithText(FilledButton, 'Save'))
+          .onPressed,
+      isNull,
+    );
+    expect(
+      container.read(shortcutBindingsProvider)[ShortcutAction.refresh]!.key,
+      'R',
+    );
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await tester.pumpAndSettle();
     expect(find.textContaining('Already assigned to'), findsNothing);
   });
 
+  testWidgets('recording can be saved using only the keyboard', (tester) async {
+    final container = await open(tester);
+    await tester.enterText(find.byType(TextField), 'refresh');
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('shortcut-refresh')));
+    await tester.pumpAndSettle();
+    await tester.sendKeyEvent(LogicalKeyboardKey.f9);
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pumpAndSettle();
+    expect(find.text('Save'), findsNothing);
+    expect(
+      container.read(shortcutBindingsProvider)[ShortcutAction.refresh]!.key,
+      'F9',
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   for (final locale in ['de', 'ar']) {
-    testWidgets('shortcut editor remains usable in narrow $locale layout', (tester) async {
+    testWidgets('shortcut editor remains usable in narrow $locale layout', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(360, 740);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);

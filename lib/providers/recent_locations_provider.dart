@@ -38,14 +38,18 @@ class RecentLocationsNotifier extends ChangeNotifier {
   void add(String path, PanelSide side, {StorageReference? storage}) {
     if (_disposed || path.isEmpty || path.contains('\u0000')) return;
     // The same path in two accounts represents two distinct destinations.
-    _entries.removeWhere((e) =>
-        e.path == path && e.side == side && e.storage == storage);
-    _entries.insert(0, RecentEntry(
-      path: path,
-      side: side,
-      storage: storage,
-      visitedAt: DateTime.now(),
-    ));
+    _entries.removeWhere(
+      (e) => e.path == path && e.side == side && e.storage == storage,
+    );
+    _entries.insert(
+      0,
+      RecentEntry(
+        path: path,
+        side: side,
+        storage: storage,
+        visitedAt: DateTime.now(),
+      ),
+    );
     // Trim to max
     while (_entries.length > maxRecent) {
       _entries.removeLast();
@@ -74,7 +78,9 @@ class RecentLocationsNotifier extends ChangeNotifier {
         for (final item in list) {
           if (_entries.length >= maxRecent) break;
           try {
-            final entry = RecentEntry.fromJson(Map<String, dynamic>.from(item as Map));
+            final entry = RecentEntry.fromJson(
+              Map<String, dynamic>.from(item as Map),
+            );
             if (!_entries.any((value) => value.sameLocation(entry))) {
               _entries.add(entry);
             }
@@ -93,13 +99,16 @@ class RecentLocationsNotifier extends ChangeNotifier {
     await ready;
     await _saveLock.synchronized(() async {
       if (_disposed) return;
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      if (_disposed) return;
-      await prefs.setString(_storageKey, json.encode(_entries.map((e) => e.toJson()).toList()));
-    } catch (e) {
-      // Silently ignored
-    }
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        if (_disposed) return;
+        await prefs.setString(
+          _storageKey,
+          json.encode(_entries.map((e) => e.toJson()).toList()),
+        );
+      } catch (e) {
+        // Silently ignored
+      }
     });
   }
 
@@ -116,7 +125,12 @@ class RecentEntry {
   final DateTime visitedAt;
   final StorageReference? storage;
 
-  const RecentEntry({required this.path, required this.side, required this.visitedAt, this.storage});
+  const RecentEntry({
+    required this.path,
+    required this.side,
+    required this.visitedAt,
+    this.storage,
+  });
 
   bool sameLocation(RecentEntry other) =>
       path == other.path && side == other.side && storage == other.storage;
@@ -143,11 +157,14 @@ class RecentEntry {
         ? PanelNavigationEntry.fromJson(json)
         : null;
     return RecentEntry(
-    path: location?.path ?? path,
-    side: PanelSide.values.firstWhere((s) => s.name == json['side'], orElse: () => PanelSide.local),
-    visitedAt: DateTime.tryParse(json['visitedAt'] ?? '') ?? DateTime.now(),
-    storage: location?.storage,
-  );
+      path: location?.path ?? path,
+      side: PanelSide.values.firstWhere(
+        (s) => s.name == json['side'],
+        orElse: () => PanelSide.local,
+      ),
+      visitedAt: DateTime.tryParse(json['visitedAt'] ?? '') ?? DateTime.now(),
+      storage: location?.storage,
+    );
   }
 }
 

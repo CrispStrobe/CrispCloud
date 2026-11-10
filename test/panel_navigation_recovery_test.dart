@@ -36,7 +36,10 @@ class _Cloud extends CloudStorageClient {
   @override
   bool get isAuthenticated => authenticated;
   @override
-  Future<void> logout() async { authenticated = false; }
+  Future<void> logout() async {
+    authenticated = false;
+  }
+
   @override
   Future<Map<String, dynamic>> listPath(String path) async {
     paths.add(path);
@@ -53,6 +56,7 @@ class _Cloud extends CloudStorageClient {
       ],
     };
   }
+
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
@@ -99,178 +103,354 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     accountA = _Cloud('a');
     accountB = _Cloud('b');
-    container = ProviderContainer(overrides: [
-      authProvider.overrideWith((_) => _Auth(accountA)),
-      localFileServiceProvider.overrideWithValue(_Local()),
-    ]);
-    container.read(multiCloudProvider).addConnection(
-      id: 'secondary', label: 'Second account',
-      provider: CloudProvider.s3, client: accountB,
+    container = ProviderContainer(
+      overrides: [
+        authProvider.overrideWith((_) => _Auth(accountA)),
+        localFileServiceProvider.overrideWithValue(_Local()),
+      ],
     );
+    container
+        .read(multiCloudProvider)
+        .addConnection(
+          id: 'secondary',
+          label: 'Second account',
+          provider: CloudProvider.s3,
+          client: accountB,
+        );
     panel = container.read(panelProvider(PanelSide.remote));
     await panel.refresh();
   });
   tearDown(() => container.dispose());
 
-  test('back and forward resolve identical paths against their exact accounts', () async {
-    await panel.navigateToPath('/shared');
-    final accountBOrigin = panel.resolveStorageReference(storageReferenceForClient(accountB), '/shared')!;
-    await panel.navigateToPath('/shared', origin: accountBOrigin);
-    expect(panel.captureCurrentOrigin().storageReference, storageReferenceForClient(accountB));
-    await panel.navigateBack();
-    expect(panel.currentPath, '/shared');
-    expect(panel.captureCurrentOrigin().storageReference, storageReferenceForClient(accountA));
-    expect(panel.files!.where((file) => !file.isFolder).every((file) => file.uuid!.startsWith('a:')), isTrue);
-    await panel.navigateForward();
-    expect(panel.captureCurrentOrigin().storageReference, storageReferenceForClient(accountB));
+  test(
+    'back and forward resolve identical paths against their exact accounts',
+    () async {
+      await panel.navigateToPath('/shared');
+      final accountBOrigin = panel.resolveStorageReference(
+        storageReferenceForClient(accountB),
+        '/shared',
+      )!;
+      await panel.navigateToPath('/shared', origin: accountBOrigin);
+      expect(
+        panel.captureCurrentOrigin().storageReference,
+        storageReferenceForClient(accountB),
+      );
+      await panel.navigateBack();
+      expect(panel.currentPath, '/shared');
+      expect(
+        panel.captureCurrentOrigin().storageReference,
+        storageReferenceForClient(accountA),
+      );
+      expect(
+        panel.files!
+            .where((file) => !file.isFolder)
+            .every((file) => file.uuid!.startsWith('a:')),
+        isTrue,
+      );
+      await panel.navigateForward();
+      expect(
+        panel.captureCurrentOrigin().storageReference,
+        storageReferenceForClient(accountB),
+      );
+    },
+  );
+
+  test(
+    'back restores local storage in a pane currently displaying a cloud',
+    () async {
+      final local = panel.captureLocalClipboardOrigin('/');
+      await panel.navigateToPath('/', origin: local);
+      await panel.navigateToPath(
+        '/shared',
+        origin: panel.resolveStorageReference(
+          storageReferenceForClient(accountB),
+          '/shared',
+        ),
+      );
+      await panel.navigateBack();
+      expect(panel.captureCurrentOrigin().source, isA<LocalPanelSource>());
+      expect(
+        container.read(panelSourceProvider(PanelSide.remote)),
+        isA<LocalPanelSource>(),
+      );
+      expect(panel.currentPath, '/');
+    },
+  );
+
+  test(
+    'up follows the local directory in a right pane with a prior cloud path',
+    () async {
+      await panel.navigateToPath('/cloud/previous');
+      await panel.navigateToPath(
+        '/local/documents/project',
+        origin: panel.captureLocalClipboardOrigin('/local/documents/project'),
+      );
+      final remoteRequests = accountA.paths.length;
+      await panel.navigateUp();
+      expect(panel.currentPath, '/local/documents');
+      expect(panel.captureCurrentOrigin().source, isA<LocalPanelSource>());
+      expect(accountA.paths.length, remoteRequests);
+    },
+  );
+
+  test('up follows the selected cloud account in the left pane', () async {
+    final left = container.read(panelProvider(PanelSide.local));
+    await left.refresh();
+    final storage = storageReferenceForClient(accountB);
+    await left.navigateToPath(
+      '/cloud/documents/project',
+      origin: left.resolveStorageReference(storage, '/cloud/documents/project'),
+    );
+    final primaryRequests = accountA.paths.length;
+    await left.navigateUp();
+    expect(left.currentPath, '/cloud/documents');
+    expect(left.captureCurrentOrigin().storageReference, storage);
+    expect(accountA.paths.length, primaryRequests);
   });
 
-  test('back restores local storage in a pane currently displaying a cloud', () async {
-    final local = panel.captureLocalClipboardOrigin('/');
-    await panel.navigateToPath('/', origin: local);
-    await panel.navigateToPath('/shared', origin: panel.resolveStorageReference(storageReferenceForClient(accountB), '/shared'));
-    await panel.navigateBack();
-    expect(panel.captureCurrentOrigin().source, isA<LocalPanelSource>());
-    expect(container.read(panelSourceProvider(PanelSide.remote)), isA<LocalPanelSource>());
-    expect(panel.currentPath, '/');
-  });
+  test(
+    'history and forward position stay independent when switching tabs',
+    () async {
+      final first = panel.activeTabId;
+      await panel.navigateToPath('/one');
+      await panel.navigateToPath('/two');
+      await panel.navigateBack();
+      await panel.restoreTabs([
+        {
+          'path': '/other',
+          'storage': storageReferenceForClient(accountA).toJson(),
+        },
+      ]);
+      final second = panel.activeTabId;
+      expect(panel.navigationHistory.map((entry) => entry.path), ['/other']);
+      await panel.selectTab(first);
+      expect(panel.currentPath, '/one');
+      expect(panel.canNavigateForward, isTrue);
+      await panel.navigateForward();
+      expect(panel.currentPath, '/two');
+      await panel.selectTab(second);
+      expect(panel.currentPath, '/other');
+      expect(panel.canNavigateBack, isFalse);
+    },
+  );
 
-  test('history and forward position stay independent when switching tabs', () async {
-    final first = panel.activeTabId;
-    await panel.navigateToPath('/one');
-    await panel.navigateToPath('/two');
-    await panel.navigateBack();
-    await panel.restoreTabs([{
-      'path': '/other', 'storage': storageReferenceForClient(accountA).toJson(),
-    }]);
-    final second = panel.activeTabId;
-    expect(panel.navigationHistory.map((entry) => entry.path), ['/other']);
-    await panel.selectTab(first);
-    expect(panel.currentPath, '/one');
-    expect(panel.canNavigateForward, isTrue);
-    await panel.navigateForward();
-    expect(panel.currentPath, '/two');
-    await panel.selectTab(second);
-    expect(panel.currentPath, '/other');
-    expect(panel.canNavigateBack, isFalse);
-  });
+  test(
+    'history navigation restores cursor using a fresh verified row',
+    () async {
+      final second = panel.files!.firstWhere(
+        (file) => file.name == 'second.txt',
+      );
+      panel.setCursorOnly(second);
+      await panel.navigateToPath('/one');
+      await panel.navigateBack();
+      expect(panel.cursorItem?.name, 'second.txt');
+      expect(identical(panel.cursorItem, second), isFalse);
+      expect(panel.originForOperation(panel.cursorItem!), isNotNull);
+    },
+  );
 
-  test('history navigation restores cursor using a fresh verified row', () async {
-    final second = panel.files!.firstWhere((file) => file.name == 'second.txt');
-    panel.setCursorOnly(second);
-    await panel.navigateToPath('/one');
-    await panel.navigateBack();
-    expect(panel.cursorItem?.name, 'second.txt');
-    expect(identical(panel.cursorItem, second), isFalse);
-    expect(panel.originForOperation(panel.cursorItem!), isNotNull);
-  });
+  test(
+    'unavailable history retains its index and never uses a different account',
+    () async {
+      await panel.navigateToPath('/one');
+      await panel.navigateToPath(
+        '/shared',
+        origin: panel.resolveStorageReference(
+          storageReferenceForClient(accountB),
+          '/shared',
+        ),
+      );
+      final index = panel.navigationHistoryIndex;
+      final requests = accountB.paths.length;
+      accountA.authenticated = false;
+      await panel.navigateBack();
+      expect(panel.navigationHistoryIndex, index);
+      expect(panel.currentPath, '/shared');
+      expect(accountB.paths.length, requests);
+      expect(
+        container.read(errorProvider).lastAppError!.code,
+        PanelErrorCode.navigationUnavailable,
+      );
+    },
+  );
 
-  test('unavailable history retains its index and never uses a different account', () async {
-    await panel.navigateToPath('/one');
-    await panel.navigateToPath('/shared', origin: panel.resolveStorageReference(storageReferenceForClient(accountB), '/shared'));
-    final index = panel.navigationHistoryIndex;
-    final requests = accountB.paths.length;
-    accountA.authenticated = false;
-    await panel.navigateBack();
-    expect(panel.navigationHistoryIndex, index);
-    expect(panel.currentPath, '/shared');
-    expect(accountB.paths.length, requests);
-    expect(container.read(errorProvider).lastAppError!.code, PanelErrorCode.navigationUnavailable);
-  });
+  test(
+    'failed history listing does not advance its history position',
+    () async {
+      await panel.navigateToPath('/one');
+      await panel.navigateToPath('/two');
+      final index = panel.navigationHistoryIndex;
+      accountA.failures.add('/one');
+      await panel.navigateBack();
+      expect(panel.navigationHistoryIndex, index);
+      accountA.failures.clear();
+      await panel.navigateBack();
+      expect(panel.currentPath, '/one');
+      expect(panel.navigationHistoryIndex, index - 1);
+    },
+  );
 
-  test('failed history listing does not advance its history position', () async {
-    await panel.navigateToPath('/one');
-    await panel.navigateToPath('/two');
-    final index = panel.navigationHistoryIndex;
-    accountA.failures.add('/one');
-    await panel.navigateBack();
-    expect(panel.navigationHistoryIndex, index);
-    accountA.failures.clear();
-    await panel.navigateBack();
-    expect(panel.currentPath, '/one');
-    expect(panel.navigationHistoryIndex, index - 1);
-  });
-
-  test('a late back result cannot change the tab selected while it loads', () async {
-    final first = panel.activeTabId;
-    await panel.navigateToPath('/one');
-    await panel.navigateToPath('/two');
-    await panel.restoreTabs([{
-      'path': '/other', 'storage': storageReferenceForClient(accountA).toJson(),
-    }]);
-    final second = panel.activeTabId;
-    await panel.selectTab(first);
-    final delay = Completer<void>();
-    accountA.delays['/one'] = delay;
-    final back = panel.navigateBack();
-    await panel.selectTab(second);
-    delay.complete();
-    await back;
-    expect(panel.activeTabId, second);
-    expect(panel.currentPath, '/other');
-    final original = panel.tabs.firstWhere((tab) => tab.id == first);
-    expect(original.navigation.current!.path, '/two');
-  });
+  test(
+    'a late back result cannot change the tab selected while it loads',
+    () async {
+      final first = panel.activeTabId;
+      await panel.navigateToPath('/one');
+      await panel.navigateToPath('/two');
+      await panel.restoreTabs([
+        {
+          'path': '/other',
+          'storage': storageReferenceForClient(accountA).toJson(),
+        },
+      ]);
+      final second = panel.activeTabId;
+      await panel.selectTab(first);
+      final delay = Completer<void>();
+      accountA.delays['/one'] = delay;
+      final back = panel.navigateBack();
+      await panel.selectTab(second);
+      delay.complete();
+      await back;
+      expect(panel.activeTabId, second);
+      expect(panel.currentPath, '/other');
+      final original = panel.tabs.firstWhere((tab) => tab.id == first);
+      expect(original.navigation.current!.path, '/two');
+    },
+  );
 
   test('recent destinations reopen exact accounts and refuse legacy unscoped paths', () async {
     await panel.navigateToPath('/one');
     final recent = container.read(recentLocationsProvider).entries.first;
-    await panel.navigateToPath('/shared', origin: panel.resolveStorageReference(storageReferenceForClient(accountB), '/shared'));
+    await panel.navigateToPath(
+      '/shared',
+      origin: panel.resolveStorageReference(
+        storageReferenceForClient(accountB),
+        '/shared',
+      ),
+    );
     await panel.openRecentLocation(recent);
-    expect(panel.captureCurrentOrigin().storageReference, storageReferenceForClient(accountA));
+    expect(
+      panel.captureCurrentOrigin().storageReference,
+      storageReferenceForClient(accountA),
+    );
     final requests = accountA.paths.length;
-    await panel.openRecentLocation(RecentEntry(path: '/legacy', side: PanelSide.remote, visitedAt: DateTime.utc(2026)));
+    await panel.openRecentLocation(
+      RecentEntry(
+        path: '/legacy',
+        side: PanelSide.remote,
+        visitedAt: DateTime.utc(2026),
+      ),
+    );
     expect(accountA.paths.length, requests);
     expect(panel.currentPath, '/one');
-    expect(container.read(errorProvider).lastAppError!.code, PanelErrorCode.navigationUnavailable);
+    expect(
+      container.read(errorProvider).lastAppError!.code,
+      PanelErrorCode.navigationUnavailable,
+    );
   });
 
-  test('closed tab recovery preserves name, view, source, placement and history', () async {
-    final first = panel.activeTabId;
-    await panel.restoreTabs([{
-      'path': '/one', 'storage': storageReferenceForClient(accountB).toJson(),
-    }]);
-    await panel.navigateToPath('/two');
-    panel.renameTab(panel.activeTabId, 'Working files');
-    await panel.applyViewConfiguration(FileViewConfiguration(filter: '.txt', sortBy: SortBy.size));
-    panel.closeTab(panel.activeTabId);
-    await panel.selectTab(first);
-    expect(panel.canReopenClosedTab, isTrue);
-    await panel.reopenClosedTab();
-    expect(panel.activeTab!.label, 'Working files');
-    expect(panel.currentPath, '/two');
-    expect(panel.captureCurrentOrigin().storageReference, storageReferenceForClient(accountB));
-    expect(panel.filterQuery, '.txt');
-    expect(panel.sortBy, SortBy.size);
-    expect(panel.tabs.indexWhere((tab) => tab.id == panel.activeTabId), 1);
-    expect(panel.canNavigateBack, isTrue);
-    expect(panel.canReopenClosedTab, isFalse);
+  test(
+    'closed tab recovery preserves name, view, source, placement and history',
+    () async {
+      final first = panel.activeTabId;
+      await panel.restoreTabs([
+        {
+          'path': '/one',
+          'storage': storageReferenceForClient(accountB).toJson(),
+        },
+      ]);
+      await panel.navigateToPath('/two');
+      panel.renameTab(panel.activeTabId, 'Working files');
+      await panel.applyViewConfiguration(
+        FileViewConfiguration(filter: '.txt', sortBy: SortBy.size),
+      );
+      panel.closeTab(panel.activeTabId);
+      await panel.selectTab(first);
+      expect(panel.canReopenClosedTab, isTrue);
+      await panel.reopenClosedTab();
+      expect(panel.activeTab!.label, 'Working files');
+      expect(panel.currentPath, '/two');
+      expect(
+        panel.captureCurrentOrigin().storageReference,
+        storageReferenceForClient(accountB),
+      );
+      expect(panel.filterQuery, '.txt');
+      expect(panel.sortBy, SortBy.size);
+      expect(panel.tabs.indexWhere((tab) => tab.id == panel.activeTabId), 1);
+      expect(panel.canNavigateBack, isTrue);
+      expect(panel.canReopenClosedTab, isFalse);
+      await panel.navigateBack();
+      expect(panel.currentPath, '/one');
+    },
+  );
+
+  test(
+    'closing a protected tab does not create a phantom recovery entry',
+    () async {
+      await panel.restoreTabs([
+        {
+          'path': '/one',
+          'storage': storageReferenceForClient(accountA).toJson(),
+        },
+      ]);
+      panel.toggleTabPin(panel.activeTabId);
+      panel.closeTab(panel.activeTabId);
+      expect(panel.canReopenClosedTab, isFalse);
+      expect(panel.tabs, hasLength(2));
+    },
+  );
+
+  test(
+    'closing another active tab preserves a surviving collection tab',
+    () async {
+      final first = panel.activeTabId;
+      panel.showSearchResults([
+        panel.files!.firstWhere((file) => !file.isFolder),
+      ], origin: panel.captureCurrentOrigin());
+      final collectionId = await panel.saveCurrentCollection('Kept results');
+      await panel.restoreTabs([
+        {
+          'path': '/one',
+          'storage': storageReferenceForClient(accountA).toJson(),
+        },
+      ]);
+      panel.closeTab(panel.activeTabId);
+      await panel.selectTab(first);
+      expect(panel.showingSearchResults, isTrue);
+      expect(panel.activeTab!.collectionId, collectionId);
+      expect(panel.activeCollectionId, collectionId);
+    },
+  );
+
+  test('back from a result list returns to its folder before consuming folder history', () async {
+    await panel.navigateToPath('/one');
+    final historyIndex = panel.navigationHistoryIndex;
+    panel.showSearchResults([
+      panel.files!.firstWhere((file) => !file.isFolder),
+    ], origin: panel.captureCurrentOrigin());
     await panel.navigateBack();
+    expect(panel.showingSearchResults, isFalse);
     expect(panel.currentPath, '/one');
-  });
-
-  test('closing a protected tab does not create a phantom recovery entry', () async {
-    await panel.restoreTabs([{
-      'path': '/one', 'storage': storageReferenceForClient(accountA).toJson(),
-    }]);
-    panel.toggleTabPin(panel.activeTabId);
-    panel.closeTab(panel.activeTabId);
-    expect(panel.canReopenClosedTab, isFalse);
-    expect(panel.tabs, hasLength(2));
+    expect(panel.navigationHistoryIndex, historyIndex);
+    await panel.navigateBack();
+    expect(panel.currentPath, '/');
   });
 
   test('closed tab recovery metadata is saved with an exact source and bounded history', () async {
     final first = panel.activeTabId;
-    await panel.restoreTabs([{
-      'path': '/one', 'storage': storageReferenceForClient(accountB).toJson(),
-    }]);
+    await panel.restoreTabs([
+      {'path': '/one', 'storage': storageReferenceForClient(accountB).toJson()},
+    ]);
     await panel.navigateToPath('/two');
     panel.closeTab(panel.activeTabId);
     await panel.selectTab(first);
     await panel.exportTabs();
     final prefs = await SharedPreferences.getInstance();
-    final saved = jsonDecode(prefs.getString('panel_tabs_remote_closed')!) as List;
-    final restored = PanelTab.fromJson('recovered', Map<String, dynamic>.from(saved.single['tab'] as Map));
+    final saved =
+        jsonDecode(prefs.getString('panel_tabs_remote_closed')!) as List;
+    final restored = PanelTab.fromJson(
+      'recovered',
+      Map<String, dynamic>.from(saved.single['tab'] as Map),
+    );
     expect(restored.path, '/two');
     expect(restored.storage, storageReferenceForClient(accountB));
     expect(restored.navigation.current!.path, '/two');
@@ -279,9 +459,12 @@ void main() {
 
   test('reopening an offline tab never redirects its location into the current account', () async {
     final first = panel.activeTabId;
-    await panel.restoreTabs([{
-      'path': '/private', 'storage': storageReferenceForClient(accountB).toJson(),
-    }]);
+    await panel.restoreTabs([
+      {
+        'path': '/private',
+        'storage': storageReferenceForClient(accountB).toJson(),
+      },
+    ]);
     panel.closeTab(panel.activeTabId);
     await panel.selectTab(first);
     accountB.authenticated = false;

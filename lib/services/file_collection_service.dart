@@ -213,7 +213,8 @@ class FileCollectionService {
                 (acceptedReplacementKeys == null ||
                     acceptedReplacementKeys.contains(entry.key));
             final reviewed = reviewedReplacements[entry.key];
-            final changedSinceReview = accepted &&
+            final changedSinceReview =
+                accepted &&
                 reviewed != null &&
                 !sameReplacementEvidence(reviewed, current);
             if (changedSinceReview) {

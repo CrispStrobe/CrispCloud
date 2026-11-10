@@ -55,6 +55,10 @@ jobs:
           lib/providers/keyboard_shortcut_provider.dart
           lib/services/keyboard_shortcut_service.dart
           lib/screens/keyboard_shortcuts.dart
+          lib/screens/file_browser_screen.dart
+          lib/services/browser_menu_shortcut.dart
+          lib/widgets/tree_sidebar.dart
+          lib/widgets/keyboard_shortcut_dialog.dart
           lib/widgets/file_column_view.dart
           lib/widgets/file_collections_dialog.dart
           lib/widgets/command_palette.dart
@@ -65,6 +69,7 @@ jobs:
             test/commander_file_list_test.dart
             test/keyboard_shortcut_test.dart
             test/workspace_keyboard_test.dart
+            test/browser_menu_shortcut_test.dart
             test/panel_navigation_model_test.dart
             test/panel_navigation_recovery_test.dart
             test/recent_locations_identity_test.dart
@@ -73,6 +78,7 @@ jobs:
             test/command_search_test.dart
             test/widget/file_column_view_test.dart
             test/widget/navigation_recovery_ui_test.dart
+            test/widget/tree_sidebar_source_test.dart
             test/widget/keyboard_shortcut_dialog_test.dart
             test/widget/command_palette_localization_test.dart
             test/widget/screen_dialog_localization_test.dart

@@ -14,12 +14,21 @@ void main() {
     expect(prefix, greaterThan(abbreviation));
   });
   test('shortcut and semantic aliases are searchable across locales', () {
-    expect(commandSearchScore('F9', 'Aktualisieren', keywords: 'refresh F9'), isNotNull);
-    expect(commandSearchScore('refresh', 'Aktualisieren', keywords: 'refresh F9'), isNotNull);
+    expect(
+      commandSearchScore('F9', 'Aktualisieren', keywords: 'refresh F9'),
+      isNotNull,
+    );
+    expect(
+      commandSearchScore('refresh', 'Aktualisieren', keywords: 'refresh F9'),
+      isNotNull,
+    );
     expect(commandSearchScore('akt', 'Aktualisieren'), isNotNull);
   });
   test('empty query is stable and unrelated terms have no result', () {
     expect(commandSearchScore('  ', 'Any command'), 0);
-    expect(commandSearchScore('___no_such_command___', 'Copy with options'), isNull);
+    expect(
+      commandSearchScore('___no_such_command___', 'Copy with options'),
+      isNull,
+    );
   });
 }

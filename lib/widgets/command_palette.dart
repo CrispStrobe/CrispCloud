@@ -49,6 +49,7 @@ import '../l10n/workspace_ux_strings.dart';
 import '../services/keyboard_shortcut_service.dart';
 import '../services/command_search.dart';
 import 'keyboard_shortcut_dialog.dart';
+import '../screens/keyboard_shortcuts.dart' show executeBrowserShortcut;
 
 class _Command {
   final String name;
@@ -104,7 +105,8 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
     super.didChangeDependencies();
     _allCommands = _buildCommands();
     _filtered = _rankCommands(_controller.text);
-    _selectedIndex = 0;
+    _selectedIndex = _filtered.indexWhere((command) => command.enabled);
+    if (_selectedIndex < 0) _selectedIndex = 0;
   }
 
   @override
@@ -122,6 +124,7 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
     final pdfFiles = panel.selection.isNotEmpty
         ? panel.selection.toList()
         : <FileItem>[if (panel.cursorItem case final file?) file];
+    final hasTargets = pdfFiles.any((file) => file.name != '..');
 
     return [
       // Navigation
@@ -152,6 +155,44 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
         keywords: 'keyboard keys bindings shortcuts',
         action: () => showKeyboardShortcutSettings(widget.parentContext),
       ),
+      for (final action in [
+        ShortcutAction.search,
+        ShortcutAction.filter,
+        ShortcutAction.rename,
+        ShortcutAction.preview,
+        ShortcutAction.edit,
+        ShortcutAction.newFolder,
+        ShortcutAction.delete,
+        ShortcutAction.toggleHidden,
+        ShortcutAction.toggleTreeView,
+        ShortcutAction.cycleLayout,
+      ])
+        _Command(
+          name: WorkspaceUxStrings(context).action(action),
+          binding: action,
+          enabled:
+              ![
+                ShortcutAction.rename,
+                ShortcutAction.preview,
+                ShortcutAction.edit,
+                ShortcutAction.delete,
+              ].contains(action) ||
+              hasTargets,
+          icon: switch (action) {
+            ShortcutAction.search => Icons.search,
+            ShortcutAction.filter => Icons.filter_list,
+            ShortcutAction.rename => Icons.drive_file_rename_outline,
+            ShortcutAction.preview => Icons.preview_outlined,
+            ShortcutAction.edit => Icons.edit_outlined,
+            ShortcutAction.newFolder => Icons.create_new_folder_outlined,
+            ShortcutAction.delete => Icons.delete_outline,
+            ShortcutAction.toggleHidden => Icons.visibility_outlined,
+            ShortcutAction.toggleTreeView => Icons.account_tree_outlined,
+            _ => Icons.view_list_outlined,
+          },
+          action: () =>
+              executeBrowserShortcut(widget.parentContext, ref, action),
+        ),
       _Command(
         name: context.commanderTr("Navigate Up"),
         binding: ShortcutAction.up,
@@ -168,11 +209,11 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
         name: context.commanderTr("Switch Panel"),
         binding: ShortcutAction.switchPanel,
         icon: Icons.swap_horiz,
-        action: () {
-          ref.read(activePanelProvider.notifier).state = side == PanelSide.local
-              ? PanelSide.remote
-              : PanelSide.local;
-        },
+        action: () => executeBrowserShortcut(
+          widget.parentContext,
+          ref,
+          ShortcutAction.switchPanel,
+        ),
       ),
       _Command(
         name: context.commanderTr("Open Local Folder"),
@@ -411,6 +452,7 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
         name: context.commanderTr("Close Tab"),
         binding: ShortcutAction.closeTab,
         icon: Icons.close,
+        enabled: panel.tabs.length > 1 && panel.activeTab?.isProtected != true,
         action: () {
           panel.closeTab(panel.activeTabId);
         },
@@ -492,6 +534,7 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
       if (!auth.isConnected)
         _Command(
           name: context.commanderTr("Connect to Cloud"),
+          binding: ShortcutAction.connect,
           icon: Icons.cloud,
           action: () => showConnectionDialogScreen(widget.parentContext),
         ),
@@ -508,6 +551,12 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
           name: context.commanderTr("Sort by {0}", [
             context.commanderEnum(sort),
           ]),
+          binding: switch (sort) {
+            SortBy.name => ShortcutAction.sortByName,
+            SortBy.size => ShortcutAction.sortBySize,
+            SortBy.date => ShortcutAction.sortByDate,
+            SortBy.extension => ShortcutAction.sortByExtension,
+          },
           icon: Icons.sort,
           action: () => panel.setSortBy(sort),
         ),
@@ -542,14 +591,20 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
 
   String? _shortcut(_Command command) => command.binding == null
       ? command.shortcut
-      : ref.read(keyboardShortcutServiceProvider).browserDisplay(command.binding!);
+      : ref
+            .read(keyboardShortcutServiceProvider)
+            .browserDisplay(command.binding!);
 
   List<_Command> _rankCommands(String query) {
     final ranked = <({int index, int score, _Command command})>[];
     for (var i = 0; i < _allCommands.length; i++) {
       final command = _allCommands[i];
-      final score = commandSearchScore(query, command.name,
-        keywords: '${command.keywords} ${command.binding == null ? '' : CommanderStrings.labelForEnum(command.binding!)} ${_shortcut(command) ?? ''}');
+      final score = commandSearchScore(
+        query,
+        command.name,
+        keywords:
+            '${command.keywords} ${command.binding == null ? '' : CommanderStrings.labelForEnum(command.binding!)} ${_shortcut(command) ?? ''}',
+      );
       if (score != null) ranked.add((index: i, score: score, command: command));
     }
     ranked.sort((a, b) {
@@ -562,7 +617,8 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
   void _moveSelection(int delta) {
     if (_filtered.isEmpty) return;
     var next = _selectedIndex + delta;
-    while (next >= 0 && next < _filtered.length && !_filtered[next].enabled) next += delta;
+    while (next >= 0 && next < _filtered.length && !_filtered[next].enabled)
+      next += delta;
     if (next < 0 || next >= _filtered.length) return;
     setState(() => _selectedIndex = next);
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -580,7 +636,9 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
   }
 
   void _executeSelected() {
-    if (_filtered.isNotEmpty && _selectedIndex < _filtered.length && _filtered[_selectedIndex].enabled) {
+    if (_filtered.isNotEmpty &&
+        _selectedIndex < _filtered.length &&
+        _filtered[_selectedIndex].enabled) {
       Navigator.of(context).pop();
       _filtered[_selectedIndex].action();
     }
@@ -617,10 +675,12 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
       selected: selected,
       enabled: command.enabled,
       child: InkWell(
-        onTap: !command.enabled ? null : () {
-          setState(() => _selectedIndex = index);
-          _executeSelected();
-        },
+        onTap: !command.enabled
+            ? null
+            : () {
+                setState(() => _selectedIndex = index);
+                _executeSelected();
+              },
         child: Container(
           color: selected
               ? theme.colorScheme.primaryContainer.withValues(alpha: 0.5)
@@ -638,8 +698,13 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(command.name, style: TextStyle(fontSize: 13,
-                        color: command.enabled ? null : theme.disabledColor)),
+                    Text(
+                      command.name,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: command.enabled ? null : theme.disabledColor,
+                      ),
+                    ),
                     if (compact && shortcutLabel != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
@@ -663,9 +728,18 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
     ref.watch(panelProvider(side));
     ref.watch(authProvider);
     ref.watch(shortcutBindingsProvider);
+    final selectedName = _selectedIndex < _filtered.length
+        ? _filtered[_selectedIndex].name
+        : null;
     _allCommands = _buildCommands();
     _filtered = _rankCommands(_controller.text);
-    if (_selectedIndex >= _filtered.length) _selectedIndex = 0;
+    _selectedIndex = _filtered.indexWhere(
+      (command) => command.name == selectedName && command.enabled,
+    );
+    if (_selectedIndex < 0) {
+      _selectedIndex = _filtered.indexWhere((command) => command.enabled);
+      if (_selectedIndex < 0) _selectedIndex = 0;
+    }
 
     return Dialog(
       alignment: Alignment.topCenter,
@@ -685,8 +759,10 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
               child: Focus(
                 onKeyEvent: (node, event) {
                   if (event is! KeyDownEvent) return KeyEventResult.ignored;
-                  if (_filtered.isEmpty && (event.logicalKey == LogicalKeyboardKey.arrowDown ||
-                      event.logicalKey == LogicalKeyboardKey.arrowUp)) return KeyEventResult.handled;
+                  if (_filtered.isEmpty &&
+                      (event.logicalKey == LogicalKeyboardKey.arrowDown ||
+                          event.logicalKey == LogicalKeyboardKey.arrowUp))
+                    return KeyEventResult.handled;
                   if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
                     _moveSelection(1);
                     return KeyEventResult.handled;

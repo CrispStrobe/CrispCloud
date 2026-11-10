@@ -4,6 +4,8 @@ import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/l10n/commander_strings.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/providers.dart';
+import 'package:crisp_cloud/providers/focus_area_provider.dart';
+import 'package:crisp_cloud/services/keyboard_shortcut_service.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:crisp_cloud/services/secure_storage_service.dart';
 import 'package:crisp_cloud/services/transfer_journal.dart';
@@ -231,6 +233,62 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(CommandPalette), findsNothing);
     expect(find.byType(ConnectionDialog), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+    'live shortcut changes are searchable without reopening the palette',
+    (tester) async {
+      locale.value = const Locale('en');
+      await open(tester, narrow: false);
+      await tester.enterText(find.byType(TextField), 'refresh panel');
+      await tester.pump();
+      expect(find.text('Refresh Panel'), findsOneWidget);
+      await container
+          .read(shortcutBindingsProvider.notifier)
+          .setBinding(ShortcutAction.refresh, const ShortcutBinding(key: 'F9'));
+      await tester.pump();
+      expect(find.text('F9'), findsOneWidget);
+      await tester.enterText(find.byType(TextField), 'F9');
+      await tester.pump();
+      expect(find.text('Refresh Panel'), findsOneWidget);
+      expect(find.text('Refresh Left Panel'), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('unavailable history commands cannot execute', (tester) async {
+    locale.value = const Locale('en');
+    await open(tester, narrow: false);
+    await tester.enterText(find.byType(TextField), 'Navigate Back');
+    await tester.pump();
+    expect(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is Semantics &&
+            widget.properties.button == true &&
+            widget.properties.enabled == false,
+      ),
+      findsWidgets,
+    );
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pump();
+    expect(find.byType(CommandPalette), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('switch panel command transfers keyboard ownership', (
+    tester,
+  ) async {
+    locale.value = const Locale('en');
+    await open(tester, narrow: false);
+    await tester.enterText(find.byType(TextField), 'Switch Panel');
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pumpAndSettle();
+    expect(find.byType(CommandPalette), findsNothing);
+    expect(container.read(activePanelProvider), PanelSide.remote);
+    expect(container.read(focusAreaProvider), FocusArea.remote);
     expect(tester.takeException(), isNull);
   });
 }

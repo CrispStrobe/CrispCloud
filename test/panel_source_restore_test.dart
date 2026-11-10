@@ -9,24 +9,25 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   for (final side in PanelSide.values) {
-    testWidgets('restores the saved ${side.name} source without a newer choice', (
-      tester,
-    ) async {
-      final key = 'panel_source_${side.name}';
-      SharedPreferences.setMockInitialValues({
-        key: 'local',
-        '${key}_path': '/saved/${side.name}',
-      });
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
-      expect(container.read(panelSourceProvider(side)).currentPath, '/');
+    testWidgets(
+      'restores the saved ${side.name} source without a newer choice',
+      (tester) async {
+        final key = 'panel_source_${side.name}';
+        SharedPreferences.setMockInitialValues({
+          key: 'local',
+          '${key}_path': '/saved/${side.name}',
+        });
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
+        expect(container.read(panelSourceProvider(side)).currentPath, '/');
 
-      await tester.pump();
+        await tester.pump();
 
-      final restored = container.read(panelSourceProvider(side));
-      expect(restored, isA<LocalPanelSource>());
-      expect(restored.currentPath, '/saved/${side.name}');
-    });
+        final restored = container.read(panelSourceProvider(side));
+        expect(restored, isA<LocalPanelSource>());
+        expect(restored.currentPath, '/saved/${side.name}');
+      },
+    );
   }
 
   final choices = <String, void Function(PanelSourceNotifier)>{
@@ -58,7 +59,10 @@ void main() {
 
       await tester.pump();
 
-      expect(container.read(panelSourceProvider(PanelSide.remote)), same(chosen));
+      expect(
+        container.read(panelSourceProvider(PanelSide.remote)),
+        same(chosen),
+      );
       if (chosen.isLocal) {
         final prefs = await SharedPreferences.getInstance();
         expect(prefs.getString('panel_source_remote_path'), chosen.currentPath);
@@ -80,22 +84,26 @@ void main() {
 
     await tester.pump();
 
-    expect(container.read(panelSourceProvider(PanelSide.remote)).currentPath, '/two');
+    expect(
+      container.read(panelSourceProvider(PanelSide.remote)).currentPath,
+      '/two',
+    );
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getString('panel_source_remote_path'), '/two');
   });
 
-  testWidgets('disposing before preferences resolve does not publish a source', (
-    tester,
-  ) async {
-    SharedPreferences.setMockInitialValues({
-      'panel_source_local': 'local',
-      'panel_source_local_path': '/saved',
-    });
-    final container = ProviderContainer();
-    container.read(panelSourceProvider(PanelSide.local));
-    container.dispose();
-    await tester.pump();
-    expect(tester.takeException(), isNull);
-  });
+  testWidgets(
+    'disposing before preferences resolve does not publish a source',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({
+        'panel_source_local': 'local',
+        'panel_source_local_path': '/saved',
+      });
+      final container = ProviderContainer();
+      container.read(panelSourceProvider(PanelSide.local));
+      container.dispose();
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+    },
+  );
 }

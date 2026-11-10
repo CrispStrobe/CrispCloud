@@ -11,7 +11,8 @@ String localizedPanelError(BuildContext context, AppError error) {
     return NavigationStrings(context).text('unavailable');
   }
   if (code == PanelErrorCode.navigationFailed) {
-    return NavigationStrings(context).failure(error.arguments['error'] ?? error.message);
+    return NavigationStrings(context)
+        .failure(error.arguments['error'] ?? error.message);
   }
   if (code == null) {
     return localizedProviderError(context, error.cause ?? error.message);

@@ -5,7 +5,11 @@ import '../providers/panel_provider.dart';
 
 /// History choices retain their original tab and storage while the menu is open.
 class PanelHistoryButton extends StatelessWidget {
-  const PanelHistoryButton({super.key, required this.panel, this.compact = false});
+  const PanelHistoryButton({
+    super.key,
+    required this.panel,
+    this.compact = false,
+  });
   final PanelNotifier panel;
   final bool compact;
 
@@ -41,12 +45,18 @@ class PanelHistoryButton extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(entries[index].path,
+                  Text(
+                    entries[index].path,
                     textDirection: TextDirection.ltr,
-                    maxLines: 2, overflow: TextOverflow.ellipsis),
-                  Text(panel.storageDisplayName(entries[index].storage),
-                    maxLines: 1, overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodySmall),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    panel.storageDisplayName(entries[index].storage),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
                 ],
               ),
             ),

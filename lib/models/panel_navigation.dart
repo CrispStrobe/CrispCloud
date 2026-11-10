@@ -99,7 +99,9 @@ class PanelNavigationHistory {
     final history = PanelNavigationHistory();
     final raw = json['entries'];
     if (raw is! List) return history;
-    final savedIndex = json['index'] is int ? json['index'] as int : raw.length - 1;
+    final savedIndex = json['index'] is int
+        ? json['index'] as int
+        : raw.length - 1;
     final start = (raw.length - maxEntries).clamp(0, raw.length);
     for (var i = start; i < raw.length; i++) {
       try {
