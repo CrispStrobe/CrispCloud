@@ -29,6 +29,20 @@ LocalFileService createPlatformFileService() {
   throw UnsupportedError('Unsupported platform');
 }
 
+void _validateSnapshotPath(String path) {
+  if (path.isEmpty || !p.isAbsolute(path) || path.contains('\u0000')) {
+    throw FileSystemException(
+      'A directory snapshot needs an absolute path.',
+      path,
+    );
+  }
+}
+
+Future<List<FileSystemEntity>> _readDirectorySnapshot(String path) async =>
+    List<FileSystemEntity>.unmodifiable(
+      await Directory(path).list(followLinks: false).toList(),
+    );
+
 /// Stage editor output beside the destination and replace it only after the
 /// bytes have been flushed. A failed write never truncates the original.
 ///
@@ -133,12 +147,21 @@ Future<void> writeLocalEditorFile(
 class MacosFileService
     implements
         LocalFileService,
+        LocalDirectorySnapshotReader,
         LocalFileSaveReporter,
         ScopedLocalFileOperations,
         LocalMediaFileAccess {
+  MacosFileService({
+    SecureBookmarks? bookmarks,
+    Future<List<FileSystemEntity>> Function()? resolveBookmarks,
+  }) : _bookmarks = bookmarks ?? SecureBookmarks(),
+       _resolveBookmarks =
+           resolveBookmarks ?? MacOSBookmarkService.getResolvedBookmarks;
+
   String? _grantedBasePath;
   int? _cachedUid;
-  final _bookmarks = SecureBookmarks();
+  final SecureBookmarks _bookmarks;
+  final Future<List<FileSystemEntity>> Function() _resolveBookmarks;
   List<FileSystemEntity> _resolvedBookmarks = <FileSystemEntity>[];
   FileSystemEntity? _streamScope;
 
@@ -159,7 +182,7 @@ class MacosFileService
 
   Future<bool> _loadAndResolveBookmarks() async {
     try {
-      _resolvedBookmarks = await MacOSBookmarkService.getResolvedBookmarks();
+      _resolvedBookmarks = await _resolveBookmarks();
       if (_resolvedBookmarks.isNotEmpty) {
         _grantedBasePath = _resolvedBookmarks.last.path;
         return true;
@@ -330,6 +353,37 @@ class MacosFileService
     } catch (e) {
       debugPrint('Failed to list directory: $e');
       rethrow;
+    }
+  }
+
+  @override
+  Future<List<FileSystemEntity>?> listDirectorySnapshot(String path) async {
+    _validateSnapshotPath(path);
+    // Resolving a saved grant is not navigation. Keep the chosen root and the
+    // interactive bookmark cache untouched, even when this read finishes late.
+    final scopes = _resolvedBookmarks.isEmpty
+        ? await _resolveBookmarks()
+        : List<FileSystemEntity>.of(_resolvedBookmarks);
+    final accessPath = await _accessPath(path);
+    FileSystemEntity? scope;
+    for (final candidate in scopes) {
+      if (isSameOrUnderPath(accessPath, candidate.path)) {
+        scope = candidate;
+        break;
+      }
+    }
+    if (scope == null) {
+      // App-owned or otherwise readable paths need no extra grant. The actual
+      // read enforces OS access and never escalates to a folder picker.
+      return _readDirectorySnapshot(path);
+    }
+    if (!await _bookmarks.startAccessingSecurityScopedResource(scope)) {
+      throw PathAccessException(path, const OSError('Access denied', 13));
+    }
+    try {
+      return await _readDirectorySnapshot(path);
+    } finally {
+      await _endScope(scope);
     }
   }
 
@@ -599,7 +653,11 @@ class MacosFileService
 
 // --- Windows/Linux Implementation ---
 class DesktopFileService
-    implements LocalFileService, LocalFileSaveReporter, LocalMediaFileAccess {
+    implements
+        LocalFileService,
+        LocalDirectorySnapshotReader,
+        LocalFileSaveReporter,
+        LocalMediaFileAccess {
   @override
   String currentPath =
       Platform.environment['HOME'] ??
@@ -651,6 +709,12 @@ class DesktopFileService
   Future<List<FileSystemEntity>?> listDirectory(String path) async {
     currentPath = path;
     return Directory(path).list().toList();
+  }
+
+  @override
+  Future<List<FileSystemEntity>?> listDirectorySnapshot(String path) async {
+    _validateSnapshotPath(path);
+    return _readDirectorySnapshot(path);
   }
 
   @override
@@ -736,6 +800,7 @@ class DesktopFileService
 class MobileFileService
     implements
         LocalFileService,
+        LocalDirectorySnapshotReader,
         LocalFileSaveReporter,
         LocalMediaFileAccess,
         ScopedLocalFileOperations {
@@ -743,8 +808,10 @@ class MobileFileService
     IosFilesClient? iosFiles,
     bool? isIOS,
     Future<Directory> Function()? documentsDirectory,
+    SecureBookmarks? bookmarks,
   }) : _isIOS = isIOS ?? Platform.isIOS,
        _iosFiles = iosFiles ?? IosFilesClient(),
+       _bookmarks = bookmarks ?? SecureBookmarks(),
        _documentsDirectory =
            documentsDirectory ?? getApplicationDocumentsDirectory;
 
@@ -755,7 +822,7 @@ class MobileFileService
   int _streamUsers = 0;
   String? _grantedBasePath;
   static const String _mobileBookmarkKey = 'mobile_bookmark_data';
-  final _bookmarks = SecureBookmarks();
+  final SecureBookmarks _bookmarks;
   FileSystemEntity? _resolvedBookmarkFile;
 
   @override
@@ -773,12 +840,19 @@ class MobileFileService
   @override
   Future<void> refresh() async {}
 
+  Future<FileSystemEntity?> _readStoredBookmark() async {
+    final prefs = await SharedPreferences.getInstance();
+    final bookmarkBase64 = prefs.getString(_mobileBookmarkKey);
+    return bookmarkBase64 == null
+        ? null
+        : _bookmarks.resolveBookmark(bookmarkBase64);
+  }
+
   Future<bool> _loadAndResolveBookmark() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final bookmarkBase64 = prefs.getString(_mobileBookmarkKey);
-      if (bookmarkBase64 == null) return false;
-      _resolvedBookmarkFile = await _bookmarks.resolveBookmark(bookmarkBase64);
+      final resolved = await _readStoredBookmark();
+      if (resolved == null) return false;
+      _resolvedBookmarkFile = resolved;
       return true;
     } catch (e) {
       debugPrint('Failed to load or resolve mobile bookmark: $e');
@@ -862,12 +936,9 @@ class MobileFileService
   @override
   Future<List<FileSystemEntity>?> listDirectory(String path) async {
     if (_isIOS) {
-      final entries = await _iosOperation(
-        path,
-        () => _iosFiles.listDirectory(path),
-      );
+      final entries = await _listIosDirectory(path);
       currentPath = normalizeIosFilePath(path);
-      return entries.map(iosListingEntity).toList(growable: false);
+      return entries;
     }
     currentPath = path;
 
@@ -900,6 +971,45 @@ class MobileFileService
         );
       }
       rethrow;
+    }
+  }
+
+  Future<List<FileSystemEntity>> _listIosDirectory(String path) async {
+    final entries = await _iosOperation(
+      path,
+      () => _iosFiles.listDirectory(path),
+    );
+    return entries.map(iosListingEntity).toList(growable: false);
+  }
+
+  @override
+  Future<List<FileSystemEntity>?> listDirectorySnapshot(String path) async {
+    if (_isIOS) {
+      // The native list call owns its coordinated security scope and reports
+      // revoked access directly. It never presents a directory picker.
+      return List<FileSystemEntity>.unmodifiable(
+        await _listIosDirectory(normalizeIosFilePath(path)),
+      );
+    }
+    _validateSnapshotPath(path);
+    final saved = _resolvedBookmarkFile ?? await _readStoredBookmark();
+    final accessPath = await Directory(path).resolveSymbolicLinks();
+    final scope = saved != null && isSameOrUnderPath(accessPath, saved.path)
+        ? saved
+        : null;
+    if (scope == null) return _readDirectorySnapshot(path);
+    if (!await _bookmarks.startAccessingSecurityScopedResource(scope)) {
+      throw PathAccessException(path, const OSError('Access denied', 13));
+    }
+    try {
+      return await _readDirectorySnapshot(path);
+    } finally {
+      try {
+        await _bookmarks.stopAccessingSecurityScopedResource(scope);
+      } catch (_) {
+        // The snapshot has completed; a release error must not request a grant
+        // or change another pane's directory to retry it.
+      }
     }
   }
 

@@ -63,6 +63,9 @@ jobs:
           lib/widgets/keyboard_shortcut_dialog.dart
           lib/widgets/folder_drop_target.dart
           lib/services/folder_drop_service.dart
+          lib/services/local_file_service.dart
+          lib/services/local_file_service_native.dart
+          lib/services/local_file_service_web.dart
           lib/models/panel_drag_data.dart
           lib/widgets/fkey_bar.dart
           lib/widgets/file_clipboard_actions.dart
@@ -80,6 +83,8 @@ jobs:
             test/panel_source_restore_test.dart
             test/panel_file_origin_test.dart
             test/panel_listing_presentation_test.dart
+            test/local_directory_snapshot_test.dart
+            test/ios_local_file_service_test.dart
             test/panel_refresh_lifecycle_test.dart
             test/panel_swap_test.dart
             test/panel_swap_view_test.dart

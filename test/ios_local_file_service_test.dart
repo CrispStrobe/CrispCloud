@@ -172,6 +172,70 @@ void main() {
   );
 
   test(
+    'snapshot uses existing coordinated access without changing navigation',
+    () async {
+      await service.getInitialPath();
+      service.currentPath = '/visible/folder';
+      calls.clear();
+      final entities = (await service.listDirectorySnapshot(
+        '/provider/./folder',
+      ))!;
+      expect(entities[0], isA<File>());
+      expect(entities[1], isA<Directory>());
+      expect(entities[2], isA<Link>());
+      expect((await entities[0].stat()).size, 123);
+      expect(service.currentPath, '/visible/folder');
+      expect(service.grantedBasePath, '/provider/folder');
+      expect(calls.map((call) => call.method), ['listDirectory']);
+      expect((calls.single.arguments as Map)['path'], '/provider/folder');
+      expect(() => entities.clear(), throwsUnsupportedError);
+    },
+  );
+
+  test(
+    'snapshot access failure never presents a picker or changes the grant',
+    () async {
+      await service.getInitialPath();
+      service.currentPath = '/visible/folder';
+      calls.clear();
+      failMethod = 'listDirectory';
+      await expectLater(
+        service.listDirectorySnapshot('/provider/folder'),
+        throwsA(isA<PathAccessException>()),
+      );
+      expect(service.currentPath, '/visible/folder');
+      expect(service.grantedBasePath, '/provider/folder');
+      expect(calls.map((call) => call.method), ['listDirectory']);
+    },
+  );
+
+  test(
+    'a delayed snapshot cannot replace a newer interactive directory',
+    () async {
+      await service.getInitialPath();
+      final started = Completer<void>();
+      final released = Completer<void>();
+      intercept = (call) async {
+        if (call.method == 'listDirectory' &&
+            (call.arguments as Map)['path'] == '/provider/folder') {
+          started.complete();
+          await released.future;
+        }
+      };
+      final snapshot = service.listDirectorySnapshot('/provider/folder');
+      await started.future;
+      expect(service.currentPath, '/provider/folder');
+      await service.listDirectory('/provider/newer');
+      expect(service.currentPath, '/provider/newer');
+      released.complete();
+      await snapshot;
+      expect(service.currentPath, '/provider/newer');
+      expect(service.grantedBasePath, '/provider/folder');
+      expect(calls.where((call) => call.method == 'pickDirectory'), isEmpty);
+    },
+  );
+
+  test(
     'reads writes create delete and lengths use native coordinated methods',
     () async {
       expect(await service.readFile('/provider/file'), [1, 2, 3]);
