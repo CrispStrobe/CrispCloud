@@ -64,6 +64,7 @@ class PanelSourceSelector extends ConsumerWidget {
         for (final live in ref.read(availableSourcesProvider)) {
           if (live.key == entry.key &&
               _sameSource(live.source, entry.source!) &&
+              live.source.currentPath == entry.source!.currentPath &&
               _sourceStorage(live.source) == entry.storage &&
               _sourceAvailable(live.source)) {
             if (onSelected case final select?) {
@@ -131,7 +132,7 @@ class _SourceOption {
 // Internal dropdown
 // ---------------------------------------------------------------------------
 
-class _SourceDropdown extends StatelessWidget {
+class _SourceDropdown extends StatefulWidget {
   final PanelSource? current;
   final String currentLabel;
   final bool currentIsLocal;
@@ -149,7 +150,20 @@ class _SourceDropdown extends StatelessWidget {
   });
 
   @override
+  State<_SourceDropdown> createState() => _SourceDropdownState();
+}
+
+class _SourceDropdownState extends State<_SourceDropdown> {
+  List<_SourceOption>? _menuEntries;
+  void Function(_SourceOption)? _menuSelect;
+
+  @override
   Widget build(BuildContext context) {
+    final current = widget.current;
+    final currentLabel = widget.currentLabel;
+    final currentIsLocal = widget.currentIsLocal;
+    final currentAvailable = widget.currentAvailable;
+    final available = widget.available;
     final theme = Theme.of(context);
     final l = AppLocalizations.of(context);
     final disconnected = l?.notConnected ?? 'Not connected';
@@ -252,11 +266,22 @@ class _SourceDropdown extends StatelessWidget {
           child: label(entry),
         );
       }).toList(),
+      onTap: () {
+        // DropdownButton returns only a key through its latest callback when
+        // the route closes. Preserve the choices and owning callback that the
+        // user actually opened, even if accounts or the panel rebuild meanwhile.
+        _menuEntries = List<_SourceOption>.unmodifiable(entries);
+        _menuSelect = widget.onSelect;
+      },
       onChanged: (key) {
-        if (key == null) return;
-        for (final entry in entries) {
+        final openedEntries = _menuEntries;
+        final select = _menuSelect;
+        _menuEntries = null;
+        _menuSelect = null;
+        if (key == null || openedEntries == null || select == null) return;
+        for (final entry in openedEntries) {
           if (entry.key == key && entry.enabled && entry.source != null) {
-            onSelect(entry);
+            select(entry);
             return;
           }
         }

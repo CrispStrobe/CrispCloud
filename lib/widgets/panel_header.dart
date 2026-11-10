@@ -77,6 +77,8 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
     ref.watch(authProvider);
     ref.watch(multiCloudProvider);
     final storage = panel.directoryStorage;
+    final tabId = panel.activeTabId;
+    final side = widget.side;
     final String path = panel.currentPath;
     final bool isLocal = storage?.isLocal ?? source.isLocal;
     final ThemeData theme = Theme.of(context);
@@ -103,6 +105,11 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
                   currentAvailable:
                       storage == null || panel.directorySourceAvailable,
                   onSelected: (selected) async {
+                    if (!mounted ||
+                        widget.side != side ||
+                        panel.activeTabId != tabId) {
+                      return;
+                    }
                     if (!selected.isLocal && !selected.isRemote) {
                       ref
                           .read(panelSourceProvider(widget.side).notifier)

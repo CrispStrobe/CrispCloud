@@ -274,8 +274,8 @@ void main() {
     await panel.navigateToPath('/locked', origin: origin!);
     await mount(tester, mode: ViewMode.column);
     expect(state(PanelListingState.failed), findsOneWidget);
-    expect(find.text('Grant access'), findsOneWidget);
-    await tester.tap(find.widgetWithText(ElevatedButton, 'Grant access'));
+    expect(find.text('Grant Access'), findsOneWidget);
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Grant Access'));
     await tester.pumpAndSettle();
     expect(local.grants, ['/locked']);
     expect(panel.currentPath, '/locked');
