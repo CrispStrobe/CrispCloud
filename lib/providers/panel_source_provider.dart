@@ -248,7 +248,7 @@ final availableSourcesProvider = Provider<List<AvailableSource>>((ref) {
         source: RemotePanelSource(
           providerName: auth.providerName,
           client: auth.client,
-          path: '/',
+          path: auth.client.rootPath,
         ),
       ),
     );
@@ -266,7 +266,7 @@ final availableSourcesProvider = Provider<List<AvailableSource>>((ref) {
         source: RemotePanelSource(
           providerName: conn.label,
           client: conn.client,
-          path: '/',
+          path: conn.client.rootPath,
         ),
       ),
     );

@@ -30,6 +30,7 @@ import '../providers/terminal_provider.dart';
 import '../services/panel_swap_service.dart';
 import '../services/panel_view_mode_service.dart';
 import '../services/panel_source_service.dart';
+import '../services/storage_identity.dart';
 import '../screens/screen_dialogs.dart';
 import '../widgets/command_palette.dart';
 import 'bookmark_actions.dart';
@@ -73,8 +74,11 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
   Widget build(BuildContext context) {
     final PanelNotifier panel = ref.watch(panelProvider(widget.side));
     final PanelSource source = ref.watch(panelSourceProvider(widget.side));
+    ref.watch(authProvider);
+    ref.watch(multiCloudProvider);
+    final storage = panel.directoryStorage;
     final String path = panel.currentPath;
-    final bool isLocal = source.isLocal;
+    final bool isLocal = storage?.isLocal ?? source.isLocal;
     final ThemeData theme = Theme.of(context);
     final m = BrowserMenuStrings(context);
     final h = PanelHeaderStrings(context);
@@ -89,7 +93,44 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
               const SizedBox(width: 4),
               ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 132),
-                child: PanelSourceSelector(side: widget.side),
+                child: PanelSourceSelector(
+                  side: widget.side,
+                  currentSource: panel.directorySource,
+                  currentStorage: storage,
+                  currentLabel: storage == null
+                      ? null
+                      : panel.storageDisplayName(storage),
+                  currentAvailable:
+                      storage == null || panel.directorySourceAvailable,
+                  onSelected: (selected) async {
+                    if (!selected.isLocal && !selected.isRemote) {
+                      ref
+                          .read(panelSourceProvider(widget.side).notifier)
+                          .setSource(selected);
+                      return;
+                    }
+                    final origin = panel.resolveStorageReference(
+                      storageReferenceForSource(selected),
+                      selected.currentPath,
+                    );
+                    if (origin == null || !origin.isCurrent) return;
+                    try {
+                      // An explicit selection also routes a legacy listing
+                      // whose picker already has this value, and a reconnected
+                      // account whose previous listing is no longer current.
+                      await panel.navigateToPath(
+                        selected.currentPath,
+                        origin: origin,
+                      );
+                    } catch (error) {
+                      if (mounted) {
+                        ref
+                            .read(errorProvider)
+                            .addError(error.toString(), cause: error);
+                      }
+                    }
+                  },
+                ),
               ),
               const SizedBox(width: 2),
             ],

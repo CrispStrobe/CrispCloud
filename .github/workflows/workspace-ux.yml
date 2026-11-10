@@ -106,6 +106,7 @@ jobs:
             test/widget/folder_drop_target_test.dart
             test/widget/panel_drop_options_test.dart
             test/widget/panel_source_selector_widget_test.dart
+            test/widget/panel_source_localization_test.dart
             test/widget/panel_listing_placeholder_test.dart
             test/file_clipboard_test.dart
             test/file_list_i18n_test.dart
