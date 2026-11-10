@@ -57,6 +57,40 @@ void main() {
     expect(browserMenuShortcut(service, ShortcutAction.refresh), isNull);
   });
 
+  test(
+    'imported modifier-only bindings cannot create native accelerators',
+    () async {
+      final service = KeyboardShortcutService();
+      for (final key in [
+        LogicalKeyboardKey.shiftLeft,
+        LogicalKeyboardKey.control,
+        LogicalKeyboardKey.metaRight,
+      ]) {
+        await service.setBinding(
+          ShortcutAction.refresh,
+          ShortcutBinding(key: key.keyLabel),
+        );
+        expect(browserMenuShortcut(service, ShortcutAction.refresh), isNull);
+      }
+    },
+  );
+
+  test(
+    'imported collisions keep native menus aligned with custom priority',
+    () async {
+      final service = KeyboardShortcutService();
+      await service.setBinding(
+        ShortcutAction.rename,
+        const ShortcutBinding(key: 'W', meta: true),
+      );
+      expect(browserMenuShortcut(service, ShortcutAction.closeTab), isNull);
+      final rename = browserMenuShortcut(service, ShortcutAction.rename)!;
+      expect(rename.trigger, LogicalKeyboardKey.keyW);
+      expect(rename.meta, isTrue);
+      expect(rename.includeRepeats, isFalse);
+    },
+  );
+
   testWidgets('browser accelerators yield while a text field owns focus', (
     tester,
   ) async {

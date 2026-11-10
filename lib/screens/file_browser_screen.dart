@@ -102,7 +102,6 @@ class FileBrowserScreen extends ConsumerStatefulWidget {
 
 class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
   static const _log = Log('FileBrowser');
-  PanelSide _activePanelMobile = PanelSide.local;
   bool _textInputFocused = false;
 
   @override
@@ -144,6 +143,11 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     String label,
   ) {
     final panel = _activePanel(ref);
+    final bindings = ref.read(keyboardShortcutServiceProvider);
+    final typeaheadOwnsBackspace =
+        action == ShortcutAction.up &&
+        panel.isTypeahead &&
+        !bindings.isCustomized(action);
     final available =
         _browserOwnsInput(context, ref) &&
         switch (action) {
@@ -156,11 +160,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         };
     return PlatformMenuItem(
       label: label,
-      shortcut: available
-          ? browserMenuShortcut(
-              ref.read(keyboardShortcutServiceProvider),
-              action,
-            )
+      shortcut: available && !typeaheadOwnsBackspace
+          ? browserMenuShortcut(bindings, action)
           : null,
       onSelected: !available
           ? null
@@ -174,6 +175,12 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
   @override
   Widget build(BuildContext context) {
     ref.watch(shortcutBindingsProvider);
+    final activeSide = ref.watch(activePanelProvider);
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.macOS) {
+      ref.watch(panelProvider(activeSide));
+      ref.watch(focusAreaProvider);
+      ref.watch(terminalInputFocusedProvider);
+    }
     final l = AppLocalizations.of(context)!;
     final OfficeEditorMenuActions? officeEditor = ref.watch(
       officeEditorMenuProvider,
@@ -220,16 +227,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           : null,
       body: Focus(
         autofocus: true,
-        onKeyEvent: (node, event) => handleKeyEvent(
-          context,
-          ref,
-          event,
-          onPanelSwitch: (newPanel) {
-            if (MediaQuery.of(context).size.width <= 800) {
-              setState(() => _activePanelMobile = newPanel);
-            }
-          },
-        ),
+        onKeyEvent: (node, event) => handleKeyEvent(context, ref, event),
         child: Column(
           children: [
             Expanded(
@@ -931,8 +929,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                     : panel.captureCurrentOrigin();
                 final home = origin.source.isLocal && !kIsWeb
                     ? (Platform.environment['HOME'] ?? '/')
-                    : '/';
-                panel.navigateToPath(home);
+                    : origin.storageReference.root;
+                panel.navigateToPath(home, origin: origin);
               } catch (error) {
                 ScaffoldMessenger.of(context)
                     .showSnackBar(SnackBar(content: Text('$error')));
@@ -941,7 +939,21 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           ),
           PlatformMenuItem(
             label: context.commanderTr("Root"),
-            onSelected: () => _activePanel(ref).navigateToPath('/'),
+            onSelected: () {
+              final panel = _activePanel(ref);
+              try {
+                final origin = panel.isInArchive
+                    ? panel.captureArchiveOrigin()
+                    : panel.captureCurrentOrigin();
+                panel.navigateToPath(
+                  origin.storageReference.root,
+                  origin: origin,
+                );
+              } catch (error) {
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(SnackBar(content: Text('$error')));
+              }
+            },
           ),
           _browserMenuCommand(
             context,
@@ -1739,9 +1751,9 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
 
   Widget _buildSinglePanelLayout(BuildContext context) {
     final focusArea = ref.watch(focusAreaProvider);
+    final activePanel = ref.watch(activePanelProvider);
 
     void switchTo(PanelSide side) {
-      setState(() => _activePanelMobile = side);
       ref.read(activePanelProvider.notifier).state = side;
       ref.read(focusAreaProvider.notifier).state = side == PanelSide.local
           ? FocusArea.local
@@ -1784,7 +1796,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                       decoration: BoxDecoration(
                         border: Border(
                           bottom: BorderSide(
-                            color: _activePanelMobile == PanelSide.local
+                            color: activePanel == PanelSide.local
                                 ? Theme.of(context).colorScheme.primary
                                 : Colors.transparent,
                             width: 2,
@@ -1811,7 +1823,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
                       decoration: BoxDecoration(
                         border: Border(
                           bottom: BorderSide(
-                            color: _activePanelMobile == PanelSide.remote
+                            color: activePanel == PanelSide.remote
                                 ? Theme.of(context).colorScheme.primary
                                 : Colors.transparent,
                             width: 2,
@@ -1828,9 +1840,9 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           Expanded(
             child: RepaintBoundary(
               child: FilePanel(
-                side: _activePanelMobile,
-                isActive: focusArea.panelSide == _activePanelMobile,
-                onTap: () => switchTo(_activePanelMobile),
+                side: activePanel,
+                isActive: focusArea.panelSide == activePanel,
+                onTap: () => switchTo(activePanel),
               ),
             ),
           ),
@@ -2512,9 +2524,6 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
   /// Called by the AppBar swap button and Ctrl+U.
   Future<void> _swapPanels() async {
     await swapPanelSources(ref);
-    if (mounted && MediaQuery.of(context).size.width <= 800) {
-      setState(() => _activePanelMobile = ref.read(activePanelProvider));
-    }
   }
 
   void _handleFKeyAction(

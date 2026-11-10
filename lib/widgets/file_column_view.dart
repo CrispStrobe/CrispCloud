@@ -18,6 +18,7 @@ import '../services/keyboard_shortcut_service.dart';
 import '../services/panel_source_service.dart';
 import '../utils/formatters.dart';
 import 'file_context_menu.dart';
+import 'folder_drop_target.dart';
 import 'file_list_view.dart'
     show FileListView, FileInlineRenameField, getFileIcon;
 
@@ -100,7 +101,8 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
   void _observePanel(PanelNotifier panel, PanelSource selected) {
     final endpoint = selected.withPath('');
     final pickerChanged = _selectedEndpoint != endpoint;
-    final sameLiveEndpoint = _columns.isNotEmpty &&
+    final sameLiveEndpoint =
+        _columns.isNotEmpty &&
         _columns.last.origin.source.withPath('') == endpoint;
     if (_tabId != panel.activeTabId ||
         (pickerChanged && !sameLiveEndpoint) ||
@@ -236,6 +238,10 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
       if (!mounted || file == null) return;
       final panel = ref.read(panelProvider(widget.side));
       if (file.name != '..' && panel.originForOperation(file) == null) return;
+      if (!(panel.displayedFiles?.any((row) => identical(row, file)) ??
+          false)) {
+        panel.setFilter('');
+      }
       if (contextPosition != null) {
         showFileContextMenu(context, ref, widget.side, file, contextPosition);
       } else if (shift || toggle) {
@@ -252,9 +258,10 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
       if (!mounted) return;
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(
         SnackBar(
-          content: Text(FileListStrings(context).format(
-            'Error loading item: {error}', {'error': error},
-          )),
+          content: Text(
+            FileListStrings(context)
+                .format('Error loading item: {error}', {'error': error}),
+          ),
         ),
       );
     }
@@ -272,21 +279,28 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
     }
     final keyboard = HardwareKeyboard.instance;
     final shortcuts = ref.read(keyboardShortcutServiceProvider);
-    final command = shortcuts.resolveBrowser(event,
-        isCtrl: keyboard.isControlPressed,
-        isMeta: keyboard.isMetaPressed,
-        isShift: keyboard.isShiftPressed,
-        isAlt: keyboard.isAltPressed);
-    final editingQuery = panel.isTypeahead &&
+    final command = shortcuts.resolveBrowser(
+      event,
+      isCtrl: keyboard.isControlPressed,
+      isMeta: keyboard.isMetaPressed,
+      isShift: keyboard.isShiftPressed,
+      isAlt: keyboard.isAltPressed,
+    );
+    final editingQuery =
+        panel.isTypeahead &&
         event.logicalKey == LogicalKeyboardKey.backspace &&
         !shortcuts.isCustomized(ShortcutAction.up);
     if ((!editingQuery && command != null) ||
-        keyboard.isControlPressed || keyboard.isMetaPressed ||
-        keyboard.isAltPressed || shortcuts.suppressesDefault(event,
-            isCtrl: keyboard.isControlPressed,
-            isMeta: keyboard.isMetaPressed,
-            isShift: keyboard.isShiftPressed,
-            isAlt: keyboard.isAltPressed)) {
+        keyboard.isControlPressed ||
+        keyboard.isMetaPressed ||
+        keyboard.isAltPressed ||
+        shortcuts.suppressesDefault(
+          event,
+          isCtrl: keyboard.isControlPressed,
+          isMeta: keyboard.isMetaPressed,
+          isShift: keyboard.isShiftPressed,
+          isAlt: keyboard.isAltPressed,
+        )) {
       return KeyEventResult.ignored;
     }
     final key = event.logicalKey;
@@ -304,14 +318,16 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
       }
       return KeyEventResult.handled;
     }
-    if (key == LogicalKeyboardKey.arrowRight || key == LogicalKeyboardKey.enter) {
+    if (key == LogicalKeyboardKey.arrowRight ||
+        key == LogicalKeyboardKey.enter) {
       final file = panel.cursorItem;
       if (file != null && (file.isFolder || key == LogicalKeyboardKey.enter)) {
         unawaited(_perform(_columns.last, file, open: true));
       }
       return KeyEventResult.handled;
     }
-    if (key == LogicalKeyboardKey.arrowUp || key == LogicalKeyboardKey.arrowDown) {
+    if (key == LogicalKeyboardKey.arrowUp ||
+        key == LogicalKeyboardKey.arrowDown) {
       final delta = key == LogicalKeyboardKey.arrowDown ? 1 : -1;
       if (keyboard.isShiftPressed) {
         panel.shiftMoveCursor(delta);
@@ -323,13 +339,17 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
       return KeyEventResult.handled;
     }
     if (key == LogicalKeyboardKey.home || key == LogicalKeyboardKey.end) {
-      panel.moveCursorTo(key == LogicalKeyboardKey.home ? 0 : widget.files.length - 1);
+      panel.moveCursorTo(
+        key == LogicalKeyboardKey.home ? 0 : widget.files.length - 1,
+      );
       return KeyEventResult.handled;
     }
-    if (key == LogicalKeyboardKey.pageUp || key == LogicalKeyboardKey.pageDown) {
+    if (key == LogicalKeyboardKey.pageUp ||
+        key == LogicalKeyboardKey.pageDown) {
       final page = widget.scrollController.hasClients
           ? (widget.scrollController.position.viewportDimension / _rowHeight)
-              .floor().clamp(1, 999)
+                .floor()
+                .clamp(1, 999)
           : 12;
       panel.moveCursor(key == LogicalKeyboardKey.pageDown ? page : -page);
       return KeyEventResult.handled;
@@ -351,9 +371,10 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
         panel.typeaheadBackspace();
         return KeyEventResult.handled;
       }
-      final character = event.character ??
-          (key.keyLabel.length == 1 ? key.keyLabel : null);
-      if (character != null && character.isNotEmpty &&
+      final character =
+          event.character ?? (key.keyLabel.length == 1 ? key.keyLabel : null);
+      if (character != null &&
+          character.isNotEmpty &&
           ref.read(quickSearchSettingsProvider).mode != QuickSearchMode.off) {
         panel.typeaheadAppend(character);
         return KeyEventResult.handled;
@@ -367,26 +388,34 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
     final platform = Theme.of(context).platform;
     return math.max(
       platform == TargetPlatform.android || platform == TargetPlatform.iOS
-          ? 48.0 : 32.0,
+          ? 48.0
+          : 32.0,
       MediaQuery.textScalerOf(context).scale(fontSize) + 14,
     );
   }
 
   void _revealCursor(PanelNotifier panel) {
     final item = panel.itemToScrollTo;
-    final index = item == null ? -1 :
-        widget.files.indexWhere((file) => identical(file, item));
+    final index = item == null
+        ? -1
+        : widget.files.indexWhere((file) => identical(file, item));
     if (index < 0) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !identical(panel.itemToScrollTo, item) ||
-          !widget.scrollController.hasClients) return;
+      if (!mounted ||
+          !identical(panel.itemToScrollTo, item) ||
+          !widget.scrollController.hasClients)
+        return;
       final position = widget.scrollController.position;
       final top = index * _rowHeight;
       final bottom = top + _rowHeight;
-      final offset = top < position.pixels ? top :
-          bottom > position.pixels + position.viewportDimension
-              ? bottom - position.viewportDimension : position.pixels;
-      widget.scrollController.jumpTo(offset.clamp(0.0, position.maxScrollExtent));
+      final offset = top < position.pixels
+          ? top
+          : bottom > position.pixels + position.viewportDimension
+          ? bottom - position.viewportDimension
+          : position.pixels;
+      widget.scrollController.jumpTo(
+        offset.clamp(0.0, position.maxScrollExtent),
+      );
       panel.clearItemToScrollTo();
     });
   }
@@ -399,8 +428,11 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
     ref.watch(fontFamilyProvider);
     if (panel.isInArchive || panel.showingSearchResults || panel.isFlatView) {
       if (_columns.isNotEmpty) _resetTrail();
-      return FileListView(side: widget.side, files: widget.files,
-          scrollController: widget.scrollController);
+      return FileListView(
+        side: widget.side,
+        files: widget.files,
+        scrollController: widget.scrollController,
+      );
     }
     _observePanel(panel, selected);
     _revealCursor(panel);
@@ -409,7 +441,8 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
     return Listener(
       onPointerDown: (_) {
         _shiftPressed = HardwareKeyboard.instance.isShiftPressed;
-        _togglePressed = HardwareKeyboard.instance.isControlPressed ||
+        _togglePressed =
+            HardwareKeyboard.instance.isControlPressed ||
             HardwareKeyboard.instance.isMetaPressed;
         _takeFocus();
       },
@@ -419,9 +452,11 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
         skipTraversal: true,
         onKeyEvent: _onKeyEvent,
         child: _columns.isEmpty
-            ? Center(child: panel.isLoading
-                ? const CircularProgressIndicator()
-                : Text(FileListStrings(context).text('Empty folder')))
+            ? Center(
+                child: panel.isLoading
+                    ? const CircularProgressIndicator()
+                    : Text(FileListStrings(context).text('Empty folder')),
+              )
             : Scrollbar(
                 controller: _horizontalScroll,
                 scrollbarOrientation: ScrollbarOrientation.bottom,
@@ -442,14 +477,19 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
     );
   }
 
-  Widget _buildColumn(BuildContext context, PanelNotifier panel,
-      int index, bool active) {
+  Widget _buildColumn(
+    BuildContext context,
+    PanelNotifier panel,
+    int index,
+    bool active,
+  ) {
     final column = _columns[index];
     final current = index == _columns.length - 1;
     final theme = Theme.of(context);
     final strings = FileListStrings(context);
     final files = current && _currentOrigin(panel) != null
-        ? widget.files : column.files;
+        ? widget.files
+        : column.files;
     final nextPath = current ? null : _columns[index + 1].path;
     final ready = !panel.isLoading && column.origin.isCurrent;
     final fontFamily = ref.read(fontFamilyProvider);
@@ -457,26 +497,39 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
       key: ValueKey('file-column:${column.path}'),
       width: 252,
       child: DecoratedBox(
-        decoration: BoxDecoration(border: Border(
-          top: BorderSide(color: current && active
-              ? theme.colorScheme.primary : theme.dividerColor, width: 2),
-          right: BorderSide(color: theme.dividerColor),
-        )),
+        decoration: BoxDecoration(
+          border: Border(
+            top: BorderSide(
+              color: current && active
+                  ? theme.colorScheme.primary
+                  : theme.dividerColor,
+              width: 2,
+            ),
+            right: BorderSide(color: theme.dividerColor),
+          ),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Tooltip(
               message: column.path,
               child: TextButton.icon(
-                onPressed: ready ? () {
-                  _takeFocus();
-                  unawaited(_perform(column, null));
-                } : null,
-                icon: Icon(current ? Icons.folder_open : Icons.folder_outlined,
-                    size: 16),
-                label: Text(column.path, maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textDirection: TextDirection.ltr),
+                onPressed: ready
+                    ? () {
+                        _takeFocus();
+                        unawaited(_perform(column, null));
+                      }
+                    : null,
+                icon: Icon(
+                  current ? Icons.folder_open : Icons.folder_outlined,
+                  size: 16,
+                ),
+                label: Text(
+                  column.path,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textDirection: TextDirection.ltr,
+                ),
               ),
             ),
             Expanded(
@@ -484,14 +537,16 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
                   ? Center(child: Text(strings.text('Empty folder')))
                   : ListView.builder(
                       key: PageStorageKey('column-list:${column.path}'),
-                      controller: current ? widget.scrollController
+                      controller: current
+                          ? widget.scrollController
                           : column.scrollController,
                       itemExtent: _rowHeight,
                       itemCount: files.length,
                       itemBuilder: (context, row) {
                         final file = files[row];
                         final marked = current && panel.isSelected(file);
-                        final cursor = current && identical(panel.cursorItem, file);
+                        final cursor =
+                            current && identical(panel.cursorItem, file);
                         final expanded = file.isFolder && file.path == nextPath;
                         if (current && identical(panel.renamingItem, file)) {
                           return FileInlineRenameField(
@@ -505,65 +560,131 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
                         }
                         void tap() {
                           _takeFocus();
-                          unawaited(_perform(column, file,
-                              shift: _shiftPressed, toggle: _togglePressed));
+                          unawaited(
+                            _perform(
+                              column,
+                              file,
+                              shift: _shiftPressed,
+                              toggle: _togglePressed,
+                            ),
+                          );
                         }
+
                         void menu(Offset position) {
                           _takeFocus();
-                          unawaited(_perform(column, file,
-                              contextPosition: position));
+                          unawaited(
+                            _perform(column, file, contextPosition: position),
+                          );
                         }
-                        return Semantics(
-                          key: ValueKey('column-item:${column.path}:${file.path ?? file.uuid ?? file.name}'),
+
+                        final rowWidget = Semantics(
+                          key: ValueKey(
+                            'column-item:${column.path}:${file.path ?? file.uuid ?? file.name}',
+                          ),
                           container: true,
                           button: true,
                           selected: marked,
                           focused: cursor && active,
                           enabled: ready,
-                          label: strings.semantic(folder: file.isFolder,
-                              name: file.name, selected: marked,
-                              size: file.size == null ? null : formatBytes(file.size!)),
+                          label: strings.semantic(
+                            folder: file.isFolder,
+                            name: file.name,
+                            selected: marked,
+                            size: file.size == null
+                                ? null
+                                : formatBytes(file.size!),
+                          ),
                           onTap: ready ? tap : null,
                           child: ExcludeSemantics(
                             child: GestureDetector(
                               onSecondaryTapDown: ready
-                                  ? (details) => menu(details.globalPosition) : null,
+                                  ? (details) => menu(details.globalPosition)
+                                  : null,
                               onLongPressStart: ready
-                                  ? (details) => menu(details.globalPosition) : null,
+                                  ? (details) => menu(details.globalPosition)
+                                  : null,
                               child: InkWell(
                                 canRequestFocus: false,
                                 onTap: ready ? tap : null,
-                                onDoubleTap: ready ? () {
-                                  _takeFocus();
-                                  unawaited(_perform(column, file, open: true));
-                                } : null,
+                                onDoubleTap: ready
+                                    ? () {
+                                        _takeFocus();
+                                        unawaited(
+                                          _perform(column, file, open: true),
+                                        );
+                                      }
+                                    : null,
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                                  color: marked ? theme.colorScheme.primaryContainer
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                  ),
+                                  color: marked
+                                      ? theme.colorScheme.primaryContainer
                                       : cursor || expanded
-                                      ? theme.colorScheme.primary.withValues(alpha: 0.14)
+                                      ? theme.colorScheme.primary.withValues(
+                                          alpha: 0.14,
+                                        )
                                       : null,
-                                  child: Row(children: [
-                                    Icon(file.isFolder ? Icons.folder : getFileIcon(file.name),
-                                        size: 18, color: file.isFolder
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        file.isFolder
+                                            ? Icons.folder
+                                            : getFileIcon(file.name),
+                                        size: 18,
+                                        color: file.isFolder
                                             ? theme.colorScheme.primary
-                                            : theme.colorScheme.onSurfaceVariant),
-                                    const SizedBox(width: 8),
-                                    Expanded(child: Text(file.name, maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(fontSize: ref.read(fontSizeProvider),
-                                        fontFamily: fontFamily == 'system' ? null : fontFamily,
-                                        fontWeight: marked || expanded
-                                            ? FontWeight.w600 : FontWeight.normal))),
-                                    if (file.isFolder)
-                                      const Icon(Icons.chevron_right, size: 16)
-                                    else if (file.size != null)
-                                      Text(formatBytes(file.size!), style: theme.textTheme.labelSmall),
-                                  ]),
+                                            : theme
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          file.name,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontSize: ref.read(
+                                              fontSizeProvider,
+                                            ),
+                                            fontFamily: fontFamily == 'system'
+                                                ? null
+                                                : fontFamily,
+                                            fontWeight: marked || expanded
+                                                ? FontWeight.w600
+                                                : FontWeight.normal,
+                                          ),
+                                        ),
+                                      ),
+                                      if (file.isFolder)
+                                        const Icon(
+                                          Icons.chevron_right,
+                                          size: 16,
+                                        )
+                                      else if (file.size != null)
+                                        Text(
+                                          formatBytes(file.size!),
+                                          style: theme.textTheme.labelSmall,
+                                        ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
                           ),
+                        );
+                        if (!current) return rowWidget;
+                        return PanelFileDragSource(
+                          side: widget.side,
+                          file: file,
+                          child: file.isFolder
+                              ? FolderDropTarget(
+                                  side: widget.side,
+                                  folder: file,
+                                  child: rowWidget,
+                                )
+                              : rowWidget,
                         );
                       },
                     ),
@@ -577,7 +698,7 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
 
 class _DirectoryColumn {
   _DirectoryColumn(this.origin, List<FileItem> files)
-      : files = List<FileItem>.unmodifiable(files);
+    : files = List<FileItem>.unmodifiable(files);
 
   PanelFileOrigin origin;
   List<FileItem> files;

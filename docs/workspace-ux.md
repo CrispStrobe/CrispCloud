@@ -26,6 +26,46 @@ evidence. Existing provider and platform capability limits remain explicit.
 | Saved collections | Renames/appends/removal leave open tabs stale; replacement consent is not tied to the reviewed session | Both panes update coherently; changed collection/session evidence requires a fresh review | In progress |
 | Command discovery | Literal substring filtering and fixed shortcut labels hide useful workflows | Ranked multi-word matching, live binding labels and direct navigation/recovery commands | In progress |
 | Empty and error states | An empty browser directory can be confused with no folder selected | Distinct empty, filtered-empty, loading, disconnected and unavailable states | Under review |
+| Folder tree | Cache keys and listing selection assume pane position identifies storage | Lazy children use the actual account, tab, root and access grant; stale reads are discarded | Implemented; verification pending |
+| Folder drops | Internal drags target pane backgrounds but not individual folders consistently | All normal file views offer folder-row review with drag-start source identity, destination revalidation and no silent parent fallback | Implemented; verification pending |
+
+## Workspace controls
+
+Choose **Columns** from the file-view selector to keep ancestor directories
+visible beside the current directory. Each column scrolls independently. Opening
+an ancestor row first verifies that directory in its original storage source;
+filtering applies only to the current column. Archives, search results and flat
+collections retain their existing list surfaces because their rows do not imply
+a single directory hierarchy.
+
+The back/forward history button belongs to the active tab. Its menu includes the
+storage identity and position of each location. Reopen a closed tab from the
+tab menu, command palette or the default **Ctrl+Shift+T** binding. History is
+bounded to 100 entries per tab and closed-tab recovery to 20 tabs per pane.
+Locations whose original account or access grant is unavailable explain the
+problem instead of opening the same path in another source.
+
+**Settings → Customize shortcuts** lets you search actions and record a new
+combination. Conflicts must be resolved before saving. Each override can be
+reset independently; resetting all bindings requires confirmation. Defaults use
+Command as the primary modifier on macOS, while recorded modifiers remain
+exact. The command palette searches command words, action names and current
+shortcuts; unavailable history actions remain visible and disabled. Text entry,
+modal workflows, editors and terminal sessions own their keys while focused.
+
+The folder tree follows the active pane's actual source. Expanding a folder is
+lazy, does not follow unverified symlinks, and stays within the source root or
+granted local base where applicable. A failed expansion offers a local retry.
+Switching accounts, tabs, roots or hidden-file visibility invalidates that tree's
+cached children.
+
+Drag a file or an existing marked group onto a folder row to open copy review.
+Hold **Shift** alone to review a move. The hovered folder shows the operation and
+destination. The drag retains its original files and accounts; a changed tab,
+listing, connection or destination requires a new drag. Self/descendant drops,
+same-folder moves and unverified destination rows are rejected. No files are
+changed until the existing operation review is accepted. Dropping into the
+active column works; ancestor columns must first be opened to verify their rows.
 
 ## Existing capabilities to preserve
 

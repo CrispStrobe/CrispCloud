@@ -1,9 +1,7 @@
 // widgets/file_list_view.dart
 
-import 'dart:io' show Platform;
 import 'dart:math' as math;
 
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,6 +22,9 @@ import '../services/keyboard_shortcut_service.dart';
 import '../utils/formatters.dart';
 import 'file_context_menu.dart';
 import 'pattern_selection_dialog.dart';
+import 'folder_drop_target.dart';
+
+export '../models/panel_drag_data.dart';
 
 String _collectionPathLabel(FileItem file) {
   final source = file.metadata?['collectionSource'];
@@ -254,16 +255,8 @@ class FileListView extends ConsumerWidget {
       final focusArea = ref.read(focusAreaProvider);
       final terminalVisible = ref.watch(showTerminalProvider);
       final isActivePanel = focusArea.panelSide == side && !terminalVisible;
-      if (isActivePanel) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!context.mounted) return;
-          if (ref.read(showTerminalProvider)) return;
-          if (ModalRoute.of(context)?.isCurrent != true) return;
-          if (!panel.listFocusNode.hasFocus) {
-            panel.listFocusNode.requestFocus();
-          }
-        });
-      }
+      // Initial autofocus and explicit pointer/pane actions own focus. A
+      // listing refresh must leave same-route path and filter fields alone.
       return Listener(
         onPointerDown: (event) {
           _PointerModifiers.update(event);
@@ -287,19 +280,28 @@ class FileListView extends ConsumerWidget {
             if (p.renamingItem != null) return KeyEventResult.ignored;
             final keyboard = HardwareKeyboard.instance;
             final shortcuts = ref.read(keyboardShortcutServiceProvider);
-            final command = shortcuts.resolveBrowser(event,
-                isCtrl: keyboard.isControlPressed,
-                isMeta: keyboard.isMetaPressed,
-                isShift: isShift, isAlt: keyboard.isAltPressed);
-            final editingQuery = p.isTypeahead &&
+            final command = shortcuts.resolveBrowser(
+              event,
+              isCtrl: keyboard.isControlPressed,
+              isMeta: keyboard.isMetaPressed,
+              isShift: isShift,
+              isAlt: keyboard.isAltPressed,
+            );
+            final editingQuery =
+                p.isTypeahead &&
                 event.logicalKey == LogicalKeyboardKey.backspace &&
                 !shortcuts.isCustomized(ShortcutAction.up);
             if ((!editingQuery && command != null) ||
-                keyboard.isControlPressed || keyboard.isMetaPressed ||
-                keyboard.isAltPressed || shortcuts.suppressesDefault(event,
-                    isCtrl: keyboard.isControlPressed,
-                    isMeta: keyboard.isMetaPressed,
-                    isShift: isShift, isAlt: keyboard.isAltPressed)) {
+                keyboard.isControlPressed ||
+                keyboard.isMetaPressed ||
+                keyboard.isAltPressed ||
+                shortcuts.suppressesDefault(
+                  event,
+                  isCtrl: keyboard.isControlPressed,
+                  isMeta: keyboard.isMetaPressed,
+                  isShift: isShift,
+                  isAlt: keyboard.isAltPressed,
+                )) {
               return KeyEventResult.ignored;
             }
 
@@ -457,13 +459,6 @@ class FileListView extends ConsumerWidget {
   }
 }
 
-/// Data carried during a drag operation between panels.
-class PanelDragData {
-  final PanelSide sourceSide;
-  final List<FileItem> files;
-  const PanelDragData({required this.sourceSide, required this.files});
-}
-
 class FileListTile extends ConsumerWidget {
   final FileItem file;
   final PanelSide side;
@@ -549,8 +544,16 @@ class FileListTile extends ConsumerWidget {
               !HardwareKeyboard.instance.isMetaPressed &&
               !HardwareKeyboard.instance.isAltPressed &&
               !HardwareKeyboard.instance.isShiftPressed &&
-              ref.read(keyboardShortcutServiceProvider).resolveBrowser(event,
-                  isCtrl: false, isShift: false, isAlt: false, isMeta: false) == null) {
+              ref
+                      .read(keyboardShortcutServiceProvider)
+                      .resolveBrowser(
+                        event,
+                        isCtrl: false,
+                        isShift: false,
+                        isAlt: false,
+                        isMeta: false,
+                      ) ==
+                  null) {
             onDoubleTap();
             return KeyEventResult.handled;
           }
@@ -661,79 +664,12 @@ class FileListTile extends ConsumerWidget {
       ),
     );
 
-    // ".." cannot be dragged
-    if (file.name == '..') return tile;
-
-    // Wrap with LongPressDraggable for inter-panel drag
-    // If this file is selected and there are multiple selections, drag all selected files
-    final dragFiles = isSelected && selectedFiles.length > 1
-        ? selectedFiles
-        : [file];
-    final dragCount = dragFiles.length;
-
-    // On mobile, use shorter delay for touch drag; on desktop, use long press
-    final isMobile = !kIsWeb && (Platform.isAndroid || Platform.isIOS);
-
-    return LongPressDraggable<PanelDragData>(
-      delay: isMobile
-          ? const Duration(milliseconds: 200)
-          : const Duration(milliseconds: 500),
-      data: PanelDragData(sourceSide: side, files: dragFiles),
-      feedback: Material(
-        elevation: 4,
-        borderRadius: BorderRadius.circular(8),
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    file.isFolder ? Icons.folder : getFileIcon(file.name),
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    dragCount > 1
-                        ? '${file.name} +${dragCount - 1}'
-                        : file.name,
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-            // Count badge for multi-file drag
-            if (dragCount > 1)
-              Positioned(
-                top: -8,
-                right: -8,
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Text(
-                    '$dragCount',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onPrimary,
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
-      childWhenDragging: Opacity(opacity: 0.3, child: tile),
-      child: tile,
+    return PanelFileDragSource(
+      side: side,
+      file: file,
+      child: file.isFolder
+          ? FolderDropTarget(side: side, folder: file, child: tile)
+          : tile,
     );
   }
 }
@@ -819,7 +755,7 @@ class CompactFileTile extends ConsumerWidget {
     final semanticLabel =
         '$semantic${collection == null ? '' : ', $collection, ${file.path}'}${status.isEmpty ? '' : ', $status'}';
 
-    return LayoutBuilder(
+    final tile = LayoutBuilder(
       builder: (context, constraints) {
         final columns = view.columnsFitting(constraints.maxWidth);
         return Semantics(
@@ -894,6 +830,13 @@ class CompactFileTile extends ConsumerWidget {
         );
       },
     );
+    return PanelFileDragSource(
+      side: side,
+      file: file,
+      child: file.isFolder
+          ? FolderDropTarget(side: side, folder: file, child: tile)
+          : tile,
+    );
   }
 }
 
@@ -920,7 +863,8 @@ class FileInlineRenameField extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<FileInlineRenameField> createState() => FileInlineRenameFieldState();
+  ConsumerState<FileInlineRenameField> createState() =>
+      FileInlineRenameFieldState();
 }
 
 class FileInlineRenameFieldState extends ConsumerState<FileInlineRenameField> {

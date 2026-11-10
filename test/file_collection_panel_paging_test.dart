@@ -91,6 +91,12 @@ class _Auth extends ChangeNotifier implements AuthNotifier {
     notifyListeners();
   }
 
+  void reconnect() {
+    isConnected = true;
+    client.connected = true;
+    notifyListeners();
+  }
+
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
@@ -426,6 +432,55 @@ void main() {
       await panel.openCollection('large');
       expect(panel.selection, hasLength(4));
       expect(store.residentEntryCount, lessThanOrEqualTo(1000));
+    },
+  );
+
+  test('drag preparation retains every off-page marked original', () async {
+    final panel = await open();
+    final data = PanelDragData(
+      sourceSide: PanelSide.remote,
+      files: panel.selection,
+    )..captureFrom(panel);
+    final groups = await data.prepareForDrop();
+    expect(
+      groups.values.expand((files) => files).map((file) => file.path).toSet(),
+      {'/file-00000.txt', '/file-00700.txt', '/file-01799.txt'},
+    );
+    expect(data.isCurrent, isTrue);
+    expect(
+      groups.keys.single.storageReference,
+      storageReferenceForClient(cloud),
+    );
+  });
+
+  test(
+    'drag cannot adopt a reconnect while collection marks are saved',
+    () async {
+      final panel = await open();
+      panel.toggleSelection(panel.files![1], ctrlKey: true);
+      storage.pausePrefix = 'page:';
+      storage.entered = Completer<void>();
+      storage.release = Completer<void>();
+      final data = PanelDragData(
+        sourceSide: PanelSide.remote,
+        files: panel.selection,
+      )..captureFrom(panel);
+      final rejected = expectLater(
+        data.prepareForDrop(),
+        throwsA(
+          isA<PanelDragException>().having(
+            (error) => error.failure,
+            'failure',
+            PanelDragFailure.sourceChanged,
+          ),
+        ),
+      );
+      await storage.entered!.future;
+      auth.disconnect();
+      auth.reconnect();
+      storage.release!.complete();
+      await rejected;
+      expect(data.isCurrent, isFalse);
     },
   );
 

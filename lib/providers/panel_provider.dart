@@ -1473,6 +1473,26 @@ class PanelNotifier extends ChangeNotifier {
     );
   }
 
+  /// Pin an interactive operation before its first asynchronous read. Paged
+  /// selections resolve off-page rows later, but may never substitute a newly
+  /// connected account or another tab while doing so.
+  bool Function() captureOperationSession() {
+    final tab = _activeTabId;
+    final listing = _listingGeneration;
+    final collection = _collectionId;
+    final session = _collectionMarks;
+    final account = _accountGeneration;
+    final connections = _connectionGeneration;
+    return () =>
+        !_isDisposed &&
+        tab == _activeTabId &&
+        listing == _listingGeneration &&
+        collection == _collectionId &&
+        identical(session, _collectionMarks) &&
+        account == _accountGeneration &&
+        connections == _connectionGeneration;
+  }
+
   /// Capture all requested original rows, including marks outside the visible
   /// page. No capability is returned if even one original is unavailable,
   /// replaced, or changed accounts while the pages were being resolved.

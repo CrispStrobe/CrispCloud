@@ -42,7 +42,10 @@ We also maintain patched Nextcloud and ownCloud desktop clients with delta sync 
 
 ## Key Features
 
-- **Flexible layout:** dual/single panel toggle, tree sidebar toggle, grid/list toggle, density toggle — all independent and composable
+- **Flexible layout:** independent dual/single panes, an account-aware folder tree, detailed and compact lists, grids, and hierarchical columns with separately scrollable ancestor folders
+- **Recoverable navigation:** source-bound history per tab, history menus, recent locations that retain their storage identity, and reopening closed tabs with their view and history
+- **Keyboard workspace:** searchable shortcut customization with conflict checks; command palette, shortcut help, native menus and action buttons reflect saved bindings. Text fields, editors and terminals retain their own input.
+- **Folder drop review:** drag marked files onto a folder in a list, grid or current column; hold Shift for a move. Source accounts and the destination are checked before the existing copy/move review opens. See [workspace controls and acceptance](docs/workspace-ux.md).
 - **Storage analyzer:** interactive treemap and sunburst for local and cloud folders, folder drill-down, largest files, extension filters, faster background native scans, and lossless saved scans for offline browsing. Cancellable scans retain explicit partial results; saved history survives full rescans. See [storage analysis](docs/storage-analyzer.md) for controls, measured performance, size semantics and limits.
 - **Image gallery and tiles:** adjustable thumbnails, image-only gallery, natural sorting and catalog filters, 0–5 ratings, color labels, favorites and tags. Fullscreen filmstrip/slideshow, linked 2–4-image comparison, image-editor handoff, batch conversion/resizing and contact-sheet export. See [image gallery](docs/image-gallery.md) for controls, format coverage and limits.
 - **Encryption:** AES-256-GCM file encryption, Filen/Internxt E2EE, and Cryptomator/VeraCrypt format helpers. See the [crypto audit](docs/crypto-audit.md) for supported operations and remaining limits, and the [store export guide](docs/export-compliance.md) for the no-report release route.
@@ -115,20 +118,40 @@ threat model, and [PLAN.md](PLAN.md) for the feature roadmap.
 
 ## Keyboard Shortcuts
 
+These are the defaults. On macOS, Command is the primary modifier for the
+Control shortcuts below. Recorded custom modifiers remain exact. Open
+**Settings → Customize shortcuts**, or find that action in the command palette,
+to change a binding, review conflicts or restore defaults.
+
 | Key | Action |
 |-----|--------|
 | `Tab` | Switch panels |
 | `Enter` | Open folder / execute file |
 | `Backspace` | Parent folder |
+| `Alt+Left` / `Alt+Right` | Back / forward within the active tab |
+| `Ctrl+T` / `Ctrl+W` | New / close tab |
+| `Ctrl+Shift+T` | Reopen the most recently closed tab |
+| `Ctrl+G` | Go to a path in the current storage source |
+| `Ctrl+Shift+P` | Search commands and shortcuts |
+| `Ctrl+K` | Connect to cloud storage |
 | `Ctrl+A` | Select all |
-| `Ctrl+C` / `F5` | Copy |
-| `Ctrl+X` / `F6` | Move |
+| `Ctrl+C` / `Ctrl+X` | Capture files for clipboard copy / cut |
+| `Ctrl+V` | Review a paste into the current folder |
+| `F5` / `F6` | Review copy / move to the other pane |
 | `F2` | Rename |
+| `F3` / `F4` | View / edit |
 | `F7` | New folder |
 | `F8` / `Delete` | Delete |
-| `Ctrl+F` / `Alt+F7` | Search |
+| `Ctrl+F` | Filter the current listing |
+| `Alt+F7` | Recursive file and content search |
+| `Ctrl+R` | Refresh the active pane |
+| `Ctrl+M` | Batch rename review |
+| `Ctrl+F3` / `Ctrl+F4` / `Ctrl+F5` / `Ctrl+F6` | Sort by name / extension / date / size |
+| `Ctrl+Alt+P` | Toggle the preview pane |
+| `Ctrl+Shift+3` | Toggle the folder tree |
+| `Ctrl+Shift+2` | Cycle file views |
 | `Space` | Select + advance cursor |
-| `Ctrl+Q` | Swap panels |
+| `Ctrl+U` | Swap pane sources |
 
 ## License
 

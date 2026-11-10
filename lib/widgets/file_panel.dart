@@ -1,6 +1,7 @@
 // widgets/file_panel.dart
 
 import '../l10n/commander_strings.dart';
+import '../l10n/folder_drop_strings.dart';
 
 import 'package:flutter/material.dart';
 import 'package:desktop_drop/desktop_drop.dart';
@@ -10,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/file_item.dart';
 import '../services/log_service.dart';
 import '../models/panel_side.dart';
+import '../models/panel_drag_data.dart';
 import '../providers/providers.dart';
 import '../l10n/panel_error_strings.dart';
 import '../providers/panel_source_provider.dart' show panelSourceProvider;
@@ -22,7 +24,7 @@ import 'file_view_editor_dialog.dart';
 import 'workspace_dialog.dart';
 import 'file_command_toolbar.dart';
 import 'file_grid_view.dart';
-import 'file_list_view.dart' show FileListView, PanelDragData;
+import 'file_list_view.dart' show FileListView;
 import 'file_selection_bar.dart';
 import 'file_list_dialog.dart';
 import 'file_collections_dialog.dart';
@@ -221,15 +223,15 @@ class _FilePanelState extends ConsumerState<FilePanel> {
     // Flutter DragTarget for cross-panel drops
     final Widget content = DragTarget<PanelDragData>(
       onWillAcceptWithDetails: (details) {
-        if (details.data.sourceSide == widget.side ||
+        if (details.data.hasFolderTarget ||
+            details.data.sourceSide == widget.side ||
             panel.showingSearchResults) {
           return false;
         }
         try {
           final source = ref.read(panelProvider(details.data.sourceSide));
-          if (!source.recognizesCollectionRows(details.data.files)) {
-            source.captureOperationGroups(details.data.files);
-          }
+          details.data.captureFrom(source);
+          if (!details.data.isCurrent) return false;
           panel.captureCurrentOrigin();
           return true;
         } catch (_) {
@@ -239,16 +241,24 @@ class _FilePanelState extends ConsumerState<FilePanel> {
       onAcceptWithDetails: (details) async {
         final data = details.data;
         final sourcePanel = ref.read(panelProvider(data.sourceSide));
-        if (data.sourceSide == widget.side || panel.showingSearchResults) {
+        if (data.hasFolderTarget ||
+            data.sourceSide == widget.side ||
+            panel.showingSearchResults) {
           return;
         }
         try {
           // PanelSide is a visual position. Both normal folders and virtual
           // lists must retain their actual storage/account through the dialog.
           final destination = panel.captureCurrentOrigin();
-          final files = await sourcePanel.prepareOperationFiles(data.files);
+          final destinationTab = panel.activeTabId;
+          data.captureFrom(sourcePanel);
+          final groups = await data.prepareForDrop();
+          final files = [for (final group in groups.values) ...group];
           if (!context.mounted) return;
-          final groups = sourcePanel.captureOperationGroups(files);
+          if (panel.activeTabId != destinationTab ||
+              !identical(panel.captureCurrentOrigin(), destination)) {
+            throw const PanelDragException(PanelDragFailure.destinationChanged);
+          }
           await showFileOperationDialog(
             context,
             ref,
@@ -261,7 +271,9 @@ class _FilePanelState extends ConsumerState<FilePanel> {
           );
         } catch (error) {
           if (context.mounted) {
-            ref.read(errorProvider).addError(error.toString());
+            ref
+                .read(errorProvider)
+                .addError(FolderDropStrings(context).failure(error));
           }
         }
       },
@@ -270,7 +282,7 @@ class _FilePanelState extends ConsumerState<FilePanel> {
         if (!isDropTarget) return panelContent;
 
         const opIcon = Icons.copy_outlined;
-        const opLabel = 'Copy';
+        final opLabel = context.commanderTr('Copy');
         final fileCount = candidateData.first?.files.length ?? 0;
 
         return Stack(
@@ -756,7 +768,8 @@ class _FilePanelState extends ConsumerState<FilePanel> {
         layout == ViewMode.tiles ||
         layout == ViewMode.gallery ||
         layout == ViewMode.column;
-    final retainColumns = layout == ViewMode.column &&
+    final retainColumns =
+        layout == ViewMode.column &&
         !panel.showingSearchResults &&
         ref.watch(panelViewModeProvider(widget.side)) != PanelViewMode.tree;
     return Container(

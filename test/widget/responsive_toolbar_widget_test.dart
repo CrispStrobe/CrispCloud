@@ -31,6 +31,7 @@ import 'package:crisp_cloud/services/sync_engine.dart';
 import 'package:crisp_cloud/services/theme_service.dart';
 import 'package:crisp_cloud/screens/file_browser_screen.dart';
 import 'package:crisp_cloud/widgets/file_toolbar.dart';
+import 'package:crisp_cloud/widgets/file_panel.dart';
 
 // ---------------------------------------------------------------------------
 // Mock cloud client
@@ -260,6 +261,29 @@ Widget _wrapToolbar({
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
+  });
+
+  testWidgets('narrow workspace shows the pane selected by a command', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrapScreen(width: 600, overrides: _baseOverrides()),
+    );
+    await tester.pump();
+    expect(
+      tester.widget<FilePanel>(find.byType(FilePanel)).side,
+      PanelSide.local,
+    );
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(FileBrowserScreen)),
+    );
+    container.read(activePanelProvider.notifier).state = PanelSide.remote;
+    await tester.pump();
+    expect(
+      tester.widget<FilePanel>(find.byType(FilePanel)).side,
+      PanelSide.remote,
+    );
+    expect(tester.takeException(), isNull);
   });
 
   // =========================================================================
