@@ -12,6 +12,15 @@ import 'package:flutter_test/flutter_test.dart';
 import '../support/workspace_fixture.dart';
 
 void main() {
+  Future<void> chooseHistory(WidgetTester tester, String path) async {
+    final item = find.ancestor(
+      of: find.text(path),
+      matching: find.byType(CheckedPopupMenuItem<int>),
+    );
+    await tester.ensureVisible(item);
+    await tester.tap(item);
+  }
+
   testWidgets('history menu labels the source and opens the selected route', (
     tester,
   ) async {
@@ -29,7 +38,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('/one'), findsOneWidget);
     expect(find.textContaining('Memory'), findsWidgets);
-    await tester.tap(find.text('/one'));
+    await chooseHistory(tester, '/one');
     await tester.pumpAndSettle();
     expect(panel.currentPath, '/one');
     expect(panel.canNavigateForward, isTrue);
@@ -55,7 +64,7 @@ void main() {
       {...saved.single, 'path': '/other', 'navigation': null},
     ]);
     final secondTab = panel.activeTabId;
-    await tester.tap(find.text('/'));
+    await chooseHistory(tester, '/');
     await tester.pumpAndSettle();
     expect(panel.activeTabId, secondTab);
     expect(panel.currentPath, '/other');

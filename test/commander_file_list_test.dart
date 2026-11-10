@@ -194,6 +194,29 @@ void main() {
     return panel;
   }
 
+  Future<PanelNotifier> readyLocalPanel() async {
+    final panel = container.read(panelProvider(PanelSide.local));
+    final ready = Completer<void>();
+    void check() {
+      if (ready.isCompleted || panel.isLoading || panel.files == null) return;
+      try {
+        panel.captureCurrentOrigin();
+        ready.complete();
+      } on StateError {
+        // The constructor's initial directory listing still owns the request.
+      }
+    }
+
+    panel.addListener(check);
+    try {
+      check();
+      await ready.future.timeout(const Duration(seconds: 10));
+    } finally {
+      panel.removeListener(check);
+    }
+    return panel;
+  }
+
   test(
     'a delayed local refresh cannot replace newer cloud navigation',
     () async {
@@ -448,8 +471,7 @@ void main() {
     'mixed-storage same-path results retain distinct verified account groups',
     () async {
       final remotePanel = await remote();
-      final localPanel = container.read(panelProvider(PanelSide.local));
-      await localPanel.refresh();
+      final localPanel = await readyLocalPanel();
       final cloudOrigin = remotePanel.captureRemoteSearchOrigin();
       final localOrigin = localPanel.captureCurrentOrigin();
       final cloudFile = item('/one/same.txt');
@@ -1046,10 +1068,15 @@ void main() {
         container: container,
         child: MaterialApp(
           home: Scaffold(
-            body: FileListView(
-              side: PanelSide.remote,
-              files: panel.files!,
-              scrollController: scroll,
+            body: Consumer(
+              builder: (context, ref, _) => Focus(
+                onKeyEvent: (_, event) => handleKeyEvent(context, ref, event),
+                child: FileListView(
+                  side: PanelSide.remote,
+                  files: panel.files!,
+                  scrollController: scroll,
+                ),
+              ),
             ),
           ),
         ),
@@ -1539,8 +1566,7 @@ void main() {
 
   test('same parent and imported marks never alias another account with the same path', () async {
     final panel = await remote();
-    final localPanel = container.read(panelProvider(PanelSide.local));
-    await localPanel.refresh();
+    final localPanel = await readyLocalPanel();
     final cloudOrigin = panel.captureRemoteSearchOrigin();
     final localOrigin = localPanel.captureCurrentOrigin();
     final cloudRows = [item('/one/same.txt'), item('/one/other.txt')];

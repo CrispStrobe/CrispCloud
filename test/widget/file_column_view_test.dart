@@ -278,29 +278,32 @@ void main() {
     tester,
   ) async {
     final semantics = tester.ensureSemantics();
-    addTearDown(semantics.dispose);
-    await mount(tester);
-    final folder = panel.files!.firstWhere((file) => file.name == 'docs');
-    panel.setCursorOnly(folder);
-    await tester.pumpAndSettle();
-    expect(
-      tester.getSemantics(row('/', '/docs')).getSemanticsData().label,
-      contains('Folder docs'),
-    );
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
-    await tester.pumpAndSettle();
-    expect(parentKeys, contains(LogicalKeyboardKey.enter));
-    expect(panel.currentPath, '/');
-    await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
-    await tester.pumpAndSettle();
-    expect(panel.currentPath, '/docs');
-    expect(panel.listFocusNode.hasFocus, isTrue);
-    await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
-    await tester.pumpAndSettle();
-    expect(panel.currentPath, '/');
-    expect(column('/docs'), findsNothing);
+    try {
+      await mount(tester);
+      final folder = panel.files!.firstWhere((file) => file.name == 'docs');
+      panel.setCursorOnly(folder);
+      await tester.pumpAndSettle();
+      expect(
+        tester.getSemantics(row('/', '/docs')).getSemanticsData().label,
+        contains('Folder docs'),
+      );
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pumpAndSettle();
+      expect(parentKeys, contains(LogicalKeyboardKey.enter));
+      expect(panel.currentPath, '/');
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pumpAndSettle();
+      expect(panel.currentPath, '/docs');
+      expect(panel.listFocusNode.hasFocus, isTrue);
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+      await tester.pumpAndSettle();
+      expect(panel.currentPath, '/');
+      expect(column('/docs'), findsNothing);
+    } finally {
+      semantics.dispose();
+    }
   });
 
   testWidgets(

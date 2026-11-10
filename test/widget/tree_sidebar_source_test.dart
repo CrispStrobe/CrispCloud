@@ -323,9 +323,13 @@ void main() {
       // ask the OS for a new grant when the route is inaccessible.
       expect(local.operations, isEmpty);
       local.denied.clear();
-      await tester.tap(find.text('Could not load folders. Retry'));
-      await tester.pump();
-      await tester.runAsync(() => Future.wait(local.operations));
+      // Start the native read in the real async zone as well as awaiting it.
+      // Waiting here on a read created by fakeAsync would prevent its
+      // continuations from running and deadlock the widget test.
+      await tester.runAsync(() async {
+        await tester.tap(find.text('Could not load folders. Retry'));
+        await Future.wait(local.operations);
+      });
       await tester.pumpAndSettle();
       expect(find.text('child'), findsOneWidget);
       expect(first.requests.length, requestCount);

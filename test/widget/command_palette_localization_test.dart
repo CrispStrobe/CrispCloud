@@ -260,7 +260,7 @@ void main() {
   testWidgets('unavailable history commands cannot execute', (tester) async {
     locale.value = const Locale('en');
     await open(tester, narrow: false);
-    await tester.enterText(find.byType(TextField), 'Navigate Back');
+    await tester.enterText(find.byType(TextField), 'Go back');
     await tester.pump();
     expect(
       find.byWidgetPredicate(

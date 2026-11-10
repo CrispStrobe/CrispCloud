@@ -123,6 +123,7 @@ class _Local extends Fake implements LocalFileService {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   const service = FolderDropService();
+  final desktop = TargetPlatformVariant.only(TargetPlatform.linux);
   late ProviderContainer container;
   late _Cloud cloud;
   late _Auth auth;
@@ -132,7 +133,6 @@ void main() {
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
-    debugDefaultTargetPlatformOverride = TargetPlatform.linux;
     cloud = _Cloud('first');
     auth = _Auth(cloud);
     local = _Local();
@@ -163,7 +163,6 @@ void main() {
       cloud.readGate!.complete();
     }
     container.dispose();
-    debugDefaultTargetPlatformOverride = null;
   });
 
   FileItem row(PanelNotifier panel, String path) =>
@@ -461,6 +460,7 @@ void main() {
       expect(cloud.writes, isEmpty);
       await close(tester);
     },
+    variant: desktop,
   );
 
   testWidgets('Shift requests a reviewed same-panel move', (tester) async {
@@ -477,7 +477,7 @@ void main() {
       isNull,
     );
     await close(tester);
-  });
+  }, variant: desktop);
 
   testWidgets(
     'a stale hover fails locally and does not reopen another destination',
@@ -497,6 +497,7 @@ void main() {
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());
     },
+    variant: desktop,
   );
 
   testWidgets('rejected folder hover stays claimed until it is left', (
@@ -512,7 +513,7 @@ void main() {
     expect(data.hasFolderTarget, isFalse);
     expect(find.byType(FileOperationDialog), findsNothing);
     await tester.pumpWidget(const SizedBox.shrink());
-  });
+  }, variant: desktop);
 
   for (final marked in [true, false]) {
     testWidgets(
@@ -557,6 +558,7 @@ void main() {
         expect(dialog.destinationPath, '/destination');
         await close(tester);
       },
+      variant: desktop,
     );
   }
 
@@ -599,5 +601,6 @@ void main() {
       expect(seen.toSet(), hasLength(9));
       await tester.pumpWidget(const SizedBox.shrink());
     },
+    variant: desktop,
   );
 }
