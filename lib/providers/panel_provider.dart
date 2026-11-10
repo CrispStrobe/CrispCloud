@@ -5247,7 +5247,10 @@ class PanelNotifier extends ChangeNotifier {
           await _loadRemoteFiles();
         } else {
           final tabId = _activeTabId;
-          final generation = _listingGeneration;
+          // Reserve this request before preparation yields. An older startup
+          // path read must not start a loader that makes this explicit refresh
+          // return before a verified listing has been published.
+          final generation = ++_listingGeneration;
           final path = _localPath;
           _localFileService.currentPath = path;
           await _localFileService.refresh();

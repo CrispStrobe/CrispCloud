@@ -217,6 +217,36 @@ void main() {
     return panel;
   }
 
+  test('an explicit local refresh takes priority over pending startup', () async {
+    local.initialPath = Completer<String>();
+    final preparationStarted = Completer<void>();
+    final releasePreparation = Completer<void>();
+    local.onRefresh = () {
+      preparationStarted.complete();
+      return releasePreparation.future;
+    };
+    addTearDown(() {
+      if (!local.initialPath!.isCompleted) local.initialPath!.complete('/');
+      if (!releasePreparation.isCompleted) releasePreparation.complete();
+    });
+    final panel = container.read(panelProvider(PanelSide.local));
+    final refreshing = panel.refresh();
+    await preparationStarted.future;
+
+    // Release the older startup read while the explicit refresh is preparing.
+    // It must not issue a competing directory listing or complete this request.
+    local.initialPath!.complete('/');
+    await Future<void>.delayed(Duration.zero);
+    expect(local.paths, isEmpty);
+
+    releasePreparation.complete();
+    await refreshing;
+    expect(local.paths, ['/']);
+    expect(panel.files, isNotNull);
+    expect(panel.isLoading, isFalse);
+    expect(panel.captureCurrentOrigin().source, isA<LocalPanelSource>());
+  });
+
   test(
     'a delayed local refresh cannot replace newer cloud navigation',
     () async {

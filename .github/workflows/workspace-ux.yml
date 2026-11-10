@@ -74,6 +74,7 @@ jobs:
         run: |
           candidates=(
             test/panel_source_restore_test.dart
+            test/panel_file_origin_test.dart
             test/commander_file_list_test.dart
             test/keyboard_shortcut_test.dart
             test/workspace_keyboard_test.dart
