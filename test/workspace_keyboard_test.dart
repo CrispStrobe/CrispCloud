@@ -37,11 +37,16 @@ class _Auth extends ChangeNotifier implements AuthNotifier {
   @override
   final WorkflowFakeClient client = WorkflowFakeClient()..current = false;
   @override
-  bool get isConnected => false;
+  bool get isConnected => client.current;
   @override
   String? userEmail;
   @override
   String get providerName => client.providerName;
+  void connect() {
+    client.current = true;
+    notifyListeners();
+  }
+
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
@@ -311,6 +316,37 @@ void main() {
     expect(container.read(activePanelProvider), PanelSide.local);
     expect(container.read(focusAreaProvider), FocusArea.local);
   });
+
+  testWidgets(
+    'opening the cursor in the other pane transfers focus ownership',
+    (tester) async {
+      final auth = container.read(authProvider) as _Auth;
+      auth.client.put('/pictures/photo.txt', [1, 2, 3]);
+      auth.connect();
+      final source = container.read(panelProvider(PanelSide.remote));
+      await source.navigateToPath('/pictures');
+      final file = source.files!.singleWhere(
+        (file) => file.name == 'photo.txt',
+      );
+      final origin = source.captureOperationOrigin([file]);
+      source.setCursorToItem(file);
+      await mount(tester);
+      container.read(activePanelProvider.notifier).state = PanelSide.remote;
+      container.read(focusAreaProvider.notifier).state = FocusArea.remote;
+      await chord(tester, LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+      final destination = container.read(panelProvider(PanelSide.local));
+      expect(destination.currentPath, '/pictures');
+      expect(destination.cursorItem?.name, 'photo.txt');
+      expect(
+        destination.captureCurrentOrigin().storageReference,
+        origin.storageReference,
+      );
+      expect(container.read(activePanelProvider), PanelSide.local);
+      expect(container.read(focusAreaProvider), FocusArea.local);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('a rebound action suppresses its alternate default chord', (
     tester,

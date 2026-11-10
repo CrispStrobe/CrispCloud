@@ -9,6 +9,7 @@ import '../models/panel_side.dart';
 import '../models/storage_reference.dart';
 import '../models/file_search_query.dart';
 import '../providers/core_providers.dart';
+import '../providers/focus_area_provider.dart';
 import '../providers/panel_provider.dart';
 import '../providers/transfer_provider.dart';
 import '../services/file_operation_backend.dart';
@@ -35,120 +36,153 @@ Future<FileOperationPlan?> showFileOperationDialog(
   Map<PanelFileOrigin, List<FileItem>>? sourceGroups,
 }) async {
   if (files.isEmpty) return null;
-  var groups = sourceGroups;
-  if (groups == null && sourceOrigin == null && sourceBackend == null) {
-    try {
-      final panel = ref.read(panelProvider(side));
-      files = await panel.prepareOperationFiles(files);
-      groups = panel.captureOperationGroups(files);
-    } catch (error) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('$error')));
-      }
-      return null;
+  final invokingSide = ref.read(activePanelProvider);
+  final invokingArea = ref.read(focusAreaProvider);
+  final invokingPanel = ref.read(panelProvider(invokingSide));
+  final invokingTab = invokingPanel.activeTabId;
+  final invokingScope = FocusScope.of(context);
+  final invokingFocus = FocusManager.instance.primaryFocus;
+  void restoreInvokingFocus() {
+    if (!context.mounted ||
+        ModalRoute.of(context)?.isCurrent == false ||
+        ref.read(activePanelProvider) != invokingSide ||
+        ref.read(focusAreaProvider) != invokingArea ||
+        invokingPanel.activeTabId != invokingTab ||
+        !invokingScope.hasFocus) {
+      return;
+    }
+    // Navigator normally restores its previous focused child. Only fill a
+    // vacant scope; a newly focused field or surface keeps ownership.
+    final current = FocusManager.instance.primaryFocus;
+    if (current != null && current is! FocusScopeNode) return;
+    if (invokingFocus != null &&
+        invokingFocus.context != null &&
+        invokingFocus.canRequestFocus &&
+        invokingFocus.ancestors.contains(invokingScope)) {
+      invokingFocus.requestFocus();
+    } else if (invokingArea.panelSide == invokingSide) {
+      invokingPanel.focusList();
     }
   }
-  if (!context.mounted) return null;
-  if (groups != null && groups.length > 1) {
-    if (sourceBackend != null) {
-      throw ArgumentError('A snapshot copy uses one captured source.');
+
+  try {
+    var groups = sourceGroups;
+    if (groups == null && sourceOrigin == null && sourceBackend == null) {
+      try {
+        final panel = ref.read(panelProvider(side));
+        files = await panel.prepareOperationFiles(files);
+        groups = panel.captureOperationGroups(files);
+      } catch (error) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text('$error')));
+        }
+        return null;
+      }
     }
-    if (!groups.keys.every((origin) => origin.isCurrent)) {
-      throw StateError(
-        'An original source disconnected. Copy the items again.',
-      );
-    }
-    PanelFileOrigin destination;
-    try {
-      destination =
-          destinationOrigin ??
-          ref
-              .read(
-                panelProvider(
-                  side == PanelSide.local ? PanelSide.remote : PanelSide.local,
-                ),
-              )
-              .captureCurrentOrigin();
-    } catch (error) {
-      if (context.mounted) {
-        await showDialog<void>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text(context.commanderTr("Choose a destination folder")),
-            content: Text(
-              context.commanderTr(
-                "Open a verified destination in the other panel before transferring a mixed collection. {0}",
-                [error],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(context.commanderTr("Close")),
-              ),
-            ],
-          ),
+    if (!context.mounted) return null;
+    if (groups != null && groups.length > 1) {
+      if (sourceBackend != null) {
+        throw ArgumentError('A snapshot copy uses one captured source.');
+      }
+      if (!groups.keys.every((origin) => origin.isCurrent)) {
+        throw StateError(
+          'An original source disconnected. Copy the items again.',
         );
       }
-      return null;
-    }
-    final protected = [
-      for (final group in groups.entries)
-        for (final file in group.value)
-          FileReference(
-            storage: group.key.storageReference,
-            path: file.path!,
-            objectId: file.uuid,
-          ),
-    ];
-    FileOperationPlan? last;
-    var index = 0;
-    for (final group in groups.entries) {
-      if (!context.mounted) return last;
-      index++;
-      last = await showDialog<FileOperationPlan>(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => FileOperationDialog(
-          side: side,
-          files: group.value,
-          kind: kind,
-          sourceOrigin: group.key,
-          destinationOrigin: destination,
-          destinationPath: destinationPath ?? destination.source.currentPath,
-          protectedSources: protected,
-          allowBackground: false,
-          reviewGroup:
-              'Account $index of ${groups!.length}: ${ref.read(panelProvider(side)).storageDisplayName(group.key.storageReference)}',
-        ),
-      );
-      if (last == null ||
-          last.entries.any(
-            (entry) => entry.outcome == FileOperationOutcome.cancelled,
-          )) {
-        return last;
+      PanelFileOrigin destination;
+      try {
+        destination =
+            destinationOrigin ??
+            ref
+                .read(
+                  panelProvider(
+                    side == PanelSide.local
+                        ? PanelSide.remote
+                        : PanelSide.local,
+                  ),
+                )
+                .captureCurrentOrigin();
+      } catch (error) {
+        if (context.mounted) {
+          await showDialog<void>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text(context.commanderTr("Choose a destination folder")),
+              content: Text(
+                context.commanderTr(
+                  "Open a verified destination in the other panel before transferring a mixed collection. {0}",
+                  [error],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(context.commanderTr("Close")),
+                ),
+              ],
+            ),
+          );
+        }
+        return null;
       }
+      final protected = [
+        for (final group in groups.entries)
+          for (final file in group.value)
+            FileReference(
+              storage: group.key.storageReference,
+              path: file.path!,
+              objectId: file.uuid,
+            ),
+      ];
+      FileOperationPlan? last;
+      var index = 0;
+      for (final group in groups.entries) {
+        if (!context.mounted) return last;
+        index++;
+        last = await showDialog<FileOperationPlan>(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => FileOperationDialog(
+            side: side,
+            files: group.value,
+            kind: kind,
+            sourceOrigin: group.key,
+            destinationOrigin: destination,
+            destinationPath: destinationPath ?? destination.source.currentPath,
+            protectedSources: protected,
+            allowBackground: false,
+            reviewGroup:
+                'Account $index of ${groups!.length}: ${ref.read(panelProvider(side)).storageDisplayName(group.key.storageReference)}',
+          ),
+        );
+        if (last == null ||
+            last.entries.any(
+              (entry) => entry.outcome == FileOperationOutcome.cancelled,
+            )) {
+          return last;
+        }
+      }
+      return last;
     }
-    if (context.mounted) ref.read(panelProvider(side)).focusList();
-    return last;
+    sourceOrigin ??= groups?.keys.firstOrNull;
+    final result = await showDialog<FileOperationPlan>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => FileOperationDialog(
+        side: side,
+        files: List.unmodifiable(files),
+        kind: kind,
+        sourceOrigin: sourceOrigin,
+        destinationOrigin: destinationOrigin,
+        destinationPath: destinationPath,
+        sourceBackend: sourceBackend,
+      ),
+    );
+    return result;
+  } finally {
+    restoreInvokingFocus();
   }
-  sourceOrigin ??= groups?.keys.firstOrNull;
-  final result = await showDialog<FileOperationPlan>(
-    context: context,
-    barrierDismissible: false,
-    builder: (_) => FileOperationDialog(
-      side: side,
-      files: List.unmodifiable(files),
-      kind: kind,
-      sourceOrigin: sourceOrigin,
-      destinationOrigin: destinationOrigin,
-      destinationPath: destinationPath,
-      sourceBackend: sourceBackend,
-    ),
-  );
-  if (context.mounted) ref.read(panelProvider(side)).focusList();
-  return result;
 }
 
 class FileOperationDialog extends ConsumerStatefulWidget {

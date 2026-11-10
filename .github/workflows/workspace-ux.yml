@@ -63,6 +63,8 @@ jobs:
           lib/services/folder_drop_service.dart
           lib/models/panel_drag_data.dart
           lib/widgets/fkey_bar.dart
+          lib/widgets/file_clipboard_actions.dart
+          lib/widgets/file_operation_dialog.dart
           lib/widgets/file_column_view.dart
           lib/widgets/file_collections_dialog.dart
           lib/widgets/command_palette.dart
@@ -91,6 +93,8 @@ jobs:
             test/widget/responsive_toolbar_widget_test.dart
             test/widget/folder_drop_target_test.dart
             test/widget/panel_drop_options_test.dart
+            test/file_clipboard_test.dart
+            test/widget/file_operation_dialog_test.dart
           )
           tests=()
           for path in "${candidates[@]}"; do if [[ -f "$path" ]]; then tests+=("$path"); fi; done

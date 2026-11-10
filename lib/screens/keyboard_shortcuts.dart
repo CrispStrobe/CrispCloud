@@ -517,6 +517,9 @@ Future<void> _openCursorInPanel(
     }
     if (!context.mounted || ref.read(activePanelProvider) != sourceSide) return;
     ref.read(activePanelProvider.notifier).state = targetSide;
+    ref.read(focusAreaProvider.notifier).state = targetSide == PanelSide.local
+        ? FocusArea.local
+        : FocusArea.remote;
     onPanelSwitch?.call(targetSide);
     targetPanel.restoreCursorAndFocus(item);
   } catch (error) {
