@@ -6,6 +6,8 @@ on:
     paths:
       - 'lib/**'
       - 'test/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
       - '.github/workflows/workspace-ux.yml'
   workflow_dispatch:
 
