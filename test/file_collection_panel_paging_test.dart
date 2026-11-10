@@ -27,6 +27,8 @@ class _Cloud extends Fake implements CloudStorageClient {
   int count = 1800;
   final removed = <int>{};
   final replacements = <int, String>{};
+  final sizes = <int, int>{};
+  final modified = <int, DateTime>{};
   bool connected = true;
   Completer<void>? delay;
   Completer<void>? entered;
@@ -63,8 +65,9 @@ class _Cloud extends Fake implements CloudStorageClient {
               {
                 'name': name(index),
                 'uuid': replacements[index] ?? 'object-$index',
-                'size': index + 1,
-                'lastModified': DateTime.utc(2024, 1, 1).millisecondsSinceEpoch,
+                'size': sizes[index] ?? index + 1,
+                'lastModified': (modified[index] ?? DateTime.utc(2024, 1, 1))
+                    .millisecondsSinceEpoch,
               },
       ],
       'folders': [],
@@ -192,6 +195,151 @@ void main() {
     await panel.openCollection(id);
     return panel;
   }
+
+  test('collection rename updates both panes and inactive tabs', () async {
+    final right = await open(count: 3, marks: {});
+    final originalTab = right.activeTabId;
+    await right.openCollection('large', newTab: true);
+    final left = container.read(panelProvider(PanelSide.local));
+    await left.refresh();
+    await left.openCollection('large');
+
+    await right.renameSavedCollection('large', 'Reviewed files');
+
+    expect(right.fileListTitle, 'Reviewed files');
+    expect(left.fileListTitle, 'Reviewed files');
+    expect(right.tabs.where((tab) => tab.collectionId == 'large'), hasLength(2));
+    expect(
+      right.tabs.where((tab) => tab.collectionId == 'large').map((tab) => tab.label),
+      everyElement('Reviewed files'),
+    );
+    await right.selectTab(originalTab);
+    expect(right.fileListTitle, 'Reviewed files');
+    expect(right.collectionRevision, store.get('large')!.revision);
+  });
+
+  test('removing a collection detaches active, inactive, and locked tab links', () async {
+    final right = await open(count: 3, marks: {});
+    final originalTab = right.activeTabId;
+    right.setTabLock(originalTab, TabLockMode.resetOnLeave);
+    await right.openCollection('large', newTab: true);
+    final left = container.read(panelProvider(PanelSide.local));
+    await left.refresh();
+    await left.openCollection('large');
+
+    await right.removeSavedCollection('large');
+
+    expect(store.get('large'), isNull);
+    for (final panel in [left, right]) {
+      expect(panel.activeCollectionId, isNull);
+      expect(panel.tabs.every((tab) => tab.collectionId != 'large'), isTrue);
+      expect(panel.tabs.every((tab) => tab.lockedCollectionId != 'large'), isTrue);
+    }
+    await right.selectTab(originalTab);
+    await right.flushCollectionMarks();
+    expect(store.get('large'), isNull);
+  });
+
+  test('appending from a directory refreshes an open collection in the other pane', () async {
+    cloud.count = 3;
+    final right = await open(count: 2, marks: {});
+    final left = container.read(panelProvider(PanelSide.local));
+    await left.refresh();
+    await left.openCollection('large');
+    await right.clearSearchResults();
+    right.toggleSelection(right.files!.singleWhere((file) => file.name == cloud.name(2)));
+
+    await right.appendToCollection('large');
+
+    expect(left.collectionTotalCount, 3);
+    expect(left.files!.map((file) => file.name), contains(cloud.name(2)));
+    expect(left.collectionRevision, store.get('large')!.revision);
+    expect(right.showingSearchResults, isFalse);
+  });
+
+  test('replacement review shows fresh candidate details and saves exact reviewed rows', () async {
+    final panel = await open(count: 3, marks: {});
+    cloud.replacements[0] = 'replacement-0';
+    cloud.sizes[0] = 1234;
+    await panel.refreshCollectionItems();
+    final review = (await panel.captureCollectionReplacementReview())!;
+    expect(review.items.single.uuid, 'replacement-0');
+    expect(review.items.single.size, 1234);
+
+    await panel.acceptCollectionReplacements(review);
+
+    final saved = await store.load('large');
+    final accepted = saved.entries.singleWhere((entry) => entry.reference.path == '/${cloud.name(0)}');
+    expect(accepted.reference.objectId, 'replacement-0');
+    expect(accepted.file.size, 1234);
+    expect(accepted.replacement, isFalse);
+    expect(panel.collectionReplacements, isEmpty);
+  });
+
+  for (final mutation in ['object', 'size', 'modified']) {
+    test('a replacement whose $mutation changes after review cannot be accepted', () async {
+      final panel = await open(count: 3, marks: {});
+      cloud.replacements[0] = 'reviewed-object';
+      await panel.refreshCollectionItems();
+      final review = (await panel.captureCollectionReplacementReview())!;
+      final revision = store.get('large')!.revision;
+      switch (mutation) {
+        case 'object':
+          cloud.replacements[0] = 'different-object';
+        case 'size':
+          cloud.sizes[0] = 900;
+        case 'modified':
+          cloud.modified[0] = DateTime.utc(2025, 1, 1);
+      }
+
+      await expectLater(panel.acceptCollectionReplacements(review), throwsStateError);
+
+      expect(store.get('large')!.revision, revision);
+      final saved = await store.load('large');
+      expect(saved.entries.singleWhere((entry) => entry.reference.path == '/${cloud.name(0)}').reference.objectId, 'object-0');
+      expect(panel.collectionBusy, isFalse);
+    });
+  }
+
+  for (final mutation in ['tab', 'revision', 'source']) {
+    test('replacement approval rejects a changed $mutation', () async {
+      final panel = await open(count: 3, marks: {});
+      cloud.replacements[0] = 'reviewed-object';
+      await panel.refreshCollectionItems();
+      final review = (await panel.captureCollectionReplacementReview())!;
+      switch (mutation) {
+        case 'tab':
+          await panel.openCollection('large', newTab: true);
+        case 'revision':
+          await store.rename('large', 'Changed elsewhere');
+        case 'source':
+          auth.disconnect();
+      }
+      final revision = store.get('large')!.revision;
+
+      await expectLater(panel.acceptCollectionReplacements(review), throwsStateError);
+
+      expect(store.get('large')!.revision, revision);
+      final saved = await store.load('large');
+      expect(saved.entries.singleWhere((entry) => entry.reference.path == '/${cloud.name(0)}').reference.objectId, 'object-0');
+    });
+  }
+
+  test('a saved collection changed while a search reruns cannot be overwritten', () async {
+    final panel = await open(count: 3, marks: {}, search: true);
+    cloud.delay = Completer<void>();
+    cloud.entered = Completer<void>();
+    final refreshing = panel.refreshCollectionItems(rerunSearch: true);
+    final rejected = expectLater(refreshing, throwsStateError);
+    await cloud.entered!.future;
+    await store.rename('large', 'Newer saved name');
+    final revision = store.get('large')!.revision;
+    cloud.delay!.complete();
+    await rejected;
+
+    expect(store.get('large')!.name, 'Newer saved name');
+    expect(store.get('large')!.revision, revision);
+  });
 
   test(
     'bounded windows retain all off-page marks and prepare every original',
@@ -410,7 +558,8 @@ void main() {
     expect(panel.collectionReplacements.map((file) => file.path), [
       '/file-00000.txt',
     ]);
-    await panel.refreshCollectionItems(acceptReplacements: true);
+    final review = (await panel.captureCollectionReplacementReview())!;
+    await panel.acceptCollectionReplacements(review);
     final saved = await store.load('large');
     expect(
       saved.entries

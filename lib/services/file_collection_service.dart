@@ -119,6 +119,7 @@ class FileCollectionService {
     CollectionBackendResolver resolve, {
     bool acceptReplacements = false,
     Set<String>? acceptedReplacementKeys,
+    Map<String, FileCollectionEntry> reviewedReplacements = const {},
     bool Function()? isCancelled,
     void Function(int complete, int total)? onProgress,
   }) async {
@@ -211,7 +212,19 @@ class FileCollectionService {
                 acceptReplacements &&
                 (acceptedReplacementKeys == null ||
                     acceptedReplacementKeys.contains(entry.key));
-            if ((differentObject || differentType) && !accepted) {
+            final reviewed = reviewedReplacements[entry.key];
+            final changedSinceReview = accepted &&
+                reviewed != null &&
+                !sameReplacementEvidence(reviewed, current);
+            if (changedSinceReview) {
+              entries.add(
+                unavailable(
+                  CollectionItemState.changed,
+                  'The replacement changed after review. Review its current details again.',
+                  replacement: true,
+                ),
+              );
+            } else if ((differentObject || differentType) && !accepted) {
               entries.add(
                 unavailable(
                   CollectionItemState.changed,
@@ -269,6 +282,20 @@ class FileCollectionService {
       verified,
     );
   }
+
+  /// Compare only the identity and metadata that the source actually exposes.
+  /// Backends still bind the account and parent path before reading candidates.
+  static bool sameReplacementEvidence(
+    FileCollectionEntry reviewed,
+    FileItem current,
+  ) =>
+      reviewed.reference.objectId == objectIdentity(current) &&
+      reviewed.reference.version == version(current) &&
+      reviewed.file.size == current.size &&
+      reviewed.file.updatedAt == current.updatedAt &&
+      reviewed.file.isFolder == current.isFolder &&
+      (reviewed.file.isSymlink == true) == (current.isSymlink == true) &&
+      reviewed.file.symlinkTarget == current.symlinkTarget;
 
   Future<CollectionRefreshResult> rerun(
     FileCollection collection,

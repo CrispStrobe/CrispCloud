@@ -33,8 +33,9 @@ Future<void> reviewCollectionReplacements(
   PanelSide side,
 ) async {
   final panel = ref.read(panelProvider(side));
-  final items = panel.collectionReplacements;
-  if (items.isEmpty) return;
+  final review = await panel.captureCollectionReplacementReview();
+  if (review == null || !context.mounted) return;
+  final items = review.items;
   final accepted = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
@@ -84,12 +85,7 @@ Future<void> reviewCollectionReplacements(
     ),
   );
   if (accepted == true) {
-    await panel.refreshCollectionItems(
-      acceptReplacements: true,
-      acceptedReplacementKeys: items
-          .map((item) => '${item.storageId}\u0000${item.path}')
-          .toSet(),
-    );
+    await panel.acceptCollectionReplacements(review);
   }
 }
 
@@ -244,7 +240,7 @@ class _FileCollectionsDialogState extends ConsumerState<FileCollectionsDialog> {
       case 'rename':
         final name = await _askName(collection.name);
         if (name != null) {
-          await store.rename(collection.id, name);
+          await panel.renameSavedCollection(collection.id, name);
         }
       case 'export':
         final loaded = await store.load(collection.id);
@@ -266,7 +262,7 @@ class _FileCollectionsDialogState extends ConsumerState<FileCollectionsDialog> {
           );
         }
       case 'remove':
-        await store.remove(collection.id);
+        await panel.removeSavedCollection(collection.id);
         if (mounted) {
           setState(
             () =>

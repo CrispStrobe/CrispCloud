@@ -2,10 +2,17 @@ import 'package:flutter/widgets.dart';
 
 import '../providers/error_provider.dart';
 import 'provider_operation_strings.dart';
+import 'navigation_strings.dart';
 
 /// Localize recognized panel errors; preserve unknown and external details.
 String localizedPanelError(BuildContext context, AppError error) {
   final code = error.code;
+  if (code == PanelErrorCode.navigationUnavailable) {
+    return NavigationStrings(context).text('unavailable');
+  }
+  if (code == PanelErrorCode.navigationFailed) {
+    return NavigationStrings(context).failure(error.arguments['error'] ?? error.message);
+  }
   if (code == null) {
     return localizedProviderError(context, error.cause ?? error.message);
   }

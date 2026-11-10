@@ -458,18 +458,27 @@ class FileCollectionStore extends ChangeNotifier {
     return _pageCollection(record, entries, selected);
   }
 
-  Future<void> save(FileCollection collection) async {
+  Future<void> save(
+    FileCollection collection, {
+    String? expectedRevision,
+    bool Function()? isCancelled,
+  }) async {
     await ready;
-    await _lock.synchronized(
-      () => _writeRows(
+    await _lock.synchronized(() async {
+      final before = expectedRevision == null
+          ? null
+          : await _readManifest(collection.id, revision: expectedRevision);
+      await _writeRows(
         collection,
         Stream.fromIterable(
           collection.entries.map(
             (entry) => (entry, collection.selectedKeys.contains(entry.key)),
           ),
         ),
-      ),
-    );
+        before: before,
+        isCancelled: isCancelled,
+      );
+    });
   }
 
   Future<void> rename(String id, String name) async {
@@ -491,11 +500,12 @@ class FileCollectionStore extends ChangeNotifier {
     String id,
     Future<FileCollection> Function(FileCollection page) change, {
     bool Function()? isCancelled,
+    String? expectedRevision,
   }) async {
     await ready;
     await _lock.synchronized(() async {
       _checkWritable();
-      final before = await _readManifest(id);
+      final before = await _readManifest(id, revision: expectedRevision);
       final descriptors = <CollectionPageDescriptor>[];
       final written = <String>[];
       final keys = <String>{};
@@ -798,8 +808,12 @@ class FileCollectionStore extends ChangeNotifier {
     FileCollection metadata,
     Stream<(FileCollectionEntry, bool)> rows, {
     FileCollectionManifest? before,
+    bool Function()? isCancelled,
   }) async {
     _checkWritable();
+    if (isCancelled?.call() ?? false) {
+      throw StateError('Collection update cancelled.');
+    }
     before ??= _collections.containsKey(metadata.id)
         ? await _readManifest(metadata.id)
         : null;
@@ -829,6 +843,9 @@ class FileCollectionStore extends ChangeNotifier {
 
     try {
       await for (final row in rows) {
+        if (isCancelled?.call() ?? false) {
+          throw StateError('Collection update cancelled.');
+        }
         if (!keys.add(row.$1.key)) {
           throw const FormatException(
             'A collection contains duplicate source paths.',
@@ -859,7 +876,12 @@ class FileCollectionStore extends ChangeNotifier {
         pendingBytes += size;
       }
       await flush();
-      await _commit(metadata, descriptors, before: before);
+      await _commit(
+        metadata,
+        descriptors,
+        before: before,
+        isCancelled: isCancelled,
+      );
     } catch (error) {
       await _discardUncommitted(written, error);
       rethrow;

@@ -5,6 +5,7 @@
 
 import 'file_item.dart';
 import 'file_view_configuration.dart';
+import 'panel_navigation.dart';
 import 'storage_reference.dart';
 
 enum TabLockMode { none, locked, resetOnLeave, newTab }
@@ -35,6 +36,7 @@ class PanelTab {
   String? lockedCollectionId;
   FileViewConfiguration? view;
   String? viewProfileId;
+  final PanelNavigationHistory navigation;
 
   PanelTab({
     required this.id,
@@ -51,7 +53,9 @@ class PanelTab {
     this.lockedCollectionId,
     this.view,
     this.viewProfileId,
-  }) : label = customLabel ?? label ?? _labelFromPath(path);
+    PanelNavigationHistory? navigation,
+  }) : label = customLabel ?? label ?? _labelFromPath(path),
+       navigation = navigation ?? PanelNavigationHistory();
 
   bool get isLocked => lockMode != TabLockMode.none;
   bool get isProtected => isPinned || isLocked;
@@ -117,6 +121,7 @@ class PanelTab {
     if (lockedCollectionId != null) 'lockedCollectionId': lockedCollectionId,
     if (view != null) 'view': view!.toJson(),
     if (viewProfileId != null) 'viewProfileId': viewProfileId,
+    if (navigation.entries.isNotEmpty) 'navigation': navigation.toJson(),
   };
 
   factory PanelTab.fromJson(String id, Map<String, dynamic> json) {
@@ -159,6 +164,11 @@ class PanelTab {
               Map<String, dynamic>.from(json['view'] as Map),
             ),
       viewProfileId: json['viewProfileId'] as String?,
+      navigation: json['navigation'] is Map
+          ? PanelNavigationHistory.fromJson(
+              Map<String, dynamic>.from(json['navigation'] as Map),
+            )
+          : null,
     );
     if (tab.isLocked && tab.lockedPath == null) {
       tab.lockedPath = tab.path;
@@ -185,6 +195,7 @@ class PanelTab {
       lockedCollectionId: lockedCollectionId,
       view: view,
       viewProfileId: viewProfileId,
+      navigation: navigation.copy(),
     );
   }
 }

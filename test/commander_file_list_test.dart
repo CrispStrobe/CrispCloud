@@ -127,21 +127,29 @@ class _Local extends Fake
   @override
   String currentPath = '/';
   String? directory;
+  Completer<String>? initialPath;
+  final paths = <String>[];
+  Future<void> Function()? onRefresh;
   @override
   String? get grantedBasePath => directory ?? '/';
   @override
-  Future<String> getInitialPath() async => directory ?? '/';
+  Future<String> getInitialPath() async =>
+      initialPath == null ? directory ?? '/' : await initialPath!.future;
   @override
   Future<String> getSafeFallbackDirectory() async => directory ?? '/';
   @override
   Future<bool> hasAccessToPath(String path) async => true;
   @override
-  Future<List<FileSystemEntity>?> listDirectory(String path) async =>
-      directory == null
-      ? []
-      : Directory(path).list(followLinks: false).toList();
+  Future<List<FileSystemEntity>?> listDirectory(String path) async {
+    paths.add(path);
+    return directory == null
+        ? []
+        : Directory(path).list(followLinks: false).toList();
+  }
   @override
-  Future<void> refresh() async {}
+  Future<void> refresh() async {
+    await onRefresh?.call();
+  }
   Future<void> Function(String)? onAccess;
   @override
   Future<T> withFileOperationAccess<T>(
@@ -182,6 +190,57 @@ void main() {
     final panel = container.read(panelProvider(PanelSide.remote));
     await panel.refresh();
     return panel;
+  }
+
+  test('a delayed local refresh cannot replace newer cloud navigation', () async {
+    final panel = await remote();
+    final original = panel.captureCurrentOrigin();
+    container.read(panelSourceProvider(PanelSide.remote).notifier).setSource(
+      const LocalPanelSource('/local'),
+    );
+    await panel.refresh();
+    final localReads = local.paths.length;
+    final started = Completer<void>();
+    final release = Completer<void>();
+    addTearDown(() {
+      if (!release.isCompleted) release.complete();
+    });
+    local.onRefresh = () {
+      started.complete();
+      return release.future;
+    };
+
+    final stale = panel.refresh();
+    await started.future;
+    await panel.navigateToPath('/two', origin: original);
+    release.complete();
+    await stale;
+
+    expect(local.paths.length, localReads);
+    expect(panel.currentPath, '/two');
+    expect(panel.files!.any((file) => file.path == '/two/same.txt'), isTrue);
+    expect(panel.captureCurrentOrigin().storageReference, original.storageReference);
+  });
+
+  for (final failInitial in [false, true]) {
+    test('a delayed initial local ${failInitial ? 'failure' : 'path'} cannot replace a chosen cloud source', () async {
+      final origin = (await remote()).captureCurrentOrigin();
+      local.initialPath = Completer<String>();
+      final panel = container.read(panelProvider(PanelSide.local));
+      await panel.navigateToPath('/two', origin: origin);
+      final reads = local.paths.length;
+      if (failInitial) {
+        local.initialPath!.completeError(StateError('Delayed startup failure'));
+      } else {
+        local.initialPath!.complete('/');
+      }
+      await Future<void>.delayed(Duration.zero);
+
+      expect(local.paths.length, reads);
+      expect(panel.currentPath, '/two');
+      expect(panel.files!.any((file) => file.path == '/two/same.txt'), isTrue);
+      expect(panel.captureCurrentOrigin().storageReference, origin.storageReference);
+    });
   }
 
   test(

@@ -136,6 +136,58 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
+  test('reviewed saves and transforms reject a changed or removed revision', () async {
+    final store = FileCollectionStore(storage: MemoryFileCollectionStorage());
+    addTearDown(store.dispose);
+    final original = _collection('reviewed', 3);
+    await store.save(original);
+    final revision = store.get(original.id)!.revision;
+    await store.rename(original.id, 'Newer name');
+    final newer = store.get(original.id)!.revision;
+    var inspected = false;
+
+    await expectLater(
+      store.save(original, expectedRevision: revision),
+      throwsStateError,
+    );
+    await expectLater(
+      store.transform(original.id, (page) async {
+        inspected = true;
+        return page;
+      }, expectedRevision: revision),
+      throwsStateError,
+    );
+    expect(inspected, isFalse);
+    expect(store.get(original.id)!.revision, newer);
+    expect(store.get(original.id)!.name, 'Newer name');
+
+    await store.remove(original.id);
+    await expectLater(
+      store.save(original, expectedRevision: newer),
+      throwsStateError,
+    );
+    expect(store.get(original.id), isNull);
+  });
+
+  test('cancelled snapshot saves leave no catalog entry or staged pages', () async {
+    final storage = MemoryFileCollectionStorage();
+    final store = FileCollectionStore(storage: storage);
+    addTearDown(store.dispose);
+    await store.ready;
+    final before = Map<String, String>.of(storage.values);
+
+    await expectLater(
+      store.save(
+        _collection('cancelled', 3),
+        isCancelled: () => storage.values.keys.any((key) => key.startsWith('manifest:cancelled:')),
+      ),
+      throwsStateError,
+    );
+
+    expect(store.get('cancelled'), isNull);
+    expect(storage.values, before);
+  });
+
   test(
     'restart loads only the catalog across many large collections',
     () async {

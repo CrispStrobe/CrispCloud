@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, Tar
 import 'package:flutter/material.dart';
 
 import '../l10n/misc_ui_strings.dart';
+import '../l10n/navigation_strings.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 
@@ -386,19 +387,27 @@ class _TreeSidebarState extends ConsumerState<TreeSidebar> {
             ],
           ),
         ),
-        ...shown.map((r) => InkWell(
-          onTap: () => panel.navigateToPath(r.path),
+        ...shown.map((r) => Tooltip(
+          message: r.storage == null
+              ? NavigationStrings(context).text('older')
+              : '${panel.storageDisplayName(r.storage!)}: ${r.path}',
+          child: InkWell(
+          onTap: r.storage == null ? null : () => panel.openRecentLocation(r),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
             child: Row(
               children: [
                 Icon(Icons.history, size: 14, color: theme.colorScheme.onSurfaceVariant),
                 const SizedBox(width: 6),
-                Expanded(child: Text(r.label, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis)),
+                Expanded(child: Text(
+                  r.storage == null ? r.label : '${r.label} · ${panel.storageDisplayName(r.storage!)}',
+                  style: TextStyle(fontSize: 12, color: r.storage == null ? theme.disabledColor : null),
+                  overflow: TextOverflow.ellipsis,
+                )),
               ],
             ),
           ),
-        )),
+        ))),
         Divider(height: 1, color: theme.dividerColor),
       ],
     );
