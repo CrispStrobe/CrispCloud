@@ -10,7 +10,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:crisp_cloud/models/file_item.dart';
-import 'package:crisp_cloud/providers/panel_source_provider.dart';
 import 'package:crisp_cloud/providers/keyboard_shortcut_provider.dart';
 import 'package:crisp_cloud/services/fkey_action_service.dart';
 import 'package:crisp_cloud/services/keyboard_shortcut_service.dart';

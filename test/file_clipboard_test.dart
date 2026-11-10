@@ -11,6 +11,8 @@ import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:crisp_cloud/services/native_file_operations.dart';
 import 'package:crisp_cloud/widgets/file_clipboard_actions.dart';
 import 'package:crisp_cloud/widgets/file_operation_dialog.dart';
+import 'package:flutter/foundation.dart'
+    show debugDefaultTargetPlatformOverride;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

@@ -9,7 +9,7 @@ import 'dart:typed_data';
 
 import 'package:drift/native.dart';
 import 'package:flutter/foundation.dart'
-    show TargetPlatform, debugDefaultTargetPlatformOverride, kIsWeb;
+    show TargetPlatform, debugDefaultTargetPlatformOverride;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

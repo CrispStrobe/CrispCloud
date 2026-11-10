@@ -9,14 +9,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../l10n/app_localizations.dart';
 import '../l10n/command_strings.dart';
 import '../l10n/undo_presentation.dart';
 import '../l10n/viewer_action_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
-import '../providers/panel_source_provider.dart' show swapPanelSources;
+import '../providers/panel_source_provider.dart'
+    show panelSourceProvider, swapPanelSources;
 import '../providers/focus_area_provider.dart';
 import '../providers/terminal_provider.dart';
 import '../providers/toolbar_provider.dart' show panelViewModeProvider;
@@ -486,6 +486,8 @@ Future<void> _openCursorInPanel(
 
   final path = item.path;
   if (path == null || path.isEmpty) return;
+  final sourceTab = sourcePanel.activeTabId;
+  final sourceFocus = ref.read(focusAreaProvider);
   final targetPanel = ref.read(panelProvider(targetSide));
   try {
     final origin = sourcePanel.captureOperationOrigin([item]);
@@ -499,15 +501,23 @@ Future<void> _openCursorInPanel(
       origin: origin,
     );
     final targetTab = targetPanel.activeTabId;
+    bool stillOwnsInteraction() =>
+        context.mounted &&
+        origin.isCurrent &&
+        ref.read(activePanelProvider) == sourceSide &&
+        ref.read(focusAreaProvider) == sourceFocus &&
+        targetPanel.activeTabId == targetTab &&
+        (sourceSide == targetSide ||
+            (sourcePanel.activeTabId == sourceTab &&
+                sourcePanel.originForOperation(item)?.storageReference ==
+                    origin.storageReference));
     await navigation;
-    if (!context.mounted ||
-        !origin.isCurrent ||
-        targetPanel.activeTabId != targetTab ||
+    if (!stillOwnsInteraction() ||
         targetPanel.currentPath != destination ||
-        ref.read(activePanelProvider) != sourceSide ||
         targetPanel.captureCurrentOrigin().storageReference !=
             origin.storageReference)
       return;
+    final targetSource = ref.read(panelSourceProvider(targetSide)).withPath('');
     if (!item.isFolder && ArchiveService.isArchive(item.name)) {
       final fresh = targetPanel.files
           ?.where((file) => file.path == path)
@@ -515,7 +525,11 @@ Future<void> _openCursorInPanel(
       if (fresh == null || fresh.isFolder) return;
       await targetPanel.enterArchive(fresh);
     }
-    if (!context.mounted || ref.read(activePanelProvider) != sourceSide) return;
+    if (!stillOwnsInteraction() ||
+        ref.read(panelSourceProvider(targetSide)).withPath('') !=
+            targetSource) {
+      return;
+    }
     ref.read(activePanelProvider.notifier).state = targetSide;
     ref.read(focusAreaProvider.notifier).state = targetSide == PanelSide.local
         ? FocusArea.local
