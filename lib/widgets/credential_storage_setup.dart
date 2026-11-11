@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../l10n/settings_strings.dart';
 import '../l10n/startup_failure_strings.dart';
@@ -177,7 +178,44 @@ class _CredentialStorageSetupPanelState
     'Select a keychain file.',
     'Enter a path and password for the new keychain.',
     'The system keychain is unavailable. Choose an encrypted file or session-only storage.',
+    _keychainLocked,
+    _keychainAccessNeeded,
   };
+
+  static const _keychainLocked =
+      'The selected keychain is locked. Unlock it in Keychain Access, then continue.';
+  static const _keychainAccessNeeded =
+      'CrispCloud needs permission to use this keychain file. Choose it in the file dialog to grant access.';
+
+  /// Probes an existing keychain file. A path from the discovery list (or typed
+  /// by hand) carries no sandbox permission, so an access failure opens the
+  /// native picker for that file once and retries with the granted file.
+  /// Returns the usable path; cancelling the picker is a validation error.
+  Future<String> _probeExistingKeychain(String path) async {
+    try {
+      await MacosKeychainService.selectKeychain(path);
+      return path;
+    } on PlatformException catch (error) {
+      if (error.code == 'custom_keychain_locked') {
+        throw const FormatException(_keychainLocked);
+      }
+    }
+    final granted = await MacosKeychainService.chooseKeychain(
+      initialPath: path,
+    );
+    if (granted == null) throw const FormatException(_keychainAccessNeeded);
+    if (mounted) setState(() => _existingPath.text = granted);
+    try {
+      await MacosKeychainService.selectKeychain(granted);
+    } on PlatformException catch (error) {
+      throw FormatException(
+        error.code == 'custom_keychain_locked'
+            ? _keychainLocked
+            : _keychainAccessNeeded,
+      );
+    }
+    return granted;
+  }
 
   Future<void> _pickExistingKeychain() async {
     try {
@@ -295,7 +333,8 @@ class _CredentialStorageSetupPanelState
       } else {
         // Probe only the explicit selected/created keychain. Failure must not
         // silently turn this into a probe of the default OS keychain.
-        await MacosKeychainService.selectKeychain(path);
+        path = await _probeExistingKeychain(path);
+        if (!mounted) return;
       }
 
       _complete(
