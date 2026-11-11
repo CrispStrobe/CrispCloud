@@ -3,7 +3,9 @@
 Decision: reuse `smb2` 0.43.0 through an independent `crisp_smb` Rust crate and
 flutter_rust_bridge 2.11.1. Do not reimplement the protocol in Dart or add Go's
 runtime. CrispCloud and CrisperPlayer share one Dart facade; CrispSorter can
-consume the core directly while retaining OS-mounted SMB.
+consume the core directly while retaining OS-mounted SMB. For the current
+Dart/Rust split and proposed Filen/Internxt integration, see
+[STORAGE_ENGINE_ARCHITECTURE.md](STORAGE_ENGINE_ARCHITECTURE.md).
 
 ## Backend policy
 
@@ -128,20 +130,24 @@ The `surfaces` CI job runs both. Live SMB tests require the two fixture environm
 variables described above. These fixture tests do not replace real SMB3/device
 qualification.
 
-## Surface validation checkpoint
+## Surface validation checkpoint — 11 November 2026
 
-The shared suite passes 23 Dart tests with the native bridge and authenticated
-SMB fixture enabled. The CLI's SMB and runner suites pass 18 tests, including
-libsmb2, Rust and Auto transfers. The native core passes 8 unit tests. GUI widget
-and adapter tests are in the surfaces CI job; they were not run locally because
-Flutter startup is unavailable in this environment.
+Local checks covered 24 shared Dart tests (23 transport tests plus notice
+consistency), the complete 109-test CLI suite and 8 native core unit tests.
+The loopback SMB fixture was enabled for transport tests. These are recorded
+checks, not a guarantee for every future revision or provider.
 
-The previous host matrix built Windows and iOS artifacts successfully, but the
-macOS Dart test step failed while rewriting the **existing libsmb2** dylib's
-install name: the prebuilt binary lacks room for the expanded load command.
-This remains a macOS packaging gate, not a successful cross-platform validation.
-The matrix now keeps other hosts running when one fails. No signing/encryption
-qualification on a real SMB3 NAS has been claimed.
+[The workflow at `13ca681`](https://github.com/CrispStrobe/CrispCloud/actions/runs/43012455534)
+passed Linux, macOS, iOS compilation/Apple padding checks, and the GUI/CLI
+`surfaces` job. The Windows job stopped in recipe integrity verification because
+Git converted the pinned LF files to CRLF. Package-specific Git attributes now
+preserve the original bytes; the integrity tests pass after a local checkout
+with `core.autocrlf=true`. The Windows rerun must still confirm that correction.
+
+The earlier macOS prebuilt-library install-name failure is addressed by the
+source recipe below and passed the subsequent macOS/iOS CI checks. Final app
+embedding/signing, physical-device and real signing/encryption NAS qualification
+remain separate gates.
 
 CLI settings/listing output labels old profiles without an explicit choice as
 `build default`, matching the shared adapter's compile-time default behavior.

@@ -31,3 +31,10 @@ packaging. The source archive hash and all vendored patches are validated.
 A fixture does not establish SMB3 encrypted interoperability, performance,
 physical-device support or final signed-app license compliance. Those remain
 release qualification gates; do not switch the default on fixture results alone.
+
+## Wider provider architecture
+
+The Dart/Rust responsibility split, proposed Filen/Internxt reuse, their current
+CLI gap, constrained fallback policy, browser boundaries and license differences
+are documented in [STORAGE_ENGINE_ARCHITECTURE.md](STORAGE_ENGINE_ARCHITECTURE.md).
+SMB selection is implemented; the proposed Filen/Internxt bridge is not.
