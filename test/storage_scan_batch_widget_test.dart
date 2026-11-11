@@ -499,6 +499,8 @@ void main() {
         const ValueKey('scan-batch-history-0'),
       );
       await tester.ensureVisible(historyButton);
+      await tester.pumpAndSettle();
+      expect(historyButton.hitTestable(), findsOneWidget);
       await tester.tap(historyButton);
       await tester.pumpAndSettle();
       await tester.tap(find.widgetWithText(ListTile, 'Original account'));
