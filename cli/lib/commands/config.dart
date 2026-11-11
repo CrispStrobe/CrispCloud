@@ -183,7 +183,9 @@ class _ConfigSmbBackendCommand extends Command<int> {
       provider['smbBackend'] = parseSmbBackend(args[1])!.name;
       config.saveProvider(args.first, provider);
     }
-    stdout.writeln(parseSmbBackend(provider['smbBackend'])?.name ?? 'libsmb2');
+    stdout.writeln(
+      parseSmbBackend(provider['smbBackend'])?.name ?? 'build default',
+    );
     return 0;
   }
 }

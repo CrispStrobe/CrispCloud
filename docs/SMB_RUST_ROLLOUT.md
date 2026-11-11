@@ -127,3 +127,21 @@ run `dart test test/smb_adapter_test.dart test/cli_runner_test.dart` from `cli/`
 The `surfaces` CI job runs both. Live SMB tests require the two fixture environment
 variables described above. These fixture tests do not replace real SMB3/device
 qualification.
+
+## Surface validation checkpoint
+
+The shared suite passes 23 Dart tests with the native bridge and authenticated
+SMB fixture enabled. The CLI's SMB and runner suites pass 18 tests, including
+libsmb2, Rust and Auto transfers. The native core passes 8 unit tests. GUI widget
+and adapter tests are in the surfaces CI job; they were not run locally because
+Flutter startup is unavailable in this environment.
+
+The previous host matrix built Windows and iOS artifacts successfully, but the
+macOS Dart test step failed while rewriting the **existing libsmb2** dylib's
+install name: the prebuilt binary lacks room for the expanded load command.
+This remains a macOS packaging gate, not a successful cross-platform validation.
+The matrix now keeps other hosts running when one fails. No signing/encryption
+qualification on a real SMB3 NAS has been claimed.
+
+CLI settings/listing output labels old profiles without an explicit choice as
+`build default`, matching the shared adapter's compile-time default behavior.

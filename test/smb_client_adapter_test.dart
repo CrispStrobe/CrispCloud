@@ -93,6 +93,7 @@ void main() {
           restored = SmbClientAdapter(config: config);
           expect(await restored.restoreCredentials(), isTrue);
           expect(restored.requireEncryption, isFalse);
+          expect(restored.smbBackend, backend);
           await restored.renamePath(
             '/Audio Books/Disc 1/Chapter #1.mp3',
             'Chapter 2.mp3',

@@ -57,7 +57,8 @@ class ProvidersCommand extends Command<int> {
       String info = '';
       switch (type.toLowerCase()) {
         case 'smb':
-          info = '${cfg['url'] ?? ''} [${cfg['smbBackend'] ?? 'libsmb2'}]';
+          info =
+              '${cfg['url'] ?? ''} [${cfg['smbBackend'] ?? 'build default'}]';
         case 's3':
           info = '${cfg['endpoint'] ?? ''}/${cfg['bucket'] ?? ''}';
         case 'sftp':
@@ -72,7 +73,7 @@ class ProvidersCommand extends Command<int> {
       rows.add({
         'name': name,
         'type': type,
-        if (type == 'smb') 'smbBackend': cfg['smbBackend'] ?? 'libsmb2',
+        if (type == 'smb') 'smbBackend': cfg['smbBackend'],
         'info': info,
         'default': name == defaultProv,
       });
