@@ -16,10 +16,14 @@ void main() {
         addTearDown(tester.view.resetDevicePixelRatio);
         addTearDown(tester.view.resetPhysicalSize);
         var doc = entry.value;
-        int? pageCount;
+        final pageCount = {
+          'rtl': 1,
+          'columns_sections': 3,
+          'continued_notes': 3,
+          'tall_table': 4,
+        }[entry.key]!;
         for (int cycle = 0; cycle < 2; cycle++) {
           final laid = WordLayoutEngine(font: null).layout(doc);
-          pageCount ??= laid.pages.length;
           expect(laid.pages.length, pageCount);
           expect(laid.pages, isNotEmpty);
           for (int page = 0; page < laid.pages.length; page++) {

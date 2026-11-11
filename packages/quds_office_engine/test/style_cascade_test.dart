@@ -154,4 +154,96 @@ void main() {
       );
     },
   );
+  test('style toggles compose while direct on/off is absolute', () async {
+    final package = styleFixture();
+    final styles = package.getPart('/word/styles.xml')!;
+    styles.writeText(
+      styles.readText().replaceFirst(
+        '</w:styles>',
+        '<w:style w:type="paragraph" w:styleId="Toggle"><w:basedOn w:val="Base"/><w:rPr><w:b/><w:i/></w:rPr></w:style>'
+            '<w:style w:type="paragraph" w:styleId="Unchanged"><w:basedOn w:val="Base"/><w:rPr><w:b w:val="0"/></w:rPr></w:style>'
+            '</w:styles>',
+      ),
+    );
+    package
+        .getPart('/word/document.xml')!
+        .writeText(
+          '<w:document xmlns:w="${OfficeNamespaces.w}"><w:body>'
+          '<w:p><w:pPr><w:pStyle w:val="Toggle"/></w:pPr>'
+          '<w:r><w:t>Toggled off</w:t></w:r>'
+          '<w:r><w:rPr><w:b/></w:rPr><w:t>Direct on</w:t></w:r>'
+          '<w:r><w:rPr><w:b w:val="0"/><w:i w:val="0"/></w:rPr><w:t>Direct off</w:t></w:r></w:p>'
+          '<w:p><w:pPr><w:pStyle w:val="Unchanged"/></w:pPr><w:r><w:t>False style leaves parent on</w:t></w:r></w:p>'
+          '<w:sectPr/></w:body></w:document>',
+        );
+    var doc = WordDeserializer().read(package);
+    for (int cycle = 0; cycle < 4; cycle++) {
+      final runs = doc.paragraphs.first.inlines.whereType<WmlRun>().toList();
+      expect(runs.map((r) => r.properties.bold), [false, true, false]);
+      expect(runs.map((r) => r.properties.italic), [true, true, false]);
+      expect(
+        doc.paragraphs.last.inlines.whereType<WmlRun>().first.properties.bold,
+        true,
+      );
+      final bytes = await OfficeIsolateSave.word(doc);
+      if (cycle > 0) {
+        Directory('build/fidelity-style-toggles').createSync(recursive: true);
+        File(
+          'build/fidelity-style-toggles/toggle-$cycle.docx',
+        ).writeAsBytesSync(bytes);
+      }
+      doc = WordDeserializer().readBytes(bytes);
+    }
+  });
+  test(
+    'custom style part location stays authoritative after style edits',
+    () async {
+      final package = styleFixture();
+      final original = package.getPart('/word/styles.xml')!;
+      package.createPart(
+        '/word/resources/custom-styles.xml',
+        original.contentType,
+        original.readBytes(),
+      );
+      package.deletePart('/word/styles.xml');
+      final rels = package.relationshipsFor('/word/document.xml');
+      final rel = rels.firstByType(RelationshipTypes.styles)!;
+      rels.removeById(rel.id);
+      rels.add(
+        id: rel.id,
+        type: rel.type,
+        target: 'resources/custom-styles.xml',
+      );
+      var doc = WordDeserializer().read(package);
+      cli.applyStep(doc, {
+        'op': 'styleDefinition',
+        'style': 'Accent',
+        'type': 'character',
+        'rPr': {
+          'color': {'val': '123456'},
+        },
+      });
+      for (int cycle = 0; cycle < 3; cycle++) {
+        doc = WordDeserializer().readBytes(await OfficeIsolateSave.word(doc));
+        expect(doc.package!.getPart('/word/styles.xml'), isNull);
+        expect(
+          doc.paragraphs
+              .elementAt(1)
+              .inlines
+              .whereType<WmlRun>()
+              .first
+              .properties
+              .color,
+          '123456',
+        );
+        expect(
+          doc.package!
+              .relationshipsFor('/word/document.xml')
+              .firstByType(RelationshipTypes.styles)!
+              .target,
+          'resources/custom-styles.xml',
+        );
+      }
+    },
+  );
 }

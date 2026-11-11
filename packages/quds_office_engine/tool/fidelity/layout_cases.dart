@@ -117,5 +117,42 @@ Map<String, WmlDocument> layoutCases() {
       .properties
     ..color = '225588'
     ..italic = true;
-  return {'rtl': rtl, 'columns_sections': columns, 'continued_notes': notes};
+  final tallCell = paragraph(
+    List.generate(120, (i) => 'T${i.toString().padLeft(3, '0')}').join(' '),
+  );
+  final tallTable = WmlDocument(
+    sections: [
+      section(
+        [
+          paragraph('Table continues across pages', heading: true),
+          WmlTable(
+            grid: [160, 90],
+            rows: [
+              WmlTableRow(
+                cells: [
+                  WmlTableCell(blocks: [tallCell]),
+                  WmlTableCell(blocks: [paragraph('Other cell')]),
+                ],
+              ),
+            ],
+          ),
+          paragraph('After the table'),
+        ],
+        width: 300,
+        height: 260,
+      ),
+    ],
+  );
+  WordNotes.insert(
+    tallTable,
+    tallCell,
+    endnote: false,
+    text: 'Late table note',
+  );
+  return {
+    'rtl': rtl,
+    'columns_sections': columns,
+    'continued_notes': notes,
+    'tall_table': tallTable,
+  };
 }

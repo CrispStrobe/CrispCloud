@@ -144,8 +144,9 @@ LaidOutLine _noteLine(
   double dx,
   double dy,
   int page,
-  String source,
-) => LaidOutLine(
+  String source, {
+  int paragraphIndex = -1,
+}) => LaidOutLine(
   glyphs: <LaidOutGlyph>[
     for (final LaidOutGlyph g in line.glyphs)
       LaidOutGlyph(
@@ -173,7 +174,7 @@ LaidOutLine _noteLine(
   width: line.width,
   height: line.height,
   pageIndex: page,
-  paragraphIndex: -1,
+  paragraphIndex: paragraphIndex,
   justification: line.justification,
   listLabel: line.listLabel,
   listMarkerX: line.listMarkerX + dx,
@@ -189,8 +190,9 @@ LaidOutBox _noteBox(
   double dx,
   double dy,
   double start,
-  double end,
-) {
+  double end, {
+  bool isNoteContent = true,
+}) {
   final double top = math.max(start, b.y);
   final double bottom = math.min(end, b.y + b.height);
   return LaidOutBox(
@@ -214,6 +216,8 @@ LaidOutBox _noteBox(
     strokeBottom: b.strokeBottom && b.y + b.height <= end,
     strokeLeft: b.strokeLeft,
     strokeRight: b.strokeRight,
-    isNoteContent: true,
+    paragraphIndex: b.paragraphIndex,
+    paragraphEnd: b.paragraphEnd,
+    isNoteContent: isNoteContent,
   );
 }

@@ -109,7 +109,11 @@ class _StyleCascade {
     ];
   }
 
-  XmlElement merged(String name, Iterable<XmlElement?> layers) {
+  XmlElement merged(
+    String name,
+    Iterable<XmlElement?> layers, {
+    Set<XmlElement> toggleLayers = const {},
+  }) {
     final result = WordPropertyIo.parse('', name)
       ..setAttribute('w', OfficeNamespaces.w, prefix: 'xmlns');
     for (final layer in layers) {
@@ -117,6 +121,36 @@ class _StyleCascade {
       for (final child in layer.childElements) {
         if (child.localName == 'sectPr') continue;
         final old = result.firstChild(child.localName);
+        if (name == 'rPr' &&
+            const {
+              'b',
+              'bCs',
+              'i',
+              'iCs',
+              'strike',
+              'caps',
+              'smallCaps',
+              'emboss',
+              'imprint',
+              'outline',
+              'shadow',
+              'vanish',
+            }.contains(child.localName)) {
+          bool enabled(XmlElement? element) =>
+              element != null &&
+              !const [
+                '0',
+                'false',
+                'off',
+              ].contains(element.getAttribute('val'));
+          final on = enabled(child);
+          if (toggleLayers.contains(layer) && !on) continue;
+          final value = toggleLayers.contains(layer) ? !enabled(old) : on;
+          final effective = old ?? child.copy();
+          effective.setAttribute('val', value ? '1' : '0', prefix: 'w');
+          if (old == null) result.addChild(effective);
+          continue;
+        }
         if (old == null) {
           result.addChild(child.copy());
           continue;
@@ -253,13 +287,16 @@ class _StyleCascade {
         props.sourcePropertiesXml = WordSerializer().runPropertiesXml(props);
       }
       final direct = WordPropertyIo.parse(props.sourcePropertiesXml, 'rPr');
+      final styleRuns = [
+        for (final s in paragraphChain) s.firstChild('rPr'),
+        for (final s in chain(props.styleId)) s.firstChild('rPr'),
+      ];
       final rp = merged('rPr', [
         defaults?.firstChild('rPrDefault')?.firstChild('rPr'),
         for (final t in tableLayers) t.firstChild('rPr'),
-        for (final s in paragraphChain) s.firstChild('rPr'),
-        for (final s in chain(props.styleId)) s.firstChild('rPr'),
+        ...styleRuns,
         direct,
-      ]);
+      ], toggleLayers: styleRuns.whereType<XmlElement>().toSet());
       final resolved = WmlRunProps();
       final inner = XmlPullReader(
         XmlDocument(root: rp).toXmlString(declaration: false),

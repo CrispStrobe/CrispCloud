@@ -7,9 +7,11 @@ dart pub get
 bash tool/fidelity/check.sh
 ```
 
-The check runs the oracle's negative tests, focused Dart regressions, six DOCX
-exports and twelve XLSX/PPTX exports (three unchanged cycles and three edited
-cycles per format), then an example DOCX edit script. Exported files and
+The check runs nine oracle self-tests and focused Dart regressions, followed by
+repeated import/edit/export scenarios. It includes the original 18 cross-format
+exports plus rich notes, style cascades/toggles, independently produced native
+spreadsheets/decks, pivot creation, image replacement and opaque body XML.
+The editor adds eight layout exports and the async controller export. Exported files and
 machine-readable reports are written under `build/fidelity*`.
 
 ## Import, inspect, edit and export
@@ -23,7 +25,8 @@ dart run tool/fidelity/office_steps.dart modify input.docx steps.json output.doc
 `inspect` imports a DOCX and prints paragraphs, headings, note IDs and image
 sizes. `export` uses the asynchronous save implementation used by the host.
 `modify` applies a JSON array of steps before saving. All steps must succeed
-before the output is written. Existing output files are replaced on success;
+before a flushed temporary file is atomically renamed to the output. Existing
+output files are replaced on success;
 choose a different filename to retain the input.
 
 `example_steps.json` is a runnable example. Paragraph/image indices are
@@ -35,6 +38,9 @@ the command's working directory.
 | --- | --- | --- |
 | `replaceText` | `paragraph`, `text`, optional `start`, `end` | Replace a range; defaults to the whole paragraph |
 | `heading` | `paragraph`, `level` | Apply heading level |
+| `characterStyle` | `paragraph`, `run`, `style` | Apply a character style and refresh inheritance |
+| `tableStyle` | `table`, `style` | Apply a table style |
+| `styleDefinition` | `style`, `type`, optional `rPr`, `pPr`, `tblPr`, `tcPr` | Edit sparse source style properties; syntax below |
 | `applyStyle` | `paragraph`, `style` | Apply a style from the document catalog |
 | `paragraphFormat` | `paragraph`, optional `alignment`, `before`, `after`, `lineSpacing`, `keepTogether`, `pageBreakBefore` | Change supplied paragraph settings |
 | `runFormat` | `paragraph`, optional `start`, `end`, `bold`, `italic`, `color`, `highlight`, `font`, `size` | Change supplied text settings; colors are RGB hex strings |
@@ -90,13 +96,15 @@ Normal checks never refresh expectations. After deliberately changing the
 authored fixture, run `python3 tool/fidelity/corpus.py seed`, review the DOCX/JSON
 diff, and rerun checks. Sheet/slide JSON is authored separately, not regenerated.
 
-The editor golden renders the fixture before and after export against the same
-reviewed full-page PNG. It requires actual picture pixels before capture, and
+The editor uses twelve reviewed PNGs, comparing both the original and exported
+reopen to the same baseline. Cases cover the rich document, RTL/Arabic, columns,
+sections/page breaks, continued notes, and a four-page table with a late note.
+Expected page counts are asserted explicitly. It requires actual picture pixels before capture, and
 includes notes and footer. Use pinned Flutter **3.44.0** on Linux:
 
 ```sh
 cd ../quds_office_editor
-flutter test test/office_fidelity_golden_test.dart --no-pub
+flutter test test/office_fidelity_golden_test.dart test/office_layout_goldens_test.dart --no-pub
 # Intentional maintenance only: inspect the PNG, then rerun without this flag.
 flutter test test/office_fidelity_golden_test.dart --no-pub --update-goldens
 ```
@@ -146,3 +154,26 @@ The independent `native.xlsx` (openpyxl 3.1.5) and `native.pptx`
 files under `build/fidelity-native`. `native_oracle.py` checks owned relationships,
 master/theme preservation, decoded picture pixels, chart data/references, number
 formats, borders, fonts, hyperlinks, pivot/cache wiring, notes and motion XML.
+
+
+## External validation
+
+The fork workflow runs the Open XML SDK 3.3.0 validator (Office 2019 schema and
+semantic constraints), including positive and deliberately invalid controls.
+It also opens every emitted DOCX/XLSX/PPTX in LibreOffice Writer/Calc/Impress,
+exports PDFs and compares extracted text and rendered page pixels between save
+cycles. These checks do not rely on Quds' importer.
+
+From the repository root, with .NET 8, LibreOffice and Poppler installed:
+
+```sh
+dotnet run --project tool/office-validation -- --self-test
+dotnet run --project tool/office-validation -- build/office-evidence build/external/schema-report.json
+python3 tool/office-validation/render.py build/office-evidence build/external-render
+```
+
+The workflow collects `packages/quds_office_*/build/fidelity*` into the evidence
+directory. Reports include file/part/XPath errors, page counts, text and pixel
+hashes. Artifact PDFs support manual review. The renderer accepts either the
+`libreoffice` or `soffice` executable. External engine agreement is evidence for
+this corpus; it does not establish identical layout for every Office document.
