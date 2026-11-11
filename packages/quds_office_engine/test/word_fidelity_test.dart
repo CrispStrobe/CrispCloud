@@ -536,8 +536,8 @@ void main() {
     final String slide = package.getPart('/ppt/slides/slide1.xml')!.readText();
     expect(slide.contains('<p:pic>'), isTrue);
     expect(slide.contains('<p:graphicFrame>'), isTrue);
-    expect(package.getPart('/ppt/media/image1.png'), isNotNull);
-    expect(package.getPart('/ppt/charts/chart1.xml'), isNotNull);
+    expect(package.getPart('/ppt/media/slide1_image1.png'), isNotNull);
+    expect(package.getPart('/ppt/charts/slide1_chart1.xml'), isNotNull);
 
     final PmlPresentation copy = SlideDeserializer().readBytes(bytes);
     expect(
