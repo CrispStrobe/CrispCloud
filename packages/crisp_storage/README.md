@@ -9,6 +9,11 @@ and fresh checkouts do not need sibling repositories.
   credentials stay in headers; redirects and paths outside the configured root
   are rejected. HTTP resume requires a strong ETag and validates Content-Range;
   an incompatible revision restarts. SFTP resumes using size/mtime validators.
+- `SmbSession`: native SMB2/3 browsing, streaming, validated resumable downloads
+  and file operations through `dart_smb2` / LGPL-2.1 libsmb2. Signing is enabled;
+  SMB3 encryption is required unless the user explicitly opts out. Downloads
+  await each bounded disk write. Failed initial connections can be retried by
+  a later operation. See `NOTICE-LIBSMB2.txt` and the app's distribution review.
 - `openVerifiedSsh` / `SshKnownHosts`: SHA256 host-key verification before
   authentication. Unknown keys require an explicit acceptance callback;
   changed keys fail closed. Inject secure read/write callbacks. Accepted keys
@@ -31,5 +36,14 @@ paused/queued transfer manifests. App credentials remain in platform secure
 storage. CrispCloud's standalone CLI currently stores credentials in its YAML
 configuration (owner-only permissions on Unix); it does **not** use Keychain.
 
-Direct SMB transport, cross-app account sharing, cross-device progress sync,
-and persistent CrispCloud transfer queues are not supplied by this package.
+Cross-app account sharing, cross-device progress sync, and persistent CrispCloud
+transfer queues are not supplied by this package. Direct SMB is native-only.
+
+Run the local SMB regression fixture (no user credentials or shares) with:
+
+```sh
+CRISPER_SMB_PYTHON=/path/to/python-with-impacket dart test test/smb_transfer_test.dart
+```
+
+The fixture validates SMB2 behavior; it does not qualify SMB3 encryption or
+device-specific performance. Never disable production encryption for this test.

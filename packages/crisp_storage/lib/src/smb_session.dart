@@ -49,35 +49,41 @@ class SmbSession {
     }
   }
 
-  Future<Smb2Pool> _open() => _opening ??= _guard(() async {
-    final user = connection.username;
-    final split = user.indexOf(r'\');
-    final pool = await Smb2Pool.connect(
-      host: connection.url.hasPort
-          ? connection.url.authority
-          : connection.url.host,
-      share: connection.url.pathSegments.first,
-      user: split < 0 ? user : user.substring(split + 1),
-      domain: split < 0 ? null : user.substring(0, split),
-      password: connection.secret,
-      workers: 1,
-      timeout: const Duration(seconds: 15),
-      signing: true,
-      seal: connection.requireEncryption,
-      version: connection.requireEncryption
-          ? Smb2Version.any3
-          : Smb2Version.any,
-    );
-    if (_closed) {
-      await pool.disconnect();
-      throw const RemoteException(
-        'SMB connection closed.',
-        code: RemoteErrorCode.closed,
-        arguments: {'protocol': 'SMB'},
-      );
-    }
-    return pool;
-  });
+  Future<Smb2Pool> _open() => _opening ??=
+      _guard(() async {
+        final user = connection.username;
+        final split = user.indexOf(r'\');
+        final pool = await Smb2Pool.connect(
+          host: connection.url.hasPort
+              ? connection.url.authority
+              : connection.url.host,
+          share: connection.url.pathSegments.first,
+          user: split < 0 ? user : user.substring(split + 1),
+          domain: split < 0 ? null : user.substring(0, split),
+          password: connection.secret,
+          workers: 1,
+          timeout: const Duration(seconds: 15),
+          signing: true,
+          seal: connection.requireEncryption,
+          version: connection.requireEncryption
+              ? Smb2Version.any3
+              : Smb2Version.any,
+        );
+        if (_closed) {
+          await pool.disconnect();
+          throw const RemoteException(
+            'SMB connection closed.',
+            code: RemoteErrorCode.closed,
+            arguments: {'protocol': 'SMB'},
+          );
+        }
+        return pool;
+      }).catchError((Object error, StackTrace stack) {
+        // Share an in-flight handshake, but do not cache a failed connection.
+        // A later explicit operation may retry after the network recovers.
+        _opening = null;
+        Error.throwWithStackTrace(error, stack);
+      });
 
   /// Convert a share-root-relative app path into a confined server URL.
   String urlForPath(String path) {
@@ -299,11 +305,10 @@ class SmbSession {
         offset > before.size) {
       offset = 0;
     }
-    final sink = output.openWrite(
+    final sink = await output.open(
       mode: offset > 0 ? FileMode.append : FileMode.write,
     );
     try {
-      await sink.flush();
       await DownloadState(source, validator, before.size).save(output);
       onBytes?.call(offset);
       await pool.withFile(
@@ -326,8 +331,10 @@ class SmbSession {
                 retryable: true,
               );
             }
-            sink.add(bytes);
-            await sink.flush();
+            // Await the write itself for backpressure. An IOSink flush after
+            // every chunk adds another asynchronous round trip; it is not an
+            // fsync durability guarantee. Keep at most one SMB chunk in flight.
+            await sink.writeFrom(bytes);
             offset += bytes.length;
             onBytes?.call(offset);
           }

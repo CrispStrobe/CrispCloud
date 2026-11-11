@@ -27,3 +27,20 @@ and malicious-path cases before switching. Preserve current native notices.
 
 No LGPL-removal or throughput claim is made by this review. Real SMB3
 interoperability and performance measurements require suitable servers/devices.
+
+## Implemented and validated on this branch
+- Awaited RandomAccessFile writes replace per-chunk IOSink add/flush pairs.
+  Each progress callback runs after the chunk write; memory remains bounded by
+  the read chunk, and interruption closes the local handle before returning.
+- Failed initial pool opens are cleared while concurrent callers share the
+  same in-flight future. Closed sessions still cannot reopen.
+- `dart test` in `packages/crisp_storage`: 15 tests passed with the opt-in
+  impacket fixture enabled, including initial failure/retry, concurrent browse,
+  partial-write resume, changed-source restart and size-limit rejection.
+- `dart analyze`: no errors/warnings; eight existing style informational
+  diagnostics. No full Flutter app or physical SMB3 server test was run here.
+- Updated the package README, which incorrectly said direct SMB was absent.
+
+CrisperPlayer's existing immutable pin is deliberately unchanged in its sibling
+branch. Adopting these shared changes there also requires regenerating its
+dependency and native-license evidence; this commit is not silently propagated.
