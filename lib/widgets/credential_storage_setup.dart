@@ -67,6 +67,7 @@ class CredentialStorageSetupScreen extends StatelessWidget {
 Future<CredentialStorageSetupResult?> showCredentialStorageSetupDialog(
   BuildContext context, {
   bool firstRun = false,
+  bool applyNow = false,
   CredentialStorageMode initialMode = CredentialStorageMode.systemKeychain,
   String? initialKeychainPath,
 }) {
@@ -81,6 +82,7 @@ Future<CredentialStorageSetupResult?> showCredentialStorageSetupDialog(
           padding: const EdgeInsets.all(24),
           child: CredentialStorageSetupPanel(
             firstRun: firstRun,
+            applyNow: applyNow,
             initialMode: initialMode,
             initialKeychainPath: initialKeychainPath,
             onComplete: (result) => Navigator.pop(dialogContext, result),
@@ -96,12 +98,17 @@ class CredentialStorageSetupPanel extends StatefulWidget {
     super.key,
     required this.onComplete,
     this.firstRun = false,
+    this.applyNow = false,
     this.initialMode = CredentialStorageMode.systemKeychain,
     this.initialKeychainPath,
   });
 
   final ValueChanged<CredentialStorageSetupResult> onComplete;
   final bool firstRun;
+
+  /// The choice is used immediately (startup recovery) rather than saved for
+  /// the next launch. File vaults are still created only by the password gate.
+  final bool applyNow;
   final CredentialStorageMode initialMode;
   final String? initialKeychainPath;
 
@@ -339,7 +346,7 @@ class _CredentialStorageSetupPanelState
         const SizedBox(height: 8),
         Text(
           _text(
-            widget.firstRun
+            widget.firstRun || widget.applyNow
                 ? 'Choose where CrispCloud keeps provider credentials. You can change this later in Settings.'
                 : 'Where should CrispCloud keep provider credentials after the next restart?',
           ),
@@ -392,7 +399,11 @@ class _CredentialStorageSetupPanelState
                 )
               : const Icon(Icons.check),
           label: Text(
-            _text(widget.firstRun ? 'Continue' : 'Save and restart later'),
+            _text(
+              widget.firstRun || widget.applyNow
+                  ? 'Continue'
+                  : 'Save and restart later',
+            ),
           ),
         ),
       ],
