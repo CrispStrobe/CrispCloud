@@ -64,12 +64,22 @@ jobs:
           lib/widgets/folder_drop_target.dart
           lib/services/folder_drop_service.dart
           lib/services/storage_scan_backend.dart
+          lib/services/storage_scan_service.dart
+          lib/services/storage_scan_source.dart
+          lib/services/storage_scan_batch_service.dart
+          lib/services/storage_scan_snapshot_store.dart
+          lib/services/storage_identity.dart
+          lib/services/file_collection_storage.dart
+          lib/services/file_collection_storage_native.dart
+          lib/services/file_collection_storage_browser.dart
+          lib/services/file_collection_store.dart
           lib/services/local_file_service.dart
           lib/services/local_file_service_native.dart
           lib/services/local_file_service_web.dart
           lib/models/panel_drag_data.dart
           lib/models/panel_breadcrumb.dart
           lib/models/folder_size_measurement.dart
+          lib/models/storage_analysis.dart
           lib/widgets/fkey_bar.dart
           lib/widgets/file_clipboard_actions.dart
           lib/widgets/file_operation_dialog.dart
@@ -85,6 +95,7 @@ jobs:
           lib/l10n/storage_analyzer_strings.dart
           lib/widgets/storage_analysis_view.dart
           lib/widgets/storage_analyzer_dialog.dart
+          lib/widgets/storage_scan_batch_dialog.dart
           lib/widgets/panel_listing_placeholder.dart
           lib/widgets/panel_source_selector.dart
           lib/widgets/panel_header.dart
@@ -107,8 +118,16 @@ jobs:
             test/storage_analyzer_origin_test.dart
             test/storage_scan_access_test.dart
             test/storage_scan_service_test.dart
+            test/storage_scan_summary_test.dart
+            test/storage_scan_batch_service_test.dart
+            test/storage_scan_batch_widget_test.dart
+            test/storage_scan_snapshot_store_test.dart
+            test/storage_scan_snapshot_widget_test.dart
+            test/storage_identity_cache_test.dart
+            test/file_collection_batch_storage_test.dart
             test/storage_scan_worker_test.dart
             test/storage_scan_native_test.dart
+            test/storage_scan_native_paths_test.dart
             test/storage_scan_virtual_test.dart
             test/panel_breadcrumb_test.dart
             test/panel_header_i18n_test.dart

@@ -60,6 +60,7 @@ import '../widgets/file_context_menu.dart' show showPropertiesDialog;
 import '../widgets/status_bar.dart';
 import '../widgets/duplicate_finder_dialog.dart';
 import '../widgets/storage_analyzer_dialog.dart';
+import '../widgets/storage_scan_batch_dialog.dart';
 import '../l10n/storage_analyzer_strings.dart';
 import '../widgets/key_management_dialog.dart';
 import '../widgets/multi_cloud_dialog.dart';
@@ -880,6 +881,10 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             label: StorageAnalyzerStrings(context).text('title'),
             onSelected: () => showStorageAnalyzerDialog(context, ref),
           ),
+          PlatformMenuItem(
+            label: StorageAnalyzerStrings(context).text('batchTitle'),
+            onSelected: () => showStorageScanBatchDialog(context, ref),
+          ),
         ],
       ),
       PlatformMenuItemGroup(
@@ -1025,6 +1030,10 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           PlatformMenuItem(
             label: StorageAnalyzerStrings(context).text('title'),
             onSelected: () => showStorageAnalyzerDialog(context, ref),
+          ),
+          PlatformMenuItem(
+            label: StorageAnalyzerStrings(context).text('batchTitle'),
+            onSelected: () => showStorageScanBatchDialog(context, ref),
           ),
           PlatformMenuItem(
             label: context.commanderTr("Multi-Cloud..."),

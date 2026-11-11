@@ -63,6 +63,23 @@ class StorageScanSnapshot {
   final StorageScanResult result;
 }
 
+/// A save may have published its index, but neither its acknowledgement nor
+/// recovery readback established the outcome. Candidate records are retained.
+class StorageScanSnapshotCommitUnconfirmed extends StateError {
+  StorageScanSnapshotCommitUnconfirmed({
+    required this.snapshotId,
+    required this.cause,
+    required this.recoveryCause,
+  }) : super(
+         'The saved scan outcome is unknown. '
+         'Check saved scan history before retrying.',
+       );
+
+  final String snapshotId;
+  final Object cause;
+  final Object recoveryCause;
+}
+
 /// Immutable paged metadata, published only by a small compare-and-swap index.
 /// A failed or interrupted save cannot replace an earlier saved scan. Native
 /// pages use disk records; browser pages use IndexedDB via the shared factory.
@@ -285,11 +302,21 @@ class StorageScanSnapshotStore {
           if (await _storage.compareAndSwap(indexKey, oldRaw, updated)) {
             return summary;
           }
-        } catch (_) {
+        } catch (cause) {
           // A thrown commit may already have succeeded. Never remove its pages
           // unless non-publication is certain, including when readback fails.
           commitUncertain = true;
-          final (_, current) = await _index();
+          late List<StorageScanSnapshotSummary> current;
+          try {
+            final (_, recovered) = await _index();
+            current = recovered;
+          } catch (recoveryCause) {
+            throw StorageScanSnapshotCommitUnconfirmed(
+              snapshotId: id,
+              cause: cause,
+              recoveryCause: recoveryCause,
+            );
+          }
           if (current.any((entry) => entry.id == id)) return summary;
           rethrow;
         }

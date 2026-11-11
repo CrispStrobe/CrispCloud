@@ -90,6 +90,9 @@ class _FailingStorage extends MemoryFileCollectionStorage {
   bool throwAfterCommit = false;
   bool blindAfterCommit = false;
   bool blind = false;
+  final commitFailure = StateError('Acknowledgement lost');
+  final recoveryFailure = StateError('Temporarily unavailable');
+  void Function()? afterCommit;
 
   @override
   Future<void> write(String key, String value) async {
@@ -99,7 +102,7 @@ class _FailingStorage extends MemoryFileCollectionStorage {
 
   @override
   Future<String?> read(String key, {required int maxBytes}) async {
-    if (blind) throw StateError('Temporarily unavailable');
+    if (blind) throw recoveryFailure;
     return super.read(key, maxBytes: maxBytes);
   }
 
@@ -112,7 +115,8 @@ class _FailingStorage extends MemoryFileCollectionStorage {
     final accepted = await super.compareAndSwap(key, expected, value);
     if (accepted && throwAfterCommit) {
       if (blindAfterCommit) blind = true;
-      throw StateError('Acknowledgement lost');
+      afterCommit?.call();
+      throw commitFailure;
     }
     return accepted;
   }
@@ -642,6 +646,55 @@ void main() {
     storage.blind = false;
     final saved = (await store.list()).single;
     expect((await store.load(saved.id)).result.root.fileCount, 2);
+  });
+
+  test('unconfirmed publication preserves its causes and candidate after cancellation', () async {
+    var cancelled = false;
+    final storage = _FailingStorage()
+      ..throwAfterCommit = true
+      ..blindAfterCommit = true
+      ..afterCommit = () => cancelled = true;
+    final store = StorageScanSnapshotStore(storage: storage);
+    Object? caught;
+    try {
+      await store.save(
+        result: _result(count: 1200),
+        storageId: 'opaque-source',
+        sourceLabel: 'Travel archive 📁',
+        isCancelled: () => cancelled,
+      );
+    } catch (error) {
+      caught = error;
+    }
+    expect(caught, isA<StorageScanSnapshotCommitUnconfirmed>());
+    final failure = caught as StorageScanSnapshotCommitUnconfirmed;
+    expect(failure, isA<StateError>());
+    expect(failure.cause, same(storage.commitFailure));
+    expect(failure.recoveryCause, same(storage.recoveryFailure));
+    expect(failure.message, contains('outcome is unknown'));
+    expect(
+      failure.message,
+      contains('Check saved scan history before retrying'),
+    );
+    expect(cancelled, isTrue);
+    expect(
+      storage.values.keys.where(
+        (key) => key.startsWith('storage-scan:${failure.snapshotId}:page:'),
+      ),
+      hasLength(3),
+    );
+    expect(
+      storage.values,
+      contains('storage-scan:${failure.snapshotId}:manifest-v1'),
+    );
+
+    storage.blind = false;
+    final reopened = StorageScanSnapshotStore(storage: storage);
+    final saved = (await reopened.list()).single;
+    expect(saved.id, failure.snapshotId);
+    final loaded = await reopened.load(saved.id);
+    expect(loaded.result.root.fileCount, 1201);
+    expect(loaded.result.root.bytes, 719400);
   });
 
   test(

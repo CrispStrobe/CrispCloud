@@ -142,6 +142,7 @@ class StorageAnalyzerDialog extends StatefulWidget {
     this.onReveal,
     this.service,
     this.snapshotStore,
+    this.initialSnapshot,
   });
 
   final FileOperationBackend? source;
@@ -154,6 +155,7 @@ class StorageAnalyzerDialog extends StatefulWidget {
   final Future<void> Function(StorageNode)? onReveal;
   final StorageScanService? service;
   final StorageScanSnapshotStore? snapshotStore;
+  final StorageScanSnapshotSummary? initialSnapshot;
 
   @override
   State<StorageAnalyzerDialog> createState() => _StorageAnalyzerDialogState();
@@ -188,7 +190,9 @@ class _StorageAnalyzerDialogState extends State<StorageAnalyzerDialog> {
         widget.storageId ??
         widget.source?.persistentStorageId ??
         'session:${const Uuid().v4()}';
-    if (widget.historyOnly || widget.source == null) {
+    if (widget.initialSnapshot != null) {
+      unawaited(_openSaved(widget.initialSnapshot!));
+    } else if (widget.historyOnly || widget.source == null) {
       _showHistory = true;
       unawaited(_loadHistory());
     } else {

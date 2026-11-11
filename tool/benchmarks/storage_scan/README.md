@@ -1,9 +1,9 @@
 # Directory scan and snapshot comparisons
 
-These opt-in Flutter benchmarks measure the real local scan adapter and native
-snapshot storage. They never read file contents. Use disposable synthetic
-fixtures, keep all benchmarks and compilers serialized, and compare revisions on
-the same host with the same fixtures and runtime.
+These opt-in Flutter benchmarks measure the real local scan adapter, native
+snapshot storage and collection import. They never read source-file contents.
+Use disposable synthetic fixtures, keep all benchmarks and compilers serialized,
+and compare revisions on the same host with the same fixtures and runtime.
 
 ## Fixtures and independent truth
 
@@ -85,6 +85,34 @@ are measured separately, including durable native storage operations. Each load
 must match the complete original snapshot fingerprint, including its metadata,
 subtree totals, scan timestamps, flags and diagnostics. The stable metadata
 fingerprint in the final record can also be compared across source revisions.
+
+## Native collection import
+
+Copy `test/file_collection_import_benchmark_test.dart` unchanged into baseline
+and final worktrees. It uses the existing public store API and the actual native
+storage implementation, without a wrapper that could hide the batch capability.
+
+```sh
+COLLECTION_IMPORT_BENCHMARK=1 \
+  flutter test --no-pub --concurrency=1 --tags benchmark --run-skipped \
+  test/file_collection_import_benchmark_test.dart
+```
+
+Keep `STORAGE_SCAN_BENCHMARK_REVISION` set to the source commit as above.
+`COLLECTION_IMPORT_BENCHMARK_RUNS` optionally changes the default five samples.
+The fixture is deterministic: 10,000 rows, two account identities with identical
+paths, Unicode names, microsecond timestamps, known/zero/unknown sizes, and
+selection marks spanning pages. No provider connection is opened.
+
+Each sample imports the fixture into a fresh temporary native store. Only
+`save` is timed, including row encoding, durable page writes and catalog
+publication. Fixture construction, store initialization, full reopen, checks
+and cleanup are outside timing. One warmup precedes the five measured samples.
+Each reopened result must preserve every serialized row, source identity and
+mark, and all 20 pages must respect the existing row/byte limits. The output
+includes exact metadata/selection digests, raw samples, median/range, runtime,
+source revision and rows per second. This measures bulk metadata ingestion,
+not copying source files or reading their contents.
 
 ## Scope of conclusions
 
