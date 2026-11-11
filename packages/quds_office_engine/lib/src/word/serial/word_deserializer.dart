@@ -91,6 +91,14 @@ class WordDeserializer {
         _readSectPr(reader, section, package, docUri);
         document.sections.add(section);
         section = WmlSection();
+      } else if (reader.depth == 3) {
+        section.blocks.add(
+          WmlOpaqueBlock(
+            xml: XmlDocument(
+              root: XmlDocument.readElement(reader),
+            ).toXmlString(declaration: false),
+          ),
+        );
       }
     }
     if (section.blocks.isNotEmpty || document.sections.isEmpty) {

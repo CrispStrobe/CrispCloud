@@ -66,7 +66,17 @@ Future<void> main(List<String> args) async {
   }
   final Uint8List output = await OfficeIsolateSave.word(doc);
   // Do not touch the output until every step and serialization has succeeded.
-  File(args.last).writeAsBytesSync(output);
+  final destination = File(args.last);
+  destination.parent.createSync(recursive: true);
+  final temporary = File(
+    '${destination.path}.tmp.$pid.${DateTime.now().microsecondsSinceEpoch}',
+  );
+  try {
+    temporary.writeAsBytesSync(output, flush: true);
+    temporary.renameSync(destination.path);
+  } finally {
+    if (temporary.existsSync()) temporary.deleteSync();
+  }
 }
 
 void applyStep(WmlDocument doc, Map<String, dynamic> step) {

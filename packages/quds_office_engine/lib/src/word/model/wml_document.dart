@@ -15,6 +15,13 @@ sealed class WmlBlock {
   WmlBlock();
 }
 
+/// Unmodeled body element retained as opaque XML in document order.
+/// Its package-owned relationships remain in the originating package.
+class WmlOpaqueBlock extends WmlBlock {
+  WmlOpaqueBlock({required this.xml});
+  final String xml;
+}
+
 /// Class WmlInline.
 sealed class WmlInline {
   /// WmlInline API.
@@ -904,6 +911,8 @@ class WmlDocument {
   static Iterable<WmlVisual> _visualsIn(List<WmlBlock> blocks) sync* {
     for (final WmlBlock block in blocks) {
       switch (block) {
+        case WmlOpaqueBlock():
+          break;
         case WmlVisual():
           yield block;
         case WmlFrame():
@@ -927,6 +936,8 @@ class WmlDocument {
   static Iterable<WmlParagraph> _paragraphsIn(List<WmlBlock> blocks) sync* {
     for (final WmlBlock block in blocks) {
       switch (block) {
+        case WmlOpaqueBlock():
+          break;
         case WmlParagraph():
           yield block;
         case WmlTable(:final List<WmlTableRow> rows):
@@ -958,6 +969,8 @@ class WmlDocument {
   static Iterable<WmlEquation> _equationsIn(List<WmlBlock> blocks) sync* {
     for (final WmlBlock block in blocks) {
       switch (block) {
+        case WmlOpaqueBlock():
+          break;
         case WmlEquation():
           yield block;
         case WmlTable(:final List<WmlTableRow> rows):

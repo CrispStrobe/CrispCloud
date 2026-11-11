@@ -5,6 +5,8 @@ abstract final class WmlClone {
   /// block API.
   static WmlBlock block(WmlBlock source) {
     switch (source) {
+      case WmlOpaqueBlock():
+        return WmlOpaqueBlock(xml: source.xml);
       case WmlParagraph():
         return paragraph(source);
       case WmlTable():
@@ -153,6 +155,8 @@ abstract final class WmlClone {
   ) {
     for (final WmlBlock block in blocks) {
       switch (block) {
+        case WmlOpaqueBlock():
+          break;
         case WmlParagraph():
           out.add(block);
         case WmlTable(:final List<WmlTableRow> rows):

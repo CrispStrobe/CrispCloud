@@ -169,7 +169,7 @@ void writeSlideMotion(XmlWriter w, PmlSlide slide) {
   if (!slide.transition.isNone) {
     w.writeStartElement('transition', prefix: 'p');
     w.writeAttribute('spd', _msToSpd(slide.transition.durationMs));
-    w.writeAttribute('dur', '${slide.transition.durationMs}');
+    w.writeAttribute('p14:dur', '${slide.transition.durationMs}');
     w.writeAttribute('advClick', slide.transition.advanceOnClick ? '1' : '0');
     if (slide.transition.advanceAfterMs != null) {
       w.writeAttribute('advTm', '${slide.transition.advanceAfterMs}');

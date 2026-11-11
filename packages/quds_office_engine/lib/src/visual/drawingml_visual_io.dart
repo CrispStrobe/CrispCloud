@@ -160,8 +160,9 @@ abstract final class DrawingmlVisualIo {
     required PictureAdjust adj,
     int offX = 0,
     int offY = 0,
+    String prefix = 'a',
   }) {
-    w.writeStartElement('xfrm', prefix: 'a');
+    w.writeStartElement('xfrm', prefix: prefix);
     final int rot = (adj.rotationDeg * 60000).round();
     if (rot != 0) {
       w.writeAttribute('rot', '$rot');

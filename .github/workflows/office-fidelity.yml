@@ -13,6 +13,9 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: office-fidelity-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   host-roundtrip:
     runs-on: ubuntu-latest

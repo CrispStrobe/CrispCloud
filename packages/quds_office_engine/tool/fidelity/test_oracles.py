@@ -4,6 +4,7 @@ import tempfile
 import unittest
 import xml.etree.ElementTree as ET
 from corpus import FIXTURES, read_zip, snapshot, validate, word_parts, write_zip
+from edge_oracle import verify_image
 
 class OracleTests(unittest.TestCase):
     def setUp(self):
@@ -17,6 +18,15 @@ class OracleTests(unittest.TestCase):
 
     def test_input_matches_reviewed_golden(self):
         self.assertEqual(json.loads(json.dumps(snapshot(self.parts))), json.loads((FIXTURES/'imported.json').read_text()))
+
+    def test_replacement_pixel_oracle_rejects_original_image(self):
+        with self.assertRaises(AssertionError):
+            verify_image(self.parts)
+        self.parts['word/media/source.png'] = read_zip(FIXTURES/'native.pptx')['ppt/media/image2.png']
+        verify_image(self.parts)
+        self.parts['word/document.xml'] = self.parts['word/document.xml'].replace(b'cx="457200"', b'cx="999"')
+        with self.assertRaises(AssertionError):
+            verify_image(self.parts)
 
     def test_unresolved_relationship_is_rejected(self):
         self.parts['word/document.xml'] = self.parts['word/document.xml'].replace(b'r:id="link"', b'r:id="missing"')

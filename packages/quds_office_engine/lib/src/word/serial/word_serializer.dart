@@ -203,6 +203,8 @@ class WordSerializer {
     Map<OfficeVisual, String> imageIds,
   ) {
     switch (block) {
+      case WmlOpaqueBlock():
+        XmlDocument.parse(block.xml).root!.writeTo(w);
       case WmlParagraph():
         _writeParagraph(w, block);
       case WmlTable():

@@ -7,8 +7,9 @@ Future<void> main() async {
     ..createSync(recursive: true);
   for (final bool edited in <bool>[false, true]) {
     WmlDocument doc = richNoteFixture();
-    if (!edited)
+    if (!edited) {
       File('${output.path}/source.docx').writeAsBytesSync(doc.package!.save());
+    }
     if (edited) {
       final WmlNote note = doc.footnotes.single;
       final WmlRun run = note.paragraphs.first.inlines

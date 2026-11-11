@@ -58,11 +58,22 @@ def verify_slides(parts,edited):
     root=E.fromstring(parts['ppt/presentation.xml'])
     assert root.find(P+'notesSz') is not None
     source=read_zip(Path('test/fixtures/fidelity/native.pptx'))
+    for name, data in parts.items():
+        if name.startswith('ppt/charts/') and name.endswith('.xml'):
+            chart = E.fromstring(data)
+            for tag in ('axId', 'crossAx'):
+                assert all(0 <= int(e.get('val')) <= 4294967295 for e in chart.iter(C+tag)), name
     for name in ['ppt/slideMasters/slideMaster1.xml','ppt/theme/theme1.xml']:
         assert parts[name]==source[name], f'Template changed: {name}'
     for index,s in enumerate(root.find(P+'sldIdLst')):
         owner=target(parts,'ppt/presentation.xml',rid=s.get(R+'id'))
         slide=E.fromstring(parts[owner])
+        transition=slide.find(P+'transition')
+        assert transition.get('dur') is None
+        assert int(transition.get('{http://schemas.microsoft.com/office/powerpoint/2010/main}dur')) > 0
+        for frame in slide.findall('.//'+P+'graphicFrame'):
+            assert frame.find(P+'xfrm') is not None
+            assert frame.find(A+'xfrm') is None
         text=''.join(t.text or '' for t in slide.findall('.//'+A+'t'))
         assert (f'Edited native slide {index+1}' if edited else f'Native slide {index+1}') in text
         image=target(parts,owner,rid=slide.find('.//'+A+'blip').get(R+'embed'))

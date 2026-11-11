@@ -583,9 +583,37 @@ class SlideSerializer {
     package
         .getPart(_presentationUri)!
         .writeText(_presentationXml(pres, slideRelIds, package));
+    _repairSignedChartAxisIds(package);
     pres.properties.writeToPackage(package);
     pres.package = package;
     return package;
+  }
+
+  // Some producers emit signed 32-bit axis IDs, although CT_UnsignedInt
+  // requires uint32. Repair retained source chart parts too, preserving the
+  // identity/reference mapping and all other chart markup.
+  static void _repairSignedChartAxisIds(OpcPackage package) {
+    for (final part in package.parts) {
+      if (part.contentType != OfficeContentTypes.drawingChart) continue;
+      final document = XmlDocument.parse(part.readText());
+      var changed = false;
+      void visit(XmlElement element) {
+        if (element.namespaceUri == OfficeNamespaces.c &&
+            (element.localName == 'axId' || element.localName == 'crossAx')) {
+          final value = int.tryParse(element.getAttribute('val') ?? '');
+          if (value != null && value >= -2147483648 && value < 0) {
+            element.setAttribute('val', '${value + 4294967296}');
+            changed = true;
+          }
+        }
+        for (final child in element.childElements) {
+          visit(child);
+        }
+      }
+
+      if (document.root != null) visit(document.root!);
+      if (changed) part.writeText(document.toXmlString());
+    }
   }
 
   static Map<PmlShape, String> _syncSlideVisuals(

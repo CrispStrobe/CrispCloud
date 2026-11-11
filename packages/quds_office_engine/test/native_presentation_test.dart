@@ -134,6 +134,7 @@ void main() {
           expect(slide.notes, 'Edited speaker note ${i + 1}');
           expect(slide.shapes.first.text, 'Edited native slide ${i + 1}');
           expect(slide.transition.kind, PmlTransitionKind.wipe);
+          expect(slide.transition.durationMs, 900);
           expect(slide.animations.single.preset, PmlAnimPreset.fade);
           expect(
             slide.shapes

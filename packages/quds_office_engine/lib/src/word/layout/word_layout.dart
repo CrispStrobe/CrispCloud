@@ -994,6 +994,8 @@ class WordLayoutEngine {
     }
     for (final WmlBlock block in section.blocks) {
       switch (block) {
+        case WmlOpaqueBlock():
+          break;
         case WmlParagraph():
           if (block.properties.pageBreakBefore) {
             flow.breakPage();
@@ -1106,6 +1108,8 @@ class WordLayoutEngine {
     var n = 0;
     for (final WmlBlock block in blocks) {
       switch (block) {
+        case WmlOpaqueBlock():
+          break;
         case WmlParagraph():
           n++;
         case WmlTable():
@@ -2079,6 +2083,8 @@ class WordLayoutEngine {
     final double innerW = math.max(12, frame.width - pad * 2);
     for (final WmlBlock block in frame.blocks) {
       switch (block) {
+        case WmlOpaqueBlock():
+          break;
         case WmlParagraph():
           final ({double y, int pageIndex}) laid = _layoutParagraph(
             block,
