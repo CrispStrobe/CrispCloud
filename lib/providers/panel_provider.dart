@@ -471,44 +471,33 @@ class PanelNotifier extends ChangeNotifier {
         storageReferenceForSource(_ref.read(panelSourceProvider(side)));
   }
 
-  /// The exact source of the current request/listing. A missing source remains
-  /// missing; another connected account must not supply its empty/error state.
-  PanelSource? get directorySource {
+  /// The captured session behind the current directory presentation, including
+  /// an in-flight request. Keep its original availability guard even when a
+  /// second live session has the same persisted storage identity.
+  ///
+  /// This is presentation state, not authorization for file operations; those
+  /// still require a verified listing through [captureCurrentOrigin].
+  PanelFileOrigin? get directoryPresentationOrigin {
     final storage = directoryStorage;
     if (storage == null) return null;
     if (_pendingTabStorage == null) {
       if (_verifiedListingGeneration == _listingGeneration &&
           _currentDirectoryOrigin != null) {
-        return _currentDirectoryOrigin!.source;
+        return _currentDirectoryOrigin;
       }
       if (_hasCurrentDirectoryRequest) {
-        return _directoryPresentationRequest!.origin.source;
+        return _directoryPresentationRequest!.origin;
       }
     }
-    return resolveStorageReference(
-      storage,
-      activeTab?.path ?? currentPath,
-    )?.source;
+    return resolveStorageReference(storage, activeTab?.path ?? currentPath);
   }
 
-  bool get directorySourceAvailable {
-    final storage = directoryStorage;
-    if (storage == null) return false;
-    if (_pendingTabStorage == null) {
-      if (_verifiedListingGeneration == _listingGeneration &&
-          _currentDirectoryOrigin != null) {
-        return _currentDirectoryOrigin!.isCurrent;
-      }
-      if (_hasCurrentDirectoryRequest) {
-        return _directoryPresentationRequest!.origin.isCurrent;
-      }
-    }
-    return resolveStorageReference(
-          storage,
-          activeTab?.path ?? currentPath,
-        )?.isCurrent ==
-        true;
-  }
+  /// The exact source of the current request/listing. A missing source remains
+  /// missing; another connected account must not supply its empty/error state.
+  PanelSource? get directorySource => directoryPresentationOrigin?.source;
+
+  bool get directorySourceAvailable =>
+      directoryPresentationOrigin?.isCurrent == true;
 
   bool get hasVerifiedDirectoryListing =>
       !isInArchive &&
