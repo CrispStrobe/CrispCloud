@@ -116,18 +116,13 @@ Widget _app(
   localizationsDelegates: AppLocalizations.localizationsDelegates,
   supportedLocales: AppLocalizations.supportedLocales,
   builder: (context, child) => MediaQuery(
-    data: MediaQuery.of(context).copyWith(
-      textScaler: TextScaler.linear(scale),
-    ),
+    data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(scale)),
     child: child!,
   ),
   home: Scaffold(body: child),
 );
 
-void _viewport(
-  WidgetTester tester, [
-  Size size = const Size(1100, 900),
-]) {
+void _viewport(WidgetTester tester, [Size size = const Size(1100, 900)]) {
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = size;
   addTearDown(tester.view.resetDevicePixelRatio);
@@ -137,56 +132,51 @@ void _viewport(
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test(
-    'verified mixed-source result folders keep their captured roots after navigation',
-    () async {
-      final harness = await WorkspaceTestHarness.create();
-      addTearDown(harness.dispose);
-      final panel = harness.container.read(panelProvider(PanelSide.remote));
-      final original = panel.files!.firstWhere((file) => file.isFolder);
-      final firstOrigin = panel.originForFile(original)!;
-      final other = _Cloud('other')
-        ..put('/one/other.bin', List.filled(19, 1));
-      harness.container.read(multiCloudProvider).addConnection(
-        id: 'other',
-        label: 'Other original',
-        provider: CloudProvider.s3,
-        client: other,
-      );
-      final otherOrigin = panel.resolveStorageReference(
-        storageReferenceForClient(other),
-        '/',
-      )!;
-      final otherRow = FileItem(name: 'one', path: '/one', isFolder: true);
-      panel.showSearchResults(
-        [original, otherRow],
-        originForFile: (file) =>
-            identical(file, original) ? firstOrigin : otherOrigin,
-      );
-      panel.selectVisibleItems(panel.files!);
-      final roots = captureMarkedStorageScanRoots(
-        panel,
-        harness.container.read(localFileServiceProvider),
-      );
-      expect(roots, hasLength(2));
-      expect(roots.map((root) => root.rootPath), ['/one', '/one']);
-      expect(roots.map((root) => root.storage.id).toSet(), hasLength(2));
-      harness.cloud.put('/elsewhere/large.bin', List.filled(700, 1));
-      await panel.navigateToPath('/elsewhere', origin: firstOrigin);
-      final store = StorageScanSnapshotStore(
-        storage: MemoryFileCollectionStorage(),
-      );
-      final batch = StorageScanBatchService(roots: roots, snapshots: store);
-      addTearDown(batch.dispose);
-      await batch.start();
-      expect(batch.jobs.map((job) => job.snapshot!.bytes), [3, 19]);
-      expect(panel.currentPath, '/elsewhere');
-      expect(
-        batch.jobs.map((job) => job.snapshot!.rootPath),
-        ['/one', '/one'],
-      );
-    },
-  );
+  test('verified mixed-source result folders keep their captured roots after navigation', () async {
+    final harness = await WorkspaceTestHarness.create();
+    addTearDown(harness.dispose);
+    final panel = harness.container.read(panelProvider(PanelSide.remote));
+    final original = panel.files!.firstWhere((file) => file.isFolder);
+    final firstOrigin = panel.originForFile(original)!;
+    final other = _Cloud('other')..put('/one/other.bin', List.filled(19, 1));
+    harness.container
+        .read(multiCloudProvider)
+        .addConnection(
+          id: 'other',
+          label: 'Other original',
+          provider: CloudProvider.s3,
+          client: other,
+        );
+    final otherOrigin = panel.resolveStorageReference(
+      storageReferenceForClient(other),
+      '/',
+    )!;
+    final otherRow = FileItem(name: 'one', path: '/one', isFolder: true);
+    panel.showSearchResults(
+      [original, otherRow],
+      originForFile: (file) =>
+          identical(file, original) ? firstOrigin : otherOrigin,
+    );
+    panel.selectVisibleItems(panel.files!);
+    final roots = captureMarkedStorageScanRoots(
+      panel,
+      harness.container.read(localFileServiceProvider),
+    );
+    expect(roots, hasLength(2));
+    expect(roots.map((root) => root.rootPath), ['/one', '/one']);
+    expect(roots.map((root) => root.storage.id).toSet(), hasLength(2));
+    harness.cloud.put('/elsewhere/large.bin', List.filled(700, 1));
+    await panel.navigateToPath('/elsewhere', origin: firstOrigin);
+    final store = StorageScanSnapshotStore(
+      storage: MemoryFileCollectionStorage(),
+    );
+    final batch = StorageScanBatchService(roots: roots, snapshots: store);
+    addTearDown(batch.dispose);
+    await batch.start();
+    expect(batch.jobs.map((job) => job.snapshot!.bytes), [3, 19]);
+    expect(panel.currentPath, '/elsewhere');
+    expect(batch.jobs.map((job) => job.snapshot!.rootPath), ['/one', '/one']);
+  });
 
   test(
     'unverified result rows explain unavailability without source fallback',
@@ -215,66 +205,58 @@ void main() {
     },
   );
 
-  test(
-    'paged collection marks outside the verified window receive an explicit explanation',
-    () async {
-      SharedPreferences.setMockInitialValues({});
-      final cloud = _Cloud('collection');
-      for (var i = 0; i < 501; i++) {
-        cloud.put('/folder-${i.toString().padLeft(4, '0')}/file.bin', [1]);
-      }
-      final local = _Local();
-      final store = FileCollectionStore(
-        storage: MemoryFileCollectionStorage(),
-      );
-      final container = ProviderContainer(
-        overrides: [
-          authProvider.overrideWith((_) => WorkspaceTestAuth(cloud)),
-          localFileServiceProvider.overrideWithValue(local),
-          fileCollectionStoreProvider.overrideWith((_) => store),
-        ],
-      );
-      addTearDown(container.dispose);
-      final panel = container.read(panelProvider(PanelSide.remote));
-      await Future<void>.delayed(Duration.zero);
-      await panel.refresh();
-      final entries = [
-        for (final file in panel.files!)
-          if (file.isFolder && file.name != '..')
-            FileCollectionService.capture(
-              file,
-              storageReferenceForClient(cloud),
+  test('paged collection marks outside the verified window receive an explicit explanation', () async {
+    SharedPreferences.setMockInitialValues({});
+    final cloud = _Cloud('collection');
+    for (var i = 0; i < 501; i++) {
+      cloud.put('/folder-${i.toString().padLeft(4, '0')}/file.bin', [1]);
+    }
+    final local = _Local();
+    final store = FileCollectionStore(storage: MemoryFileCollectionStorage());
+    final container = ProviderContainer(
+      overrides: [
+        authProvider.overrideWith((_) => WorkspaceTestAuth(cloud)),
+        localFileServiceProvider.overrideWithValue(local),
+        fileCollectionStoreProvider.overrideWith((_) => store),
+      ],
+    );
+    addTearDown(container.dispose);
+    final panel = container.read(panelProvider(PanelSide.remote));
+    await Future<void>.delayed(Duration.zero);
+    await panel.refresh();
+    final entries = [
+      for (final file in panel.files!)
+        if (file.isFolder && file.name != '..')
+          FileCollectionService.capture(file, storageReferenceForClient(cloud)),
+    ];
+    await store.save(
+      FileCollection(id: 'folders', name: 'Folders', entries: entries),
+    );
+    await panel.openCollection('folders');
+    final selected = panel.files!.first;
+    panel.toggleSelection(selected);
+    expect(
+      captureMarkedStorageScanRoots(panel, local).single.rootPath,
+      selected.path,
+    );
+    await panel.loadCollectionPage(1);
+    expect(panel.selection.single.path, selected.path);
+    expect(panel.originForFile(panel.selection.single), isNull);
+    final oldReads = cloud.reads.length;
+    expect(
+      () => captureMarkedStorageScanRoots(panel, local),
+      throwsA(
+        isA<StorageScanBatchCaptureFailure>()
+            .having((error) => error.key, 'key', 'batchUnverified')
+            .having(
+              (error) => error.values['path'],
+              'original path',
+              selected.path,
             ),
-      ];
-      await store.save(
-        FileCollection(id: 'folders', name: 'Folders', entries: entries),
-      );
-      await panel.openCollection('folders');
-      final selected = panel.files!.first;
-      panel.toggleSelection(selected);
-      expect(
-        captureMarkedStorageScanRoots(panel, local).single.rootPath,
-        selected.path,
-      );
-      await panel.loadCollectionPage(1);
-      expect(panel.selection.single.path, selected.path);
-      expect(panel.originForFile(panel.selection.single), isNull);
-      final oldReads = cloud.reads.length;
-      expect(
-        () => captureMarkedStorageScanRoots(panel, local),
-        throwsA(
-          isA<StorageScanBatchCaptureFailure>()
-              .having((error) => error.key, 'key', 'batchUnverified')
-              .having(
-                (error) => error.values['path'],
-                'original path',
-                selected.path,
-              ),
-        ),
-      );
-      expect(cloud.reads.length, oldReads);
-    },
-  );
+      ),
+    );
+    expect(cloud.reads.length, oldReads);
+  });
 
   testWidgets(
     'batch review keeps the captured session label when another session shares its account',
@@ -289,12 +271,14 @@ void main() {
         storageReferenceForClient(other),
         storageReferenceForClient(harness.cloud),
       );
-      harness.container.read(multiCloudProvider).addConnection(
-        id: 'duplicate-session',
-        label: 'Other session',
-        provider: CloudProvider.s3,
-        client: other,
-      );
+      harness.container
+          .read(multiCloudProvider)
+          .addConnection(
+            id: 'duplicate-session',
+            label: 'Other session',
+            provider: CloudProvider.s3,
+            client: other,
+          );
       await panel.refresh();
       final selected = panel.files!.firstWhere((file) => file.isFolder);
       final origin = panel.originForFile(selected)!;
@@ -304,10 +288,7 @@ void main() {
         harness.container.read(localFileServiceProvider),
       ).single;
       final account = origin.storageReference.accountKey;
-      expect(
-        captured.sourceLabel,
-        'Memory · ${account.substring(0, 8)}',
-      );
+      expect(captured.sourceLabel, 'Memory · ${account.substring(0, 8)}');
       expect(captured.storage.id, origin.storageId);
       await tester.pumpWidget(
         UncontrolledProviderScope(
@@ -324,9 +305,9 @@ void main() {
       );
       await tester.tap(find.text('Review marked folders'));
       await tester.pumpAndSettle();
-      final batch = tester.widget<StorageScanBatchDialog>(
-        find.byType(StorageScanBatchDialog),
-      ).batch;
+      final batch = tester
+          .widget<StorageScanBatchDialog>(find.byType(StorageScanBatchDialog))
+          .batch;
       expect(batch.hasStarted, isFalse);
       expect(
         batch.jobs.single.root.sourceLabel,
@@ -380,9 +361,9 @@ void main() {
       final secondReads = second.reads.length;
       await tester.tap(find.byKey(const ValueKey('scan-batch-open-0')));
       await tester.pumpAndSettle();
-      final report = tester.widget<StorageAnalysisView>(
-        find.byType(StorageAnalysisView),
-      ).analysis;
+      final report = tester
+          .widget<StorageAnalysisView>(find.byType(StorageAnalysisView))
+          .analysis;
       expect(report.root.bytes, 3);
       expect(report.root.children.single.name, 'first.bin');
       expect(find.text('Show in file panel'), findsNothing);
@@ -393,35 +374,34 @@ void main() {
     },
   );
 
-  testWidgets(
-    'Stop shows unsaved state after a blocked scan releases',
-    (tester) async {
-      _viewport(tester);
-      final cloud = _Cloud('Original account')
-        ..put('/data/late.bin', List.filled(99, 1))
-        ..heldPath = '/data';
-      final store = StorageScanSnapshotStore(
-        storage: MemoryFileCollectionStorage(),
-      );
-      final batch = StorageScanBatchService(
-        roots: [_root(cloud, '/data')],
-        snapshots: store,
-      );
-      await tester.pumpWidget(_app(StorageScanBatchDialog(batch: batch)));
-      await tester.tap(find.byKey(const ValueKey('scan-batch-start')));
-      await tester.pump();
-      expect(cloud.entered.isCompleted, isTrue);
-      await tester.tap(find.byKey(const ValueKey('scan-batch-stop')));
-      await tester.pump();
-      expect(batch.isStopping, isTrue);
-      cloud.release.complete();
-      await tester.pumpAndSettle();
-      expect(find.text('Stopped · Report not saved'), findsOneWidget);
-      expect(find.byKey(const ValueKey('scan-batch-open-0')), findsNothing);
-      expect(await store.list(), isEmpty);
-      expect(tester.takeException(), isNull);
-    },
-  );
+  testWidgets('Stop shows unsaved state after a blocked scan releases', (
+    tester,
+  ) async {
+    _viewport(tester);
+    final cloud = _Cloud('Original account')
+      ..put('/data/late.bin', List.filled(99, 1))
+      ..heldPath = '/data';
+    final store = StorageScanSnapshotStore(
+      storage: MemoryFileCollectionStorage(),
+    );
+    final batch = StorageScanBatchService(
+      roots: [_root(cloud, '/data')],
+      snapshots: store,
+    );
+    await tester.pumpWidget(_app(StorageScanBatchDialog(batch: batch)));
+    await tester.tap(find.byKey(const ValueKey('scan-batch-start')));
+    await tester.pump();
+    expect(cloud.entered.isCompleted, isTrue);
+    await tester.tap(find.byKey(const ValueKey('scan-batch-stop')));
+    await tester.pump();
+    expect(batch.isStopping, isTrue);
+    cloud.release.complete();
+    await tester.pumpAndSettle();
+    expect(find.text('Stopped · Report not saved'), findsOneWidget);
+    expect(find.byKey(const ValueKey('scan-batch-open-0')), findsNothing);
+    expect(await store.list(), isEmpty);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets(
     'closing a running batch cancels late data without losing committed history',
@@ -495,9 +475,7 @@ void main() {
       expect(tester.takeException(), isNull);
       cloud.current = false;
       final reads = cloud.reads.length;
-      final historyButton = find.byKey(
-        const ValueKey('scan-batch-history-0'),
-      );
+      final historyButton = find.byKey(const ValueKey('scan-batch-history-0'));
       await tester.ensureVisible(historyButton);
       await tester.pumpAndSettle();
       expect(historyButton.hitTestable(), findsOneWidget);
@@ -505,9 +483,9 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.widgetWithText(ListTile, 'Original account'));
       await tester.pumpAndSettle();
-      final report = tester.widget<StorageAnalysisView>(
-        find.byType(StorageAnalysisView),
-      ).analysis;
+      final report = tester
+          .widget<StorageAnalysisView>(find.byType(StorageAnalysisView))
+          .analysis;
       expect(report.root.bytes, 13);
       expect(report.root.children.single.path, '/data/file');
       expect(cloud.reads.length, reads);

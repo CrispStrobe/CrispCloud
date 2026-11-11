@@ -39,19 +39,16 @@ List<StorageScanBatchRoot> captureMarkedStorageScanRoots(
   String Function(PanelFileOrigin)? sourceLabel,
 }) {
   final folders = panel.selection
-      .where(
-        (file) => file.isFolder && file.name != '..' && file.name != '.',
-      )
+      .where((file) => file.isFolder && file.name != '..' && file.name != '.')
       .take(StorageScanBatchService.maxRoots + 1)
       .toList(growable: false);
   if (folders.isEmpty) {
     throw const StorageScanBatchCaptureFailure('batchNoFolders');
   }
   if (folders.length > StorageScanBatchService.maxRoots) {
-    throw const StorageScanBatchCaptureFailure(
-      'batchRootLimit',
-      {'count': StorageScanBatchService.maxRoots},
-    );
+    throw const StorageScanBatchCaptureFailure('batchRootLimit', {
+      'count': StorageScanBatchService.maxRoots,
+    });
   }
   final roots = <StorageScanBatchRoot>[];
   for (final folder in folders) {
@@ -60,19 +57,17 @@ List<StorageScanBatchRoot> captureMarkedStorageScanRoots(
     if (origin == null &&
         panel.isPagedCollection &&
         !(panel.files?.any((file) => identical(file, folder)) ?? false)) {
-      throw StorageScanBatchCaptureFailure(
-        'batchUnverified',
-        {'path': path ?? folder.name},
-      );
+      throw StorageScanBatchCaptureFailure('batchUnverified', {
+        'path': path ?? folder.name,
+      });
     }
     if (origin?.isCurrent != true ||
         path == null ||
         path.isEmpty ||
         folder.isSymlink == true) {
-      throw StorageScanBatchCaptureFailure(
-        'batchUnavailable',
-        {'path': path ?? folder.name},
-      );
+      throw StorageScanBatchCaptureFailure('batchUnavailable', {
+        'path': path ?? folder.name,
+      });
     }
     try {
       final source = origin!.source;
@@ -87,7 +82,8 @@ List<StorageScanBatchRoot> captureMarkedStorageScanRoots(
           ),
           rootPath: path,
           storage: origin.storageReference,
-          sourceLabel: sourceLabel?.call(origin) ?? _capturedSourceLabel(origin),
+          sourceLabel:
+              sourceLabel?.call(origin) ?? _capturedSourceLabel(origin),
           // Remote clients may share mutable sessions between listings. Local
           // scans already own independent scoped workers/snapshot readers.
           serialReadKey: source is RemotePanelSource ? source.client : null,
@@ -97,10 +93,7 @@ List<StorageScanBatchRoot> captureMarkedStorageScanRoots(
         ),
       );
     } catch (_) {
-      throw StorageScanBatchCaptureFailure(
-        'batchUnavailable',
-        {'path': path},
-      );
+      throw StorageScanBatchCaptureFailure('batchUnavailable', {'path': path});
     }
   }
   return List.unmodifiable(roots);
@@ -157,8 +150,7 @@ class StorageScanBatchDialog extends StatefulWidget {
   final StorageScanBatchService batch;
 
   @override
-  State<StorageScanBatchDialog> createState() =>
-      _StorageScanBatchDialogState();
+  State<StorageScanBatchDialog> createState() => _StorageScanBatchDialogState();
 }
 
 class _StorageScanBatchDialogState extends State<StorageScanBatchDialog> {
@@ -185,21 +177,19 @@ class _StorageScanBatchDialogState extends State<StorageScanBatchDialog> {
     if (job.phase == StorageScanBatchPhase.partial) {
       return '${strings.text('scanSaved')} · ${strings.text('partial')}';
     }
-    return strings.text(
-      switch (job.phase) {
-        StorageScanBatchPhase.ready => 'batchReady',
-        StorageScanBatchPhase.queued => 'queued',
-        StorageScanBatchPhase.scanning => 'scanning',
-        StorageScanBatchPhase.saving => 'savingScan',
-        StorageScanBatchPhase.stopping => 'stopping',
-        StorageScanBatchPhase.saved => 'scanSaved',
-        StorageScanBatchPhase.partial => 'partial',
-        StorageScanBatchPhase.cancelled => 'batchStopped',
-        StorageScanBatchPhase.failed => 'failed',
-        StorageScanBatchPhase.sourceChanged => 'sourceChanged',
-        StorageScanBatchPhase.unconfirmed => 'batchUnconfirmed',
-      },
-    );
+    return strings.text(switch (job.phase) {
+      StorageScanBatchPhase.ready => 'batchReady',
+      StorageScanBatchPhase.queued => 'queued',
+      StorageScanBatchPhase.scanning => 'scanning',
+      StorageScanBatchPhase.saving => 'savingScan',
+      StorageScanBatchPhase.stopping => 'stopping',
+      StorageScanBatchPhase.saved => 'scanSaved',
+      StorageScanBatchPhase.partial => 'partial',
+      StorageScanBatchPhase.cancelled => 'batchStopped',
+      StorageScanBatchPhase.failed => 'failed',
+      StorageScanBatchPhase.sourceChanged => 'sourceChanged',
+      StorageScanBatchPhase.unconfirmed => 'batchUnconfirmed',
+    });
   }
 
   Future<void> _openSaved(StorageScanBatchJob job) async {

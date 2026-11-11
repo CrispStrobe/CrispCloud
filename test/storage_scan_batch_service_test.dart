@@ -16,11 +16,8 @@ FileItem _file(String path, int? size) => FileItem(
   size: size,
 );
 
-FileItem _folder(String path) => FileItem(
-  name: p.posix.basename(path),
-  path: path,
-  isFolder: true,
-);
+FileItem _folder(String path) =>
+    FileItem(name: p.posix.basename(path), path: path, isFolder: true);
 
 class _Source implements StorageScanSource {
   _Source(this.account, this.tree);
@@ -83,21 +80,18 @@ class _Source implements StorageScanSource {
   }
 }
 
-StorageScanBatchRoot _root(
-  _Source source,
-  String path, {
-  Object? serialKey,
-}) => StorageScanBatchRoot(
-  source: source,
-  rootPath: path,
-  storage: StorageReference(
-    kind: 'remote',
-    provider: 'memory',
-    accountKey: source.account,
-  ),
-  sourceLabel: source.account,
-  serialReadKey: serialKey,
-);
+StorageScanBatchRoot _root(_Source source, String path, {Object? serialKey}) =>
+    StorageScanBatchRoot(
+      source: source,
+      rootPath: path,
+      storage: StorageReference(
+        kind: 'remote',
+        provider: 'memory',
+        accountKey: source.account,
+      ),
+      sourceLabel: source.account,
+      serialReadKey: serialKey,
+    );
 
 class _GatedStore extends StorageScanSnapshotStore {
   _GatedStore({this.holdFirst = false, this.failPath})
@@ -192,10 +186,7 @@ class _UnconfirmedCommit extends MemoryFileCollectionStorage {
   }
 }
 
-Future<void> _until(
-  StorageScanBatchService batch,
-  bool Function() ready,
-) {
+Future<void> _until(StorageScanBatchService batch, bool Function() ready) {
   if (ready()) return Future.value();
   final done = Completer<void>();
   void changed() {
@@ -203,6 +194,7 @@ Future<void> _until(
     batch.removeListener(changed);
     done.complete();
   }
+
   batch.addListener(changed);
   return done.future;
 }
@@ -211,10 +203,7 @@ void main() {
   test('review accepts at most 32 captured roots and starts no reads', () {
     final source = _Source('original', {'/one': []});
     final root = _root(source, '/one');
-    expect(
-      () => StorageScanBatchService(roots: []),
-      throwsArgumentError,
-    );
+    expect(() => StorageScanBatchService(roots: []), throwsArgumentError);
     expect(
       () => StorageScanBatchService(roots: List.filled(33, root)),
       throwsArgumentError,
@@ -226,6 +215,7 @@ void main() {
         yield root;
       }
     }
+
     expect(
       () => StorageScanBatchService(roots: largeInput()),
       throwsArgumentError,
@@ -242,48 +232,51 @@ void main() {
     expect(source.reads, isEmpty);
   });
 
-  test('two slots include pending saves and all saves are serialized', () async {
-    final first = _Source('first', {
-      '/one': [_file('/one/a', 1)],
-    });
-    final second = _Source('second', {
-      '/two': [_file('/two/b', 2)],
-    });
-    final third = _Source('third', {
-      '/three': [_file('/three/c', 3)],
-    });
-    final secondEntered = second.hold('/two');
-    final store = _GatedStore(holdFirst: true);
-    final batch = StorageScanBatchService(
-      roots: [
-        _root(first, '/one'),
-        _root(second, '/two'),
-        _root(third, '/three'),
-      ],
-      snapshots: store,
-    );
-    addTearDown(batch.dispose);
-    final done = batch.start();
-    await secondEntered;
-    await store.firstEntered.future;
-    second.release();
-    await _until(
-      batch,
-      () => batch.jobs[1].phase == StorageScanBatchPhase.saving,
-    );
-    expect(store.calls, 1);
-    expect(third.stats, isEmpty);
-    expect(third.reads, isEmpty);
-    store.firstRelease.complete();
-    await done;
-    expect(store.calls, 3);
-    expect(store.maxActive, 1);
-    expect(await store.list(), hasLength(3));
-    expect(
-      batch.jobs.map((job) => job.phase),
-      everyElement(StorageScanBatchPhase.saved),
-    );
-  });
+  test(
+    'two slots include pending saves and all saves are serialized',
+    () async {
+      final first = _Source('first', {
+        '/one': [_file('/one/a', 1)],
+      });
+      final second = _Source('second', {
+        '/two': [_file('/two/b', 2)],
+      });
+      final third = _Source('third', {
+        '/three': [_file('/three/c', 3)],
+      });
+      final secondEntered = second.hold('/two');
+      final store = _GatedStore(holdFirst: true);
+      final batch = StorageScanBatchService(
+        roots: [
+          _root(first, '/one'),
+          _root(second, '/two'),
+          _root(third, '/three'),
+        ],
+        snapshots: store,
+      );
+      addTearDown(batch.dispose);
+      final done = batch.start();
+      await secondEntered;
+      await store.firstEntered.future;
+      second.release();
+      await _until(
+        batch,
+        () => batch.jobs[1].phase == StorageScanBatchPhase.saving,
+      );
+      expect(store.calls, 1);
+      expect(third.stats, isEmpty);
+      expect(third.reads, isEmpty);
+      store.firstRelease.complete();
+      await done;
+      expect(store.calls, 3);
+      expect(store.maxActive, 1);
+      expect(await store.list(), hasLength(3));
+      expect(
+        batch.jobs.map((job) => job.phase),
+        everyElement(StorageScanBatchPhase.saved),
+      );
+    },
+  );
 
   test(
     'roots using one stateful client never overlap directory reads',
@@ -366,48 +359,45 @@ void main() {
     },
   );
 
-  test(
-    'stop retains measured totals, discards late rows and never starts queued roots',
-    () async {
-      final first = _Source('first', {
-        '/one': [_file('/one/known', 5), _folder('/one/blocked')],
-        '/one/blocked': [_file('/one/blocked/late', 900)],
-      });
-      final second = _Source('second', {
-        '/two': [_file('/two/late', 100)],
-      });
-      final third = _Source('third', {
-        '/three': [_file('/three/never', 99)],
-      });
-      final firstEntered = first.hold('/one/blocked');
-      final secondEntered = second.hold('/two');
-      final store = _GatedStore();
-      final batch = StorageScanBatchService(
-        roots: [
-          _root(first, '/one'),
-          _root(second, '/two'),
-          _root(third, '/three'),
-        ],
-        snapshots: store,
-      );
-      addTearDown(batch.dispose);
-      final done = batch.start();
-      await Future.wait([firstEntered, secondEntered]);
-      batch.cancel();
-      expect(batch.jobs[0].phase, StorageScanBatchPhase.stopping);
-      expect(batch.jobs[2].phase, StorageScanBatchPhase.cancelled);
-      first.release();
-      second.release();
-      await done;
-      expect(batch.jobs[0].summary!.bytes, 5);
-      expect(batch.jobs[0].summary!.isComplete, isFalse);
-      expect(batch.jobs[1].summary!.bytes, 0);
-      expect(third.stats, isEmpty);
-      expect(third.reads, isEmpty);
-      expect(store.calls, 0);
-      expect(await store.list(), isEmpty);
-    },
-  );
+  test('stop retains measured totals, discards late rows and never starts queued roots', () async {
+    final first = _Source('first', {
+      '/one': [_file('/one/known', 5), _folder('/one/blocked')],
+      '/one/blocked': [_file('/one/blocked/late', 900)],
+    });
+    final second = _Source('second', {
+      '/two': [_file('/two/late', 100)],
+    });
+    final third = _Source('third', {
+      '/three': [_file('/three/never', 99)],
+    });
+    final firstEntered = first.hold('/one/blocked');
+    final secondEntered = second.hold('/two');
+    final store = _GatedStore();
+    final batch = StorageScanBatchService(
+      roots: [
+        _root(first, '/one'),
+        _root(second, '/two'),
+        _root(third, '/three'),
+      ],
+      snapshots: store,
+    );
+    addTearDown(batch.dispose);
+    final done = batch.start();
+    await Future.wait([firstEntered, secondEntered]);
+    batch.cancel();
+    expect(batch.jobs[0].phase, StorageScanBatchPhase.stopping);
+    expect(batch.jobs[2].phase, StorageScanBatchPhase.cancelled);
+    first.release();
+    second.release();
+    await done;
+    expect(batch.jobs[0].summary!.bytes, 5);
+    expect(batch.jobs[0].summary!.isComplete, isFalse);
+    expect(batch.jobs[1].summary!.bytes, 0);
+    expect(third.stats, isEmpty);
+    expect(third.reads, isEmpty);
+    expect(store.calls, 0);
+    expect(await store.list(), isEmpty);
+  });
 
   test(
     'source loss during a read rejects late data and other roots continue',
@@ -521,37 +511,34 @@ void main() {
     },
   );
 
-  test(
-    'Stop cannot turn an unconfirmed commit into a claim that nothing was saved',
-    () async {
-      final memory = _UnconfirmedCommit();
-      final store = StorageScanSnapshotStore(storage: memory);
-      final source = _Source('original', {
-        '/data': [_file('/data/file', 13)],
-      });
-      final batch = StorageScanBatchService(
-        roots: [_root(source, '/data')],
-        snapshots: store,
-      );
-      addTearDown(batch.dispose);
-      final done = batch.start();
-      await memory.committed.future;
-      batch.cancel();
-      memory.acknowledge.complete();
-      await done;
-      expect(batch.jobs.single.phase, StorageScanBatchPhase.unconfirmed);
-      expect(batch.jobs.single.snapshot, isNull);
-      expect(batch.jobs.single.summary!.bytes, 13);
-      expect(batch.jobs.single.error, isNull);
-      await expectLater(store.list(), throwsStateError);
-      memory.indexUnavailable = false;
-      final history = await store.list();
-      expect(history, hasLength(1));
-      expect(history.single.storageId, 'remote:memory:original');
-      final report = await store.load(history.single.id);
-      expect(report.result.root.children.single.path, '/data/file');
-      expect(report.result.root.bytes, 13);
-      expect(report.result.isComplete, isTrue);
-    },
-  );
+  test('Stop cannot turn an unconfirmed commit into a claim that nothing was saved', () async {
+    final memory = _UnconfirmedCommit();
+    final store = StorageScanSnapshotStore(storage: memory);
+    final source = _Source('original', {
+      '/data': [_file('/data/file', 13)],
+    });
+    final batch = StorageScanBatchService(
+      roots: [_root(source, '/data')],
+      snapshots: store,
+    );
+    addTearDown(batch.dispose);
+    final done = batch.start();
+    await memory.committed.future;
+    batch.cancel();
+    memory.acknowledge.complete();
+    await done;
+    expect(batch.jobs.single.phase, StorageScanBatchPhase.unconfirmed);
+    expect(batch.jobs.single.snapshot, isNull);
+    expect(batch.jobs.single.summary!.bytes, 13);
+    expect(batch.jobs.single.error, isNull);
+    await expectLater(store.list(), throwsStateError);
+    memory.indexUnavailable = false;
+    final history = await store.list();
+    expect(history, hasLength(1));
+    expect(history.single.storageId, 'remote:memory:original');
+    final report = await store.load(history.single.id);
+    expect(report.result.root.children.single.path, '/data/file');
+    expect(report.result.root.bytes, 13);
+    expect(report.result.isComplete, isTrue);
+  });
 }

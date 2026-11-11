@@ -52,7 +52,11 @@ FileCollection _fixture() {
             uuid: objectId,
             storageId: source.id,
             isFolder: false,
-            size: index % 97 == 0 ? null : index % 19 == 0 ? 0 : index * 17,
+            size: index % 97 == 0
+                ? null
+                : index % 19 == 0
+                ? 0
+                : index * 17,
             updatedAt: DateTime.fromMicrosecondsSinceEpoch(
               modified + index * 1001,
               isUtc: true,
@@ -110,7 +114,9 @@ void main() {
 
       // Construct and encode independent expected metadata before timing.
       final fixture = _fixture();
-      final expectedRows = [for (final entry in fixture.entries) entry.toJson()];
+      final expectedRows = [
+        for (final entry in fixture.entries) entry.toJson(),
+      ];
       final expectedKeys = fixture.entries.map((entry) => entry.key).toSet();
       final expectedDigest = _digest(expectedRows, fixture.selectedKeys);
       expect(fixture.entries, hasLength(_rowCount));
@@ -157,25 +163,44 @@ void main() {
             expect(manifest.summary.unavailableCount, 0);
             expect(manifest.pages, hasLength(20));
             for (final page in manifest.pages) {
-              expect(page.count, inInclusiveRange(1, FileCollectionStore.pageEntryLimit));
-              expect(page.bytes, inInclusiveRange(1, FileCollectionStore.pageByteLimit));
+              expect(
+                page.count,
+                inInclusiveRange(1, FileCollectionStore.pageEntryLimit),
+              );
+              expect(
+                page.bytes,
+                inInclusiveRange(1, FileCollectionStore.pageByteLimit),
+              );
             }
             final loaded = await reader.load(fixture.id);
             expect(loaded.id, fixture.id);
             expect(loaded.name, fixture.name);
             expect(loaded.selectedKeys, fixture.selectedKeys);
-            expect(loaded.entries.map((entry) => entry.key).toSet(), expectedKeys);
-            final loadedRows = [for (final entry in loaded.entries) entry.toJson()];
+            expect(
+              loaded.entries.map((entry) => entry.key).toSet(),
+              expectedKeys,
+            );
+            final loadedRows = [
+              for (final entry in loaded.entries) entry.toJson(),
+            ];
             expect(loadedRows, expectedRows);
             expect(_digest(loadedRows, loaded.selectedKeys), expectedDigest);
             expect(reader.loadErrors, isEmpty);
-            expect(reader.residentEntryCount, lessThanOrEqualTo(reader.cacheEntryLimit));
-            expect(reader.residentPageBytes, lessThanOrEqualTo(reader.cacheByteLimit));
+            expect(
+              reader.residentEntryCount,
+              lessThanOrEqualTo(reader.cacheEntryLimit),
+            );
+            expect(
+              reader.residentPageBytes,
+              lessThanOrEqualTo(reader.cacheByteLimit),
+            );
             if (run == 0) {
               warmupMilliseconds = milliseconds;
             } else {
               timings.add(milliseconds);
-              pageBytes.add(manifest.pages.fold(0, (sum, page) => sum + page.bytes));
+              pageBytes.add(
+                manifest.pages.fold(0, (sum, page) => sum + page.bytes),
+              );
             }
           } finally {
             reader.dispose();

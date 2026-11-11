@@ -221,7 +221,8 @@ class StorageAnalyzerStrings {
       "batchStart": "Analyser et enregistrer",
       "batchStop": "Arrêter le lot",
       "batchReady": "Prêt pour l’analyse",
-      "batchNoFolders": "Marquez un ou plusieurs dossiers pour enregistrer leurs rapports.",
+      "batchNoFolders":
+          "Marquez un ou plusieurs dossiers pour enregistrer leurs rapports.",
       "batchRootLimit": "Sélectionnez au maximum {count} dossiers par lot.",
       "batchUnavailable": "Le dossier d’origine n’est pas disponible : {path}. Actualisez sa source ou reconnectez-la, puis sélectionnez à nouveau le dossier.",
       "batchStopped": "Arrêté · Rapport non enregistré",
@@ -320,7 +321,8 @@ class StorageAnalyzerStrings {
       "batchStart": "Analizar y guardar",
       "batchStop": "Detener lote",
       "batchReady": "Listo para analizar",
-      "batchNoFolders": "Marca una o varias carpetas para guardar sus informes.",
+      "batchNoFolders":
+          "Marca una o varias carpetas para guardar sus informes.",
       "batchRootLimit": "Elige como máximo {count} carpetas por lote.",
       "batchUnavailable": "La carpeta original no está disponible: {path}. Actualiza o vuelve a conectar su origen y selecciónala de nuevo.",
       "batchStopped": "Detenido · Informe no guardado",
@@ -417,7 +419,8 @@ class StorageAnalyzerStrings {
       "batchStart": "Analisar e salvar",
       "batchStop": "Parar lote",
       "batchReady": "Pronto para analisar",
-      "batchNoFolders": "Marque uma ou mais pastas para salvar seus relatórios.",
+      "batchNoFolders":
+          "Marque uma ou mais pastas para salvar seus relatórios.",
       "batchRootLimit": "Selecione no máximo {count} pastas por lote.",
       "batchUnavailable": "A pasta original não está disponível: {path}. Atualize ou reconecte a origem e selecione a pasta novamente.",
       "batchStopped": "Interrompido · Relatório não salvo",
@@ -613,13 +616,16 @@ class StorageAnalyzerStrings {
       "batchReady": "スキャンの準備完了",
       "batchNoFolders": "レポートを保存するフォルダーを 1 つ以上マークしてください。",
       "batchRootLimit": "一度に選択できるフォルダーは {count} 個までです。",
-      "batchUnavailable": "元のフォルダーを利用できません: {path}。保存元の表示を更新するか再接続し、フォルダーを選択し直してください。",
+      "batchUnavailable":
+          "元のフォルダーを利用できません: {path}。保存元の表示を更新するか再接続し、フォルダーを選択し直してください。",
       "batchStopped": "停止済み · レポートは未保存",
       "batchSummary": "保存済み {saved} 件（うち部分的なレポート {partial} 件）· 失敗 {failed} 件 · 停止 {cancelled} 件",
       "batchStopAndClose": "停止して閉じる",
-      "batchUnverified": "このマーク済みフォルダーは現在確認されていません: {path}。元のフォルダーを開いて、選択し直してください。",
+      "batchUnverified":
+          "このマーク済みフォルダーは現在確認されていません: {path}。元のフォルダーを開いて、選択し直してください。",
       "batchUnconfirmed": "保存を確認できません",
-      "batchUnconfirmedHint": "このレポートはすでに保存されている可能性があります。再試行する前に「{history}」を開いて確認してください。",
+      "batchUnconfirmedHint":
+          "このレポートはすでに保存されている可能性があります。再試行する前に「{history}」を開いて確認してください。",
       "batchUnconfirmedCount": "保存未確認: {count} 件",
       "title": "ストレージ分析",
       "intro": "このフォルダーとサブフォルダーの容量の使用状況を確認します。",
@@ -708,13 +714,15 @@ class StorageAnalyzerStrings {
       "batchReady": "스캔 준비 완료",
       "batchNoFolders": "보고서를 저장할 폴더를 하나 이상 표시하세요.",
       "batchRootLimit": "일괄 작업당 폴더를 최대 {count}개까지 선택하세요.",
-      "batchUnavailable": "원래 폴더를 사용할 수 없습니다: {path}. 원본 저장소를 새로 고치거나 다시 연결한 후 폴더를 다시 선택하세요.",
+      "batchUnavailable":
+          "원래 폴더를 사용할 수 없습니다: {path}. 원본 저장소를 새로 고치거나 다시 연결한 후 폴더를 다시 선택하세요.",
       "batchStopped": "중지됨 · 보고서 저장 안 됨",
       "batchSummary": "저장 {saved}개(그중 불완전한 보고서 {partial}개) · 실패 {failed}개 · 중지 {cancelled}개",
       "batchStopAndClose": "중지하고 닫기",
       "batchUnverified": "표시한 이 폴더는 현재 확인되지 않았습니다: {path}. 원래 폴더를 열고 다시 선택하세요.",
       "batchUnconfirmed": "저장 여부 미확인",
-      "batchUnconfirmedHint": "이 보고서는 이미 저장되었을 수 있습니다. 다시 시도하기 전에 {history} 화면을 열어 확인하세요.",
+      "batchUnconfirmedHint":
+          "이 보고서는 이미 저장되었을 수 있습니다. 다시 시도하기 전에 {history} 화면을 열어 확인하세요.",
       "batchUnconfirmedCount": "저장 여부 미확인 {count}개",
       "title": "저장 공간 분석",
       "intro": "이 폴더와 하위 폴더에서 공간을 차지하는 항목을 확인합니다.",
