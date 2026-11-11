@@ -1,70 +1,92 @@
 # Quds forks
 
-Local development copies of the MIT-licensed Quds Office engine/editor.
+Vendored copies of the MIT-licensed Quds Office engine and editor, used by
+CrispCloud for Word, Excel, PowerPoint and PDF handling.
 
 - Upstream: https://github.com/MohammedAsaadAsaad/quds_office_suite
-- Fork: https://github.com/CrispStrobe/quds_office_suite
-- Branch: `crispcloud`
+- Fork (canonical for our fixes): https://github.com/CrispStrobe/quds_office_suite, branch `main`
+  (the old `crispcloud` branch is fully contained in it)
 
-## Test commands
+## Why we carry local copies
 
-The published packages exclude `test/`; the local copies and fork retain it.
+CrispCloud resolves both packages through `path` overrides in `pubspec.yaml`,
+so builds are reproducible offline. The consequence is that a fix made only in
+the fork never reaches the app, and a fix made only here never reaches the
+fork. The rule is therefore: fix in one place, sync to the other, and let a hash
+guard fail loudly if they drift.
 
-```bash
-# Engine
-cd packages/quds_office_engine
-dart pub get
-dart test
+The goal of the fixes is simple: opening a real Word, LibreOffice, Excel or
+PowerPoint file, editing it and saving it must not silently change or lose
+content.
 
-# Editor — exercise the patched local engine, not the published snapshot.
-cd packages/quds_office_editor
-printf 'dependency_overrides:\n  quds_office_engine:\n    path: ../quds_office_engine\n' \
-  > pubspec_overrides.yaml
-flutter pub get
-flutter test
-rm pubspec_overrides.yaml
-```
+## State (11 November 2026)
 
-`pubspec_overrides.yaml` is gitignored intentionally. Without it, the editor
-tests can resolve the published engine and produce a false footnote regression.
+- Pinned fork revision: `5c5270d` on `feature/office-fidelity-oracles`, merged
+  into CrispCloud `main`. `tool/office_fidelity_manifest.json` records the
+  source commit and a SHA-256 for every shared file;
+  `tool/verify_office_fidelity.py` fails when a shared file differs from it.
+  Unrelated vendor changes are allowed.
+- Engine suite in the fork: 491 passed, 3 optional-fixture skips, analysis clean
+  with `--fatal-infos`. Editor analysis clean.
+- CrispCloud host checks (`tool/check_office_fidelity.sh`, Flutter 3.47.8):
+  vendor hash guard, engine oracles, 16 host tests and the independent corpus
+  verification all pass.
+- The earlier RTL MultiPage PDF failure noted in the 5 November baseline is not
+  reproduced in the fork's current engine suite.
 
-## Baseline — 5 November 2026
-
-- Engine: **454 passed, 6 skipped, 1 failure**
-  - failure: `pdf_widgets_test.dart: RTL MultiPage short line starts on the
-    right` (`lastLeft` 90.9 vs expected >200)
-  - outside the DOCX save path; next Quds defect to investigate
-- Editor: **220 passed, 1 skipped, 0 failures** with the local-engine override
-- CrispCloud Office regressions: green
-
-The remaining skips are environment-only: font availability and an external
-PDF comparison tool.
-
-## Local patches
+## What the local patches do
 
 ### Engine
 
-- footnote/endnote reference marks import as superscript;
-- footnotes attach only to the page containing the reference glyph;
-- `separator` and `continuationSeparator` note chrome is recreated on save;
-- each note body gets a `footnoteRef`/`endnoteRef` mark with direct superscript
-  formatting and the conventional separating space;
-- Word paragraph/run/style/section/numbering child elements are emitted in
-  ECMA-376 order; `w:highlight` hex values are mapped back to Word's named
-  highlight enum;
-- PDF watermarks rotate as one marked line and survive missing-script faces;
-- feature-showcase template detail bands fit their item table.
+- Footnotes and endnotes keep their identity, kind, formatting, hyperlinks and
+  media relationships through editing, splitting, undo/redo and repeated saves.
+  Mixed and multiple notes per paragraph render; multiline bodies, styled runs,
+  tables and drawings in notes survive.
+- Note layout reserves its band while the body is laid out; long notes continue
+  on extra pages instead of overlapping or vanishing. Reference marks import as
+  superscript, and separator/continuation chrome is recreated on save.
+- Untouched paragraph, character and table styles, defaults, numbering
+  definitions, table borders and opaque package parts are retained instead of
+  regenerated. Explicit direct defaults (black, 11pt, zero spacing, left) are
+  treated as set.
+- List commands allocate document-local definitions, so they cannot collide
+  with imported IDs; start values and Roman, alphabetic and padded-decimal
+  formats are honored.
+- Word child elements are emitted in ECMA-376 order and `w:highlight` maps back
+  to Word's named values.
+- PDF watermarks rotate as one marked line; the feature-showcase detail band
+  fits its table.
 
 ### Editor
 
-- selection uses the theme selection colour (previously white-on-white);
-- header/footer edits force a full relayout so typed text lands in the header
-  band;
-- report font tests match the supported italic/bold-italic slots;
-- feature-showcase templates carry the corrected detail band.
+- Selection uses the theme selection colour (it was white-on-white).
+- Header/footer edits force a full relayout.
+- Footnote insertion follows the caret; paragraph splits keep rich runs;
+  paragraph formatting no longer mutates history snapshots; list commands
+  undo/redo.
+- Report font tests match the supported italic/bold-italic slots.
 
-Some of these changes are currently in the vendored copies first. Sync only the
-intended files back to the fork before treating the fork branch as canonical.
+## Verification
+
+Expected values come from authored XML/JSON, not from our own serializer
+output, and negative tests prove the oracles reject damaged files.
+
+```bash
+# Needs Flutter >= 3.47 (the app requires Dart 3.13). CI uses 3.47.8.
+export PATH=$HOME/flutter-3.47.8/bin:$PATH
+bash tool/check_office_fidelity.sh
+```
+
+That script runs the vendor hash guard, the Python/Dart fidelity oracles in
+`packages/quds_office_engine/tool/fidelity`, the host tests
+(`test/office_fidelity_workflow_test.dart`, formatting, round-trip and editor
+fix tests) and checks the saved DOCX corpus. The fork additionally validates
+exported packages with the Open XML SDK (`tool/office-validation`) in its
+`office-fidelity` workflow. Details: `docs/office-fidelity.md`.
+
+Known limit: the full-page golden is reviewed on Linux with Flutter 3.44.0. On
+other platforms it can differ by about 0.6% of pixels from font rendering. Do
+not regenerate it from another platform.
 
 ## Independent Word verification
 
@@ -106,14 +128,14 @@ The app resolves these packages through local `path` overrides in
 `pubspec.yaml`, so builds are reproducible offline.
 
 ```bash
-# In the fork checkout on branch crispcloud:
+# In the fork checkout on branch main (then update tool/office_fidelity_manifest.json):
 rsync -a /path/to/CrispCloud/packages/quds_office_engine/ \
   packages/quds_office_engine/
 rsync -a /path/to/CrispCloud/packages/quds_office_editor/ \
   packages/quds_office_editor/
 git add packages/quds_office_engine packages/quds_office_editor
 git commit -m "CrispCloud: update Quds patches"
-git push origin crispcloud
+git push origin main
 ```
 
 Keep commits small and add a CrispCloud regression test for every fixed bug.
