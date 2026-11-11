@@ -27,7 +27,7 @@ class HostEvidenceTest(unittest.TestCase):
         self.populate()
         report = evidence.inspect(self.root)
         self.assertEqual(report['failures'], [])
-        self.assertEqual(report['verified'], 14)
+        self.assertEqual(report['verified'], 17)
         for entry in report['files']:
             self.assertEqual(entry['sha256'], hashlib.sha256(
                 (self.root / entry['path']).read_bytes()).hexdigest())
@@ -36,7 +36,7 @@ class HostEvidenceTest(unittest.TestCase):
         self.populate(self.root / 'downloaded-artifact')
         report = evidence.inspect(self.root)
         self.assertEqual(report['failures'], [])
-        self.assertEqual(report['verified'], 14)
+        self.assertEqual(report['verified'], 17)
 
     def test_missing_upload_or_controller_output_fails(self):
         for name in (evidence.expected_paths()[0], evidence.expected_paths()[-1]):

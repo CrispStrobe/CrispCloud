@@ -24,38 +24,30 @@ content.
 
 ## State (11 November 2026)
 
-- Pinned fork revision: `692a326aae2e8133b793570344028a1ceffddbdc`, with the
-  full host and external schema gates passing against production-identical
-  `a7e1a207`. Every affected existing app file matched the previous
-  `14fa25f` source bytes before synchronization: 26 files updated, 11 added and
-  no host customization conflicts. The final three-file followup carries a
-  reviewed story-page PNG, its spacing assertion and a coverage-helper docstring;
-  no production code changed. The continuation retains the prior
-  `3146e63` work now merged into both main branches.
-  `tool/office_fidelity_manifest.json` records the source commit and SHA-256
-  values for all 154 shared files; the expanded guard passes.
-  `tool/verify_office_fidelity.py` fails when a shared file differs. Unrelated
-  vendor changes are allowed.
-- The app gate passes 163 selected engine tests, 113 engine Python controls,
-  all 43 public scripted operations and the exact 117-file engine inventory.
-  Full engine/editor suite and renderer results belong to their separately
-  recorded source checkpoints; see the fork's fidelity audit.
-- CrispCloud host checks (`tool/check_office_fidelity.sh`, Flutter 3.47.8) pass
-  97 actual host tests, eight inventory controls and four coverage-report
-  controls. All 14 expected actual-host DOCX files are present. Office-host
-  LCOV records 1,952/3,557 instrumented lines (54.9%) across all nine matching
-  host files; the detailed report records source hashes and unhit lines.
-- Open XML SDK validation of an immutable snapshot passes all 14 actual-host
-  packages and all 131 combined engine/host exports with zero errors. Its
-  positive and negative self-test controls pass. These are local verification
-  results. The earlier milestone's remote Actions run was queued when recorded;
-  it does not establish remote CI success for the newer source pin.
-- The current source followup includes imported-note formatting, style
-  transitions, table borders/paragraph spacing and drawing distances. The
-  complete host and schema gates have now passed for those changes. The source
-  story-page golden has been reviewed after the intended correction to imported
-  styleless-paragraph spacing and passes the source editor suite. The final pin
-  includes that reviewed image and its explicit spacing assertion.
+- Pinned fork revision: `431bffa31a4f007d88cbb9b19d59bd5dcd04bdff`.
+  The exact SHA-256 guard now covers 158 shared files. This adds the canvas
+  image-cache lifecycle fix to the previously verified `692a326` revision:
+  decoded images are released when an editor closes, and late decoding cannot
+  repaint a disposed Word, Sheet or Slide canvas. Two deterministic source
+  tests and the real host's three-save/reopen picture workflow pass.
+- CrispCloud now exposes Footnote and Endnote in the Word Insert tab and menu,
+  with translations, cancellation/read-only checks, undo/redo and preserved
+  whitespace. The 15-test targeted ribbon/save/localization cohort passes.
+  Its authored export assertions cover headings, explicit unbold, paragraph
+  settings, note bodies/IDs and both imported and inserted picture payloads.
+  The exact host inventory has grown from 14 to 17 documents; the full gate
+  will regenerate all of them together before final integration is recorded.
+- The prior broad milestone (source `692a326`, app `2203f2b`) passed 163
+  selected engine tests, 113 engine Python controls, all 43 public scripted
+  operations and 117 required engine outputs. Its actual host cohort passed
+  97 tests, with eight inventory controls and four coverage controls. Its
+  immutable 14-host/131-combined package snapshot passed Open XML SDK checks.
+  Those counts describe the earlier checkpoint, not the current expanded suite.
+- That earlier host cohort executed 1,952/3,557 instrumented lines (54.9%)
+  across all nine selected host files. The report will be refreshed after the
+  complete expanded cohort runs. Source full-suite, golden and renderer evidence
+  remains documented separately in the fork. Remote Actions status must be
+  checked separately; locally passing gates do not imply remote CI success.
 
 ## What the local patches do
 

@@ -182,6 +182,12 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
             _c.config.allowsMutation ? _insertComment : null,
             icon: Icons.comment_outlined,
           ),
+          _menuItem('Footnote…',
+              _canMutate ? () => _insertNote(endnote: false) : null,
+              icon: Icons.format_list_numbered),
+          _menuItem('Endnote…',
+              _canMutate ? () => _insertNote(endnote: true) : null,
+              icon: Icons.notes),
           const Divider(height: 1),
           _menuItem('Page break', _pageBreak, icon: Icons.insert_page_break),
           _menuItem('Section break', _sectionBreak, icon: Icons.horizontal_split),
@@ -757,6 +763,12 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
           ]),
           _group('Illustrations', <Widget>[
             _bigButton(Icons.image_outlined, 'Picture', _wordInsertPicture),
+          ]),
+          _group('Notes', <Widget>[
+            _bigButton(Icons.format_list_numbered, 'Footnote',
+                () => _insertNote(endnote: false), enabled: _canMutate),
+            _bigButton(Icons.notes, 'Endnote',
+                () => _insertNote(endnote: true), enabled: _canMutate),
           ]),
           _group('Links', <Widget>[
             _bigButton(Icons.link, 'Hyperlink', _insertHyperlink),
@@ -2535,6 +2547,24 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
         await showCommentDialog(context);
     if (result == null) return;
     _word.insertComment(text: result.text, author: result.author);
+  }
+
+  Future<void> _insertNote({required bool endnote}) async {
+    if (!_canMutate) return;
+    final WordEditorController controller = _word;
+    final String? text = await showOfficePromptDialog(
+      context,
+      title: context.tr(endnote ? 'Insert endnote' : 'Insert footnote'),
+      label: context.tr('Text'),
+      multiline: true,
+      trimResult: false,
+      confirmLabel: context.tr('Insert'),
+    );
+    if (!mounted || text == null || !_canMutate ||
+        !identical(controller, widget.controller)) {
+      return;
+    }
+    controller.insertFootnote(text: text, endnote: endnote);
   }
 
   void _pageBreak() => _word.insertPageBreak();

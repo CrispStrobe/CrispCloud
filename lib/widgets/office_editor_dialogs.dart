@@ -1012,6 +1012,7 @@ Future<String?> showOfficePromptDialog(
   String initial = '',
   String? helper,
   bool multiline = false,
+  bool trimResult = true,
   String confirmLabel = 'OK',
 }) {
   final TextEditingController controller =
@@ -1040,7 +1041,9 @@ Future<String?> showOfficePromptDialog(
           child: Text(ctx.tr('Cancel')),
         ),
         ElevatedButton(
-          onPressed: () => Navigator.pop(ctx, controller.text.trim()),
+          onPressed: () => Navigator.pop(
+            ctx, trimResult ? controller.text.trim() : controller.text,
+          ),
           child: Text(confirmLabel),
         ),
       ],

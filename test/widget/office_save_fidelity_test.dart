@@ -12,6 +12,7 @@ import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/services/file_cache_service.dart';
 import 'package:crisp_cloud/widgets/office_editor_dialog.dart';
 import 'package:crisp_cloud/widgets/office_editor_ribbon.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -62,6 +63,39 @@ class _Cache extends FileCacheService {
   Future<void> remove(String remotePath, String provider) async {}
 }
 
+class _ImagePicker extends FilePicker {
+  _ImagePicker(this.bytes);
+  final Uint8List bytes;
+  int calls = 0;
+
+  @override
+  Future<FilePickerResult?> pickFiles({
+    String? dialogTitle,
+    String? initialDirectory,
+    FileType type = FileType.any,
+    List<String>? allowedExtensions,
+    Function(FilePickerStatus)? onFileLoading,
+    bool allowCompression = false,
+    int compressionQuality = 0,
+    bool allowMultiple = false,
+    bool withData = false,
+    bool withReadStream = false,
+    bool lockParentWindow = false,
+    bool readSequential = false,
+  }) async {
+    expect(type, FileType.image);
+    expect(withData, isTrue);
+    calls++;
+    return FilePickerResult([
+      PlatformFile(
+        name: 'ribbon-picture.png',
+        size: bytes.length,
+        bytes: bytes,
+      ),
+    ]);
+  }
+}
+
 Future<void> _pumpUntil(
   WidgetTester tester,
   bool Function() complete,
@@ -83,14 +117,17 @@ OfficeEditorRibbon _ribbon(WidgetTester tester) =>
 
 Future<WordEditorController> _open(
   WidgetTester tester,
-  _DelayedCloud cloud,
-) async {
+  _DelayedCloud cloud, {
+  bool keepExisting = false,
+}) async {
   SharedPreferences.setMockInitialValues({});
-  cloud.put(
-    '/report.docx',
-    File('packages/quds_office_engine/test/fixtures/fidelity/word.docx')
-        .readAsBytesSync(),
-  );
+  if (!keepExisting) {
+    cloud.put(
+      '/report.docx',
+      File('packages/quds_office_engine/test/fixtures/fidelity/word.docx')
+          .readAsBytesSync(),
+    );
+  }
   final container = ProviderContainer(
     overrides: [
       authProvider.overrideWith((_) => WorkspaceTestAuth(cloud)),
@@ -181,7 +218,256 @@ void _evidence(String name, Uint8List bytes) {
   file.writeAsBytesSync(bytes);
 }
 
+const _wordNs = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+
+String _storyText(xml.XmlElement node) {
+  final result = StringBuffer();
+  for (final child in node.descendants.whereType<xml.XmlElement>()) {
+    if (child.name.namespaceUri != _wordNs) continue;
+    switch (child.name.local) {
+      case 't':
+        result.write(child.innerText);
+      case 'br':
+        if (child.parent is xml.XmlElement &&
+            (child.parent! as xml.XmlElement).name.local == 'r') {
+          result.write('\n');
+        }
+      case 'tab':
+        // Paragraph tab-stop definitions share the local name with run tabs.
+        if (child.parent is xml.XmlElement &&
+            (child.parent! as xml.XmlElement).name.local == 'r') {
+          result.write('\t');
+        }
+    }
+  }
+  return result.toString();
+}
+
+void _assertRibbonExport(Uint8List bytes, Uint8List pickedImage) {
+  final document = _part(bytes, 'word/document.xml');
+  final paragraph = document.findAllElements('p', namespace: _wordNs).first;
+  final properties = paragraph.getElement('pPr', namespace: _wordNs)!;
+  String? value(String element, String attribute) => properties
+      .getElement(element, namespace: _wordNs)
+      ?.getAttribute(attribute, namespace: _wordNs);
+  expect(value('pStyle', 'val'), 'Heading2');
+  expect(value('jc', 'val'), 'center');
+  expect(value('ind', 'left'), '360');
+  expect(value('spacing', 'before'), '120');
+  expect(value('spacing', 'after'), '360');
+  expect(value('spacing', 'line'), '360');
+  expect(
+    properties
+        .findAllElements('tab', namespace: _wordNs)
+        .map((node) => node.getAttribute('pos', namespace: _wordNs))
+        .toList(),
+    ['1440', '2880'],
+  );
+  expect(
+    paragraph
+        .findAllElements('b', namespace: _wordNs)
+        .map((node) => node.getAttribute('val', namespace: _wordNs)),
+    contains('0'),
+    reason:
+        'The explicit unbold edit must override Heading2 style inheritance.',
+  );
+  expect(_storyText(paragraph), 'Imported heading');
+  expect(
+    document
+        .findAllElements('footnoteReference', namespace: _wordNs)
+        .map((node) => node.getAttribute('id', namespace: _wordNs))
+        .toSet(),
+    {'12', '13'},
+  );
+  expect(
+    document
+        .findAllElements('endnoteReference', namespace: _wordNs)
+        .map((node) => node.getAttribute('id', namespace: _wordNs))
+        .toSet(),
+    {'3', '4'},
+  );
+  final footnote = _part(bytes, 'word/footnotes.xml')
+      .findAllElements('footnote', namespace: _wordNs)
+      .singleWhere(
+        (node) => node.getAttribute('id', namespace: _wordNs) == '13',
+      );
+  final endnote = _part(bytes, 'word/endnotes.xml')
+      .findAllElements('endnote', namespace: _wordNs)
+      .singleWhere(
+        (node) => node.getAttribute('id', namespace: _wordNs) == '4',
+      );
+  expect(_storyText(footnote), '  Footnote first\nsecond\tline  ');
+  expect(_storyText(endnote), ' Endnote from the ribbon');
+  expect(
+    footnote.findAllElements('footnoteRef', namespace: _wordNs),
+    hasLength(1),
+  );
+  expect(
+    endnote.findAllElements('endnoteRef', namespace: _wordNs),
+    hasLength(1),
+  );
+
+  const drawingNs = 'http://schemas.openxmlformats.org/drawingml/2006/main';
+  const relNs =
+      'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+  final blips = document.findAllElements('blip', namespace: drawingNs).toList();
+  expect(blips, hasLength(2));
+  expect(
+    document
+        .findAllElements(
+          'extent',
+          namespace: 'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing',
+        )
+        .map((node) => (node.getAttribute('cx'), node.getAttribute('cy'))),
+    contains(('4572000', '2540000')),
+    reason: 'The ribbon inserts its picture at 360 by 200 points.',
+  );
+  final archive = ZipDecoder().decodeBytes(bytes);
+  final relationships = _part(bytes, 'word/_rels/document.xml.rels');
+  final payloads = <List<int>>[];
+  for (final blip in blips) {
+    final id = blip.getAttribute('embed', namespace: relNs);
+    final relation = relationships.rootElement.childElements.singleWhere(
+      (node) => node.getAttribute('Id') == id,
+    );
+    expect(relation.getAttribute('TargetMode'), isNot('External'));
+    final path = Uri.parse('/word/document.xml')
+        .resolve(relation.getAttribute('Target')!)
+        .path
+        .substring(1);
+    payloads.add(archive.findFile(path)!.content);
+  }
+  expect(payloads, contains(orderedEquals(pickedImage)));
+  final original = ZipDecoder().decodeBytes(
+    File('packages/quds_office_engine/test/fixtures/fidelity/word.docx')
+        .readAsBytesSync(),
+  );
+  final originalImage = original.files
+      .singleWhere((file) => file.name.startsWith('word/media/'))
+      .content;
+  expect(
+    payloads,
+    contains(orderedEquals(originalImage)),
+    reason: 'Inserting a picture must not overwrite the imported picture.',
+  );
+}
+
+Future<void> _tapSettled(WidgetTester tester, Finder finder) async {
+  await tester.tap(finder);
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 350));
+}
+
 void main() {
+  testWidgets(
+    'ribbon headings, paragraphs, notes and pictures survive three host saves',
+    (tester) async {
+      tester.view.physicalSize = const Size(2000, 1100);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final picture = File(
+        'packages/quds_office_engine/test/fixtures/fidelity/scripts/replacement.png',
+      ).readAsBytesSync();
+      final picker = _ImagePicker(picture);
+      // File-picker plugins have no registered instance in the widget-test
+      // isolate. Install the deterministic boundary used by this scenario.
+      FilePicker.platform = picker;
+      await tester.runAsync(() async {
+        final cloud = _DelayedCloud();
+        var controller = await _open(tester, cloud);
+        controller.jumpToParagraph(0);
+        await tester.pump();
+        await _tapSettled(tester, find.text('Heading 1').last);
+        await _tapSettled(tester, find.text('Heading 2').last);
+        final title = controller.document.paragraphs.first;
+        controller.caret
+          ..paragraphIndex = 0
+          ..logicalIndex = title.text.length
+          ..selectionAnchorParagraph = 0
+          ..selectionAnchor = 0;
+        controller.refresh();
+        await tester.pump();
+        expect(controller.activeRunProps.bold, isTrue);
+        await _tapSettled(tester, find.byTooltip('Bold (Ctrl+B)'));
+        await _tapSettled(tester, find.byIcon(Icons.format_align_center).first);
+        await _tapSettled(tester, find.byTooltip('Paragraph settings…'));
+        for (final entry in {
+          'Left indent (pt)': '18',
+          'Space before (pt)': '6',
+          'Space after (pt)': '18',
+          'Line spacing': '1.5',
+          'Tab stops (pt, comma separated)': '72, 144',
+        }.entries) {
+          await tester.enterText(
+            find.widgetWithText(TextField, entry.key),
+            entry.value,
+          );
+        }
+        await _tapSettled(tester, find.widgetWithText(ElevatedButton, 'Apply'));
+
+        controller.jumpToParagraph(0);
+        controller.caret.logicalIndex = 7;
+        controller.caret.collapseSelection();
+        controller.refresh();
+        await _tapSettled(tester, find.text('Insert').last);
+        await _tapSettled(tester, find.text('Footnote'));
+        expect(find.text('Insert footnote'), findsOneWidget);
+        await tester.enterText(
+          find.descendant(
+            of: find.byType(AlertDialog),
+            matching: find.byType(TextField),
+          ),
+          '  Footnote first\nsecond\tline  ',
+        );
+        await _tapSettled(
+          tester,
+          find.widgetWithText(ElevatedButton, 'Insert'),
+        );
+        await _tapSettled(tester, find.text('Endnote'));
+        expect(find.text('Insert endnote'), findsOneWidget);
+        await tester.enterText(
+          find.descendant(
+            of: find.byType(AlertDialog),
+            matching: find.byType(TextField),
+          ),
+          'Endnote from the ribbon',
+        );
+        await _tapSettled(
+          tester,
+          find.widgetWithText(ElevatedButton, 'Insert'),
+        );
+        await _tapSettled(tester, find.text('Picture'));
+        expect(picker.calls, 1);
+        expect(controller.document.visuals, hasLength(2));
+
+        for (var cycle = 1; cycle <= 3; cycle++) {
+          await tester.tap(find.byTooltip('Save'));
+          await _pumpUntil(
+            tester,
+            () => !_ribbon(tester).saving && cloud.writes.length == cycle,
+            'The ribbon-edited document was not uploaded in cycle $cycle.',
+          );
+          final bytes = cloud.files['/report.docx']!;
+          _assertRibbonExport(bytes, picture);
+          _evidence('ribbon-edits-$cycle', bytes);
+          await _tapSettled(tester, find.byTooltip('Close').last);
+          controller = await _open(tester, cloud, keepExisting: true);
+          expect(
+            controller.document.paragraphs.first.properties.styleId,
+            'Heading2',
+          );
+          expect(controller.document.footnotes, hasLength(2));
+          expect(controller.document.endnotes, hasLength(2));
+          expect(controller.document.visuals, hasLength(2));
+        }
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump();
+      });
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets(
     'new text, style, note and image edits stay dirty during upload',
     (tester) async {
