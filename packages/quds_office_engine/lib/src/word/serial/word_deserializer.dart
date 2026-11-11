@@ -24,6 +24,7 @@ import 'word_opaque_io.dart';
 import 'word_property_io.dart';
 import 'word_section_io.dart';
 import 'word_serializer.dart';
+import 'word_table_property_io.dart';
 
 part 'word_style_cascade.dart';
 
@@ -37,6 +38,8 @@ class WordDeserializer {
   String? _docUri;
   WmlSection? _pendingParagraphSectPr;
   WmlDocument? _document;
+  WmlNote? _readingNote;
+  bool _noteMarkCaptured = false;
   final Set<WmlTable> _tablesWithOwnBorders = Set<WmlTable>.identity();
   final Set<WmlRunProps> _notBold = Set<WmlRunProps>.identity();
   final Set<WmlRunProps> _notItalic = Set<WmlRunProps>.identity();
@@ -45,6 +48,7 @@ class WordDeserializer {
 
   /// read API.
   WmlDocument read(OpcPackage package) {
+    _readingNote = null;
     final PackageRelationship? office = package.packageRelationships
         .firstByType(RelationshipTypes.officeDocument);
     final String docUri = office == null
@@ -361,6 +365,13 @@ class WordDeserializer {
         run.properties.vertAlign = WmlVertAlign.superscript;
         paragraph.properties.noteId = id;
         paragraph.properties.endnoteRef = run.noteRefEndnote;
+      } else if (reader.localName == 'footnoteRef' ||
+          reader.localName == 'endnoteRef') {
+        if (_readingNote != null && !_noteMarkCaptured) {
+          _readingNote!.referencePropertiesXml =
+              run.properties.sourcePropertiesXml ?? '';
+          _noteMarkCaptured = true;
+        }
       } else if (reader.localName == 'instrText') {
         final String instr = _elementText(reader);
         paragraph.properties.fieldInstruction =
@@ -802,7 +813,9 @@ class WordDeserializer {
       if (reader.localName == 'ilvl') {
         props.ilvl = int.tryParse(val) ?? 0;
       } else if (reader.localName == 'numId') {
-        props.numId = int.tryParse(val);
+        final int? id = int.tryParse(val);
+        props.numId = id == 0 ? null : id;
+        props.numberingSuppressed = id == 0;
       }
     }
   }
@@ -942,13 +955,46 @@ class WordDeserializer {
   }
 
   WmlTable _readTable(XmlPullReader reader, OpcPackage package, String docUri) {
-    final WmlTable table = WmlTable();
+    final WmlTable table = WmlTable(
+      properties: WmlTableProps(borders: false)..sourcePropertiesXml = '',
+    );
     if (reader.isEmptyElement) {
       return table;
     }
     final int depth = reader.depth;
     while (reader.next() && reader.depth >= depth) {
       if (reader.eventType != XmlEventType.startElement) {
+        continue;
+      }
+      if (reader.localName == 'tblPr') {
+        final XmlElement source = XmlDocument.readElement(reader);
+        final String xml = XmlDocument(
+          root: source,
+        ).toXmlString(declaration: false);
+        table.properties.sourcePropertiesXml = xml;
+        _readTableProperties(WordMarkupCompatibilityReader(xml)..next(), table);
+      } else if (reader.localName == 'gridCol') {
+        final String? w = reader.getAttribute(
+          'w',
+          namespaceUri: OfficeNamespaces.w,
+        );
+        table.grid.add(w == null ? 100 : twipsToPoints(int.parse(w)));
+      } else if (reader.localName == 'tr') {
+        table.rows.add(_readRow(reader, package, docUri, table));
+      }
+    }
+    _applyTableStyleToCells(table);
+    table.properties.importedValues = WordTablePropertyIo.values(
+      table.properties,
+    );
+    return table;
+  }
+
+  void _readTableProperties(XmlPullReader reader, WmlTable table) {
+    final int depth = reader.depth;
+    while (reader.next() && reader.depth >= depth) {
+      if (reader.eventType != XmlEventType.startElement ||
+          reader.depth != depth + 1) {
         continue;
       }
       if (reader.localName == 'tblStyle') {
@@ -962,19 +1008,15 @@ class WordDeserializer {
       } else if (reader.localName == 'tblLook') {
         _tableLooks[table] = _TableLook.read(reader);
       } else if (reader.localName == 'bidiVisual') {
-        table.properties.rightToLeft = true;
-      } else if (reader.localName == 'gridCol') {
-        final String? w = reader.getAttribute(
-          'w',
-          namespaceUri: OfficeNamespaces.w,
+        table.properties.rightToLeft = _onOff(
+          reader.getAttribute('val', namespaceUri: OfficeNamespaces.w),
         );
-        table.grid.add(w == null ? 100 : twipsToPoints(int.parse(w)));
-      } else if (reader.localName == 'tr') {
-        table.rows.add(_readRow(reader, package, docUri, table));
+      } else if (reader.localName == 'jc') {
+        table.properties.alignment = _jc(
+          reader.getAttribute('val', namespaceUri: OfficeNamespaces.w),
+        );
       }
     }
-    _applyTableStyleToCells(table);
-    return table;
   }
 
   void _readTblBorders(XmlPullReader reader, WmlTableProps props) {
@@ -1043,6 +1085,7 @@ class WordDeserializer {
           }
         } else if (styleId != null && _tableStyleLooksGrid(styleId)) {
           table.properties
+            ..borders = true
             ..borderColor ??= '000000'
             ..borderWidth = 0.5;
         }
@@ -1065,6 +1108,9 @@ class WordDeserializer {
           }
         }
       }
+      table.properties.importedValues = WordTablePropertyIo.values(
+        table.properties,
+      );
       for (final WmlTableRow row in table.rows) {
         for (final WmlTableCell cell in row.cells) {
           _walkTables(cell.blocks, applyTo);
@@ -1074,6 +1120,12 @@ class WordDeserializer {
 
     for (final WmlSection section in document.sections) {
       _walkTables(section.blocks, applyTo);
+    }
+    for (final WmlNote note in <WmlNote>[
+      ...document.footnotes,
+      ...document.endnotes,
+    ]) {
+      _walkTables(note.blocks, applyTo);
     }
     _tablesWithOwnBorders.clear();
     _tableLooks.clear();
@@ -1851,7 +1903,10 @@ class WordDeserializer {
         id: id,
         endnote: endnote,
         addReferenceSpace: false,
+        referencePropertiesXml: '',
       );
+      _readingNote = note;
+      _noteMarkCaptured = false;
       note.blocks.clear();
       if (!reader.isEmptyElement) {
         final int depth = reader.depth;
@@ -1872,6 +1927,7 @@ class WordDeserializer {
           }
         }
       }
+      _readingNote = null;
       if (note.blocks.isEmpty) {
         note.text = '';
       }

@@ -49,6 +49,30 @@ class StoryMediaOracleTests(unittest.TestCase):
         with self.assertRaisesRegex(AssertionError, 'Retained consumer payload'):
             verify_document(self.parts)
 
+    def test_added_picture_padding_is_rejected(self):
+        self.parts['word/header11.xml'] = self.parts['word/header11.xml'].replace(
+            b'<wp:inline>', b'<wp:inline distT="101600" distL="101600">')
+        with self.assertRaisesRegex(AssertionError, 'default header'):
+            verify_document(self.parts)
+
+    def test_one_emu_picture_padding_change_is_rejected(self):
+        self.parts['word/footnotes.xml'] = self.parts['word/footnotes.xml'].replace(
+            b'<wp:inline>', b'<wp:inline distB="1">')
+        with self.assertRaisesRegex(AssertionError, 'Note picture'):
+            verify_document(self.parts)
+
+    def test_explicit_zero_cannot_replace_an_omitted_distance(self):
+        self.parts['word/document.xml'] = self.parts['word/document.xml'].replace(
+            b'<wp:inline>', b'<wp:inline distL="0">', 1)
+        with self.assertRaisesRegex(AssertionError, 'Wrong body images'):
+            verify_document(self.parts)
+
+    def test_all_explicit_zeros_cannot_replace_note_distance_omissions(self):
+        self.parts['word/footnotes.xml'] = self.parts['word/footnotes.xml'].replace(
+            b'<wp:inline>', b'<wp:inline distT="0" distB="0" distL="0" distR="0">')
+        with self.assertRaisesRegex(AssertionError, 'Note picture'):
+            verify_document(self.parts)
+
 
 if __name__ == '__main__':
     unittest.main()

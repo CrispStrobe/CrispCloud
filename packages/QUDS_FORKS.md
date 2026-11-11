@@ -24,14 +24,20 @@ content.
 
 ## State (11 November 2026)
 
-- Pinned fork revision: `14fa25f5e0775cc6468fc08d064cbb476d942215`, integrated in
-  app checkpoint `78e65b9`. The continuation retains the prior `3146e63` work
-  now merged into both main branches. `tool/office_fidelity_manifest.json`
-  records the source commit and SHA-256 values for all 142 shared files;
+- Pinned fork revision: `692a326aae2e8133b793570344028a1ceffddbdc`, with the
+  full host and external schema gates passing against production-identical
+  `a7e1a207`. Every affected existing app file matched the previous
+  `14fa25f` source bytes before synchronization: 26 files updated, 11 added and
+  no host customization conflicts. The final three-file followup carries a
+  reviewed story-page PNG, its spacing assertion and a coverage-helper docstring;
+  no production code changed. The continuation retains the prior
+  `3146e63` work now merged into both main branches.
+  `tool/office_fidelity_manifest.json` records the source commit and SHA-256
+  values for all 154 shared files; the expanded guard passes.
   `tool/verify_office_fidelity.py` fails when a shared file differs. Unrelated
   vendor changes are allowed.
-- The app gate passes 136 selected engine tests, 84 engine Python controls,
-  all 43 public scripted operations and the exact 111-file engine inventory.
+- The app gate passes 163 selected engine tests, 113 engine Python controls,
+  all 43 public scripted operations and the exact 117-file engine inventory.
   Full engine/editor suite and renderer results belong to their separately
   recorded source checkpoints; see the fork's fidelity audit.
 - CrispCloud host checks (`tool/check_office_fidelity.sh`, Flutter 3.47.8) pass
@@ -40,12 +46,16 @@ content.
   LCOV records 1,952/3,557 instrumented lines (54.9%) across all nine matching
   host files; the detailed report records source hashes and unhit lines.
 - Open XML SDK validation of an immutable snapshot passes all 14 actual-host
-  packages and all 125 combined engine/host exports with zero errors. Its
+  packages and all 131 combined engine/host exports with zero errors. Its
   positive and negative self-test controls pass. These are local verification
-  results; the app milestone's remote Actions run was queued when recorded.
-- A final source followup for imported-note formatting, style transitions,
-  paragraph borders/spacing and drawing distances is pending. Those changes
-  require a new immutable source pin and host verification before integration.
+  results. The earlier milestone's remote Actions run was queued when recorded;
+  it does not establish remote CI success for the newer source pin.
+- The current source followup includes imported-note formatting, style
+  transitions, table borders/paragraph spacing and drawing distances. The
+  complete host and schema gates have now passed for those changes. The source
+  story-page golden has been reviewed after the intended correction to imported
+  styleless-paragraph spacing and passes the source editor suite. The final pin
+  includes that reviewed image and its explicit spacing assertion.
 
 ## What the local patches do
 

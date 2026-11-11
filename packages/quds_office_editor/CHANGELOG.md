@@ -4,6 +4,12 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Toggling off an imported list suppresses style-based numbering through
+  undo/redo and save/reopen; toggling it back on restores a list normally.
+
+- Splitting a heading or a restarted list retains the first paragraph's anchor
+  and restart without duplicating them on the new paragraph, including undo/redo.
+
 - Relayout a replaced Word viewport so scrolling to later pages does not leave
   an empty canvas. Three reviewed page goldens cover first, even and default
   header/footer pictures before and after an asynchronous save.

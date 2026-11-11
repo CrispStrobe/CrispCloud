@@ -52,6 +52,9 @@ def snapshot(parts):
     paras = [word_text(p).strip() for p in note.findall('w:p', NS)]
     run = next(r for r in note.findall('.//w:r', NS) if 'note' in ''.join(r.itertext()))
     rp = run.find('w:rPr', NS)
+    marker = next(r for r in note.findall('w:p/w:r', NS)
+                  if r.find('w:footnoteRef', NS) is not None)
+    marker_properties = marker.find('w:rPr', NS)
     blip = note.find('.//a:blip', NS)
     rel = relationship_map(parts, owner)[blip.get(f'{{{R}}}embed')]
     target = posixpath.normpath(posixpath.join('word', rel['Target']))
@@ -59,6 +62,8 @@ def snapshot(parts):
         'blocks': [e.tag.split('}')[-1] for e in note],
         'paragraphs': [p for p in paras if p],
         'leading_whitespace': re.match(r'^\s*', word_text(note.find('w:p', NS))).group(),
+        'reference_properties': None if marker_properties is None else
+            {node.tag: attrs(node) for node in marker_properties},
         'table': [''.join(e.itertext()).strip() for e in note.findall('.//w:tc', NS)],
         'bold': rp.find('w:b', NS) is not None and attrs(rp.find('w:b', NS)).get('val', '1') != '0',
         'color': attrs(rp.find('w:color', NS)).get('val'),

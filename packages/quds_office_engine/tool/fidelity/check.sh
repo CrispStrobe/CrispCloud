@@ -15,7 +15,9 @@ dart test \
   test/word_referenced_styles_and_breaks_test.dart \
   test/comment_thread_fidelity_test.dart test/word_altchunk_fidelity_test.dart \
   test/word_section_clone_fidelity_test.dart test/note_separator_fidelity_test.dart \
-  test/xml_whitespace_fidelity_test.dart test/styleless_import_fidelity_test.dart
+  test/xml_whitespace_fidelity_test.dart test/styleless_import_fidelity_test.dart \
+  test/table_border_fidelity_test.dart test/word_picture_distance_fidelity_test.dart \
+  test/scripted_transitions_test.dart
 dart run tool/fidelity/scenarios.dart
 python3 tool/fidelity/corpus.py verify
 dart run tool/fidelity/cross_format.dart
@@ -32,6 +34,7 @@ python3 tool/fidelity/scripted_oracle.py
 python3 tool/fidelity/word_compatibility_oracle.py
 python3 tool/fidelity/comment_threads_oracle.py
 python3 tool/fidelity/altchunk_oracle.py
+python3 tool/fidelity/table_borders_oracle.py
 python3 tool/fidelity/audit_operations.py
 python3 tool/fidelity/inventory.py verify
 python3 -m unittest discover -s tool/fidelity -p 'test_*.py'

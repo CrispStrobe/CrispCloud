@@ -62,6 +62,11 @@ void main() {
       ],
     ];
     for (var cycle = 0; cycle < 2; cycle++) {
+      // The authored fixture has no styles part or paragraph spacing. Keep
+      // that source layout explicit when reviewing its page image; imported
+      // paragraphs must not acquire the defaults used for newly created ones.
+      expect(doc.paragraphs.first.properties.spacingAfter, 0);
+      expect(doc.paragraphs.first.properties.lineSpacing, 1);
       final layout = WordLayoutEngine(font: null).layout(doc);
       expect(layout.pages, hasLength(3));
       for (var page = 0; page < 3; page++) {

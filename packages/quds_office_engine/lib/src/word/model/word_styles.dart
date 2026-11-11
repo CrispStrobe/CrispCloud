@@ -248,7 +248,8 @@ abstract final class WordStyles {
       ..justification = style.justification
       ..spacingBefore = style.spacingBefore
       ..spacingAfter = style.spacingAfter
-      ..numId = style.numId
+      ..numId = style.numId == 0 ? null : style.numId
+      ..numberingSuppressed = style.numId == 0
       ..ilvl = style.ilvl ?? 0
       ..indent = style.indent ?? const WmlIndent()
       ..listLabel = null;
@@ -293,9 +294,12 @@ abstract final class WordStyles {
         paragraph.properties.justification == WmlJustification.left) {
       paragraph.properties.justification = style.justification;
     }
-    if (paragraph.properties.numId == null && style.numId != null) {
+    if (paragraph.properties.numId == null &&
+        !paragraph.properties.numberingSuppressed &&
+        style.numId != null) {
       paragraph.properties
-        ..numId = style.numId
+        ..numId = style.numId == 0 ? null : style.numId
+        ..numberingSuppressed = style.numId == 0
         ..ilvl = style.ilvl ?? paragraph.properties.ilvl;
     }
     final WmlIndent own = paragraph.properties.indent;

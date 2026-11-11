@@ -282,6 +282,7 @@ class WmlParagraphProps {
     this.pageBreakBefore = false,
     this.columnBreakBefore = false,
     this.numId,
+    this.numberingSuppressed = false,
     this.ilvl = 0,
     this.listLabel,
     this.listRestart,
@@ -347,6 +348,10 @@ class WmlParagraphProps {
 
   /// numId API.
   int? numId;
+
+  /// An explicit removal from numbering, including a list inherited from a
+  /// paragraph style. Exported as `w:numId=0` while [numId] remains null.
+  bool numberingSuppressed;
 
   /// ilvl API.
   int ilvl;
@@ -426,6 +431,7 @@ class WmlParagraphProps {
           pageBreakBefore: pageBreakBefore,
           columnBreakBefore: columnBreakBefore,
           numId: numId,
+          numberingSuppressed: numberingSuppressed,
           ilvl: ilvl,
           listLabel: listLabel,
           listRestart: listRestart,
@@ -609,6 +615,10 @@ class WmlRunProps {
 
 /// Class WmlTableProps.
 class WmlTableProps {
+  /// Original direct tblPr XML and effective import values, for sparse export.
+  String? sourcePropertiesXml;
+  Map<String, String>? importedValues;
+
   /// WmlTableProps API.
   WmlTableProps({
     this.alignment = WmlJustification.left,
@@ -633,7 +643,8 @@ class WmlTableProps {
   /// Word `w:bidiVisual` — first column is drawn on the right.
   bool rightToLeft;
 
-  /// When false, no `tblBorders` are written (borderless layout rows).
+  /// Whether table borders are visible. Explicit off edits override a style
+  /// with native nil borders; an unchanged imported absence stays absent.
   bool borders;
 
   /// RRGGBB stroke for table borders.
@@ -646,16 +657,21 @@ class WmlTableProps {
   String? styleId;
 
   /// copy API.
-  WmlTableProps copy() => WmlTableProps(
-    alignment: alignment,
-    floating: floating,
-    cellMargin: cellMargin,
-    rightToLeft: rightToLeft,
-    borders: borders,
-    borderColor: borderColor,
-    borderWidth: borderWidth,
-    styleId: styleId,
-  );
+  WmlTableProps copy() =>
+      WmlTableProps(
+          alignment: alignment,
+          floating: floating,
+          cellMargin: cellMargin,
+          rightToLeft: rightToLeft,
+          borders: borders,
+          borderColor: borderColor,
+          borderWidth: borderWidth,
+          styleId: styleId,
+        )
+        ..sourcePropertiesXml = sourcePropertiesXml
+        ..importedValues = importedValues == null
+            ? null
+            : Map<String, String>.of(importedValues!);
 }
 
 /// pointsToTwips helper.

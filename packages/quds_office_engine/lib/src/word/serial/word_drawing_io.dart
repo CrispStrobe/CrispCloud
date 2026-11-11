@@ -68,6 +68,11 @@ abstract final class WordDrawingIo {
   static int sizeToEmu(double points) =>
       (points.clamp(1, 4000) * emuPerPoint).round();
 
+  // Wrap distances use unsigned EMUs and may be zero or below the minimum
+  // visible picture size. Size clamping would add padding to imported images.
+  static int _wrapDistanceToEmu(double points) =>
+      (points * emuPerPoint).clamp(0, 0xFFFFFFFF).round();
+
   /// emuToPoints API.
   static double emuToPoints(int emu) => emu / emuPerPoint;
 
@@ -345,17 +350,11 @@ abstract final class WordDrawingIo {
     final bool floating = adj.wrap != PictureWrap.inline;
     if (!floating) {
       w.writeStartElement('inline', prefix: 'wp');
-      w.writeAttribute('distT', '${pointsToEmu(adj.wrapDistT)}');
-      w.writeAttribute('distB', '${pointsToEmu(adj.wrapDistB)}');
-      w.writeAttribute('distL', '${pointsToEmu(adj.wrapDistL)}');
-      w.writeAttribute('distR', '${pointsToEmu(adj.wrapDistR)}');
+      _writeWrapDistances(w, adj);
       return;
     }
     w.writeStartElement('anchor', prefix: 'wp');
-    w.writeAttribute('distT', '${pointsToEmu(adj.wrapDistT)}');
-    w.writeAttribute('distB', '${pointsToEmu(adj.wrapDistB)}');
-    w.writeAttribute('distL', '${pointsToEmu(adj.wrapDistL)}');
-    w.writeAttribute('distR', '${pointsToEmu(adj.wrapDistR)}');
+    _writeWrapDistances(w, adj);
     w.writeAttribute('simplePos', '0');
     w.writeAttribute('relativeHeight', '251658240');
     w.writeAttribute('behindDoc', adj.wrap == PictureWrap.behind ? '1' : '0');
@@ -683,6 +682,19 @@ abstract final class WordDrawingIo {
     return null;
   }
 
+  static void _writeWrapDistances(XmlWriter writer, PictureAdjust picture) {
+    for (final (edge, name, value) in [
+      (PictureWrapDistanceEdge.top, 'distT', picture.wrapDistT),
+      (PictureWrapDistanceEdge.bottom, 'distB', picture.wrapDistB),
+      (PictureWrapDistanceEdge.left, 'distL', picture.wrapDistL),
+      (PictureWrapDistanceEdge.right, 'distR', picture.wrapDistR),
+    ]) {
+      if (picture.writesWrapDistance(edge)) {
+        writer.writeAttribute(name, '${_wrapDistanceToEmu(value)}');
+      }
+    }
+  }
+
   static void _readWrapDist(PictureAdjust adj, XmlPullReader reader) {
     adj.wrapDistT = emuToPoints(
       int.tryParse(reader.getAttribute('distT') ?? '') ?? 0,
@@ -696,6 +708,12 @@ abstract final class WordDrawingIo {
     adj.wrapDistR = emuToPoints(
       int.tryParse(reader.getAttribute('distR') ?? '') ?? 0,
     );
+    adj.retainWrapDistanceAttributes([
+      if (reader.getAttribute('distT') != null) PictureWrapDistanceEdge.top,
+      if (reader.getAttribute('distB') != null) PictureWrapDistanceEdge.bottom,
+      if (reader.getAttribute('distL') != null) PictureWrapDistanceEdge.left,
+      if (reader.getAttribute('distR') != null) PictureWrapDistanceEdge.right,
+    ]);
   }
 
   static OfficeVisual? _readChart(

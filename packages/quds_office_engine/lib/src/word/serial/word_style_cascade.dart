@@ -203,7 +203,8 @@ class _StyleCascade {
 
   void paragraph(WmlParagraph p, List<XmlElement> tableLayers) {
     final bool previouslyImported = p.properties.importedValues != null;
-    if (p.properties.importedValues != null) {
+    if (p.properties.importedValues != null ||
+        p.properties.numberingSuppressed) {
       p.properties.sourcePropertiesXml = WordSerializer()
           .paragraphPropertiesXml(p.properties);
     }

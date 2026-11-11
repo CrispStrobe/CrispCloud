@@ -26,7 +26,7 @@ abstract final class WordPropertyIo {
         '${p.indent.left}|${p.indent.right}|${p.indent.firstLine}|${p.indent.hanging}',
     'keepLines': '${p.keepTogether}',
     'pageBreakBefore': '${p.pageBreakBefore}',
-    'numPr': '${p.numId}|${p.ilvl}',
+    'numPr': '${p.numId ?? (p.numberingSuppressed ? 0 : null)}|${p.ilvl}',
     'outlineLvl': '${p.headingLevel}',
     'bidi': '${p.rightToLeft}',
     'framePr': '${p.dropCapLines}',

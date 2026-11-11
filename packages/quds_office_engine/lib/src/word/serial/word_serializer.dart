@@ -23,6 +23,7 @@ import 'word_numbering_io.dart';
 import 'word_opaque_io.dart';
 import 'word_property_io.dart';
 import 'word_section_io.dart';
+import 'word_table_property_io.dart';
 
 /// Writes a [WmlDocument] back to a `.docx` OPC package.
 class WordSerializer {
@@ -537,6 +538,7 @@ class WordSerializer {
     bool noteReference = false,
     bool endnote = false,
     bool addNoteReferenceSpace = true,
+    String? noteReferencePropertiesXml,
   }) {
     w.writeStartElement('p', prefix: 'w');
     final int? numberedInstance = _restartNumberingIds[paragraph];
@@ -548,28 +550,32 @@ class WordSerializer {
       // Word displays the automatic note number from this marker in the note
       // body. Without it, Word shows the note text but no number.
       w.writeStartElement('r', prefix: 'w');
-      w.writeStartElement('rPr', prefix: 'w');
-      w.writeStartElement('rStyle', prefix: 'w');
-      w.writeAttribute(
-        'w:val',
-        endnote ? 'EndnoteReference' : 'FootnoteReference',
-      );
-      w.writeEndElement();
-      // Direct formatting matters when the source package does not define
-      // the Word note-reference style. Word otherwise renders the number at
-      // body size and baseline instead of as a small superscript.
-      w.writeEmptyElement(
-        'vertAlign',
-        prefix: 'w',
-        attributes: <String, String>{'w:val': 'superscript'},
-      );
-      w.writeEndElement();
+      if (noteReferencePropertiesXml == null) {
+        w.writeStartElement('rPr', prefix: 'w');
+        w.writeStartElement('rStyle', prefix: 'w');
+        w.writeAttribute(
+          'w:val',
+          endnote ? 'EndnoteReference' : 'FootnoteReference',
+        );
+        w.writeEndElement();
+        // Newly created notes have a conventional superscript mark. Imported
+        // marks retain their exact source properties, including no rPr.
+        w.writeEmptyElement(
+          'vertAlign',
+          prefix: 'w',
+          attributes: <String, String>{'w:val': 'superscript'},
+        );
+        w.writeEndElement();
+      } else if (noteReferencePropertiesXml.isNotEmpty) {
+        XmlDocument.parse(noteReferencePropertiesXml).root!.writeTo(w);
+      }
       w.writeEmptyElement(endnote ? 'endnoteRef' : 'footnoteRef', prefix: 'w');
       w.writeEndElement();
       // New notes get a separator; imported stories already carry their exact
       // whitespace, including an intentionally absent space after the mark.
       if (addNoteReferenceSpace &&
-          (paragraph.text.isEmpty || !RegExp(r'^\s').hasMatch(paragraph.text))) {
+          (paragraph.text.isEmpty ||
+              !RegExp(r'^\s').hasMatch(paragraph.text))) {
         w.writeStartElement('r', prefix: 'w');
         w.writeStartElement('t', prefix: 'w');
         w.writeAttribute('xml:space', 'preserve');
@@ -885,7 +891,8 @@ class WordSerializer {
         },
       );
     }
-    if (p.numId != null) {
+    final int? numberingId = p.numId ?? (p.numberingSuppressed ? 0 : null);
+    if (numberingId != null) {
       w.writeStartElement('numPr', prefix: 'w');
       w.writeEmptyElement(
         'ilvl',
@@ -895,7 +902,7 @@ class WordSerializer {
       w.writeEmptyElement(
         'numId',
         prefix: 'w',
-        attributes: <String, String>{'w:val': '${p.numId}'},
+        attributes: <String, String>{'w:val': '$numberingId'},
       );
       w.writeEndElement();
     }
@@ -1100,55 +1107,7 @@ class WordSerializer {
     Map<OfficeVisual, String> imageIds,
   ) {
     w.writeStartElement('tbl', prefix: 'w');
-    w.writeStartElement('tblPr', prefix: 'w');
-    if (table.properties.styleId != null) {
-      w.writeEmptyElement(
-        'tblStyle',
-        prefix: 'w',
-        attributes: <String, String>{'w:val': table.properties.styleId!},
-      );
-    }
-    if (table.properties.rightToLeft) {
-      w.writeEmptyElement('bidiVisual', prefix: 'w');
-    }
-    w.writeEmptyElement(
-      'jc',
-      prefix: 'w',
-      attributes: <String, String>{
-        'w:val': switch (table.properties.alignment) {
-          WmlJustification.center => 'center',
-          WmlJustification.right => 'right',
-          WmlJustification.justify => 'both',
-          WmlJustification.distributed => 'distribute',
-          WmlJustification.left => 'left',
-        },
-      },
-    );
-    if (table.properties.borders) {
-      final String color = table.properties.borderColor ?? '000000';
-      w.writeStartElement('tblBorders', prefix: 'w');
-      for (final String edge in <String>[
-        'top',
-        'left',
-        'bottom',
-        'right',
-        'insideH',
-        'insideV',
-      ]) {
-        w.writeEmptyElement(
-          edge,
-          prefix: 'w',
-          attributes: <String, String>{
-            'w:val': 'single',
-            'w:sz': '${(table.properties.borderWidth * 8).round()}',
-            'w:space': '0',
-            'w:color': color,
-          },
-        );
-      }
-      w.writeEndElement();
-    }
-    w.writeEndElement();
+    WordTablePropertyIo.write(w, table.properties);
     w.writeStartElement('tblGrid', prefix: 'w');
     for (final double col in table.grid) {
       w.writeEmptyElement(
@@ -1798,7 +1757,8 @@ class WordSerializer {
       'styles.xml',
     );
     final PackagePart? original = package.getPart(uri);
-    final bool importedWithoutStyles = document.package != null && original == null;
+    final bool importedWithoutStyles =
+        document.package != null && original == null;
     final Map<String, WmlStyle> current = _stylesForExport(
       document,
       includeDefaultStyles: document.package == null,
@@ -2065,6 +2025,7 @@ class WordSerializer {
             noteReference: true,
             endnote: note.endnote,
             addNoteReferenceSpace: note.addReferenceSpace,
+            noteReferencePropertiesXml: note.referencePropertiesXml,
           );
           referenceWritten = true;
           if (block is WmlParagraph) continue;
@@ -2078,6 +2039,7 @@ class WordSerializer {
           noteReference: true,
           endnote: note.endnote,
           addNoteReferenceSpace: note.addReferenceSpace,
+          noteReferencePropertiesXml: note.referencePropertiesXml,
         );
       }
       w.writeEndElement();

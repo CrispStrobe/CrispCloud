@@ -3126,7 +3126,9 @@ class WordEditorController extends OfficeController {
             WmlRunEdit.replaceRange(para, index, para.text.length, '');
           }
           final WmlParagraph next = WmlParagraph(
-            properties: para.properties.copy(),
+            properties: para.properties.copy()
+              ..bookmarkName = null
+              ..listRestart = null,
             inlines: tail.isEmpty
                 ? <WmlInline>[WmlRun()]
                 : <WmlInline>[..._cloneInlinesFrom(tail)],
@@ -4635,14 +4637,12 @@ class WordEditorController extends OfficeController {
   void toggleList({required bool numbered}) {
     applyParagraphFormat((WmlParagraphProps props) {
       if (props.numId != null) {
-        props
-          ..numId = null
-          ..listLabel = null
-          ..ilvl = 0;
+        WordLists.clear(WmlParagraph(properties: props));
         return;
       }
       props
         ..numId = WordLists.numberingId(document, numbered: numbered)
+        ..numberingSuppressed = false
         ..ilvl = 0
         ..listLabel = numbered ? '1. ' : '• ';
     });

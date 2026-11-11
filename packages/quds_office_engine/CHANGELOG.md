@@ -4,12 +4,30 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Explicitly clearing a list suppresses inherited numbering through style
+  refresh, clone/history, export and reopen. Applying a list or numbered style
+  restores numbering. Script formatting rejects empty ranges with the failing
+  step number instead of silently leaving the document unchanged.
+
+- Preserve imported direct table properties, including border absence, inherited
+  style borders and explicit nil overrides, in body and note tables. Deliberate
+  border edits retain widths, layout, cell margins and captions; new tables keep
+  their existing border defaults.
+
+- Preserve omitted, zero and small picture wrap distances on DOCX export instead
+  of adding attributes or increasing them to the minimum picture size. Clones
+  carry source presence, while deliberate distance edits, including zero, emit
+  explicitly. Scripted paragraph splits retain
+  one bookmark/restart identity, and style edits bind the Word namespace locally
+  when imported style parts use different prefixes.
+
 - Preserve sparse paragraph/run formatting when importing a document with no
   style definitions; retain empty catalogs and avoid adding unreferenced Normal
   defaults, while exporting explicitly referenced built-in styles and edits.
 
-- Preserve imported footnote/endnote separation exactly, including no space,
-  multiple spaces and tabs; newly inserted notes still get one separator.
+- Preserve imported footnote/endnote marker formatting verbatim, including an
+  absent `rPr`, and retain exact source separation: no space, multiple spaces or
+  tabs. New notes keep conventional superscript markers and one separator.
 - Honor inherited `xml:space="preserve"` for whitespace-only text in the XML
   DOM so copied rich text and note spaces remain intact.
 

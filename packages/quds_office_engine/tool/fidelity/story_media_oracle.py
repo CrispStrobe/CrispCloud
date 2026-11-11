@@ -55,9 +55,15 @@ def image_snapshot(parts, owner, root):
         require(mime == 'image/png', f'{owner}: expected PNG content type, got {mime}')
         extents = drawing.findall('.//wp:extent', NS)
         require(len(extents) == 1, f'{owner}: image extents missing or duplicated')
+        containers = drawing.findall('wp:inline', NS)
+        require(len(containers) == 1, f'{owner}: expected one inline picture')
         result.append({
             'pixels': list(pixels(parts[uri])),
             'extents': [int(extents[0].get('cx')), int(extents[0].get('cy'))],
+            'wrap_distances_emu': [int(containers[0].get(name, '0'))
+                                   for name in ('distT', 'distB', 'distL', 'distR')],
+            'wrap_distance_attributes': [name in containers[0].attrib
+                                         for name in ('distT', 'distB', 'distL', 'distR')],
         })
     return result
 
@@ -67,6 +73,8 @@ def expected_image(golden, color, extents=None):
     return {
         'pixels': [width, height, hashlib.sha256(bytes(color) * (width * height)).hexdigest()],
         'extents': extents or [golden['width_emu'], golden['height_emu']],
+        'wrap_distances_emu': golden['wrap_distances_emu'],
+        'wrap_distance_attributes': golden['wrap_distance_attributes'],
     }
 
 

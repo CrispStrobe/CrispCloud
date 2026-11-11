@@ -24,6 +24,7 @@ abstract final class WordLists {
       ..numId = document == null
           ? (numbered ? 2 : 1)
           : numberingId(document, numbered: numbered)
+      ..numberingSuppressed = false
       ..ilvl = safe
       ..listLabel = numbered ? _numberLabel(safe) : _bulletLabel(safe)
       ..indent = WmlIndent(left: 18.0 + safe * 18);
@@ -147,6 +148,7 @@ abstract final class WordLists {
   static void clear(WmlParagraph paragraph) {
     paragraph.properties
       ..numId = null
+      ..numberingSuppressed = true
       ..ilvl = 0
       ..listLabel = null
       ..listRestart = null;

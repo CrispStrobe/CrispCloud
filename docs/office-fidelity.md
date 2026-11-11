@@ -6,56 +6,71 @@ Quds fork; changing the upstream branch alone cannot update the running app.
 The host also has its own save, preview and content-search behavior, which is
 tested separately from the engine.
 
-## Current integrated milestone
+## Verified vendor revision
 
-App checkpoint
+The current [vendor manifest](../tool/office_fidelity_manifest.json) selects
+Quds commit
+[`692a326`](https://github.com/CrispStrobe/quds_office_suite/commit/692a326aae2e8133b793570344028a1ceffddbdc)
+and **154 shared files**. The sync compared every existing selected app file
+with its bytes at the previous `14fa25f` pin before copying immutable Git blobs:
+26 existing files changed, 11 files were added, and no host customization
+conflicts were found. New files include the table-property helper, authored
+table-border fixture/oracle, transition and picture-distance regressions, editor
+split-identity tests and coverage-report controls. A subsequent three-file sync
+from `a7e1a207` to the final pin adds the reviewed first story-page PNG, its
+explicit paragraph-spacing assertion and a coverage-helper docstring correction.
+No production source changed in that followup. The expanded hash guard passes.
+
+This revision includes the imported-note formatting, style-transition,
+table-border/paragraph-spacing and drawing-distance followup. The complete host
+gate and the external schema gate pass against the production bytes from
+`a7e1a207`, identical to the final pin. The source repository reviewed the story
+page after the intended correction to imported styleless-paragraph spacing and
+passed its full editor suite with the final PNG. The app gate does not regenerate
+those reviewed images.
+
+The previous integrated milestone was app checkpoint
 [`78e65b9`](https://github.com/CrispStrobe/CrispCloud/commit/78e65b9eecd7861c95433819d11ac39375c40f9c)
-pins Quds source commit
+with Quds source commit
 [`14fa25f`](https://github.com/CrispStrobe/quds_office_suite/commit/14fa25f5e0775cc6468fc08d064cbb476d942215).
-Both repositories use the continuation branch
-`feature/office-fidelity-completion-20261111`, preserving their earlier
-unmerged fidelity work. The
-[vendor manifest](../tool/office_fidelity_manifest.json) records the exact source
-commit and SHA-256 hashes of **142 shared files**, including implementation,
-scenarios, authored fixtures, semantic/visual goldens and the external schema
-validator. The guard checks these files without absorbing unrelated host code.
+Its 125-package SDK snapshot remains separate from the new 131-package snapshot.
+Both repositories use `feature/office-fidelity-completion-20261111`, preserving
+their earlier fidelity work. App documentation checkpoint `faa444b` also carries
+the updated main-branch ancestry through `e70f24c`.
 
-**The final source followup is still pending integration.** This milestone
-contains only the pinned source above. Further imported-note formatting,
-style-transition, paragraph-border/spacing and drawing-distance corrections
-under development in the source checkout must receive their own immutable
-source checkpoint, vendor comparison and host verification before they count
-as app fixes.
-
-The following results were verified locally for this milestone on 2026-11-11:
+The following results were verified locally for **source `a7e1a207`**, with
+production-byte identity and the expanded guard rechecked at **`692a326`**, on
+2026-11-11:
 
 | Evidence | Result |
 | --- | --- |
-| Vendor guard | All 142 pinned files match |
-| Portable engine regression selection | 136 Dart tests pass |
+| Vendor guard | All 154 pinned files match |
+| Portable engine regression selection | 163 Dart tests pass |
 | Executable operation catalog | All 43 public operations appear in committed scenarios |
-| Engine semantic/mutation/inventory controls | 84 Python tests pass |
-| Engine output inventory | All 111 required Office files exist and are checked |
+| Engine semantic/mutation/inventory controls | 113 Python tests pass |
+| Engine output inventory | All 117 required Office files exist and are checked |
 | Actual app controller, widget, preview, search and service cohort | 97 Flutter tests pass |
 | Host inventory controls | 8 Python tests pass |
 | Host coverage-report controls | 4 Python tests pass |
 | Actual host DOCX inventory | All 14 required files exist and are checked |
 | External Open XML SDK: actual host files | 14 packages, zero validation errors |
-| External Open XML SDK: combined engine and host snapshot | 125 packages, zero validation errors |
+| External Open XML SDK: combined engine and host snapshot | 131 packages, zero validation errors |
 | Office host line execution | 1,952 / 3,557 instrumented lines, 54.9%; all 9 matching source files instrumented |
 
 The SDK's valid and deliberately invalid self-test controls also pass. These
-are local results; GitHub Actions run
+are local results. GitHub Actions run
 [`43101519120`](https://github.com/CrispStrobe/CrispCloud/actions/runs/43101519120)
-was queued when this milestone was recorded. A queued remote run is not a
-completed CI result.
+was queued when the earlier app milestone was recorded; it does not establish
+remote CI success for this newer source pin. Check the continuation branch's
+latest Actions run separately.
 
 The committed [host execution-gap report](office-host-coverage-gaps.json) lists
-every uncovered instrumented line, file totals and source hashes. Its source
-commit is the app checkpoint above and its Office source tree is clean. The
-54.9% figure measures line execution in this cohort; it does not measure branch
-correctness or completeness of Office format support. The original precommit
-run report remains in the build evidence with its original dirty-source flag.
+every uncovered instrumented line, file totals and source hashes. The nine host
+source hashes are unchanged from the previous measurement; the new full run
+reproduces the same counts. The report records its app source commit and scoped
+dirty-state metadata. The 54.9% figure measures line execution in this cohort;
+it does not measure branch correctness or completeness of Office format support.
+Each run's original build report remains attached to its own source metadata.
 
 ## Run the integration gate
 

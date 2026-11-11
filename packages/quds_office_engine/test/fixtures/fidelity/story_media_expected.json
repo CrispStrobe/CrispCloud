@@ -16,6 +16,8 @@
   "image_pixels": [2, 2],
   "width_emu": 457200,
   "height_emu": 228600,
+  "wrap_distances_emu": [0, 0, 0, 0],
+  "wrap_distance_attributes": [false, false, false, false],
   "replacement_body_color": [128, 0, 128],
   "replacement_body_extents": [1028700, 571500],
   "replacement_header_color": [255, 0, 0],

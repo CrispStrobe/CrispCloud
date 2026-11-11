@@ -11,6 +11,7 @@ class WmlNote {
     required this.id,
     required this.endnote,
     this.addReferenceSpace = true,
+    this.referencePropertiesXml,
     List<WmlParagraph>? paragraphs,
     List<WmlBlock>? blocks,
   }) : blocks =
@@ -31,6 +32,10 @@ class WmlNote {
   /// New note bodies get one separator after the automatic reference mark.
   /// Imported stories keep their exact source whitespace instead.
   final bool addReferenceSpace;
+
+  /// Original automatic note-mark properties. Empty means an unformatted
+  /// imported mark; null gives new notes the standard superscript style.
+  String? referencePropertiesXml;
 
   /// Ordered note story, including paragraphs, tables, pictures and equations.
   final List<WmlBlock> blocks;

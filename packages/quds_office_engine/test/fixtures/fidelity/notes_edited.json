@@ -30,5 +30,6 @@
       "https://example.com/note"
     ]
   ],
-  "leading_whitespace": ""
+  "leading_whitespace": "",
+  "reference_properties": null
 }

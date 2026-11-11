@@ -153,6 +153,9 @@ void applyStep(
     case 'runFormat':
       final p = paragraph();
       final range = _range(p, s);
+      if (range.$1 == range.$2) {
+        throw ArgumentError('runFormat requires a non-empty text range');
+      }
       WmlRunEdit.applyRange(p, range.$1, range.$2, (r) {
         for (final entry in <String, String>{
           'bold': 'b',
@@ -284,7 +287,9 @@ void applyStep(
         if (inline is WmlRun) offset += inline.text.length;
       }
       final tail = WmlParagraph(
-        properties: p.properties.copy(),
+        properties: p.properties.copy()
+          ..bookmarkName = null
+          ..listRestart = null,
         inlines: p.inlines.sublist(cut),
       );
       p.inlines.removeRange(cut, p.inlines.length);
@@ -558,7 +563,7 @@ void _boundary(WmlParagraph p, int at) {
 
 XmlElement _sourceStyle(WmlDocument doc, String id, String type) {
   final style = _styles(doc).$2.root!
-      .childrenNamed('style')
+      .childrenNamed('style', namespaceUri: OfficeNamespaces.w)
       .where((s) => s.getAttribute('styleId') == id)
       .firstOrNull;
   if (style == null || style.getAttribute('type') != type) {
@@ -570,7 +575,7 @@ XmlElement _sourceStyle(WmlDocument doc, String id, String type) {
 void _editStyle(WmlDocument doc, StepInput s) {
   final source = _styles(doc);
   final style = source.$2.root!
-      .childrenNamed('style')
+      .childrenNamed('style', namespaceUri: OfficeNamespaces.w)
       .where((e) => e.getAttribute('styleId') == s.string('style'))
       .firstOrNull;
   if (style == null) throw ArgumentError('Unknown style id');
@@ -579,9 +584,9 @@ void _editStyle(WmlDocument doc, StepInput s) {
   }
   for (final group in <String>['pPr', 'rPr', 'tblPr', 'tcPr']) {
     if (!s.has(group)) continue;
-    var props = style.firstChild(group);
+    var props = style.firstChild(group, namespaceUri: OfficeNamespaces.w);
     if (props == null) {
-      props = XmlElement(localName: group, prefix: 'w');
+      props = _wordPropertyElement(group);
       style.addChild(props);
     }
     for (final entry in s.object(group).entries) {
@@ -589,14 +594,17 @@ void _editStyle(WmlDocument doc, StepInput s) {
         throw ArgumentError('Invalid property name');
       }
       props.children.removeWhere(
-        (n) => n is XmlElement && n.localName == entry.key,
+        (n) =>
+            n is XmlElement &&
+            n.localName == entry.key &&
+            n.namespaceUri == OfficeNamespaces.w,
       );
       if (entry.value == null) continue;
       final attributes = entry.value;
       if (attributes is! Map<String, Object?>) {
         throw ArgumentError('${entry.key} must be an attribute object or null');
       }
-      final element = XmlElement(localName: entry.key, prefix: 'w');
+      final element = _wordPropertyElement(entry.key);
       for (final attribute in attributes.entries) {
         if (!RegExp(r'^[A-Za-z][A-Za-z0-9]*$').hasMatch(attribute.key) ||
             (attribute.value is! String &&
@@ -604,7 +612,12 @@ void _editStyle(WmlDocument doc, StepInput s) {
                 attribute.value is! bool)) {
           throw ArgumentError('Invalid XML attribute ${attribute.key}');
         }
-        element.setAttribute(attribute.key, '${attribute.value}', prefix: 'w');
+        element.setAttribute(
+          attribute.key,
+          '${attribute.value}',
+          prefix: 'w',
+          namespaceUri: OfficeNamespaces.w,
+        );
       }
       props.addChild(element);
     }
@@ -613,3 +626,14 @@ void _editStyle(WmlDocument doc, StepInput s) {
   source.$1.writeText(source.$2.toXmlString());
   WordDeserializer().refreshStyles(doc);
 }
+
+// Imported parts can use another Word prefix and bind `w` to an extension.
+// Bind only generated nodes so the source's namespace scopes remain intact.
+XmlElement _wordPropertyElement(String name) =>
+    XmlElement(localName: name, prefix: 'w', namespaceUri: OfficeNamespaces.w)
+      ..setAttribute(
+        'w',
+        OfficeNamespaces.w,
+        prefix: 'xmlns',
+        namespaceUri: 'http://www.w3.org/2000/xmlns/',
+      );
