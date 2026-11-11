@@ -583,28 +583,24 @@ class SlideSerializer {
     package
         .getPart(_presentationUri)!
         .writeText(_presentationXml(pres, slideRelIds, package));
-    _repairSignedChartAxisIds(package);
+    _repairChartAxisIds(package);
     pres.properties.writeToPackage(package);
     pres.package = package;
     return package;
   }
 
-  // Some producers emit signed 32-bit axis IDs, although CT_UnsignedInt
-  // requires uint32. Repair retained source chart parts too, preserving the
-  // identity/reference mapping and all other chart markup.
-  static void _repairSignedChartAxisIds(OpcPackage package) {
+  // SDK semantic constraints restrict axis IDs to signed-positive integers.
+  // Allocate replacements for out-of-range producer IDs without colliding with
+  // valid IDs, and apply the same mapping to every axis reference in the part.
+  static void _repairChartAxisIds(OpcPackage package) {
     for (final part in package.parts) {
       if (part.contentType != OfficeContentTypes.drawingChart) continue;
       final document = XmlDocument.parse(part.readText());
-      var changed = false;
+      final axes = <XmlElement>[];
       void visit(XmlElement element) {
         if (element.namespaceUri == OfficeNamespaces.c &&
             (element.localName == 'axId' || element.localName == 'crossAx')) {
-          final value = int.tryParse(element.getAttribute('val') ?? '');
-          if (value != null && value >= -2147483648 && value < 0) {
-            element.setAttribute('val', '${value + 4294967296}');
-            changed = true;
-          }
+          axes.add(element);
         }
         for (final child in element.childElements) {
           visit(child);
@@ -612,7 +608,26 @@ class SlideSerializer {
       }
 
       if (document.root != null) visit(document.root!);
-      if (changed) part.writeText(document.toXmlString());
+      final used = <int>{
+        for (final axis in axes)
+          if (int.tryParse(axis.getAttribute('val') ?? '') case final int value)
+            if (value >= 0 && value <= 2147483647) value,
+      };
+      final replacements = <int, int>{};
+      var next = 1;
+      for (final axis in axes) {
+        final value = int.tryParse(axis.getAttribute('val') ?? '');
+        if (value == null || value >= 0 && value <= 2147483647) continue;
+        if (!replacements.containsKey(value)) {
+          while (used.contains(next)) {
+            next++;
+          }
+          replacements[value] = next;
+          used.add(next++);
+        }
+        axis.setAttribute('val', '${replacements[value]}');
+      }
+      if (replacements.isNotEmpty) part.writeText(document.toXmlString());
     }
   }
 

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:quds_office_engine/quds_office_engine.dart';
+import 'package:quds_office_engine/src/word/serial/word_property_io.dart';
 
 /// Scriptable DOCX import, mutation and export. Indexes are zero-based.
 /// inspect INPUT; export INPUT OUTPUT; modify INPUT STEPS.json OUTPUT.
@@ -153,7 +154,9 @@ void applyStep(WmlDocument doc, Map<String, dynamic> step) {
           }
           props.addChild(element);
         }
+        WordPropertyIo.orderChildren(props);
       }
+      WordPropertyIo.orderChildren(style);
       part.writeText(xml.toXmlString());
       WordDeserializer().refreshStyles(doc);
     case 'applyStyle':

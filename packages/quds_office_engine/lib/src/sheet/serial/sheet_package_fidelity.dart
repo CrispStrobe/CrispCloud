@@ -285,7 +285,9 @@ void _writePivots(
       pivot.sourceSheetName = sourceSheet.name;
     } else {
       final table = XmlDocument.parse(package.getPart(uri)!.readText());
-      table.root!.setAttribute('name', pivot.name);
+      table.root!
+        ..removeAttribute('id', namespaceUri: OfficeNamespaces.r)
+        ..setAttribute('name', pivot.name);
       table.root!
           .firstChild('rowFields')
           ?.firstChild('field')

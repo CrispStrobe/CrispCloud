@@ -493,7 +493,10 @@ class SmlStyleSheet {
     }
     buf.write('</cellXfs></styleSheet>');
     final generated = XmlDocument.parse(buf.toString());
-    if (_source == null) return generated.toXmlString();
+    if (_source == null) {
+      _orderFonts(generated);
+      return generated.toXmlString();
+    }
     final result = XmlDocument.parse(_source!.toXmlString());
     for (final name in ['fonts', 'fills', 'cellXfs']) {
       final old = result.root!.firstChild(name);
@@ -551,7 +554,38 @@ class SmlStyleSheet {
       }
       old.setAttribute('count', '${old.childElements.length}');
     }
+    _orderFonts(result);
     return result.toXmlString();
+  }
+
+  // CT_Font is an ordered sequence, even when a producer emits properties in
+  // another order. Preserve every property while normalizing its position.
+  static void _orderFonts(XmlDocument document) {
+    const order = [
+      'b',
+      'i',
+      'strike',
+      'condense',
+      'extend',
+      'outline',
+      'shadow',
+      'u',
+      'vertAlign',
+      'sz',
+      'color',
+      'name',
+      'family',
+      'charset',
+      'scheme',
+    ];
+    int rank(XmlNode node) {
+      final index = node is XmlElement ? order.indexOf(node.localName) : -1;
+      return index < 0 ? order.length : index;
+    }
+
+    for (final font in document.root!.firstChild('fonts')!.childElements) {
+      font.children.sort((a, b) => rank(a).compareTo(rank(b)));
+    }
   }
 
   /// resolveColor API.
