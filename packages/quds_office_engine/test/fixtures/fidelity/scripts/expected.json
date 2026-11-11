@@ -1,0 +1,123 @@
+{
+  "word": {
+    "text": [
+      "Script headline",
+      "Body text",
+      "Body",
+      " link",
+      "List item",
+      "Appended paragraph"
+    ],
+    "heading": 2,
+    "references": {
+      "footnote": [
+        13,
+        12
+      ],
+      "endnote": [
+        4,
+        3
+      ]
+    },
+    "notes": {
+      "footnote": {
+        "12": [
+          "First line\nSecond line"
+        ],
+        "13": [
+          "Caret footnote"
+        ]
+      },
+      "endnote": {
+        "3": [
+          "Endnote text"
+        ],
+        "4": [
+          "New endnote"
+        ]
+      }
+    },
+    "table": [
+      "Changed cell"
+    ],
+    "header": "Updated header",
+    "footer": "Updated footer",
+    "extent": {
+      "cx": "914400",
+      "cy": "457200"
+    },
+    "size": {
+      "w": "12240",
+      "h": "15840"
+    },
+    "margins": {
+      "top": "720",
+      "bottom": "720",
+      "left": "720",
+      "right": "720"
+    },
+    "columns": {
+      "num": "2",
+      "space": "360",
+      "sep": "1"
+    }
+  },
+  "sheet": {
+    "names": [
+      "Report",
+      "Data"
+    ],
+    "cells": {
+      "B2": {
+        "value": 7,
+        "formula": null
+      },
+      "C2": {
+        "value": 28,
+        "formula": "B2*4"
+      },
+      "D1": {
+        "value": true,
+        "formula": null
+      },
+      "D6": {
+        "value": "Joined",
+        "formula": null
+      }
+    },
+    "merges": [
+      "A5:C5",
+      "D6:E6"
+    ],
+    "frozen_rows": 2,
+    "frozen_columns": 1,
+    "row_height": 36,
+    "column_width_pixels": 96
+  },
+  "slide": {
+    "titles": [
+      "Native slide 2",
+      "Scripted presentation"
+    ],
+    "hidden": [
+      true,
+      false
+    ],
+    "notes": [
+      "Speaker note 2",
+      "Edited\nspeaker note"
+    ],
+    "offset": {
+      "x": "508000",
+      "y": "508000"
+    },
+    "extent": {
+      "cx": "6350000",
+      "cy": "635000"
+    },
+    "rotation": "900000",
+    "font_size": "3000",
+    "color": "112233",
+    "transition": "wipe"
+  }
+}

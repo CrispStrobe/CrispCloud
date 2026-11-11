@@ -2,6 +2,46 @@ import 'wml_document.dart';
 
 /// Deep copies of Word blocks so cut / paste / undo never share mutable state.
 abstract final class WmlClone {
+  /// Copies the section's blocks, stories and page settings for undo or split.
+  static WmlSection section(WmlSection source) => WmlSection(
+    blocks: <WmlBlock>[for (final WmlBlock item in source.blocks) block(item)],
+    pageSize: source.pageSize,
+    margins: source.margins,
+    columnCount: source.columnCount,
+    columnSpace: source.columnSpace,
+    columnSep: source.columnSep,
+    breakKind: source.breakKind,
+    differentFirstPage: source.differentFirstPage,
+    differentOddEven: source.differentOddEven,
+    linkToPrevious: source.linkToPrevious,
+    lineNumbers: source.lineNumbers,
+    sourceProperties: source.sourceProperties,
+    header: <WmlParagraph>[for (final p in source.header) paragraph(p)],
+    footer: <WmlParagraph>[for (final p in source.footer) paragraph(p)],
+    firstHeader: <WmlParagraph>[
+      for (final p in source.firstHeader) paragraph(p),
+    ],
+    firstFooter: <WmlParagraph>[
+      for (final p in source.firstFooter) paragraph(p),
+    ],
+    evenHeader: <WmlParagraph>[for (final p in source.evenHeader) paragraph(p)],
+    evenFooter: <WmlParagraph>[for (final p in source.evenFooter) paragraph(p)],
+    headerVisuals: <WmlVisual>[for (final v in source.headerVisuals) visual(v)],
+    footerVisuals: <WmlVisual>[for (final v in source.footerVisuals) visual(v)],
+    firstHeaderVisuals: <WmlVisual>[
+      for (final v in source.firstHeaderVisuals) visual(v),
+    ],
+    firstFooterVisuals: <WmlVisual>[
+      for (final v in source.firstFooterVisuals) visual(v),
+    ],
+    evenHeaderVisuals: <WmlVisual>[
+      for (final v in source.evenHeaderVisuals) visual(v),
+    ],
+    evenFooterVisuals: <WmlVisual>[
+      for (final v in source.evenFooterVisuals) visual(v),
+    ],
+  );
+
   /// block API.
   static WmlBlock block(WmlBlock source) {
     switch (source) {
@@ -17,6 +57,12 @@ abstract final class WmlClone {
         return equation(source);
       case WmlToc():
         return toc(source);
+      case WmlOpaqueBlock():
+        return WmlOpaqueBlock(
+          xml: source.xml,
+          sourcePartUri: source.sourcePartUri,
+          relationships: source.relationships,
+        );
     }
   }
 
@@ -168,6 +214,7 @@ abstract final class WmlClone {
           _collectParagraphs(block.blocks, out);
         case WmlVisual():
         case WmlEquation():
+        case WmlOpaqueBlock():
           break;
       }
     }

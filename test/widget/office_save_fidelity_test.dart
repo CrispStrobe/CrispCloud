@@ -26,6 +26,7 @@ class _DelayedCloud extends WorkflowFakeClient {
   Completer<void>? _nextUpload;
   Completer<void>? _activeUpload;
   Uint8List? pendingBytes;
+  Uint8List? attemptedBytes;
   int uploadAttempts = 0;
 
   void pauseNextUpload() {
@@ -43,6 +44,7 @@ class _DelayedCloud extends WorkflowFakeClient {
     Function(int, int)? onProgress,
   }) async {
     uploadAttempts++;
+    attemptedBytes = Uint8List.fromList(bytes);
     final gate = _nextUpload;
     _nextUpload = null;
     if (gate != null) {
@@ -272,6 +274,7 @@ void main() {
         _text(_part(cloud.files['/report.docx']!, 'word/footnotes.xml')),
         isNot(contains('Late footnote must remain open')),
       );
+      _evidence('close-before-late-edit', cloud.files['/report.docx']!);
 
       await tester.tap(find.byTooltip('Close').last);
       await tester.pump(const Duration(milliseconds: 400));
@@ -287,6 +290,7 @@ void main() {
         _text(_part(cloud.files['/report.docx']!, 'word/footnotes.xml')),
         contains('Late footnote must remain open'),
       );
+      _evidence('close-after-late-edit', cloud.files['/report.docx']!);
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump();
     });
@@ -309,6 +313,11 @@ void main() {
       expect(controller.isDirty, isFalse);
       expect(_ribbon(tester).dirty, isFalse);
       expect(cloud.writes.length, 1);
+      expect(
+        _text(_part(cloud.files['/report.docx']!, 'word/document.xml')),
+        contains('Saved edit '),
+      );
+      _evidence('selection-save', cloud.files['/report.docx']!);
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump();
     });
@@ -336,6 +345,11 @@ void main() {
       expect(_ribbon(tester).dirty, isTrue);
       expect(cloud.files['/report.docx'], original);
       expect(cloud.writes, isEmpty);
+      expect(
+        _text(_part(cloud.attemptedBytes!, 'word/document.xml')),
+        contains('Pending edit '),
+      );
+      _evidence('failed-upload-attempt', cloud.attemptedBytes!);
 
       cloud.failUploads = false;
       await tester.tap(find.byTooltip('Save'));
@@ -349,6 +363,7 @@ void main() {
         _text(_part(cloud.files['/report.docx']!, 'word/document.xml')),
         contains('Pending edit '),
       );
+      _evidence('retry-after-failure', cloud.files['/report.docx']!);
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump();
     });

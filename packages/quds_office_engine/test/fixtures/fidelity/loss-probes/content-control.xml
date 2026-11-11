@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:body>
+    <w:p><w:r><w:t>Probe prefix</w:t></w:r></w:p>
+    <w:sdt>
+      <w:sdtPr>
+        <w:alias w:val="Customer name"/>
+        <w:tag w:val="customer.name"/>
+        <w:id w:val="71"/>
+        <w:text/>
+      </w:sdtPr>
+      <w:sdtEndPr><w:rPr><w:color w:val="4488AA"/></w:rPr></w:sdtEndPr>
+      <w:sdtContent><w:p><w:r><w:t>Customer Alpha</w:t></w:r></w:p></w:sdtContent>
+    </w:sdt>
+    <w:sectPr/>
+  </w:body>
+</w:document>

@@ -39,14 +39,17 @@ abstract final class SheetDrawingIo {
         ? '/xl/drawings/${owner}_drawing.xml'
         : sheetRels.resolve(imported);
     final String target = OpcUris.relativize(sheetUri, drawingUri);
-    PackageRelationship? found;
-    for (final PackageRelationship rel in sheetRels.items) {
-      if (rel.target == target && rel.type == RelationshipTypes.drawing) {
-        found = rel;
-        break;
+    // A worksheet owns one drawing part. Imported producers may use an
+    // absolute package URI while our writer uses a relative target; compare
+    // resolved URIs so a save does not add a second relationship to that part.
+    final found =
+        imported ??
+        sheetRels.add(type: RelationshipTypes.drawing, target: target);
+    for (final rel in sheetRels.byType(RelationshipTypes.drawing).toList()) {
+      if (rel.id != found.id && sheetRels.resolve(rel) == drawingUri) {
+        sheetRels.removeById(rel.id);
       }
     }
-    found ??= sheetRels.add(type: RelationshipTypes.drawing, target: target);
     final RelationshipCollection drawingRels = package.relationshipsFor(
       drawingUri,
     );
@@ -421,7 +424,13 @@ abstract final class SheetDrawingIo {
     w.writeEndElement();
     w.writeEmptyElement('cNvGraphicFramePr', prefix: 'xdr');
     w.writeEndElement();
-    DrawingmlVisualIo.writeXfrm(w, cx: cx, cy: cy, adj: visual.picture);
+    DrawingmlVisualIo.writeXfrm(
+      w,
+      cx: cx,
+      cy: cy,
+      adj: visual.picture,
+      prefix: 'xdr',
+    );
     w.writeStartElement('graphic', prefix: 'a');
     w.writeStartElement('graphicData', prefix: 'a');
     w.writeAttribute('uri', OfficeNamespaces.c);

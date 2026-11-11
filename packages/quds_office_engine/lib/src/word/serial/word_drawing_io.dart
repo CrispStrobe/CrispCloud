@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:crypto/crypto.dart';
+
 import '../../builders/drawingml_charts.dart';
 import '../../builders/image_fit.dart';
 import '../../builders/office_markup.dart';
@@ -30,6 +32,15 @@ abstract final class WordDrawingIo {
   static String mimeOf(Uint8List bytes) {
     if (bytes.length > 3 && bytes[0] == 0xFF && bytes[1] == 0xD8) {
       return 'image/jpeg';
+    }
+    if (bytes.length >= 6 &&
+        bytes[0] == 0x47 &&
+        bytes[1] == 0x49 &&
+        bytes[2] == 0x46 &&
+        bytes[3] == 0x38 &&
+        (bytes[4] == 0x37 || bytes[4] == 0x39) &&
+        bytes[5] == 0x61) {
+      return 'image/gif';
     }
     return 'image/png';
   }
@@ -86,19 +97,13 @@ abstract final class WordDrawingIo {
     final Map<OfficeVisual, String> ids = <OfficeVisual, String>{};
     for (final OfficeVisual visual in visuals) {
       if (visual.isChart) {
-        final String uri =
-            '/word/charts/${mediaPrefix == 'image' ? '' : mediaPrefix}chart$chartIndex.xml';
-        final String xml = _chartXml(visual);
+        final String uri = _storePayload(
+          package,
+          '/word/charts/${mediaPrefix == 'image' ? '' : mediaPrefix}chart$chartIndex.xml',
+          OfficeContentTypes.drawingChart,
+          Uint8List.fromList(utf8.encode(_chartXml(visual))),
+        );
         chartIndex++;
-        if (package.getPart(uri) == null) {
-          package.createPart(
-            uri,
-            OfficeContentTypes.drawingChart,
-            utf8.encode(xml),
-          );
-        } else {
-          package.getPart(uri)!.writeText(xml);
-        }
         final String target = OpcUris.relativize(partUri, uri);
         PackageRelationship? found;
         for (final PackageRelationship rel in rels.items) {
@@ -173,14 +178,13 @@ abstract final class WordDrawingIo {
     for (final WmlVisualImage image in images) {
       final Uint8List bytes = image.bytes;
       final String mime = mimeOf(bytes);
-      final String uri = '/word/media/$mediaPrefix$index${extensionOf(mime)}';
+      final String uri = _storePayload(
+        package,
+        '/word/media/$mediaPrefix$index${extensionOf(mime)}',
+        mime,
+        bytes,
+      );
       index++;
-      final PackagePart? existing = package.getPart(uri);
-      if (existing == null) {
-        package.createPart(uri, mime, bytes);
-      } else {
-        existing.writeBytes(bytes);
-      }
       final String target = OpcUris.relativize(partUri, uri);
       final RelationshipCollection rels = package.relationshipsFor(partUri);
       PackageRelationship? found;
@@ -194,6 +198,46 @@ abstract final class WordDrawingIo {
       ids[image] = found.id;
     }
     return ids;
+  }
+
+  // A media part can be shared by several stories, including XML that the
+  // editor does not interpret. Never replace it merely because its filename
+  // matches our sequential allocator. Reuse identical payloads and allocate a
+  // deterministic content-addressed alternative for changed content.
+  static String _storePayload(
+    OpcPackage package,
+    String preferredUri,
+    String contentType,
+    Uint8List bytes,
+  ) {
+    bool matches(PackagePart part) {
+      if (part.contentType != contentType || part.length != bytes.length) {
+        return false;
+      }
+      final Uint8List old = part.bytesView;
+      for (int i = 0; i < bytes.length; i++) {
+        if (old[i] != bytes[i]) return false;
+      }
+      return true;
+    }
+
+    final int dot = preferredUri.lastIndexOf('.');
+    final String stem = preferredUri.substring(0, dot);
+    final String extension = preferredUri.substring(dot);
+    String uri = preferredUri;
+    String? digest;
+    int collision = 0;
+    while (true) {
+      final PackagePart? part = package.getPart(uri);
+      if (part == null) {
+        package.createPart(uri, contentType, bytes);
+        return uri;
+      }
+      if (matches(part)) return uri;
+      digest ??= sha256.convert(bytes).toString();
+      final String suffix = collision++ == 0 ? '' : '-$collision';
+      uri = '$stem-$digest$suffix$extension';
+    }
   }
 
   /// writeInline API.

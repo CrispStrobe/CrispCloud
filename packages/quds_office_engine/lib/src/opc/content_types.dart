@@ -192,7 +192,7 @@ abstract final class OfficeContentTypes {
 
   /// wordCommentsExtended API.
   static const String wordCommentsExtended =
-      'application/vnd.ms-word.commentsExtended+xml';
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.commentsExtended+xml';
 
   /// drawingChart API.
   static const String drawingChart =

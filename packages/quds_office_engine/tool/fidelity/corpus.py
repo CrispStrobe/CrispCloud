@@ -96,6 +96,15 @@ def read_zip(path):
 def attrs(e):
     return {k.split('}')[-1]: v for k, v in e.attrib.items()} if e is not None else {}
 
+def word_text(element):
+    """Read visible Word text tokens, including real tabs and hard line breaks."""
+    result = []
+    for node in element.iter():
+        if node.tag == f'{{{W}}}t': result.append(node.text or '')
+        elif node.tag == f'{{{W}}}tab': result.append('\t')
+        elif node.tag in (f'{{{W}}}br', f'{{{W}}}cr'): result.append('\n')
+    return ''.join(result)
+
 def relationship_map(parts, owner):
     name = posixpath.join(posixpath.dirname(owner), '_rels', posixpath.basename(owner) + '.rels')
     if name not in parts:
@@ -104,7 +113,7 @@ def relationship_map(parts, owner):
 
 def links(parts, owner, root):
     rel = relationship_map(parts, owner)
-    return [( ''.join(e.itertext()).strip(), rel.get(e.get(f'{{{R}}}id'), {}).get('Target', e.get(f'{{{W}}}anchor')))
+    return [(word_text(e).strip(), rel.get(e.get(f'{{{R}}}id'), {}).get('Target', e.get(f'{{{W}}}anchor')))
             for e in root.findall('.//w:hyperlink', NS)]
 
 def snapshot(parts):
@@ -114,7 +123,7 @@ def snapshot(parts):
     for kind in ('footnote', 'endnote'):
         owner = f'word/{kind}s.xml'
         tree = ET.fromstring(parts[owner])
-        notes[kind] = [{'id': int(e.get(f'{{{W}}}id')), 'paragraphs': [''.join(p.itertext()).strip() for p in e.findall('w:p', NS)],
+        notes[kind] = [{'id': int(e.get(f'{{{W}}}id')), 'paragraphs': [word_text(p).strip() for p in e.findall('w:p', NS)],
                         'links': links(parts, owner, e)} for e in tree if e.get(f'{{{W}}}type') is None]
     styles = ET.fromstring(parts['word/styles.xml'])
     image_rels = relationship_map(parts, 'word/document.xml')
@@ -140,19 +149,19 @@ def snapshot(parts):
         stories[kind] = (owner, ET.fromstring(parts[owner]))
     return {
         'numbering': definitions,
-        'text': [''.join(p.findall('.//w:t', NS)[i].text or '' for i in range(len(p.findall('.//w:t', NS)))) for p in ps if p.findall('.//w:t', NS)],
+        'text': [word_text(p) for p in ps if p.findall('.//w:t', NS)],
         'heading_levels': [attrs(p.find('w:pPr/w:outlineLvl', NS)) for p in ps if p.find('w:pPr/w:outlineLvl', NS) is not None],
         'references': {kind: [int(e.get(f'{{{W}}}id')) for e in root.findall(f'.//w:{kind}Reference', NS)] for kind in ('footnote', 'endnote')},
         'notes': notes,
         'links': links(parts, 'word/document.xml', root),
-        'table_text': [''.join(e.itertext()).strip() for e in root.findall('.//w:tc', NS)],
+        'table_text': [word_text(e).strip() for e in root.findall('.//w:tc', NS)],
         'image_extents': [attrs(e) for e in root.findall('.//wp:extent', NS)],
         'image_sha256': image_digests,
         'styles': {e.get(f'{{{W}}}styleId'): {'type': e.get(f'{{{W}}}type'),
                     'numId': attrs(e.find('w:pPr/w:numPr/w:numId', NS)), 'indent': attrs(e.find('w:pPr/w:ind', NS))}
                    for e in styles.findall('w:style', NS)},
         'header_links': links(parts, *stories['header']),
-        'footer_text': ''.join(stories['footer'][1].itertext()).strip(),
+        'footer_text': word_text(stories['footer'][1]).strip(),
         'opaque_sha256': hashlib.sha256(parts['customXml/item1.xml']).hexdigest(),
     }
 

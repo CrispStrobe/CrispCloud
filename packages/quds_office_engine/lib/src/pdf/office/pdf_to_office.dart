@@ -553,6 +553,7 @@ abstract final class PdfToOffice {
           return block.titleParagraph;
         case WmlVisual():
         case WmlEquation():
+        case WmlOpaqueBlock():
           break;
       }
     }

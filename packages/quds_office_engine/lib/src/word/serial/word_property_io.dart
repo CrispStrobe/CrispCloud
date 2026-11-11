@@ -90,6 +90,12 @@ abstract final class WordPropertyIo {
     for (final n in generated.childrenNamed('sectPr')) {
       result.addChild(n.copy());
     }
+    order(result);
+    return result;
+  }
+
+  /// Put properties in OOXML schema order after an explicit style edit.
+  static void order(XmlElement properties) {
     const runOrder = [
       'rStyle',
       'rFonts',
@@ -170,13 +176,12 @@ abstract final class WordPropertyIo {
       'sectPr',
       'pPrChange',
     ];
-    final order = generated.localName == 'rPr' ? runOrder : paragraphOrder;
+    final order = properties.localName == 'rPr' ? runOrder : paragraphOrder;
     int rank(XmlNode n) {
       final i = n is XmlElement ? order.indexOf(n.localName) : -1;
       return i < 0 ? order.length : i;
     }
 
-    result.children.sort((a, b) => rank(a).compareTo(rank(b)));
-    return result;
+    properties.children.sort((a, b) => rank(a).compareTo(rank(b)));
   }
 }

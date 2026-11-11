@@ -411,8 +411,11 @@ class WordCanvas extends LeafRenderObjectWidget {
       ..compact = compact
       ..findHits = findHits
       ..activeFindIndex = activeFindIndex;
-    if (viewport != null) {
+    if (viewport != null && !identical(renderObject.viewport, viewport)) {
       renderObject.viewport = viewport!;
+      // A replacement viewport has no extent until layout initializes it.
+      // Painting with a zero extent culls every page after the first one.
+      renderObject.markNeedsLayout();
     }
     renderObject.markNeedsPaint();
   }

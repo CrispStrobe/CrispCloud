@@ -1,148 +1,228 @@
 # Office fidelity scenarios
 
-From `packages/quds_office_engine`, with Dart on `PATH`:
+This suite drives real DOCX, XLSX and PPTX imports, edits and asynchronous saves,
+then checks the resulting packages with independently authored expectations.
+Normal checks do not regenerate source fixtures or accept new goldens.
+
+## Run the suite
+
+Use the repository's pinned Flutter 3.44.0 / Dart toolchain. From
+`packages/quds_office_engine`:
 
 ```sh
 dart pub get
 bash tool/fidelity/check.sh
 ```
 
-The check runs the oracle's negative tests, focused Dart regressions, six DOCX
-exports and twelve XLSX/PPTX exports (three unchanged cycles and three edited
-cycles per format), then an example DOCX edit script. Exported files and
-machine-readable reports are written under `build/fidelity*`.
+The command produces Office exports under `build/fidelity*`, checks ZIP/XML
+semantics and image pixels, and runs deliberate corruption controls. These
+controls must pass a positive fixture before proving that damaged output fails.
+`audit_operations.py` also requires a committed executable scenario for every
+public operation. Operation coverage measures exercised commands, not complete
+OOXML support or all possible parameter combinations.
 
 ## Import, inspect, edit and export
 
 ```sh
+dart run tool/fidelity/office_steps.dart operations
 dart run tool/fidelity/office_steps.dart inspect input.docx
 dart run tool/fidelity/office_steps.dart export input.docx output.docx
-dart run tool/fidelity/office_steps.dart modify input.docx steps.json output.docx
+dart run tool/fidelity/office_steps.dart modify input.docx steps.json edited.docx
+dart run tool/fidelity/office_steps.dart roundtrip edited.docx build/my-document 3
 ```
 
-`inspect` imports a DOCX and prints paragraphs, headings, note IDs and image
-sizes. `export` uses the asynchronous save implementation used by the host.
-`modify` applies a JSON array of steps before saving. All steps must succeed
-before the output is written. Existing output files are replaced on success;
-choose a different filename to retain the input.
+All five commands accept `.docx`, `.xlsx` and `.pptx` where an input is needed.
+`operations` prints the exact operation/field catalog as JSON. `inspect` prints
+model content, indexes, notes, stories, cells or slide shapes. `export` saves in
+the input format using the host's `OfficeIsolateSave` implementation.
+`roundtrip` exports and reimports repeatedly, writing `roundtrip-1` through the
+requested cycle count (default 3, allowed 1–100). It does not convert formats.
 
-`example_steps.json` is a runnable example. Paragraph/image indices are
-zero-based, following `inspect` order. Text offsets are UTF-16 code units;
-measurements and font sizes are points. Relative image paths are relative to
-the command's working directory.
+`modify` reads a JSON array. Each step must succeed before the output is written
+through a temporary file and rename. Failure reports the numbered step, exits
+nonzero and leaves an existing output unchanged. Unknown operations/fields,
+invalid indexes/types/ranges, malformed colors and unsupported image bytes fail
+explicitly. Use a distinct output filename to keep the original after success.
 
-| Operation | Fields besides `op` | Behavior |
+Paragraph, run, table, cell row/column, image, sheet and slide indexes are
+zero-based. Text offsets use UTF-16 code units; offsets within a surrogate pair
+or an atomic note reference are rejected. Word and slide measurements are
+points; sheet row heights and column widths are **pixels**. RGB colors contain
+six hex digits without `#`. Image files are PNG or JPEG; relative asset paths
+are resolved against **the step file's directory**, regardless of the current
+working directory. Inspect a document before choosing indexes, since each edit
+can change the indexes used by later steps.
+
+### DOCX: 25 operations
+
+For paragraph/run/image operations that accept a story selector, `story`
+defaults to `body`. Other values are `header`, `footer`, `firstHeader`,
+`firstFooter`, `evenHeader`, `evenFooter`, `footnote`, and `endnote`. Header/footer
+stories use `section` (default 0); note stories require the actual `note` ID.
+`addNote`, paragraph structure and list commands target the body.
+
+| Operation | Fields besides `op` | Result |
 | --- | --- | --- |
-| `replaceText` | `paragraph`, `text`, optional `start`, `end` | Replace a range; defaults to the whole paragraph |
-| `heading` | `paragraph`, `level` | Apply heading level |
-| `applyStyle` | `paragraph`, `style` | Apply a style from the document catalog |
-| `paragraphFormat` | `paragraph`, optional `alignment`, `before`, `after`, `lineSpacing`, `keepTogether`, `pageBreakBefore` | Change supplied paragraph settings |
-| `runFormat` | `paragraph`, optional `start`, `end`, `bold`, `italic`, `color`, `highlight`, `font`, `size` | Change supplied text settings; colors are RGB hex strings |
-| `addNote` | `paragraph`, `text`, optional `endnote` | Append a reference and create its body; editor tests separately cover caret insertion |
-| `editNote` | `id`, `text`, optional `endnote` | Replace note body |
-| `deleteNote` | `id`, optional `endnote` | Remove note and references |
-| `imageSize` | `image`, optional `width`, `height` | Resize existing picture |
-| `imageReplace` | `image`, `file` | Replace existing picture bytes |
+| `replaceText` | `paragraph`, `text`; optional `start`, `end`, story selector | Replace a text range; defaults to the whole paragraph |
+| `heading` | `paragraph`, `level`, story selector | Set heading level 0–9; referenced built-in styles are exported |
+| `applyStyle` | `paragraph`, `style`, story selector | Apply a paragraph style from this document |
+| `characterStyle` | `paragraph`, `run`, `style`, story selector | Apply a source character style |
+| `tableStyle` | `table`, `style` | Apply a source table style |
+| `styleDefinition` | `style`, `type`; optional `rPr`, `pPr`, `tblPr`, `tcPr` | Edit sparse source style properties |
+| `paragraphFormat` | `paragraph`; optional `alignment`, `before`, `after`, `lineSpacing`, `keepTogether`, `pageBreakBefore`, `rtl`, story selector | Change supplied properties, preserving explicit defaults |
+| `runFormat` | `paragraph`; optional `start`, `end`, `bold`, `italic`, `strike`, `underline`, `color`, `highlight`, `font`, `size`, story selector | Format a range; explicit false/black/default-size values stay direct |
+| `addNote` | `paragraph`, `text`; optional `offset`, `endnote` | Insert a footnote/endnote at the caret offset, or the end if omitted |
+| `editNote` | `id`, `text`; optional `endnote` | Replace the note body; use story run operations for rich formatting |
+| `deleteNote` | `id`; optional `endnote` | Delete the note and its actual reference runs |
+| `imageSize` | `image`; `width` and/or `height`, story selector | Resize a picture |
+| `imageReplace` | `image`, `file`, story selector | Replace picture data while preserving owning-part relationships |
+| `imageAdd` | `file`, `width`, `height`; optional `section`, `index`, `title` | Insert a body picture at a block index, or append |
+| `imageRemove` | `image`, story selector | Remove the selected picture |
+| `paragraphInsert` | `text`; optional `section`, `index`, `style` | Insert at a block index, or append |
+| `paragraphSplit` | `paragraph`, `offset` | Split rich content at a valid offset |
+| `paragraphDelete` | `paragraph` | Delete the selected paragraph |
+| `list` | `paragraph`, `numbered`; optional `level` | Apply a document-local list definition; levels 0–8 |
+| `listClear` | `paragraph` | Remove list formatting |
+| `listRestart` | `paragraph`; optional `at` (default 1) | Restart a numbered list without mutating unrelated instances |
+| `hyperlink` | `paragraph`, `run`, `target`, story selector | Set a run hyperlink |
+| `tableCellText` | `table`, `row`, `column`, `text` | Replace the selected cell's text |
+| `headerFooterText` | `story`, `text`; optional `section`, `paragraph` | Replace/add text in one of the six header/footer variants |
+| `sectionFormat` | optional `section`, `width`, `height`, `top`, `bottom`, `left`, `right`, `header`, `footer`, `columns`, `columnSpace`, `columnSep`, `breakKind`, `differentFirstPage`, `differentOddEven` | Edit page/section geometry and flags |
 
-`endnote` defaults to false. Unknown operations, missing note IDs and invalid
-indices fail explicitly. This developer CLI exposes only the listed operations.
+`endnote` defaults to false. Alignment, underline and break-kind strings use the
+model enum names printed in the source. `highlight: null` clears a highlight.
+`styleDefinition` values are maps from OOXML property names to attribute maps;
+a null property removes it. Existing style ID and type must match. The command
+retains sparse source definitions and re-evaluates inherited formatting.
 
-## Independent expectations
+A small edit script:
 
-- `corpus.py` authors deterministic DOCX input with Python ZIP/XML tools,
-  independently of the Quds serializer. `imported.json` and `edited.json` in
-  `test/fixtures/fidelity` describe expected semantics from authored XML.
-- `scenarios.dart` imports that fixture, edits it and produces repeated exports.
-  `corpus.py verify` reads exported ZIP/XML directly, without using the Quds
-  reader to decide whether the Quds writer is correct.
-- Checks cover note identity/body, hyperlink ownership, headings, numbering,
-  style types/list indents, table text, image size/byte hashes, header/footer,
-  opaque parts, relationship targets, duplicate IDs, namespace bindings and
-  selected OOXML child order. This is not complete XSD validation.
-- `cross_format.dart` imports directly authored sheet/slide XML.
-  `cross_oracle.py` compares exported cells/formulas/caches/merges/frozen rows
-  and slide text/geometry with separately authored JSON expectations.
-- `notes.dart` produces an authored rich-note source and six repeated exports.
-  `notes_oracle.py` independently checks ordered paragraphs/tables/drawings,
-  run formatting, owning-part hyperlinks and image extents against JSON goldens.
-  It decodes PNG scanlines and checks the expected pixel hash, so accidentally
-  reusing the body picture's relationship cannot pass through a byte-copy check.
-- `test_oracles.py` deliberately corrupts fixtures to prove missing links/media/
-  note marks, changed text/numbering, invalid namespaces and property ordering
-  are rejected.
-
-Goldens are semantic: generated IDs, XML whitespace, ZIP timestamps and
-compression are not compared byte-for-byte. Picture/opaque content is hashed.
-
-```sh
-python3 tool/fidelity/corpus.py inspect input.docx
-python3 tool/fidelity/corpus.py verify build/fidelity
-python3 tool/fidelity/cross_oracle.py build/fidelity
+```json
+[
+  {"op":"heading","paragraph":0,"level":2},
+  {"op":"runFormat","paragraph":0,"bold":false,"color":"000000","size":11},
+  {"op":"addNote","paragraph":1,"offset":0,"text":"Source note"},
+  {"op":"imageReplace","image":0,"file":"replacement.png"},
+  {"op":"sectionFormat","columns":2,"columnSpace":18}
+]
 ```
 
-The Python snapshot expects this corpus's parts; use the Dart `inspect` for
-general documents. `verify` expects scenario outputs; DOCX names beginning
-with `edited` use the edited expectation.
+The committed `test/fixtures/fidelity/scripts/word.json` combines styles,
+explicit defaults, caret notes, rich note text, split hyperlinks, images,
+paragraph insertion/deletion, list restarts, table text and header/footer edits.
+It has a separately authored semantic expectation in `scripts/expected.json`.
 
-## Reviewed golden maintenance
+### XLSX: 10 operations
 
-Normal checks never refresh expectations. After deliberately changing the
-authored fixture, run `python3 tool/fidelity/corpus.py seed`, review the DOCX/JSON
-diff, and rerun checks. Sheet/slide JSON is authored separately, not regenerated.
+Every operation accepts `sheet` (default 0). Cell addresses/ranges use A1
+notation and must stay within Excel row/column bounds.
 
-The editor golden renders the fixture before and after export against the same
-reviewed full-page PNG. It requires actual picture pixels before capture, and
-includes notes and footer. Use pinned Flutter **3.44.0** on Linux:
+| Operation | Other fields | Result |
+| --- | --- | --- |
+| `cellValue` | `cell`, `value` | Set string/number/boolean/null and clear an existing formula |
+| `cellFormula` | `cell`, `formula` | Set a formula; a leading `=` is optional |
+| `cellFormat` | `cell`; optional `bold`, `color`, `fill`, `size`, `alignment` | Edit formatting while retaining imported style properties |
+| `mergeCells` | `range` | Merge and center a multi-cell range |
+| `unmergeCells` | `range` | Unmerge the selected range |
+| `freeze` | `rows` and/or `columns` | Set frozen row/column counts |
+| `renameSheet` | `name` | Rename an unreferenced sheet with a unique valid name |
+| `sheetOrder` | `to` | Move the sheet to a new index |
+| `rowHeight` | `row`, `height` | Set row height in pixels |
+| `columnWidth` | `column`, `width` | Set column width in pixels |
+
+After all edits, formulas are recalculated by the engine. The scripting command
+rejects a rename if formulas, names, charts or pivots reference that sheet;
+rewriting every possible formula grammar/reference is not implemented. This is
+an explicit unsupported operation, not a silently broken workbook. See
+`scripts/sheet.json` for formulas, styles, freeze panes, dimensions and reordering.
+
+### PPTX: 8 operations
+
+Every operation accepts `slide` (default 0). Shape indexes follow `inspect`.
+
+| Operation | Other fields | Result |
+| --- | --- | --- |
+| `shapeText` | `shape`, `text` | Replace text, preserving actual paragraph boundaries |
+| `shapeFormat` | `shape`; optional `size`, `color`, `fill`, `alignment`, `rtl` | Change supplied text/fill settings |
+| `shapeGeometry` | `shape`; optional `x`, `y`, `width`, `height`, `rotation` | Edit points/degrees, keeping visual geometry synchronized |
+| `slideNotes` | `text` | Replace speaker notes |
+| `slideHidden` | `hidden` | Set visibility |
+| `slideOrder` | `to` | Move a slide and preserve its owning parts |
+| `slideTransition` | `kind`; optional `direction`, `durationMs`, `advanceOnClick` | Set a schema-valid transition |
+| `slideImageReplace` | `shape`, `file` | Replace picture bytes |
+
+Text replacement refuses picture/table shapes. Slide reordering is rejected
+when presentation sections would also need rewriting. See `scripts/slide.json`
+for combined text, geometry, notes, transition, picture and reorder steps.
+
+## Evidence layers
+
+| Layer | Independent expectation and failure detected |
+| --- | --- |
+| Authored DOCX ZIP/XML | Note IDs/bodies, direct styles, lists, links, tables, media, section and compatibility semantics |
+| openpyxl / python-pptx inputs | Retained source templates/styles, live charts, pivots, speaker notes, media ownership and reorder behavior |
+| Python semantic oracles | Read output ZIP/XML directly, compare authored values, decode picture pixels, verify relationships and selected child ordering |
+| Mutation controls | Deliberately break content, note marks, style flags, list starts, formulas, media, namespaces or inventories and require rejection |
+| Flutter goldens | A full rich-note page plus three pages using first/even/default header/footer pictures, before and after asynchronous save |
+| Real CrispCloud widget tests | Open the real editor dialog, edit during an upload, capture saved bytes, retry failures and check dirty/close behavior |
+| Open XML SDK | Validate exported packages against the external OOXML schema validator; prove the validator rejects an invalid control |
+| LibreOffice / Poppler | Render each package to PDF and retained page PNGs; compare normalized text and decoded RGB pixels between complete repeated-save groups |
+| VM line coverage | List every uncovered instrumented line and every absent source file; execution coverage does not establish correctness |
+
+The Python package oracle is not a general OOXML validator. The Open XML SDK
+checks structural validity, not application rendering. LibreOffice repeated-save
+comparisons check stability in that renderer, not pixel identity with Microsoft
+Office. These layers answer different questions and are all retained.
+
+## Full checks
+
+From `packages/quds_office_engine`:
 
 ```sh
-cd ../quds_office_editor
-flutter test test/office_fidelity_golden_test.dart --no-pub
-# Intentional maintenance only: inspect the PNG, then rerun without this flag.
-flutter test test/office_fidelity_golden_test.dart --no-pub --update-goldens
-```
-
-## Full checks and gap inventory
-
-```sh
-# From packages/quds_office_engine; use a fresh coverage directory each time.
 dart analyze
-dart test --coverage=coverage/fresh-run
-python3 tool/fidelity/coverage_report.py coverage/fresh-run
+# Use an empty directory; never combine coverage from different source revisions.
+rm -rf coverage/vm
+dart test --coverage=coverage/vm
+bash tool/fidelity/check.sh
+python3 tool/fidelity/coverage_report.py coverage/vm
 cd ../quds_office_editor
 flutter test --no-pub
 python3 ../quds_office_engine/tool/fidelity/corpus.py verify build/fidelity
 ```
 
-The report merges hits and lists every unhit instrumented engine line plus files
-absent from instrumentation. Never mix coverage from different source revisions.
-Coverage measures execution, not correctness. See the repository's
-`docs/office-fidelity-audit.md` and `docs/office-coverage-gaps.json`.
+From the repository root, with .NET 8, LibreOffice and Poppler available:
 
-The GitHub workflow runs full engine/editor checks and uploads exports, reports,
-coverage and failed-image diffs. CrispCloud runs the portable corpus plus root
-host save regressions and checks a SHA-256 manifest for shared vendored files.
-
-Style steps preserve sparse source definitions and inherited values:
-
-```json
-[
-  {"op":"styleDefinition","style":"Accent","type":"character","rPr":{"color":{"val":"008844"},"sz":{"val":"32"}}},
-  {"op":"characterStyle","paragraph":2,"run":0,"style":"Accent"},
-  {"op":"tableStyle","table":0,"style":"Regional"}
-]
+```sh
+dotnet run --project tool/office-validation -- --self-test
+dotnet run --project tool/office-validation -- packages/quds_office_engine/build build/external/schema-report.json
+python3 -m unittest discover -s tool/office-validation -p 'test_*.py'
+python3 tool/office-validation/render.py packages/quds_office_engine/build build/external-render
 ```
 
-`styleDefinition` accepts `rPr`, `pPr`, `tblPr`, and `tcPr` maps. Keys are
-OOXML property names; values are attribute maps, or null to remove a property.
-The operation rejects unknown styles and type mismatches. Source defaults,
-basedOn chains, theme fonts/colors, character styles, table run/paragraph
-formatting, direct zero/false values, and cyclic source definitions are covered
-by `style_cascade_test.dart` and six independent sparse-XML oracle checks.
+CI runs full engine/editor suites, retains the semantic reports, exports,
+coverage, PDF/PNG render evidence and image diffs, and runs external gates.
+CrispCloud pins shared files with `tool/office_fidelity_manifest.json`; its host
+check also opens the actual saved DOCX with the independent oracle.
 
-The independent `native.xlsx` (openpyxl 3.1.5) and `native.pptx`
-(python-pptx 1.0.2) fixtures are committed. Regenerate explicitly with
-`python3 tool/fidelity/native_fixtures.py`; normal runs never overwrite inputs.
-`native_spreadsheet_test.dart` and `native_presentation_test.dart` emit fifteen
-files under `build/fidelity-native`. `native_oracle.py` checks owned relationships,
-master/theme preservation, decoded picture pixels, chart data/references, number
-formats, borders, fonts, hyperlinks, pivot/cache wiring, notes and motion XML.
+## Intentional fixture and golden maintenance
+
+Source fixture generators are maintenance commands, not part of normal checks.
+`corpus.py seed`, `native_fixtures.py`, and the authored fixture scripts must be
+run deliberately, followed by review of the XML/JSON/content changes. Never
+replace an expected value solely because the current exporter produced it.
+Generated IDs, ZIP timestamps, compression and harmless XML whitespace are not
+semantic goldens. Image pixels and opaque retained payloads are checked.
+
+For visual maintenance, use Flutter **3.44.0 on Linux**:
+
+```sh
+cd packages/quds_office_editor
+flutter test --no-pub test/office_fidelity_golden_test.dart test/office_story_golden_test.dart
+# Only after an intentional design/layout change:
+flutter test --no-pub test/office_story_golden_test.dart --update-goldens
+# Inspect all changed PNGs, then rerun without --update-goldens.
+```
+
+The picture assertions must pass before capturing a golden, so an undecoded or
+blank page cannot become an accepted baseline. Read `docs/office-fidelity-audit.md`
+and the machine-readable gap ledger for verified fixes and remaining limits.

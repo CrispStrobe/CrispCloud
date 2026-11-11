@@ -11,6 +11,7 @@ class _StyleCascade {
   final Map<String, String> fonts = {};
   XmlElement? defaults;
   String? defaultParagraph;
+  bool _missingStyles = false;
 
   bool apply() {
     final package = document.package;
@@ -26,10 +27,10 @@ class _StyleCascade {
     final part = package.getPart(
       rel == null ? '/word/styles.xml' : rels.resolve(rel),
     );
-    if (part == null) return false;
-    final root = XmlDocument.parse(part.readText()).root!;
-    defaults = root.firstChild('docDefaults');
-    for (final style in root.childrenNamed('style')) {
+    _missingStyles = part == null;
+    final root = part == null ? null : XmlDocument.parse(part.readText()).root;
+    defaults = root?.firstChild('docDefaults');
+    for (final style in root?.childrenNamed('style') ?? <XmlElement>[]) {
       final id = style.getAttribute('styleId');
       if (id == null) continue;
       styles[id] = style;
@@ -38,6 +39,7 @@ class _StyleCascade {
         defaultParagraph = id;
       }
     }
+    _missingStyles = styles.isEmpty && defaults == null;
     final themeRel = rels.firstByType(RelationshipTypes.theme);
     final theme = package.getPart(
       themeRel == null ? '/word/theme/theme1.xml' : rels.resolve(themeRel),
@@ -200,9 +202,42 @@ class _StyleCascade {
   }
 
   void paragraph(WmlParagraph p, List<XmlElement> tableLayers) {
+    final bool previouslyImported = p.properties.importedValues != null;
     if (p.properties.importedValues != null) {
       p.properties.sourcePropertiesXml = WordSerializer()
           .paragraphPropertiesXml(p.properties);
+    }
+    if (_missingStyles) {
+      // Missing style parts are legal. Retain the absence of direct XML rather
+      // than serializing the editor's new-document defaults onto this import.
+      // Keep the established built-in fallback for an explicit style reference.
+      if (!previouslyImported && p.properties.styleId == null) {
+        if (!p.properties.explicitSpacingAfter) p.properties.spacingAfter = 0;
+        if (!p.properties.explicitLineSpacing) p.properties.lineSpacing = 1;
+      }
+      for (final run in p.inlines.whereType<WmlRun>()) {
+        if (run.properties.importedValues != null) {
+          run.properties.sourcePropertiesXml = WordSerializer()
+              .runPropertiesXml(run.properties);
+        }
+      }
+      WordStyles.resolveOntoParagraph(
+        p,
+        document: document,
+        notBold: reader._notBold,
+        notItalic: reader._notItalic,
+      );
+      p.properties.sourcePropertiesXml ??= '';
+      p.properties.importedValues = WordPropertyIo.paragraphValues(
+        p.properties,
+      );
+      for (final run in p.inlines.whereType<WmlRun>()) {
+        run.properties.sourcePropertiesXml ??= '';
+        run.properties.importedValues = WordPropertyIo.runValues(
+          run.properties,
+        );
+      }
+      return;
     }
     final direct = WordPropertyIo.parse(
       p.properties.sourcePropertiesXml,

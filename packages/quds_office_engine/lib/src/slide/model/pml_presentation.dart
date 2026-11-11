@@ -196,6 +196,41 @@ class PmlTable {
   );
 }
 
+/// Imported text body and the scalar values exposed by the shape editor.
+///
+/// The immutable source retains rich runs, fonts, bullets, hyperlinks, fields
+/// and body settings when a shape is moved or otherwise edited without
+/// replacing its text. Scalar text-format edits are applied during export.
+class PmlTextSource {
+  /// Creates an immutable source snapshot.
+  const PmlTextSource({
+    required this.xml,
+    required this.text,
+    required this.fontSizePt,
+    required this.textColor,
+    required this.textAlign,
+    required this.rightToLeft,
+  });
+
+  /// Original DrawingML text body, including namespace declarations.
+  final String xml;
+
+  /// Text and formatting exposed on import.
+  final String text;
+
+  /// Imported representative font size.
+  final double fontSizePt;
+
+  /// Imported representative text color.
+  final String textColor;
+
+  /// Imported paragraph alignment.
+  final PmlTextAlign textAlign;
+
+  /// Imported paragraph direction.
+  final bool? rightToLeft;
+}
+
 /// Class PmlShape.
 class PmlShape {
   /// PmlShape API.
@@ -208,6 +243,7 @@ class PmlShape {
     this.fillColor = '4472C4',
     this.textColor = '',
     this.fontSizePt = 0,
+    this.textSource,
     this.embedRelId,
     List<PmlPathPoint>? path,
     this.visual,
@@ -249,6 +285,9 @@ class PmlShape {
 
   /// fontSizePt API.
   double fontSizePt;
+
+  /// Source rich text used to preserve unchanged imported formatting.
+  PmlTextSource? textSource;
 
   /// embedRelId API.
   String? embedRelId;
@@ -310,6 +349,7 @@ class PmlShape {
       fillColor: fillColor,
       textColor: textColor,
       fontSizePt: fontSizePt,
+      textSource: textSource,
       embedRelId: embedRelId,
       path: <PmlPathPoint>[...path],
       visual: visual?.copy(),

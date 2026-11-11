@@ -1,3 +1,4 @@
+import 'namespaces.dart';
 import 'xml_reader.dart';
 import 'xml_writer.dart';
 
@@ -349,7 +350,9 @@ class XmlDocument {
           if (stack.isEmpty) {
             break;
           }
-          if (reader.isWhitespace && stack.last.children.isEmpty) {
+          if (reader.isWhitespace &&
+              stack.last.children.isEmpty &&
+              !_preservesSpace(stack)) {
             break;
           }
           stack.last.addText(reader.text);
@@ -369,6 +372,24 @@ class XmlDocument {
       }
     }
     return doc;
+  }
+
+  static bool _preservesSpace(List<XmlElement> stack) {
+    for (final XmlElement element in stack.reversed) {
+      for (final XmlAttribute attribute in element.attributes) {
+        if (attribute.namespaceUri != OfficeNamespaces.xml ||
+            attribute.localName != 'space') {
+          continue;
+        }
+        if (attribute.value == 'preserve') {
+          return true;
+        }
+        if (attribute.value == 'default') {
+          return false;
+        }
+      }
+    }
+    return false;
   }
 
   /// Consume the element at the reader's current start event, retaining namespaces.

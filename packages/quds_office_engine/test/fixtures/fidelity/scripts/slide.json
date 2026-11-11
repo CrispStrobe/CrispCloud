@@ -1,0 +1,50 @@
+[
+  {
+    "op": "shapeText",
+    "shape": 0,
+    "text": "Scripted presentation"
+  },
+  {
+    "op": "shapeFormat",
+    "shape": 0,
+    "size": 30,
+    "color": "112233",
+    "fill": "FFEEDD",
+    "alignment": "center",
+    "rtl": false
+  },
+  {
+    "op": "shapeGeometry",
+    "shape": 0,
+    "x": 40,
+    "y": 40,
+    "width": 500,
+    "height": 50,
+    "rotation": 15
+  },
+  {
+    "op": "slideNotes",
+    "text": "Edited\nspeaker note"
+  },
+  {
+    "op": "slideHidden",
+    "slide": 1,
+    "hidden": true
+  },
+  {
+    "op": "slideTransition",
+    "kind": "wipe",
+    "durationMs": 900,
+    "direction": "right"
+  },
+  {
+    "op": "slideImageReplace",
+    "shape": 1,
+    "file": "replacement.png"
+  },
+  {
+    "op": "slideOrder",
+    "slide": 1,
+    "to": 0
+  }
+]

@@ -4,6 +4,64 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Preserve sparse paragraph/run formatting when importing a document with no
+  style definitions; retain empty catalogs and avoid adding unreferenced Normal
+  defaults, while exporting explicitly referenced built-in styles and edits.
+
+- Preserve imported footnote/endnote separation exactly, including no space,
+  multiple spaces and tabs; newly inserted notes still get one separator.
+- Honor inherited `xml:space="preserve"` for whitespace-only text in the XML
+  DOM so copied rich text and note spaces remain intact.
+
+- Preserve imported `altChunk` blocks in body, table and note stories with
+  immutable source XML and payload identity; rebind their relationships when
+  moved or cloned between stories. Their external content remains unrendered.
+- Allocate stable unique section-revision IDs when cloning imported sections,
+  preserving their history and settings without duplicate schema identifiers.
+- Add diagnostic probes that explicitly report remaining content-control
+  wrapper loss and multiple/cross-paragraph bookmark-range loss.
+
+- Join native comment replies and resolved state through the final paragraph's
+  `w14:paraId`, retain anchors through comment copies/edits, allocate new anchors
+  without collisions, and normalize MIME declarations when clearing comments.
+
+- Add strict DOCX/XLSX/PPTX import, inspect, edit and repeated-save scripts with
+  43 operations, authored semantic expectations and deliberate corruption checks.
+  Explicit script formatting retains false/zero/default values as direct edits.
+
+- Preserve imported list-level overrides and export explicit restart instances
+  while keeping subsequent items attached to the restarted numbering sequence.
+- Import only the first supported markup-compatibility Choice, or its Fallback,
+  throughout Word body, table, header/footer and note stories.
+- Retain imported section metadata, page numbering, grids, borders, custom
+  columns and revision history through unrelated edits and section cloning;
+  merge deliberate page and column edits without discarding other settings.
+- Export referenced built-in styles missing from an imported style catalog,
+  including known parent styles and references from notes and headers.
+- Write line feeds as Word breaks, read run-contained line/page/column breaks,
+  and use the standard extended-comments content type.
+
+- Preserve one worksheet drawing relationship across absolute/relative target
+  forms, emit SpreadsheetML chart transforms, and normalize pivot cache links.
+- Keep imported font properties, number formats and borders during cell edits
+  while serializing font properties in schema order.
+- Convert stored column widths with the ISO maximum-digit-width formula;
+  preserve untouched import precision and export edited pixel widths accurately.
+- Preserve hidden/grouped columns, default column styles, best-fit/phonetic flags
+  and width-less column definitions through edits and column insertion/deletion.
+
+- Preserve imported PowerPoint rich text bodies and export scalar font/color
+  edits; use proper paragraph boundaries for multiline shape text.
+- Emit valid PowerPoint chart-frame transforms and transition durations, and
+  allocate valid chart axis IDs for nonconforming imported identifiers.
+
+- Preserve pictures and charts in default, first-page and even-page headers
+  and footers; keep their relationships scoped to the owning story.
+- Follow package relationships when saving nonstandard Word main, styles, notes
+  and settings parts, so edits reach the part opened by external applications.
+- Replacing or reordering Word media no longer overwrites payloads shared by
+  other stories or retained package parts. Repeated saves reuse unchanged data.
+
 - Fix the feature-showcase template detail band so its item table fits.
 - Watermark text rotates as one marked line on every page.
 - Imported DOCX footnote and endnote reference marks render as superscript.

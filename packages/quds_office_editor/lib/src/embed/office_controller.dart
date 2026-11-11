@@ -4382,29 +4382,13 @@ class WordEditorController extends OfficeController {
     final List<WmlBlock> moved = splitAt < current.blocks.length
         ? current.blocks.sublist(splitAt)
         : <WmlBlock>[];
-    final WmlSection next = WmlSection(
-      blocks: moved.isEmpty
+    final WmlSection next = WmlClone.section(current)
+      ..blocks = moved.isEmpty
           ? <WmlBlock>[
               WmlParagraph(inlines: <WmlInline>[WmlRun(text: '')]),
             ]
-          : moved,
-      pageSize: current.pageSize,
-      margins: current.margins,
-      columnCount: current.columnCount,
-      columnSpace: current.columnSpace,
-      columnSep: current.columnSep,
-      header: <WmlParagraph>[
-        for (final WmlParagraph para in current.header)
-          WmlClone.paragraph(para),
-      ],
-      footer: <WmlParagraph>[
-        for (final WmlParagraph para in current.footer)
-          WmlClone.paragraph(para),
-      ],
-      breakKind: kind,
-      differentFirstPage: current.differentFirstPage,
-      differentOddEven: current.differentOddEven,
-    );
+          : moved
+      ..breakKind = kind;
     final int at = document.sections.indexOf(current) + 1;
     commands.commit(
       _CallbackCommand(

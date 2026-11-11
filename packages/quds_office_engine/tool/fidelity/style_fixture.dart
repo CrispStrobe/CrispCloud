@@ -19,12 +19,12 @@ OpcPackage styleFixture() {
     utf8.encode('''
 <w:styles xmlns:w="${OfficeNamespaces.w}">
 <w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:asciiTheme="minorHAnsi"/><w:sz w:val="24"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="100"/></w:pPr></w:pPrDefault></w:docDefaults>
-<w:style w:type="paragraph" w:styleId="Base"><w:name w:val="Base"/><w:pPr><w:spacing w:before="240"/></w:pPr><w:rPr><w:b/><w:color w:themeColor="accent1"/><w:sz w:val="28"/></w:rPr></w:style>
+<w:style w:type="paragraph" w:styleId="Base"><w:name w:val="Base"/><w:pPr><w:spacing w:before="240"/></w:pPr><w:rPr><w:b/><w:color w:val="auto" w:themeColor="accent1"/><w:sz w:val="28"/></w:rPr></w:style>
 <w:style w:type="paragraph" w:styleId="Child"><w:name w:val="Child"/><w:basedOn w:val="Base"/><w:pPr><w:spacing w:after="60"/></w:pPr></w:style>
 <w:style w:type="character" w:styleId="AccentBase"><w:name w:val="Accent base"/><w:rPr><w:i/></w:rPr></w:style>
 <w:style w:type="character" w:styleId="Accent"><w:name w:val="Accent"/><w:basedOn w:val="AccentBase"/><w:rPr><w:color w:val="AA3300"/><w:sz w:val="32"/></w:rPr></w:style>
 <w:style w:type="paragraph" w:styleId="CycleA"><w:basedOn w:val="CycleB"/></w:style><w:style w:type="paragraph" w:styleId="CycleB"><w:basedOn w:val="CycleA"/></w:style>
-<w:style w:type="table" w:styleId="Regional"><w:name w:val="Regional"/><w:rPr><w:color w:val="334455"/></w:rPr><w:tblStylePr w:type="firstRow"><w:rPr><w:b/><w:color w:val="FFFFFF"/></w:rPr><w:tcPr><w:shd w:fill="225588"/></w:tcPr></w:tblStylePr></w:style>
+<w:style w:type="table" w:styleId="Regional"><w:name w:val="Regional"/><w:rPr><w:color w:val="334455"/></w:rPr><w:tblStylePr w:type="firstRow"><w:rPr><w:b/><w:color w:val="FFFFFF"/></w:rPr><w:tcPr><w:shd w:val="clear" w:fill="225588"/></w:tcPr></w:tblStylePr></w:style>
 </w:styles>'''),
   );
   final native = OpcPackage.openBytes(

@@ -1,0 +1,47 @@
+{
+  "payloads": {
+    "payload/body.html": {
+      "sha256": "ca032c1aa19e3129e2c16acdc31ae903a2a41cc2d5349a27f609fdcf1a827365",
+      "content_type": "text/html"
+    },
+    "payload/cell.html": {
+      "sha256": "046149cae083215aac87ba2bdff9bd2b1124b07e1a1a19a5a9ac984e56aa2133",
+      "content_type": "text/html"
+    },
+    "payload/note.html": {
+      "sha256": "8fff8e69d414e00086025ea47da4e93ccd666845ff76c529f6750f52a66f17fb",
+      "content_type": "text/html"
+    }
+  },
+  "imported_body_order": [
+    "p:Edited before body",
+    "chunk:payload/body.html",
+    "p:After opaque body",
+    "table",
+    "p:Reference note"
+  ],
+  "moved_body_order": [
+    "p:Edited before body",
+    "chunk:payload/note.html",
+    "p:After opaque body",
+    "table",
+    "p:Reference note",
+    "chunk:payload/body.html"
+  ],
+  "cell_order": [
+    "p:Before opaque cell",
+    "chunk:payload/cell.html",
+    "p:After opaque cell"
+  ],
+  "imported_note_order": [
+    "p:Before opaque note",
+    "chunk:payload/note.html",
+    "p:Edited after note"
+  ],
+  "moved_note_order": [
+    "p:Before opaque note",
+    "chunk:payload/body.html",
+    "p:Edited after note",
+    "chunk:payload/cell.html"
+  ]
+}

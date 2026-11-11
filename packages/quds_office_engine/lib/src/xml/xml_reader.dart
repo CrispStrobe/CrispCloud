@@ -95,6 +95,12 @@ class XmlPullReader {
     return _resolvePrefix(prefix);
   }
 
+  /// Resolves a prefix in the current element's namespace scope.
+  ///
+  /// Markup-compatibility `Requires` values contain prefixes rather than
+  /// namespace URIs, so consumers must resolve them where the attribute occurs.
+  String lookupNamespace(String prefix) => _resolvePrefix(prefix);
+
   /// text API.
   String get text {
     if (_type == XmlEventType.characters || _type == XmlEventType.cdata) {

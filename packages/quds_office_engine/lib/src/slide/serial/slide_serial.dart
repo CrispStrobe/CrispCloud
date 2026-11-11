@@ -583,6 +583,7 @@ class SlideSerializer {
     package
         .getPart(_presentationUri)!
         .writeText(_presentationXml(pres, slideRelIds, package));
+    _normalizeChartAxisIds(package);
     pres.properties.writeToPackage(package);
     pres.package = package;
     return package;
@@ -657,6 +658,57 @@ class SlideSerializer {
       shape.embedRelId = found.id;
     }
     return ids;
+  }
+
+  // Some independent producers use signed or oversized chart axis IDs.
+  // Both the schema and Office's semantic constraint require nonnegative
+  // Int32 values. Allocate unused IDs and update declarations/references
+  // together, including retained source charts, without changing their data.
+  static void _normalizeChartAxisIds(OpcPackage package) {
+    for (final PackagePart part in package.parts) {
+      if (part.contentType != OfficeContentTypes.drawingChart) continue;
+      final XmlPullReader reader = XmlPullReader(
+        package.getPart(part.uri)!.readText(),
+      );
+      XmlElement? root;
+      while (reader.next()) {
+        if (reader.eventType == XmlEventType.startElement) {
+          root = XmlDocument.readElement(reader);
+          break;
+        }
+      }
+      if (root == null) continue;
+      final XmlDocument xml = XmlDocument(root: root);
+      final List<XmlElement> nodes =
+          <XmlElement>[
+                ..._descendants(root, 'axId'),
+                ..._descendants(root, 'crossAx'),
+              ]
+              .where(
+                (XmlElement node) => node.namespaceUri == OfficeNamespaces.c,
+              )
+              .toList();
+      final Set<int> used = <int>{
+        for (final XmlElement node in nodes)
+          if (int.tryParse(node.getAttribute('val') ?? '') case final int value)
+            if (value >= 0 && value <= 2147483647) value,
+      };
+      final Map<int, int> replacements = <int, int>{};
+      int next = 1;
+      for (final XmlElement node in nodes) {
+        final int? value = int.tryParse(node.getAttribute('val') ?? '');
+        if (value == null || (value >= 0 && value <= 2147483647)) continue;
+        final int normalized = replacements.putIfAbsent(value, () {
+          while (used.contains(next)) {
+            next++;
+          }
+          used.add(next);
+          return next++;
+        });
+        node.setAttribute('val', '$normalized');
+      }
+      if (replacements.isNotEmpty) part.writeText(xml.toXmlString());
+    }
   }
 
   static String _chartXml(OfficeVisual visual) {

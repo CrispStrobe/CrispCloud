@@ -21,6 +21,7 @@ import 'package:path/path.dart' as p;
 import 'package:xml/xml.dart';
 
 import 'archive_viewer_service.dart';
+import 'office_package_parts.dart';
 
 const int _kOfficePartCap = 8 * 1024 * 1024;
 const int _kOfficeRawCap = 4 * 1024 * 1024;
@@ -326,72 +327,13 @@ int _sortedNumber(String path, String prefix) {
 // DOCX
 // ---------------------------------------------------------------------------
 
-class _OfficePartRelationship {
-  const _OfficePartRelationship(this.id, this.type, this.path);
-  final String id;
-  final String type;
-  final String path;
-}
-
-Future<List<_OfficePartRelationship>> _officePartRelationships(
+Future<List<OfficePartRelationship>> _officePartRelationships(
   ViewerArchive archive,
   String owner,
-) async {
-  final relsPath = owner.isEmpty
-      ? '_rels/.rels'
-      : p.posix.normalize(
-          p.posix.join(
-            p.posix.dirname(owner),
-            '_rels',
-            '${p.posix.basename(owner)}.rels',
-          ),
-        );
-  final xml = await _readPart(archive, relsPath);
-  if (xml == null) return const [];
-  final result = <_OfficePartRelationship>[];
-  for (final rel in XmlDocument.parse(
-    xml,
-  ).findAllElements('Relationship', namespace: '*')) {
-    final id = rel.getAttribute('Id');
-    final type = rel.getAttribute('Type');
-    final target = rel.getAttribute('Target');
-    if (id == null ||
-        type == null ||
-        target == null ||
-        rel.getAttribute('TargetMode')?.toLowerCase() == 'external') {
-      continue;
-    }
-    final uri = Uri.tryParse(target);
-    if (uri == null ||
-        uri.hasScheme ||
-        uri.hasAuthority ||
-        uri.hasQuery ||
-        uri.hasFragment ||
-        target.contains('\\')) {
-      continue;
-    }
-    final decoded = Uri.decodeComponent(uri.path);
-    final path = p.posix.normalize(
-      decoded.startsWith('/')
-          ? decoded.substring(1)
-          : p.posix.join(owner.isEmpty ? '' : p.posix.dirname(owner), decoded),
-    );
-    if (path == '..' || path.startsWith('../') || path.startsWith('/')) {
-      continue;
-    }
-    result.add(_OfficePartRelationship(id, type, path));
-  }
-  return result;
-}
+) => OfficePackageParts((name) => _readPart(archive, name)).relationships(owner);
 
-Future<String> _officeMainPart(ViewerArchive archive, String fallback) async {
-  final rels = await _officePartRelationships(archive, '');
-  return rels
-          .where((rel) => rel.type.endsWith('/officeDocument'))
-          .firstOrNull
-          ?.path ??
-      fallback;
-}
+Future<String> _officeMainPart(ViewerArchive archive, String fallback) =>
+    OfficePackageParts((name) => _readPart(archive, name)).mainPart(fallback);
 
 Future<OfficeDocument> _parseDocx(ViewerArchive archive) async {
   final mainPart = await _officeMainPart(archive, 'word/document.xml');

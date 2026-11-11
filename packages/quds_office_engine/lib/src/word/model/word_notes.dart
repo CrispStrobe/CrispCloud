@@ -10,6 +10,7 @@ class WmlNote {
   WmlNote({
     required this.id,
     required this.endnote,
+    this.addReferenceSpace = true,
     List<WmlParagraph>? paragraphs,
     List<WmlBlock>? blocks,
   }) : blocks =
@@ -26,6 +27,10 @@ class WmlNote {
 
   /// True for an endnote, false for a footnote.
   final bool endnote;
+
+  /// New note bodies get one separator after the automatic reference mark.
+  /// Imported stories keep their exact source whitespace instead.
+  final bool addReferenceSpace;
 
   /// Ordered note story, including paragraphs, tables, pictures and equations.
   final List<WmlBlock> blocks;

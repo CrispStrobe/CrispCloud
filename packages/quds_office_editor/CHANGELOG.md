@@ -4,6 +4,10 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Relayout a replaced Word viewport so scrolling to later pages does not leave
+  an empty canvas. Three reviewed page goldens cover first, even and default
+  header/footer pictures before and after an asynchronous save.
+
 - Fix the feature-showcase template detail band so its item table fits.
 - Selection highlighting is visible on white pages.
 - Header and footer edits force a full relayout so typed text lands in the

@@ -438,10 +438,11 @@ class SmlStyleSheet {
       if (bold) {
         buf.write('<b/>');
       }
-      buf.write('<sz val="$size"/><name val="Calibri"/>');
+      buf.write('<sz val="$size"/>');
       if (font.isNotEmpty) {
         buf.write('<color rgb="FF$font"/>');
       }
+      buf.write('<name val="Calibri"/>');
       buf.write('</font>');
     }
     buf.write('</fonts><fills count="${fillRgbs.length}">');
@@ -522,6 +523,7 @@ class SmlStyleSheet {
                 template.addChild(child.copy());
               }
             }
+            _orderFontChildren(template);
           } else {
             for (final key in [
               'fontId',
@@ -551,7 +553,50 @@ class SmlStyleSheet {
       }
       old.setAttribute('count', '${old.childElements.length}');
     }
+    // Some import producers emit the same properties in a non-schema order.
+    // Normalize their sequence without changing the properties themselves.
+    for (final font
+        in result.root!.firstChild('fonts')?.childrenNamed('font') ??
+            <XmlElement>[]) {
+      _orderFontChildren(font);
+    }
     return result.toXmlString();
+  }
+
+  // CT_Font is an ordered sequence. Updating only the supported properties
+  // must retain imported family/charset/italic/underline/scheme properties
+  // while inserting b, color and sz at their schema positions.
+  static void _orderFontChildren(XmlElement font) {
+    const order = <String>[
+      'b',
+      'i',
+      'strike',
+      'condense',
+      'extend',
+      'outline',
+      'shadow',
+      'u',
+      'vertAlign',
+      'sz',
+      'color',
+      'name',
+      'family',
+      'charset',
+      'scheme',
+    ];
+    int rank(XmlNode node) {
+      final index = node is XmlElement ? order.indexOf(node.localName) : -1;
+      return index < 0 ? order.length : index;
+    }
+
+    final children = font.children.indexed.toList()
+      ..sort((a, b) {
+        final compared = rank(a.$2).compareTo(rank(b.$2));
+        return compared == 0 ? a.$1.compareTo(b.$1) : compared;
+      });
+    font.children
+      ..clear()
+      ..addAll(children.map((entry) => entry.$2));
   }
 
   /// resolveColor API.

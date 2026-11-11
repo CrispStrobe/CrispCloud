@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "outputs": [
+    "build/fidelity-host/after-late-edits.docx",
+    "build/fidelity-host/before-late-edits.docx",
+    "build/fidelity-host/close-after-late-edit.docx",
+    "build/fidelity-host/close-before-late-edit.docx",
+    "build/fidelity-host/failed-upload-attempt.docx",
+    "build/fidelity-host/retry-after-failure.docx",
+    "build/fidelity-host/sections-1.docx",
+    "build/fidelity-host/sections-2.docx",
+    "build/fidelity-host/sections-3.docx",
+    "build/fidelity-host/selection-save.docx",
+    "build/fidelity-host/text-breaks-1.docx",
+    "build/fidelity-host/text-breaks-2.docx",
+    "build/fidelity-host/text-breaks-3.docx",
+    "build/fidelity/unchanged-controller.docx"
+  ]
+}
