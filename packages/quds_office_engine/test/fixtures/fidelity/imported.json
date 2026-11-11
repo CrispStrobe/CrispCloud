@@ -1,0 +1,105 @@
+{
+  "text": [
+    "Imported heading",
+    "Body text",
+    "Body link",
+    "List item"
+  ],
+  "heading_levels": [
+    {
+      "val": "0"
+    }
+  ],
+  "references": {
+    "footnote": [
+      12
+    ],
+    "endnote": [
+      3
+    ]
+  },
+  "notes": {
+    "footnote": [
+      {
+        "id": 12,
+        "paragraphs": [
+          "Footnote text",
+          "Note link"
+        ],
+        "links": [
+          [
+            "Note link",
+            "https://example.com/note"
+          ]
+        ]
+      }
+    ],
+    "endnote": [
+      {
+        "id": 3,
+        "paragraphs": [
+          "Endnote text"
+        ],
+        "links": []
+      }
+    ]
+  },
+  "links": [
+    [
+      "Body link",
+      "https://example.com/body"
+    ]
+  ],
+  "table_text": [
+    "Cell text"
+  ],
+  "image_extents": [
+    {
+      "cx": "457200",
+      "cy": "457200"
+    }
+  ],
+  "image_sha256": [
+    "ebf4f635a17d10d6eb46ba680b70142419aa3220f228001a036d311a22ee9d2a"
+  ],
+  "styles": {
+    "Heading1": {
+      "type": "paragraph",
+      "numId": {},
+      "indent": {}
+    },
+    "BodyCustom": {
+      "type": "paragraph",
+      "numId": {},
+      "indent": {}
+    },
+    "ListCustom": {
+      "type": "paragraph",
+      "numId": {
+        "val": "5"
+      },
+      "indent": {
+        "left": "720",
+        "hanging": "360"
+      }
+    },
+    "EmphasisCustom": {
+      "type": "character",
+      "numId": {},
+      "indent": {}
+    },
+    "TableCustom": {
+      "type": "table",
+      "numId": {},
+      "indent": {}
+    }
+  },
+  "header_links": [
+    [
+      "Header link",
+      "https://example.com/header"
+    ]
+  ],
+  "footer_text": "Footer text",
+  "opaque_sha256": "0529ef8946804c26f3955fc960200726e5ff6f9100deb7ce8929267c51ce907b"
+}

@@ -270,6 +270,8 @@ class WmlParagraphProps {
     this.explicitLineSpacing = false,
     this.explicitSpacingBefore = false,
     this.explicitSpacingAfter = false,
+    this.explicitJustification = false,
+    this.explicitIndent = false,
     this.indent = const WmlIndent(),
     List<WmlTabStop>? tabs,
     this.keepTogether = false,
@@ -317,6 +319,12 @@ class WmlParagraphProps {
 
   /// True when `w:spacing/@w:after` was set on this paragraph.
   bool explicitSpacingAfter;
+
+  /// Whether alignment was explicitly set by the source paragraph.
+  bool explicitJustification;
+
+  /// Whether indentation was explicitly set by the source paragraph.
+  bool explicitIndent;
 
   /// indent API.
   WmlIndent indent;
@@ -405,6 +413,8 @@ class WmlParagraphProps {
     explicitLineSpacing: explicitLineSpacing,
     explicitSpacingBefore: explicitSpacingBefore,
     explicitSpacingAfter: explicitSpacingAfter,
+    explicitJustification: explicitJustification,
+    explicitIndent: explicitIndent,
     indent: indent,
     tabs: List<WmlTabStop>.from(tabs),
     keepTogether: keepTogether,
@@ -508,6 +518,9 @@ abstract final class WmlHighlight {
 
 /// Class WmlRunProps.
 class WmlRunProps {
+  /// Direct source properties, including explicit values equal to defaults.
+  final Set<String> explicitProperties = <String>{};
+
   /// WmlRunProps API.
   WmlRunProps({
     this.bold = false,
@@ -567,7 +580,7 @@ class WmlRunProps {
     asciiFont: asciiFont,
     csFont: csFont,
     vertAlign: vertAlign,
-  );
+  )..explicitProperties.addAll(explicitProperties);
 }
 
 /// Class WmlTableProps.

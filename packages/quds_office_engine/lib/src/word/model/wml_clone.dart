@@ -180,6 +180,8 @@ abstract final class WmlClone {
         properties: inline.properties.copy(),
         hyperlink: inline.hyperlink?.copy(),
         commentIds: List<int>.from(inline.commentIds),
+        noteRefId: inline.noteRefId,
+        noteRefEndnote: inline.noteRefEndnote,
       );
     }
     if (inline is WmlBreak) {
@@ -222,6 +224,8 @@ abstract final class WmlClone {
           properties: inline.properties.copy(),
           hyperlink: inline.hyperlink?.copy(),
           commentIds: List<int>.from(inline.commentIds),
+          noteRefId: inline.noteRefId,
+          noteRefEndnote: inline.noteRefEndnote,
         ),
       );
       offset = end;

@@ -468,6 +468,7 @@ class WordDeserializer {
       }
       switch (reader.localName) {
         case 'jc':
+          props.explicitJustification = true;
           props.justification = _jc(
             reader.getAttribute('val', namespaceUri: OfficeNamespaces.w),
           );
@@ -513,6 +514,7 @@ class WordDeserializer {
             }
           }
         case 'ind':
+          props.explicitIndent = true;
           props.indent = WmlIndent(
             left: _twipAttr(
               reader,
@@ -528,9 +530,13 @@ class WordDeserializer {
             hanging: _twipAttr(reader, 'hanging'),
           );
         case 'keepLines':
-          props.keepTogether = true;
+          props.keepTogether = _onOff(
+            reader.getAttribute('val', namespaceUri: OfficeNamespaces.w),
+          );
         case 'pageBreakBefore':
-          props.pageBreakBefore = true;
+          props.pageBreakBefore = _onOff(
+            reader.getAttribute('val', namespaceUri: OfficeNamespaces.w),
+          );
         case 'numPr':
           _readNumPr(reader, props);
         case 'shd':
@@ -821,6 +827,7 @@ class WordDeserializer {
       if (reader.eventType != XmlEventType.startElement) {
         continue;
       }
+      props.explicitProperties.add(reader.localName);
       switch (reader.localName) {
         case 'b':
           props.bold = _onOff(
@@ -837,7 +844,9 @@ class WordDeserializer {
             _notItalic.add(props);
           }
         case 'strike':
-          props.strike = true;
+          props.strike = _onOff(
+            reader.getAttribute('val', namespaceUri: OfficeNamespaces.w),
+          );
         case 'color':
           props.color =
               reader.getAttribute('val', namespaceUri: OfficeNamespaces.w) ??
@@ -1808,7 +1817,7 @@ class WordDeserializer {
         while (reader.next() && reader.depth >= depth) {
           if (reader.eventType == XmlEventType.startElement &&
               reader.localName == 'p') {
-            note.paragraphs.add(_readParagraph(reader, package, docUri));
+            note.paragraphs.add(_readParagraph(reader, package, uri));
           }
         }
       }
@@ -1828,7 +1837,6 @@ class WordDeserializer {
     if (part == null) {
       return;
     }
-    WordStyles.extras.clear();
     document.styles.clear();
     final XmlPullReader reader = XmlPullReader(part.readText());
     String? id;
@@ -1857,6 +1865,14 @@ class WordDeserializer {
       }
       if (reader.eventType == XmlEventType.startElement &&
           reader.localName == 'style') {
+        final String? type = reader.getAttribute(
+          'type',
+          namespaceUri: OfficeNamespaces.w,
+        );
+        if (type != null && type != 'paragraph') {
+          reader.skip();
+          continue;
+        }
         id = reader.getAttribute('styleId', namespaceUri: OfficeNamespaces.w);
         name = '';
         basedOn = null;
@@ -1988,9 +2004,7 @@ class WordDeserializer {
           indent: indent,
         );
         document.styles.add(style);
-        if (WordStyles.byId(id) == null) {
-          WordStyles.extras.add(style);
-        }
+        document.importedStyles[style.id] = style;
         id = null;
       }
     }

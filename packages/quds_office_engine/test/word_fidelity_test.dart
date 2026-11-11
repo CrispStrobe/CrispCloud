@@ -205,7 +205,7 @@ void main() {
           .first
           .properties
           .highlight,
-      'yellow',
+      'FFFF00',
     );
     final WmlTable table = doc.sections.first.blocks
         .whereType<WmlTable>()

@@ -73,9 +73,8 @@ abstract final class WordNotes {
 
   /// byId API.
   static WmlNote? byId(WmlDocument document, int id, {required bool endnote}) {
-    for (final WmlNote note in endnote
-        ? document.endnotes
-        : document.footnotes) {
+    for (final WmlNote note
+        in endnote ? document.endnotes : document.footnotes) {
       if (note.id == id) {
         return note;
       }
@@ -93,7 +92,6 @@ abstract final class WordNotes {
       return false;
     }
     bucket.removeAt(index);
-    final String legacy = endnote ? '[E$id]' : '[$id]';
     for (final WmlParagraph paragraph in document.paragraphs) {
       if (paragraph.properties.noteId == id &&
           paragraph.properties.endnoteRef == endnote) {
@@ -106,11 +104,6 @@ abstract final class WordNotes {
             inline.noteRefId == id &&
             inline.noteRefEndnote == endnote,
       );
-      for (final WmlInline inline in paragraph.inlines) {
-        if (inline is WmlRun && inline.text.contains(legacy)) {
-          inline.text = inline.text.replaceAll(legacy, '');
-        }
-      }
     }
     return true;
   }

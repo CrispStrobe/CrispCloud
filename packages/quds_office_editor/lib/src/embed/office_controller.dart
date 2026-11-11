@@ -3126,13 +3126,10 @@ class WordEditorController extends OfficeController {
             WmlRunEdit.replaceRange(para, index, para.text.length, '');
           }
           final WmlParagraph next = WmlParagraph(
-            properties: para.properties,
+            properties: para.properties.copy(),
             inlines: tail.isEmpty
                 ? <WmlInline>[WmlRun()]
-                : <WmlInline>[
-                    for (final WmlRun run in tail)
-                      WmlRun(text: run.text, properties: run.properties.copy()),
-                  ],
+                : <WmlInline>[..._cloneInlinesFrom(tail)],
           );
           _insertParagraphAfter(para, next);
         },
@@ -3277,6 +3274,8 @@ class WordEditorController extends OfficeController {
             properties: inline.properties.copy(),
             hyperlink: inline.hyperlink,
             commentIds: List<int>.from(inline.commentIds),
+            noteRefId: inline.noteRefId,
+            noteRefEndnote: inline.noteRefEndnote,
           )
         else
           inline,
@@ -3652,28 +3651,7 @@ class WordEditorController extends OfficeController {
     }
     final WmlParagraph para = _activeParagraph;
     final String text = para.text;
-    final int i = caret.logicalIndex.clamp(0, text.length);
-    final String head = text.substring(0, i);
-    final String tail = text.substring(i);
-    commands.commit(
-      _CallbackCommand(
-        executeFn: () {
-          _setParagraphText(para, head);
-          final WmlParagraph next = WmlParagraph(
-            properties: para.properties,
-            inlines: <WmlInline>[WmlRun(text: tail)],
-          );
-          _insertParagraphAfter(para, next);
-        },
-        undoFn: () {
-          _setParagraphText(para, text);
-          _removeParagraphAfter(para);
-        },
-      ),
-    );
-    caret.paragraphIndex++;
-    caret.logicalIndex = 0;
-    caret.collapseSelection();
+    _splitActiveParagraph();
     relayout(localEdit: true);
     _markLocalEdit(previousText: text);
     attachInput();
@@ -4595,12 +4573,13 @@ class WordEditorController extends OfficeController {
       _CallbackCommand(
         executeFn: () {
           for (int i = start; i <= end; i++) {
+            paras[i].properties = before[i]!.copy();
             update(paras[i].properties);
           }
         },
         undoFn: () {
           for (final MapEntry<int, WmlParagraphProps> entry in before.entries) {
-            paras[entry.key].properties = entry.value;
+            paras[entry.key].properties = entry.value.copy();
           }
         },
       ),
@@ -6105,11 +6084,22 @@ class WordEditorController extends OfficeController {
       return;
     }
     final WmlParagraph paragraph = _activeParagraph;
-    final String? before = paragraph.properties.styleId;
+    final WmlParagraphProps before = paragraph.properties.copy();
+    final List<WmlInline> inlines = _cloneInlines(paragraph);
+    void restore() {
+      paragraph.properties = before.copy();
+      paragraph.inlines
+        ..clear()
+        ..addAll(_cloneInlinesFrom(inlines));
+    }
+
     commands.commit(
       _CallbackCommand(
-        executeFn: () => WordStyles.apply(paragraph, styleId),
-        undoFn: () => WordStyles.apply(paragraph, before ?? 'Normal'),
+        executeFn: () {
+          restore();
+          WordStyles.apply(paragraph, styleId, document: document);
+        },
+        undoFn: restore,
       ),
     );
     relayout();
@@ -6122,7 +6112,10 @@ class WordEditorController extends OfficeController {
       return;
     }
     final WmlParagraph paragraph = _activeParagraph;
-    late final WmlNote note;
+    final int at = caret.logicalIndex.clamp(0, paragraph.text.length);
+    final WmlParagraphProps beforeProps = paragraph.properties.copy();
+    final List<WmlInline> before = _cloneInlines(paragraph);
+    late WmlNote note;
     commands.commit(
       _CallbackCommand(
         executeFn: () {
@@ -6132,8 +6125,20 @@ class WordEditorController extends OfficeController {
             endnote: endnote,
             text: text,
           );
+          final WmlRun reference = paragraph.inlines.removeLast() as WmlRun;
+          WmlRunEdit.insertRuns(paragraph, at, <WmlRun>[reference]);
+          caret.logicalIndex = at + reference.text.length;
+          caret.collapseSelection();
         },
-        undoFn: () => WordNotes.delete(document, note.id, endnote: endnote),
+        undoFn: () {
+          WordNotes.delete(document, note.id, endnote: endnote);
+          paragraph.properties = beforeProps.copy();
+          paragraph.inlines
+            ..clear()
+            ..addAll(_cloneInlinesFrom(before));
+          caret.logicalIndex = at;
+          caret.collapseSelection();
+        },
       ),
     );
     relayout();

@@ -31,6 +31,8 @@ abstract final class WmlRunEdit {
       }
       final int end = offset + inline.text.length;
       if (index > offset && index < end) {
+        // A note mark is one field even when its displayed id has two digits.
+        if (inline.noteRefId != null) return;
         final int local = index - offset;
         paragraph.inlines.replaceRange(i, i + 1, <WmlInline>[
           WmlRun(
@@ -38,12 +40,16 @@ abstract final class WmlRunEdit {
             properties: inline.properties.copy(),
             hyperlink: inline.hyperlink,
             commentIds: List<int>.from(inline.commentIds),
+            noteRefId: inline.noteRefId,
+            noteRefEndnote: inline.noteRefEndnote,
           ),
           WmlRun(
             text: inline.text.substring(local),
             properties: inline.properties.copy(),
             hyperlink: inline.hyperlink,
             commentIds: List<int>.from(inline.commentIds),
+            noteRefId: inline.noteRefId,
+            noteRefEndnote: inline.noteRefEndnote,
           ),
         ]);
         return;
@@ -83,7 +89,9 @@ abstract final class WmlRunEdit {
         continue;
       }
       final int runEnd = offset + inline.text.length;
-      if (offset >= start && runEnd <= end && inline.text.isNotEmpty) {
+      if (((offset >= start && runEnd <= end) ||
+              (inline.noteRefId != null && offset < end && runEnd > start)) &&
+          inline.text.isNotEmpty) {
         update(inline.properties);
       }
       offset = runEnd;
@@ -199,10 +207,14 @@ abstract final class WmlRunEdit {
       if (to > from) {
         out.add(
           WmlRun(
-            text: inline.text.substring(from - offset, to - offset),
+            text: inline.noteRefId != null
+                ? inline.text
+                : inline.text.substring(from - offset, to - offset),
             properties: inline.properties.copy(),
             hyperlink: inline.hyperlink,
             commentIds: List<int>.from(inline.commentIds),
+            noteRefId: inline.noteRefId,
+            noteRefEndnote: inline.noteRefEndnote,
           ),
         );
       }
@@ -240,6 +252,8 @@ abstract final class WmlRunEdit {
           properties: run.properties.copy(),
           hyperlink: run.hyperlink,
           commentIds: List<int>.from(run.commentIds),
+          noteRefId: run.noteRefId,
+          noteRefEndnote: run.noteRefEndnote,
         ),
     ]);
     coalesce(paragraph);
@@ -284,7 +298,9 @@ abstract final class WmlRunEdit {
   }
 
   static bool _sameRun(WmlRun a, WmlRun b) {
-    return _sameProps(a.properties, b.properties) &&
+    return a.noteRefId == null &&
+        b.noteRefId == null &&
+        _sameProps(a.properties, b.properties) &&
         a.hyperlink?.displayTarget == b.hyperlink?.displayTarget &&
         _sameInts(a.commentIds, b.commentIds);
   }
