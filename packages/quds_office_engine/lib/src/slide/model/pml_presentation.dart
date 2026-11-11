@@ -350,6 +350,7 @@ class PmlSlide {
     this.layoutName = 'Blank',
     this.masterName = 'Office Theme',
     this.notes = '',
+    this.sourcePartUri,
     this.transition = const PmlSlideTransition(),
     List<PmlShapeAnimation>? animations,
     this.hidden = false,
@@ -367,6 +368,9 @@ class PmlSlide {
 
   /// masterName API.
   String masterName;
+
+  /// Original owning part, retained when slides are reordered.
+  String? sourcePartUri;
 
   /// notes API.
   String notes;
@@ -387,6 +391,7 @@ class PmlSlide {
       layoutName: layoutName,
       masterName: masterName,
       notes: notes,
+      sourcePartUri: id == null || id == this.id ? sourcePartUri : null,
       transition: transition,
       hidden: hidden,
       animations: <PmlShapeAnimation>[

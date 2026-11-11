@@ -86,7 +86,8 @@ abstract final class WordDrawingIo {
     final Map<OfficeVisual, String> ids = <OfficeVisual, String>{};
     for (final OfficeVisual visual in visuals) {
       if (visual.isChart) {
-        final String uri = '/word/charts/chart$chartIndex.xml';
+        final String uri =
+            '/word/charts/${mediaPrefix == 'image' ? '' : mediaPrefix}chart$chartIndex.xml';
         final String xml = _chartXml(visual);
         chartIndex++;
         if (package.getPart(uri) == null) {

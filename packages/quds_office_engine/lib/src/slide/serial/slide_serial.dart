@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import '../../builders/drawingml_charts.dart';
 import '../../builders/office_markup.dart';
+import '../../builders/pptx_builder.dart';
 import '../../office/office_document_properties.dart';
 import '../../opc/content_types.dart';
 import '../../opc/opc_archive.dart';
@@ -12,6 +13,7 @@ import '../../sheet/serial/sheet_drawing_io.dart';
 import '../../visual/office_visual.dart';
 import '../../visual/png_bytes.dart';
 import '../../xml/namespaces.dart';
+import '../../xml/xml_node.dart';
 import '../../xml/xml_reader.dart';
 import '../../xml/xml_writer.dart';
 import '../anim/pml_motion_io.dart';
@@ -40,7 +42,8 @@ class SlideDeserializer {
       if (reader.eventType != XmlEventType.startElement) {
         continue;
       }
-      if (reader.localName == 'sldId') {
+      if (reader.localName == 'sldId' &&
+          reader.namespaceUri == OfficeNamespaces.p) {
         var id = 256;
         String? relId;
         for (int a = 0; a < reader.attributeCount; a++) {
@@ -62,7 +65,8 @@ class SlideDeserializer {
         );
       } else if (reader.localName == 'sldSection') {
         final String name = reader.getAttribute('name') ?? 'Section';
-        final int start = int.tryParse(reader.getAttribute('start') ?? '0') ?? 0;
+        final int start =
+            int.tryParse(reader.getAttribute('start') ?? '0') ?? 0;
         pres.sections.add(PmlSection(name: name, startIndex: start));
       } else if (reader.localName == 'sldSz') {
         pres.slideWidth = int.parse(
@@ -73,6 +77,22 @@ class SlideDeserializer {
         );
       }
     }
+    final XmlDocument source = XmlDocument.parse(part.readText());
+    for (final XmlElement section in _descendants(source.root!, 'section')) {
+      final String? firstId = section
+          .firstChild('sldIdLst')
+          ?.firstChild('sldId')
+          ?.getAttribute('id');
+      final int start = pres.slides.indexWhere((s) => '${s.id}' == firstId);
+      if (start >= 0) {
+        pres.sections.add(
+          PmlSection(
+            name: section.getAttribute('name') ?? 'Section',
+            startIndex: start,
+          ),
+        );
+      }
+    }
     final String? masterBg = _masterBackground(package);
     if (masterBg != null && masterBg.isNotEmpty) {
       pres.master.background = masterBg;
@@ -80,6 +100,7 @@ class SlideDeserializer {
     final _SlideTemplates templates = _SlideTemplates(package);
     for (int i = 0; i < pres.slides.length; i++) {
       final String uri = slideUris[i];
+      pres.slides[i].sourcePartUri = uri;
       final slidePart = package.getPart(uri);
       if (slidePart != null) {
         final String slideXml = slidePart.readText();
@@ -497,14 +518,38 @@ class SlideSerializer {
 
   /// write API.
   OpcPackage write(PmlPresentation pres) {
+    final bool fresh = pres.package == null;
     final OpcPackage package =
         pres.package ?? OpcPackage.create(OpcPackageKind.slide);
     final RelationshipCollection presentationRels = package.relationshipsFor(
       _presentationUri,
     );
+    final String layoutUri = _ensureTemplates(
+      package,
+      notes: pres.slides.any((s) => s.notes.trim().isNotEmpty),
+    );
     final List<String> slideRelIds = <String>[];
+    final Set<String> used = <String>{};
     for (int i = 0; i < pres.slides.length; i++) {
-      final String uri = '/ppt/slides/slide${i + 1}.xml';
+      String? uri =
+          pres.slides[i].sourcePartUri ??
+          (fresh ? '/ppt/slides/slide${i + 1}.xml' : null);
+      if (uri == null || used.contains(uri)) {
+        var n = 1;
+        while (package.getPart('/ppt/slides/slide$n.xml') != null) {
+          n++;
+        }
+        uri = '/ppt/slides/slide$n.xml';
+      }
+      used.add(uri);
+      pres.slides[i].sourcePartUri = uri;
+      final RelationshipCollection slideRels = package.relationshipsFor(uri);
+      if (slideRels.firstByType(RelationshipTypes.slideLayout) == null) {
+        slideRels.add(
+          type: RelationshipTypes.slideLayout,
+          target: OpcUris.relativize(uri, layoutUri),
+        );
+      }
       if (package.getPart(uri) == null) {
         package.createPart(uri, OfficeContentTypes.slide, utf8.encode(''));
       }
@@ -518,7 +563,7 @@ class SlideSerializer {
       }
       slideRel ??= presentationRels.add(
         type: RelationshipTypes.slide,
-        target: 'slides/slide${i + 1}.xml',
+        target: OpcUris.relativize(_presentationUri, uri),
       );
       slideRelIds.add(slideRel.id);
       final Map<PmlShape, String> embedIds = _syncSlideVisuals(
@@ -531,9 +576,13 @@ class SlideSerializer {
           .writeText(slideToXml(pres.slides[i], embedIds: embedIds));
       _syncNotesSlide(pres.slides[i], package, uri, i + 1);
     }
+    for (final PackageRelationship rel
+        in presentationRels.byType(RelationshipTypes.slide).toList()) {
+      if (!slideRelIds.contains(rel.id)) presentationRels.removeById(rel.id);
+    }
     package
         .getPart(_presentationUri)!
-        .writeText(_presentationXml(pres, slideRelIds));
+        .writeText(_presentationXml(pres, slideRelIds, package));
     pres.properties.writeToPackage(package);
     pres.package = package;
     return package;
@@ -548,13 +597,14 @@ class SlideSerializer {
     final RelationshipCollection rels = package.relationshipsFor(slideUri);
     var mediaIndex = 1;
     var chartIndex = 1;
+    final String owner = slideUri.split('/').last.replaceAll('.xml', '');
     for (final PmlShape shape in slide.shapes) {
       final OfficeVisual? visual = shape.visual;
       if (visual == null) {
         continue;
       }
       if (visual.isChart) {
-        final String uri = '/ppt/charts/chart$chartIndex.xml';
+        final String uri = '/ppt/charts/${owner}_chart$chartIndex.xml';
         chartIndex++;
         final String xml = _chartXml(visual);
         final PackagePart? existing = package.getPart(uri);
@@ -586,7 +636,7 @@ class SlideSerializer {
       final Uint8List bytes = PngBytes.fromVisual(visual);
       final String mime = WordLikeMedia.mimeOf(bytes);
       final String uri =
-          '/ppt/media/image$mediaIndex${WordLikeMedia.extensionOf(mime)}';
+          '/ppt/media/${owner}_image$mediaIndex${WordLikeMedia.extensionOf(mime)}';
       mediaIndex++;
       final PackagePart? existing = package.getPart(uri);
       if (existing == null) {
@@ -644,40 +694,214 @@ class SlideSerializer {
     };
   }
 
-  String _presentationXml(PmlPresentation pres, List<String> slideRelIds) {
-    final XmlWriter w = XmlWriter();
-    w.writeStartDocument();
-    w.writeStartElement('presentation', prefix: 'p');
-    w.writeNamespace('p', OfficeNamespaces.p);
-    w.writeNamespace('r', OfficeNamespaces.r);
-    w.writeStartElement('sldIdLst', prefix: 'p');
-    for (int i = 0; i < pres.slides.length; i++) {
-      w.writeStartElement('sldId', prefix: 'p');
-      w.writeAttribute('id', '${pres.slides[i].id}');
-      w.writeAttribute('r:id', slideRelIds[i]);
-      w.writeEndElement();
-    }
-    w.writeEndElement();
-    w.writeStartElement('sldSz', prefix: 'p');
-    w.writeAttribute('cx', '${pres.slideWidth}');
-    w.writeAttribute('cy', '${pres.slideHeight}');
-    w.writeEndElement();
-    if (pres.sections.isNotEmpty) {
-      w.writeStartElement('sldSections', prefix: 'p');
-      for (final PmlSection section in pres.sections) {
-        w.writeEmptyElement(
-          'sldSection',
+  String _presentationXml(
+    PmlPresentation pres,
+    List<String> slideRelIds,
+    OpcPackage package,
+  ) {
+    final XmlDocument document = XmlDocument.parse(
+      package.getPart(_presentationUri)!.readText(),
+    );
+    final XmlElement root = document.root!;
+    XmlElement element(String name, [Map<String, String> attrs = const {}]) =>
+        XmlElement(
+          localName: name,
           prefix: 'p',
-          attributes: <String, String>{
-            'name': section.name,
-            'start': '${section.startIndex}',
-          },
+          namespaceUri: OfficeNamespaces.p,
+          attributes: [
+            for (final a in attrs.entries)
+              XmlAttribute(localName: a.key, value: a.value),
+          ],
         );
+    final RelationshipCollection rels = package.relationshipsFor(
+      _presentationUri,
+    );
+    final XmlElement masters = element('sldMasterIdLst');
+    var masterId = 2147483648;
+    for (final PackageRelationship rel in rels.byType(
+      RelationshipTypes.slideMaster,
+    )) {
+      masters.addChild(
+        element('sldMasterId', {'id': '${masterId++}', 'r:id': rel.id}),
+      );
+    }
+    final XmlElement slides = element('sldIdLst');
+    for (int i = 0; i < pres.slides.length; i++) {
+      slides.addChild(
+        element('sldId', {
+          'id': '${pres.slides[i].id}',
+          'r:id': slideRelIds[i],
+        }),
+      );
+    }
+    final XmlElement? oldNotesSize = root.firstChild('notesSz');
+    final XmlElement? oldExtensions = root.firstChild('extLst');
+    root.children.removeWhere(
+      (n) =>
+          n is XmlElement &&
+          {
+            'sldMasterIdLst',
+            'notesMasterIdLst',
+            'sldIdLst',
+            'sldSz',
+            'notesSz',
+            'sldSections',
+            'extLst',
+          }.contains(n.localName),
+    );
+    final List<XmlNode> tail = root.children.toList();
+    root.children.clear();
+    root.setAttribute('r', OfficeNamespaces.r, prefix: 'xmlns');
+    root.addChild(masters);
+    final XmlElement notesMasters = element('notesMasterIdLst');
+    for (final PackageRelationship rel in rels.byType(
+      RelationshipTypes.notesMaster,
+    )) {
+      notesMasters.addChild(element('notesMasterId', {'r:id': rel.id}));
+    }
+    if (notesMasters.children.isNotEmpty) root.addChild(notesMasters);
+    // Handout master IDs precede the slide list in the presentation sequence.
+    for (final n in tail.where(
+      (n) => n is XmlElement && n.localName == 'handoutMasterIdLst',
+    )) {
+      root.addChild(n);
+    }
+    root.addChild(slides);
+    root.addChild(
+      element('sldSz', {
+        'cx': '${pres.slideWidth}',
+        'cy': '${pres.slideHeight}',
+      }),
+    );
+    root.addChild(
+      oldNotesSize ?? element('notesSz', {'cx': '6858000', 'cy': '9144000'}),
+    );
+    for (final n in tail.where(
+      (n) => !(n is XmlElement && n.localName == 'handoutMasterIdLst'),
+    )) {
+      root.addChild(n);
+    }
+    final XmlElement extensions = oldExtensions ?? element('extLst');
+    extensions.children.removeWhere(
+      (n) => n is XmlElement && _descendants(n, 'sectionLst').isNotEmpty,
+    );
+    if (pres.sections.isNotEmpty) {
+      final XmlElement ext = element('ext', {
+        'uri': '{521415D9-36F7-43E2-AB2F-B90AF26B5E84}',
+      });
+      final XmlWriter w = XmlWriter();
+      w.writeStartElement('sectionLst', prefix: 'p14');
+      w.writeNamespace(
+        'p14',
+        'http://schemas.microsoft.com/office/powerpoint/2010/main',
+      );
+      final List<PmlSection> sections = [...pres.sections]
+        ..sort((a, b) => a.startIndex.compareTo(b.startIndex));
+      for (int i = 0; i < sections.length; i++) {
+        w.writeStartElement('section', prefix: 'p14');
+        w.writeAttribute('name', sections[i].name);
+        w.writeAttribute(
+          'id',
+          '{00000000-0000-4000-8000-${(i + 1).toRadixString(16).padLeft(12, '0')}}',
+        );
+        w.writeStartElement('sldIdLst', prefix: 'p14');
+        final int end = i + 1 < sections.length
+            ? sections[i + 1].startIndex
+            : pres.slides.length;
+        for (
+          int j = sections[i].startIndex.clamp(0, pres.slides.length);
+          j < end.clamp(0, pres.slides.length);
+          j++
+        ) {
+          w.writeEmptyElement(
+            'sldId',
+            prefix: 'p14',
+            attributes: {'id': '${pres.slides[j].id}'},
+          );
+        }
+        w.writeEndElement();
+        w.writeEndElement();
       }
       w.writeEndElement();
+      ext.addChild(XmlDocument.parse(w.toXml()).root!);
+      extensions.addChild(ext);
     }
-    w.writeEndElement();
-    return w.toXml();
+    if (extensions.children.isNotEmpty) root.addChild(extensions);
+    return document.toXmlString();
+  }
+
+  /// Fill missing template relationships without replacing imported templates.
+  static String _ensureTemplates(OpcPackage package, {required bool notes}) {
+    OpcPackage? seed;
+    final Map<String, String> copied = {};
+    String copyPart(String uri) {
+      if (copied[uri] case final String existing) return existing;
+      seed ??= OpcPackage.openBytes(
+        (PptxDeckBuilder()..addTitleSlide(title: '', notes: 'Template'))
+            .build(),
+      );
+      final PackagePart part = seed!.getPart(uri)!;
+      final int slash = uri.lastIndexOf('/');
+      final String stem =
+          '${uri.substring(0, slash + 1)}quds_${uri.substring(slash + 1)}';
+      String target = stem;
+      var suffix = 1;
+      while (package.getPart(target) != null) {
+        target = stem.replaceFirst('.xml', '_${suffix++}.xml');
+      }
+      copied[uri] = target;
+      package.createPart(target, part.contentType, part.readBytes());
+      final RelationshipCollection dest = package.relationshipsFor(target);
+      final RelationshipCollection source = seed!.relationshipsFor(uri);
+      for (final rel in source.items) {
+        dest.add(
+          id: rel.id,
+          type: rel.type,
+          targetMode: rel.targetMode,
+          target: rel.targetMode == RelationshipTargetMode.external
+              ? rel.target
+              : OpcUris.relativize(target, copyPart(source.resolve(rel))),
+        );
+      }
+      return target;
+    }
+
+    final RelationshipCollection rels = package.relationshipsFor(
+      _presentationUri,
+    );
+    PackageRelationship? master = rels.firstByType(
+      RelationshipTypes.slideMaster,
+    );
+    master ??= rels.add(
+      type: RelationshipTypes.slideMaster,
+      target: OpcUris.relativize(
+        _presentationUri,
+        copyPart('/ppt/slideMasters/slideMaster1.xml'),
+      ),
+    );
+    final RelationshipCollection masterRels = package.relationshipsFor(
+      rels.resolve(master),
+    );
+    PackageRelationship? layout = masterRels.firstByType(
+      RelationshipTypes.slideLayout,
+    );
+    if (layout == null) {
+      final String uri = copyPart('/ppt/slideLayouts/slideLayout1.xml');
+      layout = masterRels.add(
+        type: RelationshipTypes.slideLayout,
+        target: OpcUris.relativize(masterRels.sourcePartUri, uri),
+      );
+    }
+    if (notes && rels.firstByType(RelationshipTypes.notesMaster) == null) {
+      rels.add(
+        type: RelationshipTypes.notesMaster,
+        target: OpcUris.relativize(
+          _presentationUri,
+          copyPart('/ppt/notesMasters/notesMaster1.xml'),
+        ),
+      );
+    }
+    return masterRels.resolve(layout);
   }
 
   static void _syncNotesSlide(
@@ -686,10 +910,17 @@ class SlideSerializer {
     String slideUri,
     int index,
   ) {
+    final RelationshipCollection rels = package.relationshipsFor(slideUri);
+    final PackageRelationship? oldNotes = rels.firstByType(
+      RelationshipTypes.notesSlide,
+    );
     if (slide.notes.trim().isEmpty) {
+      if (oldNotes != null) rels.removeById(oldNotes.id);
       return;
     }
-    final String uri = '/ppt/notesSlides/notesSlide$index.xml';
+    final String uri = oldNotes == null
+        ? '/ppt/notesSlides/${slideUri.split('/').last.replaceFirst('slide', 'notesSlide')}'
+        : rels.resolve(oldNotes);
     final String escaped = slide.notes
         .replaceAll('&', '&amp;')
         .replaceAll('<', '&lt;')
@@ -713,12 +944,39 @@ class SlideSerializer {
     } else {
       existing.writeText(xml);
     }
-    final RelationshipCollection rels = package.relationshipsFor(slideUri);
-    if (rels.firstByType(RelationshipTypes.notesSlide) == null) {
+    if (oldNotes == null) {
       rels.add(
         type: RelationshipTypes.notesSlide,
-        target: '../notesSlides/notesSlide$index.xml',
+        target: OpcUris.relativize(slideUri, uri),
       );
     }
+    final RelationshipCollection noteRels = package.relationshipsFor(uri);
+    for (final rel in noteRels.byType(RelationshipTypes.slide).toList()) {
+      noteRels.removeById(rel.id);
+    }
+    noteRels.add(
+      type: RelationshipTypes.slide,
+      target: OpcUris.relativize(uri, slideUri),
+    );
+    final RelationshipCollection presRels = package.relationshipsFor(
+      _presentationUri,
+    );
+    final PackageRelationship? notesMaster = presRels.firstByType(
+      RelationshipTypes.notesMaster,
+    );
+    if (notesMaster != null &&
+        noteRels.firstByType(RelationshipTypes.notesMaster) == null) {
+      noteRels.add(
+        type: RelationshipTypes.notesMaster,
+        target: OpcUris.relativize(uri, presRels.resolve(notesMaster)),
+      );
+    }
+  }
+}
+
+Iterable<XmlElement> _descendants(XmlElement root, String name) sync* {
+  for (final XmlElement child in root.childElements) {
+    if (child.localName == name) yield child;
+    yield* _descendants(child, name);
   }
 }

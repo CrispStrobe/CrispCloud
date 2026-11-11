@@ -608,7 +608,7 @@ void main() {
       ],
     );
     final OpcPackage package = SlideSerializer().write(deck);
-    final PackagePart? chart = package.getPart('/ppt/charts/chart1.xml');
+    final PackagePart? chart = package.getPart('/ppt/charts/slide1_chart1.xml');
     expect(chart, isNotNull);
     expect(chart!.readText(), contains('rtl="1"'));
   });
