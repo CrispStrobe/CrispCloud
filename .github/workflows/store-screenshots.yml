@@ -1,0 +1,62 @@
+name: Store screenshots (macOS)
+
+# Captures Mac App Store screenshots (2880x1800) from the real app on a fresh
+# runner profile and uploads them as an artifact. Manual only; uploading to
+# App Store Connect is a separate, reviewed step.
+
+on:
+  workflow_dispatch:
+
+env:
+  FLUTTER_VERSION: '3.47.8'
+
+jobs:
+  capture:
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Resolve dependencies
+        run: |
+          TOKEN="${{ secrets.GH_PAT || github.token }}"
+          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
+          flutter config --enable-macos-desktop
+          flutter config --no-enable-swift-package-manager
+          flutter pub get
+
+      - name: Prime dart_smb2 Apple asset cache
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: tool/prime_dart_smb2_cache.sh
+
+      - name: Capture screenshots from the running app
+        run: |
+          mkdir -p build/store-screenshots
+          set -o pipefail
+          flutter test integration_test/store_screenshots_test.dart -d macos 2>&1 \
+            | tee build/store-screenshots/capture.log
+
+      - name: Collect screenshots
+        if: success() || failure()
+        run: |
+          find "$HOME/Library/Containers" /private/var/folders "$TMPDIR" \
+            -name 'crispcloud-store-*.png' -newer pubspec.yaml 2>/dev/null \
+            -exec cp {} build/store-screenshots/ \;
+          ls -la build/store-screenshots
+          for f in build/store-screenshots/*.png; do
+            sips -g pixelWidth -g pixelHeight "$f" | tail -2 | tr '\n' ' '; echo " $f"
+          done
+
+      - uses: actions/upload-artifact@v4
+        if: success() || failure()
+        with:
+          name: macos-store-screenshots
+          path: build/store-screenshots/
+          if-no-files-found: warn
