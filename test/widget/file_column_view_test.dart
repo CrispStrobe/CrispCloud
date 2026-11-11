@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
+import 'package:crisp_cloud/models/panel_drag_data.dart';
 import 'package:crisp_cloud/providers/focus_area_provider.dart';
 import 'package:crisp_cloud/providers/panel_source_provider.dart';
 import 'package:crisp_cloud/providers/providers.dart';
@@ -10,8 +11,12 @@ import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:crisp_cloud/services/panel_source_service.dart';
 import 'package:crisp_cloud/widgets/file_column_view.dart';
+import 'package:crisp_cloud/widgets/file_operation_dialog.dart';
+import 'package:crisp_cloud/widgets/folder_drop_target.dart';
+import 'package:crisp_cloud/services/file_operation_service.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/gestures.dart' show kSecondaryMouseButton;
+import 'package:flutter/gestures.dart'
+    show kSecondaryMouseButton, PointerDeviceKind;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -578,8 +583,10 @@ void main() {
       });
       expect(
         panel.files!.any((file) => file.path == '/Photos/target.txt'),
-        isTrue,
+        isFalse,
       );
+      expect(panel.hasVerifiedDirectoryListing, isFalse);
+      expect(panel.isLoading, isFalse);
       expect(panel.cursorItem?.path, isNot('/Photos/target.txt'));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
@@ -621,6 +628,132 @@ void main() {
     expect(column('/docs'), findsOneWidget);
     expect(row('/docs/nested', '/docs/nested/deep.txt'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  for (final move in [false, true]) {
+    testWidgets(
+      'dragging into a hydrated ancestor folder reviews ${move ? 'move' : 'copy'} without navigating',
+      (tester) async {
+        await panel.navigateToPath('/docs/nested');
+        await mount(tester);
+        final liveRows = panel.files;
+        final sourceRow = row('/docs/nested', '/docs/nested/deep.txt');
+        final ancestorRow = row('/', '/other');
+        final gesture = await tester.startGesture(
+          tester.getCenter(sourceRow),
+          kind: PointerDeviceKind.mouse,
+        );
+        await gesture.moveBy(const Offset(25, 0));
+        await tester.pump();
+        if (move) await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+        await gesture.moveTo(tester.getCenter(ancestorRow));
+        await tester.pump();
+        expect(find.text('${move ? 'Move' : 'Copy'} → other'), findsOneWidget);
+        await gesture.up();
+        if (move) await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.pumpAndSettle();
+        final dialog = tester.widget<FileOperationDialog>(
+          find.byType(FileOperationDialog),
+        );
+        expect(dialog.destinationPath, '/other');
+        expect(
+          dialog.kind,
+          move ? FileOperationKind.move : FileOperationKind.copy,
+        );
+        expect(dialog.files.single.path, '/docs/nested/deep.txt');
+        expect(
+          dialog.destinationOrigin!.storageReference,
+          panel.captureCurrentOrigin().storageReference,
+        );
+        expect(panel.currentPath, '/docs/nested');
+        expect(panel.files, same(liveRows));
+        expect(cloud.writes, isEmpty);
+        expect(container.read(transferProvider).operations, isEmpty);
+        expect(
+          tester
+              .widget<FilledButton>(
+                find.widgetWithText(
+                  FilledButton,
+                  move ? 'Start Move' : 'Start Copy',
+                ),
+              )
+              .onPressed,
+          isNull,
+        );
+        await tester.tap(find.text('Cancel'));
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+      },
+      variant: TargetPlatformVariant.only(TargetPlatform.linux),
+    );
+  }
+
+  testWidgets('a removed ancestor folder cannot receive a captured drop', (
+    tester,
+  ) async {
+    await panel.navigateToPath('/docs/nested');
+    await mount(tester);
+    final target = find.byWidgetPredicate(
+      (widget) => widget is FolderDropTarget && widget.folder.path == '/other',
+    );
+    final drop = tester.widget<DragTarget<PanelDragData>>(
+      find.descendant(
+        of: target,
+        matching: find.byType(DragTarget<PanelDragData>),
+      ),
+    );
+    final file = panel.files!.singleWhere((item) => item.name == 'deep.txt');
+    final data = PanelDragData(sourceSide: PanelSide.remote, files: [file])
+      ..captureFrom(panel);
+    final details = DragTargetDetails(data: data, offset: Offset.zero);
+    expect(drop.onWillAcceptWithDetails!(details), isTrue);
+    cloud.folderNames['/'] = ['docs'];
+    drop.onAcceptWithDetails!(details);
+    await tester.pumpAndSettle();
+    expect(find.byType(FileOperationDialog), findsNothing);
+    expect(data.hasFolderTarget, isFalse);
+    expect(panel.currentPath, '/docs/nested');
+    expect(cloud.writes, isEmpty);
+    expect(container.read(transferProvider).operations, isEmpty);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('ancestor destinations cannot become drag sources', (
+    tester,
+  ) async {
+    await panel.navigateToPath('/docs/nested');
+    await mount(tester);
+    expect(
+      find.ancestor(
+        of: row('/', '/other'),
+        matching: find.byType(FolderDropTarget),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.ancestor(
+        of: row('/', '/other'),
+        matching: find.byType(PanelFileDragSource),
+      ),
+      findsNothing,
+    );
+    expect(
+      find.ancestor(
+        of: row('/', '/root.txt'),
+        matching: find.byType(PanelFileDragSource),
+      ),
+      findsNothing,
+    );
+    final target = tester.widget<FolderDropTarget>(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is FolderDropTarget && widget.folder.path == '/other',
+      ),
+    );
+    final captured = target.captureDestination!();
+    expect(captured, isNotNull);
+    await panel.refresh();
+    expect(captured!.isCurrent, isFalse);
   });
 
   testWidgets('filters the live column without replacing ancestor snapshots', (

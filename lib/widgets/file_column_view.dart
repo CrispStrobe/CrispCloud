@@ -17,6 +17,7 @@ import '../providers/providers.dart';
 import '../screens/screen_dialogs.dart' show viewSelectedFile;
 import '../services/archive_service.dart';
 import '../services/file_operation_backend.dart';
+import '../services/folder_drop_service.dart';
 import '../services/keyboard_shortcut_service.dart';
 import '../services/local_file_service.dart';
 import '../services/panel_source_service.dart';
@@ -28,7 +29,8 @@ import 'file_list_view.dart'
     show FileListView, FileInlineRenameField, getFileIcon;
 
 /// A directory hierarchy with background ancestor snapshots. Only the final
-/// column is the live panel; earlier columns never authorize file operations.
+/// column is the live panel. Ancestors request navigation or a freshly verified
+/// drop destination; their snapshot rows never authorize operation sources.
 class FileColumnView extends ConsumerStatefulWidget {
   final PanelSide side;
   final List<FileItem> files;
@@ -436,6 +438,29 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
       !origin.source.isLocal ||
       (_ancestorRoot(origin) == root &&
           identical(_localIdentity(origin), identity));
+
+  CapturedFolderDropTarget? _captureColumnDrop(
+    _DirectoryColumn column,
+    FileItem folder,
+  ) {
+    final origin = column.origin;
+    final root = _trailRoot;
+    final identity = _trailLocalIdentity;
+    bool snapshotIsCurrent() =>
+        mounted &&
+        _columns.contains(column) &&
+        identical(column.origin, origin) &&
+        column.files.any((file) => identical(file, folder)) &&
+        _matchesLocalTrail(origin, root, identity);
+    return const FolderDropService().captureSnapshot(
+      ref.read(panelProvider(widget.side)),
+      folder,
+      ref.read(localFileServiceProvider),
+      snapshotOrigin: origin,
+      directoryPath: column.path,
+      snapshotIsCurrent: snapshotIsCurrent,
+    );
+  }
 
   /// Restore the original directory, then resolve its fresh row. Snapshot
   /// objects must never authorize selection, preview or a context-menu action.
@@ -977,17 +1002,21 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
                             ),
                           ),
                         );
-                        if (!current) return rowWidget;
+                        final destination = file.isFolder
+                            ? FolderDropTarget(
+                                side: widget.side,
+                                folder: file,
+                                captureDestination: current
+                                    ? null
+                                    : () => _captureColumnDrop(column, file),
+                                child: rowWidget,
+                              )
+                            : rowWidget;
+                        if (!current) return destination;
                         return PanelFileDragSource(
                           side: widget.side,
                           file: file,
-                          child: file.isFolder
-                              ? FolderDropTarget(
-                                  side: widget.side,
-                                  folder: file,
-                                  child: rowWidget,
-                                )
-                              : rowWidget,
+                          child: destination,
                         );
                       },
                     ),

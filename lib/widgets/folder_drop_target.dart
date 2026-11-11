@@ -30,10 +30,15 @@ class FolderDropTarget extends ConsumerStatefulWidget {
     required this.side,
     required this.folder,
     required this.child,
+    this.captureDestination,
   });
   final PanelSide side;
   final FileItem folder;
   final Widget child;
+
+  /// Ancestor columns provide their own captured snapshot context. The service
+  /// still revalidates that context and stats its exact folder before review.
+  final CapturedFolderDropTarget? Function()? captureDestination;
 
   @override
   ConsumerState<FolderDropTarget> createState() => _FolderDropTargetState();
@@ -81,11 +86,14 @@ class _FolderDropTargetState extends ConsumerState<FolderDropTarget> {
     HardwareKeyboard.instance.addHandler(_modifiersChanged);
     _listening = true;
     if (_reviewing) return false;
-    final destination = const FolderDropService().capture(
-      ref.read(panelProvider(widget.side)),
-      widget.folder,
-      ref.read(localFileServiceProvider),
-    );
+    final capture = widget.captureDestination;
+    final destination = capture != null
+        ? capture()
+        : const FolderDropService().capture(
+            ref.read(panelProvider(widget.side)),
+            widget.folder,
+            ref.read(localFileServiceProvider),
+          );
     _destination = destination;
     return destination != null &&
         const FolderDropService().canAccept(
