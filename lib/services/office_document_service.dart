@@ -339,7 +339,13 @@ Future<List<_OfficePartRelationship>> _officePartRelationships(
 ) async {
   final relsPath = owner.isEmpty
       ? '_rels/.rels'
-      : p.posix.join(p.posix.dirname(owner), '_rels', '${p.posix.basename(owner)}.rels');
+      : p.posix.normalize(
+          p.posix.join(
+            p.posix.dirname(owner),
+            '_rels',
+            '${p.posix.basename(owner)}.rels',
+          ),
+        );
   final xml = await _readPart(archive, relsPath);
   if (xml == null) return const [];
   final result = <_OfficePartRelationship>[];
@@ -404,7 +410,9 @@ Future<OfficeDocument> _parseDocx(ViewerArchive archive) async {
   for (final kind in ['footnote', 'endnote']) {
     final path =
         rels.where((rel) => rel.type.endsWith('/${kind}s')).firstOrNull?.path ??
-        p.posix.join(p.posix.dirname(mainPart), '${kind}s.xml');
+        p.posix.normalize(
+          p.posix.join(p.posix.dirname(mainPart), '${kind}s.xml'),
+        );
     final noteXml = await _readPart(archive, path);
     if (noteXml == null) continue;
     for (final note in XmlDocument.parse(
