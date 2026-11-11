@@ -127,21 +127,31 @@ class _Local extends Fake
   @override
   String currentPath = '/';
   String? directory;
+  Completer<String>? initialPath;
+  final paths = <String>[];
+  Future<void> Function()? onRefresh;
   @override
   String? get grantedBasePath => directory ?? '/';
   @override
-  Future<String> getInitialPath() async => directory ?? '/';
+  Future<String> getInitialPath() async =>
+      initialPath == null ? directory ?? '/' : await initialPath!.future;
   @override
   Future<String> getSafeFallbackDirectory() async => directory ?? '/';
   @override
   Future<bool> hasAccessToPath(String path) async => true;
   @override
-  Future<List<FileSystemEntity>?> listDirectory(String path) async =>
-      directory == null
-      ? []
-      : Directory(path).list(followLinks: false).toList();
+  Future<List<FileSystemEntity>?> listDirectory(String path) async {
+    paths.add(path);
+    return directory == null
+        ? []
+        : Directory(path).list(followLinks: false).toList();
+  }
+
   @override
-  Future<void> refresh() async {}
+  Future<void> refresh() async {
+    await onRefresh?.call();
+  }
+
   Future<void> Function(String)? onAccess;
   @override
   Future<T> withFileOperationAccess<T>(
@@ -182,6 +192,127 @@ void main() {
     final panel = container.read(panelProvider(PanelSide.remote));
     await panel.refresh();
     return panel;
+  }
+
+  Future<PanelNotifier> readyLocalPanel() async {
+    final panel = container.read(panelProvider(PanelSide.local));
+    final ready = Completer<void>();
+    void check() {
+      if (ready.isCompleted || panel.isLoading || panel.files == null) return;
+      try {
+        panel.captureCurrentOrigin();
+        ready.complete();
+      } on StateError {
+        // The constructor's initial directory listing still owns the request.
+      }
+    }
+
+    panel.addListener(check);
+    try {
+      check();
+      await ready.future.timeout(const Duration(seconds: 10));
+    } finally {
+      panel.removeListener(check);
+    }
+    return panel;
+  }
+
+  test('an explicit local refresh takes priority over pending startup', () async {
+    local.initialPath = Completer<String>();
+    final preparationStarted = Completer<void>();
+    final releasePreparation = Completer<void>();
+    local.onRefresh = () {
+      preparationStarted.complete();
+      return releasePreparation.future;
+    };
+    addTearDown(() {
+      if (!local.initialPath!.isCompleted) local.initialPath!.complete('/');
+      if (!releasePreparation.isCompleted) releasePreparation.complete();
+    });
+    final panel = container.read(panelProvider(PanelSide.local));
+    final refreshing = panel.refresh();
+    await preparationStarted.future;
+
+    // Release the older startup read while the explicit refresh is preparing.
+    // It must not issue a competing directory listing or complete this request.
+    local.initialPath!.complete('/');
+    await Future<void>.delayed(Duration.zero);
+    expect(local.paths, isEmpty);
+
+    releasePreparation.complete();
+    await refreshing;
+    expect(local.paths, ['/']);
+    expect(panel.files, isNotNull);
+    expect(panel.isLoading, isFalse);
+    expect(panel.captureCurrentOrigin().source, isA<LocalPanelSource>());
+  });
+
+  test(
+    'a delayed local refresh cannot replace newer cloud navigation',
+    () async {
+      final panel = await remote();
+      final original = panel.captureCurrentOrigin();
+      container
+          .read(panelSourceProvider(PanelSide.remote).notifier)
+          .setSource(const LocalPanelSource('/local'));
+      await panel.refresh();
+      final localReads = local.paths.length;
+      final started = Completer<void>();
+      final release = Completer<void>();
+      addTearDown(() {
+        if (!release.isCompleted) release.complete();
+      });
+      local.onRefresh = () {
+        started.complete();
+        return release.future;
+      };
+
+      final stale = panel.refresh();
+      await started.future;
+      await panel.navigateToPath('/two', origin: original);
+      release.complete();
+      await stale;
+
+      expect(local.paths.length, localReads);
+      expect(panel.currentPath, '/two');
+      expect(panel.files!.any((file) => file.path == '/two/same.txt'), isTrue);
+      expect(
+        panel.captureCurrentOrigin().storageReference,
+        original.storageReference,
+      );
+    },
+  );
+
+  for (final failInitial in [false, true]) {
+    test(
+      'a delayed initial local ${failInitial ? 'failure' : 'path'} cannot replace a chosen cloud source',
+      () async {
+        final origin = (await remote()).captureCurrentOrigin();
+        local.initialPath = Completer<String>();
+        final panel = container.read(panelProvider(PanelSide.local));
+        await panel.navigateToPath('/two', origin: origin);
+        final reads = local.paths.length;
+        if (failInitial) {
+          local.initialPath!.completeError(
+            StateError('Delayed startup failure'),
+          );
+        } else {
+          local.initialPath!.complete('/');
+        }
+        await Future<void>.delayed(Duration.zero);
+
+        expect(local.paths.length, reads);
+        expect(panel.currentPath, '/two');
+        expect(
+          panel.files!.any((file) => file.path == '/two/same.txt'),
+          isTrue,
+        );
+        expect(
+          panel.captureCurrentOrigin().storageReference,
+          origin.storageReference,
+        );
+      },
+    );
   }
 
   test(
@@ -370,8 +501,7 @@ void main() {
     'mixed-storage same-path results retain distinct verified account groups',
     () async {
       final remotePanel = await remote();
-      final localPanel = container.read(panelProvider(PanelSide.local));
-      await localPanel.refresh();
+      final localPanel = await readyLocalPanel();
       final cloudOrigin = remotePanel.captureRemoteSearchOrigin();
       final localOrigin = localPanel.captureCurrentOrigin();
       final cloudFile = item('/one/same.txt');
@@ -968,10 +1098,15 @@ void main() {
         container: container,
         child: MaterialApp(
           home: Scaffold(
-            body: FileListView(
-              side: PanelSide.remote,
-              files: panel.files!,
-              scrollController: scroll,
+            body: Consumer(
+              builder: (context, ref, _) => Focus(
+                onKeyEvent: (_, event) => handleKeyEvent(context, ref, event),
+                child: FileListView(
+                  side: PanelSide.remote,
+                  files: panel.files!,
+                  scrollController: scroll,
+                ),
+              ),
             ),
           ),
         ),
@@ -1461,8 +1596,7 @@ void main() {
 
   test('same parent and imported marks never alias another account with the same path', () async {
     final panel = await remote();
-    final localPanel = container.read(panelProvider(PanelSide.local));
-    await localPanel.refresh();
+    final localPanel = await readyLocalPanel();
     final cloudOrigin = panel.captureRemoteSearchOrigin();
     final localOrigin = localPanel.captureCurrentOrigin();
     final cloudRows = [item('/one/same.txt'), item('/one/other.txt')];

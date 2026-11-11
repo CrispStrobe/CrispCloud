@@ -10,8 +10,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:crisp_cloud/models/file_item.dart';
-import 'package:crisp_cloud/providers/panel_source_provider.dart';
+import 'package:crisp_cloud/providers/keyboard_shortcut_provider.dart';
 import 'package:crisp_cloud/services/fkey_action_service.dart';
+import 'package:crisp_cloud/services/keyboard_shortcut_service.dart';
 import 'package:crisp_cloud/services/panel_source_service.dart';
 import 'package:crisp_cloud/widgets/fkey_bar.dart';
 
@@ -20,10 +21,7 @@ import 'package:crisp_cloud/widgets/fkey_bar.dart';
 // ---------------------------------------------------------------------------
 
 /// Wraps [child] in a minimal testable tree.
-Widget _wrap(
-  Widget child, {
-  List<Override> overrides = const [],
-}) {
+Widget _wrap(Widget child, {List<Override> overrides = const []}) {
   return ProviderScope(
     overrides: overrides,
     child: MaterialApp(
@@ -34,47 +32,47 @@ Widget _wrap(
 
 /// A [FKeyContext] that has no files selected.
 FKeyContext _emptyContext() => FKeyContext(
-      activePanel: const LocalPanelSource('/'),
-      oppositePanel: const LocalPanelSource('/tmp'),
-      selectedFiles: [],
-    );
+  activePanel: const LocalPanelSource('/'),
+  oppositePanel: const LocalPanelSource('/tmp'),
+  selectedFiles: [],
+);
 
 /// A [FKeyContext] with one non-folder file selected.
 FKeyContext _singleFileContext() => FKeyContext(
-      activePanel: const LocalPanelSource('/'),
-      oppositePanel: const LocalPanelSource('/tmp'),
-      selectedFiles: [
-        FileItem(name: 'file.txt', path: '/file.txt', isFolder: false),
-      ],
-    );
+  activePanel: const LocalPanelSource('/'),
+  oppositePanel: const LocalPanelSource('/tmp'),
+  selectedFiles: [
+    FileItem(name: 'file.txt', path: '/file.txt', isFolder: false),
+  ],
+);
 
 /// A context with only the cursor row, as happens in a freshly opened panel.
 FKeyContext _cursorContext() => FKeyContext(
-      activePanel: const LocalPanelSource('/'),
-      oppositePanel: const LocalPanelSource('/tmp'),
-      selectedFiles: const [],
-      cursorFile: FileItem(
-        name: 'readme.txt',
-        path: '/readme.txt',
-        isFolder: false,
-      ),
-    );
+  activePanel: const LocalPanelSource('/'),
+  oppositePanel: const LocalPanelSource('/tmp'),
+  selectedFiles: const [],
+  cursorFile: FileItem(
+    name: 'readme.txt',
+    path: '/readme.txt',
+    isFolder: false,
+  ),
+);
 
 /// A [FKeyContext] with multiple files selected.
 FKeyContext _multiFileContext() => FKeyContext(
-      activePanel: const LocalPanelSource('/'),
-      oppositePanel: const LocalPanelSource('/tmp'),
-      selectedFiles: [
-        FileItem(name: 'a.txt', path: '/a.txt', isFolder: false),
-        FileItem(name: 'b.txt', path: '/b.txt', isFolder: false),
-      ],
-    );
+  activePanel: const LocalPanelSource('/'),
+  oppositePanel: const LocalPanelSource('/tmp'),
+  selectedFiles: [
+    FileItem(name: 'a.txt', path: '/a.txt', isFolder: false),
+    FileItem(name: 'b.txt', path: '/b.txt', isFolder: false),
+  ],
+);
 
 /// Finds the InkWell inside the Tooltip with [message].
 Finder _buttonByTooltip(String message) => find.descendant(
-      of: find.byTooltip(message),
-      matching: find.byType(InkWell),
-    );
+  of: find.byTooltip(message),
+  matching: find.byType(InkWell),
+);
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -85,13 +83,36 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
+  testWidgets('action labels inherit the application font family', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          theme: ThemeData(fontFamily: 'WorkspaceTestFont'),
+          home: Scaffold(body: FKeyBar(overrideContext: _singleFileContext())),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final label = tester.widget<RichText>(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is RichText && widget.text.toPlainText().startsWith('F3 '),
+      ),
+    );
+    expect(label.text.style?.fontFamily, 'WorkspaceTestFont');
+    expect(tester.takeException(), isNull);
+  });
+
   // -------------------------------------------------------------------------
   // Visibility
   // -------------------------------------------------------------------------
 
   group('FKeyBar visibility', () {
-    testWidgets('renders 6 buttons when fkeyBarVisibleProvider is true',
-        (tester) async {
+    testWidgets('renders 6 buttons when fkeyBarVisibleProvider is true', (
+      tester,
+    ) async {
       // Default SharedPreferences empty → defaults to true.
       SharedPreferences.setMockInitialValues({});
       await tester.pumpWidget(_wrap(FKeyBar(overrideContext: _emptyContext())));
@@ -101,21 +122,26 @@ void main() {
       expect(find.byType(InkWell), findsNWidgets(6));
     });
 
-    testWidgets('renders nothing (SizedBox.shrink) when fkeyBarVisibleProvider is false',
-        (tester) async {
-      // Pre-set fkey_bar_visible to false in SharedPreferences.
-      SharedPreferences.setMockInitialValues({'fkey_bar_visible': false});
-      await tester.pumpWidget(_wrap(FKeyBar(overrideContext: _emptyContext())));
-      // Give the async _load() in the notifier time to complete.
-      await tester.pumpAndSettle();
+    testWidgets(
+      'renders nothing (SizedBox.shrink) when fkeyBarVisibleProvider is false',
+      (tester) async {
+        // Pre-set fkey_bar_visible to false in SharedPreferences.
+        SharedPreferences.setMockInitialValues({'fkey_bar_visible': false});
+        await tester.pumpWidget(
+          _wrap(FKeyBar(overrideContext: _emptyContext())),
+        );
+        // Give the async _load() in the notifier time to complete.
+        await tester.pumpAndSettle();
 
-      expect(find.byType(InkWell), findsNothing);
-      // The SizedBox.shrink() is returned — no FKeyBar Material content.
-      expect(find.byType(Tooltip), findsNothing);
-    });
+        expect(find.byType(InkWell), findsNothing);
+        // The SizedBox.shrink() is returned — no FKeyBar Material content.
+        expect(find.byType(Tooltip), findsNothing);
+      },
+    );
 
-    testWidgets('bar is visible by default when SharedPreferences is empty',
-        (tester) async {
+    testWidgets('bar is visible by default when SharedPreferences is empty', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap(FKeyBar(overrideContext: _emptyContext())));
       await tester.pump();
 
@@ -159,13 +185,15 @@ void main() {
       expect(find.byTooltip('F7 — MkDir'), findsOneWidget);
     });
 
-    testWidgets('shows "Delete" tooltip for F8', (tester) async {
+    testWidgets('shows the primary Delete binding in its tooltip', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap(FKeyBar(overrideContext: _emptyContext())));
       await tester.pump();
-      expect(find.byTooltip('F8 — Delete'), findsOneWidget);
+      expect(find.byTooltip('Del — Delete'), findsOneWidget);
     });
 
-    testWidgets('shows shortcut prefixes F3 through F8 as RichText', (tester) async {
+    testWidgets('shows current shortcut prefixes as RichText', (tester) async {
       await tester.pumpWidget(_wrap(FKeyBar(overrideContext: _emptyContext())));
       await tester.pump();
       // 6 RichText widgets — one per button (wide mode).
@@ -178,14 +206,12 @@ void main() {
   // -------------------------------------------------------------------------
 
   group('FKeyBar button availability', () {
-    testWidgets('F7 MkDir is always enabled (even with no selection)',
-        (tester) async {
+    testWidgets('F7 MkDir is always enabled (even with no selection)', (
+      tester,
+    ) async {
       final tapped = <FKeyAction>[];
       await tester.pumpWidget(
-        _wrap(FKeyBar(
-          overrideContext: _emptyContext(),
-          onAction: tapped.add,
-        )),
+        _wrap(FKeyBar(overrideContext: _emptyContext(), onAction: tapped.add)),
       );
       await tester.pump();
 
@@ -195,14 +221,12 @@ void main() {
       expect(tapped, contains(FKeyAction.mkdir));
     });
 
-    testWidgets('F3/F4/F5/F6/F8 are enabled from the cursor alone',
-        (tester) async {
+    testWidgets('F3/F4/F5/F6/F8 are enabled from the cursor alone', (
+      tester,
+    ) async {
       final tapped = <FKeyAction>[];
       await tester.pumpWidget(
-        _wrap(FKeyBar(
-          overrideContext: _cursorContext(),
-          onAction: tapped.add,
-        )),
+        _wrap(FKeyBar(overrideContext: _cursorContext(), onAction: tapped.add)),
       );
       await tester.pump();
 
@@ -211,7 +235,7 @@ void main() {
         'F4 — Edit',
         'F5 — Copy',
         'F6 — Move',
-        'F8 — Delete',
+        'Del — Delete',
       ]) {
         await tester.tap(_buttonByTooltip(tooltip));
         await tester.pump();
@@ -229,14 +253,12 @@ void main() {
       );
     });
 
-    testWidgets('F5 Copy is disabled (no onTap) when selection is empty',
-        (tester) async {
+    testWidgets('F5 Copy is disabled (no onTap) when selection is empty', (
+      tester,
+    ) async {
       final tapped = <FKeyAction>[];
       await tester.pumpWidget(
-        _wrap(FKeyBar(
-          overrideContext: _emptyContext(),
-          onAction: tapped.add,
-        )),
+        _wrap(FKeyBar(overrideContext: _emptyContext(), onAction: tapped.add)),
       );
       await tester.pump();
 
@@ -246,18 +268,16 @@ void main() {
       expect(tapped, isNot(contains(FKeyAction.copy)));
     });
 
-    testWidgets('F8 Delete is disabled when selection is empty',
-        (tester) async {
+    testWidgets('F8 Delete is disabled when selection is empty', (
+      tester,
+    ) async {
       final tapped = <FKeyAction>[];
       await tester.pumpWidget(
-        _wrap(FKeyBar(
-          overrideContext: _emptyContext(),
-          onAction: tapped.add,
-        )),
+        _wrap(FKeyBar(overrideContext: _emptyContext(), onAction: tapped.add)),
       );
       await tester.pump();
 
-      await tester.tap(_buttonByTooltip('F8 — Delete'));
+      await tester.tap(_buttonByTooltip('Del — Delete'));
       await tester.pump();
 
       expect(tapped, isNot(contains(FKeyAction.delete)));
@@ -266,10 +286,7 @@ void main() {
     testWidgets('F3 View is disabled when selection is empty', (tester) async {
       final tapped = <FKeyAction>[];
       await tester.pumpWidget(
-        _wrap(FKeyBar(
-          overrideContext: _emptyContext(),
-          onAction: tapped.add,
-        )),
+        _wrap(FKeyBar(overrideContext: _emptyContext(), onAction: tapped.add)),
       );
       await tester.pump();
 
@@ -282,10 +299,9 @@ void main() {
     testWidgets('F3 View fires when a single file is selected', (tester) async {
       final tapped = <FKeyAction>[];
       await tester.pumpWidget(
-        _wrap(FKeyBar(
-          overrideContext: _singleFileContext(),
-          onAction: tapped.add,
-        )),
+        _wrap(
+          FKeyBar(overrideContext: _singleFileContext(), onAction: tapped.add),
+        ),
       );
       await tester.pump();
 
@@ -298,10 +314,9 @@ void main() {
     testWidgets('F5 Copy fires when files are selected', (tester) async {
       final tapped = <FKeyAction>[];
       await tester.pumpWidget(
-        _wrap(FKeyBar(
-          overrideContext: _multiFileContext(),
-          onAction: tapped.add,
-        )),
+        _wrap(
+          FKeyBar(overrideContext: _multiFileContext(), onAction: tapped.add),
+        ),
       );
       await tester.pump();
 
@@ -314,10 +329,9 @@ void main() {
     testWidgets('F6 Move fires when files are selected', (tester) async {
       final tapped = <FKeyAction>[];
       await tester.pumpWidget(
-        _wrap(FKeyBar(
-          overrideContext: _multiFileContext(),
-          onAction: tapped.add,
-        )),
+        _wrap(
+          FKeyBar(overrideContext: _multiFileContext(), onAction: tapped.add),
+        ),
       );
       await tester.pump();
 
@@ -330,14 +344,13 @@ void main() {
     testWidgets('F8 Delete fires when files are selected', (tester) async {
       final tapped = <FKeyAction>[];
       await tester.pumpWidget(
-        _wrap(FKeyBar(
-          overrideContext: _multiFileContext(),
-          onAction: tapped.add,
-        )),
+        _wrap(
+          FKeyBar(overrideContext: _multiFileContext(), onAction: tapped.add),
+        ),
       );
       await tester.pump();
 
-      await tester.tap(_buttonByTooltip('F8 — Delete'));
+      await tester.tap(_buttonByTooltip('Del — Delete'));
       await tester.pump();
 
       expect(tapped, contains(FKeyAction.delete));
@@ -346,10 +359,9 @@ void main() {
     testWidgets('F4 Edit fires when a single file is selected', (tester) async {
       final tapped = <FKeyAction>[];
       await tester.pumpWidget(
-        _wrap(FKeyBar(
-          overrideContext: _singleFileContext(),
-          onAction: tapped.add,
-        )),
+        _wrap(
+          FKeyBar(overrideContext: _singleFileContext(), onAction: tapped.add),
+        ),
       );
       await tester.pump();
 
@@ -359,14 +371,13 @@ void main() {
       expect(tapped, contains(FKeyAction.edit));
     });
 
-    testWidgets('F4 Edit is disabled when a folder is selected',
-        (tester) async {
+    testWidgets('F4 Edit is disabled when a folder is selected', (
+      tester,
+    ) async {
       final folderContext = FKeyContext(
         activePanel: const LocalPanelSource('/'),
         oppositePanel: const LocalPanelSource('/tmp'),
-        selectedFiles: [
-          FileItem(name: 'docs', path: '/docs', isFolder: true),
-        ],
+        selectedFiles: [FileItem(name: 'docs', path: '/docs', isFolder: true)],
       );
       final tapped = <FKeyAction>[];
       await tester.pumpWidget(
@@ -400,8 +411,9 @@ void main() {
   }
 
   group('FKeyBar narrow screen', () {
-    testWidgets('shows icons instead of RichText labels on narrow screen',
-        (tester) async {
+    testWidgets('shows icons instead of RichText labels on narrow screen', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _wrapNarrow(FKeyBar(overrideContext: _emptyContext()), 400),
       );
@@ -411,8 +423,9 @@ void main() {
       expect(find.byType(Icon), findsWidgets);
     });
 
-    testWidgets('shows specific icons for each action in narrow mode',
-        (tester) async {
+    testWidgets('shows specific icons for each action in narrow mode', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _wrapNarrow(FKeyBar(overrideContext: _emptyContext()), 400),
       );
@@ -443,8 +456,9 @@ void main() {
   // -------------------------------------------------------------------------
 
   group('FKeyBar onAction callback', () {
-    testWidgets('does not throw when onAction is null and button is tapped',
-        (tester) async {
+    testWidgets('does not throw when onAction is null and button is tapped', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _wrap(FKeyBar(overrideContext: _singleFileContext(), onAction: null)),
       );
@@ -459,10 +473,9 @@ void main() {
     testWidgets('fires onAction for each enabled button once', (tester) async {
       final tapped = <FKeyAction>[];
       await tester.pumpWidget(
-        _wrap(FKeyBar(
-          overrideContext: _singleFileContext(),
-          onAction: tapped.add,
-        )),
+        _wrap(
+          FKeyBar(overrideContext: _singleFileContext(), onAction: tapped.add),
+        ),
       );
       await tester.pump();
 
@@ -481,13 +494,117 @@ void main() {
 
   group('FKeyBar tooltips', () {
     testWidgets('each button is wrapped in a Tooltip', (tester) async {
-      await tester.pumpWidget(
-        _wrap(FKeyBar(overrideContext: _emptyContext())),
-      );
+      await tester.pumpWidget(_wrap(FKeyBar(overrideContext: _emptyContext())));
       await tester.pump();
 
       // 6 Tooltips, one per action
       expect(find.byType(Tooltip), findsNWidgets(6));
     });
+  });
+
+  group('FKeyBar current bindings', () {
+    testWidgets(
+      'restores persisted shortcuts and updates live without changing button actions',
+      (tester) async {
+        SharedPreferences.setMockInitialValues({
+          'keyboard_shortcuts': '{"copyWithOptions":{"key":"F9","alt":true}}',
+        });
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
+        final tapped = <FKeyAction>[];
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: MaterialApp(
+              home: Scaffold(
+                body: FKeyBar(
+                  overrideContext: _singleFileContext(),
+                  onAction: tapped.add,
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        final service = container.read(keyboardShortcutServiceProvider);
+        final restored = service.browserDisplay(ShortcutAction.copyWithOptions);
+        expect(find.byTooltip('$restored — Copy'), findsOneWidget);
+        expect(find.byTooltip('F5 — Copy'), findsNothing);
+        await tester.tap(_buttonByTooltip('$restored — Copy'));
+        expect(tapped, [FKeyAction.copy]);
+
+        await container
+            .read(shortcutBindingsProvider.notifier)
+            .setBinding(
+              ShortcutAction.copyWithOptions,
+              const ShortcutBinding(key: 'F10', ctrl: true, shift: true),
+            );
+        await tester.pump();
+        final updated = service.browserDisplay(ShortcutAction.copyWithOptions);
+        expect(find.byTooltip('$updated — Copy'), findsOneWidget);
+        expect(find.byTooltip('$restored — Copy'), findsNothing);
+        await tester.tap(_buttonByTooltip('$updated — Copy'));
+        expect(tapped, [FKeyAction.copy, FKeyAction.copy]);
+
+        final reloaded = KeyboardShortcutService();
+        await reloaded.load();
+        expect(
+          reloaded.getBinding(ShortcutAction.copyWithOptions),
+          service.getBinding(ShortcutAction.copyWithOptions),
+        );
+        expect(tester.takeException(), isNull);
+      },
+    );
+
+    testWidgets(
+      'compact buttons expose complete custom shortcuts to accessibility',
+      (tester) async {
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
+        await container
+            .read(shortcutBindingsProvider.notifier)
+            .setBinding(
+              ShortcutAction.delete,
+              const ShortcutBinding(
+                key: 'F12',
+                ctrl: true,
+                shift: true,
+                alt: true,
+              ),
+            );
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: MaterialApp(
+              home: MediaQuery(
+                data: const MediaQueryData(
+                  size: Size(320, 600),
+                  textScaler: TextScaler.linear(2),
+                ),
+                child: Scaffold(
+                  body: FKeyBar(
+                    overrideContext: _singleFileContext(),
+                    onAction: (_) {},
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        final shortcut = container
+            .read(keyboardShortcutServiceProvider)
+            .browserDisplay(ShortcutAction.delete);
+        expect(find.byTooltip('$shortcut — Delete'), findsOneWidget);
+        expect(find.byIcon(Icons.delete_outline), findsOneWidget);
+        final semantics = tester.widget<Semantics>(
+          find.byKey(const ValueKey('file-action-delete')),
+        );
+        expect(semantics.properties.label, 'Delete ($shortcut)');
+        expect(semantics.properties.enabled, isTrue);
+        expect(semantics.properties.onTap, isNotNull);
+        expect(tester.takeException(), isNull);
+      },
+    );
   });
 }

@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:path/path.dart' as p;
 
 import '../models/file_item.dart';
 import '../models/storage_analysis.dart';
@@ -18,21 +21,22 @@ FileOperationBackend storageScanBackend({
   required bool Function() isCurrent,
 }) {
   if (source is LocalPanelSource) {
+    if (kIsWeb) {
+      return VirtualLocalStorageScanBackend(
+        local,
+        scanRoot: source.currentPath,
+        isCurrent: isCurrent,
+      );
+    }
     final grantSource = local is LocalFileSourceIdentity
         ? local as LocalFileSourceIdentity
         : null;
     final capturedGrant = grantSource?.sourceIdentityForPath(
       source.currentPath,
     );
-    if (kIsWeb && capturedGrant == null) {
-      throw UnsupportedError(
-        'Open a selected local folder before scanning browser storage.',
-      );
-    }
     var grantLost = false;
     return _LocalStorageScanBackend(
       local,
-      scanRoot: source.currentPath,
       isCurrent: () {
         if (!isCurrent()) return false;
         if (grantSource != null &&
@@ -52,17 +56,207 @@ FileOperationBackend storageScanBackend({
   throw UnsupportedError('Open a local or cloud folder before scanning.');
 }
 
+/// Reads a granted virtual folder without populating the interactive cache.
+/// Kept independent of the host platform so its grant boundaries can also be
+/// exercised with deterministic virtual filesystems in native tests.
+class VirtualLocalStorageScanBackend extends LocalOperationBackend
+    implements StorageScanDirectoryReader {
+  factory VirtualLocalStorageScanBackend(
+    LocalFileService service, {
+    required String scanRoot,
+    required bool Function() isCurrent,
+  }) {
+    if (scanRoot.isEmpty ||
+        scanRoot.contains('\u0000') ||
+        !p.posix.isAbsolute(scanRoot)) {
+      throw FileSystemException(
+        'Use an absolute selected folder path.',
+        scanRoot,
+      );
+    }
+    final root = p.posix.normalize(scanRoot);
+    if (service is! LocalFileSourceIdentity ||
+        service is! LocalDirectorySnapshotReader) {
+      throw UnsupportedError(
+        'Noninteractive folder snapshots are unavailable.',
+      );
+    }
+    final identities = service as LocalFileSourceIdentity;
+    final grant = identities.sourceIdentityForPath(root);
+    if (grant == null) {
+      throw UnsupportedError('Open a selected local folder before scanning.');
+    }
+    var lost = false;
+    bool current() {
+      if (lost) return false;
+      if (!isCurrent() ||
+          !identical(identities.sourceIdentityForPath(root), grant)) {
+        lost = true;
+      }
+      return !lost;
+    }
+
+    return VirtualLocalStorageScanBackend._(
+      service,
+      scanRoot: root,
+      identities: identities,
+      grant: grant,
+      isCurrent: current,
+    );
+  }
+
+  VirtualLocalStorageScanBackend._(
+    super.service, {
+    required this.scanRoot,
+    required LocalFileSourceIdentity identities,
+    required Object grant,
+    required super.isCurrent,
+  }) : _identities = identities,
+       _grant = grant;
+
+  final String scanRoot;
+  final LocalFileSourceIdentity _identities;
+  final Object _grant;
+  StorageScanDirectory? _rootSnapshot;
+
+  @override
+  p.Context get paths => p.posix;
+  @override
+  String pathKey(String path) => paths.normalize(path);
+  @override
+  bool get supportsModifiedTime => false;
+  @override
+  bool get supportsSymbolicLinks => false;
+
+  String _checkedPath(String path) {
+    if (!isCurrent) throw StateError('The selected local folder changed.');
+    if (path.isEmpty || path.contains('\u0000') || !paths.isAbsolute(path)) {
+      throw FileSystemException('Use an absolute selected folder path.', path);
+    }
+    final normalized = paths.normalize(path);
+    if ((normalized != scanRoot && !paths.isWithin(scanRoot, normalized)) ||
+        !identical(_identities.sourceIdentityForPath(normalized), _grant)) {
+      throw FileSystemException(
+        'The path is outside the selected folder.',
+        path,
+      );
+    }
+    return normalized;
+  }
+
+  @override
+  Future<FileItem?> stat(String path) async {
+    final normalized = _checkedPath(path);
+    if (normalized == scanRoot) {
+      // A successful directory snapshot verifies a selected root directly.
+      // Its parent may be the ungranted browser namespace or another root.
+      _rootSnapshot = await _readDirectory(normalized);
+      return FileItem(
+        name: paths.basename(normalized),
+        path: normalized,
+        isFolder: true,
+      );
+    }
+    final parent = paths.dirname(normalized);
+    final listing = await _readDirectory(parent);
+    _checkedPath(normalized);
+    final matches = listing.entries
+        .where((entry) => entry.path == normalized)
+        .toList();
+    if (matches.length > 1) {
+      throw StateError('Ambiguous directory entry: $normalized');
+    }
+    return matches.isEmpty ? null : matches.single;
+  }
+
+  @override
+  Future<List<FileItem>> list(String path) async =>
+      (await listForStorageScan(path)).entries;
+
+  @override
+  Future<StorageScanDirectory> listForStorageScan(String path) async {
+    final normalized = _checkedPath(path);
+    if (normalized == scanRoot && _rootSnapshot != null) {
+      final snapshot = _rootSnapshot!;
+      _rootSnapshot = null;
+      return snapshot;
+    }
+    return _readDirectory(normalized);
+  }
+
+  Future<StorageScanDirectory> _readDirectory(String path) async {
+    _checkedPath(path);
+    final snapshot = await service.listDirectorySnapshot(path);
+    _checkedPath(path);
+    if (snapshot == null) {
+      throw FileSystemException('The selected folder is unavailable.', path);
+    }
+    final entries = <FileItem>[];
+    final issues = <StorageScanIssue>[];
+    final pathCounts = <String, int>{};
+    for (final entity in snapshot) {
+      pathCounts.update(entity.path, (count) => count + 1, ifAbsent: () => 1);
+    }
+    for (final entity in snapshot) {
+      final child = entity.path;
+      if (child.contains('\u0000') ||
+          !paths.isAbsolute(child) ||
+          paths.normalize(child) != child ||
+          paths.dirname(child) != path ||
+          child == path ||
+          pathCounts[child] != 1 ||
+          !identical(_identities.sourceIdentityForPath(child), _grant) ||
+          (entity is! File && entity is! Directory && entity is! Link)) {
+        issues.add(
+          StorageScanIssue(
+            path: child,
+            code: StorageScanIssueCode.invalidEntry,
+            message: 'An entry did not identify a direct child of the selected folder.',
+          ),
+        );
+        continue;
+      }
+      final metadata = entity is File
+          ? service.getWebMetadata(child)
+          : const <String, dynamic>{};
+      _checkedPath(child);
+      entries.add(
+        FileItem(
+          name: paths.basename(child),
+          path: child,
+          isFolder: entity is Directory,
+          isSymlink: entity is Link,
+          size: metadata['size'] is int ? metadata['size'] as int : null,
+          updatedAt: metadata['modified'] is DateTime
+              ? metadata['modified'] as DateTime
+              : null,
+        ),
+      );
+    }
+    return StorageScanDirectory(
+      entries: entries,
+      // Snapshot enumeration is nonmutating. Available file metadata can still
+      // be older than that enumeration, and new entries may have no size.
+      isComplete: false,
+      issues: [
+        ...issues,
+        if (path == scanRoot)
+          StorageScanIssue(
+            path: path,
+            code: StorageScanIssueCode.incompleteListing,
+            message: 'Browser-local sizes may use older file metadata or omit unavailable sizes. This report is a partial observation.',
+          ),
+      ],
+    );
+  }
+}
+
 class _LocalStorageScanBackend extends LocalOperationBackend
     implements
         StorageScanDirectoryReader,
         StorageScanDirectoryGuard,
         StorageScanSessionFactory {
-  _LocalStorageScanBackend(
-    super.service, {
-    required super.isCurrent,
-    required this.scanRoot,
-  });
-  final String scanRoot;
+  _LocalStorageScanBackend(super.service, {required super.isCurrent});
 
   // A case-sensitive macOS/Windows volume may legitimately contain A and a.
   // A read-only census must not use conservative destination collision keys.
@@ -99,23 +293,8 @@ class _LocalStorageScanBackend extends LocalOperationBackend
       if (!isCurrent) throw StateError('The selected local folder changed.');
       return result;
     }
-    final entries = await super.list(path);
-    if (!isCurrent) throw StateError('The selected local folder changed.');
-    return StorageScanDirectory(
-      entries: entries,
-      // Browser-local listings currently expose cached picker snapshots, omit
-      // hidden entries in the FSA path, and may suppress enumeration errors.
-      // Do not describe that legacy API as a complete/live directory census.
-      isComplete: !kIsWeb,
-      issues: kIsWeb && samePath(path, scanRoot)
-          ? [
-              StorageScanIssue(
-                path: path,
-                code: StorageScanIssueCode.incompleteListing,
-                message: 'Browser-local results use a cached folder snapshot. Hidden entries and access failures may be omitted; use the installed app for a complete local scan.',
-              ),
-            ]
-          : const [],
+    throw UnsupportedError(
+      'Use virtual directory snapshots for browser scans.',
     );
   }
 }

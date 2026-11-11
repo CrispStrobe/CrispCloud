@@ -12,16 +12,20 @@ import '../models/file_collection.dart';
 import '../models/panel_side.dart';
 import '../providers/gallery_media_provider.dart';
 import '../providers/gallery_provider.dart';
+import '../providers/focus_area_provider.dart';
 import '../providers/providers.dart';
 import '../providers/panel_source_provider.dart';
 import '../services/gallery_device_export.dart';
 import '../services/gallery_catalog_service.dart';
 import '../services/gallery_media_service.dart';
 import '../services/panel_source_service.dart';
+import '../services/keyboard_shortcut_service.dart';
 import '../utils/formatters.dart';
 import 'batch_rename_dialog.dart';
 import 'file_context_menu.dart';
-import 'file_list_view.dart' show getFileIcon, PanelDragData;
+import 'file_list_view.dart' show getFileIcon;
+import 'folder_drop_target.dart';
+import 'folder_size_presentation.dart';
 import 'gallery_annotations_dialog.dart';
 import 'gallery_export_dialog.dart';
 import 'gallery_thumbnail.dart';
@@ -408,6 +412,8 @@ class _FileGridViewState extends ConsumerState<FileGridView> {
   KeyEventResult _onKey(KeyEvent event, int columns, double rowHeight) {
     if ((event is! KeyDownEvent && event is! KeyRepeatEvent) ||
         ref.read(activePanelProvider) != widget.side ||
+        ref.read(focusAreaProvider).panelSide != widget.side ||
+        ref.read(terminalInputFocusedProvider) ||
         _searchFocus.hasFocus) {
       return KeyEventResult.ignored;
     }
@@ -415,31 +421,58 @@ class _FileGridViewState extends ConsumerState<FileGridView> {
     final modifier = keyboard.isControlPressed || keyboard.isMetaPressed;
     final key = event.logicalKey;
     final panel = ref.read(panelProvider(widget.side));
-    const fileCommandKeys = [
-      LogicalKeyboardKey.delete,
-      LogicalKeyboardKey.f2,
-      LogicalKeyboardKey.f5,
-      LogicalKeyboardKey.f6,
-      LogicalKeyboardKey.f8,
-    ];
-    if ((fileCommandKeys.contains(key) ||
-            modifier &&
-                [
-                  LogicalKeyboardKey.keyC,
-                  LogicalKeyboardKey.keyX,
-                  LogicalKeyboardKey.keyV,
-                ].contains(key)) &&
+    final shortcuts = ref.read(keyboardShortcutServiceProvider);
+    final command = shortcuts.resolveBrowser(
+      event,
+      isCtrl: keyboard.isControlPressed,
+      isMeta: keyboard.isMetaPressed,
+      isShift: keyboard.isShiftPressed,
+      isAlt: keyboard.isAltPressed,
+    );
+    // The effective command owns the key. A rebound function key may now be
+    // navigation or filtering, so its former file action must not block it.
+    if (command != null && event is KeyRepeatEvent) {
+      return KeyEventResult.handled;
+    }
+    final keepExtensionRename =
+        command == null &&
+        !modifier &&
+        !keyboard.isAltPressed &&
+        keyboard.isShiftPressed &&
+        key == LogicalKeyboardKey.f6;
+    if (([
+              ShortcutAction.delete,
+              ShortcutAction.rename,
+              ShortcutAction.copy,
+              ShortcutAction.cut,
+              ShortcutAction.paste,
+              ShortcutAction.copyWithOptions,
+              ShortcutAction.moveWithOptions,
+            ].contains(command) ||
+            keepExtensionRename) &&
         !_canUseFileActions(_targets())) {
       _unavailableActions();
       return KeyEventResult.handled;
     }
-    if (modifier && key == LogicalKeyboardKey.keyA) {
+    if (command == ShortcutAction.selectAll) {
       _selectAll();
       return KeyEventResult.handled;
     }
-    if (modifier && key == LogicalKeyboardKey.keyF) {
+    if (command == ShortcutAction.filter) {
       _searchFocus.requestFocus();
       return KeyEventResult.handled;
+    }
+    if (command != null ||
+        modifier ||
+        keyboard.isAltPressed ||
+        shortcuts.suppressesDefault(
+          event,
+          isCtrl: keyboard.isControlPressed,
+          isMeta: keyboard.isMetaPressed,
+          isShift: keyboard.isShiftPressed,
+          isAlt: keyboard.isAltPressed,
+        )) {
+      return KeyEventResult.ignored;
     }
     if (key == LogicalKeyboardKey.escape) {
       panel.clearSelection();
@@ -1147,6 +1180,11 @@ class _FileGridViewState extends ConsumerState<FileGridView> {
 
   Widget _tile(FileItem file, GalleryPreferences prefs, double imageHeight) {
     final panel = ref.read(panelProvider(widget.side));
+    final folderSize = FolderSizePresentation.forFile(
+      context,
+      file,
+      panel.folderSizeFor(file),
+    );
     final selected = panel.isSelected(file);
     final cursor = identical(panel.cursorItem, file);
     final record = _record(file);
@@ -1194,7 +1232,7 @@ class _FileGridViewState extends ConsumerState<FileGridView> {
         if (prefs.showDetails) ...[
           Text(
             file.isFolder
-                ? t('Folder')
+                ? folderSize?.label ?? t('Folder')
                 : '${file.extension.toUpperCase()} · ${file.size == null ? '—' : formatBytes(file.size!)}',
             style: Theme.of(context).textTheme.labelSmall
                 ?.copyWith(color: scheme.onSurfaceVariant),
@@ -1244,12 +1282,13 @@ class _FileGridViewState extends ConsumerState<FileGridView> {
       ],
     );
     final card = Semantics(
-      label: '${file.name}${file.isFolder ? ', ${t('Folder')}' : ''}',
+      label:
+          '${file.name}${file.isFolder ? ', ${t('Folder')}' : ''}${folderSize == null ? '' : ', ${folderSize.tooltip}'}',
       selected: selected,
       button: true,
       child: Tooltip(
         message:
-            '${file.path ?? file.name}\n${file.size == null ? '' : formatBytes(file.size!)}',
+            '${file.path ?? file.name}\n${folderSize?.tooltip ?? (file.size == null ? '' : formatBytes(file.size!))}',
         child: Material(
           color: selected
               ? scheme.primaryContainer
@@ -1339,31 +1378,12 @@ class _FileGridViewState extends ConsumerState<FileGridView> {
         ),
       ),
     );
-    final other = ref.read(panelSourceProvider(oppositePanel(widget.side)));
-    final expectedDestination = widget.side == PanelSide.local
-        ? other is RemotePanelSource &&
-              identical(other.client, ref.read(authProvider).client)
-        : other is LocalPanelSource;
-    if (file.name == '..' ||
-        !_canUseFileActions(selected ? _targets() : [file]) ||
-        !expectedDestination) {
-      return card;
-    }
-    return LongPressDraggable<PanelDragData>(
-      data: PanelDragData(
-        sourceSide: widget.side,
-        files: selected ? _targets() : [file],
-      ),
-      maxSimultaneousDrags: 1,
-      feedback: Material(
-        elevation: 6,
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Text(file.name),
-        ),
-      ),
-      child: card,
+    return PanelFileDragSource(
+      side: widget.side,
+      file: file,
+      child: file.isFolder
+          ? FolderDropTarget(side: widget.side, folder: file, child: card)
+          : card,
     );
   }
 }

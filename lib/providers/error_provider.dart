@@ -33,6 +33,8 @@ enum PanelErrorCode {
   findFailed,
   searchUnsupported,
   findUnsupported,
+  navigationUnavailable,
+  navigationFailed,
 }
 
 class AppError {

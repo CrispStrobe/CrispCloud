@@ -1,0 +1,960 @@
+{
+  "schema": "crispcloud.reviewed_source_refresh.v1",
+  "targetPath": "docs/recovery/source-evidence-refresh-2026-11-11.json",
+  "repository": "CrispStrobe/CrispCloud",
+  "dateUTC": "2026-11-11",
+  "status": "source_difference_review_completed_hosted_gate_pending",
+  "purpose": "Record a narrowly reviewed source-binding refresh after the exact hosted stale-fingerprint failure. This JSON is a guarded change proposal; creating its blob changes no files or refs.",
+  "reviewBaseCommit": "e9dd5dbbb8581e16f228d4f51239adf7d0b22660",
+  "targetBaseCommit": "ef3ca3c038bab1a2af7765eb09d395d994431e99",
+  "targetBaseTree": "58e0fc9be2a393765c0b40312959decf5e4be861",
+  "ciMergeCommit": "e1c8d92c3013bf12b01b5789f1f0b33339647ca1",
+  "ciMergeTreeMatchesTarget": true,
+  "failureEvidence": {
+    "runId": 43035543238,
+    "jobId": 130573305765,
+    "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43035543238/job/130573305765",
+    "command": "python3 tool/crypto_release_evidence.py --check",
+    "exactFailure": "Crypto release evidence failed: Apple export review is stale: reviewed crypto source changed; review and update the policy",
+    "precedingValidatorSuites": [
+      {
+        "name": "test_crypto_release_evidence.py",
+        "executed": 41,
+        "passed": 39,
+        "skipped": 2,
+        "result": "OK (skipped=2); skipped cases require Apple's native plutil"
+      },
+      {
+        "name": "test_apple_export_preflight.py",
+        "executed": 37,
+        "passed": 37,
+        "skipped": 0,
+        "result": "OK"
+      }
+    ],
+    "limitation": "The proposed refreshed files have not yet passed a hosted source-evidence check. Earlier suite results are not relabeled as validation of the resulting commit."
+  },
+  "fingerprint": {
+    "algorithm": "SHA-256 of the UTF-8 compact JSON object mapping sorted inventory paths to lowercase SHA-256(file bytes); matches json.dumps(hashes, sort_keys=True, separators=(\",\", \":\")). All paths are ASCII.",
+    "reviewedInputCount": 128,
+    "currentVerifiedInputBytes": 1555975,
+    "unchangedInputs": 126,
+    "previous": "72be43025ae190ec5734c2b877481361a318a4b234407558004b2fda703e866a",
+    "proposed": "1be5e3187053a515c775c136e8424c4f11b1616a5978ed8856e54223476a7ad8",
+    "oldFingerprintReproducedExactly": true,
+    "proof": "Every current file was retrieved at targetBaseCommit and independently matched its Git blob SHA. Substituting only the two exact prior blobs reproduces the existing policy fingerprint. The complete e9dd5db...ef3ca3c comparison has exactly these two paths in the unchanged inventory's reviewed_files set.",
+    "inventorySHA256": "2f716200d7249f094dd491174929a355d87958150c4edeaebd464b61da13e0bd",
+    "rootPubspecLockSHA256": "490f6b9238de9a8e51292dc8831844e7b502b8f186cc6e2d426bf2fb25f88853",
+    "records": [
+      {
+        "path": ".github/workflows/smb-rust.yml",
+        "blobSHA": "74386d22de1581fdb02142f32e23b83ffb2c5fc2",
+        "sha256": "215e665af661bd82936a1df2040dd0cdd2c7e88092e36231432546fa93f63e4d",
+        "bytes": 3915
+      },
+      {
+        "path": "cli/lib/adapters/cli_adapter_factory.dart",
+        "blobSHA": "6527e9b65516e910f86b8d90485e2edd558c059f",
+        "sha256": "70170bbdb5b51122641145c9ddf5de660f7d8ab47486dbef26aa76d0b32d5877",
+        "bytes": 1333
+      },
+      {
+        "path": "cli/lib/adapters/cli_storage_client.dart",
+        "blobSHA": "352f3122b79d17ccb1cbedfc0d52ff07eaa8f8e4",
+        "sha256": "fddb119d3dee02fde9d51fd14af901891275c4a1ff034dc82118f977e5cd7a6a",
+        "bytes": 3076
+      },
+      {
+        "path": "cli/lib/adapters/smb_adapter.dart",
+        "blobSHA": "773028f9f449f84e3546233af21f81b9696f8836",
+        "sha256": "f9a22d7b115443c54802e469bb9ed541f879302eb50adc21fe4b7799a517d796",
+        "bytes": 5721
+      },
+      {
+        "path": "cli/lib/commands/config.dart",
+        "blobSHA": "d38b67b5d3639f8e555def499c63dc91a9664d3f",
+        "sha256": "1ef397756ca30d602143f301e2a6d2eb3bc319b1e5cc23d3203768ef27fe443a",
+        "bytes": 4991
+      },
+      {
+        "path": "cli/lib/commands/connect.dart",
+        "blobSHA": "bfa9b76a9d51c7ee8bd423456515ed9286a5e4d1",
+        "sha256": "78b64243233caea7f85386e7292aad2e6d8915f68a17e4a7bedbee71a4e176cb",
+        "bytes": 7304
+      },
+      {
+        "path": "cli/lib/commands/providers.dart",
+        "blobSHA": "1566da07aaa5ca0105632a4d8c72b5cd5eec0e5c",
+        "sha256": "d74155686d69914ebc231e648254be2109a0987d1e7fbfc6dd3337d299e9a6a8",
+        "bytes": 2822
+      },
+      {
+        "path": "cli/lib/commands/sync.dart",
+        "blobSHA": "4bb0ca6de8ae1261da3c8f43da29d2d9e2231ad6",
+        "sha256": "405f222885e245bdd099678d4f99b9457d175a2035c6518a5639de8d37123beb",
+        "bytes": 5849
+      },
+      {
+        "path": "cli/lib/commands/upload.dart",
+        "blobSHA": "2d77a30349eee90f5b461670cdaf5b6e6be82b55",
+        "sha256": "66a31156f582e7500ab40f74062d854315232d9c6c28ed56ee04406aea0c3296",
+        "bytes": 2987
+      },
+      {
+        "path": "cli/lib/config/cli_config.dart",
+        "blobSHA": "531742fc6f44492524e90493eb2a4601d2c8c85f",
+        "sha256": "d29cf9c8cf76aceceee63a2566c14e0f8548a689d2cddf10bbbc6dc2490e8215",
+        "bytes": 8288
+      },
+      {
+        "path": "cli/pubspec.lock",
+        "blobSHA": "7feb53d78b82336a34bee12a6cef2a925966eb81",
+        "sha256": "308aa39ba3ef2d4c240755928439bcfe7974f758d722063f2c71666e1e721f83",
+        "bytes": 16487
+      },
+      {
+        "path": "cli/pubspec.yaml",
+        "blobSHA": "6272d9ec282ed00a472dd7527b8ebc95f7c42e81",
+        "sha256": "2ffe0b6040fa11f2fc9de75b634e293af6d559ad83cc4030ce2b289a3203323c",
+        "bytes": 535
+      },
+      {
+        "path": "lib/l10n/connection_dialog_extra_strings.dart",
+        "blobSHA": "af4b0f62bc788d803ed6f87161466b381158f0a1",
+        "sha256": "161da8f3be0dc7bfe296f49fcf18e9d2e93e98d4f94aaac6892f9c681bb32ff8",
+        "bytes": 54410
+      },
+      {
+        "path": "lib/l10n/key_management_strings.dart",
+        "blobSHA": "a78745254be58a33caed8f9d5e440e7f06d06db5",
+        "sha256": "5786dd3854b03ea0d5589cc2112dc8fceac3015a693220df1adc33683df8914d",
+        "bytes": 35572
+      },
+      {
+        "path": "lib/main.dart",
+        "blobSHA": "de764a16d0b35c30e7d0d5f96f80291c160bda17",
+        "sha256": "038d0abad953ccc8e9554ef2b03f3bb0da16b3faafdc5badd347238e1a18cfaa",
+        "bytes": 43917
+      },
+      {
+        "path": "lib/providers/auth_provider.dart",
+        "blobSHA": "08a90965dd0fcfbfdb08bf4ef0ed565dd5ca6a37",
+        "sha256": "c37041a00da658b6d15d8b9b3d6964f51c1f913594679a441e3c83e5b8a2e63b",
+        "bytes": 20420
+      },
+      {
+        "path": "lib/screens/screen_dialogs.dart",
+        "blobSHA": "967cefb8cfd747615926efacd83b0b7500478ff9",
+        "sha256": "5ac29d32b955cb8e3999481bee71e5dca68db872186d4311cbfe15cf724e154d",
+        "bytes": 26121
+      },
+      {
+        "path": "lib/services/aes_siv.dart",
+        "blobSHA": "bf364626aac075adf2734ae92de7db0f7fe6b0cd",
+        "sha256": "022c2ef221a330b8d586acb0102339f5b6b423817d1c7806d3bb783cb0244f83",
+        "bytes": 5230
+      },
+      {
+        "path": "lib/services/app_lock_service.dart",
+        "blobSHA": "5c7af1d85f88c48fc727cad0ebf8145fb401bfaf",
+        "sha256": "9da77bd848b75adf49325f312b1042dbd9cb3aef0c1434de66c90a94e15e695d",
+        "bytes": 8047
+      },
+      {
+        "path": "lib/services/archive_service.dart",
+        "blobSHA": "41f34f2dd591cd591a2205868c7d0369ccf9dbd1",
+        "sha256": "94b8b7ccfc44593ab2bef55f6d96a92715f034a19cfa8ea4e51496788381390d",
+        "bytes": 14413
+      },
+      {
+        "path": "lib/services/archive_viewer_file_io.dart",
+        "blobSHA": "6c2df9ce105a449cf3632971edea5fc344e4f35e",
+        "sha256": "91f0af7015385e2dc0f23b8133fe5d7b050d7f1c6acbf566942bc41476df6205",
+        "bytes": 385
+      },
+      {
+        "path": "lib/services/archive_viewer_service.dart",
+        "blobSHA": "1e12a13c2dfe1d05cbf3f9b55d64d984d2293a8c",
+        "sha256": "b3895c97ca74af4cdca49c26e6f777fd7c610e777d2140768287f400f29655ca",
+        "bytes": 16744
+      },
+      {
+        "path": "lib/services/archive_workspace.dart",
+        "blobSHA": "29cd3069831e8d025b52e7245e09ccf693399ab9",
+        "sha256": "4f7a60cf3fa1a15f198bfaa7fc7d787401a2b627125b07bc9b623762522d2c44",
+        "bytes": 25753
+      },
+      {
+        "path": "lib/services/background_sync_mobile.dart",
+        "blobSHA": "c6da41d8cdd91509e6a9ebe1d3a5197b85905d84",
+        "sha256": "ce89555acd7b9d041eb7ec8b371ccf7959940b6b10231947f41d240157c35b3c",
+        "bytes": 10416
+      },
+      {
+        "path": "lib/services/backup_service.dart",
+        "blobSHA": "1f4f69b2cd5f14f3f1582e341fccc1eb7ab00490",
+        "sha256": "c608fe2f0b34abc1cb4fdcfd633c4a30ee629457e7141e6a44c93d8ba123e884",
+        "bytes": 40554
+      },
+      {
+        "path": "lib/services/bcrypt_aesgcm.dart",
+        "blobSHA": "245eab8fbaa837bdf1ac4cb5ff9e5973160137e5",
+        "sha256": "f8e182511aabde650f61674c4515f12886f3f3c633fcf400fce8eeb70141e433",
+        "bytes": 9097
+      },
+      {
+        "path": "lib/services/cert_pinning_service.dart",
+        "blobSHA": "45327136c4048723b35563b6eaa67452c38292a6",
+        "sha256": "36420a45f05b021d78eadfe6ff852c6135b9895e467ef51f77105a8e35344bd0",
+        "bytes": 8314
+      },
+      {
+        "path": "lib/services/connection_profiles.dart",
+        "blobSHA": "abdc9f6f979ec2533c366b5600cb9d3d74e1fa8f",
+        "sha256": "f637185ab225b4edafdc771f3039424056244f19f012709ccb704434293fdf65",
+        "bytes": 731
+      },
+      {
+        "path": "lib/services/credential_storage_bootstrap.dart",
+        "blobSHA": "b926951b9eb3d87512d74390fc1aa09be4111da9",
+        "sha256": "36b08dde8eaa4d333b71e8093e5e674b38de0e381d82deb2cff695d48cbdb62e",
+        "bytes": 4302
+      },
+      {
+        "path": "lib/services/credential_storage_config.dart",
+        "blobSHA": "3790135b46c19da01d74c9b2b10d12f41957c2be",
+        "sha256": "9e8c29ea30344df4e31dae6d563c06fe15592018440a708b13a37e7e3ddc5dce",
+        "bytes": 11653
+      },
+      {
+        "path": "lib/services/credential_storage_first_setup.dart",
+        "blobSHA": "1885b29ab11804a924ce2078ea38f0a84e04e8e4",
+        "sha256": "72824ed946d0c21d158e709683c34fd176930069034f9e0f7251086b95c04d0e",
+        "bytes": 4203
+      },
+      {
+        "path": "lib/services/credential_storage_first_setup_io.dart",
+        "blobSHA": "8989a8b08468ad5bf77e700a1400e144c1fe612a",
+        "sha256": "dc01fdc10a428a9a09bb5632eb2cb5ee4d4f75e621595d520946eb5ddfc465b3",
+        "bytes": 4967
+      },
+      {
+        "path": "lib/services/credential_storage_recovery.dart",
+        "blobSHA": "2d7399148a40b69ae37bfd473522a20ddfd5fd7a",
+        "sha256": "1fbf072567e811d7b815931ab4868c66d6126f07271fe3db4b7226fba1e0c09c",
+        "bytes": 4527
+      },
+      {
+        "path": "lib/services/cryptography_crypto_provider.dart",
+        "blobSHA": "067bb27cff34ecb4353f0284228ce3a5bca0d4f6",
+        "sha256": "f878848c313d66d32da565d64b4b5506ec9df6ee007fd01f326d735982a8ce10",
+        "bytes": 2707
+      },
+      {
+        "path": "lib/services/cryptomator_service.dart",
+        "blobSHA": "9d5591f750edd0359bd163a6ea52b0aa9c080aa3",
+        "sha256": "15be00e8b1341748ea92c372d07b426a23ae8c746e25d97e14d8b64cfbbac838",
+        "bytes": 27288
+      },
+      {
+        "path": "lib/services/encrypted_storage_wrapper.dart",
+        "blobSHA": "6be336b220159a97949b97d52a8a6c1071ab4a07",
+        "sha256": "d8d7829f54990eb7d696b8673d00f59f7a1d95c374cd02880d1547884c2f4461",
+        "bytes": 11617
+      },
+      {
+        "path": "lib/services/encryption_service.dart",
+        "blobSHA": "dd4e133c2d7da87da5236ee8f06833bb433fa6fd",
+        "sha256": "4217517cf562e9f45dea1d86381092464e073a0230ea613875e926a58f5ea6aa",
+        "bytes": 9350
+      },
+      {
+        "path": "lib/services/filen_client_adapter.dart",
+        "blobSHA": "d03b51926ca0843b4005355a17bdce469f26a810",
+        "sha256": "6ba8096fcab8481a6b5b1ed59ead7d6c4284fcfeede218497cd91050f018d18c",
+        "bytes": 13171
+      },
+      {
+        "path": "lib/services/filen_config_service.dart",
+        "blobSHA": "a8bf220a230c1f7cac16b371a837faaa349a1d28",
+        "sha256": "dea294adedf9e7ec0b9532edb700e17455010d67273d79eff24e1c2d7a106dc9",
+        "bytes": 8791
+      },
+      {
+        "path": "lib/services/filen_legacy_credentials_io.dart",
+        "blobSHA": "c6e9e82c88eb7e8e062706ad011f2db612333271",
+        "sha256": "19e76356b4a32ed544a9886436985e50c82bbd41f34dcf93ecb055fb6e6bb5b7",
+        "bytes": 2392
+      },
+      {
+        "path": "lib/services/filen_legacy_credentials_stub.dart",
+        "blobSHA": "0bc70f9575016b92c0d0e28feb4fb5dfd7ad57e7",
+        "sha256": "72c1212421dad8afa7520d6bd4d635edd9cfb66cbcef38da231987c955c80c5c",
+        "bytes": 215
+      },
+      {
+        "path": "lib/services/filen_stream_transfer.dart",
+        "blobSHA": "31710ae25da0ea3863faff2a0a79a4a6bd80e915",
+        "sha256": "577cfd6d861d30b25f4b9be95b8bee6f3ae645fd0669dd8caa3db7a984a7fb91",
+        "bytes": 7672
+      },
+      {
+        "path": "lib/services/gcm_transfer_stream.dart",
+        "blobSHA": "e582c239058dff49199b69f3c25d59adb28285c9",
+        "sha256": "a5a36dfedc7bd5f411d37ed37141e0d81c95ece625b726b1520b8c469397947a",
+        "bytes": 5831
+      },
+      {
+        "path": "lib/services/internxt_client_adapter.dart",
+        "blobSHA": "6e4c5a28e80f3c761cef964eaaa6f39ee95fe848",
+        "sha256": "a389980b4ccd068d7d3d869f8e3a8bb764fa26b54f6820de774de9ec80a60db4",
+        "bytes": 10743
+      },
+      {
+        "path": "lib/services/internxt_flutter/legacy_config_io.dart",
+        "blobSHA": "4d2f25d3ad97b09b17778c93afaf832b48ed20f0",
+        "sha256": "6d3883a1699cefcc544791b9231f8370821c898c75d764867deaaf7390353541",
+        "bytes": 386
+      },
+      {
+        "path": "lib/services/internxt_flutter/legacy_config_web.dart",
+        "blobSHA": "b5c19433d562d722dfaf8be32c5428626dbadcd6",
+        "sha256": "de464f8d0a6fcdc16c53d76c55641b60df3ea1d08b865c670e3a27f2a6aed4ff",
+        "bytes": 210
+      },
+      {
+        "path": "lib/services/internxt_flutter/secure_config_storage.dart",
+        "blobSHA": "8782a1bd28159b3aa02feb88968c51993e7b5dac",
+        "sha256": "463ea5feaeef7a8a56c1670ef9d9094313e273ff9f74b690a03c57a78ea717ae",
+        "bytes": 7139
+      },
+      {
+        "path": "lib/services/internxt_streaming_transfer.dart",
+        "blobSHA": "abb4b8b06d761bcb1b73e68359c2ceecc82f283a",
+        "sha256": "35c7317581c3d0bf22332672a80bcdb459834f1956936d29ae85b4ae8bb2884c",
+        "bytes": 20289
+      },
+      {
+        "path": "lib/services/local_api_service.dart",
+        "blobSHA": "efe0f941ad22155ceaba4c151ad044cca1d25439",
+        "sha256": "a8c417b96d96a2dc7487b72d28cf71d1966dfeeaf0382608b7d456998e94b67b",
+        "bytes": 22602
+      },
+      {
+        "path": "lib/services/macos_keychain_service.dart",
+        "blobSHA": "fd8b1a9225af54b1b8374a654e69134065ce67eb",
+        "sha256": "62cb2551ec39e2f3305f82e3ff581d021c2199b6e9472d4b881feaede44bd8a3",
+        "bytes": 101
+      },
+      {
+        "path": "lib/services/macos_keychain_service_io.dart",
+        "blobSHA": "a0bf441981d00e7e162573be043cf54ff110cea6",
+        "sha256": "e357535e5ccc32a3018f02a4b508d935aa4f1ea417c63d9653b7f1ed87e52a74",
+        "bytes": 3273
+      },
+      {
+        "path": "lib/services/macos_keychain_service_stub.dart",
+        "blobSHA": "4eb4b62379c7b5478ea2966908fa7b3e0dbaba2b",
+        "sha256": "9bee20bb0e64b2bff9f57a85b30664c1de0e59773545ef635e4f88f570c6218e",
+        "bytes": 1065
+      },
+      {
+        "path": "lib/services/openssl_aesgcm.dart",
+        "blobSHA": "e7232eb9c36e5753976adc41021ef8ed60fdaa7f",
+        "sha256": "a3589808a5b03aa3174a5bdff9fe6c09133fe28a7bca1a2f3cbba44aa60b11de",
+        "bytes": 8870
+      },
+      {
+        "path": "lib/services/plugin_service.dart",
+        "blobSHA": "1c860df502a178700467be59aaec17dc42f0a74f",
+        "sha256": "86abf400f9b782fcee8b52504cb54d9cd2a8bc2db34a7ecbfc8020241e905c6e",
+        "bytes": 22031
+      },
+      {
+        "path": "lib/services/proxy_service.dart",
+        "blobSHA": "bcef1747be6501e63b255a2a3f6fa830feb582f5",
+        "sha256": "54f4665543ea0c637423a75361838b4017243a5e55620252c8291112ac2a1435",
+        "bytes": 8819
+      },
+      {
+        "path": "lib/services/secure_storage_file.dart",
+        "blobSHA": "1d549d801a32b324e4250fc0bb8ccff8a4e12d4a",
+        "sha256": "859cf7bac754c4035b3e5414c72a03e9834ad389b4600fc7344b3a8f589819e7",
+        "bytes": 95
+      },
+      {
+        "path": "lib/services/secure_storage_file_io.dart",
+        "blobSHA": "54b0e2860a6864184cafc45971565eedaf7023ef",
+        "sha256": "9d90990873b35239bbe6810019399b1e0a389432be568d7bdc0392b52a483e75",
+        "bytes": 12291
+      },
+      {
+        "path": "lib/services/secure_storage_file_stub.dart",
+        "blobSHA": "e470aeef708711ab126f3745073ab712fa52a0d9",
+        "sha256": "0318289ac4622a925d0609e199d7c57d8ea7f4c0184d6a30a26f756f477caf8a",
+        "bytes": 204
+      },
+      {
+        "path": "lib/services/secure_storage_macos_keychain.dart",
+        "blobSHA": "1c8e45c2bc5a64b00c9cfccf2dbabf8f7d91af8f",
+        "sha256": "c8d7f2730f7f62df15fb6bedb6c0ffbeed95f46661f75ed1c1cf3b806b96996c",
+        "bytes": 4167
+      },
+      {
+        "path": "lib/services/secure_storage_service.dart",
+        "blobSHA": "2cd0357ef35f1376d7e60740f3dcf4713d2e7db9",
+        "sha256": "46e3006d2c6fb808c5a05173e55b372ad3e8543c37e2d8e6d4bf2d0ad260cf2c",
+        "bytes": 6342
+      },
+      {
+        "path": "lib/services/secure_storage_web.dart",
+        "blobSHA": "948ea6f4d7afb81455fd96b5762ae6a3fbb655e8",
+        "sha256": "43598872db2f7581dfcdd59f9c9f6bd7eb0f733a0ee659d4193688b706a93700",
+        "bytes": 14639
+      },
+      {
+        "path": "lib/services/smb_client_adapter.dart",
+        "blobSHA": "a6de395d4587595ad807b242c9f389e78a47abe8",
+        "sha256": "710550138ccf928151b08c89bfb117a1c278663ee27b88f1871182b74420113e",
+        "bytes": 9793
+      },
+      {
+        "path": "lib/services/smb_config_service.dart",
+        "blobSHA": "355f0c2ccc07bcb4213ba29c63d1de2f82931690",
+        "sha256": "275a887f1c0c2f52058603c32c2634574f22f44ece1934125237f4533e9e3160",
+        "bytes": 408
+      },
+      {
+        "path": "lib/services/veracrypt_mount_service.dart",
+        "blobSHA": "67dda7cd1b32568bdef10fff21d35465b6e20a3c",
+        "sha256": "0bd02e61fe1f0c4723717fffb05dc8d1d0f4bccdea50afb3ae1b3ce13f3409cb",
+        "bytes": 24797
+      },
+      {
+        "path": "lib/services/veracrypt_service.dart",
+        "blobSHA": "433d1b17d5b82938ec6aaca90c7d83ae6e45f80d",
+        "sha256": "f8006df880b1fac5476b598b63f29cc12e102e32cf7373fdb6e35470665cc936",
+        "bytes": 17785
+      },
+      {
+        "path": "lib/services/web_crypto_factory_io.dart",
+        "blobSHA": "d1334a43f5d9d4d3857b2c686a69e205a7a68da8",
+        "sha256": "06edb3b9210f78affd329b699b61bee26cb728c66cc3b426ca3c007ffa930f2d",
+        "bytes": 1630
+      },
+      {
+        "path": "lib/services/web_crypto_provider.dart",
+        "blobSHA": "c23e96811d804cc038d7a4c57b2c1c87eee82b17",
+        "sha256": "0744b2085d450e89b1578f38cb5c017507e6b166bcdc516f407c1e39aa6ac93c",
+        "bytes": 3025
+      },
+      {
+        "path": "lib/services/web_crypto_subtle.dart",
+        "blobSHA": "1c3ab737ff7e51382fb8cddc5ecbbc82838c3d72",
+        "sha256": "72b723487139e5bebf12a384dcfe3af856d153da529b1db3ed1fa86e8129b1e9",
+        "bytes": 3729
+      },
+      {
+        "path": "lib/widgets/archive_workspace_dialog.dart",
+        "blobSHA": "48ce9eb49d1e64893bcc36fe5045416a3d69385b",
+        "sha256": "bf309cf0c9368ce6267b023191bc61293158375b11edcc1b349add9b23493848",
+        "bytes": 30107
+      },
+      {
+        "path": "lib/widgets/command_palette.dart",
+        "blobSHA": "66f5173bbb1622b818d31cacc2264763ab048cd3",
+        "sha256": "d92f172f9c0e48f8fc6806ba57ffce71981b6eb60268472178fbf72762b21118",
+        "bytes": 28477
+      },
+      {
+        "path": "lib/widgets/connection_dialog.dart",
+        "blobSHA": "df27c8849b1ed2d4f03b1f106c7110d216decc55",
+        "sha256": "78903acb659c56acf480a444e832c1afbd6ecf3220b055a8cf58ae855c636ab5",
+        "bytes": 65926
+      },
+      {
+        "path": "lib/widgets/credential_storage_setup.dart",
+        "blobSHA": "c3580b6e0332183c141d2c7c3ed0b933bb62cf1e",
+        "sha256": "084e6f78038454d466509278785c8551993a0afbe304ca908a64576fee6c892a",
+        "bytes": 21957
+      },
+      {
+        "path": "lib/widgets/file_encryption_recovery_dialog.dart",
+        "blobSHA": "5015242d6652995887bbf094c3540f95ce9e8810",
+        "sha256": "cbd7b090928a1196279492769a26a1d6117c178fe227fc020de01e4b3eb86d81",
+        "bytes": 5759
+      },
+      {
+        "path": "lib/widgets/internal_viewer_dialog.dart",
+        "blobSHA": "19271a70eb9155a21eec7e1d3887e4a62a20bacd",
+        "sha256": "0554cbd3eaf914e4b9900999b61410ebc19afd524b71a4cfd6ac07a9a210e426",
+        "bytes": 113695
+      },
+      {
+        "path": "lib/widgets/lock_screen.dart",
+        "blobSHA": "d50b82f9611e73251641701db428006da3917312",
+        "sha256": "9d18d8d6662f9b1cdaecaa258eec305b6272420718d93a4443ba71239664cf27",
+        "bytes": 17197
+      },
+      {
+        "path": "lib/widgets/settings_dialog.dart",
+        "blobSHA": "aeb45166cf4a02cc643e4474e0046cb0628a256b",
+        "sha256": "c7f13c7a124be492caee48c04da31dc165d3ce99e21da310514a97c3e92e70b1",
+        "bytes": 39427
+      },
+      {
+        "path": "lib/widgets/smb_backend_field.dart",
+        "blobSHA": "b594a1dfff923d2ad9dcfffe0332087c9755271b",
+        "sha256": "046bd4cca55f9bd43c3beb7ff84f6dcc23a15a0eac303def1795e23c7a2ccc07",
+        "bytes": 1185
+      },
+      {
+        "path": "macos/Runner/AppDelegate.swift",
+        "blobSHA": "795b0348b69b56c7810fd5f02f544f23e898307f",
+        "sha256": "94b8fe275b18eb68bec01a1c308e14588f98edac202ec7af229f68ee1672e2fb",
+        "bytes": 11836
+      },
+      {
+        "path": "macos/Runner/CustomKeychainStore.swift",
+        "blobSHA": "83678b9c327f81757669944067e93b585f87a526",
+        "sha256": "c2e5c1139b2602e49ab8cb2944c2fc4a25cdc8c0244df731fcbd1981824b842e",
+        "bytes": 21180
+      },
+      {
+        "path": "macos/Runner/MainFlutterWindow.swift",
+        "blobSHA": "3cc7713a02caa13ba846414733584dd8f2f2135a",
+        "sha256": "0fe5c06d7b77317bf91572a290ae3a0d5e323be6eac628c339f322339dc473f5",
+        "bytes": 6333
+      },
+      {
+        "path": "packages/crisp_ios_shell/UPSTREAM.md",
+        "blobSHA": "ab856c4a6624dcbb8e0cbfcb46664f291c22c2a8",
+        "sha256": "d830bd57fa705c2a16e005e577d3854c40d0ed0ea192bb0ad189ed9d35523f4c",
+        "bytes": 8994
+      },
+      {
+        "path": "packages/crisp_ios_shell/ios/crisp_ios_shell.podspec",
+        "blobSHA": "4a3aa37211ed75b5a6f58aa1e96ee843407b6a7d",
+        "sha256": "49f05edf3a35a4f1607caa6633b67b48722825d8001e5455e956e409a8c44ec4",
+        "bytes": 1232
+      },
+      {
+        "path": "packages/crisp_ios_shell/tool/sources.json",
+        "blobSHA": "2a08870450792cf57c8b79dde11c2b1aebe6817d",
+        "sha256": "687c533d250c4f37f3190e0645443c03f055734ec7492e040af762898e927cdb",
+        "bytes": 2470
+      },
+      {
+        "path": "packages/crisp_storage/NOTICE-LIBSMB2.txt",
+        "blobSHA": "f171e0641bafcc92afb0224a06ae4e7893c7cb8a",
+        "sha256": "a490d1d0d72c90bf172da6c3ac2cf217dc3c66792ab66b2e971155ffc23cd3cb",
+        "bytes": 27838
+      },
+      {
+        "path": "packages/crisp_storage/bin/build_smb.dart",
+        "blobSHA": "7567dd2fa61aa38d35f3fdd66d51cdabe9ee8b28",
+        "sha256": "cb41b72beebf9da1fb4443d9ba0015c759c7512fb037d8cb87ff7ce4e6e8c5ac",
+        "bytes": 2718
+      },
+      {
+        "path": "packages/crisp_storage/lib/crisp_storage.dart",
+        "blobSHA": "422f3fd1f21c61112746239af7a7dfce110e2f4d",
+        "sha256": "faea0706bc03df848ebb17d79842537580201e0ec1342e061dc0553bde33151c",
+        "bytes": 315
+      },
+      {
+        "path": "packages/crisp_storage/lib/src/download_state.dart",
+        "blobSHA": "8fc8f9bb80f2673bb63b88cc59c2e08f25c38b2f",
+        "sha256": "08a3b641948f93686e9aa90af28dfe9199df1925b712585df2c1b09740d11f7f",
+        "bytes": 1082
+      },
+      {
+        "path": "packages/crisp_storage/lib/src/host_keys.dart",
+        "blobSHA": "bbd433e4fbd4d7860d2168be81321007ef87e349",
+        "sha256": "d44c2e1abd4853f60e11a7a034a7fe2ecd3faecf2185b72f8d69d8df6a697d33",
+        "bytes": 4223
+      },
+      {
+        "path": "packages/crisp_storage/lib/src/libsmb2_session.dart",
+        "blobSHA": "a3e583427645cf2c6cef2154c6d3cc9535ceb484",
+        "sha256": "ecb5f41f1b2d717bfa3d812ea3393bc3c938a1cdb5f8e93aa0be1918c83c1167",
+        "bytes": 11789
+      },
+      {
+        "path": "packages/crisp_storage/lib/src/profiles.dart",
+        "blobSHA": "adda0432eca00472e2062e42179bc465c5af9e75",
+        "sha256": "e805c4f6386e40b818151396a55c85be0bb07edc57c94949d43cf9eab1071480",
+        "bytes": 2606
+      },
+      {
+        "path": "packages/crisp_storage/lib/src/remote_client.dart",
+        "blobSHA": "be31f97e999fb0fec742c44885fc8c10acfa8c02",
+        "sha256": "63894c9ba9d201dcb5d075944c78f8c3b3c34fde5337e5a1b5ff623911a5099e",
+        "bytes": 23741
+      },
+      {
+        "path": "packages/crisp_storage/lib/src/rust/api.dart",
+        "blobSHA": "efa9d7d260fa6985176e6d39b41086ae9191eab8",
+        "sha256": "1f4ad27a56000af0537323a34ffe061aa3edcc36e5988d7d5008d5ad157aab0b",
+        "bytes": 1780
+      },
+      {
+        "path": "packages/crisp_storage/lib/src/rust/frb_generated.dart",
+        "blobSHA": "51ec62a3c38cf80ec963202586a1799e56b56d27",
+        "sha256": "6df8daeb986491615760065dc8689efff1e8c8e90d4937ab29f2827819bc409c",
+        "bytes": 17332
+      },
+      {
+        "path": "packages/crisp_storage/lib/src/rust/frb_generated.io.dart",
+        "blobSHA": "1f2d8ea447a59c014886333148e2151a4a631128",
+        "sha256": "8a2bec564f3345ac216c441ddde8cbb90dce50b80aeab96e59766d8e980f9d36",
+        "bytes": 3570
+      },
+      {
+        "path": "packages/crisp_storage/lib/src/rust/frb_generated.web.dart",
+        "blobSHA": "8f3af0eebadaac6a76be7424b206d9eab730d7ce",
+        "sha256": "68badebac3061161a97629c42ac34ddb85ea63550db55aca9567fc546c8dcc60",
+        "bytes": 3490
+      },
+      {
+        "path": "packages/crisp_storage/lib/src/rust_smb_session.dart",
+        "blobSHA": "4bca303223d16f9637d22bff6fed3458a573b0b1",
+        "sha256": "043b00bcb40b1eb72508791a6dc2e7b60ebcb58f0f1ad0026c8ea1b46af1a955",
+        "bytes": 9723
+      },
+      {
+        "path": "packages/crisp_storage/lib/src/smb_backend.dart",
+        "blobSHA": "c2c95e260b1c50432b0c86356fb2d6f08d602a19",
+        "sha256": "b19307d65087cb48c1d081f18dbbe0afb5e8b529c08304556e2341356641c21d",
+        "bytes": 1382
+      },
+      {
+        "path": "packages/crisp_storage/lib/src/smb_paths.dart",
+        "blobSHA": "05decb592f11a4d5216057d7f5617782c37a436e",
+        "sha256": "1c19c1a53900053626cd3ffd10a2c239be5a4d0d9e4b14e0f1414ae86da741f4",
+        "bytes": 2338
+      },
+      {
+        "path": "packages/crisp_storage/lib/src/smb_session.dart",
+        "blobSHA": "cde8e4be9b5854869e6f13e7523cb287b238c4cb",
+        "sha256": "6b24d7702529a44275221c084d89401d6c03b29b70c26422be9cfbb1022ad9ff",
+        "bytes": 3382
+      },
+      {
+        "path": "packages/crisp_storage/lib/src/smb_session_web.dart",
+        "blobSHA": "c9e90a329781ac4d807c72e3c66dc876fdb90d3e",
+        "sha256": "142bda3fd87b6f4248ab62204304a85887177603351e57eb901df85d54bef493",
+        "bytes": 1380
+      },
+      {
+        "path": "packages/crisp_storage/lib/src/smb_transport.dart",
+        "blobSHA": "019f3aa57b0658a385b524a76c8c8c6e05130807",
+        "sha256": "3234b70c0d6ad51a2a1044dc6116e8086e8c42ae7083372846d24ab03b621679",
+        "bytes": 718
+      },
+      {
+        "path": "packages/crisp_storage/licensing/rust_dependencies.json",
+        "blobSHA": "6416c50048f18cca1e88a9014a71dcf0fc2522d5",
+        "sha256": "a5b55034c6be8b865745e291a10dbf01f0c8796ca0136ec3fec93cacace9b01e",
+        "bytes": 81947
+      },
+      {
+        "path": "packages/crisp_storage/licensing/upstream/flutter_rust_bridge-2.11.1-LICENSE",
+        "blobSHA": "19192594124a454df4d63be00129254cb8494564",
+        "sha256": "d56622df159a9967bd6a16c726823a2cbe8546c1f18437617283c9da27000390",
+        "bytes": 1064
+      },
+      {
+        "path": "packages/crisp_storage/native/crisp_smb/Cargo.lock",
+        "blobSHA": "873ab684976bf80bcc19ccbbbc1bd075e27b17d6",
+        "sha256": "6dd9181097351cada85d244bac6734c86bf120a3c0bf1c72281c64ef1da350f6",
+        "bytes": 20088
+      },
+      {
+        "path": "packages/crisp_storage/native/crisp_smb/Cargo.toml",
+        "blobSHA": "87000a463d3fa7375dadc4ab68825d33111f1d5c",
+        "sha256": "496b068fdf8dd9e379ea58aa5796dfe093adcf0c992daa9c600979758bc9690f",
+        "bytes": 478
+      },
+      {
+        "path": "packages/crisp_storage/native/crisp_smb/src/lib.rs",
+        "blobSHA": "73091faf8766f99d9ed378759e2b40a731049489",
+        "sha256": "2c4a9bc5e3d3bfcbe5ccea72c3a0f6a0eeda1c8043bfa34a81449a9e6488fa72",
+        "bytes": 19334
+      },
+      {
+        "path": "packages/crisp_storage/pubspec.yaml",
+        "blobSHA": "562194a7916667ff68eab80f0778a92cdadcfa89",
+        "sha256": "f43f51e8352ec74e9ad22d085ebda8b790a9e1f45d1c88aa41fe27f4a255a04d",
+        "bytes": 369
+      },
+      {
+        "path": "packages/crisp_storage/rust/Cargo.lock",
+        "blobSHA": "f215b3f3177728adfe4c6d405469f8bd39c4f01f",
+        "sha256": "83e223e1de23bc1a66ee92e99fd0374d4dc1e0c7f295312226a92c85b8ac3c75",
+        "bytes": 33460
+      },
+      {
+        "path": "packages/crisp_storage/rust/Cargo.toml",
+        "blobSHA": "780cf68068f1b562aa093518353ace89801e632e",
+        "sha256": "dc14a753fee57b3e82cb7fb2b235b5fa2d60065918a524c68941f077aca53e55",
+        "bytes": 378
+      },
+      {
+        "path": "packages/crisp_storage/rust/src/api/mod.rs",
+        "blobSHA": "3008cfd7092fe519da5982f365ae7afcba158efa",
+        "sha256": "3acee3dc33e940553079817d1cd6672eb5f74bda90feb7361eaeab8466b996db",
+        "bytes": 2488
+      },
+      {
+        "path": "packages/crisp_storage/rust/src/frb_generated.rs",
+        "blobSHA": "8a4ad2d0fe29333968e6dde5d25dd955d20e10b8",
+        "sha256": "bad78b90046b5a5c2b75772c398688a2f33aa6691c59a27046f842e95cf81767",
+        "bytes": 21464
+      },
+      {
+        "path": "packages/crisp_storage/rust/src/lib.rs",
+        "blobSHA": "9360602722dd9a47620c011dbb5dddfccad00a26",
+        "sha256": "eae26ac4da1920131b75d6342f1bf91533034f837b51f1bef3dadc78946324e1",
+        "bytes": 154
+      },
+      {
+        "path": "packages/crisp_storage/tool/check_rust_licenses.py",
+        "blobSHA": "a5a4b889c163fc61f8425db81c6719956ee3388a",
+        "sha256": "f1bded03f3015dcd9fcc18a583c84bd0fbc67a3b3659a3f4be08bea99b2f8277",
+        "bytes": 4153
+      },
+      {
+        "path": "packages/crisp_storage/tool/run_package_tests.py",
+        "blobSHA": "cb09629cbfc1d6114d95e5ab288261656f30bf21",
+        "sha256": "89cc624337c73cfdb2419d38415fe1a83d97b2a9862603f6642f352a9e8a5285",
+        "bytes": 3637
+      },
+      {
+        "path": "packages/filen_client/UPSTREAM.md",
+        "blobSHA": "95a5a3db390f9a2f3fe35681527da9cf95153642",
+        "sha256": "154d640d0c46efb6f2d4f53b760886d0efdd2136dd1c52676cf04dd10a8a8fd2",
+        "bytes": 8738
+      },
+      {
+        "path": "packages/filen_client/lib/aes_gcm_backend.dart",
+        "blobSHA": "d91f75ce9993b3376bb54f194a10e37ff1799fde",
+        "sha256": "90da09c95b363e67b5d5e1b773b40f8530a30cfb1c2f334084a55ca6a7a177cf",
+        "bytes": 5775
+      },
+      {
+        "path": "packages/filen_client/lib/bcrypt_aesgcm.dart",
+        "blobSHA": "245eab8fbaa837bdf1ac4cb5ff9e5973160137e5",
+        "sha256": "f8e182511aabde650f61674c4515f12886f3f3c633fcf400fce8eeb70141e433",
+        "bytes": 9097
+      },
+      {
+        "path": "packages/filen_client/lib/config.dart",
+        "blobSHA": "ce66ac2aa8935474fa46a7716d5de2d724dc0146",
+        "sha256": "548c60dd18d529f13c5fa818ddc015e300e613a29c8cd6098c90c6625adc3ff4",
+        "bytes": 7233
+      },
+      {
+        "path": "packages/filen_client/lib/credential_crypto.dart",
+        "blobSHA": "11584c118e97a2e4e953096278dffd8b6819186d",
+        "sha256": "2ccceb2688c257edfd330fe7d2215fbaa74fc53ee35ad7d2fdaf715ff08f02a9",
+        "bytes": 2918
+      },
+      {
+        "path": "packages/filen_client/lib/crypto.dart",
+        "blobSHA": "cac506fd9d52ea1583e97d91be0a193a40a4d4e3",
+        "sha256": "ea6e5ceadb05f096869e93323d7453858d2e4a48027616c6288f98c12fff049d",
+        "bytes": 7419
+      },
+      {
+        "path": "packages/filen_client/lib/openssl_aesgcm.dart",
+        "blobSHA": "03bf9993b10785d1dc03fabd96ba1a1c60aa9a55",
+        "sha256": "231510e24fc4aa5966614649e83a7c7448118fbe0f83d44310a9e09b0cee3cad",
+        "bytes": 8755
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/opc/crypto/office_crypto.dart",
+        "blobSHA": "16e87675eee9cc101d37521720b52fd9037ef47d",
+        "sha256": "216c10b7ee437311f711b86c30a9b84f556f3c3bf25404af2deaad51804c505c",
+        "bytes": 23405
+      },
+      {
+        "path": "packages/quds_office_engine/lib/src/pdf/file/crypto/pdf_security.dart",
+        "blobSHA": "9f437f9942bfcfa96fee36f76c180829cd8248bf",
+        "sha256": "889d24940b271f454b9ab3041e1270830fea852119ccf7032f79c9112eb980fc",
+        "bytes": 8842
+      },
+      {
+        "path": "pubspec.yaml",
+        "blobSHA": "8772821b00693e5c2bfe0830b717f04dc4906967",
+        "sha256": "8ac1390a24171cca345a60abd2745007f334190d8d356f0ac1e8f73918bd954a",
+        "bytes": 9284
+      },
+      {
+        "path": "tool/apple_export_preflight.py",
+        "blobSHA": "1309e45b535f7bc3af1d290d0f851435279188ee",
+        "sha256": "fe50c99410fa418edd98fd0a7da4375a05355994e0d8e2c332a3baf9bbd8378b",
+        "bytes": 35342
+      },
+      {
+        "path": "tool/crypto_release_evidence.py",
+        "blobSHA": "f1e3d46d06c6c50a166dc9a9979764274576b41b",
+        "sha256": "aac38ebfca574e2e5385a1f04a27ddda79181f5c7b06efc8fb321d3ea93d2514",
+        "bytes": 18114
+      },
+      {
+        "path": "tool/testflight_export_guard.rb",
+        "blobSHA": "2019165f6c43eeea5acd490ecfeaeccd603423a7",
+        "sha256": "74e54d4c5ba297aea7f08f2c29bb26d92e2800754c1c5d89ba375b14869d0dd8",
+        "bytes": 11365
+      },
+      {
+        "path": "tool/testflight_external.rb",
+        "blobSHA": "e39a227ae62b28d3f23a86910604467777984edb",
+        "sha256": "47c22044a28373f4529aae44c940850ea49b9074ba56e39e4db8c26ae53e5b05",
+        "bytes": 8941
+      }
+    ],
+    "changedInputs": [
+      {
+        "path": "cli/lib/commands/connect.dart",
+        "rationale": "Exact-context comparison changes only whitespace between the existing help: field and its unchanged quoted SFTP host-key help text. Option names, values, defaults, transport selection, host-key requirements and authentication code are unchanged.",
+        "exactDelta": [
+          {
+            "before": "      ..addOption(\n        'host-key',\n        help:\n            'Expected SFTP SHA256 host-key fingerprint (required for non-interactive first connections).',\n      )",
+            "after": "      ..addOption(\n        'host-key',\n        help: 'Expected SFTP SHA256 host-key fingerprint (required for non-interactive first connections).',\n      )",
+            "expectedOccurrences": 1
+          }
+        ],
+        "priorBlobSHA": "4697a99246f42195396dc3ccad7decb352da2273",
+        "currentBlobSHA": "bfa9b76a9d51c7ee8bd423456515ed9286a5e4d1",
+        "priorSHA256": "8ddfc1b62fc306c5b8e2c81773766a66585191bb325feeeebd6c2778e165ee49",
+        "currentSHA256": "78b64243233caea7f85386e7292aad2e6d8915f68a17e4a7bedbee71a4e176cb"
+      },
+      {
+        "path": "lib/widgets/command_palette.dart",
+        "rationale": "Exact-context comparison adds only the batch dialog import and explicit command registration. The reachable flow was reviewed at the target commit: verified original folder sources and live grant/client checks; existing metadata listing; inert reports through existing snapshot storage; no new cipher, KDF, transport, authentication mode, credential store or source-file content transfer.",
+        "exactDelta": [
+          {
+            "before": "import 'storage_analyzer_dialog.dart';",
+            "after": "import 'storage_analyzer_dialog.dart';\nimport 'storage_scan_batch_dialog.dart';",
+            "expectedOccurrences": 1
+          },
+          {
+            "before": "      _Command(\n        name: StorageAnalyzerStrings(context).text('title'),\n        icon: Icons.space_dashboard_outlined,\n        action: () => showStorageAnalyzerDialog(widget.parentContext, ref),\n      ),",
+            "after": "      _Command(\n        name: StorageAnalyzerStrings(context).text('title'),\n        icon: Icons.space_dashboard_outlined,\n        action: () => showStorageAnalyzerDialog(widget.parentContext, ref),\n      ),\n      _Command(\n        name: StorageAnalyzerStrings(context).text('batchTitle'),\n        icon: Icons.inventory_2_outlined,\n        action: () => showStorageScanBatchDialog(widget.parentContext, ref),\n      ),",
+            "expectedOccurrences": 1
+          }
+        ],
+        "priorBlobSHA": "297d8ed2b6eac2a28420f2390637243ef2a196da",
+        "currentBlobSHA": "66f5173bbb1622b818d31cacc2264763ab048cd3",
+        "priorSHA256": "cfff9eba06a838c93f7584012fc7ba51ca297f3b46e4d776c03c0d069186a10c",
+        "currentSHA256": "d92f172f9c0e48f8fc6806ba57ffce71981b6eb60268472178fbf72762b21118"
+      }
+    ]
+  },
+  "reachableSourceReview": {
+    "records": [
+      {
+        "path": "lib/services/storage_scan_batch_service.dart",
+        "blobSHA": "6d796161b9e06eaee1943a9965ba2078d299d8b8",
+        "sha256": "290b8e34c9f36f5b73fb42818d759a1e99cf2e6390749f4189c6e0f747117faf",
+        "bytes": 9811
+      },
+      {
+        "path": "lib/widgets/storage_scan_batch_dialog.dart",
+        "blobSHA": "7a4278b20e4cb6d2c4972e71dff8b6fec48e25e9",
+        "sha256": "9b5404b4c87f11904f711067b5662d3d2185995cf5d9371afc1f643ea26061ba",
+        "bytes": 14303
+      },
+      {
+        "path": "lib/services/storage_scan_snapshot_store.dart",
+        "blobSHA": "e51b52e7b8a76187d8ac32a8a9a4b0967d2456e2",
+        "sha256": "ac17e6baa3be74406c24dc441146bf4afa02cea587574369a99f65d309e9b3d4",
+        "bytes": 32706
+      },
+      {
+        "path": "lib/services/storage_scan_backend.dart",
+        "blobSHA": "0c959cfe52f0ceed838d657d856dea8817a7c5ed",
+        "sha256": "4ce31d98ee3d2b1d5a843f4ec254d0c82f674fde860a9f0e610acff070f3861d",
+        "bytes": 19155
+      },
+      {
+        "path": "lib/widgets/storage_analyzer_dialog.dart",
+        "blobSHA": "a85ed4a0100992c2776f559e5d616e73abd9147f",
+        "sha256": "9f735e9fc6c9f9f527cc3140fe964805d5efcd3fd1fd0e664da6ba67c26293fa",
+        "bytes": 23917
+      }
+    ],
+    "rationale": [
+      "The new batch command presents review before scanning and captures exact original marked folders. Invalid/stale/off-page origins are rejected; no fallback account is used to authorize source reads.",
+      "Local source grant guards and remote client identity checks stay in the existing scanner backend. The new flow invokes metadata stat/list operations and existing snapshot persistence, not file-content transfers.",
+      "Labels may use an already configured connection or active-account display information only after matching the captured client identity. The fallback uses the captured source and opaque account identity prefix.",
+      "The coordinator keeps accepted reports as inert metadata; successful publication remains saved through Stop/disposal and later source loss. Unconfirmed publication remains distinct and retains candidate pages.",
+      "The snapshot delta adds typed uncertain-publication reporting without a cipher, credential, dependency, transport or format change. Offline report opening uses the existing validated snapshot loader."
+    ]
+  },
+  "scopeGuards": {
+    "allowedChangedFiles": [
+      "docs/apple-export-policy.json",
+      "docs/crypto-audit.md"
+    ],
+    "policyChangedFields": [
+      "reviewed_source_sha256"
+    ],
+    "policyJSONOtherFieldsVerifiedIdentical": true,
+    "inventoryUnchanged": true,
+    "dependencyLocksAndProvenanceUnchanged": true,
+    "validatorsUnchanged": true,
+    "encryptionClassificationAndDeclarationsUnchanged": true,
+    "approvalsAndDistributionSettingsUnchanged": true,
+    "noClaimOfSignedArtifactCorrespondence": true,
+    "noClaimOfExternalApprovalOrLiveDistributionReverification": true
+  },
+  "applicationInstructions": [
+    "Use the exact target base commit, or verify all source-input blob guards and both target-file baseBlobSHA values before applying. Stop and review any mismatch.",
+    "Apply each exact replacement once in order; require expectedOccurrences and verify expectedResultBlobSHA plus expectedResultBytes.",
+    "Confirm parsed policy JSON differs only at reviewed_source_sha256. Do not refresh inventory, dependency, classification, compliance-code, approval or distribution fields.",
+    "Run the unmodified Python validator suites and crypto_release_evidence.py --check in hosted CI at the committed revision before claiming the gate passes.",
+    "Commit reviewed documentation/policy changes and this review record through the parent workflow. This proposal does not mutate runtime code or refs."
+  ],
+  "files": [
+    {
+      "path": "docs/apple-export-policy.json",
+      "baseBlobSHA": "b3d1d54ae9737d4e06afb7c919ee5e6525686900",
+      "expectedResultBlobSHA": "bcce1a66cefa9ef6ae9205d4a653e5fa05b25b4d",
+      "expectedResultBytes": 1698,
+      "replacements": [
+        {
+          "before": "  \"reviewed_source_sha256\": \"72be43025ae190ec5734c2b877481361a318a4b234407558004b2fda703e866a\",",
+          "after": "  \"reviewed_source_sha256\": \"1be5e3187053a515c775c136e8424c4f11b1616a5978ed8856e54223476a7ad8\",",
+          "expectedOccurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "docs/crypto-audit.md",
+      "baseBlobSHA": "e4018889a84723c2215c037255fdcbe2980913a0",
+      "expectedResultBlobSHA": "eecaa0b0b51f31c8f1a132b93a55de42e8cf8943",
+      "expectedResultBytes": 38233,
+      "replacements": [
+        {
+          "before": "\n## Validation and build evidence\n",
+          "after": "\n## 11 November 2026: batch-command source binding review\n\nReviewed [source ef3ca3c038bab1a2af7765eb09d395d994431e99](https://github.com/CrispStrobe/CrispCloud/tree/ef3ca3c038bab1a2af7765eb09d395d994431e99)\nagainst the previously covered\n[e9dd5dbbb8581e16f228d4f51239adf7d0b22660](https://github.com/CrispStrobe/CrispCloud/tree/e9dd5dbbb8581e16f228d4f51239adf7d0b22660).\nThe [source comparison](https://github.com/CrispStrobe/CrispCloud/compare/e9dd5dbbb8581e16f228d4f51239adf7d0b22660...ef3ca3c038bab1a2af7765eb09d395d994431e99)\nchanges exactly two of the inventory's 128 reviewed files:\n\n| Reviewed file | Source finding |\n| --- | --- |\n| `cli/lib/commands/connect.dart` | Only the line wrapping of the existing SFTP host-key help string changes. Its text, option, defaults and validation remain identical. |\n| `lib/widgets/command_palette.dart` | Adds the batch-scan dialog import and an explicitly selected command that opens its review flow. Existing account, encryption and key-management commands remain unchanged. |\n\nThe reachable batch flow captures verified marked-folder origins, retains\ntheir existing client/grant checks, reads source metadata and persists inert\nfull reports through existing snapshot storage. Its source-label lookup is\ndisplay-only and requires matching client identity before using active-account\ninformation. Snapshot publication keeps uncertain commits distinct from\ncancellation and preserves their candidate pages. These additions introduce\nno cipher, key derivation, transport, authentication mode or credential store.\nNo source-file content transfer or source-file mutation is added by this flow.\n\nAll 128 exact current inputs were fetched and checked against their Git blob\nidentities. The canonical sorted path-to-SHA-256 map, using the previous bytes\nof the two changed inputs, reproduces the policy's existing fingerprint:\n\n`72be43025ae190ec5734c2b877481361a318a4b234407558004b2fda703e866a`\n\nUpdating only those two inputs yields:\n\n`1be5e3187053a515c775c136e8424c4f11b1616a5978ed8856e54223476a7ad8`\n\nThe other 126 reviewed inputs, inventory and dependency lock are unchanged.\nThe policy refresh changes only `reviewed_source_sha256`; validators,\ndependency provenance, encryption declarations, documentation decisions,\ncompliance-code and distribution settings are unchanged. This source binding\nreview does not renew external approvals or establish a signed artifact's\ncorrespondence to source.\n\n[CI job 130573305765](https://github.com/CrispStrobe/CrispCloud/actions/runs/43035543238/job/130573305765)\nchecked merge `e1c8d92c3013bf12b01b5789f1f0b33339647ca1`, whose tree is\nidentical to the reviewed source. Its validator suites completed with 41 tests\n(two Apple-only skips) and 37 tests, then `crypto_release_evidence.py --check`\ncorrectly rejected the stale source fingerprint. The refreshed policy still\nrequires a successful hosted source-evidence check at its committed revision;\nthe hash review alone is not recorded as a passing hosted gate.\n\n## Validation and build evidence\n",
+          "expectedOccurrences": 1
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "sourceAndResultGitBlobHashesComputed": true,
+    "hashImplementationCheckedAgainstKnownSHA256VectorsAndExistingPolicyInventoryHash": true,
+    "previousCanonicalFingerprintMatchedPolicy": true,
+    "currentCanonicalFingerprintComputed": true,
+    "exactCLIContextMatched": true,
+    "exactPaletteContextMatched": true,
+    "proposedPolicyJSONDiffLimitedToOneField": true,
+    "proposedValidatorOrTestRun": false,
+    "executionEnvironment": "GitHub connector reads and in-memory verification; local workspace remains unavailable."
+  }
+}

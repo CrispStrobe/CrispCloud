@@ -61,6 +61,29 @@ abstract interface class LocalFileSourceIdentity {
   Object? sourceIdentityForPath(String path);
 }
 
+/// Reads directory context using access that is already available. Snapshot
+/// reads never navigate the service, request a picker or acquire a new grant.
+/// Entries keep their File/Directory/Link types without following child links.
+abstract interface class LocalDirectorySnapshotReader {
+  Future<List<FileSystemEntity>?> listDirectorySnapshot(String path);
+}
+
+extension LocalDirectorySnapshots on LocalFileService {
+  /// A legacy implementation cannot prove a noninteractive read contract.
+  /// Never fall back to its potentially mutating or prompting listDirectory.
+  Future<List<FileSystemEntity>?> listDirectorySnapshot(String path) async {
+    final service = this;
+    if (service is LocalDirectorySnapshotReader) {
+      return (service as LocalDirectorySnapshotReader).listDirectorySnapshot(
+        path,
+      );
+    }
+    throw UnsupportedError(
+      'Noninteractive directory snapshots are unavailable.',
+    );
+  }
+}
+
 extension LocalFileEditorOperations on LocalFileService {
   Future<Uint8List> readFileForEdit(
     String path, {
@@ -115,8 +138,12 @@ extension LocalFileEditorOperations on LocalFileService {
 /// Optional bounded transfer operations. Folder cleanup must be nonrecursive.
 abstract interface class LocalTransferFileOperations {
   Stream<List<int>> readTransferStream(String path);
-  Future<void> writeTransferStream(String path, Stream<List<int>> data, int? length,
-      {required bool replace});
+  Future<void> writeTransferStream(
+    String path,
+    Stream<List<int>> data,
+    int? length, {
+    required bool replace,
+  });
   Future<void> deleteDirectoryIfEmpty(String path);
 }
 

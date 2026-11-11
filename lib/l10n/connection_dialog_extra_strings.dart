@@ -3,7 +3,7 @@ import 'package:flutter/widgets.dart';
 /// Localized connection setup and validation messages.
 class ConnectionDialogExtraStrings {
   ConnectionDialogExtraStrings(BuildContext context)
-      : language = Localizations.maybeLocaleOf(context)?.languageCode ?? 'en';
+    : language = Localizations.maybeLocaleOf(context)?.languageCode ?? 'en';
 
   final String language;
 
@@ -21,6 +21,7 @@ class ConnectionDialogExtraStrings {
 
   static const Map<String, Map<String, String>> _strings = {
     'en': {
+      "invalidSmbBackendProfile": "Could not load this profile because its SMB transport is invalid. Choose a transport or another profile before connecting.",
       "smbBackend": "SMB transport",
       "smbBackend_libsmb2": "libsmb2 (compatible)",
       "smbBackend_rust": "Rust (experimental)",
@@ -44,8 +45,7 @@ class ConnectionDialogExtraStrings {
       "passphraseHelp":
           "Files will be encrypted/decrypted with this passphrase",
       "requireSmb": "Require SMB3 encryption",
-      "smbHelp":
-          "Turn off only for an older NAS on a trusted network. Signing is always required. Use DOMAIN\\user for a domain account.",
+      "smbHelp": "Turn off only for an older NAS on a trusted network. Signing is always required. Use DOMAIN\\user for a domain account.",
       "hostUserRequired": "Host and Username are required",
       "urlUserRequired": "Server URL and Username are required",
       "portInvalid": "Port must be a number between 1 and 65535",
@@ -58,8 +58,7 @@ class ConnectionDialogExtraStrings {
       "s3Required": "Endpoint, Bucket, Access Key, and Secret Key are required",
       "endpointScheme": "Endpoint must start with http:// or https://",
       "verifySsh": "Verify SSH server",
-      "sshFingerprint":
-          "Server: {endpoint}\n\nSHA256 host key:\n{fingerprint}\n\nCompare this fingerprint with your server before trusting it.",
+      "sshFingerprint": "Server: {endpoint}\n\nSHA256 host key:\n{fingerprint}\n\nCompare this fingerprint with your server before trusting it.",
       "trust": "Trust server",
       "providerAzure": "Azure containers and enterprise object storage.",
       "providerB2": "Cost-focused object storage with large-file support.",
@@ -82,12 +81,9 @@ class ConnectionDialogExtraStrings {
       "hintS3": "Have the endpoint, region, bucket, and access keys ready.",
       "hintServer": "Have the server address and account credentials ready.",
       "hintSecure": "Your credentials are stored in the platform secure store.",
-      "oauthHelp":
-          "Click Connect to open {provider} sign-in in your browser. Authorize CrispCloud, then return here.",
-      "azureHelp":
-          "Click Connect to open the Azure Blob Storage dialog and enter an account key, SAS token, or connection string.",
-      "b2Help":
-          "Click Connect to open the Backblaze B2 dialog and enter your application key ID and application key.",
+      "oauthHelp": "Click Connect to open {provider} sign-in in your browser. Authorize CrispCloud, then return here.",
+      "azureHelp": "Click Connect to open the Azure Blob Storage dialog and enter an account key, SAS token, or connection string.",
+      "b2Help": "Click Connect to open the Backblaze B2 dialog and enter your application key ID and application key.",
       "dropboxConsole": "From Dropbox App Console → Settings",
       "googleConsole":
           "From Google Cloud Console → APIs & Services → Credentials",
@@ -107,6 +103,7 @@ class ConnectionDialogExtraStrings {
       "useTls": "Use TLS (FTPS)",
     },
     'de': {
+      "invalidSmbBackendProfile": "Dieses Profil konnte wegen eines ungültigen SMB-Transports nicht geladen werden. Wählen Sie vor dem Verbinden einen Transport oder ein anderes Profil.",
       "smbBackend": "SMB-Transport",
       "smbBackend_libsmb2": "libsmb2 (kompatibel)",
       "smbBackend_rust": "Rust (experimentell)",
@@ -130,8 +127,7 @@ class ConnectionDialogExtraStrings {
       "passphraseHelp":
           "Dateien werden mit dieser Passphrase ver- und entschlüsselt",
       "requireSmb": "SMB3-Verschlüsselung verlangen",
-      "smbHelp":
-          "Nur für ältere NAS-Geräte in einem vertrauenswürdigen Netzwerk deaktivieren. Signierung ist immer erforderlich. Für Domänenkonten DOMAIN\\user verwenden.",
+      "smbHelp": "Nur für ältere NAS-Geräte in einem vertrauenswürdigen Netzwerk deaktivieren. Signierung ist immer erforderlich. Für Domänenkonten DOMAIN\\user verwenden.",
       "hostUserRequired": "Host und Benutzername sind erforderlich",
       "urlUserRequired": "Server-URL und Benutzername sind erforderlich",
       "portInvalid": "Der Port muss eine Zahl zwischen 1 und 65535 sein",
@@ -141,12 +137,10 @@ class ConnectionDialogExtraStrings {
       "keyRequired": "App-Schlüssel ist erforderlich",
       "oauthIdRequired": "OAuth2-Client-ID ist erforderlich",
       "applicationIdRequired": "Anwendungs- bzw. Client-ID ist erforderlich",
-      "s3Required":
-          "Endpunkt, Bucket, Zugriffsschlüssel und geheimer Schlüssel sind erforderlich",
+      "s3Required": "Endpunkt, Bucket, Zugriffsschlüssel und geheimer Schlüssel sind erforderlich",
       "endpointScheme": "Der Endpunkt muss mit http:// oder https:// beginnen",
       "verifySsh": "SSH-Server überprüfen",
-      "sshFingerprint":
-          "Server: {endpoint}\n\nSHA256-Hostschlüssel:\n{fingerprint}\n\nVergleichen Sie diesen Fingerabdruck mit Ihrem Server, bevor Sie ihm vertrauen.",
+      "sshFingerprint": "Server: {endpoint}\n\nSHA256-Hostschlüssel:\n{fingerprint}\n\nVergleichen Sie diesen Fingerabdruck mit Ihrem Server, bevor Sie ihm vertrauen.",
       "trust": "Server vertrauen",
       "providerAzure": "Azure-Container und Objektspeicher für Unternehmen.",
       "providerB2":
@@ -180,14 +174,10 @@ class ConnectionDialogExtraStrings {
       "hintS3":
           "Halten Sie Endpunkt, Region, Bucket und Zugriffsschlüssel bereit.",
       "hintServer": "Halten Sie Serveradresse und Zugangsdaten bereit.",
-      "hintSecure":
-          "Ihre Zugangsdaten werden im sicheren Speicher der Plattform gespeichert.",
-      "oauthHelp":
-          "Klicken Sie auf Verbinden, um die Anmeldung bei {provider} im Browser zu öffnen. Autorisieren Sie CrispCloud und kehren Sie hierher zurück.",
-      "azureHelp":
-          "Klicken Sie auf Verbinden und geben Sie im Azure-Blob-Storage-Dialog einen Kontoschlüssel, SAS-Token oder eine Verbindungszeichenfolge ein.",
-      "b2Help":
-          "Klicken Sie auf Verbinden und geben Sie im Backblaze-B2-Dialog Ihre Anwendungsschlüssel-ID und Ihren Anwendungsschlüssel ein.",
+      "hintSecure": "Ihre Zugangsdaten werden im sicheren Speicher der Plattform gespeichert.",
+      "oauthHelp": "Klicken Sie auf Verbinden, um die Anmeldung bei {provider} im Browser zu öffnen. Autorisieren Sie CrispCloud und kehren Sie hierher zurück.",
+      "azureHelp": "Klicken Sie auf Verbinden und geben Sie im Azure-Blob-Storage-Dialog einen Kontoschlüssel, SAS-Token oder eine Verbindungszeichenfolge ein.",
+      "b2Help": "Klicken Sie auf Verbinden und geben Sie im Backblaze-B2-Dialog Ihre Anwendungsschlüssel-ID und Ihren Anwendungsschlüssel ein.",
       "dropboxConsole": "Aus Dropbox App Console → Settings",
       "googleConsole":
           "Aus Google Cloud Console → APIs & Services → Credentials",
@@ -207,6 +197,7 @@ class ConnectionDialogExtraStrings {
       "useTls": "TLS verwenden (FTPS)",
     },
     'fr': {
+      "invalidSmbBackendProfile": "Ce profil n’a pas pu être chargé car son transport SMB est invalide. Choisissez un transport ou un autre profil avant de vous connecter.",
       "smbBackend": "Transport SMB",
       "smbBackend_libsmb2": "libsmb2 (compatible)",
       "smbBackend_rust": "Rust (expérimental)",
@@ -230,8 +221,7 @@ class ConnectionDialogExtraStrings {
       "passphraseHelp":
           "Les fichiers seront chiffrés et déchiffrés avec cette phrase",
       "requireSmb": "Exiger le chiffrement SMB3",
-      "smbHelp":
-          "Désactivez uniquement pour un ancien NAS sur un réseau fiable. La signature est toujours requise. Utilisez DOMAIN\\user pour un compte de domaine.",
+      "smbHelp": "Désactivez uniquement pour un ancien NAS sur un réseau fiable. La signature est toujours requise. Utilisez DOMAIN\\user pour un compte de domaine.",
       "hostUserRequired": "L’hôte et le nom d’utilisateur sont requis",
       "urlUserRequired": "L’URL du serveur et le nom d’utilisateur sont requis",
       "portInvalid": "Le port doit être un nombre entre 1 et 65535",
@@ -242,17 +232,14 @@ class ConnectionDialogExtraStrings {
       "oauthIdRequired": "L’identifiant client OAuth2 est requis",
       "applicationIdRequired":
           "L’identifiant d’application (client) est requis",
-      "s3Required":
-          "Le point de terminaison, le compartiment et les clés d’accès et secrète sont requis",
+      "s3Required": "Le point de terminaison, le compartiment et les clés d’accès et secrète sont requis",
       "endpointScheme":
           "Le point de terminaison doit commencer par http:// ou https://",
       "verifySsh": "Vérifier le serveur SSH",
-      "sshFingerprint":
-          "Serveur : {endpoint}\n\nClé d’hôte SHA256 :\n{fingerprint}\n\nComparez cette empreinte à celle de votre serveur avant de lui faire confiance.",
+      "sshFingerprint": "Serveur : {endpoint}\n\nClé d’hôte SHA256 :\n{fingerprint}\n\nComparez cette empreinte à celle de votre serveur avant de lui faire confiance.",
       "trust": "Faire confiance au serveur",
       "providerAzure": "Conteneurs Azure et stockage objet professionnel.",
-      "providerB2":
-          "Stockage objet économique prenant en charge les fichiers volumineux.",
+      "providerB2": "Stockage objet économique prenant en charge les fichiers volumineux.",
       "providerDropbox": "Cloud personnel avec OAuth, partage et aperçus.",
       "providerFilen": "Stockage cloud personnel axé sur la confidentialité.",
       "providerFtp": "Connexion à un serveur FTP ou FTPS chiffré.",
@@ -274,20 +261,14 @@ class ConnectionDialogExtraStrings {
           "Partages Windows, Samba et NAS dans l’application installée.",
       "hintOauth": "Vous vous connecterez dans la fenêtre du fournisseur.",
       "hintAzure": "Préparez le nom du compte, le conteneur et la clé d’accès.",
-      "hintB2":
-          "Préparez l’identifiant de clé, la clé d’application et le compartiment.",
-      "hintS3":
-          "Préparez le point de terminaison, la région, le compartiment et les clés d’accès.",
+      "hintB2": "Préparez l’identifiant de clé, la clé d’application et le compartiment.",
+      "hintS3": "Préparez le point de terminaison, la région, le compartiment et les clés d’accès.",
       "hintServer":
           "Préparez l’adresse du serveur et les identifiants du compte.",
-      "hintSecure":
-          "Vos identifiants sont conservés dans le stockage sécurisé de la plateforme.",
-      "oauthHelp":
-          "Cliquez sur Connecter pour ouvrir la connexion {provider} dans votre navigateur. Autorisez CrispCloud, puis revenez ici.",
-      "azureHelp":
-          "Cliquez sur Connecter, puis saisissez une clé de compte, un jeton SAS ou une chaîne de connexion dans la boîte Azure Blob Storage.",
-      "b2Help":
-          "Cliquez sur Connecter, puis saisissez l’identifiant et la clé d’application dans la boîte Backblaze B2.",
+      "hintSecure": "Vos identifiants sont conservés dans le stockage sécurisé de la plateforme.",
+      "oauthHelp": "Cliquez sur Connecter pour ouvrir la connexion {provider} dans votre navigateur. Autorisez CrispCloud, puis revenez ici.",
+      "azureHelp": "Cliquez sur Connecter, puis saisissez une clé de compte, un jeton SAS ou une chaîne de connexion dans la boîte Azure Blob Storage.",
+      "b2Help": "Cliquez sur Connecter, puis saisissez l’identifiant et la clé d’application dans la boîte Backblaze B2.",
       "dropboxConsole": "Dans Dropbox App Console → Settings",
       "googleConsole":
           "Dans Google Cloud Console → APIs & Services → Credentials",
@@ -309,6 +290,7 @@ class ConnectionDialogExtraStrings {
       "useTls": "Utiliser TLS (FTPS)",
     },
     'es': {
+      "invalidSmbBackendProfile": "No se pudo cargar este perfil porque su transporte SMB no es válido. Elige un transporte u otro perfil antes de conectar.",
       "smbBackend": "Transporte SMB",
       "smbBackend_libsmb2": "libsmb2 (compatible)",
       "smbBackend_rust": "Rust (experimental)",
@@ -331,8 +313,7 @@ class ConnectionDialogExtraStrings {
       "passphrase": "Frase de cifrado",
       "passphraseHelp": "Los archivos se cifrarán y descifrarán con esta frase",
       "requireSmb": "Exigir cifrado SMB3",
-      "smbHelp":
-          "Desactívalo solo para un NAS antiguo en una red de confianza. La firma siempre es obligatoria. Usa DOMAIN\\user para una cuenta de dominio.",
+      "smbHelp": "Desactívalo solo para un NAS antiguo en una red de confianza. La firma siempre es obligatoria. Usa DOMAIN\\user para una cuenta de dominio.",
       "hostUserRequired": "El servidor y el usuario son obligatorios",
       "urlUserRequired": "La URL del servidor y el usuario son obligatorios",
       "portInvalid": "El puerto debe ser un número entre 1 y 65535",
@@ -342,17 +323,14 @@ class ConnectionDialogExtraStrings {
       "keyRequired": "La clave de aplicación es obligatoria",
       "oauthIdRequired": "El ID de cliente OAuth2 es obligatorio",
       "applicationIdRequired": "El ID de aplicación (cliente) es obligatorio",
-      "s3Required":
-          "El endpoint, bucket, clave de acceso y clave secreta son obligatorios",
+      "s3Required": "El endpoint, bucket, clave de acceso y clave secreta son obligatorios",
       "endpointScheme": "El endpoint debe comenzar por http:// o https://",
       "verifySsh": "Verificar servidor SSH",
-      "sshFingerprint":
-          "Servidor: {endpoint}\n\nClave de host SHA256:\n{fingerprint}\n\nCompara esta huella con la de tu servidor antes de confiar en él.",
+      "sshFingerprint": "Servidor: {endpoint}\n\nClave de host SHA256:\n{fingerprint}\n\nCompara esta huella con la de tu servidor antes de confiar en él.",
       "trust": "Confiar en el servidor",
       "providerAzure":
           "Contenedores Azure y almacenamiento de objetos empresarial.",
-      "providerB2":
-          "Almacenamiento de objetos económico con soporte para archivos grandes.",
+      "providerB2": "Almacenamiento de objetos económico con soporte para archivos grandes.",
       "providerDropbox":
           "Nube personal con OAuth, uso compartido y vistas previas.",
       "providerFilen":
@@ -371,8 +349,7 @@ class ConnectionDialogExtraStrings {
       "providerSftp": "Acceso seguro a archivos, incluido Hetzner Storage Box.",
       "providerWebdav":
           "Servidor basado en estándares o unidad en la nube compatible.",
-      "providerSmb":
-          "Recursos compartidos de Windows, Samba y NAS en la aplicación instalada.",
+      "providerSmb": "Recursos compartidos de Windows, Samba y NAS en la aplicación instalada.",
       "hintOauth": "Iniciarás sesión en la ventana del proveedor.",
       "hintAzure":
           "Ten a mano el nombre de cuenta, contenedor y clave de acceso.",
@@ -382,12 +359,9 @@ class ConnectionDialogExtraStrings {
       "hintServer": "Ten a mano la dirección del servidor y las credenciales.",
       "hintSecure":
           "Tus credenciales se guardan en el almacén seguro de la plataforma.",
-      "oauthHelp":
-          "Pulsa Conectar para abrir el inicio de sesión de {provider} en el navegador. Autoriza CrispCloud y vuelve aquí.",
-      "azureHelp":
-          "Pulsa Conectar e introduce una clave de cuenta, token SAS o cadena de conexión en el diálogo de Azure Blob Storage.",
-      "b2Help":
-          "Pulsa Conectar e introduce el ID y la clave de aplicación en el diálogo de Backblaze B2.",
+      "oauthHelp": "Pulsa Conectar para abrir el inicio de sesión de {provider} en el navegador. Autoriza CrispCloud y vuelve aquí.",
+      "azureHelp": "Pulsa Conectar e introduce una clave de cuenta, token SAS o cadena de conexión en el diálogo de Azure Blob Storage.",
+      "b2Help": "Pulsa Conectar e introduce el ID y la clave de aplicación en el diálogo de Backblaze B2.",
       "dropboxConsole": "Desde Dropbox App Console → Settings",
       "googleConsole":
           "Desde Google Cloud Console → APIs & Services → Credentials",
@@ -409,6 +383,7 @@ class ConnectionDialogExtraStrings {
       "useTls": "Usar TLS (FTPS)",
     },
     'pt': {
+      "invalidSmbBackendProfile": "Não foi possível carregar este perfil porque o transporte SMB é inválido. Escolha um transporte ou outro perfil antes de conectar.",
       "smbBackend": "Transporte SMB",
       "smbBackend_libsmb2": "libsmb2 (compatível)",
       "smbBackend_rust": "Rust (experimental)",
@@ -432,8 +407,7 @@ class ConnectionDialogExtraStrings {
       "passphraseHelp":
           "Os arquivos serão criptografados e descriptografados com esta frase",
       "requireSmb": "Exigir criptografia SMB3",
-      "smbHelp":
-          "Desative apenas para um NAS antigo em uma rede confiável. A assinatura é sempre obrigatória. Use DOMAIN\\user para uma conta de domínio.",
+      "smbHelp": "Desative apenas para um NAS antigo em uma rede confiável. A assinatura é sempre obrigatória. Use DOMAIN\\user para uma conta de domínio.",
       "hostUserRequired": "Host e nome de usuário são obrigatórios",
       "urlUserRequired":
           "A URL do servidor e o nome de usuário são obrigatórios",
@@ -448,8 +422,7 @@ class ConnectionDialogExtraStrings {
           "Endpoint, bucket, chave de acesso e chave secreta são obrigatórios",
       "endpointScheme": "O endpoint deve começar com http:// ou https://",
       "verifySsh": "Verificar servidor SSH",
-      "sshFingerprint":
-          "Servidor: {endpoint}\n\nChave de host SHA256:\n{fingerprint}\n\nCompare esta impressão digital com a do servidor antes de confiar nele.",
+      "sshFingerprint": "Servidor: {endpoint}\n\nChave de host SHA256:\n{fingerprint}\n\nCompare esta impressão digital com a do servidor antes de confiar nele.",
       "trust": "Confiar no servidor",
       "providerAzure":
           "Contêineres Azure e armazenamento de objetos empresarial.",
@@ -485,12 +458,9 @@ class ConnectionDialogExtraStrings {
       "hintServer": "Tenha em mãos o endereço do servidor e as credenciais.",
       "hintSecure":
           "Suas credenciais são armazenadas no cofre seguro da plataforma.",
-      "oauthHelp":
-          "Clique em Conectar para abrir o login do {provider} no navegador. Autorize o CrispCloud e volte aqui.",
-      "azureHelp":
-          "Clique em Conectar e insira uma chave de conta, token SAS ou cadeia de conexão no diálogo do Azure Blob Storage.",
-      "b2Help":
-          "Clique em Conectar e insira o ID e a chave de aplicativo no diálogo do Backblaze B2.",
+      "oauthHelp": "Clique em Conectar para abrir o login do {provider} no navegador. Autorize o CrispCloud e volte aqui.",
+      "azureHelp": "Clique em Conectar e insira uma chave de conta, token SAS ou cadeia de conexão no diálogo do Azure Blob Storage.",
+      "b2Help": "Clique em Conectar e insira o ID e a chave de aplicativo no diálogo do Backblaze B2.",
       "dropboxConsole": "Em Dropbox App Console → Settings",
       "googleConsole":
           "Em Google Cloud Console → APIs & Services → Credentials",
@@ -511,6 +481,7 @@ class ConnectionDialogExtraStrings {
       "useTls": "Usar TLS (FTPS)",
     },
     'zh': {
+      "invalidSmbBackendProfile": "此配置的 SMB 传输方式无效，无法加载。连接前请选择有效的传输方式或其他配置。",
       "smbBackend": "SMB 传输方式",
       "smbBackend_libsmb2": "libsmb2（兼容）",
       "smbBackend_rust": "Rust（实验性）",
@@ -546,8 +517,7 @@ class ConnectionDialogExtraStrings {
       "s3Required": "必须填写端点、存储桶、访问密钥和私密密钥",
       "endpointScheme": "端点必须以 http:// 或 https:// 开头",
       "verifySsh": "验证 SSH 服务器",
-      "sshFingerprint":
-          "服务器：{endpoint}\n\nSHA256 主机密钥：\n{fingerprint}\n\n信任服务器前，请将此指纹与服务器上的指纹进行比较。",
+      "sshFingerprint": "服务器：{endpoint}\n\nSHA256 主机密钥：\n{fingerprint}\n\n信任服务器前，请将此指纹与服务器上的指纹进行比较。",
       "trust": "信任服务器",
       "providerAzure": "Azure 容器和企业对象存储。",
       "providerB2": "支持大文件的经济型对象存储。",
@@ -591,6 +561,8 @@ class ConnectionDialogExtraStrings {
       "useTls": "使用 TLS（FTPS）",
     },
     'ja': {
+      "invalidSmbBackendProfile":
+          "このプロファイルは SMB 転送方式が無効なため読み込めません。接続する前に、転送方式または別のプロファイルを選んでください。",
       "smbBackend": "SMB 転送方式",
       "smbBackend_libsmb2": "libsmb2（互換）",
       "smbBackend_rust": "Rust（試験的）",
@@ -614,8 +586,7 @@ class ConnectionDialogExtraStrings {
       "passphrase": "暗号化パスフレーズ",
       "passphraseHelp": "このパスフレーズでファイルを暗号化・復号します",
       "requireSmb": "SMB3 暗号化を必須にする",
-      "smbHelp":
-          "信頼できるネットワーク上の古い NAS でのみ無効にしてください。署名は常に必須です。ドメインアカウントには DOMAIN\\user を使用します。",
+      "smbHelp": "信頼できるネットワーク上の古い NAS でのみ無効にしてください。署名は常に必須です。ドメインアカウントには DOMAIN\\user を使用します。",
       "hostUserRequired": "ホストとユーザー名は必須です",
       "urlUserRequired": "サーバー URL とユーザー名は必須です",
       "portInvalid": "ポートは 1〜65535 の数値で指定してください",
@@ -628,8 +599,7 @@ class ConnectionDialogExtraStrings {
       "s3Required": "エンドポイント、バケット、アクセスキー、シークレットキーは必須です",
       "endpointScheme": "エンドポイントは http:// または https:// で始めてください",
       "verifySsh": "SSH サーバーを確認",
-      "sshFingerprint":
-          "サーバー: {endpoint}\n\nSHA256 ホストキー:\n{fingerprint}\n\n信頼する前に、このフィンガープリントをサーバーと照合してください。",
+      "sshFingerprint": "サーバー: {endpoint}\n\nSHA256 ホストキー:\n{fingerprint}\n\n信頼する前に、このフィンガープリントをサーバーと照合してください。",
       "trust": "サーバーを信頼",
       "providerAzure": "Azure コンテナーと企業向けオブジェクトストレージ。",
       "providerB2": "大きなファイルに対応した低コストのオブジェクトストレージ。",
@@ -675,6 +645,7 @@ class ConnectionDialogExtraStrings {
       "useTls": "TLS を使用（FTPS）",
     },
     'ko': {
+      "invalidSmbBackendProfile": "이 프로필의 SMB 전송 방식이 잘못되어 불러올 수 없습니다. 연결하기 전에 전송 방식을 선택하거나 다른 프로필을 불러오세요.",
       "smbBackend": "SMB 전송 방식",
       "smbBackend_libsmb2": "libsmb2 (호환)",
       "smbBackend_rust": "Rust (실험적)",
@@ -698,8 +669,7 @@ class ConnectionDialogExtraStrings {
       "passphrase": "암호화 암호문구",
       "passphraseHelp": "이 암호문구로 파일을 암호화하고 복호화합니다",
       "requireSmb": "SMB3 암호화 필수",
-      "smbHelp":
-          "신뢰할 수 있는 네트워크의 구형 NAS에서만 끄세요. 서명은 항상 필수입니다. 도메인 계정은 DOMAIN\\user를 사용하세요.",
+      "smbHelp": "신뢰할 수 있는 네트워크의 구형 NAS에서만 끄세요. 서명은 항상 필수입니다. 도메인 계정은 DOMAIN\\user를 사용하세요.",
       "hostUserRequired": "호스트와 사용자 이름은 필수입니다",
       "urlUserRequired": "서버 URL과 사용자 이름은 필수입니다",
       "portInvalid": "포트는 1에서 65535 사이의 숫자여야 합니다",
@@ -712,8 +682,7 @@ class ConnectionDialogExtraStrings {
       "s3Required": "엔드포인트, 버킷, 액세스 키, 비밀 키는 필수입니다",
       "endpointScheme": "엔드포인트는 http:// 또는 https://로 시작해야 합니다",
       "verifySsh": "SSH 서버 확인",
-      "sshFingerprint":
-          "서버: {endpoint}\n\nSHA256 호스트 키:\n{fingerprint}\n\n신뢰하기 전에 이 지문을 서버와 비교하세요.",
+      "sshFingerprint": "서버: {endpoint}\n\nSHA256 호스트 키:\n{fingerprint}\n\n신뢰하기 전에 이 지문을 서버와 비교하세요.",
       "trust": "서버 신뢰",
       "providerAzure": "Azure 컨테이너 및 기업용 객체 저장소.",
       "providerB2": "대용량 파일을 지원하는 경제적인 객체 저장소.",
@@ -759,6 +728,7 @@ class ConnectionDialogExtraStrings {
       "useTls": "TLS 사용 (FTPS)",
     },
     'ar': {
+      "invalidSmbBackendProfile": "تعذر تحميل هذا الملف التعريفي لأن طريقة نقل SMB غير صالحة. اختر طريقة نقل أو ملفًا تعريفيًا آخر قبل الاتصال.",
       "smbBackend": "نقل SMB",
       "smbBackend_libsmb2": "libsmb2 (متوافق)",
       "smbBackend_rust": "Rust (تجريبي)",
@@ -781,8 +751,7 @@ class ConnectionDialogExtraStrings {
       "passphrase": "عبارة مرور التشفير",
       "passphraseHelp": "ستُشفّر الملفات وتُفك بهذه العبارة",
       "requireSmb": "اشتراط تشفير SMB3",
-      "smbHelp":
-          "عطّل هذا فقط لجهاز NAS قديم على شبكة موثوقة. التوقيع مطلوب دائمًا. استخدم DOMAIN\\user لحساب نطاق.",
+      "smbHelp": "عطّل هذا فقط لجهاز NAS قديم على شبكة موثوقة. التوقيع مطلوب دائمًا. استخدم DOMAIN\\user لحساب نطاق.",
       "hostUserRequired": "المضيف واسم المستخدم مطلوبان",
       "urlUserRequired": "عنوان الخادم واسم المستخدم مطلوبان",
       "portInvalid": "يجب أن يكون المنفذ رقمًا بين 1 و65535",
@@ -795,8 +764,7 @@ class ConnectionDialogExtraStrings {
       "s3Required": "نقطة النهاية والحاوية ومفتاح الوصول والمفتاح السري مطلوبة",
       "endpointScheme": "يجب أن تبدأ نقطة النهاية بـ http:// أو https://",
       "verifySsh": "التحقق من خادم SSH",
-      "sshFingerprint":
-          "الخادم: {endpoint}\n\nمفتاح المضيف SHA256:\n{fingerprint}\n\nقارن بصمة المفتاح مع خادمك قبل الوثوق به.",
+      "sshFingerprint": "الخادم: {endpoint}\n\nمفتاح المضيف SHA256:\n{fingerprint}\n\nقارن بصمة المفتاح مع خادمك قبل الوثوق به.",
       "trust": "الوثوق بالخادم",
       "providerAzure": "حاويات Azure وتخزين الكائنات للمؤسسات.",
       "providerB2": "تخزين كائنات اقتصادي يدعم الملفات الكبيرة.",
@@ -818,12 +786,9 @@ class ConnectionDialogExtraStrings {
       "hintS3": "جهّز نقطة النهاية والمنطقة والحاوية ومفاتيح الوصول.",
       "hintServer": "جهّز عنوان الخادم وبيانات اعتماد الحساب.",
       "hintSecure": "تُحفظ بيانات اعتمادك في مخزن المنصة الآمن.",
-      "oauthHelp":
-          "انقر على اتصال لفتح تسجيل دخول {provider} في المتصفح. فوّض CrispCloud ثم عُد إلى هنا.",
-      "azureHelp":
-          "انقر على اتصال لإدخال مفتاح حساب أو رمز SAS أو سلسلة اتصال في نافذة Azure Blob Storage.",
-      "b2Help":
-          "انقر على اتصال لإدخال معرّف مفتاح التطبيق ومفتاح التطبيق في نافذة Backblaze B2.",
+      "oauthHelp": "انقر على اتصال لفتح تسجيل دخول {provider} في المتصفح. فوّض CrispCloud ثم عُد إلى هنا.",
+      "azureHelp": "انقر على اتصال لإدخال مفتاح حساب أو رمز SAS أو سلسلة اتصال في نافذة Azure Blob Storage.",
+      "b2Help": "انقر على اتصال لإدخال معرّف مفتاح التطبيق ومفتاح التطبيق في نافذة Backblaze B2.",
       "dropboxConsole": "من Dropbox App Console ← Settings",
       "googleConsole":
           "من Google Cloud Console ← APIs & Services ← Credentials",

@@ -26,6 +26,7 @@ import '../l10n/file_operations_strings.dart';
 import '../l10n/provider_operation_strings.dart';
 import '../l10n/link_operation_strings.dart';
 import '../l10n/checksum_error_strings.dart';
+import '../l10n/storage_analyzer_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
@@ -69,6 +70,7 @@ import 'share_link_dialog.dart' show showShareLinkDialog;
 import 'permissions_dialog.dart' show showPermissionsDialog;
 import 'file_attributes_dialog.dart';
 import 'version_history_dialog.dart' show showVersionHistoryDialog;
+import 'storage_analyzer_dialog.dart' show showFolderSizeDialog;
 
 const _log = Log('FileContextMenu');
 
@@ -131,6 +133,10 @@ void _showResultListContextMenu(
   Offset position,
 ) {
   final panel = ref.read(panelProvider(side));
+  final folder = files.length == 1 && files.single.isFolder
+      ? files.single
+      : null;
+  final folderOrigin = folder == null ? null : panel.originForFile(folder);
   var verified = true;
   try {
     panel.captureOperationGroups(files);
@@ -176,6 +182,30 @@ void _showResultListContextMenu(
       Offset.zero & overlay.size,
     ),
     items: [
+      if (folder != null && panel.folderSizeFor(folder)?.isActive == true)
+        command(
+          StorageAnalyzerStrings(context).text('cancel'),
+          Icons.stop_circle_outlined,
+          () => panel.cancelFolderSize(folder),
+          // Cancelling addresses this exact in-flight row. Preparing a saved
+          // collection row could replace it and leave the original scan running.
+          requiresSource: false,
+        ),
+      if (folder != null &&
+          folder.path != null &&
+          folder.isSymlink != true &&
+          folderOrigin != null &&
+          folderOrigin.isCurrent &&
+          (folderOrigin.source is LocalPanelSource ||
+              folderOrigin.source is RemotePanelSource))
+        command(
+          context.commanderTr("Calculate Size"),
+          Icons.data_usage,
+          () => showFolderSizeDialog(context, ref, folder, folderOrigin),
+          // The verified row and its source were captured with the menu. Later
+          // selection, tab, or pane changes must not choose a different endpoint.
+          requiresSource: false,
+        ),
       command(
         context.commanderTr("Copy files to clipboard"),
         Icons.content_copy,
@@ -1384,8 +1414,28 @@ void showFileContextMenu(
     );
   }
 
-  // Calculate Size (folders only, not on web)
-  if (isSingleFolder && native) {
+  // Folder measurements use the same captured-source scanner on every backend.
+  if (isSingleFolder &&
+      file.isSymlink != true &&
+      file.path != null &&
+      (origin.source is LocalPanelSource ||
+          origin.source is RemotePanelSource)) {
+    if (panel.folderSizeFor(file)?.isActive == true) {
+      items.add(
+        PopupMenuItem(
+          child: Row(
+            children: [
+              const Icon(Icons.stop_circle_outlined),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(StorageAnalyzerStrings(context).text('cancel')),
+              ),
+            ],
+          ),
+          onTap: () => panel.cancelFolderSize(file),
+        ),
+      );
+    }
     items.add(
       PopupMenuItem(
         child: Row(
@@ -1400,7 +1450,7 @@ void showFileContextMenu(
             return;
           }
           if (current()) {
-            _showFolderSize(context, ref, file, origin);
+            unawaited(showFolderSizeDialog(context, ref, file, origin));
           }
         }),
       ),
@@ -2006,108 +2056,6 @@ Widget _propertyRow(
         ),
       ],
     ),
-  );
-}
-
-Future<int> _calculateFolderSize(String path) async {
-  int totalSize = 0;
-  final dir = Directory(path);
-  if (!await dir.exists()) {
-    return 0;
-  }
-  await for (final entity in dir.list(recursive: true, followLinks: false)) {
-    if (entity is File) {
-      try {
-        totalSize += await entity.length();
-      } catch (e) {
-        // Skip files we can't read
-      }
-    }
-  }
-  return totalSize;
-}
-
-void _showFolderSize(
-  BuildContext context,
-  WidgetRef ref,
-  FileItem file,
-  PanelFileOrigin origin,
-) {
-  if (file.path == null) {
-    return;
-  }
-  final result = withNativeFileAction(ref, origin, [
-    file.path!,
-  ], () => _calculateFolderSize(file.path!));
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (ctx) {
-      return FutureBuilder<int>(
-        future: result,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return AlertDialog(
-              title: Row(
-                children: [
-                  const Icon(Icons.folder),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(file.name, overflow: TextOverflow.ellipsis),
-                  ),
-                ],
-              ),
-              content: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const CircularProgressIndicator(),
-                  const SizedBox(width: 16),
-                  Text(context.commanderTr("Calculating folder size...")),
-                ],
-              ),
-            );
-          }
-
-          final size = snapshot.data ?? 0;
-          return AlertDialog(
-            title: Row(
-              children: [
-                const Icon(Icons.folder),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(file.name, overflow: TextOverflow.ellipsis),
-                ),
-              ],
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (snapshot.hasError)
-                  Text('${snapshot.error}')
-                else
-                  _propertyRow(
-                    context,
-                    context.commanderTr("Total Size"),
-                    formatBytes(size),
-                  ),
-                _propertyRow(
-                  context,
-                  context.commanderTr("Bytes"),
-                  size.toString(),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: Text(context.commanderTr("Close")),
-              ),
-            ],
-          );
-        },
-      );
-    },
   );
 }
 

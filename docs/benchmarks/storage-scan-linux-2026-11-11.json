@@ -1,0 +1,646 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-11",
+  "repository": "CrispStrobe/CrispCloud",
+  "baselineRevision": "d0a1e93e6c094403cb23f0941bfcea580c7b5968",
+  "performanceRevision": "e9dd5dbbb8581e16f228d4f51239adf7d0b22660",
+  "provenance": "Recovered from completed benchmark output after the execution workspace became unavailable. Full samples are retained where present in the captured output; summary-only records are explicitly marked. No missing samples were invented.",
+  "runtime": {
+    "flutter": "3.47.8",
+    "dart": "3.13.7",
+    "os": "Linux x86-64",
+    "mode": "Flutter test / JIT"
+  },
+  "protocol": {
+    "warmupsPerSession": 1,
+    "measuredRunsPerSession": 5,
+    "serialized": true,
+    "verificationOutsideTiming": true,
+    "compileAndProcessStartupExcluded": true,
+    "contentReads": false
+  },
+  "fixtures": {
+    "balanced": {
+      "files": 24000,
+      "folders": 460,
+      "logicalBytes": 359116800,
+      "metadataDigest": "d3bf5e9e565f14607ac6e6e4728a15c8d1e34a759a1017830f34cc0e123cbf7d",
+      "filesSizeMtimeDigest": "b5544c5b56ba0dce86428c4d0cab0dca04ca42ca9ce20f90f61366dd2e8dfe67"
+    },
+    "wide": {
+      "files": 24000,
+      "folders": 0,
+      "logicalBytes": 359116800,
+      "metadataDigest": "431636407526f8f6960972ee0b55090b5dcdf0b1eb0ca353878afbc55bab52f0",
+      "filesSizeMtimeDigest": "3674051af55ab070415f92d4739fbce9578b0dc3460a26057544d63664901e14"
+    },
+    "empty": {
+      "files": 0,
+      "folders": 1010,
+      "logicalBytes": 0,
+      "metadataDigest": "66d922032e631aa69b3614cb2110b56048d8e4eb958926dfc4c371470b78ed56",
+      "filesSizeMtimeDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    }
+  },
+  "panel": {
+    "fixture": "cached provider metadata; 8000 pane rows, target last; 8000 scanned files",
+    "logicalBytes": 119705600,
+    "baselineMs": [
+      723.584,
+      602.293,
+      490.094,
+      677.066,
+      655.778
+    ],
+    "baselineMedianMs": 655.778,
+    "intermediateRevision": "c2cbe787f397982b624e7609c4ad4a40b111eb4d",
+    "intermediateMs": [
+      445.284,
+      395.552,
+      438.318,
+      420.61,
+      415.12
+    ],
+    "intermediateMedianMs": 420.61,
+    "finalMs": [
+      468.641,
+      352.39,
+      316.749,
+      302.759,
+      321.007
+    ],
+    "finalMedianMs": 321.007,
+    "baselineNotifications": [
+      10,
+      9,
+      8,
+      10,
+      10
+    ],
+    "finalNotifications": [
+      7,
+      7,
+      6,
+      6,
+      7
+    ],
+    "verification": "All six runs per revision matched exact totals, current-source publication and exact row identity; one parent and one target metadata read, no content reads or writes."
+  },
+  "nativeFullScan": {
+    "balancedInitial": {
+      "baselineMs": [
+        1297.377,
+        1125.634,
+        1196.377,
+        1161.55,
+        1204.462
+      ],
+      "baselineMedianMs": 1196.377,
+      "finalMs": [
+        1535.648,
+        2200.116,
+        1712.266,
+        1439.38,
+        1240.628
+      ],
+      "finalMedianMs": 1535.648
+    },
+    "balancedPairedRepeat": {
+      "baselineMs": [
+        1409.912,
+        1387.208,
+        1037.068,
+        3127.5,
+        2252.333
+      ],
+      "baselineMedianMs": 1409.912,
+      "finalMs": [
+        976.147,
+        1466.411,
+        1023.992,
+        1004.967,
+        918.539
+      ],
+      "finalMedianMs": 1004.967
+    },
+    "balancedPooled": {
+      "runsPerRevision": 10,
+      "baselineMedianMs": 1250.9195,
+      "baselineMinMs": 1037.068,
+      "baselineMaxMs": 3127.5,
+      "finalMedianMs": 1340.004,
+      "finalMinMs": 918.539,
+      "finalMaxMs": 2200.116
+    },
+    "wide": {
+      "baselineMs": [
+        729.235,
+        804.821,
+        805.457,
+        892.188,
+        879.884
+      ],
+      "baselineMedianMs": 805.457,
+      "finalMedianMs": 922.273,
+      "finalMinMs": 787.191,
+      "finalMaxMs": 971.275,
+      "finalSamplesStatus": "summary only retained"
+    },
+    "empty": {
+      "baselineMedianMs": 436.645,
+      "finalMedianMs": 427.894,
+      "finalMinMs": 335.365,
+      "finalMaxMs": 659.574,
+      "samplesStatus": "summary only retained"
+    },
+    "conclusion": "No consistent full-tree wall-time speedup established. Initial balanced and wide runs were slower; the balanced paired repeat was faster. Pooled balanced median is 7.1% slower. Keep all observations; do not attribute the difference to host scheduling without evidence."
+  },
+  "nativeSummaryScan": {
+    "balanced": {
+      "ms": [
+        1155.032,
+        1414.589,
+        1628.938,
+        1704.667,
+        1190.463
+      ],
+      "medianMs": 1414.589
+    },
+    "wide": {
+      "medianMs": 734.681,
+      "minMs": 673.8,
+      "maxMs": 1010.685,
+      "samplesStatus": "summary only retained"
+    },
+    "empty": {
+      "medianMs": 371.501,
+      "minMs": 320.976,
+      "maxMs": 419.438,
+      "samplesStatus": "summary only retained"
+    },
+    "qualification": "Same traversal/bounds, aggregate-only retention. These runs do not preserve per-file display nodes and are not full-tree replacements. Every aggregate matched a full independently verified reference scan."
+  },
+  "snapshots": {
+    "balancedInitial": {
+      "baselineSaveMs": [
+        1062.537,
+        992.799,
+        960.989,
+        1187.037,
+        1172.673
+      ],
+      "baselineLoadMs": [
+        821.541,
+        723.709,
+        761.641,
+        694.903,
+        795.035
+      ],
+      "baselineSaveMedianMs": 1062.537,
+      "baselineLoadMedianMs": 761.641,
+      "finalSaveMedianMs": 843.114,
+      "finalLoadMedianMs": 887.982,
+      "finalSamplesStatus": "summary only retained"
+    },
+    "balancedPairedRepeat": {
+      "baselineSaveMs": [
+        1053.284,
+        1005.817,
+        940.227,
+        1286.183,
+        918.485
+      ],
+      "baselineLoadMs": [
+        946.092,
+        808.671,
+        1065.395,
+        847.951,
+        902.435
+      ],
+      "finalSaveMs": [
+        623.291,
+        640.479,
+        769.38,
+        678.088,
+        562.34
+      ],
+      "finalLoadMs": [
+        762.087,
+        852.536,
+        1202.261,
+        797.764,
+        832.178
+      ],
+      "baselineSaveMedianMs": 1005.817,
+      "baselineLoadMedianMs": 902.435,
+      "finalSaveMedianMs": 640.479,
+      "finalLoadMedianMs": 832.178
+    },
+    "balancedPooled": {
+      "runsPerRevision": 10,
+      "baselineSave": {
+        "medianMs": 1029.5505,
+        "minMs": 918.485,
+        "maxMs": 1286.183
+      },
+      "finalSave": {
+        "medianMs": 772.586,
+        "minMs": 562.34,
+        "maxMs": 1198.188
+      },
+      "baselineLoad": {
+        "medianMs": 815.106,
+        "minMs": 694.903,
+        "maxMs": 1065.395
+      },
+      "finalLoad": {
+        "medianMs": 862.086,
+        "minMs": 762.087,
+        "maxMs": 1202.261
+      },
+      "provenance": "Pooled statistics were computed from complete logs before workspace failure; not all underlying final-initial samples remain in this recovery record."
+    },
+    "wide": {
+      "baselineSaveMedianMs": 926.65,
+      "baselineLoadMedianMs": 860.381,
+      "finalSaveMedianMs": 821.745,
+      "finalLoadMedianMs": 902.693,
+      "retainedFinalRecord": {
+        "benchmark": "native_storage_snapshot",
+        "storage": "NativeFileCollectionStorage (atomic files, flush, CAS lease)",
+        "runtime": "3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
+        "source_scan_excluded": true,
+        "source_scan_progress_callbacks": 4,
+        "independent_oracle": true,
+        "files_size_mtime_digest": "3674051af55ab070415f92d4739fbce9578b0dc3460a26057544d63664901e14",
+        "all_metadata_digest": "431636407526f8f6960972ee0b55090b5dcdf0b1eb0ca353878afbc55bab52f0",
+        "save_median_ms": 821.745,
+        "save_minimum_ms": 615.811,
+        "save_maximum_ms": 1356.445,
+        "load_median_ms": 902.693,
+        "load_minimum_ms": 848.562,
+        "load_maximum_ms": 1087.256,
+        "source_revision": "e9dd5dbbb8581e16f228d4f51239adf7d0b22660",
+        "runs": [
+          {
+            "run": 0,
+            "warmup": true,
+            "save_ms": 944.348,
+            "load_ms": 1415.462,
+            "nodes": 24001,
+            "files": 24000,
+            "folders": 0,
+            "logical_bytes": 359116800,
+            "all_metadata_fingerprint": "f4d8ba4b459eeadbadbaa3f34af4d058bb87b0c5f10dc867c9bfd2c679ead300",
+            "exact_roundtrip": true
+          },
+          {
+            "run": 1,
+            "warmup": false,
+            "save_ms": 813.728,
+            "load_ms": 902.693,
+            "nodes": 24001,
+            "files": 24000,
+            "folders": 0,
+            "logical_bytes": 359116800,
+            "all_metadata_fingerprint": "f4d8ba4b459eeadbadbaa3f34af4d058bb87b0c5f10dc867c9bfd2c679ead300",
+            "exact_roundtrip": true
+          },
+          {
+            "run": 2,
+            "warmup": false,
+            "save_ms": 1356.445,
+            "load_ms": 1087.256,
+            "nodes": 24001,
+            "files": 24000,
+            "folders": 0,
+            "logical_bytes": 359116800,
+            "all_metadata_fingerprint": "f4d8ba4b459eeadbadbaa3f34af4d058bb87b0c5f10dc867c9bfd2c679ead300",
+            "exact_roundtrip": true
+          },
+          {
+            "run": 3,
+            "warmup": false,
+            "save_ms": 821.745,
+            "load_ms": 848.562,
+            "nodes": 24001,
+            "files": 24000,
+            "folders": 0,
+            "logical_bytes": 359116800,
+            "all_metadata_fingerprint": "f4d8ba4b459eeadbadbaa3f34af4d058bb87b0c5f10dc867c9bfd2c679ead300",
+            "exact_roundtrip": true
+          },
+          {
+            "run": 4,
+            "warmup": false,
+            "save_ms": 1092.621,
+            "load_ms": 911.131,
+            "nodes": 24001,
+            "files": 24000,
+            "folders": 0,
+            "logical_bytes": 359116800,
+            "all_metadata_fingerprint": "f4d8ba4b459eeadbadbaa3f34af4d058bb87b0c5f10dc867c9bfd2c679ead300",
+            "exact_roundtrip": true
+          },
+          {
+            "run": 5,
+            "warmup": false,
+            "save_ms": 615.811,
+            "load_ms": 849.491,
+            "nodes": 24001,
+            "files": 24000,
+            "folders": 0,
+            "logical_bytes": 359116800,
+            "all_metadata_fingerprint": "f4d8ba4b459eeadbadbaa3f34af4d058bb87b0c5f10dc867c9bfd2c679ead300",
+            "exact_roundtrip": true
+          }
+        ]
+      }
+    },
+    "empty": {
+      "baselineSaveMedianMs": 73.407,
+      "baselineLoadMedianMs": 50.76,
+      "finalSaveMedianMs": 51.015,
+      "finalLoadMedianMs": 35.101,
+      "retainedFinalRecord": {
+        "benchmark": "native_storage_snapshot",
+        "storage": "NativeFileCollectionStorage (atomic files, flush, CAS lease)",
+        "runtime": "3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
+        "source_scan_excluded": true,
+        "source_scan_progress_callbacks": 8,
+        "independent_oracle": true,
+        "files_size_mtime_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "all_metadata_digest": "66d922032e631aa69b3614cb2110b56048d8e4eb958926dfc4c371470b78ed56",
+        "save_median_ms": 51.015,
+        "save_minimum_ms": 40.933,
+        "save_maximum_ms": 88.648,
+        "load_median_ms": 35.101,
+        "load_minimum_ms": 25.767,
+        "load_maximum_ms": 37.946,
+        "source_revision": "e9dd5dbbb8581e16f228d4f51239adf7d0b22660",
+        "runs": [
+          {
+            "run": 0,
+            "warmup": true,
+            "save_ms": 109.541,
+            "load_ms": 87.17,
+            "nodes": 1011,
+            "files": 0,
+            "folders": 1010,
+            "logical_bytes": 0,
+            "all_metadata_fingerprint": "4974d78d5b973d283cc3b903832a978f664de96c7adbada44675ab011c907a58",
+            "exact_roundtrip": true
+          },
+          {
+            "run": 1,
+            "warmup": false,
+            "save_ms": 51.015,
+            "load_ms": 35.101,
+            "nodes": 1011,
+            "files": 0,
+            "folders": 1010,
+            "logical_bytes": 0,
+            "all_metadata_fingerprint": "4974d78d5b973d283cc3b903832a978f664de96c7adbada44675ab011c907a58",
+            "exact_roundtrip": true
+          },
+          {
+            "run": 2,
+            "warmup": false,
+            "save_ms": 58.383,
+            "load_ms": 37.946,
+            "nodes": 1011,
+            "files": 0,
+            "folders": 1010,
+            "logical_bytes": 0,
+            "all_metadata_fingerprint": "4974d78d5b973d283cc3b903832a978f664de96c7adbada44675ab011c907a58",
+            "exact_roundtrip": true
+          },
+          {
+            "run": 3,
+            "warmup": false,
+            "save_ms": 88.648,
+            "load_ms": 25.767,
+            "nodes": 1011,
+            "files": 0,
+            "folders": 1010,
+            "logical_bytes": 0,
+            "all_metadata_fingerprint": "4974d78d5b973d283cc3b903832a978f664de96c7adbada44675ab011c907a58",
+            "exact_roundtrip": true
+          },
+          {
+            "run": 4,
+            "warmup": false,
+            "save_ms": 49.87,
+            "load_ms": 35.228,
+            "nodes": 1011,
+            "files": 0,
+            "folders": 1010,
+            "logical_bytes": 0,
+            "all_metadata_fingerprint": "4974d78d5b973d283cc3b903832a978f664de96c7adbada44675ab011c907a58",
+            "exact_roundtrip": true
+          },
+          {
+            "run": 5,
+            "warmup": false,
+            "save_ms": 40.933,
+            "load_ms": 29.245,
+            "nodes": 1011,
+            "files": 0,
+            "folders": 1010,
+            "logical_bytes": 0,
+            "all_metadata_fingerprint": "4974d78d5b973d283cc3b903832a978f664de96c7adbada44675ab011c907a58",
+            "exact_roundtrip": true
+          }
+        ]
+      }
+    },
+    "verification": "Fresh native storage reopen matched the original full snapshot fingerprint, including metadata, children/order, all aggregate totals, timestamps, flags and diagnostics. Scan time excluded from save/load timing. Flush, atomic rename, checksums and CAS included."
+  },
+  "collectionImport": {
+    "rows": 10000,
+    "sources": 2,
+    "pages": 20,
+    "selectedRows": 6,
+    "totalPageBytes": 4641463,
+    "metadataDigest": "0abb36bec0319f94295ca65d6c362c236cb50e7fb27cd2189060a5857ca50e71",
+    "baselineMs": [
+      1249.77,
+      791.156,
+      762.386,
+      934.379,
+      689.763
+    ],
+    "baselineMedianMs": 791.156,
+    "finalMs": [
+      466.041,
+      861.622,
+      701.555,
+      748.675,
+      741.453
+    ],
+    "finalMedianMs": 741.453,
+    "verification": "Every serialized row, identity, microsecond timestamp and selected mark matched after a fresh-store reopen. Only save/encoding/durable publication timed; construction, verification and cleanup excluded.",
+    "qualification": "Observed median reduction is 6.3%; ranges overlap substantially. This is collection import, separate from a multi-root scanning workflow."
+  },
+  "completedValidation": [
+    {
+      "scope": "shared scanner/summary, access, virtual/native workers and inline measurement",
+      "passed": 124,
+      "overlapsOtherRuns": true
+    },
+    {
+      "scope": "native page batches, snapshot store and collection paging store",
+      "passed": 64,
+      "overlapsOtherRuns": true
+    },
+    {
+      "scope": "native child paths, links, workers and access lifetimes",
+      "passed": 19,
+      "overlapsOtherRuns": true
+    },
+    {
+      "scope": "identity cache, captured targets, sync binding, inline measurement and shared scans",
+      "passed": 139,
+      "overlapsOtherRuns": true
+    },
+    {
+      "scope": "uncommitted initial batch UI, analyzer and localization",
+      "passed": 62,
+      "status": "precedes final unconfirmed-save repair; not acceptance of recovered artifacts"
+    },
+    {
+      "scope": "hosted File workspace UX behavior regression step at e9dd5db",
+      "passed": 814,
+      "overlapsOtherRuns": true,
+      "runId": 43026970576,
+      "qualification": "Behavior and targeted analysis steps succeeded; overall workflow failed its final formatting check in three CLI files. Targeted analysis reported 66 nonfatal issues."
+    }
+  ],
+  "incompleteValidation": [
+    "The local execution workspace disappeared; subsequent runtime restoration, formatting and focused validation used GitHub and hosted runners.",
+    "The new production AOT comparison was prepared but never compiled or run.",
+    "Full-tree scanning and snapshot reopening show inconsistent or slower pooled medians; no general speedup is established.",
+    "Broader main CI tests, optimized full-app builds and live-provider/native-platform acceptance are separate from the completed workspace and Chrome gates.",
+    "The initial stale source binding was reviewed and refreshed in the accompanying documentation checkpoint; its exact hosted verification is tracked in PR #40."
+  ],
+  "hostedValidation": [
+    {
+      "revision": "e9dd5dbbb8581e16f228d4f51239adf7d0b22660",
+      "runId": 43026970946,
+      "jobId": 130544314870,
+      "name": "Browser storage + terminal (Chrome)",
+      "status": "completed",
+      "conclusion": "success",
+      "includes": "IndexedDB concurrency and paged restart recovery; terminal; browser credential vault"
+    },
+    {
+      "revision": "e9dd5dbbb8581e16f228d4f51239adf7d0b22660",
+      "runId": 43026970576,
+      "name": "File workspace UX",
+      "status": "completed",
+      "conclusion": "failure",
+      "cause": "Require committed formatting; three CLI files changed by formatter. Workspace behavior regressions passed 814 tests; targeted analysis succeeded with nonfatal diagnostics."
+    },
+    {
+      "revision": "e9dd5dbbb8581e16f228d4f51239adf7d0b22660",
+      "runId": 43026970946,
+      "jobId": 130544314796,
+      "name": "Analyze + Test (Linux)",
+      "status": "in_progress",
+      "qualification": "Full analysis step succeeded; broad deterministic tests were still running at this observation."
+    }
+  ],
+  "recoveredBenchmarkSource": {
+    "verification": "SHA-256 of committed hosted-formatted benchmark and README exactly matches the recorded originals. This is source-identity verification, not a new benchmark execution.",
+    "revision": "ef3ca3c038bab1a2af7765eb09d395d994431e99",
+    "files": [
+      {
+        "path": "test/file_collection_import_benchmark_test.dart",
+        "sha256": "c3ab5063a691b1b7f224ea596ec12f65e2c50ec2a9f6337cf0343b4310226200",
+        "recorded": "c3ab5063a691b1b7f224ea596ec12f65e2c50ec2a9f6337cf0343b4310226200",
+        "matchesRecorded": true
+      },
+      {
+        "path": "tool/benchmarks/storage_scan/README.md",
+        "sha256": "31d2196e5212c99759e4b31c223f012e5699952abe216d8571ac45dbae416d41",
+        "recorded": "31d2196e5212c99759e4b31c223f012e5699952abe216d8571ac45dbae416d41",
+        "matchesRecorded": true
+      }
+    ]
+  },
+  "restoredBatchHistory": [
+    {
+      "revision": "43a2c0f26ad89f0514ad0c4aff3edb351e017697",
+      "runId": 43033419568,
+      "workspaceJobId": 130566104312,
+      "testsPassed": 912,
+      "testsFailed": 1,
+      "analysis": {
+        "errors": 0,
+        "warnings": 7,
+        "infos": 60
+      },
+      "failure": "Compact Arabic history test tapped before the layout update following ensureVisible; no layout-overflow failure. Final formatter gate skipped after test failure."
+    },
+    {
+      "revision": "bf6b8e2740b1a57b56248b6f12e1bed90e90fd9d",
+      "change": "Wait for scroll layout and explicitly assert hit testability; retain compact Arabic viewport, large text and all offline history assertions."
+    },
+    {
+      "revision": "ef3ca3c038bab1a2af7765eb09d395d994431e99",
+      "change": "Apply exact five-file hosted formatter artifact, verified by artifact SHA-256, hunk contexts/counts and result Git hashes, while preserving the scroll correction.",
+      "formatterArtifactSha256": "17155cf8cc9e9e08f5db9c7e6d23f587883c4b5b83a3f990ad8629229c88abe1",
+      "validation": "Workspace run 43035543058 succeeded: 913 tests passed, 163 files formatted with 0 changes, targeted analysis 0 errors / 7 warnings / 60 infos, final committed-format gate passed."
+    }
+  ],
+  "restoredBatchValidation": {
+    "revision": "ef3ca3c038bab1a2af7765eb09d395d994431e99",
+    "runId": 43035543058,
+    "jobId": 130573266888,
+    "conclusion": "success",
+    "testsPassed": 913,
+    "formatFilesChecked": 163,
+    "formatFilesChanged": 0,
+    "analysis": {
+      "errors": 0,
+      "warnings": 7,
+      "infos": 60
+    },
+    "browser": {
+      "runId": 43035543238,
+      "jobId": 130573305650,
+      "conclusion": "success",
+      "includes": "IndexedDB concurrency and paged restart recovery, terminal and credential vault",
+      "suites": [
+        {
+          "name": "IndexedDB concurrency and paged restart recovery",
+          "passed": 2,
+          "skipped": 0
+        },
+        {
+          "name": "Terminal input and explicit SSH gateway",
+          "passed": 36,
+          "skipped": 1
+        },
+        {
+          "name": "Browser credential vault authentication and compatibility",
+          "passed": 34,
+          "skipped": 0
+        }
+      ]
+    },
+    "boundary": "Overlapping earlier local gates are not added to this total. Separate broad/platform CI outcomes require their own completed evidence."
+  },
+  "reviewedSourceBinding": {
+    "previousFingerprint": "72be43025ae190ec5734c2b877481361a318a4b234407558004b2fda703e866a",
+    "reviewedFingerprint": "1be5e3187053a515c775c136e8424c4f11b1616a5978ed8856e54223476a7ad8",
+    "paths": 128,
+    "unchangedPaths": 126,
+    "changedPaths": [
+      "cli/lib/commands/connect.dart",
+      "lib/widgets/command_palette.dart"
+    ],
+    "scope": "CLI help-string wrapping from the verified formatter and the marked-folder batch palette import/dispatch; inventory and root lock unchanged.",
+    "validation": "Per-file Git blob identities and canonical old/current SHA-256 maps independently checked; hosted refresh status recorded in PR."
+  }
+}

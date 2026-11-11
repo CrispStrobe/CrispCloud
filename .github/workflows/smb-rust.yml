@@ -85,7 +85,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_PAT || github.token }}
         run: git config --global url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
       - run: flutter pub get
-      - run: flutter test test/smb_backend_field_test.dart test/smb_client_adapter_test.dart
+      - run: flutter test test/smb_backend_field_test.dart test/smb_client_adapter_test.dart test/smb_connection_profile_dialog_test.dart
       - working-directory: cli
         run: |
           dart pub get

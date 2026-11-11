@@ -471,6 +471,7 @@ class _StorageAnalysisViewState extends State<StorageAnalysisView>
             : node.isFolder
             ? strings.text('fileCount', {'count': node.fileCount})
             : strings.text('share', {'percent': _percentage(node.bytes)}),
+        textDirection: showPath ? TextDirection.ltr : null,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
@@ -637,6 +638,7 @@ class _StorageAnalysisViewState extends State<StorageAnalysisView>
         children: [
           Text(
             node.path,
+            textDirection: TextDirection.ltr,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.bodySmall,
@@ -738,6 +740,7 @@ class _StorageAnalysisViewState extends State<StorageAnalysisView>
                   title: Text(strings.text(issue.code.name)),
                   subtitle: Text(
                     issue.path,
+                    textDirection: TextDirection.ltr,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),

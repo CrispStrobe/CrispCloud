@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:crisp/adapters/smb_adapter.dart';
 import 'package:crisp/adapters/cli_adapter_factory.dart';
 import 'package:crisp/adapters/cli_storage_client.dart';
@@ -69,6 +70,75 @@ void main() {
       }
     },
   );
+  test(
+    'saved SMB passwords preserve literal strings when reconnecting',
+    () async {
+      final tmp = Directory.systemTemp.createTempSync(
+        'smb-password-roundtrip-',
+      );
+      try {
+        final path = '${tmp.path}/config.yaml';
+        final saved = CliConfig(path: path);
+        for (final password in [
+          'true',
+          'FALSE',
+          'null',
+          '~',
+          '12345',
+          '0123',
+          '1.25',
+          '1e3',
+          '.inf',
+          'ordinary-fixture-password',
+          ' space: #value ',
+          r'back\slash\n"quoted"',
+          '[list-looking]',
+          '{map: looking}',
+          '*alias-looking',
+        ]) {
+          saved.saveProvider('nas', {...config(), 'password': password});
+          // Reopen the file rather than checking only the emitter's text.
+          final restored = CliConfig(path: path)
+              .providerConfig('nas', strict: true)!;
+          expect(restored['password'], password);
+          final adapter = createAdapter('nas', restored) as SmbCliAdapter;
+          expect(adapter.connection.secret, password);
+          await adapter.dispose();
+        }
+      } finally {
+        tmp.deleteSync(recursive: true);
+      }
+    },
+  );
+
+  test('persisted invalid credentials stay rejected after round-trip', () {
+    final tmp = Directory.systemTemp.createTempSync(
+      'smb-invalid-password-roundtrip-',
+    );
+    try {
+      final path = '${tmp.path}/config.yaml';
+      final saved = CliConfig(path: path);
+      for (final password in ['', 'line\nbreak\rreturn\ttab\u0000']) {
+        saved.saveProvider('nas', {...config(), 'password': password});
+        final restored = CliConfig(path: path)
+            .providerConfig('nas', strict: true)!;
+        expect(restored['password'], password);
+        expect(
+          () => createAdapter('nas', restored),
+          throwsA(
+            isA<RemoteFormatException>().having(
+              (error) => error.code,
+              'code',
+              RemoteErrorCode.invalidCredentials,
+            ),
+          ),
+        );
+      }
+    } finally {
+      tmp.deleteSync(recursive: true);
+    }
+  });
+
   final python = Platform.environment['CRISPER_SMB_PYTHON'];
   for (final backend in SmbBackend.values) {
     test(
@@ -83,15 +153,13 @@ void main() {
         final errors = server.stderr.drain<void>();
         SmbCliAdapter? adapter;
         try {
-          final ready =
-              jsonDecode(
-                    await server.stdout
-                        .transform(utf8.decoder)
-                        .transform(const LineSplitter())
-                        .first
-                        .timeout(const Duration(seconds: 15)),
-                  )
-                  as Map;
+          final ready = jsonDecode(
+            await server.stdout
+                .transform(utf8.decoder)
+                .transform(const LineSplitter())
+                .first
+                .timeout(const Duration(seconds: 15)),
+          ) as Map;
           final cfg = {
             ...config(backend.name),
             'url': 'smb://127.0.0.1:${ready['port']}/books/',
@@ -121,9 +189,10 @@ void main() {
           await adapter.delete('/folder');
           expect(await adapter.list('/'), isEmpty);
           await expectLater(adapter.list('../escape'), throwsFormatException);
-          final strict =
-              createAdapter('strict', {...cfg, 'requireEncryption': true})
-                  as SmbCliAdapter;
+          final strict = createAdapter('strict', {
+            ...cfg,
+            'requireEncryption': true,
+          }) as SmbCliAdapter;
           try {
             await expectLater(
               strict.list('/'),

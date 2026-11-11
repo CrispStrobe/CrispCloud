@@ -14,8 +14,11 @@ import 'package:crisp_cloud/services/panel_source_service.dart';
 import 'package:crisp_cloud/services/storage_scan_backend.dart';
 import 'package:crisp_cloud/services/storage_scan_service.dart';
 
+import 'support/storage_scan_benchmark_oracle.dart';
+
 /// Run against an existing, disposable fixture; this test never creates files.
 /// Set STORAGE_SCAN_BENCHMARK_ROOT and optionally STORAGE_SCAN_BENCHMARK_RUNS.
+/// STORAGE_SCAN_BENCHMARK_ORACLE supplies independent file/directory metadata.
 /// Runtime startup is excluded. The first scan warms caches and is not timed.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -41,21 +44,49 @@ void main() {
             Platform.environment['STORAGE_SCAN_BENCHMARK_RUNS'] ?? '',
           ) ??
           5;
-      expect(runs, greaterThan(0));
+      expect(runs, inInclusiveRange(1, 50));
       final timings = <double>[];
+      final progressCounts = <int>[];
       final manifestPath =
           Platform.environment['STORAGE_SCAN_BENCHMARK_MANIFEST'];
       final manifest = manifestPath == null
           ? null
           : jsonDecode(await File(manifestPath).readAsString())
                 as Map<String, dynamic>;
+      final oraclePath = Platform.environment['STORAGE_SCAN_BENCHMARK_ORACLE'];
+      final oracle = oraclePath == null
+          ? null
+          : StorageScanBenchmarkOracle.read(oraclePath);
+      if (oracle != null) expect(root, oracle.root);
       StorageScanResult? first;
       String? firstDigest;
+      String? firstMetadataDigest;
+      String? oracleDigest;
+      double? warmupMilliseconds;
       for (var run = 0; run <= runs; run++) {
+        StorageScanProgress? finalProgress;
+        var progressCalls = 0;
         final watch = Stopwatch()..start();
-        final result = await const StorageScanService().scan(source, root);
+        final result = await const StorageScanService().scan(
+          source,
+          root,
+          onProgress: (progress) {
+            progressCalls++;
+            finalProgress = progress;
+          },
+        );
         watch.stop();
         expect(result.isComplete, isTrue, reason: result.issues.toString());
+        expect(progressCalls, greaterThanOrEqualTo(2));
+        expect(finalProgress?.files, result.root.fileCount);
+        expect(finalProgress?.folders, result.root.folderCount);
+        expect(finalProgress?.bytes, result.root.bytes);
+        oracleDigest = oracle?.verify(result);
+        final metadataDigest = storageScanMetadataFingerprint(result);
+        if (firstMetadataDigest != null) {
+          expect(metadataDigest, firstMetadataDigest);
+        }
+        firstMetadataDigest ??= metadataDigest;
         // Validate every relative path and size outside the timed interval.
         final pending = [result.root];
         final records = <List<Object>>[];
@@ -87,7 +118,12 @@ void main() {
           expect(result.root.bytes, first.root.bytes);
         }
         first ??= result;
-        if (run != 0) timings.add(watch.elapsedMicroseconds / 1000);
+        if (run == 0) {
+          warmupMilliseconds = watch.elapsedMicroseconds / 1000;
+        } else {
+          timings.add(watch.elapsedMicroseconds / 1000);
+          progressCounts.add(progressCalls);
+        }
         // ignore: avoid_print
         print('Scan $run: ${watch.elapsedMilliseconds} ms');
       }
@@ -98,17 +134,25 @@ void main() {
         jsonEncode({
           'benchmark': 'storage_scan',
           'backend': legacy ? 'legacy_operation' : 'native_scan',
+          'retention': 'tree',
           'root': root,
           'files': first!.root.fileCount,
           'folders': first.root.folderCount,
           'logicalBytes': first.root.bytes,
           'filesDigest': firstDigest,
+          'allMetadataDigest': firstMetadataDigest,
+          'independentOracle': oracle != null,
+          'filesSizeMtimeDigest': oracleDigest,
+          'progressCallbacks': progressCounts,
+          'warmupMilliseconds': warmupMilliseconds,
           'milliseconds': timings,
           'medianMilliseconds': sorted[sorted.length ~/ 2],
           'minimumMilliseconds': sorted.first,
           'maximumMilliseconds': sorted.last,
           'runtime': Platform.version,
           'operatingSystem': Platform.operatingSystem,
+          'sourceRevision':
+              Platform.environment['STORAGE_SCAN_BENCHMARK_REVISION'],
         }),
       );
     },

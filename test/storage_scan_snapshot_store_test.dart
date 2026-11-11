@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:crisp_cloud/models/file_item.dart';
@@ -89,6 +90,9 @@ class _FailingStorage extends MemoryFileCollectionStorage {
   bool throwAfterCommit = false;
   bool blindAfterCommit = false;
   bool blind = false;
+  final commitFailure = StateError('Acknowledgement lost');
+  final recoveryFailure = StateError('Temporarily unavailable');
+  void Function()? afterCommit;
 
   @override
   Future<void> write(String key, String value) async {
@@ -98,7 +102,7 @@ class _FailingStorage extends MemoryFileCollectionStorage {
 
   @override
   Future<String?> read(String key, {required int maxBytes}) async {
-    if (blind) throw StateError('Temporarily unavailable');
+    if (blind) throw recoveryFailure;
     return super.read(key, maxBytes: maxBytes);
   }
 
@@ -111,13 +115,442 @@ class _FailingStorage extends MemoryFileCollectionStorage {
     final accepted = await super.compareAndSwap(key, expected, value);
     if (accepted && throwAfterCommit) {
       if (blindAfterCommit) blind = true;
-      throw StateError('Acknowledgement lost');
+      afterCommit?.call();
+      throw commitFailure;
     }
     return accepted;
   }
 }
 
+class _BatchSnapshotStorage extends MemoryFileCollectionStorage
+    implements FileCollectionStorageBatchWriter {
+  final batches = <List<FileCollectionStorageRecord>>[];
+  Future<void> Function()? beforeBatch;
+  void Function(String)? afterWrite;
+  void Function()? afterCommit;
+  bool failBatch = false;
+  bool loseCommitReply = false;
+
+  @override
+  Future<void> write(String key, String value) async {
+    await super.write(key, value);
+    afterWrite?.call(key);
+  }
+
+  @override
+  Future<void> writeBatch(List<FileCollectionStorageRecord> records) async {
+    FileCollectionStorageBatch.validate(records);
+    batches.add(List.of(records));
+    final callback = beforeBatch;
+    beforeBatch = null;
+    await callback?.call();
+    for (final record in records) {
+      await write(record.key, record.value);
+    }
+    if (failBatch) throw StateError('Injected batch failure.');
+  }
+
+  @override
+  Future<bool> compareAndSwap(
+    String key,
+    String? expected,
+    String value,
+  ) async {
+    final committed = await super.compareAndSwap(key, expected, value);
+    if (committed) {
+      afterCommit?.call();
+      if (loseCommitReply) throw StateError('Lost committed acknowledgement.');
+    }
+    return committed;
+  }
+}
+
+class _PausedSnapshotReads extends _BatchSnapshotStorage {
+  bool pause = false;
+  final entered = Completer<void>();
+  final gates = List.generate(4, (_) => Completer<void>());
+  final requested = <int>[];
+  final finished = <int>[];
+  var active = 0;
+  var maximumActive = 0;
+
+  @override
+  Future<String?> read(String key, {required int maxBytes}) async {
+    if (pause && key.contains(':page:')) {
+      final index = int.parse(key.split(':').last);
+      requested.add(index);
+      if (index < gates.length) {
+        active++;
+        if (active > maximumActive) maximumActive = active;
+        if (active == gates.length && !entered.isCompleted) entered.complete();
+        try {
+          await gates[index].future;
+          finished.add(index);
+        } finally {
+          active--;
+        }
+      }
+    }
+    return super.read(key, maxBytes: maxBytes);
+  }
+}
+
+class _SynchronousSnapshotReadFailure extends _BatchSnapshotStorage {
+  bool fail = false;
+  final entered = Completer<void>();
+  final release = Completer<void>();
+  var delayedFinished = false;
+
+  @override
+  Future<String?> read(String key, {required int maxBytes}) {
+    if (fail && key.contains(':page:')) {
+      final page = int.parse(key.split(':').last);
+      if (page == 1) throw StateError('Synchronous adapter failure.');
+      if (page == 0) {
+        entered.complete();
+        return release.future.then((_) {
+          delayedFinished = true;
+          return super.read(key, maxBytes: maxBytes);
+        });
+      }
+    }
+    return super.read(key, maxBytes: maxBytes);
+  }
+}
+
 void main() {
+  test(
+    'snapshot writes bounded four-page batches without changing the format',
+    () async {
+      final storage = _BatchSnapshotStorage();
+      final store = StorageScanSnapshotStore(storage: storage);
+      final saved = await _save(store, count: 2100);
+      expect(storage.batches.map((batch) => batch.length), [4, 1]);
+      for (final batch in storage.batches) {
+        expect(
+          batch.fold<int>(0, (size, record) => size + record.bytes.length),
+          lessThanOrEqualTo(FileCollectionStorageBatch.maxBytes),
+        );
+        for (final record in batch) {
+          expect(
+            record.bytes.length,
+            lessThanOrEqualTo(StorageScanSnapshotStore.pageByteLimit),
+          );
+          expect(utf8.decode(record.bytes), record.value);
+          expect((jsonDecode(record.value) as Map)['version'], 1);
+        }
+      }
+      final loaded = await store.load(saved.id);
+      expect(loaded.result.root.fileCount, 2101);
+      expect(loaded.result.root.children[2100].item.name, '文書-2099.txt');
+      expect(loaded.result.root.skippedLinkCount, 1);
+      expect(loaded.result.root.unknownSizeCount, 1);
+    },
+  );
+
+  test(
+    'a failed page batch drains and preserves the earlier published snapshot',
+    () async {
+      final storage = _BatchSnapshotStorage();
+      final store = StorageScanSnapshotStore(storage: storage);
+      final saved = await _save(store);
+      final before = Map<String, String>.of(storage.values);
+      storage.failBatch = true;
+      await expectLater(_save(store, count: 2100), throwsStateError);
+      expect(storage.values, before);
+      expect((await store.load(saved.id)).result.root.fileCount, 2);
+    },
+  );
+
+  test('cancelling an outstanding save waits for the batch then removes staged pages', () async {
+    final storage = _BatchSnapshotStorage();
+    final store = StorageScanSnapshotStore(storage: storage);
+    await _save(store);
+    final before = Map<String, String>.of(storage.values);
+    final entered = Completer<void>();
+    final release = Completer<void>();
+    storage.beforeBatch = () async {
+      entered.complete();
+      await release.future;
+    };
+    var cancelled = false;
+    var returned = false;
+    final checked = expectLater(
+      store.save(
+        result: _result(count: 2100),
+        storageId: 'original',
+        sourceLabel: 'Original',
+        isCancelled: () => cancelled,
+      ),
+      throwsStateError,
+    ).then((_) => returned = true);
+    await entered.future;
+    cancelled = true;
+    try {
+      await Future<void>.delayed(Duration.zero);
+      expect(returned, isFalse);
+    } finally {
+      release.complete();
+    }
+    await checked;
+    expect(storage.values, before);
+  });
+
+  test(
+    'cancellation after manifest staging cannot publish a snapshot',
+    () async {
+      final storage = _BatchSnapshotStorage();
+      final store = StorageScanSnapshotStore(storage: storage);
+      var cancelled = false;
+      storage.afterWrite = (key) {
+        if (key.contains(':manifest')) cancelled = true;
+      };
+      await expectLater(
+        store.save(
+          result: _result(),
+          storageId: 'original',
+          sourceLabel: 'Original',
+          isCancelled: () => cancelled,
+        ),
+        throwsStateError,
+      );
+      expect(storage.values, isEmpty);
+    },
+  );
+
+  for (final loseReply in [false, true]) {
+    test(
+      'committed save remains successful after cancellation with lostReply=$loseReply',
+      () async {
+        final storage = _BatchSnapshotStorage()..loseCommitReply = loseReply;
+        final store = StorageScanSnapshotStore(storage: storage);
+        var cancelled = false;
+        storage.afterCommit = () => cancelled = true;
+        final saved = await store.save(
+          result: _result(),
+          storageId: 'original',
+          sourceLabel: 'Original',
+          isCancelled: () => cancelled,
+        );
+        expect(cancelled, isTrue);
+        expect((await store.load(saved.id)).result.root.fileCount, 2);
+        expect((await store.list()).single.id, saved.id);
+      },
+    );
+  }
+
+  test(
+    'bounded read-ahead preserves parent order when pages finish in reverse',
+    () async {
+      final storage = _PausedSnapshotReads();
+      final store = StorageScanSnapshotStore(storage: storage);
+      final saved = await _save(store, count: 2100);
+      storage.pause = true;
+      final loading = store.load(saved.id);
+      await storage.entered.future;
+      expect(storage.requested, [0, 1, 2, 3]);
+      for (final gate in storage.gates.reversed) {
+        gate.complete();
+      }
+      final loaded = await loading;
+      expect(storage.finished, [3, 2, 1, 0]);
+      expect(storage.requested, [0, 1, 2, 3, 4]);
+      expect(storage.maximumActive, 4);
+      expect(storage.active, 0);
+      expect(loaded.result.root.fileCount, 2101);
+      expect(loaded.result.root.children.first.path, '/資料/空');
+      expect(loaded.result.root.children[2100].path, '/資料/文書-2099.txt');
+    },
+  );
+
+  test('cancelled read-ahead drains the current group without reading further pages', () async {
+    final storage = _PausedSnapshotReads();
+    final store = StorageScanSnapshotStore(storage: storage);
+    final saved = await _save(store, count: 2100);
+    final before = Map<String, String>.of(storage.values);
+    storage.pause = true;
+    var cancelled = false;
+    final checked = expectLater(
+      store.load(saved.id, isCancelled: () => cancelled),
+      throwsStateError,
+    );
+    await storage.entered.future;
+    cancelled = true;
+    for (final gate in storage.gates) {
+      gate.complete();
+    }
+    await checked;
+    expect(storage.requested, [0, 1, 2, 3]);
+    expect(storage.active, 0);
+    expect(storage.values, before);
+  });
+
+  test(
+    'a synchronous page-read failure still drains earlier submitted reads',
+    () async {
+      final storage = _SynchronousSnapshotReadFailure();
+      final store = StorageScanSnapshotStore(storage: storage);
+      final saved = await _save(store, count: 2100);
+      storage.fail = true;
+      var returned = false;
+      final checked = expectLater(
+        store.load(saved.id),
+        throwsStateError,
+      ).then((_) => returned = true);
+      await storage.entered.future;
+      try {
+        await Future<void>.delayed(Duration.zero);
+        expect(returned, isFalse);
+        expect(storage.delayedFinished, isFalse);
+      } finally {
+        storage.release.complete();
+      }
+      await checked;
+      expect(storage.delayedFinished, isTrue);
+    },
+  );
+
+  test('full history rejects before preparing or writing any candidate pages', () async {
+    final storage = _BatchSnapshotStorage();
+    final store = StorageScanSnapshotStore(storage: storage);
+    await _save(store);
+    final catalog =
+        jsonDecode(storage.values[StorageScanSnapshotStore.indexKey]!) as Map;
+    final original = (catalog['snapshots'] as List).single as Map;
+    catalog['snapshots'] = [
+      for (
+        var index = 0;
+        index < StorageScanSnapshotStore.maxSnapshots;
+        index++
+      )
+        {
+          ...original,
+          'id':
+              '00000000-0000-0000-0000-${index.toRadixString(16).padLeft(12, '0')}',
+        },
+    ];
+    storage.values[StorageScanSnapshotStore.indexKey] = jsonEncode(catalog);
+    final before = Map<String, String>.of(storage.values);
+    storage.batches.clear();
+    await expectLater(_save(store, count: 2100), throwsFormatException);
+    expect(storage.batches, isEmpty);
+    expect(storage.values, before);
+  });
+
+  test(
+    'canonical-child fast path rejects aliases and retains platform name rules',
+    () async {
+      StorageScanResult result(String root, String name, String path) {
+        final child = StorageNode(
+          item: FileItem(name: name, path: path, isFolder: false, size: 1),
+          bytes: 1,
+          fileCount: 1,
+          folderCount: 0,
+        );
+        return StorageScanResult(
+          root: StorageNode(
+            item: FileItem(name: root, path: root, isFolder: true),
+            children: [child],
+            bytes: 1,
+            fileCount: 1,
+            folderCount: 0,
+          ),
+          startedAt: DateTime.utc(2026),
+          completedAt: DateTime.utc(2026),
+          cancelled: false,
+          limited: false,
+          sourceChanged: false,
+        );
+      }
+
+      final store = StorageScanSnapshotStore(
+        storage: MemoryFileCollectionStorage(),
+      );
+      for (final (style, root, name, path) in [
+        (p.Style.posix, '/root', 'escape', '/root/../escape'),
+        (p.Style.posix, '/root', 'item', '/rooted/item'),
+        (p.Style.posix, '/root', '.', '/root/.'),
+        (p.Style.posix, '/root', 'a/b', '/root/a/b'),
+        (p.Style.posix, '/', 'item', '//item'),
+        (p.Style.windows, r'C:\root', 'escape', r'C:\root\..\escape'),
+        (p.Style.windows, r'C:\root', 'item', r'C:\rooted\item'),
+        (p.Style.windows, r'C:\root', r'a\b', r'C:\root\a\b'),
+      ]) {
+        await expectLater(
+          store.save(
+            result: result(root, name, path),
+            storageId: 'source',
+            sourceLabel: 'Invalid child',
+            pathStyle: style,
+          ),
+          throwsFormatException,
+          reason: path,
+        );
+      }
+      for (final (style, root, name, path) in [
+        (p.Style.posix, '/', '.hidden', '/.hidden'),
+        (p.Style.posix, '/root', r'a\b', r'/root/a\b'),
+        (p.Style.windows, 'C:\\', '資料', r'C:\資料'),
+        (p.Style.windows, r'\\server\share', '資料', r'\\server\share\資料'),
+      ]) {
+        final saved = await store.save(
+          result: result(root, name, path),
+          storageId: 'source',
+          sourceLabel: 'Canonical child',
+          pathStyle: style,
+        );
+        expect(
+          (await store.load(saved.id)).result.root.children.single.path,
+          path,
+        );
+      }
+    },
+  );
+
+  test(
+    'single-pass totals still rejects every inconsistent aggregate',
+    () async {
+      final original = _result();
+      final root = original.root;
+      final storage = MemoryFileCollectionStorage();
+      final store = StorageScanSnapshotStore(storage: storage);
+      for (final field in [
+        'bytes',
+        'files',
+        'folders',
+        'unknown',
+        'links',
+        'complete',
+      ]) {
+        final invalid = StorageScanResult(
+          root: StorageNode(
+            item: root.item,
+            children: root.children,
+            bytes: root.bytes + (field == 'bytes' ? 1 : 0),
+            fileCount: root.fileCount + (field == 'files' ? 1 : 0),
+            folderCount: root.folderCount + (field == 'folders' ? 1 : 0),
+            unknownSizeCount:
+                root.unknownSizeCount + (field == 'unknown' ? 1 : 0),
+            skippedLinkCount:
+                root.skippedLinkCount + (field == 'links' ? 1 : 0),
+            isComplete: field == 'complete' || root.isComplete,
+          ),
+          startedAt: original.startedAt,
+          completedAt: original.completedAt,
+          cancelled: original.cancelled,
+          limited: original.limited,
+          sourceChanged: original.sourceChanged,
+        );
+        await expectLater(
+          store.save(result: invalid, storageId: 'source', sourceLabel: field),
+          throwsFormatException,
+          reason: field,
+        );
+        expect(storage.values, isEmpty);
+      }
+    },
+  );
+
   test('round trip preserves Unicode, empty directories, zero/unknown sizes, links and diagnostics', () async {
     final storage = MemoryFileCollectionStorage();
     final store = StorageScanSnapshotStore(storage: storage);
@@ -213,6 +646,55 @@ void main() {
     storage.blind = false;
     final saved = (await store.list()).single;
     expect((await store.load(saved.id)).result.root.fileCount, 2);
+  });
+
+  test('unconfirmed publication preserves its causes and candidate after cancellation', () async {
+    var cancelled = false;
+    final storage = _FailingStorage()
+      ..throwAfterCommit = true
+      ..blindAfterCommit = true
+      ..afterCommit = () => cancelled = true;
+    final store = StorageScanSnapshotStore(storage: storage);
+    Object? caught;
+    try {
+      await store.save(
+        result: _result(count: 1200),
+        storageId: 'opaque-source',
+        sourceLabel: 'Travel archive 📁',
+        isCancelled: () => cancelled,
+      );
+    } catch (error) {
+      caught = error;
+    }
+    expect(caught, isA<StorageScanSnapshotCommitUnconfirmed>());
+    final failure = caught as StorageScanSnapshotCommitUnconfirmed;
+    expect(failure, isA<StateError>());
+    expect(failure.cause, same(storage.commitFailure));
+    expect(failure.recoveryCause, same(storage.recoveryFailure));
+    expect(failure.message, contains('outcome is unknown'));
+    expect(
+      failure.message,
+      contains('Check saved scan history before retrying'),
+    );
+    expect(cancelled, isTrue);
+    expect(
+      storage.values.keys.where(
+        (key) => key.startsWith('storage-scan:${failure.snapshotId}:page:'),
+      ),
+      hasLength(3),
+    );
+    expect(
+      storage.values,
+      contains('storage-scan:${failure.snapshotId}:manifest-v1'),
+    );
+
+    storage.blind = false;
+    final reopened = StorageScanSnapshotStore(storage: storage);
+    final saved = (await reopened.list()).single;
+    expect(saved.id, failure.snapshotId);
+    final loaded = await reopened.load(saved.id);
+    expect(loaded.result.root.fileCount, 1201);
+    expect(loaded.result.root.bytes, 719400);
   });
 
   test(

@@ -1,0 +1,319 @@
+{
+  "schemaVersion": 1,
+  "artifactType": "inert-source-recovery",
+  "repository": "CrispStrobe/CrispCloud",
+  "intendedRepositoryPath": "docs/recovery/scan-benchmark-2026-11-11.json",
+  "baseCommit": "e9dd5dbbb8581e16f228d4f51239adf7d0b22660",
+  "date": "2026-11-11",
+  "purpose": "Preserve collection-import benchmark work, its README delta, and batch-report translations after the shared execution workspace became inaccessible.",
+  "activationStatus": "Documentation-only recovery data. No recovered source is installed or executed by this artifact.",
+  "provenance": {
+    "benchmark": "Recovered from the executed apply_patch source text retained in tool-call history. The source below predates dart format; it is not claimed byte-identical to the subsequently formatted and tested file.",
+    "readme": "Exact base README fetched through GitHub at baseCommit, with the two executed text changes reapplied using unique exact anchors. Prior final-file hash is recorded but has not been recomputed against this reconstruction.",
+    "previousTranslations": "Text recovered from executed scratch-write tool calls, including the final saved-total wording and the two later keys. JSON serialization formatting is reconstructed.",
+    "pendingTranslations": "Exact authored text sent through collaboration messages after the workspace interruption. These three keys were not written to the repository or a scratch file before interruption.",
+    "validation": "Parent reported the original benchmark passed both baseline and final runs. This recovery operation did not inspect those logs and did not run, compile, analyze, or format the reconstructed source."
+  },
+  "files": [
+    {
+      "path": "test/file_collection_import_benchmark_test.dart",
+      "operation": "add",
+      "recoveredTextStage": "executed-pre-format-source",
+      "previousFormattedSha256": "c3ab5063a691b1b7f224ea596ec12f65e2c50ec2a9f6337cf0343b4310226200",
+      "previouslyReportedValidation": {
+        "reporter": "parent agent",
+        "baseline": "Benchmark run passed",
+        "final": "Benchmark run passed",
+        "originalLogsRecovered": false,
+        "recoveredTextRevalidated": false
+      },
+      "protocol": {
+        "rows": 10000,
+        "sourceIdentities": 2,
+        "repeatedPathsAcrossIdentities": 5000,
+        "markedRows": 6,
+        "expectedPages": 20,
+        "warmups": 1,
+        "defaultMeasuredSamples": 5,
+        "timedOperation": "FileCollectionStore.save into a fresh NativeFileCollectionStorage directory, including encoding, durable page writes and catalog publication",
+        "excludedFromTiming": [
+          "fixture construction",
+          "store initialization",
+          "fresh-instance durable reopen",
+          "complete row/source/selection comparison",
+          "bounded page and resident cache checks",
+          "cleanup"
+        ],
+        "benchmarkCompatibleWithBaseline": true,
+        "sourceRevisionEnvironment": "STORAGE_SCAN_BENCHMARK_REVISION",
+        "enabledEnvironment": "COLLECTION_IMPORT_BENCHMARK=1"
+      },
+      "restoreNotes": [
+        "Run the pinned Dart formatter on this recovered source before comparing with previousFormattedSha256.",
+        "Review any mismatch against the original executed source and the base APIs; the pre-format recovery is not a substitute for byte verification.",
+        "Copy the same verified harness into baseline and final worktrees before any new comparison.",
+        "No timing samples or performance claims are reconstructed here."
+      ],
+      "content": "@Tags(['benchmark'])\nlibrary;\n\nimport 'dart:convert';\nimport 'dart:io';\n\nimport 'package:crypto/crypto.dart';\nimport 'package:flutter_test/flutter_test.dart';\nimport 'package:shared_preferences/shared_preferences.dart';\nimport 'package:crisp_cloud/models/file_collection.dart';\nimport 'package:crisp_cloud/models/file_item.dart';\nimport 'package:crisp_cloud/models/storage_reference.dart';\nimport 'package:crisp_cloud/services/file_collection_storage_native.dart';\nimport 'package:crisp_cloud/services/file_collection_store.dart';\n\nconst _rowCount = 10000;\nconst _sources = [\n  StorageReference(\n    kind: 'remote',\n    provider: 'Synthetic benchmark',\n    accountKey: 'account-a',\n  ),\n  StorageReference(\n    kind: 'remote',\n    provider: 'Synthetic benchmark',\n    accountKey: 'account-b',\n  ),\n];\n\nFileCollection _fixture() {\n  final modified = DateTime.utc(2026, 1, 1).microsecondsSinceEpoch;\n  final entries = [\n    for (var index = 0; index < _rowCount; index++)\n      () {\n        // Each path appears in both accounts; its source remains part of its\n        // identity. Non-millisecond timestamps must survive serialization.\n        final number = (index ~/ 2).toString().padLeft(5, '0');\n        final name = '資料-📁-$number.txt';\n        final path = '/fixture/$name';\n        final source = _sources[index % _sources.length];\n        final objectId = 'object-$number';\n        return FileCollectionEntry(\n          reference: FileReference(\n            storage: source,\n            path: path,\n            objectId: objectId,\n            version: 'revision-$number',\n          ),\n          file: FileItem(\n            name: name,\n            path: path,\n            uuid: objectId,\n            storageId: source.id,\n            isFolder: false,\n            size: index % 97 == 0 ? null : index % 19 == 0 ? 0 : index * 17,\n            updatedAt: DateTime.fromMicrosecondsSinceEpoch(\n              modified + index * 1001,\n              isUtc: true,\n            ),\n            isSymlink: false,\n          ),\n        );\n      }(),\n  ];\n  return FileCollection(\n    id: 'native-import-fixture',\n    name: 'Synthetic collection import',\n    entries: entries,\n    selectedKeys: {\n      for (final index in [0, 1, 499, 500, 5001, 9999]) entries[index].key,\n    },\n    updatedAt: DateTime.utc(2026, 1, 1),\n  );\n}\n\nString _digest(List<Map<String, dynamic>> rows, Set<String> selectedKeys) =>\n    sha256\n        .convert(\n          utf8.encode(\n            jsonEncode({\n              'rows': rows,\n              'selectedKeys': selectedKeys.toList()..sort(),\n            }),\n          ),\n        )\n        .toString();\n\nFileCollectionStore _store(Directory directory) => FileCollectionStore(\n  storage: NativeFileCollectionStorage(directory: () async => directory),\n);\n\n/// Uses only APIs present before batched storage writes, so the exact harness\n/// can run against both baseline and final production sources.\nvoid main() {\n  TestWidgetsFlutterBinding.ensureInitialized();\n  SharedPreferences.setMockInitialValues({});\n  final enabled = Platform.environment['COLLECTION_IMPORT_BENCHMARK'] == '1';\n  test(\n    'native collection import benchmark',\n    () async {\n      if (!enabled) {\n        throw StateError('Set COLLECTION_IMPORT_BENCHMARK=1 to opt in.');\n      }\n      final runs =\n          int.tryParse(\n            Platform.environment['COLLECTION_IMPORT_BENCHMARK_RUNS'] ?? '',\n          ) ??\n          5;\n      expect(runs, inInclusiveRange(1, 50));\n\n      // Construct and encode independent expected metadata before timing.\n      final fixture = _fixture();\n      final expectedRows = [for (final entry in fixture.entries) entry.toJson()];\n      final expectedKeys = fixture.entries.map((entry) => entry.key).toSet();\n      final expectedDigest = _digest(expectedRows, fixture.selectedKeys);\n      expect(fixture.entries, hasLength(_rowCount));\n      expect(expectedKeys, hasLength(_rowCount));\n      expect(\n        fixture.entries.map((entry) => entry.reference.path).toSet(),\n        hasLength(_rowCount ~/ 2),\n      );\n      final directory = await Directory.systemTemp.createTemp(\n        'collection-import-benchmark-',\n      );\n      addTearDown(() => directory.delete(recursive: true));\n      final timings = <double>[];\n      final pageBytes = <int>[];\n      double? warmupMilliseconds;\n      for (var run = 0; run <= runs; run++) {\n        final runDirectory = await Directory(\n          '${directory.path}${Platform.pathSeparator}run-$run',\n        ).create();\n        try {\n          final writer = _store(runDirectory);\n          late double milliseconds;\n          try {\n            await writer.ready;\n            final watch = Stopwatch()..start();\n            await writer.save(fixture);\n            watch.stop();\n            milliseconds = watch.elapsedMicroseconds / 1000;\n          } finally {\n            writer.dispose();\n          }\n\n          // Reopen actual native files with an empty cache. All verification\n          // and cleanup are excluded from the import stopwatch.\n          final reader = _store(runDirectory);\n          try {\n            await reader.ready;\n            expect(reader.loadErrors, isEmpty);\n            expect(reader.collections, hasLength(1));\n            final manifest = await reader.manifest(fixture.id);\n            expect(manifest.summary.itemCount, _rowCount);\n            expect(manifest.summary.sourceCount, _sources.length);\n            expect(manifest.summary.selectedCount, fixture.selectedKeys.length);\n            expect(manifest.summary.unavailableCount, 0);\n            expect(manifest.pages, hasLength(20));\n            for (final page in manifest.pages) {\n              expect(page.count, inInclusiveRange(1, FileCollectionStore.pageEntryLimit));\n              expect(page.bytes, inInclusiveRange(1, FileCollectionStore.pageByteLimit));\n            }\n            final loaded = await reader.load(fixture.id);\n            expect(loaded.id, fixture.id);\n            expect(loaded.name, fixture.name);\n            expect(loaded.selectedKeys, fixture.selectedKeys);\n            expect(loaded.entries.map((entry) => entry.key).toSet(), expectedKeys);\n            final loadedRows = [for (final entry in loaded.entries) entry.toJson()];\n            expect(loadedRows, expectedRows);\n            expect(_digest(loadedRows, loaded.selectedKeys), expectedDigest);\n            expect(reader.loadErrors, isEmpty);\n            expect(reader.residentEntryCount, lessThanOrEqualTo(reader.cacheEntryLimit));\n            expect(reader.residentPageBytes, lessThanOrEqualTo(reader.cacheByteLimit));\n            if (run == 0) {\n              warmupMilliseconds = milliseconds;\n            } else {\n              timings.add(milliseconds);\n              pageBytes.add(manifest.pages.fold(0, (sum, page) => sum + page.bytes));\n            }\n          } finally {\n            reader.dispose();\n          }\n          // ignore: avoid_print\n          print('Collection import $run: $milliseconds ms');\n        } finally {\n          await runDirectory.delete(recursive: true);\n        }\n      }\n      final sorted = timings.toList()..sort();\n      final median = sorted[sorted.length ~/ 2];\n      // ignore: avoid_print\n      print(\n        jsonEncode({\n          'benchmark': 'native_collection_import',\n          'rows': _rowCount,\n          'sources': _sources.length,\n          'pages': 20,\n          'selectedRows': fixture.selectedKeys.length,\n          'metadataDigest': expectedDigest,\n          'exactDurableRoundtrip': true,\n          'pageBytes': pageBytes,\n          'warmupMilliseconds': warmupMilliseconds,\n          'milliseconds': timings,\n          'medianMilliseconds': median,\n          'minimumMilliseconds': sorted.first,\n          'maximumMilliseconds': sorted.last,\n          'rowsPerSecond': _rowCount * 1000 / median,\n          'runtime': Platform.version,\n          'operatingSystem': Platform.operatingSystem,\n          'sourceRevision':\n              Platform.environment['STORAGE_SCAN_BENCHMARK_REVISION'],\n          'protocol':\n              'One warmup plus $runs measured saves into fresh native stores. '\n              'Fixture construction, store initialization, full durable reopen '\n              'and metadata/paging verification, and cleanup are outside timing. '\n              'Encoding, page persistence and catalog publication are timed.',\n        }),\n      );\n    },\n    timeout: const Timeout(Duration(minutes: 10)),\n    skip: enabled ? false : 'Set COLLECTION_IMPORT_BENCHMARK=1 to opt in.',\n  );\n}\n"
+    },
+    {
+      "path": "tool/benchmarks/storage_scan/README.md",
+      "operation": "modify",
+      "previousBaseSha256": "feb96227638188e5022da36af946fe0cab8eb307641adff10b35e6b1de430dac",
+      "previousFinalSha256": "31d2196e5212c99759e4b31c223f012e5699952abe216d8571ac45dbae416d41",
+      "reconstructedHashVerified": false,
+      "sourceUrl": "https://raw.githubusercontent.com/CrispStrobe/CrispCloud/e9dd5dbbb8581e16f228d4f51239adf7d0b22660/tool/benchmarks/storage_scan/README.md",
+      "exactAnchorReplacements": [
+        {
+          "before": "These opt-in Flutter benchmarks measure the real local scan adapter and native\nsnapshot storage. They never read file contents. Use disposable synthetic\nfixtures, keep all benchmarks and compilers serialized, and compare revisions on\nthe same host with the same fixtures and runtime.\n",
+          "after": "These opt-in Flutter benchmarks measure the real local scan adapter, native\nsnapshot storage and collection import. They never read source-file contents.\nUse disposable synthetic fixtures, keep all benchmarks and compilers serialized,\nand compare revisions on the same host with the same fixtures and runtime.\n"
+        },
+        {
+          "before": "## Scope of conclusions\n",
+          "after": "## Native collection import\n\nCopy `test/file_collection_import_benchmark_test.dart` unchanged into baseline\nand final worktrees. It uses the existing public store API and the actual native\nstorage implementation, without a wrapper that could hide the batch capability.\n\n```sh\nCOLLECTION_IMPORT_BENCHMARK=1 \\\n  flutter test --no-pub --concurrency=1 --tags benchmark --run-skipped \\\n  test/file_collection_import_benchmark_test.dart\n```\n\nKeep `STORAGE_SCAN_BENCHMARK_REVISION` set to the source commit as above.\n`COLLECTION_IMPORT_BENCHMARK_RUNS` optionally changes the default five samples.\nThe fixture is deterministic: 10,000 rows, two account identities with identical\npaths, Unicode names, microsecond timestamps, known/zero/unknown sizes, and\nselection marks spanning pages. No provider connection is opened.\n\nEach sample imports the fixture into a fresh temporary native store. Only\n`save` is timed, including row encoding, durable page writes and catalog\npublication. Fixture construction, store initialization, full reopen, checks\nand cleanup are outside timing. One warmup precedes the five measured samples.\nEach reopened result must preserve every serialized row, source identity and\nmark, and all 20 pages must respect the existing row/byte limits. The output\nincludes exact metadata/selection digests, raw samples, median/range, runtime,\nsource revision and rows per second. This measures bulk metadata ingestion,\nnot copying source files or reading their contents.\n\n## Scope of conclusions\n"
+        }
+      ],
+      "content": "# Directory scan and snapshot comparisons\n\nThese opt-in Flutter benchmarks measure the real local scan adapter, native\nsnapshot storage and collection import. They never read source-file contents.\nUse disposable synthetic fixtures, keep all benchmarks and compilers serialized,\nand compare revisions on the same host with the same fixtures and runtime.\n\n## Fixtures and independent truth\n\nCreate each fixture once, outside either source checkout. The destination must\nnot already exist. The balanced shape preserves the original workload. File\nsizes are logical sparse-file sizes, not allocated disk usage.\n\n| Shape | Files | Descendant folders | Purpose |\n| --- | ---: | ---: | --- |\n| `balanced` | 24,000 | 460 | File-heavy traversal through several levels |\n| `wide` | 24,000 | 0 | One large directory, result retention and child sorting |\n| `empty` | 0 | 1,010 | Directory enumeration, scheduling and cancellation checkpoints |\n\nFrom a checkout containing the benchmark infrastructure:\n\n```sh\nSCAN_BENCH_FIXTURES=/absolute/disposable/scan-benchmarks\nmkdir -p \"$SCAN_BENCH_FIXTURES\"\nfor shape in balanced wide empty; do\n  python3 tool/create_storage_scan_fixture.py \"$SCAN_BENCH_FIXTURES/$shape\" --shape \"$shape\"\n  python3 tool/benchmarks/dart_scan_probe/generate_oracle.py \\\n    \"$SCAN_BENCH_FIXTURES/$shape\" \"$SCAN_BENCH_FIXTURES/$shape.oracle.json\"\ndone\n```\n\nThe Python oracle independently walks the completed fixture with no-follow\nmetadata reads. It records every file path, size and microsecond modification\ntime, every directory's modification time, and each subtree's byte/file/folder\ntotals. Missing roots, traversal errors, links and special files fail oracle\ngeneration. Keep fixture contents and timestamps unchanged for both revisions.\n\n## Comparable full-scan and snapshot runs\n\nUse the same copies of these harness files in baseline and final worktrees:\n\n- `test/storage_scan_benchmark_test.dart`\n- `test/storage_scan_snapshot_benchmark_test.dart`\n- `test/support/storage_scan_benchmark_oracle.dart`\n\nThey use APIs present before the summary scan optimization. Copy only the\nharness files into the baseline worktree; keep its production sources and\ndependency lockfile at the baseline revision. Record that revision and the\nharness source hashes with the results. Resolve dependencies before measuring.\n\nRun from each worktree, with the revision label set to its actual source commit:\n\n```sh\nexport STORAGE_SCAN_BENCHMARK_REVISION=actual-source-commit\nexport STORAGE_SCAN_BENCHMARK_RUNS=5\nfor shape in balanced wide empty; do\n  export STORAGE_SCAN_BENCHMARK_ROOT=\"$SCAN_BENCH_FIXTURES/$shape\"\n  export STORAGE_SCAN_BENCHMARK_MANIFEST=\"$SCAN_BENCH_FIXTURES/$shape.manifest.json\"\n  export STORAGE_SCAN_BENCHMARK_ORACLE=\"$SCAN_BENCH_FIXTURES/$shape.oracle.json\"\n  flutter test --no-pub --concurrency=1 --tags benchmark --run-skipped \\\n    test/storage_scan_benchmark_test.dart\n  flutter test --no-pub --concurrency=1 --tags benchmark --run-skipped \\\n    test/storage_scan_snapshot_benchmark_test.dart\ndone\n```\n\nIf the environment needs a repository build wrapper, use the same wrapper for\nboth revisions and record that fact. Do not replace runtime dependencies solely\nfor one side of the comparison.\n\nEach benchmark performs one unmeasured warmup followed by five measured samples.\nCompilation, process startup, oracle loading, correctness checks and digest\ncalculation are outside the stopwatch. Full scans include worker startup and\nshutdown, access wrappers, source/path checks, bounds, progress callbacks,\ncancellation checkpoints, immutable nodes and sorted children.\n\nEvery scan is checked against the independent metadata oracle and final progress\ncounts. The output includes all samples, median/minimum/maximum, callback counts,\nsource revision, and a stable metadata fingerprint. The original size-only\nmanifest remains supported, but an oracle is required for a fully verified\nbaseline/final comparison. A run without one explicitly reports that omission.\n\nSnapshot timing starts after a separately verified full scan. Save and reopen\nare measured separately, including durable native storage operations. Each load\nmust match the complete original snapshot fingerprint, including its metadata,\nsubtree totals, scan timestamps, flags and diagnostics. The stable metadata\nfingerprint in the final record can also be compared across source revisions.\n\n## Native collection import\n\nCopy `test/file_collection_import_benchmark_test.dart` unchanged into baseline\nand final worktrees. It uses the existing public store API and the actual native\nstorage implementation, without a wrapper that could hide the batch capability.\n\n```sh\nCOLLECTION_IMPORT_BENCHMARK=1 \\\n  flutter test --no-pub --concurrency=1 --tags benchmark --run-skipped \\\n  test/file_collection_import_benchmark_test.dart\n```\n\nKeep `STORAGE_SCAN_BENCHMARK_REVISION` set to the source commit as above.\n`COLLECTION_IMPORT_BENCHMARK_RUNS` optionally changes the default five samples.\nThe fixture is deterministic: 10,000 rows, two account identities with identical\npaths, Unicode names, microsecond timestamps, known/zero/unknown sizes, and\nselection marks spanning pages. No provider connection is opened.\n\nEach sample imports the fixture into a fresh temporary native store. Only\n`save` is timed, including row encoding, durable page writes and catalog\npublication. Fixture construction, store initialization, full reopen, checks\nand cleanup are outside timing. One warmup precedes the five measured samples.\nEach reopened result must preserve every serialized row, source identity and\nmark, and all 20 pages must respect the existing row/byte limits. The output\nincludes exact metadata/selection digests, raw samples, median/range, runtime,\nsource revision and rows per second. This measures bulk metadata ingestion,\nnot copying source files or reading their contents.\n\n## Scope of conclusions\n\nThese are warm local filesystem and Flutter-test measurements. They do not\npredict cold storage, remote provider latency, release-app UI latency, or memory\nusage. Compare full-tree scans with full-tree scans. Report summary scans as a\nseparate mode because they intentionally do not retain descendant display nodes.\nKeep raw samples and correctness evidence; do not turn timing expectations into\nmachine-dependent test pass/fail thresholds.\n"
+    }
+  ],
+  "translations": {
+    "targetPath": "lib/l10n/storage_analyzer_strings.dart",
+    "locales": [
+      "de",
+      "fr",
+      "es",
+      "pt",
+      "zh",
+      "ja",
+      "ko",
+      "ar"
+    ],
+    "placeholderValidation": {
+      "verifiedDuringRecovery": true,
+      "checkedStrings": 120,
+      "keySetsExact": true,
+      "placeholderNamesAndMultiplicityExact": true
+    },
+    "previousBatchKeys": {
+      "originalScratchPath": "/workspace/scratch/4e1535db056b/validation/storage-analyzer-batch-translations.json",
+      "keyCountPerLocale": 12,
+      "savedTotalIncludesPartial": true,
+      "values": {
+        "de": {
+          "batchTitle": "Momentaufnahmen markierter Ordner speichern",
+          "batchReview": "Prüfen Sie {count} Ordner. Jeder Bericht behält seine ursprüngliche Speicherquelle und seinen Pfad.",
+          "batchStart": "Analysieren und speichern",
+          "batchStop": "Stapel stoppen",
+          "batchReady": "Bereit zur Analyse",
+          "batchNoFolders": "Markieren Sie einen oder mehrere Ordner, um ihre Berichte zu speichern.",
+          "batchRootLimit": "Wählen Sie höchstens {count} Ordner pro Stapel.",
+          "batchUnavailable": "Der ursprüngliche Ordner ist nicht verfügbar: {path}. Aktualisieren Sie die Ansicht oder verbinden Sie die Speicherquelle erneut und wählen Sie den Ordner noch einmal aus.",
+          "batchStopped": "Gestoppt · Bericht nicht gespeichert",
+          "batchSummary": "{saved} gespeichert ({partial} unvollständig) · {failed} fehlgeschlagen · {cancelled} gestoppt",
+          "batchStopAndClose": "Stoppen und schließen",
+          "batchUnverified": "Dieser markierte Ordner ist derzeit nicht überprüft: {path}. Öffnen Sie seinen ursprünglichen Ordner und wählen Sie ihn erneut aus."
+        },
+        "fr": {
+          "batchTitle": "Enregistrer des instantanés des dossiers marqués",
+          "batchReview": "Vérifiez {count} dossiers. Chaque rapport conserve sa source de stockage et son chemin d’origine.",
+          "batchStart": "Analyser et enregistrer",
+          "batchStop": "Arrêter le lot",
+          "batchReady": "Prêt pour l’analyse",
+          "batchNoFolders": "Marquez un ou plusieurs dossiers pour enregistrer leurs rapports.",
+          "batchRootLimit": "Sélectionnez au maximum {count} dossiers par lot.",
+          "batchUnavailable": "Le dossier d’origine n’est pas disponible : {path}. Actualisez sa source ou reconnectez-la, puis sélectionnez à nouveau le dossier.",
+          "batchStopped": "Arrêté · Rapport non enregistré",
+          "batchSummary": "{saved} enregistrés ({partial} partiels) · {failed} en échec · {cancelled} arrêtés",
+          "batchStopAndClose": "Arrêter et fermer",
+          "batchUnverified": "Ce dossier marqué n’est pas actuellement vérifié : {path}. Ouvrez son dossier d’origine et sélectionnez-le à nouveau."
+        },
+        "es": {
+          "batchTitle": "Guardar instantáneas de las carpetas marcadas",
+          "batchReview": "Revisa {count} carpetas. Cada informe conserva su origen de almacenamiento y su ruta originales.",
+          "batchStart": "Analizar y guardar",
+          "batchStop": "Detener lote",
+          "batchReady": "Listo para analizar",
+          "batchNoFolders": "Marca una o varias carpetas para guardar sus informes.",
+          "batchRootLimit": "Elige como máximo {count} carpetas por lote.",
+          "batchUnavailable": "La carpeta original no está disponible: {path}. Actualiza o vuelve a conectar su origen y selecciónala de nuevo.",
+          "batchStopped": "Detenido · Informe no guardado",
+          "batchSummary": "{saved} guardados ({partial} parciales) · {failed} fallidos · {cancelled} detenidos",
+          "batchStopAndClose": "Detener y cerrar",
+          "batchUnverified": "Esta carpeta marcada no está verificada actualmente: {path}. Abre su carpeta de origen y selecciónala de nuevo."
+        },
+        "pt": {
+          "batchTitle": "Salvar instantâneos das pastas marcadas",
+          "batchReview": "Revise {count} pastas. Cada relatório mantém a fonte de armazenamento e o caminho originais.",
+          "batchStart": "Analisar e salvar",
+          "batchStop": "Parar lote",
+          "batchReady": "Pronto para analisar",
+          "batchNoFolders": "Marque uma ou mais pastas para salvar seus relatórios.",
+          "batchRootLimit": "Selecione no máximo {count} pastas por lote.",
+          "batchUnavailable": "A pasta original não está disponível: {path}. Atualize ou reconecte a origem e selecione a pasta novamente.",
+          "batchStopped": "Interrompido · Relatório não salvo",
+          "batchSummary": "{saved} salvos ({partial} parciais) · {failed} com falha · {cancelled} interrompidos",
+          "batchStopAndClose": "Parar e fechar",
+          "batchUnverified": "Esta pasta marcada não está verificada no momento: {path}. Abra sua pasta de origem e selecione-a novamente."
+        },
+        "zh": {
+          "batchTitle": "保存已标记文件夹的快照",
+          "batchReview": "请检查 {count} 个文件夹。每份报告都会保留原始存储来源和路径。",
+          "batchStart": "扫描并保存",
+          "batchStop": "停止批处理",
+          "batchReady": "准备扫描",
+          "batchNoFolders": "请标记一个或多个文件夹以保存其报告。",
+          "batchRootLimit": "每批最多选择 {count} 个文件夹。",
+          "batchUnavailable": "原文件夹不可用：{path}。请刷新或重新连接其存储来源，然后重新选择该文件夹。",
+          "batchStopped": "已停止 · 报告未保存",
+          "batchSummary": "已保存 {saved} 个（其中 {partial} 个为部分报告）· 失败 {failed} 个 · 已停止 {cancelled} 个",
+          "batchStopAndClose": "停止并关闭",
+          "batchUnverified": "此已标记的文件夹当前未经验证：{path}。请打开其原始文件夹，然后重新选择。"
+        },
+        "ja": {
+          "batchTitle": "マークしたフォルダーのスナップショットを保存",
+          "batchReview": "{count} 個のフォルダーを確認してください。各レポートには元のストレージとパスが保持されます。",
+          "batchStart": "スキャンして保存",
+          "batchStop": "一括処理を停止",
+          "batchReady": "スキャンの準備完了",
+          "batchNoFolders": "レポートを保存するフォルダーを 1 つ以上マークしてください。",
+          "batchRootLimit": "一度に選択できるフォルダーは {count} 個までです。",
+          "batchUnavailable": "元のフォルダーを利用できません: {path}。保存元の表示を更新するか再接続し、フォルダーを選択し直してください。",
+          "batchStopped": "停止済み · レポートは未保存",
+          "batchSummary": "保存済み {saved} 件（うち部分的なレポート {partial} 件）· 失敗 {failed} 件 · 停止 {cancelled} 件",
+          "batchStopAndClose": "停止して閉じる",
+          "batchUnverified": "このマーク済みフォルダーは現在確認されていません: {path}。元のフォルダーを開いて、選択し直してください。"
+        },
+        "ko": {
+          "batchTitle": "표시한 폴더의 스냅샷 저장",
+          "batchReview": "폴더 {count}개를 확인하세요. 각 보고서는 원래 저장소와 경로를 유지합니다.",
+          "batchStart": "스캔 후 저장",
+          "batchStop": "일괄 작업 중지",
+          "batchReady": "스캔 준비 완료",
+          "batchNoFolders": "보고서를 저장할 폴더를 하나 이상 표시하세요.",
+          "batchRootLimit": "일괄 작업당 폴더를 최대 {count}개까지 선택하세요.",
+          "batchUnavailable": "원래 폴더를 사용할 수 없습니다: {path}. 원본 저장소를 새로 고치거나 다시 연결한 후 폴더를 다시 선택하세요.",
+          "batchStopped": "중지됨 · 보고서 저장 안 됨",
+          "batchSummary": "저장 {saved}개(그중 불완전한 보고서 {partial}개) · 실패 {failed}개 · 중지 {cancelled}개",
+          "batchStopAndClose": "중지하고 닫기",
+          "batchUnverified": "표시한 이 폴더는 현재 확인되지 않았습니다: {path}. 원래 폴더를 열고 다시 선택하세요."
+        },
+        "ar": {
+          "batchTitle": "حفظ لقطات المجلدات المحددة",
+          "batchReview": "راجع المجلدات المحددة ({count}). يحتفظ كل تقرير بمصدر التخزين والمسار الأصليين.",
+          "batchStart": "فحص وحفظ",
+          "batchStop": "إيقاف الدفعة",
+          "batchReady": "جاهز للفحص",
+          "batchNoFolders": "حدّد مجلدًا واحدًا أو أكثر لحفظ تقاريرها.",
+          "batchRootLimit": "اختر ما لا يزيد عن {count} مجلدًا لكل دفعة.",
+          "batchUnavailable": "المجلد الأصلي غير متاح: {path}. حدّث مصدره أو أعد الاتصال به، ثم حدّد المجلد مرة أخرى.",
+          "batchStopped": "متوقف · لم يُحفظ التقرير",
+          "batchSummary": "المحفوظة: {saved} (منها {partial} جزئية) · الفاشلة: {failed} · المتوقفة: {cancelled}",
+          "batchStopAndClose": "إيقاف وإغلاق",
+          "batchUnverified": "لم يتم التحقق حاليًا من هذا المجلد المحدد: {path}. افتح مجلده الأصلي وحدّده مرة أخرى."
+        }
+      }
+    },
+    "pendingUnconfirmedSaveKeys": {
+      "keyCountPerLocale": 3,
+      "english": {
+        "batchUnconfirmed": "Save not confirmed",
+        "batchUnconfirmedHint": "This report may already be saved. Open {history} to check before trying again.",
+        "batchUnconfirmedCount": "{count} saves unconfirmed"
+      },
+      "values": {
+        "de": {
+          "batchUnconfirmed": "Speicherung nicht bestätigt",
+          "batchUnconfirmedHint": "Dieser Bericht wurde möglicherweise bereits gespeichert. Öffnen Sie {history}, um dies vor einem erneuten Versuch zu prüfen.",
+          "batchUnconfirmedCount": "{count} Speicherungen unbestätigt"
+        },
+        "fr": {
+          "batchUnconfirmed": "Enregistrement non confirmé",
+          "batchUnconfirmedHint": "Ce rapport est peut-être déjà enregistré. Ouvrez {history} pour le vérifier avant de réessayer.",
+          "batchUnconfirmedCount": "{count} enregistrements non confirmés"
+        },
+        "es": {
+          "batchUnconfirmed": "Guardado sin confirmar",
+          "batchUnconfirmedHint": "Es posible que este informe ya esté guardado. Abre {history} para comprobarlo antes de intentarlo de nuevo.",
+          "batchUnconfirmedCount": "{count} guardados sin confirmar"
+        },
+        "pt": {
+          "batchUnconfirmed": "Gravação não confirmada",
+          "batchUnconfirmedHint": "Este relatório pode já estar guardado. Abra {history} para confirmar antes de tentar novamente.",
+          "batchUnconfirmedCount": "{count} gravações não confirmadas"
+        },
+        "zh": {
+          "batchUnconfirmed": "保存状态未确认",
+          "batchUnconfirmedHint": "此报告可能已保存。请先打开“{history}”检查，再重试。",
+          "batchUnconfirmedCount": "{count} 次保存尚未确认"
+        },
+        "ja": {
+          "batchUnconfirmed": "保存を確認できません",
+          "batchUnconfirmedHint": "このレポートはすでに保存されている可能性があります。再試行する前に「{history}」を開いて確認してください。",
+          "batchUnconfirmedCount": "保存未確認: {count} 件"
+        },
+        "ko": {
+          "batchUnconfirmed": "저장 여부 미확인",
+          "batchUnconfirmedHint": "이 보고서는 이미 저장되었을 수 있습니다. 다시 시도하기 전에 {history} 화면을 열어 확인하세요.",
+          "batchUnconfirmedCount": "저장 여부 미확인 {count}개"
+        },
+        "ar": {
+          "batchUnconfirmed": "لم يُؤكَّد الحفظ",
+          "batchUnconfirmedHint": "قد يكون هذا التقرير محفوظًا بالفعل. افتح {history} للتحقق قبل المحاولة مرة أخرى.",
+          "batchUnconfirmedCount": "عمليات حفظ غير مؤكدة: {count}"
+        }
+      },
+      "integrationNotes": [
+        "Pass the already localized savedScans value as the history placeholder in the hint.",
+        "Preserve the uncertain-save outcome separately from stopped and failed outcomes.",
+        "Review Portuguese phrasing for consistency with the existing catalog before activation; this bundle preserves the exact previously delivered text.",
+        "Localization injection and dialog placeholder binding were still pending when the execution workspace became inaccessible."
+      ]
+    }
+  },
+  "optionalProductionAotProbe": {
+    "executionStatus": "Read-only preparation only; none of the following pub-get, compile, or run commands was executed.",
+    "harnessPath": "tool/benchmarks/dart_scan_probe/bin/production_probe.dart",
+    "observedHarnessSha256": "233afbb97293c0f54ce72e1492bd0468348474a3f6e408fd43e48bc9b3513dad",
+    "observedLockSha256": "73aebea82a6af898deb6c8fa2efe2366dec1d5e17f0437288f98131922b12dfc",
+    "baselineFinalHarnessAndLockMatched": true,
+    "cachedDependencyReview": "All seven locked hosted packages were present with cache hashes matching the lock at inspection time.",
+    "cachedPackages": {
+      "collection": "1.19.1",
+      "cross_file": "0.3.5+2",
+      "crypto": "3.0.7",
+      "meta": "1.19.0",
+      "path": "1.9.1",
+      "typed_data": "1.4.0",
+      "web": "1.1.2"
+    },
+    "observedPreparationState": "No standalone-probe .dart_tool/package_config or compiled executable existed in either worktree at inspection time.",
+    "compileCommands": [
+      "source /workspace/scratch/4e1535db056b/toolchain/env.sh",
+      "cd /workspace/scratch/4e1535db056b/scan-baseline-d0a1e93/tool/benchmarks/dart_scan_probe",
+      "dart pub get --offline --enforce-lockfile",
+      "dart compile exe bin/production_probe.dart -o /workspace/scratch/4e1535db056b/validation/scan-performance/baseline-production-aot",
+      "cd /workspace/scratch/4e1535db056b/crispcloud/tool/benchmarks/dart_scan_probe",
+      "dart pub get --offline --enforce-lockfile",
+      "dart compile exe bin/production_probe.dart -o /workspace/scratch/4e1535db056b/validation/scan-performance/final-production-aot"
+    ],
+    "balancedRunCommands": [
+      "/workspace/scratch/4e1535db056b/validation/scan-performance/baseline-production-aot --oracle=/workspace/scratch/4e1535db056b/validation/scan-performance/fixtures/balanced.oracle.json --variants=production_persistent_guarded --runs=5 --mode=aot --output=/workspace/scratch/4e1535db056b/validation/scan-performance/baseline-core-balanced-aot.json",
+      "/workspace/scratch/4e1535db056b/validation/scan-performance/final-production-aot --oracle=/workspace/scratch/4e1535db056b/validation/scan-performance/fixtures/balanced.oracle.json --variants=production_persistent_guarded --runs=5 --mode=aot --output=/workspace/scratch/4e1535db056b/validation/scan-performance/final-core-balanced-aot.json"
+    ],
+    "options": [
+      "For a wide comparison, use fixtures/wide.oracle.json and distinct baseline/final wide output paths.",
+      "The fixture root comes from the oracle; this probe does not consume STORAGE_SCAN_BENCHMARK_ROOT or STORAGE_SCAN_BENCHMARK_RUNS.",
+      "Optional --build-metadata=<JSON> embeds source revision and hash metadata.",
+      "Serialize compiles and measurements with all other heavy commands."
+    ],
+    "coverage": "Real production scanner, native enumeration and model code; one root stat; every directory listing; one worker lifecycle; progress, cancellation, source and path guards; sorted result tree; bounded errors; file and directory metadata oracle checks.",
+    "limitations": [
+      "This is a production AOT scan-core measurement, not the complete app adapter or UI.",
+      "Its withAccess hook is a no-op callback, so it does not validate actual LocalFileService grants, platform plugins or access activation.",
+      "There is no Flutter engine or UI in this probe.",
+      "AOT avoids JIT tiering but does not remove host I/O and scheduling variance.",
+      "A native-only attribution would require a separate controlled ablation.",
+      "The workspace paths and cached dependencies must be restored or rechecked before execution."
+    ]
+  }
+}

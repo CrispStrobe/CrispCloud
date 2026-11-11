@@ -15,8 +15,9 @@ import '../services/keyboard_shortcut_service.dart';
 /// The service is created immediately; call [KeyboardShortcutService.load]
 /// during app startup (or after this provider is first read) to hydrate
 /// custom bindings from SharedPreferences.
-final keyboardShortcutServiceProvider =
-    Provider<KeyboardShortcutService>((ref) {
+final keyboardShortcutServiceProvider = Provider<KeyboardShortcutService>((
+  ref,
+) {
   final svc = KeyboardShortcutService();
   // Kick off async load; the service updates in place and
   // ShortcutBindingsNotifier re-reads on next access.
@@ -32,14 +33,22 @@ final keyboardShortcutServiceProvider =
 /// operations that keep the map in sync with the persisted service state.
 class ShortcutBindingsNotifier
     extends StateNotifier<Map<ShortcutAction, ShortcutBinding>> {
-  ShortcutBindingsNotifier(this._service)
-      : super(_service.getBindings());
+  ShortcutBindingsNotifier(this._service) : super(_service.getBindings()) {
+    _service.load().then((_) {
+      if (mounted) _refresh();
+    });
+  }
 
   final KeyboardShortcutService _service;
 
-  void _refresh() => state = _service.getBindings();
+  void _refresh() {
+    if (mounted) state = _service.getBindings();
+  }
 
-  Future<void> setBinding(ShortcutAction action, ShortcutBinding binding) async {
+  Future<void> setBinding(
+    ShortcutAction action,
+    ShortcutBinding binding,
+  ) async {
     await _service.setBinding(action, binding);
     _refresh();
   }
@@ -71,13 +80,14 @@ class ShortcutBindingsNotifier
 }
 
 /// StateNotifier provider for the complete bindings map.
-final shortcutBindingsProvider = StateNotifierProvider<ShortcutBindingsNotifier,
-    Map<ShortcutAction, ShortcutBinding>>(
-  (ref) {
-    final svc = ref.watch(keyboardShortcutServiceProvider);
-    return ShortcutBindingsNotifier(svc);
-  },
-);
+final shortcutBindingsProvider =
+    StateNotifierProvider<
+      ShortcutBindingsNotifier,
+      Map<ShortcutAction, ShortcutBinding>
+    >((ref) {
+      final svc = ref.watch(keyboardShortcutServiceProvider);
+      return ShortcutBindingsNotifier(svc);
+    });
 
 // ---------------------------------------------------------------------------
 // Family provider — display string per action
@@ -85,9 +95,10 @@ final shortcutBindingsProvider = StateNotifierProvider<ShortcutBindingsNotifier,
 
 /// Returns the human-readable display string for [action]'s current binding,
 /// e.g. "Ctrl+Shift+P".
-final shortcutDisplayProvider =
-    Provider.family<String, ShortcutAction>((ref, action) {
-  final bindings = ref.watch(shortcutBindingsProvider);
-  final binding = bindings[action];
-  return binding?.toDisplayString() ?? '';
+final shortcutDisplayProvider = Provider.family<String, ShortcutAction>((
+  ref,
+  action,
+) {
+  ref.watch(shortcutBindingsProvider);
+  return ref.watch(keyboardShortcutServiceProvider).browserDisplay(action);
 });

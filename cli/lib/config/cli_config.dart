@@ -242,15 +242,9 @@ class CliConfig {
 
   String _yamlScalar(dynamic value) {
     if (value is String) {
-      // Quote if needed
-      if (value.contains(':') ||
-          value.contains('#') ||
-          value.startsWith(' ') ||
-          value.endsWith(' ') ||
-          value.isEmpty) {
-        return jsonEncode(value);
-      }
-      return value;
+      // JSON quoting is valid YAML and preserves scalar-looking strings and
+      // literal escapes instead of turning credentials into booleans or null.
+      return jsonEncode(value);
     }
     return '$value';
   }

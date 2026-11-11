@@ -12,6 +12,7 @@ import '../l10n/misc_ui_strings.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import 'bookmark_actions.dart';
+import 'panel_history_button.dart';
 
 class FileBreadcrumbs extends ConsumerWidget {
   final PanelSide side;
@@ -111,48 +112,51 @@ class FileBreadcrumbs extends ConsumerWidget {
           Tooltip(
             message: MiscUiStrings(context).text('forward'),
             child: ConstrainedBox(
-            constraints: BoxConstraints(minWidth: minTap, minHeight: minTap),
-            child: InkWell(
-              onTap: canForward ? () => panel.navigateForward() : null,
-              child: Center(
-                child: Icon(
-                  Icons.arrow_forward,
-                  size: iconSize,
-                  color: canForward
-                      ? Theme.of(context).colorScheme.onSurfaceVariant
-                      : Theme.of(context).colorScheme.onSurfaceVariant
-                            .withValues(alpha: 0.3),
+              constraints: BoxConstraints(minWidth: minTap, minHeight: minTap),
+              child: InkWell(
+                onTap: canForward ? () => panel.navigateForward() : null,
+                child: Center(
+                  child: Icon(
+                    Icons.arrow_forward,
+                    size: iconSize,
+                    color: canForward
+                        ? Theme.of(context).colorScheme.onSurfaceVariant
+                        : Theme.of(context).colorScheme.onSurfaceVariant
+                              .withValues(alpha: 0.3),
+                  ),
                 ),
               ),
             ),
-          )),
+          ),
+          PanelHistoryButton(panel: panel, compact: !isMobile),
           Tooltip(
             message: MiscUiStrings(context).text('home'),
             child: ConstrainedBox(
-            constraints: BoxConstraints(minWidth: minTap, minHeight: minTap),
-            child: InkWell(
-              onTap: () {
-                if (side == PanelSide.local) {
-                  if (!kIsWeb) {
-                    panel.navigateToPath(
-                      Platform.environment['HOME'] ??
-                          Platform.environment['USERPROFILE'] ??
-                          '/',
-                    );
+              constraints: BoxConstraints(minWidth: minTap, minHeight: minTap),
+              child: InkWell(
+                onTap: () {
+                  if (side == PanelSide.local) {
+                    if (!kIsWeb) {
+                      panel.navigateToPath(
+                        Platform.environment['HOME'] ??
+                            Platform.environment['USERPROFILE'] ??
+                            '/',
+                      );
+                    }
+                  } else {
+                    panel.navigateToPath('/');
                   }
-                } else {
-                  panel.navigateToPath('/');
-                }
-              },
-              child: Center(
-                child: Icon(
-                  Icons.home,
-                  size: iconSize,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                },
+                child: Center(
+                  child: Icon(
+                    Icons.home,
+                    size: iconSize,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
             ),
-          )),
+          ),
           // Bookmark star (Ctrl+B to toggle)
           ConstrainedBox(
             constraints: BoxConstraints(minWidth: minTap, minHeight: minTap),

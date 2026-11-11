@@ -1,0 +1,106 @@
+{
+  "schema": "crispcloud.recovery.exact_replacements.v1",
+  "recoveryPath": "docs/recovery/scan-publication-2026-11-11.json",
+  "repository": "CrispStrobe/CrispCloud",
+  "baseCommit": "e9dd5dbbb8581e16f228d4f51239adf7d0b22660",
+  "recordedDateUTC": "2026-11-11",
+  "status": "recovery_only_unapplied_untested",
+  "purpose": "Preserve the executed but uncommitted typed unconfirmed-publication repair and store regression after the workspace became unavailable. This artifact does not activate runtime changes.",
+  "provenance": [
+    "Reconstructed from the completed apply_patch call, successful Dart formatter output, and the subsequent full git diff and clean git diff --check output recorded before environment failure.",
+    "Both original files were fetched from the exact remote base commit. Their complete UTF-8 contents independently matched their Git blob SHA-1 values.",
+    "Each replacement matched exactly once in order. Reconstructed result blob hashes match the prefixes e51b52e and def0856 printed by the executed post-format git diff."
+  ],
+  "validation": {
+    "beforeEnvironmentFailure": [
+      "Dart format completed successfully for the two changed files.",
+      "git diff --check completed with exit code 0 for the two changed files."
+    ],
+    "recoveryVerification": [
+      "Remote base content hashes independently recomputed.",
+      "Six exact-context replacements applied in memory with single-match assertions.",
+      "Both reconstructed result hashes matched previously observed post-format diff hashes."
+    ],
+    "finalRepairTests": "UNTESTED: no tests, analysis, or builds were run for this final repair before the environment became unavailable.",
+    "priorGateScope": "The earlier 62-test batch gate covered the previous frozen state and does not validate this final unconfirmed-publication repair."
+  },
+  "applicationInstructions": [
+    "Keep this file as a recovery artifact until a working validation environment is available; do not interpret its presence as an activated or tested fix.",
+    "Read each target as UTF-8 and require the complete original Git blob SHA to equal baseBlobSHA. Stop on any mismatch and review intervening changes.",
+    "Apply replacements in the listed order using exact strings, requiring expectedOccurrences to match before replacing. Do not use fuzzy matching or drop assertions.",
+    "Verify the resulting UTF-8 byte count and complete Git blob SHA equal expectedResultBytes and expectedResultBlobSHA.",
+    "Integrate the separate batch consumer/UI recovery changes before claiming the end-to-end stopped-publication outcome is fixed.",
+    "Run the store, batch coordinator, batch widget, and analyzer regression suites plus the required analysis/build gates before activating or publishing runtime changes."
+  ],
+  "coverage": [
+    "Public StorageScanSnapshotCommitUnconfirmed extends StateError, retaining snapshotId, the original CAS cause, and the failed recovery-read cause.",
+    "The exception explains that the save outcome is unknown and saved scan history must be checked before retrying.",
+    "Only save-time CAS failure followed by failed index readback becomes the typed unconfirmed outcome. Confirmed recovery still returns the saved summary, including after cancellation.",
+    "Candidate manifest and pages remain retained by the existing uncertain-commit protection; this repair does not retry publication automatically.",
+    "The test fixture can cancel immediately after a real CAS commit while preserving the exact acknowledgement and recovery error objects.",
+    "The regression asserts the typed StateError-compatible outcome, both original cause identities, cancellation timing, three retained candidate pages and manifest, and later recovery of the same snapshot ID with 1201 files and 719400 bytes."
+  ],
+  "missingPieces": [
+    "This bundle contains only storage_scan_snapshot_store.dart and its regression test changes.",
+    "The batch coordinator must classify StorageScanSnapshotCommitUnconfirmed before cancellation or source-state handling; those changes are owned and preserved separately.",
+    "Localized unconfirmed status, the history-inspection UI action, and coordinator/widget race coverage are separate recovery work and are not embedded here.",
+    "Final runtime tests, static analysis, build validation, and combined integration validation remain outstanding because the workspace failed.",
+    "Snapshot deletion behavior is unchanged; this repair addresses save publication only."
+  ],
+  "files": [
+    {
+      "path": "lib/services/storage_scan_snapshot_store.dart",
+      "baseBlobSHA": "9cfd9015750e221a3510739f67342866d0b09a42",
+      "expectedResultBlobSHA": "e51b52e7b8a76187d8ac32a8a9a4b0967d2456e2",
+      "expectedResultBytes": 32706,
+      "priorObservedDiffResultPrefix": "e51b52e",
+      "replacements": [
+        {
+          "id": "add_typed_unconfirmed_exception",
+          "before": "class StorageScanSnapshot {\n  const StorageScanSnapshot({required this.summary, required this.result});\n  final StorageScanSnapshotSummary summary;\n  final StorageScanResult result;\n}\n\n/// Immutable paged metadata, published only by a small compare-and-swap index.\n",
+          "after": "class StorageScanSnapshot {\n  const StorageScanSnapshot({required this.summary, required this.result});\n  final StorageScanSnapshotSummary summary;\n  final StorageScanResult result;\n}\n\n/// A save may have published its index, but neither its acknowledgement nor\n/// recovery readback established the outcome. Candidate records are retained.\nclass StorageScanSnapshotCommitUnconfirmed extends StateError {\n  StorageScanSnapshotCommitUnconfirmed({\n    required this.snapshotId,\n    required this.cause,\n    required this.recoveryCause,\n  }) : super(\n         'The saved scan outcome is unknown. '\n         'Check saved scan history before retrying.',\n       );\n\n  final String snapshotId;\n  final Object cause;\n  final Object recoveryCause;\n}\n\n/// Immutable paged metadata, published only by a small compare-and-swap index.\n",
+          "expectedOccurrences": 1
+        },
+        {
+          "id": "type_failed_commit_recovery_without_removing_candidates",
+          "before": "        } catch (_) {\n          // A thrown commit may already have succeeded. Never remove its pages\n          // unless non-publication is certain, including when readback fails.\n          commitUncertain = true;\n          final (_, current) = await _index();\n          if (current.any((entry) => entry.id == id)) return summary;\n          rethrow;\n        }\n",
+          "after": "        } catch (cause) {\n          // A thrown commit may already have succeeded. Never remove its pages\n          // unless non-publication is certain, including when readback fails.\n          commitUncertain = true;\n          late List<StorageScanSnapshotSummary> current;\n          try {\n            final (_, recovered) = await _index();\n            current = recovered;\n          } catch (recoveryCause) {\n            throw StorageScanSnapshotCommitUnconfirmed(\n              snapshotId: id,\n              cause: cause,\n              recoveryCause: recoveryCause,\n            );\n          }\n          if (current.any((entry) => entry.id == id)) return summary;\n          rethrow;\n        }\n",
+          "expectedOccurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "test/storage_scan_snapshot_store_test.dart",
+      "baseBlobSHA": "79684aabcd8465e206c7f2430febbf0ce32adc60",
+      "expectedResultBlobSHA": "def08563de27808e3b15c25205d55dacd32eeae7",
+      "expectedResultBytes": 30752,
+      "priorObservedDiffResultPrefix": "def0856",
+      "replacements": [
+        {
+          "id": "capture_failure_objects_and_after_commit_hook",
+          "before": "class _FailingStorage extends MemoryFileCollectionStorage {\n  bool failPages = false;\n  bool throwAfterCommit = false;\n  bool blindAfterCommit = false;\n  bool blind = false;\n",
+          "after": "class _FailingStorage extends MemoryFileCollectionStorage {\n  bool failPages = false;\n  bool throwAfterCommit = false;\n  bool blindAfterCommit = false;\n  bool blind = false;\n  final commitFailure = StateError('Acknowledgement lost');\n  final recoveryFailure = StateError('Temporarily unavailable');\n  void Function()? afterCommit;\n",
+          "expectedOccurrences": 1
+        },
+        {
+          "id": "retain_original_recovery_failure_identity",
+          "before": "  @override\n  Future<String?> read(String key, {required int maxBytes}) async {\n    if (blind) throw StateError('Temporarily unavailable');\n    return super.read(key, maxBytes: maxBytes);\n  }\n",
+          "after": "  @override\n  Future<String?> read(String key, {required int maxBytes}) async {\n    if (blind) throw recoveryFailure;\n    return super.read(key, maxBytes: maxBytes);\n  }\n",
+          "expectedOccurrences": 1
+        },
+        {
+          "id": "cancel_after_real_commit_and_retain_acknowledgement_failure",
+          "before": "    final accepted = await super.compareAndSwap(key, expected, value);\n    if (accepted && throwAfterCommit) {\n      if (blindAfterCommit) blind = true;\n      throw StateError('Acknowledgement lost');\n    }\n    return accepted;\n",
+          "after": "    final accepted = await super.compareAndSwap(key, expected, value);\n    if (accepted && throwAfterCommit) {\n      if (blindAfterCommit) blind = true;\n      afterCommit?.call();\n      throw commitFailure;\n    }\n    return accepted;\n",
+          "expectedOccurrences": 1
+        },
+        {
+          "id": "regress_unconfirmed_publication_and_later_recovery",
+          "before": "  test(\n    'concurrent saves merge through CAS rather than losing either scan',\n",
+          "after": "  test('unconfirmed publication preserves its causes and candidate after cancellation', () async {\n    var cancelled = false;\n    final storage = _FailingStorage()\n      ..throwAfterCommit = true\n      ..blindAfterCommit = true\n      ..afterCommit = () => cancelled = true;\n    final store = StorageScanSnapshotStore(storage: storage);\n    Object? caught;\n    try {\n      await store.save(\n        result: _result(count: 1200),\n        storageId: 'opaque-source',\n        sourceLabel: 'Travel archive 📁',\n        isCancelled: () => cancelled,\n      );\n    } catch (error) {\n      caught = error;\n    }\n    expect(caught, isA<StorageScanSnapshotCommitUnconfirmed>());\n    final failure = caught as StorageScanSnapshotCommitUnconfirmed;\n    expect(failure, isA<StateError>());\n    expect(failure.cause, same(storage.commitFailure));\n    expect(failure.recoveryCause, same(storage.recoveryFailure));\n    expect(failure.message, contains('outcome is unknown'));\n    expect(\n      failure.message,\n      contains('Check saved scan history before retrying'),\n    );\n    expect(cancelled, isTrue);\n    expect(\n      storage.values.keys.where(\n        (key) => key.startsWith('storage-scan:${failure.snapshotId}:page:'),\n      ),\n      hasLength(3),\n    );\n    expect(\n      storage.values,\n      contains('storage-scan:${failure.snapshotId}:manifest-v1'),\n    );\n\n    storage.blind = false;\n    final reopened = StorageScanSnapshotStore(storage: storage);\n    final saved = (await reopened.list()).single;\n    expect(saved.id, failure.snapshotId);\n    final loaded = await reopened.load(saved.id);\n    expect(loaded.result.root.fileCount, 1201);\n    expect(loaded.result.root.bytes, 719400);\n  });\n\n  test(\n    'concurrent saves merge through CAS rather than losing either scan',\n",
+          "expectedOccurrences": 1
+        }
+      ]
+    }
+  ]
+}

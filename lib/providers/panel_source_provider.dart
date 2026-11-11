@@ -65,6 +65,7 @@ class PanelSourceNotifier extends StateNotifier<PanelSource> {
   static const _log = Log('PanelSource');
 
   final PanelSide side;
+  int _sourceRevision = 0;
 
   PanelSourceNotifier(this.side) : super(const LocalPanelSource('/')) {
     _restore();
@@ -77,6 +78,7 @@ class PanelSourceNotifier extends StateNotifier<PanelSource> {
     _log.debug(
       'setSource: ${source.displayName} path=${source.currentPath} side=$side',
     );
+    _sourceRevision++;
     state = source;
     _persist();
   }
@@ -84,6 +86,7 @@ class PanelSourceNotifier extends StateNotifier<PanelSource> {
   /// Navigate inside the current source to a sub-path.
   void navigateTo(String path) {
     _log.debug('navigateTo: $path side=$side');
+    _sourceRevision++;
     state = state.withPath(path);
     _persist();
   }
@@ -91,6 +94,7 @@ class PanelSourceNotifier extends StateNotifier<PanelSource> {
   /// Enter an archive file.
   void enterArchive(String archivePath) {
     _log.debug('enterArchive: $archivePath');
+    _sourceRevision++;
     const service = PanelSourceService();
     state = service.enterArchive(archivePath, state);
     _persist();
@@ -99,6 +103,7 @@ class PanelSourceNotifier extends StateNotifier<PanelSource> {
   /// Unlock and enter an encrypted container.
   void enterContainer(String containerPath, String password) {
     _log.debug('enterContainer: $containerPath');
+    _sourceRevision++;
     const service = PanelSourceService();
     state = service.enterContainer(containerPath, password, state);
     _persist();
@@ -107,6 +112,7 @@ class PanelSourceNotifier extends StateNotifier<PanelSource> {
   /// Navigate to the parent source (exit archive/container).
   void exitToParent() {
     _log.debug('exitToParent from ${state.displayName}');
+    _sourceRevision++;
     const service = PanelSourceService();
     state = service.exitToParent(state);
     _persist();
@@ -117,8 +123,12 @@ class PanelSourceNotifier extends StateNotifier<PanelSource> {
   String get _prefKey => 'panel_source_${side.name}';
 
   Future<void> _restore() async {
+    final revision = _sourceRevision;
     try {
       final prefs = await SharedPreferences.getInstance();
+      // A source chosen while preferences load owns the pane, including an
+      // explicit selection of the same source or path as the initial value.
+      if (!mounted || revision != _sourceRevision) return;
       final raw = prefs.getString(_prefKey);
       if (raw != null) {
         // Only local sources can be restored safely.
@@ -134,6 +144,7 @@ class PanelSourceNotifier extends StateNotifier<PanelSource> {
   Future<void> _persist() async {
     try {
       final prefs = await SharedPreferences.getInstance();
+      if (!mounted) return;
       final json = state.toJson();
       // Persist only local path; remote/archive are session-only.
       if (json['type'] == 'local') {
@@ -237,7 +248,7 @@ final availableSourcesProvider = Provider<List<AvailableSource>>((ref) {
         source: RemotePanelSource(
           providerName: auth.providerName,
           client: auth.client,
-          path: '/',
+          path: auth.client.rootPath,
         ),
       ),
     );
@@ -255,7 +266,7 @@ final availableSourcesProvider = Provider<List<AvailableSource>>((ref) {
         source: RemotePanelSource(
           providerName: conn.label,
           client: conn.client,
-          path: '/',
+          path: conn.client.rootPath,
         ),
       ),
     );

@@ -12,7 +12,9 @@ class StorageNode {
     this.unknownSizeCount = 0,
     this.skippedLinkCount = 0,
     this.isComplete = true,
-  }) : children = List.unmodifiable(children);
+  }) : children = children.isEmpty
+           ? const <StorageNode>[]
+           : List.unmodifiable(children);
 
   final FileItem item;
   final List<StorageNode> children;
@@ -99,6 +101,49 @@ class StorageScanResult {
 
   bool get isComplete =>
       root.isComplete && !cancelled && !limited && !sourceChanged;
+}
+
+/// Aggregate metadata for a directory, without retaining its descendant tree.
+/// Use this for size displays; saved reports and tree views require a full
+/// [StorageScanResult]. Both modes use the same guarded traversal and limits.
+class StorageScanSummary {
+  StorageScanSummary({
+    required this.rootPath,
+    required this.bytes,
+    required this.fileCount,
+    required this.folderCount,
+    required this.unknownSizeCount,
+    required this.skippedLinkCount,
+    required bool isComplete,
+    List<StorageScanIssue> issues = const [],
+    required this.cancelled,
+    required this.limited,
+    required this.sourceChanged,
+    required this.startedAt,
+    required this.completedAt,
+    this.suppressedIssueCount = 0,
+  }) : _totalsComplete = isComplete,
+       issues = List.unmodifiable(issues);
+
+  final String rootPath;
+  final int bytes;
+  final int fileCount;
+
+  /// Descendant directories, excluding the scan root and symbolic links.
+  final int folderCount;
+  final int unknownSizeCount;
+  final int skippedLinkCount;
+  final bool _totalsComplete;
+  final List<StorageScanIssue> issues;
+  final bool cancelled;
+  final bool limited;
+  final bool sourceChanged;
+  final DateTime startedAt;
+  final DateTime completedAt;
+  final int suppressedIssueCount;
+
+  bool get isComplete =>
+      _totalsComplete && !cancelled && !limited && !sourceChanged;
 }
 
 /// Providers with pagination/error metadata can retain partial entries without

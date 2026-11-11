@@ -132,9 +132,172 @@ class _PausedNativeStorage extends NativeFileCollectionStorage {
   }
 }
 
+class _CollectionBatchStorage extends MemoryFileCollectionStorage
+    implements FileCollectionStorageBatchWriter {
+  final batches = <List<FileCollectionStorageRecord>>[];
+  bool failBatch = false;
+  void Function()? afterBatch;
+
+  @override
+  Future<void> writeBatch(List<FileCollectionStorageRecord> records) async {
+    FileCollectionStorageBatch.validate(records);
+    batches.add(List.of(records));
+    for (final record in records) {
+      await write(record.key, record.value);
+    }
+    afterBatch?.call();
+    if (failBatch) throw StateError('Injected batch failure.');
+  }
+}
+
+class _CountingEntry extends FileCollectionEntry {
+  _CountingEntry(FileCollectionEntry entry)
+    : super(reference: entry.reference, file: entry.file);
+  var encodings = 0;
+
+  @override
+  Map<String, dynamic> toJson() {
+    encodings++;
+    return super.toJson();
+  }
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUp(() => SharedPreferences.setMockInitialValues({}));
+
+  test('bulk collection save encodes each row once and publishes bounded page batches', () async {
+    final storage = _CollectionBatchStorage();
+    final store = FileCollectionStore(storage: storage);
+    addTearDown(store.dispose);
+    final original = _collection('encoded-once', 2100);
+    final entries = original.entries.map(_CountingEntry.new).toList();
+    await store.save(original.copyWith(entries: entries));
+    expect(entries.every((entry) => entry.encodings == 1), isTrue);
+    expect(storage.batches.map((batch) => batch.length), [4, 1]);
+    for (final batch in storage.batches) {
+      expect(
+        batch.fold<int>(0, (size, record) => size + record.bytes.length),
+        lessThanOrEqualTo(FileCollectionStorageBatch.maxBytes),
+      );
+      for (final record in batch) {
+        expect(
+          record.bytes.length,
+          lessThanOrEqualTo(FileCollectionStore.pageByteLimit),
+        );
+        expect(utf8.decode(record.bytes), record.value);
+      }
+    }
+    final restored = await store.load(original.id);
+    expect(
+      restored.entries.map((entry) => entry.key),
+      original.entries.map((entry) => entry.key),
+    );
+    expect(restored.selectedKeys, original.selectedKeys);
+    expect(
+      restored.entries.last.reference.version,
+      original.entries.last.reference.version,
+    );
+  });
+
+  test(
+    'failed bounded collection batch retains the previous catalog and pages',
+    () async {
+      final storage = _CollectionBatchStorage();
+      final store = FileCollectionStore(storage: storage);
+      addTearDown(store.dispose);
+      await store.save(_collection('atomic-batch', 600));
+      final before = Map<String, String>.of(storage.values);
+      final revision = store.get('atomic-batch')!.revision;
+      storage.failBatch = true;
+      await expectLater(
+        store.save(_collection('atomic-batch', 2100)),
+        throwsStateError,
+      );
+      expect(storage.values, before);
+      expect(store.get('atomic-batch')!.revision, revision);
+      expect((await store.load('atomic-batch')).entries, hasLength(600));
+    },
+  );
+
+  test('cancellation after a collection page batch removes only uncommitted records', () async {
+    final storage = _CollectionBatchStorage();
+    final store = FileCollectionStore(storage: storage);
+    addTearDown(store.dispose);
+    await store.save(_collection('cancel-batch', 600));
+    final before = Map<String, String>.of(storage.values);
+    var cancelled = false;
+    storage.afterBatch = () => cancelled = true;
+    await expectLater(
+      store.save(
+        _collection('cancel-batch', 2100),
+        isCancelled: () => cancelled,
+      ),
+      throwsStateError,
+    );
+    expect(storage.values, before);
+    expect((await store.load('cancel-batch')).entries, hasLength(600));
+  });
+
+  test(
+    'reviewed saves and transforms reject a changed or removed revision',
+    () async {
+      final store = FileCollectionStore(storage: MemoryFileCollectionStorage());
+      addTearDown(store.dispose);
+      final original = _collection('reviewed', 3);
+      await store.save(original);
+      final revision = store.get(original.id)!.revision;
+      await store.rename(original.id, 'Newer name');
+      final newer = store.get(original.id)!.revision;
+      var inspected = false;
+
+      await expectLater(
+        store.save(original, expectedRevision: revision),
+        throwsStateError,
+      );
+      await expectLater(
+        store.transform(original.id, (page) async {
+          inspected = true;
+          return page;
+        }, expectedRevision: revision),
+        throwsStateError,
+      );
+      expect(inspected, isFalse);
+      expect(store.get(original.id)!.revision, newer);
+      expect(store.get(original.id)!.name, 'Newer name');
+
+      await store.remove(original.id);
+      await expectLater(
+        store.save(original, expectedRevision: newer),
+        throwsStateError,
+      );
+      expect(store.get(original.id), isNull);
+    },
+  );
+
+  test(
+    'cancelled snapshot saves leave no catalog entry or staged pages',
+    () async {
+      final storage = MemoryFileCollectionStorage();
+      final store = FileCollectionStore(storage: storage);
+      addTearDown(store.dispose);
+      await store.ready;
+      final before = Map<String, String>.of(storage.values);
+
+      await expectLater(
+        store.save(
+          _collection('cancelled', 3),
+          isCancelled: () => storage.values.keys.any(
+            (key) => key.startsWith('manifest:cancelled:'),
+          ),
+        ),
+        throwsStateError,
+      );
+
+      expect(store.get('cancelled'), isNull);
+      expect(storage.values, before);
+    },
+  );
 
   test(
     'restart loads only the catalog across many large collections',

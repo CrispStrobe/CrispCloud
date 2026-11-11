@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 import '../l10n/storage_analyzer_strings.dart';
+import '../models/file_item.dart';
 import '../providers/providers.dart';
 import '../services/file_operation_service.dart';
 import '../services/panel_source_service.dart';
@@ -15,6 +16,48 @@ import '../services/storage_scan_service.dart';
 import '../services/storage_scan_snapshot_store.dart';
 import '../utils/formatters.dart';
 import 'storage_analysis_view.dart';
+
+/// Analyze the exact folder chosen in a context menu, including remote folders.
+/// The report owns its original endpoint and exposes cancellation/partial data.
+Future<void> showFolderSizeDialog(
+  BuildContext context,
+  WidgetRef ref,
+  FileItem folder,
+  PanelFileOrigin origin,
+) async {
+  try {
+    if (!origin.isCurrent ||
+        !folder.isFolder ||
+        folder.isSymlink == true ||
+        folder.path == null)
+      throw StateError('Folder unavailable.');
+    final source = storageScanBackend(
+      source: origin.source is LocalPanelSource
+          ? LocalPanelSource(folder.path!)
+          : origin.source,
+      local: ref.read(localFileServiceProvider),
+      isCurrent: () => origin.isCurrent,
+    );
+    await showDialog<void>(
+      context: context,
+      builder: (_) => StorageAnalyzerDialog(
+        source: source,
+        rootPath: folder.path!,
+        sourceLabel: origin.source.displayName,
+        storageId: kIsWeb && origin.source is LocalPanelSource
+            ? 'browser-grant-session:${const Uuid().v4()}'
+            : origin.storageId,
+      ),
+    );
+  } catch (_) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(StorageAnalyzerStrings(context).text('openFolderFirst')),
+      ),
+    );
+  }
+}
 
 /// Capture the actual active endpoint before opening the asynchronous scan.
 Future<void> showStorageAnalyzerDialog(
@@ -99,6 +142,7 @@ class StorageAnalyzerDialog extends StatefulWidget {
     this.onReveal,
     this.service,
     this.snapshotStore,
+    this.initialSnapshot,
   });
 
   final FileOperationBackend? source;
@@ -111,6 +155,7 @@ class StorageAnalyzerDialog extends StatefulWidget {
   final Future<void> Function(StorageNode)? onReveal;
   final StorageScanService? service;
   final StorageScanSnapshotStore? snapshotStore;
+  final StorageScanSnapshotSummary? initialSnapshot;
 
   @override
   State<StorageAnalyzerDialog> createState() => _StorageAnalyzerDialogState();
@@ -145,7 +190,9 @@ class _StorageAnalyzerDialogState extends State<StorageAnalyzerDialog> {
         widget.storageId ??
         widget.source?.persistentStorageId ??
         'session:${const Uuid().v4()}';
-    if (widget.historyOnly || widget.source == null) {
+    if (widget.initialSnapshot != null) {
+      unawaited(_openSaved(widget.initialSnapshot!));
+    } else if (widget.historyOnly || widget.source == null) {
       _showHistory = true;
       unawaited(_loadHistory());
     } else {

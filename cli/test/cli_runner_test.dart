@@ -4,6 +4,7 @@
 // Uses a temp config directory so no real network calls are needed for
 // commands that operate purely on config (providers, config show, etc.).
 
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:args/command_runner.dart';
@@ -11,6 +12,18 @@ import 'package:test/test.dart';
 
 import 'package:crisp/cli_app.dart';
 import 'package:crisp/config/cli_config.dart';
+
+class _CapturedStdout implements Stdout {
+  final buffer = StringBuffer();
+
+  @override
+  void writeln([Object? object = '']) => buffer.writeln(object);
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnsupportedError(
+    'Unexpected stdout operation: ${invocation.memberName}',
+  );
+}
 
 void main() {
   late Directory tmp;
@@ -35,6 +48,37 @@ void main() {
     test('exits 0 with no providers configured', () async {
       final code = await runner().run(['providers']);
       expect(code, equals(0));
+    });
+
+    test('SMB diagnostics distinguish saved choices from the build default', () async {
+      final config = CliConfig(path: configPath);
+      for (final backend in <String?>[null, 'libsmb2', 'rust', 'auto']) {
+        config.saveProvider('nas', {
+          'type': 'smb',
+          'url': 'smb://nas.example/Share/',
+          if (backend != null) 'smbBackend': backend,
+        });
+        final saved = File(configPath).readAsStringSync();
+        final expected = backend ?? 'build default';
+        final output = _CapturedStdout();
+        await IOOverrides.runZoned(() async {
+          expect(await runner().run(['config', 'smb-backend', 'nas']), 0);
+          expect(output.buffer.toString().trim(), expected);
+          output.buffer.clear();
+
+          expect(await runner().run(['providers', '--json']), 0);
+          final rows = jsonDecode(output.buffer.toString()) as List;
+          expect(rows.single.containsKey('smbBackend'), isTrue);
+          expect(rows.single['smbBackend'], backend);
+          expect(rows.single['info'], 'smb://nas.example/Share/ [$expected]');
+          output.buffer.clear();
+
+          expect(await runner().run(['providers']), 0);
+          expect(output.buffer.toString(), contains('[$expected]'));
+        }, stdout: () => output);
+        // Reporting an inherited choice must not turn it into a saved override.
+        expect(File(configPath).readAsStringSync(), saved);
+      }
     });
 
     test('exits 0 with providers configured', () async {

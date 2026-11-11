@@ -28,6 +28,7 @@ LocalFileService createPlatformFileService() {
 class WebFileService
     implements
         LocalFileService,
+        LocalDirectorySnapshotReader,
         LocalFileSaveReporter,
         FreshLocalFileReader,
         LocalTransferFileOperations,
@@ -331,6 +332,132 @@ class WebFileService
   }
 
   @override
+  Future<List<FileSystemEntity>?> listDirectorySnapshot(String path) async {
+    if (path.isEmpty || !p.posix.isAbsolute(path) || path.contains('\u0000')) {
+      throw FileSystemException(
+        'A directory snapshot needs an absolute path.',
+        path,
+      );
+    }
+    final lookup = p.posix.normalize(path);
+    if (lookup == '/') {
+      return List<FileSystemEntity>.unmodifiable(_virtualTree['/'] ?? const []);
+    }
+    final identity = sourceIdentityForPath(lookup);
+    final parts = lookup.split('/').where((part) => part.isNotEmpty).toList();
+    final rootPath = '/${parts.first}';
+    final rootHandle = _rootHandles[rootPath];
+    final cached = _virtualTree[lookup];
+    if (identity == null || (rootHandle == null && cached == null)) {
+      throw PathAccessException(path, const OSError('Access denied', 13));
+    }
+    if (rootHandle == null) {
+      // Legacy file-input grants contain detached entries instead of live
+      // handles. Copy the granted directory without changing its cached tree.
+      return List<FileSystemEntity>.unmodifiable(cached!);
+    }
+
+    void requireCurrentGrant() {
+      if (!identical(sourceIdentityForPath(lookup), identity) ||
+          !identical(_rootHandles[rootPath], rootHandle)) {
+        throw FileSystemException(
+          'The folder changed during the snapshot.',
+          path,
+        );
+      }
+    }
+
+    Future<void> requireReadPermission(dynamic handle) async {
+      // Query only. Requesting permission would require an explicit user
+      // action and must never occur while reading background folder context.
+      if (js_util.hasProperty(handle, 'queryPermission')) {
+        final options = js_util.newObject();
+        js_util.setProperty(options, 'mode', 'read');
+        final permission = await js_util.promiseToFuture(
+          js_util.callMethod(handle, 'queryPermission', [options]),
+        );
+        requireCurrentGrant();
+        if (permission != 'granted') {
+          throw PathAccessException(path, const OSError('Access denied', 13));
+        }
+      }
+    }
+
+    // Resolve from the captured root, including folders never opened in a
+    // pane. Cached child handles are not authority for this snapshot, and a
+    // background traversal must not publish newly resolved handles to them.
+    dynamic handle = rootHandle;
+    for (final part in parts.skip(1)) {
+      await requireReadPermission(handle);
+      requireCurrentGrant();
+      // Virtual names use the same normalization as the visible browser tree.
+      // Resolve the actual handle from its parent rather than assuming that
+      // normalized spelling is also the provider's literal directory name.
+      final iterator = js_util.callMethod(handle, 'values', []);
+      dynamic match;
+      while (true) {
+        final next = await js_util.promiseToFuture(
+          js_util.callMethod(iterator, 'next', []),
+        );
+        requireCurrentGrant();
+        if (js_util.getProperty(next, 'done') == true) break;
+        final child = js_util.getProperty(next, 'value');
+        final name = _sanitizeFsaName(
+          js_util.getProperty(child, 'name') as String,
+        );
+        if (name != part) continue;
+        if (match != null ||
+            js_util.getProperty(child, 'kind') != 'directory') {
+          throw FileSystemException(
+            'The folder path is ambiguous or unavailable.',
+            lookup,
+          );
+        }
+        match = child;
+      }
+      if (match == null) {
+        throw FileSystemException(
+          'The selected folder is unavailable.',
+          lookup,
+        );
+      }
+      handle = match;
+    }
+    await requireReadPermission(handle);
+    requireCurrentGrant();
+
+    // Do not use _loadDirectChildren here: its interactive listing cache can
+    // retain partial results on failure. A snapshot publishes only a complete
+    // read and cannot overwrite a newer grant with the same folder name.
+    final entries = <FileSystemEntity>[];
+    final iterator = js_util.callMethod(handle, 'values', []);
+    while (true) {
+      final next = await js_util.promiseToFuture(
+        js_util.callMethod(iterator, 'next', []),
+      );
+      requireCurrentGrant();
+      if (js_util.getProperty(next, 'done') == true) break;
+      final child = js_util.getProperty(next, 'value');
+      final name = _sanitizeFsaName(
+        js_util.getProperty(child, 'name') as String,
+      );
+      if (name.isEmpty || name == '.' || name == '..') {
+        continue;
+      }
+      final childPath = p.posix.join(lookup, name);
+      switch (js_util.getProperty(child, 'kind')) {
+        case 'file':
+          entries.add(File(childPath));
+        case 'directory':
+          entries.add(Directory(childPath));
+        default:
+          throw FileSystemException('Unsupported directory entry.', childPath);
+      }
+    }
+    return List<FileSystemEntity>.unmodifiable(entries);
+  }
+
+  @override
   Future<bool> hasAccessToPath(String path) async {
     if (path == '/') return true;
 
@@ -403,7 +530,12 @@ class WebFileService
       }
     }
 
-    if (fileRef == null) throw WebFileException(WebFileFailureCode.fileMissing, 'File ref not found: $path', {'path': path});
+    if (fileRef == null)
+      throw WebFileException(
+        WebFileFailureCode.fileMissing,
+        'File ref not found: $path',
+        {'path': path},
+      );
 
     return _readBrowserFile(path, fileRef);
   }
@@ -657,7 +789,11 @@ class WebFileService
         await js_util.promiseToFuture(promise);
       } catch (e) {
         _log.debug('FSA removeEntry failed: $e');
-        throw WebFileException(WebFileFailureCode.deleteFailed, 'Delete failed: $e', {'error': e});
+        throw WebFileException(
+          WebFileFailureCode.deleteFailed,
+          'Delete failed: $e',
+          {'error': e},
+        );
       }
     }
 
@@ -673,10 +809,19 @@ class WebFileService
   Future<void> createDirectory(String path) async {
     _log.debug('createDirectory: $path');
     final rootHandle = _findRootHandle(path);
-    if (rootHandle == null) throw WebFileException(WebFileFailureCode.rootMissing, 'No root handle for path: $path', {'path': path});
+    if (rootHandle == null)
+      throw WebFileException(
+        WebFileFailureCode.rootMissing,
+        'No root handle for path: $path',
+        {'path': path},
+      );
 
     final permState = await _verifyPermission(rootHandle, 'readwrite');
-    if (!permState) throw WebFileException(WebFileFailureCode.permission, 'Permission denied for directory creation');
+    if (!permState)
+      throw WebFileException(
+        WebFileFailureCode.permission,
+        'Permission denied for directory creation',
+      );
 
     final parts = path.split('/').where((s) => s.isNotEmpty).toList();
     dynamic current = rootHandle;

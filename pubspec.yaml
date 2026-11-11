@@ -27,6 +27,8 @@ dependencies:
   provider: ^6.1.1  # kept during incremental migration
   
   # UI
+  # Bundle the icon font used by adaptive controls and embedded UI.
+  cupertino_icons: 2.0.0
   desktop_drop: ^0.7.1
   madedit2_hex:
     path: packages/madedit2_hex

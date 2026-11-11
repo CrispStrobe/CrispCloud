@@ -4,9 +4,9 @@
 // Stores custom bindings in SharedPreferences as JSON.
 
 import 'dart:convert';
-import 'dart:io' show Platform;
 
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -21,6 +21,7 @@ enum ShortcutAction {
   nextTab,
   prevTab,
   commandPalette,
+  connect,
   goToFolder,
   filter,
   selectAll,
@@ -40,7 +41,27 @@ enum ShortcutAction {
   cycleLayout,
   search,
   findPattern,
+  copyWithOptions,
+  moveWithOptions,
+  back,
+  forward,
+  up,
+  reopenClosedTab,
+  togglePreview,
+  toggleHidden,
+  sortByName,
+  sortByExtension,
+  sortByDate,
+  sortBySize,
+  bookmark,
+  multiRename,
 }
+
+/// Redo is owned by individual editors. File operations only advertise actions
+/// for which the browser has an actual implementation.
+final browserShortcutActions = ShortcutAction.values
+    .where((action) => action != ShortcutAction.redo)
+    .toList(growable: false);
 
 // ---------------------------------------------------------------------------
 // ShortcutBinding
@@ -66,19 +87,19 @@ class ShortcutBinding {
 
   /// Returns false when the key label is empty (modifier-only bindings are
   /// considered invalid).
-  bool get isValid => key.trim().isNotEmpty;
+  bool get isValid => key == ' ' || key.trim().isNotEmpty;
 
   // -------------------------------------------------------------------------
   // Serialization
   // -------------------------------------------------------------------------
 
   Map<String, dynamic> toJson() => {
-        'key': key,
-        'ctrl': ctrl,
-        'shift': shift,
-        'alt': alt,
-        'meta': meta,
-      };
+    'key': key,
+    'ctrl': ctrl,
+    'shift': shift,
+    'alt': alt,
+    'meta': meta,
+  };
 
   factory ShortcutBinding.fromJson(Map<String, dynamic> json) =>
       ShortcutBinding(
@@ -128,8 +149,9 @@ class ShortcutBinding {
   String toDisplayString() {
     final parts = <String>[];
 
-    final isMacLike = !kIsWeb &&
-        (Platform.isMacOS || Platform.isIOS);
+    final isMacLike =
+        defaultTargetPlatform == TargetPlatform.macOS ||
+        defaultTargetPlatform == TargetPlatform.iOS;
 
     if (ctrl) parts.add(isMacLike ? '⌃' : 'Ctrl');
     if (alt) parts.add(isMacLike ? '⌥' : 'Alt');
@@ -171,14 +193,15 @@ class ShortcutBinding {
   @override
   bool operator ==(Object other) =>
       other is ShortcutBinding &&
-      key.toLowerCase() == other.key.toLowerCase() &&
+      _normaliseForMatch(key) == _normaliseForMatch(other.key) &&
       ctrl == other.ctrl &&
       shift == other.shift &&
       alt == other.alt &&
       meta == other.meta;
 
   @override
-  int get hashCode => Object.hash(key.toLowerCase(), ctrl, shift, alt, meta);
+  int get hashCode =>
+      Object.hash(_normaliseForMatch(key), ctrl, shift, alt, meta);
 
   @override
   String toString() => toDisplayString();
@@ -203,73 +226,138 @@ class KeyboardShortcutService {
     ShortcutAction.newTab: const ShortcutBinding(key: 'T', ctrl: true),
     ShortcutAction.closeTab: const ShortcutBinding(key: 'W', ctrl: true),
     ShortcutAction.nextTab: const ShortcutBinding(key: 'Tab', ctrl: true),
-    ShortcutAction.prevTab:
-        const ShortcutBinding(key: 'Tab', ctrl: true, shift: true),
-    ShortcutAction.commandPalette:
-        const ShortcutBinding(key: 'P', ctrl: true, shift: true),
+    ShortcutAction.prevTab: const ShortcutBinding(
+      key: 'Tab',
+      ctrl: true,
+      shift: true,
+    ),
+    ShortcutAction.commandPalette: const ShortcutBinding(
+      key: 'P',
+      ctrl: true,
+      shift: true,
+    ),
+    ShortcutAction.connect: const ShortcutBinding(key: 'K', ctrl: true),
     ShortcutAction.goToFolder: const ShortcutBinding(key: 'G', ctrl: true),
     ShortcutAction.filter: const ShortcutBinding(key: 'F', ctrl: true),
     ShortcutAction.selectAll: const ShortcutBinding(key: 'A', ctrl: true),
     ShortcutAction.delete: const ShortcutBinding(key: 'Delete'),
     ShortcutAction.rename: const ShortcutBinding(key: 'F2'),
-    ShortcutAction.newFolder: const ShortcutBinding(key: 'N', ctrl: true),
-    ShortcutAction.refresh: const ShortcutBinding(key: 'F5'),
-    ShortcutAction.preview: const ShortcutBinding(key: 'Space'),
-    ShortcutAction.edit:
-        const ShortcutBinding(key: 'E', ctrl: true),
+    ShortcutAction.newFolder: const ShortcutBinding(key: 'F7'),
+    ShortcutAction.refresh: const ShortcutBinding(key: 'R', ctrl: true),
+    ShortcutAction.preview: const ShortcutBinding(key: 'F3'),
+    ShortcutAction.edit: const ShortcutBinding(key: 'F4'),
     ShortcutAction.undo: const ShortcutBinding(key: 'Z', ctrl: true),
-    ShortcutAction.redo:
-        const ShortcutBinding(key: 'Z', ctrl: true, shift: true),
+    ShortcutAction.redo: const ShortcutBinding(
+      key: 'Z',
+      ctrl: true,
+      shift: true,
+    ),
     ShortcutAction.switchPanel: const ShortcutBinding(key: 'Tab'),
     ShortcutAction.copy: const ShortcutBinding(key: 'C', ctrl: true),
     ShortcutAction.paste: const ShortcutBinding(key: 'V', ctrl: true),
     ShortcutAction.cut: const ShortcutBinding(key: 'X', ctrl: true),
-    ShortcutAction.toggleTreeView:
-        const ShortcutBinding(key: 'B', ctrl: true),
-    ShortcutAction.cycleLayout:
-        const ShortcutBinding(key: 'L', ctrl: true, shift: true),
-    ShortcutAction.search: const ShortcutBinding(key: 'K', ctrl: true),
-    ShortcutAction.findPattern:
-        const ShortcutBinding(key: 'H', ctrl: true, shift: true),
+    ShortcutAction.toggleTreeView: const ShortcutBinding(
+      key: '3',
+      ctrl: true,
+      shift: true,
+    ),
+    ShortcutAction.cycleLayout: const ShortcutBinding(
+      key: '2',
+      ctrl: true,
+      shift: true,
+    ),
+    ShortcutAction.search: const ShortcutBinding(key: 'F7', alt: true),
+    ShortcutAction.findPattern: ShortcutBinding(
+      key: LogicalKeyboardKey.numpadAdd.keyLabel,
+    ),
+    ShortcutAction.copyWithOptions: const ShortcutBinding(key: 'F5'),
+    ShortcutAction.moveWithOptions: const ShortcutBinding(key: 'F6'),
+    ShortcutAction.back: ShortcutBinding(
+      key: LogicalKeyboardKey.arrowLeft.keyLabel,
+      alt: true,
+    ),
+    ShortcutAction.forward: ShortcutBinding(
+      key: LogicalKeyboardKey.arrowRight.keyLabel,
+      alt: true,
+    ),
+    ShortcutAction.up: const ShortcutBinding(key: 'Backspace'),
+    ShortcutAction.reopenClosedTab: const ShortcutBinding(
+      key: 'T',
+      ctrl: true,
+      shift: true,
+    ),
+    ShortcutAction.togglePreview: const ShortcutBinding(
+      key: 'P',
+      ctrl: true,
+      alt: true,
+    ),
+    ShortcutAction.toggleHidden: const ShortcutBinding(key: '.', ctrl: true),
+    ShortcutAction.sortByName: const ShortcutBinding(key: 'F3', ctrl: true),
+    ShortcutAction.sortByExtension: const ShortcutBinding(
+      key: 'F4',
+      ctrl: true,
+    ),
+    ShortcutAction.sortByDate: const ShortcutBinding(key: 'F5', ctrl: true),
+    ShortcutAction.sortBySize: const ShortcutBinding(key: 'F6', ctrl: true),
+    ShortcutAction.bookmark: const ShortcutBinding(key: 'B', ctrl: true),
+    ShortcutAction.multiRename: const ShortcutBinding(key: 'M', ctrl: true),
+  };
+
+  /// Alternate bindings for the same command share conflict detection and
+  /// customization rules. A custom binding replaces all defaults for its action.
+  static final Map<ShortcutAction, List<ShortcutBinding>> _browserAliases = {
+    ShortcutAction.newFolder: [const ShortcutBinding(key: 'N', ctrl: true)],
+    ShortcutAction.goToFolder: [const ShortcutBinding(key: 'L', ctrl: true)],
+    ShortcutAction.nextTab: [
+      ShortcutBinding(key: LogicalKeyboardKey.pageDown.keyLabel, ctrl: true),
+    ],
+    ShortcutAction.prevTab: [
+      ShortcutBinding(key: LogicalKeyboardKey.pageUp.keyLabel, ctrl: true),
+    ],
+    ShortcutAction.toggleHidden: [const ShortcutBinding(key: 'H', ctrl: true)],
+    ShortcutAction.delete: [const ShortcutBinding(key: 'F8')],
+    ShortcutAction.copyWithOptions: [
+      const ShortcutBinding(key: 'F5', shift: true),
+    ],
   };
 
   /// Custom bindings loaded from / persisted to SharedPreferences.
   final Map<ShortcutAction, ShortcutBinding> _custom = {};
+  Future<void>? _loading;
+  Future<void> _saving = Future<void>.value();
 
   // -------------------------------------------------------------------------
   // Initialisation
   // -------------------------------------------------------------------------
 
   /// Load persisted custom bindings.  Call once during app startup.
-  Future<void> load() async {
+  Future<void> load() => _loading ??= _load();
+
+  Future<void> _load() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final raw = prefs.getString(_prefsKey);
       if (raw == null) return;
-      final map = json.decode(raw) as Map<String, dynamic>;
-      _custom.clear();
-      for (final entry in map.entries) {
-        final action = _actionFromName(entry.key);
-        if (action == null) continue;
-        final binding =
-            ShortcutBinding.fromJson(entry.value as Map<String, dynamic>);
-        if (binding.isValid) {
-          _custom[action] = binding;
-        }
-      }
+      final parsed = _parseBindings(raw);
+      if (parsed != null) _custom.addAll(parsed);
     } catch (_) {
       // Corrupt prefs — silently ignore and use defaults.
     }
   }
 
-  Future<void> _persist() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final map = <String, dynamic>{
-        for (final e in _custom.entries) e.key.name: e.value.toJson(),
-      };
-      await prefs.setString(_prefsKey, json.encode(map));
-    } catch (_) {}
+  Future<void> _persist() {
+    final encoded = json.encode({
+      for (final entry in _custom.entries) entry.key.name: entry.value.toJson(),
+    });
+    // Persist snapshots in mutation order. A slow earlier settings write must
+    // never finish after, and overwrite, a newer recorded binding or reset.
+    _saving = _saving.then((_) async {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(_prefsKey, encoded);
+      } catch (_) {}
+    });
+    return _saving;
   }
 
   // -------------------------------------------------------------------------
@@ -278,10 +366,7 @@ class KeyboardShortcutService {
 
   /// Returns all current bindings (custom overrides merged over defaults).
   Map<ShortcutAction, ShortcutBinding> getBindings() {
-    return {
-      ..._defaults,
-      ..._custom,
-    };
+    return {..._defaults, ..._custom};
   }
 
   /// Returns the current binding for [action].
@@ -290,22 +375,28 @@ class KeyboardShortcutService {
 
   /// Persists [binding] for [action].
   /// Throws [ArgumentError] when [binding] is invalid (empty key).
-  Future<void> setBinding(ShortcutAction action, ShortcutBinding binding) async {
+  Future<void> setBinding(
+    ShortcutAction action,
+    ShortcutBinding binding,
+  ) async {
     if (!binding.isValid) {
       throw ArgumentError('Binding key must not be empty.');
     }
+    await load();
     _custom[action] = binding;
     await _persist();
   }
 
   /// Removes any custom override for [action], reverting to the default.
   Future<void> resetBinding(ShortcutAction action) async {
+    await load();
     _custom.remove(action);
     await _persist();
   }
 
   /// Removes all custom overrides, reverting every action to its default.
   Future<void> resetAll() async {
+    await load();
     _custom.clear();
     await _persist();
   }
@@ -343,23 +434,35 @@ class KeyboardShortcutService {
   ///
   /// Invalid JSON or malformed entries are silently ignored.
   Future<void> importBindings(String jsonStr) async {
+    final parsed = _parseBindings(jsonStr);
+    if (parsed == null) return;
+    await load();
+    _custom
+      ..clear()
+      ..addAll(parsed);
+    await _persist();
+  }
+
+  static Map<ShortcutAction, ShortcutBinding>? _parseBindings(String raw) {
     try {
-      final dynamic decoded = json.decode(jsonStr);
-      if (decoded is! Map<String, dynamic>) return;
-      _custom.clear();
+      final decoded = json.decode(raw);
+      if (decoded is! Map<String, dynamic>) return null;
+      final parsed = <ShortcutAction, ShortcutBinding>{};
       for (final entry in decoded.entries) {
         final action = _actionFromName(entry.key);
-        if (action == null) continue;
-        if (entry.value is! Map<String, dynamic>) continue;
-        final binding =
-            ShortcutBinding.fromJson(entry.value as Map<String, dynamic>);
-        if (binding.isValid) {
-          _custom[action] = binding;
+        if (action == null || entry.value is! Map<String, dynamic>) continue;
+        try {
+          final binding = ShortcutBinding.fromJson(
+            entry.value as Map<String, dynamic>,
+          );
+          if (binding.isValid) parsed[action] = binding;
+        } catch (_) {
+          // A malformed entry must not discard the other saved shortcuts.
         }
       }
-      await _persist();
+      return parsed;
     } catch (_) {
-      // Gracefully handle invalid JSON.
+      return null;
     }
   }
 
@@ -396,5 +499,142 @@ class KeyboardShortcutService {
       }
     }
     return null;
+  }
+
+  bool isCustomized(ShortcutAction action) => _custom.containsKey(action);
+
+  Iterable<ShortcutBinding> _browserBindings(ShortcutAction action) sync* {
+    yield getBinding(action);
+    if (!isCustomized(action)) {
+      yield* _browserAliases[action] ?? const <ShortcutBinding>[];
+    }
+  }
+
+  List<ShortcutAction> browserConflicts(
+    ShortcutAction action,
+    ShortcutBinding binding,
+  ) {
+    return browserShortcutActions
+        .where((other) {
+          if (other == action) return false;
+          return _browserBindings(other).any((existing) {
+            if (existing == binding) return true;
+            // Default Control accelerators also accept Command.
+            return !isCustomized(other) &&
+                existing.ctrl &&
+                !existing.meta &&
+                binding ==
+                    ShortcutBinding(
+                      key: existing.key,
+                      meta: true,
+                      shift: existing.shift,
+                      alt: existing.alt,
+                    );
+          });
+        })
+        .toList(growable: false);
+  }
+
+  /// Default primary-modifier shortcuts work with Control and Command.
+  /// Explicit custom bindings retain the exact modifiers the user recorded.
+  bool _browserMatches(
+    ShortcutAction action,
+    ShortcutBinding binding,
+    KeyEvent event, {
+    required bool isCtrl,
+    required bool isShift,
+    required bool isAlt,
+    required bool isMeta,
+    bool defaultBinding = false,
+  }) {
+    final primary = defaultBinding && binding.ctrl && !binding.meta;
+    if (primary && isCtrl == isMeta) return false;
+    // Recognize a held binding so child views can forward it and the command
+    // host can suppress repeats instead of turning it into quick search.
+    final press = event is KeyRepeatEvent
+        ? KeyDownEvent(
+            physicalKey: event.physicalKey,
+            logicalKey: event.logicalKey,
+            timeStamp: event.timeStamp,
+            character: event.character,
+          )
+        : event;
+    return binding.matches(
+      press,
+      isCtrl: primary ? isCtrl || isMeta : isCtrl,
+      isShift: isShift,
+      isAlt: isAlt,
+      isMeta: primary ? false : isMeta,
+    );
+  }
+
+  ShortcutAction? resolveBrowser(
+    KeyEvent event, {
+    required bool isCtrl,
+    required bool isShift,
+    required bool isAlt,
+    required bool isMeta,
+  }) {
+    // An explicit binding takes priority over a default it replaced. The UI
+    // reports these conflicts before saving; older imports remain deterministic.
+    for (final action in [..._custom.keys, ...browserShortcutActions]) {
+      if (!browserShortcutActions.contains(action)) continue;
+      for (final binding in _browserBindings(action)) {
+        if (_browserMatches(
+          action,
+          binding,
+          event,
+          isCtrl: isCtrl,
+          isShift: isShift,
+          isAlt: isAlt,
+          isMeta: isMeta,
+          defaultBinding: !_custom.containsKey(action),
+        ))
+          return action;
+      }
+    }
+    return null;
+  }
+
+  /// Prevent the old hardcoded accelerator from firing after it was rebound.
+  bool suppressesDefault(
+    KeyEvent event, {
+    required bool isCtrl,
+    required bool isShift,
+    required bool isAlt,
+    required bool isMeta,
+  }) {
+    return _custom.keys
+        .where(browserShortcutActions.contains)
+        .any(
+          (action) => [_defaults[action]!, ...?_browserAliases[action]].any(
+            (binding) => _browserMatches(
+              action,
+              binding,
+              event,
+              isCtrl: isCtrl,
+              isShift: isShift,
+              isAlt: isAlt,
+              isMeta: isMeta,
+              defaultBinding: true,
+            ),
+          ),
+        );
+  }
+
+  String browserDisplay(ShortcutAction action) {
+    var binding = getBinding(action);
+    final mac =
+        defaultTargetPlatform == TargetPlatform.macOS ||
+        defaultTargetPlatform == TargetPlatform.iOS;
+    if (mac && !isCustomized(action) && binding.ctrl && !binding.meta) {
+      binding = ShortcutBinding(
+        key: binding.key,
+        meta: true,
+        shift: binding.shift,
+        alt: binding.alt,
+      );
+    }
+    return binding.toDisplayString();
   }
 }

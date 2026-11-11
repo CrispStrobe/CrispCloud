@@ -13,7 +13,8 @@ FileCollectionStorage createFileCollectionStorage({
 
 /// One IndexedDB value per bounded row page; browsing the catalog never loads
 /// file payloads into browser localStorage or SharedPreferences.
-class BrowserFileCollectionStorage implements FileCollectionStorage {
+class BrowserFileCollectionStorage
+    implements FileCollectionStorage, FileCollectionStorageBatchWriter {
   Future<web.IDBDatabase>? _database;
   Future<web.IDBDatabase> _open() => _database ??= () async {
     final done = Completer<web.IDBDatabase>();
@@ -62,6 +63,7 @@ class BrowserFileCollectionStorage implements FileCollectionStorage {
 
   Future<void> _committed(web.IDBTransaction transaction) {
     final done = Completer<void>();
+    StateError? failure;
     transaction.oncomplete = ((web.Event event) {
       if (!done.isCompleted) {
         done.complete();
@@ -70,14 +72,22 @@ class BrowserFileCollectionStorage implements FileCollectionStorage {
     void failed(web.Event event) {
       if (!done.isCompleted) {
         done.completeError(
-          StateError(
-            'Collection storage write failed: ${transaction.error?.message}',
-          ),
+          failure ??
+              StateError(
+                'Collection storage write failed: ${transaction.error?.message}',
+              ),
         );
       }
     }
 
-    transaction.onerror = failed.toJS;
+    // A request error bubbles before the transaction has finished aborting.
+    // Record it, but wait for onabort so staged-data cleanup cannot race a
+    // transaction which still has outstanding requests.
+    transaction.onerror = ((web.Event event) {
+      failure ??= StateError(
+        'Collection storage write failed: ${transaction.error?.message}',
+      );
+    }).toJS;
     transaction.onabort = failed.toJS;
     return done.future;
   }
@@ -109,6 +119,40 @@ class BrowserFileCollectionStorage implements FileCollectionStorage {
     );
     final complete = _committed(transaction);
     transaction.objectStore('records').put(value.toJS, key.toJS);
+    await complete;
+  }
+
+  @override
+  Future<void> writeBatch(List<FileCollectionStorageRecord> records) async {
+    final batch = List<FileCollectionStorageRecord>.unmodifiable(records);
+    FileCollectionStorageBatch.validate(batch);
+    if (batch.isEmpty) return;
+    final transaction = (await _open()).transaction(
+      'records'.toJS,
+      'readwrite',
+    );
+    final complete = _committed(transaction);
+    try {
+      final store = transaction.objectStore('records');
+      // Enqueue synchronously while the transaction is active. Awaiting each
+      // put separately would allow auto-commit and lose the batching boundary.
+      for (final record in batch) {
+        store.put(record.value.toJS, record.key.toJS);
+      }
+    } catch (_) {
+      // A synchronous enqueue failure must also drain/abort earlier requests.
+      try {
+        transaction.abort();
+      } catch (_) {
+        // An already finished transaction is still accounted for by complete.
+      }
+      try {
+        await complete;
+      } catch (_) {
+        // Preserve the original enqueue error after pending requests finish.
+      }
+      rethrow;
+    }
     await complete;
   }
 

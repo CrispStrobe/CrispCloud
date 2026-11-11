@@ -1,0 +1,182 @@
+name: File workspace UX
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'lib/**'
+      - 'test/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - '.github/workflows/workspace-ux.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: workspace-ux-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  workspace:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.8'
+          channel: stable
+          cache: true
+      - name: Resolve dependencies
+        run: flutter pub get
+      - name: Install SQLite for isolated filesystem tests
+        run: sudo apt-get update && sudo apt-get install -y libsqlite3-dev
+      - name: Check formatting and preserve a reviewable correction patch
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || 'origin/main' }}
+        run: |
+          mapfile -t changed < <(git diff --name-only --diff-filter=ACM "$BASE_SHA" HEAD -- '*.dart')
+          if ((${#changed[@]})); then dart format "${changed[@]}"; fi
+          git diff --binary > workspace-format.patch
+      - name: Upload formatting corrections
+        uses: actions/upload-artifact@v4
+        with:
+          name: workspace-format
+          path: workspace-format.patch
+          retention-days: 7
+      - name: Analyze workspace implementation
+        run: >-
+          flutter analyze --no-fatal-infos --no-fatal-warnings
+          lib/providers/panel_provider.dart
+          lib/providers/panel_source_provider.dart
+          lib/providers/recent_locations_provider.dart
+          lib/providers/keyboard_shortcut_provider.dart
+          lib/services/keyboard_shortcut_service.dart
+          lib/screens/keyboard_shortcuts.dart
+          lib/screens/file_browser_screen.dart
+          lib/services/browser_menu_shortcut.dart
+          lib/widgets/tree_sidebar.dart
+          lib/widgets/keyboard_shortcut_dialog.dart
+          lib/widgets/folder_drop_target.dart
+          lib/services/folder_drop_service.dart
+          lib/services/storage_scan_backend.dart
+          lib/services/storage_scan_service.dart
+          lib/services/storage_scan_source.dart
+          lib/services/storage_scan_batch_service.dart
+          lib/services/storage_scan_snapshot_store.dart
+          lib/services/storage_identity.dart
+          lib/services/file_collection_storage.dart
+          lib/services/file_collection_storage_native.dart
+          lib/services/file_collection_storage_browser.dart
+          lib/services/file_collection_store.dart
+          lib/services/local_file_service.dart
+          lib/services/local_file_service_native.dart
+          lib/services/local_file_service_web.dart
+          lib/models/panel_drag_data.dart
+          lib/models/panel_breadcrumb.dart
+          lib/models/folder_size_measurement.dart
+          lib/models/storage_analysis.dart
+          lib/widgets/fkey_bar.dart
+          lib/widgets/file_clipboard_actions.dart
+          lib/widgets/file_operation_dialog.dart
+          lib/widgets/file_column_view.dart
+          lib/widgets/file_context_menu.dart
+          lib/widgets/file_grid_view.dart
+          lib/widgets/file_list_view.dart
+          lib/widgets/folder_size_presentation.dart
+          lib/widgets/file_panel.dart
+          lib/widgets/panel_tab_bar.dart
+          lib/widgets/status_bar.dart
+          lib/l10n/status_bar_strings.dart
+          lib/l10n/storage_analyzer_strings.dart
+          lib/widgets/storage_analysis_view.dart
+          lib/widgets/storage_analyzer_dialog.dart
+          lib/widgets/storage_scan_batch_dialog.dart
+          lib/widgets/panel_listing_placeholder.dart
+          lib/widgets/panel_source_selector.dart
+          lib/widgets/panel_header.dart
+          lib/widgets/operations_panel.dart
+          lib/widgets/transfer_file_details.dart
+          lib/widgets/file_collections_dialog.dart
+          lib/widgets/command_palette.dart
+      - name: Workspace behavior regressions
+        run: |
+          candidates=(
+            test/panel_source_restore_test.dart
+            test/panel_file_origin_test.dart
+            test/panel_listing_presentation_test.dart
+            test/local_directory_snapshot_test.dart
+            test/local_grant_origin_test.dart
+            test/folder_drop_snapshot_test.dart
+            test/panel_folder_size_test.dart
+            test/storage_analyzer_strings_test.dart
+            test/storage_analyzer_widget_test.dart
+            test/storage_analyzer_origin_test.dart
+            test/storage_scan_access_test.dart
+            test/storage_scan_service_test.dart
+            test/storage_scan_summary_test.dart
+            test/storage_scan_batch_service_test.dart
+            test/storage_scan_batch_widget_test.dart
+            test/storage_scan_snapshot_store_test.dart
+            test/storage_scan_snapshot_widget_test.dart
+            test/storage_identity_cache_test.dart
+            test/file_collection_batch_storage_test.dart
+            test/storage_scan_worker_test.dart
+            test/storage_scan_native_test.dart
+            test/storage_scan_native_paths_test.dart
+            test/storage_scan_virtual_test.dart
+            test/panel_breadcrumb_test.dart
+            test/panel_header_i18n_test.dart
+            test/operations_i18n_test.dart
+            test/commander_strings_test.dart
+            test/ios_local_file_service_test.dart
+            test/panel_refresh_lifecycle_test.dart
+            test/panel_swap_test.dart
+            test/panel_swap_view_test.dart
+            test/panel_swap_virtual_test.dart
+            test/commander_file_list_test.dart
+            test/keyboard_shortcut_test.dart
+            test/workspace_keyboard_test.dart
+            test/browser_menu_shortcut_test.dart
+            test/panel_navigation_model_test.dart
+            test/panel_navigation_recovery_test.dart
+            test/recent_locations_identity_test.dart
+            test/file_collection_panel_paging_test.dart
+            test/file_collection_paging_store_test.dart
+            test/command_search_test.dart
+            test/widget/file_column_view_test.dart
+            test/widget/navigation_recovery_ui_test.dart
+            test/widget/tree_sidebar_source_test.dart
+            test/widget/keyboard_shortcut_dialog_test.dart
+            test/widget/command_palette_localization_test.dart
+            test/widget/screen_dialog_localization_test.dart
+            test/widget/fkey_bar_widget_test.dart
+            test/widget/gallery_browser_test.dart
+            test/widget/gallery_media_routing_test.dart
+            test/widget/responsive_toolbar_widget_test.dart
+            test/widget/folder_drop_target_test.dart
+            test/widget/folder_size_result_context_test.dart
+            test/widget/folder_size_views_test.dart
+            test/widget/status_bar_source_test.dart
+            test/widget/status_bar_widget_test.dart
+            test/widget/workspace_tab_bar_test.dart
+            test/widget/panel_header_navigation_test.dart
+            test/widget/operations_panel_test.dart
+            test/widget/transfer_file_details_test.dart
+            test/widget/panel_drop_options_test.dart
+            test/widget/panel_source_selector_widget_test.dart
+            test/widget/panel_source_localization_test.dart
+            test/widget/panel_listing_placeholder_test.dart
+            test/file_clipboard_test.dart
+            test/file_list_i18n_test.dart
+            test/widget/file_operation_dialog_test.dart
+          )
+          tests=()
+          for path in "${candidates[@]}"; do if [[ -f "$path" ]]; then tests+=("$path"); fi; done
+          python3 tool/with_ci_system_sqlite.py flutter test --no-pub "${tests[@]}"
+      - name: Require committed formatting
+        run: git diff --exit-code

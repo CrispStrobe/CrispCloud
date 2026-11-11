@@ -1,3 +1,5 @@
+import 'dart:ui' show SemanticsAction, Tristate;
+
 import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/l10n/file_list_strings.dart';
 import 'package:crisp_cloud/models/file_item.dart';
@@ -42,34 +44,106 @@ void main() {
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({});
-    final file = FileItem(name: 'a.txt', isFolder: false, size: 100);
-    await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          locale: const Locale('de'),
-          supportedLocales: AppLocalizations.supportedLocales,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          home: Scaffold(
-            body: CompactFileTile(
-              file: file,
-              side: PanelSide.local,
-              isSelected: true,
-              onTap: (_, __) {},
-              onDoubleTap: () {},
+    final semantics = tester.ensureSemantics();
+    try {
+      final file = FileItem(name: 'a.txt', isFolder: false, size: 100);
+      var taps = 0;
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            locale: const Locale('de'),
+            supportedLocales: AppLocalizations.supportedLocales,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            home: Scaffold(
+              body: CompactFileTile(
+                file: file,
+                side: PanelSide.local,
+                isSelected: true,
+                onTap: (_, __) => taps++,
+                onDoubleTap: () {},
+              ),
             ),
           ),
         ),
-      ),
-    );
-    await tester.pumpAndSettle();
-    expect(
-      find.byWidgetPredicate(
+      );
+      await tester.pumpAndSettle();
+      final semanticRow = find.byWidgetPredicate(
         (widget) =>
             widget is Semantics &&
             (widget.properties.label?.startsWith('Datei a.txt,') ?? false) &&
             (widget.properties.label?.endsWith('ausgewählt') ?? false),
-      ),
-      findsOneWidget,
-    );
+      );
+      expect(semanticRow, findsOneWidget);
+      final node = tester.getSemantics(semanticRow);
+      final data = node.getSemanticsData();
+      expect(data.label, startsWith('Datei a.txt,'));
+      expect(data.label, contains('ausgewählt'));
+      expect(data.flagsCollection.isSelected, Tristate.isTrue);
+      expect(data.flagsCollection.isButton, isTrue);
+      expect(data.hasAction(SemanticsAction.tap), isTrue);
+      node.owner!.performAction(node.id, SemanticsAction.tap);
+      await tester.pump();
+      expect(taps, 1);
+      expect(find.byType(Draggable<PanelDragData>), findsNothing);
+      expect(find.byType(LongPressDraggable<PanelDragData>), findsNothing);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    } finally {
+      semantics.dispose();
+    }
   });
+
+  for (final path in <String?>[null, '']) {
+    testWidgets(
+      'a folder row with ${path == null ? 'no' : 'an empty'} path keeps localized focus semantics',
+      (tester) async {
+        SharedPreferences.setMockInitialValues({});
+        final semantics = tester.ensureSemantics();
+        try {
+          await tester.pumpWidget(
+            ProviderScope(
+              child: MaterialApp(
+                locale: const Locale('de'),
+                supportedLocales: AppLocalizations.supportedLocales,
+                localizationsDelegates: AppLocalizations.localizationsDelegates,
+                home: Scaffold(
+                  body: CompactFileTile(
+                    file: FileItem(
+                      name: 'Entwürfe',
+                      path: path,
+                      isFolder: true,
+                    ),
+                    side: PanelSide.local,
+                    isSelected: false,
+                    isCursor: true,
+                    onTap: (_, __) {},
+                    onDoubleTap: () {},
+                  ),
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+          final semanticRow = find.byWidgetPredicate(
+            (widget) =>
+                widget is Semantics &&
+                widget.properties.label == 'Ordner Entwürfe',
+          );
+          expect(semanticRow, findsOneWidget);
+          final data = tester.getSemantics(semanticRow).getSemanticsData();
+          expect(data.label, startsWith('Ordner Entwürfe'));
+          expect(data.flagsCollection.isSelected, Tristate.isFalse);
+          expect(data.flagsCollection.isFocused, Tristate.isTrue);
+          expect(data.flagsCollection.isButton, isTrue);
+          expect(data.hasAction(SemanticsAction.tap), isTrue);
+          expect(find.byType(Draggable<PanelDragData>), findsNothing);
+          expect(find.byType(LongPressDraggable<PanelDragData>), findsNothing);
+          expect(tester.takeException(), isNull);
+          await tester.pumpWidget(const SizedBox.shrink());
+        } finally {
+          semantics.dispose();
+        }
+      },
+    );
+  }
 }

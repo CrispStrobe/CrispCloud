@@ -14,6 +14,8 @@ class PanelHeaderStrings {
 
 const _translations = <String, Map<String, String>>{
   "de": {
+    "Enter a valid path.": "Geben Sie einen gültigen Pfad ein.",
+    "Choose a path within {0}.": "Wählen Sie einen Pfad innerhalb von {0}.",
     "Volumes": "Laufwerke",
     "Computer": "Computer",
     "More commands": "Weitere Befehle",
@@ -35,6 +37,8 @@ const _translations = <String, Map<String, String>>{
     "Go to path…": "Pfad öffnen…",
   },
   "fr": {
+    "Enter a valid path.": "Saisissez un chemin valide.",
+    "Choose a path within {0}.": "Choisissez un chemin dans {0}.",
     "Volumes": "Volumes",
     "Computer": "Ordinateur",
     "More commands": "Plus de commandes",
@@ -56,6 +60,8 @@ const _translations = <String, Map<String, String>>{
     "Go to path…": "Aller au chemin…",
   },
   "es": {
+    "Enter a valid path.": "Introduce una ruta válida.",
+    "Choose a path within {0}.": "Elige una ruta dentro de {0}.",
     "Volumes": "Volúmenes",
     "Computer": "Equipo",
     "More commands": "Más comandos",
@@ -77,6 +83,8 @@ const _translations = <String, Map<String, String>>{
     "Go to path…": "Ir a la ruta…",
   },
   "pt": {
+    "Enter a valid path.": "Introduza um caminho válido.",
+    "Choose a path within {0}.": "Escolha um caminho dentro de {0}.",
     "Volumes": "Volumes",
     "Computer": "Computador",
     "More commands": "Mais comandos",
@@ -98,6 +106,8 @@ const _translations = <String, Map<String, String>>{
     "Go to path…": "Ir para o caminho…",
   },
   "zh": {
+    "Enter a valid path.": "请输入有效路径。",
+    "Choose a path within {0}.": "请选择 {0} 内的路径。",
     "Volumes": "宗卷",
     "Computer": "计算机",
     "More commands": "更多命令",
@@ -118,6 +128,8 @@ const _translations = <String, Map<String, String>>{
     "Go to path…": "转到路径…",
   },
   "ja": {
+    "Enter a valid path.": "有効なパスを入力してください。",
+    "Choose a path within {0}.": "{0} 内のパスを選択してください。",
     "Volumes": "ボリューム",
     "Computer": "コンピューター",
     "More commands": "その他のコマンド",
@@ -138,6 +150,8 @@ const _translations = <String, Map<String, String>>{
     "Go to path…": "パスへ移動…",
   },
   "ko": {
+    "Enter a valid path.": "유효한 경로를 입력하세요.",
+    "Choose a path within {0}.": "{0} 안의 경로를 선택하세요.",
     "Volumes": "볼륨",
     "Computer": "컴퓨터",
     "More commands": "추가 명령",
@@ -158,6 +172,8 @@ const _translations = <String, Map<String, String>>{
     "Go to path…": "경로로 이동…",
   },
   "ar": {
+    "Enter a valid path.": "أدخل مسارًا صالحًا.",
+    "Choose a path within {0}.": "اختر مسارًا داخل {0}.",
     "Volumes": "وحدات التخزين",
     "Computer": "الكمبيوتر",
     "More commands": "المزيد من الأوامر",

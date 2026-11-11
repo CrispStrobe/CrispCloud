@@ -1,9 +1,7 @@
 // widgets/file_list_view.dart
 
-import 'dart:io' show Platform;
 import 'dart:math' as math;
 
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/provider_operation_strings.dart';
 import '../l10n/file_list_strings.dart';
 import '../models/file_item.dart';
+import '../models/folder_size_measurement.dart';
 import '../models/file_view_configuration.dart';
 import '../models/panel_side.dart';
 import '../providers/focus_area_provider.dart';
@@ -20,9 +19,14 @@ import '../providers/toolbar_provider.dart'
     show columnWidthsProvider, panelViewModeProvider, fileColumnsProvider;
 import '../services/log_service.dart';
 import '../services/panel_view_mode_service.dart' show PanelViewMode;
+import '../services/keyboard_shortcut_service.dart';
 import '../utils/formatters.dart';
 import 'file_context_menu.dart';
 import 'pattern_selection_dialog.dart';
+import 'folder_drop_target.dart';
+import 'folder_size_presentation.dart';
+
+export '../models/panel_drag_data.dart';
 
 String _collectionPathLabel(FileItem file) {
   final source = file.metadata?['collectionSource'];
@@ -178,7 +182,7 @@ class FileListView extends ConsumerWidget {
               final isCursor = index == cursorIndex;
 
               if (panel.renamingItem == file) {
-                return _InlineRenameField(
+                return FileInlineRenameField(
                   file: file,
                   side: side,
                   isCursor: isCursor,
@@ -196,6 +200,7 @@ class FileListView extends ConsumerWidget {
                   isSelected: isSelected,
                   isCursor: isCursor,
                   selectedFiles: selectedFiles,
+                  folderMeasurement: panel.folderSizeFor(file),
                   textStyle: listTextStyle,
                   sourceLabel: origin == null
                       ? null
@@ -221,6 +226,7 @@ class FileListView extends ConsumerWidget {
                 isSelected: isSelected,
                 isCursor: isCursor,
                 selectedFiles: selectedFiles,
+                folderMeasurement: panel.folderSizeFor(file),
                 textStyle: listTextStyle,
                 showRelativePath:
                     panel.isFlatView || panel.showingSearchResults,
@@ -253,16 +259,8 @@ class FileListView extends ConsumerWidget {
       final focusArea = ref.read(focusAreaProvider);
       final terminalVisible = ref.watch(showTerminalProvider);
       final isActivePanel = focusArea.panelSide == side && !terminalVisible;
-      if (isActivePanel) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!context.mounted) return;
-          if (ref.read(showTerminalProvider)) return;
-          if (ModalRoute.of(context)?.isCurrent != true) return;
-          if (!panel.listFocusNode.hasFocus) {
-            panel.listFocusNode.requestFocus();
-          }
-        });
-      }
+      // Initial autofocus and explicit pointer/pane actions own focus. A
+      // listing refresh must leave same-route path and filter fields alone.
       return Listener(
         onPointerDown: (event) {
           _PointerModifiers.update(event);
@@ -283,6 +281,33 @@ class FileListView extends ConsumerWidget {
 
             final isShift = HardwareKeyboard.instance.isShiftPressed;
             final p = ref.read(panelProvider(side));
+            if (p.renamingItem != null) return KeyEventResult.ignored;
+            final keyboard = HardwareKeyboard.instance;
+            final shortcuts = ref.read(keyboardShortcutServiceProvider);
+            final command = shortcuts.resolveBrowser(
+              event,
+              isCtrl: keyboard.isControlPressed,
+              isMeta: keyboard.isMetaPressed,
+              isShift: isShift,
+              isAlt: keyboard.isAltPressed,
+            );
+            final editingQuery =
+                p.isTypeahead &&
+                event.logicalKey == LogicalKeyboardKey.backspace &&
+                !shortcuts.isCustomized(ShortcutAction.up);
+            if ((!editingQuery && command != null) ||
+                keyboard.isControlPressed ||
+                keyboard.isMetaPressed ||
+                keyboard.isAltPressed ||
+                shortcuts.suppressesDefault(
+                  event,
+                  isCtrl: keyboard.isControlPressed,
+                  isMeta: keyboard.isMetaPressed,
+                  isShift: isShift,
+                  isAlt: keyboard.isAltPressed,
+                )) {
+              return KeyEventResult.ignored;
+            }
 
             // Selection shortcuts must run before printable-character quick search.
             if (event.logicalKey == LogicalKeyboardKey.numpadAdd ||
@@ -438,19 +463,13 @@ class FileListView extends ConsumerWidget {
   }
 }
 
-/// Data carried during a drag operation between panels.
-class PanelDragData {
-  final PanelSide sourceSide;
-  final List<FileItem> files;
-  const PanelDragData({required this.sourceSide, required this.files});
-}
-
 class FileListTile extends ConsumerWidget {
   final FileItem file;
   final PanelSide side;
   final bool isSelected;
   final bool isCursor;
   final List<FileItem> selectedFiles;
+  final FolderSizeMeasurement? folderMeasurement;
   final Function(bool shiftKey, bool ctrlKey) onTap;
   final VoidCallback onDoubleTap;
   final Function(TapDownDetails)? onSecondaryTap;
@@ -465,6 +484,7 @@ class FileListTile extends ConsumerWidget {
     required this.isSelected,
     this.isCursor = false,
     this.selectedFiles = const [],
+    this.folderMeasurement,
     required this.onTap,
     required this.onDoubleTap,
     this.onSecondaryTap,
@@ -488,10 +508,15 @@ class FileListTile extends ConsumerWidget {
     );
     final colorService = ref.watch(fileTypeColorProvider);
     final fileColor = colorService.colorForFile(file);
+    final folderSize = FolderSizePresentation.forFile(
+      context,
+      file,
+      folderMeasurement,
+    );
 
     // Inline rename mode: replace the whole tile with an editable field
     if (isRenaming) {
-      return _InlineRenameField(
+      return FileInlineRenameField(
         file: file,
         side: side,
         isCursor: isCursor,
@@ -525,19 +550,35 @@ class FileListTile extends ConsumerWidget {
       child: Focus(
         onKeyEvent: (node, event) {
           if (event is KeyDownEvent &&
-              event.logicalKey == LogicalKeyboardKey.enter) {
+              event.logicalKey == LogicalKeyboardKey.enter &&
+              !HardwareKeyboard.instance.isControlPressed &&
+              !HardwareKeyboard.instance.isMetaPressed &&
+              !HardwareKeyboard.instance.isAltPressed &&
+              !HardwareKeyboard.instance.isShiftPressed &&
+              ref
+                      .read(keyboardShortcutServiceProvider)
+                      .resolveBrowser(
+                        event,
+                        isCtrl: false,
+                        isShift: false,
+                        isAlt: false,
+                        isMeta: false,
+                      ) ==
+                  null) {
             onDoubleTap();
             return KeyEventResult.handled;
           }
           return KeyEventResult.ignored;
         },
         child: Semantics(
-          label: strings.semantic(
-            folder: file.isFolder,
-            name: file.name,
-            size: file.size == null ? null : formatBytes(file.size!),
-            selected: isSelected,
-          ),
+          label:
+              strings.semantic(
+                folder: file.isFolder,
+                name: file.name,
+                size: file.size == null ? null : formatBytes(file.size!),
+                selected: isSelected,
+              ) +
+              (folderSize == null ? '' : ', ${folderSize.tooltip}'),
           selected: isSelected,
           focused: isCursor,
           button: true,
@@ -554,166 +595,118 @@ class FileListTile extends ConsumerWidget {
                     ),
                   )
                 : null,
-            child: ListTile(
-              selected: isSelected,
-              selectedTileColor: Theme.of(context).colorScheme.primaryContainer
-                  .withValues(alpha: 0.65),
-              leading: file.name == '..'
-                  ? const Icon(
-                      Icons.arrow_upward,
-                      size: 28,
-                      color: Colors.amber,
-                    )
-                  : iconWidget,
-              title: Text(
-                file.name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: (textStyle ?? const TextStyle()).copyWith(
-                  color: isSelected
-                      ? Theme.of(context).colorScheme.onPrimaryContainer
-                      : fileColor,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            // Keep selection and ink above the cursor decoration, on the same
+            // local Material, while the outer border retains its own inset.
+            child: Material(
+              type: MaterialType.transparency,
+              child: ListTile(
+                selected: isSelected,
+                selectedTileColor: Theme.of(context)
+                    .colorScheme
+                    .primaryContainer
+                    .withValues(alpha: 0.65),
+                leading: file.name == '..'
+                    ? const Icon(
+                        Icons.arrow_upward,
+                        size: 28,
+                        color: Colors.amber,
+                      )
+                    : iconWidget,
+                title: Text(
+                  file.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: (textStyle ?? const TextStyle()).copyWith(
+                    color: isSelected
+                        ? Theme.of(context).colorScheme.onPrimaryContainer
+                        : fileColor,
+                    fontWeight: isSelected
+                        ? FontWeight.w600
+                        : FontWeight.normal,
+                  ),
                 ),
-              ),
-              subtitle: file.name == '..'
-                  ? null
-                  : Row(
-                      children: [
-                        if (_collectionStatusLabel(file).isNotEmpty)
-                          _collectionStatus(context, file),
-                        if (showRelativePath && file.path != null) ...[
-                          Expanded(
-                            child: Text(
-                              _collectionPathLabel(file),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: (textStyle ?? const TextStyle()).copyWith(
-                                fontSize: math.max(
-                                  9.0,
-                                  (textStyle?.fontSize ?? 13) - 2,
-                                ),
+                subtitle: file.name == '..'
+                    ? null
+                    : Row(
+                        children: [
+                          if (_collectionStatusLabel(file).isNotEmpty)
+                            _collectionStatus(context, file),
+                          if (showRelativePath && file.path != null) ...[
+                            Expanded(
+                              child: Text(
+                                _collectionPathLabel(file),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: (textStyle ?? const TextStyle())
+                                    .copyWith(
+                                      fontSize: math.max(
+                                        9.0,
+                                        (textStyle?.fontSize ?? 13) - 2,
+                                      ),
+                                    ),
                               ),
                             ),
-                          ),
-                        ] else ...[
-                          if (file.isFolder && file.calculatedSize != null) ...[
-                            Text(formatBytes(file.calculatedSize!)),
-                            if (file.updatedAt != null) ...[
-                              const Text(' • '),
+                          ] else ...[
+                            if (folderSize != null) ...[
+                              Flexible(
+                                child: Tooltip(
+                                  message: folderSize.tooltip,
+                                  child: Text(
+                                    folderSize.label,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ),
+                              if (file.updatedAt != null) ...[
+                                const Text(' • '),
+                                Text(formatDate(file.updatedAt!)),
+                              ],
+                            ] else if (!file.isFolder &&
+                                file.displaySize != null) ...[
+                              Text(formatBytes(file.displaySize!)),
+                              if (file.updatedAt != null) ...[
+                                const Text(' • '),
+                                Text(formatDate(file.updatedAt!)),
+                              ],
+                            ] else if (file.updatedAt != null)
                               Text(formatDate(file.updatedAt!)),
-                            ],
-                          ] else if (!file.isFolder &&
-                              file.displaySize != null) ...[
-                            Text(formatBytes(file.displaySize!)),
-                            if (file.updatedAt != null) ...[
-                              const Text(' • '),
-                              Text(formatDate(file.updatedAt!)),
-                            ],
-                          ] else if (file.updatedAt != null)
-                            Text(formatDate(file.updatedAt!)),
+                          ],
                         ],
-                      ],
-                    ),
-              trailing: file.isFolder
-                  ? IconButton(
-                      icon: const Icon(Icons.chevron_right),
-                      tooltip: 'Open',
-                      onPressed: onDoubleTap,
-                    )
-                  : null,
-              onTap: () {
-                // Use _PointerModifiers captured at pointer-down time (more reliable on web).
-                onTap(
-                  _PointerModifiers.shiftPressed,
-                  _PointerModifiers.ctrlOrMetaPressed,
-                );
-              },
-              onLongPress: onDoubleTap,
+                      ),
+                trailing: file.isFolder
+                    ? IconButton(
+                        icon: const Icon(Icons.chevron_right),
+                        tooltip: 'Open',
+                        onPressed: onDoubleTap,
+                      )
+                    : null,
+                onTap: () {
+                  // Use _PointerModifiers captured at pointer-down time (more reliable on web).
+                  onTap(
+                    _PointerModifiers.shiftPressed,
+                    _PointerModifiers.ctrlOrMetaPressed,
+                  );
+                },
+                onLongPress: onDoubleTap,
+              ),
             ),
           ), // Container (cursor border)
         ), // Semantics
       ),
     );
 
-    // ".." cannot be dragged
-    if (file.name == '..') return tile;
-
-    // Wrap with LongPressDraggable for inter-panel drag
-    // If this file is selected and there are multiple selections, drag all selected files
-    final dragFiles = isSelected && selectedFiles.length > 1
-        ? selectedFiles
-        : [file];
-    final dragCount = dragFiles.length;
-
-    // On mobile, use shorter delay for touch drag; on desktop, use long press
-    final isMobile = !kIsWeb && (Platform.isAndroid || Platform.isIOS);
-
-    return LongPressDraggable<PanelDragData>(
-      delay: isMobile
-          ? const Duration(milliseconds: 200)
-          : const Duration(milliseconds: 500),
-      data: PanelDragData(sourceSide: side, files: dragFiles),
-      feedback: Material(
-        elevation: 4,
-        borderRadius: BorderRadius.circular(8),
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    file.isFolder ? Icons.folder : getFileIcon(file.name),
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    dragCount > 1
-                        ? '${file.name} +${dragCount - 1}'
-                        : file.name,
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-            // Count badge for multi-file drag
-            if (dragCount > 1)
-              Positioned(
-                top: -8,
-                right: -8,
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Text(
-                    '$dragCount',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onPrimary,
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
-      childWhenDragging: Opacity(opacity: 0.3, child: tile),
-      child: tile,
+    return PanelFileDragSource(
+      side: side,
+      file: file,
+      child: file.isFolder
+          ? FolderDropTarget(side: side, folder: file, child: tile)
+          : tile,
     );
   }
 }
 
-/// Compact single-line tile for "Full" view mode — like Double Commander.
+/// Compact single-line tile for the full file-list layout.
 /// Shows: icon | name | (spacer) | size | date — all on one 26px row.
 class CompactFileTile extends ConsumerWidget {
   final FileItem file;
@@ -721,6 +714,7 @@ class CompactFileTile extends ConsumerWidget {
   final bool isSelected;
   final bool isCursor;
   final List<FileItem> selectedFiles;
+  final FolderSizeMeasurement? folderMeasurement;
   final Function(bool shiftKey, bool ctrlKey) onTap;
   final VoidCallback onDoubleTap;
   final Function(TapDownDetails)? onSecondaryTap;
@@ -735,6 +729,7 @@ class CompactFileTile extends ConsumerWidget {
     required this.isSelected,
     this.isCursor = false,
     this.selectedFiles = const [],
+    this.folderMeasurement,
     required this.onTap,
     required this.onDoubleTap,
     this.onSecondaryTap,
@@ -782,6 +777,11 @@ class CompactFileTile extends ConsumerWidget {
               ? formatBytes(file.calculatedSize!)
               : '<DIR>')
         : (file.displaySize != null ? formatBytes(file.displaySize!) : '');
+    final folderSize = FolderSizePresentation.forFile(
+      context,
+      file,
+      folderMeasurement,
+    );
 
     final semantic = strings.semantic(
       folder: file.isFolder,
@@ -792,9 +792,9 @@ class CompactFileTile extends ConsumerWidget {
     final collection = file.metadata?['collectionSource'];
     final status = _collectionStatusLabel(file);
     final semanticLabel =
-        '$semantic${collection == null ? '' : ', $collection, ${file.path}'}${status.isEmpty ? '' : ', $status'}';
+        '$semantic${collection == null ? '' : ', $collection, ${file.path}'}${status.isEmpty ? '' : ', $status'}${folderSize == null ? '' : ', ${folderSize.tooltip}'}';
 
-    return LayoutBuilder(
+    final tile = LayoutBuilder(
       builder: (context, constraints) {
         final columns = view.columnsFitting(constraints.maxWidth);
         return Semantics(
@@ -850,14 +850,30 @@ class CompactFileTile extends ConsumerWidget {
                     const SizedBox(width: 6),
                     SizedBox(
                       width: view.widthFor(column),
-                      child: Text(
-                        column.displayValue(file, sourceLabel: sourceLabel),
-                        style: dimStyle,
-                        textAlign: column.kind == FileColumnKind.size
-                            ? TextAlign.right
-                            : TextAlign.left,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                      child: Tooltip(
+                        message:
+                            column.kind == FileColumnKind.size &&
+                                folderSize != null
+                            ? folderSize.tooltip
+                            : column.displayValue(
+                                file,
+                                sourceLabel: sourceLabel,
+                              ),
+                        child: Text(
+                          column.kind == FileColumnKind.size &&
+                                  folderSize != null
+                              ? folderSize.label
+                              : column.displayValue(
+                                  file,
+                                  sourceLabel: sourceLabel,
+                                ),
+                          style: dimStyle,
+                          textAlign: column.kind == FileColumnKind.size
+                              ? TextAlign.right
+                              : TextAlign.left,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ),
                   ],
@@ -869,11 +885,18 @@ class CompactFileTile extends ConsumerWidget {
         );
       },
     );
+    return PanelFileDragSource(
+      side: side,
+      file: file,
+      child: file.isFolder
+          ? FolderDropTarget(side: side, folder: file, child: tile)
+          : tile,
+    );
   }
 }
 
 /// Inline rename text field shown in-place of the filename when F2 is pressed.
-class _InlineRenameField extends ConsumerStatefulWidget {
+class FileInlineRenameField extends ConsumerStatefulWidget {
   final FileItem file;
   final PanelSide side;
   final bool isCursor;
@@ -885,7 +908,7 @@ class _InlineRenameField extends ConsumerStatefulWidget {
   /// Select only the base name so the extension is preserved.
   final bool keepExtension;
 
-  const _InlineRenameField({
+  const FileInlineRenameField({
     required this.file,
     required this.side,
     required this.isCursor,
@@ -895,10 +918,11 @@ class _InlineRenameField extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<_InlineRenameField> createState() => _InlineRenameFieldState();
+  ConsumerState<FileInlineRenameField> createState() =>
+      FileInlineRenameFieldState();
 }
 
-class _InlineRenameFieldState extends ConsumerState<_InlineRenameField> {
+class FileInlineRenameFieldState extends ConsumerState<FileInlineRenameField> {
   late final TextEditingController _ctrl;
   late final FocusNode _focus;
   late final FocusNode _keyboardListenerFocus;

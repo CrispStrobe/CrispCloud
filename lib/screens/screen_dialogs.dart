@@ -32,6 +32,9 @@ import '../l10n/command_strings.dart';
 import '../l10n/screen_dialog_strings.dart';
 import '../l10n/shortcut_strings.dart';
 import '../l10n/undo_presentation.dart';
+import '../l10n/workspace_ux_strings.dart';
+import '../services/keyboard_shortcut_service.dart';
+import '../widgets/keyboard_shortcut_dialog.dart';
 
 /// Explicit selection, or the cursor item when nothing is marked. This mirrors
 /// Total Commander: F5/F6/F8 operate on the item under the cursor when there
@@ -73,59 +76,62 @@ void confirmLogoutRiverpod(BuildContext context, WidgetRef ref) {
     context: context,
     builder: (context) => StatefulBuilder(
       builder: (context, setState) => AlertDialog(
-      title: Text(ScreenDialogStrings(context).text('logoutTitle')),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(ScreenDialogStrings(context).text('logoutConfirm')),
-          if (cleanupError != null) ...[
-            const SizedBox(height: 12),
-            Text(cleanupError!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+        title: Text(ScreenDialogStrings(context).text('logoutTitle')),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(ScreenDialogStrings(context).text('logoutConfirm')),
+            if (cleanupError != null) ...[
+              const SizedBox(height: 12),
+              Text(
+                cleanupError!,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ],
           ],
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: busy ? null : () => Navigator.pop(context),
-          child: Text(AppLocalizations.of(context)!.cancel),
         ),
-        ElevatedButton(
-          onPressed: busy ? null : () async {
-            setState(() => busy = true);
-            try {
-              await auth.logout();
-            } on FilenCredentialDeletionFailure catch (error) {
-              if (context.mounted) {
-                setState(() {
-                  cleanupError = error.toString();
-                  busy = false;
-                });
-              }
-              return;
-            } catch (_) {
-              if (context.mounted) setState(() => busy = false);
-              rethrow;
-            }
-            if (context.mounted) {
-              final messenger = ScaffoldMessenger.of(context);
-              final message = CommandStrings(context).text('loggedOut');
-              Navigator.pop(context);
-              messenger.showSnackBar(
-                SnackBar(
-                  content: Text(message),
-                ),
-              );
-            }
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.error,
-            foregroundColor: Theme.of(context).colorScheme.onError,
+        actions: [
+          TextButton(
+            onPressed: busy ? null : () => Navigator.pop(context),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
-          child: Text(cleanupError == null
-              ? AppLocalizations.of(context)!.logout
-              : AppLocalizations.of(context)!.retry),
-        ),
-      ],
+          ElevatedButton(
+            onPressed: busy
+                ? null
+                : () async {
+                    setState(() => busy = true);
+                    try {
+                      await auth.logout();
+                    } on FilenCredentialDeletionFailure catch (error) {
+                      if (context.mounted) {
+                        setState(() {
+                          cleanupError = error.toString();
+                          busy = false;
+                        });
+                      }
+                      return;
+                    } catch (_) {
+                      if (context.mounted) setState(() => busy = false);
+                      rethrow;
+                    }
+                    if (context.mounted) {
+                      final messenger = ScaffoldMessenger.of(context);
+                      final message = CommandStrings(context).text('loggedOut');
+                      Navigator.pop(context);
+                      messenger.showSnackBar(SnackBar(content: Text(message)));
+                    }
+                  },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+            ),
+            child: Text(
+              cleanupError == null
+                  ? AppLocalizations.of(context)!.logout
+                  : AppLocalizations.of(context)!.retry,
+            ),
+          ),
+        ],
       ),
     ),
   );
@@ -236,12 +242,21 @@ void showKeyboardShortcutsHelp(BuildContext context) {
             ),
             const Divider(),
             // Transfer
-            _shortcutRow('Ctrl+U', ShortcutStrings(context).description(45)),
+            _shortcutRow('Ctrl+U', context.commanderTr('Swap Panels')),
             _shortcutRow('Ctrl+D', ShortcutStrings(context).description(46)),
+            _shortcutRow(
+              'Ctrl+Shift+T',
+              WorkspaceUxStrings(context).text('reopen'),
+            ),
+            _shortcutRow('Ctrl+Alt+P', context.commanderTr('Toggle Preview')),
           ],
         ),
       ),
       actions: [
+        TextButton(
+          onPressed: () => showKeyboardShortcutSettings(context),
+          child: Text(WorkspaceUxStrings(context).text('customize')),
+        ),
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: Text(AppLocalizations.of(context)!.close),
@@ -251,27 +266,72 @@ void showKeyboardShortcutsHelp(BuildContext context) {
   );
 }
 
-Widget _shortcutRow(String keys, String description) => Builder(
-  builder: (context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 4),
-    child: Row(
-      children: [
-        SizedBox(
-          width: 120,
-          child: Text(
-            keys,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontFamily: 'monospace',
+Widget _shortcutRow(String keys, String description) => Consumer(
+  builder: (context, ref, _) {
+    ref.watch(shortcutBindingsProvider);
+    final service = ref.watch(keyboardShortcutServiceProvider);
+    String key(ShortcutAction action) => service.browserDisplay(action);
+    String withAlias(ShortcutAction action, String alias) =>
+        service.isCustomized(action) ? key(action) : '${key(action)} / $alias';
+    final liveKeys = switch (keys) {
+      'F2 / Shift+F6' => '${key(ShortcutAction.rename)} / Shift+F6',
+      'F3' => key(ShortcutAction.preview),
+      'F4' => key(ShortcutAction.edit),
+      'F5' => key(ShortcutAction.copyWithOptions),
+      'F6' => key(ShortcutAction.moveWithOptions),
+      'F7 / Ctrl+N' => withAlias(ShortcutAction.newFolder, 'Ctrl+N'),
+      'F8 / Delete' => withAlias(ShortcutAction.delete, 'F8'),
+      'Alt+← / Alt+→' =>
+        '${key(ShortcutAction.back)} / ${key(ShortcutAction.forward)}',
+      'Backspace' => key(ShortcutAction.up),
+      'Tab' => key(ShortcutAction.switchPanel),
+      'Ctrl+G / Ctrl+L' => withAlias(ShortcutAction.goToFolder, 'Ctrl+L'),
+      'Alt+F7' => key(ShortcutAction.search),
+      'Ctrl+F' => key(ShortcutAction.filter),
+      'Ctrl+A' => key(ShortcutAction.selectAll),
+      'Numpad +' => key(ShortcutAction.findPattern),
+      'Ctrl+C / Ctrl+X' =>
+        '${key(ShortcutAction.copy)} / ${key(ShortcutAction.cut)}',
+      'Ctrl+V' => key(ShortcutAction.paste),
+      'Ctrl+M' => key(ShortcutAction.multiRename),
+      'Ctrl+Z' => key(ShortcutAction.undo),
+      'Ctrl+R' => key(ShortcutAction.refresh),
+      'Ctrl+F3' => key(ShortcutAction.sortByName),
+      'Ctrl+F4' => key(ShortcutAction.sortByExtension),
+      'Ctrl+F5' => key(ShortcutAction.sortByDate),
+      'Ctrl+F6' => key(ShortcutAction.sortBySize),
+      'Ctrl+. / Ctrl+H' => withAlias(ShortcutAction.toggleHidden, 'Ctrl+H'),
+      'Ctrl+B' => key(ShortcutAction.bookmark),
+      'Ctrl+T' => key(ShortcutAction.newTab),
+      'Ctrl+W' => key(ShortcutAction.closeTab),
+      'Ctrl+Tab' => key(ShortcutAction.nextTab),
+      'Ctrl+Shift+Tab' => key(ShortcutAction.prevTab),
+      'Ctrl+Shift+P' => key(ShortcutAction.commandPalette),
+      'Ctrl+Shift+T' => key(ShortcutAction.reopenClosedTab),
+      'Ctrl+Alt+P' => key(ShortcutAction.togglePreview),
+      _ => keys,
+    };
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              liveKeys,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontFamily: 'monospace',
+              ),
             ),
           ),
-        ),
-        Expanded(
-          child: Text(ShortcutStrings(context).descriptionFor(description)),
-        ),
-      ],
-    ),
-  ),
+          Expanded(
+            child: Text(ShortcutStrings(context).descriptionFor(description)),
+          ),
+        ],
+      ),
+    );
+  },
 );
 
 void uploadSelected(BuildContext context, WidgetRef ref) {

@@ -1,4 +1,7 @@
 import 'package:crisp_cloud/models/panel_tab.dart';
+import 'package:crisp_cloud/models/file_item.dart';
+import 'package:crisp_cloud/models/panel_drag_data.dart';
+import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/widgets/panel_tab_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -9,6 +12,62 @@ void main() {
       home: Scaffold(body: Column(children: [bar])),
     ),
   );
+
+  testWidgets('tabs without a destination handler reject file drags', (
+    tester,
+  ) async {
+    var accepted = 0;
+    var rejected = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Column(
+            children: [
+              PanelTabBar(
+                tabs: [PanelTab(id: 'first', path: '/documents')],
+                activeTabId: 'first',
+                onTabSelected: (_) {},
+                onTabClosed: (_) {},
+                onNewTab: () {},
+              ),
+              Draggable<PanelDragData>(
+                data: PanelDragData(
+                  sourceSide: PanelSide.local,
+                  files: [
+                    FileItem(
+                      name: 'notes.txt',
+                      path: '/notes.txt',
+                      isFolder: false,
+                    ),
+                  ],
+                ),
+                onDragCompleted: () => accepted++,
+                onDraggableCanceled: (_, __) => rejected++,
+                feedback: const Material(child: Text('File feedback')),
+                child: const SizedBox(
+                  width: 140,
+                  height: 80,
+                  child: Text('Drag file'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.text('Drag file')),
+    );
+    await gesture.moveBy(const Offset(25, 0));
+    await tester.pump();
+    await gesture.moveTo(tester.getCenter(find.text('documents')));
+    await tester.pump();
+    await gesture.up();
+    await tester.pumpAndSettle();
+    expect(accepted, 0);
+    expect(rejected, 1);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets('one tab still exposes new-tab and workspace actions', (
     tester,

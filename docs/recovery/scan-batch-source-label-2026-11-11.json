@@ -1,0 +1,42 @@
+{
+  "format": "crispcloud-recovery-followup-v1",
+  "target_path": "docs/recovery/scan-batch-source-label-2026-11-11.json",
+  "base_recovery_blob": "0e8d9082ab6e00eed3a8157a0c1cf03406f7e881",
+  "applies_after": "All existing-file patches and pending final repairs from the base recovery blob.",
+  "finding": "A batch captured from the primary client could save the label of another registered live client with an equal persisted account identity. The actual read authority stayed bound correctly, but panel.storageDisplayName resolves labels by persistent identity rather than captured client.",
+  "behavior": "Match registered labels by identical client, then match the primary email by identical client. Otherwise use the captured provider and opaque account prefix. Local/nonremote fallback remains its captured source.displayName. No new localized text or credentials are introduced.",
+  "validation": "Read-only API/context review only. No tests, formatter, analyzer or builds were run. The new widget regression must run in the hosted gate.",
+  "patches": [
+    {
+      "path": "lib/widgets/storage_scan_batch_dialog.dart",
+      "replacements": [
+        {
+          "before": "/// Capture every requested row before opening a dialog or awaiting any work.",
+          "after": "String _capturedSourceLabel(PanelFileOrigin origin) {\n  final source = origin.source;\n  if (source is! RemotePanelSource) return source.displayName;\n  final account = origin.storageReference.accountKey;\n  final prefix = account.substring(0, account.length < 8 ? account.length : 8);\n  return '${source.displayName} · $prefix';\n}\n\n/// Capture every requested row before opening a dialog or awaiting any work.",
+          "expected_occurrences": 1
+        },
+        {
+          "before": "          sourceLabel:\n              sourceLabel?.call(origin) ??\n              panel.storageDisplayName(origin.storageReference),",
+          "after": "          sourceLabel: sourceLabel?.call(origin) ?? _capturedSourceLabel(origin),",
+          "expected_occurrences": 1
+        },
+        {
+          "before": "      sourceLabel: (origin) {\n        final source = origin.source;\n        if (source is RemotePanelSource) {\n          for (final connection in ref.read(multiCloudProvider).connections) {\n            if (identical(connection.client, source.client)) {\n              return '${connection.label} (${origin.storageReference.provider})';\n            }\n          }\n        }\n        return panel.storageDisplayName(origin.storageReference);\n      },",
+          "after": "      sourceLabel: (origin) {\n        final source = origin.source;\n        if (source is RemotePanelSource) {\n          for (final connection in ref.read(multiCloudProvider).connections) {\n            if (identical(connection.client, source.client)) {\n              return '${connection.label} (${origin.storageReference.provider})';\n            }\n          }\n          final auth = ref.read(authProvider);\n          if (identical(auth.client, source.client)) {\n            final email = auth.userEmail;\n            if (email?.isNotEmpty == true) {\n              return '${origin.storageReference.provider} · $email';\n            }\n          }\n        }\n        return _capturedSourceLabel(origin);\n      },",
+          "expected_occurrences": 1
+        }
+      ]
+    },
+    {
+      "path": "test/storage_scan_batch_widget_test.dart",
+      "expected_test_cases_after": 9,
+      "replacements": [
+        {
+          "before": "  testWidgets(\n    'review starts only on request and opens the exact committed report offline',",
+          "after": "  testWidgets(\n    'batch review keeps the captured session label when another session shares its account',\n    (tester) async {\n      _viewport(tester);\n      final harness = await WorkspaceTestHarness.create();\n      addTearDown(harness.dispose);\n      final panel = harness.container.read(panelProvider(PanelSide.remote));\n      final other = _Cloud(harness.cloud.userId!)\n        ..put('/one/other.bin', List.filled(99, 1));\n      expect(\n        storageReferenceForClient(other),\n        storageReferenceForClient(harness.cloud),\n      );\n      harness.container.read(multiCloudProvider).addConnection(\n        id: 'duplicate-session',\n        label: 'Other session',\n        provider: CloudProvider.s3,\n        client: other,\n      );\n      await panel.refresh();\n      final selected = panel.files!.firstWhere((file) => file.isFolder);\n      final origin = panel.originForFile(selected)!;\n      panel.toggleSelection(selected);\n      final captured = captureMarkedStorageScanRoots(\n        panel,\n        harness.container.read(localFileServiceProvider),\n      ).single;\n      final account = origin.storageReference.accountKey;\n      expect(\n        captured.sourceLabel,\n        'Memory · ${account.substring(0, 8)}',\n      );\n      expect(captured.storage.id, origin.storageId);\n      await tester.pumpWidget(\n        UncontrolledProviderScope(\n          container: harness.container,\n          child: _app(\n            Consumer(\n              builder: (context, ref, _) => TextButton(\n                onPressed: () => showStorageScanBatchDialog(context, ref),\n                child: const Text('Review marked folders'),\n              ),\n            ),\n          ),\n        ),\n      );\n      await tester.tap(find.text('Review marked folders'));\n      await tester.pumpAndSettle();\n      final batch = tester.widget<StorageScanBatchDialog>(\n        find.byType(StorageScanBatchDialog),\n      ).batch;\n      expect(batch.hasStarted, isFalse);\n      expect(\n        batch.jobs.single.root.sourceLabel,\n        'Memory · workspace@example.test',\n      );\n      expect(batch.jobs.single.root.storage.id, origin.storageId);\n      expect(find.text('Other session (Memory)'), findsNothing);\n      await tester.tap(find.byKey(const ValueKey('scan-batch-start')));\n      await tester.pumpAndSettle();\n      final saved = batch.jobs.single.snapshot!;\n      expect(saved.sourceLabel, 'Memory · workspace@example.test');\n      expect(saved.storageId, origin.storageId);\n      expect(saved.bytes, 3);\n      expect(other.reads, isEmpty);\n      harness.cloud.current = false;\n      expect(batch.jobs.single.root.isCurrent, isFalse);\n      expect(other.current, isTrue);\n      expect(batch.jobs.single.phase, StorageScanBatchPhase.saved);\n      await tester.tap(find.byKey(const ValueKey('scan-batch-close')));\n      await tester.pumpAndSettle();\n      expect(tester.takeException(), isNull);\n    },\n  );\n\n  testWidgets(\n    'review starts only on request and opens the exact committed report offline',",
+          "expected_occurrences": 1
+        }
+      ]
+    }
+  ]
+}

@@ -358,6 +358,72 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets(
+    'expanded members follow queue path search including renamed destinations',
+    (tester) async {
+      final saved = _savedJob('batch');
+      saved.entries.add(
+        TransferEntryRecord(
+          index: 0,
+          source: FileItem(
+            name: 'statement.csv',
+            path: '/source/statement.csv',
+            isFolder: false,
+          ),
+          destination: '/archive/renamed.csv',
+        ),
+      );
+      final transfers = _Transfers(
+        rows: [
+          _operation(
+            'batch',
+            files: [
+              FileProgress(
+                name: 'statement.csv',
+                path: '/source/statement.csv',
+                size: 100,
+              ),
+              FileProgress(
+                name: 'other.txt',
+                path: '/source/other.txt',
+                size: 100,
+              ),
+            ],
+          ),
+        ],
+        pending: {'batch'},
+        saved: {'batch': saved},
+      );
+      await show(tester, transfers);
+      final search = find.byKey(const ValueKey('queue-search'));
+      await tester.enterText(search, 'RENAMED.csv');
+      await tester.pumpAndSettle();
+      await tapKey(tester, 'queue-menu-batch');
+      await tester.tap(find.text('Show files'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('queue-file-batch-0')), findsOneWidget);
+      expect(find.byKey(const ValueKey('queue-file-batch-1')), findsNothing);
+      expect(
+        tester
+            .widget<TextField>(
+              find.byKey(const ValueKey('queue-file-search-batch')),
+            )
+            .controller!
+            .text,
+        'renamed.csv',
+      );
+      await tester.ensureVisible(search);
+      await tester.enterText(search, 'other.txt');
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('queue-file-batch-0')), findsNothing);
+      expect(find.byKey(const ValueKey('queue-file-batch-1')), findsOneWidget);
+      expect(transfers.rows.single.files, hasLength(2));
+      expect(transfers.pausedRequests, isEmpty);
+      expect(transfers.cancelledRequests, isEmpty);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('queue pause is independent from the concurrency setting', (
     tester,
   ) async {

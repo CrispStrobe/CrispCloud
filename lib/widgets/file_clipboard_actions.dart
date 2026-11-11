@@ -143,7 +143,9 @@ Future<void> pasteFilesFromClipboard(
         }
         if (remaining) break;
       }
-      if (!remaining) clipboard.clear();
+      if (!remaining && identical(clipboard.selection, internal)) {
+        clipboard.clear();
+      }
     }
   } catch (error) {
     if (context.mounted) {

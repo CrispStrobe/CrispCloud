@@ -1,18 +1,27 @@
+import 'dart:async';
 import 'dart:io';
 
+import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/file_clipboard_provider.dart';
+import 'package:crisp_cloud/providers/native_file_operations_provider.dart';
 import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:crisp_cloud/services/native_file_operations.dart';
-import 'package:flutter/foundation.dart';
+import 'package:crisp_cloud/widgets/file_clipboard_actions.dart';
+import 'package:crisp_cloud/widgets/file_operation_dialog.dart';
+import 'package:flutter/foundation.dart'
+    show debugDefaultTargetPlatformOverride;
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _Cloud extends Fake implements CloudStorageClient {
+  bool fileExists = true;
+  Future<void> Function()? beforeList;
   @override
   String get providerName => 'Clipboard test';
   @override
@@ -24,12 +33,16 @@ class _Cloud extends Fake implements CloudStorageClient {
   @override
   bool isAuthenticated = true;
   @override
-  Future<Map<String, dynamic>> listPath(String path) async => {
-    'folders': <Map<String, dynamic>>[],
-    'files': [
-      {'name': 'file.txt', 'size': 3, 'uuid': '$path/file-id'},
-    ],
-  };
+  Future<Map<String, dynamic>> listPath(String path) async {
+    await beforeList?.call();
+    return {
+      'folders': <Map<String, dynamic>>[],
+      'files': [
+        if (fileExists)
+          {'name': 'file.txt', 'size': 3, 'uuid': '$path/file-id'},
+      ],
+    };
+  }
 }
 
 class _Auth extends ChangeNotifier implements AuthNotifier {
@@ -89,6 +102,7 @@ void main() {
       overrides: [
         authProvider.overrideWith((_) => auth),
         localFileServiceProvider.overrideWithValue(_Local(directory)),
+        nativeFileOperationsProvider.overrideWithValue(native),
       ],
     );
     clipboardText = null;
@@ -121,6 +135,29 @@ void main() {
         .setMockMethodCallHandler(nativeChannel, null);
     await directory.delete(recursive: true);
   });
+
+  Future<PanelNotifier> readyLocalPanel() async {
+    final panel = container.read(panelProvider(PanelSide.local));
+    final ready = Completer<void>();
+    void check() {
+      if (ready.isCompleted || panel.isLoading || panel.files == null) return;
+      try {
+        panel.captureCurrentOrigin();
+        ready.complete();
+      } on StateError {
+        // Wait for the constructor's initial verified directory listing.
+      }
+    }
+
+    panel.addListener(check);
+    try {
+      check();
+      await ready.future.timeout(const Duration(seconds: 10));
+    } finally {
+      panel.removeListener(check);
+    }
+    return panel;
+  }
 
   test(
     'clipboard retains original account and path after navigating away',
@@ -156,8 +193,7 @@ void main() {
     'desktop clipboard uses full native paths and preserves cut intent',
     () async {
       debugDefaultTargetPlatformOverride = TargetPlatform.linux;
-      final panel = container.read(panelProvider(PanelSide.local));
-      await panel.refresh();
+      final panel = await readyLocalPanel();
       final files = panel.files!.where((file) => file.name != '..').toList();
       final clipboard = FileClipboardNotifier();
       await clipboard.capture(panel, files, native, cut: true);
@@ -174,12 +210,82 @@ void main() {
       expect(await clipboard.stillOwnsClipboard(native), isFalse);
     },
   );
+  testWidgets('cut cleanup preserves a newer copied selection', (tester) async {
+    final originalPlatform = debugDefaultTargetPlatformOverride;
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    try {
+      final remote = container.read(panelProvider(PanelSide.remote));
+      late PanelNotifier local;
+      final clipboard = container.read(fileClipboardProvider);
+      await tester.runAsync(() async {
+        await remote.refresh();
+        local = await readyLocalPanel();
+        await clipboard.capture(remote, remote.files!, native, cut: true);
+      });
+      Future<void>? pendingPaste;
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: Consumer(
+                builder: (context, ref, _) => TextButton(
+                  onPressed: () {
+                    pendingPaste = pasteFilesFromClipboard(
+                      context,
+                      ref,
+                      PanelSide.local,
+                    );
+                  },
+                  child: const Text('Paste here'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Paste here'));
+      await tester.pumpAndSettle();
+      expect(find.byType(FileOperationDialog), findsOneWidget);
+      final checking = Completer<void>();
+      final release = Completer<void>();
+      addTearDown(() {
+        if (!release.isCompleted) release.complete();
+      });
+      auth.client.fileExists = false;
+      auth.client.beforeList = () async {
+        if (!checking.isCompleted) checking.complete();
+        await release.future;
+      };
+      await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+      await tester.pumpAndSettle();
+      expect(checking.isCompleted, isTrue);
+      await clipboard.capture(
+        local,
+        local.files!.where((file) => file.name != '..').toList(),
+        native,
+        cut: false,
+      );
+      final latest = clipboard.selection!;
+      release.complete();
+      await pendingPaste;
+      await tester.pumpAndSettle();
+      expect(clipboard.selection, same(latest));
+      expect(clipboard.selection!.cut, isFalse);
+      expect(await clipboard.stillOwnsClipboard(native), isTrue);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    } finally {
+      debugDefaultTargetPlatformOverride = originalPlatform;
+    }
+  });
   test('mixed collections keep every captured source and reject a disconnected account', () async {
     debugDefaultTargetPlatformOverride = TargetPlatform.linux;
     final remote = container.read(panelProvider(PanelSide.remote));
-    final local = container.read(panelProvider(PanelSide.local));
+    final local = await readyLocalPanel();
     await remote.refresh();
-    await local.refresh();
     final cloudFile = remote.files!.single;
     final localFile = local.files!.singleWhere((file) => file.name != '..');
     final cloudOrigin = remote.captureOperationOrigin([cloudFile]);

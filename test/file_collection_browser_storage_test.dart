@@ -2,6 +2,7 @@ import 'package:crisp_cloud/models/file_collection.dart';
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/storage_reference.dart';
 import 'package:crisp_cloud/services/file_collection_service.dart';
+import 'package:crisp_cloud/services/file_collection_storage.dart';
 import 'package:crisp_cloud/services/file_collection_storage_factory.dart';
 import 'package:crisp_cloud/services/file_collection_store.dart';
 import 'package:flutter/foundation.dart';
@@ -11,6 +12,57 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUp(() => SharedPreferences.setMockInitialValues({}));
+  test('IndexedDB bounded page batches survive restart and reject invalid groups before writes', () async {
+    final storage = createFileCollectionStorage(
+      preferences: SharedPreferences.getInstance,
+    );
+    final writer = storage as FileCollectionStorageBatchWriter;
+    final records = [
+      for (var index = 0; index < 4; index++)
+        FileCollectionStorageRecord(
+          'browser-batch-$index',
+          '{"資料":"📁-$index"}',
+        ),
+    ];
+    const extraKey = 'browser-batch-extra';
+    for (final key in [...records.map((record) => record.key), extraKey]) {
+      await storage.remove(key);
+    }
+    try {
+      await writer.writeBatch(records);
+      final restarted = createFileCollectionStorage(
+        preferences: SharedPreferences.getInstance,
+      );
+      for (final record in records) {
+        expect(await restarted.read(record.key, maxBytes: 100), record.value);
+      }
+      await expectLater(
+        writer.writeBatch([
+          ...records.map(
+            (record) => FileCollectionStorageRecord(record.key, 'replacement'),
+          ),
+          FileCollectionStorageRecord(extraKey, 'exceeds count'),
+        ]),
+        throwsArgumentError,
+      );
+      await expectLater(
+        writer.writeBatch([
+          FileCollectionStorageRecord(records.first.key, 'first replacement'),
+          FileCollectionStorageRecord(records.first.key, 'second replacement'),
+        ]),
+        throwsArgumentError,
+      );
+      for (final record in records) {
+        expect(await restarted.read(record.key, maxBytes: 100), record.value);
+      }
+      expect(await restarted.read(extraKey, maxBytes: 100), isNull);
+    } finally {
+      for (final key in [...records.map((record) => record.key), extraKey]) {
+        await storage.remove(key);
+      }
+    }
+  }, skip: !kIsWeb);
+
   test('IndexedDB clients serialize catalog CAS and preserve bounded records after restart', () async {
     final first = createFileCollectionStorage(
       preferences: SharedPreferences.getInstance,

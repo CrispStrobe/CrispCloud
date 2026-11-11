@@ -8,6 +8,7 @@ import 'package:crisp_cloud/models/operation_progress.dart';
 import 'package:crisp_cloud/models/transfer_job.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/models/file_search_query.dart';
+import 'package:crisp_cloud/providers/focus_area_provider.dart';
 import 'package:crisp_cloud/providers/panel_source_provider.dart';
 import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
@@ -188,7 +189,9 @@ void main() {
       overrides: [
         authProvider.overrideWith((_) => auth),
         localFileServiceProvider.overrideWithValue(_Local()),
-        transferJournalProvider.overrideWithValue(TransferJournal(journalStorage)),
+        transferJournalProvider.overrideWithValue(
+          TransferJournal(journalStorage),
+        ),
       ],
     );
     final remote = container.read(panelProvider(PanelSide.remote));
@@ -247,13 +250,15 @@ void main() {
           ),
           home: Scaffold(
             body: inRoute
-                ? Builder(builder: (context) => TextButton(
-                    onPressed: () => showDialog<void>(
-                      context: context,
-                      builder: (_) => dialog,
+                ? Builder(
+                    builder: (context) => TextButton(
+                      onPressed: () => showDialog<void>(
+                        context: context,
+                        builder: (_) => dialog,
+                      ),
+                      child: const Text('Open transfer'),
                     ),
-                    child: const Text('Open transfer'),
-                  ))
+                  )
                 : dialog,
           ),
         ),
@@ -274,6 +279,112 @@ void main() {
     await tester.enterText(field('Destination directory'), '/target');
     await tester.pumpAndSettle();
   }
+
+  Future<({BuildContext context, WidgetRef ref})> mountReviewHost(
+    WidgetTester tester,
+    FocusNode inputFocus,
+  ) async {
+    late BuildContext invocationContext;
+    late WidgetRef invocationRef;
+    final local = container.read(panelProvider(PanelSide.local));
+    final remote = container.read(panelProvider(PanelSide.remote));
+    container.read(activePanelProvider.notifier).state = PanelSide.local;
+    container.read(focusAreaProvider.notifier).state = FocusArea.local;
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: Consumer(
+              builder: (context, ref, _) {
+                invocationContext = context;
+                invocationRef = ref;
+                return Column(
+                  children: [
+                    Focus(
+                      focusNode: local.listFocusNode,
+                      autofocus: true,
+                      child: const Text('Local browser'),
+                    ),
+                    Focus(
+                      focusNode: remote.listFocusNode,
+                      child: const Text('Remote browser'),
+                    ),
+                    TextField(focusNode: inputFocus),
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(local.listFocusNode.hasFocus, isTrue);
+    return (context: invocationContext, ref: invocationRef);
+  }
+
+  testWidgets('a paste review returns focus to its invoking destination pane', (
+    tester,
+  ) async {
+    final inputFocus = FocusNode();
+    addTearDown(inputFocus.dispose);
+    final host = await mountReviewHost(tester, inputFocus);
+    final local = container.read(panelProvider(PanelSide.local));
+    final remote = container.read(panelProvider(PanelSide.remote));
+    final review = showFileOperationDialog(
+      host.context,
+      host.ref,
+      PanelSide.remote,
+      files,
+      kind: FileOperationKind.copy,
+      sourceOrigin: remote.captureOperationOrigin(files),
+      destinationOrigin: local.captureCurrentOrigin(),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+    await tester.pumpAndSettle();
+    await review;
+    expect(local.listFocusNode.hasFocus, isTrue);
+    expect(remote.listFocusNode.hasFocus, isFalse);
+    expect(container.read(activePanelProvider), PanelSide.local);
+    expect(container.read(focusAreaProvider), FocusArea.local);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('a closing review does not reclaim changed input ownership', (
+    tester,
+  ) async {
+    final inputFocus = FocusNode();
+    addTearDown(inputFocus.dispose);
+    final host = await mountReviewHost(tester, inputFocus);
+    final local = container.read(panelProvider(PanelSide.local));
+    final remote = container.read(panelProvider(PanelSide.remote));
+    final review = showFileOperationDialog(
+      host.context,
+      host.ref,
+      PanelSide.remote,
+      files,
+      kind: FileOperationKind.copy,
+      sourceOrigin: remote.captureOperationOrigin(files),
+      destinationOrigin: local.captureCurrentOrigin(),
+    );
+    await tester.pumpAndSettle();
+    Navigator.of(tester.element(find.byType(FileOperationDialog))).pop();
+    container.read(focusAreaProvider.notifier).state = FocusArea.terminal;
+    inputFocus.requestFocus();
+    await tester.pumpAndSettle();
+    await review;
+    expect(inputFocus.hasFocus, isTrue);
+    expect(local.listFocusNode.hasFocus, isFalse);
+    expect(remote.listFocusNode.hasFocus, isFalse);
+    expect(container.read(focusAreaProvider), FocusArea.terminal);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
 
   testWidgets(
     'translated transfer controls remain scrollable with large RTL text',
@@ -574,56 +685,69 @@ void main() {
     expect(cloud.uploads, isEmpty);
   });
 
-  testWidgets('unsupported preservation settings from defaults can be cleared', (tester) async {
-    await FileOperationProfiles().save(
-      '@default:copy',
-      const FileOperationOptions(
-        preservePermissions: true,
-        preserveOwnership: true,
-        preserveExtendedAttributes: true,
-        preserveAcl: true,
-        preserveWindowsAttributes: true,
-      ),
-    );
-    await open(tester);
-    await useCloudDestination(tester);
-    await tester.tap(find.text('Preview'));
-    await tester.pumpAndSettle();
-    expect(
-      tester.widget<FilledButton>(start(FileOperationKind.copy)).onPressed,
-      isNull,
-    );
-    expect(find.textContaining('Some selected preservation settings are unavailable'), findsOneWidget);
-    for (final label in [
-      'Preserve permissions',
-      'Preserve owner/group',
-      'Preserve extended attributes',
-      'Preserve ACL',
-      'Preserve Windows attributes',
-    ]) {
-      final row = find.ancestor(of: find.text(label), matching: find.byType(Row)).first;
-      final checkbox = find.descendant(of: row, matching: find.byType(Checkbox));
-      expect(tester.widget<Checkbox>(checkbox).value, isTrue);
-      expect(tester.widget<Checkbox>(checkbox).onChanged, isNotNull);
-      await toggle(tester, label);
-      expect(tester.widget<Checkbox>(checkbox).value, isFalse);
-      expect(tester.widget<Checkbox>(checkbox).onChanged, isNull);
-    }
-    await tester.tap(find.text('Preview'));
-    await tester.pumpAndSettle();
-    expect(
-      tester.widget<FilledButton>(start(FileOperationKind.copy)).onPressed,
-      isNotNull,
-    );
-    expect(cloud.uploads, isEmpty);
-    // Clearing incompatible settings for this job does not rewrite a profile.
-    final defaults = (await FileOperationProfiles().load())['@default:copy']!;
-    expect(defaults.preservePermissions, isTrue);
-    expect(defaults.preserveOwnership, isTrue);
-    expect(defaults.preserveExtendedAttributes, isTrue);
-    expect(defaults.preserveAcl, isTrue);
-    expect(defaults.preserveWindowsAttributes, isTrue);
-  });
+  testWidgets(
+    'unsupported preservation settings from defaults can be cleared',
+    (tester) async {
+      await FileOperationProfiles().save(
+        '@default:copy',
+        const FileOperationOptions(
+          preservePermissions: true,
+          preserveOwnership: true,
+          preserveExtendedAttributes: true,
+          preserveAcl: true,
+          preserveWindowsAttributes: true,
+        ),
+      );
+      await open(tester);
+      await useCloudDestination(tester);
+      await tester.tap(find.text('Preview'));
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<FilledButton>(start(FileOperationKind.copy)).onPressed,
+        isNull,
+      );
+      expect(
+        find.textContaining(
+          'Some selected preservation settings are unavailable',
+        ),
+        findsOneWidget,
+      );
+      for (final label in [
+        'Preserve permissions',
+        'Preserve owner/group',
+        'Preserve extended attributes',
+        'Preserve ACL',
+        'Preserve Windows attributes',
+      ]) {
+        final row = find
+            .ancestor(of: find.text(label), matching: find.byType(Row))
+            .first;
+        final checkbox = find.descendant(
+          of: row,
+          matching: find.byType(Checkbox),
+        );
+        expect(tester.widget<Checkbox>(checkbox).value, isTrue);
+        expect(tester.widget<Checkbox>(checkbox).onChanged, isNotNull);
+        await toggle(tester, label);
+        expect(tester.widget<Checkbox>(checkbox).value, isFalse);
+        expect(tester.widget<Checkbox>(checkbox).onChanged, isNull);
+      }
+      await tester.tap(find.text('Preview'));
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<FilledButton>(start(FileOperationKind.copy)).onPressed,
+        isNotNull,
+      );
+      expect(cloud.uploads, isEmpty);
+      // Clearing incompatible settings for this job does not rewrite a profile.
+      final defaults = (await FileOperationProfiles().load())['@default:copy']!;
+      expect(defaults.preservePermissions, isTrue);
+      expect(defaults.preserveOwnership, isTrue);
+      expect(defaults.preserveExtendedAttributes, isTrue);
+      expect(defaults.preserveAcl, isTrue);
+      expect(defaults.preserveWindowsAttributes, isTrue);
+    },
+  );
 
   test('an unanswered background conflict is reported as incomplete', () async {
     cloud.files['/target/one.txt'] = utf8.encode('retain existing file');
@@ -636,10 +760,9 @@ void main() {
     );
     expect(plan.canExecute, isTrue);
     final transfers = container.read(transferProvider);
-    await transfers.runFileOperation(
-      plan,
-      control: FileOperationControl(),
-    ).timeout(const Duration(seconds: 5));
+    await transfers
+        .runFileOperation(plan, control: FileOperationControl())
+        .timeout(const Duration(seconds: 5));
     final operation = transfers.operations.single;
     expect(operation.status, OperationStatus.waitingForDecision);
     expect(operation.error, isNull);
@@ -647,8 +770,14 @@ void main() {
     expect(operation.failedFiles, 0);
     expect(plan.entries.first.outcome, FileOperationOutcome.needsDecision);
     expect(plan.entries.last.outcome, FileOperationOutcome.pending);
-    expect(operation.files!.first.statusLabel, 'Waiting for a conflict decision');
-    expect(operation.files!.last.statusLabel, 'Not started (awaiting conflict decision)');
+    expect(
+      operation.files!.first.statusLabel,
+      'Waiting for a conflict decision',
+    );
+    expect(
+      operation.files!.last.statusLabel,
+      'Not started (awaiting conflict decision)',
+    );
     expect(operation.files!.every((file) => !file.isComplete), isTrue);
     expect(cloud.files['/target/one.txt'], utf8.encode('retain existing file'));
     expect(cloud.files.containsKey('/target/two.bin'), isFalse);
@@ -738,29 +867,40 @@ void main() {
     },
   );
 
-  testWidgets('Ask can queue in background and waits without failing or copying later rows', (tester) async {
-    cloud.files['/target/one.txt'] = utf8.encode('existing');
-    await open(tester, inRoute: true);
-    await useCloudDestination(tester);
-    await tester.tap(find.text('Preview'));
-    await tester.pumpAndSettle();
-    final queue = find.byKey(const ValueKey('transfer-queue-background'));
-    expect(tester.widget<TextButton>(queue).onPressed, isNotNull);
-    await tester.tap(queue);
-    await tester.pumpAndSettle();
-    expect(find.byType(FileOperationDialog), findsNothing);
-    final transfers = container.read(transferProvider);
-    expect(transfers.operations.single.status, OperationStatus.waitingForDecision);
-    expect(transfers.operations.single.error, isNull);
-    expect(transfers.hasActiveOperations, isFalse);
-    expect(transfers.savedJobs.single.status, TransferJobStatus.waitingForDecision);
-    expect(cloud.files['/target/one.txt'], utf8.encode('existing'));
-    expect(cloud.files.containsKey('/target/two.bin'), isFalse);
-    expect(cloud.uploads, isEmpty);
-    expect(tester.takeException(), isNull);
-  });
+  testWidgets(
+    'Ask can queue in background and waits without failing or copying later rows',
+    (tester) async {
+      cloud.files['/target/one.txt'] = utf8.encode('existing');
+      await open(tester, inRoute: true);
+      await useCloudDestination(tester);
+      await tester.tap(find.text('Preview'));
+      await tester.pumpAndSettle();
+      final queue = find.byKey(const ValueKey('transfer-queue-background'));
+      expect(tester.widget<TextButton>(queue).onPressed, isNotNull);
+      await tester.tap(queue);
+      await tester.pumpAndSettle();
+      expect(find.byType(FileOperationDialog), findsNothing);
+      final transfers = container.read(transferProvider);
+      expect(
+        transfers.operations.single.status,
+        OperationStatus.waitingForDecision,
+      );
+      expect(transfers.operations.single.error, isNull);
+      expect(transfers.hasActiveOperations, isFalse);
+      expect(
+        transfers.savedJobs.single.status,
+        TransferJobStatus.waitingForDecision,
+      );
+      expect(cloud.files['/target/one.txt'], utf8.encode('existing'));
+      expect(cloud.files.containsKey('/target/two.bin'), isFalse);
+      expect(cloud.uploads, isEmpty);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
-  testWidgets('background dialog stays open if saving the queued plan fails', (tester) async {
+  testWidgets('background dialog stays open if saving the queued plan fails', (
+    tester,
+  ) async {
     await open(tester, inRoute: true);
     await useCloudDestination(tester);
     await tester.tap(find.text('Preview'));
@@ -769,19 +909,28 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('transfer-queue-background')));
     await tester.pumpAndSettle();
     expect(find.byType(FileOperationDialog), findsOneWidget);
-    expect(find.textContaining('Transfer history could not be saved'), findsOneWidget);
+    expect(
+      find.textContaining('Transfer history could not be saved'),
+      findsOneWidget,
+    );
     expect(cloud.uploads, isEmpty);
     expect(container.read(transferProvider).operations, isEmpty);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('duplicate templates load, save and reject invalid defaults', (tester) async {
+  testWidgets('duplicate templates load, save and reject invalid defaults', (
+    tester,
+  ) async {
     await FileOperationProfiles().save(
       '@default:copy',
-      const FileOperationOptions(duplicateNameTemplate: '{name}-backup{counter}{ext}'),
+      const FileOperationOptions(
+        duplicateNameTemplate: '{name}-backup{counter}{ext}',
+      ),
     );
     await open(tester);
-    final template = find.byKey(const ValueKey('transfer-duplicate-name-template'));
+    final template = find.byKey(
+      const ValueKey('transfer-duplicate-name-template'),
+    );
     expect(
       tester.widget<TextField>(template).controller!.text,
       '{name}-backup{counter}{ext}',
@@ -791,7 +940,8 @@ void main() {
     await tester.tap(find.text('Save as defaults'));
     await tester.pumpAndSettle();
     expect(
-      (await FileOperationProfiles().load())['@default:copy']!.duplicateNameTemplate,
+      (await FileOperationProfiles().load())['@default:copy']!
+          .duplicateNameTemplate,
       '{name}_copy-{counter:000}{ext}',
     );
     await tester.enterText(template, '../{counter}');
@@ -799,7 +949,8 @@ void main() {
     await tester.tap(find.text('Save as defaults'));
     await tester.pumpAndSettle();
     expect(
-      (await FileOperationProfiles().load())['@default:copy']!.duplicateNameTemplate,
+      (await FileOperationProfiles().load())['@default:copy']!
+          .duplicateNameTemplate,
       '{name}_copy-{counter:000}{ext}',
     );
     expect(find.textContaining('FormatException'), findsOneWidget);
@@ -807,40 +958,60 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('client streaming rate loads and saves exact fractional KiB values', (tester) async {
-    await FileOperationProfiles().save(
-      '@default:copy',
-      const FileOperationOptions(clientBytesPerSecond: 512),
-    );
-    await open(tester);
-    final rate = find.byKey(const ValueKey('transfer-client-rate'));
-    expect(tester.widget<TextField>(rate).controller!.text, '0.5');
-    expect(
-      find.text('Limits bytes fed to the copy stream. Verification and native/server-side copies are not limited; buffered uploads may still burst.'),
-      findsOneWidget,
-    );
-    await tester.ensureVisible(rate);
-    await tester.enterText(rate, '1.25');
-    await tester.ensureVisible(find.text('Save as defaults'));
-    await tester.tap(find.text('Save as defaults'));
-    await tester.pumpAndSettle();
-    expect((await FileOperationProfiles().load())['@default:copy']!.clientBytesPerSecond, 1280);
-    await tester.ensureVisible(rate);
-    await tester.enterText(rate, '0');
-    await tester.ensureVisible(find.text('Save as defaults'));
-    await tester.tap(find.text('Save as defaults'));
-    await tester.pumpAndSettle();
-    expect((await FileOperationProfiles().load())['@default:copy']!.clientBytesPerSecond, 1280);
-    expect(find.textContaining('positive client streaming rate'), findsOneWidget);
-    await tester.ensureVisible(rate);
-    await tester.enterText(rate, '');
-    await tester.ensureVisible(find.text('Save as defaults'));
-    await tester.tap(find.text('Save as defaults'));
-    await tester.pumpAndSettle();
-    expect((await FileOperationProfiles().load())['@default:copy']!.clientBytesPerSecond, isNull);
-    expect(cloud.uploads, isEmpty);
-    expect(tester.takeException(), isNull);
-  });
+  testWidgets(
+    'client streaming rate loads and saves exact fractional KiB values',
+    (tester) async {
+      await FileOperationProfiles().save(
+        '@default:copy',
+        const FileOperationOptions(clientBytesPerSecond: 512),
+      );
+      await open(tester);
+      final rate = find.byKey(const ValueKey('transfer-client-rate'));
+      expect(tester.widget<TextField>(rate).controller!.text, '0.5');
+      expect(
+        find.text(
+          'Limits bytes fed to the copy stream. Verification and native/server-side copies are not limited; buffered uploads may still burst.',
+        ),
+        findsOneWidget,
+      );
+      await tester.ensureVisible(rate);
+      await tester.enterText(rate, '1.25');
+      await tester.ensureVisible(find.text('Save as defaults'));
+      await tester.tap(find.text('Save as defaults'));
+      await tester.pumpAndSettle();
+      expect(
+        (await FileOperationProfiles().load())['@default:copy']!
+            .clientBytesPerSecond,
+        1280,
+      );
+      await tester.ensureVisible(rate);
+      await tester.enterText(rate, '0');
+      await tester.ensureVisible(find.text('Save as defaults'));
+      await tester.tap(find.text('Save as defaults'));
+      await tester.pumpAndSettle();
+      expect(
+        (await FileOperationProfiles().load())['@default:copy']!
+            .clientBytesPerSecond,
+        1280,
+      );
+      expect(
+        find.textContaining('positive client streaming rate'),
+        findsOneWidget,
+      );
+      await tester.ensureVisible(rate);
+      await tester.enterText(rate, '');
+      await tester.ensureVisible(find.text('Save as defaults'));
+      await tester.tap(find.text('Save as defaults'));
+      await tester.pumpAndSettle();
+      expect(
+        (await FileOperationProfiles().load())['@default:copy']!
+            .clientBytesPerSecond,
+        isNull,
+      );
+      expect(cloud.uploads, isEmpty);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('move deletes only files that pass the configured filter', (
     tester,

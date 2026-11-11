@@ -6,6 +6,7 @@
 // crisp config path         — print just the config file path
 
 import 'dart:io';
+
 import 'package:crisp_storage/crisp_storage.dart';
 
 import 'package:args/command_runner.dart';
@@ -183,6 +184,7 @@ class _ConfigSmbBackendCommand extends Command<int> {
       provider['smbBackend'] = parseSmbBackend(args[1])!.name;
       config.saveProvider(args.first, provider);
     }
+    // A legacy profile inherits the build setting, which may not be libsmb2.
     stdout.writeln(
       parseSmbBackend(provider['smbBackend'])?.name ?? 'build default',
     );

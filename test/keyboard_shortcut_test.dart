@@ -61,7 +61,12 @@ void main() {
   group('ShortcutBinding serialization', () {
     test('round-trips through toJson / fromJson', () {
       const original = ShortcutBinding(
-          key: 'P', ctrl: true, shift: true, alt: false, meta: false);
+        key: 'P',
+        ctrl: true,
+        shift: true,
+        alt: false,
+        meta: false,
+      );
       final restored = ShortcutBinding.fromJson(original.toJson());
       expect(restored, equals(original));
     });
@@ -100,7 +105,13 @@ void main() {
     });
 
     test('equality after JSON round-trip with all modifiers', () {
-      const b = ShortcutBinding(key: 'L', ctrl: true, shift: true, alt: true, meta: true);
+      const b = ShortcutBinding(
+        key: 'L',
+        ctrl: true,
+        shift: true,
+        alt: true,
+        meta: true,
+      );
       expect(ShortcutBinding.fromJson(b.toJson()), equals(b));
     });
   });
@@ -150,40 +161,75 @@ void main() {
       const binding = ShortcutBinding(key: 'T', ctrl: true);
       final event = _keyDown(LogicalKeyboardKey.keyT);
       expect(
-          binding.matches(event, isCtrl: true, isShift: false, isAlt: false, isMeta: false),
-          isTrue);
+        binding.matches(
+          event,
+          isCtrl: true,
+          isShift: false,
+          isAlt: false,
+          isMeta: false,
+        ),
+        isTrue,
+      );
     });
 
     test('does not match when ctrl differs', () {
       const binding = ShortcutBinding(key: 'T', ctrl: true);
       final event = _keyDown(LogicalKeyboardKey.keyT);
       expect(
-          binding.matches(event, isCtrl: false, isShift: false, isAlt: false, isMeta: false),
-          isFalse);
+        binding.matches(
+          event,
+          isCtrl: false,
+          isShift: false,
+          isAlt: false,
+          isMeta: false,
+        ),
+        isFalse,
+      );
     });
 
     test('does not match when shift differs', () {
       const binding = ShortcutBinding(key: 'P', ctrl: true, shift: true);
       final event = _keyDown(LogicalKeyboardKey.keyP);
       expect(
-          binding.matches(event, isCtrl: true, isShift: false, isAlt: false, isMeta: false),
-          isFalse);
+        binding.matches(
+          event,
+          isCtrl: true,
+          isShift: false,
+          isAlt: false,
+          isMeta: false,
+        ),
+        isFalse,
+      );
     });
 
     test('does not match when alt differs', () {
       const binding = ShortcutBinding(key: 'X', alt: true);
       final event = _keyDown(LogicalKeyboardKey.keyX);
       expect(
-          binding.matches(event, isCtrl: false, isShift: false, isAlt: false, isMeta: false),
-          isFalse);
+        binding.matches(
+          event,
+          isCtrl: false,
+          isShift: false,
+          isAlt: false,
+          isMeta: false,
+        ),
+        isFalse,
+      );
     });
 
     test('does not match when meta differs', () {
       const binding = ShortcutBinding(key: 'Q', meta: true);
       final event = _keyDown(LogicalKeyboardKey.keyQ);
       expect(
-          binding.matches(event, isCtrl: false, isShift: false, isAlt: false, isMeta: false),
-          isFalse);
+        binding.matches(
+          event,
+          isCtrl: false,
+          isShift: false,
+          isAlt: false,
+          isMeta: false,
+        ),
+        isFalse,
+      );
     });
 
     test('does not match a KeyUpEvent', () {
@@ -194,24 +240,45 @@ void main() {
         timeStamp: Duration.zero,
       );
       expect(
-          binding.matches(event, isCtrl: true, isShift: false, isAlt: false, isMeta: false),
-          isFalse);
+        binding.matches(
+          event,
+          isCtrl: true,
+          isShift: false,
+          isAlt: false,
+          isMeta: false,
+        ),
+        isFalse,
+      );
     });
 
     test('matches function key F5 with no modifiers', () {
       const binding = ShortcutBinding(key: 'F5');
       final event = _keyDown(LogicalKeyboardKey.f5);
       expect(
-          binding.matches(event, isCtrl: false, isShift: false, isAlt: false, isMeta: false),
-          isTrue);
+        binding.matches(
+          event,
+          isCtrl: false,
+          isShift: false,
+          isAlt: false,
+          isMeta: false,
+        ),
+        isTrue,
+      );
     });
 
     test('matches Space key using word "Space"', () {
       const binding = ShortcutBinding(key: 'Space');
       final event = _keyDown(LogicalKeyboardKey.space);
       expect(
-          binding.matches(event, isCtrl: false, isShift: false, isAlt: false, isMeta: false),
-          isTrue);
+        binding.matches(
+          event,
+          isCtrl: false,
+          isShift: false,
+          isAlt: false,
+          isMeta: false,
+        ),
+        isTrue,
+      );
     });
 
     test('matches Space key using raw space character', () {
@@ -219,8 +286,15 @@ void main() {
       const binding = ShortcutBinding(key: ' ');
       final event = _keyDown(LogicalKeyboardKey.space);
       expect(
-          binding.matches(event, isCtrl: false, isShift: false, isAlt: false, isMeta: false),
-          isTrue);
+        binding.matches(
+          event,
+          isCtrl: false,
+          isShift: false,
+          isAlt: false,
+          isMeta: false,
+        ),
+        isTrue,
+      );
     });
   });
 
@@ -242,8 +316,10 @@ void main() {
       const b = ShortcutBinding(key: 'P', ctrl: true, shift: true);
       final s = b.toDisplayString();
       expect(s, contains('P'));
-      expect(s.toLowerCase(),
-          anyOf(contains('shift'), contains('⇧'), contains('Shift')));
+      expect(
+        s.toLowerCase(),
+        anyOf(contains('shift'), contains('⇧'), contains('Shift')),
+      );
     });
 
     test('F5 alone displays without separator', () {
@@ -272,8 +348,7 @@ void main() {
     test('Meta modifier label is present', () {
       const b = ShortcutBinding(key: 'T', meta: true);
       final s = b.toDisplayString();
-      expect(s.toLowerCase(),
-          anyOf(contains('meta'), contains('⌘')));
+      expect(s.toLowerCase(), anyOf(contains('meta'), contains('⌘')));
     });
   });
 
@@ -286,8 +361,11 @@ void main() {
       final svc = _freshService();
       final bindings = svc.getBindings();
       for (final action in ShortcutAction.values) {
-        expect(bindings.containsKey(action), isTrue,
-            reason: '${action.name} has no default binding');
+        expect(
+          bindings.containsKey(action),
+          isTrue,
+          reason: '${action.name} has no default binding',
+        );
       }
     });
 
@@ -296,9 +374,12 @@ void main() {
       final bindings = svc.getBindings();
       final seen = <ShortcutBinding>{};
       for (final entry in bindings.entries) {
-        expect(seen.contains(entry.value), isFalse,
-            reason:
-                'Duplicate default binding ${entry.value} for ${entry.key.name}');
+        expect(
+          seen.contains(entry.value),
+          isFalse,
+          reason:
+              'Duplicate default binding ${entry.value} for ${entry.key.name}',
+        );
         seen.add(entry.value);
       }
     });
@@ -353,8 +434,9 @@ void main() {
       final svc = _freshService();
       const invalid = ShortcutBinding(key: '');
       expect(
-          () async => svc.setBinding(ShortcutAction.newTab, invalid),
-          throwsArgumentError);
+        () async => svc.setBinding(ShortcutAction.newTab, invalid),
+        throwsArgumentError,
+      );
     });
 
     test('resetBinding reverts to default', () async {
@@ -370,10 +452,14 @@ void main() {
 
     test('resetAll clears all custom overrides', () async {
       final svc = _freshService();
-      await svc.setBinding(ShortcutAction.newTab,
-          const ShortcutBinding(key: 'Q', ctrl: true));
-      await svc.setBinding(ShortcutAction.closeTab,
-          const ShortcutBinding(key: 'E', ctrl: true, shift: true));
+      await svc.setBinding(
+        ShortcutAction.newTab,
+        const ShortcutBinding(key: 'Q', ctrl: true),
+      );
+      await svc.setBinding(
+        ShortcutAction.closeTab,
+        const ShortcutBinding(key: 'E', ctrl: true, shift: true),
+      );
       await svc.resetAll();
       // Both should revert to their defaults
       expect(svc.getBinding(ShortcutAction.newTab).key.toUpperCase(), 'T');
@@ -391,8 +477,7 @@ void main() {
       final svc = _freshService();
       // Should not throw
       await svc.resetBinding(ShortcutAction.selectAll);
-      expect(
-          svc.getBinding(ShortcutAction.selectAll).key.toUpperCase(), 'A');
+      expect(svc.getBinding(ShortcutAction.selectAll).key.toUpperCase(), 'A');
     });
   });
 
@@ -414,8 +499,10 @@ void main() {
 
     test('resetAll persists empty map; reloading shows defaults', () async {
       final svc1 = _freshService();
-      await svc1.setBinding(ShortcutAction.undo,
-          const ShortcutBinding(key: 'U', ctrl: true));
+      await svc1.setBinding(
+        ShortcutAction.undo,
+        const ShortcutBinding(key: 'U', ctrl: true),
+      );
       await svc1.resetAll();
 
       final svc2 = _freshService();
@@ -433,41 +520,53 @@ void main() {
     test('isConflict returns true for an existing default binding', () {
       final svc = _freshService();
       // Ctrl+T is the default for newTab
-      expect(svc.isConflict(const ShortcutBinding(key: 'T', ctrl: true)),
-          isTrue);
+      expect(
+        svc.isConflict(const ShortcutBinding(key: 'T', ctrl: true)),
+        isTrue,
+      );
     });
 
     test('isConflict returns false for an unused combination', () {
       final svc = _freshService();
       expect(
-          svc.isConflict(const ShortcutBinding(
-              key: 'M', ctrl: true, shift: true, alt: true)),
-          isFalse);
+        svc.isConflict(
+          const ShortcutBinding(key: 'M', ctrl: true, shift: true, alt: true),
+        ),
+        isFalse,
+      );
     });
 
     test('getConflicts returns the action using a binding', () {
       final svc = _freshService();
-      final conflicts =
-          svc.getConflicts(const ShortcutBinding(key: 'T', ctrl: true));
+      final conflicts = svc.getConflicts(
+        const ShortcutBinding(key: 'T', ctrl: true),
+      );
       expect(conflicts, contains(ShortcutAction.newTab));
     });
 
     test('getConflicts returns empty list for unused binding', () {
       final svc = _freshService();
       final conflicts = svc.getConflicts(
-          const ShortcutBinding(key: 'M', ctrl: true, shift: true, alt: true));
+        const ShortcutBinding(key: 'M', ctrl: true, shift: true, alt: true),
+      );
       expect(conflicts, isEmpty);
     });
 
     test('setting duplicate binding causes conflict for two actions', () async {
       final svc = _freshService();
       // Make rename share the same combo as newTab (Ctrl+T)
-      await svc.setBinding(ShortcutAction.rename,
-          const ShortcutBinding(key: 'T', ctrl: true));
-      final conflicts =
-          svc.getConflicts(const ShortcutBinding(key: 'T', ctrl: true));
+      await svc.setBinding(
+        ShortcutAction.rename,
+        const ShortcutBinding(key: 'T', ctrl: true),
+      );
+      final conflicts = svc.getConflicts(
+        const ShortcutBinding(key: 'T', ctrl: true),
+      );
       expect(conflicts.length, greaterThanOrEqualTo(2));
-      expect(conflicts, containsAll([ShortcutAction.newTab, ShortcutAction.rename]));
+      expect(
+        conflicts,
+        containsAll([ShortcutAction.newTab, ShortcutAction.rename]),
+      );
     });
   });
 
@@ -478,8 +577,10 @@ void main() {
   group('Export / Import', () {
     test('exportBindings returns valid JSON', () async {
       final svc = _freshService();
-      await svc.setBinding(ShortcutAction.undo,
-          const ShortcutBinding(key: 'U', ctrl: true));
+      await svc.setBinding(
+        ShortcutAction.undo,
+        const ShortcutBinding(key: 'U', ctrl: true),
+      );
       final exported = svc.exportBindings();
       expect(() => json.decode(exported), returnsNormally);
     });
@@ -497,8 +598,10 @@ void main() {
 
     test('importing clears previous custom bindings', () async {
       final svc = _freshService();
-      await svc.setBinding(ShortcutAction.undo,
-          const ShortcutBinding(key: 'U', ctrl: true));
+      await svc.setBinding(
+        ShortcutAction.undo,
+        const ShortcutBinding(key: 'U', ctrl: true),
+      );
       // Import empty map — removes previous custom
       await svc.importBindings('{}');
       expect(svc.getBinding(ShortcutAction.undo).key.toUpperCase(), 'Z');
@@ -544,16 +647,21 @@ void main() {
       expect(decoded, isEmpty);
     });
 
-    test('exported JSON contains only custom overrides, not all defaults', () async {
-      final svc = _freshService();
-      await svc.setBinding(ShortcutAction.rename,
-          const ShortcutBinding(key: 'R', ctrl: true));
-      final decoded =
-          json.decode(svc.exportBindings()) as Map<String, dynamic>;
-      expect(decoded.keys, contains('rename'));
-      // Other actions should NOT be in export (only custom overrides)
-      expect(decoded.keys, isNot(contains('newTab')));
-    });
+    test(
+      'exported JSON contains only custom overrides, not all defaults',
+      () async {
+        final svc = _freshService();
+        await svc.setBinding(
+          ShortcutAction.rename,
+          const ShortcutBinding(key: 'R', ctrl: true),
+        );
+        final decoded =
+            json.decode(svc.exportBindings()) as Map<String, dynamic>;
+        expect(decoded.keys, contains('rename'));
+        // Other actions should NOT be in export (only custom overrides)
+        expect(decoded.keys, isNot(contains('newTab')));
+      },
+    );
   });
 
   // =========================================================================
@@ -564,27 +672,202 @@ void main() {
     test('resolve returns the matching action for default binding', () {
       final svc = _freshService();
       final event = _keyDown(LogicalKeyboardKey.keyT);
-      final action = svc.resolve(event,
-          isCtrl: true, isShift: false, isAlt: false, isMeta: false);
+      final action = svc.resolve(
+        event,
+        isCtrl: true,
+        isShift: false,
+        isAlt: false,
+        isMeta: false,
+      );
       expect(action, equals(ShortcutAction.newTab));
     });
 
     test('resolve returns null for unbound combination', () {
       final svc = _freshService();
       final event = _keyDown(LogicalKeyboardKey.keyM);
-      final action = svc.resolve(event,
-          isCtrl: true, isShift: true, isAlt: true, isMeta: false);
+      final action = svc.resolve(
+        event,
+        isCtrl: true,
+        isShift: true,
+        isAlt: true,
+        isMeta: false,
+      );
       expect(action, isNull);
     });
 
     test('resolve uses custom binding when set', () async {
       final svc = _freshService();
-      await svc.setBinding(ShortcutAction.rename,
-          const ShortcutBinding(key: 'R', ctrl: true, shift: true));
+      await svc.setBinding(
+        ShortcutAction.rename,
+        const ShortcutBinding(key: 'R', ctrl: true, shift: true),
+      );
       final event = _keyDown(LogicalKeyboardKey.keyR);
-      final action = svc.resolve(event,
-          isCtrl: true, isShift: true, isAlt: false, isMeta: false);
+      final action = svc.resolve(
+        event,
+        isCtrl: true,
+        isShift: true,
+        isAlt: false,
+        isMeta: false,
+      );
       expect(action, equals(ShortcutAction.rename));
+    });
+  });
+
+  group('browser binding integrity', () {
+    test('Space is recordable, persisted and matched as a real key', () async {
+      final service = _freshService();
+      const binding = ShortcutBinding(key: ' ');
+      expect(binding.isValid, isTrue);
+      await service.setBinding(ShortcutAction.preview, binding);
+      final restored = _freshService();
+      await restored.load();
+      expect(
+        restored.resolveBrowser(
+          _keyDown(LogicalKeyboardKey.space),
+          isCtrl: false,
+          isMeta: false,
+          isShift: false,
+          isAlt: false,
+        ),
+        ShortcutAction.preview,
+      );
+    });
+
+    test(
+      'default primary modifier requires exactly Control or Command',
+      () async {
+        final service = _freshService();
+        final event = _keyDown(LogicalKeyboardKey.keyT);
+        expect(
+          service.resolveBrowser(
+            event,
+            isCtrl: true,
+            isMeta: true,
+            isShift: false,
+            isAlt: false,
+          ),
+          isNull,
+        );
+        await service.setBinding(
+          ShortcutAction.refresh,
+          const ShortcutBinding(key: 'T', ctrl: true, meta: true),
+        );
+        expect(
+          service.resolveBrowser(
+            event,
+            isCtrl: true,
+            isMeta: true,
+            isShift: false,
+            isAlt: false,
+          ),
+          ShortcutAction.refresh,
+        );
+      },
+    );
+
+    test(
+      'aliases participate in conflicts and are removed by rebinding',
+      () async {
+        final service = _freshService();
+        final event = _keyDown(LogicalKeyboardKey.keyN);
+        expect(
+          service.browserConflicts(
+            ShortcutAction.newTab,
+            const ShortcutBinding(key: 'N', meta: true),
+          ),
+          contains(ShortcutAction.newFolder),
+        );
+        expect(
+          service.resolveBrowser(
+            event,
+            isCtrl: true,
+            isMeta: false,
+            isShift: false,
+            isAlt: false,
+          ),
+          ShortcutAction.newFolder,
+        );
+        await service.setBinding(
+          ShortcutAction.newFolder,
+          const ShortcutBinding(key: 'F9'),
+        );
+        expect(
+          service.resolveBrowser(
+            event,
+            isCtrl: true,
+            isMeta: false,
+            isShift: false,
+            isAlt: false,
+          ),
+          isNull,
+        );
+        expect(
+          service.suppressesDefault(
+            event,
+            isCtrl: true,
+            isMeta: false,
+            isShift: false,
+            isAlt: false,
+          ),
+          isTrue,
+        );
+      },
+    );
+
+    test(
+      'an edit racing initial load preserves unrelated saved bindings',
+      () async {
+        SharedPreferences.setMockInitialValues({
+          'keyboard_shortcuts':
+              '{"rename":{"key":"F10"},"toggleHidden":{"key":"H","ctrl":true}}',
+        });
+        final service = _freshService();
+        final loading = service.load();
+        final editing = service.setBinding(
+          ShortcutAction.refresh,
+          const ShortcutBinding(key: 'F9'),
+        );
+        await Future.wait([loading, editing]);
+        final restored = _freshService();
+        await restored.load();
+        expect(restored.getBinding(ShortcutAction.rename).key, 'F10');
+        expect(restored.getBinding(ShortcutAction.toggleHidden).key, 'H');
+        expect(restored.getBinding(ShortcutAction.refresh).key, 'F9');
+      },
+    );
+
+    test('overlapping edits and resets persist their final order', () async {
+      final service = _freshService();
+      await Future.wait([
+        service.setBinding(
+          ShortcutAction.refresh,
+          const ShortcutBinding(key: 'F9'),
+        ),
+        service.resetBinding(ShortcutAction.refresh),
+        service.setBinding(
+          ShortcutAction.rename,
+          const ShortcutBinding(key: 'F11'),
+        ),
+        service.setBinding(
+          ShortcutAction.refresh,
+          const ShortcutBinding(key: 'F10'),
+        ),
+      ]);
+      final restored = _freshService();
+      await restored.load();
+      expect(restored.getBinding(ShortcutAction.refresh).key, 'F10');
+      expect(restored.getBinding(ShortcutAction.rename).key, 'F11');
+    });
+
+    test('one malformed stored binding does not discard later valid entries', () async {
+      SharedPreferences.setMockInitialValues({
+        'keyboard_shortcuts':
+            '{"rename":{"key":"F10","ctrl":"invalid"},"refresh":{"key":"F9"}}',
+      });
+      final service = _freshService();
+      await service.load();
+      expect(service.getBinding(ShortcutAction.refresh).key, 'F9');
+      expect(service.isCustomized(ShortcutAction.rename), isFalse);
     });
   });
 }

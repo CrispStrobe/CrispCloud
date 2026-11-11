@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:crisp_cloud/l10n/app_localizations.dart';
+import 'package:crisp_cloud/l10n/storage_analyzer_strings.dart';
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/storage_analysis.dart';
 import 'package:crisp_cloud/services/storage_scan_backend.dart';
@@ -45,7 +46,10 @@ StorageNode _folder(String path, List<StorageNode> children) => StorageNode(
   isComplete: children.every((child) => child.isComplete),
 );
 
-StorageScanResult _report({bool unknown = false}) => StorageScanResult(
+StorageScanResult _report({
+  bool unknown = false,
+  List<StorageScanIssue> issues = const [],
+}) => StorageScanResult(
   root: _folder('/', [
     _folder('/movies', [
       _file('/movies/clip.mp4', 3000),
@@ -55,6 +59,7 @@ StorageScanResult _report({bool unknown = false}) => StorageScanResult(
     _file('/empty.txt', 0),
     if (unknown) _file('/unknown.bin', null),
   ]),
+  issues: issues,
   cancelled: false,
   limited: false,
   sourceChanged: false,
@@ -169,6 +174,91 @@ void main() {
       await tester.tap(find.text('Ordner und Dateien'));
       await tester.pumpAndSettle();
       expect(find.widgetWithText(ListTile, 'movies'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'narrow Arabic report keeps partial details and folder navigation accessible',
+    (tester) async {
+      _viewport(tester, const Size(390, 780));
+      final strings = StorageAnalyzerStrings.forLanguage('ar');
+      const issuePath = '/movies/{count}/original';
+      await tester.pumpWidget(
+        _app(
+          StorageAnalysisView(
+            analysis: _report(
+              unknown: true,
+              issues: const [
+                StorageScanIssue(
+                  path: issuePath,
+                  code: StorageScanIssueCode.unreadableDirectory,
+                  message: 'Access denied for the original directory.',
+                ),
+              ],
+            ),
+          ),
+          locale: const Locale('ar'),
+          scale: 1.5,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text(strings.text('treemap')), findsOneWidget);
+      expect(find.text('Partial results'), findsNothing);
+      expect(tester.takeException(), isNull);
+
+      await tester.tap(find.text(strings.text('partial')));
+      await tester.pumpAndSettle();
+      final detailsScroll = find
+          .descendant(
+            of: find.byType(AlertDialog),
+            matching: find.byType(Scrollable),
+          )
+          .first;
+      await tester.scrollUntilVisible(
+        find.text(strings.text('partialHint')),
+        200,
+        scrollable: detailsScroll,
+      );
+      expect(find.text(strings.text('partialHint')), findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.text(strings.text('unknown', {'count': 1})),
+        200,
+        scrollable: detailsScroll,
+      );
+      expect(find.text(strings.text('unknown', {'count': 1})), findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.text(issuePath),
+        200,
+        scrollable: detailsScroll,
+      );
+      expect(
+        tester.widget<Text>(find.text(issuePath)).textDirection,
+        TextDirection.ltr,
+      );
+      expect(tester.takeException(), isNull);
+      await tester.tap(find.widgetWithText(TextButton, strings.text('close')));
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.text(strings.text('items')));
+      await tester.tap(find.text(strings.text('items')));
+      await tester.pumpAndSettle();
+      expect(find.widgetWithText(ListTile, 'movies'), findsOneWidget);
+      await tester.tap(find.byTooltip(strings.text('openFolder')).first);
+      await tester.pumpAndSettle();
+      expect(find.widgetWithText(ListTile, 'clip.mp4'), findsOneWidget);
+      expect(find.widgetWithText(ListTile, 'photo.jpg'), findsNothing);
+      expect(
+        tester.widget<Text>(find.text('/movies')).textDirection,
+        TextDirection.ltr,
+      );
+      await tester.ensureVisible(find.text(strings.text('largest')));
+      await tester.tap(find.text(strings.text('largest')));
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<Text>(find.text('/movies/clip.mp4')).textDirection,
+        TextDirection.ltr,
+      );
       expect(tester.takeException(), isNull);
     },
   );
