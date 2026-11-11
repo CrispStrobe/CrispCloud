@@ -7,6 +7,7 @@ import 'package:crisp_cloud/providers/gallery_media_provider.dart';
 import 'package:crisp_cloud/providers/panel_source_provider.dart';
 import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
+import 'package:crisp_cloud/services/gallery_media_service.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:crisp_cloud/services/panel_source_service.dart';
 import 'package:flutter/foundation.dart';
@@ -34,7 +35,9 @@ class _Cloud extends Fake implements CloudStorageClient {
   @override
   Future<Map<String, dynamic>> listPath(String path) async => {
     'folders': <Map<String, dynamic>>[],
-    'files': [{'name': 'photo.png', 'size': 3, 'uuid': 'one-image'}],
+    'files': [
+      {'name': 'photo.png', 'size': 3, 'uuid': 'one-image'},
+    ],
   };
 }
 
@@ -78,113 +81,224 @@ class _Local extends Fake implements LocalFileService, LocalFileSourceIdentity {
   @override
   Future<int?> fileLength(String path) => file.length();
   @override
-  Future<Uint8List> readFile(String path, {FileItem? fileItem}) => file.readAsBytes();
+  Future<Uint8List> readFile(String path, {FileItem? fileItem}) =>
+      file.readAsBytes();
 }
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  testWidgets('an unverified collection row cannot borrow the selected cloud account', (tester) async {
-    final cloud = _Cloud('SMB');
-    final container = ProviderContainer(overrides: [
-      authProvider.overrideWith((_) => _Auth(cloud)),
-    ]);
-    addTearDown(container.dispose);
-    late WidgetRef ref;
-    await tester.pumpWidget(UncontrolledProviderScope(container: container,
-      child: Consumer(builder: (_, value, __) { ref = value; return const SizedBox(); })));
-    final panel = container.read(panelProvider(PanelSide.remote));
-    container.read(panelSourceProvider(PanelSide.remote).notifier)
-      .setSource(RemotePanelSource(client: cloud, providerName: cloud.providerName, path: '/'));
-    await tester.runAsync(panel.refresh);
-    panel.showSearchResults([FileItem(name: 'photo.png', path: '/photo.png', isFolder: false)]);
-    expect(tryCaptureGalleryMediaRequest(ref, PanelSide.remote, panel.files!.single), isNull);
-    await tester.pumpWidget(const SizedBox());
-  });
+  testWidgets(
+    'an unverified collection row cannot borrow the selected cloud account',
+    (tester) async {
+      final cloud = _Cloud('SMB');
+      final container = ProviderContainer(
+        overrides: [authProvider.overrideWith((_) => _Auth(cloud))],
+      );
+      addTearDown(container.dispose);
+      late WidgetRef ref;
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: Consumer(
+            builder: (_, value, __) {
+              ref = value;
+              return const SizedBox();
+            },
+          ),
+        ),
+      );
+      final panel = container.read(panelProvider(PanelSide.remote));
+      container
+          .read(panelSourceProvider(PanelSide.remote).notifier)
+          .setSource(
+            RemotePanelSource(
+              client: cloud,
+              providerName: cloud.providerName,
+              path: '/',
+            ),
+          );
+      await tester.runAsync(panel.refresh);
+      panel.showSearchResults([
+        FileItem(name: 'photo.png', path: '/photo.png', isFolder: false),
+      ]);
+      expect(
+        tryCaptureGalleryMediaRequest(
+          ref,
+          PanelSide.remote,
+          panel.files!.single,
+        ),
+        isNull,
+      );
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
 
-  testWidgets('an unknown-revision cloud listing refresh invalidates only thumbnails', (tester) async {
-    final cloud = _Cloud('SMB');
-    final auth = _Auth(cloud);
-    final container = ProviderContainer(overrides: [
-      authProvider.overrideWith((_) => auth),
-    ]);
-    addTearDown(container.dispose);
-    late WidgetRef ref;
-    await tester.pumpWidget(UncontrolledProviderScope(container: container,
-      child: Consumer(builder: (_, value, __) { ref = value; return const SizedBox(); })));
-    final panel = container.read(panelProvider(PanelSide.remote));
-    await tester.runAsync(panel.refresh);
-    final beforeFile = panel.files!.firstWhere((file) => !file.isFolder);
-    expect(beforeFile.updatedAt, isNull);
-    final before = captureGalleryMediaRequest(ref, PanelSide.remote, beforeFile);
-    expect(before.isRemote, isTrue); // The dropdown still says Local by default.
-    await tester.runAsync(panel.refresh);
-    final after = captureGalleryMediaRequest(ref, PanelSide.remote,
-        panel.files!.firstWhere((file) => !file.isFolder));
-    expect(after.assetId, before.assetId);
-    expect(after.revisionKey, isNot(before.revisionKey));
-    await tester.pumpWidget(const SizedBox());
-  });
+  testWidgets(
+    'an unknown-revision cloud listing refresh invalidates only thumbnails',
+    (tester) async {
+      final cloud = _Cloud('SMB');
+      final auth = _Auth(cloud);
+      final container = ProviderContainer(
+        overrides: [authProvider.overrideWith((_) => auth)],
+      );
+      addTearDown(container.dispose);
+      late WidgetRef ref;
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: Consumer(
+            builder: (_, value, __) {
+              ref = value;
+              return const SizedBox();
+            },
+          ),
+        ),
+      );
+      final panel = container.read(panelProvider(PanelSide.remote));
+      await tester.runAsync(panel.refresh);
+      final beforeFile = panel.files!.firstWhere((file) => !file.isFolder);
+      expect(beforeFile.updatedAt, isNull);
+      final before = captureGalleryMediaRequest(
+        ref,
+        PanelSide.remote,
+        beforeFile,
+      );
+      expect(
+        before.isRemote,
+        isTrue,
+      ); // The dropdown still says Local by default.
+      await tester.runAsync(panel.refresh);
+      final after = captureGalleryMediaRequest(
+        ref,
+        PanelSide.remote,
+        panel.files!.firstWhere((file) => !file.isFolder),
+      );
+      expect(after.assetId, before.assetId);
+      expect(after.revisionKey, isNot(before.revisionKey));
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
 
-  testWidgets('ambiguous endpoint reconnects cannot reuse a previous session namespace', (tester) async {
-    final auth = _Auth(_Cloud('S3'));
-    final container = ProviderContainer(overrides: [authProvider.overrideWith((_) => auth)]);
-    addTearDown(container.dispose);
-    late WidgetRef ref;
-    await tester.pumpWidget(UncontrolledProviderScope(container: container,
-      child: Consumer(builder: (_, value, __) { ref = value; return const SizedBox(); })));
-    final panel = container.read(panelProvider(PanelSide.remote));
-    await tester.runAsync(panel.refresh);
-    final file = panel.files!.firstWhere((file) => !file.isFolder);
-    final before = captureGalleryMediaRequest(ref, PanelSide.remote, file);
-    auth.reconnect();
-    await tester.pump();
-    expect(before.isCurrent, isFalse);
-    final after = captureGalleryMediaRequest(ref, PanelSide.remote, file);
-    expect(after.namespaceId, isNot(before.namespaceId));
-    await tester.pumpWidget(const SizedBox());
-  });
+  testWidgets(
+    'ambiguous endpoint reconnects cannot reuse a previous session namespace',
+    (tester) async {
+      final auth = _Auth(_Cloud('S3'));
+      final container = ProviderContainer(
+        overrides: [authProvider.overrideWith((_) => auth)],
+      );
+      addTearDown(container.dispose);
+      late WidgetRef ref;
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: Consumer(
+            builder: (_, value, __) {
+              ref = value;
+              return const SizedBox();
+            },
+          ),
+        ),
+      );
+      final panel = container.read(panelProvider(PanelSide.remote));
+      await tester.runAsync(panel.refresh);
+      final file = panel.files!.firstWhere((file) => !file.isFolder);
+      final before = captureGalleryMediaRequest(ref, PanelSide.remote, file);
+      auth.reconnect();
+      await tester.pump();
+      expect(before.isCurrent, isFalse);
+      final after = captureGalleryMediaRequest(ref, PanelSide.remote, file);
+      expect(after.namespaceId, isNot(before.namespaceId));
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
 
-  testWidgets('a same-path folder regrant changes catalog scope and invalidates old reads', (tester) async {
-    final dir = (await tester.runAsync(() => Directory.systemTemp.createTemp('gallery-root-')))!;
-    final file = (await tester.runAsync(() => File('${dir.path}/photo.png').writeAsBytes([1, 2, 3])))!;
-    addTearDown(() => dir.delete(recursive: true));
-    final local = _Local(dir.path, file);
-    final auth = _Auth(_Cloud('Google Drive'))..isConnected = false;
-    final container = ProviderContainer(overrides: [
-      authProvider.overrideWith((_) => auth),
-      localFileServiceProvider.overrideWithValue(local),
-    ]);
-    addTearDown(container.dispose);
-    late WidgetRef ref;
-    await tester.pumpWidget(UncontrolledProviderScope(container: container,
-      child: Consumer(builder: (_, value, __) { ref = value; return const SizedBox(); })));
-    final panel = container.read(panelProvider(PanelSide.remote));
-    // Finish the source notifier's initial preference restoration before
-    // explicitly choosing a folder.
-    await tester.pump();
-    await tester.runAsync(() async {
-      container.read(panelSourceProvider(PanelSide.remote).notifier)
-          .setSource(LocalPanelSource(dir.path));
-      // Native listings publish names before their asynchronous metadata
-      // pass replaces FileItem instances and verifies the complete listing.
-      // Wait for that work, rather than assuming it finishes within 10 ms.
-      await panel.refresh();
-    });
-    expect(panel.isLoading, isFalse);
-    final listed = panel.files!.firstWhere((file) => !file.isFolder);
-    expect(listed.size, 3);
-    expect(panel.originForFile(listed)?.source,
-        isA<LocalPanelSource>().having((source) => source.path, 'path', dir.path));
-    final before = captureGalleryMediaRequest(ref, PanelSide.remote, listed);
-    expect(before.isRemote, isFalse);
-    expect(before.isCurrent, isTrue);
-    local.rootToken = Object();
-    final after = captureGalleryMediaRequest(ref, PanelSide.remote, listed);
-    expect(before.isCurrent, isFalse);
-    expect(after.isCurrent, isTrue);
-    expect(after.namespaceId, isNot(before.namespaceId));
-    expect(after.assetId, isNot(before.assetId));
-    await tester.pumpWidget(const SizedBox());
-  });
+  testWidgets(
+    'a same-path folder regrant changes catalog scope and invalidates old reads',
+    (tester) async {
+      final dir = (await tester.runAsync(
+        () => Directory.systemTemp.createTemp('gallery-root-'),
+      ))!;
+      final file = (await tester.runAsync(
+        () => File('${dir.path}/photo.png').writeAsBytes([1, 2, 3]),
+      ))!;
+      addTearDown(() => dir.delete(recursive: true));
+      final local = _Local(dir.path, file);
+      final auth = _Auth(_Cloud('Google Drive'))..isConnected = false;
+      final container = ProviderContainer(
+        overrides: [
+          authProvider.overrideWith((_) => auth),
+          localFileServiceProvider.overrideWithValue(local),
+        ],
+      );
+      addTearDown(container.dispose);
+      late WidgetRef ref;
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: Consumer(
+            builder: (_, value, __) {
+              ref = value;
+              return const SizedBox();
+            },
+          ),
+        ),
+      );
+      final panel = container.read(panelProvider(PanelSide.remote));
+      // Finish the source notifier's initial preference restoration before
+      // explicitly choosing a folder.
+      await tester.pump();
+      await tester.runAsync(() async {
+        container
+            .read(panelSourceProvider(PanelSide.remote).notifier)
+            .setSource(LocalPanelSource(dir.path));
+        // Native listings publish names before their asynchronous metadata
+        // pass replaces FileItem instances and verifies the complete listing.
+        // Wait for that work, rather than assuming it finishes within 10 ms.
+        await panel.refresh();
+      });
+      expect(panel.isLoading, isFalse);
+      final listed = panel.files!.firstWhere((file) => !file.isFolder);
+      expect(listed.size, 3);
+      expect(
+        panel.originForFile(listed)?.source,
+        isA<LocalPanelSource>().having(
+          (source) => source.path,
+          'path',
+          dir.path,
+        ),
+      );
+      final before = captureGalleryMediaRequest(ref, PanelSide.remote, listed);
+      expect(before.isRemote, isFalse);
+      expect(before.isCurrent, isTrue);
+      local.rootToken = Object();
+      expect(before.isCurrent, isFalse);
+      expect(before.assertCurrent, throwsA(isA<GalleryMediaException>()));
+      // A replacement grant cannot authorize a row from the previous listing,
+      // even when the new grant exposes the same literal folder and file paths.
+      expect(
+        () => captureGalleryMediaRequest(ref, PanelSide.remote, listed),
+        throwsA(isA<GalleryMediaException>()),
+      );
+      expect(
+        tryCaptureGalleryMediaRequest(ref, PanelSide.remote, listed),
+        isNull,
+      );
+      await tester.runAsync(panel.refresh);
+      expect(panel.isLoading, isFalse);
+      final refreshed = panel.files!.firstWhere((file) => !file.isFolder);
+      expect(refreshed.path, listed.path);
+      expect(refreshed, isNot(same(listed)));
+      final after = captureGalleryMediaRequest(
+        ref,
+        PanelSide.remote,
+        refreshed,
+      );
+      expect(before.isCurrent, isFalse);
+      expect(after.isCurrent, isTrue);
+      expect(after.namespaceId, isNot(before.namespaceId));
+      expect(after.assetId, isNot(before.assetId));
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
 }

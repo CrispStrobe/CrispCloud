@@ -1,8 +1,9 @@
 # crisp_smb (experimental)
 
-Independent MIT OR Apache-2.0 SMB engine, shared by Flutter's generated bridge
-and Rust consumers. The application keeps libsmb2 as its default until the
-qualification matrix in `../../../../docs/SMB_RUST_ROLLOUT.md` passes.
+Standalone experimental Rust SMB wrapper. The Flutter application continues to
+use `dart_smb2` / libsmb2. This crate is not connected to an application bridge,
+backend selector or platform build. Enabling it requires the
+[rollout qualification](../../../../docs/SMB_RUST_ROLLOUT.md).
 
 - Pins `smb2` 0.43.0; no Samba/libsmb2 dependency in this crate.
 - Named authentication, mandatory signing, encryption required unless explicitly
@@ -20,3 +21,9 @@ qualification matrix in `../../../../docs/SMB_RUST_ROLLOUT.md` passes.
 Run `cargo test --locked`. This does not prove interoperability or security on
 real SMB3 servers; those checks remain a rollout gate. No credentials are logged
 or persisted by the wrapper. The caller owns secure credential storage.
+
+The wrapper declares `MIT OR Apache-2.0`. Its manifest and lockfile do not
+establish license or notice compliance for every dependency or for the finished
+application. Review the exact dependency graph and update applicable native,
+cryptographic and distribution evidence before packaging this engine. Existing
+application notices remain in place while its active backend is unchanged.
