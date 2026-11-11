@@ -77,10 +77,10 @@ class FolderDropService {
             identical(identities.sourceIdentityForPath(path), identity),
       );
     }
-    final grantedRoot = local.grantedBasePath;
-    return origin.withAvailabilityGuard(
-      () => local.grantedBasePath == grantedRoot,
-    );
+    // A native service can retain several valid bookmarks. Its last chosen
+    // root is presentation state, so changing it must not revoke a reviewed
+    // literal path. The backend still acquires and verifies its actual scope.
+    return origin;
   }
 
   /// Virtual folders have no authoritative modified time. Read their existing

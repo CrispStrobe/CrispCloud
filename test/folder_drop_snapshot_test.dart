@@ -9,10 +9,12 @@ import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/services/file_operation_service.dart';
 import 'package:crisp_cloud/services/folder_drop_service.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
+import 'package:crisp_cloud/services/local_file_service_native.dart';
 import 'package:crisp_cloud/services/panel_source_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:macos_secure_bookmarks/macos_secure_bookmarks.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -185,6 +187,53 @@ class _GrantedLocal extends Fake
     final gate = snapshotGate;
     snapshotGate = null;
     if (gate != null && !gate.isCompleted) gate.complete();
+  }
+}
+
+class _NativeBookmarks extends Fake implements SecureBookmarks {
+  final started = <String>[];
+  final stopped = <String>[];
+
+  @override
+  Future<bool> startAccessingSecurityScopedResource(
+    FileSystemEntity entity,
+  ) async {
+    started.add(entity.path);
+    return true;
+  }
+
+  @override
+  Future<bool> stopAccessingSecurityScopedResource(
+    FileSystemEntity entity,
+  ) async {
+    stopped.add(entity.path);
+    return true;
+  }
+}
+
+class _NativeLocal extends MacosFileService {
+  _NativeLocal(Directory first, Directory second, _NativeBookmarks bookmarks)
+    : selectedRoot = first.path,
+      super(
+        bookmarks: bookmarks,
+        resolveBookmarks: () async => [first, second],
+      ) {
+    currentPath = first.path;
+  }
+
+  // Selecting another native root changes presentation, while the real
+  // scoped-read implementation can still use either saved bookmark.
+  String selectedRoot;
+  int accessRequests = 0;
+
+  @override
+  String get grantedBasePath => selectedRoot;
+  @override
+  Future<String> getInitialPath() async => currentPath;
+  @override
+  Future<String?> requestDirectoryAccess({String? initialDirectory}) async {
+    accessRequests++;
+    throw StateError('An existing native scope must not request a picker.');
   }
 }
 
@@ -704,6 +753,58 @@ void main() {
       );
       expect(local.snapshots, 0);
       expect(local.accessRequests, 0);
+    },
+  );
+
+  test(
+    'a reviewed native target survives choosing another available grant',
+    () async {
+      final first = Directory(await localRoot.resolveSymbolicLinks());
+      final otherTemporary = await Directory.systemTemp.createTemp(
+        'other-native-grant-',
+      );
+      addTearDown(() => otherTemporary.delete(recursive: true));
+      final second = Directory(await otherTemporary.resolveSymbolicLinks());
+      final bookmarks = _NativeBookmarks();
+      final native = _NativeLocal(first, second, bookmarks);
+      final nativeContainer = ProviderContainer(
+        overrides: [
+          authProvider.overrideWith((_) => _Auth(cloud)),
+          localFileServiceProvider.overrideWithValue(native),
+        ],
+      );
+      addTearDown(nativeContainer.dispose);
+      final nativePanel = nativeContainer.read(panelProvider(PanelSide.local));
+      await Future<void>.delayed(Duration.zero);
+      await nativePanel.navigateToPath(
+        first.path,
+        origin: nativePanel.captureLocalClipboardOrigin(first.path),
+      );
+      final targetPath = p.join(first.path, 'drop');
+      final target = service.capture(
+        nativePanel,
+        row(nativePanel, targetPath),
+        native,
+      )!;
+      final prepared = await service.prepare(
+        drag(),
+        target,
+        kind: FileOperationKind.copy,
+      );
+
+      native.selectedRoot = second.path;
+      expect(await native.hasAccessToPath(targetPath), isTrue);
+      expect(prepared.destination.origin.isCurrent, isTrue);
+      expect(prepared.destination.backend.isCurrent, isTrue);
+      final fresh = await prepared.destination.backend.stat(targetPath);
+      expect(fresh?.path, targetPath);
+      expect(fresh?.isFolder, isTrue);
+      expect(bookmarks.started, contains(first.path));
+      expect(bookmarks.stopped, bookmarks.started);
+      expect(native.grantedBasePath, second.path);
+      expect(native.accessRequests, 0);
+      expect(cloud.writes, isEmpty);
+      expect(await Directory(targetPath).list().isEmpty, isTrue);
     },
   );
 }
