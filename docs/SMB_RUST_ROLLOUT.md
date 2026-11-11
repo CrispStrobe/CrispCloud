@@ -140,9 +140,11 @@ checks, not a guarantee for every future revision or provider.
 [The workflow at `13ca681`](https://github.com/CrispStrobe/CrispCloud/actions/runs/43012455534)
 passed Linux, macOS, iOS compilation/Apple padding checks, and the GUI/CLI
 `surfaces` job. The Windows job stopped in recipe integrity verification because
-Git converted the pinned LF files to CRLF. Package-specific Git attributes now
-preserve the original bytes; the integrity tests pass after a local checkout
-with `core.autocrlf=true`. The Windows rerun must still confirm that correction.
+Git converted the pinned LF files to CRLF. Package-specific Git attributes preserve the original bytes. The subsequent
+Windows run passed recipe verification, then found CRLF/LF differences between
+the distributed notice and Dart's runtime string. The notice now also retains
+LF; recipe integrity and notice consistency were verified locally after export
+with `core.autocrlf=true`. A full Windows rerun must still confirm both fixes.
 
 The earlier macOS prebuilt-library install-name failure is addressed by the
 source recipe below and passed the subsequent macOS/iOS CI checks. Final app
