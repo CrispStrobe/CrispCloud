@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -155,6 +156,55 @@ void main() {
     await tester.pumpAndSettle();
     expect(horizontal.offset, greaterThan(0));
     expect(controller.caret, 0);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('pressing the scrollbar gutter does not select bytes', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1400, 700);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final controller = HexEditorController(
+      HexDocument(MemoryHexByteSource(Uint8List(64 * 1024))),
+    );
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 1200,
+            height: 500,
+            child: HexEditor(controller: controller),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final list = tester.getRect(find.byType(ListView));
+
+    // A mouse drag down the right edge (where the vertical scrollbar sits)
+    // must scroll or do nothing, never start a byte selection.
+    final gesture = await tester.startGesture(
+      Offset(list.right - 4, list.top + 40),
+      kind: PointerDeviceKind.mouse,
+    );
+    await gesture.moveTo(Offset(list.right - 4, list.top + 300));
+    await gesture.up();
+    await tester.pumpAndSettle();
+    expect(controller.caret, 0);
+    expect(controller.anchor, 0);
+
+    // A press on the rows themselves still places the caret.
+    final row = await tester.startGesture(
+      Offset(list.left + 200, list.top + 60),
+      kind: PointerDeviceKind.mouse,
+    );
+    await row.up();
+    await tester.pumpAndSettle();
+    expect(controller.caret, isNot(0));
+
     await tester.pumpWidget(const SizedBox());
   });
 }

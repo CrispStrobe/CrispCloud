@@ -161,6 +161,25 @@ class _HexEditorState extends State<HexEditor> {
     _focus.requestFocus();
   }
 
+  /// Width of the strip along the right (vertical) and bottom (horizontal)
+  /// edge where a press belongs to the scrollbar, not to byte selection.
+  static const double _scrollbarGutter = 18;
+
+  /// Whether [local] (viewport coordinates) is on a scrollbar: the vertical
+  /// one sits at the right edge of the [contentWidth]-wide row area, the
+  /// horizontal one along the bottom when rows are wider than the viewport.
+  bool _onScrollbar(
+    Offset local,
+    BoxConstraints viewport,
+    double contentWidth,
+  ) {
+    final scrolledX =
+        local.dx + (_horizontal.hasClients ? _horizontal.offset : 0.0);
+    if (contentWidth - scrolledX <= _scrollbarGutter) return true;
+    return contentWidth > viewport.maxWidth &&
+        viewport.maxHeight - local.dy <= _scrollbarGutter;
+  }
+
   void _pointerMove(PointerMoveEvent event) {
     if (_dragPointer != event.pointer) return;
     final box = _viewport.currentContext?.findRenderObject() as RenderBox?;
@@ -549,7 +568,12 @@ class _HexEditorState extends State<HexEditor> {
                 key: _viewport,
                 onPointerDown: (event) {
                   if (event.kind == PointerDeviceKind.mouse &&
-                      event.buttons == kPrimaryMouseButton) {
+                      event.buttons == kPrimaryMouseButton &&
+                      !_onScrollbar(
+                        event.localPosition,
+                        constraints,
+                        math.max(rowWidth, constraints.maxWidth),
+                      )) {
                     _dragPointer = event.pointer;
                     _hit(
                       event.localPosition,
