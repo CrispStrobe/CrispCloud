@@ -55,4 +55,88 @@ void main() {
       throwsArgumentError,
     );
   });
+  test(
+    'image replacement preserves pixels and dimensions through async saves',
+    () async {
+      final temporary = Directory.systemTemp.createTempSync('office-image-');
+      addTearDown(() => temporary.deleteSync(recursive: true));
+      final source = OpcPackage.openBytes(
+        File('test/fixtures/fidelity/native.pptx').readAsBytesSync(),
+      );
+      final image = source.getPart('/ppt/media/image2.png')!.readBytes();
+      final path = File('${temporary.path}/replacement.png')
+        ..writeAsBytesSync(image);
+      var doc = fixture();
+      final original = doc.visuals.single.visual;
+      final width = original.width, height = original.height;
+      cli.applyStep(doc, {'op': 'imageReplace', 'image': 0, 'file': path.path});
+      for (int cycle = 1; cycle <= 3; cycle++) {
+        final bytes = await OfficeIsolateSave.word(doc);
+        Directory('build/fidelity-image').createSync(recursive: true);
+        File(
+          'build/fidelity-image/replaced-$cycle.docx',
+        ).writeAsBytesSync(bytes);
+        doc = WordDeserializer().readBytes(bytes);
+        expect(doc.visuals.single.visual.imageBytes, image);
+        expect(doc.visuals.single.visual.width, width);
+        expect(doc.visuals.single.visual.height, height);
+      }
+    },
+  );
+  test(
+    'failing later script step leaves existing output intact and no temporary file',
+    () async {
+      final temporary = Directory.systemTemp.createTempSync('office-atomic-');
+      addTearDown(() => temporary.deleteSync(recursive: true));
+      final output = File('${temporary.path}/keep.docx')
+        ..writeAsBytesSync([1, 2, 3, 4]);
+      final steps = File('${temporary.path}/steps.json')
+        ..writeAsStringSync(
+          jsonEncode([
+            {'op': 'replaceText', 'paragraph': 0, 'text': 'Partial edit'},
+            {'op': 'imageReplace', 'image': 999, 'file': 'missing.png'},
+          ]),
+        );
+      await expectLater(
+        cli.main([
+          'modify',
+          'test/fixtures/fidelity/word.docx',
+          steps.path,
+          output.path,
+        ]),
+        throwsStateError,
+      );
+      expect(output.readAsBytesSync(), [1, 2, 3, 4]);
+      expect(
+        temporary.listSync().where((f) => f.path.contains('.tmp.')),
+        isEmpty,
+      );
+    },
+  );
+  test(
+    'successful CLI export replaces output with a complete package',
+    () async {
+      final temporary = Directory.systemTemp.createTempSync('office-export-');
+      addTearDown(() => temporary.deleteSync(recursive: true));
+      final output = File('${temporary.path}/result.docx')
+        ..writeAsStringSync('old');
+      await cli.main([
+        'export',
+        'test/fixtures/fidelity/word.docx',
+        output.path,
+      ]);
+      expect(
+        WordDeserializer()
+            .readBytes(output.readAsBytesSync())
+            .paragraphs
+            .first
+            .text,
+        'Imported heading',
+      );
+      expect(
+        temporary.listSync().where((f) => f.path.contains('.tmp.')),
+        isEmpty,
+      );
+    },
+  );
 }

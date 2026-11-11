@@ -203,6 +203,8 @@ class WordSerializer {
     Map<OfficeVisual, String> imageIds,
   ) {
     switch (block) {
+      case WmlOpaqueBlock():
+        XmlDocument.parse(block.xml).root!.writeTo(w);
       case WmlParagraph():
         _writeParagraph(w, block);
       case WmlTable():
@@ -1635,7 +1637,9 @@ class WordSerializer {
   }
 
   void _syncStyles(WmlDocument document, OpcPackage package) {
-    const String uri = '/word/styles.xml';
+    final rels = package.relationshipsFor('/word/document.xml');
+    final rel = rels.firstByType(RelationshipTypes.styles);
+    final String uri = rel == null ? '/word/styles.xml' : rels.resolve(rel);
     final XmlWriter w = XmlWriter();
     w.writeStartDocument();
     w.writeStartElement('styles', prefix: 'w');

@@ -270,4 +270,80 @@ void main() {
     expect(note.blocks, hasLength(1));
     expect(note.text, 'Replacement');
   });
+  test(
+    'a tall cell paragraph splits without losing text or placing its note early',
+    () {
+      final doc = WmlDocument.empty(text: 'Before table');
+      final section = doc.sections.first
+        ..pageSize = const WmlPageSize(width: 260, height: 260)
+        ..margins = const WmlPageMargins(
+          top: 20,
+          bottom: 20,
+          left: 20,
+          right: 20,
+        );
+      final cell = WmlParagraph(
+        inlines: [
+          WmlRun(
+            text: List.generate(
+              120,
+              (i) => 'T${i.toString().padLeft(3, '0')}',
+            ).join(' '),
+          ),
+        ],
+      );
+      final second = WmlParagraph(inlines: [WmlRun(text: 'Other cell')]);
+      section.blocks.add(
+        WmlTable(
+          grid: [140, 80],
+          rows: [
+            WmlTableRow(
+              cells: [
+                WmlTableCell(blocks: [cell]),
+                WmlTableCell(blocks: [second]),
+              ],
+            ),
+          ],
+        ),
+      );
+      WordNotes.insert(doc, cell, endnote: false, text: 'Late table note');
+      final laid = WordLayoutEngine(font: null).layout(doc);
+      assertNoOverlap(laid, doc);
+      expect(laid.pages.length, greaterThan(2));
+      final text = laid.pages
+          .expand((p) => p.lines)
+          .map((l) => l.text)
+          .join(' ');
+      for (int i = 0; i < 120; i++) {
+        expect(
+          RegExp('T${i.toString().padLeft(3, '0')}').allMatches(text),
+          hasLength(1),
+        );
+      }
+      final markerPage = laid.pages.singleWhere(
+        (p) => p.lines.any(
+          (l) => l.glyphs.any((g) => g.vertAlign == WmlVertAlign.superscript),
+        ),
+      );
+      expect(markerPage.index, greaterThan(0));
+      expect(
+        markerPage.notes.map((l) => l.text).join(' '),
+        contains('Late table note'),
+      );
+      expect(
+        laid.pages
+            .where((p) => p.index < markerPage.index)
+            .expand((p) => p.notes),
+        isEmpty,
+      );
+      for (final page in laid.pages) {
+        for (final line in page.lines) {
+          expect(line.y + line.height, lessThanOrEqualTo(240.01));
+        }
+        for (final frame in page.frames.where((b) => !b.isNoteContent)) {
+          expect(frame.y + frame.height, lessThanOrEqualTo(240.01));
+        }
+      }
+    },
+  );
 }

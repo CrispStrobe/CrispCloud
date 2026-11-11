@@ -21,6 +21,7 @@ import '../model/word_toc.dart';
 import '../properties/wml_properties.dart';
 
 part 'word_note_layout.dart';
+part 'word_table_row_layout.dart';
 
 /// Class LaidOutGlyph.
 class LaidOutGlyph {
@@ -994,6 +995,8 @@ class WordLayoutEngine {
     }
     for (final WmlBlock block in section.blocks) {
       switch (block) {
+        case WmlOpaqueBlock():
+          break;
         case WmlParagraph():
           if (block.properties.pageBreakBefore) {
             flow.breakPage();
@@ -1106,6 +1109,8 @@ class WordLayoutEngine {
     var n = 0;
     for (final WmlBlock block in blocks) {
       switch (block) {
+        case WmlOpaqueBlock():
+          break;
         case WmlParagraph():
           n++;
         case WmlTable():
@@ -1545,6 +1550,41 @@ class WordLayoutEngine {
 
     for (final WmlTableRow row in table.rows) {
       final int rowIndex = table.rows.indexOf(row);
+      final double fullRowHeight = _measureTableRowHeightFrom(
+        row,
+        cols,
+        section,
+        nextBlock: List<int>.filled(row.cells.length, 0),
+        tableX: tableX,
+        tableWidth: tableWidth,
+        rtl: rtl,
+        cellPad: cellPad,
+      );
+      if (fullRowHeight > section.contentHeight - cellPad * 2) {
+        final laid = _layoutTallTableRow(
+          this,
+          table,
+          rowIndex,
+          cols,
+          section,
+          pages,
+          current,
+          currentFrames,
+          idx,
+          cursorY,
+          para,
+          tableX,
+          tableWidth,
+          flow?.sectionIndex ?? 0,
+        );
+        cursorY = laid.y;
+        idx = laid.pageIndex;
+        para += row.cells
+            .expand((cell) => cell.blocks)
+            .expand(WmlClone.paragraphsOf)
+            .length;
+        continue;
+      }
       final List<int> nextBlock = List<int>.filled(row.cells.length, 0);
       var sliceStart = true;
       while (true) {
@@ -2079,6 +2119,8 @@ class WordLayoutEngine {
     final double innerW = math.max(12, frame.width - pad * 2);
     for (final WmlBlock block in frame.blocks) {
       switch (block) {
+        case WmlOpaqueBlock():
+          break;
         case WmlParagraph():
           final ({double y, int pageIndex}) laid = _layoutParagraph(
             block,

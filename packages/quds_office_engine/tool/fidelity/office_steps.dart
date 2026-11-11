@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:quds_office_engine/quds_office_engine.dart';
+import 'package:quds_office_engine/src/word/serial/word_property_io.dart';
 
 /// Scriptable DOCX import, mutation and export. Indexes are zero-based.
 /// inspect INPUT; export INPUT OUTPUT; modify INPUT STEPS.json OUTPUT.
@@ -66,7 +67,17 @@ Future<void> main(List<String> args) async {
   }
   final Uint8List output = await OfficeIsolateSave.word(doc);
   // Do not touch the output until every step and serialization has succeeded.
-  File(args.last).writeAsBytesSync(output);
+  final destination = File(args.last);
+  destination.parent.createSync(recursive: true);
+  final temporary = File(
+    '${destination.path}.tmp.$pid.${DateTime.now().microsecondsSinceEpoch}',
+  );
+  try {
+    temporary.writeAsBytesSync(output, flush: true);
+    temporary.renameSync(destination.path);
+  } finally {
+    if (temporary.existsSync()) temporary.deleteSync();
+  }
 }
 
 void applyStep(WmlDocument doc, Map<String, dynamic> step) {
@@ -143,7 +154,9 @@ void applyStep(WmlDocument doc, Map<String, dynamic> step) {
           }
           props.addChild(element);
         }
+        WordPropertyIo.orderChildren(props);
       }
+      WordPropertyIo.orderChildren(style);
       part.writeText(xml.toXmlString());
       WordDeserializer().refreshStyles(doc);
     case 'applyStyle':

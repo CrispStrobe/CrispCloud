@@ -134,6 +134,7 @@ void main() {
           expect(slide.notes, 'Edited speaker note ${i + 1}');
           expect(slide.shapes.first.text, 'Edited native slide ${i + 1}');
           expect(slide.transition.kind, PmlTransitionKind.wipe);
+          expect(slide.transition.durationMs, 900);
           expect(slide.animations.single.preset, PmlAnimPreset.fade);
           expect(
             slide.shapes
@@ -157,5 +158,22 @@ void main() {
     final xml = package.getPart('/ppt/presentation.xml')!.readText();
     expect(xml, contains('notesSz'));
     expect(xml, contains('sldMasterIdLst'));
+  });
+  test('axis repair avoids collisions with valid source IDs', () {
+    final deck = SlideDeserializer().readBytes(
+      File('test/fixtures/fidelity/native.pptx').readAsBytesSync(),
+    );
+    final part = deck.package!.getPart('/ppt/charts/chart1.xml')!;
+    var xml = part
+        .readText()
+        .replaceAll('-2068027336', '1')
+        .replaceAll('-2113994440', '2147483648');
+    part.writeText(xml);
+    final out = SlideSerializer().write(deck);
+    xml = out.getPart(part.uri)!.readText();
+    final values = RegExp(
+      r'<c:(?:axId|crossAx) val="([0-9]+)"',
+    ).allMatches(xml).map((m) => int.parse(m[1]!)).toSet();
+    expect(values, {1, 2});
   });
 }

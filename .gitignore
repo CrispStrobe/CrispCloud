@@ -104,3 +104,7 @@ CLAUDE.local.md
 /packages/crisp_storage/frb_codegen.*.log
 
 /packages/crisp_storage/.fixture-venv/
+
+# Generated standalone office-library checks
+/packages/quds_office_engine/build/
+/packages/quds_office_engine/pubspec.lock
