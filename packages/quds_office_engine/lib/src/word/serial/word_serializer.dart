@@ -996,6 +996,13 @@ class WordSerializer {
   ) {
     w.writeStartElement('tbl', prefix: 'w');
     w.writeStartElement('tblPr', prefix: 'w');
+    if (table.properties.styleId != null) {
+      w.writeEmptyElement(
+        'tblStyle',
+        prefix: 'w',
+        attributes: <String, String>{'w:val': table.properties.styleId!},
+      );
+    }
     if (table.properties.rightToLeft) {
       w.writeEmptyElement('bidiVisual', prefix: 'w');
     }
@@ -1013,7 +1020,7 @@ class WordSerializer {
       },
     );
     if (table.properties.borders) {
-      final String color = table.properties.borderColor ?? 'BFBFBF';
+      final String color = table.properties.borderColor ?? '000000';
       w.writeStartElement('tblBorders', prefix: 'w');
       for (final String edge in <String>[
         'top',
@@ -1028,7 +1035,7 @@ class WordSerializer {
           prefix: 'w',
           attributes: <String, String>{
             'w:val': 'single',
-            'w:sz': '4',
+            'w:sz': '${(table.properties.borderWidth * 8).round()}',
             'w:space': '0',
             'w:color': color,
           },
@@ -1529,11 +1536,43 @@ class WordSerializer {
       w.writeEndElement();
     }
     w.writeEndElement();
+    final XmlDocument generated = XmlDocument.parse(w.toXml());
+    final PackagePart? original = package.getPart(uri);
+    String xml = generated.toXmlString();
+    if (original != null) {
+      final XmlDocument preserved = XmlDocument.parse(original.readText());
+      final XmlElement? root = preserved.root;
+      if (root != null) {
+        for (final XmlElement node in generated.root!.childElements) {
+          final String key = node.localName == 'num'
+              ? 'numId'
+              : 'abstractNumId';
+          if (root
+              .childrenNamed(node.localName)
+              .any(
+                (XmlElement old) =>
+                    old.getAttribute(key) == node.getAttribute(key),
+              )) {
+            continue;
+          }
+          // CT_Numbering requires abstractNum before num instances.
+          final int firstNum = root.children.indexWhere(
+            (XmlNode n) => n is XmlElement && n.localName == 'num',
+          );
+          if (node.localName == 'abstractNum' && firstNum >= 0) {
+            root.children.insert(firstNum, node.copy()..parent = root);
+          } else {
+            root.addChild(node.copy());
+          }
+        }
+        xml = preserved.toXmlString();
+      }
+    }
     _putPart(
       package,
       uri,
       OfficeContentTypes.wordNumbering,
-      w.toXml(),
+      xml,
       RelationshipTypes.numbering,
       'numbering.xml',
     );
@@ -1677,7 +1716,7 @@ class WordSerializer {
     final XmlDocument generated = XmlDocument.parse(w.toXml());
     final PackagePart? original = package.getPart(uri);
     String xml = generated.toXmlString();
-    if (original != null && document.importedStyles.isNotEmpty) {
+    if (original != null) {
       final XmlDocument preserved = XmlDocument.parse(original.readText());
       final XmlElement? root = preserved.root;
       if (root != null) {
@@ -1695,8 +1734,10 @@ class WordSerializer {
         );
         for (final XmlElement node in generated.root!.childrenNamed('style')) {
           final String? id = node.getAttribute('styleId');
-          if (id != null && identical(current[id], document.importedStyles[id]))
+          if (id != null &&
+              identical(current[id], document.importedStyles[id])) {
             continue;
+          }
           final int at = root.children.indexWhere(
             (XmlNode old) =>
                 old is XmlElement &&

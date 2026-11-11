@@ -5,16 +5,22 @@ import 'package:quds_office_editor/quds_office_editor.dart';
 
 Uint8List fidelityFixture() {
   for (final String prefix in <String>['../', 'packages/']) {
-    final File file = File('${prefix}quds_office_engine/test/fixtures/fidelity/word.docx');
+    final File file = File(
+      '${prefix}quds_office_engine/test/fixtures/fidelity/word.docx',
+    );
     if (file.existsSync()) return file.readAsBytesSync();
   }
   throw StateError('Run from the editor package or CrispCloud root.');
 }
+
 WordEditorController openFixture() {
-  final WordEditorController c = WordEditorController.fromBytes(fidelityFixture());
+  final WordEditorController c = WordEditorController.fromBytes(
+    fidelityFixture(),
+  );
   addTearDown(c.dispose);
   return c;
 }
+
 List<int?> references(WmlDocument doc) => <int?>[
   for (final WmlParagraph p in doc.paragraphs)
     for (final WmlRun r in p.inlines.whereType<WmlRun>())
@@ -28,8 +34,18 @@ void main() {
     final WordEditorController reopened = WordEditorController.fromBytes(bytes);
     addTearDown(reopened.dispose);
     expect(references(reopened.document), <int>[12, 3]);
-    expect(reopened.document.visuals.single.visual.imageBytes, c.document.visuals.single.visual.imageBytes);
-    expect(reopened.document.footnotes.single.paragraphs.last.inlines.whereType<WmlRun>().single.hyperlink?.url, 'https://example.com/note');
+    expect(
+      reopened.document.visuals.single.visual.imageBytes,
+      c.document.visuals.single.visual.imageBytes,
+    );
+    expect(
+      reopened.document.footnotes.single.paragraphs.last.inlines
+          .whereType<WmlRun>()
+          .single
+          .hyperlink
+          ?.url,
+      'https://example.com/note',
+    );
     final File exported = File('build/fidelity/unchanged-controller.docx');
     exported.parent.createSync(recursive: true);
     exported.writeAsBytesSync(bytes);
@@ -45,7 +61,10 @@ void main() {
       expect(references(c.document), <int>[12, 3]);
       c.redo();
     }
-    expect(references(WordDeserializer().readBytes(c.saveBytes())), <int>[12, 3]);
+    expect(references(WordDeserializer().readBytes(c.saveBytes())), <int>[
+      12,
+      3,
+    ]);
   });
   test('paragraph split and undo preserve styled runs and notes', () {
     final WordEditorController c = openFixture();
@@ -57,7 +76,10 @@ void main() {
     expect(ps[1].text, 'Body');
     expect(ps[2].text, ' text123');
     expect(references(c.document), <int>[12, 3]);
-    expect(ps[2].inlines.whereType<WmlRun>().first.properties.highlight, 'FFFF00');
+    expect(
+      ps[2].inlines.whereType<WmlRun>().first.properties.highlight,
+      'FFFF00',
+    );
     expect(identical(ps[1].properties, ps[2].properties), isFalse);
     c.undo();
     expect(c.document.paragraphs.elementAt(1).text, 'Body text123');
@@ -65,20 +87,24 @@ void main() {
     c.redo();
     expect(references(c.document), <int>[12, 3]);
   });
-  test('custom style uses document catalog and undo restores direct values', () {
-    final WordEditorController c = openFixture();
-    c.jumpToParagraph(1);
-    c.applyStyle('ListCustom');
-    expect(c.document.paragraphs.elementAt(1).properties.numId, 5);
-    c.undo();
-    final WmlParagraph p = c.document.paragraphs.elementAt(1);
-    expect(p.properties.spacingBefore, 0);
-    expect(p.properties.spacingAfter, 8);
-    expect(p.inlines.whereType<WmlRun>().first.properties.bold, isFalse);
-    c.redo(); c.undo();
-    expect(p.properties.spacingBefore, 0);
-    expect(references(c.document), <int>[12, 3]);
-  });
+  test(
+    'custom style uses document catalog and undo restores direct values',
+    () {
+      final WordEditorController c = openFixture();
+      c.jumpToParagraph(1);
+      c.applyStyle('ListCustom');
+      expect(c.document.paragraphs.elementAt(1).properties.numId, 5);
+      c.undo();
+      final WmlParagraph p = c.document.paragraphs.elementAt(1);
+      expect(p.properties.spacingBefore, 0);
+      expect(p.properties.spacingAfter, 8);
+      expect(p.inlines.whereType<WmlRun>().first.properties.bold, isFalse);
+      c.redo();
+      c.undo();
+      expect(p.properties.spacingBefore, 0);
+      expect(references(c.document), <int>[12, 3]);
+    },
+  );
   test('paragraph format history does not mutate the undo snapshot', () {
     final WordEditorController c = openFixture();
     c.jumpToParagraph(1);
@@ -91,18 +117,28 @@ void main() {
     }
   });
   for (final bool endnote in <bool>[false, true]) {
-    test('${endnote ? 'endnote' : 'footnote'} inserts at caret and survives history', () {
-      final WordEditorController c = WordEditorController(document: WmlDocument.empty(text: 'abcdef'));
-      addTearDown(c.dispose);
-      c.caret.logicalIndex = 3;
-      c.caret.collapseSelection();
-      c.insertFootnote(text: 'New note', endnote: endnote);
-      expect(c.document.paragraphs.first.text, 'abc1def');
-      c.undo(); expect(c.document.paragraphs.first.text, 'abcdef');
-      c.redo(); expect(c.document.paragraphs.first.text, 'abc1def');
-      final WmlDocument after = WordDeserializer().readBytes(c.saveBytes());
-      expect((endnote ? after.endnotes : after.footnotes).single.text, 'New note');
-      expect(references(after), <int>[1]);
-    });
+    test(
+      '${endnote ? 'endnote' : 'footnote'} inserts at caret and survives history',
+      () {
+        final WordEditorController c = WordEditorController(
+          document: WmlDocument.empty(text: 'abcdef'),
+        );
+        addTearDown(c.dispose);
+        c.caret.logicalIndex = 3;
+        c.caret.collapseSelection();
+        c.insertFootnote(text: 'New note', endnote: endnote);
+        expect(c.document.paragraphs.first.text, 'abc1def');
+        c.undo();
+        expect(c.document.paragraphs.first.text, 'abcdef');
+        c.redo();
+        expect(c.document.paragraphs.first.text, 'abc1def');
+        final WmlDocument after = WordDeserializer().readBytes(c.saveBytes());
+        expect(
+          (endnote ? after.endnotes : after.footnotes).single.text,
+          'New note',
+        );
+        expect(references(after), <int>[1]);
+      },
+    );
   }
 }

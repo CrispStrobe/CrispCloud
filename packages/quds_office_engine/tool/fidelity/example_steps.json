@@ -1,0 +1,10 @@
+[
+  {"op":"replaceText","paragraph":0,"text":"Edited headline"},
+  {"op":"heading","paragraph":0,"level":2},
+  {"op":"applyStyle","paragraph":3,"style":"ListCustom"},
+  {"op":"paragraphFormat","paragraph":1,"alignment":"center","before":6,"after":10,"lineSpacing":1.5},
+  {"op":"runFormat","paragraph":1,"start":0,"end":9,"bold":true,"font":"Arial","size":14,"highlight":"FFFF00"},
+  {"op":"editNote","id":12,"text":"Revised footnote"},
+  {"op":"addNote","paragraph":0,"endnote":true,"text":"Added endnote"},
+  {"op":"imageSize","image":0,"width":72,"height":48}
+]

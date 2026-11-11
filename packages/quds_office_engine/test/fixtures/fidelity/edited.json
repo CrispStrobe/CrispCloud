@@ -1,4 +1,19 @@
 {
+  "numbering": {
+    "5": [
+      {
+        "start": {
+          "val": "1"
+        },
+        "numFmt": {
+          "val": "decimal"
+        },
+        "lvlText": {
+          "val": "%1."
+        }
+      }
+    ]
+  },
   "text": [
     "Revised heading",
     "Edited body",
@@ -60,7 +75,7 @@
     }
   ],
   "image_sha256": [
-    "ebf4f635a17d10d6eb46ba680b70142419aa3220f228001a036d311a22ee9d2a"
+    "a015424474434a3ecc70d1c9424ebd2833eeb18fbfe80124c4b8169792e80614"
   ],
   "styles": {
     "Heading1": {

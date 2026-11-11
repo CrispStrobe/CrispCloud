@@ -8,6 +8,37 @@ WmlDocument openFixture() => WordDeserializer().readBytes(
 );
 
 void main() {
+  test('custom numbering definitions preserve visible labels after export', () {
+    WmlDocument doc = openFixture();
+    final String? label = doc.paragraphs.elementAt(3).properties.listLabel;
+    expect(label, '1. ');
+    for (var cycle = 0; cycle < 3; cycle++) {
+      doc = WordDeserializer().readBytes(WordSerializer().writeBytes(doc));
+      expect(doc.paragraphs.elementAt(3).properties.listLabel, label);
+    }
+  });
+
+  test('table style id, border color and border width survive export', () {
+    final WmlDocument doc = openFixture();
+    final WmlTable table = doc.sections.first.blocks
+        .whereType<WmlTable>()
+        .single;
+    table.properties
+      ..styleId = 'TableCustom'
+      ..borderColor = '123456'
+      ..borderWidth = 2;
+    final WmlTable after = WordDeserializer()
+        .readBytes(WordSerializer().writeBytes(doc))
+        .sections
+        .first
+        .blocks
+        .whereType<WmlTable>()
+        .single;
+    expect(after.properties.styleId, 'TableCustom');
+    expect(after.properties.borderColor, '123456');
+    expect(after.properties.borderWidth, 2);
+  });
+
   test(
     'explicit default formatting overrides a non-default paragraph style',
     () {

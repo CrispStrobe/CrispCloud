@@ -5,7 +5,8 @@ Uses only Python's standard library. Expected goldens come from authored XML,
 never from Quds output. `seed` is an explicit reviewed-corpus maintenance action.
 """
 import argparse
-import base64
+import struct
+import zlib
 import hashlib
 import json
 from pathlib import Path
@@ -19,7 +20,13 @@ W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
 R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
 NS = {'w': W, 'r': R, 'wp': 'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing',
       'a': 'http://schemas.openxmlformats.org/drawingml/2006/main'}
-PNG = base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==')
+def fixture_png():
+    def chunk(kind, data):
+        return struct.pack('>I', len(data)) + kind + data + struct.pack('>I', zlib.crc32(kind + data))
+    pixels = b''.join(b'\0' + b''.join(bytes((35, 100, 170, 255) if (x+y)%2 else (245, 180, 50, 255)) for x in range(4)) for y in range(4))
+    return b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR', struct.pack('>IIBBBBB', 4, 4, 8, 6, 0, 0, 0)) + chunk(b'IDAT', zlib.compress(pixels)) + chunk(b'IEND', b'')
+
+PNG = fixture_png()
 
 def rels(entries):
     return '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' + ''.join(
@@ -116,7 +123,23 @@ def snapshot(parts):
         rel = image_rels[blip.get(f'{{{R}}}embed')]
         target = posixpath.normpath(posixpath.join('word', rel['Target']))
         image_digests.append(hashlib.sha256(parts[target]).hexdigest())
+    numbering = ET.fromstring(parts['word/numbering.xml'])
+    referenced = {e.get(f'{{{W}}}val') for tree in (root, styles) for e in tree.findall('.//w:numId', NS)}
+    abstract = {e.get(f'{{{W}}}abstractNumId'): e for e in numbering.findall('w:abstractNum', NS)}
+    definitions = {}
+    for num in numbering.findall('w:num', NS):
+        num_id = num.get(f'{{{W}}}numId')
+        if num_id in referenced:
+            definition = abstract.get(attrs(num.find('w:abstractNumId', NS)).get('val'))
+            definitions[num_id] = [{c.tag.split('}')[-1]: attrs(c) for c in lvl if c.tag.split('}')[-1] in ('start', 'numFmt', 'lvlText')} for lvl in definition.findall('w:lvl', NS)] if definition is not None else None
+    stories = {}
+    for kind in ('header', 'footer'):
+        ref = root.find(f'.//w:{kind}Reference', NS)
+        rel = image_rels[ref.get(f'{{{R}}}id')]
+        owner = posixpath.normpath(posixpath.join('word', rel['Target']))
+        stories[kind] = (owner, ET.fromstring(parts[owner]))
     return {
+        'numbering': definitions,
         'text': [''.join(p.findall('.//w:t', NS)[i].text or '' for i in range(len(p.findall('.//w:t', NS)))) for p in ps if p.findall('.//w:t', NS)],
         'heading_levels': [attrs(p.find('w:pPr/w:outlineLvl', NS)) for p in ps if p.find('w:pPr/w:outlineLvl', NS) is not None],
         'references': {kind: [int(e.get(f'{{{W}}}id')) for e in root.findall(f'.//w:{kind}Reference', NS)] for kind in ('footnote', 'endnote')},
@@ -128,8 +151,8 @@ def snapshot(parts):
         'styles': {e.get(f'{{{W}}}styleId'): {'type': e.get(f'{{{W}}}type'),
                     'numId': attrs(e.find('w:pPr/w:numPr/w:numId', NS)), 'indent': attrs(e.find('w:pPr/w:ind', NS))}
                    for e in styles.findall('w:style', NS)},
-        'header_links': links(parts, 'word/header1.xml', ET.fromstring(parts['word/header1.xml'])),
-        'footer_text': ''.join(ET.fromstring(parts['word/footer1.xml']).itertext()).strip(),
+        'header_links': links(parts, *stories['header']),
+        'footer_text': ''.join(stories['footer'][1].itertext()).strip(),
         'opaque_sha256': hashlib.sha256(parts['customXml/item1.xml']).hexdigest(),
     }
 
