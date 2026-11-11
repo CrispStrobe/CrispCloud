@@ -6,8 +6,9 @@ with the `crispcloud` fork; changing the upstream branch alone cannot update the
 running app.
 
 `tool/office_fidelity_manifest.json` records the source commit and SHA-256 hashes
-for the 33 shared implementation, scenario, fixture and golden files in this
-change. The guard checks only those files, preserving unrelated host changes.
+for the shared implementation, scenario, fixture and golden files in this
+change. The guard reports the current file count and checks only those files,
+preserving unrelated host changes.
 
 ## Run
 
@@ -19,9 +20,10 @@ bash tool/check_office_fidelity.sh
 ```
 
 The script checks vendored hashes, runs the independent DOCX/XLSX/PPTX corpus,
-runs 15 root host regressions and independently inspects the asynchronous-save
-DOCX produced by the controller. It includes the app's existing formatting,
-minimal-edit round-trip, header editing and select-all checks.
+runs root controller and widget regressions and independently inspects the
+asynchronous-save DOCX produced by the controller. It includes the app's
+formatting, minimal-edit round-trip, header editing, select-all, preview/PDF
+services, ribbon, paragraph-dialog and real host save checks.
 
 On Linux, native hooks need a C/C++ compiler. CI installs clang and SQLite
 development files, then uses the existing system-SQLite wrapper:
@@ -31,14 +33,35 @@ python3 tool/with_ci_system_sqlite.py bash tool/check_office_fidelity.sh
 ```
 
 The GitHub workflow `.github/workflows/office-fidelity.yml` runs this command and
-uploads exported files and JSON oracle reports. Local root testing was blocked
-by the sandbox's missing clang; the actual native host suite passed on GitHub.
+uploads exported files and JSON oracle reports. It runs on `main`, on
+`feature/office-fidelity-*` pushes, and on pull requests changing the vendored
+packages, Office host, captured save target, relevant tests or toolchain pins.
 
 To compare against a sibling fork checkout as well as the manifest:
 
 ```sh
 python3 tool/verify_office_fidelity.py --source ../quds_office_suite
 ```
+
+## Host save fidelity
+
+`test/widget/office_save_fidelity_test.dart` opens the actual `OfficeEditorDialog`
+through a verified remote file listing and blocks its upload using an in-memory
+storage client. It applies text, heading/style, paragraph, note and picture
+changes while the older snapshot is uploading, then checks the uploaded DOCX
+directly with independent ZIP/XML readers. The older snapshot must not clear
+the newer edits' dirty flag; a second save must include those edits and clean
+the document. Save and Close must keep the editor open when newer edits exist.
+Selection/caret notifications do not count as edits, and failed uploads preserve
+the original bytes and keep the current edits available for retry.
+
+The host tracks command revisions separately from rendering notifications and
+only marks the captured revision clean after the original target reports a
+successful write. Exported host snapshots are retained in
+`build/fidelity-host/`, separately from the unchanged/edited corpus fixtures.
+These tests exercise the app's real loading, serialization, save-target and
+dirty-state wiring with deterministic storage; they do not claim live-provider
+or external Microsoft Office rendering coverage.
 
 ## Scripted edits and goldens
 

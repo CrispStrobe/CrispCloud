@@ -115,6 +115,9 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
   bool _loading = true;
   bool _saving = false;
   bool _dirty = false;
+  // Only document commands advance the revision. Caret, selection, layout and
+  // menu notifications must not make an otherwise completed save look dirty.
+  int _editRevision = 0;
   String? _error;
   final FocusNode _focusNode = FocusNode(debugLabel: 'QudsOfficeEditor');
   final GlobalKey<OfficeEditorRibbonState> _ribbonKey =
@@ -162,7 +165,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       });
     }
     _controller?.removeListener(_onControllerChanged);
-    _controller?.commands.removeListener(_onControllerChanged);
+    _controller?.commands.removeListener(_onDocumentCommand);
     _controller?.dispose();
     _focusNode.dispose();
     super.dispose();
@@ -231,7 +234,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
         return;
       }
       controller?.addListener(_onControllerChanged);
-      controller?.commands.addListener(_onControllerChanged);
+      controller?.commands.addListener(_onDocumentCommand);
       setState(() {
         _loadedBytes = bytes;
         _controller = controller;
@@ -258,12 +261,22 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
     setState(() => _dirty = dirty);
   }
 
+  void _onDocumentCommand() {
+    _editRevision++;
+    _onControllerChanged();
+  }
+
   Future<void> _save({bool popAfter = false}) async {
     final controller = _controller;
     if (controller == null || _saving) return;
     setState(() => _saving = true);
     try {
       await _saveSnapshot();
+      if (!mounted) return;
+      // Serialization captures this document revision. Editing remains enabled
+      // while encoding/uploading, so completing this write cannot clean a newer
+      // revision or dismiss it through Save and Close.
+      final savedRevision = _editRevision;
       final bytes = await controller.saveBytesAsync();
       final target = _target;
       if (target == null) {
@@ -278,17 +291,17 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
         );
       }
       _loadedBytes = bytes;
-      controller.markClean();
       if (!mounted) return;
+      if (_editRevision == savedRevision) controller.markClean();
       setState(() {
         _saving = false;
-        _dirty = false;
+        _dirty = controller.isDirty;
       });
       ref.read(panelProvider(widget.side)).refreshFiles();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('${context.tr('Saved')}: ${widget.file.name}')),
       );
-      if (popAfter && mounted) Navigator.of(context).pop();
+      if (popAfter && mounted && !_dirty) Navigator.of(context).pop();
     } catch (e, st) {
       _log.warn('office editor save failed', e, st);
       if (!mounted) return;
