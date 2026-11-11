@@ -1,0 +1,33 @@
+{
+  "blocks": [
+    "p",
+    "tbl",
+    "p",
+    "p"
+  ],
+  "paragraphs": [
+    "Revised note",
+    "Note link"
+  ],
+  "table": [
+    "Revised table"
+  ],
+  "bold": true,
+  "color": "224466",
+  "half_points": "24",
+  "image": [
+    4,
+    4,
+    "41926762b85be2b464eeb5a18b52c2ea4b6db77fffc07f726f43d852ff98a8d6"
+  ],
+  "extent": {
+    "cx": "914400",
+    "cy": "609600"
+  },
+  "links": [
+    [
+      "Note link",
+      "https://example.com/note"
+    ]
+  ]
+}

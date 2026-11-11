@@ -3346,7 +3346,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
         );
       }
       for (final LaidOutLine line in page.notes) {
-        _drawOverlay(
+        _drawLine(
           canvas,
           line,
           pageWidth: page.width,

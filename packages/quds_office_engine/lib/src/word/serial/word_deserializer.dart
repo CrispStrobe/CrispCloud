@@ -92,6 +92,7 @@ class WordDeserializer {
       document.sections.add(section);
     }
     _ensureHeadersFooters(document, package, docUri);
+    _readNotes(document, package, docUri);
     _readStyles(document, package, docUri);
     _applyDocumentStyles(document);
     _notBold.clear();
@@ -102,7 +103,6 @@ class WordDeserializer {
     _readComments(document, package, docUri);
     _readCommentsExtended(document, package, docUri);
     _readWatermark(document, package);
-    _readNotes(document, package, docUri);
     _readCitations(document, package);
     _readSettingsFlags(document, package, docUri);
     return document;
@@ -1812,17 +1812,23 @@ class WordDeserializer {
           ) ??
           bucket.length + 1;
       final WmlNote note = WmlNote(id: id, endnote: endnote);
-      note.paragraphs.clear();
+      note.blocks.clear();
       if (!reader.isEmptyElement) {
         final int depth = reader.depth;
         while (reader.next() && reader.depth >= depth) {
           if (reader.eventType == XmlEventType.startElement &&
               reader.localName == 'p') {
-            note.paragraphs.add(_readParagraph(reader, package, uri));
+            _addParagraph(note.blocks, _readParagraph(reader, package, uri));
+          } else if (reader.eventType == XmlEventType.startElement &&
+              reader.localName == 'tbl') {
+            note.blocks.add(_readTable(reader, package, uri));
+          } else if (reader.eventType == XmlEventType.startElement &&
+              reader.localName == 'sdt') {
+            note.blocks.addAll(_readSdt(reader, package, uri));
           }
         }
       }
-      if (note.paragraphs.isEmpty) {
+      if (note.blocks.isEmpty) {
         note.text = '';
       }
       bucket.add(note);
@@ -2024,6 +2030,12 @@ class WordDeserializer {
     }
 
     walk(document.paragraphs);
+    for (final WmlNote note in <WmlNote>[
+      ...document.footnotes,
+      ...document.endnotes,
+    ]) {
+      walk(note.allParagraphs);
+    }
     for (final WmlSection section in document.sections) {
       walk(section.header);
       walk(section.footer);

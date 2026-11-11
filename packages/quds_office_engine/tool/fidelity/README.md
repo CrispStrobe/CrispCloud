@@ -62,6 +62,11 @@ indices fail explicitly. This developer CLI exposes only the listed operations.
 - `cross_format.dart` imports directly authored sheet/slide XML.
   `cross_oracle.py` compares exported cells/formulas/caches/merges/frozen rows
   and slide text/geometry with separately authored JSON expectations.
+- `notes.dart` produces an authored rich-note source and six repeated exports.
+  `notes_oracle.py` independently checks ordered paragraphs/tables/drawings,
+  run formatting, owning-part hyperlinks and image extents against JSON goldens.
+  It decodes PNG scanlines and checks the expected pixel hash, so accidentally
+  reusing the body picture's relationship cannot pass through a byte-copy check.
 - `test_oracles.py` deliberately corrupts fixtures to prove missing links/media/
   note marks, changed text/numbering, invalid namespaces and property ordering
   are rejected.

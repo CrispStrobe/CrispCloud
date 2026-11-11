@@ -9,6 +9,7 @@ import '../../fonts/sfnt_parser.dart';
 import '../../visual/office_visual.dart';
 import '../math/omml_document.dart';
 import '../math/omml_layout.dart';
+import '../model/wml_clone.dart';
 import '../model/wml_document.dart';
 import '../model/wml_run_edit.dart';
 import '../model/word_comment.dart';
@@ -18,6 +19,8 @@ import '../model/word_notes.dart';
 import '../model/word_table.dart';
 import '../model/word_toc.dart';
 import '../properties/wml_properties.dart';
+
+part 'word_note_layout.dart';
 
 /// Class LaidOutGlyph.
 class LaidOutGlyph {
@@ -156,6 +159,31 @@ class LaidOutLine {
   /// paragraphIndex API.
   final int paragraphIndex;
 
+  /// Logical source text covered by this line, including shaped note content.
+  String get text {
+    if (glyphs.isEmpty) return overlayText ?? '';
+    final List<LaidOutGlyph> logical = List<LaidOutGlyph>.of(glyphs)
+      ..sort(
+        (LaidOutGlyph a, LaidOutGlyph b) =>
+            a.glyph.logicalIndex.compareTo(b.glyph.logicalIndex),
+      );
+    final String? source = sourceText;
+    if (source != null) {
+      final int start = logical.first.glyph.logicalIndex.clamp(
+        0,
+        source.length,
+      );
+      final LaidOutGlyph last = logical.last;
+      final int end =
+          (last.glyph.logicalIndex + (last.glyph.codePoint > 0xffff ? 2 : 1))
+              .clamp(start, source.length);
+      return source.substring(start, end);
+    }
+    return String.fromCharCodes(
+      logical.map((LaidOutGlyph g) => g.glyph.codePoint),
+    );
+  }
+
   /// listLabel API.
   final String? listLabel;
 
@@ -290,6 +318,7 @@ class LaidOutBox {
     this.strokeBottom = true,
     this.strokeLeft = true,
     this.strokeWidth = 0.5,
+    this.isNoteContent = false,
   });
 
   /// x API.
@@ -357,6 +386,9 @@ class LaidOutBox {
 
   /// strokeWidth API.
   double strokeWidth;
+
+  /// True for note borders, drawings and separators, outside the body flow.
+  final bool isNoteContent;
 }
 
 /// Class LaidOutBand.
@@ -488,8 +520,13 @@ class LaidOutDocument {
 }
 
 class _Flow {
-  _Flow(this.section, this.pages, this.makePage, this.sectionIndex)
-    : pageIndex = pages.length,
+  _Flow(
+    this.section,
+    this.pages,
+    this.makePage,
+    this.sectionIndex,
+    this.noteReserve,
+  ) : pageIndex = pages.length,
       y = section.margins.top,
       columnTop = section.margins.top;
 
@@ -513,6 +550,8 @@ class _Flow {
   })
   /// makePage API.
   makePage;
+
+  final double Function(int) noteReserve;
 
   /// current API.
   final List<LaidOutLine> current = <LaidOutLine>[];
@@ -539,7 +578,8 @@ class _Flow {
   double get colWidth => section.columnWidth;
 
   /// bottom API.
-  double get bottom => section.pageSize.height - section.margins.bottom;
+  double get bottom =>
+      section.pageSize.height - section.margins.bottom - noteReserve(pageIndex);
 
   /// hasContent API.
   bool get hasContent => current.isNotEmpty || currentFrames.isNotEmpty;
@@ -663,6 +703,114 @@ class WordLayoutEngine {
   final Map<int, FontMetrics> _metricsCache = <int, FontMetrics>{};
 
   WmlDocument? _layoutDoc;
+  final Map<WmlNote, _NoteStory> _noteStories = <WmlNote, _NoteStory>{};
+  final Map<int, List<_NoteSlice>> _noteSlices = <int, List<_NoteSlice>>{};
+  final Set<int> _placedNotes = <int>{};
+
+  double _noteReserve(int page) {
+    final List<_NoteSlice> slices = _noteSlices[page] ?? <_NoteSlice>[];
+    return slices.isEmpty
+        ? 0
+        : 8 + slices.fold<double>(0, (double n, _NoteSlice s) => n + s.height);
+  }
+
+  double _bodyBottom(WmlSection section, int page) =>
+      section.pageSize.height - section.margins.bottom - _noteReserve(page);
+
+  _NoteStory _story(WmlNote note, WmlSection section) => _noteStories
+      .putIfAbsent(note, () => _NoteStory.shape(note, section, this));
+
+  List<WmlNote> _newNotes(Iterable<int> ids) => <WmlNote>[
+    for (final int id in ids.toSet())
+      if (!_placedNotes.contains(id))
+        if (WordNotes.byId(_layoutDoc!, id, endnote: false)
+            case final WmlNote note)
+          note,
+  ];
+
+  double _minimumNotes(Iterable<int> ids, WmlSection section, int page) {
+    final List<WmlNote> notes = _newNotes(ids);
+    if (notes.isEmpty) return 0;
+    return (_noteReserve(page) == 0 ? 8 : 0) +
+        notes.fold<double>(
+          0,
+          (double h, WmlNote note) => h + _story(note, section).firstHeight,
+        );
+  }
+
+  void _reserveNotes(
+    Iterable<int> ids,
+    WmlSection section,
+    int page,
+    double bodyBottom,
+  ) {
+    final List<WmlNote> notes = _newNotes(ids);
+    for (var ni = 0; ni < notes.length; ni++) {
+      final WmlNote note = notes[ni];
+      _placedNotes.add(note.id);
+      final _NoteStory story = _story(note, section);
+      var start = 0.0;
+      var target = page;
+      while (start < story.height - 0.01) {
+        final double minimumRemaining = target == page
+            ? notes
+                  .skip(ni + 1)
+                  .fold<double>(
+                    0,
+                    (double h, WmlNote n) => h + _story(n, section).firstHeight,
+                  )
+            : 0;
+        final double top = target == page ? bodyBottom : section.margins.top;
+        final double available =
+            section.pageSize.height -
+            section.margins.bottom -
+            top -
+            _noteReserve(target) -
+            (_noteReserve(target) == 0 ? 8 : 0) -
+            minimumRemaining;
+        final double end = story.cut(start, available);
+        if (end <= start + 0.01) {
+          if (target > page && _noteReserve(target) == 0) {
+            throw StateError(
+              'Note ${note.id} contains content taller than a page',
+            );
+          }
+          target++;
+          continue;
+        }
+        _noteSlices
+            .putIfAbsent(target, () => <_NoteSlice>[])
+            .add(
+              _NoteSlice(
+                story,
+                start,
+                end,
+                section,
+                _layoutDoc!.sections.indexOf(section),
+              ),
+            );
+        start = end;
+        target++;
+      }
+    }
+  }
+
+  Iterable<int> _noteIds(WmlParagraph paragraph, Iterable<int> offsets) sync* {
+    final Set<int> positions = offsets.toSet();
+    var offset = 0;
+    for (final WmlInline inline in paragraph.inlines) {
+      if (inline is WmlRun) {
+        if (inline.noteRefId != null &&
+            !inline.noteRefEndnote &&
+            positions.contains(offset)) {
+          yield inline.noteRefId!;
+        }
+        offset += inline.text.length;
+      } else if (inline is WmlBreak) {
+        offset++;
+      }
+    }
+  }
 
   double _advanceOf(
     int cp,
@@ -728,6 +876,10 @@ class WordLayoutEngine {
     LaidOutDocument? reuse,
   }) {
     _layoutDoc = document;
+    _noteStories.clear();
+    _noteSlices.clear();
+    _placedNotes.clear();
+    if (document.footnotes.isNotEmpty) fromSectionIndex = 0;
     if (updateFields) {
       WordFields.update(document);
     }
@@ -776,6 +928,20 @@ class WordLayoutEngine {
         ),
       );
     }
+    while (_noteSlices.keys.any((int index) => index >= pages.length)) {
+      final _NoteSlice? slice = _noteSlices[pages.length]?.firstOrNull;
+      final WmlSection section = slice?.section ?? document.sections.last;
+      pages.add(
+        _makePage(
+          section,
+          pages.length,
+          <LaidOutLine>[],
+          <LaidOutBox>[],
+          sectionIndex: slice?.sectionIndex ?? document.sections.length - 1,
+          firstInSection: false,
+        ),
+      );
+    }
     _appendEndnotes(document, pages);
     if (updateFields) {
       WordFields.update(document, pageCount: pages.length);
@@ -792,7 +958,7 @@ class WordLayoutEngine {
       bottom = math.max(bottom, line.y + line.height);
     }
     for (final LaidOutBox box in page.frames) {
-      bottom = math.max(bottom, box.y + box.height);
+      if (!box.isNoteContent) bottom = math.max(bottom, box.y + box.height);
     }
     return bottom;
   }
@@ -806,14 +972,22 @@ class WordLayoutEngine {
     _padSectionBreak(section, pages, sectionIndex);
     final bool continuous =
         sectionIndex > 0 && section.breakKind == WmlSectionBreakKind.continuous;
-    final _Flow flow = _Flow(section, pages, _makePage, sectionIndex);
+    final _Flow flow = _Flow(
+      section,
+      pages,
+      _makePage,
+      sectionIndex,
+      _noteReserve,
+    );
     // Leave room under a floating header logo for title/body on page 1.
     flow.y = _bodyTopClearingLogo(section);
     flow.columnTop = flow.y;
     if (continuous && pages.isNotEmpty) {
       final LaidOutPage last = pages.removeLast();
       flow.current.addAll(last.lines);
-      flow.currentFrames.addAll(last.frames);
+      flow.currentFrames.addAll(
+        last.frames.where((LaidOutBox b) => !b.isNoteContent),
+      );
       flow.pageIndex = last.index;
       flow.y = _contentBottom(last, fallback: _bodyTopClearingLogo(section));
       flow.columnTop = flow.y;
@@ -1086,12 +1260,49 @@ class WordLayoutEngine {
     final int lineStart = current.length;
     final double paraTop = cursorY;
     for (final BrokenLine line in broken) {
-      if (allowBreak &&
-          cursorY + lineHeight >
-              section.pageSize.height - section.margins.bottom) {
+      final List<int> noteIds = _noteIds(
+        paragraph,
+        line.glyphs.map((ShapedGlyph g) => g.logicalIndex),
+      ).toList();
+      double occupiedBottom() {
+        var bottom = cursorY + lineHeight;
+        for (final LaidOutLine l in current) {
+          bottom = math.max(bottom, l.y + l.height);
+        }
+        for (final LaidOutBox b in currentFrames) {
+          if (!b.isNoteContent && b.kind != LaidOutBoxKind.columnSep) {
+            bottom = math.max(bottom, b.y + b.height);
+          }
+        }
+        return bottom;
+      }
+
+      while (allowBreak &&
+          (cursorY + lineHeight > _bodyBottom(section, idx) ||
+              (_minimumNotes(noteIds, section, idx) > 0 &&
+                  occupiedBottom() + _minimumNotes(noteIds, section, idx) >
+                      _bodyBottom(section, idx)))) {
+        if (current.isEmpty &&
+            currentFrames.isEmpty &&
+            _noteReserve(idx) == 0 &&
+            cursorY <= section.margins.top + 0.01) {
+          if (_minimumNotes(noteIds, section, idx) > 0) {
+            throw StateError(
+              'A note reference and its first line cannot fit the page',
+            );
+          }
+          break; // Retain the existing oversized-body-line behavior.
+        }
+        // A new note affects every column: move its marker to a new page when
+        // reserving its first line would overlap earlier column content.
+        final bool noteBreak = _minimumNotes(noteIds, section, idx) > 0;
         if (flow != null) {
           flow.y = cursorY;
-          flow.nextColumn();
+          if (noteBreak) {
+            flow.flushPage();
+          } else {
+            flow.nextColumn();
+          }
           cursorY = flow.y;
           idx = flow.pageIndex;
           lineOrigin = flow.originX;
@@ -1112,6 +1323,7 @@ class WordLayoutEngine {
           cursorY = section.margins.top;
         }
       }
+      if (allowBreak) _reserveNotes(noteIds, section, idx, occupiedBottom());
       final double x0 =
           lineOrigin +
           textLeft +
@@ -1347,12 +1559,63 @@ class WordLayoutEngine {
           break;
         }
 
-        final double pageBottom =
-            section.pageSize.height - section.margins.bottom;
+        final Set<int> rowNotes = <int>{
+          for (final WmlTableCell cell in row.cells)
+            for (final WmlBlock block in cell.blocks)
+              for (final WmlParagraph p in WmlClone.paragraphsOf(block))
+                for (final WmlRun run in p.inlines.whereType<WmlRun>())
+                  if (run.noteRefId != null && !run.noteRefEndnote)
+                    run.noteRefId!,
+        };
+        if (_minimumNotes(rowNotes, section, idx) > 0) {
+          final double rowHeight = _measureTableRowHeightFrom(
+            row,
+            cols,
+            section,
+            nextBlock: nextBlock,
+            tableX: tableX,
+            tableWidth: tableWidth,
+            rtl: rtl,
+            cellPad: cellPad,
+          );
+          while (cursorY + rowHeight + _minimumNotes(rowNotes, section, idx) >
+                  _bodyBottom(section, idx) &&
+              (current.isNotEmpty ||
+                  currentFrames.isNotEmpty ||
+                  _noteReserve(idx) > 0)) {
+            pages.add(
+              _makePage(
+                section,
+                idx,
+                current,
+                currentFrames,
+                sectionIndex: flow?.sectionIndex ?? 0,
+                firstInSection: false,
+              ),
+            );
+            current.clear();
+            currentFrames.clear();
+            idx++;
+            cursorY = _tablePageTop(section);
+          }
+          final double minimum = _minimumNotes(rowNotes, section, idx);
+          _reserveNotes(
+            rowNotes,
+            section,
+            idx,
+            math.min(
+              cursorY + rowHeight,
+              section.pageSize.height - section.margins.bottom - minimum,
+            ),
+          );
+        }
+        var pageBottom = _bodyBottom(section, idx);
 
         // If the cursor is already past the usable area, advance the page
         // before opening a new row slice.
-        if ((current.isNotEmpty || currentFrames.isNotEmpty) &&
+        while ((current.isNotEmpty ||
+                currentFrames.isNotEmpty ||
+                _noteReserve(idx) > 0) &&
             cursorY + cellPad + 12 > pageBottom) {
           pages.add(
             _makePage(
@@ -1368,6 +1631,7 @@ class WordLayoutEngine {
           currentFrames.clear();
           idx++;
           cursorY = _tablePageTop(section);
+          pageBottom = _bodyBottom(section, idx);
         }
 
         // When cantSplit is set, move the whole remaining row to the next
@@ -1401,6 +1665,7 @@ class WordLayoutEngine {
             currentFrames.clear();
             idx++;
             cursorY = _tablePageTop(section);
+            pageBottom = _bodyBottom(section, idx);
           }
         }
 
@@ -1588,6 +1853,7 @@ class WordLayoutEngine {
           currentFrames.clear();
           idx++;
           cursorY = _tablePageTop(section);
+          pageBottom = _bodyBottom(section, idx);
         }
       }
     }
@@ -1913,9 +2179,11 @@ class WordLayoutEngine {
     var cursorY = atTop ? y : y + 8 + visual.offsetY;
     var idx = pageIndex;
     var x0 = (originX ?? section.margins.left) + visual.offsetX;
-    if (allowBreak &&
-        cursorY + height > section.pageSize.height - section.margins.bottom &&
-        (current.isNotEmpty || currentFrames.isNotEmpty)) {
+    while (allowBreak &&
+        cursorY + height > _bodyBottom(section, idx) &&
+        (current.isNotEmpty ||
+            currentFrames.isNotEmpty ||
+            _noteReserve(idx) > 0)) {
       if (flow != null) {
         flow.y = cursorY;
         flow.nextColumn();
@@ -1983,8 +2251,10 @@ class WordLayoutEngine {
     final double height = math.max(28, omml.height);
     var cursorY = y + 8;
     var idx = pageIndex;
-    if (cursorY + height > section.pageSize.height - section.margins.bottom &&
-        (current.isNotEmpty || currentFrames.isNotEmpty)) {
+    while (cursorY + height > _bodyBottom(section, idx) &&
+        (current.isNotEmpty ||
+            currentFrames.isNotEmpty ||
+            _noteReserve(idx) > 0)) {
       pages.add(
         _makePage(
           section,
@@ -2161,33 +2431,9 @@ class WordLayoutEngine {
   }
 
   void _attachNotes(LaidOutPage page, WmlSection section) {
-    final WmlDocument? document = _layoutDoc;
-    if (document == null || document.footnotes.isEmpty) {
-      return;
-    }
-    final List<WmlParagraph> paras = document.paragraphs.toList();
-    final Set<int> ids = <int>{};
-    for (final LaidOutLine line in page.lines) {
-      if (line.paragraphIndex < 0 || line.paragraphIndex >= paras.length) {
-        continue;
-      }
-      final WmlParagraph paragraph = paras[line.paragraphIndex];
-      ids.addAll(_footnoteIdsForLine(paragraph, line));
-    }
-    final List<String> lines = <String>[
-      for (final int id in ids)
-        if (WordNotes.byId(document, id, endnote: false)
-            case final WmlNote note)
-          ..._noteTextLines(note),
-    ];
-    if (lines.isEmpty) {
-      return;
-    }
-    var y =
-        section.pageSize.height -
-        section.margins.bottom -
-        14.0 * lines.length -
-        2;
+    final List<_NoteSlice> slices = _noteSlices[page.index] ?? <_NoteSlice>[];
+    if (slices.isEmpty) return;
+    var y = _bodyBottom(section, page.index) + 8;
     page.frames.add(
       LaidOutBox(
         x: section.margins.left,
@@ -2197,49 +2443,12 @@ class WordLayoutEngine {
         fillColor: '888888',
         strokeColor: '888888',
         kind: LaidOutBoxKind.footnote,
+        isNoteContent: true,
       ),
     );
-    for (final String text in lines) {
-      page.notes.add(
-        LaidOutLine(
-          glyphs: const <LaidOutGlyph>[],
-          x: section.margins.left,
-          y: y,
-          width: section.contentWidth,
-          height: 14,
-          pageIndex: page.index,
-          justification: WmlJustification.left,
-          overlayText: text,
-          overlaySize: 9,
-        ),
-      );
-      y += 14;
-    }
-  }
-
-  Iterable<int> _footnoteIdsForLine(
-    WmlParagraph paragraph,
-    LaidOutLine line,
-  ) sync* {
-    final Set<int> offsets = <int>{
-      for (final LaidOutGlyph glyph in line.glyphs) glyph.glyph.logicalIndex,
-    };
-    var offset = 0;
-    for (final WmlInline inline in paragraph.inlines) {
-      if (inline is WmlRun) {
-        final int? id = inline.noteRefId;
-        if (id != null && !inline.noteRefEndnote && offsets.contains(offset)) {
-          yield id;
-        }
-        offset += inline.text.length;
-      }
-    }
-  }
-
-  Iterable<String> _noteTextLines(WmlNote note) sync* {
-    final List<String> lines = note.text.split('\n');
-    for (var i = 0; i < lines.length; i++) {
-      yield i == 0 ? '${note.id}. ${lines[i]}' : lines[i];
+    for (final _NoteSlice slice in slices) {
+      slice.paintInto(page, y);
+      y += slice.height;
     }
   }
 
@@ -2279,7 +2488,7 @@ class WordLayoutEngine {
         ? section.margins.top
         : last.lines.last.y + last.lines.last.height + 16;
     for (final LaidOutBox frame in last.frames) {
-      if (frame.kind != LaidOutBoxKind.footnote) {
+      if (!frame.isNoteContent) {
         y = math.max(y, frame.y + frame.height + 12);
       }
     }
@@ -2323,22 +2532,29 @@ class WordLayoutEngine {
       ),
     );
     y += 18;
-    for (final String text in notes.expand(_noteTextLines)) {
-      ensureRoom(14);
-      target.notes.add(
-        LaidOutLine(
-          glyphs: const <LaidOutGlyph>[],
-          x: section.margins.left,
-          y: y,
-          width: section.contentWidth,
-          height: 14,
-          pageIndex: target.index,
-          justification: WmlJustification.left,
-          overlayText: text,
-          overlaySize: 10,
-        ),
-      );
-      y += 14;
+    for (final WmlNote note in notes) {
+      final _NoteStory story = _story(note, section);
+      var start = 0.0;
+      while (start < story.height - 0.01) {
+        double end = story.cut(start, bottom - y);
+        if (end <= start + 0.01) {
+          ensureRoom(bottom - y + 1);
+          end = story.cut(start, bottom - y);
+          if (end <= start + 0.01) {
+            throw StateError('Endnote content taller than a page');
+          }
+        }
+        final _NoteSlice slice = _NoteSlice(
+          story,
+          start,
+          end,
+          section,
+          document.sections.length - 1,
+        );
+        slice.paintInto(target, y);
+        y += slice.height;
+        start = end;
+      }
     }
   }
 

@@ -1814,11 +1814,22 @@ class WordSerializer {
     String root,
     String item,
   ) {
+    final Map<OfficeVisual, String> imageIds = WordDrawingIo.syncVisuals(
+      notes
+          .expand((WmlNote note) => note.visuals)
+          .map((WmlVisual v) => v.visual),
+      package,
+      partUri: uri,
+      mediaPrefix: '${item}Image',
+    );
     final XmlWriter w = XmlWriter();
     w.writeStartDocument();
     w.writeStartElement(root, prefix: 'w');
     w.writeNamespace('w', OfficeNamespaces.w);
     w.writeNamespace('r', OfficeNamespaces.r);
+    w.writeNamespace('wp', OfficeNamespaces.wp);
+    w.writeNamespace('a', OfficeNamespaces.a);
+    w.writeNamespace('pic', WordDrawingIo.pictureUri);
     final String previousPart = _activePartUri;
     _activePartUri = uri;
     // Word treats these two notes as footnote/endnote chrome. They are not
@@ -1828,11 +1839,25 @@ class WordSerializer {
     for (final WmlNote note in notes) {
       w.writeStartElement(item, prefix: 'w');
       w.writeAttribute('w:id', '${note.id}');
-      for (var index = 0; index < note.paragraphs.length; index++) {
+      var referenceWritten = false;
+      for (final WmlBlock block in note.blocks) {
+        if (!referenceWritten) {
+          _writeParagraph(
+            w,
+            block is WmlParagraph ? block : WmlParagraph(),
+            noteReference: true,
+            endnote: note.endnote,
+          );
+          referenceWritten = true;
+          if (block is WmlParagraph) continue;
+        }
+        _writeBlock(w, block, imageIds);
+      }
+      if (!referenceWritten) {
         _writeParagraph(
           w,
-          note.paragraphs[index],
-          noteReference: index == 0,
+          WmlParagraph(),
+          noteReference: true,
           endnote: note.endnote,
         );
       }

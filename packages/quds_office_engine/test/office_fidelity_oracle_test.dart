@@ -14,7 +14,7 @@ void main() {
     ).layout(openFixture());
     expect(layout.pages, hasLength(1));
     final List<String?> lines = layout.pages.single.notes
-        .map((LaidOutLine line) => line.overlayText)
+        .map((LaidOutLine line) => line.text)
         .toList();
     expect(
       lines,
@@ -35,7 +35,7 @@ void main() {
     WordNotes.insert(doc, doc.paragraphs.first, endnote: true, text: 'End');
     final LaidOutDocument layout = WordLayoutEngine(font: null).layout(doc);
     expect(
-      layout.pages.single.notes.map((LaidOutLine l) => l.overlayText),
+      layout.pages.single.notes.map((LaidOutLine l) => l.text),
       containsAll(<String>['1. First', '2. Second', '1. End']),
     );
   });
@@ -53,7 +53,7 @@ void main() {
     final List<LaidOutLine> notes = layout.pages
         .expand((LaidOutPage p) => p.notes)
         .toList();
-    expect(notes.map((LaidOutLine l) => l.overlayText), contains('Line 99'));
+    expect(notes.map((LaidOutLine l) => l.text), contains('Line 99'));
     for (final LaidOutLine line in notes) {
       expect(
         line.y + line.height,
