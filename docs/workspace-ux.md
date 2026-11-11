@@ -2,7 +2,17 @@
 
 ## Current integrated implementation
 
-The current functional revision is
+The current runtime performance checkpoint is
+[`e9dd5dbbb8581e16f228d4f51239adf7d0b22660`](https://github.com/CrispStrobe/CrispCloud/commit/e9dd5dbbb8581e16f228d4f51239adf7d0b22660).
+It adds aggregate-only inline totals, cached derived storage identities with live
+input checks, and bounded durable catalog page batches. The
+[2026-11-11 performance record](storage-scan-update-2026-11-11.md) reports the
+measured gains, inconsistent full-scan/load timings and current validation limits.
+The additional multi-root batch UI and its final publication-status repair are
+preserved as [inert recovery artifacts](recovery/README.md), not active runtime
+code. The execution workspace became unavailable before their final validation.
+
+The preceding integrated UX checkpoint is
 [`12924a58b7c87b58d172fae829349e97aec3a64f`](https://github.com/CrispStrobe/CrispCloud/commit/12924a58b7c87b58d172fae829349e97aec3a64f),
 with application version `1.1.0+12`. It combines the latest integrated startup
 and native-release work with bounded folder measurement, original-result
@@ -12,7 +22,8 @@ navigation, keyboard, column browsing and transfer-inspection work remains part
 of this branch.
 
 The completed local behavioral checks and final analysis/build results are
-recorded in [Current revision verification](#current-revision-verification).
+recorded in [Historical integrated UX verification](#historical-integrated-ux-verification).
+Those results predate the current performance changes.
 Current hosted, native-platform and live-provider acceptance remain separate
 gates. Earlier test, render and build results are explicitly historical.
 
@@ -43,9 +54,13 @@ review and runtime boundaries are recorded in the
 [engineering review](crypto-source-review-2026-11-11.md) and
 [SMB rollout notes](SMB_RUST_ROLLOUT.md).
 
-The final incoming-ref audit at **2026-11-11 11:06:19 UTC** found no additional
-main or SMB commits. Both heads listed above are proven ancestors of this
-branch. The latest CI adjustment runs macOS package tests from a bounded short
+The incoming-ref audit at **2026-11-11 11:06:19 UTC** found no additional
+main or SMB commits at that time. Both heads listed above are proven ancestors of
+this branch. A later review identified optional SMB commits
+[`445c20b`](https://github.com/CrispStrobe/CrispCloud/commit/445c20b) and
+[`13ca681`](https://github.com/CrispStrobe/CrispCloud/commit/13ca681).
+They are not integrated in the performance checkpoint; their updated native
+runtime and Apple packaging evidence still need independent acceptance. The latest CI adjustment runs macOS package tests from a bounded short
 physical path to address the pinned native library’s install-name limit; macOS
 execution and application packaging still need their own hosted acceptance.
 
@@ -305,19 +320,20 @@ tested commit and distinguish automated results from interactive platform and
 live-provider acceptance. Incremental remote checkpoints preserve work before
 the final review. Reference research is kept outside project artifacts.
 
-### Current revision verification
+### Historical integrated UX verification
 
 The completed application run tested
 [`ed05a8d57ce99b69cbfceeded2c1e92c7c166d45`](https://github.com/CrispStrobe/CrispCloud/commit/ed05a8d57ce99b69cbfceeded2c1e92c7c166d45).
 Its application `lib/`, `test/`, shared transport/native sources, and application
 manifest/lockfile are byte-identical at the final analysis/build checkpoint
 [`1b15782263b8fcca36f6bffb75efd71a62ac4605`](https://github.com/CrispStrobe/CrispCloud/commit/1b15782263b8fcca36f6bffb75efd71a62ac4605).
-The application inputs remain unchanged at the current `12924a5` checkpoint.
+The application inputs remained unchanged at that historical `12924a5` checkpoint.
+They have changed in the later performance commits.
 The CLI received formatting cleanup and the typed JSON correction described
 above; its complete suite passed again after that correction. CI/source-evidence
-changes are recorded separately in the engineering review. This table replaces
-the earlier focused counts for current acceptance; overlapping and historical batches are
-not added to its totals.
+changes are recorded separately in the engineering review. This table records that checkpoint's acceptance evidence; it does not validate
+the later performance changes. Overlapping and historical batches are not added
+to its totals.
 
 | Check | Completed result | Scope and qualification |
 | --- | --- | --- |

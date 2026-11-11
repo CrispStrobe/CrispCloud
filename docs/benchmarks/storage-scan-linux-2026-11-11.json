@@ -1,0 +1,551 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-11",
+  "repository": "CrispStrobe/CrispCloud",
+  "baselineRevision": "d0a1e93e6c094403cb23f0941bfcea580c7b5968",
+  "performanceRevision": "e9dd5dbbb8581e16f228d4f51239adf7d0b22660",
+  "provenance": "Recovered from completed benchmark output after the execution workspace became unavailable. Full samples are retained where present in the captured output; summary-only records are explicitly marked. No missing samples were invented.",
+  "runtime": {
+    "flutter": "3.47.8",
+    "dart": "3.13.7",
+    "os": "Linux x86-64",
+    "mode": "Flutter test / JIT"
+  },
+  "protocol": {
+    "warmupsPerSession": 1,
+    "measuredRunsPerSession": 5,
+    "serialized": true,
+    "verificationOutsideTiming": true,
+    "compileAndProcessStartupExcluded": true,
+    "contentReads": false
+  },
+  "fixtures": {
+    "balanced": {
+      "files": 24000,
+      "folders": 460,
+      "logicalBytes": 359116800,
+      "metadataDigest": "d3bf5e9e565f14607ac6e6e4728a15c8d1e34a759a1017830f34cc0e123cbf7d",
+      "filesSizeMtimeDigest": "b5544c5b56ba0dce86428c4d0cab0dca04ca42ca9ce20f90f61366dd2e8dfe67"
+    },
+    "wide": {
+      "files": 24000,
+      "folders": 0,
+      "logicalBytes": 359116800,
+      "metadataDigest": "431636407526f8f6960972ee0b55090b5dcdf0b1eb0ca353878afbc55bab52f0",
+      "filesSizeMtimeDigest": "3674051af55ab070415f92d4739fbce9578b0dc3460a26057544d63664901e14"
+    },
+    "empty": {
+      "files": 0,
+      "folders": 1010,
+      "logicalBytes": 0,
+      "metadataDigest": "66d922032e631aa69b3614cb2110b56048d8e4eb958926dfc4c371470b78ed56",
+      "filesSizeMtimeDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    }
+  },
+  "panel": {
+    "fixture": "cached provider metadata; 8000 pane rows, target last; 8000 scanned files",
+    "logicalBytes": 119705600,
+    "baselineMs": [
+      723.584,
+      602.293,
+      490.094,
+      677.066,
+      655.778
+    ],
+    "baselineMedianMs": 655.778,
+    "intermediateRevision": "c2cbe787f397982b624e7609c4ad4a40b111eb4d",
+    "intermediateMs": [
+      445.284,
+      395.552,
+      438.318,
+      420.61,
+      415.12
+    ],
+    "intermediateMedianMs": 420.61,
+    "finalMs": [
+      468.641,
+      352.39,
+      316.749,
+      302.759,
+      321.007
+    ],
+    "finalMedianMs": 321.007,
+    "baselineNotifications": [
+      10,
+      9,
+      8,
+      10,
+      10
+    ],
+    "finalNotifications": [
+      7,
+      7,
+      6,
+      6,
+      7
+    ],
+    "verification": "All six runs per revision matched exact totals, current-source publication and exact row identity; one parent and one target metadata read, no content reads or writes."
+  },
+  "nativeFullScan": {
+    "balancedInitial": {
+      "baselineMs": [
+        1297.377,
+        1125.634,
+        1196.377,
+        1161.55,
+        1204.462
+      ],
+      "baselineMedianMs": 1196.377,
+      "finalMs": [
+        1535.648,
+        2200.116,
+        1712.266,
+        1439.38,
+        1240.628
+      ],
+      "finalMedianMs": 1535.648
+    },
+    "balancedPairedRepeat": {
+      "baselineMs": [
+        1409.912,
+        1387.208,
+        1037.068,
+        3127.5,
+        2252.333
+      ],
+      "baselineMedianMs": 1409.912,
+      "finalMs": [
+        976.147,
+        1466.411,
+        1023.992,
+        1004.967,
+        918.539
+      ],
+      "finalMedianMs": 1004.967
+    },
+    "balancedPooled": {
+      "runsPerRevision": 10,
+      "baselineMedianMs": 1250.9195,
+      "baselineMinMs": 1037.068,
+      "baselineMaxMs": 3127.5,
+      "finalMedianMs": 1340.004,
+      "finalMinMs": 918.539,
+      "finalMaxMs": 2200.116
+    },
+    "wide": {
+      "baselineMs": [
+        729.235,
+        804.821,
+        805.457,
+        892.188,
+        879.884
+      ],
+      "baselineMedianMs": 805.457,
+      "finalMedianMs": 922.273,
+      "finalMinMs": 787.191,
+      "finalMaxMs": 971.275,
+      "finalSamplesStatus": "summary only retained"
+    },
+    "empty": {
+      "baselineMedianMs": 436.645,
+      "finalMedianMs": 427.894,
+      "finalMinMs": 335.365,
+      "finalMaxMs": 659.574,
+      "samplesStatus": "summary only retained"
+    },
+    "conclusion": "No consistent full-tree wall-time speedup established. Initial balanced and wide runs were slower; the balanced paired repeat was faster. Pooled balanced median is 7.1% slower. Keep all observations; do not attribute the difference to host scheduling without evidence."
+  },
+  "nativeSummaryScan": {
+    "balanced": {
+      "ms": [
+        1155.032,
+        1414.589,
+        1628.938,
+        1704.667,
+        1190.463
+      ],
+      "medianMs": 1414.589
+    },
+    "wide": {
+      "medianMs": 734.681,
+      "minMs": 673.8,
+      "maxMs": 1010.685,
+      "samplesStatus": "summary only retained"
+    },
+    "empty": {
+      "medianMs": 371.501,
+      "minMs": 320.976,
+      "maxMs": 419.438,
+      "samplesStatus": "summary only retained"
+    },
+    "qualification": "Same traversal/bounds, aggregate-only retention. These runs do not preserve per-file display nodes and are not full-tree replacements. Every aggregate matched a full independently verified reference scan."
+  },
+  "snapshots": {
+    "balancedInitial": {
+      "baselineSaveMs": [
+        1062.537,
+        992.799,
+        960.989,
+        1187.037,
+        1172.673
+      ],
+      "baselineLoadMs": [
+        821.541,
+        723.709,
+        761.641,
+        694.903,
+        795.035
+      ],
+      "baselineSaveMedianMs": 1062.537,
+      "baselineLoadMedianMs": 761.641,
+      "finalSaveMedianMs": 843.114,
+      "finalLoadMedianMs": 887.982,
+      "finalSamplesStatus": "summary only retained"
+    },
+    "balancedPairedRepeat": {
+      "baselineSaveMs": [
+        1053.284,
+        1005.817,
+        940.227,
+        1286.183,
+        918.485
+      ],
+      "baselineLoadMs": [
+        946.092,
+        808.671,
+        1065.395,
+        847.951,
+        902.435
+      ],
+      "finalSaveMs": [
+        623.291,
+        640.479,
+        769.38,
+        678.088,
+        562.34
+      ],
+      "finalLoadMs": [
+        762.087,
+        852.536,
+        1202.261,
+        797.764,
+        832.178
+      ],
+      "baselineSaveMedianMs": 1005.817,
+      "baselineLoadMedianMs": 902.435,
+      "finalSaveMedianMs": 640.479,
+      "finalLoadMedianMs": 832.178
+    },
+    "balancedPooled": {
+      "runsPerRevision": 10,
+      "baselineSave": {
+        "medianMs": 1029.5505,
+        "minMs": 918.485,
+        "maxMs": 1286.183
+      },
+      "finalSave": {
+        "medianMs": 772.586,
+        "minMs": 562.34,
+        "maxMs": 1198.188
+      },
+      "baselineLoad": {
+        "medianMs": 815.106,
+        "minMs": 694.903,
+        "maxMs": 1065.395
+      },
+      "finalLoad": {
+        "medianMs": 862.086,
+        "minMs": 762.087,
+        "maxMs": 1202.261
+      },
+      "provenance": "Pooled statistics were computed from complete logs before workspace failure; not all underlying final-initial samples remain in this recovery record."
+    },
+    "wide": {
+      "baselineSaveMedianMs": 926.65,
+      "baselineLoadMedianMs": 860.381,
+      "finalSaveMedianMs": 821.745,
+      "finalLoadMedianMs": 902.693,
+      "retainedFinalRecord": {
+        "benchmark": "native_storage_snapshot",
+        "storage": "NativeFileCollectionStorage (atomic files, flush, CAS lease)",
+        "runtime": "3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
+        "source_scan_excluded": true,
+        "source_scan_progress_callbacks": 4,
+        "independent_oracle": true,
+        "files_size_mtime_digest": "3674051af55ab070415f92d4739fbce9578b0dc3460a26057544d63664901e14",
+        "all_metadata_digest": "431636407526f8f6960972ee0b55090b5dcdf0b1eb0ca353878afbc55bab52f0",
+        "save_median_ms": 821.745,
+        "save_minimum_ms": 615.811,
+        "save_maximum_ms": 1356.445,
+        "load_median_ms": 902.693,
+        "load_minimum_ms": 848.562,
+        "load_maximum_ms": 1087.256,
+        "source_revision": "e9dd5dbbb8581e16f228d4f51239adf7d0b22660",
+        "runs": [
+          {
+            "run": 0,
+            "warmup": true,
+            "save_ms": 944.348,
+            "load_ms": 1415.462,
+            "nodes": 24001,
+            "files": 24000,
+            "folders": 0,
+            "logical_bytes": 359116800,
+            "all_metadata_fingerprint": "f4d8ba4b459eeadbadbaa3f34af4d058bb87b0c5f10dc867c9bfd2c679ead300",
+            "exact_roundtrip": true
+          },
+          {
+            "run": 1,
+            "warmup": false,
+            "save_ms": 813.728,
+            "load_ms": 902.693,
+            "nodes": 24001,
+            "files": 24000,
+            "folders": 0,
+            "logical_bytes": 359116800,
+            "all_metadata_fingerprint": "f4d8ba4b459eeadbadbaa3f34af4d058bb87b0c5f10dc867c9bfd2c679ead300",
+            "exact_roundtrip": true
+          },
+          {
+            "run": 2,
+            "warmup": false,
+            "save_ms": 1356.445,
+            "load_ms": 1087.256,
+            "nodes": 24001,
+            "files": 24000,
+            "folders": 0,
+            "logical_bytes": 359116800,
+            "all_metadata_fingerprint": "f4d8ba4b459eeadbadbaa3f34af4d058bb87b0c5f10dc867c9bfd2c679ead300",
+            "exact_roundtrip": true
+          },
+          {
+            "run": 3,
+            "warmup": false,
+            "save_ms": 821.745,
+            "load_ms": 848.562,
+            "nodes": 24001,
+            "files": 24000,
+            "folders": 0,
+            "logical_bytes": 359116800,
+            "all_metadata_fingerprint": "f4d8ba4b459eeadbadbaa3f34af4d058bb87b0c5f10dc867c9bfd2c679ead300",
+            "exact_roundtrip": true
+          },
+          {
+            "run": 4,
+            "warmup": false,
+            "save_ms": 1092.621,
+            "load_ms": 911.131,
+            "nodes": 24001,
+            "files": 24000,
+            "folders": 0,
+            "logical_bytes": 359116800,
+            "all_metadata_fingerprint": "f4d8ba4b459eeadbadbaa3f34af4d058bb87b0c5f10dc867c9bfd2c679ead300",
+            "exact_roundtrip": true
+          },
+          {
+            "run": 5,
+            "warmup": false,
+            "save_ms": 615.811,
+            "load_ms": 849.491,
+            "nodes": 24001,
+            "files": 24000,
+            "folders": 0,
+            "logical_bytes": 359116800,
+            "all_metadata_fingerprint": "f4d8ba4b459eeadbadbaa3f34af4d058bb87b0c5f10dc867c9bfd2c679ead300",
+            "exact_roundtrip": true
+          }
+        ]
+      }
+    },
+    "empty": {
+      "baselineSaveMedianMs": 73.407,
+      "baselineLoadMedianMs": 50.76,
+      "finalSaveMedianMs": 51.015,
+      "finalLoadMedianMs": 35.101,
+      "retainedFinalRecord": {
+        "benchmark": "native_storage_snapshot",
+        "storage": "NativeFileCollectionStorage (atomic files, flush, CAS lease)",
+        "runtime": "3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
+        "source_scan_excluded": true,
+        "source_scan_progress_callbacks": 8,
+        "independent_oracle": true,
+        "files_size_mtime_digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "all_metadata_digest": "66d922032e631aa69b3614cb2110b56048d8e4eb958926dfc4c371470b78ed56",
+        "save_median_ms": 51.015,
+        "save_minimum_ms": 40.933,
+        "save_maximum_ms": 88.648,
+        "load_median_ms": 35.101,
+        "load_minimum_ms": 25.767,
+        "load_maximum_ms": 37.946,
+        "source_revision": "e9dd5dbbb8581e16f228d4f51239adf7d0b22660",
+        "runs": [
+          {
+            "run": 0,
+            "warmup": true,
+            "save_ms": 109.541,
+            "load_ms": 87.17,
+            "nodes": 1011,
+            "files": 0,
+            "folders": 1010,
+            "logical_bytes": 0,
+            "all_metadata_fingerprint": "4974d78d5b973d283cc3b903832a978f664de96c7adbada44675ab011c907a58",
+            "exact_roundtrip": true
+          },
+          {
+            "run": 1,
+            "warmup": false,
+            "save_ms": 51.015,
+            "load_ms": 35.101,
+            "nodes": 1011,
+            "files": 0,
+            "folders": 1010,
+            "logical_bytes": 0,
+            "all_metadata_fingerprint": "4974d78d5b973d283cc3b903832a978f664de96c7adbada44675ab011c907a58",
+            "exact_roundtrip": true
+          },
+          {
+            "run": 2,
+            "warmup": false,
+            "save_ms": 58.383,
+            "load_ms": 37.946,
+            "nodes": 1011,
+            "files": 0,
+            "folders": 1010,
+            "logical_bytes": 0,
+            "all_metadata_fingerprint": "4974d78d5b973d283cc3b903832a978f664de96c7adbada44675ab011c907a58",
+            "exact_roundtrip": true
+          },
+          {
+            "run": 3,
+            "warmup": false,
+            "save_ms": 88.648,
+            "load_ms": 25.767,
+            "nodes": 1011,
+            "files": 0,
+            "folders": 1010,
+            "logical_bytes": 0,
+            "all_metadata_fingerprint": "4974d78d5b973d283cc3b903832a978f664de96c7adbada44675ab011c907a58",
+            "exact_roundtrip": true
+          },
+          {
+            "run": 4,
+            "warmup": false,
+            "save_ms": 49.87,
+            "load_ms": 35.228,
+            "nodes": 1011,
+            "files": 0,
+            "folders": 1010,
+            "logical_bytes": 0,
+            "all_metadata_fingerprint": "4974d78d5b973d283cc3b903832a978f664de96c7adbada44675ab011c907a58",
+            "exact_roundtrip": true
+          },
+          {
+            "run": 5,
+            "warmup": false,
+            "save_ms": 40.933,
+            "load_ms": 29.245,
+            "nodes": 1011,
+            "files": 0,
+            "folders": 1010,
+            "logical_bytes": 0,
+            "all_metadata_fingerprint": "4974d78d5b973d283cc3b903832a978f664de96c7adbada44675ab011c907a58",
+            "exact_roundtrip": true
+          }
+        ]
+      }
+    },
+    "verification": "Fresh native storage reopen matched the original full snapshot fingerprint, including metadata, children/order, all aggregate totals, timestamps, flags and diagnostics. Scan time excluded from save/load timing. Flush, atomic rename, checksums and CAS included."
+  },
+  "collectionImport": {
+    "rows": 10000,
+    "sources": 2,
+    "pages": 20,
+    "selectedRows": 6,
+    "totalPageBytes": 4641463,
+    "metadataDigest": "0abb36bec0319f94295ca65d6c362c236cb50e7fb27cd2189060a5857ca50e71",
+    "baselineMs": [
+      1249.77,
+      791.156,
+      762.386,
+      934.379,
+      689.763
+    ],
+    "baselineMedianMs": 791.156,
+    "finalMs": [
+      466.041,
+      861.622,
+      701.555,
+      748.675,
+      741.453
+    ],
+    "finalMedianMs": 741.453,
+    "verification": "Every serialized row, identity, microsecond timestamp and selected mark matched after a fresh-store reopen. Only save/encoding/durable publication timed; construction, verification and cleanup excluded.",
+    "qualification": "Observed median reduction is 6.3%; ranges overlap substantially. This is collection import, separate from a multi-root scanning workflow."
+  },
+  "completedValidation": [
+    {
+      "scope": "shared scanner/summary, access, virtual/native workers and inline measurement",
+      "passed": 124,
+      "overlapsOtherRuns": true
+    },
+    {
+      "scope": "native page batches, snapshot store and collection paging store",
+      "passed": 64,
+      "overlapsOtherRuns": true
+    },
+    {
+      "scope": "native child paths, links, workers and access lifetimes",
+      "passed": 19,
+      "overlapsOtherRuns": true
+    },
+    {
+      "scope": "identity cache, captured targets, sync binding, inline measurement and shared scans",
+      "passed": 139,
+      "overlapsOtherRuns": true
+    },
+    {
+      "scope": "uncommitted initial batch UI, analyzer and localization",
+      "passed": 62,
+      "status": "precedes final unconfirmed-save repair; not acceptance of recovered artifacts"
+    },
+    {
+      "scope": "hosted File workspace UX behavior regression step at e9dd5db",
+      "passed": 814,
+      "overlapsOtherRuns": true,
+      "runId": 43026970576,
+      "qualification": "Behavior and targeted analysis steps succeeded; overall workflow failed its final formatting check in three CLI files. Targeted analysis reported 66 nonfatal issues."
+    }
+  ],
+  "incompleteValidation": [
+    "Local Chrome startup failed with socket EPERM before assertions; the later hosted Chrome job passed at the performance revision.",
+    "AOT comparison was prepared but never compiled or run.",
+    "Final unconfirmed-save repair, combined broad regressions, full static analysis, optimized app build and final source-evidence rerun were interrupted or not started."
+  ],
+  "hostedValidation": [
+    {
+      "revision": "e9dd5dbbb8581e16f228d4f51239adf7d0b22660",
+      "runId": 43026970946,
+      "jobId": 130544314870,
+      "name": "Browser storage + terminal (Chrome)",
+      "status": "completed",
+      "conclusion": "success",
+      "includes": "IndexedDB concurrency and paged restart recovery; terminal; browser credential vault"
+    },
+    {
+      "revision": "e9dd5dbbb8581e16f228d4f51239adf7d0b22660",
+      "runId": 43026970576,
+      "name": "File workspace UX",
+      "status": "completed",
+      "conclusion": "failure",
+      "cause": "Require committed formatting; three CLI files changed by formatter. Workspace behavior regressions passed 814 tests; targeted analysis succeeded with nonfatal diagnostics."
+    },
+    {
+      "revision": "e9dd5dbbb8581e16f228d4f51239adf7d0b22660",
+      "runId": 43026970946,
+      "jobId": 130544314796,
+      "name": "Analyze + Test (Linux)",
+      "status": "in_progress",
+      "qualification": "Full analysis step succeeded; broad deterministic tests were still running at this observation."
+    }
+  ]
+}

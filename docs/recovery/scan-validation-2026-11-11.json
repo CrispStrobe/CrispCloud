@@ -1,0 +1,67 @@
+{
+  "schema": "crispcloud.recovery.exact_replacements.v1",
+  "recoveryPath": "docs/recovery/scan-validation-2026-11-11.json",
+  "repository": "CrispStrobe/CrispCloud",
+  "baseCommit": "e9dd5dbbb8581e16f228d4f51239adf7d0b22660",
+  "recordedDateUTC": "2026-11-11",
+  "status": "INERT RECOVERY ARTIFACT. This file does not activate workflow changes.",
+  "purpose": "Preserve the interrupted expansion of the workspace analysis and regression candidates for directory scanning, identity caching, durable catalog pages and multi-root snapshot ingestion.",
+  "provenance": [
+    "Reconstructed from the exact edit recorded before the workspace became unavailable.",
+    "The original workflow was fetched from the exact remote base and its Git blob hash was independently verified.",
+    "Each of the five exact contexts matched once during recovery assembly. The reconstructed result was not executed."
+  ],
+  "dependencies": [
+    "Apply and validate scan-publication-2026-11-11.json and scan-batch-ui-2026-11-11.json before enabling this workflow; several paths do not exist in the base revision."
+  ],
+  "validation": {
+    "assembly": "Exact base SHA, replacement counts and expected result SHA checked in memory.",
+    "runtime": "NOT RUN. This recovery does not establish passing analysis, tests or hosted workflow acceptance.",
+    "browser": "The existing independent collection-browser job in .github/workflows/ci.yml already targets the browser persistence suite; no browser workflow change is needed."
+  },
+  "applicationInstructions": [
+    "Require the current workflow Git blob SHA to equal baseBlobSHA.",
+    "Apply each replacement exactly once in order and verify the result hash and byte count.",
+    "Apply only with the restored batch runtime files and tests present; run the same focused checks serially before committing active workflow changes."
+  ],
+  "files": [
+    {
+      "path": ".github/workflows/workspace-ux.yml",
+      "baseBlobSHA": "bb37bfbf5a11dc1caac4851d0671aafd73988983",
+      "expectedResultBlobSHA": "e12cee7bcfdd7b3c45e04e5db03d0750a8047581",
+      "expectedResultBytes": 7906,
+      "replacements": [
+        {
+          "id": "extend-workspace-gate-1",
+          "before": "          lib/services/storage_scan_backend.dart\n",
+          "after": "          lib/services/storage_scan_backend.dart\n          lib/services/storage_scan_service.dart\n          lib/services/storage_scan_source.dart\n          lib/services/storage_scan_batch_service.dart\n          lib/services/storage_scan_snapshot_store.dart\n          lib/services/storage_identity.dart\n          lib/services/file_collection_storage.dart\n          lib/services/file_collection_storage_native.dart\n          lib/services/file_collection_storage_browser.dart\n          lib/services/file_collection_store.dart\n",
+          "expectedOccurrences": 1
+        },
+        {
+          "id": "extend-workspace-gate-2",
+          "before": "          lib/models/folder_size_measurement.dart\n",
+          "after": "          lib/models/folder_size_measurement.dart\n          lib/models/storage_analysis.dart\n",
+          "expectedOccurrences": 1
+        },
+        {
+          "id": "extend-workspace-gate-3",
+          "before": "          lib/widgets/storage_analyzer_dialog.dart\n",
+          "after": "          lib/widgets/storage_analyzer_dialog.dart\n          lib/widgets/storage_scan_batch_dialog.dart\n",
+          "expectedOccurrences": 1
+        },
+        {
+          "id": "extend-workspace-gate-4",
+          "before": "            test/storage_scan_service_test.dart\n",
+          "after": "            test/storage_scan_service_test.dart\n            test/storage_scan_summary_test.dart\n            test/storage_scan_batch_service_test.dart\n            test/storage_scan_batch_widget_test.dart\n            test/storage_scan_snapshot_store_test.dart\n            test/storage_scan_snapshot_widget_test.dart\n            test/storage_identity_cache_test.dart\n            test/file_collection_batch_storage_test.dart\n",
+          "expectedOccurrences": 1
+        },
+        {
+          "id": "extend-workspace-gate-5",
+          "before": "            test/storage_scan_native_test.dart\n",
+          "after": "            test/storage_scan_native_test.dart\n            test/storage_scan_native_paths_test.dart\n",
+          "expectedOccurrences": 1
+        }
+      ]
+    }
+  ]
+}
