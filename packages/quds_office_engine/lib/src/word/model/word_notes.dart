@@ -1,4 +1,7 @@
+import 'dart:collection';
+
 import '../properties/wml_properties.dart';
+import 'wml_clone.dart';
 import 'wml_document.dart';
 
 /// Footnote or endnote body.
@@ -8,10 +11,14 @@ class WmlNote {
     required this.id,
     required this.endnote,
     List<WmlParagraph>? paragraphs,
-  }) : paragraphs =
-           paragraphs ??
-           <WmlParagraph>[
-             WmlParagraph(inlines: <WmlInline>[WmlRun(text: '')]),
+    List<WmlBlock>? blocks,
+  }) : blocks =
+           blocks ??
+           <WmlBlock>[
+             ...paragraphs ??
+                 <WmlParagraph>[
+                   WmlParagraph(inlines: <WmlInline>[WmlRun(text: '')]),
+                 ],
            ];
 
   /// id API.
@@ -20,19 +27,77 @@ class WmlNote {
   /// True for an endnote, false for a footnote.
   final bool endnote;
 
-  /// paragraphs API.
-  List<WmlParagraph> paragraphs;
+  /// Ordered note story, including paragraphs, tables, pictures and equations.
+  final List<WmlBlock> blocks;
+
+  /// Mutable top-level paragraph view retained for existing note editors.
+  List<WmlParagraph> get paragraphs => _NoteParagraphs(blocks);
+  set paragraphs(List<WmlParagraph> value) {
+    final List<WmlParagraph> copied = List<WmlParagraph>.of(value);
+    blocks
+      ..clear()
+      ..addAll(copied);
+  }
+
+  Iterable<WmlParagraph> get allParagraphs =>
+      blocks.expand(WmlClone.paragraphsOf);
+
+  Iterable<WmlVisual> get visuals =>
+      WmlDocument(sections: <WmlSection>[WmlSection(blocks: blocks)]).visuals;
 
   /// text API.
-  String get text =>
-      paragraphs.map((WmlParagraph p) => p.text).join('\n').trim();
+  String get text => WmlClone.plainTextOf(blocks).trim();
 
   /// text API.
   set text(String value) {
-    paragraphs
+    blocks
       ..clear()
       ..add(WmlParagraph(inlines: <WmlInline>[WmlRun(text: value)]));
   }
+}
+
+class _NoteParagraphs extends ListBase<WmlParagraph> {
+  _NoteParagraphs(this.blocks);
+  final List<WmlBlock> blocks;
+  List<int> get _indices => <int>[
+    for (var i = 0; i < blocks.length; i++)
+      if (blocks[i] is WmlParagraph) i,
+  ];
+  @override
+  int get length => _indices.length;
+  @override
+  set length(int value) {
+    RangeError.checkNotNegative(value);
+    while (length > value) {
+      removeAt(length - 1);
+    }
+    while (length < value) {
+      blocks.add(WmlParagraph());
+    }
+  }
+
+  @override
+  WmlParagraph operator [](int index) =>
+      blocks[_indices[index]] as WmlParagraph;
+  @override
+  void operator []=(int index, WmlParagraph value) {
+    blocks[_indices[index]] = value;
+  }
+
+  @override
+  void add(WmlParagraph value) {
+    blocks.add(value);
+  }
+
+  @override
+  void insert(int index, WmlParagraph value) {
+    RangeError.checkValidRange(index, index, length);
+    blocks.insert(index == length ? blocks.length : _indices[index], value);
+  }
+
+  @override
+  WmlParagraph removeAt(int index) =>
+      blocks.removeAt(_indices[index]) as WmlParagraph;
 }
 
 /// Inserts and looks up notes on a [WmlDocument].
@@ -73,9 +138,8 @@ abstract final class WordNotes {
 
   /// byId API.
   static WmlNote? byId(WmlDocument document, int id, {required bool endnote}) {
-    for (final WmlNote note in endnote
-        ? document.endnotes
-        : document.footnotes) {
+    for (final WmlNote note
+        in endnote ? document.endnotes : document.footnotes) {
       if (note.id == id) {
         return note;
       }
@@ -93,7 +157,6 @@ abstract final class WordNotes {
       return false;
     }
     bucket.removeAt(index);
-    final String legacy = endnote ? '[E$id]' : '[$id]';
     for (final WmlParagraph paragraph in document.paragraphs) {
       if (paragraph.properties.noteId == id &&
           paragraph.properties.endnoteRef == endnote) {
@@ -106,11 +169,6 @@ abstract final class WordNotes {
             inline.noteRefId == id &&
             inline.noteRefEndnote == endnote,
       );
-      for (final WmlInline inline in paragraph.inlines) {
-        if (inline is WmlRun && inline.text.contains(legacy)) {
-          inline.text = inline.text.replaceAll(legacy, '');
-        }
-      }
     }
     return true;
   }

@@ -247,7 +247,11 @@ abstract final class WordStyles {
       ..headingLevel = style.headingLevel
       ..justification = style.justification
       ..spacingBefore = style.spacingBefore
-      ..spacingAfter = style.spacingAfter;
+      ..spacingAfter = style.spacingAfter
+      ..numId = style.numId
+      ..ilvl = style.ilvl ?? 0
+      ..indent = style.indent ?? const WmlIndent()
+      ..listLabel = null;
     if (paragraph.inlines.whereType<WmlRun>().isEmpty) {
       paragraph.inlines.add(WmlRun());
     }
@@ -285,6 +289,10 @@ abstract final class WordStyles {
     }
     final WmlStyle style = resolve(id, document: document);
     paragraph.properties.headingLevel ??= style.headingLevel;
+    if (!paragraph.properties.explicitJustification &&
+        paragraph.properties.justification == WmlJustification.left) {
+      paragraph.properties.justification = style.justification;
+    }
     if (paragraph.properties.numId == null && style.numId != null) {
       paragraph.properties
         ..numId = style.numId
@@ -293,34 +301,43 @@ abstract final class WordStyles {
     final WmlIndent own = paragraph.properties.indent;
     final WmlIndent? styled = style.indent;
     if (styled != null &&
+        !paragraph.properties.explicitIndent &&
         own.left == 0 &&
         own.right == 0 &&
         own.firstLine == 0 &&
         own.hanging == 0) {
       paragraph.properties.indent = styled;
     }
-    if (paragraph.properties.spacingBefore == 0 && style.spacingBefore != 0) {
+    if (!paragraph.properties.explicitSpacingBefore &&
+        paragraph.properties.spacingBefore == 0 &&
+        style.spacingBefore != 0) {
       paragraph.properties.spacingBefore = style.spacingBefore;
     }
-    if (paragraph.properties.spacingAfter == 8 && style.spacingAfter != 8) {
+    if (!paragraph.properties.explicitSpacingAfter &&
+        paragraph.properties.spacingAfter == 8 &&
+        style.spacingAfter != 8) {
       paragraph.properties.spacingAfter = style.spacingAfter;
     }
     for (final WmlInline inline in paragraph.inlines) {
       if (inline is! WmlRun) {
         continue;
       }
-      if (inline.properties.fontSizeHalfPoints == 22 &&
+      if (!inline.properties.explicitProperties.contains('sz') &&
+          !inline.properties.explicitProperties.contains('szCs') &&
+          inline.properties.fontSizeHalfPoints == 22 &&
           style.fontSizePoints != 11) {
         inline.properties.fontSizeHalfPoints = (style.fontSizePoints * 2)
             .round();
       }
-      if ((inline.properties.asciiFont == 'Calibri' ||
+      if (!inline.properties.explicitProperties.contains('rFonts') &&
+          (inline.properties.asciiFont == 'Calibri' ||
               inline.properties.asciiFont == 'Arial') &&
           style.font != null &&
           style.font!.isNotEmpty) {
         inline.properties.asciiFont = style.font!;
       }
-      if (inline.properties.csFont == 'Arial' &&
+      if (!inline.properties.explicitProperties.contains('rFonts') &&
+          inline.properties.csFont == 'Arial' &&
           style.csFont != null &&
           style.csFont!.isNotEmpty) {
         inline.properties.csFont = style.csFont!;
@@ -331,7 +348,9 @@ abstract final class WordStyles {
       if (style.italic && !notItalic.contains(inline.properties)) {
         inline.properties.italic = true;
       }
-      if (inline.properties.color == '000000' && style.color != '000000') {
+      if (!inline.properties.explicitProperties.contains('color') &&
+          inline.properties.color == '000000' &&
+          style.color != '000000') {
         inline.properties.color = style.color;
       }
     }

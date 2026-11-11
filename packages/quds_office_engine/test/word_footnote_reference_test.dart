@@ -29,7 +29,7 @@ void main() {
       ).layout(document);
       final List<String> notes = laid.pages
           .expand((LaidOutPage page) => page.notes)
-          .map((LaidOutLine line) => line.overlayText ?? '')
+          .map((LaidOutLine line) => line.text)
           .toList();
       expect(notes, contains('1. First footnote text.'));
       expect(notes, contains('2. Second footnote text.'));

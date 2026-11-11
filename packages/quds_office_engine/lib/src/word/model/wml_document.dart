@@ -153,6 +153,8 @@ class WmlComment {
                   properties: inline.properties.copy(),
                   hyperlink: inline.hyperlink,
                   commentIds: List<int>.from(inline.commentIds),
+                  noteRefId: inline.noteRefId,
+                  noteRefEndnote: inline.noteRefEndnote,
                 )
               else
                 inline,
@@ -683,7 +685,10 @@ class WmlSection {
   List<WmlVisual> evenFooterVisuals;
 
   /// headerForPage API.
-  List<WmlParagraph> headerForPage(int pageNumber, {required bool firstInSection}) {
+  List<WmlParagraph> headerForPage(
+    int pageNumber, {
+    required bool firstInSection,
+  }) {
     if (differentFirstPage && firstInSection && firstHeader.isNotEmpty) {
       return firstHeader;
     }
@@ -698,21 +703,20 @@ class WmlSection {
     int pageNumber, {
     required bool firstInSection,
   }) {
-    if (differentFirstPage &&
-        firstInSection &&
-        firstHeaderVisuals.isNotEmpty) {
+    if (differentFirstPage && firstInSection && firstHeaderVisuals.isNotEmpty) {
       return firstHeaderVisuals;
     }
-    if (differentOddEven &&
-        pageNumber.isEven &&
-        evenHeaderVisuals.isNotEmpty) {
+    if (differentOddEven && pageNumber.isEven && evenHeaderVisuals.isNotEmpty) {
       return evenHeaderVisuals;
     }
     return headerVisuals;
   }
 
   /// footerForPage API.
-  List<WmlParagraph> footerForPage(int pageNumber, {required bool firstInSection}) {
+  List<WmlParagraph> footerForPage(
+    int pageNumber, {
+    required bool firstInSection,
+  }) {
     if (differentFirstPage && firstInSection && firstFooter.isNotEmpty) {
       return firstFooter;
     }
@@ -727,14 +731,10 @@ class WmlSection {
     int pageNumber, {
     required bool firstInSection,
   }) {
-    if (differentFirstPage &&
-        firstInSection &&
-        firstFooterVisuals.isNotEmpty) {
+    if (differentFirstPage && firstInSection && firstFooterVisuals.isNotEmpty) {
       return firstFooterVisuals;
     }
-    if (differentOddEven &&
-        pageNumber.isEven &&
-        evenFooterVisuals.isNotEmpty) {
+    if (differentOddEven && pageNumber.isEven && evenFooterVisuals.isNotEmpty) {
       return evenFooterVisuals;
     }
     return footerVisuals;
@@ -819,6 +819,9 @@ class WmlDocument {
 
   /// Paragraph styles written to `styles.xml` when non-empty.
   List<WmlStyle> styles;
+
+  /// Immutable imported style objects used to preserve untouched style XML.
+  final Map<String, WmlStyle> importedStyles = <String, WmlStyle>{};
 
   /// properties API.
   OfficeDocumentProperties properties;

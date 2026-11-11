@@ -1,0 +1,24 @@
+{
+  "cells": {
+    "A1": {
+      "value": "Label",
+      "formula": null
+    },
+    "B1": {
+      "value": 5,
+      "formula": null
+    },
+    "C1": {
+      "value": 15,
+      "formula": "B1*3"
+    },
+    "D1": {
+      "value": true,
+      "formula": null
+    }
+  },
+  "merges": [
+    "A3:B3"
+  ],
+  "frozen_rows": 1
+}

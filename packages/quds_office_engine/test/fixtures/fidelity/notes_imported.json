@@ -1,0 +1,33 @@
+{
+  "blocks": [
+    "p",
+    "tbl",
+    "p",
+    "p"
+  ],
+  "paragraphs": [
+    "Rich note",
+    "Note link"
+  ],
+  "table": [
+    "Note table"
+  ],
+  "bold": true,
+  "color": "008844",
+  "half_points": "24",
+  "image": [
+    4,
+    4,
+    "41926762b85be2b464eeb5a18b52c2ea4b6db77fffc07f726f43d852ff98a8d6"
+  ],
+  "extent": {
+    "cx": "457200",
+    "cy": "457200"
+  },
+  "links": [
+    [
+      "Note link",
+      "https://example.com/note"
+    ]
+  ]
+}

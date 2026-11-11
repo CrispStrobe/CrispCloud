@@ -1,0 +1,38 @@
+name: Office fidelity integration
+on:
+  push:
+    branches: [main, feature/office-fidelity-oracles]
+  pull_request:
+    paths:
+      - 'packages/quds_office_engine/**'
+      - 'packages/quds_office_editor/**'
+      - 'lib/widgets/office_editor*'
+      - 'test/office_*'
+      - 'tool/*office_fidelity*'
+      - '.github/workflows/office-fidelity.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  host-roundtrip:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.8'
+          channel: stable
+          cache: true
+      - name: Native test dependencies
+        run: sudo apt-get update && sudo apt-get install -y clang libsqlite3-dev
+      - run: flutter pub get
+      - name: Shared corpus and host save workflow
+        run: python3 tool/with_ci_system_sqlite.py bash tool/check_office_fidelity.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: office-host-fidelity-evidence
+          path: |
+            build/fidelity/
+            packages/quds_office_engine/build/fidelity*

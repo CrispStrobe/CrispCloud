@@ -1,0 +1,120 @@
+{
+  "numbering": {
+    "5": [
+      {
+        "start": {
+          "val": "1"
+        },
+        "numFmt": {
+          "val": "decimal"
+        },
+        "lvlText": {
+          "val": "%1."
+        }
+      }
+    ]
+  },
+  "text": [
+    "Revised heading",
+    "Edited body",
+    "Body link",
+    "List item"
+  ],
+  "heading_levels": [
+    {
+      "val": "0"
+    }
+  ],
+  "references": {
+    "footnote": [
+      12
+    ],
+    "endnote": [
+      3
+    ]
+  },
+  "notes": {
+    "footnote": [
+      {
+        "id": 12,
+        "paragraphs": [
+          "Edited footnote",
+          "Note link"
+        ],
+        "links": [
+          [
+            "Note link",
+            "https://example.com/note"
+          ]
+        ]
+      }
+    ],
+    "endnote": [
+      {
+        "id": 3,
+        "paragraphs": [
+          "Endnote text"
+        ],
+        "links": []
+      }
+    ]
+  },
+  "links": [
+    [
+      "Body link",
+      "https://example.com/body"
+    ]
+  ],
+  "table_text": [
+    "Cell text"
+  ],
+  "image_extents": [
+    {
+      "cx": "914400",
+      "cy": "457200"
+    }
+  ],
+  "image_sha256": [
+    "a015424474434a3ecc70d1c9424ebd2833eeb18fbfe80124c4b8169792e80614"
+  ],
+  "styles": {
+    "Heading1": {
+      "type": "paragraph",
+      "numId": {},
+      "indent": {}
+    },
+    "BodyCustom": {
+      "type": "paragraph",
+      "numId": {},
+      "indent": {}
+    },
+    "ListCustom": {
+      "type": "paragraph",
+      "numId": {
+        "val": "5"
+      },
+      "indent": {
+        "left": "720",
+        "hanging": "360"
+      }
+    },
+    "EmphasisCustom": {
+      "type": "character",
+      "numId": {},
+      "indent": {}
+    },
+    "TableCustom": {
+      "type": "table",
+      "numId": {},
+      "indent": {}
+    }
+  },
+  "header_links": [
+    [
+      "Header link",
+      "https://example.com/header"
+    ]
+  ],
+  "footer_text": "Footer text",
+  "opaque_sha256": "0529ef8946804c26f3955fc960200726e5ff6f9100deb7ce8929267c51ce907b"
+}
