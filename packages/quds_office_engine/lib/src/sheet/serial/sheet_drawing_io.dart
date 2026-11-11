@@ -11,6 +11,7 @@ import '../../visual/drawingml_visual_io.dart';
 import '../../visual/office_visual.dart';
 import '../../visual/png_bytes.dart';
 import '../../xml/namespaces.dart';
+import '../../xml/xml_node.dart';
 import '../../xml/xml_reader.dart';
 import '../../xml/xml_writer.dart';
 import '../model/sml_workbook.dart';
@@ -31,8 +32,12 @@ abstract final class SheetDrawingIo {
     if (sheet.drawings.isEmpty) {
       return;
     }
-    final String drawingUri = '/xl/drawings/drawing$drawingIndex.xml';
     final RelationshipCollection sheetRels = package.relationshipsFor(sheetUri);
+    final imported = sheetRels.firstByType(RelationshipTypes.drawing);
+    final owner = sheetUri.split('/').last.replaceAll('.xml', '');
+    final String drawingUri = imported == null
+        ? '/xl/drawings/${owner}_drawing.xml'
+        : sheetRels.resolve(imported);
     final String target = OpcUris.relativize(sheetUri, drawingUri);
     PackageRelationship? found;
     for (final PackageRelationship rel in sheetRels.items) {
@@ -51,9 +56,13 @@ abstract final class SheetDrawingIo {
     for (final SmlDrawing drawing in sheet.drawings) {
       final OfficeVisual visual = drawing.visual;
       if (visual.isChart) {
-        final String uri = '/xl/charts/chart$chartIndex.xml';
+        final String uri = '/xl/charts/${owner}_chart$chartIndex.xml';
         chartIndex++;
-        final String xml = _chartXml(visual, sheetRtl: sheet.rightToLeft);
+        final String xml = _bindChartRefs(
+          _chartXml(visual, sheetRtl: sheet.rightToLeft),
+          drawing,
+          sheet.name,
+        );
         _writePart(
           package,
           uri,
@@ -71,7 +80,7 @@ abstract final class SheetDrawingIo {
         final Uint8List bytes = PngBytes.fromVisual(visual);
         final String mime = WordLikeMedia.mimeOf(bytes);
         final String uri =
-            '/xl/media/image$mediaIndex${WordLikeMedia.extensionOf(mime)}';
+            '/xl/media/${owner}_image$mediaIndex${WordLikeMedia.extensionOf(mime)}';
         mediaIndex++;
         _writePart(package, uri, mime, bytes);
         embedIds.add(
@@ -424,6 +433,51 @@ abstract final class SheetDrawingIo {
     w.writeEndElement();
     w.writeEndElement();
     w.writeEndElement();
+  }
+
+  static String _bindChartRefs(
+    String xml,
+    SmlDrawing drawing,
+    String sheetName,
+  ) {
+    if (drawing.sourceFromA1 == null || drawing.sourceToA1 == null) return xml;
+    final document = XmlDocument.parse(xml);
+    XmlElement? find(XmlElement node, String name) {
+      if (node.localName == name) return node;
+      for (final c in node.childElements) {
+        final match = find(c, name);
+        if (match != null) return match;
+      }
+      return null;
+    }
+
+    final series = find(document.root!, 'ser');
+    if (series == null) return xml;
+    final source = (drawing.sourceSheetName ?? sheetName).replaceAll("'", "''");
+    for (final kind in ['cat', 'val']) {
+      final from = kind == 'val' ? drawing.sourceFromA1 : drawing.labelsFromA1;
+      final to = kind == 'val' ? drawing.sourceToA1 : drawing.labelsToA1;
+      if (from == null || to == null) continue;
+      final region = series.firstChild(kind);
+      if (region == null) continue;
+      final literal = region.childElements.firstOrNull;
+      final numeric = kind == 'val';
+      final reference = XmlElement(
+        localName: numeric ? 'numRef' : 'strRef',
+        prefix: 'c',
+      );
+      reference.addChild(
+        XmlElement(localName: 'f', prefix: 'c')..addText("'$source'!$from:$to"),
+      );
+      if (literal != null) {
+        final cache = literal.copy()
+          ..localName = numeric ? 'numCache' : 'strCache';
+        reference.addChild(cache);
+      }
+      region.children.clear();
+      region.addChild(reference);
+    }
+    return document.toXmlString();
   }
 
   static String _chartXml(OfficeVisual visual, {bool sheetRtl = false}) {

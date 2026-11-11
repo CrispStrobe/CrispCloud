@@ -95,6 +95,60 @@ void main() {
     },
   );
 
+  test(
+    'edited native slides retain animation chart and speaker note edits',
+    () async {
+      var deck = SlideDeserializer().readBytes(
+        File('test/fixtures/fidelity/native.pptx').readAsBytesSync(),
+      );
+      for (int i = 0; i < deck.slides.length; i++) {
+        final slide = deck.slides[i];
+        expect(slide.transition.kind, PmlTransitionKind.fade);
+        slide.notes = 'Edited speaker note ${i + 1}';
+        slide.shapes.first.text = 'Edited native slide ${i + 1}';
+        slide.transition = const PmlSlideTransition(
+          kind: PmlTransitionKind.wipe,
+          durationMs: 900,
+        );
+        slide.animations.add(
+          PmlShapeAnimation(
+            shapeId: slide.shapes.first.id,
+            preset: PmlAnimPreset.fade,
+            durationMs: 600,
+          ),
+        );
+        final chart = slide.shapes
+            .firstWhere((s) => s.visual?.isChart ?? false)
+            .visual!;
+        chart.points[0] = chart.points[0].copyWith(value: 10 + i.toDouble());
+      }
+      for (int cycle = 1; cycle <= 3; cycle++) {
+        final bytes = await OfficeIsolateSave.presentation(deck);
+        Directory('build/fidelity-native').createSync(recursive: true);
+        File(
+          'build/fidelity-native/native-slides-edited-$cycle.pptx',
+        ).writeAsBytesSync(bytes);
+        deck = SlideDeserializer().readBytes(bytes);
+        for (int i = 0; i < deck.slides.length; i++) {
+          final slide = deck.slides[i];
+          expect(slide.notes, 'Edited speaker note ${i + 1}');
+          expect(slide.shapes.first.text, 'Edited native slide ${i + 1}');
+          expect(slide.transition.kind, PmlTransitionKind.wipe);
+          expect(slide.animations.single.preset, PmlAnimPreset.fade);
+          expect(
+            slide.shapes
+                .firstWhere((s) => s.visual?.isChart ?? false)
+                .visual!
+                .points
+                .first
+                .value,
+            10 + i,
+          );
+        }
+      }
+    },
+  );
+
   test('new presentations include masters layouts and required notes size', () {
     final package = SlideSerializer().write(PmlPresentation());
     final rels = package.relationshipsFor('/ppt/presentation.xml');

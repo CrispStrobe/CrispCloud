@@ -138,3 +138,11 @@ The operation rejects unknown styles and type mismatches. Source defaults,
 basedOn chains, theme fonts/colors, character styles, table run/paragraph
 formatting, direct zero/false values, and cyclic source definitions are covered
 by `style_cascade_test.dart` and six independent sparse-XML oracle checks.
+
+The independent `native.xlsx` (openpyxl 3.1.5) and `native.pptx`
+(python-pptx 1.0.2) fixtures are committed. Regenerate explicitly with
+`python3 tool/fidelity/native_fixtures.py`; normal runs never overwrite inputs.
+`native_spreadsheet_test.dart` and `native_presentation_test.dart` emit fifteen
+files under `build/fidelity-native`. `native_oracle.py` checks owned relationships,
+master/theme preservation, decoded picture pixels, chart data/references, number
+formats, borders, fonts, hyperlinks, pivot/cache wiring, notes and motion XML.
