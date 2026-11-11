@@ -8,6 +8,63 @@ WmlDocument openFixture() => WordDeserializer().readBytes(
 );
 
 void main() {
+  test('mixed note references and all note paragraphs appear on the page', () {
+    final LaidOutDocument layout = WordLayoutEngine(
+      font: null,
+    ).layout(openFixture());
+    expect(layout.pages, hasLength(1));
+    final List<String?> lines = layout.pages.single.notes
+        .map((LaidOutLine line) => line.overlayText)
+        .toList();
+    expect(
+      lines,
+      containsAll(<String>[
+        '12. Footnote text',
+        'Note link',
+        'Endnotes',
+        '3. Endnote text',
+      ]),
+    );
+  });
+
+  test('multiple footnotes in one paragraph do not hide each other', () {
+    final WmlDocument doc = WmlDocument.empty(text: 'Body');
+    for (final String text in <String>['First', 'Second']) {
+      WordNotes.insert(doc, doc.paragraphs.first, endnote: false, text: text);
+    }
+    WordNotes.insert(doc, doc.paragraphs.first, endnote: true, text: 'End');
+    final LaidOutDocument layout = WordLayoutEngine(font: null).layout(doc);
+    expect(
+      layout.pages.single.notes.map((LaidOutLine l) => l.overlayText),
+      containsAll(<String>['1. First', '2. Second', '1. End']),
+    );
+  });
+
+  test('multiline endnotes continue onto additional pages', () {
+    final WmlDocument doc = WmlDocument.empty(text: 'Body');
+    WordNotes.insert(
+      doc,
+      doc.paragraphs.first,
+      endnote: true,
+      text: List<String>.generate(100, (int i) => 'Line $i').join('\n'),
+    );
+    final LaidOutDocument layout = WordLayoutEngine(font: null).layout(doc);
+    expect(layout.pages.length, greaterThan(1));
+    final List<LaidOutLine> notes = layout.pages
+        .expand((LaidOutPage p) => p.notes)
+        .toList();
+    expect(notes.map((LaidOutLine l) => l.overlayText), contains('Line 99'));
+    for (final LaidOutLine line in notes) {
+      expect(
+        line.y + line.height,
+        lessThanOrEqualTo(
+          doc.sections.first.pageSize.height -
+              doc.sections.first.margins.bottom,
+        ),
+      );
+    }
+  });
+
   test('custom numbering definitions preserve visible labels after export', () {
     WmlDocument doc = openFixture();
     final String? label = doc.paragraphs.elementAt(3).properties.listLabel;

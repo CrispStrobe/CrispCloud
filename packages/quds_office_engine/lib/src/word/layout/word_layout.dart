@@ -673,7 +673,8 @@ class WordLayoutEngine {
     if (cp == 0x09) {
       return kDefaultTabWidth;
     }
-    final SfntFont? face = fonts?.faceFor(cp) ??
+    final SfntFont? face =
+        fonts?.faceFor(cp) ??
         (font != null && font!.glyphIdFor(cp) != 0 ? font : null);
     if (face == null) {
       final WordGlyphMeasure? hostMeasure = measure;
@@ -710,10 +711,7 @@ class WordLayoutEngine {
     if (logoH <= 0) {
       return section.margins.top;
     }
-    return math.max(
-      section.margins.top,
-      section.margins.header + logoH + 2,
-    );
+    return math.max(section.margins.top, section.margins.header + logoH + 2);
   }
 
   /// Top Y for a new table page slice — always below the header logo band.
@@ -817,10 +815,7 @@ class WordLayoutEngine {
       flow.current.addAll(last.lines);
       flow.currentFrames.addAll(last.frames);
       flow.pageIndex = last.index;
-      flow.y = _contentBottom(
-        last,
-        fallback: _bodyTopClearingLogo(section),
-      );
+      flow.y = _contentBottom(last, fallback: _bodyTopClearingLogo(section));
       flow.columnTop = flow.y;
     }
     for (final WmlBlock block in section.blocks) {
@@ -1034,17 +1029,20 @@ class WordLayoutEngine {
     // Hanging indent: marker sits in [left-hanging, left); text wraps at left.
     final double markerSlot = listLabel == null
         ? 0
-        : (hanging > 0 ? hanging : math.min(18, indentLeft > 0 ? indentLeft : 16));
+        : (hanging > 0
+              ? hanging
+              : math.min(18, indentLeft > 0 ? indentLeft : 16));
     final double textLeft = indentLeft > 0
         ? indentLeft
         : (listLabel == null ? 0 : markerSlot);
     // [maxWidthOverride] is the content box (e.g. cell inner width). Indents
     // still consume that box ? otherwise wrapped text overflows the right edge.
     final double contentBox = maxWidthOverride ?? section.contentWidth;
-    final double maxWidth = (contentBox -
-            textLeft -
-            paragraph.properties.indent.right)
-        .clamp(12.0, section.pageSize.width);
+    final double maxWidth =
+        (contentBox - textLeft - paragraph.properties.indent.right).clamp(
+          12.0,
+          section.pageSize.width,
+        );
     // Empty paragraphs are a full blank line in Word. A tab is content.
     if (!paragraph.text.contains('\t') &&
         paragraph.text.trim().isEmpty &&
@@ -1115,7 +1113,9 @@ class WordLayoutEngine {
         }
       }
       final double x0 =
-          lineOrigin + textLeft + (identical(line, broken.first) ? firstLineShift : 0);
+          lineOrigin +
+          textLeft +
+          (identical(line, broken.first) ? firstLineShift : 0);
       double x = x0;
       if (paragraph.properties.justification == WmlJustification.center) {
         x += (maxWidth - line.width) / 2;
@@ -1158,13 +1158,14 @@ class WordLayoutEngine {
         );
         gx += g.advance * scale;
       }
-      final bool paraRtl = paragraph.properties.rightToLeft == true ||
+      final bool paraRtl =
+          paragraph.properties.rightToLeft == true ||
           paragraph.properties.bidiBaseLevel == 1;
       final double markerX = listLabel == null
           ? 0
           : (paraRtl
-              ? lineOrigin + textLeft + maxWidth + 2
-              : lineOrigin + textLeft - markerSlot);
+                ? lineOrigin + textLeft + maxWidth + 2
+                : lineOrigin + textLeft - markerSlot);
       final LaidOutLine laid = LaidOutLine(
         glyphs: glyphs,
         x: x,
@@ -1514,8 +1515,9 @@ class WordLayoutEngine {
                 y: rowStartY,
                 width: colW,
                 height: 0,
-                fillColor:
-                    cell.vMerge == WmlVMerge.cont ? null : cell.fillColor,
+                fillColor: cell.vMerge == WmlVMerge.cont
+                    ? null
+                    : cell.fillColor,
                 strokeColor: cell.vMerge == WmlVMerge.cont
                     ? '00000000'
                     : (table.properties.borderColor ?? '000000'),
@@ -1558,8 +1560,8 @@ class WordLayoutEngine {
           // Close the bottom edge of a mid-row split on both columns so the
           // page break matches Word's continuous table grid.
           if (needsContinue && frame.strokeBottom == false) {
-            final WmlTableCell? cell = frame.tableCol != null &&
-                    frame.tableCol! < row.cells.length
+            final WmlTableCell? cell =
+                frame.tableCol != null && frame.tableCol! < row.cells.length
                 ? row.cells[frame.tableCol!]
                 : null;
             if (cell?.borderBottom != false) {
@@ -2170,17 +2172,22 @@ class WordLayoutEngine {
         continue;
       }
       final WmlParagraph paragraph = paras[line.paragraphIndex];
-      final int? id = paragraph.properties.noteId;
-      if (id != null &&
-          !paragraph.properties.endnoteRef &&
-          _lineCarriesNoteRef(paragraph, line, id)) {
-        ids.add(id);
-      }
+      ids.addAll(_footnoteIdsForLine(paragraph, line));
     }
-    if (ids.isEmpty) {
+    final List<String> lines = <String>[
+      for (final int id in ids)
+        if (WordNotes.byId(document, id, endnote: false)
+            case final WmlNote note)
+          ..._noteTextLines(note),
+    ];
+    if (lines.isEmpty) {
       return;
     }
-    var y = section.pageSize.height - section.margins.bottom - 16.0 * ids.length;
+    var y =
+        section.pageSize.height -
+        section.margins.bottom -
+        14.0 * lines.length -
+        2;
     page.frames.add(
       LaidOutBox(
         x: section.margins.left,
@@ -2192,11 +2199,7 @@ class WordLayoutEngine {
         kind: LaidOutBoxKind.footnote,
       ),
     );
-    for (final int id in ids.toList()..sort()) {
-      final WmlNote? note = WordNotes.byId(document, id, endnote: false);
-      if (note == null) {
-        continue;
-      }
+    for (final String text in lines) {
       page.notes.add(
         LaidOutLine(
           glyphs: const <LaidOutGlyph>[],
@@ -2206,7 +2209,7 @@ class WordLayoutEngine {
           height: 14,
           pageIndex: page.index,
           justification: WmlJustification.left,
-          overlayText: '$id. ${note.text}',
+          overlayText: text,
           overlaySize: 9,
         ),
       );
@@ -2214,27 +2217,30 @@ class WordLayoutEngine {
     }
   }
 
-  bool _lineCarriesNoteRef(
+  Iterable<int> _footnoteIdsForLine(
     WmlParagraph paragraph,
     LaidOutLine line,
-    int noteId,
-  ) {
+  ) sync* {
+    final Set<int> offsets = <int>{
+      for (final LaidOutGlyph glyph in line.glyphs) glyph.glyph.logicalIndex,
+    };
     var offset = 0;
-    int? noteOffset;
     for (final WmlInline inline in paragraph.inlines) {
       if (inline is WmlRun) {
-        if (inline.noteRefId == noteId) {
-          noteOffset = offset;
-          break;
+        final int? id = inline.noteRefId;
+        if (id != null && !inline.noteRefEndnote && offsets.contains(offset)) {
+          yield id;
         }
         offset += inline.text.length;
       }
     }
-    if (noteOffset == null) return false;
-    for (final LaidOutGlyph glyph in line.glyphs) {
-      if (glyph.glyph.logicalIndex == noteOffset) return true;
+  }
+
+  Iterable<String> _noteTextLines(WmlNote note) sync* {
+    final List<String> lines = note.text.split('\n');
+    for (var i = 0; i < lines.length; i++) {
+      yield i == 0 ? '${note.id}. ${lines[i]}' : lines[i];
     }
-    return false;
   }
 
   void _attachLineNumbers(LaidOutPage page, WmlSection section) {
@@ -2273,22 +2279,35 @@ class WordLayoutEngine {
         ? section.margins.top
         : last.lines.last.y + last.lines.last.height + 16;
     for (final LaidOutBox frame in last.frames) {
-      y = math.max(y, frame.y + frame.height + 12);
+      if (frame.kind != LaidOutBoxKind.footnote) {
+        y = math.max(y, frame.y + frame.height + 12);
+      }
     }
-    if (y > section.pageSize.height - section.margins.bottom - 20) {
-      pages.add(
-        _makePage(
-          section,
-          pages.length,
-          <LaidOutLine>[],
-          <LaidOutBox>[],
-          sectionIndex: document.sections.length - 1,
-          firstInSection: false,
-        ),
+    LaidOutPage target = pages.last;
+    var bottom = section.pageSize.height - section.margins.bottom;
+    for (final LaidOutBox frame in target.frames) {
+      if (frame.kind == LaidOutBoxKind.footnote) {
+        bottom = math.min(bottom, frame.y - 4);
+      }
+    }
+    void ensureRoom(double height) {
+      if (y + height <= bottom) {
+        return;
+      }
+      target = _makePage(
+        section,
+        pages.length,
+        <LaidOutLine>[],
+        <LaidOutBox>[],
+        sectionIndex: document.sections.length - 1,
+        firstInSection: false,
       );
+      pages.add(target);
       y = section.margins.top;
+      bottom = section.pageSize.height - section.margins.bottom;
     }
-    final LaidOutPage target = pages.last;
+
+    ensureRoom(32);
     target.notes.add(
       LaidOutLine(
         glyphs: const <LaidOutGlyph>[],
@@ -2304,7 +2323,8 @@ class WordLayoutEngine {
       ),
     );
     y += 18;
-    for (final WmlNote note in notes) {
+    for (final String text in notes.expand(_noteTextLines)) {
+      ensureRoom(14);
       target.notes.add(
         LaidOutLine(
           glyphs: const <LaidOutGlyph>[],
@@ -2314,7 +2334,7 @@ class WordLayoutEngine {
           height: 14,
           pageIndex: target.index,
           justification: WmlJustification.left,
-          overlayText: '${note.id}. ${note.text}',
+          overlayText: text,
           overlaySize: 10,
         ),
       );
@@ -2462,9 +2482,7 @@ class WordLayoutEngine {
     for (final LaidOutLine line in lines) {
       height = math.max(
         height,
-        footer
-            ? pageHeight - line.y + 6
-            : line.y + line.height + 6,
+        footer ? pageHeight - line.y + 6 : line.y + line.height + 6,
       );
     }
     return height.clamp(28, pageHeight * 0.35).toDouble();
