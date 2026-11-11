@@ -73,12 +73,46 @@ class StartupFailureApp extends StatelessWidget {
     this.locale,
     this.onRetry,
     this.onRestoreStorageAccess,
+    this.onChooseStorage,
   });
 
   final Object error;
   final Locale? locale;
   final VoidCallback? onRetry;
   final VoidCallback? onRestoreStorageAccess;
+
+  /// Receives an explicit, confirmed choice of a different credential store.
+  /// The caller persists it and retries startup with that store.
+  final ValueChanged<CredentialStorageSetupResult>? onChooseStorage;
+
+  Future<void> _chooseStorage(BuildContext context) async {
+    final strings = StartupFailureStrings(context);
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(strings.chooseAnotherStore),
+        content: Text(strings.chooseAnotherStoreWarning),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            key: const ValueKey('startup-choose-store-confirm'),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(strings.chooseAnotherStoreConfirm),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    final result = await showCredentialStorageSetupDialog(
+      context,
+      applyNow: true,
+    );
+    if (result != null) onChooseStorage?.call(result);
+  }
 
   String _message(BuildContext context) {
     final strings = StartupFailureStrings(context);
@@ -130,6 +164,17 @@ class StartupFailureApp extends StatelessWidget {
                     onPressed: onRestoreStorageAccess,
                     child: Text(
                       StartupFailureStrings(context).restoreKeychainAccess,
+                    ),
+                  ),
+                ],
+                if (onChooseStorage != null) ...[
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    key: const ValueKey('startup-choose-store'),
+                    onPressed: () => _chooseStorage(context),
+                    icon: const Icon(Icons.swap_horiz),
+                    label: Text(
+                      StartupFailureStrings(context).chooseAnotherStore,
                     ),
                   ),
                 ],
@@ -388,6 +433,8 @@ Future<CredentialStorageSelection> _initializeWebVaultSelection(
   }
 }
 
+enum _StartupAction { retry, restoreAccess }
+
 Future<CredentialStorageBootstrapResult> _initializeNativeSecureStorage({
   required bool allowFirstSetup,
 }) async {
@@ -506,23 +553,57 @@ Future<CredentialStorageBootstrapResult> _initializeNativeSecureStorage({
             );
       Object safeFailure = const CredentialStorageUnavailable();
       while (true) {
-        final action = Completer<bool>();
+        final action = Completer<Object>();
         runApp(
           StartupFailureApp(
             // Parse, migration, filesystem and platform exceptions may include
             // credentials or paths. Do not render them before profile unlock.
             error: safeFailure,
             onRetry: () {
-              if (!action.isCompleted) action.complete(false);
+              if (!action.isCompleted) action.complete(_StartupAction.retry);
             },
             onRestoreStorageAccess: recovery?.canRestoreKeychainAccess == true
                 ? () {
-                    if (!action.isCompleted) action.complete(true);
+                    if (!action.isCompleted) {
+                      action.complete(_StartupAction.restoreAccess);
+                    }
                   }
                 : null,
+            onChooseStorage: (result) {
+              if (!action.isCompleted) action.complete(result);
+            },
           ),
         );
-        if (!await action.future) break;
+        final chosen = await action.future;
+        if (chosen == _StartupAction.retry) break;
+        if (chosen is CredentialStorageSetupResult) {
+          // The user explicitly confirmed leaving the unavailable store. Its
+          // saved credentials and App Lock policy stay untouched there; the
+          // new store starts without them (see docs/credential-storage.md).
+          // Like the authenticated Settings switch, a file vault is created
+          // only through the password gate, and only when leaving another
+          // mode. An existing vault is unlocked with its own password.
+          try {
+            final failedMode =
+                attemptedSelection?.mode ??
+                CredentialStorageMode.systemKeychain;
+            await CredentialStorageConfig.writeSelection(
+              mode: chosen.mode,
+              customKeychainPath:
+                  chosen.mode == CredentialStorageMode.systemKeychain
+                  ? chosen.keychainPath
+                  : attemptedSelection?.customKeychainPath,
+              createFileVault:
+                  chosen.mode == CredentialStorageMode.encryptedFile &&
+                  (failedMode != CredentialStorageMode.encryptedFile ||
+                      attemptedSelection?.createFileVault == true),
+            );
+            break;
+          } catch (_) {
+            safeFailure = const CredentialStorageUnavailable();
+            continue;
+          }
+        }
         try {
           // A successful grant only retries this store through the ordinary
           // bootstrap and App Lock gates. Cancellation preserves the failure UI.

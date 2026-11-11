@@ -1,5 +1,6 @@
 import 'package:crisp_cloud/main.dart';
 import 'package:crisp_cloud/services/credential_storage_bootstrap.dart';
+import 'package:crisp_cloud/services/credential_storage_config.dart';
 import 'package:crisp_cloud/services/credential_storage_recovery.dart';
 import 'package:crisp_cloud/widgets/credential_storage_setup.dart';
 import 'package:flutter/material.dart';
@@ -59,6 +60,49 @@ void main() {
       expect(find.byType(CredentialStorageSetupPanel), findsNothing);
       expect(find.text('This session only'), findsNothing);
       expect(find.text('Create vault'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'unavailable storage offers an explicit, confirmed choice of another store',
+    (tester) async {
+      tester.view.physicalSize = const Size(1200, 1600);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      CredentialStorageSetupResult? chosen;
+      await tester.pumpWidget(
+        StartupFailureApp(
+          error: const CredentialStorageUnavailable(),
+          onRetry: () {},
+          onChooseStorage: (result) => chosen = result,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const ValueKey('startup-choose-store')));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('neither used nor deleted'), findsOneWidget);
+      // Cancelling the warning keeps the failure screen and chooses nothing.
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(find.byType(CredentialStorageSetupPanel), findsNothing);
+      expect(chosen, isNull);
+
+      await tester.tap(find.byKey(const ValueKey('startup-choose-store')));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const ValueKey('startup-choose-store-confirm')),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(CredentialStorageSetupPanel), findsOneWidget);
+      expect(find.text('Save and restart later'), findsNothing);
+
+      await tester.tap(find.text('This session only'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('credential-setup-continue')));
+      await tester.pumpAndSettle();
+      expect(chosen?.mode, CredentialStorageMode.sessionOnly);
+      expect(find.byType(CredentialStorageSetupPanel), findsNothing);
     },
   );
 
