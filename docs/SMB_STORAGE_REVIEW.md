@@ -1,46 +1,33 @@
 # SMB storage review — 11 November 2026
 
 ## Current implementation
-`packages/crisp_storage` pins `dart_smb2 0.2.1` (BSD wrapper) and therefore
-uses LGPL-2.1 libsmb2. `SmbSession` uses one worker isolate per pool, signing,
-SMB3 encryption by default, 256 KiB reads and size/mtime/change-time resume
-validators. `SmbClientAdapter` adds file-manager writes and secure credentials.
-CrisperPlayer consumes an older immutable revision of this package.
+CrispCloud GUI and CLI use `packages/crisp_storage`. It offers `libsmb2`, `rust`
+and `auto` per connection, with libsmb2 still the default. Auto falls back only
+when the Rust library cannot load before authentication; authentication, network
+and security failures never trigger an engine switch. Signing and required SMB3
+encryption remain the defaults. Settings and CLI examples are in
+[SMB_RUST_ROLLOUT.md](SMB_RUST_ROLLOUT.md).
 
-## Priorities
-1. Remove the extra IOSink flush round trip after every download chunk while
-   retaining awaited, bounded disk writes, resume safety and prompt cancellation.
-2. Allow a session to retry a failed initial connection instead of caching a
-   failed future forever; concurrent initial callers must still share one open.
-3. Qualify session reuse/concurrency at the adapter boundary before increasing
-   worker counts. Large-folder paging and server-side copies require explicit
-   backend support and should not silently weaken existing limits.
+The shared Dart API calls a permissively licensed Rust SMB core through FFI.
+CrispSorter consumes that same core directly; CrisperPlayer pins the shared Dart
+package at an immutable commit. We do not maintain a Dart SMB protocol port.
 
-## Permissive replacement decision
-SMB3 encryption and signing are existing product requirements. smb_connect
-(Apache-2.0, advertised through SMB2.1) and Swift SMBClient (MIT, advertised
-SMB2.0) are not equivalent replacements. SMBJ (Apache-2.0) only solves the
-Java/Android side. A shared Go or Rust SMB2/3 engine is a candidate, not an
-approved dependency: validate exact releases, transitive licenses, all target
-ABIs, authentication, required signing/encryption, cancellation, validated resume
-and malicious-path cases before switching. Preserve current native notices.
+The fallback is dart_smb2 0.2.5+crisp.1 (BSD wrapper) over LGPL-2.1-or-later libsmb2
+r10. The Apple recipe is rebuilt with install-name padding; other targets use
+checksum-verified release binaries. See the [packaging patch](../packages/dart_smb2/CRISP_PATCHES.md).
+Keeping this fallback does not remove LGPL distribution requirements.
 
-No LGPL-removal or throughput claim is made by this review. Real SMB3
-interoperability and performance measurements require suitable servers/devices.
+## Implemented protections
+Downloads use bounded, awaited disk writes and validated staging/resume metadata.
+Failed initial opens can retry without leaking parallel sessions. Rust validates
+paths, caps chunks and handles, propagates cancellation and redacts remote errors.
+The CLI uses the same adapter contract for streaming uploads, downloads and
+mutations; the GUI exposes the same backend choices.
 
-## Implemented and validated on this branch
-- Awaited RandomAccessFile writes replace per-chunk IOSink add/flush pairs.
-  Each progress callback runs after the chunk write; memory remains bounded by
-  the read chunk, and interruption closes the local handle before returning.
-- Failed initial pool opens are cleared while concurrent callers share the
-  same in-flight future. Closed sessions still cannot reopen.
-- `dart test` in `packages/crisp_storage`: 15 tests passed with the opt-in
-  impacket fixture enabled, including initial failure/retry, concurrent browse,
-  partial-write resume, changed-source restart and size-limit rejection.
-- `dart analyze`: no errors/warnings; eight existing style informational
-  diagnostics. No full Flutter app or physical SMB3 server test was run here.
-- Updated the package README, which incorrectly said direct SMB was absent.
-
-CrisperPlayer's existing immutable pin is deliberately unchanged in its sibling
-branch. Adopting these shared changes there also requires regenerating its
-dependency and native-license evidence; this commit is not silently propagated.
+## Validation and remaining qualification
+Shared transport and complete CLI tests pass with a local authenticated SMB2
+fixture. CI covers Flutter controls/adapters, native host builds and Apple
+packaging. The source archive hash and all vendored patches are validated.
+A fixture does not establish SMB3 encrypted interoperability, performance,
+physical-device support or final signed-app license compliance. Those remain
+release qualification gates; do not switch the default on fixture results alone.

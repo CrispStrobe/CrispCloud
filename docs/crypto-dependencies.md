@@ -21,7 +21,7 @@ URL alone does not identify the exact package source used by a release.
 | Filen SDK | [filen_client 0.2.2 archive](https://pub.dev/api/archives/filen_client-0.2.2.tar.gz); [CrispStrobe/filen-dart](https://github.com/CrispStrobe/filen-dart) | `89823f6add3a86aeafee8bc942de43544431ed21faa6cc851a4d6758a0473b05` | MPL-2.0. Vendored local fork; exact changed files and history are in [UPSTREAM.md](../packages/filen_client/UPSTREAM.md). |
 | Internxt SDK | [internxt_client 0.2.3 archive](https://pub.dev/api/archives/internxt_client-0.2.3.tar.gz); [CrispStrobe/internxt-dart](https://github.com/CrispStrobe/internxt-dart) | `c730aeb1779104bd42b27c6215bcf1b62b73c2979e9d570a5e61ed187b760469` | MPL-2.0. Hosted package, with application storage and transfer adapters. |
 | OpenPGP dependency | [dart_pg 2.1.0 archive](https://pub.dev/api/archives/dart_pg-2.1.0.tar.gz); [web-of-trust/dart-pg](https://github.com/web-of-trust/dart-pg) | `9f4f5a41c8282ac5f6a32e816a1fe4a5f2d54ec6527b57ce11d1f328140eda0c` | BSD-3-Clause text in the archive. Internxt's active key-generation path uses this implementation. |
-| SMB Dart wrapper | [dart_smb2 0.2.1 archive](https://pub.dev/api/archives/dart_smb2-0.2.1.tar.gz); [ales-drnz/dart_smb2](https://github.com/ales-drnz/dart_smb2) | `ba54193d234f49a92e54222e5300bc4c901063457e8af2abfb4ac3153ac923eb` | BSD-3-Clause wrapper; separate LGPL native library, detailed below. |
+| SMB Dart wrapper | [Crisp dart_smb2 fork](../packages/dart_smb2/CRISP_PATCHES.md), upstream 0.2.5 | Exact source in this repository; upstream recipe hashes in [UPSTREAM.json](../packages/dart_smb2/UPSTREAM.json) | BSD-3-Clause wrapper; separate LGPL native library, detailed below. |
 | SSH/SFTP | [dartssh2 4.1.0 archive](https://pub.dev/api/archives/dartssh2-4.1.0.tar.gz); [vicajilau/dartssh2](https://github.com/vicajilau/dartssh2) | `39359aceafcf5940b868249e3c9c6d86e4e0f989eec7417d033c943157c84c51` | MIT. Pure Dart protocol using PointyCastle and PineNaCl. |
 | Local database | [CrispStrobe/libdbm](https://github.com/CrispStrobe/libdbm/tree/547b5bfce1d3cd663810a3ceae35336857956139), version 0.2.1 | Git `547b5bfce1d3cd663810a3ceae35336857956139` | Apache-2.0. Pure Dart database; no native assets or cryptographic package dependencies at this revision. |
 
@@ -190,18 +190,21 @@ implementation and interoperability review.
 
 ## Native SMB library
 
-`dart_smb2` 0.2.1's `hook/build.dart` downloads **libsmb2-r9** from the public
-[release](https://github.com/ales-drnz/dart_smb2/releases/tag/libsmb2-r9) and
+`dart_smb2` 0.2.5+crisp.1's `hook/build.dart` downloads **libsmb2-r10** on non-Apple targets from the public
+[release](https://github.com/ales-drnz/dart_smb2/releases/tag/libsmb2-r10) and
 verifies a fixed SHA-256 for each native artifact. The existing
 [NOTICE-LIBSMB2.txt](../packages/crisp_storage/NOTICE-LIBSMB2.txt) identifies the
 LGPL-2.1-or-later library and corresponding build-source commit.
+Apple targets instead compile the same pinned source using the vendored recipe
+with install-name header padding. Their final signed binary hashes must be
+recorded per build; upstream Apple archive hashes do not describe our binaries.
 
 - Build recipes: [ales-drnz/libsmb2-scripts at
-  `f2695f24c0db8984cd0593738b72004ab48cfe1b`](https://github.com/ales-drnz/libsmb2-scripts/tree/f2695f24c0db8984cd0593738b72004ab48cfe1b).
+  `eca28a3ef007d6c268ebfd4a4950a0c28de6335c`](https://github.com/ales-drnz/libsmb2-scripts/tree/eca28a3ef007d6c268ebfd4a4950a0c28de6335c).
 - Those recipes pin [sahlberg/libsmb2 at
-  `e94eee9465d55ed094ace2c038a8705b4822dada`](https://github.com/sahlberg/libsmb2/tree/e94eee9465d55ed094ace2c038a8705b4822dada).
+  `4d9ce67863332462236d86bf76c85617a0b2897d`](https://github.com/sahlberg/libsmb2/tree/4d9ce67863332462236d86bf76c85617a0b2897d).
 - The source archive hash in `scripts/shared/_versions.sh` is
-  `7f347c08c8cb66a94e42d1cac4686e71a093a7022e7e77cb5cc9325b8369b0ce`;
+  `6c34870b2aef319b5415e9912b406f922e03f127c072764ceca78139e6d94b7a`;
   the downloaded native source archive was checked against this digest.
 - These recipes compile the public native source, excluding `krb5-wrapper.c`;
   they do not enable the GSSAPI/Kerberos wrapper. SMB signing and SMB3 encryption
@@ -217,15 +220,17 @@ are additional application crypto, even on Apple: the conditional
 `lib/aes_apple.c` backend accelerates the AES block through CommonCrypto, while
 the library supplies the CCM/CMAC composition and protocol implementation.
 
-The reviewed hook's store-platform artifact hashes are:
+The non-Apple hook artifact hashes are:
 
 | Artifact | SHA-256 |
 | --- | --- |
-| Android arm64 | `d9af2446788f5eb298065312fcb21b11ebd7af83510bbfb0c09d8a6075bb2cf2` |
-| Android armv7 | `54d3e5c85fe824f426da21028500a825d1ee4ae7dd46a2cfc8e74f2e4e603d36` |
-| Android x86_64 | `e740406fb7e97c2b6aa1eb65864b348a9b720b07c1ff90b75e6e5be12beee205` |
-| iOS XCFramework | `a1f0b15bf0f173165e36abcfcea3b944f469fc2c7e3bd2b6d3d16df7a6c38f63` |
-| macOS XCFramework | `922defa3509e550d32d66d7e8f84ef95ddf53fb9bb96a8ff85e01537765129e6` |
+| libsmb2_android-arm64-v8a.so | `af27ac23a6c25843dbd3ae47023f1131b9593344125238374ed5e5577e33d73e` |
+| libsmb2_android-armeabi-v7a.so | `9074910ca1f1bc347f3b65f1a92d6b7f77ec70a9280918e4f7f22ea2f707612e` |
+| libsmb2_android-x86_64.so | `5db4be4402f379f6091f3710d7230de1bbba54c8360054930e915a418cbbf01f` |
+| libsmb2_linux-aarch64.so | `ed0b1858e97f74b117206a01aa2fc1be70c45027bb7fa92702ab4eee09e9aa23` |
+| libsmb2_linux-x86_64.so | `4612ed4499f4c066d0db295679469c62545c6252849bfa61eb5f45ec1bbd3577` |
+| libsmb2_windows-arm64.dll | `3ce1899948bdc16108d18669ca3d4c7428cfa31b7b9efab72a4dff1d40cf7819` |
+| libsmb2_windows-x86_64.dll | `e0aba8b2feb469b053abbfa6c305b362fee7a88c13edcddddf430d33a920377c` |
 
 The hook accepts `hooks.user_defines.dart_smb2.libsmb2` as a custom local library
 override. That path bypasses the published artifact selection and its digest
@@ -236,14 +241,14 @@ link and permissive availability are distinct from fulfilling each dependency's
 license conditions.
 
 **Conditional desktop hardening issue:** the pinned
-[`smb2_random_bytes`](https://github.com/sahlberg/libsmb2/blob/e94eee9465d55ed094ace2c038a8705b4822dada/lib/init.c)
+[`smb2_random_bytes`](https://github.com/sahlberg/libsmb2/blob/4d9ce67863332462236d86bf76c85617a0b2897d/lib/init.c)
 returns an error after falling back to `random()` when strong sources fail, but
-[`smb3_encrypt_pdu`](https://github.com/sahlberg/libsmb2/blob/e94eee9465d55ed094ace2c038a8705b4822dada/lib/smb3-seal.c)
+[`smb3_encrypt_pdu`](https://github.com/sahlberg/libsmb2/blob/4d9ce67863332462236d86bf76c85617a0b2897d/lib/smb3-seal.c)
 ignores that status when generating the 11-byte CCM nonce. The pinned build
-[configuration](https://github.com/ales-drnz/libsmb2-scripts/blob/f2695f24c0db8984cd0593738b72004ab48cfe1b/scripts/shared/config/config.h)
+[configuration](https://github.com/ales-drnz/libsmb2-scripts/blob/eca28a3ef007d6c268ebfd4a4950a0c28de6335c/scripts/shared/config/config.h)
 uses `arc4random_buf` on Apple/Android and compiles out this fallback there.
 Linux requires both `getrandom` and `/dev/urandom` to fail; the Windows
-[CSPRNG patch](https://github.com/ales-drnz/libsmb2-scripts/blob/f2695f24c0db8984cd0593738b72004ab48cfe1b/patches/libsmb2/windows/patch_windows_csprng.py)
+[CSPRNG patch](https://github.com/ales-drnz/libsmb2-scripts/blob/eca28a3ef007d6c268ebfd4a4950a0c28de6335c/patches/libsmb2/windows/patch_windows_csprng.py)
 also permits fallback after BCrypt failure. CCM requires unique nonces per
 key, so the concern is repetition risk from weak/resettable PRNG state, not
 predictability alone. Propagate failure and stop encryption upstream. This

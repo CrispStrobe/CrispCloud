@@ -1,7 +1,7 @@
 dart_smb2 is licensed under the BSD 3-Clause License (see LICENSE).
 
 Apps built with dart_smb2 also bundle libsmb2, which the package's build
-hook downloads for each target:
+hook downloads for non-Apple targets and builds from source on Apple:
 
   libsmb2 - SMB2/3 client library
   Copyright (C) Ronnie Sahlberg and the libsmb2 contributors
@@ -21,3 +21,6 @@ not list libsmb2 by itself: an app that shows one adds it, for example with
 LicenseRegistry.addLicense and the texts of the release. The library is
 loaded dynamically, and hooks.user_defines.dart_smb2.libsmb2 replaces it
 with another build (see the package README).
+
+Crisp packaging modification: Apple targets use the pinned r10 source recipe
+with install-name header padding. See CRISP_PATCHES.md and UPSTREAM.json.

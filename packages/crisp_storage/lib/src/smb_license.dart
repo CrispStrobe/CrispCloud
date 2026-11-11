@@ -3,7 +3,7 @@ const smbLicense = r'''
 dart_smb2 is licensed under the BSD 3-Clause License (see LICENSE).
 
 Apps built with dart_smb2 also bundle libsmb2, which the package's build
-hook downloads for each target:
+hook downloads for non-Apple targets and builds from source on Apple:
 
   libsmb2 - SMB2/3 client library
   Copyright (C) Ronnie Sahlberg and the libsmb2 contributors
@@ -24,7 +24,12 @@ LicenseRegistry.addLicense and the texts of the release. The library is
 loaded dynamically, and hooks.user_defines.dart_smb2.libsmb2 replaces it
 with another build (see the package README).
 
-Bundled release: libsmb2-r10 (Apple builds include linker header padding)
+Crisp Apple builds add -Wl,-headerpad_max_install_names to the r10 recipe.
+Exact recipe and original-file hashes:
+https://github.com/CrispStrobe/CrispCloud/tree/445c20bfc9d15b40ed65fde07bd0f0198963ff30/packages/dart_smb2
+Upstream libsmb2 source: 4d9ce67863332462236d86bf76c85617a0b2897d
+
+Bundled release: libsmb2-r10
 Source and build scripts (commit eca28a3ef007d6c268ebfd4a4950a0c28de6335c): https://github.com/ales-drnz/dart_smb2/releases/tag/libsmb2-r10
 
                   GNU LESSER GENERAL PUBLIC LICENSE
@@ -530,4 +535,4 @@ necessary.  Here is a sample; alter the names:
 
 That's all there is to it!
 
-''' ;
+''';
