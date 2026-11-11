@@ -1,7 +1,7 @@
 {
   "source_repository": "CrispStrobe/quds_office_suite",
   "source_branch": "feature/office-fidelity-oracles",
-  "source_commit": "a79b7d832e080e6e551547ec79c0bb83b7312710",
+  "source_commit": "2873f6db4b9a0fa728dfb24907506f09b147ebae",
   "files": {
     "packages/quds_office_editor/lib/src/editor_word/render_word_canvas.dart": "0f903efc8144c1e4098211341603b42c051bbeb1ece4e68942f46423dc88ddb3",
     "packages/quds_office_editor/lib/src/embed/office_controller.dart": "29a540627c0a92d5149e84b49b0d833a877165558ee39e5bb3adcaa55cd78f33",
