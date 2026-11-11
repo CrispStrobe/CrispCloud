@@ -85,11 +85,34 @@ Flutter supports `libsmb2` (default), strict `rust`, and `auto`; Auto falls back
 only if the native Rust library/bridge cannot initialize before credentials or
 network activity. Sorter supports explicit `mounted` or `rust`, with no Auto.
 
-For Filen/Internxt, a future per-account setting could offer `dart`, strict
-`rust`, and `auto`. These are proposed values, not existing GUI controls or CLI
-flags. Keep Dart as the Flutter default during qualification. Sorter should keep
-its native clients and use the same shared Rust source; embedding a Dart VM just
-for a second provider implementation adds a separate runtime and packaging cost.
+For Filen/Internxt, retain the existing Dart and Rust clients as supported,
+selectable engines. Both run behind one provider contract and must pass the
+same tests. Keeping both is an intentional compatibility option, not merely a
+promise to remove Dart after the first Rust rollout.
+
+The planned settings are:
+
+| Scope / value | Behavior |
+| --- | --- |
+| App default per provider | Filen and Internxt each initially use `dart`; defaults can change independently after qualification |
+| Account: app default | An absent override inherits that provider's default |
+| Account: `dart` | Strict Dart selection |
+| Account: `rust` | Strict Rust selection; unavailable native support is an error |
+| Account: `auto` | Prefer Rust, with Dart fallback only when locally unavailable before authentication/work |
+
+These are planned settings, not existing Filen/Internxt GUI controls or CLI flags.
+A later default flip to `auto` enables Rust-preferred operation with the bounded
+fallback policy. It affects new sessions/jobs on inheriting accounts. Explicit
+Dart/Rust overrides remain intact, and active transfers retain their original
+engine. A paused job needs checkpoint validation or a safe restart before using
+a different engine. GUI and CLI must expose the configured policy and effective
+engine, and allow a manual override for a problematic account/provider.
+
+Sorter continues to consume Rust directly. Keeping both language packages does
+not itself make Dart callable from a Rust application: a Sorter Dart option
+would require an explicit worker/runtime, packaging and platform tests. Treat
+that as a separate desktop compatibility feature if needed, while retaining
+both Dart/Rust choices in the Flutter consumers.
 
 | Event | Required behavior |
 | --- | --- |
@@ -164,9 +187,10 @@ to require its LGPL distribution materials.
 4. Integrate Rust Internxt with shared login/2FA and session-renewal tests. Player
    currently has its own renewal adapter; consolidate behavior through tests,
    rather than discarding that compatibility fix.
-5. Offer explicit Rust selection and constrained Auto after platform and
-   compatibility gates pass. Change native defaults only on measured evidence;
-   reassess the ongoing cost of shipping two engines after the transition.
+5. Offer app defaults, per-account overrides and constrained Auto after platform
+   and compatibility gates pass. Keep both engines supported and tested. Flip
+   each provider's native default only on measured evidence; retiring an engine
+   would be a separate decision, not an assumed outcome of this migration.
 
 Required coverage before promotion:
 
@@ -176,7 +200,7 @@ Required coverage before promotion:
 | Authentication | Correct/incorrect credentials, 2FA, revoked sessions, single-flight Internxt renewal, account change during an operation |
 | Transfers | Empty/large files, range/seek, bounded memory, backpressure, cancellation, process restart and validated resume |
 | Failures | Corrupt/truncated data, changed source, disk full, short writes, quota/rate limit, interrupted/ambiguous mutations without cross-engine replay |
-| Settings | Save/reload, legacy defaults, invalid values, requested/effective engine, active-job guards and both GUI/CLI paths |
+| Settings | Save/reload, legacy inheritance, invalid values, requested/effective engine, default flips preserving explicit overrides and active jobs, and both GUI/CLI paths |
 | Runtime | Native-library absence, bridge initialization, worker lifecycle and no UI/async-runtime blocking |
 | Platforms | Linux/macOS/Windows and supported mobile ABIs/devices; browser checks as a separate target |
 | Distribution and performance | Exact source/license/native evidence; comparable throughput/CPU/memory/first-audio measurements |
