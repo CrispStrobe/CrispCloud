@@ -1,114 +1,254 @@
 # Office import/edit/export fidelity
 
 CrispCloud resolves `quds_office_engine` and `quds_office_editor` through local
-path overrides. These vendored packages therefore need explicit synchronization
-with the `crispcloud` fork; changing the upstream branch alone cannot update the
-running app.
+path overrides. These vendored packages need explicit synchronization with the
+Quds fork; changing the upstream branch alone cannot update the running app.
+The host also has its own save, preview and content-search behavior, which is
+tested separately from the engine.
 
-`tool/office_fidelity_manifest.json` records the source commit and SHA-256 hashes
-for the shared implementation, scenario, fixture and golden files in this
-change. The guard reports the current file count and checks only those files,
-preserving unrelated host changes.
+## Current integrated milestone
 
-## Run
+App checkpoint
+[`78e65b9`](https://github.com/CrispStrobe/CrispCloud/commit/78e65b9eecd7861c95433819d11ac39375c40f9c)
+pins Quds source commit
+[`14fa25f`](https://github.com/CrispStrobe/quds_office_suite/commit/14fa25f5e0775cc6468fc08d064cbb476d942215).
+Both repositories use the continuation branch
+`feature/office-fidelity-completion-20261111`, preserving their earlier
+unmerged fidelity work. The
+[vendor manifest](../tool/office_fidelity_manifest.json) records the exact source
+commit and SHA-256 hashes of **142 shared files**, including implementation,
+scenarios, authored fixtures, semantic/visual goldens and the external schema
+validator. The guard checks these files without absorbing unrelated host code.
 
-From the repository root, using the app's Flutter 3.47.8 toolchain:
+**The final source followup is still pending integration.** This milestone
+contains only the pinned source above. Further imported-note formatting,
+style-transition, paragraph-border/spacing and drawing-distance corrections
+under development in the source checkout must receive their own immutable
+source checkpoint, vendor comparison and host verification before they count
+as app fixes.
+
+The following results were verified locally for this milestone on 2026-11-11:
+
+| Evidence | Result |
+| --- | --- |
+| Vendor guard | All 142 pinned files match |
+| Portable engine regression selection | 136 Dart tests pass |
+| Executable operation catalog | All 43 public operations appear in committed scenarios |
+| Engine semantic/mutation/inventory controls | 84 Python tests pass |
+| Engine output inventory | All 111 required Office files exist and are checked |
+| Actual app controller, widget, preview, search and service cohort | 97 Flutter tests pass |
+| Host inventory controls | 8 Python tests pass |
+| Host coverage-report controls | 4 Python tests pass |
+| Actual host DOCX inventory | All 14 required files exist and are checked |
+| External Open XML SDK: actual host files | 14 packages, zero validation errors |
+| External Open XML SDK: combined engine and host snapshot | 125 packages, zero validation errors |
+| Office host line execution | 1,952 / 3,557 instrumented lines, 54.9%; all 9 matching source files instrumented |
+
+The SDK's valid and deliberately invalid self-test controls also pass. These
+are local results; GitHub Actions run
+[`43101519120`](https://github.com/CrispStrobe/CrispCloud/actions/runs/43101519120)
+was queued when this milestone was recorded. A queued remote run is not a
+completed CI result.
+
+The committed [host execution-gap report](office-host-coverage-gaps.json) lists
+every uncovered instrumented line, file totals and source hashes. Its source
+commit is the app checkpoint above and its Office source tree is clean. The
+54.9% figure measures line execution in this cohort; it does not measure branch
+correctness or completeness of Office format support. The original precommit
+run report remains in the build evidence with its original dirty-source flag.
+
+## Run the integration gate
+
+From the repository root, using the app's Flutter **3.47.8** toolchain:
 
 ```sh
 flutter pub get
 bash tool/check_office_fidelity.sh
 ```
 
-The script checks vendored hashes, runs the independent DOCX/XLSX/PPTX corpus,
-runs root controller and widget regressions and independently inspects the
-asynchronous-save DOCX produced by the controller. It includes the app's
-formatting, minimal-edit round-trip, header editing, select-all, preview/PDF
-services, ribbon, paragraph-dialog and real host save checks.
+The script checks the pinned files, runs the portable DOCX/XLSX/PPTX corpus and
+independent semantic oracles, requires every engine output, then runs the host
+cohort with fresh LCOV. It verifies the exact host output inventory and checks
+the unchanged controller export with the independent ZIP/XML oracle. It deletes
+only the expected host artifacts and the intended LCOV before the relevant
+tests, preventing stale output from satisfying a missing test.
 
 On Linux, native hooks need a C/C++ compiler. CI installs clang and SQLite
-development files, then uses the existing system-SQLite wrapper:
+development files and uses the existing system-SQLite wrapper:
 
 ```sh
 python3 tool/with_ci_system_sqlite.py bash tool/check_office_fidelity.sh
 ```
 
-The GitHub workflow `.github/workflows/office-fidelity.yml` runs this command and
-uploads exported files and JSON oracle reports. It runs on `main`, on
-`feature/office-fidelity-*` pushes, and on pull requests changing the vendored
-packages, Office host, captured save target, relevant tests or toolchain pins.
+The wrapper restores the app's `pubspec.yaml` after the command. Keep its
+temporary native-hook override out of commits.
 
-To compare against a sibling fork checkout as well as the manifest:
+With .NET 8 available, the independent schema checks can run locally too:
+
+```sh
+dotnet run --project tool/office-validation -- --self-test
+dotnet run --no-build --project tool/office-validation -- build/fidelity-host build/external/host-schema-report.json
+dotnet run --no-build --project tool/office-validation -- build/fidelity build/external/controller-schema-report.json
+dotnet run --no-build --project tool/office-validation -- packages/quds_office_engine/build build/external/engine-schema-report.json
+```
+
+The validator recursively finds Office packages below its input directory. The
+first host directory contains 13 outputs; the unchanged controller document is
+the fourteenth and lives in `build/fidelity/`. CI validates both together with
+the engine exports after downloading the exact evidence artifact.
+
+## Actual host saves and command history
+
+[The save widget tests](../test/widget/office_save_fidelity_test.dart) open the
+real `OfficeEditorDialog` through a verified remote file listing and delay its
+upload using an in-memory storage client. They inspect the **actual attempted
+upload bytes** using independent ZIP/XML readers. The four cases cover:
+
+- Text, heading/style, paragraph, note and picture edits made while an older
+  snapshot is uploading. The old success leaves the newer revision dirty;
+  the second save contains those changes and cleans that revision.
+- Save and Close during a pending edit. The dialog stays open until the newer
+  revision has been saved.
+- Selection/caret/render notifications during upload. These do not create
+  document edits or prevent a successful clean save.
+- A failed upload followed by a successful retry. The original bytes and
+  unsaved changes remain available, and the retry writes the intended content.
+
+The host records command revisions separately from rendering notifications.
+Only a successful write to the captured original target can mark the captured
+revision clean. This cohort exercises actual app loading, serialization,
+target selection and dirty/close state with deterministic storage. Live storage
+provider behavior requires separate provider tests.
+
+[The section/text command tests](../test/office_section_break_fidelity_test.dart)
+start with independently authored source XML and use the actual host controller
+to insert a `nextPage` section break, edit body/header text with LF/CRLF/CR/tabs,
+insert a footnote, undo and redo. Each scenario is saved and reopened three
+times. The assertions read exported XML directly, retaining page-number starts,
+grids, gutters, line-number settings, all six header/footer variants, historical
+section metadata, note identity and real Word break/tab tokens.
+
+The external schema check exposed a defect that content assertions alone
+missed: cloned historical section properties reused a `sectPrChange` ID. The
+pinned engine now allocates stable unique IDs while preserving the source
+history. The host regression requires both uniqueness and stability across all
+three saves, and all resulting packages pass SDK validation.
+
+The [host artifact manifest](../tool/office_host_evidence.json) declares exactly
+14 documents: seven snapshots from the four save cases, three section exports,
+three text-break exports and one unchanged-controller export. The inventory
+helper requires the full expected paths, verifies ZIP/main-part integrity and
+records sizes/SHA-256 values. Missing, duplicate, ambiguous, unexpected or
+escaping-symlink evidence fails the gate. Its controls also cover the wrapper
+directory introduced by GitHub artifact downloads.
+
+## F3 preview and content-search fidelity
+
+[The preview tests](../test/office_preview_fidelity_test.dart) author ZIP/XML
+fixtures independently of Quds. F3 preview honors explicit false bold/italic,
+retains tabs and hard line breaks, resolves main-part and note relationships,
+and includes referenced footnote/endnote bodies. Repeated references keep the
+same preview marker; a footnote and endnote with the same stored ID remain
+distinct. Preview markers follow a shared reading-order sequence; custom Word
+note numbering and pagination remain outside this preview model.
+
+Spreadsheet previews follow workbook relationship order and authored names,
+including empty sheets and relocated shared strings. They exclude unrelated
+worksheet files and external or escaping targets. Only packages without a
+workbook part use a naturally sorted filename fallback. Authored names remain
+document content; localization applies to generated `Sheet N` headings.
+
+[The content-search tests](../test/office_search_fidelity_test.dart) cover the
+corresponding package graph independently. DOCX search includes the owning
+main part, referenced headers/footers and referenced footnote/endnote bodies.
+XLSX search follows workbook order and resolves used shared strings. PPTX
+search follows presentation order and each selected slide's owning notes.
+Unrelated XML, orphan stories and external relationships are excluded. Search
+accepts Transitional and Strict namespace variants; that scoped test does not
+claim full Strict editing support in the engine or preview.
+
+All selected XML reads share a cumulative byte budget, with repeated reads
+cached. Emitted UTF-8 text has a separate limit of the same size, checked before
+accumulation. A small shared-string part referenced by many cells therefore
+cannot expand into unbounded search text. Authored positive and negative controls
+cover that amplification, malformed selected XML, canonical fallback, relocated
+parts and archive-boundary restrictions. The existing recursive search caller
+tests remain in the integration gate.
+
+## Scripted edits, oracles and goldens
+
+The [scenario guide](../packages/quds_office_engine/tool/fidelity/README.md)
+documents inspection/import, export, JSON modification scripts and repeated
+save/reopen commands. The catalog has **25 Word, 10 spreadsheet and 8
+presentation operations**. It includes heading/style definitions, explicit
+run/paragraph formatting, caret notes and rich note stories, paragraph
+split/insert/delete, list restarts, table text, pictures and six header/footer
+variants, sections, cell values/formulas/formatting/dimensions/order, slide
+text/geometry/notes/transitions/order and picture replacement.
+
+Every public operation appears in a committed executable scenario. Unknown
+fields, invalid types/ranges and unsupported operations fail before an existing
+output is replaced. Expectations come from authored XML/JSON, native producer
+fixtures and decoded image pixels. The Python readers inspect exported ZIP/XML
+without importing the Quds serializer's interpretation. Mutation controls
+damage valid outputs and require rejection; normal checks do not regenerate
+expected values.
+
+The portable corpus includes repeated unchanged and edited saves and targeted
+note, style, list, media, compatibility, section, comment and opaque-content
+cases. The source repository also runs full engine/editor suites, rendering
+checks and reviewed Flutter PNG goldens. Its original rich-note page and three
+first/even/default header/footer pages are tested under pinned Flutter
+**3.44.0 on Linux**. Do not refresh those PNGs using the app's different SDK.
+
+## CI evidence and remaining boundaries
+
+The [integration workflow](../.github/workflows/office-fidelity.yml) runs on
+`main`, on `feature/office-fidelity-*` pushes and on pull requests changing the
+packages, relevant host code/tests/helpers or toolchain. Per-branch/PR
+concurrency cancels superseded runs. The dependent external-schema job verifies
+the downloaded host inventory, proves the SDK detects a deliberately invalid
+control, then validates the engine exports and actual host bytes together.
+
+| Evidence | Local path or Actions artifact |
+| --- | --- |
+| Exact host inventory and SHA receipt | `build/fidelity-host/inventory.json` |
+| Fresh host LCOV and detailed gaps | `build/fidelity-host/coverage/lcov.info`, `build/fidelity-host/coverage/gaps.json` |
+| Actual upload and controller documents | `build/fidelity-host/`, `build/fidelity/` |
+| Engine semantic reports and exports | `packages/quds_office_engine/build/fidelity*` |
+| Shared engine/host evidence artifact | `office-host-fidelity-evidence` |
+| Downloaded host inventory and combined SDK report | `build/external/host-inventory.json`, `build/external/schema-report.json` |
+| External schema artifact | `office-host-schema-evidence` |
+
+The [source audit](https://github.com/CrispStrobe/quds_office_suite/blob/feature/office-fidelity-completion-20261111/docs/office-fidelity-audit.md)
+and [gap ledger](https://github.com/CrispStrobe/quds_office_suite/blob/feature/office-fidelity-completion-20261111/docs/office-fidelity-gaps.json)
+map scoped fixes to regressions and record remaining limitations. Their branch
+may advance beyond this app's immutable pin; consult the manifest before
+attributing a source fix to the app. Richer editable content-control/bookmark
+models, referenced sheet renaming, slide-section rewrites and broader OS/font/
+layout combinations remain acceptance boundaries. Retaining an opaque payload
+does not establish that the editor can render or edit it.
+
+Open XML SDK validity checks structural conformance. LibreOffice repeated-save
+comparisons check stability in that renderer. Neither establishes pixel identity
+with Microsoft Office or native application certification. The local host
+cohort and explicit execution gaps provide narrower, reproducible evidence.
+
+## Synchronizing the next source checkpoint
+
+Copy only from a known source commit. Compare each existing app path with its
+bytes at the previous manifest pin before applying the new source version; flag
+host customizations for review. Include new shared helpers, tests and fixtures
+in the manifest union, update the hashes and source commit together, then run
+the vendor guard, host gate and external schema gate.
+
+When a sibling checkout is at the selected source revision, compare it too:
 
 ```sh
 python3 tool/verify_office_fidelity.py --source ../quds_office_suite
 ```
 
-## Host save fidelity
-
-`test/widget/office_save_fidelity_test.dart` opens the actual `OfficeEditorDialog`
-through a verified remote file listing and blocks its upload using an in-memory
-storage client. It applies text, heading/style, paragraph, note and picture
-changes while the older snapshot is uploading, then checks the uploaded DOCX
-directly with independent ZIP/XML readers. The older snapshot must not clear
-the newer edits' dirty flag; a second save must include those edits and clean
-the document. Save and Close must keep the editor open when newer edits exist.
-Selection/caret notifications do not count as edits, and failed uploads preserve
-the original bytes and keep the current edits available for retry.
-
-The host tracks command revisions separately from rendering notifications and
-only marks the captured revision clean after the original target reports a
-successful write. Exported host snapshots are retained in
-`build/fidelity-host/`, separately from the unchanged/edited corpus fixtures.
-These tests exercise the app's real loading, serialization, save-target and
-dirty-state wiring with deterministic storage; they do not claim live-provider
-or external Microsoft Office rendering coverage.
-
-## F3 preview fidelity
-
-`test/office_preview_fidelity_test.dart` authors ZIP/XML fixtures independently
-of Quds. The preview honors explicit false bold/italic properties, retains tabs
-and hard line breaks, resolves the package's main part and note relationships,
-and includes referenced footnote/endnote bodies. Repeated references keep the
-same preview marker; footnotes and endnotes with the same stored ID remain
-distinct. Preview markers use a shared sequence in reading order, so they do
-not claim the document's custom Word numbering or pagination.
-
-Spreadsheet previews follow workbook relationship order and authored sheet
-names, including empty named sheets and relocated shared-string parts.
-Unreferenced worksheet files and external or escaping relationship targets are
-excluded. Only packages without a workbook part use the fallback filename scan,
-which sorts numbered sheets naturally. Authored sheet names remain document
-content; localization still applies only to generated `Sheet N` headings.
-
-## Scripted edits and goldens
-
-See [the scenario guide](../packages/quds_office_engine/tool/fidelity/README.md)
-for developer commands to inspect/import/export a DOCX, execute JSON edit steps,
-and maintain independent semantic goldens. Steps cover heading/style/text,
-paragraph/run formatting, footnotes/endnotes and image resizing/replacement.
-
-The shared corpus has three unchanged and three edited save/reopen cycles for
-each of DOCX, XLSX and PPTX. Python checks actual ZIP/XML, relationships and
-picture/opaque-part hashes against authored expectations. Eight negative tests
-exercise the oracles themselves. The reviewed editor PNG is tested by the fork
-under its pinned Flutter 3.44.0 environment; do not silently refresh it using the
-app's different SDK.
-
-## Fixes and limits
-
-The integrated fixes preserve note references through rich edits/history,
-scope note/header hyperlinks correctly, respect explicit formatting defaults,
-retain imported styles/numbering/table borders, split rich paragraphs safely,
-insert notes at the caret and render mixed/multiline note bodies. The full fork
-suites pass 478 engine tests and 228 editor tests, each with one existing skip.
-
-The [fork audit](https://github.com/CrispStrobe/quds_office_suite/blob/feature/office-fidelity-oracles/docs/office-fidelity-audit.md)
-maps fixes to evidence and lists remaining gaps. Its engine coverage report is
-79.4% of instrumented lines, not a claim of complete OOXML support. Dense-page
-footnote reflow, full rich-note layout, more complete style/list handling,
-broader sheet/slide corpus and external Office-renderer validation remain open.
-
-When syncing another change, review each source diff against host customizations,
-copy the selected files, update their hashes and source commit together, then
-run the guard and host suite. Do not update the manifest to conceal unexplained
-source drift, or regenerate goldens merely to make a failing test pass.
+Keep the old snapshot receipts attached to their original revision. Regenerate
+coverage only from matching source/LCOV, and retain its source hashes and dirty
+state. Do not change the manifest to conceal unexplained drift or regenerate a
+golden merely because a failing exporter produced a different result.

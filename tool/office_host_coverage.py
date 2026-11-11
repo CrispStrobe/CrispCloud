@@ -76,9 +76,10 @@ def main():
         report['source_git_commit'] = subprocess.run(
             ['git', 'rev-parse', 'HEAD'], cwd=ROOT, check=True,
             capture_output=True, text=True).stdout.strip()
-        report['source_git_dirty'] = subprocess.run(
-            ['git', 'diff', '--quiet', 'HEAD', '--', *report['source_sha256']],
-            cwd=ROOT, capture_output=True).returncode != 0
+        report['source_git_dirty'] = bool(subprocess.run(
+            ['git', 'status', '--porcelain', '--untracked-files=all', '--',
+             *report['source_sha256']],
+            cwd=ROOT, check=True, capture_output=True, text=True).stdout.strip())
     except (OSError, subprocess.CalledProcessError):
         report['source_git_commit'] = None
         report['source_git_dirty'] = None
