@@ -138,6 +138,12 @@ jobs:
           python3 -m venv "$RUNNER_TEMP/storage-fixture"
           "$RUNNER_TEMP/storage-fixture/bin/pip" install --quiet paramiko impacket
 
+      - name: Shared SMB reconnect and resume regression
+        working-directory: packages/crisp_storage
+        env:
+          CRISPER_SMB_PYTHON: ${{ runner.temp }}/storage-fixture/bin/python
+        run: dart test test/smb_transfer_test.dart
+
       - name: Export dependency inventory
         run: |
           dart pub deps --json > dependency-inventory.json
