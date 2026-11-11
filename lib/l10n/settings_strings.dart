@@ -59,6 +59,10 @@ const _translations = <String, Map<String, String>>{
         "Geben Sie einen Pfad und ein Passwort für den neuen Schlüsselbund ein.",
     "The system keychain is unavailable. Choose an encrypted file or session-only storage.":
         "Der Schlüsselbund des Systems ist nicht verfügbar. Wählen Sie eine verschlüsselte Datei oder die Speicherung nur für diese Sitzung.",
+    "The selected keychain is locked. Unlock it in Keychain Access, then continue.":
+        "Der ausgewählte Schlüsselbund ist gesperrt. Entsperren Sie ihn in der Schlüsselbundverwaltung und fahren Sie dann fort.",
+    "CrispCloud needs permission to use this keychain file. Choose it in the file dialog to grant access.":
+        "CrispCloud benötigt die Berechtigung, diese Schlüsselbunddatei zu verwenden. Wählen Sie sie im Dateidialog aus, um den Zugriff zu erlauben.",
     "Current session: {mode}": "Aktuelle Sitzung: {mode}",
     "After restart: {mode}": "Nach dem Neustart: {mode}",
     "The current session keeps using its original storage until restart.":
@@ -202,6 +206,10 @@ const _translations = <String, Map<String, String>>{
         "Saisissez un chemin et un mot de passe pour le nouveau trousseau.",
     "The system keychain is unavailable. Choose an encrypted file or session-only storage.":
         "Le trousseau du système est indisponible. Choisissez un fichier chiffré ou un stockage limité à cette session.",
+    "The selected keychain is locked. Unlock it in Keychain Access, then continue.":
+        "Le trousseau sélectionné est verrouillé. Déverrouillez-le dans Trousseaux d’accès, puis continuez.",
+    "CrispCloud needs permission to use this keychain file. Choose it in the file dialog to grant access.":
+        "CrispCloud a besoin d’une autorisation pour utiliser ce fichier de trousseau. Sélectionnez-le dans la boîte de dialogue pour autoriser l’accès.",
     "Current session: {mode}": "Session actuelle : {mode}",
     "After restart: {mode}": "Après redémarrage : {mode}",
     "The current session keeps using its original storage until restart.":
@@ -342,6 +350,10 @@ const _translations = <String, Map<String, String>>{
         "Introduce una ruta y una contraseña para el nuevo llavero.",
     "The system keychain is unavailable. Choose an encrypted file or session-only storage.":
         "El llavero del sistema no está disponible. Elige un archivo cifrado o almacenamiento solo para esta sesión.",
+    "The selected keychain is locked. Unlock it in Keychain Access, then continue.":
+        "El llavero seleccionado está bloqueado. Desbloquéalo en Acceso a Llaveros y continúa.",
+    "CrispCloud needs permission to use this keychain file. Choose it in the file dialog to grant access.":
+        "CrispCloud necesita permiso para usar este archivo de llavero. Selecciónalo en el cuadro de diálogo de archivos para permitir el acceso.",
     "Current session: {mode}": "Sesión actual: {mode}",
     "After restart: {mode}": "Después de reiniciar: {mode}",
     "The current session keeps using its original storage until restart.":
@@ -482,6 +494,10 @@ const _translations = <String, Map<String, String>>{
         "Digite um caminho e uma senha para as novas chaves.",
     "The system keychain is unavailable. Choose an encrypted file or session-only storage.":
         "As chaves do sistema estão indisponíveis. Escolha um arquivo criptografado ou armazenamento somente para esta sessão.",
+    "The selected keychain is locked. Unlock it in Keychain Access, then continue.":
+        "O chaveiro selecionado está bloqueado. Desbloqueie-o no Acesso às Chaves e continue.",
+    "CrispCloud needs permission to use this keychain file. Choose it in the file dialog to grant access.":
+        "O CrispCloud precisa de permissão para usar este arquivo de chaveiro. Selecione-o na caixa de diálogo de arquivos para permitir o acesso.",
     "Current session: {mode}": "Sessão atual: {mode}",
     "After restart: {mode}": "Após reiniciar: {mode}",
     "The current session keeps using its original storage until restart.":
@@ -620,6 +636,10 @@ const _translations = <String, Map<String, String>>{
     "Enter a path and password for the new keychain.": "请输入新钥匙串的路径和密码。",
     "The system keychain is unavailable. Choose an encrypted file or session-only storage.":
         "系统钥匙串不可用。请选择加密文件，或仅在本次会话中保存凭据。",
+    "The selected keychain is locked. Unlock it in Keychain Access, then continue.":
+        "所选钥匙串已锁定。请在“钥匙串访问”中将其解锁，然后继续。",
+    "CrispCloud needs permission to use this keychain file. Choose it in the file dialog to grant access.":
+        "CrispCloud 需要权限才能使用此钥匙串文件。请在文件对话框中选择它以授予访问权限。",
     "Current session: {mode}": "当前会话：{mode}",
     "After restart: {mode}": "重启后：{mode}",
     "The current session keeps using its original storage until restart.":
@@ -746,6 +766,10 @@ const _translations = <String, Map<String, String>>{
     "Enter a path and password for the new keychain.": "新しいキーチェーンのパスとパスワードを入力してください。",
     "The system keychain is unavailable. Choose an encrypted file or session-only storage.":
         "システムキーチェーンを利用できません。暗号化ファイルまたはこのセッションのみの保存を選択してください。",
+    "The selected keychain is locked. Unlock it in Keychain Access, then continue.":
+        "選択したキーチェーンはロックされています。キーチェーンアクセスでロックを解除してから続行してください。",
+    "CrispCloud needs permission to use this keychain file. Choose it in the file dialog to grant access.":
+        "CrispCloud がこのキーチェーンファイルを使用するには許可が必要です。ファイルダイアログでファイルを選択してアクセスを許可してください。",
     "Current session: {mode}": "現在のセッション：{mode}",
     "After restart: {mode}": "再起動後：{mode}",
     "The current session keeps using its original storage until restart.":
@@ -875,6 +899,10 @@ const _translations = <String, Map<String, String>>{
     "Enter a path and password for the new keychain.": "새 키체인의 경로와 비밀번호를 입력하세요.",
     "The system keychain is unavailable. Choose an encrypted file or session-only storage.":
         "시스템 키체인을 사용할 수 없습니다. 암호화 파일 또는 이번 세션만 저장을 선택하세요.",
+    "The selected keychain is locked. Unlock it in Keychain Access, then continue.":
+        "선택한 키체인이 잠겨 있습니다. 키체인 접근에서 잠금을 해제한 후 계속하세요.",
+    "CrispCloud needs permission to use this keychain file. Choose it in the file dialog to grant access.":
+        "CrispCloud가 이 키체인 파일을 사용하려면 권한이 필요합니다. 파일 대화상자에서 파일을 선택하여 접근을 허용하세요.",
     "Current session: {mode}": "현재 세션: {mode}",
     "After restart: {mode}": "다시 시작 후: {mode}",
     "The current session keeps using its original storage until restart.":
@@ -1008,6 +1036,10 @@ const _translations = <String, Map<String, String>>{
         "أدخل مسارًا وكلمة مرور لسلسلة المفاتيح الجديدة.",
     "The system keychain is unavailable. Choose an encrypted file or session-only storage.":
         "سلسلة مفاتيح النظام غير متاحة. اختر ملفًا مشفرًا أو التخزين لهذه الجلسة فقط.",
+    "The selected keychain is locked. Unlock it in Keychain Access, then continue.":
+        "سلسلة المفاتيح المحددة مقفلة. افتح قفلها في تطبيق الوصول إلى سلسلة المفاتيح، ثم تابع.",
+    "CrispCloud needs permission to use this keychain file. Choose it in the file dialog to grant access.":
+        "يحتاج CrispCloud إلى إذن لاستخدام ملف سلسلة المفاتيح هذا. اختره في مربع حوار الملفات للسماح بالوصول.",
     "Current session: {mode}": "الجلسة الحالية: {mode}",
     "After restart: {mode}": "بعد إعادة التشغيل: {mode}",
     "The current session keeps using its original storage until restart.":
