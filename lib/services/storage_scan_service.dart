@@ -29,6 +29,66 @@ class StorageScanService {
     int maxIssues = 1000,
     Duration progressInterval = const Duration(milliseconds: 100),
   }) async {
+    final outcome = await _scan(
+      source,
+      rootPath,
+      retainTree: true,
+      isCancelled: isCancelled,
+      onProgress: onProgress,
+      maxEntries: maxEntries,
+      maxDepth: maxDepth,
+      maxIssues: maxIssues,
+      progressInterval: progressInterval,
+    );
+    final summary = outcome.summary;
+    return StorageScanResult(
+      root: outcome.root!,
+      issues: summary.issues,
+      cancelled: summary.cancelled,
+      limited: summary.limited,
+      sourceChanged: summary.sourceChanged,
+      startedAt: summary.startedAt,
+      completedAt: summary.completedAt,
+      suppressedIssueCount: summary.suppressedIssueCount,
+    );
+  }
+
+  /// Reads the same metadata as [scan], retaining aggregate totals, bounded
+  /// diagnostics, pending directories and the path keys needed to reject
+  /// duplicates. File display nodes and sorted child lists are unnecessary
+  /// for an inline size calculation.
+  Future<StorageScanSummary> scanSummary(
+    StorageScanSource source,
+    String rootPath, {
+    bool Function()? isCancelled,
+    void Function(StorageScanProgress)? onProgress,
+    int maxEntries = 200000,
+    int maxDepth = 200,
+    int maxIssues = 1000,
+    Duration progressInterval = const Duration(milliseconds: 100),
+  }) async => (await _scan(
+    source,
+    rootPath,
+    retainTree: false,
+    isCancelled: isCancelled,
+    onProgress: onProgress,
+    maxEntries: maxEntries,
+    maxDepth: maxDepth,
+    maxIssues: maxIssues,
+    progressInterval: progressInterval,
+  )).summary;
+
+  Future<({StorageNode? root, StorageScanSummary summary})> _scan(
+    StorageScanSource source,
+    String rootPath, {
+    required bool retainTree,
+    bool Function()? isCancelled,
+    void Function(StorageScanProgress)? onProgress,
+    required int maxEntries,
+    required int maxDepth,
+    required int maxIssues,
+    required Duration progressInterval,
+  }) async {
     if (maxEntries < 1 || maxDepth < 0 || maxIssues < 1) {
       throw ArgumentError('Scan limits must be positive (depth may be zero).');
     }
@@ -46,7 +106,7 @@ class StorageScanService {
       isFolder: true,
     );
     var rootBuilder = _NodeBuilder(fallbackRoot);
-    final builders = <_NodeBuilder>[rootBuilder];
+    final builders = retainTree ? <_NodeBuilder>[rootBuilder] : null;
     final pending = ListQueue<(_NodeBuilder, int)>();
     final seen = <String>{source.pathKey(root)};
     final issues = <StorageScanIssue>[];
@@ -57,6 +117,9 @@ class StorageScanService {
     var files = 0;
     var folders = 0;
     var bytes = 0;
+    var unknownSizes = 0;
+    var skippedLinks = 0;
+    var directoriesComplete = false;
     var examined = 0;
     var currentPath = root;
     _NodeBuilder? activeDirectory;
@@ -136,7 +199,8 @@ class StorageScanService {
         );
       }
       rootBuilder = _NodeBuilder(rootItem.copyWith(path: root));
-      builders[0] = rootBuilder;
+      if (builders != null) builders[0] = rootBuilder;
+      directoriesComplete = true;
       pending.add((rootBuilder, 0));
 
       while (pending.isNotEmpty) {
@@ -181,6 +245,7 @@ class StorageScanService {
           rethrow;
         } catch (error) {
           check();
+          directoriesComplete = false;
           issue(
             StorageScanIssue(
               path: currentPath,
@@ -192,6 +257,7 @@ class StorageScanService {
         }
 
         directory.complete = listing.isComplete && listing.issues.isEmpty;
+        directoriesComplete = directoriesComplete && directory.complete;
         for (final problem in listing.issues) {
           issue(problem);
         }
@@ -200,6 +266,7 @@ class StorageScanService {
           if (examined >= maxEntries) {
             limited = true;
             directory.complete = false;
+            directoriesComplete = false;
             issue(
               StorageScanIssue(
                 path: currentPath,
@@ -235,6 +302,7 @@ class StorageScanService {
                       ) ||
                       source.paths.basename(itemPath) != item.name))) {
             directory.complete = false;
+            directoriesComplete = false;
             issue(
               StorageScanIssue(
                 path: itemPath ?? currentPath,
@@ -246,6 +314,7 @@ class StorageScanService {
           }
           if (!seen.add(source.pathKey(itemPath))) {
             directory.complete = false;
+            directoriesComplete = false;
             issue(
               StorageScanIssue(
                 path: itemPath,
@@ -256,11 +325,18 @@ class StorageScanService {
             );
             continue;
           }
-          final child = _NodeBuilder(item);
-          directory.children.add(child);
-          builders.add(child);
+          // A summary only needs directory metadata until descent. It never
+          // allocates or retains one builder/display node for every file.
+          final child = retainTree || (item.isFolder && item.isSymlink != true)
+              ? _NodeBuilder(item)
+              : null;
+          if (retainTree) {
+            directory.addChild(child!);
+            builders!.add(child);
+          }
           if (item.isSymlink == true) {
-            child.complete = true;
+            skippedLinks++;
+            child?.complete = true;
             continue;
           }
           if (item.isFolder) {
@@ -276,15 +352,16 @@ class StorageScanService {
                 ),
               );
             } else {
-              pending.add((child, depth + 1));
+              pending.add((child!, depth + 1));
             }
           } else {
             files++;
             final size = item.size;
             if (size != null && size >= 0 && size <= maxReportedBytes) {
               if (size > maxReportedBytes - bytes) {
-                child.complete = false;
-                child.sizeKnown = false;
+                child?.complete = false;
+                child?.sizeKnown = false;
+                unknownSizes++;
                 limited = true;
                 issue(
                   StorageScanIssue(
@@ -295,9 +372,11 @@ class StorageScanService {
                 );
                 throw const _ScanLimitReached();
               }
-              child.sizeKnown = true;
-              child.complete = true;
+              child?.sizeKnown = true;
+              child?.complete = true;
               bytes += size;
+            } else {
+              unknownSizes++;
             }
           }
           progress();
@@ -326,6 +405,7 @@ class StorageScanService {
       activeDirectory?.complete = false;
     } catch (error) {
       rootBuilder.complete = false;
+      directoriesComplete = false;
       issue(
         StorageScanIssue(
           path: root,
@@ -338,6 +418,7 @@ class StorageScanService {
         if (session != null) await session.close();
       } catch (error) {
         rootBuilder.complete = false;
+        directoriesComplete = false;
         issue(
           StorageScanIssue(
             path: root,
@@ -368,6 +449,7 @@ class StorageScanService {
         );
       } catch (error) {
         rootBuilder.complete = false;
+        directoriesComplete = false;
         issue(
           StorageScanIssue(
             path: root,
@@ -381,7 +463,7 @@ class StorageScanService {
     // Iterative postorder avoids recursion limits and preserves all completed
     // descendants even when a later directory fails or the scan is stopped.
     var aggregated = 0;
-    for (final builder in builders.reversed) {
+    for (final builder in builders?.reversed ?? const <_NodeBuilder>[]) {
       // Keep repaint/cancellation responsive while finalizing a large tree.
       // The root is frozen last, after any late cancellation/source change,
       // so each node still needs only one immutable snapshot.
@@ -408,15 +490,24 @@ class StorageScanService {
       builder.freeze();
     }
     progress(force: true);
-    return StorageScanResult(
-      root: rootBuilder.frozen!,
-      issues: issues,
-      cancelled: cancelled,
-      limited: limited,
-      sourceChanged: sourceChanged,
-      startedAt: startedAt,
-      completedAt: DateTime.now(),
-      suppressedIssueCount: suppressedIssues,
+    return (
+      root: rootBuilder.frozen,
+      summary: StorageScanSummary(
+        rootPath: root,
+        bytes: bytes,
+        fileCount: files,
+        folderCount: folders,
+        unknownSizeCount: unknownSizes,
+        skippedLinkCount: skippedLinks,
+        isComplete: directoriesComplete && unknownSizes == 0,
+        issues: issues,
+        cancelled: cancelled,
+        limited: limited,
+        sourceChanged: sourceChanged,
+        startedAt: startedAt,
+        completedAt: DateTime.now(),
+        suppressedIssueCount: suppressedIssues,
+      ),
     );
   }
 }
@@ -424,7 +515,11 @@ class StorageScanService {
 class _NodeBuilder {
   _NodeBuilder(this.item);
   final FileItem item;
-  final children = <_NodeBuilder>[];
+  // Most entries are leaves. Allocate a mutable list only when a directory
+  // actually has children, and share the immutable empty list for all leaves.
+  List<_NodeBuilder>? _children;
+  List<_NodeBuilder> get children => _children ?? const <_NodeBuilder>[];
+  void addChild(_NodeBuilder child) => (_children ??= []).add(child);
   bool complete = false;
   bool sizeKnown = false;
   StorageNode? frozen;

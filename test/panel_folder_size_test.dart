@@ -341,6 +341,111 @@ void main() {
     expect(folder(panel).calculatedSize, isNull);
   });
 
+  test(
+    'sorting during a scan follows the original row at its new index',
+    () async {
+      cloud.put('/aaa/other.bin', [9, 9]);
+      final panel = await remote();
+      final row = folder(panel);
+      panel.selectVisibleItems([row], cursor: row);
+      final oldIndex = panel.files!.indexWhere((file) => identical(file, row));
+      cloud.blocked['/box'] = Completer<void>();
+      cloud.entered['/box'] = Completer<void>();
+      final pending = panel.calculateFolderSize(row);
+      await cloud.entered['/box']!.future;
+
+      panel.toggleSortOrder();
+      final newIndex = panel.files!.indexWhere((file) => identical(file, row));
+      expect(newIndex, isNot(oldIndex));
+      expect(panel.folderSizeFor(row)?.phase, FolderSizePhase.scanning);
+      cloud.blocked['/box']!.complete();
+
+      expect((await pending)?.phase, FolderSizePhase.complete);
+      final measured = folder(panel);
+      expect(measured.calculatedSize, 3);
+      expect(identical(panel.files![newIndex], measured), isTrue);
+      expect(identical(panel.selection.single, measured), isTrue);
+      expect(panel.originForFile(measured)?.isCurrent, isTrue);
+      expect(folder(panel, 'aaa').calculatedSize, isNull);
+      expect(cloud.scans.where((path) => path == '/box'), hasLength(1));
+    },
+  );
+
+  test(
+    'removing a row from the current list invalidates its cached index',
+    () async {
+      cloud.put('/aaa/other.bin', [9]);
+      final panel = await remote();
+      final row = folder(panel);
+      expect(identical(panel.files!.last, row), isTrue);
+      cloud.blocked['/box'] = Completer<void>();
+      cloud.entered['/box'] = Completer<void>();
+      final pending = panel.calculateFolderSize(row);
+      await cloud.entered['/box']!.future;
+
+      // Change membership without changing the listing generation. The index
+      // hint must prove continued object identity on every authority check.
+      panel.files!.removeWhere((file) => identical(file, row));
+      cloud.blocked['/box']!.complete();
+
+      expect(await pending, isNull);
+      expect(row.calculatedSize, isNull);
+      expect(folder(panel, 'aaa').calculatedSize, isNull);
+      expect(await panel.calculateFolderSize(row), isNull);
+      expect(cloud.scans.where((path) => path == '/box'), hasLength(1));
+    },
+  );
+
+  test(
+    'an equal-path replacement at the hinted index cannot inherit a scan',
+    () async {
+      final panel = await remote();
+      final row = folder(panel);
+      final index = panel.files!.indexWhere((file) => identical(file, row));
+      cloud.blocked['/box'] = Completer<void>();
+      cloud.entered['/box'] = Completer<void>();
+      final pending = panel.calculateFolderSize(row);
+      await cloud.entered['/box']!.future;
+
+      final replacement = row.copyWith();
+      expect(replacement, row);
+      expect(identical(replacement, row), isFalse);
+      panel.files![index] = replacement;
+      cloud.blocked['/box']!.complete();
+
+      expect(await pending, isNull);
+      expect(replacement.calculatedSize, isNull);
+      expect(panel.folderSizeFor(replacement), isNull);
+      expect(panel.originForFile(replacement), isNull);
+      expect(await panel.calculateFolderSize(replacement), isNull);
+      expect(cloud.scans.where((path) => path == '/box'), hasLength(1));
+    },
+  );
+
+  test(
+    'unchanged progress preserves one scanning transition and the final result',
+    () async {
+      final panel = await remote();
+      cloud.scanListings['/box'] = {'files': [], 'folders': []};
+      final phases = <FolderSizePhase?>[];
+      void changed() => phases.add(panel.folderSizeFor(folder(panel))?.phase);
+      panel.addListener(changed);
+      try {
+        final result = await panel.calculateFolderSize(folder(panel));
+        expect(result?.bytes, 0);
+        expect(result?.phase, FolderSizePhase.complete);
+        expect(folder(panel).calculatedSize, 0);
+        expect(phases, [
+          FolderSizePhase.queued,
+          FolderSizePhase.scanning,
+          FolderSizePhase.complete,
+        ]);
+      } finally {
+        panel.removeListener(changed);
+      }
+    },
+  );
+
   test('a refreshed same-path row cannot inherit a late measurement', () async {
     final panel = await remote();
     final row = folder(panel);

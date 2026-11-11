@@ -9,26 +9,37 @@ import sys
 
 root = Path(sys.argv[1]).resolve()
 output = Path(sys.argv[2])
+if not root.is_dir():
+    raise ValueError(f"Fixture root is not a directory: {root}")
 records = []
 directories = []
 totals = {}
-for directory, names, filenames in os.walk(root, followlinks=False):
+
+
+def failed_walk(error):
+    raise error
+
+
+for directory, names, filenames in os.walk(root, followlinks=False, onerror=failed_walk):
     names.sort()
     directory = Path(directory)
     relative_directory = directory.relative_to(root).as_posix()
     if relative_directory == '.':
         relative_directory = ''
     info = directory.stat(follow_symlinks=False)
-    assert stat.S_ISDIR(info.st_mode), directory
+    if not stat.S_ISDIR(info.st_mode):
+        raise ValueError(f"Non-directory fixture entry: {directory}")
     directories.append([relative_directory, info.st_mtime_ns // 1000])
     totals[relative_directory] = [0, 0, 0]
     for name in names:
         info = (directory / name).stat(follow_symlinks=False)
-        assert stat.S_ISDIR(info.st_mode), directory / name
+        if not stat.S_ISDIR(info.st_mode):
+            raise ValueError(f"Non-directory fixture entry: {directory / name}")
     for name in filenames:
         file = directory / name
         info = file.stat(follow_symlinks=False)
-        assert stat.S_ISREG(info.st_mode), file
+        if not stat.S_ISREG(info.st_mode):
+            raise ValueError(f"Non-regular fixture file: {file}")
         relative = file.relative_to(root).as_posix()
         records.append([relative, info.st_size, info.st_mtime_ns // 1000])
         totals[relative_directory][0] += info.st_size

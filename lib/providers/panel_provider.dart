@@ -4722,8 +4722,7 @@ class PanelNotifier extends ChangeNotifier {
 
   // --- Cursor (keyboard focus, separate from selection marks) ---
 
-  /// Plain click: move the cursor and clear selection marks without marking
-  /// the clicked item (Total Commander / Double Commander behavior).
+  /// Plain click moves the cursor and clears marks without marking the row.
   /// Ctrl/Shift clicks still select.
   void setCursorOnly(FileItem item) {
     if (_files == null) return;
@@ -4835,17 +4834,28 @@ class PanelNotifier extends ChangeNotifier {
       return Future.value(previous);
     final generation = _listingGeneration;
     final tab = _activeTabId;
-    final request = _FolderSizeRequest(
-      folder,
-      origin!,
-      () =>
-          !_isDisposed &&
-          generation == _listingGeneration &&
-          tab == _activeTabId &&
-          origin.isCurrent &&
-          _files != null &&
-          _indexOfIdentical(_files!, folder) >= 0,
-    );
+    var rowIndex = -1;
+    final request = _FolderSizeRequest(folder, origin!, () {
+      if (_isDisposed ||
+          generation != _listingGeneration ||
+          tab != _activeTabId ||
+          !origin.isCurrent) {
+        return false;
+      }
+      final files = _files;
+      if (files == null) return false;
+      // The scanner checks its authority for every entry. A stable row must
+      // not require searching the whole pane each time. Sorting can move the
+      // object, so refresh the hint on a mismatch; never accept an equal-path
+      // replacement or retain membership after the original object is gone.
+      if (rowIndex >= 0 &&
+          rowIndex < files.length &&
+          identical(files[rowIndex], folder)) {
+        return true;
+      }
+      rowIndex = _indexOfIdentical(files, folder);
+      return rowIndex >= 0;
+    });
     _folderSizeRequests[folder] = request;
     _folderSizes[folder] = const FolderSizeMeasurement(
       phase: FolderSizePhase.queued,
@@ -4899,6 +4909,7 @@ class PanelNotifier extends ChangeNotifier {
 
   Future<void> _runFolderSizeScan(_FolderSizeRequest request) async {
     FolderSizeMeasurement? measurement;
+    StorageScanProgress? lastProgress;
     try {
       final origin = request.origin;
       final backend = storageScanBackend(
@@ -4908,7 +4919,7 @@ class PanelNotifier extends ChangeNotifier {
         local: _localFileService,
         isCurrent: request.isCurrent,
       );
-      final result = await const StorageScanService().scan(
+      final result = await const StorageScanService().scanSummary(
         backend,
         request.folder.path!,
         maxEntries: maxInlineFolderSizeEntries,
@@ -4917,6 +4928,16 @@ class PanelNotifier extends ChangeNotifier {
         isCancelled: () => request.cancelled || !request.isCurrent(),
         onProgress: (progress) {
           if (!request.isCurrent() || request.cancelled) return;
+          final previous = lastProgress;
+          if (previous != null &&
+              previous.bytes == progress.bytes &&
+              previous.files == progress.files &&
+              previous.folders == progress.folders) {
+            return;
+          }
+          // Keep the initial scanning transition and every changed total. The
+          // inline row does not display the scanner's changing directory path.
+          lastProgress = progress;
           _folderSizes[request.folder] = FolderSizeMeasurement(
             phase: FolderSizePhase.scanning,
             bytes: progress.bytes,
@@ -4938,18 +4959,18 @@ class PanelNotifier extends ChangeNotifier {
             : FolderSizePhase.partial;
         measurement = FolderSizeMeasurement(
           phase: phase,
-          bytes: result.root.bytes,
-          files: result.root.fileCount,
-          folders: result.root.folderCount,
-          unknownSizes: result.root.unknownSizeCount,
-          skippedLinks: result.root.skippedLinkCount,
+          bytes: result.bytes,
+          files: result.fileCount,
+          folders: result.folderCount,
+          unknownSizes: result.unknownSizeCount,
+          skippedLinks: result.skippedLinkCount,
           issueCount: result.issues.length + result.suppressedIssueCount,
           limited: result.limited,
           sourceChanged: result.sourceChanged,
         );
         _folderSizes[request.folder] = measurement;
         if (phase == FolderSizePhase.complete) {
-          updateItemCalculatedSize(request.folder, result.root.bytes);
+          updateItemCalculatedSize(request.folder, result.bytes);
         } else {
           notifyListeners();
         }

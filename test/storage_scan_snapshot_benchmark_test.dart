@@ -14,6 +14,8 @@ import 'package:crisp_cloud/services/storage_scan_backend.dart';
 import 'package:crisp_cloud/services/storage_scan_service.dart';
 import 'package:crisp_cloud/services/storage_scan_snapshot_store.dart';
 
+import 'support/storage_scan_benchmark_oracle.dart';
+
 String _fingerprint(StorageScanResult result) {
   final pending = [result.root];
   final nodes = <List<Object?>>[];
@@ -80,8 +82,28 @@ void main() {
         isCurrent: () => true,
       );
       // Build the source tree once, outside every measured save/load interval.
-      final result = await const StorageScanService().scan(source, root);
+      StorageScanProgress? finalProgress;
+      var progressCalls = 0;
+      final result = await const StorageScanService().scan(
+        source,
+        root,
+        onProgress: (progress) {
+          progressCalls++;
+          finalProgress = progress;
+        },
+      );
       expect(result.isComplete, isTrue);
+      expect(progressCalls, greaterThanOrEqualTo(2));
+      expect(finalProgress?.files, result.root.fileCount);
+      expect(finalProgress?.folders, result.root.folderCount);
+      expect(finalProgress?.bytes, result.root.bytes);
+      final oraclePath = Platform.environment['STORAGE_SCAN_BENCHMARK_ORACLE'];
+      final oracle = oraclePath == null
+          ? null
+          : StorageScanBenchmarkOracle.read(oraclePath);
+      if (oracle != null) expect(root, oracle.root);
+      final oracleDigest = oracle?.verify(result);
+      final metadataDigest = storageScanMetadataFingerprint(result);
       final manifestPath =
           Platform.environment['STORAGE_SCAN_BENCHMARK_MANIFEST'];
       if (manifestPath != null) {
@@ -142,6 +164,12 @@ void main() {
         // ignore: avoid_print
         print('SNAPSHOT_BENCH ${jsonEncode(records.last)}');
       }
+      final saves = [
+        for (final record in records.skip(1)) record['save_ms']! as double,
+      ]..sort();
+      final loads = [
+        for (final record in records.skip(1)) record['load_ms']! as double,
+      ]..sort();
       // ignore: avoid_print
       print(
         jsonEncode({
@@ -150,6 +178,18 @@ void main() {
               'NativeFileCollectionStorage (atomic files, flush, CAS lease)',
           'runtime': Platform.version,
           'source_scan_excluded': true,
+          'source_scan_progress_callbacks': progressCalls,
+          'independent_oracle': oracle != null,
+          'files_size_mtime_digest': oracleDigest,
+          'all_metadata_digest': metadataDigest,
+          'save_median_ms': saves[saves.length ~/ 2],
+          'save_minimum_ms': saves.first,
+          'save_maximum_ms': saves.last,
+          'load_median_ms': loads[loads.length ~/ 2],
+          'load_minimum_ms': loads.first,
+          'load_maximum_ms': loads.last,
+          'source_revision':
+              Platform.environment['STORAGE_SCAN_BENCHMARK_REVISION'],
           'runs': records,
         }),
       );
