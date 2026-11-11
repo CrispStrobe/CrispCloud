@@ -89,3 +89,40 @@ Local validation of the refreshed bindings used the existing Python suites:
 Any further edit to the inventory, lockfile or an inventory-listed source file
 requires another delta review before its fingerprint is updated. A passing
 source check does not validate a later binary or establish current store state.
+
+## Integration review: startup recovery and keychain access
+
+The workspace branch subsequently integrated main at
+[`05de9cfaa1d3727e7e4fd53b51ec63c5c39438cc`](https://github.com/CrispStrobe/CrispCloud/commit/05de9cfaa1d3727e7e4fd53b51ec63c5c39438cc).
+Relative to workspace checkpoint `2d641b6664f343b18cbbccb3ef16491d802a7eb2`,
+exact inventory-file comparison identifies two additional changed inputs:
+
+- `lib/main.dart`: adds a confirmed startup action to choose another credential
+  store. It persists the explicit selection and retries ordinary initialization;
+  an existing file vault still uses its password gate. This is an intentional
+  recovery-policy change, not an automatic fallback or credential migration.
+- `lib/widgets/credential_storage_setup.dart`: adds immediate-application labels
+  and probes an explicitly selected keychain. A locked keychain has a specific
+  outcome; an access failure can request a native picker grant and retry the
+  selected path. Cancellation remains an error and no default keychain is
+  substituted silently.
+
+These changes are the upstream implementations from PRs #41 and #42, preserved
+without modifications during integration. Their startup, setup and grant
+regressions remain enabled. They change recovery and access orchestration, not
+the cryptographic primitives, vault formats, KDF parameters or dependency graph.
+The other 79 inventory-listed inputs match the preceding workspace checkpoint.
+The icon-package lockfile is unchanged, and the source version retains main's
+`1.1.0+12` update.
+
+Neither parent's source fingerprint describes the combined tree. The policy
+therefore records the reviewed combined-source digest:
+
+```text
+4b75a080f497a07e8110b313702b380c7452f5c9107e384fa5e51d6776f02900
+```
+
+The inventory and lockfile hashes remain the values recorded above. Only the
+reviewed-source fingerprint changes from the preceding workspace policy; the
+existing declaration, store/distribution assertions and validators are retained.
+This integration review does not claim a new binary, live-store or legal review.

@@ -264,4 +264,123 @@ void main() {
       debugDefaultTargetPlatformOverride = null;
     },
   );
+
+  group('listed keychain without sandbox access', () {
+    const listed = '/synthetic/Library/Keychains/team.keychain-db';
+    const granted = '/synthetic/granted/team.keychain-db';
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    const customChannel = MethodChannel(
+      MacOsCustomKeychainStorage.methodChannelName,
+    );
+
+    Future<(CredentialStorageSetupResult?, List<String>)> run(
+      WidgetTester tester, {
+      required Object? Function(MethodCall call) handler,
+    }) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+      final calls = <String>[];
+      messenger.setMockMethodCallHandler(customChannel, (call) async {
+        if (call.method == 'listKeychains') {
+          return [
+            {'label': 'team', 'path': listed},
+          ];
+        }
+        final args = call.arguments as Map?;
+        calls.add('${call.method}:${args?['path'] ?? args?['initialPath']}');
+        return handler(call);
+      });
+      addTearDown(() {
+        debugDefaultTargetPlatformOverride = null;
+        messenger.setMockMethodCallHandler(customChannel, null);
+      });
+      CredentialStorageSetupResult? result;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: CredentialStorageSetupPanel(
+                firstRun: true,
+                onComplete: (value) => result = value,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('team'));
+      await tester.pumpAndSettle();
+      final button = find.byKey(const ValueKey('credential-setup-continue'));
+      await tester.ensureVisible(button);
+      await tester.tap(button);
+      await tester.pumpAndSettle();
+      debugDefaultTargetPlatformOverride = null;
+      return (result, calls);
+    }
+
+    PlatformException denied() => PlatformException(
+      code: 'custom_keychain_unavailable',
+      message: 'Could not open the selected keychain.',
+    );
+
+    testWidgets('opens the picker for that file and uses the granted file', (
+      tester,
+    ) async {
+      final (result, calls) = await run(
+        tester,
+        handler: (call) {
+          final args = call.arguments as Map;
+          if (call.method == 'chooseKeychain') return granted;
+          if (call.method == 'initialize' && args['path'] == listed) {
+            throw denied();
+          }
+          return null;
+        },
+      );
+      expect(calls, [
+        'initialize:$listed',
+        'chooseKeychain:$listed',
+        'initialize:$granted',
+      ]);
+      expect(result?.mode, CredentialStorageMode.systemKeychain);
+      expect(result?.keychainPath, granted);
+    });
+
+    testWidgets('a cancelled picker explains that access is needed', (
+      tester,
+    ) async {
+      final (result, calls) = await run(
+        tester,
+        handler: (call) {
+          if (call.method == 'chooseKeychain') return null;
+          throw denied();
+        },
+      );
+      expect(result, isNull);
+      expect(calls, ['initialize:$listed', 'chooseKeychain:$listed']);
+      expect(
+        find.textContaining('needs permission to use this keychain file'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('Restore access or unlock it'), findsNothing);
+    });
+
+    testWidgets('a locked keychain says so instead of opening a picker', (
+      tester,
+    ) async {
+      final (result, calls) = await run(
+        tester,
+        handler: (call) => throw PlatformException(
+          code: 'custom_keychain_locked',
+          message: 'locked',
+        ),
+      );
+      expect(result, isNull);
+      expect(calls, ['initialize:$listed']);
+      expect(
+        find.textContaining('Unlock it in Keychain Access'),
+        findsOneWidget,
+      );
+    });
+  });
 }

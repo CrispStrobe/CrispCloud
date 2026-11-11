@@ -30,6 +30,19 @@ Unreadable vault metadata or App Lock policy is an error, not an empty profile
 or a disabled lock. Otherwise, changing stores could bypass the old store's
 policy and hide saved credentials.
 
+The failure screen also offers **Choose another credential store…**. It is
+never taken automatically: a warning explains that the unavailable store's
+saved sign-ins and App Lock are neither used nor deleted, and only after the
+user confirms does the chooser open. The choice is written like an
+authenticated Settings switch (an encrypted file vault is created only through
+the password gate, and only when leaving another mode; an existing vault keeps
+its own password and App Lock) and startup retries with it. The new store
+starts without the old credentials or App Lock: reconnect accounts and enable
+App Lock again, or switch back in Settings once the original store works. This
+is a deliberate trade-off: the old store's secrets stay unreadable, while a
+local user who can run the app could already reset the profile by deleting its
+data (see the fresh-profile caveat above).
+
 For a configured custom macOS keychain, **Restore keychain access**
 opens a permission picker for that same existing file. Native validation checks
 its canonical path and readable file/volume identities before saving a new
