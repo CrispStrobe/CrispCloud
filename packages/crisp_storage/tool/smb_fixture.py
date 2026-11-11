@@ -7,7 +7,8 @@ from impacket.ntlm import compute_lmhash, compute_nthash
 from impacket import smb3structs as smb2
 
 logging.disable(logging.CRITICAL)
-server = SimpleSMBServer(listenAddress='127.0.0.1', listenPort=0)
+server = SimpleSMBServer(listenAddress='127.0.0.1',
+                        listenPort=int(sys.argv[2]) if len(sys.argv) > 2 else 0)
 server.setSMB2Support(True)
 server.addShare('books', sys.argv[1], readOnly='no')
 server.addCredential('reader', 0, compute_lmhash('fixture-password'), compute_nthash('fixture-password'))
