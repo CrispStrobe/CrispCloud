@@ -259,3 +259,29 @@ The optional build helper now records Cargo's actual emitted dynamic library
 path and verifies that it exists, including builds with a custom target
 directory. This improves build reporting; runtime binary identity still needs
 the separate artifact checks described above.
+
+
+### Follow-up incoming workflow review
+
+Incoming SMB commit
+[`087b2d9d38797bd96eda64962e1998b1f8731c1f`](https://github.com/CrispStrobe/CrispCloud/commit/087b2d9d38797bd96eda64962e1998b1f8731c1f)
+adds a non-cancelling host matrix and authenticates the surface job's private
+Git source dependencies using its existing GitHub Actions secret/token context.
+The credential is consumed by the runner's Git URL rewrite, not application
+code or packaged settings. This workflow is the only changed inventory-listed
+input since the combined binding above. The application runtime, both Cargo
+lockfiles, application dependency lockfile and inventory are unchanged.
+
+The incoming saved-backend assertion and explicitly historical rollout notes
+are also retained. CLI diagnostics preserve the integrated `build default`
+label in both text and JSON without writing an explicit backend into old
+profiles. The current reviewed-source binding is:
+
+```text
+c3f94d46fa8055fe092d2e65c5a14ca17439c34b4d6ccb05260f4524ae491cca
+```
+
+Only the source fingerprint changes in the policy. Its inventory/lockfile
+fingerprints and all declarations and distribution assertions are preserved.
+This records the reviewed CI setup; it does not establish a successful hosted
+workflow, native packaging, live store state or actual loaded-binary identity.

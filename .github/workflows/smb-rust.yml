@@ -8,6 +8,7 @@ on:
 jobs:
   host:
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
@@ -70,6 +71,10 @@ jobs:
           .smb-venv/bin/pip install impacket==0.13.0
           echo "CRISPER_SMB_PYTHON=$PWD/.smb-venv/bin/python" >> "$GITHUB_ENV"
           echo "CRISP_SMB_LIBRARY=$PWD/packages/crisp_storage/rust/target/debug/libcrisp_smb_bridge.so" >> "$GITHUB_ENV"
+      - name: Authenticate private source dependencies
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT || github.token }}
+        run: git config --global url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
       - run: flutter pub get
       - run: flutter test test/smb_backend_field_test.dart test/smb_client_adapter_test.dart test/smb_connection_profile_dialog_test.dart
       - working-directory: cli

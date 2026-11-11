@@ -135,8 +135,6 @@ void main() {
     double width = 360,
     double textScale = 1.5,
   }) async {
-    final semantics = tester.ensureSemantics();
-    addTearDown(semantics.dispose);
     tester.view.physicalSize = const Size(1000, 800);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -214,9 +212,14 @@ void main() {
   testWidgets(
     'compact list renders a measured lower bound and accessible detail',
     (tester) async {
-      await mount(tester, _Layout.list);
-      expect(find.byType(CompactFileTile), findsNWidgets(2));
-      expectPartialDetails(tester);
+      final semantics = tester.ensureSemantics();
+      try {
+        await mount(tester, _Layout.list);
+        expect(find.byType(CompactFileTile), findsNWidgets(2));
+        expectPartialDetails(tester);
+      } finally {
+        semantics.dispose();
+      }
     },
     timeout: const Timeout(Duration(seconds: 30)),
   );
@@ -224,17 +227,27 @@ void main() {
   testWidgets('current directory column renders its real partial measurement', (
     tester,
   ) async {
-    await mount(tester, _Layout.column);
-    expect(find.byKey(const ValueKey('file-column:/')), findsOneWidget);
-    expectPartialDetails(tester);
+    final semantics = tester.ensureSemantics();
+    try {
+      await mount(tester, _Layout.column);
+      expect(find.byKey(const ValueKey('file-column:/')), findsOneWidget);
+      expectPartialDetails(tester);
+    } finally {
+      semantics.dispose();
+    }
   }, timeout: const Timeout(Duration(seconds: 30)));
 
   testWidgets(
     'narrow tiles retain measured sizes and readable partial detail',
     (tester) async {
-      await mount(tester, _Layout.tiles, width: 320, textScale: 1.6);
-      expect(find.byType(GridView), findsOneWidget);
-      expectPartialDetails(tester);
+      final semantics = tester.ensureSemantics();
+      try {
+        await mount(tester, _Layout.tiles, width: 320, textScale: 1.6);
+        expect(find.byType(GridView), findsOneWidget);
+        expectPartialDetails(tester);
+      } finally {
+        semantics.dispose();
+      }
     },
     timeout: const Timeout(Duration(seconds: 30)),
   );
@@ -242,27 +255,32 @@ void main() {
   testWidgets(
     'expanded rows remove a stale exact size after source invalidation',
     (tester) async {
-      await container
-          .read(panelViewModeProvider(PanelSide.remote).notifier)
-          .applyMode(PanelViewMode.brief);
-      await mount(tester, _Layout.list);
-      expect(find.byType(FileListTile), findsNWidgets(2));
-      expect(find.text('2.0 KB'), findsOneWidget);
-      auth.disconnect();
-      await tester.pumpAndSettle();
-      expect(panel.folderSizeFor(folder('complete'))?.sourceChanged, isTrue);
-      expect(find.text('2.0 KB'), findsNothing);
-      final row = find.byWidgetPredicate(
-        (widget) =>
-            widget is Semantics &&
-            (widget.properties.label?.contains('Folder complete') ?? false),
-      );
-      expect(row, findsOneWidget);
-      final label = tester.getSemantics(row).getSemanticsData().label;
-      expect(label, contains('The original storage connection changed'));
-      expect(label, isNot(contains('2.0 KB')));
-      expect(cloud.writes, isEmpty);
-      expect(tester.takeException(), isNull);
+      final semantics = tester.ensureSemantics();
+      try {
+        await container
+            .read(panelViewModeProvider(PanelSide.remote).notifier)
+            .applyMode(PanelViewMode.brief);
+        await mount(tester, _Layout.list);
+        expect(find.byType(FileListTile), findsNWidgets(2));
+        expect(find.text('2.0 KB'), findsOneWidget);
+        auth.disconnect();
+        await tester.pumpAndSettle();
+        expect(panel.folderSizeFor(folder('complete'))?.sourceChanged, isTrue);
+        expect(find.text('2.0 KB'), findsNothing);
+        final row = find.byWidgetPredicate(
+          (widget) =>
+              widget is Semantics &&
+              (widget.properties.label?.contains('Folder complete') ?? false),
+        );
+        expect(row, findsOneWidget);
+        final label = tester.getSemantics(row).getSemanticsData().label;
+        expect(label, contains('The original storage connection changed'));
+        expect(label, isNot(contains('2.0 KB')));
+        expect(cloud.writes, isEmpty);
+        expect(tester.takeException(), isNull);
+      } finally {
+        semantics.dispose();
+      }
     },
     timeout: const Timeout(Duration(seconds: 30)),
   );

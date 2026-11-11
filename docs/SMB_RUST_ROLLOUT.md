@@ -127,3 +127,28 @@ run `dart test test/smb_adapter_test.dart test/cli_runner_test.dart` from `cli/`
 The `surfaces` CI job runs both. Live SMB tests require the two fixture environment
 variables described above. These fixture tests do not replace real SMB3/device
 qualification.
+
+## Upstream surface validation checkpoint
+
+The upstream SMB branch recorded this checkpoint in
+[`087b2d9`](https://github.com/CrispStrobe/CrispCloud/commit/087b2d9d38797bd96eda64962e1998b1f8731c1f).
+The results below describe that upstream note; they do not establish current
+local or hosted acceptance for this combined branch.
+
+According to that note, the shared suite passed 23 Dart tests with the native
+bridge and authenticated SMB fixture enabled. The CLI's SMB and runner suites
+passed 18 tests, including libsmb2, Rust and Auto transfers. The native core passed
+8 unit tests. GUI widget and adapter tests were included in the surfaces CI job,
+but were not run locally at that upstream checkpoint because Flutter startup was
+unavailable in its environment.
+
+The upstream note also reports that a previous host matrix built Windows and iOS
+artifacts, while the macOS Dart test step failed when rewriting the existing
+libsmb2 dylib's install name: the prebuilt binary lacked room for the expanded
+load command. That reported failure remains a macOS packaging gate, not evidence
+of successful cross-platform validation. The matrix now keeps other hosts running
+when one fails. The upstream checkpoint did not claim signing or encryption
+qualification on a real SMB3 NAS.
+
+CLI settings and listing output label profiles without an explicit choice as
+`build default`, matching the shared adapter's compile-time default behavior.

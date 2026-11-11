@@ -595,91 +595,101 @@ class FileListTile extends ConsumerWidget {
                     ),
                   )
                 : null,
-            child: ListTile(
-              selected: isSelected,
-              selectedTileColor: Theme.of(context).colorScheme.primaryContainer
-                  .withValues(alpha: 0.65),
-              leading: file.name == '..'
-                  ? const Icon(
-                      Icons.arrow_upward,
-                      size: 28,
-                      color: Colors.amber,
-                    )
-                  : iconWidget,
-              title: Text(
-                file.name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: (textStyle ?? const TextStyle()).copyWith(
-                  color: isSelected
-                      ? Theme.of(context).colorScheme.onPrimaryContainer
-                      : fileColor,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            // Keep selection and ink above the cursor decoration, on the same
+            // local Material, while the outer border retains its own inset.
+            child: Material(
+              type: MaterialType.transparency,
+              child: ListTile(
+                selected: isSelected,
+                selectedTileColor: Theme.of(context)
+                    .colorScheme
+                    .primaryContainer
+                    .withValues(alpha: 0.65),
+                leading: file.name == '..'
+                    ? const Icon(
+                        Icons.arrow_upward,
+                        size: 28,
+                        color: Colors.amber,
+                      )
+                    : iconWidget,
+                title: Text(
+                  file.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: (textStyle ?? const TextStyle()).copyWith(
+                    color: isSelected
+                        ? Theme.of(context).colorScheme.onPrimaryContainer
+                        : fileColor,
+                    fontWeight: isSelected
+                        ? FontWeight.w600
+                        : FontWeight.normal,
+                  ),
                 ),
-              ),
-              subtitle: file.name == '..'
-                  ? null
-                  : Row(
-                      children: [
-                        if (_collectionStatusLabel(file).isNotEmpty)
-                          _collectionStatus(context, file),
-                        if (showRelativePath && file.path != null) ...[
-                          Expanded(
-                            child: Text(
-                              _collectionPathLabel(file),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: (textStyle ?? const TextStyle()).copyWith(
-                                fontSize: math.max(
-                                  9.0,
-                                  (textStyle?.fontSize ?? 13) - 2,
-                                ),
+                subtitle: file.name == '..'
+                    ? null
+                    : Row(
+                        children: [
+                          if (_collectionStatusLabel(file).isNotEmpty)
+                            _collectionStatus(context, file),
+                          if (showRelativePath && file.path != null) ...[
+                            Expanded(
+                              child: Text(
+                                _collectionPathLabel(file),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: (textStyle ?? const TextStyle())
+                                    .copyWith(
+                                      fontSize: math.max(
+                                        9.0,
+                                        (textStyle?.fontSize ?? 13) - 2,
+                                      ),
+                                    ),
                               ),
                             ),
-                          ),
-                        ] else ...[
-                          if (folderSize != null) ...[
-                            Flexible(
-                              child: Tooltip(
-                                message: folderSize.tooltip,
-                                child: Text(
-                                  folderSize.label,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                          ] else ...[
+                            if (folderSize != null) ...[
+                              Flexible(
+                                child: Tooltip(
+                                  message: folderSize.tooltip,
+                                  child: Text(
+                                    folderSize.label,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
                               ),
-                            ),
-                            if (file.updatedAt != null) ...[
-                              const Text(' • '),
+                              if (file.updatedAt != null) ...[
+                                const Text(' • '),
+                                Text(formatDate(file.updatedAt!)),
+                              ],
+                            ] else if (!file.isFolder &&
+                                file.displaySize != null) ...[
+                              Text(formatBytes(file.displaySize!)),
+                              if (file.updatedAt != null) ...[
+                                const Text(' • '),
+                                Text(formatDate(file.updatedAt!)),
+                              ],
+                            ] else if (file.updatedAt != null)
                               Text(formatDate(file.updatedAt!)),
-                            ],
-                          ] else if (!file.isFolder &&
-                              file.displaySize != null) ...[
-                            Text(formatBytes(file.displaySize!)),
-                            if (file.updatedAt != null) ...[
-                              const Text(' • '),
-                              Text(formatDate(file.updatedAt!)),
-                            ],
-                          ] else if (file.updatedAt != null)
-                            Text(formatDate(file.updatedAt!)),
+                          ],
                         ],
-                      ],
-                    ),
-              trailing: file.isFolder
-                  ? IconButton(
-                      icon: const Icon(Icons.chevron_right),
-                      tooltip: 'Open',
-                      onPressed: onDoubleTap,
-                    )
-                  : null,
-              onTap: () {
-                // Use _PointerModifiers captured at pointer-down time (more reliable on web).
-                onTap(
-                  _PointerModifiers.shiftPressed,
-                  _PointerModifiers.ctrlOrMetaPressed,
-                );
-              },
-              onLongPress: onDoubleTap,
+                      ),
+                trailing: file.isFolder
+                    ? IconButton(
+                        icon: const Icon(Icons.chevron_right),
+                        tooltip: 'Open',
+                        onPressed: onDoubleTap,
+                      )
+                    : null,
+                onTap: () {
+                  // Use _PointerModifiers captured at pointer-down time (more reliable on web).
+                  onTap(
+                    _PointerModifiers.shiftPressed,
+                    _PointerModifiers.ctrlOrMetaPressed,
+                  );
+                },
+                onLongPress: onDoubleTap,
+              ),
             ),
           ), // Container (cursor border)
         ), // Semantics
