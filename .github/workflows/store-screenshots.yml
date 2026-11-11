@@ -1,8 +1,9 @@
-name: Store screenshots (macOS)
+name: Store screenshots
 
-# Captures Mac App Store screenshots (2880x1800) from the real app on a fresh
-# runner profile and uploads them as an artifact. Manual only; uploading to
-# App Store Connect is a separate, reviewed step.
+# Captures App Store screenshots from the real app on fresh runners and
+# uploads them as artifacts: Mac 2880x1800, iPhone 6.5" 1284x2778 and iPad
+# 12.9" 2048x2732. Manual only; uploading to App Store Connect is a separate,
+# reviewed step.
 
 on:
   workflow_dispatch:
@@ -12,8 +13,13 @@ env:
 
 jobs:
   capture:
+    name: capture (${{ matrix.target }})
     runs-on: macos-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [mac, iphone, ipad]
     steps:
       - uses: actions/checkout@v5
 
@@ -36,17 +42,53 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: tool/prime_dart_smb2_cache.sh
 
+      # The Mac capture runs unsandboxed against a realistic home folder, so
+      # breadcrumbs read "/ Users alex Documents" instead of the runner's
+      # container path. Only this throwaway debug build is changed.
+      - name: Prepare Mac demo home
+        if: matrix.target == 'mac'
+        run: |
+          sudo mkdir -p /Users/alex
+          sudo chown "$(id -un)" /Users/alex
+          /usr/libexec/PlistBuddy -c 'Set :com.apple.security.app-sandbox false' \
+            macos/Runner/DebugProfile.entitlements
+          echo "DEVICE=macos" >> "$GITHUB_ENV"
+          echo "EXTRA=--dart-define=STORE_HOME=/Users/alex" >> "$GITHUB_ENV"
+
+      - name: Boot simulator
+        if: matrix.target != 'mac'
+        run: |
+          UDID=$(xcrun simctl list devices available -j | /usr/bin/python3 -c '
+          import json, sys, re
+          target = sys.argv[1]
+          devices = [d for rt, ds in json.load(sys.stdin)["devices"].items()
+                     if "iOS" in rt for d in ds]
+          prefs = ([r"Pro Max", r"Plus"] if target == "iphone"
+                   else [r"iPad Pro.*13", r"iPad Pro.*12\.9", r"iPad Pro"])
+          for p in prefs:
+              hit = [d for d in devices if re.search(p, d["name"])]
+              if hit:
+                  print(hit[-1]["udid"]); print(hit[-1]["name"], file=sys.stderr); break
+          ' "${{ matrix.target }}")
+          test -n "$UDID"
+          xcrun simctl boot "$UDID"
+          xcrun simctl bootstatus "$UDID" -b
+          echo "DEVICE=$UDID" >> "$GITHUB_ENV"
+          echo "EXTRA=" >> "$GITHUB_ENV"
+
       - name: Capture screenshots from the running app
         run: |
           mkdir -p build/store-screenshots
           set -o pipefail
-          flutter test integration_test/store_screenshots_test.dart -d macos 2>&1 \
+          flutter test integration_test/store_screenshots_test.dart -d "$DEVICE" \
+            --dart-define=STORE_TARGET=${{ matrix.target }} $EXTRA 2>&1 \
             | tee build/store-screenshots/capture.log
 
       - name: Collect screenshots
         if: success() || failure()
         run: |
-          find "$HOME/Library/Containers" /private/var/folders "$TMPDIR" \
+          find "$HOME/Library/Containers" "$HOME/Library/Developer/CoreSimulator" \
+            /private/var/folders "$TMPDIR" \
             -name 'crispcloud-store-*.png' -newer pubspec.yaml 2>/dev/null \
             -exec cp {} build/store-screenshots/ \; || true
           ls -la build/store-screenshots
@@ -57,6 +99,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: success() || failure()
         with:
-          name: macos-store-screenshots
+          name: store-screenshots-${{ matrix.target }}
           path: build/store-screenshots/
           if-no-files-found: warn

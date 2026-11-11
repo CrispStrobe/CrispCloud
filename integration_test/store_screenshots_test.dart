@@ -1,13 +1,16 @@
-// Captures Mac App Store screenshots from the real application.
+// Captures App Store screenshots from the real application.
 //
-// Runs only in the "Store screenshots" workflow on a fresh macOS runner:
-//   flutter test integration_test/store_screenshots_test.dart -d macos
-// It seeds demo files in the app's (sandbox) home, selects session-only
-// credential storage so no keychain or account is involved, boots the
-// production `main()`, and renders each screen at 1440x900 points @2x
-// (2880x1800, an accepted Mac App Store size) straight from the layer tree.
-// PNGs land in the app's temporary directory as crispcloud-store-NN-*.png;
-// the workflow collects them from there.
+// Runs only in the "Store screenshots" workflow on fresh runners:
+//   flutter test integration_test/store_screenshots_test.dart -d macos \
+//     --dart-define=STORE_TARGET=mac --dart-define=STORE_HOME=/Users/alex
+//   flutter test ... -d <iPhone simulator> --dart-define=STORE_TARGET=iphone
+//   flutter test ... -d <iPad simulator>   --dart-define=STORE_TARGET=ipad
+// It seeds demo files in STORE_HOME (default: the app's home), selects
+// session-only credential storage so no keychain or account is involved,
+// boots the production `main()`, and renders each screen straight from the
+// layer tree at an accepted store size: Mac 2880x1800, iPhone 6.5" 1284x2778,
+// iPad 12.9" 2048x2732. PNGs land in the app's temporary directory as
+// crispcloud-store-NN-*.png; the workflow collects them from there.
 //
 // Steps are best-effort: a missing control is logged and the capture still
 // happens, so one UI change cannot hide every other screenshot.
@@ -23,12 +26,23 @@ import 'package:crisp_cloud/screens/file_browser_screen.dart';
 import 'package:crisp_cloud/services/credential_storage_config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:quds_office_engine/quds_office_engine.dart';
 
-const _logicalSize = Size(1440, 900);
-const _pixelRatio = 2.0;
+const _target = String.fromEnvironment('STORE_TARGET', defaultValue: 'mac');
+const _storeHome = String.fromEnvironment('STORE_HOME');
+
+/// Logical size and pixel ratio per store slot.
+final (Size, double) _slot = switch (_target) {
+  'iphone' => (const Size(428, 926), 3.0), // 1284x2778, iPhone 6.5"
+  'ipad' => (const Size(1024, 1366), 2.0), // 2048x2732, iPad 12.9"
+  _ => (const Size(1440, 900), 2.0), // 2880x1800, Mac
+};
+final Size _logicalSize = _slot.$1;
+final double _pixelRatio = _slot.$2;
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -45,10 +59,12 @@ void main() {
     tester.view.physicalSize = _logicalSize * _pixelRatio;
     tester.view.devicePixelRatio = _pixelRatio;
 
-    final home = Platform.environment['HOME']!;
+    final home = _storeHome.isNotEmpty
+        ? _storeHome
+        : Platform.environment['HOME']!;
     final out = Directory('${Directory.systemTemp.path}/crispcloud-store')
       ..createSync(recursive: true);
-    _log('home=$home out=${out.path}');
+    _log('target=$_target home=$home out=${out.path}');
     await _seedDemoHome(home);
     await CredentialStorageConfig.writeSelection(
       mode: CredentialStorageMode.sessionOnly,
@@ -66,9 +82,25 @@ void main() {
       await _settle(tester, const Duration(seconds: 2));
     }
 
-    await _step('home and documents', () async {
-      await go(PanelSide.local, home);
-      await go(PanelSide.remote, '$home/Documents');
+    final nav = Navigator.of(
+      tester.element(find.byType(FileBrowserScreen)),
+      rootNavigator: true,
+    );
+    Future<void> closeDialogs() async {
+      nav.popUntil((route) => route.isFirst);
+      await _settle(tester, const Duration(milliseconds: 800));
+    }
+
+    Future<void> select(PanelSide side, String name) async {
+      final panel = container.read(panelProvider(side));
+      final item = panel.files!.firstWhere((f) => f.name == name);
+      panel.toggleSelection(item);
+      await _settle(tester, const Duration(seconds: 2));
+    }
+
+    await _step('documents and projects', () async {
+      await go(PanelSide.local, '$home/Documents');
+      await go(PanelSide.remote, '$home/Projects');
     });
     _dumpTexts('home');
     await _shot(tester, out, '01-dual-panel');
@@ -82,22 +114,44 @@ void main() {
     _dumpTexts('photos');
     await _shot(tester, out, '02-photos-grid');
 
-    await _step('project file with preview', () async {
+    await _step('markdown preview', () async {
+      container.read(localViewModeProvider.notifier).state = ViewMode.list;
+      await go(PanelSide.local, '$home/Documents');
       await go(PanelSide.remote, '$home/Projects/CrispCloud');
-      await _tapTooltip(tester, 'Show Preview');
-      await tester.tap(find.text('README.md').last);
-      await _settle(tester, const Duration(seconds: 2));
+      container.read(showPreviewProvider.notifier).state = true;
+      await select(PanelSide.remote, 'README.md');
     });
     await _settle(tester, const Duration(seconds: 3));
-    _dumpTexts('projects');
+    _dumpTexts('preview');
     await _shot(tester, out, '03-preview');
+
+    await _step('word document in the office editor', () async {
+      container.read(showPreviewProvider.notifier).state = false;
+      await go(PanelSide.remote, '$home/Documents');
+      await select(PanelSide.remote, 'Project plan.docx');
+      await tester.sendKeyEvent(LogicalKeyboardKey.f4);
+      await _settle(tester, const Duration(seconds: 6));
+    });
+    _dumpTexts('office');
+    await _shot(tester, out, '04-office-editor');
+    await closeDialogs();
+
+    await _step('connect to a server', () async {
+      await go(PanelSide.local, '$home/Documents');
+      await tester.tap(find.text('Connect').first);
+      await _settle(tester, const Duration(seconds: 2));
+    });
+    _dumpTexts('connect');
+    await _shot(tester, out, '05-connect');
+    await closeDialogs();
 
     await _step('open settings', () async {
       await _tapTooltip(tester, 'Settings');
     });
     await _settle(tester, const Duration(seconds: 2));
     _dumpTexts('settings');
-    await _shot(tester, out, '04-settings');
+    await _shot(tester, out, '06-settings');
+    await closeDialogs();
     FlutterError.onError = originalOnError;
   }, timeout: const Timeout(Duration(minutes: 10)));
 }
@@ -177,6 +231,8 @@ Future<void> _seedDemoHome(String home) async {
     "void main() {\n  print('Hello from CrispCloud');\n}\n",
   );
   await text('Projects/Website/index.html', '<h1>Hello</h1>\n');
+  final plan = File('$home/Documents/Project plan.docx');
+  await plan.writeAsBytes(WordSerializer().write(_projectPlan()).save());
   await text('Backups/2026-11-01.log', 'Backup completed: 1,284 files\n');
   const palettes = [
     [Color(0xFF1E88E5), Color(0xFF26C6DA)],
@@ -199,6 +255,77 @@ Future<void> _seedDemoHome(String home) async {
     await file.parent.create(recursive: true);
     await file.writeAsBytes(await _gradientPng(palettes[i], i));
   }
+}
+
+/// A short, formatted Word document for the office editor screenshot.
+WmlDocument _projectPlan() {
+  WmlParagraph para(
+    String text, {
+    bool bold = false,
+    int size = 22,
+    String color = '1F2933',
+  }) => WmlParagraph(
+    inlines: <WmlInline>[
+      WmlRun(
+        text: text,
+        properties: WmlRunProps(
+          bold: bold,
+          fontSizeHalfPoints: size,
+          color: color,
+        ),
+      ),
+    ],
+  );
+  WmlTableCell cell(String text, {bool header = false}) =>
+      WmlTableCell(blocks: <WmlBlock>[para(text, bold: header)]);
+  final doc = WmlDocument.empty();
+  doc.sections.first.blocks
+    ..clear()
+    ..addAll(<WmlBlock>[
+      para('Website relaunch', bold: true, size: 40, color: '1F4E79'),
+      para(
+        'Goals, milestones and owners for the relaunch in spring. '
+        'Drafts live in the shared Projects folder; final assets are '
+        'synced to every cloud the team uses.',
+      ),
+      para('Milestones', bold: true, size: 28, color: '1F4E79'),
+      WmlTable(
+        grid: <double>[2600, 3600, 2400],
+        rows: <WmlTableRow>[
+          WmlTableRow(
+            cells: <WmlTableCell>[
+              cell('Date', header: true),
+              cell('Milestone', header: true),
+              cell('Owner', header: true),
+            ],
+          ),
+          WmlTableRow(
+            cells: <WmlTableCell>[
+              cell('March 3'),
+              cell('Content inventory'),
+              cell('Maya'),
+            ],
+          ),
+          WmlTableRow(
+            cells: <WmlTableCell>[
+              cell('March 24'),
+              cell('Design review'),
+              cell('Jonas'),
+            ],
+          ),
+          WmlTableRow(
+            cells: <WmlTableCell>[
+              cell('April 14'),
+              cell('Launch'),
+              cell('Whole team'),
+            ],
+          ),
+        ],
+      ),
+      para('Next steps', bold: true, size: 28, color: '1F4E79'),
+      para('Collect feedback on the draft and share the final plan.'),
+    ]);
+  return doc;
 }
 
 Future<List<int>> _gradientPng(List<Color> colors, int seed) async {
