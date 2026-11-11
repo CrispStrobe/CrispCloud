@@ -24,8 +24,8 @@ LicenseRegistry.addLicense and the texts of the release. The library is
 loaded dynamically, and hooks.user_defines.dart_smb2.libsmb2 replaces it
 with another build (see the package README).
 
-Bundled release: libsmb2-r9
-Source and build scripts (commit f2695f24c0db8984cd0593738b72004ab48cfe1b): https://github.com/ales-drnz/dart_smb2/releases/tag/libsmb2-r9
+Bundled release: libsmb2-r10 (Apple builds include linker header padding)
+Source and build scripts (commit eca28a3ef007d6c268ebfd4a4950a0c28de6335c): https://github.com/ales-drnz/dart_smb2/releases/tag/libsmb2-r10
 
                   GNU LESSER GENERAL PUBLIC LICENSE
                        Version 2.1, February 1999

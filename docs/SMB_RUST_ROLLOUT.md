@@ -145,3 +145,18 @@ qualification on a real SMB3 NAS has been claimed.
 
 CLI settings/listing output labels old profiles without an explicit choice as
 `build default`, matching the shared adapter's compile-time default behavior.
+
+## Apple fallback packaging
+
+GUI and standalone CLI resolve the same `packages/dart_smb2` fork (0.2.5+crisp.1).
+The libsmb2 backend remains available and remains the default. Apple builds now
+compile the pinned r10 source with install-name header padding, so long checkout
+paths work with Dart and Flutter native assets. Xcode command-line tools, Python 3,
+curl and zip are required. Other platforms use checksum-verified r10 binaries.
+See [recipe provenance and licensing](../packages/dart_smb2/CRISP_PATCHES.md).
+This fixes packaging without changing backend selection or fallback policy.
+
+CI runs shared tests on Linux, Windows and macOS, GUI/CLI fixture tests on Linux,
+and iOS device/simulator compilation. Both Apple recipes are checked by rewriting
+a compiled binary's install name to a long path and re-signing it. SMB3 encryption
+against production servers and physical-device testing remain qualification gates.

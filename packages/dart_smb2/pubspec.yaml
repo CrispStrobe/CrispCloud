@@ -1,0 +1,36 @@
+name: dart_smb2
+description: Dart client for SMB2/3 built on libsmb2. Listings, reads, streaming, atomic downloads, writes and cancellation from worker isolates. Targets macOS, Windows, Linux, iOS and Android.
+version: 0.2.5+crisp.1
+publish_to: none
+homepage: https://github.com/ales-drnz/dart_smb2
+repository: https://github.com/ales-drnz/dart_smb2
+issue_tracker: https://github.com/ales-drnz/dart_smb2/issues
+
+topics:
+  - cross-platform
+  - smb2
+  - smb3
+  - samba
+  - libsmb2
+
+platforms:
+  android:
+  ios:
+  linux:
+  macos:
+  windows:
+
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  code_assets: ^2.1.0
+  crypto: ^3.0.7
+  ffi: ^2.1.3
+  hooks: ^2.2.0
+  meta: ^1.15.0
+
+dev_dependencies:
+  ffigen: ^23.0.0
+  lints: ^6.0.0
+  test: ^1.26.0
