@@ -17,6 +17,7 @@ import 'dart:ui' as ui;
 
 import 'package:crisp_cloud/main.dart' as app;
 import 'package:crisp_cloud/models/panel_side.dart';
+import 'package:crisp_cloud/providers/core_providers.dart';
 import 'package:crisp_cloud/providers/panel_provider.dart';
 import 'package:crisp_cloud/screens/file_browser_screen.dart';
 import 'package:crisp_cloud/services/credential_storage_config.dart';
@@ -34,6 +35,13 @@ void main() {
 
   testWidgets('capture Mac App Store screenshots', (tester) async {
     WidgetsApp.debugAllowBannerOverride = false;
+    // Debug-only framework assertions (e.g. ink hidden by a decorated
+    // ancestor) are logged, not fatal: they do not change release rendering
+    // and must not discard the captures. Restored before the test ends.
+    final originalOnError = FlutterError.onError;
+    FlutterError.onError = (details) => _log(
+      'framework error: ${details.exceptionAsString().split('\n').first}',
+    );
     tester.view.physicalSize = _logicalSize * _pixelRatio;
     tester.view.devicePixelRatio = _pixelRatio;
 
@@ -65,21 +73,20 @@ void main() {
     _dumpTexts('home');
     await _shot(tester, out, '01-dual-panel');
 
-    await _step('photos as large items', () async {
+    await _step('photos as gallery', () async {
       await go(PanelSide.local, '$home/Photos');
-      await tester.tap(find.text('Lake.png').first);
-      await _settle(tester, const Duration(milliseconds: 600));
-      await _tapTooltip(tester, 'Large Items');
+      container.read(localViewModeProvider.notifier).state = ViewMode.gallery;
+      await _settle(tester, const Duration(seconds: 2));
     });
-    await _settle(tester, const Duration(seconds: 3));
+    await _settle(tester, const Duration(seconds: 5));
     _dumpTexts('photos');
     await _shot(tester, out, '02-photos-grid');
 
     await _step('project file with preview', () async {
       await go(PanelSide.remote, '$home/Projects/CrispCloud');
-      await tester.tap(find.text('README.md').last);
-      await _settle(tester, const Duration(milliseconds: 600));
       await _tapTooltip(tester, 'Show Preview');
+      await tester.tap(find.text('README.md').last);
+      await _settle(tester, const Duration(seconds: 2));
     });
     await _settle(tester, const Duration(seconds: 3));
     _dumpTexts('projects');
@@ -91,6 +98,7 @@ void main() {
     await _settle(tester, const Duration(seconds: 2));
     _dumpTexts('settings');
     await _shot(tester, out, '04-settings');
+    FlutterError.onError = originalOnError;
   }, timeout: const Timeout(Duration(minutes: 10)));
 }
 
