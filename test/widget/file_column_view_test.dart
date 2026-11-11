@@ -93,6 +93,7 @@ class _Local extends Fake
   final listings = <String, List<FileSystemEntity>>{};
   final directoryReads = <String>[];
   final directoryGates = <String, Completer<void>>{};
+  final directoryEntered = <String, Completer<void>>{};
   int accessRequests = 0;
   int ensuredAccess = 0;
   @override
@@ -109,6 +110,9 @@ class _Local extends Fake
   Future<List<FileSystemEntity>?> listDirectory(String path) async {
     directoryReads.add(path);
     final result = List<FileSystemEntity>.of(listings[path] ?? const []);
+    if (directoryEntered[path] case final entered?) {
+      if (!entered.isCompleted) entered.complete();
+    }
     if (directoryGates[path] case final gate?) await gate.future;
     return result;
   }
@@ -538,10 +542,14 @@ void main() {
           .onTap!;
       await tester.runAsync(() async {
         final gate = Completer<void>();
+        final entered = Completer<void>();
         service.directoryGates['/Photos'] = gate;
+        service.directoryEntered['/Photos'] = entered;
         final loaded = Completer<void>();
         void observe() {
-          if (!panel.isLoading && panel.currentPath == '/Photos') {
+          if (entered.isCompleted &&
+              !panel.isLoading &&
+              panel.currentPath == '/Photos') {
             if (!loaded.isCompleted) loaded.complete();
           }
         }
@@ -549,16 +557,23 @@ void main() {
         panel.addListener(observe);
         try {
           action();
+          // Navigation checks access asynchronously before starting its read.
+          await entered.future;
           expect(panel.isLoading, isTrue);
           expect(service.directoryReads.last, '/Photos');
           service.rootIdentity = Object();
-          gate.complete();
-          await loaded.future;
-          // Finish the row action without relying on a rebuild to cancel it.
-          await Future<void>.delayed(Duration.zero);
         } finally {
           if (!gate.isCompleted) gate.complete();
-          panel.removeListener(observe);
+          try {
+            await loaded.future;
+            // Drain the loader and row action even if a preceding assertion
+            // fails, before returning to fake time or disposing the fixture.
+            await Future<void>.delayed(Duration.zero);
+          } finally {
+            panel.removeListener(observe);
+            service.directoryGates.remove('/Photos');
+            service.directoryEntered.remove('/Photos');
+          }
         }
       });
       expect(

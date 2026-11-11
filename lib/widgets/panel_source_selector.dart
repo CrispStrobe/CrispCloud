@@ -196,7 +196,7 @@ class _SourceDropdownState extends State<_SourceDropdown> {
       }
       if (selected == null) {
         for (final entry in entries) {
-          if (_sameSource(entry.source!, current!)) {
+          if (_sameSource(entry.source!, current)) {
             selected = entry;
             break;
           }
@@ -218,7 +218,7 @@ class _SourceDropdownState extends State<_SourceDropdown> {
             ? Icons.folder_outlined
             : current == null || current is RemotePanelSource
             ? Icons.cloud_off
-            : _iconFor(current!),
+            : _iconFor(current),
         enabled: false,
         source: current,
       );

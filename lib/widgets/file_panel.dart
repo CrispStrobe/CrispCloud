@@ -33,7 +33,6 @@ import 'file_tree_view_stub.dart' if (dart.library.io) 'file_tree_view.dart';
 import 'panel_tab_bar.dart';
 import 'panel_header.dart';
 import 'panel_listing_placeholder.dart';
-import '../l10n/app_localizations.dart';
 import '../l10n/file_panel_strings.dart';
 
 class FilePanel extends ConsumerStatefulWidget {
