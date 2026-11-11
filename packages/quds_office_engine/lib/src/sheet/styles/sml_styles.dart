@@ -1,3 +1,4 @@
+import '../../xml/xml_node.dart';
 import '../../xml/xml_reader.dart';
 
 /// Horizontal cell alignment (`alignment/@horizontal`).
@@ -5,6 +6,10 @@ enum SmlHAlign { general, left, center, right }
 
 /// Parsed `styles.xml` subset: numFmts, fills, fonts, and cellXfs.
 class SmlStyleSheet {
+  XmlDocument? _source;
+  final Map<int, int> _fontBases = {};
+  final Map<int, int> _xfBases = {};
+
   /// SmlStyleSheet API.
   SmlStyleSheet({
     Map<int, String>? numFmts,
@@ -168,6 +173,7 @@ class SmlStyleSheet {
         );
       }
     }
+    sheet._source = XmlDocument.parse(xml);
     return sheet;
   }
 
@@ -284,6 +290,7 @@ class SmlStyleSheet {
     String fontRgb = '',
     bool bold = false,
     double size = 11,
+    int? baseStyleIndex,
   }) {
     if (cellXfsAlign.isEmpty) {
       cellXfsNumFmt.add(0);
@@ -299,29 +306,57 @@ class SmlStyleSheet {
       fontBolds.add(false);
       fontSizes.add(11);
     }
+    final int? base =
+        baseStyleIndex != null &&
+            baseStyleIndex >= 0 &&
+            baseStyleIndex < cellXfsAlign.length
+        ? baseStyleIndex
+        : null;
+    if (base != null &&
+        alignAt(base) == align &&
+        fillAt(base) == normalizeRgb(fillRgb) &&
+        fontAt(base) == normalizeRgb(fontRgb) &&
+        boldAt(base) == bold &&
+        sizeAt(base) == size) {
+      return base;
+    }
     final String fill = normalizeRgb(fillRgb);
     final String font = normalizeRgb(fontRgb);
     final int fillId = _idFor(fillRgbs, fill, reserveNone: true);
-    final int fontId = _fontId(rgb: font, bold: bold, size: size);
+    final int? baseFont = base == null ? null : cellXfsFontId[base];
+    final int fontId;
+    if (baseFont != null &&
+        (fontRgbs[baseFont] != font ||
+            fontBolds[baseFont] != bold ||
+            fontSizes[baseFont] != size)) {
+      fontId = fontRgbs.length;
+      fontRgbs.add(font);
+      fontBolds.add(bold);
+      fontSizes.add(size);
+      _fontBases[fontId] = baseFont;
+    } else {
+      fontId = baseFont ?? _fontId(rgb: font, bold: bold, size: size);
+    }
+
     for (int i = 0; i < cellXfsAlign.length; i++) {
       final int xfFill = i < cellXfsFillId.length ? cellXfsFillId[i] : 0;
       final int xfFont = i < cellXfsFontId.length ? cellXfsFontId[i] : 0;
-      if (cellXfsAlign[i] == align && xfFill == fillId && xfFont == fontId) {
+      if (base == null &&
+          cellXfsAlign[i] == align &&
+          xfFill == fillId &&
+          xfFont == fontId) {
         return i;
       }
     }
-    cellXfsNumFmt.add(0);
+    if (base != null) _xfBases[cellXfsAlign.length] = base;
+    cellXfsNumFmt.add(base == null ? 0 : cellXfsNumFmt[base]);
     cellXfsAlign.add(align);
     cellXfsFillId.add(fillId);
     cellXfsFontId.add(fontId);
     return cellXfsAlign.length - 1;
   }
 
-  int _fontId({
-    required String rgb,
-    required bool bold,
-    required double size,
-  }) {
+  int _fontId({required String rgb, required bool bold, required double size}) {
     final int n = fontRgbs.length;
     while (fontBolds.length < n) {
       fontBolds.add(false);
@@ -330,9 +365,7 @@ class SmlStyleSheet {
       fontSizes.add(11);
     }
     for (int i = 0; i < n; i++) {
-      if (fontRgbs[i] == rgb &&
-          fontBolds[i] == bold &&
-          fontSizes[i] == size) {
+      if (fontRgbs[i] == rgb && fontBolds[i] == bold && fontSizes[i] == size) {
         return i;
       }
     }
@@ -459,7 +492,66 @@ class SmlStyleSheet {
       }
     }
     buf.write('</cellXfs></styleSheet>');
-    return buf.toString();
+    final generated = XmlDocument.parse(buf.toString());
+    if (_source == null) return generated.toXmlString();
+    final result = XmlDocument.parse(_source!.toXmlString());
+    for (final name in ['fonts', 'fills', 'cellXfs']) {
+      final old = result.root!.firstChild(name);
+      final fresh = generated.root!.firstChild(name)!;
+      if (old == null) {
+        result.root!.addChild(fresh.copy());
+        continue;
+      }
+      final count = old.childElements.length;
+      final generatedEntries = fresh.childElements.toList();
+      for (int i = count; i < generatedEntries.length; i++) {
+        XmlElement entry = generatedEntries[i].copy();
+        final base = name == 'fonts'
+            ? _fontBases[i]
+            : name == 'cellXfs'
+            ? _xfBases[i]
+            : null;
+        if (base != null && base < old.childElements.length) {
+          final template = old.childElements.elementAt(base).copy();
+          if (name == 'fonts') {
+            for (final key in ['b', 'sz', 'color']) {
+              template.children.removeWhere(
+                (n) => n is XmlElement && n.localName == key,
+              );
+              for (final child in entry.childrenNamed(key)) {
+                template.addChild(child.copy());
+              }
+            }
+          } else {
+            for (final key in [
+              'fontId',
+              'fillId',
+              'numFmtId',
+              'applyFont',
+              'applyFill',
+              'applyAlignment',
+            ]) {
+              final value = entry.getAttribute(key);
+              if (value != null) template.setAttribute(key, value);
+            }
+            final alignment = template.firstChild('alignment');
+            final generatedAlignment = entry.firstChild('alignment');
+            if (alignment != null) {
+              alignment.setAttribute(
+                'horizontal',
+                generatedAlignment?.getAttribute('horizontal') ?? 'general',
+              );
+            } else if (generatedAlignment != null) {
+              template.addChild(generatedAlignment.copy());
+            }
+          }
+          entry = template;
+        }
+        old.addChild(entry);
+      }
+      old.setAttribute('count', '${old.childElements.length}');
+    }
+    return result.toXmlString();
   }
 
   /// resolveColor API.

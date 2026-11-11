@@ -534,7 +534,15 @@ class SmlPivotTable {
     required this.rowField,
     required this.dataField,
     this.name = 'Pivot',
+    this.sourceSheetName,
+    this.sourcePartUri,
+    this.cachePartUri,
   });
+
+  /// Imported pivot/cache owners and source worksheet name.
+  String? sourcePartUri;
+  String? cachePartUri;
+  String? sourceSheetName;
 
   /// Source range including a header row.
   SmlRange source;

@@ -467,8 +467,8 @@ void main() {
     );
     final Uint8List bytes = SheetSerializer().writeBytes(book);
     final OpcPackage package = OpcPackage.openBytes(bytes);
-    expect(package.getPart('/xl/drawings/drawing1.xml'), isNotNull);
-    expect(package.getPart('/xl/charts/chart1.xml'), isNotNull);
+    expect(package.getPart('/xl/drawings/sheet1_drawing.xml'), isNotNull);
+    expect(package.getPart('/xl/charts/sheet1_chart1.xml'), isNotNull);
     expect(
       package
           .getPart('/xl/worksheets/sheet1.xml')!
