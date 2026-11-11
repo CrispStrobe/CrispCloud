@@ -1,9 +1,9 @@
 name: Experimental Rust SMB
 on:
   push:
-    paths: ['packages/crisp_storage/**', '.github/workflows/smb-rust.yml']
+    paths: ['packages/crisp_storage/**', 'cli/**', 'lib/**smb**', 'lib/widgets/connection_dialog.dart', 'test/**smb**', '.github/workflows/smb-rust.yml']
   pull_request:
-    paths: ['packages/crisp_storage/**', '.github/workflows/smb-rust.yml']
+    paths: ['packages/crisp_storage/**', 'cli/**', 'lib/**smb**', 'lib/widgets/connection_dialog.dart', 'test/**smb**', '.github/workflows/smb-rust.yml']
   workflow_dispatch:
 jobs:
   host:
@@ -55,3 +55,25 @@ jobs:
           name: experimental-smb-ios-static
           path: packages/crisp_storage/rust/target/aarch64-apple-*/release/libcrisp_smb_bridge.a
           if-no-files-found: error
+  surfaces:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.8'
+          cache: true
+      - run: cargo build --manifest-path packages/crisp_storage/rust/Cargo.toml --locked
+      - run: |
+          python3 -m venv .smb-venv
+          .smb-venv/bin/pip install impacket==0.13.0
+          echo "CRISPER_SMB_PYTHON=$PWD/.smb-venv/bin/python" >> "$GITHUB_ENV"
+          echo "CRISP_SMB_LIBRARY=$PWD/packages/crisp_storage/rust/target/debug/libcrisp_smb_bridge.so" >> "$GITHUB_ENV"
+      - run: flutter pub get
+      - run: flutter test test/smb_backend_field_test.dart test/smb_client_adapter_test.dart
+      - working-directory: cli
+        run: |
+          dart pub get
+          dart analyze
+          dart test test/smb_adapter_test.dart test/cli_runner_test.dart

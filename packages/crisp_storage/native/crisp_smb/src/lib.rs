@@ -404,4 +404,112 @@ mod tests {
             r#"{"code":"AuthRequired","retryable":false}"#
         );
     }
+    fn config() -> Config {
+        Config {
+            address: "127.0.0.1:1".into(),
+            share: "books".into(),
+            root: "audio".into(),
+            username: "reader".into(),
+            password: "private-password".into(),
+            domain: "".into(),
+            require_encryption: true,
+        }
+    }
+    #[test]
+    fn rejects_unsigned_accounts_and_invalid_roots_before_connecting() {
+        for name in ["", "guest", "GUEST"] {
+            let mut cfg = config();
+            cfg.username = name.into();
+            assert_eq!(Session::new(cfg).err().unwrap().code, "SigningRequired");
+        }
+        for root in ["../secret", "a/../b", "/absolute", "a\\b"] {
+            let mut cfg = config();
+            cfg.root = root.into();
+            assert_eq!(Session::new(cfg).err().unwrap().code, "InvalidPath");
+        }
+        let mut cfg = config();
+        cfg.share = "other/share".into();
+        assert_eq!(Session::new(cfg).err().unwrap().code, "InvalidConfig");
+    }
+    #[test]
+    fn path_resolution_retains_configured_root() {
+        let session = Session::new(config()).unwrap();
+        assert_eq!(session.path("").unwrap(), "audio");
+        assert_eq!(
+            session.path("Chapter #1.mp3").unwrap(),
+            "audio/Chapter #1.mp3"
+        );
+        assert!(session.path("../escape").is_err());
+    }
+    #[test]
+    fn upstream_auth_details_are_redacted() {
+        let error = Error::from(smb2::Error::Auth {
+            message: "private-password server/path".into(),
+        });
+        assert!(!error.to_string().contains("private-password"));
+        assert!(!error.to_string().contains("server/path"));
+        assert!(!error.retryable);
+    }
+    #[test]
+    fn encryption_policy_is_required_in_core_configuration() {
+        let missing =
+            r#"{"address":"host:445","share":"books","root":"","username":"u","password":"p"}"#;
+        assert!(serde_json::from_str::<Config>(missing).is_err());
+        let unknown = missing.replace("{", r#"{"unexpected":true,"require_encryption":true,"#);
+        assert!(serde_json::from_str::<Config>(&unknown).is_err());
+    }
+    #[tokio::test]
+    async fn cancellation_and_transfer_bounds_do_not_need_a_connection() {
+        let session = Session::new(config()).unwrap();
+        assert_eq!(
+            session
+                .read_chunk(1, 0, CHUNK as u32 + 1)
+                .await
+                .unwrap_err()
+                .code,
+            "TooLarge"
+        );
+        assert_eq!(
+            session
+                .write_chunk(1, vec![0; CHUNK + 1])
+                .await
+                .unwrap_err()
+                .code,
+            "TooLarge"
+        );
+        session.cancel();
+        assert_eq!(
+            session.request("list", "", "", 0).await.unwrap_err().code,
+            "Cancelled"
+        );
+        session.close().await;
+        session.close().await;
+    }
+    #[tokio::test]
+    async fn resume_markers_reject_foreign_malformed_and_oversized_data() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("partial.resume");
+        let name = path.to_str().unwrap();
+        for bytes in [
+            br#"{"source":"smb://host/books/a","validator":"libsmb2"}"#.to_vec(),
+            b"not json".to_vec(),
+            vec![b'x'; 8193],
+        ] {
+            tokio::fs::write(&path, bytes).await.unwrap();
+            assert!(read_marker(name).await.is_none());
+        }
+        let version: FileVersion = serde_json::from_value(json!({"size":42,"modified":1,"changed":2,"identity":null})).unwrap();
+        save_marker(
+            name,
+            &Marker {
+                source: "smb://host/books/a".into(),
+                validator: version,
+            },
+        )
+        .await
+        .unwrap();
+        let loaded = read_marker(name).await.unwrap();
+        assert_eq!(loaded.validator, version);
+        assert_eq!(loaded.source, "smb://host/books/a");
+    }
 }

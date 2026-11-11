@@ -7,7 +7,7 @@ import 'rust_smb_session.dart';
 import 'smb_backend.dart';
 import 'smb_paths.dart';
 import 'smb_transport.dart';
-export 'smb_backend.dart' show SmbBackend;
+export 'smb_backend.dart' show SmbBackend, parseSmbBackend;
 
 /// Compatibility facade: apps retain the same API and libsmb2 default.
 class SmbSession implements SmbTransport {
@@ -18,7 +18,7 @@ class SmbSession implements SmbTransport {
   bool _closed = false;
   late final _paths = SmbPaths(connection);
   SmbSession(this.connection, {SmbBackend? backend})
-    : backend = backend ?? configuredSmbBackend() {
+    : backend = backend ?? connection.smbBackend ?? configuredSmbBackend() {
     if (connection.kind != 'smb') {
       throw ArgumentError('Expected SMB connection');
     }

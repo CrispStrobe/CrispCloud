@@ -21,6 +21,11 @@ class ConnectionDialogExtraStrings {
 
   static const Map<String, Map<String, String>> _strings = {
     'en': {
+      "smbBackend": "SMB transport",
+      "smbBackend_libsmb2": "libsmb2 (compatible)",
+      "smbBackend_rust": "Rust (experimental)",
+      "smbBackend_auto": "Auto",
+      "smbBackendHelp": "Auto falls back only if Rust cannot load. Network, sign-in and security failures never switch transports.",
       "connectTitle": "Connect to Cloud Storage",
       "profileName": "Profile Name",
       "profileHint": "e.g., Work S3, Personal SFTP",
@@ -102,6 +107,11 @@ class ConnectionDialogExtraStrings {
       "useTls": "Use TLS (FTPS)",
     },
     'de': {
+      "smbBackend": "SMB-Transport",
+      "smbBackend_libsmb2": "libsmb2 (kompatibel)",
+      "smbBackend_rust": "Rust (experimentell)",
+      "smbBackend_auto": "Automatisch",
+      "smbBackendHelp": "Automatisch wechselt nur, wenn Rust nicht geladen werden kann. Netzwerk-, Anmelde- und Sicherheitsfehler wechseln den Transport nicht.",
       "connectTitle": "Mit Cloud-Speicher verbinden",
       "profileName": "Profilname",
       "profileHint": "z. B. Arbeit S3, Privat SFTP",
@@ -197,6 +207,11 @@ class ConnectionDialogExtraStrings {
       "useTls": "TLS verwenden (FTPS)",
     },
     'fr': {
+      "smbBackend": "Transport SMB",
+      "smbBackend_libsmb2": "libsmb2 (compatible)",
+      "smbBackend_rust": "Rust (expérimental)",
+      "smbBackend_auto": "Automatique",
+      "smbBackendHelp": "Le mode automatique revient à libsmb2 uniquement si Rust ne se charge pas, jamais après une erreur réseau, de connexion ou de sécurité.",
       "connectTitle": "Se connecter au stockage cloud",
       "profileName": "Nom du profil",
       "profileHint": "ex. : S3 professionnel, SFTP personnel",
@@ -294,6 +309,11 @@ class ConnectionDialogExtraStrings {
       "useTls": "Utiliser TLS (FTPS)",
     },
     'es': {
+      "smbBackend": "Transporte SMB",
+      "smbBackend_libsmb2": "libsmb2 (compatible)",
+      "smbBackend_rust": "Rust (experimental)",
+      "smbBackend_auto": "Automático",
+      "smbBackendHelp": "El modo automático cambia solo si Rust no puede cargarse; nunca tras errores de red, acceso o seguridad.",
       "connectTitle": "Conectar al almacenamiento en la nube",
       "profileName": "Nombre del perfil",
       "profileHint": "p. ej., S3 trabajo, SFTP personal",
@@ -389,6 +409,11 @@ class ConnectionDialogExtraStrings {
       "useTls": "Usar TLS (FTPS)",
     },
     'pt': {
+      "smbBackend": "Transporte SMB",
+      "smbBackend_libsmb2": "libsmb2 (compatível)",
+      "smbBackend_rust": "Rust (experimental)",
+      "smbBackend_auto": "Automático",
+      "smbBackendHelp": "O modo automático muda apenas se Rust não puder carregar, nunca após erros de rede, autenticação ou segurança.",
       "connectTitle": "Conectar ao armazenamento na nuvem",
       "profileName": "Nome do perfil",
       "profileHint": "ex.: S3 trabalho, SFTP pessoal",
@@ -486,6 +511,11 @@ class ConnectionDialogExtraStrings {
       "useTls": "Usar TLS (FTPS)",
     },
     'zh': {
+      "smbBackend": "SMB 传输方式",
+      "smbBackend_libsmb2": "libsmb2（兼容）",
+      "smbBackend_rust": "Rust（实验性）",
+      "smbBackend_auto": "自动",
+      "smbBackendHelp": "仅在无法加载 Rust 时自动回退。网络、登录或安全错误不会切换传输方式。",
       "connectTitle": "连接云存储",
       "profileName": "配置名称",
       "profileHint": "例如：工作 S3、个人 SFTP",
@@ -561,6 +591,12 @@ class ConnectionDialogExtraStrings {
       "useTls": "使用 TLS（FTPS）",
     },
     'ja': {
+      "smbBackend": "SMB 転送方式",
+      "smbBackend_libsmb2": "libsmb2（互換）",
+      "smbBackend_rust": "Rust（試験的）",
+      "smbBackend_auto": "自動",
+      "smbBackendHelp":
+          "Rust を読み込めない場合のみ自動で切り替えます。ネットワーク、認証、セキュリティのエラーでは切り替えません。",
       "connectTitle": "クラウドストレージに接続",
       "profileName": "プロファイル名",
       "profileHint": "例：仕事用 S3、個人用 SFTP",
@@ -639,6 +675,12 @@ class ConnectionDialogExtraStrings {
       "useTls": "TLS を使用（FTPS）",
     },
     'ko': {
+      "smbBackend": "SMB 전송 방식",
+      "smbBackend_libsmb2": "libsmb2 (호환)",
+      "smbBackend_rust": "Rust (실험적)",
+      "smbBackend_auto": "자동",
+      "smbBackendHelp":
+          "Rust를 불러올 수 없을 때만 자동 전환합니다. 네트워크, 로그인 또는 보안 오류 시에는 전환하지 않습니다.",
       "connectTitle": "클라우드 저장소에 연결",
       "profileName": "프로필 이름",
       "profileHint": "예: 업무용 S3, 개인용 SFTP",
@@ -717,6 +759,11 @@ class ConnectionDialogExtraStrings {
       "useTls": "TLS 사용 (FTPS)",
     },
     'ar': {
+      "smbBackend": "نقل SMB",
+      "smbBackend_libsmb2": "libsmb2 (متوافق)",
+      "smbBackend_rust": "Rust (تجريبي)",
+      "smbBackend_auto": "تلقائي",
+      "smbBackendHelp": "يتم التبديل التلقائي فقط إذا تعذر تحميل Rust، وليس بعد أخطاء الشبكة أو تسجيل الدخول أو الأمان.",
       "connectTitle": "الاتصال بالتخزين السحابي",
       "profileName": "اسم الملف التعريفي",
       "profileHint": "مثال: S3 للعمل، SFTP شخصي",

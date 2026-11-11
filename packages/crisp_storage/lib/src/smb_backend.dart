@@ -1,6 +1,15 @@
 /// libsmb2 remains the default until native packaging and NAS qualification pass.
 enum SmbBackend { libsmb2, rust, auto }
 
+/// Persisted profile / CLI input. Unknown values never silently change engines.
+SmbBackend? parseSmbBackend(Object? value) {
+  if (value == null) return null;
+  for (final backend in SmbBackend.values) {
+    if (value == backend.name) return backend;
+  }
+  throw const FormatException('SMB backend must be libsmb2, rust or auto.');
+}
+
 SmbBackend configuredSmbBackend() {
   const value = String.fromEnvironment(
     'CRISP_SMB_BACKEND',

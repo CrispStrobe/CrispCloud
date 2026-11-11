@@ -87,3 +87,43 @@ license is recorded separately. `r-efi` publishes its SPDX grant and author list
 complete notice assembly is still a packaging gate. Existing libsmb2 LGPL
 obligations remain while it ships. The surrounding app/package license is not
 changed by the permissively licensed independent Rust crates.
+
+## GUI and CLI settings
+
+The installed GUI's connection dialog offers **SMB transport**: libsmb2, Rust or
+Auto. Save it with a connection profile or reconnect to apply it. The choice is
+stored as `smbBackend` beside `requireEncryption`; credentials remain in the
+existing secure store. Browser builds still cannot open SMB sockets.
+
+The CLI now provides the same shared SMB session through `SmbCliAdapter`:
+
+```
+crisp connect smb 'DOMAIN\reader@smb://nas/Books/' --name nas --smb-backend libsmb2
+crisp config smb-backend nas rust
+crisp config smb-backend nas
+crisp ls / --provider nas --json
+crisp upload chapter.mp3 / --provider nas
+crisp download /chapter.mp3 ./chapter.mp3 --provider nas
+```
+
+Omit `--secret` to use the password prompt/stdin. Encryption is required by
+default; `--no-require-encryption` is explicit SMB2 opt-in. Invalid backend names
+fail without changing the saved setting. `providers --json` reports the configured
+backend without credentials. `upload` and `sync` stream local files for SMB;
+downloads publish a `.part` staging file only after success. Byte-buffer consumers
+have explicit size limits. Public share links are unsupported by SMB.
+
+CLI profiles remain in the CLI's private configuration file; GUI profiles remain
+in the GUI store. These are separate existing stores, with the same backend
+values and security rules. A session override wins over its saved profile; legacy
+profiles without a choice use the build default (normally libsmb2). Changing a
+profile affects new sessions, not an already-running transfer.
+
+Tests cover profile round trips, legacy defaults, invalid input, override order,
+CLI configuration commands, GUI selector callbacks/localization, and adapter CRUD
+and bounded transfers for libsmb2, Rust and Auto. The GUI integration tests use
+the same authenticated fixture as the CLI. Run the GUI tests with Flutter;
+run `dart test test/smb_adapter_test.dart test/cli_runner_test.dart` from `cli/`.
+The `surfaces` CI job runs both. Live SMB tests require the two fixture environment
+variables described above. These fixture tests do not replace real SMB3/device
+qualification.
