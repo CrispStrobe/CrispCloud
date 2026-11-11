@@ -8,11 +8,12 @@ cached-provider fixture. Durable snapshot saving also improved. The measurements
 do **not** establish a consistent improvement in full directory scans or
 snapshot reopening.
 
-The additional multi-root batch workflow is preserved as
-[recovery source](recovery/README.md). It is not active runtime code in this
-checkpoint. The execution workspace became unavailable after the initial batch
-tests passed and during its final publication-status repair. The preserved
-reconstructions still require formatting, analysis and tests.
+The additional multi-root batch workflow was restored into source checkpoint
+[`43a2c0f`](https://github.com/CrispStrobe/CrispCloud/commit/43a2c0f26ad89f0514ad0c4aff3edb351e017697)
+after the execution workspace became unavailable. Its original
+[recovery source](recovery/README.md) remains available with exact provenance.
+The restored code includes the final publication-status and captured-session
+label repairs. Hosted validation of this restored source is recorded below.
 
 ## Active implementation
 
@@ -149,33 +150,77 @@ summary survived are marked explicitly. Pooled snapshot statistics were computed
 from complete logs before the outage; not all underlying samples survived in the
 captured output. No missing samples have been reconstructed.
 
+The restored collection benchmark, after applying hosted formatter output, has
+SHA-256 `c3ab5063a691b1b7f224ea596ec12f65e2c50ec2a9f6337cf0343b4310226200`,
+exactly matching the frozen file used for both original runs. Its restored README
+also matches the recorded final SHA-256. The benchmark is now committed at
+[`ef3ca3c`](https://github.com/CrispStrobe/CrispCloud/commit/ef3ca3c038bab1a2af7765eb09d395d994431e99).
+This establishes source identity; it does not represent a new benchmark run.
+
 These measurements do not establish cold-drive, live cloud, network-share,
 mobile or complete native release-app performance. A new AOT comparison was
 prepared but never compiled or run.
 
-## Batch workflow recovery
+## Marked-folder batch workflow
 
-The interrupted implementation adds a reviewable queue for saving snapshots of
-marked folders. Its recovered design captures exact row origins before awaiting,
+The restored implementation adds a reviewable queue for saving snapshots of
+marked folders. It captures exact row origins before awaiting,
 rejects more than 32 roots, and holds at most two scan/save slots until durable
 saving finishes. Reads sharing one remote client are serialized, as are saves.
 Each job uses the full scanner so its saved report keeps the complete tree.
 Successfully saved reports remain accessible after Stop or a source disconnect.
 
-The bundle includes browser menu and command-palette entry points, per-job
+The implementation includes browser menu and command-palette entry points, per-job
 progress and outcomes, opening the exact saved report, and nine locale catalogs.
 The initial implementation passed 62 tests across its focused UI, analyzer and
 localization gate. The final repair distinguishes an unconfirmed publication from
 a definite failure or cancellation and directs the user to saved history before
 retrying.
 
-That final repair was not tested. Some recovered files come from executed
-pre-format edit text, and the last localization/widget changes are separately
-marked as proposed. Neither the initial test count nor the recovery bundle's
-integrity checks establish acceptance of the reconstructed source. The branch
-contains the bundles as documentation only.
+Before restoration, that final repair was untested. Some recovered files came
+from executed pre-format edit text, and the last localization/widget changes
+were separately marked as proposed. All base hashes and exact contexts were
+checked before staging the combined source. An additional review corrected
+source labels so another live session sharing a persisted account identity
+cannot supply the label for the captured client. The new regression exercises
+the actual review dialog, saved label, original totals and original-source loss.
+
+The original recovery bundles remain inert documentation; runtime code is
+committed separately. The historical 62-test result and assembly checks do not
+establish acceptance of the restored source. Use the later hosted evidence below.
 
 ## Validation and remaining gates
+
+The current restored runtime is
+[`ef3ca3c`](https://github.com/CrispStrobe/CrispCloud/commit/ef3ca3c038bab1a2af7765eb09d395d994431e99).
+Its [workspace run](https://github.com/CrispStrobe/CrispCloud/actions/runs/43035543058)
+completed successfully: **913 tests passed**, **163 Dart files checked with zero
+formatting changes**, targeted analysis with **zero errors, seven warnings and
+60 informational findings**, and a successful final committed-format gate.
+The [Chrome job](https://github.com/CrispStrobe/CrispCloud/actions/runs/43035543238/job/130573305650)
+also passed at that exact revision, including IndexedDB concurrency and paged
+restart recovery.
+
+The first restored run at `43a2c0f` recorded 912 passes and one failed compact
+Arabic history interaction. The test called `ensureVisible` and tapped before
+the resulting layout frame. The correction waits for that frame and explicitly
+requires the button to be hit-testable, preserving the 390 by 780 viewport,
+1.5 text scaling and complete offline-history checks. The corrected case passes
+in the 913-test run. Hosted formatter output was recovered from its digest-checked
+artifact and applied with exact context and before/after Git hash checks.
+
+The separate source-evidence job initially rejected a stale reviewed-source
+fingerprint. An audit of all 128 recorded inputs reproduced the prior fingerprint
+and identified exactly two changed files: a formatter-only host-key help-string
+wrap in the CLI and the palette's batch-command import/dispatch. The other 126
+inputs, dependency inventory and root lock remained identical. The
+[review record](crypto-audit.md) describes the delta and the
+reviewed binding refresh. This is separate from the workspace and browser test
+results; it does not establish platform release acceptance.
+
+The separate main workflow's broader tests and platform builds are reported only
+when completed at their exact revision; this workspace success does not imply
+that every CI job or platform release has passed.
 
 | Completed check | Result and boundary |
 | --- | --- |
@@ -202,18 +247,19 @@ restart recovery. The
 [hosted workspace workflow](https://github.com/CrispStrobe/CrispCloud/actions/runs/43026970576)
 passed 814 behavior tests and its targeted analysis step, then failed the final
 formatting check for three CLI files. That correction remains separate from
-performance behavior. The main Linux analysis step passed; its broad test step
-was still running at this observation.
+performance behavior. The main Linux analysis step passed; that old run's broad test step was later
+cancelled when newer checkpoints were pushed and is not acceptance evidence.
 
-The workspace disappeared before the final publication repair, combined broad
-regressions, full current static analysis, optimized application build and final
-source-evidence rerun could complete. The three runtime commits and the recovery
-checkpoint are durable on the remote feature branch. PR #40 remains a draft.
+The workspace disappeared before the final local publication repair, combined
+broad regressions, full current static analysis, optimized application build and
+source-evidence rerun could complete. Subsequent GitHub restoration and hosted
+validation completed the runtime repair and the focused acceptance above.
+All source, tests, retained measurements and recovery artifacts are durable on
+the remote feature branch. PR #40 remains a draft.
 
-Apply the recovery bundles in a working validation environment with their exact
-base and context checks, then run their focused gates before accepting the batch
-flow. Hosted runners remain available for validating a separately staged runtime
-checkpoint. Repeat full scans and snapshot loads under the same
-controlled setup, including the production AOT probe, before choosing further
-traversal or read-ahead changes. Keep native and provider-backed measurements
-separate and preserve all correctness and source-lifetime checks.
+The batch runtime has been restored and validated as recorded above; the recovery
+bundles are retained for provenance and should not be reapplied over those files.
+Repeat full scans and snapshot loads under the same controlled setup, including
+the production AOT probe, before choosing further traversal or read-ahead changes.
+Keep native and provider-backed measurements separate and preserve all correctness
+and source-lifetime checks.

@@ -517,9 +517,11 @@
     }
   ],
   "incompleteValidation": [
-    "Local Chrome startup failed with socket EPERM before assertions; the later hosted Chrome job passed at the performance revision.",
-    "AOT comparison was prepared but never compiled or run.",
-    "Final unconfirmed-save repair, combined broad regressions, full static analysis, optimized app build and final source-evidence rerun were interrupted or not started."
+    "The local execution workspace disappeared; subsequent runtime restoration, formatting and focused validation used GitHub and hosted runners.",
+    "The new production AOT comparison was prepared but never compiled or run.",
+    "Full-tree scanning and snapshot reopening show inconsistent or slower pooled medians; no general speedup is established.",
+    "Broader main CI tests, optimized full-app builds and live-provider/native-platform acceptance are separate from the completed workspace and Chrome gates.",
+    "The initial stale source binding was reviewed and refreshed in the accompanying documentation checkpoint; its exact hosted verification is tracked in PR #40."
   ],
   "hostedValidation": [
     {
@@ -547,5 +549,98 @@
       "status": "in_progress",
       "qualification": "Full analysis step succeeded; broad deterministic tests were still running at this observation."
     }
-  ]
+  ],
+  "recoveredBenchmarkSource": {
+    "verification": "SHA-256 of committed hosted-formatted benchmark and README exactly matches the recorded originals. This is source-identity verification, not a new benchmark execution.",
+    "revision": "ef3ca3c038bab1a2af7765eb09d395d994431e99",
+    "files": [
+      {
+        "path": "test/file_collection_import_benchmark_test.dart",
+        "sha256": "c3ab5063a691b1b7f224ea596ec12f65e2c50ec2a9f6337cf0343b4310226200",
+        "recorded": "c3ab5063a691b1b7f224ea596ec12f65e2c50ec2a9f6337cf0343b4310226200",
+        "matchesRecorded": true
+      },
+      {
+        "path": "tool/benchmarks/storage_scan/README.md",
+        "sha256": "31d2196e5212c99759e4b31c223f012e5699952abe216d8571ac45dbae416d41",
+        "recorded": "31d2196e5212c99759e4b31c223f012e5699952abe216d8571ac45dbae416d41",
+        "matchesRecorded": true
+      }
+    ]
+  },
+  "restoredBatchHistory": [
+    {
+      "revision": "43a2c0f26ad89f0514ad0c4aff3edb351e017697",
+      "runId": 43033419568,
+      "workspaceJobId": 130566104312,
+      "testsPassed": 912,
+      "testsFailed": 1,
+      "analysis": {
+        "errors": 0,
+        "warnings": 7,
+        "infos": 60
+      },
+      "failure": "Compact Arabic history test tapped before the layout update following ensureVisible; no layout-overflow failure. Final formatter gate skipped after test failure."
+    },
+    {
+      "revision": "bf6b8e2740b1a57b56248b6f12e1bed90e90fd9d",
+      "change": "Wait for scroll layout and explicitly assert hit testability; retain compact Arabic viewport, large text and all offline history assertions."
+    },
+    {
+      "revision": "ef3ca3c038bab1a2af7765eb09d395d994431e99",
+      "change": "Apply exact five-file hosted formatter artifact, verified by artifact SHA-256, hunk contexts/counts and result Git hashes, while preserving the scroll correction.",
+      "formatterArtifactSha256": "17155cf8cc9e9e08f5db9c7e6d23f587883c4b5b83a3f990ad8629229c88abe1",
+      "validation": "Workspace run 43035543058 succeeded: 913 tests passed, 163 files formatted with 0 changes, targeted analysis 0 errors / 7 warnings / 60 infos, final committed-format gate passed."
+    }
+  ],
+  "restoredBatchValidation": {
+    "revision": "ef3ca3c038bab1a2af7765eb09d395d994431e99",
+    "runId": 43035543058,
+    "jobId": 130573266888,
+    "conclusion": "success",
+    "testsPassed": 913,
+    "formatFilesChecked": 163,
+    "formatFilesChanged": 0,
+    "analysis": {
+      "errors": 0,
+      "warnings": 7,
+      "infos": 60
+    },
+    "browser": {
+      "runId": 43035543238,
+      "jobId": 130573305650,
+      "conclusion": "success",
+      "includes": "IndexedDB concurrency and paged restart recovery, terminal and credential vault",
+      "suites": [
+        {
+          "name": "IndexedDB concurrency and paged restart recovery",
+          "passed": 2,
+          "skipped": 0
+        },
+        {
+          "name": "Terminal input and explicit SSH gateway",
+          "passed": 36,
+          "skipped": 1
+        },
+        {
+          "name": "Browser credential vault authentication and compatibility",
+          "passed": 34,
+          "skipped": 0
+        }
+      ]
+    },
+    "boundary": "Overlapping earlier local gates are not added to this total. Separate broad/platform CI outcomes require their own completed evidence."
+  },
+  "reviewedSourceBinding": {
+    "previousFingerprint": "72be43025ae190ec5734c2b877481361a318a4b234407558004b2fda703e866a",
+    "reviewedFingerprint": "1be5e3187053a515c775c136e8424c4f11b1616a5978ed8856e54223476a7ad8",
+    "paths": 128,
+    "unchangedPaths": 126,
+    "changedPaths": [
+      "cli/lib/commands/connect.dart",
+      "lib/widgets/command_palette.dart"
+    ],
+    "scope": "CLI help-string wrapping from the verified formatter and the marked-folder batch palette import/dispatch; inventory and root lock unchanged.",
+    "validation": "Per-file Git blob identities and canonical old/current SHA-256 maps independently checked; hosted refresh status recorded in PR."
+  }
 }

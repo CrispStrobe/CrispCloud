@@ -2,15 +2,24 @@
 
 ## Current integrated implementation
 
-The current runtime performance checkpoint is
-[`e9dd5dbbb8581e16f228d4f51239adf7d0b22660`](https://github.com/CrispStrobe/CrispCloud/commit/e9dd5dbbb8581e16f228d4f51239adf7d0b22660).
-It adds aggregate-only inline totals, cached derived storage identities with live
-input checks, and bounded durable catalog page batches. The
+The current runtime checkpoint is
+[`ef3ca3c038bab1a2af7765eb09d395d994431e99`](https://github.com/CrispStrobe/CrispCloud/commit/ef3ca3c038bab1a2af7765eb09d395d994431e99).
+It includes aggregate-only inline totals, cached derived storage identities with
+live input checks, bounded durable catalog page batches, and a marked-folder
+queue that saves complete reports for offline history. The
 [2026-11-11 performance record](storage-scan-update-2026-11-11.md) reports the
 measured gains, inconsistent full-scan/load timings and current validation limits.
-The additional multi-root batch UI and its final publication-status repair are
-preserved as [inert recovery artifacts](recovery/README.md), not active runtime
-code. The execution workspace became unavailable before their final validation.
+The additional multi-root batch UI and its final publication-status repair were
+subsequently restored as source checkpoint
+[`43a2c0f`](https://github.com/CrispStrobe/CrispCloud/commit/43a2c0f26ad89f0514ad0c4aff3edb351e017697).
+The [recovery artifacts](recovery/README.md) remain available for provenance after
+the original execution workspace became unavailable. At the formatted runtime checkpoint `ef3ca3c`,
+[hosted workspace validation](https://github.com/CrispStrobe/CrispCloud/actions/runs/43035543058)
+passes 913 tests, checks 163 Dart files with zero formatting changes, and passes
+targeted analysis with zero errors (seven warnings and 60 informational findings).
+The [Chrome persistence job](https://github.com/CrispStrobe/CrispCloud/actions/runs/43035543238/job/130573305650)
+also passes at that exact revision. Broader and platform gates remain separately
+reported in the performance record.
 
 The preceding integrated UX checkpoint is
 [`12924a58b7c87b58d172fae829349e97aec3a64f`](https://github.com/CrispStrobe/CrispCloud/commit/12924a58b7c87b58d172fae829349e97aec3a64f),
@@ -92,7 +101,9 @@ live-provider acceptance that still needs a suitable runtime.
 | Inline folder measurements | Marking a verified folder queues a metadata scan through its original source. Each pane runs at most two scans concurrently, with a 20,000-entry budget and depth limit of 128 per scan. Only a complete current result supplies an exact calculated folder size. | `panel_folder_size_test.dart`, `widget/folder_size_views_test.dart`, `storage_scan_service_test.dart`, `storage_scan_access_test.dart`, `storage_scan_virtual_test.dart` |
 | Original-result reports | Calculate Size opens a detailed report for the captured verified folder, including search and collection results. Stop scan addresses the original queued or running row. Later selection or pane navigation cannot substitute another folder or account. | `widget/folder_size_result_context_test.dart`, `storage_analyzer_origin_test.dart`, `storage_analyzer_widget_test.dart` |
 | Source-aware status | Labels, quota, connection state and local capacity follow the active pane's actual storage and client session. Unknown quota fields and unmeasured selections remain explicit; parent rows are excluded from counts, and paged collections use collection totals. | `widget/status_bar_source_test.dart`, `widget/status_bar_widget_test.dart` |
-| Analyzer localization | All nine supported languages have complete 78-label catalogs, including queued scans. Literal paths retain left-to-right direction in report selection, scan issues and largest-files rows; narrow layouts retain accessible controls. | `storage_analyzer_strings_test.dart`, `storage_analyzer_widget_test.dart` |
+| Aggregate-only totals | Inline measurement uses the same guarded traversal without retaining a detailed display tree. Exact row publication survives reordering and rejects replacement rows. Derived storage identities are reused only while all live inputs match. | `storage_scan_summary_test.dart`, `panel_folder_size_test.dart`, `storage_identity_cache_test.dart` |
+| Marked-folder catalog queue | Review up to 32 captured roots; hold at most two scan/save slots, serialize shared-client reads and durable saves, and open exact saved reports offline. Confirmed saves survive Stop; uncertain acknowledgement offers history inspection without automatic resaving. | `storage_scan_batch_service_test.dart`, `storage_scan_batch_widget_test.dart`, `storage_scan_snapshot_store_test.dart` |
+| Analyzer localization | All nine supported languages have complete 93-label catalogs, including batch review, progress and unconfirmed-save outcomes. Literal paths retain left-to-right direction in report selection, scan issues and largest-files rows; narrow layouts retain accessible controls. | `storage_analyzer_strings_test.dart`, `storage_analyzer_widget_test.dart` |
 | SMB connection choices | GUI and CLI connections persist libsmb2, Rust or Auto selection. libsmb2 remains the default; Auto permits fallback only at native initialization. Invalid saved GUI modes leave fields intact, and CLI scalar-looking credential strings retain their type. | `smb_backend_field_test.dart`, `smb_connection_profile_dialog_test.dart`, `smb_client_adapter_test.dart`; shared transport and CLI suites are linked in the [SMB rollout notes](SMB_RUST_ROLLOUT.md). |
 | Transfer inspection | Expanded batches search names, literal paths and saved destinations, and filter files by attention, unfinished, completed or skipped status. Rows expose errors; keyboard and touch open selectable full details with copy support. | `widget/transfer_file_details_test.dart`, `widget/operations_panel_test.dart`, `operations_i18n_test.dart` |
 

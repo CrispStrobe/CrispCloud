@@ -284,6 +284,53 @@ No production credentials were used, no live provider account was mutated,
 and no government notification/report, CCATS request or store submission was
 made by the audit workflow.
 
+## 11 November 2026: batch-command source binding review
+
+Reviewed [source ef3ca3c038bab1a2af7765eb09d395d994431e99](https://github.com/CrispStrobe/CrispCloud/tree/ef3ca3c038bab1a2af7765eb09d395d994431e99)
+against the previously covered
+[e9dd5dbbb8581e16f228d4f51239adf7d0b22660](https://github.com/CrispStrobe/CrispCloud/tree/e9dd5dbbb8581e16f228d4f51239adf7d0b22660).
+The [source comparison](https://github.com/CrispStrobe/CrispCloud/compare/e9dd5dbbb8581e16f228d4f51239adf7d0b22660...ef3ca3c038bab1a2af7765eb09d395d994431e99)
+changes exactly two of the inventory's 128 reviewed files:
+
+| Reviewed file | Source finding |
+| --- | --- |
+| `cli/lib/commands/connect.dart` | Only the line wrapping of the existing SFTP host-key help string changes. Its text, option, defaults and validation remain identical. |
+| `lib/widgets/command_palette.dart` | Adds the batch-scan dialog import and an explicitly selected command that opens its review flow. Existing account, encryption and key-management commands remain unchanged. |
+
+The reachable batch flow captures verified marked-folder origins, retains
+their existing client/grant checks, reads source metadata and persists inert
+full reports through existing snapshot storage. Its source-label lookup is
+display-only and requires matching client identity before using active-account
+information. Snapshot publication keeps uncertain commits distinct from
+cancellation and preserves their candidate pages. These additions introduce
+no cipher, key derivation, transport, authentication mode or credential store.
+No source-file content transfer or source-file mutation is added by this flow.
+
+All 128 exact current inputs were fetched and checked against their Git blob
+identities. The canonical sorted path-to-SHA-256 map, using the previous bytes
+of the two changed inputs, reproduces the policy's existing fingerprint:
+
+`72be43025ae190ec5734c2b877481361a318a4b234407558004b2fda703e866a`
+
+Updating only those two inputs yields:
+
+`1be5e3187053a515c775c136e8424c4f11b1616a5978ed8856e54223476a7ad8`
+
+The other 126 reviewed inputs, inventory and dependency lock are unchanged.
+The policy refresh changes only `reviewed_source_sha256`; validators,
+dependency provenance, encryption declarations, documentation decisions,
+compliance-code and distribution settings are unchanged. This source binding
+review does not renew external approvals or establish a signed artifact's
+correspondence to source.
+
+[CI job 130573305765](https://github.com/CrispStrobe/CrispCloud/actions/runs/43035543238/job/130573305765)
+checked merge `e1c8d92c3013bf12b01b5789f1f0b33339647ca1`, whose tree is
+identical to the reviewed source. Its validator suites completed with 41 tests
+(two Apple-only skips) and 37 tests, then `crypto_release_evidence.py --check`
+correctly rejected the stale source fingerprint. The refreshed policy still
+requires a successful hosted source-evidence check at its committed revision;
+the hash review alone is not recorded as a passing hosted gate.
+
 ## Validation and build evidence
 
 The PR's **Crypto release evidence** job checks the inventory and failure paths
