@@ -58,414 +58,167 @@ void main() {
 
     await _step('open Projects with preview', () async {
       await _openFolder(tester, 'Projects', panel: 1);
-      awai…39314 tokens truncated…Service.lightTheme,
-      darkTheme: themeService.darkTheme,
-      themeMode: themeService.themeMode,
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      locale: ref.watch(localeProvider),
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: kIsWeb || ref.watch(credentialVaultRequiredProvider)
-          ? const WebMasterPasswordGate()
-          : const _AppLockGate(),
-    );
-  }
-}
-
-/// Gate widget that shows the lock screen if app lock is enabled.
-class _AppLockGate extends ConsumerStatefulWidget {
-  const _AppLockGate();
-
-  @override
-  ConsumerState<_AppLockGate> createState() => _AppLockGateState();
-}
-
-class _AppLockGateState extends ConsumerState<_AppLockGate>
-    with WidgetsBindingObserver {
-  bool _isLocked = false;
-  bool _isChecking = true;
-  bool _checkFailed = false;
-  DateTime? _lastPaused;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    _checkLock();
-  }
-
-  Future<void> _checkLock() async {
-    if (mounted) {
-      setState(() {
-        _isChecking = true;
-        _checkFailed = false;
-      });
-    }
-    try {
-      final lockService = ref.read(appLockServiceProvider);
-      final enabled = await lockService.isEnabled();
-      if (mounted) {
-        setState(() {
-          _isLocked = enabled;
-          _isChecking = false;
-        });
-      }
-    } catch (_) {
-      // An unavailable policy is not evidence that app lock is disabled.
-      if (mounted) {
-        setState(() {
-          _checkFailed = true;
-          _isChecking = false;
-        });
-      }
-    }
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.hidden) {
-      _lastPaused = DateTime.now();
-    } else if (state == AppLifecycleState.resumed) {
-      unawaited(_resume());
-    }
-  }
-
-  Future<void> _resume() async {
-    if (_lastPaused != null) await _checkAutoLock();
-    if (mounted && !_isChecking && !_checkFailed && !_isLocked) {
-      await ref.read(transferProvider).refreshBackgroundRecovery();
-    }
-  }
-
-  Future<void> _checkAutoLock() async {
-    if (_isLocked) return;
-    try {
-      final lockService = ref.read(appLockServiceProvider);
-      final enabled = await lockService.isEnabled();
-      if (!enabled) return;
-
-      final timeout = await lockService.getTimeout();
-      final elapsed = DateTime.now().difference(_lastPaused!).inSeconds;
-      if (elapsed >= timeout) {
-        if (mounted) setState(() => _isLocked = true);
-      }
-    } catch (_) {
-      if (mounted) setState(() => _checkFailed = true);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_isChecking) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
-
-    if (_checkFailed) {
-      return _CredentialGateFailure(onRetry: _checkLock);
-    }
-
-    if (_isLocked) {
-      return LockScreen(
-        lockService: ref.read(appLockServiceProvider),
-        onUnlocked: () => setState(() => _isLocked = false),
-      );
-    }
-
-    return const FileBrowserScreen();
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-}
-
-/// Shows a retryable credential failure without exposing the app or treating
-/// unreadable lock/vault metadata as an empty new profile.
-class _CredentialGateFailure extends StatelessWidget {
-  const _CredentialGateFailure({required this.onRetry});
-
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    body: Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.lock_outline, size: 48),
-            const SizedBox(height: 16),
-            Text(
-              StartupFailureStrings(context).credentialStorageUnavailable,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: onRetry,
-              child: Text(AppLocalizations.of(context)?.retry ?? 'Retry'),
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
-}
-
-/// Prompts for a master password on web and native encrypted-file backends
-/// before proceeding to provider authentication or the app-lock gate.
-class WebMasterPasswordGate extends ConsumerStatefulWidget {
-  const WebMasterPasswordGate({super.key});
-
-  @override
-  ConsumerState<WebMasterPasswordGate> createState() =>
-      WebMasterPasswordGateState();
-}
-
-class WebMasterPasswordGateState extends ConsumerState<WebMasterPasswordGate> {
-  final _controller = TextEditingController();
-  final _confirmationController = TextEditingController();
-  String? _error;
-  bool _loading = true;
-  bool _isNewVault = false;
-  bool _inspectionFailed = false;
-  bool _obscurePassword = true;
-  bool _obscureConfirmation = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _checkIfGateNeeded();
-  }
-
-  /// Decide whether to create or unlock a vault before the app saves secrets.
-  Future<void> _checkIfGateNeeded() async {
-    if (mounted) {
-      setState(() {
-        _loading = true;
-        _inspectionFailed = false;
-      });
-    }
-    try {
-      final storage = ref.read(secureStorageProvider) as WebEncryptedStorage;
-      _isNewVault = !await storage.hasVault();
-      if (_isNewVault && ref.read(credentialVaultCreationProvider) == null) {
-        throw const CredentialStorageUnavailable();
-      }
-    } catch (_) {
-      // Corrupt/inaccessible metadata must never lead to a create/overwrite
-      // prompt or to provider initialization without an unlocked vault.
-      _inspectionFailed = true;
-    }
-    if (mounted) {
-      setState(() {
-        _loading = false;
-      });
-    }
-  }
-
-  Future<void> _submit() async {
-    if (_loading || _inspectionFailed) return;
-    final password = _controller.text;
-    if (password.isEmpty) return;
-    if (_isNewVault && password.length < 8) {
-      setState(
-        () =>
-            _error = SettingsStrings(context)
-                .text('Use at least 8 characters for the master password.'),
-      );
-      return;
-    }
-    if (_isNewVault && password != _confirmationController.text) {
-      setState(() => _error = WebVaultStrings(context).mismatch);
-      return;
-    }
-
-    setState(() {
-      _loading = true;
-      _error = null;
+      await _openFolder(tester, 'CrispCloud', panel: 1);
+      await tester.tap(find.text('README.md').last);
+      await _settle(tester, const Duration(milliseconds: 600));
+      await _tapTooltip(tester, 'Show Preview');
     });
+    await _settle(tester, const Duration(seconds: 3));
+    _dumpTexts('projects');
+    await _shot(tester, out, '03-preview');
 
-    try {
-      final storage = ref.read(secureStorageProvider) as WebEncryptedStorage;
-      final consumeCreation = ref.read(credentialVaultCreationProvider);
-      if (_isNewVault && consumeCreation == null) {
-        throw const CredentialStorageUnavailable();
-      }
-      if (consumeCreation != null) {
-        // Consume before writing a vault: a stale or unacknowledged grant must
-        // never leave an empty replacement vault that a restart could trust.
-        // Neither a failed consume nor a failed creation restores this grant.
-        ref.read(credentialVaultCreationProvider.notifier).state = null;
-        await consumeCreation();
-      }
-      await storage.initialize(password, expectedExisting: !_isNewVault);
-      if (!storage.isInitialized) throw const CredentialStorageUnavailable();
-      _isNewVault = false;
-      await CredentialMigration.migrateIfNeeded(storage);
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute<void>(builder: (_) => const _AppLockGate()),
-        );
-      }
-    } on StateError catch (e) {
-      if (mounted) {
-        setState(() {
-          _inspectionFailed =
-              _isNewVault && ref.read(credentialVaultCreationProvider) == null;
-          _error =
-              e.message == 'Incorrect master password' ||
-                  e.message == 'Incorrect master password or damaged vault' ||
-                  e.message == 'Master password verification failed'
-              ? WebVaultStrings(context).incorrect
-              : WebVaultStrings(context).failure;
-          _loading = false;
-        });
-      }
-    } catch (_) {
-      if (mounted) {
-        setState(() {
-          _inspectionFailed =
-              _isNewVault && ref.read(credentialVaultCreationProvider) == null;
-          _error = WebVaultStrings(context).failure;
-          _loading = false;
-        });
-      }
-    }
+    await _step('open settings', () async {
+      await _tapTooltip(tester, 'Settings');
+    });
+    await _settle(tester, const Duration(seconds: 2));
+    _dumpTexts('settings');
+    await _shot(tester, out, '04-settings');
+  }, timeout: const Timeout(Duration(minutes: 10)));
+}
+
+void _log(String message) => debugPrint('STORE_SHOTS $message');
+
+Future<void> _step(String name, Future<void> Function() body) async {
+  try {
+    await body();
+    _log('step ok: $name');
+  } catch (error) {
+    _log('step failed: $name: $error');
+  }
+}
+
+Future<void> _settle(WidgetTester tester, Duration total) async {
+  final end = DateTime.now().add(total);
+  while (DateTime.now().isBefore(end)) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
+}
+
+Future<void> _tapTooltip(WidgetTester tester, String tooltip) async {
+  await tester.tap(find.byTooltip(tooltip).first);
+  await _settle(tester, const Duration(milliseconds: 800));
+}
+
+Future<void> _openFolder(
+  WidgetTester tester,
+  String name, {
+  required int panel,
+}) async {
+  final matches = find.text(name);
+  final count = matches.evaluate().length;
+  if (count == 0) throw StateError('no "$name" entry');
+  final target = matches.at(math.min(panel, count - 1));
+  await tester.tap(target);
+  await tester.pump(const Duration(milliseconds: 60));
+  await tester.tap(target);
+  await _settle(tester, const Duration(seconds: 2));
+}
+
+void _dumpTexts(String label) {
+  final texts = find
+      .byType(Text)
+      .evaluate()
+      .map((e) => (e.widget as Text).data)
+      .whereType<String>()
+      .where((t) => t.trim().isNotEmpty)
+      .take(80)
+      .join(' | ');
+  _log('texts[$label]: $texts');
+}
+
+Future<void> _shot(WidgetTester tester, Directory out, String name) async {
+  await tester.pump();
+  final view = tester.binding.renderViews.first;
+  final layer = view.debugLayer! as OffsetLayer;
+  final image = await layer.toImage(
+    Offset.zero & view.size,
+    pixelRatio: _pixelRatio,
+  );
+  final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+  final file = File('${out.path}/crispcloud-store-$name.png');
+  await file.writeAsBytes(bytes!.buffer.asUint8List(), flush: true);
+  _log('saved ${file.path} ${image.width}x${image.height}');
+}
+
+Future<void> _seedDemoHome(String home) async {
+  Future<void> text(String path, String content) async {
+    final file = File('$home/$path');
+    await file.parent.create(recursive: true);
+    await file.writeAsString(content);
   }
 
-  @override
-  Widget build(BuildContext context) {
-    // While checking if gate is needed, show a loading screen
-    if (_loading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
-    if (_inspectionFailed) {
-      return _CredentialGateFailure(onRetry: _checkIfGateNeeded);
-    }
+  await text(
+    'Documents/Meeting notes.md',
+    '# Weekly sync\n\n- Ship 1.1 to TestFlight\n- Review sync settings\n',
+  );
+  await text('Documents/Budget 2026.csv', 'Month,Cloud,Backup\nJan,12,4\n');
+  await text(
+    'Documents/Quarterly report.txt',
+    'Q3 summary\n\nStorage across five providers grew 18%.\n',
+  );
+  await text(
+    'Projects/CrispCloud/README.md',
+    '# CrispCloud\n\nOne file manager for every cloud.\n\n'
+        '## Features\n\n- Dual-panel browsing\n- Cloud-to-cloud transfers\n'
+        '- Client-side encryption\n- Previews and an editor\n',
+  );
+  await text(
+    'Projects/CrispCloud/main.dart',
+    "void main() {\n  print('Hello from CrispCloud');\n}\n",
+  );
+  await text('Projects/Website/index.html', '<h1>Hello</h1>\n');
+  await text('Backups/2026-11-01.log', 'Backup completed: 1,284 files\n');
+  const palettes = [
+    [Color(0xFF1E88E5), Color(0xFF26C6DA)],
+    [Color(0xFFFF7043), Color(0xFFFFCA28)],
+    [Color(0xFF43A047), Color(0xFF9CCC65)],
+    [Color(0xFF8E24AA), Color(0xFFEC407A)],
+    [Color(0xFF3949AB), Color(0xFF7E57C2)],
+    [Color(0xFF00897B), Color(0xFF4DD0E1)],
+  ];
+  const names = [
+    'Lake.png',
+    'Sunset.png',
+    'Forest.png',
+    'Bloom.png',
+    'Night.png',
+    'Coast.png',
+  ];
+  for (var i = 0; i < names.length; i++) {
+    final file = File('$home/Photos/${names[i]}');
+    await file.parent.create(recursive: true);
+    await file.writeAsBytes(await _gradientPng(palettes[i], i));
+  }
+}
 
-    final strings = WebVaultStrings(context);
-    return Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 400),
-            child: Card(
-              margin: const EdgeInsets.all(32),
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.lock_outline, size: 48),
-                    const SizedBox(height: 16),
-                    Text(
-                      strings.title,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _isNewVault
-                          ? strings.createDescription
-                          : strings.unlockDescription,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    TextField(
-                      controller: _controller,
-                      autocorrect: false,
-                      enableSuggestions: false,
-                      enableIMEPersonalizedLearning: false,
-                      obscureText: _obscurePassword,
-                      autofocus: true,
-                      decoration: InputDecoration(
-                        labelText: strings.password,
-                        errorText: _error,
-                        border: const OutlineInputBorder(),
-                        suffixIcon: IconButton(
-                          tooltip: _obscurePassword
-                              ? 'Show password'
-                              : 'Hide password',
-                          icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility
-                                : Icons.visibility_off,
-                          ),
-                          onPressed: () => setState(
-                            () => _obscurePassword = !_obscurePassword,
-                          ),
-                        ),
-                      ),
-                      onSubmitted: (_) => _submit(),
-                    ),
-                    if (_isNewVault) ...[
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: _confirmationController,
-                        autocorrect: false,
-                        enableSuggestions: false,
-                        enableIMEPersonalizedLearning: false,
-                        obscureText: _obscureConfirmation,
-                        decoration: InputDecoration(
-                          labelText: strings.confirmation,
-                          border: const OutlineInputBorder(),
-                          suffixIcon: IconButton(
-                            tooltip: _obscureConfirmation
-                                ? 'Show password'
-                                : 'Hide password',
-                            icon: Icon(
-                              _obscureConfirmation
-                                  ? Icons.visibility
-                                  : Icons.visibility_off,
-                            ),
-                            onPressed: () => setState(
-                              () =>
-                                  _obscureConfirmation = !_obscureConfirmation,
-                            ),
-                          ),
-                        ),
-                        onSubmitted: (_) => _submit(),
-                      ),
-                    ],
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _loading ? null : _submit,
-                        child: _loading
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : Text(
-                                _isNewVault ? strings.create : strings.unlock,
-                              ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
+Future<List<int>> _gradientPng(List<Color> colors, int seed) async {
+  const size = Size(640, 420);
+  final recorder = ui.PictureRecorder();
+  final canvas = Canvas(recorder);
+  canvas.drawRect(
+    Offset.zero & size,
+    Paint()
+      ..shader = ui.Gradient.linear(
+        Offset.zero,
+        size.bottomRight(Offset.zero),
+        colors,
       ),
+  );
+  final random = math.Random(seed);
+  for (var i = 0; i < 5; i++) {
+    canvas.drawCircle(
+      Offset(
+        random.nextDouble() * size.width,
+        random.nextDouble() * size.height,
+      ),
+      40 + random.nextDouble() * 90,
+      Paint()..color = Colors.white.withValues(alpha: 0.12),
     );
   }
-
-  @override
-  void dispose() {
-    _confirmationController.dispose();
-    _controller.dispose();
-    super.dispose();
-  }
+  final image = await recorder.endRecording().toImage(
+    size.width.toInt(),
+    size.height.toInt(),
+  );
+  final data = await image.toByteData(format: ui.ImageByteFormat.png);
+  return data!.buffer.asUint8List();
 }
