@@ -30,6 +30,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:quds_office_engine/quds_office_engine.dart';
 
 const _target = String.fromEnvironment('STORE_TARGET', defaultValue: 'mac');
@@ -54,13 +55,18 @@ void main() {
     // and must not discard the captures. Restored before the test ends.
     final originalOnError = FlutterError.onError;
     FlutterError.onError = (details) => _log(
-      'framework error: ${details.exceptionAsString().split('\n').first}',
+      'framework error: ${details.exceptionAsString().split('\n').first}\n'
+      '${details.stack.toString().split('\n').take(8).join('\n')}',
     );
     tester.view.physicalSize = _logicalSize * _pixelRatio;
     tester.view.devicePixelRatio = _pixelRatio;
 
+    // iOS exposes no HOME to the test process; the app's Documents folder is
+    // the root its local panel shows, so the demo folders go there.
     final home = _storeHome.isNotEmpty
         ? _storeHome
+        : Platform.isIOS
+        ? (await getApplicationDocumentsDirectory()).path
         : Platform.environment['HOME']!;
     final out = Directory('${Directory.systemTemp.path}/crispcloud-store')
       ..createSync(recursive: true);
