@@ -128,11 +128,21 @@ List<String> bundledRustLibraryCandidates({
         for (final s in stems) '$dir/../Frameworks/$s.framework/$s',
         for (final s in stems) '@rpath/$s.framework/$s',
         '$dir/../Frameworks/libcrisp_smb_bridge.dylib',
+        // `dart build cli` bundle: bin/<exe>, lib/<library>.
+        '$dir/../lib/libcrisp_smb_bridge.dylib',
       ];
     case 'linux':
-      return ['$dir/lib/libcrisp_smb_bridge.so', 'libcrisp_smb_bridge.so'];
+      return [
+        '$dir/lib/libcrisp_smb_bridge.so', // Flutter bundle
+        '$dir/../lib/libcrisp_smb_bridge.so', // dart build cli bundle
+        'libcrisp_smb_bridge.so',
+      ];
     case 'windows':
-      return ['$dir${slash}crisp_smb_bridge.dll', 'crisp_smb_bridge.dll'];
+      return [
+        '$dir${slash}crisp_smb_bridge.dll',
+        '$dir$slash..${slash}lib${slash}crisp_smb_bridge.dll',
+        'crisp_smb_bridge.dll',
+      ];
     case 'android':
       return ['libcrisp_smb_bridge.so'];
     default:

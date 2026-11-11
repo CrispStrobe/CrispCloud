@@ -190,8 +190,17 @@ void main() {
         'libcrisp_smb_bridge.framework/libcrisp_smb_bridge',
       );
       expect(
-        c.last,
-        '/Applications/Crisper.app/Contents/MacOS/../Frameworks/libcrisp_smb_bridge.dylib',
+        c,
+        contains(
+          '/Applications/Crisper.app/Contents/MacOS/../Frameworks/libcrisp_smb_bridge.dylib',
+        ),
+      );
+      expect(
+        bundledRustLibraryCandidates(
+          os: 'macos',
+          executable: '/opt/crisp/bin/crisp',
+        ),
+        contains('/opt/crisp/bin/../lib/libcrisp_smb_bridge.dylib'),
       );
     });
 
@@ -201,7 +210,11 @@ void main() {
           os: 'linux',
           executable: '/opt/app/crisper',
         ),
-        ['/opt/app/lib/libcrisp_smb_bridge.so', 'libcrisp_smb_bridge.so'],
+        [
+          '/opt/app/lib/libcrisp_smb_bridge.so',
+          '/opt/app/../lib/libcrisp_smb_bridge.so',
+          'libcrisp_smb_bridge.so',
+        ],
       );
     });
 
@@ -213,6 +226,7 @@ void main() {
         ),
         [
           r'C:\Program Files\Crisper\crisp_smb_bridge.dll',
+          r'C:\Program Files\Crisper\..\lib\crisp_smb_bridge.dll',
           'crisp_smb_bridge.dll',
         ],
       );
