@@ -3,6 +3,7 @@ import 'dart:collection';
 import '../properties/wml_properties.dart';
 import 'wml_clone.dart';
 import 'wml_document.dart';
+import 'wml_run_edit.dart';
 
 /// Footnote or endnote body.
 class WmlNote {
@@ -171,6 +172,100 @@ abstract final class WordNotes {
       );
     }
     return true;
+  }
+
+  /// The editable text of [note]: one line per top-level paragraph.
+  ///
+  /// The space Word places after the automatic note number is not part of
+  /// the editable text. Tables, pictures and equations inside the note are
+  /// not included, and [editText] never changes them.
+  static String editableText(WmlNote note) {
+    final List<WmlParagraph> paragraphs = note.paragraphs;
+    return <String>[
+      for (var i = 0; i < paragraphs.length; i++)
+        i == 0 && paragraphs[i].text.startsWith(' ')
+            ? paragraphs[i].text.substring(1)
+            : paragraphs[i].text,
+    ].join('\n');
+  }
+
+  /// Applies edited [text] (as returned by [editableText], then changed) to
+  /// [note] with the smallest change per paragraph.
+  ///
+  /// Untouched characters keep their runs, so formatting, links and comment
+  /// anchors survive; inserted characters take the formatting of the text
+  /// they join. Paragraph properties (such as the FootnoteText style) are
+  /// kept, extra lines become paragraphs styled like the last one, and
+  /// removed lines delete trailing paragraphs. Non-paragraph blocks are kept.
+  static void editText(WmlNote note, String text) {
+    final List<String> lines = text.split('\n');
+    List<WmlParagraph> paragraphs = note.paragraphs.toList();
+    if (paragraphs.isEmpty) {
+      note.blocks.insert(0, WmlParagraph(inlines: <WmlInline>[WmlRun()]));
+      paragraphs = note.paragraphs.toList();
+    }
+    final int shared = lines.length < paragraphs.length
+        ? lines.length
+        : paragraphs.length;
+    for (var i = 0; i < shared; i++) {
+      _applyLine(paragraphs[i], lines[i], first: i == 0);
+    }
+    if (lines.length > paragraphs.length) {
+      final WmlParagraph template = paragraphs.last;
+      final WmlRunProps runProps = WmlRunEdit.propsAt(
+        template,
+        template.text.length - 1,
+      ).copy();
+      var at = note.blocks.indexOf(template) + 1;
+      for (var i = paragraphs.length; i < lines.length; i++) {
+        note.blocks.insert(
+          at++,
+          WmlParagraph(
+            properties: template.properties.copy(),
+            inlines: <WmlInline>[
+              WmlRun(text: lines[i], properties: runProps.copy()),
+            ],
+          ),
+        );
+      }
+    } else {
+      for (var i = paragraphs.length - 1; i >= lines.length; i--) {
+        note.blocks.remove(paragraphs[i]);
+      }
+    }
+  }
+
+  static void _applyLine(
+    WmlParagraph paragraph,
+    String line, {
+    required bool first,
+  }) {
+    final String old = paragraph.text;
+    final String target = first && old.startsWith(' ') && !line.startsWith(' ')
+        ? ' $line'
+        : line;
+    if (old == target) {
+      return;
+    }
+    var start = 0;
+    while (start < old.length &&
+        start < target.length &&
+        old.codeUnitAt(start) == target.codeUnitAt(start)) {
+      start++;
+    }
+    var end = 0;
+    while (end < old.length - start &&
+        end < target.length - start &&
+        old.codeUnitAt(old.length - 1 - end) ==
+            target.codeUnitAt(target.length - 1 - end)) {
+      end++;
+    }
+    WmlRunEdit.replaceRange(
+      paragraph,
+      start,
+      old.length - end,
+      target.substring(start, target.length - end),
+    );
   }
 
   /// paragraphOf API.

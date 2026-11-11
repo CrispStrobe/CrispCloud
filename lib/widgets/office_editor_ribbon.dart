@@ -182,6 +182,16 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
             _c.config.allowsMutation ? _insertComment : null,
             icon: Icons.comment_outlined,
           ),
+          _menuItem(
+            'Footnote',
+            _c.config.allowsMutation ? () => _insertNote(endnote: false) : null,
+            icon: Icons.short_text,
+          ),
+          _menuItem(
+            'Endnote',
+            _c.config.allowsMutation ? () => _insertNote(endnote: true) : null,
+            icon: Icons.notes,
+          ),
           const Divider(height: 1),
           _menuItem('Page break', _pageBreak, icon: Icons.insert_page_break),
           _menuItem('Section break', _sectionBreak, icon: Icons.horizontal_split),
@@ -289,6 +299,11 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
           widget.config.showRulers ? 'Hide rulers' : 'Show rulers',
           () => _setConfig(showRulers: !widget.config.showRulers),
           icon: Icons.straighten,
+        ));
+        items.add(_menuItem(
+          widget.config.showNotesPane ? 'Hide footnotes' : 'Show footnotes',
+          () => _setConfig(showNotesPane: !widget.config.showNotesPane),
+          icon: Icons.notes,
         ));
         break;
       case OfficeEditorKind.sheet:
@@ -698,6 +713,14 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
             _bigButton(Icons.horizontal_split, 'Section break', _sectionBreak),
             _bigButton(Icons.vertical_split, 'Column break', _columnBreak),
           ]),
+          _group('Footnotes', <Widget>[
+            _bigButton(
+              Icons.short_text,
+              'Footnote',
+              () => _insertNote(endnote: false),
+            ),
+            _bigButton(Icons.notes, 'Endnote', () => _insertNote(endnote: true)),
+          ]),
           _group('Tables', <Widget>[
             _bigButton(Icons.table_chart, 'Table', _insertTable),
             _iconButton(
@@ -914,6 +937,12 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
               widget.config.showRulers ? 'Hide rulers' : 'Show rulers',
               () => _setConfig(showRulers: !widget.config.showRulers),
               active: widget.config.showRulers,
+            ),
+            _bigButton(
+              Icons.notes,
+              widget.config.showNotesPane ? 'Hide footnotes' : 'Show footnotes',
+              () => _setConfig(showNotesPane: !widget.config.showNotesPane),
+              active: widget.config.showNotesPane,
             ),
           ]),
           _group('Workspace', <Widget>[
@@ -2254,9 +2283,11 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
     bool? showGridHeaders,
     bool? showGridlines,
     bool? showSlideHandles,
+    bool? showNotesPane,
   }) {
     final OfficeSurfaceConfig next = widget.config.copyWith(
       showRulers: showRulers,
+      showNotesPane: showNotesPane,
       showFormulaBar: showFormulaBar,
       showGridHeaders: showGridHeaders,
       showGridlines: showGridlines,
@@ -2538,6 +2569,15 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
   }
 
   void _pageBreak() => _word.insertPageBreak();
+
+  /// Inserts a footnote or endnote at the caret and opens the notes pane,
+  /// where its text is typed.
+  void _insertNote({required bool endnote}) {
+    _word.insertFootnote(endnote: endnote);
+    if (!widget.config.showNotesPane) {
+      _setConfig(showNotesPane: true);
+    }
+  }
 
   void _sectionBreak() => _word.insertSectionBreak();
 

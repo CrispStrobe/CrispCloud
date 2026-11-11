@@ -1,10 +1,10 @@
 {
   "source_repository": "CrispStrobe/quds_office_suite",
-  "source_branch": "feature/office-fidelity-oracles",
-  "source_commit": "3146e6359853ccc89e7d6452e7fb7a8000564c2a",
+  "source_branch": "main",
+  "source_commit": "91dae1c350d337ac905807f45553c01053134c55",
   "files": {
     "packages/quds_office_editor/lib/src/editor_word/render_word_canvas.dart": "0f903efc8144c1e4098211341603b42c051bbeb1ece4e68942f46423dc88ddb3",
-    "packages/quds_office_editor/lib/src/embed/office_controller.dart": "29a540627c0a92d5149e84b49b0d833a877165558ee39e5bb3adcaa55cd78f33",
+    "packages/quds_office_editor/lib/src/embed/office_controller.dart": "b892d9ec3b853d0e4dfe89d9d1b98970b1f29026bf576288d25d4c45051ba783",
     "packages/quds_office_editor/test/goldens/office_fidelity_word.png": "c03a47179ddea9938f97c80e724be601484ffb75edd7e98d799dd2f79ae535a3",
     "packages/quds_office_editor/test/office_fidelity_golden_test.dart": "31c57d63b547930803c0a578263a08f32c9d216e4377c7e15fa19cc237941b5a",
     "packages/quds_office_editor/test/office_fidelity_workflow_test.dart": "e3e6effb1a6444812bccd4f3d68240345fd15decd1da126b057eee710fe0236b",
@@ -22,7 +22,7 @@
     "packages/quds_office_engine/lib/src/word/model/wml_document.dart": "88bb050e9252151487d797ef0d15d7bf4f9da65fa3dd4a5b5fdfed9d7ff968c0",
     "packages/quds_office_engine/lib/src/word/model/wml_run_edit.dart": "9ae1e791e51e6afc7b09099b348dad7785f8e4a7b84f37be88d63954a29dca36",
     "packages/quds_office_engine/lib/src/word/model/word_lists.dart": "7643e3106390b8b303b4fcd3e8684df87fe345d043b2bb106259ce552242f766",
-    "packages/quds_office_engine/lib/src/word/model/word_notes.dart": "e3d7de4de9d15e2805e6e8e304a1aaaf4a19028d2526c74bac81279ecdbf88a1",
+    "packages/quds_office_engine/lib/src/word/model/word_notes.dart": "29a71161d7edea6a4312ee8006e7f9b31e393421f1c711428675f672a9ee6512",
     "packages/quds_office_engine/lib/src/word/model/word_styles.dart": "4ef43cbd4997a81aa87415c6a0f4d252578322c02b429036294acc042e55ca9c",
     "packages/quds_office_engine/lib/src/word/properties/wml_properties.dart": "8f4f556cd31ed7f3574ea10d494c379cb98b816954990895db6b81868ad3137e",
     "packages/quds_office_engine/lib/src/word/serial/word_deserializer.dart": "55b89cd979037996c9d9d3c537337211b322c94918a129370a9581c1652e8ce3",
@@ -63,12 +63,15 @@
     "packages/quds_office_engine/tool/fidelity/native_fixtures.py": "1d44abab01c6248821940744b27ba017c0a62f874eb5efdb6abac9414e9b68ca",
     "packages/quds_office_engine/tool/fidelity/native_oracle.py": "f5b4770b4e7b71e5f229aaa291fa4cd6ee8de02541b0223cc467de360216531d",
     "packages/quds_office_engine/tool/fidelity/note_fixture.dart": "6cad6a312631f3fbb4fd1efbd3d915539f7f1e32551f517ff1797a7ba4624318",
-    "packages/quds_office_engine/tool/fidelity/notes.dart": "3a736f2f9af0f29dfc8a5c982f45da2dc69e2f5a235e8edaa4fbc7f7c266782f",
+    "packages/quds_office_engine/tool/fidelity/notes.dart": "a7b5ed2a7813bcf38cdd80e01c1bd4149c6929ba38d8bae556b3cd3db3da682d",
     "packages/quds_office_engine/tool/fidelity/notes_oracle.py": "f78ccfb7ee15b15a87496fff25d1335331d6bd982ae806e28d2b967a2c88f088",
     "packages/quds_office_engine/tool/fidelity/office_steps.dart": "e1f38508087d580981017344959710e87f93f9b46f1070f5d0704a32145505fe",
     "packages/quds_office_engine/tool/fidelity/scenarios.dart": "417c5a2aa5f54bc99e2373958d405829544a846bc675ef2074ba186fd35d5074",
     "packages/quds_office_engine/tool/fidelity/style_fixture.dart": "b76df5594ed4a3700deb9474cfc7d9db5e646d8a21ced651311efa864b66af13",
     "packages/quds_office_engine/tool/fidelity/styles_oracle.py": "9be40c7c90ea84c38450351e46ab257056d9698024a62f10aa1879300198c778",
-    "packages/quds_office_engine/tool/fidelity/test_oracles.py": "1895fe3dce2c729d2d9ea82b29b8874576b0ca56ed43eea06f290b6f3c58d325"
+    "packages/quds_office_engine/tool/fidelity/test_oracles.py": "1895fe3dce2c729d2d9ea82b29b8874576b0ca56ed43eea06f290b6f3c58d325",
+    "packages/quds_office_editor/lib/src/embed/word_notes_pane.dart": "8311a405ec1bf8082284c4a79337d16abc96033bb78e7a789065805d0504b5b8",
+    "packages/quds_office_engine/test/note_edit_test.dart": "e247e7ee0f2b184f3a522eef48118b897cc765b86f6e5e454b67138f2942a15e",
+    "packages/quds_office_editor/test/word_notes_editing_test.dart": "5a4dd0fa0e2a6ca5af7af288cbe3ca54821570089a218a3829246353570a7619"
   }
 }

@@ -232,6 +232,14 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       }
       controller?.addListener(_onControllerChanged);
       controller?.commands.addListener(_onControllerChanged);
+      // Documents with footnotes or endnotes open with the notes pane, the
+      // place where their text is edited.
+      if (controller is WordEditorController &&
+          (controller.document.footnotes.isNotEmpty ||
+              controller.document.endnotes.isNotEmpty)) {
+        _config = _config.copyWith(showNotesPane: true);
+        controller.syncConfig(_config);
+      }
       setState(() {
         _loadedBytes = bytes;
         _controller = controller;

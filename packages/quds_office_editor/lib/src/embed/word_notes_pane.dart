@@ -24,8 +24,9 @@ class WordNotesPane extends StatefulWidget {
 }
 
 class _WordNotesPaneState extends State<WordNotesPane> {
-  final Map<int, TextEditingController> _noteEdits =
-      <int, TextEditingController>{};
+  final Map<WmlNote, TextEditingController> _noteEdits =
+      <WmlNote, TextEditingController>{};
+  final Map<WmlNote, FocusNode> _noteFocus = <WmlNote, FocusNode>{};
 
   WordEditorController get _c => widget.controller;
 
@@ -34,15 +35,45 @@ class _WordNotesPaneState extends State<WordNotesPane> {
     for (final TextEditingController edit in _noteEdits.values) {
       edit.dispose();
     }
+    for (final FocusNode focus in _noteFocus.values) {
+      focus.dispose();
+    }
     super.dispose();
   }
 
+  FocusNode _focusFor(WmlNote note) => _noteFocus.putIfAbsent(note, () {
+    final FocusNode focus = FocusNode();
+    focus.addListener(() {
+      if (!focus.hasFocus) {
+        _c.commitNoteEdit(note);
+      }
+    });
+    return focus;
+  });
+
+  /// One controller per note object. Text changed elsewhere (undo, another
+  /// view) is pulled in while the field is not being typed in.
   TextEditingController _editFor(WmlNote note) {
-    final int key = note.endnote ? -note.id : note.id;
-    return _noteEdits.putIfAbsent(
-      key,
-      () => TextEditingController(text: note.text),
+    final String current = _c.noteEditText(note);
+    final TextEditingController edit = _noteEdits.putIfAbsent(
+      note,
+      () => TextEditingController(text: current),
     );
+    if (edit.text != current && !(_noteFocus[note]?.hasFocus ?? false)) {
+      edit.value = TextEditingValue(
+        text: current,
+        selection: TextSelection.collapsed(offset: current.length),
+      );
+    }
+    return edit;
+  }
+
+  void _dropStale(List<WmlNote> notes) {
+    for (final WmlNote gone
+        in _noteEdits.keys.where((WmlNote n) => !notes.contains(n)).toList()) {
+      _noteEdits.remove(gone)?.dispose();
+      _noteFocus.remove(gone)?.dispose();
+    }
   }
 
   @override
@@ -52,6 +83,8 @@ class _WordNotesPaneState extends State<WordNotesPane> {
       ..._c.document.footnotes,
       ..._c.document.endnotes,
     ];
+    _dropStale(notes);
+    final bool editable = _c.config.allowsMutation;
     return ColoredBox(
       color: theme.chromeFill,
       child: Padding(
@@ -67,6 +100,30 @@ class _WordNotesPaneState extends State<WordNotesPane> {
                 fontSize: 12,
               ),
             ),
+            if (editable) ...<Widget>[
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 12,
+                children: <Widget>[
+                  GestureDetector(
+                    key: const ValueKey<String>('notes-add-footnote'),
+                    onTap: () => _c.insertFootnote(),
+                    child: Text(
+                      widget.arabic ? '+ حاشية سفلية' : '+ Footnote',
+                      style: TextStyle(color: theme.focusRing, fontSize: 11),
+                    ),
+                  ),
+                  GestureDetector(
+                    key: const ValueKey<String>('notes-add-endnote'),
+                    onTap: () => _c.insertFootnote(endnote: true),
+                    child: Text(
+                      widget.arabic ? '+ حاشية ختامية' : '+ Endnote',
+                      style: TextStyle(color: theme.focusRing, fontSize: 11),
+                    ),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 8),
             if (notes.isEmpty)
               Text(
@@ -82,22 +139,44 @@ class _WordNotesPaneState extends State<WordNotesPane> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: <Widget>[
-                      GestureDetector(
-                        onTap: () => _c.jumpToNote(note),
-                        child: Text(
-                          widget.arabic ? 'حاشية $mark' : 'Note $mark',
-                          style: TextStyle(
-                            color: theme.focusRing,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
+                      Row(
+                        children: <Widget>[
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => _c.jumpToNote(note),
+                              child: Text(
+                                widget.arabic ? 'حاشية $mark' : 'Note $mark',
+                                style: TextStyle(
+                                  color: theme.focusRing,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
+                          if (editable)
+                            GestureDetector(
+                              key: ValueKey<String>('notes-delete-$mark'),
+                              onTap: () => _c.deleteNote(note),
+                              child: Text(
+                                widget.arabic ? 'حذف' : 'Delete',
+                                style: TextStyle(
+                                  color: theme.headerText,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                       const SizedBox(height: 4),
                       TextField(
+                        key: ValueKey<String>('notes-edit-$mark'),
                         controller: edit,
-                        maxLines: 2,
-                        enabled: _c.config.allowsMutation,
+                        focusNode: _focusFor(note),
+                        minLines: 1,
+                        maxLines: null,
+                        keyboardType: TextInputType.multiline,
+                        enabled: editable,
                         style: TextStyle(color: theme.chromeText, fontSize: 11),
                         decoration: const InputDecoration(
                           isDense: true,
@@ -105,6 +184,7 @@ class _WordNotesPaneState extends State<WordNotesPane> {
                         ),
                         onChanged: (String value) =>
                             _c.setNoteText(note, value),
+                        onTapOutside: (_) => _focusFor(note).unfocus(),
                       ),
                     ],
                   ),
