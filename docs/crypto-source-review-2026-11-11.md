@@ -273,9 +273,10 @@ input since the combined binding above. The application runtime, both Cargo
 lockfiles, application dependency lockfile and inventory are unchanged.
 
 The incoming saved-backend assertion and explicitly historical rollout notes
-are also retained. CLI diagnostics preserve the integrated `build default`
-label in both text and JSON without writing an explicit backend into old
-profiles. The current reviewed-source binding is:
+are also retained. CLI text diagnostics retain the integrated `build default`
+label without writing an explicit backend into old profiles. The machine-readable
+field is clarified in the typed-output review below. The source binding at this
+checkpoint was:
 
 ```text
 c3f94d46fa8055fe092d2e65c5a14ca17439c34b4d6ccb05260f4524ae491cca
@@ -335,4 +336,26 @@ the only changed inventoried input. The final source fingerprint is:
 ```
 
 The inventory and lockfile fingerprints, declarations, distribution assertions,
+and verifier remain unchanged.
+
+
+### Typed CLI backend-output review
+
+The final integration adopts upstream `087b2d9`'s nullable machine-readable
+`smbBackend` field. `providers --json` returns the saved backend name or `null`
+for an inherited choice; human-readable text and `info` retain `build default`.
+This matches `parseSmbBackend(null)` and avoids exposing a display label as a
+fourth, invalid backend value. Diagnostics still do not write configuration,
+construct sessions, pass credentials or change backend fallback policy.
+
+`cli/lib/commands/providers.dart` is the only changed inventoried input. The
+existing regression now verifies both field presence and the nullable saved
+value for all four cases; the complete CLI suite passed 113 tests with no
+failures or skips after this change. The final reviewed-source binding is:
+
+```text
+72be43025ae190ec5734c2b877481361a318a4b234407558004b2fda703e866a
+```
+
+The inventory and lockfile fingerprints, declarations, distribution assertions
 and verifier remain unchanged.

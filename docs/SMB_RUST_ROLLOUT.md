@@ -152,6 +152,10 @@ qualification on a real SMB3 NAS.
 
 CLI settings and listing output label profiles without an explicit choice as
 `build default`, matching the shared adapter's compile-time default behavior.
+The machine-readable `smbBackend` field in `providers --json` is `null` for an
+inherited choice and retains the saved backend name for an explicit choice.
+Its human-readable `info` field still displays `build default`; that display
+label is not a fourth backend value and is never written into saved profiles.
 
 ## macOS host package test path
 

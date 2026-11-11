@@ -70,7 +70,8 @@ void main() {
 
             expect(await runner().run(['providers', '--json']), 0);
             final rows = jsonDecode(output.buffer.toString()) as List;
-            expect(rows.single['smbBackend'], expected);
+            expect(rows.single.containsKey('smbBackend'), isTrue);
+            expect(rows.single['smbBackend'], backend);
             expect(rows.single['info'], 'smb://nas.example/Share/ [$expected]');
             output.buffer.clear();
 

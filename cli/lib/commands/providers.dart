@@ -73,7 +73,7 @@ class ProvidersCommand extends Command<int> {
       rows.add({
         'name': name,
         'type': type,
-        if (type == 'smb') 'smbBackend': cfg['smbBackend'] ?? 'build default',
+        if (type == 'smb') 'smbBackend': cfg['smbBackend'],
         'info': info,
         'default': name == defaultProv,
       });
