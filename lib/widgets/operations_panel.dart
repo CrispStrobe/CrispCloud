@@ -5,13 +5,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/commander_strings.dart';
 import '../l10n/transfer_error_strings.dart';
-import '../l10n/provider_operation_strings.dart';
 import '../models/operation_progress.dart';
 import '../models/transfer_job.dart';
 import '../providers/providers.dart';
-import '../services/file_operation_options.dart';
 import '../utils/formatters.dart' show formatBytes, formatSpeed;
 import 'transfer_history_dialog.dart';
+import 'transfer_file_details.dart';
 import 'transfer_schedule_dialog.dart';
 
 enum _QueueFilter { active, queued, attention, finished, all }
@@ -334,6 +333,8 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
                       return _OperationTile(
                         key: ValueKey('queue-job-${operation.id}'),
                         operation: operation,
+                        savedEntries: saved?.entries ?? const [],
+                        fileQuery: _search,
                         state: states[operation.id]!,
                         selected: _selectedIds.contains(operation.id),
                         onSelected: (selected) => setState(() {
@@ -686,6 +687,8 @@ class _OperationTile extends StatelessWidget {
   const _OperationTile({
     super.key,
     required this.operation,
+    required this.savedEntries,
+    required this.fileQuery,
     required this.state,
     required this.selected,
     required this.onSelected,
@@ -700,6 +703,8 @@ class _OperationTile extends StatelessWidget {
   });
 
   final OperationProgress operation;
+  final List<TransferEntryRecord> savedEntries;
+  final String fileQuery;
   final _JobState state;
   final bool selected;
   final ValueChanged<bool> onSelected;
@@ -1013,87 +1018,16 @@ class _OperationTile extends StatelessWidget {
                   ),
                 ),
               ),
-            if (isExpanded && operation.isBatch) _buildFiles(context),
+            if (isExpanded && operation.isBatch)
+              TransferFileDetails(
+                key: ValueKey('queue-file-details-${operation.id}'),
+                operation: operation,
+                savedEntries: savedEntries,
+                initialQuery: fileQuery,
+              ),
           ],
         ),
       ),
     );
   }
-
-  Widget _buildFiles(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(top: 8),
-    child: ConstrainedBox(
-      constraints: const BoxConstraints(maxHeight: 150),
-      child: ListView.builder(
-        key: ValueKey('queue-files-${operation.id}'),
-        shrinkWrap: true,
-        primary: false,
-        itemCount: operation.files!.length,
-        itemBuilder: (context, index) {
-          final file = operation.files![index];
-          final outcome = FileOperationOutcome.values
-              .where((value) => value.name == file.statusLabel)
-              .firstOrNull;
-          final label = outcome == null
-              ? file.statusLabel
-              : CommanderStrings.labelForEnum(outcome);
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 3),
-            child: Row(
-              children: [
-                Icon(
-                  file.error != null
-                      ? Icons.error_outline
-                      : file.isSkipped
-                      ? Icons.skip_next
-                      : file.isComplete
-                      ? Icons.check_circle_outline
-                      : Icons.pending_outlined,
-                  size: 14,
-                  color: file.error != null
-                      ? Theme.of(context).colorScheme.error
-                      : null,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  flex: 3,
-                  child: Tooltip(
-                    message: file.path,
-                    child: Text(
-                      file.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Flexible(
-                  flex: 2,
-                  child: Tooltip(
-                    message: file.errorCause == null
-                        ? file.error ?? file.path
-                        : localizedKnownProviderError(
-                                context,
-                                file.errorCause!,
-                              ) ??
-                              file.error ??
-                              file.path,
-                    child: Text(
-                      label == null
-                          ? formatBytes(file.size)
-                          : context.commanderTr(label),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    ),
-  );
 }
