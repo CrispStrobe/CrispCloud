@@ -318,6 +318,7 @@
     ".github/workflows/smb-rust.yml",
     "packages/crisp_storage/licensing/rust_dependencies.json",
     "packages/crisp_storage/licensing/upstream/flutter_rust_bridge-2.11.1-LICENSE",
-    "packages/crisp_storage/tool/check_rust_licenses.py"
+    "packages/crisp_storage/tool/check_rust_licenses.py",
+    "packages/crisp_storage/tool/run_package_tests.py"
   ]
 }

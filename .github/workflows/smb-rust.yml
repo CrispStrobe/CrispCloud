@@ -25,7 +25,11 @@ jobs:
       - run: cargo build --manifest-path rust/Cargo.toml --release --locked
       - run: dart pub get
       - run: dart analyze
-      - run: dart test
+      - if: runner.os != 'macOS'
+        run: dart test
+      - name: Run macOS package tests with a short native-asset path
+        if: runner.os == 'macOS'
+        run: python3 tool/run_package_tests.py
       - if: runner.os == 'Linux'
         run: |
           python3 -m venv .fixture-venv

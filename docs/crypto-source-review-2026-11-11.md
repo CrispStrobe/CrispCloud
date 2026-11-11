@@ -285,3 +285,38 @@ Only the source fingerprint changes in the policy. Its inventory/lockfile
 fingerprints and all declarations and distribution assertions are preserved.
 This records the reviewed CI setup; it does not establish a successful hosted
 workflow, native packaging, live store state or actual loaded-binary identity.
+
+
+### macOS package-test path review
+
+The follow-up host test wrapper
+[`run_package_tests.py`](../packages/crisp_storage/tool/run_package_tests.py)
+addresses the install-name expansion failure recorded in the
+[upstream macOS job](https://github.com/CrispStrobe/CrispCloud/actions/runs/42992765040/job/130429384351).
+The wrapper is the 128th inventory-listed input. The host workflow is the only
+previously inventoried file changed by this follow-up; application, credential,
+transport and native bridge sources and dependency lockfiles remain unchanged.
+
+On macOS the wrapper makes a physical package copy under `/private/tmp`, excludes
+caches/build outputs, bounds the native-asset install path, and checks the copied
+resolved lockfile before and after offline locked dependency resolution. It runs
+the same Dart tests with the supplied arguments, preserves the exit status, and
+cleans up the temporary copy. The workflow continues to run Dart directly on
+other hosts. No binary, dependency, build hook, assertion or skip condition is
+replaced. Local flow checks are separate from macOS execution; the latter remains
+a hosted acceptance gate. This test-path adjustment does not establish signed
+application packaging or live SMB3 qualification.
+
+The unchanged verifier computes these current source bindings:
+
+```json
+{
+  "inventory_sha256": "2f716200d7249f094dd491174929a355d87958150c4edeaebd464b61da13e0bd",
+  "pubspec_lock_sha256": "490f6b9238de9a8e51292dc8831844e7b502b8f186cc6e2d426bf2fb25f88853",
+  "reviewed_source_sha256": "214bc8ffeb3d682c2fd44820319625c172b8a425280283b021bf8f17d11a61f4"
+}
+```
+
+The policy changes only its inventory and reviewed-source fingerprints for this
+reviewed delta. Its lockfile fingerprint, declarations and distribution assertions
+retain their values. Binary and live-store evidence remain separate requirements.

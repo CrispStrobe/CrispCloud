@@ -152,3 +152,24 @@ qualification on a real SMB3 NAS.
 
 CLI settings and listing output label profiles without an explicit choice as
 `build default`, matching the shared adapter's compile-time default behavior.
+
+## macOS host package test path
+
+The host workflow runs the same macOS package tests through
+`python3 tool/run_package_tests.py` from `packages/crisp_storage`. Dart rewrites
+the bundled libsmb2 install name to an absolute path before running tests. The
+pinned arm64 binary has insufficient header space for the long Actions checkout
+path, as recorded in
+[the upstream macOS job](https://github.com/CrispStrobe/CrispCloud/actions/runs/42992765040/job/130429384351).
+
+The wrapper copies unchanged package sources and the resolved `pubspec.lock` to
+a bounded physical `/private/tmp/cc-smb-...` directory, excluding caches, build
+outputs and virtual environments. It resolves that same lockfile offline, then
+forwards the supplied `dart test` arguments and failure status and removes the
+temporary copy. External fixture and bridge paths should be absolute. Linux and
+Windows continue to run `dart test` directly. No dependency, prebuilt binary,
+build hook, test assertion or skip condition is replaced by this workaround.
+
+This addresses only the host package test path. A passing macOS run is still
+required; it does not establish general macOS app signing or packaging, or
+acceptance on a real SMB3 NAS.
