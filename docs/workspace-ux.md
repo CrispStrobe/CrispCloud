@@ -51,7 +51,7 @@ live-provider acceptance that still needs a suitable runtime.
 | Command discovery | The palette ranks multi-word searches across command words, action names and current shortcuts. It exposes navigation, recovery, sorting and pane commands with current availability. | `command_search_test.dart`, `widget/command_palette_localization_test.dart` |
 | Listing states | Empty folders, empty collections, filters with no results, loading, unselected browser folders, disconnected storage and failed reads have distinct states. Recovery acts on the owning pane; another pane cannot clear its failure or supply a replacement account. | `panel_listing_presentation_test.dart`, `widget/panel_listing_placeholder_test.dart` |
 | Folder tree | Lazy child reads follow the actual account, tab, source root and access grant. Source changes invalidate cached children and stale results are discarded. Failed expansion has a local retry action. | `widget/tree_sidebar_source_test.dart` |
-| Folder drops | Normal file views and visible ancestor columns support reviewed folder-row drops. Source files and accounts are captured at drag start. Ancestor destinations are freshly verified without navigating or requesting a grant, then checked again before review and execution. | `folder_drop_snapshot_test.dart`, `widget/file_column_view_test.dart`, `widget/folder_drop_target_test.dart`, `widget/panel_drop_options_test.dart`, `widget/file_operation_dialog_test.dart` |
+| Folder drops | Normal file views and visible ancestor columns support reviewed folder-row drops. Source files and accounts are captured at drag start. Ancestor destinations are freshly verified without navigating, then checked again before review and execution. | `folder_drop_snapshot_test.dart`, `widget/file_column_view_test.dart`, `widget/folder_drop_target_test.dart`, `widget/panel_drop_options_test.dart`, `widget/file_operation_dialog_test.dart` |
 | Transfer inspection | Expanded batches search names, literal paths and saved destinations, and filter files by attention, unfinished, completed or skipped status. Rows expose errors; keyboard and touch open selectable full details with copy support. | `widget/transfer_file_details_test.dart`, `widget/operations_panel_test.dart`, `operations_i18n_test.dart` |
 
 Test paths in this table are relative to `test/`.
@@ -136,8 +136,11 @@ An ancestor row is a destination candidate only: it cannot supply operation
 sources. Verification uses fresh backend metadata or a noninteractive local
 parent listing, with exact direct-child matching, folder type and root checks.
 Verification rejects missing or ambiguous destinations and any detected changes.
-The drag retains the original snapshot and source session throughout verification
-and review.
+Drop preparation checks the original snapshot and source session. Review then
+retains the captured endpoints and grant identities; ordinary pane navigation
+does not redirect or itself revoke that reviewed operation. Virtual snapshot
+verification does not request access. Native backend verification still follows
+its existing scoped-access policy and may request access if permissions change.
 
 Expand a transfer batch to search its file names, literal paths or saved
 destinations, including renamed targets. **All**, **Attention**, **Unfinished**,
@@ -241,8 +244,8 @@ platform acceptance run.
 
 Sixteen failures occurred at Unix-socket `ServerSocket.bind` with errno 9 in the
 FUSE IPC fixtures, before protocol work. The exact runtime cause remains
-unproven. One child process could not find `dart` on PATH; the final workspace
-run covers that process-journal case with the executable available. The other
+unproven. One child process could not find `dart` on PATH; that process-journal
+case passed its earlier focused rerun with the executable available. The other
 two failures exposed explicit-refresh ordering and compact file-row
 accessibility defects, which were corrected and covered by the final passing
 regressions. The later hosted run above resolves the sixteen Unix-socket fixture
