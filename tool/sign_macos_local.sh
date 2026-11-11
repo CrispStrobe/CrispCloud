@@ -50,8 +50,30 @@ security cms -D -i "$APP_PROFILE" > "$WORK/app.plist"
 /usr/libexec/PlistBuddy -c 'Print :DeveloperCertificates:0' "$WORK/app.plist" > "$WORK/cert.der"
 IDENT=$(openssl x509 -inform DER -in "$WORK/cert.der" -noout -fingerprint -sha1 \
   | sed 's/.*=//; s/://g')
-security find-identity -v -p codesigning | grep -q "$IDENT" \
-  || { echo "Signing identity $IDENT from the profile is not in any keychain" >&2; exit 1; }
+# The identity may live in a keychain that is not on the user search list
+# (e.g. brickwright-build.keychain-db); search the list first, then the
+# keychain files directly, and pass the one that has it to codesign.
+KEYCHAIN_ARGS=()
+if ! security find-identity -v -p codesigning | grep -q "$IDENT"; then
+  for kc in "${SIGNING_KEYCHAIN:-}" "$HOME"/Library/Keychains/*.keychain-db; do
+    [ -n "$kc" ] && [ -f "$kc" ] || continue
+    if security find-identity -v -p codesigning "$kc" 2>/dev/null | grep -q "$IDENT"; then
+      KEYCHAIN_ARGS=(--keychain "$kc")
+      # codesign only resolves identities from keychains on the search list:
+      # add this one for the duration of the script, then restore the list.
+      ORIGINAL_KEYCHAINS=()
+      while IFS= read -r line; do
+        line="${line#"${line%%[![:space:]]*}"}"; line="${line%\"}"; line="${line#\"}"
+        [ -n "$line" ] && ORIGINAL_KEYCHAINS+=("$line")
+      done < <(security list-keychains -d user)
+      trap 'security list-keychains -d user -s "${ORIGINAL_KEYCHAINS[@]}"; rm -rf "$WORK"' EXIT
+      security list-keychains -d user -s "${ORIGINAL_KEYCHAINS[@]}" "$kc"
+      break
+    fi
+  done
+  [ ${#KEYCHAIN_ARGS[@]} -gt 0 ] \
+    || { echo "Signing identity $IDENT from the profile is not in any keychain" >&2; exit 1; }
+fi
 
 mkents() {  # mkents <source .entitlements> <bundle id> <out>
   cp "$1" "$3"
@@ -68,20 +90,20 @@ cp "$APP_PROFILE" "$APP/Contents/embedded.provisionprofile"
 # Nested first, same order and entitlements as .github/workflows/macos-release.yml.
 HELPER="$APP/Contents/Resources/crispcloud_fuse_bridge"
 if [ -x "$HELPER" ]; then
-  codesign --force --sign "$IDENT" --entitlements macos/Runner/FuseBridge.entitlements "$HELPER"
+  codesign ${KEYCHAIN_ARGS[@]+"${KEYCHAIN_ARGS[@]}"} --force --sign "$IDENT" --entitlements macos/Runner/FuseBridge.entitlements "$HELPER"
 fi
 find "$APP/Contents/Frameworks" -maxdepth 1 -name '*.framework' -print0 2>/dev/null \
-  | xargs -0 -I{} codesign --force --options runtime --sign "$IDENT" {}
+  | xargs -0 -I{} codesign ${KEYCHAIN_ARGS[@]+"${KEYCHAIN_ARGS[@]}"} --force --options runtime --sign "$IDENT" {}
 find "$APP/Contents/Frameworks" -name '*.dylib' -print0 2>/dev/null \
-  | xargs -0 -I{} codesign --force --options runtime --sign "$IDENT" {}
+  | xargs -0 -I{} codesign ${KEYCHAIN_ARGS[@]+"${KEYCHAIN_ARGS[@]}"} --force --options runtime --sign "$IDENT" {}
 if [ -d "$EXT" ]; then
   mkents macos/FinderExtension/FinderExtension.entitlements "$EXT_BUNDLE_ID" "$WORK/ext.plist"
-  codesign --force --options runtime --sign "$IDENT" --entitlements "$WORK/ext.plist" "$EXT"
+  codesign ${KEYCHAIN_ARGS[@]+"${KEYCHAIN_ARGS[@]}"} --force --options runtime --sign "$IDENT" --entitlements "$WORK/ext.plist" "$EXT"
 fi
 mkents macos/Runner/Release.entitlements "$BUNDLE_ID" "$WORK/app-ents.plist"
-codesign --force --options runtime --sign "$IDENT" --entitlements "$WORK/app-ents.plist" "$APP"
+codesign ${KEYCHAIN_ARGS[@]+"${KEYCHAIN_ARGS[@]}"} --force --options runtime --sign "$IDENT" --entitlements "$WORK/app-ents.plist" "$APP"
 
 codesign --verify --deep --strict "$APP"
 codesign -d --entitlements - --xml "$APP" 2>/dev/null | grep -q "$TEAM.$BUNDLE_ID" \
   || { echo "application-identifier missing from the signed app" >&2; exit 1; }
-echo "Signed $APP with $(security find-identity -v -p codesigning | grep "$IDENT" | sed 's/.*"\(.*\)"/\1/')"
+echo "Signed $APP with identity $IDENT ${KEYCHAIN_ARGS[*]+"${KEYCHAIN_ARGS[*]}"}"
