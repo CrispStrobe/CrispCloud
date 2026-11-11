@@ -21,16 +21,18 @@ content.
 
 ## State (11 November 2026)
 
-- Pinned fork revision: `5c5270d` on `feature/office-fidelity-oracles`, merged
-  into CrispCloud `main`. `tool/office_fidelity_manifest.json` records the
-  source commit and a SHA-256 for every shared file;
-  `tool/verify_office_fidelity.py` fails when a shared file differs from it.
-  Unrelated vendor changes are allowed.
-- Engine suite in the fork: 491 passed, 3 optional-fixture skips, analysis clean
-  with `--fatal-infos`. Editor analysis clean.
+- Pinned fork revision: `c9db5a8` ("preserve PowerPoint templates and isolate
+  slide media"), now merged into the fork's `main` (`a855d79`) and into
+  CrispCloud `main`. `tool/office_fidelity_manifest.json` records that source
+  commit and a SHA-256 for every shared file; `tool/verify_office_fidelity.py`
+  fails when a shared file differs from it. Unrelated vendor changes are allowed.
+- Engine suite in the fork: 493 passed, 3 optional-fixture skips, analysis clean
+  with `--fatal-infos`; `quds_reports` clean and passing. Editor analysis clean;
+  its only local failure is the Linux-reviewed page golden (font rasterization
+  drift on macOS, see Known limits in the fork README).
 - CrispCloud host checks (`tool/check_office_fidelity.sh`, Flutter 3.47.8):
-  vendor hash guard, engine oracles, 16 host tests and the independent corpus
-  verification all pass.
+  vendor hash guard, engine oracles, host tests and the independent corpus
+  verification (DOCX, XLSX and PPTX save/reopen exports) all pass.
 - The earlier RTL MultiPage PDF failure noted in the 5 November baseline is not
   reproduced in the fork's current engine suite.
 
@@ -56,6 +58,12 @@ content.
   to Word's named values.
 - PDF watermarks rotate as one marked line; the feature-showcase detail band
   fits its table.
+- PowerPoint exports keep the imported slide masters, layouts and theme, and
+  add any missing master/layout/theme and notes-size parts. Pictures and charts
+  are namespaced to the slide that owns them, so editing or reordering one
+  slide cannot overwrite another slide's media. Independent python-pptx and
+  openpyxl fixtures (`native.pptx`, `native.xlsx`) test import against files
+  this code did not write.
 
 ### Editor
 
