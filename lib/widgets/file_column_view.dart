@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,7 +16,9 @@ import '../providers/panel_source_provider.dart';
 import '../providers/providers.dart';
 import '../screens/screen_dialogs.dart' show viewSelectedFile;
 import '../services/archive_service.dart';
+import '../services/file_operation_backend.dart';
 import '../services/keyboard_shortcut_service.dart';
+import '../services/local_file_service.dart';
 import '../services/panel_source_service.dart';
 import '../utils/formatters.dart';
 import 'file_context_menu.dart';
@@ -23,8 +27,8 @@ import 'panel_listing_placeholder.dart';
 import 'file_list_view.dart'
     show FileListView, FileInlineRenameField, getFileIcon;
 
-/// A trail of visited directories. Only the final column is the live panel;
-/// earlier columns are snapshots, never an independent authorization to act.
+/// A directory hierarchy with background ancestor snapshots. Only the final
+/// column is the live panel; earlier columns never authorize file operations.
 class FileColumnView extends ConsumerStatefulWidget {
   final PanelSide side;
   final List<FileItem> files;
@@ -46,6 +50,10 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
   final _horizontalScroll = ScrollController();
   String? _tabId;
   PanelSource? _selectedEndpoint;
+  String? _trailRoot;
+  Object? _trailLocalIdentity;
+  bool? _showHidden;
+  _AncestorHydration? _hydration;
   int _interaction = 0;
   bool _shiftPressed = false;
   bool _togglePressed = false;
@@ -60,6 +68,7 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
   @override
   void dispose() {
     _interaction++;
+    _hydration = null;
     for (final column in _columns) {
       column.scrollController.dispose();
     }
@@ -80,6 +89,7 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
 
   void _resetTrail() {
     _interaction++;
+    _hydration = null;
     _removeColumnsFrom(0);
   }
 
@@ -113,7 +123,20 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
     _tabId = panel.activeTabId;
     _selectedEndpoint = endpoint;
     final origin = _currentOrigin(panel);
-    if (origin == null) return;
+    if (origin == null) {
+      _hydration = null;
+      return;
+    }
+    final root = _ancestorRoot(origin);
+    final localIdentity = _localIdentity(origin);
+    if (_trailRoot != root ||
+        !identical(_trailLocalIdentity, localIdentity) ||
+        _showHidden != panel.showHiddenFiles) {
+      _resetTrail();
+    }
+    _trailRoot = root;
+    _trailLocalIdentity = localIdentity;
+    _showHidden = panel.showHiddenFiles;
     if (_columns.isNotEmpty && !_sameEndpoint(_columns.last.origin, origin)) {
       _resetTrail();
     }
@@ -124,10 +147,11 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
       _columns[existing]
         ..origin = origin
         ..files = List<FileItem>.unmodifiable(panel.files ?? const []);
+      _scheduleAncestors(panel, origin, root);
       return;
     }
     if (_columns.isNotEmpty) {
-      final paths = origin.source.isLocal ? p.context : p.posix;
+      final paths = _pathsFor(origin);
       final parent = paths.dirname(path);
       final parentIndex = _columns.indexWhere(
         (column) => paths.normalize(column.path) == paths.normalize(parent),
@@ -140,6 +164,220 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
     }
     _columns.add(_DirectoryColumn(origin, panel.files ?? const []));
     _revealCurrentColumn();
+    _scheduleAncestors(panel, origin, root);
+  }
+
+  p.Context _pathsFor(PanelFileOrigin origin) =>
+      origin.source.isLocal && !kIsWeb ? p.context : p.posix;
+
+  Object? _localIdentity(PanelFileOrigin origin) {
+    if (!origin.source.isLocal) return null;
+    final local = ref.read(localFileServiceProvider);
+    return local is LocalFileSourceIdentity
+        ? (local as LocalFileSourceIdentity).sourceIdentityForPath(
+            origin.source.currentPath,
+          )
+        : null;
+  }
+
+  /// Stop at the actual source/grant boundary, including named browser roots.
+  /// An unrelated grant or malformed remote root must never widen the scope.
+  String _ancestorRoot(PanelFileOrigin origin) {
+    final paths = _pathsFor(origin);
+    final current = paths.normalize(origin.source.currentPath);
+    bool contains(String root) =>
+        paths.isAbsolute(root) &&
+        (root == current || paths.isWithin(root, current));
+    if (!paths.isAbsolute(current) || current.contains('\u0000')) {
+      return current;
+    }
+    if (origin.source.isLocal) {
+      final local = ref.read(localFileServiceProvider);
+      if (local is LocalFileSourceIdentity) {
+        final identities = local as LocalFileSourceIdentity;
+        final identity = identities.sourceIdentityForPath(current);
+        if (identity == null) return current;
+        var root = current;
+        while (true) {
+          final parent = paths.dirname(root);
+          if (parent == root ||
+              !identical(identities.sourceIdentityForPath(parent), identity)) {
+            return root;
+          }
+          root = parent;
+        }
+      }
+      final granted = local.grantedBasePath;
+      if (granted != null) {
+        final root = paths.normalize(granted);
+        return contains(root) ? root : current;
+      }
+      return paths.rootPrefix(current);
+    }
+    final root = paths.normalize(origin.storageReference.root);
+    return contains(root) ? root : current;
+  }
+
+  List<String> _ancestorPaths(PanelFileOrigin origin, String root) {
+    final paths = _pathsFor(origin);
+    var current = paths.normalize(origin.source.currentPath);
+    final result = <String>[];
+    if (current == root || !paths.isWithin(root, current)) return result;
+    // Keep work bounded for unusually deep locations while retaining their
+    // source root and nearest parents. Only two requests run concurrently.
+    while (current != root && result.length < 127) {
+      final parent = paths.dirname(current);
+      if (parent == current ||
+          (parent != root && !paths.isWithin(root, parent)))
+        break;
+      result.add(parent);
+      current = parent;
+    }
+    if (result.isNotEmpty && result.last != root) result.add(root);
+    return result.reversed.toList(growable: false);
+  }
+
+  bool _isCurrentHydration(_AncestorHydration request) {
+    if (!mounted ||
+        !identical(_hydration, request) ||
+        !request.sessionIsCurrent() ||
+        !request.origin.isCurrent)
+      return false;
+    final panel = ref.read(panelProvider(request.side));
+    final current = _currentOrigin(panel);
+    return current != null &&
+        panel.activeTabId == request.tabId &&
+        panel.showHiddenFiles == request.showHidden &&
+        _sameEndpoint(request.origin, current) &&
+        _pathsFor(current).normalize(current.source.currentPath) ==
+            request.path &&
+        _ancestorRoot(current) == request.root &&
+        identical(_localIdentity(current), request.localIdentity);
+  }
+
+  void _scheduleAncestors(
+    PanelNotifier panel,
+    PanelFileOrigin origin,
+    String root,
+  ) {
+    final paths = _ancestorPaths(origin, root);
+    if (paths.isEmpty) return;
+    var request = _hydration;
+    if (request == null || !_isCurrentHydration(request)) {
+      request = _AncestorHydration(
+        side: widget.side,
+        tabId: panel.activeTabId,
+        origin: origin,
+        root: root,
+        path: _pathsFor(origin).normalize(origin.source.currentPath),
+        showHidden: panel.showHiddenFiles,
+        localIdentity: _localIdentity(origin),
+        sessionIsCurrent: panel.captureOperationSession(),
+      );
+      _hydration = request;
+    }
+    if (request.running) return;
+    final missing = paths
+        .where(
+          (path) =>
+              !request!.attempted.contains(path) &&
+              !_columns.any((column) => column.path == path),
+        )
+        .toList();
+    if (missing.isEmpty) return;
+    // Root context and the nearest parent arrive first; remaining ancestors
+    // follow without blocking the already verified current directory.
+    final queue = <String>[
+      if (missing.contains(root)) root,
+      ...missing.reversed.where((path) => path != root),
+    ];
+    request.running = true;
+    final captured = request;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_isCurrentHydration(captured)) {
+        unawaited(_hydrateAncestors(captured, paths, queue));
+      }
+    });
+  }
+
+  Future<void> _hydrateAncestors(
+    _AncestorHydration request,
+    List<String> hierarchy,
+    List<String> queue,
+  ) async {
+    var next = 0;
+    Future<void> worker() async {
+      while (_isCurrentHydration(request) && next < queue.length) {
+        final path = queue[next++];
+        request.attempted.add(path);
+        try {
+          final local = ref.read(localFileServiceProvider);
+          final List<FileItem> entries;
+          if (request.origin.source.isLocal) {
+            // Snapshot reads acquire existing access without mutating the
+            // shared path/grant or opening a permission picker.
+            final entities = await local.listDirectorySnapshot(path);
+            if (entities == null || !_isCurrentHydration(request)) continue;
+            final paths = _pathsFor(request.origin);
+            entries = [
+              for (final entity in entities)
+                FileItem(
+                  name: paths.basename(entity.path),
+                  path: entity.path,
+                  isFolder: entity is Directory,
+                  isSymlink: entity is Link,
+                ),
+            ];
+          } else {
+            final backend = fileOperationBackend(
+              source: request.origin.source.withPath(path),
+              local: local,
+              isCurrent: () => _isCurrentHydration(request),
+            );
+            entries = await backend.list(path);
+          }
+          if (!_isCurrentHydration(request)) return;
+          final paths = _pathsFor(request.origin);
+          final seen = <String>{};
+          final files = <FileItem>[];
+          for (final entry in entries) {
+            final child = entry.path;
+            if (child == null || child.contains('\u0000')) continue;
+            final normalized = paths.normalize(child);
+            if (!paths.isAbsolute(normalized) ||
+                paths.dirname(normalized) != path ||
+                paths.basename(normalized) != entry.name ||
+                entry.name == '.' ||
+                entry.name == '..' ||
+                (!request.showHidden && entry.name.startsWith('.')) ||
+                !seen.add(normalized))
+              continue;
+            files.add(entry.copyWith(path: normalized));
+          }
+          if (_columns.any((column) => column.path == path)) continue;
+          final position = hierarchy.indexOf(path);
+          final insertion = _columns.indexWhere(
+            (column) =>
+                column.path == request.path ||
+                hierarchy.indexOf(column.path) > position,
+          );
+          if (insertion < 0) continue;
+          setState(() {
+            _columns.insert(
+              insertion,
+              _DirectoryColumn(request.origin, files, path: path),
+            );
+          });
+          _revealCurrentColumn();
+        } on Object {
+          // Ancestor context is optional. Failed/denied reads stay skipped for
+          // this listing and never become another pane's loading/error state.
+        }
+      }
+    }
+
+    await Future.wait([worker(), worker()]);
+    request.running = false;
   }
 
   void _revealCurrentColumn() {
@@ -174,8 +412,14 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
     String tabId,
     PanelSource endpoint,
     PanelFileOrigin origin,
+    String? localRoot,
+    Object? localIdentity,
   ) {
-    if (!mounted || ticket != _interaction || !origin.isCurrent) return false;
+    if (!mounted ||
+        ticket != _interaction ||
+        !origin.isCurrent ||
+        !_matchesLocalTrail(origin, localRoot, localIdentity))
+      return false;
     final selected = ref.read(panelSourceProvider(widget.side)).withPath('');
     return ref.read(panelProvider(widget.side)).activeTabId == tabId &&
         // Explicitly routed legacy listings can update a stale picker label.
@@ -183,6 +427,15 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
         ref.read(focusAreaProvider).panelSide == widget.side &&
         ModalRoute.of(context)?.isCurrent != false;
   }
+
+  bool _matchesLocalTrail(
+    PanelFileOrigin origin,
+    String? root,
+    Object? identity,
+  ) =>
+      !origin.source.isLocal ||
+      (_ancestorRoot(origin) == root &&
+          identical(_localIdentity(origin), identity));
 
   /// Restore the original directory, then resolve its fresh row. Snapshot
   /// objects must never authorize selection, preview or a context-menu action.
@@ -192,6 +445,7 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
     if (panel.isLoading ||
         !column.origin.isCurrent ||
         !_columns.contains(column) ||
+        !_matchesLocalTrail(column.origin, _trailRoot, _trailLocalIdentity) ||
         _tabId != panel.activeTabId ||
         (before != null && !_sameEndpoint(before, column.origin))) {
       return null;
@@ -200,13 +454,24 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
     final tabId = panel.activeTabId;
     final endpoint = ref.read(panelSourceProvider(widget.side)).withPath('');
     final captured = column.origin;
+    final localRoot = _trailRoot;
+    final localIdentity = _trailLocalIdentity;
     if (before == null || before.source.currentPath != column.path) {
       await panel.navigateToPath(column.path, origin: captured);
     }
-    if (!_isCurrentInteraction(ticket, tabId, endpoint, captured)) return null;
+    if (!_isCurrentInteraction(
+      ticket,
+      tabId,
+      endpoint,
+      captured,
+      localRoot,
+      localIdentity,
+    ))
+      return null;
     final current = _currentOrigin(panel);
     if (current == null ||
         !_sameEndpoint(captured, current) ||
+        !_matchesLocalTrail(current, localRoot, localIdentity) ||
         current.source.currentPath != column.path ||
         item == null) {
       return null;
@@ -502,8 +767,23 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
     final strings = FileListStrings(context);
     final files = current && _currentOrigin(panel) != null
         ? widget.files
-        : column.files;
+        : (List<FileItem>.of(column.files)..sort((a, b) {
+            if (a.isFolder != b.isFolder) return a.isFolder ? -1 : 1;
+            var result = PanelNotifier.compareSortKey(a, b, panel.sortBy);
+            if (panel.sortOrder == SortOrder.descending) result = -result;
+            if (result == 0 && panel.secondarySortBy != null) {
+              result = PanelNotifier.compareSortKey(
+                a,
+                b,
+                panel.secondarySortBy!,
+              );
+              if (panel.secondarySortOrder == SortOrder.descending)
+                result = -result;
+            }
+            return result == 0 ? a.name.compareTo(b.name) : result;
+          }));
     final nextPath = current ? null : _columns[index + 1].path;
+    final paths = _pathsFor(column.origin);
     final ready = !panel.isLoading && column.origin.isCurrent;
     final fontFamily = ref.read(fontFamilyProvider);
     return SizedBox(
@@ -565,7 +845,12 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
                         final marked = current && panel.isSelected(file);
                         final cursor =
                             current && identical(panel.cursorItem, file);
-                        final expanded = file.isFolder && file.path == nextPath;
+                        final expanded =
+                            file.isFolder &&
+                            file.path != null &&
+                            nextPath != null &&
+                            (file.path == nextPath ||
+                                paths.isWithin(file.path!, nextPath));
                         if (current && identical(panel.renamingItem, file)) {
                           return FileInlineRenameField(
                             file: file,
@@ -715,11 +1000,36 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
 }
 
 class _DirectoryColumn {
-  _DirectoryColumn(this.origin, List<FileItem> files)
-    : files = List<FileItem>.unmodifiable(files);
+  _DirectoryColumn(this.origin, List<FileItem> files, {String? path})
+    : path = path ?? origin.source.currentPath,
+      files = List<FileItem>.unmodifiable(files);
 
   PanelFileOrigin origin;
   List<FileItem> files;
+  final String path;
   final scrollController = ScrollController();
-  String get path => origin.source.currentPath;
+}
+
+class _AncestorHydration {
+  _AncestorHydration({
+    required this.side,
+    required this.tabId,
+    required this.origin,
+    required this.root,
+    required this.path,
+    required this.showHidden,
+    required this.localIdentity,
+    required this.sessionIsCurrent,
+  });
+
+  final PanelSide side;
+  final String tabId;
+  final PanelFileOrigin origin;
+  final String root;
+  final String path;
+  final bool showHidden;
+  final Object? localIdentity;
+  final bool Function() sessionIsCurrent;
+  final attempted = <String>{};
+  bool running = false;
 }
