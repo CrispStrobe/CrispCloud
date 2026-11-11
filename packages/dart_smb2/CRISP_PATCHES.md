@@ -21,3 +21,7 @@ The r10 update also includes upstream fixes for encrypted request handling,
 malformed replies and NTLM initialization. This preserves the libsmb2 fallback
 while updating its native runtime. Final app artifacts must still include the
 LGPL notice and corresponding source/build recipe, plus their own binary hashes.
+
+Git attributes preserve LF endings for this package, including its native recipe
+and license texts. This keeps the recorded SHA-256 evidence stable on Windows
+checkouts with `core.autocrlf=true`; the integrity test checks original bytes.

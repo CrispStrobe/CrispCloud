@@ -1,9 +1,9 @@
 name: Experimental Rust SMB
 on:
   push:
-    paths: ['packages/dart_smb2/**', 'packages/crisp_storage/**', 'cli/**', 'lib/**smb**', 'lib/widgets/connection_dialog.dart', 'test/**smb**', '.github/workflows/smb-rust.yml']
+    paths: ['.gitattributes', 'packages/dart_smb2/**', 'packages/crisp_storage/**', 'cli/**', 'lib/**smb**', 'lib/widgets/connection_dialog.dart', 'test/**smb**', '.github/workflows/smb-rust.yml']
   pull_request:
-    paths: ['packages/dart_smb2/**', 'packages/crisp_storage/**', 'cli/**', 'lib/**smb**', 'lib/widgets/connection_dialog.dart', 'test/**smb**', '.github/workflows/smb-rust.yml']
+    paths: ['.gitattributes', 'packages/dart_smb2/**', 'packages/crisp_storage/**', 'cli/**', 'lib/**smb**', 'lib/widgets/connection_dialog.dart', 'test/**smb**', '.github/workflows/smb-rust.yml']
   workflow_dispatch:
 jobs:
   host:
