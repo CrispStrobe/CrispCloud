@@ -24,6 +24,7 @@ abstract final class WordLists {
       ..numId = document == null
           ? (numbered ? 2 : 1)
           : numberingId(document, numbered: numbered)
+      ..numberingSuppressed = false
       ..ilvl = safe
       ..listLabel = numbered ? _numberLabel(safe) : _bulletLabel(safe)
       ..indent = WmlIndent(left: 18.0 + safe * 18);
@@ -133,8 +134,9 @@ abstract final class WordLists {
 
   /// Restarts numbering for [paragraph]'s list at the current level.
   ///
-  /// Sets [WmlParagraphProps.listRestart] so serializers/deserializers can
-  /// emit `lvlOverride` / treat the item as a fresh counter.
+  /// Keeps a pending restart on the paragraph. Label resolution is repeatable;
+  /// serialization emits a separate numbering instance without changing the
+  /// paragraph's list identity (and therefore without altering undo snapshots).
   static void restart(WmlParagraph paragraph, {int? at}) {
     if (paragraph.properties.numId == null) {
       return;
@@ -146,6 +148,7 @@ abstract final class WordLists {
   static void clear(WmlParagraph paragraph) {
     paragraph.properties
       ..numId = null
+      ..numberingSuppressed = true
       ..ilvl = 0
       ..listLabel = null
       ..listRestart = null;
@@ -191,7 +194,6 @@ abstract final class WordLists {
         for (int i = ilvl + 1; i < stack.length; i++) {
           stack[i] = 0;
         }
-        paragraph.properties.listRestart = null;
       }
       stack[ilvl] = stack[ilvl] + 1;
       for (int i = ilvl + 1; i < stack.length; i++) {

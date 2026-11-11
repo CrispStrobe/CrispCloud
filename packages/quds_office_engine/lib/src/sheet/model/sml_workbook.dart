@@ -349,6 +349,7 @@ class SmlWorksheet {
     Map<int, SmlRow>? rows,
     List<SmlDrawing>? drawings,
     Map<int, double>? columnWidths,
+    Map<int, Map<String, String>>? columnProperties,
     Map<int, double>? rowHeights,
     List<SmlMerge>? merges,
     List<SmlDataValidation>? validations,
@@ -366,6 +367,7 @@ class SmlWorksheet {
   }) : rows = rows ?? <int, SmlRow>{},
        drawings = drawings ?? <SmlDrawing>[],
        columnWidths = columnWidths ?? <int, double>{},
+       columnProperties = columnProperties ?? <int, Map<String, String>>{},
        rowHeights = rowHeights ?? <int, double>{},
        merges = merges ?? <SmlMerge>[],
        validations = validations ?? <SmlDataValidation>[],
@@ -402,8 +404,12 @@ class SmlWorksheet {
   /// maxRowHeightPx API.
   static const double maxRowHeightPx = 409;
 
-  /// OOXML `col/@width` character units matching [defaultColumnWidthPx].
-  static const double excelDefaultColumnWidth = 8.43;
+  /// OOXML `col/@width` units matching [defaultColumnWidthPx]. The Excel UI
+  /// displays about 8.43 characters, but the stored width includes padding.
+  static const double excelDefaultColumnWidth = 9.140625;
+
+  /// Calibri 11 maximum digit width at 96 dpi, used by the default sheet font.
+  static const int defaultMaximumDigitWidthPx = 7;
 
   /// name API.
   String name;
@@ -428,6 +434,14 @@ class SmlWorksheet {
 
   /// Custom column widths in CSS pixels, keyed by 0-based column index.
   final Map<int, double> columnWidths;
+
+  /// Retained column formatting attributes, including hidden/grouping flags,
+  /// default cell style, bestFit and phonetic. Width/min/max are modeled apart.
+  final Map<int, Map<String, String>> columnProperties;
+
+  // Preserve original character widths when an import is saved unchanged:
+  // several stored widths can map to the same integral pixel width.
+  final Map<int, double> _importedColumnWidths = <int, double>{};
 
   /// Custom row heights in CSS pixels, keyed by 0-based row index.
   final Map<int, double> rowHeights;
@@ -602,13 +616,66 @@ class SmlWorksheet {
     mergeAndCenter(range);
   }
 
-  /// columnWidthFromExcel API.
-  static double columnWidthFromExcel(double excelWidth) =>
-      excelWidth * defaultColumnWidthPx / excelDefaultColumnWidth;
+  /// Converts stored `col/@width` to integral pixels using ISO 29500-1
+  /// 18.3.1.13. The stored width already includes the five padding pixels;
+  /// adding padding again, or scaling the UI's 8.43 character default, is wrong.
+  static double columnWidthFromExcel(
+    double excelWidth, {
+    int maximumDigitWidth = defaultMaximumDigitWidthPx,
+  }) {
+    if (maximumDigitWidth <= 0) {
+      throw ArgumentError.value(maximumDigitWidth, 'maximumDigitWidth');
+    }
+    return (((256 * excelWidth + (128 / maximumDigitWidth).floor()) / 256) *
+            maximumDigitWidth)
+        .floorToDouble();
+  }
 
-  /// columnWidthToExcel API.
-  static double columnWidthToExcel(double px) =>
-      px * excelDefaultColumnWidth / defaultColumnWidthPx;
+  /// Quantizes a requested pixel width to the stored 1/256-character units.
+  /// The result maps back to the nearest integral pixel under the ISO formula.
+  static double columnWidthToExcel(
+    double px, {
+    int maximumDigitWidth = defaultMaximumDigitWidthPx,
+  }) {
+    if (maximumDigitWidth <= 0) {
+      throw ArgumentError.value(maximumDigitWidth, 'maximumDigitWidth');
+    }
+    final pixelWidth = px.round();
+    final scaled = pixelWidth * 256 / maximumDigitWidth;
+    final lower = (scaled - (128 / maximumDigitWidth).floor()).ceil();
+    final preferred = scaled.floor();
+    return (preferred < lower ? lower : preferred) / 256;
+  }
+
+  /// Records both the imported character width and its rendered pixel width.
+  void importColumnWidth(int col, double excelWidth) {
+    columnWidths[col] = columnWidthFromExcel(excelWidth);
+    _importedColumnWidths[col] = excelWidth;
+  }
+
+  /// Retains untouched import precision and converts edited pixel widths.
+  double exportColumnWidth(int col) {
+    final px = columnWidths[col] ?? defaultColumnWidthPx;
+    final imported = _importedColumnWidths[col];
+    if (imported != null && columnWidthFromExcel(imported) == px) {
+      return imported;
+    }
+    return columnWidthToExcel(px);
+  }
+
+  /// Column formatting to export, marking explicit width edits as custom.
+  Map<String, String> exportColumnProperties(int col) {
+    final properties = Map<String, String>.from(
+      columnProperties[col] ?? const <String, String>{},
+    );
+    final width = columnWidths[col];
+    final original = _importedColumnWidths[col];
+    if (width != null &&
+        (original == null || columnWidthFromExcel(original) != width)) {
+      properties['customWidth'] = '1';
+    }
+    return properties;
+  }
 
   /// rowHeightFromExcel API.
   static double rowHeightFromExcel(double points) => points * 96 / 72;
@@ -633,8 +700,10 @@ class SmlWorksheet {
       return;
     }
     final double v = px.clamp(minColumnWidthPx, maxColumnWidthPx);
+    _importedColumnWidths.remove(col);
     if ((v - defaultColumnWidthPx).abs() < 0.5) {
       columnWidths.remove(col);
+      columnProperties[col]?.remove('customWidth');
     } else {
       columnWidths[col] = v;
     }
@@ -954,6 +1023,8 @@ class SmlWorksheet {
       _shiftRowCells(row, index, count, remove: false);
     }
     _shiftKeyedMap(columnWidths, index, count, remove: false);
+    _shiftKeyedMap(_importedColumnWidths, index, count, remove: false);
+    _shiftKeyedMap(columnProperties, index, count, remove: false);
     _shiftMerges(row: false, index: index, count: count, remove: false);
   }
 
@@ -990,6 +1061,8 @@ class SmlWorksheet {
       _shiftRowCells(row, index, -count, remove: true);
     }
     _shiftKeyedMap(columnWidths, index, count, remove: true);
+    _shiftKeyedMap(_importedColumnWidths, index, count, remove: true);
+    _shiftKeyedMap(columnProperties, index, count, remove: true);
     _shiftMerges(row: false, index: index, count: count, remove: true);
   }
 
@@ -1027,15 +1100,15 @@ class SmlWorksheet {
       ..addAll(next);
   }
 
-  static void _shiftKeyedMap(
-    Map<int, double> map,
+  static void _shiftKeyedMap<T>(
+    Map<int, T> map,
     int index,
     int count, {
     required bool remove,
   }) {
     final int last = index + count;
-    final Map<int, double> next = <int, double>{};
-    for (final MapEntry<int, double> e in map.entries) {
+    final Map<int, T> next = <int, T>{};
+    for (final MapEntry<int, T> e in map.entries) {
       if (remove && e.key >= index && e.key < last) {
         continue;
       }

@@ -29,5 +29,7 @@
       "Note link",
       "https://example.com/note"
     ]
-  ]
+  ],
+  "leading_whitespace": "",
+  "reference_properties": null
 }

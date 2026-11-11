@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:crypto/crypto.dart';
+
 import '../../builders/drawingml_charts.dart';
 import '../../builders/image_fit.dart';
 import '../../builders/office_markup.dart';
@@ -31,6 +33,15 @@ abstract final class WordDrawingIo {
     if (bytes.length > 3 && bytes[0] == 0xFF && bytes[1] == 0xD8) {
       return 'image/jpeg';
     }
+    if (bytes.length >= 6 &&
+        bytes[0] == 0x47 &&
+        bytes[1] == 0x49 &&
+        bytes[2] == 0x46 &&
+        bytes[3] == 0x38 &&
+        (bytes[4] == 0x37 || bytes[4] == 0x39) &&
+        bytes[5] == 0x61) {
+      return 'image/gif';
+    }
     return 'image/png';
   }
 
@@ -56,6 +67,11 @@ abstract final class WordDrawingIo {
   /// Shape / picture extent — allows a full A4 edge.
   static int sizeToEmu(double points) =>
       (points.clamp(1, 4000) * emuPerPoint).round();
+
+  // Wrap distances use unsigned EMUs and may be zero or below the minimum
+  // visible picture size. Size clamping would add padding to imported images.
+  static int _wrapDistanceToEmu(double points) =>
+      (points * emuPerPoint).clamp(0, 0xFFFFFFFF).round();
 
   /// emuToPoints API.
   static double emuToPoints(int emu) => emu / emuPerPoint;
@@ -86,19 +102,13 @@ abstract final class WordDrawingIo {
     final Map<OfficeVisual, String> ids = <OfficeVisual, String>{};
     for (final OfficeVisual visual in visuals) {
       if (visual.isChart) {
-        final String uri =
-            '/word/charts/${mediaPrefix == 'image' ? '' : mediaPrefix}chart$chartIndex.xml';
-        final String xml = _chartXml(visual);
+        final String uri = _storePayload(
+          package,
+          '/word/charts/${mediaPrefix == 'image' ? '' : mediaPrefix}chart$chartIndex.xml',
+          OfficeContentTypes.drawingChart,
+          Uint8List.fromList(utf8.encode(_chartXml(visual))),
+        );
         chartIndex++;
-        if (package.getPart(uri) == null) {
-          package.createPart(
-            uri,
-            OfficeContentTypes.drawingChart,
-            utf8.encode(xml),
-          );
-        } else {
-          package.getPart(uri)!.writeText(xml);
-        }
         final String target = OpcUris.relativize(partUri, uri);
         PackageRelationship? found;
         for (final PackageRelationship rel in rels.items) {
@@ -173,14 +183,13 @@ abstract final class WordDrawingIo {
     for (final WmlVisualImage image in images) {
       final Uint8List bytes = image.bytes;
       final String mime = mimeOf(bytes);
-      final String uri = '/word/media/$mediaPrefix$index${extensionOf(mime)}';
+      final String uri = _storePayload(
+        package,
+        '/word/media/$mediaPrefix$index${extensionOf(mime)}',
+        mime,
+        bytes,
+      );
       index++;
-      final PackagePart? existing = package.getPart(uri);
-      if (existing == null) {
-        package.createPart(uri, mime, bytes);
-      } else {
-        existing.writeBytes(bytes);
-      }
       final String target = OpcUris.relativize(partUri, uri);
       final RelationshipCollection rels = package.relationshipsFor(partUri);
       PackageRelationship? found;
@@ -194,6 +203,46 @@ abstract final class WordDrawingIo {
       ids[image] = found.id;
     }
     return ids;
+  }
+
+  // A media part can be shared by several stories, including XML that the
+  // editor does not interpret. Never replace it merely because its filename
+  // matches our sequential allocator. Reuse identical payloads and allocate a
+  // deterministic content-addressed alternative for changed content.
+  static String _storePayload(
+    OpcPackage package,
+    String preferredUri,
+    String contentType,
+    Uint8List bytes,
+  ) {
+    bool matches(PackagePart part) {
+      if (part.contentType != contentType || part.length != bytes.length) {
+        return false;
+      }
+      final Uint8List old = part.bytesView;
+      for (int i = 0; i < bytes.length; i++) {
+        if (old[i] != bytes[i]) return false;
+      }
+      return true;
+    }
+
+    final int dot = preferredUri.lastIndexOf('.');
+    final String stem = preferredUri.substring(0, dot);
+    final String extension = preferredUri.substring(dot);
+    String uri = preferredUri;
+    String? digest;
+    int collision = 0;
+    while (true) {
+      final PackagePart? part = package.getPart(uri);
+      if (part == null) {
+        package.createPart(uri, contentType, bytes);
+        return uri;
+      }
+      if (matches(part)) return uri;
+      digest ??= sha256.convert(bytes).toString();
+      final String suffix = collision++ == 0 ? '' : '-$collision';
+      uri = '$stem-$digest$suffix$extension';
+    }
   }
 
   /// writeInline API.
@@ -301,17 +350,11 @@ abstract final class WordDrawingIo {
     final bool floating = adj.wrap != PictureWrap.inline;
     if (!floating) {
       w.writeStartElement('inline', prefix: 'wp');
-      w.writeAttribute('distT', '${pointsToEmu(adj.wrapDistT)}');
-      w.writeAttribute('distB', '${pointsToEmu(adj.wrapDistB)}');
-      w.writeAttribute('distL', '${pointsToEmu(adj.wrapDistL)}');
-      w.writeAttribute('distR', '${pointsToEmu(adj.wrapDistR)}');
+      _writeWrapDistances(w, adj);
       return;
     }
     w.writeStartElement('anchor', prefix: 'wp');
-    w.writeAttribute('distT', '${pointsToEmu(adj.wrapDistT)}');
-    w.writeAttribute('distB', '${pointsToEmu(adj.wrapDistB)}');
-    w.writeAttribute('distL', '${pointsToEmu(adj.wrapDistL)}');
-    w.writeAttribute('distR', '${pointsToEmu(adj.wrapDistR)}');
+    _writeWrapDistances(w, adj);
     w.writeAttribute('simplePos', '0');
     w.writeAttribute('relativeHeight', '251658240');
     w.writeAttribute('behindDoc', adj.wrap == PictureWrap.behind ? '1' : '0');
@@ -639,6 +682,19 @@ abstract final class WordDrawingIo {
     return null;
   }
 
+  static void _writeWrapDistances(XmlWriter writer, PictureAdjust picture) {
+    for (final (edge, name, value) in [
+      (PictureWrapDistanceEdge.top, 'distT', picture.wrapDistT),
+      (PictureWrapDistanceEdge.bottom, 'distB', picture.wrapDistB),
+      (PictureWrapDistanceEdge.left, 'distL', picture.wrapDistL),
+      (PictureWrapDistanceEdge.right, 'distR', picture.wrapDistR),
+    ]) {
+      if (picture.writesWrapDistance(edge)) {
+        writer.writeAttribute(name, '${_wrapDistanceToEmu(value)}');
+      }
+    }
+  }
+
   static void _readWrapDist(PictureAdjust adj, XmlPullReader reader) {
     adj.wrapDistT = emuToPoints(
       int.tryParse(reader.getAttribute('distT') ?? '') ?? 0,
@@ -652,6 +708,12 @@ abstract final class WordDrawingIo {
     adj.wrapDistR = emuToPoints(
       int.tryParse(reader.getAttribute('distR') ?? '') ?? 0,
     );
+    adj.retainWrapDistanceAttributes([
+      if (reader.getAttribute('distT') != null) PictureWrapDistanceEdge.top,
+      if (reader.getAttribute('distB') != null) PictureWrapDistanceEdge.bottom,
+      if (reader.getAttribute('distL') != null) PictureWrapDistanceEdge.left,
+      if (reader.getAttribute('distR') != null) PictureWrapDistanceEdge.right,
+    ]);
   }
 
   static OfficeVisual? _readChart(

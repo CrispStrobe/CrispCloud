@@ -533,8 +533,6 @@ abstract final class PdfToOffice {
   static WmlParagraph? _firstParagraph(List<WmlBlock> blocks) {
     for (final WmlBlock block in blocks) {
       switch (block) {
-        case WmlOpaqueBlock():
-          break;
         case WmlParagraph():
           return block;
         case WmlFrame():
@@ -555,6 +553,7 @@ abstract final class PdfToOffice {
           return block.titleParagraph;
         case WmlVisual():
         case WmlEquation():
+        case WmlOpaqueBlock():
           break;
       }
     }

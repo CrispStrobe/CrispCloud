@@ -6,6 +6,9 @@ CrispCloud for Word, Excel, PowerPoint and PDF handling.
 - Upstream: https://github.com/MohammedAsaadAsaad/quds_office_suite
 - Fork (canonical for our fixes): https://github.com/CrispStrobe/quds_office_suite, branch `main`
   (the old `crispcloud` branch is fully contained in it)
+- Current fidelity continuation in both repositories:
+  `feature/office-fidelity-completion-20261111`. The app's exact source pin below
+  is authoritative while this work is reviewed on feature branches.
 
 ## Why we carry local copies
 
@@ -21,21 +24,38 @@ content.
 
 ## State (11 November 2026)
 
-- Pinned fork revision: `3146e63` ("preserve spreadsheet styles pivots and
-  live chart references"), merged into the fork's `main` (`a090bd8`) and into
-  CrispCloud `main`. `tool/office_fidelity_manifest.json` records that source
-  commit and a SHA-256 for every shared file; `tool/verify_office_fidelity.py`
-  fails when a shared file differs from it. Unrelated vendor changes are allowed.
-- Engine suite in the fork: 499 passed, 3 optional-fixture skips, analysis clean
-  with `--fatal-infos`; `quds_reports` clean and passing. Editor analysis clean;
-  its only local failure is the Linux-reviewed page golden (font rasterization
-  drift on macOS, see Known limits in the fork README).
-- CrispCloud host checks (`tool/check_office_fidelity.sh`, Flutter 3.47.8):
-  vendor hash guard, engine oracles, host tests and the independent corpus
-  verification (DOCX, XLSX and PPTX save/reopen exports) all pass; 67 shared
-  files match the pinned revision.
-- The earlier RTL MultiPage PDF failure noted in the 5 November baseline is not
-  reproduced in the fork's current engine suite.
+- Pinned fork revision: `692a326aae2e8133b793570344028a1ceffddbdc`, with the
+  full host and external schema gates passing against production-identical
+  `a7e1a207`. Every affected existing app file matched the previous
+  `14fa25f` source bytes before synchronization: 26 files updated, 11 added and
+  no host customization conflicts. The final three-file followup carries a
+  reviewed story-page PNG, its spacing assertion and a coverage-helper docstring;
+  no production code changed. The continuation retains the prior
+  `3146e63` work now merged into both main branches.
+  `tool/office_fidelity_manifest.json` records the source commit and SHA-256
+  values for all 154 shared files; the expanded guard passes.
+  `tool/verify_office_fidelity.py` fails when a shared file differs. Unrelated
+  vendor changes are allowed.
+- The app gate passes 163 selected engine tests, 113 engine Python controls,
+  all 43 public scripted operations and the exact 117-file engine inventory.
+  Full engine/editor suite and renderer results belong to their separately
+  recorded source checkpoints; see the fork's fidelity audit.
+- CrispCloud host checks (`tool/check_office_fidelity.sh`, Flutter 3.47.8) pass
+  97 actual host tests, eight inventory controls and four coverage-report
+  controls. All 14 expected actual-host DOCX files are present. Office-host
+  LCOV records 1,952/3,557 instrumented lines (54.9%) across all nine matching
+  host files; the detailed report records source hashes and unhit lines.
+- Open XML SDK validation of an immutable snapshot passes all 14 actual-host
+  packages and all 131 combined engine/host exports with zero errors. Its
+  positive and negative self-test controls pass. These are local verification
+  results. The earlier milestone's remote Actions run was queued when recorded;
+  it does not establish remote CI success for the newer source pin.
+- The current source followup includes imported-note formatting, style
+  transitions, table borders/paragraph spacing and drawing distances. The
+  complete host and schema gates have now passed for those changes. The source
+  story-page golden has been reviewed after the intended correction to imported
+  styleless-paragraph spacing and passes the source editor suite. The final pin
+  includes that reviewed image and its explicit spacing assertion.
 
 ## What the local patches do
 
@@ -54,7 +74,8 @@ content.
   treated as set.
 - List commands allocate document-local definitions, so they cannot collide
   with imported IDs; start values and Roman, alphabetic and padded-decimal
-  formats are honored.
+  formats are honored. List restart overrides survive repeated saves and
+  continue only the intended list segment.
 - Word child elements are emitted in ECMA-376 order and `w:highlight` maps back
   to Word's named values.
 - PDF watermarks rotate as one marked line; the feature-showcase detail band
@@ -70,6 +91,13 @@ content.
   slide cannot overwrite another slide's media. Independent python-pptx and
   openpyxl fixtures (`native.pptx`, `native.xlsx`) test import against files
   this code did not write.
+- Relocated Word parts follow owning relationships, compatibility markup
+  selects one supported branch, and section/page-number/grid/history metadata
+  survives edits and cloning. Cloned historical section IDs remain unique and
+  stable, as checked by actual host exports and the external schema validator.
+- Real Word break/tab tokens, note-story media ownership, authored comment
+  threads and retained external-content payloads have dedicated multi-cycle
+  regressions. Payload retention does not imply rendering or edit support.
 
 ### Editor
 
@@ -79,6 +107,20 @@ content.
   paragraph formatting no longer mutates history snapshots; list commands
   undo/redo.
 - Report font tests match the supported italic/bold-italic slots.
+- Later-page painting initializes the replacement viewport's layout; three
+  reviewed PNGs cover first/even/default header and footer pictures before and
+  after an asynchronous save.
+
+### CrispCloud host
+
+- Edits during an asynchronous upload remain dirty; Save and Close waits for
+  the newer revision. Selection-only notifications and retry after failure
+  have separate real-dialog regressions that inspect the attempted upload bytes.
+- F3 previews honor explicit false formatting, tabs, breaks, note references
+  and bodies, plus workbook order/names and relocated shared strings.
+- Content search follows the DOCX/XLSX/PPTX relationship graph, excludes orphan
+  and external parts, and bounds both XML reads and emitted text. Authored
+  controls cover Strict namespace variants and shared-string amplification.
 
 ## Verification
 
@@ -92,11 +134,13 @@ bash tool/check_office_fidelity.sh
 ```
 
 That script runs the vendor hash guard, the Python/Dart fidelity oracles in
-`packages/quds_office_engine/tool/fidelity`, the host tests
-(`test/office_fidelity_workflow_test.dart`, formatting, round-trip and editor
-fix tests) and checks the saved DOCX corpus. The fork additionally validates
-exported packages with the Open XML SDK (`tool/office-validation`) in its
-`office-fidelity` workflow. Details: `docs/office-fidelity.md`.
+`packages/quds_office_engine/tool/fidelity`, actual controller/widget/service
+tests, fresh host LCOV, exact export inventories and the saved DOCX oracle.
+On Linux, CI invokes it through `python3 tool/with_ci_system_sqlite.py` after
+installing clang and SQLite development files. The app workflow additionally
+validates the downloaded engine exports and actual host bytes with the Open XML
+SDK (`tool/office-validation`), after proving that missing evidence and invalid
+XML are rejected. Details and scoped limits: [office-fidelity.md](../docs/office-fidelity.md).
 
 Known limit: the full-page golden is reviewed on Linux with Flutter 3.44.0. On
 other platforms it can differ by about 0.6% of pixels from font rendering. Do
@@ -116,8 +160,10 @@ Word does not repeatedly request folder access. It opens/saves/exports through
 Microsoft Word, then checks paragraph text, footnote count/text, `footnoteRef`
 markers, separator chrome and PDF text.
 
-The untouched and minimal-edit outputs both passed. Word rendered correctly
-formatted superscript note numbers. Excel round-trips use
+The previously recorded untouched and minimal-edit outputs both passed. Word
+rendered correctly formatted superscript note numbers. This native application
+result predates the current continuation checkpoint; it was not rerun for the
+local Linux milestone above. Excel round-trips use
 `tool/verify_excel_roundtrip.py` and passed for a Quds-generated workbook.
 PowerPoint’s AppleScript surface lacks equivalent save-as support; use
 python-pptx structural checks plus UI automation/LibreOffice for a native
@@ -141,16 +187,20 @@ Follow
 The app resolves these packages through local `path` overrides in
 `pubspec.yaml`, so builds are reproducible offline.
 
+Checkpoint source changes on a feature branch, then copy the intended files
+from that immutable source commit. Before overwriting an existing app file,
+compare it with the previous pinned source bytes so host customizations are
+reviewed. Add new shared helpers/tests/fixtures to the manifest union and update
+their hashes and source commit together. Do not copy unrelated working-tree
+edits or build artifacts.
+
 ```bash
-# In the fork checkout on branch main (then update tool/office_fidelity_manifest.json):
-rsync -a /path/to/CrispCloud/packages/quds_office_engine/ \
-  packages/quds_office_engine/
-rsync -a /path/to/CrispCloud/packages/quds_office_editor/ \
-  packages/quds_office_editor/
-git add packages/quds_office_engine packages/quds_office_editor
-git commit -m "CrispCloud: update Quds patches"
-git push origin main
+# With the sibling source checkout at the exact selected source commit:
+python3 tool/verify_office_fidelity.py --source ../quds_office_suite
+python3 tool/with_ci_system_sqlite.py bash tool/check_office_fidelity.sh
 ```
 
-Keep commits small and add a CrispCloud regression test for every fixed bug.
-Do not rewrite the packages during sync; copy only intended files.
+Run the external schema gate over the complete evidence as well, then push the
+app feature checkpoint. Keep commits small and add a CrispCloud regression test
+for every host-visible bug. Do not rewrite packages during sync or regenerate
+goldens simply to accept changed output.

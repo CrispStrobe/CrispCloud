@@ -39,11 +39,12 @@ abstract final class SheetDrawingIo {
         ? '/xl/drawings/${owner}_drawing.xml'
         : sheetRels.resolve(imported);
     final String target = OpcUris.relativize(sheetUri, drawingUri);
+    // A worksheet owns exactly one drawing relationship. Imported producers
+    // may use an absolute package URI while our writer uses a relative target;
+    // keep the matching one so a save never adds a second relationship.
     final found =
         imported ??
         sheetRels.add(type: RelationshipTypes.drawing, target: target);
-    // WorksheetPart permits exactly one drawing relationship, including when
-    // the imported target is absolute and the generated target is relative.
     for (final rel in sheetRels.byType(RelationshipTypes.drawing).toList()) {
       if (rel.id != found.id) sheetRels.removeById(rel.id);
     }

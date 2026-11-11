@@ -25,6 +25,9 @@ enum PictureWrap {
   inFront,
 }
 
+/// Sides on which Word stores an optional distance between a picture and text.
+enum PictureWrapDistanceEdge { top, bottom, left, right }
+
 /// Legend placement (`c:legendPos`).
 enum ChartLegendPos { bottom, top, left, right, topRight }
 
@@ -46,10 +49,10 @@ class PictureAdjust {
     this.flipV = false,
     this.lockAspect = true,
     this.wrap = PictureWrap.inline,
-    this.wrapDistT = 0,
-    this.wrapDistB = 0,
-    this.wrapDistL = 9,
-    this.wrapDistR = 9,
+    this._wrapDistT = 0,
+    this._wrapDistB = 0,
+    this._wrapDistL = 9,
+    this._wrapDistR = 9,
     this.altTitle = '',
     this.altDescription = '',
     this.shadow = false,
@@ -97,17 +100,55 @@ class PictureAdjust {
   /// wrap API.
   PictureWrap wrap;
 
-  /// wrapDistT API.
-  double wrapDistT;
+  double _wrapDistT;
+  double _wrapDistB;
+  double _wrapDistL;
+  double _wrapDistR;
+  Set<PictureWrapDistanceEdge>? _sourceWrapDistances;
+  final Set<PictureWrapDistanceEdge> _editedWrapDistances = {};
 
-  /// wrapDistB API.
-  double wrapDistB;
+  /// Distance above the picture, in points. Assignments are explicit edits,
+  /// including setting an imported, omitted distance to zero.
+  double get wrapDistT => _wrapDistT;
+  set wrapDistT(double value) {
+    _wrapDistT = value;
+    _editedWrapDistances.add(PictureWrapDistanceEdge.top);
+  }
 
-  /// wrapDistL API.
-  double wrapDistL;
+  /// Distance below the picture, in points.
+  double get wrapDistB => _wrapDistB;
+  set wrapDistB(double value) {
+    _wrapDistB = value;
+    _editedWrapDistances.add(PictureWrapDistanceEdge.bottom);
+  }
 
-  /// wrapDistR API.
-  double wrapDistR;
+  /// Distance to the left of the picture, in points.
+  double get wrapDistL => _wrapDistL;
+  set wrapDistL(double value) {
+    _wrapDistL = value;
+    _editedWrapDistances.add(PictureWrapDistanceEdge.left);
+  }
+
+  /// Distance to the right of the picture, in points.
+  double get wrapDistR => _wrapDistR;
+  set wrapDistR(double value) {
+    _wrapDistR = value;
+    _editedWrapDistances.add(PictureWrapDistanceEdge.right);
+  }
+
+  /// Capture source attribute presence after reading the four distance values.
+  /// Office consumers can distinguish omission from an explicit zero.
+  void retainWrapDistanceAttributes(Iterable<PictureWrapDistanceEdge> edges) {
+    _sourceWrapDistances = Set<PictureWrapDistanceEdge>.unmodifiable(edges);
+    _editedWrapDistances.clear();
+  }
+
+  /// New pictures emit model defaults. Imported pictures emit only source
+  /// attributes and deliberate edits, preserving untouched omissions.
+  bool writesWrapDistance(PictureWrapDistanceEdge edge) =>
+      _sourceWrapDistances == null ||
+      _sourceWrapDistances!.contains(edge) ||
+      _editedWrapDistances.contains(edge);
 
   /// altTitle API.
   String altTitle;
@@ -119,29 +160,32 @@ class PictureAdjust {
   bool shadow;
 
   /// copy API.
-  PictureAdjust copy() => PictureAdjust(
-    cropLeft: cropLeft,
-    cropTop: cropTop,
-    cropRight: cropRight,
-    cropBottom: cropBottom,
-    rotationDeg: rotationDeg,
-    brightness: brightness,
-    contrast: contrast,
-    transparency: transparency,
-    borderColor: borderColor,
-    borderWidth: borderWidth,
-    flipH: flipH,
-    flipV: flipV,
-    lockAspect: lockAspect,
-    wrap: wrap,
-    wrapDistT: wrapDistT,
-    wrapDistB: wrapDistB,
-    wrapDistL: wrapDistL,
-    wrapDistR: wrapDistR,
-    altTitle: altTitle,
-    altDescription: altDescription,
-    shadow: shadow,
-  );
+  PictureAdjust copy() =>
+      PictureAdjust(
+          cropLeft: cropLeft,
+          cropTop: cropTop,
+          cropRight: cropRight,
+          cropBottom: cropBottom,
+          rotationDeg: rotationDeg,
+          brightness: brightness,
+          contrast: contrast,
+          transparency: transparency,
+          borderColor: borderColor,
+          borderWidth: borderWidth,
+          flipH: flipH,
+          flipV: flipV,
+          lockAspect: lockAspect,
+          wrap: wrap,
+          wrapDistT: wrapDistT,
+          wrapDistB: wrapDistB,
+          wrapDistL: wrapDistL,
+          wrapDistR: wrapDistR,
+          altTitle: altTitle,
+          altDescription: altDescription,
+          shadow: shadow,
+        )
+        .._sourceWrapDistances = _sourceWrapDistances
+        .._editedWrapDistances.addAll(_editedWrapDistances);
 
   /// reset API.
   void reset() {

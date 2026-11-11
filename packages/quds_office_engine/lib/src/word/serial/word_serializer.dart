@@ -16,9 +16,14 @@ import '../model/word_revision.dart';
 import '../model/word_styles.dart';
 import '../model/word_toc.dart';
 import '../properties/wml_properties.dart';
+import 'word_comment_io.dart';
 import 'word_drawing_io.dart';
 import 'word_frame_io.dart';
+import 'word_numbering_io.dart';
+import 'word_opaque_io.dart';
 import 'word_property_io.dart';
+import 'word_section_io.dart';
+import 'word_table_property_io.dart';
 
 /// Writes a [WmlDocument] back to a `.docx` OPC package.
 class WordSerializer {
@@ -39,11 +44,15 @@ class WordSerializer {
   var _docPrId = 1;
   var _hfPart = 1;
   OpcPackage? _package;
+  String _mainPartUri = '/word/document.xml';
   String _activePartUri = '/word/document.xml';
   final Set<int> _openComments = <int>{};
   Map<WmlSection, _HeaderFooterIds> _headerFooterIds =
       <WmlSection, _HeaderFooterIds>{};
   WmlDocument? _document;
+  late WordSectionRevisionIds _sectionRevisionIds;
+  final Map<WmlParagraph, int> _restartNumberingIds =
+      Map<WmlParagraph, int>.identity();
 
   /// writeBytes API.
   Uint8List writeBytes(WmlDocument document, {String? password}) {
@@ -54,36 +63,56 @@ class WordSerializer {
   OpcPackage write(WmlDocument document) {
     final OpcPackage package =
         document.package ?? OpcPackage.create(OpcPackageKind.word);
-    if (package.getPart('/word/document.xml') == null) {
+    final PackageRelationship? office = package.packageRelationships
+        .firstByType(RelationshipTypes.officeDocument);
+    if (office?.targetMode == RelationshipTargetMode.external) {
+      throw const FormatException(
+        'The Word main part must be inside its package',
+      );
+    }
+    _mainPartUri = office == null
+        ? '/word/document.xml'
+        : package.packageRelationships.resolve(office);
+    if (package.getPart(_mainPartUri) == null) {
       package.createPart(
-        '/word/document.xml',
+        _mainPartUri,
         OfficeContentTypes.wordMain,
         utf8.encode('<w:document xmlns:w="${OfficeNamespaces.w}"/>'),
       );
-      if (package.packageRelationships.firstByType(
-            RelationshipTypes.officeDocument,
-          ) ==
-          null) {
-        package.packageRelationships.add(
-          type: RelationshipTypes.officeDocument,
-          target: 'word/document.xml',
-        );
-      }
+    }
+    if (office == null) {
+      package.packageRelationships.add(
+        type: RelationshipTypes.officeDocument,
+        target: _mainPartUri.substring(1),
+      );
     }
     _package = package;
-    _activePartUri = '/word/document.xml';
+    _activePartUri = _mainPartUri;
     _docPrId = 1;
     _openComments.clear();
     _document = document;
+    _sectionRevisionIds = WordSectionRevisionIds(document.sections);
+    _syncNumbering(package);
+    _restartNumberingIds
+      ..clear()
+      ..addAll(
+        WordNumberingIo.prepareRestarts(
+          document,
+          package.getPart(
+            _relatedPartUri(
+              package,
+              RelationshipTypes.numbering,
+              'numbering.xml',
+            ),
+          )!,
+        ),
+      );
     _headerFooterIds = _syncHeadersFooters(document, package);
     _syncEmbeddings(document, package);
     final Map<OfficeVisual, String> imageIds = _syncImages(document, package);
-    package
-        .getPart('/word/document.xml')!
-        .writeText(_documentXml(document, imageIds));
+    package.getPart(_mainPartUri)!.writeText(_documentXml(document, imageIds));
     _syncComments(document, package);
     _syncWatermark(document, package);
-    _syncNumbering(package);
     _syncStyles(document, package);
     _syncNotes(document, package);
     _syncCitations(document, package);
@@ -108,14 +137,14 @@ class WordSerializer {
         } else {
           package.getPart(uri)!.writeBytes(bin);
         }
-        final String target = OpcUris.relativize('/word/document.xml', uri);
+        final String target = OpcUris.relativize(_mainPartUri, uri);
         final existing = package
-            .relationshipsFor('/word/document.xml')
+            .relationshipsFor(_mainPartUri)
             .items
             .where((r) => r.target == target);
         if (existing.isEmpty) {
           inline.relationshipId = package
-              .relationshipsFor('/word/document.xml')
+              .relationshipsFor(_mainPartUri)
               .add(type: RelationshipTypes.oleObject, target: target)
               .id;
         } else {
@@ -132,6 +161,7 @@ class WordSerializer {
     return WordDrawingIo.syncVisuals(
       document.visuals.map((WmlVisual wrap) => wrap.visual),
       package,
+      partUri: _mainPartUri,
     );
   }
 
@@ -203,8 +233,6 @@ class WordSerializer {
     Map<OfficeVisual, String> imageIds,
   ) {
     switch (block) {
-      case WmlOpaqueBlock():
-        XmlDocument.parse(block.xml).root!.writeTo(w);
       case WmlParagraph():
         _writeParagraph(w, block);
       case WmlTable():
@@ -247,6 +275,8 @@ class WordSerializer {
         w.writeEndElement();
       case WmlToc():
         _writeToc(w, block);
+      case WmlOpaqueBlock():
+        WordOpaqueIo.write(w, block, _package!, _activePartUri);
     }
   }
 
@@ -349,26 +379,39 @@ class WordSerializer {
   }
 
   void _syncComments(WmlDocument document, OpcPackage package) {
-    const String uri = '/word/comments.xml';
-    const String extUri = '/word/commentsExtended.xml';
-    final RelationshipCollection rels = package.relationshipsFor(
-      '/word/document.xml',
+    final String uri = _relatedPartUri(
+      package,
+      RelationshipTypes.comments,
+      'comments.xml',
     );
+    final String extUri = _relatedPartUri(
+      package,
+      RelationshipTypes.commentsExtended,
+      'commentsExtended.xml',
+    );
+    final RelationshipCollection rels = package.relationshipsFor(_mainPartUri);
     if (document.comments.isEmpty) {
-      package
-          .getPart(uri)
-          ?.writeText(
-            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-            '<w:comments xmlns:w="${OfficeNamespaces.w}"/>',
-          );
-      package
-          .getPart(extUri)
-          ?.writeText(
-            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-            '<w15:commentsEx xmlns:w15="${OfficeNamespaces.w15}"/>',
-          );
+      WordCommentIo.writePart(
+        package,
+        uri,
+        OfficeContentTypes.wordComments,
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        '<w:comments xmlns:w="${OfficeNamespaces.w}"/>',
+        create: false,
+      );
+      WordCommentIo.writePart(
+        package,
+        extUri,
+        OfficeContentTypes.wordCommentsExtended,
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        '<w15:commentsEx xmlns:w15="${OfficeNamespaces.w15}"/>',
+        create: false,
+      );
       return;
     }
+    final Map<int, String> paragraphIds = WordCommentIo.paragraphIds(
+      document.comments,
+    );
     final Map<OfficeVisual, String> imageIds = WordDrawingIo.syncVisuals(
       <OfficeVisual>[
         for (final WmlComment comment in document.comments)
@@ -381,7 +424,7 @@ class WordSerializer {
     final XmlWriter w = XmlWriter();
     w.writeStartDocument();
     final String previousPart = _activePartUri;
-    _activePartUri = '/word/comments.xml';
+    _activePartUri = uri;
     w.writeStartElement('comments', prefix: 'w');
     w.writeNamespace('w', OfficeNamespaces.w);
     w.writeNamespace('r', OfficeNamespaces.r);
@@ -408,33 +451,33 @@ class WordSerializer {
       w.writeEndElement();
     }
     w.writeEndElement();
-    final PackagePart? existing = package.getPart(uri);
-    if (existing == null) {
-      package.createPart(
-        uri,
-        OfficeContentTypes.wordComments,
-        utf8.encode(w.toXml()),
-      );
-    } else {
-      existing.writeText(w.toXml());
-    }
+    WordCommentIo.writePart(
+      package,
+      uri,
+      OfficeContentTypes.wordComments,
+      WordCommentIo.attachParagraphIds(w.toXml(), paragraphIds),
+    );
     if (rels.firstByType(RelationshipTypes.comments) == null) {
       rels.add(
         type: RelationshipTypes.comments,
-        target: 'comments.xml',
-        id: 'rIdComments',
+        target: OpcUris.relativize(_mainPartUri, uri),
       );
     }
     _activePartUri = previousPart;
-    _syncCommentsExtended(document, package, rels);
+    _syncCommentsExtended(document, package, rels, paragraphIds);
   }
 
   void _syncCommentsExtended(
     WmlDocument document,
     OpcPackage package,
     RelationshipCollection rels,
+    Map<int, String> paragraphIds,
   ) {
-    const String uri = '/word/commentsExtended.xml';
+    final String uri = _relatedPartUri(
+      package,
+      RelationshipTypes.commentsExtended,
+      'commentsExtended.xml',
+    );
     final XmlWriter w = XmlWriter();
     w.writeStartDocument();
     w.writeStartElement('commentsEx', prefix: 'w15');
@@ -444,31 +487,24 @@ class WordSerializer {
         'commentEx',
         prefix: 'w15',
         attributes: <String, String>{
-          'w15:paraId': comment.id.toRadixString(16).padLeft(8, '0'),
+          'w15:paraId': paragraphIds[comment.id]!,
           if (comment.parentId != null)
-            'w15:paraIdParent': comment.parentId!
-                .toRadixString(16)
-                .padLeft(8, '0'),
+            'w15:paraIdParent': paragraphIds[comment.parentId]!,
           'w15:done': comment.resolved ? '1' : '0',
         },
       );
     }
     w.writeEndElement();
-    final PackagePart? existing = package.getPart(uri);
-    if (existing == null) {
-      package.createPart(
-        uri,
-        OfficeContentTypes.wordCommentsExtended,
-        utf8.encode(w.toXml()),
-      );
-    } else {
-      existing.writeText(w.toXml());
-    }
+    WordCommentIo.writePart(
+      package,
+      uri,
+      OfficeContentTypes.wordCommentsExtended,
+      w.toXml(),
+    );
     if (rels.firstByType(RelationshipTypes.commentsExtended) == null) {
       rels.add(
         type: RelationshipTypes.commentsExtended,
-        target: 'commentsExtended.xml',
-        id: 'rIdCommentsEx',
+        target: OpcUris.relativize(_mainPartUri, uri),
       );
     }
   }
@@ -501,34 +537,45 @@ class WordSerializer {
     WmlSection? sectionBreak,
     bool noteReference = false,
     bool endnote = false,
+    bool addNoteReferenceSpace = true,
+    String? noteReferencePropertiesXml,
   }) {
     w.writeStartElement('p', prefix: 'w');
-    _writePPr(w, paragraph.properties, sectionBreak: sectionBreak);
+    final int? numberedInstance = _restartNumberingIds[paragraph];
+    final WmlParagraphProps properties = numberedInstance == null
+        ? paragraph.properties
+        : (paragraph.properties.copy()..numId = numberedInstance);
+    _writePPr(w, properties, sectionBreak: sectionBreak);
     if (noteReference) {
       // Word displays the automatic note number from this marker in the note
       // body. Without it, Word shows the note text but no number.
       w.writeStartElement('r', prefix: 'w');
-      w.writeStartElement('rPr', prefix: 'w');
-      w.writeStartElement('rStyle', prefix: 'w');
-      w.writeAttribute(
-        'w:val',
-        endnote ? 'EndnoteReference' : 'FootnoteReference',
-      );
-      w.writeEndElement();
-      // Direct formatting matters when the source package does not define
-      // the Word note-reference style. Word otherwise renders the number at
-      // body size and baseline instead of as a small superscript.
-      w.writeEmptyElement(
-        'vertAlign',
-        prefix: 'w',
-        attributes: <String, String>{'w:val': 'superscript'},
-      );
-      w.writeEndElement();
+      if (noteReferencePropertiesXml == null) {
+        w.writeStartElement('rPr', prefix: 'w');
+        w.writeStartElement('rStyle', prefix: 'w');
+        w.writeAttribute(
+          'w:val',
+          endnote ? 'EndnoteReference' : 'FootnoteReference',
+        );
+        w.writeEndElement();
+        // Newly created notes have a conventional superscript mark. Imported
+        // marks retain their exact source properties, including no rPr.
+        w.writeEmptyElement(
+          'vertAlign',
+          prefix: 'w',
+          attributes: <String, String>{'w:val': 'superscript'},
+        );
+        w.writeEndElement();
+      } else if (noteReferencePropertiesXml.isNotEmpty) {
+        XmlDocument.parse(noteReferencePropertiesXml).root!.writeTo(w);
+      }
       w.writeEmptyElement(endnote ? 'endnoteRef' : 'footnoteRef', prefix: 'w');
       w.writeEndElement();
-      // Keep the automatic number separated from the first text run. Word's
-      // own note body normally starts with a space after the reference mark.
-      if (paragraph.text.isEmpty || !RegExp(r'^\s').hasMatch(paragraph.text)) {
+      // New notes get a separator; imported stories already carry their exact
+      // whitespace, including an intentionally absent space after the mark.
+      if (addNoteReferenceSpace &&
+          (paragraph.text.isEmpty ||
+              !RegExp(r'^\s').hasMatch(paragraph.text))) {
         w.writeStartElement('r', prefix: 'w');
         w.writeStartElement('t', prefix: 'w');
         w.writeAttribute('xml:space', 'preserve');
@@ -743,19 +790,25 @@ class WordSerializer {
   }
 
   void _writeRunContent(XmlWriter w, String text, {required bool deleted}) {
-    if (!text.contains('\t')) {
+    if (!text.contains(RegExp(r'[\t\r\n]'))) {
       _writeTextNode(w, text, deleted: deleted);
       return;
     }
     var start = 0;
     for (int i = 0; i < text.length; i++) {
-      if (text.codeUnitAt(i) != 0x09) {
+      final int code = text.codeUnitAt(i);
+      if (code != 0x09 && code != 0x0a && code != 0x0d) {
         continue;
       }
       if (i > start) {
         _writeTextNode(w, text.substring(start, i), deleted: deleted);
       }
-      w.writeEmptyElement('tab', prefix: 'w');
+      w.writeEmptyElement(code == 0x09 ? 'tab' : 'br', prefix: 'w');
+      if (code == 0x0d &&
+          i + 1 < text.length &&
+          text.codeUnitAt(i + 1) == 0x0a) {
+        i++;
+      }
       start = i + 1;
     }
     if (start < text.length) {
@@ -838,7 +891,8 @@ class WordSerializer {
         },
       );
     }
-    if (p.numId != null) {
+    final int? numberingId = p.numId ?? (p.numberingSuppressed ? 0 : null);
+    if (numberingId != null) {
       w.writeStartElement('numPr', prefix: 'w');
       w.writeEmptyElement(
         'ilvl',
@@ -848,7 +902,7 @@ class WordSerializer {
       w.writeEmptyElement(
         'numId',
         prefix: 'w',
-        attributes: <String, String>{'w:val': '${p.numId}'},
+        attributes: <String, String>{'w:val': '$numberingId'},
       );
       w.writeEndElement();
     }
@@ -1053,55 +1107,7 @@ class WordSerializer {
     Map<OfficeVisual, String> imageIds,
   ) {
     w.writeStartElement('tbl', prefix: 'w');
-    w.writeStartElement('tblPr', prefix: 'w');
-    if (table.properties.styleId != null) {
-      w.writeEmptyElement(
-        'tblStyle',
-        prefix: 'w',
-        attributes: <String, String>{'w:val': table.properties.styleId!},
-      );
-    }
-    if (table.properties.rightToLeft) {
-      w.writeEmptyElement('bidiVisual', prefix: 'w');
-    }
-    w.writeEmptyElement(
-      'jc',
-      prefix: 'w',
-      attributes: <String, String>{
-        'w:val': switch (table.properties.alignment) {
-          WmlJustification.center => 'center',
-          WmlJustification.right => 'right',
-          WmlJustification.justify => 'both',
-          WmlJustification.distributed => 'distribute',
-          WmlJustification.left => 'left',
-        },
-      },
-    );
-    if (table.properties.borders) {
-      final String color = table.properties.borderColor ?? '000000';
-      w.writeStartElement('tblBorders', prefix: 'w');
-      for (final String edge in <String>[
-        'top',
-        'left',
-        'bottom',
-        'right',
-        'insideH',
-        'insideV',
-      ]) {
-        w.writeEmptyElement(
-          edge,
-          prefix: 'w',
-          attributes: <String, String>{
-            'w:val': 'single',
-            'w:sz': '${(table.properties.borderWidth * 8).round()}',
-            'w:space': '0',
-            'w:color': color,
-          },
-        );
-      }
-      w.writeEndElement();
-    }
-    w.writeEndElement();
+    WordTablePropertyIo.write(w, table.properties);
     w.writeStartElement('tblGrid', prefix: 'w');
     for (final double col in table.grid) {
       w.writeEmptyElement(
@@ -1189,8 +1195,19 @@ class WordSerializer {
     );
   }
 
-  void _writeSectPr(XmlWriter w, WmlSection section) {
+  void _writeSectPr(XmlWriter writer, WmlSection section) {
+    final XmlWriter generated = XmlWriter();
+    _writeGeneratedSectPr(generated, section);
+    final XmlElement element = XmlDocument.parse(generated.toXml()).root!;
+    final XmlElement preserved = WordSectionIo.preserve(element, section);
+    _sectionRevisionIds.ensureUnique(preserved);
+    preserved.writeTo(writer);
+  }
+
+  void _writeGeneratedSectPr(XmlWriter w, WmlSection section) {
     w.writeStartElement('sectPr', prefix: 'w');
+    w.writeNamespace('w', OfficeNamespaces.w);
+    w.writeNamespace('r', OfficeNamespaces.r);
     final _HeaderFooterIds? ids = _headerFooterIds[section];
     if (ids != null) {
       void ref(String? rid, String kind, String type) {
@@ -1205,10 +1222,10 @@ class WordSerializer {
       }
 
       ref(ids.header, 'headerReference', 'default');
-      ref(ids.footer, 'footerReference', 'default');
       ref(ids.firstHeader, 'headerReference', 'first');
-      ref(ids.firstFooter, 'footerReference', 'first');
       ref(ids.evenHeader, 'headerReference', 'even');
+      ref(ids.footer, 'footerReference', 'default');
+      ref(ids.firstFooter, 'footerReference', 'first');
       ref(ids.evenFooter, 'footerReference', 'even');
     }
     w.writeEmptyElement(
@@ -1359,14 +1376,40 @@ class WordSerializer {
         header: _writeHfPart(
           package,
           section.header,
+          visuals: section.headerVisuals,
           header: true,
           watermark: i == 0 ? watermark : '',
         ),
-        footer: _writeHfPart(package, section.footer, header: false),
-        firstHeader: _writeHfPart(package, section.firstHeader, header: true),
-        firstFooter: _writeHfPart(package, section.firstFooter, header: false),
-        evenHeader: _writeHfPart(package, section.evenHeader, header: true),
-        evenFooter: _writeHfPart(package, section.evenFooter, header: false),
+        footer: _writeHfPart(
+          package,
+          section.footer,
+          visuals: section.footerVisuals,
+          header: false,
+        ),
+        firstHeader: _writeHfPart(
+          package,
+          section.firstHeader,
+          visuals: section.firstHeaderVisuals,
+          header: true,
+        ),
+        firstFooter: _writeHfPart(
+          package,
+          section.firstFooter,
+          visuals: section.firstFooterVisuals,
+          header: false,
+        ),
+        evenHeader: _writeHfPart(
+          package,
+          section.evenHeader,
+          visuals: section.evenHeaderVisuals,
+          header: true,
+        ),
+        evenFooter: _writeHfPart(
+          package,
+          section.evenFooter,
+          visuals: section.evenFooterVisuals,
+          header: false,
+        ),
       );
     }
     return map;
@@ -1375,15 +1418,22 @@ class WordSerializer {
   String? _writeHfPart(
     OpcPackage package,
     List<WmlParagraph> story, {
+    required List<WmlVisual> visuals,
     required bool header,
     String watermark = '',
   }) {
-    if (story.isEmpty && watermark.isEmpty) {
+    if (story.isEmpty && visuals.isEmpty && watermark.isEmpty) {
       return null;
     }
     final int n = _hfPart++;
     final String name = header ? 'header$n.xml' : 'footer$n.xml';
-    final String uri = '/word/$name';
+    final String uri = OpcUris.resolve(_mainPartUri, name);
+    final Map<OfficeVisual, String> imageIds = WordDrawingIo.syncVisuals(
+      visuals.map((WmlVisual visual) => visual.visual),
+      package,
+      partUri: uri,
+      mediaPrefix: '${header ? 'header' : 'footer'}${n}Image',
+    );
     final String previousPart = _activePartUri;
     _activePartUri = uri;
     final XmlWriter w = XmlWriter();
@@ -1391,12 +1441,19 @@ class WordSerializer {
     w.writeStartElement(header ? 'hdr' : 'ftr', prefix: 'w');
     w.writeNamespace('w', OfficeNamespaces.w);
     w.writeNamespace('r', OfficeNamespaces.r);
+    w.writeNamespace('wp', OfficeNamespaces.wp);
+    w.writeNamespace('a', OfficeNamespaces.a);
+    w.writeNamespace('pic', OfficeNamespaces.pic);
+    w.writeNamespace('c', OfficeNamespaces.c);
     if (watermark.isNotEmpty) {
       w.writeNamespace('v', OfficeNamespaces.v);
       w.writeNamespace('o', OfficeNamespaces.o);
     }
     for (final WmlParagraph paragraph in story) {
       _writeParagraph(w, paragraph);
+    }
+    for (final WmlVisual visual in visuals) {
+      _writeBlock(w, visual, imageIds);
     }
     if (watermark.isNotEmpty) {
       _writeVmlWatermark(w, watermark);
@@ -1409,12 +1466,15 @@ class WordSerializer {
       header ? OfficeContentTypes.wordHeader : OfficeContentTypes.wordFooter,
       w.toXml(),
       header ? RelationshipTypes.header : RelationshipTypes.footer,
-      name,
     );
   }
 
   void _syncSettings(WmlDocument document, OpcPackage package) {
-    const String uri = '/word/settings.xml';
+    final String uri = _relatedPartUri(
+      package,
+      RelationshipTypes.settings,
+      'settings.xml',
+    );
     final XmlWriter w = XmlWriter();
     w.writeStartDocument();
     w.writeStartElement('settings', prefix: 'w');
@@ -1439,7 +1499,6 @@ class WordSerializer {
       OfficeContentTypes.wordSettings,
       w.toXml(),
       RelationshipTypes.settings,
-      'settings.xml',
     );
   }
 
@@ -1449,7 +1508,6 @@ class WordSerializer {
     String contentType,
     String xml,
     String relType,
-    String target,
   ) {
     final PackagePart? existing = package.getPart(uri);
     if (existing == null) {
@@ -1457,15 +1515,17 @@ class WordSerializer {
     } else {
       existing.writeText(xml);
     }
-    final RelationshipCollection rels = package.relationshipsFor(
-      '/word/document.xml',
-    );
+    final RelationshipCollection rels = package.relationshipsFor(_mainPartUri);
     for (final PackageRelationship rel in rels.items) {
-      if (rel.target == target) {
+      if (rel.type == relType &&
+          rel.targetMode == RelationshipTargetMode.internal &&
+          rels.resolve(rel) == uri) {
         return rel.id;
       }
     }
-    return rels.add(type: relType, target: target).id;
+    return rels
+        .add(type: relType, target: OpcUris.relativize(_mainPartUri, uri))
+        .id;
   }
 
   void _syncWatermark(WmlDocument document, OpcPackage package) {
@@ -1527,7 +1587,11 @@ class WordSerializer {
   }
 
   void _syncNumbering(OpcPackage package) {
-    const String uri = '/word/numbering.xml';
+    final String uri = _relatedPartUri(
+      package,
+      RelationshipTypes.numbering,
+      'numbering.xml',
+    );
     final XmlWriter w = XmlWriter();
     w.writeStartDocument();
     w.writeStartElement('numbering', prefix: 'w');
@@ -1617,10 +1681,12 @@ class WordSerializer {
           final int firstNum = root.children.indexWhere(
             (XmlNode n) => n is XmlElement && n.localName == 'num',
           );
+          final XmlElement copy = node.copy()
+            ..setAttribute('w', OfficeNamespaces.w, prefix: 'xmlns');
           if (node.localName == 'abstractNum' && firstNum >= 0) {
-            root.children.insert(firstNum, node.copy()..parent = root);
+            root.children.insert(firstNum, copy..parent = root);
           } else {
-            root.addChild(node.copy());
+            root.addChild(copy);
           }
         }
         xml = preserved.toXmlString();
@@ -1632,42 +1698,99 @@ class WordSerializer {
       OfficeContentTypes.wordNumbering,
       xml,
       RelationshipTypes.numbering,
-      'numbering.xml',
     );
   }
 
+  Map<String, WmlStyle> _stylesForExport(
+    WmlDocument document, {
+    bool includeDefaultStyles = true,
+  }) {
+    final Map<String, WmlStyle> styles = <String, WmlStyle>{
+      for (final WmlStyle style
+          in document.styles.isEmpty && includeDefaultStyles
+              ? WordStyles.all
+              : document.styles)
+        style.id: style,
+    };
+    final Map<String, WmlStyle> builtIns = <String, WmlStyle>{
+      for (final WmlStyle style in WordStyles.catalog) style.id: style,
+    };
+    final Set<String> visited = <String>{};
+    void include(String? id) {
+      if (id == null || !visited.add(id)) return;
+      final WmlStyle? style = styles[id] ?? builtIns[id];
+      if (style == null) return;
+      styles[id] = style;
+      include(style.basedOn);
+    }
+
+    for (final WmlStyle style in List<WmlStyle>.of(styles.values)) {
+      include(style.id);
+    }
+    final Iterable<WmlParagraph> paragraphs = <WmlParagraph>[
+      ...document.paragraphs,
+      for (final WmlSection section in document.sections) ...<WmlParagraph>[
+        ...section.header,
+        ...section.footer,
+        ...section.firstHeader,
+        ...section.firstFooter,
+        ...section.evenHeader,
+        ...section.evenFooter,
+      ],
+      for (final WmlNote note in <WmlNote>[
+        ...document.footnotes,
+        ...document.endnotes,
+      ])
+        ...note.allParagraphs,
+      for (final WmlComment comment in document.comments) ...comment.paragraphs,
+    ];
+    for (final WmlParagraph paragraph in paragraphs) {
+      include(paragraph.properties.styleId);
+    }
+    return styles;
+  }
+
   void _syncStyles(WmlDocument document, OpcPackage package) {
-    final rels = package.relationshipsFor('/word/document.xml');
-    final rel = rels.firstByType(RelationshipTypes.styles);
-    final String uri = rel == null ? '/word/styles.xml' : rels.resolve(rel);
+    final String uri = _relatedPartUri(
+      package,
+      RelationshipTypes.styles,
+      'styles.xml',
+    );
+    final PackagePart? original = package.getPart(uri);
+    final bool importedWithoutStyles =
+        document.package != null && original == null;
+    final Map<String, WmlStyle> current = _stylesForExport(
+      document,
+      includeDefaultStyles: document.package == null,
+    );
+    if (importedWithoutStyles && current.isEmpty) return;
     final XmlWriter w = XmlWriter();
     w.writeStartDocument();
     w.writeStartElement('styles', prefix: 'w');
     w.writeNamespace('w', OfficeNamespaces.w);
-    w.writeStartElement('docDefaults', prefix: 'w');
-    w.writeStartElement('rPrDefault', prefix: 'w');
-    w.writeStartElement('rPr', prefix: 'w');
-    w.writeEmptyElement(
-      'rFonts',
-      prefix: 'w',
-      attributes: const <String, String>{
-        'w:ascii': 'Arial',
-        'w:hAnsi': 'Arial',
-        'w:cs': 'Arial',
-      },
-    );
-    w.writeEmptyElement(
-      'sz',
-      prefix: 'w',
-      attributes: const <String, String>{'w:val': '22'},
-    );
-    w.writeEndElement();
-    w.writeEndElement();
-    w.writeEndElement();
-    final Iterable<WmlStyle> styles = document.styles.isEmpty
-        ? WordStyles.all
-        : document.styles;
-    for (final WmlStyle style in styles) {
+    if (!importedWithoutStyles) {
+      w.writeStartElement('docDefaults', prefix: 'w');
+      w.writeStartElement('rPrDefault', prefix: 'w');
+      w.writeStartElement('rPr', prefix: 'w');
+      w.writeEmptyElement(
+        'rFonts',
+        prefix: 'w',
+        attributes: const <String, String>{
+          'w:ascii': 'Arial',
+          'w:hAnsi': 'Arial',
+          'w:cs': 'Arial',
+        },
+      );
+      w.writeEmptyElement(
+        'sz',
+        prefix: 'w',
+        attributes: const <String, String>{'w:val': '22'},
+      );
+      w.writeEndElement();
+      w.writeEndElement();
+      w.writeEndElement();
+    }
+    for (final WmlStyle style in current.values) {
       w.writeStartElement('style', prefix: 'w');
       w.writeAttribute('w:type', 'paragraph');
       w.writeAttribute('w:styleId', style.id);
@@ -1774,15 +1897,11 @@ class WordSerializer {
     }
     w.writeEndElement();
     final XmlDocument generated = XmlDocument.parse(w.toXml());
-    final PackagePart? original = package.getPart(uri);
     String xml = generated.toXmlString();
     if (original != null) {
       final XmlDocument preserved = XmlDocument.parse(original.readText());
       final XmlElement? root = preserved.root;
       if (root != null) {
-        final Map<String, WmlStyle> current = <String, WmlStyle>{
-          for (final WmlStyle style in document.styles) style.id: style,
-        };
         root.children.removeWhere(
           (XmlNode node) =>
               node is XmlElement &&
@@ -1804,10 +1923,12 @@ class WordSerializer {
                 old.localName == 'style' &&
                 old.getAttribute('styleId') == id,
           );
+          final XmlElement copy = node.copy()
+            ..setAttribute('w', OfficeNamespaces.w, prefix: 'xmlns');
           if (at < 0) {
-            root.addChild(node.copy());
+            root.addChild(copy);
           } else {
-            root.children[at] = node.copy()..parent = root;
+            root.children[at] = copy..parent = root;
           }
         }
         xml = preserved.toXmlString();
@@ -1819,7 +1940,6 @@ class WordSerializer {
       OfficeContentTypes.wordStyles,
       xml,
       RelationshipTypes.styles,
-      'styles.xml',
     );
   }
 
@@ -1827,20 +1947,18 @@ class WordSerializer {
     _writeNotesPart(
       package,
       document.footnotes,
-      '/word/footnotes.xml',
+      _relatedPartUri(package, RelationshipTypes.footnotes, 'footnotes.xml'),
       OfficeContentTypes.wordFootnotes,
       RelationshipTypes.footnotes,
-      'footnotes.xml',
       'footnotes',
       'footnote',
     );
     _writeNotesPart(
       package,
       document.endnotes,
-      '/word/endnotes.xml',
+      _relatedPartUri(package, RelationshipTypes.endnotes, 'endnotes.xml'),
       OfficeContentTypes.wordEndnotes,
       RelationshipTypes.endnotes,
-      'endnotes.xml',
       'endnotes',
       'endnote',
     );
@@ -1870,7 +1988,6 @@ class WordSerializer {
     String uri,
     String contentType,
     String relType,
-    String target,
     String root,
     String item,
   ) {
@@ -1907,6 +2024,8 @@ class WordSerializer {
             block is WmlParagraph ? block : WmlParagraph(),
             noteReference: true,
             endnote: note.endnote,
+            addNoteReferenceSpace: note.addReferenceSpace,
+            noteReferencePropertiesXml: note.referencePropertiesXml,
           );
           referenceWritten = true;
           if (block is WmlParagraph) continue;
@@ -1919,13 +2038,15 @@ class WordSerializer {
           WmlParagraph(),
           noteReference: true,
           endnote: note.endnote,
+          addNoteReferenceSpace: note.addReferenceSpace,
+          noteReferencePropertiesXml: note.referencePropertiesXml,
         );
       }
       w.writeEndElement();
     }
     w.writeEndElement();
     _activePartUri = previousPart;
-    _putPart(package, uri, contentType, w.toXml(), relType, target);
+    _putPart(package, uri, contentType, w.toXml(), relType);
   }
 
   void _putPart(
@@ -1934,7 +2055,6 @@ class WordSerializer {
     String contentType,
     String xml,
     String relType,
-    String target,
   ) {
     final PackagePart? existing = package.getPart(uri);
     if (existing == null) {
@@ -1942,12 +2062,20 @@ class WordSerializer {
     } else {
       existing.writeText(xml);
     }
-    final RelationshipCollection rels = package.relationshipsFor(
-      '/word/document.xml',
-    );
+    final RelationshipCollection rels = package.relationshipsFor(_mainPartUri);
     if (rels.firstByType(relType) == null) {
-      rels.add(type: relType, target: target);
+      rels.add(type: relType, target: OpcUris.relativize(_mainPartUri, uri));
     }
+  }
+
+  String _relatedPartUri(OpcPackage package, String type, String name) {
+    final RelationshipCollection rels = package.relationshipsFor(_mainPartUri);
+    final PackageRelationship? rel = rels.firstByType(type);
+    if (rel == null) return OpcUris.resolve(_mainPartUri, name);
+    if (rel.targetMode == RelationshipTargetMode.external) {
+      throw FormatException('The Word $name part must be inside its package');
+    }
+    return rels.resolve(rel);
   }
 
   static String _xmlEscape(String text) {

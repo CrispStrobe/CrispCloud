@@ -29,7 +29,15 @@ migrate_working_dir/
 .pub/
 /build/
 /coverage/
+/tool/office-validation/bin/
+/tool/office-validation/obj/
 # Standalone checks for vendored packages must not change the app lockfile.
+/packages/quds_office_engine/pubspec.lock
+/packages/quds_office_editor/pubspec.lock
+/packages/quds_office_engine/build/
+/packages/quds_office_editor/build/
+/packages/quds_office_engine/coverage/
+/packages/quds_office_editor/coverage/
 /packages/dart_pdf_editor/pubspec.lock
 /packages/dart_pdf_editor_secure_storage/pubspec.lock
 /packages/dart_pdf_editor/build/

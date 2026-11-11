@@ -1,0 +1,16 @@
+{
+  "main_part": "/custom/document-main.xml",
+  "comments_part": "/review/threads.xml",
+  "extended_part": "/review/thread-state.xml",
+  "imported": [
+    {"id": 7, "paragraph_id": "0077BB07", "parent_id": 41, "resolved": false, "author": "Reply reviewer", "text": "Reply arrived first"},
+    {"id": 41, "paragraph_id": "00ABC123", "parent_id": null, "resolved": true, "author": "Root reviewer", "text": "Root opening paragraph\nRoot final paragraph"},
+    {"id": 99, "paragraph_id": "00000001", "parent_id": null, "resolved": false, "author": "Other reviewer", "text": "Independent unresolved comment"}
+  ],
+  "edited": [
+    {"id": 7, "paragraph_id": "0077BB07", "parent_id": 41, "resolved": true, "author": "Reply reviewer", "text": "Reply arrived first"},
+    {"id": 41, "paragraph_id": "00ABC123", "parent_id": null, "resolved": false, "author": "Root reviewer", "text": "Root opening paragraph\nRoot revised final paragraph"},
+    {"id": 55, "paragraph_id": "00000002", "parent_id": 7, "resolved": false, "author": "New reviewer", "text": "Nested new reply"},
+    {"id": 99, "paragraph_id": "00000001", "parent_id": null, "resolved": false, "author": "Other reviewer", "text": "Independent unresolved comment"}
+  ]
+}

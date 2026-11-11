@@ -164,13 +164,13 @@ abstract final class DrawingmlVisualIo {
   }) {
     w.writeStartElement('xfrm', prefix: prefix);
     final int rot = (adj.rotationDeg * 60000).round();
-    if (rot != 0) {
+    if (rot != 0 && prefix != 'p') {
       w.writeAttribute('rot', '$rot');
     }
-    if (adj.flipH) {
+    if (adj.flipH && prefix != 'p') {
       w.writeAttribute('flipH', '1');
     }
-    if (adj.flipV) {
+    if (adj.flipV && prefix != 'p') {
       w.writeAttribute('flipV', '1');
     }
     w.writeEmptyElement(

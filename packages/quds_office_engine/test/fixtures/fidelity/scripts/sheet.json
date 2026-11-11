@@ -1,0 +1,73 @@
+[
+  {
+    "op": "cellValue",
+    "cell": "B2",
+    "value": 7
+  },
+  {
+    "op": "cellFormula",
+    "cell": "C2",
+    "formula": "=B2*4"
+  },
+  {
+    "op": "cellFormat",
+    "cell": "B2",
+    "bold": true,
+    "color": "000000",
+    "fill": "00FF00",
+    "size": 15,
+    "alignment": "center"
+  },
+  {
+    "op": "cellValue",
+    "cell": "D1",
+    "value": true
+  },
+  {
+    "op": "cellValue",
+    "cell": "E1",
+    "value": null
+  },
+  {
+    "op": "mergeCells",
+    "range": "D5:E5"
+  },
+  {
+    "op": "unmergeCells",
+    "range": "D5:E5"
+  },
+  {
+    "op": "mergeCells",
+    "range": "D6:E6"
+  },
+  {
+    "op": "cellValue",
+    "cell": "D6",
+    "value": "Joined"
+  },
+  {
+    "op": "freeze",
+    "rows": 2,
+    "columns": 1
+  },
+  {
+    "op": "rowHeight",
+    "row": 0,
+    "height": 48
+  },
+  {
+    "op": "columnWidth",
+    "column": 0,
+    "width": 96
+  },
+  {
+    "op": "renameSheet",
+    "sheet": 1,
+    "name": "Report"
+  },
+  {
+    "op": "sheetOrder",
+    "sheet": 1,
+    "to": 0
+  }
+]

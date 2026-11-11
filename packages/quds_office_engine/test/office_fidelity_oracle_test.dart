@@ -80,8 +80,12 @@ void main() {
     final WmlTable table = doc.sections.first.blocks
         .whereType<WmlTable>()
         .single;
+    // The authored source has no direct or inherited borders. Make the edit
+    // explicit instead of relying on the old import default that added borders.
+    expect(table.properties.borders, isFalse);
     table.properties
       ..styleId = 'TableCustom'
+      ..borders = true
       ..borderColor = '123456'
       ..borderWidth = 2;
     final WmlTable after = WordDeserializer()

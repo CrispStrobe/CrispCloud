@@ -97,8 +97,9 @@ void main() {
             {'op': 'imageReplace', 'image': 999, 'file': 'missing.png'},
           ]),
         );
+      // execute() is the CLI body; main() reports the same error as exit code 1.
       await expectLater(
-        cli.main([
+        cli.execute([
           'modify',
           'test/fixtures/fidelity/word.docx',
           steps.path,
@@ -108,7 +109,7 @@ void main() {
       );
       expect(output.readAsBytesSync(), [1, 2, 3, 4]);
       expect(
-        temporary.listSync().where((f) => f.path.contains('.tmp.')),
+        temporary.listSync().where((f) => f.path.endsWith('.tmp')),
         isEmpty,
       );
     },
@@ -134,7 +135,7 @@ void main() {
         'Imported heading',
       );
       expect(
-        temporary.listSync().where((f) => f.path.contains('.tmp.')),
+        temporary.listSync().where((f) => f.path.endsWith('.tmp')),
         isEmpty,
       );
     },

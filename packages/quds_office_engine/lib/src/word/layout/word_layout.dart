@@ -1954,6 +1954,7 @@ class WordLayoutEngine {
     if (block is WmlEquation) {
       return OmmlLayout.layout(block.math, fontSize: 14).height + 4;
     }
+    if (block is WmlOpaqueBlock) return 0;
     return 18;
   }
 

@@ -21,13 +21,25 @@ import 'package:path/path.dart' as p;
 import 'package:xml/xml.dart';
 
 import 'archive_viewer_service.dart';
+import 'office_package_parts.dart';
 
 const int _kOfficePartCap = 8 * 1024 * 1024;
 const int _kOfficeRawCap = 4 * 1024 * 1024;
+const String _wordNamespace =
+    'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+const String _officeRelationshipNamespace =
+    'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
 
 enum OfficeDocumentKind { document, spreadsheet, presentation, ebook }
 
-enum OfficePreviewFallback { legacyPresentation, extractionFailed, missingDocx, missingOds, missingOdp, missingOdt }
+enum OfficePreviewFallback {
+  legacyPresentation,
+  extractionFailed,
+  missingDocx,
+  missingOds,
+  missingOdp,
+  missingOdt,
+}
 
 enum OfficeHeadingKind { sheet, slide }
 
@@ -193,7 +205,7 @@ Future<String?> _readPart(ViewerArchive archive, String path) async {
 }
 
 String _stripMarkdown(String markdown) {
-  var text = markdown;
+  var text = markdown.replaceAll('  \n', '\n');
   text = text.replaceAll(RegExp(r'^#{1,6}\s*', multiLine: true), '');
   text = text.replaceAllMapped(
     RegExp(r'\*\*(.*?)\*\*'),
@@ -223,9 +235,13 @@ String _stripMarkdown(String markdown) {
 }
 
 (String, List<OfficeGeneratedHeading>) _plainWithHeadings(
-    String markdown, List<OfficeGeneratedHeading> headings) {
+  String markdown,
+  List<OfficeGeneratedHeading> headings,
+) {
   var marker = '\uE000';
-  while (markdown.contains(marker)) { marker += '\uE000'; }
+  while (markdown.contains(marker)) {
+    marker += '\uE000';
+  }
   var marked = markdown;
   for (var i = headings.length - 1; i >= 0; i--) {
     final h = headings[i];
@@ -243,18 +259,39 @@ String _stripMarkdown(String markdown) {
     final label = markdown.substring(heading.start, heading.end);
     final newStart = result.length;
     result.write(label);
-    mapped.add(OfficeGeneratedHeading(newStart, result.length, heading.kind, heading.number));
+    mapped.add(
+      OfficeGeneratedHeading(
+        newStart,
+        result.length,
+        heading.kind,
+        heading.number,
+      ),
+    );
     offset = start + token.length;
   }
   result.write(stripped.substring(offset));
   return (result.toString(), mapped);
 }
 
-void _writeHeading(StringBuffer buffer, String prefix, OfficeHeadingKind kind,
-    int number, List<OfficeGeneratedHeading> headings) {
-  final label = '${kind == OfficeHeadingKind.sheet ? 'Sheet' : 'Slide'} $number';
+void _writeHeading(
+  StringBuffer buffer,
+  String prefix,
+  OfficeHeadingKind kind,
+  int number,
+  List<OfficeGeneratedHeading> headings, {
+  String? name,
+}) {
+  if (name != null && name.isNotEmpty) {
+    // Workbook sheet names are document content, never generated UI labels.
+    buffer.writeln('$prefix$name');
+    return;
+  }
+  final label =
+      '${kind == OfficeHeadingKind.sheet ? 'Sheet' : 'Slide'} $number';
   final start = buffer.length + prefix.length;
-  headings.add(OfficeGeneratedHeading(start, start + label.length, kind, number));
+  headings.add(
+    OfficeGeneratedHeading(start, start + label.length, kind, number),
+  );
   buffer.writeln('$prefix$label');
 }
 
@@ -290,8 +327,17 @@ int _sortedNumber(String path, String prefix) {
 // DOCX
 // ---------------------------------------------------------------------------
 
+Future<List<OfficePartRelationship>> _officePartRelationships(
+  ViewerArchive archive,
+  String owner,
+) => OfficePackageParts((name) => _readPart(archive, name)).relationships(owner);
+
+Future<String> _officeMainPart(ViewerArchive archive, String fallback) =>
+    OfficePackageParts((name) => _readPart(archive, name)).mainPart(fallback);
+
 Future<OfficeDocument> _parseDocx(ViewerArchive archive) async {
-  final xml = await _readPart(archive, 'word/document.xml');
+  final mainPart = await _officeMainPart(archive, 'word/document.xml');
+  final xml = await _readPart(archive, mainPart);
   if (xml == null) {
     return const OfficeDocument(
       kind: OfficeDocumentKind.document,
@@ -301,80 +347,191 @@ Future<OfficeDocument> _parseDocx(ViewerArchive archive) async {
     );
   }
 
-  final markdown = _docxToMarkdown(xml);
+  final rels = await _officePartRelationships(archive, mainPart);
+  final notes = <String, XmlElement>{};
+  for (final kind in ['footnote', 'endnote']) {
+    final path =
+        rels.where((rel) => rel.type.endsWith('/${kind}s')).firstOrNull?.path ??
+        p.posix.normalize(
+          p.posix.join(p.posix.dirname(mainPart), '${kind}s.xml'),
+        );
+    final noteXml = await _readPart(archive, path);
+    if (noteXml == null) continue;
+    for (final note in XmlDocument.parse(
+      noteXml,
+    ).findAllElements(kind, namespace: _wordNamespace)) {
+      final id = note.getAttribute('id', namespace: _wordNamespace);
+      final type = note.getAttribute('type', namespace: _wordNamespace);
+      if (id != null && (type == null || type == 'normal')) {
+        notes['$kind:$id'] = note;
+      }
+    }
+  }
+  final markdown = _docxToMarkdown(xml, notes: notes);
   return OfficeDocument(
     kind: OfficeDocumentKind.document,
     markdown: markdown,
     plainText: _stripMarkdown(markdown),
-    rawXml: _capRaw(xml, 'word/document.xml'),
+    rawXml: _capRaw(xml, mainPart),
   );
 }
 
-String _docxToMarkdown(String xml) {
+String _docxToMarkdown(String xml, {Map<String, XmlElement> notes = const {}}) {
   final document = XmlDocument.parse(xml);
-  final body = document.findAllElements('w:body').firstOrNull;
+  final body = document
+      .findAllElements('body', namespace: _wordNamespace)
+      .firstOrNull;
   if (body == null) return '';
+  final references = <String, int>{};
+  String reference(String kind, String id) {
+    final label = references.putIfAbsent(
+      '$kind:$id',
+      () => references.length + 1,
+    );
+    return '[$label]';
+  }
 
-  final blocks = <String>[];
-  for (final element in body.childElements) {
-    switch (element.localName) {
-      case 'p':
-        final block = _docxParagraph(element);
-        if (block.isNotEmpty) blocks.add(block);
-      case 'tbl':
-        final table = _docxTable(element);
-        if (table.isNotEmpty) blocks.add(table);
-    }
+  final blocks = _docxBlocks(body, reference: reference);
+  for (final entry in references.entries) {
+    final note = notes[entry.key];
+    if (note == null) continue;
+    final content = _docxBlocks(note).join('\n\n');
+    if (content.isNotEmpty) blocks.add('[${entry.value}] $content');
   }
   return blocks.join('\n\n').trim();
 }
 
-String _docxParagraph(XmlElement paragraph) {
-  final style = paragraph
-          .findAllElements('w:pStyle')
-          .firstOrNull
-          ?.getAttribute('w:val') ??
-      '';
-  final isList = paragraph.findAllElements('w:numPr').isNotEmpty;
-
-  final runs = <String>[];
-  for (final run in paragraph.findAllElements('w:r')) {
-    final text = run
-        .findAllElements('w:t')
-        .map((element) => element.innerText)
-        .join();
-    if (text.isEmpty) continue;
-    final bold = run.findAllElements('w:b').isNotEmpty;
-    final italic = run.findAllElements('w:i').isNotEmpty;
-    var value = text;
-    if (bold) value = '**$value**';
-    if (italic) value = '*$value*';
-    runs.add(value);
+List<String> _docxBlocks(
+  XmlElement container, {
+  String Function(String kind, String id)? reference,
+}) {
+  final blocks = <String>[];
+  for (final element in container.childElements) {
+    switch (element.localName) {
+      case 'p':
+        final block = _docxParagraph(element, reference: reference);
+        if (block.isNotEmpty) blocks.add(block);
+      case 'tbl':
+        final table = _docxTable(element, reference: reference);
+        if (table.isNotEmpty) blocks.add(table);
+    }
   }
-  final text = runs.join().trim();
+  return blocks;
+}
+
+String _docxParagraph(
+  XmlElement paragraph, {
+  String Function(String kind, String id)? reference,
+}) {
+  final style =
+      paragraph
+          .findAllElements('pStyle', namespace: _wordNamespace)
+          .firstOrNull
+          ?.getAttribute('val', namespace: _wordNamespace) ??
+      '';
+  final isList = paragraph
+      .findAllElements('numPr', namespace: _wordNamespace)
+      .any(
+        (numbering) =>
+            numbering.findElements(
+              'numId',
+              namespace: _wordNamespace,
+            ).firstOrNull?.getAttribute('val', namespace: _wordNamespace) !=
+            '0',
+      );
+
+  final text = _docxRuns(paragraph, reference: reference).trim();
   if (text.isEmpty) return '';
 
   final lower = style.toLowerCase();
   if (lower == 'title') return '# $text';
   if (lower.startsWith('heading')) {
-    final level =
-        (int.tryParse(style.replaceAll(RegExp('[^0-9]'), '')) ?? 1)
-            .clamp(1, 6);
+    final level = (int.tryParse(style.replaceAll(RegExp('[^0-9]'), '')) ?? 1)
+        .clamp(1, 6);
     return '${'#' * level} $text';
   }
   if (isList) return '- $text';
   return text;
 }
 
-String _docxTable(XmlElement table) {
+bool _docxEnabled(XmlElement? property) {
+  if (property == null) return false;
+  final value = property
+      .getAttribute('val', namespace: _wordNamespace)
+      ?.toLowerCase();
+  return value != '0' && value != 'false' && value != 'off';
+}
+
+String _docxRuns(
+  XmlElement paragraph, {
+  String Function(String kind, String id)? reference,
+}) {
+  final runs = <String>[];
+  for (final run in paragraph.findAllElements('r', namespace: _wordNamespace)) {
+    final buffer = StringBuffer();
+    for (final element in run.findAllElements('*', namespace: _wordNamespace)) {
+      switch (element.localName) {
+        case 't':
+          buffer.write(element.innerText);
+        case 'tab':
+          buffer.write('\t');
+        case 'br':
+        case 'cr':
+          buffer.write('\n');
+        case 'noBreakHyphen':
+          buffer.write('\u2011');
+        case 'softHyphen':
+          buffer.write('\u00ad');
+        case 'footnoteReference':
+        case 'endnoteReference':
+          final id = element.getAttribute('id', namespace: _wordNamespace);
+          if (id != null && reference != null) {
+            buffer.write(
+              reference(element.localName.replaceAll('Reference', ''), id),
+            );
+          }
+      }
+    }
+    final text = buffer.toString();
+    if (text.isEmpty) continue;
+    final properties = run
+        .findElements('rPr', namespace: _wordNamespace)
+        .firstOrNull;
+    final bold = _docxEnabled(
+      properties?.findElements('b', namespace: _wordNamespace).firstOrNull,
+    );
+    final italic = _docxEnabled(
+      properties?.findElements('i', namespace: _wordNamespace).firstOrNull,
+    );
+    runs.add(
+      text
+          .split('\n')
+          .map((line) {
+            if (line.isEmpty) return '';
+            var value = line;
+            if (bold) value = '**$value**';
+            if (italic) value = '*$value*';
+            return value;
+          })
+          .join('  \n'),
+    );
+  }
+  return runs.join();
+}
+
+String _docxTable(
+  XmlElement table, {
+  String Function(String kind, String id)? reference,
+}) {
   final rows = <List<String>>[];
-  for (final row in table.findAllElements('w:tr')) {
+  for (final row in table.findElements('tr', namespace: _wordNamespace)) {
     final cells = <String>[];
-    for (final cell in row.findAllElements('w:tc')) {
+    for (final cell in row.findElements('tc', namespace: _wordNamespace)) {
       final text = cell
-          .findAllElements('w:t')
-          .map((element) => element.innerText)
-          .join()
+          .findAllElements('p', namespace: _wordNamespace)
+          .map((element) => _docxRuns(element, reference: reference))
+          .join(' ')
+          .replaceAll('  \n', ' ')
           .trim();
       cells.add(_escapePipes(text));
     }
@@ -408,42 +565,100 @@ Future<OfficeDocument> _parseSpreadsheet(
 }) async {
   if (isOds) return _parseOds(archive);
 
-  final sharedXml = await _readPart(archive, 'xl/sharedStrings.xml');
+  final workbookPath = await _officeMainPart(archive, 'xl/workbook.xml');
+  final workbookXml = await _readPart(archive, workbookPath);
+  final rels = await _officePartRelationships(archive, workbookPath);
+  final sharedPath =
+      rels
+          .where((rel) => rel.type.endsWith('/sharedStrings'))
+          .firstOrNull
+          ?.path ??
+      p.posix.join(p.posix.dirname(workbookPath), 'sharedStrings.xml');
+  final sharedXml = await _readPart(archive, sharedPath);
   final shared = <String>[];
   if (sharedXml != null) {
     final document = XmlDocument.parse(sharedXml);
-    for (final item in document.findAllElements('si')) {
+    for (final item in document.findAllElements('si', namespace: '*')) {
       shared.add(
-        item.findAllElements('t').map((e) => e.innerText).join(),
+        item
+            .findAllElements('t', namespace: '*')
+            .map((e) => e.innerText)
+            .join(),
       );
     }
   }
 
-  final sheets = archive.members
-      .where((m) =>
-          m.isFile &&
-          m.name.startsWith('xl/worksheets/') &&
-          m.name.endsWith('.xml'))
-      .map((m) => m.name)
-      .toList()
-    ..sort();
+  final sheets = <({String path, String? name})>[];
+  if (workbookXml != null) {
+    final targets = <String, String>{
+      for (final rel in rels)
+        if (rel.type.endsWith('/worksheet')) rel.id: rel.path,
+    };
+    for (final sheet in XmlDocument.parse(
+      workbookXml,
+    ).findAllElements('sheet', namespace: '*')) {
+      final id = sheet.getAttribute(
+        'id',
+        namespace: _officeRelationshipNamespace,
+      );
+      final path = targets[id];
+      if (path != null) {
+        sheets.add((path: path, name: sheet.getAttribute('name')));
+      }
+    }
+  } else {
+    // Minimal/legacy extraction fixtures may have no workbook part. In that
+    // case only, retain the best-effort scan, with natural sheet-number order.
+    final paths =
+        archive.members
+            .where(
+              (m) =>
+                  m.isFile &&
+                  m.name.startsWith('xl/worksheets/') &&
+                  m.name.endsWith('.xml'),
+            )
+            .map((m) => m.name)
+            .toList()
+          ..sort((a, b) {
+            final first = _sortedNumber(a, 'sheet');
+            final second = _sortedNumber(b, 'sheet');
+            return first > 0 && second > 0
+                ? first.compareTo(second)
+                : a.compareTo(b);
+          });
+    sheets.addAll(paths.map((path) => (path: path, name: null)));
+  }
 
   final markdown = StringBuffer();
   final csv = StringBuffer();
   final headings = <OfficeGeneratedHeading>[];
   final csvHeadings = <OfficeGeneratedHeading>[];
   var sheetNumber = 0;
-  for (final sheetPath in sheets) {
+  for (final sheet in sheets) {
     sheetNumber++;
-    final xml = await _readPart(archive, sheetPath);
+    final xml = await _readPart(archive, sheet.path);
     if (xml == null) continue;
     final rows = _xlsxRows(xml, shared);
-    if (rows.isEmpty) continue;
-    _writeHeading(markdown, '## ', OfficeHeadingKind.sheet, sheetNumber, headings);
+    if (rows.isEmpty && sheet.name == null) continue;
+    _writeHeading(
+      markdown,
+      '## ',
+      OfficeHeadingKind.sheet,
+      sheetNumber,
+      headings,
+      name: sheet.name,
+    );
     markdown.writeln();
     markdown.writeln(_markdownTable(rows));
     markdown.writeln();
-    _writeHeading(csv, '# ', OfficeHeadingKind.sheet, sheetNumber, csvHeadings);
+    _writeHeading(
+      csv,
+      '# ',
+      OfficeHeadingKind.sheet,
+      sheetNumber,
+      csvHeadings,
+      name: sheet.name,
+    );
     for (final row in rows) {
       csv.writeln(row.map(_csvCell).join(','));
     }
@@ -460,40 +675,43 @@ Future<OfficeDocument> _parseSpreadsheet(
     textHeadings: textHeadings,
     csv: csv.toString().trim(),
     csvHeadings: csvHeadings,
-    rawXml: await _rawPart(archive, sheets.firstOrNull),
+    rawXml: await _rawPart(archive, sheets.firstOrNull?.path),
   );
 }
 
 List<List<String>> _xlsxRows(String xml, List<String> shared) {
   final document = XmlDocument.parse(xml);
   final rows = <List<String>>[];
-  for (final row in document.findAllElements('row')) {
+  for (final row in document.findAllElements('row', namespace: '*')) {
     final cells = <int, String>{};
-    for (final cell in row.findAllElements('c')) {
+    for (final cell in row.findAllElements('c', namespace: '*')) {
       final ref = cell.getAttribute('r') ?? '';
       final type = cell.getAttribute('t');
       String value;
       if (type == 's') {
         final index = int.tryParse(
-          cell.findAllElements('v').firstOrNull?.innerText ?? '',
+          cell.findAllElements('v', namespace: '*').firstOrNull?.innerText ??
+              '',
         );
         value = (index != null && index >= 0 && index < shared.length)
             ? shared[index]
             : '';
       } else if (type == 'inlineStr') {
-        value =
-            cell.findAllElements('t').map((e) => e.innerText).join();
+        value = cell
+            .findAllElements('t', namespace: '*')
+            .map((e) => e.innerText)
+            .join();
       } else {
-        value = cell.findAllElements('v').firstOrNull?.innerText ?? '';
+        value =
+            cell.findAllElements('v', namespace: '*').firstOrNull?.innerText ??
+            '';
       }
       final column = _columnIndex(ref);
       if (column >= 0 && value.isNotEmpty) cells[column] = value;
     }
     if (cells.isEmpty) continue;
     final width = cells.keys.reduce((a, b) => a > b ? a : b) + 1;
-    rows.add(
-      List<String>.generate(width, (i) => cells[i] ?? ''),
-    );
+    rows.add(List<String>.generate(width, (i) => cells[i] ?? ''));
   }
   return rows;
 }

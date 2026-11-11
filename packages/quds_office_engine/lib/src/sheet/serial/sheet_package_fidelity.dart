@@ -285,9 +285,11 @@ void _writePivots(
       pivot.sourceSheetName = sourceSheet.name;
     } else {
       final table = XmlDocument.parse(package.getPart(uri)!.readText());
-      table.root!
-        ..removeAttribute('id', namespaceUri: OfficeNamespaces.r)
-        ..setAttribute('name', pivot.name);
+      // The cache belongs to the pivot table through its package relationship
+      // and cacheId, not an r:id attribute on pivotTableDefinition. Some
+      // producers emit both; retain the relationship and normalize that XML.
+      table.root!.removeAttribute('id', namespaceUri: OfficeNamespaces.r);
+      table.root!.setAttribute('name', pivot.name);
       table.root!
           .firstChild('rowFields')
           ?.firstChild('field')

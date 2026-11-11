@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:body>
+    <w:p><w:r><w:t>Probe prefix</w:t></w:r></w:p>
+    <w:p>
+      <w:bookmarkStart w:id="10" w:name="Alpha"/>
+      <w:r><w:t>Alpha</w:t></w:r>
+      <w:bookmarkEnd w:id="10"/>
+      <w:r><w:t xml:space="preserve"> </w:t></w:r>
+      <w:bookmarkStart w:id="11" w:name="Beta"/>
+      <w:r><w:t>Beta</w:t></w:r>
+      <w:bookmarkEnd w:id="11"/>
+    </w:p>
+    <w:p>
+      <w:bookmarkStart w:id="12" w:name="AcrossParagraphs"/>
+      <w:r><w:t>Cross-paragraph start</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:r><w:t>Cross-paragraph end</w:t></w:r>
+      <w:bookmarkEnd w:id="12"/>
+    </w:p>
+    <w:sectPr/>
+  </w:body>
+</w:document>

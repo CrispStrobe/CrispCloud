@@ -1,6 +1,7 @@
 import '../../visual/drawingml_visual_io.dart';
 import '../../visual/office_visual.dart';
 import '../../xml/namespaces.dart';
+import '../../xml/xml_node.dart';
 import '../../xml/xml_reader.dart';
 import '../../xml/xml_writer.dart';
 import '../anim/pml_motion_io.dart';
@@ -54,6 +55,8 @@ List<PmlShape> parseSlideShapes(
 
   /// currentCell API.
   PmlTableCell? currentCell;
+  var paragraphCount = 0;
+  var cellParagraphCount = 0;
   int? currentGroupId;
   var nextGroupId = 1;
   var inXfrm = false;
@@ -173,6 +176,11 @@ List<PmlShape> parseSlideShapes(
       }
     } else if (reader.localName == 'txBody') {
       inTxBody = current != null;
+      if (currentCell == null) {
+        paragraphCount = 0;
+      } else {
+        cellParagraphCount = 0;
+      }
     } else if (reader.localName == 'rPr' && current != null) {
       final int? sz = int.tryParse(reader.getAttribute('sz') ?? '');
       if (sz != null && sz > 0 && current.fontSizePt <= 0) {
@@ -329,14 +337,16 @@ List<PmlShape> parseSlideShapes(
       if (rtl != null) {
         current.rightToLeft = rtl == '1' || rtl.toLowerCase() == 'true';
       }
-    } else if (reader.localName == 'p' && current != null) {
-      if (currentCell != null &&
-          currentCell.text.isNotEmpty &&
-          !currentCell.text.endsWith('\n')) {
+    } else if (reader.localName == 'p' && current != null && inTxBody) {
+      if (currentCell != null) {
+        if (cellParagraphCount++ > 0) currentCell.text += '\n';
+      } else if (!inTbl) {
+        if (paragraphCount++ > 0) current.text += '\n';
+      }
+    } else if (reader.localName == 'br' && current != null && inTxBody) {
+      if (currentCell != null) {
         currentCell.text += '\n';
-      } else if (!inTbl &&
-          current.text.isNotEmpty &&
-          !current.text.endsWith('\n')) {
+      } else if (!inTbl) {
         current.text += '\n';
       }
     } else if (reader.localName == 't' &&
@@ -354,7 +364,35 @@ List<PmlShape> parseSlideShapes(
       }
     }
   }
+  _captureTextSources(xml, shapes);
   return shapes;
+}
+
+void _captureTextSources(String xml, List<PmlShape> shapes) {
+  final Map<int, PmlShape> byId = <int, PmlShape>{
+    for (final PmlShape shape in shapes) shape.id: shape,
+  };
+  final XmlPullReader reader = XmlPullReader(xml);
+  PmlShape? current;
+  while (reader.next()) {
+    if (reader.eventType != XmlEventType.startElement) continue;
+    if (reader.localName == 'cNvPr' &&
+        reader.namespaceUri == OfficeNamespaces.p) {
+      current = byId[int.tryParse(reader.getAttribute('id') ?? '')];
+    } else if (reader.localName == 'txBody' &&
+        reader.namespaceUri == OfficeNamespaces.p &&
+        current != null) {
+      final XmlElement body = XmlDocument.readElement(reader);
+      current.textSource = PmlTextSource(
+        xml: XmlDocument(root: body).toXmlString(declaration: false),
+        text: current.text,
+        fontSizePt: current.fontSizePt,
+        textColor: current.textColor,
+        textAlign: current.textAlign,
+        rightToLeft: current.rightToLeft,
+      );
+    }
+  }
 }
 
 const Set<String> _colorElements = <String>{
@@ -732,36 +770,186 @@ void _writeSlideShape(XmlWriter w, PmlShape shape) {
 
   /// writeEndElement API.
   w.writeEndElement();
-  if (shape.text.isNotEmpty) {
-    w.writeStartElement('txBody', prefix: 'p');
-    w.writeEmptyElement('bodyPr', prefix: 'a');
-    w.writeStartElement('p', prefix: 'a');
-    if (shape.rightToLeft != null || shape.textAlign != PmlTextAlign.left) {
-      final Map<String, String> pPr = <String, String>{};
-      if (shape.textAlign != PmlTextAlign.left) {
-        pPr['algn'] = switch (shape.textAlign) {
-          PmlTextAlign.center => 'ctr',
-          PmlTextAlign.right => 'r',
-          PmlTextAlign.justify => 'just',
-          PmlTextAlign.left => 'l',
-        };
-      }
-      if (shape.rightToLeft != null) {
-        pPr['rtl'] = shape.rightToLeft! ? '1' : '0';
-      }
-      w.writeEmptyElement('pPr', prefix: 'a', attributes: pPr);
-    }
-    w.writeStartElement('r', prefix: 'a');
-    w.writeStartElement('t', prefix: 'a');
-    w.writeText(shape.text);
-    w.writeEndElement();
-    w.writeEndElement();
-    w.writeEndElement();
-    w.writeEndElement();
+  if (shape.text.isNotEmpty || shape.textSource != null) {
+    _writeShapeText(w, shape);
   }
 
   /// writeEndElement API.
   w.writeEndElement();
+}
+
+XmlElement _textElement(String name) =>
+    XmlElement(localName: name, prefix: 'a', namespaceUri: OfficeNamespaces.a);
+
+Iterable<XmlElement> _textDescendants(XmlElement root, String name) sync* {
+  for (final XmlElement child in root.childElements) {
+    if (child.localName == name && child.namespaceUri == OfficeNamespaces.a) {
+      yield child;
+    }
+    yield* _textDescendants(child, name);
+  }
+}
+
+XmlElement _readTextSourceRoot(String xml) {
+  final XmlPullReader reader = XmlPullReader(xml);
+  while (reader.next()) {
+    if (reader.eventType == XmlEventType.startElement) {
+      // The generic DOM parser omits leading whitespace-only text. A drawing
+      // text run containing only spaces is content and must stay intact.
+      return XmlDocument.readElement(reader);
+    }
+  }
+  throw const FormatException('Imported slide text body is empty');
+}
+
+void _writeShapeText(XmlWriter writer, PmlShape shape) {
+  final PmlTextSource? source = shape.textSource;
+  final XmlElement body = source == null
+      ? XmlElement(
+          localName: 'txBody',
+          prefix: 'p',
+          namespaceUri: OfficeNamespaces.p,
+        )
+      : _readTextSourceRoot(source.xml);
+  if (source == null) {
+    body.addChild(_textElement('bodyPr'));
+    body.addChild(_textElement('lstStyle'));
+  }
+  final bool replace = source == null || source.text != shape.text;
+  if (replace) {
+    final List<XmlElement> original = body.childrenNamed(
+      'p',
+      namespaceUri: OfficeNamespaces.a,
+    );
+    body.children.removeWhere(
+      (XmlNode n) =>
+          n is XmlElement &&
+          n.localName == 'p' &&
+          n.namespaceUri == OfficeNamespaces.a,
+    );
+    final List<String> lines = shape.text.split('\n');
+    for (int i = 0; i < lines.length; i++) {
+      final XmlElement? template = original.isEmpty
+          ? null
+          : original[i < original.length ? i : original.length - 1];
+      final XmlElement paragraph = _textElement('p');
+      final XmlElement? pPr = template?.firstChild(
+        'pPr',
+        namespaceUri: OfficeNamespaces.a,
+      );
+      if (pPr != null) paragraph.addChild(pPr.copy());
+      final XmlElement? templateRun = template?.firstChild(
+        'r',
+        namespaceUri: OfficeNamespaces.a,
+      );
+      final XmlElement? rPr = templateRun?.firstChild(
+        'rPr',
+        namespaceUri: OfficeNamespaces.a,
+      );
+      final XmlElement run = _textElement('r');
+      if (rPr != null) run.addChild(rPr.copy());
+      run.addChild(_textElement('t')..addText(lines[i]));
+      paragraph.addChild(run);
+      final XmlElement? end = template?.firstChild(
+        'endParaRPr',
+        namespaceUri: OfficeNamespaces.a,
+      );
+      if (end != null) paragraph.addChild(end.copy());
+      body.addChild(paragraph);
+    }
+  }
+  final bool fontChanged =
+      source == null || source.fontSizePt != shape.fontSizePt;
+  final bool colorChanged =
+      source == null || source.textColor != shape.textColor;
+  final bool alignChanged =
+      source == null || source.textAlign != shape.textAlign;
+  final bool directionChanged =
+      source == null || source.rightToLeft != shape.rightToLeft;
+  for (final XmlElement paragraph in body.childrenNamed(
+    'p',
+    namespaceUri: OfficeNamespaces.a,
+  )) {
+    if (alignChanged || directionChanged) {
+      XmlElement? props = paragraph.firstChild(
+        'pPr',
+        namespaceUri: OfficeNamespaces.a,
+      );
+      if (props == null) {
+        props = _textElement('pPr')..parent = paragraph;
+        paragraph.children.insert(0, props);
+      }
+      if (alignChanged) {
+        props.setAttribute('algn', switch (shape.textAlign) {
+          PmlTextAlign.left => 'l',
+          PmlTextAlign.center => 'ctr',
+          PmlTextAlign.right => 'r',
+          PmlTextAlign.justify => 'just',
+        });
+      }
+      if (directionChanged) {
+        if (shape.rightToLeft == null) {
+          props.removeAttribute('rtl');
+        } else {
+          props.setAttribute('rtl', shape.rightToLeft! ? '1' : '0');
+        }
+      }
+    }
+  }
+  if (fontChanged || colorChanged) {
+    for (final XmlElement run in <XmlElement>[
+      ..._textDescendants(body, 'r'),
+      ..._textDescendants(body, 'fld'),
+    ]) {
+      if (run.firstChild('rPr', namespaceUri: OfficeNamespaces.a) == null) {
+        final XmlElement props = _textElement('rPr')..parent = run;
+        run.children.insert(0, props);
+      }
+    }
+    for (final XmlElement props in <XmlElement>[
+      ..._textDescendants(body, 'rPr'),
+      ..._textDescendants(body, 'defRPr'),
+      ..._textDescendants(body, 'endParaRPr'),
+    ]) {
+      if (fontChanged) {
+        if (shape.fontSizePt > 0) {
+          props.setAttribute('sz', '${(shape.fontSizePt * 100).round()}');
+        } else {
+          props.removeAttribute('sz');
+        }
+      }
+      if (colorChanged) {
+        const Set<String> fills = <String>{
+          'noFill',
+          'solidFill',
+          'gradFill',
+          'blipFill',
+          'pattFill',
+          'grpFill',
+        };
+        props.children.removeWhere(
+          (XmlNode n) =>
+              n is XmlElement &&
+              n.namespaceUri == OfficeNamespaces.a &&
+              fills.contains(n.localName),
+        );
+        if (shape.textColor.isNotEmpty) {
+          final XmlElement fill = _textElement('solidFill');
+          fill.addChild(
+            _textElement('srgbClr')..setAttribute('val', shape.textColor),
+          );
+          final int lineAt = props.children.indexWhere(
+            (XmlNode n) =>
+                n is XmlElement &&
+                n.localName == 'ln' &&
+                n.namespaceUri == OfficeNamespaces.a,
+          );
+          props.children.insert(lineAt + 1, fill..parent = props);
+        }
+      }
+    }
+  }
+  body.writeTo(writer);
 }
 
 void _writeSlidePicture(

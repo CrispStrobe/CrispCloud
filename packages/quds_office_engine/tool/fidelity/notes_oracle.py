@@ -4,10 +4,11 @@ import hashlib
 import json
 from pathlib import Path
 import posixpath
+import re
 import struct
 import zlib
 import xml.etree.ElementTree as ET
-from corpus import read_zip, validate, relationship_map, links, attrs, NS, R
+from corpus import read_zip, validate, relationship_map, links, attrs, word_text, NS, R
 
 
 def pixels(data):
@@ -48,15 +49,21 @@ def snapshot(parts):
     root = ET.fromstring(parts[owner])
     note = root.find("w:footnote[@w:id='12']", NS)
     assert note is not None, 'missing note 12'
-    paras = [''.join(p.itertext()).strip() for p in note.findall('w:p', NS)]
+    paras = [word_text(p).strip() for p in note.findall('w:p', NS)]
     run = next(r for r in note.findall('.//w:r', NS) if 'note' in ''.join(r.itertext()))
     rp = run.find('w:rPr', NS)
+    marker = next(r for r in note.findall('w:p/w:r', NS)
+                  if r.find('w:footnoteRef', NS) is not None)
+    marker_properties = marker.find('w:rPr', NS)
     blip = note.find('.//a:blip', NS)
     rel = relationship_map(parts, owner)[blip.get(f'{{{R}}}embed')]
     target = posixpath.normpath(posixpath.join('word', rel['Target']))
     return {
         'blocks': [e.tag.split('}')[-1] for e in note],
         'paragraphs': [p for p in paras if p],
+        'leading_whitespace': re.match(r'^\s*', word_text(note.find('w:p', NS))).group(),
+        'reference_properties': None if marker_properties is None else
+            {node.tag: attrs(node) for node in marker_properties},
         'table': [''.join(e.itertext()).strip() for e in note.findall('.//w:tc', NS)],
         'bold': rp.find('w:b', NS) is not None and attrs(rp.find('w:b', NS)).get('val', '1') != '0',
         'color': attrs(rp.find('w:color', NS)).get('val'),

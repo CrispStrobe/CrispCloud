@@ -3126,7 +3126,9 @@ class WordEditorController extends OfficeController {
             WmlRunEdit.replaceRange(para, index, para.text.length, '');
           }
           final WmlParagraph next = WmlParagraph(
-            properties: para.properties.copy(),
+            properties: para.properties.copy()
+              ..bookmarkName = null
+              ..listRestart = null,
             inlines: tail.isEmpty
                 ? <WmlInline>[WmlRun()]
                 : <WmlInline>[..._cloneInlinesFrom(tail)],
@@ -4382,29 +4384,13 @@ class WordEditorController extends OfficeController {
     final List<WmlBlock> moved = splitAt < current.blocks.length
         ? current.blocks.sublist(splitAt)
         : <WmlBlock>[];
-    final WmlSection next = WmlSection(
-      blocks: moved.isEmpty
+    final WmlSection next = WmlClone.section(current)
+      ..blocks = moved.isEmpty
           ? <WmlBlock>[
               WmlParagraph(inlines: <WmlInline>[WmlRun(text: '')]),
             ]
-          : moved,
-      pageSize: current.pageSize,
-      margins: current.margins,
-      columnCount: current.columnCount,
-      columnSpace: current.columnSpace,
-      columnSep: current.columnSep,
-      header: <WmlParagraph>[
-        for (final WmlParagraph para in current.header)
-          WmlClone.paragraph(para),
-      ],
-      footer: <WmlParagraph>[
-        for (final WmlParagraph para in current.footer)
-          WmlClone.paragraph(para),
-      ],
-      breakKind: kind,
-      differentFirstPage: current.differentFirstPage,
-      differentOddEven: current.differentOddEven,
-    );
+          : moved
+      ..breakKind = kind;
     final int at = document.sections.indexOf(current) + 1;
     commands.commit(
       _CallbackCommand(
@@ -4651,14 +4637,12 @@ class WordEditorController extends OfficeController {
   void toggleList({required bool numbered}) {
     applyParagraphFormat((WmlParagraphProps props) {
       if (props.numId != null) {
-        props
-          ..numId = null
-          ..listLabel = null
-          ..ilvl = 0;
+        WordLists.clear(WmlParagraph(properties: props));
         return;
       }
       props
         ..numId = WordLists.numberingId(document, numbered: numbered)
+        ..numberingSuppressed = false
         ..ilvl = 0
         ..listLabel = numbered ? '1. ' : '• ';
     });

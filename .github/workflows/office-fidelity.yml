@@ -1,20 +1,31 @@
 name: Office fidelity integration
 on:
   push:
-    branches: [main, feature/office-fidelity-oracles]
+    branches: [main, 'feature/office-fidelity-*']
   pull_request:
     paths:
       - 'packages/quds_office_engine/**'
       - 'packages/quds_office_editor/**'
       - 'lib/widgets/office_editor*'
+      - 'lib/services/office_*'
+      - 'lib/services/recursive_search_service.dart'
+      - 'lib/services/captured_file_target.dart'
+      - 'lib/services/pdf_file_store.dart'
+      - 'lib/providers/panel_provider.dart'
       - 'test/office_*'
-      - 'tool/*office_fidelity*'
+      - 'test/recursive_search_service_test.dart'
+      - 'test/widget/office_*'
+      - 'tool/*office*'
+      - 'tool/office-validation/**'
+      - 'tool/with_ci_system_sqlite.py'
+      - 'pubspec.*'
+      - '.fvmrc'
       - '.github/workflows/office-fidelity.yml'
   workflow_dispatch:
 permissions:
   contents: read
 concurrency:
-  group: office-fidelity-${{ github.ref }}
+  group: office-host-fidelity-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 jobs:
   host-roundtrip:
@@ -38,4 +49,31 @@ jobs:
           name: office-host-fidelity-evidence
           path: |
             build/fidelity/
+            build/fidelity-host/
             packages/quds_office_engine/build/fidelity*
+  external-schema:
+    needs: host-roundtrip
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - uses: actions/download-artifact@v4
+        with:
+          name: office-host-fidelity-evidence
+          path: evidence
+      - name: Require every actual host export
+        run: |
+          python3 -m unittest discover -s tool -p test_office_host_evidence.py
+          python3 tool/office_host_evidence.py verify --root evidence --report build/external/host-inventory.json
+      - name: Prove validator detects invalid XML
+        run: dotnet run --project tool/office-validation -- --self-test
+      - name: Validate host uploads and engine exports
+        run: dotnet run --no-build --project tool/office-validation -- evidence build/external/schema-report.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: office-host-schema-evidence
+          path: build/external/

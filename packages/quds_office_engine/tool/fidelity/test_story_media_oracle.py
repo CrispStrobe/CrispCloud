@@ -1,0 +1,78 @@
+"""Negative controls prove the independent story-media oracle fails closed."""
+import tempfile
+from pathlib import Path
+import unittest
+
+from corpus import FIXTURES, read_zip
+from story_media_oracle import verify_document, verify_directory
+
+
+class StoryMediaOracleTests(unittest.TestCase):
+    def setUp(self):
+        self.parts = read_zip(FIXTURES / 'story-media.docx')
+
+    def test_authored_source_matches_pixel_and_story_expectations(self):
+        verify_document(self.parts)
+
+    def test_missing_exports_fail_closed(self):
+        with tempfile.TemporaryDirectory() as folder:
+            with self.assertRaisesRegex(AssertionError, 'missing='):
+                verify_directory(Path(folder))
+
+    def test_deleted_header_picture_is_rejected(self):
+        self.parts['word/header11.xml'] = self.parts['word/header11.xml'].replace(b'<w:drawing>', b'<w:discarded>').replace(b'</w:drawing>', b'</w:discarded>')
+        with self.assertRaisesRegex(AssertionError, 'wrong, missing or cross-wired'):
+            verify_document(self.parts)
+
+    def test_same_relationship_id_in_wrong_story_cannot_pass(self):
+        self.parts['word/_rels/header11.xml.rels'] = self.parts['word/_rels/header11.xml.rels'].replace(b'media/image1.png', b'media/body.png')
+        with self.assertRaisesRegex(AssertionError, 'default header'):
+            verify_document(self.parts)
+
+    def test_changed_note_pixels_are_rejected(self):
+        self.parts['word/media/note.png'] = self.parts['word/media/body.png']
+        with self.assertRaisesRegex(AssertionError, 'Note picture'):
+            verify_document(self.parts)
+
+    def test_blank_story_paragraph_accumulation_is_rejected(self):
+        self.parts['word/header11.xml'] = self.parts['word/header11.xml'].replace(b'</w:hdr>', b'<w:p/></w:hdr>')
+        with self.assertRaisesRegex(AssertionError, 'blank paragraphs'):
+            verify_document(self.parts)
+
+    def test_wrong_media_mime_is_rejected(self):
+        self.parts['[Content_Types].xml'] = self.parts['[Content_Types].xml'].replace(b'ContentType="image/png"', b'ContentType="image/jpeg"')
+        with self.assertRaisesRegex(AssertionError, 'content type'):
+            verify_document(self.parts)
+
+    def test_retained_chart_overwrite_is_rejected(self):
+        self.parts['word/charts/chart1.xml'] = self.parts['word/charts/chart1.xml'].replace(b'<c:layout/>', b'<c:layout><c:manualLayout/></c:layout>')
+        with self.assertRaisesRegex(AssertionError, 'Retained consumer payload'):
+            verify_document(self.parts)
+
+    def test_added_picture_padding_is_rejected(self):
+        self.parts['word/header11.xml'] = self.parts['word/header11.xml'].replace(
+            b'<wp:inline>', b'<wp:inline distT="101600" distL="101600">')
+        with self.assertRaisesRegex(AssertionError, 'default header'):
+            verify_document(self.parts)
+
+    def test_one_emu_picture_padding_change_is_rejected(self):
+        self.parts['word/footnotes.xml'] = self.parts['word/footnotes.xml'].replace(
+            b'<wp:inline>', b'<wp:inline distB="1">')
+        with self.assertRaisesRegex(AssertionError, 'Note picture'):
+            verify_document(self.parts)
+
+    def test_explicit_zero_cannot_replace_an_omitted_distance(self):
+        self.parts['word/document.xml'] = self.parts['word/document.xml'].replace(
+            b'<wp:inline>', b'<wp:inline distL="0">', 1)
+        with self.assertRaisesRegex(AssertionError, 'Wrong body images'):
+            verify_document(self.parts)
+
+    def test_all_explicit_zeros_cannot_replace_note_distance_omissions(self):
+        self.parts['word/footnotes.xml'] = self.parts['word/footnotes.xml'].replace(
+            b'<wp:inline>', b'<wp:inline distT="0" distB="0" distL="0" distR="0">')
+        with self.assertRaisesRegex(AssertionError, 'Note picture'):
+            verify_document(self.parts)
+
+
+if __name__ == '__main__':
+    unittest.main()

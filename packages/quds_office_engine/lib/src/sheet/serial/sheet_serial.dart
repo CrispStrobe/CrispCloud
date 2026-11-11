@@ -357,15 +357,25 @@ class SheetDeserializer {
         final double? width = double.tryParse(
           reader.getAttribute('width') ?? '',
         );
-        if (width != null) {
-          final double px = SmlWorksheet.columnWidthFromExcel(width);
-          final int from = (min - 1).clamp(
-            0,
-            SmlWorksheet.excelColumnCount - 1,
-          );
-          final int to = (max - 1).clamp(0, SmlWorksheet.excelColumnCount - 1);
-          for (int c = from; c <= to; c++) {
-            sheet.columnWidths[c] = px;
+        final properties = <String, String>{};
+        for (final name in <String>[
+          'hidden',
+          'outlineLevel',
+          'collapsed',
+          'style',
+          'bestFit',
+          'phonetic',
+          'customWidth',
+        ]) {
+          final value = reader.getAttribute(name);
+          if (value != null) properties[name] = value;
+        }
+        final int from = (min - 1).clamp(0, SmlWorksheet.excelColumnCount - 1);
+        final int to = (max - 1).clamp(0, SmlWorksheet.excelColumnCount - 1);
+        for (int c = from; c <= to; c++) {
+          if (width != null) sheet.importColumnWidth(c, width);
+          if (properties.isNotEmpty) {
+            sheet.columnProperties[c] = Map<String, String>.from(properties);
           }
         }
       }
@@ -1132,27 +1142,45 @@ class SheetSerializer {
   }
 
   static void _writeCols(XmlWriter w, SmlWorksheet sheet) {
-    if (sheet.columnWidths.isEmpty) {
+    if (sheet.columnWidths.isEmpty && sheet.columnProperties.isEmpty) {
       return;
     }
-    final List<int> keys = sheet.columnWidths.keys.toList()..sort();
+    final List<int> keys = <int>{
+      ...sheet.columnWidths.keys,
+      ...sheet.columnProperties.keys,
+    }.toList()..sort();
+    double? widthAt(int col) => sheet.columnWidths.containsKey(col)
+        ? sheet.exportColumnWidth(col)
+        : null;
+    bool sameProperties(Map<String, String> a, Map<String, String> b) =>
+        a.length == b.length &&
+        a.entries.every((entry) => b[entry.key] == entry.value);
     w.writeStartElement('cols');
     var i = 0;
     while (i < keys.length) {
       final int start = keys[i];
-      final double px = sheet.columnWidths[start]!;
+      final double? width = widthAt(start);
+      final properties = sheet.exportColumnProperties(start);
       var end = start;
       while (i + 1 < keys.length &&
           keys[i + 1] == end + 1 &&
-          (sheet.columnWidths[keys[i + 1]]! - px).abs() < 0.01) {
+          widthAt(keys[i + 1]) == width &&
+          sameProperties(
+            properties,
+            sheet.exportColumnProperties(keys[i + 1]),
+          )) {
         i++;
         end = keys[i];
       }
       w.writeStartElement('col');
       w.writeAttribute('min', '${start + 1}');
       w.writeAttribute('max', '${end + 1}');
-      w.writeAttribute('width', '${SmlWorksheet.columnWidthToExcel(px)}');
-      w.writeAttribute('customWidth', '1');
+      if (width != null) w.writeAttribute('width', '$width');
+      for (final entry in properties.entries) {
+        if (!<String>{'min', 'max', 'width'}.contains(entry.key)) {
+          w.writeAttribute(entry.key, entry.value);
+        }
+      }
       w.writeEndElement();
       i++;
     }
