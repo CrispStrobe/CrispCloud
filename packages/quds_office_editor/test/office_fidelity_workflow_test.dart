@@ -28,6 +28,42 @@ List<int?> references(WmlDocument doc) => <int?>[
 ];
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  test('list commands preserve imported definitions and support undo redo', () {
+    final WordEditorController c = openFixture();
+    final part = c.document.package!.getPart('/word/numbering.xml')!;
+    part.writeText(
+      part.readText().replaceFirst(
+        '</w:numbering>',
+        '<w:abstractNum w:abstractNumId="1"><w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="bullet"/><w:lvlText w:val="◆"/></w:lvl></w:abstractNum>'
+            '<w:abstractNum w:abstractNumId="2"><w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="upperRoman"/><w:lvlText w:val="%1."/></w:lvl></w:abstractNum>'
+            '<w:num w:numId="1"><w:abstractNumId w:val="1"/></w:num>'
+            '<w:num w:numId="2"><w:abstractNumId w:val="2"/></w:num></w:numbering>',
+      ),
+    );
+    c.jumpToParagraph(2);
+    c.applyList(numbered: true);
+    final int? id = c.document.paragraphs.elementAt(2).properties.numId;
+    expect(id, isNot(anyOf(1, 2, 5, null)));
+    c.undo();
+    expect(c.document.paragraphs.elementAt(2).properties.numId, isNull);
+    c.redo();
+    expect(c.document.paragraphs.elementAt(2).properties.numId, id);
+    expect(
+      WordDeserializer()
+          .readBytes(c.saveBytes())
+          .paragraphs
+          .elementAt(2)
+          .properties
+          .listLabel,
+      '1. ',
+    );
+    c.toggleList(numbered: false);
+    expect(c.document.paragraphs.elementAt(2).properties.numId, isNull);
+    c.toggleList(numbered: false);
+    final WmlDocument reopened = WordDeserializer().readBytes(c.saveBytes());
+    expect(reopened.paragraphs.elementAt(2).properties.listLabel, '• ');
+    expect(reopened.paragraphs.elementAt(3).properties.listLabel, '1. ');
+  });
   test('host async save preserves notes, links and images', () async {
     final WordEditorController c = openFixture();
     final Uint8List bytes = await c.saveBytesAsync();

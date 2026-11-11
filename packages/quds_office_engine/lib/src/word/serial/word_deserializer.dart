@@ -1462,27 +1462,28 @@ class WordDeserializer {
         final String key = '$numId';
         final List<int> stack = counters.putIfAbsent(
           key,
-          () => List<int>.filled(9, 0),
+          () => List<int>.filled(9, -1),
         );
         final int? restartAt = paragraph.properties.listRestart;
-        if (restartAt != null) {
-          stack[ilvl] = restartAt - 1;
-          for (int i = ilvl + 1; i < stack.length; i++) {
-            stack[i] = 0;
-          }
-          paragraph.properties.listRestart = null;
-        }
-        stack[ilvl] = stack[ilvl] + 1;
+        stack[ilvl] =
+            restartAt ?? (stack[ilvl] < 0 ? level.start : stack[ilvl] + 1);
+        paragraph.properties.listRestart = null;
         for (int i = ilvl + 1; i < stack.length; i++) {
-          stack[i] = 0;
+          stack[i] = -1;
         }
-        // Seed missing ancestors so "%1.%2" never shows zeros mid-path.
         for (int i = 0; i < ilvl; i++) {
-          if (stack[i] == 0) {
-            stack[i] = level.start;
+          if (stack[i] < 0) {
+            stack[i] = levels[_levelKey(numId, i)]?.start ?? 1;
           }
         }
-        paragraph.properties.listLabel = level.decimalLabelStack(stack, ilvl);
+        paragraph.properties.listLabel = level.decimalLabelStack(
+          stack,
+          ilvl,
+          formats: <String>[
+            for (var i = 0; i <= ilvl; i++)
+              levels[_levelKey(numId, i)]?.fmt ?? level.fmt,
+          ],
+        );
       }
       if (paragraph.properties.indent.left == 0 &&
           paragraph.properties.indent.hanging == 0 &&
@@ -2513,11 +2514,60 @@ class _NumberingLevel {
     return '$value. ';
   }
 
+  static String _formatNumber(int number, String format) {
+    if (format == 'decimalZero') return '$number'.padLeft(2, '0');
+    if ((format == 'upperLetter' || format == 'lowerLetter') && number > 0) {
+      var n = number;
+      var result = '';
+      while (n > 0) {
+        n--;
+        result = String.fromCharCode(65 + n % 26) + result;
+        n ~/= 26;
+      }
+      return format == 'lowerLetter' ? result.toLowerCase() : result;
+    }
+    if ((format == 'upperRoman' || format == 'lowerRoman') &&
+        number > 0 &&
+        number < 4000) {
+      var n = number;
+      final StringBuffer result = StringBuffer();
+      const Map<int, String> digits = <int, String>{
+        1000: 'M',
+        900: 'CM',
+        500: 'D',
+        400: 'CD',
+        100: 'C',
+        90: 'XC',
+        50: 'L',
+        40: 'XL',
+        10: 'X',
+        9: 'IX',
+        5: 'V',
+        4: 'IV',
+        1: 'I',
+      };
+      for (final MapEntry<int, String> digit in digits.entries) {
+        while (n >= digit.key) {
+          result.write(digit.value);
+          n -= digit.key;
+        }
+      }
+      return format == 'lowerRoman'
+          ? result.toString().toLowerCase()
+          : result.toString();
+    }
+    return '$number';
+  }
+
   /// Expands `%1`…`%9` using the multilevel [stack] through [ilvl].
   ///
   /// Null when the level prints nothing: an empty `w:lvlText`, or a `none`
   /// format with no literal text (LibreOffice heading outlines).
-  String? decimalLabelStack(List<int> stack, int ilvl) {
+  String? decimalLabelStack(
+    List<int> stack,
+    int ilvl, {
+    List<String>? formats,
+  }) {
     if (text.isEmpty) {
       return null;
     }
@@ -2533,7 +2583,10 @@ class _NumberingLevel {
     }
     var out = text;
     for (int i = 0; i <= ilvl; i++) {
-      out = out.replaceAll('%${i + 1}', '${stack[i] == 0 ? 1 : stack[i]}');
+      out = out.replaceAll(
+        '%${i + 1}',
+        _formatNumber(stack[i] < 0 ? 1 : stack[i], formats?[i] ?? fmt),
+      );
     }
     for (int i = ilvl + 1; i < 9; i++) {
       out = out.replaceAll('%${i + 1}', '');

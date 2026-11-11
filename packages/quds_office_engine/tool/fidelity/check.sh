@@ -2,7 +2,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 python3 -m unittest discover -s tool/fidelity -p 'test_*.py'
-dart test test/office_fidelity_oracle_test.dart test/office_steps_test.dart
+dart test test/office_fidelity_oracle_test.dart test/office_steps_test.dart test/numbering_collision_test.dart
 dart run tool/fidelity/scenarios.dart
 python3 tool/fidelity/corpus.py verify
 dart run tool/fidelity/cross_format.dart

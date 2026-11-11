@@ -4658,7 +4658,7 @@ class WordEditorController extends OfficeController {
         return;
       }
       props
-        ..numId = numbered ? 2 : 1
+        ..numId = WordLists.numberingId(document, numbered: numbered)
         ..ilvl = 0
         ..listLabel = numbered ? '1. ' : '• ';
     });
@@ -6416,9 +6416,15 @@ class WordEditorController extends OfficeController {
     if (!config.allowsMutation) {
       return;
     }
-    WordLists.applyLevel(_activeParagraph, numbered: numbered, level: level);
-    relayout();
-    notifyListeners();
+    applyParagraphFormat((WmlParagraphProps props) {
+      final WmlParagraph paragraph = WmlParagraph(properties: props);
+      WordLists.applyLevel(
+        paragraph,
+        numbered: numbered,
+        level: level,
+        document: document,
+      );
+    });
   }
 
   /// setParagraphIndent API.
