@@ -1,0 +1,57 @@
+name: Experimental Rust SMB
+on:
+  push:
+    paths: ['packages/crisp_storage/**', '.github/workflows/smb-rust.yml']
+  pull_request:
+    paths: ['packages/crisp_storage/**', '.github/workflows/smb-rust.yml']
+  workflow_dispatch:
+jobs:
+  host:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: packages/crisp_storage
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: '3.13.7'
+      - run: cargo test --manifest-path native/crisp_smb/Cargo.toml --locked
+      - run: cargo build --manifest-path rust/Cargo.toml --release --locked
+      - run: dart pub get
+      - run: dart analyze
+      - run: dart test
+      - if: runner.os == 'Linux'
+        run: |
+          python3 -m venv .fixture-venv
+          .fixture-venv/bin/pip install impacket==0.13.0
+          CRISPER_SMB_PYTHON="$PWD/.fixture-venv/bin/python" CRISP_SMB_LIBRARY="$PWD/rust/target/release/libcrisp_smb_bridge.so" dart test test/rust_smb_test.dart test/smb_transfer_test.dart
+          python3 tool/check_rust_licenses.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: experimental-smb-${{ matrix.os }}
+          path: |
+            packages/crisp_storage/rust/target/release/*crisp_smb_bridge.so
+            packages/crisp_storage/rust/target/release/*crisp_smb_bridge.dylib
+            packages/crisp_storage/rust/target/release/*crisp_smb_bridge.dll
+            packages/crisp_storage/licensing/
+          if-no-files-found: error
+  ios-compile:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-ios,aarch64-apple-ios-sim
+      - run: |
+          cargo build --manifest-path packages/crisp_storage/rust/Cargo.toml --locked --release --target aarch64-apple-ios
+          cargo build --manifest-path packages/crisp_storage/rust/Cargo.toml --locked --release --target aarch64-apple-ios-sim
+      - uses: actions/upload-artifact@v4
+        with:
+          name: experimental-smb-ios-static
+          path: packages/crisp_storage/rust/target/aarch64-apple-*/release/libcrisp_smb_bridge.a
+          if-no-files-found: error
