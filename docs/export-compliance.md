@@ -482,6 +482,11 @@ App Review (`WAITING_FOR_REVIEW`). Build 10 was expired so it could not remain
 the active review in the same train. These are operational records, not an
 Apple approval or a legal classification.
 
+The source version advanced to `1.1.0+12` on 2026-11-11 for a TestFlight
+build that adds the startup credential-store chooser and keychain access
+fixes (PRs #41-#43). No cryptographic algorithm, protocol or dependency
+changed; the reviewed-source fingerprint was refreshed after reassessment.
+
 ### Internal release decision record
 
 Fill in facts and references; checked boxes without evidence do not establish
