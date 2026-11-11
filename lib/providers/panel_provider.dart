@@ -79,11 +79,22 @@ class PanelFileOrigin {
   PanelFileOrigin._(this.source, this._isCurrent)
     : storageReference = storageReferenceForSource(source);
 
+  PanelFileOrigin._guarded(PanelFileOrigin original, bool Function() available)
+    : source = original.source,
+      storageReference = original.storageReference,
+      _isCurrent = (() => original.isCurrent && available());
+
   final PanelSource source;
   final bool Function() _isCurrent;
 
   /// Remains false after the captured account disconnects or changes.
   bool get isCurrent => _isCurrent();
+
+  /// Narrow a captured capability without resolving another account or grant.
+  /// The extra guard must describe source availability, so a reviewed operation
+  /// can keep running independently of its originating widget or panel view.
+  PanelFileOrigin withAvailabilityGuard(bool Function() available) =>
+      PanelFileOrigin._guarded(this, available);
 
   final StorageReference storageReference;
   String get storageId => storageReference.id;
@@ -596,7 +607,9 @@ class PanelNotifier extends ChangeNotifier {
     final scrollTarget = replacement(_itemToScrollTo);
     _verifiedListingGeneration = _listingGeneration;
     for (final file in listed) {
-      _fileOrigins[file] = origin;
+      // The browser namespace root can contain several distinct grants. Bind
+      // each exact row to its own grant instead of the unscoped root listing.
+      _fileOrigins[file] = _guardLocalGrant(origin, file.path);
     }
     _selection
       ..clear()
@@ -623,6 +636,28 @@ class PanelNotifier extends ChangeNotifier {
           before.path == after.path;
     }
     return false;
+  }
+
+  PanelFileOrigin _guardLocalGrant(
+    PanelFileOrigin origin,
+    String? path, {
+    bool allowNamespaceRoot = false,
+  }) {
+    final local = _localFileService;
+    if (!origin.source.isLocal || local is! LocalFileSourceIdentity) {
+      return origin;
+    }
+    final identities = local as LocalFileSourceIdentity;
+    final identity = path == null
+        ? null
+        : identities.sourceIdentityForPath(path);
+    final namespaceRoot = allowNamespaceRoot && path == '/' && identity == null;
+    return origin.withAvailabilityGuard(
+      () =>
+          path != null &&
+          (identity != null || namespaceRoot) &&
+          identical(identities.sourceIdentityForPath(path), identity),
+    );
   }
 
   PanelFileOrigin _remoteOrigin(
@@ -5541,7 +5576,8 @@ class PanelNotifier extends ChangeNotifier {
     bool stillNavigating() =>
         !_isDisposed &&
         navigation == _navigationRevision &&
-        targetTabId == _activeTabId;
+        targetTabId == _activeTabId &&
+        (sourceOrigin?.isCurrent ?? true);
     _leaveFileList();
     // Any explicit path navigation leaves archive mode. Previously the stale
     // ArchivePanelSource kept currentPath virtual and Home/breadcrumbs tried
@@ -5564,7 +5600,10 @@ class PanelNotifier extends ChangeNotifier {
       _isTypeahead = false;
     }
     if (!isRemote) {
-      if (!kIsWeb && !await _localFileService.hasAccessToPath(path)) {
+      final hasAccess = await _localFileService.hasAccessToPath(path);
+      if (!stillNavigating()) return;
+      if (!hasAccess) {
+        if (kIsWeb) return;
         final target = path;
         final granted = await _localFileService.requestDirectoryAccess(
           initialDirectory: p.dirname(target),
@@ -5576,8 +5615,11 @@ class PanelNotifier extends ChangeNotifier {
               .addError('Access to "$target" was not granted.');
           return;
         }
-        if (!await _localFileService.hasAccessToPath(target)) {
-          if (!stillNavigating()) return;
+        final hasGrantedAccess = await _localFileService.hasAccessToPath(
+          target,
+        );
+        if (!stillNavigating()) return;
+        if (!hasGrantedAccess) {
           _ref
               .read(errorProvider)
               .addError(
@@ -5590,8 +5632,6 @@ class PanelNotifier extends ChangeNotifier {
         }
         // Stay on the requested path: the user granted a parent folder.
         path = target;
-      } else if (kIsWeb && !await _localFileService.hasAccessToPath(path)) {
-        return;
       }
       if (!stillNavigating()) return;
       final selected = _ref.read(panelSourceProvider(side));
@@ -5606,7 +5646,11 @@ class PanelNotifier extends ChangeNotifier {
         }
       }
       _localPath = path;
-      await _loadLocalFiles();
+      await _loadLocalFiles(
+        sourceIsCurrent: sourceOrigin == null
+            ? null
+            : () => sourceOrigin.isCurrent,
+      );
     } else {
       _remotePath = path;
       if (sourceOrigin?.source case final RemotePanelSource requested) {
@@ -7368,7 +7412,10 @@ class PanelNotifier extends ChangeNotifier {
     }
   }
 
-  Future<void> _loadLocalFiles({bool fallbackOnMissing = true}) async {
+  Future<void> _loadLocalFiles({
+    bool fallbackOnMissing = true,
+    bool Function()? sourceIsCurrent,
+  }) async {
     if (_showingSearchResults) return;
     final generation = ++_listingGeneration;
     // This loader must never receive an archive's virtual path. If an archive
@@ -7388,14 +7435,26 @@ class PanelNotifier extends ChangeNotifier {
     if (_isDisposed || generation != _listingGeneration) return;
     final listingPath = _localPath;
     _requestedListingSource = LocalPanelSource(listingPath);
-    final origin = PanelFileOrigin._(
-      LocalPanelSource(listingPath),
-      () => !_isDisposed,
+    final origin = _guardLocalGrant(
+      PanelFileOrigin._(LocalPanelSource(listingPath), () => !_isDisposed),
+      listingPath,
+      allowNamespaceRoot: true,
     );
+    bool stillCurrent() {
+      if (_isDisposed || generation != _listingGeneration) return false;
+      if (origin.isCurrent && (sourceIsCurrent?.call() ?? true)) return true;
+      // Discard the result without keeping a dead request in a loading state.
+      // The owning presentation exposes its unavailable source until refresh.
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+
     _beginDirectoryPresentation(generation, origin);
     _log.debug('_loadLocalFiles: $currentPath (web=$kIsWeb)');
     _isLoading = true;
     notifyListeners();
+    if (!stillCurrent()) return;
 
     final dirCache = _ref.read(directoryCacheProvider);
     final cacheKey = DirectoryCacheService.key('local', listingPath);
@@ -7427,15 +7486,17 @@ class PanelNotifier extends ChangeNotifier {
       try {
         entities = await _localFileService.listDirectory(listingPath);
       } on FileSystemException catch (e) {
+        if (!stillCurrent()) return;
         if (!_isPermissionDenied(e)) rethrow;
         // A symlinked folder may point outside the granted root, or a saved
         // bookmark may no longer resolve after a rebuild. Ask for the target
         // folder and retry once.
         final granted = await _localFileService.ensureAccess(listingPath);
+        if (!stillCurrent()) return;
         if (!granted) rethrow;
         entities = await _localFileService.listDirectory(listingPath);
       }
-      if (_isDisposed || generation != _listingGeneration) return;
+      if (!stillCurrent()) return;
       if (entities == null) {
         _files = [];
         _isLoading = false;
@@ -7591,7 +7652,7 @@ class PanelNotifier extends ChangeNotifier {
             }
           }),
         );
-        if (_isDisposed || generation != _listingGeneration) return;
+        if (!stillCurrent()) return;
         // _files is the same mutable list, so notifyListeners() is enough for
         // the ListView.builder to refresh visible rows. Re-stamp origins
         // because metadata replaced the FileItem instances.
@@ -7605,13 +7666,13 @@ class PanelNotifier extends ChangeNotifier {
         _resetCursor(preserveItem: prev);
       }
       _isLoading = false;
-      if (_isDisposed || generation != _listingGeneration) return;
+      if (!stillCurrent()) return;
       dirCache.put(cacheKey, _files!);
       // Fire-and-forget free space fetch (result stored in _freeBytes, shown in status bar)
       if (side == PanelSide.local) _updateFreeSpace(listingPath);
       notifyListeners();
     } catch (e) {
-      if (_isDisposed || generation != _listingGeneration) return;
+      if (!stillCurrent()) return;
       _log.warn('operation failed', e);
       _isLoading = false;
       final description = e.toString();
@@ -7623,7 +7684,7 @@ class PanelNotifier extends ChangeNotifier {
           description.contains('errno = 20');
       if (fallbackOnMissing && missing) {
         final fallback = await _localFileService.getSafeFallbackDirectory();
-        if (_isDisposed || generation != _listingGeneration) return;
+        if (!stillCurrent()) return;
         if (fallback != _localPath) {
           _localPath = fallback;
           await _loadLocalFiles(fallbackOnMissing: false);

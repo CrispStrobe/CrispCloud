@@ -15,13 +15,16 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path/path.dart' as p;
 
 import '../l10n/app_localizations.dart';
 import '../l10n/gallery_strings.dart';
 import 'file_view_selector.dart';
 import 'panel_history_button.dart';
 import '../models/panel_side.dart';
+import '../models/panel_breadcrumb.dart';
 import '../models/file_item.dart';
 import '../providers/providers.dart';
 import '../providers/panel_source_provider.dart';
@@ -31,6 +34,7 @@ import '../services/panel_swap_service.dart';
 import '../services/panel_view_mode_service.dart';
 import '../services/panel_source_service.dart';
 import '../services/storage_identity.dart';
+import '../services/local_file_service.dart';
 import '../screens/screen_dialogs.dart';
 import '../widgets/command_palette.dart';
 import 'bookmark_actions.dart';
@@ -62,12 +66,279 @@ class PanelHeader extends ConsumerStatefulWidget {
 
 class _PanelHeaderState extends ConsumerState<PanelHeader> {
   final TextEditingController _pathController = TextEditingController();
-  bool _editingPath = false;
+  _HeaderLocation? _pathEditLocation;
+  _HeaderLocation? _volumeMenuLocation;
+  bool Function()? _locationMenuIsCurrent;
 
   @override
   void dispose() {
     _pathController.dispose();
     super.dispose();
+  }
+
+  _HeaderLocation? _captureLocation(PanelNotifier panel) {
+    PanelFileOrigin? origin;
+    try {
+      origin = panel.captureCurrentOrigin();
+    } on StateError {
+      // A failed or pending directory request can still navigate within its
+      // exact account. An unavailable saved tab must remain unavailable.
+      final storage = panel.directoryStorage;
+      if (storage != null && panel.directorySourceAvailable) {
+        final resolved = panel.resolveStorageReference(
+          storage,
+          panel.currentPath,
+        );
+        if (resolved != null &&
+            _sameSource(resolved.source, panel.directorySource)) {
+          origin = resolved;
+        }
+      } else if (panel.isInArchive) {
+        PanelSource source = panel.archiveSource!.parent;
+        while (source is ArchivePanelSource) {
+          source = source.parent;
+        }
+        final resolved = panel.resolveStorageReference(
+          storageReferenceForSource(source),
+          source.currentPath,
+        );
+        if (resolved != null && _sameSource(resolved.source, source)) {
+          origin = resolved;
+        }
+      }
+    }
+    if (origin == null || !origin.isCurrent) return null;
+    final capturedOrigin = origin;
+    final paths = origin.source.isLocal && !kIsWeb ? p.context : p.posix;
+    final sourcePath = paths.normalize(origin.source.currentPath);
+    if (!paths.isAbsolute(sourcePath) ||
+        sourcePath.length > 8192 ||
+        sourcePath.contains('\u0000')) {
+      return null;
+    }
+    final local = ref.read(localFileServiceProvider);
+    final root = _locationRoot(origin, local, paths);
+    final identity = origin.source.isLocal && local is LocalFileSourceIdentity
+        ? (local as LocalFileSourceIdentity).sourceIdentityForPath(sourcePath)
+        : null;
+    bool grantIsCurrent() {
+      if (!capturedOrigin.source.isLocal) return true;
+      if (_locationRoot(capturedOrigin, local, paths) != root) return false;
+      return local is! LocalFileSourceIdentity ||
+          identical(
+            (local as LocalFileSourceIdentity).sourceIdentityForPath(
+              sourcePath,
+            ),
+            identity,
+          );
+    }
+
+    final side = widget.side;
+    final displayedPath = panel.currentPath;
+    final sessionIsCurrent = panel.captureOperationSession();
+    return _HeaderLocation(
+      origin: origin,
+      paths: paths,
+      root: root,
+      grantIsCurrent: grantIsCurrent,
+      isCurrent: () =>
+          mounted &&
+          widget.side == side &&
+          sessionIsCurrent() &&
+          panel.currentPath == displayedPath &&
+          (!capturedOrigin.source.isLocal ||
+              identical(ref.read(localFileServiceProvider), local)) &&
+          capturedOrigin.isCurrent &&
+          grantIsCurrent(),
+    );
+  }
+
+  bool _sameSource(PanelSource first, PanelSource? second) =>
+      (first.isLocal && second?.isLocal == true) ||
+      (first is RemotePanelSource &&
+          second is RemotePanelSource &&
+          identical(first.client, second.client));
+
+  String _locationRoot(
+    PanelFileOrigin origin,
+    LocalFileService local,
+    p.Context paths,
+  ) {
+    final current = paths.normalize(origin.source.currentPath);
+    bool contains(String root) =>
+        paths.isAbsolute(root) &&
+        root.length <= 8192 &&
+        !root.contains('\u0000') &&
+        (paths.equals(root, current) || paths.isWithin(root, current));
+    if (origin.source.isLocal) {
+      if (local is LocalFileSourceIdentity) {
+        final identities = local as LocalFileSourceIdentity;
+        final token = identities.sourceIdentityForPath(current);
+        if (token == null) return current;
+        var root = current;
+        while (true) {
+          final parent = paths.dirname(root);
+          if (parent == root ||
+              !identical(identities.sourceIdentityForPath(parent), token)) {
+            return root;
+          }
+          root = parent;
+        }
+      }
+      final granted = local.grantedBasePath;
+      if (granted != null) {
+        final root = paths.normalize(granted);
+        return contains(root) ? root : current;
+      }
+      return paths.rootPrefix(current);
+    }
+    final root = paths.normalize(origin.storageReference.root);
+    return contains(root) ? root : current;
+  }
+
+  void _clearLocationMenu() {
+    _volumeMenuLocation = null;
+    _locationMenuIsCurrent = null;
+  }
+
+  void _closePathEditor(
+    PanelNotifier panel,
+    _HeaderLocation location, {
+    bool restoreFocus = false,
+  }) {
+    if (!mounted || !identical(_pathEditLocation, location)) return;
+    setState(() => _pathEditLocation = null);
+    if (restoreFocus && location.isCurrent) {
+      ref.read(activePanelProvider.notifier).state = widget.side;
+      panel.listFocusNode.requestFocus();
+    }
+  }
+
+  Future<void> _submitPath(
+    PanelNotifier panel,
+    _HeaderLocation location,
+    String entered,
+  ) async {
+    if (!identical(_pathEditLocation, location) || !location.isCurrent) return;
+    var path = entered.trim();
+    if (path.isEmpty) {
+      _closePathEditor(panel, location, restoreFocus: true);
+      return;
+    }
+    final strings = PanelHeaderStrings(context);
+    void reject(String message) {
+      ScaffoldMessenger.maybeOf(context)
+          ?.showSnackBar(SnackBar(content: Text(message)));
+    }
+
+    if (path.length > 8192 || path.contains('\u0000')) {
+      reject(strings.text('Enter a valid path.'));
+      return;
+    }
+    final paths = location.paths;
+    if (location.origin.source.isRemote) {
+      final advertisedRoot = location.origin.storageReference.root;
+      if (!paths.isAbsolute(advertisedRoot) ||
+          advertisedRoot.contains('\u0000') ||
+          advertisedRoot.length > 8192) {
+        reject(strings.text('Enter a valid path.'));
+        return;
+      }
+      final sourceRoot = paths.normalize(advertisedRoot);
+      path = paths.normalize(
+        paths.isAbsolute(path)
+            ? path
+            : paths.join(location.origin.source.currentPath, path),
+      );
+      if (!paths.equals(path, sourceRoot) &&
+          !paths.isWithin(sourceRoot, path)) {
+        reject(
+          strings
+              .text('Choose a path within {0}.')
+              .replaceAll('{0}', sourceRoot),
+        );
+        return;
+      }
+    }
+    // An explicit local path may intentionally request another existing or new
+    // grant. Only navigation within the captured grant keeps its token guard.
+    final localTarget = _localEntryPath(path, location);
+    final keepGrant =
+        !location.origin.source.isLocal ||
+        paths.equals(localTarget, location.root) ||
+        paths.isWithin(location.root, localTarget);
+    _closePathEditor(panel, location);
+    await _navigateLocation(panel, location, path, keepGrant: keepGrant);
+  }
+
+  String _localEntryPath(String path, _HeaderLocation location) {
+    if (path.startsWith('"') && path.endsWith('"') && path.length > 1) {
+      path = path.substring(1, path.length - 1);
+    }
+    if (path.startsWith('file://')) {
+      try {
+        path = Uri.parse(path)
+            .toFilePath(windows: location.paths.style == p.Style.windows);
+      } on Object {
+        return path;
+      }
+    }
+    if (!kIsWeb) {
+      final home = Platform.environment['HOME'];
+      if (home != null) {
+        if (path == '~') path = home;
+        if (path.startsWith('~/')) path = '$home/${path.substring(2)}';
+      }
+    }
+    return location.paths.normalize(
+      location.paths.isAbsolute(path)
+          ? path
+          : location.paths.join(location.origin.source.currentPath, path),
+    );
+  }
+
+  Future<void> _navigateLocation(
+    PanelNotifier panel,
+    _HeaderLocation location,
+    String path, {
+    required bool keepGrant,
+  }) async {
+    if (!location.isCurrent) return;
+    final side = widget.side;
+    ref.read(activePanelProvider.notifier).state = side;
+    var origin = keepGrant && location.origin.source.isLocal
+        ? location.origin.withAvailabilityGuard(location.grantIsCurrent)
+        : location.origin;
+    if (!keepGrant && location.origin.source.isLocal) {
+      final target = _localEntryPath(path, location);
+      final resolved = panel.resolveStorageReference(
+        location.origin.storageReference,
+        target,
+      );
+      if (resolved == null || !resolved.isCurrent) return;
+      origin = resolved;
+      final local = ref.read(localFileServiceProvider);
+      if (local is LocalFileSourceIdentity) {
+        final identities = local as LocalFileSourceIdentity;
+        final identity = identities.sourceIdentityForPath(target);
+        // An existing target grant keeps its own identity. A genuinely new
+        // target may acquire the grant explicitly requested by this action.
+        if (identity != null) {
+          origin = origin.withAvailabilityGuard(
+            () => identical(identities.sourceIdentityForPath(target), identity),
+          );
+        }
+      }
+    }
+    final navigation = panel.navigateToPath(path, origin: origin);
+    final targetTab = panel.activeTabId;
+    try {
+      await navigation;
+    } catch (error) {
+      if (mounted && widget.side == side && panel.activeTabId == targetTab) {
+        ref.read(errorProvider).addError(error.toString(), cause: error);
+      }
+    }
   }
 
   @override
@@ -80,7 +351,10 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
     final tabId = panel.activeTabId;
     final side = widget.side;
     final String path = panel.currentPath;
-    final bool isLocal = storage?.isLocal ?? source.isLocal;
+    final location = _captureLocation(panel);
+    if (_pathEditLocation?.isCurrent == false) _pathEditLocation = null;
+    final bool isLocal =
+        location?.origin.source.isLocal ?? storage?.isLocal ?? source.isLocal;
     final ThemeData theme = Theme.of(context);
     final m = BrowserMenuStrings(context);
     final h = PanelHeaderStrings(context);
@@ -154,7 +428,7 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
                   : null,
             ),
             PanelHistoryButton(panel: panel, compact: true),
-            _volumeButton(panel, isLocal),
+            _volumeButton(panel, isLocal, location),
             if (panel.isInArchive)
               _navButton(
                 icon: Icons.close,
@@ -163,9 +437,9 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
               ),
             const SizedBox(width: 2),
             Expanded(
-              child: _editingPath
-                  ? _pathEditor(panel)
-                  : _breadcrumbs(context, panel, path, isLocal),
+              child: _pathEditLocation != null
+                  ? _pathEditor(panel, _pathEditLocation!)
+                  : _breadcrumbs(context, panel, path, location),
             ),
             if (isLocal)
               _navButton(
@@ -188,14 +462,19 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
             _navButton(
               icon: Icons.edit,
               tooltip: context.commanderTr("Edit path"),
-              onPressed: () {
-                _pathController.text = panel.currentPath;
-                _pathController.selection = TextSelection(
-                  baseOffset: 0,
-                  extentOffset: _pathController.text.length,
-                );
-                setState(() => _editingPath = true);
-              },
+              onPressed: location == null
+                  ? null
+                  : () {
+                      if (!location.isCurrent) return;
+                      ref.read(activePanelProvider.notifier).state =
+                          widget.side;
+                      _pathController.text = location.origin.source.currentPath;
+                      _pathController.selection = TextSelection(
+                        baseOffset: 0,
+                        extentOffset: _pathController.text.length,
+                      );
+                      setState(() => _pathEditLocation = location);
+                    },
             ),
             const SizedBox(width: 2),
           ],
@@ -224,39 +503,44 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
     );
   }
 
-  Widget _pathEditor(PanelNotifier panel) {
-    final h = PanelHeaderStrings(context);
-    final l = AppLocalizations.of(context);
-    return Row(
-      children: <Widget>[
-        Expanded(
-          child: TextField(
-            controller: _pathController,
-            autofocus: true,
-            style: const TextStyle(fontSize: 12.5),
-            decoration: InputDecoration(
-              isDense: true,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 8,
-                vertical: 7,
+  Widget _pathEditor(PanelNotifier panel, _HeaderLocation location) {
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.escape): () =>
+            _closePathEditor(panel, location, restoreFocus: true),
+      },
+      child: Row(
+        children: <Widget>[
+          Expanded(
+            child: TextField(
+              key: ValueKey('panel-path-editor-${widget.side.name}'),
+              controller: _pathController,
+              autofocus: true,
+              style: const TextStyle(fontSize: 12.5),
+              decoration: InputDecoration(
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 7,
+                ),
+                border: const OutlineInputBorder(),
+                hintText: context.commanderTr("Enter path…"),
+                prefixIcon: const Icon(Icons.folder_open, size: 17),
               ),
-              border: const OutlineInputBorder(),
-              hintText: context.commanderTr("Enter path…"),
-              prefixIcon: const Icon(Icons.folder_open, size: 17),
+              onEditingComplete: () {},
+              onSubmitted: (String value) =>
+                  _submitPath(panel, location, value),
             ),
-            onSubmitted: (String value) {
-              if (value.isNotEmpty) panel.navigateToPath(value);
-              setState(() => _editingPath = false);
-            },
           ),
-        ),
-        IconButton(
-          icon: const Icon(Icons.close, size: 17),
-          tooltip: context.commanderTr("Cancel"),
-          visualDensity: VisualDensity.compact,
-          onPressed: () => setState(() => _editingPath = false),
-        ),
-      ],
+          IconButton(
+            icon: const Icon(Icons.close, size: 17),
+            tooltip: context.commanderTr("Cancel"),
+            visualDensity: VisualDensity.compact,
+            onPressed: () =>
+                _closePathEditor(panel, location, restoreFocus: true),
+          ),
+        ],
+      ),
     );
   }
 
@@ -264,48 +548,16 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
     BuildContext context,
     PanelNotifier panel,
     String path,
-    bool isLocal,
+    _HeaderLocation? location,
   ) {
     final ThemeData theme = Theme.of(context);
-    final List<({String label, String path})> crumbs =
-        <({String label, String path})>[];
-    if (isLocal) {
-      if (!kIsWeb && Platform.isWindows) {
-        final List<String> parts = path.split('\\');
-        String accumulated = '';
-        for (int i = 0; i < parts.length; i++) {
-          if (parts[i].isEmpty) continue;
-          accumulated = i == 0 ? parts[i] : '$accumulated\\${parts[i]}';
-          crumbs.add((label: parts[i], path: accumulated));
-        }
-      } else {
-        final List<String> parts = path.split('/');
-        String accumulated = '';
-        for (int i = 0; i < parts.length; i++) {
-          if (parts[i].isEmpty && i != 0) continue;
-          if (i == 0) {
-            crumbs.add((label: '/', path: '/'));
-            accumulated = '';
-          } else {
-            accumulated = accumulated.isEmpty
-                ? '/${parts[i]}'
-                : '$accumulated/${parts[i]}';
-            crumbs.add((label: parts[i], path: accumulated));
-          }
-        }
-      }
-    } else {
-      crumbs.add((label: '/', path: '/'));
-      final List<String> parts = path.split('/');
-      String accumulated = '';
-      for (int i = 1; i < parts.length; i++) {
-        if (parts[i].isEmpty) continue;
-        accumulated = accumulated.isEmpty
-            ? '/${parts[i]}'
-            : '$accumulated/${parts[i]}';
-        crumbs.add((label: parts[i], path: accumulated));
-      }
-    }
+    final crumbs = location == null
+        ? const <PanelBreadcrumb>[]
+        : buildPanelBreadcrumbs(
+            path,
+            root: location.root,
+            paths: location.paths,
+          );
 
     if (panel.isInArchive) {
       final archive = panel.archiveSource!;
@@ -361,25 +613,39 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
                       alpha: 0.55,
                     ),
                   ),
-                InkWell(
-                  onTap: i == crumbs.length - 1
-                      ? null
-                      : () => panel.navigateToPath(crumbs[i].path),
-                  onLongPress: () =>
-                      _toggleBookmark(panel, crumbs[i].path, crumbs[i].label),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 4,
-                      vertical: 4,
+                Tooltip(
+                  message: crumbs[i].path,
+                  child: InkWell(
+                    key: ValueKey(
+                      'panel-breadcrumb-${widget.side.name}-${crumbs[i].path}',
                     ),
-                    child: Text(
-                      crumbs[i].label,
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        color: theme.colorScheme.onPrimaryContainer,
-                        fontWeight: i == crumbs.length - 1
-                            ? FontWeight.w700
-                            : FontWeight.w400,
+                    onTap: i == crumbs.length - 1
+                        ? null
+                        : () => _navigateLocation(
+                            panel,
+                            location!,
+                            crumbs[i].path,
+                            keepGrant: true,
+                          ),
+                    onLongPress: () {
+                      if (location!.isCurrent) {
+                        _toggleBookmark(panel, crumbs[i].path, crumbs[i].label);
+                      }
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 4,
+                      ),
+                      child: Text(
+                        crumbs[i].label,
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: theme.colorScheme.onPrimaryContainer,
+                          fontWeight: i == crumbs.length - 1
+                              ? FontWeight.w700
+                              : FontWeight.w400,
+                        ),
                       ),
                     ),
                   ),
@@ -391,7 +657,11 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
     );
   }
 
-  Widget _volumeButton(PanelNotifier panel, bool isLocal) {
+  Widget _volumeButton(
+    PanelNotifier panel,
+    bool isLocal,
+    _HeaderLocation? location,
+  ) {
     final ThemeData theme = Theme.of(context);
     final h = PanelHeaderStrings(context);
     final m = BrowserMenuStrings(context);
@@ -401,21 +671,32 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
       return PopupMenuButton<Bookmark>(
         tooltip: context.commanderTr("Bookmarks"),
         padding: EdgeInsets.zero,
-        onSelected: (Bookmark bookmark) =>
-            openBookmark(context, ref, bookmark, side: widget.side),
-        itemBuilder: (BuildContext context) => <PopupMenuEntry<Bookmark>>[
-          for (final bookmark in bookmarks.bookmarks)
-            PopupMenuItem<Bookmark>(
-              value: bookmark,
-              child: Row(
-                children: <Widget>[
-                  const Icon(Icons.bookmark_outline, size: 17),
-                  const SizedBox(width: 8),
-                  Text(bookmark.name),
-                ],
+        onCanceled: _clearLocationMenu,
+        onSelected: (Bookmark bookmark) {
+          final isCurrent = _locationMenuIsCurrent;
+          _clearLocationMenu();
+          if (isCurrent?.call() != true) return;
+          openBookmark(context, ref, bookmark, side: widget.side);
+        },
+        itemBuilder: (BuildContext context) {
+          final side = widget.side;
+          final sessionIsCurrent = panel.captureOperationSession();
+          _locationMenuIsCurrent = () =>
+              mounted && widget.side == side && sessionIsCurrent();
+          return <PopupMenuEntry<Bookmark>>[
+            for (final bookmark in bookmarks.bookmarks)
+              PopupMenuItem<Bookmark>(
+                value: bookmark,
+                child: Row(
+                  children: <Widget>[
+                    const Icon(Icons.bookmark_outline, size: 17),
+                    const SizedBox(width: 8),
+                    Text(bookmark.name),
+                  ],
+                ),
               ),
-            ),
-        ],
+          ];
+        },
         child: _homeVisual(theme, true),
       );
     }
@@ -424,18 +705,41 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
     return PopupMenuButton<DriveEntry>(
       tooltip: context.commanderTr("Volumes"),
       padding: EdgeInsets.zero,
-      onSelected: (DriveEntry entry) => panel.navigateToPath(entry.path),
+      enabled: location != null,
+      onCanceled: _clearLocationMenu,
+      onSelected: (DriveEntry entry) {
+        final owner = _volumeMenuLocation;
+        final isCurrent = _locationMenuIsCurrent;
+        _clearLocationMenu();
+        if (owner == null ||
+            !owner.origin.source.isLocal ||
+            isCurrent?.call() != true)
+          return;
+        _navigateLocation(panel, owner, entry.path, keepGrant: false);
+      },
       itemBuilder: (BuildContext context) {
-        final List<DriveEntry> entries = drives.maybeWhen(
-          data: (List<DriveEntry> value) => value,
-          orElse: () => <DriveEntry>[
-            DriveEntry(
-              path: Platform.environment['HOME'] ?? '/',
-              label: m.text('Home'),
-              icon: Icons.home,
-            ),
-          ],
-        );
+        _volumeMenuLocation = location;
+        _locationMenuIsCurrent = () => mounted && location?.isCurrent == true;
+        final List<DriveEntry> entries = kIsWeb
+            ? [
+                DriveEntry(
+                  path: location!.root,
+                  label: location.paths.basename(location.root),
+                  icon: Icons.folder_open,
+                ),
+              ]
+            : drives.maybeWhen(
+                data: (List<DriveEntry> value) => value,
+                orElse: () => <DriveEntry>[
+                  DriveEntry(
+                    path: kIsWeb
+                        ? location?.root ?? '/'
+                        : Platform.environment['HOME'] ?? '/',
+                    label: m.text('Home'),
+                    icon: Icons.home,
+                  ),
+                ],
+              );
         return <PopupMenuEntry<DriveEntry>>[
           for (final DriveEntry entry in entries)
             PopupMenuItem<DriveEntry>(
@@ -454,21 +758,26 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
                 ],
               ),
             ),
-          const PopupMenuDivider(),
-          PopupMenuItem<DriveEntry>(
-            value: const DriveEntry(
-              path: '/',
-              label: '/',
-              icon: Icons.computer,
+          if (!kIsWeb) const PopupMenuDivider(),
+          if (!kIsWeb)
+            PopupMenuItem<DriveEntry>(
+              value: DriveEntry(
+                path: location == null
+                    ? p.rootPrefix(panel.currentPath)
+                    : location.paths.rootPrefix(
+                        location.origin.source.currentPath,
+                      ),
+                label: location?.root ?? '/',
+                icon: Icons.computer,
+              ),
+              child: Row(
+                children: <Widget>[
+                  const Icon(Icons.computer, size: 17),
+                  const SizedBox(width: 8),
+                  Text(context.commanderTr("Computer")),
+                ],
+              ),
             ),
-            child: Row(
-              children: <Widget>[
-                const Icon(Icons.computer, size: 17),
-                const SizedBox(width: 8),
-                Text(context.commanderTr("Computer")),
-              ],
-            ),
-          ),
         ];
       },
       child: _homeVisual(theme, drives.isLoading),
@@ -730,4 +1039,21 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
       label: label.isEmpty ? '/' : label,
     );
   }
+}
+
+class _HeaderLocation {
+  const _HeaderLocation({
+    required this.origin,
+    required this.paths,
+    required this.root,
+    required this.grantIsCurrent,
+    required bool Function() isCurrent,
+  }) : _isCurrent = isCurrent;
+
+  final PanelFileOrigin origin;
+  final p.Context paths;
+  final String root;
+  final bool Function() grantIsCurrent;
+  final bool Function() _isCurrent;
+  bool get isCurrent => _isCurrent();
 }
