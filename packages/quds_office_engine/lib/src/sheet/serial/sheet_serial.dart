@@ -6,7 +6,9 @@ import '../../opc/content_types.dart';
 import '../../opc/opc_archive.dart';
 import '../../opc/package_part.dart';
 import '../../opc/relationships.dart';
+import '../../visual/sheet_chart_data.dart';
 import '../../xml/namespaces.dart';
+import '../../xml/xml_node.dart';
 import '../../xml/xml_reader.dart';
 import '../../xml/xml_writer.dart';
 import '../formula/dep_graph.dart';
@@ -17,6 +19,8 @@ import '../model/sml_workbook.dart';
 import '../shared_strings.dart';
 import '../styles/sml_styles.dart';
 import 'sheet_drawing_io.dart';
+
+part 'sheet_package_fidelity.dart';
 
 /// Class SheetDeserializer.
 class SheetDeserializer {
@@ -71,6 +75,7 @@ class SheetDeserializer {
         final PackageRelationship? rel = rels.byId(rid);
         if (rel != null) {
           final String uri = rels.resolve(rel);
+          sheet.sourcePartUri = uri;
           final PackagePart? part = package.getPart(uri);
           if (part != null) {
             _readSheet(part.readText(), sheet, sst, package, uri, styles);
@@ -83,6 +88,7 @@ class SheetDeserializer {
       book.sheets.add(SmlWorksheet(name: 'Sheet1', sheetId: 1));
     }
     _readDefinedNames(wb.readText(), book);
+    SheetChartData.refreshWorkbook(book);
     return book;
   }
 
@@ -532,27 +538,7 @@ class SheetDeserializer {
         );
       }
     }
-    final PackagePart? pivot = package.getPart(
-      '/xl/pivotCache/pivotCacheDefinition${sheet.sheetId}.xml',
-    );
-    if (pivot != null && sheet.pivots.isEmpty) {
-      final XmlPullReader reader = XmlPullReader(pivot.readText());
-      while (reader.next()) {
-        if (reader.eventType == XmlEventType.startElement &&
-            reader.localName == 'worksheetSource') {
-          final String? ref = reader.getAttribute('ref');
-          if (ref != null) {
-            sheet.pivots.add(
-              SmlPivotTable(
-                source: SmlRange.parse(ref),
-                rowField: 0,
-                dataField: 1,
-              ),
-            );
-          }
-        }
-      }
-    }
+    _readPivots(sheet, package, sheetUri);
   }
 
   /// Text of an inline string (`<is>`): plain `<t>` or rich-text runs,
@@ -615,6 +601,8 @@ class SheetSerializer {
     if (recalculate) {
       FormulaDepGraph(book).recalculate();
     }
+    SheetChartData.refreshWorkbook(book);
+    final bool fresh = book.package == null;
     final OpcPackage package =
         book.package ?? OpcPackage.create(OpcPackageKind.sheet);
     final SharedStringTable sst = SharedStringTable();
@@ -636,21 +624,39 @@ class SheetSerializer {
     }
     _syncStyles(book, package);
     book.properties.writeToPackage(package);
-    package.getPart('/xl/workbook.xml')!.writeText(_workbookXml(book));
+
     final RelationshipCollection rels = package.relationshipsFor(
       '/xl/workbook.xml',
     );
+    final List<String> sheetIds = [];
+    final Set<String> used = {};
     for (int i = 0; i < book.sheets.length; i++) {
-      final String uri = '/xl/worksheets/sheet${i + 1}.xml';
+      String? uri =
+          book.sheets[i].sourcePartUri ??
+          (fresh ? '/xl/worksheets/sheet${i + 1}.xml' : null);
+      if (uri == null || used.contains(uri)) {
+        var n = 1;
+        while (package.getPart('/xl/worksheets/sheet$n.xml') != null) {
+          n++;
+        }
+        uri = '/xl/worksheets/sheet$n.xml';
+      }
+      used.add(uri);
+      book.sheets[i].sourcePartUri = uri;
+      PackageRelationship? relationship = rels
+          .byType(RelationshipTypes.worksheet)
+          .where((r) => rels.resolve(r) == uri)
+          .firstOrNull;
+      relationship ??= rels.add(
+        type: RelationshipTypes.worksheet,
+        target: OpcUris.relativize('/xl/workbook.xml', uri),
+      );
+      sheetIds.add(relationship.id);
       if (package.getPart(uri) == null) {
         package.createPart(
           uri,
           OfficeContentTypes.sheetWorksheet,
           utf8.encode(''),
-        );
-        rels.add(
-          type: RelationshipTypes.worksheet,
-          target: 'worksheets/sheet${i + 1}.xml',
         );
       }
       SheetDrawingIo.syncSheet(book.sheets[i], package, uri, i + 1);
@@ -658,6 +664,7 @@ class SheetSerializer {
           .getPart(uri)!
           .writeText(_sheetXml(book.sheets[i], sst, package, uri));
       _writeSheetExtras(book.sheets[i], package);
+      _writePivots(book, book.sheets[i], package, uri);
     }
     if (package
             .relationshipsFor('/xl/workbook.xml')
@@ -670,6 +677,12 @@ class SheetSerializer {
             target: 'sharedStrings.xml',
           );
     }
+    for (final rel in rels.byType(RelationshipTypes.worksheet).toList()) {
+      if (!sheetIds.contains(rel.id)) rels.removeById(rel.id);
+    }
+    package
+        .getPart('/xl/workbook.xml')!
+        .writeText(_workbookXml(book, package, sheetIds));
     book.package = package;
     book.sharedStrings = sst.values;
     return package;
@@ -728,66 +741,6 @@ class SheetSerializer {
         );
       } else {
         existing.writeText(w.toXml());
-      }
-    }
-    if (sheet.pivots.isNotEmpty) {
-      final XmlWriter w = XmlWriter();
-      w.writeStartDocument();
-      w.writeStartElement(
-        'pivotCacheDefinition',
-        namespaceUri: OfficeNamespaces.x,
-      );
-      w.writeAttribute('refreshedBy', 'Quds Office');
-      w.writeAttribute(
-        'recordCount',
-        '${sheet.pivots.first.source.cells.length}',
-      );
-      w.writeStartElement('cacheSource');
-      w.writeAttribute('type', 'worksheet');
-      w.writeEmptyElement(
-        'worksheetSource',
-        attributes: <String, String>{
-          'ref':
-              '${sheet.pivots.first.source.start.a1}:${sheet.pivots.first.source.end.a1}',
-          'sheet': sheet.name,
-        },
-      );
-      w.writeEndElement();
-      w.writeEndElement();
-      final String cacheUri =
-          '/xl/pivotCache/pivotCacheDefinition${sheet.sheetId}.xml';
-      final PackagePart? cache = package.getPart(cacheUri);
-      if (cache == null) {
-        package.createPart(
-          cacheUri,
-          OfficeContentTypes.sheetWorksheet,
-          utf8.encode(w.toXml()),
-        );
-      } else {
-        cache.writeText(w.toXml());
-      }
-      final XmlWriter table = XmlWriter();
-      table.writeStartDocument();
-      table.writeStartElement(
-        'pivotTableDefinition',
-        namespaceUri: OfficeNamespaces.x,
-      );
-      table.writeAttribute('name', sheet.pivots.first.name);
-      table.writeEmptyElement(
-        'location',
-        attributes: <String, String>{'ref': sheet.pivots.first.source.start.a1},
-      );
-      table.writeEndElement();
-      final String tableUri = '/xl/pivotTables/pivotTable${sheet.sheetId}.xml';
-      final PackagePart? tablePart = package.getPart(tableUri);
-      if (tablePart == null) {
-        package.createPart(
-          tableUri,
-          OfficeContentTypes.sheetWorksheet,
-          utf8.encode(table.toXml()),
-        );
-      } else {
-        tablePart.writeText(table.toXml());
       }
     }
     if (sheet.sparklines.isNotEmpty) {
@@ -850,6 +803,7 @@ class SheetSerializer {
           continue;
         }
         cell.styleIndex = styles.xfFor(
+          baseStyleIndex: cell.styleIndex,
           align: cell.horizontalAlign,
           fillRgb: cell.fillRgb,
           fontRgb: cell.fontRgb,
@@ -876,7 +830,11 @@ class SheetSerializer {
     }
   }
 
-  String _workbookXml(SmlWorkbook book) {
+  String _workbookXml(
+    SmlWorkbook book,
+    OpcPackage package,
+    List<String> sheetIds,
+  ) {
     final XmlWriter w = XmlWriter();
     w.writeStartDocument();
     w.writeStartElement('workbook');
@@ -888,7 +846,7 @@ class SheetSerializer {
       w.writeStartElement('sheet');
       w.writeAttribute('name', s.name);
       w.writeAttribute('sheetId', '${s.sheetId}');
-      w.writeAttribute('r:id', 'rId${i + 1}');
+      w.writeAttribute('r:id', sheetIds[i]);
       w.writeEndElement();
     }
     w.writeEndElement();
@@ -935,7 +893,12 @@ class SheetSerializer {
       w.writeEndElement();
     }
     w.writeEndElement();
-    return w.toXml();
+    return _preserveSheetParts(
+      package.getPart('/xl/workbook.xml')?.readText(),
+      w.toXml(),
+      {'sheets', 'definedNames'},
+      _workbookOrder,
+    );
   }
 
   String _sheetXml(
@@ -1123,7 +1086,23 @@ class SheetSerializer {
       }
     }
     w.writeEndElement();
-    return w.toXml();
+    return _preserveSheetParts(
+      package.getPart(sheetUri)?.readText(),
+      w.toXml(),
+      {
+        'sheetViews',
+        'cols',
+        'sheetData',
+        'sheetProtection',
+        'autoFilter',
+        'conditionalFormatting',
+        'dataValidations',
+        'mergeCells',
+        'headerFooter',
+        'drawing',
+      },
+      _worksheetOrder,
+    );
   }
 
   static void _writeSheetViews(XmlWriter w, SmlWorksheet sheet) {

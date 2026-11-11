@@ -121,3 +121,28 @@ Coverage measures execution, not correctness. See the repository's
 The GitHub workflow runs full engine/editor checks and uploads exports, reports,
 coverage and failed-image diffs. CrispCloud runs the portable corpus plus root
 host save regressions and checks a SHA-256 manifest for shared vendored files.
+
+Style steps preserve sparse source definitions and inherited values:
+
+```json
+[
+  {"op":"styleDefinition","style":"Accent","type":"character","rPr":{"color":{"val":"008844"},"sz":{"val":"32"}}},
+  {"op":"characterStyle","paragraph":2,"run":0,"style":"Accent"},
+  {"op":"tableStyle","table":0,"style":"Regional"}
+]
+```
+
+`styleDefinition` accepts `rPr`, `pPr`, `tblPr`, and `tcPr` maps. Keys are
+OOXML property names; values are attribute maps, or null to remove a property.
+The operation rejects unknown styles and type mismatches. Source defaults,
+basedOn chains, theme fonts/colors, character styles, table run/paragraph
+formatting, direct zero/false values, and cyclic source definitions are covered
+by `style_cascade_test.dart` and six independent sparse-XML oracle checks.
+
+The independent `native.xlsx` (openpyxl 3.1.5) and `native.pptx`
+(python-pptx 1.0.2) fixtures are committed. Regenerate explicitly with
+`python3 tool/fidelity/native_fixtures.py`; normal runs never overwrite inputs.
+`native_spreadsheet_test.dart` and `native_presentation_test.dart` emit fifteen
+files under `build/fidelity-native`. `native_oracle.py` checks owned relationships,
+master/theme preservation, decoded picture pixels, chart data/references, number
+formats, borders, fonts, hyperlinks, pivot/cache wiring, notes and motion XML.

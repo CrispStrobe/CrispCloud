@@ -371,6 +371,73 @@ class XmlDocument {
     return doc;
   }
 
+  /// Consume the element at the reader's current start event, retaining namespaces.
+  static XmlElement readElement(XmlPullReader reader) {
+    if (reader.eventType != XmlEventType.startElement) {
+      throw StateError('Expected an XML start element');
+    }
+    final List<XmlElement> stack = [];
+    XmlElement? root;
+    final Map<String, String> namespaces = {};
+    do {
+      switch (reader.eventType) {
+        case XmlEventType.startElement:
+          final node = XmlElement(
+            localName: reader.localName,
+            prefix: reader.prefix,
+            namespaceUri: reader.namespaceUri,
+          );
+          if (reader.namespaceUri.isNotEmpty) {
+            namespaces[reader.prefix] = reader.namespaceUri;
+          }
+          for (int i = 0; i < reader.attributeCount; i++) {
+            node.attributes.add(
+              XmlAttribute(
+                localName: reader.attributeLocalName(i),
+                value: reader.attributeValue(i),
+                prefix: reader.attributePrefix(i),
+                namespaceUri: reader.attributeNamespace(i),
+              ),
+            );
+            final prefix = reader.attributePrefix(i);
+            if (prefix.isNotEmpty &&
+                prefix != 'xmlns' &&
+                prefix != 'xml' &&
+                reader.attributeNamespace(i).isNotEmpty) {
+              namespaces[prefix] = reader.attributeNamespace(i);
+            }
+          }
+          if (stack.isEmpty) {
+            root = node;
+          } else {
+            stack.last.addChild(node);
+          }
+          stack.add(node);
+        case XmlEventType.endElement:
+          stack.removeLast();
+          if (stack.isEmpty) {
+            for (final ns in namespaces.entries) {
+              if (ns.key.isEmpty) {
+                root!.setAttribute('xmlns', ns.value);
+              } else {
+                root!.setAttribute(ns.key, ns.value, prefix: 'xmlns');
+              }
+            }
+            return root!;
+          }
+        case XmlEventType.characters:
+          if (stack.isNotEmpty) stack.last.addText(reader.text);
+        case XmlEventType.cdata:
+          if (stack.isNotEmpty) stack.last.addChild(XmlCdata(reader.text));
+        case XmlEventType.comment:
+          if (stack.isNotEmpty) stack.last.addChild(XmlComment(reader.text));
+        default:
+          break;
+      }
+    } while (reader.next());
+    throw StateError('Unterminated XML element');
+  }
+
   /// toXmlString API.
   String toXmlString({bool declaration = true}) {
     final XmlWriter writer = XmlWriter();

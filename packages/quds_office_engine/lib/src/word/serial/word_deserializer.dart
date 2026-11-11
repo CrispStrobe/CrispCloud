@@ -6,6 +6,7 @@ import '../../opc/opc_archive.dart';
 import '../../opc/package_part.dart';
 import '../../opc/relationships.dart';
 import '../../xml/namespaces.dart';
+import '../../xml/xml_node.dart';
 import '../../xml/xml_reader.dart';
 import '../math/omml_document.dart';
 import '../math/omml_io.dart';
@@ -18,6 +19,10 @@ import '../model/word_styles.dart';
 import '../model/word_toc.dart';
 import '../properties/wml_properties.dart';
 import 'word_drawing_io.dart';
+import 'word_property_io.dart';
+import 'word_serializer.dart';
+
+part 'word_style_cascade.dart';
 
 /// Reads a `.docx` OPC package into a [WmlDocument] tree.
 class WordDeserializer {
@@ -239,7 +244,8 @@ class WordDeserializer {
     OpcPackage package,
     String docUri,
   ) {
-    final WmlParagraph paragraph = WmlParagraph();
+    final WmlParagraph paragraph = WmlParagraph()
+      ..properties.sourcePropertiesXml = '';
     if (reader.isEmptyElement) {
       return paragraph;
     }
@@ -326,7 +332,7 @@ class WordDeserializer {
     WmlParagraph paragraph,
   ) {
     final List<WmlInline> inlines = <WmlInline>[];
-    final WmlRun run = WmlRun();
+    final WmlRun run = WmlRun()..properties.sourcePropertiesXml = '';
     if (reader.isEmptyElement) {
       return inlines;
     }
@@ -458,6 +464,16 @@ class WordDeserializer {
   }
 
   void _readPPr(XmlPullReader reader, WmlParagraphProps props) {
+    final XmlElement node = XmlDocument.readElement(reader);
+    props.sourcePropertiesXml = XmlDocument(
+      root: node,
+    ).toXmlString(declaration: false);
+    final XmlPullReader source = XmlPullReader(props.sourcePropertiesXml!)
+      ..next();
+    _parsePPr(source, props);
+  }
+
+  void _parsePPr(XmlPullReader reader, WmlParagraphProps props) {
     if (reader.isEmptyElement) {
       return;
     }
@@ -819,6 +835,16 @@ class WordDeserializer {
   }
 
   void _readRPr(XmlPullReader reader, WmlRunProps props) {
+    final XmlElement node = XmlDocument.readElement(reader);
+    props.sourcePropertiesXml = XmlDocument(
+      root: node,
+    ).toXmlString(declaration: false);
+    final XmlPullReader source = XmlPullReader(props.sourcePropertiesXml!)
+      ..next();
+    _parseRPr(source, props);
+  }
+
+  void _parseRPr(XmlPullReader reader, WmlRunProps props) {
     if (reader.isEmptyElement) {
       return;
     }
@@ -829,6 +855,11 @@ class WordDeserializer {
       }
       props.explicitProperties.add(reader.localName);
       switch (reader.localName) {
+        case 'rStyle':
+          props.styleId = reader.getAttribute(
+            'val',
+            namespaceUri: OfficeNamespaces.w,
+          );
         case 'b':
           props.bold = _onOff(
             reader.getAttribute('val', namespaceUri: OfficeNamespaces.w),
@@ -2017,7 +2048,26 @@ class WordDeserializer {
     }
   }
 
+  /// Recompute effective formatting after editing a source style definition.
+  void refreshStyles(WmlDocument document) {
+    final OpcPackage? package = document.package;
+    if (package == null) return;
+    final rel = package.packageRelationships.firstByType(
+      RelationshipTypes.officeDocument,
+    );
+    final uri = rel == null
+        ? '/word/document.xml'
+        : package.packageRelationships.resolve(rel);
+    _readStyles(document, package, uri);
+    _applyDocumentStyles(document);
+  }
+
   void _applyDocumentStyles(WmlDocument document) {
+    if (_StyleCascade(this, document).apply()) return;
+    _applyLegacyDocumentStyles(document);
+  }
+
+  void _applyLegacyDocumentStyles(WmlDocument document) {
     void walk(Iterable<WmlParagraph> story) {
       for (final WmlParagraph paragraph in story) {
         WordStyles.resolveOntoParagraph(

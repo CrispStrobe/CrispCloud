@@ -342,6 +342,7 @@ class SmlWorksheet {
   SmlWorksheet({
     required this.name,
     required this.sheetId,
+    this.sourcePartUri,
     this.rightToLeft = false,
     this.freezeRows = 0,
     this.freezeCols = 0,
@@ -373,6 +374,9 @@ class SmlWorksheet {
        tables = tables ?? <SmlTable>[],
        pivots = pivots ?? <SmlPivotTable>[],
        sparklines = sparklines ?? <SmlSparkline>[];
+
+  /// Original owning part, retained when worksheets are reordered.
+  String? sourcePartUri;
 
   /// Excel worksheet column count (A … XFD).
   static const int excelColumnCount = 16384;
