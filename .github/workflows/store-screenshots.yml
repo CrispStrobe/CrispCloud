@@ -48,7 +48,7 @@ jobs:
         run: |
           find "$HOME/Library/Containers" /private/var/folders "$TMPDIR" \
             -name 'crispcloud-store-*.png' -newer pubspec.yaml 2>/dev/null \
-            -exec cp {} build/store-screenshots/ \;
+            -exec cp {} build/store-screenshots/ \; || true
           ls -la build/store-screenshots
           for f in build/store-screenshots/*.png; do
             sips -g pixelWidth -g pixelHeight "$f" | tail -2 | tr '\n' ' '; echo " $f"

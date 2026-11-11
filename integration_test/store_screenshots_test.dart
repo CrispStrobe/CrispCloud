@@ -16,9 +16,13 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:crisp_cloud/main.dart' as app;
+import 'package:crisp_cloud/models/panel_side.dart';
+import 'package:crisp_cloud/providers/panel_provider.dart';
+import 'package:crisp_cloud/screens/file_browser_screen.dart';
 import 'package:crisp_cloud/services/credential_storage_config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 
@@ -46,19 +50,33 @@ void main() {
     await _settle(tester, const Duration(seconds: 8));
     _dumpTexts('after boot');
 
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(FileBrowserScreen)),
+    );
+    Future<void> go(PanelSide side, String path) async {
+      await container.read(panelProvider(side)).navigateToPath(path);
+      await _settle(tester, const Duration(seconds: 2));
+    }
+
+    await _step('home and documents', () async {
+      await go(PanelSide.local, home);
+      await go(PanelSide.remote, '$home/Documents');
+    });
+    _dumpTexts('home');
     await _shot(tester, out, '01-dual-panel');
 
-    await _step('open Photos as large items', () async {
-      await _openFolder(tester, 'Photos', panel: 0);
+    await _step('photos as large items', () async {
+      await go(PanelSide.local, '$home/Photos');
+      await tester.tap(find.text('Lake.png').first);
+      await _settle(tester, const Duration(milliseconds: 600));
       await _tapTooltip(tester, 'Large Items');
     });
     await _settle(tester, const Duration(seconds: 3));
     _dumpTexts('photos');
     await _shot(tester, out, '02-photos-grid');
 
-    await _step('open Projects with preview', () async {
-      await _openFolder(tester, 'Projects', panel: 1);
-      await _openFolder(tester, 'CrispCloud', panel: 1);
+    await _step('project file with preview', () async {
+      await go(PanelSide.remote, '$home/Projects/CrispCloud');
       await tester.tap(find.text('README.md').last);
       await _settle(tester, const Duration(milliseconds: 600));
       await _tapTooltip(tester, 'Show Preview');
@@ -99,21 +117,6 @@ Future<void> _tapTooltip(WidgetTester tester, String tooltip) async {
   await _settle(tester, const Duration(milliseconds: 800));
 }
 
-Future<void> _openFolder(
-  WidgetTester tester,
-  String name, {
-  required int panel,
-}) async {
-  final matches = find.text(name);
-  final count = matches.evaluate().length;
-  if (count == 0) throw StateError('no "$name" entry');
-  final target = matches.at(math.min(panel, count - 1));
-  await tester.tap(target);
-  await tester.pump(const Duration(milliseconds: 60));
-  await tester.tap(target);
-  await _settle(tester, const Duration(seconds: 2));
-}
-
 void _dumpTexts(String label) {
   final texts = find
       .byType(Text)
@@ -130,10 +133,9 @@ Future<void> _shot(WidgetTester tester, Directory out, String name) async {
   await tester.pump();
   final view = tester.binding.renderViews.first;
   final layer = view.debugLayer! as OffsetLayer;
-  final image = await layer.toImage(
-    Offset.zero & view.size,
-    pixelRatio: _pixelRatio,
-  );
+  // The root layer already carries the device-pixel-ratio transform, so
+  // capture the physical rectangle 1:1 instead of scaling a second time.
+  final image = await layer.toImage(Offset.zero & (view.size * _pixelRatio));
   final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
   final file = File('${out.path}/crispcloud-store-$name.png');
   await file.writeAsBytes(bytes!.buffer.asUint8List(), flush: true);
