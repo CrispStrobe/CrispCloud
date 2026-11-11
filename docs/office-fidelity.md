@@ -63,6 +63,23 @@ These tests exercise the app's real loading, serialization, save-target and
 dirty-state wiring with deterministic storage; they do not claim live-provider
 or external Microsoft Office rendering coverage.
 
+## F3 preview fidelity
+
+`test/office_preview_fidelity_test.dart` authors ZIP/XML fixtures independently
+of Quds. The preview honors explicit false bold/italic properties, retains tabs
+and hard line breaks, resolves the package's main part and note relationships,
+and includes referenced footnote/endnote bodies. Repeated references keep the
+same preview marker; footnotes and endnotes with the same stored ID remain
+distinct. Preview markers use a shared sequence in reading order, so they do
+not claim the document's custom Word numbering or pagination.
+
+Spreadsheet previews follow workbook relationship order and authored sheet
+names, including empty named sheets and relocated shared-string parts.
+Unreferenced worksheet files and external or escaping relationship targets are
+excluded. Only packages without a workbook part use the fallback filename scan,
+which sorts numbered sheets naturally. Authored sheet names remain document
+content; localization still applies only to generated `Sheet N` headings.
+
 ## Scripted edits and goldens
 
 See [the scenario guide](../packages/quds_office_engine/tool/fidelity/README.md)

@@ -10,6 +10,7 @@ flutter test \
   test/office_editor_fixes_test.dart \
   test/office_footnote_test.dart \
   test/office_document_service_test.dart \
+  test/office_preview_fidelity_test.dart \
   test/office_pdf_service_test.dart \
   test/widget/office_editor_dialog_test.dart \
   test/widget/office_editor_ribbon_test.dart \
