@@ -47,3 +47,7 @@ CRISPER_SMB_PYTHON=/path/to/python-with-impacket dart test test/smb_transfer_tes
 
 The fixture validates SMB2 behavior; it does not qualify SMB3 encryption or
 device-specific performance. Never disable production encryption for this test.
+
+## Experimental Rust SMB
+
+The default remains libsmb2. See [rollout and qualification](../../docs/SMB_RUST_ROLLOUT.md) for strict Rust/auto selection, native host builds and test gates.

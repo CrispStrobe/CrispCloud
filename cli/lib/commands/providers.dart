@@ -41,7 +41,9 @@ class ProvidersCommand extends Command<int> {
       if (asJson) {
         stdout.writeln('[]');
       } else {
-        stdout.writeln('No providers configured. Run: crisp connect <type> <identity>');
+        stdout.writeln(
+          'No providers configured. Run: crisp connect <type> <identity>',
+        );
       }
       return 0;
     }
@@ -54,10 +56,14 @@ class ProvidersCommand extends Command<int> {
       // Build a safe summary — omit credentials
       String info = '';
       switch (type.toLowerCase()) {
+        case 'smb':
+          info =
+              '${cfg['url'] ?? ''} [${cfg['smbBackend'] ?? 'build default'}]';
         case 's3':
           info = '${cfg['endpoint'] ?? ''}/${cfg['bucket'] ?? ''}';
         case 'sftp':
-          info = '${cfg['username'] ?? ''}@${cfg['host'] ?? ''}:${cfg['port'] ?? '22'}';
+          info =
+              '${cfg['username'] ?? ''}@${cfg['host'] ?? ''}:${cfg['port'] ?? '22'}';
         case 'webdav':
           info = '${cfg['username'] ?? ''}@${cfg['host'] ?? ''}';
         default:
@@ -67,6 +73,7 @@ class ProvidersCommand extends Command<int> {
       rows.add({
         'name': name,
         'type': type,
+        if (type == 'smb') 'smbBackend': cfg['smbBackend'] ?? 'build default',
         'info': info,
         'default': name == defaultProv,
       });
@@ -75,8 +82,12 @@ class ProvidersCommand extends Command<int> {
     if (asJson) {
       stdout.writeln(const JsonEncoder.withIndent('  ').convert(rows));
     } else {
-      final nameW = rows.map((r) => (r['name'] as String).length).reduce((a, b) => a > b ? a : b);
-      final typeW = rows.map((r) => (r['type'] as String).length).reduce((a, b) => a > b ? a : b);
+      final nameW = rows
+          .map((r) => (r['name'] as String).length)
+          .reduce((a, b) => a > b ? a : b);
+      final typeW = rows
+          .map((r) => (r['type'] as String).length)
+          .reduce((a, b) => a > b ? a : b);
 
       for (final row in rows) {
         final isDefault = row['default'] as bool;

@@ -102,3 +102,5 @@ CLAUDE.local.md
 /packages/crisp_storage/rust/target/
 /packages/crisp_storage/pubspec.lock
 /packages/crisp_storage/frb_codegen.*.log
+
+/packages/crisp_storage/.fixture-venv/

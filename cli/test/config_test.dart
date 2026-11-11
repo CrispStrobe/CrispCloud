@@ -50,6 +50,19 @@ void main() {
     expect(config.providerNames(), equals(['aaa', 'zzz']));
   });
 
+  test('scalar serialization preserves strings and native value types', () {
+    final values = <String, dynamic>{
+      'string': 'false',
+      'enabled': false,
+      'port': 445,
+      'ratio': 1.5,
+      'optional': null,
+      'values': ['true', '12345', 'null', true, 12345, null],
+    };
+    config.write(values);
+    expect(CliConfig(path: configPath).read(strict: true), values);
+  });
+
   test('removeProvider removes entry', () {
     config.saveProvider('to-remove', {'type': 's3'});
     config.removeProvider('to-remove');

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "review_date": "2026-11-08",
+  "review_date": "2026-11-11",
   "repository": "https://github.com/CrispStrobe/CrispCloud",
   "scope": "Source-level inventory of the finished application, including portable helpers. Runtime reachability and platform behavior are described in crypto-audit.md. This inventory is not an export classification or a binary scan.",
   "required_providers": [
@@ -109,7 +109,7 @@
       "algorithms": [
         "TLS via platform/Dart networking",
         "SSH via dartssh2",
-        "SMB signing and SMB3 encryption via dart_smb2 / libsmb2",
+        "SMB signing and SMB3 encryption requirements through the default libsmb2 transport or an explicitly selected native Rust wrapper",
         "S3/Azure signing and SAS credentials",
         "platform secure storage",
         "WebCrypto browser storage"
@@ -117,9 +117,20 @@
       "sources": [
         "https://pub.dev/packages/dartssh2",
         "https://pub.dev/packages/dart_smb2",
-        "https://github.com/sahlberg/libsmb2"
+        "https://github.com/sahlberg/libsmb2",
+        "packages/crisp_storage/lib/src/smb_backend.dart",
+        "packages/crisp_storage/lib/src/smb_session.dart",
+        "packages/crisp_storage/lib/src/libsmb2_session.dart",
+        "packages/crisp_storage/lib/src/rust_smb_session.dart",
+        "packages/crisp_storage/native/crisp_smb/src/lib.rs",
+        "packages/crisp_storage/native/crisp_smb/Cargo.lock",
+        "packages/crisp_storage/rust/src/api/mod.rs",
+        "packages/crisp_storage/rust/Cargo.lock",
+        "lib/services/smb_config_service.dart",
+        "cli/lib/adapters/smb_adapter.dart",
+        "cli/lib/config/cli_config.dart"
       ],
-      "note": "Review negotiated algorithms and native dependency sources as part of each resolved release; TLS is not the complete app crypto scope."
+      "note": "libsmb2 remains the default SMB transport. Strict Rust selection requires the optional native bridge; Auto falls back only when native loading or bridge initialization is unavailable, before constructing a transport session. Authentication, network, signing, encryption and transfer failures do not trigger backend fallback. Signing remains required and encryption is required by default; these source-level policy checks do not establish every negotiated algorithm or server/platform behavior. GUI credentials use the configured SecureStorage backend. CLI credentials remain in its separate plaintext YAML configuration, with mode 0600 applied on non-Windows writes; the native wrapper adds no credential store. An external CRISP_SMB_LIBRARY selection requires separate verification of the actual library bytes. Review negotiated algorithms, native dependency sources and packaged artifacts for each resolved release; TLS is not the complete app crypto scope."
     },
     {
       "name": "Application credential storage and App Lock gates",
@@ -261,6 +272,52 @@
     "tool/apple_export_preflight.py",
     "tool/crypto_release_evidence.py",
     "tool/testflight_external.rb",
-    "tool/testflight_export_guard.rb"
+    "tool/testflight_export_guard.rb",
+    "packages/crisp_storage/lib/crisp_storage.dart",
+    "packages/crisp_storage/lib/src/remote_client.dart",
+    "packages/crisp_storage/lib/src/profiles.dart",
+    "packages/crisp_storage/lib/src/smb_backend.dart",
+    "packages/crisp_storage/lib/src/smb_session.dart",
+    "packages/crisp_storage/lib/src/smb_session_web.dart",
+    "packages/crisp_storage/lib/src/smb_transport.dart",
+    "packages/crisp_storage/lib/src/smb_paths.dart",
+    "packages/crisp_storage/lib/src/libsmb2_session.dart",
+    "packages/crisp_storage/lib/src/rust_smb_session.dart",
+    "packages/crisp_storage/lib/src/download_state.dart",
+    "packages/crisp_storage/lib/src/rust/api.dart",
+    "packages/crisp_storage/lib/src/rust/frb_generated.dart",
+    "packages/crisp_storage/lib/src/rust/frb_generated.io.dart",
+    "packages/crisp_storage/lib/src/rust/frb_generated.web.dart",
+    "packages/crisp_storage/native/crisp_smb/src/lib.rs",
+    "packages/crisp_storage/rust/src/api/mod.rs",
+    "packages/crisp_storage/rust/src/lib.rs",
+    "packages/crisp_storage/rust/src/frb_generated.rs",
+    "lib/services/smb_client_adapter.dart",
+    "lib/services/smb_config_service.dart",
+    "lib/services/connection_profiles.dart",
+    "lib/widgets/smb_backend_field.dart",
+    "lib/l10n/connection_dialog_extra_strings.dart",
+    "cli/lib/adapters/smb_adapter.dart",
+    "cli/lib/adapters/cli_adapter_factory.dart",
+    "cli/lib/adapters/cli_storage_client.dart",
+    "cli/lib/config/cli_config.dart",
+    "cli/lib/commands/connect.dart",
+    "cli/lib/commands/config.dart",
+    "cli/lib/commands/providers.dart",
+    "cli/lib/commands/upload.dart",
+    "cli/lib/commands/sync.dart",
+    "pubspec.yaml",
+    "cli/pubspec.yaml",
+    "cli/pubspec.lock",
+    "packages/crisp_storage/pubspec.yaml",
+    "packages/crisp_storage/native/crisp_smb/Cargo.toml",
+    "packages/crisp_storage/native/crisp_smb/Cargo.lock",
+    "packages/crisp_storage/rust/Cargo.toml",
+    "packages/crisp_storage/rust/Cargo.lock",
+    "packages/crisp_storage/bin/build_smb.dart",
+    ".github/workflows/smb-rust.yml",
+    "packages/crisp_storage/licensing/rust_dependencies.json",
+    "packages/crisp_storage/licensing/upstream/flutter_rust_bridge-2.11.1-LICENSE",
+    "packages/crisp_storage/tool/check_rust_licenses.py"
   ]
 }

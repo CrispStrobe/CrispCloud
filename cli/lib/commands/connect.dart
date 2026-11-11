@@ -16,6 +16,7 @@ import 'package:args/command_runner.dart';
 
 import '../adapters/cli_adapter_factory.dart';
 import '../adapters/s3_adapter.dart';
+import '../adapters/smb_adapter.dart';
 import '../adapters/sftp_adapter.dart';
 import '../adapters/webdav_adapter.dart';
 import '../config/cli_config.dart';
@@ -36,13 +37,25 @@ class ConnectCommand extends Command<int> {
   ConnectCommand(this.config) {
     argParser
       ..addOption(
+        'smb-backend',
+        allowed: ['libsmb2', 'rust', 'auto'],
+        defaultsTo: 'libsmb2',
+        help: 'SMB transport; Rust requires the optional native library.',
+      )
+      ..addFlag(
+        'require-encryption',
+        defaultsTo: true,
+        help: 'Require SMB3 encryption (SMB only).',
+      )
+      ..addOption(
         'secret',
         abbr: 's',
         help: 'Credential secret: password (SFTP/WebDAV) or secret key (S3).',
       )
-      ..addOption('host-key',
-          help:
-              'Expected SFTP SHA256 host-key fingerprint (required for non-interactive first connections).')
+      ..addOption(
+        'host-key',
+        help: 'Expected SFTP SHA256 host-key fingerprint (required for non-interactive first connections).',
+      )
       ..addOption(
         'name',
         abbr: 'n',
@@ -90,11 +103,21 @@ class ConnectCommand extends Command<int> {
         return 1;
       }
       return _doConnect(
-          type, identity, input, args['name'] as String?, makeDefault);
+        type,
+        identity,
+        input,
+        args['name'] as String?,
+        makeDefault,
+      );
     }
 
     return _doConnect(
-        type, identity, secret, args['name'] as String?, makeDefault);
+      type,
+      identity,
+      secret,
+      args['name'] as String?,
+      makeDefault,
+    );
   }
 
   Future<int> _doConnect(
@@ -107,6 +130,14 @@ class ConnectCommand extends Command<int> {
     Map<String, dynamic> providerMap;
 
     switch (type) {
+      case 'smb':
+        providerMap = {
+          'type': 'smb',
+          ...SmbCliAdapter.parseIdentity(identity, secret),
+          'smbBackend': argResults!['smb-backend'],
+          'requireEncryption': argResults!['require-encryption'],
+        };
+        break;
       case 's3':
         final parsed = S3CliAdapter.parseIdentity(identity, secret);
         providerMap = {'type': 's3', ...parsed};
@@ -117,7 +148,7 @@ class ConnectCommand extends Command<int> {
           'type': 'sftp',
           ...parsed,
           if (argResults?['host-key'] != null)
-            'hostKey': argResults!['host-key']
+            'hostKey': argResults!['host-key'],
         };
         break;
       case 'webdav':
@@ -126,7 +157,8 @@ class ConnectCommand extends Command<int> {
         break;
       default:
         stderr.writeln(
-            'Unknown provider type: $type. Supported: s3, sftp, webdav');
+          'Unknown provider type: $type. Supported: s3, sftp, smb, webdav',
+        );
         return 2;
     }
 
@@ -154,7 +186,8 @@ class ConnectCommand extends Command<int> {
               providerMap['hostKey'] != null &&
               !pins.contains(providerMap['hostKey']))) {
         stderr.writeln(
-            'The saved SSH host key differs. Verify the server and explicitly remove the old profile before replacing its key.');
+          'The saved SSH host key differs. Verify the server and explicitly remove the old profile before replacing its key.',
+        );
         return 1;
       }
       if (pins.isNotEmpty) providerMap['hostKey'] = pins.single;
@@ -167,7 +200,8 @@ class ConnectCommand extends Command<int> {
       if (adapter is SftpCliAdapter && stdin.hasTerminal) {
         adapter.confirmHostKey = (endpoint, fingerprint) async {
           stderr.writeln(
-              'SSH server $endpoint\nHost key: $fingerprint\nVerify this fingerprint with your server.');
+            'SSH server $endpoint\nHost key: $fingerprint\nVerify this fingerprint with your server.',
+          );
           stderr.write('Trust this server? [yes/no] ');
           return stdin.readLineSync()?.trim().toLowerCase() == 'yes';
         };

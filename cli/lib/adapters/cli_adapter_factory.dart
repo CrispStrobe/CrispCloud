@@ -9,6 +9,7 @@
 import '../config/cli_config.dart';
 import 'cli_storage_client.dart';
 import 's3_adapter.dart';
+import 'smb_adapter.dart';
 import 'sftp_adapter.dart';
 import 'webdav_adapter.dart';
 
@@ -16,7 +17,10 @@ import 'webdav_adapter.dart';
 ///
 /// [config] is the raw provider map from the CLI config file.
 /// Throws [CliConfigException] for unknown or misconfigured providers.
-CliStorageClient createAdapter(String providerName, Map<String, dynamic> config) {
+CliStorageClient createAdapter(
+  String providerName,
+  Map<String, dynamic> config,
+) {
   final type = config['type'] as String?;
   if (type == null) {
     throw CliConfigException(
@@ -25,6 +29,8 @@ CliStorageClient createAdapter(String providerName, Map<String, dynamic> config)
   }
 
   switch (type.toLowerCase()) {
+    case 'smb':
+      return SmbCliAdapter.fromConfig(config);
     case 's3':
       return S3CliAdapter.fromConfig(config);
     case 'sftp':
@@ -34,7 +40,7 @@ CliStorageClient createAdapter(String providerName, Map<String, dynamic> config)
     default:
       throw CliConfigException(
         'Unsupported provider type "$type". '
-        'Supported types: s3, sftp, webdav.',
+        'Supported types: s3, sftp, smb, webdav.',
       );
   }
 }

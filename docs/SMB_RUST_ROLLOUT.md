@@ -1,88 +1,129 @@
-# Experimental Rust SMB qualification
+# Rust SMB rollout — experimental, libsmb2 remains default
 
-## Current state
+Decision: reuse `smb2` 0.43.0 through an independent `crisp_smb` Rust crate and
+flutter_rust_bridge 2.11.1. Do not reimplement the protocol in Dart or add Go's
+runtime. CrispCloud and CrisperPlayer share one Dart facade; CrispSorter can
+consume the core directly while retaining OS-mounted SMB.
 
-The [experimental crate](../packages/crisp_storage/native/crisp_smb/README.md)
-provides a standalone Rust API. The Flutter application continues to use the
-existing `SmbSession` and `dart_smb2` / libsmb2 backend. There is no generated
-application bridge, backend selector, platform build hook or packaged runtime
-integration for this crate in the current tree. Adding its source files does
-not enable it in an application connection.
+## Backend policy
 
-The crate pins `smb2` to `0.43.0` and commits its Rust dependency lockfile. Its
-wrapper requests named authentication, signing and configured encryption;
-automatic mutation replay is disabled. The current source bounds individual
-read/write chunks to 256 KiB and open handles to eight. Those implementation
-choices are starting points for qualification, not proof of interoperability,
-resource limits under every failure path or platform readiness.
+`SmbSession` preserves its API. Optional `backend: SmbBackend.rust` selects Rust
+per session. Otherwise the compile-time `CRISP_SMB_BACKEND` chooses:
 
-The existing production SMB optimization is separate: Dart downloads now await
-bounded disk writes, and a later operation can retry a failed initial pool
-connection. Its local SMB2 fixture and CI step exercise that production backend.
-They do not exercise or qualify this Rust crate, SMB3 encryption, or real-server
-performance. See the [storage review](SMB_STORAGE_REVIEW.md).
+| Value | Behavior |
+| --- | --- |
+| `libsmb2` (default) | Existing worker-isolate implementation; never loads Rust |
+| `rust` | Strict Rust; missing native library is an error |
+| `auto` | Rust preferred; fallback only if native loading/bridge initialization fails |
 
-## Acceptance required before application integration
+Selection happens before passing credentials or connecting. Authentication,
+network, signing, encryption, protocol and transfer failures NEVER trigger
+fallback. Unknown mode values are rejected. `effectiveBackend` is diagnostic
+only; do not include credentials or remote paths in telemetry.
 
-Record the exact application revision, crate revision, dependency lockfile,
-target, server configuration and result for each gate. A unit-test command or a
-successful compile does not complete a server or device acceptance row.
+Both backends require signing. Encryption remains required by default. Rust
+rejects guest sessions and disables DFS and automatic mutation replay. URL
+confinement is not a server-side filesystem sandbox: configure share permissions
+and do not expose symlink/reparse-point ancestors outside the intended root.
 
-| Gate | Required evidence | Current boundary |
-| --- | --- | --- |
-| Dart bridge and source ownership | Contract tests for source/account/grant identity, handle ownership, translated errors, exact byte counts and cancellation across the bridge. A reviewed operation must retain its original endpoints. | The bridge and application adapter are absent. |
-| Authentication and transport policy | Supported-server tests for successful and rejected authentication, required signing, required encryption, downgrade rejection, unavailable encryption, guest rejection and connection loss. Preserve explicit connection choices and secret redaction. | Wrapper checks exist; these server-policy combinations have not been qualified here. |
-| Paths and object identity | Tests for configured-root confinement, literal Unicode and percent characters, reserved names, separators, traversal, parent reparse/symlink components, object replacement and missing-versus-denied results. Review the underlying server/open semantics, not just string validation. | The wrapper rejects some malformed paths and leaf links; full parent-object confinement is not established. |
-| Browsing and metadata | Validate complete directory results, timestamps, object/version identity, hidden files, capability reporting and large-directory paging with bounded resources. | The current listing checks its 10,000-row limit after obtaining the complete directory result. That is not a bounded paging implementation. |
-| Reads and downloads | Cover empty files, exact chunk boundaries, short reads, size changes, handle identity changes, interrupted writes, incompatible resume markers, local I/O failures and final source revalidation. Retain caller-owned staging and explicit publication. | Direct downloads currently reject zero-byte files. Resume and failure behavior require broader contract and server coverage. |
-| Writes and mutations | Match reviewed create-only/overwrite choices, collision outcomes, expected-revision checks, rename/delete semantics and metadata behavior. Test partial writes and ambiguous cancellation outcomes without automatic replay. | The wrapper exposes mutation primitives; application operation-review and conflict contracts are not integrated. |
-| Resource lifetime and progress | Verify disconnect, failed connect, cancellation during every operation, handle cleanup, bounded memory, concurrent callers and progress ownership. Confirm an interrupted mutation is never reported as rolled back without evidence. | Session serialization and cancellation exist; the progress counter is shared and concurrent request behavior needs qualification. |
-| Native targets and packaging | Reproducible builds and runtime tests for each supported target/architecture, native loading, sandbox access, distribution signing, installation and removal. Unsupported targets must retain an explicit supported route. | There are no application build hooks or packaged libraries for this engine. |
-| Performance | Reproducible comparison of latency, throughput, memory and cancellation on representative local and remote servers, directory sizes and target devices. | No throughput, memory improvement or device-performance claim is established here. |
-| Dependency, license and crypto evidence | Review exact locked dependency sources and notices, native packaging obligations, cryptographic inventory and artifact evidence. Retain existing application notices until the actual distributed dependency graph changes. | The crate's declared wrapper license and lockfile are not a completed dependency or application-distribution review. |
+## Run the native prototype
 
-## Test and evidence scope
+From `packages/crisp_storage`, run `dart pub get`, then
+`dart run bin/build_smb.dart`. This builds the host dynamic library with Cargo.
+The tool prints its absolute `CRISP_SMB_LIBRARY` path. For a desktop developer
+build, pass `--dart-define=CRISP_SMB_BACKEND=rust` and
+`--dart-define=CRISP_SMB_LIBRARY=/absolute/path/to/library` to Flutter.
+This path is for local qualification, not a distributable application.
 
-From `packages/crisp_storage/native/crisp_smb`, run:
+Dart tests also accept `CRISP_SMB_LIBRARY` as an environment variable. Set
+`CRISPER_SMB_PYTHON` to a Python containing `impacket==0.13.0` and run
+`dart test test/rust_smb_test.dart test/smb_transfer_test.dart`. The fixture is
+loopback-only, authenticates a disposable test account, and offers SMB2 only.
+It normalizes Impacket's malformed error/CREATE replies without relaxing client
+validation. It cannot establish SMB3 encryption interoperability.
 
-```sh
-cargo test --locked
+Regenerate the bridge with `flutter_rust_bridge_codegen` 2.11.1:
+
+```
+flutter_rust_bridge_codegen generate --rust-root rust --rust-input crate::api --dart-output lib/src/rust --dart-root . --no-deps-check --no-auto-upgrade-dependency --type-64bit-int --no-dart-fix
 ```
 
-The current source contains two unit tests: malformed-path rejection and the
-format of a credential-free wrapper error. They do not connect to a server or
-exercise downloads, writes, session cancellation, encryption or a Flutter
-bridge. Record any execution result separately from this description of the
-test source. Add the missing contract and integration cases before expanding
-the engine's application role.
+## Transfer semantics
 
-Keep qualification fixtures isolated from user credentials and shares. Require
-deliberate fixture configuration for servers used by integration tests. An SMB2
-fixture's encryption opt-out must remain limited to that fixture and must not
-change production defaults.
+Rust-to-disk downloads keep file bytes native, cap reads at 256 KiB and use four
+read-ahead requests. Native writes complete before progress advances; cancellation
+cannot leave a background file write racing a new resume. Progress is coalesced
+at 100 ms with a final value. A callback exception cancels the session; create a
+new session to resume. There is one download per session and eight file handles
+maximum. Stream consumers receive bounded typed byte buffers and backpressure.
 
-## License and dependency review
+Resume validates source, size, timestamps and file identity when the server can
+prove it. A missing/incompatible marker restarts the staging file. Rust and
+libsmb2 markers are deliberately incompatible; switching backends never appends
+bytes under another backend's validator. The app publishes the staging file only
+after success. Uploads retain existing create/truncate semantics and are neither
+resumable nor atomic. No transparent write replay is enabled.
 
-The wrapper manifest declares `MIT OR Apache-2.0`, and the corresponding license
-texts are included with the crate. That declaration applies to the wrapper; it
-does not establish the license of every locked dependency. The lockfile includes
-cryptographic packages, so a future native artifact also needs a review of the
-exact linked sources and the application's existing crypto evidence rules.
+## Qualification gates before changing the default
 
-Before packaging, produce the resolved dependency inventory from the locked
-build, inspect the applicable license texts and source/provenance records, and
-record the required notices for every distributed target. Review the resulting
-binary and its actual dependencies. Retain the current libsmb2 notices while
-the application continues to use that backend. This document makes no claim
-that bringing in this experimental source changes the shipped license or
-encryption scope.
+| Gate | Current evidence / next check |
+| --- | --- |
+| Wrapper + bridge | Linux build, pure Dart analysis and local fixture tests |
+| Protocol | CRUD, bounded streams, resume/revision restart, cancellation, wrong-password and required-encryption refusal on SMB2 fixture |
+| Required SMB3 security | Pending Samba, Windows Server, Synology/QNAP: signing-required and encryption-required success; tamper/refusal tests |
+| Reliability | Pending real reconnects, suspend/resume, quota/disk full, same-length remote edits, multi-GB stress and handle/RSS measurements |
+| Performance | Pending comparable libsmb2/Rust throughput, CPU/RSS, first audio and seek measurements on the same NAS/network |
+| Desktop | CI compiles host libraries; app embedding, signing, sandbox/network entitlements and final binaries remain to qualify |
+| Mobile | CI compiles iOS arm64/device + simulator libraries; Android NDK ABI builds, XCFramework/plugin integration and physical-device tests remain to qualify |
+| Distribution | Cargo grants and exact source license evidence recorded; final native notices, packaged binary closure and store review remain required |
 
-## Enabling and reverting
+`licensing/rust_dependencies.json` covers the entire resolved bridge Cargo graph,
+including target-specific/build dependencies. `tool/check_rust_licenses.py`
+rejects unknown license expressions or changed evidence. MIT alternatives are
+selected where dual/triple licensing also offers copyleft. `unicode-ident` also
+requires Unicode-3.0 notices. `allo-isolate` uses an Apache-2.0 license file.
+The FRB crates omit license files in their archives; the upstream v2.11.1 MIT
+license is recorded separately. `r-efi` publishes its SPDX grant and author list;
+complete notice assembly is still a packaging gate. Existing libsmb2 LGPL
+obligations remain while it ships. The surrounding app/package license is not
+changed by the permissively licensed independent Rust crates.
 
-Application adoption is a separate implementation change after the relevant
-gates pass. It must make backend selection explicit, preserve current provider
-capability checks and operation review, and support returning to the existing
-backend without silently reusing incompatible partial-download markers. Enable
-only qualified targets; record unsupported operations and platform limits in
-the adapter. Do not change default connection behavior merely because this
-crate compiles or its source is present.
+## GUI and CLI settings
+
+The installed GUI's connection dialog offers **SMB transport**: libsmb2, Rust or
+Auto. Save it with a connection profile or reconnect to apply it. The choice is
+stored as `smbBackend` beside `requireEncryption`; credentials remain in the
+existing secure store. Browser builds still cannot open SMB sockets.
+
+The CLI now provides the same shared SMB session through `SmbCliAdapter`:
+
+```
+crisp connect smb 'DOMAIN\reader@smb://nas/Books/' --name nas --smb-backend libsmb2
+crisp config smb-backend nas rust
+crisp config smb-backend nas
+crisp ls / --provider nas --json
+crisp upload chapter.mp3 / --provider nas
+crisp download /chapter.mp3 ./chapter.mp3 --provider nas
+```
+
+Omit `--secret` to use the password prompt/stdin. Encryption is required by
+default; `--no-require-encryption` is explicit SMB2 opt-in. Invalid backend names
+fail without changing the saved setting. `providers --json` reports the configured
+backend without credentials. `upload` and `sync` stream local files for SMB;
+downloads publish a `.part` staging file only after success. Byte-buffer consumers
+have explicit size limits. Public share links are unsupported by SMB.
+
+CLI profiles remain in the CLI's private configuration file; GUI profiles remain
+in the GUI store. These are separate existing stores, with the same backend
+values and security rules. A session override wins over its saved profile; legacy
+profiles without a choice use the build default (normally libsmb2). Changing a
+profile affects new sessions, not an already-running transfer.
+
+Tests cover profile round trips, legacy defaults, invalid input, override order,
+CLI configuration commands, GUI selector callbacks/localization, and adapter CRUD
+and bounded transfers for libsmb2, Rust and Auto. The GUI integration tests use
+the same authenticated fixture as the CLI. Run the GUI tests with Flutter;
+run `dart test test/smb_adapter_test.dart test/cli_runner_test.dart` from `cli/`.
+The `surfaces` CI job runs both. Live SMB tests require the two fixture environment
+variables described above. These fixture tests do not replace real SMB3/device
+qualification.

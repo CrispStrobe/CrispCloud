@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/provider_operation_strings.dart';
 import '../l10n/file_list_strings.dart';
 import '../models/file_item.dart';
+import '../models/folder_size_measurement.dart';
 import '../models/file_view_configuration.dart';
 import '../models/panel_side.dart';
 import '../providers/focus_area_provider.dart';
@@ -199,6 +200,7 @@ class FileListView extends ConsumerWidget {
                   isSelected: isSelected,
                   isCursor: isCursor,
                   selectedFiles: selectedFiles,
+                  folderMeasurement: panel.folderSizeFor(file),
                   textStyle: listTextStyle,
                   sourceLabel: origin == null
                       ? null
@@ -224,6 +226,7 @@ class FileListView extends ConsumerWidget {
                 isSelected: isSelected,
                 isCursor: isCursor,
                 selectedFiles: selectedFiles,
+                folderMeasurement: panel.folderSizeFor(file),
                 textStyle: listTextStyle,
                 showRelativePath:
                     panel.isFlatView || panel.showingSearchResults,
@@ -466,6 +469,7 @@ class FileListTile extends ConsumerWidget {
   final bool isSelected;
   final bool isCursor;
   final List<FileItem> selectedFiles;
+  final FolderSizeMeasurement? folderMeasurement;
   final Function(bool shiftKey, bool ctrlKey) onTap;
   final VoidCallback onDoubleTap;
   final Function(TapDownDetails)? onSecondaryTap;
@@ -480,6 +484,7 @@ class FileListTile extends ConsumerWidget {
     required this.isSelected,
     this.isCursor = false,
     this.selectedFiles = const [],
+    this.folderMeasurement,
     required this.onTap,
     required this.onDoubleTap,
     this.onSecondaryTap,
@@ -506,7 +511,7 @@ class FileListTile extends ConsumerWidget {
     final folderSize = FolderSizePresentation.forFile(
       context,
       file,
-      ref.watch(panelProvider(side)).folderSizeFor(file),
+      folderMeasurement,
     );
 
     // Inline rename mode: replace the whole tile with an editable field
@@ -699,6 +704,7 @@ class CompactFileTile extends ConsumerWidget {
   final bool isSelected;
   final bool isCursor;
   final List<FileItem> selectedFiles;
+  final FolderSizeMeasurement? folderMeasurement;
   final Function(bool shiftKey, bool ctrlKey) onTap;
   final VoidCallback onDoubleTap;
   final Function(TapDownDetails)? onSecondaryTap;
@@ -713,6 +719,7 @@ class CompactFileTile extends ConsumerWidget {
     required this.isSelected,
     this.isCursor = false,
     this.selectedFiles = const [],
+    this.folderMeasurement,
     required this.onTap,
     required this.onDoubleTap,
     this.onSecondaryTap,
@@ -763,7 +770,7 @@ class CompactFileTile extends ConsumerWidget {
     final folderSize = FolderSizePresentation.forFile(
       context,
       file,
-      ref.watch(panelProvider(side)).folderSizeFor(file),
+      folderMeasurement,
     );
 
     final semantic = strings.semantic(

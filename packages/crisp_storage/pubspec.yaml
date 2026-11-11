@@ -5,6 +5,7 @@ publish_to: none
 environment:
   sdk: '>=3.10.0 <4.0.0'
 dependencies:
+  flutter_rust_bridge: 2.11.1
   collection: ^1.19.0
   dartssh2: ^4.1.0
   dart_smb2: 0.2.1

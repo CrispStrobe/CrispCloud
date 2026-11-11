@@ -6,13 +6,14 @@ use smb2::{
     ClientConfig, DownloadCheckpoint, FileReader, FileVersion, FileWriter, ReadAhead, SmbClient,
     Tree,
 };
+use std::io::Write;
 use std::{
     collections::HashMap,
     path::Path,
     sync::atomic::{AtomicU64, Ordering},
     time::Duration,
 };
-use tokio::{io::AsyncWriteExt, sync::Mutex};
+use tokio::sync::Mutex;
 use tokio_util::sync::CancellationToken;
 
 pub const CHUNK: usize = 256 * 1024;
@@ -192,9 +193,9 @@ impl Session {
                         .map(|e| json!({"name":e.name,"size":e.size,"directory":e.is_directory})).collect()))
                 },
                 "stat" => {
-                    match client.stat(tree, &path).await {
-                        Ok(s) => { if s.is_link() { return Err(Error::new("LinksUnsupported")); }
-                            Ok(json!({"size":s.size,"directory":s.is_directory,"modified":s.modified.0,"changed":s.changed.0})) },
+                    match client.stat_with_identity(tree, &path).await {
+                        Ok((s, identity)) => { if s.is_link() { return Err(Error::new("LinksUnsupported")); }
+                            Ok(json!({"size":s.size,"directory":s.is_directory,"modified":s.modified.0,"changed":s.changed.0,"version":normalized_version(FileVersion::new(s.size,s.modified,s.changed,identity))})) },
                         Err(e) if e.kind() == smb2::ErrorKind::NotFound => Ok(Value::Null),
                         Err(e) => Err(e.into()),
                     }
@@ -205,7 +206,7 @@ impl Session {
                     if info.is_link() || info.is_directory { return Err(Error::new("InvalidFile")); }
                     let reader = client.open_file_reader(tree, &path).await?;
                     let id = *next; *next += 1;
-                    let result = json!({"handle":id,"size":reader.size(),"version":reader.version()});
+                    let result = json!({"handle":id,"size":reader.size(),"version":normalized_version(reader.version())});
                     readers.insert(id, reader); Ok(result)
                 },
                 "closeRead" => { if let Some(reader) = readers.remove(&handle) { reader.close().await?; } Ok(Value::Null) },
@@ -282,7 +283,12 @@ impl Session {
             if before.is_link() || before.is_directory || before.size == 0 || before.size > limit {
                 return Err(Error::new("InvalidFile"));
             }
-            let version = FileVersion::new(before.size, before.modified, before.changed, identity);
+            let version = normalized_version(FileVersion::new(
+                before.size,
+                before.modified,
+                before.changed,
+                identity,
+            ));
             let marker_path = format!("{output}.resume");
             let saved = read_marker(&marker_path).await;
             let length = tokio::fs::metadata(output)
@@ -304,13 +310,14 @@ impl Session {
                 .await?
                 .with_chunk_size(chunk_size)
                 .with_read_ahead(ReadAhead::Fixed(4));
-            let mut file = tokio::fs::OpenOptions::new()
+            // Bounded synchronous writes run on the native worker, not Dart.
+            // Cancellation cannot leave an unjoined background write racing resume.
+            let mut file = std::fs::OpenOptions::new()
                 .create(true)
                 .write(true)
                 .truncate(offset == 0)
                 .append(offset != 0)
-                .open(output)
-                .await?;
+                .open(output)?;
             save_marker(
                 &marker_path,
                 &Marker {
@@ -326,16 +333,21 @@ impl Session {
                 if bytes.is_empty() || received + bytes.len() as u64 > version.size {
                     return Err(Error::new("InvalidData"));
                 }
-                file.write_all(&bytes).await?;
+                file.write_all(&bytes)?;
                 received += bytes.len() as u64;
                 self.progress.store(received, Ordering::Relaxed);
             }
-            file.flush().await?;
+            file.flush()?;
             if received != version.size {
                 return Err(Error::new("Incomplete"));
             }
             let (after, identity) = client.stat_with_identity(tree, &path).await?;
-            let after = FileVersion::new(after.size, after.modified, after.changed, identity);
+            let after = normalized_version(FileVersion::new(
+                after.size,
+                after.modified,
+                after.changed,
+                identity,
+            ));
             if version != after {
                 return Err(Error::new("FileChanged"));
             }
@@ -343,6 +355,14 @@ impl Session {
         })
         .await
     }
+}
+// Servers may return a partial/zero identity. It is not proof of identity;
+// normalize it consistently across CREATE and QUERY_INFO, as upstream does.
+fn normalized_version(mut version: FileVersion) -> FileVersion {
+    version.identity = version
+        .identity
+        .filter(|id| id.index_number != 0 && id.volume_serial != 0);
+    version
 }
 #[derive(Serialize, Deserialize)]
 struct Marker {
@@ -383,5 +403,113 @@ mod tests {
             Error::new("AuthRequired").to_string(),
             r#"{"code":"AuthRequired","retryable":false}"#
         );
+    }
+    fn config() -> Config {
+        Config {
+            address: "127.0.0.1:1".into(),
+            share: "books".into(),
+            root: "audio".into(),
+            username: "reader".into(),
+            password: "private-password".into(),
+            domain: "".into(),
+            require_encryption: true,
+        }
+    }
+    #[test]
+    fn rejects_unsigned_accounts_and_invalid_roots_before_connecting() {
+        for name in ["", "guest", "GUEST"] {
+            let mut cfg = config();
+            cfg.username = name.into();
+            assert_eq!(Session::new(cfg).err().unwrap().code, "SigningRequired");
+        }
+        for root in ["../secret", "a/../b", "/absolute", "a\\b"] {
+            let mut cfg = config();
+            cfg.root = root.into();
+            assert_eq!(Session::new(cfg).err().unwrap().code, "InvalidPath");
+        }
+        let mut cfg = config();
+        cfg.share = "other/share".into();
+        assert_eq!(Session::new(cfg).err().unwrap().code, "InvalidConfig");
+    }
+    #[test]
+    fn path_resolution_retains_configured_root() {
+        let session = Session::new(config()).unwrap();
+        assert_eq!(session.path("").unwrap(), "audio");
+        assert_eq!(
+            session.path("Chapter #1.mp3").unwrap(),
+            "audio/Chapter #1.mp3"
+        );
+        assert!(session.path("../escape").is_err());
+    }
+    #[test]
+    fn upstream_auth_details_are_redacted() {
+        let error = Error::from(smb2::Error::Auth {
+            message: "private-password server/path".into(),
+        });
+        assert!(!error.to_string().contains("private-password"));
+        assert!(!error.to_string().contains("server/path"));
+        assert!(!error.retryable);
+    }
+    #[test]
+    fn encryption_policy_is_required_in_core_configuration() {
+        let missing =
+            r#"{"address":"host:445","share":"books","root":"","username":"u","password":"p"}"#;
+        assert!(serde_json::from_str::<Config>(missing).is_err());
+        let unknown = missing.replace("{", r#"{"unexpected":true,"require_encryption":true,"#);
+        assert!(serde_json::from_str::<Config>(&unknown).is_err());
+    }
+    #[tokio::test]
+    async fn cancellation_and_transfer_bounds_do_not_need_a_connection() {
+        let session = Session::new(config()).unwrap();
+        assert_eq!(
+            session
+                .read_chunk(1, 0, CHUNK as u32 + 1)
+                .await
+                .unwrap_err()
+                .code,
+            "TooLarge"
+        );
+        assert_eq!(
+            session
+                .write_chunk(1, vec![0; CHUNK + 1])
+                .await
+                .unwrap_err()
+                .code,
+            "TooLarge"
+        );
+        session.cancel();
+        assert_eq!(
+            session.request("list", "", "", 0).await.unwrap_err().code,
+            "Cancelled"
+        );
+        session.close().await;
+        session.close().await;
+    }
+    #[tokio::test]
+    async fn resume_markers_reject_foreign_malformed_and_oversized_data() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("partial.resume");
+        let name = path.to_str().unwrap();
+        for bytes in [
+            br#"{"source":"smb://host/books/a","validator":"libsmb2"}"#.to_vec(),
+            b"not json".to_vec(),
+            vec![b'x'; 8193],
+        ] {
+            tokio::fs::write(&path, bytes).await.unwrap();
+            assert!(read_marker(name).await.is_none());
+        }
+        let version: FileVersion = serde_json::from_value(json!({"size":42,"modified":1,"changed":2,"identity":null})).unwrap();
+        save_marker(
+            name,
+            &Marker {
+                source: "smb://host/books/a".into(),
+                validator: version,
+            },
+        )
+        .await
+        .unwrap();
+        let loaded = read_marker(name).await.unwrap();
+        assert_eq!(loaded.validator, version);
+        assert_eq!(loaded.source, "smb://host/books/a");
     }
 }

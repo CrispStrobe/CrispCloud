@@ -126,3 +126,136 @@ The inventory and lockfile hashes remain the values recorded above. Only the
 reviewed-source fingerprint changes from the preceding workspace policy; the
 existing declaration, store/distribution assertions and validators are retained.
 This integration review does not claim a new binary, live-store or legal review.
+
+## Integration review: optional SMB runtime and backend selection
+
+This engineering delta covers upstream SMB snapshot
+[`4b44dc4d44ef05a18d2da2579d2e3b866b245643`](https://github.com/CrispStrobe/CrispCloud/commit/4b44dc4d44ef05a18d2da2579d2e3b866b245643)
+and the integration fixes described below. It adds an optional Rust transport,
+native bridge, and GUI/CLI backend selection. The earlier fingerprints and
+validation results in this document describe their recorded revisions; they do
+not bind or establish acceptance for this expanded source tree.
+
+The [inventory](crypto-inventory.json) now retains the original 81 reviewed paths
+and adds exactly 46, for 127 unique files. Its review date is 11 November 2026.
+The additions cover 19 shared runtime and bridge files, 14 GUI/CLI orchestration
+files, and 13 manifest, build and committed dependency-evidence inputs. Existing
+entries such as `lib/widgets/connection_dialog.dart`,
+`lib/providers/auth_provider.dart` and the GUI credential-store implementation
+remain in the source binding. The application `pubspec.lock` retains its
+separate complete-file fingerprint; the CLI lockfile and both Cargo lockfiles
+are included in the reviewed-source inventory.
+
+| Input group | Reviewed behavior and binding purpose |
+| --- | --- |
+| Shared SMB facade, backend selector, URL paths and connection/profile models | Bind session override order, default selection, endpoint confinement, saved non-secret settings and the web rejection path. |
+| libsmb2 and Rust session adapters | Bind credential handoff, signing/encryption requirements, error translation, transfer state and the boundary that permits backend fallback. |
+| Generated Dart/Rust bridge and native core | Bind native loading, serialization, session registry, dispatch and the independent Rust implementation, including generated code that participates at runtime. |
+| GUI and CLI adapters, selectors, configuration and transfer commands | Bind explicit user choices, credential persistence, profile validation, default diagnostics and the entry points that make the optional transport reachable. |
+| Manifests, lockfiles and build/evidence inputs | Bind the exact requested and resolved graphs, optional library build commands and committed dependency evidence/checker. The independent core and bridge are separate Cargo workspaces and both lockfiles are retained. |
+
+### Selection and security orchestration
+
+[`SmbSession`](../packages/crisp_storage/lib/src/smb_session.dart) selects an
+explicit constructor override first, then a saved `RemoteConnection.smbBackend`,
+then compile-time `CRISP_SMB_BACKEND`. The build default remains `libsmb2`.
+New GUI and CLI connection surfaces explicitly start with libsmb2 and persist
+the chosen setting; changing a saved choice affects newly constructed sessions.
+Unknown mode values are rejected. Browser builds continue to reject SMB socket
+operations.
+
+The [selector](../packages/crisp_storage/lib/src/smb_backend.dart) does not load
+Rust when libsmb2 is requested. Strict Rust selection propagates unavailable
+library errors. Auto catches only native loading/bridge initialization
+unavailability, before constructing the selected transport session. Session
+construction and subsequent handshakes occur outside that fallback block.
+Authentication, network, signing, encryption and transfer failures therefore do
+not initiate a login through another backend.
+
+`RemoteConnection.requireEncryption` remains true by default. The GUI and CLI
+retain an explicit choice to relax that requirement. The libsmb2 wrapper passes
+`signing: true`, binds sealing to the configured encryption requirement and
+selects SMB3 when encryption is required. The Rust wrapper rejects empty/guest
+usernames before connecting, checks the resulting session's signing state and
+checks encryption when required before opening the share. It disables automatic
+reconnect, DFS and compression. These are source-level policy observations;
+they do not establish every negotiated algorithm or behavior on every server,
+device or platform.
+
+Shared URL validation binds the endpoint, port and configured share/root.
+Native path validation also rejects absolute and traversal components. These
+checks confine application requests; they do not establish a server-side
+filesystem sandbox or resolve server-side link/ancestor behavior.
+
+### Credential persistence and integration fixes
+
+GUI SMB credentials continue through
+[`SmbConfigService`](../lib/services/smb_config_service.dart) into the configured
+`SecureStorage` backend. Login verifies the connection before persisting the
+credential map, and a persistence failure closes the newly created session.
+Saved connection profiles carry backend and encryption settings through the
+existing profile store. The optional native wrapper adds no credential store.
+
+The CLI continues to use its separate plaintext YAML configuration. Its
+[configuration writer](../cli/lib/config/cli_config.dart) applies mode `0600`
+before writing on non-Windows platforms; Windows uses its existing filesystem
+access controls. This storage is distinct from the GUI credential vault.
+Credentials pass into the bridge as a configuration JSON string and remain in
+the native session configuration. This review does not establish zeroization of
+those copies. Native operational errors are reduced to a stable error code and
+retryability flag before presentation.
+
+Three integration corrections preserve the intended saved-choice behavior:
+
+- An invalid saved GUI backend is rejected before any profile fields are
+  applied. The existing form remains intact and the user receives a handled
+  configuration error.
+- Legacy CLI profiles without `smbBackend` report **build default**. Diagnostics
+  no longer imply an explicit libsmb2 choice when compile-time selection may
+  supply another backend.
+- CLI YAML string values use JSON quoting, preserving their string type and
+  contents when read back. Passwords and settings such as `true`, `null` or
+  `12345` no longer change type through YAML scalar coercion. This changes
+  serialization, not the configuration file's storage protection.
+
+### Dependency and runtime boundaries
+
+The Dart graph adds `flutter_rust_bridge` pinned to `2.11.1` and its resolved
+`build_cli_annotations 2.1.1` dependency. The independent Rust core pins
+`smb2 0.43.0`; the bridge pins `flutter_rust_bridge 2.11.1` and references that
+core by path. Both Cargo graphs and their generated bindings are source-bound.
+The optional host build helper uses `cargo build --release --locked`. Committed
+dependency evidence and its checker are included as exact reviewed inputs;
+their inclusion does not add a new interpretation of the recorded declarations.
+
+`CRISP_SMB_LIBRARY` remains an explicit external-library selection mechanism,
+using a compile-time value or process environment. Without it, the generated
+loader uses its configured library stem and location. Source fingerprints bind
+that loading policy and the reviewed source graph, not the bytes of an arbitrary
+library selected at runtime. Final application embedding and actual loaded
+artifact identity require their own recorded evidence.
+
+The existing policy declaration and distribution assertions retain their
+recorded values. This engineering delta changes inventory scope and review
+documentation. Final source/dependency fingerprints and measured validation
+results must refer to the formatted combined tree; this section records no new
+artifact, live-store or platform qualification.
+
+### Combined source binding
+
+The formatted integration retains the existing declarations and distribution
+assertions. Its 127 reviewed paths and resolved application lockfile produce
+the following input fingerprints under the unchanged verifier:
+
+```json
+{
+  "inventory_sha256": "fbcfb3b91097052ade593d018df60cebd2276bfd38222cb2e4e71d647eaa6952",
+  "pubspec_lock_sha256": "490f6b9238de9a8e51292dc8831844e7b502b8f186cc6e2d426bf2fb25f88853",
+  "reviewed_source_sha256": "9b884cf643c23fad85bcbb66d862cb365be5c86ce4545973f8fa34cba04dcf40"
+}
+```
+
+The optional build helper now records Cargo's actual emitted dynamic library
+path and verifies that it exists, including builds with a custom target
+directory. This improves build reporting; runtime binary identity still needs
+the separate artifact checks described above.

@@ -1,10 +1,15 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'remote_client.dart';
+import 'smb_backend.dart';
+export 'smb_backend.dart' show SmbBackend, parseSmbBackend;
 
 /// Browsers cannot connect to SMB TCP sockets.
 class SmbSession {
-  SmbSession(RemoteConnection connection);
+  final SmbBackend backend;
+  SmbSession(RemoteConnection connection, {SmbBackend? backend})
+    : backend = backend ?? connection.smbBackend ?? configuredSmbBackend();
+  SmbBackend? get effectiveBackend => null;
   Never _unsupported() => throw RemoteUnsupportedError(
     'SMB requires the installed app.',
     RemoteErrorCode.smbWebUnsupported,

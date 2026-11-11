@@ -9,6 +9,7 @@ import 'package:args/command_runner.dart';
 import 'package:path/path.dart' as p;
 
 import '../adapters/cli_adapter_factory.dart';
+import '../adapters/cli_storage_client.dart';
 import '../config/cli_config.dart';
 
 class UploadCommand extends Command<int> {
@@ -25,16 +26,8 @@ class UploadCommand extends Command<int> {
 
   UploadCommand(this.config) {
     argParser
-      ..addOption(
-        'provider',
-        abbr: 'p',
-        help: 'Provider name to use.',
-      )
-      ..addFlag(
-        'progress',
-        negatable: false,
-        help: 'Show upload progress.',
-      )
+      ..addOption('provider', abbr: 'p', help: 'Provider name to use.')
+      ..addFlag('progress', negatable: false, help: 'Show upload progress.')
       ..addFlag(
         'json',
         abbr: 'j',
@@ -54,7 +47,9 @@ class UploadCommand extends Command<int> {
 
     final localPath = rest[0];
     final remotePath = rest[1];
-    final providerName = config.resolveProviderName(args['provider'] as String?);
+    final providerName = config.resolveProviderName(
+      args['provider'] as String?,
+    );
     final showProgress = args['progress'] as bool;
     final asJson = args['json'] as bool;
 
@@ -71,7 +66,7 @@ class UploadCommand extends Command<int> {
     }
 
     final fileName = p.basename(localPath);
-    final data = await localFile.readAsBytes();
+    final size = await localFile.length();
     final adapter = createAdapter(providerName, providerCfg);
 
     int lastPct = -1;
@@ -85,21 +80,29 @@ class UploadCommand extends Command<int> {
     }
 
     try {
-      await adapter.upload(data, fileName, remotePath, onProgress: progressCallback);
+      await uploadLocalFile(
+        adapter,
+        localFile,
+        fileName,
+        remotePath,
+        onProgress: progressCallback,
+      );
       if (showProgress) stderr.writeln('');
 
       final result = {
         'status': 'ok',
         'local': localPath,
         'remote': p.posix.join(remotePath, fileName),
-        'bytes': data.length,
+        'bytes': size,
         'provider': providerName,
       };
 
       if (asJson) {
         stdout.writeln(const JsonEncoder.withIndent('  ').convert(result));
       } else {
-        stdout.writeln('Uploaded ${data.length} bytes → $providerName:${p.posix.join(remotePath, fileName)}');
+        stdout.writeln(
+          'Uploaded $size bytes → $providerName:${p.posix.join(remotePath, fileName)}',
+        );
       }
       return 0;
     } catch (e) {

@@ -63,16 +63,28 @@ jobs:
           lib/widgets/keyboard_shortcut_dialog.dart
           lib/widgets/folder_drop_target.dart
           lib/services/folder_drop_service.dart
+          lib/services/storage_scan_backend.dart
           lib/services/local_file_service.dart
           lib/services/local_file_service_native.dart
           lib/services/local_file_service_web.dart
           lib/models/panel_drag_data.dart
           lib/models/panel_breadcrumb.dart
+          lib/models/folder_size_measurement.dart
           lib/widgets/fkey_bar.dart
           lib/widgets/file_clipboard_actions.dart
           lib/widgets/file_operation_dialog.dart
           lib/widgets/file_column_view.dart
+          lib/widgets/file_context_menu.dart
+          lib/widgets/file_grid_view.dart
+          lib/widgets/file_list_view.dart
+          lib/widgets/folder_size_presentation.dart
           lib/widgets/file_panel.dart
+          lib/widgets/panel_tab_bar.dart
+          lib/widgets/status_bar.dart
+          lib/l10n/status_bar_strings.dart
+          lib/l10n/storage_analyzer_strings.dart
+          lib/widgets/storage_analysis_view.dart
+          lib/widgets/storage_analyzer_dialog.dart
           lib/widgets/panel_listing_placeholder.dart
           lib/widgets/panel_source_selector.dart
           lib/widgets/panel_header.dart
@@ -89,6 +101,15 @@ jobs:
             test/local_directory_snapshot_test.dart
             test/local_grant_origin_test.dart
             test/folder_drop_snapshot_test.dart
+            test/panel_folder_size_test.dart
+            test/storage_analyzer_strings_test.dart
+            test/storage_analyzer_widget_test.dart
+            test/storage_analyzer_origin_test.dart
+            test/storage_scan_access_test.dart
+            test/storage_scan_service_test.dart
+            test/storage_scan_worker_test.dart
+            test/storage_scan_native_test.dart
+            test/storage_scan_virtual_test.dart
             test/panel_breadcrumb_test.dart
             test/panel_header_i18n_test.dart
             test/operations_i18n_test.dart
@@ -116,8 +137,14 @@ jobs:
             test/widget/screen_dialog_localization_test.dart
             test/widget/fkey_bar_widget_test.dart
             test/widget/gallery_browser_test.dart
+            test/widget/gallery_media_routing_test.dart
             test/widget/responsive_toolbar_widget_test.dart
             test/widget/folder_drop_target_test.dart
+            test/widget/folder_size_result_context_test.dart
+            test/widget/folder_size_views_test.dart
+            test/widget/status_bar_source_test.dart
+            test/widget/status_bar_widget_test.dart
+            test/widget/workspace_tab_bar_test.dart
             test/widget/panel_header_navigation_test.dart
             test/widget/operations_panel_test.dart
             test/widget/transfer_file_details_test.dart

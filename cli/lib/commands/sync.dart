@@ -69,7 +69,9 @@ class SyncCommand extends Command<int> {
 
     final localDir = rest[0];
     final remotePath = rest[1];
-    final providerName = config.resolveProviderName(args['provider'] as String?);
+    final providerName = config.resolveProviderName(
+      args['provider'] as String?,
+    );
     final delete = args['delete'] as bool;
     final dryRun = args['dry-run'] as bool;
     final asJson = args['json'] as bool;
@@ -110,7 +112,7 @@ class SyncCommand extends Command<int> {
         remoteItems = [];
       }
       final remoteFiles = {
-        for (final i in remoteItems.where((i) => !i.isDirectory)) i.name: i
+        for (final i in remoteItems.where((i) => !i.isDirectory)) i.name: i,
       };
 
       // Upload local files missing or outdated remotely
@@ -127,8 +129,7 @@ class SyncCommand extends Command<int> {
           }
           if (!dryRun) {
             try {
-              final data = await localFile.readAsBytes();
-              await adapter.upload(data, fileName, remotePath);
+              await uploadLocalFile(adapter, localFile, fileName, remotePath);
               action['status'] = 'ok';
             } catch (e) {
               action['status'] = 'error';
