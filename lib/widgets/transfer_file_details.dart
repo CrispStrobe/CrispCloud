@@ -303,7 +303,7 @@ class _TransferFileDetailsState extends State<TransferFileDetails> {
     final status = context.commanderTr(
       storedStatus ??
           (showOutcome
-              ? CommanderStrings.labelForEnum(outcome!)
+              ? CommanderStrings.labelForEnum(outcome)
               : switch (member.state) {
                   _FileState.pending => 'Pending',
                   _FileState.running => 'Running',
@@ -325,7 +325,7 @@ class _TransferFileDetailsState extends State<TransferFileDetails> {
     final paths = [file.path, ...member.destinations].join(' → ');
     final details = <_Detail>[
       _Detail(context.commanderTr('Name'), file.name),
-      _Detail(context.commanderTr('Source'), file.path, isPath: true),
+      _Detail(context.commanderTr('Path'), file.path, isPath: true),
       for (final destination in member.destinations)
         _Detail(context.commanderTr('Destination'), destination, isPath: true),
       _Detail(context.commanderTr('Status'), status),
@@ -470,13 +470,14 @@ class _TransferFileDetailsState extends State<TransferFileDetails> {
                         await Clipboard.setData(ClipboardData(text: copyText));
                         if (context.mounted) setState(() => copied = true);
                       } catch (error) {
-                        if (context.mounted)
+                        if (context.mounted) {
                           setState(
                             () => copyError = context.commanderTr(
                               'Could not copy details: {0}',
                               [error],
                             ),
                           );
+                        }
                       } finally {
                         if (context.mounted) setState(() => copying = false);
                       }

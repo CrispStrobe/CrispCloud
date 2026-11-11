@@ -29,8 +29,6 @@ import '../models/file_item.dart';
 import '../providers/providers.dart';
 import '../providers/panel_source_provider.dart';
 import '../providers/toolbar_provider.dart';
-import '../providers/terminal_provider.dart';
-import '../services/panel_swap_service.dart';
 import '../services/panel_view_mode_service.dart';
 import '../services/panel_source_service.dart';
 import '../services/storage_identity.dart';
@@ -141,7 +139,7 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
       paths: paths,
       root: root,
       grantIsCurrent: grantIsCurrent,
-      isCurrent: () =>
+      isCurrentCheck: () =>
           mounted &&
           widget.side == side &&
           sessionIsCurrent() &&
@@ -263,6 +261,10 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
     // An explicit local path may intentionally request another existing or new
     // grant. Only navigation within the captured grant keeps its token guard.
     final localTarget = _localEntryPath(path, location);
+    if (location.origin.source.isLocal && !paths.isAbsolute(localTarget)) {
+      reject(strings.text('Enter a valid path.'));
+      return;
+    }
     final keepGrant =
         !location.origin.source.isLocal ||
         paths.equals(localTarget, location.root) ||
@@ -306,22 +308,28 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
     if (!location.isCurrent) return;
     final side = widget.side;
     ref.read(activePanelProvider.notifier).state = side;
+    if (location.origin.source.isLocal) {
+      path = _localEntryPath(path, location);
+    }
     var origin = keepGrant && location.origin.source.isLocal
         ? location.origin.withAvailabilityGuard(location.grantIsCurrent)
         : location.origin;
     if (!keepGrant && location.origin.source.isLocal) {
-      final target = _localEntryPath(path, location);
+      final target = path;
       final resolved = panel.resolveStorageReference(
         location.origin.storageReference,
         target,
       );
       if (resolved == null || !resolved.isCurrent) return;
       origin = resolved;
+    }
+    if (location.origin.source.isLocal) {
+      final target = path;
       final local = ref.read(localFileServiceProvider);
       if (local is LocalFileSourceIdentity) {
         final identities = local as LocalFileSourceIdentity;
         final identity = identities.sourceIdentityForPath(target);
-        // An existing target grant keeps its own identity. A genuinely new
+        // An existing target grant keeps its own identity. A new
         // target may acquire the grant explicitly requested by this action.
         if (identity != null) {
           origin = origin.withAvailabilityGuard(
@@ -356,8 +364,6 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
     final bool isLocal =
         location?.origin.source.isLocal ?? storage?.isLocal ?? source.isLocal;
     final ThemeData theme = Theme.of(context);
-    final m = BrowserMenuStrings(context);
-    final h = PanelHeaderStrings(context);
 
     return Material(
       color: theme.colorScheme.primaryContainer,
@@ -663,9 +669,7 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
     _HeaderLocation? location,
   ) {
     final ThemeData theme = Theme.of(context);
-    final h = PanelHeaderStrings(context);
     final m = BrowserMenuStrings(context);
-    final l = AppLocalizations.of(context);
     if (!isLocal) {
       final bookmarks = ref.watch(bookmarksProvider);
       return PopupMenuButton<Bookmark>(
@@ -713,8 +717,9 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
         _clearLocationMenu();
         if (owner == null ||
             !owner.origin.source.isLocal ||
-            isCurrent?.call() != true)
+            isCurrent?.call() != true) {
           return;
+        }
         _navigateLocation(panel, owner, entry.path, keepGrant: false);
       },
       itemBuilder: (BuildContext context) {
@@ -937,7 +942,6 @@ class _PanelHeaderState extends ConsumerState<PanelHeader> {
     bool isLocal,
   ) async {
     ref.read(activePanelProvider.notifier).state = widget.side;
-    final PanelSide active = ref.read(activePanelProvider);
     final PanelViewMode density = ref.read(panelViewModeProvider(widget.side));
     switch (value) {
       case 'toggle_top_toolbar':
@@ -1047,13 +1051,13 @@ class _HeaderLocation {
     required this.paths,
     required this.root,
     required this.grantIsCurrent,
-    required bool Function() isCurrent,
-  }) : _isCurrent = isCurrent;
+    required this.isCurrentCheck,
+  });
 
   final PanelFileOrigin origin;
   final p.Context paths;
   final String root;
   final bool Function() grantIsCurrent;
-  final bool Function() _isCurrent;
-  bool get isCurrent => _isCurrent();
+  final bool Function() isCurrentCheck;
+  bool get isCurrent => isCurrentCheck();
 }

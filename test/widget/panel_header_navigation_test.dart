@@ -19,14 +19,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../support/workflow_fake_client.dart';
 
 class _Cloud extends WorkflowFakeClient {
-  _Cloud(this.account, {this.root = '/account'});
+  _Cloud(this.account);
   final String account;
-  final String root;
   final reads = <String>[];
   @override
   String get userId => account;
   @override
-  String get rootPath => root;
+  String get rootPath => '/account';
   @override
   Future<Map<String, dynamic>> listPath(String path) {
     reads.add(path);
@@ -61,6 +60,7 @@ class _Local extends Fake implements LocalFileService, LocalFileSourceIdentity {
   String grantedBasePath = '/Photos';
   Object token = Object();
   final extraGrants = <String, Object>{};
+  bool allowNamespaceRoot = false;
   final reads = <String>[];
   final grants = <String?>[];
   Completer<bool>? accessGate;
@@ -79,7 +79,8 @@ class _Local extends Fake implements LocalFileService, LocalFileSourceIdentity {
       accessStarted?.complete();
       return gate.future;
     }
-    return sourceIdentityForPath(path) != null;
+    return (allowNamespaceRoot && path == '/') ||
+        sourceIdentityForPath(path) != null;
   }
 
   @override
@@ -158,10 +159,10 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: MaterialApp(
+        child: const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: const Scaffold(
+          home: Scaffold(
             body: PanelHeader(
               side: PanelSide.remote,
               isActive: true,
@@ -370,6 +371,55 @@ void main() {
       expect(panel.currentPath, '/Photos/Projects/Deep');
     },
   );
+
+  testWidgets(
+    'namespace path entry cannot adopt a replaced target grant during access checking',
+    (tester) async {
+      local.allowNamespaceRoot = true;
+      final origin = panel.resolveStorageReference(
+        storageReferenceForSource(const LocalPanelSource('/')),
+        '/',
+      );
+      expect(origin, isNotNull);
+      await panel.navigateToPath('/', origin: origin!);
+      await mount(tester);
+      await tester.tap(find.byTooltip('Edit path'));
+      await tester.pump();
+      final submitted = tester.widget<TextField>(editor()).onSubmitted!;
+      local.reads.clear();
+      await tester.runAsync(() async {
+        final gate = Completer<bool>();
+        local.accessGate = gate;
+        local.accessStarted = Completer<void>();
+        final navigation =
+            (submitted as dynamic)('/Photos/Projects') as Future<void>;
+        await local.accessStarted!.future;
+        local.token = Object();
+        gate.complete(true);
+        await navigation;
+      });
+      await tester.pumpAndSettle();
+      expect(panel.currentPath, '/');
+      expect(local.reads, isEmpty);
+      expect(local.grants, isEmpty);
+    },
+  );
+
+  testWidgets('relative local path entry resolves inside its original grant', (
+    tester,
+  ) async {
+    await openLocal();
+    await mount(tester);
+    await tester.tap(find.byTooltip('Edit path'));
+    await tester.pump();
+    await tester.enterText(editor(), '../Sibling');
+    local.reads.clear();
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+    expect(panel.currentPath, '/Photos/Projects/Sibling');
+    expect(local.reads, ['/Photos/Projects/Sibling']);
+    expect(local.grants, isEmpty);
+  });
 
   testWidgets('an explicit local path can acquire its requested new grant', (
     tester,

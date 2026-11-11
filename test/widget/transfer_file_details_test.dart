@@ -319,11 +319,12 @@ void main() {
           TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
       messenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
         if (call.method == 'Clipboard.setData') {
-          if (shouldFail)
+          if (shouldFail) {
             throw PlatformException(
               code: 'unavailable',
               message: 'Clipboard unavailable',
             );
+          }
           copied = (call.arguments as Map)['text'] as String;
         }
         return null;
@@ -341,7 +342,7 @@ void main() {
       shouldFail = false;
       await tester.tap(find.text('Copy details'));
       await tester.pumpAndSettle();
-      expect(copied, contains('Source: /source/{0}.txt'));
+      expect(copied, contains('Path: /source/{0}.txt'));
       expect(copied, contains('Error: Denied at {1}'));
       expect(find.text('Copied'), findsOneWidget);
       expect(find.textContaining('Could not copy details:'), findsNothing);
