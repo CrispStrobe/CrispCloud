@@ -31,8 +31,15 @@ python3 tool/with_ci_system_sqlite.py bash tool/check_office_fidelity.sh
 ```
 
 The GitHub workflow `.github/workflows/office-fidelity.yml` runs this command and
-uploads exported files and JSON oracle reports. The latest local root suite passed all 16 tests with GCC and system SQLite;
-temporary compiler discovery settings were restored afterward. CI uses clang.
+uploads exported files and JSON oracle reports. The latest local root suite
+passed all 16 tests with GCC and system SQLite; temporary compiler discovery
+settings were restored afterward. CI uses clang.
+
+The portable corpus also passed under the app toolchain. The Open XML SDK 3.3.0
+independently validated all 57 app-generated Office files, including the actual
+asynchronous host save, with zero schema/semantic errors. The committed
+[schema evidence](office-schema-evidence.json) pins the tested revisions and
+SHA-256 hashes of every input.
 
 To compare against a sibling fork checkout as well as the manifest:
 

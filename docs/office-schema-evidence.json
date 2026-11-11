@@ -1,0 +1,297 @@
+{
+  "Files": 57,
+  "Failures": 0,
+  "Reports": [
+    {
+      "File": "engine/fidelity-image/replaced-1.docx",
+      "Errors": [],
+      "InputSha256": "bd468cba8cdc80c3160d7c4ad2254351dcc815905ead393fd7e9ab5ca87dcbd0"
+    },
+    {
+      "File": "engine/fidelity-image/replaced-2.docx",
+      "Errors": [],
+      "InputSha256": "769497881d645fb218eee7fa8018cea8c1d9d53a1cc57876517f657d055e966a"
+    },
+    {
+      "File": "engine/fidelity-image/replaced-3.docx",
+      "Errors": [],
+      "InputSha256": "039490edb3ed246f8bcfa6425d0ab327653327cd58c78d9a6a7c72f978a25fb0"
+    },
+    {
+      "File": "engine/fidelity-native/created-pivot-1.xlsx",
+      "Errors": [],
+      "InputSha256": "2073eef5517835f9d2abbddef48817d72cd7317caa444cae497ae45e65559f77"
+    },
+    {
+      "File": "engine/fidelity-native/created-pivot-2.xlsx",
+      "Errors": [],
+      "InputSha256": "a0c38bc34868a67b72a0ee2d2f50cdbfd05cc16678ff6885008a5e724c3ecbef"
+    },
+    {
+      "File": "engine/fidelity-native/created-pivot-3.xlsx",
+      "Errors": [],
+      "InputSha256": "780cf655ac252f965f7a2d078f2a8587e50209839a7449c54ab67ef78e38d7ac"
+    },
+    {
+      "File": "engine/fidelity-native/native-sheet-edited-1.xlsx",
+      "Errors": [],
+      "InputSha256": "45de49d0f50845261193a80427b68c6d82634c993ed7c6b5ce0b2ea03461aba5"
+    },
+    {
+      "File": "engine/fidelity-native/native-sheet-edited-2.xlsx",
+      "Errors": [],
+      "InputSha256": "ef0c4d46767d7fc316af7013f8005e6b62f223e6e9b091f58ad8e779d468d099"
+    },
+    {
+      "File": "engine/fidelity-native/native-sheet-edited-3.xlsx",
+      "Errors": [],
+      "InputSha256": "be5c83bdf2aa12ef7d0df4a8341446913f618ff9d1bc5cde0f8bc344e2bf207f"
+    },
+    {
+      "File": "engine/fidelity-native/native-sheet-imported-1.xlsx",
+      "Errors": [],
+      "InputSha256": "e2d6b4e80210fb049885711e20c773ce77655d4245d2668174338fda92a28d7f"
+    },
+    {
+      "File": "engine/fidelity-native/native-sheet-imported-2.xlsx",
+      "Errors": [],
+      "InputSha256": "b6d482e6cc41dece896bc52bacefbdf320b2507f0891d6b6ee36ff7857c5a47a"
+    },
+    {
+      "File": "engine/fidelity-native/native-sheet-imported-3.xlsx",
+      "Errors": [],
+      "InputSha256": "5d1e6f31780a73f59faa4496f0041b0a4da8401377a4513e9924c26ff2ecda2f"
+    },
+    {
+      "File": "engine/fidelity-native/native-slides-1.pptx",
+      "Errors": [],
+      "InputSha256": "6fb9efe94a3251cb8a0fe7882942a49d3bad6a2bebbf1b1213222f012b8b8604"
+    },
+    {
+      "File": "engine/fidelity-native/native-slides-2.pptx",
+      "Errors": [],
+      "InputSha256": "ba3d9100f4de2dbaf794901bc605c24bf34d2c8009fa7117bfd2b1dc4456ca40"
+    },
+    {
+      "File": "engine/fidelity-native/native-slides-3.pptx",
+      "Errors": [],
+      "InputSha256": "8aa9f862c2d1110e06989a78f1a51089be42f31f8b0b0e774219cff362115975"
+    },
+    {
+      "File": "engine/fidelity-native/native-slides-edited-1.pptx",
+      "Errors": [],
+      "InputSha256": "e1c55e2313a9f7f56253107a42e7e533fd9b858e9f6a55e120323db1ac3fff5d"
+    },
+    {
+      "File": "engine/fidelity-native/native-slides-edited-2.pptx",
+      "Errors": [],
+      "InputSha256": "b3f65edde31e394170d517667ed0736ad1dacba6922f0cf3d83d219d55c77375"
+    },
+    {
+      "File": "engine/fidelity-native/native-slides-edited-3.pptx",
+      "Errors": [],
+      "InputSha256": "96a76b31b426a6530e18d999997a42efd3162b5f19f4f0d9d66bbdddbbbc6caa"
+    },
+    {
+      "File": "engine/fidelity-notes/edited-1.docx",
+      "Errors": [],
+      "InputSha256": "ad265fd0fca1fcb4033422a0caf4c600894efa82e29d8b5580deb636fed59191"
+    },
+    {
+      "File": "engine/fidelity-notes/edited-2.docx",
+      "Errors": [],
+      "InputSha256": "2ed000fc230f7bcf18a523d72044bf934d0f7c924600fcf0171680602f25f29b"
+    },
+    {
+      "File": "engine/fidelity-notes/edited-3.docx",
+      "Errors": [],
+      "InputSha256": "c9f50cce6a6d9d8df63f9220dfbb3a020d0cd76016b4ada31ebd2f0f50120413"
+    },
+    {
+      "File": "engine/fidelity-notes/source.docx",
+      "Errors": [],
+      "InputSha256": "11550ac3f3c06bd4093b61bf16cc879827587a53c1cf0abaf8dcbdffc19da59e"
+    },
+    {
+      "File": "engine/fidelity-notes/unchanged-1.docx",
+      "Errors": [],
+      "InputSha256": "95ab59d7dcea83acc26d3d243711e9daee1fb2fb2576019ff2caccb21b3b1dde"
+    },
+    {
+      "File": "engine/fidelity-notes/unchanged-2.docx",
+      "Errors": [],
+      "InputSha256": "cea2e8ff31cb0525115f35c4648634fb216749b1cb0c0a018dde5b2ce233ad42"
+    },
+    {
+      "File": "engine/fidelity-notes/unchanged-3.docx",
+      "Errors": [],
+      "InputSha256": "8ddd101863e67454559fa5bd1c6d477e2ddb0bd20e00968b7af1114418cbdc55"
+    },
+    {
+      "File": "engine/fidelity-opaque/opaque-1.docx",
+      "Errors": [],
+      "InputSha256": "0eac13b696162c20c9db4548eb82d69c0f5ce5e8bbaa3baded6355e9b42d1f1b"
+    },
+    {
+      "File": "engine/fidelity-opaque/opaque-2.docx",
+      "Errors": [],
+      "InputSha256": "34251fcc1b513c8f7ca4f65a01f3d4c3d0177e299753d3fe8de14c517b407d5a"
+    },
+    {
+      "File": "engine/fidelity-opaque/opaque-3.docx",
+      "Errors": [],
+      "InputSha256": "fa0ebe20fa32c24f92fa676cc43cf07a193811f0073e59690ddad8310dc498bd"
+    },
+    {
+      "File": "engine/fidelity-script.docx",
+      "Errors": [],
+      "InputSha256": "b442ed8810ec0c4ac3a0f38c1ec1c2352b3035a252a08cb2a6e352b15e8ae664"
+    },
+    {
+      "File": "engine/fidelity-style-toggles/toggle-1.docx",
+      "Errors": [],
+      "InputSha256": "211dbe2c96ddd822862c13e478d3bb872217b042a5243319cb82555f24a2aa08"
+    },
+    {
+      "File": "engine/fidelity-style-toggles/toggle-2.docx",
+      "Errors": [],
+      "InputSha256": "b483227190f46a3e85f46ecc13b5eaf4c116b30c2fa3abe56843d9ba0b2517c2"
+    },
+    {
+      "File": "engine/fidelity-style-toggles/toggle-3.docx",
+      "Errors": [],
+      "InputSha256": "d038c5763aa1f0bf0ca5287df59be02bd1595b9dbdb87a6a7b91a1a3fd3538e7"
+    },
+    {
+      "File": "engine/fidelity-styles/edited-1.docx",
+      "Errors": [],
+      "InputSha256": "0a0de4676dff289922723974988281d9b0d6553c63965ab1a02b442cf50ef8f3"
+    },
+    {
+      "File": "engine/fidelity-styles/edited-2.docx",
+      "Errors": [],
+      "InputSha256": "c763b80c55db33901b63b70b337824b9d3b8b95c9c4ff38aad8534414577ebd6"
+    },
+    {
+      "File": "engine/fidelity-styles/edited-3.docx",
+      "Errors": [],
+      "InputSha256": "38e4957c49193d7bc6c6e15bc43939dcca68a3c38cad51017e5760e0247538a2"
+    },
+    {
+      "File": "engine/fidelity-styles/unchanged-1.docx",
+      "Errors": [],
+      "InputSha256": "a7b3ddcad13492e01e7257e95131dc448949f0ffbf2a2af5c553904ff672cdbb"
+    },
+    {
+      "File": "engine/fidelity-styles/unchanged-2.docx",
+      "Errors": [],
+      "InputSha256": "07e6d02e3ec72202ad1f046e0276622cdaee71492773d3d0a9bb99814264808f"
+    },
+    {
+      "File": "engine/fidelity-styles/unchanged-3.docx",
+      "Errors": [],
+      "InputSha256": "df3965256a25a55a67b288518ba468a5be3b4a8322902b39f0203d1ac76b3368"
+    },
+    {
+      "File": "engine/fidelity/edited-1.docx",
+      "Errors": [],
+      "InputSha256": "4b9928ba573d068668e74e4d4189c9b008e5d680c72c94c8c1b57602420392c8"
+    },
+    {
+      "File": "engine/fidelity/edited-2.docx",
+      "Errors": [],
+      "InputSha256": "310bbd7fbc7e48e349b6d4a9bcdabe7b57c01dfe538b046fbc623981f71ae15e"
+    },
+    {
+      "File": "engine/fidelity/edited-3.docx",
+      "Errors": [],
+      "InputSha256": "000fa5086ca068351cd1af188f2495c5ead888cc0c4f24adb528951d37f65523"
+    },
+    {
+      "File": "engine/fidelity/sheet-edited-1.xlsx",
+      "Errors": [],
+      "InputSha256": "4b8977970edd8b60871ccf45755cd96b56bec077789fe40ee84ce928e771e090"
+    },
+    {
+      "File": "engine/fidelity/sheet-edited-2.xlsx",
+      "Errors": [],
+      "InputSha256": "f87dafd511d23b61a1fe48ba9f52f1454939be2117634db310ebb17923505d9e"
+    },
+    {
+      "File": "engine/fidelity/sheet-edited-3.xlsx",
+      "Errors": [],
+      "InputSha256": "4ba1452f81819a3694308492b05d7f977079bec6c0b71325b2670aadc93da001"
+    },
+    {
+      "File": "engine/fidelity/sheet-imported-1.xlsx",
+      "Errors": [],
+      "InputSha256": "d6d93d0ed29cc1f18a0241c27dbb2012bf7c1e13f1c45b2430278d79349b4342"
+    },
+    {
+      "File": "engine/fidelity/sheet-imported-2.xlsx",
+      "Errors": [],
+      "InputSha256": "f15fd2605895cd15a3e6debea30e6cafc91fb71688f34d943bf3c1dbe5dcba1d"
+    },
+    {
+      "File": "engine/fidelity/sheet-imported-3.xlsx",
+      "Errors": [],
+      "InputSha256": "fd1a92ffb3ee41b550dbd39da4f4f9e88d9da047b351430b1437796a38ae9be4"
+    },
+    {
+      "File": "engine/fidelity/slide-edited-1.pptx",
+      "Errors": [],
+      "InputSha256": "6029e69892eaffccfbc7fba00f463b263536b6fb4065a939e3ec17a76bfce2c3"
+    },
+    {
+      "File": "engine/fidelity/slide-edited-2.pptx",
+      "Errors": [],
+      "InputSha256": "e78ab34ac4becc457f2ddb809e90af21700e1b92798a34b6e8e5529dc9165767"
+    },
+    {
+      "File": "engine/fidelity/slide-edited-3.pptx",
+      "Errors": [],
+      "InputSha256": "ae6a6fea62a9625f02844769354d7a898f9202ad1b30cfba3a92e96c12c3ea19"
+    },
+    {
+      "File": "engine/fidelity/slide-imported-1.pptx",
+      "Errors": [],
+      "InputSha256": "41fdb73ffa97b2d7a21847868db8c48e5a93d2679030757915dfc0411379ebce"
+    },
+    {
+      "File": "engine/fidelity/slide-imported-2.pptx",
+      "Errors": [],
+      "InputSha256": "b4bb1413917fd90157b3c65ef7a95455dc8db7c243b182b99b49383774c7c469"
+    },
+    {
+      "File": "engine/fidelity/slide-imported-3.pptx",
+      "Errors": [],
+      "InputSha256": "5ce4cd685425a9c58bab97a5db6e1e0ed87f4cddbe6444a404a5851f111b61cd"
+    },
+    {
+      "File": "engine/fidelity/unchanged-1.docx",
+      "Errors": [],
+      "InputSha256": "8336d44b4927ca5e46c6aa15adc5629c07296ba2a026caddb60a020d390fab26"
+    },
+    {
+      "File": "engine/fidelity/unchanged-2.docx",
+      "Errors": [],
+      "InputSha256": "e445fff74b6e966d231582bde5d22c1842a2a0477df96473b81effc9c1e7a550"
+    },
+    {
+      "File": "engine/fidelity/unchanged-3.docx",
+      "Errors": [],
+      "InputSha256": "a3419a0269d272fdbe3f3029d8fdde1d916f686a77081d704dcd83da8f1bac0f"
+    },
+    {
+      "File": "host/fidelity/unchanged-controller.docx",
+      "Errors": [],
+      "InputSha256": "22554fc772b7a9cb6b3b501dae531c59ca0d2338d5c4ae6656dd088e8eb39f24"
+    }
+  ],
+  "SourceCommit": "2177e2a7cbb0eab700623f6215652c966be0c76e",
+  "EngineSourceCommit": "a79b7d832e080e6e551547ec79c0bb83b7312710",
+  "Validator": "DocumentFormat.OpenXml 3.3.0",
+  "Target": "Office2019",
+  "PositiveAndNegativeControls": "passed",
+  "SuppressedErrors": 0
+}
