@@ -1,0 +1,15 @@
+[package]
+name = "crisp_smb"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+publish = false
+[workspace]
+[dependencies]
+smb2 = { version = "=0.43.0", default-features = false, features = ["tokio", "serde"] }
+tokio = { version = "1", features = ["fs", "io-util", "sync", "time", "rt-multi-thread", "macros"] }
+tokio-util = { version = "0.7", features = ["rt"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+[dev-dependencies]
+tempfile = "3"

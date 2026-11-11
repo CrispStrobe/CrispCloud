@@ -96,3 +96,9 @@ CLAUDE.local.md
 # covfuzz corpora / minimized crashes
 .corpus/
 .crashes/
+
+# Independent SMB engine and generated bridge build output
+/packages/crisp_storage/native/crisp_smb/target/
+/packages/crisp_storage/rust/target/
+/packages/crisp_storage/pubspec.lock
+/packages/crisp_storage/frb_codegen.*.log
