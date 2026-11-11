@@ -344,12 +344,14 @@ class WebFileService
       return List<FileSystemEntity>.unmodifiable(_virtualTree['/'] ?? const []);
     }
     final identity = sourceIdentityForPath(lookup);
-    final handle = _dirHandles[lookup];
+    final parts = lookup.split('/').where((part) => part.isNotEmpty).toList();
+    final rootPath = '/${parts.first}';
+    final rootHandle = _rootHandles[rootPath];
     final cached = _virtualTree[lookup];
-    if (identity == null || (handle == null && cached == null)) {
+    if (identity == null || (rootHandle == null && cached == null)) {
       throw PathAccessException(path, const OSError('Access denied', 13));
     }
-    if (handle == null) {
+    if (rootHandle == null) {
       // Legacy file-input grants contain detached entries instead of live
       // handles. Copy the granted directory without changing its cached tree.
       return List<FileSystemEntity>.unmodifiable(cached!);
@@ -357,7 +359,7 @@ class WebFileService
 
     void requireCurrentGrant() {
       if (!identical(sourceIdentityForPath(lookup), identity) ||
-          !identical(_dirHandles[lookup], handle)) {
+          !identical(_rootHandles[rootPath], rootHandle)) {
         throw FileSystemException(
           'The folder changed during the snapshot.',
           path,
@@ -365,19 +367,64 @@ class WebFileService
       }
     }
 
-    // Query only. Requesting a permission would require an explicit user
-    // action and must never occur while hydrating background folder context.
-    if (js_util.hasProperty(handle, 'queryPermission')) {
-      final options = js_util.newObject();
-      js_util.setProperty(options, 'mode', 'read');
-      final permission = await js_util.promiseToFuture(
-        js_util.callMethod(handle, 'queryPermission', [options]),
-      );
-      requireCurrentGrant();
-      if (permission != 'granted') {
-        throw PathAccessException(path, const OSError('Access denied', 13));
+    Future<void> requireReadPermission(dynamic handle) async {
+      // Query only. Requesting permission would require an explicit user
+      // action and must never occur while reading background folder context.
+      if (js_util.hasProperty(handle, 'queryPermission')) {
+        final options = js_util.newObject();
+        js_util.setProperty(options, 'mode', 'read');
+        final permission = await js_util.promiseToFuture(
+          js_util.callMethod(handle, 'queryPermission', [options]),
+        );
+        requireCurrentGrant();
+        if (permission != 'granted') {
+          throw PathAccessException(path, const OSError('Access denied', 13));
+        }
       }
     }
+
+    // Resolve from the captured root, including folders never opened in a
+    // pane. Cached child handles are not authority for this snapshot, and a
+    // background traversal must not publish newly resolved handles to them.
+    dynamic handle = rootHandle;
+    for (final part in parts.skip(1)) {
+      await requireReadPermission(handle);
+      requireCurrentGrant();
+      // Virtual names use the same normalization as the visible browser tree.
+      // Resolve the actual handle from its parent rather than assuming that
+      // normalized spelling is also the provider's literal directory name.
+      final iterator = js_util.callMethod(handle, 'values', []);
+      dynamic match;
+      while (true) {
+        final next = await js_util.promiseToFuture(
+          js_util.callMethod(iterator, 'next', []),
+        );
+        requireCurrentGrant();
+        if (js_util.getProperty(next, 'done') == true) break;
+        final child = js_util.getProperty(next, 'value');
+        final name = _sanitizeFsaName(
+          js_util.getProperty(child, 'name') as String,
+        );
+        if (name != part) continue;
+        if (match != null ||
+            js_util.getProperty(child, 'kind') != 'directory') {
+          throw FileSystemException(
+            'The folder path is ambiguous or unavailable.',
+            lookup,
+          );
+        }
+        match = child;
+      }
+      if (match == null) {
+        throw FileSystemException(
+          'The selected folder is unavailable.',
+          lookup,
+        );
+      }
+      handle = match;
+    }
+    await requireReadPermission(handle);
+    requireCurrentGrant();
 
     // Do not use _loadDirectChildren here: its interactive listing cache can
     // retain partial results on failure. A snapshot publishes only a complete

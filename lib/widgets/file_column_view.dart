@@ -24,6 +24,7 @@ import '../services/panel_source_service.dart';
 import '../utils/formatters.dart';
 import 'file_context_menu.dart';
 import 'folder_drop_target.dart';
+import 'folder_size_presentation.dart';
 import 'panel_listing_placeholder.dart';
 import 'file_list_view.dart'
     show FileListView, FileInlineRenameField, getFileIcon;
@@ -867,6 +868,13 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
                       itemCount: files.length,
                       itemBuilder: (context, row) {
                         final file = files[row];
+                        final folderSize = current
+                            ? FolderSizePresentation.forFile(
+                                context,
+                                file,
+                                panel.folderSizeFor(file),
+                              )
+                            : null;
                         final marked = current && panel.isSelected(file);
                         final cursor =
                             current && identical(panel.cursorItem, file);
@@ -914,14 +922,18 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
                           selected: marked,
                           focused: cursor && active,
                           enabled: ready,
-                          label: strings.semantic(
-                            folder: file.isFolder,
-                            name: file.name,
-                            selected: marked,
-                            size: file.size == null
-                                ? null
-                                : formatBytes(file.size!),
-                          ),
+                          label:
+                              strings.semantic(
+                                folder: file.isFolder,
+                                name: file.name,
+                                selected: marked,
+                                size: file.size == null
+                                    ? null
+                                    : formatBytes(file.size!),
+                              ) +
+                              (folderSize == null
+                                  ? ''
+                                  : ', ${folderSize.tooltip}'),
                           onTap: ready ? tap : null,
                           child: ExcludeSemantics(
                             child: GestureDetector(
@@ -985,6 +997,21 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
                                           ),
                                         ),
                                       ),
+                                      if (folderSize != null)
+                                        ConstrainedBox(
+                                          constraints: const BoxConstraints(
+                                            maxWidth: 84,
+                                          ),
+                                          child: Tooltip(
+                                            message: folderSize.tooltip,
+                                            child: Text(
+                                              folderSize.label,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: theme.textTheme.labelSmall,
+                                            ),
+                                          ),
+                                        ),
                                       if (file.isFolder)
                                         const Icon(
                                           Icons.chevron_right,

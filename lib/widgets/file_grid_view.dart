@@ -25,6 +25,7 @@ import 'batch_rename_dialog.dart';
 import 'file_context_menu.dart';
 import 'file_list_view.dart' show getFileIcon;
 import 'folder_drop_target.dart';
+import 'folder_size_presentation.dart';
 import 'gallery_annotations_dialog.dart';
 import 'gallery_export_dialog.dart';
 import 'gallery_thumbnail.dart';
@@ -1179,6 +1180,11 @@ class _FileGridViewState extends ConsumerState<FileGridView> {
 
   Widget _tile(FileItem file, GalleryPreferences prefs, double imageHeight) {
     final panel = ref.read(panelProvider(widget.side));
+    final folderSize = FolderSizePresentation.forFile(
+      context,
+      file,
+      panel.folderSizeFor(file),
+    );
     final selected = panel.isSelected(file);
     final cursor = identical(panel.cursorItem, file);
     final record = _record(file);
@@ -1226,7 +1232,7 @@ class _FileGridViewState extends ConsumerState<FileGridView> {
         if (prefs.showDetails) ...[
           Text(
             file.isFolder
-                ? t('Folder')
+                ? folderSize?.label ?? t('Folder')
                 : '${file.extension.toUpperCase()} · ${file.size == null ? '—' : formatBytes(file.size!)}',
             style: Theme.of(context).textTheme.labelSmall
                 ?.copyWith(color: scheme.onSurfaceVariant),
@@ -1276,12 +1282,13 @@ class _FileGridViewState extends ConsumerState<FileGridView> {
       ],
     );
     final card = Semantics(
-      label: '${file.name}${file.isFolder ? ', ${t('Folder')}' : ''}',
+      label:
+          '${file.name}${file.isFolder ? ', ${t('Folder')}' : ''}${folderSize == null ? '' : ', ${folderSize.tooltip}'}',
       selected: selected,
       button: true,
       child: Tooltip(
         message:
-            '${file.path ?? file.name}\n${file.size == null ? '' : formatBytes(file.size!)}',
+            '${file.path ?? file.name}\n${folderSize?.tooltip ?? (file.size == null ? '' : formatBytes(file.size!))}',
         child: Material(
           color: selected
               ? scheme.primaryContainer

@@ -23,6 +23,7 @@ import '../utils/formatters.dart';
 import 'file_context_menu.dart';
 import 'pattern_selection_dialog.dart';
 import 'folder_drop_target.dart';
+import 'folder_size_presentation.dart';
 
 export '../models/panel_drag_data.dart';
 
@@ -502,6 +503,11 @@ class FileListTile extends ConsumerWidget {
     );
     final colorService = ref.watch(fileTypeColorProvider);
     final fileColor = colorService.colorForFile(file);
+    final folderSize = FolderSizePresentation.forFile(
+      context,
+      file,
+      ref.watch(panelProvider(side)).folderSizeFor(file),
+    );
 
     // Inline rename mode: replace the whole tile with an editable field
     if (isRenaming) {
@@ -560,12 +566,14 @@ class FileListTile extends ConsumerWidget {
           return KeyEventResult.ignored;
         },
         child: Semantics(
-          label: strings.semantic(
-            folder: file.isFolder,
-            name: file.name,
-            size: file.size == null ? null : formatBytes(file.size!),
-            selected: isSelected,
-          ),
+          label:
+              strings.semantic(
+                folder: file.isFolder,
+                name: file.name,
+                size: file.size == null ? null : formatBytes(file.size!),
+                selected: isSelected,
+              ) +
+              (folderSize == null ? '' : ', ${folderSize.tooltip}'),
           selected: isSelected,
           focused: isCursor,
           button: true,
@@ -625,8 +633,17 @@ class FileListTile extends ConsumerWidget {
                             ),
                           ),
                         ] else ...[
-                          if (file.isFolder && file.calculatedSize != null) ...[
-                            Text(formatBytes(file.calculatedSize!)),
+                          if (folderSize != null) ...[
+                            Flexible(
+                              child: Tooltip(
+                                message: folderSize.tooltip,
+                                child: Text(
+                                  folderSize.label,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ),
                             if (file.updatedAt != null) ...[
                               const Text(' • '),
                               Text(formatDate(file.updatedAt!)),
@@ -743,6 +760,11 @@ class CompactFileTile extends ConsumerWidget {
               ? formatBytes(file.calculatedSize!)
               : '<DIR>')
         : (file.displaySize != null ? formatBytes(file.displaySize!) : '');
+    final folderSize = FolderSizePresentation.forFile(
+      context,
+      file,
+      ref.watch(panelProvider(side)).folderSizeFor(file),
+    );
 
     final semantic = strings.semantic(
       folder: file.isFolder,
@@ -753,7 +775,7 @@ class CompactFileTile extends ConsumerWidget {
     final collection = file.metadata?['collectionSource'];
     final status = _collectionStatusLabel(file);
     final semanticLabel =
-        '$semantic${collection == null ? '' : ', $collection, ${file.path}'}${status.isEmpty ? '' : ', $status'}';
+        '$semantic${collection == null ? '' : ', $collection, ${file.path}'}${status.isEmpty ? '' : ', $status'}${folderSize == null ? '' : ', ${folderSize.tooltip}'}';
 
     final tile = LayoutBuilder(
       builder: (context, constraints) {
@@ -811,14 +833,30 @@ class CompactFileTile extends ConsumerWidget {
                     const SizedBox(width: 6),
                     SizedBox(
                       width: view.widthFor(column),
-                      child: Text(
-                        column.displayValue(file, sourceLabel: sourceLabel),
-                        style: dimStyle,
-                        textAlign: column.kind == FileColumnKind.size
-                            ? TextAlign.right
-                            : TextAlign.left,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                      child: Tooltip(
+                        message:
+                            column.kind == FileColumnKind.size &&
+                                folderSize != null
+                            ? folderSize.tooltip
+                            : column.displayValue(
+                                file,
+                                sourceLabel: sourceLabel,
+                              ),
+                        child: Text(
+                          column.kind == FileColumnKind.size &&
+                                  folderSize != null
+                              ? folderSize.label
+                              : column.displayValue(
+                                  file,
+                                  sourceLabel: sourceLabel,
+                                ),
+                          style: dimStyle,
+                          textAlign: column.kind == FileColumnKind.size
+                              ? TextAlign.right
+                              : TextAlign.left,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ),
                   ],

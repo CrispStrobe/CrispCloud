@@ -4,6 +4,7 @@
 // Used as a family provider keyed by PanelSide.
 
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 
@@ -15,6 +16,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/file_item.dart';
+import '../models/folder_size_measurement.dart';
 import '../models/file_view_configuration.dart';
 import '../models/panel_side.dart';
 import '../models/panel_tab.dart';
@@ -33,6 +35,8 @@ import '../services/file_collection_store.dart';
 import '../services/file_operation_service.dart';
 import '../services/captured_file_target.dart';
 import '../services/storage_identity.dart';
+import '../services/storage_scan_backend.dart';
+import '../services/storage_scan_service.dart';
 import '../services/storage_trash.dart';
 import '../services/trash_history_store.dart';
 import 'trash_history_provider.dart';
@@ -193,6 +197,17 @@ class PanelNotifier extends ChangeNotifier {
   late final FocusNode listFocusNode;
   bool _isDisposed = false;
 
+  final _folderSizes = Expando<FolderSizeMeasurement>(
+    'folder size observation',
+  );
+  final _folderSizeRequests = Expando<_FolderSizeRequest>(
+    'folder size request',
+  );
+  final _folderSizeQueue = ListQueue<_FolderSizeRequest>();
+  final _activeFolderSizeRequests = <_FolderSizeRequest>{};
+  static const maxConcurrentFolderSizeScans = 2;
+  static const maxInlineFolderSizeEntries = 20000;
+
   /// A virtual list retains original item paths across refresh and operations.
   /// Explicit navigation or the Return to folder command leaves this view.
   bool _showingSearchResults = false;
@@ -313,7 +328,15 @@ class PanelNotifier extends ChangeNotifier {
 
   // Free space for the current local path (populated after _loadLocalFiles)
   int? _freeBytes;
-  int? get freeBytes => _freeBytes;
+  int? get freeBytes {
+    final source = directorySource;
+    return source is LocalPanelSource &&
+            directorySourceAvailable &&
+            source.currentPath == _lastFreeSpacePath
+        ? _freeBytes
+        : null;
+  }
+
   String? _lastFreeSpacePath;
   DateTime? _lastFreeSpaceTime;
 
@@ -4744,9 +4767,8 @@ class PanelNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// DC-style Space / Insert: toggle selection mark on cursor item, advance down.
-  /// When pressed on a folder with no calculated size yet, also triggers async
-  /// folder size computation (shown inline in the size column, like DC).
+  /// Space / Insert toggles the cursor's mark and advances. Marking a verified
+  /// folder also queues a bounded size scan through its original storage.
   void spaceSelectAndAdvance() {
     final displayed = filteredFiles;
     if (displayed == null || displayed.isEmpty) return;
@@ -4762,12 +4784,12 @@ class PanelNotifier extends ChangeNotifier {
         _selection.add(item);
       }
       _lastSelected = item;
-      // DC: Space on a folder triggers inline size calculation
       if (item.isFolder &&
+          _selection.contains(item) &&
+          item.isSymlink != true &&
           item.calculatedSize == null &&
-          item.path != null &&
-          !kIsWeb) {
-        _calculateFolderSizeInBackground(item);
+          item.path != null) {
+        unawaited(calculateFolderSize(item));
       }
     }
     final next = (idx + 1).clamp(0, displayed.length - 1);
@@ -4775,29 +4797,186 @@ class PanelNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Calculate folder size in a background isolate and update the file list entry.
-  void _calculateFolderSizeInBackground(FileItem folder) {
-    _computeFolderSize(folder.path!)
-        .then((size) {
-          updateItemCalculatedSize(folder, size);
-        })
-        .catchError((_) {});
+  FolderSizeMeasurement? folderSizeFor(FileItem file) {
+    final measurement = _folderSizes[file];
+    if (measurement != null && originForFile(file)?.isCurrent != true) {
+      return const FolderSizeMeasurement(
+        phase: FolderSizePhase.failed,
+        sourceChanged: true,
+      );
+    }
+    final request = _folderSizeRequests[file];
+    if (measurement?.isActive == true &&
+        request != null &&
+        !request.isCurrent()) {
+      return measurement!.withPhase(FolderSizePhase.cancelled);
+    }
+    return measurement;
   }
 
-  Future<int> _computeFolderSize(String path) async {
-    int total = 0;
+  /// Returns null when the exact row can no longer authorize a scan. Repeated
+  /// requests share their in-flight work; only complete observations set size.
+  Future<FolderSizeMeasurement?> calculateFolderSize(FileItem folder) {
+    final origin = originForFile(folder);
+    if (_isDisposed ||
+        !folder.isFolder ||
+        folder.name == '..' ||
+        folder.isSymlink == true ||
+        folder.path == null ||
+        origin?.isCurrent != true) {
+      return Future.value(null);
+    }
+    final existing = _folderSizeRequests[folder];
+    if (existing != null && !existing.completed.isCompleted) {
+      return existing.completed.future;
+    }
+    final previous = _folderSizes[folder];
+    if (previous?.phase == FolderSizePhase.complete)
+      return Future.value(previous);
+    final generation = _listingGeneration;
+    final tab = _activeTabId;
+    final request = _FolderSizeRequest(
+      folder,
+      origin!,
+      () =>
+          !_isDisposed &&
+          generation == _listingGeneration &&
+          tab == _activeTabId &&
+          origin.isCurrent &&
+          _files != null &&
+          _indexOfIdentical(_files!, folder) >= 0,
+    );
+    _folderSizeRequests[folder] = request;
+    _folderSizes[folder] = const FolderSizeMeasurement(
+      phase: FolderSizePhase.queued,
+    );
+    _folderSizeQueue.add(request);
+    notifyListeners();
+    _pumpFolderSizeQueue();
+    return request.completed.future;
+  }
+
+  void cancelFolderSize(FileItem folder) {
+    final request = _folderSizeRequests[folder];
+    if (request == null || request.completed.isCompleted) return;
+    request.cancelled = true;
+    if (_folderSizeQueue.remove(request)) {
+      final stopped =
+          (_folderSizes[folder] ??
+                  const FolderSizeMeasurement(phase: FolderSizePhase.queued))
+              .withPhase(FolderSizePhase.cancelled);
+      _folderSizes[folder] = stopped;
+      request.completed.complete(stopped);
+    } else {
+      _folderSizes[folder] =
+          (_folderSizes[folder] ??
+                  const FolderSizeMeasurement(phase: FolderSizePhase.scanning))
+              .withPhase(FolderSizePhase.stopping);
+    }
+    if (!_isDisposed) notifyListeners();
+  }
+
+  void _pumpFolderSizeQueue() {
+    while (!_isDisposed &&
+        _folderSizeQueue.isNotEmpty &&
+        _activeFolderSizeRequests.length < maxConcurrentFolderSizeScans) {
+      final request = _folderSizeQueue.removeFirst();
+      if (!request.isCurrent() || request.cancelled) {
+        _folderSizes[request.folder] =
+            (_folderSizes[request.folder] ??
+                    const FolderSizeMeasurement(phase: FolderSizePhase.queued))
+                .withPhase(FolderSizePhase.cancelled);
+        request.completed.complete(null);
+        continue;
+      }
+      _activeFolderSizeRequests.add(request);
+      _folderSizes[request.folder] = const FolderSizeMeasurement(
+        phase: FolderSizePhase.scanning,
+      );
+      unawaited(_runFolderSizeScan(request));
+    }
+  }
+
+  Future<void> _runFolderSizeScan(_FolderSizeRequest request) async {
+    FolderSizeMeasurement? measurement;
     try {
-      final entities = await Directory(path).list(recursive: true).toList();
-      for (final e in entities) {
-        if (e is File) {
-          final stat = await e.stat();
-          total += stat.size;
+      final origin = request.origin;
+      final backend = storageScanBackend(
+        source: origin.source is LocalPanelSource
+            ? LocalPanelSource(request.folder.path!)
+            : origin.source,
+        local: _localFileService,
+        isCurrent: request.isCurrent,
+      );
+      final result = await const StorageScanService().scan(
+        backend,
+        request.folder.path!,
+        maxEntries: maxInlineFolderSizeEntries,
+        maxDepth: 128,
+        maxIssues: 20,
+        isCancelled: () => request.cancelled || !request.isCurrent(),
+        onProgress: (progress) {
+          if (!request.isCurrent() || request.cancelled) return;
+          _folderSizes[request.folder] = FolderSizeMeasurement(
+            phase: FolderSizePhase.scanning,
+            bytes: progress.bytes,
+            files: progress.files,
+            folders: progress.folders,
+          );
+          notifyListeners();
+        },
+      );
+      if (request.isCurrent()) {
+        final phase = result.cancelled
+            ? FolderSizePhase.cancelled
+            : result.isComplete
+            ? FolderSizePhase.complete
+            : result.issues.any(
+                (issue) => issue.code == StorageScanIssueCode.rootUnavailable,
+              )
+            ? FolderSizePhase.failed
+            : FolderSizePhase.partial;
+        measurement = FolderSizeMeasurement(
+          phase: phase,
+          bytes: result.root.bytes,
+          files: result.root.fileCount,
+          folders: result.root.folderCount,
+          unknownSizes: result.root.unknownSizeCount,
+          skippedLinks: result.root.skippedLinkCount,
+          issueCount: result.issues.length + result.suppressedIssueCount,
+          limited: result.limited,
+          sourceChanged: result.sourceChanged,
+        );
+        _folderSizes[request.folder] = measurement;
+        if (phase == FolderSizePhase.complete) {
+          updateItemCalculatedSize(request.folder, result.root.bytes);
+        } else {
+          notifyListeners();
         }
       }
-    } catch (e) {
-      _log.warn('operation failed', e);
+    } catch (error) {
+      _log.warn('Folder size scan failed', error);
+      if (request.isCurrent()) {
+        measurement = const FolderSizeMeasurement(
+          phase: FolderSizePhase.failed,
+        );
+        _folderSizes[request.folder] = measurement;
+        notifyListeners();
+      }
+    } finally {
+      _activeFolderSizeRequests.remove(request);
+      if (measurement == null) {
+        _folderSizes[request.folder] =
+            (_folderSizes[request.folder] ??
+                    const FolderSizeMeasurement(
+                      phase: FolderSizePhase.scanning,
+                    ))
+                .withPhase(FolderSizePhase.cancelled);
+      }
+      if (!request.completed.isCompleted)
+        request.completed.complete(measurement);
+      _pumpFolderSizeQueue();
     }
-    return total;
   }
 
   /// Shift+Arrow: move cursor AND extend/shrink selection range.
@@ -5779,6 +5958,7 @@ class PanelNotifier extends ChangeNotifier {
     final idx = _indexOfIdentical(_files!, item);
     if (idx == -1) return;
     final replacement = item.copyWith(calculatedSize: size);
+    _folderSizes[replacement] = _folderSizes[item];
     _fileOrigins[replacement] = _fileOrigins[item];
     _collectionEntries[replacement] = _collectionEntries[item];
     _files![idx] = replacement;
@@ -7676,7 +7856,7 @@ class PanelNotifier extends ChangeNotifier {
       if (!stillCurrent()) return;
       dirCache.put(cacheKey, _files!);
       // Fire-and-forget free space fetch (result stored in _freeBytes, shown in status bar)
-      if (side == PanelSide.local) _updateFreeSpace(listingPath);
+      _updateFreeSpace(listingPath);
       notifyListeners();
     } catch (e) {
       if (!stillCurrent()) return;
@@ -7794,7 +7974,6 @@ class PanelNotifier extends ChangeNotifier {
     _lastFreeSpacePath = path;
     _lastFreeSpaceTime = now;
     final bytes = freeDiskBytes(path);
-    if (bytes == null) return;
     _freeBytes = bytes;
     notifyListeners();
   }
@@ -7997,6 +8176,14 @@ class PanelNotifier extends ChangeNotifier {
     _collectionMarksTimer?.cancel();
     _collectionQueryTimer?.cancel();
     _isDisposed = true;
+    for (final request in _activeFolderSizeRequests) {
+      request.cancelled = true;
+    }
+    for (final request in _folderSizeQueue) {
+      request.cancelled = true;
+      if (!request.completed.isCompleted) request.completed.complete(null);
+    }
+    _folderSizeQueue.clear();
     _clearArchiveState();
     _typeaheadResetTimer?.cancel();
     _refreshDebounce?.cancel();
@@ -8004,6 +8191,15 @@ class PanelNotifier extends ChangeNotifier {
     listFocusNode.dispose();
     super.dispose();
   }
+}
+
+class _FolderSizeRequest {
+  _FolderSizeRequest(this.folder, this.origin, this.isCurrent);
+  final FileItem folder;
+  final PanelFileOrigin origin;
+  final bool Function() isCurrent;
+  final completed = Completer<FolderSizeMeasurement?>();
+  bool cancelled = false;
 }
 
 class FileListImportResult {
