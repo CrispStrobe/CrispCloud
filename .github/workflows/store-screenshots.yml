@@ -81,7 +81,8 @@ jobs:
           mkdir -p build/store-screenshots
           set -o pipefail
           flutter test integration_test/store_screenshots_test.dart -d "$DEVICE" \
-            --dart-define=STORE_TARGET=${{ matrix.target }} $EXTRA 2>&1 \
+            --dart-define=STORE_TARGET=${{ matrix.target }} \
+            --dart-define=STORE_OUT="$PWD/build/store-screenshots" $EXTRA 2>&1 \
             | tee build/store-screenshots/capture.log
 
       - name: Collect screenshots
