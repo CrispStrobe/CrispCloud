@@ -260,6 +260,10 @@ class WmlBorder {
 
 /// Class WmlParagraphProps.
 class WmlParagraphProps {
+  /// Original direct properties and resolved import values, for sparse export.
+  String? sourcePropertiesXml;
+  Map<String, String>? importedValues;
+
   /// WmlParagraphProps API.
   WmlParagraphProps({
     this.justification = WmlJustification.left,
@@ -404,40 +408,45 @@ class WmlParagraphProps {
   }
 
   /// copy API.
-  WmlParagraphProps copy() => WmlParagraphProps(
-    justification: justification,
-    lineSpacing: lineSpacing,
-    lineSpacingRule: lineSpacingRule,
-    spacingBefore: spacingBefore,
-    spacingAfter: spacingAfter,
-    explicitLineSpacing: explicitLineSpacing,
-    explicitSpacingBefore: explicitSpacingBefore,
-    explicitSpacingAfter: explicitSpacingAfter,
-    explicitJustification: explicitJustification,
-    explicitIndent: explicitIndent,
-    indent: indent,
-    tabs: List<WmlTabStop>.from(tabs),
-    keepTogether: keepTogether,
-    pageBreakBefore: pageBreakBefore,
-    columnBreakBefore: columnBreakBefore,
-    numId: numId,
-    ilvl: ilvl,
-    listLabel: listLabel,
-    listRestart: listRestart,
-    pageNumberField: pageNumberField,
-    headingLevel: headingLevel,
-    styleId: styleId,
-    fieldInstruction: fieldInstruction,
-    fieldBegin: fieldBegin,
-    fieldEnd: fieldEnd,
-    bookmarkName: bookmarkName,
-    rightToLeft: rightToLeft,
-    dropCapLines: dropCapLines,
-    shadingFill: shadingFill,
-    borderColor: borderColor,
-    noteId: noteId,
-    endnoteRef: endnoteRef,
-  );
+  WmlParagraphProps copy() =>
+      WmlParagraphProps(
+          justification: justification,
+          lineSpacing: lineSpacing,
+          lineSpacingRule: lineSpacingRule,
+          spacingBefore: spacingBefore,
+          spacingAfter: spacingAfter,
+          explicitLineSpacing: explicitLineSpacing,
+          explicitSpacingBefore: explicitSpacingBefore,
+          explicitSpacingAfter: explicitSpacingAfter,
+          explicitJustification: explicitJustification,
+          explicitIndent: explicitIndent,
+          indent: indent,
+          tabs: List<WmlTabStop>.from(tabs),
+          keepTogether: keepTogether,
+          pageBreakBefore: pageBreakBefore,
+          columnBreakBefore: columnBreakBefore,
+          numId: numId,
+          ilvl: ilvl,
+          listLabel: listLabel,
+          listRestart: listRestart,
+          pageNumberField: pageNumberField,
+          headingLevel: headingLevel,
+          styleId: styleId,
+          fieldInstruction: fieldInstruction,
+          fieldBegin: fieldBegin,
+          fieldEnd: fieldEnd,
+          bookmarkName: bookmarkName,
+          rightToLeft: rightToLeft,
+          dropCapLines: dropCapLines,
+          shadingFill: shadingFill,
+          borderColor: borderColor,
+          noteId: noteId,
+          endnoteRef: endnoteRef,
+        )
+        ..sourcePropertiesXml = sourcePropertiesXml
+        ..importedValues = importedValues == null
+            ? null
+            : Map.of(importedValues!);
 }
 
 /// Maps Word `w:highlight` names (and raw hex) to RRGGBB.
@@ -518,11 +527,16 @@ abstract final class WmlHighlight {
 
 /// Class WmlRunProps.
 class WmlRunProps {
+  /// Original direct properties and resolved import values, for sparse export.
+  String? sourcePropertiesXml;
+  Map<String, String>? importedValues;
+
   /// Direct source properties, including explicit values equal to defaults.
   final Set<String> explicitProperties = <String>{};
 
   /// WmlRunProps API.
   WmlRunProps({
+    this.styleId,
     this.bold = false,
     this.italic = false,
     this.underline = WmlUnderline.none,
@@ -534,6 +548,9 @@ class WmlRunProps {
     this.csFont = 'Arial',
     this.vertAlign = WmlVertAlign.baseline,
   });
+
+  /// Character style reference (`w:rStyle`).
+  String? styleId;
 
   /// bold API.
   bool bold;
@@ -569,18 +586,25 @@ class WmlRunProps {
   double get fontSizePoints => fontSizeHalfPoints / 2.0;
 
   /// copy API.
-  WmlRunProps copy() => WmlRunProps(
-    bold: bold,
-    italic: italic,
-    underline: underline,
-    strike: strike,
-    color: color,
-    highlight: highlight,
-    fontSizeHalfPoints: fontSizeHalfPoints,
-    asciiFont: asciiFont,
-    csFont: csFont,
-    vertAlign: vertAlign,
-  )..explicitProperties.addAll(explicitProperties);
+  WmlRunProps copy() =>
+      WmlRunProps(
+          styleId: styleId,
+          bold: bold,
+          italic: italic,
+          underline: underline,
+          strike: strike,
+          color: color,
+          highlight: highlight,
+          fontSizeHalfPoints: fontSizeHalfPoints,
+          asciiFont: asciiFont,
+          csFont: csFont,
+          vertAlign: vertAlign,
+        )
+        ..explicitProperties.addAll(explicitProperties)
+        ..sourcePropertiesXml = sourcePropertiesXml
+        ..importedValues = importedValues == null
+            ? null
+            : Map.of(importedValues!);
 }
 
 /// Class WmlTableProps.

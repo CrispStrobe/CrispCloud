@@ -82,6 +82,70 @@ void applyStep(WmlDocument doc, Map<String, dynamic> step) {
         step['end'] as int? ?? p.text.length,
         step['text'] as String,
       );
+    case 'characterStyle':
+      final run = paragraph().inlines.whereType<WmlRun>().elementAt(
+        step['run'] as int,
+      );
+      run.properties.styleId = step['style'] as String;
+      WordDeserializer().refreshStyles(doc);
+    case 'tableStyle':
+      final tables = doc.sections.expand((s) => s.blocks).whereType<WmlTable>();
+      tables.elementAt(step['table'] as int).properties.styleId =
+          step['style'] as String;
+      WordDeserializer().refreshStyles(doc);
+    case 'styleDefinition':
+      final package = doc.package;
+      if (package == null) {
+        throw ArgumentError('Style editing requires an imported package');
+      }
+      final office = package.packageRelationships.firstByType(
+        RelationshipTypes.officeDocument,
+      );
+      final uri = office == null
+          ? '/word/document.xml'
+          : package.packageRelationships.resolve(office);
+      final rels = package.relationshipsFor(uri);
+      final rel = rels.firstByType(RelationshipTypes.styles);
+      final part = package.getPart(
+        rel == null ? '/word/styles.xml' : rels.resolve(rel),
+      );
+      if (part == null) throw ArgumentError('No styles part');
+      final xml = XmlDocument.parse(part.readText());
+      final style = xml.root!
+          .childrenNamed('style')
+          .where((s) => s.getAttribute('styleId') == step['style'])
+          .firstOrNull;
+      if (style == null) throw ArgumentError('Unknown style id');
+      if (step.containsKey('type') &&
+          style.getAttribute('type') != step['type']) {
+        throw ArgumentError('Style type mismatch');
+      }
+      for (final group in ['rPr', 'pPr', 'tblPr', 'tcPr']) {
+        if (!step.containsKey(group)) continue;
+        XmlElement? props = style.firstChild(group);
+        if (props == null) {
+          props = XmlElement(localName: group, prefix: 'w');
+          style.addChild(props);
+        }
+        final values = (step[group] as Map).cast<String, dynamic>();
+        for (final entry in values.entries) {
+          props.children.removeWhere(
+            (n) => n is XmlElement && n.localName == entry.key,
+          );
+          if (entry.value == null) continue;
+          final element = XmlElement(localName: entry.key, prefix: 'w');
+          for (final attr in (entry.value as Map).entries) {
+            element.setAttribute(
+              attr.key as String,
+              '${attr.value}',
+              prefix: 'w',
+            );
+          }
+          props.addChild(element);
+        }
+      }
+      part.writeText(xml.toXmlString());
+      WordDeserializer().refreshStyles(doc);
     case 'applyStyle':
       WordStyles.apply(paragraph(), step['style'] as String, document: doc);
     case 'heading':

@@ -18,9 +18,24 @@ import '../model/word_toc.dart';
 import '../properties/wml_properties.dart';
 import 'word_drawing_io.dart';
 import 'word_frame_io.dart';
+import 'word_property_io.dart';
 
 /// Writes a [WmlDocument] back to a `.docx` OPC package.
 class WordSerializer {
+  /// Direct run properties, excluding unchanged inherited formatting.
+  String runPropertiesXml(WmlRunProps properties) {
+    final writer = XmlWriter();
+    _writeRPr(writer, properties);
+    return writer.toXml();
+  }
+
+  /// Direct paragraph properties, excluding unchanged inherited formatting.
+  String paragraphPropertiesXml(WmlParagraphProps properties) {
+    final writer = XmlWriter();
+    _writePPr(writer, properties);
+    return writer.toXml();
+  }
+
   var _docPrId = 1;
   var _hfPart = 1;
   OpcPackage? _package;
@@ -775,6 +790,25 @@ class WordSerializer {
   }
 
   void _writePPr(XmlWriter w, WmlParagraphProps p, {WmlSection? sectionBreak}) {
+    if (p.importedValues != null && p.sourcePropertiesXml != null) {
+      final XmlWriter generated = XmlWriter();
+      _writeFullPPr(generated, p, sectionBreak: sectionBreak);
+      WordPropertyIo.preserve(
+        XmlDocument.parse(generated.toXml()).root!,
+        p.sourcePropertiesXml!,
+        p.importedValues!,
+        WordPropertyIo.paragraphValues(p),
+      ).writeTo(w);
+      return;
+    }
+    _writeFullPPr(w, p, sectionBreak: sectionBreak);
+  }
+
+  void _writeFullPPr(
+    XmlWriter w,
+    WmlParagraphProps p, {
+    WmlSection? sectionBreak,
+  }) {
     w.writeStartElement('pPr', prefix: 'w');
 
     // OOXML schema order for w:pPr is significant. Word reports files as
@@ -914,7 +948,29 @@ class WordSerializer {
   }
 
   void _writeRPr(XmlWriter w, WmlRunProps r) {
+    if (r.importedValues != null && r.sourcePropertiesXml != null) {
+      final XmlWriter generated = XmlWriter();
+      _writeFullRPr(generated, r);
+      WordPropertyIo.preserve(
+        XmlDocument.parse(generated.toXml()).root!,
+        r.sourcePropertiesXml!,
+        r.importedValues!,
+        WordPropertyIo.runValues(r),
+      ).writeTo(w);
+      return;
+    }
+    _writeFullRPr(w, r);
+  }
+
+  void _writeFullRPr(XmlWriter w, WmlRunProps r) {
     w.writeStartElement('rPr', prefix: 'w');
+    if (r.styleId != null) {
+      w.writeEmptyElement(
+        'rStyle',
+        prefix: 'w',
+        attributes: {'w:val': r.styleId!},
+      );
+    }
     // OOXML CT_RPr order is strict: rFonts, b, i, strike, color, sz,
     // highlight, u, vertAlign. Word reports the package as corrupt when these
     // appear in a different order.

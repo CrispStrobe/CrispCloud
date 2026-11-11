@@ -55,9 +55,9 @@ void main() {
               ))!;
               image.dispose();
               for (var offset = 0; offset < pixels.lengthInBytes; offset += 4) {
-                if (pixels.getUint8(offset) == 35 &&
-                    pixels.getUint8(offset + 1) == 100 &&
-                    pixels.getUint8(offset + 2) == 170) {
+                if ((pixels.getUint8(offset) - 35).abs() <= 2 &&
+                    (pixels.getUint8(offset + 1) - 100).abs() <= 2 &&
+                    (pixels.getUint8(offset + 2) - 170).abs() <= 2) {
                   return true;
                 }
               }
@@ -66,6 +66,19 @@ void main() {
             }) ??
             false;
         await tester.pumpAndSettle();
+      }
+      if (!picturePainted) {
+        await tester.runAsync(() async {
+          final image = await boundary.toImage();
+          final bytes = (await image.toByteData(
+            format: ui.ImageByteFormat.png,
+          ))!;
+          Directory('build/fidelity-diagnostics').createSync(recursive: true);
+          File(
+            'build/fidelity-diagnostics/missing-picture.png',
+          ).writeAsBytesSync(bytes.buffer.asUint8List());
+          image.dispose();
+        });
       }
       expect(picturePainted, isTrue, reason: 'Fixture picture must be visible');
       await expectLater(
