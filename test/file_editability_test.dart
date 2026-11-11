@@ -61,4 +61,11 @@ void main() {
     expect(isTextEditableName('project.pbxproj'), isTrue);
     expect(isTextEditableName('diagram.svg'), isFalse);
   });
+
+  test('PEM certificates, requests and armored keys open as text', () {
+    for (final name in ['server.crt', 'ca.pem', 'root.cer', 'req.csr', 'key.asc']) {
+      expect(isTextEditableName(name), isTrue, reason: name);
+      expect(isEditableInBuiltInEditor(name), isTrue, reason: name);
+    }
+  });
 }

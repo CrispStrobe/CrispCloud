@@ -19,7 +19,10 @@ Future<void> showEditorChooser(
   PanelSide side,
 ) async {
   if (file.isFolder) return;
-  final canUseText = isTextEditableName(file.name);
+  // Text is offered for every file: a certificate or config file with an
+  // unknown extension is often text. Bytes that do not decode are reported
+  // in the editor (with a way to reopen in hex) and never written back.
+  final knownText = isTextEditableName(file.name);
   final canUseSystem = !kIsWeb && file.path != null;
   final choice = await showDialog<EditorKind>(
     context: context,
@@ -35,14 +38,15 @@ Future<void> showEditorChooser(
             style: Theme.of(dialogContext).textTheme.bodySmall,
           ),
         ),
-        if (canUseText)
-          _option(
-            dialogContext,
-            icon: Icons.code,
-            title: 'Text / Code Editor',
-            subtitle: 'Encoding, BOM and line-ending controls with syntax highlighting',
-            value: EditorKind.text,
-          ),
+        _option(
+          dialogContext,
+          icon: Icons.code,
+          title: 'Text / Code Editor',
+          subtitle: knownText
+              ? 'Encoding, BOM and line-ending controls with syntax highlighting'
+              : 'Open the bytes as text; choose another encoding or Hex if they do not decode',
+          value: EditorKind.text,
+        ),
         _option(
           dialogContext,
           icon: Icons.hexagon_outlined,

@@ -470,22 +470,21 @@ void showFileContextMenu(
 
   // Specialized editors and text/code editing for a single file.
   if (!isMultiSelect && !isSingleFolder) {
-    if (isTextEditableName(file.name)) {
-      items.add(
-        PopupMenuItem(
-          child: const Row(
-            children: [
-              Icon(Icons.tune),
-              SizedBox(width: 8),
-              Expanded(child: Text('Edit with…')),
-            ],
-          ),
-          onTap: () => Future.delayed(Duration.zero, () {
-            if (context.mounted) showEditorChooser(context, ref, file, side);
-          }),
+    // Every file can be opened as text or hex; the chooser lists both.
+    items.add(
+      PopupMenuItem(
+        child: const Row(
+          children: [
+            Icon(Icons.tune),
+            SizedBox(width: 8),
+            Expanded(child: Text('Edit with…')),
+          ],
         ),
-      );
-    }
+        onTap: () => Future.delayed(Duration.zero, () {
+          if (context.mounted) showEditorChooser(context, ref, file, side);
+        }),
+      ),
+    );
     items.add(
       PopupMenuItem(
         child: const Row(
@@ -501,6 +500,26 @@ void showFileContextMenu(
         }),
       ),
     );
+    // Text formats get their own Edit item below; for any other file (for
+    // example a certificate saved as .crt) text editing stays one click away.
+    // Undecodable bytes are reported, never written back.
+    if (!isTextEditableName(file.name)) {
+      items.add(
+        PopupMenuItem(
+          child: const Row(
+            children: [
+              Icon(Icons.code),
+              SizedBox(width: 8),
+              Expanded(child: Text('Edit as Text')),
+            ],
+          ),
+          onTap: () => Future.delayed(Duration.zero, () {
+            if (context.mounted && current())
+              showFileEditorDialog(context, ref, file, side, forceText: true);
+          }),
+        ),
+      );
+    }
     final preferExternal = native && ref.read(preferExternalEditorProvider);
     if (isImageEditorFileName(file.name)) {
       items.add(

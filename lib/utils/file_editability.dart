@@ -57,6 +57,14 @@ const Set<String> textEditableExtensions = <String>{
   'makefile',
   'properties',
   'gradle',
+  // PEM certificates, requests and ASCII-armored keys are text. (DER-encoded
+  // .crt/.cer files are binary; the text editor reports them instead of
+  // decoding with replacements, and Hex stays one click away.)
+  'pem',
+  'crt',
+  'cer',
+  'csr',
+  'asc',
   // Apple project and configuration formats are text/XML, not opaque binaries.
   'plist',
   'strings',

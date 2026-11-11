@@ -7,12 +7,16 @@ import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/widgets/editor_chooser_dialog.dart';
 
 void main() {
-  testWidgets('a plist offers text, hex and system editors', (tester) async {
-    final file = FileItem(
-      name: 'Info.plist',
-      path: '/tmp/Info.plist',
-      isFolder: false,
-    );
+  for (final name in <String>['Info.plist', 'server.crt', 'blob.bin']) {
+    testWidgets('$name offers text, hex and system editors', (tester) async {
+      await _expectAllEditors(tester, name);
+    });
+  }
+}
+
+Future<void> _expectAllEditors(WidgetTester tester, String name) async {
+  {
+    final file = FileItem(name: name, path: '/tmp/$name', isFolder: false);
     await tester.pumpWidget(
       ProviderScope(
         child: MaterialApp(
@@ -38,5 +42,5 @@ void main() {
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pumpAndSettle();
-  });
+  }
 }

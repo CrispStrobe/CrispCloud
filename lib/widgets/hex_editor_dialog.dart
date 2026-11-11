@@ -7,7 +7,6 @@ import 'package:madedit2_hex/madedit2_hex.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
-import '../utils/file_editability.dart' show isTextEditableName;
 import '../services/file_operation_service.dart';
 import '../services/hex_file_session.dart';
 import '../services/editor_kind.dart';
@@ -293,14 +292,15 @@ class _HexFileEditorPageState extends State<HexFileEditorPage> {
             '${widget.file.name} — Hex${controller?.isDirty == true ? ' *' : ''}',
           ),
           actions: [
-            if (isTextEditableName(widget.file.name))
-              IconButton(
-                tooltip: 'Open in Text Editor',
-                icon: const Icon(Icons.code),
-                onPressed: _saving || _closing || _loading || controller == null
-                    ? null
-                    : () => unawaited(_switchToText()),
-              ),
+            // Available for every file; undecodable bytes are reported by
+            // the text editor and never written back.
+            IconButton(
+              tooltip: 'Open in Text Editor',
+              icon: const Icon(Icons.code),
+              onPressed: _saving || _closing || _loading || controller == null
+                  ? null
+                  : () => unawaited(_switchToText()),
+            ),
             IconButton(
               tooltip: 'Save a separate copy',
               icon: const Icon(Icons.save_as_outlined),
