@@ -24,5 +24,6 @@ dev_dependencies:
   test: ^1.25.0
 
 dependency_overrides:
+  pointycastle: ^4.0.0
   pdf_document:
     path: ../packages/pdf_document

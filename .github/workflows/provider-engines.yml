@@ -1,0 +1,53 @@
+name: Shared encrypted providers
+on:
+  push:
+    paths: ['packages/crisp_storage/**', 'packages/filen_client/**', 'lib/services/**', 'test/*filen*', 'test/*internxt*', 'cli/**', '.github/workflows/provider-engines.yml']
+  pull_request:
+    paths: ['packages/crisp_storage/**', 'packages/filen_client/**', 'lib/services/**', 'test/*filen*', 'test/*internxt*', 'cli/**', '.github/workflows/provider-engines.yml']
+  workflow_dispatch:
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: '3.13.7'
+      - name: Resolve and check shared native providers
+        working-directory: packages/crisp_storage
+        run: |
+          dart pub get
+          dart analyze lib/src/cloud
+          dart test
+      - name: Resolve and test the standalone CLI
+        working-directory: cli
+        run: |
+          dart pub get
+          dart analyze
+          dart test
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: provider-resolved-lockfiles
+          path: |
+            cli/pubspec.lock
+            packages/crisp_storage/pubspec.lock
+  gui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.8'
+          cache: true
+      - name: Authenticate private source dependencies
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT || github.token }}
+        run: git config --global url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
+      - run: flutter pub get
+      - run: flutter test test/filen_adapter_test.dart test/filen_bounded_transfer_test.dart test/filen_crypto_validation_test.dart test/internxt_bounded_transfer_test.dart test/internxt_download_path_test.dart
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: provider-gui-lockfile
+          path: pubspec.lock
