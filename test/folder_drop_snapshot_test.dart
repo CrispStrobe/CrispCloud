@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_drag_data.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
+import 'package:crisp_cloud/models/panel_tab.dart';
 import 'package:crisp_cloud/providers/panel_source_provider.dart';
 import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/services/file_operation_service.dart';
@@ -120,6 +121,7 @@ class _GrantedLocal extends Fake
   final String root;
   Object identity = Object();
   final identityOverrides = <String, Object>{};
+  final literalIdentityOverrides = <String, Object>{};
   int interactiveReads = 0;
   int accessRequests = 0;
   int snapshots = 0;
@@ -136,6 +138,11 @@ class _GrantedLocal extends Fake
   String? get grantedBasePath => root;
   @override
   Object? sourceIdentityForPath(String path) {
+    // Virtual services may identify a literal grant prefix before normalizing
+    // dot segments; callers must bind the actual canonical operation path.
+    if (literalIdentityOverrides.containsKey(path)) {
+      return literalIdentityOverrides[path];
+    }
     final normalized = p.normalize(path);
     if (normalized != root && !p.isWithin(root, normalized)) return null;
     return identityOverrides[normalized] ?? identity;
@@ -370,6 +377,91 @@ void main() {
       expect(cloud.writes, isEmpty);
     },
   );
+
+  PanelTab localTab(String path) {
+    final tab = PanelTab(
+      id: 'local-background',
+      path: path,
+      storage: destination.captureLocalClipboardOrigin(path).storageReference,
+    );
+    destination.tabs.add(tab);
+    return tab;
+  }
+
+  test(
+    'an inactive granted-root tab verifies without changing local navigation',
+    () async {
+      final tab = localTab(localRoot.path);
+      final active = destination.activeTabId;
+      final path = destination.currentPath;
+      final localPath = local.currentPath;
+      final reads = local.interactiveReads;
+      final snapshots = local.snapshots;
+      final prepared = await service.prepare(
+        drag(),
+        service.captureTab(destination, tab, local)!,
+        kind: FileOperationKind.copy,
+      );
+      expect(prepared.destination.path, localRoot.path);
+      expect(prepared.destination.origin.source, isA<LocalPanelSource>());
+      expect(local.snapshots, greaterThan(snapshots));
+      expect(local.interactiveReads, reads);
+      expect(local.accessRequests, 0);
+      expect(local.currentPath, localPath);
+      expect(destination.activeTabId, active);
+      expect(destination.currentPath, path);
+      expect(cloud.writes, isEmpty);
+    },
+  );
+
+  test('a replaced grant cannot complete inactive-tab verification', () async {
+    final tab = localTab(local.path('drop'));
+    final target = service.captureTab(destination, tab, local)!;
+    local.blockSnapshot();
+    final result = expectLater(
+      service.prepare(drag(), target, kind: FileOperationKind.copy),
+      throwsA(isA<PanelDragException>()),
+    );
+    await local.snapshotStarted!.future;
+    local.identity = Object();
+    local.releaseSnapshot();
+    await result;
+    expect(target.origin.isCurrent, isFalse);
+    expect(local.accessRequests, 0);
+    expect(cloud.writes, isEmpty);
+  });
+
+  test('a tab outside its configured remote root is unavailable', () {
+    final tab = PanelTab(
+      id: 'outside-root',
+      path: '/elsewhere',
+      storage: destination.captureCurrentOrigin().storageReference,
+    );
+    destination.tabs.add(tab);
+    expect(service.captureTab(destination, tab, local), isNull);
+  });
+
+  test('an inactive tab binds the canonical target grant rather than a literal alias', () async {
+    final canonical = local.path('drop');
+    final literal = '${local.path('active')}${p.separator}..${p.separator}drop';
+    local.literalIdentityOverrides[literal] = Object();
+    final tab = localTab(literal);
+    final prepared = await service.prepare(
+      drag(),
+      service.captureTab(destination, tab, local)!,
+      kind: FileOperationKind.copy,
+    );
+    expect(prepared.destination.path, canonical);
+    expect(prepared.destination.origin.source.currentPath, canonical);
+    expect(prepared.destination.origin.isCurrent, isTrue);
+    // Replacing the actual target grant invalidates the reviewed capability,
+    // even though the unrelated literal-prefix token has not changed.
+    local.identity = Object();
+    expect(prepared.destination.origin.isCurrent, isFalse);
+    expect(prepared.destination.backend.isCurrent, isFalse);
+    expect(local.accessRequests, 0);
+    expect(cloud.writes, isEmpty);
+  });
 
   test('same-pane ancestor moves preserve the live source selection', () async {
     final file = row(destination, '/vault/active/deep/inside.txt');

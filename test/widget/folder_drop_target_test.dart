@@ -6,6 +6,7 @@ import 'package:crisp_cloud/l10n/folder_drop_strings.dart';
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_drag_data.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
+import 'package:crisp_cloud/models/panel_tab.dart';
 import 'package:crisp_cloud/providers/panel_source_provider.dart';
 import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/services/file_operation_service.dart';
@@ -14,7 +15,9 @@ import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:crisp_cloud/services/panel_source_service.dart';
 import 'package:crisp_cloud/widgets/file_list_view.dart';
 import 'package:crisp_cloud/widgets/file_operation_dialog.dart';
+import 'package:crisp_cloud/widgets/file_panel.dart';
 import 'package:crisp_cloud/widgets/folder_drop_target.dart';
+import 'package:crisp_cloud/widgets/drive_bar.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
@@ -133,6 +136,11 @@ void main() {
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+          const MethodChannel('desktop_drop'),
+          (_) async => null,
+        );
     cloud = _Cloud('first');
     auth = _Auth(cloud);
     local = _Local();
@@ -140,6 +148,7 @@ void main() {
       overrides: [
         authProvider.overrideWith((_) => auth),
         localFileServiceProvider.overrideWithValue(local),
+        drivesProvider.overrideWith((_) async => const <DriveEntry>[]),
       ],
     );
     source = container.read(panelProvider(PanelSide.local));
@@ -163,6 +172,8 @@ void main() {
       cloud.readGate!.complete();
     }
     container.dispose();
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(const MethodChannel('desktop_drop'), null);
   });
 
   FileItem row(PanelNotifier panel, String path) =>
@@ -599,6 +610,244 @@ void main() {
         seen.add(value);
       }
       expect(seen.toSet(), hasLength(9));
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+    variant: desktop,
+  );
+
+  PanelTab inactiveTab({String path = '/destination'}) {
+    final tab = PanelTab(
+      id: 'background-drop',
+      path: path,
+      storage: destination.captureCurrentOrigin().storageReference,
+    );
+    destination.tabs.add(tab);
+    return tab;
+  }
+
+  test('inactive directory review preserves the active tab and captured groups', () async {
+    final tab = inactiveTab();
+    final active = destination.activeTabId;
+    final path = destination.currentPath;
+    final files = destination.files;
+    final data = drag([row(source, '/a.txt'), row(source, '/b.txt')]);
+    final prepared = await service.prepare(
+      data,
+      service.captureTab(destination, tab, local)!,
+      kind: FileOperationKind.copy,
+    );
+    expect(prepared.groups, same(data.capturedGroups));
+    expect(prepared.destination.path, '/destination');
+    expect(prepared.destination.origin.storageReference, tab.storage);
+    expect(destination.activeTabId, active);
+    expect(destination.currentPath, path);
+    expect(destination.files, same(files));
+    expect(cloud.writes, isEmpty);
+
+    // Once reviewed, the exact endpoint survives closing its presentation tab.
+    destination.closeTab(tab.id);
+    expect(prepared.destination.isCurrent, isFalse);
+    expect(prepared.destination.origin.isCurrent, isTrue);
+    expect(prepared.destination.backend.isCurrent, isTrue);
+    expect(prepared.destination.origin.source.currentPath, '/destination');
+  });
+
+  test('inactive root verification reads the actual root instead of synthetic stat', () async {
+    final tab = inactiveTab(path: '/');
+    final reads = cloud.reads.length;
+    await service.prepare(
+      drag([row(source, '/a.txt')]),
+      service.captureTab(destination, tab, local)!,
+      kind: FileOperationKind.copy,
+    );
+    expect(cloud.reads.skip(reads), contains('/'));
+    expect(cloud.writes, isEmpty);
+  });
+
+  for (final change in ['close', 'path', 'collection', 'account']) {
+    test(
+      'an inactive tab $change during verification rejects the drop',
+      () async {
+        final tab = inactiveTab();
+        final captured = service.captureTab(destination, tab, local)!;
+        final data = drag([row(source, '/a.txt')]);
+        cloud.readGate = Completer<void>();
+        cloud.readStarted = Completer<void>();
+        final result = expectLater(
+          service.prepare(data, captured, kind: FileOperationKind.copy),
+          throwsA(isA<PanelDragException>()),
+        );
+        await cloud.readStarted!.future;
+        switch (change) {
+          case 'close':
+            destination.closeTab(tab.id);
+          case 'path':
+            tab.path = '/parent';
+          case 'collection':
+            tab.collectionId = 'saved-results';
+          case 'account':
+            auth.replace(_Cloud('other-account'));
+        }
+        final gate = cloud.readGate!;
+        cloud.readGate = null;
+        gate.complete();
+        await result;
+        expect(cloud.writes, isEmpty);
+      },
+    );
+  }
+
+  test(
+    'legacy, archive and transient search tabs cannot supply directory targets',
+    () async {
+      final tab = inactiveTab();
+      final storage = tab.storage;
+      tab.storage = null;
+      expect(service.captureTab(destination, tab, local), isNull);
+      tab.storage = storage;
+      tab.path = '/archive.zip:/inside';
+      expect(service.captureTab(destination, tab, local), isNull);
+
+      final original = destination.activeTab!;
+      destination.showSearchResults([
+        row(destination, '/destination'),
+      ], origin: destination.captureCurrentOrigin());
+      tab.path = '/parent';
+      await destination.selectTab(tab.id);
+      // An unsaved search retains a normal path and has no collection ID.
+      expect(original.collectionId, isNull);
+      expect(original.storage, isNotNull);
+      expect(service.captureTab(destination, original, local), isNull);
+    },
+  );
+
+  test('a tab naming a file fails fresh directory verification', () async {
+    final tab = inactiveTab(path: '/b.txt');
+    await expectLater(
+      service.prepare(
+        drag([row(source, '/a.txt')]),
+        service.captureTab(destination, tab, local)!,
+        kind: FileOperationKind.copy,
+      ),
+      throwsA(failure(PanelDragFailure.destinationChanged)),
+    );
+    expect(cloud.writes, isEmpty);
+  });
+
+  Future<void> mountTabs(WidgetTester tester, PanelDragData data) async {
+    tester.view.physicalSize = const Size(1100, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: Row(
+              children: [
+                Draggable<PanelDragData>(
+                  data: data,
+                  feedback: const Material(child: Text('Dragged files')),
+                  child: const SizedBox(
+                    key: ValueKey('tab-drag-source'),
+                    width: 150,
+                    height: 80,
+                    child: Text('Drag to a tab'),
+                  ),
+                ),
+                Expanded(
+                  child: FilePanel(
+                    side: PanelSide.remote,
+                    isActive: false,
+                    onTap: () {},
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+  }
+
+  for (final move in [false, true]) {
+    testWidgets(
+      'FilePanel reviews an inactive-tab ${move ? 'move' : 'copy'} without selecting it',
+      (tester) async {
+        final tab = inactiveTab();
+        final active = destination.activeTabId;
+        final path = destination.currentPath;
+        final listed = destination.files;
+        final data = drag([row(source, '/a.txt'), row(source, '/b.txt')]);
+        await mountTabs(tester, data);
+        if (move) await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+        final gesture = await tester.startGesture(
+          tester.getCenter(find.byKey(const ValueKey('tab-drag-source'))),
+          kind: PointerDeviceKind.mouse,
+        );
+        await gesture.moveBy(const Offset(25, 0));
+        await tester.pump();
+        await gesture.moveTo(
+          tester.getCenter(
+            find.byKey(ValueKey('tab-folder-drop-remote-${tab.id}')),
+          ),
+        );
+        await tester.pump();
+        expect(
+          find.text('${move ? 'Move' : 'Copy'} → destination'),
+          findsOneWidget,
+        );
+        await gesture.up();
+        await tester.pumpAndSettle();
+        if (move) await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+        final dialog = tester.widget<FileOperationDialog>(
+          find.byType(FileOperationDialog),
+        );
+        expect(
+          dialog.kind,
+          move ? FileOperationKind.move : FileOperationKind.copy,
+        );
+        expect(dialog.destinationPath, '/destination');
+        expect(dialog.sourceOrigin, same(data.capturedGroups!.keys.single));
+        expect(dialog.files.map((file) => file.path), ['/a.txt', '/b.txt']);
+        expect(destination.activeTabId, active);
+        expect(destination.currentPath, path);
+        expect(destination.files, same(listed));
+        await close(tester);
+      },
+      variant: desktop,
+    );
+  }
+
+  testWidgets(
+    'a rejected tab does not redirect the drop into the active pane',
+    (tester) async {
+      final tab = inactiveTab()..collectionId = 'saved-results';
+      final data = drag([row(source, '/a.txt')]);
+      await mountTabs(tester, data);
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.byKey(const ValueKey('tab-drag-source'))),
+        kind: PointerDeviceKind.mouse,
+      );
+      await gesture.moveBy(const Offset(25, 0));
+      await tester.pump();
+      await gesture.moveTo(
+        tester.getCenter(
+          find.byKey(ValueKey('tab-folder-drop-remote-${tab.id}')),
+        ),
+      );
+      await tester.pump();
+      expect(find.text('Copy → destination'), findsNothing);
+      await gesture.up();
+      await tester.pumpAndSettle();
+      expect(find.byType(FileOperationDialog), findsNothing);
+      expect(cloud.writes, isEmpty);
+      expect(container.read(transferProvider).operations, isEmpty);
+      expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());
     },
     variant: desktop,

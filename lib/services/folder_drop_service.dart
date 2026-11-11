@@ -2,6 +2,7 @@ import 'dart:io';
 
 import '../models/file_item.dart';
 import '../models/panel_drag_data.dart';
+import '../models/panel_tab.dart';
 import '../providers/panel_provider.dart';
 import 'file_collection_service.dart';
 import 'file_operation_backend.dart';
@@ -271,6 +272,101 @@ class FolderDropService {
       readFolder: virtual
           ? () => _readVirtualFolder(local, backend, path)
           : null,
+      compareModified: !virtual,
+    );
+  }
+
+  /// A saved directory tab is a destination candidate, never a source of file
+  /// authority. Resolve only its exact stored endpoint and verify the folder
+  /// before review without selecting the tab or replacing the active listing.
+  CapturedFolderDropTarget? captureTab(
+    PanelNotifier panel,
+    PanelTab tab,
+    LocalFileService local,
+  ) {
+    if (!panel.tabs.any((value) => identical(value, tab)) ||
+        !panel.isDirectoryTab(tab.id)) {
+      return null;
+    }
+    final storage = tab.storage;
+    if (storage == null) return null;
+    final requestedPath = tab.path;
+    final resolved = panel.resolveStorageReference(storage, requestedPath);
+    if (resolved == null || !resolved.isCurrent) return null;
+    final origin = _guardLocalSource(
+      resolved,
+      local,
+      resolved.source.currentPath,
+    );
+    if (!origin.isCurrent) return null;
+    final backend = fileOperationBackend(
+      source: origin.source,
+      local: local,
+      isCurrent: () => origin.isCurrent,
+    );
+    final paths = backend.paths;
+    if (!paths.isAbsolute(requestedPath) || requestedPath.contains('\u0000')) {
+      return null;
+    }
+    final path = paths.normalize(requestedPath);
+    if (!origin.source.isLocal) {
+      final root = paths.normalize(storage.root);
+      if (!paths.isAbsolute(root) ||
+          (path != root && !paths.isWithin(root, path))) {
+        return null;
+      }
+    }
+    final sessionIsCurrent = panel.captureOperationSession();
+    bool current() =>
+        sessionIsCurrent() &&
+        panel.tabs.any((value) => identical(value, tab)) &&
+        panel.isDirectoryTab(tab.id) &&
+        tab.path == requestedPath &&
+        tab.storage == storage &&
+        origin.isCurrent;
+    if (!current()) return null;
+    final virtual = origin.source.isLocal && local is LocalFileSourceIdentity;
+    final folder = FileItem(
+      name: paths.basename(path),
+      path: path,
+      isFolder: true,
+    );
+    return CapturedFolderDropTarget._(
+      origin: origin,
+      folder: folder,
+      path: path,
+      backend: backend,
+      isCurrent: current,
+      hasAccess: origin.source.isLocal
+          ? () => local.hasAccessToPath(path)
+          : null,
+      readFolder: () async {
+        if (virtual) {
+          final identities = local as LocalFileSourceIdentity;
+          final identity = identities.sourceIdentityForPath(path);
+          if (identical(
+            identities.sourceIdentityForPath(paths.dirname(path)),
+            identity,
+          )) {
+            return _readVirtualFolder(local, backend, path);
+          }
+          // A granted root has no accessible parent listing. Read the root
+          // itself through its noninteractive directory capability, checking
+          // its permission and availability without mutating browser caches.
+          final entries = await local.listDirectorySnapshot(path);
+          if (entries == null) {
+            throw const PanelDragException(PanelDragFailure.unavailable);
+          }
+          return folder;
+        }
+        if (!origin.source.isLocal && backend.isRootPath(path)) {
+          // Remote stat treats configured roots as synthetic directories. A
+          // fresh read is required before an inactive root can receive a drop.
+          await backend.list(path);
+          return folder;
+        }
+        return backend.stat(path);
+      },
       compareModified: !virtual,
     );
   }

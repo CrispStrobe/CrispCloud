@@ -28,6 +28,8 @@ import 'file_list_dialog.dart';
 import 'file_collections_dialog.dart';
 import 'file_operation_dialog.dart';
 import '../services/file_operation_service.dart';
+import '../services/folder_drop_service.dart';
+import 'folder_drop_target.dart';
 import 'pattern_selection_dialog.dart';
 import 'file_tree_view_stub.dart' if (dart.library.io) 'file_tree_view.dart';
 import 'panel_tab_bar.dart';
@@ -705,6 +707,17 @@ class _FilePanelState extends ConsumerState<FilePanel> {
             onTabForceClosed: (id) => panel.closeTab(id, force: true),
             onCloseDuplicates: () => panel.closeDuplicateTabs(),
             onWorkspace: () => showWorkspaceDialog(context, ref, widget.side),
+            tabDropTargetBuilder: (tab, child) => FolderDropTarget(
+              key: ValueKey('tab-folder-drop-${widget.side.name}-${tab.id}'),
+              side: widget.side,
+              folder: FileItem(name: tab.label, path: tab.path, isFolder: true),
+              captureDestination: () => const FolderDropService().captureTab(
+                panel,
+                tab,
+                ref.read(localFileServiceProvider),
+              ),
+              child: child,
+            ),
           ),
           PanelHeader(
             side: widget.side,

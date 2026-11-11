@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../models/panel_tab.dart';
 import '../l10n/panel_tab_strings.dart';
 import '../l10n/navigation_strings.dart';
-import 'file_list_view.dart' show PanelDragData;
 
 class PanelTabBar extends StatelessWidget {
   const PanelTabBar({
@@ -20,7 +19,7 @@ class PanelTabBar extends StatelessWidget {
     this.onTabReordered,
     this.onCloseDuplicates,
     this.onWorkspace,
-    this.onFilesDroppedOnTab,
+    this.tabDropTargetBuilder,
     this.activeSelectionCount = 0,
     this.onTabRenamed,
     this.onReopenClosedTab,
@@ -39,7 +38,10 @@ class PanelTabBar extends StatelessWidget {
   final void Function(int, int)? onTabReordered;
   final VoidCallback? onCloseDuplicates;
   final VoidCallback? onWorkspace;
-  final void Function(String, List<dynamic>)? onFilesDroppedOnTab;
+
+  /// Supplies a guarded destination without discarding the drag's captured
+  /// source capabilities. Without a builder, tabs never advertise a drop.
+  final Widget Function(PanelTab tab, Widget child)? tabDropTargetBuilder;
   final int activeSelectionCount;
   final void Function(String, String)? onTabRenamed;
   final VoidCallback? onReopenClosedTab;
@@ -74,100 +76,97 @@ class PanelTabBar extends StatelessWidget {
                 final title = active && activeSelectionCount > 0
                     ? '[$activeSelectionCount] ${tab.label}'
                     : tab.label;
-                return DragTarget<PanelDragData>(
-                  key: ValueKey(tab.id),
-                  onAcceptWithDetails: (details) =>
-                      onFilesDroppedOnTab?.call(tab.id, details.data.files),
-                  builder: (context, candidates, rejected) => Tooltip(
-                    message:
-                        '${tab.storage?.provider ?? strings.text('location')}: ${tab.path}'
-                        '${tab.isLocked ? '\n${strings.text('lock_${tab.lockMode.name}')}' : ''}'
-                        '${tab.lockedPath != null && tab.lockedPath != tab.path ? '\n${strings.value('lockedLocation', {'path': tab.lockedPath!})}' : ''}',
-                    child: GestureDetector(
-                      onSecondaryTapDown: (details) =>
-                          _menu(context, tab, details.globalPosition),
-                      onLongPressStart: (details) =>
-                          _menu(context, tab, details.globalPosition),
-                      child: InkWell(
-                        onTap: () => onTabSelected(tab.id),
-                        child: Container(
-                          constraints: const BoxConstraints(
-                            minWidth: 72,
-                            maxWidth: 220,
-                          ),
-                          padding: const EdgeInsets.symmetric(horizontal: 6),
-                          decoration: BoxDecoration(
-                            color: candidates.isNotEmpty
-                                ? theme.colorScheme.primaryContainer
-                                : active
-                                ? theme.colorScheme.surface
-                                : Colors.transparent,
-                            border: Border(
-                              bottom: BorderSide(
-                                color: active
-                                    ? theme.colorScheme.primary
-                                    : Colors.transparent,
-                                width: 2,
-                              ),
-                              right: BorderSide(
-                                color: theme.dividerColor,
-                                width: 0.5,
-                              ),
+                final child = Tooltip(
+                  message:
+                      '${tab.storage?.provider ?? strings.text('location')}: ${tab.path}'
+                      '${tab.isLocked ? '\n${strings.text('lock_${tab.lockMode.name}')}' : ''}'
+                      '${tab.lockedPath != null && tab.lockedPath != tab.path ? '\n${strings.value('lockedLocation', {'path': tab.lockedPath!})}' : ''}',
+                  child: GestureDetector(
+                    onSecondaryTapDown: (details) =>
+                        _menu(context, tab, details.globalPosition),
+                    onLongPressStart: (details) =>
+                        _menu(context, tab, details.globalPosition),
+                    child: InkWell(
+                      onTap: () => onTabSelected(tab.id),
+                      child: Container(
+                        constraints: const BoxConstraints(
+                          minWidth: 72,
+                          maxWidth: 220,
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        decoration: BoxDecoration(
+                          color: active
+                              ? theme.colorScheme.surface
+                              : Colors.transparent,
+                          border: Border(
+                            bottom: BorderSide(
+                              color: active
+                                  ? theme.colorScheme.primary
+                                  : Colors.transparent,
+                              width: 2,
+                            ),
+                            right: BorderSide(
+                              color: theme.dividerColor,
+                              width: 0.5,
                             ),
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (onTabReordered != null)
-                                ReorderableDragStartListener(
-                                  index: index,
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(right: 3),
-                                    child: Icon(
-                                      Icons.drag_indicator,
-                                      size: 12,
-                                      color: theme.hintColor,
-                                    ),
-                                  ),
-                                ),
-                              if (tab.isProtected)
-                                Padding(
-                                  padding: const EdgeInsets.only(right: 4),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (onTabReordered != null)
+                              ReorderableDragStartListener(
+                                index: index,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(right: 3),
                                   child: Icon(
-                                    tab.isLocked
-                                        ? Icons.lock_outline
-                                        : Icons.push_pin,
+                                    Icons.drag_indicator,
                                     size: 12,
-                                    color: theme.colorScheme.primary,
-                                  ),
-                                ),
-                              Flexible(
-                                child: Text(
-                                  title,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: active
-                                        ? FontWeight.w600
-                                        : FontWeight.normal,
+                                    color: theme.hintColor,
                                   ),
                                 ),
                               ),
-                              if (!tab.isProtected && tabs.length > 1)
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 4),
-                                  child: InkWell(
-                                    onTap: () => onTabClosed(tab.id),
-                                    child: const Icon(Icons.close, size: 14),
-                                  ),
+                            if (tab.isProtected)
+                              Padding(
+                                padding: const EdgeInsets.only(right: 4),
+                                child: Icon(
+                                  tab.isLocked
+                                      ? Icons.lock_outline
+                                      : Icons.push_pin,
+                                  size: 12,
+                                  color: theme.colorScheme.primary,
                                 ),
-                            ],
-                          ),
+                              ),
+                            Flexible(
+                              child: Text(
+                                title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: active
+                                      ? FontWeight.w600
+                                      : FontWeight.normal,
+                                ),
+                              ),
+                            ),
+                            if (!tab.isProtected && tabs.length > 1)
+                              Padding(
+                                padding: const EdgeInsets.only(left: 4),
+                                child: InkWell(
+                                  onTap: () => onTabClosed(tab.id),
+                                  child: const Icon(Icons.close, size: 14),
+                                ),
+                              ),
+                          ],
                         ),
                       ),
                     ),
                   ),
+                );
+                return KeyedSubtree(
+                  key: ValueKey(tab.id),
+                  child: tabDropTargetBuilder?.call(tab, child) ?? child,
                 );
               },
             ),

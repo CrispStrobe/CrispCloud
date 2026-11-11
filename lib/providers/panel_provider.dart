@@ -3868,6 +3868,24 @@ class PanelNotifier extends ChangeNotifier {
   String _remotePath = '/';
 
   List<PanelTab> get tabs => _tabs;
+
+  /// A saved location can be a drop destination only when it identifies a real
+  /// directory. A transient result tab must not borrow its underlying path.
+  bool isDirectoryTab(String id) {
+    if (_isDisposed || _fileListTabs.containsKey(id)) return false;
+    PanelTab? tab;
+    for (final candidate in _tabs) {
+      if (candidate.id == id) tab = candidate;
+    }
+    if (tab == null ||
+        tab.storage == null ||
+        tab.collectionId != null ||
+        _isArchiveVirtualPath(tab.path))
+      return false;
+    return id != _activeTabId ||
+        (!_showingSearchResults && !isInArchive && !_isFlatView);
+  }
+
   String get activeTabId => _activeTabId;
   PanelTab? get activeTab => _tabs.isEmpty
       ? null
