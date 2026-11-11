@@ -1,0 +1,28 @@
+{
+  "dart_smb2": {
+    "version": "0.2.5",
+    "repository": "https://github.com/ales-drnz/dart_smb2"
+  },
+  "libsmb2_scripts": {
+    "revision": "eca28a3ef007d6c268ebfd4a4950a0c28de6335c",
+    "repository": "https://github.com/ales-drnz/libsmb2-scripts"
+  },
+  "upstream_files": {
+    "LICENSE": "3d980201ca4f6c78fb1a79e85485cd956151b4fdc1275ef196370d97f1b61e6e",
+    "scripts/build_libsmb2_macos.sh": "78f7d4a608e12654b0d2c3542a1171c15e2d10b9a328fb455dc6c75de5e2cf56",
+    "scripts/build_libsmb2_ios.sh": "cd239546cc64cc06ce6b418adbb747079c0427aa3c6d896e80ee698b748c4e7a",
+    "scripts/shared/_helpers.sh": "120121b262be266858e8644ad48cfc2f896e52a7bd019a0c3b1f189007bddfc0",
+    "scripts/shared/_versions.sh": "69a518ec73ace00eeb19e5dc55d8478110da8d4104221c94db3fb72c2c14ed31",
+    "scripts/shared/config/config.h": "86a5decd64d6a08cd3c57f15b4fef156df2eab9f0efe44d16cb95ddb69c8dc5d",
+    "patches/libsmb2/shared/patch_utimes.py": "180fc39c246386e666fb1953e148b8120688e04dd6f6ba3e2511c08577b24616",
+    "patches/libsmb2/shared/patch_unlink_non_directory.py": "adea67bd9b6591d54cf933529fb872c67b013997e7992cbecf1766fdd4688ff4",
+    "patches/libsmb2/shared/patch_nterror_reporting.py": "7cafb907b90b0a50962f9b87f076d6f1270cbea26ae5296cd5866d295542be1b",
+    "patches/libsmb2/shared/patch_truncate_non_directory.py": "94dca2d839a2b663a7253fa8ab8226daff0f831f3eafd4a24e122d3cdf1e138f",
+    "patches/libsmb2/shared/patch_rmdir_disposition.py": "92a9bec3930b5535cd8e219f62d0e879d1140421c25cddee23fa192f95ea41f5",
+    "patches/libsmb2/shared/patch_poll_eintr.py": "09d96e3d5b448567973a5c52ae7948413723c590f642603e214046a82534297a",
+    "patches/libsmb2/shared/patch_create_data_leaks.py": "e097d8a597a4dc8c3f14bbcf3214ff31072edfbb599ba7c421b078cd334a7602",
+    "patches/libsmb2/shared/patch_compound_callbacks.py": "4429ebd6acb43e83db0c42ec9eef139389982fd512a98f3c4054c4e475dc6322",
+    "licenses/libsmb2/LICENCE-LGPL-2.1.txt": "dc626520dcd53a22f727af3ee42c770e56c97a64fe3adb063799d8ab032fe551",
+    "licenses/libsmb2/COPYING": "fd87b0d474243809ec4b41c6c8e4a6563c143e5c1e1f4039adc54c0151babf76"
+  }
+}

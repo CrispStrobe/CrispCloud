@@ -6,6 +6,7 @@
 // crisp config path         — print just the config file path
 
 import 'dart:io';
+import 'package:crisp_storage/crisp_storage.dart';
 
 import 'package:args/command_runner.dart';
 
@@ -21,6 +22,7 @@ class ConfigCommand extends Command<int> {
   final CliConfig config;
 
   ConfigCommand(this.config) {
+    addSubcommand(_ConfigSmbBackendCommand(config));
     addSubcommand(_ConfigShowCommand(config));
     addSubcommand(_ConfigPathCommand(config));
     addSubcommand(_ConfigSetDefaultCommand(config));
@@ -51,7 +53,9 @@ class _ConfigShowCommand extends Command<int> {
     stdout.writeln('');
     final file = File(config.configPath);
     if (!file.existsSync()) {
-      stdout.writeln('(No config file found — run "crisp connect" to add a provider)');
+      stdout.writeln(
+        '(No config file found — run "crisp connect" to add a provider)',
+      );
       return 0;
     }
     // Mask secrets before printing
@@ -64,8 +68,10 @@ class _ConfigShowCommand extends Command<int> {
   /// Replace lines like "  secret_key: ..." or "  password: ..." with masked values.
   static String _maskSecrets(String yaml) {
     return yaml.replaceAllMapped(
-      RegExp(r'^(\s*(?:secret_key|password|access_token|api_key):\s*)(.+)$',
-          multiLine: true),
+      RegExp(
+        r'^(\s*(?:secret_key|password|access_token|api_key):\s*)(.+)$',
+        multiLine: true,
+      ),
       (m) => '${m.group(1)}****',
     );
   }
@@ -152,6 +158,34 @@ class _ConfigRemoveCommand extends Command<int> {
 
     config.removeProvider(name);
     stdout.writeln('Removed provider "$name".');
+    return 0;
+  }
+}
+
+class _ConfigSmbBackendCommand extends Command<int> {
+  @override
+  final name = 'smb-backend';
+  @override
+  final description = 'Show or set a saved SMB transport: libsmb2, rust, auto.';
+  final CliConfig config;
+  _ConfigSmbBackendCommand(this.config);
+  @override
+  Future<int> run() async {
+    final args = argResults!.rest;
+    if (args.isEmpty || args.length > 2) {
+      usageException('crisp config smb-backend <provider> [libsmb2|rust|auto]');
+    }
+    final provider = config.providerConfig(args.first, strict: true);
+    if (provider == null || provider['type'] != 'smb') {
+      throw CliConfigException('Choose an SMB provider.');
+    }
+    if (args.length == 2) {
+      provider['smbBackend'] = parseSmbBackend(args[1])!.name;
+      config.saveProvider(args.first, provider);
+    }
+    stdout.writeln(
+      parseSmbBackend(provider['smbBackend'])?.name ?? 'build default',
+    );
     return 0;
   }
 }

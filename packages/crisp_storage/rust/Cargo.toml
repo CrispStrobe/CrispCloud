@@ -1,0 +1,17 @@
+[package]
+name = "crisp_smb_bridge"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+publish = false
+[lib]
+crate-type = ["cdylib", "staticlib"]
+[workspace]
+[dependencies]
+crisp_smb = { path = "../native/crisp_smb" }
+flutter_rust_bridge = "=2.11.1"
+serde_json = "1"
+anyhow = "1"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ["cfg(frb_expand)"] }

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'sftp_reader.dart';
 import 'smb_session.dart' if (dart.library.js_interop) 'smb_session_web.dart';
 import 'download_state.dart';
+import 'smb_backend.dart';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:xml/xml.dart';
@@ -93,6 +94,7 @@ class RemoteConnection {
   final Uri url;
   final bool allowLocalHttp;
   final bool requireEncryption;
+  final SmbBackend? smbBackend;
   final String? hostKey;
   RemoteConnection({
     required this.id,
@@ -103,6 +105,7 @@ class RemoteConnection {
     required this.secret,
     this.allowLocalHttp = false,
     this.requireEncryption = true,
+    this.smbBackend,
     this.hostKey,
   }) : url = validateUrl(
          url,
@@ -200,6 +203,7 @@ class RemoteConnection {
     'username': username,
     'allowLocalHttp': allowLocalHttp,
     if (kind == 'smb') 'requireEncryption': requireEncryption,
+    if (kind == 'smb' && smbBackend != null) 'smbBackend': smbBackend!.name,
     if (hostKey != null) 'hostKey': hostKey,
     if (credentials) 'secret': secret,
   };
@@ -213,6 +217,7 @@ class RemoteConnection {
         secret: json['secret'] as String,
         allowLocalHttp: json['allowLocalHttp'] == true,
         requireEncryption: json['requireEncryption'] != false,
+        smbBackend: parseSmbBackend(json['smbBackend']),
         hostKey: json['hostKey'] as String?,
       );
 }

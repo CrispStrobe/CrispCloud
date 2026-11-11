@@ -1,3 +1,5 @@
+import 'package:crisp_storage/crisp_storage.dart' show SmbBackend, parseSmbBackend;
+import 'smb_backend_field.dart';
 import '../services/sftp_client_adapter.dart';
 import '../services/smb_client_adapter.dart';
 import 'dart:convert';
@@ -60,6 +62,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
   final _ftpUserController = TextEditingController();
   bool _ftpUseTLS = false;
   bool _smbRequireEncryption = true;
+  SmbBackend _smbBackend = SmbBackend.libsmb2;
 
   // S3 Specific Controllers
   final _s3EndpointController =
@@ -178,7 +181,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
       case CloudProvider.webdav:
         return {'host': _hostController.text, 'user': _emailController.text};
       case CloudProvider.smb:
-        return {'host': _hostController.text, 'user': _emailController.text, 'requireEncryption': '$_smbRequireEncryption'};
+        return {'host': _hostController.text, 'user': _emailController.text, 'requireEncryption': '$_smbRequireEncryption', 'smbBackend': _smbBackend.name};
       default:
         return {'email': _emailController.text};
     }
@@ -245,6 +248,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
         _hostController.text = f['host'] ?? '';
         _emailController.text = f['user'] ?? '';
         _smbRequireEncryption = f['requireEncryption'] != 'false';
+        _smbBackend = parseSmbBackend(f['smbBackend']) ?? SmbBackend.libsmb2;
         break;
       default:
         _emailController.text = f['email'] ?? '';
@@ -1030,6 +1034,8 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                 ),
                 enabled: !_isLoading,
               ),
+              if (isSmb) SmbBackendField(value: _smbBackend,
+                onChanged: _isLoading ? null : (v) => setState(() => _smbBackend = v)),
               if (isSmb) CheckboxListTile(
                 contentPadding: EdgeInsets.zero,
                 title: Text(t.text('requireSmb')),
@@ -1508,6 +1514,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
       // 4. Perform Login
       if (auth.client is SmbClientAdapter) {
         (auth.client as SmbClientAdapter).requireEncryption = _smbRequireEncryption;
+        (auth.client as SmbClientAdapter).smbBackend = _smbBackend;
       }
       if (_selectedProvider == CloudProvider.sftp && _sftpUsePrivateKey) {
         await auth.loginSftpWithPrivateKey(identity, _sftpPrivateKey!,

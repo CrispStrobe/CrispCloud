@@ -12,3 +12,9 @@ packages/pdf_operations/test/fonts/*.ttf binary
 # Unified patch context lines contain a required space prefix.
 packages/*/UPSTREAM.patch -whitespace
 packages/pdf_fork_transfer/fork.patch -whitespace
+
+# Native SMB recipe and notice hashes identify exact upstream LF bytes.
+packages/dart_smb2/** text eol=lf
+
+# Dart raw strings use LF; keep the distributed runtime notice identical.
+packages/crisp_storage/NOTICE-LIBSMB2.txt text eol=lf

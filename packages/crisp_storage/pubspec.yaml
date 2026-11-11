@@ -5,11 +5,22 @@ publish_to: none
 environment:
   sdk: '>=3.10.0 <4.0.0'
 dependencies:
+  crypto: ^3.0.3
+  http: ^1.2.0
+  filen_client:
+    path: ../filen_client
+  internxt_client: 0.2.3
+  flutter_rust_bridge: 2.11.1
   collection: ^1.19.0
   dartssh2: ^4.1.0
-  dart_smb2: 0.2.1
+  dart_smb2:
+    path: ../dart_smb2
   path: ^1.9.0
   xml: '>=6.5.0 <8.0.0'
 dev_dependencies:
   test: ^1.25.0
   lints: ^5.0.0
+
+# Same SDK-compatibility override used by both Flutter apps.
+dependency_overrides:
+  pointycastle: ^4.0.0

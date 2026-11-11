@@ -22,6 +22,8 @@ class SmbClientAdapter extends CloudStorageClient with CloudTransferOperations {
   SmbSession? _session;
   String? _username, _server;
   bool requireEncryption = true;
+  SmbBackend smbBackend = SmbBackend.libsmb2;
+  SmbBackend? get effectiveBackend => _session?.effectiveBackend;
   SmbClientAdapter({required this.config});
   @override
   String get providerName => 'SMB';
@@ -43,7 +45,9 @@ class SmbClientAdapter extends CloudStorageClient with CloudTransferOperations {
   Future<SmbSession> _connect(Map<String, String> credentials) async {
     if (kIsWeb) {
       throw SmbUnsupportedFailure(
-          SmbOperationCode.unsupported, 'SMB requires the installed app.');
+        SmbOperationCode.unsupported,
+        'SMB requires the installed app.',
+      );
     }
     final connection = RemoteConnection(
       id: 'crispcloud-smb',
@@ -53,6 +57,7 @@ class SmbClientAdapter extends CloudStorageClient with CloudTransferOperations {
       username: credentials['username']!,
       secret: credentials['password']!,
       requireEncryption: credentials['requireEncryption'] != 'false',
+      smbBackend: parseSmbBackend(credentials['smbBackend']),
     );
     final session = SmbSession(connection);
     try {
@@ -64,6 +69,7 @@ class SmbClientAdapter extends CloudStorageClient with CloudTransferOperations {
     _username = connection.username;
     _server = connection.url.toString();
     requireEncryption = connection.requireEncryption;
+    smbBackend = session.backend;
     return session;
   }
 
@@ -72,7 +78,9 @@ class SmbClientAdapter extends CloudStorageClient with CloudTransferOperations {
     final credentials = await config.readCredentials();
     if (credentials == null) {
       throw SmbStateFailure(
-          SmbOperationCode.notConnected, 'Connect to an SMB share first.');
+        SmbOperationCode.notConnected,
+        'Connect to an SMB share first.',
+      );
     }
     return _session = await _connect(credentials);
   }
@@ -86,13 +94,16 @@ class SmbClientAdapter extends CloudStorageClient with CloudTransferOperations {
     final split = email.lastIndexOf('@smb://');
     if (split < 1) {
       throw const SmbFormatFailure(
-          SmbOperationCode.invalidLogin, 'Use username@smb://host/share/.');
+        SmbOperationCode.invalidLogin,
+        'Use username@smb://host/share/.',
+      );
     }
     final credentials = {
       'username': email.substring(0, split),
       'url': email.substring(split + 1),
       'password': password,
       'requireEncryption': '$requireEncryption',
+      'smbBackend': smbBackend.name,
     };
     final session = await _connect(credentials);
     try {
@@ -157,8 +168,10 @@ class SmbClientAdapter extends CloudStorageClient with CloudTransferOperations {
         name.contains('/') ||
         name.contains(r'\') ||
         name.contains('\u0000')) {
-      throw const SmbFormatFailure(SmbOperationCode.invalidName,
-          'Enter a file name without path separators.');
+      throw const SmbFormatFailure(
+        SmbOperationCode.invalidName,
+        'Enter a file name without path separators.',
+      );
     }
     return p.posix.join(parent, name);
   }
@@ -271,8 +284,10 @@ class SmbClientAdapter extends CloudStorageClient with CloudTransferOperations {
       if (entry == null) {
         await session.mkdir(url);
       } else if (entry.type != 'folder') {
-        throw SmbStateFailure(SmbOperationCode.folderOccupied,
-            'A file occupies the folder path.');
+        throw SmbStateFailure(
+          SmbOperationCode.folderOccupied,
+          'A file occupies the folder path.',
+        );
       }
     }
   }
@@ -281,14 +296,18 @@ class SmbClientAdapter extends CloudStorageClient with CloudTransferOperations {
   Future<void> deletePath(String path) async {
     if (path.replaceAll('/', '').isEmpty) {
       throw const SmbFormatFailure(
-          SmbOperationCode.deleteRoot, 'Cannot delete the share root.');
+        SmbOperationCode.deleteRoot,
+        'Cannot delete the share root.',
+      );
     }
     final session = await _ensure();
     final url = _url(session, path);
     final entry = await session.stat(url);
     if (entry == null) {
       throw SmbStateFailure(
-          SmbOperationCode.notFound, 'File or folder was not found.');
+        SmbOperationCode.notFound,
+        'File or folder was not found.',
+      );
     }
     if (entry.type == 'folder') {
       final listing = await listPath(path);
@@ -308,7 +327,9 @@ class SmbClientAdapter extends CloudStorageClient with CloudTransferOperations {
     if (sourcePath.replaceAll('/', '').isEmpty ||
         targetPath.replaceAll('/', '').isEmpty) {
       throw const SmbFormatFailure(
-          SmbOperationCode.moveRoot, 'Cannot move the share root.');
+        SmbOperationCode.moveRoot,
+        'Cannot move the share root.',
+      );
     }
     await session.rename(_url(session, sourcePath), _url(session, targetPath));
   }

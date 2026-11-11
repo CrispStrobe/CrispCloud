@@ -16,6 +16,30 @@ commands are `connect`, `providers`, `ls`, `upload`, `download`, `search`, `shar
 `sync`, and `config`. `crisp completion bash`, `zsh`, or `fish` includes PDF
 operations.
 
+## Storage providers and engines
+
+| Provider | Current standalone CLI implementation | Engine choice |
+| --- | --- | --- |
+| S3 | Dart HTTP/crypto adapter | Existing adapter |
+| SFTP | Dart `dartssh2` adapter | Existing adapter |
+| WebDAV | Dart HTTP adapter | Existing adapter |
+| SMB | Shared `crisp_storage` adapter | `libsmb2` (default), strict `rust`, or `auto` |
+| Filen / Internxt | Not implemented in this CLI factory | Proposed shared Dart/Rust adapters; no engine flag exists yet |
+
+The CLI runs independently of the GUI. Its profiles and credentials are in its
+private YAML configuration (owner-only permissions on Unix), not the GUI's secure
+store. SMB values and security behavior match the GUI, even though the stores
+are separate. Current commands and native build instructions are in
+[SMB_RUST_ROLLOUT.md](../docs/SMB_RUST_ROLLOUT.md).
+
+The proposed Filen/Internxt integration keeps application scheduling in Dart and
+reuses Rust provider code with the GUI and other Crisp apps. Native library
+absence may permit an explicitly configured Auto fallback before login/work;
+authentication, crypto or transfer failures must not replay work through another
+engine. Proposed modes are not accepted by today's CLI. See
+[the complete storage-engine design](../docs/STORAGE_ENGINE_ARCHITECTURE.md) for
+capabilities, session/resume compatibility, web limits and acceptance tests.
+
 ## PDF operations
 
 `crisp pdf` uses the same `pdf_operations` package as the graphical application.

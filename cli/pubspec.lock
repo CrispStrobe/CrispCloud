@@ -65,6 +65,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.2"
+  build_cli_annotations:
+    dependency: transitive
+    description:
+      name: build_cli_annotations
+      sha256: e563c2e01de8974566a1998410d3f6f03521788160a02503b0b1f1a46c7b3d95
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.1.1"
   characters:
     dependency: transitive
     description:
@@ -131,11 +139,10 @@ packages:
   dart_smb2:
     dependency: transitive
     description:
-      name: dart_smb2
-      sha256: ba54193d234f49a92e54222e5300bc4c901063457e8af2abfb4ac3153ac923eb
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.2.1"
+      path: "../packages/dart_smb2"
+      relative: true
+    source: path
+    version: "0.2.5+crisp.1"
   dartssh2:
     dependency: "direct main"
     description:
@@ -160,6 +167,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "7.0.1"
+  flutter_rust_bridge:
+    dependency: transitive
+    description:
+      name: flutter_rust_bridge
+      sha256: "37ef40bc6f863652e865f0b2563ea07f0d3c58d8efad803cc01933a4b2ee067e"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.11.1"
   frontend_server_client:
     dependency: transitive
     description:

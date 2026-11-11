@@ -1,3 +1,5 @@
+import 'dart:io';
+
 // lib/adapters/cli_storage_client.dart
 //
 // Abstract interface for CLI storage adapters.
@@ -23,12 +25,12 @@ class CliFileItem {
   });
 
   Map<String, dynamic> toJson() => {
-        'name': name,
-        'path': path,
-        'type': isDirectory ? 'folder' : 'file',
-        if (size != null) 'size': size,
-        if (modifiedAt != null) 'modified': modifiedAt,
-      };
+    'name': name,
+    'path': path,
+    'type': isDirectory ? 'folder' : 'file',
+    if (size != null) 'size': size,
+    if (modifiedAt != null) 'modified': modifiedAt,
+  };
 }
 
 /// Abstract interface every CLI adapter must implement.
@@ -74,4 +76,38 @@ abstract class CliStorageClient {
 
   /// Close any open connections / release resources.
   Future<void> dispose();
+}
+
+/// Optional bounded upload for local files; other providers retain their API.
+abstract interface class CliStreamingUpload {
+  Future<void> uploadFile(
+    File file,
+    String fileName,
+    String remoteDir, {
+    void Function(int sent, int total)? onProgress,
+  });
+}
+
+Future<void> uploadLocalFile(
+  CliStorageClient adapter,
+  File file,
+  String fileName,
+  String remoteDir, {
+  void Function(int, int)? onProgress,
+}) async {
+  if (adapter is CliStreamingUpload) {
+    await (adapter as CliStreamingUpload).uploadFile(
+      file,
+      fileName,
+      remoteDir,
+      onProgress: onProgress,
+    );
+  } else {
+    await adapter.upload(
+      await file.readAsBytes(),
+      fileName,
+      remoteDir,
+      onProgress: onProgress,
+    );
+  }
 }

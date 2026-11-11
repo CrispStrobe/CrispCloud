@@ -115,10 +115,10 @@ _crisp_completion() {
       COMPREPLY=( $(compgen -f -- "${cur}") )
       ;;
     connect)
-      COMPREPLY=( $(compgen -W "s3 sftp webdav" -- "${cur}") )
+      COMPREPLY=( $(compgen -W "s3 sftp smb webdav" -- "${cur}") )
       ;;
     config)
-      COMPREPLY=( $(compgen -W "show path set-default remove" -- "${cur}") )
+      COMPREPLY=( $(compgen -W "show path set-default remove smb-backend" -- "${cur}") )
       ;;
     pdf)
       if [[ ${COMP_CWORD} -eq 2 ]]; then
@@ -163,10 +163,10 @@ _crisp() {
     args)
       case $words[2] in
         connect)
-          _values 'type' s3 sftp webdav
+          _values 'type' s3 sftp smb webdav
           ;;
         config)
-          _values 'subcommand' show path set-default remove
+          _values 'subcommand' show path set-default remove smb-backend
           ;;
         pdf)
           if (( CURRENT == 3 )); then
@@ -208,10 +208,10 @@ complete -c crisp -f -n "not __fish_seen_subcommand_from $commands" -a pdf -d "I
 complete -c crisp -f -n "not __fish_seen_subcommand_from $commands" -a completion -d "Shell completion"
 
 # connect provider types
-complete -c crisp -f -n "__fish_seen_subcommand_from connect" -a "s3 sftp webdav"
+complete -c crisp -f -n "__fish_seen_subcommand_from connect" -a "s3 sftp smb webdav"
 
 # config subcommands
-complete -c crisp -f -n "__fish_seen_subcommand_from config" -a "show path set-default remove"
+complete -c crisp -f -n "__fish_seen_subcommand_from config" -a "show path set-default remove smb-backend"
 
 # completion shells
 complete -c crisp -f -n "__fish_seen_subcommand_from completion" -a "bash zsh fish"

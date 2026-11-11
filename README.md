@@ -55,7 +55,7 @@ We also maintain patched Nextcloud and ownCloud desktop clients with delta sync 
 - **Office editing:** DOCX/XLSX/PPTX editing through the patched Quds engine, with independent Word round-trip verification and archive members kept view-only
 - **PDF editor:** annotate, fill standard PDF forms, edit page content, and organize pages from F4, the file menu, or the preview pane. Includes conflict checks, save-copy/export recovery, and password-protected input; see [PDF editing](docs/pdf-editor.md) for supported behavior and limits.
 - **Web support:** full file operations (open folder, copy, move, delete, download) via File System Access API with Safari/Firefox fallback
-- **CLI companion** (`crisp`): headless S3/SFTP/WebDAV operations, 9 commands, shell completions
+- **CLI companion** (`crisp`): headless S3/SFTP/SMB/WebDAV operations, PDF tools and shell completions; see [CLI capabilities](cli/README.md). Filen/Internxt CLI adapters are planned.
 - **Plugin system** with local REST API and automation rules
 - **Experimental macOS mounts:** read-only macFUSE FSKit, explicitly selected FUSE-T, or a separately configured rclone NFS remote. Runtime installation, limitations and current test status are described in the [mount guide](docs/USER_GUIDE.md#fuse-mounted-drives). Linux and Windows mounting is not yet implemented.
 - **Unified Settings:** one surface for language, theme/accent, file-list fonts, quick search, cache, proxy/provider networking, accessibility, privacy and advanced options
@@ -111,7 +111,9 @@ Modular adapter pattern with provider-agnostic interfaces:
 
 See [the architecture guide](docs/ARCHITECTURE.md) for state and provider
 boundaries, [the security architecture](docs/SECURITY_ARCHITECTURE.md) for the
-threat model, and [PLAN.md](PLAN.md) for the feature roadmap.
+threat model, [Dart/Rust storage engines](docs/STORAGE_ENGINE_ARCHITECTURE.md)
+for the current split and proposed Filen/Internxt reuse, and [PLAN.md](PLAN.md)
+for the feature roadmap.
 
 ## Keyboard Shortcuts
 

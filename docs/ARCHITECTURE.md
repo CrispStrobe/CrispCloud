@@ -41,3 +41,17 @@ The terminal backend is platform- and distribution-aware: a real PTY-backed
 shell on desktop, a sandboxed shell with security-scoped folder grants on the
 macOS App Store build, an unsandboxed shell for Developer ID builds, and a
 built-in command layer on iOS. See [terminal.md](terminal.md).
+
+## Storage engines across apps
+
+Flutter/Dart owns application state, account settings, queues and UI. SMB uses
+`packages/crisp_storage`: the default Dart wrapper calls C libsmb2, while the
+optional Rust path uses the shared `crisp_smb` core through FFI. Filen/Internxt
+currently use Dart clients in the GUI and have no standalone CLI adapters.
+
+The next design reuses Sorter's existing Rust Filen/Internxt clients through a
+common contract and bridge, retaining Dart during qualification. Source reuse,
+credential ownership, worker/stream boundaries, fallback rules, browser limits,
+MPL/LGPL evidence and the test/rollout sequence are recorded in
+[STORAGE_ENGINE_ARCHITECTURE.md](STORAGE_ENGINE_ARCHITECTURE.md). Its proposed
+provider settings must not be presented as already implemented.
