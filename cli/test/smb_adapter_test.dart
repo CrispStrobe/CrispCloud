@@ -98,9 +98,8 @@ void main() {
         ]) {
           saved.saveProvider('nas', {...config(), 'password': password});
           // Reopen the file rather than checking only the emitter's text.
-          final restored = CliConfig(
-            path: path,
-          ).providerConfig('nas', strict: true)!;
+          final restored = CliConfig(path: path)
+              .providerConfig('nas', strict: true)!;
           expect(restored['password'], password);
           final adapter = createAdapter('nas', restored) as SmbCliAdapter;
           expect(adapter.connection.secret, password);
@@ -121,9 +120,8 @@ void main() {
       final saved = CliConfig(path: path);
       for (final password in ['', 'line\nbreak\rreturn\ttab\u0000']) {
         saved.saveProvider('nas', {...config(), 'password': password});
-        final restored = CliConfig(
-          path: path,
-        ).providerConfig('nas', strict: true)!;
+        final restored = CliConfig(path: path)
+            .providerConfig('nas', strict: true)!;
         expect(restored['password'], password);
         expect(
           () => createAdapter('nas', restored),
@@ -155,15 +153,13 @@ void main() {
         final errors = server.stderr.drain<void>();
         SmbCliAdapter? adapter;
         try {
-          final ready =
-              jsonDecode(
-                    await server.stdout
-                        .transform(utf8.decoder)
-                        .transform(const LineSplitter())
-                        .first
-                        .timeout(const Duration(seconds: 15)),
-                  )
-                  as Map;
+          final ready = jsonDecode(
+            await server.stdout
+                .transform(utf8.decoder)
+                .transform(const LineSplitter())
+                .first
+                .timeout(const Duration(seconds: 15)),
+          ) as Map;
           final cfg = {
             ...config(backend.name),
             'url': 'smb://127.0.0.1:${ready['port']}/books/',
@@ -193,9 +189,10 @@ void main() {
           await adapter.delete('/folder');
           expect(await adapter.list('/'), isEmpty);
           await expectLater(adapter.list('../escape'), throwsFormatException);
-          final strict =
-              createAdapter('strict', {...cfg, 'requireEncryption': true})
-                  as SmbCliAdapter;
+          final strict = createAdapter('strict', {
+            ...cfg,
+            'requireEncryption': true,
+          }) as SmbCliAdapter;
           try {
             await expectLater(
               strict.list('/'),
