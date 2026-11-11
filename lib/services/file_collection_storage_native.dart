@@ -17,19 +17,38 @@ FileCollectionStorage createFileCollectionStorage({
     ? PreferencesFileCollectionStorage(preferences)
     : NativeFileCollectionStorage();
 
-class NativeFileCollectionStorage implements FileCollectionStorage {
+class NativeFileCollectionStorage
+    implements FileCollectionStorage, FileCollectionStorageBatchWriter {
   NativeFileCollectionStorage({Future<Directory> Function()? directory})
     : _directory = directory ?? _defaultDirectory;
   final Future<Directory> Function() _directory;
+  Future<Directory>? _resolvedDirectory;
   static Future<Directory> _defaultDirectory() async => Directory(
     p.join(
       (await getApplicationSupportDirectory()).path,
       'file_collections_v2',
     ),
   );
+  Future<Directory> _storageDirectory() {
+    final previous = _resolvedDirectory;
+    if (previous != null) return previous;
+    final resolving = Future<Directory>.sync(_directory);
+    _resolvedDirectory = resolving;
+    // A transient platform/path-provider failure must not poison this instance.
+    resolving.then<void>(
+      (_) {},
+      onError: (Object _, StackTrace __) {
+        if (identical(_resolvedDirectory, resolving)) {
+          _resolvedDirectory = null;
+        }
+      },
+    );
+    return resolving;
+  }
+
   Future<File> _file(String key) async => File(
     p.join(
-      (await _directory()).path,
+      (await _storageDirectory()).path,
       '${sha256.convert(utf8.encode(key))}.json',
     ),
   );
@@ -57,18 +76,35 @@ class NativeFileCollectionStorage implements FileCollectionStorage {
   }
 
   @override
-  Future<void> write(String key, String value) async {
-    final file = await _file(key);
+  Future<void> write(String key, String value) =>
+      writePreparedRecord(FileCollectionStorageRecord(key, value));
+
+  /// Persist an already encoded record with the same durable publication as a
+  /// normal write. Subclasses may wrap it while retaining these semantics.
+  Future<void> writePreparedRecord(FileCollectionStorageRecord record) async {
+    final file = await _file(record.key);
     await file.parent.create(recursive: true);
     final pending = File('${file.path}.${const Uuid().v4()}.pending');
     try {
-      await pending.writeAsString(value, flush: true);
+      await pending.writeAsBytes(record.bytes, flush: true);
       await pending.rename(file.path);
     } finally {
       if (await pending.exists()) {
         await pending.delete();
       }
     }
+  }
+
+  @override
+  Future<void> writeBatch(List<FileCollectionStorageRecord> records) async {
+    final batch = List<FileCollectionStorageRecord>.unmodifiable(records);
+    FileCollectionStorageBatch.validate(batch);
+    // Future.wait's default non-eager error mode drains all four (or fewer)
+    // writes before callers begin cleaning up a failed unpublished revision.
+    await Future.wait([
+      for (final record in batch)
+        Future<void>.sync(() => writePreparedRecord(record)),
+    ]);
   }
 
   @override

@@ -181,9 +181,39 @@ StorageScanDirectory _readDirectory(String path) {
       FileSystemEntityType.directory) {
     throw FileSystemException('The directory is no longer available.', path);
   }
+  // Ordinary POSIX enumeration preserves this already-normalized parent. A
+  // direct child component therefore needs no second full-path normalization.
+  // Windows aliases, roots, leading double slashes, trailing separators and
+  // noncanonical parents keep the original path-library behavior.
+  final directChildPrefix =
+      !Platform.isWindows &&
+          p.context.style == p.Style.posix &&
+          p.isAbsolute(path) &&
+          path != '/' &&
+          !path.startsWith('//') &&
+          !path.endsWith('/') &&
+          p.normalize(path) == path
+      ? '$path/'
+      : null;
   for (final entity in Directory(path).listSync(followLinks: false)) {
-    final entryPath = p.normalize(entity.path);
-    final name = p.basename(entryPath);
+    var entryPath = entity.path;
+    String? name;
+    if (directChildPrefix != null && entryPath.startsWith(directChildPrefix)) {
+      final component = entryPath.substring(directChildPrefix.length);
+      if (component.isNotEmpty &&
+          component != '.' &&
+          component != '..' &&
+          !component.contains('/') &&
+          !component.contains(r'\') &&
+          !component.contains(':') &&
+          !component.contains('\u0000')) {
+        name = component;
+      }
+    }
+    if (name == null) {
+      entryPath = p.normalize(entryPath);
+      name = p.basename(entryPath);
+    }
     if (entity is Link) {
       // A disk-usage scan needs to identify links, not resolve their targets.
       entries.add(

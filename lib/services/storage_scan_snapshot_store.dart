@@ -103,7 +103,15 @@ class StorageScanSnapshotStore {
     required String storageId,
     required String sourceLabel,
     p.Style? pathStyle,
+    bool Function()? isCancelled,
   }) async {
+    void checkCancellation() {
+      if (isCancelled?.call() ?? false) {
+        throw StateError('Saving the scan was cancelled.');
+      }
+    }
+
+    checkCancellation();
     _text(storageId, 'storage ID', max: 1024);
     _text(sourceLabel, 'source label', max: 1024, empty: true);
     final style =
@@ -117,6 +125,17 @@ class StorageScanSnapshotStore {
     }
     final paths = p.Context(style: style);
     _checkRoot(result.root.path, paths);
+    if (result.issues.length > 1000) {
+      throw const FormatException('The scan exceeds 1,000 saved diagnostics.');
+    }
+    _count(result.suppressedIssueCount, 'suppressed issues', max: _maxInteger);
+    final (_, existing) = await _index();
+    checkCancellation();
+    if (existing.length >= maxSnapshots) {
+      throw const FormatException(
+        'Keep at most 100 saved scans. Delete an older scan first.',
+      );
+    }
     final id = const Uuid().v4();
     final createdKeys = <String>[];
     var commitUncertain = false;
@@ -126,25 +145,35 @@ class StorageScanSnapshotStore {
       var pageBytes = 0;
       var totalBytes = 0;
       var nodes = 0;
+      final batch = <FileCollectionStorageRecord>[];
       final seen = <String>{};
       final objects = HashSet<StorageNode>.identity();
       final pending = <(StorageNode, int, int, String?)>[
         (result.root, -1, 0, null),
       ];
+      Future<void> writeBatch() async {
+        if (batch.isEmpty) return;
+        checkCancellation();
+        await FileCollectionStorageBatch.write(_storage, batch);
+        batch.clear();
+        checkCancellation();
+      }
+
       Future<void> flush() async {
         if (page.isEmpty) return;
         if (pages.length >= maxPages) {
           throw const FormatException('The scan exceeds its saved-page limit.');
         }
         final raw = '{"version":$version,"nodes":[${page.join(',')}]}';
-        final bytes = utf8.encode(raw);
+        final key = _pageKey(id, pages.length);
+        final record = FileCollectionStorageRecord(key, raw);
+        final bytes = record.bytes;
         totalBytes += bytes.length;
         if (bytes.length > pageByteLimit || totalBytes > snapshotByteLimit) {
           throw const FormatException('The saved scan exceeds 128 MiB.');
         }
-        final key = _pageKey(id, pages.length);
         createdKeys.add(key);
-        await _storage.write(key, raw);
+        batch.add(record);
         pages.add({
           'bytes': bytes.length,
           'nodes': page.length,
@@ -152,9 +181,13 @@ class StorageScanSnapshotStore {
         });
         page = [];
         pageBytes = 0;
+        if (batch.length == FileCollectionStorageBatch.maxRecords) {
+          await writeBatch();
+        }
       }
 
       while (pending.isNotEmpty) {
+        checkCancellation();
         final (node, parent, depth, parentPath) = pending.removeLast();
         if (++nodes > maxNodes || depth > 201 || !objects.add(node)) {
           throw const FormatException(
@@ -186,6 +219,7 @@ class StorageScanSnapshotStore {
         if (nodes % 500 == 0) await Future<void>.delayed(Duration.zero);
       }
       await flush();
+      await writeBatch();
       final summary = StorageScanSnapshotSummary(
         id: id,
         storageId: storageId,
@@ -199,16 +233,6 @@ class StorageScanSnapshotStore {
         fileCount: result.root.fileCount,
         folderCount: result.root.folderCount,
         isComplete: result.isComplete,
-      );
-      if (result.issues.length > 1000) {
-        throw const FormatException(
-          'The scan exceeds 1,000 saved diagnostics.',
-        );
-      }
-      _count(
-        result.suppressedIssueCount,
-        'suppressed issues',
-        max: _maxInteger,
       );
       final manifest = jsonEncode({
         'version': version,
@@ -234,10 +258,13 @@ class StorageScanSnapshotStore {
         ],
       });
       _bounded(manifest, manifestByteLimit);
+      checkCancellation();
       createdKeys.add(_manifestKey(id));
       await _storage.write(_manifestKey(id), manifest);
       for (var attempt = 0; attempt < 4; attempt++) {
+        checkCancellation();
         final (oldRaw, entries) = await _index();
+        checkCancellation();
         if (entries.length >= maxSnapshots) {
           throw const FormatException(
             'Keep at most 100 saved scans. Delete an older scan first.',
@@ -251,6 +278,9 @@ class StorageScanSnapshotStore {
           ],
         });
         _bounded(updated, indexByteLimit);
+        // This is the last cancellation boundary. Once CAS commits, return its
+        // saved summary even if cancellation arrives while awaiting the reply.
+        checkCancellation();
         try {
           if (await _storage.compareAndSwap(indexKey, oldRaw, updated)) {
             return summary;
@@ -279,8 +309,19 @@ class StorageScanSnapshotStore {
     }
   }
 
-  Future<StorageScanSnapshot> load(String id) async {
+  Future<StorageScanSnapshot> load(
+    String id, {
+    bool Function()? isCancelled,
+  }) async {
+    void checkCancellation() {
+      if (isCancelled?.call() ?? false) {
+        throw StateError('Opening the saved scan was cancelled.');
+      }
+    }
+
+    checkCancellation();
     final (_, entries) = await _index();
+    checkCancellation();
     final matches = entries.where((entry) => entry.id == id);
     if (matches.isEmpty) {
       throw const FormatException('This saved scan is no longer available.');
@@ -290,6 +331,7 @@ class StorageScanSnapshotStore {
       _manifestKey(id),
       maxBytes: manifestByteLimit,
     );
+    checkCancellation();
     if (manifestRaw == null) {
       throw const FormatException('The saved scan manifest is missing.');
     }
@@ -307,10 +349,11 @@ class StorageScanSnapshotStore {
     }
     final rows = <_SnapshotRow>[];
     var totalBytes = 0;
+    var totalNodes = 0;
+    final descriptors = <(int, int, Object?)>[];
     final paths = p.Context(
       style: summary.pathStyle == 'windows' ? p.Style.windows : p.Style.posix,
     );
-    final seen = <String>{};
     for (var page = 0; page < pages.length; page++) {
       final descriptor = _map(pages[page], 'page descriptor');
       final length = _count(
@@ -323,72 +366,98 @@ class StorageScanSnapshotStore {
         'page nodes',
         max: pageNodeLimit,
       );
-      if (length == 0 ||
-          count == 0 ||
-          rows.length + count > summary.nodeCount) {
+      totalNodes += count;
+      if (length == 0 || count == 0 || totalNodes > summary.nodeCount) {
         throw const FormatException('Invalid saved scan page limits.');
       }
       totalBytes += length;
       if (totalBytes > snapshotByteLimit) {
         throw const FormatException('The saved scan exceeds 128 MiB.');
       }
-      final raw = await _storage.read(
-        _pageKey(id, page),
-        maxBytes: pageByteLimit,
-      );
-      if (raw == null) {
-        throw const FormatException('A saved scan page is missing.');
-      }
-      final bytes = utf8.encode(raw);
-      if (bytes.length != length ||
-          sha256.convert(bytes).toString() != descriptor['sha256']) {
-        throw const FormatException('A saved scan page is damaged.');
-      }
-      final data = _map(_decode(raw), 'page');
-      _version(data);
-      final records = _list(data['nodes'], 'nodes', pageNodeLimit);
-      if (records.length != count) {
-        throw const FormatException(
-          'A saved scan page has the wrong item count.',
-        );
-      }
-      for (final record in records) {
-        final row = _row(_map(record, 'node'));
-        final index = rows.length;
-        if (row.parent >= index ||
-            row.parent < -1 ||
-            (index == 0) != (row.parent == -1)) {
-          throw const FormatException('Invalid saved scan parent references.');
-        }
-        final parent = row.parent < 0 ? null : rows[row.parent];
-        if (parent != null &&
-            (!parent.item.isFolder || parent.item.isSymlink == true)) {
-          throw const FormatException(
-            'A file or link cannot contain saved children.',
-          );
-        }
-        row.depth = parent == null ? 0 : parent.depth + 1;
-        if (row.depth > 201 || !seen.add(row.item.path!)) {
-          throw const FormatException(
-            'The saved scan contains invalid or repeated paths.',
-          );
-        }
-        _checkPath(row.item, parent?.item.path, paths);
-        if (index == 0 && row.item.path != summary.rootPath) {
-          throw const FormatException(
-            'The saved scan root does not match its history record.',
-          );
-        }
-        parent?.children.add(index);
-        rows.add(row);
-      }
-      await Future<void>.delayed(Duration.zero);
+      descriptors.add((length, count, descriptor['sha256']));
     }
-    if (rows.length != summary.nodeCount) {
+    if (totalNodes != summary.nodeCount) {
       throw const FormatException('The saved scan is missing items.');
+    }
+    final seen = <String>{};
+    for (
+      var start = 0;
+      start < descriptors.length;
+      start += FileCollectionStorageBatch.maxRecords
+    ) {
+      checkCancellation();
+      final proposedEnd = start + FileCollectionStorageBatch.maxRecords;
+      final end = proposedEnd < descriptors.length
+          ? proposedEnd
+          : descriptors.length;
+      // At most four bounded immutable records are outstanding. Future.wait
+      // drains failures too; validation remains strictly in manifest order.
+      final values = await Future.wait<String?>([
+        for (var page = start; page < end; page++)
+          Future<String?>.sync(
+            () => _storage.read(_pageKey(id, page), maxBytes: pageByteLimit),
+          ),
+      ]);
+      checkCancellation();
+      for (var page = start; page < end; page++) {
+        final (length, count, digest) = descriptors[page];
+        final raw = values[page - start];
+        if (raw == null) {
+          throw const FormatException('A saved scan page is missing.');
+        }
+        final bytes = utf8.encode(raw);
+        if (bytes.length != length ||
+            sha256.convert(bytes).toString() != digest) {
+          throw const FormatException('A saved scan page is damaged.');
+        }
+        final data = _map(_decode(raw), 'page');
+        _version(data);
+        final records = _list(data['nodes'], 'nodes', pageNodeLimit);
+        if (records.length != count) {
+          throw const FormatException(
+            'A saved scan page has the wrong item count.',
+          );
+        }
+        for (final record in records) {
+          checkCancellation();
+          final row = _row(_map(record, 'node'));
+          final index = rows.length;
+          if (row.parent >= index ||
+              row.parent < -1 ||
+              (index == 0) != (row.parent == -1)) {
+            throw const FormatException(
+              'Invalid saved scan parent references.',
+            );
+          }
+          final parent = row.parent < 0 ? null : rows[row.parent];
+          if (parent != null &&
+              (!parent.item.isFolder || parent.item.isSymlink == true)) {
+            throw const FormatException(
+              'A file or link cannot contain saved children.',
+            );
+          }
+          row.depth = parent == null ? 0 : parent.depth + 1;
+          if (row.depth > 201 || !seen.add(row.item.path!)) {
+            throw const FormatException(
+              'The saved scan contains invalid or repeated paths.',
+            );
+          }
+          _checkPath(row.item, parent?.item.path, paths);
+          if (index == 0 && row.item.path != summary.rootPath) {
+            throw const FormatException(
+              'The saved scan root does not match its history record.',
+            );
+          }
+          parent?.children.add(index);
+          rows.add(row);
+        }
+        await Future<void>.delayed(Duration.zero);
+        checkCancellation();
+      }
     }
     final built = List<StorageNode?>.filled(rows.length, null);
     for (var index = rows.length - 1; index >= 0; index--) {
+      checkCancellation();
       final row = rows[index];
       final children = [for (final child in row.children) built[child]!];
       final node = StorageNode(
@@ -449,6 +518,7 @@ class StorageScanSnapshotStore {
         'The saved scan totals do not match its history record.',
       );
     }
+    checkCancellation();
     return StorageScanSnapshot(summary: summary, result: result);
   }
 
@@ -625,16 +695,45 @@ class StorageScanSnapshotStore {
       if (!item.isFolder || item.isSymlink == true) {
         throw const FormatException('The saved root must be a folder.');
       }
-    } else if (!paths.isAbsolute(path) ||
-        paths.normalize(path) != path ||
-        paths.dirname(path) != parent ||
-        paths.basename(path) != item.name ||
-        item.name == '.' ||
-        item.name == '..') {
+    } else if (!_canonicalChild(item.name, path, parent, paths.style) &&
+        (!paths.isAbsolute(path) ||
+            paths.normalize(path) != path ||
+            paths.dirname(path) != parent ||
+            paths.basename(path) != item.name ||
+            item.name == '.' ||
+            item.name == '..')) {
       throw const FormatException(
         'A saved item is not a direct child of its folder.',
       );
     }
+  }
+
+  // The parent has already passed validation earlier in the traversal. Exact
+  // parent + separator + one ordinary component proves canonical membership
+  // without reparsing the full path for every sibling. Unusual names and path
+  // styles retain the general predicates above.
+  static bool _canonicalChild(
+    String name,
+    String path,
+    String parent,
+    p.Style style,
+  ) {
+    final windows = style == p.Style.windows;
+    if ((style != p.Style.posix && !windows) ||
+        name == '.' ||
+        name == '..' ||
+        name.contains('/') ||
+        (windows && (name.contains(r'\') || name.contains(':')))) {
+      return false;
+    }
+    final separator = windows ? r'\' : '/';
+    final terminated = parent.endsWith(separator);
+    final prefixLength = parent.length + (terminated ? 0 : 1);
+    return path.length == prefixLength + name.length &&
+        path.startsWith(parent) &&
+        (terminated ||
+            path.codeUnitAt(parent.length) == separator.codeUnitAt(0)) &&
+        path.endsWith(name);
   }
 
   static void _checkTotals(StorageNode node, List<StorageNode> children) {
@@ -644,29 +743,36 @@ class StorageScanSnapshotStore {
     if ((file || link) && children.isNotEmpty) {
       throw const FormatException('A saved file or link has children.');
     }
-    int sum(int Function(StorageNode) value) =>
-        children.fold(0, (total, child) => total + value(child));
-    if (node.fileCount != (file ? 1 : sum((child) => child.fileCount)) ||
-        node.folderCount !=
-            sum(
-              (child) =>
-                  child.folderCount +
-                  (child.isFolder && child.item.isSymlink != true ? 1 : 0),
-            ) ||
-        node.skippedLinkCount !=
-            (link ? 1 : sum((child) => child.skippedLinkCount)) ||
+    var files = 0;
+    var folders = 0;
+    var links = 0;
+    var unknown = 0;
+    var bytes = 0;
+    var complete = true;
+    for (final child in children) {
+      files += child.fileCount;
+      folders +=
+          child.folderCount +
+          (child.isFolder && child.item.isSymlink != true ? 1 : 0);
+      links += child.skippedLinkCount;
+      unknown += child.unknownSizeCount;
+      bytes += child.bytes;
+      if (bytes < 0 || bytes > _maxInteger) {
+        throw const FormatException('The saved scan has inconsistent totals.');
+      }
+      complete = complete && child.isComplete;
+    }
+    if (node.fileCount != (file ? 1 : files) ||
+        node.folderCount != folders ||
+        node.skippedLinkCount != (link ? 1 : links) ||
         node.unknownSizeCount !=
-            (file
-                ? (node.unknownSizeCount == 1 ? 1 : 0)
-                : sum((child) => child.unknownSizeCount)) ||
+            (file ? (node.unknownSizeCount == 1 ? 1 : 0) : unknown) ||
         (file && node.unknownSizeCount != 0 && node.unknownSizeCount != 1) ||
         node.bytes !=
             (file
                 ? (node.unknownSizeCount == 1 ? 0 : node.item.size)
-                : sum((child) => child.bytes)) ||
-        (node.isComplete &&
-            (node.unknownSizeCount > 0 ||
-                children.any((child) => !child.isComplete)))) {
+                : bytes) ||
+        (node.isComplete && (node.unknownSizeCount > 0 || !complete))) {
       throw const FormatException('The saved scan has inconsistent totals.');
     }
   }

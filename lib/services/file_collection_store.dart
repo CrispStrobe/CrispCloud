@@ -307,9 +307,9 @@ class FileCollectionStore extends ChangeNotifier {
         if (raw == null) {
           throw const FormatException('A saved collection page is missing.');
         }
-        final bytes = utf8.encode(raw).length;
-        if (bytes != descriptor.bytes ||
-            sha256.convert(utf8.encode(raw)).toString() != descriptor.digest) {
+        final bytes = utf8.encode(raw);
+        if (bytes.length != descriptor.bytes ||
+            sha256.convert(bytes).toString() != descriptor.digest) {
           throw const FormatException('A saved collection page changed.');
         }
         final json = jsonDecode(raw) as Map;
@@ -344,7 +344,7 @@ class FileCollectionStore extends ChangeNotifier {
         value = _CachedPage(
           List.unmodifiable(entries),
           Set.unmodifiable(selected),
-          bytes,
+          bytes.length,
           descriptor.digest,
         );
       }
@@ -819,26 +819,49 @@ class FileCollectionStore extends ChangeNotifier {
         : null;
     final descriptors = <CollectionPageDescriptor>[];
     final pending = <(FileCollectionEntry, bool)>[];
+    final pendingJson = <String>[];
+    final batch = <FileCollectionStorageRecord>[];
     final keys = <String>{};
     final written = <String>[];
     var pendingBytes = 32;
     var totalBytes = 0;
+    Future<void> writeBatch() async {
+      if (batch.isEmpty) return;
+      if (isCancelled?.call() ?? false) {
+        throw StateError('Collection update cancelled.');
+      }
+      await FileCollectionStorageBatch.write(_storage, batch);
+      batch.clear();
+      if (isCancelled?.call() ?? false) {
+        throw StateError('Collection update cancelled.');
+      }
+    }
+
     Future<void> flush() async {
       if (pending.isEmpty) {
         return;
       }
       final key = 'page:${const Uuid().v4()}';
-      written.add(key);
-      final descriptor = await _writePage(key, pending);
+      final (record, descriptor) = _preparePage(
+        key,
+        pending,
+        encodedRows: pendingJson,
+      );
       totalBytes += descriptor.bytes;
       if (totalBytes > collectionByteLimit) {
         throw const FormatException(
           'Collection exceeds the 32 MiB storage limit.',
         );
       }
+      written.add(key);
+      batch.add(record);
       descriptors.add(descriptor);
       pending.clear();
+      pendingJson.clear();
       pendingBytes = 32;
+      if (batch.length == FileCollectionStorageBatch.maxRecords) {
+        await writeBatch();
+      }
     }
 
     try {
@@ -856,13 +879,8 @@ class FileCollectionStore extends ChangeNotifier {
             'A collection can hold up to 100,000 items.',
           );
         }
-        final size =
-            utf8
-                .encode(
-                  jsonEncode({'entry': row.$1.toJson(), 'selected': row.$2}),
-                )
-                .length +
-            1;
+        final raw = jsonEncode({'entry': row.$1.toJson(), 'selected': row.$2});
+        final size = utf8.encode(raw).length + 1;
         if (size + 32 > pageByteLimit) {
           throw const FormatException(
             'A collection row exceeds the 512 KiB page limit.',
@@ -873,9 +891,11 @@ class FileCollectionStore extends ChangeNotifier {
           await flush();
         }
         pending.add(row);
+        pendingJson.add(raw);
         pendingBytes += size;
       }
       await flush();
+      await writeBatch();
       await _commit(
         metadata,
         descriptors,
@@ -905,26 +925,49 @@ class FileCollectionStore extends ChangeNotifier {
     String key,
     List<(FileCollectionEntry, bool)> rows,
   ) async {
-    final raw = jsonEncode({
-      'version': 2,
-      'rows': [
-        for (final row in rows) {'entry': row.$1.toJson(), 'selected': row.$2},
-      ],
-    });
-    final bytes = utf8.encode(raw).length;
-    if (bytes > pageByteLimit) {
+    final (record, descriptor) = _preparePage(key, rows);
+    await FileCollectionStorageBatch.write(_storage, [record]);
+    return descriptor;
+  }
+
+  (FileCollectionStorageRecord, CollectionPageDescriptor) _preparePage(
+    String key,
+    List<(FileCollectionEntry, bool)> rows, {
+    List<String>? encodedRows,
+  }) {
+    final values =
+        encodedRows ??
+        [
+          for (final row in rows)
+            jsonEncode({'entry': row.$1.toJson(), 'selected': row.$2}),
+        ];
+    // Rows prepared while sizing the page retain their exact serialized form.
+    // Joining them avoids a second toJson/JSON encoding pass over every item.
+    final record = FileCollectionStorageRecord(
+      key,
+      '{"version":2,"rows":[${values.join(',')}]}',
+    );
+    if (record.bytes.length > pageByteLimit) {
       throw const FormatException('A collection page exceeds 512 KiB.');
     }
-    await _storage.write(key, raw);
-    return CollectionPageDescriptor(
+    var selected = 0;
+    var unavailable = 0;
+    final sources = <String>{};
+    for (final row in rows) {
+      if (row.$2) selected++;
+      if (_isUnavailable(row.$1)) unavailable++;
+      sources.add(row.$1.reference.storage.id);
+    }
+    final descriptor = CollectionPageDescriptor(
       key: key,
       count: rows.length,
-      selectedCount: rows.where((row) => row.$2).length,
-      bytes: bytes,
-      digest: sha256.convert(utf8.encode(raw)).toString(),
-      unavailableCount: rows.where((row) => _isUnavailable(row.$1)).length,
-      sources: rows.map((row) => row.$1.reference.storage.id).toSet(),
+      selectedCount: selected,
+      bytes: record.bytes.length,
+      digest: sha256.convert(record.bytes).toString(),
+      unavailableCount: unavailable,
+      sources: sources,
     );
+    return (record, descriptor);
   }
 
   Future<FileCollectionManifest> _commit(
