@@ -5,6 +5,8 @@ publish_to: none
 environment:
   sdk: '>=3.10.0 <4.0.0'
 dependencies:
+  code_assets: ^2.1.0
+  hooks: ^2.2.0
   flutter_rust_bridge: 2.11.1
   collection: ^1.19.0
   dartssh2: ^4.1.0
