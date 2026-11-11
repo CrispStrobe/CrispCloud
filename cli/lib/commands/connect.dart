@@ -54,7 +54,8 @@ class ConnectCommand extends Command<int> {
       )
       ..addOption(
         'host-key',
-        help: 'Expected SFTP SHA256 host-key fingerprint (required for non-interactive first connections).',
+        help:
+            'Expected SFTP SHA256 host-key fingerprint (required for non-interactive first connections).',
       )
       ..addOption(
         'name',

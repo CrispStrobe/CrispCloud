@@ -50,35 +50,38 @@ void main() {
       expect(code, equals(0));
     });
 
-    test('SMB diagnostics distinguish saved choices from the build default', () async {
-      final config = CliConfig(path: configPath);
-      for (final backend in <String?>[null, 'libsmb2', 'rust', 'auto']) {
-        config.saveProvider('nas', {
-          'type': 'smb',
-          'url': 'smb://nas.example/Share/',
-          if (backend != null) 'smbBackend': backend,
-        });
-        final saved = File(configPath).readAsStringSync();
-        final expected = backend ?? 'build default';
-        final output = _CapturedStdout();
-        await IOOverrides.runZoned(() async {
-          expect(await runner().run(['config', 'smb-backend', 'nas']), 0);
-          expect(output.buffer.toString().trim(), expected);
-          output.buffer.clear();
+    test(
+      'SMB diagnostics distinguish saved choices from the build default',
+      () async {
+        final config = CliConfig(path: configPath);
+        for (final backend in <String?>[null, 'libsmb2', 'rust', 'auto']) {
+          config.saveProvider('nas', {
+            'type': 'smb',
+            'url': 'smb://nas.example/Share/',
+            if (backend != null) 'smbBackend': backend,
+          });
+          final saved = File(configPath).readAsStringSync();
+          final expected = backend ?? 'build default';
+          final output = _CapturedStdout();
+          await IOOverrides.runZoned(() async {
+            expect(await runner().run(['config', 'smb-backend', 'nas']), 0);
+            expect(output.buffer.toString().trim(), expected);
+            output.buffer.clear();
 
-          expect(await runner().run(['providers', '--json']), 0);
-          final rows = jsonDecode(output.buffer.toString()) as List;
-          expect(rows.single['smbBackend'], expected);
-          expect(rows.single['info'], 'smb://nas.example/Share/ [$expected]');
-          output.buffer.clear();
+            expect(await runner().run(['providers', '--json']), 0);
+            final rows = jsonDecode(output.buffer.toString()) as List;
+            expect(rows.single['smbBackend'], expected);
+            expect(rows.single['info'], 'smb://nas.example/Share/ [$expected]');
+            output.buffer.clear();
 
-          expect(await runner().run(['providers']), 0);
-          expect(output.buffer.toString(), contains('[$expected]'));
-        }, stdout: () => output);
-        // Reporting an inherited choice must not turn it into a saved override.
-        expect(File(configPath).readAsStringSync(), saved);
-      }
-    });
+            expect(await runner().run(['providers']), 0);
+            expect(output.buffer.toString(), contains('[$expected]'));
+          }, stdout: () => output);
+          // Reporting an inherited choice must not turn it into a saved override.
+          expect(File(configPath).readAsStringSync(), saved);
+        }
+      },
+    );
 
     test('exits 0 with providers configured', () async {
       CliConfig(path: configPath).saveProvider('my-s3', {

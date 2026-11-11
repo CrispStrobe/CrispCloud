@@ -320,3 +320,19 @@ The unchanged verifier computes these current source bindings:
 The policy changes only its inventory and reviewed-source fingerprints for this
 reviewed delta. Its lockfile fingerprint, declarations and distribution assertions
 retain their values. Binary and live-store evidence remain separate requirements.
+
+
+### Final formatting review
+
+The 139-file formatting gate reflowed the existing SFTP host-key help argument
+in `cli/lib/commands/connect.dart` and the CLI backend-diagnostics test. Review
+of that diff found layout changes only: option names, strings, callbacks and
+assertions retain their values and behavior. The connection-command file is
+the only changed inventoried input. The final source fingerprint is:
+
+```text
+2d73f74dc791dc90ec8ee089702e61fc747ca143b65fa9e58dd99460ee704feb
+```
+
+The inventory and lockfile fingerprints, declarations, distribution assertions,
+and verifier remain unchanged.
