@@ -679,8 +679,13 @@ class _PdfEditingToolbarState extends State<PdfEditingToolbar> {
 
   /// Arms a tool from a group's strip / grid, routing measure and
   /// signature tools through their prerequisite flows.
+  ///
+  /// Never a toggle: opening a group already arms its default tool (Shapes →
+  /// Rectangle, Insert → Text box), so a toggle made the user's first tap on
+  /// that very tool disarm it and collapse the strip instead of drawing.
+  /// Re-tapping the group chip, Escape or Select still disarm.
   Future<void> _armGroupTool(BuildContext context, PdfEditTool tool) =>
-      _commands.toggleTool(context, tool);
+      _commands.armTool(context, tool);
 
   Future<void> _setScale(BuildContext context) =>
       _commands.setMeasurementScale(context);
