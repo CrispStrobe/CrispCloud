@@ -294,3 +294,17 @@ The committed merge-specific source was used for these bindings so concurrent, u
 ```
 
 This source identity check preserves the scope of each parent review; it does not establish native Linux readiness or alter distribution approval. Follow-up source changes require their own reviewed bindings.
+
+## Reading lifecycle corrections after recovery
+
+Reviewed explicit-discard handling in the editor, the section resource loader, and the host-owned search adapter. Explicit discard now suppresses the final best-effort write and relocation callbacks during closing. The resource loader shares in-flight work, retains only immutable sanitized search snapshots across unload, and releases late resources. The search adapter bounds inputs, serializes mutable Foliate iterators, returns cancellation promptly and suppresses stale overlays/events without modifying pinned vendor code. Search hit section numbers are resolved from their CFIs. No new network, cryptographic or credential capability is introduced. The only root dependency change promotes the already-locked shared_preferences_platform_interface 2.4.2 to a direct development dependency for the one-shot write-failure regression.
+
+The inventory adds reader_search.js (224 total paths). Default and forced missing-grouping/raw-DEFLATE parser regressions, vendor integrity and focused Dart analysis passed. The actual browser regression is committed for CI; local application tests are awaiting the restored native build toolchain. These bindings use staged source and exclude the temporary local SQLite test configuration and still-uncommitted Linux-host work. All non-digest policy values remain unchanged.
+
+```json
+{
+  "inventory_sha256": "51e68885d5401faac89272c84af86753e5627a5bad6ed6ab14e5925a11e3d3f4",
+  "pubspec_lock_sha256": "5df7dcfb50f5ffc6c1649adaad649c8d7c577ece5aac6eb8ba1753c7e75703fe",
+  "reviewed_source_sha256": "62a74997da1d2566bc728dd26d9918a9821d08aa2737268cd92b79531a7407a0"
+}
+```

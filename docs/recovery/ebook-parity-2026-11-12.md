@@ -221,3 +221,10 @@ custom fonts, persistent navigation stacks and robust annotation re-anchoring
 remain distinct increments. The FBReader comparison differentiates stable
 desktop 2.1.5 from 2.5 RC 1, Android editions and iOS rather than claiming that
 one product feature list is universal across platforms.
+
+## Continuation checkpoints after `67ee2af`
+
+- `280f55167f43f227068d8a462a88aabc18e56afb`: recovered the newer remote checkpoint and saved the continuation plan on the feature branch.
+- `5e0b6f94c542a41db232eb62ec19d21a9ddacffb`: merged current main (`977b5037`), preserving both source inventories and reviewing the combined startup changes.
+
+The next shared-reader increment fixes explicit reading-data discard being retried on disposal, concurrent section-load resource leaks, and canceled searches leaving stale overlays. It also blocks late events from replaced reader views and reports search result chapter indices from their CFIs. Focused Dart analysis, both parser compatibility modes and vendor checks passed. The committed browser and one-shot storage-write regressions still require their runtime gates before final qualification. The Linux startup-helper work remains a separate increment.

@@ -325,9 +325,10 @@
         "packages/crisp_ebook_reader/lib/src/hosts/host_linux.dart",
         "packages/crisp_ebook_reader/linux/CMakeLists.txt",
         "packages/crisp_ebook_reader/linux/crisp_ebook_reader_plugin.cc",
-        "linux/packaging/build_deb.sh"
+        "linux/packaging/build_deb.sh",
+        "packages/crisp_ebook_reader/assets/reader_search.js"
       ],
-      "note": "The added SHA-256 uses bind data to exact content and renderer versions, detect stale import previews, and derive catalog IDs; they are not signatures, MACs, encryption or access grants. Reading-data exports are plain UTF-8 JSON without source paths, account metadata or credentials. Local sidecars and the library index use SharedPreferences; the index can retain exact persistent account/root/file references but resolves authentication separately. In-process locks and stale-instance checks do not establish cross-process or browser-tab transactions. Shared appearance controls accept bounded numbers and allowlisted choices, not arbitrary CSS or scripts. The Linux CMake target links system GTK3/gmodule and optional epoxy, dynamically loads libwebkit2gtk-4.1.so.0 at version 2.48.4 or newer, and copies no WebKit runtime into the bundle. Its ephemeral host requires the WebKit process sandbox and uses the existing session loopback assets, CSP and sanitized book frames. No new production Dart dependency, cipher implementation, KDF or credential store is added by this increment. Installed system WebKit and transitive TLS/crypto implementations, finished binaries and distribution decisions remain outside this bounded technical source review."
+      "note": "The added SHA-256 uses bind data to exact content and renderer versions, detect stale import previews, and derive catalog IDs; they are not signatures, MACs, encryption or access grants. Reading-data exports are plain UTF-8 JSON without source paths, account metadata or credentials. Local sidecars and the library index use SharedPreferences; the index can retain exact persistent account/root/file references but resolves authentication separately. In-process locks and stale-instance checks do not establish cross-process or browser-tab transactions. Shared appearance controls accept bounded numbers and allowlisted choices, not arbitrary CSS or scripts. The Linux CMake target links system GTK3/gmodule and optional epoxy, dynamically loads libwebkit2gtk-4.1.so.0 at version 2.48.4 or newer, and copies no WebKit runtime into the bundle. Its ephemeral host requires the WebKit process sandbox and uses the existing session loopback assets, CSP and sanitized book frames. No new production Dart dependency, cipher implementation, KDF or credential store is added by this increment. Installed system WebKit and transitive TLS/crypto implementations, finished binaries and distribution decisions remain outside this bounded technical source review. The shared search controller serializes Foliate iterators and suppresses canceled search overlays; section resource cleanup and explicit reading-state discard add no cryptographic or network capability."
     }
   ],
   "reviewed_files": [
@@ -553,6 +554,7 @@
     "packages/crisp_storage/lib/src/cloud_engine.dart",
     "packages/crisp_storage/lib/src/rust_cloud_native.dart",
     "packages/crisp_storage/lib/src/cloud/internxt_streaming_transfer.dart",
-    "lib/services/rust_cloud_delegate.dart"
+    "lib/services/rust_cloud_delegate.dart",
+    "packages/crisp_ebook_reader/assets/reader_search.js"
   ]
 }
