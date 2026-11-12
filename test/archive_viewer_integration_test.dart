@@ -7,6 +7,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
@@ -25,12 +26,17 @@ import 'package:crisp_cloud/services/filen_config_service.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:crisp_cloud/services/panel_source_service.dart';
 import 'package:crisp_cloud/services/secure_storage_service.dart';
+import 'package:crisp_cloud/widgets/file_list_view.dart';
+import 'package:crisp_cloud/providers/toolbar_provider.dart'
+    show panelViewModeProvider;
+import 'package:crisp_cloud/services/panel_view_mode_service.dart';
 
 class _ArchiveFileService implements LocalFileService {
   _ArchiveFileService(this.zipPath, this.bytes);
 
   final String zipPath;
-  final Uint8List bytes;
+  Uint8List bytes;
+  bool listPhysicalDirectory = false;
 
   @override
   String currentPath = Directory.systemTemp.path;
@@ -60,9 +66,10 @@ class _ArchiveFileService implements LocalFileService {
   Future<bool> hasAccessToPath(String path) async => true;
 
   @override
-  Future<List<FileSystemEntity>?> listDirectory(String path) async => [
-    File(zipPath),
-  ];
+  Future<List<FileSystemEntity>?> listDirectory(String path) async =>
+      listPhysicalDirectory
+      ? Directory(path).list(followLinks: false).toList()
+      : [File(zipPath)];
 
   @override
   Future<String?> requestDirectoryAccess({String? initialDirectory}) async =>
@@ -147,6 +154,106 @@ void main() {
     container.dispose();
     await tempDir.delete(recursive: true);
   });
+
+  for (final side in PanelSide.values) {
+    for (final empty in [false, true]) {
+      testWidgets(
+        'leaving ${empty ? 'empty' : 'populated'} ZIP restores a visible selected row in ${side.name} pane',
+        (tester) async {
+          final local =
+              container.read(localFileServiceProvider) as _ArchiveFileService;
+          local.listPhysicalDirectory = true;
+          local.currentPath = tempDir.path;
+          late PanelNotifier panel;
+          await tester.runAsync(() async {
+            await Future.wait(
+              List.generate(
+                120,
+                (index) => File(
+                  p.join(
+                    tempDir.path,
+                    'a${index.toString().padLeft(3, '0')}.txt',
+                  ),
+                ).writeAsString(''),
+              ),
+            );
+            if (empty) {
+              local.bytes = Uint8List.fromList(ZipEncoder().encode(Archive()));
+              await File(zipPath).writeAsBytes(local.bytes);
+            }
+            panel = container.read(panelProvider(side));
+            await panel.navigateToPath(
+              tempDir.path,
+              origin: panel.captureLocalClipboardOrigin(tempDir.path),
+            );
+          });
+          container.read(panelViewModeProvider(side).notifier).state =
+              PanelViewMode.full;
+          final scroll = ScrollController();
+          addTearDown(scroll.dispose);
+          Widget listing() => UncontrolledProviderScope(
+            container: container,
+            child: MaterialApp(
+              home: Scaffold(
+                body: Center(
+                  child: SizedBox(
+                    key: const ValueKey('archive-return-viewport'),
+                    width: 700,
+                    height: 220,
+                    child: Consumer(
+                      builder: (context, ref, _) {
+                        final current = ref.watch(panelProvider(side));
+                        return FileListView(
+                          side: side,
+                          files: current.displayedFiles ?? [],
+                          scrollController: scroll,
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+          await tester.pumpWidget(listing());
+          await tester.pumpAndSettle();
+          final archive = panel.files!.firstWhere((row) => row.path == zipPath);
+          panel.setCursorOnly(archive);
+          await tester.pumpAndSettle();
+          expect(scroll.offset, greaterThan(0));
+          await tester.runAsync(() => panel.enterArchive(archive));
+          await tester.pumpAndSettle();
+          expect(panel.isInArchive, isTrue);
+          // Loading/replacing the pane can detach its list before parent rows arrive.
+          await tester.pumpWidget(const SizedBox.shrink());
+          final parent = panel.files!.firstWhere((row) => row.name == '..');
+          await tester.runAsync(() => panel.navigateInto(parent));
+          expect(panel.isInArchive, isFalse);
+          expect(panel.currentPath, tempDir.path);
+          expect(panel.cursorItem?.path, zipPath);
+          expect(panel.selection.map((row) => row.path), [zipPath]);
+          await tester.pumpWidget(listing());
+          await tester.pumpAndSettle();
+          final tile = find.byWidgetPredicate(
+            (widget) =>
+                widget is CompactFileTile && widget.file.path == zipPath,
+          );
+          expect(tile, findsOneWidget);
+          expect(tester.widget<CompactFileTile>(tile).isCursor, isTrue);
+          expect(tester.widget<CompactFileTile>(tile).isSelected, isTrue);
+          final viewport = tester.getRect(
+            find.byKey(const ValueKey('archive-return-viewport')),
+          );
+          final row = tester.getRect(tile);
+          expect(row.top, greaterThanOrEqualTo(viewport.top - 1));
+          expect(row.bottom, lessThanOrEqualTo(viewport.bottom + 1));
+          expect(scroll.offset, greaterThan(0));
+          expect(tester.takeException(), isNull);
+          await tester.pumpWidget(const SizedBox.shrink());
+        },
+      );
+    }
+  }
 
   test('F3 can read a member from an opened archive', () async {
     final panel = container.read(panelProvider(PanelSide.local));

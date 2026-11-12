@@ -129,11 +129,15 @@ class FileListView extends ConsumerWidget {
 
     // Auto-scroll to cursor when it changes
     final itemToScroll = panel.itemToScrollTo;
-    if (itemToScroll != null && scrollController.hasClients) {
+    if (itemToScroll != null) {
       final idx = files.indexOf(itemToScroll);
       if (idx != -1) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!scrollController.hasClients) return;
+          if (!context.mounted ||
+              !scrollController.hasClients ||
+              !identical(panel.itemToScrollTo, itemToScroll)) {
+            return;
+          }
           final itemTop = idx * itemHeight;
           final itemBot = itemTop + itemHeight;
           final viewMin = scrollController.offset;

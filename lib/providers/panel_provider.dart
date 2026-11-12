@@ -3624,7 +3624,7 @@ class PanelNotifier extends ChangeNotifier {
       '',
     );
     if (inner.isEmpty) {
-      exitArchive();
+      await exitArchive();
       return;
     }
     final parent = p.posix.dirname(inner);
@@ -3633,15 +3633,16 @@ class PanelNotifier extends ChangeNotifier {
 
   /// A nested exit restores its exact enclosing directory and cursor. Only
   /// leaving the outermost archive navigates back to physical storage.
-  void exitArchive() {
+  Future<void> exitArchive() async {
     if (_archiveFrames.isEmpty) return;
     if (_archiveFrames.length > 1) {
       final closed = _archiveFrames.removeLast();
       _archiveSource = _archiveFrames.last.source;
       unawaited(closed.session.close());
-      unawaited(_loadArchiveFiles(cursorPath: closed.returnCursor));
+      await _loadArchiveFiles(cursorPath: closed.returnCursor);
       return;
     }
+    final archiveFile = _archiveFrames.first.session.file;
     final source = _archiveFrames.first.source;
     final origin = _archiveOrigin;
     _listingGeneration++;
@@ -3652,26 +3653,24 @@ class PanelNotifier extends ChangeNotifier {
             source.parent.currentPath,
             origin: origin,
             recordHistory: false,
+            selectItem: archiveFile,
           )
         : refresh();
-    unawaited(
-      restore
-          .then((_) {
-            if (!_isDisposed) focusList();
-          })
-          .catchError((Object error) {
-            if (!_isDisposed) {
-              _ref
-                  .read(errorProvider)
-                  .addError('Could not return to the archive folder: $error');
-            }
-          }),
-    );
+    try {
+      await restore;
+      if (!_isDisposed) focusList();
+    } catch (error) {
+      if (!_isDisposed) {
+        _ref
+            .read(errorProvider)
+            .addError('Could not return to the archive folder: $error');
+      }
+    }
   }
 
   Future<void> navigateHome() async {
     if (isInArchive) {
-      exitArchive();
+      await exitArchive();
       return;
     }
     final path = kIsWeb ? '/' : (Platform.environment['HOME'] ?? '/');
@@ -6029,6 +6028,7 @@ class PanelNotifier extends ChangeNotifier {
         _selection.clear();
         _selection.add(found);
         _lastSelected = found;
+        _cursorIndex = _indexOfIdentical(_files!, found);
         _itemToScrollTo = found;
       } catch (e) {
         _log.warn('operation failed', e);

@@ -348,7 +348,7 @@ jobs:
     name: Build macOS
     needs: [test, create-release]
     runs-on: macos-15-intel
-    timeout-minutes: 40
+    timeout-minutes: 75
     continue-on-error: true  # macOS runners scarce on free tier
     steps:
       - uses: actions/checkout@v5
@@ -690,7 +690,7 @@ jobs:
     name: Build iOS
     needs: [test, create-release]
     runs-on: macos-15-intel
-    timeout-minutes: 45
+    timeout-minutes: 75
     continue-on-error: true  # macOS runners scarce on free tier
     env:
       # Signed App Store/TestFlight uploads are owned by ios-release.yml.

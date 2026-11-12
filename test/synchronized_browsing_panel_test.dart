@@ -234,8 +234,24 @@ void main() {
         origin: left.captureLocalClipboardOrigin(directory.path),
       );
       expect(link.start(), isTrue);
-      await right.navigateToPath('/target/a');
-      await _settle();
+      final followed = Completer<void>();
+      var started = false;
+      void observeFollow() {
+        started = started || link.busy;
+        if (started && !link.busy && !followed.isCompleted) {
+          followed.complete();
+        }
+      }
+
+      // Native filesystem checks need an actual completion event; draining a
+      // fixed number of event-loop turns can finish before I/O under CI load.
+      link.addListener(observeFollow);
+      try {
+        await right.navigateToPath('/target/a');
+        await followed.future.timeout(const Duration(seconds: 10));
+      } finally {
+        link.removeListener(observeFollow);
+      }
       expect(left.currentPath, '${directory.path}/a');
       expect(left.captureCurrentOrigin().source, isA<LocalPanelSource>());
       expect(link.enabled, isTrue);
