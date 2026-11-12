@@ -33,7 +33,14 @@ The small MIT-licensed FTP metadata runtime is preserved under
 `packages/ftpconnect`. Its source/version/license and local certificate/data
 protection fixes are recorded in that package's `UPSTREAM.md`. The app's
 bounded streaming transfer implementation remains independent and uses one
-control/data session per transfer.
+control/data session per transfer. Both paths use an owned native transport that
+retains its TCP task and raw socket while TLS negotiation is pending.
+
+Connection deadlines close the native transport even if the peer never answers
+its TLS handshake. Closing a captured transfer session, disconnecting the
+metadata client, or logging out closes their pending control/data connections.
+An initial login is owned before authentication completes, so logout can also
+cancel that handshake. A late native completion cannot revive a closed session.
 
 ## Scope
 
@@ -51,7 +58,8 @@ fixtures under `test/fixtures/tls`; they need no provider credentials:
 
 ```sh
 flutter test test/ftp_explicit_tls_test.dart test/ftp_security_mode_test.dart \
-  test/ftp_transfer_session_test.dart test/ftp_adapter_test.dart \
+  test/ftp_transfer_session_test.dart test/ftp_transport_lifetime_test.dart \
+  test/ftp_adapter_test.dart \
   test/ftp_config_service_test.dart test/widget/ftp_security_field_test.dart
 ```
 
@@ -61,7 +69,23 @@ mode/port preservation, malformed identity rejection and the localized mode
 selector. Live interoperability with a user's server remains dependent on that
 server's TLS and passive-port configuration.
 
-TLS-upgrade calls have a caller-side timeout. The FTP tests establish certificate
-and data-protection behavior and cancellation of an established transfer;
-cleanup of a transport stalled inside a TLS upgrade remains outside this
-verification coverage.
+The lifetime suite observes TCP EOF/reset at loopback peers that have received
+ClientHello but never complete TLS. It covers explicit and implicit control
+deadlines, session close, metadata disconnect, logout during initial connection,
+and directory/upload/download data-channel deadlines and cancellation. The
+observation occurs before fixture teardown, so a failed caller Future alone is
+not treated as proof of transport cleanup.
+
+Cancellation coverage is specific to the owning session's close/disconnect and
+account logout. The generic upload-stream API does not expose a cancellation
+token before it subscribes to source bytes; stopping a queued operation during
+that initial handshake can still wait for its connection deadline. Subscription
+cancellation during an asynchronous download setup can likewise wait for setup
+to finish. Those deadlines now close the native connection; this change does
+not claim immediate queue-stop propagation through every provider API.
+
+The final G37 gate passed all 145 tests across the lifetime, explicit-TLS,
+streaming-session, adapter, media-transfer, provider-dispatch, SOCKS5, proxy and
+TLS-verification suites. The 24 lifetime cases include observed peer closure,
+failed upstream cancellation cleanup and closing an output sink after a
+post-handshake receive timeout. Focused static analysis has no errors or warnings.

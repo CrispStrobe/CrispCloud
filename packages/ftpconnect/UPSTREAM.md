@@ -20,6 +20,17 @@ Local changes retain the public FTP API and harden TLS behavior:
   supply trust anchors without disabling certificate checks.
 - Remove obsolete `final` parameter modifiers rejected by the current Dart SDK.
 - Reject command-injection characters and redact authentication commands in logs.
+- Keep ownership of native TCP tasks and raw sockets through implicit/explicit
+  TLS upgrades. Timeouts and disconnects close the underlying transport, reject
+  late completion, and never downgrade certificate verification.
+- Register passive data connections before awaiting connection/protection;
+  close them on disconnect and in directory/file operation cleanup.
+- Adapt owned raw sockets to byte streams with reads up to 64 KiB and write
+  backpressure.
+  The local adapter is based on CrispCloud's independently implemented native
+  HTTP transport adapter; that HTTP/SOCKS transport remains unchanged.
+- Stop pending response polling when a connection closes rather than leaving a
+  timed-out polling loop running in the background.
 
 The app retains its separately bounded streaming data-transfer implementation.
 Local loopback tests exercise both runtime paths, certificate failures, TLS

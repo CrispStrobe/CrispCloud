@@ -1,7 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
-import 'dart:typed_data';
 
 import '../ftp_entry.dart';
 import '../ftp_exceptions.dart';
@@ -57,46 +55,41 @@ class FTPDirectory {
 
     // Data transfer socket
     int iPort = Utils.parsePort(response.message, _socket.supportIPV6);
-    Socket dataSocket = await Socket.connect(
-      _socket.host,
-      iPort,
-      timeout: Duration(seconds: _socket.timeout),
-    );
-    //Test if second socket connection accepted or not
-    response = await _socket.readResponse();
-    //some server return two lines 125 and 226 for transfer finished
-    bool isTransferCompleted = response.isSuccessCode();
-    if (!isTransferCompleted && response.code != 125 && response.code != 150) {
-      dataSocket.destroy();
-      throw FTPConnectException('Connection refused. ', response.message);
-    }
-    dataSocket = await _socket.protectDataSocket(dataSocket);
-
-    List<int> lstDirectoryListing = [];
-    await dataSocket.listen((Uint8List data) {
-      lstDirectoryListing.addAll(data);
-    }).asFuture();
-
-    await dataSocket.close();
-
-    if (!isTransferCompleted) {
+    final dataConnection = await _socket.openDataSocket(iPort);
+    try {
+      // Test if the second socket connection was accepted.
       response = await _socket.readResponse();
-      if (!response.isSuccessCode()) {
-        throw FTPConnectException('Transfer Error.', response.message);
+      // Some servers return both 125 and 226 for a completed transfer.
+      bool isTransferCompleted = response.isSuccessCode();
+      if (!isTransferCompleted &&
+          response.code != 125 &&
+          response.code != 150) {
+        throw FTPConnectException('Connection refused. ', response.message);
       }
+      final dataSocket = await _socket.protectDataSocket(dataConnection);
+      final lstDirectoryListing = <int>[];
+      await for (final data
+          in dataSocket.timeout(Duration(seconds: _socket.timeout))) {
+        lstDirectoryListing.addAll(data);
+      }
+      await dataSocket.close();
+
+      if (!isTransferCompleted) {
+        response = await _socket.readResponse();
+        if (!response.isSuccessCode()) {
+          throw FTPConnectException('Transfer Error.', response.message);
+        }
+      }
+
+      // Convert MLSD response into FTPEntry.
+      return [
+        for (final line in Utf8Codec().decode(lstDirectoryListing).split('\n'))
+          if (line.trim().isNotEmpty)
+            FTPEntry.parse(line.replaceAll('\r', ''), _socket.listCommand),
+      ];
+    } finally {
+      _socket.closeDataSocket(dataConnection);
     }
-
-    // Convert MLSD response into FTPEntry
-    List<FTPEntry> lstFTPEntries = <FTPEntry>[];
-    Utf8Codec().decode(lstDirectoryListing).split('\n').forEach((line) {
-      if (line.trim().isNotEmpty) {
-        lstFTPEntries.add(
-          FTPEntry.parse(line.replaceAll('\r', ""), _socket.listCommand),
-        );
-      }
-    });
-
-    return lstFTPEntries;
   }
 
   Future<List<String>> directoryContentNames() async {

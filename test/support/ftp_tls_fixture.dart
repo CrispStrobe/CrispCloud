@@ -42,6 +42,11 @@ class FtpTlsFixture {
   int dataTlsConnections = 0;
   bool stallControlHandshake = false;
   final controlHandshakeStarted = Completer<void>();
+  bool stallDataHandshake = false;
+  final dataHandshakeStarted = Completer<void>();
+  final dataPeerClosed = Completer<void>();
+  final stalledDataPrefix = <int>[];
+  bool stallAfterDownloadChunk = false;
 
   int get port => listener.port;
 
@@ -146,6 +151,10 @@ class FtpTlsFixture {
             await control.flush();
             var data = await nextData!;
             if (privateData) {
+              if (stallDataHandshake) {
+                await _observeStalledData(data);
+                return;
+              }
               data = await SecureSocket.secureServer(
                 data,
                 _serverContext(dataCertificate),
@@ -156,6 +165,13 @@ class FtpTlsFixture {
             if (verb == 'STOR') {
               uploads.add(await data.expand((chunk) => chunk).toList());
             } else {
+              if (verb == 'RETR' && stallAfterDownloadChunk) {
+                data.add(payload.take(3).toList());
+                await data.flush();
+                await data.drain<void>();
+                await data.close();
+                return;
+              }
               data.add(
                 verb == 'RETR'
                     ? payload
@@ -178,6 +194,24 @@ class FtpTlsFixture {
     } finally {
       control.destroy();
       await lines.cancel();
+    }
+  }
+
+  Future<void> _observeStalledData(Socket socket) async {
+    try {
+      await for (final bytes in socket) {
+        if (bytes.isEmpty) continue;
+        if (stalledDataPrefix.length < 16) {
+          stalledDataPrefix.addAll(bytes.take(16 - stalledDataPrefix.length));
+        }
+        if (!dataHandshakeStarted.isCompleted) dataHandshakeStarted.complete();
+      }
+    } on SocketException {
+      // Closing a pending TLS transport can produce EOF or a TCP reset.
+    } finally {
+      if (dataHandshakeStarted.isCompleted && !dataPeerClosed.isCompleted) {
+        dataPeerClosed.complete();
+      }
     }
   }
 
