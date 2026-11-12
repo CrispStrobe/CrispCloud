@@ -2,6 +2,11 @@ import 'package:crisp_storage/crisp_storage.dart'
     show SmbBackend, parseSmbBackend;
 
 import 'smb_backend_field.dart';
+import 'cloud_engine_field.dart';
+import 'package:crisp_storage/rust_cloud.dart'
+    show CloudEngine, RustCloudProvider, RustCloudUnavailable, RustCloudException, RustCloudErrorCode, configuredCloudEngine, parseCloudEngine;
+import '../services/filen_client_adapter.dart';
+import '../services/internxt_client_adapter.dart';
 import '../services/sftp_client_adapter.dart';
 import '../services/smb_client_adapter.dart';
 
@@ -70,6 +75,18 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
   bool _smbRequireEncryption = true;
   SmbBackend _smbBackend = SmbBackend.libsmb2;
   bool _invalidSmbProfile = false;
+  CloudEngine _cloudEngine = configuredCloudEngine(RustCloudProvider.filen);
+
+  bool get _usesCloudEngine =>
+      _selectedProvider == CloudProvider.filen ||
+      _selectedProvider == CloudProvider.internxt;
+
+  static CloudEngine _defaultEngineFor(CloudProvider provider) =>
+      configuredCloudEngine(
+        provider == CloudProvider.internxt
+            ? RustCloudProvider.internxt
+            : RustCloudProvider.filen,
+      );
 
   bool get _smbProfileNeedsTransport =>
       _selectedProvider == CloudProvider.smb && _invalidSmbProfile;
@@ -199,7 +216,10 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
           'smbBackend': _smbBackend.name,
         };
       default:
-        return {'email': _emailController.text};
+        return {
+          'email': _emailController.text,
+          if (_usesCloudEngine) 'engine': _cloudEngine.name,
+        };
     }
   }
 
@@ -281,6 +301,24 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
         _invalidSmbProfile = false;
         _error = null;
         break;
+      case CloudProvider.filen:
+      case CloudProvider.internxt:
+        final CloudEngine engine;
+        try {
+          engine =
+              parseCloudEngine(f['engine']) ??
+              _defaultEngineFor(_selectedProvider);
+        } on FormatException {
+          setState(
+            () => _error = ConnectionDialogExtraStrings(
+              context,
+            ).text('invalidCloudEngineProfile'),
+          );
+          return;
+        }
+        _emailController.text = f['email'] ?? '';
+        _cloudEngine = engine;
+        _error = null;
       default:
         _emailController.text = f['email'] ?? '';
     }
@@ -413,6 +451,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                         }
                         setState(() {
                           _selectedProvider = value;
+                          _cloudEngine = _defaultEngineFor(value);
                           if (value == CloudProvider.azure ||
                               value == CloudProvider.b2) {
                             _enableEncryption = false;
@@ -1159,6 +1198,13 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                 ),
                 enabled: !_isLoading,
               ),
+              if (_usesCloudEngine && !kIsWeb)
+                CloudEngineField(
+                  value: _cloudEngine,
+                  onChanged: _isLoading
+                      ? null
+                      : (v) => setState(() => _cloudEngine = v),
+                ),
             ],
 
             const SizedBox(height: 16),
@@ -1619,6 +1665,11 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
             _smbRequireEncryption;
         (auth.client as SmbClientAdapter).smbBackend = _smbBackend;
       }
+      final engineClient = auth.client;
+      if (engineClient is FilenClientAdapter) engineClient.engine = _cloudEngine;
+      if (engineClient is InternxtClientAdapter) {
+        engineClient.engine = _cloudEngine;
+      }
       if (_selectedProvider == CloudProvider.sftp && _sftpUsePrivateKey) {
         await auth.loginSftpWithPrivateKey(
           identity,
@@ -1663,7 +1714,15 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = e is EncryptionFormatException
+          if (e is RustCloudException &&
+              e.code == RustCloudErrorCode.twoFactorRequired) {
+            _needs2fa = true;
+          }
+          _error = e is RustCloudUnavailable
+              ? ConnectionDialogExtraStrings(
+                  context,
+                ).text('rustEngineUnavailable')
+              : e is EncryptionFormatException
               ? KeyManagementStrings(context).text(e.code.name, e.arguments)
               : e is NextcloudAuthenticationException
               ? ConnectionStrings.of(context).authenticationFailed

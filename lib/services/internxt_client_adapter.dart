@@ -19,6 +19,7 @@ import 'dart:typed_data';
 import 'package:path/path.dart' as p;
 import 'package:flutter/foundation.dart';
 import 'package:internxt_client/internxt_client.dart';
+import 'package:crisp_storage/rust_cloud.dart';
 
 import 'cloud_storage_interface.dart';
 import 'internxt_client.dart' show InternxtUrls;
@@ -28,6 +29,7 @@ import 'secure_storage_service.dart';
 import 'log_service.dart';
 import 'internxt_streaming_transfer.dart';
 import 'internxt_transfer_platform.dart';
+import 'rust_cloud_delegate.dart';
 
 class InternxtClientAdapter extends CloudStorageClient
     with CloudTransferOperations
@@ -36,6 +38,17 @@ class InternxtClientAdapter extends CloudStorageClient
   final InternxtClient _client;
   final InternxtStreamingTransfer _streaming;
   int _authGeneration = 0;
+  final RustCloudApi? _rustApiOverride;
+
+  /// Requested engine for the next sign-in (per connection profile, default
+  /// from `CRISP_INTERNXT_BACKEND`). A restored session keeps the engine whose
+  /// format it was saved in; Dart and Rust sessions are not interchangeable.
+  CloudEngine engine = configuredCloudEngine(RustCloudProvider.internxt);
+  CloudEngine? _effectiveEngine;
+  RustCloudDelegate? _rust;
+
+  CloudEngine? get effectiveEngine => _effectiveEngine;
+  RustCloudApi get _rustApi => _rustApiOverride ?? defaultRustCloudApi();
 
   @override
   bool get supportsStreaming => true;
@@ -48,7 +61,9 @@ class InternxtClientAdapter extends CloudStorageClient
         boundedDownload: true,
       );
   @override
-  String get transferIdentity => jsonEncode([
+  String get transferIdentity => _rust != null
+      ? jsonEncode(['internxt-rust', _rust!.account, _rust!.rootId])
+      : jsonEncode([
     'internxt',
     _client.driveApiUrl,
     _client.networkUrl,
@@ -57,8 +72,50 @@ class InternxtClientAdapter extends CloudStorageClient
     _client.rootFolderId,
   ]);
 
-  InternxtClientAdapter({required ConfigService config})
-    : _streaming = const InternxtStreamingTransfer(),
+  Future<void> _persistRust(String email, String envelope) =>
+      _client.config.saveCredentials({
+        'email': email,
+        'engine': CloudEngine.rust.name,
+        'rustSession': envelope,
+      });
+
+  void _closeRust() {
+    _rust?.close();
+    _rust = null;
+  }
+
+  /// Restore a saved login. Rust-format credentials require the Rust engine
+  /// (strict: no Dart fallback); legacy Dart credentials use the Dart client.
+  Future<bool> restoreSavedSession(Map<String, dynamic> creds) async {
+    final envelope = creds['rustSession'];
+    if (envelope is String && envelope.isNotEmpty) {
+      await _rustApi.initialize();
+      final session = await RustCloudSession.restore(
+        _rustApi,
+        RustCloudProvider.internxt,
+        envelope,
+      );
+      final email = creds['email'] as String? ?? session.account;
+      _authGeneration++;
+      _client.setAuth({});
+      _closeRust();
+      _rust = RustCloudDelegate(
+        session,
+        persist: (renewed) => _persistRust(email, renewed),
+      );
+      _effectiveEngine = CloudEngine.rust;
+      return true;
+    }
+    if (creds['token'] == null) return false;
+    _closeRust();
+    setAuth(creds);
+    _effectiveEngine = CloudEngine.dart;
+    return true;
+  }
+
+  InternxtClientAdapter({required ConfigService config, RustCloudApi? rustApi})
+    : _rustApiOverride = rustApi,
+      _streaming = const InternxtStreamingTransfer(),
       _client = InternxtClient(
         // Production callers inject the host's secure ConfigStorage. Keep the
         // ConfigService seam so isolated tests can supply their own backend.
@@ -71,7 +128,9 @@ class InternxtClientAdapter extends CloudStorageClient
   InternxtClientAdapter.withClient(
     this._client, {
     InternxtStreamingTransfer? streaming,
-  }) : _streaming = streaming ?? const InternxtStreamingTransfer();
+    RustCloudApi? rustApi,
+  }) : _rustApiOverride = rustApi,
+       _streaming = streaming ?? const InternxtStreamingTransfer();
 
   /// Convenience constructor that builds the right ConfigService
   /// for the host platform. Use this when AppState doesn't already
@@ -100,13 +159,13 @@ class InternxtClientAdapter extends CloudStorageClient
   String get rootPath => '/';
 
   @override
-  bool get isAuthenticated => _client.userId != null;
+  bool get isAuthenticated => _rust != null || _client.userId != null;
 
   @override
-  String? get userId => _client.userId;
+  String? get userId => _rust?.account ?? _client.userId;
 
   @override
-  String? get bucketId => _client.bucketId;
+  String? get bucketId => _rust != null ? null : _client.bucketId;
 
   void setAuth(Map<String, dynamic> creds) {
     _authGeneration++;
@@ -120,6 +179,35 @@ class InternxtClientAdapter extends CloudStorageClient
     String? twoFactorCode,
   }) async {
     _authGeneration++;
+    // Choose the engine before any credential leaves this method. Auto uses
+    // Dart only when the Rust library cannot load; sign-in failures never
+    // switch engines.
+    final selected = await selectCloudEngine(engine, () => _rustApi.initialize());
+    if (selected == CloudEngine.rust) {
+      final session = await RustCloudSession.login(
+        _rustApi,
+        RustCloudProvider.internxt,
+        email,
+        password,
+        twoFactorCode: twoFactorCode,
+      );
+      try {
+        await _persistRust(email, session.envelope);
+      } catch (_) {
+        session.close();
+        rethrow;
+      }
+      _client.setAuth({});
+      _lastLoginResponse = null;
+      _closeRust();
+      _rust = RustCloudDelegate(
+        session,
+        persist: (renewed) => _persistRust(email, renewed),
+      );
+      _effectiveEngine = CloudEngine.rust;
+      return;
+    }
+    _closeRust();
     _log.debug('Calling InternxtClient login...');
     try {
       final response = await _client.login(
@@ -130,6 +218,7 @@ class InternxtClientAdapter extends CloudStorageClient
       _lastLoginResponse = response;
       _log.debug('Login successful. Keys received: ${response.keys}');
       setAuth(response);
+      _effectiveEngine = CloudEngine.dart;
     } catch (e) {
       _log.error('Login failed', e);
       rethrow;
@@ -137,10 +226,23 @@ class InternxtClientAdapter extends CloudStorageClient
   }
 
   @override
-  Future<bool> is2faNeeded(String email) => _client.is2faNeeded(email);
+  Future<bool> is2faNeeded(String email) async {
+    // The Rust engine reports TwoFactorRequired from sign-in instead of a
+    // separate pre-check; resolve the engine without loading credentials.
+    if (engine != CloudEngine.dart) {
+      final selected = await selectCloudEngine(
+        engine,
+        () => _rustApi.initialize(),
+      );
+      if (selected == CloudEngine.rust) return false;
+    }
+    return _client.is2faNeeded(email);
+  }
 
   @override
   Future<void> logout() async {
+    _closeRust();
+    _effectiveEngine = null;
     _authGeneration++;
     _client.setAuth({});
     _lastLoginResponse = null;
@@ -206,6 +308,11 @@ class InternxtClientAdapter extends CloudStorageClient
     String remotePath, {
     Function(int, int)? onProgress,
   }) async* {
+    final rust = _rust;
+    if (rust != null) {
+      yield* rust.downloadStream(remotePath, onProgress: onProgress);
+      return;
+    }
     yield* _streaming.download(_capture(), remotePath, onProgress: onProgress);
   }
 
@@ -215,6 +322,14 @@ class InternxtClientAdapter extends CloudStorageClient
     Function(int, int)? onProgress,
   }) async {
     const maxBytes = 32 * 1024 * 1024;
+    final rust = _rust;
+    if (rust != null) {
+      return rust.downloadBytes(
+        remotePath,
+        onProgress: onProgress,
+        maxBytes: maxBytes,
+      );
+    }
     final result = BytesBuilder(copy: false);
     await for (final bytes in _streaming.download(
       _capture(),
@@ -232,6 +347,8 @@ class InternxtClientAdapter extends CloudStorageClient
 
   @override
   Future<Map<String, dynamic>?> resolvePath(String path) async {
+    final rust = _rust;
+    if (rust != null) return rust.resolvePath(path);
     try {
       return await _streaming.resolve(_capture(requireEncryption: false), path);
     } on InternxtPathNotFound {
@@ -241,11 +358,12 @@ class InternxtClientAdapter extends CloudStorageClient
 
   @override
   Future<Map<String, dynamic>> listPath(String path) =>
+      _rust?.listPath(path) ??
       _streaming.list(_capture(requireEncryption: false), path);
 
   @override
   Future<Map<String, dynamic>> readDirectoryForEdit(String path) =>
-      listPath(path);
+      _rust?.listPath(path, fresh: true) ?? listPath(path);
 
   @override
   Future<void> uploadFile(
@@ -269,6 +387,16 @@ class InternxtClientAdapter extends CloudStorageClient
     String targetPath, {
     Function(int, int)? onProgress,
   }) async {
+    final rust = _rust;
+    if (rust != null) {
+      return rust.uploadStream(
+        dataStream,
+        length,
+        fileName,
+        targetPath,
+        onProgress: onProgress,
+      );
+    }
     await _streaming.upload(
       _capture(),
       dataStream,
@@ -285,6 +413,10 @@ class InternxtClientAdapter extends CloudStorageClient
     String localPath, {
     Function(int, int)? onProgress,
   }) async {
+    final rust = _rust;
+    if (rust != null) {
+      return rust.downloadToPath(remotePath, localPath, onProgress: onProgress);
+    }
     final session = _capture();
     await saveInternxtDownload(
       _streaming.download(session, remotePath, onProgress: onProgress),
@@ -294,10 +426,13 @@ class InternxtClientAdapter extends CloudStorageClient
   }
 
   @override
-  Future<void> createFolderPath(String path) => _client.createFolderPath(path);
+  Future<void> createFolderPath(String path) =>
+      _rust?.createFolderPath(path) ?? _client.createFolderPath(path);
 
   @override
   Future<void> deletePath(String path) async {
+    final rust = _rust;
+    if (rust != null) return rust.deletePath(path);
     final session = _capture(requireEncryption: false);
     final source = await _streaming.resolve(session, path);
     session.checkCurrent();
@@ -310,6 +445,8 @@ class InternxtClientAdapter extends CloudStorageClient
 
   @override
   Future<void> movePath(String sourcePath, String targetPath) async {
+    final rust = _rust;
+    if (rust != null) return rust.movePath(sourcePath, targetPath);
     final session = _capture(requireEncryption: false);
     final source = await _streaming.resolve(session, sourcePath);
     final target = await _streaming.resolve(session, targetPath);
@@ -341,6 +478,8 @@ class InternxtClientAdapter extends CloudStorageClient
         newName.contains('\u0000')) {
       throw const FormatException('Enter a file name without path separators.');
     }
+    final rust = _rust;
+    if (rust != null) return rust.renamePath(path, newName);
     final session = _capture(requireEncryption: false);
     final source = await _streaming.resolve(session, path);
     session.checkCurrent();
@@ -360,11 +499,15 @@ class InternxtClientAdapter extends CloudStorageClient
   Future<Map<String, List<Map<String, dynamic>>>> search(
     String query, {
     bool detailed = false,
-  }) => _client.search(query, detailed: detailed);
+  }) => _rust != null
+      ? Future.error(UnsupportedError('Search uses the Dart Internxt engine.'))
+      : _client.search(query, detailed: detailed);
 
   Future<List<Map<String, dynamic>>> findFiles(
     String path,
     String pattern, {
     int maxDepth = -1,
-  }) => _client.findFiles(path, pattern, maxDepth: maxDepth);
+  }) => _rust != null
+      ? Future.error(UnsupportedError('Find uses the Dart Internxt engine.'))
+      : _client.findFiles(path, pattern, maxDepth: maxDepth);
 }

@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
     show ExternalLibrary;
+import 'native_library_locator.dart';
 import 'remote_client.dart';
 import 'rust/api.dart' as native;
 import 'rust/frb_generated.dart';
@@ -18,13 +19,17 @@ class RustSmbSession implements SmbTransport {
   static Future<void> initialize() => _initializing ??= (() async {
     try {
       const defined = String.fromEnvironment('CRISP_SMB_LIBRARY');
-      final path = defined.isNotEmpty
-          ? defined
-          : Platform.environment['CRISP_SMB_LIBRARY'];
+      // Explicit path (define/environment) first, then a library bundled
+      // next to the app (macOS: Contents/Frameworks), then FRB's default.
+      final path = firstExistingLibrary(
+        rustLibraryCandidates(
+          stem: 'crisp_smb_bridge',
+          definedPath: defined,
+          environmentVariable: 'CRISP_SMB_LIBRARY',
+        ),
+      );
       await RustLib.init(
-        externalLibrary: path == null || path.isEmpty
-            ? null
-            : ExternalLibrary.open(path),
+        externalLibrary: path == null ? null : ExternalLibrary.open(path),
       );
     } catch (_) {
       // No session, credentials or network operations exist at this boundary.

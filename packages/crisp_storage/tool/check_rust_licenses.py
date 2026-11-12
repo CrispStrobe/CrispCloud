@@ -18,9 +18,30 @@ EXPRESSIONS = {
     'Apache-2.0': 'Apache-2.0', 'Apache-2.0 OR Apache-2.0 WITH LLVM-exception OR MIT': 'MIT',
 }
 def digest(path): return hashlib.sha256(path.read_bytes()).hexdigest()
-def inventory():
+# Bridges: SMB keeps its original evidence file; the Filen/Internxt bridge has
+# its own Cargo graph and evidence. CLOUD_EXPRESSIONS are reviewed only for it.
+BRIDGES = {
+    'smb': ('rust', 'licensing/rust_dependencies.json'),
+    'cloud': ('rust_cloud', 'licensing/rust_cloud_dependencies.json'),
+}
+CLOUD_EXPRESSIONS = {
+    # Vendored provider clients and their bridge (file-level copyleft, retained notices).
+    'MPL-2.0': 'MPL-2.0',
+    # rustls/aws-lc TLS stack, certificate data and helpers (all permissive).
+    'ISC': 'ISC', 'ISC AND (Apache-2.0 OR ISC)': 'ISC', 'Apache-2.0 AND ISC': 'Apache-2.0 AND ISC',
+    'ISC AND (Apache-2.0 OR ISC) AND Apache-2.0 AND MIT AND BSD-3-Clause AND (Apache-2.0 OR ISC OR MIT) AND (Apache-2.0 OR ISC OR MIT-0)':
+        'ISC AND Apache-2.0 AND MIT AND BSD-3-Clause',
+    'Apache-2.0 OR ISC OR MIT': 'MIT', 'CDLA-Permissive-2.0': 'CDLA-Permissive-2.0',
+    'CC0-1.0 OR Apache-2.0 OR Apache-2.0 WITH LLVM-exception': 'Apache-2.0',
+    'CC0-1.0 OR MIT-0 OR Apache-2.0': 'MIT-0', 'Unicode-3.0': 'Unicode-3.0',
+    'MIT OR Apache-2.0 OR Zlib': 'MIT', 'Unlicense/MIT': 'MIT', 'BSD-3-Clause': 'BSD-3-Clause',
+    'BSD-2-Clause OR Apache-2.0 OR MIT': 'MIT',
+}
+def inventory(bridge='smb'):
+    crate_dir = BRIDGES[bridge][0]
+    allowed = dict(EXPRESSIONS, **(CLOUD_EXPRESSIONS if bridge == 'cloud' else {}))
     metadata = json.loads(subprocess.check_output(['cargo', 'metadata', '--locked', '--format-version', '1',
-        '--manifest-path', str(ROOT / 'rust/Cargo.toml')]))
+        '--manifest-path', str(ROOT / crate_dir / 'Cargo.toml')]))
     result = []
     for package in sorted(metadata['packages'], key=lambda p: (p['name'], p['version'])):
         base = Path(package['manifest_path']).parent
@@ -30,7 +51,7 @@ def inventory():
             if digest(base / 'LICENSE') != ALLO_LICENSE_HASH:
                 raise SystemExit('allo-isolate license-file changed; review required')
             expression = 'Apache-2.0'
-        if expression not in EXPRESSIONS:
+        if expression not in allowed:
             raise SystemExit(f"Unreviewed license: {package['name']} {expression}")
         files = sorted(p for p in base.rglob('*') if p.is_file()
             and 'target' not in p.parts and any(p.name.upper().startswith(n) for n in ['LICENSE', 'LICENCE', 'COPYING', 'NOTICE', 'COPYRIGHT']))
@@ -47,17 +68,18 @@ def inventory():
         if not files: raise SystemExit(f"Missing license evidence: {package['name']}")
         result.append({'name': package['name'], 'version': package['version'],
             'source': package['source'] or 'project-owned', 'license_expression': expression,
-            'selected_grant': EXPRESSIONS[expression],
+            'selected_grant': allowed[expression],
             'evidence_source': evidence_source,
             'license_files': [{'path': str(p.relative_to(evidence_base)), 'sha256': digest(p)} for p in files]})
     return {'schema_version': 1, 'scope': 'All packages resolved by the bridge Cargo.lock, including platform/build dependencies; excludes compiler/SDK and final packaged binaries.',
-        'cargo_lock_sha256': digest(ROOT / 'rust/Cargo.lock'), 'packages': result}
+        'cargo_lock_sha256': digest(ROOT / crate_dir / 'Cargo.lock'), 'packages': result}
 
 ALLO_LICENSE_HASH = 'c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4'
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(); parser.add_argument('--record', action='store_true'); args = parser.parse_args()
-    path = ROOT / 'licensing/rust_dependencies.json'
-    value = inventory()
+    parser = argparse.ArgumentParser(); parser.add_argument('--record', action='store_true')
+    parser.add_argument('--bridge', choices=sorted(BRIDGES), default='smb'); args = parser.parse_args()
+    path = ROOT / BRIDGES[args.bridge][1]
+    value = inventory(args.bridge)
     if args.record: path.write_text(json.dumps(value, indent=2) + '\n')
     elif json.loads(path.read_text()) != value: raise SystemExit('Rust license evidence changed; review and record it')
     print(f"Verified permissive grants and license files for {len(value['packages'])} Cargo packages")
