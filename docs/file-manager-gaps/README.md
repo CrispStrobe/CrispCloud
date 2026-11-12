@@ -49,6 +49,10 @@ loopback/recovery coverage, and G09 has verified command/keyboard coverage.
 G05's reviewed reference workflow and G49's maintained three-language offline
 help are closed with their separate regression evidence and remote checkpoints.
 
+The [external tools and archive continuation](continuation-tools-archives-20261112.md)
+starts from `d76fe9b`. G10, G11 and G18 are implementing; their implementation
+and acceptance status will change only after verified remote checkpoints.
+
 ## Lane index
 
 | Lane | Scope | Items |
@@ -73,15 +77,15 @@ help are closed with their separate regression evidence and remote checkpoints.
 | [G07](01-workspace-and-interaction.md#g07) | General file tags | Scoped | Stable file identity; native metadata bridge |
 | [G08](01-workspace-and-interaction.md#g08) | Favorite synchronization | Scoped | Versioned favorites; selected sync backend |
 | [G09](01-workspace-and-interaction.md#g09) | Command entry and keyboard conventions | Implemented / native acceptance pending | Captured local commands and scoped insertion verified; actual OS behavior under G50 |
-| [G10](02-viewing-search-and-tools.md#g10) | External remote editing | Scoped | Captured editor session; conflict review |
-| [G11](02-viewing-search-and-tools.md#g11) | External comparison tools | Scoped | G10 staging lifetime |
+| [G10](02-viewing-search-and-tools.md#g10) | External remote editing | Implementing | Captured editor session; conflict review |
+| [G11](02-viewing-search-and-tools.md#g11) | External comparison tools | Implementing | G10 staging lifetime |
 | [G12](02-viewing-search-and-tools.md#g12) | Preferred external terminal | Implemented / native acceptance pending | Verify installed terminals on each claimed desktop OS |
 | [G13](02-viewing-search-and-tools.md#g13) | UUE, XXE and MIME conversion | Closed: documented streaming formats | Single-part Base64 MIME; verified exclusive-output backends only |
 | [G14](02-viewing-search-and-tools.md#g14) | Large-file viewer and comparison limits | Scoped | Provider range capabilities |
 | [G15](02-viewing-search-and-tools.md#g15) | Nested and encrypted archive search | Scoped | G18 archive identity; reader capabilities |
 | [G16](02-viewing-search-and-tools.md#g16) | Native indexed search | Scoped | Native search bridge |
 | [G17](02-viewing-search-and-tools.md#g17) | Additional viewer adapters | Scoped | Existing viewer dispatch; extension review |
-| [G18](03-archives-and-containers.md#g18) | Writable archive endpoints | Scoped | Existing archive workspace |
+| [G18](03-archives-and-containers.md#g18) | Writable archive endpoints | Implementing | Existing archive workspace |
 | [G19](03-archives-and-containers.md#g19) | Directory-to-archive synchronization | Scoped | G18 |
 | [G20](03-archives-and-containers.md#g20) | Archive-to-archive transfer | Scoped | G18 |
 | [G21](03-archives-and-containers.md#g21) | Large background archive jobs | Scoped | G18; transfer queue |
