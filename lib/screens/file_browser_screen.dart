@@ -60,6 +60,8 @@ import '../widgets/trash_history_dialog.dart';
 import '../widgets/transfer_history_dialog.dart';
 import '../widgets/integrity_dialogs.dart';
 import '../widgets/integrity_recovery_dialog.dart';
+import '../widgets/archive_endpoint_actions.dart';
+import '../l10n/archive_endpoint_strings.dart';
 import '../widgets/directory_comparison_dialog.dart';
 import '../widgets/file_context_menu.dart' show showPropertiesDialog;
 import '../widgets/status_bar.dart';
@@ -580,6 +582,12 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       ExternalEditingStrings(context).text('title'),
       () => showExternalEditingSessions(context, ref),
       available: () => const NativeCommandEntryHost().platform != null,
+    );
+    add(
+      'archiveRecovery',
+      archiveEndpointText(context, 'recoveryTitle'),
+      () => showArchiveRecoveryForActiveSource(context, ref),
+      available: () => !kIsWeb,
     );
     add(
       'gatherSelection',
@@ -2117,6 +2125,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         showTransferHistoryDialog(context, ref);
       case 'integrity_recovery':
         showIntegrityRecoveryDialog(context, ref);
+      case 'archive_recovery':
+        if (!kIsWeb) showArchiveRecoveryForActiveSource(context, ref);
       case 'checksums':
         showChecksumToolsDialog(
           context,
@@ -2348,6 +2358,14 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           child: _overflowItem(
             Icons.restore,
             context.commanderTr("Split/combine recovery…"),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'archive_recovery',
+          enabled: !kIsWeb,
+          child: _overflowItem(
+            Icons.settings_backup_restore,
+            archiveEndpointText(context, 'recoveryTitle'),
           ),
         ),
         PopupMenuItem(

@@ -14,6 +14,7 @@ are consolidated into the stable gap identifiers below.
 
 - **Scoped:** implementation boundaries and acceptance checks are defined; work is not complete.
 - **Implementing:** a concrete increment is being prepared; closure still requires validation and a remote checkpoint.
+- **Partially implemented:** a verified increment is pushed, while named parts of the feature still require implementation.
 - **Implemented / acceptance pending:** the stated code scope is verified locally and pushed; named platform or live-server checks remain.
 - **Closed:** all listed deliverables and required acceptance checks have observed evidence.
 - **Research:** a specific architecture, licensed implementation, runtime or hardware prerequisite must be resolved before a support claim.
@@ -30,13 +31,17 @@ preserve earlier feature branches and do not rewrite or merge the main branch.
 
 ## Current progress
 
-Fourteen implementation increments are preserved on remote feature branches:
+Fourteen feature scopes have reached implementation on remote feature branches:
 **seven closed scopes** (G02, G03, G05, G13, G27, G37, G49) and **seven implemented features
 with target-runtime/live-server acceptance pending** (G01, G04, G09, G10, G11, G12, G25).
 The remaining 37 items
 comprise **25 implementation gaps, 10 research prerequisites and two
 cross-cutting acceptance items**. The acceptance work also applies to delivered
 features where their specific boundary names a target-runtime check.
+
+G18 additionally has a delivered native local archive workflow. It remains in
+the 25 implementation gaps because remote publication access-policy contracts
+and browser operation leases still require code, alongside native acceptance.
 
 The [12 November validation record](validation-20261112.md) separates passing
 unit/widget/native-loopback evidence, static analysis, JavaScript compilation,
@@ -53,8 +58,10 @@ The [external tools and archive continuation](continuation-tools-archives-202611
 starts from `d76fe9b`. G10's retained remote editor sessions and G11's reviewed
 external comparison workflow are implemented with native/live acceptance pending.
 G10 conditionally publishes Dropbox revisions; other bounded-download sources
-support independent copies only. G18 remains implementing; shared retained
-staging and archive publication have separate verified foundation checkpoints.
+support independent copies only. G18 now connects reviewed native archive
+imports, member edits and explicit recovery to pane, clipboard and menu actions.
+Shared retained staging and archive publication have separate verified
+foundation checkpoints.
 
 ## Lane index
 
@@ -88,7 +95,7 @@ staging and archive publication have separate verified foundation checkpoints.
 | [G15](02-viewing-search-and-tools.md#g15) | Nested and encrypted archive search | Scoped | G18 archive identity; reader capabilities |
 | [G16](02-viewing-search-and-tools.md#g16) | Native indexed search | Scoped | Native search bridge |
 | [G17](02-viewing-search-and-tools.md#g17) | Additional viewer adapters | Scoped | Existing viewer dispatch; extension review |
-| [G18](03-archives-and-containers.md#g18) | Writable archive endpoints | Implementing | Existing archive workspace |
+| [G18](03-archives-and-containers.md#g18) | Writable archive endpoints | Partially implemented: native local workflow | Remote access-policy contracts; browser operation leases; native acceptance |
 | [G19](03-archives-and-containers.md#g19) | Directory-to-archive synchronization | Scoped | G18 |
 | [G20](03-archives-and-containers.md#g20) | Archive-to-archive transfer | Scoped | G18 |
 | [G21](03-archives-and-containers.md#g21) | Large background archive jobs | Scoped | G18; transfer queue |
@@ -160,6 +167,7 @@ wait for unavailable legacy hardware or a platform-specific entitlement.
 | G11 external comparison | `feature/external-comparison-tools-20261112` · `77af994` · PR #77 | 119 checks across nine focused suites; source capture, menus and help verified | Implemented; installed GUI-tool acceptance pending |
 | Archive publication/recovery | `feature/archive-publication-recovery-20261112` · `005771b` · PR #78 | 24 verified-publication/recovery tests; narrow analysis clean | Native local foundation; remote/browser prerequisites remain implementation work |
 | G10 external remote editing | `feature/external-remote-editing-20261112` · `c5ddfff` · PR #80 | 125 distinct checks across 11 suites, including final five lifecycle cases; three current offline guides | Implemented; native editor/live Dropbox acceptance pending |
+| G18 native archive endpoints | `feature/writable-archive-endpoints-20261112` · core `e32401c`, UI `c74986a`, reviewed fixes `af79a89` · PR #81 | 104 archive checks plus 58 distinct host/help checks: 162 across 14 suites; three current offline guides | Native local increment delivered; remote/browser publication implementation and native acceptance remain |
 
 Implementation status is updated only after the corresponding code and tests
 are preserved remotely. Test counts from overlapping runs are not added together.

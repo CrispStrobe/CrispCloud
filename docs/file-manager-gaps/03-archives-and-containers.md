@@ -10,11 +10,28 @@ capability. Required live/device checks remain visible after code implementation
 
 ### Writable archive endpoints
 
-**Status:** Implementing. **Dependencies:** Existing archive workspace.
+**Status:** Partially implemented: native local workflow delivered; remote/browser publication implementation and native acceptance remain. **Dependencies:** Existing archive workspace and verified publication journal.
 
 **Scope:** Expose reviewed archive mutations as captured operation endpoints with verified container publication.
 
 **Implementation:** Introduce captured archive-member backends and transaction plans over the existing archive workspace. Bind container source/version, member identity, passwords and staged changes until verified whole-container publication.
+
+**Delivered native increment:** Ordinary captured selections can be copied or
+moved into the other pane's current archive directory through F5, paste and
+context-menu actions. A private copy overlay is verified and presented as a
+whole-container review. Only a verified physical publication receipt completes
+the import; a move then attempts exact, revalidated source-file removal and
+reports retained files/directories. Cancellation preserves cut references.
+Existing add/edit/rename/remove actions and new empty-directory creation share
+the same reviewed publisher. Nested routes retain independent passwords and
+container generations. Tools and overflow expose account-scoped recovery even
+when the original archive name is temporarily absent.
+
+ZIP, 7z, TAR and TAR.GZ/TGZ have separate writer/protection policies. Existing
+supported member times and permission bits are verified after repacking, and
+unsupported protection or timestamp policies are refused. The
+[endpoint specification](../archive-endpoints.md) records byte, entry, path,
+nesting, time, metadata and encryption boundaries.
 
 **Boundary:** Capabilities are format-specific. Mutating one member may require repacking the container; declare cost and read/write/encryption support. Keep original containers recoverable until replacement is verified.
 
@@ -25,6 +42,16 @@ capability. Required live/device checks remain visible after code implementation
 - Local and supported remote targets maintain exact source identity, cancellation and interruption recovery.
 
 **Starting points:** archive_workspace.dart; archive_viewer_service.dart; operation backend/capabilities.
+
+**Remaining implementation:** No remote backend currently supplies the
+required original access-policy contract. Browser publication also needs an
+operation-lifetime lease. Generic upload/move capabilities do not enable either
+path. Native publication uses two exclusive moves with a temporary original-name
+absence window. Durable packing drafts remain G21; directory synchronization
+and direct archive-to-archive transfers remain G19/G20. Native release acceptance
+continues under G50. The implementation and its observed gates are preserved in
+[draft PR 81](https://github.com/CrispStrobe/CrispCloud/pull/81) and the
+[continuation record](continuation-tools-archives-20261112.md).
 
 ## G19
 

@@ -220,6 +220,12 @@ class ArchiveWorkspace {
       password: password,
     );
     try {
+      final policy = await ArchiveEndpointPolicy.inspect(
+        bytes,
+        file.name,
+        archive,
+        password,
+      );
       final encrypted = archive.members.where((member) => member.isEncrypted);
       if (encrypted.isNotEmpty) {
         if (password == null) {
@@ -227,9 +233,29 @@ class ArchiveWorkspace {
             'Enter the archive password before editing or extracting members.',
           );
         }
-        // Validate a supplied password before allowing replacement of every
-        // encrypted entry, which otherwise could silently change the password.
-        await archive.readMember(encrypted.first);
+        // Every original protected file must authenticate, including one that
+        // the user later replaces/removes. ZIP members can use different
+        // passwords; validating only the first member is insufficient.
+        final files = encrypted.where((member) => member.isFile).toList();
+        if (policy.reason == null) {
+          if (archive.members.fold<int>(
+                0,
+                (sum, member) => sum + (member.isFile ? member.size : 0),
+              ) >
+              ArchiveService.maxExtractedBytes) {
+            throw const ArchiveViewException(
+              'Archive contents exceed 256 MiB.',
+            );
+          }
+          for (final member in files) {
+            if (!source.isCurrent) {
+              throw StateError('The archive source changed.');
+            }
+            await archive.readMember(member);
+          }
+        } else if (files.isNotEmpty) {
+          await archive.readMember(files.first);
+        }
       }
       return ArchiveWorkspace._(
         source,
@@ -237,12 +263,7 @@ class ArchiveWorkspace {
         archive,
         sha256.convert(bytes).toString(),
         password,
-        await ArchiveEndpointPolicy.inspect(
-          bytes,
-          file.name,
-          archive,
-          password,
-        ),
+        policy,
         journal ?? ArchivePublicationJournal(),
       );
     } catch (_) {

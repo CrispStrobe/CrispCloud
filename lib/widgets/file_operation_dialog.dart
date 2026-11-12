@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/commander_strings.dart';
 import '../l10n/external_drop_strings.dart';
+import '../l10n/archive_endpoint_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../models/storage_reference.dart';
@@ -21,9 +22,12 @@ import '../services/read_only_operation_backend.dart';
 import '../services/saved_search_service.dart';
 import 'file_operation_conflict_dialog.dart';
 import 'transfer_schedule_dialog.dart';
+import 'archive_endpoint_actions.dart';
 
 /// Returns the completed foreground plan for callers that need to apply a
 /// follow-up operation to successful entries. Cancellation/background is null.
+/// An archive destination owns a separate physical-container review and receipt;
+/// that workflow does not return a generic per-member completion plan.
 Future<FileOperationPlan?> showFileOperationDialog(
   BuildContext context,
   WidgetRef ref,
@@ -73,6 +77,46 @@ Future<FileOperationPlan?> showFileOperationDialog(
   }
 
   try {
+    final targetSide =
+        externalDestinationSide ??
+        lockedDestinationSide ??
+        (side == PanelSide.local ? PanelSide.remote : PanelSide.local);
+    if (destinationOrigin == null &&
+        destinationPath == null &&
+        ref.read(panelProvider(targetSide)).isInArchive) {
+      try {
+        // Capture the actual outer container and inner directory before source
+        // materialization or any dialog await can change either pane.
+        final destination = CapturedArchiveImportDestination.capture(
+          ref,
+          targetSide,
+        );
+        if (sourceBackend != null ||
+            onPreparedPlan != null ||
+            onForegroundPlan != null) {
+          throw StateError(
+            archiveEndpointText(context, 'sourceArchiveUnsupported'),
+          );
+        }
+        await showCapturedArchiveImport(
+          context,
+          ref,
+          sourceSide: side,
+          files: files,
+          destination: destination,
+          sourceOrigin: sourceOrigin,
+          sourceGroups: sourceGroups,
+          moveSources: kind == FileOperationKind.move,
+          isReviewCurrent: isReviewCurrent,
+        );
+      } catch (error) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text('$error')));
+        }
+      }
+      return null;
+    }
     var groups = sourceGroups;
     if (groups == null && sourceOrigin == null && sourceBackend == null) {
       try {

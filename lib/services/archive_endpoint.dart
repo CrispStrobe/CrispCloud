@@ -162,7 +162,7 @@ class ArchiveEndpoint {
     }
     final overlay = _ArchiveImportOverlay(workspace, () => !_closed);
     final plan = await const FileOperationService().prepare(
-      files: List.unmodifiable(files),
+      files: List.unmodifiable(files.map(_captureImportFile)),
       source: _ArchiveImportSource(source, readInactivity),
       destination: overlay,
       targetDirectory: directory,
@@ -425,7 +425,10 @@ class ArchiveEndpoint {
               current();
               await bounded(publisher.verifyReceipt(receipt));
               current();
-              final now = await bounded(input.stat(file.path!));
+              final observed = await bounded(input.stat(file.path!));
+              final now = observed == null
+                  ? null
+                  : _captureImportFile(observed);
               if (now == null ||
                   now.isSymlink == true ||
                   (file.isFolder
@@ -515,14 +518,20 @@ class ArchiveEndpoint {
     }
   }
 
-  static bool _hasVersion(FileItem file) => [
-    'version',
-    'versionId',
-    'etag',
-    'eTag',
-    'rev',
-    'cTag',
-  ].any((key) => file.metadata?[key] != null);
+  static bool _hasVersion(FileItem file) {
+    // Same precedence as CloudOperationBackend._fileVersion. An empty or
+    // malformed earlier field must never shadow a usable later revision and
+    // silently turn a provider's conditional removal into an unguarded one.
+    var found = false;
+    for (final key in ['version', 'versionId', 'eTag', 'etag', 'rev', 'cTag']) {
+      final value = file.metadata?[key];
+      if (value == null) continue;
+      if (value is! String || value.trim().isEmpty) return false;
+      found = true;
+    }
+    return found;
+  }
+
   Future<void> close() async {
     if (_closed) return;
     _closed = true;
@@ -544,6 +553,15 @@ class _ImportWitness {
   final String? sha256;
   final int? mode;
 }
+
+// FileItem fields are final, but provider-owned metadata maps need their own
+// copy. In particular, a later provider read must not rewrite captured String
+// revisions in place and authorize deletion of a replacement source.
+FileItem _captureImportFile(FileItem file) => file.metadata == null
+    ? file
+    : file.copyWith(
+        metadata: Map.unmodifiable(Map<String, dynamic>.of(file.metadata!)),
+      );
 
 Future<String> _digest(
   FileOperationBackend source,
@@ -620,10 +638,16 @@ class _ArchiveImportSource extends FileOperationBackend {
   @override
   StorageTransferCapabilities get capabilities => input.capabilities;
   @override
-  Future<FileItem?> stat(String path) => input.stat(path).timeout(inactivity);
+  Future<FileItem?> stat(String path) async {
+    final file = await input.stat(path).timeout(inactivity);
+    return file == null ? null : _captureImportFile(file);
+  }
+
   @override
-  Future<List<FileItem>> list(String path) =>
-      input.list(path).timeout(inactivity);
+  Future<List<FileItem>> list(String path) async => [
+    for (final file in await input.list(path).timeout(inactivity))
+      _captureImportFile(file),
+  ];
   @override
   Stream<List<int>> readFile(FileItem file) =>
       (control?.bind(input.readFile(file)) ?? input.readFile(file)).timeout(

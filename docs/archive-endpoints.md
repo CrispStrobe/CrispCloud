@@ -4,6 +4,138 @@ Archive edits need two distinct outcomes: an editable draft and a verified
 container published at its captured original path. A staged member write is
 never a published transfer and never authorizes deleting a move source.
 
+## Endpoint workflow
+
+`ArchiveEndpoint` owns a captured `ArchiveWorkspace`, its container authority,
+and one import transaction. An ordinary source selection is planned by the
+existing copy planner into a private archive overlay. The internal operation
+is always **copy**, even when the requested final operation is move. The
+writable overlay is never exposed as a general transfer destination.
+
+The public sequence is `prepareImport`, `stageImport`, a concrete
+`ArchiveWorkspaceReview`, then `commit`. Staging independently verifies every
+copied member against a fresh source snapshot and full SHA-256, reads declared
+source permission bits, and adopts the entire successful import in one draft
+mutation. A failed or cancelled copy does not adopt a partial overlay. The
+review repacks and independently decodes the archive, compares every member's
+bytes and supported metadata, and lists add/replace/rename/remove/directory
+changes. Changing the draft or a parent generation invalidates that review.
+
+The dialog supports explicit keep-both, replace and skip policies. Its result
+is `ArchiveEndpointTransferResult` only after an outer physical publication
+receipt exists. Closing a staged review returns no successful transfer result.
+Existing workspace Save uses the same review/publisher path. Existing editing,
+renaming and member removal remain staged; creating an empty directory is also
+available. Adding from the other pane uses the private verified copy path.
+
+Nested routes retain separate original passwords and captured generations for
+each level. Updating an inner archive stages its bytes in its parent; only the
+outermost physical publication completes the transaction. A failed outer
+publication retains the verified nested draft for an explicit retry. Passwords
+are not persisted in the publication journal.
+
+The import UI entry point is
+`showArchiveEndpointImportDialog(context, source: ..., files: ...,
+containerBackend: ..., containerFile: ..., nestedMembers: ..., directory: ...,
+expectedOuterFingerprint: ..., moveSources: ..., journal: ...)`.
+General pane/clipboard routing captures account, navigation, listing and local
+grant authority before awaiting the dialog. Archive-to-archive imports and
+mixed-account selections are outside this transaction's scope; copy the
+members to an ordinary directory first.
+
+## Format and member policy
+
+The filename and detected format must agree. Writer eligibility is narrower
+than reader recognition; an unsupported writer never silently converts the
+container or falls back to a direct provider upload.
+
+| Container | Writable policy | Imported modification time | Important boundary |
+| --- | --- | --- | --- |
+| ZIP | Plain or the supported AES-256 policy | UTC whole seconds in the supported signed timestamp range; otherwise DOS wall-time fields at two-second resolution | Mixed protected/plain files, legacy or other AES strengths, and encrypted directory entries are refused. |
+| 7z | Plain or original AES password, retaining original header visibility | Millisecond resolution | Header encryption is detected independently of file data, including containers with no ordinary files. |
+| TAR | Plain | Whole seconds | Unsupported links and special members are rejected. |
+| TAR.GZ / TGZ | Plain TAR inside gzip | Whole seconds | The decoded TAR container is additionally limited to 64 MiB. |
+| Other recognized formats | Browsing and extraction only | Not applicable | No edit/publication capability is advertised. |
+
+A bounded ZIP metadata finalizer writes explicit UTC-second fields to both
+local and central headers while copying compressed/encrypted payloads unchanged.
+It rebuilds every local offset and ordinary/ZIP64 footer, including the
+65,535-entry transition. UTC fields are emitted only from 1970 through
+2038-01-19 03:14:07 UTC. Outside that range, only already representable DOS
+wall-time fields can be kept; DOS fields have two-second resolution and no time
+zone, so that fallback does not promise an exact UTC instant in another time
+zone. An existing timestamp that cannot be preserved is refused rather than
+rounded during rewrite. ZIPs with signed-negative extended UTC timestamps are
+read-only with the pinned reader: it interprets the high bit as an unsigned
+future date. The capability policy checks bounded local/central timestamp
+extras and refuses that input, malformed timestamp fields, and inconsistent
+local/central declared modification times before any edit is allowed.
+Local headers must have distinct, nonoverlapping metadata regions and matching
+local/central names. The policy bounds aggregate local metadata scanning to the
+input byte length, preventing central records from repeatedly scanning shared
+extra fields. ZIP encryption markers are classified consistently with the
+reader; inconsistent flags, methods or AES descriptors refuse editing.
+
+Supported existing modification times and POSIX permission bits are compared
+after repacking; inability to preserve them refuses publication. Imported times
+are normalized to the chosen format's supported precision. Empty directories
+are retained. Merging an existing explicit archive directory preserves its
+original mode and modification time; new directories import supported metadata. Opaque comments, archive extras, ownership, ACLs and other member
+extensions are not promised by the current member writer. That limitation is
+shown in the review and is separate from the stricter outer-container access
+policy below.
+
+The original password must successfully decode and authenticate every original
+protected file before editing, within the decoded-content limits. Replacing or
+removing a later member cannot bypass its password or authentication check. A supplied
+password on an empty container whose protection cannot be established does not
+authorize an unencrypted rewrite. Removing all protected file data is refused
+when it would erase a data-only encryption policy. The writer never silently
+enables or disables 7z header protection.
+
+Paths are validated before they become members: no traversal, absolute paths,
+links or special entries, duplicate paths, or file/directory collisions.
+Limits are 200,000 explicit entries, 200 path components, 4,096 UTF-8 bytes per
+member path and 8 MiB of member names. Each decoded member is limited to
+64 MiB; total decoded content and packed output are each limited to 256 MiB.
+Nested routes are limited to eight levels. An import has a ten-minute overall
+staging deadline and 30-second source-call/read inactivity limits. Digest
+streams also have a five-minute whole-read bound and cancel their source
+subscription when cancelled or timed out.
+
+## Move source disposition
+
+After the receipt is durable, each copied source is checked again against its
+captured identity, every recognized revision field (including `versionId`),
+length and full content hash. The published receipt and member bytes must still
+match. Native file identity evidence (path, regular-file type, size, modification
+and change times, and mode) is captured during preview, checked around staging,
+and required again after publication. It remains private to this transaction.
+Native files use an exact, nonrecursive unlink after bounded re-reading and
+final no-follow parent/file snapshots; the receipt is reverified immediately
+before those final checks. Remote file removal requires a nonempty captured
+string revision and a provider conditional-delete capability. Empty, whitespace-only
+or malformed recognized revision values are refused, including an earlier
+field that would shadow a valid later field. There is no unguarded
+source-delete fallback. Preview, staging and cleanup snapshots copy provider
+metadata into immutable maps, so later provider reads cannot rewrite the
+captured revision evidence in place.
+
+Source directories are retained in this increment. The shared empty-directory
+API accepts a path without an expected object identity, so it cannot authorize
+removing a directory that may have been replaced after inspection. A directory
+move can therefore publish its contents and remove verified source files while
+reporting remaining directory paths explicitly.
+
+A changed source, cancellation, unsupported exact removal, timeout or missing
+acknowledgement produces a published copy with a partial move result. It never
+claims rollback of the published archive. Cleanup has a ten-minute overall
+budget and 30-second acknowledgement limits; timeout revokes that cleanup
+attempt's authority. Retained/unconfirmed source paths are returned separately
+from the bounded detailed warning list. Sources are never deleted during
+packing, virtual member staging or restart recovery. A restart recovery record
+contains no source-deletion authority.
+
 ## Container publication foundation
 
 `ArchiveContainerPublisher` publishes an already verified, bounded candidate
@@ -103,6 +235,17 @@ are reconciled only through successful backend inspection. A lost provider or
 journal acknowledgement never grants permission to remove an original or to
 replay a mutation against a replacement account.
 
+The user-facing recovery entry point is
+`showArchivePublicationRecoveryDialog(context, backend: capturedBackend,
+journal: ..., containerPath: optionalExactPath)`. It lists only unfinished
+records for the captured account and exposes verified finish/restore actions.
+The publisher reacquires the lease and reloads the record before mutation.
+An attempted recovery tells the host to refresh and capture a new container
+before another edit; it does not silently reuse a stale file snapshot. Import
+and workspace opening detect recorded interruptions even when the original
+name is temporarily absent. Detailed UI messages are available in English,
+German, French, Spanish, Portuguese, Chinese, Japanese, Korean and Arabic.
+
 ## Verification
 
 The independent filesystem in `test/support/archive_endpoint_backend.dart`
@@ -113,10 +256,47 @@ reconciliation, concurrent writers, changed recovery revisions, access-policy
 changes, bounded cleanup, and unsupported capabilities. It also exercises real
 native files, permission preservation and native lease exclusion.
 
-Focused foundation gate:
+The endpoint and dialog suites cover private staging, collision policies,
+copy/commit ordering, content and revision-only source mutations, native exact
+source cleanup, source-directory retention, cancellation, stalled/dripping
+reads, post-publication cleanup timeouts, review invalidation, nested passwords,
+original-member authentication, invalid/mutated revision evidence, protection
+policy boundaries, and explicit restart recovery UI. The malformed-policy
+suite constructs shared and overlapping ZIP local metadata and inconsistent
+AES/strong-encryption markers; each case must refuse edits and retain the
+original container.
+
+Focused gate:
 
 ```sh
-flutter test test/archive_container_publisher_test.dart
+flutter test test/archive_container_publisher_test.dart \
+  test/archive_workspace_test.dart test/archive_endpoint_test.dart \
+  test/archive_endpoint_dialog_test.dart test/archive_viewer_integration_test.dart \
+  test/archive_browser_session_test.dart test/archive_zip_metadata_test.dart \
+  test/archive_endpoint_policy_malformed_test.dart
 ```
 
 No dependency was added. Transaction and publication code is project-owned.
+
+## Format references and licensing
+
+ZIP record offsets and footer handling follow the primary
+[ZIP format specification](https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT).
+The signed UTC timestamp boundary and local/central timestamp layout are also
+cross-checked against the primary
+[Apache Commons Compress timestamp implementation](https://commons.apache.org/proper/commons-compress/xref/org/apache/commons/compress/archivers/zip/X5455_ExtendedTimestamp.html).
+No implementation code was copied from those references.
+
+The ZIP AES policy scan follows the primary
+[AES ZIP format specification](https://www.winzip.com/en/support/aes-encryption/):
+it checks the AES method marker and bounded extra-field descriptors, including
+the declared 256-bit strength. The independent reader remains responsible for
+actual data authentication and decoding. The
+[7z format description](https://www.7-zip.org/7z.html) documents its extensible
+format and AES-256 encryption; support here remains limited by the pinned
+reader/writer and the verification above.
+
+The implementation reuses the existing `koni_archive` 0.9.0 and `archive`
+dependencies. The pinned `koni_archive` package's MIT license was checked; no
+new library, external binary or upstream implementation code was introduced.
+Publication, policy, transaction, lifetime and recovery code is project-owned.

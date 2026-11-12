@@ -298,6 +298,33 @@ void main() {
   );
 
   testWidgets(
+    'archive recovery is reachable from an ordinary folder and keeps modal input ownership',
+    (tester) async {
+      await mount(tester);
+      final menu = tester.widget<ConfigurableBrowserMenu>(
+        find.byType(ConfigurableBrowserMenu),
+      );
+      final openRecovery =
+          menu.commands['workflow:archiveRecovery']!.onSelected!;
+      openRecovery();
+      await tester.pumpAndSettle();
+      expect(find.text('Archive publication recovery'), findsOneWidget);
+      expect(
+        find.text('No unfinished archive publication for this account.'),
+        findsOneWidget,
+      );
+      openRecovery();
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsOneWidget);
+      await tester.tap(find.widgetWithText(TextButton, 'Close').last);
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.linux),
+  );
+
+  testWidgets(
     'native code-editor and terminal menus keep ownership over a configured browser layout',
     (tester) async {
       tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(

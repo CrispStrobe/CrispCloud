@@ -160,12 +160,12 @@ grants. The link is transient and is not restored after restarting the app.
 | Requested workflow | Current status | Evidence and boundary |
 | --- | --- | --- |
 | Browse local/remote archives like folders | Implemented with limits | ZIP, TAR/TGZ, 7z, RAR; bounded BZ2/XZ/ZSTD streams/containers. Native input up to 2 GiB, browser input up to 256 MiB, smaller member/edit budgets. |
-| Edit/add/rename/delete/repack archive members | Implemented for selected formats | `lib/services/archive_workspace.dart`; ZIP, 7z, TAR and TGZ/TAR.GZ, verified original-container saves. |
+| Edit/add/rename/delete/repack archive members | Implemented for selected native local formats | G18 connects reviewed ZIP, 7z, TAR and TGZ/TAR.GZ transactions to file actions, preserves supported member metadata/protection and verifies whole-container publication. Explicit interruption recovery is reachable from ordinary folders. Remote/browser publication prerequisites remain open. See [archive endpoints](archive-endpoints.md). |
 | Create an archive | Implemented for bounded native local inputs | The native local context action opens a reviewed ZIP/7z/TAR/TAR.GZ dialog with a captured selection and destination. Source hashes, decoded contents and staged output are checked before exclusive publication. Remote/browser creation remains G23. See [archive creation](archive-creation.md). |
 | Password-protected archive input | Implemented | ZIP/7z/RAR reading and encrypted ZIP/7z repack preserve original protection. |
 | Password/compression settings for new archives | Implemented for supported formats | ZIP/TAR.GZ compression levels, 7z compression methods, ZIP/7z AES-256 and optional 7z filename encryption. TAR/TAR.GZ do not offer password protection. Passwords are not persisted. Exact limits are in [archive creation](archive-creation.md). |
 | Large archive packing in a background worker | Missing | Current creation/repack is bounded and in-process, not a queued streaming worker. |
-| Direct archive-to-archive transfer | Missing | Copy-out exists; writable archive endpoints are not connected to the general transfer planner. |
+| Direct archive-to-archive transfer | Missing | G18 imports ordinary sources into native archive destinations; a transaction coordinating two writable containers and commit-before-delete ordering remains G20. |
 | Additional packer plugins and legacy binary plugins | Partial/missing | First-party extension/custom-command interfaces exist; no legacy binary plugin ABI or general external-packer bridge. |
 | Remaining archive-format breadth | Missing | No complete native dispatch for ARJ/LZH/CAB/ACE/UC2, RPM/CPIO/DEB, ISO/XAR/XIP or all ZIP-derived aliases/raw LZMA. Requires format-by-format implementation and license/limit review. |
 
@@ -260,12 +260,16 @@ separate [FTP API boundary](ftp-transport.md).
 
 ## Follow-up gap closure validation
 
-All 51 gap scopes are recorded in six lane documents. Fourteen implementation
-increments are preserved on remote feature branches: seven closed scopes
+All 51 gap scopes are recorded in six lane documents. Fourteen feature scopes
+have reached implementation on remote feature branches: seven closed scopes
 (G02, G03, G05, G13, G27, G37, G49), and seven implemented features with named
 target-runtime/live-server acceptance pending (G01, G04, G09, G10, G11, G12, G25).
 The remaining 37 items are 25 implementation gaps, ten research prerequisites
 and two cross-cutting acceptance items.
+
+G18 also has a delivered native local increment. It remains among the
+implementation gaps because remote access-policy contracts and browser
+operation leases have not been implemented.
 
 The [earlier validation record](file-manager-gaps/validation-20261112.md) and
 [continuation record](file-manager-gaps/continuation-20261112.md) contain the
@@ -304,5 +308,8 @@ Their respective focused gates passed 119 and 125 checks; the suites overlap
 and those counts are not a combined total. Source/launch review, native watcher
 shutdown, failed cleanup and exact-source recovery have separate regression
 coverage. Installed external tools, live Dropbox publication and signed/native
-acceptance remain open. G18 archive publication has a verified native foundation
-while endpoint and format-preservation work continues.
+acceptance remain open. G18 now adds reviewed imports through pane, clipboard
+and context-menu actions; nested/password-aware drafts; supported metadata
+preservation; receipt-gated source cleanup; and explicit publication recovery.
+Its native local scope is verified separately from the remaining remote/browser
+implementation and signed/native acceptance boundaries.
