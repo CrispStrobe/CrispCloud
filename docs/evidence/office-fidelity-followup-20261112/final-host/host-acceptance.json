@@ -1,0 +1,129 @@
+{
+  "arguments": {
+    "engine_count": 296,
+    "expected_commit": "b7edb919def85ef78d6d34ba6eb7c74d61e0bd4d",
+    "expected_source_commit": "7641d9cfa167987216134ebfc4772918cc945d97",
+    "host_count": 62,
+    "managed_count": 366,
+    "output": "/workspace/scratch/10b2b87c2738/validation/host-final",
+    "repo": "/workspace/scratch/10b2b87c2738/CrispCloud"
+  },
+  "command": [
+    "python3",
+    "tool/with_ci_system_sqlite.py",
+    "bash",
+    "tool/check_office_fidelity.sh"
+  ],
+  "completed_utc": "2026-11-12T13:49:58.713806+00:00",
+  "coverage": {
+    "all_sources_instrumented": true,
+    "covered_lines": 2216,
+    "instrumented_lines": 3549,
+    "source_count": 10
+  },
+  "dependency_files_restored": {
+    "cli/pubspec.lock": "58b84e563e45e743202f9d223f7bc7c958a220a2781e2fd63b7c4ce52d7f191d",
+    "cli/pubspec.yaml": "c0277c49abcbb66846b70a5600027b23013887c891530af38adfeda449a9c7f9",
+    "packages/crisp_audio/pubspec.yaml": "295d8d1755ffc2f9a40c5babd18da8a7c62212775cf0550c441757caa8ed4be4",
+    "packages/crisp_ios_files/pubspec.yaml": "adc678f6e775cfaa287db3c3cc8b97d7212963e639b5595a92e2e6325b241c7b",
+    "packages/crisp_ios_shell/pubspec.yaml": "737dca5562be39243e051483824fd7f04c43cbb71077a8da87675e57fa431c26",
+    "packages/crisp_storage/pubspec.yaml": "791fd99ee64f461f1356b3b5ebab2caa2baeafc0a25d449fb2855d0878a11675",
+    "packages/dart_pdf_editor/pubspec.yaml": "cb851d6b7163cfd90103775661d658bee91768bcf42194b83b34cd490a6aa66e",
+    "packages/dart_pdf_editor_secure_storage/pubspec.yaml": "3a9048055f9e5502644fcd944aca4277fb28dd72ef4f8d7a48b86415feffbe74",
+    "packages/dart_smb2/pubspec.lock": "0227ee4d33ec5881a00e911c30c481d2c2edbef5fb08813cfb4aafbf6a48a051",
+    "packages/dart_smb2/pubspec.yaml": "58550451c3bdb75176fa74a778f303a479fdfacf70094c106ac57f5dce4795d4",
+    "packages/filen_client/pubspec.yaml": "8c4db6d3a66c83ef51a0e4d9dd99e6d9061c6869d7e3cc25eb021517b1bac31f",
+    "packages/flutter_pty2/pubspec.yaml": "787b59a3518b8e491ddeaf6946be207bd207aff9d7b1a30db46ea6b602ead330",
+    "packages/madedit2_hex/pubspec.yaml": "a4f687414a774f26d6c82f1795421adaeea4cddad249774e6478ae2c1593cba7",
+    "packages/pdf_document/pubspec.yaml": "82cb5dea3a06e8963834a62ce9fb827479e6a70bf3aa8b43ee47e3d91d2db52e",
+    "packages/pdf_operations/pubspec.yaml": "f3edca693464b09be286051981b0b63e3daeb4757b5c3d7930673e3613acce6a",
+    "packages/pro_image_editor/pubspec.yaml": "f6d043bc8824215ac035be3b353189d7e0604090958bceb115e65f642a70862c",
+    "packages/pro_video_editor/pubspec.yaml": "66188a312f9a40ddfb26da2875963557802e95e759e666e687354628f9b2d836",
+    "packages/quds_office_editor/pubspec.yaml": "108a9b14e566abb48169bf189ae44c04fe9bf45cf317fdcd0cf3841852161421",
+    "packages/quds_office_engine/pubspec.yaml": "5458c2376a55bc57a794ccc9ccdafe44f747a29fee7d7f37e6f0befa0a967c3a",
+    "packages/re_editor/pubspec.yaml": "6b1bc164e9c7fb5fc27654fab9d4ea7b7767812d5c77f07fedc4de0577d69610",
+    "pubspec.lock": "f18ecce960b3b22694107cb17d4cef93e1e823b55da8f39374bcf7f081783256",
+    "pubspec.yaml": "8ac1390a24171cca345a60abd2745007f334190d8d356f0ac1e8f73918bd954a",
+    "tool/benchmarks/dart_scan_probe/pubspec.lock": "73aebea82a6af898deb6c8fa2efe2366dec1d5e17f0437288f98131922b12dfc",
+    "tool/benchmarks/dart_scan_probe/pubspec.yaml": "59b4a5150e1022b1ddd3b57921db19baf7e121e46234097edf0e0233a8374032",
+    "tool/benchmarks/native_scan_lab/pubspec.lock": "00e455c14fde26dd6e54856b76529535fadfdd597714f934f1c1d3f8fc6328bc",
+    "tool/benchmarks/native_scan_lab/pubspec.yaml": "1c43345a96efb9f49c94364269bc5b2fdf67f85fe2deb03b738ea4785ada5732"
+  },
+  "elapsed_seconds": 223.494,
+  "errors": [],
+  "evidence_sha256": {
+    "coverage.json": "f0797c05b76efd3acd6265db92a3cb1cf53bdcd555e4b48e7c9f336c3923c322",
+    "engine-inventory.json": "fcbb1424353e8d7cca5b2b1d1bc5323c49a104e2a11609cbe5a29e67e2684b87",
+    "flutter-version.json": "def4e60bda4a261604e4725477014333bb6878173840c1e58f0f89f48670e615",
+    "gate.log": "97e7d3d28cba86eb806d88ac0633b711bf09b7a798a31662ce46e88846b09d68",
+    "host-inventory.json": "38c26ab8e6320077cdb7b81ee7693a85cc068d3b576a41fbeb59dfdeeff3ad68",
+    "lcov.info": "ad5a0e3e2948060b39c537291da73a6a152aa92563111ef7f29193047c1dfcee",
+    "output-snapshot.json": "d6158ba945563be570f2cdbe670791495bd9ba48f315abfc13f98e5892778238",
+    "tracked-after.json": "2abe077c661e554b4a01ee5e3da253a6a670eb9701853a0a45a9cab386b3ef80",
+    "tracked-before.json": "2abe077c661e554b4a01ee5e3da253a6a670eb9701853a0a45a9cab386b3ef80"
+  },
+  "gate_exit_code": 0,
+  "gate_pid": 28,
+  "inventories": {
+    "engine": 296,
+    "host": 62,
+    "snapshot_manifest_sha256": "d6158ba945563be570f2cdbe670791495bd9ba48f315abfc13f98e5892778238",
+    "total": 358
+  },
+  "pin_after": {
+    "files": 366,
+    "manifest_sha256": "18556afca2ab8831dc1c861f4098c5ae6734b3923b56bcdddc2b6842fbc8662d",
+    "source_commit": "7641d9cfa167987216134ebfc4772918cc945d97"
+  },
+  "pin_before": {
+    "files": 366,
+    "manifest_sha256": "18556afca2ab8831dc1c861f4098c5ae6734b3923b56bcdddc2b6842fbc8662d",
+    "source_commit": "7641d9cfa167987216134ebfc4772918cc945d97"
+  },
+  "repo": "/workspace/scratch/10b2b87c2738/CrispCloud",
+  "runner_sha256": "1db655730df4799bc5768efe7e30e889df3037937b338f4c66f61a058052c843",
+  "runtime": {
+    "CI": "true",
+    "env_file": "/workspace/scratch/10b2b87c2738/runtime/env-host.sh",
+    "env_sha256": "4ef20d8d6074701d498cb91ed76f454a6b49931fcf66d7b1d74890e1f71150fb",
+    "flutter_wrapper": "/workspace/scratch/10b2b87c2738/runtime/host-bin/flutter",
+    "version": {
+      "channel": "[user-branch]",
+      "dartSdkVersion": "3.13.7",
+      "devToolsVersion": "2.60.0",
+      "engineBuildDate": "2026-10-23 05:34:48.330",
+      "engineCommitDate": "2026-10-23 02:13:38.000Z",
+      "engineContentHash": "dfd2e6cb7d319db05e3bf1503f3e2ac60f6288a2",
+      "engineRevision": "cf636b1dfb818dd6a3ff16e390e93b1a036969c8",
+      "flutterRoot": "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8",
+      "flutterVersion": "3.47.8",
+      "frameworkCommitDate": "2026-10-22 21:37:31 -0700",
+      "frameworkRevision": "737ba8f885dc774b53b442759999a312c9461e4e",
+      "frameworkVersion": "3.47.8",
+      "repositoryUrl": "https://github.com/flutter/flutter.git"
+    },
+    "wrapper_sha256": "7b8fd43fedc2b00648a28db11d170c29af7c55fd99b5497c8b7144ddc4b629cb"
+  },
+  "started_utc": "2026-11-12T13:46:15.220135+00:00",
+  "status": "passed",
+  "test_phases": {
+    "engine": {
+      "passed": 921,
+      "python_unittest_counts": [
+        7,
+        344,
+        10
+      ],
+      "summary": "00:16 +921: All tests passed!"
+    },
+    "host": {
+      "passed": 143,
+      "python_unittest_counts": [
+        9
+      ],
+      "summary": "01:41 +143: All tests passed!"
+    }
+  },
+  "tracked_files_unchanged": true,
+  "tracked_tree_sha256": "6a10ddc84b4c0b16226d1f9ee56477b4fc59beea8578c762a59c46685a188acb"
+}

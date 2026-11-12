@@ -1,0 +1,36 @@
+{
+  "Files": 6,
+  "Failures": 0,
+  "Reports": [
+    {
+      "File": "/workspace/scratch/10b2b87c2738/validation/host-tabs-native-final/inputs/build/fidelity-custom-tabs/host-tabs-1.docx",
+      "Sha256": "376e758654a46e432ced3d5b32df6fe180359c591c5771efcaefd9123a87379c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/10b2b87c2738/validation/host-tabs-native-final/inputs/build/fidelity-custom-tabs/host-tabs-2.docx",
+      "Sha256": "ddbd3ba2d46b93f3b51b51f795f3234802a5aa21c23494d14cf1caf2a5680874",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/10b2b87c2738/validation/host-tabs-native-final/inputs/build/fidelity-custom-tabs/host-tabs-3.docx",
+      "Sha256": "037cb0b567320f8213868e556a30623e3993dc3e697e8baf28dea2200b8bbf34",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/10b2b87c2738/validation/host-tabs-native-final/inputs/build/fidelity-host/ribbon-edits-1.docx",
+      "Sha256": "09f17f404b39b1ce437fcdf7fd0d5bee94fece0fd72feb6db6c8b13560d61e15",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/10b2b87c2738/validation/host-tabs-native-final/inputs/build/fidelity-host/ribbon-edits-2.docx",
+      "Sha256": "3a5eee862098e13d6c1ac9b792a887ee7478712a298afcb816fb1f1d71e85180",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/10b2b87c2738/validation/host-tabs-native-final/inputs/build/fidelity-host/ribbon-edits-3.docx",
+      "Sha256": "166fed5bb6afc38225607edcd87f08e6d481ee08f3bf123b42516f132c769377",
+      "Errors": []
+    }
+  ]
+}

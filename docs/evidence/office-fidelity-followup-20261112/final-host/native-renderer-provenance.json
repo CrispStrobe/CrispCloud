@@ -1,0 +1,66 @@
+{
+  "format_version": 1,
+  "renderer": {
+    "version": "LibreOffice 24.2.7.2 ee3885777aa7032db5a9b65deec9457448a91162 (LibreOfficeKit embedding API)",
+    "archive_url": "https://downloadarchive.documentfoundation.org/libreoffice/old/24.2.7.2/deb/x86_64/LibreOffice_24.2.7.2_Linux_x86-64_deb.tar.gz",
+    "archive_sha256": "be967ebc63cb15b831b4e8176492e83eb625dc00852eb96eda2b299b6e74bb74"
+  },
+  "adapter": {
+    "method": "Official LibreOfficeKit embedding API; no IPC required; exact conversion failures retained.",
+    "artifacts": [
+      {
+        "path": "/workspace/scratch/10b2b87c2738/runtime/libreoffice-242/lok_convert.c",
+        "bytes": 2652,
+        "sha256": "1f23398b945320057ca8695a6f9a9fe3db87e232998800691dacd571d87fc496"
+      },
+      {
+        "path": "/workspace/scratch/10b2b87c2738/runtime/libreoffice-242/lok_convert",
+        "bytes": 17144,
+        "sha256": "b69aa183cd4d2852ed011b280e667cf54c2fb6cd63e8295783732259f9b84c89"
+      },
+      {
+        "path": "/workspace/scratch/10b2b87c2738/runtime/lok242-bin/libreoffice",
+        "bytes": 1960,
+        "sha256": "4087cfbf62a50717804ce883618227756dfe3d41d5cf7ab9f11f0e849c2653df"
+      },
+      {
+        "path": "/workspace/scratch/10b2b87c2738/runtime/libreoffice-242/root/opt/libreoffice24.2/program/libmergedlo.so",
+        "bytes": 78181760,
+        "sha256": "b482c62fa4a1f064ca4a07422c7164827d6c1a3b5c9a0850a21609f5ec9ac540"
+      },
+      {
+        "path": "/workspace/scratch/10b2b87c2738/runtime/libreoffice-242/include/LibreOfficeKit/LibreOfficeKit.h",
+        "bytes": 20545,
+        "sha256": "af1f5c90f39a885bd0f2ba50bb5c68f40cf2fac88cfcc6b6a76a4522fab0b676"
+      },
+      {
+        "path": "/workspace/scratch/10b2b87c2738/runtime/libreoffice-242/include/LibreOfficeKit/LibreOfficeKitInit.h",
+        "bytes": 10287,
+        "sha256": "16feb15e51651387d223f3e156bc876d5d9826078651cfb12e4f035dcc0d2dc0"
+      },
+      {
+        "path": "/workspace/scratch/10b2b87c2738/runtime/libreoffice-242/include/LibreOfficeKit/LibreOfficeKitTypes.h",
+        "bytes": 983,
+        "sha256": "64eee50e2e74d2d33368e1a7b50683fe2e5fec9f3fd4952ebea24195f3dffa43"
+      }
+    ]
+  },
+  "supporting_tools": {
+    "pdftoppm": {
+      "path": "/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override/pdftoppm",
+      "sha256": "de772e88ab9977ccde25def9b403bf42675d75f5dd82b19fbd7d8123ad183159",
+      "version": "pdftoppm version 26.05.0"
+    },
+    "pdftotext": {
+      "path": "/usr/bin/pdftotext",
+      "sha256": "7fe3559cac3ba61dd93650a1ba90499b9fc488184ef8d0f2f1305ddf52c0378b",
+      "version": "pdftotext version 25.03.0"
+    },
+    "pdfinfo": {
+      "path": "/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override/pdfinfo",
+      "sha256": "fee70ade670fb025343aca2b5c3a2aacacb8ed9edce1b716b233b5de924b6bf5",
+      "version": "pdfinfo version 26.05.0"
+    }
+  },
+  "recovery_receipt_sha256": "a98730a6eeb1dc27db8f7baabe4ea4228b8a7d2e2c350350b8a6b7b555e30fd4"
+}

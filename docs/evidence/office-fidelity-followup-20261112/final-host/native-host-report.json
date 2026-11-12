@@ -1,0 +1,329 @@
+{
+  "status": "passed",
+  "source_commit": "b7edb919def85ef78d6d34ba6eb7c74d61e0bd4d",
+  "managed_source_commit": "7641d9cfa167987216134ebfc4772918cc945d97",
+  "schema_input_count": 358,
+  "engine_files": 296,
+  "host_files": 62,
+  "managed_source_files_verified": 366,
+  "input_manifest_sha256": "26e1d8b3c631f04b148620b73f6e442b4e6743c5dfecd1758e6e61ec0640981e",
+  "probe_script_sha256": "d312f9d7185b2a70b463a6a1b2da9ad9cab5501d9e0c31e25bb262cc54880783",
+  "renderer": "LibreOffice 24.2.7.2 ee3885777aa7032db5a9b65deec9457448a91162 (LibreOfficeKit embedding API)",
+  "scope": "Supplementary native conversion of eleven actual host uploads: four XLSX, four PPTX, and DOCM/DOTX/DOTM. No repeated-save-cycle certification is implied.",
+  "native_conversion_function": "Unchanged tool/office-validation/render.py render_document",
+  "native_conversion_script_sha256": "787d79602869da46442e40656d8d2cb95141a72d26433582fe58033bb7bea5a0",
+  "schema_report_sha256": "9dcea9b14060a41a62626520563b76cb9fe5ff13b60652e87930a7ea55a4c73c",
+  "files": 11,
+  "reports": [
+    {
+      "file": "build/fidelity-host/pending-cell-after-save.xlsx",
+      "pages": 3,
+      "text": "New cell text whileValue          Total\nNorth                      2.00            6\nSouth                         5           15                  Regional values\n                                               6.00\nNative workbook\n                                               5.00\n\n                                               4.00\n\n                                               3.00\n\n                                               2.00\n\n                                               1.00\n\n                                               0.00\n                                                      North                     Sout\n\fRegional values\n\n\n\n                          Value\n\n\n\n\n                  South\n\fSum of Value\n     7.00\n\f",
+      "pixel_sha256": [
+        "af336282cf4fa9570540da6741f179a11e9d784f696ba74e333d19a974525b3b",
+        "dc250644fcf82004acb5d25f921f103c879ef3369598b74434d6664ac25f11da",
+        "3e392b8f39b0ec27fb7936c71a5ba331df4fed0bbe9a5b5bd3a1ffa76b9406cf"
+      ],
+      "pdf": "000/document.pdf",
+      "page_artifacts": [
+        {
+          "page": 1,
+          "width": 612,
+          "height": 792,
+          "png": "000/page-0001.png",
+          "pixel_sha256": "af336282cf4fa9570540da6741f179a11e9d784f696ba74e333d19a974525b3b"
+        },
+        {
+          "page": 2,
+          "width": 612,
+          "height": 792,
+          "png": "000/page-0002.png",
+          "pixel_sha256": "dc250644fcf82004acb5d25f921f103c879ef3369598b74434d6664ac25f11da"
+        },
+        {
+          "page": 3,
+          "width": 612,
+          "height": 792,
+          "png": "000/page-0003.png",
+          "pixel_sha256": "3e392b8f39b0ec27fb7936c71a5ba331df4fed0bbe9a5b5bd3a1ffa76b9406cf"
+        }
+      ],
+      "input_sha256": "45359a3dc701b2c0a43e5287ce1adcb99cf05037cb3a779719d6d513a95bf94c"
+    },
+    {
+      "file": "build/fidelity-host/pending-cell-before-save.xlsx",
+      "pages": 3,
+      "text": "First saved cell draValue          Total\nNorth                       2.00            6\nSouth                          5           15                  Regional values\n                                                6.00\nNative workbook\n                                                5.00\n\n                                                4.00\n\n                                                3.00\n\n                                                2.00\n\n                                                1.00\n\n                                                0.00\n                                                       North                     Sout\n\fRegional values\n\n\n\n                          Value\n\n\n\n\n                  South\n\fSum of Value\n     7.00\n\f",
+      "pixel_sha256": [
+        "5cca18f633d42db36844ff756fbad063ba3dd034b13d9845cbbccf87d0a24c0c",
+        "dc250644fcf82004acb5d25f921f103c879ef3369598b74434d6664ac25f11da",
+        "3e392b8f39b0ec27fb7936c71a5ba331df4fed0bbe9a5b5bd3a1ffa76b9406cf"
+      ],
+      "pdf": "001/document.pdf",
+      "page_artifacts": [
+        {
+          "page": 1,
+          "width": 612,
+          "height": 792,
+          "png": "001/page-0001.png",
+          "pixel_sha256": "5cca18f633d42db36844ff756fbad063ba3dd034b13d9845cbbccf87d0a24c0c"
+        },
+        {
+          "page": 2,
+          "width": 612,
+          "height": 792,
+          "png": "001/page-0002.png",
+          "pixel_sha256": "dc250644fcf82004acb5d25f921f103c879ef3369598b74434d6664ac25f11da"
+        },
+        {
+          "page": 3,
+          "width": 612,
+          "height": 792,
+          "png": "001/page-0003.png",
+          "pixel_sha256": "3e392b8f39b0ec27fb7936c71a5ba331df4fed0bbe9a5b5bd3a1ffa76b9406cf"
+        }
+      ],
+      "input_sha256": "f5812563572dcb3138ef064e574eb3aa58a8cce30f5711b8f25272626fcae088"
+    },
+    {
+      "file": "build/fidelity-host/pending-cell-close-after-save.xlsx",
+      "pages": 3,
+      "text": "New cell text whileValue          Total\nNorth                      2.00            6\nSouth                         5           15                  Regional values\n                                               6.00\nNative workbook\n                                               5.00\n\n                                               4.00\n\n                                               3.00\n\n                                               2.00\n\n                                               1.00\n\n                                               0.00\n                                                      North                     Sout\n\fRegional values\n\n\n\n                          Value\n\n\n\n\n                  South\n\fSum of Value\n     7.00\n\f",
+      "pixel_sha256": [
+        "af336282cf4fa9570540da6741f179a11e9d784f696ba74e333d19a974525b3b",
+        "dc250644fcf82004acb5d25f921f103c879ef3369598b74434d6664ac25f11da",
+        "3e392b8f39b0ec27fb7936c71a5ba331df4fed0bbe9a5b5bd3a1ffa76b9406cf"
+      ],
+      "pdf": "002/document.pdf",
+      "page_artifacts": [
+        {
+          "page": 1,
+          "width": 612,
+          "height": 792,
+          "png": "002/page-0001.png",
+          "pixel_sha256": "af336282cf4fa9570540da6741f179a11e9d784f696ba74e333d19a974525b3b"
+        },
+        {
+          "page": 2,
+          "width": 612,
+          "height": 792,
+          "png": "002/page-0002.png",
+          "pixel_sha256": "dc250644fcf82004acb5d25f921f103c879ef3369598b74434d6664ac25f11da"
+        },
+        {
+          "page": 3,
+          "width": 612,
+          "height": 792,
+          "png": "002/page-0003.png",
+          "pixel_sha256": "3e392b8f39b0ec27fb7936c71a5ba331df4fed0bbe9a5b5bd3a1ffa76b9406cf"
+        }
+      ],
+      "input_sha256": "f4e9546cab389c15cc69fff708a34486ef4227cc0bca7a91889c7d73b9b0b697"
+    },
+    {
+      "file": "build/fidelity-host/pending-cell-close-before-save.xlsx",
+      "pages": 3,
+      "text": "First saved cell draValue          Total\nNorth                       2.00            6\nSouth                          5           15                  Regional values\n                                                6.00\nNative workbook\n                                                5.00\n\n                                                4.00\n\n                                                3.00\n\n                                                2.00\n\n                                                1.00\n\n                                                0.00\n                                                       North                     Sout\n\fRegional values\n\n\n\n                          Value\n\n\n\n\n                  South\n\fSum of Value\n     7.00\n\f",
+      "pixel_sha256": [
+        "5cca18f633d42db36844ff756fbad063ba3dd034b13d9845cbbccf87d0a24c0c",
+        "dc250644fcf82004acb5d25f921f103c879ef3369598b74434d6664ac25f11da",
+        "3e392b8f39b0ec27fb7936c71a5ba331df4fed0bbe9a5b5bd3a1ffa76b9406cf"
+      ],
+      "pdf": "003/document.pdf",
+      "page_artifacts": [
+        {
+          "page": 1,
+          "width": 612,
+          "height": 792,
+          "png": "003/page-0001.png",
+          "pixel_sha256": "5cca18f633d42db36844ff756fbad063ba3dd034b13d9845cbbccf87d0a24c0c"
+        },
+        {
+          "page": 2,
+          "width": 612,
+          "height": 792,
+          "png": "003/page-0002.png",
+          "pixel_sha256": "dc250644fcf82004acb5d25f921f103c879ef3369598b74434d6664ac25f11da"
+        },
+        {
+          "page": 3,
+          "width": 612,
+          "height": 792,
+          "png": "003/page-0003.png",
+          "pixel_sha256": "3e392b8f39b0ec27fb7936c71a5ba331df4fed0bbe9a5b5bd3a1ffa76b9406cf"
+        }
+      ],
+      "input_sha256": "0273e30116c545720a037aad387f7e7af8f09df23a97b7ba3fafa75c9f04a93f"
+    },
+    {
+      "file": "build/fidelity-host/pending-slide-after-save.pptx",
+      "pages": 2,
+      "text": "    New slide text while upload waits\n6\n\n\n5\n\n\n4\n\n\n3\n\n\n2\n\n\n1\n\n\n0\n       North            South\n\f            Native slide 2\n7\n\n6\n\n5\n\n4\n\n3\n\n2\n\n1\n\n0\n    North              South\n\f",
+      "pixel_sha256": [
+        "7d394299954a55afbcce03110a513ce59792c653982b216578fb62785cdbc1bd",
+        "5fc905b370eff3aec7792ba9652877237799466ddedd0a3f92b2b3d408f09ad2"
+      ],
+      "pdf": "004/document.pdf",
+      "page_artifacts": [
+        {
+          "page": 1,
+          "width": 720,
+          "height": 540,
+          "png": "004/page-0001.png",
+          "pixel_sha256": "7d394299954a55afbcce03110a513ce59792c653982b216578fb62785cdbc1bd"
+        },
+        {
+          "page": 2,
+          "width": 720,
+          "height": 540,
+          "png": "004/page-0002.png",
+          "pixel_sha256": "5fc905b370eff3aec7792ba9652877237799466ddedd0a3f92b2b3d408f09ad2"
+        }
+      ],
+      "input_sha256": "8b1e4b4d2bcccacb64e7d1a49b5a33eb68a1239d5807e257c2f4125908413a54"
+    },
+    {
+      "file": "build/fidelity-host/pending-slide-before-save.pptx",
+      "pages": 2,
+      "text": "        First saved slide draft\n6\n\n\n5\n\n\n4\n\n\n3\n\n\n2\n\n\n1\n\n\n0\n    North               South\n\f            Native slide 2\n7\n\n6\n\n5\n\n4\n\n3\n\n2\n\n1\n\n0\n    North              South\n\f",
+      "pixel_sha256": [
+        "db21a9346dca2971739c95c6192a750cb60bbb8e3c405486b17b7348e663aade",
+        "5fc905b370eff3aec7792ba9652877237799466ddedd0a3f92b2b3d408f09ad2"
+      ],
+      "pdf": "005/document.pdf",
+      "page_artifacts": [
+        {
+          "page": 1,
+          "width": 720,
+          "height": 540,
+          "png": "005/page-0001.png",
+          "pixel_sha256": "db21a9346dca2971739c95c6192a750cb60bbb8e3c405486b17b7348e663aade"
+        },
+        {
+          "page": 2,
+          "width": 720,
+          "height": 540,
+          "png": "005/page-0002.png",
+          "pixel_sha256": "5fc905b370eff3aec7792ba9652877237799466ddedd0a3f92b2b3d408f09ad2"
+        }
+      ],
+      "input_sha256": "b4d8348da23412eb8752657ac80be2efb8e90483563bbf9fea936a156943808b"
+    },
+    {
+      "file": "build/fidelity-host/pending-slide-close-after-save.pptx",
+      "pages": 2,
+      "text": "    New slide text while upload waits\n6\n\n\n5\n\n\n4\n\n\n3\n\n\n2\n\n\n1\n\n\n0\n       North            South\n\f            Native slide 2\n7\n\n6\n\n5\n\n4\n\n3\n\n2\n\n1\n\n0\n    North              South\n\f",
+      "pixel_sha256": [
+        "7d394299954a55afbcce03110a513ce59792c653982b216578fb62785cdbc1bd",
+        "5fc905b370eff3aec7792ba9652877237799466ddedd0a3f92b2b3d408f09ad2"
+      ],
+      "pdf": "006/document.pdf",
+      "page_artifacts": [
+        {
+          "page": 1,
+          "width": 720,
+          "height": 540,
+          "png": "006/page-0001.png",
+          "pixel_sha256": "7d394299954a55afbcce03110a513ce59792c653982b216578fb62785cdbc1bd"
+        },
+        {
+          "page": 2,
+          "width": 720,
+          "height": 540,
+          "png": "006/page-0002.png",
+          "pixel_sha256": "5fc905b370eff3aec7792ba9652877237799466ddedd0a3f92b2b3d408f09ad2"
+        }
+      ],
+      "input_sha256": "36c9229a89b2d7434591e60e70be0336227dccca3b1facdadc75d3ae6367ba04"
+    },
+    {
+      "file": "build/fidelity-host/pending-slide-close-before-save.pptx",
+      "pages": 2,
+      "text": "        First saved slide draft\n6\n\n\n5\n\n\n4\n\n\n3\n\n\n2\n\n\n1\n\n\n0\n    North               South\n\f            Native slide 2\n7\n\n6\n\n5\n\n4\n\n3\n\n2\n\n1\n\n0\n    North              South\n\f",
+      "pixel_sha256": [
+        "db21a9346dca2971739c95c6192a750cb60bbb8e3c405486b17b7348e663aade",
+        "5fc905b370eff3aec7792ba9652877237799466ddedd0a3f92b2b3d408f09ad2"
+      ],
+      "pdf": "007/document.pdf",
+      "page_artifacts": [
+        {
+          "page": 1,
+          "width": 720,
+          "height": 540,
+          "png": "007/page-0001.png",
+          "pixel_sha256": "db21a9346dca2971739c95c6192a750cb60bbb8e3c405486b17b7348e663aade"
+        },
+        {
+          "page": 2,
+          "width": 720,
+          "height": 540,
+          "png": "007/page-0002.png",
+          "pixel_sha256": "5fc905b370eff3aec7792ba9652877237799466ddedd0a3f92b2b3d408f09ad2"
+        }
+      ],
+      "input_sha256": "039cb1ff674d23a95e38e5c4340e9588d70fe849b3eb7c527e7fa84372d85852"
+    },
+    {
+      "file": "build/fidelity-host/word-docm-save.docm",
+      "pages": 1,
+      "text": "Host-saved Template body.\n\f",
+      "pixel_sha256": [
+        "934d965167e2979d7381a45c8dae89933a6569745112b2d03c6439ba4940556c"
+      ],
+      "pdf": "008/document.pdf",
+      "page_artifacts": [
+        {
+          "page": 1,
+          "width": 596,
+          "height": 842,
+          "png": "008/page-0001.png",
+          "pixel_sha256": "934d965167e2979d7381a45c8dae89933a6569745112b2d03c6439ba4940556c"
+        }
+      ],
+      "input_sha256": "9e778f2e3d57aa8c33377ab3036dedbeb52b8b90ced9b1da19e864834444d0ed"
+    },
+    {
+      "file": "build/fidelity-host/word-dotm-save.dotm",
+      "pages": 1,
+      "text": "Host-saved Template body.\n\f",
+      "pixel_sha256": [
+        "934d965167e2979d7381a45c8dae89933a6569745112b2d03c6439ba4940556c"
+      ],
+      "pdf": "009/document.pdf",
+      "page_artifacts": [
+        {
+          "page": 1,
+          "width": 596,
+          "height": 842,
+          "png": "009/page-0001.png",
+          "pixel_sha256": "934d965167e2979d7381a45c8dae89933a6569745112b2d03c6439ba4940556c"
+        }
+      ],
+      "input_sha256": "bb8bb32a5d5146919c21bee7ad37c06782d15c360d4f6ad27b22613946394846"
+    },
+    {
+      "file": "build/fidelity-host/word-dotx-save.dotx",
+      "pages": 1,
+      "text": "Host-saved Template body.\n\f",
+      "pixel_sha256": [
+        "934d965167e2979d7381a45c8dae89933a6569745112b2d03c6439ba4940556c"
+      ],
+      "pdf": "010/document.pdf",
+      "page_artifacts": [
+        {
+          "page": 1,
+          "width": 596,
+          "height": 842,
+          "png": "010/page-0001.png",
+          "pixel_sha256": "934d965167e2979d7381a45c8dae89933a6569745112b2d03c6439ba4940556c"
+        }
+      ],
+      "input_sha256": "fc866381001dc85c4fe1cf24bfbc976d9707ca2bd451499f9dc56775955da240"
+    }
+  ],
+  "failures": [],
+  "rendered_files": 11,
+  "rendered_pages": 23,
+  "all_input_hashes_unchanged": true,
+  "elapsed_seconds": 17.25363663200187
+}

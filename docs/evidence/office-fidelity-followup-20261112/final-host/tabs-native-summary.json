@@ -1,0 +1,136 @@
+{
+  "status": "passed",
+  "started_utc": "2026-11-12T13:50:59.690727+00:00",
+  "source_commit": "b7edb919def85ef78d6d34ba6eb7c74d61e0bd4d",
+  "managed_source_commit": "7641d9cfa167987216134ebfc4772918cc945d97",
+  "managed_source_files_verified": 366,
+  "parent_snapshot": "/workspace/scratch/10b2b87c2738/validation/host-external-final",
+  "parent_input_manifest_sha256": "26e1d8b3c631f04b148620b73f6e442b4e6743c5dfecd1758e6e61ec0640981e",
+  "parent_schema_report_sha256": "9dcea9b14060a41a62626520563b76cb9fe5ff13b60652e87930a7ea55a4c73c",
+  "input_manifest_sha256": "25bd45a846a88d16f49219a6efd5e5bd2c023c1e4439f4e46050c8ac358b8846",
+  "helper_sha256": "699bf7f14e6e6bf0afb4d4872a60d6d870a4a92161d7e08f85d3b68783d0c8c7",
+  "runtime": {
+    "validator_source_sha256": "4d41f286855ed11a12ecdf0641773c33285847180a3e5cdbf43ce2385a099880",
+    "validator_assembly_sha256": "dfcb15de8e16acc0e70d736fe2bcc350aae3b3f9cbb740ba19cf9ad18b66821c",
+    "validator_build_receipt_sha256": "5b4b298125abe4e6de1f7447ee223ed2e393812a7de521ffc2f492dc5b0c9446",
+    "renderer_provenance_sha256": "2c2634f724ccacc9739480a38fb94ba1a1a707d3ae9d51960a88041e6f9480ad",
+    "native_conversion_script_sha256": "787d79602869da46442e40656d8d2cb95141a72d26433582fe58033bb7bea5a0",
+    "collection_script_sha256": "ae5114eb41efe627a39a3b29ea54ddf5c20b688a2fb6b0aef73761b8f03a8fdf",
+    "host_native_probe_sha256": "d312f9d7185b2a70b463a6a1b2da9ad9cab5501d9e0c31e25bb262cc54880783"
+  },
+  "scope": "Six actual host custom-tab/dialog and ribbon-upload saves; two complete native three-save comparisons. Supplementary to the eleven-file host probe.",
+  "files": [
+    {
+      "path": "build/fidelity-custom-tabs/host-tabs-1.docx",
+      "bytes": 5367,
+      "sha256": "376e758654a46e432ced3d5b32df6fe180359c591c5771efcaefd9123a87379c",
+      "producer_group": "host"
+    },
+    {
+      "path": "build/fidelity-custom-tabs/host-tabs-2.docx",
+      "bytes": 5402,
+      "sha256": "ddbd3ba2d46b93f3b51b51f795f3234802a5aa21c23494d14cf1caf2a5680874",
+      "producer_group": "host"
+    },
+    {
+      "path": "build/fidelity-custom-tabs/host-tabs-3.docx",
+      "bytes": 5403,
+      "sha256": "037cb0b567320f8213868e556a30623e3993dc3e697e8baf28dea2200b8bbf34",
+      "producer_group": "host"
+    },
+    {
+      "path": "build/fidelity-host/ribbon-edits-1.docx",
+      "bytes": 9291,
+      "sha256": "09f17f404b39b1ce437fcdf7fd0d5bee94fece0fd72feb6db6c8b13560d61e15",
+      "producer_group": "host"
+    },
+    {
+      "path": "build/fidelity-host/ribbon-edits-2.docx",
+      "bytes": 9354,
+      "sha256": "3a5eee862098e13d6c1ac9b792a887ee7478712a298afcb816fb1f1d71e85180",
+      "producer_group": "host"
+    },
+    {
+      "path": "build/fidelity-host/ribbon-edits-3.docx",
+      "bytes": 9353,
+      "sha256": "166fed5bb6afc38225607edcd87f08e6d481ee08f3bf123b42516f132c769377",
+      "producer_group": "host"
+    }
+  ],
+  "commands": {
+    "schema": [
+      "dotnet",
+      "/workspace/scratch/10b2b87c2738/runtime/validator/OfficeValidation.dll",
+      "/workspace/scratch/10b2b87c2738/validation/host-tabs-native-final/inputs",
+      "/workspace/scratch/10b2b87c2738/validation/host-tabs-native-final/schema-report.json"
+    ],
+    "render": [
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+      "/workspace/scratch/10b2b87c2738/CrispCloud/tool/office-validation/render.py",
+      "/workspace/scratch/10b2b87c2738/validation/host-tabs-native-final/inputs",
+      "/workspace/scratch/10b2b87c2738/validation/host-tabs-native-final/render",
+      "--schema-report",
+      "/workspace/scratch/10b2b87c2738/validation/host-tabs-native-final/schema-report.json"
+    ]
+  },
+  "sdk_files": 6,
+  "sdk_failures": 0,
+  "rendered_files": 6,
+  "cycle_groups": 2,
+  "native_failures": [],
+  "all_input_hashes_unchanged": true,
+  "renderer": "LibreOffice 24.2.7.2 ee3885777aa7032db5a9b65deec9457448a91162 (LibreOfficeKit embedding API)",
+  "cycle_comparisons": [
+    {
+      "case": "build/fidelity-custom-tabs/host-tabs.docx",
+      "expected_cycles": [
+        1,
+        2,
+        3
+      ],
+      "actual_cycles": [
+        1,
+        2,
+        3
+      ],
+      "files": [
+        "build/fidelity-custom-tabs/host-tabs-1.docx",
+        "build/fidelity-custom-tabs/host-tabs-2.docx",
+        "build/fidelity-custom-tabs/host-tabs-3.docx"
+      ],
+      "baseline": null,
+      "baseline_candidate": null,
+      "baseline_page_order": null,
+      "passed": true
+    },
+    {
+      "case": "build/fidelity-host/ribbon-edits.docx",
+      "expected_cycles": [
+        1,
+        2,
+        3
+      ],
+      "actual_cycles": [
+        1,
+        2,
+        3
+      ],
+      "files": [
+        "build/fidelity-host/ribbon-edits-1.docx",
+        "build/fidelity-host/ribbon-edits-2.docx",
+        "build/fidelity-host/ribbon-edits-3.docx"
+      ],
+      "baseline": null,
+      "baseline_candidate": null,
+      "baseline_page_order": null,
+      "passed": true
+    }
+  ],
+  "evidence_sha256": {
+    "schema-report.json": "ca52c72ebe33ca832afd8f8b689f45a4893c681d258e9953ba72d251c6e2a49b",
+    "schema.log": "6484311868d8eefdc1a988695295db558d24a611275c41375d19094fdba2a028",
+    "render/render-report.json": "6d69357984f28e1c7cda241312291356351d28492a1f3535403291937e95e116",
+    "render.log": "6ef4e52b882f0579a7bce981184fbc5079e8ae3f46fed8238662fedad0df9797"
+  },
+  "finished_utc": "2026-11-12T13:51:09.538977+00:00"
+}

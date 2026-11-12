@@ -1,0 +1,1791 @@
+{
+  "artifact_root": "build",
+  "errors": [],
+  "expected_files": 296,
+  "files": [
+    {
+      "bytes": 5471,
+      "path": "fidelity-altchunk/altchunk-imported-1.docx",
+      "producer": "test/word_altchunk_fidelity_test.dart",
+      "sha256": "fe4110723f29ecfc4ce587c50399c6f67729fb94b3d6e911c140b4d215bef734"
+    },
+    {
+      "bytes": 5503,
+      "path": "fidelity-altchunk/altchunk-imported-2.docx",
+      "producer": "test/word_altchunk_fidelity_test.dart",
+      "sha256": "d893b56f2f38753110fe7a6b5937780bf2117d570aa17d1f98d397fc12b85a27"
+    },
+    {
+      "bytes": 5503,
+      "path": "fidelity-altchunk/altchunk-imported-3.docx",
+      "producer": "test/word_altchunk_fidelity_test.dart",
+      "sha256": "e3fadfc112bc9eb9f5faee28d78d8d125551fd6a5b09d41373aeb2e3fd3239bf"
+    },
+    {
+      "bytes": 5565,
+      "path": "fidelity-altchunk/altchunk-moved-1.docx",
+      "producer": "test/word_altchunk_fidelity_test.dart",
+      "sha256": "ac783e6f24349e2e9e4da2234170a68a84cbba0aa0aa4a7914ffec9939fa93ad"
+    },
+    {
+      "bytes": 5596,
+      "path": "fidelity-altchunk/altchunk-moved-2.docx",
+      "producer": "test/word_altchunk_fidelity_test.dart",
+      "sha256": "0c2a005a4b002038e31b2231ad627d49932b920e3f8f36b1dda2aca97b951d1e"
+    },
+    {
+      "bytes": 5596,
+      "path": "fidelity-altchunk/altchunk-moved-3.docx",
+      "producer": "test/word_altchunk_fidelity_test.dart",
+      "sha256": "a5062bc143db55a1d6b74943a4b5ea3813c62b95c63f1b110a54f0ea40d30dd6"
+    },
+    {
+      "bytes": 17974,
+      "path": "fidelity-aux-controls/edited-1.docx",
+      "producer": "test/word_auxiliary_content_control_test.dart",
+      "sha256": "9918b8654e6a2316dc46f9f5451210676949c1e899579263e1cf7cdbd15e5208"
+    },
+    {
+      "bytes": 18008,
+      "path": "fidelity-aux-controls/edited-2.docx",
+      "producer": "test/word_auxiliary_content_control_test.dart",
+      "sha256": "6370aa1b3789f094ca24351e0814ad7e83e77c04fb41dcb7abbe6dd8fcb32851"
+    },
+    {
+      "bytes": 18009,
+      "path": "fidelity-aux-controls/edited-3.docx",
+      "producer": "test/word_auxiliary_content_control_test.dart",
+      "sha256": "1418fd5e44f6acfd9c7ee990a0f0c194e67821a8110b6d8a538c5913fa3c3580"
+    },
+    {
+      "bytes": 17917,
+      "path": "fidelity-aux-controls/imported-1.docx",
+      "producer": "test/word_auxiliary_content_control_test.dart",
+      "sha256": "639ed8a85de60c791982729b7abd5eb02d84edf80d4b7890070d58a90b58cdaf"
+    },
+    {
+      "bytes": 17950,
+      "path": "fidelity-aux-controls/imported-2.docx",
+      "producer": "test/word_auxiliary_content_control_test.dart",
+      "sha256": "7307bd34c3f281f6404f85679174778324052a7580b37a58746c052521e75588"
+    },
+    {
+      "bytes": 17952,
+      "path": "fidelity-aux-controls/imported-3.docx",
+      "producer": "test/word_auxiliary_content_control_test.dart",
+      "sha256": "72da373851ab0e8663aeeb1951f9e6d316f07e0828c638ff5a5b3f95a73a89fc"
+    },
+    {
+      "bytes": 8995,
+      "path": "fidelity-aux-controls/source.docx",
+      "producer": "test/word_auxiliary_content_control_test.dart",
+      "sha256": "fba38173b5148646d8cd00d1f18baffaf4a5bed829bc8d02583dacfbf75ddf4e"
+    },
+    {
+      "bytes": 17828,
+      "path": "fidelity-aux-header-footer/edited-1.docx",
+      "producer": "test/word_auxiliary_content_control_test.dart",
+      "sha256": "c4c6c3670346530553dce6ec5d5f0a674041541346c7756756f03c2bdfe9ce1f"
+    },
+    {
+      "bytes": 17862,
+      "path": "fidelity-aux-header-footer/edited-2.docx",
+      "producer": "test/word_auxiliary_content_control_test.dart",
+      "sha256": "0f14c37fceb48d285f8d643a912e703c8c5739c4efd87c1dca230b87b7d96011"
+    },
+    {
+      "bytes": 17863,
+      "path": "fidelity-aux-header-footer/edited-3.docx",
+      "producer": "test/word_auxiliary_content_control_test.dart",
+      "sha256": "6d19afac4e94cfb777f544dd1dfeba0cc4f427b7640c8f03b02f7754d696dbdb"
+    },
+    {
+      "bytes": 17770,
+      "path": "fidelity-aux-header-footer/imported-1.docx",
+      "producer": "test/word_auxiliary_content_control_test.dart",
+      "sha256": "045d7e7c2bded87d53cc3e90bf5a25bb75f2b5f0eab3f8a1ac327b2309e36377"
+    },
+    {
+      "bytes": 17804,
+      "path": "fidelity-aux-header-footer/imported-2.docx",
+      "producer": "test/word_auxiliary_content_control_test.dart",
+      "sha256": "40bfaef84c6c50b96e8b9bd2695fe7ca386c8404e0851d345f9dc3e7d4797f96"
+    },
+    {
+      "bytes": 17804,
+      "path": "fidelity-aux-header-footer/imported-3.docx",
+      "producer": "test/word_auxiliary_content_control_test.dart",
+      "sha256": "50030d1bc25d6b0cbabb5d0c79d40d44ca8cd264c2f516654f875434e9a8a71c"
+    },
+    {
+      "bytes": 8857,
+      "path": "fidelity-aux-header-footer/source.docx",
+      "producer": "test/word_auxiliary_content_control_test.dart",
+      "sha256": "2d26c7e85810e0c1ed50483ed16e02e2d03c43f83b182e819571f1e0a66c7036"
+    },
+    {
+      "bytes": 6337,
+      "path": "fidelity-bibliography/direct-1.docx",
+      "producer": "test/word_bibliography_fidelity_test.dart",
+      "sha256": "0327dcae833bcba3a4ef24a33a63398bad850b0c109b804a2053510b03c5b484"
+    },
+    {
+      "bytes": 6371,
+      "path": "fidelity-bibliography/direct-2.docx",
+      "producer": "test/word_bibliography_fidelity_test.dart",
+      "sha256": "2d4a32aa0035b40246891833251eaf24301b9bbb59dfcd3abc1d0039c672ba83"
+    },
+    {
+      "bytes": 6371,
+      "path": "fidelity-bibliography/direct-3.docx",
+      "producer": "test/word_bibliography_fidelity_test.dart",
+      "sha256": "81ded3a8baaf13f12faf40b590217aa3ff967e741d845c0600c9774c53d752d2"
+    },
+    {
+      "bytes": 6337,
+      "path": "fidelity-bibliography/isolate-1.docx",
+      "producer": "test/word_bibliography_fidelity_test.dart",
+      "sha256": "1a430ba7d27ef6b517f0e86d5afbaf1f560eed08de9ee3522b03345a4047db0c"
+    },
+    {
+      "bytes": 6369,
+      "path": "fidelity-bibliography/isolate-2.docx",
+      "producer": "test/word_bibliography_fidelity_test.dart",
+      "sha256": "498823e2a6b6b2cf2136f58fdc7d935ab93373b5aab3859a315bfc698543d5ee"
+    },
+    {
+      "bytes": 6370,
+      "path": "fidelity-bibliography/isolate-3.docx",
+      "producer": "test/word_bibliography_fidelity_test.dart",
+      "sha256": "2d4f4ef8145238b3692f6ae75dcdfd291f302568ebcfbfdcb42102f2b755449c"
+    },
+    {
+      "bytes": 7610,
+      "path": "fidelity-bookmarks-legacy/bookmarks-edited-1.docx",
+      "producer": "test/bookmark_fidelity_test.dart",
+      "sha256": "e2f9e5e4a759b050732ae83a83de73f53116f736b52785b33a100254abc8ae46"
+    },
+    {
+      "bytes": 7674,
+      "path": "fidelity-bookmarks-legacy/bookmarks-edited-2.docx",
+      "producer": "test/bookmark_fidelity_test.dart",
+      "sha256": "d40dba51dda316bfa1c686cd94fd90c0d184266acf5b0f7e451149811f22ed5a"
+    },
+    {
+      "bytes": 7674,
+      "path": "fidelity-bookmarks-legacy/bookmarks-edited-3.docx",
+      "producer": "test/bookmark_fidelity_test.dart",
+      "sha256": "b04635648fa4f4c254f1573ae123d32f31c7e0f10f43b4373851963820b87501"
+    },
+    {
+      "bytes": 7558,
+      "path": "fidelity-bookmarks-legacy/bookmarks-imported-1.docx",
+      "producer": "test/bookmark_fidelity_test.dart",
+      "sha256": "990598165ed80abef4b7cfbc5920ee21083c4b82568339312491c3dc0949ac5d"
+    },
+    {
+      "bytes": 7624,
+      "path": "fidelity-bookmarks-legacy/bookmarks-imported-2.docx",
+      "producer": "test/bookmark_fidelity_test.dart",
+      "sha256": "17c9e798dd63e259936d914622e43815b300e8ee9e1ef18567afacd827008e32"
+    },
+    {
+      "bytes": 7624,
+      "path": "fidelity-bookmarks-legacy/bookmarks-imported-3.docx",
+      "producer": "test/bookmark_fidelity_test.dart",
+      "sha256": "ebd43257809a5239b275fa0b26b99ef821bd1cd6167c43ab350718ef7a226f1e"
+    },
+    {
+      "bytes": 4446,
+      "path": "fidelity-bookmarks-legacy/bookmarks-source.docx",
+      "producer": "test/bookmark_fidelity_test.dart",
+      "sha256": "acc4bc7ef24543b75d2295dbbd37a58b9a4ac5a2105cef13ef186e8178ec05b6"
+    },
+    {
+      "bytes": 4821,
+      "path": "fidelity-bookmarks/cloned-1.docx",
+      "producer": "test/word_bookmark_fidelity_test.dart",
+      "sha256": "b5fab810efc4ea8ef385a2136a678738ecb7b28ec09e88c0154d18f0f7f62ce1"
+    },
+    {
+      "bytes": 4869,
+      "path": "fidelity-bookmarks/cloned-2.docx",
+      "producer": "test/word_bookmark_fidelity_test.dart",
+      "sha256": "f10d2884d66716fcdcb80b28eeb1de6cc6eee12e3f8e165c2bc9c94245454c21"
+    },
+    {
+      "bytes": 4871,
+      "path": "fidelity-bookmarks/cloned-3.docx",
+      "producer": "test/word_bookmark_fidelity_test.dart",
+      "sha256": "e8fdcd3e5eefdb6c5b56eeeffa6b26cb2c9ce3fbfd62bd1e4aa79156675a318d"
+    },
+    {
+      "bytes": 5405,
+      "path": "fidelity-bookmarks/edited-1.docx",
+      "producer": "test/word_bookmark_fidelity_test.dart",
+      "sha256": "58c0340f99ca771ca7e7352c2159da5fb1925891ee0e0102b6ba392ffed2743c"
+    },
+    {
+      "bytes": 5419,
+      "path": "fidelity-bookmarks/edited-2.docx",
+      "producer": "test/word_bookmark_fidelity_test.dart",
+      "sha256": "581245731853acae569da1210304fec308a5561f3385758a18580b289e233bb8"
+    },
+    {
+      "bytes": 5422,
+      "path": "fidelity-bookmarks/edited-3.docx",
+      "producer": "test/word_bookmark_fidelity_test.dart",
+      "sha256": "0efba626c02f7cce71c4163d6cbae74d260579298a81c1c072ea7dcfad08c829"
+    },
+    {
+      "bytes": 5208,
+      "path": "fidelity-bookmarks/frame-1.docx",
+      "producer": "test/word_bookmark_fidelity_test.dart",
+      "sha256": "92b87312685b8bb1ed77a178c839dc802a4a01db8e43b8845ba37104cea15192"
+    },
+    {
+      "bytes": 5251,
+      "path": "fidelity-bookmarks/frame-2.docx",
+      "producer": "test/word_bookmark_fidelity_test.dart",
+      "sha256": "5e04ae0eea974b2aec095fad3283d51333e863438c874ba3db292fdf04d0689d"
+    },
+    {
+      "bytes": 5251,
+      "path": "fidelity-bookmarks/frame-3.docx",
+      "producer": "test/word_bookmark_fidelity_test.dart",
+      "sha256": "d06d35e8cc25579b6c38eaac53b012d19bb180c6f8710dfe9ae52946c86bfa05"
+    },
+    {
+      "bytes": 1700,
+      "path": "fidelity-bookmarks/frame-source.docx",
+      "producer": "test/word_bookmark_fidelity_test.dart",
+      "sha256": "84efbba2da2751e303d812860309a701b71b6424ed13c811474f37081ce3d01a"
+    },
+    {
+      "bytes": 4821,
+      "path": "fidelity-bookmarks/imported-1.docx",
+      "producer": "test/word_bookmark_fidelity_test.dart",
+      "sha256": "ac3152417b99bf9edf902c92e8e5389374d7712f2e8a9f918d13a5b6bf5380dd"
+    },
+    {
+      "bytes": 4869,
+      "path": "fidelity-bookmarks/imported-2.docx",
+      "producer": "test/word_bookmark_fidelity_test.dart",
+      "sha256": "69b6d8c674a75a19c05279a0df19ce271bc87cdf3dbfbc69e76dddff3ed79933"
+    },
+    {
+      "bytes": 4869,
+      "path": "fidelity-bookmarks/imported-3.docx",
+      "producer": "test/word_bookmark_fidelity_test.dart",
+      "sha256": "e7a42043f738b75347c3687f37ff71a54d20d0aafcb412aa9a26b9203b6e98f7"
+    },
+    {
+      "bytes": 2140,
+      "path": "fidelity-bookmarks/source.docx",
+      "producer": "test/word_bookmark_fidelity_test.dart",
+      "sha256": "b469fc9d8ffc372e8dd6d84fc506acd19e47074262f9717e1fc0c6995758ea83"
+    },
+    {
+      "bytes": 5589,
+      "path": "fidelity-comment-threads/threads-edited-1.docx",
+      "producer": "test/comment_thread_fidelity_test.dart",
+      "sha256": "7fedae5d2bbdc8b3ae13d103a8250695bcf9aa0952c91bf571f40e2e2a09df38"
+    },
+    {
+      "bytes": 5623,
+      "path": "fidelity-comment-threads/threads-edited-2.docx",
+      "producer": "test/comment_thread_fidelity_test.dart",
+      "sha256": "8b49d1121d99afd85d10825f25025a459e3de2392cf5af72d552d95135bc41a8"
+    },
+    {
+      "bytes": 5623,
+      "path": "fidelity-comment-threads/threads-edited-3.docx",
+      "producer": "test/comment_thread_fidelity_test.dart",
+      "sha256": "c25757d11d39ce71998d904382b40d66a675053499b3258d59cbbe3ab7f40e53"
+    },
+    {
+      "bytes": 5541,
+      "path": "fidelity-comment-threads/threads-imported-1.docx",
+      "producer": "test/comment_thread_fidelity_test.dart",
+      "sha256": "bd2d81b8cb5e992e963e62694aa1df83391522fcbb99d534c6949327a130fd83"
+    },
+    {
+      "bytes": 5576,
+      "path": "fidelity-comment-threads/threads-imported-2.docx",
+      "producer": "test/comment_thread_fidelity_test.dart",
+      "sha256": "300da9eb59c98a9cefd76ca269d5868710acbf71f70ff0fc17489696e3f3300a"
+    },
+    {
+      "bytes": 5576,
+      "path": "fidelity-comment-threads/threads-imported-3.docx",
+      "producer": "test/comment_thread_fidelity_test.dart",
+      "sha256": "0814465b755116f4b8925ddd6fce64db3da1e64158a434a5959f54e92dcc406d"
+    },
+    {
+      "bytes": 2376,
+      "path": "fidelity-comment-threads/threads-source.docx",
+      "producer": "test/comment_thread_fidelity_test.dart",
+      "sha256": "d1763533e3733a93398a0cea7043b9d188f98f5a403ff5b7f3ed5869d654e9a4"
+    },
+    {
+      "bytes": 5413,
+      "path": "fidelity-content-controls-legacy/controls-edited-1.docx",
+      "producer": "test/content_control_fidelity_test.dart",
+      "sha256": "f0570f1ee0e12193e6ef954abd824f0cd0f4c03d1246d235d42ccd4e55fbfefb"
+    },
+    {
+      "bytes": 5464,
+      "path": "fidelity-content-controls-legacy/controls-edited-2.docx",
+      "producer": "test/content_control_fidelity_test.dart",
+      "sha256": "cfe13b97f465ebdd3aa476e0c6e3a9516c400c196a283ccca868f28f116759b6"
+    },
+    {
+      "bytes": 5464,
+      "path": "fidelity-content-controls-legacy/controls-edited-3.docx",
+      "producer": "test/content_control_fidelity_test.dart",
+      "sha256": "61af23b8870441b9519465e17c295b784ad8e5c56253d5f2824904b996a9835f"
+    },
+    {
+      "bytes": 5408,
+      "path": "fidelity-content-controls-legacy/controls-imported-1.docx",
+      "producer": "test/content_control_fidelity_test.dart",
+      "sha256": "fbd017b7f2283b2b6bb9f597a4f73d79a44b73fa8af905a6ff7e7f3ee2cd9bff"
+    },
+    {
+      "bytes": 5460,
+      "path": "fidelity-content-controls-legacy/controls-imported-2.docx",
+      "producer": "test/content_control_fidelity_test.dart",
+      "sha256": "4bac96ba61a0ca18859587308620e5b7e3064d3868be776d6863c0760d550868"
+    },
+    {
+      "bytes": 5461,
+      "path": "fidelity-content-controls-legacy/controls-imported-3.docx",
+      "producer": "test/content_control_fidelity_test.dart",
+      "sha256": "4d4490cd155d8e99503a895f9e7567ec5d7285a554ee6d4fb013d1d09307c4a4"
+    },
+    {
+      "bytes": 2620,
+      "path": "fidelity-content-controls-legacy/controls-source.docx",
+      "producer": "test/content_control_fidelity_test.dart",
+      "sha256": "a59cb0915fdadaa579bd28f028da5be1df2c8e036362e8e1fe21b789053b5e29"
+    },
+    {
+      "bytes": 6326,
+      "path": "fidelity-content-controls-legacy/legacy-frame-1.docx",
+      "producer": "test/content_control_fidelity_test.dart",
+      "sha256": "bcaf4f3af86097def461b5dd4dd8cc55184b68dcb489d58db069531bbdd39dd2"
+    },
+    {
+      "bytes": 6404,
+      "path": "fidelity-content-controls-legacy/legacy-frame-2.docx",
+      "producer": "test/content_control_fidelity_test.dart",
+      "sha256": "06ef75bf1c3c3e67124755384ad4e665e73fca76c767ad49216425e5d66d6799"
+    },
+    {
+      "bytes": 6405,
+      "path": "fidelity-content-controls-legacy/legacy-frame-3.docx",
+      "producer": "test/content_control_fidelity_test.dart",
+      "sha256": "d36910881ccb1f6fcd6f062614405fa07e60d69e4bea523c3b84620da6f750ad"
+    },
+    {
+      "bytes": 15424,
+      "path": "fidelity-content-controls/direct-1.docx",
+      "producer": "test/word_content_control_fidelity_test.dart",
+      "sha256": "c888031dbe68f0b78d8bb58418df9cd852f561e4d7b7a2df900c4a065ea5e1ff"
+    },
+    {
+      "bytes": 15495,
+      "path": "fidelity-content-controls/direct-2.docx",
+      "producer": "test/word_content_control_fidelity_test.dart",
+      "sha256": "d6eb89e3ee3a4e758f60ecf6cd7e5226a8ff6f0c614b6729509fcd62f59014ab"
+    },
+    {
+      "bytes": 15497,
+      "path": "fidelity-content-controls/direct-3.docx",
+      "producer": "test/word_content_control_fidelity_test.dart",
+      "sha256": "d14c48d1cae754f86801f9a7b0c4c9987ba2ee3592b62660fd3074cf55b9cf96"
+    },
+    {
+      "bytes": 15214,
+      "path": "fidelity-content-controls/imported-1.docx",
+      "producer": "test/word_content_control_fidelity_test.dart",
+      "sha256": "8ec6216dd91db7da197901145aa03a3190d5078043827d69c4f2426255ae017a"
+    },
+    {
+      "bytes": 15256,
+      "path": "fidelity-content-controls/imported-2.docx",
+      "producer": "test/word_content_control_fidelity_test.dart",
+      "sha256": "03324b07d4f91b1359f69318f21d4bde0d20702291b45fc8f09733fc8529f518"
+    },
+    {
+      "bytes": 15257,
+      "path": "fidelity-content-controls/imported-3.docx",
+      "producer": "test/word_content_control_fidelity_test.dart",
+      "sha256": "73d64ddd64bb46462c96881e7af9b0fabd62aac1bdcf4919e514d908cfc555a4"
+    },
+    {
+      "bytes": 15424,
+      "path": "fidelity-content-controls/isolate-1.docx",
+      "producer": "test/word_content_control_fidelity_test.dart",
+      "sha256": "7b8461dd5711fc0622a62bf40bb609addda909c7fcc028355303dfaf41255a18"
+    },
+    {
+      "bytes": 15496,
+      "path": "fidelity-content-controls/isolate-2.docx",
+      "producer": "test/word_content_control_fidelity_test.dart",
+      "sha256": "cb65c2722ac28230b16bbd2b92e0406a19e24ece39b7fdfd61555d2b79e77194"
+    },
+    {
+      "bytes": 15496,
+      "path": "fidelity-content-controls/isolate-3.docx",
+      "producer": "test/word_content_control_fidelity_test.dart",
+      "sha256": "539b817ee003be8d8a6052d2aa84dc32036f8ad63af8edbfa2eb9299f2d31a01"
+    },
+    {
+      "bytes": 8712,
+      "path": "fidelity-content-controls/source.docx",
+      "producer": "test/word_content_control_fidelity_test.dart",
+      "sha256": "5af5646742521142abb6295e0962e84a21de75f5959d66aa524f43ab48c11a40"
+    },
+    {
+      "bytes": 5209,
+      "path": "fidelity-frame-wrap/none-1.docx",
+      "producer": "test/word_frame_wrap_test.dart",
+      "sha256": "768912a7a3ac035a54b6869d053c84ed1d4c3c0e20fb54c34f53cd6057396f80"
+    },
+    {
+      "bytes": 5247,
+      "path": "fidelity-frame-wrap/none-2.docx",
+      "producer": "test/word_frame_wrap_test.dart",
+      "sha256": "a5e857cf4ef55a0191977652b6a8e95bd9499ab3c1947e4017144a74c082cbf6"
+    },
+    {
+      "bytes": 5247,
+      "path": "fidelity-frame-wrap/none-3.docx",
+      "producer": "test/word_frame_wrap_test.dart",
+      "sha256": "f7a1932dc479c3b9b347195a76c1ca06ba7c9ce3fab782df0f20c4b2f4e1e927"
+    },
+    {
+      "bytes": 1959,
+      "path": "fidelity-frame-wrap/none-source.docx",
+      "producer": "test/word_frame_wrap_test.dart",
+      "sha256": "956a75351e281d6fcaea42829e79262c4567eba6113ea67a82fc191a61d35543"
+    },
+    {
+      "bytes": 5229,
+      "path": "fidelity-frame-wrap/square-1.docx",
+      "producer": "test/word_frame_wrap_test.dart",
+      "sha256": "9580b52ad20330244fffd6474e619abee23d8f98f6660bcffd4594634046b6f3"
+    },
+    {
+      "bytes": 5267,
+      "path": "fidelity-frame-wrap/square-2.docx",
+      "producer": "test/word_frame_wrap_test.dart",
+      "sha256": "7b2410e50607cdc7f1fceaa9e75b21a4bbff47968759300b92122177675f4e14"
+    },
+    {
+      "bytes": 5267,
+      "path": "fidelity-frame-wrap/square-3.docx",
+      "producer": "test/word_frame_wrap_test.dart",
+      "sha256": "6e9a1b50d3a36165e2af16d2e4b92c933f29cbdb8e3fd6298b452c948d9225d6"
+    },
+    {
+      "bytes": 1979,
+      "path": "fidelity-frame-wrap/square-source.docx",
+      "producer": "test/word_frame_wrap_test.dart",
+      "sha256": "cc13ec6ed3be7cfe0c37c56c0bcfd5fea15b4d5e0901ca896f18b111690ad567"
+    },
+    {
+      "bytes": 5247,
+      "path": "fidelity-frame-wrap/topBottom-1.docx",
+      "producer": "test/word_frame_wrap_test.dart",
+      "sha256": "3ef608fb117c3a3d8061e8c3fa0edb79a94b9167d6e59f412df49842ff143112"
+    },
+    {
+      "bytes": 5283,
+      "path": "fidelity-frame-wrap/topBottom-2.docx",
+      "producer": "test/word_frame_wrap_test.dart",
+      "sha256": "83338b495170985c7d3ddbbb075f3a9d4f8b72d4cacfb5c664ed45eb6a3db051"
+    },
+    {
+      "bytes": 5283,
+      "path": "fidelity-frame-wrap/topBottom-3.docx",
+      "producer": "test/word_frame_wrap_test.dart",
+      "sha256": "6b15ceb2a350c038d21a703340893570513e33cfc8f9cc54359daaa1fe7c0f5c"
+    },
+    {
+      "bytes": 1965,
+      "path": "fidelity-frame-wrap/topBottom-source.docx",
+      "producer": "test/word_frame_wrap_test.dart",
+      "sha256": "e14aaadf28e887ae68c5492226c9d42d3954485be35511ec539bf27fe9bbf0ba"
+    },
+    {
+      "bytes": 8201,
+      "path": "fidelity-image/replaced-1.docx",
+      "producer": "test/office_steps_test.dart",
+      "sha256": "f4c1aeda9080b00735930321e99ce39598a4ca19ecdda639df2809290db96259"
+    },
+    {
+      "bytes": 8236,
+      "path": "fidelity-image/replaced-2.docx",
+      "producer": "test/office_steps_test.dart",
+      "sha256": "5dc3bdc01a3efaad170a8eeb4a516626ffae9c10c759445d3610defa0a35093c"
+    },
+    {
+      "bytes": 8236,
+      "path": "fidelity-image/replaced-3.docx",
+      "producer": "test/office_steps_test.dart",
+      "sha256": "2d5f18f398ac9b24c056cdfcd4af27265ea88ea2f3b8735b59540939bf09e6b1"
+    },
+    {
+      "bytes": 5634,
+      "path": "fidelity-inline-fields/direct-1.docx",
+      "producer": "test/inline_field_fidelity_test.dart",
+      "sha256": "1b5c9bab6a8c3e2611b63811c879220fcab5492b90639d55edb53e277c1c55a8"
+    },
+    {
+      "bytes": 5681,
+      "path": "fidelity-inline-fields/direct-2.docx",
+      "producer": "test/inline_field_fidelity_test.dart",
+      "sha256": "a8bd92372b6cfa574b666b191c8cb8d2a908dc645b8945cdb535fe6249b59970"
+    },
+    {
+      "bytes": 5681,
+      "path": "fidelity-inline-fields/direct-3.docx",
+      "producer": "test/inline_field_fidelity_test.dart",
+      "sha256": "22a63d4b68af888be09d0cd8335e8f94ca617e34bfd143c2df88f033bd1468be"
+    },
+    {
+      "bytes": 5634,
+      "path": "fidelity-inline-fields/isolate-1.docx",
+      "producer": "test/inline_field_fidelity_test.dart",
+      "sha256": "da4d771ef6f380eb3cfe53b027cfea8faf2447084e60c4104dd4a719386ef401"
+    },
+    {
+      "bytes": 5679,
+      "path": "fidelity-inline-fields/isolate-2.docx",
+      "producer": "test/inline_field_fidelity_test.dart",
+      "sha256": "a998b9d7a983bd29da6352f420aca38a6077560e6af26b1ad15b61ec61ce2ab7"
+    },
+    {
+      "bytes": 5679,
+      "path": "fidelity-inline-fields/isolate-3.docx",
+      "producer": "test/inline_field_fidelity_test.dart",
+      "sha256": "2087f6314a713a99c7dda8116139ad75856bff8c87950994c8b8def19eed3ff6"
+    },
+    {
+      "bytes": 4562,
+      "path": "fidelity-lists/restarted-0.docx",
+      "producer": "test/list_restart_fidelity_test.dart",
+      "sha256": "483da3b3e0e4bf154b06b3076e71ab7169793743bc167ef40c1862b7cfa95a58"
+    },
+    {
+      "bytes": 4562,
+      "path": "fidelity-lists/restarted-1.docx",
+      "producer": "test/list_restart_fidelity_test.dart",
+      "sha256": "e3fa1badc0f6e737fe70b89c6683f21cc90f1c175df8e9d34c62e72249688160"
+    },
+    {
+      "bytes": 4562,
+      "path": "fidelity-lists/restarted-2.docx",
+      "producer": "test/list_restart_fidelity_test.dart",
+      "sha256": "9fcea42d8aaa99c1c9792342f3f259fce01a67361f7a02101cfcbff9396f8690"
+    },
+    {
+      "bytes": 9729,
+      "path": "fidelity-native/created-pivot-1.xlsx",
+      "producer": "test/native_spreadsheet_test.dart",
+      "sha256": "44a32f6036cd8702e7aeb2ee7aca265623b73f571db14f848676fa7b24f43f39"
+    },
+    {
+      "bytes": 9740,
+      "path": "fidelity-native/created-pivot-2.xlsx",
+      "producer": "test/native_spreadsheet_test.dart",
+      "sha256": "6383e34b80909ad732e591a2ec7245b4a8e11676343300c3be61383eeb2a9b5a"
+    },
+    {
+      "bytes": 9740,
+      "path": "fidelity-native/created-pivot-3.xlsx",
+      "producer": "test/native_spreadsheet_test.dart",
+      "sha256": "8cedecfd6bb2438c9040b6a8a304c6c744503b76be21c1c9955f325c0b5db689"
+    },
+    {
+      "bytes": 11904,
+      "path": "fidelity-native/native-sheet-edited-1.xlsx",
+      "producer": "test/native_spreadsheet_test.dart",
+      "sha256": "375e22ed0386cb8190600858d14dbccae11a29d891ee6c7174146beda8c1a474"
+    },
+    {
+      "bytes": 11904,
+      "path": "fidelity-native/native-sheet-edited-2.xlsx",
+      "producer": "test/native_spreadsheet_test.dart",
+      "sha256": "ed73417ed8c55c56ec496df212e13cd6ad34351a93ed4c430c737dd805afe312"
+    },
+    {
+      "bytes": 11904,
+      "path": "fidelity-native/native-sheet-edited-3.xlsx",
+      "producer": "test/native_spreadsheet_test.dart",
+      "sha256": "4c0d375aea58238046da8c23175c59b58c1b4204df257d05ae63dec5c12025ca"
+    },
+    {
+      "bytes": 11877,
+      "path": "fidelity-native/native-sheet-imported-1.xlsx",
+      "producer": "test/native_spreadsheet_test.dart",
+      "sha256": "1f5b86afbe7f1e9559f51581c8688f019916c3924ff229033a0488e54102d6a1"
+    },
+    {
+      "bytes": 11875,
+      "path": "fidelity-native/native-sheet-imported-2.xlsx",
+      "producer": "test/native_spreadsheet_test.dart",
+      "sha256": "0b47e58f72d16f2e8b8746cee78a6563c88f2335c01c0e3b29cc5f58f9d0b561"
+    },
+    {
+      "bytes": 11877,
+      "path": "fidelity-native/native-sheet-imported-3.xlsx",
+      "producer": "test/native_spreadsheet_test.dart",
+      "sha256": "0fa087324e77ce777b7d44fccebe6ea05669b182e8ef56861ae7245f6c10c1b2"
+    },
+    {
+      "bytes": 55757,
+      "path": "fidelity-native/native-slides-1.pptx",
+      "producer": "test/native_presentation_test.dart",
+      "sha256": "76c20d074e720b0f7bf53c3d67f62448fc6c05b7908c98ebb6763df185d65227"
+    },
+    {
+      "bytes": 55756,
+      "path": "fidelity-native/native-slides-2.pptx",
+      "producer": "test/native_presentation_test.dart",
+      "sha256": "4357f8b38f677b2579725b5c577d26e88537fd86c43a85ec45317fdc46cec917"
+    },
+    {
+      "bytes": 55757,
+      "path": "fidelity-native/native-slides-3.pptx",
+      "producer": "test/native_presentation_test.dart",
+      "sha256": "6dec3110f774cf6a2400b45cf5ce1fb06a20f73d9a62180f95e94b0155e6c5d9"
+    },
+    {
+      "bytes": 56052,
+      "path": "fidelity-native/native-slides-edited-1.pptx",
+      "producer": "test/native_presentation_test.dart",
+      "sha256": "d2c34e679f076bcc0418990df4e124ce386f4c3ee3528de50c2fb20e7b28a4a3"
+    },
+    {
+      "bytes": 56053,
+      "path": "fidelity-native/native-slides-edited-2.pptx",
+      "producer": "test/native_presentation_test.dart",
+      "sha256": "7f216e3c5ad5c72aa8d97c9101e2d421872d1aa7c10b9cb4288876ac1d3aae78"
+    },
+    {
+      "bytes": 56053,
+      "path": "fidelity-native/native-slides-edited-3.pptx",
+      "producer": "test/native_presentation_test.dart",
+      "sha256": "a027bb5a242cf4f54a468a236d71a8b25264cd9042b82e720ab38a9543bc1995"
+    },
+    {
+      "bytes": 5015,
+      "path": "fidelity-note-markers-legacy/markers-edited-1.docx",
+      "producer": "test/note_marker_legacy_fidelity_test.dart",
+      "sha256": "6081e98456abb621ec217e764ae565b04d2654873581bf54e630fef0b1707fb1"
+    },
+    {
+      "bytes": 5037,
+      "path": "fidelity-note-markers-legacy/markers-edited-2.docx",
+      "producer": "test/note_marker_legacy_fidelity_test.dart",
+      "sha256": "a82a47cdfe2bebdbdd86da96ca3977335a652fa6d26190e1026dbf8e1d5774b1"
+    },
+    {
+      "bytes": 5037,
+      "path": "fidelity-note-markers-legacy/markers-edited-3.docx",
+      "producer": "test/note_marker_legacy_fidelity_test.dart",
+      "sha256": "2d2f3893c1cbc224bedf2b81874a22651c6aa6ffec8f6ec96e2c0840adb23942"
+    },
+    {
+      "bytes": 4724,
+      "path": "fidelity-note-markers-legacy/markers-imported-1.docx",
+      "producer": "test/note_marker_legacy_fidelity_test.dart",
+      "sha256": "cd91420710512a9175b3e769f0451331a627cbf8b7c2e6dbdd88d01d0280fbe5"
+    },
+    {
+      "bytes": 4746,
+      "path": "fidelity-note-markers-legacy/markers-imported-2.docx",
+      "producer": "test/note_marker_legacy_fidelity_test.dart",
+      "sha256": "89a2d5017896866896a17909e214cf0e24df43ceaa3c463d6c1f880bd052effb"
+    },
+    {
+      "bytes": 4747,
+      "path": "fidelity-note-markers-legacy/markers-imported-3.docx",
+      "producer": "test/note_marker_legacy_fidelity_test.dart",
+      "sha256": "644c3950908b828bdd2db546c47b699ad5f796585083be3983c19357116ac2d0"
+    },
+    {
+      "bytes": 2428,
+      "path": "fidelity-note-markers-legacy/markers-source.docx",
+      "producer": "test/note_marker_legacy_fidelity_test.dart",
+      "sha256": "6f4e979c69c4a942796ea512490b791f8b3ea99a966c75593c1b2613880e7536"
+    },
+    {
+      "bytes": 5063,
+      "path": "fidelity-note-markers/cloned-1.docx",
+      "producer": "test/note_marker_fidelity_test.dart",
+      "sha256": "a60dd66c2b1e4caedb2a5458904d5feea55f8e2d7881a65ec63caea38220e5da"
+    },
+    {
+      "bytes": 5105,
+      "path": "fidelity-note-markers/cloned-2.docx",
+      "producer": "test/note_marker_fidelity_test.dart",
+      "sha256": "561d16efab34277c20c028f62a1b3629b2a79c78ec0e903a4d481c2ae7a8e76a"
+    },
+    {
+      "bytes": 5105,
+      "path": "fidelity-note-markers/cloned-3.docx",
+      "producer": "test/note_marker_fidelity_test.dart",
+      "sha256": "cc666109285b699f2a214e48667083d42254bd01c817159e527890fa5d8e32da"
+    },
+    {
+      "bytes": 5089,
+      "path": "fidelity-note-markers/edited-1.docx",
+      "producer": "test/note_marker_fidelity_test.dart",
+      "sha256": "d6a0f13ade4b176678fb13ea7346a84a190940ae11bae1c71a70f62ff635531a"
+    },
+    {
+      "bytes": 5130,
+      "path": "fidelity-note-markers/edited-2.docx",
+      "producer": "test/note_marker_fidelity_test.dart",
+      "sha256": "203e765c490ffa571b04eafd052cd5f3a562f1e3732c5836827de1470489dff6"
+    },
+    {
+      "bytes": 5130,
+      "path": "fidelity-note-markers/edited-3.docx",
+      "producer": "test/note_marker_fidelity_test.dart",
+      "sha256": "e448572489d6de023ee6b94d89d14a2cfab5e72e267d2e7150c130eb3c591bbd"
+    },
+    {
+      "bytes": 5063,
+      "path": "fidelity-note-markers/imported-1.docx",
+      "producer": "test/note_marker_fidelity_test.dart",
+      "sha256": "3a306e02489cdd549e217091dc7820953e8c8ee2adfb4a065317c9bbe2a5e451"
+    },
+    {
+      "bytes": 5103,
+      "path": "fidelity-note-markers/imported-2.docx",
+      "producer": "test/note_marker_fidelity_test.dart",
+      "sha256": "d8e63099e22cedacfb89c7f214844e879b6ee27d8da755332e7fa1c88adfc988"
+    },
+    {
+      "bytes": 5103,
+      "path": "fidelity-note-markers/imported-3.docx",
+      "producer": "test/note_marker_fidelity_test.dart",
+      "sha256": "6bbe76f7855c8751f33e145ce315c238a29413fff9fec0da99e140ef263eb7f0"
+    },
+    {
+      "bytes": 2987,
+      "path": "fidelity-note-markers/source.docx",
+      "producer": "test/note_marker_fidelity_test.dart",
+      "sha256": "24d80e959d01435191ccaaa6d31bed1e214becbddef6eef8b87b69d79d357a48"
+    },
+    {
+      "bytes": 9108,
+      "path": "fidelity-notes/edited-1.docx",
+      "producer": "tool/fidelity/notes.dart",
+      "sha256": "f03aee59e059ef0cfd3123acf4543afe88c0808bc17cc00a374bbadd326ccb96"
+    },
+    {
+      "bytes": 9142,
+      "path": "fidelity-notes/edited-2.docx",
+      "producer": "tool/fidelity/notes.dart",
+      "sha256": "90578243223a7d4255b0e6aa01c7307f15b3f4d78015a187cdaa148dea825f6a"
+    },
+    {
+      "bytes": 9142,
+      "path": "fidelity-notes/edited-3.docx",
+      "producer": "tool/fidelity/notes.dart",
+      "sha256": "8533201b19d1ba3eb35a0e4426bc92ee3cc7691e92bbde3ea20d2b55cd6877da"
+    },
+    {
+      "bytes": 6100,
+      "path": "fidelity-notes/source.docx",
+      "producer": "tool/fidelity/notes.dart",
+      "sha256": "11550ac3f3c06bd4093b61bf16cc879827587a53c1cf0abaf8dcbdffc19da59e"
+    },
+    {
+      "bytes": 9102,
+      "path": "fidelity-notes/unchanged-1.docx",
+      "producer": "tool/fidelity/notes.dart",
+      "sha256": "f40905622e17db94c8ac6e6486ad683bd6fa5beae216af87d4245dcccbf4dd3b"
+    },
+    {
+      "bytes": 9135,
+      "path": "fidelity-notes/unchanged-2.docx",
+      "producer": "tool/fidelity/notes.dart",
+      "sha256": "3f396ff31935175d03838de9f9ec70be499051353a4df9de6c6c3644d8f626d4"
+    },
+    {
+      "bytes": 9136,
+      "path": "fidelity-notes/unchanged-3.docx",
+      "producer": "tool/fidelity/notes.dart",
+      "sha256": "2a5c348f6c343dc762fcebbe9e018aa9d8de6b25907f3a657f38867c168c7ba1"
+    },
+    {
+      "bytes": 4405,
+      "path": "fidelity-opaque/opaque-1.docx",
+      "producer": "test/opaque_word_test.dart",
+      "sha256": "237dd7c24100e287aa29c054feb584763aabd1728c3f35ebc357fa6f565eeb0b"
+    },
+    {
+      "bytes": 4440,
+      "path": "fidelity-opaque/opaque-2.docx",
+      "producer": "test/opaque_word_test.dart",
+      "sha256": "2d75c4b0c4d24e6239aaf8f4a84ea3327b8af720a69bd3c97a5422df61e3a829"
+    },
+    {
+      "bytes": 4440,
+      "path": "fidelity-opaque/opaque-3.docx",
+      "producer": "test/opaque_word_test.dart",
+      "sha256": "338cbeef2b0547d7f1ef4c7756c4ad2f1b25a694fc598180470b9a9311ec5c34"
+    },
+    {
+      "bytes": 11760,
+      "path": "fidelity-revision-stories/direct-1.docx",
+      "producer": "test/word_revision_story_test.dart",
+      "sha256": "2e8b985a68347afe89a1c0f964750d49405b44ef00da436f612fc094091e5ddd"
+    },
+    {
+      "bytes": 11802,
+      "path": "fidelity-revision-stories/direct-2.docx",
+      "producer": "test/word_revision_story_test.dart",
+      "sha256": "6046a3d32cc330049e9fb0c1709c283696f7aac13629707fd944b8952275110c"
+    },
+    {
+      "bytes": 11801,
+      "path": "fidelity-revision-stories/direct-3.docx",
+      "producer": "test/word_revision_story_test.dart",
+      "sha256": "b18ac7483d25de7d47014a589ab323a4be771b38017c5855f150845150d83fbf"
+    },
+    {
+      "bytes": 11760,
+      "path": "fidelity-revision-stories/isolate-1.docx",
+      "producer": "test/word_revision_story_test.dart",
+      "sha256": "b35b76b5d3d086f9097049c5155b518d9fc56140fb4621afddb3dd6b3cc0c8f8"
+    },
+    {
+      "bytes": 11801,
+      "path": "fidelity-revision-stories/isolate-2.docx",
+      "producer": "test/word_revision_story_test.dart",
+      "sha256": "2aa26456f1c9b6a4d7d97c2ca451d97cfa66cd373472b2c1a2f1247498638dce"
+    },
+    {
+      "bytes": 11802,
+      "path": "fidelity-revision-stories/isolate-3.docx",
+      "producer": "test/word_revision_story_test.dart",
+      "sha256": "4f18f39a54cd9724f6f1fc076f7db6d221cd27d6e97246216be5bfb1cd8aa29f"
+    },
+    {
+      "bytes": 11972,
+      "path": "fidelity-schema/column-metadata-1.xlsx",
+      "producer": "test/sheet_schema_fidelity_test.dart",
+      "sha256": "39954a5966d7678ac432dca793a65c3bdda7afe4484475e6fe578c29abbe2dd9"
+    },
+    {
+      "bytes": 11972,
+      "path": "fidelity-schema/column-metadata-2.xlsx",
+      "producer": "test/sheet_schema_fidelity_test.dart",
+      "sha256": "812c73a90d7c0a02c976cb1d4f9034d3c955ac86111941ce97659074afac3d62"
+    },
+    {
+      "bytes": 11972,
+      "path": "fidelity-schema/column-metadata-3.xlsx",
+      "producer": "test/sheet_schema_fidelity_test.dart",
+      "sha256": "9fc8e69d3c82eb1c076e43209d5b2c1d55871e5becff491c844076a3793423a8"
+    },
+    {
+      "bytes": 11964,
+      "path": "fidelity-schema/sheet-style-1.xlsx",
+      "producer": "test/sheet_schema_fidelity_test.dart",
+      "sha256": "fa975d84231af8325815a5d99080d0af2594b4069aa306aed4d2196a3ddeb316"
+    },
+    {
+      "bytes": 11964,
+      "path": "fidelity-schema/sheet-style-2.xlsx",
+      "producer": "test/sheet_schema_fidelity_test.dart",
+      "sha256": "62c79d2d84b52364c174cc4d0ede7460e8b51d76092955abdc61a20ea99adc17"
+    },
+    {
+      "bytes": 11964,
+      "path": "fidelity-schema/sheet-style-3.xlsx",
+      "producer": "test/sheet_schema_fidelity_test.dart",
+      "sha256": "4a5d87ff1671350db9ea3f8ea82b813252fd48f1290cc0353209fe7ddd8e7e83"
+    },
+    {
+      "bytes": 8746,
+      "path": "fidelity-script.docx",
+      "producer": "tool/fidelity/check.sh",
+      "sha256": "5a8d4a40dd0085967f32f96f92e7c02544258d012b0e906a72b82a12dfebccb5"
+    },
+    {
+      "bytes": 12048,
+      "path": "fidelity-scripted/sheet/edited.xlsx",
+      "producer": "test/scripted_workflows_test.dart",
+      "sha256": "402c7d44382ee1cda8247d82fe46a065a64f34b8609f91aebba55388581513b6"
+    },
+    {
+      "bytes": 12045,
+      "path": "fidelity-scripted/sheet/roundtrip-1.xlsx",
+      "producer": "test/scripted_workflows_test.dart",
+      "sha256": "9b0f52c44984fec184bafc4a5f976c1c8a24c7ffe5c55753299aa38c1ce6d02a"
+    },
+    {
+      "bytes": 12045,
+      "path": "fidelity-scripted/sheet/roundtrip-2.xlsx",
+      "producer": "test/scripted_workflows_test.dart",
+      "sha256": "10125816145dde6f8390cee31223ce9d4eacf5cc77ddc90366de1bcaea4ac29c"
+    },
+    {
+      "bytes": 12043,
+      "path": "fidelity-scripted/sheet/roundtrip-3.xlsx",
+      "producer": "test/scripted_workflows_test.dart",
+      "sha256": "24e87876e30d48efe883992499c985f1bca53f7ea0e06b04fe429bf11aaf5e8b"
+    },
+    {
+      "bytes": 55647,
+      "path": "fidelity-scripted/slide/edited.pptx",
+      "producer": "test/scripted_workflows_test.dart",
+      "sha256": "300e283d9feb61c9968d2c4f733d53ba9abc3aef079eaf460dc56ac77b568268"
+    },
+    {
+      "bytes": 55648,
+      "path": "fidelity-scripted/slide/roundtrip-1.pptx",
+      "producer": "test/scripted_workflows_test.dart",
+      "sha256": "128513eb8e1a9d6faa28e004f2c8f19306699981e6973eeefbb5d67aab4d8364"
+    },
+    {
+      "bytes": 55648,
+      "path": "fidelity-scripted/slide/roundtrip-2.pptx",
+      "producer": "test/scripted_workflows_test.dart",
+      "sha256": "09dca2ae2ade0fbcec85dec3f8e0b7f601fdac8baf6f8d79cc592ddaae602ccf"
+    },
+    {
+      "bytes": 55648,
+      "path": "fidelity-scripted/slide/roundtrip-3.pptx",
+      "producer": "test/scripted_workflows_test.dart",
+      "sha256": "c54c31ddfb9e330e259be66c92a6ce6ceea6a6d074a6dc34bf2665d7e2b3d9cd"
+    },
+    {
+      "bytes": 9126,
+      "path": "fidelity-scripted/word/edited.docx",
+      "producer": "test/scripted_workflows_test.dart",
+      "sha256": "fe859a89ca81f897d7dab47baf2156a61a206760aaca8ea02cdd93fbb0b68cb4"
+    },
+    {
+      "bytes": 9196,
+      "path": "fidelity-scripted/word/roundtrip-1.docx",
+      "producer": "test/scripted_workflows_test.dart",
+      "sha256": "4adeb9bd9a7c3e96992ec5453ab7ceb06269b8e58d13b1e0b2566123afe23710"
+    },
+    {
+      "bytes": 9195,
+      "path": "fidelity-scripted/word/roundtrip-2.docx",
+      "producer": "test/scripted_workflows_test.dart",
+      "sha256": "0bf7c5e2f91af6e01a862553ce6039404d4e037e3dfb67324bc9ceeaaa6e4a9c"
+    },
+    {
+      "bytes": 9195,
+      "path": "fidelity-scripted/word/roundtrip-3.docx",
+      "producer": "test/scripted_workflows_test.dart",
+      "sha256": "65ee79a5807b2bb77acfda018a59fd433fac39a08415cb61444cd707c8114144"
+    },
+    {
+      "bytes": 8388,
+      "path": "fidelity-section-clones/section-clone-1.docx",
+      "producer": "test/word_section_clone_fidelity_test.dart",
+      "sha256": "434bc679d4df71e58714b13867fbae5fe9decf7355f51a5634eb10e4cb8c5c9a"
+    },
+    {
+      "bytes": 8456,
+      "path": "fidelity-section-clones/section-clone-2.docx",
+      "producer": "test/word_section_clone_fidelity_test.dart",
+      "sha256": "899ef88ad2485ecb2e4778d781a537e48f221b2908b2fac1c49c6953f2377a75"
+    },
+    {
+      "bytes": 8457,
+      "path": "fidelity-section-clones/section-clone-3.docx",
+      "producer": "test/word_section_clone_fidelity_test.dart",
+      "sha256": "4bd0055cb15ba588897639ed1096c9e539d1dca99075c7f25795390b3489cf15"
+    },
+    {
+      "bytes": 3748,
+      "path": "fidelity-sheet-normal-font/normal-font-1.xlsx",
+      "producer": "test/sheet_normal_font_metrics_test.dart",
+      "sha256": "801f4da1c17b1b602f0e2fae053c20cefd5cd57d2b45d3c337a21646054638ae"
+    },
+    {
+      "bytes": 3755,
+      "path": "fidelity-sheet-normal-font/normal-font-2.xlsx",
+      "producer": "test/sheet_normal_font_metrics_test.dart",
+      "sha256": "f0783f94655372377382917b5db52c4090bf2a810b25524a9aa71ba7f7e8bee4"
+    },
+    {
+      "bytes": 3754,
+      "path": "fidelity-sheet-normal-font/normal-font-3.xlsx",
+      "producer": "test/sheet_normal_font_metrics_test.dart",
+      "sha256": "175bf18f5b40737a6ea7d47f45c4e4c883e305be910d70e05830ed4cf79c4d90"
+    },
+    {
+      "bytes": 2258,
+      "path": "fidelity-sheet-normal-font/source.xlsx",
+      "producer": "test/sheet_normal_font_metrics_test.dart",
+      "sha256": "7021b9a131d929d4ae6d4074a69056c997efa5b96f7693d4ba15d6c9a41b737f"
+    },
+    {
+      "bytes": 3742,
+      "path": "fidelity-sheet-normal-font/unchanged-1.xlsx",
+      "producer": "test/sheet_normal_font_metrics_test.dart",
+      "sha256": "87b54f365d096072f8520099b2b8bfa0fd65ca01fbb30654e41d9639fd96d5a8"
+    },
+    {
+      "bytes": 3750,
+      "path": "fidelity-sheet-normal-font/unchanged-2.xlsx",
+      "producer": "test/sheet_normal_font_metrics_test.dart",
+      "sha256": "762dc4f8d56159c6cfd11c57a1c1440ff42434546593bc132176920203896fca"
+    },
+    {
+      "bytes": 3750,
+      "path": "fidelity-sheet-normal-font/unchanged-3.xlsx",
+      "producer": "test/sheet_normal_font_metrics_test.dart",
+      "sha256": "1c64126569e7bd0a67d20cd6137c059c7f6a1662a18b19ffe71e5d2ca649a6e4"
+    },
+    {
+      "bytes": 13534,
+      "path": "fidelity-sheet-rename/renamed-1.xlsx",
+      "producer": "test/sheet_rename_fidelity_test.dart",
+      "sha256": "526fbc14cbc25d4e9343d46865e17e14702d5cc029f17ef703a01f5f3a2c9164"
+    },
+    {
+      "bytes": 13534,
+      "path": "fidelity-sheet-rename/renamed-2.xlsx",
+      "producer": "test/sheet_rename_fidelity_test.dart",
+      "sha256": "d427d9c81a6172708be0923559c8ef2f3e2741e26eae863279d1773142f8b20a"
+    },
+    {
+      "bytes": 13534,
+      "path": "fidelity-sheet-rename/renamed-3.xlsx",
+      "producer": "test/sheet_rename_fidelity_test.dart",
+      "sha256": "2d2b2882f335bbfe3b35d2196ad3f31e65fa8d7f70d935d8bb1adf95ee51d99b"
+    },
+    {
+      "bytes": 10758,
+      "path": "fidelity-sheet-rename/source.xlsx",
+      "producer": "test/sheet_rename_fidelity_test.dart",
+      "sha256": "561a2ebf80b6f02e8b1fc00648230b341ff68e1a3ee501ea026b9e69c35fc24b"
+    },
+    {
+      "bytes": 48105,
+      "path": "fidelity-slide-sections/direct/backward-1.pptx",
+      "producer": "test/slide_section_fidelity_test.dart",
+      "sha256": "f0064b87cab209966c9e2863390e2e5a02038a5e56c83cfa8f944a56ce6453e7"
+    },
+    {
+      "bytes": 48104,
+      "path": "fidelity-slide-sections/direct/backward-2.pptx",
+      "producer": "test/slide_section_fidelity_test.dart",
+      "sha256": "db39bfdbd696408879a9f7cca79ac86ae863c9bfde53391eab97e65e366620e5"
+    },
+    {
+      "bytes": 48105,
+      "path": "fidelity-slide-sections/direct/backward-3.pptx",
+      "producer": "test/slide_section_fidelity_test.dart",
+      "sha256": "7b94de44fd1751d8105c98b3ce10477237a71e996c66828e4abb0eedb9264778"
+    },
+    {
+      "bytes": 48173,
+      "path": "fidelity-slide-sections/direct/emptied-1.pptx",
+      "producer": "test/slide_section_fidelity_test.dart",
+      "sha256": "449e201349d8791d671dc3b022e9a99a5c2fcd3df409e4c23763da4ad529a2a2"
+    },
+    {
+      "bytes": 48173,
+      "path": "fidelity-slide-sections/direct/emptied-2.pptx",
+      "producer": "test/slide_section_fidelity_test.dart",
+      "sha256": "c3fa6a32c8e3904b094af91f049044fc583475edabf1a673c336dde1d0db819a"
+    },
+    {
+      "bytes": 48172,
+      "path": "fidelity-slide-sections/direct/emptied-3.pptx",
+      "producer": "test/slide_section_fidelity_test.dart",
+      "sha256": "32252bfaaa674784f74754f02afa3e9c25a97e76d2dbb5aef1e2d3d09220d027"
+    },
+    {
+      "bytes": 48110,
+      "path": "fidelity-slide-sections/direct/forward-1.pptx",
+      "producer": "test/slide_section_fidelity_test.dart",
+      "sha256": "b45a6fab450430941d065ed36cce1cdbd68c27553b077c1c7d63e9cac5833c34"
+    },
+    {
+      "bytes": 48110,
+      "path": "fidelity-slide-sections/direct/forward-2.pptx",
+      "producer": "test/slide_section_fidelity_test.dart",
+      "sha256": "70ebc4be1ceb12ce353bfc1db680353564e9143b9f8412e62abe439eac9f6590"
+    },
+    {
+      "bytes": 48110,
+      "path": "fidelity-slide-sections/direct/forward-3.pptx",
+      "producer": "test/slide_section_fidelity_test.dart",
+      "sha256": "540331da28b640eeb9ee6b1d55d295c563c3d8c58ecde7ce422adcb8fb0f9c83"
+    },
+    {
+      "bytes": 42941,
+      "path": "fidelity-slide-sections/direct/source.pptx",
+      "producer": "test/slide_section_fidelity_test.dart",
+      "sha256": "fbbaacf2b6bbc657568bb3e507e062a949ce5304d2f77fb51bd3c9f3ec5bb39c"
+    },
+    {
+      "bytes": 48103,
+      "path": "fidelity-slide-sections/direct/unchanged-1.pptx",
+      "producer": "test/slide_section_fidelity_test.dart",
+      "sha256": "d3984a4bb5ce3964245ec9059e2d67c312ab607266b1e812558e912610dbb2cb"
+    },
+    {
+      "bytes": 48103,
+      "path": "fidelity-slide-sections/direct/unchanged-2.pptx",
+      "producer": "test/slide_section_fidelity_test.dart",
+      "sha256": "491e38c6f997f3044401f6988e96dbfbdb01aa593c65e1371ca6214aeefa383a"
+    },
+    {
+      "bytes": 48103,
+      "path": "fidelity-slide-sections/direct/unchanged-3.pptx",
+      "producer": "test/slide_section_fidelity_test.dart",
+      "sha256": "9dd192ebd6ddbd28335b000958e1c7286209b0fc32cc57e3412d5d626fe30f0b"
+    },
+    {
+      "bytes": 48112,
+      "path": "fidelity-slide-sections/direct/within-1.pptx",
+      "producer": "test/slide_section_fidelity_test.dart",
+      "sha256": "6d89cc36320e81a7bcd25e1584269ff4e4f0d6d9f7031cc62c99c4a714caca41"
+    },
+    {
+      "bytes": 48112,
+      "path": "fidelity-slide-sections/direct/within-2.pptx",
+      "producer": "test/slide_section_fidelity_test.dart",
+      "sha256": "af68de8584f531393a9fdca9aa2b070ce9cc6613ae8f3e237d23535d2c645476"
+    },
+    {
+      "bytes": 48112,
+      "path": "fidelity-slide-sections/direct/within-3.pptx",
+      "producer": "test/slide_section_fidelity_test.dart",
+      "sha256": "cf5cce61bbf2bbcbf9cdd5a4ad2b9ff3bc6ad3ad8aee0e175412ac30fbc4a135"
+    },
+    {
+      "bytes": 48105,
+      "path": "fidelity-slide-sections/isolate/backward-1.pptx",
+      "producer": "test/slide_section_fidelity_test.dart",
+      "sha256": "4fd6f3ae82a713305f45ff0ee0e1cb8b02d0c58539f20f61e7f98182c344fc5b"
+    },
+    {
+      "bytes": 48105,
+      "path": "fidelity-slide-sections/isolate/backward-2.pptx",
+      "producer": "test/slide_section_fidelity_test.dart",
+      "sha256": "3e41dc209a045d5da5e03d0c9b9eb3531c6b7a4a3369f84c41cff258d213ccc1"
+    },
+    {
+      "bytes": 48105,
+      "path": "fidelity-slide-sections/isolate/backward-3.pptx",
+      "producer": "test/slide_section_fidelity_test.dart",
+      "sha256": "dce14c788ff34b6d74fd3b8d20af369904969e0daeeb988c2b8a5d7f53bd5bd9"
+    },
+    {
+      "bytes": 48173,
+      "path": "fidelity-slide-sections/isolate/emptied-1.pptx",
+      "producer": "test/slide_section_fidelity_test.dart",
+      "sha256": "0f64a7fe649c0242bee59bf2b9aa6821a62bf1693a6bc9e5a8326fab2d0c5e3e"
+    },
+    {
+      "bytes": 48173,
+      "path": "fidelity-slide-sections/isolate/emptied-2.pptx",
+      "producer": "test/slide_section_fidelity_test.dart",
+      "sha256": "1b1fdf27ca6af0f069eda09519d22861df4974351b84fe690ec08d83c5268b98"
+    },
+    {
+      "bytes": 48172,
+      "path": "fidelity-slide-sections/isolate/emptied-3.pptx",
+      "producer": "test/slide_section_fidelity_test.dart",
+      "sha256": "4b3cb5310e3b9d084b5d81127611958b52956b938476abd9a98ecb1ce04a3c0e"
+    },
+    {
+      "bytes": 48110,
+      "path": "fidelity-slide-sections/isolate/forward-1.pptx",
+      "producer": "test/slide_section_fidelity_test.dart",
+      "sha256": "09695732715d1875da28d6902dabeb9280068d6e8c96c9845009c6cda42876c8"
+    },
+    {
+      "bytes": 48110,
+      "path": "fidelity-slide-sections/isolate/forward-2.pptx",
+      "producer": "test/slide_section_fidelity_test.dart",
+      "sha256": "63d204bc366cc02f1155b46d4f0d6b9db0c4d3712bd51eb71390b6cddfc28b29"
+    },
+    {
+      "bytes": 48110,
+      "path": "fidelity-slide-sections/isolate/forward-3.pptx",
+      "producer": "test/slide_section_fidelity_test.dart",
+      "sha256": "a2e9e7bdad6b71e8577b47cb62bc8aa8d3b71b8cc20fba50357b413b6c4137b7"
+    },
+    {
+      "bytes": 42941,
+      "path": "fidelity-slide-sections/isolate/source.pptx",
+      "producer": "test/slide_section_fidelity_test.dart",
+      "sha256": "fbbaacf2b6bbc657568bb3e507e062a949ce5304d2f77fb51bd3c9f3ec5bb39c"
+    },
+    {
+      "bytes": 48103,
+      "path": "fidelity-slide-sections/isolate/unchanged-1.pptx",
+      "producer": "test/slide_section_fidelity_test.dart",
+      "sha256": "e59b068af01db4bffd960ad3db2b7a17dd4b0867303ca8d942d448eeca9da1f6"
+    },
+    {
+      "bytes": 48103,
+      "path": "fidelity-slide-sections/isolate/unchanged-2.pptx",
+      "producer": "test/slide_section_fidelity_test.dart",
+      "sha256": "5e17f6b708e1207431163cd4f0a5226570a4e436caf4b424d9e50272d1baa3d0"
+    },
+    {
+      "bytes": 48103,
+      "path": "fidelity-slide-sections/isolate/unchanged-3.pptx",
+      "producer": "test/slide_section_fidelity_test.dart",
+      "sha256": "e22a1ec1c784d5e0cba56f0bfb9903a5525297a2abe9604ca215b9ed0b0cf77d"
+    },
+    {
+      "bytes": 48112,
+      "path": "fidelity-slide-sections/isolate/within-1.pptx",
+      "producer": "test/slide_section_fidelity_test.dart",
+      "sha256": "9a24137e43e03a8f902d30837aa40c03ed2f11bd3fb18ee956177517c4668f66"
+    },
+    {
+      "bytes": 48111,
+      "path": "fidelity-slide-sections/isolate/within-2.pptx",
+      "producer": "test/slide_section_fidelity_test.dart",
+      "sha256": "d6749664df6068cf194c18eb2e996bfdab81f4e3d3df00f409c31eaa827d195d"
+    },
+    {
+      "bytes": 48111,
+      "path": "fidelity-slide-sections/isolate/within-3.pptx",
+      "producer": "test/slide_section_fidelity_test.dart",
+      "sha256": "b97aeedb3ca2b65304f8b0322ad3264d4cd2684ade7474199bbee0168817a8fc"
+    },
+    {
+      "bytes": 6304,
+      "path": "fidelity-slide-text/rich-edited-1.pptx",
+      "producer": "test/slide_text_fidelity_test.dart",
+      "sha256": "5a3fe9a738bb3f0773f932112ef85be2c6082e4c0ecdbe0314d7e35c8969b249"
+    },
+    {
+      "bytes": 6309,
+      "path": "fidelity-slide-text/rich-edited-2.pptx",
+      "producer": "test/slide_text_fidelity_test.dart",
+      "sha256": "a9b7a4077f7cd447b3285cfcfebed1736fd87ff92b1bff05fff7ddc6a6e8f0d4"
+    },
+    {
+      "bytes": 6311,
+      "path": "fidelity-slide-text/rich-edited-3.pptx",
+      "producer": "test/slide_text_fidelity_test.dart",
+      "sha256": "54ad169038e84b7eac8eb9eaecfea4674bdfc1d1b67d3fe5df6337fc8db0ba7f"
+    },
+    {
+      "bytes": 6300,
+      "path": "fidelity-slide-text/rich-imported-1.pptx",
+      "producer": "test/slide_text_fidelity_test.dart",
+      "sha256": "af9ae5d302a1d4b47aa6b503ce80be2eccb1caaa8e909e72d71bd0be564e2f87"
+    },
+    {
+      "bytes": 6307,
+      "path": "fidelity-slide-text/rich-imported-2.pptx",
+      "producer": "test/slide_text_fidelity_test.dart",
+      "sha256": "fcf14ba003c1cb5d6b4ddd8a34906fa32120a5d1e9b18bce8382c98659a2bf27"
+    },
+    {
+      "bytes": 6307,
+      "path": "fidelity-slide-text/rich-imported-3.pptx",
+      "producer": "test/slide_text_fidelity_test.dart",
+      "sha256": "005c6ad23c3b25cbc839e76774cae9abef5e41fdb2553645aaa374b3a0d0551f"
+    },
+    {
+      "bytes": 22497,
+      "path": "fidelity-story-media/relocated-edited-1.docx",
+      "producer": "test/word_part_routing_test.dart",
+      "sha256": "5a2f91e2e2c29284c4040ee7fe2d842f37bca42797c03550707e4c3bd0584313"
+    },
+    {
+      "bytes": 22525,
+      "path": "fidelity-story-media/relocated-edited-2.docx",
+      "producer": "test/word_part_routing_test.dart",
+      "sha256": "4a944ed09e56733ae14738beec364141165066f9287669a7d2a0eddfddd74e41"
+    },
+    {
+      "bytes": 22525,
+      "path": "fidelity-story-media/relocated-edited-3.docx",
+      "producer": "test/word_part_routing_test.dart",
+      "sha256": "1f8f08ef1f2c025f7eed60b3f09141124b46124abbdb68b2d6894bada64c1292"
+    },
+    {
+      "bytes": 22133,
+      "path": "fidelity-story-media/story-edited-1.docx",
+      "producer": "test/story_media_fidelity_test.dart",
+      "sha256": "ea7ab3eaa4b534b5920119253b10bfb01176702f52df377e9339b502b5419f54"
+    },
+    {
+      "bytes": 22171,
+      "path": "fidelity-story-media/story-edited-2.docx",
+      "producer": "test/story_media_fidelity_test.dart",
+      "sha256": "7eae85b5521a5e02336198098d500365c325d44fe64e7ccd4396b42eb80cec31"
+    },
+    {
+      "bytes": 22172,
+      "path": "fidelity-story-media/story-edited-3.docx",
+      "producer": "test/story_media_fidelity_test.dart",
+      "sha256": "af55994b7956a0891c2633cf8463f29db4efc6af007a84015eba1728fa257f2e"
+    },
+    {
+      "bytes": 21841,
+      "path": "fidelity-story-media/story-imported-1.docx",
+      "producer": "test/story_media_fidelity_test.dart",
+      "sha256": "0860ab4d444400f720011cb663aea9e8f0dd5cdaad8aac5247eb7e90bae87ca1"
+    },
+    {
+      "bytes": 21871,
+      "path": "fidelity-story-media/story-imported-2.docx",
+      "producer": "test/story_media_fidelity_test.dart",
+      "sha256": "79f236e4ae52b6c360e237acfea6e6e1aca19805809bda582e8f6c8d4cfad75f"
+    },
+    {
+      "bytes": 21871,
+      "path": "fidelity-story-media/story-imported-3.docx",
+      "producer": "test/story_media_fidelity_test.dart",
+      "sha256": "59089823d80dacc8b87182296caa54299c03a38ed545c240f058dfd2a15e6ebb"
+    },
+    {
+      "bytes": 8312,
+      "path": "fidelity-structure/create/edited.docx",
+      "producer": "test/word_structure_steps_test.dart",
+      "sha256": "b6f235f91112ab9ebd6576b20f7d80fc75e75fb1b0d9db861f06051a4e7cd7a8"
+    },
+    {
+      "bytes": 8382,
+      "path": "fidelity-structure/create/roundtrip-1.docx",
+      "producer": "test/word_structure_steps_test.dart",
+      "sha256": "cab70056855cc0b9df8b5a6e6206c538e82ec0bee91577a6f3afb06633bb1c32"
+    },
+    {
+      "bytes": 8383,
+      "path": "fidelity-structure/create/roundtrip-2.docx",
+      "producer": "test/word_structure_steps_test.dart",
+      "sha256": "f20de3670b9cc760859275df521956a376efa5af9da800e687e5787dfede20ef"
+    },
+    {
+      "bytes": 8383,
+      "path": "fidelity-structure/create/roundtrip-3.docx",
+      "producer": "test/word_structure_steps_test.dart",
+      "sha256": "3dbeb202b1cf6ea33b7690078b93a6d68b705144565c1335335c3a9ea43d068b"
+    },
+    {
+      "bytes": 8339,
+      "path": "fidelity-structure/edit/edited.docx",
+      "producer": "test/word_structure_steps_test.dart",
+      "sha256": "17d84b789785314896cd1b1e74b3ba46b0d4db3826f7891623a82ed7cac10f13"
+    },
+    {
+      "bytes": 8340,
+      "path": "fidelity-structure/edit/roundtrip-1.docx",
+      "producer": "test/word_structure_steps_test.dart",
+      "sha256": "26f755ceeab9a4df9d8f4d29b23dbaa096d807d7b1e9ce8be441f58cb765aeb0"
+    },
+    {
+      "bytes": 8341,
+      "path": "fidelity-structure/edit/roundtrip-2.docx",
+      "producer": "test/word_structure_steps_test.dart",
+      "sha256": "5c103217709c4d5658fe8b5f9f589d3624886115645d3a33cc2e5cf0c16c04ad"
+    },
+    {
+      "bytes": 8341,
+      "path": "fidelity-structure/edit/roundtrip-3.docx",
+      "producer": "test/word_structure_steps_test.dart",
+      "sha256": "21bb13217f966408e915857abfb16a31edfeda305c69fe8f3003108f4234129b"
+    },
+    {
+      "bytes": 6293,
+      "path": "fidelity-structure/remove/edited.docx",
+      "producer": "test/word_structure_steps_test.dart",
+      "sha256": "8e941b20f02aa8e37fd6b3e5c67bf8f1f54bab228f5960821b28dc1ee9d55511"
+    },
+    {
+      "bytes": 6291,
+      "path": "fidelity-structure/remove/roundtrip-1.docx",
+      "producer": "test/word_structure_steps_test.dart",
+      "sha256": "88d7fd719db3fe42e65c22a9ada9da4822a93e961cdf72117d549420e1c322e5"
+    },
+    {
+      "bytes": 6293,
+      "path": "fidelity-structure/remove/roundtrip-2.docx",
+      "producer": "test/word_structure_steps_test.dart",
+      "sha256": "78f9e244660ddd254b89a246b5eec3818d4bedc3c85ae2283f075d3cabce8612"
+    },
+    {
+      "bytes": 6293,
+      "path": "fidelity-structure/remove/roundtrip-3.docx",
+      "producer": "test/word_structure_steps_test.dart",
+      "sha256": "dadc1c5b0d3ad5cfd849a9299bc881f093485f54c3fe5a2804d4b2fc5901b279"
+    },
+    {
+      "bytes": 1231,
+      "path": "fidelity-structure/source.docx",
+      "producer": "test/word_structure_steps_test.dart",
+      "sha256": "19d3d78dd6823d8b2ad7173f0eb82be7b2ccf4224d50fdb889dee758ab64e88f"
+    },
+    {
+      "bytes": 6967,
+      "path": "fidelity-style-toggles/toggle-1.docx",
+      "producer": "test/style_cascade_test.dart",
+      "sha256": "56296d014fbf4d70b8cf84caa0c5b797e0d918a211a699b30855014c9ef7a57b"
+    },
+    {
+      "bytes": 6967,
+      "path": "fidelity-style-toggles/toggle-2.docx",
+      "producer": "test/style_cascade_test.dart",
+      "sha256": "6f12a707a7858480020cb3da19de9c0485594b9181c96764d8d4671da8f47ea5"
+    },
+    {
+      "bytes": 6967,
+      "path": "fidelity-style-toggles/toggle-3.docx",
+      "producer": "test/style_cascade_test.dart",
+      "sha256": "08675b3405228e3c4afa14b084eb853da9c68f487254e8d487e34f3790bd075b"
+    },
+    {
+      "bytes": 7167,
+      "path": "fidelity-styles/edited-1.docx",
+      "producer": "test/style_cascade_test.dart",
+      "sha256": "770c352169892a797eba0e354abfca11b22fc436b5bbdcec73bbdc0682df5964"
+    },
+    {
+      "bytes": 7167,
+      "path": "fidelity-styles/edited-2.docx",
+      "producer": "test/style_cascade_test.dart",
+      "sha256": "2b481ae3a27da3c42bbd30d6e4c764ed1a9c28bcdd94149cb0e5abe72e43d7aa"
+    },
+    {
+      "bytes": 7167,
+      "path": "fidelity-styles/edited-3.docx",
+      "producer": "test/style_cascade_test.dart",
+      "sha256": "ffe225210232a40cb1ba1b8061335636519ea8db84c9f8d6053990c683bb1d55"
+    },
+    {
+      "bytes": 7125,
+      "path": "fidelity-styles/unchanged-1.docx",
+      "producer": "test/style_cascade_test.dart",
+      "sha256": "867a20333effb58fc90af056d07e124f9bfc1be72be882b2f635e5d13da8fa5a"
+    },
+    {
+      "bytes": 7160,
+      "path": "fidelity-styles/unchanged-2.docx",
+      "producer": "test/style_cascade_test.dart",
+      "sha256": "2350a5a0f87b6487fad3cffe1908e1fbeaaf16303b553b42fbd2a54467ab7c6a"
+    },
+    {
+      "bytes": 7160,
+      "path": "fidelity-styles/unchanged-3.docx",
+      "producer": "test/style_cascade_test.dart",
+      "sha256": "e3abbade179ec145fd03ac4ab1026a2858eb646e162a42a4278fd08d9b1b7066"
+    },
+    {
+      "bytes": 5131,
+      "path": "fidelity-table-borders/tables-edited-1.docx",
+      "producer": "test/table_border_fidelity_test.dart",
+      "sha256": "a9e276d7a055339809ac7e0d7c6a5e1c31291fecadbc3263bfcda006bad166c1"
+    },
+    {
+      "bytes": 5165,
+      "path": "fidelity-table-borders/tables-edited-2.docx",
+      "producer": "test/table_border_fidelity_test.dart",
+      "sha256": "a89a67c34e8633fed274e81ab8c0ae506a030877de612aa9c3a6ec2521c77f3a"
+    },
+    {
+      "bytes": 5165,
+      "path": "fidelity-table-borders/tables-edited-3.docx",
+      "producer": "test/table_border_fidelity_test.dart",
+      "sha256": "ab5510ae6d0863a33d0b09273fdf485a6ec37026d75360a11a85d5f3a83ab8c2"
+    },
+    {
+      "bytes": 4970,
+      "path": "fidelity-table-borders/tables-imported-1.docx",
+      "producer": "test/table_border_fidelity_test.dart",
+      "sha256": "67cbb4a51a15d67e6fbd5fe40494b19bd365a5537440b85988f0154c26ea7dc2"
+    },
+    {
+      "bytes": 5009,
+      "path": "fidelity-table-borders/tables-imported-2.docx",
+      "producer": "test/table_border_fidelity_test.dart",
+      "sha256": "fcd0dc262f89b478c84b0da47c00379975f74c5d07acf85bdfe6046ca57f55a7"
+    },
+    {
+      "bytes": 5009,
+      "path": "fidelity-table-borders/tables-imported-3.docx",
+      "producer": "test/table_border_fidelity_test.dart",
+      "sha256": "9c451968b3db9d9e05a3eb2b4a2aa5ab7468276d20c21fcc1a6e57ae75ea23d0"
+    },
+    {
+      "bytes": 4434,
+      "path": "fidelity-table-grid/edited-1.docx",
+      "producer": "test/word_table_grid_addressing_test.dart",
+      "sha256": "ab09dee94bdbcd2d930525aa1569b01010c4734f91c3d708dd42ddf3d760bae9"
+    },
+    {
+      "bytes": 4477,
+      "path": "fidelity-table-grid/edited-2.docx",
+      "producer": "test/word_table_grid_addressing_test.dart",
+      "sha256": "da60d3f506adf9a041b768f9f09c8430057ee10dfb1d6f8bb9e0b38c486da477"
+    },
+    {
+      "bytes": 4476,
+      "path": "fidelity-table-grid/edited-3.docx",
+      "producer": "test/word_table_grid_addressing_test.dart",
+      "sha256": "31f3e2b2bd690a16d82cdbc7560a593446d81e41dcdfc2a6092a3cdf7661968a"
+    },
+    {
+      "bytes": 4230,
+      "path": "fidelity-table-grid/omitted-1.docx",
+      "producer": "test/word_table_grid_addressing_test.dart",
+      "sha256": "acac191f33ffb223d47d7f7ab0c26857cdf79c4b7d05efa7fcf4bbe84d863114"
+    },
+    {
+      "bytes": 4264,
+      "path": "fidelity-table-grid/omitted-2.docx",
+      "producer": "test/word_table_grid_addressing_test.dart",
+      "sha256": "b6dcb4bdb0f9ece8b457fe5e8c030838c174747d71c6b199760c2ac4020479ef"
+    },
+    {
+      "bytes": 4264,
+      "path": "fidelity-table-grid/omitted-3.docx",
+      "producer": "test/word_table_grid_addressing_test.dart",
+      "sha256": "e2b111da69fd2f13c666f317b9a4504bb4389f19d3a4ddea3947320982a0c054"
+    },
+    {
+      "bytes": 4376,
+      "path": "fidelity-table-grid/omitted-edited-1.docx",
+      "producer": "test/word_table_grid_addressing_test.dart",
+      "sha256": "d7ec69aab4ad6a8cebb6d810c080ab589ad3cd0bd986be68f5a09ad381eb65bb"
+    },
+    {
+      "bytes": 4417,
+      "path": "fidelity-table-grid/omitted-edited-2.docx",
+      "producer": "test/word_table_grid_addressing_test.dart",
+      "sha256": "3b129c4fe0496da14de3636fc50fca93618e7f7cf6685fc200f2319f1ea355e3"
+    },
+    {
+      "bytes": 4417,
+      "path": "fidelity-table-grid/omitted-edited-3.docx",
+      "producer": "test/word_table_grid_addressing_test.dart",
+      "sha256": "f574bea604a7bccdeab3f0d9d8a8ae70ed1c60926daefeda74dd0f7ef5c77981"
+    },
+    {
+      "bytes": 1263,
+      "path": "fidelity-table-grid/omitted-edited-expected.docx",
+      "producer": "test/word_table_grid_addressing_test.dart",
+      "sha256": "f56030b12e3b91fde86de919e9cb9ec38eb2ddadd2c00bc0aea443c1f05b6507"
+    },
+    {
+      "bytes": 1116,
+      "path": "fidelity-table-grid/omitted-source.docx",
+      "producer": "test/word_table_grid_addressing_test.dart",
+      "sha256": "708b3d662d51f21ea30441df04cba4cdcb2fcad89d2da84d5dedb82a08fb0853"
+    },
+    {
+      "bytes": 1200,
+      "path": "fidelity-table-grid/source.docx",
+      "producer": "test/word_table_grid_addressing_test.dart",
+      "sha256": "8f44b7cbf776d0378c5964c45708d745dcb01eed3679a025bf7225bba297f107"
+    },
+    {
+      "bytes": 7280,
+      "path": "fidelity-word-compatibility/compatibility-edited-1.docx",
+      "producer": "test/word_compatibility_fidelity_test.dart",
+      "sha256": "fc50a0463e6094df747831eac4cb04b3b811141587cad3989fc4404bfe6ec0bc"
+    },
+    {
+      "bytes": 7322,
+      "path": "fidelity-word-compatibility/compatibility-edited-2.docx",
+      "producer": "test/word_compatibility_fidelity_test.dart",
+      "sha256": "44f822c77abc0958b8a2e0151a6c06bd9968cacf8e7b8589d5ed7b2340aab0a9"
+    },
+    {
+      "bytes": 7323,
+      "path": "fidelity-word-compatibility/compatibility-edited-3.docx",
+      "producer": "test/word_compatibility_fidelity_test.dart",
+      "sha256": "93da0753f60b33df58ac136fcac85ac92786301c6342dcbe51779f789bf4d613"
+    },
+    {
+      "bytes": 7346,
+      "path": "fidelity-word-compatibility/compatibility-imported-1.docx",
+      "producer": "test/word_compatibility_fidelity_test.dart",
+      "sha256": "f438a1c68efef951d96eba798e0c25cd197bd762edd4907d468b03164b3c27e5"
+    },
+    {
+      "bytes": 7388,
+      "path": "fidelity-word-compatibility/compatibility-imported-2.docx",
+      "producer": "test/word_compatibility_fidelity_test.dart",
+      "sha256": "a30a80ae92fc564cd99964fdf9c5876b7b8cca89afadc69cbd5b0b6d7408c330"
+    },
+    {
+      "bytes": 7388,
+      "path": "fidelity-word-compatibility/compatibility-imported-3.docx",
+      "producer": "test/word_compatibility_fidelity_test.dart",
+      "sha256": "9bb3e035b8e8fcdea2865b006c12ad50c1d88b3688a2ddaacbad1ad6c1429574"
+    },
+    {
+      "bytes": 6246,
+      "path": "fidelity-word-edits/breaks-1.docx",
+      "producer": "test/word_referenced_styles_and_breaks_test.dart",
+      "sha256": "9da5b7a788a54688097fbec707fd0468f9ee8a9e2bd69523fac38824c0630899"
+    },
+    {
+      "bytes": 6310,
+      "path": "fidelity-word-edits/breaks-2.docx",
+      "producer": "test/word_referenced_styles_and_breaks_test.dart",
+      "sha256": "30bc38cbbc3491d1f30c397e619ba59afa5e8c7ef5d4ab6686c5dee4cf68ea5b"
+    },
+    {
+      "bytes": 6310,
+      "path": "fidelity-word-edits/breaks-3.docx",
+      "producer": "test/word_referenced_styles_and_breaks_test.dart",
+      "sha256": "f9d03043af90a60744f4c2121ad7a1ac71bf5231eafdbf597501eeea7f01e4b2"
+    },
+    {
+      "bytes": 5899,
+      "path": "fidelity-word-edits/styles-1.docx",
+      "producer": "test/word_referenced_styles_and_breaks_test.dart",
+      "sha256": "c908d13fd402077050756d0b0704bdca47868449f42d0028c766a57b30b5d040"
+    },
+    {
+      "bytes": 5963,
+      "path": "fidelity-word-edits/styles-2.docx",
+      "producer": "test/word_referenced_styles_and_breaks_test.dart",
+      "sha256": "6875fe1599b5357c3fb3d7e9155c0d8ce3c75311f13e12acfa95bfdf8acaf304"
+    },
+    {
+      "bytes": 5964,
+      "path": "fidelity-word-edits/styles-3.docx",
+      "producer": "test/word_referenced_styles_and_breaks_test.dart",
+      "sha256": "41fc91dafab3a0a0b275dcd7b4b70463ff2840526bee726f9380a356c028611b"
+    },
+    {
+      "bytes": 8216,
+      "path": "fidelity/edited-1.docx",
+      "producer": "tool/fidelity/scenarios.dart",
+      "sha256": "a586398a2eee5d79a0cbc5ac9c06f06db0afc39b1571c45c3006e3310c0a680b"
+    },
+    {
+      "bytes": 8251,
+      "path": "fidelity/edited-2.docx",
+      "producer": "tool/fidelity/scenarios.dart",
+      "sha256": "f8e971895f5db6a36aa82fb96f8ab573f513070e3464a11f66725e23b10eee75"
+    },
+    {
+      "bytes": 8251,
+      "path": "fidelity/edited-3.docx",
+      "producer": "tool/fidelity/scenarios.dart",
+      "sha256": "41ea6e1e9e33575734fc34b6ee2e35a374ba289d6f6dfd068aada71e2b855b1f"
+    },
+    {
+      "bytes": 3211,
+      "path": "fidelity/sheet-edited-1.xlsx",
+      "producer": "tool/fidelity/cross_format.dart",
+      "sha256": "608bc6a56048ec65e839841c449d681a7ec6db08818eab6944b778987386c1dd"
+    },
+    {
+      "bytes": 3219,
+      "path": "fidelity/sheet-edited-2.xlsx",
+      "producer": "tool/fidelity/cross_format.dart",
+      "sha256": "cf1631bff8ae2210a06387c10e0fbb9d7439c0162bca8f2d83c1fcaa136927a4"
+    },
+    {
+      "bytes": 3219,
+      "path": "fidelity/sheet-edited-3.xlsx",
+      "producer": "tool/fidelity/cross_format.dart",
+      "sha256": "0d7325f5b6727e79776b4943d51dea60ab9e07f855a6fe864b423cdd674f70c2"
+    },
+    {
+      "bytes": 3211,
+      "path": "fidelity/sheet-imported-1.xlsx",
+      "producer": "tool/fidelity/cross_format.dart",
+      "sha256": "f612e14c7449de85118c46d1a87409ee5ae8f78fae8331181b445ffdb659efe3"
+    },
+    {
+      "bytes": 3217,
+      "path": "fidelity/sheet-imported-2.xlsx",
+      "producer": "tool/fidelity/cross_format.dart",
+      "sha256": "61a32d6f6b60f31b6c6448ae1e1b0d417dd2439c2aa1b04907a1a6630ee23848"
+    },
+    {
+      "bytes": 3218,
+      "path": "fidelity/sheet-imported-3.xlsx",
+      "producer": "tool/fidelity/cross_format.dart",
+      "sha256": "fc999a4abe044ffaa865db71e5bfa4bc1d80f9f648433b51105a90bc30813004"
+    },
+    {
+      "bytes": 6139,
+      "path": "fidelity/slide-edited-1.pptx",
+      "producer": "tool/fidelity/cross_format.dart",
+      "sha256": "6c4ab25f289627efcf180986693d41b2d248e83f13d388e939d557b345cb1a57"
+    },
+    {
+      "bytes": 6145,
+      "path": "fidelity/slide-edited-2.pptx",
+      "producer": "tool/fidelity/cross_format.dart",
+      "sha256": "c519eb3478fae04e0657a3f45b28e226dc9d2a9691a22653df661d876444df6c"
+    },
+    {
+      "bytes": 6146,
+      "path": "fidelity/slide-edited-3.pptx",
+      "producer": "tool/fidelity/cross_format.dart",
+      "sha256": "ea6ad2c932d1eacb0529c274d20a1a1845b47478093e8ae4b5d48f5459fbd97d"
+    },
+    {
+      "bytes": 6138,
+      "path": "fidelity/slide-imported-1.pptx",
+      "producer": "tool/fidelity/cross_format.dart",
+      "sha256": "41b66be620182610438bf8361738a26f747ba47a47d3c88e2ae9fbede621e13c"
+    },
+    {
+      "bytes": 6145,
+      "path": "fidelity/slide-imported-2.pptx",
+      "producer": "tool/fidelity/cross_format.dart",
+      "sha256": "7ff5749c033779abf086ef54d8d8ad023626d61c7461a9e26517a922088ed473"
+    },
+    {
+      "bytes": 6145,
+      "path": "fidelity/slide-imported-3.pptx",
+      "producer": "tool/fidelity/cross_format.dart",
+      "sha256": "e976a113b909b1ba65db078a1498bd8e1c2fbb2d692a85a7a7ba227b7003965b"
+    },
+    {
+      "bytes": 8208,
+      "path": "fidelity/unchanged-1.docx",
+      "producer": "tool/fidelity/scenarios.dart",
+      "sha256": "1748922ecaa286092d19d61eb263e496125f2aaf584157cdbff53d4a6ddd8e57"
+    },
+    {
+      "bytes": 8243,
+      "path": "fidelity/unchanged-2.docx",
+      "producer": "tool/fidelity/scenarios.dart",
+      "sha256": "126dbd90fc2c4d5f7499f9c79729bf05581d402f35f5c38a43e28735e9004038"
+    },
+    {
+      "bytes": 8242,
+      "path": "fidelity/unchanged-3.docx",
+      "producer": "tool/fidelity/scenarios.dart",
+      "sha256": "940103c33fd2836181c5657d0b33ae8a9f2814a69413e5757991cf00ff14c4b9"
+    }
+  ],
+  "manifest_sha256": "afd6ba8068bae37959cc365b15648a1901f51538c3ffeea3236e822a5d203fdc",
+  "observed_files": 296,
+  "ok": true,
+  "package": "quds_office_engine",
+  "standalone_files": 29,
+  "three_cycle_series": 89,
+  "verified_files": 296,
+  "version": 1
+}

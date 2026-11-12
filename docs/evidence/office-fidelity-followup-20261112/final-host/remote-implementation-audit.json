@@ -1,0 +1,50 @@
+{
+  "recorded_utc": "2026-11-12T13:53:36.531Z",
+  "source": {
+    "repository": "CrispStrobe/quds_office_suite",
+    "implementation_commit": "7641d9cfa167987216134ebfc4772918cc945d97",
+    "pr": 2,
+    "base": "main",
+    "workflows": [
+      {
+        "id": 43229347015,
+        "name": "CI",
+        "status": "queued",
+        "conclusion": null,
+        "run_number": 15,
+        "jobs_url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/actions/runs/43229347015/jobs",
+        "logs_url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/actions/runs/43229347015/logs",
+        "workflow_id": 415056415
+      },
+      {
+        "id": 43229345887,
+        "name": "Office fidelity oracles",
+        "status": "queued",
+        "conclusion": null,
+        "run_number": 65,
+        "jobs_url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/actions/runs/43229345887/jobs",
+        "logs_url": "https://api.github.com/repos/CrispStrobe/quds_office_suite/actions/runs/43229345887/logs",
+        "workflow_id": 414960041
+      }
+    ]
+  },
+  "host": {
+    "repository": "CrispStrobe/CrispCloud",
+    "implementation_commit": "b7edb919def85ef78d6d34ba6eb7c74d61e0bd4d",
+    "pr": 79,
+    "base": "feature/office-fidelity-gap-closure-20261112",
+    "workflows": [
+      {
+        "id": 43229916550,
+        "name": "Office fidelity integration",
+        "status": "queued",
+        "conclusion": null,
+        "run_number": 116,
+        "jobs_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/actions/runs/43229916550/jobs",
+        "logs_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/actions/runs/43229916550/logs",
+        "workflow_id": 414961483
+      }
+    ]
+  },
+  "note": "These are remote statuses observed for the implementation commits. Evidence-only commits follow; their source, test, gate and managed-file bytes remain unchanged."
+}
