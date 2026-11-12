@@ -169,6 +169,17 @@ class ReleaseEvidenceTests(unittest.TestCase):
     def test_reviewed_false_apple_declaration_passes(self):
         evidence.validate(self.root)
 
+    def test_pending_questionnaire_does_not_prevent_collecting_source_facts(self):
+        self.policy["documentation"] = {
+            "status": "unreviewed", "reference": "KeePass source reviewed; questionnaire pending",
+            "compliance_code": None,
+        }
+        self.refresh_policy()
+        with patch.object(evidence, "git", side_effect=self.git_fixture):
+            result = evidence.collect(self.root, "source", [], None, False)
+        self.assertTrue(result["apple_source_declarations_match_policy"])
+        self.assertFalse(result["apple_distribution_verified"])
+
     def test_false_apple_declaration_without_structured_evidence_fails(self):
         # Historical or negated prose must never authorize a release.
         self.write("docs/export-compliance.md", "Rejected example: availableOnFrenchStore=false "

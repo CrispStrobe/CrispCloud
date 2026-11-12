@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "review_date": "2026-11-11",
+  "review_date": "2026-11-12",
   "repository": "https://github.com/CrispStrobe/CrispCloud",
   "scope": "Source-level inventory of the finished application, including portable helpers. Runtime reachability and platform behavior are described in crypto-audit.md. This inventory is not an export classification or a binary scan.",
   "required_providers": [
@@ -23,7 +23,8 @@
     "koni_zip",
     "koni_sevenz",
     "koni_rar",
-    "flutter_secure_storage"
+    "flutter_secure_storage",
+    "kpasslib"
   ],
   "features": [
     {
@@ -182,6 +183,33 @@
       "note": "Reachable through the portable archive viewer and workspace, including mobile. Exact source paths, archive hashes and MIT licenses are recorded in crypto-dependencies.md. No older RAR1.x/2.x cipher was found in the supported encrypted paths. Published availability and international-standard recognition are separate claims; this finding is not an Apple/BIS classification or automatic CCATS conclusion. Existing format compatibility is retained."
     },
     {
+      "name": "KeePass KDBX database viewing and editing",
+      "algorithms": [
+        "AES-256-CBC with PKCS#7 padding or ChaCha20 outer database encryption",
+        "KeePass AES-KDF or Argon2d/Argon2id versions 0x10/0x13 through PointyCastle",
+        "SHA-256 password/key-file composition and SHA-256/SHA-512 format key derivation",
+        "KDBX4 HMAC-SHA-256 header and block authentication, including the terminal block",
+        "KDBX3 encrypted start bytes, SHA-256 block hashes and encrypted header hash",
+        "Salsa20 or ChaCha20 inner protected values",
+        "Random.secure fresh seeds, KDF salts, stream keys and IVs on save"
+      ],
+      "implementations": [
+        "Vendored KPassLib 1.1.2 at upstream 81d51d9f3575f72136441ea5a271f6748e3ca77c with recorded local format/preservation patches",
+        "Default pure-Dart CryptoDart engine; Argon2 adapter uses already-resolved PointyCastle 4.0.0",
+        "Existing crypto 3.0.7 hash/HMAC implementations; no new native KPassLib binary"
+      ],
+      "sources": [
+        "lib/services/keepass_service.dart",
+        "lib/widgets/keepass_editor_dialog.dart",
+        "packages/kpasslib/UPSTREAM.md",
+        "docs/keepass.md",
+        "https://github.com/vladimir-skorokhodov/kpasslib/tree/81d51d9f3575f72136441ea5a271f6748e3ca77c",
+        "https://keepass.info/help/kb/kdbx.html",
+        "https://keepass.info/help/base/security.html"
+      ],
+      "note": "New confidentiality workflow for existing KDBX 3.0/3.1/4.0/4.1 databases on native and web. Preserves existing cipher/KDF costs and untouched XML/history/attachments, with bounded input/KDF work. Source-bound saves and lock checkpoints contain ciphertext only; no persistent master credentials or plaintext recovery copies. App does not load upstream FFI engine or expose runtime cipher plugins. This is not Apple-OS-only cryptography. No claim that every algorithm or construction is internationally standardized, no new legal classification, and no post-feature Apple questionnaire result; documentation review remains pending."
+    },
+    {
       "name": "Documents, backups, and transitive crypto",
       "algorithms": [
         "PDF password protection (legacy RC4 and AES variants)",
@@ -319,6 +347,69 @@
     "packages/crisp_storage/licensing/rust_dependencies.json",
     "packages/crisp_storage/licensing/upstream/flutter_rust_bridge-2.11.1-LICENSE",
     "packages/crisp_storage/tool/check_rust_licenses.py",
-    "packages/crisp_storage/tool/run_package_tests.py"
+    "packages/crisp_storage/tool/run_package_tests.py",
+    "lib/services/keepass_service.dart",
+    "lib/widgets/keepass_editor_dialog.dart",
+    "lib/l10n/keepass_strings.dart",
+    "lib/widgets/file_editor_dialog.dart",
+    "lib/widgets/preview_pane.dart",
+    "lib/services/captured_file_target.dart",
+    "lib/services/save_coordinator.dart",
+    "lib/services/file_bytes_loader.dart",
+    "lib/services/pdf_file_store.dart",
+    "lib/models/storage_reference.dart",
+    "packages/kpasslib/pubspec.yaml",
+    "packages/kpasslib/UPSTREAM.md",
+    "packages/kpasslib/LICENSE",
+    "packages/kpasslib/LICENSE.kdbxweb",
+    "packages/crisp_storage/hook/build.dart",
+    "packages/crisp_storage/lib/src/rust_library.dart",
+    "packages/kpasslib/lib/kpasslib.dart",
+    "packages/kpasslib/lib/src/crypto/aes.dart",
+    "packages/kpasslib/lib/src/crypto/argon2.dart",
+    "packages/kpasslib/lib/src/crypto/blake2b.dart",
+    "packages/kpasslib/lib/src/crypto/chacha20.dart",
+    "packages/kpasslib/lib/src/crypto/crypto_engine.dart",
+    "packages/kpasslib/lib/src/crypto/crypto_utils.dart",
+    "packages/kpasslib/lib/src/crypto/dart/aes256_dart.dart",
+    "packages/kpasslib/lib/src/crypto/dart/argon2_dart.dart",
+    "packages/kpasslib/lib/src/crypto/dart/chacha20_dart.dart",
+    "packages/kpasslib/lib/src/crypto/dart/crypto_dart.dart",
+    "packages/kpasslib/lib/src/crypto/dart/salsa20_dart.dart",
+    "packages/kpasslib/lib/src/crypto/ffi/aes256_ffi.dart",
+    "packages/kpasslib/lib/src/crypto/ffi/argon2_ffi.dart",
+    "packages/kpasslib/lib/src/crypto/ffi/chacha20_ffi.dart",
+    "packages/kpasslib/lib/src/crypto/ffi/crypto_ffi.dart",
+    "packages/kpasslib/lib/src/crypto/ffi/crypto_ffi_stub.dart",
+    "packages/kpasslib/lib/src/crypto/ffi/salsa20_ffi.dart",
+    "packages/kpasslib/lib/src/crypto/hashed_block_transform.dart",
+    "packages/kpasslib/lib/src/crypto/hmac_block_transform.dart",
+    "packages/kpasslib/lib/src/crypto/key_encryptor_aes.dart",
+    "packages/kpasslib/lib/src/crypto/key_encryptor_kdf.dart",
+    "packages/kpasslib/lib/src/crypto/key_encryptor_worker_io.dart",
+    "packages/kpasslib/lib/src/crypto/key_encryptor_worker_web.dart",
+    "packages/kpasslib/lib/src/crypto/protect_salt_generator.dart",
+    "packages/kpasslib/lib/src/crypto/protected_value.dart",
+    "packages/kpasslib/lib/src/crypto/salsa20.dart",
+    "packages/kpasslib/lib/src/crypto/stream_cipher.dart",
+    "packages/kpasslib/lib/src/kdbx/constants.dart",
+    "packages/kpasslib/lib/src/kdbx/kdbx_autotype.dart",
+    "packages/kpasslib/lib/src/kdbx/kdbx_binaries.dart",
+    "packages/kpasslib/lib/src/kdbx/kdbx_credentials.dart",
+    "packages/kpasslib/lib/src/kdbx/kdbx_custom_data.dart",
+    "packages/kpasslib/lib/src/kdbx/kdbx_database.dart",
+    "packages/kpasslib/lib/src/kdbx/kdbx_entry.dart",
+    "packages/kpasslib/lib/src/kdbx/kdbx_error.dart",
+    "packages/kpasslib/lib/src/kdbx/kdbx_group.dart",
+    "packages/kpasslib/lib/src/kdbx/kdbx_header.dart",
+    "packages/kpasslib/lib/src/kdbx/kdbx_item.dart",
+    "packages/kpasslib/lib/src/kdbx/kdbx_meta.dart",
+    "packages/kpasslib/lib/src/kdbx/kdbx_raw_document.dart",
+    "packages/kpasslib/lib/src/kdbx/kdbx_time.dart",
+    "packages/kpasslib/lib/src/kdbx/kdbx_uuid.dart",
+    "packages/kpasslib/lib/src/utils/byte_utils.dart",
+    "packages/kpasslib/lib/src/utils/merge_utils.dart",
+    "packages/kpasslib/lib/src/utils/parameters_map.dart",
+    "packages/kpasslib/lib/src/utils/xml_utils.dart"
   ]
 }
