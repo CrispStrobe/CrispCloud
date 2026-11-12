@@ -1064,6 +1064,15 @@ combined tree. Source bindings after restoring the test configuration:
 }
 ```
 
+
+Current extracted-book integration: `1.2.3` resolves the facade and its three internal packages from the same immutable Git checkout, independently verifies all tracked source bytes and records them in `docs/ebook-source-manifest.json`. The compressed browser converter and memory-only WASI worker are now present and enabled for bounded supported Kindle export; the earlier pending-runtime note describes the previous checkpoint. Native/Wasm parity, malformed-input and budget controls pass. The shim retains its published random fallback, which is not claimed as a secure RNG. Local platform speech does not introduce a remote text destination. Existing classification and distribution policy fields are unchanged.
+
+
+The final sibling audit also retains the independently authored parser-53a7f0d host receipts under `docs/evidence/legacy-doc-parser-20261112/parser-53a7f0d/`. These preserve their original source attribution. The current consumer remains at canonical parser f689b4c (a descendant with CI-only fixes), and its exact source inventory remains independently verified. No runtime parser file or dependency pin is rolled back by this evidence merge.
+
+
+Historical continuation record (its original source pins and digests are retained; current source attribution remains in the manifests):
+
 ### Parser 53a7f0d integration source binding
 
 The exact parser mirror now follows `53a7f0df113f0b88967f7fecd492652ad5c730d5` through Quds `09f5ec4b8eba290ff4d65678179854fb6ff6a468`. Ten additional parser implementation files bring the reviewed inventory to 371 paths. They implement bounded media previews, fixed number formats, list/table operations, positioning, image appearance and row history. The runtime dependency remains `archive`; these changes add no cryptographic implementation, native provider or network operation.
@@ -1101,3 +1110,6 @@ all non-digest policy decisions remain unchanged. No release or filing is perfor
   "reviewed_source_sha256": "771c35ba779b87b1376fd15dafd38d0f40df8273398743c80e3400305c8ece76"
 }
 ```
+
+
+The 1.2.4 source refresh binds the canonical DOC parser, its executable-mode-aware mirror guard, bounded package readers, attached-content Word inspection and the minimal Internxt trash-name backport. Source tests and local HTTP endpoint controls verify these contracts; no added cryptographic primitive, credential persistence or account destination is introduced. Source fingerprints are refreshed without changing the existing classification or distribution-policy values.

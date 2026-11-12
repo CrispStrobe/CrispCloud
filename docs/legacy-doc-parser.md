@@ -154,19 +154,11 @@ scope are recorded in the conversion guide and the package pull request.
 These results do not certify arbitrary Word pagination, full OOXML schema
 conformance, Windows Word behavior or a complete Flutter browser build.
 
-## Fidelity continuation
 
-The current parser work adds independently checked native row origins,
-conditional table cells and text, editable bounded OfficeArt geometry,
-compound EMF/WMF previews, note layout, linked-textbox reflow checks, supported
-list continuation and revision history. Ink payloads are retained as bounded
-inert evidence; nonempty ink-stroke rendering is not claimed.
+The final sibling audit also retains the independently authored parser-53a7f0d host receipts under `docs/evidence/legacy-doc-parser-20261112/parser-53a7f0d/`. These preserve their original source attribution. The current consumer remains at canonical parser f689b4c (a descendant with CI-only fixes), and its exact source inventory remains independently verified. No runtime parser file or dependency pin is rolled back by this evidence merge.
 
-The upstream [fidelity status](https://github.com/CrispStrobe/legacy-doc-parser/blob/feature/structured-doc-preservation-20261112/doc/fidelity-status.md)
-separates supported contracts from the remaining gaps in all eight feature
-families. Its native reports distinguish producer round-trip changes, parser
-changes, structural differences, renderer coordinates and raster equality.
-Successful measurement and equal page counts do not establish exact fidelity.
+
+Historical continuation record (its original source pins and digests are retained; current source attribution remains in the manifests):
 
 ### Saved integration checkpoint: parser b295a3c
 

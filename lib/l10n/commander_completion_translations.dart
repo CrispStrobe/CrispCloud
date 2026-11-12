@@ -1,5 +1,15 @@
 // Additional Commander workflow translations: de, fr, es, pt, zh, ja, ko, ar.
 const commanderCompletionTranslations = <String, List<String>>{
+  "Container details": [
+    "Containerdetails",
+    "Détails du conteneur",
+    "Detalles del contenedor",
+    "Detalhes do contêiner",
+    "容器详情",
+    "コンテナの詳細",
+    "컨테이너 세부 정보",
+    "تفاصيل الحاوية",
+  ],
   "Match the focused item": [
     "Fokussiertes Element abgleichen",
     "Correspondre à l’élément ciblé",

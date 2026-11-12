@@ -103,10 +103,12 @@ Uint8List inlinePictureWordFixture({
   bool special = true,
   int location = 16,
   List<int> characterProperties = const [],
+  Map<int, List<int>> extraTablePairs = const {},
 }) {
   final payload = picture ?? inlinePictureData();
   return StructuredWordFixture(
     pieces: const [WordFixturePiece('A\x01B\r')],
+    extraTablePairs: extraTablePairs,
     characterRuns: [
       const WordFixtureFkpRun(8192, 8193),
       WordFixtureFkpRun(
@@ -199,11 +201,13 @@ Uint8List floatingPictureWordFixture({
   int shapeFlags = 0x0a00,
   int? anchorFlags,
   (int, int, int, int) anchorBounds = (120, 240, 1560, 960),
+  Map<int, List<int>> extraTablePairs = const {},
 }) {
   final blip = pictureBlip();
   return StructuredWordFixture(
     pieces: const [WordFixturePiece('A\x08B\r')],
     extraTablePairs: {
+      ...extraTablePairs,
       40: drawingAnchor(
         flags: anchorFlags,
         left: anchorBounds.$1,
@@ -249,6 +253,7 @@ Uint8List oleWordFixture({
   bool fieldTable = true,
   List<int> characterProperties = const [],
   Uint8List? oleRecord,
+  Map<int, List<int>> extraTablePairs = const {},
 }) {
   final original = StructuredWordFixture(
     pieces: const [WordFixturePiece('\x13EMBED\x14X\x15\r')],
@@ -267,6 +272,7 @@ Uint8List oleWordFixture({
       const WordFixtureFkpRun(8199, 8202),
     ],
     extraTablePairs: {
+      ...extraTablePairs,
       if (fieldTable)
         16: [
           ...wordU32(0),

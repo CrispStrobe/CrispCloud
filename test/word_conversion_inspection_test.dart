@@ -11,7 +11,10 @@ const _strictW = 'http://purl.oclc.org/ooxml/wordprocessingml/main';
 const _rels = 'http://schemas.openxmlformats.org/package/2006/relationships';
 const _office =
     'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+const _strictOffice = 'http://purl.oclc.org/ooxml/officeDocument/relationships';
 const _types = 'http://schemas.openxmlformats.org/package/2006/content-types';
+const _wordPartType =
+    'application/vnd.openxmlformats-officedocument.wordprocessingml';
 const _mainType =
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml';
 const _macroType = 'application/vnd.ms-word.document.macroEnabled.main+xml';
@@ -23,6 +26,7 @@ String _relationships(String children) =>
 
 Map<String, Uint8List> _parts({
   String mainType = _mainType,
+  String mainPart = 'word/document.xml',
   String namespace = _w,
   String? body,
   Map<String, String> overrides = const {},
@@ -33,21 +37,84 @@ Map<String, Uint8List> _parts({
     '<Default Extension="xml" ContentType="application/xml"/>'
     '<Default Extension="png" ContentType="image/png"/>'
     '<Default Extension="bin" ContentType="application/octet-stream"/>'
-    '<Override PartName="/word/document.xml" ContentType="$mainType"/>'
+    '<Override PartName="/$mainPart" ContentType="$mainType"/>'
     '${overrides.entries.map((e) => '<Override PartName="/${e.key}" ContentType="${e.value}"/>').join()}'
     '</Types>',
   ),
   '_rels/.rels': _bytes(
     _relationships(
-      '<Relationship Id="main" Type="$_office/officeDocument" Target="word/document.xml"/>',
+      '<Relationship Id="main" Type="$_office/officeDocument" Target="$mainPart"/>',
     ),
   ),
-  'word/document.xml': _bytes(
+  mainPart: _bytes(
     '<w:document xmlns:w="$namespace" xmlns:r="$_office">'
     '<w:body>${body ?? '<w:p><w:r><w:t>Example</w:t></w:r></w:p><w:sectPr/>'}</w:body>'
     '</w:document>',
   ),
 };
+
+const _allSourceFeatures = LegacyWordSourceInspection(
+  hasObjects: true,
+  hasHeaders: true,
+  hasFootnotes: true,
+  hasEndnotes: true,
+  hasComments: true,
+);
+const _allFeatureLosses = [
+  WordConversionLoss.objectsMissing,
+  WordConversionLoss.headersMissing,
+  WordConversionLoss.footnotesMissing,
+  WordConversionLoss.endnotesMissing,
+  WordConversionLoss.commentsMissing,
+];
+const _storyKinds = ['header', 'footer', 'footnotes', 'endnotes', 'comments'];
+
+// Deliberately non-default main/relationship names and relative targets.
+Map<String, Uint8List> _reachableParts({
+  String namespace = _w,
+  String relationshipNamespace = _office,
+  String mode = '',
+  String? relationshipKind,
+}) {
+  final parts = _parts(
+    mainPart: 'content/body/main.xml',
+    namespace: namespace,
+    overrides: {
+      for (final kind in _storyKinds)
+        'content/shared/$kind.xml': '$_wordPartType.$kind+xml',
+      'content/embeddings/object.bin':
+          'application/vnd.openxmlformats-officedocument.oleObject',
+    },
+  );
+  parts['_rels/.rels'] = _bytes(
+    _relationships(
+      '<Relationship Id="main" Type="$relationshipNamespace/officeDocument" Target="content/body/main.xml"/>',
+    ),
+  );
+  parts['content/body/_rels/main.xml.rels'] = _bytes(
+    _relationships(
+      [
+        for (final kind in _storyKinds)
+          '<Relationship Id="$kind" Type="$relationshipNamespace/${relationshipKind ?? kind}" Target="../shared/$kind.xml" $mode/>',
+        '<Relationship Id="object" Type="$relationshipNamespace/${relationshipKind ?? 'oleObject'}" Target="../embeddings/object.bin" $mode/>',
+      ].join(),
+    ),
+  );
+  for (final entry in {
+    'header': '<w:hdr xmlns:w="$namespace"><w:p/></w:hdr>',
+    'footer': '<w:ftr xmlns:w="$namespace"><w:p/></w:ftr>',
+    'footnotes':
+        '<w:footnotes xmlns:w="$namespace"><w:footnote w:id="1"><w:p/></w:footnote></w:footnotes>',
+    'endnotes':
+        '<w:endnotes xmlns:w="$namespace"><w:endnote w:id="1"><w:p/></w:endnote></w:endnotes>',
+    'comments':
+        '<w:comments xmlns:w="$namespace"><w:comment w:id="1"><w:p/></w:comment></w:comments>',
+  }.entries) {
+    parts['content/shared/${entry.key}.xml'] = _bytes(entry.value);
+  }
+  parts['content/embeddings/object.bin'] = Uint8List.fromList([1, 2]);
+  return parts;
+}
 
 Uint8List _zip(Map<String, Uint8List> parts) {
   final archive = Archive();
@@ -513,6 +580,275 @@ void main() {
     });
   });
 
+  group('reachable feature evidence', () {
+    test(
+      'orphan parts retain inventory counts without hiding losses',
+      () async {
+        final parts = _reachableParts()
+          ..remove('content/body/_rels/main.xml.rels');
+        final result = await _inspect(parts, source: _allSourceFeatures);
+        for (final key in [
+          'headers',
+          'footers',
+          'footnotes',
+          'endnotes',
+          'comments',
+          'objects',
+        ]) {
+          expect(result.counts[key], 1, reason: key);
+        }
+        expect(result.losses, unorderedEquals(_allFeatureLosses));
+      },
+    );
+
+    test(
+      'resolves both relationship namespaces from the actual main part',
+      () async {
+        for (final (namespace, relationships) in [
+          (_w, _office),
+          (_strictW, _strictOffice),
+        ]) {
+          final result = await _inspect(
+            _reachableParts(
+              namespace: namespace,
+              relationshipNamespace: relationships,
+              mode: 'TargetMode="Internal"',
+            ),
+            source: _allSourceFeatures,
+          );
+          expect(result.losses, isEmpty, reason: relationships);
+        }
+      },
+    );
+
+    test(
+      'external and lookalike relationships cannot prove preservation',
+      () async {
+        for (final parts in [
+          _reachableParts(mode: 'TargetMode="External"'),
+          _reachableParts(relationshipKind: 'customXml'),
+          _reachableParts(relationshipKind: 'hyperlink'),
+        ]) {
+          final result = await _inspect(parts, source: _allSourceFeatures);
+          expect(result.losses, unorderedEquals(_allFeatureLosses));
+        }
+        final lookalike = _reachableParts();
+        const rels = 'content/body/_rels/main.xml.rels';
+        lookalike[rels] = _bytes(
+          utf8
+              .decode(lookalike[rels]!)
+              .replaceAll(_office, 'https://example.invalid'),
+        );
+        expect(
+          (await _inspect(lookalike, source: _allSourceFeatures)).losses,
+          unorderedEquals(_allFeatureLosses),
+        );
+      },
+    );
+
+    test('glossary-only stories do not substitute for document stories', () async {
+      final parts = _reachableParts();
+      parts['content/body/_rels/glossary.xml.rels'] =
+          parts['content/body/_rels/main.xml.rels']!;
+      parts['content/body/glossary.xml'] = _bytes(
+        '<w:glossaryDocument xmlns:w="$_w"><w:docParts/></w:glossaryDocument>',
+      );
+      parts['content/body/_rels/main.xml.rels'] = _bytes(
+        _relationships(
+          '<Relationship Id="glossary" Type="$_office/glossaryDocument" Target="glossary.xml"/>',
+        ),
+      );
+      parts['[Content_Types].xml'] = _bytes(
+        utf8
+            .decode(parts['[Content_Types].xml']!)
+            .replaceFirst(
+              '</Types>',
+              '<Override PartName="/content/body/glossary.xml" ContentType="$_wordPartType.document.glossary+xml"/></Types>',
+            ),
+      );
+      expect(
+        (await _inspect(parts, source: _allSourceFeatures)).losses,
+        unorderedEquals(_allFeatureLosses),
+      );
+    });
+
+    test('objects must belong to main or an attached document story', () async {
+      for (final kind in _storyKinds) {
+        for (final objectKind in ['oleObject', 'package']) {
+          final parts = _reachableParts();
+          parts['content/body/_rels/main.xml.rels'] = _bytes(
+            _relationships(
+              '<Relationship Id="story" Type="$_office/$kind" Target="../shared/$kind.xml"/>',
+            ),
+          );
+          parts['content/shared/_rels/$kind.xml.rels'] = _bytes(
+            _relationships(
+              '<Relationship Id="object" Type="$_office/$objectKind" Target="../embeddings/object.bin"/>',
+            ),
+          );
+          const source = LegacyWordSourceInspection(hasObjects: true);
+          expect(
+            (await _inspect(parts, source: source)).losses,
+            isEmpty,
+            reason: '$kind/$objectKind',
+          );
+          parts.remove('content/body/_rels/main.xml.rels');
+          expect((await _inspect(parts, source: source)).losses, [
+            WordConversionLoss.objectsMissing,
+          ], reason: 'disconnected $kind/$objectKind');
+        }
+      }
+    });
+
+    test('object relationships cannot alias structural package parts', () async {
+      for (final kind in ['oleObject', 'package']) {
+        for (final target in [
+          'document.xml',
+          'comments.xml',
+          'styles.xml',
+          '../[Content_Types].xml',
+          '_rels/document.xml.rels',
+        ]) {
+          final parts = _parts(
+            overrides: {
+              'word/comments.xml': '$_wordPartType.comments+xml',
+              'word/styles.xml': '$_wordPartType.styles+xml',
+            },
+          );
+          parts['word/comments.xml'] = _bytes(
+            '<w:comments xmlns:w="$_w"><w:comment w:id="1"><w:p/></w:comment></w:comments>',
+          );
+          parts['word/styles.xml'] = _bytes('<w:styles xmlns:w="$_w"/>');
+          parts['word/_rels/document.xml.rels'] = _bytes(
+            _relationships(
+              '<Relationship Id="object" Type="$_office/$kind" Target="$target"/>',
+            ),
+          );
+          final result = await _inspect(
+            parts,
+            source: const LegacyWordSourceInspection(hasObjects: true),
+          );
+          expect(result.counts['objects'], 0);
+          expect(result.losses, [
+            WordConversionLoss.objectsMissing,
+          ], reason: '$kind/$target');
+        }
+      }
+    });
+
+    test('OLE needs its content type while packages may use registered types', () async {
+      final image = _parts();
+      image['word/image.png'] = Uint8List.fromList([137, 80, 78, 71]);
+      image['word/_rels/document.xml.rels'] = _bytes(
+        _relationships(
+          '<Relationship Id="object" Type="$_office/oleObject" Target="image.png"/>',
+        ),
+      );
+      expect(
+        (await _inspect(
+          image,
+          source: const LegacyWordSourceInspection(hasObjects: true),
+        )).losses,
+        [WordConversionLoss.objectsMissing],
+      );
+      for (final type in [
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.example.embedded-package',
+      ]) {
+        final parts = _reachableParts();
+        parts['content/body/_rels/main.xml.rels'] = _bytes(
+          _relationships(
+            '<Relationship Id="object" Type="$_office/package" Target="../embeddings/object.bin"/>',
+          ),
+        );
+        parts['[Content_Types].xml'] = _bytes(
+          utf8
+              .decode(parts['[Content_Types].xml']!)
+              .replaceFirst(
+                'application/vnd.openxmlformats-officedocument.oleObject',
+                type,
+              ),
+        );
+        expect(
+          (await _inspect(
+            parts,
+            source: const LegacyWordSourceInspection(hasObjects: true),
+          )).losses,
+          isEmpty,
+          reason: type,
+        );
+      }
+    });
+
+    test('attached separator-only note parts do not prove note preservation', () async {
+      final parts = _reachableParts();
+      for (final kind in ['footnote', 'endnote']) {
+        parts['content/shared/${kind}s.xml'] = _bytes(
+          '<w:${kind}s xmlns:w="$_w"><w:$kind w:type="separator" w:id="-1"><w:p/></w:$kind></w:${kind}s>',
+        );
+      }
+      expect(
+        (await _inspect(parts, source: _allSourceFeatures)).losses,
+        unorderedEquals([
+          WordConversionLoss.footnotesMissing,
+          WordConversionLoss.endnotesMissing,
+        ]),
+      );
+    });
+
+    test('foreign type attributes do not turn ordinary notes into separators', () async {
+      final parts = _reachableParts();
+      for (final kind in ['footnote', 'endnote']) {
+        parts['content/shared/${kind}s.xml'] = _bytes(
+          '<w:${kind}s xmlns:w="$_w" xmlns:x="urn:unrelated"><w:$kind x:type="separator" w:id="1"><w:p/></w:$kind></w:${kind}s>',
+        );
+      }
+      final result = await _inspect(parts, source: _allSourceFeatures);
+      expect(result.counts['footnotes'], 1);
+      expect(result.counts['endnotes'], 1);
+      expect(result.losses, isEmpty);
+    });
+
+    test('rejects mismatched story target types and roots', () async {
+      for (final kind in _storyKinds) {
+        final wrongType = _reachableParts();
+        wrongType['[Content_Types].xml'] = _bytes(
+          utf8
+              .decode(wrongType['[Content_Types].xml']!)
+              .replaceFirst('$_wordPartType.$kind+xml', 'application/xml'),
+        );
+        await expectLater(
+          _inspect(wrongType, source: _allSourceFeatures),
+          _issue(WordConversionInspectionIssue.invalidOutput),
+          reason: '$kind content type',
+        );
+        final wrongRoot = _reachableParts();
+        wrongRoot['content/shared/$kind.xml'] = _bytes(
+          '<w:document xmlns:w="$_w"><w:body><w:p/></w:body></w:document>',
+        );
+        await expectLater(
+          _inspect(wrongRoot, source: _allSourceFeatures),
+          _issue(WordConversionInspectionIssue.invalidOutput),
+          reason: '$kind root',
+        );
+      }
+    });
+
+    test('disconnected relationship errors are still validated', () async {
+      final parts = _reachableParts()
+        ..remove('content/body/_rels/main.xml.rels');
+      parts['content/shared/_rels/comments.xml.rels'] = _bytes(
+        _relationships(
+          '<Relationship Id="missing" Type="$_office/oleObject" Target="missing.bin"/>',
+        ),
+      );
+      await expectLater(
+        _inspect(parts, source: _allSourceFeatures),
+        _issue(WordConversionInspectionIssue.invalidOutput),
+      );
+    });
+  });
+
   group('observable content and losses', () {
     test('counts emitted rich parts and excludes note separators', () async {
       const prefix =
@@ -549,16 +885,16 @@ void main() {
       parts['word/_rels/document.xml.rels'] = _bytes(
         _relationships(
           [
-            for (final name in [
-              'header1.xml',
-              'footer1.xml',
-              'footnotes.xml',
-              'endnotes.xml',
-              'comments.xml',
-              'media/image1.png',
-              'embeddings/object.bin',
+            for (final (name, kind) in [
+              ('header1.xml', 'header'),
+              ('footer1.xml', 'footer'),
+              ('footnotes.xml', 'footnotes'),
+              ('endnotes.xml', 'endnotes'),
+              ('comments.xml', 'comments'),
+              ('media/image1.png', 'image'),
+              ('embeddings/object.bin', 'oleObject'),
             ])
-              '<Relationship Id="r${name.replaceAll('/', '_')}" Type="$_office/${name.split('.').first}" Target="$name"/>',
+              '<Relationship Id="r${name.replaceAll('/', '_')}" Type="$_office/$kind" Target="$name"/>',
           ].join(),
         ),
       );

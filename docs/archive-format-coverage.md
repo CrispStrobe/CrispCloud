@@ -23,7 +23,9 @@ metadata, protection or filesystem structures cannot be preserved.
 | JAR / WAR / EAR | Yes | Unsigned archives | Unsigned archives only | Signing records and signature-related manifest digests block rewriting. This is archive editing, not compilation or signing. |
 | KMZ | Yes | Yes | Yes | A KML document must remain at the top level. |
 | AR | Ordinary, GNU and BSD members | Flat regular files | Inspected profiles | Preserves order, ownership, permissions, timestamps and supported long-name style. Symbol indexes and thin archives are refused. |
-| CPIO | SVR4 newc and CRC | Newc | Inspected newc/CRC | Preserves known record/root/trailer metadata. Links, hard links, device records and unsupported variants are refused. |
+| CPIO | Portable ASCII/odc, SVR4 newc and CRC | Newc | Inspected newc/CRC | Odc is read-only. Preserves known newc/CRC record/root/trailer metadata when rewriting. Links, hard links and device records cannot be extracted. Binary CPIO is unsupported. |
+| RPM | Classic v3/v4 newc/CRC payloads | No | No | gzip, bzip2, XZ, Zstandard and uncompressed payloads. Supported present MD5/SHA-256 payload checksums are checked; publisher signatures and separate header/file digests are not authenticated. No installation or script execution. |
+| CAB | Single-cabinet stored and MSZIP folders | No | No | Preserves MSZIP dictionary history across blocks and checks present block checksums when reading a folder. Spanned cabinets, split files, Quantum/LZX and unspecified non-ASCII legacy name encodings are refused. |
 | XAR | XAR v1, stored/zlib/bzip2/XZ members | Unsigned XAR | Inspected unsigned profiles | Preserves known IDs, ownership, permissions, times, checksums and compression policy. Unknown XML/heap data, signatures, ACLs and xattrs block rewriting. |
 | DEB / UDEB | AR wrapper and nested TAR members | No package builder | Coordinated prebuilt payload replacement | Exact original three-member wrapper/order; required control fields and present md5sums are checked. Replace prepared control/data payloads together. Nested in-app package edits are disabled. |
 | ISO | ISO 9660, Joliet and ordinary Rock Ridge | Data ISO | Inspected data-only profiles | Rock Ridge retains exact Unicode/long names; Joliet has compatible alternate names. Boot records, hybrid/system areas, UDF, extra sessions and unknown extensions block rewriting. |
@@ -32,7 +34,8 @@ metadata, protection or filesystem structures cannot be preserved.
 | RAR / CBR | Existing reader | No | No | Existing password and compression-method limits apply. |
 | Other ZIP packages | Yes | No | No | WHL, APK/APKS/XAPK, IPA/AAB, XPI, NuGet, VSIX, APPX/MSIX and bundles require package-specific rebuild/signing workflows. |
 | CRX | CRX2/CRX3 ZIP payload | No | No | Header is bounded; publisher signatures are not authenticated. |
-| PKG / XIP | XAR members | No | No | Package metadata and signing need dedicated tools; PBZX remains an undecoded payload. |
+| PKG / XIP | XAR members and supported nested PBZX/CPIO payloads | No | No | Preview an extensionless `Payload` or `Content` member in F3 to browse its supported inner file tree. Package metadata and signing need dedicated tools. |
+| PBZX | Stored/XZ block stream and supported inner containers | No | No | Positional chunk decoding; portable CPIO payloads become a file tree. Unknown inner formats remain one decoded payload. Apple Archive/YAA and other unsupported payload formats are not interpreted. |
 | Static object libraries (`.a`) | AR members | No | No | A linker/archive tool must regenerate the library symbol index. |
 
 Office and EPUB files retain their document/book viewers. No archive action
@@ -102,6 +105,27 @@ subsets remain extractable. F3 displays these records with reading disabled when
 the underlying reader can enumerate them; malformed ISO/HFS names are refused
 while opening the image.
 
+## Using package payloads
+
+Open `.rpm`, `.cab` or `.pbzx` through the normal archive pane or F3 viewer.
+RPM presents the payload's CPIO tree directly. CAB exposes its files with
+Windows separators normalized to archive paths. A PBZX stream containing a
+supported archive exposes that archive's tree; an opaque stream exposes one
+decoded member. Signature detection also works for extensionless F3 inputs and
+inside supported compression wrappers.
+
+For an Apple `.pkg` or `.xip`, F3 first lists the XAR wrapper. Preview its
+`Payload` or `Content` member to open supported PBZX/CPIO contents, then preview
+individual regular files. That nested preview still buffers the outer XAR
+member up to the existing 64 MiB limit; larger outer members remain unavailable
+through this path. A standalone PBZX file can use the larger positional path
+described below. No package action installs software or executes scripts.
+
+The three new families remain read-only, including after a misleading filename
+change. Odc CPIO is also read-only; newc/CRC creation and inspected rewriting
+retain their prior profile. Package signature notices distinguish content
+checksums from publisher authentication.
+
 ## Bounds and integrity
 
 - Native pane sessions spool at most 2 GiB; browser pane sessions keep at most
@@ -140,6 +164,31 @@ while opening the image.
 - AR/CPIO/XAR enforce 200,000 records, 16 MiB aggregate metadata and 16 KiB
   names. XAR compressed/expanded TOCs are each capped at 8 MiB, with bounded
   XML events, elements and depth.
+- RPM header metadata is limited to 16 MiB and 200,000 index entries. Packed
+  and expanded payloads are each capped at 64 MiB by default; XZ dictionaries
+  and Zstandard windows are capped at 64 MiB. Header ranges, tag types, actual
+  compression, declared sizes and supported present MD5/SHA-256 payload digests
+  are checked before opening the CPIO tree. Unsupported digests, compressors,
+  v6 and stripped large-file payloads are refused. Links and special CPIO
+  entries remain non-extractable.
+- CAB metadata is capped at 16 MiB, names at 16 KiB, folders at 4,096 and data
+  blocks at 100,000. A decoded folder is capped at 64 MiB by default; opening
+  reads its metadata without decoding file data. Member reads decode and check
+  the entire containing folder, keeping one shared folder cache. Present block
+  checksums are verified on read, not on listing. MSZIP blocks retain the last
+  32 KiB of folder history and cannot expand beyond their declared 32 KiB block
+  bound. UTF-8 flagged names and unflagged ASCII names are supported. CAB dates
+  are local wall-clock values without a stored time zone.
+- PBZX inputs and logical decoded payloads are bounded at 2 GiB, with at most
+  100,000 chunks. Each chunk and XZ dictionary is capped at 16 MiB; a single
+  source read is capped at 64 MiB. Framing is indexed without fetching payload
+  bytes; positional reads serialize access to one shared decoded-chunk cache.
+  A large CPIO member can be skipped while listing and reading a later small
+  member. This does not raise member extraction limits. Stored size must not
+  exceed decoded size, and only the final chunk may be shorter than the declared
+  block size. Present XZ checksums are verified for chunks actually read;
+  stored chunks and XZ `CHECK_NONE` streams have no data checksum. Partial
+  browsing does not verify an entire PBZX payload or a package signature.
 - DMG limits XML metadata to 8 MiB, block maps to 128 and chunks to 100,000.
   Each compressed chunk is limited to 16 MiB. One shared chunk cache avoids
   retaining an expanded buffer per partition. Declared disk geometry is
@@ -168,6 +217,10 @@ Primary references used for layout and validation:
 - [XZ file format](https://tukaani.org/xz/xz-file-format.txt).
 - [GNU binutils AR](https://sourceware.org/binutils/docs/binutils/ar.html).
 - [GNU CPIO format reference](https://www.gnu.org/software/cpio/manual/html_node/Media.html).
+- [Portable CPIO header layout](https://www.ibm.com/docs/en/zos/3.1.0?topic=formats-cpio-format-cpio-archives).
+- [RPM v3/v4 format and headers](https://rpm.org/docs/4.20.x/manual/format_header.html).
+- [Microsoft Cabinet format](https://learn.microsoft.com/en-us/previous-versions/bb417343(v=msdn.10)) and [MSZIP structures](https://learn.microsoft.com/en-us/openspecs/exchange_server_protocols/ms-mci/3048c471-f739-4d30-bcb3-a962cfe84a69).
+- [PBZX reference reader](https://github.com/blacktop/ipsw/blob/master/pkg/ota/pbzx/read.go).
 - [Apple XAR sources](https://github.com/apple-oss-distributions/xar).
 - [UDIF reference implementation](https://github.com/mozilla/libdmg-hfsplus).
 - [archive 4.6.0 strict-decoder contract](https://pub.dev/packages/archive/changelog).
@@ -179,6 +232,20 @@ HFS+/UDIF images with a multi-level catalog, 42 original text files and an
 Applications link. Native generators are test tooling only. Exact fixture
 commands, tool revisions and hashes are in
 [NATIVE_DISK_IMAGES.md](../test/fixtures/archives/NATIVE_DISK_IMAGES.md).
+
+The package continuation adds independently produced Windows MakeCAB cabinets,
+rpmbuild RPMs, an original libarchive portable CPIO, and PBZX framing verified by
+an independent BSD-licensed decoder with native liblzma. The MSZIP reference
+includes a block that cannot decode without the previous dictionary. Reproducible
+commands, source revisions, fixture hashes and attribution are in
+[CAB_READERS.md](../test/fixtures/archives/CAB_READERS.md),
+[RPM_REFERENCE.md](../test/fixtures/archives/RPM_REFERENCE.md),
+[CPIO_ODC.md](../test/fixtures/archives/CPIO_ODC.md) and
+[PBZX_REFERENCE.md](../test/fixtures/archives/PBZX_REFERENCE.md).
+These native/reference tools are test dependencies only; the app adds no
+runtime dependency or subprocess decoder.
+The complete observed test scope and local environment are recorded in
+[package-reader verification](archive-package-readers-verification.md).
 
 Writer acceptance also includes native GNU tar/Python tarfile and
 GNU ar/libarchive/dpkg-deb readback,
@@ -198,6 +265,7 @@ optional reference checks are:
 These reference tools are test dependencies only. Native macOS mounting and
 platform-specific release acceptance are not established by Linux readback.
 
-UDF, APFS, CAB, RPM, ARJ/LZH/ACE/UC2, raw LZMA and additional ZIPX methods are
-not enabled by this increment. G22 remains partial; support for these codecs
-requires its own implementation and independent fixtures.
+UDF, APFS, ARJ/LZH/ACE/UC2, raw LZMA, CAB Quantum/LZX/spanning, RPM v6/stripped
+payloads, Apple Archive/YAA and additional ZIPX methods are not enabled by these
+increments. G22 remains partial; additional profiles require their own
+implementation and independent fixtures.

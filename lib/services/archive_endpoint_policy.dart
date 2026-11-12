@@ -113,7 +113,7 @@ class ArchiveEndpointPolicy {
     if (format == ArchiveEndpointFormat.readOnly) {
       reason = switch (descriptor?.id) {
         'dmg' || 'hfs' => 'Existing disk images remain read-only. Create a new HFSX data image from regular files and folders; other filesystem metadata requires a filesystem-aware editor.',
-        'zip-package' || 'crx' || 'xar-package' => 'This package requires a dedicated metadata or signing workflow. Browsing and extraction are available.',
+        'zip-package' || 'crx' || 'xar-package' || 'rpm' || 'cab' || 'pbzx' => 'This package requires a dedicated metadata or signing workflow. Browsing and extraction are available.',
         'ar-library' => 'Static object libraries require their linker or archive tool to rebuild the library symbol index.',
         _ => 'This format supports browsing and extraction, but its writer is unavailable.',
       };
