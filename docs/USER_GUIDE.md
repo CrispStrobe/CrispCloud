@@ -80,6 +80,10 @@ Saving a character that the selected legacy encoding cannot represent fails inst
 
 External editor launch is limited to verified native local files. An external application does not automatically upload edits to a remote account. Use the built-in remote editor for guarded remote saves.
 
+On a native desktop, select two files in one pane, or one file in each pane, and choose **Compare with external tool**. A file's context menu also offers this action when exactly one file with the same name exists in the other pane. **External comparison tools** stores separate text and image tool settings. Choose an installed executable by its absolute path and use `{left}` and `{right}` once each as complete arguments; no shell expansion is performed. Review the captured sources and actual arguments before launching.
+
+Both comparison inputs are private copies, including local files. Each input is limited to 256 MiB, preparation/final validation has a 15-minute deadline, and at most eight comparisons are retained. Changes in the external tool never update the originals. Close every external window using the copies, then explicitly release that session from **External comparison tools**. Closing a dialog or restarting the app retains the copies; recovery lists them for cleanup and does not relaunch a tool. A changed or disconnected source requires a new selection and review.
+
 <a id="search-and-filters"></a>
 ## Search, filters and duplicate files
 

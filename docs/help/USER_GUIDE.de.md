@@ -80,6 +80,10 @@ Kann die gewählte ältere Zeichenkodierung ein Zeichen nicht darstellen, schlä
 
 Der Start externer Editoren ist auf überprüfte native lokale Dateien beschränkt. Eine externe Anwendung lädt Änderungen nicht automatisch in ein entferntes Konto hoch. Verwenden Sie für abgesichertes Speichern entfernter Dateien den integrierten Remote-Editor.
 
+Wählen Sie auf einem nativen Desktop zwei Dateien in einer Ansicht oder je eine Datei in beiden Ansichten und dann **Mit externem Werkzeug vergleichen**. Das Kontextmenü einer Datei bietet diese Aktion auch an, wenn in der anderen Ansicht genau eine Datei mit demselben Namen vorhanden ist. **Externe Vergleichswerkzeuge** speichert getrennte Einstellungen für Text- und Bildvergleiche. Geben Sie den absoluten Pfad einer installierten Programmdatei an und verwenden Sie `{left}` und `{right}` jeweils einmal als vollständiges Argument; es findet keine Shell-Erweiterung statt. Prüfen Sie vor dem Start die erfassten Quellen und die tatsächlichen Argumente.
+
+Beide Vergleichseingaben sind private Kopien, auch bei lokalen Dateien. Pro Eingabe gelten 256 MiB, für Vorbereitung und abschließende Prüfung jeweils 15 Minuten und höchstens acht aufbewahrte Vergleiche. Änderungen im externen Werkzeug aktualisieren die Originale niemals. Schließen Sie alle externen Fenster, die diese Kopien verwenden, und geben Sie die Sitzung anschließend ausdrücklich unter **Externe Vergleichswerkzeuge** zur Bereinigung frei. Das Schließen eines Dialogs oder ein Neustart der App bewahrt die Kopien auf; die Wiederherstellung listet sie zur Bereinigung auf und startet kein Werkzeug erneut. Bei einer geänderten oder getrennten Quelle sind eine neue Auswahl und Prüfung erforderlich.
+
 <a id="search-and-filters"></a>
 ## Suche, Filter und doppelte Dateien
 

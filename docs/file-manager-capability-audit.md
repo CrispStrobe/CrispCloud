@@ -111,7 +111,7 @@ grants. The link is transient and is not restored after restarting the app.
 | Syntax-highlighted internal editor | Implemented | F4 code editor, newline/encoding controls, guarded original-account saves and recovery. |
 | Remote editing in built-in editors | Implemented | Captured target and external-change checks. |
 | External editor with automatic remote upload on save | Missing | External application launch is currently limited to verified native local files. |
-| Image comparison | Partial | Gallery offers linked image comparison; arbitrary external comparison-tool configuration is separate. |
+| Image comparison | Implemented / native acceptance pending | Gallery offers linked image comparison. G11 adds configured text/image tools, private copies of captured local/remote pairs, explicit launch review and retained-session cleanup. See [external comparison](external-comparison.md); installed GUI-tool acceptance remains per desktop OS. |
 
 ## File operations and search
 

@@ -79,6 +79,9 @@ import '../widgets/command_entry_dialog.dart';
 import '../l10n/command_entry_strings.dart';
 import '../widgets/gathering_stack_dialog.dart';
 import '../l10n/gathering_stack_strings.dart';
+import '../widgets/external_comparison_dialog.dart';
+import '../l10n/external_comparison_strings.dart';
+import '../services/command_entry_service.dart' show NativeCommandEntryHost;
 import '../widgets/help_guide_dialog.dart';
 import '../l10n/help_guide_strings.dart';
 import '../widgets/extensions_dialog.dart';
@@ -526,6 +529,18 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     );
     route('columns', context.commanderTr('Columns and view'), 'columns');
     route('customCommands', context.commanderTr('Custom commands'), 'commands');
+    add(
+      'externalCompare',
+      ExternalComparisonStrings(context).text('compare'),
+      () => showExternalComparisonForSelection(context, ref),
+      available: () => const NativeCommandEntryHost().platform != null,
+    );
+    add(
+      'externalComparisonTools',
+      ExternalComparisonStrings(context).text('title'),
+      () => showExternalComparisonDialog(context, ref),
+      available: () => const NativeCommandEntryHost().platform != null,
+    );
     add(
       'gatherSelection',
       GatheringStackStrings(context).text('gather'),
@@ -1990,6 +2005,14 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         showCustomCommandsDialog(context, ref, ref.read(activePanelProvider));
       case 'command_entry':
         if (commandEntryAvailable(ref)) showCommandEntryDialog(context, ref);
+      case 'external_compare':
+        if (const NativeCommandEntryHost().platform != null) {
+          showExternalComparisonForSelection(context, ref);
+        }
+      case 'external_comparison_tools':
+        if (const NativeCommandEntryHost().platform != null) {
+          showExternalComparisonDialog(context, ref);
+        }
       case 'gather_selection':
         addPanelSelectionToGatheringStack(
           context,
@@ -2178,6 +2201,22 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           child: _overflowItem(
             Icons.terminal,
             CommandEntryStrings(context).text('title'),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'external_compare',
+          enabled: const NativeCommandEntryHost().platform != null,
+          child: _overflowItem(
+            Icons.compare_arrows,
+            ExternalComparisonStrings(context).text('compare'),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'external_comparison_tools',
+          enabled: const NativeCommandEntryHost().platform != null,
+          child: _overflowItem(
+            Icons.tune,
+            ExternalComparisonStrings(context).text('title'),
           ),
         ),
         PopupMenuItem(

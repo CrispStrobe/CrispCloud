@@ -42,9 +42,10 @@ branch, followed by its validation and acceptance-status update.
 ## Validation and checkpoints
 
 Implementation and observed gates are appended as each increment is completed.
-G10, G11 and G18 remain **implementing** until their code, tests, documentation
-and remote checkpoints are recorded. The baseline still has seven closed
-scopes and five implemented scopes with named acceptance pending.
+G11 is **implemented / native acceptance pending**. G10 and G18 remain
+**implementing** until their complete workflows and checkpoints are recorded.
+The baseline had seven closed scopes and five implemented scopes with named
+acceptance pending; G11 raises the latter count to six.
 
 ### Private staging foundation
 
@@ -80,3 +81,33 @@ editor session and UI remain in progress; the provider foundation alone does
 not close G10. Other providers need their own original-preserving publication
 contract before they can upload external edits automatically. No dependency was
 added and no S3/Azure transfer adapter was changed.
+
+Remote checkpoint: `2297f8e3f7a261c8cbf80b48ffa70bf25df2998d` on
+`feature/conditional-remote-publication-20261112`,
+[draft PR 76](https://github.com/CrispStrobe/CrispCloud/pull/76).
+
+### G11 — external comparison tools
+
+The [external comparison workflow](../external-comparison.md) is connected to
+Tools, configurable menus, overflow and verified context-menu pairs. Both local
+and remote inputs become distinct private copies. Separate configuration and
+launch reviews use literal argument lists, fresh source versions, executable
+identity and final copy digests. Launch-attempted files survive close/restart
+until explicit tool-closed confirmation permits cleanup; originals are never
+published by the comparison workflow.
+
+Observed gates: **80 tests** across the five service/dialog/popup/offline-help
+suites, **36 tests** across source capture and menu model/command ownership, and
+**3 full-browser integration tests** in an isolated worktree of this exact
+increment and its remote base. Total: **119 passing tests across nine suites**.
+Initial fixture failures were corrected: a test selected only one row, an
+argument assertion compared presentation rather than parsed tokens, and a
+cancelled stream's root-zone completion needed the widget runner's real async
+boundary. No production behavior was weakened to make those assertions pass.
+
+The three offline guides were updated and their source/translation digests
+validated. Narrow feature analysis is clean; host files retain existing
+unrelated warnings. Installed-tool acceptance on Linux/Windows/macOS remains
+explicit, as do provider metadata and OS path-launch race limits. No dependency
+was added. G11 is implemented for the documented private-copy workflow; G10
+merge-back and automatic remote editing remain separate.
