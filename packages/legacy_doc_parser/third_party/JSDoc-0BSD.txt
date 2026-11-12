@@ -1,0 +1,36 @@
+JSDoc: provenance for adapted Word-binary parsing code
+
+Upstream project: https://github.com/Alpaq92/JSDoc
+Reviewed revision: 821695a884e0c0bb8592a635d9524bb3e116cd67
+Original source:
+https://github.com/Alpaq92/JSDoc/blob/821695a884e0c0bb8592a635d9524bb3e116cd67/src/docToText.js
+Original license:
+https://github.com/Alpaq92/JSDoc/blob/821695a884e0c0bb8592a635d9524bb3e116cd67/LICENSE
+License Git blob: e795d52a6aecd2bd05383c808ba4fc87f5872423
+
+CrispCloud adaptations:
+  lib/services/legacy_word_format_tables.dart
+    Formatting-page, font-table, style-table and section-property traversal.
+  lib/services/legacy_word_sprms.dart
+    SPRM operand and property decoding.
+
+The Dart adaptations add strict stream extents and resource budgets, and
+implement property precedence, piece PRMs, style-relative toggles, revision
+retention and cell-merge interpretation against the MS-DOC specification.
+See docs/legacy-word-parser-research-2026-11-12.md for the source evaluation
+and supported-format limitations. JSDoc is not a runtime dependency.
+
+The upstream license text is reproduced verbatim below.
+
+Zero-Clause BSD (0BSD)
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
+OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
+THIS SOFTWARE.

@@ -1,0 +1,315 @@
+// SPDX-License-Identifier: MPL-2.0
+
+import 'dart:typed_data';
+
+/// Resolved character-property span. CPs are document-global UTF-16 positions.
+class LegacyWordMediaRun {
+  const LegacyWordMediaRun({
+    required this.startCp,
+    required this.endCp,
+    this.pictureLocation,
+    this.special = false,
+    this.object = false,
+    this.ole2 = false,
+    this.data = false,
+  });
+  final int startCp;
+  final int endCp;
+  final int? pictureLocation;
+  final bool special;
+  final bool object;
+  final bool ole2;
+  final bool data;
+}
+
+/// A precise location in an original compound-file stream. Offsets and lengths
+/// identify stored bytes; a reconstructed compound payload has its own length.
+class LegacyWordSourceReference {
+  const LegacyWordSourceReference({
+    required this.streamPath,
+    required this.offset,
+    required this.length,
+    required this.structure,
+    this.cp,
+  });
+  final String streamPath;
+  final int offset;
+  final int length;
+  final String structure;
+  final int? cp;
+}
+
+enum LegacyWordImageFormat { png, jpeg, tiff, dib, emf, wmf, pict, unknown }
+
+class LegacyWordImageAsset {
+  LegacyWordImageAsset({
+    required this.id,
+    required this.format,
+    required Uint8List bytes,
+    required this.source,
+    required this.officeArtArtifactId,
+  }) : bytes = Uint8List.fromList(bytes).asUnmodifiableView();
+  final String id;
+  final LegacyWordImageFormat format;
+  final Uint8List bytes;
+  final LegacyWordSourceReference source;
+  final String officeArtArtifactId;
+
+  /// Only these formats have a directly reusable, bounded raster file payload.
+  /// Metafiles and DIBs remain opaque records; they are not rendered or inflated.
+  bool get isRenderable =>
+      format == LegacyWordImageFormat.png ||
+      format == LegacyWordImageFormat.jpeg ||
+      format == LegacyWordImageFormat.tiff;
+  String get contentType => switch (format) {
+    LegacyWordImageFormat.png => 'image/png',
+    LegacyWordImageFormat.jpeg => 'image/jpeg',
+    LegacyWordImageFormat.tiff => 'image/tiff',
+    _ => 'application/octet-stream',
+  };
+  String get extension => switch (format) {
+    LegacyWordImageFormat.png => 'png',
+    LegacyWordImageFormat.jpeg => 'jpg',
+    LegacyWordImageFormat.tiff => 'tif',
+    _ => 'bin',
+  };
+}
+
+/// An inline picture tied to U+0001 and CPicLocation, never image-carving order.
+class LegacyWordPicture {
+  const LegacyWordPicture({
+    required this.id,
+    required this.cp,
+    required this.source,
+    required this.officeArtArtifactId,
+    this.imageId,
+    this.widthTwips,
+    this.heightTwips,
+    this.cropTopFixed16 = 0,
+    this.cropBottomFixed16 = 0,
+    this.cropLeftFixed16 = 0,
+    this.cropRightFixed16 = 0,
+    this.storedExternalName,
+  });
+  final String id;
+  final int cp;
+  final LegacyWordSourceReference source;
+  final String officeArtArtifactId;
+  final String? imageId;
+  final int? widthTwips;
+  final int? heightTwips;
+  final int cropTopFixed16;
+  final int cropBottomFixed16;
+  final int cropLeftFixed16;
+  final int cropRightFixed16;
+
+  /// Descriptive source metadata only. It is never resolved or fetched.
+  final String? storedExternalName;
+}
+
+class LegacyWordDrawing {
+  const LegacyWordDrawing({
+    required this.shapeId,
+    required this.anchorCp,
+    required this.headerStory,
+    required this.leftTwips,
+    required this.topTwips,
+    required this.rightTwips,
+    required this.bottomTwips,
+    required this.horizontalOrigin,
+    required this.verticalOrigin,
+    required this.wrapMode,
+    required this.wrapSide,
+    required this.behindText,
+    required this.anchorLocked,
+    required this.source,
+    this.officeArtArtifactId,
+    this.imageId,
+    this.textboxId,
+    this.nextTextboxShapeId,
+  });
+  final int shapeId;
+  final int anchorCp;
+  final bool headerStory;
+  final int leftTwips;
+  final int topTwips;
+  final int rightTwips;
+  final int bottomTwips;
+  final int horizontalOrigin;
+  final int verticalOrigin;
+  final int wrapMode;
+  final int wrapSide;
+  final bool behindText;
+  final bool anchorLocked;
+  final LegacyWordSourceReference source;
+  final String? officeArtArtifactId;
+  final String? imageId;
+  final int? textboxId;
+  final int? nextTextboxShapeId;
+}
+
+class LegacyWordPreservedStream {
+  LegacyWordPreservedStream({
+    required this.path,
+    required Uint8List bytes,
+    this.metadata,
+  })
+    : bytes = Uint8List.fromList(bytes).asUnmodifiableView();
+  /// Path relative to the preserved storage's root.
+  final String path;
+  final Uint8List bytes;
+  final LegacyWordStorageMetadata? metadata;
+}
+
+class LegacyWordStorageMetadata {
+  LegacyWordStorageMetadata({
+    required this.path,
+    required Uint8List clsid,
+    required this.stateBits,
+    this.created,
+    this.modified,
+    Uint8List? createdFiletime,
+    Uint8List? modifiedFiletime,
+  }) : clsid = Uint8List.fromList(clsid).asUnmodifiableView(),
+       createdFiletime = createdFiletime == null
+           ? null
+           : Uint8List.fromList(createdFiletime).asUnmodifiableView(),
+       modifiedFiletime = modifiedFiletime == null
+           ? null
+           : Uint8List.fromList(modifiedFiletime).asUnmodifiableView();
+  /// Empty for the preserved root; otherwise relative to that root.
+  final String path;
+  final Uint8List clsid;
+  final int stateBits;
+  final DateTime? created;
+  final DateTime? modified;
+  final Uint8List? createdFiletime;
+  final Uint8List? modifiedFiletime;
+}
+
+/// Original stream bytes plus a reconstructed CFB container. Reconstruction
+/// changes allocation/directory layout; it is not the original container bytes.
+class LegacyWordCompoundStorage {
+  LegacyWordCompoundStorage({
+    required this.sourcePath,
+    required Uint8List bytes,
+    required List<LegacyWordPreservedStream> streams,
+    required List<LegacyWordStorageMetadata> storages,
+  }) : bytes = Uint8List.fromList(bytes).asUnmodifiableView(),
+       streams = List.unmodifiable(streams),
+       storages = List.unmodifiable(storages);
+  final String sourcePath;
+  final Uint8List bytes;
+  final List<LegacyWordPreservedStream> streams;
+  final List<LegacyWordStorageMetadata> storages;
+}
+
+class LegacyWordEmbeddedObject {
+  const LegacyWordEmbeddedObject({
+    required this.id,
+    required this.cp,
+    required this.storage,
+    this.progId,
+    this.linked,
+    this.canEmbed = false,
+  });
+  final String id;
+  final int cp;
+  final LegacyWordCompoundStorage storage;
+  /// The original CompObj ProgID, when a bounded recognized record supplies it.
+  final String? progId;
+  /// Null means the original Ole record did not establish this information.
+  final bool? linked;
+  /// The field end is present and not a zombie, and the Ole record explicitly
+  /// identifies an embedded object. Other stored objects remain inert evidence.
+  final bool canEmbed;
+}
+
+class LegacyWordVbaProject {
+  LegacyWordVbaProject({
+    required this.id,
+    required this.storage,
+    required this.hasRequiredStreams,
+    List<String> signatureArtifactIds = const [],
+  }) : signatureArtifactIds = List.unmodifiable(signatureArtifactIds);
+  final String id;
+  final LegacyWordCompoundStorage storage;
+  /// PROJECT plus VBA/dir and VBA/_VBA_PROJECT are present. This is structural
+  /// completeness, not verification that macros compile or are safe to execute.
+  final bool hasRequiredStreams;
+  final List<String> signatureArtifactIds;
+}
+
+enum LegacyWordArtifactKind {
+  officeArt,
+  binaryData,
+  documentSignature,
+  vbaSignature,
+  unreferencedObjectStorage,
+}
+
+class LegacyWordOpaqueArtifact {
+  LegacyWordOpaqueArtifact({
+    required this.id,
+    required this.kind,
+    required Uint8List bytes,
+    required this.source,
+  }) : bytes = Uint8List.fromList(bytes).asUnmodifiableView();
+  final String id;
+  final LegacyWordArtifactKind kind;
+  final Uint8List bytes;
+  final LegacyWordSourceReference source;
+  /// Signature artifacts are retained as evidence. No cryptographic validation
+  /// or assertion that a copied signature authenticates converted output occurs.
+  bool get signatureVerified => false;
+}
+
+enum LegacyWordMediaIssue {
+  unsupportedImage,
+  externalPictureNotFetched,
+  missingDrawingShape,
+  unsupportedDrawing,
+  unreferencedObjectStorage,
+  incompleteVbaProject,
+  oleFieldMetadataIncomplete,
+}
+
+class LegacyWordMediaNotice {
+  const LegacyWordMediaNotice(this.issue, this.source);
+  final LegacyWordMediaIssue issue;
+  final LegacyWordSourceReference source;
+}
+
+class LegacyWordMediaCatalog {
+  const LegacyWordMediaCatalog()
+    : assets = const [],
+      pictures = const [],
+      drawings = const [],
+      embeddedObjects = const [],
+      vbaProjects = const [],
+      artifacts = const [],
+      notices = const [];
+
+  LegacyWordMediaCatalog.from({
+    List<LegacyWordImageAsset> assets = const [],
+    List<LegacyWordPicture> pictures = const [],
+    List<LegacyWordDrawing> drawings = const [],
+    List<LegacyWordEmbeddedObject> embeddedObjects = const [],
+    List<LegacyWordVbaProject> vbaProjects = const [],
+    List<LegacyWordOpaqueArtifact> artifacts = const [],
+    List<LegacyWordMediaNotice> notices = const [],
+  }) : assets = List.unmodifiable(assets),
+       pictures = List.unmodifiable(pictures),
+       drawings = List.unmodifiable(drawings),
+       embeddedObjects = List.unmodifiable(embeddedObjects),
+       vbaProjects = List.unmodifiable(vbaProjects),
+       artifacts = List.unmodifiable(artifacts),
+       notices = List.unmodifiable(notices);
+  final List<LegacyWordImageAsset> assets;
+  final List<LegacyWordPicture> pictures;
+  final List<LegacyWordDrawing> drawings;
+  final List<LegacyWordEmbeddedObject> embeddedObjects;
+  final List<LegacyWordVbaProject> vbaProjects;
+  final List<LegacyWordOpaqueArtifact> artifacts;
+  final List<LegacyWordMediaNotice> notices;
+}
