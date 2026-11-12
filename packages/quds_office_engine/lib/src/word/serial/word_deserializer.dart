@@ -17,6 +17,7 @@ import '../model/word_revision.dart';
 import '../model/word_styles.dart';
 import '../model/word_toc.dart';
 import '../properties/wml_properties.dart';
+import 'word_bibliography_io.dart';
 import 'word_comment_io.dart';
 import 'word_drawing_io.dart';
 import 'word_markup_compatibility.dart';
@@ -137,8 +138,14 @@ class WordDeserializer {
     _readComments(document, package, docUri);
     _readCommentsExtended(document, package, docUri);
     _readWatermark(document, package);
-    _readCitations(document, package);
+    WordBibliographyIo.read(document, package, docUri);
     _readSettingsFlags(document, package, docUri);
+    final Map<WmlParagraph, int> bodyIndices = <WmlParagraph, int>{
+      for (final entry in document.paragraphs.indexed) entry.$2: entry.$1,
+    };
+    for (final WmlRevision revision in document.revisions) {
+      revision.paragraphIndex = bodyIndices[revision.targetParagraph] ?? -1;
+    }
     return document;
   }
 
@@ -217,6 +224,7 @@ class WordDeserializer {
         paragraph.inlines.isEmpty && _pendingEquations.isNotEmpty;
     final bool drawingHost =
         paragraph.text.trim().isEmpty &&
+        !paragraph.inlines.any((inline) => inline is WmlNoteMarker) &&
         (_pendingVisuals.isNotEmpty || _pendingFrames.isNotEmpty);
     if (!mathOnly && !drawingHost) {
       blocks.add(paragraph);
@@ -282,12 +290,12 @@ class WordDeserializer {
       } else if (reader.localName == 'ins' || reader.localName == 'del') {
         _readTracked(reader, package, docUri, paragraph);
       } else if (reader.localName == 'hyperlink') {
-        paragraph.inlines.addAll(
-          _readHyperlinkInlines(reader, package, docUri, paragraph),
-        );
+        _readHyperlink(reader, package, docUri, paragraph);
       } else if (reader.localName == 'fldSimple' &&
           reader.namespaceUri == OfficeNamespaces.w) {
-        paragraph.inlines.addAll(_readSimpleField(reader, package, docUri));
+        paragraph.inlines.addAll(
+          _readSimpleField(reader, package, docUri, paragraph),
+        );
       } else if (reader.localName == 'commentRangeStart') {
         final int? id = int.tryParse(
           reader.getAttribute('id', namespaceUri: OfficeNamespaces.w) ?? '',
@@ -347,6 +355,7 @@ class WordDeserializer {
     XmlPullReader reader,
     OpcPackage package,
     String docUri,
+    WmlParagraph paragraph,
   ) {
     final XmlElement source = XmlDocument.readElement(reader);
     final String? instruction = source.getAttribute(
@@ -356,13 +365,31 @@ class WordDeserializer {
     final XmlPullReader inner = WordMarkupCompatibilityReader(
       XmlDocument(root: source).toXmlString(declaration: false),
     )..next();
+    final int revisionCount = _document?.revisions.length ?? 0;
     final WmlParagraph result = _readParagraph(inner, package, docUri);
+    // A simple-field cache is parsed in a temporary paragraph. Its tracked
+    // run still belongs to the containing paragraph and uses that offset.
+    for (final WmlRevision revision
+        in _document?.revisions.skip(revisionCount) ?? <WmlRevision>[]) {
+      if (identical(revision.targetParagraph, result)) {
+        revision
+          ..targetParagraph = paragraph
+          ..start += paragraph.text.length
+          ..end += paragraph.text.length;
+      }
+    }
     final List<XmlElement> children = source.childElements.toList();
+    bool isRun(XmlElement child) =>
+        child.localName == 'r' && child.namespaceUri == OfficeNamespaces.w;
+    bool isTrackedRun(XmlElement child) =>
+        (child.localName == 'ins' || child.localName == 'del') &&
+        child.namespaceUri == OfficeNamespaces.w &&
+        child.childElements.length == 1 &&
+        isRun(child.childElements.single);
     final bool singleRun =
         children.isEmpty ||
         (children.length == 1 &&
-            children.single.localName == 'r' &&
-            children.single.namespaceUri == OfficeNamespaces.w);
+            (isRun(children.single) || isTrackedRun(children.single)));
     // Retain the native one-run field boundary. Arbitrary rich/nested fields
     // need a span model; do not turn their entire containing paragraph into a
     // field or duplicate one instruction onto each result run.
@@ -441,6 +468,26 @@ class WordDeserializer {
         paragraph.properties.endnoteRef = run.noteRefEndnote;
       } else if (reader.localName == 'footnoteRef' ||
           reader.localName == 'endnoteRef') {
+        if (run.text.isNotEmpty) {
+          inlines.add(
+            WmlRun(
+              text: run.text,
+              properties: run.properties.copy(),
+              commentIds: List<int>.of(_openCommentIds),
+            ),
+          );
+          run.text = '';
+        }
+        final WmlRunProps markerProperties = run.properties.copy();
+        markerProperties.importedValues = WordPropertyIo.runValues(
+          markerProperties,
+        );
+        inlines.add(
+          WmlNoteMarker(
+            endnote: reader.localName == 'endnoteRef',
+            properties: markerProperties,
+          ),
+        );
         if (_readingNote != null && !_noteMarkCaptured) {
           _readingNote!.referencePropertiesXml =
               run.properties.sourcePropertiesXml ?? '';
@@ -534,6 +581,9 @@ class WordDeserializer {
         paragraph.inlines.addAll(
           _readRunInlines(reader, package, docUri, paragraph),
         );
+      } else if (reader.eventType == XmlEventType.startElement &&
+          reader.localName == 'hyperlink') {
+        _readHyperlink(reader, package, docUri, paragraph);
       }
     }
     final WmlDocument? document = _document;
@@ -547,7 +597,8 @@ class WordDeserializer {
     final WmlRevision revision = WordRevisions.record(
       document,
       kind: deleted ? WmlRevisionKind.delete : WmlRevisionKind.insert,
-      paragraphIndex: document.paragraphs.length,
+      paragraphIndex: -1,
+      paragraph: paragraph,
       start: start,
       end: start + text.length,
       text: text,
@@ -733,44 +784,45 @@ class WordDeserializer {
     return WmlSection();
   }
 
-  List<WmlInline> _readHyperlinkInlines(
+  void _readHyperlink(
     XmlPullReader reader,
     OpcPackage package,
     String docUri,
     WmlParagraph paragraph,
   ) {
     final WmlHyperlink? link = _hyperlinkFrom(reader, package, docUri);
-    final List<WmlInline> inlines = <WmlInline>[];
     if (reader.isEmptyElement) {
-      return inlines;
+      return;
     }
     final int depth = reader.depth;
     while (reader.next() && reader.depth >= depth) {
       if (reader.eventType != XmlEventType.startElement) {
         continue;
       }
+      final int firstInline = paragraph.inlines.length;
       if (reader.localName == 'r') {
-        for (final WmlInline inline in _readRunInlines(
-          reader,
-          package,
-          docUri,
-          paragraph,
-        )) {
-          if (inline is WmlRun) {
-            inline.hyperlink = link;
-            if (link != null && inline.properties.color == '000000') {
-              WordLink.applyLook(inline);
-            }
-          }
-          inlines.add(inline);
-        }
-      } else if (reader.localName == 'hyperlink') {
-        inlines.addAll(
-          _readHyperlinkInlines(reader, package, docUri, paragraph),
+        paragraph.inlines.addAll(
+          _readRunInlines(reader, package, docUri, paragraph),
         );
+      } else if (reader.localName == 'ins' || reader.localName == 'del') {
+        _readTracked(reader, package, docUri, paragraph);
+      } else if (reader.localName == 'fldSimple' &&
+          reader.namespaceUri == OfficeNamespaces.w) {
+        paragraph.inlines.addAll(
+          _readSimpleField(reader, package, docUri, paragraph),
+        );
+      } else if (reader.localName == 'hyperlink') {
+        _readHyperlink(reader, package, docUri, paragraph);
+      }
+      for (final WmlInline inline in paragraph.inlines.skip(firstInline)) {
+        if (inline is WmlRun) {
+          inline.hyperlink ??= link;
+          if (link != null && inline.properties.color == '000000') {
+            WordLink.applyLook(inline);
+          }
+        }
       }
     }
-    return inlines;
   }
 
   WmlHyperlink? _hyperlinkFrom(
@@ -1879,52 +1931,6 @@ class WordDeserializer {
     }
   }
 
-  void _readCitations(WmlDocument document, OpcPackage package) {
-    final PackagePart? part =
-        package.getPart('/customXml/sources.xml') ??
-        package.getPart('/customXml/item1.xml');
-    if (part == null) {
-      return;
-    }
-    final XmlPullReader reader = WordMarkupCompatibilityReader(part.readText());
-    String tag = '';
-    String author = '';
-    String title = '';
-    String year = '';
-    while (reader.next()) {
-      if (reader.eventType == XmlEventType.startElement &&
-          reader.localName == 'Source') {
-        tag = '';
-        author = '';
-        title = '';
-        year = '';
-      } else if (reader.eventType == XmlEventType.startElement &&
-          (reader.localName == 'Tag' ||
-              reader.localName == 'Author' ||
-              reader.localName == 'Title' ||
-              reader.localName == 'Year')) {
-        final String name = reader.localName;
-        final String text = _elementText(reader);
-        switch (name) {
-          case 'Tag':
-            tag = text;
-          case 'Author':
-            author = text;
-          case 'Title':
-            title = text;
-          case 'Year':
-            year = text;
-        }
-      } else if (reader.eventType == XmlEventType.endElement &&
-          reader.localName == 'Source' &&
-          tag.isNotEmpty) {
-        document.citations.add(
-          WmlCitation(tag: tag, author: author, title: title, year: year),
-        );
-      }
-    }
-  }
-
   void _readNotes(WmlDocument document, OpcPackage package, String docUri) {
     _readNotesPart(
       document.footnotes,
@@ -1995,6 +2001,7 @@ class WordDeserializer {
       final WmlNote note = WmlNote(
         id: id,
         endnote: endnote,
+        addReference: false,
         addReferenceSpace: false,
         referencePropertiesXml: '',
       );

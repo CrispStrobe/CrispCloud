@@ -64,6 +64,18 @@ sealed class WmlInline {
   WmlInline();
 }
 
+/// The zero-width automatic number inside a footnote or endnote body.
+///
+/// This is distinct from [WmlRun.noteRefId], which links body text to a note.
+/// Keeping the marker in the inline sequence preserves imported placement,
+/// including a marker between two text nodes in one native run.
+final class WmlNoteMarker extends WmlInline {
+  WmlNoteMarker({required this.endnote, required this.properties});
+
+  final bool endnote;
+  final WmlRunProps properties;
+}
+
 /// Class WmlRun.
 class WmlRun extends WmlInline {
   /// WmlRun API.
@@ -613,7 +625,11 @@ class WmlCitation {
     required this.title,
     this.year = '',
     this.pages = '',
-  });
+    this.sourceXml,
+    Map<String, String>? importedValues,
+  }) : importedValues = importedValues == null
+           ? null
+           : Map<String, String>.unmodifiable(importedValues);
 
   /// Short tag used in the body (`(Smith 2020)`).
   String tag;
@@ -629,6 +645,13 @@ class WmlCitation {
 
   /// pages API.
   String pages;
+
+  /// Original native source metadata, including structured authors and fields
+  /// not represented by this compact editing model.
+  final String? sourceXml;
+
+  /// Imported scalar values used to patch only deliberately changed fields.
+  final Map<String, String>? importedValues;
 
   /// inText API.
   String get inText {

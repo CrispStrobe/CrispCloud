@@ -7,7 +7,7 @@
   {"op":"commentAdd","paragraph":1,"start":6,"end":10,"text":"Check beta","author":"Reviewer","initials":"RV","date":"2026-11-12T00:00:00Z"},
   {"op":"commentReply","id":0,"text":"Reviewed","author":"Author","initials":"AU","date":"2026-11-12T01:00:00Z"},
   {"op":"imageAdd","file":"replacement.png","width":48,"height":24,"title":"Illustration"},
-  {"op":"imageWrap","image":0,"wrap":"square","top":1,"bottom":0,"left":0,"right":2.5,"rotation":30,"altTitle":"Accessible picture","altDescription":"Two color test picture"},
+  {"op":"imageWrap","image":0,"wrap":"square","top":1,"bottom":0,"left":0,"right":2.5,"rotation":30,"altTitle":"Accessible picture","altDescription":"Solid green test picture"},
   {"op":"frameAdd","text":"Placed text","x":24.5,"y":50.25,"width":180,"height":60,"anchor":"margin","wrap":"square","fill":"EFEFEF","stroke":"123456"},
   {"op":"tableAdd","rows":2,"columns":2,"width":240},
   {"op":"tableCellText","table":0,"row":0,"column":0,"text":"A"},

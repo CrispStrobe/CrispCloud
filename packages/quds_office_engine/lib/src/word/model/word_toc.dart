@@ -160,7 +160,7 @@ abstract final class WordToc {
     paragraph.properties.spacingAfter = clamped == 0 ? 8 : 8;
     paragraph.properties.keepTogether = clamped > 0;
     if (clamped > 0) {
-      paragraph.properties.bookmarkName = WordLink.headingBookmark(
+      paragraph.properties.bookmarkName ??= WordLink.headingBookmark(
         paragraph.text,
         clamped,
       );
@@ -311,6 +311,9 @@ abstract final class WordToc {
 
   /// refresh API.
   static void refresh(WmlToc toc, WmlDocument document) {
+    // Native headings need durable, unique targets even when the caller is a
+    // script or engine client rather than the editor's relayout path.
+    WordLink.ensureHeadingBookmarks(document);
     final String titleText = toc.titleParagraph.text.trim();
     if (titleText.isNotEmpty) {
       toc.title = titleText;
@@ -412,7 +415,11 @@ abstract final class WordToc {
       inlines: <WmlInline>[
         WmlRun(
           text: entry.text,
-          properties: WmlRunProps(fontSizeHalfPoints: 22, color: '2E75B6'),
+          properties: WmlRunProps(
+            fontSizeHalfPoints: 22,
+            color: '2E75B6',
+            underline: link == null ? WmlUnderline.none : WmlUnderline.single,
+          ),
           hyperlink: link,
         ),
       ],

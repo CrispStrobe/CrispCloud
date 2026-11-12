@@ -2520,7 +2520,11 @@ class WordLayoutEngine {
   void _appendEndnotes(WmlDocument document, List<LaidOutPage> pages) {
     final List<WmlNote> notes = <WmlNote>[
       for (final WmlNote note in document.endnotes)
-        if (note.id > 0 && note.text.trim().isNotEmpty) note,
+        if (note.id > 0 &&
+            (note.text.trim().isNotEmpty ||
+                note.addReference ||
+                note.hasReferenceMarkers))
+          note,
     ];
     if (notes.isEmpty || pages.isEmpty) {
       return;

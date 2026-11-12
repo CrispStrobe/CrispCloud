@@ -10,12 +10,14 @@ import '../../xml/namespaces.dart';
 import '../../xml/xml_node.dart';
 import '../../xml/xml_writer.dart';
 import '../math/omml_io.dart';
+import '../model/wml_clone.dart';
 import '../model/wml_document.dart';
 import '../model/word_notes.dart';
 import '../model/word_revision.dart';
 import '../model/word_styles.dart';
 import '../model/word_toc.dart';
 import '../properties/wml_properties.dart';
+import 'word_bibliography_io.dart';
 import 'word_comment_io.dart';
 import 'word_drawing_io.dart';
 import 'word_frame_io.dart';
@@ -61,6 +63,7 @@ class WordSerializer {
 
   /// write API.
   OpcPackage write(WmlDocument document) {
+    WordRevisions.validate(document);
     final OpcPackage package =
         document.package ?? OpcPackage.create(OpcPackageKind.word);
     final PackageRelationship? office = package.packageRelationships
@@ -115,7 +118,7 @@ class WordSerializer {
     _syncWatermark(document, package);
     _syncStyles(document, package);
     _syncNotes(document, package);
-    _syncCitations(document, package);
+    WordBibliographyIo.write(document, package, _mainPartUri);
     _syncSettings(document, package);
     document.properties.writeToPackage(package);
     document.package = package;
@@ -688,6 +691,20 @@ class WordSerializer {
         continue;
       }
       switch (inline) {
+        case WmlNoteMarker():
+          w.writeStartElement('r', prefix: 'w');
+          final marker = inline.properties;
+          final changed = WordPropertyIo.runValues(marker).entries.any(
+            (entry) => marker.importedValues?[entry.key] != entry.value,
+          );
+          if (marker.sourcePropertiesXml != '' || changed) {
+            _writeRPr(w, marker);
+          }
+          w.writeEmptyElement(
+            inline.endnote ? 'endnoteRef' : 'footnoteRef',
+            prefix: 'w',
+          );
+          w.writeEndElement();
         case WmlRun():
           if (pageFieldOpen) {
             _writePageFieldResult(w, inline);
@@ -747,26 +764,39 @@ class WordSerializer {
     WmlRun inline,
     int offset,
   ) {
-    final WmlRevision? revision = _revisionAt(
-      paragraph,
-      offset,
-      inline.text.length,
-    );
-    if (revision == null) {
+    final List<WmlRevision> revisions = _revisionsFor(paragraph).toList();
+    if (revisions.isEmpty || inline.text.isEmpty) {
       _writeRun(w, inline);
       return;
     }
-    w.writeStartElement(
-      revision.kind == WmlRevisionKind.delete ? 'del' : 'ins',
-      prefix: 'w',
-    );
-    w.writeAttribute('w:id', '${revision.id}');
-    w.writeAttribute('w:author', revision.author);
-    if (revision.dateIso.isNotEmpty) {
-      w.writeAttribute('w:date', revision.dateIso);
+    final int length = inline.text.length;
+    final Set<int> boundaries = <int>{0, length};
+    if (!inline.isAtomic) {
+      for (final WmlRevision revision in revisions) {
+        if (revision.start < offset + length && revision.end > offset) {
+          boundaries
+            ..add((revision.start - offset).clamp(0, length))
+            ..add((revision.end - offset).clamp(0, length));
+        }
+      }
     }
-    _writeRun(w, inline, deleted: revision.kind == WmlRevisionKind.delete);
-    w.writeEndElement();
+    final List<int> cuts = boundaries.toList()..sort();
+    for (var i = 1; i < cuts.length; i++) {
+      final int start = offset + cuts[i - 1];
+      final int end = offset + cuts[i];
+      WmlRevision? tracked;
+      for (final WmlRevision revision in revisions) {
+        if (revision.start < end && revision.end > start) {
+          tracked = revision;
+          break;
+        }
+      }
+      final WmlRun run = cuts.length == 2
+          ? inline
+          : (WmlClone.inlines(<WmlInline>[inline]).single as WmlRun
+              ..text = inline.text.substring(cuts[i - 1], cuts[i]));
+      _writeRun(w, run, revision: tracked);
+    }
   }
 
   bool _hasLeadingColumnBreak(WmlParagraph paragraph) {
@@ -777,30 +807,22 @@ class WordSerializer {
     return false;
   }
 
-  WmlRevision? _revisionAt(WmlParagraph paragraph, int offset, int length) {
+  Iterable<WmlRevision> _revisionsFor(WmlParagraph paragraph) sync* {
     final WmlDocument? document = _document;
-    if (document == null || length <= 0) {
-      return null;
-    }
-    var index = 0;
-    for (final WmlParagraph item in document.paragraphs) {
-      if (identical(item, paragraph)) {
-        final int end = offset + length;
-        for (final WmlRevision revision in document.revisions) {
-          if (revision.paragraphIndex == index &&
-              revision.start < end &&
-              revision.end > offset) {
-            return revision;
-          }
-        }
-        return null;
+    if (document == null) return;
+    for (final WmlRevision revision in document.revisions) {
+      if (revision.accepted == null &&
+          identical(
+            revision.targetParagraph ??
+                WordRevisions.resolveParagraph(document, revision),
+            paragraph,
+          )) {
+        yield revision;
       }
-      index++;
     }
-    return null;
   }
 
-  void _writeRun(XmlWriter w, WmlRun inline, {bool deleted = false}) {
+  void _writeRun(XmlWriter w, WmlRun inline, {WmlRevision? revision}) {
     final String? instruction = inline.fieldInstruction;
     if (instruction != null) {
       w.writeStartElement('fldSimple', prefix: 'w');
@@ -808,6 +830,17 @@ class WordSerializer {
       if (inline.fieldLocked) w.writeAttribute('w:fldLock', '1');
       if (inline.fieldDirty != null) {
         w.writeAttribute('w:dirty', inline.fieldDirty! ? '1' : '0');
+      }
+    }
+    // Native simple fields contain tracked runs. A fldSimple inside ins/del
+    // is not a valid WordprocessingML run-content child.
+    final bool deleted = revision?.kind == WmlRevisionKind.delete;
+    if (revision != null) {
+      w.writeStartElement(deleted ? 'del' : 'ins', prefix: 'w');
+      w.writeAttribute('w:id', '${revision.id}');
+      w.writeAttribute('w:author', revision.author);
+      if (revision.dateIso.isNotEmpty) {
+        w.writeAttribute('w:date', revision.dateIso);
       }
     }
     w.writeStartElement('r', prefix: 'w');
@@ -822,6 +855,7 @@ class WordSerializer {
       _writeRunContent(w, inline.text, deleted: deleted);
     }
     w.writeEndElement();
+    if (revision != null) w.writeEndElement();
     if (instruction != null) w.writeEndElement();
   }
 
@@ -1591,37 +1625,6 @@ class WordSerializer {
     w.writeEndElement();
   }
 
-  void _syncCitations(WmlDocument document, OpcPackage package) {
-    if (document.citations.isEmpty && document.indexMarks.isEmpty) {
-      return;
-    }
-    final StringBuffer sources = StringBuffer(
-      '<?xml version="1.0" encoding="UTF-8"?>'
-      '<b:Sources xmlns:b="http://schemas.openxmlformats.org/officeDocument/2006/bibliography">',
-    );
-    for (final WmlCitation citation in document.citations) {
-      sources.write(
-        '<b:Source><b:Tag>${_xmlEscape(citation.tag)}</b:Tag>'
-        '<b:Author>${_xmlEscape(citation.author)}</b:Author>'
-        '<b:Title>${_xmlEscape(citation.title)}</b:Title>'
-        '<b:Year>${_xmlEscape(citation.year)}</b:Year></b:Source>',
-      );
-    }
-    sources.write('</b:Sources>');
-    final String xml = sources.toString();
-    for (final String uri in <String>[
-      '/customXml/sources.xml',
-      '/customXml/item1.xml',
-    ]) {
-      final PackagePart? existing = package.getPart(uri);
-      if (existing == null) {
-        package.createPart(uri, 'application/xml', utf8.encode(xml));
-      } else {
-        existing.writeText(xml);
-      }
-    }
-  }
-
   void _syncNumbering(OpcPackage package) {
     final String uri = _relatedPartUri(
       package,
@@ -2052,7 +2055,9 @@ class WordSerializer {
     for (final WmlNote note in notes) {
       w.writeStartElement(item, prefix: 'w');
       w.writeAttribute('w:id', '${note.id}');
-      var referenceWritten = false;
+      // Imported absence is intentional. A marker already present in any
+      // paragraph or nested table must stay there without a second prefix.
+      var referenceWritten = !note.addReference || note.hasReferenceMarkers;
       for (final WmlBlock block in note.blocks) {
         if (!referenceWritten) {
           _writeParagraph(
@@ -2112,13 +2117,6 @@ class WordSerializer {
       throw FormatException('The Word $name part must be inside its package');
     }
     return rels.resolve(rel);
-  }
-
-  static String _xmlEscape(String text) {
-    return text
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;');
   }
 }
 

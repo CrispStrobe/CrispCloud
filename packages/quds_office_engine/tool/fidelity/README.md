@@ -96,7 +96,10 @@ stories use `section` (default 0); note stories require the actual `note` ID; co
 
 ### Word structure operations
 
-These 24 additional commands use body indexes shown by `inspect`. Exact required
+These 24 additional commands use body indexes shown by `inspect`. `tableMerge`
+uses logical grid columns; `tableUnmerge`, `tableCellText` and `tableCellFormat`
+use physical cell indexes within the selected row. TOC indexes address top-level
+section TOCs. Exact required
 fields and accepted optional fields are available from `operations`.
 
 | Operations | Purpose and important fields |
@@ -112,7 +115,7 @@ fields and accepted optional fields are available from `operations`.
 | `frameAdd`, `frameFormat`, `frameRemove` | Create and position a text frame with `x`, `y`, `width`, `height`, `anchor`, `wrap`, `fill`, `stroke` |
 
 Paragraph tab stops are arrays of `{ "position": 72, "alignment": "right",
-"leader": "dots" }`. Distances are points. `firstLine` and `hanging` cannot both
+"leader": "dot" }`. Distances are points. `firstLine` and `hanging` cannot both
 be supplied. Comment `date` values, when supplied, are ISO-8601 timestamps.
 Bookmark creation rejects duplicate names and replacement of a differently named
 bookmark, preventing silent breakage of existing references. General multiple

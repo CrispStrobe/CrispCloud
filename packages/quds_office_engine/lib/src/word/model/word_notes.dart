@@ -11,6 +11,7 @@ class WmlNote {
   WmlNote({
     required this.id,
     required this.endnote,
+    this.addReference = true,
     this.addReferenceSpace = true,
     this.referencePropertiesXml,
     List<WmlParagraph>? paragraphs,
@@ -29,6 +30,10 @@ class WmlNote {
 
   /// True for an endnote, false for a footnote.
   final bool endnote;
+
+  /// Newly authored notes get a conventional leading marker when their story
+  /// has no [WmlNoteMarker]. Imported notes preserve marker absence and order.
+  final bool addReference;
 
   /// New note bodies get one separator after the automatic reference mark.
   /// Imported stories keep their exact source whitespace instead.
@@ -53,6 +58,10 @@ class WmlNote {
   Iterable<WmlParagraph> get allParagraphs =>
       blocks.expand(WmlClone.paragraphsOf);
 
+  bool get hasReferenceMarkers => allParagraphs.any(
+    (paragraph) => paragraph.inlines.any((inline) => inline is WmlNoteMarker),
+  );
+
   Iterable<WmlVisual> get visuals =>
       WmlDocument(sections: <WmlSection>[WmlSection(blocks: blocks)]).visuals;
 
@@ -61,9 +70,26 @@ class WmlNote {
 
   /// text API.
   set text(String value) {
+    // This legacy setter deliberately replaces the rich story, but its
+    // automatic note number is not ordinary body text. Retain one existing
+    // marker (and its own formatting); imported absence remains absence.
+    final marker = allParagraphs
+        .expand((paragraph) => paragraph.inlines.whereType<WmlNoteMarker>())
+        .firstOrNull;
     blocks
       ..clear()
-      ..add(WmlParagraph(inlines: <WmlInline>[WmlRun(text: value)]));
+      ..add(
+        WmlParagraph(
+          inlines: <WmlInline>[
+            if (marker != null)
+              WmlNoteMarker(
+                endnote: marker.endnote,
+                properties: marker.properties.copy(),
+              ),
+            WmlRun(text: value),
+          ],
+        ),
+      );
   }
 }
 
@@ -193,7 +219,9 @@ abstract final class WordNotes {
     final List<WmlParagraph> paragraphs = note.paragraphs;
     return <String>[
       for (var i = 0; i < paragraphs.length; i++)
-        i == 0 && paragraphs[i].text.startsWith(' ')
+        i == 0 &&
+                _hasLeadingReference(note, paragraphs[i]) &&
+                paragraphs[i].text.startsWith(' ')
             ? paragraphs[i].text.substring(1)
             : paragraphs[i].text,
     ].join('\n');
@@ -218,7 +246,12 @@ abstract final class WordNotes {
         ? lines.length
         : paragraphs.length;
     for (var i = 0; i < shared; i++) {
-      _applyLine(paragraphs[i], lines[i], first: i == 0);
+      _applyLine(
+        paragraphs[i],
+        lines[i],
+        preserveReferenceSpace:
+            i == 0 && _hasLeadingReference(note, paragraphs[i]),
+      );
     }
     if (lines.length > paragraphs.length) {
       final WmlParagraph template = paragraphs.last;
@@ -248,10 +281,10 @@ abstract final class WordNotes {
   static void _applyLine(
     WmlParagraph paragraph,
     String line, {
-    required bool first,
+    required bool preserveReferenceSpace,
   }) {
     final String old = paragraph.text;
-    final String target = first && old.startsWith(' ') && !line.startsWith(' ')
+    final String target = preserveReferenceSpace && old.startsWith(' ')
         ? ' $line'
         : line;
     if (old == target) {
@@ -276,6 +309,21 @@ abstract final class WordNotes {
       old.length - end,
       target.substring(start, target.length - end),
     );
+  }
+
+  static bool _hasLeadingReference(WmlNote note, WmlParagraph paragraph) {
+    if (note.addReference &&
+        !note.hasReferenceMarkers &&
+        note.blocks.isNotEmpty &&
+        identical(note.blocks.first, paragraph)) {
+      return true;
+    }
+    for (final inline in paragraph.inlines) {
+      if (inline is WmlNoteMarker) return true;
+      if (inline is WmlRun && inline.text.isEmpty) continue;
+      return false;
+    }
+    return false;
   }
 
   /// paragraphOf API.

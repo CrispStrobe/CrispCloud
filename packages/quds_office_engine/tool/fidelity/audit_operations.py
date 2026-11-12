@@ -14,7 +14,11 @@ FIXTURES = ROOT/'test/fixtures/fidelity/scripts'
 def audit(catalog):
     scenarios = {'docx':[FIXTURES/'word.json',ROOT/'tool/fidelity/example_steps.json'],
                  'xlsx':[FIXTURES/'sheet.json'],'pptx':[FIXTURES/'slide.json']}
-    scenarios['docx'].extend(sorted(FIXTURES.glob('word-structure-*.json')))
+    # Keep this list aligned with the executable phases in
+    # word_structure_steps_test.dart. An unexecuted JSON file must not satisfy
+    # coverage just because its filename matches a wildcard.
+    scenarios['docx'].extend(FIXTURES/f'word-structure-{phase}.json'
+                             for phase in ('create', 'edit', 'remove'))
     rows=[]
     for extension, operations in catalog.items():
         evidence={name:[] for name in operations}
@@ -29,7 +33,7 @@ def audit(catalog):
             if not sources: raise AssertionError(f'Unexercised operation: {extension}/{op}')
             rows.append({'format':extension,'operation':op,'scenarios':sources})
     return {'schema_version':1,'operations':len(rows),'unexercised':[],
-            'scope':'Executable scenario inventory; semantic correctness checked by independent oracles.',
+            'scope':'Operation-name inventory in the explicitly executed scenarios; parameter/edge-case coverage is not measured. Semantic correctness is checked by independent oracles.',
             'evidence':rows}
 
 if __name__=='__main__':

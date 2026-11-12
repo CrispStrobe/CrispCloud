@@ -14,14 +14,38 @@ class _NoteStory {
     WordLayoutEngine owner,
   ) {
     final List<WmlBlock> blocks = note.blocks.map(WmlClone.block).toList();
-    if (blocks.isEmpty || blocks.first is! WmlParagraph) {
-      blocks.insert(0, WmlParagraph());
+    var hasMarker = false;
+    for (final paragraph in blocks.expand(WmlClone.paragraphsOf)) {
+      for (var i = 0; i < paragraph.inlines.length; i++) {
+        final inline = paragraph.inlines[i];
+        if (inline is WmlNoteMarker) {
+          hasMarker = true;
+          paragraph.inlines[i] = WmlRun(
+            text: '${note.id}',
+            properties: inline.properties.copy(),
+          );
+        }
+      }
     }
-    final WmlParagraph first = blocks.first as WmlParagraph;
-    final int leading = first.text.length - first.text.trimLeft().length;
-    if (leading > 0) WmlRunEdit.replaceRange(first, 0, leading, '');
-    final WmlRunProps props = WmlRunEdit.propsAt(first, 0).copy();
-    first.inlines.insert(0, WmlRun(text: '${note.id}. ', properties: props));
+    if (note.addReference && !hasMarker) {
+      if (blocks.isEmpty || blocks.first is! WmlParagraph) {
+        blocks.insert(0, WmlParagraph());
+      }
+      final WmlParagraph first = blocks.first as WmlParagraph;
+      final bool separator =
+          note.addReferenceSpace &&
+          (first.text.isEmpty || !RegExp(r'^\s').hasMatch(first.text));
+      first.inlines.insertAll(0, [
+        WmlRun(
+          text: '${note.id}',
+          properties: WmlRunProps(
+            styleId: note.endnote ? 'EndnoteReference' : 'FootnoteReference',
+            vertAlign: WmlVertAlign.superscript,
+          ),
+        ),
+        if (separator) WmlRun(text: ' '),
+      ]);
+    }
     // Make oversized drawings fit a continuation page without clipping.
     final WmlDocument story = WmlDocument(
       sections: <WmlSection>[

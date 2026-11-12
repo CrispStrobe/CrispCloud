@@ -228,6 +228,12 @@ abstract final class WmlClone {
   }
 
   static WmlInline _inline(WmlInline inline) {
+    if (inline is WmlNoteMarker) {
+      return WmlNoteMarker(
+        endnote: inline.endnote,
+        properties: inline.properties.copy(),
+      );
+    }
     if (inline is WmlRun) {
       return WmlRun(
         text: inline.text,

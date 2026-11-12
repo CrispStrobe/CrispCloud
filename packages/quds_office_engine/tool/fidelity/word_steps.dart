@@ -113,6 +113,7 @@ void applyStep(
       _noteHint(p);
     case 'heading':
       WordToc.applyHeading(paragraph(), s.integer('level', max: 9));
+      WordLink.ensureHeadingBookmarks(doc);
     case 'applyStyle':
       final style = s.string('style');
       if (WordStyles.byId(style, document: doc) == null) {
@@ -230,7 +231,10 @@ void applyStep(
         var index = 0;
         while (index < target.inlines.length) {
           final inline = target.inlines[index];
-          if (inline is WmlRun && inline.text.isEmpty) { index++; continue; }
+          if (inline is WmlRun && inline.text.isEmpty) {
+            index++;
+            continue;
+          }
           if (inline is WmlBreak && inline.type == WmlBreakType.column) {
             target.inlines.removeAt(index);
           }
@@ -244,6 +248,22 @@ void applyStep(
       if (range.$1 == range.$2) {
         throw ArgumentError('runFormat requires a non-empty text range');
       }
+      // Validate before applyRange splits source runs or touches their imported
+      // property snapshots. A late invalid color must not partially bold text.
+      final bold = s.has('bold') ? s.boolean('bold') : null;
+      final italic = s.has('italic') ? s.boolean('italic') : null;
+      final strike = s.has('strike') ? s.boolean('strike') : null;
+      final underline = s.has('underline')
+          ? WmlUnderline.values.byName(s.string('underline'))
+          : null;
+      final color = s.has('color') ? s.color('color') : null;
+      final highlight = s.has('highlight') && values['highlight'] != null
+          ? s.color('highlight')
+          : null;
+      final font = s.has('font') ? s.string('font') : null;
+      final size = s.has('size')
+          ? (s.number('size', min: 0.5, max: 1638) * 2).round()
+          : null;
       WmlRunEdit.applyRange(p, range.$1, range.$2, (r) {
         for (final entry in <String, String>{
           'bold': 'b',
@@ -260,23 +280,14 @@ void applyStep(
             r.explicitProperties.add(entry.value);
           }
         }
-        if (s.has('bold')) r.bold = s.boolean('bold');
-        if (s.has('italic')) r.italic = s.boolean('italic');
-        if (s.has('strike')) r.strike = s.boolean('strike');
-        if (s.has('underline')) {
-          r.underline = WmlUnderline.values.byName(s.string('underline'));
-        }
-        if (s.has('color')) r.color = s.color('color');
-        if (s.has('highlight')) {
-          r.highlight = values['highlight'] == null
-              ? null
-              : s.color('highlight');
-        }
-        if (s.has('font')) r.asciiFont = s.string('font');
-        if (s.has('size')) {
-          r.fontSizeHalfPoints = (s.number('size', min: 0.5, max: 1638) * 2)
-              .round();
-        }
+        if (bold != null) r.bold = bold;
+        if (italic != null) r.italic = italic;
+        if (strike != null) r.strike = strike;
+        if (underline != null) r.underline = underline;
+        if (color != null) r.color = color;
+        if (s.has('highlight')) r.highlight = highlight;
+        if (font != null) r.asciiFont = font;
+        if (size != null) r.fontSizeHalfPoints = size;
       });
     case 'addNote':
       final p = paragraph();
@@ -302,7 +313,7 @@ void applyStep(
         endnote: s.boolean('endnote', fallback: false),
       );
       if (note == null) throw ArgumentError('Unknown note id');
-      note.text = s.string('text');
+      WordNotes.editText(note, s.string('text'));
     case 'deleteNote':
       if (!WordNotes.delete(
         doc,
@@ -316,8 +327,13 @@ void applyStep(
       if (!s.has('width') && !s.has('height')) {
         throw ArgumentError('imageSize needs width or height');
       }
-      if (s.has('width')) image.width = s.number('width', min: 0.01);
-      if (s.has('height')) image.height = s.number('height', min: 0.01);
+      final width = s.has('width') ? s.number('width', min: 0.01) : image.width;
+      final height = s.has('height')
+          ? s.number('height', min: 0.01)
+          : image.height;
+      image
+        ..width = width
+        ..height = height;
     case 'imageReplace':
       picture().visual.imageBytes = readPicture(s, assetDirectory);
     case 'imageAdd':
@@ -410,11 +426,10 @@ void applyStep(
     case 'tableCellText':
       final row = s.item('row', table().rows);
       final cell = s.item('column', row.cells);
+      final text = s.string('text');
       cell.blocks
         ..clear()
-        ..add(
-          WmlParagraph(inlines: <WmlInline>[WmlRun(text: s.string('text'))]),
-        );
+        ..add(WmlParagraph(inlines: <WmlInline>[WmlRun(text: text)]));
     case 'headerFooterText':
       final story = s.string('story');
       if (!_headerStories.contains(story)) {
@@ -422,9 +437,10 @@ void applyStep(
       }
       final paragraphs = _headerParagraphs(section(), story);
       final at = s.integer('paragraph', fallback: 0, max: paragraphs.length);
+      final text = s.string('text');
       if (at == paragraphs.length) paragraphs.add(WmlParagraph());
       final p = paragraphs[at];
-      WmlRunEdit.replaceRange(p, 0, p.text.length, s.string('text'));
+      WmlRunEdit.replaceRange(p, 0, p.text.length, text);
     case 'sectionFormat':
       final sec = section();
       final width = s.number('width', fallback: sec.pageSize.width, min: 1);
@@ -452,22 +468,26 @@ void applyStep(
       if (gap * (columns - 1) >= width - margins.left - margins.right) {
         throw ArgumentError('Columns leave no text width');
       }
+      final separator = s.boolean('columnSep', fallback: sec.columnSep);
+      final breakKind = s.has('breakKind')
+          ? WmlSectionBreakKind.values.byName(s.string('breakKind'))
+          : sec.breakKind;
+      final firstPage = s.boolean(
+        'differentFirstPage',
+        fallback: sec.differentFirstPage,
+      );
+      final oddEven = s.boolean(
+        'differentOddEven',
+        fallback: sec.differentOddEven,
+      );
       sec.pageSize = WmlPageSize(width: width, height: height);
       sec.margins = margins;
       sec.columnCount = columns;
       sec.columnSpace = gap;
-      if (s.has('columnSep')) sec.columnSep = s.boolean('columnSep');
-      if (s.has('breakKind')) {
-        sec.breakKind = WmlSectionBreakKind.values.byName(
-          s.string('breakKind'),
-        );
-      }
-      if (s.has('differentFirstPage')) {
-        sec.differentFirstPage = s.boolean('differentFirstPage');
-      }
-      if (s.has('differentOddEven')) {
-        sec.differentOddEven = s.boolean('differentOddEven');
-      }
+      sec.columnSep = separator;
+      sec.breakKind = breakKind;
+      sec.differentFirstPage = firstPage;
+      sec.differentOddEven = oddEven;
     default:
       applyWordStructureStep(doc, values);
   }
@@ -637,10 +657,8 @@ void _boundary(WmlParagraph p, int at) {
   }
   var position = 0;
   for (final run in p.inlines.whereType<WmlRun>()) {
-    if (run.noteRefId != null &&
-        at > position &&
-        at < position + run.text.length) {
-      throw ArgumentError('Offset splits an atomic note reference');
+    if (run.isAtomic && at > position && at < position + run.text.length) {
+      throw ArgumentError('Offset splits an atomic note or field result');
     }
     position += run.text.length;
   }

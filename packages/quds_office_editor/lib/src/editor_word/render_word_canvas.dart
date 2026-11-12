@@ -352,6 +352,9 @@ class WordCanvas extends LeafRenderObjectWidget {
   @override
   /// updateRenderObject API.
   void updateRenderObject(BuildContext context, RenderWordCanvas renderObject) {
+    var needsLayout =
+        !identical(renderObject.laidOut, laidOut) ||
+        renderObject.compact != compact;
     renderObject
       ..document = document
       ..laidOut = laidOut
@@ -415,6 +418,11 @@ class WordCanvas extends LeafRenderObjectWidget {
       renderObject.viewport = viewport!;
       // A replacement viewport has no extent until layout initializes it.
       // Painting with a zero extent culls every page after the first one.
+      needsLayout = true;
+    }
+    if (needsLayout) {
+      // Content size and viewport bounds may change even when the host keeps
+      // the same widget constraints and reuses this render object.
       renderObject.markNeedsLayout();
     }
     renderObject.markNeedsPaint();
@@ -3727,8 +3735,16 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     if (document.revisions.isEmpty || line.glyphs.isEmpty) {
       return;
     }
+    final List<WmlParagraph> paragraphs = document.paragraphs.toList();
+    if (line.paragraphIndex < 0 || line.paragraphIndex >= paragraphs.length) {
+      return;
+    }
+    final WmlParagraph paragraph = paragraphs[line.paragraphIndex];
     for (final WmlRevision revision in document.revisions) {
-      if (revision.paragraphIndex != line.paragraphIndex) {
+      if (!identical(
+        WordRevisions.resolveParagraph(document, revision),
+        paragraph,
+      )) {
         continue;
       }
       for (final LaidOutGlyph glyph in line.glyphs) {
