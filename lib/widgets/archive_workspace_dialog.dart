@@ -23,6 +23,7 @@ import '../utils/formatters.dart';
 import 'file_operation_dialog.dart';
 import 'internal_viewer_dialog.dart';
 import 'archive_endpoint_dialog.dart';
+import 'archive_endpoint_actions.dart';
 import 'archive_member_move_dialog.dart';
 
 enum ArchiveWorkspaceAction { browse, copyOut, moveOut, edit }
@@ -35,6 +36,7 @@ Future<void> showCurrentArchiveWorkspaceDialog(
   PanelSide side, {
   ArchiveWorkspaceAction action = ArchiveWorkspaceAction.browse,
   FileItem? focusedMember,
+  ArchivePublicationJournal? journal,
 }) async {
   try {
     final panel = ref.read(panelProvider(side));
@@ -68,6 +70,7 @@ Future<void> showCurrentArchiveWorkspaceDialog(
           .map((file) => memberPath(file.path!))
           .toSet(),
       initialAction: action,
+      journal: journal,
     );
   } catch (error) {
     if (context.mounted) {
@@ -87,6 +90,7 @@ Future<void> showArchiveWorkspaceDialog(
   String initialDirectory = '/',
   Set<String> initialSelectedPaths = const {},
   ArchiveWorkspaceAction initialAction = ArchiveWorkspaceAction.browse,
+  ArchivePublicationJournal? journal,
 }) async {
   try {
     final origin =
@@ -103,6 +107,7 @@ Future<void> showArchiveWorkspaceDialog(
         initialDirectory: initialDirectory,
         initialSelectedPaths: initialSelectedPaths,
         initialAction: initialAction,
+        journal: journal,
       ),
     );
     if (context.mounted) await ref.read(panelProvider(side)).refresh();
@@ -123,6 +128,7 @@ class _ArchiveWorkspaceDialog extends ConsumerStatefulWidget {
     required this.initialDirectory,
     required this.initialSelectedPaths,
     required this.initialAction,
+    this.journal,
   });
   final PanelSide side;
   final FileItem file;
@@ -131,6 +137,7 @@ class _ArchiveWorkspaceDialog extends ConsumerStatefulWidget {
   final String initialDirectory;
   final Set<String> initialSelectedPaths;
   final ArchiveWorkspaceAction initialAction;
+  final ArchivePublicationJournal? journal;
   @override
   ConsumerState<_ArchiveWorkspaceDialog> createState() =>
       _ArchiveWorkspaceDialogState();
@@ -224,7 +231,7 @@ class _ArchiveWorkspaceDialogState
             widget.origin.isCurrent &&
             (widget.location?.isCurrent() ?? true),
       );
-      final journal = ArchivePublicationJournal();
+      final journal = widget.journal ?? ArchivePublicationJournal();
       await journal.initialize();
       if (journal.records.any(
         (record) =>
@@ -528,15 +535,33 @@ class _ArchiveWorkspaceDialogState
   }
 
   Future<void> _moveOut() async {
+    final files = List<FileItem>.unmodifiable(_selection);
     final otherSide = widget.side == PanelSide.local
         ? PanelSide.remote
         : PanelSide.local;
     if (ref.read(panelProvider(otherSide)).isInArchive) {
+      ArchiveEndpointTransferResult? result;
+      var sourceInvalidated = false;
       await _run(() async {
-        throw UnsupportedError(
-          archiveEndpointText(context, 'archiveMoveUnsupported'),
+        final destination = CapturedArchiveImportDestination.capture(
+          ref,
+          otherSide,
+        );
+        result = await showCapturedArchiveWorkspaceCopy(
+          context,
+          source: _workspace!,
+          files: files,
+          destination: destination,
+          moveSources: true,
+          isReviewCurrent: () => mounted && widget.origin.isCurrent,
+          onSourceInvalidated: () => sourceInvalidated = true,
         );
       });
+      // Source removal is published from a separate reviewed candidate. Close
+      // this borrowed view before its old in-memory members can be used again.
+      if (mounted && (result != null || sourceInvalidated)) {
+        Navigator.pop(context);
+      }
       return;
     }
     final proceed = await showDialog<bool>(
@@ -561,7 +586,6 @@ class _ArchiveWorkspaceDialogState
       ),
     );
     if (proceed != true || !mounted) return;
-    final files = _selection;
     await _run(() async {
       final plan = await showFileOperationDialog(
         context,

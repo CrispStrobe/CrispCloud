@@ -29,8 +29,9 @@ import 'archive_endpoint_actions.dart';
 /// follow-up operation to successful entries. Cancellation/background is null.
 /// An archive destination owns a separate physical-container review and receipt;
 /// that workflow does not return a generic per-member completion plan.
-/// [archiveSourceMove] marks a workspace move that first copies, then removes
-/// members from its draft. It is refused when the destination is an archive.
+/// [archiveSourceMove] marks the ordinary copy-out workflow that later removes
+/// members from its draft. Archive destinations use the separate two-container
+/// move review and never return a generic plan for that follow-up removal.
 Future<FileOperationPlan?> showFileOperationDialog(
   BuildContext context,
   WidgetRef ref,
@@ -95,9 +96,7 @@ Future<FileOperationPlan?> showFileOperationDialog(
           ref,
           targetSide,
         );
-        if (archiveSourceMove ||
-            sourceBackend is ArchiveOperationBackend &&
-                kind == FileOperationKind.move) {
+        if (archiveSourceMove) {
           throw UnsupportedError(
             archiveEndpointText(context, 'archiveMoveUnsupported'),
           );
@@ -110,6 +109,7 @@ Future<FileOperationPlan?> showFileOperationDialog(
             source: sourceBackend.workspace,
             files: files,
             destination: destination,
+            moveSources: kind == FileOperationKind.move,
             isReviewCurrent: isReviewCurrent,
           );
           return null;

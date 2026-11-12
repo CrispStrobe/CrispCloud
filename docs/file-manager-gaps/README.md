@@ -103,7 +103,7 @@ the existing size limits and does not claim immutable provider snapshots.
 | [G17](02-viewing-search-and-tools.md#g17) | Additional viewer adapters | Scoped | Existing viewer dispatch; extension review |
 | [G18](03-archives-and-containers.md#g18) | Writable archive endpoints | Partially implemented: native local workflow | Remote access-policy contracts; browser operation leases; native acceptance |
 | [G19](03-archives-and-containers.md#g19) | Directory-to-archive synchronization | Scoped | G18 |
-| [G20](03-archives-and-containers.md#g20) | Archive-to-archive transfer | Partially implemented: reviewed copy | Two-container move/recovery; native acceptance |
+| [G20](03-archives-and-containers.md#g20) | Archive-to-archive transfer | Partially implemented: reviewed copy and native top-level moves | Nested cross-container routes; remote/browser publication; native acceptance |
 | [G21](03-archives-and-containers.md#g21) | Large background archive jobs | Scoped | G18; transfer queue |
 | [G22](03-archives-and-containers.md#g22) | Archive format coverage | Partially implemented: readers, writers and integrity checks | Remaining profiles; format/license review; native acceptance |
 | [G23](03-archives-and-containers.md#g23) | Remote and browser archive creation | Scoped | G18; G21 where streaming is required |

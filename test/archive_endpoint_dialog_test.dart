@@ -143,6 +143,9 @@ void main() {
           throw StateError('Interrupted install');
         }
       };
+      // Native publication leases must make progress in the real async zone,
+      // including when another widget-test file briefly owns the same fixture
+      // archive identity.
       await tester.runAsync(() async {
         await expectLater(
           ArchiveContainerPublisher(backend, firstJournal).publish(

@@ -99,7 +99,7 @@ void main() {
           'test/fixtures/archives/compress-reference-$fixture.Z',
         ).readAsBytesSync();
         final original = decodeArchiveUnixCompress(source);
-        final path = '/payload.Z';
+        const path = '/payload.Z';
         final client = ArchiveWorkflowClient()..put(path, source);
         final backend = ArchiveWorkflowBackend(client, isCurrent: () => true);
         final workspace = await ArchiveWorkspace.open(

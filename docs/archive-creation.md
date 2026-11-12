@@ -4,7 +4,7 @@ Select local files or folders, open the context menu and choose **Create
 archive…**. The dialog captures the selection and the original parent folder
 before review. It shows the destination, archive name, format and available
 compression choices. Choose a new name if an output already exists. The picker
-has **31 explicit choices**; the [format matrix](archive-format-coverage.md)
+has **33 explicit choices**; the [format matrix](archive-format-coverage.md)
 separates creation from reading and editing existing containers.
 
 | Format | Compression choices | Password protection |
@@ -15,6 +15,7 @@ separates creation from reading and editing existing containers.
 | TAR.GZ / gzip | Store (0), Fast (1), Normal (6), Maximum (9) | Unavailable |
 | TAR.BZ2 / TAR.XZ / TAR.ZST / TAR.LZMA; bzip2 / XZ / Zstandard / LZMA-alone | Fast, Normal, Maximum | Unavailable |
 | TAR.LZ4 / LZ4 | Store, Normal | Unavailable |
+| TAR.Z / UNIX compress | Fast (12-bit), Normal (14-bit), Maximum (16-bit dictionary) | Unavailable |
 | AR | Store; flat regular files | Unavailable |
 | CPIO newc / odc / binary LE / binary BE | Store; four distinct creation profiles | Unavailable |
 | XAR | Normal | Unavailable |
@@ -33,6 +34,15 @@ name comes from the output filename. AR takes flat regular files. KMZ requires
 a top-level KML document. The picker explains codec-specific dictionary and
 checksum limits and clears password fields when switching to a format without
 protection support.
+
+UNIX compress creates one `.Z` payload or a `.tar.Z` tree with real block-mode
+LZW compression. Full dictionaries reset when another phrase must be added.
+The three settings bound the dictionary; a larger dictionary does not guarantee
+a smaller file for every input. Neither Store nor password protection is
+available. The format stores no payload checksum or decoded length; verification
+of newly created output compares its complete decoded bytes with the captured
+source. Existing eligible streams are rewritten using the normal 14-bit profile.
+See the [independent writer profile evidence](../test/fixtures/archives/UNIX_COMPRESS_WRITER_PROFILES.md).
 
 CPIO defaults to newc. Select odc or binary LE/BE explicitly when compatibility
 requires the older layout. All four use `.cpio`; the selected profile controls
@@ -66,6 +76,7 @@ Ordinary archive creation is bounded to 64 MiB per source file, 256 MiB of total
 source content and packed output, 200,000 entries, 200 folder levels and 8 MiB
 of member-path text. Format headers also count toward packed limits. All
 compressed TAR choices have a 64 MiB decoded TAR limit, including headers.
+Single-file compressors and compressed TAR also cap encoded output at 64 MiB.
 Fresh native ISO/HFSX/DMG creation has a separate streamed 2 GiB image-output
 bound; it does not increase existing-container editing limits. HFSX/DMG are
 data volumes without copied resource forks, extended attributes or symlinks.
@@ -85,4 +96,7 @@ password confirmation, invalid filenames and all eight translated narrow layouts
 layout and refusal of encryption or unrepresentable timestamps before output.
 `test/archive_cpio_writer_profiles_test.dart` and the native reference emitter/
 checker cover preserved profiles and exact metadata/content readback.
+UNIX compress writer/workflow tests cover physical settings, independent input
+profiles and wrapper preservation; gzip/libarchive readback and actual Node
+execution independently check the produced streams.
 These tests are evidence only when run against the branch being reviewed.

@@ -48,7 +48,8 @@ required original access-policy contract. Browser publication also needs an
 operation-lifetime lease. Generic upload/move capabilities do not enable either
 path. Native publication uses two exclusive moves with a temporary original-name
 absence window. Durable packing drafts remain G21; directory synchronization
-and archive-to-archive moves remain G19/G20; reviewed direct copy is delivered below. Native release acceptance
+and broader archive transfer remain G19/G20; reviewed copy and native top-level
+moves are delivered below. Native release acceptance
 continues under G50. The implementation and its observed gates are preserved in
 [draft PR 81](https://github.com/CrispStrobe/CrispCloud/pull/81) and the
 [continuation record](continuation-tools-archives-20261112.md).
@@ -77,7 +78,7 @@ continues under G50. The implementation and its observed gates are preserved in
 
 ### Archive-to-archive transfer
 
-**Status:** Partially implemented: reviewed copy delivered; two-container moves and native acceptance remain. **Dependencies:** G18.
+**Status:** Partially implemented: reviewed copy and native top-level two-container moves delivered; nested cross-container routes, remote/browser publication and full native acceptance remain. **Dependencies:** G18.
 
 **Scope:** Copy or move members between captured archives with commit-before-delete ordering.
 
@@ -97,8 +98,9 @@ supported time/mode preservation, keep-both/replace/skip, private staged
 verification and existing physical publication. Source fingerprints are checked
 before staging and before final destination verification/installation. Same
 outer containers and native hard-link aliases are refused. Pane F5/context Copy
-and clean workspace Copy out are connected; F6/Move out are explicitly refused
-for archive targets. Source bytes are never written or deleted. A changed source
+and clean workspace Copy out are connected. At that checkpoint F6/Move out were
+refused for archive targets; the later native move continuation below enables
+its narrower scope. Copy source bytes are never written or deleted. A changed source
 or late failure retains/restores the original destination through the existing
 journal. Bounds remain 64 MiB/member and 256 MiB/container/aggregate.
 
@@ -110,9 +112,23 @@ path bounds and the existing whole-container review/publication protect the
 original. This is one workspace, including an eligible nested route; it does
 not coordinate separately opened aliases or different nested routes.
 
-**Remaining:** A two-container move/recovery transaction, grouped operations
-across separately opened routes, backend-specific remote/browser publication, and native release
-acceptance. This increment does not close the broader G20 scope.
+**Delivered native move continuation (2026-11-12):** F6/Move and clean workspace
+Move out prepare and verify both complete archive candidates, then publish the
+destination before source removal. A privately guarded source draft cannot be
+saved without its coordinator and verified destination dependency. Version-2
+source-publication records retain that dependency across restart; older apps
+refuse the record. Source installation, lost-acknowledgement confirmation and
+backup deletion recheck the exact destination. Explicit recovery can restore a
+verified source backup after retaining its installed removal candidate. Results
+distinguish completed members, skipped paths, destination-only publication and
+unconfirmed source state requiring recovery. Original source permissions and
+content are rechecked between publications. Both paths appear in recovery UI.
+
+**Remaining:** Nested cross-container moves, grouped operations across separately
+opened inner routes, backend-specific remote/browser publication and native
+release acceptance. These publications are ordered, not atomic across two files;
+external changes after final observations remain an explicit boundary. This
+increment does not close the broader G20 scope.
 
 **Starting points:** G18; FileOperationService transfer/recovery planning.
 
@@ -214,6 +230,16 @@ layouts, inode aliases, hard links and special records are refused. Independent
 libarchive fresh/edited readback and byte-identical unchanged rewrites supplement
 the malformed/preservation tests. No runtime dependency is added. See the
 [continuation record](../archive-rearrange-cpio-continuation.md).
+
+**Delivered UNIX compress writer continuation (2026-11-12):** `.Z` and TAR.Z
+bring the picker to **33** choices. The bounded original LZW writer provides
+12/14/16-bit block profiles, and eligible existing 9–16-bit block/nonblock
+streams rewrite with the normal 14-bit profile. Immediate payload and physical
+wrapper checks prevent losing nested layers. All 23 independent gzip/libarchive
+readback cases and 18 actual JavaScript profiles pass, including dictionary
+resets and external TAR metadata preservation. The format's missing checksum
+and decoded length remain explicit. See the
+[writer evidence](../../test/fixtures/archives/UNIX_COMPRESS_WRITER_PROFILES.md).
 
 ## G23
 

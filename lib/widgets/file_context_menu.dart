@@ -60,6 +60,7 @@ import 'file_clipboard_actions.dart';
 import 'archive_workspace_dialog.dart';
 import 'archive_endpoint_actions.dart';
 import '../l10n/archive_endpoint_strings.dart';
+import '../l10n/archive_transfer_strings.dart';
 import 'integrity_dialogs.dart';
 import 'integrity_recovery_dialog.dart';
 import '../services/file_operation_service.dart';
@@ -400,6 +401,17 @@ Future<void> _showArchiveMemberTransferMenu(
     // selection or a replacement archive cannot substitute different inputs.
     final source = CapturedArchiveCopySource.capture(ref, side, files);
     final destination = CapturedArchiveImportDestination.capture(ref, opposite);
+    final sourceStorage = source.location.backend.storageReference;
+    final destinationStorage = destination.backend.storageReference;
+    final canReviewMove =
+        !kIsWeb &&
+        source.location.backend is LocalOperationBackend &&
+        destination.backend is LocalOperationBackend &&
+        source.location.location.nestedMembers.isEmpty &&
+        destination.location.nestedMembers.isEmpty &&
+        sourceStorage?.persistent == true &&
+        destinationStorage?.persistent == true &&
+        sourceStorage == destinationStorage;
     final action = await showMenu<String>(
       context: context,
       position: RelativeRect.fromLTRB(position.dx, position.dy, 0, 0),
@@ -408,6 +420,11 @@ Future<void> _showArchiveMemberTransferMenu(
           value: 'copy',
           child: Text(archiveEndpointText(context, 'copyToArchive')),
         ),
+        if (canReviewMove)
+          PopupMenuItem(
+            value: 'move',
+            child: Text(archiveTransferText(context, 'toArchive')),
+          ),
         PopupMenuItem(
           value: 'workspace',
           child: Text(archiveEndpointText(context, 'workspaceTitle')),
@@ -418,12 +435,13 @@ Future<void> _showArchiveMemberTransferMenu(
     if (!source.isCurrent || !destination.isCurrent) {
       throw StateError(archiveEndpointText(context, 'sourceChanged'));
     }
-    if (action == 'copy') {
+    if (action == 'copy' || action == 'move') {
       await showCapturedArchiveCopy(
         context,
         ref,
         source: source,
         destination: destination,
+        moveSources: action == 'move',
       );
     } else {
       await showCurrentArchiveWorkspaceDialog(
