@@ -127,6 +127,18 @@ class ExportFixture(unittest.TestCase):
 
 
 class PolicyAndArtifactTests(ExportFixture):
+    def test_changed_crypto_can_have_source_evidence_but_pending_questionnaire_blocks_upload(self):
+        self.policy["documentation"] = {
+            "status": "unreviewed", "reference": "New encrypted-database feature needs review",
+            "compliance_code": None,
+        }
+        self.save_policy()
+        preflight.validate_policy(self.root)
+        preflight.verify_artifact(self.root, "ios", self.artifact())
+        with self.assertRaisesRegex(preflight.PreflightError, "truthful Apple encryption questionnaire"):
+            preflight.preflight(self.root, "ios", self.artifact(), self.store)
+        self.assertEqual(self.store.calls, [])
+
     def test_pending_history_can_be_reviewed_in_source_but_cannot_be_submitted(self):
         self.policy["france"]["prior_distribution_review"] = "pending"
         self.policy["france"]["reference"] = None

@@ -8,6 +8,9 @@ audit of every dependency, or a scan of a signed release binary. The release's
 Git commit, resolved dependency evidence, native manifests and actual packaged
 libraries must agree. See [the main audit](crypto-audit.md) for findings and
 [the machine-readable inventory](crypto-inventory.json) for application scope.
+The KeePass addition and intervening source differences were reviewed on
+2026-11-12; see the dedicated section below and
+[source-review record](crypto-source-review-2026-11-12.md).
 
 ## Required provider source
 
@@ -122,6 +125,63 @@ encrypt-then-MAC preferred) and HMAC-SHA1. The actual negotiated suite depends
 on the peer. Implemented legacy compatibility algorithms in the dependency
 are not all enabled by these defaults. The application verifies server keys
 before authentication through its endpoint-scoped known-hosts flow.
+
+## KeePass KDBX databases
+
+Reviewed **2026-11-12**. The new direct path dependency `kpasslib` is version
+1.1.2, vendored from commit
+[`81d51d9f3575f72136441ea5a271f6748e3ca77c`](https://github.com/vladimir-skorokhodov/kpasslib/tree/81d51d9f3575f72136441ea5a271f6748e3ca77c).
+Its MIT notice and the MIT notice for its KdbxWeb origin are retained in
+[`packages/kpasslib`](../packages/kpasslib/UPSTREAM.md). The upstream package is
+modified locally, so the pinned upstream commit alone does not identify the
+shipped implementation: the inventory binds every vendored runtime file and
+the app adapters to their current bytes.
+
+The lockfile adds only this package. PointyCastle 4.0.0, crypto 3.0.7, archive
+4.6.0, xml 6.6.1, collection 1.19.1, convert 3.1.2 and ffi 2.2.0 were already
+resolved. KPassLib's local Argon2 adapter calls PointyCastle's existing
+`Argon2BytesGenerator`, whose conditional implementation supports native Dart
+and JavaScript. This adds a reachable Argon2 database-unlock/save path, not a
+new PointyCastle version. PointyCastle's license is its Bouncy Castle MIT-style
+permission grant; the other dependency notices are described in the vendoring
+record. No GPL/MPL library or new native crypto binary is introduced here.
+
+| Reachable operation | Implementation and format |
+| --- | --- |
+| Database payload encryption | KPassLib's pure-Dart AES-256-CBC with PKCS#7 padding or ChaCha20, selected by the existing database header. |
+| Master-key derivation | Published KeePass AES-KDF, or Argon2d/Argon2id through PointyCastle. Password/key-file components use SHA-256; XML v1/v2, raw, hex and arbitrary-file key material are supported. |
+| KDBX4 integrity | SHA-256 header checksum and HMAC-SHA-256 authentication of header and payload blocks, including the terminal block. SHA-512 participates in key derivation. |
+| KDBX3 integrity | Encrypted start bytes, SHA-256 block hashes and encrypted header hash; do not describe this as equivalent to KDBX4's HMAC construction. |
+| Protected values inside the database | Salsa20 or ChaCha20, with format-defined SHA-256/SHA-512 derivation. This inner stream is separate from the encrypted outer database. |
+| Saving | Retain version/cipher/KDF/costs; obtain fresh seeds, salts, stream keys and IVs from `Random.secure`. |
+
+The call path is `KeePassEditorDialog` → `KeePassSession` →
+`KdbxRawDocument` → the KPassLib envelope and default `CryptoDart` engine. The
+app never assigns `Crypto.engine` or constructs `CryptoFfi`. Upstream FFI
+adapter source remains conditionally exported for native Dart, but no native
+KPassLib library is bundled or loaded by this workflow. The old standalone
+`blake2b.dart` implementation is retained source and is not imported by the
+default engine; reachable Argon2 uses PointyCastle instead. This is source
+reachability evidence, not a claim about an inspected signed Apple binary.
+
+Local changes preserve full XML, unknown metadata, history and positional
+attachments; enforce bounded KDF/header/block/XML parsing; verify terminal
+integrity; and re-protect preserved values when encryption randomness changes.
+They do not add a new cryptographic primitive. The application exposes a fixed
+supported KDBX subset, with no runtime interface to install ciphers or key
+providers. A source-level engine class is not by itself an app-facing crypto
+plugin facility; reassess if that changes.
+
+The editor decrypts password-vault contents and can encrypt modified contents.
+It therefore belongs in the finished-app confidentiality inventory even though
+CrispCloud already used AES, hashes, MACs and SSH ChaCha20 elsewhere. New KDBX
+usage, Salsa20 inner protection and Argon2 reachability must not disappear from
+review merely because some primitive implementations were already installed.
+The [published KDBX specification](https://keepass.info/help/kb/kdbx.html),
+[KeePass security description](https://keepass.info/help/base/security.html),
+local source and [support limits](keepass.md) document this construction.
+Published format availability does not itself decide Apple documentation or
+the whole app's BIS classification; see [export-compliance.md](export-compliance.md).
 
 ## Archive password compatibility
 

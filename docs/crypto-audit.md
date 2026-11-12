@@ -11,6 +11,38 @@ in [export-compliance.md](export-compliance.md). The machine-readable scope is
 [crypto-inventory.json](crypto-inventory.json); exact dependency provenance is
 in [crypto-dependencies.md](crypto-dependencies.md).
 
+## 12 November 2026: KeePass source and release evidence
+
+The review now includes the KDBX viewer/editor at implementation checkpoint
+`77a63a0`, the pinned MIT KPassLib runtime, and its PointyCastle Argon2 adapter.
+The detailed [source review](crypto-source-review-2026-11-12.md) records the
+scope, evidence fingerprints and remaining declaration decision. Existing
+file/provider encryption remains enabled. This is an additional password-vault
+confidentiality workflow, not evidence that earlier store answers automatically
+cover the new app.
+
+| Engineering concern | Implemented control and evidence |
+| --- | --- |
+| Unknown database content must survive editing | Raw XML preservation retains custom data, attributes, history and protected values. Attachments retain positional IDs, including identical payloads. Public-fixture service tests reopen edited output and check retained content. |
+| Unauthenticated or malformed input | KDBX4 validates header/block HMACs and the terminal block; KDBX3 validates its format-specific encrypted start bytes, block hashes and header hash. Strict headers, variant maps, integer bounds and bounded gzip/XML parsing reject unsupported structures. KDBX3 is not described as having KDBX4 authentication. |
+| Hostile KDF cost or object counts | Preflight checks file/key sizes, KDF parameters and memory/work budgets before derivation; decoded data, XML depth/events and attachment/group/entry counts are bounded. Saving must satisfy the same structural limits as reading. These limits are documented in [keepass.md](keepass.md#resource-limits). |
+| JavaScript crypto portability | Argon2 delegates to PointyCastle's portable implementation; 64-bit format values use exact high/low 32-bit conversion. Known-answer and complete database open/edit/save/reopen probes passed on the Dart VM and compiled JavaScript during feature validation. |
+| Plaintext persistence or wrong save target | The dedicated editor passes encrypted snapshots through its captured source target and save coordinator. Locking creates an encrypted in-memory checkpoint. Detached/archive bytes are read only; password reveal/copy is explicit, and credential/controller cleanup is best effort. Tests cover original-target conflicts and lock/save lifecycles. |
+| Stale export evidence | The inventory now binds KPassLib runtime/provenance and app integration files. Policy fingerprints identify the reviewed source; the Apple questionnaire status is explicitly `unreviewed`, so source checks cannot authorize submission. The reusable Ruby TestFlight guard also rejects pending documentation independently of its Python caller. |
+
+Feature validation included 17 backend tests plus the Argon2 known-answer test,
+15 dedicated UI tests, and VM/JavaScript database probes for AES-KDF/AES,
+Argon2id/AES and Argon2d/ChaCha20. Those are implementation results retained from
+the feature work, not a newly inspected Apple artifact or an independent
+cryptographic certification. CI and the iOS/macOS/Play crypto test lists now
+include the KeePass backend and Argon2 tests for subsequent releases.
+
+No Apple questionnaire, CCATS application, French declaration or live territory
+change was submitted in this review. Both source plist values remain `false`
+as the proposed outside-France route, with submission blocked while review is
+pending. The complete app still needs the classification/documentation decision
+described in [export-compliance.md](export-compliance.md).
+
 ## 8 November 2026 follow-up: concrete defects and release controls
 
 The follow-up starts from main `7985a1fb77ccda59e9636f16ad964f453e0f8d7c`

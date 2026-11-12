@@ -8,6 +8,29 @@ import 'package:quds_office_engine/quds_office_engine.dart';
 
 import '../../packages/quds_office_engine/test/support/legacy_word_fixture.dart';
 
+Future<void> _chooseText(
+  WidgetTester tester, {
+  String label = 'Text only (built in)',
+}) async {
+  await tester.runAsync(() async {
+    final watch = Stopwatch()..start();
+    while (find
+        .byKey(const ValueKey('word-conversion-method'))
+        .evaluate()
+        .isEmpty) {
+      await tester.pump(const Duration(milliseconds: 20));
+      await Future<void>.delayed(const Duration(milliseconds: 1));
+      if (watch.elapsed > const Duration(seconds: 15)) {
+        throw TimeoutException('Conversion discovery did not finish.');
+      }
+    }
+  });
+  await tester.tap(find.byKey(const ValueKey('word-conversion-method')));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text(label).last);
+  await tester.pumpAndSettle();
+}
+
 void main() {
   testWidgets('discloses text-only losses before preparing a new DOCX', (
     tester,
@@ -23,6 +46,7 @@ void main() {
                 context,
                 sourceName: 'legacy.doc',
                 bytes: source,
+                discover: () async => [],
               );
             },
             child: const Text('Open conversion'),
@@ -31,7 +55,7 @@ void main() {
       ),
     );
     await tester.tap(find.text('Open conversion'));
-    await tester.pumpAndSettle();
+    await _chooseText(tester);
     expect(find.textContaining('Formatting, page layout'), findsOneWidget);
     expect(find.textContaining('The original file is kept'), findsOneWidget);
     expect(find.text('legacy (text).docx'), findsOneWidget);
@@ -79,6 +103,7 @@ void main() {
                 context,
                 sourceName: 'vorlage.dot',
                 bytes: legacyWordFixture('Vorlage\r'),
+                discover: () async => [],
               );
               completed = true;
             },
@@ -88,8 +113,8 @@ void main() {
       ),
     );
     await tester.tap(find.text('Open conversion'));
-    await tester.pumpAndSettle();
-    expect(find.text('In DOCX konvertieren'), findsOneWidget);
+    await _chooseText(tester, label: 'Nur Text (integriert)');
+    expect(find.text('Älteres Word-Dokument konvertieren'), findsOneWidget);
     expect(find.textContaining('Das Original bleibt erhalten'), findsOneWidget);
     await tester.tap(find.text('Abbrechen'));
     await tester.pumpAndSettle();
@@ -112,6 +137,7 @@ void main() {
                 context,
                 sourceName: 'legacy.doc',
                 bytes: legacyWordFixture('Copy body\r'),
+                discover: () async => [],
                 onSave: (copy) async {
                   attempts.add(copy.fileName);
                   if (attempts.length == 1) throw StateError('collision');
@@ -125,7 +151,7 @@ void main() {
       ),
     );
     await tester.tap(find.text('Open conversion'));
-    await tester.pumpAndSettle();
+    await _chooseText(tester);
     await tester.runAsync(() async {
       await tester.tap(find.text('Create text-only DOCX'));
       final watch = Stopwatch()..start();

@@ -246,6 +246,7 @@ jobs:
         run: >-
           python3 tool/with_ci_system_sqlite.py flutter test --no-pub
           test/aes_siv_test.dart test/cryptomator_test.dart
+          test/keepass_crypto_test.dart test/keepass_service_test.dart
           test/veracrypt_test.dart test/veracrypt_header_vectors_test.dart
           test/encryption_service_test.dart test/filen_crypto_validation_test.dart
           test/encryption_key_lifecycle_test.dart test/file_encryption_recovery_test.dart

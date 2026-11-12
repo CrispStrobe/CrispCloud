@@ -1,3 +1,4 @@
+import 'package:crisp_cloud/services/legacy_word_copy.dart';
 import 'package:crisp_cloud/services/file_operation_backend.dart';
 import 'package:crisp_cloud/services/legacy_word_copy_target.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -43,6 +44,33 @@ void main() {
     expect(cloud.files['/original/notes.docx'], [7, 8, 9]);
     expect(cloud.writes, isEmpty);
   });
+
+  test(
+    'DOCM copy uses its requested extension and retains the original',
+    () async {
+      final created = await target.create(
+        LegacyWordCopy(
+          fileName: 'notes (converted).docm',
+          bytes: original,
+          extension: 'docm',
+          converterName: 'Installed engine',
+        ),
+      );
+      expect(created.path, '/original/notes (converted).docm');
+      expect(cloud.files[created.path], original);
+      expect(cloud.files['/original/notes.doc'], original);
+      await expectLater(
+        target.create(
+          LegacyWordCopy(
+            fileName: 'notes.docx',
+            bytes: original,
+            extension: 'docm',
+          ),
+        ),
+        throwsA(isA<LegacyWordConversionException>()),
+      );
+    },
+  );
 
   test('directory changes cannot be injected through the filename', () async {
     await expectLater(

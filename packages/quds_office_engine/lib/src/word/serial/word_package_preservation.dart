@@ -29,7 +29,7 @@ class WordPackagePreservationLimits {
   final int maxEntries;
 }
 
-/// Checks the additional invariants for editing Word macro documents/templates.
+/// Checks opaque-part and signature invariants for editing Word packages.
 ///
 /// The Word serializer retains imported OPC parts. Capture a guard before
 /// editing and validate serialized bytes before replacing the original. The
@@ -45,6 +45,7 @@ class WordPackagePreservation {
   final WordPackagePreservationLimits _limits;
 
   static const contentTypesByExtension = <String, String>{
+    'docx': OfficeContentTypes.wordMain,
     'docm': 'application/vnd.ms-word.document.macroEnabled.main+xml',
     'dotm': 'application/vnd.ms-word.template.macroEnabledTemplate.main+xml',
     'dotx': OfficeContentTypes.wordTemplate,
@@ -78,7 +79,7 @@ class WordPackagePreservation {
     if (current.mainPath != _snapshot.mainPath ||
         current.mainType != _snapshot.mainType) {
       throw const FormatException(
-        'Saving would change the Word macro/template type. The original was not changed.',
+        'Saving would change the Word document type. The original was not changed.',
       );
     }
     for (final part in _snapshot.protectedParts.entries) {
@@ -91,7 +92,7 @@ class WordPackagePreservation {
     for (final relationship in _snapshot.protectedRelationships) {
       if (!current.protectedRelationships.contains(relationship)) {
         throw const FormatException(
-          'Saving would remove a Word macro relationship. The original was not changed.',
+          'Saving would remove a preserved Word relationship. The original was not changed.',
         );
       }
     }
@@ -111,6 +112,9 @@ class _WordSnapshot {
   final Map<String, String> protectedParts;
   final Set<String> protectedRelationships;
 }
+
+const _signedMessage =
+    'This Word package is digitally signed. Save an unsigned copy in Word before editing it here.';
 
 const _limitMessage = 'Word package exceeds the safe editing limit.';
 
@@ -183,6 +187,12 @@ _WordSnapshot _readSnapshot(
     _checkMetadata(typesText, 'Types', OfficeNamespaces.contentTypes);
     final types = ContentTypes.parse(typesText);
     String typeOf(String path) => types.contentTypeFor('/$path');
+    if ([
+      ...types.defaults.values,
+      ...types.overrides.values,
+    ].any((type) => type.toLowerCase().contains('digital-signature'))) {
+      throw const FormatException(_signedMessage);
+    }
 
     final relationshipParts = <String, RelationshipCollection>{};
     for (final path in members.keys.where((path) => path.endsWith('.rels'))) {
@@ -200,6 +210,7 @@ _WordSnapshot _readSnapshot(
     bool opaque(String path) {
       final lower = path.toLowerCase();
       return lower.endsWith('.bin') ||
+          lower.contains('/embeddings/') ||
           lower.contains('vba') ||
           lower.startsWith('customui/') ||
           typeOf(path).toLowerCase().contains('vba');
@@ -213,6 +224,9 @@ _WordSnapshot _readSnapshot(
         final owner = OpcUris.sourcePartForRelationships('/$path');
         final opaqueOwner = owner != null && opaque(OpcUris.toZipName(owner));
         for (final rel in partRelationships.items) {
+          if (rel.type.toLowerCase().contains('/digital-signature/')) {
+            throw const FormatException(_signedMessage);
+          }
           final opaqueTarget =
               rel.targetMode == RelationshipTargetMode.internal &&
               opaque(OpcUris.toZipName(partRelationships.resolve(rel)));
@@ -220,7 +234,9 @@ _WordSnapshot _readSnapshot(
               !opaqueOwner &&
               !opaqueTarget &&
               !rel.type.toLowerCase().contains('vba') &&
-              !rel.target.toLowerCase().contains('vba')) {
+              !rel.target.toLowerCase().contains('vba') &&
+              !rel.type.toLowerCase().contains('oleobject') &&
+              !rel.target.toLowerCase().contains('embeddings/')) {
             continue;
           }
           relationships.add(

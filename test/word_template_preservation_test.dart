@@ -15,7 +15,8 @@ import 'package:crisp_cloud/widgets/office_editor_ribbon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:quds_office_editor/quds_office_editor.dart' hide WordPackagePreservation;
+import 'package:quds_office_editor/quds_office_editor.dart'
+    hide WordPackagePreservation;
 import 'package:quds_office_engine/quds_office_engine.dart'
     show WordPackagePreservation;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -155,11 +156,12 @@ Uint8List _fixture(String extension) {
       'application/vnd.ms-office.vbaProject',
     ),
   ]);
-  if (extension != 'dotx') contentTypes.rootElement.children.add(macroType);
+  if (extension == 'docm' || extension == 'dotm')
+    contentTypes.rootElement.children.add(macroType);
   parts['[Content_Types].xml'] = Uint8List.fromList(
     utf8.encode(contentTypes.toXmlString()),
   );
-  if (extension != 'dotx') {
+  if (extension == 'docm' || extension == 'dotm') {
     // Opaque fixture bytes: these must survive untouched, without any VBA execution.
     parts['word/vbaProject.bin'] = Uint8List.fromList([
       0xd0,
@@ -410,5 +412,119 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump();
     });
+  });
+
+  for (final extension in ['docx', 'dotm']) {
+    test('$extension package signatures are rejected before editing', () async {
+      final signed = _parts(_fixture(extension));
+      signed['_xmlsignatures/sig1.xml'] = Uint8List.fromList(
+        utf8.encode('<Signature/>'),
+      );
+      await expectLater(
+        WordPackagePreservation.capture(_package(signed), 'signed.$extension'),
+        throwsA(
+          isA<FormatException>().having(
+            (e) => e.message,
+            'message',
+            contains('digitally signed'),
+          ),
+        ),
+      );
+    });
+  }
+
+  test(
+    'DOCX embedded object bytes and their relationship remain protected',
+    () async {
+      final original = _parts(_fixture('docx'));
+      original['word/embeddings/object.xlsx'] = Uint8List.fromList([1, 3, 5]);
+      final rels = xml.XmlDocument.parse(
+        utf8.decode(original['word/_rels/document.xml.rels']!),
+      );
+      rels.rootElement.children.add(
+        xml.XmlElement(xml.XmlName('Relationship'), [
+          xml.XmlAttribute(xml.XmlName('Id'), 'object'),
+          xml.XmlAttribute(
+            xml.XmlName('Type'),
+            'http://schemas.openxmlformats.org/officeDocument/2006/relationships/package',
+          ),
+          xml.XmlAttribute(xml.XmlName('Target'), 'embeddings/object.xlsx'),
+        ]),
+      );
+      original['word/_rels/document.xml.rels'] = Uint8List.fromList(
+        utf8.encode(rels.toXmlString()),
+      );
+      final guard = (await WordPackagePreservation.capture(
+        _package(original),
+        'copy.docx',
+      ))!;
+      await guard.validateSaved(_package(original));
+      final changed = Map<String, Uint8List>.of(original)
+        ..['word/embeddings/object.xlsx'] = Uint8List.fromList([9]);
+      await expectLater(
+        guard.validateSaved(_package(changed)),
+        throwsFormatException,
+      );
+      final missingRelationship = Map<String, Uint8List>.of(original);
+      rels.rootElement.children.removeWhere(
+        (node) => node is xml.XmlElement && node.getAttribute('Id') == 'object',
+      );
+      missingRelationship['word/_rels/document.xml.rels'] = Uint8List.fromList(
+        utf8.encode(rels.toXmlString()),
+      );
+      await expectLater(
+        guard.validateSaved(_package(missingRelationship)),
+        throwsFormatException,
+      );
+    },
+  );
+
+  test('DOCX signature parts outside the usual folder are rejected by type or relationship', () async {
+    final original = _parts(_fixture('docx'));
+    final byType = Map<String, Uint8List>.of(original);
+    final types = xml.XmlDocument.parse(
+      utf8.decode(byType['[Content_Types].xml']!),
+    );
+    types.rootElement.children.add(
+      xml.XmlElement(xml.XmlName('Override'), [
+        xml.XmlAttribute(xml.XmlName('PartName'), '/proof/signature.xml'),
+        xml.XmlAttribute(
+          xml.XmlName('ContentType'),
+          'application/vnd.openxmlformats-package.digital-signature-xmlsignature+xml',
+        ),
+      ]),
+    );
+    byType['[Content_Types].xml'] = Uint8List.fromList(
+      utf8.encode(types.toXmlString()),
+    );
+    byType['proof/signature.xml'] = Uint8List.fromList(
+      utf8.encode('<Signature/>'),
+    );
+    await expectLater(
+      WordPackagePreservation.capture(_package(byType), 'copy.docx'),
+      throwsFormatException,
+    );
+    final byRelationship = Map<String, Uint8List>.of(original);
+    final relationships = xml.XmlDocument.parse(
+      utf8.decode(byRelationship['_rels/.rels']!),
+    );
+    relationships.rootElement.children.add(
+      xml.XmlElement(xml.XmlName('Relationship'), [
+        xml.XmlAttribute(xml.XmlName('Id'), 'origin'),
+        xml.XmlAttribute(
+          xml.XmlName('Type'),
+          'http://schemas.openxmlformats.org/package/2006/relationships/digital-signature/origin',
+        ),
+        xml.XmlAttribute(xml.XmlName('Target'), 'proof/origin.sigs'),
+      ]),
+    );
+    byRelationship['_rels/.rels'] = Uint8List.fromList(
+      utf8.encode(relationships.toXmlString()),
+    );
+    byRelationship['proof/origin.sigs'] = Uint8List(0);
+    await expectLater(
+      WordPackagePreservation.capture(_package(byRelationship), 'copy.docx'),
+      throwsFormatException,
+    );
   });
 }

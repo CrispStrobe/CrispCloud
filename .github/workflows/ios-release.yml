@@ -73,6 +73,7 @@ jobs:
         run: |
           python3 tool/crypto_release_evidence.py --check
           flutter test --no-pub test/aes_siv_test.dart test/cryptomator_test.dart \
+            test/keepass_crypto_test.dart test/keepass_service_test.dart \
             test/veracrypt_header_vectors_test.dart test/internxt_secure_config_test.dart \
             test/crypto_paths_test.dart test/filen_adapter_test.dart \
             test/filen_crypto_validation_test.dart test/encryption_key_lifecycle_test.dart \

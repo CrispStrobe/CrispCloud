@@ -1,7 +1,7 @@
 {
   "source_repository": "CrispStrobe/quds_office_suite",
-  "source_branch": "feature/office-fidelity-gap-closure-20261112",
-  "source_commit": "a9bd470a4807c65f65271be896703e587c12de00",
+  "source_branch": "fix/word-package-guards-20261112",
+  "source_commit": "5a71dcf6b12b50cea32f7db95fbf959710042bdb",
   "files": {
     "packages/quds_office_editor/CHANGELOG.md": "7290a134a6f9a039cb68584b5f5f0296a0dd7d7ffe9f215bdbdfa0efef6619d5",
     "packages/quds_office_editor/lib/src/editor_sheet/render_sheet_grid.dart": "dde600201484a04a07e922b12d0098b3334bb3c3289476a7ea4e88a28cd4e9f4",
@@ -128,7 +128,7 @@
     "packages/quds_office_engine/lib/src/word/serial/word_markup_compatibility.dart": "24558ff5c518ffa2cb22f35e887fcab1622d2631a1f1f1ef82ecd12960783c87",
     "packages/quds_office_engine/lib/src/word/serial/word_numbering_io.dart": "0149afb504bd0ff5287cabd15069b1481087dcb6ce7d01b0536711af524d2df9",
     "packages/quds_office_engine/lib/src/word/serial/word_opaque_io.dart": "e7a1d2c190e998bdcea27387a957470b11bb61e34dcf41cd792e37df73b07896",
-    "packages/quds_office_engine/lib/src/word/serial/word_package_preservation.dart": "5b85aa46e5958027e9e3d4296866981b6848c750fb80e1d9d6121515746862c6",
+    "packages/quds_office_engine/lib/src/word/serial/word_package_preservation.dart": "d498dba54add5833e0114978eb382a783ad7fe4cbdb6397db87fc098b3ba62f2",
     "packages/quds_office_engine/lib/src/word/serial/word_property_io.dart": "eb556e3a27554a00ea7295bbe07a65b4ef1ecc0bf5fa42c226e68ca1d9f11e38",
     "packages/quds_office_engine/lib/src/word/serial/word_section_io.dart": "346354c4fab12d533247d32a053966990e5446a4ebf5e73b7e755d4ef5c54e3a",
     "packages/quds_office_engine/lib/src/word/serial/word_serializer.dart": "2bcc1b58f1f28fd104e4c3cc2472c010f438ce8022fa6d497fa1300087fa3b29",
