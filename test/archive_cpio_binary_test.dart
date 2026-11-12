@@ -74,8 +74,8 @@ void main() {
         );
         expect(
           policy.reason,
-          isNotNull,
-          reason: 'the newc writer must not rewrite binary metadata',
+          isNull,
+          reason: 'the binary writer preserves the inspected byte order',
         );
       },
     );

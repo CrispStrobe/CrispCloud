@@ -25,6 +25,8 @@ const _lz4Help =
     'LZ4 offers fast compression or storage without compression. Both modes include content checksums.';
 const _lzmaHelp =
     'LZMA uses a 64 KiB dictionary for Fast, 8 MiB for Normal and 64 MiB for Maximum. The format has no content checksum.';
+const _legacyCpioHelp =
+    'Use legacy CPIO for compatibility. These profiles have no content checksum or encryption; names, sizes and metadata must fit their older fields.';
 
 class _RecordingService extends ArchiveCreationService {
   final List<ArchiveCreationOptions> requests = [];
@@ -376,6 +378,46 @@ void main() {
   );
 
   for (final value in [
+    ArchiveCreationFormat.cpioOdc,
+    ArchiveCreationFormat.cpioBinaryLittleEndian,
+    ArchiveCreationFormat.cpioBinaryBigEndian,
+  ]) {
+    testWidgets('${value.label} creates the selected uncompressed profile', (
+      tester,
+    ) async {
+      await show(tester, width: 390);
+      await tester.tap(find.byKey(const ValueKey('archive-create-protect')));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const ValueKey('archive-create-password')),
+        'discarded password',
+      );
+      await format(tester, value.label);
+      expect(name(tester), 'report.cpio');
+      expect(find.text(_legacyCpioHelp), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('archive-create-protect')),
+        findsNothing,
+      );
+      expect(
+        find.byKey(const ValueKey('archive-create-password')),
+        findsNothing,
+      );
+      expect(compressionChoices(tester, value), [
+        ArchiveCreationCompression.none,
+      ]);
+      await submit(tester);
+      final request = service.requests.single;
+      expect(request.format, value);
+      expect(request.name, 'report.cpio');
+      expect(request.compression, ArchiveCreationCompression.none);
+      expect(request.password, isNull);
+      expect(request.encryptNames, isFalse);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  for (final value in [
     ArchiveCreationFormat.lz4,
     ArchiveCreationFormat.tarLz4,
     ArchiveCreationFormat.lzma,
@@ -558,6 +600,8 @@ void main() {
         'HFSX data image',
         'DMG (HFSX data volume)',
         'AR — flat files',
+        'CPIO (binary, little-endian)',
+        'CPIO (binary, big-endian)',
         'JAR (unsigned)',
         'WAR (unsigned)',
         'EAR (unsigned)',
@@ -569,6 +613,7 @@ void main() {
         _isoHelp,
         _lz4Help,
         _lzmaHelp,
+        _legacyCpioHelp,
       ]) {
         expect(tr(tester, key), isNot(key), reason: '${locale.$1}: $key');
       }
@@ -581,12 +626,17 @@ void main() {
         ArchiveCreationFormat.tarLzma,
         ArchiveCreationFormat.lz4,
         ArchiveCreationFormat.lzma,
+        ArchiveCreationFormat.cpioOdc,
+        ArchiveCreationFormat.cpioBinaryLittleEndian,
+        ArchiveCreationFormat.cpioBinaryBigEndian,
         ArchiveCreationFormat.xz,
       ]) {
         await format(tester, tr(tester, value.label));
         expect(find.text(tr(tester, value.label)), findsOneWidget);
         final help = value.diskImage
             ? _dataImageHelp
+            : value.legacyCpio
+            ? _legacyCpioHelp
             : value.singlePayload
             ? _singleFileHelp
             : _compressedTarHelp;

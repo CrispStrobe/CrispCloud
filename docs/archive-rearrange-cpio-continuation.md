@@ -3,20 +3,36 @@
 Date: 12 November 2026. Baseline: `7cb65d768f2b096230f8bd32afc6c954baae7416`
 from [draft PR #92](https://github.com/CrispStrobe/CrispCloud/pull/92).
 Branch: `feature/archive-rearrange-cpio-20261112`.
+Review record: [PR #93](https://github.com/CrispStrobe/CrispCloud/pull/93),
+based on PR #92's branch. GitHub records that PR #93 was closed by `CrispStrobe`
+during implementation. That closure is preserved; the completed implementation
+and evidence remain saved on the continuation branch.
 
-## Scope in progress
+## Delivered
 
-1. Move a captured group of members to an existing directory in one archive
-   workspace. Preflight the complete selection and collision policy, preserve
-   original member identity and supported metadata, and publish a single draft
-   mutation. Keep both, skip and fail are explicit collision choices. The
-   existing whole-container review, verification and recovery journal publish
-   the result. This does not introduce a move between two archives.
+1. **Move within archive…** moves a captured group of members to an existing
+   directory in one archive workspace. Complete selection/collision preflight
+   precedes a single draft mutation. Stop without changes, keep-both and skip
+   retain destination contents; folders are not merged. Recursive, empty and
+   implicit folders, overlapping selections, pending draft edits and nested
+   workspaces are supported. Original member identity retains the supported
+   metadata and protection. The normal Save/review/verification/recovery workflow
+   publishes the result. This does not introduce a move between two archives.
 2. Create portable ASCII/odc and modern binary little-/big-endian CPIO archives,
    and rewrite eligible existing archives without changing their profile.
    Preserve understood member/root/trailer metadata, member order, stored-name
    conventions and supported padding. Reject unsupported structures and fields
-   that cannot fit the original layout. Existing newc/CRC behavior remains.
+   that cannot fit the original layout. The picker now has **31 choices**, up
+   from 28. Source inspection controls the rewrite layout, including existing
+   mixed newc/CRC behavior; a creation preference cannot convert an open archive.
+3. Preserve the root-directory record's ordering relative to surviving source
+   members when an earlier member is deleted. Independent review identified
+   the same numeric-insertion issue in newc/CRC and the new legacy writers;
+   one shared fix and five regressions cover all five header profiles.
+
+The new move dialog and creation guidance support English and all eight existing
+translations. The bundled English, German and French guides now describe the
+current creation, copy, integrity and rearrangement workflows consistently.
 
 ## Completion gates
 
@@ -47,5 +63,24 @@ assets or dependencies from that project are inspected or imported.
 
 ## Checkpoints and observed validation
 
-This file will be updated as implementation checkpoints and validation finish.
-The baseline's recorded gates do not establish acceptance of this increment.
+| Remote commit | Checkpoint |
+| --- | --- |
+| `19bbb860` | Scope and continuation boundaries |
+| `22f25063` | Legacy CPIO writers/inspectors, preservation tests and native reference tooling |
+| `9fc44eb4` | 31 creation choices, translated guidance and creation integration |
+| `bd11520a` | Atomic grouped member moves with 57 service tests |
+| `41f3ed36` | Captured move picker, nine-language UI and 21 widget tests |
+| `a68ad875` | Shared CPIO root-order fix, five regressions and actual JavaScript runtime checks |
+| `9d6fae0c` | Technical documentation, reviewed bundled guides and complete archive regression evidence |
+
+All implementation checkpoints above are saved remotely. The complete affected
+regression passed **1,773 tests across 70 files**, and all **21 changed Dart
+files** passed fatal-info analysis. Independent libarchive readback passed all
+nine CPIO cases; Dart2JS output passed actual Node execution, including the
+33-bit odc timestamp case. The three offline guides have 23 matching topics,
+and all 33 help-service/widget tests passed. The versioned release web build
+passed at `9d6fae0c`; its packaged guides match the reviewed manifest hashes.
+The final documentation-only checkpoint records those completed gates and the
+observed closed PR status. Both dependency files match the original baseline
+byte-for-byte. Details and acceptance limits are recorded in the
+[verification record](archive-rearrange-cpio-verification.md).

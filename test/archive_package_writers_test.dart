@@ -205,6 +205,45 @@ void main() {
 
     for (final crc in [false, true]) {
       test(
+        '${crc ? 'CRC' : 'newc'} root retains order when earlier members are removed',
+        () async {
+          final source = await _fixture(
+            cpioFixture([
+              const PackageFixtureEntry('before', [1]),
+              const PackageFixtureEntry('./', [], mode: 0x41ed),
+              const PackageFixtureEntry('after', [2]),
+            ], crc: crc),
+            'cpio',
+          );
+          expect(source.inspection.reason, isNull);
+          final bytes = await packageOutput('cpio', [
+            source.entries.last,
+            packageEntry('added', [3]),
+          ], source: source.inspection);
+          final rebuilt = await _fixture(bytes, 'cpio');
+          expect(rebuilt.inspection.reason, isNull);
+          final originalRoot = source.inspection.container['cpio.root'] as Map;
+          final rewrittenRoot =
+              rebuilt.inspection.container['cpio.root'] as Map;
+          expect(rewrittenRoot['package.order'], 0);
+          for (final key in originalRoot.keys.where(
+            (key) => key != 'package.order',
+          )) {
+            expect(rewrittenRoot[key], originalRoot[key], reason: '$key');
+          }
+          expect(
+            rebuilt.inspection.container['cpio.variant'],
+            crc ? '070702' : '070701',
+          );
+          expect(rebuilt.archive.members.map((member) => member.name), [
+            'after',
+            'added',
+          ]);
+          expect(await rebuilt.repack(), bytes);
+        },
+      );
+
+      test(
         'preserves ${crc ? 'CRC' : 'newc'} ownership, devices and trailer metadata',
         () async {
           final bytes = cpioFixture([

@@ -150,8 +150,8 @@ Future<ViewerArchive> openArArchive(
 /// Reads modern binary little/big-endian CPIO, portable ASCII/odc (070707),
 /// SVR4 newc (070701) and CRC (070702).
 /// Links and special files are listed as non-extractable metadata. Concatenated
-/// archives and PWB-specific type semantics are not silently interpreted. Binary
-/// and odc profiles remain read-only; the newc/CRC writer inspector is separate.
+/// archives and PWB-specific type semantics are not silently interpreted.
+/// A separate preservation inspector determines eligibility for rewriting.
 /// https://github.com/libarchive/libarchive/blob/master/libarchive/cpio.5
 Future<ViewerArchive> openCpioArchive(
   koni.ByteSource source, {

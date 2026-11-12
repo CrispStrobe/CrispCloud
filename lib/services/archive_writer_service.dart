@@ -18,6 +18,7 @@ Future<void> writeArchiveEntries(
   List<ArchiveWriteEntry> entries, {
   required Future<void> Function(List<int>) sink,
   ArchiveRewriteInspection? source,
+  ArchiveCpioFormat cpioFormat = ArchiveCpioFormat.newc,
   ArchiveCompressionKind? compression,
   bool singlePayload = false,
   Uint8List? gzipHeader,
@@ -36,6 +37,12 @@ Future<void> writeArchiveEntries(
 
   check();
   validateArchiveWriteEntries(entries);
+  if (format != ArchiveEndpointFormat.cpio &&
+      cpioFormat != ArchiveCpioFormat.newc) {
+    throw const ArchiveViewException(
+      'A CPIO profile requires the CPIO writer.',
+    );
+  }
   if (maxOutputBytes <= 0 || maxOutputBytes > 2 * 1024 * 1024 * 1024) {
     throw ArgumentError.value(maxOutputBytes, 'maxOutputBytes');
   }
@@ -120,6 +127,7 @@ Future<void> writeArchiveEntries(
       entries,
       sink: emit,
       source: source,
+      cpioFormat: cpioFormat,
       maxOutputBytes: maxOutputBytes,
       isCancelled: isCancelled,
     );

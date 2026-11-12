@@ -81,14 +81,15 @@ void main() {
     expect(await archive.readMember(archive.members[2]), isEmpty);
   });
 
-  test('keeps odc outside the existing newc/CRC rewrite profile', () async {
+  test('inspects odc as its own preserved rewrite profile', () async {
     final bytes = odcFixture([
       const PackageFixtureEntry('a', [1]),
     ]);
     final archive = await _open(bytes);
     addTearDown(archive.close);
     final inspection = await inspectPackageRewrite(bytes, 'cpio', archive);
-    expect(inspection.supported, isFalse);
+    expect(inspection.supported, isTrue);
+    expect(inspection.container['cpio.variant'], '070707');
   });
 
   test(

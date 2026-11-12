@@ -312,7 +312,7 @@ const archiveFormatCapabilities = <ArchiveFormatCapability>[
     canCreate: true,
     canModify: true,
     notes:
-        'Read little/big-endian binary, odc, newc and CRC variants; rewrite inspected newc/CRC only. '
+        'Read little/big-endian binary, odc, newc and CRC variants; create newc, odc or binary and rewrite inspected profiles without changing their layout. '
         'Links and special entries cannot be extracted.',
   ),
   ArchiveFormatCapability(

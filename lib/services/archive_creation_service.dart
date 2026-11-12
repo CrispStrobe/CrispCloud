@@ -14,6 +14,7 @@ import 'archive_dmg_writer.dart';
 import 'archive_hfs_writer.dart';
 import 'archive_iso_writer.dart';
 import 'archive_output_spool.dart';
+import 'archive_package_writers.dart';
 import 'archive_write_model.dart';
 import 'archive_writer_service.dart';
 import 'archive_zip_package_policy.dart';
@@ -39,6 +40,9 @@ enum ArchiveCreationFormat {
   lzma,
   ar,
   cpio,
+  cpioOdc,
+  cpioBinaryLittleEndian,
+  cpioBinaryBigEndian,
   xar,
   iso,
   hfsx,
@@ -64,6 +68,9 @@ extension ArchiveCreationFormatDetails on ArchiveCreationFormat {
     ArchiveCreationFormat.gzip => '.gz',
     ArchiveCreationFormat.bzip2 => '.bz2',
     ArchiveCreationFormat.zstd => '.zst',
+    ArchiveCreationFormat.cpioOdc ||
+    ArchiveCreationFormat.cpioBinaryLittleEndian ||
+    ArchiveCreationFormat.cpioBinaryBigEndian => '.cpio',
     _ => '.$name',
   };
 
@@ -85,6 +92,11 @@ extension ArchiveCreationFormatDetails on ArchiveCreationFormat {
     ArchiveCreationFormat.dmg => 'DMG (HFSX data volume)',
     ArchiveCreationFormat.iso => 'ISO data image',
     ArchiveCreationFormat.ar => 'AR — flat files',
+    ArchiveCreationFormat.cpio => 'CPIO (newc)',
+    ArchiveCreationFormat.cpioOdc => 'CPIO (odc)',
+    ArchiveCreationFormat.cpioBinaryLittleEndian =>
+      'CPIO (binary, little-endian)',
+    ArchiveCreationFormat.cpioBinaryBigEndian => 'CPIO (binary, big-endian)',
     ArchiveCreationFormat.jar ||
     ArchiveCreationFormat.war ||
     ArchiveCreationFormat.ear => '${name.toUpperCase()} (unsigned)',
@@ -115,7 +127,10 @@ extension ArchiveCreationFormatDetails on ArchiveCreationFormat {
     ArchiveCreationFormat.lz4 => ArchiveEndpointFormat.lz4,
     ArchiveCreationFormat.lzma => ArchiveEndpointFormat.lzma,
     ArchiveCreationFormat.ar => ArchiveEndpointFormat.ar,
-    ArchiveCreationFormat.cpio => ArchiveEndpointFormat.cpio,
+    ArchiveCreationFormat.cpio ||
+    ArchiveCreationFormat.cpioOdc ||
+    ArchiveCreationFormat.cpioBinaryLittleEndian ||
+    ArchiveCreationFormat.cpioBinaryBigEndian => ArchiveEndpointFormat.cpio,
     ArchiveCreationFormat.xar => ArchiveEndpointFormat.xar,
     ArchiveCreationFormat.iso => ArchiveEndpointFormat.iso,
     _ => ArchiveEndpointFormat.readOnly,
@@ -136,6 +151,21 @@ extension ArchiveCreationFormatDetails on ArchiveCreationFormat {
     ArchiveCreationFormat.lzma => ArchiveCompressionKind.lzma,
     _ => null,
   };
+
+  ArchiveCpioFormat get cpioFormat => switch (this) {
+    ArchiveCreationFormat.cpioOdc => ArchiveCpioFormat.odc,
+    ArchiveCreationFormat.cpioBinaryLittleEndian =>
+      ArchiveCpioFormat.binaryLittleEndian,
+    ArchiveCreationFormat.cpioBinaryBigEndian =>
+      ArchiveCpioFormat.binaryBigEndian,
+    _ => ArchiveCpioFormat.newc,
+  };
+
+  bool get legacyCpio => const {
+    ArchiveCreationFormat.cpioOdc,
+    ArchiveCreationFormat.cpioBinaryLittleEndian,
+    ArchiveCreationFormat.cpioBinaryBigEndian,
+  }.contains(this);
 
   bool get singlePayload => const {
     ArchiveCreationFormat.gzip,
@@ -710,6 +740,7 @@ class ArchiveCreationService {
           sink: emit,
           compression: options.format.wrapper,
           singlePayload: options.format.singlePayload,
+          cpioFormat: options.format.cpioFormat,
           level: options.compression.deflateLevel,
           maxOutputBytes: spool.maxBytes,
           isCancelled: isCancelled,

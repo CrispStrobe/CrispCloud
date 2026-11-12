@@ -7,6 +7,7 @@ import 'package:path/path.dart' as p;
 
 import '../l10n/commander_strings.dart';
 import '../l10n/archive_endpoint_strings.dart';
+import '../l10n/archive_member_move_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
@@ -22,6 +23,7 @@ import '../utils/formatters.dart';
 import 'file_operation_dialog.dart';
 import 'internal_viewer_dialog.dart';
 import 'archive_endpoint_dialog.dart';
+import 'archive_member_move_dialog.dart';
 
 enum ArchiveWorkspaceAction { browse, copyOut, moveOut, edit }
 
@@ -379,6 +381,44 @@ class _ArchiveWorkspaceDialogState
       }
       _workspace!.rename(file.path!, p.posix.join(_path.substring(1), name));
       _selected.clear();
+    });
+  }
+
+  Future<void> _moveWithin() async {
+    final workspace = _workspace;
+    final selected = List<FileItem>.unmodifiable(_selection);
+    final directory = _path;
+    if (workspace == null || selected.isEmpty || !workspace.canMoveMembers) {
+      return;
+    }
+    await _run(() async {
+      final result = await showArchiveMemberMoveDialog(
+        context,
+        workspace: workspace,
+        members: selected,
+        initialDirectory: directory,
+      );
+      if (!mounted || result == null || !identical(_workspace, workspace)) {
+        return;
+      }
+      setState(() {
+        // Skipped and unchanged members remain selected at the source. Moved
+        // members are reviewed by the normal whole-container Save action.
+        _selected
+          ..clear()
+          ..addAll(result.skipped)
+          ..addAll(result.unchanged);
+        _message = (context) => result.moved.isEmpty
+            ? archiveMemberMoveText(context, 'noChanges', [
+                result.skipped.length,
+                result.unchanged.length,
+              ])
+            : archiveMemberMoveText(context, 'result', [
+                result.moved.length,
+                result.skipped.length,
+                result.unchanged.length,
+              ]);
+      });
     });
   }
 
@@ -786,6 +826,23 @@ class _ArchiveWorkspaceDialogState
                                       ? _rename
                                       : null,
                                   child: Text(context.commanderTr("Rename")),
+                                ),
+                                TextButton.icon(
+                                  key: const ValueKey(
+                                    'archive-workspace-move-within',
+                                  ),
+                                  onPressed:
+                                      editable &&
+                                          workspace.canMoveMembers &&
+                                          selected.isNotEmpty
+                                      ? _moveWithin
+                                      : null,
+                                  icon: const Icon(
+                                    Icons.drive_file_move_outline,
+                                  ),
+                                  label: Text(
+                                    archiveMemberMoveText(context, 'action'),
+                                  ),
                                 ),
                                 TextButton(
                                   onPressed: editable && selected.isNotEmpty
