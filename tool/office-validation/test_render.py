@@ -268,6 +268,288 @@ class HostPicturePixelTests(unittest.TestCase):
                         render.render_document(source, root, output, 1)
 
 
+class HostWordPicturePixelTests(unittest.TestCase):
+    # A4 in twentieth-points, one authored 12-point empty line, then a 60x30
+    # point inline picture at the one-inch left/top margins. These values do
+    # not come from the renderer's expected geometry or a generated document.
+    def geometry(self, kind='jpeg'):
+        return {'page_twips': [11906, 16838],
+                'margins_twips': [1440, 1440, 1440, 1440, 720, 720],
+                'leading_spacing_twips': [0, 0, 240], 'leading_line_rule': 'exact',
+                'inline_extent_emu': [762000, 381000],
+                'inline_distances_emu': [0, 0, 114300, 114300],
+                'picture_offset_emu': [0, 0], 'picture_extent_emu': [762000, 381000],
+                'media_dimensions_pixels': [80, 40], 'media_mime': 'image/' + kind}
+
+    def raster(self, *, rectangle=(72, 84, 60, 30), color=b'\0' * 3):
+        width, height = 596, 842
+        x, y, rect_width, rect_height = rectangle
+        pixels = bytearray(b'\xff' * (width * height * 3))
+        for row in range(y, min(height, y + rect_height)):
+            start, end = max(0, x), min(width, x + rect_width)
+            pixels[(row * width + start) * 3:(row * width + end) * 3] = color * (end - start)
+        return width, height, bytes(pixels)
+
+    def parts(self, kind='jpeg'):
+        # The unit packages exercise raw OOXML/header parsing only. Native
+        # decoding is independently required by render_document's pixel check
+        # and by the real six-file acceptance; these tiny header fixtures are
+        # deliberately not claimed as complete decodable Office documents.
+        w = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
+        a = 'http://schemas.openxmlformats.org/drawingml/2006/main'
+        r = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
+        pic = 'http://schemas.openxmlformats.org/drawingml/2006/picture'
+        wp = 'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing'
+        document = (
+            f'<w:document xmlns:w="{w}" xmlns:a="{a}" xmlns:r="{r}" xmlns:pic="{pic}" xmlns:wp="{wp}">'
+            '<w:body><w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="exact"/>'
+            '<w:ind w:left="0" w:right="0"/><w:jc w:val="left"/></w:pPr><w:r><w:t/></w:r></w:p>'
+            '<w:p><w:r><w:drawing><wp:inline distT="0" distB="0" distL="114300" distR="114300">'
+            '<wp:extent cx="762000" cy="381000"/><wp:effectExtent l="0" t="0" r="0" b="0"/>'
+            f'<a:graphic><a:graphicData uri="{pic}"><pic:pic><pic:blipFill><a:blip r:embed="image"/>'
+            '<a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/>'
+            '<a:ext cx="762000" cy="381000"/></a:xfrm></pic:spPr></pic:pic></a:graphicData></a:graphic>'
+            '</wp:inline></w:drawing></w:r></w:p><w:sectPr><w:type w:val="nextPage"/>'
+            '<w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1440" w:bottom="1440" '
+            'w:left="1440" w:right="1440" w:header="720" w:footer="720"/>'
+            '<w:cols w:num="1" w:space="720"/></w:sectPr></w:body></w:document>')
+        jpeg = b'\xff\xd8\xff\xc0\x00\x08\x08\x00\x28\x00\x50\x03\xff\xd9'
+        gif = (b'GIF89a' + struct.pack('<HHBBB', 80, 40, 0, 0, 0)
+               + b'\x2c' + struct.pack('<HHHHB', 0, 0, 80, 40, 0) + b'\x02\x01\x00\x00\x3b')
+        return {'word/document.xml': document.encode(),
+                'word/_rels/document.xml.rels': (
+                    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                    f'<Relationship Id="image" Type="{r}/image" Target="media/image1.{kind}"/>'
+                    '</Relationships>').encode(),
+                '[Content_Types].xml': (
+                    '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+                    f'<Default Extension="{kind}" ContentType="image/{kind}"/>'
+                    f'<Override PartName="/word/media/image1.{kind}" ContentType="image/{kind}"/>'
+                    '</Types>').encode(),
+                f'word/media/image1.{kind}': jpeg if kind == 'jpeg' else gif}
+
+    def package(self, path, parts):
+        with ZipFile(path, 'w') as package:
+            for name, payload in parts.items():
+                package.writestr(name, payload)
+
+    def evidence(self, kind='jpeg'):
+        return render.picture_pixel_evidence('word-' + kind, *self.raster(),
+                                             self.geometry(kind), (595.3, 841.9))
+
+    def test_both_codecs_require_raw_authored_geometry_and_measured_pixels(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'image.docx'
+            for kind in ('jpeg', 'gif'):
+                with self.subTest(kind=kind):
+                    self.package(path, self.parts(kind))
+                    self.assertEqual(render.picture_package_geometry(path, 'word-' + kind), self.geometry(kind))
+                    reopened = self.parts(kind)
+                    reopened['word/document.xml'] = reopened['word/document.xml'].replace(b'<w:r><w:t/></w:r>', b'')
+                    self.package(path, reopened)
+                    self.assertEqual(render.picture_package_geometry(path, 'word-' + kind), self.geometry(kind))
+                    measured = self.evidence(kind)
+                    self.assertEqual(measured['oracle'], 'host-word-black-picture-v1')
+                    self.assertEqual(measured['page_size'], [596, 842])
+                    self.assertEqual(measured['expected_page_size'], [595.3, 841.9])
+                    self.assertEqual(measured['black_bbox'], [72, 84, 132, 114])
+                    self.assertEqual(measured['black_pixels'], 1800)
+                    self.assertEqual(measured['white_pixels'], 596 * 842 - 1800)
+                    self.assertEqual(measured['colored_pixels'], 0)
+                    self.assertEqual(measured['outside_nonwhite_pixels'], 0)
+                    self.assertEqual(measured['interior_nonblack_pixels'], 0)
+
+    def test_changed_page_margins_line_spacing_or_paragraph_structure_fail(self):
+        replacements = [
+            (b'w:w="11906"', b'w:w="12240"'), (b'w:h="16838"', b'w:h="15840"'),
+            (b'w:top="1440"', b'w:top="1200"'), (b'w:left="1440"', b'w:left="1200"'),
+            (b'w:after="0"', b'w:after="240"'), (b'w:line="240"', b'w:line="280"'),
+            (b'w:lineRule="exact"', b'w:lineRule="auto"'),
+            (b'<w:t/>', b'<w:t>sentinel</w:t>'), (b'<w:t/>', b'<w:br/><w:t/>'),
+            (b'<w:r><w:t/></w:r>', b'<w:r><w:t/></w:r><w:r><w:t/></w:r>'),
+            (b'<w:sectPr>', b'<w:p/><w:sectPr>'), (b'w:num="1"', b'w:num="2"'),
+            (b'<w:sectPr>', b'<w:sectPr><w:headerReference r:id="header"/>')]
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'bad.docx'
+            for before, after in replacements:
+                parts = self.parts()
+                self.assertIn(before, parts['word/document.xml'])
+                parts['word/document.xml'] = parts['word/document.xml'].replace(before, after)
+                self.package(path, parts)
+                with self.subTest(after=after), self.assertRaises(render.FidelityError):
+                    render.picture_package_geometry(path, 'word-jpeg')
+
+    def test_changed_inline_geometry_crop_rotation_effect_or_extra_image_fail(self):
+        replacements = [
+            (b'<wp:inline', b'<wp:anchor'), (b'cx="762000"', b'cx="1524000"'),
+            (b'cy="381000"', b'cy="762000"'), (b'<a:off x="0"', b'<a:off x="12700"'),
+            (b'distL="114300"', b'distL="0"'), (b'<a:xfrm>', b'<a:xfrm rot="60000">'),
+            (b'<a:stretch>', b'<a:srcRect l="1000"/><a:stretch>'),
+            (b'<a:blip r:embed="image"/>', b'<a:blip r:embed="image"><a:alphaModFix amt="0"/></a:blip>'),
+            (b'<wp:effectExtent l="0"', b'<wp:effectExtent l="12700"'),
+            (b'</a:graphicData>', b'<pic:pic/></a:graphicData>')]
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'bad.docx'
+            for before, after in replacements:
+                parts = self.parts()
+                parts['word/document.xml'] = parts['word/document.xml'].replace(before, after)
+                if before == b'<wp:inline':
+                    parts['word/document.xml'] = parts['word/document.xml'].replace(b'</wp:inline>', b'</wp:anchor>')
+                self.package(path, parts)
+                with self.subTest(after=after), self.assertRaises(render.FidelityError):
+                    render.picture_package_geometry(path, 'word-jpeg')
+
+    def test_wrong_external_ambiguous_relationship_mime_or_extra_media_fail(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'bad.docx'
+            for mutation in ('target', 'external', 'type', 'duplicate', 'default', 'override', 'extra', 'missing'):
+                parts = self.parts()
+                relationships = 'word/_rels/document.xml.rels'
+                types = '[Content_Types].xml'
+                if mutation == 'target':
+                    parts[relationships] = parts[relationships].replace(b'media/image1.jpeg', b'media/image2.jpeg')
+                elif mutation == 'external':
+                    parts[relationships] = parts[relationships].replace(b'Id="image"', b'Id="image" TargetMode="External"')
+                elif mutation == 'type':
+                    parts[relationships] = parts[relationships].replace(b'/image"', b'/hyperlink"')
+                elif mutation == 'duplicate':
+                    parts[relationships] = parts[relationships].replace(b'</Relationships>', b'<Relationship Id="image"/></Relationships>')
+                elif mutation == 'default':
+                    parts[types] = parts[types].replace(b'ContentType="image/jpeg"', b'ContentType="image/png"', 1)
+                elif mutation == 'override':
+                    parts[types] = parts[types].replace(b'PartName="/word/media/image1.jpeg" ContentType="image/jpeg"',
+                                                      b'PartName="/word/media/image1.jpeg" ContentType="image/png"')
+                elif mutation == 'extra':
+                    parts['word/media/image2.jpeg'] = parts['word/media/image1.jpeg']
+                else:
+                    del parts['word/media/image1.jpeg']
+                self.package(path, parts)
+                with self.subTest(mutation=mutation), self.assertRaises(render.FidelityError):
+                    render.picture_package_geometry(path, 'word-jpeg')
+
+    def test_wrong_media_dimensions_signatures_and_gif_frame_count_fail(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'bad.docx'
+            for kind in ('jpeg', 'gif'):
+                original = self.parts(kind)[f'word/media/image1.{kind}']
+                changed_dimensions = bytearray(original)
+                changed_dimensions[9 if kind == 'jpeg' else 6] = 1
+                variants = [b'', b'not an image', original[:-1], bytes(changed_dimensions)]
+                if kind == 'gif':
+                    variants.extend([original[:-1] + original[13:],
+                                     original[:14] + b'\x01' + original[15:]])
+                for payload in variants:
+                    parts = self.parts(kind)
+                    parts[f'word/media/image1.{kind}'] = payload
+                    self.package(path, parts)
+                    with self.subTest(kind=kind, payload=payload), self.assertRaises(render.FidelityError):
+                        render.picture_package_geometry(path, 'word-' + kind)
+
+    def test_blank_aspect_position_color_extra_ink_and_interior_hole_fail(self):
+        rasters = [self.raster(color=b'\xff' * 3), self.raster(rectangle=(72, 84, 30, 60)),
+                   self.raster(rectangle=(72, 72, 60, 30)), self.raster(rectangle=(80, 84, 60, 30)),
+                   self.raster(color=b'\xff\0\0')]
+        width, height, pixels = self.raster()
+        for position, color in ((0, b'\0' * 3), (100 * width + 90, b'\xff' * 3)):
+            altered = bytearray(pixels)
+            altered[position * 3:position * 3 + 3] = color
+            rasters.append((width, height, bytes(altered)))
+        for index, raster in enumerate(rasters):
+            with self.subTest(index=index), self.assertRaises(render.FidelityError):
+                render.picture_pixel_evidence('word-jpeg', *raster, self.geometry(), (595.3, 841.9))
+        for page in ((612, 792), (595.3, 842), (595.4, 841.9)):
+            with self.subTest(page=page), self.assertRaises(render.FidelityError):
+                render.picture_raster_size('word-jpeg', page)
+        self.assertEqual(render.picture_raster_size('word-jpeg', (595.304, 841.89)), [596, 842])
+
+    def test_only_exact_six_word_paths_can_use_measured_empty_text_evidence(self):
+        measured = self.evidence()
+        for name in ('word-picture-jpeg-1.docx', 'other/word-picture-jpeg-1.docx',
+                     'fidelity-host/word-picture-jpeg-0.docx', 'fidelity-host/word-picture-jpeg-4.docx',
+                     'fidelity-host/word-picture-jpeg-1.pptx', 'fidelity-host/word-picture-png-1.docx'):
+            with self.subTest(name=name):
+                self.assertIsNone(render.host_picture_case(name))
+                candidate = dict(record(name, text='', pixels=[measured['pixel_sha256']]),
+                                 picture_pixel_evidence=measured)
+                with self.assertRaises(render.FidelityError):
+                    render.validate_record(candidate)
+        # A JPEG measurement cannot satisfy the separately scoped GIF case.
+        candidate = dict(record('fidelity-host/word-picture-gif-1.docx', text='',
+                                pixels=[measured['pixel_sha256']]), picture_pixel_evidence=measured)
+        with self.assertRaises(render.FidelityError):
+            render.validate_record(candidate)
+
+    def test_both_three_save_groups_require_every_measured_page_and_exact_cycles(self):
+        for directory, root in (('fidelity-host/', None), ('', Path('/corpus/fidelity-host'))):
+            records = {}
+            for kind in ('jpeg', 'gif'):
+                measured = self.evidence(kind)
+                for cycle in range(1, 4):
+                    name = f'{directory}word-picture-{kind}-{cycle}.docx'
+                    records[name] = dict(record(name, text='\f', pixels=[measured['pixel_sha256']]),
+                                         picture_pixel_evidence=copy.deepcopy(measured))
+            files = list(records)
+            passing = render.cycle_coverage(files, records, root=root)
+            self.assertEqual(passing['failures'], [])
+            self.assertEqual(passing['cycle_groups'], 2)
+            self.assertTrue(all(group['passed'] for group in passing['cycle_comparisons']))
+            for mutation in ('missing', 'unmeasured', 'geometry', 'pixels', 'text', 'pages'):
+                changed = copy.deepcopy(records)
+                if mutation == 'missing':
+                    del changed[files[1]]
+                elif mutation == 'unmeasured':
+                    del changed[files[1]]['picture_pixel_evidence']
+                elif mutation == 'geometry':
+                    changed[files[1]]['picture_pixel_evidence']['source_geometry']['leading_spacing_twips'][2] = 280
+                elif mutation == 'pixels':
+                    changed[files[1]]['pixel_sha256'] = ['2' * 64]
+                elif mutation == 'text':
+                    changed[files[1]]['text'] = 'Unexpected text\f'
+                else:
+                    changed[files[1]]['pages'] = 2
+                    changed[files[1]]['pixel_sha256'] *= 2
+                with self.subTest(mutation=mutation, root=root):
+                    self.assertTrue(render.cycle_coverage(files, changed, root=root)['failures'])
+            self.assertTrue(render.cycle_coverage(files[:-1], records, root=root)['failures'])
+
+    def test_native_pipeline_measures_word_pixels_and_rejects_blank_or_extra_pages(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder) / 'fidelity-host'
+            root.mkdir()
+            source = root / 'word-picture-jpeg-1.docx'
+            self.package(source, self.parts())
+            output = Path(folder) / 'output'
+            output.mkdir()
+            raster, pages = self.raster(), 1
+
+            def command(args, **kwargs):
+                if Path(args[0]).name in ('libreoffice', 'soffice'):
+                    dest = Path(args[args.index('--outdir') + 1])
+                    (dest / (source.stem + '.pdf')).write_bytes(b'%PDF fixture')
+                elif args[0] == 'pdftoppm':
+                    self.assertEqual(args[1:3], ['-r', '72'])
+                    width, height, pixels = raster
+                    Path(args[-1]).with_name('page-1.ppm').write_bytes(
+                        f'P6\n{width} {height}\n255\n'.encode() + pixels)
+                return subprocess.CompletedProcess(args, 0, stdout=b'', stderr=b'')
+
+            def output_text(args, **kwargs):
+                return f'Pages: {pages}\nPage size: 595.304 x 841.89 pts\n' if args[0] == 'pdfinfo' else '\f'
+
+            with patch.object(render.subprocess, 'run', side_effect=command), \
+                    patch.object(render.subprocess, 'check_output', side_effect=output_text):
+                result = render.render_document(source, root, output, 0)
+                measured = result['picture_pixel_evidence']
+                self.assertEqual(measured['black_bbox'], [72, 84, 132, 114])
+                self.assertEqual(measured['black_pixels'], 1800)
+                self.assertEqual(measured['source_geometry'], self.geometry())
+                self.assertEqual(result['pixel_sha256'], [measured['pixel_sha256']])
+                self.assertEqual(json.loads(json.dumps(result)), result)
+                for raster, pages in ((self.raster(color=b'\xff' * 3), 1), (self.raster(), 2)):
+                    with self.subTest(pages=pages), self.assertRaises(render.FidelityError):
+                        render.render_document(source, root, output, 1)
+
+
 class CycleComparisonTests(unittest.TestCase):
     def test_complete_zero_and_one_based_series_pass(self):
         for cycles in ([0, 1, 2], [1, 2, 3]):
