@@ -122,6 +122,11 @@ abstract final class LineBreaker {
     /// When false, do not stretch spaces to the line edge (pdf_widgets
     /// non-justify aligns). Word layout keeps the default [true].
     bool justify = true,
+
+    /// Split otherwise overflowing lines at source grapheme boundaries. Fixed
+    /// cells and textboxes cannot expand to accommodate a long word. Normal
+    /// word breaks still take priority; a single wider grapheme stays intact.
+    bool breakLongWords = false,
     MarkAttachFn? markAttachOf,
     List<ShapedGlyph> Function(List<ShapedGlyph> glyphs)? ligate,
   }) {
@@ -145,6 +150,9 @@ abstract final class LineBreaker {
     if (logical.isEmpty) {
       return <BrokenLine>[];
     }
+    final Set<int>? clusterStarts = breakLongWords
+        ? {for (final cluster in GraphemeClusters.segment(text)) cluster.start}
+        : null;
 
     // Hard breaks on LF/CR (Flutter / package:pdf Text parity).
     final List<BrokenLine> lines = <BrokenLine>[];
@@ -162,11 +170,13 @@ abstract final class LineBreaker {
         lines.addAll(
           _wrapChunk(
             chunk,
+            sourceText: text,
             maxWidth: maxWidth,
             spaceStretch: spaceStretch,
             spaceShrink: spaceShrink,
             justify: justify,
             markAttachOf: markAttachOf,
+            clusterStarts: clusterStarts,
           ),
         );
       } else if (hard || (atEnd && lines.isEmpty)) {
@@ -194,18 +204,23 @@ abstract final class LineBreaker {
 
   static List<BrokenLine> _wrapChunk(
     List<ShapedGlyph> logical, {
+    required String sourceText,
     required double maxWidth,
     required double spaceStretch,
     required double spaceShrink,
     required bool justify,
     MarkAttachFn? markAttachOf,
+    Set<int>? clusterStarts,
   }) {
-    final List<int> breaks = _knuthPlass(
+    final List<int> planned = _knuthPlass(
       logical,
       maxWidth,
       spaceStretch,
       spaceShrink,
     );
+    final breaks = clusterStarts == null
+        ? planned
+        : _constrainBreaks(logical, planned, clusterStarts, maxWidth);
     final List<BrokenLine> lines = <BrokenLine>[];
     for (int i = 0; i < breaks.length - 1; i++) {
       final int from = breaks[i];
@@ -216,6 +231,7 @@ abstract final class LineBreaker {
       final List<ShapedGlyph> slice = _reorderLine(
         logical.sublist(from, to),
         markAttachOf,
+        clusterStarts,
       );
       double width = 0;
       var spaces = 0;
@@ -236,8 +252,10 @@ abstract final class LineBreaker {
         if (g.logicalIndex < logStart) {
           logStart = g.logicalIndex;
         }
-        if (g.logicalIndex + 1 > logEnd) {
-          logEnd = g.logicalIndex + 1;
+        final source = sourceText.codeUnitAt(g.logicalIndex);
+        final units = source >= 0xD800 && source <= 0xDBFF ? 2 : 1;
+        if (g.logicalIndex + units > logEnd) {
+          logEnd = g.logicalIndex + units;
         }
       }
       if (slice.isEmpty) {
@@ -257,14 +275,80 @@ abstract final class LineBreaker {
     return lines;
   }
 
+  // Keep the existing paragraph plan wherever it fits. Repair only overflow,
+  // greedily preferring a normal word break before a grapheme boundary. This
+  // avoids adding every character to Knuth-Plass's quadratic search, and keeps
+  // original Arabic joining, bidi levels and UTF-16 ownership intact.
+  static List<int> _constrainBreaks(
+    List<ShapedGlyph> logical,
+    List<int> planned,
+    Set<int> clusterStarts,
+    double maxWidth,
+  ) {
+    final boundaries = <int>[
+      0,
+      for (var i = 1; i < logical.length; i++)
+        if (clusterStarts.contains(logical[i].logicalIndex) &&
+            // A lam-alef ghost belongs to the preceding painted ligature.
+            logical[i].codePoint != 0)
+          i,
+      logical.length,
+    ];
+    final boundaryIndex = <int, int>{
+      for (var i = 0; i < boundaries.length; i++) boundaries[i]: i,
+    };
+    final widths = List<double>.filled(logical.length + 1, 0);
+    final paintedEnd = List<int>.filled(logical.length + 1, 0);
+    for (var i = 0; i < logical.length; i++) {
+      widths[i + 1] = widths[i] + logical[i].advance;
+      paintedEnd[i + 1] = _isSoftTrailingSpace(logical[i])
+          ? paintedEnd[i]
+          : i + 1;
+    }
+    final result = <int>[0];
+    var start = 0;
+    for (final plannedEnd in planned.skip(1)) {
+      final end = boundaryIndex[plannedEnd];
+      // A natural break inside a source grapheme must join the next interval.
+      if (end == null) continue;
+      while (start < end) {
+        var fitting = start;
+        var natural = start;
+        for (var next = start + 1; next <= end; next++) {
+          final from = boundaries[start];
+          final to = boundaries[next];
+          final width = widths[math.max(from, paintedEnd[to])] - widths[from];
+          if (width > maxWidth + 0.000001) {
+            // An indivisible glyph/cluster may itself be wider than the box.
+            // Keep it whole and always make progress.
+            if (fitting == start) fitting = next;
+            break;
+          }
+          fitting = next;
+          if (_canBreakAfter(logical, to - 1)) natural = next;
+        }
+        final cut = fitting == end
+            ? end
+            : (natural > start ? natural : fitting);
+        result.add(boundaries[cut]);
+        start = cut;
+      }
+    }
+    return result;
+  }
+
   static List<ShapedGlyph> _reorderLine(
     List<ShapedGlyph> logicalSlice,
-    MarkAttachFn? markAttachOf,
-  ) {
+    MarkAttachFn? markAttachOf, [
+    Set<int>? clusterStarts,
+  ]) {
     if (logicalSlice.isEmpty) {
       return logicalSlice;
     }
-    final List<List<ShapedGlyph>> clusters = _graphemeClusters(logicalSlice);
+    final List<List<ShapedGlyph>> clusters = _graphemeClusters(
+      logicalSlice,
+      clusterStarts,
+    );
     if (clusters.length < 2) {
       return _attachMarksToBases(logicalSlice, markAttachOf);
     }
@@ -278,10 +362,16 @@ abstract final class LineBreaker {
   }
 
   /// UAX #9 L2 at grapheme-cluster granularity: tashkeel stays on its letter.
-  static List<List<ShapedGlyph>> _graphemeClusters(List<ShapedGlyph> glyphs) {
+  static List<List<ShapedGlyph>> _graphemeClusters(
+    List<ShapedGlyph> glyphs,
+    Set<int>? clusterStarts,
+  ) {
     final List<List<ShapedGlyph>> clusters = <List<ShapedGlyph>>[];
     for (final ShapedGlyph glyph in glyphs) {
-      if (clusters.isNotEmpty && isCombiningMark(glyph.codePoint)) {
+      final continues = clusterStarts == null
+          ? isCombiningMark(glyph.codePoint)
+          : !clusterStarts.contains(glyph.logicalIndex) || glyph.codePoint == 0;
+      if (clusters.isNotEmpty && continues) {
         clusters.last.add(glyph);
       } else {
         clusters.add(<ShapedGlyph>[glyph]);

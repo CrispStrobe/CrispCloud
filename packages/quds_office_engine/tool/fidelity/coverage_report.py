@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Merge fresh Dart VM coverage and inventory every uncovered engine line.
+"""Merge Dart VM coverage and inventory every uncovered engine line.
 
-The source fingerprint records the files present when this report is made.
-Always collect into a fresh coverage directory: stale data from a same-length
-source edit cannot be detected from VM hit counts alone. Executed lines do not
-measure branch coverage or certify that a line is correct.
+The CLI requires a successful, unchanged collect_coverage.py receipt by default.
+Use --allow-unverified only to inspect historical data; the result explicitly
+marks collection provenance as unverified. Executed lines do not measure branch
+coverage or certify that a line is correct.
 """
 import argparse
 import hashlib
@@ -12,12 +12,19 @@ import json
 from pathlib import Path
 import subprocess
 
+from collect_coverage import RECEIPT, verify_receipt
+
 ENGINE = Path(__file__).resolve().parents[2]
 PACKAGE_PREFIX = 'package:quds_office_engine/'
 
 
-def report_coverage(directory, root=ENGINE):
+def report_coverage(directory, root=ENGINE, *, require_receipt=False,
+                    verify_collection=True):
     root = root.resolve()
+    provenance = {'verified': False,
+                  'reason': 'No verified successful collection receipt; current source hashes alone cannot establish when these hits were collected.'}
+    if verify_collection and (require_receipt or (directory / RECEIPT).exists()):
+        provenance = verify_receipt(directory, root)
     sources = {path.relative_to(root).as_posix(): path
                for path in sorted((root / 'lib').rglob('*.dart'))}
     if not sources:
@@ -26,8 +33,14 @@ def report_coverage(directory, root=ENGINE):
                       for name, path in sources.items()}
     merged = {}
     for path in sorted(directory.rglob('*.json')):
+        if path == directory / RECEIPT:
+            continue
         data = json.loads(path.read_text())
+        if not isinstance(data, dict) or not isinstance(data.get('coverage'), list):
+            raise ValueError(f'Malformed VM coverage record: {path}')
         for item in data.get('coverage', []):
+            if not isinstance(item, dict) or not isinstance(item.get('source'), str):
+                raise ValueError(f'Malformed VM coverage item: {path}')
             source = item['source']
             if not source.startswith(PACKAGE_PREFIX):
                 continue
@@ -64,8 +77,13 @@ def report_coverage(directory, root=ENGINE):
             'instrumented_lines': sum(file['total'] for file in subset),
             'uninstrumented_files': [path for path in uninstrumented if path.startswith(prefix)],
         }
+    if provenance['verified']:
+        # Detect an input/output change while the report was being assembled.
+        if verify_receipt(directory, root) != provenance:
+            raise ValueError('Collection provenance changed while building coverage report')
     return {
         'measurement': 'executed instrumented lines; not branch coverage',
+        'collection': provenance,
         'source_tree_sha256': hashlib.sha256(json.dumps(hashes, sort_keys=True).encode()).hexdigest(),
         'source_sha256': hashes,
         'components': components,
@@ -80,8 +98,27 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('directory', type=Path, nargs='?', default=ENGINE / 'coverage/vm')
     parser.add_argument('--output', type=Path, default=ENGINE / 'build/fidelity/coverage-gaps.json')
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument('--require-receipt', action='store_true',
+                      help='require source-bound successful collection (the default)')
+    mode.add_argument('--allow-unverified', action='store_true',
+                      help='inspect historical unbound hits with an explicit unverified label')
     args = parser.parse_args()
-    report = report_coverage(args.directory)
+    if args.output.resolve().is_relative_to(args.directory.resolve()):
+        parser.error('Report output must be outside the raw coverage directory')
+    # Reusing a report destination must not leave an earlier success behind if
+    # validation fails or this process is interrupted before publishing a result.
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    pending = {'status': 'running', 'coverage_directory': str(args.directory),
+               'collection': {'verified': False, 'reason': 'Report validation has not completed'}}
+    args.output.write_text(json.dumps(pending, indent=2) + '\n')
+    try:
+        report = report_coverage(args.directory, require_receipt=not args.allow_unverified)
+    except BaseException as error:
+        pending.update(status='failed', error=f'{type(error).__name__}: {error}')
+        args.output.write_text(json.dumps(pending, indent=2) + '\n')
+        raise
+    report['status'] = 'complete'
     try:
         report['source_git_commit'] = subprocess.run(
             ['git', 'rev-parse', 'HEAD'], cwd=ENGINE, check=True,
@@ -92,10 +129,11 @@ def main():
             cwd=ENGINE, check=True, capture_output=True, text=True).stdout.strip())
     except (OSError, subprocess.CalledProcessError):
         report['source_git_commit'], report['source_git_dirty'] = None, None
-    args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2) + '\n')
     hit, total = report['covered_lines'], report['instrumented_lines']
     print(f'Engine coverage: {hit}/{total} instrumented lines ({100*hit/total:.1f}%).')
+    print('Collection provenance: ' + ('verified source/output receipt'
+                                     if report['collection']['verified'] else 'UNVERIFIED historical hits'))
     print('Largest uncovered files:')
     for file in sorted(report['files'], key=lambda item: item['total'] - item['hit'], reverse=True)[:10]:
         print(f"  {file['path']}: {file['total'] - file['hit']} uncovered lines")

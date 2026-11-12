@@ -76,5 +76,7 @@ class SheetRenameOracleTest(unittest.TestCase):
         self.reject('xl/worksheets/sheet2.xml', lambda r: r.find(f'.//{X}c[@r="D13"]').attrib.pop('t'))
     def test_rejects_stale_supported_arithmetic_cache(self):
         self.reject('xl/worksheets/sheet2.xml', lambda r: setattr(r.find(f'.//{X}c[@r="D14"]/{X}v'), 'text', '42'))
+    def test_rejects_stale_newly_supported_qualified_name_cache(self):
+        self.reject('xl/worksheets/sheet2.xml', lambda r: setattr(r.find(f'.//{X}c[@r="D10"]/{X}v'), 'text', '42'))
 
 if __name__ == '__main__': unittest.main()

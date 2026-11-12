@@ -2,6 +2,7 @@ import '../model/sml_analysis.dart';
 import '../model/sml_workbook.dart';
 import 'formula_ast.dart';
 import 'formula_eval.dart';
+import 'formula_functions.dart';
 
 /// Dependency graph with topological recalculation and cycle detection.
 class FormulaDepGraph {
@@ -11,6 +12,7 @@ class FormulaDepGraph {
   /// workbook API.
   final SmlWorkbook workbook;
   final Map<String, Set<String>> _deps = <String, Set<String>>{};
+  final Set<String> _unmodeledDependencies = <String>{};
 
   /// circular API.
   final Set<String> circular = <String>{};
@@ -18,6 +20,7 @@ class FormulaDepGraph {
   /// rebuild API.
   void rebuild() {
     _deps.clear();
+    _unmodeledDependencies.clear();
     circular.clear();
     for (final SmlWorksheet sheet in workbook.sheets) {
       for (final SmlCell cell in sheet.allCells) {
@@ -25,7 +28,9 @@ class FormulaDepGraph {
           continue;
         }
         final String key = _key(sheet, cell.ref);
-        _deps[key] = _collect(cell.formula!, sheet);
+        final dependencies = _collect(cell.formula!, sheet);
+        _deps[key] = dependencies ?? <String>{};
+        if (dependencies == null) _unmodeledDependencies.add(key);
       }
     }
   }
@@ -40,6 +45,7 @@ class FormulaDepGraph {
     rebuild();
     final List<String> order = <String>[];
     final Set<String> visiting = <String>{};
+    final List<String> path = <String>[];
     final Set<String> visited = <String>{};
 
     void visit(String node) {
@@ -47,13 +53,17 @@ class FormulaDepGraph {
         return;
       }
       if (!visiting.add(node)) {
-        circular.add(node);
+        // Every participant must be marked before any old numeric cache is
+        // consulted; marking only the first would leave stale values in peers.
+        circular.addAll(path.skip(path.indexOf(node)));
         return;
       }
+      path.add(node);
       for (final String d in _deps[node] ?? const <String>{}) {
         visit(d);
       }
       visiting.remove(node);
+      path.removeLast();
       visited.add(node);
       order.add(node);
     }
@@ -65,6 +75,12 @@ class FormulaDepGraph {
     for (final String key in order) {
       final (SmlWorksheet sheet, SmlCellRef ref) = _parse(key);
       final SmlCell cell = sheet.cell(ref);
+      if (_unmodeledDependencies.contains(key)) {
+        if (keepCachedOnUnsupported && cell.value != null) continue;
+        cell.value = '#ERROR! Unmodeled formula dependencies';
+        cell.type = SmlCellType.error;
+        continue;
+      }
       if (circular.contains(key)) {
         cell.value = '#CIRC!';
         cell.type = SmlCellType.error;
@@ -80,9 +96,8 @@ class FormulaDepGraph {
       );
       if (keepCachedOnUnsupported &&
           result is FormulaErrorValue &&
-          _unsupported(result.code) &&
-          cached != null &&
-          !(cell.type == SmlCellType.error && _unsupported(cached))) {
+          result.isUnsupported &&
+          cached != null) {
         continue;
       }
       cell.value = FormulaErrorValue.unwrap(result);
@@ -103,42 +118,90 @@ class FormulaDepGraph {
     return order;
   }
 
-  Set<String> _collect(String formula, SmlWorksheet sheet) {
+  Set<String>? _collect(String formula, SmlWorksheet sheet) {
     final Set<String> out = <String>{};
-    void walk(FormulaNode node) {
+    void walk(FormulaNode node, [Set<String> bindings = const {}]) {
       switch (node) {
         case CellNode(:final SmlCellRef ref, :final String? sheetName):
-          final SmlWorksheet target = sheetName == null
+          final SmlWorksheet? target = sheetName == null
               ? sheet
-              : (workbook.sheetByName(sheetName) ?? sheet);
-          out.add(_key(target, ref));
+              : workbook.sheetByName(sheetName);
+          if (target != null) out.add(_key(target, ref));
         case RangeNode(:final SmlRange range, :final String? sheetName):
-          final SmlWorksheet target = sheetName == null
+          final SmlWorksheet? target = sheetName == null
               ? sheet
-              : (workbook.sheetByName(sheetName) ?? sheet);
-          for (final SmlCellRef ref in range.cells) {
-            out.add(_key(target, ref));
+              : workbook.sheetByName(sheetName);
+          if (target != null) {
+            for (final SmlCellRef ref in range.cells) {
+              out.add(_key(target, ref));
+            }
           }
         case BinaryNode(:final FormulaNode left, :final FormulaNode right):
-          walk(left);
-          walk(right);
+          walk(left, bindings);
+          walk(right, bindings);
         case UnaryNode(:final FormulaNode expr):
-          walk(expr);
-        case CallNode(:final List<FormulaNode> args):
+          walk(expr, bindings);
+        case CallNode(:final String name, :final List<FormulaNode> args):
+          final function = FormulaFunctions.stripFutureFunctionPrefix(name);
+          if (function == 'IF' && args.isNotEmpty) {
+            if (args.first case LiteralNode(value: final bool condition)) {
+              // A constant predicate has one reachable branch. Opaque names in
+              // the unused branch cannot discard the selected branch's deps.
+              final selected = condition ? 1 : 2;
+              if (args.length > selected) walk(args[selected], bindings);
+              break;
+            }
+          }
+          if ((function == 'IFERROR' || function == 'IFNA') &&
+              args.isNotEmpty &&
+              args.first is LiteralNode) {
+            // Parsed scalar literals cannot be native errors; quoted error
+            // spellings are ordinary text and do not select the fallback.
+            break;
+          }
+          if (function == 'LET' && args.length >= 3 && args.length.isOdd) {
+            final local = {...bindings};
+            for (var i = 0; i < args.length - 1; i += 2) {
+              walk(args[i + 1], local);
+              final binding = args[i];
+              if (binding is NamedRangeNode && binding.sheetName == null) {
+                local.add(binding.name.toUpperCase());
+              }
+            }
+            walk(args.last, local);
+            break;
+          }
           for (final FormulaNode a in args) {
-            walk(a);
+            walk(a, bindings);
           }
         case LiteralNode():
           break;
-        case NamedRangeNode(:final String name):
-          final SmlNamedRange? named = workbook.namedRange(name);
-          if (named == null) {
+        case NamedRangeNode():
+          if (node.sheetName == null &&
+              bindings.contains(node.name.toUpperCase())) {
             break;
           }
-          final SmlWorksheet target =
-              workbook.sheetByName(named.sheetName) ?? sheet;
-          for (final SmlCellRef ref in named.range.cells) {
-            out.add(_key(target, ref));
+          final named = node.resolve(workbook, sheet);
+          if (named is! SmlNamedRange) {
+            if (named is SmlFormulaName || node.sheetName != null) {
+              // Validate only scalar/opaque definitions. An unsupported name
+              // means the whole expression must keep its authored cache, not
+              // acquire partial dependencies that could manufacture a cycle.
+              node.eval(
+                FormulaContext(
+                  workbook: workbook,
+                  sheet: sheet,
+                  origin: const SmlCellRef(0, 0),
+                ),
+              );
+            }
+            break;
+          }
+          final target = workbook.sheetByName(named.sheetName);
+          if (target != null) {
+            for (final SmlCellRef ref in named.range.cells) {
+              out.add(_key(target, ref));
+            }
           }
       }
     }
@@ -146,13 +209,13 @@ class FormulaDepGraph {
     try {
       walk(parseFormula(formula));
     } on Object {
-      // Broken formula — no deps.
+      // Never calculate against an incomplete dependency set. In particular,
+      // a dynamic conditional containing an opaque name remains a cache
+      // fallback even if direct scalar evaluation can choose another branch.
+      return null;
     }
     return out;
   }
-
-  static bool _unsupported(Object? value) =>
-      value is String && (value == '#NAME?' || value.startsWith('#ERROR!'));
 
   static String _key(SmlWorksheet sheet, SmlCellRef ref) =>
       '${sheet.name}!${ref.a1}';

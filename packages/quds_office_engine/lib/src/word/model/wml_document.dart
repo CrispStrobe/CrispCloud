@@ -456,6 +456,8 @@ class WmlTableCell {
     this.gridSpan = 1,
     this.vMerge = WmlVMerge.none,
     this.width,
+    this.sourceWidthXml,
+    this.sourceWidthPoints,
     this.fillColor,
     this.borderTop,
     this.borderBottom,
@@ -474,6 +476,13 @@ class WmlTableCell {
 
   /// width API.
   double? width;
+
+  /// Native preferred-width element. Percent, automatic and nil widths cannot
+  /// be represented as points and are retained until [width] is changed.
+  String? sourceWidthXml;
+
+  /// Point projection at import, used to detect an explicit width change.
+  double? sourceWidthPoints;
 
   /// fillColor API.
   String? fillColor;

@@ -1,0 +1,12 @@
+{
+  "description": "Independent native package authored from the hand-written source XML and explicit copy mapping. It was not produced by the Dart serializer. Engine and editor both copy these exact bytes as a required appearance reference.",
+  "author": "bookmark_copy_oracle.write_native_reference",
+  "source_commit": "a8eee31af3cc5ad0f9520d4ac47568e98f26dac7",
+  "files_sha256": {
+    "test/fixtures/fidelity/bookmark_copy.xml": "6353fd1493111a544b371711a40b028cb3e21eb811007b64a00a1047e5a5425a",
+    "test/fixtures/fidelity/bookmark_copy_expected.json": "c8dd4dd38cbc6b3f0f698079aacdc3cf62efe19f54faade8410c4e6af46c2191",
+    "test/fixtures/fidelity/bookmark_copy_expected.docx": "4813413bbe1ac7b1cd927d0b40b07752c0944dc272d849a4274c627ce4d969b3"
+  },
+  "accepted_native_reference": "All six original engine/editor copied exports matched this reference exactly in page count, extracted text, and pixel fingerprints using LibreOffice 24.2.7.2.",
+  "author_script_at_source_commit_sha256": "7d07d1e6027c99bdeafac1f6a66d8abd4b39bd02ef1a162b99adb73d797ca7ec"
+}

@@ -4,18 +4,21 @@ cd "$(dirname "$0")/../.."
 # Generate every required output before running the independent oracles. Missing
 # or stale/incomplete inventories fail; this command never regenerates goldens.
 python3 tool/fidelity/inventory.py clean
+python3 tool/fidelity/feature_matrix.py list > /dev/null
 dart test \
   test/legacy_word_document_test.dart test/bounded_cfb_reader_test.dart \
   test/legacy_word_conversion_test.dart test/opc_word_kind_test.dart \
   test/word_package_preservation_test.dart test/zip_bounded_read_test.dart \
   test/drawing_line_style_test.dart \
+  test/table_grid_steps_test.dart test/xml_namespace_capture_test.dart \
+  test/word_contained_text_wrap_test.dart \
   test/office_package_parts_test.dart test/office_search_fidelity_test.dart \
   test/office_fidelity_oracle_test.dart test/office_steps_test.dart \
   test/scripted_workflows_test.dart test/numbering_collision_test.dart \
   test/list_restart_fidelity_test.dart test/rich_note_test.dart \
   test/native_presentation_test.dart test/native_spreadsheet_test.dart \
-  test/slide_section_fidelity_test.dart \
-  test/sheet_rename_fidelity_test.dart \
+  test/slide_section_fidelity_test.dart test/slide_arrange_fidelity_test.dart \
+  test/sheet_rename_fidelity_test.dart test/sheet_qualified_names_test.dart test/sheet_qualified_name_error_test.dart \
   test/sheet_rename_adversarial_test.dart \
   test/sheet_formula_cache_fidelity_test.dart \
   test/sheet_normal_font_metrics_test.dart \
@@ -31,7 +34,7 @@ dart test \
   test/xml_whitespace_fidelity_test.dart test/styleless_import_fidelity_test.dart \
   test/table_border_fidelity_test.dart test/word_picture_distance_fidelity_test.dart \
   test/note_marker_legacy_fidelity_test.dart \
-  test/bookmark_fidelity_test.dart test/content_control_fidelity_test.dart \
+  test/bookmark_fidelity_test.dart test/word_bookmark_copy_test.dart test/content_control_fidelity_test.dart \
   test/word_edit_integrity_test.dart test/inline_field_fidelity_test.dart \
   test/word_structure_steps_test.dart test/word_structure_integrity_test.dart \
   test/word_table_grid_addressing_test.dart \
@@ -59,7 +62,9 @@ dart run tool/fidelity/office_steps.dart inspect build/fidelity-script.docx > bu
 python3 tool/fidelity/styles_oracle.py
 python3 tool/fidelity/native_oracle.py
 python3 tool/fidelity/slide_sections_oracle.py
+python3 tool/fidelity/slide_arrange_oracle.py
 python3 tool/fidelity/sheet_rename_oracle.py
+python3 tool/fidelity/sheet_qualified_names_oracle.py
 python3 tool/fidelity/story_media_oracle.py
 python3 tool/fidelity/lists_oracle.py build/fidelity-lists
 python3 tool/fidelity/scripted_oracle.py
@@ -68,6 +73,7 @@ python3 tool/fidelity/comment_threads_oracle.py
 python3 tool/fidelity/altchunk_oracle.py
 python3 tool/fidelity/edge_oracle.py
 python3 tool/fidelity/table_borders_oracle.py
+python3 tool/fidelity/table_grid_oracle.py
 python3 tool/fidelity/note_markers_legacy_oracle.py
 python3 tool/fidelity/bookmarks_oracle.py
 python3 tool/fidelity/content_controls_oracle.py
@@ -80,6 +86,7 @@ python3 tool/fidelity/frame_wrap_oracle.py
 python3 tool/fidelity/content_control_oracle.py
 python3 tool/fidelity/auxiliary_content_control_oracle.py
 python3 tool/fidelity/bookmark_ranges_oracle.py
+python3 tool/fidelity/bookmark_copy_oracle.py
 python3 tool/fidelity/unsupported_word_audit.py
 python3 tool/fidelity/audit_operations.py
 python3 tool/fidelity/inventory.py verify

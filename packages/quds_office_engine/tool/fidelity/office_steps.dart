@@ -7,6 +7,7 @@ import 'package:quds_office_engine/quds_office_engine.dart';
 import 'sheet_steps.dart';
 import 'slide_steps.dart';
 import 'step_input.dart';
+import 'table_selector.dart';
 import 'word_steps.dart';
 import 'word_structure_steps.dart';
 export 'word_steps.dart' show applyStep;
@@ -188,33 +189,29 @@ Map<String, Object?> inspectWord(WmlDocument doc) {
     ],
     'images': <Object?>[for (final v in doc.visuals) image(v)],
     'tables': [
-      for (final t in bodyBlocks(doc).whereType<WmlTable>())
+      for (final (t, coordinates) in bodyBlocks(doc).whereType<WmlTable>().map(
+        (table) => (table, tableGridCoordinates(table)),
+      ))
         {
           'grid': t.grid,
           'style': t.properties.styleId,
           'gridAddressingSupported': WordTable.supportsGridAddressing(t),
           'rows': [
-            for (final row in t.rows)
+            for (final (rowIndex, row) in t.rows.indexed)
               {
+                'row': rowIndex,
                 'height': row.height,
                 'cantSplit': row.cantSplit,
                 'gridBefore': row.gridBefore,
                 'gridAfter': row.gridAfter,
                 'cells': [
-                  for (var column = 0; column < row.cells.length; column++)
+                  for (final (column, cell) in row.cells.indexed)
                     {
-                      'column': column,
-                      'gridColumn':
-                          row.gridBefore + WordTable.gridStart(row, column),
-                      'endGridColumn':
-                          row.gridBefore +
-                          WordTable.gridStart(row, column) +
-                          row.cells[column].gridSpan -
-                          1,
-                      'width': row.cells[column].width,
-                      'span': row.cells[column].gridSpan,
-                      'merge': row.cells[column].vMerge.name,
-                      'fill': row.cells[column].fillColor,
+                      ...coordinates[rowIndex][column],
+                      'width': cell.width,
+                      'span': cell.gridSpan,
+                      'merge': cell.vMerge.name,
+                      'fill': cell.fillColor,
                       'paragraphs': [
                         for (final para
                             in row.cells[column].blocks

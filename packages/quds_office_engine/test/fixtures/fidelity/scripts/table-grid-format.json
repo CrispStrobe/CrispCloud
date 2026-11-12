@@ -1,0 +1,7 @@
+[
+  {"op":"tableCellFormat","table":0,"row":1,"gridColumn":1,"fill":"DDEEFF"},
+  {"op":"tableCellText","table":0,"row":1,"gridColumn":2,"text":"Edited middle right"},
+  {"op":"tableCellFormat","table":0,"row":1,"gridColumn":2,"width":73.25},
+  {"op":"tableCellText","table":1,"row":0,"gridColumn":2,"text":"Edited nested tail"},
+  {"op":"tableCellFormat","table":1,"row":0,"gridColumn":1,"fill":"EEDDCC"}
+]

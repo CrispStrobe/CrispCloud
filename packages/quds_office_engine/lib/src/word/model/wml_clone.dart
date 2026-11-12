@@ -131,6 +131,8 @@ abstract final class WmlClone {
       gridSpan: cell.gridSpan,
       vMerge: cell.vMerge,
       width: cell.width,
+      sourceWidthXml: cell.sourceWidthXml,
+      sourceWidthPoints: cell.sourceWidthPoints,
       fillColor: cell.fillColor,
       borderTop: cell.borderTop,
       borderBottom: cell.borderBottom,

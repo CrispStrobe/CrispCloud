@@ -26,13 +26,47 @@ creation, image replacement and opaque body XML (`w:altChunk` and any other
 unmodeled body element, with its relationship provenance). The editor adds
 layout exports and the async controller export.
 
-The authored manifests require **296 engine files** and **25 editor files**.
-The engine has 89 complete three-save series and 29 standalone inputs/exports;
+The authored manifests require **324 engine files** and **25 editor files**.
+The engine has 97 complete three-save series and 33 standalone inputs/exports;
 the editor has eight complete three-save series and one standalone export.
+The recovered preferred-width corpus uses `fidelity-table-widths/`; the earlier
+logical-grid/omitted-row corpus remains in `fidelity-table-grid/`. Their distinct
+authored `source.docx` files must never share an output path.
 Exact inventory checks reject missing, extra, empty or invalid packages and
 retain SHA-256 receipts. Authored source/edited baselines also participate in
 external render comparisons; exports without a declared comparison baseline
 still require their own schema and render checks.
+
+### Run selected feature areas
+
+The feature runner groups import, modification, repeated export, independent
+package checks and corruption controls by the area being changed:
+
+```sh
+python3 tool/fidelity/feature_matrix.py list
+python3 tool/fidelity/feature_matrix.py plan footnotes headings tables
+python3 tool/fidelity/feature_matrix.py run styles references
+```
+
+Available names are `footnotes`, `endnotes`, `headings`, `styles`, `paragraphs`,
+`images`, `tables`, `tocs`, `textflow`, `placement`, `drawings`, `references`,
+`comments`, `spreadsheets` and `slides`. The committed matrix connects these
+15 areas to 19 producer/oracle bundles. Selecting every area currently requires
+214 freshly generated Office packages and 38 commands. The full `check.sh`
+gate also covers other regression corpora and requires all 324 engine files.
+
+`plan` prints the exact commands, required exports and separate editor golden
+commands without changing files. `run` validates every reference, removes only
+the selected managed outputs, then executes their producers, independent
+oracles and negative controls. It records input and output hashes under
+`build/fidelity-features/`. A missing output, failed command, input change or
+concurrent feature run fails the run. An interrupted rerun cannot leave an old
+successful receipt in place. Supply a specific runtime with
+`--dart /path/to/flutter/bin/cache/dart-sdk/bin/dart` before `run` or `plan`.
+
+The matrix lists the pinned editor goldens separately. It never updates or
+implicitly executes them, and a successful feature run does not certify all
+parameter combinations, branches or Microsoft Office visual equivalence.
 
 ## Import, inspect, edit and export
 
@@ -111,7 +145,8 @@ and physical row-cell indexes for `tableUnmerge`, `tableCellText` and
 `tableMerge` accepts `endGridColumn` instead of `endColumn`. Each pair is mutually
 exclusive. A logical slot inside a horizontal or vertical merge resolves to the
 visible master cell. `inspect` reports both coordinate systems and whether the
-table supports grid addressing.
+table supports grid addressing. Each inspected cell also identifies its merge
+origin, or a grid diagnostic when logical edits are guarded.
 
 Logical addressing and merge/unmerge require a rectangular grid with matching
 vertical continuation spans. Partial merges crossing an existing vertical region
@@ -133,6 +168,35 @@ optional fields are available from `operations`.
 | `commentAdd`, `commentReply`, `commentEdit`, `commentResolve`, `commentDelete` | Anchor a nonempty text range, maintain thread replies and resolved state, and remove a thread |
 | `imageWrap` | Set `wrap`, distances `top`/`bottom`/`left`/`right`, `rotation`, `altTitle`, `altDescription` |
 | `frameAdd`, `frameFormat`, `frameRemove` | Create and position a text frame with `x`, `y`, `width`, `height`, `anchor`, `wrap`, `fill`, `stroke` |
+
+For `tableCellText`, `tableCellFormat` and `tableUnmerge`, supply exactly one of
+the legacy physical `column` or the logical `gridColumn`. Logical columns count
+each grid unit, so a coordinate inside a horizontal span or on a vertical
+continuation selects the visible merge origin. `inspect` reports both coordinate
+systems and each cell's merge origin. Invalid continuation chains are diagnosed
+and rejected before mutation. Nested table indexes still follow depth-first
+order and retain their actual containing cell.
+
+```json
+[
+  {"op":"tableCellFormat","table":0,"row":1,"gridColumn":1,"width":73.25,"fill":"DDEEFF"},
+  {"op":"tableCellText","table":0,"row":1,"gridColumn":2,"text":"Edited logical column"},
+  {"op":"tableUnmerge","table":0,"row":1,"gridColumn":1}
+]
+```
+
+Native cell preferred widths retain their original `dxa`, `pct`, `auto` or `nil`
+representation until an explicit point-width change. Changed widths are saved
+as `dxa`; horizontal merge/unmerge derives new widths from the logical grid.
+Percentage, automatic and nil widths are retained native metadata; the canvas
+continues to lay out the table using its logical grid. An incomplete grid does
+not supply enough geometry to infer a merged preferred width.
+The `table-grid-{format,replace,unmerge}.json` scripts run against an independently
+authored rich nested-table source. The 28-file corpus contains that source,
+three independently authored expected documents, and unchanged/format/replace/
+unmerge series over three direct and three isolate saves. The XML oracle checks
+the exact intended cell, width units, spans, rich text and bookmark ownership.
+The native renderer requires each first export to match its authored baseline.
 
 Paragraph tab stops are arrays of `{ "position": 72, "alignment": "right",
 "leader": "dot" }`. Distances are points. `firstLine` and `hanging` cannot both
@@ -321,11 +385,10 @@ From `packages/quds_office_engine`:
 
 ```sh
 dart analyze
-# Use an empty directory; never combine coverage from different source revisions.
-rm -rf coverage/vm
-dart test --coverage=coverage/vm
+# Use a new directory; the collector refuses to overwrite an earlier run.
+python3 tool/fidelity/collect_coverage.py coverage/vm
 bash tool/fidelity/check.sh
-python3 tool/fidelity/coverage_report.py coverage/vm
+python3 tool/fidelity/coverage_report.py coverage/vm --require-receipt
 cd ../quds_office_editor
 python3 ../quds_office_engine/tool/fidelity/inventory.py clean \
   --package quds_office_editor --package-root . \

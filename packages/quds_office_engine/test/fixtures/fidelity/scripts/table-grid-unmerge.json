@@ -1,0 +1,4 @@
+[
+  {"op":"tableUnmerge","table":0,"row":1,"gridColumn":1},
+  {"op":"tableUnmerge","table":1,"row":0,"gridColumn":1}
+]

@@ -55,8 +55,11 @@ sealed class FormulaNode {
 /// Internal error provenance during scalar-cache evaluation. Public evaluator
 /// entry points unwrap these markers back to the existing String error codes.
 class FormulaErrorValue {
-  const FormulaErrorValue(this.code);
+  const FormulaErrorValue(this.code, {this.isUnsupported = false});
   final String code;
+
+  /// Evaluation capability, distinct from the spelling of a real native error.
+  final bool isUnsupported;
 
   @override
   String toString() => code;
@@ -79,7 +82,13 @@ class FormulaContext {
     required this.sheet,
     required this.origin,
     this.onCircular,
-  });
+  }) : _stack = <String>{};
+
+  FormulaContext._cell(FormulaContext parent, this.sheet, this.origin)
+    : workbook = parent.workbook,
+      onCircular = parent.onCircular,
+      _stack = parent._stack,
+      _typedErrors = parent._typedErrors;
 
   /// workbook API.
   final SmlWorkbook workbook;
@@ -92,7 +101,7 @@ class FormulaContext {
 
   /// Function API.
   final void Function(SmlCellRef ref)? onCircular;
-  final Set<String> _stack = <String>{};
+  final Set<String> _stack;
   var _typedErrors = false;
 
   /// Whether actual error producers must retain their distinct scalar type.
@@ -110,7 +119,8 @@ class FormulaContext {
   }
 
   /// Emits an actual evaluation error without confusing literal text with it.
-  Object error(String code) => _typedErrors ? FormulaErrorValue(code) : code;
+  Object error(String code, {bool unsupported = false}) =>
+      _typedErrors ? FormulaErrorValue(code, isUnsupported: unsupported) : code;
 
   /// LET bindings (uppercase name → value).
   final Map<String, Object?> lets = <String, Object?>{};
@@ -128,9 +138,12 @@ class FormulaContext {
       if (cell.formula != null &&
           cell.formula!.isNotEmpty &&
           (cell.value == null || cell.value == cell.formula)) {
+        // A referenced formula owns its worksheet scope and LET bindings.
+        // Share only recursion/error state with the caller.
+        final child = FormulaContext._cell(this, target, ref);
         return tracksErrorTypes
-            ? evaluateFormulaForCache(cell.formula!, this)
-            : evaluateFormula(cell.formula!, this);
+            ? evaluateFormulaForCache(cell.formula!, child)
+            : evaluateFormula(cell.formula!, child);
       }
       final value = cell.value;
       return tracksErrorTypes &&
@@ -177,28 +190,52 @@ class FormulaSpill {
 /// Resolves a workbook defined name.
 class NamedRangeNode extends FormulaNode {
   /// NamedRangeNode API.
-  NamedRangeNode(this.name);
+  NamedRangeNode(this.name, {this.sheetName});
 
   /// name API.
   final String name;
 
+  /// Explicit worksheet owner, distinct from the definition's target sheet.
+  final String? sheetName;
+
+  /// Shared with dependency collection so scope lookup cannot disagree.
+  SmlDefinedName? resolve(SmlWorkbook book, SmlWorksheet current) {
+    final owner = sheetName == null ? current : book.sheetByName(sheetName!);
+    if (owner == null) return null;
+    return book.definedName(name, onSheet: owner, localOnly: sheetName != null);
+  }
+
   @override
   Object? eval(FormulaContext ctx) {
     final String key = name.toUpperCase();
-    if (ctx.lets.containsKey(key)) {
+    if (sheetName == null && ctx.lets.containsKey(key)) {
       return ctx.lets[key];
     }
-    final SmlRange? table = SmlTable.resolveRef(ctx.sheet, name);
+    final SmlRange? table = sheetName == null
+        ? SmlTable.resolveRef(ctx.sheet, name)
+        : null;
     if (table != null) {
       if (table.isSingleCell) {
         return ctx.valueOf(table.start);
       }
       return RangeNode(table).eval(ctx);
     }
-    final SmlNamedRange? found = ctx.workbook.namedRange(name);
-    if (found == null) {
-      return ctx.error('#NAME?');
+    if (sheetName != null && ctx.workbook.sheetByName(sheetName!) == null) {
+      return ctx.error('#REF!');
     }
+    final found = resolve(ctx.workbook, ctx.sheet);
+    if (found == null) {
+      if (sheetName != null) {
+        // The bounded evaluator implements worksheet-local qualification.
+        // A possible workbook/external-name interpretation must retain cache.
+        throw UnsupportedError(
+          'No worksheet-local definition for $sheetName!$name',
+        );
+      }
+      return ctx.error('#NAME?', unsupported: true);
+    }
+    if (found is SmlFormulaName) return _scalar(found.formula, ctx);
+    found as SmlNamedRange;
     final SmlWorksheet? sheet = ctx.workbook.sheetByName(found.sheetName);
     if (sheet == null) {
       return ctx.error('#REF!');
@@ -207,6 +244,35 @@ class NamedRangeNode extends FormulaNode {
       return ctx.valueOf(found.range.start, onSheet: sheet);
     }
     return RangeNode(found.range, sheetName: found.sheetName).eval(ctx);
+  }
+
+  static Object _scalar(String formula, FormulaContext ctx) {
+    final raw = formula.trim();
+    if (raw.toUpperCase() == 'TRUE') return true;
+    if (raw.toUpperCase() == 'FALSE') return false;
+    if (RegExp(
+      r'^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$',
+    ).hasMatch(raw)) {
+      final number = double.tryParse(raw);
+      if (number != null && number.isFinite) return number;
+    }
+    if (RegExp(r'^"(?:[^"]|"")*"$').hasMatch(raw)) {
+      return raw.substring(1, raw.length - 1).replaceAll('""', '"');
+    }
+    if (const {
+      '#NULL!',
+      '#DIV/0!',
+      '#VALUE!',
+      '#REF!',
+      '#NAME?',
+      '#NUM!',
+      '#N/A',
+    }.contains(raw)) {
+      return ctx.error(raw);
+    }
+    // Throw through aggregators: returning a generic name-error string here
+    // could be ignored as text and replace a native cache with a false zero.
+    throw UnsupportedError('Unmodeled defined-name expression $formula');
   }
 }
 

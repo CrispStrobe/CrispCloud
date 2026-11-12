@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:q="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:body>
+    <w:p>
+      <w:r><w:t xml:space="preserve">Prefix </w:t></w:r>
+      <q:bookmarkStart q:id="000" q:name="Alpha" q:colFirst="0" q:colLast="1" q:displacedByCustomXml="next"/>
+      <w:r><w:rPr><w:b/></w:rPr><w:t>A😀</w:t></w:r>
+      <w:bookmarkStart w:id="5" w:name="Overlap"/>
+      <w:r><w:t>B</w:t></w:r>
+      <q:bookmarkEnd q:id="000" q:displacedByCustomXml="prev"/>
+      <w:r><w:t>C</w:t></w:r>
+      <w:bookmarkStart w:id="6" w:name="Cross"/>
+      <w:r><w:t>Tail</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:r><w:t>Head</w:t></w:r>
+      <w:bookmarkEnd w:id="5"/>
+      <w:bookmarkStart w:id="7" w:name="Empty"/>
+      <w:bookmarkEnd w:id="7"/>
+      <w:r><w:t xml:space="preserve"> End</w:t></w:r>
+      <w:bookmarkEnd w:id="6"/>
+      <w:r><w:t xml:space="preserve"> | </w:t></w:r>
+      <w:fldSimple w:instr=" REF Alpha "><w:r><w:t>A😀B</w:t></w:r></w:fldSimple>
+      <w:r><w:t xml:space="preserve"> | </w:t></w:r>
+      <w:hyperlink w:anchor="Alpha"><w:r><w:t>Jump</w:t></w:r></w:hyperlink>
+    </w:p>
+    <w:p>
+      <w:bookmarkStart w:id="1" w:name="Alpha_copy"/><w:r><w:t>Reserved one</w:t></w:r><w:bookmarkEnd w:id="1"/>
+      <w:bookmarkStart w:id="2" w:name="Alpha_copy2"/><w:r><w:t>Reserved two</w:t></w:r><w:bookmarkEnd w:id="2"/>
+    </w:p>
+    <w:p/>
+    <w:sectPr/>
+  </w:body>
+</w:document>

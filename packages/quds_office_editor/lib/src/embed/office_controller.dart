@@ -2924,7 +2924,10 @@ class WordEditorController extends OfficeController {
     }
     _assertSelectionCanChange();
     WordContentControls.assertCanInsert(document, blocks);
-    _assertIncomingBookmarks(blocks);
+    final List<WmlBlock> clones = WordBookmarks.copyForInsertion(
+      document,
+      blocks,
+    );
     final paragraphStory = isEditingComment || isEditingHeaderFooter;
     if (paragraphStory) {
       if (blocks.any((block) => block is! WmlParagraph)) {
@@ -2940,6 +2943,17 @@ class WordEditorController extends OfficeController {
     final mergedParagraphs = paragraphStory
         ? blocks.whereType<WmlParagraph>()
         : blocks.take(1).whereType<WmlParagraph>();
+    if ((paragraphStory ||
+            (!_wordBodyIsBlank() &&
+                (!caret.isCollapsed || _activeParagraph.text.isNotEmpty))) &&
+        mergedParagraphs.any(
+          (paragraph) => WordBookmarks.generatedName(paragraph) != null,
+        )) {
+      throw UnsupportedError(
+        'Pasting a generated paragraph bookmark into this text would discard '
+        'its range. Retain it as a complete paragraph in an empty body target.',
+      );
+    }
     if ((paragraphStory || !_wordBodyIsBlank()) &&
         mergedParagraphs.any(
           (paragraph) =>
@@ -2957,9 +2971,6 @@ class WordEditorController extends OfficeController {
     if (!caret.isCollapsed) {
       _deleteNormalizedSelection();
     }
-    final List<WmlBlock> clones = <WmlBlock>[
-      for (final WmlBlock block in blocks) WmlClone.block(block),
-    ];
     if (paragraphStory) {
       for (int i = 0; i < clones.length; i++) {
         if (i > 0) {
@@ -2980,42 +2991,6 @@ class WordEditorController extends OfficeController {
     _markLocalEdit();
     _syncImeSelection();
     notifyListeners();
-  }
-
-  void _assertIncomingBookmarks(List<WmlBlock> blocks) {
-    final paragraphs = blocks.expand(WmlClone.paragraphsOf).toList();
-    if (!paragraphs.any(
-      (paragraph) =>
-          paragraph.inlines.any((inline) => inline is WmlBookmarkBoundary),
-    )) {
-      return;
-    }
-    // A fragment must carry complete pairs. A copied range in a later block
-    // must not mutate the destination and defer an ID collision until save.
-    final incoming = WordBookmarks.ranges(
-      WmlDocument(sections: [WmlSection(blocks: blocks)]),
-    );
-    final ids = <String>{};
-    final names = <String>{};
-    for (final paragraph in _paragraphs) {
-      final generated = WordBookmarks.generatedName(paragraph);
-      if (generated != null) names.add(generated);
-      for (final inline in paragraph.inlines.whereType<WmlBookmarkBoundary>()) {
-        if (inline.isStart) {
-          ids.add(WordBookmarks.canonicalId(inline.id));
-          if (inline.name != null) names.add(inline.name!);
-        }
-      }
-    }
-    for (final range in incoming) {
-      if (!ids.add(WordBookmarks.canonicalId(range.start.id)) ||
-          !names.add(range.name)) {
-        throw UnsupportedError(
-          'Pasting this bookmark requires remapping its native ID and name '
-          'before it can be added to the same story.',
-        );
-      }
-    }
   }
 
   bool _wordBodyIsBlank() {
@@ -11210,21 +11185,29 @@ class SlideEditorController extends OfficeController {
     if (!config.allowsMutation) {
       return null;
     }
-    final List<PmlShape> items;
+    final List<PmlShape> candidates;
     if (shapes != null) {
-      items = shapes;
+      candidates = shapes;
     } else if (selectedShapes.length >= 2) {
-      items = List<PmlShape>.from(selectedShapes);
+      candidates = selectedShapes;
     } else if (selectedShapes.isEmpty) {
-      items = slide.shapes;
+      candidates = slide.shapes;
     } else {
       return null;
     }
+    final List<PmlShape> items = _arrangementMembers(candidates);
     if (items.length < 2) {
       return null;
     }
-    final int id = PmlArrange.group(items);
-    _adoptSelection(items, primary: selected ?? items.first);
+    final Map<PmlShape, PmlShape> planned = _groupPlan();
+    final int id = PmlArrange.group([
+      for (final shape in items) planned[shape]!,
+    ], allShapes: planned.values.toList());
+    _applyGroupMembership({for (final shape in items) shape: id});
+    _adoptSelection(
+      items,
+      primary: items.contains(selected) ? selected : items.first,
+    );
     notifyListeners();
     return id;
   }
@@ -11234,9 +11217,50 @@ class SlideEditorController extends OfficeController {
     if (!config.allowsMutation) {
       return;
     }
-    final List<PmlShape> items =
-        shapes ?? (selectedShapes.isNotEmpty ? selectedShapes : slide.shapes);
-    PmlArrange.ungroup(items);
+    final List<PmlShape> items = _arrangementMembers(
+      shapes ?? (selectedShapes.isNotEmpty ? selectedShapes : slide.shapes),
+    );
+    final Map<PmlShape, PmlShape> planned = _groupPlan();
+    PmlArrange.ungroup([
+      for (final shape in items) planned[shape]!,
+    ], allShapes: planned.values.toList());
+    _applyGroupMembership({for (final shape in items) shape: null});
+  }
+
+  List<PmlShape> _arrangementMembers(List<PmlShape> shapes) {
+    final Set<PmlShape> seen = Set<PmlShape>.identity();
+    for (final shape in shapes) {
+      if (!seen.add(shape) || !_containsShape(slide.shapes, shape)) {
+        throw ArgumentError(
+          'Arrangement requires unique shapes from the active slide.',
+        );
+      }
+    }
+    return List<PmlShape>.of(shapes);
+  }
+
+  Map<PmlShape, PmlShape> _groupPlan() => {
+    for (final shape in slide.shapes)
+      shape: PmlShape(id: shape.id, name: shape.name, groupId: shape.groupId),
+  };
+
+  void _applyGroupMembership(Map<PmlShape, int?> proposed) {
+    final Map<PmlShape, int?> next = {
+      for (final entry in proposed.entries)
+        if (entry.key.groupId != entry.value) entry.key: entry.value,
+    };
+    if (next.isEmpty) {
+      return;
+    }
+    final Map<PmlShape, int?> previous = {
+      for (final shape in next.keys) shape: shape.groupId,
+    };
+    commands.commit(
+      _CallbackCommand(
+        executeFn: () => next.forEach((shape, id) => shape.groupId = id),
+        undoFn: () => previous.forEach((shape, id) => shape.groupId = id),
+      ),
+    );
     notifyListeners();
   }
 
@@ -11526,8 +11550,10 @@ class SlideEditorController extends OfficeController {
     if (!config.allowsMutation) {
       return;
     }
-    PmlArrange.align(shapes ?? slide.shapes, axis);
-    notifyListeners();
+    _arrangeTransforms(
+      shapes ?? slide.shapes,
+      (planned) => PmlArrange.align(planned, axis),
+    );
   }
 
   /// distributeShapes API.
@@ -11535,8 +11561,35 @@ class SlideEditorController extends OfficeController {
     if (!config.allowsMutation) {
       return;
     }
-    PmlArrange.distribute(shapes ?? slide.shapes, horizontal: horizontal);
-    notifyListeners();
+    _arrangeTransforms(
+      shapes ?? slide.shapes,
+      (planned) => PmlArrange.distribute(planned, horizontal: horizontal),
+    );
+  }
+
+  void _arrangeTransforms(
+    List<PmlShape> shapes,
+    void Function(List<PmlShape>) arrange,
+  ) {
+    final List<PmlShape> items = _arrangementMembers(shapes);
+    final List<PmlShape> planned = [
+      for (final shape in items)
+        PmlShape(id: shape.id, name: shape.name, transform: shape.transform),
+    ];
+    arrange(planned);
+    final Map<PmlShape, PmlTransform> changes = {};
+    for (int index = 0; index < items.length; index++) {
+      final PmlTransform before = items[index].transform;
+      final PmlTransform after = planned[index].transform;
+      if (before.x != after.x ||
+          before.y != after.y ||
+          before.cx != after.cx ||
+          before.cy != after.cy ||
+          before.rot != after.rot) {
+        changes[items[index]] = after;
+      }
+    }
+    applyTransforms(changes);
   }
 
   /// applyMasterBackground API.

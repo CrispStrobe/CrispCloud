@@ -117,7 +117,7 @@ abstract final class GraphemeClusters {
           break;
         }
       }
-      return count.isOdd;
+      return count.isEven;
     }
     return true;
   }
@@ -233,6 +233,7 @@ abstract final class GraphemeClusters {
         (cp >= 0x20D0 && cp <= 0x20FF) ||
         (cp >= 0xFE00 && cp <= 0xFE0F) ||
         (cp >= 0xFE20 && cp <= 0xFE2F) ||
+        (cp >= 0x1F3FB && cp <= 0x1F3FF) ||
         (cp >= 0xE0100 && cp <= 0xE01EF);
   }
 

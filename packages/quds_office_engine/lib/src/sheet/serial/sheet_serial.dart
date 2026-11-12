@@ -116,49 +116,63 @@ class SheetDeserializer {
       read(OpcPackage.openBytes(bytes, password: password));
 
   static void _readDefinedNames(String xml, SmlWorkbook book) {
-    final XmlPullReader reader = XmlPullReader(xml);
-    String? name;
-    String? localSheetId;
-    while (reader.next()) {
-      if (reader.eventType == XmlEventType.startElement &&
-          reader.localName == 'definedName') {
-        name = reader.getAttribute('name');
-        localSheetId = reader.getAttribute('localSheetId');
-      } else if (reader.eventType == XmlEventType.characters && name != null) {
-        final String raw = reader.text.trim();
-        if (name == '_xlnm.Print_Titles') {
-          _applyPrintTitles(book, raw, localSheetId);
-          name = null;
-          localSheetId = null;
+    final names = XmlDocument.parse(xml).root?.firstChild('definedNames');
+    if (names == null) return;
+    // Relative references depend on the definition's active-cell origin.
+    // Project only absolute in-workbook A1 references; retain every other
+    // definition as authored so an unsupported local still shadows a global.
+    final absoluteReference = RegExp(
+      r"^('(?:[^']|'')+'|[\p{L}_][\p{L}\p{N}_.]*)!(\$[A-Za-z]+\$[1-9]\d*(?::\$[A-Za-z]+\$[1-9]\d*)?)$",
+      unicode: true,
+    );
+    for (final element in names.childrenNamed('definedName')) {
+      final name = element.getAttribute('name');
+      if (name == null) continue;
+      final raw = element.text;
+      final scope = element.getAttribute('localSheetId');
+      if (name == '_xlnm.Print_Titles') {
+        _applyPrintTitles(book, raw.trim(), scope);
+        continue;
+      }
+      final localSheetId = scope == null ? null : (int.tryParse(scope) ?? -1);
+      final attributes = <String, String>{
+        for (final attribute in element.attributes)
+          if (attribute.qualifiedName != 'name' &&
+              attribute.qualifiedName != 'localSheetId')
+            attribute.qualifiedName: attribute.value,
+      };
+      final match = absoluteReference.firstMatch(raw.trim());
+      if (match != null) {
+        var sheetName = match[1]!;
+        if (sheetName.startsWith("'")) {
+          sheetName = sheetName
+              .substring(1, sheetName.length - 1)
+              .replaceAll("''", "'");
+        }
+        final range = SmlRange.parse(match[2]!);
+        if (!sheetName.contains(RegExp(r'[\[\]:]')) &&
+            range.maxCol < 16384 &&
+            range.maxRow < 1048576) {
+          book.namedRanges.add(
+            SmlNamedRange(
+              name: name,
+              sheetName: sheetName,
+              range: range,
+              localSheetId: localSheetId,
+              attributes: attributes,
+            ),
+          );
           continue;
         }
-        final int bang = raw.lastIndexOf('!');
-        if (bang > 0) {
-          var sheetName = raw.substring(0, bang);
-          if (sheetName.startsWith("'") && sheetName.endsWith("'")) {
-            sheetName = sheetName
-                .substring(1, sheetName.length - 1)
-                .replaceAll("''", "'");
-          }
-          try {
-            book.namedRanges.add(
-              SmlNamedRange(
-                name: name,
-                sheetName: sheetName,
-                range: SmlRange.parse(raw.substring(bang + 1)),
-              ),
-            );
-          } on FormatException {
-            // Ignore names that are not A1 ranges.
-          }
-        }
-        name = null;
-        localSheetId = null;
-      } else if (reader.eventType == XmlEventType.endElement &&
-          reader.localName == 'definedName') {
-        name = null;
-        localSheetId = null;
       }
+      book.formulaNames.add(
+        SmlFormulaName(
+          name: name,
+          formula: raw,
+          localSheetId: localSheetId,
+          attributes: attributes,
+        ),
+      );
     }
   }
 
@@ -937,16 +951,20 @@ class SheetSerializer {
     }
     w.writeEndElement();
     if (!preserveNames &&
-        (book.namedRanges.isNotEmpty ||
+        (book.definedNames.isNotEmpty ||
             book.sheets.any(
               (SmlWorksheet s) =>
                   s.printTitleRows != null || s.printTitleCols != null,
             ))) {
       w.writeStartElement('definedNames');
-      for (final SmlNamedRange name in book.namedRanges) {
+      for (final name in book.definedNames) {
         w.writeStartElement('definedName');
         w.writeAttribute('name', name.name);
-        w.writeText("'${name.sheetName.replaceAll("'", "''")}'!${name.a1}");
+        if (name.localSheetId != null) {
+          w.writeAttribute('localSheetId', '${name.localSheetId}');
+        }
+        name.attributes.forEach(w.writeAttribute);
+        w.writeText(name.formula);
         w.writeEndElement();
       }
       for (int i = 0; i < book.sheets.length; i++) {

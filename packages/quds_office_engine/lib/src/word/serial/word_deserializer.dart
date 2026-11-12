@@ -1663,7 +1663,29 @@ class WordDeserializer {
       if (reader.eventType != XmlEventType.startElement) {
         continue;
       }
-      if (reader.localName == 'gridSpan') {
+      if (reader.localName == 'tcW' &&
+          reader.namespaceUri == OfficeNamespaces.w &&
+          reader.depth == depth + 2) {
+        if (cell.sourceWidthXml != null) {
+          throw const FormatException(
+            'Duplicate preferred width in table cell',
+          );
+        }
+        final source = XmlDocument.readElement(reader);
+        cell.sourceWidthXml = XmlDocument(
+          root: source,
+        ).toXmlString(declaration: false);
+        final type =
+            source.getAttribute('type', namespaceUri: OfficeNamespaces.w) ??
+            'dxa';
+        final twips = int.tryParse(
+          source.getAttribute('w', namespaceUri: OfficeNamespaces.w) ?? '',
+        );
+        if (type == 'dxa' && twips != null && twips >= 0) {
+          cell.width = twipsToPoints(twips);
+        }
+        cell.sourceWidthPoints = cell.width;
+      } else if (reader.localName == 'gridSpan') {
         cell.gridSpan = int.parse(
           reader.getAttribute('val', namespaceUri: OfficeNamespaces.w) ?? '1',
         );
