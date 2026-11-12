@@ -55,7 +55,8 @@ physical storage identity and outer SHA-256. It uses the same verified overlay,
 review and destination publication machinery, with no source mutation/deletion.
 The UI captures both pane routes/selections before awaiting independent nested
 password prompts. Pane F5/context Copy and a clean workspace's Copy out action
-enter this workflow. F6/Move out explicitly refuse an archive destination.
+enter this workflow. F6/Move out use the separately reviewed native move
+transaction below when both containers meet its narrower eligibility rules.
 
 Supported regular-member content, hierarchy, empty directories, modification
 times and permission bits are imported. Protection follows the destination.
@@ -76,6 +77,147 @@ never deletes the source. This is a one-destination copy transaction, not an
 atomic two-container move. Source changes after the final observation cannot be
 made atomic across independent storage; copied member bytes remain the captured,
 verified snapshot.
+
+## Reviewed native archive-to-archive moves
+
+`prepareArchiveMove`, `stageArchiveMove` and `commitArchiveMove` operate on two
+distinct, writable, top-level native local containers from the same persistent
+installation. The existing physical-container and hard-link alias checks apply.
+Each source/destination password is captured independently. Nested routes,
+remote/browser publication, single-payload source wrappers and replacement-only
+package sources remain unavailable for this move workflow.
+
+Preparation uses the verified copy overlay and a separately owned source-removal
+workspace. Both complete candidates are decoded, verified and presented before
+either physical archive changes. The borrowed source workspace stays clean.
+The combined packed candidate budget is 256 MiB, alongside existing per-member
+and per-container limits. Only successfully copied members enter removal;
+skipped members and directories with remaining children stay in the source.
+Keep-both/replace/skip retain the existing copy semantics and metadata profile.
+
+Source-removal drafts require the move owner's private authority and a verified
+destination dependency when saving. Merely obtaining the source review or its
+workspace cannot publish removal through ordinary Save. Changing either review,
+captured source or caller authority invalidates the paired operation.
+
+Commit publishes the destination first and obtains its durable physical receipt.
+The complete source fingerprint and native identity witness are checked again
+between publications. Source publication then records an
+`ArchivePublicationDependency` containing the destination receipt ID, storage,
+file snapshot, SHA-256 and access-policy hash. No password enters this record.
+
+Guarded source records use **version 2**; old apps that understand only version 1
+must refuse them. New readers also reject a version-1 record carrying a dependency
+or a version-2 record lacking one. The dependency survives retries and journal
+reloads even if the destination's completed publication record is pruned.
+Destination snapshots retain every recognized revision field; native local and
+serialized UTC timestamps are compared by instant rather than representation.
+
+Source installation, confirmation after a lost installation acknowledgement,
+and original-backup cleanup all recheck that dependency. Native cleanup checks
+it again immediately before the final synchronous source-file snapshots and
+exact unlink. A missing or changed destination prevents finishing source recovery
+and retains available source recovery files. A pending guarded source record
+blocks another publication at that path until reconciliation.
+
+Recovery identifies both archive paths. When a source-removal candidate is
+already installed and the verified original backup remains, explicit Restore
+first retains that installed candidate at its generated recovery path, then
+restores the original into the vacant original name. Existing names are never
+overwritten; altered files require review. This can leave the destination as a
+copy. Source recovery does not roll back destination publication.
+
+Results distinguish both publications confirmed, destination published with no
+confirmed source removal, and source recovery required. A recovery result does
+not claim that the original source remains at its normal pathname; the journal
+identifies its possible backup/candidate locations. Successful moves can retain
+explicitly skipped paths. Empty-directory-only moves can remove zero regular
+files while still having two verified receipts.
+
+This is **destination-first ordering, not atomic publication of two files**.
+An independently changed destination can invalidate later checks. Recovery
+checks describe observed file state; they do not lock unrelated processes out of
+both containers. Cancellation before destination publication begins leaves both
+originals unchanged. Once destination backup or installation starts, interruption
+can require journal recovery if best-effort restoration cannot complete. After
+a verified destination publication, cancellation/failure is reported as a partial
+outcome with retained source data or recovery evidence.
+
+## Reviewed native folder-to-archive synchronization
+
+Open a native folder in one pane and an eligible top-level archive directory in
+the other, then choose **Compare directories**. The folder supplies its contents
+regardless of which pane holds it. Both locations, navigation generations,
+storage identity and access grants are captured before opening the dialog.
+Native local storage from the same persistent installation is required. Nested
+archives, flat AR, single-payload wrappers, replacement-only package profiles
+and read-only destinations are excluded.
+
+`ArchiveDirectorySyncService.compare` snapshots the complete source tree and
+compares logical relative paths and full SHA-256 values with the archive.
+The rows distinguish equal files/directories, source-only entries, changed
+files, archive-only entries and file/directory type conflicts. Empty directories
+are explicit. Equal bytes are not rewritten merely because metadata differs;
+type conflicts block staging and require a fresh comparison after resolution.
+The initial selection keeps every entry. **Select updates** selects new/changed
+rows; each selected directory is an exact entry, not an implicit recursive
+selection. Archive-only removal requires both a separate opt-in and explicit
+row selection. Selecting an archive-only directory cannot remove any unchecked
+descendant.
+
+`stage` reads selected source files again, revalidates the complete source
+snapshot and calls `ArchiveWorkspace.applyDirectorySync` once. All additions,
+replacements and exact removals are validated against a private map before
+adopting one draft revision. Failed validation leaves the prior draft intact.
+The complete candidate is packed, decoded and verified using the existing
+writer/protection policy before review. Imported content, supported modification
+times and permissions follow the ordinary import profile; destination
+encryption remains authoritative. Ownership, ACLs, extended attributes,
+resource forks and signatures are not imported. Unsupported special entries,
+symlinks, unsafe names, setuid/setgid imports and physical aliases to the
+destination archive are refused. The destination cannot be inside the source.
+
+The source snapshot includes sorted names, file/directory types, native
+size/modification-time/change-time/mode witnesses and all regular-file hashes.
+Ownership, ACLs and extended-attribute values are not inventoried. It checks before/after read witnesses,
+re-lists every visited directory and rechecks all witnesses after traversal.
+The bounds are 64 MiB per file, 256 MiB total file content, 200,000 entries,
+200 levels and 8 MiB of relative-path text. Complete revalidation includes
+equal and unselected entries. Comparison, staging, publication and recovery
+are cancellable; each scan retains bounded read and traversal budgets.
+
+The private synchronization owner and original source-tree dependency remain
+bound to the workspace. Ordinary Save cannot publish this draft or substitute
+a new source dependency. `commit` revalidates the source and requires the exact
+current review, then delegates physical publication to the existing journal.
+Review cancellation writes neither endpoint. The source folder is never
+modified by synchronization or its recovery.
+
+Synchronization publication records use **version 3**, carrying an
+`ArchivePublicationDirectoryDependency`: persistent storage identity, filtered
+root-directory snapshot, complete-tree SHA-256, entry count and byte count.
+The journal contains no source file contents, passwords or grants. Version 1
+has no dependency; version 2 has the archive-move dependency; version 3 has only
+the directory dependency. Mixed, missing, downgraded or unknown combinations
+are refused, including by older apps that cannot understand version 3.
+
+Publication rechecks the whole directory before staging, original backup,
+installation, installed-candidate confirmation, receipt creation and original
+backup cleanup. Restart recovery performs the same scan. Missing, changed,
+aliased or unsupported source evidence blocks finishing and retains recovery
+material. When a verified original backup remains, explicit restoration can
+retain an already installed synchronization candidate at its unused recovery
+path before restoring the original. Foreign replacements are never overwritten.
+An unfinished guarded record blocks another publication at that archive path.
+Recovery displays both the destination archive and source directory.
+
+The two exclusive archive moves still have the temporary original-name absence
+window described below. Source checks observe a complete tree; they cannot
+lock unrelated processes out of both the directory and archive after the final
+observation. This is selected one-way synchronization. Two-way baseline and
+deletion semantics, nested destinations and remote/browser publication remain
+separate requirements. The [verification record](archive-sync-large-tar-verification.md)
+documents native, restart, selection and UI evidence.
 
 ## Grouped moves within one workspace
 
@@ -118,13 +260,13 @@ container or falls back to a direct provider upload.
 | ZIP | Plain or the supported AES-256 policy | UTC whole seconds in the supported signed timestamp range; otherwise DOS wall-time fields at two-second resolution | Mixed protected/plain files, legacy or other AES strengths, and encrypted directory entries are refused. |
 | 7z | Plain or original AES password, retaining original header visibility | Millisecond resolution | Header encryption is detected independently of file data, including containers with no ordinary files. |
 | TAR / CBT | Inspected regular-file profiles | Whole seconds for imports | Known ownership and PAX metadata are retained; unsupported extensions, links and special entries are refused. |
-| Compressed TAR | Supported TAR inside gzip/bzip2/XZ/Zstandard/LZ4/LZMA | Whole seconds for imports | Decoded TAR is limited to 64 MiB, including headers. Wrapper/profile inspection precedes writes. |
+| Compressed TAR | Supported TAR inside gzip/bzip2/XZ/Zstandard/LZ4/LZMA/UNIX compress | Whole seconds for imports | Decoded TAR is limited to 64 MiB, including headers. Wrapper/profile inspection precedes writes. |
 | CBZ / CB7 / unsigned JAR/WAR/EAR / KMZ | Corresponding ZIP/7z policy | Corresponding underlying format | Java signatures/digests block editing; KMZ needs a top-level KML; original member order is retained. |
-| gzip / bzip2 / XZ / Zstandard / LZ4 / LZMA | Exactly one immediate ordinary payload | Not applicable | Replace its bytes; name/count/permissions cannot be changed. Recursive inner-container views cannot be flattened, including same-codec nested streams. |
+| gzip / bzip2 / XZ / Zstandard / LZ4 / LZMA / UNIX compress | Exactly one immediate ordinary payload | Not applicable | Replace its bytes; name/count/permissions cannot be changed. Recursive inner-container views cannot be flattened, including same-codec nested streams. |
 | AR / CPIO / XAR | Inspected regular-file profiles | Whole seconds for imports | Known ownership, package metadata and integrity/compression policies are retained. CPIO retains newc/CRC, odc or binary byte order; unsupported or overflowing metadata is refused. |
 | DEB / UDEB | Coordinated prebuilt control/data payload replacement | Whole seconds for outer members | Exact three-member wrapper; required control fields and present md5sums checked. In-app nested payload editing is disabled. |
 | ISO | Inspected data-only ISO 9660/Rock Ridge/Joliet | Whole seconds for imports | Known volume/member metadata retained. Boot/hybrid/UDF/unknown structures block rewriting. |
-| Lzip / UNIX compress | Browsing and extraction only | Not applicable | Includes TAR.LZ, TAR.Z and TAZ. Reader support does not grant a writer or authorize conversion to another wrapper. |
+| Lzip | Browsing and extraction only | Not applicable | Includes TAR.LZ. Reader support does not grant a writer or authorize conversion to another wrapper. |
 | Existing HFS / DMG and other packages | Browsing and extraction only | Not applicable | Separate fresh HFSX/DMG creation does not grant existing filesystem rewrite access. |
 
 Legacy CPIO rewriting preserves raw device identifiers, inode/ownership fields,
@@ -150,6 +292,14 @@ preserve the decoded content rather than the original encoder parameters.
 LZMA-alone has no stored content checksum. Both wrappers keep their 64 MiB
 compressed/decoded limits, including TAR headers, and a recursively opened
 inner container is not eligible for a single-payload rewrite.
+
+UNIX compress accepts eligible 9–16-bit block/nonblock streams and rewrites one
+physical wrapper using 14-bit block mode, retaining decoded content rather than
+original encoder choices. TAR.Z/TAZ also require a supported TAR profile. Input
+and output are independently bounded at 64 MiB. The format has no payload
+checksum or decoded length: a structurally valid shorter prefix or changed
+payload can require trusted external evidence to detect. Creation/publication
+still compare the entire decoded result with their captured input bytes.
 
 A bounded ZIP metadata finalizer writes explicit UTC-second fields to both
 local and central headers while copying compressed/encrypted payloads unchanged.
@@ -405,3 +555,9 @@ is project-owned.
 The archive-copy and compression continuation is recorded in
 [PR #92](https://github.com/CrispStrobe/CrispCloud/pull/92), with its observed
 gates and platform boundaries in the [verification record](archive-workflows-codecs-verification.md).
+
+The later [native move/UNIX compress continuation](archive-move-compress-continuation.md)
+records reviewed two-container moves and `.Z`/TAR.Z writing. Its
+[verification record](archive-move-compress-verification.md) includes durable
+dependency/restart cases, source-authority checks, UI lifetime review and
+independent codec readback.

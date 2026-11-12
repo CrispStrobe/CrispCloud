@@ -1,0 +1,399 @@
+[
+  {
+    "file": "empty-12.Z",
+    "source": "empty-12.Z.raw",
+    "maxBits": 12,
+    "packedBytes": 3,
+    "packedSha256": "ec243afa8ebdd414e8719086e484730e19a28262eead0732bcb5fd95c3e798f3",
+    "decodedBytes": 0,
+    "decodedSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "empty-14.Z",
+    "source": "empty-14.Z.raw",
+    "maxBits": 14,
+    "packedBytes": 3,
+    "packedSha256": "df24d6734ed06884b591e676254c55eeac68d359a7b18fcbe5c03d48d98c028e",
+    "decodedBytes": 0,
+    "decodedSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "empty-16.Z",
+    "source": "empty-16.Z.raw",
+    "maxBits": 16,
+    "packedBytes": 3,
+    "packedSha256": "7aa6f58a0a8f57b9e6a70d89961f4668b7d69eb177a8da8344d4e5ed12d7858e",
+    "decodedBytes": 0,
+    "decodedSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "byte-12.Z",
+    "source": "byte-12.Z.raw",
+    "maxBits": 12,
+    "packedBytes": 5,
+    "packedSha256": "bf5c3966b94c0314ca3e3632a32beaa86f9a2048d2a79069de31eea535b1990c",
+    "decodedBytes": 1,
+    "decodedSha256": "76be8b528d0075f7aae98d6fa57a6d3c83ae480a8469e668d7b0af968995ac71"
+  },
+  {
+    "file": "byte-14.Z",
+    "source": "byte-14.Z.raw",
+    "maxBits": 14,
+    "packedBytes": 5,
+    "packedSha256": "4fa5550abe67248d38129ddc482f55f38e9686f11cc16c65d7459e6e01c4f377",
+    "decodedBytes": 1,
+    "decodedSha256": "76be8b528d0075f7aae98d6fa57a6d3c83ae480a8469e668d7b0af968995ac71"
+  },
+  {
+    "file": "byte-16.Z",
+    "source": "byte-16.Z.raw",
+    "maxBits": 16,
+    "packedBytes": 5,
+    "packedSha256": "93690bd4d3ac8cc55468cc93cf80abc094991a9dad81f27884cf704fd397c879",
+    "decodedBytes": 1,
+    "decodedSha256": "76be8b528d0075f7aae98d6fa57a6d3c83ae480a8469e668d7b0af968995ac71"
+  },
+  {
+    "file": "width-boundary-12.Z",
+    "source": "width-boundary-12.Z.raw",
+    "maxBits": 12,
+    "packedBytes": 291,
+    "packedSha256": "4b68a4de7720ebdf2217c746ee35dec825acb3980bdfcbf48b0b21dd45a929e2",
+    "decodedBytes": 256,
+    "decodedSha256": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880"
+  },
+  {
+    "file": "width-boundary-14.Z",
+    "source": "width-boundary-14.Z.raw",
+    "maxBits": 14,
+    "packedBytes": 291,
+    "packedSha256": "245cd39fed8aca1b88d5075fa35c07a41696f91da27760fd3291ff0576544e4c",
+    "decodedBytes": 256,
+    "decodedSha256": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880"
+  },
+  {
+    "file": "width-boundary-16.Z",
+    "source": "width-boundary-16.Z.raw",
+    "maxBits": 16,
+    "packedBytes": 291,
+    "packedSha256": "2d79d7c0c7561562e357cbf9cbf2d60007ace7fea264a002d295ddf0f7b9937f",
+    "decodedBytes": 256,
+    "decodedSha256": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880"
+  },
+  {
+    "file": "phrases-12.Z",
+    "source": "phrases-12.Z.raw",
+    "maxBits": 12,
+    "packedBytes": 1219,
+    "packedSha256": "58298db9524a24f1076845732802e5a239b31cbf33fc5b98b7bc94457a2fbca3",
+    "decodedBytes": 70000,
+    "decodedSha256": "366c502aab2835b93819e73118e1a852ef9e7874c3c71519887daeb5d1f97aaf"
+  },
+  {
+    "file": "phrases-14.Z",
+    "source": "phrases-14.Z.raw",
+    "maxBits": 14,
+    "packedBytes": 1219,
+    "packedSha256": "52135031a6f66887380ac7cc779e3a3dfd58b475c8d894a48bfc7434958b95a4",
+    "decodedBytes": 70000,
+    "decodedSha256": "366c502aab2835b93819e73118e1a852ef9e7874c3c71519887daeb5d1f97aaf"
+  },
+  {
+    "file": "phrases-16.Z",
+    "source": "phrases-16.Z.raw",
+    "maxBits": 16,
+    "packedBytes": 1219,
+    "packedSha256": "6ba9545fa982d4a0157a4b04b1a82c27b44b3203e51c06153e0b6d9b78663b6a",
+    "decodedBytes": 70000,
+    "decodedSha256": "366c502aab2835b93819e73118e1a852ef9e7874c3c71519887daeb5d1f97aaf"
+  },
+  {
+    "file": "text-12.Z",
+    "source": "text-12.Z.raw",
+    "maxBits": 12,
+    "packedBytes": 4576,
+    "packedSha256": "54c5d60b11fe58c7f054d757697602b890f9157470411443bf69371461419a35",
+    "decodedBytes": 165000,
+    "decodedSha256": "64559fbe0923aa5ab1ae01bafddb4e62096fb67c9563312e95201495c44206bb"
+  },
+  {
+    "file": "text-14.Z",
+    "source": "text-14.Z.raw",
+    "maxBits": 14,
+    "packedBytes": 4576,
+    "packedSha256": "df81a9b71b1ea10f46dd14915a851a575cc070f640ae736478b1441e42e35858",
+    "decodedBytes": 165000,
+    "decodedSha256": "64559fbe0923aa5ab1ae01bafddb4e62096fb67c9563312e95201495c44206bb"
+  },
+  {
+    "file": "text-16.Z",
+    "source": "text-16.Z.raw",
+    "maxBits": 16,
+    "packedBytes": 4576,
+    "packedSha256": "ef8da8b6809e9231c524b030eecb169db766db748b24b44c76b7687a411b947f",
+    "decodedBytes": 165000,
+    "decodedSha256": "64559fbe0923aa5ab1ae01bafddb4e62096fb67c9563312e95201495c44206bb"
+  },
+  {
+    "file": "noise-reset-12.Z",
+    "source": "noise-reset-12.Z.raw",
+    "maxBits": 12,
+    "packedBytes": 411682,
+    "packedSha256": "f79f3055e1f95fff863d1f911bf391dda1d9a935a04f823fa4d6376308af5123",
+    "decodedBytes": 300000,
+    "decodedSha256": "980da8f2fe1a82321da95060b1b6d7a15fb90d23adc76aecaaa79861e02eb73a"
+  },
+  {
+    "file": "noise-reset-14.Z",
+    "source": "noise-reset-14.Z.raw",
+    "maxBits": 14,
+    "packedBytes": 441422,
+    "packedSha256": "3a58b14c51e50df91810a4ef10227b8f2ce328223a6761bb9697e5286016029c",
+    "decodedBytes": 300000,
+    "decodedSha256": "980da8f2fe1a82321da95060b1b6d7a15fb90d23adc76aecaaa79861e02eb73a"
+  },
+  {
+    "file": "noise-reset-16.Z",
+    "source": "noise-reset-16.Z.raw",
+    "maxBits": 16,
+    "packedBytes": 415277,
+    "packedSha256": "45497e9e17543117b1e101145c22b92b5148ff7748baa5a8613f9a33a3531f0a",
+    "decodedBytes": 300000,
+    "decodedSha256": "980da8f2fe1a82321da95060b1b6d7a15fb90d23adc76aecaaa79861e02eb73a"
+  },
+  {
+    "file": "tree-12.tar.Z",
+    "source": "tree-12.tar.Z.raw",
+    "maxBits": 12,
+    "packedBytes": 13235,
+    "packedSha256": "bcdeadcb09533e6cc9dd78d7c0a86eae42d6b7f257a4dbea9e78a48693b03b7d",
+    "decodedBytes": 70144,
+    "decodedSha256": "867a5f126a45765e3bae9d7606b1726ed880da257e86de86b6046534700947c7",
+    "tarEntries": [
+      {
+        "path": "docs",
+        "directory": true,
+        "size": 0,
+        "mode": 488,
+        "uid": 0,
+        "gid": 0,
+        "uname": "",
+        "gname": "",
+        "mtime": 1700000000,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "docs/日本語.txt",
+        "directory": false,
+        "size": 32,
+        "mode": 416,
+        "uid": 0,
+        "gid": 0,
+        "uname": "",
+        "gname": "",
+        "mtime": 1700000000,
+        "sha256": "52fc697c1d89cdc3262e6e8d2bc40fee52e349790e93efeec684c2a10aab3764"
+      },
+      {
+        "path": "empty-file",
+        "directory": false,
+        "size": 0,
+        "mode": 416,
+        "uid": 0,
+        "gid": 0,
+        "uname": "",
+        "gname": "",
+        "mtime": 1700000000,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "empty-folder",
+        "directory": true,
+        "size": 0,
+        "mode": 488,
+        "uid": 0,
+        "gid": 0,
+        "uname": "",
+        "gname": "",
+        "mtime": 1700000000,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "binary.dat",
+        "directory": false,
+        "size": 65555,
+        "mode": 416,
+        "uid": 0,
+        "gid": 0,
+        "uname": "",
+        "gname": "",
+        "mtime": 1700000000,
+        "sha256": "541c3db816ba9420de860e6d01e7e9f16c1e0dc873c2ef390f65520a2d4f0637"
+      }
+    ]
+  },
+  {
+    "file": "tree-14.tar.Z",
+    "source": "tree-14.tar.Z.raw",
+    "maxBits": 14,
+    "packedBytes": 8775,
+    "packedSha256": "1862851ad2f2eecfd681d7722c95feafd261e767e3ebd1067bb4d468ba3a5aaf",
+    "decodedBytes": 70144,
+    "decodedSha256": "867a5f126a45765e3bae9d7606b1726ed880da257e86de86b6046534700947c7",
+    "tarEntries": [
+      {
+        "path": "docs",
+        "directory": true,
+        "size": 0,
+        "mode": 488,
+        "uid": 0,
+        "gid": 0,
+        "uname": "",
+        "gname": "",
+        "mtime": 1700000000,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "docs/日本語.txt",
+        "directory": false,
+        "size": 32,
+        "mode": 416,
+        "uid": 0,
+        "gid": 0,
+        "uname": "",
+        "gname": "",
+        "mtime": 1700000000,
+        "sha256": "52fc697c1d89cdc3262e6e8d2bc40fee52e349790e93efeec684c2a10aab3764"
+      },
+      {
+        "path": "empty-file",
+        "directory": false,
+        "size": 0,
+        "mode": 416,
+        "uid": 0,
+        "gid": 0,
+        "uname": "",
+        "gname": "",
+        "mtime": 1700000000,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "empty-folder",
+        "directory": true,
+        "size": 0,
+        "mode": 488,
+        "uid": 0,
+        "gid": 0,
+        "uname": "",
+        "gname": "",
+        "mtime": 1700000000,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "binary.dat",
+        "directory": false,
+        "size": 65555,
+        "mode": 416,
+        "uid": 0,
+        "gid": 0,
+        "uname": "",
+        "gname": "",
+        "mtime": 1700000000,
+        "sha256": "541c3db816ba9420de860e6d01e7e9f16c1e0dc873c2ef390f65520a2d4f0637"
+      }
+    ]
+  },
+  {
+    "file": "tree-16.tar.Z",
+    "source": "tree-16.tar.Z.raw",
+    "maxBits": 16,
+    "packedBytes": 8775,
+    "packedSha256": "af743c567a005adfcd5a8b7ab52b72e82de195b44613c1f5e2279707d671129b",
+    "decodedBytes": 70144,
+    "decodedSha256": "867a5f126a45765e3bae9d7606b1726ed880da257e86de86b6046534700947c7",
+    "tarEntries": [
+      {
+        "path": "docs",
+        "directory": true,
+        "size": 0,
+        "mode": 488,
+        "uid": 0,
+        "gid": 0,
+        "uname": "",
+        "gname": "",
+        "mtime": 1700000000,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "docs/日本語.txt",
+        "directory": false,
+        "size": 32,
+        "mode": 416,
+        "uid": 0,
+        "gid": 0,
+        "uname": "",
+        "gname": "",
+        "mtime": 1700000000,
+        "sha256": "52fc697c1d89cdc3262e6e8d2bc40fee52e349790e93efeec684c2a10aab3764"
+      },
+      {
+        "path": "empty-file",
+        "directory": false,
+        "size": 0,
+        "mode": 416,
+        "uid": 0,
+        "gid": 0,
+        "uname": "",
+        "gname": "",
+        "mtime": 1700000000,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "empty-folder",
+        "directory": true,
+        "size": 0,
+        "mode": 488,
+        "uid": 0,
+        "gid": 0,
+        "uname": "",
+        "gname": "",
+        "mtime": 1700000000,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "binary.dat",
+        "directory": false,
+        "size": 65555,
+        "mode": 416,
+        "uid": 0,
+        "gid": 0,
+        "uname": "",
+        "gname": "",
+        "mtime": 1700000000,
+        "sha256": "541c3db816ba9420de860e6d01e7e9f16c1e0dc873c2ef390f65520a2d4f0637"
+      }
+    ]
+  },
+  {
+    "file": "rewritten.tar.Z",
+    "source": "rewritten.tar.Z.raw",
+    "maxBits": 14,
+    "packedBytes": 296,
+    "packedSha256": "b34fcf1bd25df52a176eca1eb3844c18a8e360be28dae58c109edf3c2687ff22",
+    "decodedBytes": 10240,
+    "decodedSha256": "e66e22c3f86d139c1a708c512f0dead6fbd5b74bf9f6f5fc4e7512bd885e7078",
+    "tarSource": "reference.tar.Z",
+    "edited": false
+  },
+  {
+    "file": "edited.tar.Z",
+    "source": "edited.tar.Z.raw",
+    "maxBits": 14,
+    "packedBytes": 279,
+    "packedSha256": "abdb8eb0842bafc99ba3ce5a240eacd02b2a919d7c35e0d0befc35705a212fa6",
+    "decodedBytes": 10240,
+    "decodedSha256": "a20cc9715fe147bdd9a2e8dd8a644e2056327d1baed789ec63592adb5f00e9f8",
+    "tarSource": "reference.tar.Z",
+    "edited": true
+  }
+]

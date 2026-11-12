@@ -211,6 +211,11 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
     String tr(String key, [List<Object?> values = const []]) =>
         archiveCreationText(context, key, values);
     final enabled = !_busy && _result == null;
+    final streamedTar = ArchiveCreationService.supportsStreamedTarCreation(
+      format: _format,
+      source: widget.source,
+      destination: widget.destination,
+    );
     final progress = _progress;
     return PopScope(
       canPop: !_busy,
@@ -362,6 +367,8 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
                   tr(
                     _format.diskImage
                         ? 'Create a data image from local files and folders. Up to 2 GiB of image output. Existing files are never replaced.'
+                        : streamedTar
+                        ? 'Stream local files into a new TAR or CBT archive up to 2 GiB, including headers. Existing archive editing keeps its 64 MiB member and 256 MiB total limits. Existing files are never replaced.'
                         : _format.singlePayload
                         ? 'Select one local file, up to 64 MiB. Its name after decompression comes from the output filename.'
                         : _format == ArchiveCreationFormat.ar
@@ -374,6 +381,13 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
                   Text(
                     tr(
                       'Compressed TAR is limited to 64 MiB after decompression, including archive headers.',
+                    ),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                if (_format.wrapper != null || _format.singlePayload)
+                  Text(
+                    tr(
+                      'Single-file compressors and compressed TAR are limited to 64 MiB of encoded output.',
                     ),
                     style: Theme.of(context).textTheme.bodySmall,
                   ),

@@ -15,6 +15,7 @@ import 'archive_hfs_writer.dart';
 import 'archive_iso_writer.dart';
 import 'archive_output_spool.dart';
 import 'archive_package_writers.dart';
+import 'archive_tar_writer.dart';
 import 'archive_write_model.dart';
 import 'archive_writer_service.dart';
 import 'archive_zip_package_policy.dart';
@@ -376,6 +377,29 @@ class ArchiveCreationService {
   static const maxEntries = 200000;
   static const maxNameBytes = 8 * 1024 * 1024;
 
+  /// Fresh native TAR/CBT output, including headers and alignment padding.
+  /// Compressed containers and existing-archive editing keep their own limits.
+  static const maxStreamedTarBytes = kArchiveFreshTarOutputLimit;
+
+  /// The larger allowance requires native local storage and bounded reads and
+  /// staging in both directions. UI guidance uses the same eligibility rule.
+  static bool supportsStreamedTarCreation({
+    required ArchiveCreationFormat format,
+    required FileOperationBackend source,
+    required FileOperationBackend destination,
+  }) =>
+      const bool.fromEnvironment('dart.library.io') &&
+      (format == ArchiveCreationFormat.tar ||
+          format == ArchiveCreationFormat.cbt) &&
+      source.storageReference?.isLocal == true &&
+      source.storageReference?.provider != 'browser' &&
+      destination.storageReference?.isLocal == true &&
+      destination.storageReference?.provider != 'browser' &&
+      source.capabilities.boundedDownload &&
+      destination.capabilities.boundedDownload &&
+      destination.capabilities.boundedUpload &&
+      destination.supportsStagedVerification;
+
   Future<ArchiveCreationResult> create({
     required FileOperationBackend source,
     required FileOperationBackend destination,
@@ -386,6 +410,11 @@ class ArchiveCreationService {
     void Function(ArchiveCreationProgress)? onProgress,
   }) async {
     options.validate();
+    final streamedTar = supportsStreamedTarCreation(
+      format: options.format,
+      source: source,
+      destination: destination,
+    );
     void check() {
       if (isCancelled?.call() ?? false) {
         throw const ArchiveCreationException(ArchiveCreationError.cancelled);
@@ -455,10 +484,10 @@ class ArchiveCreationService {
         ArchiveCreationError.unsupportedEntry,
       );
     }
-    final memberLimit = options.format.diskImage
+    final memberLimit = options.format.diskImage || streamedTar
         ? 2 * 1024 * 1024 * 1024
         : kArchiveReadLimit;
-    final totalLimit = options.format.diskImage
+    final totalLimit = options.format.diskImage || streamedTar
         ? 2 * 1024 * 1024 * 1024
         : options.format.wrapper != null
         ? kArchiveReadLimit
@@ -600,6 +629,73 @@ class ArchiveCreationService {
       await walk(file, file.name, 0);
     }
 
+    ArchiveCreationPhase? bytePhase;
+    var completedBytes = 0, phaseBytes = 0, bytesSinceYield = 0;
+    final yieldWatch = Stopwatch()..start();
+    void beginBytePhase(ArchiveCreationPhase phase, int total, String path) {
+      bytePhase = phase;
+      completedBytes = 0;
+      phaseBytes = total;
+      bytesSinceYield = 0;
+      yieldWatch.reset();
+      progress(phase, 0, total, path);
+    }
+
+    Future<void> reportBytes(int count, String path) async {
+      if (!streamedTar || bytePhase == null) return;
+      completedBytes += count;
+      if (completedBytes > phaseBytes) {
+        throw const ArchiveCreationException(
+          ArchiveCreationError.verificationFailed,
+        );
+      }
+      progress(bytePhase!, completedBytes, phaseBytes, path);
+      bytesSinceYield += count;
+      // Hashing and synchronous source streams must also yield to timers and
+      // the UI event loop, including the source rereads after packing.
+      if (bytesSinceYield >= 1024 * 1024 ||
+          yieldWatch.elapsedMilliseconds >= 16) {
+        await Future<void>.delayed(Duration.zero);
+        bytesSinceYield = 0;
+        yieldWatch.reset();
+        check();
+      }
+    }
+
+    Stream<List<int>> checkedOutput(
+      Stream<List<int>> input, {
+      required int expectedLength,
+      required String path,
+    }) async* {
+      var received = 0;
+      await for (final chunk in input) {
+        check();
+        if (chunk.length > expectedLength - received ||
+            chunk is! Uint8List &&
+                chunk.any((value) => value < 0 || value > 255)) {
+          throw const ArchiveCreationException(
+            ArchiveCreationError.verificationFailed,
+          );
+        }
+        for (var at = 0; at < chunk.length; at += 256 * 1024) {
+          final end = at + 256 * 1024 < chunk.length
+              ? at + 256 * 1024
+              : chunk.length;
+          final copy = Uint8List.fromList(chunk.sublist(at, end));
+          received += copy.length;
+          yield copy;
+          check();
+          await reportBytes(copy.length, path);
+        }
+      }
+      check();
+      if (received != expectedLength) {
+        throw const ArchiveCreationException(
+          ArchiveCreationError.verificationFailed,
+        );
+      }
+    }
+
     Future<void> validateEntry(_CreationEntry entry) async {
       check();
       if (!_sameVersion(entry.file, await source.stat(entry.file.path!))) {
@@ -642,6 +738,7 @@ class ArchiveCreationService {
           hash.add(copy);
           yield copy;
           check();
+          await reportBytes(copy.length, entry.name);
         }
       }
       await validateEntry(entry);
@@ -692,7 +789,7 @@ class ArchiveCreationService {
     final packageIssue = await archiveZipPackageIssue(options.name, captured);
     if (packageIssue != null) throw ArchiveViewException(packageIssue);
     final spool = await ArchiveOutputSpool.create(
-      maxBytes: options.format.diskImage
+      maxBytes: options.format.diskImage || streamedTar
           ? 2 * 1024 * 1024 * 1024
           : ArchiveService.maxArchiveBytes,
     );
@@ -704,6 +801,9 @@ class ArchiveCreationService {
         check();
       }
 
+      if (streamedTar) {
+        beginBytePhase(ArchiveCreationPhase.packing, totalBytes, options.name);
+      }
       if (options.format.diskImage) {
         progress(ArchiveCreationPhase.packing, 0, totalBytes, options.name);
         switch (options.format) {
@@ -863,6 +963,16 @@ class ArchiveCreationService {
       await spool.finish();
       check();
 
+      if (streamedTar) {
+        // Read the created members, revalidate source contents, then hash the
+        // complete output. These are three distinct streamed verification
+        // passes, all represented in one monotonic byte total.
+        beginBytePhase(
+          ArchiveCreationPhase.verifying,
+          2 * totalBytes + spool.length,
+          options.name,
+        );
+      }
       if (options.format.diskImage) {
         progress(
           ArchiveCreationPhase.verifying,
@@ -901,14 +1011,19 @@ class ArchiveCreationService {
         }
       } else {
         // Decode with the regular reader, which is independent of the ZIP encoder.
+        final verificationSource = await spool.openByteSource();
         final archive = await openViewerArchiveSource(
-          await spool.openByteSource(),
+          streamedTar
+              ? _CreationTarVerificationSource(verificationSource, check)
+              : verificationSource,
           name: options.name,
           password: options.password,
+          maxMemberBytes: streamedTar ? maxStreamedTarBytes : kArchiveReadLimit,
         );
         try {
           final expected = {for (final entry in entries) entry.name: entry};
-          if (archive.members.length != entries.length) {
+          if (archive.members.length != entries.length ||
+              streamedTar && archive.formatName != 'tar') {
             throw const ArchiveCreationException(
               ArchiveCreationError.verificationFailed,
             );
@@ -923,6 +1038,7 @@ class ArchiveCreationService {
                 member.pathEscapedRoot ||
                 member.isSpecial ||
                 member.isFile == entry.file.isFolder ||
+                member.size != (entry.file.isFolder ? 0 : entry.file.size) ||
                 entry.mode != null &&
                     (member.posixMode == null ||
                         (member.posixMode! & 0xfff) != entry.mode) ||
@@ -934,8 +1050,21 @@ class ArchiveCreationService {
               );
             }
             if (member.isFile) {
-              final decoded = await archive.readMember(member);
-              if (sha256.convert(decoded).toString() != entry.digest ||
+              final digest = streamedTar
+                  ? await sha256
+                        .bind(
+                          checkedOutput(
+                            archive.openMember(
+                              member,
+                              maxBytes: maxStreamedTarBytes,
+                            ),
+                            expectedLength: member.size,
+                            path: name,
+                          ),
+                        )
+                        .single
+                  : sha256.convert(await archive.readMember(member));
+              if (digest.toString() != entry.digest ||
                   options.password != null &&
                       member.size > 0 &&
                       !member.isEncrypted) {
@@ -944,12 +1073,14 @@ class ArchiveCreationService {
                 );
               }
             }
-            progress(
-              ArchiveCreationPhase.verifying,
-              ++done,
-              entries.length,
-              name,
-            );
+            if (!streamedTar) {
+              progress(
+                ArchiveCreationPhase.verifying,
+                ++done,
+                entries.length,
+                name,
+              );
+            }
             await Future<void>.delayed(Duration.zero);
           }
         } finally {
@@ -987,23 +1118,36 @@ class ArchiveCreationService {
 
       await validateSources();
       await checkDestination();
-      progress(ArchiveCreationPhase.saving, 0, spool.length, output);
+      if (!streamedTar) {
+        progress(ArchiveCreationPhase.saving, 0, spool.length, output);
+      }
       final packedHash =
           (await sha256
                   .bind(
-                    spool.openRead().map((chunk) {
-                      check();
-                      return chunk;
-                    }),
+                    checkedOutput(
+                      spool.openRead(),
+                      expectedLength: spool.length,
+                      path: options.name,
+                    ),
                   )
                   .first)
               .toString();
+      if (streamedTar) {
+        // Staging, its full readback, and one final source-content check all
+        // happen before the existing exclusive publication boundary.
+        beginBytePhase(
+          ArchiveCreationPhase.saving,
+          2 * spool.length + totalBytes,
+          output,
+        );
+      }
       await destination.writePreparedFile(
         output,
-        spool.openRead().map((chunk) {
-          check();
-          return chunk;
-        }),
+        checkedOutput(
+          spool.openRead(),
+          expectedLength: spool.length,
+          path: output,
+        ),
         spool.length,
         replace: false,
         checkpoint: (state) async {
@@ -1013,10 +1157,11 @@ class ArchiveCreationService {
           check();
           final hash = await sha256
               .bind(
-                destination.readFile(staged).map((chunk) {
-                  check();
-                  return chunk;
-                }),
+                checkedOutput(
+                  destination.readFile(staged),
+                  expectedLength: spool.length,
+                  path: output,
+                ),
               )
               .first;
           if (staged.size != spool.length || hash.toString() != packedHash) {
@@ -1059,6 +1204,33 @@ class ArchiveCreationService {
       (a.uuid == null && !requireKnown || a.uuid == b.uuid) &&
       (a.size == null && !requireKnown || a.size == b.size) &&
       (a.updatedAt == null && !requireKnown || a.updatedAt == b.updatedAt);
+}
+
+/// TAR verification may index many headers before opening a member. Keep its
+/// metadata reads cancellable and bounded as well as its payload streams.
+class _CreationTarVerificationSource implements koni.ByteSource {
+  _CreationTarVerificationSource(this.source, this.check);
+  final koni.ByteSource source;
+  final void Function() check;
+  @override
+  String? get name => source.name;
+  @override
+  int get length => source.length;
+  @override
+  Future<Uint8List> read(int offset, int length) async {
+    check();
+    if (length > 1024 * 1024) {
+      throw const ArchiveCreationException(
+        ArchiveCreationError.verificationFailed,
+      );
+    }
+    final bytes = await source.read(offset, length);
+    check();
+    return bytes;
+  }
+
+  @override
+  Future<void> close() => source.close();
 }
 
 class _BoundedArchiveMemory extends codecs.OutputMemoryStream {

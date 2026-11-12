@@ -8,6 +8,7 @@ import 'package:uuid/uuid.dart';
 
 import '../models/archive_endpoint.dart';
 import '../models/file_item.dart';
+import 'archive_directory_snapshot.dart';
 import 'archive_publication_journal.dart';
 import 'archive_publication_lease.dart';
 import 'archive_publication_access_policy.dart';
@@ -185,6 +186,33 @@ class ArchiveContainerPublisher {
     ArchivePublicationRecord record, {
     bool Function()? isCancelled,
   }) async {
+    final directory = record.directoryDependency;
+    if (directory != null) {
+      _check(isCancelled: isCancelled);
+      final path = directory.directory.path!;
+      if (backend is! LocalOperationBackend ||
+          directory.storage != backend.storageReference ||
+          !backend.paths.isAbsolute(path) ||
+          backend.paths.normalize(path) != path ||
+          [
+            record.original.path!,
+            record.candidatePath(backend.paths),
+            record.backupPath(backend.paths),
+          ].any((other) => backend.isWithin(path, other))) {
+        throw StateError(
+          'The saved synchronization source directory is invalid or contains the archive.',
+        );
+      }
+      await verifyArchiveDirectoryDependency(
+        backend,
+        directory,
+        isCancelled: () {
+          _check(isCancelled: isCancelled);
+          return false;
+        },
+      );
+      _check(isCancelled: isCancelled);
+    }
     final dependency = record.dependency;
     if (dependency == null) return;
     _check(isCancelled: isCancelled);
@@ -243,6 +271,7 @@ class ArchiveContainerPublisher {
     void Function(ArchivePublicationPhase)? onPhase,
     TransferCheckpoint? beforePublication,
     ArchivePublicationDependency? dependency,
+    ArchivePublicationDirectoryDependency? directoryDependency,
   }) async {
     if (_running) {
       throw StateError('An archive publication is already running.');
@@ -266,13 +295,17 @@ class ArchiveContainerPublisher {
             phase: ArchivePublicationPhase.prepared,
             createdAt: DateTime.now().toUtc(),
             dependency: dependency,
+            directoryDependency: directoryDependency,
           );
       if (record.candidateSha256 != sha256.convert(bytes).toString() ||
           record.candidateBytes != bytes.length ||
           record.originalSha256 != originalSha256 ||
           dependency != null &&
               jsonEncode(record.dependency?.toJson()) !=
-                  jsonEncode(dependency.toJson())) {
+                  jsonEncode(dependency.toJson()) ||
+          directoryDependency != null &&
+              jsonEncode(record.directoryDependency?.toJson()) !=
+                  jsonEncode(directoryDependency.toJson())) {
         throw StateError(
           'The saved publication belongs to a different archive draft.',
         );
@@ -314,7 +347,9 @@ class ArchiveContainerPublisher {
             saved.candidateSha256 != record.candidateSha256 ||
             saved.storage != record.storage ||
             jsonEncode(saved.dependency?.toJson()) !=
-                jsonEncode(record.dependency?.toJson())) {
+                jsonEncode(record.dependency?.toJson()) ||
+            jsonEncode(saved.directoryDependency?.toJson()) !=
+                jsonEncode(record.directoryDependency?.toJson())) {
           throw StateError(
             'The original publication intent is no longer available.',
           );
@@ -536,12 +571,12 @@ class ArchiveContainerPublisher {
     }
     record = _active!;
     await _intent(ArchivePublicationPhase.installing, onPhase: onPhase);
-    // Cross-container copies revalidate their separate immutable source after
+    // Captured transfers revalidate their separate source after
     // staging. Keep the final candidate/backup checks below this potentially
     // long read, so a source check cannot weaken destination verification.
     // Failure restores a vacant original and retains a reviewable recovery
-    // record. An already installed candidate is confirmed above without
-    // replaying this guard; source files are never part of recovery deletion.
+    // record. Already installed candidates are confirmed above without replaying
+    // a transient guard, but all durable dependencies are still verified.
     await beforePublication?.call();
     await _verifyDependency(record, isCancelled: isCancelled);
     await _guardPaths(_active!);
@@ -632,8 +667,8 @@ class ArchiveContainerPublisher {
     } catch (_) {
       // Publication was already verified and durably recorded. An uncertain
       // cleanup does not remove the backup reference or claim a rollback.
-      // A missing move destination is stronger than an ordinary cleanup
-      // warning: do not issue a successful source-removal receipt for it.
+      // A changed durable dependency is stronger than an ordinary cleanup
+      // warning: do not issue a successful guarded-publication receipt for it.
       await _verifyDependency(_active!);
       return ArchivePublicationReceipt(
         record: _active!,
@@ -655,7 +690,7 @@ class ArchiveContainerPublisher {
     }
     await _guardPaths(record);
     final guardedCleanup =
-        record.dependency != null && publishedSha256 == record.candidateSha256;
+        record.hasDependency && publishedSha256 == record.candidateSha256;
     if (guardedCleanup) await _verifyDependency(record);
     final published = await _inspect(record.original.path!);
     if (published?.hash != publishedSha256) {
@@ -700,7 +735,7 @@ class ArchiveContainerPublisher {
     }
   }
 
-  /// A reviewed restore of a guarded source may undo an installed removal
+  /// A reviewed restore of a guarded publication may undo an installed
   /// candidate while its verified original backup still exists. Keep that
   /// candidate at its generated path before restoring; never overwrite either
   /// the installed name or an occupied recovery path.
@@ -709,7 +744,7 @@ class ArchiveContainerPublisher {
     void Function(ArchivePublicationPhase)? onPhase,
   }) async {
     final record = _active!;
-    if (record.dependency == null) return;
+    if (!record.hasDependency) return;
     await _guardPaths(record);
     var original = await _inspect(
       record.original.path!,
@@ -778,7 +813,7 @@ class ArchiveContainerPublisher {
         _active!.copyWith(
           phase: ArchivePublicationPhase.restored,
           original: original!.file,
-          clearPublished: record.dependency != null,
+          clearPublished: record.hasDependency,
         ),
       );
     } catch (_) {
@@ -787,12 +822,23 @@ class ArchiveContainerPublisher {
   }
 
   Future<ArchiveRecoveryInspection> inspect(
-    ArchivePublicationRecord record,
-  ) async {
+    ArchivePublicationRecord record, {
+    bool Function()? isCancelled,
+  }) async {
+    _check(isCancelled: isCancelled);
     await _guardPaths(record);
-    final original = await _inspect(record.original.path!);
-    final candidate = await _inspect(record.candidatePath(backend.paths));
-    final backup = await _inspect(record.backupPath(backend.paths));
+    final original = await _inspect(
+      record.original.path!,
+      isCancelled: isCancelled,
+    );
+    final candidate = await _inspect(
+      record.candidatePath(backend.paths),
+      isCancelled: isCancelled,
+    );
+    final backup = await _inspect(
+      record.backupPath(backend.paths),
+      isCancelled: isCancelled,
+    );
     final oldOriginal = original?.hash == record.originalSha256;
     final published =
         original?.hash == record.candidateSha256 &&
@@ -813,15 +859,13 @@ class ArchiveContainerPublisher {
         backup != null && !backupValid;
     String? dependencyFailure;
     try {
-      await _verifyDependency(record);
+      await _verifyDependency(record, isCancelled: isCancelled);
     } catch (error) {
+      _check(isCancelled: isCancelled);
       dependencyFailure = '$error';
     }
     final guardedRestore =
-        record.dependency != null &&
-        published &&
-        backupValid &&
-        candidate == null;
+        record.hasDependency && published && backupValid && candidate == null;
     return ArchiveRecoveryInspection(
       record: record,
       canFinish:
@@ -838,7 +882,7 @@ class ArchiveContainerPublisher {
       message: foreign
           ? 'A container or recovery file changed. No automatic mutation is safe.'
           : dependencyFailure != null
-          ? 'Source publication and original-backup cleanup are blocked: $dependencyFailure Restore the verified source original when available.'
+          ? 'Publication and original-backup cleanup are blocked: $dependencyFailure Restore the verified original archive when available.'
           : published
           ? 'The published container matches the verified candidate. Finish confirmation and exact cleanup.'
           : candidateValid
@@ -875,18 +919,20 @@ class ArchiveContainerPublisher {
           current.originalSha256 != record.originalSha256 ||
           current.candidateSha256 != record.candidateSha256 ||
           jsonEncode(current.dependency?.toJson()) !=
-              jsonEncode(record.dependency?.toJson())) {
+              jsonEncode(record.dependency?.toJson()) ||
+          jsonEncode(current.directoryDependency?.toJson()) !=
+              jsonEncode(record.directoryDependency?.toJson())) {
         throw StateError('The saved archive recovery intent changed.');
       }
       _active = current;
       _check(isCancelled: isCancelled);
-      final inspection = await inspect(current);
+      final inspection = await inspect(current, isCancelled: isCancelled);
       if (action == ArchiveRecoveryAction.finishPublication) {
         if (!inspection.canFinish) throw StateError(inspection.message);
         return await _finish(isCancelled: isCancelled, onPhase: onPhase);
       }
       if (!inspection.canRestore) throw StateError(inspection.message);
-      if (current.dependency != null) {
+      if (current.hasDependency) {
         await _retainInstalledCandidateForRestore(
           isCancelled: isCancelled,
           onPhase: onPhase,
@@ -1075,7 +1121,7 @@ bool sameArchiveFile(FileItem before, FileItem? after) {
       after.isSymlink == true ||
       before.size != after.size ||
       before.uuid != after.uuid ||
-      before.updatedAt != after.updatedAt) {
+      !_sameFileInstant(before.updatedAt, after.updatedAt)) {
     return false;
   }
   for (final key in [
@@ -1091,3 +1137,10 @@ bool sameArchiveFile(FileItem before, FileItem? after) {
   }
   return true;
 }
+
+// Native stat returns local DateTimes, while the durable journal stores UTC.
+// Time-zone representation must not invalidate an otherwise identical native
+// file after restart; a different instant (or missing evidence) still refuses.
+bool _sameFileInstant(DateTime? before, DateTime? after) => before == null
+    ? after == null
+    : after != null && before.isAtSameMomentAs(after);

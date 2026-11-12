@@ -18,10 +18,10 @@ metadata, protection or filesystem structures cannot be preserved.
 | ZIP / CBZ | Yes | Yes | Eligible ZIP policy | Original supported AES-256 protection is retained. Comic member order is preserved. |
 | 7z / CB7 | Yes | Yes | Eligible 7z policy | Original password and header visibility are retained. |
 | TAR / CBT | Yes | Yes | Inspected regular-file profiles | Preserves understood ownership, names, permissions, timestamps and PAX metadata; unknown extensions, links and special records are refused. |
-| Compressed TAR | gzip, bzip2, XZ, Zstandard, LZ4, LZMA | Yes, all six | Eligible TAR plus one supported wrapper | Includes TGZ, TBZ/TBZ2, TXZ, TZST, TLZ and long suffix aliases. Decoded TAR is limited to 64 MiB, including headers. |
-| Compressed files | gzip, bzip2, XZ, Zstandard, LZ4, LZMA | Yes, one file | Replace one ordinary payload | No member add/delete/rename or filesystem modes. Output filename supplies the decompressed name. Nested archive payloads can be created/read; single-payload editing requires the immediate decoded payload and cannot flatten inner wrappers. |
+| Compressed TAR | gzip, bzip2, XZ, Zstandard, LZ4, LZMA, UNIX compress | Yes, all seven | Eligible TAR plus one supported wrapper | Includes TGZ, TBZ/TBZ2, TXZ, TZST, TLZ, TAZ and long suffix aliases. Decoded TAR is limited to 64 MiB, including headers. |
+| Compressed files | gzip, bzip2, XZ, Zstandard, LZ4, LZMA, UNIX compress | Yes, one file | Replace one ordinary payload | No member add/delete/rename or filesystem modes. Output filename supplies the decompressed name. Nested archive payloads can be created/read; single-payload editing requires the immediate decoded payload and cannot flatten inner wrappers. |
 | Lzip | Lzip v1 and TAR.LZ | No | No | Checks CRC32, size, EOS and full member boundaries. Consecutive nonempty members are supported; v0, ignored tails and empty members inside collections are refused. |
-| UNIX compress | .Z, .tar.Z and .taz | No | No | 9–16-bit block/nonblock LZW, width changes and dictionary resets. No stored checksum or decoded size: some corruption or valid-prefix truncation cannot be detected. |
+| UNIX compress | .Z, .tar.Z and .taz | .Z and TAR.Z | Eligible direct payload or supported TAR | Reads 9–16-bit block/nonblock LZW; creates 12/14/16-bit block streams and rewrites with 14-bit block coding. No stored checksum or decoded size: some corruption or valid-prefix truncation cannot be detected. |
 | JAR / WAR / EAR | Yes | Unsigned archives | Unsigned archives only | Signing records and signature-related manifest digests block rewriting. This is archive editing, not compilation or signing. |
 | KMZ | Yes | Yes | Yes | A KML document must remain at the top level. |
 | AR | Ordinary, GNU and BSD members | Flat regular files | Inspected profiles | Preserves order, ownership, permissions, timestamps and supported long-name style. Symbol indexes and thin archives are refused. |
@@ -95,8 +95,37 @@ forks, links and signatures are not imported. Save or discard a source draft
 first. The same physical outer archive, including native hard-link aliases,
 cannot be both endpoints of this transaction. Source bytes are checked before
 staging and again before destination installation. Source archives are retained.
-Archive-to-archive moves require a separate two-container transaction and remain
-unavailable. Rearrangement within one workspace uses the grouped move below.
+Archive-to-archive moves use the separate native transaction below.
+
+## Moving between archives
+
+With two distinct writable top-level native archives open, use **F6** or
+**Move**, or choose **Move to the other archive…** from a clean workspace.
+Choose the destination directory and keep-both/replace/skip conflict policy.
+**Prepare both reviews** verifies the destination additions and source removals
+before either physical archive changes; **Publish reviewed move** confirms
+that concrete pair. Independent source/destination passwords are supported.
+
+The destination is published and verified first. Source removal requires a
+durable dependency on that exact destination, retained across restart. Only
+successfully copied members are removed; skipped descendants keep their parent
+directories. Supported retained-source metadata and original source protection
+follow its writer policy. Imported metadata and destination protection follow
+the copy profile above, including its ownership/ACL/signature limits.
+
+Cancellation or a failure between publications can leave a published copy and
+unremoved source contents. An interrupted source installation can instead leave
+the original at a recorded backup path. The result distinguishes those outcomes
+and directs recovery to both captured archive paths. Recovery cannot finish
+source removal or clean its original backup if the destination changed; an
+intact original can be restored through verified exclusive moves.
+
+This is ordered publication of two archives, not one atomic filesystem update.
+Nested cross-container routes, browser/remote publication, same physical outer
+archives and hard-link aliases remain outside this move scope. The combined
+packed candidate limit is 256 MiB. See the [endpoint contract](archive-endpoints.md)
+for precise receipt, source-authority, recovery and external-change boundaries.
+Rearrangement within one workspace uses the grouped move below.
 
 ## Moving members within an archive
 
@@ -201,6 +230,14 @@ content checksums from publisher authentication.
   verified by streaming; this does not raise the existing workspace edit,
   preview or ordinary extraction limits. Browser/fallback output spools are
   capped at 256 MiB, and the creation UI remains native-local.
+- Fresh native uncompressed TAR/CBT creation also streams to a 2 GiB packed
+  output bound, including headers and alignment. Eligible bounded native-local
+  endpoints can create members above 64 MiB and archives above 256 MiB, with
+  streaming member hashes, full source rechecks and staged byte readback.
+  TAR member streaming is used explicitly for this verification path; ordinary
+  viewer reads, extraction and existing TAR editing keep their previous bounds.
+  Compressed TAR, browser/fallback creation and durable background jobs do not
+  inherit this extension. See the [measured large TAR evidence](archive-sync-large-tar-verification.md).
 - Ordinary creation and existing workspace publication keep the 256 MiB packed
   and decoded-total limits; compressed streams and decoded TAR wrappers keep
   their 64 MiB bounds. Native spooling does not make buffered codecs unbounded.
@@ -235,6 +272,16 @@ content checksums from publisher authentication.
   empty member is supported, but empty members inside collections are refused.
   Single compressed-file rewriting is refused once the reader has traversed
   another container, even if nested layers have the same format name.
+- UNIX compress creation uses 12-, 14- or 16-bit block dictionaries for Fast,
+  Normal or Maximum. A full dictionary resets before adding another phrase.
+  Eligible rewrites normalize accepted 9–16-bit block/nonblock inputs to the
+  normal 14-bit block profile. Input/output each remain capped at 64 MiB, and
+  `.tar.Z`/`.taz` also require a supported TAR profile. No checksum or decoded
+  length is stored; structural validity cannot prove absence of all corruption
+  or valid-prefix truncation. Creation/rewrite verification still compares the
+  complete result with its captured source. Independent gzip/libarchive and
+  actual JavaScript evidence are recorded in the
+  [UNIX compress writer profiles](../test/fixtures/archives/UNIX_COMPRESS_WRITER_PROFILES.md).
 - ISO and HFS enforce 100,000 entries, 64 directory levels and 32 MiB of
   directory/catalog metadata. ISO also bounds continuation and pathname data.
   The ISO writer uses an ordinary primary hierarchy of at most eight levels
@@ -376,3 +423,10 @@ adds grouped moves within one workspace and three legacy CPIO creation choices.
 [CPIO writer provenance](../test/fixtures/archives/CPIO_WRITER_PROFILES.md)
 records exact profile preservation, integer/name bounds and native libarchive
 readback. odc and binary CPIO contain no stored content checksum or encryption.
+
+The [native move/UNIX compress continuation](archive-move-compress-continuation.md)
+adds reviewed destination-first moves between eligible top-level native archives,
+durable destination-dependent source recovery, and `.Z`/TAR.Z creation and
+eligible rewrites. Its [verification record](archive-move-compress-verification.md)
+records service/UI regressions, independent gzip/libarchive readback, actual
+JavaScript execution and the remaining publication/format limits.

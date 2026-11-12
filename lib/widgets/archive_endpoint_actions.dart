@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 
 import '../l10n/archive_endpoint_strings.dart';
+import '../l10n/archive_transfer_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/core_providers.dart';
@@ -130,13 +131,14 @@ class CapturedArchiveCopySource {
   }
 }
 
-/// Review and publish a copy between independently captured containers. The
-/// source is reopened from its physical fingerprint and is never mutated.
+/// Reviews a copy or move between independently captured containers. A move
+/// publishes the destination before its separately reviewed source removal.
 Future<ArchiveEndpointTransferResult?> showCapturedArchiveCopy(
   BuildContext context,
   WidgetRef ref, {
   required CapturedArchiveCopySource source,
   required CapturedArchiveImportDestination destination,
+  bool moveSources = false,
   bool Function()? isReviewCurrent,
 }) async {
   try {
@@ -157,7 +159,10 @@ Future<ArchiveEndpointTransferResult?> showCapturedArchiveCopy(
       throw StateError(archiveEndpointText(context, 'sourceChanged'));
     }
     final captured = source.location;
-    final result = await showArchiveEndpointCopyDialog(
+    final showTransfer = moveSources
+        ? showArchiveEndpointMoveDialog
+        : showArchiveEndpointCopyDialog;
+    final result = await showTransfer(
       context,
       sourceContainerBackend: fileOperationBackend(
         source: captured.origin.source,
@@ -174,10 +179,14 @@ Future<ArchiveEndpointTransferResult?> showCapturedArchiveCopy(
       directory: destination.directory,
       expectedOuterFingerprint: destination.location.fingerprint,
     );
-    // Recovery can change the destination even when no new copy was published.
-    // The source view and its selection remain untouched by this copy.
+    // Recovery can change either archive even without a new move receipt.
+    // Ordinary copies keep the source view and its selection untouched.
+    final refreshSource = moveSources && source.isCurrent;
     if (context.mounted && destination.isCurrent) {
       await destination.panel.refresh();
+    }
+    if (context.mounted && refreshSource && source.isCurrent) {
+      await source.location.panel.refresh();
     }
     return result;
   } catch (error) {
@@ -189,19 +198,25 @@ Future<ArchiveEndpointTransferResult?> showCapturedArchiveCopy(
   }
 }
 
-/// Borrows an already unlocked workspace for Copy out. The owner retains its
-/// lifetime and draft; only an unchanged physical source is eligible.
+/// Borrows an unlocked source for a physical transfer. The owner retains its
+/// draft and lifetime. After a move result, it must close or reopen the source.
 Future<ArchiveEndpointTransferResult?> showCapturedArchiveWorkspaceCopy(
   BuildContext context, {
   required ArchiveWorkspace source,
   required List<FileItem> files,
   required CapturedArchiveImportDestination destination,
+  bool moveSources = false,
   bool Function()? isReviewCurrent,
+  VoidCallback? onSourceInvalidated,
 }) async {
   if (files.isEmpty) return null;
   try {
     if (source.dirty || source.pendingPublication != null) {
-      throw StateError(archiveEndpointText(context, 'sourceDraft'));
+      throw StateError(
+        moveSources
+            ? archiveTransferText(context, 'sourceDraft')
+            : archiveEndpointText(context, 'sourceDraft'),
+      );
     }
     final snapshot = source.captureCopySource();
     final selected = List<FileItem>.unmodifiable(files);
@@ -221,7 +236,10 @@ Future<ArchiveEndpointTransferResult?> showCapturedArchiveWorkspaceCopy(
       if (!context.mounted) return null;
       throw StateError(archiveEndpointText(context, 'sourceChanged'));
     }
-    final result = await showArchiveWorkspaceCopyDialog(
+    final showTransfer = moveSources
+        ? showArchiveWorkspaceMoveDialog
+        : showArchiveWorkspaceCopyDialog;
+    final result = await showTransfer(
       context,
       source,
       files: selected,
@@ -231,6 +249,8 @@ Future<ArchiveEndpointTransferResult?> showCapturedArchiveWorkspaceCopy(
       directory: destination.directory,
       expectedOuterFingerprint: destination.location.fingerprint,
       isCopyCurrent: current,
+      onSourceInvalidated: onSourceInvalidated,
+      journal: source.journal,
     );
     if (context.mounted && destination.isCurrent) {
       await destination.panel.refresh();
@@ -270,17 +290,13 @@ Future<ArchiveEndpointTransferResult?> showCapturedArchiveImport(
     final sourceSession = panel.captureOperationSession();
     final sourceNavigation = panel.navigationIntentRevision;
     if (sourceOrigin == null && sourceGroups == null && panel.isInArchive) {
-      if (moveSources) {
-        throw UnsupportedError(
-          archiveEndpointText(context, 'archiveMoveUnsupported'),
-        );
-      }
       final source = CapturedArchiveCopySource.capture(ref, sourceSide, files);
       return await showCapturedArchiveCopy(
         context,
         ref,
         source: source,
         destination: destination,
+        moveSources: moveSources,
         isReviewCurrent: isReviewCurrent,
       );
     }

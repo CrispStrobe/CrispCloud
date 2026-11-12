@@ -143,6 +143,10 @@ void main() {
           throw StateError('Interrupted install');
         }
       };
+      // Native publication leases must make progress in the real async zone,
+      // including when another widget-test file briefly owns the same fixture
+      // archive identity.
+
       await tester.runAsync(() async {
         await expectLater(
           ArchiveContainerPublisher(backend, firstJournal).publish(
@@ -174,8 +178,8 @@ void main() {
           ),
         ),
       );
-      await _activateAndWaitForText(tester, 'Recover', 'Finish publication');
-      await tester.pumpAndSettle();
+      await _activateAndWaitForText(tester, 'Recover', '/out/work.zip');
+
       expect(find.text('/out/work.zip'), findsOneWidget);
       await tester.ensureVisible(find.text('Finish publication'));
       await _activateAndWaitForText(
@@ -183,18 +187,16 @@ void main() {
         'Finish publication',
         'No unfinished archive publication for this account.',
       );
-      await tester.pumpAndSettle();
+
       expect(backend.files['/out/work.zip'], candidate);
       expect(restarted.records.single.phase, ArchivePublicationPhase.complete);
       expect(
         find.text('No unfinished archive publication for this account.'),
         findsOneWidget,
       );
-      await tester.runAsync(() async {
-        await tester.tap(find.text('Close'));
-        await tester.pumpAndSettle();
-        await Future<void>.delayed(Duration.zero);
-      });
+      await tester.runAsync(() => tester.tap(find.text('Close')));
+      await tester.pumpAndSettle();
+
       expect(changed, isTrue);
       expect(tester.takeException(), isNull);
     },
