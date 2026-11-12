@@ -1,0 +1,13 @@
+{
+  "tests": 32,
+  "newTests": 11,
+  "mode": "Pure Dart; import-only adapter for data-only assertions; no Flutter/native hooks",
+  "source": {
+    "lib/services/word_conversion_inspection.dart": "0e6f318591e35eb9b32ffab23f3f40bad5d45c762fcfd51238a81b88a51147bf",
+    "test/word_conversion_inspection_test.dart": "37e6b741ea6b1b558250aec5e4acd7d419d4e223c350a460dc821c7f05d8bab4",
+    "pubspec.yaml": "5075aaae70b36474859d57cf162d41f8ffddd68fe5d37199b371d4081092e678",
+    "pubspec.lock": "0580eb8cc18a0ff7118aedb5f4987612502c334d726edc8e54ebbb8c3499e270"
+  },
+  "logSha256": "a1670cfe3786e43ea0fc5d026da16d2eebf946106d33e41f76cf812c9201d272",
+  "logGzipSha256": "36478cd167d33fdd347811bc2b80aed10d0097cb545250cc143f42239a601cc2"
+}

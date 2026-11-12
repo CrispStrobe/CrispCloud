@@ -7,6 +7,7 @@ import 'package:xml/xml.dart';
 import 'package:xml/xml_events.dart';
 
 import 'archive_viewer_service.dart';
+
 import 'package:quds_office_engine/quds_office_engine.dart'
     show BoundedCfbReader, CfbfDirectoryEntry;
 
@@ -57,6 +58,8 @@ class LegacyWordSourceInspection {
 
 /// Counts describe what the converter emitted. They are not proof of visual
 /// equivalence, complete semantic preservation, or a valid digital signature.
+/// Loss checks additionally require a matching relationship from the document
+/// or an attached story; an orphan package part cannot establish preservation.
 class WordConversionInspection {
   const WordConversionInspection({required this.counts, required this.losses});
   final Map<String, int> counts;
@@ -69,6 +72,19 @@ const _maxXml = 16 * 1024 * 1024;
 const _wordNamespaces = {
   'http://schemas.openxmlformats.org/wordprocessingml/2006/main',
   'http://purl.oclc.org/ooxml/wordprocessingml/main',
+};
+const _officeRelationshipNamespaces = {
+  'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
+  'http://purl.oclc.org/ooxml/officeDocument/relationships',
+};
+const _wordPartType =
+    'application/vnd.openxmlformats-officedocument.wordprocessingml';
+const _storyPartTypes = {
+  '$_wordPartType.header+xml': (kind: 'header', root: 'hdr'),
+  '$_wordPartType.footer+xml': (kind: 'footer', root: 'ftr'),
+  '$_wordPartType.footnotes+xml': (kind: 'footnotes', root: 'footnotes'),
+  '$_wordPartType.endnotes+xml': (kind: 'endnotes', root: 'endnotes'),
+  '$_wordPartType.comments+xml': (kind: 'comments', root: 'comments'),
 };
 const _documentType =
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml';
@@ -397,6 +413,9 @@ Future<WordConversionInspection> inspectConvertedWord(
         key: 0,
     };
     final vbaProjects = <String, Map<String, String>>{};
+    final internalRelationships =
+        <String, List<({String kind, String target})>>{};
+    final storyParts = <String, ({String kind, bool hasContent})>{};
     String? documentVba;
     const revisions = {
       'ins',
@@ -471,6 +490,13 @@ Future<WordConversionInspection> inspectConvertedWord(
             rel.getAttribute('Target') ?? '',
           );
           if (!members.containsKey(target)) throw const FormatException();
+          final kind = _officeRelationshipKind(rel.getAttribute('Type')!);
+          if (kind != null) {
+            internalRelationships.putIfAbsent(owner, () => []).add((
+              kind: kind,
+              target: target,
+            ));
+          }
           if (isDocumentVba) {
             if (documentVba != null) throw const FormatException();
             documentVba = target;
@@ -488,6 +514,29 @@ Future<WordConversionInspection> inspectConvertedWord(
       final dom = name == main ? document : xml(data);
       if (!_wordNamespaces.contains(dom.rootElement.namespaceUri)) {
         throw const FormatException();
+      }
+      final storyType = _storyPartTypes[type];
+      if (storyType != null) {
+        if (dom.rootElement.name.local != storyType.root) {
+          throw const FormatException();
+        }
+        final itemName = switch (storyType.kind) {
+          'footnotes' => 'footnote',
+          'endnotes' => 'endnote',
+          'comments' => 'comment',
+          _ => null,
+        };
+        storyParts[name] = (
+          kind: storyType.kind,
+          hasContent:
+              itemName == null ||
+              dom.rootElement.childElements.any(
+                (element) =>
+                    _wordNamespaces.contains(element.namespaceUri) &&
+                    element.name.local == itemName &&
+                    (itemName == 'comment' || !_isNoteSeparator(element)),
+              ),
+        );
       }
       if (dom.rootElement.name.local == 'hdr') {
         counts['headers'] = counts['headers']! + 1;
@@ -511,16 +560,7 @@ Future<WordConversionInspection> inspectConvertedWord(
           counts['revisions'] = counts['revisions']! + 1;
         }
         if (local == 'footnote' || local == 'endnote') {
-          final separator = node.attributes.any(
-            (a) =>
-                a.name.local == 'type' &&
-                {
-                  'separator',
-                  'continuationSeparator',
-                  'continuationNotice',
-                }.contains(a.value),
-          );
-          if (!separator) {
+          if (!_isNoteSeparator(node)) {
             final key = local == 'footnote' ? 'footnotes' : 'endnotes';
             counts[key] = counts[key]! + 1;
           }
@@ -533,6 +573,56 @@ Future<WordConversionInspection> inspectConvertedWord(
     if (documentVba != null && !vbaProjects.containsKey(documentVba)) {
       throw const FormatException();
     }
+    // ECMA-376 Part 1, 11.3.2/.4/.6/.7/.9: document stories belong to the
+    // Main Document part. Glossary-owned copies are separate content, even
+    // when the glossary itself is reachable. 15.2.9/.10 allow objects/packages
+    // to belong to main, comments, endnotes, footnotes, headers or footers.
+    // https://download.microsoft.com/download/e/1/4/e14fb96f-83b8-4a2a-84db-7fa8acbe061a/Office%20Open%20XML%20Part%201%20-%20Fundamentals.pdf
+    // This is part/relationship presence, not validation of every text anchor,
+    // opaque object payload or the resulting document's visual fidelity.
+    final attachedStories = {main};
+    final reachableFeatures = <String>{};
+    for (final relationship in internalRelationships[main] ?? const []) {
+      if (!const {
+        'header',
+        'footer',
+        'footnotes',
+        'endnotes',
+        'comments',
+      }.contains(relationship.kind)) {
+        continue;
+      }
+      final story = storyParts[relationship.target];
+      if (story == null || story.kind != relationship.kind) {
+        throw const FormatException();
+      }
+      attachedStories.add(relationship.target);
+      if (story.hasContent) reachableFeatures.add(story.kind);
+    }
+    final hasReachableObjects = attachedStories.any(
+      (owner) => (internalRelationships[owner] ?? const []).any((relationship) {
+        final target = relationship.target;
+        final type = typeOf(target).toLowerCase();
+        if (target == main ||
+            target == '[Content_Types].xml' ||
+            target.endsWith('.rels') ||
+            storyParts.containsKey(target) ||
+            _isOfficeStructuralPartType(type)) {
+          return false;
+        }
+        return switch (relationship.kind) {
+          'oleObject' =>
+            type == 'application/vnd.openxmlformats-officedocument.oleobject',
+          // Later ECMA editions allow arbitrary package MIME types. Do not
+          // restrict embeddings to Office extensions, but a structural part
+          // of this document cannot stand in for an embedded package.
+          // MS-OI29500 3.10 describes the content-type-specific handling:
+          // https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oi29500/32be961f-d71a-4812-913f-b675c79aa88a
+          'package' => type.isNotEmpty,
+          _ => false,
+        };
+      }),
+    );
     final vbaStreams = vbaProjects[documentVba];
     final losses = <WordConversionLoss>[];
     if (source.hasVba) {
@@ -545,19 +635,21 @@ Future<WordConversionInspection> inspectConvertedWord(
         losses.add(WordConversionLoss.vbaChanged);
       }
     }
-    if (source.hasObjects && counts['objects'] == 0) {
+    if (source.hasObjects && !hasReachableObjects) {
       losses.add(WordConversionLoss.objectsMissing);
     }
-    if (source.hasHeaders && counts['headers']! + counts['footers']! == 0) {
+    if (source.hasHeaders &&
+        !reachableFeatures.contains('header') &&
+        !reachableFeatures.contains('footer')) {
       losses.add(WordConversionLoss.headersMissing);
     }
-    if (source.hasFootnotes && counts['footnotes'] == 0) {
+    if (source.hasFootnotes && !reachableFeatures.contains('footnotes')) {
       losses.add(WordConversionLoss.footnotesMissing);
     }
-    if (source.hasEndnotes && counts['endnotes'] == 0) {
+    if (source.hasEndnotes && !reachableFeatures.contains('endnotes')) {
       losses.add(WordConversionLoss.endnotesMissing);
     }
-    if (source.hasComments && counts['comments'] == 0) {
+    if (source.hasComments && !reachableFeatures.contains('comments')) {
       losses.add(WordConversionLoss.commentsMissing);
     }
     return WordConversionInspection(
@@ -574,6 +666,32 @@ Future<WordConversionInspection> inspectConvertedWord(
     await archive?.close();
   }
 }
+
+String? _officeRelationshipKind(String type) {
+  for (final namespace in _officeRelationshipNamespaces) {
+    if (type.startsWith('$namespace/')) {
+      return type.substring(namespace.length + 1);
+    }
+  }
+  return null;
+}
+
+bool _isNoteSeparator(XmlElement element) => element.attributes.any(
+  (attribute) =>
+      _wordNamespaces.contains(attribute.namespaceUri) &&
+      attribute.name.local == 'type' &&
+      const {
+        'separator',
+        'continuationSeparator',
+        'continuationNotice',
+      }.contains(attribute.value),
+);
+
+bool _isOfficeStructuralPartType(String type) =>
+    type.endsWith('+xml') &&
+    (type.startsWith('application/vnd.openxmlformats-officedocument.') ||
+        type.startsWith('application/vnd.openxmlformats-package.') ||
+        type.startsWith('application/vnd.ms-word.'));
 
 String _relationshipOwner(String name) {
   if (name == '_rels/.rels') return '';
