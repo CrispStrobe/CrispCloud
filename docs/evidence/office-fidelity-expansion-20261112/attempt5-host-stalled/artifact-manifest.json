@@ -1,0 +1,19 @@
+{
+  "recorded_utc": "2026-11-12T16:25:10.354221+00:00",
+  "status": "stalled_incomplete_interrupted",
+  "app_commit": "78ea8a020bb9acd6e8b1f26d8caf82c34a99202f",
+  "source_commit": "73ad0c42a8ecc81fb11dbde05c6f0cf10b9a1c74",
+  "artifacts": {
+    "README.md": "c158c30c65e701b0384c9f7638e4b5c7f1d503e4fcfb2c8d615a8a53ae21930b",
+    "analysis-receipt.json": "b408043d11fdbabc2d9f5f35750b0db5120e6ee41ff3e8dbc1bf3be940a38e2b",
+    "host-analysis.log.gz": "57f0c6f8813658c6d6327ddddfc70b493c394e2d4dc50c4e792c91a2657112fc",
+    "interrupted-runtime-pubspec.yaml": "54e2a604f148bf153c2d28a219cee9c8ee8f564d0880b0d8fdb2253a72fc0c0f",
+    "interruption.json": "4e5657ee6abd3a548a7edd37248527d2dc3d93dac4c062ad7c8e951b5e6bb558",
+    "partial-host-gate.log.gz": "38544d77b1e41852aca293a14e20cb0c09af6d301d00fe9d6ccd4fb5d101759c",
+    "partial-producer-acceptance.json": "04d977a6d0f82e7dfc8587a1aaa4a0f8c859cd85fba3c58fbec2ba5bb04151fd",
+    "setup-pub-get.log.gz": "843fed2391c638e38188116bcb0e6319931627ce479164deaaff4b4af0438dbd",
+    "setup-receipt.json": "bf2fc00a4344c61cf1eaa05e46cbdd1c86dc1818244793134cd21d00730f3ab3",
+    "stall-observation.json": "30b08a59b8e98344f7d289b82847f445222c57a6475eab4422e09e08a72b44aa"
+  },
+  "raw_host_gate_log_sha256": "c4512886eee6940742b56862dcc958eccf2a2e6ff367af5dca5165d39033d673"
+}
