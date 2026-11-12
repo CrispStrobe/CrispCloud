@@ -665,7 +665,6 @@
     "packages/crisp_ebook_conversion/assets/metadata_worker.js",
     "packages/crisp_ebook_conversion/tool/build_metadata_wasm.py",
     "packages/crisp_ebook_conversion/tool/check_wasm.py",
-    "lib/models/storage_reference.dart",
     "lib/services/ebook_chapter_reader_controller.dart",
     "lib/services/ebook_reading_data.dart",
     "lib/services/ebook_library.dart",

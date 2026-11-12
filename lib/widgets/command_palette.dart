@@ -35,6 +35,7 @@ import 'transfer_history_dialog.dart';
 import 'integrity_dialogs.dart';
 import 'integrity_recovery_dialog.dart';
 import 'directory_comparison_dialog.dart';
+import 'directory_selection_actions.dart';
 import 'storage_analyzer_dialog.dart';
 import 'storage_scan_batch_dialog.dart';
 import '../l10n/storage_analyzer_strings.dart';
@@ -409,6 +410,22 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
         icon: Icons.pending_actions,
         action: () => showTransferHistoryDialog(widget.parentContext, ref),
       ),
+      _Command(
+        name: 'Copy name(s)',
+        icon: Icons.copy,
+        action: () => copySelectionNamesOrPaths(ref, namesOnly: true),
+      ),
+      _Command(
+        name: 'Copy full path(s)',
+        icon: Icons.copy,
+        action: () => copySelectionNamesOrPaths(ref, namesOnly: false),
+      ),
+      if (canCompareDirectories(ref))
+        _Command(
+          name: 'Compare Directories',
+          icon: Icons.compare_arrows,
+          action: () => compareDirectories(ref),
+        ),
       _Command(
         name: context.commanderTr("Create or Verify Checksums"),
         icon: Icons.verified_outlined,

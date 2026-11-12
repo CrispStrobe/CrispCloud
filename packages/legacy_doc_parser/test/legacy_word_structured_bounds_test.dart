@@ -4,7 +4,7 @@ import 'dart:typed_data';
 
 import 'package:legacy_doc_parser/src/legacy_word_document.dart';
 import 'package:test/test.dart';
-import 'package:quds_office_engine/quds_office_engine.dart' show CfbfWriter;
+import 'package:legacy_doc_parser/src/compound/cfbf_writer.dart' show CfbfWriter;
 
 import 'support/structured_word_fixture.dart';
 

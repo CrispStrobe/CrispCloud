@@ -840,3 +840,8 @@ non-digest policy fields remain unchanged. The first hosted 2.52.6 application
 exit is still under investigation and is not explained or declared fixed by
 this older-version guard. The current fingerprint block includes these final
 native CMake, probe/trace, packaging and descriptive changes.
+
+
+## Integration source binding
+
+The integration combines the recorded KeePass and ebook inventories without changing the stored distribution decisions. Duplicate reviewed paths are removed. The Word parser now lives in the shared Quds engine; it parses and serializes user documents without introducing cryptographic operations. The new directory selection comparison uses names, sizes and timestamps, and the new clipboard commands only copy names or paths. Fingerprints bind the merged inventory, resolved lockfile and exact reviewed source bytes. They do not represent a new Apple approval or distribution review.

@@ -5,6 +5,7 @@
 
 import '../l10n/ebook_strings.dart';
 import '../widgets/ebook_library_actions.dart';
+import '../widgets/directory_selection_actions.dart';
 import '../l10n/commander_strings.dart';
 import '../l10n/terminal_strings.dart';
 
@@ -400,6 +401,22 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       'editWith',
       context.commanderTr('Edit with…'),
       () => chooseEditorForSelection(context, ref),
+    );
+    add(
+      'copyNames',
+      'Copy name(s)',
+      () => copySelectionNamesOrPaths(ref, namesOnly: true),
+    );
+    add(
+      'copyFullPaths',
+      'Copy full path(s)',
+      () => copySelectionNamesOrPaths(ref, namesOnly: false),
+    );
+    add(
+      'compareDirectories',
+      'Compare Directories',
+      () => compareDirectories(ref),
+      available: () => canCompareDirectories(ref),
     );
     add('properties', context.commanderTr('Properties'), () {
       final files = _integritySelection(ref);
@@ -2081,6 +2098,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         );
       case 'rename_history':
         showRenameHistoryDialog(context, ref, ref.read(activePanelProvider));
+      case 'ebook_library':
+        showEbookLibrary(context, ref, ref.read(activePanelProvider));
       case 'collections':
         showFileCollectionsDialog(context, ref, ref.read(activePanelProvider));
       case 'compare_folders':

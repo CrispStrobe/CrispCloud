@@ -362,10 +362,8 @@ extension _WordFormattingTables on _StructuredWordParser {
   }
 
   List<LegacyWordSection> _readSections() {
-    final mainLength = source.bodyLength;
-    if (mainLength == 0) return const [];
     final (offset, length) = source.pair(6);
-    if (length == 0) return [LegacyWordSection(startCp: 0, endCp: mainLength)];
+    if (length == 0) return [LegacyWordSection(startCp: 0, endCp: body.length)];
     if (length < 20 || (length - 4) % 16 != 0) {
       throw const FormatException('Invalid Word section table.');
     }
@@ -384,11 +382,11 @@ extension _WordFormattingTables on _StructuredWordParser {
     for (var i = 0; i < count; i++) {
       final start = input.u32(i * 4), declaredEnd = input.u32((i + 1) * 4);
       if (declaredEnd <= start ||
-          start >= mainLength ||
-          (i < count - 1 && declaredEnd > mainLength)) {
+          start >= body.length ||
+          (i < count - 1 && declaredEnd > body.length)) {
         throw const FormatException('Word section positions are not ordered.');
       }
-      final end = declaredEnd > mainLength ? mainLength : declaredEnd;
+      final end = declaredEnd > body.length ? body.length : declaredEnd;
       if (i < count - 1 && body[end - 1] != 12) {
         throw const FormatException(
           'Word section has no terminating section mark.',
@@ -426,7 +424,7 @@ extension _WordFormattingTables on _StructuredWordParser {
         ),
       );
     }
-    if (result.last.endCp != mainLength) {
+    if (result.last.endCp != body.length) {
       throw const FormatException(
         'Word section table does not cover the body.',
       );

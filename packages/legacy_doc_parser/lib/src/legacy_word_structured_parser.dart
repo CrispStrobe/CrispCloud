@@ -3,17 +3,12 @@
 import 'dart:typed_data';
 
 import 'bounded_cfb_reader.dart';
-import 'compound/cfbf_writer.dart';
 import 'legacy_word_structured_model.dart';
 import 'legacy_word_structured_render.dart';
 
 part 'legacy_word_binary_source.dart';
 part 'legacy_word_sprms.dart';
 part 'legacy_word_format_tables.dart';
-part 'legacy_word_stories.dart';
-part 'legacy_word_fields.dart';
-part 'legacy_word_lists.dart';
-part 'legacy_word_media_parser.dart';
 
 typedef _Props = Map<String, Object?>;
 
@@ -39,39 +34,23 @@ class _StructuredWordParser {
   final authors = <String>[];
   int? defaultFont;
   int runCount = 0;
-  int paragraphCount = 0;
-  int fieldTextUnits = 0;
   final _fieldResults = <bool>[];
-  final _privateFieldSeparators = <int>{};
-  final _fieldFlags = <int, int>{};
-  final _noteMarkerCps = <int>{};
-  final _commentMarkerCps = <int>{};
-  final stories = <LegacyWordStory>[];
-  final noteReferences = <LegacyWordNoteReference>[];
-  final commentReferences = <LegacyWordCommentReference>[];
-  final textboxReferences = <LegacyWordTextboxReference>[];
-  final bookmarks = <LegacyWordBookmark>[];
-  final fields = <LegacyWordField>[];
-  final mediaRuns = <LegacyWordMediaRun>[];
-  final numbering = <LegacyWordNumberingDefinition>[];
-  final _numberingById = <int, LegacyWordNumberingDefinition>{};
   late final Uint16List body;
   late final List<LegacyWordSection> sections;
   late final Set<int> sectionEnds;
 
   LegacyWordDocument parse() {
     _storyWarnings();
-    if (source.totalLength == 0) {
+    if (source.bodyLength == 0) {
       return LegacyWordDocument(
         blocks: const [],
         sections: const [],
         plainText: '',
         safeHtml: '',
         warnings: List.unmodifiable(warnings),
-        media: _readMediaCatalog(const []),
       );
     }
-    body = Uint16List(source.totalLength);
+    body = Uint16List(source.bodyLength);
     for (final piece in source.pieces) {
       if (piece.startCp >= body.length) break;
       final end = piece.endCp < body.length ? piece.endCp : body.length;
@@ -93,57 +72,31 @@ class _StructuredWordParser {
     paragraphFormatting = _readFkp(paragraph: true);
     sections = _readSections();
     sectionEnds = {
-      for (final section in sections.take(sections.isEmpty ? 0 : sections.length - 1)) section.endCp,
+      for (final section in sections.take(sections.length - 1)) section.endCp,
     };
-    _readNumbering();
-    _readBookmarks();
-    _readFieldTables();
-    _readAuxiliaryStories();
-    final blocks = _parseRange(0, source.bodyLength, 'main');
-    final media = _readMediaCatalog(mediaRuns);
-    final orderedWarnings = warnings.toList()
-      ..sort((a, b) => a.index.compareTo(b.index));
-    return LegacyWordDocument(
-      blocks: List.unmodifiable(blocks), sections: List.unmodifiable(sections),
-      plainText: _plainText(blocks), safeHtml: renderLegacyWordHtml(blocks),
-      warnings: List.unmodifiable(orderedWarnings), stories: List.unmodifiable(stories),
-      noteReferences: List.unmodifiable(noteReferences), commentReferences: List.unmodifiable(commentReferences),
-      textboxReferences: List.unmodifiable(textboxReferences), bookmarks: List.unmodifiable(bookmarks),
-      fields: List.unmodifiable(fields), numbering: List.unmodifiable(numbering), media: media,
-    );
-  }
-
-  List<LegacyWordBlock> _parseRange(int first, int limit, String storyId) {
-    if (first == limit) return const [];
-    _collectFields(first, limit, storyId);
-    _fieldResults.clear();
     final paragraphs = <_Paragraph>[];
-    var start = first;
-    for (var cp = first; cp < limit; cp++) {
+    var start = 0;
+    for (var cp = 0; cp < body.length; cp++) {
       final unit = body[cp];
       if (unit == 13 ||
           unit == 7 ||
           (unit == 12 && sectionEnds.contains(cp + 1))) {
         paragraphs.add(_paragraph(start, cp, cp + 1, unit));
         start = cp + 1;
-        if (++paragraphCount > 50000) {
+        if (paragraphs.length > 50000) {
           throw const FormatException(
             'Word paragraphs exceed the preview complexity limit.',
           );
         }
       }
     }
-    if (start < limit) {
-      if (++paragraphCount > 50000) throw const FormatException('Word paragraphs exceed the preview complexity limit.');
-      paragraphs.add(_paragraph(start, limit, limit, 0));
+    if (start < body.length) {
+      paragraphs.add(_paragraph(start, body.length, body.length, 0));
     }
     if (_fieldResults.isNotEmpty) {
       throw const FormatException('Unclosed Word field.');
     }
-    return _assembleTables(paragraphs);
-  }
-
-  String _plainText(List<LegacyWordBlock> blocks) {
+    final blocks = _assembleTables(paragraphs);
     final plain = StringBuffer();
     void paragraphText(LegacyWordParagraph paragraph) {
       for (final run in paragraph.runs) {
@@ -170,15 +123,32 @@ class _StructuredWordParser {
           }
       }
     }
+    final orderedWarnings = warnings.toList()
+      ..sort((a, b) => a.index.compareTo(b.index));
     final plainText = plain.toString();
-    return plainText.endsWith('\n')
+    return LegacyWordDocument(
+      blocks: List.unmodifiable(blocks),
+      sections: List.unmodifiable(sections),
+      plainText: plainText.endsWith('\n')
           ? plainText.substring(0, plainText.length - 1)
-          : plainText;
+          : plainText,
+      safeHtml: renderLegacyWordHtml(blocks),
+      warnings: List.unmodifiable(orderedWarnings),
+    );
   }
 
   void _storyWarnings() {
     if (source.missingDeclaredExtent) {
       warnings.add(LegacyWordWarning.unsupportedFormatting);
+    }
+    final lengths = source.storyLengths;
+    if (lengths[0] != 0 || lengths[3] != 0) {
+      warnings.add(LegacyWordWarning.notesOmitted);
+    }
+    if (lengths[1] != 0) warnings.add(LegacyWordWarning.headersFootersOmitted);
+    if (lengths[2] != 0) warnings.add(LegacyWordWarning.commentsOmitted);
+    if (lengths[4] != 0 || lengths[5] != 0) {
+      warnings.add(LegacyWordWarning.textboxesOmitted);
     }
     for (final entry in source.compound.childrenOf(source.compound.root)) {
       if (const {
@@ -353,14 +323,6 @@ class _StructuredWordParser {
         spanEnd++;
         warnings.add(LegacyWordWarning.unsupportedFormatting);
       }
-      if (character['special'] == true || character['object'] == true ||
-          character['ole2'] == true || character['pictureLocation'] != null) {
-        if (mediaRuns.length >= 200000) throw const FormatException('Word media references exceed the complexity limit.');
-        mediaRuns.add(LegacyWordMediaRun(startCp: cp, endCp: spanEnd,
-          pictureLocation: character['pictureLocation'] as int?,
-          special: character['special'] == true, object: character['object'] == true,
-          ole2: character['ole2'] == true, data: character['data'] == true));
-      }
       final runStyle = _characterStyle(character);
       final inserted = character['inserted'] == true;
       final deleted = character['deleted'] == true;
@@ -429,7 +391,7 @@ class _StructuredWordParser {
               if (_fieldResults.last) {
                 throw const FormatException('Duplicate Word field separator.');
               }
-              _fieldResults[_fieldResults.length - 1] = !_privateFieldSeparators.contains(cp);
+              _fieldResults[_fieldResults.length - 1] = true;
             } else {
               _fieldResults.removeLast();
             }
@@ -448,10 +410,10 @@ class _StructuredWordParser {
             warnings.add(LegacyWordWarning.imagesOmitted);
             printable = -1;
           case 2:
-            if (!_noteMarkerCps.contains(cp)) warnings.add(LegacyWordWarning.notesOmitted);
+            warnings.add(LegacyWordWarning.notesOmitted);
             printable = -1;
           case 5:
-            if (!_commentMarkerCps.contains(cp)) warnings.add(LegacyWordWarning.commentsOmitted);
+            warnings.add(LegacyWordWarning.commentsOmitted);
             printable = -1;
           case 8:
             warnings.add(LegacyWordWarning.floatingObjectsOmitted);

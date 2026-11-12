@@ -163,7 +163,6 @@ const _toggleProperties = <int, String>{
   0x083c: 'hidden',
   0x2a53: 'doubleStrike',
   0x0855: 'special',
-  0x0856: 'object',
 };
 const _palette = <String?>[
   null,
@@ -312,11 +311,7 @@ void _applyCharacter(
         resetVisualProperties(paragraph);
         output['characterStyle'] = 10;
       case 0x6a03:
-        output['pictureLocation'] = data.i32(0);
-      case 0x0806:
-        output['data'] = _boolean(data);
-      case 0x080a:
-        output['ole2'] = _boolean(data);
+        output['pictureLocation'] = data.u32(0);
       // Language, proofing and revision-save identifiers do not change the
       // supported visual properties. Alternate script fonts remain a limit.
       case 0x486d:
@@ -328,6 +323,8 @@ void _applyCharacter(
       case 0x6816:
       case 0x6817:
       case 0x0802:
+      case 0x0806:
+      case 0x080a:
         break;
       default:
         warnings.add(LegacyWordWarning.unsupportedFormatting);
