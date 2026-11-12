@@ -40,6 +40,16 @@ def resolve(owner, relationship):
 
 
 def inspect_parts(parts, *, edited=False, wrapped_comment=True):
+    # Source parts retained after relationship relocation are still validated
+    # by the SDK. Check the concrete pPr sequence in those parts as well.
+    for owner, payload in parts.items():
+        if owner.startswith('word/') and owner.endswith('.xml'):
+            for properties in ET.fromstring(payload).iter(f'{{{W}}}pPr'):
+                names = [node.tag for node in properties]
+                spacing, alignment = f'{{{W}}}spacing', f'{{{W}}}jc'
+                if spacing in names and alignment in names:
+                    require(names.index(spacing) < names.index(alignment),
+                            f'paragraph property order is invalid in {owner}')
     main = 'word/document.xml'
     document = ET.fromstring(parts[main])
     main_rels = relationships(parts, main)
@@ -93,6 +103,15 @@ def inspect_parts(parts, *, edited=False, wrapped_comment=True):
                 'control no longer owns exactly one paragraph')
         paragraph = children[0]
         if story == 'footer_default':
+            properties = paragraph.find('w:pPr', NS)
+            require(properties is not None and [node.tag for node in properties] ==
+                    [f'{{{W}}}spacing', f'{{{W}}}jc'],
+                    'PAGE paragraph property order or membership changed')
+            spacing = properties.find('w:spacing', NS)
+            require(spacing.attrib == {f'{{{W}}}{name}': value for name, value in
+                                       [('before', '0'), ('after', '0'),
+                                        ('line', '240'), ('lineRule', 'auto')]},
+                    'PAGE paragraph spacing changed')
             instructions = [''.join(node.itertext()).strip()
                             for node in paragraph.findall('.//w:instrText', NS)]
             require(instructions == [r'PAGE \* MERGEFORMAT'], 'native PAGE field instruction changed')

@@ -26,6 +26,20 @@ class NoteMarkerOracleControls(unittest.TestCase):
     def test_source_and_nine_exports_pass_authored_expectations(self):
         self.assertEqual(oracle.verify(self.root)['files_verified'], 10)
 
+    def test_invented_separator_definitions_fail(self):
+        for kind in ('footnote', 'endnote'):
+            for separator in sorted(oracle.SEPARATOR_TYPES):
+                with self.subTest(kind=kind, separator=separator):
+                    def inject(root):
+                        note = ET.Element('{'+oracle.W+'}'+kind,
+                                          {'{'+oracle.W+'}id': '-1',
+                                           '{'+oracle.W+'}type': separator})
+                        run = ET.SubElement(ET.SubElement(note, '{'+oracle.W+'}p'),
+                                            '{'+oracle.W+'}r')
+                        ET.SubElement(run, '{'+oracle.W+'}separator')
+                        root.insert(0, note)
+                    self.reject(inject, f'word/{kind}s.xml')
+
     def test_late_marker_moved_to_first_paragraph_fails(self):
         def change(root):
             note = self.note(root, 1)

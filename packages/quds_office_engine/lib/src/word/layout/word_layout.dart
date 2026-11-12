@@ -2577,18 +2577,20 @@ class WordLayoutEngine {
     final List<_NoteSlice> slices = _noteSlices[page.index] ?? <_NoteSlice>[];
     if (slices.isEmpty) return;
     var y = _bodyBottom(section, page.index) + 8;
-    page.frames.add(
-      LaidOutBox(
-        x: section.margins.left,
-        y: y - 4,
-        width: section.contentWidth,
-        height: 0.6,
-        fillColor: '888888',
-        strokeColor: '888888',
-        kind: LaidOutBoxKind.footnote,
-        isNoteContent: true,
-      ),
-    );
+    if (_layoutDoc?.sourceFootnoteSeparatorsPresent != false) {
+      page.frames.add(
+        LaidOutBox(
+          x: section.margins.left,
+          y: y - 4,
+          width: section.contentWidth,
+          height: 0.6,
+          fillColor: '888888',
+          strokeColor: '888888',
+          kind: LaidOutBoxKind.footnote,
+          isNoteContent: true,
+        ),
+      );
+    }
     for (final _NoteSlice slice in slices) {
       slice.paintInto(page, y);
       y += slice.height;

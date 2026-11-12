@@ -13,7 +13,8 @@ def authored(*, edited=False, wrapped_comment=True):
     prefix = 'Changed' if edited else 'Original'
     for index, story in enumerate(STORIES):
         if story == 'footer_default':
-            paragraph = ('<w:p><w:pPr><w:jc w:val="center"/></w:pPr>'
+            paragraph = ('<w:p><w:pPr><w:spacing w:before="0" w:after="0" '
+                         'w:line="240" w:lineRule="auto"/><w:jc w:val="center"/></w:pPr>'
                          '<w:r><w:fldChar w:fldCharType="begin"/></w:r>'
                          '<w:r><w:instrText>PAGE \\* MERGEFORMAT</w:instrText></w:r>'
                          '<w:r><w:fldChar w:fldCharType="separate"/></w:r>'
@@ -105,6 +106,47 @@ class AuxiliaryControlOracleTest(unittest.TestCase):
                     node.set(f'{{{W}}}fldCharType', 'end')
                 parts['word/footer_default.xml'] = ET.tostring(root)
                 with self.assertRaisesRegex(AssertionError, 'PAGE field'):
+                    inspect_parts(parts)
+
+    def test_rejects_invalid_page_paragraph_property_order(self):
+        for wrapped_comment in (False, True):
+            with self.subTest(wrapped_comment=wrapped_comment):
+                parts = authored(wrapped_comment=wrapped_comment)
+                root = ET.fromstring(parts['word/footer_default.xml'])
+                properties = root.find('.//w:p/w:pPr', NS)
+                alignment = properties.find('w:jc', NS)
+                properties.remove(alignment)
+                properties.insert(0, alignment)
+                parts['word/footer_default.xml'] = ET.tostring(root)
+                with self.assertRaisesRegex(AssertionError, 'paragraph property order'):
+                    inspect_parts(parts, wrapped_comment=wrapped_comment)
+
+    def test_rejects_invalid_order_in_a_retained_unreferenced_source_part(self):
+        parts = authored()
+        retained = (f'<w:ftr xmlns:w="{W}"><w:p><w:pPr>'
+                    '<w:spacing w:line="240"/><w:jc w:val="center"/>'
+                    '</w:pPr></w:p></w:ftr>')
+        parts['word/retained_footer.xml'] = retained.encode()
+        inspect_parts(parts)
+        parts['word/retained_footer.xml'] = retained.replace(
+            '<w:spacing w:line="240"/><w:jc w:val="center"/>',
+            '<w:jc w:val="center"/><w:spacing w:line="240"/>').encode()
+        with self.assertRaisesRegex(AssertionError, 'order is invalid in word/retained_footer.xml'):
+            inspect_parts(parts)
+
+    def test_rejects_lost_or_changed_native_page_spacing(self):
+        for change in ('missing', 'changed'):
+            with self.subTest(change=change):
+                parts = authored()
+                root = ET.fromstring(parts['word/footer_default.xml'])
+                properties = root.find('.//w:p/w:pPr', NS)
+                spacing = properties.find('w:spacing', NS)
+                if change == 'missing':
+                    properties.remove(spacing)
+                else:
+                    spacing.set(f'{{{W}}}line', '480')
+                parts['word/footer_default.xml'] = ET.tostring(root)
+                with self.assertRaisesRegex(AssertionError, 'PAGE paragraph'):
                     inspect_parts(parts)
 
     def test_rejects_link_resolution_in_the_wrong_story_part(self):

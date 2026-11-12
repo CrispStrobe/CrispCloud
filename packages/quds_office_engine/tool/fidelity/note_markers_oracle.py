@@ -19,6 +19,7 @@ FIXTURES = ROOT/'test/fixtures/fidelity'
 W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
 R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
 NS = {'w': W}
+SEPARATOR_TYPES = {'separator', 'continuationSeparator', 'continuationNotice'}
 
 
 def equal(actual, expected, label):
@@ -71,7 +72,7 @@ def snapshot(root, kind):
     result = {}
     ids = []
     for note in root.findall('w:'+kind, NS):
-        if attr(note, 'type') in ('separator', 'continuationSeparator', 'continuationNotice'):
+        if attr(note, 'type') in SEPARATOR_TYPES:
             continue
         note_id = attr(note, 'id')
         ids.append(note_id)
@@ -79,6 +80,11 @@ def snapshot(root, kind):
                            'paragraphs': [paragraph_snapshot(p) for p in note.findall('.//w:p', NS)]}
     equal(len(set(ids)), len(ids), f'{kind} ids are unique')
     return result
+
+
+def separator_definitions(root, kind):
+    return [properties(note) for note in root.findall('w:'+kind, NS)
+            if attr(note, 'type') in SEPARATOR_TYPES]
 
 
 def authored_expected(kind, phase):
@@ -109,7 +115,11 @@ def verify_parts(parts, phase):
         if target not in parts:
             raise AssertionError(f'Missing {kind} part: {target}')
         expected = authored_expected(kind, phase)
-        actual = snapshot(ET.fromstring(parts[target]), kind)
+        native = ET.fromstring(parts[target])
+        authored = ET.fromstring((FIXTURES/f'note_markers_{kind}s.xml').read_bytes())
+        equal(separator_definitions(native, kind), separator_definitions(authored, kind),
+              f'{phase} {kind} native separator definitions')
+        actual = snapshot(native, kind)
         equal(actual, expected, f'{phase} {kind} content and marker placement')
         references = [attr(node, 'id') for node in main.findall('.//w:'+kind+'Reference', NS)]
         equal(references, list(expected), f'{kind} body-reference ids')

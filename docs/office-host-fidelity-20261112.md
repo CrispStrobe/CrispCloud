@@ -87,6 +87,26 @@ previously outside this selected cohort. Coverage is written to
 It does not require every line to be hit or claim full branch coverage.
 
 Execution results belong to the corresponding commit's local output or Actions
-artifact. The historical 54.9% report is not a measurement of these changed
-sources; a new full run must produce the replacement report. A passing semantic
-oracle or Open XML SDK check does not establish pixel identity with Word.
+artifact. The last completed host run,
+[Actions run 43177469270](https://github.com/CrispStrobe/CrispCloud/actions/runs/43177469270),
+tested app commit
+[`86338bd`](https://github.com/CrispStrobe/CrispCloud/commit/86338bdab58f46eeb68bb24d0916690874dfdca5)
+with suite revision `adcccb405b0e11ac407fabaaaf7d0ebbb1a48f10`. It passed all
+**115 host tests**, verified **41/41 actual saved host exports**, and measured
+**2,282/3,661 instrumented host lines (62.3%)**, with **all nine scoped Office
+source files instrumented**. These are executed line counts, not branch coverage.
+
+In that same run, **all 41 actual host exports passed Open XML SDK validation**.
+The overall schema job failed only on **14 shared auxiliary-control fixtures**:
+the authored source and six export cycles in each of `fidelity-aux-controls`
+and `fidelity-aux-header-footer`. Their paragraph-property element order was
+incorrect. The current sync pins
+[`c19e90d`](https://github.com/CrispStrobe/quds_office_suite/commit/c19e90d60002ff088acfcfcd3b2d34633cb4cb72),
+which corrects that fixture order and the native note-separator and render-gate
+counterexamples. **The full host gate for this new checkpoint is pending**;
+the previous run's results do not certify the synchronized changes.
+
+For historical comparison, the earlier **54.9%** report measured an older source
+revision. It remains a separate historical observation and is not the current
+coverage measurement. A passing semantic oracle or Open XML SDK check does not
+establish pixel identity with Word.

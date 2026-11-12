@@ -73,7 +73,7 @@ stories use `section` (default 0); note stories require the actual `note` ID; co
 | `applyStyle` | `paragraph`, `style`, story selector | Apply a paragraph style from this document |
 | `characterStyle` | `paragraph`, `run`, `style`, story selector | Apply a source character style |
 | `tableStyle` | `table`, `style` | Apply a source table style |
-| `styleDefinition` | `style`, `type`; optional `rPr`, `pPr`, `tblPr`, `tcPr` | Edit sparse source style properties |
+| `styleDefinition` | `style`; optional `type`, `rPr`, `pPr`, `tblPr`, `tcPr` | Edit sparse source style properties |
 | `paragraphFormat` | `paragraph`; optional `alignment`, `before`, `after`, `lineSpacing`, `lineSpacingRule`, `left`, `right`, `firstLine`, `hanging`, `tabs`, `keepTogether`, `pageBreakBefore`, `columnBreakBefore`, `dropCapLines`, `shading`, `border`, `rtl`, story selector | Change supplied properties, preserving explicit defaults |
 | `runFormat` | `paragraph`; optional `start`, `end`, `bold`, `italic`, `strike`, `underline`, `color`, `highlight`, `font`, `size`, story selector | Format a range; explicit false/black/default-size values stay direct |
 | `addNote` | `paragraph`, `text`; optional `offset`, `endnote` | Insert a footnote/endnote at the caret offset, or the end if omitted |
@@ -90,7 +90,7 @@ stories use `section` (default 0); note stories require the actual `note` ID; co
 | `listClear` | `paragraph` | Remove list formatting |
 | `listRestart` | `paragraph`; optional `at` (default 1) | Restart a numbered list without mutating unrelated instances |
 | `hyperlink` | `paragraph`, `run`, `target`, story selector | Set a run hyperlink |
-| `tableCellText` | `table`, `row`, `column`, `text` | Replace the selected cell's text |
+| `tableCellText` | `table`, `row`, `column`, `text` | Replace the selected cell's entire story with one plain paragraph |
 | `headerFooterText` | `story`, `text`; optional `section`, `paragraph` | Replace/add text in one of the six header/footer variants |
 | `sectionFormat` | optional `section`, `width`, `height`, `top`, `bottom`, `left`, `right`, `header`, `footer`, `columns`, `columnSpace`, `columnSep`, `breakKind`, `differentFirstPage`, `differentOddEven` | Edit page/section geometry and flags |
 
@@ -121,8 +121,13 @@ Bookmark creation rejects duplicate names and replacement of a differently named
 bookmark, preventing silent breakage of existing references. The import/edit/export
 model also preserves native partial, multiple, overlapping and cross-paragraph
 bookmark ranges; `reference` uses their exact marked text. `bookmarkSet` remains
-a paragraph-wide creation operation. Copies that would duplicate native IDs and
-destructive edits that erase only one endpoint are rejected before mutation.
+a paragraph-wide creation operation. The editor's rich clipboard insertion
+rejects native-ID collisions. The scripted `paragraphDelete`, `tableRowDelete`,
+`tableColumnDelete` and `tocRemove` commands, plus note-pane edits that remove
+paragraphs, reject removal of only one native bookmark endpoint before mutation.
+These guarantees cover the named edit paths. The note-pane guard also runs before
+controller history changes. The CLI `editNote` operation intentionally replaces
+the rich note body; use paragraph/run operations for rich edits.
 
 Frame `wrap` accepts `none`, `square` and `topBottom`. Body paragraphs and TOCs
 following a frame reflow around it; native coordinates, wrap values and colors
@@ -136,8 +141,7 @@ controls retain their positions. Supported paragraph operations use the actual
 container. Unsupported inline drawings/equations, multi-paragraph or
 non-paragraph auxiliary controls, table row/cell wrappers and edits crossing
 control boundaries fail before mutation. UI lock and data-binding semantics are
-not implemented. Whole-note replacement also rejects deletion of only one
-bookmark endpoint before changing the note or controller history.
+not implemented.
 
 The independently authored `word_structure_source.xml`,
 `word_structure_expected.json`, and `scripts/word-structure-{create,edit,remove}.json`
@@ -151,8 +155,9 @@ and original image bytes. Normal validation never rewrites expected values.
 `endnote` defaults to false. Alignment, underline and break-kind strings use the
 model enum names printed in the source. `highlight: null` clears a highlight.
 `styleDefinition` values are maps from OOXML property names to attribute maps;
-a null property removes it. Existing style ID and type must match. The command
-retains sparse source definitions and re-evaluates inherited formatting.
+a null property removes it. The style ID must already exist; a supplied type
+must match its native type. The command retains sparse source definitions and
+re-evaluates inherited formatting.
 
 A small edit script:
 
@@ -263,7 +268,8 @@ From the repository root, with .NET 8, LibreOffice and Poppler available:
 dotnet run --project tool/office-validation -- --self-test
 dotnet run --project tool/office-validation -- packages/quds_office_engine/build build/external/schema-report.json
 python3 -m unittest discover -s tool/office-validation -p 'test_*.py'
-python3 tool/office-validation/render.py packages/quds_office_engine/build build/external-render
+python3 tool/office-validation/render.py packages/quds_office_engine/build build/external-render \
+  --schema-report build/external/schema-report.json
 ```
 
 CI runs full engine/editor suites, retains the semantic reports, exports,
@@ -290,14 +296,18 @@ flutter test --no-pub test/office_story_golden_test.dart --update-goldens
 # Inspect all changed PNGs, then rerun without --update-goldens.
 ```
 
-The layout goldens compare both the original and the exported reopen to the
-same reviewed baseline for RTL/Arabic, columns, sections/page breaks, continued
-notes, and a four-page table with a late note; expected page counts are asserted
-explicitly.
+The layout goldens compare the original and each of three sequential native
+save/reopen states to the same reviewed baseline for RTL/Arabic, columns,
+sections/page breaks, continued notes, and a four-page table with a late note;
+expected page counts are asserted explicitly.
 
 The picture assertions must pass before capturing a golden, so an undecoded or
-blank page cannot become an accepted baseline. Read `docs/office-fidelity-audit.md`
-and the machine-readable gap ledger for verified fixes and remaining limits.
+blank page cannot become an accepted baseline. Use the
+[current coverage guide](../../../../docs/office-fidelity-coverage-20261112.md)
+and [gap ledger](../../../../docs/office-fidelity-gaps.json) for current fixes
+and remaining limits. The
+[historical audit](../../../../docs/office-fidelity-audit.md) retains earlier
+measurements and probe results.
 
 ## Native fixtures
 

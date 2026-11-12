@@ -17,8 +17,8 @@ const _stories = [
   'comments',
 ];
 const _pageField =
-    '<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="0" '
-    'w:after="0" w:line="240" w:lineRule="auto"/></w:pPr>'
+    '<w:p><w:pPr><w:spacing w:before="0" '
+    'w:after="0" w:line="240" w:lineRule="auto"/><w:jc w:val="center"/></w:pPr>'
     '<w:r><w:fldChar w:fldCharType="begin"/></w:r>'
     '<w:r><w:instrText xml:space="preserve"> PAGE \\* MERGEFORMAT </w:instrText></w:r>'
     '<w:r><w:fldChar w:fldCharType="separate"/></w:r>'
