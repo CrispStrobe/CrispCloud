@@ -1,11 +1,12 @@
 name: Office fidelity integration
 on:
   push:
-    branches: [main, 'feature/office-fidelity-*']
+    branches: [main, 'feature/office-fidelity-*', 'feature/legacy-doc-fidelity-*']
   pull_request:
     paths:
       - 'packages/quds_office_engine/**'
       - 'packages/quds_office_editor/**'
+      - 'packages/legacy_doc_parser/**'
       - 'lib/widgets/office_editor*'
       - 'lib/services/office_*'
       - 'lib/l10n/**'
@@ -18,6 +19,8 @@ on:
       - 'test/recursive_search_service_test.dart'
       - 'test/widget/office_*'
       - 'tool/*office*'
+      - 'tool/sync_legacy_doc_parser.py'
+      - 'tool/test_sync_legacy_doc_parser.py'
       - 'tool/office-validation/**'
       - 'tool/with_ci_system_sqlite.py'
       - 'pubspec.*'

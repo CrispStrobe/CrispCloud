@@ -196,3 +196,19 @@ The next continuation checkpoint pins parser `53a7f0df113f0b88967f7fecd492652ad5
 The [retained app receipt](evidence/legacy-doc-parser-20261112/parser-53a7f0d/README.md) records 99 Flutter tests across 16 suites, 74 Python harness tests, portable DOC/RTF/PPT/MSG JavaScript checks and installed-Office acceptance. The release pubspec is restored after the documented temporary test hooks.
 
 The upstream runtime checkpoint passed 616 Dart tests, 104 Python tests and 129 independently schema-validated DOCX outputs. Its 22-input native corpus completed all 66 repeat imports and retained every initial page count. Six initial RGB/text/geometry comparisons were exact; every strict structural comparison still reported differences. These measurements are separate from the app workflow checks and do not claim universal fidelity. Complete native/schema/portable reports and exact review-audit inputs are retained in the mirrored package.
+
+### Saved integration checkpoint: parser 713973f
+
+The current continuation pins parser `713973fb27330d190281cbe66193f6b22ec722f8`
+and Quds `94ba00188be8f91f3aafb82d58fe05cf0268c22d` independently. It preserves
+main's release preparation and the immutable 278-file ebook checkout. All 356
+parser files match bytes and executable bits; the Office inventory covers 777 files.
+The [retained app receipt](evidence/legacy-doc-parser-20261112/parser-713973f/README.md)
+records 99 Word workflow tests, 101 harness tests, portable JavaScript checks
+and installed-Office acceptance. The source lock is unchanged.
+
+The parser now preserves bounded solid OfficeArt context and exact textbox
+content boundaries. Its 647 Dart, 109 Python and 144 SDK checks pass. The separate
+native corpus was interrupted by an environment disk-capacity failure; its
+partial report and all 228 emitted documents remain versioned upstream. Exact
+layout and full arbitrary format semantics remain separate goals.

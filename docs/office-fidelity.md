@@ -6,7 +6,8 @@ CrispCloud uses local path overrides for `quds_office_engine` and
 SHA-256 inventory; changing a suite branch alone does not update the app.
 
 The active legacy Word continuation uses
-`feature/legacy-doc-fidelity-20261112` in the app and suite. The
+`feature/legacy-doc-fidelity-20261112` in the app and
+`feature/legacy-doc-fidelity-continuation-20261112` in the suite. The
 [standalone parser guide](legacy-doc-parser.md) records its exact source pins,
 conversion contracts and app acceptance. It builds on the earlier
 `feature/office-fidelity-workflows-20261112` work, including feature-directed
@@ -262,7 +263,7 @@ explicit rejections where an edit would silently corrupt native structure.
 To sync a reviewed immutable suite checkpoint:
 
 ```sh
-python3 tool/sync_office_fidelity.py --source ../quds_office_suite --ref SOURCE_COMMIT --branch feature/legacy-doc-fidelity-20261112 --apply
+python3 tool/sync_office_fidelity.py --source ../quds_office_suite --ref SOURCE_COMMIT --branch feature/legacy-doc-fidelity-continuation-20261112 --apply
 python3 tool/verify_office_fidelity.py
 ```
 
