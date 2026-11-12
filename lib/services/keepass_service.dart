@@ -308,7 +308,12 @@ class KeePassSession {
         (customFields != null && _customFieldsChanged(entry, customFields));
     if (changed) {
       _validateTouch(entry);
-      _checkGrowth(fields, history: entry, customFields: customFields);
+      _checkGrowth(
+        fields,
+        history: entry,
+        customFields: customFields,
+        historyEntryDepth: moving ? _xmlDepth(destination) + 1 : null,
+      );
       _appendHistory(entry);
       _setFields(raw, entry, fields);
       if (customFields != null) _setCustomFields(entry, customFields);
@@ -475,22 +480,28 @@ class KeePassSession {
   List<KeePassHistoryInfo> entryHistory(String id) {
     final raw = _openDocument;
     final records = _historyRecords(_entry(id));
+    KeePassHistoryInfo summary(int index) {
+      final fields = _fieldNodes(records[index]);
+      String value(String name) =>
+          fields[name] == null ? '' : raw.textOf(fields[name]!);
+      return KeePassHistoryInfo(
+        index: index,
+        title: value('Title'),
+        userName: value('UserName'),
+        modifiedAt: KdbxTime.fromXmlText(
+          text:
+              records[index]
+                  .getElement('Times')
+                  ?.getElement('LastModificationTime')
+                  ?.innerText ??
+              '',
+          isBinary: raw.header.version.$1 >= 4,
+        ).time,
+      );
+    }
+
     return List.unmodifiable([
-      for (var index = 0; index < records.length; index++)
-        KeePassHistoryInfo(
-          index: index,
-          title: _fieldsOf(records[index]).title,
-          userName: _fieldsOf(records[index]).userName,
-          modifiedAt: KdbxTime.fromXmlText(
-            text:
-                records[index]
-                    .getElement('Times')
-                    ?.getElement('LastModificationTime')
-                    ?.innerText ??
-                '',
-            isBinary: raw.header.version.$1 >= 4,
-          ).time,
-        ),
+      for (var index = 0; index < records.length; index++) summary(index),
     ]);
   }
 
@@ -523,6 +534,7 @@ class KeePassSession {
       _singleText(entry.getElement('Times')!, 'LocationChanged');
     }
     final records = _historyRecords(entry);
+    _checkHistoryDepth(entry);
     if (records.length >= kKeePassMaxHistoryItems) {
       throw const KeePassException(KeePassErrorCode.resourceLimit);
     }
@@ -734,10 +746,8 @@ class KeePassSession {
     final groups = <String, XmlElement>{};
     final entries = <String, XmlElement>{};
     final entryGroups = <String, String>{};
-    final recycleId = doc
-        .getElement('Meta')!
-        .getElement('RecycleBinUUID')
-        ?.innerText;
+    final recycleId = _metaText('RecycleBinUUID');
+    final recycleEnabled = _recycleEnabled;
     void group(
       XmlElement node,
       String parentPath,
@@ -754,8 +764,8 @@ class KeePassSession {
       final nameNode = _singleText(node, 'Name');
       final name = nameNode == null ? '' : raw.textOf(nameNode);
       final path = parentPath.isEmpty ? name : '$parentPath / $name';
-      final isRecycled = recycled || (_recycleEnabled && id == recycleId);
-      if (parentId == null && id == recycleId && _recycleEnabled) {
+      final isRecycled = recycled || (recycleEnabled && id == recycleId);
+      if (parentId == null && id == recycleId && recycleEnabled) {
         throw const KeePassException(KeePassErrorCode.unsupported);
       }
       info.add(
@@ -803,19 +813,19 @@ class KeePassSession {
     _groupInfo = List.unmodifiable(info);
   }
 
+  String? _metaText(String name) {
+    final node = _singleText(
+      _openDocument.xml.rootElement.getElement('Meta')!,
+      name,
+    );
+    return node == null ? null : _openDocument.textOf(node);
+  }
+
   bool get _recycleEnabled =>
-      _openDocument.xml.rootElement
-          .getElement('Meta')!
-          .getElement('RecycleBinEnabled')
-          ?.innerText
-          .toLowerCase() ==
-      'true';
+      _metaText('RecycleBinEnabled')?.toLowerCase() == 'true';
 
   XmlElement? get _recycleGroup {
-    final id = _openDocument.xml.rootElement
-        .getElement('Meta')!
-        .getElement('RecycleBinUUID')
-        ?.innerText;
+    final id = _metaText('RecycleBinUUID');
     return _groups[id];
   }
 
@@ -1139,6 +1149,7 @@ class KeePassSession {
     KeePassEntryFields fields, {
     XmlElement? history,
     List<KeePassCustomField>? customFields,
+    int? historyEntryDepth,
   }) {
     final raw = _openDocument;
     var added = 4096;
@@ -1154,7 +1165,10 @@ class KeePassSession {
       added += utf8.encode(XmlText(value).toXmlString()).length;
       added += ((utf8.encode(value).length + 2) ~/ 3) * 4;
     }
-    if (history != null) added += raw.estimateHistorySnapshot(history);
+    if (history != null) {
+      _checkHistoryDepth(history, atDepth: historyEntryDepth);
+      added += raw.estimateHistorySnapshot(history);
+    }
     _checkCapacity(
       bytes: added,
       events:
@@ -1175,6 +1189,19 @@ class KeePassSession {
       total += _eventCount(child);
     }
     return total;
+  }
+
+  void _checkHistoryDepth(XmlElement entry, {int? atDepth}) {
+    var snapshotDepth = 1;
+    for (final child in entry.childElements.where(
+      (node) => node.name.qualified != 'History',
+    )) {
+      final depth = _subtreeDepth(child) + 1;
+      if (depth > snapshotDepth) snapshotDepth = depth;
+    }
+    if ((atDepth ?? _xmlDepth(entry)) + snapshotDepth + 1 > 64) {
+      throw const KeePassException(KeePassErrorCode.resourceLimit);
+    }
   }
 
   int _snapshotEvents(XmlElement entry) =>

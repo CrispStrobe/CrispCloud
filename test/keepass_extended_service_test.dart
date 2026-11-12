@@ -50,6 +50,90 @@ Matcher _error(KeePassErrorCode code) =>
     isA<KeePassException>().having((error) => error.code, 'code', code);
 
 void main() {
+  test('combined edits and moves reject excessive history depth before any mutation', () async {
+    final raw = await _raw(_fixture('demo.kdbx'));
+    const id = 'vqcoCvE9/k6PSgutKI6snw==';
+    final entry = _node(raw, 'Entry', id);
+    var node = entry;
+    while (node.ancestors.whereType<XmlElement>().length + 1 < 61) {
+      final child = XmlElement(XmlName('FutureNested'));
+      node.children.add(child);
+      node = child;
+    }
+    node.innerText = 'preserve deep opaque data';
+    final session = await _open(await raw.save());
+    final original = session.entryFields(id);
+    final oldGroup = session.entries
+        .firstWhere((item) => item.id == id)
+        .groupId;
+    final historyCount = session.entryHistory(id).length;
+    var group = session.groups.first.id;
+    for (var index = 0; index < 4; index++) {
+      group = session.addGroup(parentId: group, name: 'Destination $index');
+    }
+    expect(
+      () => session.updateEntry(
+        id,
+        const KeePassEntryFields(title: 'Rejected'),
+        groupId: group,
+      ),
+      throwsA(_error(KeePassErrorCode.resourceLimit)),
+    );
+    expect(session.entryFields(id).title, original.title);
+    expect(session.entryHistory(id).length, historyCount);
+    expect(
+      session.entries.firstWhere((item) => item.id == id).groupId,
+      oldGroup,
+    );
+    await _open(await session.save());
+  });
+
+  test('disabled recycling deletes complete subtrees and clears known group references', () async {
+    final initial = await _open();
+    final group = initial.addGroup(
+      parentId: initial.groups.first.id,
+      name: 'Templates',
+    );
+    final child = initial.addGroup(parentId: group, name: 'Nested');
+    final id = initial.addEntry(
+      groupId: child,
+      fields: const KeePassEntryFields(title: 'Deleted'),
+    );
+    final raw = await _raw(await initial.save());
+    final meta = raw.xml.rootElement.getElement('Meta')!;
+    meta.getElement('RecycleBinEnabled')!.innerText = 'False';
+    for (final name in [
+      'EntryTemplatesGroup',
+      'LastSelectedGroup',
+      'LastTopVisibleGroup',
+    ]) {
+      final value = meta.getElement(name) ?? XmlElement(XmlName(name));
+      if (value.parent == null) meta.children.add(value);
+      value.innerText = group;
+    }
+    final session = await _open(await raw.save());
+    session.deleteGroup(group);
+    expect(
+      session.groups.where((item) => item.id == group || item.id == child),
+      isEmpty,
+    );
+    expect(session.entries.where((item) => item.id == id), isEmpty);
+    final saved = await _raw(await session.save());
+    expect(
+      saved.xml.rootElement
+          .getElement('Meta')!
+          .getElement('EntryTemplatesGroup')!
+          .innerText,
+      'AAAAAAAAAAAAAAAAAAAAAA==',
+    );
+    final deleted = saved.xml.rootElement
+        .getElement('Root')!
+        .getElement('DeletedObjects')!
+        .findElements('DeletedObject')
+        .map((item) => item.getElement('UUID')!.innerText);
+    expect(deleted, containsAll([group, child, id]));
+  });
+
   test('group creation, rename, subtree moves and entry moves survive encrypted save', () async {
     final session = await _open();
     final root = session.groups.first;
