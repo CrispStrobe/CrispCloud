@@ -98,4 +98,3 @@ abstract final class HmacBlockTransform {
     return Hmac(sha256, blockKey).convert(writer.bytes).bytes;
   }
 }
-

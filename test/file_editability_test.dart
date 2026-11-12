@@ -40,7 +40,6 @@ void main() {
       'legacy.doc',
       'legacy.dot',
       'message.msg',
-      'passwords.kdbx',
       'legacy.xls',
       'legacy.ppt',
       'original.mobi',
@@ -68,6 +67,19 @@ void main() {
       expect(isTextEditableName('shortcuts.kbdx'), isTrue);
       expect(isTextEditableName('message.msg'), isFalse);
       expect(isTextEditableName('template.dotm'), isFalse);
+    },
+  );
+
+  test(
+    'KeePass vaults use their editor and remain distinct from keyboard XML',
+    () {
+      expect(isKeePassFileName('passwords.KDBX'), isTrue);
+      expect(isEditableInBuiltInEditor('passwords.kdbx'), isTrue);
+      expect(isTextEditableName('passwords.kdbx'), isFalse);
+      expect(isKeePassFileName('shortcuts.kbdx'), isFalse);
+      expect(isKeePassFileName('passwords.kdbx.zip'), isFalse);
+      expect(isLegacyWordFileName('letter.DOC'), isTrue);
+      expect(isLegacyWordFileName('letter.docx'), isFalse);
     },
   );
 

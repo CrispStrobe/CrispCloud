@@ -137,3 +137,8 @@ failure followed by a renamed retry. These suites passed together with the
 captured create-only target tests, which verify sibling placement, retention of
 the original, collision rejection, path validation and disconnected-source
 rejection. Broader viewer/editor integration results are recorded in the PR.
+
+The final combined run passed 360 tests across 28 suites. Its real F4 workflow
+test changes the invoking pane's directory while the conversion dialog is open,
+then verifies that the original DOC is unchanged, the new DOCX is beside that
+original, and the new file opens in `QudsWordEditor` with its captured save target.

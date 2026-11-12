@@ -194,4 +194,3 @@ class KdbxCredentials {
     return ProtectedData.fromBytes(hash);
   }
 }
-

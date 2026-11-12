@@ -36,6 +36,8 @@ import '../l10n/ebook_strings.dart';
 import 'code_highlighting.dart';
 import 'email_message_view.dart';
 import 'internal_viewer_dialog.dart';
+import 'keepass_editor_dialog.dart';
+import '../l10n/keepass_strings.dart';
 
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -61,6 +63,7 @@ enum PreviewType {
   audio,
   office,
   email,
+  keepass,
   font,
   none,
 }
@@ -157,6 +160,8 @@ PreviewType _classifyFile(String name) {
     case 'eml':
     case 'msg':
       return PreviewType.email;
+    case 'kdbx':
+      return PreviewType.keepass;
     case 'doc':
     case 'dot':
     case 'docx':
@@ -303,7 +308,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
       setState(() {});
       return;
     }
-    if (type == PreviewType.none) {
+    if (type == PreviewType.none || type == PreviewType.keepass) {
       setState(() {});
       return;
     }
@@ -686,6 +691,36 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
       );
     }
 
+    if (_classifyFile(file.name) == PreviewType.keepass) {
+      final strings = KeePassStrings(context);
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.lock_outline, size: 40),
+              const SizedBox(height: 12),
+              Text(strings.text('locked'), textAlign: TextAlign.center),
+              const SizedBox(height: 12),
+              FilledButton.icon(
+                key: const ValueKey('preview-open-keepass'),
+                onPressed: () => showKeePassEditorDialog(
+                  context,
+                  ref,
+                  file,
+                  widget.side,
+                  readOnly: true,
+                ),
+                icon: const Icon(Icons.lock_open),
+                label: Text(strings.text('unlock')),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     final email = _emailMessage;
     if (email != null) {
       return EmailMessageView(
@@ -693,13 +728,15 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
         onOpenAttachment: (attachment) {
           final bytes = attachment.bytes;
           if (bytes == null) return;
-          unawaited(showInternalViewer(
-            context,
-            file: file,
-            side: widget.side,
-            bytesOverride: bytes,
-            displayName: attachment.name,
-          ));
+          unawaited(
+            showInternalViewer(
+              context,
+              file: file,
+              side: widget.side,
+              bytesOverride: bytes,
+              displayName: attachment.name,
+            ),
+          );
         },
       );
     }

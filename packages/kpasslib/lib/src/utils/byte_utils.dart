@@ -14,7 +14,8 @@ class BytesReader {
     final low = readUint32();
     final high = readUint32();
     if (high > 0x1fffff) {
-      throw const FormatException('64-bit value exceeds portable integer range');
+      throw const FormatException(
+          '64-bit value exceeds portable integer range');
     }
     return high * 4294967296 + low;
   }
@@ -25,7 +26,8 @@ class BytesReader {
     final high = readInt32();
     final result = high * 4294967296 + low;
     if (result.abs() > 9007199254740991) {
-      throw const FormatException('64-bit value exceeds portable integer range');
+      throw const FormatException(
+          '64-bit value exceeds portable integer range');
     }
     return result;
   }
@@ -97,7 +99,8 @@ class BytesWriter {
       return;
     }
     if (value < 0 || value > 9007199254740991) {
-      throw const FormatException('64-bit value exceeds portable integer range');
+      throw const FormatException(
+          '64-bit value exceeds portable integer range');
     }
     writeUint32(value % 4294967296);
     writeUint32(value ~/ 4294967296);
@@ -106,7 +109,8 @@ class BytesWriter {
   /// Writes signed 64-bit integer.
   writeInt64(int value) {
     if (value.abs() > 9007199254740991) {
-      throw const FormatException('64-bit value exceeds portable integer range');
+      throw const FormatException(
+          '64-bit value exceeds portable integer range');
     }
     final low = value % 4294967296;
     writeUint32(low);
@@ -143,4 +147,3 @@ class BytesWriter {
   ///The result bytes sequence.
   Uint8List get bytes => _builder.toBytes(); //TODO: return without copy
 }
-

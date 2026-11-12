@@ -1,8 +1,9 @@
-# Saved email, Word variants and keyboard profiles
+# Saved email, Word variants and KeePass databases
 
 F3 and the preview pane recognize the formats below. The table describes the
 full F3 viewer; the compact pane shows an email view, extracted Office text, or
-keyboard-profile XML source. F4 uses the existing captured-source editor/save
+keyboard-profile XML source. KeePass previews stay locked until explicitly
+opened. F4 uses the existing captured-source editor/save
 coordinator; opening a file never sends a message, executes a macro, or changes
 its original bytes.
 
@@ -10,14 +11,16 @@ its original bytes.
 | --- | --- | --- |
 | `.eml` | Decoded subject, sender, recipients, date, plain text or safe HTML, attachments | MIME source in the text/code editor |
 | `.msg` | Outlook compound-message headers, plain text or safe HTML, ordinary attachments | Existing explicit hex editor; no structured Outlook writer |
-| `.doc`, `.dot` | Main-document text from unencrypted Word 97–2007 binary files | View-only as a Word document; convert to DOCX in Word/LibreOffice for rich editing |
+| `.doc`, `.dot` | Main-document text from unencrypted Word 97–2007 binary files | Offers a new text-only DOCX beside the original, then opens the new file in the rich editor |
 | `.docm`, `.dotm`, `.dotx` | Existing formatted Word view, text and page rendering | Rich Word editor with macro/template preservation checks before saving |
+| `.kdbx` | Password/key-file unlock, groups, standard fields and entry search | Add/edit/delete entries, preserving other database data and saving encrypted KDBX |
 | `.kbdx` | XML tree and source for Autodesk keyboard-shortcut profiles | XML source in the text/code editor |
 
 `.kbdx` is the Autodesk extension named in its
 [custom-interface documentation](https://help.autodesk.com/cloudhelp/2016/ENU/3DSMax/files/GUID-41CA005E-8B79-4823-A586-C27ABDDD1B2B.htm).
-KeePass password databases use a different extension, `.kdbx`; this change does
-not add a password-vault reader or treat those databases as editable XML.
+KeePass password databases use a different extension, `.kdbx`; they open in the
+dedicated database viewer/editor, never as XML source. See
+[KeePass support and limits](keepass.md).
 
 ## Email
 
@@ -71,6 +74,15 @@ formatting, images, headers, notes or tracked-change semantics. Encrypted files,
 older pre-Word-97 variants and malformed structures produce a clear failure.
 The main story is capped at 4 × 1024 × 1024 UTF-16 code units.
 
+F4 on DOC/DOT, or **Convert to DOCX** in F3, offers an explicitly text-only
+conversion. It creates a new sibling such as `report (text).docx`, rejects
+filename collisions, and opens the verified new file in the Word editor. It
+keeps the original captured account and directory even if the pane navigates
+elsewhere. Formatting, layout, images, objects, headers, notes, tracked-change
+state, macros and signatures are omitted. No installed application or remote
+conversion service is used. See [legacy Word conversion](legacy-word-conversion.md)
+for the implementation, source review and optional desktop-converter discussion.
+
 Macro-enabled documents and templates use the already-vendored Word editor.
 Before editing, the package's main content type must match its extension.
 Before every upload, the preservation guard checks the original main-part path
@@ -90,7 +102,12 @@ validation. Existing Office fidelity limits still apply; see
 
 ## Dependencies and licensing
 
-No new dependency was introduced. Compound-file parsing reuses
+KeePass uses a pinned, MIT-licensed vendored
+[`KPassLib`](../packages/kpasslib/UPSTREAM.md), adapted to preserve the raw XML
+tree and use the existing PointyCastle Argon2 implementation on native and
+JavaScript targets. No native cryptography binaries are bundled.
+
+The email and Word additions require no new package. Compound-file parsing reuses
 `CfbfFile` from the existing MIT-licensed
 [`quds_office_engine`](../packages/quds_office_engine/LICENSE). MIME parsing,
 resource checks and format routing are CrispCloud code. HTML parsing/rendering
@@ -113,13 +130,26 @@ Focused regression suites include:
   a second round trip, macro bytes/relationships, failure guards and DOTM UI.
 - `test/word_format_strings_test.dart`, `test/file_editability_test.dart` and
   `test/internal_viewer_test.dart`: localization, editor routing and MIME types.
+- `test/keepass_service_test.dart`, `test/keepass_crypto_test.dart`,
+  `test/widget/keepass_editor_dialog_test.dart` and
+  `test/keepass_strings_test.dart`: interoperable encrypted database editing,
+  lock/save behavior and localized controls.
+- `test/legacy_word_conversion_test.dart`, `test/legacy_word_copy_target_test.dart`,
+  `test/widget/legacy_word_conversion_dialog_test.dart` and
+  `test/widget/keepass_word_routing_test.dart`: create-only conversion,
+  source identity and the actual viewer/editor handoffs.
 
 Macro fixtures contain synthetic opaque payloads. They establish preservation
 and failure behavior, not macro execution or a Microsoft Word certification.
 
-The development validation run passed 283 tests across 20 focused parser,
-archive, favorites, viewer, preview and editor suites. A separate JavaScript
+The final combined development validation run passed 360 tests across 28 focused
+parser, archive, favorites, viewer, preview, conversion and editor suites. A separate JavaScript
 compilation and execution smoke check passed Unicode EML, MSG/CFB and legacy DOC
 parsing. A full Flutter web release build was not run locally because the cached
 SDK lacks the Flutter web target artifacts; the JavaScript parser check does not
-replace that application build or platform acceptance testing.
+replace that application build or platform acceptance testing. KeePass also
+passes a separate JavaScript open/edit/save/reopen smoke run against public
+KeePass-generated KDBX3/AES, KDBX4/Argon2id/AES and KDBX4/Argon2d/ChaCha20 fixtures.
+The PR records the final combined regression results.
+The last inner-header resource guard was followed by a passing 18-test KeePass
+backend/crypto rerun, including excessive-attachment rejection.

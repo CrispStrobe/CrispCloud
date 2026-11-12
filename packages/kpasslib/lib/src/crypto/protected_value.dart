@@ -9,6 +9,9 @@ class ProtectedData {
   final List<int> _data;
   final List<int> _salt;
 
+  /// Byte length without materializing an unprotected copy.
+  int get length => _data.length;
+
   const ProtectedData._(this._data, this._salt);
 
   /// Constructs [ProtectedData] from [bytes] already protected with [salt].
@@ -64,4 +67,3 @@ class ProtectedData {
         salt: _salt,
       );
 }
-

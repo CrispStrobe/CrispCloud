@@ -115,6 +115,8 @@ class KdbxHeader {
   ProtectSaltGenerator? _saltGenerator;
   var _version = defaultVersion;
   var _hash = <int>[];
+  final _outerFields = <int>{};
+  final _innerFields = <int>{};
 
   KdbxHeader._(this.credentials);
 
@@ -350,6 +352,9 @@ class KdbxHeader {
   }
 
   _writeBinaries(BytesWriter writer) {
+    if (binaries.length > 4096) {
+      throw const ResourceLimitError('inner binary count');
+    }
     for (final item in binaries.all) {
       final binary = item;
       final isProtected = binary is ProtectedBinary;
@@ -458,18 +463,35 @@ class KdbxHeader {
   bool _readField(BytesReader reader, {bool isInner = false}) {
     final id = reader.readUint8();
     final size = _readFieldSize(reader);
+    if ((!isInner && size > 1024 * 1024) ||
+        (isInner && size > 32 * 1024 * 1024)) {
+      throw const ResourceLimitError('header field size');
+    }
+    final fields = isInner ? _innerFields : _outerFields;
+    if (!(isInner && id == _InnerField.binary.id) && !fields.add(id)) {
+      throw const FileCorruptedError('duplicate header field');
+    }
+    if (!isInner &&
+        (version.$1 == 3
+            ? id > 10
+            : !const {0, 1, 2, 3, 4, 7, 11, 12}.contains(id))) {
+      throw const UnsupportedValueError('outer header field');
+    }
     final bytes = reader.readBytes(size);
 
     if (isInner) {
       switch (_InnerField.values.elementAtOrNull(id)) {
         case _InnerField.innerRandomStreamID:
+          if (size != 4) throw const FileCorruptedError('inner stream ID size');
           crsAlgorithm =
               CrsAlgorithm.fromValue(BytesReader(bytes).readUint32());
         case _InnerField.innerRandomStreamKey:
-          protectedStreamKey = bytes;
+          protectedStreamKey = Uint8List.fromList(bytes);
         case _InnerField.binary:
           _readBinary(bytes);
         case _InnerField.endOfHeader:
+          if (size != 0)
+            throw const FileCorruptedError('inner header terminator');
           return false;
         default:
           throw UnsupportedValueError('bad header field: $id');
@@ -477,21 +499,31 @@ class KdbxHeader {
     } else {
       switch (_OuterField.values.elementAtOrNull(id)) {
         case _OuterField.innerRandomStreamID:
+          if (size != 4) throw const FileCorruptedError('inner stream ID size');
           crsAlgorithm =
               CrsAlgorithm.fromValue(BytesReader(bytes).readUint32());
         case _OuterField.endOfHeader:
+          if (!const ListEquality<int>().equals(bytes, _endOfOuterHeader)) {
+            throw const FileCorruptedError('outer header terminator');
+          }
           return false;
         case _OuterField.comment:
           comment = bytes;
         case _OuterField.cipherID:
+          if (size != 16)
+            throw const FileCorruptedError('cipher identifier size');
           dataCipherUuid = KdbxUuid.fromBytes(bytes);
         case _OuterField.compressionFlags:
+          if (size != 4)
+            throw const FileCorruptedError('compression flag size');
           compression = _readCompressionFlags(bytes);
         case _OuterField.masterSeed:
           masterSeed = bytes;
         case _OuterField.transformSeed:
           transformSeed = bytes;
         case _OuterField.transformRounds:
+          if (size != 8)
+            throw const FileCorruptedError('transform rounds size');
           keyEncryptionRounds = BytesReader(bytes).readUint64();
         case _OuterField.encryptionIV:
           encryptionIV = bytes;
@@ -512,15 +544,19 @@ class KdbxHeader {
   }
 
   _readBinary(List<int> bytes) {
+    if (binaries.length >= 4096) {
+      throw const ResourceLimitError('inner binary count');
+    }
     if (bytes.isEmpty || (bytes.first & ~1) != 0) {
       throw const UnsupportedValueError('inner binary flags');
     }
     final isProtected = bytes.first == 1;
-    final data = bytes.slice(1); // Actual data comes after the flag byte
+    final data = Uint8List.fromList(bytes.sublist(1));
 
     final binary = isProtected
         ? ProtectedBinary(protectedData: ProtectedData.fromBytes(data))
         : PlainBinary(data: data, compressed: false);
+    if (isProtected) CryptoUtils.wipeData(data);
 
     binaries.appendFromInnerHeader(binary);
   }
@@ -580,10 +616,19 @@ class KdbxHeader {
     if (crsAlgorithm == null) {
       throw FileCorruptedError('no crs algorithm in header');
     }
+    if (crsAlgorithm != CrsAlgorithm.salsa20 &&
+        crsAlgorithm != CrsAlgorithm.chaCha20) {
+      throw const UnsupportedValueError('inner stream algorithm');
+    }
+    if (protectedStreamKey!.isEmpty) {
+      throw const FileCorruptedError('empty protected stream key');
+    }
+    if (protectedStreamKey!.length > 1024) {
+      throw const ResourceLimitError('protected stream key size');
+    }
   }
 
   _setHash(List<int> data) {
     _hash = sha256.convert(data).bytes;
   }
 }
-

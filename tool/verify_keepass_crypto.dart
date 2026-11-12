@@ -43,5 +43,7 @@ void verifyKeePassArgon2() {
 
 void main() {
   verifyKeePassArgon2();
+  // Standalone CLI verification output contains no database or credentials.
+  // ignore: avoid_print
   print('PASS: KeePass Argon2id known-answer check');
 }

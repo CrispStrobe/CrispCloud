@@ -166,6 +166,9 @@ class ProtectedBinary extends KdbxDataBinary {
 class KdbxBinaries {
   final _map = <int, KdbxDataBinary>{};
 
+  /// Number of indexed binaries without allocating a list of values.
+  int get length => _map.length;
+
   /// The list of all data binaries, contained in the [KdbxBinaries].
   List<KdbxDataBinary> get all => _map.values.toList();
 
@@ -261,4 +264,3 @@ class KdbxBinaries {
     );
   }
 }
-
