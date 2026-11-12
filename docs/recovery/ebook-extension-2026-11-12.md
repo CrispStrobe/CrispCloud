@@ -44,3 +44,13 @@ runtime does not count as a rendering pass; use the hosted browser job.
 - Keep native and browser conversion capabilities explicit per operation.
 - Add focused preservation and interaction tests; retain independent EPUBCheck
   and Foliate checks for edited/rewritten output.
+
+## Incremental progress
+
+- `ec8f8a1`: saved the scope, synchronized the feature branch with current main,
+  and shortened the Chromium probe's temporary path.
+- Structured prose core: 42 tests pass (30 existing and 12 new), analyzer clean.
+  The new API reads immutable text segments and applies a guarded batch to the
+  original XML text nodes. Protected objects and markup survive, stale batches
+  fail atomically, and no-op edits preserve original package bytes. Application
+  integration and widget verification are being completed separately.

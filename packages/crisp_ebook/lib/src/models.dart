@@ -129,6 +129,66 @@ class EpubProseBlock {
   });
 }
 
+/// Recognized display hints. The original XML, including all attributes and
+/// unrecognized styling, remains authoritative when a text run is corrected.
+enum EpubProseMark {
+  bold,
+  italic,
+  underline,
+  strikethrough,
+  code,
+  link,
+  superscript,
+  subscript,
+}
+
+enum EpubProseSegmentKind { text, lineBreak, protectedContent }
+
+/// One original XML text node or an opaque item between text nodes. Segment
+/// indices are valid only with their block's exact resource fingerprint.
+class EpubProseSegment {
+  final int index;
+  final String text;
+  final EpubProseSegmentKind kind;
+  final bool editable;
+  final Set<EpubProseMark> marks;
+  final String? tag;
+  final String? href;
+
+  EpubProseSegment({
+    required this.index,
+    required this.text,
+    required this.kind,
+    required this.editable,
+    Set<EpubProseMark> marks = const {},
+    this.tag,
+    this.href,
+  }) : marks = Set.unmodifiable(marks);
+}
+
+/// An immutable view of an innermost supported XHTML prose block. It never
+/// carries editable XML nodes; applying edits re-resolves and checks the source.
+class EpubStructuredProseBlock {
+  final String resourcePath;
+  final String resourceFingerprint;
+  final int index;
+  final String tag;
+  final String? id;
+  final List<EpubProseSegment> segments;
+
+  EpubStructuredProseBlock({
+    required this.resourcePath,
+    required this.resourceFingerprint,
+    required this.index,
+    required this.tag,
+    this.id,
+    required List<EpubProseSegment> segments,
+  }) : segments = List.unmodifiable(segments);
+
+  bool get editable => segments.any((segment) => segment.editable);
+  String get text => segments.map((segment) => segment.text).join();
+}
+
 class _ManifestItem {
   final String id;
   final String href;
