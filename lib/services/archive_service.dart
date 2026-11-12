@@ -12,6 +12,7 @@ import 'package:path/path.dart' as p;
 
 import '../models/file_item.dart';
 import 'archive_viewer_service.dart';
+import '../utils/system_links.dart';
 
 class ArchiveService {
   static const maxArchiveBytes = 256 * 1024 * 1024;
@@ -189,7 +190,7 @@ class ArchiveService {
     }
     var cursor = destination;
     while (true) {
-      final type = await FileSystemEntity.type(cursor, followLinks: false);
+      final type = await entityTypeTrustingSystemLinks(cursor);
       if (type == FileSystemEntityType.link) {
         throw ArchiveViewException(
           'Extraction will not follow a symbolic link: $cursor',

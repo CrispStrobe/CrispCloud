@@ -16,6 +16,7 @@ import 'native_file_primitives.dart';
 import 'native_metadata.dart';
 import 'storage_identity.dart';
 import 'transfer_spool.dart';
+import '../utils/system_links.dart';
 
 FileOperationBackend fileOperationBackend({
   required PanelSource source,
@@ -156,10 +157,10 @@ class LocalOperationBackend extends FileOperationBackend {
   }
 
   Future<FileItem?> _nativeItemOrNull(String path) async {
-    var type = await FileSystemEntity.type(path, followLinks: false);
+    var type = await entityTypeTrustingSystemLinks(path);
     if (type == FileSystemEntityType.notFound) {
       if (await _confirmMissing(path)) return null;
-      type = await FileSystemEntity.type(path, followLinks: false);
+      type = await entityTypeTrustingSystemLinks(path);
       if (type == FileSystemEntityType.notFound) {
         throw FileSystemException('Cannot inspect the requested item.', path);
       }
@@ -189,7 +190,7 @@ class LocalOperationBackend extends FileOperationBackend {
       );
     }
     if (info.type != type ||
-        await FileSystemEntity.type(path, followLinks: false) != type) {
+        await entityTypeTrustingSystemLinks(path) != type) {
       throw FileSystemException(
         'Item changed while it was being inspected.',
         path,
@@ -246,10 +247,7 @@ class LocalOperationBackend extends FileOperationBackend {
       return service.withFileOperationAccess(path, () async {
         _check();
         if (parent != path) {
-          final parentType = await FileSystemEntity.type(
-            parent,
-            followLinks: false,
-          );
+          final parentType = await entityTypeTrustingSystemLinks(parent);
           if (parentType == FileSystemEntityType.link) {
             throw FileSystemException(
               'Destination parent is a symbolic link.',
@@ -539,7 +537,7 @@ class LocalOperationBackend extends FileOperationBackend {
       _check();
       var ancestor = paths.dirname(path);
       while (true) {
-        if (await FileSystemEntity.type(ancestor, followLinks: false) ==
+        if (await entityTypeTrustingSystemLinks(ancestor) ==
             FileSystemEntityType.link) {
           throw FileSystemException(
             'Destination parent is a symbolic link.',

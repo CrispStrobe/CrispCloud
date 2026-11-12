@@ -611,6 +611,35 @@ void main() {
       );
 
       test(
+        'root-level system links (macOS /var, /tmp) do not block writes',
+        () async {
+          // On macOS the temp root lives under /var -> /private/var.
+          final target = p.join(root.path, 'written.txt');
+          await backend.writeFile(
+            target,
+            Stream.value(utf8.encode('ok')),
+            2,
+            replace: false,
+          );
+          expect(await File(target).readAsString(), 'ok');
+          final viaTmp = Directory('/tmp');
+          if (Platform.isMacOS && await FileSystemEntity.isLink(viaTmp.path)) {
+            final dir = await viaTmp.createTemp('crisp_root_link_');
+            addTearDown(() => dir.delete(recursive: true));
+            final file = p.join(dir.path, 'a.txt');
+            await backend.writeFile(
+              file,
+              Stream.value(utf8.encode('tmp')),
+              3,
+              replace: false,
+            );
+            expect(await File(file).readAsString(), 'tmp');
+          }
+        },
+        skip: Platform.isWindows ? 'No root-level links on Windows.' : false,
+      );
+
+      test(
         'empty-directory cleanup never recursively deletes a populated folder',
         () async {
           final folder = await Directory(p.join(root.path, 'folder')).create();

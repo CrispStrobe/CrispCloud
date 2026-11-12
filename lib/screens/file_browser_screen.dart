@@ -2027,7 +2027,6 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         tooltip: context.commanderTr("Settings"),
         onPressed: () => showSettingsDialog(context),
       ),
-      _buildOverflowMenu(context, auth),
     ];
 
     return [
@@ -2037,6 +2036,9 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           child: Row(mainAxisSize: MainAxisSize.min, children: toolbarButtons),
         ),
       ),
+      // Outside the scrolling row so it stays reachable however many
+      // toolbar buttons there are.
+      _buildOverflowMenu(context, auth),
       const SizedBox(width: 4),
       if (!auth.isConnected)
         TextButton.icon(
