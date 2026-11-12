@@ -1,0 +1,17 @@
+{
+  "status": "passed",
+  "finished_utc": "2026-11-12T15:23:30.355822+00:00",
+  "exit_code": 0,
+  "command": [
+    "dotnet",
+    "/workspace/scratch/07eb2580faa9/runtime/validator/OfficeValidation.dll",
+    "/workspace/scratch/07eb2580faa9/acceptance-expansion/final-host/bounds-fixture-fix/inputs",
+    "/workspace/scratch/07eb2580faa9/acceptance-expansion/final-host/bounds-fixture-fix/schema-report.json"
+  ],
+  "elapsed_seconds": 0.8764562090000254,
+  "files": 3,
+  "failures": 0,
+  "input_manifest_sha256": "adecf7d41906a332b1cbb9aca3cc225901ba9b9fc3001f14703a3c6ad99b42b2",
+  "schema_report_sha256": "9125f657304f502735eff72c761ef7ee3f4f22d87a6e89dae9ef105d3101f9c7",
+  "scope": "Corrected legal minimum slide height in the authored host picture-boundary fixture; actual image geometry and bytes still checked across three saves."
+}

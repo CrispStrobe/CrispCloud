@@ -1,0 +1,36 @@
+{
+  "base_commit": "7e8de191ec434382ac10d7cfd17b53cf29d13a77",
+  "test_sha256": "690528becbfbc8dc9b129acb99d031782bb65745ea50f9dd82d43fea82f70ed8",
+  "source_pin": "2d6529e52f389e8c491ce75331d9efe6bd59a821",
+  "files": [
+    {
+      "path": "slide-picture-bounds-1.pptx",
+      "bytes": 6479,
+      "sha256": "835c640f408dc76d2c6ea7b7aa62a25af77c0c7ad36761071feb3fdd8efb9a9a",
+      "slide_size_emu": {
+        "cx": "1270000",
+        "cy": "914400"
+      }
+    },
+    {
+      "path": "slide-picture-bounds-2.pptx",
+      "bytes": 6487,
+      "sha256": "3434bd353c8e1f2c253225448c7c73a8edb87ecd962dad2af51f6b1db18fc5c9",
+      "slide_size_emu": {
+        "cx": "1270000",
+        "cy": "914400"
+      }
+    },
+    {
+      "path": "slide-picture-bounds-3.pptx",
+      "bytes": 6487,
+      "sha256": "e591a1edf72097bda7c51a5e515d7edceaa50737ae9cbb78779eb193a027b1cf",
+      "slide_size_emu": {
+        "cx": "1270000",
+        "cy": "914400"
+      }
+    }
+  ],
+  "validator_source_sha256": "4d41f286855ed11a12ecdf0641773c33285847180a3e5cdbf43ce2385a099880",
+  "validator_assembly_sha256": "77b80ecfa6082d482f18c7646582645ae94d0ee70e724de5e2e3bb5bbbb9ef38"
+}

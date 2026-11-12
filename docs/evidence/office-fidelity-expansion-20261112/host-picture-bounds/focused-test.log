@@ -1,0 +1,6 @@
+CI SQLite: libsqlite3.so, version 3.46.1, foreign keys/transactions verified; optional FTS5=True
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/07eb2580faa9/crisp-expansion/test/widget/office_picture_fidelity_test.dart
+00:00 +0: Slide picture stays within a small imported slide
+00:01 +1: All tests passed!

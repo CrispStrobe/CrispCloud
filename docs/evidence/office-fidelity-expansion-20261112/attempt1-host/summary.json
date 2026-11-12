@@ -1,0 +1,25 @@
+{
+  "status": "failed_after_test_success",
+  "app_commit": "e719ef0165bf01852a9def093f65adab1c6186e6",
+  "source_commit": "2d6529e52f389e8c491ce75331d9efe6bd59a821",
+  "runner_status": "failed",
+  "exit_code": 1,
+  "source_unchanged": true,
+  "test_completion_markers": [
+    "00:36 +1147: All tests passed!",
+    "01:46 +180: All tests passed!"
+  ],
+  "failure_line": [
+    "cp: cannot create regular file 'build/fidelity-host/coverage/gaps.json': No such file or directory"
+  ],
+  "cause": "The external OFFICE_HOST_COVERAGE_DIR does not implicitly create the repository aggregate coverage directory in a fresh worktree. The gate attempted to copy its already verified summary before creating that destination.",
+  "bounded_fix": "Create build/fidelity-host/coverage immediately before copying the verified summary. No test, coverage or inventory requirement changes.",
+  "local_fix_commit": "e826d0a833295a91a6ffe25b1986ad8cc6857e13",
+  "artifacts_sha256": {
+    "producer/producer-acceptance.json": "c33b0a74098018a1494a080986089217798401ed8b65a8ed2cba4f0626cbc484",
+    "producer/host-gate.log": "df90ac4ea22d5be545da2a090528c5cb851362a77b50570559b387c472aee25e",
+    "producer/host-coverage-run/collection-receipt.json": "0baa8a0eb23751fd5421d745138fe64e8584a8c65638c5b964bf76f8e173ee37",
+    "producer/host-coverage-run/gaps.json": "0a0a38bdf12d36493e0d83e2560dd3174d2d7b9a6958099b6a39cde67363580f",
+    "producer/host-coverage-run/lcov.info": "d8e6dea9f0ae57992d4e7e810500aeb210865f56bf1a24ef6dd732bb031a135b"
+  }
+}

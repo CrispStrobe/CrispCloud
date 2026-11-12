@@ -1,0 +1,21 @@
+{
+  "Files": 3,
+  "Failures": 0,
+  "Reports": [
+    {
+      "File": "/workspace/scratch/07eb2580faa9/acceptance-expansion/final-host/bounds-fixture-fix/inputs/slide-picture-bounds-1.pptx",
+      "Sha256": "835c640f408dc76d2c6ea7b7aa62a25af77c0c7ad36761071feb3fdd8efb9a9a",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/07eb2580faa9/acceptance-expansion/final-host/bounds-fixture-fix/inputs/slide-picture-bounds-2.pptx",
+      "Sha256": "3434bd353c8e1f2c253225448c7c73a8edb87ecd962dad2af51f6b1db18fc5c9",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/07eb2580faa9/acceptance-expansion/final-host/bounds-fixture-fix/inputs/slide-picture-bounds-3.pptx",
+      "Sha256": "e591a1edf72097bda7c51a5e515d7edceaa50737ae9cbb78779eb193a027b1cf",
+      "Errors": []
+    }
+  ]
+}

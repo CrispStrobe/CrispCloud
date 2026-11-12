@@ -1,0 +1,57 @@
+{
+  "status": "historical_sdk_failure",
+  "app_commit": "8b96fe9717196aea0ef678c2690aa1fb1195e4a5",
+  "source_commit": "2d6529e52f389e8c491ce75331d9efe6bd59a821",
+  "sdk_files": 468,
+  "sdk_failures": 3,
+  "failed_files": [
+    {
+      "File": "/workspace/scratch/07eb2580faa9/acceptance-expansion/final-host/retry/external/inputs/build/fidelity-host/slide-picture-bounds-1.pptx",
+      "Sha256": "98e552ee21c38a60b5132ef1fcca218f48f2315c7bc8265a53f699bb018a42a1",
+      "Errors": [
+        {
+          "Id": "Sch_AttributeValueDataTypeDetailed",
+          "Description": " The MinInclusive constraint failed. The value must be greater than or equal to 914400.",
+          "Type": "Schema",
+          "Part": "/ppt/presentation.xml",
+          "XPath": "/p:presentation[1]/p:sldSz[1]"
+        }
+      ]
+    },
+    {
+      "File": "/workspace/scratch/07eb2580faa9/acceptance-expansion/final-host/retry/external/inputs/build/fidelity-host/slide-picture-bounds-2.pptx",
+      "Sha256": "b310a299103951b5147cde468f7b0825c58249a9d07dec706dde4972951bc6aa",
+      "Errors": [
+        {
+          "Id": "Sch_AttributeValueDataTypeDetailed",
+          "Description": " The MinInclusive constraint failed. The value must be greater than or equal to 914400.",
+          "Type": "Schema",
+          "Part": "/ppt/presentation.xml",
+          "XPath": "/p:presentation[1]/p:sldSz[1]"
+        }
+      ]
+    },
+    {
+      "File": "/workspace/scratch/07eb2580faa9/acceptance-expansion/final-host/retry/external/inputs/build/fidelity-host/slide-picture-bounds-3.pptx",
+      "Sha256": "bdc5cac881a3bec3345c32626a7bed6d9df75d2eccf965c3782e0d9360820919",
+      "Errors": [
+        {
+          "Id": "Sch_AttributeValueDataTypeDetailed",
+          "Description": " The MinInclusive constraint failed. The value must be greater than or equal to 914400.",
+          "Type": "Schema",
+          "Part": "/ppt/presentation.xml",
+          "XPath": "/p:presentation[1]/p:sldSz[1]"
+        }
+      ]
+    }
+  ],
+  "correction": {
+    "file": "test/widget/office_picture_fidelity_test.dart",
+    "old_slide_height_emu": 762000,
+    "new_slide_height_emu": 914400,
+    "old_expected_picture_y_emu": 76200,
+    "new_expected_picture_y_emu": 91440,
+    "production_code_changed": false
+  },
+  "note": "The prior complete producer passed. Independent schema validation identified an invalid authored fixture height. This focused receipt proves all three corrected exports pass SDK validation; a fresh final commit acceptance remains required."
+}
