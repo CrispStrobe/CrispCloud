@@ -36,15 +36,21 @@ ZIP/XML independently of Quds deserialization. Seventeen widget tests cover:
 Ten scenarios produce three save/reopen exports each. All 30 paths are
 mandatory entries in `tool/office_host_evidence.json`, and the test is part of
 `tool/check_office_fidelity.sh`. The normal tests never regenerate expected
-formatting from the exporter. A deliberate local corruption that overwrote
-the complex-script font was rejected by the XML assertion (`Amiri` versus
-`Cambria`); the corruption was then removed.
+formatting from the exporter. The independent XML assertions include distinct
+Latin and complex-script font names (`Cambria` and `Amiri`).
 
 The focused 17-test run passes under the app's pinned Flutter 3.47.8.
 Targeted analysis reports no warnings or errors. Full host/schema acceptance
 belongs to this feature branch's final execution evidence. This semantic
 coverage does not claim complete font fallback, mixed-value dialog UI, native
 Word rendering equivalence or character-style authoring support.
+
+The resumed integration also retains the shared custom-tab dialog and its
+existing save/history regressions. The combined 70-case host cohort passed
+69 cases initially; its remaining upload case passed after awaiting the new
+picture decoder and correcting its independent expectation for the authored
+2 by 2 pixel PNG (1.5 by 1.5 points at 96 dpi). These are focused integration
+results, separate from the final source-pinned host gate.
 
 ```sh
 flutter test test/widget/office_font_fidelity_test.dart

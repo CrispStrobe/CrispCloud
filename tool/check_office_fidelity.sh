@@ -34,9 +34,9 @@ python3 tool/collect_office_host_coverage.py "$office_host_coverage_dir" -- \
   test/widget/office_paragraph_fidelity_test.dart \
   test/widget/office_font_fidelity_test.dart \
   test/widget/office_picture_fidelity_test.dart \
+  test/widget/office_save_fidelity_test.dart \
   test/widget/legacy_word_conversion_dialog_test.dart \
-  test/widget/legacy_word_routing_test.dart \
-  test/widget/office_save_fidelity_test.dart
+  test/widget/legacy_word_routing_test.dart
 python3 -m unittest discover -s tool -p 'test*office*coverage.py'
 python3 tool/office_host_coverage.py "$office_host_coverage_dir/lcov.info" \
   --output "$office_host_coverage_dir/gaps.json" --require-receipt --require-all-sources

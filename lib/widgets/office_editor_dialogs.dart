@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 
 import '../l10n/misc_ui_strings.dart';
+
 import 'package:flutter/services.dart';
 import 'package:quds_office_editor/quds_office_editor.dart';
 
@@ -13,12 +14,42 @@ import '../l10n/office_editor_strings.dart';
 
 /// Office-like palette (RRGGBB, no leading '#').
 const List<String> kOfficePalette = <String>[
-  '000000', '1F1F1F', '3F3F3F', '5F5F5F', '7F7F7F', '9F9F9F', 'BFBFBF',
-  'DFDFDF', 'FFFFFF', 'F2F2F2',
-  'C00000', 'FF0000', 'FF7C80', 'FFC000', 'FFD966', 'FFF2CC', 'FFFF00',
-  '92D050', '00B050', '00B0F0', '0070C0', '002060', '7030A0', 'C65911',
-  'E36C0A', 'F4B183', 'A9D18E', '548235', '1F4E79', '2E75B6', 'BDD7EE',
-  'D9E2F3', 'FCE4D6', 'E2EFDA', 'FFF2CC', 'EDEDED',
+  '000000',
+  '1F1F1F',
+  '3F3F3F',
+  '5F5F5F',
+  '7F7F7F',
+  '9F9F9F',
+  'BFBFBF',
+  'DFDFDF',
+  'FFFFFF',
+  'F2F2F2',
+  'C00000',
+  'FF0000',
+  'FF7C80',
+  'FFC000',
+  'FFD966',
+  'FFF2CC',
+  'FFFF00',
+  '92D050',
+  '00B050',
+  '00B0F0',
+  '0070C0',
+  '002060',
+  '7030A0',
+  'C65911',
+  'E36C0A',
+  'F4B183',
+  'A9D18E',
+  '548235',
+  '1F4E79',
+  '2E75B6',
+  'BDD7EE',
+  'D9E2F3',
+  'FCE4D6',
+  'E2EFDA',
+  'FFF2CC',
+  'EDEDED',
 ];
 
 const List<String> kOfficeFontFamilies = <String>[
@@ -44,8 +75,33 @@ const List<String> kOfficeFontFamilies = <String>[
 ];
 
 const List<int> kOfficeFontSizes = <int>[
-  6, 7, 8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 26, 28, 32, 36, 40, 44,
-  48, 54, 60, 66, 72, 80, 88, 96,
+  6,
+  7,
+  8,
+  9,
+  10,
+  11,
+  12,
+  14,
+  16,
+  18,
+  20,
+  22,
+  24,
+  26,
+  28,
+  32,
+  36,
+  40,
+  44,
+  48,
+  54,
+  60,
+  66,
+  72,
+  80,
+  88,
+  96,
 ];
 
 String _normalizeHex(String raw) {
@@ -70,8 +126,9 @@ Future<String?> showOfficeColorPicker(
   bool allowNone = false,
   String noneLabel = 'Automatic',
 }) {
-  final TextEditingController hexController =
-      TextEditingController(text: initial ?? '');
+  final TextEditingController hexController = TextEditingController(
+    text: initial ?? '',
+  );
   String selected = _normalizeHex(initial ?? '');
   String error = '';
 
@@ -242,57 +299,61 @@ Future<WordFontChoice?> showWordFontDialog(
                         Expanded(
                           flex: 3,
                           child: Builder(
-                          builder: (BuildContext context) {
-                            final List<String> families = <String>[
-                              if (!kOfficeFontFamilies.contains(family)) family,
-                              ...kOfficeFontFamilies,
-                            ];
-                            return PopupMenuButton<String>(
-                              tooltip: ctx.tr('Family'),
-                              onSelected: (String value) => setState(() {
-                                family = value;
-                                edited.add(WordFontProperty.family);
-                              }),
-                              itemBuilder: (BuildContext context) =>
-                                  <PopupMenuEntry<String>>[
-                                for (final String f in families)
-                                  PopupMenuItem<String>(
-                                    value: f,
-                                    height: 32,
-                                    child: Text(
-                                      f,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        fontFamily: f,
-                                        fontSize: 13,
-                                      ),
-                                    ),
+                            builder: (BuildContext context) {
+                              final List<String> families = <String>[
+                                if (!kOfficeFontFamilies.contains(family))
+                                  family,
+                                ...kOfficeFontFamilies,
+                              ];
+                              return PopupMenuButton<String>(
+                                tooltip: ctx.tr('Family'),
+                                onSelected: (String value) => setState(() {
+                                  family = value;
+                                  edited.add(WordFontProperty.family);
+                                }),
+                                itemBuilder: (BuildContext context) =>
+                                    <PopupMenuEntry<String>>[
+                                      for (final String f in families)
+                                        PopupMenuItem<String>(
+                                          value: f,
+                                          height: 32,
+                                          child: Text(
+                                            f,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              fontFamily: f,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                child: InputDecorator(
+                                  decoration: InputDecoration(
+                                    labelText: ctx.tr('Family'),
+                                    isDense: true,
                                   ),
-                              ],
-                              child: InputDecorator(
-                                decoration: InputDecoration(
-                                  labelText: ctx.tr('Family'),
-                                  isDense: true,
-                                ),
-                                child: Row(
-                                  children: <Widget>[
-                                    Expanded(
-                                      child: Text(
-                                        family,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          fontFamily: family,
-                                          fontSize: 13,
+                                  child: Row(
+                                    children: <Widget>[
+                                      Expanded(
+                                        child: Text(
+                                          family,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontFamily: family,
+                                            fontSize: 13,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    const Icon(Icons.arrow_drop_down, size: 18),
-                                  ],
+                                      const Icon(
+                                        Icons.arrow_drop_down,
+                                        size: 18,
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            );
-                          },
-                        ),
+                              );
+                            },
+                          ),
                         ),
                         SizedBox(
                           width: 100,
@@ -307,9 +368,11 @@ Future<WordFontChoice?> showWordFontDialog(
                               for (final double s in sizes)
                                 DropdownMenuItem<double>(
                                   value: s,
-                                  child: Text(s == s.roundToDouble()
-                                      ? s.toInt().toString()
-                                      : s.toString()),
+                                  child: Text(
+                                    s == s.roundToDouble()
+                                        ? s.toInt().toString()
+                                        : s.toString(),
+                                  ),
                                 ),
                             ],
                             onChanged: (double? value) {
@@ -581,7 +644,9 @@ class _ColorField extends StatelessWidget {
               width: 18,
               height: 18,
               decoration: BoxDecoration(
-                color: color.isEmpty ? Colors.transparent : _colorFromHex(color),
+                color: color.isEmpty
+                    ? Colors.transparent
+                    : _colorFromHex(color),
                 border: Border.all(color: Theme.of(context).dividerColor),
               ),
             ),
@@ -931,10 +996,12 @@ Future<({int rows, int columns})?> showInsertTableDialog(
   int rows = 3,
   int columns = 3,
 }) {
-  final TextEditingController rowController =
-      TextEditingController(text: '$rows');
-  final TextEditingController colController =
-      TextEditingController(text: '$columns');
+  final TextEditingController rowController = TextEditingController(
+    text: '$rows',
+  );
+  final TextEditingController colController = TextEditingController(
+    text: '$columns',
+  );
   return showDialog<({int rows, int columns})>(
     context: context,
     builder: (BuildContext ctx) => AlertDialog(
@@ -972,10 +1039,18 @@ Future<({int rows, int columns})?> showInsertTableDialog(
         ),
         ElevatedButton(
           onPressed: () {
-            final int r = (int.tryParse(rowController.text) ?? rows).clamp(1, 50);
-            final int c =
-                (int.tryParse(colController.text) ?? columns).clamp(1, 20);
-            Navigator.pop<({int rows, int columns})>(ctx, (rows: r, columns: c));
+            final int r = (int.tryParse(rowController.text) ?? rows).clamp(
+              1,
+              50,
+            );
+            final int c = (int.tryParse(colController.text) ?? columns).clamp(
+              1,
+              20,
+            );
+            Navigator.pop<({int rows, int columns})>(ctx, (
+              rows: r,
+              columns: c,
+            ));
           },
           child: Text(ctx.tr('Insert')),
         ),
@@ -989,8 +1064,9 @@ Future<({String text, String url})?> showHyperlinkDialog(
   String text = '',
   String url = 'https://',
 }) {
-  final TextEditingController textController =
-      TextEditingController(text: text);
+  final TextEditingController textController = TextEditingController(
+    text: text,
+  );
   final TextEditingController urlController = TextEditingController(text: url);
   return showDialog<({String text, String url})>(
     context: context,
@@ -1029,10 +1105,10 @@ Future<({String text, String url})?> showHyperlinkDialog(
           onPressed: () {
             final String address = urlController.text.trim();
             if (address.isEmpty) return;
-            Navigator.pop<({String text, String url})>(
-              ctx,
-              (text: textController.text.trim(), url: address),
-            );
+            Navigator.pop<({String text, String url})>(ctx, (
+              text: textController.text.trim(),
+              url: address,
+            ));
           },
           child: Text(ctx.tr('Insert')),
         ),
@@ -1114,10 +1190,7 @@ Widget _inchField(TextEditingController controller, String label) {
   return TextField(
     controller: controller,
     keyboardType: const TextInputType.numberWithOptions(decimal: true),
-    decoration: InputDecoration(
-      labelText: label,
-      isDense: true,
-    ),
+    decoration: InputDecoration(labelText: label, isDense: true),
   );
 }
 
@@ -1131,8 +1204,7 @@ Future<String?> showOfficePromptDialog(
   bool trimResult = true,
   String confirmLabel = 'OK',
 }) {
-  final TextEditingController controller =
-      TextEditingController(text: initial);
+  final TextEditingController controller = TextEditingController(text: initial);
   return showDialog<String>(
     context: context,
     builder: (BuildContext ctx) => AlertDialog(
@@ -1158,7 +1230,8 @@ Future<String?> showOfficePromptDialog(
         ),
         ElevatedButton(
           onPressed: () => Navigator.pop(
-            ctx, trimResult ? controller.text.trim() : controller.text,
+            ctx,
+            trimResult ? controller.text.trim() : controller.text,
           ),
           child: Text(confirmLabel),
         ),
@@ -1172,10 +1245,12 @@ Future<({String text, String author})?> showCommentDialog(
   String text = '',
   String author = 'CrispCloud',
 }) {
-  final TextEditingController textController =
-      TextEditingController(text: text);
-  final TextEditingController authorController =
-      TextEditingController(text: author);
+  final TextEditingController textController = TextEditingController(
+    text: text,
+  );
+  final TextEditingController authorController = TextEditingController(
+    text: author,
+  );
   return showDialog<({String text, String author})>(
     context: context,
     builder: (BuildContext ctx) => AlertDialog(
@@ -1215,10 +1290,10 @@ Future<({String text, String author})?> showCommentDialog(
           onPressed: () {
             final String body = textController.text.trim();
             if (body.isEmpty) return;
-            Navigator.pop<({String text, String author})>(
-              ctx,
-              (text: body, author: authorController.text.trim()),
-            );
+            Navigator.pop<({String text, String author})>(ctx, (
+              text: body,
+              author: authorController.text.trim(),
+            ));
           },
           child: Text(ctx.tr('Add')),
         ),

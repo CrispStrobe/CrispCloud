@@ -3,7 +3,6 @@ import hashlib
 from pathlib import Path
 import tempfile
 import unittest
-from xml.etree import ElementTree
 from unittest.mock import patch
 from zipfile import ZipFile
 
@@ -13,20 +12,13 @@ import office_host_evidence as evidence
 def package(file, extension=None, main=None):
     extension = extension or file.suffix
     kind, namespace, local = evidence.MAIN_TYPES[extension]
-    main = main or ({'.xlsx': 'xl/workbook.xml', '.pptx': 'ppt/presentation.xml'}.get(extension, 'word/document.xml'))
-    content_type = {
-        '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml',
-        '.docm': 'application/vnd.ms-word.document.macroEnabled.main+xml',
-        '.dotx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.template.main+xml',
-        '.dotm': 'application/vnd.ms-word.template.macroEnabledTemplate.main+xml',
-        '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml',
-        '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml',
-    }[extension]
+    main = main or {'.docx': 'word/document.xml', '.xlsx': 'xl/workbook.xml',
+                    '.pptx': 'ppt/presentation.xml'}.get(extension, 'word/document.xml')
     file.parent.mkdir(parents=True, exist_ok=True)
     with ZipFile(file, 'w') as archive:
         archive.writestr('[Content_Types].xml',
             f'<Types xmlns="{evidence.CONTENT_TYPES}"><Override PartName="/{main}" '
-            f'ContentType="{content_type}"/></Types>')
+            f'ContentType="{evidence.MAIN_CONTENT_TYPES[extension]}"/></Types>')
         archive.writestr('_rels/.rels',
             f'<Relationships xmlns="{evidence.PACKAGE_REL}"><Relationship Id="main" '
             'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" '
@@ -87,27 +79,18 @@ class HostEvidenceTest(unittest.TestCase):
         (self.root / evidence.expected_paths()[0]).write_bytes(b'not a zip')
         self.assertTrue(evidence.inspect(self.root)['failures'])
 
-    def test_each_office_extension_requires_its_own_main_part(self):
+    def test_each_office_extension_requires_its_own_format(self):
         for extension in evidence.OFFICE:
             with self.subTest(extension=extension):
                 self.populate()
                 name = next(name for name in evidence.expected_paths()
                             if Path(name).suffix == extension)
-                with ZipFile(self.root / name) as original:
-                    metadata = {part: original.read(part) for part in ('[Content_Types].xml', '_rels/.rels')}
-                with ZipFile(self.root / name, 'w') as archive:
-                    for part, data in metadata.items():
-                        archive.writestr(part, data)
-                    wrong = ('.xlsx' if evidence.MAIN_PARTS[extension][0]
-                             == 'word/document.xml' else '.docx')
-                    main_part, root_tag = evidence.MAIN_PARTS[wrong]
-                    archive.writestr(main_part, ElementTree.tostring(
-                        ElementTree.Element(root_tag)))
+                wrong = '.xlsx' if extension != '.xlsx' else '.docx'
+                package(self.root / name, extension=wrong)
                 failures = evidence.inspect(self.root)['failures']
                 self.assertEqual(len(failures), 1)
-                self.assertIn(f'{name}: invalid {extension[1:].upper()}',
-                              failures[0])
-                self.assertIn('missing main part', failures[0])
+                self.assertIn(f'{name}: invalid Office package', failures[0])
+                self.assertIn('content type', failures[0])
 
     def test_main_parts_require_valid_xml_with_the_correct_root(self):
         for extension in evidence.OFFICE:
@@ -116,17 +99,17 @@ class HostEvidenceTest(unittest.TestCase):
                     self.populate()
                     name = next(name for name in evidence.expected_paths()
                                 if Path(name).suffix == extension)
-                    main_part, _ = evidence.MAIN_PARTS[extension]
-                    with ZipFile(self.root / name) as original:
-                        metadata = {part: original.read(part) for part in ('[Content_Types].xml', '_rels/.rels')}
-                    with ZipFile(self.root / name, 'w') as archive:
-                        for part, data in metadata.items():
+                    file = self.root / name
+                    main = evidence.inspect_package(file)
+                    with ZipFile(file) as archive:
+                        parts = {part: archive.read(part) for part in archive.namelist()}
+                    parts[main] = content.encode()
+                    with ZipFile(file, 'w') as archive:
+                        for part, data in parts.items():
                             archive.writestr(part, data)
-                        archive.writestr(main_part, content)
                     failures = evidence.inspect(self.root)['failures']
                     self.assertEqual(len(failures), 1)
-                    self.assertIn(f'{name}: invalid {extension[1:].upper()}',
-                                  failures[0])
+                    self.assertIn(f'{name}: invalid Office package', failures[0])
 
     def test_external_file_cannot_satisfy_an_artifact(self):
         self.populate()
@@ -176,7 +159,7 @@ class HostEvidenceTest(unittest.TestCase):
                 self.assertEqual(evidence.inspect_package(file), 'documents/main.xml')
 
     def test_renamed_docx_cannot_satisfy_a_presentation_or_workbook(self):
-        for extension in ('.pptx', '.xlsx'):
+        for extension in ('.pptx', '.xlsx', '.docm', '.dotx', '.dotm'):
             with self.subTest(format=extension):
                 file = self.root / ('renamed' + extension)
                 package(file, extension='.docx')

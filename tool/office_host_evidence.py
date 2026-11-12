@@ -12,7 +12,6 @@ from zipfile import BadZipFile, ZipFile
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = Path(__file__).with_suffix('.json')
 REPORT = 'build/fidelity-host/inventory.json'
-OFFICE = {'.docx', '.xlsx', '.pptx'}
 PACKAGE_REL = 'http://schemas.openxmlformats.org/package/2006/relationships'
 CONTENT_TYPES = 'http://schemas.openxmlformats.org/package/2006/content-types'
 MAIN_TYPES = {
@@ -20,25 +19,18 @@ MAIN_TYPES = {
     '.xlsx': ('spreadsheetml.sheet', 'spreadsheetml', 'workbook'),
     '.pptx': ('presentationml.presentation', 'presentationml', 'presentation'),
 }
-
-MAIN_TYPES.update({
-    '.docm': MAIN_TYPES['.docx'],
-    '.dotx': ('wordprocessingml.template', 'wordprocessingml', 'document'),
-    '.dotm': MAIN_TYPES['.docx'],
-})
-OFFICE = set(MAIN_TYPES)
-MAIN_PARTS = {
-    ext: ({'.docx': 'word/document.xml', '.docm': 'word/document.xml', '.dotx': 'word/document.xml', '.dotm': 'word/document.xml', '.xlsx': 'xl/workbook.xml', '.pptx': 'ppt/presentation.xml'}[ext],
-          f'{{http://schemas.openxmlformats.org/{space}/2006/main}}{local}')
-    for ext, (_, space, local) in MAIN_TYPES.items()
+MAIN_CONTENT_TYPES = {
+    extension: f'application/vnd.openxmlformats-officedocument.{kind}.main+xml'
+    for extension, (kind, _, _) in MAIN_TYPES.items()
 }
-
-def main_content_type(extension):
-    if extension == '.docm':
-        return 'application/vnd.ms-word.document.macroEnabled.main+xml'
-    if extension == '.dotm':
-        return 'application/vnd.ms-word.template.macroEnabledTemplate.main+xml'
-    return f'application/vnd.openxmlformats-officedocument.{MAIN_TYPES[extension][0]}.main+xml'
+for extension, content_type in {
+    '.docm': 'application/vnd.ms-word.document.macroEnabled.main+xml',
+    '.dotx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.template.main+xml',
+    '.dotm': 'application/vnd.ms-word.template.macroEnabledTemplate.main+xml',
+}.items():
+    MAIN_TYPES[extension] = MAIN_TYPES['.docx']
+    MAIN_CONTENT_TYPES[extension] = content_type
+OFFICE = set(MAIN_TYPES)
 
 
 def expected_paths():
@@ -53,7 +45,8 @@ def expected_paths():
         path = PurePosixPath(name)
         if (path.is_absolute() or '..' in path.parts or '\\' in name
                 or str(path) != name or path.suffix not in OFFICE
-                or path.parts[:2] not in (('build', 'fidelity-host'), ('build', 'fidelity'), ('build', 'fidelity-custom-tabs'))):
+                or path.parts[:2] not in (('build', 'fidelity-host'), ('build', 'fidelity'),
+                                          ('build', 'fidelity-custom-tabs'))):
             raise ValueError(f'Invalid host evidence path: {name}')
     return paths
 
@@ -91,16 +84,14 @@ def inspect_package(file):
         if not decoded or '\\' in decoded:
             raise ValueError('invalid Office main-part target')
         main = posixpath.normpath(decoded.lstrip('/'))
-        if main in ('.', '..') or main.startswith('../'):
-            raise ValueError('escaping Office main part')
-        if main not in names:
-            raise ValueError(f'missing main part {main}')
+        if main in ('.', '..') or main.startswith('../') or main not in names:
+            raise ValueError('missing or escaping Office main part')
         types = ET.fromstring(archive.read('[Content_Types].xml'))
         if types.tag != f'{{{CONTENT_TYPES}}}Types':
             raise ValueError('invalid content-types namespace')
         matches = [entry.get('ContentType') for entry in types.findall(f'{{{CONTENT_TYPES}}}Override')
                    if unquote(entry.get('PartName', '')).lstrip('/') == main]
-        expected_type = main_content_type(file.suffix.lower())
+        expected_type = MAIN_CONTENT_TYPES[file.suffix.lower()]
         if matches != [expected_type]:
             raise ValueError('Office main-part content type does not match filename format')
         document = ET.fromstring(archive.read(main))
@@ -153,12 +144,11 @@ def inspect(root):
             failures.append(f'{name}: file escapes the evidence directory')
             continue
         used_bases.add(file.parents[len(PurePosixPath(name).parts) - 1])
-        extension = PurePosixPath(name).suffix
         try:
             main_part = inspect_package(file)
             content = file.read_bytes()
         except (BadZipFile, OSError, ValueError, ET.ParseError, KeyError) as error:
-            failures.append(f'{name}: invalid {extension[1:].upper()}: {error}')
+            failures.append(f'{name}: invalid Office package: {error}')
             continue
         files.append({
             'path': name,

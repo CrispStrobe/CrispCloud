@@ -345,7 +345,8 @@ void _assertRibbonExport(Uint8List bytes, Uint8List pickedImage) {
         )
         .map((node) => (node.getAttribute('cx'), node.getAttribute('cy'))),
     contains(('19050', '19050')),
-    reason: 'A 2x2 pixel picture retains its square ratio at 96 dpi.',
+    reason:
+        'The authored 2 by 2 pixel PNG stays square at 1.5 points at 96 dpi.',
   );
   // Read the authored PNG header independently of the production image decoder.
   expect(pickedImage.take(8), [137, 80, 78, 71, 13, 10, 26, 10]);
@@ -643,7 +644,7 @@ void main() {
         await _pumpUntil(
           tester,
           () => controller.document.visuals.length == 2,
-          'The picked picture was not decoded and inserted into the document.',
+          'The decoded ribbon picture was not inserted.',
         );
         expect(controller.document.visuals, hasLength(2));
 

@@ -38,10 +38,10 @@ insertion, slide switching, undo and redo.
 Six Word and four slide scenarios produce three saves/reopens each. The 18 DOCX
 and 12 PPTX paths are mandatory in `tool/office_host_evidence.json`. Independent
 ZIP/XML readers verify actual extents, transforms, owning relationships and
-original media bytes. A deliberate fixed-height corruption is rejected by an
-extent assertion, and normal expectations are never refreshed from output.
+original media bytes. Normal expectations are fixed from the authored input
+dimensions and are never refreshed from output.
 
-The inventory now supports DOCX, XLSX and PPTX, follows the actual OPC main-part
+The inventory supports DOCX, DOCM, DOTX, DOTM, XLSX and PPTX, follows the actual OPC main-part
 relationship and checks format-specific content type and XML root. A Word file
 renamed to PPTX cannot satisfy a slide artifact. Controls cover relocated parts,
 duplicate ZIP members, wrong content types, missing/external/escaping targets,
@@ -52,6 +52,13 @@ The focused 20-test picture run passes under Flutter 3.47.8. The host gate also
 includes the 17 font regressions and all earlier paragraph, note, TOC, table,
 reference and actual-save scenarios. External rendering and schema receipts are
 recorded separately from these semantic test results.
+
+The resumed integration preserves the later custom-tab and macro/template
+exports, giving 122 required host artifacts. Fourteen inventory controls and
+34 source-bound coverage controls pass. The older ribbon upload regression
+now awaits decoded insertion and checks the authored 2 by 2 pixel PNG's square
+1.5-point extent; its three upload/reopen saves pass with that explicit
+expectation.
 
 ## Remaining host UI boundaries
 

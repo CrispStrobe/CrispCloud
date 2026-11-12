@@ -86,7 +86,8 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
   void initState() {
     super.initState();
     if (widget.kind == OfficeEditorKind.word) {
-      final WordEditorController word = widget.controller as WordEditorController;
+      final WordEditorController word =
+          widget.controller as WordEditorController;
       _trackChanges = word.document.trackRevisions;
       _wordProtected = word.document.restrictEditing;
     }
@@ -98,30 +99,25 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
   SlideEditorController get _slides => _c as SlideEditorController;
 
   List<String> get _tabs => switch (widget.kind) {
-        OfficeEditorKind.word => const <String>[
-            'Home',
-            'Insert',
-            'Layout',
-            'Review',
-            'View',
-          ],
-        OfficeEditorKind.sheet => const <String>[
-            'Home',
-            'Insert',
-            'Data',
-            'View',
-          ],
-        OfficeEditorKind.slides => const <String>[
-            'Home',
-            'Insert',
-            'Design',
-            'Transitions',
-            'Animations',
-            'Slide Show',
-            'Review',
-          ],
-        OfficeEditorKind.unsupported => const <String>[],
-      };
+    OfficeEditorKind.word => const <String>[
+      'Home',
+      'Insert',
+      'Layout',
+      'Review',
+      'View',
+    ],
+    OfficeEditorKind.sheet => const <String>['Home', 'Insert', 'Data', 'View'],
+    OfficeEditorKind.slides => const <String>[
+      'Home',
+      'Insert',
+      'Design',
+      'Transitions',
+      'Animations',
+      'Slide Show',
+      'Review',
+    ],
+    OfficeEditorKind.unsupported => const <String>[],
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -178,25 +174,25 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
   }
 
   List<Widget> _fileMenu(ThemeData theme) => <Widget>[
-        _menuItem('Save', widget.onSave, icon: Icons.save_outlined),
-        if (widget.kind == OfficeEditorKind.word)
-          _menuItem('Page setup…', _pageSetupMenu, icon: Icons.tune),
-        const Divider(height: 1),
-        _menuItem('Close editor', widget.onClose, icon: Icons.close),
-      ];
+    _menuItem('Save', widget.onSave, icon: Icons.save_outlined),
+    if (widget.kind == OfficeEditorKind.word)
+      _menuItem('Page setup…', _pageSetupMenu, icon: Icons.tune),
+    const Divider(height: 1),
+    _menuItem('Close editor', widget.onClose, icon: Icons.close),
+  ];
 
   List<Widget> _editMenu(ThemeData theme) => <Widget>[
-        _menuItem('Undo', _c.canUndo ? _c.undo : null, icon: Icons.undo),
-        _menuItem('Redo', _c.canRedo ? _c.redo : null, icon: Icons.redo),
-        const Divider(height: 1),
-        _menuItem('Cut', _canMutate ? _cut : null, icon: Icons.cut),
-        _menuItem('Copy', _copy, icon: Icons.copy),
-        _menuItem('Paste', _canMutate ? _paste : null, icon: Icons.paste),
-        _menuItem('Select all', _selectAll, icon: Icons.select_all),
-        const Divider(height: 1),
-        _menuItem('Find…', widget.onFind, icon: Icons.search),
-        _menuItem('Replace…', _c.requestReplace, icon: Icons.find_replace),
-      ];
+    _menuItem('Undo', _c.canUndo ? _c.undo : null, icon: Icons.undo),
+    _menuItem('Redo', _c.canRedo ? _c.redo : null, icon: Icons.redo),
+    const Divider(height: 1),
+    _menuItem('Cut', _canMutate ? _cut : null, icon: Icons.cut),
+    _menuItem('Copy', _copy, icon: Icons.copy),
+    _menuItem('Paste', _canMutate ? _paste : null, icon: Icons.paste),
+    _menuItem('Select all', _selectAll, icon: Icons.select_all),
+    const Divider(height: 1),
+    _menuItem('Find…', widget.onFind, icon: Icons.search),
+    _menuItem('Replace…', _c.requestReplace, icon: Icons.find_replace),
+  ];
 
   List<Widget> _insertMenu(ThemeData theme) {
     switch (widget.kind) {
@@ -209,15 +205,23 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
             _c.config.allowsMutation ? _insertComment : null,
             icon: Icons.comment_outlined,
           ),
-          _menuItem('Footnote…',
-              _canMutate ? () => _insertNote(endnote: false) : null,
-              icon: Icons.format_list_numbered),
-          _menuItem('Endnote…',
-              _canMutate ? () => _insertNote(endnote: true) : null,
-              icon: Icons.notes),
+          _menuItem(
+            'Footnote…',
+            _canMutate ? () => _insertNote(endnote: false) : null,
+            icon: Icons.format_list_numbered,
+          ),
+          _menuItem(
+            'Endnote…',
+            _canMutate ? () => _insertNote(endnote: true) : null,
+            icon: Icons.notes,
+          ),
           const Divider(height: 1),
           _menuItem('Page break', _pageBreak, icon: Icons.insert_page_break),
-          _menuItem('Section break', _sectionBreak, icon: Icons.horizontal_split),
+          _menuItem(
+            'Section break',
+            _sectionBreak,
+            icon: Icons.horizontal_split,
+          ),
           _menuItem('Column break', _columnBreak, icon: Icons.vertical_split),
           _menuItem('Table of contents', _insertToc, icon: Icons.toc),
           const Divider(height: 1),
@@ -228,38 +232,70 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
         ];
       case OfficeEditorKind.sheet:
         return <Widget>[
-          _menuItem('Insert rows above', () => _sheet.insertSheetRows(after: false),
-              icon: Icons.add),
-          _menuItem('Insert rows below', () => _sheet.insertSheetRows(after: true),
-              icon: Icons.add),
-          _menuItem('Insert columns left',
-              () => _sheet.insertSheetCols(after: false),
-              icon: Icons.add),
-          _menuItem('Insert columns right',
-              () => _sheet.insertSheetCols(after: true),
-              icon: Icons.add),
+          _menuItem(
+            'Insert rows above',
+            () => _sheet.insertSheetRows(after: false),
+            icon: Icons.add,
+          ),
+          _menuItem(
+            'Insert rows below',
+            () => _sheet.insertSheetRows(after: true),
+            icon: Icons.add,
+          ),
+          _menuItem(
+            'Insert columns left',
+            () => _sheet.insertSheetCols(after: false),
+            icon: Icons.add,
+          ),
+          _menuItem(
+            'Insert columns right',
+            () => _sheet.insertSheetCols(after: true),
+            icon: Icons.add,
+          ),
           const Divider(height: 1),
-          _menuItem('Delete rows', _sheetDeleteRows,
-              icon: Icons.delete_outline),
-          _menuItem('Delete columns', _sheetDeleteCols,
-              icon: Icons.delete_outline),
+          _menuItem(
+            'Delete rows',
+            _sheetDeleteRows,
+            icon: Icons.delete_outline,
+          ),
+          _menuItem(
+            'Delete columns',
+            _sheetDeleteCols,
+            icon: Icons.delete_outline,
+          ),
           _menuItem('Table', _sheetAddTable, icon: Icons.table_chart),
           _menuItem('Comment…', _sheetComment, icon: Icons.comment_outlined),
         ];
       case OfficeEditorKind.slides:
         return <Widget>[
           _menuItem('New slide', _slideNew, icon: Icons.add_box_outlined),
-          _menuItem('Duplicate slide', _slideDuplicate,
-              icon: Icons.copy_all_outlined),
+          _menuItem(
+            'Duplicate slide',
+            _slideDuplicate,
+            icon: Icons.copy_all_outlined,
+          ),
           _menuItem('Text box', _slideTextBox, icon: Icons.text_fields),
-          _menuItem('Rectangle', () => _slideAddShape(PmlShapePreset.rect),
-              icon: Icons.crop_square),
-          _menuItem('Ellipse', () => _slideAddShape(PmlShapePreset.ellipse),
-              icon: Icons.circle_outlined),
-          _menuItem('Line', () => _slideAddShape(PmlShapePreset.connector),
-              icon: Icons.horizontal_rule),
+          _menuItem(
+            'Rectangle',
+            () => _slideAddShape(PmlShapePreset.rect),
+            icon: Icons.crop_square,
+          ),
+          _menuItem(
+            'Ellipse',
+            () => _slideAddShape(PmlShapePreset.ellipse),
+            icon: Icons.circle_outlined,
+          ),
+          _menuItem(
+            'Line',
+            () => _slideAddShape(PmlShapePreset.connector),
+            icon: Icons.horizontal_rule,
+          ),
           _menuItem('Table…', _slideInsertTable, icon: Icons.table_chart),
-          _menuItem('Picture…', _slideInsertPicture, icon: Icons.image_outlined),
+          _menuItem(
+            'Picture…',
+            _slideInsertPicture,
+            icon: Icons.image_outlined,
+          ),
           const Divider(height: 1),
           _menuItem('Speaker notes…', _slideNotes, icon: Icons.notes),
         ];
@@ -275,39 +311,73 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
           _menuItem('Font…', _wordFontDialog, icon: Icons.text_fields),
           _menuItem('Paragraph…', _wordParagraphDialog, icon: Icons.notes),
           const Divider(height: 1),
-          _menuItem('Bullets', () => _toggleList(false),
-              icon: Icons.format_list_bulleted),
-          _menuItem('Numbering', () => _toggleList(true),
-              icon: Icons.format_list_numbered),
-          _menuItem('Clear formatting', _clearWordFormat,
-              icon: Icons.format_clear),
+          _menuItem(
+            'Bullets',
+            () => _toggleList(false),
+            icon: Icons.format_list_bulleted,
+          ),
+          _menuItem(
+            'Numbering',
+            () => _toggleList(true),
+            icon: Icons.format_list_numbered,
+          ),
+          _menuItem(
+            'Clear formatting',
+            _clearWordFormat,
+            icon: Icons.format_clear,
+          ),
         ];
       case OfficeEditorKind.sheet:
         return <Widget>[
           _menuItem('Fill color…', _sheetFill, icon: Icons.format_color_fill),
-          _menuItem('Font color…', _sheetFontColor,
-              icon: Icons.format_color_text),
-          _menuItem('Clear formatting', _sheetClearFormat,
-              icon: Icons.format_clear),
+          _menuItem(
+            'Font color…',
+            _sheetFontColor,
+            icon: Icons.format_color_text,
+          ),
+          _menuItem(
+            'Clear formatting',
+            _sheetClearFormat,
+            icon: Icons.format_clear,
+          ),
           const Divider(height: 1),
-          _menuItem('Merge and center', _sheet.toggleMergeAndCenter,
-              icon: Icons.merge_type),
+          _menuItem(
+            'Merge and center',
+            _sheet.toggleMergeAndCenter,
+            icon: Icons.merge_type,
+          ),
           _menuItem('Unmerge', _sheet.unmergeCells, icon: Icons.call_split),
         ];
       case OfficeEditorKind.slides:
         return <Widget>[
-          _menuItem('Text color…', _slideTextColor, icon: Icons.format_color_text),
+          _menuItem(
+            'Text color…',
+            _slideTextColor,
+            icon: Icons.format_color_text,
+          ),
           _menuItem('Shape fill…', _slideFill, icon: Icons.format_color_fill),
           _menuItem('Background…', _slideBackground, icon: Icons.wallpaper),
           const Divider(height: 1),
-          _menuItem('Align left', () => _slideAlign(PmlTextAlign.left),
-              icon: Icons.format_align_left),
-          _menuItem('Align center', () => _slideAlign(PmlTextAlign.center),
-              icon: Icons.format_align_center),
-          _menuItem('Align right', () => _slideAlign(PmlTextAlign.right),
-              icon: Icons.format_align_right),
-          _menuItem('Justify', () => _slideAlign(PmlTextAlign.justify),
-              icon: Icons.format_align_justify),
+          _menuItem(
+            'Align left',
+            () => _slideAlign(PmlTextAlign.left),
+            icon: Icons.format_align_left,
+          ),
+          _menuItem(
+            'Align center',
+            () => _slideAlign(PmlTextAlign.center),
+            icon: Icons.format_align_center,
+          ),
+          _menuItem(
+            'Align right',
+            () => _slideAlign(PmlTextAlign.right),
+            icon: Icons.format_align_right,
+          ),
+          _menuItem(
+            'Justify',
+            () => _slideAlign(PmlTextAlign.justify),
+            icon: Icons.format_align_justify,
+          ),
         ];
       case OfficeEditorKind.unsupported:
         return const <Widget>[];
@@ -318,21 +388,27 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
     final List<Widget> items = <Widget>[];
     switch (widget.kind) {
       case OfficeEditorKind.word:
-        items.add(_menuItem(
-          widget.config.showRulers ? 'Hide rulers' : 'Show rulers',
-          () => _setConfig(showRulers: !widget.config.showRulers),
-          icon: Icons.straighten,
-        ));
-        items.add(_menuItem(
-          widget.config.showNotesPane ? 'Hide footnotes' : 'Show footnotes',
-          () => _setConfig(showNotesPane: !widget.config.showNotesPane),
-          icon: Icons.notes,
-        ));
+        items.add(
+          _menuItem(
+            widget.config.showRulers ? 'Hide rulers' : 'Show rulers',
+            () => _setConfig(showRulers: !widget.config.showRulers),
+            icon: Icons.straighten,
+          ),
+        );
+        items.add(
+          _menuItem(
+            widget.config.showNotesPane ? 'Hide footnotes' : 'Show footnotes',
+            () => _setConfig(showNotesPane: !widget.config.showNotesPane),
+            icon: Icons.notes,
+          ),
+        );
         break;
       case OfficeEditorKind.sheet:
         items.addAll(<Widget>[
           _menuItem(
-            widget.config.showFormulaBar ? 'Hide formula bar' : 'Show formula bar',
+            widget.config.showFormulaBar
+                ? 'Hide formula bar'
+                : 'Show formula bar',
             () => _setConfig(showFormulaBar: !widget.config.showFormulaBar),
             icon: Icons.functions,
           ),
@@ -345,19 +421,19 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
             widget.config.showGridHeaders
                 ? 'Hide row/column headers'
                 : 'Show row/column headers',
-            () => _setConfig(
-              showGridHeaders: !widget.config.showGridHeaders,
-            ),
+            () => _setConfig(showGridHeaders: !widget.config.showGridHeaders),
             icon: Icons.view_column_outlined,
           ),
         ]);
         break;
       case OfficeEditorKind.slides:
-        items.add(_menuItem(
-          widget.config.showSlideHandles ? 'Hide handles' : 'Show handles',
-          () => _setConfig(showSlideHandles: !widget.config.showSlideHandles),
-          icon: Icons.crop_free,
-        ));
+        items.add(
+          _menuItem(
+            widget.config.showSlideHandles ? 'Hide handles' : 'Show handles',
+            () => _setConfig(showSlideHandles: !widget.config.showSlideHandles),
+            icon: Icons.crop_free,
+          ),
+        );
         break;
       case OfficeEditorKind.unsupported:
         break;
@@ -371,8 +447,11 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
         _toggleReadingMode,
         icon: Icons.chrome_reader_mode_outlined,
       ),
-      _menuItem('Collapse ribbon', () => setState(() => _collapsed = true),
-          icon: Icons.keyboard_arrow_up),
+      _menuItem(
+        'Collapse ribbon',
+        () => setState(() => _collapsed = true),
+        icon: Icons.keyboard_arrow_up,
+      ),
     ]);
     return items;
   }
@@ -393,27 +472,42 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
             _toggleProtect,
             icon: Icons.lock_outline,
           ),
-          _menuItem('Left-to-right', () => _word.setParagraphDirection(rtl: false),
-              icon: Icons.format_textdirection_l_to_r),
-          _menuItem('Right-to-left', () => _word.setParagraphDirection(rtl: true),
-              icon: Icons.format_textdirection_r_to_l),
+          _menuItem(
+            'Left-to-right',
+            () => _word.setParagraphDirection(rtl: false),
+            icon: Icons.format_textdirection_l_to_r,
+          ),
+          _menuItem(
+            'Right-to-left',
+            () => _word.setParagraphDirection(rtl: true),
+            icon: Icons.format_textdirection_r_to_l,
+          ),
         ];
       case OfficeEditorKind.sheet:
         return <Widget>[
           _menuItem('Protect sheet…', _sheetProtect, icon: Icons.lock_outline),
           _menuItem('Unprotect sheet', _sheetUnprotect, icon: Icons.lock_open),
-          _menuItem('Toggle right-to-left', _sheet.toggleSheetRightToLeft,
-              icon: Icons.format_textdirection_r_to_l),
+          _menuItem(
+            'Toggle right-to-left',
+            _sheet.toggleSheetRightToLeft,
+            icon: Icons.format_textdirection_r_to_l,
+          ),
           _menuItem('Comment…', _sheetComment, icon: Icons.comment_outlined),
         ];
       case OfficeEditorKind.slides:
         return <Widget>[
           _menuItem('Speaker notes…', _slideNotes, icon: Icons.notes),
           _menuItem('Slide count…', _wordCount, icon: Icons.analytics_outlined),
-          _menuItem('Animations', () => setState(() => _tab = 4),
-              icon: Icons.animation),
-          _menuItem('Transitions', () => setState(() => _tab = 3),
-              icon: Icons.swap_horiz),
+          _menuItem(
+            'Animations',
+            () => setState(() => _tab = 4),
+            icon: Icons.animation,
+          ),
+          _menuItem(
+            'Transitions',
+            () => setState(() => _tab = 3),
+            icon: Icons.swap_horiz,
+          ),
         ];
       case OfficeEditorKind.unsupported:
         return const <Widget>[];
@@ -421,27 +515,20 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
   }
 
   List<Widget> _helpMenu(ThemeData theme) => <Widget>[
-        _menuItem(
-          'Keyboard shortcuts…',
-          () => showOfficeShortcuts(
-            context,
-            switch (widget.kind) {
-              OfficeEditorKind.word => 'word',
-              OfficeEditorKind.sheet => 'sheet',
-              OfficeEditorKind.slides => 'slides',
-              OfficeEditorKind.unsupported => 'office',
-            },
-          ),
-          icon: Icons.keyboard_outlined,
-        ),
-        _menuItem('About the editor…', _aboutEditor, icon: Icons.info_outline),
-      ];
+    _menuItem(
+      'Keyboard shortcuts…',
+      () => showOfficeShortcuts(context, switch (widget.kind) {
+        OfficeEditorKind.word => 'word',
+        OfficeEditorKind.sheet => 'sheet',
+        OfficeEditorKind.slides => 'slides',
+        OfficeEditorKind.unsupported => 'office',
+      }),
+      icon: Icons.keyboard_outlined,
+    ),
+    _menuItem('About the editor…', _aboutEditor, icon: Icons.info_outline),
+  ];
 
-  Widget _menuItem(
-    String label,
-    VoidCallback? onPressed, {
-    IconData? icon,
-  }) {
+  Widget _menuItem(String label, VoidCallback? onPressed, {IconData? icon}) {
     return MenuItemButton(
       onPressed: onPressed,
       child: Row(
@@ -519,8 +606,9 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
                           context.tr(_tabs[i]),
                           style: TextStyle(
                             fontSize: 11.5,
-                            fontWeight:
-                                _tab == i ? FontWeight.w600 : FontWeight.w400,
+                            fontWeight: _tab == i
+                                ? FontWeight.w600
+                                : FontWeight.w400,
                             color: _tab == i
                                 ? theme.colorScheme.primary
                                 : theme.colorScheme.onSurfaceVariant,
@@ -533,7 +621,8 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
             ),
           ),
           IconButton(
-            tooltip: OfficeRibbonControlStrings(context).text(_collapsed ? 'Expand ribbon' : 'Collapse ribbon'),
+            tooltip: OfficeRibbonControlStrings(context)
+                .text(_collapsed ? 'Expand ribbon' : 'Collapse ribbon'),
             iconSize: 17,
             visualDensity: VisualDensity.compact,
             padding: EdgeInsets.zero,
@@ -596,14 +685,16 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
     final List<Widget> out = <Widget>[];
     for (int i = 0; i < groups.length; i++) {
       if (i > 0) {
-        out.add(Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 6),
-          child: VerticalDivider(
-            width: 1,
-            thickness: 0.5,
-            color: Theme.of(context).dividerColor,
+        out.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 6),
+            child: VerticalDivider(
+              width: 1,
+              thickness: 0.5,
+              color: Theme.of(context).dividerColor,
+            ),
           ),
-        ));
+        );
       }
       out.add(groups[i]);
     }
@@ -723,7 +814,11 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
           ]),
           _group('Styles', <Widget>[
             _wordStyleDropdown(),
-            _iconButton(Icons.format_clear, 'Clear formatting', _clearWordFormat),
+            _iconButton(
+              Icons.format_clear,
+              'Clear formatting',
+              _clearWordFormat,
+            ),
           ]),
           _group('Editing', <Widget>[
             _iconButton(Icons.search, 'Find (Ctrl+F)', widget.onFind),
@@ -800,10 +895,18 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
             _bigButton(Icons.image_outlined, 'Picture', _wordInsertPicture),
           ]),
           _group('Notes', <Widget>[
-            _bigButton(Icons.format_list_numbered, 'Footnote',
-                () => _insertNote(endnote: false), enabled: _canMutate),
-            _bigButton(Icons.notes, 'Endnote',
-                () => _insertNote(endnote: true), enabled: _canMutate),
+            _bigButton(
+              Icons.format_list_numbered,
+              'Footnote',
+              () => _insertNote(endnote: false),
+              enabled: _canMutate,
+            ),
+            _bigButton(
+              Icons.notes,
+              'Endnote',
+              () => _insertNote(endnote: true),
+              enabled: _canMutate,
+            ),
           ]),
           _group('Links', <Widget>[
             _bigButton(Icons.link, 'Hyperlink', _insertHyperlink),
@@ -813,8 +916,11 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
             _bigButton(Icons.web_asset, 'Header', _beginHeader),
             _bigButton(Icons.web_asset_off, 'Footer', _beginFooter),
             _iconButton(Icons.pin, 'Page number', _insertPageNumber),
-            _iconButton(Icons.pin_end, 'Total pages',
-                () => _word.insertField(WmlFieldKind.numPages)),
+            _iconButton(
+              Icons.pin_end,
+              'Total pages',
+              () => _word.insertField(WmlFieldKind.numPages),
+            ),
             if (_word.isEditingHeaderFooter)
               _iconButton(
                 Icons.check,
@@ -826,16 +932,28 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
           _group('Text', <Widget>[
             _bigButton(Icons.toc, 'Contents', _insertToc),
             _bigButton(Icons.branding_watermark, 'Watermark', _watermark),
-            _iconButton(Icons.calendar_today, 'Date',
-                () => _word.insertField(WmlFieldKind.date)),
-            _iconButton(Icons.schedule, 'Time',
-                () => _word.insertField(WmlFieldKind.time)),
+            _iconButton(
+              Icons.calendar_today,
+              'Date',
+              () => _word.insertField(WmlFieldKind.date),
+            ),
+            _iconButton(
+              Icons.schedule,
+              'Time',
+              () => _word.insertField(WmlFieldKind.time),
+            ),
           ]),
           _group('Symbols', <Widget>[
-            _iconButton(Icons.functions, 'Page field',
-                () => _word.insertField(WmlFieldKind.page)),
-            _iconButton(Icons.numbers, 'Number of pages',
-                () => _word.insertField(WmlFieldKind.numPages)),
+            _iconButton(
+              Icons.functions,
+              'Page field',
+              () => _word.insertField(WmlFieldKind.page),
+            ),
+            _iconButton(
+              Icons.numbers,
+              'Number of pages',
+              () => _word.insertField(WmlFieldKind.numPages),
+            ),
           ]),
         ]);
       case 2:
@@ -848,7 +966,9 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
                 _actionItem('Normal', () => _setMargins(WmlPageMargins.normal)),
                 _actionItem('Narrow', () => _setMargins(WmlPageMargins.narrow)),
                 _actionItem(
-                    'Moderate', () => _setMargins(WmlPageMargins.moderate)),
+                  'Moderate',
+                  () => _setMargins(WmlPageMargins.moderate),
+                ),
                 _actionItem('Wide', () => _setMargins(WmlPageMargins.wide)),
                 const PopupMenuDivider(),
                 _actionItem('Custom…', _customMargins),
@@ -867,9 +987,14 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
               'Size',
               <PopupMenuEntry<VoidCallback>>[
                 _actionItem('A4', () => _word.setPageSize(WmlPageSize.a4())),
-                _actionItem('Letter',
-                    () => _word.setPageSize(WmlPageSize.letter())),
-                _actionItem('Legal', () => _word.setPageSize(WmlPageSize.legal())),
+                _actionItem(
+                  'Letter',
+                  () => _word.setPageSize(WmlPageSize.letter()),
+                ),
+                _actionItem(
+                  'Legal',
+                  () => _word.setPageSize(WmlPageSize.legal()),
+                ),
                 _actionItem('A3', () => _word.setPageSize(WmlPageSize.a3())),
               ],
             ),
@@ -882,22 +1007,23 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
                 _actionItem('Three', () => _word.setSectionColumns(3)),
               ],
             ),
-            _iconButton(
-              Icons.format_list_numbered,
-              'Line numbers',
-              () {
-                _lineNumbers = !_lineNumbers;
-                _word.setLineNumbers(_lineNumbers);
-                setState(() {});
-              },
-              active: _lineNumbers,
-            ),
+            _iconButton(Icons.format_list_numbered, 'Line numbers', () {
+              _lineNumbers = !_lineNumbers;
+              _word.setLineNumbers(_lineNumbers);
+              setState(() {});
+            }, active: _lineNumbers),
           ]),
           _group('Paragraph', <Widget>[
-            _iconButton(Icons.format_indent_decrease, 'Decrease indent',
-                () => _nudgeIndent(-18)),
-            _iconButton(Icons.format_indent_increase, 'Increase indent',
-                () => _nudgeIndent(18)),
+            _iconButton(
+              Icons.format_indent_decrease,
+              'Decrease indent',
+              () => _nudgeIndent(-18),
+            ),
+            _iconButton(
+              Icons.format_indent_increase,
+              'Increase indent',
+              () => _nudgeIndent(18),
+            ),
             _lineSpacingControl(),
             _bigMenuButton(
               Icons.space_bar,
@@ -912,13 +1038,19 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
                 _actionItem('Remove after', () => _spaceAfter(0)),
               ],
             ),
-            _iconButton(Icons.format_clear, 'Clear formatting',
-                _clearWordFormat),
+            _iconButton(
+              Icons.format_clear,
+              'Clear formatting',
+              _clearWordFormat,
+            ),
           ]),
           _group('Background', <Widget>[
             _bigButton(Icons.branding_watermark, 'Watermark', _watermark),
-            _iconButton(Icons.format_color_fill, 'Paragraph shading',
-                _paragraphShading),
+            _iconButton(
+              Icons.format_color_fill,
+              'Paragraph shading',
+              _paragraphShading,
+            ),
           ]),
         ]);
       case 3:
@@ -947,10 +1079,16 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
             ),
           ]),
           _group('Language', <Widget>[
-            _iconButton(Icons.format_textdirection_l_to_r, 'Left-to-right',
-                () => _word.setParagraphDirection(rtl: false)),
-            _iconButton(Icons.format_textdirection_r_to_l, 'Right-to-left',
-                () => _word.setParagraphDirection(rtl: true)),
+            _iconButton(
+              Icons.format_textdirection_l_to_r,
+              'Left-to-right',
+              () => _word.setParagraphDirection(rtl: false),
+            ),
+            _iconButton(
+              Icons.format_textdirection_r_to_l,
+              'Right-to-left',
+              () => _word.setParagraphDirection(rtl: true),
+            ),
           ]),
         ]);
       case 4:
@@ -986,8 +1124,11 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
             ),
           ]),
           _group('Help', <Widget>[
-            _bigButton(Icons.keyboard_outlined, 'Shortcuts',
-                () => showOfficeShortcuts(context, 'word')),
+            _bigButton(
+              Icons.keyboard_outlined,
+              'Shortcuts',
+              () => showOfficeShortcuts(context, 'word'),
+            ),
             _bigButton(Icons.info_outline, 'About', _aboutEditor),
           ]),
         ]);
@@ -1014,8 +1155,12 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
           ]),
           _group('Font', <Widget>[
             _sheetFontSizeDropdown(),
-            _iconButton(Icons.format_bold, 'Bold', _sheetBold,
-                active: _cell.fontBold),
+            _iconButton(
+              Icons.format_bold,
+              'Bold',
+              _sheetBold,
+              active: _cell.fontBold,
+            ),
             _colorButton(
               Icons.format_color_text,
               'Font color',
@@ -1029,8 +1174,11 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
               _sheetFillValue,
               allowNone: true,
             ),
-            _iconButton(Icons.format_clear, 'Clear formatting',
-                _sheetClearFormat),
+            _iconButton(
+              Icons.format_clear,
+              'Clear formatting',
+              _sheetClearFormat,
+            ),
           ]),
           _group('Alignment', <Widget>[
             _iconButton(
@@ -1057,61 +1205,91 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
               () => _sheetAlign(SmlHAlign.general),
               active: _cell.horizontalAlign == SmlHAlign.general,
             ),
-            _iconButton(Icons.merge_type, 'Merge & center',
-                _sheet.toggleMergeAndCenter),
+            _iconButton(
+              Icons.merge_type,
+              'Merge & center',
+              _sheet.toggleMergeAndCenter,
+            ),
             _iconButton(Icons.call_split, 'Unmerge', _sheet.unmergeCells),
           ]),
           _group('Cells', <Widget>[
-            _iconButton(Icons.add, 'Insert row above',
-                () => _sheet.insertSheetRows(after: false)),
-            _iconButton(Icons.add, 'Insert row below',
-                () => _sheet.insertSheetRows(after: true)),
-            _iconButton(Icons.add, 'Insert column left',
-                () => _sheet.insertSheetCols(after: false)),
-            _iconButton(Icons.add, 'Insert column right',
-                () => _sheet.insertSheetCols(after: true)),
-            _iconButton(Icons.delete_outline, 'Delete rows',
-                _sheetDeleteRows),
-            _iconButton(Icons.delete_outline, 'Delete columns',
-                _sheetDeleteCols),
-            _iconButton(Icons.backspace_outlined, 'Clear contents',
-                _sheet.clearSelectedCells),
+            _iconButton(
+              Icons.add,
+              'Insert row above',
+              () => _sheet.insertSheetRows(after: false),
+            ),
+            _iconButton(
+              Icons.add,
+              'Insert row below',
+              () => _sheet.insertSheetRows(after: true),
+            ),
+            _iconButton(
+              Icons.add,
+              'Insert column left',
+              () => _sheet.insertSheetCols(after: false),
+            ),
+            _iconButton(
+              Icons.add,
+              'Insert column right',
+              () => _sheet.insertSheetCols(after: true),
+            ),
+            _iconButton(Icons.delete_outline, 'Delete rows', _sheetDeleteRows),
+            _iconButton(
+              Icons.delete_outline,
+              'Delete columns',
+              _sheetDeleteCols,
+            ),
+            _iconButton(
+              Icons.backspace_outlined,
+              'Clear contents',
+              _sheet.clearSelectedCells,
+            ),
           ]),
           _group('Editing', <Widget>[
             _iconButton(Icons.search, 'Find (Ctrl+F)', widget.onFind),
-            _bigMenuButton(
-              Icons.sort,
-              'Sort',
-              <PopupMenuEntry<VoidCallback>>[
-                _actionItem('Sort A → Z',
-                    () => _sheet.sortSelection(ascending: true)),
-                _actionItem('Sort Z → A',
-                    () => _sheet.sortSelection(ascending: false)),
-              ],
+            _bigMenuButton(Icons.sort, 'Sort', <PopupMenuEntry<VoidCallback>>[
+              _actionItem(
+                'Sort A → Z',
+                () => _sheet.sortSelection(ascending: true),
+              ),
+              _actionItem(
+                'Sort Z → A',
+                () => _sheet.sortSelection(ascending: false),
+              ),
+            ]),
+            _iconButton(
+              Icons.filter_alt_outlined,
+              'Filter',
+              () => _sheet.filterSelection(),
             ),
-            _iconButton(Icons.filter_alt_outlined, 'Filter',
-                () => _sheet.filterSelection()),
-            _iconButton(Icons.filter_alt_off_outlined, 'Clear filter',
-                _sheet.clearFilter),
+            _iconButton(
+              Icons.filter_alt_off_outlined,
+              'Clear filter',
+              _sheet.clearFilter,
+            ),
           ]),
         ]);
       case 1:
         return _withDividers(<Widget>[
           _group('Rows & Columns', <Widget>[
-            _bigMenuButton(
-              Icons.add,
-              'Insert',
-              <PopupMenuEntry<VoidCallback>>[
-                _actionItem('Rows above',
-                    () => _sheet.insertSheetRows(after: false)),
-                _actionItem('Rows below',
-                    () => _sheet.insertSheetRows(after: true)),
-                _actionItem('Columns left',
-                    () => _sheet.insertSheetCols(after: false)),
-                _actionItem('Columns right',
-                    () => _sheet.insertSheetCols(after: true)),
-              ],
-            ),
+            _bigMenuButton(Icons.add, 'Insert', <PopupMenuEntry<VoidCallback>>[
+              _actionItem(
+                'Rows above',
+                () => _sheet.insertSheetRows(after: false),
+              ),
+              _actionItem(
+                'Rows below',
+                () => _sheet.insertSheetRows(after: true),
+              ),
+              _actionItem(
+                'Columns left',
+                () => _sheet.insertSheetCols(after: false),
+              ),
+              _actionItem(
+                'Columns right',
+                () => _sheet.insertSheetCols(after: true),
+              ),
+            ]),
             _bigMenuButton(
               Icons.delete_outline,
               'Delete',
@@ -1120,66 +1298,127 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
                 _actionItem('Columns', _sheetDeleteCols),
               ],
             ),
-            _iconButton(Icons.height, 'Row height +',
-                () => _sheet.nudgeRowHeight(6)),
-            _iconButton(Icons.height, 'Row height −',
-                () => _sheet.nudgeRowHeight(-6)),
-            _iconButton(Icons.swap_horiz, 'Column width +',
-                () => _sheet.nudgeColumnWidth(8)),
-            _iconButton(Icons.swap_horiz, 'Column width −',
-                () => _sheet.nudgeColumnWidth(-8)),
+            _iconButton(
+              Icons.height,
+              'Row height +',
+              () => _sheet.nudgeRowHeight(6),
+            ),
+            _iconButton(
+              Icons.height,
+              'Row height −',
+              () => _sheet.nudgeRowHeight(-6),
+            ),
+            _iconButton(
+              Icons.swap_horiz,
+              'Column width +',
+              () => _sheet.nudgeColumnWidth(8),
+            ),
+            _iconButton(
+              Icons.swap_horiz,
+              'Column width −',
+              () => _sheet.nudgeColumnWidth(-8),
+            ),
           ]),
           _group('Tables', <Widget>[
             _bigButton(Icons.table_chart, 'Table', _sheetAddTable),
             _bigButton(Icons.comment_outlined, 'Comment', _sheetComment),
           ]),
           _group('Freeze', <Widget>[
-            _bigButton(Icons.ac_unit, 'Freeze panes',
-                _sheet.toggleFreezePanes,
-                active: _sheet.hasFrozenPanes),
-            _iconButton(Icons.vertical_align_top, 'Top row',
-                _sheet.freezeTopRow),
-            _iconButton(Icons.align_horizontal_left, 'First column',
-                _sheet.freezeFirstColumn),
+            _bigButton(
+              Icons.ac_unit,
+              'Freeze panes',
+              _sheet.toggleFreezePanes,
+              active: _sheet.hasFrozenPanes,
+            ),
+            _iconButton(
+              Icons.vertical_align_top,
+              'Top row',
+              _sheet.freezeTopRow,
+            ),
+            _iconButton(
+              Icons.align_horizontal_left,
+              'First column',
+              _sheet.freezeFirstColumn,
+            ),
           ]),
           _group('Data', <Widget>[
-            _bigButton(Icons.filter_alt_outlined, 'Filter',
-                () => _sheet.filterSelection()),
-            _iconButton(Icons.filter_alt_off_outlined, 'Clear filter',
-                _sheet.clearFilter),
-            _iconButton(Icons.sort, 'Sort ascending',
-                () => _sheet.sortSelection(ascending: true)),
-            _iconButton(Icons.sort, 'Sort descending',
-                () => _sheet.sortSelection(ascending: false)),
+            _bigButton(
+              Icons.filter_alt_outlined,
+              'Filter',
+              () => _sheet.filterSelection(),
+            ),
+            _iconButton(
+              Icons.filter_alt_off_outlined,
+              'Clear filter',
+              _sheet.clearFilter,
+            ),
+            _iconButton(
+              Icons.sort,
+              'Sort ascending',
+              () => _sheet.sortSelection(ascending: true),
+            ),
+            _iconButton(
+              Icons.sort,
+              'Sort descending',
+              () => _sheet.sortSelection(ascending: false),
+            ),
           ]),
         ]);
       case 2:
         return _withDividers(<Widget>[
           _group('Sort & Filter', <Widget>[
-            _bigButton(Icons.sort, 'Sort A → Z',
-                () => _sheet.sortSelection(ascending: true)),
-            _bigButton(Icons.sort, 'Sort Z → A',
-                () => _sheet.sortSelection(ascending: false)),
-            _bigButton(Icons.filter_alt_outlined, 'Filter',
-                () => _sheet.filterSelection()),
-            _bigButton(Icons.filter_alt_off_outlined, 'Clear',
-                _sheet.clearFilter),
+            _bigButton(
+              Icons.sort,
+              'Sort A → Z',
+              () => _sheet.sortSelection(ascending: true),
+            ),
+            _bigButton(
+              Icons.sort,
+              'Sort Z → A',
+              () => _sheet.sortSelection(ascending: false),
+            ),
+            _bigButton(
+              Icons.filter_alt_outlined,
+              'Filter',
+              () => _sheet.filterSelection(),
+            ),
+            _bigButton(
+              Icons.filter_alt_off_outlined,
+              'Clear',
+              _sheet.clearFilter,
+            ),
           ]),
           _group('Sheet', <Widget>[
-            _bigButton(Icons.ac_unit, 'Freeze panes',
-                _sheet.toggleFreezePanes,
-                active: _sheet.hasFrozenPanes),
-            _iconButton(Icons.vertical_align_top, 'Freeze top row',
-                _sheet.freezeTopRow),
-            _iconButton(Icons.align_horizontal_left, 'Freeze first column',
-                _sheet.freezeFirstColumn),
-            _iconButton(Icons.format_textdirection_r_to_l, 'Right-to-left',
-                _sheet.toggleSheetRightToLeft,
-                active: _sheet.sheet.rightToLeft),
+            _bigButton(
+              Icons.ac_unit,
+              'Freeze panes',
+              _sheet.toggleFreezePanes,
+              active: _sheet.hasFrozenPanes,
+            ),
+            _iconButton(
+              Icons.vertical_align_top,
+              'Freeze top row',
+              _sheet.freezeTopRow,
+            ),
+            _iconButton(
+              Icons.align_horizontal_left,
+              'Freeze first column',
+              _sheet.freezeFirstColumn,
+            ),
+            _iconButton(
+              Icons.format_textdirection_r_to_l,
+              'Right-to-left',
+              _sheet.toggleSheetRightToLeft,
+              active: _sheet.sheet.rightToLeft,
+            ),
           ]),
           _group('Protect', <Widget>[
-            _bigButton(Icons.lock_outline, 'Protect', _sheetProtect,
-                active: _sheet.sheet.protection != null),
+            _bigButton(
+              Icons.lock_outline,
+              'Protect',
+              _sheetProtect,
+              active: _sheet.sheet.protection != null,
+            ),
             _bigButton(Icons.lock_open, 'Unprotect', _sheetUnprotect),
           ]),
           _group('Comments', <Widget>[
@@ -1191,7 +1430,9 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
           _group('Show', <Widget>[
             _bigButton(
               Icons.functions,
-              widget.config.showFormulaBar ? 'Hide formula bar' : 'Show formula bar',
+              widget.config.showFormulaBar
+                  ? 'Hide formula bar'
+                  : 'Show formula bar',
               () => _setConfig(showFormulaBar: !widget.config.showFormulaBar),
               active: widget.config.showFormulaBar,
             ),
@@ -1204,8 +1445,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
             _bigButton(
               Icons.view_column_outlined,
               widget.config.showGridHeaders ? 'Hide headers' : 'Show headers',
-              () => _setConfig(
-                  showGridHeaders: !widget.config.showGridHeaders),
+              () => _setConfig(showGridHeaders: !widget.config.showGridHeaders),
               active: widget.config.showGridHeaders,
             ),
           ]),
@@ -1226,8 +1466,11 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
             ),
           ]),
           _group('Help', <Widget>[
-            _bigButton(Icons.keyboard_outlined, 'Shortcuts',
-                () => showOfficeShortcuts(context, 'sheet')),
+            _bigButton(
+              Icons.keyboard_outlined,
+              'Shortcuts',
+              () => showOfficeShortcuts(context, 'sheet'),
+            ),
             _bigButton(Icons.info_outline, 'About', _aboutEditor),
           ]),
         ]);
@@ -1299,12 +1542,21 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
           ]),
           _group('Drawing', <Widget>[
             _bigButton(Icons.text_fields, 'Text box', _slideTextBox),
-            _iconButton(Icons.crop_square, 'Rectangle',
-                () => _slideAddShape(PmlShapePreset.rect)),
-            _iconButton(Icons.circle_outlined, 'Ellipse',
-                () => _slideAddShape(PmlShapePreset.ellipse)),
-            _iconButton(Icons.horizontal_rule, 'Line',
-                () => _slideAddShape(PmlShapePreset.connector)),
+            _iconButton(
+              Icons.crop_square,
+              'Rectangle',
+              () => _slideAddShape(PmlShapePreset.rect),
+            ),
+            _iconButton(
+              Icons.circle_outlined,
+              'Ellipse',
+              () => _slideAddShape(PmlShapePreset.ellipse),
+            ),
+            _iconButton(
+              Icons.horizontal_rule,
+              'Line',
+              () => _slideAddShape(PmlShapePreset.connector),
+            ),
             _iconButton(Icons.table_chart, 'Table', _slideInsertTable),
           ]),
           _group('Arrange', <Widget>[
@@ -1312,36 +1564,67 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
               Icons.align_horizontal_center,
               'Align',
               <PopupMenuEntry<VoidCallback>>[
-                _actionItem('Align left',
-                    () => _slides.alignShapes(PmlAlignAxis.left)),
-                _actionItem('Align center',
-                    () => _slides.alignShapes(PmlAlignAxis.center)),
-                _actionItem('Align right',
-                    () => _slides.alignShapes(PmlAlignAxis.right)),
-                _actionItem('Align top',
-                    () => _slides.alignShapes(PmlAlignAxis.top)),
-                _actionItem('Align middle',
-                    () => _slides.alignShapes(PmlAlignAxis.middle)),
-                _actionItem('Align bottom',
-                    () => _slides.alignShapes(PmlAlignAxis.bottom)),
+                _actionItem(
+                  'Align left',
+                  () => _slides.alignShapes(PmlAlignAxis.left),
+                ),
+                _actionItem(
+                  'Align center',
+                  () => _slides.alignShapes(PmlAlignAxis.center),
+                ),
+                _actionItem(
+                  'Align right',
+                  () => _slides.alignShapes(PmlAlignAxis.right),
+                ),
+                _actionItem(
+                  'Align top',
+                  () => _slides.alignShapes(PmlAlignAxis.top),
+                ),
+                _actionItem(
+                  'Align middle',
+                  () => _slides.alignShapes(PmlAlignAxis.middle),
+                ),
+                _actionItem(
+                  'Align bottom',
+                  () => _slides.alignShapes(PmlAlignAxis.bottom),
+                ),
                 const PopupMenuDivider(),
-                _actionItem('Distribute horizontally',
-                    () => _slides.distributeShapes(horizontal: true)),
-                _actionItem('Distribute vertically',
-                    () => _slides.distributeShapes(horizontal: false)),
+                _actionItem(
+                  'Distribute horizontally',
+                  () => _slides.distributeShapes(horizontal: true),
+                ),
+                _actionItem(
+                  'Distribute vertically',
+                  () => _slides.distributeShapes(horizontal: false),
+                ),
               ],
             ),
-            _iconButton(Icons.flip_to_front, 'Bring forward',
-                () => _slides.reorderSelected(forward: true)),
-            _iconButton(Icons.flip_to_back, 'Send backward',
-                () => _slides.reorderSelected(forward: false)),
-            _iconButton(Icons.workspaces_outline, 'Group',
-                () => _slides.groupShapes()),
-            _iconButton(Icons.workspaces, 'Ungroup',
-                () => _slides.ungroupShapes()),
-            _iconButton(Icons.delete_outline, 'Delete shape',
-                _slides.deleteSelectedShape,
-                enabled: _shape != null),
+            _iconButton(
+              Icons.flip_to_front,
+              'Bring forward',
+              () => _slides.reorderSelected(forward: true),
+            ),
+            _iconButton(
+              Icons.flip_to_back,
+              'Send backward',
+              () => _slides.reorderSelected(forward: false),
+            ),
+            _iconButton(
+              Icons.workspaces_outline,
+              'Group',
+              () => _slides.groupShapes(),
+            ),
+            _iconButton(
+              Icons.workspaces,
+              'Ungroup',
+              () => _slides.ungroupShapes(),
+            ),
+            _iconButton(
+              Icons.delete_outline,
+              'Delete shape',
+              _slides.deleteSelectedShape,
+              enabled: _shape != null,
+            ),
           ]),
           _group('Editing', <Widget>[
             _iconButton(Icons.search, 'Find (Ctrl+F)', widget.onFind),
@@ -1364,16 +1647,26 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
               Icons.category_outlined,
               'Shapes',
               <PopupMenuEntry<VoidCallback>>[
-                _actionItem('Rectangle',
-                    () => _slideAddShape(PmlShapePreset.rect)),
-                _actionItem('Rounded rectangle',
-                    () => _slideAddShape(PmlShapePreset.roundRect)),
-                _actionItem('Ellipse',
-                    () => _slideAddShape(PmlShapePreset.ellipse)),
-                _actionItem('Triangle',
-                    () => _slideAddShape(PmlShapePreset.triangle)),
-                _actionItem('Line',
-                    () => _slideAddShape(PmlShapePreset.connector)),
+                _actionItem(
+                  'Rectangle',
+                  () => _slideAddShape(PmlShapePreset.rect),
+                ),
+                _actionItem(
+                  'Rounded rectangle',
+                  () => _slideAddShape(PmlShapePreset.roundRect),
+                ),
+                _actionItem(
+                  'Ellipse',
+                  () => _slideAddShape(PmlShapePreset.ellipse),
+                ),
+                _actionItem(
+                  'Triangle',
+                  () => _slideAddShape(PmlShapePreset.triangle),
+                ),
+                _actionItem(
+                  'Line',
+                  () => _slideAddShape(PmlShapePreset.connector),
+                ),
               ],
             ),
             _bigButton(Icons.table_chart, 'Table', _slideInsertTable),
@@ -1392,14 +1685,26 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
           ]),
           _group('Text', <Widget>[
             _slideFontSizeDropdown(),
-            _iconButton(Icons.format_align_left, 'Align left',
-                () => _slideAlign(PmlTextAlign.left)),
-            _iconButton(Icons.format_align_center, 'Align center',
-                () => _slideAlign(PmlTextAlign.center)),
-            _iconButton(Icons.format_align_right, 'Align right',
-                () => _slideAlign(PmlTextAlign.right)),
-            _iconButton(Icons.format_align_justify, 'Justify',
-                () => _slideAlign(PmlTextAlign.justify)),
+            _iconButton(
+              Icons.format_align_left,
+              'Align left',
+              () => _slideAlign(PmlTextAlign.left),
+            ),
+            _iconButton(
+              Icons.format_align_center,
+              'Align center',
+              () => _slideAlign(PmlTextAlign.center),
+            ),
+            _iconButton(
+              Icons.format_align_right,
+              'Align right',
+              () => _slideAlign(PmlTextAlign.right),
+            ),
+            _iconButton(
+              Icons.format_align_justify,
+              'Justify',
+              () => _slideAlign(PmlTextAlign.justify),
+            ),
           ]),
           _group('Theme', <Widget>[
             _bigMenuButton(
@@ -1429,31 +1734,32 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
                 _applyTransition(transition.kind, value);
               },
             ),
+            _iconButton(Icons.select_all, 'Apply to all slides', () {
+              setState(() => _transitionAll = !_transitionAll);
+              _applyTransition(
+                transition.kind,
+                transition.durationMs,
+                applyToAll: _transitionAll,
+              );
+            }, active: _transitionAll),
             _iconButton(
-              Icons.select_all,
-              'Apply to all slides',
-              () {
-                setState(() => _transitionAll = !_transitionAll);
-                _applyTransition(
-                  transition.kind,
-                  transition.durationMs,
-                  applyToAll: _transitionAll,
-                );
-              },
-              active: _transitionAll,
+              Icons.play_arrow,
+              'Preview transition',
+              () => _slides.setSlideTransition(
+                PmlSlideTransition(
+                  kind: transition.kind,
+                  durationMs: transition.durationMs,
+                ),
+                preview: true,
+              ),
             ),
-            _iconButton(Icons.play_arrow, 'Preview transition',
-                () => _slides.setSlideTransition(
-                      PmlSlideTransition(
-                        kind: transition.kind,
-                        durationMs: transition.durationMs,
-                      ),
-                      preview: true,
-                    )),
           ]),
           _group('Slide Show', <Widget>[
-            _bigButton(Icons.play_circle_outline, 'From start',
-                _slideShowFromStart),
+            _bigButton(
+              Icons.play_circle_outline,
+              'From start',
+              _slideShowFromStart,
+            ),
             _bigButton(Icons.play_arrow, 'From current', _slideShowFromCurrent),
             _bigButton(Icons.stop_circle_outlined, 'End show', _slides.endShow),
           ]),
@@ -1461,58 +1767,76 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
       case 4:
         return _withDividers(<Widget>[
           _group('Animation', <Widget>[
-            _bigMenuButton(
-              Icons.animation,
-              'Add',
-              <PopupMenuEntry<VoidCallback>>[
-                _actionItem('Appear',
-                    () => _slideAddAnimation(PmlAnimPreset.appear)),
-                _actionItem('Fade',
-                    () => _slideAddAnimation(PmlAnimPreset.fade)),
-                _actionItem('Fly in',
-                    () => _slideAddAnimation(PmlAnimPreset.flyIn)),
-                _actionItem('Float in',
-                    () => _slideAddAnimation(PmlAnimPreset.floatIn)),
-                _actionItem('Zoom',
-                    () => _slideAddAnimation(PmlAnimPreset.zoom)),
-                _actionItem('Bounce',
-                    () => _slideAddAnimation(PmlAnimPreset.bounce)),
-                _actionItem('Pulse',
-                    () => _slideAddAnimation(PmlAnimPreset.pulse)),
-              ],
-            ),
+            _bigMenuButton(Icons.animation, 'Add', <
+              PopupMenuEntry<VoidCallback>
+            >[
+              _actionItem(
+                'Appear',
+                () => _slideAddAnimation(PmlAnimPreset.appear),
+              ),
+              _actionItem('Fade', () => _slideAddAnimation(PmlAnimPreset.fade)),
+              _actionItem(
+                'Fly in',
+                () => _slideAddAnimation(PmlAnimPreset.flyIn),
+              ),
+              _actionItem(
+                'Float in',
+                () => _slideAddAnimation(PmlAnimPreset.floatIn),
+              ),
+              _actionItem('Zoom', () => _slideAddAnimation(PmlAnimPreset.zoom)),
+              _actionItem(
+                'Bounce',
+                () => _slideAddAnimation(PmlAnimPreset.bounce),
+              ),
+              _actionItem(
+                'Pulse',
+                () => _slideAddAnimation(PmlAnimPreset.pulse),
+              ),
+            ]),
             _bigButton(Icons.play_arrow, 'Preview', _slidePreviewAnimation),
-            _bigButton(Icons.delete_outline, 'Remove',
-                _slideRemoveAnimation),
+            _bigButton(Icons.delete_outline, 'Remove', _slideRemoveAnimation),
           ]),
           _group('Animation Pane', <Widget>[
-            _bigButton(Icons.keyboard_arrow_up, 'Previous animation',
-                _slidePreviousAnimation,
-                enabled: _hasAnimation),
-            _bigButton(Icons.keyboard_arrow_down, 'Next animation',
-                _slideNextAnimation,
-                enabled: _selectedAnimation != null),
-            _iconButton(Icons.play_circle_outline, 'Loop preview',
-                _slidePreviewAnimation,
-                enabled: _selectedAnimation != null),
+            _bigButton(
+              Icons.keyboard_arrow_up,
+              'Previous animation',
+              _slidePreviousAnimation,
+              enabled: _hasAnimation,
+            ),
+            _bigButton(
+              Icons.keyboard_arrow_down,
+              'Next animation',
+              _slideNextAnimation,
+              enabled: _selectedAnimation != null,
+            ),
+            _iconButton(
+              Icons.play_circle_outline,
+              'Loop preview',
+              _slidePreviewAnimation,
+              enabled: _selectedAnimation != null,
+            ),
           ]),
           _group('Transition', <Widget>[
-            _bigButton(Icons.swap_horiz, 'Transitions',
-                () => setState(() => _tab = 3)),
+            _bigButton(
+              Icons.swap_horiz,
+              'Transitions',
+              () => setState(() => _tab = 3),
+            ),
           ]),
         ]);
       case 5:
         return _withDividers(<Widget>[
           _group('Start Slide Show', <Widget>[
-            _bigButton(Icons.play_circle_outline, 'From beginning',
-                _slideShowFromStart),
-            _bigButton(Icons.play_arrow, 'From current',
-                _slideShowFromCurrent),
+            _bigButton(
+              Icons.play_circle_outline,
+              'From beginning',
+              _slideShowFromStart,
+            ),
+            _bigButton(Icons.play_arrow, 'From current', _slideShowFromCurrent),
             _bigButton(Icons.stop_circle_outlined, 'End show', _slides.endShow),
           ]),
           _group('Options', <Widget>[
-            _iconButton(Icons.skip_previous, 'Previous slide',
-                _slidePrevious),
+            _iconButton(Icons.skip_previous, 'Previous slide', _slidePrevious),
             _iconButton(Icons.skip_next, 'Next slide', _slideNext),
             _iconButton(Icons.notes, 'Speaker notes', _slideNotes),
           ]),
@@ -1528,8 +1852,11 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
             _bigButton(Icons.content_copy, 'Duplicate', _slideDuplicate),
           ]),
           _group('Help', <Widget>[
-            _bigButton(Icons.keyboard_outlined, 'Shortcuts',
-                () => showOfficeShortcuts(context, 'slides')),
+            _bigButton(
+              Icons.keyboard_outlined,
+              'Shortcuts',
+              () => showOfficeShortcuts(context, 'slides'),
+            ),
             _bigButton(Icons.info_outline, 'About', _aboutEditor),
           ]),
         ]);
@@ -1558,8 +1885,9 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
       tooltip: context.tr(tooltip),
       onPressed: enabled ? onPressed : null,
       style: IconButton.styleFrom(
-        backgroundColor:
-            active ? theme.colorScheme.primaryContainer : Colors.transparent,
+        backgroundColor: active
+            ? theme.colorScheme.primaryContainer
+            : Colors.transparent,
         foregroundColor: active
             ? theme.colorScheme.onPrimaryContainer
             : theme.colorScheme.onSurface,
@@ -1581,12 +1909,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
       child: InkWell(
         onTap: usable ? onPressed : null,
         borderRadius: BorderRadius.circular(4),
-        child: _bigButtonVisual(
-          icon,
-          label,
-          active: active,
-          enabled: usable,
-        ),
+        child: _bigButtonVisual(icon, label, active: active, enabled: usable),
       ),
     );
   }
@@ -1614,8 +1937,8 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
             size: 17,
             color: enabled
                 ? (active
-                    ? theme.colorScheme.onPrimaryContainer
-                    : theme.colorScheme.onSurface)
+                      ? theme.colorScheme.onPrimaryContainer
+                      : theme.colorScheme.onSurface)
                 : theme.disabledColor,
           ),
           const SizedBox(height: 2),
@@ -1680,9 +2003,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
     TextStyle Function(T value)? itemStyle,
     double itemHeight = 48,
   }) {
-    final List<T> values = items.contains(value)
-        ? items
-        : <T>[value, ...items];
+    final List<T> values = items.contains(value) ? items : <T>[value, ...items];
     return Container(
       width: width,
       height: 24,
@@ -1860,13 +2181,16 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
               PopupMenuItem<WmlUnderline>(
                 value: style,
                 height: 30,
-                child: Text(OfficeRibbonControlStrings(context).text(switch (style) {
-                  WmlUnderline.none => 'None',
-                  WmlUnderline.single => 'Single',
-                  WmlUnderline.double => 'Double',
-                  WmlUnderline.dotted => 'Dotted',
-                  WmlUnderline.wavy => 'Wavy',
-                }), style: const TextStyle(fontSize: 12)),
+                child: Text(
+                  OfficeRibbonControlStrings(context).text(switch (style) {
+                    WmlUnderline.none => 'None',
+                    WmlUnderline.single => 'Single',
+                    WmlUnderline.double => 'Double',
+                    WmlUnderline.dotted => 'Dotted',
+                    WmlUnderline.wavy => 'Wavy',
+                  }),
+                  style: const TextStyle(fontSize: 12),
+                ),
               ),
           ],
         ),
@@ -1876,28 +2200,39 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
 
   Widget _vertAlignControl() {
     return PopupMenuButton<WmlVertAlign>(
-      tooltip: OfficeRibbonControlStrings(context).text('Superscript / subscript'),
+      tooltip: OfficeRibbonControlStrings(context)
+          .text('Superscript / subscript'),
       icon: const Icon(Icons.superscript, size: 17),
       iconSize: 17,
       padding: EdgeInsets.zero,
       onSelected: (WmlVertAlign align) {
         _wordRun((WmlRunProps props) {
-          props.vertAlign =
-              props.vertAlign == align ? WmlVertAlign.baseline : align;
+          props.vertAlign = props.vertAlign == align
+              ? WmlVertAlign.baseline
+              : align;
         });
       },
       itemBuilder: (BuildContext context) => <PopupMenuEntry<WmlVertAlign>>[
         PopupMenuItem<WmlVertAlign>(
           value: WmlVertAlign.superscript,
-          child: Text(OfficeRibbonControlStrings(context).text('Superscript'), style: const TextStyle(fontSize: 12)),
+          child: Text(
+            OfficeRibbonControlStrings(context).text('Superscript'),
+            style: const TextStyle(fontSize: 12),
+          ),
         ),
         PopupMenuItem<WmlVertAlign>(
           value: WmlVertAlign.subscript,
-          child: Text(OfficeRibbonControlStrings(context).text('Subscript'), style: const TextStyle(fontSize: 12)),
+          child: Text(
+            OfficeRibbonControlStrings(context).text('Subscript'),
+            style: const TextStyle(fontSize: 12),
+          ),
         ),
         PopupMenuItem<WmlVertAlign>(
           value: WmlVertAlign.baseline,
-          child: Text(OfficeRibbonControlStrings(context).text('Baseline'), style: const TextStyle(fontSize: 12)),
+          child: Text(
+            OfficeRibbonControlStrings(context).text('Baseline'),
+            style: const TextStyle(fontSize: 12),
+          ),
         ),
       ],
     );
@@ -1921,7 +2256,9 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
             value: value,
             height: 30,
             child: Text(
-              value == 1.0 ? OfficeRibbonControlStrings(context).text('Single') : OfficeRibbonControlStrings(context).lines(value),
+              value == 1.0
+                  ? OfficeRibbonControlStrings(context).text('Single')
+                  : OfficeRibbonControlStrings(context).lines(value),
               style: const TextStyle(fontSize: 12),
             ),
           ),
@@ -1939,11 +2276,17 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
       itemBuilder: (BuildContext context) => <PopupMenuEntry<bool>>[
         PopupMenuItem<bool>(
           value: false,
-          child: Text(OfficeRibbonControlStrings(context).text('Left-to-right'), style: const TextStyle(fontSize: 12)),
+          child: Text(
+            OfficeRibbonControlStrings(context).text('Left-to-right'),
+            style: const TextStyle(fontSize: 12),
+          ),
         ),
         PopupMenuItem<bool>(
           value: true,
-          child: Text(OfficeRibbonControlStrings(context).text('Right-to-left'), style: const TextStyle(fontSize: 12)),
+          child: Text(
+            OfficeRibbonControlStrings(context).text('Right-to-left'),
+            style: const TextStyle(fontSize: 12),
+          ),
         ),
       ],
     );
@@ -2065,8 +2408,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
   }
 
   String _transitionLabel(PmlTransitionKind value) {
-    const Map<PmlTransitionKind, String> names =
-        <PmlTransitionKind, String>{
+    const Map<PmlTransitionKind, String> names = <PmlTransitionKind, String>{
       PmlTransitionKind.none: 'None',
       PmlTransitionKind.fade: 'Fade',
       PmlTransitionKind.push: 'Push',
@@ -2128,15 +2470,12 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
       case OfficeEditorAction.readingView:
         _toggleReadingMode();
       case OfficeEditorAction.keyboardShortcuts:
-        showOfficeShortcuts(
-          context,
-          switch (widget.kind) {
-            OfficeEditorKind.word => 'word',
-            OfficeEditorKind.sheet => 'sheet',
-            OfficeEditorKind.slides => 'slides',
-            OfficeEditorKind.unsupported => 'office',
-          },
-        );
+        showOfficeShortcuts(context, switch (widget.kind) {
+          OfficeEditorKind.word => 'word',
+          OfficeEditorKind.sheet => 'sheet',
+          OfficeEditorKind.slides => 'slides',
+          OfficeEditorKind.unsupported => 'office',
+        });
       case OfficeEditorAction.about:
         _aboutEditor();
       case OfficeEditorAction.font:
@@ -2317,10 +2656,9 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
   }
 
   void _toggleReadingMode() {
-    final OfficeInteractionMode next =
-        _c.mode == OfficeInteractionMode.editing
-            ? OfficeInteractionMode.viewing
-            : OfficeInteractionMode.editing;
+    final OfficeInteractionMode next = _c.mode == OfficeInteractionMode.editing
+        ? OfficeInteractionMode.viewing
+        : OfficeInteractionMode.editing;
     widget.onConfigChanged(widget.config.copyWith(mode: next));
   }
 
@@ -2611,7 +2949,9 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
     final controller = _word;
     final target = _wordEditTarget(controller);
     final picture = await _pickImage();
-    if (picture == null || !mounted || !_canMutate ||
+    if (picture == null ||
+        !mounted ||
+        !_canMutate ||
         !identical(controller, widget.controller) ||
         _wordEditTarget(controller) != target) {
       return;
@@ -2666,7 +3006,11 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
     if (file.bytes!.length > officePictureMaxBytes) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('Images larger than 32 MB are not supported.'))),
+          SnackBar(
+            content: Text(
+              context.tr('Images larger than 32 MB are not supported.'),
+            ),
+          ),
         );
       }
       return null;
@@ -2680,15 +3024,17 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
   }
 
   void _insertTable() async {
-    final ({int rows, int columns})? result =
-        await showInsertTableDialog(context);
+    final ({int rows, int columns})? result = await showInsertTableDialog(
+      context,
+    );
     if (result == null) return;
     _word.insertTable(rows: result.rows, columns: result.columns);
   }
 
   void _insertHyperlink() async {
-    final ({String text, String url})? result =
-        await showHyperlinkDialog(context);
+    final ({String text, String url})? result = await showHyperlinkDialog(
+      context,
+    );
     if (result == null) return;
     _word.insertHyperlink(
       text: result.text.isEmpty ? result.url : result.text,
@@ -2697,8 +3043,9 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
   }
 
   void _insertComment() async {
-    final ({String text, String author})? result =
-        await showCommentDialog(context);
+    final ({String text, String author})? result = await showCommentDialog(
+      context,
+    );
     if (result == null) return;
     _word.insertComment(text: result.text, author: result.author);
   }
@@ -2714,7 +3061,9 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
       trimResult: false,
       confirmLabel: context.tr('Insert'),
     );
-    if (!mounted || text == null || !_canMutate ||
+    if (!mounted ||
+        text == null ||
+        !_canMutate ||
         !identical(controller, widget.controller)) {
       return;
     }
@@ -2947,8 +3296,9 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
   }
 
   void _sheetComment() async {
-    final ({String text, String author})? result =
-        await showCommentDialog(context);
+    final ({String text, String author})? result = await showCommentDialog(
+      context,
+    );
     if (result == null) return;
     _sheet.setCellComment(
       result.text,
@@ -2987,13 +3337,13 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
 
   PmlShapeAnimation? get _selectedAnimation => _slides.selectedAnimation;
 
-  bool get _hasAnimation =>
-      _slides.slide.animations.isNotEmpty;
+  bool get _hasAnimation => _slides.slide.animations.isNotEmpty;
 
   void _slideNew() {
     if (!_canMutate) return;
     final List<PmlSlide> slides = _slides.presentation.slides;
-    final int id = slides.fold<int>(
+    final int id =
+        slides.fold<int>(
           256,
           (int max, PmlSlide slide) => slide.id > max ? slide.id : max,
         ) +
@@ -3015,7 +3365,9 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
   Future<void> _slideDelete() async {
     if (_slideCount <= 1) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('A presentation needs at least one slide.'))),
+        SnackBar(
+          content: Text(context.tr('A presentation needs at least one slide.')),
+        ),
       );
       return;
     }
@@ -3062,7 +3414,8 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
   }) {
     if (!_canMutate) return;
     final PmlSlide slide = _slides.slide;
-    final int id = slide.shapes.fold<int>(
+    final int id =
+        slide.shapes.fold<int>(
           2,
           (int max, PmlShape shape) => shape.id > max ? shape.id : max,
         ) +
@@ -3093,7 +3446,9 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
     final PmlSlide slide = controller.slide;
     final int revision = controller.contentRevision;
     final picture = await _pickImage();
-    if (picture == null || !mounted || !_canMutate ||
+    if (picture == null ||
+        !mounted ||
+        !_canMutate ||
         !identical(controller, widget.controller) ||
         !identical(slide, controller.slide) ||
         revision != controller.contentRevision) {
@@ -3111,7 +3466,8 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
       _pictureError();
       return;
     }
-    final int id = slide.shapes.fold<int>(
+    final int id =
+        slide.shapes.fold<int>(
           2,
           (int max, PmlShape shape) => shape.id > max ? shape.id : max,
         ) +
@@ -3140,8 +3496,9 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
   }
 
   void _slideInsertTable() async {
-    final ({int rows, int columns})? result =
-        await showInsertTableDialog(context);
+    final ({int rows, int columns})? result = await showInsertTableDialog(
+      context,
+    );
     if (result == null) return;
     _slides.insertTable(rows: result.rows, cols: result.columns);
   }
@@ -3305,22 +3662,23 @@ class _MenuButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return MenuAnchor(
       menuChildren: items,
-      builder: (BuildContext context, MenuController controller, Widget? child) {
-        return InkWell(
-          onTap: () =>
-              controller.isOpen ? controller.close() : controller.open(),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                color: Theme.of(context).colorScheme.onSurface,
+      builder:
+          (BuildContext context, MenuController controller, Widget? child) {
+            return InkWell(
+              onTap: () =>
+                  controller.isOpen ? controller.close() : controller.open(),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
               ),
-            ),
-          ),
-        );
-      },
+            );
+          },
     );
   }
 }
@@ -3353,8 +3711,31 @@ class _CellStyleCommand implements OfficeCommand {
   final SmlRange range;
   final void Function(SmlCell cell) update;
 
-  final Map<String, ({SmlCellRef ref, bool bold, double size, SmlHAlign align, String fill, String font, int styleIndex})>
-      _before = <String, ({SmlCellRef ref, bool bold, double size, SmlHAlign align, String fill, String font, int styleIndex})>{};
+  final Map<
+    String,
+    ({
+      SmlCellRef ref,
+      bool bold,
+      double size,
+      SmlHAlign align,
+      String fill,
+      String font,
+      int styleIndex,
+    })
+  >
+  _before =
+      <
+        String,
+        ({
+          SmlCellRef ref,
+          bool bold,
+          double size,
+          SmlHAlign align,
+          String fill,
+          String font,
+          int styleIndex,
+        })
+      >{};
 
   @override
   void execute() {
@@ -3366,7 +3747,16 @@ class _CellStyleCommand implements OfficeCommand {
 
   @override
   void undo() {
-    for (final ({SmlCellRef ref, bool bold, double size, SmlHAlign align, String fill, String font, int styleIndex}) snap
+    for (final ({
+          SmlCellRef ref,
+          bool bold,
+          double size,
+          SmlHAlign align,
+          String fill,
+          String font,
+          int styleIndex,
+        })
+        snap
         in _before.values) {
       final SmlCell cell = controller.sheet.cell(snap.ref);
       cell
@@ -3426,8 +3816,8 @@ class _InsertSlideCommand implements OfficeCommand {
 
 class _DeleteSlideCommand implements OfficeCommand {
   _DeleteSlideCommand({required this.controller, required this.index})
-      : _removed = controller.presentation.slides[index],
-        _previous = controller.activeSlideIndex;
+    : _removed = controller.presentation.slides[index],
+      _previous = controller.activeSlideIndex;
 
   final SlideEditorController controller;
   final int index;
@@ -3461,8 +3851,8 @@ class _DeleteSlideCommand implements OfficeCommand {
 
 class _AddShapeCommand implements OfficeCommand {
   _AddShapeCommand(this.controller, this.shape)
-      : _slide = controller.slide,
-        _previousSelection = controller.selected;
+    : _slide = controller.slide,
+      _previousSelection = controller.selected;
 
   final SlideEditorController controller;
   final PmlShape shape;
@@ -3491,7 +3881,7 @@ class _AddShapeCommand implements OfficeCommand {
 
 class _SlideTextColorCommand implements OfficeCommand {
   _SlideTextColorCommand(this.controller, this.shape, this.color)
-      : _previous = shape.textColor;
+    : _previous = shape.textColor;
 
   final SlideEditorController controller;
   final PmlShape shape;
