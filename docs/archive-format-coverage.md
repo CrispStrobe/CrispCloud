@@ -51,9 +51,11 @@ DMG symbolic links, including the common `Applications` link, are omitted
 from the file tree with an explicit notice. Their original records remain in
 the raw image. An unsupported or damaged filesystem produces a raw partition
 plus a visible explanation, never a claim that its files were decoded.
-Direct ISO/HFS/CPIO/XAR browsing retains the stricter shared namespace policy:
-special entries or unsafe paths prevent entering/extracting that namespace;
-F3 can show those records with reading disabled.
+Direct pane browsing rejects namespaces containing unsafe paths or unsupported
+special entries. Extraction rejects any such selected entry, while safe selected
+subsets remain extractable. F3 displays these records with reading disabled when
+the underlying reader can enumerate them; malformed ISO/HFS names are refused
+while opening the image.
 
 ## Bounds and integrity
 

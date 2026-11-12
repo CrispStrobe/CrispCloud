@@ -9,7 +9,7 @@ import 'package:crisp_cloud/services/archive_viewer_service.dart';
 void main() {
   final payload = utf8.encode('A complete payload, never a partial success.');
   final compressed = <String, Uint8List>{
-    'gz': Uint8List.fromList(GZipEncoder().encode(payload)),
+    'gz': Uint8List.fromList(const GZipEncoder().encode(payload)),
     'bz2': Uint8List.fromList(BZip2Encoder().encode(payload)),
     'xz': Uint8List.fromList(XZEncoder().encode(payload)),
     'zst': Uint8List.fromList(ZstdEncoder().encode(payload)),

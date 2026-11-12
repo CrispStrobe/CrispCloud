@@ -1059,7 +1059,10 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         identical(_source, source) &&
         _mode == ViewerMode.archive;
     var password = _archivePassword;
-    for (var attempt = 0; attempt < 3; attempt++) {
+    var passwordWasRequired = false;
+    // The first open discovers header encryption; allow three submitted
+    // passwords after that probe, without prompting for an unused attempt.
+    for (var attempt = 0; attempt <= 3; attempt++) {
       if (!mounted || !current()) return;
       final borrowed = _borrowArchiveSource(source, token, loadToken, name);
       var accepted = false;
@@ -1088,6 +1091,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         return;
       } on ArchivePasswordRequiredException catch (e) {
         if (!mounted || !current()) return;
+        passwordWasRequired = true;
+        if (attempt == 3) break;
         setState(() => _preparing = false);
         if (e.wrongPassword) {
           _showSnack(InternalViewerStrings(context).text('incorrectPassword'));
@@ -1104,6 +1109,30 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         setState(() => _preparing = true);
       } on ArchiveViewException catch (e) {
         if (!mounted || !current()) return;
+        // Encrypted 7z headers have no separate password verifier: a bad
+        // password can surface as a decoded-header CRC error. Offer a retry
+        // only after this opening has actually requested a password. Limits
+        // and other failures must retain their original error handling.
+        if (passwordWasRequired &&
+            password != null &&
+            e.code == ArchiveMessageCode.corrupt) {
+          if (attempt == 3) break;
+          setState(() => _preparing = false);
+          final entered = await _promptArchivePassword(
+            wrong: true,
+            possiblyCorrupt: true,
+          );
+          if (!mounted || !current()) return;
+          if (entered == null) {
+            setState(
+              () => _richError = localizedArchiveViewerError(context, e),
+            );
+            return;
+          }
+          password = entered;
+          setState(() => _preparing = true);
+          continue;
+        }
         setState(() {
           _preparing = false;
           _richError = localizedArchiveViewerError(context, e);
@@ -1417,11 +1446,23 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     return int.tryParse(value, radix: radix);
   }
 
-  Future<String?> _promptArchivePassword({required bool wrong}) async {
+  Future<String?> _promptArchivePassword({
+    required bool wrong,
+    bool possiblyCorrupt = false,
+  }) async {
     final result = await showDialog<String>(
       context: context,
       builder: (_) => _TextPromptDialog(
-        title: wrong
+        title: possiblyCorrupt
+            ? localizedArchiveViewerError(
+                context,
+                const ArchivePasswordRequiredException(
+                  'The password is wrong or the archive is corrupt.',
+                  code: ArchiveMessageCode.wrongOrCorrupt,
+                  wrongPassword: true,
+                ),
+              )
+            : wrong
             ? InternalViewerStrings(context).text('wrongPassword')
             : InternalViewerStrings(context).text('passwordRequired'),
         label: InternalViewerStrings(context).text('archivePassword'),
@@ -3472,70 +3513,71 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         ),
       );
     }
-    if (files.isEmpty) {
-      return _messagePane(
-        InternalViewerStrings(context).text('emptyArchive'),
-        theme,
-      );
-    }
-    final list = ListView.builder(
-      itemCount: files.length,
-      itemBuilder: (context, index) {
-        final member = files[index];
-        final isFile = member.isFile;
-        return ListTile(
-          dense: true,
-          leading: Icon(
-            isFile ? Icons.insert_drive_file_outlined : Icons.folder_outlined,
-            size: 18,
-          ),
-          title: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  member.name,
-                  style: const TextStyle(fontSize: 13),
-                  overflow: TextOverflow.ellipsis,
+    final list = files.isEmpty
+        ? _messagePane(
+            InternalViewerStrings(context).text('emptyArchive'),
+            theme,
+          )
+        : ListView.builder(
+            itemCount: files.length,
+            itemBuilder: (context, index) {
+              final member = files[index];
+              final isFile = member.isFile;
+              return ListTile(
+                dense: true,
+                leading: Icon(
+                  isFile
+                      ? Icons.insert_drive_file_outlined
+                      : Icons.folder_outlined,
+                  size: 18,
                 ),
-              ),
-              if (member.isEncrypted)
-                Icon(
-                  Icons.lock_outline,
-                  size: 14,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              if (member.pathEscapedRoot)
-                Padding(
-                  padding: const EdgeInsets.only(left: 4),
-                  child: Tooltip(
-                    message: context.commanderTr(
-                      "Path escaped the archive root (sanitized)",
+                title: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        member.name,
+                        style: const TextStyle(fontSize: 13),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                    child: Icon(
-                      Icons.warning_amber_rounded,
-                      size: 14,
-                      color: theme.colorScheme.error,
-                    ),
-                  ),
+                    if (member.isEncrypted)
+                      Icon(
+                        Icons.lock_outline,
+                        size: 14,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    if (member.pathEscapedRoot)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 4),
+                        child: Tooltip(
+                          message: context.commanderTr(
+                            "Path escaped the archive root (sanitized)",
+                          ),
+                          child: Icon(
+                            Icons.warning_amber_rounded,
+                            size: 14,
+                            color: theme.colorScheme.error,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
-            ],
-          ),
-          trailing: isFile
-              ? Text(
-                  formatBytes(member.size),
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                )
-              : null,
-          enabled: isFile && !member.isSpecial && !member.pathEscapedRoot,
-          onTap: isFile && !member.isSpecial && !member.pathEscapedRoot
-              ? () => unawaited(_openArchiveMember(member))
-              : null,
-        );
-      },
-    );
+                trailing: isFile
+                    ? Text(
+                        formatBytes(member.size),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      )
+                    : null,
+                enabled: isFile && !member.isSpecial && !member.pathEscapedRoot,
+                onTap: isFile && !member.isSpecial && !member.pathEscapedRoot
+                    ? () => unawaited(_openArchiveMember(member))
+                    : null,
+              );
+            },
+          );
     final notices = _archive?.notices ?? const <String>[];
     if (notices.isEmpty) return list;
     return Column(

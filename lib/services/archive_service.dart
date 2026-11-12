@@ -40,8 +40,9 @@ class ArchiveService {
     bool Function()? isCancelled,
     void Function(int completed, int total)? onProgress,
   }) async {
-    if (kIsWeb)
+    if (kIsWeb) {
       throw UnsupportedError('Extract to disk is unavailable on Web.');
+    }
     final file = File(archivePath);
     if (await file.length() > maxArchiveBytes) {
       throw const ArchiveViewException(
@@ -72,8 +73,9 @@ class ArchiveService {
     bool Function()? isCancelled,
     void Function(int completed, int total)? onProgress,
   }) async {
-    if (kIsWeb)
+    if (kIsWeb) {
       throw UnsupportedError('Extract to disk is unavailable on Web.');
+    }
     if (bytes.length > maxArchiveBytes) {
       throw const ArchiveViewException(
         'Archive exceeds the 256 MiB input limit.',
@@ -298,8 +300,9 @@ class ArchiveService {
     String archivePath,
     String innerPath,
   ) async {
-    if (kIsWeb)
+    if (kIsWeb) {
       throw UnsupportedError('Use listArchiveContentsFromBytes on Web');
+    }
     final archive = await openViewerArchiveFile(archivePath, name: archivePath);
     try {
       return ArchiveMemberIndex(archive).list(innerPath);
@@ -326,8 +329,9 @@ class ArchiveService {
     String archivePath,
     String entryPath,
   ) async {
-    if (kIsWeb)
+    if (kIsWeb) {
       throw UnsupportedError('Use extractArchiveEntryFromBytes on Web');
+    }
     final archive = await openViewerArchiveFile(archivePath, name: archivePath);
     try {
       return await _readEntry(archive, entryPath);
