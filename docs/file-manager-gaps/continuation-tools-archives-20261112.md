@@ -111,3 +111,31 @@ unrelated warnings. Installed-tool acceptance on Linux/Windows/macOS remains
 explicit, as do provider metadata and OS path-launch race limits. No dependency
 was added. G11 is implemented for the documented private-copy workflow; G10
 merge-back and automatic remote editing remain separate.
+
+Remote checkpoint: `77af99427e2d7d1b3719a22376a4ebf56508edbd` on
+`feature/external-comparison-tools-20261112`,
+[draft PR 77](https://github.com/CrispStrobe/CrispCloud/pull/77).
+
+### Archive publication and recovery foundation
+
+The [archive publication foundation](../archive-endpoints.md) adds a bounded
+intent journal, exclusive operation leases, expected-record/catalog checks,
+private candidate verification, preserved native access metadata, exact
+no-replace backup/install and whole-container confirmation. Cleanup verifies
+both published and recovery contents; unknown or changed evidence is retained.
+A failed unacknowledged journal intent revokes subsequent mutation authority.
+
+Observed gate: **24 tests passed**, including real native publication and
+lease exclusion, concurrent recovery, lost acknowledgements, changed originals,
+changed access policy, candidate policy changes before installation and file
+growth during bounded cleanup. Narrow foundation analysis reported no issues.
+No dependency was added.
+
+Production publication is currently **native local only**. A remote backend
+needs a separately proven access-policy contract as well as exact no-replace
+movement; no current remote adapter claims it. Browser operation leases and
+remote access-policy preservation are implementation prerequisites, not merely
+unperformed live tests. Two exclusive moves have an original-name absence
+window and are not described as atomic replacement. Durable packing drafts
+remain G21. G18 stays implementing while endpoint transactions, host routing
+and recovery UI are connected.
