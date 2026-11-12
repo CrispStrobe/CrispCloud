@@ -28,6 +28,14 @@ dependencies are retained. Linux support is selected only after a runtime
 probe; a build without the optional development headers or an installation
 without the runtime continues to launch and can use the portable EPUB reader.
 
+The readiness probe now starts a separate bundled helper before creating a
+publication view. It checks script execution and painted output under the same
+sandboxed WebKit settings, with a bounded deadline. Startup failure, a crash,
+timeout, or missing helper returns an unavailable-host result. The plugin also
+cleans remaining helper processes before releasing their process identity.
+This addresses the interrupted session's process-fatal startup failure path;
+successful publication rendering remains a separate qualification gate.
+
 The Linux code is not, by itself, evidence of a working shipping Linux build.
 Its dedicated gate must compile and exercise the actual WebKit process, frame
 production, Flutter texture consumption, screenshot composition, input, resize,

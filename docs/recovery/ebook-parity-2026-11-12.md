@@ -245,3 +245,59 @@ Concurrent repository integration advanced main to `02be67fe`, including absent-
 ## Integration of parallel readiness candidates
 
 The integration retains the newer production isolated-startup path from `e2231a96` and its runtime/helper tests. The alternative readiness candidate in `0ba63f3f` and `13667db4` is superseded for the active build; its original code and evidence remain in Git history and its recent remote branches. The two helper protocols and their CMake targets must not be mixed. This resolution does not extend Linux renderer certification beyond the documented runtime and platform limits.
+
+## Verified continuation outcome
+
+The integrated source checkpoint is
+`b89dbdad868cffa2cb93aa5d700270532e0136d7`. The following final documentation
+update changes no production source, dependency lock, test or workflow. Local
+and remote commit trees were checked for exact equality at every publication.
+The existing draft PR #53 was conflict-free against `main` at `02be67fe` when
+this record was written.
+
+| Check | Observed result |
+| --- | --- |
+| Merged app/service/widget selection | **157 passed** in 55 seconds, including explicit discard, failed-save recovery, library/account binding, reading-data imports and existing file-save guards. Native converter build hooks stayed enabled. |
+| Editor-dialog regression file | **22 passed**, including the corrected explicit Linux test variant. The earlier test-setup failure happened before its behavioral assertions and was repaired, not excluded. |
+| Reader Flutter package | **8 passed**; package analysis clean. |
+| Focused app analysis and formatting | No issues; all four changed Dart files passed formatting with no changes. |
+| Shared reader parser/lifecycle checks | Default and forced missing-grouping/raw-DEFLATE variants passed; suspended-search and section-resource lifecycle regressions passed. |
+| Vendor integrity | The 16 pinned JavaScript files and five notices match their recorded source; vendor code is unchanged. |
+| Native startup guard | **7 actual subprocess scenarios passed**, including concurrent probes, expiry/invalidation, missing/crashed helpers, deadlines, disposal and residual-child cleanup after normal or abnormal exit. |
+| Native compilation | Helper and complete enhanced plugin pass C++17 syntax compilation with warnings treated as errors against actual Flutter 3.47.8, GTK 3.24.49, WebKitGTK 2.52.6 and epoxy headers. This does not establish a linked or rendered Linux app. |
+| Actual application web release | **Passed**, 218.5 seconds, with `flutter build web --release --no-pub --no-wasm-dry-run`. |
+| Bundled assets | Five reader assets and the metadata Wasm/runtime/worker are byte-identical to source; all three metadata digests also match `WASM.json`. |
+| Source evidence | All **292** inventoried paths and the combined lockfile pass the unchanged source-binding validator. |
+| Existing evidence/preflight suites | **42 tests** with two existing skips, plus **38 preflight tests**, passed. These checks do not constitute distribution approval. |
+
+The local Chromium attempt used the installed browser and a fresh temporary
+profile. It failed before reader code ran because `socket()` was denied by the
+execution environment. No browser or runner isolation setting was relaxed.
+
+At the final source check, the main ebook PR workflow
+[43234364793](https://github.com/CrispStrobe/CrispCloud/actions/runs/43234364793)
+had all five jobs queued, and native workflow
+[43234364973](https://github.com/CrispStrobe/CrispCloud/actions/runs/43234364973)
+had all three matrix jobs queued. Later documentation pushes may supersede
+those runs; use the exact current head's registered workflow for final hosted
+acceptance. **No new hosted rendering, native-runtime or EPUBCheck pass is
+claimed for this continuation.** The earlier `1d08158` main-workflow results
+remain historical evidence for that revision.
+
+Keep PR #53 in draft until the enhanced Linux publication test, blocked-startup
+recovery, portable-only launch and main ebook workflow complete successfully.
+The implemented guard makes failed startup a handled capability decision;
+full Linux rendering, target-device behavior, accessibility, automatic reading
+state synchronization, OPDS, speech, dictionaries/translation and licensed DRM
+remain subject to their documented gates or further product work.
+
+### Remote checkpoints from this continuation
+
+| Revision | Saved work |
+| --- | --- |
+| `280f55167f43f227068d8a462a88aabc18e56afb` | Recovery of the latest interrupted-session checkpoint and continuation plan. |
+| `5e0b6f94c542a41db232eb62ec19d21a9ddacffb` | Initial main synchronization and retained source inventories. |
+| `ae0ef0bd32c786400bb28aa6f24794948e6ae1f7` | Explicit-discard protection, section-resource lifecycle and canceled-search fixes. |
+| `e2231a963ae3e5bad6e5164a38bd8006f53b8619` | Isolated Linux readiness helper, owned-process cleanup and distinct hosted gates. |
+| `04429947003f44d9066906b340195526df8efd36` | Corrected the portable-reader regression's Linux test platform. |
+| `b89dbdad868cffa2cb93aa5d700270532e0136d7` | Integrated current main, including ebook platform recovery and macOS dependencies; all merged local checks above target this source. |
