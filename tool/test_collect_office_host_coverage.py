@@ -73,6 +73,8 @@ class HostCollectionControls(unittest.TestCase):
             'assets/images/app_icon.png': 'shipped image fixture',
             'tool/office_smoke.py': 'host tool',
             'tool/with_ci_system_sqlite.py': 'native runtime override',
+            'tool/sync_legacy_doc_parser.py': 'independent parser source guard',
+            'tool/test_sync_legacy_doc_parser.py': 'parser source guard tests',
             'pubspec.yaml': 'name: host\n',
             'pubspec.lock': 'locked dependencies',
             '.fvmrc': '{"flutter":"test-version"}',
@@ -120,7 +122,9 @@ class HostCollectionControls(unittest.TestCase):
                      'packages/quds_office_engine/lib/engine.dart',
                      'packages/quds_office_engine/lib/unpinned.dart',
                      'packages/quds_office_editor/example/fonts/fixture.ttf',
-                     'tool/with_ci_system_sqlite.py'):
+                     'tool/with_ci_system_sqlite.py',
+                     'tool/sync_legacy_doc_parser.py',
+                     'tool/test_sync_legacy_doc_parser.py'):
             self.assertIn(name, receipt['input_sha256'])
         self.assertEqual(receipt['coverage_sha256'], {LCOV: digest(self.directory / LCOV)})
         self.assertIn('test-protocol-fixture', receipt['runtime']['version'])
@@ -140,6 +144,8 @@ class HostCollectionControls(unittest.TestCase):
         self.run_collection()
         for name in ('test/office_test.dart', 'test/support/source.xml',
                      'tool/office_smoke.py', 'tool/with_ci_system_sqlite.py',
+                     'tool/sync_legacy_doc_parser.py',
+                     'tool/test_sync_legacy_doc_parser.py',
                      'pubspec.lock', 'pubspec.yaml', '.fvmrc',
                      '.dart_tool/package_config.json', 'lib/models/shared.dart',
                      'assets/fonts/Roboto-Regular.ttf', 'assets/images/app_icon.png',

@@ -118,7 +118,8 @@ def source_snapshot(root=ROOT):
                 add(child)
         else:
             add(path)
-    for name in ('with_ci_system_sqlite.py', 'test_with_ci_system_sqlite.py'):
+    for name in ('with_ci_system_sqlite.py', 'test_with_ci_system_sqlite.py',
+                 'sync_legacy_doc_parser.py', 'test_sync_legacy_doc_parser.py'):
         add(root / 'tool' / name)
     for name in CONFIG:
         add(root / name)

@@ -69,6 +69,7 @@ import '../utils/formatters.dart';
 import 'code_highlighting.dart';
 import 'hex_viewer.dart';
 import 'internal_viewer_views.dart';
+import 'office_html_widget_factory.dart';
 import 'pptx_slide_viewer.dart';
 import 'preview_media.dart';
 import 'xml_tree_view.dart';
@@ -77,8 +78,6 @@ import 'legacy_word_conversion_action.dart';
 import '../l10n/legacy_word_conversion_strings.dart';
 import '../l10n/internal_viewer_strings.dart';
 import '../l10n/office_preview_strings.dart';
-import '../l10n/legacy_word_conversion_strings.dart';
-import 'legacy_word_conversion_action.dart';
 import '../l10n/file_bytes_error_strings.dart';
 import '../l10n/archive_viewer_error_strings.dart';
 import '../l10n/native_preview_error_strings.dart';
@@ -3124,6 +3123,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
               padding: const EdgeInsets.all(12),
               child: HtmlWidget(
                 safeHtml,
+                factoryBuilder: OfficeHtmlWidgetFactory.new,
                 textStyle: TextStyle(fontSize: 13 * _zoom, height: 1.45),
                 onTapUrl: (_) => true,
               ),
