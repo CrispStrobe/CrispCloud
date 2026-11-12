@@ -134,6 +134,32 @@ optional fields are available from `operations`.
 | `imageWrap` | Set `wrap`, distances `top`/`bottom`/`left`/`right`, `rotation`, `altTitle`, `altDescription` |
 | `frameAdd`, `frameFormat`, `frameRemove` | Create and position a text frame with `x`, `y`, `width`, `height`, `anchor`, `wrap`, `fill`, `stroke` |
 
+For `tableCellText`, `tableCellFormat` and `tableUnmerge`, supply exactly one of
+the legacy physical `column` or the logical `gridColumn`. Logical columns count
+each grid unit, so a coordinate inside a horizontal span or on a vertical
+continuation selects the visible merge origin. `inspect` reports both coordinate
+systems and each cell's merge origin. Invalid continuation chains are diagnosed
+and rejected before mutation. Nested table indexes still follow depth-first
+order and retain their actual containing cell.
+
+```json
+[
+  {"op":"tableCellFormat","table":0,"row":1,"gridColumn":1,"width":73.25,"fill":"DDEEFF"},
+  {"op":"tableCellText","table":0,"row":1,"gridColumn":2,"text":"Edited logical column"},
+  {"op":"tableUnmerge","table":0,"row":1,"gridColumn":1}
+]
+```
+
+Native cell preferred widths retain their original `dxa`, `pct`, `auto` or `nil`
+representation until an explicit point-width change. Changed widths are saved
+as `dxa`; horizontal merge/unmerge derives new widths from the logical grid.
+The `table-grid-{format,replace,unmerge}.json` scripts run against an independently
+authored rich nested-table source. The 28-file corpus contains that source,
+three independently authored expected documents, and unchanged/format/replace/
+unmerge series over three direct and three isolate saves. The XML oracle checks
+the exact intended cell, width units, spans, rich text and bookmark ownership.
+The native renderer requires each first export to match its authored baseline.
+
 Paragraph tab stops are arrays of `{ "position": 72, "alignment": "right",
 "leader": "dot" }`. Distances are points. `firstLine` and `hanging` cannot both
 be supplied. Comment `date` values, when supplied, are ISO-8601 timestamps.
@@ -321,11 +347,10 @@ From `packages/quds_office_engine`:
 
 ```sh
 dart analyze
-# Use an empty directory; never combine coverage from different source revisions.
-rm -rf coverage/vm
-dart test --coverage=coverage/vm
+# Use a new directory; the collector refuses to overwrite an earlier run.
+python3 tool/fidelity/collect_coverage.py coverage/vm
 bash tool/fidelity/check.sh
-python3 tool/fidelity/coverage_report.py coverage/vm
+python3 tool/fidelity/coverage_report.py coverage/vm --require-receipt
 cd ../quds_office_editor
 python3 ../quds_office_engine/tool/fidelity/inventory.py clean \
   --package quds_office_editor --package-root . \

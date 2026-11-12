@@ -1,128 +1,1015 @@
 {
   "version": 1,
   "package": "quds_office_engine",
-  "expected_file_count": 296,
+  "expected_file_count": 324,
   "description": "Authored from the scenarios and regression tests. These paths are an inventory, not a golden generated from current output. SHA receipts identify each run; the semantic and renderer oracles decide correctness.",
   "series": [
-    {"pattern": "fidelity-table-grid/edited-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_table_grid_addressing_test.dart"},
-    {"pattern": "fidelity-table-grid/omitted-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_table_grid_addressing_test.dart"},
-    {"pattern": "fidelity-table-grid/omitted-edited-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_table_grid_addressing_test.dart"},
-    {"pattern": "fidelity-sheet-normal-font/unchanged-{cycle}.xlsx", "cycles": [1, 2, 3], "producer": "test/sheet_normal_font_metrics_test.dart"},
-    {"pattern": "fidelity-sheet-normal-font/normal-font-{cycle}.xlsx", "cycles": [1, 2, 3], "producer": "test/sheet_normal_font_metrics_test.dart"},
-    {"pattern": "fidelity-slide-sections/direct/unchanged-{cycle}.pptx", "cycles": [1, 2, 3], "producer": "test/slide_section_fidelity_test.dart"},
-    {"pattern": "fidelity-slide-sections/direct/within-{cycle}.pptx", "cycles": [1, 2, 3], "producer": "test/slide_section_fidelity_test.dart"},
-    {"pattern": "fidelity-slide-sections/direct/forward-{cycle}.pptx", "cycles": [1, 2, 3], "producer": "test/slide_section_fidelity_test.dart"},
-    {"pattern": "fidelity-slide-sections/direct/backward-{cycle}.pptx", "cycles": [1, 2, 3], "producer": "test/slide_section_fidelity_test.dart"},
-    {"pattern": "fidelity-slide-sections/direct/emptied-{cycle}.pptx", "cycles": [1, 2, 3], "producer": "test/slide_section_fidelity_test.dart"},
-    {"pattern": "fidelity-slide-sections/isolate/unchanged-{cycle}.pptx", "cycles": [1, 2, 3], "producer": "test/slide_section_fidelity_test.dart"},
-    {"pattern": "fidelity-slide-sections/isolate/within-{cycle}.pptx", "cycles": [1, 2, 3], "producer": "test/slide_section_fidelity_test.dart"},
-    {"pattern": "fidelity-slide-sections/isolate/forward-{cycle}.pptx", "cycles": [1, 2, 3], "producer": "test/slide_section_fidelity_test.dart"},
-    {"pattern": "fidelity-slide-sections/isolate/backward-{cycle}.pptx", "cycles": [1, 2, 3], "producer": "test/slide_section_fidelity_test.dart"},
-    {"pattern": "fidelity-slide-sections/isolate/emptied-{cycle}.pptx", "cycles": [1, 2, 3], "producer": "test/slide_section_fidelity_test.dart"},
-    {"pattern": "fidelity-sheet-rename/renamed-{cycle}.xlsx", "cycles": [1, 2, 3], "producer": "test/sheet_rename_fidelity_test.dart"},
-    {"pattern": "fidelity-content-controls/imported-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_content_control_fidelity_test.dart"},
-    {"pattern": "fidelity-content-controls/direct-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_content_control_fidelity_test.dart"},
-    {"pattern": "fidelity-content-controls/isolate-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_content_control_fidelity_test.dart"},
-    {"pattern": "fidelity-bookmarks/imported-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_bookmark_fidelity_test.dart"},
-    {"pattern": "fidelity-bookmarks/cloned-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_bookmark_fidelity_test.dart"},
-    {"pattern": "fidelity-bookmarks/edited-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_bookmark_fidelity_test.dart"},
-    {"pattern": "fidelity-bookmarks/frame-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_bookmark_fidelity_test.dart"},
-    {"pattern": "fidelity-frame-wrap/none-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_frame_wrap_test.dart"},
-    {"pattern": "fidelity-frame-wrap/square-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_frame_wrap_test.dart"},
-    {"pattern": "fidelity-frame-wrap/topBottom-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_frame_wrap_test.dart"},
-    {"pattern": "fidelity-note-markers/imported-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/note_marker_fidelity_test.dart"},
-    {"pattern": "fidelity-note-markers/cloned-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/note_marker_fidelity_test.dart"},
-    {"pattern": "fidelity-note-markers/edited-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/note_marker_fidelity_test.dart"},
-    {"pattern": "fidelity-bibliography/direct-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_bibliography_fidelity_test.dart"},
-    {"pattern": "fidelity-bibliography/isolate-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_bibliography_fidelity_test.dart"},
-    {"pattern": "fidelity-revision-stories/direct-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_revision_story_test.dart"},
-    {"pattern": "fidelity-revision-stories/isolate-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_revision_story_test.dart"},
-    {"pattern": "fidelity/unchanged-{cycle}.docx", "cycles": [1, 2, 3], "producer": "tool/fidelity/scenarios.dart"},
-    {"pattern": "fidelity/edited-{cycle}.docx", "cycles": [1, 2, 3], "producer": "tool/fidelity/scenarios.dart"},
-    {"pattern": "fidelity/sheet-imported-{cycle}.xlsx", "cycles": [1, 2, 3], "producer": "tool/fidelity/cross_format.dart"},
-    {"pattern": "fidelity/sheet-edited-{cycle}.xlsx", "cycles": [1, 2, 3], "producer": "tool/fidelity/cross_format.dart"},
-    {"pattern": "fidelity/slide-imported-{cycle}.pptx", "cycles": [1, 2, 3], "producer": "tool/fidelity/cross_format.dart"},
-    {"pattern": "fidelity/slide-edited-{cycle}.pptx", "cycles": [1, 2, 3], "producer": "tool/fidelity/cross_format.dart"},
-    {"pattern": "fidelity-notes/unchanged-{cycle}.docx", "cycles": [1, 2, 3], "producer": "tool/fidelity/notes.dart"},
-    {"pattern": "fidelity-notes/edited-{cycle}.docx", "cycles": [1, 2, 3], "producer": "tool/fidelity/notes.dart"},
-    {"pattern": "fidelity-native/created-pivot-{cycle}.xlsx", "cycles": [1, 2, 3], "producer": "test/native_spreadsheet_test.dart"},
-    {"pattern": "fidelity-native/native-sheet-imported-{cycle}.xlsx", "cycles": [1, 2, 3], "producer": "test/native_spreadsheet_test.dart"},
-    {"pattern": "fidelity-native/native-sheet-edited-{cycle}.xlsx", "cycles": [1, 2, 3], "producer": "test/native_spreadsheet_test.dart"},
-    {"pattern": "fidelity-native/native-slides-{cycle}.pptx", "cycles": [1, 2, 3], "producer": "test/native_presentation_test.dart"},
-    {"pattern": "fidelity-native/native-slides-edited-{cycle}.pptx", "cycles": [1, 2, 3], "producer": "test/native_presentation_test.dart"},
-    {"pattern": "fidelity-styles/unchanged-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/style_cascade_test.dart"},
-    {"pattern": "fidelity-styles/edited-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/style_cascade_test.dart"},
-    {"pattern": "fidelity-story-media/story-imported-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/story_media_fidelity_test.dart"},
-    {"pattern": "fidelity-story-media/story-edited-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/story_media_fidelity_test.dart"},
-    {"pattern": "fidelity-story-media/relocated-edited-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_part_routing_test.dart"},
-    {"pattern": "fidelity-lists/restarted-{cycle}.docx", "cycles": [0, 1, 2], "producer": "test/list_restart_fidelity_test.dart"},
-    {"pattern": "fidelity-schema/sheet-style-{cycle}.xlsx", "cycles": [1, 2, 3], "producer": "test/sheet_schema_fidelity_test.dart"},
-    {"pattern": "fidelity-schema/column-metadata-{cycle}.xlsx", "cycles": [1, 2, 3], "producer": "test/sheet_schema_fidelity_test.dart"},
-    {"pattern": "fidelity-slide-text/rich-imported-{cycle}.pptx", "cycles": [1, 2, 3], "producer": "test/slide_text_fidelity_test.dart"},
-    {"pattern": "fidelity-slide-text/rich-edited-{cycle}.pptx", "cycles": [1, 2, 3], "producer": "test/slide_text_fidelity_test.dart"},
-    {"pattern": "fidelity-scripted/word/roundtrip-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/scripted_workflows_test.dart"},
-    {"pattern": "fidelity-scripted/sheet/roundtrip-{cycle}.xlsx", "cycles": [1, 2, 3], "producer": "test/scripted_workflows_test.dart"},
-    {"pattern": "fidelity-scripted/slide/roundtrip-{cycle}.pptx", "cycles": [1, 2, 3], "producer": "test/scripted_workflows_test.dart"},
-    {"pattern": "fidelity-word-compatibility/compatibility-imported-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_compatibility_fidelity_test.dart"},
-    {"pattern": "fidelity-word-compatibility/compatibility-edited-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_compatibility_fidelity_test.dart"},
-    {"pattern": "fidelity-word-edits/styles-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_referenced_styles_and_breaks_test.dart"},
-    {"pattern": "fidelity-word-edits/breaks-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_referenced_styles_and_breaks_test.dart"},
-    {"pattern": "fidelity-comment-threads/threads-imported-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/comment_thread_fidelity_test.dart"},
-    {"pattern": "fidelity-comment-threads/threads-edited-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/comment_thread_fidelity_test.dart"},
-    {"pattern": "fidelity-altchunk/altchunk-imported-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_altchunk_fidelity_test.dart"},
-    {"pattern": "fidelity-altchunk/altchunk-moved-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_altchunk_fidelity_test.dart"},
-    {"pattern": "fidelity-opaque/opaque-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/opaque_word_test.dart"},
-    {"pattern": "fidelity-image/replaced-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/office_steps_test.dart"},
-    {"pattern": "fidelity-style-toggles/toggle-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/style_cascade_test.dart"},
-    {"pattern": "fidelity-section-clones/section-clone-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_section_clone_fidelity_test.dart"},
-    {"pattern": "fidelity-table-borders/tables-imported-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/table_border_fidelity_test.dart"},
-    {"pattern": "fidelity-table-borders/tables-edited-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/table_border_fidelity_test.dart"},
-    {"pattern": "fidelity-inline-fields/direct-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/inline_field_fidelity_test.dart"},
-    {"pattern": "fidelity-inline-fields/isolate-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/inline_field_fidelity_test.dart"},
-    {"pattern": "fidelity-structure/create/roundtrip-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_structure_steps_test.dart"},
-    {"pattern": "fidelity-structure/edit/roundtrip-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_structure_steps_test.dart"},
-    {"pattern": "fidelity-structure/remove/roundtrip-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_structure_steps_test.dart"},
-    {"pattern": "fidelity-aux-controls/imported-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_auxiliary_content_control_test.dart"},
-    {"pattern": "fidelity-aux-controls/edited-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_auxiliary_content_control_test.dart"},
-    {"pattern": "fidelity-aux-header-footer/imported-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_auxiliary_content_control_test.dart"},
-    {"pattern": "fidelity-aux-header-footer/edited-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_auxiliary_content_control_test.dart"},
-    {"pattern": "fidelity-note-markers-legacy/markers-imported-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/note_marker_legacy_fidelity_test.dart"},
-    {"pattern": "fidelity-note-markers-legacy/markers-edited-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/note_marker_legacy_fidelity_test.dart"},
-    {"pattern": "fidelity-bookmarks-legacy/bookmarks-imported-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/bookmark_fidelity_test.dart"},
-    {"pattern": "fidelity-bookmarks-legacy/bookmarks-edited-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/bookmark_fidelity_test.dart"},
-    {"pattern": "fidelity-content-controls-legacy/controls-imported-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/content_control_fidelity_test.dart"},
-    {"pattern": "fidelity-content-controls-legacy/controls-edited-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/content_control_fidelity_test.dart"},
-    {"pattern": "fidelity-content-controls-legacy/legacy-frame-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/content_control_fidelity_test.dart"}
+    {
+      "pattern": "fidelity-table-grid/edited-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/word_table_grid_addressing_test.dart"
+    },
+    {
+      "pattern": "fidelity-table-grid/omitted-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/word_table_grid_addressing_test.dart"
+    },
+    {
+      "pattern": "fidelity-table-grid/omitted-edited-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/word_table_grid_addressing_test.dart"
+    },
+    {
+      "pattern": "fidelity-sheet-normal-font/unchanged-{cycle}.xlsx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/sheet_normal_font_metrics_test.dart"
+    },
+    {
+      "pattern": "fidelity-sheet-normal-font/normal-font-{cycle}.xlsx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/sheet_normal_font_metrics_test.dart"
+    },
+    {
+      "pattern": "fidelity-slide-sections/direct/unchanged-{cycle}.pptx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/slide_section_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-slide-sections/direct/within-{cycle}.pptx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/slide_section_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-slide-sections/direct/forward-{cycle}.pptx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/slide_section_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-slide-sections/direct/backward-{cycle}.pptx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/slide_section_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-slide-sections/direct/emptied-{cycle}.pptx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/slide_section_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-slide-sections/isolate/unchanged-{cycle}.pptx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/slide_section_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-slide-sections/isolate/within-{cycle}.pptx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/slide_section_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-slide-sections/isolate/forward-{cycle}.pptx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/slide_section_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-slide-sections/isolate/backward-{cycle}.pptx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/slide_section_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-slide-sections/isolate/emptied-{cycle}.pptx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/slide_section_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-sheet-rename/renamed-{cycle}.xlsx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/sheet_rename_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-content-controls/imported-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/word_content_control_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-content-controls/direct-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/word_content_control_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-content-controls/isolate-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/word_content_control_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-bookmarks/imported-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/word_bookmark_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-bookmarks/cloned-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/word_bookmark_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-bookmarks/edited-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/word_bookmark_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-bookmarks/frame-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/word_bookmark_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-frame-wrap/none-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/word_frame_wrap_test.dart"
+    },
+    {
+      "pattern": "fidelity-frame-wrap/square-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/word_frame_wrap_test.dart"
+    },
+    {
+      "pattern": "fidelity-frame-wrap/topBottom-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/word_frame_wrap_test.dart"
+    },
+    {
+      "pattern": "fidelity-note-markers/imported-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/note_marker_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-note-markers/cloned-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/note_marker_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-note-markers/edited-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/note_marker_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-bibliography/direct-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/word_bibliography_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-bibliography/isolate-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/word_bibliography_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-revision-stories/direct-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/word_revision_story_test.dart"
+    },
+    {
+      "pattern": "fidelity-revision-stories/isolate-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/word_revision_story_test.dart"
+    },
+    {
+      "pattern": "fidelity/unchanged-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "tool/fidelity/scenarios.dart"
+    },
+    {
+      "pattern": "fidelity/edited-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "tool/fidelity/scenarios.dart"
+    },
+    {
+      "pattern": "fidelity/sheet-imported-{cycle}.xlsx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "tool/fidelity/cross_format.dart"
+    },
+    {
+      "pattern": "fidelity/sheet-edited-{cycle}.xlsx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "tool/fidelity/cross_format.dart"
+    },
+    {
+      "pattern": "fidelity/slide-imported-{cycle}.pptx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "tool/fidelity/cross_format.dart"
+    },
+    {
+      "pattern": "fidelity/slide-edited-{cycle}.pptx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "tool/fidelity/cross_format.dart"
+    },
+    {
+      "pattern": "fidelity-notes/unchanged-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "tool/fidelity/notes.dart"
+    },
+    {
+      "pattern": "fidelity-notes/edited-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "tool/fidelity/notes.dart"
+    },
+    {
+      "pattern": "fidelity-native/created-pivot-{cycle}.xlsx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/native_spreadsheet_test.dart"
+    },
+    {
+      "pattern": "fidelity-native/native-sheet-imported-{cycle}.xlsx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/native_spreadsheet_test.dart"
+    },
+    {
+      "pattern": "fidelity-native/native-sheet-edited-{cycle}.xlsx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/native_spreadsheet_test.dart"
+    },
+    {
+      "pattern": "fidelity-native/native-slides-{cycle}.pptx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/native_presentation_test.dart"
+    },
+    {
+      "pattern": "fidelity-native/native-slides-edited-{cycle}.pptx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/native_presentation_test.dart"
+    },
+    {
+      "pattern": "fidelity-styles/unchanged-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/style_cascade_test.dart"
+    },
+    {
+      "pattern": "fidelity-styles/edited-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/style_cascade_test.dart"
+    },
+    {
+      "pattern": "fidelity-story-media/story-imported-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/story_media_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-story-media/story-edited-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/story_media_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-story-media/relocated-edited-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/word_part_routing_test.dart"
+    },
+    {
+      "pattern": "fidelity-lists/restarted-{cycle}.docx",
+      "cycles": [
+        0,
+        1,
+        2
+      ],
+      "producer": "test/list_restart_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-schema/sheet-style-{cycle}.xlsx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/sheet_schema_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-schema/column-metadata-{cycle}.xlsx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/sheet_schema_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-slide-text/rich-imported-{cycle}.pptx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/slide_text_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-slide-text/rich-edited-{cycle}.pptx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/slide_text_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-scripted/word/roundtrip-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/scripted_workflows_test.dart"
+    },
+    {
+      "pattern": "fidelity-scripted/sheet/roundtrip-{cycle}.xlsx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/scripted_workflows_test.dart"
+    },
+    {
+      "pattern": "fidelity-scripted/slide/roundtrip-{cycle}.pptx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/scripted_workflows_test.dart"
+    },
+    {
+      "pattern": "fidelity-word-compatibility/compatibility-imported-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/word_compatibility_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-word-compatibility/compatibility-edited-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/word_compatibility_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-word-edits/styles-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/word_referenced_styles_and_breaks_test.dart"
+    },
+    {
+      "pattern": "fidelity-word-edits/breaks-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/word_referenced_styles_and_breaks_test.dart"
+    },
+    {
+      "pattern": "fidelity-comment-threads/threads-imported-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/comment_thread_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-comment-threads/threads-edited-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/comment_thread_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-altchunk/altchunk-imported-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/word_altchunk_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-altchunk/altchunk-moved-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/word_altchunk_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-opaque/opaque-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/opaque_word_test.dart"
+    },
+    {
+      "pattern": "fidelity-image/replaced-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/office_steps_test.dart"
+    },
+    {
+      "pattern": "fidelity-style-toggles/toggle-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/style_cascade_test.dart"
+    },
+    {
+      "pattern": "fidelity-section-clones/section-clone-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/word_section_clone_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-table-borders/tables-imported-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/table_border_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-table-borders/tables-edited-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/table_border_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-inline-fields/direct-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/inline_field_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-inline-fields/isolate-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/inline_field_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-structure/create/roundtrip-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/word_structure_steps_test.dart"
+    },
+    {
+      "pattern": "fidelity-structure/edit/roundtrip-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/word_structure_steps_test.dart"
+    },
+    {
+      "pattern": "fidelity-structure/remove/roundtrip-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/word_structure_steps_test.dart"
+    },
+    {
+      "pattern": "fidelity-aux-controls/imported-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/word_auxiliary_content_control_test.dart"
+    },
+    {
+      "pattern": "fidelity-aux-controls/edited-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/word_auxiliary_content_control_test.dart"
+    },
+    {
+      "pattern": "fidelity-aux-header-footer/imported-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/word_auxiliary_content_control_test.dart"
+    },
+    {
+      "pattern": "fidelity-aux-header-footer/edited-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/word_auxiliary_content_control_test.dart"
+    },
+    {
+      "pattern": "fidelity-note-markers-legacy/markers-imported-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/note_marker_legacy_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-note-markers-legacy/markers-edited-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/note_marker_legacy_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-bookmarks-legacy/bookmarks-imported-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/bookmark_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-bookmarks-legacy/bookmarks-edited-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/bookmark_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-content-controls-legacy/controls-imported-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/content_control_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-content-controls-legacy/controls-edited-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/content_control_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-content-controls-legacy/legacy-frame-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/content_control_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-table-grid/direct/unchanged-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/table_grid_steps_test.dart"
+    },
+    {
+      "pattern": "fidelity-table-grid/direct/format-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/table_grid_steps_test.dart"
+    },
+    {
+      "pattern": "fidelity-table-grid/direct/replace-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/table_grid_steps_test.dart"
+    },
+    {
+      "pattern": "fidelity-table-grid/direct/unmerge-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/table_grid_steps_test.dart"
+    },
+    {
+      "pattern": "fidelity-table-grid/isolate/unchanged-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/table_grid_steps_test.dart"
+    },
+    {
+      "pattern": "fidelity-table-grid/isolate/format-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/table_grid_steps_test.dart"
+    },
+    {
+      "pattern": "fidelity-table-grid/isolate/replace-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/table_grid_steps_test.dart"
+    },
+    {
+      "pattern": "fidelity-table-grid/isolate/unmerge-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/table_grid_steps_test.dart"
+    }
   ],
   "standalone": [
-    {"path": "fidelity-table-grid/source.docx", "producer": "test/word_table_grid_addressing_test.dart"},
-    {"path": "fidelity-table-grid/omitted-source.docx", "producer": "test/word_table_grid_addressing_test.dart"},
-    {"path": "fidelity-table-grid/omitted-edited-expected.docx", "producer": "test/word_table_grid_addressing_test.dart"},
-    {"path": "fidelity-sheet-normal-font/source.xlsx", "producer": "test/sheet_normal_font_metrics_test.dart"},
-    {"path": "fidelity-slide-sections/direct/source.pptx", "producer": "test/slide_section_fidelity_test.dart"},
-    {"path": "fidelity-slide-sections/isolate/source.pptx", "producer": "test/slide_section_fidelity_test.dart"},
-    {"path": "fidelity-sheet-rename/source.xlsx", "producer": "test/sheet_rename_fidelity_test.dart"},
-    {"path": "fidelity-content-controls/source.docx", "producer": "test/word_content_control_fidelity_test.dart"},
-    {"path": "fidelity-bookmarks/source.docx", "producer": "test/word_bookmark_fidelity_test.dart"},
-    {"path": "fidelity-bookmarks/frame-source.docx", "producer": "test/word_bookmark_fidelity_test.dart"},
-    {"path": "fidelity-note-markers/source.docx", "producer": "test/note_marker_fidelity_test.dart"},
-    {"path": "fidelity-structure/source.docx", "producer": "test/word_structure_steps_test.dart"},
-    {"path": "fidelity-structure/create/edited.docx", "producer": "test/word_structure_steps_test.dart"},
-    {"path": "fidelity-structure/edit/edited.docx", "producer": "test/word_structure_steps_test.dart"},
-    {"path": "fidelity-structure/remove/edited.docx", "producer": "test/word_structure_steps_test.dart"},
-    {"path": "fidelity-comment-threads/threads-source.docx", "producer": "test/comment_thread_fidelity_test.dart"},
-    {"path": "fidelity-notes/source.docx", "producer": "tool/fidelity/notes.dart"},
-    {"path": "fidelity-script.docx", "producer": "tool/fidelity/check.sh"},
-    {"path": "fidelity-scripted/word/edited.docx", "producer": "test/scripted_workflows_test.dart"},
-    {"path": "fidelity-scripted/sheet/edited.xlsx", "producer": "test/scripted_workflows_test.dart"},
-    {"path": "fidelity-scripted/slide/edited.pptx", "producer": "test/scripted_workflows_test.dart"},
-    {"path": "fidelity-frame-wrap/none-source.docx", "producer": "test/word_frame_wrap_test.dart"},
-    {"path": "fidelity-frame-wrap/square-source.docx", "producer": "test/word_frame_wrap_test.dart"},
-    {"path": "fidelity-frame-wrap/topBottom-source.docx", "producer": "test/word_frame_wrap_test.dart"},
-    {"path": "fidelity-aux-controls/source.docx", "producer": "test/word_auxiliary_content_control_test.dart"},
-    {"path": "fidelity-aux-header-footer/source.docx", "producer": "test/word_auxiliary_content_control_test.dart"},
-    {"path": "fidelity-content-controls-legacy/controls-source.docx", "producer": "test/content_control_fidelity_test.dart"},
-    {"path": "fidelity-note-markers-legacy/markers-source.docx", "producer": "test/note_marker_legacy_fidelity_test.dart"},
-    {"path": "fidelity-bookmarks-legacy/bookmarks-source.docx", "producer": "test/bookmark_fidelity_test.dart"}
+    {
+      "path": "fidelity-table-grid/source.docx",
+      "producer": "test/word_table_grid_addressing_test.dart"
+    },
+    {
+      "path": "fidelity-table-grid/omitted-source.docx",
+      "producer": "test/word_table_grid_addressing_test.dart"
+    },
+    {
+      "path": "fidelity-table-grid/omitted-edited-expected.docx",
+      "producer": "test/word_table_grid_addressing_test.dart"
+    },
+    {
+      "path": "fidelity-sheet-normal-font/source.xlsx",
+      "producer": "test/sheet_normal_font_metrics_test.dart"
+    },
+    {
+      "path": "fidelity-slide-sections/direct/source.pptx",
+      "producer": "test/slide_section_fidelity_test.dart"
+    },
+    {
+      "path": "fidelity-slide-sections/isolate/source.pptx",
+      "producer": "test/slide_section_fidelity_test.dart"
+    },
+    {
+      "path": "fidelity-sheet-rename/source.xlsx",
+      "producer": "test/sheet_rename_fidelity_test.dart"
+    },
+    {
+      "path": "fidelity-content-controls/source.docx",
+      "producer": "test/word_content_control_fidelity_test.dart"
+    },
+    {
+      "path": "fidelity-bookmarks/source.docx",
+      "producer": "test/word_bookmark_fidelity_test.dart"
+    },
+    {
+      "path": "fidelity-bookmarks/frame-source.docx",
+      "producer": "test/word_bookmark_fidelity_test.dart"
+    },
+    {
+      "path": "fidelity-note-markers/source.docx",
+      "producer": "test/note_marker_fidelity_test.dart"
+    },
+    {
+      "path": "fidelity-structure/source.docx",
+      "producer": "test/word_structure_steps_test.dart"
+    },
+    {
+      "path": "fidelity-structure/create/edited.docx",
+      "producer": "test/word_structure_steps_test.dart"
+    },
+    {
+      "path": "fidelity-structure/edit/edited.docx",
+      "producer": "test/word_structure_steps_test.dart"
+    },
+    {
+      "path": "fidelity-structure/remove/edited.docx",
+      "producer": "test/word_structure_steps_test.dart"
+    },
+    {
+      "path": "fidelity-comment-threads/threads-source.docx",
+      "producer": "test/comment_thread_fidelity_test.dart"
+    },
+    {
+      "path": "fidelity-notes/source.docx",
+      "producer": "tool/fidelity/notes.dart"
+    },
+    {
+      "path": "fidelity-script.docx",
+      "producer": "tool/fidelity/check.sh"
+    },
+    {
+      "path": "fidelity-scripted/word/edited.docx",
+      "producer": "test/scripted_workflows_test.dart"
+    },
+    {
+      "path": "fidelity-scripted/sheet/edited.xlsx",
+      "producer": "test/scripted_workflows_test.dart"
+    },
+    {
+      "path": "fidelity-scripted/slide/edited.pptx",
+      "producer": "test/scripted_workflows_test.dart"
+    },
+    {
+      "path": "fidelity-frame-wrap/none-source.docx",
+      "producer": "test/word_frame_wrap_test.dart"
+    },
+    {
+      "path": "fidelity-frame-wrap/square-source.docx",
+      "producer": "test/word_frame_wrap_test.dart"
+    },
+    {
+      "path": "fidelity-frame-wrap/topBottom-source.docx",
+      "producer": "test/word_frame_wrap_test.dart"
+    },
+    {
+      "path": "fidelity-aux-controls/source.docx",
+      "producer": "test/word_auxiliary_content_control_test.dart"
+    },
+    {
+      "path": "fidelity-aux-header-footer/source.docx",
+      "producer": "test/word_auxiliary_content_control_test.dart"
+    },
+    {
+      "path": "fidelity-content-controls-legacy/controls-source.docx",
+      "producer": "test/content_control_fidelity_test.dart"
+    },
+    {
+      "path": "fidelity-note-markers-legacy/markers-source.docx",
+      "producer": "test/note_marker_legacy_fidelity_test.dart"
+    },
+    {
+      "path": "fidelity-bookmarks-legacy/bookmarks-source.docx",
+      "producer": "test/bookmark_fidelity_test.dart"
+    },
+    {
+      "path": "fidelity-table-grid/source.docx",
+      "producer": "test/table_grid_steps_test.dart"
+    },
+    {
+      "path": "fidelity-table-grid/expected-format.docx",
+      "producer": "test/table_grid_steps_test.dart"
+    },
+    {
+      "path": "fidelity-table-grid/expected-replace.docx",
+      "producer": "test/table_grid_steps_test.dart"
+    },
+    {
+      "path": "fidelity-table-grid/expected-unmerge.docx",
+      "producer": "test/table_grid_steps_test.dart"
+    }
   ]
 }

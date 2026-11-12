@@ -18,6 +18,7 @@ import '../model/word_notes.dart';
 import '../model/word_revision.dart';
 import '../model/word_styles.dart';
 import '../model/word_toc.dart';
+import '../model/word_tree.dart';
 import '../properties/wml_properties.dart';
 import 'word_bibliography_io.dart';
 import 'word_bookmark_io.dart';
@@ -72,6 +73,24 @@ class WordSerializer {
     _generatedBookmarkIds = WordBookmarks.generatedIds(document);
     WordRevisions.validate(document);
     WordContentControls.validate(document);
+    for (final blocks in [
+      for (final section in document.sections) section.blocks,
+      for (final note in [...document.footnotes, ...document.endnotes])
+        note.blocks,
+    ]) {
+      for (final table in WordTree.descendants(blocks).whereType<WmlTable>()) {
+        for (final row in table.rows) {
+          for (final cell in row.cells) {
+            final width = cell.width;
+            if (width != null && (!width.isFinite || width < 0)) {
+              throw ArgumentError(
+                'Table cell width must be finite and nonnegative',
+              );
+            }
+          }
+        }
+      }
+    }
     final OpcPackage package =
         document.package ?? OpcPackage.create(OpcPackageKind.word);
     final PackageRelationship? office = package.packageRelationships
@@ -1297,6 +1316,19 @@ class WordSerializer {
       for (final WmlTableCell cell in row.cells) {
         w.writeStartElement('tc', prefix: 'w');
         w.writeStartElement('tcPr', prefix: 'w');
+        if (cell.sourceWidthXml != null &&
+            cell.width == cell.sourceWidthPoints) {
+          w.writeRaw(cell.sourceWidthXml!);
+        } else if (cell.width != null) {
+          w.writeEmptyElement(
+            'tcW',
+            prefix: 'w',
+            attributes: <String, String>{
+              'w:w': '${pointsToTwips(cell.width!)}',
+              'w:type': 'dxa',
+            },
+          );
+        }
         if (cell.gridSpan > 1) {
           w.writeEmptyElement(
             'gridSpan',

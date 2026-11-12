@@ -1,6 +1,7 @@
 import 'package:quds_office_engine/quds_office_engine.dart';
 
 import 'step_input.dart';
+import 'table_selector.dart';
 
 /// Structural commands use body indexes exposed by `inspect`. They validate
 /// before mutating and reject unsupported merged-grid surgery explicitly.

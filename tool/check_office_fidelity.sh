@@ -33,7 +33,9 @@ flutter test --coverage --coverage-path build/fidelity-host/coverage/lcov.info \
   test/widget/office_paragraph_fidelity_test.dart \
   test/widget/office_save_fidelity_test.dart \
   test/widget/legacy_word_conversion_dialog_test.dart \
-  test/widget/legacy_word_routing_test.dart
+  test/widget/legacy_word_routing_test.dart \
+  test/office_search_fidelity_test.dart \
+  test/widget/office_font_fidelity_test.dart
 python3 -m unittest discover -s tool -p test_office_host_coverage.py
 python3 tool/office_host_coverage.py --require-all-sources
 python3 tool/office_host_evidence.py verify
