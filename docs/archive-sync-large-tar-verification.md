@@ -128,13 +128,13 @@ packing, the pre-staging source check and the final source check. See the
 and [reproduction/provenance record](../test/fixtures/archives/NATIVE_STREAMED_TAR.md).
 
 An earlier acceptance attempt exhausted disk space while starting the CBT
-stage after TAR had succeeded. Temporary source/spool/stage cleanup completed.
+stage after TAR had succeeded. The service disposed its private spool/stage;
+test teardown removed only its generated source fixtures.
 After disposable build output was removed, the full 24-test gate and both
 independent readbacks passed. Generated large archives are not committed;
 their manifests, deterministic input specification and checker are preserved.
 
-Combined regression counts and the final release build will be recorded after
-their acceptance runs finish.
+The combined regression results and release-build evidence are recorded below.
 The configured 2 GiB output ceiling is distinct from the sizes actually
 measured. The source/output chunk limits and sampled RSS are evidence for this
 Linux run, not a promised process-memory ceiling on every platform. Fresh
@@ -157,7 +157,53 @@ dialog's focused gate passed **45 tests**, including all nine localized native
 TAR/CBT guidance cases. The English, German and French bundled guides and their
 source/hash manifest are updated together. All **33 help service/dialog tests**
 passed; the manifest validator checked **three guides with 23 topics each**.
-Final observed combined gates are recorded below once complete.
+The complete combined gates are recorded below.
+
+## Combined regression and release gates
+
+The combined command includes **84 test files**, covering archive readers,
+writers, workspaces, publication/recovery, all archive widgets, affected viewer
+and file-operation workflows, the transfer queue and ordinary directory
+comparison:
+
+```sh
+flutter test --no-pub --concurrency=1 --reporter expanded \
+  test/archive*_test.dart test/widget/archive*_test.dart \
+  test/internal_viewer_test.dart test/panel_source_test.dart \
+  test/viewer_search_service_test.dart test/viewer_streaming_service_test.dart \
+  test/viewer_spool_lifecycle_test.dart test/file_operation_service_test.dart \
+  test/file_clipboard_test.dart test/widget/internal_viewer_widget_test.dart \
+  test/widget/internal_viewer_localization_test.dart \
+  test/widget/file_operation_dialog_test.dart \
+  test/widget/file_operations_localization_test.dart \
+  test/widget/screen_dialog_localization_test.dart \
+  test/transfer_queue_test.dart test/background_transfer_journal_test.dart \
+  test/transfer_journal_storage_io_test.dart \
+  test/directory_comparison_service_test.dart
+```
+
+The complete serial regression passed **2,094 tests across all 84 files** in
+11 minutes 57 seconds, including the new native large TAR/CBT case and all
+synchronization widgets. All **23 changed Dart files** passed fatal-info
+analysis and formatting.
+Whitespace validation and Python reference-checker compilation passed. The
+English/German/French guide validator checks both exact content hashes and
+matching topic anchors. An initial parallel combined run exhausted the shared
+test filesystem when large image and TAR fixtures overlapped; that interrupted
+run is not accepted as a regression pass. The complete gate runs with one test
+file at a time to keep fixture storage within the available disk budget.
+
+The versioned release command uses the checkpoint containing all application
+code and bundled-guide changes:
+
+```sh
+flutter build web --release --no-pub --no-wasm-dry-run \
+  --dart-define=GIT_HASH=d84c9db5 \
+  --dart-define=APP_VERSION=1.2.0+13
+```
+
+Release output verification is pending in this intermediate documentation
+checkpoint.
 
 ## Remaining boundaries
 

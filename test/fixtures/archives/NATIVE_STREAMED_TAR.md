@@ -114,8 +114,9 @@ preserved. A completed exclusive publication remains successful if
 cancellation arrives afterward.
 
 An earlier acceptance attempt encountered a real disk-full error while
-starting the CBT stage after TAR had succeeded. Its source/spool/stage cleanup
-completed. After disposable build artifacts were removed, the complete
+starting the CBT stage after TAR had succeeded. The service disposed its
+private spool/stage; test teardown removed only its generated source fixtures.
+After disposable build artifacts were removed, the complete
 24-test gate and both independent checks passed. The writer preflights the
 2 GiB boundary, including a payload that fits exactly once its 512-byte header
 and 1,024-byte ending are included. The acceptance run does **not** claim to

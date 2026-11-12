@@ -25,9 +25,11 @@ Branch: `feature/archive-rearrange-cpio-20261112`.
    64 MiB member and 256 MiB aggregate limits. Keep progress, cancellation,
    source validation and exact no-overwrite publication through every phase.
 
-The implementation and focused gates are complete. Combined regression and
-release-build results are recorded in the
-[verification document](archive-sync-large-tar-verification.md) as they finish.
+The implementation and focused gates are complete. The combined regression
+passed **2,094 tests across 84 files**, all **23 changed Dart files** passed
+fatal-info analysis and formatting, and **33 help tests** passed separately.
+Release-build evidence is recorded in the
+[verification document](archive-sync-large-tar-verification.md).
 
 ## Remote checkpoints
 
@@ -38,6 +40,7 @@ release-build results are recorded in the
 | `cfc8eff48f267ceb69966c4556e83aa233607546` | Selected one-way sync service, atomic workspace adoption and native tests |
 | `f11b1cad035c9ebe5e4674475097be1139fd45ea` | Compare routing, complete review, recovery UI and nine-language guidance |
 | `6577554b29d6d0c0beec41975296f22d67546afc` | Large native TAR/CBT tests, independent checker and measured evidence |
+| `d84c9db5acf8f903ae18523266aaba84bc4a4bd0` | Reviewed contracts, partial gap status and English/German/French bundled guides |
 
 Every checkpoint uses a leased fast-forward update and an exact Git tree
 comparison. Local history is reconciled to the returned remote commit without
