@@ -292,7 +292,7 @@
         "none: encryption.xml and Kindle DRM markers are detected and such books are refused"
       ],
       "sources": [
-        "packages/crisp_ebook/lib/src/document.dart"
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook/lib/src/document.dart"
       ],
       "note": "No DRM removal or decryption is implemented."
     },
@@ -306,10 +306,10 @@
       ],
       "sources": [
         "lib/services/ebook_annotations.dart",
-        "packages/crisp_ebook/lib/src/document.dart",
-        "packages/crisp_ebook/lib/src/prose.dart",
-        "packages/crisp_ebook/lib/src/zip_container.dart",
-        "packages/crisp_ebook_reader/lib/src/reader.dart"
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook/lib/src/document.dart",
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook/lib/src/prose.dart",
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook/lib/src/zip_container.dart",
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_reader/lib/src/reader.dart"
       ],
       "note": "The digests identify source versions and detect stale prose edits; they do not encrypt books or annotations. Local annotations use SharedPreferences. The random session identifier scopes reader bridge messages alongside host source/origin checks. CRC-32 is a format check, not authentication. The portable Linux search/bookmark/appearance extension introduces no additional cipher or key derivation."
     },
@@ -327,12 +327,12 @@
         "Vendored Kindling fonts.rs SHA-1 implementation and deobfuscate"
       ],
       "sources": [
-        "packages/crisp_ebook/lib/src/document.dart",
-        "packages/crisp_ebook_reader/assets/foliate/epub.js",
-        "packages/crisp_ebook_reader/assets/foliate/mobi.js",
-        "packages/crisp_ebook_conversion/native/vendor/kindling/src/fonts.rs"
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook/lib/src/document.dart",
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_reader/assets/foliate/epub.js",
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_reader/assets/foliate/mobi.js",
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_conversion/native/vendor/kindling/src/fonts.rs"
       ],
-      "note": "These compatibility paths are reachable for supported font resources. They do not provide general ebook DRM decryption. Unknown EPUB encryption is rejected; Kindling's native bridge also rejects rights.xml and unrecognized EncryptionMethod values. The Dart document retains original obfuscated bytes, and Kindling's output FONT records use compression without XOR obfuscation. The metadata-only browser worker does not decode fonts."
+      "note": "These compatibility paths are reachable for supported font resources. They do not provide general ebook DRM decryption. Unknown EPUB encryption is rejected; Kindling's shared native/browser bridge also rejects rights.xml and unrecognized EncryptionMethod values. The Dart document retains original obfuscated bytes, and Kindling's output FONT records use compression without XOR obfuscation. The retained metadata-only regression module does not decode fonts; full browser EPUB export uses the shared native font compatibility path."
     },
     {
       "name": "Bundled ebook ZIP cryptography and rejected password paths",
@@ -343,38 +343,42 @@
         "Traditional PKWARE ZipCrypto present in zip.js and Rust zip source"
       ],
       "sources": [
-        "packages/crisp_ebook_reader/UPSTREAM.json",
-        "packages/crisp_ebook_reader/assets/foliate/vendor/zip.js",
-        "packages/crisp_ebook_reader/assets/foliate/view.js",
-        "packages/crisp_ebook_reader/assets/licenses/sjcl-LICENSE.txt",
-        "packages/crisp_ebook_reader/assets/licenses/zip-js-LICENSE.txt",
-        "packages/crisp_ebook_conversion/native/Cargo.toml",
-        "packages/crisp_ebook_conversion/native/Cargo.lock",
-        "packages/crisp_ebook_conversion/native/vendor/kindling/Cargo.toml"
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_reader/UPSTREAM.json",
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_reader/assets/foliate/vendor/zip.js",
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_reader/assets/foliate/view.js",
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_reader/assets/licenses/sjcl-LICENSE.txt",
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_reader/assets/licenses/zip-js-LICENSE.txt",
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_conversion/native/Cargo.toml",
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_conversion/native/Cargo.lock",
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_conversion/native/vendor/kindling/Cargo.toml"
       ],
       "note": "The pinned JavaScript asset contains these implementations even though the ebook loader rejects every encrypted ZIP entry before getData and never supplies a password. Its PBKDF2 has a WebCrypto path and SJCL fallback; its unused encryption code contains crypto.getRandomValues plus a Math.random-based fallback, which is not treated as a secure reachable app RNG. The Dart EPUB container independently rejects password-encrypted ZIP flags. Native conversion uses passwordless Rust zip 9.3.0 reads, which reject encrypted entries; default features and aes-crypto are disabled in the reviewed manifests. Rust ZipCrypto source remains in the dependency, so disabled AES is not a claim that the dependency source is crypto-free. No ebook password-decryption UI or password-encryption output is added. Existing archive-viewer password support is covered separately."
     },
     {
-      "name": "Kindle conversion and browser metadata engine",
+      "name": "Kindle conversion and browser engines",
       "source_reviewed_on": "2026-11-12",
       "algorithms": [
         "MD5 for Kindle format metadata: EXTH 542 title hash prefixes, native export identifiers and font-signature ordering",
-        "SHA-1 and XOR font compatibility in native EPUB conversion, as listed separately"
+        "SHA-1 and XOR font compatibility in native/browser EPUB conversion, as listed separately"
       ],
       "sources": [
-        "packages/crisp_ebook_conversion/UPSTREAM.json",
-        "packages/crisp_ebook_conversion/native/src/lib.rs",
-        "packages/crisp_ebook_conversion/native/vendor/kindling/src/exth.rs",
-        "packages/crisp_ebook_conversion/native/vendor/kindling/src/mobi.rs",
-        "packages/crisp_ebook_conversion/native/vendor/kindling/src/mobi_rewrite.rs",
-        "packages/crisp_ebook_conversion/wasm/Cargo.toml",
-        "packages/crisp_ebook_conversion/wasm/Cargo.lock",
-        "packages/crisp_ebook_conversion/wasm/src/lib.rs",
-        "packages/crisp_ebook_conversion/assets/metadata_runtime.js",
-        "packages/crisp_ebook_conversion/assets/metadata_worker.js",
-        "packages/crisp_ebook_conversion/WASM.json"
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_conversion/UPSTREAM.json",
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_conversion/native/src/lib.rs",
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_conversion/native/vendor/kindling/src/exth.rs",
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_conversion/native/vendor/kindling/src/mobi.rs",
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_conversion/native/vendor/kindling/src/mobi_rewrite.rs",
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_conversion/wasm/Cargo.toml",
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_conversion/wasm/Cargo.lock",
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_conversion/wasm/src/lib.rs",
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_conversion/assets/metadata_runtime.js",
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_conversion/assets/metadata_worker.js",
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_conversion/WASM.json",
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_conversion/CONVERSION_WASM.json",
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_conversion/WASI_SHIM.json",
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_conversion/assets/conversion_runtime.js",
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_conversion/assets/conversion_worker.js"
       ],
-      "note": "Kindling 0.46.2 contains full MD5 implementations; changing a title reaches md5_first4 in the native and browser metadata byte API. These hashes are format fields, not authentication or encryption. Metadata rewriting rejects nonzero PalmDOC encryption and DRM EXTH 401/402/403 in either primary or KF8 sections before output. The browser bridge sets doc_type and cover_image to None, so it does not invoke font conversion or embedded source-ZIP extraction. The Wasm lock retains ahash 0.8.12, getrandom 0.3.4/0.4.3, rand 0.8.8, rand_core 0.6.4 and wasm-bindgen 0.2.121; getrandom's wasm_js feature permits compilation of the broader dependency graph. The inspected bundled Wasm has zero host imports, and metadata_runtime.js rejects modules with imports. This establishes no browser RNG/crypto imports for that artifact, not absence of internal MD5 or an audit of every dependency. External/prebuilt native-library or custom worker overrides require separate artifact provenance; a version/ABI string alone is not a content hash. No export-policy classification or Apple approval is established by this source inventory."
+      "note": "Kindling 0.46.2 contains MD5 implementations used for Kindle format fields, not authentication or encryption. The production browser converter now runs the same reviewed request validator and EPUB export/metadata processor as native builds inside a fresh memory-only WASI /job. It rejects socket imports and provides no host filesystem, environment values, OPFS or network API to the Wasm engine. The pinned WASI shim can supply random_get through platform crypto.getRandomValues and retains its upstream Math.random fallback; this does not introduce a cipher or secret-key protocol. Browser export reaches the existing font SHA-1/XOR compatibility path. Its bundled compressed module, expanded bytes, runtime, build inputs and pinned shim are hashed in CONVERSION_WASM.json/WASI_SHIM.json and the app source manifest. The separate metadata-only Wasm regression module still has zero imports and retains its distinct WASM.json. Metadata rewriting rejects encrypted primary/KF8 sections before output; browser cover replacement remains unavailable. External/prebuilt native-library or custom worker overrides require separate artifact provenance. No export classification or distribution approval is established by this source inventory."
     },
     {
       "name": "Ebook reading-data exchange, library identities, and shared reader hosts",
@@ -394,50 +398,19 @@
         "lib/services/ebook_library.dart",
         "lib/services/ebook_reading_data_files.dart",
         "lib/widgets/ebook_library_actions.dart",
-        "packages/crisp_ebook_reader/assets/reader_controls.js",
-        "packages/crisp_ebook_reader/assets/reader_compat.js",
-        "packages/crisp_ebook_reader/lib/src/models.dart",
-        "packages/crisp_ebook_reader/lib/src/hosts/host_linux.dart",
-        "packages/crisp_ebook_reader/linux/CMakeLists.txt",
-        "packages/crisp_ebook_reader/linux/crisp_ebook_reader_plugin.cc",
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_reader/assets/reader_controls.js",
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_reader/assets/reader_compat.js",
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_reader/lib/src/models.dart",
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_reader/lib/src/hosts/host_linux.dart",
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_reader/linux/CMakeLists.txt",
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_reader/linux/crisp_ebook_reader_plugin.cc",
         "linux/packaging/build_deb.sh",
-        "packages/crisp_ebook_reader/assets/reader_search.js",
-        "packages/crisp_ebook_reader/linux/reader_runtime_probe.h",
-        "packages/crisp_ebook_reader/linux/reader_webkit_settings.h",
-        "packages/crisp_ebook_reader/linux/webkit_runtime_probe.cc"
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_reader/assets/reader_search.js",
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_reader/linux/reader_runtime_probe.h",
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_reader/linux/reader_webkit_settings.h",
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_reader/linux/webkit_runtime_probe.cc"
       ],
       "note": "The added SHA-256 uses bind data to exact content and renderer versions, detect stale import previews, and derive catalog IDs; they are not signatures, MACs, encryption or access grants. Reading-data exports are plain UTF-8 JSON without source paths, account metadata or credentials. Local sidecars and the library index use SharedPreferences; the index can retain exact persistent account/root/file references but resolves authentication separately. In-process locks and stale-instance checks do not establish cross-process or browser-tab transactions. Shared appearance controls accept bounded numbers and allowlisted choices, not arbitrary CSS or scripts. The Linux CMake target links system GTK3/gmodule and optional epoxy, dynamically loads libwebkit2gtk-4.1.so.0 at version 2.48.4 or newer, and copies no WebKit runtime into the bundle. Its ephemeral host requires the WebKit process sandbox and uses the existing session loopback assets, CSP and sanitized book frames. No new production Dart dependency, cipher implementation, KDF or credential store is added by this increment. Installed system WebKit and transitive TLS/crypto implementations, finished binaries and distribution decisions remain outside this bounded technical source review. The shared search controller serializes Foliate iterators and suppresses canceled search overlays; section resource cleanup and explicit reading-state discard add no cryptographic or network capability. The optional Linux host now installs a separate, system-WebKit-linked readiness executable. The application/plugin remain dynamically linked only to their prior system host libraries, while the helper loads a fixed no-network document under the enabled WebKit sandbox before any publication view is created. The host bounds startup, closes inherited descriptors, suppresses helper output/core dumps and cleans the owned child group before reaping; no source path, publication data or credentials are passed as helper arguments. No runner policy or sandbox setting is relaxed."
-    },
-    {
-      "name": "Legacy Word conversion and retained signature evidence",
-      "algorithms": [
-        "ZIP format CRC checks through the existing archive dependency; no signature validation or decryption implementation"
-      ],
-      "sources": [
-        "packages/legacy_doc_parser/UPSTREAM.json",
-        "packages/legacy_doc_parser/lib/src/conversion.dart",
-        "packages/legacy_doc_parser/lib/src/word_media_writer.dart"
-      ],
-      "note": "Bounded DOC/DOT parsing and separate DOCX/DOCM output. Original signature bytes are inert evidence; converted output does not claim the original signature validity. The parser never executes VBA or embedded objects."
-    },
-    {
-      "name": "Retained tool staging and conditional publication",
-      "algorithms": [
-        "Existing SHA-256 content fingerprints and OS-backed private staging identifiers"
-      ],
-      "sources": [
-        "lib/services/conditional_file_publication.dart",
-        "lib/services/dropbox_file_publication.dart",
-        "lib/services/private_tool_staging_io.dart",
-        "lib/services/external_remote_editing_service.dart",
-        "lib/services/external_editor_service.dart",
-        "lib/services/archive_container_publisher.dart",
-        "lib/services/archive_publication_cleanup_io.dart",
-        "lib/services/archive_source_cleanup_io.dart",
-        "lib/services/viewer_spool_io.dart",
-        "lib/utils/system_links.dart"
-      ],
-      "note": "Digests bind retained copies and reviewed publication/recovery inputs. No new cipher, password decryption path or distribution decision is introduced."
     },
     {
       "name": "FictionBook conversion and bounded serialization",
@@ -446,13 +419,27 @@
         "Existing Dart crypto SHA-256 for a fallback document identifier derived from title and authors"
       ],
       "sources": [
-        "packages/crisp_ebook/lib/src/fictionbook.dart"
+        "https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook/lib/src/fictionbook.dart"
       ],
       "note": "Pure Dart EPUB-to-FB2/FBZ conversion writes a separate in-memory output. It validates the source, refuses signed/encrypted input and non-representable active/foreign/media content, confines packaged resource paths, bounds output and image counts, and validates emitted local links. The fallback hash is a format identifier, not authentication, encryption or an exact-content identity. Embedded raster resources use Base64; FBZ uses the existing passwordless archive writer. No new cryptographic implementation, key handling, credential store, network destination or native dependency is added."
+    },
+    {
+      "name": "Shared ebook package extraction and foreground speech",
+      "source_reviewed_on": "2026-11-12",
+      "algorithms": [
+        "Existing publication SHA-256 identities; existing reader session randomness; no new cipher or key derivation"
+      ],
+      "sources": [
+        "docs/ebook-source-manifest.json",
+        "tool/verify_ebook_sources.py",
+        "lib/widgets/ebook_editor_dialog.dart"
+      ],
+      "note": "The four ebook dependencies resolve to one immutable crisperbooks Git revision. The manifest covers every tracked upstream file and verification checks the actual Pub-resolved bytes, Git identities and package roots. Shared APIs retain the existing cryptographic behavior documented above. Foreground speech uses platform/browser voices and sends no book bytes to a new application network endpoint; voice implementation and availability remain platform-dependent. This source refresh does not change distribution declarations or territory decisions."
     }
   ],
   "reviewed_files": [
     ".github/workflows/smb-rust.yml",
+    ".github/workflows/testflight-external.yml",
     "cli/lib/adapters/cli_adapter_factory.dart",
     "cli/lib/adapters/cli_storage_client.dart",
     "cli/lib/adapters/smb_adapter.dart",
@@ -464,6 +451,7 @@
     "cli/lib/config/cli_config.dart",
     "cli/pubspec.lock",
     "cli/pubspec.yaml",
+    "docs/ebook-source-manifest.json",
     "lib/l10n/connection_dialog_extra_strings.dart",
     "lib/l10n/keepass_strings.dart",
     "lib/l10n/key_management_strings.dart",
@@ -523,6 +511,7 @@
     "lib/services/internxt_streaming_transfer.dart",
     "lib/services/keepass_service.dart",
     "lib/services/local_api_service.dart",
+    "lib/services/mac_browser_toolbar.dart",
     "lib/services/macos_keychain_service.dart",
     "lib/services/macos_keychain_service_io.dart",
     "lib/services/macos_keychain_service_stub.dart",
@@ -541,6 +530,7 @@
     "lib/services/secure_storage_web.dart",
     "lib/services/smb_client_adapter.dart",
     "lib/services/smb_config_service.dart",
+    "lib/services/syntax_line_highlighting.dart",
     "lib/services/veracrypt_mount_service.dart",
     "lib/services/veracrypt_service.dart",
     "lib/services/viewer_spool_io.dart",
@@ -564,81 +554,17 @@
     "lib/widgets/internal_viewer_dialog.dart",
     "lib/widgets/keepass_editor_dialog.dart",
     "lib/widgets/lock_screen.dart",
+    "lib/widgets/office_html_widget_factory.dart",
     "lib/widgets/preview_pane.dart",
     "lib/widgets/settings_dialog.dart",
     "lib/widgets/smb_backend_field.dart",
+    "lib/widgets/syntax_line_view.dart",
     "linux/flutter/generated_plugin_registrant.cc",
     "linux/flutter/generated_plugins.cmake",
     "linux/packaging/build_deb.sh",
     "macos/Runner/AppDelegate.swift",
     "macos/Runner/CustomKeychainStore.swift",
     "macos/Runner/MainFlutterWindow.swift",
-    "packages/crisp_ebook/lib/crisp_ebook.dart",
-    "packages/crisp_ebook/lib/src/document.dart",
-    "packages/crisp_ebook/lib/src/fictionbook.dart",
-    "packages/crisp_ebook/lib/src/prose.dart",
-    "packages/crisp_ebook/lib/src/zip_container.dart",
-    "packages/crisp_ebook/pubspec.yaml",
-    "packages/crisp_ebook_conversion/UPSTREAM.json",
-    "packages/crisp_ebook_conversion/WASM.json",
-    "packages/crisp_ebook_conversion/assets/kindling_metadata.wasm",
-    "packages/crisp_ebook_conversion/assets/metadata_runtime.js",
-    "packages/crisp_ebook_conversion/assets/metadata_worker.js",
-    "packages/crisp_ebook_conversion/hook/build.dart",
-    "packages/crisp_ebook_conversion/lib/src/build_config.dart",
-    "packages/crisp_ebook_conversion/lib/src/converter.dart",
-    "packages/crisp_ebook_conversion/lib/src/converter_io.dart",
-    "packages/crisp_ebook_conversion/lib/src/converter_web.dart",
-    "packages/crisp_ebook_conversion/native/Cargo.lock",
-    "packages/crisp_ebook_conversion/native/Cargo.toml",
-    "packages/crisp_ebook_conversion/native/src/lib.rs",
-    "packages/crisp_ebook_conversion/native/src/main.rs",
-    "packages/crisp_ebook_conversion/native/vendor/kindling/Cargo.toml",
-    "packages/crisp_ebook_conversion/native/vendor/kindling/src/exth.rs",
-    "packages/crisp_ebook_conversion/native/vendor/kindling/src/fonts.rs",
-    "packages/crisp_ebook_conversion/native/vendor/kindling/src/lib.rs",
-    "packages/crisp_ebook_conversion/native/vendor/kindling/src/mobi.rs",
-    "packages/crisp_ebook_conversion/native/vendor/kindling/src/mobi_rewrite.rs",
-    "packages/crisp_ebook_conversion/pubspec.yaml",
-    "packages/crisp_ebook_conversion/tool/build_metadata_wasm.py",
-    "packages/crisp_ebook_conversion/tool/check_wasm.py",
-    "packages/crisp_ebook_conversion/wasm/Cargo.lock",
-    "packages/crisp_ebook_conversion/wasm/Cargo.toml",
-    "packages/crisp_ebook_conversion/wasm/src/lib.rs",
-    "packages/crisp_ebook_reader/UPSTREAM.json",
-    "packages/crisp_ebook_reader/assets/foliate/epub.js",
-    "packages/crisp_ebook_reader/assets/foliate/mobi.js",
-    "packages/crisp_ebook_reader/assets/foliate/vendor/zip.js",
-    "packages/crisp_ebook_reader/assets/foliate/view.js",
-    "packages/crisp_ebook_reader/assets/index.html",
-    "packages/crisp_ebook_reader/assets/licenses/sjcl-LICENSE.txt",
-    "packages/crisp_ebook_reader/assets/licenses/zip-js-LICENSE.txt",
-    "packages/crisp_ebook_reader/assets/normalize.js",
-    "packages/crisp_ebook_reader/assets/reader.js",
-    "packages/crisp_ebook_reader/assets/reader_compat.js",
-    "packages/crisp_ebook_reader/assets/reader_controls.js",
-    "packages/crisp_ebook_reader/assets/reader_search.js",
-    "packages/crisp_ebook_reader/assets/reader_speech.js",
-    "packages/crisp_ebook_reader/assets/security.js",
-    "packages/crisp_ebook_reader/lib/crisp_ebook_reader.dart",
-    "packages/crisp_ebook_reader/lib/src/controller.dart",
-    "packages/crisp_ebook_reader/lib/src/hosts/asset_server.dart",
-    "packages/crisp_ebook_reader/lib/src/hosts/host.dart",
-    "packages/crisp_ebook_reader/lib/src/hosts/host_linux.dart",
-    "packages/crisp_ebook_reader/lib/src/hosts/host_native.dart",
-    "packages/crisp_ebook_reader/lib/src/hosts/host_web.dart",
-    "packages/crisp_ebook_reader/lib/src/hosts/linux_host_probe.dart",
-    "packages/crisp_ebook_reader/lib/src/hosts/linux_host_status.dart",
-    "packages/crisp_ebook_reader/lib/src/models.dart",
-    "packages/crisp_ebook_reader/lib/src/reader.dart",
-    "packages/crisp_ebook_reader/linux/CMakeLists.txt",
-    "packages/crisp_ebook_reader/linux/crisp_ebook_reader_plugin.cc",
-    "packages/crisp_ebook_reader/linux/include/crisp_ebook_reader/crisp_ebook_reader_plugin.h",
-    "packages/crisp_ebook_reader/linux/reader_runtime_probe.h",
-    "packages/crisp_ebook_reader/linux/reader_surface_size.h",
-    "packages/crisp_ebook_reader/linux/reader_webkit_settings.h",
-    "packages/crisp_ebook_reader/linux/webkit_runtime_probe.cc",
-    "packages/crisp_ebook_reader/pubspec.yaml",
     "packages/crisp_ios_shell/UPSTREAM.md",
     "packages/crisp_ios_shell/ios/crisp_ios_shell.podspec",
     "packages/crisp_ios_shell/tool/sources.json",
@@ -690,16 +616,6 @@
     "packages/crisp_storage/rust_cloud/src/session.rs",
     "packages/crisp_storage/tool/check_rust_licenses.py",
     "packages/crisp_storage/tool/run_package_tests.py",
-    "packages/crisperbooks/UPSTREAM.json",
-    "packages/crisperbooks/lib/crisperbooks.dart",
-    "packages/crisperbooks/lib/src/edit_session.dart",
-    "packages/crisperbooks/lib/src/portable_reader_controller.dart",
-    "packages/crisperbooks/lib/src/raster_safety.dart",
-    "packages/crisperbooks/lib/src/reading_data.dart",
-    "packages/crisperbooks/lib/src/widgets/appearance_dialog.dart",
-    "packages/crisperbooks/lib/src/widgets/portable_reader.dart",
-    "packages/crisperbooks/lib/src/widgets/prose_editor.dart",
-    "packages/crisperbooks/pubspec.yaml",
     "packages/filen_client/UPSTREAM.md",
     "packages/filen_client/lib/aes_gcm_backend.dart",
     "packages/filen_client/lib/bcrypt_aesgcm.dart",
@@ -773,6 +689,7 @@
     "packages/legacy_doc_parser/lib/src/legacy_word_document.dart",
     "packages/legacy_doc_parser/lib/src/legacy_word_fields.dart",
     "packages/legacy_doc_parser/lib/src/legacy_word_format_tables.dart",
+    "packages/legacy_doc_parser/lib/src/legacy_word_html_media.dart",
     "packages/legacy_doc_parser/lib/src/legacy_word_layout_model.dart",
     "packages/legacy_doc_parser/lib/src/legacy_word_layout_parser.dart",
     "packages/legacy_doc_parser/lib/src/legacy_word_lists.dart",
@@ -780,6 +697,8 @@
     "packages/legacy_doc_parser/lib/src/legacy_word_media_parser.dart",
     "packages/legacy_doc_parser/lib/src/legacy_word_metafile.dart",
     "packages/legacy_doc_parser/lib/src/legacy_word_metafile_render.dart",
+    "packages/legacy_doc_parser/lib/src/legacy_word_number_formats.dart",
+    "packages/legacy_doc_parser/lib/src/legacy_word_numbering.dart",
     "packages/legacy_doc_parser/lib/src/legacy_word_officeart_model.dart",
     "packages/legacy_doc_parser/lib/src/legacy_word_officeart_parser.dart",
     "packages/legacy_doc_parser/lib/src/legacy_word_revisions.dart",
@@ -790,6 +709,8 @@
     "packages/legacy_doc_parser/lib/src/legacy_word_structured_parser.dart",
     "packages/legacy_doc_parser/lib/src/legacy_word_structured_render.dart",
     "packages/legacy_doc_parser/lib/src/legacy_word_table_model.dart",
+    "packages/legacy_doc_parser/lib/src/legacy_word_table_operations.dart",
+    "packages/legacy_doc_parser/lib/src/legacy_word_table_revisions.dart",
     "packages/legacy_doc_parser/lib/src/legacy_word_table_styles.dart",
     "packages/legacy_doc_parser/lib/src/legacy_word_table_text.dart",
     "packages/legacy_doc_parser/lib/src/legacy_word_tables.dart",
@@ -797,31 +718,41 @@
     "packages/legacy_doc_parser/lib/src/word_comment_writer.dart",
     "packages/legacy_doc_parser/lib/src/word_compatibility_writer.dart",
     "packages/legacy_doc_parser/lib/src/word_decoration_writer.dart",
+    "packages/legacy_doc_parser/lib/src/word_image_appearance_writer.dart",
     "packages/legacy_doc_parser/lib/src/word_layout_writer.dart",
     "packages/legacy_doc_parser/lib/src/word_media_writer.dart",
+    "packages/legacy_doc_parser/lib/src/word_numbering_writer.dart",
+    "packages/legacy_doc_parser/lib/src/word_officeart_position_writer.dart",
     "packages/legacy_doc_parser/lib/src/word_revision_writer.dart",
     "packages/legacy_doc_parser/lib/src/word_shape_writer.dart",
     "packages/legacy_doc_parser/lib/src/word_story_writer.dart",
+    "packages/legacy_doc_parser/lib/src/word_table_revision_writer.dart",
     "packages/legacy_doc_parser/lib/src/word_table_style_writer.dart",
     "packages/legacy_doc_parser/lib/src/word_table_text_writer.dart",
+    "packages/legacy_doc_parser/lib/src/word_table_writer.dart",
     "packages/legacy_doc_parser/lib/src/word_textbox_writer.dart",
     "packages/legacy_doc_parser/pubspec.yaml",
+    "packages/quds_office_editor/pubspec.yaml",
     "packages/quds_office_engine/lib/src/opc/crypto/office_crypto.dart",
     "packages/quds_office_engine/lib/src/pdf/file/crypto/pdf_security.dart",
+    "packages/quds_reports/lib/quds_reports.dart",
+    "packages/quds_reports/pubspec.yaml",
+    "packages/re_highlight/UPSTREAM.json",
+    "packages/re_highlight/UPSTREAM.md",
+    "packages/re_highlight/lib/src/highlight.dart",
+    "packages/re_highlight/pubspec.yaml",
     "pubspec.yaml",
     "tool/apple_export_preflight.py",
     "tool/crypto_release_evidence.py",
     "tool/testflight_export_guard.rb",
     "tool/testflight_external.rb",
-    "packages/legacy_doc_parser/lib/src/legacy_word_html_media.dart",
-    "packages/legacy_doc_parser/lib/src/legacy_word_number_formats.dart",
-    "packages/legacy_doc_parser/lib/src/legacy_word_numbering.dart",
-    "packages/legacy_doc_parser/lib/src/legacy_word_table_operations.dart",
-    "packages/legacy_doc_parser/lib/src/legacy_word_table_revisions.dart",
-    "packages/legacy_doc_parser/lib/src/word_image_appearance_writer.dart",
-    "packages/legacy_doc_parser/lib/src/word_numbering_writer.dart",
-    "packages/legacy_doc_parser/lib/src/word_officeart_position_writer.dart",
-    "packages/legacy_doc_parser/lib/src/word_table_revision_writer.dart",
-    "packages/legacy_doc_parser/lib/src/word_table_writer.dart"
+    "tool/update_ebook_sources.py",
+    "tool/verify_ebook_sources.py"
+  ],
+  "technical_review_notes": [
+    "CrisperBooks is consumed from a single immutable Git revision with its complete tracked tree and the exact package roots independently verified after Pub resolution. It includes the compressed browser Kindle converter, memory-only WASI source and local platform speech controls. Browser source/tests and native parity controls remain separate from binary distribution approval. The WASI shim has crypto.getRandomValues and a Math.random fallback, which is not treated as a secure RNG. Archive integration and syntax/UI changes add no cipher or credential store."
+  ],
+  "external_source_manifests": [
+    "docs/ebook-source-manifest.json"
   ]
 }

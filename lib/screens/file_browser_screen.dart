@@ -10,6 +10,7 @@ import '../l10n/commander_strings.dart';
 import '../l10n/terminal_strings.dart';
 
 import 'dart:io' show Platform;
+import 'dart:async';
 
 import 'package:flutter/foundation.dart'
     show TargetPlatform, defaultTargetPlatform, kIsWeb;
@@ -24,6 +25,7 @@ import '../providers/panel_source_provider.dart'
     show fkeyBarVisibleProvider, swapPanelSources;
 import '../providers/toolbar_provider.dart' show panelViewModeProvider;
 import '../services/platform_diagnostics_service.dart';
+import '../services/mac_browser_toolbar.dart';
 import '../services/crash_reporting_service.dart' show CrashReport;
 import '../services/panel_view_mode_service.dart' show PanelViewMode;
 import '../services/code_editor_menu.dart';
@@ -126,10 +128,13 @@ class FileBrowserScreen extends ConsumerStatefulWidget {
 class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
   static const _log = Log('FileBrowser');
   bool _textInputFocused = false;
+  late final MacBrowserToolbar _nativeToolbar;
+  bool _nativeToolbarReady = false;
 
   @override
   void initState() {
     super.initState();
+    _nativeToolbar = MacBrowserToolbar(_onNativeToolbarAction);
     FocusManager.instance.addListener(_updateMenuFocus);
   }
 
@@ -145,6 +150,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
   @override
   void dispose() {
     FocusManager.instance.removeListener(_updateMenuFocus);
+    unawaited(_nativeToolbar.dispose());
     super.dispose();
   }
 
@@ -250,8 +256,9 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
 
     final bool showTopToolbar =
         !isDesktopPlatform || ref.watch(topToolbarVisibleProvider);
+    _configureNativeToolbar(context, auth, showTopToolbar);
     final scaffold = Scaffold(
-      appBar: showTopToolbar
+      appBar: showTopToolbar && !_nativeToolbarReady
           ? AppBar(
               titleSpacing: 12,
               title: isNarrow ? Text(l.appTitle) : null,
@@ -1909,6 +1916,159 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
   }
 
   /// Wide screens (>800px): all buttons in a horizontally scrollable row.
+  void _configureNativeToolbar(
+    BuildContext context,
+    AuthNotifier auth,
+    bool visible,
+  ) {
+    if (!_nativeToolbar.supported) return;
+    final l = AppLocalizations.of(context)!;
+    final active = ModalRoute.of(context)?.isCurrent != false;
+    final terminalVisible = ref.watch(showTerminalProvider);
+    final dual = ref.watch(showDualPanelProvider);
+    final tree = ref.watch(showTreeSidebarProvider);
+    final preview = ref.watch(showPreviewProvider);
+    final side = ref.watch(activePanelProvider);
+    final view = ref.watch(
+      side == PanelSide.local ? localViewModeProvider : remoteViewModeProvider,
+    );
+    final compact =
+        ref.watch(panelViewModeProvider(side)) == PanelViewMode.full;
+    final sync = ref.watch(synchronizedBrowsingProvider).enabled;
+    Map<String, Object> item(
+      String id,
+      String label,
+      String symbol, [
+      bool selected = false,
+    ]) => {
+      'id': id,
+      'label': label,
+      'symbol': symbol,
+      'selected': selected,
+      'enabled': active,
+    };
+    final items = [
+      item('swap', l.swapPanels, 'arrow.left.arrow.right'),
+      item(
+        'synchronized',
+        SynchronizedBrowsingStrings(context).text(sync ? 'stop' : 'start'),
+        'link',
+        sync,
+      ),
+      item(
+        'terminal',
+        terminalVisible ? l.hideTerminal : l.showTerminal,
+        'terminal',
+        terminalVisible,
+      ),
+      item(
+        'dual',
+        dual ? l.singlePanel : l.dualPanel,
+        'rectangle.split.2x1',
+        dual,
+      ),
+      item(
+        'tree',
+        tree ? l.hideTreeSidebar : l.showTreeSidebar,
+        'sidebar.left',
+        tree,
+      ),
+      item(
+        'list',
+        context.commanderTr('List View'),
+        'list.bullet',
+        view == ViewMode.list,
+      ),
+      item(
+        'grid',
+        context.commanderTr('Grid View'),
+        'square.grid.2x2',
+        view == ViewMode.grid,
+      ),
+      item(
+        'density',
+        compact ? l.largeItems : l.compactItems,
+        'line.3.horizontal.decrease',
+        compact,
+      ),
+      item('preview', preview ? l.hidePreview : l.showPreview, 'eye', preview),
+      item('settings', context.commanderTr('Settings'), 'gearshape'),
+      item('more', l.moreActions, 'ellipsis.circle'),
+      item(
+        'account',
+        auth.isConnected
+            ? (auth.userEmail ?? context.commanderTr('User'))
+            : l.connect,
+        auth.isConnected ? 'person.crop.circle' : 'icloud',
+      ),
+    ];
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      final ready = await _nativeToolbar.configure(
+        title: l.appTitle,
+        visible: visible,
+        dark: Theme.of(context).brightness == Brightness.dark,
+        items: items,
+      );
+      if (mounted && ready != _nativeToolbarReady)
+        setState(() => _nativeToolbarReady = ready);
+    });
+  }
+
+  Future<void> _showNativeToolbarPopup(PopupMenuButton<String> menu) async {
+    final width = MediaQuery.sizeOf(context).width;
+    final selected = await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(width, 0, 0, 0),
+      items: menu.itemBuilder(context),
+    );
+    if (mounted && selected != null) menu.onSelected?.call(selected);
+  }
+
+  Future<void> _onNativeToolbarAction(String id) async {
+    if (!mounted || ModalRoute.of(context)?.isCurrent == false) return;
+    final side = ref.read(activePanelProvider);
+    switch (id) {
+      case 'swap':
+        _swapPanels();
+      case 'synchronized':
+        toggleSynchronizedBrowsing(ref);
+      case 'terminal':
+        setTerminalVisible(ref, !ref.read(showTerminalProvider));
+      case 'dual':
+        _runOverflowAction(context, 'dual_panel');
+      case 'tree':
+        _runOverflowAction(context, 'tree');
+      case 'list':
+        setFileView(ref, side, ViewMode.list);
+      case 'grid':
+        setFileView(ref, side, ViewMode.grid);
+      case 'density':
+        _runOverflowAction(context, 'density');
+      case 'preview':
+        _runOverflowAction(context, 'preview');
+      case 'settings':
+        showSettingsDialog(context);
+      case 'more':
+        await _showNativeToolbarPopup(
+          _buildOverflowMenu(context, ref.read(authProvider)),
+        );
+      case 'account':
+        final auth = ref.read(authProvider);
+        if (!auth.isConnected) {
+          showConnectionDialogScreen(context);
+        } else {
+          final userMenu = _buildUserMenu(context, auth);
+          if (userMenu is Padding &&
+              userMenu.child is PopupMenuButton<String>) {
+            await _showNativeToolbarPopup(
+              userMenu.child! as PopupMenuButton<String>,
+            );
+          }
+        }
+    }
+  }
+
   List<Widget> _buildWideActions(
     BuildContext context,
     AuthNotifier auth,
@@ -2233,7 +2393,10 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
 
   /// Overflow menu for narrow screens — groups secondary actions into a
   /// single "more" button so they remain accessible without cluttering the bar.
-  Widget _buildOverflowMenu(BuildContext context, AuthNotifier auth) {
+  PopupMenuButton<String> _buildOverflowMenu(
+    BuildContext context,
+    AuthNotifier auth,
+  ) {
     final bool isDesktopPlatform =
         !kIsWeb &&
         (defaultTargetPlatform == TargetPlatform.macOS ||
@@ -2693,6 +2856,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         showMoveDialogFromSelection(context, ref);
       case FKeyAction.mkdir:
         showCreateFolderDialog(context, ref, ref.read(activePanelProvider));
+      case FKeyAction.terminal:
+        setTerminalVisible(ref, !ref.read(showTerminalProvider));
       case FKeyAction.delete:
         confirmDeleteSelected(context, ref);
     }

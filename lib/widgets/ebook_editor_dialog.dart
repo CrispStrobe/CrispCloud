@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:crisp_ebook/crisp_ebook.dart';
 import 'package:crisp_ebook_conversion/crisp_ebook_conversion.dart';
 import 'package:crisp_ebook_reader/crisp_ebook_reader.dart';
+import 'package:crisperbooks/crisperbooks.dart' show EbookSpeechDialog;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -1457,6 +1458,15 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
     }
   }
 
+  Future<void> _readAloud() async {
+    if (!_readerReady || _usesChapterReader) return;
+    await showDialog<void>(
+      context: context,
+      builder: (context) =>
+          EbookSpeechDialog(controller: _reader, translate: context.ebookTr),
+    );
+  }
+
   Future<void> _appearance() async {
     final annotations = _annotations;
     if (_busy || annotations == null) return;
@@ -2148,6 +2158,12 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
                           ).then((_) => _snack('Selection copied.')),
                         )
                       : null,
+                ),
+              if (!_usesChapterReader)
+                _icon(
+                  'Read aloud',
+                  Icons.record_voice_over_outlined,
+                  _readerReady ? _readAloud : null,
                 ),
               _icon(
                 'Appearance',

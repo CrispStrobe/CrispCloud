@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "scope": "Exact retained evidence bytes; this index excludes itself. Historical failed reports retain their explicit filenames/status.",
+  "files": {
+    "README.md": {
+      "bytes": 5192,
+      "sha256": "e2e96ba76b05657673b71aab2207c4cf2c3a7d90c3dc1e14612232d1da33268b"
+    },
+    "acceptance-summary.json": {
+      "bytes": 2549,
+      "sha256": "a9060922388d098de2386c283198bdd06ac5dee60fe3c656ec58a10dec82d23a"
+    },
+    "app-input-receipt.json": {
+      "bytes": 290760,
+      "sha256": "40b2c216fabdcbdd0fc1d390793aeb70528f9611f131e3bfe8975754e53d3d4d"
+    },
+    "app-inputs.tar.xz": {
+      "bytes": 286836,
+      "sha256": "2e5bf1e373ee38d2f8aac37d939faf0de357a043fb3eb48f26121879e6f155b8"
+    },
+    "app-schema-report.json": {
+      "bytes": 115849,
+      "sha256": "a0bfea4ac8aeae07eeb7bedb17a728de47fe61f38e90f8bf5988b76ef385ffc6"
+    },
+    "engine-inventory.json": {
+      "bytes": 71095,
+      "sha256": "7b096c46cd6c55ab01c4a30e2ede098deb63a482b1e670b02aa3af0e43ddaae2"
+    },
+    "host-collection-receipt.json": {
+      "bytes": 262159,
+      "sha256": "09683f79a6658da6b79273346ef11d5732eaa7796a2aeda2ad597cb8aa8008ac"
+    },
+    "host-coverage-gaps.json": {
+      "bytes": 22939,
+      "sha256": "162a01045604210e44e442268b3d4f732a8a59f165447ee5e4b931eef410560e"
+    },
+    "host-integration.log.gz": {
+      "bytes": 12865,
+      "sha256": "9d5ec90d09d3c54d313558da562976ad6bd14c52dbb2a5f0b9bef4ab0c529289"
+    },
+    "host-inventory.json": {
+      "bytes": 31616,
+      "sha256": "0c6687248efa052418a964f04401bc335cedfc6a060e308cc5ee41885a5431b1"
+    },
+    "host-lcov.info.xz": {
+      "bytes": 35972,
+      "sha256": "293ba336bc49d9e4a44dfa822416cf9d9fdeca9315770b98ddd7a7df7579eb00"
+    },
+    "host-native-artifact-hashes.json": {
+      "bytes": 19646,
+      "sha256": "6eceb174b0f39ad6f1fb260a115c27f42be955bed9a2af3853112c782dd9cf0e"
+    },
+    "host-native-artifacts.tar.xz": {
+      "bytes": 375328,
+      "sha256": "059cd160ddd23a4081a1343d008e3cb58bc2b0435a5d8c2bcc86495d04fcdc02"
+    },
+    "host-native-provenance.json": {
+      "bytes": 589,
+      "sha256": "b8dbe7b35a6f3327e51a30acf63a09e704d89c9a4c4d57f38e75c4bc54e6deaf"
+    },
+    "host-native-report.json": {
+      "bytes": 269627,
+      "sha256": "b68aa3c76a86c5a81836388f49ce653dcd283697ea141b22dfaefe5001628cea"
+    },
+    "host-native.log.gz": {
+      "bytes": 569,
+      "sha256": "cf94a7f7a7b8b9929c410a38443abc5702fe86585bcf71f42080177b97213d18"
+    },
+    "host-note-save-focused.log.gz": {
+      "bytes": 660,
+      "sha256": "df24a98efaea8ab981077961100193d54d0a28531509474ddaccc3a4074fc3ce"
+    },
+    "host-summary.json": {
+      "bytes": 5787,
+      "sha256": "700c46335f8d709689c9f21222ee2080e62c9d19c3a268ce248edc03eab264f1"
+    },
+    "initial-host-failed.log.gz": {
+      "bytes": 13956,
+      "sha256": "db1629c594974fb0d1fc9a8d4b50a7541fbef346ffecb995c007915d72a93ac6"
+    },
+    "initial-host-native-failed-report.json": {
+      "bytes": 255399,
+      "sha256": "843cb3711e5253d026134e73f63f8d47bae75a13a1e0f1e6fcb3046da75507aa"
+    },
+    "initial-host-native-failed.log.gz": {
+      "bytes": 630,
+      "sha256": "5a334065429a7b99f272c13301209ae5dc9a322d2b98cfe5ce83413ab1537ec6"
+    },
+    "initial-schema-failed-report.json": {
+      "bytes": 113125,
+      "sha256": "8eb2a905c9582b1341261f9e1e6f8bfd2606ee66faeea43518ddd6e0c2c1de16"
+    },
+    "picture-bounds-focused.log.gz": {
+      "bytes": 683,
+      "sha256": "42d9c815cc4db74632448e68187da43825f773c5a566f47a8e34cfa423b9f13e"
+    },
+    "word-image-only-focused.log.gz": {
+      "bytes": 680,
+      "sha256": "81c48902a094d28454a2dfe8cc08e3ae1d45d23cfeffaefacad1c5ab5033946f"
+    }
+  }
+}

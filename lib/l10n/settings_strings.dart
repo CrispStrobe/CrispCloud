@@ -110,8 +110,8 @@ const _translations = <String, Map<String, String>>{
     "Done": "Fertig",
     "General": "Allgemein",
     "F-key Bar": "F-Tastenleiste",
-    "Show F3–F8 shortcut buttons at the bottom of the screen":
-        "F3–F8-Tastenkürzel am unteren Bildschirmrand anzeigen",
+    "Show F3–F9 shortcut buttons at the bottom of the screen":
+        "F3–F9-Tastenkürzel am unteren Bildschirmrand anzeigen",
     "Customize Toolbar": "Symbolleiste anpassen",
     "Add, remove, or reorder toolbar buttons":
         "Schaltflächen der Symbolleiste hinzufügen, entfernen oder neu anordnen",
@@ -257,8 +257,8 @@ const _translations = <String, Map<String, String>>{
     "Done": "Terminé",
     "General": "Général",
     "F-key Bar": "Barre des touches F",
-    "Show F3–F8 shortcut buttons at the bottom of the screen":
-        "Afficher les raccourcis F3–F8 en bas de l’écran",
+    "Show F3–F9 shortcut buttons at the bottom of the screen":
+        "Afficher les raccourcis F3–F9 en bas de l’écran",
     "Customize Toolbar": "Personnaliser la barre d’outils",
     "Add, remove, or reorder toolbar buttons":
         "Ajouter, supprimer ou réorganiser les boutons",
@@ -400,8 +400,8 @@ const _translations = <String, Map<String, String>>{
     "Done": "Listo",
     "General": "General",
     "F-key Bar": "Barra de teclas F",
-    "Show F3–F8 shortcut buttons at the bottom of the screen":
-        "Mostrar los atajos F3–F8 al pie de la pantalla",
+    "Show F3–F9 shortcut buttons at the bottom of the screen":
+        "Mostrar los atajos F3–F9 al pie de la pantalla",
     "Customize Toolbar": "Personalizar barra de herramientas",
     "Add, remove, or reorder toolbar buttons":
         "Añadir, quitar o reordenar botones",
@@ -545,8 +545,8 @@ const _translations = <String, Map<String, String>>{
     "Done": "Concluído",
     "General": "Geral",
     "F-key Bar": "Barra de teclas F",
-    "Show F3–F8 shortcut buttons at the bottom of the screen":
-        "Mostrar atalhos F3–F8 na parte inferior do ecrã",
+    "Show F3–F9 shortcut buttons at the bottom of the screen":
+        "Mostrar atalhos F3–F9 na parte inferior do ecrã",
     "Customize Toolbar": "Personalizar barra de ferramentas",
     "Add, remove, or reorder toolbar buttons":
         "Adicionar, remover ou reordenar botões",
@@ -682,8 +682,8 @@ const _translations = <String, Map<String, String>>{
     "Done": "完成",
     "General": "常规",
     "F-key Bar": "功能键栏",
-    "Show F3–F8 shortcut buttons at the bottom of the screen":
-        "在屏幕底部显示 F3–F8 快捷按钮",
+    "Show F3–F9 shortcut buttons at the bottom of the screen":
+        "在屏幕底部显示 F3–F9 快捷按钮",
     "Customize Toolbar": "自定义工具栏",
     "Add, remove, or reorder toolbar buttons": "添加、删除或重新排列工具栏按钮",
     "Open View → Toolbar to customize buttons": "打开“视图 → 工具栏”以自定义按钮",
@@ -814,8 +814,8 @@ const _translations = <String, Map<String, String>>{
     "Done": "完了",
     "General": "一般",
     "F-key Bar": "ファンクションキー バー",
-    "Show F3–F8 shortcut buttons at the bottom of the screen":
-        "画面下部に F3–F8 のショートカットを表示",
+    "Show F3–F9 shortcut buttons at the bottom of the screen":
+        "画面下部に F3–F9 のショートカットを表示",
     "Customize Toolbar": "ツールバーをカスタマイズ",
     "Add, remove, or reorder toolbar buttons": "ツールバーボタンの追加、削除、並べ替え",
     "Open View → Toolbar to customize buttons": "「表示 → ツールバー」でボタンをカスタマイズ",
@@ -947,8 +947,8 @@ const _translations = <String, Map<String, String>>{
     "Done": "완료",
     "General": "일반",
     "F-key Bar": "F 키 표시줄",
-    "Show F3–F8 shortcut buttons at the bottom of the screen":
-        "화면 하단에 F3–F8 바로가기 버튼 표시",
+    "Show F3–F9 shortcut buttons at the bottom of the screen":
+        "화면 하단에 F3–F9 바로가기 버튼 표시",
     "Customize Toolbar": "도구 모음 사용자 지정",
     "Add, remove, or reorder toolbar buttons": "도구 모음 버튼 추가, 제거 또는 재정렬",
     "Open View → Toolbar to customize buttons": "보기 → 도구 모음에서 버튼을 사용자 지정하세요",
@@ -1085,8 +1085,8 @@ const _translations = <String, Map<String, String>>{
     "Done": "تم",
     "General": "عام",
     "F-key Bar": "شريط مفاتيح الوظائف",
-    "Show F3–F8 shortcut buttons at the bottom of the screen":
-        "إظهار أزرار الاختصار F3–F8 أسفل الشاشة",
+    "Show F3–F9 shortcut buttons at the bottom of the screen":
+        "إظهار أزرار الاختصار F3–F9 أسفل الشاشة",
     "Customize Toolbar": "تخصيص شريط الأدوات",
     "Add, remove, or reorder toolbar buttons":
         "إضافة أزرار شريط الأدوات أو إزالتها أو إعادة ترتيبها",

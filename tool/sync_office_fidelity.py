@@ -14,8 +14,11 @@ from pathlib import Path, PurePosixPath
 import subprocess
 import tempfile
 import os
+import re
 
 ROOT = Path(__file__).resolve().parents[1]
+LEGACY_PREFIX = 'packages/legacy_doc_parser'
+LEGACY_REPOSITORY = 'CrispStrobe/legacy-doc-parser'
 
 
 class SyncError(ValueError):
@@ -42,12 +45,51 @@ def safe_path(name):
     return path
 
 
+def standalone_sources(manifest, target_root=None):
+    """Keep separately maintained parser bytes out of a Quds sync.
+
+    Only the explicitly supported package can use this source boundary. It is
+    not a general mechanism for excluding arbitrary vendor files from checks.
+    """
+    sources = manifest.get('standalone_sources', {})
+    if not isinstance(sources, dict) or set(sources) - {LEGACY_PREFIX}:
+        raise SyncError('Unsupported standalone Office source boundary')
+    for prefix, source in sources.items():
+        if (not isinstance(source, dict) or set(source) != {'repository', 'commit'}
+                or source['repository'] != LEGACY_REPOSITORY
+                or not isinstance(source['commit'], str)
+                or not re.fullmatch(r'[0-9a-f]{40}', source['commit'])):
+            raise SyncError('Invalid standalone legacy parser source pin')
+        if target_root is not None:
+            metadata = target_root / prefix / 'UPSTREAM.json'
+            if (metadata.is_symlink() or not metadata.is_file()
+                    or not metadata.resolve().is_relative_to(target_root.resolve())):
+                raise SyncError('Missing or unsafe legacy parser upstream metadata')
+            upstream = json.loads(metadata.read_text())
+            if upstream != {**source, 'patches': []}:
+                raise SyncError('Standalone parser metadata disagrees with Office manifest')
+            pubspec = (target_root / 'pubspec.yaml').read_text()
+            pin = re.search(r'^  legacy_doc_parser:\n    git:\n'
+                            r'      url: https://github.com/CrispStrobe/legacy-doc-parser.git\n'
+                            r'      ref: ([0-9a-f]{40})\s*$', pubspec, re.MULTILINE)
+            override = re.search(r'^dependency_overrides:\n  legacy_doc_parser:\n'
+                                 r'    path: packages/legacy_doc_parser\s*$', pubspec,
+                                 re.MULTILINE)
+            if pin is None or pin[1] != source['commit'] or override is None:
+                raise SyncError('Standalone parser dependency, mirror, and source pin disagree')
+    return sources
+
+
+def standalone_path(name, sources):
+    return any(name.startswith(prefix + '/') for prefix in sources)
+
+
 def shared(name):
     path = safe_path(name)
     parts = path.parts
     if parts[:2] == ('tool', 'office-validation'):
         return True
-    if len(parts) < 3 or parts[0] != 'packages' or parts[1] not in ('quds_office_engine', 'quds_office_editor', 'legacy_doc_parser'):
+    if len(parts) < 3 or parts[0] != 'packages' or parts[1] not in ('quds_office_engine', 'quds_office_editor', 'legacy_doc_parser', 'quds_reports'):
         return False
     return parts[2] in ('lib', 'test', 'tool', 'CHANGELOG.md')
 
@@ -55,6 +97,7 @@ def shared(name):
 def plan(source, target_root, ref, branch=None):
     manifest_path = target_root/'tool/office_fidelity_manifest.json'
     manifest = json.loads(manifest_path.read_text())
+    independent = standalone_sources(manifest, target_root)
     base = manifest['source_commit']
     target = git(source, 'rev-parse', '--verify', '--end-of-options', ref+'^{commit}').decode().strip()
     git(source, 'cat-file', '-e', base+'^{commit}')
@@ -64,12 +107,15 @@ def plan(source, target_root, ref, branch=None):
         path = target_root/name
         if path.is_symlink() or not path.is_file() or digest(path.read_bytes()) != sha:
             raise SyncError(f'Vendor drift: {name}; reconcile the host change first')
-        original = git(source, 'show', f'{base}:{name}')
-        if digest(original) != sha:
-            raise SyncError(f'Manifest does not match its source commit: {name}')
+        if not standalone_path(name, independent):
+            original = git(source, 'show', f'{base}:{name}')
+            if digest(original) != sha:
+                raise SyncError(f'Manifest does not match its source commit: {name}')
     changed = git(source, 'diff', '--name-only', '--no-renames', base, target).decode().splitlines()
-    names = sorted(set(expected) | {name for name in changed if shared(name)})
-    writes, deletes, hashes = {}, [], {}
+    names = sorted({name for name in expected if not standalone_path(name, independent)} |
+                   {name for name in changed if shared(name) and not standalone_path(name, independent)})
+    writes, deletes = {}, []
+    hashes = {name: sha for name, sha in expected.items() if standalone_path(name, independent)}
     for name in names:
         safe_path(name)
         path = target_root/name

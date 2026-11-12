@@ -48,4 +48,4 @@ runs:
         path: |
           ~/.cargo/registry
           ~/.cargo/git
-        key: ebook-rust-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('packages/crisp_ebook_conversion/native/Cargo.lock') }}
+        key: ebook-rust-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('docs/ebook-source-manifest.json', 'pubspec.lock') }}

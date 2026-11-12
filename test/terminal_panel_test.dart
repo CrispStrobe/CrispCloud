@@ -132,8 +132,14 @@ void main() {
       await tester.tap(find.text('test@example'));
       await tester.pump();
       expect(view.focusNode!.hasFocus, isTrue);
-      await tester.tap(find.byKey(const ValueKey('terminal-hide')));
+      final beforeHide = connection.input.join();
+      await tester.sendKeyEvent(LogicalKeyboardKey.f9);
       await tester.pump();
+      expect(
+        connection.input.join(),
+        beforeHide,
+        reason: 'F9 must not be sent to the remote shell',
+      );
       expect(container.read(showTerminalProvider), isFalse);
       expect(container.read(terminalInputFocusedProvider), isFalse);
       expect(container.read(focusAreaProvider), FocusArea.local);

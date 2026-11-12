@@ -31,11 +31,22 @@ jobs:
   crypto-release-inputs:
     name: Crypto release evidence
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
+    env:
+      CI: 'true'
+      BOT: 'true'
     steps:
       - uses: actions/checkout@v5
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - name: Resolve immutable dependency sources
+        run: flutter pub get --enforce-lockfile
       - name: Verify release evidence failure paths
         run: |
+          python3 -m unittest discover -s tool -p test_verify_ebook_sources.py -v
           python3 -m unittest discover -s tool -p test_crypto_release_evidence.py -v
           python3 -m unittest discover -s tool -p test_apple_export_preflight.py -v
       - name: Check provider dependencies and Apple declaration
@@ -106,6 +117,7 @@ jobs:
         run: |
           (cd packages/quds_office_engine && dart pub get)
           # Source-only fork metadata declares the matching sibling packages.
+          (cd packages/quds_reports && dart pub get)
           (cd packages/quds_office_editor && flutter pub get)
           (cd packages/dart_pdf_editor && flutter pub get)
           (cd packages/dart_pdf_editor_secure_storage && flutter pub get)
@@ -114,12 +126,12 @@ jobs:
 
       - name: CrisperBooks source and reusable API contracts
         run: |
-          python3 tool/verify_crisperbooks.py
-          (cd packages/crisperbooks && flutter pub get && flutter analyze && flutter test test)
+          python3 tool/verify_ebook_sources.py
 
       - name: Standalone legacy Word parser contracts
         run: |
           python3 tool/verify_office_fidelity.py
+          python3 -m unittest discover -s tool -p test_sync_legacy_doc_parser.py
           python3 - <<'PYTHON'
           import json, pathlib, re
           pin = json.loads(pathlib.Path('packages/legacy_doc_parser/UPSTREAM.json').read_text())

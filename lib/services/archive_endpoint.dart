@@ -301,6 +301,11 @@ class ArchiveEndpoint {
               'Source permissions could not be read: ${current.path}',
             );
           }
+          if (mode & 0xc00 != 0) {
+            throw const ArchiveViewException(
+              'Importing setuid or setgid entries requires an ownership-preserving workflow. Source ownership is not captured by this importer.',
+            );
+          }
         }
         if (!sameArchiveFile(current, await plan.source.stat(current.path!))) {
           throw StateError('Import source changed while reading metadata.');

@@ -2,9 +2,9 @@
   "schema_version": 1,
   "status": "passed",
   "scope": "CrispCloud portable-engine and host integration gate; native acceptance is recorded separately.",
-  "created_at_utc": "2026-11-12T15:26:46.412647+00:00",
-  "app_commit": "0bbb7f1fc5ed2a1be8ef7a94acf23ce7c4f7d715",
-  "suite_source_pin": "c8d5ba3cfddf8c6fd3fa736deab992be1e0cc3aa",
+  "created_at_utc": "2026-11-12T16:02:48.283603+00:00",
+  "app_commit": "afba7b6ac6e142294043c066f7ef2a926add6533",
+  "suite_source_pin": "8223a2297418ba6f478ed6ce80b9881d28680094",
   "pinned_vendor_files": 378,
   "working_tree_clean": true,
   "gate": {
@@ -15,8 +15,8 @@
       "bash",
       "tool/check_office_fidelity.sh"
     ],
-    "log_path": "/workspace/scratch/dcd413fa34f4/host-final4-integration.log",
-    "log_sha256": "eb9a0bf1f1420b78c18aabcae4a107f8b3ddd6f0059b08fb657507e38a6fb191"
+    "log_path": "/workspace/scratch/dcd413fa34f4/host-final5-integration.log",
+    "log_sha256": "a34948f8c1e2334b9a273e024a48f4fe90ad9cf03f48aedf6432b135f56cead1"
   },
   "tests": {
     "portable_engine_dart_passed": 963,
@@ -37,14 +37,14 @@
       "expected": 305,
       "failures": 0,
       "receipt_path": "/workspace/scratch/dcd413fa34f4/CrispCloud/packages/quds_office_engine/build/fidelity-inventory.json",
-      "receipt_sha256": "487da3b024a701434d86cd9133a20a2b7a11f8355d38278e633863f35345eccb"
+      "receipt_sha256": "7b096c46cd6c55ab01c4a30e2ede098deb63a482b1e670b02aa3af0e43ddaae2"
     },
     "host": {
       "verified": 104,
       "expected": 104,
       "failures": 0,
       "receipt_path": "/workspace/scratch/dcd413fa34f4/CrispCloud/build/fidelity-host/inventory.json",
-      "receipt_sha256": "0e6753c6897839a30a23d1cde9761ec79faef438d2b8a8410a12908e2487e29a"
+      "receipt_sha256": "0c6687248efa052418a964f04401bc335cedfc6a060e308cc5ee41885a5431b1"
     }
   },
   "coverage": {
@@ -58,14 +58,14 @@
     "instrumented_source_files": 10,
     "uninstrumented_files": [],
     "collection_input_files": 2133,
-    "input_tree_sha256": "82044cbdb4910b38ec13469c27be339abe16ef635401b28882085fade78a913c",
+    "input_tree_sha256": "5569e27fc937c7df8cf02c3c15720ad562769dfaaf5d82f5b0c098bffe75481b",
     "source_tree_sha256": "84c5d97423bfc8de8d4d921cc25530172efbbac99044aee132d5554e055e9b6e",
-    "lcov_path": "/workspace/scratch/dcd413fa34f4/CrispCloud/build/fidelity-host/coverage/workflows-final-4/lcov.info",
-    "lcov_sha256": "20da0f2e0f2449edfc5ab6ca82d7e13e72e9379af27785c840ea8c3cb6ebe08c",
-    "report_path": "/workspace/scratch/dcd413fa34f4/CrispCloud/build/fidelity-host/coverage/workflows-final-4/gaps.json",
-    "report_sha256": "3dd5e80ba14ffd595b7c6cfe60d2468fae60c210c894852a305192db8bf3b730",
-    "receipt_path": "/workspace/scratch/dcd413fa34f4/CrispCloud/build/fidelity-host/coverage/workflows-final-4/collection-receipt.json",
-    "receipt_sha256": "1719d1814b2ac77684fadc4bdc94db3f0a2289459400466da1f57f00d45d0601",
+    "lcov_path": "/workspace/scratch/dcd413fa34f4/CrispCloud/build/fidelity-host/coverage/workflows-final-5/lcov.info",
+    "lcov_sha256": "9786292defe4c3b9ae8b6c3de7baa9016ec0996e6ecfddf6505ddae230580b67",
+    "report_path": "/workspace/scratch/dcd413fa34f4/CrispCloud/build/fidelity-host/coverage/workflows-final-5/gaps.json",
+    "report_sha256": "162a01045604210e44e442268b3d4f732a8a59f165447ee5e4b931eef410560e",
+    "receipt_path": "/workspace/scratch/dcd413fa34f4/CrispCloud/build/fidelity-host/coverage/workflows-final-5/collection-receipt.json",
+    "receipt_sha256": "09683f79a6658da6b79273346ef11d5732eaa7796a2aeda2ad597cb8aa8008ac",
     "files": [
       {
         "path": "lib/services/office_document_service.dart",

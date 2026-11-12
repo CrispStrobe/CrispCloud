@@ -117,7 +117,7 @@ continues under G50. The implementation and its observed gates are preserved in
 
 ### Archive format coverage
 
-**Status:** Scoped. **Dependencies:** License and format review per codec.
+**Status:** Partially implemented: shared reader/writer routing, additional archive writers and streamed data-image creation delivered; uncommon codecs, existing disk filesystem rewrites and signed package builders remain. **Dependencies:** License and format review per codec.
 
 **Scope:** Add each missing reader/writer/alias independently with a tested capability matrix.
 
@@ -130,6 +130,26 @@ continues under G50. The implementation and its observed gates are preserved in
 - Each enabled format has independent valid, truncated, malformed, traversal and resource-expansion fixtures.
 - Advertised read/extract/create/modify/encryption/compression capabilities match actual codec support on each target.
 - Record exact dependency versions, permissive licenses and provenance before enabling a codec; signed containers retain explicit verification limits.
+
+**Delivered reader increment (2026-11-12):** Shared registry across panes, F3,
+search and extraction; ISO9660/Joliet/Rock Ridge, unencrypted supported UDIF DMG
+partitions with HFS+/HFSX/ISO file views, ordinary/GNU/BSD AR and DEB, CPIO
+newc/CRC, XAR/PKG/XIP container members, CRX2/3 and compatible ZIP aliases.
+Compressed streams now request strict integrity checks. Independent GNU
+ar/libarchive and native HFS+/UDIF fixtures supplement malformed, traversal,
+range, ownership and resource-bound tests. The [capability matrix](../archive-format-coverage.md)
+records per-format limits and signature/metadata boundaries. G18 publication rules are unchanged. UDF/APFS, CAB/RPM,
+ARJ/LZH/ACE/UC2, raw LZMA, PBZX and additional ZIPX methods remain.
+
+**Delivered writer increment (2026-11-12):** Comic and eligible unsigned Java
+aliases, KMZ, additional compressed TAR and single-file streams, inspected
+AR/CPIO/XAR and data ISO rewrites, and a narrow prebuilt DEB payload workflow.
+Fresh ISO/HFSX/UDIF creation uses streamed private output, complete readback
+verification and verified destination staging; native disk images can exceed
+64 MiB members up to the 2 GiB output bound. Existing HFS/DMG images, signed
+packages and static-library indexes remain read-only. The creator does not
+provide durable background job restart or larger existing-container editing,
+so G21 remains scoped. Remote/browser creation UI (G23) remains scoped.
 
 **Starting points:** archive_viewer_service.dart; archive_workspace.dart; archive_creation_service.dart; codec capability registry.
 

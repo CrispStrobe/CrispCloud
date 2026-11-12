@@ -156,7 +156,7 @@ class _GeneralSection extends ConsumerWidget {
           onChanged: (_) => ref.read(fkeyBarVisibleProvider.notifier).toggle(),
           title: Text(s.text('F-key Bar')),
           subtitle: Text(
-            s.text('Show F3–F8 shortcut buttons at the bottom of the screen'),
+            s.text('Show F3–F9 shortcut buttons at the bottom of the screen'),
           ),
           secondary: Icon(fkeyVisible ? Icons.keyboard : Icons.keyboard_hide),
           dense: false,

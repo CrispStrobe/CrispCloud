@@ -54,10 +54,11 @@ We also maintain patched Nextcloud and ownCloud desktop clients with delta sync 
 - **Sync engine:** background sync, conflict resolution, selective sync
 - **Backup engine:** scheduled backups with versioning
 - **Preview pane:** images (zoom/pan), SVG, PDF (page navigation), syntax-highlighted code (30+ languages), markdown, CSV/TSV tables, DOCX/XLSX/PPTX/ODT text, fonts (TTF/OTF/WOFF2), audio/video
-- **Archive browsing:** browse ZIP/TAR/TGZ files like folders (including on web)
+- **Archive workflows:** browse archives like folders; create and review edits to ZIP/7z/TAR, comic and unsigned Java aliases, compressed TAR/files, AR/CPIO/XAR and eligible data ISOs. Original-source verification and recovery protect publication.
 - **Extended file formats:** decoded EML/Outlook MSG viewing, including compressed RTF bodies and attachments; formatted RTF previews; current-slide text from legacy PPT/PPS/POT; formatted legacy DOC/DOT previews; protected DOCM/DOTM/DOTX rich editing; and Autodesk KBDX XML viewing/source editing. See [format coverage and limits](docs/file-format-viewers.md).
 - **Legacy Word conversion:** the maintained [legacy_doc_parser](https://github.com/CrispStrobe/legacy-doc-parser) supplies portable formatted previews and separate, reviewed DOCX/DOCM copies. Supported installed Word/LibreOffice conversions and their PDF previews remain available, as does explicit text-only conversion. Originals stay unchanged; macros and embedded objects are never executed by the built-in parser. See [conversion support and limits](docs/legacy-word-conversion.md).
 - **KeePass databases:** F3 views and F4 edits existing KDBX databases with password/key-file unlock, group management, entry moves, protected custom fields, entry history restoration, explicit password reveal/copy, automatic locking and encrypted saves to the original source. See [KeePass support and limits](docs/keepass.md).
+- **Disk images and packages:** create streamed data ISO, HFSX and UDIF DMG images; browse supported disk filesystems and package containers, with guarded prebuilt Debian payload replacement. Format-specific creation/editing limits and read-only boundaries are in [archive format coverage](docs/archive-format-coverage.md).
 - **Built-in editors:** F4 text/code and hex editors with explicit chooser and handoff, bounded edit history, and save/recovery tied to the original file and account. Text editing includes syntax highlighting, line numbers, encoding and newline controls; F3 also previews archive members
 - **Interactive terminal:** desktop PTY/Windows ConPTY, a built-in shell for sandboxed macOS, and SSH sessions with ANSI colors, full-screen programs, live resizing, raw control keys, scrollback, and mobile extra keys. Browser SSH uses your own secure WebSocket gateway. [Terminal design, licensing, and platform support](docs/terminal.md)
 - **Office editing:** DOCX/XLSX/PPTX editing through the patched Quds engine, with independent Word round-trip verification and archive members kept view-only
@@ -156,6 +157,7 @@ to change a binding, review conflicts or restore defaults.
 | `F3` / `F4` | View / edit |
 | `F7` | New folder |
 | `F8` / `Delete` | Delete |
+| `F9` | Show / hide Terminal |
 | `Ctrl+F` | Filter the current listing |
 | `Alt+F7` | Recursive file and content search |
 | `Ctrl+R` | Refresh the active pane |
@@ -212,4 +214,14 @@ For local Mac testing, `bash tool/build_macos_release.sh --no-pub` embeds the cu
 
 Release `v1.2.0` (`1.2.0+13`) uses the multi-platform GitHub Release workflow for macOS, Windows, Linux, Android, iOS and Web archives. Store uploads use explicit `ios-v*` or `macos-v*` tags and their separate release workflows; the GitHub iOS archive is unsigned.
 
-The `1.2.1` integration uses the pinned [CrisperBooks](https://github.com/CrispStrobe/crisperbooks) facade for edit transactions, portable reading, structured prose, appearance and reading data, with its matching reader/converter packages. `packages/crisperbooks/UPSTREAM.json` and `python3 tool/verify_crisperbooks.py` verify the consumer snapshot. File/account persistence stays in CrispCloud. F4 audio editing accepts ID3-prefixed FLAC without changing the original and exports edited PCM WAV copies.
+The `1.2.1` integration uses the pinned [CrisperBooks](https://github.com/CrispStrobe/crisperbooks) facade for edit transactions, portable reading, structured prose, appearance and reading data, with its matching reader/converter packages. That historical snapshot used vendored provenance; the current consumer is verified as described below. File/account persistence stays in CrispCloud. F4 audio editing accepts ID3-prefixed FLAC without changing the original and exports edited PCM WAV copies.
+
+The `1.2.2` release also vendors the matching Quds reports facade. Standalone editor resolution uses the same engine/reports source as the app, avoiding the hosted-package conflict exposed by the release gate.
+
+On macOS the browser uses a unified native title-bar toolbar beside the window controls and app title. The Find/Filter indicator reserves its own row below the file viewport. Defaults now show F8 for Delete (the Delete key remains an alias) and F9 for Terminal, including the function-key bar. NXC/NQC source uses C-family highlighting. Viewer and editor highlighting uses bounded, state-preserving chunks for large source, including generated Dart files; syntax coloring is painted only for visible viewer rows.
+
+The final `1.2.2` integration includes lazy ISO/HFS+/DMG and package-container reading, bounded streamed archive writers, the current canonical DOC parser and CrisperBooks foreground read-aloud controls. The standalone parser mirror is verified separately from Quds, with obsolete mirror files removed. The canonical Word picture gate uses its controller-default fixture and strict 94.45-point native layout; historical 12-point workflow reports keep their original source scope.
+
+The `1.2.3` integration consumes CrisperBooks directly at one immutable Git revision, including the complete browser Kindle export engine, worker lifecycle guards, local read-aloud controls and qualified Linux input behavior. Duplicate local packages are removed. `docs/ebook-source-manifest.json` binds the complete upstream tree; `python3 tool/verify_ebook_sources.py` checks the exact bytes Pub resolves for all four packages. GitHub release binaries and the separate iOS/macOS TestFlight uploads use this same source snapshot.
+
+TestFlight uses the separate `ios-release.yml` and `macos-release.yml` signing/upload workflows. `testflight-external.yml` accepts an explicit `MAC_OS` or `IOS` platform and the exact reviewed build number for beta review after processing. The older app-local Linux candidate PR is superseded by the canonical CrisperBooks reader; its recovery branch is retained.

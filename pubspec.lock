@@ -212,22 +212,28 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/crisp_ebook"
-      relative: true
-    source: path
+      ref: "5c49682143a44e14bc0eea10c52e769bc4a4c03a"
+      resolved-ref: "5c49682143a44e14bc0eea10c52e769bc4a4c03a"
+      url: "https://github.com/CrispStrobe/crisperbooks.git"
+    source: git
     version: "0.1.0"
   crisp_ebook_conversion:
     dependency: "direct main"
     description:
       path: "packages/crisp_ebook_conversion"
-      relative: true
-    source: path
+      ref: "5c49682143a44e14bc0eea10c52e769bc4a4c03a"
+      resolved-ref: "5c49682143a44e14bc0eea10c52e769bc4a4c03a"
+      url: "https://github.com/CrispStrobe/crisperbooks.git"
+    source: git
     version: "0.1.0"
   crisp_ebook_reader:
     dependency: "direct main"
     description:
       path: "packages/crisp_ebook_reader"
-      relative: true
-    source: path
+      ref: "5c49682143a44e14bc0eea10c52e769bc4a4c03a"
+      resolved-ref: "5c49682143a44e14bc0eea10c52e769bc4a4c03a"
+      url: "https://github.com/CrispStrobe/crisperbooks.git"
+    source: git
     version: "0.1.0"
   crisp_ios_files:
     dependency: "direct main"
@@ -253,9 +259,11 @@ packages:
   crisperbooks:
     dependency: "direct main"
     description:
-      path: "packages/crisperbooks"
-      relative: true
-    source: path
+      path: "."
+      ref: "5c49682143a44e14bc0eea10c52e769bc4a4c03a"
+      resolved-ref: "5c49682143a44e14bc0eea10c52e769bc4a4c03a"
+      url: "https://github.com/CrispStrobe/crisperbooks.git"
+    source: git
     version: "0.1.0"
   cross_file:
     dependency: "direct main"
@@ -976,7 +984,7 @@ packages:
     source: hosted
     version: "0.9.0"
   koni_codecs:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: koni_codecs
       sha256: "0a0ffa23f62f627bc50db6de79e88a6a41e019d3a21c6a455ac5ae7c1677a8bd"
@@ -1482,10 +1490,9 @@ packages:
   quds_reports:
     dependency: transitive
     description:
-      name: quds_reports
-      sha256: "5a839d6e27a823f7c5ebe38b849d9156d3564ba3cf8a772794886b0c0dd5f110"
-      url: "https://pub.dev"
-    source: hosted
+      path: "packages/quds_reports"
+      relative: true
+    source: path
     version: "1.5.0"
   quiver:
     dependency: transitive
@@ -1505,10 +1512,9 @@ packages:
   re_highlight:
     dependency: "direct main"
     description:
-      name: re_highlight
-      sha256: "6c4ac3f76f939fb7ca9df013df98526634e17d8f7460e028bd23a035870024f2"
-      url: "https://pub.dev"
-    source: hosted
+      path: "packages/re_highlight"
+      relative: true
+    source: path
     version: "0.0.3"
   recase:
     dependency: transitive

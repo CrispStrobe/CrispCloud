@@ -1077,3 +1077,5 @@ The root lockfile is unchanged. The 99 Word workflow tests, 74 Python harness te
   "reviewed_source_sha256": "532f0d03449787b9805d3b8edc0f7c4f55f94eb5c9ad7049c587341a43f8addb"
 }
 ```
+
+Current extracted-book integration: `1.2.3` resolves the facade and its three internal packages from the same immutable Git checkout, independently verifies all tracked source bytes and records them in `docs/ebook-source-manifest.json`. The compressed browser converter and memory-only WASI worker are now present and enabled for bounded supported Kindle export; the earlier pending-runtime note describes the previous checkpoint. Native/Wasm parity, malformed-input and budget controls pass. The shim retains its published random fallback, which is not claimed as a secure RNG. Local platform speech does not introduce a remote text destination. Existing classification and distribution policy fields are unchanged.

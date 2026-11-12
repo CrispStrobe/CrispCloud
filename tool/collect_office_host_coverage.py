@@ -32,7 +32,7 @@ IGNORED = {'__pycache__', '.dart_tool', 'build', 'failures'}
 CONFIG = ('pubspec.yaml', 'pubspec.lock', 'pubspec_overrides.yaml', '.fvmrc',
           'dart_test.yaml', 'analysis_options.yaml', 'l10n.yaml',
           '.dart_tool/package_config.json', '.dart_tool/package_graph.json')
-VENDORS = ('quds_office_engine', 'quds_office_editor', 'legacy_doc_parser')
+VENDORS = ('quds_office_engine', 'quds_office_editor', 'legacy_doc_parser', 'quds_reports')
 
 
 class CollectionError(ValueError):
@@ -118,7 +118,8 @@ def source_snapshot(root=ROOT):
                 add(child)
         else:
             add(path)
-    for name in ('with_ci_system_sqlite.py', 'test_with_ci_system_sqlite.py'):
+    for name in ('with_ci_system_sqlite.py', 'test_with_ci_system_sqlite.py',
+                 'sync_legacy_doc_parser.py', 'test_sync_legacy_doc_parser.py'):
         add(root / 'tool' / name)
     for name in CONFIG:
         add(root / name)

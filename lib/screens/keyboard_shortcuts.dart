@@ -390,6 +390,8 @@ KeyEventResult executeBrowserShortcut(
       panel.selectAll();
     case ShortcutAction.restoreSelection:
       panel.restoreSelection();
+    case ShortcutAction.terminal:
+      setTerminalVisible(ref, !ref.read(showTerminalProvider));
     case ShortcutAction.delete:
       confirmDeleteSelected(context, ref);
     case ShortcutAction.rename:

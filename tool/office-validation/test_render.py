@@ -328,6 +328,246 @@ class HostPicturePixelTests(unittest.TestCase):
                         render.render_document(source, root, output, 1)
 
 
+class HostWordPictureTests(unittest.TestCase):
+    # The XML and image bytes below are independently authored controls. The
+    # black media was encoded by Pillow, not the host/Dart image encoder. The
+    # layout/pixel expectations are literal and never read from render.py.
+    DOCUMENT = '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><w:body>\n<w:p><w:pPr><w:spacing w:before="0" w:after="160" w:line="276" w:lineRule="auto"/><w:ind w:left="0" w:right="0"/><w:jc w:val="left"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/><w:b w:val="0"/><w:i w:val="0"/><w:color w:val="000000"/><w:sz w:val="22"/></w:rPr><w:t xml:space="preserve"></w:t></w:r></w:p>\n<w:p><w:r><w:drawing><wp:inline distT="0" distB="0" distL="114300" distR="114300"><wp:extent cx="762000" cy="381000"/><wp:effectExtent l="0" t="0" r="0" b="0"/><wp:docPr id="1" name="picked.@FMT@" descr="picked.@FMT@"/><wp:cNvGraphicFramePr><a:graphicFrameLocks noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="0" name="picked.@FMT@" descr="picked.@FMT@"/><pic:cNvPicPr><a:picLocks noChangeAspect="1"/></pic:cNvPicPr></pic:nvPicPr><pic:blipFill><a:blip r:embed="image"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="762000" cy="381000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>\n<w:sectPr><w:type w:val="nextPage"/><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1440" w:bottom="1440" w:left="1440" w:right="1440" w:header="720" w:footer="720"/><w:cols w:num="1" w:space="720"/></w:sectPr></w:body></w:document>'
+    STYLES = '<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/><w:sz w:val="22"/></w:rPr></w:rPrDefault></w:docDefaults><w:style w:type="paragraph" w:styleId="Normal"><w:name w:val="Normal"/><w:pPr><w:spacing w:before="0" w:after="160"/><w:jc w:val="left"/></w:pPr><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/><w:color w:val="000000"/><w:sz w:val="22"/></w:rPr></w:style></w:styles>'
+    MEDIA_HEX = {'gif': '474946383761500028008100000000000000000000000000002c000000005000280040085d0001081c48b0a0c18308132a5cc8b0a1c38710234a9c48b1a2c58b18336adcc8b1a3c78f20438a1c49b2a4c9932853aa5cc9b2a5cb973063ca9c49b3a6cd9b3873eadcc9b3a7cf9f40830a1d4ab4a8d1a348932a5dcab4a9d3a7280302003b', 'jpeg': 'ffd8ffe000104a46494600010100000100010000ffdb004300080606070605080707070909080a0c140d0c0b0b0c1912130f141d1a1f1e1d1a1c1c20242e2720222c231c1c2837292c30313434341f27393d38323c2e333432ffdb0043010909090c0b0c180d0d1832211c213232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232ffc00011080028005003012200021101031101ffc4001f0000010501010101010100000000000000000102030405060708090a0bffc400b5100002010303020403050504040000017d01020300041105122131410613516107227114328191a1082342b1c11552d1f02433627282090a161718191a25262728292a3435363738393a434445464748494a535455565758595a636465666768696a737475767778797a838485868788898a92939495969798999aa2a3a4a5a6a7a8a9aab2b3b4b5b6b7b8b9bac2c3c4c5c6c7c8c9cad2d3d4d5d6d7d8d9dae1e2e3e4e5e6e7e8e9eaf1f2f3f4f5f6f7f8f9faffc4001f0100030101010101010101010000000000000102030405060708090a0bffc400b51100020102040403040705040400010277000102031104052131061241510761711322328108144291a1b1c109233352f0156272d10a162434e125f11718191a262728292a35363738393a434445464748494a535455565758595a636465666768696a737475767778797a82838485868788898a92939495969798999aa2a3a4a5a6a7a8a9aab2b3b4b5b6b7b8b9bac2c3c4c5c6c7c8c9cad2d3d4d5d6d7d8d9dae2e3e4e5e6e7e8e9eaf2f3f4f5f6f7f8f9faffda000c03010002110311003f00f9fe8a28a0028a28a0028a28a0028a28a0028a28a0028a28a0028a28a0028a28a0028a28a0028a28a0028a28a0028a28a0028a28a0028a28a0028a28a00fffd9'}
+
+    def parts(self, fmt='gif'):
+        relation = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
+        types = 'http://schemas.openxmlformats.org/package/2006/content-types'
+        relations = 'http://schemas.openxmlformats.org/package/2006/relationships'
+        return {
+            'word/document.xml': self.DOCUMENT.replace('@FMT@', fmt).encode(),
+            'word/styles.xml': self.STYLES.encode(),
+            'word/media/image1.' + fmt: bytes.fromhex(self.MEDIA_HEX[fmt]),
+            '_rels/.rels': (f'<Relationships xmlns="{relations}"><Relationship Id="main" Type="{relation}/officeDocument" Target="word/document.xml"/></Relationships>').encode(),
+            'word/_rels/document.xml.rels': (f'<Relationships xmlns="{relations}"><Relationship Id="styles" Type="{relation}/styles" Target="styles.xml"/><Relationship Id="image" Type="{relation}/image" Target="media/image1.{fmt}"/></Relationships>').encode(),
+            '[Content_Types].xml': (f'<Types xmlns="{types}"><Default Extension="{fmt}" ContentType="image/{fmt}"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/media/image1.{fmt}" ContentType="image/{fmt}"/></Types>').encode(),
+        }
+
+    def package(self, path, parts):
+        with ZipFile(path, 'w') as archive:
+            for name, content in parts.items():
+                archive.writestr(name, content)
+
+    def geometry(self, fmt='gif'):
+        return {'page_twips': [11906, 16838], 'margin_twips': [1440] * 4,
+                'inline_offset_emu': [0, 0], 'extent_emu': [762000, 381000],
+                'media_pixels': [80, 40], 'media_format': fmt,
+                'paragraph_font': 'Arial', 'paragraph_size_half_points': 22,
+                'paragraph_line_240ths': 276, 'paragraph_after_twips': 160}
+
+    def raster(self, *, rectangle=(72, 94.45, 60, 30), color=b'\0\0\0'):
+        width, height = 596, 842
+        x, y, w, h = rectangle
+        rgb = bytearray(b'\xff' * (width * height * 3))
+        for row in range(max(0, int(y)), min(height, int(y + h))):
+            left, right = max(0, int(x)), min(width, int(x + w))
+            rgb[(row * width + left) * 3:(row * width + right) * 3] = color * (right - left)
+        return width, height, bytes(rgb)
+
+    def evidence(self, fmt='gif'):
+        return render.picture_pixel_evidence('word-' + fmt, *self.raster(),
+                                             self.geometry(fmt), (595.3, 841.9))
+
+    def test_only_the_six_named_word_captures_and_root_scope_are_selected(self):
+        for fmt in ('gif', 'jpeg'):
+            for cycle in (1, 2, 3):
+                name = f'word-picture-{fmt}-{cycle}.docx'
+                self.assertEqual(render.host_picture_case('fidelity-host/' + name), 'word-' + fmt)
+                self.assertEqual(render.host_picture_case(name, '/inputs/fidelity-host'), 'word-' + fmt)
+        for name in ('word-picture-gif-1.docx', 'other/word-picture-gif-1.docx',
+                     'fidelity-host/word-picture-png-1.docx',
+                     'fidelity-host/word-picture-gif-0.docx',
+                     'fidelity-host/word-picture-gif-4.docx',
+                     'fidelity-host/word-picture-gif-1.docm',
+                     'fidelity-host/word-picture-gif-1.pptx'):
+            with self.subTest(name=name):
+                self.assertIsNone(render.host_picture_case(name))
+                with self.assertRaises(render.FidelityError):
+                    render.validate_record(record(name, text=''))
+
+    def test_exact_native_format_geometry_and_reopened_empty_run(self):
+        import xml.etree.ElementTree as ET
+        ns = {'w': 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'}
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'source.docx'
+            for fmt in ('gif', 'jpeg'):
+                parts = self.parts(fmt)
+                self.package(path, parts)
+                self.assertEqual(render.picture_package_geometry(path, 'word-' + fmt), self.geometry(fmt))
+                root = ET.fromstring(parts['word/document.xml'])
+                first = root.find('w:body/w:p', ns)
+                first.remove(first.find('w:r', ns))
+                parts['word/document.xml'] = ET.tostring(root)
+                self.package(path, parts)
+                self.assertEqual(render.picture_package_geometry(path, 'word-' + fmt), self.geometry(fmt))
+
+    def test_exact_package_rejects_layout_font_subpixel_offsets_and_extra_content(self):
+        changes = [
+            ('w:w="11906"', 'w:w="11907"'), ('w:h="16838"', 'w:h="16839"'),
+            ('w:top="1440"', 'w:top="1441"'), ('w:left="1440"', 'w:left="1441"'),
+            ('w:line="276"', 'w:line="275"'), ('w:after="160"', 'w:after="161"'),
+            ('w:sz w:val="22"', 'w:sz w:val="23"'),
+            ('w:ascii="Arial"', 'w:ascii="Calibri"'),
+            ('</w:rPr>', '<w:position w:val="1"/></w:rPr>'),
+            ('w:left="0"', 'w:left="1"'),
+            ('<a:off x="0"', '<a:off x="1"'), ('<a:off x="0" y="0"', '<a:off x="0" y="1"'),
+            ('<wp:extent cx="762000"', '<wp:extent cx="762001"'),
+            ('<a:ext cx="762000"', '<a:ext cx="762001"'),
+            ('<a:ext cx="762000" cy="381000"', '<a:ext cx="762000" cy="381001"'),
+            ('<a:xfrm>', '<a:xfrm rot="1">'),
+            ('<a:stretch>', '<a:srcRect l="1"/><a:stretch>'),
+            ('distT="0"', 'distT="1"'),
+            ('<w:body>', '<w:body><w:p/>'),
+            ('<w:sectPr>', '<w:sectPr><w:headerReference/>'),
+            ('</w:drawing>', '</w:drawing><w:t>extra</w:t>'),
+            ('<w:t xml:space="preserve"></w:t>', '<w:t xml:space="preserve"> </w:t>'),
+            ('wp:inline', 'wp:anchor'),
+        ]
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'source.docx'
+            for old, new in changes:
+                with self.subTest(change=(old, new)):
+                    parts = self.parts()
+                    before = parts['word/document.xml']
+                    parts['word/document.xml'] = before.replace(old.encode(), new.encode(), 1)
+                    self.assertNotEqual(parts['word/document.xml'], before)
+                    self.package(path, parts)
+                    with self.assertRaises(render.FidelityError):
+                        render.picture_package_geometry(path, 'word-gif')
+
+    def test_style_changes_cannot_hide_inside_the_one_pixel_raster_tolerance(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'source.docx'
+            for old, new in (('Arial', 'Calibri'), ('w:val="22"', 'w:val="23"'),
+                             ('w:after="160"', 'w:after="161"'),
+                             ('</w:rPr>', '<w:spacing w:val="1"/></w:rPr>'),
+                             ('<w:style w:type=', '<w:style w:default="1" w:type=')):
+                parts = self.parts()
+                parts['word/styles.xml'] = parts['word/styles.xml'].replace(old.encode(), new.encode(), 1)
+                self.package(path, parts)
+                with self.subTest(change=old), self.assertRaises(render.FidelityError):
+                    render.picture_package_geometry(path, 'word-gif')
+
+    def test_missing_wrong_format_type_size_external_and_extra_parts_fail(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'source.docx'
+            for fmt in ('gif', 'jpeg'):
+                for fault in ('missing-media', 'wrong-format', 'truncated', 'intrinsic-size',
+                              'mime', 'external', 'missing-style-link', 'extra-part', 'extra-image', 'extra-note'):
+                    parts = self.parts(fmt)
+                    media = 'word/media/image1.' + fmt
+                    if fault == 'missing-media': del parts[media]
+                    elif fault == 'wrong-format': parts[media] = bytes.fromhex(self.MEDIA_HEX['jpeg' if fmt == 'gif' else 'gif'])
+                    elif fault == 'truncated': parts[media] = parts[media][:10]
+                    elif fault == 'intrinsic-size':
+                        data = bytearray(parts[media])
+                        position = 6 if fmt == 'gif' else data.index(b'\xff\xc0') + 7
+                        data[position:position+2] = (81).to_bytes(2, 'little' if fmt == 'gif' else 'big')
+                        parts[media] = bytes(data)
+                    elif fault == 'mime': parts['[Content_Types].xml'] = parts['[Content_Types].xml'].replace(('image/' + fmt).encode(), b'image/png')
+                    elif fault == 'external': parts['word/_rels/document.xml.rels'] = parts['word/_rels/document.xml.rels'].replace(b'Target="media/', b'TargetMode="External" Target="media/')
+                    elif fault == 'missing-style-link': parts['word/_rels/document.xml.rels'] = parts['word/_rels/document.xml.rels'].replace(b'/styles"', b'/numbering"').replace(b'Target="styles.xml"', b'Target="numbering.xml"')
+                    elif fault == 'extra-part': parts['word/header1.xml'] = b'<extra/>'
+                    elif fault == 'extra-image': parts['word/media/another.' + fmt] = parts[media]
+                    elif fault == 'extra-note': parts['word/footnotes.xml'] = b'<w:footnotes xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:footnote w:id="1"><w:p><w:r><w:t>unexpected</w:t></w:r></w:p></w:footnote></w:footnotes>'
+                    self.package(path, parts)
+                    with self.subTest(fmt=fmt, fault=fault), self.assertRaises(render.FidelityError):
+                        render.picture_package_geometry(path, 'word-' + fmt)
+
+    def test_word_native_raster_is_the_full_authored_black_rectangle(self):
+        for fmt in ('gif', 'jpeg'):
+            evidence = self.evidence(fmt)
+            self.assertEqual(evidence['oracle'], 'host-word-black-picture-v1')
+            self.assertEqual(evidence['expected_page_size'], [595.3, 841.9])
+            self.assertEqual(evidence['expected_rect'], [72, 94.45, 60, 30])
+            self.assertEqual(evidence['black_bbox'], [72, 94, 132, 124])
+            self.assertEqual(evidence['black_pixels'], 1800)
+            self.assertEqual(evidence['outside_nonwhite_pixels'], 0)
+            self.assertEqual(evidence['interior_nonblack_pixels'], 0)
+
+    def test_word_blank_shifted_clipped_wrong_aspect_colored_and_extra_marks_fail(self):
+        cases = [self.raster(color=b'\xff' * 3), self.raster(rectangle=(72, 94.45, 0, 0)),
+                 self.raster(rectangle=(74.2, 94.45, 60, 30)),
+                 self.raster(rectangle=(72, 96.5, 60, 30)),
+                 self.raster(rectangle=(72, 94.45, 30, 60)),
+                 self.raster(rectangle=(72, 830, 60, 30)),
+                 self.raster(color=b'\xff\0\0')]
+        width, height, rgb = self.raster()
+        for position, color in ((0, b'\0' * 3), (100 * width + 90, b'\xff' * 3)):
+            changed = bytearray(rgb)
+            changed[position * 3:position * 3 + 3] = color
+            cases.append((width, height, bytes(changed)))
+        for index, raster in enumerate(cases):
+            with self.subTest(index=index), self.assertRaises(render.FidelityError):
+                render.picture_pixel_evidence('word-gif', *raster, self.geometry(), (595.3, 841.9))
+
+    def test_word_records_require_one_page_empty_text_and_measured_package_bound_pixels(self):
+        evidence = self.evidence()
+        good = dict(record('fidelity-host/word-picture-gif-1.docx', text='\f',
+                           pixels=[evidence['pixel_sha256']]), picture_pixel_evidence=evidence)
+        render.validate_record(good)
+        for changes in ({'pages': 2, 'pixel_sha256': [evidence['pixel_sha256']] * 2},
+                        {'text': 'unexpected'}, {'picture_pixel_evidence': None},
+                        {'pixel_sha256': ['0' * 64]}):
+            bad = copy.deepcopy(good)
+            bad.update(changes)
+            with self.subTest(changes=changes), self.assertRaises(render.FidelityError):
+                render.validate_record(bad)
+        for key, value in (('oracle', render.HOST_PICTURE_ORACLE), ('source_geometry', {}),
+                           ('black_pixels', 0), ('outside_nonwhite_pixels', 1)):
+            bad = copy.deepcopy(good)
+            bad['picture_pixel_evidence'][key] = value
+            with self.subTest(key=key), self.assertRaises(render.FidelityError):
+                render.validate_record(bad)
+        for points in ((612, 792), (595.3, 840), (595.4, 841.9)):
+            with self.subTest(points=points), self.assertRaises(render.FidelityError):
+                render.picture_raster_size('word-gif', points)
+
+    def test_word_cycle_comparison_requires_all_three_full_pixel_records(self):
+        for fmt in ('gif', 'jpeg'):
+            evidence = self.evidence(fmt)
+            names = [f'fidelity-host/word-picture-{fmt}-{i}.docx' for i in (1, 2, 3)]
+            records = {name: dict(record(name, text='\f', pixels=[evidence['pixel_sha256']]),
+                                  picture_pixel_evidence=copy.deepcopy(evidence)) for name in names}
+            self.assertEqual(render.cycle_coverage(names, records)['failures'], [])
+            del records[names[1]]['picture_pixel_evidence']
+            self.assertTrue(render.cycle_coverage(names, records)['failures'])
+
+    def test_word_native_pipeline_measures_raster_and_rejects_blank_or_extra_pages(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder) / 'fidelity-host'
+            root.mkdir()
+            source = root / 'word-picture-gif-1.docx'
+            self.package(source, self.parts())
+            output = Path(folder) / 'output'
+            output.mkdir()
+            raster, page_count, text = self.raster(), 1, '\f'
+            def command(args, **kwargs):
+                if Path(args[0]).name in ('libreoffice', 'soffice'):
+                    destination = Path(args[args.index('--outdir') + 1])
+                    (destination / (source.stem + '.pdf')).write_bytes(b'%PDF fixture')
+                elif args[0] == 'pdftoppm':
+                    width, height, pixels = raster
+                    Path(args[-1]).with_name('page-1.ppm').write_bytes(f'P6\n{width} {height}\n255\n'.encode() + pixels)
+                return subprocess.CompletedProcess(args, 0, stdout=b'', stderr=b'')
+            def output_text(args, **kwargs):
+                return f'Pages: {page_count}\nPage size: 595.3 x 841.9 pts\n' if args[0] == 'pdfinfo' else text
+            with patch.object(render.subprocess, 'run', side_effect=command), patch.object(render.subprocess, 'check_output', side_effect=output_text):
+                result = render.render_document(source, root, output, 0)
+                self.assertEqual(result['picture_pixel_evidence']['black_pixels'], 1800)
+                for raster, page_count, text in ((self.raster(color=b'\xff' * 3), 1, '\f'),
+                                                (self.raster(), 2, '\f'),
+                                                (self.raster(), 1, 'unwanted text')):
+                    with self.subTest(pages=page_count, text=text), self.assertRaises(render.FidelityError):
+                        render.render_document(source, root, output, 1)
+
+
 class CycleComparisonTests(unittest.TestCase):
     def test_omitted_table_grid_requires_matching_native_source(self):
         for folder in ('fidelity-table-grid', 'engine/fidelity-table-grid'):

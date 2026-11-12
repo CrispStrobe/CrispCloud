@@ -21,6 +21,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class _Cloud extends CloudStorageClient {
   bool authenticated = true;
   bool fail = false;
+  int reportCount = 1;
   String configuredRoot = '/';
   final reads = <String>[];
   @override
@@ -43,7 +44,14 @@ class _Cloud extends CloudStorageClient {
       ],
       'files': [
         if (path == '/docs')
-          {'name': 'report.txt', 'uuid': 'report', 'size': 12},
+          for (var i = 0; i < reportCount; i++)
+            {
+              'name': reportCount == 1
+                  ? 'report.txt'
+                  : 'report-${i.toString().padLeft(2, '0')}.txt',
+              'uuid': 'report-$i',
+              'size': 12,
+            },
       ],
     };
   }
@@ -182,6 +190,29 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pumpAndSettle();
   }
+
+  testWidgets('quick-find reserves space below the final matched file row', (
+    tester,
+  ) async {
+    cloud.reportCount = 50;
+    await mount(tester, mode: ViewMode.list);
+    await panel.navigateToPath('/docs', origin: panel.captureCurrentOrigin());
+    await tester.pumpAndSettle();
+    for (final char in 'report-49'.split('')) {
+      panel.typeaheadAppend(char);
+    }
+    await tester.pumpAndSettle();
+    final query = find.byKey(const ValueKey('panel-typeahead-remote'));
+    expect(query, findsOneWidget);
+    final row = find.text('report-49.txt').hitTestable();
+    expect(row, findsOneWidget);
+    expect(
+      tester.getRect(row).bottom,
+      lessThanOrEqualTo(tester.getRect(query).top),
+    );
+    panel.clearTypeahead();
+    await unmount(tester);
+  });
 
   for (final mode in [ViewMode.list, ViewMode.column]) {
     testWidgets(

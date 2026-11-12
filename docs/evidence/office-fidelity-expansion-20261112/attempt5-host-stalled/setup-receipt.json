@@ -1,0 +1,18 @@
+{
+  "started_utc": "2026-11-12T16:13:30.308738+00:00",
+  "finished_utc": "2026-11-12T16:13:32.850457+00:00",
+  "command": [
+    "flutter",
+    "pub",
+    "get",
+    "--offline"
+  ],
+  "exit_code": 0,
+  "app_commit": "78ea8a020bb9acd6e8b1f26d8caf82c34a99202f",
+  "source_commit": "73ad0c42a8ecc81fb11dbde05c6f0cf10b9a1c74",
+  "committed_lock_sha256": "f18ecce960b3b22694107cb17d4cef93e1e823b55da8f39374bcf7f081783256",
+  "resolved_lock_sha256": "f18ecce960b3b22694107cb17d4cef93e1e823b55da8f39374bcf7f081783256",
+  "lock_restored": false,
+  "git_status_after": "",
+  "package_config_sha256": "4ff943f0907fd1d1a1b4a43df213625fd93bb6de81a7bf41fdaf3ec7a8ccd335"
+}

@@ -17,6 +17,7 @@ import '../providers/focus_area_provider.dart';
 import '../services/ssh_terminal_service.dart';
 import '../services/terminal_backends.dart';
 import '../services/terminal_menu.dart';
+import '../services/keyboard_shortcut_service.dart';
 import '../services/terminal_session.dart';
 import '../services/terminal_mount_failure.dart';
 import '../services/terminal_directory.dart';
@@ -527,6 +528,19 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
 
   KeyEventResult _onTerminalKey(FocusNode node, KeyEvent event) {
     final keyboard = HardwareKeyboard.instance;
+    final action = ref
+        .read(keyboardShortcutServiceProvider)
+        .resolveBrowser(
+          event,
+          isCtrl: keyboard.isControlPressed,
+          isMeta: keyboard.isMetaPressed,
+          isShift: keyboard.isShiftPressed,
+          isAlt: keyboard.isAltPressed,
+        );
+    if (action == ShortcutAction.terminal) {
+      _hide();
+      return KeyEventResult.handled;
+    }
     if (event.logicalKey == LogicalKeyboardKey.keyC &&
         keyboard.isControlPressed &&
         !keyboard.isShiftPressed &&

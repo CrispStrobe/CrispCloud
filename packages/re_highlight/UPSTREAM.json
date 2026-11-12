@@ -1,0 +1,9 @@
+{
+  "repository": "https://github.com/reqable/re-highlight",
+  "package": "re_highlight",
+  "version": "0.0.3",
+  "pub_archive_sha256": "6c4ac3f76f939fb7ca9df013df98526634e17d8f7460e028bd23a035870024f2",
+  "patches": [
+    "Source-only pubspec; bounded line-aligned highlighting with continuation state in lib/src/highlight.dart."
+  ]
+}

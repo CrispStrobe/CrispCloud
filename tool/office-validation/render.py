@@ -89,8 +89,16 @@ HOST_PICTURE_GEOMETRY = {
     # The bounded fixture uses the native format's minimum 72-point height.
     # Its authored picture begins at ten percent of that height.
     'bounds': ((100, 72), (10, 7.2, 90, 45)),
+    # Independently authored Word references use the controller's A4/72pt
+    # defaults, an empty Arial11 paragraph (1.15 lines + 8pt after), then the
+    # 60x30pt picture. Their native reference places its top at 94.45pt.
+    # Package checks below bind every layout input; output bounds never define
+    # this expectation. See the word-picture-oracle reference authoring proof.
+    'word-gif': ((595.3, 841.9), (72, 94.45, 60, 30)),
+    'word-jpeg': ((595.3, 841.9), (72, 94.45, 60, 30)),
 }
 HOST_PICTURE_ORACLE = 'host-slide-black-picture-v1'
+HOST_WORD_PICTURE_ORACLE = 'host-word-black-picture-v1'
 
 
 def office_binary():
@@ -222,11 +230,268 @@ def png_bytes(width, height, pixels):
 
 
 def host_picture_case(path, root=None):
-    """Select exactly the twelve host PNG insertion exports, including root use."""
+    """Select the exact twelve slide and six Word image-only host captures."""
     path = Path(root) / path if root is not None else Path(path)
+    if path.parent.name != 'fidelity-host':
+        return None
     match = re.fullmatch(r'slide-picture-(landscape|portrait|square|bounds)-[123]\.pptx',
                          path.name)
-    return match[1] if match and path.parent.name == 'fidelity-host' else None
+    if match:
+        return match[1]
+    match = re.fullmatch(r'word-picture-(gif|jpeg)-[123]\.docx', path.name)
+    return 'word-' + match[1] if match else None
+
+
+def expected_picture_geometry(case):
+    if case in ('word-gif', 'word-jpeg'):
+        return {'page_twips': [11906, 16838], 'margin_twips': [1440] * 4,
+                'inline_offset_emu': [0, 0], 'extent_emu': [762000, 381000],
+                'media_pixels': [80, 40], 'media_format': case[5:],
+                'paragraph_font': 'Arial', 'paragraph_size_half_points': 22,
+                'paragraph_line_240ths': 276, 'paragraph_after_twips': 160}
+    page, rectangle = HOST_PICTURE_GEOMETRY[case]
+    return {'page_emu': [round(value * 12700) for value in page],
+            'rect_emu': [round(value * 12700) for value in rectangle]}
+
+
+def picture_oracle(case):
+    return HOST_WORD_PICTURE_ORACLE if case.startswith('word-') else HOST_PICTURE_ORACLE
+
+
+def word_picture_media_size(data, fmt):
+    """Inspect native format/dimensions; rendering independently checks pixels."""
+    if fmt == 'gif':
+        if data[:6] not in (b'GIF87a', b'GIF89a') or len(data) < 14:
+            raise ValueError('Expected native GIF media')
+        size = list(struct.unpack('<HH', data[6:10]))
+        offset = 13 + (3 * (2 << (data[10] & 7)) if data[10] & 128 else 0)
+        frames = 0
+
+        def blocks(position):
+            while True:
+                count = data[position]
+                position += 1
+                if not count:
+                    return position
+                position += count
+                if position >= len(data):
+                    raise ValueError('Truncated GIF data')
+
+        while offset < len(data):
+            marker = data[offset]
+            offset += 1
+            if marker == 0x3b:
+                if frames != 1 or offset != len(data):
+                    raise ValueError('Expected one complete static GIF frame')
+                return size
+            if marker == 0x21:
+                label = data[offset]
+                offset += 1
+                if label == 0xf9 and (data[offset] != 4 or data[offset + 1] & 1):
+                    raise ValueError('Expected an opaque GIF frame')
+                offset = blocks(offset)
+            elif marker == 0x2c:
+                if list(struct.unpack('<HHHH', data[offset:offset + 8])) != [0, 0, 80, 40]:
+                    raise ValueError('GIF frame dimensions/offset differ')
+                flags = data[offset + 8]
+                offset += 9 + (3 * (2 << (flags & 7)) if flags & 128 else 0)
+                offset = blocks(offset + 1)  # LZW minimum code size.
+                frames += 1
+            else:
+                raise ValueError('Unexpected GIF block')
+        raise ValueError('Incomplete GIF media')
+    if fmt != 'jpeg' or data[:2] != b'\xff\xd8' or data[-2:] != b'\xff\xd9':
+        raise ValueError('Expected native JPEG media')
+    offset = 2
+    while offset + 4 <= len(data):
+        if data[offset] != 0xff:
+            raise ValueError('Invalid JPEG marker')
+        marker = data[offset + 1]
+        length = int.from_bytes(data[offset + 2:offset + 4], 'big')
+        if length < 2 or offset + 2 + length > len(data):
+            raise ValueError('Truncated JPEG segment')
+        if marker in (0xc0, 0xc2):
+            if length < 8 or data[offset + 4] != 8 or data[offset + 9] != 3:
+                raise ValueError('Expected an 8-bit three-channel JPEG')
+            return [int.from_bytes(data[offset + 7:offset + 9], 'big'),
+                    int.from_bytes(data[offset + 5:offset + 7], 'big')]
+        if marker in (0xda, 0xd9):
+            break
+        offset += 2 + length
+    raise ValueError('JPEG has no supported image frame')
+
+
+def word_picture_package_geometry(path, case):
+    """Bind the six image-only Word captures to their independently authored flow.
+
+    Exact structure prevents paragraphs, style changes, anchors, crops, clipping,
+    fields or extra stories from hiding behind a matching black rectangle.
+    """
+    ns = {'w': 'http://schemas.openxmlformats.org/wordprocessingml/2006/main',
+          'wp': 'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing',
+          'a': 'http://schemas.openxmlformats.org/drawingml/2006/main',
+          'pic': 'http://schemas.openxmlformats.org/drawingml/2006/picture',
+          'r': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
+          'pr': 'http://schemas.openxmlformats.org/package/2006/relationships',
+          'ct': 'http://schemas.openxmlformats.org/package/2006/content-types',
+          'xml': 'http://www.w3.org/XML/1998/namespace'}
+
+    def q(name):
+        prefix, separator, local = name.partition(':')
+        return '{' + ns[prefix] + '}' + local if separator else name
+
+    def check(parent, path, attributes=None, children=None):
+        nodes = [parent] if path == '.' else parent.findall(path, ns)
+        if len(nodes) != 1:
+            raise ValueError(f'Expected one {path}')
+        node = nodes[0]
+        if attributes is not None and node.attrib != {q(k): str(v) for k, v in attributes.items()}:
+            raise ValueError(f'Unexpected attributes in {path}')
+        if children is not None and [child.tag for child in node] != [q(name) for name in children]:
+            raise ValueError(f'Unexpected content in {path}')
+        return node
+
+    def fonts(parent, size_only=False):
+        check(parent, '.', {}, ['w:rFonts', 'w:sz'] if size_only else ['w:rFonts', 'w:color', 'w:sz'])
+        check(parent, 'w:rFonts', {'w:ascii': 'Arial', 'w:hAnsi': 'Arial', 'w:cs': 'Arial'}, [])
+        check(parent, 'w:sz', {'w:val': 22}, [])
+        if not size_only:
+            check(parent, 'w:color', {'w:val': '000000'}, [])
+
+    fmt = case[5:]
+    try:
+        with ZipFile(path) as package:
+            media = f'word/media/image1.{fmt}'
+            allowed = {'[Content_Types].xml', '_rels/.rels', 'word/document.xml',
+                       'word/_rels/document.xml.rels', 'word/styles.xml', media,
+                       'word/numbering.xml', 'word/footnotes.xml', 'word/endnotes.xml',
+                       'docProps/core.xml', 'docProps/app.xml'}
+            names = package.namelist()
+            if len(names) != len(set(names)) or not set(names) <= allowed:
+                raise ValueError('Unexpected or duplicated Word package parts')
+            document = ET.fromstring(package.read('word/document.xml'))
+            body = check(document, 'w:body', {}, ['w:p', 'w:p', 'w:sectPr'])
+            if document.tag != q('w:document') or list(document) != [body]:
+                raise ValueError('Unexpected Word document root')
+            first, second, section = body
+            # Reopening drops the empty text run; the independently checked
+            # Normal/doc-default style supplies the same Arial11 metrics.
+            has_empty_run = [child.tag for child in first] == [q('w:pPr'), q('w:r')]
+            check(first, '.', {}, ['w:pPr', 'w:r'] if has_empty_run else ['w:pPr'])
+            props = check(first, 'w:pPr', {}, ['w:spacing', 'w:ind', 'w:jc'])
+            check(props, 'w:spacing', {'w:before': 0, 'w:after': 160, 'w:line': 276, 'w:lineRule': 'auto'}, [])
+            check(props, 'w:ind', {'w:left': 0, 'w:right': 0}, [])
+            check(props, 'w:jc', {'w:val': 'left'}, [])
+            if has_empty_run:
+                run = check(first, 'w:r', {}, ['w:rPr', 'w:t'])
+                run_props = check(run, 'w:rPr', {}, ['w:rFonts', 'w:b', 'w:i', 'w:color', 'w:sz'])
+                check(run_props, 'w:rFonts', {'w:ascii': 'Arial', 'w:hAnsi': 'Arial', 'w:cs': 'Arial'}, [])
+                for tag, value in (('b', '0'), ('i', '0'), ('color', '000000'), ('sz', '22')):
+                    check(run_props, 'w:' + tag, {'w:val': value}, [])
+                text = check(run, 'w:t', {'xml:space': 'preserve'}, [])
+                if text.text:
+                    raise ValueError('Unexpected Word text')
+            check(second, '.', {}, ['w:r'])
+            drawing = check(check(second, 'w:r', {}, ['w:drawing']), 'w:drawing', {}, ['wp:inline'])
+            inline = check(drawing, 'wp:inline', {'distT': 0, 'distB': 0, 'distL': 114300, 'distR': 114300},
+                           ['wp:extent', 'wp:effectExtent', 'wp:docPr', 'wp:cNvGraphicFramePr', 'a:graphic'])
+            check(inline, 'wp:extent', {'cx': 762000, 'cy': 381000}, [])
+            check(inline, 'wp:effectExtent', dict.fromkeys(('l', 't', 'r', 'b'), 0), [])
+            def picture_metadata(parent, tag, identifier):
+                node = check(parent, tag, children=[])
+                expected = {'id': str(identifier), 'name': 'picked.' + fmt, 'descr': 'picked.' + fmt}
+                if 'title' in node.attrib:
+                    expected['title'] = 'picked.' + fmt
+                if node.attrib != expected:
+                    raise ValueError('Unexpected picture metadata')
+            picture_metadata(inline, 'wp:docPr', 1)
+            locks = check(inline, 'wp:cNvGraphicFramePr', {}, ['a:graphicFrameLocks'])
+            check(locks, 'a:graphicFrameLocks', {'noChangeAspect': 1}, [])
+            graphic = check(inline, 'a:graphic', {}, ['a:graphicData'])
+            data = check(graphic, 'a:graphicData', {'uri': ns['pic']}, ['pic:pic'])
+            picture = check(data, 'pic:pic', {}, ['pic:nvPicPr', 'pic:blipFill', 'pic:spPr'])
+            nonvisual = check(picture, 'pic:nvPicPr', {}, ['pic:cNvPr', 'pic:cNvPicPr'])
+            picture_metadata(nonvisual, 'pic:cNvPr', 0)
+            locks = check(nonvisual, 'pic:cNvPicPr', {}, ['a:picLocks'])
+            check(locks, 'a:picLocks', {'noChangeAspect': 1}, [])
+            fill = check(picture, 'pic:blipFill', {}, ['a:blip', 'a:stretch'])
+            blip = check(fill, 'a:blip', children=[])
+            if set(blip.attrib) != {q('r:embed')}:
+                raise ValueError('Unexpected picture effects or external image')
+            check(check(fill, 'a:stretch', {}, ['a:fillRect']), 'a:fillRect', {}, [])
+            shape = check(picture, 'pic:spPr', {}, ['a:xfrm', 'a:prstGeom'])
+            transform = check(shape, 'a:xfrm', {}, ['a:off', 'a:ext'])
+            check(transform, 'a:off', {'x': 0, 'y': 0}, [])
+            check(transform, 'a:ext', {'cx': 762000, 'cy': 381000}, [])
+            check(check(shape, 'a:prstGeom', {'prst': 'rect'}, ['a:avLst']), 'a:avLst', {}, [])
+            check(section, '.', {}, ['w:type', 'w:pgSz', 'w:pgMar', 'w:cols'])
+            check(section, 'w:type', {'w:val': 'nextPage'}, [])
+            check(section, 'w:pgSz', {'w:w': 11906, 'w:h': 16838}, [])
+            check(section, 'w:pgMar', {'w:top': 1440, 'w:bottom': 1440, 'w:left': 1440,
+                                     'w:right': 1440, 'w:header': 720, 'w:footer': 720}, [])
+            check(section, 'w:cols', {'w:num': 1, 'w:space': 720}, [])
+            styles = ET.fromstring(package.read('word/styles.xml'))
+            fonts(check(styles, 'w:docDefaults/w:rPrDefault/w:rPr'), size_only=True)
+            defaults = check(styles, 'w:docDefaults', {}, ['w:rPrDefault'])
+            check(defaults, 'w:rPrDefault', {}, ['w:rPr'])
+            normal = [style for style in styles.findall('w:style', ns) if style.get(q('w:styleId')) == 'Normal']
+            if len(normal) != 1 or any(style.get(q('w:default')) is not None for style in styles):
+                raise ValueError('Unexpected default Word style')
+            normal = check(normal[0], '.', {'w:type': 'paragraph', 'w:styleId': 'Normal'}, ['w:name', 'w:pPr', 'w:rPr'])
+            check(normal, 'w:name', {'w:val': 'Normal'}, [])
+            props = check(normal, 'w:pPr', {}, ['w:spacing', 'w:jc'])
+            check(props, 'w:spacing', {'w:before': 0, 'w:after': 160}, [])
+            check(props, 'w:jc', {'w:val': 'left'}, [])
+            fonts(check(normal, 'w:rPr'))
+            for story in ('footnote', 'endnote'):
+                part = 'word/' + story + 's.xml'
+                if part not in names:
+                    continue
+                notes = ET.fromstring(package.read(part))
+                if notes.tag != q('w:' + story + 's') or len(notes) != 2:
+                    raise ValueError('Unexpected Word note content')
+                for note, kind, identifier in zip(notes, ('separator', 'continuationSeparator'), (-1, 0)):
+                    check(note, '.', {'w:type': kind, 'w:id': identifier}, ['w:p'])
+                    if note.tag != q('w:' + story):
+                        raise ValueError('Unexpected Word note type')
+                    paragraph = check(note, 'w:p', {}, ['w:r'])
+                    run = check(paragraph, 'w:r', {}, ['w:' + kind])
+                    check(run, 'w:' + kind, {}, [])
+            rels = ET.fromstring(package.read('word/_rels/document.xml.rels'))
+            image_rels = [rel for rel in rels if rel.get('Type') == ns['r'] + '/image']
+            if len(image_rels) != 1 or image_rels[0].attrib != {
+                    'Id': blip.get(q('r:embed')), 'Type': ns['r'] + '/image', 'Target': 'media/image1.' + fmt}:
+                raise ValueError('Unexpected Word image relationship')
+            expected_targets = {'image': 'media/image1.' + fmt, 'styles': 'styles.xml',
+                                'numbering': 'numbering.xml', 'footnotes': 'footnotes.xml', 'endnotes': 'endnotes.xml'}
+            types_seen = [rel.get('Type') for rel in rels]
+            if (rels.tag != q('pr:Relationships') or len({rel.get('Id') for rel in rels}) != len(rels)
+                    or len(types_seen) != len(set(types_seen))
+                    or not {ns['r'] + '/image', ns['r'] + '/styles'} <= set(types_seen)
+                    or any(rel.tag != q('pr:Relationship') or set(rel.attrib) != {'Id', 'Type', 'Target'}
+                           or rel.get('Type') not in {ns['r'] + '/' + name for name in expected_targets}
+                           or rel.get('Target') != expected_targets[rel.get('Type').rsplit('/', 1)[-1]] for rel in rels)):
+                raise ValueError('Unexpected Word content relationship')
+            root_rels = ET.fromstring(package.read('_rels/.rels'))
+            main = [rel for rel in root_rels if rel.get('Type') == ns['r'] + '/officeDocument']
+            if len(main) != 1 or main[0].get('Target') != 'word/document.xml' or main[0].get('TargetMode') is not None:
+                raise ValueError('Unexpected Word main part')
+            types = ET.fromstring(package.read('[Content_Types].xml'))
+            main_types = [node for node in types if node.get('PartName') == '/word/document.xml']
+            if (types.tag != q('ct:Types') or len(main_types) != 1
+                    or main_types[0].get('ContentType') != 'application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml'):
+                raise ValueError('Unexpected Word document content type')
+            overrides = [node for node in types if node.get('PartName') == '/' + media]
+            defaults = [node for node in types if node.get('Extension') == fmt]
+            if (len(overrides) != 1 or overrides[0].get('ContentType') != 'image/' + fmt
+                    or len(defaults) != 1 or defaults[0].get('ContentType') != 'image/' + fmt):
+                raise ValueError('Unexpected native image content type')
+            size = word_picture_media_size(package.read(media), fmt)
+            if size != [80, 40]:
+                raise ValueError('Native image dimensions differ from 80x40')
+        return expected_picture_geometry(case)
+    except (BadZipFile, KeyError, ET.ParseError, AttributeError, IndexError, struct.error, TypeError, ValueError) as error:
+        raise FidelityError(f'Host Word picture package geometry mismatch: {error}') from error
 
 
 def picture_package_geometry(path, case):
@@ -236,6 +501,8 @@ def picture_package_geometry(path, case):
     its authored extent from an over-wide picture clipped by the PDF page.
     Check the sole picture's raw OOXML transform independently for this corpus.
     """
+    if case in ('word-gif', 'word-jpeg'):
+        return word_picture_package_geometry(path, case)
     ns = {'p': 'http://schemas.openxmlformats.org/presentationml/2006/main',
           'a': 'http://schemas.openxmlformats.org/drawingml/2006/main',
           'r': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
@@ -283,7 +550,7 @@ def picture_raster_size(case, page_points):
     if (not isinstance(page_points, (list, tuple)) or len(page_points) != 2
             or any(type(value) not in (int, float) or not math.isfinite(value)
                    or abs(value - target) > 0.03 for value, target in zip(page_points, expected))):
-        raise FidelityError('Host picture PDF page size differs from the authored slide')
+        raise FidelityError('Host picture PDF page size differs from the authored page')
     # Poppler rounds the physical page up to whole pixels at 72 dpi. For
     # example, a 100.006 x 72.0094 pt page yields 101 x 73 pixels.
     return [math.ceil(value) for value in page_points]
@@ -296,15 +563,13 @@ def validate_picture_evidence(evidence, case, fingerprint):
     count_keys = ('black_pixels', 'white_pixels', 'gray_pixels', 'colored_pixels',
                   'outside_nonwhite_pixels', 'interior_nonblack_pixels')
     raster_size = picture_raster_size(case, evidence.get('page_size_points')) if isinstance(evidence, dict) else None
-    if (not isinstance(evidence, dict) or evidence.get('oracle') != HOST_PICTURE_ORACLE
+    if (not isinstance(evidence, dict) or evidence.get('oracle') != picture_oracle(case)
             or evidence.get('case') != case or evidence.get('dpi') != 72
             or evidence.get('page_size') != raster_size
             or evidence.get('expected_page_size') != list(page)
             or evidence.get('expected_rect') != list(rectangle)
             or evidence.get('pixel_sha256') != fingerprint
-            or evidence.get('source_geometry') != {
-                'page_emu': [round(value * 12700) for value in page],
-                'rect_emu': [round(value * 12700) for value in rectangle]}
+            or evidence.get('source_geometry') != expected_picture_geometry(case)
             or any(type(evidence.get(key)) is not int or evidence[key] < 0 for key in count_keys)):
         raise FidelityError('Missing or inconsistent host picture pixel evidence')
     bounds = evidence.get('black_bbox')
@@ -322,10 +587,10 @@ def picture_pixel_evidence(case, width, height, pixels, source_geometry, page_po
     """Measure the actual native raster; only a one-pixel edge band may vary."""
     page, rectangle = HOST_PICTURE_GEOMETRY[case]
     if [width, height] != picture_raster_size(case, page_points) or len(pixels) != width * height * 3:
-        raise FidelityError('Host picture page dimensions differ from the authored slide')
+        raise FidelityError('Host picture page dimensions differ from the authored page')
     x, y, rect_width, rect_height = rectangle
     right, bottom = x + rect_width, y + rect_height
-    evidence = {'oracle': HOST_PICTURE_ORACLE, 'case': case, 'dpi': 72,
+    evidence = {'oracle': picture_oracle(case), 'case': case, 'dpi': 72,
                 'page_size': [width, height], 'expected_page_size': list(page),
                 'page_size_points': list(page_points), 'expected_rect': list(rectangle),
                 'source_geometry': source_geometry,
@@ -367,6 +632,8 @@ def validate_record(record, *, root=None):
     if case is not None:
         if pages != 1:
             raise FidelityError('Host picture corpus must render exactly one page')
+        if case.startswith('word-') and text.strip():
+            raise FidelityError('Image-only Word corpus has unexpected text')
         validate_picture_evidence(record.get('picture_pixel_evidence'), case, pixels[0])
     elif not text.strip():
         raise FidelityError(f'Invalid or empty render evidence: {record.get("file")}')

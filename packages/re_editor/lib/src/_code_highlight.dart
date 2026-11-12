@@ -247,7 +247,11 @@ class _CodeHighlightEngine {
     if (!canHighlight) {
       result = payload.highlight.justTextHighlightResult(code);
     } else if (payload.languages.length == 1) {
-      result = payload.highlight.highlight(code: code, language: payload.languages.first);
+      final renderer = _HighlightLineRenderer();
+      for (final result in payload.highlight.highlightChunks(code: code, language: payload.languages.first)) {
+        result.render(renderer);
+      }
+      return renderer.lineResults;
     } else {
       result = payload.highlight.highlightAuto(code, payload.languages);
     }

@@ -378,11 +378,11 @@ classification of the extended application.
 
 | Operation | Verified implementation and purpose | Reachability |
 | --- | --- | --- |
-| EPUB identifiers, prose edits and local annotations | [`document.dart`](../packages/crisp_ebook/lib/src/document.dart), [`prose.dart`](../packages/crisp_ebook/lib/src/prose.dart) and [`ebook_annotations.dart`](../lib/services/ebook_annotations.dart) use Dart `crypto.sha256` for publication identifier suffixes, stale-edit fingerprints, and a document-identity plus exact-source-version preference key. | Normal creation/editing and annotation persistence. These hashes do not encrypt the publication or its annotations; annotations use `SharedPreferences`. |
-| Reader bridge session | [`reader.dart`](../packages/crisp_ebook_reader/lib/src/reader.dart) generates 24 random bytes using `Random.secure()`, then base64url-encodes them. | Each embedded reader session, together with the native/web host's message-source checks. This is an unpredictable session identifier, not an ebook encryption key. |
-| EPUB font compatibility | `EpubDocument.readDecodedBytes`, foliate's [`deobfuscators`](../packages/crisp_ebook_reader/assets/foliate/epub.js), and Kindling's [`fonts::deobfuscate`](../packages/crisp_ebook_conversion/native/vendor/kindling/src/fonts.rs) implement IDPF SHA-1/1040-byte XOR and Adobe UUID-key/1024-byte XOR. Dart uses `crypto.sha1`, foliate uses WebCrypto `subtle.digest('SHA-1')`, and Kindling has its own full SHA-1 implementation. | Supported font-resource reading/import/export. Original Dart document bytes remain obfuscated; native Kindle output writes compressed FONT records without XOR. Unknown encryption methods are rejected, and native EPUB export also rejects `META-INF/rights.xml`. |
-| MOBI font compatibility | [`mobi.js`'s `getFont`](../packages/crisp_ebook_reader/assets/foliate/mobi.js) reads the XOR key from the FONT record and reverses XOR over 1024 bytes when the key length is 16, otherwise 1040 bytes, before decompression. | Font resources in supported unencrypted MOBI/KF8 books. The reader rejects nonzero PalmDOC encryption before book decompression. |
-| Kindle format hashes | Kindling's [`exth.rs`](../packages/crisp_ebook_conversion/native/vendor/kindling/src/exth.rs), [`mobi.rs`](../packages/crisp_ebook_conversion/native/vendor/kindling/src/mobi.rs) and [`mobi_rewrite.rs`](../packages/crisp_ebook_conversion/native/vendor/kindling/src/mobi_rewrite.rs) contain full MD5 implementations. Uses include EXTH 542's first four MD5 bytes of the title, native export identifiers, and font-signature ordering. | Native export and title metadata changes. The browser byte API also reaches `md5_first4` when it changes a title. These are compatibility fields, not authentication checks or confidentiality protection. |
+| EPUB identifiers, prose edits and local annotations | [`document.dart`](https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook/lib/src/document.dart), [`prose.dart`](https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook/lib/src/prose.dart) and [`ebook_annotations.dart`](../lib/services/ebook_annotations.dart) use Dart `crypto.sha256` for publication identifier suffixes, stale-edit fingerprints, and a document-identity plus exact-source-version preference key. | Normal creation/editing and annotation persistence. These hashes do not encrypt the publication or its annotations; annotations use `SharedPreferences`. |
+| Reader bridge session | [`reader.dart`](https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_reader/lib/src/reader.dart) generates 24 random bytes using `Random.secure()`, then base64url-encodes them. | Each embedded reader session, together with the native/web host's message-source checks. This is an unpredictable session identifier, not an ebook encryption key. |
+| EPUB font compatibility | `EpubDocument.readDecodedBytes`, foliate's [`deobfuscators`](https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_reader/assets/foliate/epub.js), and Kindling's [`fonts::deobfuscate`](https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_conversion/native/vendor/kindling/src/fonts.rs) implement IDPF SHA-1/1040-byte XOR and Adobe UUID-key/1024-byte XOR. Dart uses `crypto.sha1`, foliate uses WebCrypto `subtle.digest('SHA-1')`, and Kindling has its own full SHA-1 implementation. | Supported font-resource reading/import/export. Original Dart document bytes remain obfuscated; native Kindle output writes compressed FONT records without XOR. Unknown encryption methods are rejected, and native EPUB export also rejects `META-INF/rights.xml`. |
+| MOBI font compatibility | [`mobi.js`'s `getFont`](https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_reader/assets/foliate/mobi.js) reads the XOR key from the FONT record and reverses XOR over 1024 bytes when the key length is 16, otherwise 1040 bytes, before decompression. | Font resources in supported unencrypted MOBI/KF8 books. The reader rejects nonzero PalmDOC encryption before book decompression. |
+| Kindle format hashes | Kindling's [`exth.rs`](https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_conversion/native/vendor/kindling/src/exth.rs), [`mobi.rs`](https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_conversion/native/vendor/kindling/src/mobi.rs) and [`mobi_rewrite.rs`](https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_conversion/native/vendor/kindling/src/mobi_rewrite.rs) contain full MD5 implementations. Uses include EXTH 542's first four MD5 bytes of the title, native export identifiers, and font-signature ordering. | Native export and title metadata changes. The browser byte API also reaches `md5_first4` when it changes a title. These are compatibility fields, not authentication checks or confidentiality protection. |
 
 The portable Linux search, bookmarks and appearance changes add no cipher,
 password derivation or credential store. ZIP CRC-32 checks in the core and
@@ -391,7 +391,7 @@ The font compatibility functions above do not implement general DRM decryption.
 
 ### Crypto present in ZIP dependencies but blocked by ebook entry points
 
-The pinned [zip.js asset](../packages/crisp_ebook_reader/assets/foliate/vendor/zip.js)
+The pinned [zip.js asset](https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_reader/assets/foliate/vendor/zip.js)
 contains the SJCL-derived `sha1`, `hmacSha1`, `pbkdf2`, `aes` and `ctrGladman`
 implementations. The WinZip path selects 16-, 24- or 32-byte AES keys, uses
 PBKDF2-HMAC-SHA1 with 1,000 iterations, and truncates HMAC-SHA1 to 10 bytes.
@@ -401,12 +401,12 @@ ZipCrypto is also present. The bundled encryption stream uses
 fallback. That fallback is not a secure RNG and is not used by a supported
 ebook operation.
 
-[`view.js`'s `makeZipLoader`](../packages/crisp_ebook_reader/assets/foliate/view.js)
+[`view.js`'s `makeZipLoader`](https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_reader/assets/foliate/view.js)
 inspects all central-directory entries and rejects `entry.encrypted` before
 calling any entry's `getData`. It never supplies a password, and disables the
 zip.js worker path. The package therefore still ships the password-crypto
 code as asset bytes while its ebook loading path rejects access to it. The
-Dart [ZIP container](../packages/crisp_ebook/lib/src/zip_container.dart)
+Dart [ZIP container](https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook/lib/src/zip_container.dart)
 independently rejects encrypted flags. This differs from the existing archive
 viewer, whose reachable password compatibility remains inventoried separately.
 
@@ -418,12 +418,12 @@ source. Inspection of its pinned source confirms that passwordless reads reject
 encrypted entries in `ZipFileData::make_reader`; the bridge uses those
 passwordless `by_index` calls. Disabled AES is not evidence that all source in
 the dependency is free of cryptography. The exact Rust crate archive checksum
-is recorded in the [native lock](../packages/crisp_ebook_conversion/native/Cargo.lock)
-and [Wasm lock](../packages/crisp_ebook_conversion/wasm/Cargo.lock).
+is recorded in the [native lock](https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_conversion/native/Cargo.lock)
+and [Wasm lock](https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_conversion/wasm/Cargo.lock).
 
-### Browser metadata artifact and dependency scope
+### Retained metadata regression artifact and dependency scope
 
-The [Wasm entry point](../packages/crisp_ebook_conversion/wasm/src/lib.rs) calls
+The [Wasm entry point](https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_conversion/wasm/src/lib.rs) calls
 `rewrite_mobi_metadata_bytes`, with `doc_type` and `cover_image` set to `None`.
 It therefore does not call font conversion or the optional embedded source-ZIP
 extraction path. The shared rewriter rejects nonzero PalmDOC encryption and
@@ -432,24 +432,46 @@ output. It retains the MD5 title-hash operation described above.
 
 The broader resolved dependency graph still includes `ahash` 0.8.12,
 `getrandom` 0.3.4 and 0.4.3, `rand` 0.8.8, `rand_core` 0.6.4, and
-`wasm-bindgen` 0.2.121. The [Wasm manifest](../packages/crisp_ebook_conversion/wasm/Cargo.toml)
+`wasm-bindgen` 0.2.121. The [Wasm manifest](https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_conversion/wasm/Cargo.toml)
 enables `getrandom` 0.3.4's `wasm_js` feature so the upstream graph can compile.
 This dependency presence does not establish that an RNG is called by the
 metadata operation. Direct inspection with `WebAssembly.Module.imports` returned
 an empty list for the bundled `kindling_metadata.wasm`; the
-[runtime](../packages/crisp_ebook_conversion/assets/metadata_runtime.js) also
+[runtime](https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_conversion/assets/metadata_runtime.js) also
 rejects any module with imports before instantiation. This verifies the absence
 of browser/WASI imports for that artifact, not the absence of internal MD5 or
 every possible algorithm in transitive source.
 
-The [worker](../packages/crisp_ebook_conversion/assets/metadata_worker.js) loads
-the sibling bundled Wasm asset. The default Dart backend requires a same-origin
-worker URL. [WASM.json](../packages/crisp_ebook_conversion/WASM.json) binds the
+The [worker](https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_conversion/assets/metadata_worker.js) loads
+the sibling bundled Wasm asset. The production Dart backend requires a same-origin
+worker URL and now defaults to the full conversion worker described below. [WASM.json](https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_conversion/WASM.json) binds the
 asset, runtime, worker and build inputs; the inventory additionally lists those
 exact files and both Cargo locks for the source-evidence fingerprint. Native
 prebuilt/executable/library overrides and custom worker assets require their
 own content/provenance review. Matching a version or ABI string does not prove
 an override has the reviewed implementation.
+
+### Production browser conversion worker
+
+The browser backend now defaults to `conversion_worker.js` and the packaged
+`kindling_conversion.wasm.gz`, with source identity recorded by
+[the complete dependency manifest](ebook-source-manifest.json). It executes the
+same native request validator, EPUB export and metadata processor inside a
+fresh, bounded, in-memory `/job`. The module imports WASI functions for its
+arguments, empty environment, clock, random values and memory filesystem; no
+socket import is allowed. The pinned shim exposes no host filesystem or network
+API to the engine. Its `random_get` uses `crypto.getRandomValues` where available
+and retains the upstream `Math.random` fallback. This is distinct from the
+zero-import metadata-only regression module described above.
+
+Full browser EPUB export reaches the existing Kindling SHA-1/XOR font
+compatibility and Kindle MD5 format-field implementations. It adds no book
+password feature, credential store or cipher. Native and browser output parity
+checks compare all bytes except PalmDB build timestamps, including large books.
+The same source/license verification covers the shim, compressed/expanded
+module, runtime, native sources and build inputs. Browser cover replacement
+remains unavailable. These implementation facts do not constitute a new
+release/distribution decision.
 
 ### Resolved reader-plugin and build-hook delta
 
@@ -477,7 +499,7 @@ in the root lock.
 The Android and Apple adapters expose callbacks capable of accepting a server
 trust challenge or supplying a client identity. Platform delegation alone is
 therefore not a claim that every possible plugin configuration enforces the
-same trust policy. The current [native ebook host](../packages/crisp_ebook_reader/lib/src/hosts/host_native.dart)
+same trust policy. The current [native ebook host](https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_reader/lib/src/hosts/host_native.dart)
 does not configure those callbacks.
 
 `code_assets` 2.2.0 provides build/link-hook protocol models and output
@@ -485,7 +507,7 @@ validation: see `lib/code_assets.dart`, `lib/src/code_assets/extension.dart`,
 `code_asset.dart`, `link_mode.dart` and `native_library_validation.dart` within
 that package. Its direct dependencies are `collection`, `hooks` and `logging`.
 The 2.2.0 change adds complete Apple deployment-version representation. The
-ebook converter imports this API in its [build hook](../packages/crisp_ebook_conversion/hook/build.dart)
+ebook converter imports this API in its [build hook](https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_conversion/hook/build.dart)
 and hook configuration helper; the converter's runtime exports do not import
 that helper. The package describes and validates native-library assets rather
 than implementing the conversion or its cryptography. Libraries emitted by
@@ -551,7 +573,7 @@ re-resolves the exact account/root, checks the captured origin again after a
 fresh stat, and rejects an object-ID mismatch. A source reference grants no
 access by itself; a source-free row requires the user to locate the file.
 
-The new [`reader_controls.js`](../packages/crisp_ebook_reader/assets/reader_controls.js)
+The new [`reader_controls.js`](https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_reader/assets/reader_controls.js)
 normalizes numeric limits and allowlisted choices before constructing the
 host's style sheets. It accepts no arbitrary CSS or script argument. Appearance
 changes retain publication nodes and locator structure. Navigation commands
@@ -563,10 +585,10 @@ paths are unchanged.
 
 ### Optional Linux WebKitGTK host
 
-The Linux [CMake manifest](../packages/crisp_ebook_reader/linux/CMakeLists.txt)
+The Linux [CMake manifest](https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_reader/linux/CMakeLists.txt)
 checks for WebKitGTK 4.1 development headers at version 2.48.4 or newer. It links
 system GTK3 and gmodule, and links epoxy only in the enhanced build. The
-[native adapter](../packages/crisp_ebook_reader/linux/crisp_ebook_reader_plugin.cc)
+[native adapter](https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_reader/linux/crisp_ebook_reader_plugin.cc)
 resolves WebKit and JavaScriptCore symbols from `libwebkit2gtk-4.1.so.0` on
 demand and verifies the runtime version. It does not add a direct WebKit
 `DT_NEEDED` entry or copy a partial browser runtime into the Flutter bundle.
@@ -581,7 +603,7 @@ permission, authentication, file-chooser, new-window and download requests.
 Its start URL must be the expected `http://127.0.0.1:<port>/<session>/index.html`
 with the matching session fragment. The injected bridge belongs to that
 top-level document; approved book frames use local Blob URLs. The existing
-[asset server](../packages/crisp_ebook_reader/lib/src/hosts/asset_server.dart)
+[asset server](https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_reader/lib/src/hosts/asset_server.dart)
 serves only bundled assets under the session path with the host CSP. The Dart
 reader continues to validate its random session and message channel. This
 does not introduce a custom TLS implementation or a permissive certificate

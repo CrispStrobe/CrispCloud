@@ -38,15 +38,15 @@ void main() {
     await tester.pump();
     await tester.tap(find.byKey(const ValueKey('shortcut-refresh')));
     await tester.pumpAndSettle();
-    await tester.sendKeyEvent(LogicalKeyboardKey.f9);
+    await tester.sendKeyEvent(LogicalKeyboardKey.f10);
     await tester.pump();
     await tester.tap(find.text('Save'));
     await tester.pumpAndSettle();
     expect(
       container.read(shortcutBindingsProvider)[ShortcutAction.refresh]!.key,
-      'F9',
+      'F10',
     );
-    expect(find.text('F9'), findsOneWidget);
+    expect(find.text('F10'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -82,14 +82,14 @@ void main() {
     await tester.pump();
     await tester.tap(find.byKey(const ValueKey('shortcut-refresh')));
     await tester.pumpAndSettle();
-    await tester.sendKeyEvent(LogicalKeyboardKey.f9);
+    await tester.sendKeyEvent(LogicalKeyboardKey.f10);
     await tester.pump();
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.pumpAndSettle();
     expect(find.text('Save'), findsNothing);
     expect(
       container.read(shortcutBindingsProvider)[ShortcutAction.refresh]!.key,
-      'F9',
+      'F10',
     );
     expect(tester.takeException(), isNull);
   });

@@ -196,6 +196,7 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
         ShortcutAction.toggleHidden,
         ShortcutAction.toggleTreeView,
         ShortcutAction.cycleLayout,
+        ShortcutAction.terminal,
       ])
         _Command(
           name: WorkspaceUxStrings(context).action(action),
@@ -218,6 +219,7 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
             ShortcutAction.delete => Icons.delete_outline,
             ShortcutAction.toggleHidden => Icons.visibility_outlined,
             ShortcutAction.toggleTreeView => Icons.account_tree_outlined,
+            ShortcutAction.terminal => Icons.terminal,
             _ => Icons.view_list_outlined,
           },
           action: () =>

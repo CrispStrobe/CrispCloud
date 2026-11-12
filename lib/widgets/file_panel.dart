@@ -775,84 +775,82 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                         state: listingState,
                         dropHint: _isDragging && sourceIsRemote,
                       )
-                    // Pull-to-refresh on mobile, with type-ahead overlay
-                    : Stack(
+                    // Type-ahead has its own row, leaving every file row unobscured.
+                    : Column(
                         children: [
-                          RefreshIndicator(
-                            onRefresh: () => panel.refresh(),
-                            child: _buildFileView(
-                              widget.side,
-                              files ?? const [],
+                          Expanded(
+                            child: RefreshIndicator(
+                              onRefresh: () => panel.refresh(),
+                              child: _buildFileView(
+                                widget.side,
+                                files ?? const [],
+                              ),
                             ),
                           ),
                           if (panel.isTypeahead)
-                            Positioned(
-                              left: 0,
-                              right: 0,
-                              bottom: 0,
-                              child: Container(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .inverseSurface
-                                    .withValues(alpha: 0.9),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 4,
-                                ),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      panel.isQuickFilterActive
-                                          ? Icons.filter_list
-                                          : Icons.search,
-                                      size: 16,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onInverseSurface,
+                            Container(
+                              key: ValueKey(
+                                'panel-typeahead-${widget.side.name}',
+                              ),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .inverseSurface
+                                  .withValues(alpha: 0.9),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 4,
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    panel.isQuickFilterActive
+                                        ? Icons.filter_list
+                                        : Icons.search,
+                                    size: 16,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onInverseSurface,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      '${FilePanelStrings(context).text(panel.isQuickFilterActive ? 'filter' : 'find')}: ' +
+                                          panel.filterQuery,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onInverseSurface,
+                                      ),
                                     ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
+                                  ),
+                                  if (panel.typeaheadMatchCount > 0)
+                                    Padding(
+                                      padding: const EdgeInsets.only(right: 8),
                                       child: Text(
-                                        (panel.isQuickFilterActive
-                                                ? 'Filter: '
-                                                : 'Find: ') +
-                                            panel.filterQuery,
+                                        '${panel.typeaheadMatchPosition}/'
+                                        '${panel.typeaheadMatchCount}',
                                         style: TextStyle(
-                                          fontSize: 13,
+                                          fontSize: 12,
                                           color: Theme.of(context)
                                               .colorScheme
                                               .onInverseSurface,
                                         ),
                                       ),
                                     ),
-                                    if (panel.typeaheadMatchCount > 0)
-                                      Padding(
-                                        padding: const EdgeInsets.only(
-                                          right: 8,
-                                        ),
-                                        child: Text(
-                                          '${panel.typeaheadMatchPosition}/'
-                                          '${panel.typeaheadMatchCount}',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .onInverseSurface,
-                                          ),
-                                        ),
-                                      ),
-                                    GestureDetector(
-                                      onTap: () => panel.clearTypeahead(),
-                                      child: Icon(
-                                        Icons.close,
-                                        size: 16,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onInverseSurface,
-                                      ),
+                                  GestureDetector(
+                                    onTap: () => panel.clearTypeahead(),
+                                    child: Icon(
+                                      Icons.close,
+                                      size: 16,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onInverseSurface,
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
                             ),
                         ],

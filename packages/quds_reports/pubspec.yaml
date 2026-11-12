@@ -1,0 +1,57 @@
+name: quds_reports
+publish_to: none
+description: >-
+  Band reports for Dart: .qrep templates, expressions, Arabic Tafqeet,
+  pagination, charts, and PDF, XLSX, and DOCX export.
+version: 1.5.0
+homepage: https://github.com/MohammedAsaadAsaad/quds_office_suite
+repository: https://github.com/MohammedAsaadAsaad/quds_office_suite/tree/main/packages/quds_reports
+issue_tracker: https://github.com/MohammedAsaadAsaad/quds_office_suite/issues
+
+topics:
+  - reports
+  - pdf
+  - invoice
+  - excel
+  - word
+
+screenshots:
+  - description: "Band report: sales dashboard with KPI cards, vector charts, and a grouped table (PDF)."
+    path: example/screenshots/report_sales_performance.png
+  - description: "Arabic RTL VAT invoice with a QR code and the amount in words (PDF)."
+    path: example/screenshots/report_sales_invoice_ar.png
+  - description: "Arabic account statement with a running balance and an area chart (PDF)."
+    path: example/screenshots/report_account_statement_ar.png
+  - description: "Arabic certificate of appreciation with an embedded seal and signature (PDF)."
+    path: example/screenshots/report_certificate_ar.png
+  - description: "Chart gallery: columns, lines, pies, gauges, and extruded charts drawn as vectors."
+    path: example/screenshots/report_chart_gallery.png
+  - description: "Shape map: countries colored from a table, with a legend and labels."
+    path: example/screenshots/report_shape_map.png
+  - description: "The same sales report exported to XLSX with native Excel charts."
+    path: example/screenshots/report_sales_performance_xlsx.png
+  - description: "Quds Report Studio: the desktop designer for .qrep files (Windows and Linux)."
+    path: example/screenshots/report_studio_designer.png
+  - description: "Live preview in the studio: paginated pages painted from the engine."
+    path: example/screenshots/studio_preview.png
+  - description: "Ready-made product catalog open in the studio, photos saved inside the .qrep."
+    path: example/screenshots/report_studio_templates.png
+
+platforms:
+  android:
+  ios:
+  linux:
+  macos:
+  web:
+  windows:
+
+environment:
+  sdk: ^3.12.0
+
+dependencies:
+  quds_office_engine:
+    path: ../quds_office_engine
+
+dev_dependencies:
+  lints: ^6.0.0
+  test: ^1.26.0

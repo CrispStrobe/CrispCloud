@@ -80,6 +80,7 @@ class WorkspaceUxStrings {
         context,
       ).text('title'),
       ShortcutAction.multiRename => s.extra('multiRename'),
+      ShortcutAction.terminal => context.commanderTr('Toggle Terminal'),
     };
   }
 

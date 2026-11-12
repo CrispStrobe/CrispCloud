@@ -8,6 +8,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'legacy_text_encoding.dart';
+import 'archive_format_registry.dart';
 
 // ---------------------------------------------------------------------------
 // ViewerMode enum
@@ -175,7 +176,14 @@ class InternalViewerService {
 
   /// Returns a map from [ViewerMode] to the list of file extensions handled by
   /// that mode (lower-case, including the leading dot).
-  Map<ViewerMode, List<String>> getSupportedExtensions() => const {
+  Map<ViewerMode, List<String>> getSupportedExtensions() => {
+    ..._standardExtensions,
+    ViewerMode.archive: [
+      for (final format in archiveFormatCapabilities) ...format.suffixes,
+    ],
+  };
+
+  static const _standardExtensions = <ViewerMode, List<String>>{
     ViewerMode.text: [
       '.txt',
       '.text',
@@ -228,6 +236,8 @@ class InternalViewerService {
       '.swift',
       '.c',
       '.cpp',
+      '.nxc',
+      '.nqc',
       '.cc',
       '.cxx',
       '.h',
@@ -396,34 +406,6 @@ class InternalViewerService {
       '.epub',
     ],
     ViewerMode.email: ['.eml', '.msg'],
-    ViewerMode.archive: [
-      '.zip',
-      '.jar',
-      '.whl',
-      '.apk',
-      '.ipa',
-      '.aab',
-      '.crx',
-      '.xpi',
-      '.nupkg',
-      '.vsix',
-      '.cbz',
-      '.cbt',
-      '.cb7',
-      '.cbr',
-      '.7z',
-      '.rar',
-      '.tar',
-      '.tgz',
-      '.tbz2',
-      '.tbz',
-      '.txz',
-      '.tzst',
-      '.gz',
-      '.bz2',
-      '.xz',
-      '.zst',
-    ],
     ViewerMode.binary: [
       '.exe',
       '.dll',
@@ -438,10 +420,7 @@ class InternalViewerService {
       '.obj',
       '.class',
       '.pyc',
-      '.deb',
       '.rpm',
-      '.dmg',
-      '.iso',
       '.img',
       '.vhd',
       '.vhdx',
@@ -453,7 +432,6 @@ class InternalViewerService {
       '.cache',
       '.swp',
       '.core',
-      '.a',
       '.lib',
     ],
   };
@@ -469,10 +447,10 @@ class InternalViewerService {
   ViewerMode detectMode(String filename, {Uint8List? header}) {
     final lower = filename.toLowerCase();
 
-    // Multi-segment suffixes first (.tar.gz, .tar.bz2) so that archive
-    // suffixes match before the plain '.gz' entry.
-    for (final suffix in _archiveSuffixes) {
-      if (lower.endsWith(suffix)) return ViewerMode.archive;
+    // Compound archive suffixes must win over content-based text guessing.
+    final archiveFormat = archiveFormatForName(filename);
+    if (archiveFormat != null && !archiveFormat.singleFileCompression) {
+      return ViewerMode.archive;
     }
 
     if (header != null && header.isNotEmpty) {
@@ -480,7 +458,9 @@ class InternalViewerService {
       if (magic != null) return magic;
     }
 
-    final mode = _modeForName(lower, header);
+    final mode = archiveFormat != null
+        ? ViewerMode.archive
+        : _modeForName(lower, header);
     // Content sniffing for extension-less / generic markup files. The magic
     // check above runs first; here we only refine text/binary guesses so
     // e.g. .svg keeps its image mapping.
@@ -499,18 +479,6 @@ class InternalViewerService {
     }
     return mode;
   }
-
-  static const _archiveSuffixes = <String>[
-    '.tar.gz',
-    '.tar.bz2',
-    '.tar.xz',
-    '.tar.zst',
-    '.tgz',
-    '.tbz2',
-    '.tbz',
-    '.txz',
-    '.tzst',
-  ];
 
   /// Extension names commonly plain text even without a real extension
   /// (README, LICENSE, Makefile, …). Matched against the lower-case basename.
@@ -1111,30 +1079,8 @@ class InternalViewerService {
   }
 
   /// MIME type for archive extensions.
-  static String _mimeForArchive(String lower) {
-    final ext = _extensionOf(lower);
-    return switch (ext) {
-      '.zip' ||
-      '.jar' ||
-      '.whl' ||
-      '.apk' ||
-      '.ipa' ||
-      '.aab' ||
-      '.crx' ||
-      '.xpi' ||
-      '.nupkg' ||
-      '.vsix' ||
-      '.cbz' => 'application/zip',
-      '.7z' || '.cb7' => 'application/x-7z-compressed',
-      '.rar' || '.cbr' => 'application/vnd.rar',
-      '.tar' || '.cbt' => 'application/x-tar',
-      '.gz' || '.tgz' || '.tar.gz' => 'application/gzip',
-      '.bz2' || '.tbz' || '.tbz2' || '.tar.bz2' => 'application/x-bzip2',
-      '.xz' || '.txz' || '.tar.xz' => 'application/x-xz',
-      '.zst' || '.tzst' || '.tar.zst' => 'application/zstd',
-      _ => 'application/octet-stream',
-    };
-  }
+  static String _mimeForArchive(String lower) =>
+      archiveFormatForName(lower)?.mimeType ?? 'application/octet-stream';
 
   // ---- Private helpers -------------------------------------------------------
 

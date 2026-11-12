@@ -3,6 +3,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 python3 tool/verify_office_fidelity.py
 python3 -m unittest discover -s tool -p test_sync_office_fidelity.py
+python3 -m unittest discover -s tool -p test_sync_legacy_doc_parser.py
 (cd packages/quds_office_engine && dart pub get && bash tool/fidelity/check.sh)
 python3 -m unittest discover -s tool -p test_office_host_evidence.py
 python3 tool/office_host_evidence.py clean
@@ -34,6 +35,8 @@ python3 tool/collect_office_host_coverage.py "$office_host_coverage_dir" -- \
   test/widget/office_paragraph_fidelity_test.dart \
   test/widget/office_font_fidelity_test.dart \
   test/widget/office_picture_fidelity_test.dart \
+  test/widget/office_html_widget_factory_test.dart \
+  test/widget/office_metafile_preview_test.dart \
   test/widget/office_save_fidelity_test.dart \
   test/widget/legacy_word_conversion_dialog_test.dart \
   test/widget/legacy_word_routing_test.dart

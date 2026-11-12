@@ -28,6 +28,9 @@ enum FKeyAction {
 
   /// F8 — delete selected files from the active panel.
   delete,
+
+  /// F9 — show or hide the embedded terminal.
+  terminal,
 }
 
 // ---------------------------------------------------------------------------
@@ -89,6 +92,12 @@ class FKeyContext {
 /// Describes what should happen next after the service resolves an action.
 sealed class FKeyActionResult {
   const FKeyActionResult();
+}
+
+/// Requests terminal presentation from the application host.
+class FKeyOpenTerminal extends FKeyActionResult {
+  const FKeyOpenTerminal(this.source);
+  final PanelSource source;
 }
 
 /// The action completed successfully without needing further UI interaction.
@@ -168,10 +177,11 @@ class FKeyActionService {
       FKeyAction.move => 'Move',
       FKeyAction.mkdir => 'MkDir',
       FKeyAction.delete => 'Delete',
+      FKeyAction.terminal => 'Terminal',
     };
   }
 
-  /// Display string for the keyboard shortcut (F3–F8).
+  /// Display string for the keyboard shortcut (F3–F9).
   String getActionShortcut(FKeyAction action) {
     return switch (action) {
       FKeyAction.view => 'F3',
@@ -180,10 +190,11 @@ class FKeyActionService {
       FKeyAction.move => 'F6',
       FKeyAction.mkdir => 'F7',
       FKeyAction.delete => 'F8',
+      FKeyAction.terminal => 'F9',
     };
   }
 
-  /// F-key number (3–8).
+  /// F-key number (3–9).
   int getFKeyNumber(FKeyAction action) {
     return switch (action) {
       FKeyAction.view => 3,
@@ -192,6 +203,7 @@ class FKeyActionService {
       FKeyAction.move => 6,
       FKeyAction.mkdir => 7,
       FKeyAction.delete => 8,
+      FKeyAction.terminal => 9,
     };
   }
 
@@ -211,6 +223,7 @@ class FKeyActionService {
 
       // MkDir is always available (creates in active panel).
       FKeyAction.mkdir => true,
+      FKeyAction.terminal => true,
     };
   }
 
@@ -225,10 +238,7 @@ class FKeyActionService {
   /// - [FKeyOpenViewer] — push the viewer route.
   /// - [FKeyOpenEditor] — push the editor route.
   /// - [FKeyError] — show an error message.
-  FKeyActionResult executeAction(
-    FKeyAction action,
-    FKeyContext context,
-  ) {
+  FKeyActionResult executeAction(FKeyAction action, FKeyContext context) {
     if (!isActionAvailable(action, context)) {
       return FKeyError(
         '${getActionLabel(action)} is not available: no files selected.',
@@ -242,6 +252,7 @@ class FKeyActionService {
       FKeyAction.move => _handleMove(context),
       FKeyAction.mkdir => _handleMkDir(context),
       FKeyAction.delete => _handleDelete(context),
+      FKeyAction.terminal => FKeyOpenTerminal(context.activePanel),
     };
   }
 

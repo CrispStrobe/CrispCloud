@@ -3,6 +3,13 @@ import 'dart:typed_data';
 import '../models/archive_endpoint.dart';
 import 'archive_viewer_service.dart';
 import 'archive_zip_metadata.dart';
+import 'archive_compression_writer.dart';
+import 'archive_format_registry.dart';
+import 'archive_iso_writer.dart';
+import 'archive_package_writers.dart';
+import 'archive_tar_writer.dart';
+import 'archive_write_model.dart';
+import 'archive_zip_package_policy.dart';
 
 /// Writer policy is deliberately narrower than reader recognition. The reader
 /// exposes only selected metadata; opaque format extensions are not promised.
@@ -12,11 +19,40 @@ class ArchiveEndpointPolicy {
     required this.encrypted,
     required this.encryptNames,
     this.reason,
+    this.inspection,
+    this.gzipHeader,
+    this.xzCheck = 4,
+    this.singleMemberName,
   });
   final ArchiveEndpointFormat format;
   final bool encrypted;
   final bool encryptNames;
   final String? reason;
+  final ArchiveRewriteInspection? inspection;
+  final Uint8List? gzipHeader;
+  final int xzCheck;
+  final String? singleMemberName;
+
+  bool get singlePayload => const {
+    ArchiveEndpointFormat.gzip,
+    ArchiveEndpointFormat.bzip2,
+    ArchiveEndpointFormat.xz,
+    ArchiveEndpointFormat.zstd,
+  }.contains(format);
+
+  ArchiveCompressionKind? get compression => switch (format) {
+    ArchiveEndpointFormat.tarGzip ||
+    ArchiveEndpointFormat.gzip => ArchiveCompressionKind.gzip,
+    ArchiveEndpointFormat.tarBzip2 ||
+    ArchiveEndpointFormat.bzip2 => ArchiveCompressionKind.bzip2,
+    ArchiveEndpointFormat.tarXz ||
+    ArchiveEndpointFormat.xz => ArchiveCompressionKind.xz,
+    ArchiveEndpointFormat.tarZstd ||
+    ArchiveEndpointFormat.zstd => ArchiveCompressionKind.zstd,
+    _ => null,
+  };
+
+  String? get packageKind => inspection?.container['package.kind'] as String?;
 
   static Future<ArchiveEndpointPolicy> inspect(
     Uint8List bytes,
@@ -25,34 +61,127 @@ class ArchiveEndpointPolicy {
     String? password,
   ) async {
     final lower = name.toLowerCase();
-    final format = lower.endsWith('.zip')
-        ? ArchiveEndpointFormat.zip
-        : lower.endsWith('.7z')
-        ? ArchiveEndpointFormat.sevenZip
-        : lower.endsWith('.tar.gz') || lower.endsWith('.tgz')
-        ? ArchiveEndpointFormat.tarGzip
-        : lower.endsWith('.tar')
-        ? ArchiveEndpointFormat.tar
-        : ArchiveEndpointFormat.readOnly;
+    final descriptor = archiveFormatForName(name);
+    final format = switch (descriptor?.id) {
+      'zip' => ArchiveEndpointFormat.zip,
+      'zip-alias' ||
+      'java-archive' when isEditableZipAlias(name) => ArchiveEndpointFormat.zip,
+      '7z' || '7z-alias' => ArchiveEndpointFormat.sevenZip,
+      'tar' || 'tar-alias' => ArchiveEndpointFormat.tar,
+      'tar-gzip' => ArchiveEndpointFormat.tarGzip,
+      'tar-bzip2' => ArchiveEndpointFormat.tarBzip2,
+      'tar-xz' => ArchiveEndpointFormat.tarXz,
+      'tar-zstd' => ArchiveEndpointFormat.tarZstd,
+      'gzip' => ArchiveEndpointFormat.gzip,
+      'bzip2' => ArchiveEndpointFormat.bzip2,
+      'xz' => ArchiveEndpointFormat.xz,
+      'zstd' => ArchiveEndpointFormat.zstd,
+      'ar' || 'deb' => ArchiveEndpointFormat.ar,
+      'cpio' => ArchiveEndpointFormat.cpio,
+      'xar' when lower.endsWith('.xar') => ArchiveEndpointFormat.xar,
+      'iso' => ArchiveEndpointFormat.iso,
+      _ => ArchiveEndpointFormat.readOnly,
+    };
+    final basic = ArchiveEndpointPolicy(
+      format,
+      encrypted: false,
+      encryptNames: false,
+    );
     final files = archive.members.where((member) => member.isFile).toList();
     var encrypted = archive.members.any((member) => member.isEncrypted);
     var encryptNames = false;
     String? reason;
+    ArchiveRewriteInspection? inspection;
+    Uint8List? gzipHeader;
+    var xzCheck = 4;
     final expectedFormat = switch (format) {
       ArchiveEndpointFormat.zip => 'zip',
       ArchiveEndpointFormat.sevenZip => '7z',
-      ArchiveEndpointFormat.tar || ArchiveEndpointFormat.tarGzip => 'tar',
+      ArchiveEndpointFormat.tar ||
+      ArchiveEndpointFormat.tarGzip ||
+      ArchiveEndpointFormat.tarBzip2 ||
+      ArchiveEndpointFormat.tarXz ||
+      ArchiveEndpointFormat.tarZstd => 'tar',
       ArchiveEndpointFormat.readOnly => null,
+      _ => format.name,
     };
-    final gzip = bytes.length >= 2 && bytes[0] == 0x1f && bytes[1] == 0x8b;
     if (expectedFormat != null &&
         (archive.formatName.toLowerCase() != expectedFormat ||
-            (format == ArchiveEndpointFormat.tarGzip) != gzip)) {
-      reason = 'The detected archive format does not match its filename. Repacking would change its format.';
+            basic.compression != archiveCompressionForBytes(bytes))) {
+      reason = 'The detected archive format does not match its filename or supported compression wrapper. Repacking would change its format.';
     }
-    if (format == ArchiveEndpointFormat.readOnly) reason = 'This format supports browsing and extraction, but its writer is unavailable.';
-    if (format == ArchiveEndpointFormat.zip) {
-      reason ??= archiveZipTimestampPolicyIssue(bytes);
+    if (format == ArchiveEndpointFormat.readOnly) {
+      reason = switch (descriptor?.id) {
+        'dmg' || 'hfs' => 'Existing disk images remain read-only. Create a new HFSX data image from regular files and folders; other filesystem metadata requires a filesystem-aware editor.',
+        'zip-package' || 'crx' || 'xar-package' => 'This package requires a dedicated metadata or signing workflow. Browsing and extraction are available.',
+        'ar-library' => 'Static object libraries require their linker or archive tool to rebuild the library symbol index.',
+        _ => 'This format supports browsing and extraction, but its writer is unavailable.',
+      };
+    }
+    if (reason == null && basic.compression != null) {
+      try {
+        validateArchiveCompressionRewrite(bytes, basic.compression!);
+        if (basic.compression == ArchiveCompressionKind.gzip) {
+          gzipHeader = archiveGzipHeader(bytes);
+        }
+        if (basic.compression == ArchiveCompressionKind.xz) {
+          xzCheck = bytes[7];
+          if (!const [0, 1, 4, 10].contains(xzCheck)) {
+            reason = 'The XZ integrity check cannot be preserved.';
+          }
+        }
+        if (basic.singlePayload &&
+            (files.length != 1 || archive.members.length != 1)) {
+          reason = 'A single-file compression format must contain exactly one regular payload.';
+        }
+      } catch (_) {
+        reason = 'The compression header cannot be preserved safely.';
+      }
+    }
+    if (format == ArchiveEndpointFormat.zip && reason == null) {
+      reason = archiveZipTimestampPolicyIssue(bytes);
+      if (reason == null && isEditableZipAlias(name)) {
+        reason = await archiveZipPackageIssue(name, [
+          for (final member in archive.members)
+            ArchiveWriteEntry(
+              path: member.name.replaceFirst(RegExp(r'/+$'), ''),
+              isDirectory: !member.isFile,
+              size: member.isFile ? member.size : 0,
+              readChunks: member.isFile
+                  ? () => archive.openMember(member)
+                  : null,
+            ),
+        ]);
+      }
+    }
+    if (reason == null &&
+        (format == ArchiveEndpointFormat.zip ||
+            format == ArchiveEndpointFormat.sevenZip) &&
+        archive.members.any((member) => (member.posixMode ?? 0) & 0xc00 != 0)) {
+      reason = 'This writer cannot preserve ownership associated with setuid or setgid archive members.';
+    }
+    if (reason == null && expectedFormat == 'tar') {
+      inspection = await inspectTarRewrite(bytes, archive);
+      reason = inspection.reason;
+    }
+    if (reason == null &&
+        const {
+          ArchiveEndpointFormat.ar,
+          ArchiveEndpointFormat.cpio,
+          ArchiveEndpointFormat.xar,
+          ArchiveEndpointFormat.iso,
+        }.contains(format)) {
+      inspection = format == ArchiveEndpointFormat.iso
+          ? await inspectIsoRewrite(bytes, archive)
+          : await inspectPackageRewrite(
+              bytes,
+              format == ArchiveEndpointFormat.ar &&
+                      (lower.endsWith('.deb') || lower.endsWith('.udeb'))
+                  ? 'deb'
+                  : format.name,
+              archive,
+            );
+      reason = inspection.reason;
     }
     // Header protection is independent of file-data encryption. In particular,
     // an empty 7z can still require its original password to open the header.
@@ -89,16 +218,22 @@ class ArchiveEndpointPolicy {
         !_zipAes256(bytes)) {
       reason = 'This ZIP encryption policy cannot be preserved by the available writer. Browsing and extraction remain available.';
     }
-    if ((format == ArchiveEndpointFormat.tar ||
-            format == ArchiveEndpointFormat.tarGzip) &&
+    if (format != ArchiveEndpointFormat.zip &&
+        format != ArchiveEndpointFormat.sevenZip &&
         encrypted) {
-      reason = 'The TAR writer cannot preserve this encryption policy.';
+      reason = 'The selected writer cannot preserve this encryption policy.';
     }
     return ArchiveEndpointPolicy(
       format,
       encrypted: encrypted,
       encryptNames: encryptNames,
       reason: reason,
+      inspection: inspection,
+      gzipHeader: gzipHeader,
+      xzCheck: xzCheck,
+      singleMemberName: basic.singlePayload && files.length == 1
+          ? files.single.name
+          : null,
     );
   }
 
@@ -197,20 +332,27 @@ class ArchiveEndpointPolicy {
   }
 
   DateTime? normalizeImportedTime(DateTime? value) {
-    if (value == null) return null;
+    if (value == null || singlePayload) return null;
     final utc = value.toUtc();
     return switch (format) {
       ArchiveEndpointFormat.zip => _zipImportedTime(utc),
       ArchiveEndpointFormat.tar ||
-      ArchiveEndpointFormat.tarGzip => DateTime.fromMillisecondsSinceEpoch(
-        utc.millisecondsSinceEpoch ~/ 1000 * 1000,
+      ArchiveEndpointFormat.tarGzip ||
+      ArchiveEndpointFormat.tarBzip2 ||
+      ArchiveEndpointFormat.tarXz ||
+      ArchiveEndpointFormat.tarZstd ||
+      ArchiveEndpointFormat.ar ||
+      ArchiveEndpointFormat.cpio ||
+      ArchiveEndpointFormat.xar ||
+      ArchiveEndpointFormat.iso => DateTime.fromMillisecondsSinceEpoch(
+        utc.millisecondsSinceEpoch - utc.millisecondsSinceEpoch % 1000,
         isUtc: true,
       ),
       ArchiveEndpointFormat.sevenZip => DateTime.fromMillisecondsSinceEpoch(
         utc.millisecondsSinceEpoch,
         isUtc: true,
       ),
-      ArchiveEndpointFormat.readOnly => utc,
+      _ => utc,
     };
   }
 

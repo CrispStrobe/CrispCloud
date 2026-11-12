@@ -110,7 +110,7 @@ void main() {
   // -------------------------------------------------------------------------
 
   group('FKeyBar visibility', () {
-    testWidgets('renders 6 buttons when fkeyBarVisibleProvider is true', (
+    testWidgets('renders 7 buttons when fkeyBarVisibleProvider is true', (
       tester,
     ) async {
       // Default SharedPreferences empty → defaults to true.
@@ -119,7 +119,7 @@ void main() {
       await tester.pump();
 
       // 6 InkWell (one per action)
-      expect(find.byType(InkWell), findsNWidgets(6));
+      expect(find.byType(InkWell), findsNWidgets(7));
     });
 
     testWidgets(
@@ -190,7 +190,7 @@ void main() {
     ) async {
       await tester.pumpWidget(_wrap(FKeyBar(overrideContext: _emptyContext())));
       await tester.pump();
-      expect(find.byTooltip('Del — Delete'), findsOneWidget);
+      expect(find.byTooltip('F8 — Delete'), findsOneWidget);
     });
 
     testWidgets('shows current shortcut prefixes as RichText', (tester) async {
@@ -235,7 +235,7 @@ void main() {
         'F4 — Edit',
         'F5 — Copy',
         'F6 — Move',
-        'Del — Delete',
+        'F8 — Delete',
       ]) {
         await tester.tap(_buttonByTooltip(tooltip));
         await tester.pump();
@@ -277,7 +277,7 @@ void main() {
       );
       await tester.pump();
 
-      await tester.tap(_buttonByTooltip('Del — Delete'));
+      await tester.tap(_buttonByTooltip('F8 — Delete'));
       await tester.pump();
 
       expect(tapped, isNot(contains(FKeyAction.delete)));
@@ -350,7 +350,7 @@ void main() {
       );
       await tester.pump();
 
-      await tester.tap(_buttonByTooltip('Del — Delete'));
+      await tester.tap(_buttonByTooltip('F8 — Delete'));
       await tester.pump();
 
       expect(tapped, contains(FKeyAction.delete));
@@ -447,7 +447,7 @@ void main() {
       // Wide mode uses RichText; narrow mode uses Icon. On 800px, must have RichText.
       expect(find.byType(RichText), findsWidgets);
       // All 6 tooltips still present.
-      expect(find.byType(Tooltip), findsNWidgets(6));
+      expect(find.byType(Tooltip), findsNWidgets(7));
     });
   });
 
@@ -498,7 +498,7 @@ void main() {
       await tester.pump();
 
       // 6 Tooltips, one per action
-      expect(find.byType(Tooltip), findsNWidgets(6));
+      expect(find.byType(Tooltip), findsNWidgets(7));
     });
   });
 

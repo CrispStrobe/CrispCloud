@@ -4,9 +4,17 @@ on:
   workflow_dispatch:
     inputs:
       build_number:
-        description: 'Uploaded macOS CFBundleVersion'
+        description: 'Uploaded CFBundleVersion'
         required: true
         type: string
+      platform:
+        description: 'Platform of the uploaded build'
+        required: true
+        type: choice
+        default: MAC_OS
+        options:
+          - MAC_OS
+          - IOS
       build_id:
         description: 'Exact App Store Connect build ID (required when the number matches multiple builds)'
         required: false
@@ -41,12 +49,13 @@ jobs:
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           ASC_KEY_PATH: ${{ runner.temp }}/asc-key.p8
           ASC_BUNDLE_ID: com.CrispStrobe.cloud
-          ASC_PLATFORM: MAC_OS
+          ASC_PLATFORM: ${{ inputs.platform }}
           ASC_BUILD_NUMBER: ${{ inputs.build_number }}
           ASC_BUILD_ID: ${{ inputs.build_id }}
           TESTFLIGHT_GROUP_ID: ${{ inputs.group_id }}
           TESTFLIGHT_GROUP: ${{ inputs.group }}
           TESTFLIGHT_WHAT_TO_TEST: >-
             Please verify launch reliability, sign-in, cloud browsing,
-            uploads/downloads, previews, and Finder integration on macOS.
+            uploads/downloads, previews, text editing, audio editing, ebook
+            reading and conversion, and platform file-provider integration.
         run: ruby tool/testflight_external.rb
