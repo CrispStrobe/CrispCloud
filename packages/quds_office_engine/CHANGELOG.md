@@ -4,6 +4,61 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Provide bounded legacy DOC/DOT body-text conversion into a newly authored DOCX
+  with an explicit text-only result contract. Port global compound-file directory
+  ownership and raw stream-size checks; identify relocated DOCM/DOTM main parts
+  without lowercasing case-sensitive package keys. Host conversion dialogs and
+  destination capture remain in CrispCloud.
+
+- Preserve imported formula caches when the evaluator cannot parse the entire
+  expression, and serialize supported string, Boolean and error results with
+  their native cell types. Internal error provenance keeps literal error-looking
+  text distinct while the public evaluator continues returning scalars. Decode
+  escaped formula quotes and resolve worksheet
+  names case-insensitively without redirecting missing sheets to the active one.
+  Rename undo updates owned reference slots without discarding later cell edits
+  or values produced by a save; complete shared-formula groups remain supported.
+
+- Expose namespace-aware Office part navigation and bounded OOXML/OpenDocument
+  text search through the pure-Dart engine. Follow declared package graphs and
+  referenced stories, notes, worksheets and slides; reject ambiguous roots,
+  duplicate identities, malformed selected XML/ZIP and exhausted input/output
+  budgets. Hosts retain cloud traversal and presentation rather than format
+  extraction implementations.
+
+- Retain native slide placeholder type/index bindings on save so layout/master
+  inheritance keeps title alignment and bullets. The section corpus now compares
+  each first export's page text and RGB fingerprints with an independently
+  authored source-page permutation, in addition to three-save stability.
+
+- Add reference-aware worksheet renaming across formulas, names, native rules,
+  links, charts and pivot sources. Preserve strings, structured references and
+  external workbook qualifiers/cache data. Reversible edits preflight stale
+  model/native changes and opaque reference owners before mutation; repeated
+  whole-row/column qualifiers and three-dimensional endpoints are handled.
+
+- Preserve native slide section GUIDs, empty sections, membership metadata and
+  foreign extension namespaces. Reorder slides through an atomic plan that
+  adopts the original destination section while keeping every other membership;
+  malformed sections and stale plans reject before mutation. Independent native
+  XML oracles cover within-section, forward/backward and emptied-section moves
+  through three direct/isolate saves.
+
+- Expose shared bounded compound-file reading, legacy Word text extraction and
+  macro/template preservation guards. Optional ZIP limits check actual inflated
+  bytes before growth; opaque-part relationships and native main-part/type
+  identity are verified before host upload.
+
+- Expose read-only native DrawingML line geometry for Word frame previews,
+  including explicit width, preset/custom dash spacing, caps, joins and inset
+  alignment. Preserve the original XML through clone, color edits and repeated
+  direct/isolate saves; malformed fragments retain the visual fallback.
+
+- Reserve native footnote/endnote separator-definition IDs when inserting new
+  notes, including relocated note and main parts. Imported absence of separator
+  definitions also suppresses the preview rule; new note parts retain their
+  standard definitions. Three-save regressions preserve both behaviors.
+
 - Integrate formatting-aware note updates with native markers: Enter and
   backspace carry actual inline boundaries and styled text; imported unmarked
   or later-marked notes retain visible leading whitespace. More complex

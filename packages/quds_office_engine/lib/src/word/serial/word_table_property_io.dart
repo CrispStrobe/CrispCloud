@@ -83,7 +83,9 @@ abstract final class WordTablePropertyIo {
         'bidiVisual',
         prefix: 'w',
         attributes: <String, String>{
-          'w:val': properties.rightToLeft ? '1' : '0',
+          // bidiVisual uses ST_OnOffOnly, unlike most Word boolean flags.
+          // The native enumeration accepts on/off, not numeric booleans.
+          'w:val': properties.rightToLeft ? 'on' : 'off',
         },
       );
     }

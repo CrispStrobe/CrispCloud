@@ -99,6 +99,11 @@ class WordStructureOracleControls(unittest.TestCase):
     def test_table_merge_loss_fails(self):
         self.reject('edit', 'word/document.xml', lambda r: r.find('.//w:gridSpan', oracle.NS).set('{'+oracle.NS['w']+'}val', '1'))
 
+    def test_numeric_table_direction_is_schema_invalid(self):
+        # bidiVisual is OnOffOnlyType: numeric boolean values are not allowed.
+        self.reject('create', 'word/document.xml', lambda r:
+                    r.find('.//w:bidiVisual', oracle.NS).set('{'+oracle.NS['w']+'}val', '1'))
+
     def test_disabled_row_cant_split_fails(self):
         self.reject('create', 'word/document.xml', lambda r:
                     r.find('.//w:cantSplit', oracle.NS).set('{'+oracle.NS['w']+'}val', '0'))

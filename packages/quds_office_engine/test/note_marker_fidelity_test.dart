@@ -4,232 +4,356 @@ import 'dart:io';
 import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:test/test.dart';
 
-WmlDocument _source() => WordDeserializer().readBytes(
-  File('test/fixtures/fidelity/note-markers.docx').readAsBytesSync(),
-);
+import '../tool/fidelity/office_steps.dart' as cli;
+import '../tool/fidelity/step_input.dart';
 
-WmlNote _note(WmlDocument document, int id, {bool endnote = false}) =>
-    WordNotes.byId(document, id, endnote: endnote)!;
+const _fixtures = 'test/fixtures/fidelity';
 
-List<Map<String, Object?>> _locations(WmlNote note) {
-  final result = <Map<String, Object?>>[];
-  var paragraphIndex = 0;
-  for (final paragraph in note.allParagraphs) {
-    var offset = 0;
-    for (final inline in paragraph.inlines) {
-      if (inline is WmlRun) {
-        offset += inline.text.length;
-      } else if (inline is WmlNoteBodyMarker) {
-        result.add(<String, Object?>{
-          'paragraph': paragraphIndex,
-          'offset': offset,
-          'endnote': inline.endnote,
-        });
-      }
+OpcPackage _source() {
+  final package = OpcPackage.create(OpcPackageKind.word);
+  package
+      .getPart('/word/document.xml')!
+      .writeText(
+        File('$_fixtures/note_markers_document.xml').readAsStringSync(),
+      );
+  for (final endnote in [false, true]) {
+    final kind = endnote ? 'endnote' : 'footnote';
+    final uri = '/word/${kind}s.xml';
+    final bytes = File(
+      '$_fixtures/note_markers_${kind}s.xml',
+    ).readAsBytesSync();
+    final part = package.getPart(uri);
+    if (part == null) {
+      package.createPart(
+        uri,
+        endnote
+            ? OfficeContentTypes.wordEndnotes
+            : OfficeContentTypes.wordFootnotes,
+        bytes,
+      );
+    } else {
+      part.writeBytes(bytes);
     }
-    paragraphIndex++;
+    final rels = package.relationshipsFor('/word/document.xml');
+    final type = endnote
+        ? RelationshipTypes.endnotes
+        : RelationshipTypes.footnotes;
+    if (rels.firstByType(type) == null) {
+      rels.add(type: type, target: '${kind}s.xml');
+    }
+  }
+  return package;
+}
+
+WmlDocument _document() => WordDeserializer().read(_source());
+
+List<WmlNote> _notes(WmlDocument doc, bool endnote) =>
+    endnote ? doc.endnotes : doc.footnotes;
+
+Map<String, Object> _positions(List<WmlNote> notes) => {
+  for (final note in notes)
+    '${note.id}': {
+      for (final entry in note.allParagraphs.indexed)
+        if (_offsets(entry.$2).isNotEmpty) '${entry.$1}': _offsets(entry.$2),
+    },
+};
+
+List<int> _offsets(WmlParagraph paragraph) {
+  final result = <int>[];
+  var offset = 0;
+  for (final inline in paragraph.inlines) {
+    if (inline is WmlNoteMarker) result.add(offset);
+    if (inline is WmlRun) offset += inline.text.length;
   }
   return result;
 }
 
-void _check(WmlDocument document, bool edited) {
-  final expected =
-      jsonDecode(
-            File(
-              'test/fixtures/fidelity/note_markers_expected.json',
-            ).readAsStringSync(),
-          )
-          as Map<String, Object?>;
-  for (final value in expected['notes']! as List<Object?>) {
-    final row = value! as Map<String, Object?>;
-    final endnote = row['kind'] == 'endnote';
-    final note = _note(document, row['id']! as int, endnote: endnote);
-    expect(note.preserveBodyMarkers, isTrue);
-    expect(
-      note.allParagraphs.map((paragraph) => paragraph.text),
-      row[edited ? 'edited_paragraphs' : 'paragraphs'],
-    );
-    final markers =
-        (row[edited ? 'edited_markers' : 'markers']! as List<Object?>)
-            .cast<Map<String, Object?>>();
-    expect(_locations(note), <Map<String, Object?>>[
-      for (final marker in markers)
-        <String, Object?>{
-          'paragraph': marker['paragraph'],
-          'offset': marker['offset'],
-          'endnote': endnote,
-        },
-    ]);
+Iterable<WmlNoteMarker> _markers(WmlNote note) =>
+    note.allParagraphs.expand((p) => p.inlines.whereType<WmlNoteMarker>());
+
+void _cloneStories(WmlDocument doc) {
+  for (final note in [...doc.footnotes, ...doc.endnotes]) {
+    final originals = _markers(note).toList();
+    final blocks = note.blocks.map(WmlClone.block).toList();
+    note.blocks
+      ..clear()
+      ..addAll(blocks);
+    final copies = _markers(note).toList();
+    expect(copies, hasLength(originals.length));
+    for (var i = 0; i < copies.length; i++) {
+      expect(copies[i], isNot(same(originals[i])));
+      expect(copies[i].properties, isNot(same(originals[i].properties)));
+      expect(
+        copies[i].properties.sourcePropertiesXml,
+        originals[i].properties.sourcePropertiesXml,
+      );
+      expect(
+        copies[i].properties.importedValues,
+        originals[i].properties.importedValues,
+      );
+    }
   }
 }
 
-void _edit(WmlDocument document) {
-  document.paragraphs.first.inlines.whereType<WmlRun>().first.text =
-      'Edited automatic note markers';
-  _note(document, 11).text = 'Replacement conventional';
-  _note(document, 12).text = 'Replacement unmarked footnote';
-  WmlRunEdit.replaceRange(_note(document, 13).paragraphs.first, 0, 0, 'Lead ');
-  _note(document, 14).paragraphs.first.inlines.whereType<WmlRun>().last.text +=
-      ' edited';
-  _note(document, 15).paragraphs.first.inlines.whereType<WmlRun>().last.text +=
-      ' revised';
-  _note(
-    document,
-    16,
-  ).allParagraphs.first.inlines.whereType<WmlRun>().last.text += ' edited';
-  _note(document, 31, endnote: true).text = 'Replacement endnote';
-  _note(document, 32, endnote: true).text = 'Replacement unmarked endnote';
-  _note(
-    document,
-    33,
-    endnote: true,
-  ).paragraphs.first.inlines.whereType<WmlRun>().last.text += ' edited';
+void _editStories(WmlDocument doc) {
+  for (final endnote in [false, true]) {
+    final notes = _notes(doc, endnote);
+    for (final id in [1, 2, 5, 6]) {
+      final note = notes.firstWhere((n) => n.id == id);
+      final paragraph = note.allParagraphs.first;
+      cli.applyStep(doc, {
+        'op': 'replaceText',
+        'story': endnote ? 'endnote' : 'footnote',
+        'note': id,
+        'paragraph': 0,
+        'start': paragraph.text.length,
+        'end': paragraph.text.length,
+        'text': ' edited',
+      });
+    }
+    final cell = notes.firstWhere((n) => n.id == 4).allParagraphs.elementAt(1);
+    cli.applyStep(doc, {
+      'op': 'replaceText',
+      'story': endnote ? 'endnote' : 'footnote',
+      'note': 4,
+      'paragraph': 1,
+      'start': cell.text.length,
+      'end': cell.text.length,
+      'text': ' edited',
+    });
+  }
 }
+
+WmlDocument _singleNote(bool endnote, int id) {
+  final doc = _document();
+  final note = _notes(doc, endnote).firstWhere((n) => n.id == id);
+  doc.footnotes.clear();
+  doc.endnotes.clear();
+  _notes(doc, endnote).add(note);
+  doc.sections.first.blocks
+    ..clear()
+    ..add(
+      WmlParagraph(
+        inlines: [
+          WmlRun(text: 'Body'),
+          WmlRun(text: '$id', noteRefId: id, noteRefEndnote: endnote),
+        ],
+      ),
+    );
+  return doc;
+}
+
+List<LaidOutLine> _noteLines(WmlDocument doc) => WordLayoutEngine(font: null)
+    .layout(doc)
+    .pages
+    .expand((p) => p.notes)
+    .where((line) => line.overlayText != 'Endnotes')
+    .toList();
 
 void main() {
-  setUpAll(() {
-    final output = File('build/fidelity-note-markers/markers-source.docx');
-    output.parent.createSync(recursive: true);
-    output.writeAsBytesSync(
-      File('test/fixtures/fidelity/note-markers.docx').readAsBytesSync(),
-    );
-  });
-
-  for (final edited in <bool>[false, true]) {
-    test(
-      'native note markers retain ${edited ? 'edited' : 'imported'} positions over three saves',
-      () async {
-        var document = _source();
-        _check(document, false);
-        if (edited) _edit(document);
-        _check(document, edited);
-        for (var cycle = 1; cycle <= 3; cycle++) {
-          final bytes = await OfficeIsolateSave.word(document);
-          File(
-            'build/fidelity-note-markers/markers-${edited ? 'edited' : 'imported'}-$cycle.docx',
-          ).writeAsBytesSync(bytes);
-          document = WordDeserializer().readBytes(bytes);
-          _check(document, edited);
-        }
-      },
-    );
-  }
+  final expected =
+      jsonDecode(
+            File('$_fixtures/note_markers_expected.json').readAsStringSync(),
+          )
+          as Map<String, Object?>;
 
   test(
-    'zero-width note marker copies retain source properties independently',
+    'authored note-marker stories retain position, kind and properties for three export cycles',
+    () async {
+      const root = 'build/fidelity-note-markers';
+      final source = _source().save();
+      writeOutput('$root/source.docx', source);
+      for (final phase in ['imported', 'cloned', 'edited']) {
+        var doc = WordDeserializer().readBytes(source);
+        if (phase == 'cloned') _cloneStories(doc);
+        if (phase == 'edited') _editStories(doc);
+        for (var cycle = 1; cycle <= 3; cycle++) {
+          final bytes = await OfficeIsolateSave.word(doc);
+          writeOutput('$root/$phase-$cycle.docx', bytes);
+          doc = WordDeserializer().readBytes(bytes);
+          for (final endnote in [false, true]) {
+            final notes = _notes(doc, endnote);
+            expect(notes.map((n) => n.id), [1, 2, 3, 4, 5, 6]);
+            expect(_positions(notes), expected['marker_offsets']);
+            expect(notes.every((note) => !note.addReference), isTrue);
+            expect(
+              notes.firstWhere((n) => n.id == 4).blocks.first,
+              isA<WmlTable>(),
+            );
+            expect(
+              notes.firstWhere((n) => n.id == 5).hasReferenceMarkers,
+              isFalse,
+            );
+            expect(notes.firstWhere((n) => n.id == 3).text, isEmpty);
+            for (final note in notes) {
+              expect(
+                _markers(note).every((marker) => marker.endnote == endnote),
+                isTrue,
+              );
+            }
+            final middle = _markers(
+              notes.firstWhere((n) => n.id == 2),
+            ).single.properties;
+            expect(middle.color, '335577');
+            expect(middle.italic, isTrue);
+            expect(middle.fontSizeHalfPoints, 20);
+            expect(middle.sourcePropertiesXml, contains('fr-FR'));
+          }
+        }
+      }
+    },
+  );
+
+  test(
+    'zero-width marker clones do not share mutable run property snapshots',
     () {
-      final paragraph = _note(_source(), 13).paragraphs.first;
-      final marker = paragraph.inlines.whereType<WmlNoteBodyMarker>().single;
-      expect(marker.propertiesXml, contains('123456'));
-      final clone = WmlClone.paragraph(paragraph);
-      final copied = clone.inlines.whereType<WmlNoteBodyMarker>().single;
-      expect(copied, isNot(same(marker)));
-      expect(copied.propertiesXml, marker.propertiesXml);
-      WmlRunEdit.applyRange(
-        clone,
-        0,
-        clone.text.length,
-        (properties) => properties.italic = true,
+      final doc = _document();
+      final source = doc.footnotes
+          .firstWhere((n) => n.id == 2)
+          .allParagraphs
+          .single;
+      final copy = WmlClone.paragraph(source);
+      final old = source.inlines.whereType<WmlNoteMarker>().single;
+      final next = copy.inlines.whereType<WmlNoteMarker>().single;
+      next.properties.color = 'AABBCC';
+      next.properties.importedValues!['color'] = 'different';
+      expect(old.properties.color, '335577');
+      expect(old.properties.importedValues!['color'], '335577');
+      expect(copy.text, source.text);
+      expect(_offsets(copy), [7]);
+    },
+  );
+
+  test(
+    'paragraph-scoped note script edit preserves nested content and exact unnumbered whitespace',
+    () {
+      final doc = _document();
+      final unnumbered = doc.footnotes.firstWhere((n) => n.id == 5);
+      expect(WordNotes.editableText(unnumbered), '  Intentionally unnumbered');
+      _editStories(doc);
+      expect(
+        unnumbered.paragraphs.single.text,
+        '  Intentionally unnumbered edited',
+      );
+      expect(unnumbered.hasReferenceMarkers, isFalse);
+      final nested = doc.footnotes.firstWhere((n) => n.id == 4);
+      expect(nested.blocks.single, isA<WmlTable>());
+      expect(nested.allParagraphs.map((p) => p.text), [
+        'Cell before',
+        'Cell  tail edited',
+      ]);
+      expect(_positions(doc.footnotes), expected['marker_offsets']);
+    },
+  );
+
+  test(
+    'legacy whole-story replacement retains its automatic marker or source absence',
+    () async {
+      var doc = _document();
+      final marked = doc.footnotes.firstWhere((note) => note.id == 1);
+      marked.text = 'Replacement';
+      final absent = doc.footnotes.firstWhere((note) => note.id == 5);
+      absent.text = 'Replacement without marker';
+      expect(marked.blocks, hasLength(1));
+      expect(marked.text, 'Replacement');
+      expect(_markers(marked).single.properties.color, '123456');
+      expect(absent.hasReferenceMarkers, isFalse);
+      doc = WordDeserializer().readBytes(await OfficeIsolateSave.word(doc));
+      expect(
+        _markers(doc.footnotes.firstWhere((note) => note.id == 1)),
+        hasLength(1),
       );
       expect(
-        clone.inlines.whereType<WmlNoteBodyMarker>().single.propertiesXml,
-        marker.propertiesXml,
-      );
-      expect(
-        paragraph.inlines.whereType<WmlRun>().first.properties.italic,
+        doc.footnotes.firstWhere((note) => note.id == 5).hasReferenceMarkers,
         isFalse,
       );
     },
   );
 
   test(
-    'paragraph slicing gives a boundary note marker to following text once',
-    () {
-      final paragraph = _note(_source(), 13).paragraphs.first;
-      final left = WmlClone.slicedParagraph(paragraph, 0, 7);
-      final right = WmlClone.slicedParagraph(
-        paragraph,
-        7,
-        paragraph.text.length,
-      );
-      expect(left.inlines.whereType<WmlNoteBodyMarker>(), isEmpty);
-      expect(right.inlines.whereType<WmlNoteBodyMarker>(), hasLength(1));
-      expect(right.inlines.first, isA<WmlNoteBodyMarker>());
-    },
-  );
-
-  test(
-    'actual paragraph split moves the automatic marker to its tail once',
+    'minimal note edits retain all source spacing after a leading marker',
     () async {
-      var document = _source();
-      final note = _note(document, 13);
-      final paragraph = note.paragraphs.first;
-      final marker = paragraph.inlines.whereType<WmlNoteBodyMarker>().single;
-      final tail = WmlRunEdit.splitParagraphInlines(paragraph, 7);
-      expect(paragraph.inlines.whereType<WmlNoteBodyMarker>(), isEmpty);
-      expect(tail.first, same(marker));
-      note.paragraphs.add(
-        WmlParagraph(properties: paragraph.properties.copy(), inlines: tail),
-      );
-      document = WordDeserializer().readBytes(
-        await OfficeIsolateSave.word(document),
-      );
-      expect(_locations(_note(document, 13)), <Map<String, Object?>>[
-        <String, Object?>{'paragraph': 1, 'offset': 0, 'endnote': false},
-      ]);
+      for (final endnote in [false, true]) {
+        for (final whitespace in ['', ' ', '  ', '\t']) {
+          var doc = _singleNote(endnote, 3);
+          final note = _notes(doc, endnote).single;
+          note.paragraphs.single.inlines.add(
+            WmlRun(text: '${whitespace}Visible'),
+          );
+          WordNotes.editText(note, '${WordNotes.editableText(note)} edited');
+          expect(note.paragraphs.single.text, '${whitespace}Visible edited');
+          doc = WordDeserializer().readBytes(await OfficeIsolateSave.word(doc));
+          expect(
+            _notes(doc, endnote).single.paragraphs.single.text,
+            '${whitespace}Visible edited',
+          );
+          expect(_offsets(_notes(doc, endnote).single.paragraphs.single), [0]);
+        }
+      }
     },
   );
 
-  test(
-    'whole-body replacement retains the first marker and keeps absence',
-    () async {
-      var document = _source();
-      final marked = _note(document, 15);
-      expect(_locations(marked), hasLength(3));
-      marked.text = 'Whole replacement';
-      _note(document, 12).text = 'Still unmarked';
-      expect(_locations(marked), <Map<String, Object?>>[
-        <String, Object?>{'paragraph': 0, 'offset': 0, 'endnote': false},
-      ]);
-      document = WordDeserializer().readBytes(
-        await OfficeIsolateSave.word(document),
+  const rendered = <int, List<String>>{
+    1: ['Opening text', '1 Later marker'],
+    2: ['Before 2 after'],
+    3: ['3'],
+    4: ['Cell before', 'Cell 4 tail'],
+    5: ['  Intentionally unnumbered'],
+    6: ['6A6B6'],
+  };
+  for (final endnote in [false, true]) {
+    for (final id in rendered.keys) {
+      test(
+        'layout preserves note marker location/absence: endnote=$endnote id=$id',
+        () {
+          final lines = _noteLines(_singleNote(endnote, id));
+          expect(lines.map((line) => line.sourceText), rendered[id]);
+          if (id == 1) {
+            final number = lines.last.glyphs.first;
+            expect(number.color, '123456');
+            expect(number.fontSize, 10);
+            expect(number.vertAlign, WmlVertAlign.baseline);
+          }
+        },
       );
-      expect(_locations(_note(document, 15)), hasLength(1));
-      expect(_locations(_note(document, 12)), isEmpty);
-      expect(_note(document, 12).text, 'Still unmarked');
-    },
-  );
-
-  test('empty imported note body remains unmarked', () async {
-    var document = _source();
-    _note(document, 12).blocks.clear();
-    document = WordDeserializer().readBytes(
-      await OfficeIsolateSave.word(document),
+    }
+    test(
+      'new-note display and reference properties remain stable after save: endnote=$endnote',
+      () async {
+        var doc = WmlDocument.empty(text: 'Body');
+        WordNotes.insert(
+          doc,
+          doc.paragraphs.single,
+          endnote: endnote,
+          text: 'New note',
+        );
+        for (var cycle = 0; cycle < 4; cycle++) {
+          final lines = _noteLines(doc);
+          expect(lines.single.sourceText, '1 New note');
+          expect(lines.single.glyphs.first.vertAlign, WmlVertAlign.superscript);
+          final bytes = await OfficeIsolateSave.word(doc);
+          final kind = endnote ? 'endnote' : 'footnote';
+          final root = XmlDocument.parse(
+            OpcPackage.openBytes(
+              bytes,
+            ).getPart('/word/${kind}s.xml')!.readText(),
+          ).root!;
+          final note = root
+              .childrenNamed(kind)
+              .firstWhere((n) => n.getAttribute('id') == '1');
+          final run = note.firstChild('p')!.childrenNamed('r').first;
+          expect(run.firstChild('${kind}Ref'), isNotNull);
+          expect(
+            run.firstChild('rPr')!.firstChild('rStyle')!.getAttribute('val'),
+            endnote ? 'EndnoteReference' : 'FootnoteReference',
+          );
+          expect(
+            run.firstChild('rPr')!.firstChild('vertAlign')!.getAttribute('val'),
+            'superscript',
+          );
+          doc = WordDeserializer().readBytes(bytes);
+        }
+      },
     );
-    expect(_locations(_note(document, 12)), isEmpty);
-    expect(_note(document, 12).paragraphs, hasLength(1));
-  });
-
-  test(
-    'new notes retain one generated mark and their conventional separator',
-    () async {
-      var document = WmlDocument.empty(text: 'Body');
-      final note = WordNotes.insert(
-        document,
-        document.paragraphs.first,
-        endnote: false,
-        text: 'New body',
-      );
-      expect(note.preserveBodyMarkers, isFalse);
-      note.text = 'Replacement new body';
-      document = WordDeserializer().readBytes(
-        await OfficeIsolateSave.word(document),
-      );
-      expect(_locations(document.footnotes.single), hasLength(1));
-      expect(
-        document.footnotes.single.paragraphs.first.text,
-        ' Replacement new body',
-      );
-    },
-  );
+  }
 }

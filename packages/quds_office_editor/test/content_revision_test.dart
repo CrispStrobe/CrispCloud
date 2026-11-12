@@ -15,7 +15,7 @@ void main() {
       addTearDown(editor.dispose);
       editor.insertFootnote(text: 'Original');
       final note = editor.document.footnotes.single;
-      editor.commitNoteEdits();
+      editor.commitPendingEdits();
       final captured = editor.contentRevision;
       var commands = 0;
       editor.commands.addListener(() => commands++);
@@ -28,7 +28,7 @@ void main() {
       expect(commands, 0);
 
       // This is the host's save boundary: commit first, then capture revision.
-      editor.commitNoteEdits();
+      editor.commitPendingEdits();
       final savedRevision = editor.contentRevision;
       expect(commands, 1);
       final bytes = await editor.saveBytesAsync();
@@ -70,7 +70,7 @@ void main() {
     },
   );
 
-  test('equivalent note separator input does not create a false revision', () {
+  test('unchanged note-pane text does not create a false revision', () {
     final editor = WordEditorController(
       document: WmlDocument.empty(text: 'Body'),
     );
@@ -79,12 +79,40 @@ void main() {
     final note = editor.document.footnotes.single;
     final initial = editor.contentRevision;
     expect(editor.noteEditText(note), 'Space');
-    editor.setNoteText(note, ' Space');
+    editor.setNoteText(note, editor.noteEditText(note));
     expect(note.paragraphs.single.text, ' Space');
     expect(editor.contentRevision, initial);
     editor.commitNoteEdits();
     expect(editor.contentRevision, initial);
   });
+
+  test(
+    'authored leading note whitespace advances revision and survives history',
+    () async {
+      final editor = WordEditorController(
+        document: WmlDocument.empty(text: 'Body'),
+      );
+      addTearDown(editor.dispose);
+      editor.insertFootnote(text: ' Space');
+      final note = editor.document.footnotes.single;
+      final initial = editor.contentRevision;
+      expect(editor.noteEditText(note), 'Space');
+      editor.setNoteText(note, ' Space');
+      expect(note.paragraphs.single.text, '  Space');
+      expect(editor.noteEditText(note), ' Space');
+      expect(editor.contentRevision, greaterThan(initial));
+      final bytes = await editor.saveBytesAsync();
+      final reopened = WordDeserializer().readBytes(bytes).footnotes.single;
+      expect(reopened.paragraphs.single.text, '  Space');
+      expect(WordNotes.editableText(reopened), ' Space');
+      editor.undo();
+      expect(note.paragraphs.single.text, ' Space');
+      expect(editor.noteEditText(note), 'Space');
+      editor.redo();
+      expect(note.paragraphs.single.text, '  Space');
+      expect(editor.noteEditText(note), ' Space');
+    },
+  );
 
   test('note-pane split and history keep native bookmark endpoints', () async {
     final editor = WordEditorController.fromBytes(
@@ -98,11 +126,17 @@ void main() {
     editor.commitNoteEdits();
     expect(note.paragraphs, hasLength(2));
     expect(
-      note.paragraphs.first.inlines.whereType<WmlBookmarkStart>().single.id,
+      note.paragraphs.first.inlines
+          .whereType<WmlBookmarkBoundary>()
+          .singleWhere((marker) => marker.isStart)
+          .id,
       '40',
     );
     expect(
-      note.paragraphs.last.inlines.whereType<WmlBookmarkEnd>().single.id,
+      note.paragraphs.last.inlines
+          .whereType<WmlBookmarkBoundary>()
+          .singleWhere((marker) => !marker.isStart)
+          .id,
       '40',
     );
     editor.undo();
@@ -117,8 +151,8 @@ void main() {
     ]);
     expect(
       reopened.footnotes.single.paragraphs.last.inlines
-          .whereType<WmlBookmarkEnd>()
-          .single
+          .whereType<WmlBookmarkBoundary>()
+          .singleWhere((marker) => !marker.isStart)
           .id,
       '40',
     );

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<w:endnotes xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:endnote w:id="1">
+    <w:p><w:r><w:t>Opening text</w:t></w:r></w:p>
+    <w:p><w:r><w:rPr><w:color w:val="123456"/><w:sz w:val="20"/><w:vertAlign w:val="baseline"/><w:lang w:val="en-GB"/></w:rPr><w:endnoteRef/></w:r><w:r><w:t xml:space="preserve"> Later marker</w:t></w:r></w:p>
+  </w:endnote>
+  <w:endnote w:id="2">
+    <w:p><w:r><w:rPr><w:i/><w:color w:val="335577"/><w:sz w:val="20"/><w:lang w:val="fr-FR"/></w:rPr><w:t xml:space="preserve">Before </w:t><w:endnoteRef/><w:t xml:space="preserve"> after</w:t></w:r></w:p>
+  </w:endnote>
+  <w:endnote w:id="3">
+    <w:p><w:r><w:endnoteRef/></w:r></w:p>
+  </w:endnote>
+  <w:endnote w:id="4">
+    <w:tbl><w:tblPr><w:tblW w:w="4800" w:type="dxa"/></w:tblPr><w:tblGrid><w:gridCol w:w="2400"/><w:gridCol w:w="2400"/></w:tblGrid><w:tr><w:tc><w:tcPr><w:tcW w:w="2400" w:type="dxa"/></w:tcPr><w:p><w:r><w:t>Cell before</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="2400" w:type="dxa"/></w:tcPr><w:p><w:r><w:t xml:space="preserve">Cell </w:t></w:r><w:r><w:rPr><w:color w:val="ABCDEF"/><w:vertAlign w:val="superscript"/></w:rPr><w:endnoteRef/></w:r><w:r><w:t xml:space="preserve"> tail</w:t></w:r></w:p></w:tc></w:tr></w:tbl>
+  </w:endnote>
+  <w:endnote w:id="5">
+    <w:p><w:r><w:t xml:space="preserve">  Intentionally unnumbered</w:t></w:r></w:p>
+  </w:endnote>
+  <w:endnote w:id="6">
+    <w:p><w:r><w:endnoteRef/><w:t>A</w:t><w:endnoteRef/><w:t>B</w:t><w:endnoteRef/></w:r></w:p>
+  </w:endnote>
+</w:endnotes>

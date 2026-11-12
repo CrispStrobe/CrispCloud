@@ -5,9 +5,13 @@ import 'formula_ast.dart';
 /// Tokenizes an Excel formula (leading `=` optional).
 class FormulaLexer {
   /// FormulaLexer API.
-  FormulaLexer(String source)
+  FormulaLexer(String source, {this.strict = false})
     : _src = source.startsWith('=') ? source.substring(1) : source,
       _base = source.startsWith('=') ? 1 : 0;
+
+  /// Formula editing may contain an unfinished string. Evaluation uses strict
+  /// mode so partial input cannot replace an imported cached value.
+  final bool strict;
 
   final String _src;
   final int _base;
@@ -73,17 +77,29 @@ class FormulaLexer {
   FormulaToken _string() {
     final int rawStart = _raw;
     _i++;
-    final int start = _i;
-    while (!_done && _src.codeUnitAt(_i) != 0x22) {
-      _i++;
+    final value = StringBuffer();
+    while (!_done) {
+      final char = _src[_i++];
+      if (char != '"') {
+        value.write(char);
+        continue;
+      }
+      if (!_done && _src[_i] == '"') {
+        value.write('"');
+        _i++;
+        continue;
+      }
+      return FormulaToken(
+        FormulaTokenKind.string,
+        value.toString(),
+        start: rawStart,
+        end: _raw,
+      );
     }
-    final String value = _src.substring(start, _i);
-    if (!_done) {
-      _i++;
-    }
+    if (strict) throw const FormatException('Unterminated formula string');
     return FormulaToken(
       FormulaTokenKind.string,
-      value,
+      value.toString(),
       start: rawStart,
       end: _raw,
     );
@@ -262,7 +278,13 @@ class FormulaParser {
   int _i = 0;
 
   /// parse API.
-  FormulaNode parse() => _expr(0);
+  FormulaNode parse() {
+    final node = _expr(0);
+    if (_cur.kind != FormulaTokenKind.eof) {
+      throw FormatException('Unparsed formula token ${_cur.lexeme}');
+    }
+    return node;
+  }
 
   FormulaToken get _cur => _tokens[_i];
 
@@ -324,17 +346,28 @@ class FormulaParser {
               args.add(_expr(0));
             }
           }
-          if (_cur.kind == FormulaTokenKind.rparen) {
-            _eat();
+          if (_cur.kind != FormulaTokenKind.rparen) {
+            throw const FormatException('Missing closing function parenthesis');
           }
+          _eat();
           return CallNode(tok.lexeme.toUpperCase(), args);
+        }
+        // Qualified names, whole rows/columns and 3-D references need a
+        // richer reference model. Returning a name error from inside SUM
+        // would be silently coerced to zero, corrupting an imported cache.
+        final prefix = tok.lexeme.split('[').first;
+        if (prefix.contains('!') ||
+            prefix.contains(':') ||
+            (tok.lexeme.startsWith("'") && tok.lexeme.contains('!'))) {
+          throw UnsupportedError('Unmodeled formula reference ${tok.lexeme}');
         }
         return NamedRangeNode(tok.lexeme);
       case FormulaTokenKind.lparen:
         final FormulaNode inner = _expr(0);
-        if (_cur.kind == FormulaTokenKind.rparen) {
-          _eat();
+        if (_cur.kind != FormulaTokenKind.rparen) {
+          throw const FormatException('Missing closing formula parenthesis');
         }
+        _eat();
         return inner;
       case FormulaTokenKind.op:
         if (tok.lexeme == '-' || tok.lexeme == '+') {
@@ -379,10 +412,15 @@ class FormulaParser {
   }
 
   static String _sheetName(String raw) {
-    if (raw.length >= 2 && raw.startsWith("'") && raw.endsWith("'")) {
-      return raw.substring(1, raw.length - 1).replaceAll("''", "'");
+    final name = raw.length >= 2 && raw.startsWith("'") && raw.endsWith("'")
+        ? raw.substring(1, raw.length - 1).replaceAll("''", "'")
+        : raw;
+    if (name.contains('[') || name.contains(']') || name.contains(':')) {
+      throw UnsupportedError(
+        'External and 3-D formula references are not evaluated',
+      );
     }
-    return raw;
+    return name;
   }
 
   static int? _lbp(String op) {
@@ -400,19 +438,44 @@ class FormulaParser {
 
 /// parseFormula helper.
 FormulaNode parseFormula(String source) =>
-    FormulaParser(FormulaLexer(source).tokenize()).parse();
+    FormulaParser(FormulaLexer(source, strict: true).tokenize()).parse();
 
-/// evaluateFormula helper.
-Object? evaluateFormula(String source, FormulaContext ctx) {
-  try {
-    return parseFormula(source).eval(ctx);
-  } on Object catch (e) {
-    return '#ERROR! $e';
-  }
-}
+/// evaluateFormula helper. Error codes remain plain strings at this public
+/// boundary; cache writers use [evaluateFormulaForCache] for scalar type.
+Object? evaluateFormula(String source, FormulaContext ctx) =>
+    FormulaErrorValue.unwrap(evaluateFormulaForCache(source, ctx));
+
+/// Evaluates with explicit error provenance for a persisted scalar cache.
+Object? evaluateFormulaForCache(String source, FormulaContext ctx) =>
+    ctx.withErrorTypes(() {
+      try {
+        return parseFormula(source).eval(ctx);
+      } on Object catch (error) {
+        return FormulaErrorValue('#ERROR! $error');
+      }
+    });
 
 /// Class FormulaEvaluator.
 class FormulaEvaluator {
+  /// Recognizes an ambiguous spelling in an untyped, manually supplied cache.
+  /// This never determines whether an evaluated result is text or an error.
+  static bool hasErrorSpelling(Object? value) =>
+      value is String &&
+      (<String>{
+            '#NULL!',
+            '#DIV/0!',
+            '#VALUE!',
+            '#REF!',
+            '#NAME?',
+            '#NUM!',
+            '#N/A',
+            '#CIRC!',
+            '#SPILL!',
+            '#CALC!',
+            '#GETTING_DATA',
+          }.contains(value) ||
+          value.startsWith('#ERROR!'));
+
   /// evaluate API.
   static Object? evaluate(String source, FormulaContext ctx) =>
       evaluateFormula(source, ctx);
@@ -444,20 +507,23 @@ class FormulaEvaluator {
   ) {
     final String trimmed = text.trim();
     if (trimmed.startsWith('=')) {
-      cell.formula = trimmed;
-      cell.type = SmlCellType.formula;
-      final Object? result = evaluateFormula(
+      final Object? result = evaluateFormulaForCache(
         trimmed,
         FormulaContext(workbook: book, sheet: sheet, origin: cell.ref),
       );
-      if (result is FormulaSpill) {
-        _writeSpill(sheet, cell.ref, result);
-        cell.value = result.rows.isEmpty || result.rows.first.isEmpty
-            ? 0
-            : result.rows.first.first;
-      } else {
-        cell.value = result;
-      }
+      cell.formula = trimmed;
+      final scalar = result is FormulaSpill
+          ? (result.rows.isEmpty || result.rows.first.isEmpty
+                ? 0
+                : result.rows.first.first)
+          : result;
+      if (result is FormulaSpill) _writeSpill(sheet, cell.ref, result);
+      cell.value = FormulaErrorValue.unwrap(scalar);
+      cell.type = scalar is FormulaErrorValue
+          ? SmlCellType.error
+          : scalar is String
+          ? SmlCellType.string
+          : SmlCellType.formula;
       return;
     }
     if (trimmed.isEmpty) {
@@ -504,7 +570,10 @@ class FormulaEvaluator {
         );
         target.formula = null;
         final Object? value = spill.rows[r][c];
-        if (value is num) {
+        if (value is FormulaErrorValue) {
+          target.type = SmlCellType.error;
+          target.value = value.code;
+        } else if (value is num) {
           target.type = SmlCellType.number;
           target.value = value;
         } else {

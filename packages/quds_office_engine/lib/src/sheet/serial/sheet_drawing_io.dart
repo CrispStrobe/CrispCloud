@@ -27,8 +27,9 @@ abstract final class SheetDrawingIo {
     SmlWorksheet sheet,
     OpcPackage package,
     String sheetUri,
-    int drawingIndex,
-  ) {
+    int drawingIndex, {
+    SmlWorkbook? workbook,
+  }) {
     if (sheet.drawings.isEmpty) {
       return;
     }
@@ -57,19 +58,103 @@ abstract final class SheetDrawingIo {
     for (final SmlDrawing drawing in sheet.drawings) {
       final OfficeVisual visual = drawing.visual;
       if (visual.isChart) {
-        final String uri = '/xl/charts/${owner}_chart$chartIndex.xml';
+        final preserve =
+            drawing.sourceChartPartUri != null &&
+            package.getPart(drawing.sourceChartPartUri!) != null &&
+            drawing.sourceChartState == chartState(drawing, sheet);
+        final String uri = preserve
+            ? drawing.sourceChartPartUri!
+            : '/xl/charts/${owner}_chart$chartIndex.xml';
         chartIndex++;
-        final String xml = _bindChartRefs(
-          _chartXml(visual, sheetRtl: sheet.rightToLeft),
-          drawing,
-          sheet.name,
-        );
-        _writePart(
-          package,
-          uri,
-          OfficeContentTypes.drawingChart,
-          utf8.encode(xml),
-        );
+        if (!preserve) {
+          _writePart(
+            package,
+            uri,
+            OfficeContentTypes.drawingChart,
+            utf8.encode(chartState(drawing, sheet, includeValues: true)),
+          );
+        } else if (drawing.sourceFromA1 != null &&
+            (drawing.sourceSheetName == null ||
+                drawing.sourceSheetName == sheet.name ||
+                (workbook?.sheets.any(
+                      (source) => source.name == drawing.sourceSheetName,
+                    ) ??
+                    false))) {
+          // Keep native series/title formulas and metadata, while publishing
+          // the evaluated values of the modeled first series in its cache.
+          final part = package.getPart(uri)!;
+          final native = XmlDocument.parse(part.readText());
+          final generated = XmlDocument.parse(
+            chartState(drawing, sheet, includeValues: true),
+          );
+          XmlElement? first(XmlElement node, String name) {
+            if (node.localName == name) return node;
+            for (final child in node.childElements) {
+              final found = first(child, name);
+              if (found != null) return found;
+            }
+            return null;
+          }
+
+          final target = first(
+            native.root!,
+            'ser',
+          )?.firstChild('val')?.firstChild('numRef');
+          final cache = first(
+            generated.root!,
+            'ser',
+          )?.firstChild('val')?.firstChild('numRef')?.firstChild('numCache');
+          if (target != null && cache != null) {
+            final copy = cache.copy();
+            void prefix(XmlElement node) {
+              node.prefix = target.prefix;
+              for (final child in node.childElements) {
+                prefix(child);
+              }
+            }
+
+            prefix(copy);
+            final existing = target.firstChild('numCache');
+            if (existing == null) {
+              target.addChild(copy);
+              part.writeText(native.toXmlString());
+            } else {
+              // A native cache can be sparse and carry a producer-specific
+              // number format. Refresh only mapped values, retaining point
+              // indices, missing points, formatting and extension metadata.
+              final count = int.tryParse(
+                copy.firstChild('ptCount')?.getAttribute('val') ?? '',
+              );
+              final oldCount = int.tryParse(
+                existing.firstChild('ptCount')?.getAttribute('val') ?? '',
+              );
+              final values = <int, String>{};
+              for (final point in copy.childrenNamed('pt')) {
+                final index = int.tryParse(point.getAttribute('idx') ?? '');
+                if (index != null && point.firstChild('v') != null) {
+                  values[index] = point.firstChild('v')!.text;
+                }
+              }
+              final points = existing.childrenNamed('pt');
+              final indices = [
+                for (final point in points)
+                  int.tryParse(point.getAttribute('idx') ?? ''),
+              ];
+              if (count != null &&
+                  count == oldCount &&
+                  indices.toSet().length == indices.length &&
+                  indices.every(
+                    (index) => index != null && values.containsKey(index),
+                  ) &&
+                  points.every((point) => point.firstChild('v') != null)) {
+                for (var index = 0; index < points.length; index++) {
+                  points[index].firstChild('v')!.text = values[indices[index]]!;
+                }
+                part.writeText(native.toXmlString());
+              }
+            }
+          }
+        }
         embedIds.add(
           _ensureRel(
             drawingRels,
@@ -98,6 +183,43 @@ abstract final class SheetDrawingIo {
       drawingUri,
       OfficeContentTypes.spreadsheetDrawing,
       utf8.encode(_drawingXml(sheet, embedIds)),
+    );
+  }
+
+  /// Native charts are reusable while their editable projection is unchanged.
+  /// Optional names calculate a rename snapshot without mutating the drawing.
+  static String chartState(
+    SmlDrawing drawing,
+    SmlWorksheet sheet, {
+    String? ownerName,
+    String? sourceName,
+    bool includeValues = false,
+  }) {
+    // Cell-driven values are refreshed independently; changing source data
+    // must not discard other native chart series or title formulas.
+    final visual = !includeValues && drawing.sourceFromA1 != null
+        ? drawing.visual.copy()
+        : drawing.visual;
+    if (!includeValues && drawing.sourceFromA1 != null) {
+      for (var i = 0; i < visual.points.length; i++) {
+        visual.points[i] = ChartPoint(
+          label: '',
+          value: 0,
+          color: visual.points[i].color,
+        );
+      }
+    }
+    return _bindChartRefs(
+      _chartXml(visual, sheetRtl: sheet.rightToLeft),
+      SmlDrawing(
+        visual: drawing.visual,
+        sourceFromA1: drawing.sourceFromA1,
+        sourceToA1: drawing.sourceToA1,
+        sourceSheetName: sourceName ?? drawing.sourceSheetName,
+        labelsFromA1: drawing.labelsFromA1,
+        labelsToA1: drawing.labelsToA1,
+      ),
+      ownerName ?? sheet.name,
     );
   }
 
@@ -154,11 +276,17 @@ abstract final class SheetDrawingIo {
         return;
       }
       OfficeVisual? visual;
+      String? sourceChartUri;
       ({String? sheet, SmlRange range})? values;
       ({String? sheet, SmlRange range})? labels;
       final String? chartRel = chartId;
       final String? embedRel = embed;
       if (chartRel != null) {
+        final rels = package.relationshipsFor(drawingUri);
+        final rel = rels.byId(chartRel);
+        if (rel != null && rel.targetMode != RelationshipTargetMode.external) {
+          sourceChartUri = rels.resolve(rel);
+        }
         final String? chartXml = _readChartPart(package, drawingUri, chartRel);
         if (chartXml != null) {
           visual = DrawingmlVisualIo.parseChart(
@@ -199,6 +327,7 @@ abstract final class SheetDrawingIo {
             sourceSheetName: values?.sheet,
             labelsFromA1: labels?.range.start.a1,
             labelsToA1: labels?.range.end.a1,
+            sourceChartPartUri: sourceChartUri,
           ),
         );
       }

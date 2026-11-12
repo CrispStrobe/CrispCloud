@@ -4,8 +4,16 @@ import 'dart:typed_data';
 ///
 /// No `dart:io` dependency — safe on CLI, server, web, and native.
 abstract final class RawDeflate {
-  /// inflate API.
-  static Uint8List inflate(List<int> data) => _Inflater(data).run();
+  /// Inflates a raw stream, optionally limiting the bytes produced.
+  ///
+  /// The limit is checked before growing the output, including backreferences
+  /// and stored blocks. It does not depend on an untrusted ZIP size header.
+  static Uint8List inflate(List<int> data, {int? maxOutputBytes}) {
+    if (maxOutputBytes != null && maxOutputBytes < 0) {
+      throw ArgumentError.value(maxOutputBytes, 'maxOutputBytes');
+    }
+    return _Inflater(data, maxOutputBytes: maxOutputBytes).run();
+  }
 
   /// deflate API.
   static Uint8List deflate(List<int> data, {int level = 6}) {
@@ -14,14 +22,22 @@ abstract final class RawDeflate {
 }
 
 class _Inflater {
-  _Inflater(List<int> data)
+  _Inflater(List<int> data, {this.maxOutputBytes})
     : _src = data is Uint8List ? data : Uint8List.fromList(data);
 
   final Uint8List _src;
+  final int? maxOutputBytes;
   int _pos = 0;
   int _bitBuf = 0;
   int _bitCount = 0;
   final List<int> _out = <int>[];
+
+  void _checkOutput(int additionalBytes) {
+    final limit = maxOutputBytes;
+    if (limit != null && additionalBytes > limit - _out.length) {
+      throw const ZipDeflateLimitException('DEFLATE output exceeds its limit');
+    }
+  }
 
   /// run API.
   Uint8List run() {
@@ -59,6 +75,7 @@ class _Inflater {
     if (_pos + len > _src.length) {
       throw const ZipDeflateException('Stored block overruns input');
     }
+    _checkOutput(len);
     _out.addAll(Uint8List.sublistView(_src, _pos, _pos + len));
     _pos += len;
   }
@@ -67,6 +84,7 @@ class _Inflater {
     while (true) {
       final int sym = lit.decode(this);
       if (sym < 256) {
+        _checkOutput(1);
         _out.add(sym);
         continue;
       }
@@ -86,6 +104,7 @@ class _Inflater {
       if (distance <= 0 || distance > _out.length) {
         throw const ZipDeflateException('Invalid backreference distance');
       }
+      _checkOutput(length);
       final int start = _out.length - distance;
       for (int i = 0; i < length; i++) {
         _out.add(_out[start + i]);
@@ -498,6 +517,11 @@ class ZipDeflateException implements Exception {
   @override
   /// toString API.
   String toString() => 'ZipDeflateException: $message';
+}
+
+/// Inflation would exceed the caller's maximum expanded byte count.
+class ZipDeflateLimitException extends ZipDeflateException {
+  const ZipDeflateLimitException(super.message);
 }
 
 const List<int> _codeLengthOrder = <int>[
