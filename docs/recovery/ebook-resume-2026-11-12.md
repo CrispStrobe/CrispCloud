@@ -27,9 +27,11 @@ validation. No merge to main is requested.
 
 ## Recovered implementation and verification
 
-Remote checkpoints `cbb31ab`, `ffce45f` and `ae25973` preserve the continuation
-work. Draft PR [#53](https://github.com/CrispStrobe/CrispCloud/pull/53) contains
+Remote checkpoints `cbb31ab`, `ffce45f`, `ae25973` and `4228dff` preserve the
+continuation work. Draft PR [#53](https://github.com/CrispStrobe/CrispCloud/pull/53) contains
 the feature branch. Keep new edits on this branch and checkpoint them remotely.
+The user-facing workflow, capability matrix and limits are in
+[the ebook guide](../ebooks.md).
 
 Implemented since recovery:
 
@@ -61,6 +63,7 @@ Verification completed:
 | Converter Dart/native assets | 17 tests pass; analyzer clean |
 | Focused application regression suite | 76 tests pass across editor, chapter reader, edit session, annotations and existing file services |
 | Focused application analyzer | No issues in the 8 changed app/session/annotation/license and widget-test files |
+| Actual application web release | `flutter build web --release --no-pub --no-wasm-dry-run` succeeds |
 | Rust bridge | 4 tests pass; release library/helper build succeeds |
 | Independent Kindle smoke | AZW3/MOBI text, Unicode, metadata, no-op/source preservation, navigation and budgets pass |
 | Independent Foliate parser | EPUB/FB2/CBZ and generated AZW3/dual-MOBI/legacy-MOBI pass; both decompression paths pass |
@@ -69,8 +72,10 @@ Verification completed:
 | Vendor/license checks | Reader hashes/notices and converter source/license inventory pass |
 
 The first application web build was terminated with process exit -9 while
-app tests and analysis were also running; it emitted no Dart diagnostic. An
-isolated release build with the optional Wasm dry run disabled is in progress.
+app tests and analysis were also running; it emitted no Dart diagnostic. The
+isolated release build succeeded with the optional Wasm dry run disabled,
+without code changes. This verifies the JavaScript release build, not a Wasm
+build or browser rendering.
 
 The focused CI workflow covers package preservation, desktop native conversion,
 the complete import chain, browser rendering and the app's actual web build.

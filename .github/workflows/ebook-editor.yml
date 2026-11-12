@@ -215,4 +215,4 @@ jobs:
           test/office_document_service_test.dart
           test/pdf_file_store_test.dart
       - name: Compile the actual browser application and embedded reader host
-        run: flutter build web --release
+        run: flutter build web --release --no-wasm-dry-run
