@@ -16,9 +16,9 @@ import 'legacy_word_conversion_dialog.dart';
 import 'internal_viewer_dialog.dart';
 import 'office_editor_dialog.dart';
 
-/// Converts a verified legacy document into a separate file. Native conversion
-/// opens that exact package for viewing; editing is an explicit subsequent
-/// action. Pane changes cannot redirect either write.
+/// Converts a verified legacy document into a separate file. Structured and
+/// installed conversions open the exact saved package for viewing; editing is
+/// an explicit subsequent action. Pane changes cannot redirect either write.
 Future<void> showLegacyWordConversionForFile(
   BuildContext context,
   WidgetRef ref,

@@ -3,7 +3,10 @@ import 'dart:typed_data';
 import 'package:quds_office_engine/quds_office_engine.dart';
 
 import 'legacy_word_document.dart';
+import 'legacy_word_structured_model.dart';
 import 'word_conversion_inspection.dart';
+
+part 'legacy_word_structured_conversion.dart';
 
 /// A new Word package prepared from a legacy DOC/DOT.
 /// It has no association with a writable destination; the caller must create
@@ -27,6 +30,30 @@ class LegacyWordCopy {
 
 /// Backwards-compatible name for callers of the original text-copy workflow.
 typedef LegacyWordDocxCopy = LegacyWordCopy;
+
+/// The built-in structured importer is deliberately a partial conversion.
+/// These categories are presented before the user saves a separate copy.
+enum LegacyWordConversionLimitation {
+  partialFormatting,
+  images,
+  embeddedObjects,
+  headersFooters,
+  notesComments,
+  revisions,
+  macrosSignatures,
+  fieldsLists,
+}
+
+class LegacyWordStructuredConversion {
+  LegacyWordStructuredConversion({
+    required Uint8List bytes,
+    required List<LegacyWordConversionLimitation> limitations,
+  }) : bytes = bytes.asUnmodifiableView(),
+       limitations = List.unmodifiable(limitations);
+
+  final Uint8List bytes;
+  final List<LegacyWordConversionLimitation> limitations;
+}
 
 enum LegacyWordConversionIssue { invalidName, invalidText, tooComplex }
 

@@ -10,8 +10,8 @@ import '../services/installed_office_converter.dart';
 import '../services/legacy_word_conversion.dart';
 import '../services/word_conversion_inspection.dart';
 
-/// Creates a separate copy. Installed engines return their package unchanged;
-/// the user reviews the package evidence and any detected loss before saving.
+/// Creates a separate copy. Structured and installed conversions are reviewed
+/// before saving; the explicit text-only choice retains its copy workflow.
 Future<LegacyWordCopy?> showLegacyWordConversionDialog(
   BuildContext context, {
   required String sourceName,
@@ -70,6 +70,7 @@ class _LegacyWordConversionDialogState
   InstalledOfficeOutput _output = InstalledOfficeOutput.docx;
   String? _method;
   LegacyWordCopy? _prepared;
+  List<LegacyWordConversionLimitation> _limitations = const [];
   Object? _error;
   bool _checking = true;
   bool _converting = false;
@@ -81,6 +82,8 @@ class _LegacyWordConversionDialogState
   bool _acceptLoss = false;
 
   bool get _textOnly => _method == 'text';
+  bool get _structured => _method == 'structured';
+  bool get _builtIn => _textOnly || _structured;
   bool get _busy => _converting || _saving || _previewing;
   InstalledOfficeConversion get _converter =>
       widget.convert ??
@@ -97,7 +100,7 @@ class _LegacyWordConversionDialogState
       );
   InstalledOfficeInstallation? get _installation {
     final method = _method;
-    if (method == null || method == 'text') return null;
+    if (method == null || _builtIn) return null;
     final index = int.tryParse(method);
     return index != null && index >= 0 && index < _installations.length
         ? _installations[index]
@@ -157,12 +160,13 @@ class _LegacyWordConversionDialogState
   void _changeMethod(String? value) {
     _method = value;
     _prepared = null;
+    _limitations = const [];
     _error = null;
     _previewError = false;
     _acceptLoss = false;
     final installation = _installation;
     _output =
-        !_textOnly &&
+        !_builtIn &&
             _source?.hasVba == true &&
             installation?.supportsMacros == true
         ? InstalledOfficeOutput.docm
@@ -195,11 +199,11 @@ class _LegacyWordConversionDialogState
     if (_busy ||
         _checking ||
         _source == null ||
-        (!_textOnly && _installation == null)) {
+        (!_builtIn && _installation == null)) {
       return;
     }
     try {
-      final extension = _textOnly ? 'docx' : _output.extension;
+      final extension = _builtIn ? 'docx' : _output.extension;
       final name = validateLegacyWordCopyName(_name.text, extension: extension);
       setState(() {
         _converting = true;
@@ -213,21 +217,38 @@ class _LegacyWordConversionDialogState
         await _save(LegacyWordCopy(fileName: name, bytes: bytes));
         return;
       }
-      final installation = _installation!;
-      final result = await _converter(
-        bytes: widget.bytes,
-        sourceName: widget.sourceName,
-        installation: installation,
-        output: _output,
-      );
-      if (!mounted) return;
-      if (result.output != _output ||
-          result.installation.kind != installation.kind) {
-        throw const WordConversionInspectionException(
-          WordConversionInspectionIssue.invalidOutput,
+      final Uint8List bytes;
+      final String converterName;
+      List<LegacyWordConversionLimitation> limitations = const [];
+      if (_structured) {
+        final result = await compute(
+          convertLegacyWordToStructuredDocx,
+          widget.bytes,
         );
+        if (!mounted) return;
+        bytes = Uint8List.fromList(result.bytes).asUnmodifiableView();
+        limitations = List.unmodifiable(result.limitations);
+        converterName = LegacyWordConversionStrings(
+          Localizations.localeOf(context),
+        ).builtInName;
+      } else {
+        final installation = _installation!;
+        final result = await _converter(
+          bytes: widget.bytes,
+          sourceName: widget.sourceName,
+          installation: installation,
+          output: _output,
+        );
+        if (!mounted) return;
+        if (result.output != _output ||
+            result.installation.kind != installation.kind) {
+          throw const WordConversionInspectionException(
+            WordConversionInspectionIssue.invalidOutput,
+          );
+        }
+        bytes = Uint8List.fromList(result.bytes).asUnmodifiableView();
+        converterName = installation.displayName;
       }
-      final bytes = Uint8List.fromList(result.bytes).asUnmodifiableView();
       final report = await inspectConvertedWord(
         bytes,
         extension: extension,
@@ -239,9 +260,10 @@ class _LegacyWordConversionDialogState
           fileName: name,
           bytes: bytes,
           extension: extension,
-          converterName: installation.displayName,
+          converterName: converterName,
           inspection: report,
         );
+        _limitations = limitations;
         _converting = false;
         _acceptLoss = false;
       });
@@ -376,7 +398,7 @@ class _LegacyWordConversionDialogState
         error.issue == LegacyWordConversionIssue.invalidName) {
       return strings.text(
         'filename',
-        arguments: {'extension': _textOnly ? 'docx' : _output.extension},
+        arguments: {'extension': _builtIn ? 'docx' : _output.extension},
       );
     }
     if (error is WordConversionInspectionException) {
@@ -416,11 +438,12 @@ class _LegacyWordConversionDialogState
         !_checking &&
         !_busy &&
         _source != null &&
-        (_textOnly || _installation != null);
-    final canSave =
-        !_busy &&
+        (_builtIn || _installation != null);
+    final requiresAcknowledgement =
         prepared != null &&
-        (prepared.inspection!.losses.isEmpty || _acceptLoss);
+        (_structured || prepared.inspection!.losses.isNotEmpty);
+    final canSave =
+        !_busy && prepared != null && (!requiresAcknowledgement || _acceptLoss);
     return PopScope(
       canPop: !_busy,
       child: AlertDialog(
@@ -439,7 +462,7 @@ class _LegacyWordConversionDialogState
                     Text(strings.text('checking'))
                   else ...[
                     if (_installations.isEmpty && _source != null) ...[
-                      Text(strings.text('unavailable')),
+                      Text(textStrings.unavailable),
                       const SizedBox(height: 12),
                     ],
                     DropdownButtonFormField<String>(
@@ -465,6 +488,10 @@ class _LegacyWordConversionDialogState
                             ),
                           ),
                         DropdownMenuItem(
+                          value: 'structured',
+                          child: Text(textStrings.structuredMethod),
+                        ),
+                        DropdownMenuItem(
                           value: 'text',
                           child: Text(strings.text('textOnly')),
                         ),
@@ -477,6 +504,9 @@ class _LegacyWordConversionDialogState
                   if (_textOnly) ...[
                     const SizedBox(height: 16),
                     Text(textStrings.lossNotice),
+                  ] else if (_structured) ...[
+                    const SizedBox(height: 16),
+                    Text(textStrings.structuredNotice),
                   ] else if (_installation != null) ...[
                     const SizedBox(height: 16),
                     Text(strings.text('nativeNotice')),
@@ -557,12 +587,23 @@ class _LegacyWordConversionDialogState
                   ],
                   const SizedBox(height: 8),
                   Text(strings.text('signatureNotice')),
-                  if (prepared.inspection!.losses.isNotEmpty) ...[
+                  if (requiresAcknowledgement) ...[
                     const SizedBox(height: 16),
                     Text(
-                      strings.text('losses'),
+                      _structured
+                          ? textStrings.limitationsTitle
+                          : strings.text('losses'),
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
+                    if (_structured) ...[
+                      const SizedBox(height: 6),
+                      Text(textStrings.structuredNotice),
+                      for (final limitation in _limitations)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: Text(textStrings.limitation(limitation)),
+                        ),
+                    ],
                     for (final loss in prepared.inspection!.losses)
                       Padding(
                         padding: const EdgeInsets.only(top: 6),
@@ -572,7 +613,11 @@ class _LegacyWordConversionDialogState
                       key: const ValueKey('word-conversion-accept-loss'),
                       contentPadding: EdgeInsets.zero,
                       value: _acceptLoss,
-                      title: Text(strings.text('acceptLoss')),
+                      title: Text(
+                        _structured
+                            ? textStrings.structuredAcceptLoss
+                            : strings.text('acceptLoss'),
+                      ),
                       onChanged: _busy
                           ? null
                           : (value) =>
@@ -636,6 +681,7 @@ class _LegacyWordConversionDialogState
                   ? null
                   : () => setState(() {
                       _prepared = null;
+                      _limitations = const [];
                       _acceptLoss = false;
                       _error = null;
                     }),

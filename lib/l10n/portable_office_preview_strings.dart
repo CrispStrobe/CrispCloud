@@ -20,6 +20,7 @@ class PortableOfficePreviewStrings {
       'This PowerPoint version is unsupported. The built-in text preview supports binary PowerPoint 97–2003 files.',
       'This PowerPoint document is encrypted. Open and decrypt a copy in PowerPoint before previewing it here.',
       'This PowerPoint document exceeds the preview size or complexity limits.',
+      'Partial preview of a binary Word document. Only supported structure and formatting are shown. Layout and other content may differ or be omitted. Keep the original.',
     ],
     'de': [
       'RTF-Formatvorschau. Schriftarten, Bilder, Kopfzeilen, Anmerkungen, eingebettete Objekte und Seitenlayout werden nicht wiedergegeben. Felder zeigen ihre gespeicherten Ergebnisse.',
@@ -32,6 +33,7 @@ class PortableOfficePreviewStrings {
       'Diese PowerPoint-Version wird nicht unterstützt. Die integrierte Textvorschau unterstützt binäre PowerPoint-97–2003-Dateien.',
       'Dieses PowerPoint-Dokument ist verschlüsselt. Öffnen und entschlüsseln Sie eine Kopie in PowerPoint, bevor Sie sie hier anzeigen.',
       'Dieses PowerPoint-Dokument überschreitet die Größen- oder Komplexitätsgrenzen der Vorschau.',
+      'Teilweise Vorschau eines binären Word-Dokuments. Nur unterstützte Strukturen und Formatierungen werden angezeigt. Layout und andere Inhalte können abweichen oder fehlen. Bewahren Sie das Original auf.',
     ],
     'fr': [
       'Aperçu de la mise en forme RTF. Les polices, images, en-têtes, notes, objets intégrés et la mise en page ne sont pas reproduits. Les champs affichent leurs résultats enregistrés.',
@@ -44,6 +46,7 @@ class PortableOfficePreviewStrings {
       'Cette version de PowerPoint n’est pas prise en charge. L’aperçu de texte intégré prend en charge les fichiers binaires PowerPoint 97–2003.',
       'Ce document PowerPoint est chiffré. Ouvrez et déchiffrez une copie dans PowerPoint avant de l’afficher ici.',
       'Ce document PowerPoint dépasse les limites de taille ou de complexité de l’aperçu.',
+      'Aperçu partiel d’un document Word binaire. Seules les structures et mises en forme prises en charge sont affichées. La disposition et d’autres contenus peuvent différer ou être omis. Conservez l’original.',
     ],
     'es': [
       'Vista previa del formato RTF. No se reproducen fuentes, imágenes, encabezados, notas, objetos incrustados ni el diseño de página. Los campos muestran sus resultados guardados.',
@@ -56,6 +59,7 @@ class PortableOfficePreviewStrings {
       'Esta versión de PowerPoint no es compatible. La vista previa de texto integrada admite archivos binarios de PowerPoint 97–2003.',
       'Este documento PowerPoint está cifrado. Abra y descifre una copia en PowerPoint antes de verla aquí.',
       'Este documento PowerPoint supera los límites de tamaño o complejidad de la vista previa.',
+      'Vista previa parcial de un documento Word binario. Solo se muestran las estructuras y los formatos compatibles. El diseño y otros contenidos pueden variar u omitirse. Conserve el original.',
     ],
     'pt': [
       'Pré-visualização da formatação RTF. Tipos de letra, imagens, cabeçalhos, notas, objetos incorporados e disposição das páginas não são reproduzidos. Os campos mostram os resultados guardados.',
@@ -68,6 +72,7 @@ class PortableOfficePreviewStrings {
       'Esta versão do PowerPoint não é suportada. A pré-visualização de texto integrada suporta ficheiros binários do PowerPoint 97–2003.',
       'Este documento PowerPoint está encriptado. Abra e desencripte uma cópia no PowerPoint antes de a apresentar aqui.',
       'Este documento PowerPoint excede os limites de tamanho ou complexidade da pré-visualização.',
+      'Pré-visualização parcial de um documento Word binário. Apenas a estrutura e a formatação suportadas são apresentadas. A disposição e outros conteúdos podem diferir ou ser omitidos. Guarde o original.',
     ],
     'zh': [
       'RTF 格式预览。不会重现字体、图片、页眉、注释、嵌入对象和页面布局。域仅显示已保存的结果。',
@@ -80,6 +85,7 @@ class PortableOfficePreviewStrings {
       '不支持此 PowerPoint 版本。内置文本预览支持 PowerPoint 97–2003 二进制文件。',
       '此 PowerPoint 文档已加密。请先在 PowerPoint 中打开并解密一个副本，再在此处预览。',
       '此 PowerPoint 文档超出了预览的大小或复杂度限制。',
+      'Word 二进制文档的部分预览。仅显示支持的结构和格式。布局和其他内容可能不同或被省略。请保留原文件。',
     ],
     'ja': [
       'RTF の書式プレビューです。フォント、画像、ヘッダー、注釈、埋め込みオブジェクト、ページレイアウトは再現しません。フィールドには保存済みの結果を表示します。',
@@ -92,6 +98,7 @@ class PortableOfficePreviewStrings {
       'この PowerPoint バージョンには対応していません。内蔵テキストプレビューは PowerPoint 97–2003 のバイナリファイルに対応しています。',
       'この PowerPoint 文書は暗号化されています。PowerPoint でコピーを開いて復号してから、ここでプレビューしてください。',
       'この PowerPoint 文書はプレビューのサイズまたは複雑さの上限を超えています。',
+      'Word バイナリ文書の部分的なプレビューです。対応する構造と書式のみを表示します。レイアウトやその他の内容は異なる場合や省略される場合があります。元のファイルを保持してください。',
     ],
     'ko': [
       'RTF 서식 미리보기입니다. 글꼴, 이미지, 머리글, 주석, 포함된 개체 및 페이지 레이아웃은 재현하지 않습니다. 필드는 저장된 결과를 표시합니다.',
@@ -104,6 +111,7 @@ class PortableOfficePreviewStrings {
       '이 PowerPoint 버전은 지원되지 않습니다. 내장 텍스트 미리보기는 PowerPoint 97–2003 바이너리 파일을 지원합니다.',
       '이 PowerPoint 문서는 암호화되어 있습니다. PowerPoint에서 사본을 열어 암호화를 해제한 후 여기에서 미리 보세요.',
       '이 PowerPoint 문서는 미리보기의 크기 또는 복잡도 제한을 초과합니다.',
+      'Word 바이너리 문서의 부분 미리보기입니다. 지원되는 구조와 서식만 표시됩니다. 레이아웃과 기타 내용은 다르거나 생략될 수 있습니다. 원본을 보관하세요.',
     ],
     'ar': [
       'معاينة تنسيق RTF. لا تُعاد الخطوط والصور والرؤوس والملاحظات والعناصر المضمنة وتخطيط الصفحة. تعرض الحقول نتائجها المحفوظة.',
@@ -116,6 +124,7 @@ class PortableOfficePreviewStrings {
       'إصدار PowerPoint هذا غير مدعوم. تدعم معاينة النص المدمجة ملفات PowerPoint 97–2003 الثنائية.',
       'مستند PowerPoint هذا مشفر. افتح نسخة وفك تشفيرها في PowerPoint قبل معاينتها هنا.',
       'يتجاوز مستند PowerPoint هذا حدود حجم المعاينة أو تعقيدها.',
+      'معاينة جزئية لمستند Word ثنائي. تُعرض البنية والتنسيقات المدعومة فقط. قد يختلف التخطيط والمحتوى الآخر أو يُحذف. احتفظ بالأصل.',
     ],
   };
 }

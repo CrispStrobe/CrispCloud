@@ -46,6 +46,7 @@ enum OfficePreviewNotice {
   powerPointUnsupportedVersion,
   powerPointEncrypted,
   powerPointResourceLimit,
+  legacyWordPartial,
 }
 
 enum OfficePreviewFallback {
@@ -169,13 +170,13 @@ Future<OfficeDocument> parseOfficeDocument(
       return _parseLegacyPowerPoint(bytes);
     }
     if (ext == 'doc' || ext == 'dot') {
+      final document = parseLegacyWordDocument(bytes);
       return OfficeDocument(
         kind: OfficeDocumentKind.document,
         markdown: '',
-        plainText: extractLegacyWordText(bytes),
-        note:
-            'Word binary text preview. Formatting, images, headers, notes '
-            'and tracked changes are not reproduced. Save as DOCX to edit.',
+        plainText: document.plainText,
+        safeHtml: document.safeHtml,
+        notice: OfficePreviewNotice.legacyWordPartial,
       );
     }
     archive = await openViewerArchive(bytes, name: filename);

@@ -392,7 +392,14 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
         final strings = OfficePreviewStrings(locale);
         final mediaStrings = PreviewMediaStrings(context);
         final portable =
-            const {'rtf', 'ppt', 'pps', 'pot'}.contains(file.extension)
+            const {
+              'doc',
+              'dot',
+              'rtf',
+              'ppt',
+              'pps',
+              'pot',
+            }.contains(file.extension)
             ? await parseOfficeDocument(bytes, file.name)
             : null;
         final text = portable == null

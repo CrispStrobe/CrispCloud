@@ -6,7 +6,8 @@ Research and implementation review: 2026-11-12.
 
 F4 on a binary `.doc`/`.dot`, or **Convert to DOCX** in F3, opens a conversion
 dialog. It offers supported installed applications when their discovery probe
-succeeds, plus an explicit **Text only (built in)** choice. It never installs
+succeeds, **Structured DOCX (built in)** and an explicit **Text only (built in)**
+choice. It never installs
 an office suite or silently substitutes text-only output after a native failure.
 
 For an installed converter, choose **Convert and review**, inspect the detected
@@ -38,6 +39,62 @@ does not deserialize and rewrite the converter's package.
 Archive members and detached attachments remain view-only: extract them to a
 writable location before converting. No remote conversion service receives
 document content; an installed engine receives only a temporary input copy.
+
+## Built-in structured conversion
+
+**Structured DOCX (built in)** reads supported binary Word structure in Dart
+and creates a separate, editable DOCX without an installed office application.
+It uses the same captured source and create-only save target as the existing
+conversion flow. The original DOC/DOT is not rewritten.
+
+Choose **Convert and review** to inspect the generated package counts and
+source-feature losses. The structured path always requires acknowledgement of
+its partial support before **Save copy**, even when no detector-specific loss
+is present. A save collision permits a new filename and retry with the exact
+same prepared bytes. The copy opens in the F3 viewer before optional editing.
+PDF page preview remains available for installed engines only.
+
+Supported main-story data is emitted as WordprocessingML rather than flattened
+into text:
+
+- resolved character formatting: bold, italic, underline, strike/double-strike,
+  case effects, hidden state, font name/size, color/highlight, vertical position
+  and character spacing;
+- paragraph style names, outline levels, alignment, indents, before/after and
+  line spacing, keep settings and page-break-before;
+- basic table rows/cells, widths, horizontal/vertical merge markers and explicit
+  header-row flags;
+- page size/orientation, margins, gutter, header/footer distances, columns and
+  supported section-break positions;
+- tabs, manual line breaks and page breaks as distinct elements;
+- supported tracked insertions/deletions as `w:ins`/`w:del` with deleted text
+  stored in `w:delText`, retaining available author/time metadata. These changes
+  are not automatically accepted.
+
+The parser follows logical CLX character positions through the selected text
+pieces, then resolves paragraph/character formatting pages, stylesheet
+inheritance and piece properties. It does not assume that physical text order
+is document order. Built-in DOC/DOT previews use generated escaped HTML from
+the same model, hide hidden runs and visibly mark supported insertions/deletions.
+
+This is partial preservation. Images, floating drawings, embedded objects,
+text boxes, headers/footers, notes, comments, VBA and signatures are not imported
+into this DOCX. Numbering definitions, complex/nested tables, borders/shading,
+some script-specific formatting and full revision semantics remain incomplete.
+Fields use stored results without copying executable instructions. The review
+lists the relevant detected categories, and the source inspector independently
+reports missing source features. Neither the absence of a detector warning nor
+an emitted property proves identical pagination or visual appearance.
+
+The existing 4 Mi UTF-16-code-unit body limit applies. Structured serialization
+bounds XML expansion while writing (16 MiB across document/style XML) and limits
+paragraphs, table structure, tabs and breaks before unbounded allocation.
+Malformed supported structures fail explicitly; there is no automatic retry
+through text-only conversion or raw-byte recovery.
+
+See the [pinned parser-source review](legacy-word-parser-research-2026-11-12.md)
+for `legacy-doc-recover`, `wps2md` and `JSDoc`, their permissive licenses, useful
+algorithms and the shortcuts deliberately excluded from ordinary conversion.
 
 ## Built-in text-only conversion
 
@@ -144,6 +201,7 @@ proof that a sandbox will permit conversion.
 | --- | --- | --- |
 | Microsoft Word | Windows, after a `Word.Application` registration probe | COM automation of an isolated new Word instance; close existing Word instances before conversion. Windows Word acceptance has not been run in this development environment. |
 | LibreOffice 7 or later | Windows, Linux and macOS, when the executable/version probe succeeds | Discovers PATH/common installation locations and uses headless conversion with a fresh private profile. macOS sandbox restrictions may still prevent launch or conversion. |
+| Structured DOCX | Desktop, web, Android and iOS | Uses the bounded Dart structured parser and OOXML writer with mandatory partial-preservation review. Web/mobile have no installed-engine adapter. |
 | Text only | Desktop, web, Android and iOS | Uses the bounded Dart parser and OOXML writer with the explicit losses above. Web/mobile have no installed-engine adapter. |
 
 Word for macOS is deliberately not offered: this implementation has no verified

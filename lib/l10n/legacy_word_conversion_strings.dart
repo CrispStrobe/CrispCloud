@@ -5,10 +5,13 @@ import 'word_format_strings.dart';
 
 class LegacyWordConversionStrings {
   LegacyWordConversionStrings(this.locale)
-    : _values = _translations[locale.languageCode] ?? _english;
+    : _values = _translations[locale.languageCode] ?? _english,
+      _structuredValues =
+          _structuredTranslations[locale.languageCode] ?? _structuredEnglish;
 
   final Locale locale;
   final List<String> _values;
+  final Map<String, String> _structuredValues;
 
   String get title => _values[0];
   String get lossNotice => _values[1];
@@ -17,6 +20,15 @@ class LegacyWordConversionStrings {
   String get cancel => _values[4];
   String get converting => _values[5];
   String get saving => _values[10];
+  String get structuredMethod => _structuredValues['method']!;
+  String get structuredNotice => _structuredValues['notice']!;
+  String get builtInName => _structuredValues['name']!;
+  String get structuredAcceptLoss => _structuredValues['accept']!;
+  String get unavailable => _structuredValues['unavailable']!;
+  String get limitationsTitle => _structuredValues['limitations']!;
+
+  String limitation(LegacyWordConversionLimitation limitation) =>
+      _structuredValues[limitation.name]!;
 
   String error(Object error) {
     if (error is LegacyWordConversionException) {
@@ -38,6 +50,170 @@ class LegacyWordConversionStrings {
     'The document could not be converted. The original file was not changed.',
     'Saving copy…',
   ];
+
+  static const _structuredEnglish = <String, String>{
+    'method': 'Structured DOCX (built in)',
+    'notice': 'Create a DOCX from the document structure the built-in parser can recover. Support is partial; review the limitations before saving. The original file is kept.',
+    'name': 'Built-in structured conversion',
+    'accept': 'Save this partial conversion with the listed limitations',
+    'unavailable': 'No supported installed converter was found. You can choose a built-in conversion method.',
+    'limitations': 'Conversion limitations',
+    'partialFormatting':
+        'Formatting and page layout are only partially preserved.',
+    'images': 'Images and drawing placement are omitted.',
+    'embeddedObjects':
+        'Embedded objects, floating shapes and text boxes are omitted.',
+    'headersFooters': 'Headers and footers are omitted.',
+    'notesComments': 'Footnotes, endnotes and comments are omitted.',
+    'revisions': 'Tracked changes are not fully reconstructed.',
+    'macrosSignatures': 'Macros and digital signatures are omitted.',
+    'fieldsLists': 'Fields and lists are reduced to the text or numbering the parser can recover.',
+  };
+
+  static const _structuredTranslations = <String, Map<String, String>>{
+    'de': {
+      'method': 'Strukturiertes DOCX (integriert)',
+      'notice': 'Erstellt ein DOCX aus der Dokumentstruktur, die der integrierte Parser wiederherstellen kann. Die Unterstützung ist teilweise; prüfen Sie vor dem Speichern die Einschränkungen. Das Original bleibt erhalten.',
+      'name': 'Integrierte strukturierte Konvertierung',
+      'accept': 'Diese teilweise Konvertierung mit den aufgeführten Einschränkungen speichern',
+      'unavailable': 'Es wurde kein unterstützter installierter Konverter gefunden. Sie können eine integrierte Konvertierungsmethode wählen.',
+      'limitations': 'Einschränkungen der Konvertierung',
+      'partialFormatting':
+          'Formatierung und Seitenlayout bleiben nur teilweise erhalten.',
+      'images':
+          'Bilder und die Platzierung von Zeichnungen werden nicht übernommen.',
+      'embeddedObjects': 'Eingebettete Objekte, schwebende Formen und Textfelder werden nicht übernommen.',
+      'headersFooters': 'Kopf- und Fußzeilen werden nicht übernommen.',
+      'notesComments':
+          'Fußnoten, Endnoten und Kommentare werden nicht übernommen.',
+      'revisions':
+          'Nachverfolgte Änderungen werden nicht vollständig rekonstruiert.',
+      'macrosSignatures':
+          'Makros und digitale Signaturen werden nicht übernommen.',
+      'fieldsLists': 'Felder und Listen werden auf den Text oder die Nummerierung reduziert, die der Parser wiederherstellen kann.',
+    },
+    'fr': {
+      'method': 'DOCX structuré (intégré)',
+      'notice': 'Crée un DOCX à partir de la structure du document que l’analyseur intégré peut récupérer. La prise en charge est partielle ; vérifiez les limites avant d’enregistrer. Le fichier original est conservé.',
+      'name': 'Conversion structurée intégrée',
+      'accept':
+          'Enregistrer cette conversion partielle avec les limites indiquées',
+      'unavailable': 'Aucun convertisseur installé compatible n’a été trouvé. Vous pouvez choisir une méthode de conversion intégrée.',
+      'limitations': 'Limites de la conversion',
+      'partialFormatting': 'La mise en forme et la mise en page ne sont que partiellement conservées.',
+      'images': 'Les images et le placement des dessins sont omis.',
+      'embeddedObjects': 'Les objets intégrés, les formes flottantes et les zones de texte sont omis.',
+      'headersFooters': 'Les en-têtes et pieds de page sont omis.',
+      'notesComments':
+          'Les notes de bas de page, notes de fin et commentaires sont omis.',
+      'revisions':
+          'Les modifications suivies ne sont pas entièrement reconstituées.',
+      'macrosSignatures': 'Les macros et signatures numériques sont omises.',
+      'fieldsLists': 'Les champs et listes sont réduits au texte ou à la numérotation que l’analyseur peut récupérer.',
+    },
+    'es': {
+      'method': 'DOCX estructurado (integrado)',
+      'notice': 'Crea un DOCX a partir de la estructura del documento que puede recuperar el analizador integrado. La compatibilidad es parcial; revise las limitaciones antes de guardar. Se conserva el archivo original.',
+      'name': 'Conversión estructurada integrada',
+      'accept':
+          'Guardar esta conversión parcial con las limitaciones indicadas',
+      'unavailable': 'No se encontró ningún convertidor instalado compatible. Puede elegir un método de conversión integrado.',
+      'limitations': 'Limitaciones de la conversión',
+      'partialFormatting':
+          'El formato y el diseño de página solo se conservan parcialmente.',
+      'images': 'Se omiten las imágenes y la colocación de los dibujos.',
+      'embeddedObjects': 'Se omiten los objetos incrustados, las formas flotantes y los cuadros de texto.',
+      'headersFooters': 'Se omiten los encabezados y pies de página.',
+      'notesComments':
+          'Se omiten las notas al pie, notas al final y comentarios.',
+      'revisions': 'El control de cambios no se reconstruye por completo.',
+      'macrosSignatures': 'Se omiten las macros y firmas digitales.',
+      'fieldsLists': 'Los campos y listas se reducen al texto o a la numeración que puede recuperar el analizador.',
+    },
+    'pt': {
+      'method': 'DOCX estruturado (integrado)',
+      'notice': 'Cria um DOCX a partir da estrutura do documento que o analisador integrado consegue recuperar. O suporte é parcial; reveja as limitações antes de guardar. O ficheiro original é mantido.',
+      'name': 'Conversão estruturada integrada',
+      'accept': 'Guardar esta conversão parcial com as limitações indicadas',
+      'unavailable': 'Não foi encontrado nenhum conversor instalado compatível. Pode escolher um método de conversão integrado.',
+      'limitations': 'Limitações da conversão',
+      'partialFormatting': 'A formatação e a disposição das páginas são preservadas apenas parcialmente.',
+      'images': 'As imagens e o posicionamento dos desenhos são omitidos.',
+      'embeddedObjects': 'Os objetos incorporados, formas flutuantes e caixas de texto são omitidos.',
+      'headersFooters': 'Os cabeçalhos e rodapés são omitidos.',
+      'notesComments':
+          'As notas de rodapé, notas de fim e comentários são omitidos.',
+      'revisions': 'As alterações registadas não são totalmente reconstruídas.',
+      'macrosSignatures': 'As macros e assinaturas digitais são omitidas.',
+      'fieldsLists': 'Os campos e listas são reduzidos ao texto ou à numeração que o analisador consegue recuperar.',
+    },
+    'zh': {
+      'method': '结构化 DOCX（内置）',
+      'notice': '根据内置解析器能够恢复的文档结构创建 DOCX。仅提供部分支持；保存前请查看限制。原文件将保留。',
+      'name': '内置结构化转换',
+      'accept': '接受列出的限制，保存此部分转换结果',
+      'unavailable': '未找到受支持的已安装转换器。您可以选择内置转换方式。',
+      'limitations': '转换限制',
+      'partialFormatting': '仅部分保留格式和页面布局。',
+      'images': '不会保留图片和绘图位置。',
+      'embeddedObjects': '不会保留嵌入对象、浮动形状和文本框。',
+      'headersFooters': '不会保留页眉和页脚。',
+      'notesComments': '不会保留脚注、尾注和批注。',
+      'revisions': '无法完整重建修订记录。',
+      'macrosSignatures': '不会保留宏和数字签名。',
+      'fieldsLists': '域和列表将简化为解析器能够恢复的文本或编号。',
+    },
+    'ja': {
+      'method': '構造を保持する DOCX（内蔵）',
+      'notice': '内蔵パーサーが復元できる文書構造から DOCX を作成します。対応は部分的です。保存前に制限事項を確認してください。元のファイルは保持されます。',
+      'name': '内蔵の構造変換',
+      'accept': '記載の制限事項を確認し、この部分変換を保存する',
+      'unavailable': '対応するインストール済みの変換アプリが見つかりません。内蔵の変換方法を選択できます。',
+      'limitations': '変換の制限事項',
+      'partialFormatting': '書式とページレイアウトは部分的にのみ保持されます。',
+      'images': '画像と描画の配置は省略されます。',
+      'embeddedObjects': '埋め込みオブジェクト、浮動する図形、テキストボックスは省略されます。',
+      'headersFooters': 'ヘッダーとフッターは省略されます。',
+      'notesComments': '脚注、文末脚注、コメントは省略されます。',
+      'revisions': '変更履歴は完全には再現されません。',
+      'macrosSignatures': 'マクロとデジタル署名は省略されます。',
+      'fieldsLists': 'フィールドとリストは、パーサーが復元できるテキストまたは番号に変換されます。',
+    },
+    'ko': {
+      'method': '구조화된 DOCX(내장)',
+      'notice': '내장 파서가 복원할 수 있는 문서 구조에서 DOCX를 만듭니다. 일부 기능만 지원되므로 저장 전에 제한 사항을 확인하세요. 원본 파일은 유지됩니다.',
+      'name': '내장 구조화 변환',
+      'accept': '나열된 제한 사항을 확인하고 이 부분 변환을 저장',
+      'unavailable': '지원되는 설치된 변환기를 찾지 못했습니다. 내장 변환 방법을 선택할 수 있습니다.',
+      'limitations': '변환 제한 사항',
+      'partialFormatting': '서식과 페이지 레이아웃은 일부만 유지됩니다.',
+      'images': '이미지와 그리기 위치는 생략됩니다.',
+      'embeddedObjects': '포함된 개체, 부동 도형 및 텍스트 상자는 생략됩니다.',
+      'headersFooters': '머리글과 바닥글은 생략됩니다.',
+      'notesComments': '각주, 미주 및 메모는 생략됩니다.',
+      'revisions': '추적된 변경 내용은 완전히 복원되지 않습니다.',
+      'macrosSignatures': '매크로와 디지털 서명은 생략됩니다.',
+      'fieldsLists': '필드와 목록은 파서가 복원할 수 있는 텍스트나 번호로 축소됩니다.',
+    },
+    'ar': {
+      'method': 'DOCX منظم (مدمج)',
+      'notice': 'إنشاء DOCX من بنية المستند التي يستطيع المحلل المدمج استعادتها. الدعم جزئي؛ راجع القيود قبل الحفظ. يبقى الملف الأصلي محفوظاً.',
+      'name': 'تحويل منظم مدمج',
+      'accept': 'حفظ هذا التحويل الجزئي مع القيود المذكورة',
+      'unavailable':
+          'لم يُعثر على محول مثبت مدعوم. يمكنك اختيار طريقة تحويل مدمجة.',
+      'limitations': 'قيود التحويل',
+      'partialFormatting': 'يُحتفظ بالتنسيق وتخطيط الصفحات جزئياً فقط.',
+      'images': 'تُحذف الصور ومواضع الرسومات.',
+      'embeddedObjects':
+          'تُحذف الكائنات المضمنة والأشكال العائمة ومربعات النص.',
+      'headersFooters': 'تُحذف الرؤوس والتذييلات.',
+      'notesComments': 'تُحذف الحواشي السفلية والختامية والتعليقات.',
+      'revisions': 'لا يُعاد بناء التغييرات المتعقبة بالكامل.',
+      'macrosSignatures': 'تُحذف وحدات الماكرو والتوقيعات الرقمية.',
+      'fieldsLists': 'تُختزل الحقول والقوائم إلى النص أو الترقيم الذي يستطيع المحلل استعادته.',
+    },
+  };
 
   static const _translations = <String, List<String>>{
     'de': [

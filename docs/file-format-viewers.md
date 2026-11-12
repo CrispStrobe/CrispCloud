@@ -13,7 +13,7 @@ its original bytes.
 | `.msg` | Outlook compound-message headers, plain text, safe HTML or decoded compressed RTF, ordinary attachments | Existing explicit hex editor; no structured Outlook writer |
 | `.rtf` | Basic formatted runs, paragraph alignment, explicit list markers and flat tables | Existing RTF source editor; no rich RTF writer |
 | `.ppt`, `.pps`, `.pot` | Text from the current slide list and referenced current drawings, in slide order | Existing explicit hex editor; no binary PowerPoint writer |
-| `.doc`, `.dot` | Main-document text from unencrypted Word 97–2007 binary files | Converts a separate DOCX/DOCM copy through supported installed Word/LibreOffice, or an explicitly selected text-only DOCX |
+| `.doc`, `.dot` | Supported main-story formatting, tables and revision markup from unencrypted Word 97–2007 binary files | Separate reviewed structured DOCX, installed Word/LibreOffice DOCX/DOCM, or an explicitly selected text-only DOCX |
 | `.docm`, `.dotm`, `.dotx` | Existing formatted Word view, text and page rendering | Rich Word editor with macro/template preservation checks before saving |
 | `.kdbx` | Password/key-file unlock, groups, standard/custom fields, entry history and search | Group management, entry moves, protected custom fields, history restoration and encrypted saves preserving other database data |
 | `.kbdx` | XML tree and source for Autodesk keyboard-shortcut profiles | XML source in the text/code editor |
@@ -101,15 +101,18 @@ recorded in [portable Office previews](portable-office-previews.md).
 Binary DOC/DOT extraction follows Microsoft's
 [documented FIB/CLX text-retrieval algorithm](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/01d5d8c4-cf9c-4ef9-80fd-439e763cfe01).
 It reads text in logical piece-table order, including compressed and UTF-16
-pieces, and excludes unreferenced stream bytes. The preview does not reconstruct
-formatting, images, headers, notes or tracked-change semantics. Encrypted files,
+pieces, and excludes unreferenced stream bytes. The richer parser resolves
+supported paragraph/run formatting, styles, basic tables and section layout.
+Both previews use generated escaped HTML, hide hidden runs, and visibly mark
+supported insertions/deletions. Images, headers, notes, objects and full revision
+semantics remain incomplete and are disclosed. Encrypted files,
 older pre-Word-97 variants and malformed structures produce a clear failure.
 The main story is capped at 4 × 1024 × 1024 UTF-16 code units.
 
 F4 on DOC/DOT, or **Convert to DOCX** in F3, offers detected Microsoft Word on
 Windows or LibreOffice 7+ on Windows/Linux/macOS. Availability depends on the
-installation and sandbox. **Text only (built in)** is an explicit choice on all
-platforms and the only route on web/mobile. CrispCloud never installs an office
+installation and sandbox. **Structured DOCX (built in)** and **Text only (built
+in)** are explicit choices on all platforms, including web/mobile. CrispCloud never installs an office
 suite, silently falls back after a native failure, or sends content to a remote
 conversion service.
 
@@ -121,7 +124,10 @@ exact converter bytes as a new sibling on the captured original account, rejects
 collisions, and opens the copy in F3; F4 editing is a separate action. Text-only
 conversion instead creates `report (text).docx` and opens it in the rich editor,
 omitting formatting, layout, images, objects, headers, notes, tracked-change
-state, macros and signatures. Both routes preserve the original file and save
+state, macros and signatures. Structured conversion instead emits supported
+formatting, rows/cells, sections and insertion/deletion runs as Word elements,
+always requires partial-preservation acknowledgement, and opens the saved copy
+in F3. All routes preserve the original file and save
 destination even if the pane navigates elsewhere. See
 [legacy Word conversion](legacy-word-conversion.md) for platform limits, source
 review, preservation warnings and acceptance evidence.

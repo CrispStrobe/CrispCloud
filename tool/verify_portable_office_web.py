@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compile portable RTF/PPT/MSG readers to JavaScript and run an authored fixture.
+"""Compile portable DOC/RTF/PPT/MSG readers to JavaScript with real fixtures.
 
 Requires an existing Dart SDK, Node.js and resolved package_config.json. No
 network access, package resolution, Flutter web build, or downloads are used.
@@ -20,6 +20,8 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:archive/archive.dart';
 import 'package:crisp_cloud/services/legacy_powerpoint_document.dart';
+import 'package:crisp_cloud/services/legacy_word_document.dart';
+import 'package:crisp_cloud/services/legacy_word_structured_model.dart';
 import 'package:crisp_cloud/services/outlook_rtf_compression.dart';
 import 'package:crisp_cloud/services/rtf_document.dart';
 
@@ -28,6 +30,14 @@ void check(bool condition, String description) {
 }
 
 void main() {
+  final word = parseLegacyWordDocument(Uint8List.fromList(base64.decode('__DOC_BASE64__')));
+  check(word.plainText.contains('Unicode café — 東京 😀.'), 'DOC logical Unicode text');
+  check(word.blocks.whereType<LegacyWordTable>().single.rows.length == 2, 'DOC referenced table structure');
+  final red = word.blocks.whereType<LegacyWordParagraph>()
+      .expand((paragraph) => paragraph.runs).firstWhere((run) => run.text == 'Bold red text');
+  check(red.style.bold && red.style.fontSizeHalfPoints == 36 && red.style.colorHex?.toUpperCase() == 'C02030', 'DOC character formatting');
+  check(word.sections.isNotEmpty, 'DOC section layout');
+
   final fixture = Uint8List.fromList(GZipDecoder().decodeBytes(base64.decode('__PPT_BASE64__')));
   final ppt = extractLegacyPowerPoint(fixture);
   check(ppt.slides.length == 2, 'Current PPT slide count');
@@ -53,7 +63,7 @@ void main() {
     rejected = error.code == OutlookRtfErrorCode.malformed;
   }
   check(rejected, 'MSG CRC corruption rejection');
-  print('Portable Office JavaScript smoke passed: current PPT slides, RTF Unicode/formatting, MSG RTF decompression and CRC.');
+  print('Portable Office JavaScript smoke passed: DOC formatting/tables/sections, current PPT slides, RTF Unicode/formatting, MSG RTF decompression and CRC.');
 }
 '''
 
@@ -71,11 +81,15 @@ def main():
         parser.error("The repository needs an existing package_config.json")
     fixture = repository / "test/fixtures/legacy_powerpoint/current-slides.ppt.gz"
     encoded = base64.b64encode(fixture.read_bytes()).decode("ascii")
+    word_encoded = base64.b64encode(
+        (repository / "test/fixtures/word_native/formatting.doc").read_bytes()
+    ).decode("ascii")
     with tempfile.TemporaryDirectory(prefix="portable-office-web-", dir=packages.parent) as temporary:
         root = Path(temporary)
         source = root / "smoke.dart"
         output = root / "smoke.js"
-        source.write_text(SMOKE_SOURCE.replace("__PPT_BASE64__", encoded), encoding="utf-8")
+        source.write_text(SMOKE_SOURCE.replace("__PPT_BASE64__", encoded)
+                          .replace("__DOC_BASE64__", word_encoded), encoding="utf-8")
         environment = dict(os.environ, CI="true")
         subprocess.run([args.dart, "compile", "js", "--packages=" + str(packages),
                         "-O1", "-o", str(output), str(source)],
