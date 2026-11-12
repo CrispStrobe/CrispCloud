@@ -9,6 +9,8 @@ import '../providers/core_providers.dart';
 import '../providers/panel_provider.dart';
 import '../services/archive_browser_session.dart';
 import '../services/archive_endpoint.dart';
+import '../services/archive_service.dart';
+import '../services/archive_workspace.dart';
 import '../services/file_operation_backend.dart';
 import '../services/file_operation_service.dart';
 import '../services/local_file_service.dart';
@@ -90,9 +92,161 @@ class CapturedArchiveImportDestination {
   }
 }
 
-/// Routes an ordinary captured local/remote selection into one archive
-/// transaction. Mixed accounts and archive-to-archive transfer have separate
-/// planning boundaries; no stage-only file-operation result escapes this UI.
+/// A read-only archive selection captured with its physical container, nested
+/// route and exact panel rows. Virtual member paths never reach a disk backend.
+class CapturedArchiveCopySource {
+  CapturedArchiveCopySource._(this.location, this.files);
+
+  final CapturedArchiveImportDestination location;
+  final List<FileItem> files;
+  bool get isCurrent => location.isCurrent;
+
+  static CapturedArchiveCopySource capture(
+    WidgetRef ref,
+    PanelSide side,
+    List<FileItem> files,
+  ) {
+    final location = CapturedArchiveImportDestination.capture(ref, side);
+    final rows = location.panel.files ?? const <FileItem>[];
+    if (files.isEmpty ||
+        files.any(
+          (file) =>
+              file.name == '..' ||
+              file.path == null ||
+              !rows.any((row) => identical(row, file)),
+        )) {
+      throw StateError(archiveEndpointText(ref.context, 'sourceChanged'));
+    }
+    return CapturedArchiveCopySource._(
+      location,
+      List.unmodifiable([
+        for (final file in files)
+          file.copyWith(
+            path:
+                '/${ArchiveService.safeMemberPath(file.path!.replaceAll(RegExp(r'^/+|/+$'), ''))}',
+          ),
+      ]),
+    );
+  }
+}
+
+/// Review and publish a copy between independently captured containers. The
+/// source is reopened from its physical fingerprint and is never mutated.
+Future<ArchiveEndpointTransferResult?> showCapturedArchiveCopy(
+  BuildContext context,
+  WidgetRef ref, {
+  required CapturedArchiveCopySource source,
+  required CapturedArchiveImportDestination destination,
+  bool Function()? isReviewCurrent,
+}) async {
+  try {
+    var lost = false;
+    bool current() {
+      if (!lost) {
+        lost =
+            !context.mounted ||
+            !source.isCurrent ||
+            !destination.isCurrent ||
+            !(isReviewCurrent?.call() ?? true);
+      }
+      return !lost;
+    }
+
+    if (!current()) {
+      if (!context.mounted) return null;
+      throw StateError(archiveEndpointText(context, 'sourceChanged'));
+    }
+    final captured = source.location;
+    final result = await showArchiveEndpointCopyDialog(
+      context,
+      sourceContainerBackend: fileOperationBackend(
+        source: captured.origin.source,
+        local: ref.read(localFileServiceProvider),
+        isCurrent: current,
+      ),
+      sourceContainerFile: captured.location.file,
+      sourceNestedMembers: captured.location.nestedMembers,
+      expectedSourceFingerprint: captured.location.fingerprint,
+      files: source.files,
+      containerBackend: destination.backend,
+      containerFile: destination.location.file,
+      nestedMembers: destination.location.nestedMembers,
+      directory: destination.directory,
+      expectedOuterFingerprint: destination.location.fingerprint,
+    );
+    // Recovery can change the destination even when no new copy was published.
+    // The source view and its selection remain untouched by this copy.
+    if (context.mounted && destination.isCurrent) {
+      await destination.panel.refresh();
+    }
+    return result;
+  } catch (error) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('$error')));
+    }
+    return null;
+  }
+}
+
+/// Borrows an already unlocked workspace for Copy out. The owner retains its
+/// lifetime and draft; only an unchanged physical source is eligible.
+Future<ArchiveEndpointTransferResult?> showCapturedArchiveWorkspaceCopy(
+  BuildContext context, {
+  required ArchiveWorkspace source,
+  required List<FileItem> files,
+  required CapturedArchiveImportDestination destination,
+  bool Function()? isReviewCurrent,
+}) async {
+  if (files.isEmpty) return null;
+  try {
+    if (source.dirty || source.pendingPublication != null) {
+      throw StateError(archiveEndpointText(context, 'sourceDraft'));
+    }
+    final snapshot = source.captureCopySource();
+    final selected = List<FileItem>.unmodifiable(files);
+    var lost = false;
+    bool current() {
+      if (!lost) {
+        lost =
+            !context.mounted ||
+            !snapshot.isCurrent ||
+            !destination.isCurrent ||
+            !(isReviewCurrent?.call() ?? true);
+      }
+      return !lost;
+    }
+
+    if (!current()) {
+      if (!context.mounted) return null;
+      throw StateError(archiveEndpointText(context, 'sourceChanged'));
+    }
+    final result = await showArchiveWorkspaceCopyDialog(
+      context,
+      source,
+      files: selected,
+      containerBackend: destination.backend,
+      containerFile: destination.location.file,
+      nestedMembers: destination.location.nestedMembers,
+      directory: destination.directory,
+      expectedOuterFingerprint: destination.location.fingerprint,
+      isCopyCurrent: current,
+    );
+    if (context.mounted && destination.isCurrent) {
+      await destination.panel.refresh();
+    }
+    return result;
+  } catch (error) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('$error')));
+    }
+    return null;
+  }
+}
+
+/// Routes a captured local/remote or archive selection into one destination
+/// transaction. No stage-only file-operation result escapes this UI.
 Future<ArchiveEndpointTransferResult?> showCapturedArchiveImport(
   BuildContext context,
   WidgetRef ref, {
@@ -116,8 +270,18 @@ Future<ArchiveEndpointTransferResult?> showCapturedArchiveImport(
     final sourceSession = panel.captureOperationSession();
     final sourceNavigation = panel.navigationIntentRevision;
     if (sourceOrigin == null && sourceGroups == null && panel.isInArchive) {
-      throw StateError(
-        archiveEndpointText(context, 'sourceArchiveUnsupported'),
+      if (moveSources) {
+        throw UnsupportedError(
+          archiveEndpointText(context, 'archiveMoveUnsupported'),
+        );
+      }
+      final source = CapturedArchiveCopySource.capture(ref, sourceSide, files);
+      return await showCapturedArchiveCopy(
+        context,
+        ref,
+        source: source,
+        destination: destination,
+        isReviewCurrent: isReviewCurrent,
       );
     }
     final explicitSource = sourceOrigin != null || sourceGroups != null;

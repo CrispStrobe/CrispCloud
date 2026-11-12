@@ -513,7 +513,8 @@ Future<void> _editFile(
 void showCopyDialogFromSelection(BuildContext context, WidgetRef ref) {
   final side = ref.read(activePanelProvider);
   final panel = ref.read(panelProvider(side));
-  if (panel.isInArchive) {
+  final opposite = side == PanelSide.local ? PanelSide.remote : PanelSide.local;
+  if (panel.isInArchive && !ref.read(panelProvider(opposite)).isInArchive) {
     unawaited(
       showCurrentArchiveWorkspaceDialog(
         context,
@@ -537,7 +538,8 @@ void showCopyDialogFromSelection(BuildContext context, WidgetRef ref) {
 void showMoveDialogFromSelection(BuildContext context, WidgetRef ref) {
   final side = ref.read(activePanelProvider);
   final panel = ref.read(panelProvider(side));
-  if (panel.isInArchive) {
+  final opposite = side == PanelSide.local ? PanelSide.remote : PanelSide.local;
+  if (panel.isInArchive && !ref.read(panelProvider(opposite)).isInArchive) {
     unawaited(
       showCurrentArchiveWorkspaceDialog(
         context,
@@ -652,8 +654,8 @@ void showGoToDialog(BuildContext context, WidgetRef ref) {
         autofocus: true,
         decoration: InputDecoration(
           labelText: ScreenDialogStrings(context).text('path'),
-          border: OutlineInputBorder(),
-          prefixIcon: Icon(Icons.folder_open),
+          border: const OutlineInputBorder(),
+          prefixIcon: const Icon(Icons.folder_open),
         ),
         onSubmitted: (value) {
           if (value.isNotEmpty) {
