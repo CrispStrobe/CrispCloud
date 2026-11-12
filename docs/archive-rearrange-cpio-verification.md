@@ -4,8 +4,10 @@ Date: 12 November 2026. Baseline:
 `7cb65d768f2b096230f8bd32afc6c954baae7416` (PR #92).
 Implementation checkpoint:
 [`a68ad875a4f69e38c03e263f0bb61662f0f95636`](https://github.com/CrispStrobe/CrispCloud/commit/a68ad875a4f69e38c03e263f0bb61662f0f95636).
-Review: [draft PR #93](https://github.com/CrispStrobe/CrispCloud/pull/93), stacked
-on the preceding workflow/codec branch. See the
+Review record: [PR #93](https://github.com/CrispStrobe/CrispCloud/pull/93), based
+on the preceding workflow/codec branch. GitHub records that PR as closed by
+`CrispStrobe` during implementation; its closure is preserved. All subsequent
+checkpoints remain saved on `feature/archive-rearrange-cpio-20261112`. See the
 [continuation record](archive-rearrange-cpio-continuation.md) for remote checkpoints.
 
 ## Observed gates
@@ -22,12 +24,15 @@ on the preceding workflow/codec branch. See the
 | Dart2JS and actual Node execution | **Passed** for all three new profiles, rewrite identity, high odc timestamps and binary overflow refusal |
 | Bundled guide manifest | **Three guides with 23 matching topics**; reviewed English/German/French bytes |
 | Help service/widget regression | **33 tests passed** across two files |
-| Standard versioned Flutter release web build | Pending final build at this documentation checkpoint |
+| Standard versioned Flutter release web build | **Passed** at `9d6fae0c`, with version `1.2.0+13` and the commit hash embedded |
+| Packaged help assets | **All three guide SHA-256 values match the reviewed manifest**, and the bundled manifest matches its source |
 
 The focused feature counts are subsets of the full 1,773-test gate, not numbers
 to add to it. Help tests are a separate asset/reader gate. Formatting and
-whitespace checks are clean. No application dependency or lockfile change is
-required by this increment.
+whitespace checks are clean. After validation, both `pubspec.yaml` and
+`pubspec.lock` match the baseline byte-for-byte. The final checkpoint changes
+only this verification/continuation documentation; application and bundled
+guide bytes are identical to the successful release build.
 
 ## Grouped member moves
 
@@ -131,6 +136,19 @@ including standalone reference emitters and portable test entry points, with
 their fixture provenance. The release web build uses `--release --no-pub
 --no-wasm-dry-run` and includes the current git hash and application version
 through `GIT_HASH` and `APP_VERSION` Dart defines.
+
+The successful release command was:
+
+```sh
+flutter build web --release --no-pub --no-wasm-dry-run \
+  --dart-define=GIT_HASH=9d6fae0c --dart-define=APP_VERSION=1.2.0+13
+```
+
+Both define values were found in the compiled JavaScript. Each bundled guide
+was hashed independently and compared with its reviewed manifest entry.
+GitHub's PR-triggered workflow query returned no runs for the release-build
+checkpoint. The gates above are observed local results, not a claim of completed
+GitHub Actions or full platform acceptance.
 
 ## Acceptance boundaries
 
