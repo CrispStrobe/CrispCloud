@@ -31,6 +31,22 @@ const _cpioKeys = {
   'cpio.variant',
   'cpio.storedPath',
 };
+const _cpioLegacyKeys = {
+  'cpio.ino',
+  'cpio.uid',
+  'cpio.gid',
+  'cpio.nlink',
+  'cpio.dev',
+  'cpio.rdev',
+  'cpio.variant',
+  'cpio.storedPath',
+};
+
+/// Explicit profiles for a newly created CPIO archive. Existing archives keep
+/// the inspected profile (including each newc/CRC record), independently of
+/// this creation preference. Binary means the modern regular-file layout,
+/// never the historically ambiguous PWB interpretation.
+enum ArchiveCpioFormat { newc, odc, binaryLittleEndian, binaryBigEndian }
 
 /// Inspect the original structures that the generic member model omits.
 /// Unsupported metadata returns a refusal, without changing any input bytes.
@@ -82,6 +98,7 @@ Future<void> writePackageArchive(
   List<ArchiveWriteEntry> entries, {
   required Future<void> Function(List<int>) sink,
   ArchiveRewriteInspection? source,
+  ArchiveCpioFormat cpioFormat = ArchiveCpioFormat.newc,
   int maxOutputBytes = _maxOutput,
   bool Function()? isCancelled,
 }) async {
@@ -134,7 +151,7 @@ Future<void> writePackageArchive(
         final payloads = await _validateDebian(ordered, check);
         await _writeAr(payloads, output, source, debian: true);
       case 'cpio':
-        await _writeCpio(entries, output, source);
+        await _writeCpio(entries, output, source, cpioFormat);
       case 'xar':
         await _writeXar(entries, output, source);
       default:
@@ -381,6 +398,10 @@ bool _arReserved(String name) =>
 ArchiveRewriteInspection _inspectCpio(Uint8List bytes, ViewerArchive archive) {
   if (archive.formatName != 'cpio') _refuse('The source is not CPIO.');
   final input = _Input(bytes);
+  final initialVariant = _cpioMagic(input, 0);
+  if (_isLegacyCpio(initialVariant)) {
+    return _inspectLegacyCpio(input, archive, initialVariant);
+  }
   final attributes = <String, Map<String, Object?>>{};
   var at = 0, index = 0, records = 0;
   String? variant;
@@ -480,6 +501,30 @@ ArchiveRewriteInspection _inspectCpio(Uint8List bytes, ViewerArchive archive) {
 }
 
 Future<void> _writeCpio(
+  List<ArchiveWriteEntry> entries,
+  _Output output,
+  ArchiveRewriteInspection? source,
+  ArchiveCpioFormat format,
+) async {
+  final variant =
+      source?.container['cpio.variant'] ??
+      switch (format) {
+        ArchiveCpioFormat.newc => '070701',
+        ArchiveCpioFormat.odc => '070707',
+        ArchiveCpioFormat.binaryLittleEndian => 'binary-le',
+        ArchiveCpioFormat.binaryBigEndian => 'binary-be',
+      };
+  if (variant is! String) _refuse('Invalid CPIO profile metadata.');
+  if (_isLegacyCpio(variant)) {
+    await _writeLegacyCpio(entries, output, source, variant);
+  } else if (variant == '070701' || variant == '070702') {
+    await _writeNewcCpio(entries, output, source);
+  } else {
+    _refuse('Unsupported CPIO variant.');
+  }
+}
+
+Future<void> _writeNewcCpio(
   List<ArchiveWriteEntry> entries,
   _Output output,
   ArchiveRewriteInspection? source,
@@ -628,6 +673,354 @@ Uint8List _cpioHeader(String magic, List<int> fields) => Uint8List.fromList(
     '$magic${fields.map((value) => value.toRadixString(16).padLeft(8, '0')).join()}',
   ),
 );
+
+// The legacy layouts use raw device identifiers rather than newc's separate
+// major/minor fields. Keep their preservation model separate: converting those
+// numbers would depend on the originating operating system's device encoding.
+// Layout reference: libarchive's cpio(5), New Binary / Portable ASCII sections.
+// https://github.com/libarchive/libarchive/blob/master/libarchive/cpio.5
+String _cpioMagic(_Input input, int offset) {
+  final bytes = input.slice(offset, 2);
+  if (bytes[0] == 0xc7 && bytes[1] == 0x71) return 'binary-le';
+  if (bytes[0] == 0x71 && bytes[1] == 0xc7) return 'binary-be';
+  return input.text(offset, 6);
+}
+
+bool _isLegacyCpio(String variant) =>
+    variant == '070707' || variant == 'binary-le' || variant == 'binary-be';
+
+int _legacyCpioAlign(int value, String variant) =>
+    variant == '070707' ? value : value + value % 2;
+
+const _odcWidths = [6, 6, 6, 6, 6, 6, 6, 11, 6, 11];
+
+// Canonical legacy fields: dev, ino, mode, uid, gid, nlink, rdev, mtime,
+// namesize, filesize. This is the exact odc order, excluding its magic.
+List<int> _legacyCpioFields(_Input input, int offset, String variant) {
+  if (variant == '070707') {
+    var at = offset + 6;
+    return [
+      for (final width in _odcWidths)
+        (() {
+          final value = _number(input.text(at, width), 8);
+          at += width;
+          return value;
+        })(),
+    ];
+  }
+  final data = ByteData.sublistView(input.slice(offset, 26));
+  final endian = variant == 'binary-le' ? Endian.little : Endian.big;
+  int word(int index) => data.getUint16(index * 2, endian);
+  return [
+    for (var index = 1; index <= 7; index++) word(index),
+    word(8) * 65536 + word(9),
+    word(10),
+    word(11) * 65536 + word(12),
+  ];
+}
+
+void _checkLegacyCpioFields(List<int> fields, String variant) {
+  if (fields.length != 10) _refuse('Invalid legacy CPIO header metadata.');
+  final odc = variant == '070707';
+  for (var index = 0; index < fields.length; index++) {
+    final maximum = index == 7
+        ? (odc ? 0x1ffffffff : 0xffffffff)
+        : index == 9
+        ? (odc ? 0x1ffffffff : 0x7fffffff)
+        : (odc ? 0x3ffff : 0xffff);
+    if (fields[index] < 0 || fields[index] > maximum) {
+      _refuse('CPIO metadata does not fit its $variant header fields.');
+    }
+  }
+}
+
+Uint8List _legacyCpioHeader(List<int> fields, String variant) {
+  _checkLegacyCpioFields(fields, variant);
+  if (variant == '070707') {
+    return Uint8List.fromList(
+      ascii.encode(
+        '070707${List.generate(10, (index) => fields[index].toRadixString(8).padLeft(_odcWidths[index], '0')).join()}',
+      ),
+    );
+  }
+  final result = Uint8List(26);
+  final data = ByteData.sublistView(result);
+  final endian = variant == 'binary-le' ? Endian.little : Endian.big;
+  final words = [
+    0x71c7,
+    ...fields.take(7),
+    fields[7] ~/ 65536,
+    fields[7] % 65536,
+    fields[8],
+    fields[9] ~/ 65536,
+    fields[9] % 65536,
+  ];
+  for (var index = 0; index < words.length; index++) {
+    data.setUint16(index * 2, words[index], endian);
+  }
+  return result;
+}
+
+ArchiveRewriteInspection _inspectLegacyCpio(
+  _Input input,
+  ViewerArchive archive,
+  String variant,
+) {
+  final bytes = input.bytes;
+  final attributes = <String, Map<String, Object?>>{};
+  final identities = <String>{};
+  final headerSize = variant == '070707' ? 76 : 26;
+  var at = 0, index = 0, records = 0;
+  Map<String, Object?>? root;
+  List<int>? trailerFields;
+  while (at < bytes.length) {
+    if (++records > _maxEntries) _refuse('CPIO has too many records.');
+    if (_cpioMagic(input, at) != variant) {
+      _refuse('Mixed CPIO header profiles or byte orders cannot be rewritten.');
+    }
+    final fields = _legacyCpioFields(input, at, variant);
+    _checkLegacyCpioFields(fields, variant);
+    final size = fields[9], nameSize = fields[8], mode = fields[2];
+    if (nameSize < 1 || nameSize > 4097) {
+      _refuse('CPIO name exceeds its limit.');
+    }
+    final nameBytes = input.slice(at + headerSize, nameSize);
+    if (nameBytes.last != 0 || nameBytes.take(nameSize - 1).contains(0)) {
+      _refuse('Invalid CPIO name.');
+    }
+    final stored = utf8.decode(nameBytes.sublist(0, nameSize - 1));
+    final nameEnd = at + headerSize + nameSize;
+    final data = _legacyCpioAlign(nameEnd, variant);
+    final next = _legacyCpioAlign(data + size, variant);
+    input.range(data, next - data);
+    if (input.slice(nameEnd, data - nameEnd).any((byte) => byte != 0) ||
+        input.slice(data + size, next - data - size).any((byte) => byte != 0)) {
+      _refuse('Nonzero CPIO alignment metadata cannot be preserved.');
+    }
+    at = next;
+    if (stored == 'TRAILER!!!') {
+      if (size != 0) _refuse('Invalid CPIO trailer.');
+      trailerFields = List<int>.unmodifiable(fields);
+      break;
+    }
+    final directory = mode & 0xf000 == 0x4000;
+    if (mode > 0xffff ||
+        !directory && mode & 0xf000 != 0x8000 ||
+        !directory && fields[5] != 1 ||
+        directory && (size != 0 || fields[5] == 0)) {
+      _refuse('Legacy CPIO links and special records cannot be rewritten.');
+    }
+    if (!identities.add('${fields[0]}:${fields[1]}')) {
+      _refuse('Repeated legacy CPIO device/inode identities are unsupported.');
+    }
+    final path = _cpioPath(stored, directory: directory);
+    if (path == 'TRAILER!!!') _refuse('Reserved CPIO trailer name.');
+    final attrs = <String, Object?>{
+      'package.sourcePath': path,
+      'package.order': index,
+      'cpio.dev': fields[0],
+      'cpio.ino': fields[1],
+      'cpio.uid': fields[3],
+      'cpio.gid': fields[4],
+      'cpio.nlink': fields[5],
+      'cpio.rdev': fields[6],
+      'cpio.variant': variant,
+      'cpio.storedPath': stored,
+    };
+    if (path.isEmpty) {
+      if (root != null) _refuse('Duplicate CPIO root directory.');
+      root = {...attrs, 'mode': mode, 'modified': fields[7]};
+      continue;
+    }
+    _matchMember(archive, index++, path, size, directory, mode, fields[7]);
+    if (attributes.containsKey(path)) _refuse('Duplicate CPIO member path.');
+    attributes[path] = attrs;
+  }
+  if (trailerFields == null ||
+      index != archive.members.length ||
+      bytes.length - at > 65536 ||
+      input.slice(at, bytes.length - at).any((byte) => byte != 0)) {
+    _refuse('CPIO has missing or unsupported trailing records.');
+  }
+  return ArchiveRewriteInspection(
+    container: {
+      'package.kind': 'cpio',
+      'cpio.variant': variant,
+      'cpio.trailingPadding': bytes.length - at,
+      'cpio.trailerFields': trailerFields,
+      'cpio.trailerVariant': variant,
+      if (root != null) 'cpio.root': Map<String, Object?>.unmodifiable(root),
+    },
+    attributes: attributes,
+  );
+}
+
+Future<void> _writeLegacyCpio(
+  List<ArchiveWriteEntry> entries,
+  _Output output,
+  ArchiveRewriteInspection? source,
+  String variant,
+) async {
+  final all = List<ArchiveWriteEntry>.of(entries);
+  final root = source?.container['cpio.root'];
+  if (root != null) {
+    if (root is! Map<String, Object?> ||
+        root['mode'] is! int ||
+        root['modified'] is! int ||
+        root['package.order'] is! int ||
+        (root['package.order'] as int) < 0 ||
+        (root['package.order'] as int) > _maxEntries ||
+        (root['modified'] as int) < 0 ||
+        (root['modified'] as int) > 0x1ffffffff ||
+        root.keys.any(
+          (key) => !{
+            ..._identityKeys,
+            ..._cpioLegacyKeys,
+            'mode',
+            'modified',
+          }.contains(key),
+        )) {
+      _refuse('Invalid legacy CPIO root metadata.');
+    }
+    all.insert(
+      (root['package.order'] as int).clamp(0, all.length),
+      ArchiveWriteEntry(
+        path: '.',
+        isDirectory: true,
+        size: 0,
+        mode: root['mode'] as int,
+        modified: DateTime.fromMillisecondsSinceEpoch(
+          (root['modified'] as int) * 1000,
+          isUtc: true,
+        ),
+        attributes: {
+          for (final key in {..._identityKeys, ..._cpioLegacyKeys})
+            if (root.containsKey(key)) key: root[key],
+        },
+      ),
+    );
+  }
+  if (all.length + 1 > _maxEntries) _refuse('CPIO has too many records.');
+  final maximum = variant == '070707' ? 0x3ffff : 0xffff;
+  final usedIdentities = <String>{};
+  for (final entry in all) {
+    _attributes(entry, _cpioLegacyKeys);
+    if (entry.path == 'TRAILER!!!') _refuse('Reserved CPIO trailer name.');
+    final dev = _attributeInt(entry, 'cpio.dev', 0, maximum);
+    if (entry.attributes.containsKey('cpio.ino')) {
+      final inode = _attributeInt(entry, 'cpio.ino', 0, maximum);
+      if (!usedIdentities.add('$dev:$inode')) {
+        _refuse(
+          'Repeated legacy CPIO device/inode identities are unsupported.',
+        );
+      }
+    }
+  }
+  // Fill unused inode values instead of assigning max(existing)+1: a valid
+  // binary source can already contain inode 65535 and still have free slots.
+  final nextInode = <int, int>{};
+  int allocateInode(int dev) {
+    var inode = nextInode[dev] ?? 1;
+    while (inode <= maximum && usedIdentities.contains('$dev:$inode')) {
+      inode++;
+    }
+    if (inode > maximum) _refuse('No unused CPIO inode fits this profile.');
+    usedIdentities.add('$dev:$inode');
+    nextInode[dev] = inode + 1;
+    return inode;
+  }
+
+  var planned = 0;
+  final records =
+      <({ArchiveWriteEntry entry, Uint8List header, List<int> name})>[];
+  final headerSize = variant == '070707' ? 76 : 26;
+  for (final entry in all) {
+    output.check();
+    final entryVariant = entry.attributes['cpio.variant'] ?? variant;
+    if (entryVariant != variant) {
+      _refuse('The CPIO entry profile differs from its container.');
+    }
+    final sourcePath = entry.attributes['package.sourcePath'];
+    final stored = entry.attributes['cpio.storedPath'];
+    if (stored != null && stored is! String) {
+      _refuse('Invalid CPIO stored pathname metadata.');
+    }
+    final name =
+        (sourcePath == entry.path || entry.path == '.') && stored is String
+        ? stored
+        : entry.path;
+    final normalized = _cpioPath(name, directory: entry.isDirectory);
+    if (normalized != (entry.path == '.' ? '' : entry.path)) {
+      _refuse('The CPIO stored pathname does not match its member.');
+    }
+    final nameBytes = [...utf8.encode(name), 0];
+    if (nameBytes.length > 4097) _refuse('CPIO name exceeds its limit.');
+    final dev = _attributeInt(entry, 'cpio.dev', 0, maximum);
+    final inode = entry.attributes.containsKey('cpio.ino')
+        ? _attributeInt(entry, 'cpio.ino', 0, maximum)
+        : allocateInode(dev);
+    final links = _attributeInt(
+      entry,
+      'cpio.nlink',
+      entry.isDirectory ? 2 : 1,
+      maximum,
+    );
+    if (links == 0 || !entry.isDirectory && links != 1) {
+      _refuse('Legacy CPIO hard-link metadata is not writable.');
+    }
+    final fields = [
+      dev,
+      inode,
+      _typedMode(entry),
+      _attributeInt(entry, 'cpio.uid', 0, maximum),
+      _attributeInt(entry, 'cpio.gid', 0, maximum),
+      links,
+      _attributeInt(entry, 'cpio.rdev', 0, maximum),
+      _seconds(entry.modified),
+      nameBytes.length,
+      entry.size,
+    ];
+    final header = _legacyCpioHeader(fields, variant);
+    planned +=
+        _legacyCpioAlign(headerSize + nameBytes.length, variant) +
+        _legacyCpioAlign(entry.size, variant);
+    records.add((entry: entry, header: header, name: nameBytes));
+  }
+  final padding = source?.container['cpio.trailingPadding'] ?? 0;
+  final trailer =
+      source?.container['cpio.trailerFields'] ??
+      [0, 0, 0, 0, 0, 1, 0, 0, 11, 0];
+  final trailerVariant = source?.container['cpio.trailerVariant'] ?? variant;
+  if (padding is! int ||
+      padding < 0 ||
+      padding > 65536 ||
+      trailer is! List<int> ||
+      trailer.length != 10 ||
+      trailer[8] != 11 ||
+      trailer[9] != 0 ||
+      trailerVariant != variant) {
+    _refuse('Invalid legacy CPIO trailer metadata.');
+  }
+  final trailerHeader = _legacyCpioHeader(trailer, variant);
+  planned += _legacyCpioAlign(headerSize + 11, variant) + padding;
+  output.requireSpace(planned);
+  Future<void> align() => output.add(
+    Uint8List(_legacyCpioAlign(output.length, variant) - output.length),
+  );
+  for (final record in records) {
+    await output.add(record.header);
+    await output.add(record.name);
+    await align();
+    await for (final chunk in record.entry.openRead()) {
+      await output.add(chunk);
+    }
+    await align();
+  }
+  await output.add(trailerHeader);
+  await output.add([...ascii.encode('TRAILER!!!'), 0]);
+  await align();
+  await output.add(Uint8List(padding));
+}
 
 String _cpioPath(String stored, {required bool directory}) {
   var path = stored;
