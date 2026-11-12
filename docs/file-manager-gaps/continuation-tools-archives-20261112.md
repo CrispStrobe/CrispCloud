@@ -45,3 +45,18 @@ Implementation and observed gates are appended as each increment is completed.
 G10, G11 and G18 remain **implementing** until their code, tests, documentation
 and remote checkpoints are recorded. The baseline still has seven closed
 scopes and five implemented scopes with named acceptance pending.
+
+### Private staging foundation
+
+The shared [private staging contract](../private-tool-staging.md) is implemented
+with retained application-data directories, bounded verified streams,
+checksummed manifests and native session leases. A separate directory mutation
+lease excludes reopening during cleanup, including the Windows interval in
+which the child handle must close before its directory can be deleted. Closed
+retained handles cannot falsely report a later deletion as successful.
+
+Observed gate: **10 native filesystem tests passed**, including the explicit
+cleanup/reopen race and close-then-delete regression. Narrow pinned Dart
+analysis reported **no issues**. No dependency was added. This checkpoint is a
+foundation only; it does not mark G10 or G11 complete or imply target-platform
+application-launch acceptance.
