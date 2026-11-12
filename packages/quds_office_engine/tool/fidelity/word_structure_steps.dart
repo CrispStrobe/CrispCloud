@@ -1,6 +1,7 @@
 import 'package:quds_office_engine/quds_office_engine.dart';
 
 import 'step_input.dart';
+import 'table_selector.dart';
 
 /// Structural commands use body indexes exposed by `inspect`. They validate
 /// before mutating and reject unsupported merged-grid surgery explicitly.
@@ -19,9 +20,9 @@ const wordStructureOperations = <String, List<String>>{
   'tableColumnInsert': ['table', 'column'],
   'tableColumnDelete': ['table', 'column'],
   'tableMerge': ['table', 'row', 'column', 'endRow', 'endColumn'],
-  'tableUnmerge': ['table', 'row', 'column'],
+  'tableUnmerge': ['table', 'row', 'column', 'gridColumn'],
   'tableRowFormat': ['table', 'row', 'height', 'cantSplit'],
-  'tableCellFormat': ['table', 'row', 'column', 'fill', 'width'],
+  'tableCellFormat': ['table', 'row', 'column', 'gridColumn', 'fill', 'width'],
   'tocAdd': [
     'section',
     'index',
@@ -219,12 +220,11 @@ void applyWordStructureStep(WmlDocument doc, Map<String, Object?> values) {
       WordTable.merge(t, row, col, endRow, endCol);
     case 'tableUnmerge':
       final t = table();
-      final row = s.integer('row', max: t.rows.length - 1);
-      final col = s.integer('column', max: t.rows[row].cells.length - 1);
-      if (!WordTable.canUnmerge(t, row, col)) {
+      final selected = selectTableCell(t, s);
+      if (!WordTable.canUnmerge(t, selected.row, selected.column)) {
         throw ArgumentError('Cell is not merged');
       }
-      WordTable.unmerge(t, row, col);
+      WordTable.unmerge(t, selected.row, selected.column);
     case 'tableRowFormat':
       final row = s.item('row', table().rows);
       final height = s.has('height')
@@ -235,7 +235,7 @@ void applyWordStructureStep(WmlDocument doc, Map<String, Object?> values) {
         ..height = height
         ..cantSplit = cantSplit;
     case 'tableCellFormat':
-      final cell = s.item('column', s.item('row', table().rows).cells);
+      final cell = selectTableCell(table(), s).cell;
       final fill = s.has('fill')
           ? (values['fill'] == null ? null : s.color('fill'))
           : cell.fillColor;

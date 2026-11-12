@@ -2,6 +2,7 @@ import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:quds_office_engine/src/word/serial/word_property_io.dart';
 
 import 'step_input.dart';
+import 'table_selector.dart';
 import 'word_structure_steps.dart';
 
 const _storyFields = <String>['story', 'section', 'note', 'comment'];
@@ -62,7 +63,7 @@ const wordOperations = <String, List<String>>{
   'listClear': ['paragraph'],
   'listRestart': ['paragraph', 'at'],
   'hyperlink': ['paragraph', 'run', 'target', ..._storyFields],
-  'tableCellText': ['table', 'row', 'column', 'text'],
+  'tableCellText': ['table', 'row', 'column', 'gridColumn', 'text'],
   'headerFooterText': ['section', 'story', 'paragraph', 'text'],
   'sectionFormat': [
     'section',
@@ -436,9 +437,27 @@ void applyStep(
       final run = s.item('run', paragraph().inlines.whereType<WmlRun>());
       run.hyperlink = WmlHyperlink.fromTarget(s.string('target'));
     case 'tableCellText':
-      final row = s.item('row', table().rows);
-      final cell = s.item('column', row.cells);
+      final cell = selectTableCell(table(), s).cell;
       final text = s.string('text');
+      final removed = WordTree.paragraphs(cell.blocks).toSet();
+      if (WordBookmarks.ranges(doc).any(
+        (range) =>
+            removed.contains(range.startParagraph) !=
+            removed.contains(range.endParagraph),
+      )) {
+        throw ArgumentError(
+          'Cell replacement would orphan a bookmark endpoint',
+        );
+      }
+      if (doc.revisions.any(
+        (revision) =>
+            revision.accepted == null &&
+            removed.contains(WordRevisions.resolveParagraph(doc, revision)),
+      )) {
+        throw ArgumentError(
+          'Resolve tracked changes before replacing this cell',
+        );
+      }
       cell.blocks
         ..clear()
         ..add(WmlParagraph(inlines: <WmlInline>[WmlRun(text: text)]));

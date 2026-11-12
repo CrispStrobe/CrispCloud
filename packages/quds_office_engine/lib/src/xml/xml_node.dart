@@ -438,10 +438,25 @@ class XmlDocument {
           stack.removeLast();
           if (stack.isEmpty) {
             for (final ns in namespaces.entries) {
-              if (ns.key.isEmpty) {
-                root!.setAttribute('xmlns', ns.value);
+              final qualifiedName = ns.key.isEmpty
+                  ? 'xmlns'
+                  : 'xmlns:${ns.key}';
+              final existing = root!.attributes.where(
+                (attribute) => attribute.qualifiedName == qualifiedName,
+              );
+              if (existing.isNotEmpty) {
+                existing.first.value = ns.value;
               } else {
-                root!.setAttribute(ns.key, ns.value, prefix: 'xmlns');
+                // A declaration's local name can equal a real attribute's
+                // local name, e.g. xmlns:w and w:w on a preferred cell width.
+                // Match its qualified name rather than overwriting w:w.
+                root.attributes.add(
+                  XmlAttribute(
+                    localName: ns.key.isEmpty ? 'xmlns' : ns.key,
+                    prefix: ns.key.isEmpty ? '' : 'xmlns',
+                    value: ns.value,
+                  ),
+                );
               }
             }
             return root!;

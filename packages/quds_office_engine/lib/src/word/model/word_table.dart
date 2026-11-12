@@ -276,6 +276,14 @@ abstract final class WordTable {
       if (first == null) {
         continue;
       }
+      if (span != spanOf(first)) {
+        first
+          ..width = g1 < table.grid.length
+              ? table.grid.sublist(g0, g1 + 1).fold<double>(0, (a, b) => a + b)
+              : null
+          ..sourceWidthXml = null
+          ..sourceWidthPoints = null;
+      }
       first.gridSpan = span;
       if (r1 > r0) {
         first.vMerge = r == r0 ? WmlVMerge.restart : WmlVMerge.cont;
@@ -353,12 +361,28 @@ abstract final class WordTable {
         continue;
       }
       final WmlTableCell cell = table.rows[r].cells[i];
+      final originalWidth = cell.width;
       cell
         ..vMerge = WmlVMerge.none
         ..gridSpan = 1;
+      if (span > 1) {
+        cell
+          ..width = g0 < table.grid.length
+              ? table.grid[g0]
+              : originalWidth == null
+              ? null
+              : originalWidth / span
+          ..sourceWidthXml = null
+          ..sourceWidthPoints = null;
+      }
       for (int k = 1; k < span; k++) {
         table.rows[r].cells.insert(i + k, emptyCellLike(cell));
         table.rows[r].cells[i + k]
+          ..width = g0 + k < table.grid.length
+              ? table.grid[g0 + k]
+              : originalWidth == null
+              ? null
+              : originalWidth / span
           ..gridSpan = 1
           ..vMerge = WmlVMerge.none;
       }

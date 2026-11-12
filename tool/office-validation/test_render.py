@@ -219,6 +219,34 @@ class CycleComparisonTests(unittest.TestCase):
                 self.assertIn('Render changed (pixel_sha256)', changed['failures'][0]['error'])
 
 
+class TableGridBaselineTests(unittest.TestCase):
+    def test_each_phase_and_route_requires_authored_native_baseline(self):
+        for prefix in ('fidelity-table-grid', 'engine/fidelity-table-grid'):
+            for route in ('direct', 'isolate'):
+                for phase in ('unchanged', 'format', 'replace', 'unmerge'):
+                    with self.subTest(prefix=prefix, route=route, phase=phase):
+                        cycles = [f'{prefix}/{route}/{phase}-{n}.docx' for n in (1, 2, 3)]
+                        source = f'{prefix}/' + ('source.docx' if phase == 'unchanged' else f'expected-{phase}.docx')
+                        files = cycles + [source]
+                        records = {name: record(name) for name in files}
+                        passed = render.cycle_coverage(files, records)
+                        self.assertEqual(passed['failures'], [])
+                        self.assertEqual(passed['baseline_comparisons'], 1)
+                        self.assertEqual(passed['cycle_comparisons'][0]['baseline'], source)
+                        missing = render.cycle_coverage(cycles, records)
+                        self.assertIn('Missing required native baseline', missing['failures'][0]['error'])
+                        records[source] = record(source, pixels=['2' * 64])
+                        changed = render.cycle_coverage(files, records)
+                        self.assertIn('Render changed (pixel_sha256)', changed['failures'][0]['error'])
+
+    def test_corpus_root_preserves_mapping_and_other_names_are_not_guessed(self):
+        self.assertEqual(render.table_grid_baseline(Path('direct/format.docx'), '/tmp/fidelity-table-grid'),
+                         'expected-format.docx')
+        for case in ('fidelity-table-grid/preview/format.docx', 'other/direct/format.docx',
+                     'fidelity-table-grid/direct/format.xlsx', 'fidelity-table-grid/direct/other.docx'):
+            self.assertIsNone(render.table_grid_baseline(Path(case)))
+
+
 class SectionPageOrderTests(unittest.TestCase):
     # Authored expectations, not values imported from the renderer's mapping.
     cases = [('unchanged', 'ABCDEF', [1, 2, 3, 4, 5, 6]),

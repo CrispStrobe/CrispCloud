@@ -233,6 +233,18 @@ def section_page_order(case, root=None):
     return None
 
 
+def table_grid_baseline(case, root=None):
+    """Select authored native expectations for the exact merged-table corpus."""
+    context = Path(root) / case if root is not None else case
+    if (context.parent.parent.name == 'fidelity-table-grid'
+            and context.parent.name in ('direct', 'isolate')
+            and case.suffix == '.docx'
+            and case.stem in ('unchanged', 'format', 'replace', 'unmerge')):
+        name = 'source.docx' if case.stem == 'unchanged' else f'expected-{case.stem}.docx'
+        return (case.parent.parent / name).as_posix()
+    return None
+
+
 def cycle_coverage(files, records, *, root=None):
     """Check exact corpus series membership, including failed/missing renders."""
     groups = defaultdict(list)
@@ -273,11 +285,14 @@ def cycle_coverage(files, records, *, root=None):
             candidates = []
             required_baseline = REQUIRED_SERIES_BASELINES.get(
                 (case.parent.name, case.name))
+            required_grid_baseline = table_grid_baseline(case, root)
             page_order = section_page_order(case, root)
             if page_order is not None:
                 required_baseline = 'source.pptx'
                 info['baseline_page_order'] = list(page_order)
-            if required_baseline is not None:
+            if required_grid_baseline is not None:
+                candidates = [required_grid_baseline]
+            elif required_baseline is not None:
                 candidates = [case.with_name(required_baseline).as_posix()]
             elif case.stem == 'roundtrip':
                 candidates = [case.with_name('edited' + case.suffix).as_posix()]
@@ -291,7 +306,7 @@ def cycle_coverage(files, records, *, root=None):
             baseline = next((name for name in candidates if name in files),
                             candidates[0] if candidates else None)
             info['baseline_candidate'] = baseline
-            if required_baseline is not None and baseline not in files:
+            if (required_baseline is not None or required_grid_baseline is not None) and baseline not in files:
                 raise FidelityError(f'Missing required native baseline: {baseline}')
             if baseline in files:
                 if baseline not in records:

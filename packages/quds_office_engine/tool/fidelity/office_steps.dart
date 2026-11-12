@@ -7,6 +7,7 @@ import 'package:quds_office_engine/quds_office_engine.dart';
 import 'sheet_steps.dart';
 import 'slide_steps.dart';
 import 'step_input.dart';
+import 'table_selector.dart';
 import 'word_steps.dart';
 import 'word_structure_steps.dart';
 export 'word_steps.dart' show applyStep;
@@ -188,18 +189,22 @@ Map<String, Object?> inspectWord(WmlDocument doc) {
     ],
     'images': <Object?>[for (final v in doc.visuals) image(v)],
     'tables': [
-      for (final t in bodyBlocks(doc).whereType<WmlTable>())
+      for (final (t, coordinates) in bodyBlocks(doc).whereType<WmlTable>().map(
+        (table) => (table, tableGridCoordinates(table)),
+      ))
         {
           'grid': t.grid,
           'style': t.properties.styleId,
           'rows': [
-            for (final row in t.rows)
+            for (final (rowIndex, row) in t.rows.indexed)
               {
+                'row': rowIndex,
                 'height': row.height,
                 'cantSplit': row.cantSplit,
                 'cells': [
-                  for (final cell in row.cells)
+                  for (final (column, cell) in row.cells.indexed)
                     {
+                      ...coordinates[rowIndex][column],
                       'width': cell.width,
                       'span': cell.gridSpan,
                       'merge': cell.vMerge.name,

@@ -1,0 +1,54 @@
+{
+  "source": {
+    "outer_text": [["Merged origin|Rich second paragraph", "Top right"], ["", "Middle right"], ["After nested table", "Bottom middle", "Bottom right"]],
+    "outer_spans": [[2,1],[2,1],[1,1,1]],
+    "outer_merges": [["restart",null],["continue",null],[null,null,null]],
+    "outer_widths": [[["dxa","3600"],["pct","1667"]],[["dxa","3600"],["dxa","1800"]],[["dxa","1800"],["auto","0"],["nil","0"]]],
+    "outer_fills": [[null,null],[null,null],[null,null,null]],
+    "nested_text": [["Nested merged","Nested tail"]],
+    "nested_spans": [[2,1]],
+    "nested_widths": [[["dxa","1200"],["dxa","600"]]],
+    "nested_fills": [[null,null]],
+    "bookmark": true,
+    "rich_origin": true
+  },
+  "format": {
+    "outer_text": [["Merged origin|Rich second paragraph", "Top right"], ["", "Edited middle right"], ["After nested table", "Bottom middle", "Bottom right"]],
+    "outer_spans": [[2,1],[2,1],[1,1,1]],
+    "outer_merges": [["restart",null],["continue",null],[null,null,null]],
+    "outer_widths": [[["dxa","3600"],["pct","1667"]],[["dxa","3600"],["dxa","1465"]],[["dxa","1800"],["auto","0"],["nil","0"]]],
+    "outer_fills": [["DDEEFF",null],[null,null],[null,null,null]],
+    "nested_text": [["Nested merged","Edited nested tail"]],
+    "nested_spans": [[2,1]],
+    "nested_widths": [[["dxa","1200"],["dxa","600"]]],
+    "nested_fills": [["EEDDCC",null]],
+    "bookmark": true,
+    "rich_origin": true
+  },
+  "replace": {
+    "outer_text": [["Replaced merged owner", "Top right"], ["", "Edited middle right"], ["After nested table", "Bottom middle", "Bottom right"]],
+    "outer_spans": [[2,1],[2,1],[1,1,1]],
+    "outer_merges": [["restart",null],["continue",null],[null,null,null]],
+    "outer_widths": [[["dxa","3600"],["pct","1667"]],[["dxa","3600"],["dxa","1465"]],[["dxa","1800"],["auto","0"],["nil","0"]]],
+    "outer_fills": [["DDEEFF",null],[null,null],[null,null,null]],
+    "nested_text": [["Nested merged","Edited nested tail"]],
+    "nested_spans": [[2,1]],
+    "nested_widths": [[["dxa","1200"],["dxa","600"]]],
+    "nested_fills": [["EEDDCC",null]],
+    "bookmark": false,
+    "rich_origin": false
+  },
+  "unmerge": {
+    "outer_text": [["Merged origin|Rich second paragraph", "|", "Top right"], ["", "", "Edited middle right"], ["After nested table", "Bottom middle", "Bottom right"]],
+    "outer_spans": [[1,1,1],[1,1,1],[1,1,1]],
+    "outer_merges": [[null,null,null],[null,null,null],[null,null,null]],
+    "outer_widths": [[["dxa","1800"],["dxa","1800"],["pct","1667"]],[["dxa","1800"],["dxa","1800"],["dxa","1465"]],[["dxa","1800"],["auto","0"],["nil","0"]]],
+    "outer_fills": [["DDEEFF","DDEEFF",null],[null,null,null],[null,null,null]],
+    "nested_text": [["Nested merged","","Edited nested tail"]],
+    "nested_spans": [[1,1,1]],
+    "nested_widths": [[["dxa","600"],["dxa","600"],["dxa","600"]]],
+    "nested_fills": [["EEDDCC","EEDDCC",null]],
+    "bookmark": true,
+    "rich_origin": true
+  }
+}
