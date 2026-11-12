@@ -72,6 +72,8 @@ import 'preview_media.dart';
 import 'xml_tree_view.dart';
 import '../l10n/internal_viewer_strings.dart';
 import '../l10n/office_preview_strings.dart';
+import '../l10n/legacy_word_conversion_strings.dart';
+import 'legacy_word_conversion_action.dart';
 import '../l10n/file_bytes_error_strings.dart';
 import '../l10n/archive_viewer_error_strings.dart';
 import '../l10n/native_preview_error_strings.dart';
@@ -2054,6 +2056,22 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                               _tailEnabled
                                   ? Icons.pause_circle_outline
                                   : Icons.vertical_align_bottom,
+                            ),
+                          ),
+                        if (isLegacyWordFileName(_viewName) &&
+                            widget.bytesOverride == null &&
+                            _origin?.isCurrent == true)
+                          IconButton(
+                            tooltip: LegacyWordConversionStrings(
+                              Localizations.localeOf(context),
+                            ).title,
+                            icon: const Icon(Icons.transform),
+                            onPressed: () => showLegacyWordConversionForFile(
+                              context,
+                              ref,
+                              widget.file,
+                              widget.side,
+                              origin: _origin,
                             ),
                           ),
                         if (_canEdit)

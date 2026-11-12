@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
@@ -37,6 +38,49 @@ class _OversizedPreviewClient extends WorkflowFakeClient {
 }
 
 void main() {
+  test('Word side previews follow the package main-part relationship', () async {
+    final archive = Archive()
+      ..addFile(ArchiveFile.bytes('_rels/.rels', utf8.encode('''
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="main"
+    Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument"
+    Target="/office/text/main.xml"/>
+</Relationships>
+''')))
+      ..addFile(ArchiveFile.bytes('office/text/main.xml', utf8.encode('''
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:body><w:p><w:r><w:t>Relocated Word body</w:t></w:r></w:p></w:body>
+</w:document>
+''')))
+      ..addFile(ArchiveFile.bytes('word/document.xml', utf8.encode('''
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:body><w:p><w:r><w:t>Unused fallback body</w:t></w:r></w:p></w:body>
+</w:document>
+''')));
+    final zip = Uint8List.fromList(ZipEncoder().encode(archive));
+
+    for (final extension in ['docx', 'docm', 'dotx', 'dotm']) {
+      final text = await extractOfficeText(zip, 'document.$extension');
+      expect(text.trim(), 'Relocated Word body', reason: extension);
+    }
+  });
+
+  test('Word side previews retain the conventional-part fallback', () async {
+    final archive = Archive()
+      ..addFile(ArchiveFile.bytes('word/document.xml', utf8.encode('''
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:body><w:p><w:r><w:t>Conventional Word body</w:t></w:r></w:p></w:body>
+</w:document>
+''')));
+    final zip = Uint8List.fromList(ZipEncoder().encode(archive));
+
+    expect(
+      (await extractOfficeText(zip, 'document.docx')).trim(),
+      'Conventional Word body',
+    );
+  });
+
+
   testWidgets('web audio control is localized in German', (tester) async {
     await tester.pumpWidget(
       MaterialApp(

@@ -10,7 +10,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show FontLoader;
 import 'package:quds_office_engine/quds_office_engine.dart'
-    show extractLegacyWordText;
+    show OfficePackageParts, extractLegacyWordText;
 import 'package:universal_html/html.dart' as html;
 import 'package:video_player/video_player.dart';
 
@@ -114,9 +114,26 @@ Future<String> extractOfficeText(Uint8List bytes, String filename,
           : text;
     }
     archive = await openViewerArchive(bytes, name: filename);
+    final openedArchive = archive;
     final files = archive.members.where((m) => m.isFile).toList();
+    Future<String?> readPart(String name) async {
+      final member = files.where((file) => file.name == name).firstOrNull;
+      if (member == null || member.size > _kOfficeXmlCap) return null;
+      try {
+        final data = await openedArchive.readMember(
+          member,
+          maxBytes: _kOfficeXmlCap,
+        );
+        return utf8.decode(data, allowMalformed: true);
+      } on ArchiveViewException {
+        return null;
+      }
+    }
+
     final xmlPaths = switch (ext) {
-      'docx' || 'docm' || 'dotx' || 'dotm' => <String>['word/document.xml'],
+      'docx' || 'docm' || 'dotx' || 'dotm' => <String>[
+          await OfficePackageParts(readPart).mainPart('word/document.xml'),
+        ],
       'xlsx' || 'xlsm' || 'xltx' => files
           .map((f) => f.name)
           .where((n) => n.startsWith('xl/worksheets/') && n.endsWith('.xml'))
@@ -135,28 +152,17 @@ Future<String> extractOfficeText(Uint8List bytes, String filename,
     };
 
     for (final xmlPath in xmlPaths) {
-      final matches = files.where((f) => f.name == xmlPath).toList();
-      if (matches.isEmpty) continue;
-      final member = matches.first;
-      if (member.size > _kOfficeXmlCap) continue;
-      try {
-        final data = await archive.readMember(
-          member,
-          maxBytes: _kOfficeXmlCap,
-        );
-        final xmlContent = utf8.decode(data, allowMalformed: true);
-        // Strip XML tags and extract text content.
-        final text = xmlContent
-            .replaceAll(RegExp(r'<[^>]+>'), ' ')
-            .replaceAll(RegExp(r'\s+'), ' ')
-            .trim();
-        if (text.isNotEmpty) {
-          if (buffer.isNotEmpty) buffer.writeln('\n---\n');
-          buffer.writeln(text);
-          if (buffer.length > 4 * 1024 * 1024) break;
-        }
-      } on ArchiveViewException {
-        continue;
+      final xmlContent = await readPart(xmlPath);
+      if (xmlContent == null) continue;
+      // Strip XML tags and extract text content.
+      final text = xmlContent
+          .replaceAll(RegExp(r'<[^>]+>'), ' ')
+          .replaceAll(RegExp(r'\s+'), ' ')
+          .trim();
+      if (text.isNotEmpty) {
+        if (buffer.isNotEmpty) buffer.writeln('\n---\n');
+        buffer.writeln(text);
+        if (buffer.length > 4 * 1024 * 1024) break;
       }
     }
   } on FormatException {

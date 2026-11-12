@@ -158,6 +158,9 @@ bool isTextEditableName(String name) {
   return !name.contains('.') || textEditableExtensions.contains(ext);
 }
 
+bool isLegacyWordFileName(String name) =>
+    const {'doc', 'dot'}.contains(_extensionOf(name));
+
 /// True when F4 can open [name] in an editor with save support.
 bool isEditableInBuiltInEditor(String name) {
   final lower = name.toLowerCase();
