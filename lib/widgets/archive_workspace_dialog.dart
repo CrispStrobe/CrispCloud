@@ -6,12 +6,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 
 import '../l10n/commander_strings.dart';
+import '../l10n/archive_endpoint_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
-import '../services/archive_viewer_service.dart';
 import '../services/archive_browser_session.dart';
 import '../services/archive_workspace.dart';
+import '../services/archive_endpoint.dart';
+import '../services/archive_publication_journal.dart';
 import '../services/editor_document.dart';
 import '../services/file_operation_backend.dart';
 import '../services/file_operation_service.dart';
@@ -19,6 +21,7 @@ import '../utils/file_editability.dart';
 import '../utils/formatters.dart';
 import 'file_operation_dialog.dart';
 import 'internal_viewer_dialog.dart';
+import 'archive_endpoint_dialog.dart';
 
 enum ArchiveWorkspaceAction { browse, copyOut, moveOut, edit }
 
@@ -138,6 +141,7 @@ class _ArchiveWorkspaceDialogState
   String _path = '/';
   bool _busy = false;
   bool _cancelled = false;
+  FileOperationControl? _importControl;
   bool _replaceOnAdd = false;
   String? _error;
   String Function(BuildContext)? _message;
@@ -182,6 +186,7 @@ class _ArchiveWorkspaceDialogState
   @override
   void dispose() {
     _cancelled = true;
+    _importControl?.cancel();
     unawaited(_workspace?.close());
     super.dispose();
   }
@@ -204,7 +209,10 @@ class _ArchiveWorkspaceDialogState
       _busy = true;
       _error = null;
     });
-    String? password;
+    final passwords = List<String?>.filled(
+      (widget.location?.nestedMembers.length ?? 0) + 1,
+      null,
+    );
     try {
       final source = fileOperationBackend(
         source: widget.origin.source,
@@ -214,13 +222,32 @@ class _ArchiveWorkspaceDialogState
             widget.origin.isCurrent &&
             (widget.location?.isCurrent() ?? true),
       );
+      final journal = ArchivePublicationJournal();
+      await journal.initialize();
+      if (journal.records.any(
+        (record) =>
+            !record.isFinished &&
+            record.storage == source.storageReference &&
+            record.original.path == widget.file.path,
+      )) {
+        if (!mounted) return;
+        await showArchivePublicationRecoveryDialog(
+          context,
+          backend: source,
+          journal: journal,
+          containerPath: widget.file.path,
+        );
+        if (!mounted) return;
+        throw StateError(archiveEndpointText(context, 'reopen'));
+      }
       while (mounted) {
         try {
           final workspace = await ArchiveWorkspace.openNested(
             source,
             widget.file,
             widget.location?.nestedMembers ?? const [],
-            password: password,
+            passwords: passwords,
+            journal: journal,
             expectedOuterFingerprint: widget.location?.fingerprint,
           );
           if (!mounted) {
@@ -242,9 +269,9 @@ class _ArchiveWorkspaceDialogState
               );
           });
           return;
-        } on ArchivePasswordRequiredException catch (error) {
+        } on ArchiveNestedPasswordRequiredException catch (error) {
           if (!mounted) return;
-          password = await _prompt(
+          final password = await _prompt(
             error.wrongPassword
                 ? 'Incorrect password. Try again'
                 : 'Archive password',
@@ -252,6 +279,7 @@ class _ArchiveWorkspaceDialogState
             password: true,
           );
           if (password == null) return;
+          passwords[error.level] = password;
         }
       }
     } catch (error) {
@@ -393,6 +421,11 @@ class _ArchiveWorkspaceDialogState
           ? PanelSide.remote
           : PanelSide.local;
       final other = ref.read(panelProvider(otherSide));
+      if (other.isInArchive) {
+        throw UnsupportedError(
+          archiveEndpointText(context, 'sourceArchiveUnsupported'),
+        );
+      }
       final files = other.selection.isNotEmpty
           ? other.selection.toList()
           : [
@@ -405,17 +438,29 @@ class _ArchiveWorkspaceDialogState
         );
       }
       final origin = other.captureOperationOrigin(files);
-      await _workspace!.addFiles(
-        fileOperationBackend(
-          source: origin.source,
-          local: ref.read(localFileServiceProvider),
-          isCurrent: () => mounted && origin.isCurrent,
-        ),
-        files,
-        directory: _path,
-        replaceExisting: _replaceOnAdd,
-        isCancelled: () => _cancelled || !mounted,
-      );
+      final endpoint = ArchiveEndpoint.fromWorkspace(_workspace!);
+      final control = FileOperationControl();
+      _importControl = control;
+      try {
+        final plan = await endpoint.prepareImport(
+          source: fileOperationBackend(
+            source: origin.source,
+            local: ref.read(localFileServiceProvider),
+            isCurrent: () => mounted && origin.isCurrent,
+          ),
+          files: files,
+          directory: _path,
+          conflict: _replaceOnAdd
+              ? FileConflictPolicy.replace
+              : FileConflictPolicy.keepBoth,
+          control: control,
+        );
+        if (_cancelled || !mounted) control.cancel();
+        await endpoint.stageImport(plan, control: control);
+      } finally {
+        _importControl = null;
+        await endpoint.close();
+      }
       if (mounted) {
         setState(
           () => _message = (context) => context.commanderTr(
@@ -496,8 +541,11 @@ class _ArchiveWorkspaceDialogState
   }
 
   Future<void> _save() async => _run(() async {
-    await _workspace!.save(isCancelled: () => _cancelled || !mounted);
-    if (mounted) {
+    final receipt = await showArchiveWorkspacePublicationDialog(
+      context,
+      _workspace!,
+    );
+    if (mounted && receipt != null) {
       setState(
         () =>
             _message = (context) =>
@@ -506,9 +554,39 @@ class _ArchiveWorkspaceDialogState
     }
   });
 
+  Future<void> _createDirectory() async {
+    final name = await _prompt('New folder', '');
+    if (name == null || !mounted) return;
+    await _run(() async {
+      if (name.trim().isEmpty || name.contains('/') || name.contains('\\')) {
+        throw StateError('Enter a single folder name.');
+      }
+      _workspace!.createDirectory(p.posix.join(_path, name));
+    });
+  }
+
   Future<void> _close() async {
     if (_busy) return;
-    if (_workspace?.dirty == true) {
+    if (_workspace?.pendingPublication != null) {
+      final close = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(archiveEndpointText(context, 'recoveryTitle')),
+          content: Text(archiveEndpointText(context, 'recoveryClose')),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(context.commanderTr('Keep editing')),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(context.commanderTr('Close')),
+            ),
+          ],
+        ),
+      );
+      if (close != true || !mounted) return;
+    } else if (_workspace?.dirty == true) {
       final discard = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
@@ -654,6 +732,18 @@ class _ArchiveWorkspaceDialogState
                                     context.commanderTr("Add from other panel"),
                                   ),
                                 ),
+                                TextButton.icon(
+                                  onPressed: editable ? _createDirectory : null,
+                                  icon: const Icon(
+                                    Icons.create_new_folder_outlined,
+                                  ),
+                                  label: Text(
+                                    archiveEndpointText(
+                                      context,
+                                      'createDirectory',
+                                    ),
+                                  ),
+                                ),
                                 FilterChip(
                                   label: Text(
                                     context.commanderTr(
@@ -773,7 +863,10 @@ class _ArchiveWorkspaceDialogState
                   children: [
                     if (_busy)
                       TextButton(
-                        onPressed: () => setState(() => _cancelled = true),
+                        onPressed: () {
+                          setState(() => _cancelled = true);
+                          _importControl?.cancel();
+                        },
                         child: Text(context.commanderTr("Stop")),
                       ),
                     TextButton(

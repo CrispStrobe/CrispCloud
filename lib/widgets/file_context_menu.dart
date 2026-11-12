@@ -61,6 +61,8 @@ import 'file_operation_dialog.dart';
 import 'file_name_dialog.dart';
 import 'file_clipboard_actions.dart';
 import 'archive_workspace_dialog.dart';
+import 'archive_endpoint_actions.dart';
+import '../l10n/archive_endpoint_strings.dart';
 import 'integrity_dialogs.dart';
 import 'integrity_recovery_dialog.dart';
 import '../services/file_operation_service.dart';
@@ -150,6 +152,59 @@ void _showResultListContextMenu(
     verified = false;
   }
   if (panel.isPagedCollection && !panel.collectionBusy) verified = true;
+  final sourceSession = panel.captureOperationSession();
+  final sourceNavigation = panel.navigationIntentRevision;
+  final otherSide = side == PanelSide.local
+      ? PanelSide.remote
+      : PanelSide.local;
+  final otherPanel = ref.read(panelProvider(otherSide));
+  final archiveWasTarget = otherPanel.isInArchive;
+  CapturedArchiveImportDestination? archiveDestination;
+  PanelFileOrigin? ordinaryDestination;
+  try {
+    if (archiveWasTarget) {
+      archiveDestination = CapturedArchiveImportDestination.capture(
+        ref,
+        otherSide,
+      );
+    } else {
+      ordinaryDestination = otherPanel.captureCurrentOrigin();
+    }
+  } catch (_) {}
+  bool sourceReviewCurrent() =>
+      sourceSession() && panel.navigationIntentRevision == sourceNavigation;
+  Future<void> transfer(FileOperationKind kind) async {
+    if (archiveWasTarget) {
+      final captured = archiveDestination;
+      if (captured == null) {
+        throw StateError(archiveEndpointText(context, 'unavailable'));
+      }
+      await showCapturedArchiveImport(
+        context,
+        ref,
+        sourceSide: side,
+        files: files,
+        destination: captured,
+        moveSources: kind == FileOperationKind.move,
+        isReviewCurrent: sourceReviewCurrent,
+      );
+    } else {
+      if (ordinaryDestination == null && otherPanel.isInArchive) {
+        throw StateError(archiveEndpointText(context, 'unavailable'));
+      }
+      await showFileOperationDialog(
+        context,
+        ref,
+        side,
+        files,
+        kind: kind,
+        destinationOrigin: ordinaryDestination,
+        destinationPath: ordinaryDestination?.source.currentPath,
+        isReviewCurrent: sourceReviewCurrent,
+      );
+    }
+  }
+
   final externalComparison = ExternalComparisonMenuAction.capture(
     context,
     ref,
@@ -289,24 +344,12 @@ void _showResultListContextMenu(
       command(
         context.commanderTr("Copy with options…"),
         Icons.copy,
-        () => showFileOperationDialog(
-          context,
-          ref,
-          side,
-          files,
-          kind: FileOperationKind.copy,
-        ),
+        () => transfer(FileOperationKind.copy),
       ),
       command(
         context.commanderTr("Move with options…"),
         Icons.drive_file_move,
-        () => showFileOperationDialog(
-          context,
-          ref,
-          side,
-          files,
-          kind: FileOperationKind.move,
-        ),
+        () => transfer(FileOperationKind.move),
       ),
       command(
         context.commanderTr("Multi-Rename…"),
@@ -396,9 +439,19 @@ void showFileContextMenu(
   final oppositeSide = side == PanelSide.local
       ? PanelSide.remote
       : PanelSide.local;
+  final oppositePanel = ref.read(panelProvider(oppositeSide));
+  final archiveWasTarget = oppositePanel.isInArchive;
+  CapturedArchiveImportDestination? archiveDestination;
   PanelFileOrigin? destination;
   try {
-    destination = ref.read(panelProvider(oppositeSide)).captureCurrentOrigin();
+    if (archiveWasTarget) {
+      archiveDestination = CapturedArchiveImportDestination.capture(
+        ref,
+        oppositeSide,
+      );
+    } else {
+      destination = oppositePanel.captureCurrentOrigin();
+    }
   } catch (_) {}
   bool current() {
     if (origin.isCurrent) {
@@ -433,6 +486,33 @@ void showFileContextMenu(
 
   void transfer(FileOperationKind kind) {
     if (!context.mounted || !current()) {
+      return;
+    }
+    if (archiveWasTarget) {
+      final captured = archiveDestination;
+      if (captured == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(archiveEndpointText(context, 'unavailable'))),
+        );
+        return;
+      }
+      unawaited(
+        showCapturedArchiveImport(
+          context,
+          ref,
+          sourceSide: side,
+          files: files,
+          destination: captured,
+          sourceOrigin: origin,
+          moveSources: kind == FileOperationKind.move,
+        ),
+      );
+      return;
+    }
+    if (destination == null && oppositePanel.isInArchive) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(archiveEndpointText(context, 'unavailable'))),
+      );
       return;
     }
     showFileOperationDialog(

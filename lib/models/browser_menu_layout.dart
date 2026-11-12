@@ -344,6 +344,7 @@ class BrowserMenuLayout {
           'externalComparisonTools',
           'externalEdit',
           'externalEditingSessions',
+          'archiveRecovery',
           'gatherSelection',
           'gatheringStack',
           'extensions',

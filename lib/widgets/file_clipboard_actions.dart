@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 
+import '../l10n/archive_endpoint_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/core_providers.dart';
@@ -12,6 +13,7 @@ import '../services/file_operation_backend.dart';
 import '../services/file_operation_service.dart';
 import '../services/native_file_operations.dart';
 import 'file_operation_dialog.dart';
+import 'archive_endpoint_actions.dart';
 
 Future<void> copyFilesToClipboard(
   BuildContext context,
@@ -65,12 +67,24 @@ Future<void> pasteFilesFromClipboard(
 ) async {
   try {
     final panel = ref.read(panelProvider(side));
-    final destination = panel.captureCurrentOrigin();
+    final archiveDestination = panel.isInArchive
+        ? CapturedArchiveImportDestination.capture(ref, side)
+        : null;
+    final destination = archiveDestination == null
+        ? panel.captureCurrentOrigin()
+        : null;
     final clipboard = ref.read(fileClipboardProvider);
     final native = ref.read(nativeFileOperationsProvider);
-    final internal = await clipboard.stillOwnsClipboard(native)
-        ? clipboard.selection
-        : null;
+    final capturedSelection = clipboard.selection;
+    final changedClipboardMessage = archiveEndpointText(
+      context,
+      'clipboardChanged',
+    );
+    final ownsClipboard = await clipboard.stillOwnsClipboard(native);
+    if (!identical(clipboard.selection, capturedSelection)) {
+      throw StateError(changedClipboardMessage);
+    }
+    final internal = ownsClipboard ? capturedSelection : null;
     late final PanelFileOrigin source;
     late final List<FileItem> files;
     late final bool cut;
@@ -88,6 +102,9 @@ Future<void> pasteFilesFromClipboard(
         throw StateError('Copy files inside CrispCloud before pasting here.');
       }
       final external = await native.readClipboard();
+      if (!identical(clipboard.selection, capturedSelection)) {
+        throw StateError(changedClipboardMessage);
+      }
       if (external == null || external.paths.isEmpty) {
         throw StateError('The clipboard contains no files.');
       }
@@ -114,17 +131,38 @@ Future<void> pasteFilesFromClipboard(
       cut = external.cut;
     }
     if (!context.mounted) return;
-    await showFileOperationDialog(
-      context,
-      ref,
-      internal?.side ?? side,
-      files,
-      kind: cut ? FileOperationKind.move : FileOperationKind.copy,
-      sourceOrigin: source,
-      sourceGroups: internal?.groups,
-      destinationOrigin: destination,
-      destinationPath: destination.source.currentPath,
-    );
+    if (archiveDestination != null) {
+      final result = await showCapturedArchiveImport(
+        context,
+        ref,
+        sourceSide: internal?.side ?? side,
+        files: files,
+        destination: archiveDestination,
+        sourceOrigin: source,
+        sourceGroups: internal?.groups,
+        moveSources: cut,
+      );
+      // Cancellation cannot consume a cut selection merely because another
+      // actor removed its source. Partial publication/removal remains retryable.
+      if (result == null ||
+          cut &&
+              (result.retainedSources.isNotEmpty ||
+                  result.removedSources != files.length)) {
+        return;
+      }
+    } else {
+      await showFileOperationDialog(
+        context,
+        ref,
+        internal?.side ?? side,
+        files,
+        kind: cut ? FileOperationKind.move : FileOperationKind.copy,
+        sourceOrigin: source,
+        sourceGroups: internal?.groups,
+        destinationOrigin: destination!,
+        destinationPath: destination.source.currentPath,
+      );
+    }
     // A cut selection is kept until the source is consumed; a cancelled or
     // partial transfer must remain available for retry.
     if (cut && internal != null && internal.isCurrent) {

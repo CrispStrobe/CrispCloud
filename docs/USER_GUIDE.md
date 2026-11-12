@@ -188,7 +188,13 @@ Encode/decode supports UUE, XXE and single-part Base64 MIME. Choose a new output
 
 Supported archives can be browsed like folders, with bounded member previews/extraction. ZIP, TAR/TGZ, 7z and RAR support relevant reading workflows; BZ2/XZ/ZSTD support depends on the container or stream. Format-specific failures remain explicit.
 
-Edit/add/rename/delete/repack are available for selected ZIP, 7z, TAR and TAR.GZ workflows. Saves recheck the original container. Read support does not imply write support.
+Supported native local ZIP, 7z, TAR and TAR.GZ archives have a reviewed update workflow. Edit, rename, remove and create-folder actions change a draft. To add ordinary files, open the destination archive and its member directory in the other pane, then use Copy/Move or paste. Review collisions, prepare the complete container, and inspect the changes before choosing **Publish verified archive**. Only a verified publication counts as a completed transfer; closing a draft review leaves the original archive untouched.
+
+Moves first publish and verify the destination archive, then remove only source files whose original identity and complete contents still match. Source directories remain and are listed in the result. A changed source or an unsupported exact deletion produces a published copy with retained source paths. Cancelling an archive paste preserves its cut selection. Files from different source accounts and direct transfers between writable archives need separate workflows.
+
+Archive updates preserve supported member modification times and permission bits, plus the original encryption policy. ZIP updates support the accepted AES-256 policy; unsupported, mixed or ambiguous protection is refused. Nested archives keep separate passwords for each level and publish through their outer container. Passwords are not stored. Opaque comments and other unsupported member metadata are described in the review. Remote and browser archives remain readable/extractable where supported; publication needs additional storage capabilities that are not currently enabled.
+
+After an interrupted publication, choose **Archive publication recovery** in Tools. Open the original parent folder first if the archive path is temporarily absent. Recovery can verify and finish the recorded candidate or restore the original backup into a vacant path. Keep the recorded candidate and backup until recovery confirms the outcome. This recovery covers container publication; unsaved editing drafts are not restored after an app restart. Updates retain the 64 MiB member, 256 MiB content/output and eight-level nesting bounds.
 
 New creation uses native local inputs and destinations. Choose ZIP, 7z, TAR or TAR.GZ, review files and create a new name. ZIP/TAR.GZ offer compression levels; 7z offers supported methods. ZIP/7z support AES-256 passwords; 7z can encrypt filenames. TAR/TAR.GZ do not support passwords. Passwords are not saved.
 
