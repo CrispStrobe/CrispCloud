@@ -1,0 +1,114 @@
+name: Ebook Linux embedded host
+
+on:
+  push:
+    branches: [main, 'feature/ebook-*', 'checkpoint/ebook-*']
+  pull_request:
+    paths:
+      - 'packages/crisp_ebook_reader/**'
+      - 'linux/**'
+      - '.github/workflows/ebook-linux-host.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ebook-linux-host-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CI: 'true'
+  BOT: 'true'
+  FLUTTER_SUPPRESS_ANALYTICS: 'true'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+jobs:
+  linux-host:
+    name: Ubuntu 24.04 / ${{ matrix.host }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        host: [webkitgtk, portable-only]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.8'
+          channel: stable
+          cache: true
+      - name: Install the distribution's headers, runtime and display tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev \
+            libwebkit2gtk-4.1-dev xvfb xauth dbus-x11 libgl1-mesa-dri \
+            fonts-dejavu-core python3-pil python3-xlib
+          pkg-config --modversion gtk+-3.0 webkit2gtk-4.1
+      - name: Check native surface allocation bounds
+        run: |
+          clang++ -std=c++17 -Wall -Wextra -Werror \
+            packages/crisp_ebook_reader/test/linux/surface_size_test.cc \
+            -o "$RUNNER_TEMP/ebook-surface-test"
+          "$RUNNER_TEMP/ebook-surface-test"
+      - name: Prepare isolated Linux app
+        run: |
+          flutter create --platforms=linux --project-name crisp_linux_host_smoke "$RUNNER_TEMP/ebook-linux-host"
+          extra=()
+          if [[ '${{ matrix.host }}' == 'portable-only' ]]; then extra+=(--portable-only); fi
+          python3 packages/crisp_ebook_reader/tool/prepare_linux_host_smoke.py "$RUNNER_TEMP/ebook-linux-host" "${extra[@]}"
+          cd "$RUNNER_TEMP/ebook-linux-host"
+          flutter pub get
+      - name: Analyze host and run package tests
+        working-directory: packages/crisp_ebook_reader
+        run: |
+          flutter pub get
+          flutter analyze
+          flutter test --reporter expanded
+      - name: Exercise real inline rendering, input, composition and lifecycle
+        env:
+          LIBGL_ALWAYS_SOFTWARE: '1'
+          GDK_BACKEND: x11
+        run: |
+          cd "$RUNNER_TEMP/ebook-linux-host"
+          extra=()
+          if [[ '${{ matrix.host }}' == 'portable-only' ]]; then extra+=(--dart-define=EXPECT_PORTABLE=true); fi
+          set -o pipefail
+          xvfb-run -a -s '-screen 0 1280x900x24' dbus-run-session -- \
+            flutter test integration_test/reader_host_test.dart -d linux \
+              --reporter expanded "${extra[@]}" 2>&1 | tee linux-host-test.log
+      - name: Verify the app has no hard browser-library dependency
+        run: |
+          library=$(find "$RUNNER_TEMP/ebook-linux-host/build/linux" -name libcrisp_ebook_reader_plugin.so -print -quit)
+          test -n "$library"
+          readelf -d "$library" | tee "$RUNNER_TEMP/ebook-linux-host/native-dependencies.log"
+          if readelf -d "$library" | grep 'NEEDED' | grep -Ei 'webkit|javascriptcore'; then
+            echo 'The optional browser runtime became a startup dependency.' >&2
+            exit 1
+          fi
+      - name: Prove the enabled build launches when the optional runtime is absent
+        if: matrix.host == 'webkitgtk'
+        env:
+          LIBGL_ALWAYS_SOFTWARE: '1'
+          GDK_BACKEND: x11
+        run: |
+          cd "$RUNNER_TEMP/ebook-linux-host"
+          flutter build linux --debug --no-pub -t lib/runtime_probe.dart
+          # This is the disposable CI runner, after all rendering tests and the
+          # real-header build. Do not rebuild after removing the runtime.
+          sudo apt-get remove -y libwebkit2gtk-4.1-0
+          set -o pipefail
+          xvfb-run -a dbus-run-session -- \
+            timeout 30s build/linux/x64/debug/bundle/crisp_linux_host_smoke \
+            2>&1 | tee runtime-missing-launch.log
+          grep '"available":false' runtime-missing-launch.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ebook-linux-host-${{ matrix.host }}
+          path: |
+            ${{ runner.temp }}/ebook-linux-host/linux-host-test.log
+            ${{ runner.temp }}/ebook-linux-host/native-dependencies.log
+            ${{ runner.temp }}/ebook-linux-host/runtime-missing-launch.log
+            ${{ runner.temp }}/ebook-linux-host/build/linux-host-evidence/**
