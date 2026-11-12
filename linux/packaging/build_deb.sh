@@ -81,6 +81,7 @@ Architecture: ${ARCH}
 Maintainer: ${MAINTAINER}
 Installed-Size: ${INSTALLED_SIZE}
 Depends: libgtk-3-0, libblkid1, liblzma5
+Recommends: libwebkit2gtk-4.1-0 (>= 2.48.4)
 Section: net
 Priority: optional
 Homepage: ${HOMEPAGE}

@@ -1,7 +1,7 @@
 # Ebook reading and editing
 
 CrispCloud reads EPUB books and edits their original packages. Its enhanced
-reader also opens unencrypted Kindle, FictionBook and comic archives and can
+reader also opens unencrypted Kindle, FictionBook and CBZ comic archives and can
 convert them into a separate editable EPUB. The former text viewer remains
 available as a fallback.
 
@@ -27,8 +27,17 @@ MOBI, AZW, AZW3, FB2, FBZ or CBZ file with EPUB bytes.
 
 ## Reading controls and platform differences
 
-The enhanced reader provides page navigation, nested contents, search,
-bookmarks, highlights with notes, reading progress, and appearance settings.
+The enhanced reader provides page navigation, Back/Forward location history,
+percentage seeking, nested contents, search, bookmarks, highlights with notes,
+text selection/copy, and shared appearance settings. **Appearance** includes
+publisher typography, font size/family, line spacing, themes, scrolling or
+pagination, maximum columns, page margins and column width. Narrow windows
+reduce the number of columns automatically. Fixed-layout books retain their
+published text and page geometry and expose only meaningful controls.
+
+Back/Forward follows explicit navigation, while ordinary page turns update the
+current history entry. The complete navigation stack lasts for the current
+reader session; the current reading position is saved.
 Progress, annotations and appearance are stored on this device or browser
 profile, separately from the ebook. They are tied to the source and its exact
 content version; edits do not silently reuse highlights at changed positions.
@@ -39,16 +48,28 @@ location formats differ.
 | --- | --- | --- | --- | --- |
 | Android, iOS, macOS, Windows | Enhanced reader using the platform WebView; its runtime must be available. | Yes | Supported enhanced-reader formats | Available when the native converter is bundled and loads successfully. |
 | Web | Enhanced reader in a Flutter asset iframe. | Yes | Supported enhanced-reader formats | Metadata copies use the bundled offline Wasm worker. Full Kindle export and cover replacement require a native build. |
-| Linux | Portable Flutter EPUB reader with chapter and anchor navigation, search, bookmarks, appearance controls, local raster images and position restoration. | Yes | No MOBI/FB2/CBZ import through the enhanced reader on Linux. | Available with the native converter, including EPUB-to-Kindle export and metadata copies. |
+| Linux | The same enhanced engine through the optional embedded WebKitGTK 4.1 host, selected after a runtime probe. A portable Flutter EPUB reader is used when that host is unavailable. | Yes | Supported enhanced-reader formats when the Linux host is available | Available with the native converter, including EPUB-to-Kindle export and metadata copies. |
 
-Linux does not bundle CEF. Its chapter reader uses continuous scrolling and does
-not provide the enhanced reader's pagination, full book CSS/fixed-layout
-fidelity, or saved highlight and note tools. EPUB editing and the legacy text
-fallback remain available.
-The platform table describes the implemented paths; device rendering still
-requires the platform smoke checks described below.
+Linux uses the distribution's complete WebKitGTK runtime rather than bundling
+CEF or a partial browser library. See [Linux build and runtime requirements](../linux/README.md).
+Missing runtime support does not prevent the application from opening. A
+reported host startup error offers **Use portable EPUB reader** explicitly; this
+keeps its separate locator state instead of interpreting Foliate CFIs as scroll
+positions. The same recovery action is available from the ebook menu.
 
-### Portable EPUB reading on Linux
+The portable reader uses continuous scrolling and does not provide enhanced
+pagination, full book CSS/fixed-layout fidelity, or saved highlight and note
+tools. EPUB editing and the legacy text fallback remain available. The platform
+table describes implementation paths, not a completed certification of every
+OS/version/device combination. Pixel-identical pagination across different
+browser engines, fonts and screen sizes is not guaranteed.
+
+The Linux texture currently does not expose publication text through Flutter's
+accessibility semantics, and Tab traverses Flutter controls rather than links
+inside the book. Those features require implementation as well as assistive-
+technology and device testing before claiming complete interaction parity.
+
+### Portable EPUB reading
 
 Use the shared **Search** field to find literal text across chapters without
 case sensitivity. Selecting a result opens the matching text block. Internal
@@ -85,6 +106,59 @@ viewer. Close it to return to the same editing session.
 This view sacrifices book styling and layout. It can recover text from some
 incomplete EPUBs; it does not repair the archive or make encrypted content
 readable.
+
+## Ebook library
+
+Open **Ebook library** from the file browser menu or reader toolbar/menu. Books
+you open are added to this device's local catalog with their title, authors,
+format, exact content version, recent-open time and reading progress. Search
+across titles/authors/tags/shelves, filter by favorite, shelf, tag or reading
+status, and sort by recent opening, title, author or progress. **Edit library
+entry** changes favorites, shelves, tags and explicit Unread/Reading/Completed
+status. **Remove from library** removes only its catalog row.
+
+**Open book** resolves the original account and folder and checks the recorded
+object identity before loading. **Locate file** opens the original directory.
+Reconnect the original account if it is unavailable. Attachments and temporary
+sources retain metadata-only entries; locate their files manually to reopen
+them. No account credential or file-access grant is created by the library.
+
+The local catalog supports at most 1,000 entries and 4 MiB of serialized data.
+It does not download books automatically or synchronize shelves between devices.
+Cover grids, series, bulk operations, recursive scans and managed offline copies
+remain future work.
+
+## Transfer reading data
+
+Choose **Export reading data** in the ebook menu to save/download a `.reading.json`
+file containing the current position, bookmarks, highlights/notes and all
+appearance settings. It contains neither the book nor its source path/account.
+It can also rescue the in-memory reading state when local preference saving
+fails or another open reader has saved a newer sidecar.
+
+Choose **Import reading data** with the exact same book open on another device.
+The app validates the JSON format/version, publication SHA-256 and byte length,
+renderer, locators, field lengths and overall size. A different edition, an
+edited book or a sidecar from the other renderer is refused before changes are
+made. This is deliberate: the app does not guess where old highlights belong
+in changed text.
+
+Review additions, conflicts, resulting item counts, position and appearance
+changes. Choose **Merge, keep local conflicts**, **Merge, use imported conflicts**
+or **Replace local reading data**, then **Apply import**. Replace removes local
+items absent from the imported file. The reader updates only after local
+persistence succeeds. A failed or stale import leaves the current data intact.
+
+The maximum sidecar is 2 MiB, with up to 500 bookmarks and 500 highlights and
+notes of at most 2,000 characters. The file picker checks actual streamed size,
+not just the provider's declared size. Automatic synchronization and migration
+between edited editions or locator formats are not included. See the
+[FBReader comparison and next increments](ebook-feature-parity.md).
+
+If reading data cannot be saved when closing, the reader remains open and offers
+**Keep reading**, **Export reading data**, or an explicit **Close without saving
+reading data** choice. Exporting a copy does not overwrite a newer sidecar from
+another open reader.
 
 ## Edit an EPUB
 
@@ -234,7 +308,7 @@ validation, and retain Source mode for complex or unsupported content.
   EPUBCheck, native conversion, independent reader parsing, browser probes and
   focused application tests. The package READMEs contain local commands.
 
-Verification of the scope extension on **12 November 2026** included **46 core
+Earlier editing/conversion verification on **12 November 2026** included **46 core
 tests**, **27 native-converter Dart tests**, **4 Rust bridge tests**, **3 embedded
 reader controller tests**, and a complete **102-test application/service/widget
 run**, including the seven focused prose-dialog tests. The compiled
@@ -242,7 +316,7 @@ Dart browser metadata adapter passed 24 assertions through 11 actual Node
 workers using the bundled Wasm. Native/Wasm metadata parity is checked against
 the same Kindle fixtures. See the
 [extension verification record](recovery/ebook-extension-2026-11-12.md) for the
-current release-build and hosted platform-check status.
+release-build and hosted status for that earlier revision.
 
 The four core fixtures, including a formatted-text correction, pass **EPUBCheck
 5.4.0 with zero fatal errors, errors or warnings**. The previously verified
@@ -256,5 +330,24 @@ corpus. The local Chromium renderer probe was blocked before browser startup by
 the execution environment's socket restriction. Parser and widget results do
 not establish full browser layout, actual browser worker loading, or six-platform
 device verification. Run the hosted browser and native smoke checks before a
-release; the [recovery record](recovery/ebook-extension-2026-11-12.md) separates
+release; the [platform-parity recovery record](recovery/ebook-parity-2026-11-12.md) separates
 completed local checks from pending platform checks.
+
+
+### Platform/library expansion verification
+
+The [platform-parity recovery record](recovery/ebook-parity-2026-11-12.md)
+tracks the larger extension. Its local checks include **8 reader controller/model
+tests**, **154 application/service/widget tests**, normal and missing-grouping +
+raw-DEFLATE parser variants, and a successful full web release build. The three
+host-owned reader JavaScript modules in the built web bundle match their source
+hashes. The source audit covers 207 paths; its existing Python suites and
+source-bound evidence check passed without changing any gate or policy decision.
+
+The first dedicated Linux run compiled the enhanced plugin and passed its
+package checks; the portable-only build and launch passed. The enhanced
+application then exited before completing actual rendering/input validation.
+That is an unresolved native runtime gate while diagnostics are investigated,
+not a successful enhanced-reader result. Consult the recovery record for later
+runs and exact revisions. Mobile, Wayland, hardware input and assistive-
+technology validation remain separate requirements.

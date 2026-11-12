@@ -9,6 +9,14 @@ import {spawnSync} from 'node:child_process'
 const require = createRequire(import.meta.url)
 const {JSDOM} = require('jsdom')
 if (process.env.CRISP_TEST_RAW_INFLATE_FALLBACK === '1') globalThis.DecompressionStream = undefined
+const {checkReaderCompatibility} = await import('./reader_compat.mjs')
+await checkReaderCompatibility()
+if (process.env.CRISP_TEST_GROUPING_FALLBACK === '1') {
+    delete Object.groupBy
+    delete Map.groupBy
+}
+const {installReaderCompatibility} = await import('../../assets/reader_compat.js')
+installReaderCompatibility()
 const dom = new JSDOM('<!doctype html><html><head></head><body></body></html>')
 // jsdom has no layout engine and omits innerText. These fixtures contain plain
 // TOC labels, so textContent is sufficient for parser-level MOBI6 assertions.
@@ -17,7 +25,9 @@ Object.defineProperty(dom.window.HTMLElement.prototype,'innerText',{
 })
 for (const name of ['document','HTMLElement','customElements','DOMParser','XMLSerializer','Node','NodeFilter','Range','EventTarget','Event','CustomEvent','ProcessingInstruction']) globalThis[name] = dom.window[name]
 globalThis.CSS = {escape:value => String(value).replace(/[^a-z0-9_-]/gi, char => `\\${char}`)}
-const {makeBook} = await import('../../assets/foliate/view.js')
+const {makeBook, View} = await import('../../assets/foliate/view.js')
+const {checkReadingControls} = await import('./reader_controls.mjs')
+await checkReadingControls(View)
 const {safeResourceTransform,secureSections,sanitizeDocument,parseDocument,serializeDocument,sanitizeCss} = await import('../../assets/security.js')
 const {exportPublication} = await import('../../assets/normalize.js')
 const {imageDimensions} = await import('../../assets/image_dimensions.js')

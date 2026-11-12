@@ -63,6 +63,147 @@ void main() {
         throwsFormatException);
   });
 
+  test('progress commands reject nonfinite input and bound finite fractions',
+      () async {
+    final controller = CrispEbookController();
+    addTearDown(controller.dispose);
+    final calls = <EbookJson>[];
+    controller.attach((method, args) async {
+      expect(method, 'goToFraction');
+      calls.add(args);
+    });
+    await controller.goToFraction(-0.5);
+    await controller.goToFraction(0.375);
+    await controller.goToFraction(4);
+    await expectLater(controller.goToFraction(double.nan), throwsArgumentError);
+    await expectLater(
+      controller.goToFraction(double.infinity),
+      throwsArgumentError,
+    );
+    expect(calls, [
+      {'fraction': 0},
+      {'fraction': 0.375},
+      {'fraction': 1},
+    ]);
+  });
+
+  test('history commands use their own channel and reset on a new publication',
+      () async {
+    final controller = CrispEbookController();
+    addTearDown(controller.dispose);
+    final calls = <String>[];
+    controller.attach((method, args) async {
+      calls.add(method);
+      return {
+        'canGoBack': method == 'historyForward',
+        'canGoForward': method == 'historyBack',
+      };
+    });
+    controller.updateHistory(const EbookNavigationHistory(canGoBack: true));
+    await controller.goBack();
+    expect(controller.canGoBack, isFalse);
+    expect(controller.canGoForward, isTrue);
+    await controller.goForward();
+    expect(controller.canGoBack, isTrue);
+    expect(controller.canGoForward, isFalse);
+    expect(calls, ['historyBack', 'historyForward']);
+    controller.attach((method, args) async => null);
+    expect(controller.history.toJson(), {
+      'canGoBack': false,
+      'canGoForward': false,
+    });
+    controller.updateHistory(const EbookNavigationHistory(canGoForward: true));
+    controller.detach();
+    expect(controller.canGoForward, isFalse);
+  });
+
+  test('appearance roundtrips and copying one option retains all other options',
+      () {
+    const appearance = EbookAppearance(
+      fontSize: 22,
+      lineHeight: 1.9,
+      theme: 'sepia',
+      flow: 'scrolled',
+      fontFamily: 'sans-serif',
+      maxColumnCount: 3,
+      pageMargin: 42,
+      pageWidth: 940,
+      usePublisherStyles: false,
+    );
+    final restored = EbookAppearance.fromJson(
+      jsonDecode(jsonEncode(appearance.toJson())) as EbookJson,
+    );
+    expect(restored.toJson(), appearance.toJson());
+    expect(restored.copyWith(fontSize: 25).toJson(), {
+      ...appearance.toJson(),
+      'fontSize': 25,
+    });
+    expect(EbookAppearance.fromJson({'theme': 'dark'}).toJson(), {
+      ...const EbookAppearance().toJson(),
+      'theme': 'dark',
+    });
+  });
+
+  test('appearance bounds untrusted persisted values before the CSS bridge',
+      () {
+    final appearance = EbookAppearance.fromJson({
+      'fontSize': double.infinity,
+      'lineHeight': 99,
+      'theme': 'url(https://invalid.example)',
+      'flow': 'outside',
+      'fontFamily': 'serif; background: url(https://invalid.example)',
+      'maxColumnCount': 1000,
+      'pageMargin': -20,
+      'pageWidth': double.nan,
+      'usePublisherStyles': 'false',
+    });
+    expect(appearance.toJson(), {
+      'fontSize': 18,
+      'lineHeight': 2.5,
+      'theme': 'light',
+      'flow': 'paginated',
+      'fontFamily': 'serif',
+      'maxColumnCount': 3,
+      'pageMargin': 0,
+      'pageWidth': 780,
+      'usePublisherStyles': true,
+    });
+    expect(
+      const EbookAppearance(pageWidth: 1, pageMargin: double.infinity)
+          .normalized
+          .toJson(),
+      {...const EbookAppearance().toJson(), 'pageWidth': 320},
+    );
+  });
+
+  test('book capabilities disable reflow controls on fixed-layout pages', () {
+    final fixed = EbookBookInfo.fromJson({
+      'fixedLayout': true,
+      'supportsProgressSeeking': true,
+      'supportsNavigationHistory': true,
+      'supportsTextAppearance': true,
+      'supportsLayout': true,
+      'supportsPublisherStyles': true,
+    });
+    expect(fixed.supportsProgressSeeking, isTrue);
+    expect(fixed.supportsNavigationHistory, isTrue);
+    expect(fixed.supportsTextAppearance, isFalse);
+    expect(fixed.supportsLayout, isFalse);
+    expect(fixed.supportsPublisherStyles, isFalse);
+    final unavailable = EbookBookInfo.fromJson({
+      'supportsProgressSeeking': false,
+      'supportsNavigationHistory': false,
+      'supportsTextAppearance': false,
+      'supportsLayout': false,
+      'supportsPublisherStyles': false,
+    });
+    expect(unavailable.supportsProgressSeeking, isFalse);
+    expect(unavailable.supportsNavigationHistory, isFalse);
+    expect(unavailable.supportsTextAppearance, isFalse);
+    expect(unavailable.supportsLayout, isFalse);
+    expect(unavailable.supportsPublisherStyles, isFalse);
+  });
+
   test('platform capabilities do not advertise a bundled Linux renderer', () {
     addTearDown(() => debugDefaultTargetPlatformOverride = null);
     debugDefaultTargetPlatformOverride = TargetPlatform.linux;

@@ -37,7 +37,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: ebook-editor-${{ github.event.pull_request.number || github.ref }}
+  group: ebook-editor-${{ github.event.pull_request.head.repo.full_name || github.repository }}-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
 env:
@@ -170,7 +170,7 @@ jobs:
           python tool/check_vendor.py
           npm ci --ignore-scripts --no-audit --no-fund
           npm run test:parser -- ../crisp_ebook_conversion/test/fixtures/generated/*.azw3 ../crisp_ebook_conversion/test/fixtures/generated/*.mobi
-          CRISP_TEST_RAW_INFLATE_FALLBACK=1 npm run test:parser
+          CRISP_TEST_GROUPING_FALLBACK=1 CRISP_TEST_RAW_INFLATE_FALLBACK=1 npm run test:parser
       - name: Validate actual Kindle to EPUB imports independently
         if: runner.os == 'Linux'
         working-directory: packages/crisp_ebook_conversion
@@ -226,6 +226,11 @@ jobs:
         run: >-
           python3 tool/with_ci_system_sqlite.py flutter test --concurrency=2
           test/ebook_annotations_test.dart
+          test/ebook_reading_data_test.dart
+          test/ebook_reading_data_files_test.dart
+          test/ebook_library_test.dart
+          test/widget/ebook_library_dialog_test.dart
+          test/widget/ebook_reading_controls_test.dart
           test/ebook_edit_session_test.dart
           test/widget/ebook_editor_dialog_test.dart
           test/widget/ebook_chapter_reader_test.dart

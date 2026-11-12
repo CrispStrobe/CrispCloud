@@ -15,7 +15,10 @@ class CrispEbookController extends ChangeNotifier {
   EbookBookInfo? bookInfo;
   EbookLocation? location;
   EbookSelection? selection;
+  EbookNavigationHistory history = const EbookNavigationHistory();
   bool get isReady => bookInfo != null && _sender != null;
+  bool get canGoBack => history.canGoBack;
+  bool get canGoForward => history.canGoForward;
 
   /// Internal transport attachment; exposed for custom platform hosts.
   void attach(EbookCommandSender sender) {
@@ -23,6 +26,7 @@ class CrispEbookController extends ChangeNotifier {
       bookInfo = null;
       location = null;
       selection = null;
+      history = const EbookNavigationHistory();
     }
     _sender = sender;
   }
@@ -35,6 +39,7 @@ class CrispEbookController extends ChangeNotifier {
     bookInfo = null;
     location = null;
     selection = null;
+    history = const EbookNavigationHistory();
   }
 
   void updateBookInfo(EbookBookInfo value) {
@@ -49,6 +54,15 @@ class CrispEbookController extends ChangeNotifier {
 
   void updateSelection(EbookSelection value) {
     selection = value;
+    notifyListeners();
+  }
+
+  void updateHistory(EbookNavigationHistory value) {
+    if (history.canGoBack == value.canGoBack &&
+        history.canGoForward == value.canGoForward) {
+      return;
+    }
+    history = value;
     notifyListeners();
   }
 
@@ -77,7 +91,31 @@ class CrispEbookController extends ChangeNotifier {
   }
 
   Future<void> goToFraction(double value) async {
+    if (!value.isFinite) {
+      throw ArgumentError.value(value, 'value', 'Progress must be finite');
+    }
     await _command('goToFraction', {'fraction': value.clamp(0, 1)});
+  }
+
+  /// Follow a prior explicit navigation. Normal page turns update the current
+  /// history entry; they are not separate Back steps. Location changes arrive
+  /// through [location] when the renderer completes the navigation.
+  Future<void> goBack() async {
+    final result = await _command('historyBack');
+    if (result is Map) {
+      updateHistory(EbookNavigationHistory.fromJson(
+        Map<String, dynamic>.from(result),
+      ));
+    }
+  }
+
+  Future<void> goForward() async {
+    final result = await _command('historyForward');
+    if (result is Map) {
+      updateHistory(EbookNavigationHistory.fromJson(
+        Map<String, dynamic>.from(result),
+      ));
+    }
   }
 
   Future<void> setAppearance(EbookAppearance appearance) async {

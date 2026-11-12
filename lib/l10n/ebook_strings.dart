@@ -6,6 +6,119 @@ abstract final class EbookStrings {
       ? (_de[english] ?? english)
       : english;
   static const _de = <String, String>{
+    'Reading data could not be saved':
+        'Lesedaten konnten nicht gespeichert werden',
+    'Keep reading': 'Weiterlesen',
+    'Close without saving reading data':
+        'Ohne Speichern der Lesedaten schließen',
+    'Your current reading data is still available here. Export it before closing, or explicitly discard these unsaved changes.': 'Ihre aktuellen Lesedaten sind hier weiterhin verfügbar. Exportieren Sie sie vor dem Schließen oder verwerfen Sie diese ungespeicherten Änderungen ausdrücklich.',
+
+    "Ebook library": "E-Book-Bibliothek",
+    "Search books, authors, tags or shelves":
+        "Bücher, Autoren, Schlagwörter oder Regale suchen",
+    "Favorites only": "Nur Favoriten",
+    "All statuses": "Alle Lesestände",
+    "Unread": "Ungelesen",
+    "Reading": "Wird gelesen",
+    "Completed": "Abgeschlossen",
+    "Shelf": "Regal",
+    "Tag": "Schlagwort",
+    "Exact name": "Genauer Name",
+    "Sort": "Sortieren",
+    "Recently opened": "Zuletzt geöffnet",
+    "Author": "Autor",
+    "Reading progress": "Lesefortschritt",
+    "Books": "Bücher",
+    "Current book": "Aktuelles Buch",
+    "Last opened": "Zuletzt geöffnet",
+    "Progress not recorded": "Kein Lesefortschritt gespeichert",
+    "Locate file": "Datei anzeigen",
+    "Open book": "Buch öffnen",
+    "Edit library entry": "Bibliothekseintrag bearbeiten",
+    "Remove from library": "Aus Bibliothek entfernen",
+    "Remove this book from the library?":
+        "Dieses Buch aus der Bibliothek entfernen?",
+    "The book file and its reading data will remain available.":
+        "Die Buchdatei und ihre Lesedaten bleiben erhalten.",
+    "No books match these filters.": "Keine Bücher entsprechen diesen Filtern.",
+    "Books you open appear here.": "Geöffnete Bücher erscheinen hier.",
+    "Locate this file manually to read it again.":
+        "Suchen Sie diese Datei manuell, um sie erneut zu lesen.",
+    "Favorite": "Favorit",
+    "Shelves (one per line)": "Regale (eines pro Zeile)",
+    "Tags (one per line)": "Schlagwörter (eines pro Zeile)",
+    "Reading status": "Lesestand",
+    "Refresh": "Aktualisieren",
+    "Remove": "Entfernen",
+    "Reconnect the original account or folder to open this book.": "Verbinden Sie das ursprüngliche Konto oder den Ordner erneut, um dieses Buch zu öffnen.",
+    "The original book source is no longer available.":
+        "Die ursprüngliche Buchquelle ist nicht mehr verfügbar.",
+    "The original book was moved or replaced. Locate it manually.": "Das ursprüngliche Buch wurde verschoben oder ersetzt. Suchen Sie es manuell.",
+    "This file format cannot be opened in the ebook reader.":
+        "Dieses Dateiformat kann im E-Book-Reader nicht geöffnet werden.",
+    "Theme": "Farbschema",
+    "Font size": "Schriftgröße",
+    "Font family": "Schriftart",
+    "Reading flow": "Lesemodus",
+    "Maximum columns": "Maximale Spaltenzahl",
+    "Page margin": "Seitenrand",
+    "Column width": "Spaltenbreite",
+    "Use publisher styles": "Verlagsformatierung verwenden",
+    "Customizing text below overrides publisher fonts and spacing.": "Die folgenden Texteinstellungen ersetzen Schriftart und Abstände des Verlags.",
+    "This publication has a fixed layout. Its text and page geometry stay as published.": "Diese Publikation hat ein festes Layout. Text und Seitengeometrie bleiben wie veröffentlicht.",
+    "Narrow windows use fewer columns automatically.":
+        "Schmale Fenster verwenden automatisch weniger Spalten.",
+    "Back to previous location": "Zur vorherigen Lesestelle",
+    "Forward to next location": "Zur nächsten Lesestelle",
+    "Copy selection": "Auswahl kopieren",
+    "Selection copied.": "Auswahl kopiert.",
+    "Export reading data": "Lesedaten exportieren",
+    "Import reading data": "Lesedaten importieren",
+    "Reading-data download started.": "Download der Lesedaten gestartet.",
+    "Reading data exported.": "Lesedaten exportiert.",
+    "Reading data imported.": "Lesedaten importiert.",
+    "Use portable EPUB reader": "Portablen EPUB-Reader verwenden",
+    "This format needs the enhanced reader. The portable reader supports EPUB.": "Dieses Format benötigt den erweiterten Reader. Der portable Reader unterstützt EPUB.",
+    "The enhanced Linux reader is unavailable. Using the portable EPUB reader.": "Der erweiterte Linux-Reader ist nicht verfügbar. Der portable EPUB-Reader wird verwendet.",
+    "This application build does not contain the Linux browser host.":
+        "Diese Anwendungsversion enthält keine Linux-Browserintegration.",
+    "Reading-data files must be at most 2 MiB.":
+        "Lesedateien dürfen höchstens 2 MiB groß sein.",
+    "The selected reading-data file could not be read.":
+        "Die ausgewählte Lesedatei konnte nicht gelesen werden.",
+    "Reading-data files must contain UTF-8 JSON.":
+        "Lesedateien müssen JSON in UTF-8 enthalten.",
+    "Merge, keep local conflicts": "Zusammenführen, lokale Konflikte behalten",
+    "Merge, use imported conflicts":
+        "Zusammenführen, importierte Konflikte verwenden",
+    "Replace local reading data": "Lokale Lesedaten ersetzen",
+    "Import behavior": "Importverhalten",
+    "New bookmarks": "Neue Lesezeichen",
+    "New highlights": "Neue Markierungen",
+    "Conflicting bookmarks": "Widersprüchliche Lesezeichen",
+    "Conflicting highlights": "Widersprüchliche Markierungen",
+    "Resulting bookmarks": "Lesezeichen nach Import",
+    "Resulting highlights": "Markierungen nach Import",
+    "Reading position will change.": "Die Leseposition wird geändert.",
+    "Reading position will stay the same.":
+        "Die Leseposition bleibt unverändert.",
+    "Appearance settings will change.":
+        "Die Darstellungseinstellungen werden geändert.",
+    "Appearance settings will stay the same.":
+        "Die Darstellungseinstellungen bleiben unverändert.",
+    "Local bookmarks and highlights absent from the imported file will be removed.": "Lokale Lesezeichen und Markierungen, die in der importierten Datei fehlen, werden entfernt.",
+    "This import makes no changes.":
+        "Dieser Import nimmt keine Änderungen vor.",
+    "Apply import": "Import übernehmen",
+    "Reading data contains positions, bookmarks, highlights and appearance settings for this exact book.": "Lesedaten enthalten Positionen, Lesezeichen, Markierungen und Darstellungseinstellungen für genau dieses Buch.",
+    "The reading-data file is not valid JSON.":
+        "Die Lesedatei enthält kein gültiges JSON.",
+    "This reading-data format or version is not supported.":
+        "Dieses Lesedatenformat oder diese Version wird nicht unterstützt.",
+    "This reading-data renderer is not supported.":
+        "Diese Reader-Version für Lesedaten wird nicht unterstützt.",
+    "The reading-data size limit was exceeded.":
+        "Die Größenbegrenzung für Lesedaten wurde überschritten.",
     'Ebook': 'E-Book',
     'Read': 'Lesen',
     'Edit': 'Bearbeiten',

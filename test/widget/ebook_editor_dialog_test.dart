@@ -1,12 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/services/ebook_device_export.dart';
 import 'package:crisp_cloud/services/ebook_annotations.dart';
+import 'package:crisp_cloud/services/ebook_edit_session.dart';
+import 'package:crisp_cloud/services/ebook_reading_data_files.dart';
+import 'package:crisp_cloud/services/ebook_library.dart';
+import 'package:crisp_ebook_reader/crisp_ebook_reader.dart';
 import 'package:crisp_cloud/services/ebook_editor_menu.dart';
 import 'package:crisp_cloud/services/ebook_file_store.dart';
 import 'package:crisp_cloud/services/pdf_file_store.dart';
@@ -64,6 +67,9 @@ Future<ProviderContainer> _open(
   _Store store, {
   EbookDeviceExporter? exporter,
   EbookDocumentLoader? documentLoader,
+  EbookReadingDataPicker? readingDataPicker,
+  EbookReadingDataExporter? readingDataExporter,
+  Future<EbookLinuxHostStatus> Function()? linuxHostProbe,
   bool expectDocument = true,
   bool portableReader = false,
   bool startEditing = true,
@@ -91,6 +97,9 @@ Future<ProviderContainer> _open(
                     startEditing: startEditing,
                     storeOverride: EbookFileStore(store),
                     deviceExporterOverride: exporter,
+                    readingDataPickerOverride: readingDataPicker,
+                    readingDataExporterOverride: readingDataExporter,
+                    linuxHostProbeOverride: linuxHostProbe,
                     documentLoaderOverride:
                         documentLoader ??
                         (bytes) async => EpubDocument.open(bytes),
@@ -110,8 +119,9 @@ Future<ProviderContainer> _open(
   await tester.tap(find.text('Open book'));
   await tester.pumpAndSettle();
   expect(find.byType(EbookEditorDialog), findsOneWidget);
-  if (expectDocument && startEditing)
+  if (expectDocument && startEditing) {
     expect(find.text('Original'), findsOneWidget);
+  }
   return container;
 }
 
@@ -126,6 +136,210 @@ Finder get _close => find.descendant(
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
+
+  testWidgets(
+    'reading data exports exact publication state without source access',
+    (tester) async {
+      final store = _Store();
+      final notes = await EbookAnnotations.open(store.documentId, store.input);
+      notes.bookmarks.add(
+        const EbookLocation(cfi: 'epubcfi(/6/2!/4/2:0)', fraction: .25),
+      );
+      await notes.save();
+      String? exported;
+      String? filename;
+      await _open(
+        tester,
+        store,
+        readingDataExporter: (json, name) async {
+          exported = json;
+          filename = name;
+          return EbookSaveOutcome.savedCopy;
+        },
+      );
+      await tester.tap(find.byType(PopupMenuButton<String>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Export reading data'));
+      await tester.pumpAndSettle();
+      expect(filename, 'original.reading.json');
+      final data = EbookReadingData.decode(exported!);
+      expect(data.bookmarks, hasLength(1));
+      expect(data.contentSha256, notes.contentSha256);
+      expect(exported, isNot(contains('account-one')));
+      expect(store.writes, isEmpty);
+    },
+  );
+
+  testWidgets('import applies only after preview and preserves the book file', (
+    tester,
+  ) async {
+    final store = _Store();
+    final imported = await EbookAnnotations.open('another-device', store.input);
+    imported.bookmarks.add(
+      const EbookLocation(cfi: 'epubcfi(/6/2!/4/2:0)', fraction: .5),
+    );
+    await _open(
+      tester,
+      store,
+      readingDataPicker: () async => imported.exportReadingData(),
+    );
+    await tester.tap(find.byType(PopupMenuButton<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Import reading data'));
+    await tester.pumpAndSettle();
+    expect(
+      (await EbookAnnotations.open(store.documentId, store.input)).bookmarks,
+      isEmpty,
+    );
+    await tester.tap(find.byKey(const ValueKey('ebook-apply-reading-data')));
+    await tester.pumpAndSettle();
+    final saved = await EbookAnnotations.open(store.documentId, store.input);
+    expect(saved.bookmarks.single.fraction, .5);
+    expect(store.writes, isEmpty);
+  });
+
+  testWidgets(
+    'stale reading state stays open and can be exported before explicit discard',
+    (tester) async {
+      final store = _Store();
+      final initial = await EbookAnnotations.open(
+        store.documentId,
+        store.input,
+      );
+      initial.bookmarks.add(
+        const EbookLocation(cfi: 'epubcfi(/6/2!/4/2:0)', fraction: .1),
+      );
+      await initial.save();
+      String? rescued;
+      await _open(
+        tester,
+        store,
+        readingDataExporter: (json, _) async {
+          rescued = json;
+          return EbookSaveOutcome.savedCopy;
+        },
+      );
+      final otherReader = await EbookAnnotations.open(
+        store.documentId,
+        store.input,
+      );
+      otherReader.bookmarks.add(
+        const EbookLocation(cfi: 'epubcfi(/6/4!/4/2:0)', fraction: .7),
+      );
+      await otherReader.save();
+      await tester.tap(_close);
+      await tester.pumpAndSettle();
+      expect(find.text('Reading data could not be saved'), findsOneWidget);
+      await tester.tap(find.widgetWithText(TextButton, 'Export reading data'));
+      await tester.pumpAndSettle();
+      expect(EbookReadingData.decode(rescued!).bookmarks, hasLength(1));
+      expect(find.byType(EbookEditorDialog), findsOneWidget);
+      expect(
+        (await EbookAnnotations.open(store.documentId, store.input)).bookmarks,
+        hasLength(2),
+      );
+      await tester.tap(_close);
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.widgetWithText(FilledButton, 'Close without saving reading data'),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(EbookEditorDialog), findsNothing);
+      expect(
+        (await EbookAnnotations.open(store.documentId, store.input)).bookmarks,
+        hasLength(2),
+      );
+    },
+  );
+
+  testWidgets(
+    'replacement without a location clears the displayed library progress',
+    (tester) async {
+      final store = _Store();
+      final initial = await EbookAnnotations.open(
+        store.documentId,
+        store.input,
+      );
+      initial.location = const EbookLocation(
+        cfi: 'epubcfi(/6/2!/4/2:0)',
+        fraction: .8,
+      );
+      await initial.save();
+      final imported = await EbookAnnotations.open('other-device', store.input);
+      await _open(
+        tester,
+        store,
+        readingDataPicker: () async => imported.exportReadingData(),
+      );
+      await tester.tap(find.byType(PopupMenuButton<String>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Import reading data'));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const ValueKey('ebook-reading-data-merge-mode')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Replace local reading data').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('ebook-apply-reading-data')));
+      await tester.pumpAndSettle();
+      final library = await EbookLibrary.open();
+      addTearDown(library.dispose);
+      expect(library.entries.single.progress, isNull);
+      expect(
+        (await EbookAnnotations.open(store.documentId, store.input)).location,
+        isNull,
+      );
+    },
+  );
+
+  testWidgets(
+    'opening a book records a source-free library entry without inventing access',
+    (tester) async {
+      final store = _Store();
+      await _open(tester, store);
+      final library = await EbookLibrary.open();
+      addTearDown(library.dispose);
+      expect(library.entries, hasLength(1));
+      expect(library.entries.single.title, 'Original');
+      expect(library.entries.single.source, isNull);
+      expect(library.entries.single.canLocateSource, isFalse);
+      await tester.tap(find.byType(PopupMenuButton<String>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Ebook library'));
+      await tester.pumpAndSettle();
+      expect(
+        find.text('Locate this file manually to read it again.'),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'Linux selects the shared engine only after a successful host probe',
+    (tester) async {
+      await _open(
+        tester,
+        _Store(),
+        portableReader: true,
+        startEditing: false,
+        linuxHostProbe: () async =>
+            const EbookLinuxHostStatus(available: true, version: 'test'),
+      );
+      expect(find.byType(CrispEbookReader), findsOneWidget);
+      expect(find.byType(EbookChapterReader), findsNothing);
+      // The platform host is absent in this widget-test process. Its instance
+      // error offers a deliberate fallback without reusing Foliate locators.
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(PopupMenuButton<String>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Use portable EPUB reader').last);
+      await tester.pumpAndSettle();
+      expect(find.byType(EbookChapterReader), findsOneWidget);
+      expect(find.byType(CrispEbookReader), findsNothing);
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.linux),
+  );
 
   testWidgets(
     'formatted prose integrates with undo, redo and original-file save',
@@ -258,7 +472,9 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(
         find.byWidgetPredicate(
-          (w) => w is DropdownButton<String> && w.value == 'light',
+          (w) =>
+              w is DropdownButtonFormField<String> &&
+              w.key == const ValueKey('ebook-appearance-Theme'),
         ),
       );
       await tester.pumpAndSettle();

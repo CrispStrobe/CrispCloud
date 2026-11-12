@@ -1,13 +1,20 @@
+import './reader_compat.js'
 import {makeBook} from './foliate/view.js'
 import {Overlayer} from './foliate/overlayer.js'
 import {safeResourceTransform, secureSections} from './security.js'
 import {exportPublication, metadataOf} from './normalize.js'
+import {normalizeAppearance, appearanceStyle, readingCapabilities, progressFraction,
+    navigationHistory, navigateHistory, createNavigationQueue,
+    guardRendererLifecycle} from './reader_controls.js'
 
 const session = decodeURIComponent(location.hash.slice(1))
 const status = document.getElementById('status')
 let book = null, view = null, filename = '', sourceFormat = '', cleanupSections = null
-let opened = false, appearance = {}, searchGeneration = 0
+let opened = false, appearance = normalizeAppearance(), searchGeneration = 0
 const highlights = new Map()
+const enqueueNavigation = createNavigationQueue()
+const navigationMethods = new Set(['open','next','previous','goTo','goToFraction',
+    'historyBack','historyForward','appearance'])
 const expectedParent = location.origin
 const serialize = value => JSON.stringify({...value, session, channel:'crisp-ebook-v1'})
 const send = value => {
@@ -38,21 +45,20 @@ const base64ToBytes = data => {
     return Uint8Array.from(binary, character => character.charCodeAt(0))
 }
 function applyAppearance(options) {
-    appearance = {...appearance, ...options}
-    const fontSize = Math.min(48, Math.max(10, Number(appearance.fontSize) || 18))
-    const lineHeight = Math.min(2.5, Math.max(1, Number(appearance.lineHeight) || 1.6))
-    const colors = {light:['#ffffff','#243248','#245f9f'], sepia:['#f5eddb','#493c2c','#785024'], dark:['#19222e','#dce4ec','#96c9ff']}
-    const [background, foreground, link] = colors[appearance.theme] ?? colors.light
-    const fontFamily = ['serif','sans-serif','monospace'].includes(appearance.fontFamily) ? appearance.fontFamily : 'serif'
+    appearance = normalizeAppearance({...appearance, ...options})
+    const {background, styles, attributes} = appearanceStyle(appearance)
     document.body.style.background = background
-    view?.renderer?.setAttribute('flow', appearance.flow === 'scrolled' ? 'scrolled' : 'paginated')
-    view?.renderer?.setAttribute('max-column-count', '2')
-    view?.renderer?.setAttribute('max-inline-size', '780px')
-    view?.renderer?.setAttribute('margin', '24px')
-    view?.renderer?.setStyles?.(`html, body { background: ${background}; color: ${foreground}; }
-        html { font-size: ${fontSize}px !important; } body { font-family: ${fontFamily}; }
-        p, li, blockquote, dd { line-height: ${lineHeight}; } a { color: ${link}; }
-        img, svg { max-width: 100%; } pre { white-space: pre-wrap; }`)
+    const capabilities = readingCapabilities(view)
+    if (capabilities.supportsLayout) {
+        for (const [name, value] of Object.entries(attributes))
+            if (view.renderer.getAttribute(name) !== value)
+                view.renderer.setAttribute(name, value)
+    }
+    if (capabilities.supportsTextAppearance) view.renderer.setStyles(styles)
+    // Column limits and margins do not always resize the outer host. Render
+    // explicitly so the paginator restores its current range after reflow.
+    if (capabilities.supportsLayout) view.renderer.render?.()
+    return appearance
 }
 async function open(args) {
     opened = true
@@ -60,6 +66,8 @@ async function open(args) {
     cleanupSections?.()
     book?.destroy?.()
     book = null
+    appearance = normalizeAppearance(args.appearance)
+    ++searchGeneration
     highlights.clear()
     filename = String(args.filename || 'book.epub').slice(0, 512)
     const suffix = filename.toLowerCase().split('.').pop()
@@ -75,6 +83,11 @@ async function open(args) {
     cleanupSections = secureSections(book)
     view = document.createElement('foliate-view')
     document.getElementById('reader').append(view)
+    const currentView = view
+    currentView.history.addEventListener('index-change', () => {
+        if (view === currentView)
+            send({event:'history', data:navigationHistory(currentView)})
+    })
     view.addEventListener('external-link', event => {
         event.preventDefault()
         const href = String(event.detail.href_ ?? '')
@@ -93,23 +106,30 @@ async function open(args) {
         })
         doc.addEventListener('keydown', event => {
             if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return
-            if (event.key === 'ArrowRight') { event.preventDefault(); view.goRight() }
-            if (event.key === 'ArrowLeft') { event.preventDefault(); view.goLeft() }
+            const direction = event.key === 'ArrowRight' ? 'goRight'
+                : event.key === 'ArrowLeft' ? 'goLeft' : null
+            if (direction) {
+                event.preventDefault()
+                enqueueNavigation(() => view === currentView ? currentView[direction]() : null)
+                    .catch(() => {})
+            }
         })
     })
     view.addEventListener('relocate', ({detail}) => send({event:'location', data:{
-        cfi:detail.cfi, fraction:Number.isFinite(detail.fraction) ? detail.fraction : 0,
+        cfi:detail.cfi, fraction:Number.isFinite(detail.fraction) ? progressFraction(detail.fraction) : 0,
         chapterTitle:detail.tocItem?.label ?? '', sectionIndex:detail.section?.current ?? 0}}))
     view.addEventListener('draw-annotation', ({detail:{draw,annotation}}) => draw(Overlayer.highlight, {color:annotation.color}))
     view.addEventListener('create-overlay', () => {
         requestAnimationFrame(() => { for (const annotation of highlights.values()) view.addAnnotation(annotation).catch(() => {}) })
     })
     await view.open(book)
+    guardRendererLifecycle(view)
     applyAppearance(args.appearance ?? {})
     await view.init({lastLocation:args.initialLocation || undefined, showTextStart:false})
     status.hidden = true
     const info = {...metadataOf(book, filename), toc:tocOf(book.toc), sectionCount:book.sections.length,
-        sourceFormat, fixedLayout:view.isFixedLayout, warnings:[]}
+        sourceFormat, fixedLayout:view.isFixedLayout, warnings:[], ...readingCapabilities(view)}
+    send({event:'history', data:navigationHistory(view)})
     send({event:'ready', data:info})
     return info
 }
@@ -135,7 +155,14 @@ const methods = {
     next:async () => { requireBook(); await view.next() },
     previous:async () => { requireBook(); await view.prev() },
     goTo:async ({target}) => { requireBook(); await view.goTo(target) },
-    goToFraction:async ({fraction}) => { requireBook(); await view.goToFraction(Math.max(0, Math.min(1, Number(fraction) || 0))) },
+    goToFraction:async ({fraction}) => {
+        requireBook()
+        if (!readingCapabilities(view).supportsProgressSeeking)
+            throw new Error('Progress seeking is unavailable for this publication')
+        await view.goToFraction(progressFraction(fraction))
+    },
+    historyBack:async () => { requireBook(); return navigateHistory(view, 'back') },
+    historyForward:async () => { requireBook(); return navigateHistory(view, 'forward') },
     appearance:async args => applyAppearance(args),
     search,
     clearSearch:async () => { requireBook(); ++searchGeneration; view.clearSearch() },
@@ -159,7 +186,8 @@ async function receive(message) {
     const {id, method, args = {}} = message
     try {
         if (!Object.hasOwn(methods, method)) throw new Error('Unknown ebook command')
-        const data = await methods[method](args)
+        const data = await (navigationMethods.has(method)
+            ? enqueueNavigation(() => methods[method](args)) : methods[method](args))
         send({id, result:data ?? null})
     } catch (error) {
         const description = error instanceof Error ? error.message : String(error)

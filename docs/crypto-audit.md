@@ -497,6 +497,110 @@ WebView runtimes and final application binaries were not rebuilt or audited
 by this dependency-delta check. Their contents cannot be inferred solely from
 the absence of a newly named Dart crypto dependency.
 
+### Reading-data exchange, library identities and shared reader controls
+
+The follow-on reader work retains the initial 177 source paths and adds 30
+reviewed paths, for 207 in the [inventory](crypto-inventory.json). The extra
+paths bind the transfer and library services, their application integration,
+shared appearance and navigation controls, and the optional Linux host. The
+existing algorithm records above remain applicable. This increment adds no
+production Dart dependency, cipher, password KDF or credential store.
+
+[`ebook_reading_data.dart`](../lib/services/ebook_reading_data.dart) uses the
+existing Dart `crypto.sha256` to fingerprint a canonical reading-data snapshot.
+[`ebook_annotations.dart`](../lib/services/ebook_annotations.dart) continues to
+hash the actual publication bytes and the source identity for its local key.
+An imported file must match that content digest, byte length and explicit
+renderer identity before any merge is applied. The preview fingerprint also
+has to match the current local state when the user applies it. These are
+consistency checks: a SHA-256 value included in a user-supplied JSON file is
+neither a signature nor evidence of who supplied it.
+
+The transfer format is versioned plain UTF-8 JSON. It carries bookmarks,
+highlights and their notes, current position, and the nine bounded appearance
+fields. It contains no account, path, file grant or credential fields. The
+picker checks declared length and bounds actual streamed bytes to 2 MiB;
+the parser bounds nesting to 16 and each annotation collection to 500, rejects
+unknown fields and incompatible versions, and validates numbers, strings and
+renderer-specific locator envelopes. Portable locations remain distinct from
+Foliate CFIs. Local-first merge, imported-first merge and replacement are
+explicit choices; no network synchronization or provider-side write is added.
+The native export uses the existing device-save flow, and browser export uses
+a temporary JSON Blob URL.
+
+The annotation service serializes writes and imports across instances sharing
+one `SharedPreferences` object. It compares the last observed stored value
+before writing, rejects a stale preview or instance, and publishes an imported
+snapshot in memory only after its one preference write succeeds. The library
+service also reloads the current catalog inside its in-process lock before
+mutating it. Failed writes retain the live draft and restore the preference
+cache from persistence. These guards do not provide encryption, authenticated
+storage, cross-process compare-and-swap, or a browser cross-tab transaction.
+The editor pauses relocation during import/library dialogs, refreshes the
+sidecar after returning from the library, and provides an in-memory export
+recovery path when local saving fails.
+
+[`ebook_library.dart`](../lib/services/ebook_library.dart) derives catalog IDs
+with SHA-256 over an explicit JSON tuple. A persistent source uses its exact
+kind, provider, account key, root and object ID or path. An attachment without
+a persistent source uses its content digest and byte length. The 1,000-entry,
+4 MiB local index may therefore contain source-reference metadata in clear
+preferences; hashing its row ID does not conceal the stored reference. It
+stores no credentials. [`ebook_library_actions.dart`](../lib/widgets/ebook_library_actions.dart)
+re-resolves the exact account/root, checks the captured origin again after a
+fresh stat, and rejects an object-ID mismatch. A source reference grants no
+access by itself; a source-free row requires the user to locate the file.
+
+The new [`reader_controls.js`](../packages/crisp_ebook_reader/assets/reader_controls.js)
+normalizes numeric limits and allowlisted choices before constructing the
+host's style sheets. It accepts no arbitrary CSS or script argument. Appearance
+changes retain publication nodes and locator structure. Navigation commands
+are serialized, progress must be finite, and fixed-layout capability flags
+hide unavailable typography/layout controls. The compatibility module adds
+missing JavaScript grouping helpers only; it performs no I/O or cryptography.
+The existing CSP, publication sanitization and encrypted-archive rejection
+paths are unchanged.
+
+### Optional Linux WebKitGTK host
+
+The Linux [CMake manifest](../packages/crisp_ebook_reader/linux/CMakeLists.txt)
+checks for WebKitGTK 4.1 development headers at version 2.48.4 or newer. It links
+system GTK3 and gmodule, and links epoxy only in the enhanced build. The
+[native adapter](../packages/crisp_ebook_reader/linux/crisp_ebook_reader_plugin.cc)
+resolves WebKit and JavaScriptCore symbols from `libwebkit2gtk-4.1.so.0` on
+demand and verifies the runtime version. It does not add a direct WebKit
+`DT_NEEDED` entry or copy a partial browser runtime into the Flutter bundle.
+A build without headers or an installation without that runtime reports the
+enhanced host unavailable and retains the portable reader. The application
+registration files enable this plugin, and the [Debian packaging script](../linux/packaging/build_deb.sh)
+recommends `libwebkit2gtk-4.1-0 (>= 2.48.4)` without making it a startup dependency.
+
+The adapter creates an ephemeral WebKit context, requires its process sandbox,
+disables persistent WebView storage and file-URL access, and denies browser
+permission, authentication, file-chooser, new-window and download requests.
+Its start URL must be the expected `http://127.0.0.1:<port>/<session>/index.html`
+with the matching session fragment. The injected bridge belongs to that
+top-level document; approved book frames use local Blob URLs. The existing
+[asset server](../packages/crisp_ebook_reader/lib/src/hosts/asset_server.dart)
+serves only bundled assets under the session path with the host CSP. The Dart
+reader continues to validate its random session and message channel. This
+does not introduce a custom TLS implementation or a permissive certificate
+trust callback.
+
+The rendering path uses WebKit snapshots and Flutter GL textures, bounds each
+frame to 16,777,216 pixels, and limits retained surfaces to four per engine.
+Closing a reader destroys its WebKit view/context and cancels its callbacks;
+the bounded texture pool retains its GL resources for the engine lifetime.
+Those details describe the reviewed lifecycle, not a completed target-device
+validation or a release claim.
+
+WebKitGTK, its subprocesses, sandbox helper, JavaScriptCore and transitive
+network/TLS/crypto libraries remain system-supplied artifacts. Neither the
+Dart lock nor this source fingerprint pins their installed bytes. A finished
+Linux distribution still needs evidence for its actual runtime and native
+dependency graph. This source inspection does not audit the browser engine,
+prove every system's sandbox configuration, or change Apple/export decisions.
+
 ### Meaning of the existing export-policy status
 
 `documentation.status: not_required` in the existing Apple policy records the

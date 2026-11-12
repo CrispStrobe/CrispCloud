@@ -3,6 +3,8 @@
 // Main scaffold and layout for the two-panel file browser.
 // Keyboard handling, dialogs, and about dialog are in separate files.
 
+import '../l10n/ebook_strings.dart';
+import '../widgets/ebook_library_actions.dart';
 import '../l10n/commander_strings.dart';
 import '../l10n/terminal_strings.dart';
 
@@ -2391,6 +2393,13 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           child: _overflowItem(
             Icons.compare_arrows,
             context.commanderTr("Compare folders…"),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'ebook_library',
+          child: _overflowItem(
+            Icons.library_books_outlined,
+            context.ebookTr('Ebook library'),
           ),
         ),
         PopupMenuItem(

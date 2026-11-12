@@ -23,12 +23,17 @@ import '../services/ebook_device_export.dart';
 import '../services/ebook_edit_session.dart';
 import '../services/ebook_editor_menu.dart';
 import '../services/ebook_file_store.dart';
+import '../services/ebook_library.dart';
+import '../services/ebook_reading_data_files.dart';
 import '../services/file_bytes_loader.dart';
 import '../services/image_edit_session.dart';
 import '../services/panel_source_service.dart';
 import '../services/pdf_file_store.dart';
 import 'image_editor_surface.dart';
 import 'ebook_chapter_reader.dart';
+import 'ebook_appearance_dialog.dart';
+import 'ebook_library_actions.dart';
+import 'ebook_reading_data_dialog.dart';
 import 'ebook_kindle_metadata_editor.dart';
 import 'ebook_prose_editor.dart';
 import 'internal_viewer_dialog.dart'
@@ -87,6 +92,9 @@ class EbookEditorDialog extends ConsumerStatefulWidget {
     this.deviceExporterOverride,
     this.readerBuilderOverride,
     this.documentLoaderOverride,
+    this.linuxHostProbeOverride,
+    this.readingDataPickerOverride,
+    this.readingDataExporterOverride,
     this.onPrevious,
     this.onNext,
     this.positionLabel,
@@ -101,6 +109,9 @@ class EbookEditorDialog extends ConsumerStatefulWidget {
   final EbookDeviceExporter? deviceExporterOverride;
   final EbookReaderBuilder? readerBuilderOverride;
   final EbookDocumentLoader? documentLoaderOverride;
+  final Future<EbookLinuxHostStatus> Function()? linuxHostProbeOverride;
+  final EbookReadingDataPicker? readingDataPickerOverride;
+  final EbookReadingDataExporter? readingDataExporterOverride;
   final VoidCallback? onPrevious;
   final VoidCallback? onNext;
   final String? positionLabel;
@@ -122,6 +133,16 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
   EbookEditSession? _session;
   EbookAnnotations? _annotations;
   String _annotationIdentity = '';
+  EbookLinuxHostStatus? _linuxHost;
+  bool _portableReaderRequested = false;
+  bool _readingDataBusy = false;
+  bool _readingDataPreviewing = false;
+  double? _seekFraction;
+  EbookLibrary? _library;
+  String? _libraryEntryId;
+  FileReference? _librarySource;
+  String? _libraryContentSha256;
+  bool _libraryWriting = false;
   Uint8List? _bytes;
   String? _resource;
   String _sourceBaseline = '';
@@ -158,7 +179,8 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
 
   String get _name => widget.displayName ?? widget.file.name;
   EpubDocument? get _document => _session?.document;
-  bool get _busy => _loading || _working || (_session?.isSaving ?? false);
+  bool get _busy =>
+      _loading || _working || _readingDataBusy || (_session?.isSaving ?? false);
   bool get _editable => _document?.canEdit ?? false;
   bool get _dirty =>
       _metadataDraft || _sourceDraft || (_session?.isDirty ?? false);
@@ -174,10 +196,15 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
       _bytes != null &&
       (_document != null || _name.toLowerCase().endsWith('.epub'));
   bool get _usesChapterReader =>
-      !EbookReaderCapabilities.supportsEmbeddedReader &&
-      widget.readerBuilderOverride == null;
+      widget.readerBuilderOverride == null &&
+      (_portableReaderRequested ||
+          (!EbookReaderCapabilities.supportsEmbeddedReader &&
+              _linuxHost?.available != true));
+  EbookReaderRenderer get _renderer => _usesChapterReader
+      ? EbookReaderRenderer.portable
+      : EbookReaderRenderer.foliate;
   bool get _readerReady =>
-      _usesChapterReader ? _chapterReader.isReady : _reader.isReady;
+      !_busy && (_usesChapterReader ? _chapterReader.isReady : _reader.isReady);
   Future<void> _goToReader(String target) =>
       _usesChapterReader ? _chapterReader.goTo(target) : _reader.goTo(target);
   Future<void> _previousReaderPage() =>
@@ -235,6 +262,7 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
     _language.dispose();
     _description.dispose();
     _session?.dispose();
+    _library?.dispose();
     super.dispose();
   }
 
@@ -320,6 +348,28 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
                     .read(panelProvider(widget.side))
                     .originForOperation(widget.file));
       _store = _captureStore(origin);
+      if (widget.bytesOverride == null &&
+          origin?.isCurrent == true &&
+          origin!.storageReference.persistent) {
+        final paths = origin.storageReference.isLocal ? p.context : p.posix;
+        final path =
+            widget.file.path ??
+            paths.join(origin.source.currentPath, widget.file.name);
+        if (paths.isAbsolute(path)) {
+          _librarySource = FileReference(
+            storage: origin.storageReference,
+            path: paths.normalize(path),
+            objectId: widget.file.uuid,
+          );
+        }
+      }
+      if (!kIsWeb &&
+          defaultTargetPlatform == TargetPlatform.linux &&
+          widget.readerBuilderOverride == null) {
+        _linuxHost =
+            await (widget.linuxHostProbeOverride?.call() ??
+                probeEbookLinuxHost());
+      }
       final bytes =
           widget.bytesOverride ??
           await (_store?.load() ??
@@ -346,10 +396,24 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
       _annotationIdentity =
           _store?.documentId ??
           '${origin?.storageId ?? 'attachment'}:${widget.file.path ?? _name}';
-      if (_usesChapterReader) {
-        _annotationIdentity += ':chapter-reader';
+      _annotations = await EbookAnnotations.open(
+        _annotationIdentity,
+        bytes,
+        renderer: _renderer,
+      );
+      _libraryContentSha256 = _annotations!.contentSha256;
+      try {
+        final library = await EbookLibrary.open();
+        if (!mounted) {
+          library.dispose();
+          return;
+        }
+        _library = library;
+        await _recordLibraryBook();
+      } catch (error) {
+        // A catalog write must not prevent opening the user's book.
+        _notice = _message(error);
       }
-      _annotations = await EbookAnnotations.open(_annotationIdentity, bytes);
       if (!mounted) return;
       unawaited(_loadConversionCapabilities());
       setState(() {
@@ -565,6 +629,7 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
         final annotations = await EbookAnnotations.open(
           '$_annotationIdentity${_converted ? ':converted' : ''}',
           bytes,
+          renderer: _renderer,
         );
         if (!mounted) return;
         if (!identical(session, _session) ||
@@ -790,8 +855,50 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
       _annotationTimer?.cancel();
       try {
         await _annotations?.save();
+        if (_annotations case final annotations?) {
+          try {
+            await _recordLibraryProgress(annotations);
+          } catch (error) {
+            // The sidecar is durable. A catalog refresh failure must not turn
+            // a successfully saved reading state into a discard prompt.
+            _snack(_message(error));
+          }
+        }
       } catch (error) {
-        _snack(_message(error));
+        if (!mounted) return;
+        final choice = await showDialog<String>(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            title: Text(context.ebookTr('Reading data could not be saved')),
+            content: SingleChildScrollView(
+              child: Text(
+                '${context.ebookTr(_message(error))}\n\n${context.ebookTr('Your current reading data is still available here. Export it before closing, or explicitly discard these unsaved changes.')}',
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(context.ebookTr('Keep reading')),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, 'export'),
+                child: Text(context.ebookTr('Export reading data')),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, 'discard'),
+                child: Text(
+                  context.ebookTr('Close without saving reading data'),
+                ),
+              ),
+            ],
+          ),
+        );
+        if (choice == 'export') {
+          await _exportReadingData();
+          return;
+        }
+        if (choice != 'discard') return;
       }
       if (!mounted || route?.isCurrent == false) return;
       if (navigate != null) {
@@ -1203,6 +1310,11 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
       _bookInfo = info;
       _readerError = null;
     });
+    unawaited(
+      _recordLibraryBook().catchError(
+        (Object error) => _snack(_message(error)),
+      ),
+    );
     if (_usesChapterReader) return;
     for (final highlight in _annotations?.highlights ?? <EbookHighlight>[]) {
       unawaited(
@@ -1214,7 +1326,11 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
   }
 
   void _onLocation(EbookLocation location) {
-    if (!mounted) return;
+    if (!mounted ||
+        _readingDataBusy ||
+        _annotations?.isApplyingReadingData == true) {
+      return;
+    }
     setState(() => _location = location);
     _annotations?.location = location;
     _persistAnnotations();
@@ -1226,9 +1342,10 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
     if (annotations == null) return;
     _annotationTimer = Timer(const Duration(milliseconds: 500), () {
       unawaited(
-        annotations.save().catchError(
-          (Object error) => _snack(_message(error)),
-        ),
+        annotations
+            .save()
+            .then((_) => _recordLibraryProgress(annotations))
+            .catchError((Object error) => _snack(_message(error))),
       );
     });
   }
@@ -1335,148 +1452,17 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
 
   Future<void> _appearance() async {
     final annotations = _annotations;
-    if (annotations == null) return;
-    final saved = annotations.appearance;
-    var appearance = EbookAppearance(
-      fontSize: saved.fontSize.isFinite ? saved.fontSize.clamp(10, 48) : 18,
-      lineHeight: saved.lineHeight.isFinite
-          ? saved.lineHeight.clamp(1, 2.5)
-          : 1.6,
-      theme: const {'light', 'sepia', 'dark'}.contains(saved.theme)
-          ? saved.theme
-          : 'light',
-      flow: _usesChapterReader || saved.flow == 'scrolled'
-          ? 'scrolled'
-          : 'paginated',
-      fontFamily:
-          const {'serif', 'sans-serif', 'monospace'}.contains(saved.fontFamily)
-          ? saved.fontFamily
-          : 'serif',
-    );
+    if (_busy || annotations == null) return;
     final result = await showDialog<EbookAppearance>(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: Text(context.ebookTr('Appearance')),
-          content: SingleChildScrollView(
-            child: SizedBox(
-              width: 320,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('${appearance.fontSize.round()} pt'),
-                  Slider(
-                    value: appearance.fontSize.clamp(10, 48),
-                    min: 10,
-                    max: 48,
-                    divisions: 38,
-                    onChanged: (size) => setDialogState(
-                      () => appearance = EbookAppearance(
-                        fontSize: size,
-                        theme: appearance.theme,
-                        flow: appearance.flow,
-                        lineHeight: appearance.lineHeight,
-                        fontFamily: appearance.fontFamily,
-                      ),
-                    ),
-                  ),
-                  DropdownButton<String>(
-                    isExpanded: true,
-                    value: appearance.theme,
-                    items: ['light', 'sepia', 'dark']
-                        .map(
-                          (theme) => DropdownMenuItem(
-                            value: theme,
-                            child: Text(context.ebookTr(theme)),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (theme) => setDialogState(
-                      () => appearance = EbookAppearance(
-                        fontSize: appearance.fontSize,
-                        theme: theme!,
-                        flow: appearance.flow,
-                        lineHeight: appearance.lineHeight,
-                        fontFamily: appearance.fontFamily,
-                      ),
-                    ),
-                  ),
-                  DropdownButton<String>(
-                    isExpanded: true,
-                    value: appearance.fontFamily,
-                    items: ['serif', 'sans-serif', 'monospace']
-                        .map(
-                          (font) => DropdownMenuItem(
-                            value: font,
-                            child: Text(context.ebookTr(font)),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (font) => setDialogState(
-                      () => appearance = EbookAppearance(
-                        fontSize: appearance.fontSize,
-                        theme: appearance.theme,
-                        flow: appearance.flow,
-                        lineHeight: appearance.lineHeight,
-                        fontFamily: font!,
-                      ),
-                    ),
-                  ),
-                  Text(
-                    '${context.ebookTr('Line spacing')}: ${appearance.lineHeight.toStringAsFixed(1)}',
-                  ),
-                  Slider(
-                    value: appearance.lineHeight,
-                    min: 1,
-                    max: 2.5,
-                    divisions: 15,
-                    onChanged: (height) => setDialogState(
-                      () => appearance = EbookAppearance(
-                        fontSize: appearance.fontSize,
-                        theme: appearance.theme,
-                        flow: appearance.flow,
-                        lineHeight: height,
-                        fontFamily: appearance.fontFamily,
-                      ),
-                    ),
-                  ),
-                  if (!_usesChapterReader)
-                    DropdownButton<String>(
-                      isExpanded: true,
-                      value: appearance.flow,
-                      items: ['paginated', 'scrolled']
-                          .map(
-                            (flow) => DropdownMenuItem(
-                              value: flow,
-                              child: Text(context.ebookTr(flow)),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (flow) => setDialogState(
-                        () => appearance = EbookAppearance(
-                          fontSize: appearance.fontSize,
-                          theme: appearance.theme,
-                          flow: flow!,
-                          lineHeight: appearance.lineHeight,
-                          fontFamily: appearance.fontFamily,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(context.ebookTr('Cancel')),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, appearance),
-              child: Text(context.ebookTr('Apply')),
-            ),
-          ],
-        ),
+      builder: (context) => EbookAppearanceDialog(
+        appearance: annotations.appearance,
+        translate: context.ebookTr,
+        portable: _usesChapterReader,
+        supportsTextAppearance: _bookInfo?.supportsTextAppearance ?? true,
+        supportsLayout: _bookInfo?.supportsLayout ?? !_usesChapterReader,
+        supportsPublisherStyles:
+            _bookInfo?.supportsPublisherStyles ?? !_usesChapterReader,
       ),
     );
     if (result == null || !mounted) return;
@@ -1486,12 +1472,234 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
       } else {
         await _reader.setAppearance(result);
       }
+      annotations.appearance = result;
+      _persistAnnotations();
     } catch (error) {
       _snack(_message(error));
+    }
+  }
+
+  Future<void> _recordLibraryBook() async {
+    final library = _library;
+    final annotations = _annotations;
+    if (!mounted ||
+        library == null ||
+        annotations == null ||
+        _libraryWriting ||
+        annotations.contentSha256 != _libraryContentSha256) {
       return;
     }
-    annotations.appearance = result;
-    _persistAnnotations();
+    _libraryWriting = true;
+    try {
+      final title = _bookInfo?.title ?? _document?.title ?? '';
+      final entry = await library.recordOpened(
+        source: _librarySource,
+        contentSha256: annotations.contentSha256,
+        contentByteLength: annotations.contentByteLength,
+        title: title.trim().isEmpty ? _name : title,
+        authors: _bookInfo?.authors ?? _document?.authors ?? const [],
+        format: _bookInfo?.sourceFormat ?? widget.file.extension,
+        renderer: annotations.renderer,
+      );
+      _libraryEntryId = entry.id;
+      await _recordLibraryProgress(annotations);
+    } finally {
+      _libraryWriting = false;
+      if (mounted && !identical(annotations, _annotations)) {
+        unawaited(
+          _recordLibraryBook().catchError(
+            (Object error) => _snack(_message(error)),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _recordLibraryProgress(EbookAnnotations annotations) async {
+    final library = _library;
+    final id = _libraryEntryId;
+    final location = annotations.location;
+    if (library == null ||
+        id == null ||
+        location == null ||
+        annotations.contentSha256 != _libraryContentSha256 ||
+        !identical(annotations, _annotations) ||
+        library.get(id) == null) {
+      return;
+    }
+    await library.recordProgress(
+      id,
+      contentSha256: annotations.contentSha256,
+      renderer: annotations.renderer,
+      fraction: location.fraction,
+    );
+  }
+
+  Future<void> _openLibrary() async {
+    if (_busy) return;
+    final annotations = _annotations;
+    setState(() => _readingDataBusy = true);
+    _annotationTimer?.cancel();
+    try {
+      await annotations?.save();
+      if (annotations != null) await _recordLibraryProgress(annotations);
+      if (!mounted) return;
+      setState(() => _readingDataPreviewing = true);
+      await showEbookLibrary(
+        context,
+        ref,
+        widget.side,
+        library: _library,
+        currentEntryId: _libraryEntryId,
+      );
+      if (!mounted || annotations == null) return;
+      // A different reader can have updated this exact sidecar while the
+      // library was open. Background relocation was paused for the modal.
+      final fresh = await EbookAnnotations.open(
+        '$_annotationIdentity${_converted ? ':converted' : ''}',
+        _bytes!,
+        renderer: annotations.renderer,
+      );
+      if (!mounted) return;
+      final changed =
+          fresh.exportReadingData() != annotations.exportReadingData();
+      _annotations = fresh;
+      if (changed) _recreateReaderFromReadingData(fresh);
+    } catch (error) {
+      _snack(_message(error));
+    } finally {
+      if (mounted) {
+        setState(() {
+          _readingDataBusy = false;
+          _readingDataPreviewing = false;
+        });
+      }
+    }
+  }
+
+  void _recreateReaderFromReadingData(EbookAnnotations annotations) {
+    setState(() {
+      ++_readerVersion;
+      _selection = null;
+      _bookInfo = null;
+      _location = annotations.location;
+      _readerError = null;
+      _seekFraction = null;
+      _searchHits = [];
+      ++_searchGeneration;
+      _searching = false;
+    });
+  }
+
+  Future<void> _exportReadingData() async {
+    final annotations = _annotations;
+    if (_busy || annotations == null) return;
+    setState(() => _readingDataBusy = true);
+    _annotationTimer?.cancel();
+    try {
+      // Export is also the recovery path when local persistence is unavailable
+      // or another open reader has saved a newer sidecar. Validate the current
+      // in-memory snapshot without requiring a successful local overwrite.
+      final result =
+          await (widget.readingDataExporterOverride ??
+              exportEbookReadingDataFile)(
+            annotations.exportReadingData(),
+            '${p.basenameWithoutExtension(_name)}.reading.json',
+          );
+      if (result != null) {
+        _snack(
+          result == EbookSaveOutcome.downloadedCopy
+              ? 'Reading-data download started.'
+              : 'Reading data exported.',
+        );
+      }
+    } catch (error) {
+      _snack(_message(error));
+    } finally {
+      if (mounted) setState(() => _readingDataBusy = false);
+    }
+  }
+
+  Future<void> _importReadingData() async {
+    final annotations = _annotations;
+    if (_busy || annotations == null) return;
+    setState(() => _readingDataBusy = true);
+    _annotationTimer?.cancel();
+    try {
+      await annotations.save();
+      final encoded =
+          await (widget.readingDataPickerOverride ??
+              pickEbookReadingDataFile)();
+      if (encoded == null || !mounted) return;
+      setState(() => _readingDataPreviewing = true);
+      final plan = await showDialog<EbookReadingDataImportPlan>(
+        context: context,
+        builder: (context) => EbookReadingDataDialog(
+          annotations: annotations,
+          encoded: encoded,
+          translate: context.ebookTr,
+        ),
+      );
+      if (mounted) setState(() => _readingDataPreviewing = false);
+      if (plan == null || !mounted) return;
+      await annotations.applyReadingDataImport(plan);
+      if (!mounted) return;
+      // Recreate the reader only after persistence commits the entire import.
+      _recreateReaderFromReadingData(annotations);
+      if (annotations.location == null &&
+          _libraryEntryId != null &&
+          annotations.contentSha256 == _libraryContentSha256 &&
+          _library?.get(_libraryEntryId!) != null) {
+        await _library!.clearProgress(
+          _libraryEntryId!,
+          contentSha256: annotations.contentSha256,
+          renderer: annotations.renderer,
+        );
+      } else {
+        await _recordLibraryProgress(annotations);
+      }
+      _snack('Reading data imported.');
+    } catch (error) {
+      _snack(_message(error));
+    } finally {
+      if (mounted) {
+        setState(() {
+          _readingDataBusy = false;
+          _readingDataPreviewing = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _usePortableReader() async {
+    if (_busy || _document == null || _usesChapterReader) return;
+    setState(() => _working = true);
+    _annotationTimer?.cancel();
+    try {
+      await _annotations?.save();
+      final annotations = await EbookAnnotations.open(
+        '$_annotationIdentity${_converted ? ':converted' : ''}',
+        _bytes!,
+        renderer: EbookReaderRenderer.portable,
+      );
+      if (!mounted) return;
+      setState(() {
+        _portableReaderRequested = true;
+        _annotations = annotations;
+        _readerError = null;
+        _selection = null;
+        _location = null;
+        _bookInfo = null;
+        ++_readerVersion;
+        _searchHits = [];
+        ++_searchGeneration;
+        _searching = false;
+      });
+    } catch (error) {
+      _snack(_message(error));
+    } finally {
+      if (mounted) setState(() => _working = false);
+    }
   }
 
   void _snack(String message) {
@@ -1608,6 +1816,27 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
                     enabled: !_busy,
                     onSelected: _onMenuSelection,
                     itemBuilder: (_) => [
+                      PopupMenuItem(
+                        value: 'library',
+                        child: Text(context.ebookTr('Ebook library')),
+                      ),
+                      if (_annotations != null) ...[
+                        PopupMenuItem(
+                          value: 'exportReadingData',
+                          child: Text(context.ebookTr('Export reading data')),
+                        ),
+                        PopupMenuItem(
+                          value: 'importReadingData',
+                          child: Text(context.ebookTr('Import reading data')),
+                        ),
+                      ],
+                      if (_document != null && !_usesChapterReader)
+                        PopupMenuItem(
+                          value: 'portableReader',
+                          child: Text(
+                            context.ebookTr('Use portable EPUB reader'),
+                          ),
+                        ),
                       if (_canOpenTextFallback)
                         PopupMenuItem(
                           key: const ValueKey('ebook-text-fallback-menu'),
@@ -1655,7 +1884,8 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
               ),
               body: Column(
                 children: [
-                  if (_busy) const LinearProgressIndicator(),
+                  if (_busy && !_readingDataPreviewing)
+                    const LinearProgressIndicator(),
                   if (_conversionToken != null)
                     Align(
                       alignment: Alignment.centerRight,
@@ -1707,6 +1937,14 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
 
   void _onMenuSelection(String action) {
     switch (action) {
+      case 'library':
+        unawaited(_openLibrary());
+      case 'exportReadingData':
+        unawaited(_exportReadingData());
+      case 'importReadingData':
+        unawaited(_importReadingData());
+      case 'portableReader':
+        unawaited(_usePortableReader());
       case 'textFallback':
         unawaited(_openTextFallback());
       case 'export':
@@ -1758,14 +1996,26 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
     if (_bytes == null) return const SizedBox.shrink();
     final document = _document;
     if (_usesChapterReader && document == null) {
-      return const Center(
+      return Center(
         child: Padding(
-          padding: EdgeInsets.all(24),
-          child: Text(
-            'This format needs the enhanced reader on Android, iOS, macOS, Windows or the web. '
-            'Linux can read and edit EPUB files, and export Kindle files from EPUB. '
-            'Kindle metadata editing is available from the menu.',
-            textAlign: TextAlign.center,
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                context.ebookTr(
+                  'This format needs the enhanced reader. The portable reader supports EPUB.',
+                ),
+                textAlign: TextAlign.center,
+              ),
+              if (_linuxHost?.reason case final reason?) ...[
+                const SizedBox(height: 12),
+                SelectableText(
+                  context.ebookTr(reason),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ],
           ),
         ),
       );
@@ -1803,6 +2053,9 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
                 appearance: _annotations?.appearance ?? const EbookAppearance(),
                 onReady: _onReady,
                 onLocationChanged: _onLocation,
+                onHistoryChanged: (_) {
+                  if (mounted) setState(() {});
+                },
                 onSelection: (selection) {
                   if (mounted) setState(() => _selection = selection);
                 },
@@ -1818,6 +2071,27 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
             spacing: 4,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
+              _icon(
+                'Ebook library',
+                Icons.library_books_outlined,
+                _openLibrary,
+              ),
+              if (_bookInfo?.supportsNavigationHistory == true) ...[
+                _icon(
+                  'Back to previous location',
+                  Icons.arrow_back,
+                  _readerReady && _reader.canGoBack
+                      ? () => _readerCommand(_reader.goBack)
+                      : null,
+                ),
+                _icon(
+                  'Forward to next location',
+                  Icons.arrow_forward,
+                  _readerReady && _reader.canGoForward
+                      ? () => _readerCommand(_reader.goForward)
+                      : null,
+                ),
+              ],
               _icon(
                 _usesChapterReader ? 'Previous chapter' : 'Previous page',
                 Icons.chevron_left,
@@ -1855,6 +2129,18 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
                   Icons.format_color_fill,
                   _selection?.cfi.isNotEmpty == true ? _highlight : null,
                 ),
+              if (!_usesChapterReader)
+                _icon(
+                  'Copy selection',
+                  Icons.content_copy,
+                  _selection?.text.isNotEmpty == true
+                      ? () => unawaited(
+                          Clipboard.setData(
+                            ClipboardData(text: _selection!.text),
+                          ).then((_) => _snack('Selection copied.')),
+                        )
+                      : null,
+                ),
               _icon(
                 'Appearance',
                 Icons.text_fields,
@@ -1884,8 +2170,20 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
             ],
           ),
         ),
+        if (_usesChapterReader &&
+            _linuxHost != null &&
+            !_portableReaderRequested)
+          _banner(
+            'The enhanced Linux reader is unavailable. Using the portable EPUB reader.',
+          ),
         if (_readerError != null) ...[
           _banner(_readerError!),
+          if (!_usesChapterReader && _document != null)
+            TextButton.icon(
+              onPressed: _busy ? null : _usePortableReader,
+              icon: const Icon(Icons.menu_book),
+              label: Text(context.ebookTr('Use portable EPUB reader')),
+            ),
           if (_canOpenTextFallback) _textFallbackButton(),
         ],
         if (_searching) const LinearProgressIndicator(),
@@ -1909,7 +2207,9 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
               },
             ),
           ),
-        Expanded(child: reader),
+        Expanded(
+          child: AbsorbPointer(absorbing: _readingDataBusy, child: reader),
+        ),
         if (_location != null)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -1922,6 +2222,32 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                if (!_usesChapterReader &&
+                    _bookInfo?.supportsProgressSeeking == true)
+                  Expanded(
+                    child: Slider(
+                      key: const ValueKey('ebook-reading-progress'),
+                      value: (_seekFraction ?? _location!.fraction).clamp(
+                        0.0,
+                        1.0,
+                      ),
+                      label:
+                          '${((_seekFraction ?? _location!.fraction) * 100).round()}%',
+                      semanticFormatterCallback: (value) =>
+                          '${(value * 100).round()}%',
+                      onChanged: _readerReady
+                          ? (value) => setState(() => _seekFraction = value)
+                          : null,
+                      onChangeEnd: _readerReady
+                          ? (value) async {
+                              await _readerCommand(
+                                () => _reader.goToFraction(value),
+                              );
+                              if (mounted) setState(() => _seekFraction = null);
+                            }
+                          : null,
+                    ),
+                  ),
                 Text('${(_location!.fraction * 100).round()}%'),
               ],
             ),
@@ -2042,7 +2368,7 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
 
   Widget _icon(String label, IconData icon, VoidCallback? action) => IconButton(
     tooltip: context.ebookTr(label),
-    onPressed: action,
+    onPressed: _busy ? null : action,
     icon: Icon(icon),
   );
 
