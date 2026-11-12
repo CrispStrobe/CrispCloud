@@ -16,6 +16,7 @@ import '../../xml/namespaces.dart';
 import '../../xml/xml_node.dart';
 import '../../xml/xml_reader.dart';
 import '../anim/pml_motion_io.dart';
+import '../model/pml_arrange.dart';
 import '../model/pml_presentation.dart';
 import '../shapes/drawingml.dart';
 import 'slide_section_io.dart';
@@ -513,6 +514,9 @@ class SlideSerializer {
   /// write API.
   OpcPackage write(PmlPresentation pres) {
     SlideSectionXml.validateForWrite(pres);
+    for (final slide in pres.slides) {
+      PmlArrange.validateGrouping(slide.shapes);
+    }
     final bool fresh = pres.package == null;
     final OpcPackage package =
         pres.package ?? OpcPackage.create(OpcPackageKind.slide);

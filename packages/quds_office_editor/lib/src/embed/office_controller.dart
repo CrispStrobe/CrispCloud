@@ -11210,21 +11210,29 @@ class SlideEditorController extends OfficeController {
     if (!config.allowsMutation) {
       return null;
     }
-    final List<PmlShape> items;
+    final List<PmlShape> candidates;
     if (shapes != null) {
-      items = shapes;
+      candidates = shapes;
     } else if (selectedShapes.length >= 2) {
-      items = List<PmlShape>.from(selectedShapes);
+      candidates = selectedShapes;
     } else if (selectedShapes.isEmpty) {
-      items = slide.shapes;
+      candidates = slide.shapes;
     } else {
       return null;
     }
+    final List<PmlShape> items = _arrangementMembers(candidates);
     if (items.length < 2) {
       return null;
     }
-    final int id = PmlArrange.group(items);
-    _adoptSelection(items, primary: selected ?? items.first);
+    final Map<PmlShape, PmlShape> planned = _groupPlan();
+    final int id = PmlArrange.group([
+      for (final shape in items) planned[shape]!,
+    ], allShapes: planned.values.toList());
+    _applyGroupMembership({for (final shape in items) shape: id});
+    _adoptSelection(
+      items,
+      primary: items.contains(selected) ? selected : items.first,
+    );
     notifyListeners();
     return id;
   }
@@ -11234,9 +11242,50 @@ class SlideEditorController extends OfficeController {
     if (!config.allowsMutation) {
       return;
     }
-    final List<PmlShape> items =
-        shapes ?? (selectedShapes.isNotEmpty ? selectedShapes : slide.shapes);
-    PmlArrange.ungroup(items);
+    final List<PmlShape> items = _arrangementMembers(
+      shapes ?? (selectedShapes.isNotEmpty ? selectedShapes : slide.shapes),
+    );
+    final Map<PmlShape, PmlShape> planned = _groupPlan();
+    PmlArrange.ungroup([
+      for (final shape in items) planned[shape]!,
+    ], allShapes: planned.values.toList());
+    _applyGroupMembership({for (final shape in items) shape: null});
+  }
+
+  List<PmlShape> _arrangementMembers(List<PmlShape> shapes) {
+    final Set<PmlShape> seen = Set<PmlShape>.identity();
+    for (final shape in shapes) {
+      if (!seen.add(shape) || !_containsShape(slide.shapes, shape)) {
+        throw ArgumentError(
+          'Arrangement requires unique shapes from the active slide.',
+        );
+      }
+    }
+    return List<PmlShape>.of(shapes);
+  }
+
+  Map<PmlShape, PmlShape> _groupPlan() => {
+    for (final shape in slide.shapes)
+      shape: PmlShape(id: shape.id, name: shape.name, groupId: shape.groupId),
+  };
+
+  void _applyGroupMembership(Map<PmlShape, int?> proposed) {
+    final Map<PmlShape, int?> next = {
+      for (final entry in proposed.entries)
+        if (entry.key.groupId != entry.value) entry.key: entry.value,
+    };
+    if (next.isEmpty) {
+      return;
+    }
+    final Map<PmlShape, int?> previous = {
+      for (final shape in next.keys) shape: shape.groupId,
+    };
+    commands.commit(
+      _CallbackCommand(
+        executeFn: () => next.forEach((shape, id) => shape.groupId = id),
+        undoFn: () => previous.forEach((shape, id) => shape.groupId = id),
+      ),
+    );
     notifyListeners();
   }
 
@@ -11526,8 +11575,10 @@ class SlideEditorController extends OfficeController {
     if (!config.allowsMutation) {
       return;
     }
-    PmlArrange.align(shapes ?? slide.shapes, axis);
-    notifyListeners();
+    _arrangeTransforms(
+      shapes ?? slide.shapes,
+      (planned) => PmlArrange.align(planned, axis),
+    );
   }
 
   /// distributeShapes API.
@@ -11535,8 +11586,35 @@ class SlideEditorController extends OfficeController {
     if (!config.allowsMutation) {
       return;
     }
-    PmlArrange.distribute(shapes ?? slide.shapes, horizontal: horizontal);
-    notifyListeners();
+    _arrangeTransforms(
+      shapes ?? slide.shapes,
+      (planned) => PmlArrange.distribute(planned, horizontal: horizontal),
+    );
+  }
+
+  void _arrangeTransforms(
+    List<PmlShape> shapes,
+    void Function(List<PmlShape>) arrange,
+  ) {
+    final List<PmlShape> items = _arrangementMembers(shapes);
+    final List<PmlShape> planned = [
+      for (final shape in items)
+        PmlShape(id: shape.id, name: shape.name, transform: shape.transform),
+    ];
+    arrange(planned);
+    final Map<PmlShape, PmlTransform> changes = {};
+    for (int index = 0; index < items.length; index++) {
+      final PmlTransform before = items[index].transform;
+      final PmlTransform after = planned[index].transform;
+      if (before.x != after.x ||
+          before.y != after.y ||
+          before.cx != after.cx ||
+          before.cy != after.cy ||
+          before.rot != after.rot) {
+        changes[items[index]] = after;
+      }
+    }
+    applyTransforms(changes);
   }
 
   /// applyMasterBackground API.

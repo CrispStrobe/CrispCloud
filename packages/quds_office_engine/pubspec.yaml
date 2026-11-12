@@ -49,6 +49,7 @@ environment:
 
 dependencies:
   legacy_doc_parser: ^0.1.0-dev.1
+  characters: ^1.4.1
   crypto: ^3.0.7
 
 dev_dependencies:

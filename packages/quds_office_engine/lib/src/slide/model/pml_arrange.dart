@@ -100,7 +100,10 @@ abstract final class PmlArrange {
     }
   }
 
-  /// distribute API.
+  /// Equalize gaps along one axis while keeping the first and last positions.
+  ///
+  /// Every cumulative gap is rounded once to an EMU. Rounding one gap and then
+  /// repeatedly adding it would move the final endpoint and drift on retries.
   static void distribute(List<PmlShape> shapes, {required bool horizontal}) {
     if (shapes.length < 3) {
       return;
@@ -113,66 +116,101 @@ abstract final class PmlArrange {
       );
     final PmlShape first = ordered.first;
     final PmlShape last = ordered.last;
-    if (horizontal) {
-      final int span =
-          (last.transform.x + last.transform.cx) - first.transform.x;
-      var used = 0;
-      for (final PmlShape shape in ordered) {
-        used += shape.transform.cx;
-      }
-      final int gap = ((span - used) / (ordered.length - 1)).round();
-      var cursor = first.transform.x;
-      for (final PmlShape shape in ordered) {
-        shape.transform = PmlTransform(
-          x: cursor,
-          y: shape.transform.y,
-          cx: shape.transform.cx,
-          cy: shape.transform.cy,
-          rot: shape.transform.rot,
-        );
-        cursor += shape.transform.cx + gap;
-      }
-    } else {
-      final int span =
-          (last.transform.y + last.transform.cy) - first.transform.y;
-      var used = 0;
-      for (final PmlShape shape in ordered) {
-        used += shape.transform.cy;
-      }
-      final int gap = ((span - used) / (ordered.length - 1)).round();
-      var cursor = first.transform.y;
-      for (final PmlShape shape in ordered) {
-        shape.transform = PmlTransform(
-          x: shape.transform.x,
-          y: cursor,
-          cx: shape.transform.cx,
-          cy: shape.transform.cy,
-          rot: shape.transform.rot,
-        );
-        cursor += shape.transform.cy + gap;
-      }
+    final int origin = horizontal ? first.transform.x : first.transform.y;
+    final int end = horizontal
+        ? last.transform.x + last.transform.cx
+        : last.transform.y + last.transform.cy;
+    final int used = ordered.fold<int>(
+      0,
+      (sum, shape) =>
+          sum + (horizontal ? shape.transform.cx : shape.transform.cy),
+    );
+    final int space = end - origin - used;
+    var cursor = origin;
+    for (int index = 0; index < ordered.length; index++) {
+      final PmlShape shape = ordered[index];
+      final int position =
+          cursor + _roundedRatio(space * index, ordered.length - 1);
+      shape.transform = PmlTransform(
+        x: horizontal ? position : shape.transform.x,
+        y: horizontal ? shape.transform.y : position,
+        cx: shape.transform.cx,
+        cy: shape.transform.cy,
+        rot: shape.transform.rot,
+      );
+      cursor += horizontal ? shape.transform.cx : shape.transform.cy;
     }
   }
 
-  /// group API.
-  static int group(List<PmlShape> shapes) {
+  static int _roundedRatio(int numerator, int denominator) {
+    final int magnitude = numerator.abs();
+    final int rounded =
+        magnitude ~/ denominator +
+        ((magnitude % denominator) * 2 >= denominator ? 1 : 0);
+    return numerator < 0 ? -rounded : rounded;
+  }
+
+  /// Group shapes with an identity unused by the supplied drawing scope.
+  ///
+  /// When grouping a selection, pass the full slide in [allShapes]. The flat
+  /// model requires each group to occupy a consecutive run in drawing order;
+  /// unsupported changes reject before mutating any membership.
+  static int group(List<PmlShape> shapes, {List<PmlShape>? allShapes}) {
+    final List<PmlShape> scope = allShapes ?? shapes;
     var id = 1;
-    for (final PmlShape shape in shapes) {
+    for (final PmlShape shape in scope) {
       final int? existing = shape.groupId;
       if (existing != null && existing >= id) {
         id = existing + 1;
       }
     }
-    for (final PmlShape shape in shapes) {
-      shape.groupId = id;
-    }
+    _setGroup(shapes, scope, id);
     return id;
   }
 
-  /// ungroup API.
-  static void ungroup(List<PmlShape> shapes) {
+  /// Remove group membership, rejecting splits when [allShapes] is supplied.
+  static void ungroup(List<PmlShape> shapes, {List<PmlShape>? allShapes}) {
+    _setGroup(shapes, allShapes ?? shapes, null);
+  }
+
+  static void _setGroup(List<PmlShape> shapes, List<PmlShape> scope, int? id) {
+    final Set<PmlShape> selection = Set<PmlShape>.identity()..addAll(shapes);
+    if (selection.length != shapes.length || !selection.every(scope.contains)) {
+      throw ArgumentError(
+        'Group members must be unique shapes in the drawing scope.',
+      );
+    }
+    _validateGroupKeys([
+      for (final shape in scope) selection.contains(shape) ? id : shape.groupId,
+    ]);
     for (final PmlShape shape in shapes) {
-      shape.groupId = null;
+      shape.groupId = id;
+    }
+  }
+
+  /// Validate the flat grouping model before serializing or editing it.
+  ///
+  /// Splitting a group into multiple native groups would silently change its
+  /// membership; joining it would change drawing order. Neither is implicit.
+  static void validateGrouping(List<PmlShape> shapes) =>
+      _validateGroupKeys(shapes.map((shape) => shape.groupId));
+
+  static void _validateGroupKeys(Iterable<int?> keys) {
+    final Set<int> closed = <int>{};
+    int? current;
+    for (final int? id in keys) {
+      if (id == current) {
+        continue;
+      }
+      if (id != null && closed.contains(id)) {
+        throw StateError(
+          'A flat slide group must be consecutive in drawing order.',
+        );
+      }
+      if (current != null) {
+        closed.add(current);
+      }
+      current = id;
     }
   }
 
@@ -249,7 +287,11 @@ abstract final class PmlSections {
     final List<int> starts = [
       for (final section in sections) section.startIndex,
     ];
-    final List<int> owners = List<int>.filled(before.length, -1, growable: true);
+    final List<int> owners = List<int>.filled(
+      before.length,
+      -1,
+      growable: true,
+    );
     for (int index = 0; index < sections.length; index++) {
       final int end = index + 1 < sections.length
           ? starts[index + 1]

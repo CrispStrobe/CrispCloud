@@ -8,6 +8,8 @@ on:
       - 'packages/quds_office_editor/**'
       - 'lib/widgets/office_editor*'
       - 'lib/services/office_*'
+      - 'lib/l10n/**'
+      - 'assets/fonts/**'
       - 'lib/services/recursive_search_service.dart'
       - 'lib/services/captured_file_target.dart'
       - 'lib/services/pdf_file_store.dart'
@@ -58,7 +60,7 @@ jobs:
   external-schema:
     needs: host-roundtrip
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -76,6 +78,30 @@ jobs:
         run: dotnet run --project tool/office-validation -- --self-test
       - name: Validate host uploads and engine exports
         run: dotnet run --no-build --project tool/office-validation -- evidence build/external/schema-report.json
+      - name: Stage exact actual-host bytes for native rendering
+        run: |
+          python3 - <<'PYTHON'
+          import hashlib
+          import json
+          from pathlib import Path
+          import shutil
+          report = json.loads(Path('build/external/host-inventory.json').read_text())
+          assert not report['failures'] and report['verified'] == report['expected']
+          destination = Path('build/external/host-input')
+          destination.mkdir(parents=True, exist_ok=False)
+          for item in report['files']:
+              source = Path('evidence') / item['file']
+              assert hashlib.sha256(source.read_bytes()).hexdigest() == item['sha256']
+              target = destination / item['path']
+              target.parent.mkdir(parents=True, exist_ok=True)
+              shutil.copy2(source, target)
+          PYTHON
+      - name: Install independent host renderer
+        run: sudo apt-get update && sudo apt-get install -y libreoffice-writer libreoffice-calc libreoffice-impress poppler-utils fonts-liberation fonts-dejavu
+      - name: Check actual-host rendering and repeated saves
+        run: |
+          python3 -m unittest discover -s tool/office-validation -p 'test_*.py'
+          python3 tool/office-validation/render.py build/external/host-input build/external/host-render
       - uses: actions/upload-artifact@v4
         if: always()
         with:

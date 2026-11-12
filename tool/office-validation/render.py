@@ -17,6 +17,7 @@ from collections import defaultdict
 import hashlib
 import importlib.util
 import json
+import math
 import os
 from pathlib import Path
 import re
@@ -28,7 +29,9 @@ import zlib
 from xml.etree import ElementTree as ET
 from zipfile import BadZipFile, ZipFile
 
-OFFICE_SUFFIXES = {'.docx', '.xlsx', '.pptx'}
+# Match every Office package kind produced by the host inventory. Templates
+# and macro-enabled Word packages require the same native text/pixel checks.
+OFFICE_SUFFIXES = {'.docx', '.docm', '.dotx', '.dotm', '.xlsx', '.pptx'}
 CYCLE_COUNT = 3
 # This producer deep-clones imported body blocks without intended visible edits.
 # Do not infer that other "cloned", "edited", or "frame" series are unchanged.
@@ -61,6 +64,16 @@ NATIVE_AUX_REASON = (
     'LibreOffice rejected the authored native block content control in a comment. '
     'These exact files passed the independent native XML oracle and matching '
     'Open XML SDK receipts; they have no visual certification from this renderer.')
+# Authored expectations for the host's opaque black PNG insertion fixtures.
+# Points equal pixels at the fixed 72 dpi used below. These are not inferred
+# from the exported picture, and no other text-free document is exempted.
+HOST_PICTURE_GEOMETRY = {
+    'landscape': ((720, 405), (72, 40.5, 360, 180)),
+    'portrait': ((720, 405), (72, 40.5, 120, 240)),
+    'square': ((720, 405), (72, 40.5, 240, 240)),
+    'bounds': ((100, 60), (10, 6, 90, 45)),
+}
+HOST_PICTURE_ORACLE = 'host-slide-black-picture-v1'
 
 
 def office_binary():
@@ -187,24 +200,163 @@ def png_bytes(width, height, pixels):
             + chunk(b'IDAT', zlib.compress(scanlines)) + chunk(b'IEND', b''))
 
 
-def validate_record(record):
+def host_picture_case(path, root=None):
+    """Select exactly the twelve host PNG insertion exports, including root use."""
+    path = Path(root) / path if root is not None else Path(path)
+    match = re.fullmatch(r'slide-picture-(landscape|portrait|square|bounds)-[123]\.pptx',
+                         path.name)
+    return match[1] if match and path.parent.name == 'fidelity-host' else None
+
+
+def picture_package_geometry(path, case):
+    """Reject invisible clipped overflow as well as incorrect visible geometry.
+
+    The bounds fixture touches the page edge: pixels alone cannot distinguish
+    its authored extent from an over-wide picture clipped by the PDF page.
+    Check the sole picture's raw OOXML transform independently for this corpus.
+    """
+    ns = {'p': 'http://schemas.openxmlformats.org/presentationml/2006/main',
+          'a': 'http://schemas.openxmlformats.org/drawingml/2006/main',
+          'r': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
+          'pr': 'http://schemas.openxmlformats.org/package/2006/relationships'}
+    page, rectangle = HOST_PICTURE_GEOMETRY[case]
+    expected = {'page_emu': [round(value * 12700) for value in page],
+                'rect_emu': [round(value * 12700) for value in rectangle]}
+    try:
+        with ZipFile(path) as package:
+            presentation = ET.fromstring(package.read('ppt/presentation.xml'))
+            relations = ET.fromstring(package.read('ppt/_rels/presentation.xml.rels'))
+            slides = presentation.findall('p:sldIdLst/p:sldId', ns)
+            if len(slides) != 1:
+                raise ValueError('Expected one slide')
+            identifier = slides[0].get('{' + ns['r'] + '}id')
+            targets = [rel for rel in relations if rel.get('Id') == identifier]
+            if (len(targets) != 1 or targets[0].get('Target') != 'slides/slide1.xml'
+                    or targets[0].get('TargetMode') is not None
+                    or targets[0].get('Type') != ns['r'] + '/slide'):
+                raise ValueError('Unexpected slide relationship')
+            slide = ET.fromstring(package.read('ppt/slides/slide1.xml'))
+        size = presentation.find('p:sldSz', ns)
+        tree = slide.find('p:cSld/p:spTree', ns)
+        shapes = [node for node in tree if node.tag not in
+                  ('{' + ns['p'] + '}nvGrpSpPr', '{' + ns['p'] + '}grpSpPr')]
+        if len(shapes) != 1 or shapes[0].tag != '{' + ns['p'] + '}pic':
+            raise ValueError('Expected one ungrouped picture')
+        transform = shapes[0].find('p:spPr/a:xfrm', ns)
+        if transform.attrib:
+            raise ValueError('Unexpected picture rotation or flip')
+        offset, extent = transform.find('a:off', ns), transform.find('a:ext', ns)
+        actual = {'page_emu': [int(size.get(key)) for key in ('cx', 'cy')],
+                  'rect_emu': [int(node.get(key)) for node, key in
+                               ((offset, 'x'), (offset, 'y'), (extent, 'cx'), (extent, 'cy'))]}
+        if actual != expected:
+            raise ValueError(f'Expected {expected}, found {actual}')
+        return actual
+    except (BadZipFile, KeyError, ET.ParseError, AttributeError, TypeError, ValueError) as error:
+        raise FidelityError(f'Host picture package geometry mismatch: {error}') from error
+
+
+def picture_raster_size(case, page_points):
+    """Allow only LibreOffice's subpixel point-to-millimetre page rounding."""
+    expected, _ = HOST_PICTURE_GEOMETRY[case]
+    if (not isinstance(page_points, (list, tuple)) or len(page_points) != 2
+            or any(type(value) not in (int, float) or not math.isfinite(value)
+                   or abs(value - target) > 0.03 for value, target in zip(page_points, expected))):
+        raise FidelityError('Host picture PDF page size differs from the authored slide')
+    # Poppler rounds the physical page up to whole pixels at 72 dpi. For
+    # example, LibreOffice's 100.006 x 60.0094 pt page yields 101 x 61 pixels.
+    return [math.ceil(value) for value in page_points]
+
+
+def validate_picture_evidence(evidence, case, fingerprint):
+    """Validate measured values again when accepting a repeated-save series."""
+    page, rectangle = HOST_PICTURE_GEOMETRY[case]
+    x, y, width, height = rectangle
+    count_keys = ('black_pixels', 'white_pixels', 'gray_pixels', 'colored_pixels',
+                  'outside_nonwhite_pixels', 'interior_nonblack_pixels')
+    raster_size = picture_raster_size(case, evidence.get('page_size_points')) if isinstance(evidence, dict) else None
+    if (not isinstance(evidence, dict) or evidence.get('oracle') != HOST_PICTURE_ORACLE
+            or evidence.get('case') != case or evidence.get('dpi') != 72
+            or evidence.get('page_size') != raster_size
+            or evidence.get('expected_page_size') != list(page)
+            or evidence.get('expected_rect') != list(rectangle)
+            or evidence.get('pixel_sha256') != fingerprint
+            or evidence.get('source_geometry') != {
+                'page_emu': [round(value * 12700) for value in page],
+                'rect_emu': [round(value * 12700) for value in rectangle]}
+            or any(type(evidence.get(key)) is not int or evidence[key] < 0 for key in count_keys)):
+        raise FidelityError('Missing or inconsistent host picture pixel evidence')
+    bounds = evidence.get('black_bbox')
+    if (not isinstance(bounds, list) or len(bounds) != 4
+            or any(type(value) is not int for value in bounds)
+            or any(abs(actual - expected) > 1 for actual, expected in
+                   zip(bounds, (x, y, x + width, y + height)))
+            or abs(evidence['black_pixels'] - width * height) > 2 * (width + height) + 4
+            or sum(evidence[key] for key in count_keys[:3]) != raster_size[0] * raster_size[1]
+            or any(evidence[key] != 0 for key in count_keys[3:])):
+        raise FidelityError('Host picture pixels differ from the authored black rectangle')
+
+
+def picture_pixel_evidence(case, width, height, pixels, source_geometry, page_points):
+    """Measure the actual native raster; only a one-pixel edge band may vary."""
+    page, rectangle = HOST_PICTURE_GEOMETRY[case]
+    if [width, height] != picture_raster_size(case, page_points) or len(pixels) != width * height * 3:
+        raise FidelityError('Host picture page dimensions differ from the authored slide')
+    x, y, rect_width, rect_height = rectangle
+    right, bottom = x + rect_width, y + rect_height
+    evidence = {'oracle': HOST_PICTURE_ORACLE, 'case': case, 'dpi': 72,
+                'page_size': [width, height], 'expected_page_size': list(page),
+                'page_size_points': list(page_points), 'expected_rect': list(rectangle),
+                'source_geometry': source_geometry,
+                'pixel_sha256': hashlib.sha256(struct.pack('>II', width, height) + pixels).hexdigest(),
+                'black_pixels': 0, 'white_pixels': 0, 'gray_pixels': 0,
+                'colored_pixels': 0, 'outside_nonwhite_pixels': 0, 'interior_nonblack_pixels': 0}
+    bounds = [width, height, 0, 0]
+    for position in range(width * height):
+        rgb = pixels[position * 3:position * 3 + 3]
+        low, high = min(rgb), max(rgb)
+        black, white = high <= 16, low >= 239
+        evidence['black_pixels' if black else 'white_pixels' if white else 'gray_pixels'] += 1
+        evidence['colored_pixels'] += high - low > 2
+        column, row = position % width, position // width
+        cx, cy = column + 0.5, row + 0.5
+        if black:
+            bounds = [min(bounds[0], column), min(bounds[1], row),
+                      max(bounds[2], column + 1), max(bounds[3], row + 1)]
+        if cx < x - 1 or cx > right + 1 or cy < y - 1 or cy > bottom + 1:
+            evidence['outside_nonwhite_pixels'] += not white
+        elif x + 1 <= cx <= right - 1 and y + 1 <= cy <= bottom - 1:
+            evidence['interior_nonblack_pixels'] += not black
+    evidence['black_bbox'] = bounds
+    validate_picture_evidence(evidence, case, evidence['pixel_sha256'])
+    return evidence
+
+
+def validate_record(record, *, root=None):
     pages = record.get('pages')
     text = record.get('text')
     pixels = record.get('pixel_sha256')
     if (type(pages) is not int or pages < 1 or not isinstance(text, str)
-            or not text.strip() or not isinstance(pixels, list)
+            or not isinstance(pixels, list)
             or len(pixels) != pages
             or any(not isinstance(digest, str) or not re.fullmatch(r'[0-9a-f]{64}', digest)
                    for digest in pixels)):
         raise FidelityError(f'Invalid or empty render evidence: {record.get("file")}')
+    case = host_picture_case(record.get('file', ''), root)
+    if case is not None:
+        if pages != 1:
+            raise FidelityError('Host picture corpus must render exactly one page')
+        validate_picture_evidence(record.get('picture_pixel_evidence'), case, pixels[0])
+    elif not text.strip():
+        raise FidelityError(f'Invalid or empty render evidence: {record.get("file")}')
 
 
-def compare_records(reference, actual):
+def compare_records(reference, actual, *, root=None):
     """Compare text, page count and decoded RGB fingerprints independently."""
-    validate_record(reference)
-    validate_record(actual)
-    for key in ('pages', 'text', 'pixel_sha256'):
-        if reference[key] != actual[key]:
+    validate_record(reference, root=root)
+    validate_record(actual, root=root)
+    for key in ('pages', 'text', 'pixel_sha256', 'picture_pixel_evidence'):
+        if reference.get(key) != actual.get(key):
             raise FidelityError(
                 f'Render changed ({key}): {reference["file"]} -> {actual["file"]}')
 
@@ -285,7 +437,7 @@ def cycle_coverage(files, records, *, root=None):
                     raise FidelityError(f'Missing successful render for cycle file: {name}')
             reference = records[entries[0][1]]
             for _, name in entries[1:]:
-                compare_records(reference, records[name])
+                compare_records(reference, records[name], root=root)
             case = Path(key)
             candidates = []
             required_baseline = REQUIRED_SERIES_BASELINES.get(
@@ -317,7 +469,7 @@ def cycle_coverage(files, records, *, root=None):
                 if baseline not in records:
                     raise FidelityError(f'Missing successful baseline render: {baseline}')
                 if page_order is None:
-                    compare_records(records[baseline], reference)
+                    compare_records(records[baseline], reference, root=root)
                 else:
                     compare_page_order(records[baseline], reference, page_order)
                     page_order_comparisons += 1
@@ -417,6 +569,8 @@ def known_native_import_rejection(error):
 def render_document(path, root, output, index):
     """Render in a fresh directory so stale artifacts cannot satisfy a check."""
     path, root, output = (Path(value).resolve() for value in (path, root, output))
+    picture_case = host_picture_case(path)
+    geometry = picture_package_geometry(path, picture_case) if picture_case is not None else None
     environment = dict(os.environ, LC_ALL='C')
     with tempfile.TemporaryDirectory(prefix=f'render-{index:03d}-', dir=output) as temporary:
         work = Path(temporary)
@@ -434,8 +588,17 @@ def render_document(path, root, output, index):
             raise FidelityError('pdfinfo did not report a page count')
         text = subprocess.check_output(['pdftotext', '-layout', '-enc', 'UTF-8', str(pdf), '-'],
                                        text=True, timeout=30, env=environment)
-        if not text.strip():
+        if not text.strip() and picture_case is None:
             raise FidelityError('Rendered fidelity PDF has no extractable text')
+        if picture_case is not None and int(page_match[1]) != 1:
+            raise FidelityError('Host picture corpus must render exactly one page')
+        picture_page_points = None
+        if picture_case is not None:
+            size = re.search(r'^Page size:\s+([\d.]+) x ([\d.]+) pts\b', info, re.MULTILINE)
+            if size is None:
+                raise FidelityError('pdfinfo did not report host picture page dimensions')
+            picture_page_points = [float(size[1]), float(size[2])]
+            picture_raster_size(picture_case, picture_page_points)
         subprocess.run(['pdftoppm', '-r', '72', str(pdf), str(work / 'page')],
                        check=True, timeout=60, capture_output=True, env=environment)
         pages = ordered_pages(work, int(page_match[1]))
@@ -446,8 +609,12 @@ def render_document(path, root, output, index):
         for old in dest.glob('page-*.png'):
             old.unlink()
         artifacts = []
+        picture_evidence = None
         for number, ppm in enumerate(pages, 1):
             width, height, pixels = ppm_pixels(ppm.read_bytes())
+            if picture_case is not None:
+                picture_evidence = picture_pixel_evidence(
+                    picture_case, width, height, pixels, geometry, picture_page_points)
             png = dest / f'page-{number:04d}.png'
             png.write_bytes(png_bytes(width, height, pixels))
             fingerprint = hashlib.sha256(struct.pack('>II', width, height) + pixels).hexdigest()
@@ -456,10 +623,14 @@ def render_document(path, root, output, index):
                               'pixel_sha256': fingerprint})
         shutil.copyfile(pdf, dest / 'document.pdf')
         (dest / 'text.txt').write_text(text, encoding='utf-8')
-        return {'file': path.relative_to(root).as_posix(), 'pages': len(artifacts),
-                'text': text, 'pixel_sha256': [page['pixel_sha256'] for page in artifacts],
-                'pdf': (dest / 'document.pdf').relative_to(output).as_posix(),
-                'page_artifacts': artifacts}
+        record = {'file': path.relative_to(root).as_posix(), 'pages': len(artifacts),
+                  'text': text, 'pixel_sha256': [page['pixel_sha256'] for page in artifacts],
+                  'pdf': (dest / 'document.pdf').relative_to(output).as_posix(),
+                  'page_artifacts': artifacts}
+        if picture_evidence is not None:
+            record['picture_pixel_evidence'] = picture_evidence
+        validate_record(record, root=root)
+        return record
 
 
 def main(argv=None):
@@ -537,6 +708,8 @@ def main(argv=None):
                               root=root)
     failures.extend(coverage.pop('failures'))
     report = {'renderer': renderer, 'files': len(paths), 'rendered_files': len(reports),
+              'picture_pixel_oracle_files': sum('picture_pixel_evidence' in record
+                                                for record in reports.values()),
               'visual_input_files': len(paths) - len(excluded),
               'native_schema_only_files': len(native_only), 'native_schema_only': native_only,
               'schema_report': str(args.schema_report) if args.schema_report is not None else None,

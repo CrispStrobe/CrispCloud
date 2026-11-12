@@ -5,6 +5,7 @@ import '../../xml/xml_node.dart';
 import '../../xml/xml_reader.dart';
 import '../../xml/xml_writer.dart';
 import '../anim/pml_motion_io.dart';
+import '../model/pml_arrange.dart';
 import '../model/pml_presentation.dart';
 
 /// parseSlideShapes helper.
@@ -561,6 +562,16 @@ OfficeVisual parseChartVisual(
 
 /// slideToXml helper.
 String slideToXml(PmlSlide slide, {Map<PmlShape, String>? embedIds}) {
+  PmlArrange.validateGrouping(slide.shapes);
+  // Group keys identify model membership. They need not be valid native
+  // drawing IDs: the importer intentionally assigns compact local keys.
+  var nextGroupDrawingId = 2;
+  for (final shape in slide.shapes) {
+    if (shape.id >= nextGroupDrawingId) {
+      nextGroupDrawingId = shape.id + 1;
+    }
+  }
+
   /// w API.
   final XmlWriter w = XmlWriter();
 
@@ -631,7 +642,7 @@ String slideToXml(PmlSlide slide, {Map<PmlShape, String>? embedIds}) {
           'cNvPr',
           prefix: 'p',
           attributes: <String, String>{
-            'id': '${shape.groupId}',
+            'id': '${nextGroupDrawingId++}',
             'name': 'Group ${shape.groupId}',
           },
         );

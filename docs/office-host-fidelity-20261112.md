@@ -92,7 +92,7 @@ python3 tool/with_ci_system_sqlite.py bash tool/check_office_fidelity.sh
 The host gate also includes the existing footnote/endnote ribbon test that was
 previously outside this selected cohort. Coverage is written to
 `build/fidelity-host/coverage/gaps.json` with source hashes and uncovered lines.
-`--require-all-sources` rejects an absent source while preserving the report.
+`--require-all-sources` rejects an absent source and publishes explicit failed/unverified state.
 It does not require every line to be hit or claim full branch coverage.
 
 ## Earlier coverage-branch checkpoint

@@ -220,7 +220,11 @@ visual pass. Neither validator certifies Microsoft Office pixel equivalence.
 | CI evidence | `office-host-fidelity-evidence`, `office-host-schema-evidence` |
 
 The [workflow](../.github/workflows/office-fidelity.yml) runs feature-branch
-checks without deploying the app. Its result must be checked for the exact
+checks without deploying the app. After validating downloaded bytes, its
+external job stages the exact hash-checked host inventory, renders every host
+file and compares repeated saves. Picture-only slide cases require independent
+page, rectangle, color and placement measurements; empty extracted text alone
+cannot establish a visual pass. Its result must be checked for the exact
 commit; queued or cancelled runs do not establish remote CI success.
 
 ## Remaining boundaries and synchronization

@@ -333,6 +333,8 @@ void _assertRibbonExport(Uint8List bytes, Uint8List pickedImage) {
   const drawingNs = 'http://schemas.openxmlformats.org/drawingml/2006/main';
   const relNs =
       'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+  const placementNs =
+      'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing';
   final blips = document.findAllElements('blip', namespace: drawingNs).toList();
   expect(blips, hasLength(2));
   expect(
@@ -345,9 +347,15 @@ void _assertRibbonExport(Uint8List bytes, Uint8List pickedImage) {
     contains(('19050', '19050')),
     reason: 'A 2x2 pixel picture retains its square ratio at 96 dpi.',
   );
+  // Read the authored PNG header independently of the production image decoder.
+  expect(pickedImage.take(8), [137, 80, 78, 71, 13, 10, 26, 10]);
+  expect(utf8.decode(pickedImage.sublist(12, 16)), 'IHDR');
+  final imageHeader = ByteData.sublistView(pickedImage);
+  expect((imageHeader.getUint32(16), imageHeader.getUint32(20)), (2, 2));
   final archive = ZipDecoder().decodeBytes(bytes);
   final relationships = _part(bytes, 'word/_rels/document.xml.rels');
   final payloads = <List<int>>[];
+  var pickedDrawings = 0;
   for (final blip in blips) {
     final id = blip.getAttribute('embed', namespace: relNs);
     final relation = relationships.rootElement.childElements.singleWhere(
@@ -358,8 +366,27 @@ void _assertRibbonExport(Uint8List bytes, Uint8List pickedImage) {
         .resolve(relation.getAttribute('Target')!)
         .path
         .substring(1);
-    payloads.add(archive.findFile(path)!.content);
+    final payload = archive.findFile(path)!.content;
+    payloads.add(payload);
+    if (base64Encode(payload) == base64Encode(pickedImage)) {
+      pickedDrawings++;
+      final placement = blip.ancestors.whereType<xml.XmlElement>().firstWhere(
+        (node) =>
+            node.name.namespaceUri == placementNs &&
+            (node.name.local == 'inline' || node.name.local == 'anchor'),
+      );
+      final extent = placement
+          .findElements('extent', namespace: placementNs)
+          .single;
+      expect(
+        (extent.getAttribute('cx'), extent.getAttribute('cy')),
+        ('19050', '19050'),
+        reason:
+            'The picked 2-pixel square retains its 1.5-point size at 96 dpi.',
+      );
+    }
   }
+  expect(pickedDrawings, 1);
   expect(payloads, contains(orderedEquals(pickedImage)));
   final original = ZipDecoder().decodeBytes(
     File('packages/quds_office_engine/test/fixtures/fidelity/word.docx')
@@ -616,7 +643,7 @@ void main() {
         await _pumpUntil(
           tester,
           () => controller.document.visuals.length == 2,
-          'The decoded body picture was not inserted.',
+          'The picked picture was not decoded and inserted into the document.',
         );
         expect(controller.document.visuals, hasLength(2));
 

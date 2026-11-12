@@ -4,6 +4,11 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Use the pure-Dart `characters` package for Unicode 16 extended grapheme
+  boundaries. Indic conjuncts, spacing marks and other previously omitted
+  clusters retain their original UTF-16 ownership during constrained wrapping
+  and caret lookup; the public grapheme API remains unchanged.
+
 - Wrap overflowing words inside fixed table cells and text frames at source
   grapheme boundaries, retaining normal word breaks and original Arabic/bidi
   shaping. Row measurement grows with the wrapped content. Body paragraphs keep
