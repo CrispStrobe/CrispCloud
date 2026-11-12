@@ -302,10 +302,17 @@ class RustSmbSession implements SmbTransport {
     Timer? timer;
     try {
       if (onBytes != null) {
+        // The native counter reads 0 until the session has connected and
+        // established the resume offset. Reporting that 0 would make a
+        // resumed transfer jump back to empty, so only report real changes.
+        var reported = 0;
         timer = Timer.periodic(const Duration(milliseconds: 100), (_) {
           if (_closed || callbackError != null) return;
           try {
-            onBytes(native.progress(id: _id));
+            final bytes = native.progress(id: _id);
+            if (bytes <= 0 || bytes == reported) return;
+            reported = bytes;
+            onBytes(bytes);
           } catch (e, s) {
             callbackError = e;
             callbackStack = s;
