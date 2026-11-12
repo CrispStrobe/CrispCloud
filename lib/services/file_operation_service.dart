@@ -97,6 +97,7 @@ abstract class FileOperationBackend implements StorageScanSource {
     int? length, {
     required bool replace,
     bool preallocate = false,
+    bool retainPartialFileOnFailure = false,
     String? resumeUploadPath,
     Future<void> Function(FileItem staged)? verifyStaged,
     Future<void> Function(Map<String, dynamic> state)? checkpoint,
@@ -938,6 +939,8 @@ class FileOperationService {
   Future<void> execute(
     FileOperationPlan plan, {
     required FileOperationControl control,
+    // Only a durable journal owner may opt into retaining private partial data.
+    bool retainPartialFileOnFailure = false,
     FileConflictResolver? resolveConflict,
     DetailedFileConflictResolver? resolveDetailedConflict,
     Future<void> Function(FileOperationEntry entry, String phase)? checkpoint,
@@ -1227,6 +1230,17 @@ class FileOperationService {
         } else {
           entry.recovery = {...?entry.recovery, 'append': append};
           await checkpoint?.call(entry, 'writing');
+          if (!append &&
+              resumeOffset > 0 &&
+              entry.recovery?['sourceSha256'] == null) {
+            final digest = await _digest(source, entry.source, control, target);
+            final current = await source.stat(entry.source.path!);
+            _checkSources(source, target);
+            if (current == null || !_sameVersion(entry.source, current)) {
+              throw StateError('The source changed while preparing resume.');
+            }
+            entry.recovery = {...?entry.recovery, 'sourceSha256': digest};
+          }
           Future<void> recordWriteState(
             Map<String, dynamic> state, {
             String? contentSha256,
@@ -1385,6 +1399,17 @@ class FileOperationService {
                 } finally {
                   hashSink.close();
                 }
+                // Verify the combined prefix and resumed suffix before the
+                // destination observes end-of-stream and can publish it. A
+                // server can return the right length from the wrong offset.
+                if (!append &&
+                    resumeOffset > 0 &&
+                    inputDigest.value?.toString() !=
+                        entry.recovery?['sourceSha256']) {
+                  throw StateError(
+                    'Resumed bytes differ from the original source; existing destination retained.',
+                  );
+                }
               }
 
               await target.writeConfiguredFile(
@@ -1393,6 +1418,7 @@ class FileOperationService {
                 expectedLength,
                 replace: replace,
                 preallocate: options.preallocate,
+                retainPartialFileOnFailure: retainPartialFileOnFailure,
                 resumeUploadPath: recoveredUploadPath,
                 checkpoint: (state) => recordWriteState(
                   state,

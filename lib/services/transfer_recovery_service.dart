@@ -119,6 +119,10 @@ class JournaledTransferRunner {
       await const FileOperationService().execute(
         plan,
         control: control,
+        retainPartialFileOnFailure:
+            saved?.ready == true &&
+            plan.source.canRecover &&
+            plan.destination.canRecover,
         resolveConflict: resolveConflict,
         resolveDetailedConflict: resolveDetailedConflict,
         onProgress: onProgress,

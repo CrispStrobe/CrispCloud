@@ -402,6 +402,7 @@ class LocalOperationBackend extends FileOperationBackend {
     int? length, {
     required bool replace,
     bool preallocate = false,
+    bool retainPartialFileOnFailure = false,
     String? resumeUploadPath,
     Future<void> Function(FileItem staged)? verifyStaged,
     Future<void> Function(Map<String, dynamic> state)? checkpoint,
@@ -415,6 +416,7 @@ class LocalOperationBackend extends FileOperationBackend {
       length,
       replace: replace,
       preallocate: preallocate,
+      retainPartialFileOnFailure: retainPartialFileOnFailure,
       verifyStaged: verifyStaged,
       checkpoint: checkpoint,
     );
@@ -453,6 +455,7 @@ class LocalOperationBackend extends FileOperationBackend {
     int? length, {
     required bool replace,
     bool preallocate = false,
+    bool retainPartialFileOnFailure = false,
     FileItem? cloneSource,
     Future<void> Function(FileItem staged)? verifyStaged,
     Future<void> Function(Map<String, dynamic> state)? checkpoint,
@@ -562,6 +565,8 @@ class LocalOperationBackend extends FileOperationBackend {
       final staging = await Directory(paths.dirname(path))
           .createTemp('.crisp-transfer-');
       final staged = File(paths.join(staging.path, 'payload'));
+      var journalOwnsStage = false;
+      var committed = false;
       try {
         await checkpoint?.call({
           'phase': 'staging',
@@ -569,6 +574,13 @@ class LocalOperationBackend extends FileOperationBackend {
           'stagedPath': staged.path,
           'stagingDirectory': staging.path,
         });
+        journalOwnsStage =
+            retainPartialFileOnFailure &&
+            checkpoint != null &&
+            canRecover &&
+            cloneSource == null &&
+            !preallocate &&
+            length != null;
         int? originalMode;
         if (initialType == FileSystemEntityType.file) {
           final mode = (await destination.stat()).mode;
@@ -624,6 +636,27 @@ class LocalOperationBackend extends FileOperationBackend {
           } finally {
             await writer.close();
           }
+        } else if (journalOwnsStage) {
+          // IOSink.addStream can discard buffered input on a source error.
+          // A journal-owned partial must contain the bytes already accepted,
+          // so complete each write and flush even when its source is canceled.
+          final writer = await staged.open(mode: FileMode.write);
+          try {
+            await for (final chunk in data) {
+              _check();
+              received += chunk.length;
+              if (received > length!) {
+                throw StateError('Source length changed.');
+              }
+              await writer.writeFrom(chunk);
+            }
+          } finally {
+            try {
+              await writer.flush();
+            } finally {
+              await writer.close();
+            }
+          }
         } else {
           final sink = staged.openWrite();
           try {
@@ -672,6 +705,7 @@ class LocalOperationBackend extends FileOperationBackend {
         }
         if (!replace) {
           if (await moveNativeNoReplace(staged.path, path)) {
+            committed = true;
             await checkpoint?.call({'phase': 'committed', 'destination': path});
             return;
           }
@@ -680,12 +714,29 @@ class LocalOperationBackend extends FileOperationBackend {
           );
         }
         await staged.rename(path);
+        committed = true;
         await checkpoint?.call({'phase': 'committed', 'destination': path});
       } finally {
-        try {
-          await staging.delete(recursive: true);
-        } catch (_) {
-          /* Preserve write result. */
+        var keepPartial = false;
+        if (journalOwnsStage && !committed) {
+          try {
+            if (await FileSystemEntity.type(staged.path, followLinks: false) ==
+                FileSystemEntityType.file) {
+              final size = await staged.length();
+              keepPartial = size > 0 && size <= length!;
+            }
+          } catch (_) {
+            // An acknowledged journal owns an inaccessible stage as well.
+            // Retain it for explicit recovery rather than lose its evidence.
+            keepPartial = true;
+          }
+        }
+        if (!keepPartial) {
+          try {
+            await staging.delete(recursive: true);
+          } catch (_) {
+            /* Preserve write result. */
+          }
         }
       }
     });
@@ -1079,6 +1130,7 @@ class CloudOperationBackend extends FileOperationBackend {
     int? length, {
     required bool replace,
     bool preallocate = false,
+    bool retainPartialFileOnFailure = false,
     String? resumeUploadPath,
     Future<void> Function(FileItem staged)? verifyStaged,
     Future<void> Function(Map<String, dynamic> state)? checkpoint,
@@ -1686,7 +1738,9 @@ class CloudOperationBackend extends FileOperationBackend {
     return (client as CloudTransferOperations).readTransferRange(
       file.path!,
       offset,
-      expectedVersion: _fileVersion(file),
+      expectedVersion: file.metadata?['rangeReadSnapshot'] is String
+          ? file.metadata!['rangeReadSnapshot'] as String
+          : _fileVersion(file),
     );
   }
 

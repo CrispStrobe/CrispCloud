@@ -16,6 +16,7 @@ import 'ftp_security_mode.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
 import 'ftp_transfer_session.dart';
+import 'ftp_download_snapshot.dart';
 
 typedef FTPClientFactory = FTPConnect Function(
   String host, {
@@ -30,7 +31,17 @@ class FTPClientAdapter extends CloudStorageClient
     with CloudTransferOperations
     implements StorageNamespaceIdentity {
   @override
-  String get storageNamespace => '${_host ?? ''}:$_port';
+  String get storageNamespace => '${_securityMode.name}:${_host ?? ''}:$_port';
+
+  @override
+  String get transferIdentity => _authenticated
+      ? FtpDownloadSnapshot.identity(
+          host: _host!,
+          port: _port,
+          username: _username!,
+          securityMode: _securityMode,
+        )
+      : '';
 
   @override
   StorageTransferCapabilities get transferCapabilities =>
@@ -39,6 +50,9 @@ class FTPClientAdapter extends CloudStorageClient
         deleteEmptyDirectory: true,
         boundedUpload: !kIsWeb,
         boundedDownload: !kIsWeb,
+        // Requests still require a captured snapshot and server-negotiated
+        // REST STREAM. A refusal never falls back to a complete download.
+        readRanges: !kIsWeb,
       );
 
   @override
@@ -363,7 +377,7 @@ class FTPClientAdapter extends CloudStorageClient
         final name = item.name;
         if (name == '.' || name == '..') continue;
 
-        final fullPath = p.posix.join(path, name);
+        final fullPath = p.posix.normalize(p.posix.join('/', path, name));
         final isDir = item.type == FTPEntryType.dir;
 
         final modTimeStr = item.modifyTime?.toIso8601String();
@@ -375,6 +389,19 @@ class FTPClientAdapter extends CloudStorageClient
           'modificationTime': modTimeStr,
           'type': isDir ? 'folder' : 'file',
           'path': fullPath,
+          'isSymlink': item.type == FTPEntryType.link,
+          // This is deliberately separate from immutable version metadata.
+          // The journal must retain its original complete source digest.
+          if (item.type == FTPEntryType.file &&
+              item.size != null &&
+              item.size! >= 0 &&
+              item.modifyTime != null)
+            'rangeReadSnapshot': FtpDownloadSnapshot(
+              connectionIdentity: transferIdentity,
+              path: fullPath,
+              size: item.size!,
+              modified: FtpDownloadSnapshot.listingModified(item.modifyTime!),
+            ).encode(),
         };
 
         if (isDir) {
@@ -429,6 +456,18 @@ class FTPClientAdapter extends CloudStorageClient
   Future<FtpTransferSession> _openTransfer() async {
     if (kIsWeb) throw UnsupportedError('FTP is unavailable in a browser.');
     await _ensureConnection();
+    final session = _createTransferSession();
+    try {
+      await session.connect();
+      return session;
+    } catch (_) {
+      _transferSessions.remove(session);
+      session.close();
+      rethrow;
+    }
+  }
+
+  FtpTransferSession _createTransferSession() {
     final epoch = _authEpoch;
     final connection = _ftpClient;
     final password = _password;
@@ -448,14 +487,7 @@ class FTPClientAdapter extends CloudStorageClient
           identical(_ftpClient, connection),
     );
     _transferSessions.add(session);
-    try {
-      await session.connect();
-      return session;
-    } catch (_) {
-      _transferSessions.remove(session);
-      session.close();
-      rethrow;
-    }
+    return session;
   }
 
   @override
@@ -480,15 +512,87 @@ class FTPClientAdapter extends CloudStorageClient
   Stream<List<int>> downloadStream(
     String remotePath, {
     Function(int, int)? onProgress,
-  }) async* {
+  }) {
     final remote = p.posix.normalize(p.posix.join('/', remotePath));
-    final session = await _openTransfer();
-    try {
-      yield* session.download(remote, onProgress: onProgress);
-    } finally {
-      _transferSessions.remove(session);
-      session.close();
+    return _ownedDownload(
+      (session) => session.download(remote, onProgress: onProgress),
+    );
+  }
+
+  @override
+  Stream<List<int>> readTransferRange(
+    String path,
+    int offset, {
+    int? length,
+    String? expectedVersion,
+  }) {
+    final remote = p.posix.normalize(p.posix.join('/', path));
+    return _ownedDownload((session) {
+      if (expectedVersion == null) {
+        throw UnsupportedError(
+          'FTP resume requires the original source snapshot. '
+          'Review a complete restart instead.',
+        );
+      }
+      return session.downloadRange(
+        remote,
+        offset,
+        expected: FtpDownloadSnapshot.decode(expectedVersion),
+        length: length,
+      );
+    });
+  }
+
+  /// Own the session before awaiting connect, so cancellation closes pending
+  /// TCP/TLS negotiation and REST replies as well as an active data stream.
+  Stream<List<int>> _ownedDownload(
+    Stream<List<int>> Function(FtpTransferSession) read,
+  ) {
+    FtpTransferSession? session;
+    StreamSubscription<List<int>>? input;
+    late StreamController<List<int>> output;
+    var cancelled = false;
+
+    Stream<List<int>> run() async* {
+      if (kIsWeb) throw UnsupportedError('FTP is unavailable in a browser.');
+      try {
+        await _ensureConnection();
+        if (cancelled) return;
+        final owned = session = _createTransferSession();
+        await owned.connect();
+        if (cancelled) return;
+        yield* read(owned);
+      } finally {
+        if (session != null) _transferSessions.remove(session);
+        session?.close();
+      }
     }
+
+    output = StreamController<List<int>>(
+      sync: true,
+      onListen: () {
+        input = run().listen(
+          (part) {
+            if (!cancelled) output.add(part);
+          },
+          onError: (Object error, StackTrace stack) {
+            if (!cancelled) output.addError(error, stack);
+          },
+          onDone: () {
+            if (!cancelled) unawaited(output.close());
+          },
+        );
+        if (output.isPaused) input!.pause();
+      },
+      onPause: () => input?.pause(),
+      onResume: () => input?.resume(),
+      onCancel: () {
+        cancelled = true;
+        session?.close();
+        unawaited(input?.cancel().catchError((Object _) {}));
+      },
+    );
+    return output.stream;
   }
 
   @override
