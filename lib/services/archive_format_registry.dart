@@ -244,7 +244,8 @@ const archiveFormatCapabilities = <ArchiveFormatCapability>[
     canCreate: true,
     canModify: true,
     notes:
-        'newc and CRC variants. Links and special entries cannot be extracted.',
+        'Read odc, newc and CRC variants; rewrite inspected newc/CRC only. '
+        'Links and special entries cannot be extracted.',
   ),
   ArchiveFormatCapability(
     id: 'xar',

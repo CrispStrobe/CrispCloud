@@ -147,9 +147,10 @@ Future<ViewerArchive> openArArchive(
   return _rawArchive('ar', input, members, payloads);
 });
 
-/// Reads SVR4 newc (070701) and checksum (070702) CPIO archives.
+/// Reads portable ASCII/odc (070707), SVR4 newc (070701) and CRC (070702).
 /// Links and special files are listed as non-extractable metadata. Concatenated
-/// archives, binary CPIO and the old octal format are not silently interpreted.
+/// archives and binary CPIO are not silently interpreted. The odc profile is
+/// read-only: the newc/CRC writer inspector still refuses its different layout.
 Future<ViewerArchive> openCpioArchive(
   koni.ByteSource source, {
   required int maxMemberBytes,
@@ -162,36 +163,48 @@ Future<ViewerArchive> openCpioArchive(
   var trailer = false;
   while (offset < source.length) {
     _checkCount(++records);
-    final header = await input.metadata(offset, 110);
-    final magic = ascii.decode(header.sublist(0, 6));
-    if (magic != '070701' && magic != '070702') {
+    final magic = ascii.decode(await input.metadata(offset, 6));
+    final odc = magic == '070707';
+    if (!odc && magic != '070701' && magic != '070702') {
       throw const ArchiveViewException(
-        'This CPIO variant is unavailable. Supported variants are newc and CRC.',
+        'This CPIO variant is unavailable. Supported variants are odc, newc and CRC.',
       );
     }
+    final headerSize = odc ? 76 : 110;
+    final fields = await input.metadata(offset + 6, headerSize - 6);
     final values = <int>[];
-    for (var i = 0; i < 13; i++) {
+    var fieldOffset = 0;
+    for (final width
+        in odc
+            ? const [6, 6, 6, 6, 6, 6, 6, 11, 6, 11]
+            : const [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8]) {
       values.add(
         _number(
-          ascii.decode(header.sublist(6 + i * 8, 14 + i * 8)),
-          16,
+          ascii.decode(fields.sublist(fieldOffset, fieldOffset + width)),
+          odc ? 8 : 16,
           'CPIO header field',
         ),
       );
+      fieldOffset += width;
     }
-    final mode = values[1], links = values[4], modified = values[5];
-    final size = values[6], nameSize = values[11], checksum = values[12];
+    final mode = values[odc ? 2 : 1];
+    final links = values[odc ? 5 : 4];
+    final modified = values[odc ? 7 : 5];
+    final size = values[odc ? 9 : 6];
+    final nameSize = values[odc ? 8 : 11];
+    final checksum = odc ? 0 : values[12];
     if (nameSize < 1 || nameSize > _maxNameBytes) {
       throw _corrupt('Invalid CPIO name length.');
     }
-    final nameBytes = await input.metadata(offset + 110, nameSize);
+    final nameBytes = await input.metadata(offset + headerSize, nameSize);
     if (nameBytes.last != 0 || nameBytes.take(nameSize - 1).contains(0)) {
       throw _corrupt('Invalid CPIO member name terminator.');
     }
     final name = utf8.decode(nameBytes.sublist(0, nameSize - 1));
-    final dataOffset = _align4(offset + 110 + nameSize);
+    final nameEnd = offset + headerSize + nameSize;
+    final dataOffset = odc ? nameEnd : _align4(nameEnd);
     input.checkRange(dataOffset, size);
-    final next = _align4(dataOffset + size);
+    final next = odc ? dataOffset + size : _align4(dataOffset + size);
     input.checkRange(dataOffset + size, next - dataOffset - size);
     if ((magic == '070701' || size == 0) && checksum != 0) {
       throw _corrupt('Invalid CPIO checksum field.');
