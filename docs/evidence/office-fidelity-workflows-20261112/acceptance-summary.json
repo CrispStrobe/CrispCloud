@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "status": "passed",
+  "created_at_utc": "2026-11-12T16:04:54.578612+00:00",
+  "repository": "CrispStrobe/CrispCloud",
+  "branch": "feature/office-fidelity-workflows-20261112",
+  "suite_code_checkpoint": "8223a2297418ba6f478ed6ce80b9881d28680094",
+  "schema": {
+    "files": 409,
+    "failures": 0,
+    "report": "app-schema-report.json"
+  },
+  "native": {
+    "renderer": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+    "input_files": 104,
+    "rendered_files": 104,
+    "rendered_pages": 113,
+    "native_schema_only_files": 0,
+    "cycle_groups": 32,
+    "authored_baseline_comparisons": 0,
+    "page_order_comparisons": 0,
+    "picture_pixel_oracle_files": 18,
+    "failures": 0,
+    "retry_policy": {
+      "maximum_attempts": 3,
+      "retry_returncode": -9,
+      "scope": "SOFFICE conversion only; unchanged input and fresh profile/output per attempt"
+    },
+    "retried_rendered_files": [],
+    "archived_pdf_and_png_files": 217,
+    "artifact_archive_sha256": "059cd160ddd23a4081a1343d008e3cb58bc2b0435a5d8c2bcc86495d04fcdc02",
+    "archive_verification": "Archive bytes rehashed after compression; decoded PNG dimensions/RGB match the rendering fingerprints. PDF hashes identify retained archive bytes, not a separate conversion-time PDF fingerprint.",
+    "report_sha256": "b68aa3c76a86c5a81836388f49ce653dcd283697ea141b22dfaefe5001628cea",
+    "renderer_script_sha256": "70472f8e210f2b255ed9fe5d87f2971041c8e8684b07b906b955d1bebca7440a",
+    "renderer_commit": "afba7b6ac6e142294043c066f7ef2a926add6533",
+    "limits": "Native acceptance is specific to the recorded LibreOffice/Poppler corpus and runtime; it does not establish Quds canvas or Microsoft Office pixel equivalence."
+  },
+  "native_python_controls_passed": 69,
+  "app_measured_commit": "afba7b6ac6e142294043c066f7ef2a926add6533",
+  "tests": {
+    "portable_engine_dart_passed": 963,
+    "actual_host_flutter_passed": 154,
+    "actual_host_test_files": 21,
+    "sync_controls_passed": 7,
+    "portable_engine_python_controls_passed": 389,
+    "host_evidence_controls_passed": 12,
+    "host_provenance_controls_passed": 31
+  },
+  "pinned_vendor_files": 378,
+  "host_coverage": {
+    "covered_lines": 2540,
+    "instrumented_lines": 3782,
+    "unhit_instrumented_lines": 1242,
+    "instrumented_source_files": 10,
+    "uninstrumented_files": [],
+    "receipt_sha256": "09683f79a6658da6b79273346ef11d5732eaa7796a2aeda2ad597cb8aa8008ac"
+  },
+  "coverage_scope": "executed instrumented host lines; not branch coverage"
+}

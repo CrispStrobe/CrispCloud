@@ -555,6 +555,7 @@ class HostWordPictureTests(unittest.TestCase):
                 elif args[0] == 'pdftoppm':
                     width, height, pixels = raster
                     Path(args[-1]).with_name('page-1.ppm').write_bytes(f'P6\n{width} {height}\n255\n'.encode() + pixels)
+                return subprocess.CompletedProcess(args, 0, stdout=b'', stderr=b'')
             def output_text(args, **kwargs):
                 return f'Pages: {page_count}\nPage size: 595.3 x 841.9 pts\n' if args[0] == 'pdfinfo' else text
             with patch.object(render.subprocess, 'run', side_effect=command), patch.object(render.subprocess, 'check_output', side_effect=output_text):

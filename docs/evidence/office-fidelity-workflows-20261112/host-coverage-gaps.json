@@ -2,18 +2,18 @@
   "measurement": "executed instrumented host lines; not branch coverage",
   "collection": {
     "verified": true,
-    "receipt_sha256": "1719d1814b2ac77684fadc4bdc94db3f0a2289459400466da1f57f00d45d0601",
-    "input_tree_sha256": "82044cbdb4910b38ec13469c27be339abe16ef635401b28882085fade78a913c",
+    "receipt_sha256": "09683f79a6658da6b79273346ef11d5732eaa7796a2aeda2ad597cb8aa8008ac",
+    "input_tree_sha256": "5569e27fc937c7df8cf02c3c15720ad562769dfaaf5d82f5b0c098bffe75481b",
     "input_files": 2133,
     "coverage_sha256": {
-      "lcov.info": "20da0f2e0f2449edfc5ab6ca82d7e13e72e9379af27785c840ea8c3cb6ebe08c"
+      "lcov.info": "9786292defe4c3b9ae8b6c3de7baa9016ec0996e6ecfddf6505ddae230580b67"
     },
     "command": [
       "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/flutter",
       "test",
       "--no-pub",
       "--coverage",
-      "--coverage-path=/workspace/scratch/dcd413fa34f4/CrispCloud/build/fidelity-host/coverage/workflows-final-4/lcov.info",
+      "--coverage-path=/workspace/scratch/dcd413fa34f4/CrispCloud/build/fidelity-host/coverage/workflows-final-5/lcov.info",
       "test/office_fidelity_workflow_test.dart",
       "test/office_formatting_preservation_test.dart",
       "test/office_roundtrip_preservation_test.dart",
@@ -41,8 +41,8 @@
       "sha256": "7d486c33b30a0cf1ea5146231c68bb8f966cdb4e087c5cd8b37e14513f536e7d",
       "version": "{\n  \"frameworkVersion\": \"3.47.8\",\n  \"channel\": \"[user-branch]\",\n  \"repositoryUrl\": \"https://github.com/flutter/flutter.git\",\n  \"frameworkRevision\": \"737ba8f885dc774b53b442759999a312c9461e4e\",\n  \"frameworkCommitDate\": \"2026-10-22 21:37:31 -0700\",\n  \"engineRevision\": \"cf636b1dfb818dd6a3ff16e390e93b1a036969c8\",\n  \"engineCommitDate\": \"2026-10-23 02:13:38.000Z\",\n  \"engineContentHash\": \"dfd2e6cb7d319db05e3bf1503f3e2ac60f6288a2\",\n  \"engineBuildDate\": \"2026-10-23 05:34:48.330\",\n  \"dartSdkVersion\": \"3.13.7\",\n  \"devToolsVersion\": \"2.60.0\",\n  \"flutterVersion\": \"3.47.8\",\n  \"flutterRoot\": \"/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8\"\n}"
     },
-    "started_at": "2026-11-12T15:25:21.142287+00:00",
-    "completed_at": "2026-11-12T15:25:57.898085+00:00",
+    "started_at": "2026-11-12T16:01:06.532592+00:00",
+    "completed_at": "2026-11-12T16:01:52.748066+00:00",
     "scope": "Host lib/tests/assets, Office tools/config/resolutions and actual Quds inputs; successful source/output identity, not branch correctness or a hermetic environment."
   },
   "scope": [
@@ -1376,7 +1376,7 @@
       ]
     }
   ],
-  "source_git_commit": "0bbb7f1fc5ed2a1be8ef7a94acf23ce7c4f7d715",
+  "source_git_commit": "afba7b6ac6e142294043c066f7ef2a926add6533",
   "source_git_dirty": false,
   "status": "complete"
 }

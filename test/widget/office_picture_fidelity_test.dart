@@ -193,6 +193,46 @@ void _expectPicture(
   expect(declared.getAttribute('ContentType'), mime);
 }
 
+void _expectImageOnlyWordPage(Uint8List bytes) {
+  final document = _part(ZipDecoder().decodeBytes(bytes), 'word/document.xml');
+  final body = document.findAllElements('body', namespace: _w).single;
+  final paragraphs = body.findElements('p', namespace: _w).toList();
+  expect(paragraphs, hasLength(2));
+  expect(
+    document
+        .findAllElements('t', namespace: _w)
+        .map((node) => node.innerText)
+        .join(),
+    isEmpty,
+  );
+  expect(paragraphs.first.findAllElements('drawing', namespace: _w), isEmpty);
+  expect(
+    paragraphs.last.findAllElements('inline', namespace: _wp),
+    hasLength(1),
+  );
+  final spacing = paragraphs.first
+      .findAllElements('spacing', namespace: _w)
+      .single;
+  for (final (name, value) in [
+    ('before', '0'),
+    ('after', '0'),
+    ('line', '240'),
+    ('lineRule', 'exact'),
+  ]) {
+    expect(spacing.getAttribute(name, namespace: _w), value);
+  }
+  final page = document.findAllElements('pgSz', namespace: _w).single;
+  expect(page.getAttribute('w', namespace: _w), '11906');
+  expect(page.getAttribute('h', namespace: _w), '16838');
+  final margins = document.findAllElements('pgMar', namespace: _w).single;
+  for (final name in ['left', 'right', 'top', 'bottom']) {
+    expect(margins.getAttribute(name, namespace: _w), '1440');
+  }
+  for (final name in ['header', 'footer']) {
+    expect(margins.getAttribute(name, namespace: _w), '720');
+  }
+}
+
 void _cycles(
   OfficeController controller,
   String name,
@@ -354,21 +394,34 @@ void main() {
       FilePicker.platform = _Picker(
         () async => _result(picture, name: 'picked.$format'),
       );
-      final controller = WordEditorController(config: _config);
+      // Keep this image-only while giving native readers a known
+      // 12-point lead-in, independent of the empty paragraph's font metrics.
+      final document = WmlDocument.empty();
+      document.paragraphs.single.properties
+        ..lineSpacing = 12
+        ..lineSpacingRule = WmlLineSpacingRule.exact
+        ..spacingBefore = 0
+        ..spacingAfter = 0
+        ..explicitLineSpacing = true
+        ..explicitSpacingBefore = true
+        ..explicitSpacingAfter = true;
+      final controller = WordEditorController(
+        document: document,
+        config: _config,
+      );
       final key = await _host(tester, controller);
       await _insert(tester, key);
-      _cycles(
-        controller,
-        'word-picture-$format',
-        (bytes) => _expectPicture(
+      _cycles(controller, 'word-picture-$format', (bytes) {
+        _expectPicture(
           bytes,
           picture,
           word: true,
           width: 60,
           height: 30,
           mime: 'image/$format',
-        ),
-      );
+        );
+        _expectImageOnlyWordPage(bytes);
+      });
       await tester.pumpWidget(const SizedBox.shrink());
     });
   }

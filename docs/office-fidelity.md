@@ -31,14 +31,17 @@ Historical workflow checkpoint (before this integration):
 
 The [workflow acceptance evidence](evidence/office-fidelity-workflows-20261112/README.md)
 records the successful app run at
-`0bbb7f1fc5ed2a1be8ef7a94acf23ce7c4f7d715`, pinning suite
-`c8d5ba3cfddf8c6fd3fa736deab992be1e0cc3aa` through 378 verified files.
+`afba7b6ac6e142294043c066f7ef2a926add6533`, pinning suite
+`8223a2297418ba6f478ed6ce80b9881d28680094` through 378 verified files.
 It passed 154 actual-host Flutter tests across 21 files, required all 104 host
 exports, and passed the vendored 963-test Dart / 389-control Python portable
 gate. Open XML SDK accepted all 409 app/engine package instances with zero
 errors. Host line execution is 2,540 of 3,782 instrumented lines (67.2%);
 all ten scoped files are present, and the report retains all 1,242 unhit lines.
-Native rendering and its limitations are recorded separately in that evidence.
+The complete native host run rendered all 104 files across 113 pages, passed
+all 32 three-save groups and checked independent pixel geometry for eighteen
+image-only exports. Its complete PDFs, PNGs, reports and exact input archive
+are retained in that evidence. The native validator's 69 Python controls pass.
 
 ## What is checked
 
@@ -235,9 +238,11 @@ visual pass. Neither validator certifies Microsoft Office pixel equivalence.
 The [workflow](../.github/workflows/office-fidelity.yml) runs feature-branch
 checks without deploying the app. After validating downloaded bytes, its
 external job stages the exact hash-checked host inventory, renders every host
-file and compares repeated saves. Picture-only slide cases require independent
-page, rectangle, color and placement measurements; empty extracted text alone
-cannot establish a visual pass. Its result must be checked for the exact
+file and compares repeated saves. Picture-only slide and the exact six JPEG/GIF
+Word cases require independent page, rectangle, color and placement
+measurements. The Word cases also require their authored paragraph spacing,
+inline geometry and media relationships; empty extracted text alone cannot
+establish a visual pass. Its result must be checked for the exact
 commit; queued or cancelled runs do not establish remote CI success.
 
 ## Remaining boundaries and synchronization

@@ -2,16 +2,16 @@
   "schema_version": 1,
   "status": "complete",
   "returncode": 0,
-  "started_at": "2026-11-12T15:25:21.142287+00:00",
-  "completed_at": "2026-11-12T15:25:57.898085+00:00",
+  "started_at": "2026-11-12T16:01:06.532592+00:00",
+  "completed_at": "2026-11-12T16:01:52.748066+00:00",
   "host_root": "/workspace/scratch/dcd413fa34f4/CrispCloud",
-  "coverage_directory": "/workspace/scratch/dcd413fa34f4/CrispCloud/build/fidelity-host/coverage/workflows-final-4",
+  "coverage_directory": "/workspace/scratch/dcd413fa34f4/CrispCloud/build/fidelity-host/coverage/workflows-final-5",
   "command": [
     "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/flutter",
     "test",
     "--no-pub",
     "--coverage",
-    "--coverage-path=/workspace/scratch/dcd413fa34f4/CrispCloud/build/fidelity-host/coverage/workflows-final-4/lcov.info",
+    "--coverage-path=/workspace/scratch/dcd413fa34f4/CrispCloud/build/fidelity-host/coverage/workflows-final-5/lcov.info",
     "test/office_fidelity_workflow_test.dart",
     "test/office_formatting_preservation_test.dart",
     "test/office_roundtrip_preservation_test.dart",
@@ -2111,7 +2111,7 @@
     "test/widget/office_font_fidelity_test.dart": "959a7d999485d10a331eb0c463015d3655d8c93ce3ddb49e0b71b03b9d1bf6b4",
     "test/widget/office_paragraph_dialog_test.dart": "819ea7d86aa4eb2e346f2e275575a6434fce95f9fc6f79b4b60745a32dcd1b3d",
     "test/widget/office_paragraph_fidelity_test.dart": "41e125b0a982d8d8ba5e81fda24523af325b325d928108f746928c13c1bb2ae0",
-    "test/widget/office_picture_fidelity_test.dart": "efff6f9f5b3ef07cb013e52bb03a415fe76cc5ed31987c803caff76f5f23fddc",
+    "test/widget/office_picture_fidelity_test.dart": "85ccf59859949fb63518fd730f0cf093710fb50b81514755c8a83742e98b1420",
     "test/widget/office_save_fidelity_test.dart": "5079f5c4ab2cc16657dc58ec139a0eeb1188119c002332f8b63d76264616c4c1",
     "test/widget/operations_panel_test.dart": "b9caaca9836efa490ba528ab40290faaf0036e47fac3004160ac8aeca0f1f3d1",
     "test/widget/page_navigation_localization_test.dart": "afcce3d34971bab083e7a85502569083b4b3a379a5524e38e4e500a39cbaad72",
@@ -2158,10 +2158,10 @@
     "tool/collect_office_host_coverage.py": "e5fe34adb2c9394b1ed3113b5566688d888f649bff325aae00c9dce0c6e59776",
     "tool/office-validation/OfficeValidation.csproj": "e9e7985f8af8396d5b0dea81555e3c8ca51b7dba1af68a0e2cd4d2b238347e27",
     "tool/office-validation/Program.cs": "4d41f286855ed11a12ecdf0641773c33285847180a3e5cdbf43ce2385a099880",
-    "tool/office-validation/render.py": "c35e3934005b3c603fff58a9ce27fe5dde814d7dc89aab2af55f4a43a2772a37",
+    "tool/office-validation/render.py": "70472f8e210f2b255ed9fe5d87f2971041c8e8684b07b906b955d1bebca7440a",
     "tool/office-validation/test_native_render_limitations.py": "ffc4e367871bf40079b2b2868af6b146de5bcfe13b50a17bdede2f2b3398308b",
-    "tool/office-validation/test_render.py": "1240da7faa78bf10b5e219ee4a5d6a7b2b5ae57b1f604c544c3476c52d7b5c83",
-    "tool/office_fidelity_manifest.json": "0932a4cc070abbb859c5b971f295f0cbff758fd9f2745385e1a1230c29714496",
+    "tool/office-validation/test_render.py": "289b378ed9d2bf1ee101332bd6683d16d69b826e29927c3f4e102197d2781262",
+    "tool/office_fidelity_manifest.json": "961702b1f2d6a10cb15541424e80baa0e22dc70677c4a807be966feacc1acd8a",
     "tool/office_host_coverage.py": "9b336d23dda2244fe57df433139f75f7d7165f6db4c6dc307a7b5caa01c4009c",
     "tool/office_host_evidence.json": "19f7c29225d28d54107cc1608bf6c14ce02ee0d26947272c333eef1fcca3be59",
     "tool/office_host_evidence.py": "9a2c0a12077e358587e711b46982b16b46e422217a0ce55f7750077c90eba637",
@@ -2174,8 +2174,8 @@
     "tool/verify_office_fidelity.py": "f265a094e7d3730376c1237bb51a77c6f20c4c2839c78cc18d572454340e3028",
     "tool/with_ci_system_sqlite.py": "c47c0767392478e32c856b12e4f704682edc84d04b55dc2374e680a535ac1806"
   },
-  "input_tree_sha256": "82044cbdb4910b38ec13469c27be339abe16ef635401b28882085fade78a913c",
+  "input_tree_sha256": "5569e27fc937c7df8cf02c3c15720ad562769dfaaf5d82f5b0c098bffe75481b",
   "coverage_sha256": {
-    "lcov.info": "20da0f2e0f2449edfc5ab6ca82d7e13e72e9379af27785c840ea8c3cb6ebe08c"
+    "lcov.info": "9786292defe4c3b9ae8b6c3de7baa9016ec0996e6ecfddf6505ddae230580b67"
   }
 }
