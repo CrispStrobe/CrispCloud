@@ -5,14 +5,14 @@ import 'dart:typed_data';
 import 'package:archive/archive.dart' as codecs;
 import 'package:crisp_cloud/services/archive_viewer_service.dart';
 import 'package:crisp_cloud/services/archive_workspace.dart';
-import 'package:crisp_cloud/services/file_operation_backend.dart';
+import 'package:crisp_cloud/models/archive_endpoint.dart';
 import 'package:crisp_cloud/services/file_operation_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:koni_archive/koni_archive.dart' as koni;
 
-import 'support/workflow_fake_client.dart';
+import 'support/archive_workflow_backend.dart';
 
-class _RacingArchiveClient extends WorkflowFakeClient {
+class _RacingArchiveClient extends ArchiveWorkflowClient {
   void Function()? beforeStageUpload;
   @override
   Future<void> uploadFile(
@@ -78,8 +78,8 @@ void main() {
       'folder/inner.zip': inner,
       'keep.txt': [4, 5],
     });
-    final client = WorkflowFakeClient()..put('/outer.zip', original);
-    final backend = CloudOperationBackend(
+    final client = ArchiveWorkflowClient()..put('/outer.zip', original);
+    final backend = ArchiveWorkflowBackend(
       client,
       isCurrent: () => client.current,
     );
@@ -91,7 +91,10 @@ void main() {
     addTearDown(workspace.close);
     workspace.replace('/same.txt', Uint8List.fromList(utf8.encode('after')));
     client.failUploads = true;
-    await expectLater(workspace.save(), throwsStateError);
+    await expectLater(
+      workspace.save(),
+      throwsA(isA<ArchivePublicationException>()),
+    );
     expect(client.files['/outer.zip'], original);
     expect(workspace.dirty, isTrue);
     client.failUploads = false;
@@ -134,8 +137,8 @@ void main() {
         'inside.txt': [1],
       }),
     });
-    final client = WorkflowFakeClient()..put('/outer.zip', original);
-    final backend = CloudOperationBackend(
+    final client = ArchiveWorkflowClient()..put('/outer.zip', original);
+    final backend = ArchiveWorkflowBackend(
       client,
       isCurrent: () => client.current,
     );
@@ -169,7 +172,7 @@ void main() {
       final original = await _archive(const koni.ZipWriteFormat());
       final external = await _archive(const koni.TarWriteFormat());
       final client = _RacingArchiveClient()..put('/work.zip', original);
-      final backend = CloudOperationBackend(client, isCurrent: () => true);
+      final backend = ArchiveWorkflowBackend(client, isCurrent: () => true);
       final workspace = await ArchiveWorkspace.open(
         backend,
         (await backend.stat('/work.zip'))!,
@@ -177,18 +180,21 @@ void main() {
       addTearDown(workspace.close);
       workspace.replace('/added.txt', Uint8List.fromList([7]));
       client.beforeStageUpload = () => client.put('/work.zip', external);
-      await expectLater(workspace.save(), throwsStateError);
+      await expectLater(
+        workspace.save(),
+        throwsA(isA<ArchivePublicationException>()),
+      );
       expect(client.files['/work.zip'], external);
       expect(workspace.dirty, isTrue);
     },
   );
 
   test('adding recursive files keeps empty directories and refuses duplicate member replacement by default', () async {
-    final client = WorkflowFakeClient()
+    final client = ArchiveWorkflowClient()
       ..put('/work.zip', await _archive(const koni.ZipWriteFormat()))
       ..put('/input/folder/new.txt', [3, 4]);
     client.directories.add('/input/folder/empty');
-    final backend = CloudOperationBackend(client, isCurrent: () => true);
+    final backend = ArchiveWorkflowBackend(client, isCurrent: () => true);
     final workspace = await ArchiveWorkspace.open(
       backend,
       (await backend.stat('/work.zip'))!,
@@ -218,10 +224,10 @@ void main() {
   });
 
   test('captured account loss refuses repacking and extracting', () async {
-    final client = WorkflowFakeClient()
+    final client = ArchiveWorkflowClient()
       ..put('/work.zip', await _archive(const koni.ZipWriteFormat()));
     var current = true;
-    final backend = CloudOperationBackend(client, isCurrent: () => current);
+    final backend = ArchiveWorkflowBackend(client, isCurrent: () => current);
     final workspace = await ArchiveWorkspace.open(
       backend,
       (await backend.stat('/work.zip'))!,
@@ -242,9 +248,9 @@ void main() {
     test(
       '${kind.$1} edit/add/rename/delete repacks all selected changes and empty directories',
       () async {
-        final client = WorkflowFakeClient()
+        final client = ArchiveWorkflowClient()
           ..put('/work.${kind.$1}', await _archive(kind.$2));
-        final backend = CloudOperationBackend(client, isCurrent: () => true);
+        final backend = ArchiveWorkflowBackend(client, isCurrent: () => true);
         final workspace = await ArchiveWorkspace.open(
           backend,
           (await backend.stat('/work.${kind.$1}'))!,
@@ -300,12 +306,12 @@ void main() {
   }
 
   test('encrypted archive requires the original password and preserves encryption after repacking', () async {
-    final client = WorkflowFakeClient()
+    final client = ArchiveWorkflowClient()
       ..put(
         '/protected.zip',
         await _archive(const koni.ZipWriteFormat(), password: 'secret'),
       );
-    final backend = CloudOperationBackend(client, isCurrent: () => true);
+    final backend = ArchiveWorkflowBackend(client, isCurrent: () => true);
     final file = (await backend.stat('/protected.zip'))!;
     await expectLater(
       ArchiveWorkspace.open(backend, file),
@@ -347,8 +353,8 @@ void main() {
     'external modification and cancellation retain the original archive',
     () async {
       final original = await _archive(const koni.ZipWriteFormat());
-      final client = WorkflowFakeClient()..put('/work.zip', original);
-      final backend = CloudOperationBackend(client, isCurrent: () => true);
+      final client = ArchiveWorkflowClient()..put('/work.zip', original);
+      final backend = ArchiveWorkflowBackend(client, isCurrent: () => true);
       final workspace = await ArchiveWorkspace.open(
         backend,
         (await backend.stat('/work.zip'))!,
@@ -370,10 +376,10 @@ void main() {
   );
 
   test('read-only archive source copies selected members through the normal conflict engine', () async {
-    final client = WorkflowFakeClient()
+    final client = ArchiveWorkflowClient()
       ..put('/work.zip', await _archive(const koni.ZipWriteFormat()))
       ..put('/out/original.txt', utf8.encode('existing'));
-    final backend = CloudOperationBackend(client, isCurrent: () => true);
+    final backend = ArchiveWorkflowBackend(client, isCurrent: () => true);
     final workspace = await ArchiveWorkspace.open(
       backend,
       (await backend.stat('/work.zip'))!,
@@ -419,10 +425,10 @@ void main() {
   });
 
   test('archive move-out retains skipped members and refuses changed destinations atomically', () async {
-    final client = WorkflowFakeClient()
+    final client = ArchiveWorkflowClient()
       ..put('/work.zip', await _archive(const koni.ZipWriteFormat()))
       ..put('/out/remove.txt', [9]);
-    final backend = CloudOperationBackend(client, isCurrent: () => true);
+    final backend = ArchiveWorkflowBackend(client, isCurrent: () => true);
     final workspace = await ArchiveWorkspace.open(
       backend,
       (await backend.stat('/work.zip'))!,
@@ -458,9 +464,9 @@ void main() {
   });
 
   test('unsafe hierarchy changes are rejected atomically', () async {
-    final client = WorkflowFakeClient()
+    final client = ArchiveWorkflowClient()
       ..put('/work.zip', await _archive(const koni.ZipWriteFormat()));
-    final backend = CloudOperationBackend(client, isCurrent: () => true);
+    final backend = ArchiveWorkflowBackend(client, isCurrent: () => true);
     final workspace = await ArchiveWorkspace.open(
       backend,
       (await backend.stat('/work.zip'))!,
@@ -485,12 +491,12 @@ void main() {
   test(
     'RAR remains available for extraction and refuses unsupported repacking',
     () async {
-      final client = WorkflowFakeClient()
+      final client = ArchiveWorkflowClient()
         ..put(
           '/work.rar',
           await File('test/fixtures/archives/sample.rar').readAsBytes(),
         );
-      final backend = CloudOperationBackend(client, isCurrent: () => true);
+      final backend = ArchiveWorkflowBackend(client, isCurrent: () => true);
       final workspace = await ArchiveWorkspace.open(
         backend,
         (await backend.stat('/work.rar'))!,
