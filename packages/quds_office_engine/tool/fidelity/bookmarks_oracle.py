@@ -170,7 +170,7 @@ def verify_corpus(directory):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('directory', type=Path, nargs='?', default=ROOT / 'build/fidelity-bookmarks')
+    parser.add_argument('directory', type=Path, nargs='?', default=ROOT / 'build/fidelity-bookmarks-legacy')
     parser.add_argument('--editor-dir', type=Path,
                         help='Also require all three actual editor split/history outputs')
     args = parser.parse_args(argv)

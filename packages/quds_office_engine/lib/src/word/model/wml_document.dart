@@ -3,41 +3,19 @@ import '../../office/office_document_properties.dart';
 import '../../opc/ole/embedded_part.dart';
 import '../../opc/opc_archive.dart';
 import '../../opc/relationships.dart';
+import '../../visual/drawing_line_style.dart';
 import '../../visual/office_visual.dart';
 import '../math/omml_document.dart';
 import '../properties/wml_properties.dart';
 import 'word_notes.dart';
 import 'word_revision.dart';
 import 'word_styles.dart';
+import 'word_tree.dart';
 
 /// Class WmlBlock.
 sealed class WmlBlock {
   /// WmlBlock API.
   WmlBlock();
-}
-
-/// Immutable native content-control properties, separate from editable content.
-final class WmlSdtInfo {
-  const WmlSdtInfo({
-    required this.templateXml,
-    required this.hasContent,
-    this.id,
-    this.tag,
-  });
-
-  /// Self-contained `w:sdt` with its original properties and empty content slot.
-  final String templateXml;
-  final bool hasContent;
-  final String? id;
-  final String? tag;
-}
-
-/// Zero-layout boundary around ordinary editable blocks in a native SDT.
-final class WmlSdtBlockBoundary extends WmlBlock {
-  WmlSdtBlockBoundary(this.control, {required this.isStart});
-
-  final WmlSdtInfo control;
-  final bool isStart;
 }
 
 /// An imported block retained for export without claiming layout support.
@@ -82,23 +60,85 @@ final class WmlOpaqueRelationship {
   final String? sha256;
 }
 
+/// Immutable native content-control metadata with an empty sdtContent shell.
+///
+/// The editable content is held separately in block lists or ordinary inline
+/// runs. Metadata includes unmodeled control settings without claiming their
+/// UI, data-binding refresh, or lock enforcement is implemented.
+final class WmlContentControlData {
+  WmlContentControlData({
+    required this.xml,
+    required this.sourcePartUri,
+    required Iterable<WmlOpaqueRelationship> relationships,
+    this.alias,
+    this.tag,
+    this.id,
+  }) : relationships = List<WmlOpaqueRelationship>.unmodifiable(relationships);
+
+  final String xml;
+  final String sourcePartUri;
+  final List<WmlOpaqueRelationship> relationships;
+  final String? alias;
+  final String? tag;
+  final String? id;
+}
+
+/// A block-level content control whose children stay editable and visible.
+final class WmlContentControlBlock extends WmlBlock {
+  WmlContentControlBlock({required this.control, List<WmlBlock>? blocks})
+    : blocks = blocks ?? <WmlBlock>[];
+
+  final WmlContentControlData control;
+  final List<WmlBlock> blocks;
+}
+
 /// Class WmlInline.
 sealed class WmlInline {
   /// WmlInline API.
   WmlInline();
 }
 
-/// Source markup at a text boundary, without a character or layout width.
-/// Start-like markers stay with following content when a paragraph is split;
-/// end-like markers stay with preceding content.
-abstract class WmlZeroWidthInline extends WmlInline {
-  bool get isStart;
+/// Zero-width boundary of an inline content control in a paragraph.
+///
+/// Both endpoints share the same immutable [control] object. Child runs remain
+/// ordinary editable runs, so text, formatting, fields and note references are
+/// not hidden inside an opaque XML node.
+final class WmlContentControlBoundary extends WmlInline {
+  WmlContentControlBoundary({required this.control, required this.start});
 
-  /// Whether a paragraph boundary may occur between this marker and its mate.
-  /// Inline wrappers override this to reject an invalid split before mutation.
-  bool get canCrossParagraph => true;
+  final WmlContentControlData control;
+  final bool start;
+}
 
-  WmlZeroWidthInline copy();
+/// The zero-width automatic number inside a footnote or endnote body.
+///
+/// This is distinct from [WmlRun.noteRefId], which links body text to a note.
+/// Keeping the marker in the inline sequence preserves imported placement,
+/// including a marker between two text nodes in one native run.
+final class WmlNoteMarker extends WmlInline {
+  WmlNoteMarker({required this.endnote, required this.properties});
+
+  final bool endnote;
+  final WmlRunProps properties;
+}
+
+/// One zero-width endpoint of a native Word bookmark range.
+///
+/// Endpoints remain in document order and may overlap other ranges. [id]
+/// joins a start to its end within a story; [sourceXml] preserves extra native
+/// attributes such as colFirst, colLast and displacedByCustomXml.
+final class WmlBookmarkBoundary extends WmlInline {
+  WmlBookmarkBoundary({
+    required this.id,
+    required this.isStart,
+    this.name,
+    this.sourceXml,
+  });
+
+  final String id;
+  final bool isStart;
+  final String? name;
+  final String? sourceXml;
 }
 
 /// Class WmlRun.
@@ -373,15 +413,28 @@ class WmlObject extends WmlInline {
 /// Class WmlParagraph.
 class WmlParagraph extends WmlBlock {
   /// WmlParagraph API.
-  WmlParagraph({List<WmlInline>? inlines, WmlParagraphProps? properties})
-    : inlines = inlines ?? <WmlInline>[],
-      properties = properties ?? WmlParagraphProps();
+  WmlParagraph({
+    List<WmlInline>? inlines,
+    WmlParagraphProps? properties,
+    List<WmlContentControlData>? contentControlWrappers,
+  }) : inlines = inlines ?? <WmlInline>[],
+       properties = properties ?? WmlParagraphProps(),
+       contentControlWrappers =
+           contentControlWrappers ?? <WmlContentControlData>[];
 
   /// inlines API.
   List<WmlInline> inlines;
 
   /// properties API.
   WmlParagraphProps properties;
+
+  /// Native block controls around this single auxiliary-story paragraph.
+  ///
+  /// Header/footer/comment stories expose paragraphs directly. These shells,
+  /// ordered outermost first, preserve their native block wrappers while text,
+  /// formatting and fields remain editable. General body controls use
+  /// [WmlContentControlBlock] and retain arbitrary child-block ownership.
+  final List<WmlContentControlData> contentControlWrappers;
 
   /// text API.
   String get text {
@@ -475,6 +528,15 @@ class WmlFrame extends WmlBlock {
     this.wrap = WmlFrameWrap.none,
     this.fillColor,
     this.strokeColor,
+    this.insetLeft = 8,
+    this.insetTop = 8,
+    this.insetRight = 8,
+    this.insetBottom = 8,
+    this.sourceBodyPropertiesXml,
+    this.importedInsets,
+    this.sourceLinePropertiesXml,
+    this.importedStrokeColor,
+    this.anchorParagraphProperties,
     List<WmlBlock>? blocks,
   }) : blocks = blocks ?? <WmlBlock>[];
 
@@ -501,6 +563,41 @@ class WmlFrame extends WmlBlock {
 
   /// strokeColor API.
   String? strokeColor;
+
+  /// Text insets in points. Imported omitted values use DrawingML defaults;
+  /// newly created frames match the editor's conventional eight-point padding.
+  double insetLeft;
+  double insetTop;
+  double insetRight;
+  double insetBottom;
+
+  /// Sparse native body properties, including unsupported presentation fields.
+  String? sourceBodyPropertiesXml;
+  Map<String, double>? importedInsets;
+
+  /// Native line properties. An empty string records an omitted line;
+  /// null denotes a newly authored frame using the conventional one-point line.
+  String? sourceLinePropertiesXml;
+  String? importedStrokeColor;
+
+  String? _cachedLineXml;
+  DrawingLineStyle? _cachedLineStyle;
+
+  /// Native outline geometry for preview. An omitted imported width retains
+  /// the established hairline approximation; newly authored lines are 1 pt.
+  DrawingLineStyle get lineStyle {
+    if (_cachedLineStyle == null || _cachedLineXml != sourceLinePropertiesXml) {
+      _cachedLineXml = sourceLinePropertiesXml;
+      _cachedLineStyle = DrawingLineStyle.fromXml(
+        sourceLinePropertiesXml,
+        fallbackWidth: sourceLinePropertiesXml == null ? 1 : 0.8,
+      );
+    }
+    return _cachedLineStyle!;
+  }
+
+  /// Original anchor host paragraph properties, including an omitted pPr.
+  WmlParagraphProps? anchorParagraphProperties;
 
   /// blocks API.
   List<WmlBlock> blocks;
@@ -546,6 +643,36 @@ class WmlTocEntry {
   int pageNumber;
 }
 
+/// Parsed presentation of an imported TOC cache. The paragraph models retain
+/// sparse formatting and field-boundary locations; live items provide the text.
+class WmlTocPresentation {
+  WmlTocPresentation({required this.configuration, required this.paragraphs});
+
+  (int, int, bool, int?, int?, String?) configuration;
+  final List<WmlTocSourceParagraph> paragraphs;
+}
+
+/// One native TOC paragraph, with optional live title or entry ownership.
+class WmlTocSourceParagraph {
+  WmlTocSourceParagraph({
+    required this.paragraph,
+    this.title = false,
+    this.entryIndex,
+    this.textStart = 0,
+    this.textEnd = 0,
+    this.pageStart,
+    this.pageEnd,
+  });
+
+  final WmlParagraph paragraph;
+  final bool title;
+  final int? entryIndex;
+  final int textStart;
+  final int textEnd;
+  final int? pageStart;
+  final int? pageEnd;
+}
+
 /// Live table of contents built from heading paragraphs.
 class WmlToc extends WmlBlock {
   /// WmlToc API.
@@ -560,6 +687,7 @@ class WmlToc extends WmlBlock {
     List<WmlTocEntry>? entries,
     WmlParagraph? titleParagraph,
     List<WmlParagraph>? itemParagraphs,
+    this.sourcePresentation,
   }) : title = title,
        entries = entries ?? <WmlTocEntry>[],
        titleParagraph =
@@ -618,6 +746,9 @@ class WmlToc extends WmlBlock {
 
   /// itemParagraphs API.
   List<WmlParagraph> itemParagraphs;
+
+  /// Native cached presentation, invalidated by an explicit contents refresh.
+  WmlTocPresentation? sourcePresentation;
 }
 
 /// Class WmlTable.
@@ -650,7 +781,11 @@ class WmlCitation {
     required this.title,
     this.year = '',
     this.pages = '',
-  });
+    this.sourceXml,
+    Map<String, String>? importedValues,
+  }) : importedValues = importedValues == null
+           ? null
+           : Map<String, String>.unmodifiable(importedValues);
 
   /// Short tag used in the body (`(Smith 2020)`).
   String tag;
@@ -666,6 +801,13 @@ class WmlCitation {
 
   /// pages API.
   String pages;
+
+  /// Original native source metadata, including structured authors and fields
+  /// not represented by this compact editing model.
+  final String? sourceXml;
+
+  /// Imported scalar values used to patch only deliberately changed fields.
+  final Map<String, String>? importedValues;
 
   /// inText API.
   String get inText {
@@ -922,6 +1064,7 @@ class WmlDocument {
     this.mailMergePreview = 0,
     this.sourceFileName = '',
     this.sourceByteLength,
+    this.sourceFootnoteSeparatorsPresent,
   }) : sections = sections ?? <WmlSection>[WmlSection()],
        comments = comments ?? <WmlComment>[],
        footnotes = footnotes ?? <WmlNote>[],
@@ -941,6 +1084,11 @@ class WmlDocument {
 
   /// footnotes API.
   List<WmlNote> footnotes;
+
+  /// Whether an imported footnote part declares any separator/continuation
+  /// definitions. Null keeps the conventional rule for a newly authored part;
+  /// false preserves explicit native absence in the editor preview.
+  bool? sourceFootnoteSeparatorsPresent;
 
   /// endnotes API.
   List<WmlNote> endnotes;
@@ -1039,56 +1187,13 @@ class WmlDocument {
   }
 
   static Iterable<WmlVisual> _visualsIn(List<WmlBlock> blocks) sync* {
-    for (final WmlBlock block in blocks) {
-      switch (block) {
-        case WmlVisual():
-          yield block;
-        case WmlFrame():
-          yield* _visualsIn(block.blocks);
-        case WmlTable(:final List<WmlTableRow> rows):
-          for (final WmlTableRow row in rows) {
-            for (final WmlTableCell cell in row.cells) {
-              yield* _visualsIn(cell.blocks);
-            }
-          }
-        case WmlParagraph():
-          break;
-        case WmlEquation():
-          break;
-        case WmlToc():
-          break;
-        case WmlSdtBlockBoundary():
-        case WmlOpaqueBlock():
-          break;
-      }
+    for (final block in WordTree.descendants(blocks)) {
+      if (block is WmlVisual) yield block;
     }
   }
 
   static Iterable<WmlParagraph> _paragraphsIn(List<WmlBlock> blocks) sync* {
-    for (final WmlBlock block in blocks) {
-      switch (block) {
-        case WmlParagraph():
-          yield block;
-        case WmlTable(:final List<WmlTableRow> rows):
-          for (final WmlTableRow row in rows) {
-            for (final WmlTableCell cell in row.cells) {
-              yield* _paragraphsIn(cell.blocks);
-            }
-          }
-        case WmlFrame():
-          yield* _paragraphsIn(block.blocks);
-        case WmlVisual():
-          break;
-        case WmlEquation():
-          break;
-        case WmlToc():
-          yield block.titleParagraph;
-          yield* block.itemParagraphs;
-        case WmlSdtBlockBoundary():
-        case WmlOpaqueBlock():
-          break;
-      }
-    }
+    yield* WordTree.paragraphs(blocks);
   }
 
   /// equations API.
@@ -1099,25 +1204,8 @@ class WmlDocument {
   }
 
   static Iterable<WmlEquation> _equationsIn(List<WmlBlock> blocks) sync* {
-    for (final WmlBlock block in blocks) {
-      switch (block) {
-        case WmlEquation():
-          yield block;
-        case WmlTable(:final List<WmlTableRow> rows):
-          for (final WmlTableRow row in rows) {
-            for (final WmlTableCell cell in row.cells) {
-              yield* _equationsIn(cell.blocks);
-            }
-          }
-        case WmlFrame():
-          yield* _equationsIn(block.blocks);
-        case WmlParagraph():
-        case WmlVisual():
-        case WmlToc():
-        case WmlSdtBlockBoundary():
-        case WmlOpaqueBlock():
-          break;
-      }
+    for (final block in WordTree.descendants(blocks)) {
+      if (block is WmlEquation) yield block;
     }
   }
 }

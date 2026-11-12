@@ -38,6 +38,7 @@ export 'src/editor_reports/report_layout_painter.dart';
 export 'src/editor_reports/report_template_library.dart';
 export 'src/embed/office_theme.dart';
 export 'src/embed/word_notes_pane.dart';
+export 'src/embed/word_tab_stops_editor.dart';
 export 'src/editor_sheet/formula_ref_style.dart';
 export 'src/editor_sheet/inline_cell_editor.dart';
 export 'src/editor_sheet/render_sheet_grid.dart';

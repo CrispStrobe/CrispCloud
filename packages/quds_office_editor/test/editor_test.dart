@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/gestures.dart';
@@ -1642,6 +1643,99 @@ void main() {
     );
   });
 
+  test(
+    'rejected native TOC refresh preserves heading aliases, selection and history',
+    () {
+      final package = OpcPackage.create(OpcPackageKind.word);
+      package
+          .getPart('/word/document.xml')!
+          .writeText(
+            '<w:document xmlns:w="${OfficeNamespaces.w}"><w:body>'
+            '<w:p><w:r><w:t>Editable</w:t></w:r></w:p>'
+            '<w:p><w:pPr><w:pStyle w:val="TOC1"/></w:pPr>'
+            '<w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText> TOC </w:instrText></w:r>'
+            '<w:r><w:fldChar w:fldCharType="separate"/></w:r>'
+            '<w:bookmarkStart w:id="50" w:name="Cache"/><w:r><w:t>Heading</w:t></w:r>'
+            '<w:r><w:tab/><w:t>2</w:t></w:r><w:bookmarkEnd w:id="50"/>'
+            '<w:r><w:fldChar w:fldCharType="end"/></w:r></w:p>'
+            '<w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>Heading</w:t></w:r></w:p>'
+            '<w:sectPr/></w:body></w:document>',
+          );
+      final word = WordEditorController(
+        document: WordDeserializer().read(package),
+      );
+      addTearDown(word.dispose);
+      final body = word.document.paragraphs.first;
+      word.insertText('!');
+      word.caret.selectParagraph(body.text);
+      word.applyRunFormat((props) => props.bold = true);
+      word.undo();
+      expect(word.canUndo, isTrue);
+      expect(word.canRedo, isTrue);
+      final native = WordToc.tocs(word.document).single;
+      final presentation = native.sourcePresentation;
+      final earlier = WmlToc(
+        title: 'Keep authored title',
+        entries: [
+          WmlTocEntry(
+            text: 'Keep authored entry',
+            level: 1,
+            headingParagraphIndex: 0,
+          ),
+        ],
+        itemParagraphs: [
+          WmlParagraph(inlines: [WmlRun(text: 'Keep authored entry')]),
+        ],
+      );
+      word.document.sections.single.blocks.insert(1, earlier);
+      final heading = word.document.paragraphs.last;
+      heading.properties
+        ..bookmarkName = null
+        ..sourceBookmarkName = null;
+      final beforeEntries = List<WmlTocEntry>.of(earlier.entries);
+      final beforeItems = List<WmlParagraph>.of(earlier.itemParagraphs);
+      final nativeItems = List<WmlParagraph>.of(native.itemParagraphs);
+      word.caret
+        ..paragraphIndex = 0
+        ..logicalIndex = 3
+        ..selectionAnchorParagraph = 0
+        ..selectionAnchor = 1;
+      final selection = (
+        word.caret.paragraphIndex,
+        word.caret.logicalIndex,
+        word.caret.selectionAnchorParagraph,
+        word.caret.selectionAnchor,
+      );
+      word.markClean();
+      expect(word.updateTableOfContents, throwsUnsupportedError);
+      expect(heading.properties.bookmarkName, isNull);
+      expect(heading.properties.sourceBookmarkName, isNull);
+      expect(earlier.title, 'Keep authored title');
+      expect(earlier.entries, orderedEquals(beforeEntries));
+      expect(earlier.itemParagraphs, orderedEquals(beforeItems));
+      expect(earlier.entries.single.text, 'Keep authored entry');
+      expect(native.sourcePresentation, same(presentation));
+      expect(native.itemParagraphs, orderedEquals(nativeItems));
+      expect((
+        word.caret.paragraphIndex,
+        word.caret.logicalIndex,
+        word.caret.selectionAnchorParagraph,
+        word.caret.selectionAnchor,
+      ), selection);
+      expect(word.isDirty, isFalse);
+      expect(word.canUndo, isTrue);
+      expect(word.canRedo, isTrue);
+      word.redo();
+      expect(
+        body.inlines.whereType<WmlRun>().every((run) => run.properties.bold),
+        isTrue,
+      );
+      word.undo();
+      word.undo();
+      expect(body.text, 'Editable');
+    },
+  );
+
   testWidgets('Word headings feed a live table of contents', (
     WidgetTester tester,
   ) async {
@@ -1946,6 +2040,60 @@ void main() {
         contentLeft: 59.4,
       ),
       59.4,
+    );
+  });
+
+  test('ruler selected frame follows native insets and the laid-out width', () {
+    final package = OpcPackage.create(OpcPackageKind.word);
+    package
+        .getPart('/word/document.xml')!
+        .writeText(
+          File(
+            '../quds_office_engine/test/fixtures/fidelity/frame_wrap_source.xml',
+          ).readAsStringSync().replaceFirst(
+            '<wps:bodyPr/>',
+            '<wps:bodyPr lIns="254000" rIns="381000"/>',
+          ),
+        );
+    final document = WordDeserializer().read(package);
+    final section = document.sections.single;
+    final frame = section.blocks.whereType<WmlFrame>().single;
+    expect((frame.insetLeft, frame.insetRight), (20.0, 30.0));
+    final paragraph = frame.blocks.single as WmlParagraph;
+    final index = document.paragraphs.toList().indexOf(paragraph);
+    final laid = WordLayoutEngine(font: null).layout(document);
+    final line = laid.pages
+        .expand((page) => page.lines)
+        .singleWhere((line) => line.paragraphIndex == index);
+    expect((line.boxX, line.boxWidth), (44.0, 50.0));
+    for (final selected in [false, true]) {
+      expect(
+        WordRuler.paragraphContentBox(
+          margins: section.margins,
+          pageWidth: section.pageSize.width,
+          // An unrelated line box must not override selected-frame priority.
+          lineBoxX: selected ? 200 : null,
+          lineBoxWidth: selected ? 150 : null,
+          frameX: frame.pageX(section),
+          frameWidth: frame.width,
+          frameInsetLeft: frame.insetLeft,
+          frameInsetRight: frame.insetRight,
+          preferFrame: selected,
+        ),
+        (left: 44.0, right: 94.0),
+      );
+    }
+    expect(
+      WordRuler.paragraphContentBox(
+        margins: section.margins,
+        pageWidth: section.pageSize.width,
+        frameX: frame.pageX(section),
+        frameWidth: 40,
+        frameInsetLeft: frame.insetLeft,
+        frameInsetRight: frame.insetRight,
+        preferFrame: true,
+      ),
+      (left: 44.0, right: 45.0),
     );
   });
 

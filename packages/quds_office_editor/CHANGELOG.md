@@ -4,6 +4,27 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Expose worksheet renaming through shared atomic reference rewriting and one
+  undo/redo command. Commit pending drafts before planning, retain later edits
+  through save/undo, and keep read-only, unchanged and rejected operations out
+  of history and dirty-state changes.
+
+- Route slide reordering through the shared section-aware plan. Undo/redo keep
+  native section identities, empty sections and active-slide identity; invalid
+  memberships reject before history or dirty-state changes.
+
+- Paint explicit native Word frame outline widths, preset/custom dashes, caps,
+  joins and inset alignment. Keep selection chrome separate from the document
+  stroke. New frames preview their serialized one-point outline; imported
+  omitted widths retain the existing approximation. Native pixel regressions
+  and three reviewed outline-only golden corrections cover repeated saves.
+
+- Commit active Word, Sheet and Slide drafts through `commitPendingEdits()`
+  and both save APIs. Cell and slide text changes advance the content revision
+  immediately, including edits during an asynchronous save; focus, caret and
+  unchanged text stay clean. Cancel restores the draft without clearing other
+  unsaved changes, and committed drafts remain undoable.
+
 - Expose a content revision that advances immediately for pending note-pane
   edits as well as commands and history. Saves commit pending note edits before
   encoding so hosts can guard asynchronous completion against a later edit.

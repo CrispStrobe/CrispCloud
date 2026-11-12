@@ -52,6 +52,25 @@ sealed class FormulaNode {
   Object? eval(FormulaContext ctx);
 }
 
+/// Internal error provenance during scalar-cache evaluation. Public evaluator
+/// entry points unwrap these markers back to the existing String error codes.
+class FormulaErrorValue {
+  const FormulaErrorValue(this.code);
+  final String code;
+
+  @override
+  String toString() => code;
+
+  static Object? unwrap(Object? value) => switch (value) {
+    FormulaErrorValue(:final code) => code,
+    FormulaSpill(:final rows) => FormulaSpill([
+      for (final row in rows) [for (final item in row) unwrap(item)],
+    ]),
+    List<Object?>() => [for (final item in value) unwrap(item)],
+    _ => value,
+  };
+}
+
 /// Class FormulaContext.
 class FormulaContext {
   /// FormulaContext API.
@@ -74,6 +93,24 @@ class FormulaContext {
   /// Function API.
   final void Function(SmlCellRef ref)? onCircular;
   final Set<String> _stack = <String>{};
+  var _typedErrors = false;
+
+  /// Whether actual error producers must retain their distinct scalar type.
+  bool get tracksErrorTypes => _typedErrors;
+
+  /// Scoped evaluation metadata; it never changes workbook cells.
+  T withErrorTypes<T>(T Function() evaluate) {
+    final before = _typedErrors;
+    _typedErrors = true;
+    try {
+      return evaluate();
+    } finally {
+      _typedErrors = before;
+    }
+  }
+
+  /// Emits an actual evaluation error without confusing literal text with it.
+  Object error(String code) => _typedErrors ? FormulaErrorValue(code) : code;
 
   /// LET bindings (uppercase name → value).
   final Map<String, Object?> lets = <String, Object?>{};
@@ -84,16 +121,23 @@ class FormulaContext {
     final String key = '${target.name}!${ref.a1}';
     if (!_stack.add(key)) {
       onCircular?.call(ref);
-      return '#CIRC!';
+      return error('#CIRC!');
     }
     try {
       final SmlCell cell = target.cell(ref);
       if (cell.formula != null &&
           cell.formula!.isNotEmpty &&
           (cell.value == null || cell.value == cell.formula)) {
-        return evaluateFormula(cell.formula!, this);
+        return tracksErrorTypes
+            ? evaluateFormulaForCache(cell.formula!, this)
+            : evaluateFormula(cell.formula!, this);
       }
-      return cell.value;
+      final value = cell.value;
+      return tracksErrorTypes &&
+              cell.type == SmlCellType.error &&
+              value is String
+          ? FormulaErrorValue(value)
+          : value;
     } finally {
       _stack.remove(key);
     }
@@ -153,11 +197,11 @@ class NamedRangeNode extends FormulaNode {
     }
     final SmlNamedRange? found = ctx.workbook.namedRange(name);
     if (found == null) {
-      return '#NAME?';
+      return ctx.error('#NAME?');
     }
     final SmlWorksheet? sheet = ctx.workbook.sheetByName(found.sheetName);
     if (sheet == null) {
-      return '#REF!';
+      return ctx.error('#REF!');
     }
     if (found.range.isSingleCell) {
       return ctx.valueOf(found.range.start, onSheet: sheet);
@@ -183,6 +227,7 @@ class CellNode extends FormulaNode {
     final SmlWorksheet? sheet = sheetName == null
         ? ctx.sheet
         : ctx.workbook.sheetByName(sheetName!);
+    if (sheet == null) return ctx.error('#REF!');
     return ctx.valueOf(ref, onSheet: sheet);
   }
 }
@@ -204,6 +249,7 @@ class RangeNode extends FormulaNode {
     final SmlWorksheet? sheet = sheetName == null
         ? ctx.sheet
         : ctx.workbook.sheetByName(sheetName!);
+    if (sheet == null) return ctx.error('#REF!');
     final List<Object?> values = <Object?>[];
     for (final SmlCellRef ref in range.cells) {
       values.add(ctx.valueOf(ref, onSheet: sheet));
@@ -231,6 +277,8 @@ class BinaryNode extends FormulaNode {
   Object? eval(FormulaContext ctx) {
     final Object? a = left.eval(ctx);
     final Object? b = right.eval(ctx);
+    if (a is FormulaErrorValue) return a;
+    if (b is FormulaErrorValue) return b;
     if (op == '&') {
       return '${_str(a)}${_str(b)}';
     }
@@ -241,13 +289,13 @@ class BinaryNode extends FormulaNode {
         final bool eq = _str(a) == _str(b);
         return op == '=' ? eq : !eq;
       }
-      return '#VALUE!';
+      return ctx.error('#VALUE!');
     }
     return switch (op) {
       '+' => na + nb,
       '-' => na - nb,
       '*' => na * nb,
-      '/' => nb == 0 ? '#DIV/0!' : na / nb,
+      '/' => nb == 0 ? ctx.error('#DIV/0!') : na / nb,
       '^' => _pow(na, nb),
       '=' => na == nb,
       '<>' => na != nb,
@@ -255,7 +303,7 @@ class BinaryNode extends FormulaNode {
       '<=' => na <= nb,
       '>' => na > nb,
       '>=' => na >= nb,
-      _ => '#VALUE!',
+      _ => ctx.error('#VALUE!'),
     };
   }
 }
@@ -274,9 +322,11 @@ class UnaryNode extends FormulaNode {
   @override
   /// eval API.
   Object? eval(FormulaContext ctx) {
-    final double? n = _num(expr.eval(ctx));
+    final value = expr.eval(ctx);
+    if (value is FormulaErrorValue) return value;
+    final double? n = _num(value);
     if (n == null) {
-      return '#VALUE!';
+      return ctx.error('#VALUE!');
     }
     return op == '-' ? -n : n;
   }

@@ -127,7 +127,9 @@ class ViewerTailService {
           'The followed file changed during the read. Reload to try again.',
         );
       }
-      if (unit == 1 && encoding != 'latin1' && start > 0) {
+      if (unit == 1 &&
+          (encoding == null || encoding == 'utf8') &&
+          start > 0) {
         var cut = 0;
         while (cut < bytes.length && (bytes[cut] & 0xc0) == 0x80) {
           cut++;

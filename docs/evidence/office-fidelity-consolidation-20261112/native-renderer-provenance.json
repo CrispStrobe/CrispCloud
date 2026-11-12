@@ -1,0 +1,204 @@
+{
+  "format_version": 1,
+  "created_utc": "2026-11-12T08:57:30.678264+00:00",
+  "status": "frozen adapter accepted final 263-file source corpus",
+  "renderer": {
+    "product": "LibreOffice",
+    "version": "24.2.7.2",
+    "build_id": "ee3885777aa7032db5a9b65deec9457448a91162",
+    "platform": "Linux x86_64 official Debian binary distribution",
+    "invocation": "LibreOfficeKit embedding API; not the standalone soffice conversion CLI",
+    "archive": {
+      "path": "/workspace/scratch/e445bd9b965c/runtime/libreoffice-242/LibreOffice_24.2.7.2_Linux_x86-64_deb.tar.gz",
+      "bytes": 213396806,
+      "sha256": "be967ebc63cb15b831b4e8176492e83eb625dc00852eb96eda2b299b6e74bb74",
+      "official_url": "https://downloadarchive.documentfoundation.org/libreoffice/old/24.2.7.2/deb/x86_64/LibreOffice_24.2.7.2_Linux_x86-64_deb.tar.gz",
+      "expected_sha256_from_official_mirrorlist": "be967ebc63cb15b831b4e8176492e83eb625dc00852eb96eda2b299b6e74bb74",
+      "mirrorlist_path": "/workspace/scratch/e445bd9b965c/runtime/libreoffice-242/mirrorlist.html"
+    },
+    "headers": [
+      {
+        "path": "/workspace/scratch/e445bd9b965c/runtime/libreoffice-242/include/LibreOfficeKit/LibreOfficeKit.h",
+        "bytes": 20545,
+        "sha256": "af1f5c90f39a885bd0f2ba50bb5c68f40cf2fac88cfcc6b6a76a4522fab0b676",
+        "source_url": "https://raw.githubusercontent.com/LibreOffice/core/libreoffice-24.2.7.2/include/LibreOfficeKit/LibreOfficeKit.h"
+      },
+      {
+        "path": "/workspace/scratch/e445bd9b965c/runtime/libreoffice-242/include/LibreOfficeKit/LibreOfficeKitInit.h",
+        "bytes": 10287,
+        "sha256": "16feb15e51651387d223f3e156bc876d5d9826078651cfb12e4f035dcc0d2dc0",
+        "source_url": "https://raw.githubusercontent.com/LibreOffice/core/libreoffice-24.2.7.2/include/LibreOfficeKit/LibreOfficeKitInit.h"
+      },
+      {
+        "path": "/workspace/scratch/e445bd9b965c/runtime/libreoffice-242/include/LibreOfficeKit/LibreOfficeKitTypes.h",
+        "bytes": 983,
+        "sha256": "64eee50e2e74d2d33368e1a7b50683fe2e5fec9f3fd4952ebea24195f3dffa43",
+        "source_url": "https://raw.githubusercontent.com/LibreOffice/core/libreoffice-24.2.7.2/include/LibreOfficeKit/LibreOfficeKitTypes.h"
+      }
+    ]
+  },
+  "adapter": {
+    "artifacts": [
+      {
+        "path": "/workspace/scratch/e445bd9b965c/runtime/libreoffice-242/lok_convert.c",
+        "bytes": 2652,
+        "sha256": "1f23398b945320057ca8695a6f9a9fe3db87e232998800691dacd571d87fc496"
+      },
+      {
+        "path": "/workspace/scratch/e445bd9b965c/runtime/libreoffice-242/lok_convert",
+        "bytes": 17112,
+        "sha256": "3e72cac890eb7cf6975a58fc1b5635cccdaf4f7acb3be24a5a0f757b12c0e683"
+      },
+      {
+        "path": "/workspace/scratch/e445bd9b965c/runtime/lok242-bin/libreoffice",
+        "bytes": 1960,
+        "sha256": "4087cfbf62a50717804ce883618227756dfe3d41d5cf7ab9f11f0e849c2653df"
+      },
+      {
+        "path": "/workspace/scratch/e445bd9b965c/runtime/libreoffice-242/probe_adapter.py",
+        "bytes": 4302,
+        "sha256": "ae69f5147df6169a37e697265f78869f838d1280868d9ccd635c1ff987533612"
+      },
+      {
+        "path": "/workspace/scratch/e445bd9b965c/runtime/libreoffice-242/root/opt/libreoffice24.2/program/libmergedlo.so",
+        "bytes": 78181760,
+        "sha256": "b482c62fa4a1f064ca4a07422c7164827d6c1a3b5c9a0850a21609f5ec9ac540"
+      }
+    ],
+    "build_command": "clang -std=gnu11 -Wall -Wextra -I runtime/libreoffice-242/include runtime/libreoffice-242/lok_convert.c -o runtime/libreoffice-242/lok_convert -ldl",
+    "compiler": "Debian clang 19.1.7 (3+b1), x86_64-pc-linux-gnu",
+    "load_api": "documentLoadWithOptions(office, input, \"Batch=true\")",
+    "load_option_provenance": {
+      "url": "https://raw.githubusercontent.com/LibreOffice/core/libreoffice-24.2.7.2/desktop/source/lib/init.cxx",
+      "sha256": "df90a4177ce8882eba9f205c3654b7e4b26c9bd77a791406bee27a83ee9d77b2",
+      "reason": "The official Batch option sets DialogCancelMode::LOKSilent and the loader Silent property; this prevents unanswered import dialogs."
+    },
+    "export_api": "saveAs(document, output, \"pdf\", NULL)",
+    "success_rule": "Native synchronous saveAs succeeds and native document destructor returns; then flush streams and end the isolated worker process.",
+    "process_global_lifetime": "Office global teardown is owned by isolated process termination. Explicit global Office destruction crashed after successful Writer export in this host. Document destruction remains checked before success.",
+    "refusal_compatibility_rule": "Only a synchronous null native document with the exact native error loadComponentFromURL returned an empty reference maps to CLI exit 1 and Error: source file could not be loaded. The native error is also preserved verbatim.",
+    "other_statuses": {
+      "64": "Invalid helper arguments",
+      "65": "Other native import failure",
+      "70": "LibreOfficeKit initialization failure",
+      "74": "Native PDF export failure"
+    },
+    "signal_and_timeout_behavior": "Python adapter uses os.execv, leaving native signals and outer subprocess timeouts intact; they cannot enter the import-refusal compatibility rule."
+  },
+  "supporting_tools": {
+    "python": "3.12.14",
+    "poppler": "26.05.0",
+    "tmpdir": "/workspace/scratch/e445bd9b965c/tmp"
+  },
+  "validation": {
+    "probe_report": {
+      "path": "/workspace/scratch/e445bd9b965c/quds_office_suite/build/renderer-adapter-probe-ncluk8v5/probe-report.json",
+      "bytes": 5287,
+      "sha256": "a0e2e042e43ba093f168f78952757860a3c8cd88a772137aef32716664b365bd"
+    },
+    "cases": [
+      {
+        "case": "docx",
+        "input": "quds_office_engine/fidelity/unchanged-1.docx",
+        "input_sha256": "becfc9b14b9b6f5421c2871d298e6d74635d95baf9266363bfe08cf52dd1e700",
+        "returncode": 0,
+        "elapsed_seconds": 0.7658309769999505
+      },
+      {
+        "case": "xlsx",
+        "input": "quds_office_engine/fidelity/sheet-edited-1.xlsx",
+        "input_sha256": "a3834a9a9c3bdc4306c0b3aa6a67ca708937f331b5fde2c87ee843a7b11969f8",
+        "returncode": 0,
+        "elapsed_seconds": 0.9558687569997346
+      },
+      {
+        "case": "pptx",
+        "input": "quds_office_engine/fidelity/slide-imported-1.pptx",
+        "input_sha256": "617f2e006a84487e15df08a6a8100f6fc0e0a26c11c5d7713c1dee6eaf6f391b",
+        "returncode": 0,
+        "elapsed_seconds": 0.6743905270000141
+      },
+      {
+        "case": "native_aux",
+        "input": "quds_office_engine/fidelity-aux-controls/source.docx",
+        "input_sha256": "fba38173b5148646d8cd00d1f18baffaf4a5bed829bc8d02583dacfbf75ddf4e",
+        "returncode": 1,
+        "elapsed_seconds": 0.224599211000168,
+        "qualified_native_import_refusal": true,
+        "schema_receipts_matched": 7
+      },
+      {
+        "case": "export_failure",
+        "returncode": 74,
+        "qualified_native_import_refusal": false
+      }
+    ],
+    "unchanged_gate_controls": [
+      {
+        "suite": "test_render.py",
+        "passed": 22,
+        "log": {
+          "path": "/workspace/scratch/e445bd9b965c/validation/renderer-controls-after-adapter.log",
+          "bytes": 3551,
+          "sha256": "e89c419d6e2dc0665efab50069c0cd7b746f0c8dfc23adc295e6c8b54ef04a61"
+        }
+      },
+      {
+        "suite": "test_native_render_limitations.py",
+        "passed": 7,
+        "log": {
+          "path": "/workspace/scratch/e445bd9b965c/validation/native-render-controls-after-adapter.log",
+          "bytes": 1476,
+          "sha256": "2efa7f14cf43bc5eb4e6d1e2f8d8f6342ebd0ff5fc00f5301e2f8916705bbab0"
+        }
+      }
+    ],
+    "product_render_script": {
+      "path": "/workspace/scratch/e445bd9b965c/quds_office_suite/tool/office-validation/render.py",
+      "bytes": 23173,
+      "sha256": "245c3697ae0dff7b31578e58f84d3c926e17331a1c5c9b7d21e2276cebda7b3d"
+    },
+    "scope": "Adapter smoke probes used the prior frozen snapshot. The final source acceptance below used a fresh 263-input snapshot, exact passing SDK receipts, and the unchanged full visual gate."
+  },
+  "preserved_prior_attempts": {
+    "alpha26_partial_summary": "/workspace/scratch/e445bd9b965c/quds_office_suite/build/external-render-alpha26/attempt-summary.json",
+    "alpha26_single_xlsx": "/workspace/scratch/e445bd9b965c/quds_office_suite/build/renderer-diagnostic-alpha/diagnostic.json",
+    "stable_cli_ipc_failure": "/workspace/scratch/e445bd9b965c/quds_office_suite/build/renderer-diagnostic-242/diagnostic.json",
+    "kit_without_batch_timeout": "/workspace/scratch/e445bd9b965c/tmp/lok242-aux-stage-probe/result.json",
+    "kit_with_batch_native_refusal": "/workspace/scratch/e445bd9b965c/tmp/lok242-aux-batch-probe/result.json"
+  },
+  "final_source_acceptance": {
+    "source_commit": "7bd56f609d5ec63e44e0393560b3ec1055c3bf7e",
+    "summary": "/workspace/scratch/e445bd9b965c/quds_office_suite/build/external/acceptance-summary.json",
+    "summary_sha256": "b37fea3a6d3b9b6c5604f7d13131b9af8c3ee58ca6de7739684be0b47f900520",
+    "render_report": "/workspace/scratch/e445bd9b965c/quds_office_suite/build/external-render/render-report.json",
+    "render_report_sha256": "c744dc559e5e8c7540ffb48491f0cf80ee5d381311178f8c2a075dcb0632f76b",
+    "input_manifest_sha256": "c8c37a63c346c40ac1e2beba5b79d516f32a2f68931edc8f6503b2f0b2e070b3",
+    "schema_report_sha256": "914ab7c30268cd1fea3e775ffcbbd5a3da1480419ad458073286578ffe5a7faa",
+    "elapsed_seconds": 174.118495,
+    "rendered_files": 256,
+    "rendered_pages": 392,
+    "native_schema_only_files": 7,
+    "cycle_series": 78,
+    "failures": 0,
+    "baseline_comparisons": 19,
+    "validator_source_sha256_after_extension_support": "4d41f286855ed11a12ecdf0641773c33285847180a3e5cdbf43ce2385a099880",
+    "schema_receipts_unchanged_after_validator_extension": true,
+    "raw_render_report_unchanged_after_validator_extension": true
+  },
+  "final_host_probe": {
+    "app_commit": "e226859cbde21af0b3d70b755c350978161a73c9",
+    "managed_source_commit": "3ff2e15823c86cda88d3369dc4bbabf42f45290a",
+    "probe_script": "/workspace/scratch/e445bd9b965c/runtime/probe_host_native.py",
+    "probe_script_sha256": "d2aab88cf04d2cc88b5a2d48a0aa111152cbf47578880f25e4c2463bb20a99aa",
+    "render_report": "/workspace/scratch/e445bd9b965c/CrispCloud/build/external-host-native/render-report.json",
+    "render_report_sha256": "35be50d58c4288804f37f11fed4209f962d58bb7cbddb84ba3c101c79968be2b",
+    "input_manifest_sha256": "452d28748540b3d8772f5c98f2c7c2f957bf2a23b8dae90589fdeba4895fdf92",
+    "schema_report_sha256": "22dda64a3f4efedf91266df235913b18cb865a312ad259891080156f76510505",
+    "files": 11,
+    "rendered_pages": 23,
+    "failures": 0,
+    "scope": "Supplementary native conversion of eleven actual host uploads: four XLSX, four PPTX, and DOCM/DOTX/DOTM. No repeated-save-cycle certification is implied.",
+    "native_gate_code_unchanged": true
+  }
+}

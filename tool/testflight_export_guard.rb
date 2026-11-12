@@ -38,6 +38,13 @@ class TestFlightExportGuard
     unless non_exempt == true || non_exempt == false
       raise Error, 'TestFlight policy needs an explicit encryption answer'
     end
+    documentation = policy['documentation']
+    unless documentation.is_a?(Hash) && %w[not_required approved].include?(documentation['status'])
+      raise Error, 'TestFlight encryption documentation review is pending: record the completed Apple questionnaire result before distribution'
+    end
+    if non_exempt == false && (documentation['status'] != 'not_required' || !documentation['compliance_code'].nil?)
+      raise Error, 'The no-documentation TestFlight answer requires a reviewed not_required result without an Apple code'
+    end
     if non_exempt && (policy.dig('documentation', 'status') != 'approved' ||
                       !text?(policy.dig('documentation', 'compliance_code')))
       raise Error, 'Non-exempt TestFlight distribution requires an approved Apple code'

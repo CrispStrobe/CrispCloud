@@ -1,11 +1,48 @@
 # Encryption export compliance
 
-Apple, French and cited EAR requirements rechecked against official sources on
-**2026-11-08**. This is an engineering release decision guide, not a government
+Apple and cited US encryption requirements rechecked against official sources on
+**2026-11-12** for the KeePass addition; the French-source review below remains
+dated **2026-11-08**. This is an engineering release decision guide, not a government
 classification or legal certification. The exporter must apply it to the actual
 product and distribution. The repository records an intended outside-France
 Apple release route; it does not establish the app's live store availability or
 historical distribution.
+
+## 12 November 2026: KeePass changes the review scope
+
+The app now opens and edits existing KeePass `.kdbx` databases using vendored
+MIT-licensed KPassLib 1.1.2 and the already-resolved PointyCastle 4.0.0. This is
+an additional password-vault confidentiality feature: password/key-file unlock,
+decryption, viewing/editing entries, and encrypted saving. It is not merely
+authentication or a new file extension for an unchanged viewer. The full
+algorithm and source delta is recorded in [crypto-dependencies.md](crypto-dependencies.md#keepass-kdbx-databases)
+and [the dated source review](crypto-source-review-2026-11-12.md).
+
+There is no retained post-KeePass Apple questionnaire result or new government
+classification in this review. The structured policy therefore records
+`documentation.status=unreviewed`. Both existing
+`ITSAppUsesNonExemptEncryption=false` values and the recorded outside-France
+territory settings remain unchanged as the proposed route, not a newly approved
+answer. Source-evidence checks may pass; Apple upload and external TestFlight
+distribution remain blocked until the questionnaire result is recorded. The
+historical November 8 availability and tester evidence is not a fresh live check.
+
+Use these facts when completing the next review; the exact questions shown by
+App Store Connect determine the final entry. [9][10][11][15]
+
+| Question or decision | Supported answer or action for this source |
+| --- | --- |
+| Does the app use encryption? | Yes. KeePass joins existing file encryption, Filen/Internxt, encrypted archives, SSH and other inventory entries. |
+| Is encryption limited to Apple OS facilities? | No. KeePass uses bundled Dart implementations, including PointyCastle Argon2. |
+| What does KeePass add? | KDBX 3/4 AES-256-CBC or ChaCha20, AES-KDF or Argon2d/Argon2id, SHA-256/SHA-512 and HMAC-SHA-256, with Salsa20/ChaCha20 for protected inner values. Include published KDBX format references; do not label the entire app as containing only internationally standardized algorithms. |
+| Must a US CCATS automatically be obtained because KeePass or AES-256 was added? | No such conclusion follows from this source change. Reassess the finished app under the applicable EAR provisions and Apple's documentation categories. Do not borrow a dependency's classification for the app. [1][23] |
+| Is a French declaration needed? | Apple's table requires it for the third-party encryption category when distributing on the French App Store. The separate French supply/history and TestFlight review below still applies. [9] |
+| May the existing plist `false` shortcut remain in a submitted build? | Only after the updated whole-app assessment and actual questionnaire result substantiate the no-documentation route. Otherwise obtain the required documents and Apple-issued code, then update the policy and packaged declarations together. [10][11] |
+
+These facts support review of the existing published-cryptography route; they do
+not establish a legal exemption. KeePass's own format specification is public,
+but open-source licensing, published algorithms and a whole-product export
+classification are separate questions. [23][24]
 
 ## Intended route: retain functionality without the two BIS filings
 
@@ -54,6 +91,15 @@ whole construction. [4] Do not describe this file-encryption app as
 “authentication only” or rely casually on ancillary-encryption exclusions:
 BIS expressly identifies file encryption and data backup among relevant
 information-security functions. [5]
+
+Do not confuse that mass-market reporting analysis with the former Category 5
+Part 2 Note 4 ancillary-use exclusion. BIS explains that Note 4 was moved into
+the positive scope of 5A002.a in 2017. Information security, communications,
+and information storage/processing remain relevant functions. A file manager
+with file encryption and password-vault editing needs that whole-app review;
+calling KeePass a secondary viewer does not establish an ancillary-use
+exclusion. The proposed no-report basis above is §740.17(e)(3), not an old
+Note 4(b) citation. [1][5][23]
 
 ## 2. Public source is a separate route
 
@@ -299,7 +345,7 @@ scope and date; a filled-in reference is not itself proof of that decision.
 | Policy field | Interpretation |
 | --- | --- |
 | `reviewed_on`, `bundle_id` | Review date and exact application identity. A review date does not establish that a later artifact or distribution change is covered. |
-| `uses_non_exempt_encryption` | Expected boolean in both source and packaged plists, based on the completed Apple assessment. It does not say whether encryption exists. |
+| `uses_non_exempt_encryption` | Expected boolean in both source and packaged plists. While documentation is `unreviewed`, this is only the proposed declaration; submission requires a completed Apple assessment. It does not say whether encryption exists. |
 | `documentation.status`, `reference`, `compliance_code` | `unreviewed` blocks upload. `not_required` records the substantiated no-documentation route with a `null` code. `approved` requires the actual Apple-issued code and retained approval evidence; the live gate verifies the matching declaration. |
 | `france.store_availability` | Intended App Store state, `excluded` or `included`, which the live gate compares with the explicit French territory record. It does not restrict TestFlight or establish past availability. |
 | `france.prior_distribution_review`, `reference` | Leave `pending` until history and relevant channels have been reviewed. Use `no_prior_distribution` only with evidence supporting that conclusion. Use `covered` when French distribution is covered by the documented compliance route; this requires the approved-code route, including French coverage in the live declaration. |
@@ -547,8 +593,9 @@ The following live App Store Connect state was applied and read back on
 
 ## Official sources
 
-Apple, ANSSI, French legislation and cited EAR text rechecked 2026-11-08. BIS
-regulation pages displayed an eCFR currency date of 2026-11-07. The existing EU
+Apple and cited US encryption sources rechecked 2026-11-12. BIS Part 740 displayed
+an eCFR currency date of 2026-11-11. ANSSI and French legislation were rechecked
+2026-11-08; their historical findings were not revalidated for this update. The existing EU
 assessment cites the consolidated text dated 2026-09-21; its source review and
 the dependency-format references were recorded on 2026-11-07.
 
@@ -574,3 +621,5 @@ the dependency-format references were recorded on 2026-11-07.
 20. [Apple: availability changes, continuing updates and redownloads](https://developer.apple.com/help/app-store-connect/manage-your-apps-availability/manage-availability-for-your-app-on-the-app-store).
 21. [Current ANSSI declaration portal and requested supporting documents](https://demarche.numerique.gouv.fr/commencer/declaration-relative-a-un-moyen-de-cryptologie).
 22. [ANSSI: current forms and filing route](https://cyber.gouv.fr/reglementation/reglementation-identite-confiance-numerique/controles-reglementaires-cryptographie/controle-moyen-de-cryptologie/controle-reglementaire-cryptographie-formulaires/).
+23. [BIS Encryption FAQs, published March 2017: whole-item classification, changed functionality and former Note 4](https://media.bis.gov/media/documents/encryption-faqs). Read older reporting language with current §740.17(e)(3) and the 2021 amendment in sources 1 and 2.
+24. [KeePass: published KDBX 4.1 format, keys, block authentication and inner encryption](https://keepass.info/help/kb/kdbx.html).

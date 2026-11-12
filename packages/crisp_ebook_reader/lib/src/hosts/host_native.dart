@@ -83,6 +83,9 @@ class _NativeHostState extends State<_NativeHost> {
         await _server.close();
         return;
       }
+      if (InAppWebViewPlatform.instance == null) {
+        throw StateError('The ebook browser platform plugin is unavailable.');
+      }
       _url = url;
       if (mounted) setState(() {});
     } catch (error) {

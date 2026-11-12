@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+  xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+  xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
+  xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
+  xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"
+  xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape"
+  xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math">
+  <w:body>
+    <w:p><w:r><w:t>Outside before</w:t></w:r></w:p>
+    <w:sdt>
+      <w:sdtPr>
+        <w:alias w:val="Body rich control"/><w:tag w:val="control-71"/><w:id w:val="71"/>
+        <w:dataBinding w:prefixMappings="xmlns:c='urn:crispcloud:customer'" w:xpath="/c:customer/c:name" w:storeItemID="{00000000-0000-0000-0000-000000000071}"/>
+        <w:richText/>
+      </w:sdtPr>
+      <w:sdtEndPr><w:rPr><w:color w:val="4488AA"/><w:lang w:val="en-GB"/></w:rPr></w:sdtEndPr>
+      <w:sdtContent>
+        <w:p><w:pPr><w:pStyle w:val="RichBody"/></w:pPr><w:r><w:t>Block Alpha Beta</w:t></w:r></w:p>
+        <w:sdt>
+          <w:sdtPr><w:alias w:val="Nested heading"/><w:tag w:val="control-72"/><w:id w:val="72"/><w:richText/></w:sdtPr>
+          <w:sdtEndPr><w:rPr><w:b/></w:rPr></w:sdtEndPr>
+          <w:sdtContent>
+            <w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:bookmarkStart w:id="4" w:name="sdtHeading"/><w:r><w:t>Nested heading</w:t></w:r><w:bookmarkEnd w:id="4"/></w:p>
+            <w:p><m:oMath><m:r><m:t>x+1</m:t></m:r></m:oMath></w:p>
+          </w:sdtContent>
+        </w:sdt>
+        <w:tbl>
+          <w:tblPr><w:tblW w:w="5000" w:type="pct"/><w:tblBorders><w:top w:val="single" w:sz="8"/><w:left w:val="single" w:sz="8"/><w:bottom w:val="single" w:sz="8"/><w:right w:val="single" w:sz="8"/></w:tblBorders></w:tblPr>
+          <w:tblGrid><w:gridCol w:w="6000"/></w:tblGrid>
+          <w:tr><w:tc><w:tcPr><w:tcW w:w="6000" w:type="dxa"/></w:tcPr>
+            <w:sdt>
+              <w:sdtPr><w:alias w:val="Cell control"/><w:tag w:val="control-73"/><w:id w:val="73"/><w:richText/></w:sdtPr>
+              <w:sdtEndPr><w:rPr><w:i/></w:rPr></w:sdtEndPr>
+              <w:sdtContent><w:p><w:r><w:t>Cell content</w:t></w:r></w:p></w:sdtContent>
+            </w:sdt>
+          </w:tc></w:tr>
+        </w:tbl>
+        <w:p><w:r><w:drawing>
+          <wp:anchor distT="0" distB="0" distL="0" distR="0" simplePos="0" relativeHeight="251659264" behindDoc="0" locked="0" layoutInCell="1" allowOverlap="1">
+            <wp:simplePos x="0" y="0"/>
+            <wp:positionH relativeFrom="margin"><wp:posOffset>3810000</wp:posOffset></wp:positionH>
+            <wp:positionV relativeFrom="margin"><wp:posOffset>635000</wp:posOffset></wp:positionV>
+            <wp:extent cx="1524000" cy="762000"/><wp:effectExtent l="0" t="0" r="0" b="0"/><wp:wrapNone/>
+            <wp:docPr id="1" name="Control frame"/><wp:cNvGraphicFramePr/>
+            <a:graphic><a:graphicData uri="http://schemas.microsoft.com/office/word/2010/wordprocessingShape"><wps:wsp>
+              <wps:cNvSpPr txBox="1"/><wps:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="1524000" cy="762000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/><a:ln><a:noFill/></a:ln></wps:spPr>
+              <wps:txbx><w:txbxContent>
+                <w:sdt>
+                  <w:sdtPr><w:alias w:val="Frame control"/><w:tag w:val="control-74"/><w:id w:val="74"/><w:richText/></w:sdtPr>
+                  <w:sdtEndPr><w:rPr><w:color w:val="228844"/></w:rPr></w:sdtEndPr>
+                  <w:sdtContent><w:p><w:r><w:t>Frame content</w:t></w:r></w:p></w:sdtContent>
+                </w:sdt>
+              </w:txbxContent></wps:txbx><wps:bodyPr/>
+            </wps:wsp></a:graphicData></a:graphic>
+          </wp:anchor>
+        </w:drawing></w:r></w:p>
+        <w:p><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0">
+          <wp:extent cx="381000" cy="381000"/><wp:effectExtent l="0" t="0" r="0" b="0"/><wp:docPr id="2" name="Control image" title="Inside content control" descr="Preserved image payload"/><wp:cNvGraphicFramePr/>
+          <a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic>
+            <pic:nvPicPr><pic:cNvPr id="0" name="Control image"/><pic:cNvPicPr/></pic:nvPicPr>
+            <pic:blipFill><a:blip r:embed="controlImage"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>
+            <pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="381000" cy="381000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr>
+          </pic:pic></a:graphicData></a:graphic>
+        </wp:inline></w:drawing></w:r></w:p>
+        <w:p><w:r><w:t>Inline[</w:t></w:r>
+          <w:sdt>
+            <w:sdtPr><w:alias w:val="Inline outer"/><w:tag w:val="control-75"/><w:id w:val="75"/><w:richText/></w:sdtPr>
+            <w:sdtEndPr><w:rPr><w:color w:val="884422"/></w:rPr></w:sdtEndPr>
+            <w:sdtContent><w:r><w:t xml:space="preserve">Beta </w:t></w:r>
+              <w:sdt><w:sdtPr><w:alias w:val="Inline inner"/><w:tag w:val="control-76"/><w:id w:val="76"/><w:richText/></w:sdtPr><w:sdtEndPr><w:rPr><w:u w:val="single"/></w:rPr></w:sdtEndPr><w:sdtContent><w:r><w:t>Inner</w:t></w:r></w:sdtContent></w:sdt>
+              <w:r><w:t xml:space="preserve"> tail</w:t></w:r>
+            </w:sdtContent>
+          </w:sdt>
+          <w:sdt><w:sdtPr><w:alias w:val="Empty inline"/><w:tag w:val="control-77"/><w:id w:val="77"/><w:richText/></w:sdtPr><w:sdtEndPr><w:rPr><w:i/></w:rPr></w:sdtEndPr><w:sdtContent/></w:sdt>
+          <w:r><w:t>]</w:t></w:r>
+        </w:p>
+        <w:sdt>
+          <w:sdtPr><w:alias w:val="Native contents"/><w:tag w:val="control-78"/><w:id w:val="78"/><w:docPartObj><w:docPartGallery w:val="Table of Contents"/><w:docPartUnique/></w:docPartObj></w:sdtPr>
+          <w:sdtEndPr><w:rPr><w:color w:val="224466"/></w:rPr></w:sdtEndPr>
+          <w:sdtContent>
+            <w:p><w:pPr><w:pStyle w:val="TOCHeading"/></w:pPr><w:r><w:t>Contents</w:t></w:r></w:p>
+            <w:p><w:pPr><w:pStyle w:val="TOC1"/></w:pPr><w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve"> TOC \o "1-3" \h \z \u </w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r><w:hyperlink w:anchor="sdtHeading"><w:r><w:t>Nested heading</w:t></w:r></w:hyperlink><w:r><w:tab/><w:t>2</w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r></w:p>
+          </w:sdtContent>
+        </w:sdt>
+      </w:sdtContent>
+    </w:sdt>
+    <w:p><w:r><w:t>Outside after</w:t></w:r></w:p>
+    <w:sectPr/>
+  </w:body>
+</w:document>

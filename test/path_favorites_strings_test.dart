@@ -1,0 +1,41 @@
+import 'package:crisp_cloud/l10n/app_localizations.dart';
+import 'package:crisp_cloud/l10n/path_favorites_strings.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+void main() {
+  test(
+    'path favorite controls have translations in every supported language',
+    () {
+      const english = PathFavoritesStrings.forLanguage('en');
+      for (final locale in AppLocalizations.supportedLocales) {
+        final strings = PathFavoritesStrings.forLanguage(locale.languageCode);
+        for (final key in PathFavoritesStrings.keys) {
+          expect(
+            strings.text(key),
+            isNotEmpty,
+            reason: '${locale.languageCode}/$key',
+          );
+          expect(strings.text(key), isNot(key));
+          if (locale.languageCode != 'en') {
+            expect(
+              strings.text(key),
+              isNot(english.text(key)),
+              reason: '${locale.languageCode}/$key',
+            );
+          }
+        }
+        for (final key in [
+          'additionsCount',
+          'duplicatesCount',
+          'unavailableCount',
+        ]) {
+          expect(strings.text(key, arguments: {'count': 7}), contains('7'));
+          expect(
+            strings.text(key, arguments: {'count': 7}),
+            isNot(contains('{count}')),
+          );
+        }
+      }
+    },
+  );
+}

@@ -14,14 +14,38 @@ class _NoteStory {
     WordLayoutEngine owner,
   ) {
     final List<WmlBlock> blocks = note.blocks.map(WmlClone.block).toList();
-    if (blocks.isEmpty || blocks.first is! WmlParagraph) {
-      blocks.insert(0, WmlParagraph());
+    var hasMarker = false;
+    for (final paragraph in blocks.expand(WmlClone.paragraphsOf)) {
+      for (var i = 0; i < paragraph.inlines.length; i++) {
+        final inline = paragraph.inlines[i];
+        if (inline is WmlNoteMarker) {
+          hasMarker = true;
+          paragraph.inlines[i] = WmlRun(
+            text: '${note.id}',
+            properties: inline.properties.copy(),
+          );
+        }
+      }
     }
-    final WmlParagraph first = blocks.first as WmlParagraph;
-    final int leading = first.text.length - first.text.trimLeft().length;
-    if (leading > 0) WmlRunEdit.replaceRange(first, 0, leading, '');
-    final WmlRunProps props = WmlRunEdit.propsAt(first, 0).copy();
-    first.inlines.insert(0, WmlRun(text: '${note.id}. ', properties: props));
+    if (note.addReference && !hasMarker) {
+      if (blocks.isEmpty || blocks.first is! WmlParagraph) {
+        blocks.insert(0, WmlParagraph());
+      }
+      final WmlParagraph first = blocks.first as WmlParagraph;
+      final bool separator =
+          note.addReferenceSpace &&
+          (first.text.isEmpty || !RegExp(r'^\s').hasMatch(first.text));
+      first.inlines.insertAll(0, [
+        WmlRun(
+          text: '${note.id}',
+          properties: WmlRunProps(
+            styleId: note.endnote ? 'EndnoteReference' : 'FootnoteReference',
+            vertAlign: WmlVertAlign.superscript,
+          ),
+        ),
+        if (separator) WmlRun(text: ' '),
+      ]);
+    }
     // Make oversized drawings fit a continuation page without clipping.
     final WmlDocument story = WmlDocument(
       sections: <WmlSection>[
@@ -50,12 +74,13 @@ class _NoteStory {
       visual.visual.width *= scale;
       visual.visual.height *= scale;
     }
-    final LaidOutDocument laid = WordLayoutEngine(
+    final storyEngine = WordLayoutEngine(
       font: owner.font,
       fonts: owner.fonts,
       measure: owner.measure,
       fallbackWidthFactor: owner.fallbackWidthFactor,
-    ).layout(story, updateFields: false);
+    ).._containedPhysicalSection = section;
+    final LaidOutDocument laid = storyEngine.layout(story, updateFields: false);
     final List<WmlParagraph> paragraphs = story.paragraphs.toList();
     final List<LaidOutLine> lines = <LaidOutLine>[];
     final List<LaidOutBox> frames = <LaidOutBox>[];
@@ -179,6 +204,14 @@ LaidOutLine _noteLine(
   listLabel: line.listLabel,
   listMarkerX: line.listMarkerX + dx,
   isParagraphStart: line.isParagraphStart,
+  isFooter: line.isFooter,
+  overlayText: line.overlayText,
+  overlayColor: line.overlayColor,
+  overlaySize: line.overlaySize,
+  overlayBold: line.overlayBold,
+  tocTargetParagraph: line.tocTargetParagraph,
+  tocLeader: line.tocLeader,
+  hyperlink: line.hyperlink,
   sourceText: source,
   boxX: line.boxX + dx,
   boxWidth: line.boxWidth,

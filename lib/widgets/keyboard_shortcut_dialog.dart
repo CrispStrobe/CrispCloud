@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/app_localizations.dart';
+import '../l10n/command_entry_strings.dart';
 import '../l10n/workspace_ux_strings.dart';
 import '../providers/keyboard_shortcut_provider.dart';
 import '../services/keyboard_shortcut_service.dart';
@@ -65,7 +66,7 @@ class _KeyboardShortcutDialogState
     final service = ref.watch(keyboardShortcutServiceProvider);
     final s = WorkspaceUxStrings(context);
     final l = AppLocalizations.of(context)!;
-    final actions = browserShortcutActions
+    final actions = shortcutSettingsActions
         .where(
           (action) => '${s.action(action)} ${service.browserDisplay(action)}'
               .toLowerCase()
@@ -97,7 +98,9 @@ class _KeyboardShortcutDialogState
                     key: ValueKey('shortcut-${action.name}'),
                     title: Text(s.action(action)),
                     subtitle: Text(
-                      service.browserDisplay(action),
+                      commandEntryShortcutActions.contains(action)
+                          ? '${service.browserDisplay(action)} · ${CommandEntryStrings(context).text('shortcutScope')}'
+                          : service.browserDisplay(action),
                       textDirection: TextDirection.ltr,
                     ),
                     onTap: () => _record(action),
@@ -180,7 +183,7 @@ class _RecordShortcutDialogState extends ConsumerState<_RecordShortcutDialog> {
       _binding = binding;
       _conflicts = ref
           .read(keyboardShortcutServiceProvider)
-          .browserConflicts(widget.action, binding);
+          .shortcutConflicts(widget.action, binding);
     });
     if (_conflicts.isEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {

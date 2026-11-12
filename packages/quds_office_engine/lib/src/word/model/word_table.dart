@@ -1,6 +1,7 @@
 import '../properties/wml_properties.dart';
 import 'wml_clone.dart';
 import 'wml_document.dart';
+import 'word_tree.dart';
 
 /// Enum WordTableAutoFit.
 enum WordTableAutoFit { contents, window, fixed }
@@ -59,6 +60,10 @@ abstract final class WordTable {
         return found;
       }
     }
+    for (final note in [...document.footnotes, ...document.endnotes]) {
+      final found = _locateInBlocks(note.blocks, paragraph);
+      if (found != null) return found;
+    }
     return null;
   }
 
@@ -78,6 +83,10 @@ abstract final class WordTable {
     WmlParagraph paragraph,
   ) {
     for (final WmlBlock block in blocks) {
+      if (block is WmlContentControlBlock) {
+        final nested = _locateInBlocks(block.blocks, paragraph);
+        if (nested != null) return nested;
+      }
       if (block is WmlFrame) {
         final ({WmlTable table, int row, int col})? nested = _locateInBlocks(
           block.blocks,
@@ -106,12 +115,7 @@ abstract final class WordTable {
   }
 
   static bool _containsDirect(List<WmlBlock> blocks, WmlParagraph paragraph) {
-    for (final WmlBlock block in blocks) {
-      if (identical(block, paragraph)) {
-        return true;
-      }
-    }
-    return false;
+    return WordTree.paragraphs(blocks).any((p) => identical(p, paragraph));
   }
 
   /// spanOf API.
@@ -455,7 +459,9 @@ abstract final class WordTable {
         if (c >= row.cells.length) {
           continue;
         }
-        for (final WmlBlock block in row.cells[c].blocks) {
+        for (final WmlBlock block in WordTree.visibleBlocks(
+          row.cells[c].blocks,
+        )) {
           if (block is WmlParagraph) {
             final double estimate = block.text.length * 6.2 + 14;
             if (estimate > widest) {

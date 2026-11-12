@@ -23,18 +23,41 @@ void check(WmlDocument document, bool edited, {bool legacy = false}) {
     legacy ? 'Legacy frame' : 'Ordinary block',
     'After',
   ]);
-  final controls = document.sections.first.blocks
-      .whereType<WmlSdtBlockBoundary>()
-      .toList();
-  expect(controls, hasLength(10));
-  expect(controls.where((m) => m.isStart).map((m) => m.control.id), [
+  final controls = WordTree.descendants(
+    document.sections.first.blocks,
+  ).whereType<WmlContentControlBlock>().toList();
+  expect(controls, hasLength(6));
+  expect(controls.map((block) => block.control.id), [
     '101',
     '102',
+    '103',
     '104',
     '105',
     '106',
   ]);
-  final frames = document.sections.first.blocks.whereType<WmlFrame>();
+  final outer = controls.first;
+  expect(
+    outer.blocks.whereType<WmlContentControlBlock>().single.control.id,
+    '102',
+  );
+  expect(
+    outer.blocks
+        .whereType<WmlTable>()
+        .single
+        .rows
+        .single
+        .cells
+        .single
+        .blocks
+        .whereType<WmlContentControlBlock>()
+        .single
+        .control
+        .id,
+    '103',
+  );
+  final frames = WordTree.descendants(
+    document.sections.first.blocks,
+  ).whereType<WmlFrame>();
   if (legacy) {
     final frame = frames.single;
     expect(frame.x, 72);
@@ -50,14 +73,16 @@ void check(WmlDocument document, bool edited, {bool legacy = false}) {
     edited ? 'Header edited' : 'Header value',
   );
   expect(
-    document.footnotes.single.paragraphs.last.text,
+    WordNotes.editableParagraphs(document.footnotes.single).last.text,
     edited ? 'Note edited' : 'Note Delta',
   );
 }
 
 void main() {
   setUpAll(() {
-    final output = File('build/fidelity-content-controls/controls-source.docx');
+    final output = File(
+      'build/fidelity-content-controls-legacy/controls-source.docx',
+    );
     output.parent.createSync(recursive: true);
     output.writeAsBytesSync(
       File('test/fixtures/fidelity/content-controls.docx').readAsBytesSync(),
@@ -102,7 +127,7 @@ void main() {
             'Header edited',
           );
           WmlRunEdit.replaceRange(
-            document.footnotes.single.paragraphs.last,
+            WordNotes.editableParagraphs(document.footnotes.single).last,
             0,
             10,
             'Note edited',
@@ -111,7 +136,7 @@ void main() {
         for (var cycle = 1; cycle <= 3; cycle++) {
           final bytes = await OfficeIsolateSave.word(document);
           final output = File(
-            'build/fidelity-content-controls/controls-${edited ? 'edited' : 'imported'}-$cycle.docx',
+            'build/fidelity-content-controls-legacy/controls-${edited ? 'edited' : 'imported'}-$cycle.docx',
           );
           output.parent.createSync(recursive: true);
           output.writeAsBytesSync(bytes);
@@ -130,7 +155,7 @@ void main() {
       for (var cycle = 1; cycle <= 3; cycle++) {
         final bytes = await OfficeIsolateSave.word(document);
         final output = File(
-          'build/fidelity-content-controls/legacy-frame-$cycle.docx',
+          'build/fidelity-content-controls-legacy/legacy-frame-$cycle.docx',
         );
         output.parent.createSync(recursive: true);
         output.writeAsBytesSync(bytes);
@@ -140,14 +165,30 @@ void main() {
     },
   );
 
-  test('invalid SDT boundaries fail before the source package is modified', () {
+  test('invalid SDT structure fails before the source package is modified', () {
     for (final change in <void Function(WmlDocument)>[
-      (doc) => doc.sections.first.blocks.removeWhere(
-        (b) => b is WmlSdtBlockBoundary && !b.isStart && b.control.id == '101',
-      ),
+      (doc) {
+        final block = doc.sections.first.blocks
+            .whereType<WmlContentControlBlock>()
+            .first;
+        final control = block.control;
+        doc.sections.first.blocks[doc.sections.first.blocks.indexOf(
+          block,
+        )] = WmlContentControlBlock(
+          control: WmlContentControlData(
+            xml: control.xml.replaceAll('sdtContent', 'sdtPr'),
+            sourcePartUri: control.sourcePartUri,
+            relationships: control.relationships,
+            id: control.id,
+          ),
+          blocks: block.blocks,
+        );
+      },
       (doc) {
         final p = paragraph(doc, 'Customer Alpha tail');
-        p.inlines.removeWhere((i) => i is WmlSdtInlineBoundary && !i.isStart);
+        p.inlines.removeWhere(
+          (i) => i is WmlContentControlBoundary && !i.start,
+        );
       },
       (doc) {
         final p = paragraph(doc, 'Customer Alpha tail');
@@ -155,8 +196,12 @@ void main() {
         doc.sections.first.blocks.add(next);
       },
       (doc) {
-        doc.sections.first.columnCount = 2;
-        doc.sections.first.blocks.whereType<WmlTable>().single.grid[0] = 400;
+        final absent = WordTree.descendants(doc.sections.first.blocks)
+            .whereType<WmlContentControlBlock>()
+            .singleWhere((block) => block.control.id == '105');
+        absent.blocks.add(
+          WmlParagraph(inlines: [WmlRun(text: 'Hidden insertion')]),
+        );
       },
     ]) {
       final document = source();
@@ -171,6 +216,28 @@ void main() {
       );
     }
   });
+
+  test(
+    'wide tables remain within their live native control over three saves',
+    () async {
+      var document = source();
+      document.sections.first.columnCount = 2;
+      WordTree.descendants(
+        document.sections.first.blocks,
+      ).whereType<WmlTable>().single.grid[0] = 400;
+      for (var cycle = 0; cycle < 3; cycle++) {
+        document = WordDeserializer().readBytes(
+          await OfficeIsolateSave.word(document),
+        );
+        final outer = document.sections.first.blocks
+            .whereType<WmlContentControlBlock>()
+            .first;
+        expect(outer.control.id, '101');
+        expect(outer.blocks.whereType<WmlTable>().single.grid.single, 400);
+        check(document, false);
+      }
+    },
+  );
 
   test('native namespace aliases preserve SDT properties and contents', () {
     final document = source();
@@ -193,47 +260,36 @@ void main() {
     );
   });
 
-  test(
-    'unsupported block-story and row/cell wrappers reject instead of flattening',
-    () {
-      for (final location in ['header', 'row', 'cell']) {
-        final document = source();
-        final package = document.package!;
-        final main = package.getPart('/word/document.xml')!;
-        const open =
-            '<w:sdt><w:sdtPr><w:id w:val="999"/></w:sdtPr><w:sdtContent>';
-        const close = '</w:sdtContent></w:sdt>';
-        if (location == 'header') {
-          final header = package.getPart('/word/header1.xml')!;
-          header.writeText(
-            header
-                .readText()
-                .replaceFirst('<w:p>', '$open<w:p>')
-                .replaceFirst('</w:p>', '</w:p>$close'),
-          );
-        } else if (location == 'row') {
-          main.writeText(
-            main
-                .readText()
-                .replaceFirst('<w:tr>', '$open<w:tr>')
-                .replaceFirst('</w:tr>', '</w:tr>$close'),
-          );
-        } else {
-          main.writeText(
-            main
-                .readText()
-                .replaceFirst('<w:tc>', '$open<w:tc>')
-                .replaceFirst('</w:tc>', '</w:tc>$close'),
-          );
-        }
-        expect(
-          () => WordDeserializer().read(package),
-          throwsUnsupportedError,
-          reason: location,
+  test('unsupported row/cell wrappers reject instead of flattening', () {
+    for (final location in ['row', 'cell']) {
+      final document = source();
+      final package = document.package!;
+      final main = package.getPart('/word/document.xml')!;
+      const open =
+          '<w:sdt><w:sdtPr><w:id w:val="999"/></w:sdtPr><w:sdtContent>';
+      const close = '</w:sdtContent></w:sdt>';
+      if (location == 'row') {
+        main.writeText(
+          main
+              .readText()
+              .replaceFirst('<w:tr>', '$open<w:tr>')
+              .replaceFirst('</w:tr>', '</w:tr>$close'),
+        );
+      } else {
+        main.writeText(
+          main
+              .readText()
+              .replaceFirst('<w:tc>', '$open<w:tc>')
+              .replaceFirst('</w:tc>', '</w:tc>$close'),
         );
       }
-    },
-  );
+      expect(
+        () => WordDeserializer().read(package),
+        throwsUnsupportedError,
+        reason: location,
+      );
+    }
+  });
 
   test(
     'CLI rejects an inline control split before replacing an existing output',

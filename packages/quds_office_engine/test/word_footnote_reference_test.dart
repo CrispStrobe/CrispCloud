@@ -31,8 +31,14 @@ void main() {
           .expand((LaidOutPage page) => page.notes)
           .map((LaidOutLine line) => line.text)
           .toList();
-      expect(notes, contains('1. First footnote text.'));
-      expect(notes, contains('2. Second footnote text.'));
+      // This authored fixture has body references, but no w:footnoteRef in
+      // either note story. Layout must not synthesize absent note-body marks.
+      expect(
+        document.footnotes.every((note) => !note.hasReferenceMarkers),
+        isTrue,
+      );
+      expect(notes, contains('First footnote text.'));
+      expect(notes, contains('Second footnote text.'));
     },
   );
 }

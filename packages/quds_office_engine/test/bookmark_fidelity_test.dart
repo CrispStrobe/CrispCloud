@@ -17,10 +17,10 @@ _markers(Iterable<WmlParagraph> paragraphs) {
     var offset = 0;
     for (final inline in paragraph.inlines) {
       if (inline is WmlRun) offset += inline.text.length;
-      if (inline is WmlBookmarkMarker) {
+      if (inline is WmlBookmarkBoundary) {
         out.add((
           id: inline.id,
-          name: inline is WmlBookmarkStart ? inline.name : null,
+          name: inline.isStart ? inline.name : null,
           start: inline.isStart,
           paragraph: index,
           offset: offset,
@@ -86,7 +86,9 @@ void _edit(WmlDocument document) {
 
 void main() {
   setUpAll(() {
-    final source = File('build/fidelity-bookmarks/bookmarks-source.docx');
+    final source = File(
+      'build/fidelity-bookmarks-legacy/bookmarks-source.docx',
+    );
     source.parent.createSync(recursive: true);
     source.writeAsBytesSync(
       File('test/fixtures/fidelity/bookmarks.docx').readAsBytesSync(),
@@ -112,7 +114,7 @@ void main() {
         for (var cycle = 1; cycle <= 3; cycle++) {
           final bytes = await OfficeIsolateSave.word(document);
           File(
-            'build/fidelity-bookmarks/bookmarks-${edited ? 'edited' : 'imported'}-$cycle.docx',
+            'build/fidelity-bookmarks-legacy/bookmarks-${edited ? 'edited' : 'imported'}-$cycle.docx',
           ).writeAsBytesSync(bytes);
           document = WordDeserializer().readBytes(bytes);
           expect(_markers(document.paragraphs), before);
@@ -126,7 +128,10 @@ void main() {
           final table = document.paragraphs.firstWhere(
             (p) => p.text.startsWith('Cell'),
           );
-          final marker = table.inlines.whereType<WmlBookmarkStart>().single;
+          final marker = table.inlines
+              .whereType<WmlBookmarkBoundary>()
+              .where((marker) => marker.isStart)
+              .single;
           expect(marker.sourceXml, contains('colFirst="0"'));
           expect(marker.sourceXml, contains('colLast="0"'));
           final beta = document.paragraphs
@@ -151,9 +156,15 @@ void main() {
       ('11', true, 0),
       ('11', false, 4),
     ]);
-    final original = paragraph.inlines.whereType<WmlBookmarkStart>().last;
+    final original = paragraph.inlines
+        .whereType<WmlBookmarkBoundary>()
+        .where((marker) => marker.isStart)
+        .last;
     expect(
-      slice.inlines.whereType<WmlBookmarkStart>().single,
+      slice.inlines
+          .whereType<WmlBookmarkBoundary>()
+          .where((marker) => marker.isStart)
+          .single,
       isNot(same(original)),
     );
     WmlRunEdit.applyRange(slice, 0, 4, (props) => props.italic = true);
@@ -174,8 +185,8 @@ void main() {
     final paragraph = WmlParagraph(
       inlines: [
         WmlRun(text: 'left'),
-        WmlBookmarkStart(id: '1', name: 'Point'),
-        WmlBookmarkEnd(id: '1'),
+        WmlBookmarkBoundary(isStart: true, id: '1', name: 'Point'),
+        WmlBookmarkBoundary(isStart: false, id: '1'),
         WmlRun(text: 'right'),
       ],
     );
@@ -184,7 +195,7 @@ void main() {
         paragraph,
         0,
         4,
-      ).inlines.whereType<WmlBookmarkMarker>(),
+      ).inlines.whereType<WmlBookmarkBoundary>(),
       isEmpty,
     );
     final right = WmlClone.slicedParagraph(paragraph, 4, 9);
@@ -217,7 +228,10 @@ void main() {
         await OfficeIsolateSave.word(document),
       );
       expect(
-        document.paragraphs.elementAt(5).inlines.whereType<WmlBookmarkMarker>(),
+        document.paragraphs
+            .elementAt(5)
+            .inlines
+            .whereType<WmlBookmarkBoundary>(),
         hasLength(2),
       );
     },
@@ -234,12 +248,16 @@ void main() {
           await OfficeIsolateSave.word(document),
         );
         final starts = document.paragraphs
-            .expand((p) => p.inlines.whereType<WmlBookmarkStart>())
+            .expand(
+              (p) => p.inlines.whereType<WmlBookmarkBoundary>().where(
+                (marker) => marker.isStart,
+              ),
+            )
             .toList();
         expect(starts, hasLength(9));
         expect(starts.map((m) => m.id).toSet(), hasLength(9));
         final generated = starts.singleWhere(
-          (m) => m.name.startsWith('_Heading2_'),
+          (m) => m.name!.startsWith('_Heading2_'),
         );
         if (cycle == 0) generatedId = generated.id;
         expect(generated.id, generatedId);
@@ -283,7 +301,10 @@ void main() {
         output.path,
       ]);
       expect(result.exitCode, isNot(0));
-      expect(result.stderr.toString(), contains('unclosed bookmarks 12'));
+      expect(
+        result.stderr.toString(),
+        contains('orphan a cross-paragraph bookmark endpoint'),
+      );
       expect(output.readAsStringSync(), 'Existing output');
     },
   );
@@ -299,11 +320,11 @@ void main() {
       final paragraph = document.paragraphs.elementAt(1);
       if (kind == 'missing start') {
         paragraph.inlines.removeWhere(
-          (i) => i is WmlBookmarkStart && i.id == '10',
+          (i) => i is WmlBookmarkBoundary && i.isStart && i.id == '10',
         );
       } else if (kind == 'missing end') {
         paragraph.inlines.removeWhere(
-          (i) => i is WmlBookmarkEnd && i.id == '10',
+          (i) => i is WmlBookmarkBoundary && !i.isStart && i.id == '10',
         );
       } else if (kind == 'duplicate') {
         document.sections.first.blocks.add(WmlClone.paragraph(paragraph));

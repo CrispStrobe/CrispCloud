@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:path/path.dart' as p;
 
 import '../models/custom_toolbar_command.dart';
 import 'macos_app_store.dart';
@@ -140,6 +141,23 @@ class RunningToolbarCommand extends ChangeNotifier {
     CommandInvocationContext context, {
     CommandProcessStarter? processStarter,
     int maxOutputBytes = 256 * 1024,
+  }) async => startPrepared(
+    prepareToolbarCommand(command, context),
+    context,
+    timeoutSeconds: command.timeoutSeconds,
+    processStarter: processStarter,
+    maxOutputBytes: maxOutputBytes,
+  );
+
+  /// Launch an immutable, already reviewed argv without template expansion.
+  /// Callers must validate their review and filesystem evidence immediately
+  /// before invoking this method; the captured source is checked here too.
+  static Future<RunningToolbarCommand> startPrepared(
+    PreparedToolbarCommand prepared,
+    CommandInvocationContext context, {
+    required int timeoutSeconds,
+    CommandProcessStarter? processStarter,
+    int maxOutputBytes = 256 * 1024,
   }) async {
     if (kIsWeb ||
         (!Platform.isMacOS && !Platform.isWindows && !Platform.isLinux)) {
@@ -153,7 +171,22 @@ class RunningToolbarCommand extends ChangeNotifier {
     if (maxOutputBytes < 1 || maxOutputBytes > 4 * 1024 * 1024) {
       throw ArgumentError.value(maxOutputBytes, 'maxOutputBytes');
     }
-    final prepared = prepareToolbarCommand(command, context);
+    if (timeoutSeconds < 1 ||
+        timeoutSeconds > 86400 ||
+        prepared.executable.trim().isEmpty ||
+        prepared.executable.length > 4096 ||
+        prepared.executable.contains(RegExp(r'[\x00\r\n]')) ||
+        !p.isAbsolute(prepared.workingDirectory) ||
+        prepared.workingDirectory.contains('\u0000') ||
+        prepared.arguments.length > 10000 ||
+        prepared.arguments.any((argument) => argument.contains('\u0000')) ||
+        prepared.arguments.fold<int>(
+              0,
+              (size, argument) => size + utf8.encode(argument).length + 1,
+            ) >
+            1024 * 1024) {
+      throw const FormatException('Invalid prepared command.');
+    }
     final starter =
         processStarter ??
         (String executable, List<String> arguments, String directory) =>
@@ -171,7 +204,7 @@ class RunningToolbarCommand extends ChangeNotifier {
     );
     return RunningToolbarCommand._(
       process,
-      Duration(seconds: command.timeoutSeconds),
+      Duration(seconds: timeoutSeconds),
       maxOutputBytes,
     );
   }

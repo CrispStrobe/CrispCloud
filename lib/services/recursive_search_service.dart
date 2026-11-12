@@ -1,6 +1,8 @@
 import 'dart:typed_data';
 
 import 'package:path/path.dart' as p;
+import 'package:quds_office_engine/quds_office_engine.dart'
+    show isSearchableOfficeDocument, officeSearchText;
 
 import '../models/file_item.dart';
 import '../models/file_search_query.dart';
@@ -9,7 +11,6 @@ import 'archive_viewer_service.dart';
 import 'file_operation_service.dart';
 import 'file_search_path_filter.dart';
 import 'internal_viewer_service.dart';
-import 'office_search_text.dart';
 import 'search_content_matcher.dart';
 
 class FileSearchMatch {

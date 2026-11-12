@@ -5,6 +5,7 @@
 
 import '../l10n/ebook_strings.dart';
 import '../widgets/ebook_library_actions.dart';
+import '../widgets/directory_selection_actions.dart';
 import '../l10n/commander_strings.dart';
 import '../l10n/terminal_strings.dart';
 
@@ -79,6 +80,12 @@ import '../widgets/lock_screen.dart';
 import '../widgets/workspace_dialog.dart';
 import '../widgets/file_view_editor_dialog.dart';
 import '../widgets/custom_command_dialog.dart';
+import '../widgets/command_entry_dialog.dart';
+import '../l10n/command_entry_strings.dart';
+import '../widgets/gathering_stack_dialog.dart';
+import '../l10n/gathering_stack_strings.dart';
+import '../widgets/help_guide_dialog.dart';
+import '../l10n/help_guide_strings.dart';
 import '../widgets/extensions_dialog.dart';
 import '../l10n/extension_translations.dart';
 import '../widgets/terminal_panel.dart';
@@ -92,7 +99,15 @@ import 'screen_dialogs.dart';
 import '../services/log_service.dart';
 import '../services/keyboard_shortcut_service.dart';
 import '../services/browser_menu_shortcut.dart';
-import '../l10n/navigation_strings.dart';
+import '../l10n/synchronized_browsing_strings.dart';
+import '../providers/synchronized_browsing_provider.dart';
+import '../widgets/synchronized_browsing_controls.dart';
+import '../l10n/browser_menu_strings.dart';
+import '../l10n/workspace_ux_strings.dart';
+import '../providers/browser_menu_provider.dart';
+import '../providers/custom_command_provider.dart';
+import '../widgets/browser_menu_editor.dart';
+import '../widgets/configurable_browser_menu.dart';
 
 class FileBrowserScreen extends ConsumerStatefulWidget {
   const FileBrowserScreen({super.key});
@@ -156,6 +171,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           ShortcutAction.back => panel.canNavigateBack,
           ShortcutAction.forward => panel.canNavigateForward,
           ShortcutAction.reopenClosedTab => panel.canReopenClosedTab,
+          ShortcutAction.commandEntry => commandEntryAvailable(ref),
           ShortcutAction.closeTab =>
             panel.tabs.length > 1 && panel.activeTab?.isProtected != true,
           _ => true,
@@ -163,13 +179,18 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     return PlatformMenuItem(
       label: label,
       shortcut: available && !typeaheadOwnsBackspace
-          ? browserMenuShortcut(bindings, action)
+          ? browserMenuShortcut(
+              bindings,
+              action,
+              macOS: !kIsWeb && defaultTargetPlatform == TargetPlatform.macOS,
+            )
           : null,
       onSelected: !available
           ? null
           : () {
-              if (_browserOwnsInput(context, ref))
+              if (_browserOwnsInput(context, ref)) {
                 executeBrowserShortcut(context, ref, action);
+              }
             },
     );
   }
@@ -178,11 +199,17 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
   Widget build(BuildContext context) {
     ref.watch(shortcutBindingsProvider);
     final activeSide = ref.watch(activePanelProvider);
-    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.macOS) {
-      ref.watch(panelProvider(activeSide));
-      ref.watch(focusAreaProvider);
-      ref.watch(terminalInputFocusedProvider);
-    }
+    // Menus reflect the same current input and tab ownership as shortcuts.
+    ref.watch(panelProvider(activeSide));
+    ref.watch(
+      panelProvider(
+        activeSide == PanelSide.local ? PanelSide.remote : PanelSide.local,
+      ),
+    );
+    ref.watch(focusAreaProvider);
+    ref.watch(terminalInputFocusedProvider);
+    final menuStore = ref.watch(browserMenuStoreProvider);
+    ref.watch(customToolbarCommandServiceProvider);
     final l = AppLocalizations.of(context)!;
     final OfficeEditorMenuActions? officeEditor = ref.watch(
       officeEditorMenuProvider,
@@ -201,6 +228,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     final TerminalMenuActions? terminal = ref.watch(terminalMenuProvider);
     final auth = ref.watch(authProvider);
     final showPreview = ref.watch(showPreviewProvider);
+    ref.watch(synchronizedBrowsingProvider);
     // layoutPresetProvider kept for persistence but no longer drives layout.
     // Layout is now controlled by showDualPanelProvider + showTreeSidebarProvider.
 
@@ -235,6 +263,19 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         onKeyEvent: (node, event) => handleKeyEvent(context, ref, event),
         child: Column(
           children: [
+            if ((kIsWeb || defaultTargetPlatform != TargetPlatform.macOS) &&
+                officeEditor == null &&
+                imageEditor == null &&
+                pdfEditor == null &&
+                codeEditor == null &&
+                mediaEditor == null &&
+                terminal == null)
+              ConfigurableBrowserMenu(
+                layout: menuStore.layout,
+                commands: _browserMenuBindings(context, ref),
+                fixedCommands: _fixedBrowserMenuBindings(context, ref),
+              ),
+            const SynchronizedBrowsingStatus(),
             Expanded(
               child: LayoutBuilder(
                 builder: (context, constraints) {
@@ -310,6 +351,381 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         : [if (panel.cursorItem case final file?) file];
   }
 
+  Map<String, BrowserMenuCommandBinding> _browserMenuBindings(
+    BuildContext context,
+    WidgetRef ref,
+  ) {
+    final commands = <String, BrowserMenuCommandBinding>{};
+    final side = ref.read(activePanelProvider);
+    final labels = WorkspaceUxStrings(context);
+    for (final action in browserShortcutActions) {
+      final item = _browserMenuCommand(
+        context,
+        ref,
+        action,
+        labels.action(action),
+      );
+      final id = 'action:${action.name}';
+      commands[id] = BrowserMenuCommandBinding(
+        id: id,
+        label: item.label,
+        onSelected: item.onSelected,
+        shortcut: item.shortcut,
+      );
+    }
+    void add(
+      String id,
+      String label,
+      VoidCallback perform, {
+      bool Function()? available,
+    }) {
+      bool enabled() =>
+          context.mounted &&
+          _browserOwnsInput(context, ref) &&
+          (available?.call() ?? true);
+      final key = 'workflow:$id';
+      commands[key] = BrowserMenuCommandBinding(
+        id: key,
+        label: label,
+        onSelected: !enabled()
+            ? null
+            : () {
+                if (enabled()) perform();
+              },
+      );
+    }
+
+    void route(String id, String label, String action) =>
+        add(id, label, () => _runOverflowAction(context, action));
+    add(
+      'editWith',
+      context.commanderTr('Edit with…'),
+      () => chooseEditorForSelection(context, ref),
+    );
+    add(
+      'copyNames',
+      BrowserMenuStrings(context).text('copyNames'),
+      () => copySelectionNamesOrPaths(ref, namesOnly: true),
+    );
+    add(
+      'copyFullPaths',
+      BrowserMenuStrings(context).text('copyFullPaths'),
+      () => copySelectionNamesOrPaths(ref, namesOnly: false),
+    );
+    add(
+      'compareDirectories',
+      BrowserMenuStrings(context).text('compareDirectories'),
+      () => compareDirectories(ref),
+      available: () => canCompareDirectories(ref),
+    );
+    add('properties', context.commanderTr('Properties'), () {
+      final files = _integritySelection(ref);
+      if (files.isNotEmpty) showPropertiesDialog(context, files.first);
+    }, available: () => _integritySelection(ref).isNotEmpty);
+    add(
+      'deselectPattern',
+      context.commanderTr('Deselect by Wildcard or Regex...'),
+      () => showPatternSelectionDialog(
+        context,
+        ref,
+        ref.read(activePanelProvider),
+        initialAction: SelectionAction.deselect,
+      ),
+    );
+    route(
+      'sameExtension',
+      context.commanderTr('Same extension'),
+      'same_extension',
+    );
+    route(
+      'sameName',
+      context.commanderTr('Same name (without extension)'),
+      'same_name',
+    );
+    route(
+      'sameParent',
+      context.commanderTr('Same containing folder'),
+      'same_parent',
+    );
+    route(
+      'loadSelection',
+      context.commanderTr('Load selection from paths…'),
+      'load_selection',
+    );
+    add(
+      'rememberSelection',
+      context.commanderTr('Remember Selection'),
+      () => _activePanel(ref).rememberSelection(),
+    );
+    add(
+      'invertSelection',
+      context.commanderTr('Invert Selection'),
+      () => _activePanel(ref).invertSelection(),
+    );
+    route(
+      'attributes',
+      context.commanderTr('Change attributes…'),
+      'change_attributes',
+    );
+    route('dualPanel', context.commanderTr('Toggle Dual Panel'), 'dual_panel');
+    add(
+      'terminal',
+      context.commanderTr('Toggle Terminal'),
+      () => _runOverflowAction(context, 'terminal'),
+      available: () => !kIsWeb,
+    );
+    add(
+      'topToolbar',
+      context.commanderTr('Toggle Top Toolbar'),
+      () => ref.read(topToolbarVisibleProvider.notifier).toggle(),
+    );
+    for (final entry in <(String, String, PanelViewMode)>[
+      ('brief', context.commanderTr('Brief Rows'), PanelViewMode.brief),
+      ('full', context.commanderTr('Full Rows'), PanelViewMode.full),
+      ('tree', context.commanderTr('Tree View'), PanelViewMode.tree),
+    ]) {
+      add(
+        entry.$1,
+        entry.$2,
+        () => ref
+            .read(panelViewModeProvider(ref.read(activePanelProvider)).notifier)
+            .setMode(entry.$3),
+      );
+    }
+    for (final entry in <(String, String, ViewMode)>[
+      ('list', context.commanderTr('List View'), ViewMode.list),
+      ('grid', context.commanderTr('Grid View'), ViewMode.grid),
+      ('tiles', context.galleryTr('Tiles'), ViewMode.tiles),
+      ('gallery', context.galleryTr('Image gallery'), ViewMode.gallery),
+      ('column', context.commanderTr('Column View'), ViewMode.column),
+    ]) {
+      add(
+        entry.$1,
+        entry.$2,
+        () => setFileView(ref, ref.read(activePanelProvider), entry.$3),
+      );
+    }
+    add(
+      'reverseSort',
+      context.commanderTr('Reverse Sort Order'),
+      () => _activePanel(ref).toggleSortOrder(),
+    );
+    add(
+      'flat',
+      context.commanderTr('Flat View'),
+      () => _activePanel(ref).toggleFlatView(),
+    );
+    add('refreshAll', context.commanderTr('Refresh All'), () {
+      ref.read(panelProvider(PanelSide.local)).refresh();
+      ref.read(panelProvider(PanelSide.remote)).refresh();
+    });
+    for (final home in [true, false]) {
+      add(
+        home ? 'home' : 'root',
+        context.commanderTr(home ? 'Home' : 'Root'),
+        () {
+          final panel = _activePanel(ref);
+          try {
+            final origin = panel.isInArchive
+                ? panel.captureArchiveOrigin()
+                : panel.captureCurrentOrigin();
+            final path = home && origin.source.isLocal && !kIsWeb
+                ? Platform.environment['HOME'] ?? origin.storageReference.root
+                : origin.storageReference.root;
+            panel.navigateToPath(path, origin: origin);
+          } catch (error) {
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text('$error')));
+          }
+        },
+      );
+    }
+    add(
+      'findPattern',
+      context.commanderTr('Find by Pattern...'),
+      () => showFindDialog(context, ref),
+    );
+    route(
+      'workspaces',
+      BrowserMenuStrings(context).text('workspaces'),
+      'workspaces',
+    );
+    route('columns', context.commanderTr('Columns and view'), 'columns');
+    route('customCommands', context.commanderTr('Custom commands'), 'commands');
+    add(
+      'gatherSelection',
+      GatheringStackStrings(context).text('gather'),
+      () => addPanelSelectionToGatheringStack(
+        context,
+        ref,
+        ref.read(activePanelProvider),
+      ),
+      available: () =>
+          _activePanel(ref).selection.isNotEmpty &&
+          !_activePanel(ref).isInArchive,
+    );
+    route(
+      'gatheringStack',
+      GatheringStackStrings(context).text('title'),
+      'gathering_stack',
+    );
+    route('extensions', context.extensionTr('Extensions'), 'extensions');
+    route(
+      'synchronizedBrowsing',
+      SynchronizedBrowsingStrings(
+        context,
+      ).text(ref.read(synchronizedBrowsingProvider).enabled ? 'stop' : 'start'),
+      'synchronized_browsing',
+    );
+    route(
+      'compareFolders',
+      context.commanderTr('Compare Folders...'),
+      'compare_folders',
+    );
+    route('sync', context.commanderTr('Sync Manager'), 'sync');
+    route('duplicates', context.commanderTr('Find Duplicates'), 'duplicates');
+    route(
+      'storageAnalyzer',
+      StorageAnalyzerStrings(context).text('title'),
+      'storage_analyzer',
+    );
+    add(
+      'batchAnalyzer',
+      StorageAnalyzerStrings(context).text('batchTitle'),
+      () => showStorageScanBatchDialog(context, ref),
+    );
+    route('multiCloud', context.commanderTr('Multi-Cloud...'), 'multi_cloud');
+    add(
+      'mount',
+      context.commanderTr('Mount...'),
+      () => showMountDialog(context),
+      available: () => !kIsWeb && defaultTargetPlatform == TargetPlatform.macOS,
+    );
+    route(
+      'checksums',
+      context.commanderTr('Create or Verify Checksums...'),
+      'checksums',
+    );
+    add(
+      'split',
+      context.commanderTr('Split File...'),
+      () => _runOverflowAction(context, 'split_file'),
+      available: () => _integritySelection(ref).length == 1,
+    );
+    route('combine', context.commanderTr('Combine Parts...'), 'combine_parts');
+    route(
+      'importList',
+      context.commanderTr('Import File List...'),
+      'import_file_list',
+    );
+    route(
+      'exportList',
+      context.commanderTr('Export File List...'),
+      'export_file_list',
+    );
+    route(
+      'collections',
+      context.commanderTr('File Collections...'),
+      'collections',
+    );
+    route(
+      'shortcuts',
+      context.commanderTr('Keyboard Shortcuts...'),
+      'shortcuts',
+    );
+    route('audit', context.commanderTr('Audit Log'), 'audit');
+    route('syslog', context.commanderTr('System Log'), 'syslog');
+    route('keys', context.commanderTr('Key Management'), 'keys');
+    for (final command
+        in ref.read(customToolbarCommandServiceProvider).commands) {
+      final binding = userBrowserMenuCommand(
+        context,
+        ref,
+        side,
+        command,
+        ownsInput: () => _browserOwnsInput(context, ref),
+      );
+      commands[binding.id] = binding;
+    }
+    return commands;
+  }
+
+  List<BrowserMenuCommandBinding> _fixedBrowserMenuBindings(
+    BuildContext context,
+    WidgetRef ref,
+  ) {
+    final strings = BrowserMenuStrings(context);
+    BrowserMenuCommandBinding fixed(
+      String id,
+      String label,
+      VoidCallback perform,
+    ) => BrowserMenuCommandBinding(
+      id: id,
+      label: label,
+      onSelected: () {
+        if (context.mounted && ModalRoute.of(context)?.isCurrent != false) {
+          perform();
+        }
+      },
+    );
+    return [
+      fixed(
+        'settings',
+        context.commanderTr('Settings...'),
+        () => showSettingsDialog(context),
+      ),
+      fixed(
+        'transferRecovery',
+        context.commanderTr('Transfer Queue and Recovery...'),
+        () => showTransferHistoryDialog(context, ref),
+      ),
+      fixed(
+        'trashRecovery',
+        context.commanderTr('Trash History and Restore...'),
+        () =>
+            showTrashHistoryDialog(context, ref, ref.read(activePanelProvider)),
+      ),
+      fixed(
+        'renameRecovery',
+        context.commanderTr('Rename History and Recovery...'),
+        () => showRenameHistoryDialog(
+          context,
+          ref,
+          ref.read(activePanelProvider),
+        ),
+      ),
+      fixed(
+        'integrityRecovery',
+        context.commanderTr('Split/combine recovery…'),
+        () => showIntegrityRecoveryDialog(context, ref),
+      ),
+      fixed(
+        'customize',
+        strings.text('title'),
+        () => showBrowserMenuEditor(
+          context,
+          ref,
+          _browserMenuBindings(context, ref),
+        ),
+      ),
+      fixed(
+        'userGuide',
+        HelpGuideStrings(context).text('title'),
+        () => showUserGuide(context),
+      ),
+      fixed(
+        'reset',
+        strings.text('reset'),
+        () => showBrowserMenuEditor(
+          context,
+          ref,
+          _browserMenuBindings(context, ref),
+          resetDraft: true,
+        ),
+      ),
+    ];
+  }
+
   List<PlatformMenuItem> _buildMacMenus(
     BuildContext context,
     WidgetRef ref,
@@ -354,6 +770,15 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         const PlatformMenuItemGroup(
           members: <PlatformMenuItem>[
             PlatformProvidedMenuItem(type: PlatformProvidedMenuItemType.quit),
+          ],
+        ),
+        PlatformMenuItemGroup(
+          members: [
+            for (final command in _fixedBrowserMenuBindings(
+              context,
+              ref,
+            ).skip(1))
+              command.platform(),
           ],
         ),
       ],
@@ -445,304 +870,6 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     }
 
     final PanelSide activeSide = ref.read(activePanelProvider);
-
-    final List<PlatformMenuItem> browserFileMenus = <PlatformMenuItem>[
-      _browserMenuCommand(
-        context,
-        ref,
-        ShortcutAction.reopenClosedTab,
-        NavigationStrings(context).text('reopen'),
-      ),
-      _browserMenuCommand(
-        context,
-        ref,
-        ShortcutAction.newTab,
-        context.commanderTr("New Tab"),
-      ),
-      _browserMenuCommand(
-        context,
-        ref,
-        ShortcutAction.closeTab,
-        context.commanderTr("Close Tab"),
-      ),
-      PlatformMenuItem(
-        label: context.commanderTr("Open"),
-        onSelected: () => viewSelectedFile(context, ref),
-      ),
-      _browserMenuCommand(
-        context,
-        ref,
-        ShortcutAction.edit,
-        context.commanderTr("Edit"),
-      ),
-      PlatformMenuItem(
-        label: context.commanderTr("Edit with…"),
-        onSelected: () => chooseEditorForSelection(context, ref),
-      ),
-      PlatformMenuItemGroup(
-        members: <PlatformMenuItem>[
-          _browserMenuCommand(
-            context,
-            ref,
-            ShortcutAction.copyWithOptions,
-            context.commanderTr("Copy..."),
-          ),
-          _browserMenuCommand(
-            context,
-            ref,
-            ShortcutAction.moveWithOptions,
-            context.commanderTr("Move..."),
-          ),
-          _browserMenuCommand(
-            context,
-            ref,
-            ShortcutAction.delete,
-            context.commanderTr("Delete..."),
-          ),
-          _browserMenuCommand(
-            context,
-            ref,
-            ShortcutAction.rename,
-            context.commanderTr("Rename..."),
-          ),
-        ],
-      ),
-      PlatformMenuItemGroup(
-        members: <PlatformMenuItem>[
-          _browserMenuCommand(
-            context,
-            ref,
-            ShortcutAction.newFolder,
-            context.commanderTr("New Folder..."),
-          ),
-          PlatformMenuItem(
-            label: context.commanderTr("Properties"),
-            onSelected: () {
-              final panel = _activePanel(ref);
-              final item = panel.selection.isNotEmpty
-                  ? panel.selection.first
-                  : panel.cursorItem;
-              if (item != null) showPropertiesDialog(context, item);
-            },
-          ),
-        ],
-      ),
-      PlatformMenuItemGroup(
-        members: <PlatformMenuItem>[
-          _browserMenuCommand(
-            context,
-            ref,
-            ShortcutAction.goToFolder,
-            context.commanderTr("Go to Path..."),
-          ),
-          _browserMenuCommand(
-            context,
-            ref,
-            ShortcutAction.connect,
-            context.commanderTr("Connect..."),
-          ),
-        ],
-      ),
-    ];
-
-    final List<PlatformMenuItem> browserEditMenus = <PlatformMenuItem>[
-      _browserMenuCommand(
-        context,
-        ref,
-        ShortcutAction.findPattern,
-        context.commanderTr("Select by Wildcard or Regex..."),
-      ),
-      PlatformMenuItem(
-        label: context.commanderTr("Deselect by Wildcard or Regex..."),
-        onSelected: () => showPatternSelectionDialog(
-          context,
-          ref,
-          activeSide,
-          initialAction: SelectionAction.deselect,
-        ),
-      ),
-      PlatformMenuItem(
-        label: context.commanderTr("Same extension"),
-        onSelected: () => _activePanel(ref).selectSameExtension(),
-      ),
-      PlatformMenuItem(
-        label: context.commanderTr("Same name (without extension)"),
-        onSelected: () => _activePanel(ref).selectSameName(),
-      ),
-      PlatformMenuItem(
-        label: context.commanderTr("Same containing folder"),
-        onSelected: () => _activePanel(ref).selectSameParent(),
-      ),
-      PlatformMenuItem(
-        label: context.commanderTr("Load selection from paths…"),
-        onSelected: () =>
-            showFileListDialog(context, ref, activeSide, selectionMode: true),
-      ),
-      PlatformMenuItem(
-        label: context.commanderTr("Change attributes…"),
-        onSelected: () => showFileAttributesFromSelection(context, ref),
-      ),
-      _browserMenuCommand(
-        context,
-        ref,
-        ShortcutAction.multiRename,
-        context.commanderTr("Multi-Rename..."),
-      ),
-      PlatformMenuItem(
-        label: context.commanderTr("Trash History and Restore..."),
-        onSelected: () => showTrashHistoryDialog(context, ref, activeSide),
-      ),
-      PlatformMenuItem(
-        label: context.commanderTr("Rename History and Recovery..."),
-        onSelected: () => showRenameHistoryDialog(context, ref, activeSide),
-      ),
-      PlatformMenuItem(
-        label: context.commanderTr("Transfer Queue and Recovery..."),
-        onSelected: () => showTransferHistoryDialog(context, ref),
-      ),
-      PlatformMenuItem(
-        label: context.commanderTr("Create or Verify Checksums..."),
-        onSelected: () => showChecksumToolsDialog(
-          context,
-          ref,
-          ref.read(activePanelProvider),
-          _integritySelection(ref),
-        ),
-      ),
-      PlatformMenuItem(
-        label: context.commanderTr("Split File..."),
-        onSelected: _integritySelection(ref).length == 1
-            ? () => showSplitFileDialog(
-                context,
-                ref,
-                ref.read(activePanelProvider),
-                _integritySelection(ref).single,
-              )
-            : null,
-      ),
-      PlatformMenuItem(
-        label: context.commanderTr("Split/combine recovery…"),
-        onSelected: () => showIntegrityRecoveryDialog(context, ref),
-      ),
-      PlatformMenuItem(
-        label: context.commanderTr("Combine Parts..."),
-        onSelected: () => showCombinePartsDialog(
-          context,
-          ref,
-          ref.read(activePanelProvider),
-          _integritySelection(ref),
-        ),
-      ),
-      PlatformMenuItem(
-        label: context.commanderTr("Import File List..."),
-        onSelected: () =>
-            showFileListDialog(context, ref, activeSide, importMode: true),
-      ),
-      PlatformMenuItem(
-        label: context.commanderTr("Export File List..."),
-        onSelected: () => showFileListDialog(context, ref, activeSide),
-      ),
-      PlatformMenuItem(
-        label: context.commanderTr("File Collections..."),
-        onSelected: () => showFileCollectionsDialog(
-          context,
-          ref,
-          ref.read(activePanelProvider),
-        ),
-      ),
-      PlatformMenuItem(
-        label: context.ebookTr('Ebook library'),
-        onSelected: ref.watch(ebookEditorMenuProvider) != null
-            ? null
-            : () =>
-                  showEbookLibrary(context, ref, ref.read(activePanelProvider)),
-      ),
-      PlatformMenuItem(
-        label: context.commanderTr("Remember Selection"),
-        onSelected: () => _activePanel(ref).rememberSelection(),
-      ),
-      PlatformMenuItem(
-        label: context.commanderTr("Restore Selection"),
-        onSelected: () => _activePanel(ref).restoreSelection(),
-      ),
-
-      _browserMenuCommand(
-        context,
-        ref,
-        ShortcutAction.selectAll,
-        context.commanderTr("Select All"),
-      ),
-      _browserMenuCommand(
-        context,
-        ref,
-        ShortcutAction.copy,
-        context.commanderTr("Copy Files"),
-      ),
-      _browserMenuCommand(
-        context,
-        ref,
-        ShortcutAction.cut,
-        context.commanderTr("Cut Files"),
-      ),
-      _browserMenuCommand(
-        context,
-        ref,
-        ShortcutAction.paste,
-        context.commanderTr("Paste Files..."),
-      ),
-      PlatformMenuItem(
-        label: context.commanderTr("Invert Selection"),
-        onSelected: () => _activePanel(ref).invertSelection(),
-      ),
-      PlatformMenuItemGroup(
-        members: <PlatformMenuItem>[
-          _browserMenuCommand(
-            context,
-            ref,
-            ShortcutAction.copyWithOptions,
-            context.commanderTr("Copy..."),
-          ),
-          _browserMenuCommand(
-            context,
-            ref,
-            ShortcutAction.moveWithOptions,
-            context.commanderTr("Move..."),
-          ),
-          _browserMenuCommand(
-            context,
-            ref,
-            ShortcutAction.delete,
-            context.commanderTr("Delete..."),
-          ),
-          _browserMenuCommand(
-            context,
-            ref,
-            ShortcutAction.rename,
-            context.commanderTr("Rename..."),
-          ),
-        ],
-      ),
-      PlatformMenuItemGroup(
-        members: <PlatformMenuItem>[
-          _browserMenuCommand(
-            context,
-            ref,
-            ShortcutAction.filter,
-            context.commanderTr("Filter Files..."),
-          ),
-          PlatformMenuItem(
-            label: context.commanderTr("Find by Pattern..."),
-            onSelected: () => showFindDialog(context, ref),
-          ),
-          _browserMenuCommand(
-            context,
-            ref,
-            ShortcutAction.search,
-            context.commanderTr("Search All Files..."),
-          ),
-        ],
-      ),
-    ];
 
     final List<PlatformMenuItem> viewMenus = <PlatformMenuItem>[
       if (editor != null)
@@ -923,190 +1050,24 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       ),
     ];
 
-    final List<PlatformMenuItem> browserGoMenus = <PlatformMenuItem>[
-      _browserMenuCommand(
-        context,
-        ref,
-        ShortcutAction.back,
-        context.commanderTr("Back"),
-      ),
-      _browserMenuCommand(
-        context,
-        ref,
-        ShortcutAction.forward,
-        context.commanderTr("Forward"),
-      ),
-      _browserMenuCommand(
-        context,
-        ref,
-        ShortcutAction.up,
-        context.commanderTr("Up"),
-      ),
-      PlatformMenuItemGroup(
-        members: <PlatformMenuItem>[
-          PlatformMenuItem(
-            label: context.commanderTr("Home"),
-            onSelected: () {
-              final panel = _activePanel(ref);
-              try {
-                final origin = panel.isInArchive
-                    ? panel.captureArchiveOrigin()
-                    : panel.captureCurrentOrigin();
-                final home = origin.source.isLocal && !kIsWeb
-                    ? (Platform.environment['HOME'] ?? '/')
-                    : origin.storageReference.root;
-                panel.navigateToPath(home, origin: origin);
-              } catch (error) {
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(SnackBar(content: Text('$error')));
-              }
-            },
-          ),
-          PlatformMenuItem(
-            label: context.commanderTr("Root"),
-            onSelected: () {
-              final panel = _activePanel(ref);
-              try {
-                final origin = panel.isInArchive
-                    ? panel.captureArchiveOrigin()
-                    : panel.captureCurrentOrigin();
-                panel.navigateToPath(
-                  origin.storageReference.root,
-                  origin: origin,
-                );
-              } catch (error) {
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(SnackBar(content: Text('$error')));
-              }
-            },
-          ),
-          _browserMenuCommand(
-            context,
-            ref,
-            ShortcutAction.goToFolder,
-            context.commanderTr("Go to Path..."),
-          ),
-        ],
-      ),
-    ];
-
-    final List<PlatformMenuItem> browserToolsMenus = <PlatformMenuItem>[
-      _browserMenuCommand(
-        context,
-        ref,
-        ShortcutAction.search,
-        context.commanderTr("Search All Files..."),
-      ),
-      PlatformMenuItem(
-        label: context.commanderTr("Find by Pattern..."),
-        onSelected: () => showFindDialog(context, ref),
-      ),
-      PlatformMenuItemGroup(
-        members: [
-          PlatformMenuItem(
-            label: context.commanderTr("Commander workspaces"),
-            onSelected: () => showWorkspaceDialog(
-              context,
-              ref,
-              ref.read(activePanelProvider),
-            ),
-          ),
-          PlatformMenuItem(
-            label: context.commanderTr("Columns and view"),
-            onSelected: () => showPanelViewDialog(
-              context,
-              ref,
-              ref.read(activePanelProvider),
-            ),
-          ),
-          PlatformMenuItem(
-            label: context.commanderTr("Custom commands"),
-            onSelected: () => showCustomCommandsDialog(
-              context,
-              ref,
-              ref.read(activePanelProvider),
-            ),
-          ),
-          PlatformMenuItem(
-            label: context.extensionTr('Extensions'),
-            onSelected: () => showExtensionsDialog(
-              context,
-              ref,
-              ref.read(activePanelProvider),
-            ),
-          ),
-        ],
-      ),
-      PlatformMenuItemGroup(
-        members: <PlatformMenuItem>[
-          PlatformMenuItem(
-            label: context.commanderTr("Compare Folders..."),
-            onSelected: () => showDirectoryComparisonDialog(context, ref),
-          ),
-          PlatformMenuItem(
-            label: context.commanderTr("Sync Manager"),
-            onSelected: () => showSyncDialog(context),
-          ),
-          PlatformMenuItem(
-            label: context.commanderTr("Find Duplicates"),
-            onSelected: () => showDuplicateFinderDialog(context, ref),
-          ),
-          PlatformMenuItem(
-            label: StorageAnalyzerStrings(context).text('title'),
-            onSelected: () => showStorageAnalyzerDialog(context, ref),
-          ),
-          PlatformMenuItem(
-            label: StorageAnalyzerStrings(context).text('batchTitle'),
-            onSelected: () => showStorageScanBatchDialog(context, ref),
-          ),
-          PlatformMenuItem(
-            label: context.commanderTr("Multi-Cloud..."),
-            onSelected: () => showMultiCloudDialog(context),
-          ),
-          PlatformMenuItem(
-            label: context.commanderTr("Mount..."),
-            onSelected: () => showMountDialog(context),
-          ),
-        ],
-      ),
-      PlatformMenuItemGroup(
-        members: <PlatformMenuItem>[
-          _browserMenuCommand(
-            context,
-            ref,
-            ShortcutAction.commandPalette,
-            context.commanderTr("Command Palette..."),
-          ),
-          PlatformMenuItem(
-            label: context.commanderTr("Keyboard Shortcuts..."),
-            onSelected: () => showKeyboardShortcutsDialog(context),
-          ),
-        ],
-      ),
-    ];
-
     return <PlatformMenuItem>[
       appMenu,
-      PlatformMenu(
-        label: context.tr('File'),
-        menus: editor != null
-            ? _editorFileMenus(context, editor)
-            : browserFileMenus,
-      ),
-      if (editor != null)
+      if (editor == null) ...[
+        ...configuredPlatformMenus(
+          ref.read(browserMenuStoreProvider).layout,
+          _browserMenuBindings(context, ref),
+          BrowserMenuStrings(context),
+        ),
+      ] else ...[
+        PlatformMenu(
+          label: context.tr('File'),
+          menus: _editorFileMenus(context, editor),
+        ),
         PlatformMenu(
           label: context.tr('Edit'),
           menus: _editorEditMenus(context, editor),
-        )
-      else
-        PlatformMenu(
-          label: context.commanderTr("Edit"),
-          menus: browserEditMenus,
         ),
-      PlatformMenu(label: context.tr('View'), menus: viewMenus),
-      if (editor == null)
-        PlatformMenu(label: context.commanderTr("Go"), menus: browserGoMenus),
-      if (editor != null) ...<PlatformMenuItem>[
+        PlatformMenu(label: context.tr('View'), menus: viewMenus),
         PlatformMenu(
           label: context.tr('Insert'),
           menus: _editorInsertMenus(context, editor),
@@ -1119,14 +1080,14 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           label: context.tr('Tools'),
           menus: _editorToolsMenus(context, editor),
         ),
-      ] else
-        PlatformMenu(
-          label: context.commanderTr("Tools"),
-          menus: browserToolsMenus,
-        ),
+      ],
       PlatformMenu(
         label: context.tr('Help'),
         menus: <PlatformMenuItem>[
+          PlatformMenuItem(
+            label: HelpGuideStrings(context).text('title'),
+            onSelected: () => showUserGuide(context),
+          ),
           PlatformMenuItem(
             label: context.commanderTr("Keyboard Shortcuts..."),
             onSelected: () => showKeyboardShortcutsDialog(context),
@@ -1931,6 +1892,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         tooltip: context.commanderTr("{0} (Ctrl+U)", [l.swapPanels]),
         onPressed: () => _swapPanels(),
       ),
+      const SynchronizedBrowsingButton(),
       // Browsers use an explicit WebSocket gateway for SSH.
       Consumer(
         builder: (ctx, cref, _) {
@@ -2022,7 +1984,6 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         tooltip: context.commanderTr("Settings"),
         onPressed: () => showSettingsDialog(context),
       ),
-      _buildOverflowMenu(context, auth),
     ];
 
     return [
@@ -2032,6 +1993,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           child: Row(mainAxisSize: MainAxisSize.min, children: toolbarButtons),
         ),
       ),
+      // Keep the fallback menu reachable even when the toolbar is scrolled.
+      _buildOverflowMenu(context, auth),
       const SizedBox(width: 4),
       if (!auth.isConnected)
         TextButton.icon(
@@ -2043,6 +2006,174 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         _buildUserMenu(context, auth),
       const SizedBox(width: 8),
     ];
+  }
+
+  void _runOverflowAction(BuildContext context, String value) {
+    switch (value) {
+      case 'user_guide':
+        showUserGuide(context);
+      case 'menu_layout':
+        showBrowserMenuEditor(context, ref, _browserMenuBindings(context, ref));
+      case 'synchronized_browsing':
+        toggleSynchronizedBrowsing(ref);
+      case 'workspaces':
+        showWorkspaceDialog(context, ref, ref.read(activePanelProvider));
+      case 'columns':
+        showPanelViewDialog(context, ref, ref.read(activePanelProvider));
+      case 'commands':
+        showCustomCommandsDialog(context, ref, ref.read(activePanelProvider));
+      case 'command_entry':
+        if (commandEntryAvailable(ref)) showCommandEntryDialog(context, ref);
+      case 'gather_selection':
+        addPanelSelectionToGatheringStack(
+          context,
+          ref,
+          ref.read(activePanelProvider),
+        );
+      case 'gathering_stack':
+        showGatheringStackDialog(
+          context,
+          ref,
+          destinationSide: ref.read(activePanelProvider),
+        );
+      case 'extensions':
+        showExtensionsDialog(context, ref, ref.read(activePanelProvider));
+      case 'multi_rename':
+        showMultiRenameFromSelection(context, ref);
+      case 'change_attributes':
+        showFileAttributesFromSelection(context, ref);
+      case 'load_selection':
+        showFileListDialog(
+          context,
+          ref,
+          ref.read(activePanelProvider),
+          selectionMode: true,
+        );
+      case 'same_extension':
+        _activePanel(ref).selectSameExtension();
+      case 'same_name':
+        _activePanel(ref).selectSameName();
+      case 'same_parent':
+        _activePanel(ref).selectSameParent();
+      case 'pattern_selection':
+        showPatternSelectionDialog(context, ref, ref.read(activePanelProvider));
+      case 'import_file_list':
+        showFileListDialog(
+          context,
+          ref,
+          ref.read(activePanelProvider),
+          importMode: true,
+        );
+      case 'export_file_list':
+        showFileListDialog(context, ref, ref.read(activePanelProvider));
+      case 'trash_history':
+        showTrashHistoryDialog(context, ref, ref.read(activePanelProvider));
+      case 'transfer_history':
+        showTransferHistoryDialog(context, ref);
+      case 'integrity_recovery':
+        showIntegrityRecoveryDialog(context, ref);
+      case 'checksums':
+        showChecksumToolsDialog(
+          context,
+          ref,
+          ref.read(activePanelProvider),
+          _integritySelection(ref),
+        );
+      case 'split_file':
+        final files = _integritySelection(ref);
+        if (files.length == 1) {
+          showSplitFileDialog(
+            context,
+            ref,
+            ref.read(activePanelProvider),
+            files.single,
+          );
+        }
+      case 'combine_parts':
+        showCombinePartsDialog(
+          context,
+          ref,
+          ref.read(activePanelProvider),
+          _integritySelection(ref),
+        );
+      case 'rename_history':
+        showRenameHistoryDialog(context, ref, ref.read(activePanelProvider));
+      case 'ebook_library':
+        showEbookLibrary(context, ref, ref.read(activePanelProvider));
+      case 'collections':
+        showFileCollectionsDialog(context, ref, ref.read(activePanelProvider));
+      case 'compare_folders':
+        showDirectoryComparisonDialog(context, ref);
+      case 'copy_options':
+        showCopyDialogFromSelection(context, ref);
+      case 'move_options':
+        showMoveDialogFromSelection(context, ref);
+      case 'terminal':
+        setTerminalVisible(ref, !ref.read(showTerminalProvider));
+      case 'multi_cloud':
+        showMultiCloudDialog(context);
+      case 'sync':
+        showSyncDialog(context);
+      case 'mount':
+        showMountDialog(context);
+      case 'duplicates':
+        showDuplicateFinderDialog(context, ref);
+      case 'storage_analyzer':
+        showStorageAnalyzerDialog(context, ref);
+      case 'audit':
+        showAuditLogDialog(context);
+      case 'syslog':
+        showLogViewerDialog(context);
+      case 'settings':
+        showSettingsDialog(context);
+      case 'dual_panel':
+        _log.debug('dual_panel toggled → ${!ref.read(showDualPanelProvider)}');
+        ref.read(showDualPanelProvider.notifier).state = !ref.read(
+          showDualPanelProvider,
+        );
+      case 'tree':
+        _log.debug('tree toggled → ${!ref.read(showTreeSidebarProvider)}');
+        ref.read(showTreeSidebarProvider.notifier).state = !ref.read(
+          showTreeSidebarProvider,
+        );
+      case 'gallery':
+        setFileView(ref, ref.read(activePanelProvider), ViewMode.gallery);
+      case 'tiles':
+        setFileView(ref, ref.read(activePanelProvider), ViewMode.tiles);
+      case 'grid_toggle':
+        final ap = ref.read(activePanelProvider);
+        final current = ap == PanelSide.local
+            ? ref.read(localViewModeProvider)
+            : ref.read(remoteViewModeProvider);
+        setFileView(
+          ref,
+          ap,
+          current == ViewMode.grid ? ViewMode.list : ViewMode.grid,
+        );
+      case 'preview':
+        ref.read(showPreviewProvider.notifier).state = !ref.read(
+          showPreviewProvider,
+        );
+      case 'density':
+        final ap = ref.read(activePanelProvider);
+        final mode = ref.read(panelViewModeProvider(ap));
+        ref
+            .read(panelViewModeProvider(ap).notifier)
+            .setMode(
+              mode == PanelViewMode.full
+                  ? PanelViewMode.brief
+                  : PanelViewMode.full,
+            );
+      case 'keys':
+        showKeyManagementDialog(context, ref);
+      case 'shortcuts':
+        showKeyboardShortcutsDialog(context);
+      case 'about':
+        showDialog(
+          context: context,
+          builder: (context) => const AboutAppDialog(),
+        );
+    }
   }
 
   /// Overflow menu for narrow screens — groups secondary actions into a
@@ -2058,172 +2189,40 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     return PopupMenuButton<String>(
       icon: const Icon(Icons.more_vert, size: 20),
       tooltip: l.moreActions,
-      onSelected: (value) {
-        switch (value) {
-          case 'workspaces':
-            showWorkspaceDialog(context, ref, ref.read(activePanelProvider));
-          case 'columns':
-            showPanelViewDialog(context, ref, ref.read(activePanelProvider));
-          case 'commands':
-            showCustomCommandsDialog(
-              context,
-              ref,
-              ref.read(activePanelProvider),
-            );
-          case 'extensions':
-            showExtensionsDialog(context, ref, ref.read(activePanelProvider));
-          case 'multi_rename':
-            showMultiRenameFromSelection(context, ref);
-          case 'change_attributes':
-            showFileAttributesFromSelection(context, ref);
-          case 'load_selection':
-            showFileListDialog(
-              context,
-              ref,
-              ref.read(activePanelProvider),
-              selectionMode: true,
-            );
-          case 'same_extension':
-            _activePanel(ref).selectSameExtension();
-          case 'same_name':
-            _activePanel(ref).selectSameName();
-          case 'same_parent':
-            _activePanel(ref).selectSameParent();
-          case 'pattern_selection':
-            showPatternSelectionDialog(
-              context,
-              ref,
-              ref.read(activePanelProvider),
-            );
-          case 'import_file_list':
-            showFileListDialog(
-              context,
-              ref,
-              ref.read(activePanelProvider),
-              importMode: true,
-            );
-          case 'export_file_list':
-            showFileListDialog(context, ref, ref.read(activePanelProvider));
-          case 'trash_history':
-            showTrashHistoryDialog(context, ref, ref.read(activePanelProvider));
-          case 'transfer_history':
-            showTransferHistoryDialog(context, ref);
-          case 'integrity_recovery':
-            showIntegrityRecoveryDialog(context, ref);
-          case 'checksums':
-            showChecksumToolsDialog(
-              context,
-              ref,
-              ref.read(activePanelProvider),
-              _integritySelection(ref),
-            );
-          case 'split_file':
-            final files = _integritySelection(ref);
-            if (files.length == 1) {
-              showSplitFileDialog(
-                context,
-                ref,
-                ref.read(activePanelProvider),
-                files.single,
-              );
-            }
-          case 'combine_parts':
-            showCombinePartsDialog(
-              context,
-              ref,
-              ref.read(activePanelProvider),
-              _integritySelection(ref),
-            );
-          case 'rename_history':
-            showRenameHistoryDialog(
-              context,
-              ref,
-              ref.read(activePanelProvider),
-            );
-          case 'ebook_library':
-            showEbookLibrary(context, ref, ref.read(activePanelProvider));
-          case 'collections':
-            showFileCollectionsDialog(
-              context,
-              ref,
-              ref.read(activePanelProvider),
-            );
-          case 'compare_folders':
-            showDirectoryComparisonDialog(context, ref);
-          case 'copy_options':
-            showCopyDialogFromSelection(context, ref);
-          case 'move_options':
-            showMoveDialogFromSelection(context, ref);
-          case 'terminal':
-            setTerminalVisible(ref, !ref.read(showTerminalProvider));
-          case 'multi_cloud':
-            showMultiCloudDialog(context);
-          case 'sync':
-            showSyncDialog(context);
-          case 'mount':
-            showMountDialog(context);
-          case 'duplicates':
-            showDuplicateFinderDialog(context, ref);
-          case 'storage_analyzer':
-            showStorageAnalyzerDialog(context, ref);
-          case 'audit':
-            showAuditLogDialog(context);
-          case 'syslog':
-            showLogViewerDialog(context);
-          case 'settings':
-            showSettingsDialog(context);
-          case 'dual_panel':
-            _log.debug(
-              'dual_panel toggled → ${!ref.read(showDualPanelProvider)}',
-            );
-            ref.read(showDualPanelProvider.notifier).state = !ref.read(
-              showDualPanelProvider,
-            );
-          case 'tree':
-            _log.debug('tree toggled → ${!ref.read(showTreeSidebarProvider)}');
-            ref.read(showTreeSidebarProvider.notifier).state = !ref.read(
-              showTreeSidebarProvider,
-            );
-          case 'gallery':
-            setFileView(ref, ref.read(activePanelProvider), ViewMode.gallery);
-          case 'tiles':
-            setFileView(ref, ref.read(activePanelProvider), ViewMode.tiles);
-          case 'grid_toggle':
-            final ap = ref.read(activePanelProvider);
-            final current = ap == PanelSide.local
-                ? ref.read(localViewModeProvider)
-                : ref.read(remoteViewModeProvider);
-            setFileView(
-              ref,
-              ap,
-              current == ViewMode.grid ? ViewMode.list : ViewMode.grid,
-            );
-          case 'preview':
-            ref.read(showPreviewProvider.notifier).state = !ref.read(
-              showPreviewProvider,
-            );
-          case 'density':
-            final ap = ref.read(activePanelProvider);
-            final mode = ref.read(panelViewModeProvider(ap));
-            ref
-                .read(panelViewModeProvider(ap).notifier)
-                .setMode(
-                  mode == PanelViewMode.full
-                      ? PanelViewMode.brief
-                      : PanelViewMode.full,
-                );
-          case 'keys':
-            showKeyManagementDialog(context, ref);
-          case 'shortcuts':
-            showKeyboardShortcutsDialog(context);
-          case 'about':
-            showDialog(
-              context: context,
-              builder: (context) => const AboutAppDialog(),
-            );
-        }
-      },
+      onSelected: (value) => _runOverflowAction(context, value),
       itemBuilder: (context) => <PopupMenuEntry<String>>[
+        PopupMenuItem(
+          value: 'gather_selection',
+          enabled:
+              _activePanel(ref).selection.isNotEmpty &&
+              !_activePanel(ref).isInArchive,
+          child: _overflowItem(
+            Icons.playlist_add,
+            GatheringStackStrings(context).text('gather'),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'gathering_stack',
+          child: _overflowItem(
+            Icons.layers_outlined,
+            GatheringStackStrings(context).text('title'),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'command_entry',
+          enabled: commandEntryAvailable(ref),
+          child: _overflowItem(
+            Icons.terminal,
+            CommandEntryStrings(context).text('title'),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'menu_layout',
+          child: _overflowItem(
+            Icons.menu,
+            BrowserMenuStrings(context).text('title'),
+          ),
+        ),
         PopupMenuItem(
           value: 'multi_rename',
           child: _overflowItem(
@@ -2349,6 +2348,15 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           child: _overflowItem(
             Icons.playlist_play,
             context.commanderTr("Export file list"),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'synchronized_browsing',
+          child: _overflowItem(
+            Icons.link,
+            SynchronizedBrowsingStrings(context).text(
+              ref.read(synchronizedBrowsingProvider).enabled ? 'stop' : 'start',
+            ),
           ),
         ),
         PopupMenuItem(
@@ -2538,6 +2546,13 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         PopupMenuItem(
           value: 'shortcuts',
           child: _overflowItem(Icons.keyboard, l.keyboardShortcuts),
+        ),
+        PopupMenuItem(
+          value: 'user_guide',
+          child: _overflowItem(
+            Icons.help_outline,
+            HelpGuideStrings(context).text('title'),
+          ),
         ),
         PopupMenuItem(
           value: 'about',

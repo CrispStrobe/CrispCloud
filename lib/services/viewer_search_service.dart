@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'file_bytes_loader.dart';
 import 'internal_viewer_service.dart';
 import 'viewer_text_decoder.dart';
+import 'legacy_text_encoding.dart';
 
 class ViewerSearchCancelled implements Exception {
   const ViewerSearchCancelled();
@@ -278,6 +279,9 @@ Uint8List encodeViewerSearchText(String text, String encoding) {
       return Uint8List.fromList(utf8.encode(text));
     case 'latin1':
       return Uint8List.fromList(latin1.encode(text));
+    case 'cp437':
+    case 'windows1252':
+      return encodeLegacyText(text, encoding);
     case 'utf16le':
     case 'utf16be':
       final data = ByteData(text.codeUnits.length * 2);

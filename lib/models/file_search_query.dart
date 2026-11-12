@@ -64,6 +64,8 @@ class FileSearchQuery {
     'utf32le',
     'utf32be',
     'latin1',
+    'cp437',
+    'windows1252',
   };
 
   FileSelectionPattern get nameMatcher => FileSelectionPattern(

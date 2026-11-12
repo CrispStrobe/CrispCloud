@@ -11,7 +11,7 @@ import 'dart:typed_data';
 import 'package:archive/archive.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quds_office_editor/quds_office_editor.dart';
-import 'package:quds_office_engine/quds_office_engine.dart';
+import 'package:quds_office_engine/quds_office_engine.dart' hide XmlDocument, XmlElement, XmlNode, XmlText, XmlAttribute;
 import 'package:xml/xml.dart' as xml;
 
 Map<String, Uint8List> _parts(Uint8List bytes) {

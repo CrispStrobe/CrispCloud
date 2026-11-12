@@ -63,7 +63,8 @@ def verify_sheet(parts,edited):
     ch=E.fromstring(parts[chart])
     values=[float(v.text) for v in ch.findall('.//'+C+'val/'+C+'numRef/'+C+'numCache/'+C+'pt/'+C+'v')]
     assert values==[7 if edited else 2,5], f'Chart values: {values}'
-    assert ch.find('.//'+C+'val/'+C+'numRef/'+C+'f').text=="'Data'!B2:B3"
+    assert ch.find('.//'+C+'val/'+C+'numRef/'+C+'f').text == "'Data'!$B$2:$B$3", 'Native absolute chart reference changed'
+    assert ch.find('.//'+C+'ser/'+C+'tx/'+C+'strRef/'+C+'f').text == "'Data'!B1", 'Native series-title reference lost'
     pivot=target(parts,'xl/worksheets/sheet2.xml','pivotTable')
     assert E.fromstring(parts[pivot]).get('name')=='NativePivot'
     cache=target(parts,pivot,'pivotCacheDefinition')

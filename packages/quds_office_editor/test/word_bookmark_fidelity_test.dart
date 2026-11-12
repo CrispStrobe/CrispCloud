@@ -16,7 +16,7 @@ List<(String, bool, int, int)> _markers(WmlDocument document) {
     var offset = 0;
     for (final inline in paragraph.inlines) {
       if (inline is WmlRun) offset += inline.text.length;
-      if (inline is WmlBookmarkMarker) {
+      if (inline is WmlBookmarkBoundary) {
         out.add((inline.id, inline.isStart, index, offset));
       }
     }
@@ -74,7 +74,7 @@ void main() {
       for (var cycle = 1; cycle <= 3; cycle++) {
         final bytes = await editor.saveBytesAsync();
         final output = File(
-          'build/fidelity-bookmarks/editor-bookmarks-$cycle.docx',
+          'build/fidelity-bookmarks-legacy/editor-bookmarks-$cycle.docx',
         );
         output.parent.createSync(recursive: true);
         output.writeAsBytesSync(bytes);
@@ -152,11 +152,12 @@ void main() {
       await source.copyToClipboard();
       target.caret.logicalIndex = 6;
       target.caret.collapseSelection();
-      await target.pasteFromClipboard();
-      expect(() => WordSerializer().write(target.document), throwsStateError);
-      target.undo();
+      await expectLater(target.pasteFromClipboard(), throwsStateError);
       expect(target.document.paragraphs.single.text, 'Target');
       expect(_markers(target.document), isEmpty);
+      expect(target.canUndo, isFalse);
+      expect(target.isDirty, isFalse);
+      expect(() => WordSerializer().write(target.document), returnsNormally);
     },
   );
 }

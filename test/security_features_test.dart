@@ -55,7 +55,7 @@ void main() {
         port: 1080,
       );
       expect(config.isEnabled, true);
-      expect(config.toProxyString(), 'PROXY 127.0.0.1:1080');
+      expect(config.toProxyString, throwsUnsupportedError);
     });
 
     test('not enabled without host', () {
@@ -97,8 +97,8 @@ void main() {
     });
 
     test('fromJson handles unknown type', () {
-      final config = ProxyConfig.fromJson({'type': 'bogus', 'host': 'x', 'port': 1});
-      expect(config.type, ProxyType.none);
+      expect(() => ProxyConfig.fromJson({'type': 'bogus', 'host': 'x', 'port': 1}),
+          throwsFormatException);
     });
 
     test('disabled constant', () {

@@ -1,25 +1,16 @@
 import 'dart:collection';
 
+import '../../opc/package_part.dart';
+import '../../opc/relationships.dart';
+import '../../xml/namespaces.dart';
+import '../../xml/xml_node.dart';
 import '../properties/wml_properties.dart';
 import 'wml_clone.dart';
 import 'wml_document.dart';
 import 'wml_run_edit.dart';
-
-/// An automatic reference mark at its actual position inside a note story.
-/// It occupies no text offset; its native run properties remain immutable.
-class WmlNoteBodyMarker extends WmlZeroWidthInline {
-  WmlNoteBodyMarker({required this.endnote, this.propertiesXml = ''});
-
-  final bool endnote;
-  final String propertiesXml;
-
-  @override
-  bool get isStart => true;
-
-  @override
-  WmlNoteBodyMarker copy() =>
-      WmlNoteBodyMarker(endnote: endnote, propertiesXml: propertiesXml);
-}
+import 'word_bookmarks.dart';
+import 'word_content_controls.dart';
+import 'word_tree.dart';
 
 /// Footnote or endnote body.
 class WmlNote {
@@ -27,9 +18,9 @@ class WmlNote {
   WmlNote({
     required this.id,
     required this.endnote,
+    this.addReference = true,
     this.addReferenceSpace = true,
     this.referencePropertiesXml,
-    this.preserveBodyMarkers = false,
     List<WmlParagraph>? paragraphs,
     List<WmlBlock>? blocks,
   }) : blocks =
@@ -47,18 +38,17 @@ class WmlNote {
   /// True for an endnote, false for a footnote.
   final bool endnote;
 
+  /// Newly authored notes get a conventional leading marker when their story
+  /// has no [WmlNoteMarker]. Imported notes preserve marker absence and order.
+  final bool addReference;
+
   /// New note bodies get one separator after the automatic reference mark.
   /// Imported stories keep their exact source whitespace instead.
   final bool addReferenceSpace;
 
-  /// Generated-mark properties and a compatibility view of the first imported
-  /// mark. Empty means unformatted; null gives new notes superscript styling.
-  /// Explicit imported marks retain their own [WmlNoteBodyMarker.propertiesXml].
+  /// Original automatic note-mark properties. Empty means an unformatted
+  /// imported mark; null gives new notes the standard superscript style.
   String? referencePropertiesXml;
-
-  /// Imported stories retain explicit [WmlNoteBodyMarker] positions, including
-  /// a deliberate absence of marks. New notes use the conventional prefix.
-  final bool preserveBodyMarkers;
 
   /// Ordered note story, including paragraphs, tables, pictures and equations.
   final List<WmlBlock> blocks;
@@ -75,35 +65,34 @@ class WmlNote {
   Iterable<WmlParagraph> get allParagraphs =>
       blocks.expand(WmlClone.paragraphsOf);
 
+  bool get hasReferenceMarkers => allParagraphs.any(
+    (paragraph) => paragraph.inlines.any((inline) => inline is WmlNoteMarker),
+  );
+
   Iterable<WmlVisual> get visuals =>
       WmlDocument(sections: <WmlSection>[WmlSection(blocks: blocks)]).visuals;
 
   /// text API.
   String get text => WmlClone.plainTextOf(blocks).trim();
 
-  /// Replaces the complete body. An existing native marker becomes the leading
-  /// mark of the replacement; an unmarked imported note remains unmarked.
-  /// This intentionally removes the old rich blocks, formatting and ranges.
-  /// Direct paragraph/range edits instead retain their actual marker positions.
+  /// text API.
   set text(String value) {
-    WmlNoteBodyMarker? retainedMarker;
-    if (preserveBodyMarkers) {
-      findMarker:
-      for (final WmlParagraph paragraph in allParagraphs) {
-        for (final WmlInline inline in paragraph.inlines) {
-          if (inline is WmlNoteBodyMarker) {
-            retainedMarker = inline.copy();
-            break findMarker;
-          }
-        }
-      }
-    }
+    // This legacy setter deliberately replaces the rich story, but its
+    // automatic note number is not ordinary body text. Retain one existing
+    // marker (and its own formatting); imported absence remains absence.
+    final marker = allParagraphs
+        .expand((paragraph) => paragraph.inlines.whereType<WmlNoteMarker>())
+        .firstOrNull;
     blocks
       ..clear()
       ..add(
         WmlParagraph(
           inlines: <WmlInline>[
-            ?retainedMarker,
+            if (marker != null)
+              WmlNoteMarker(
+                endnote: marker.endnote,
+                properties: marker.properties.copy(),
+              ),
             WmlRun(text: value),
           ],
         ),
@@ -173,6 +162,13 @@ abstract final class WordNotes {
         id = note.id + 1;
       }
     }
+    // Special native definitions remain in the owning package part rather than
+    // the editable bucket. Their positive IDs share the same namespace as
+    // normal notes, so reserve them before changing either the model or anchor.
+    final reservedIds = _retainedDefinitionIds(document, endnote: endnote);
+    while (reservedIds.contains(id)) {
+      id++;
+    }
     final WmlNote note = WmlNote(id: id, endnote: endnote)..text = text;
     bucket.add(note);
     paragraph.properties.noteId = id;
@@ -189,6 +185,63 @@ abstract final class WordNotes {
       ),
     );
     return note;
+  }
+
+  static Set<int> _retainedDefinitionIds(
+    WmlDocument document, {
+    required bool endnote,
+  }) {
+    final package = document.package;
+    if (package == null) return const <int>{};
+    final office = package.packageRelationships.firstByType(
+      RelationshipTypes.officeDocument,
+    );
+    if (office?.targetMode == RelationshipTargetMode.external) {
+      throw const FormatException(
+        'The Word main part must be inside its package',
+      );
+    }
+    final mainUri = office == null
+        ? '/word/document.xml'
+        : package.packageRelationships.resolve(office);
+    final kind = endnote ? 'endnote' : 'footnote';
+    final relationships = package.relationshipsFor(mainUri);
+    final relationship = relationships.firstByType(
+      endnote ? RelationshipTypes.endnotes : RelationshipTypes.footnotes,
+    );
+    if (relationship?.targetMode == RelationshipTargetMode.external) {
+      throw FormatException(
+        'The Word ${kind}s part must be inside its package',
+      );
+    }
+    // Match the serializer's legacy fallback when a native part has no owner.
+    final uri = relationship == null
+        ? OpcUris.resolve(mainUri, '${kind}s.xml')
+        : relationships.resolve(relationship);
+    final part = package.getPart(uri);
+    if (part == null) return const <int>{};
+    final root = XmlDocument.parse(part.readText()).root;
+    final reserved = <int>{};
+    if (root == null) return reserved;
+    for (final definition in root.childrenNamed(
+      kind,
+      namespaceUri: OfficeNamespaces.w,
+    )) {
+      if (!const {
+        'separator',
+        'continuationSeparator',
+        'continuationNotice',
+      }.contains(
+        definition.getAttribute('type', namespaceUri: OfficeNamespaces.w),
+      )) {
+        continue;
+      }
+      final id = int.tryParse(
+        definition.getAttribute('id', namespaceUri: OfficeNamespaces.w) ?? '',
+      );
+      if (id != null) reserved.add(id);
+    }
+    return reserved;
   }
 
   /// byId API.
@@ -228,17 +281,26 @@ abstract final class WordNotes {
     return true;
   }
 
-  /// The editable text of [note]: one line per top-level paragraph.
+  /// Editable note-pane paragraphs in their original live containers.
+  ///
+  /// Native block content controls are transparent. Table and frame content
+  /// remains outside this simple text pane, as it was before controls were
+  /// represented in the model.
+  static List<WmlParagraph> editableParagraphs(WmlNote note) =>
+      WordTree.visibleBlocks(note.blocks).whereType<WmlParagraph>().toList();
+
+  /// The editable text of [note]: one line per paragraph in its main flow.
   ///
   /// The space Word places after the automatic note number is not part of
   /// the editable text. Tables, pictures and equations inside the note are
   /// not included, and [editText] never changes them.
   static String editableText(WmlNote note) {
-    final List<WmlParagraph> paragraphs = note.paragraphs;
-    final bool hideSeparator = _leadingSeparator(note);
+    final List<WmlParagraph> paragraphs = editableParagraphs(note);
     return <String>[
       for (var i = 0; i < paragraphs.length; i++)
-        i == 0 && hideSeparator && paragraphs[i].text.startsWith(' ')
+        i == 0 &&
+                _hasLeadingReference(note, paragraphs[i]) &&
+                paragraphs[i].text.startsWith(' ')
             ? paragraphs[i].text.substring(1)
             : paragraphs[i].text,
     ].join('\n');
@@ -251,35 +313,77 @@ abstract final class WordNotes {
   /// anchors survive; inserted characters take the formatting of the text
   /// they join. Paragraph properties (such as the FootnoteText style) are
   /// kept, extra lines become paragraphs styled like the last one, and
-  /// removed lines delete trailing paragraphs. Non-paragraph blocks are kept.
+  /// removed lines delete trailing paragraphs. New paragraphs do not inherit
+  /// bookmark identity. Non-paragraph blocks are kept; removal that would
+  /// orphan one bookmark endpoint is rejected before any live edit.
   static void editText(WmlNote note, String text) {
-    final String oldEditable = editableText(note);
+    final oldEditable = editableText(note);
     if (oldEditable == text) return;
     final List<String> lines = text.split('\n');
-    List<WmlParagraph> paragraphs = note.paragraphs.toList();
+    List<WmlParagraph> paragraphs = editableParagraphs(note);
     if (lines.length != paragraphs.length && paragraphs.isNotEmpty) {
       if (_editParagraphBoundary(note, oldEditable, text)) return;
-      if (paragraphs.any(
-        (paragraph) => paragraph.inlines.any(
-          (inline) =>
-              inline is WmlZeroWidthInline && inline is! WmlNoteBodyMarker,
-        ),
-      )) {
+      if (paragraphs.length == 1 &&
+          paragraphs.single.inlines.any(
+            (inline) => inline is WmlBookmarkBoundary,
+          )) {
         throw UnsupportedError(
           'Complex paragraph replacement inside native note ranges requires explicit paragraph editing',
         );
       }
     }
-    final bool hideSeparator = _leadingSeparator(note);
-    if (paragraphs.isEmpty) {
-      note.blocks.insert(0, WmlParagraph(inlines: <WmlInline>[WmlRun()]));
-      paragraphs = note.paragraphs.toList();
+    if (lines.length != paragraphs.length &&
+        paragraphs.any(WordContentControls.hasInlineControls)) {
+      throw UnsupportedError(
+        'Changing note line count with inline content controls is not supported. '
+        'Edit each existing control paragraph separately.',
+      );
+    }
+    if (lines.length < paragraphs.length) {
+      final removed = Set<WmlParagraph>.identity()
+        ..addAll(paragraphs.skip(lines.length));
+      final story = WmlDocument(
+        sections: <WmlSection>[],
+        footnotes: note.endnote ? null : <WmlNote>[note],
+        endnotes: note.endnote ? <WmlNote>[note] : null,
+      );
+      for (final range in WordBookmarks.ranges(story)) {
+        if (removed.contains(range.startParagraph) !=
+            removed.contains(range.endParagraph)) {
+          throw UnsupportedError(
+            'Removing note paragraphs would orphan bookmark "${range.name}". '
+            'Keep both endpoint paragraphs or remove the complete range.',
+          );
+        }
+      }
     }
     final int shared = lines.length < paragraphs.length
         ? lines.length
         : paragraphs.length;
+    // A later guarded range must not leave earlier paragraphs partially
+    // updated. Preflight the exact edit on copies before touching live owners.
     for (var i = 0; i < shared; i++) {
-      _applyLine(paragraphs[i], lines[i], first: i == 0 && hideSeparator);
+      _applyLine(
+        WmlClone.paragraph(paragraphs[i]),
+        lines[i],
+        preserveReferenceSpace:
+            i == 0 && _hasLeadingReference(note, paragraphs[i]),
+      );
+    }
+    if (paragraphs.isEmpty) {
+      final parent = _emptyEditableHost(note.blocks);
+      final paragraph = WmlParagraph(inlines: <WmlInline>[WmlRun()]);
+      parent.insert(0, paragraph);
+      paragraphs = <WmlParagraph>[paragraph];
+      _applyLine(paragraph, lines.first, preserveReferenceSpace: false);
+    }
+    for (var i = 0; i < shared; i++) {
+      _applyLine(
+        paragraphs[i],
+        lines[i],
+        preserveReferenceSpace:
+            i == 0 && _hasLeadingReference(note, paragraphs[i]),
+      );
     }
     if (lines.length > paragraphs.length) {
       final WmlParagraph template = paragraphs.last;
@@ -287,13 +391,15 @@ abstract final class WordNotes {
         template,
         template.text.length - 1,
       ).copy();
-      var at = note.blocks.indexOf(template) + 1;
+      final location = WordTree.locateIn(note.blocks, template)!;
+      var at = location.index + 1;
       for (var i = paragraphs.length; i < lines.length; i++) {
-        note.blocks.insert(
+        location.parent.insert(
           at++,
           WmlParagraph(
             properties: template.properties.copy()
               ..bookmarkName = null
+              ..sourceBookmarkName = null
               ..listRestart = null,
             inlines: <WmlInline>[
               WmlRun(text: lines[i], properties: runProps.copy()),
@@ -303,19 +409,19 @@ abstract final class WordNotes {
       }
     } else {
       for (var i = paragraphs.length - 1; i >= lines.length; i--) {
-        note.blocks.remove(paragraphs[i]);
+        final location = WordTree.locateIn(note.blocks, paragraphs[i])!;
+        location.parent.removeAt(location.index);
       }
     }
   }
 
-  static bool _leadingSeparator(WmlNote note) {
-    if (!note.preserveBodyMarkers) return true;
-    if (note.paragraphs.isEmpty) return false;
-    for (final WmlInline inline in note.paragraphs.first.inlines) {
-      if (inline is WmlNoteBodyMarker) return true;
-      if (inline is WmlRun && inline.text.isNotEmpty) return false;
+  static List<WmlBlock> _emptyEditableHost(List<WmlBlock> blocks) {
+    for (final block in blocks) {
+      if (block is WmlContentControlBlock) {
+        return _emptyEditableHost(block.blocks);
+      }
     }
-    return false;
+    return blocks;
   }
 
   /// Enter and backspace move actual inline tokens between adjacent paragraphs
@@ -327,10 +433,12 @@ abstract final class WordNotes {
     final bool joining =
         old.substring(change.start, change.end) == '\n' &&
         change.inserted.isEmpty;
-    final List<WmlParagraph> paragraphs = note.paragraphs.toList();
+    final List<WmlParagraph> paragraphs = editableParagraphs(note);
     final List<String> display = <String>[
       for (var i = 0; i < paragraphs.length; i++)
-        i == 0 && _leadingSeparator(note) && paragraphs[i].text.startsWith(' ')
+        i == 0 &&
+                _hasLeadingReference(note, paragraphs.first) &&
+                paragraphs[i].text.startsWith(' ')
             ? paragraphs[i].text.substring(1)
             : paragraphs[i].text,
     ];
@@ -347,7 +455,7 @@ abstract final class WordNotes {
     final bool withinParagraph =
         offset + removed <= display[paragraphIndex].length;
     if (paragraphIndex == 0 &&
-        _leadingSeparator(note) &&
+        _hasLeadingReference(note, paragraphs.first) &&
         paragraph.text.startsWith(' ')) {
       offset++;
     }
@@ -370,14 +478,19 @@ abstract final class WordNotes {
         return false;
       }
       final WmlParagraph next = paragraphs[paragraphIndex + 1];
-      if (note.blocks.indexOf(next) != note.blocks.indexOf(paragraph) + 1) {
+      final location = WordTree.locateIn(note.blocks, paragraph)!;
+      final nextLocation = WordTree.locateIn(note.blocks, next)!;
+      if (!identical(location.parent, nextLocation.parent) ||
+          nextLocation.index != location.index + 1 ||
+          WordContentControls.hasStructuralControls(paragraph) ||
+          WordContentControls.hasStructuralControls(next)) {
         throw UnsupportedError(
           'Cannot join note paragraphs across preserved blocks',
         );
       }
       paragraph.inlines.addAll(WmlClone.inlines(next.inlines));
       WmlRunEdit.coalesce(paragraph);
-      note.blocks.remove(next);
+      location.parent.removeAt(nextLocation.index);
       return true;
     }
     final WmlParagraph head = WmlClone.paragraph(paragraph);
@@ -390,6 +503,7 @@ abstract final class WordNotes {
       final WmlParagraph added = WmlParagraph(
         properties: paragraph.properties.copy()
           ..bookmarkName = null
+          ..sourceBookmarkName = null
           ..listRestart = null,
         inlines: i == inserted.length - 1 && tail.isNotEmpty
             ? tail
@@ -401,7 +515,8 @@ abstract final class WordNotes {
     paragraph.inlines
       ..clear()
       ..addAll(head.inlines);
-    note.blocks.insertAll(note.blocks.indexOf(paragraph) + 1, additions);
+    final location = WordTree.locateIn(note.blocks, paragraph)!;
+    location.parent.insertAll(location.index + 1, additions);
     return true;
   }
 
@@ -445,10 +560,10 @@ abstract final class WordNotes {
   static void _applyLine(
     WmlParagraph paragraph,
     String line, {
-    required bool first,
+    required bool preserveReferenceSpace,
   }) {
     final String old = paragraph.text;
-    final String target = first && old.startsWith(' ') && !line.startsWith(' ')
+    final String target = preserveReferenceSpace && old.startsWith(' ')
         ? ' $line'
         : line;
     if (old == target) {
@@ -461,6 +576,25 @@ abstract final class WordNotes {
       change.end,
       change.inserted,
     );
+  }
+
+  static bool _hasLeadingReference(WmlNote note, WmlParagraph paragraph) {
+    if (note.addReference &&
+        !note.hasReferenceMarkers &&
+        note.blocks.isNotEmpty &&
+        identical(note.blocks.first, paragraph)) {
+      return true;
+    }
+    for (final inline in paragraph.inlines) {
+      if (inline is WmlNoteMarker) return true;
+      if (inline is WmlContentControlBoundary ||
+          inline is WmlBookmarkBoundary) {
+        continue;
+      }
+      if (inline is WmlRun && inline.text.isEmpty) continue;
+      return false;
+    }
+    return false;
   }
 
   /// paragraphOf API.

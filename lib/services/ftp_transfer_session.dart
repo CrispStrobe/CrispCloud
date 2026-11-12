@@ -2,9 +2,13 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'bounded_transfer_stream.dart';
+import 'package:ftpconnect/ftp_transport.dart';
 
-/// One FTP/implicit-FTPS data transfer per control connection. This deliberately
+import 'bounded_transfer_stream.dart';
+import 'ftp_download_snapshot.dart';
+import 'ftp_security_mode.dart';
+
+/// One FTP/FTPS/FTPES data transfer per control connection. This deliberately
 /// avoids sharing navigation commands or a library's unbounded sink.add loop.
 /// Reply sequencing and passive data channels follow RFC 959/2428; TLS data
 /// protection follows RFC 4217, with normal certificate validation.
@@ -14,21 +18,39 @@ class FtpTransferSession {
     required this.port,
     required this.username,
     required this.password,
-    required this.secure,
+    bool? secure,
+    FtpSecurityMode? securityMode,
     required this.isCurrent,
+    this.securityContext,
     this.timeout = const Duration(seconds: 30),
-  });
+  }) : assert(secure == null || securityMode == null),
+       securityMode =
+           securityMode ??
+           (secure == true
+               ? FtpSecurityMode.implicitTls
+               : FtpSecurityMode.plain);
   final String host;
   final int port;
   final String username;
   final String password;
-  final bool secure;
+  final FtpSecurityMode securityMode;
+  bool get secure => securityMode.isSecure;
+  final SecurityContext? securityContext;
   final bool Function() isCurrent;
   final Duration timeout;
   Socket? _control;
   Socket? _data;
+  final _controlTransport = FtpSocketTransport();
+  FtpSocketTransport? _dataTransport;
   StreamIterator<String>? _lines;
   bool _closed = false;
+
+  String get connectionIdentity => FtpDownloadSnapshot.identity(
+    host: host,
+    port: port,
+    username: username,
+    securityMode: securityMode,
+  );
 
   void _check() {
     if (_closed || !isCurrent()) {
@@ -39,16 +61,33 @@ class FtpTransferSession {
   Future<void> connect() async {
     _check();
     try {
-      final connection = secure
-          ? await SecureSocket.connect(host, port, timeout: timeout)
-          : await Socket.connect(host, port, timeout: timeout);
-      if (_closed || !isCurrent()) {
-        connection.destroy();
-        throw StateError('The original FTP connection is no longer available.');
-      }
-      _control = connection;
+      await _controlTransport.connect(
+        host,
+        port,
+        timeout: timeout,
+        tlsHost: securityMode == FtpSecurityMode.implicitTls ? host : null,
+        securityContext: securityContext,
+      );
+      _check();
+      _control = _controlTransport.socket;
       _lines = StreamIterator(_replyLines(_control!));
       _expect(await _reply(), {220}, 'greeting');
+      if (securityMode == FtpSecurityMode.explicitTls) {
+        // Never send credentials or fall back to plaintext after a TLS refusal.
+        _expect(await _command('AUTH TLS'), {234}, 'TLS upgrade');
+        final oldLines = _lines!;
+        await _controlTransport.secure(
+          host,
+          timeout: timeout,
+          securityContext: securityContext,
+        );
+        _check();
+        _control = _controlTransport.socket;
+        _lines = StreamIterator(_replyLines(_control!));
+        // The old iterator paused at the AUTH reply. TLS detached its socket;
+        // cancelling it now cannot consume any encrypted response bytes.
+        await oldLines.cancel();
+      }
       final user = await _command('USER $username');
       if (user.$1 == 331) {
         _expect(await _command('PASS $password'), {230}, 'login');
@@ -133,7 +172,159 @@ class FtpTransferSession {
     }
   }
 
-  Future<bool> _openData(String command) async {
+  /// Obtain exact SIZE/MDTM evidence without treating it as an immutable
+  /// revision. The caller must retain a full source digest for durable resume.
+  Future<FtpDownloadSnapshot> captureDownloadSnapshot(String path) async {
+    _validateArgument(path);
+    final sizeReply = await _command('SIZE $path');
+    _expect(sizeReply, {213}, 'source size');
+    final sizeText = sizeReply.$2.substring(4);
+    final size = RegExp(r'^[0-9]+$').hasMatch(sizeText)
+        ? int.tryParse(sizeText)
+        : null;
+    if (size == null || size < 0) {
+      throw StateError('FTP returned an invalid source length.');
+    }
+    final modified = await _command('MDTM $path');
+    _expect(modified, {213}, 'source modification time');
+    return FtpDownloadSnapshot(
+      connectionIdentity: connectionIdentity,
+      path: path,
+      size: size,
+      modified: modified.$2.substring(4),
+    );
+  }
+
+  /// Read [offset, offset + length), or through EOF when length is absent.
+  /// FTP REST has no end bound, so a bounded range drains and validates the
+  /// complete remaining wire transfer before reporting successful completion.
+  /// The stream owns both sockets, including while REST/TLS setup is pending.
+  /// Received bytes remain provisional until stream completion and the caller's
+  /// full-file digest check; a 350 reply alone cannot prove the server's offset.
+  Stream<List<int>> downloadRange(
+    String path,
+    int offset, {
+    required FtpDownloadSnapshot expected,
+    int? length,
+    void Function(int, int)? onProgress,
+  }) {
+    late StreamController<List<int>> output;
+    StreamSubscription<List<int>>? source;
+    var cancelled = false;
+    output = StreamController<List<int>>(
+      sync: true,
+      onListen: () {
+        source =
+            _downloadRange(
+              path,
+              offset,
+              expected: expected,
+              length: length,
+              onProgress: onProgress,
+            ).listen(
+              (part) {
+                if (!cancelled) output.add(part);
+              },
+              onError: (Object error, StackTrace stack) {
+                if (!cancelled) output.addError(error, stack);
+              },
+              onDone: () {
+                if (!cancelled) unawaited(output.close());
+              },
+            );
+        if (output.isPaused) source!.pause();
+      },
+      onPause: () => source?.pause(),
+      onResume: () => source?.resume(),
+      onCancel: () {
+        cancelled = true;
+        close();
+        unawaited(source?.cancel().catchError((Object _) {}));
+      },
+    );
+    return output.stream;
+  }
+
+  Stream<List<int>> _downloadRange(
+    String path,
+    int offset, {
+    required FtpDownloadSnapshot expected,
+    int? length,
+    void Function(int, int)? onProgress,
+  }) async* {
+    try {
+      _validateArgument(path);
+      if (offset < 0 ||
+          offset > expected.size ||
+          (length != null && (length < 0 || length > expected.size - offset))) {
+        throw RangeError('The FTP range is outside the captured source.');
+      }
+      if (expected.connectionIdentity != connectionIdentity ||
+          expected.path != path) {
+        throw StateError('The original FTP source connection does not match.');
+      }
+      final features = await _command('FEAT');
+      if (features.$1 != 211 ||
+          !features.$2
+              .split('\n')
+              .any(
+                (line) =>
+                    line.startsWith(' ') &&
+                    line.substring(1).toUpperCase() == 'REST STREAM',
+              )) {
+        throw UnsupportedError(
+          'FTP resume requires advertised REST STREAM support. '
+          'Review a complete restart instead.',
+        );
+      }
+      _expect(await _command('MODE S'), {200}, 'stream transfer mode');
+      _expect(await _command('STRU F'), {200}, 'file transfer structure');
+      if (!expected.matches(await captureDownloadSnapshot(path))) {
+        throw StateError('The FTP source changed since the saved transfer.');
+      }
+      final selectedLength = length ?? expected.size - offset;
+      if (selectedLength == 0) return;
+      final finalReplyReceived = await _openData(
+        'RETR $path',
+        restartOffset: offset,
+      );
+      final wireLength = expected.size - offset;
+      var received = 0;
+      var emitted = 0;
+      await for (final chunk in _data!.timeout(timeout)) {
+        _check();
+        received += chunk.length;
+        if (received > wireLength) {
+          throw StateError('FTP did not honor the captured restart offset.');
+        }
+        onProgress?.call(offset + received, expected.size);
+        final remaining = selectedLength - emitted;
+        if (remaining > 0) {
+          final part = chunk.length <= remaining
+              ? chunk
+              : chunk.sublist(0, remaining);
+          emitted += part.length;
+          yield part;
+        }
+      }
+      if (received != wireLength || emitted != selectedLength) {
+        throw StateError(
+          'The FTP resumed source ended before its expected length.',
+        );
+      }
+      _check();
+      if (!finalReplyReceived) {
+        _expect(await _reply(), {226, 250}, 'resumed download completion');
+      }
+      if (!expected.matches(await captureDownloadSnapshot(path))) {
+        throw StateError('The FTP source changed during the resumed transfer.');
+      }
+    } finally {
+      close();
+    }
+  }
+
+  Future<bool> _openData(String command, {int? restartOffset}) async {
     _check();
     var passive = await _command('EPSV');
     int? dataPort;
@@ -166,16 +357,37 @@ class FtpTransferSession {
     }
     _check();
     // Use the control peer, never a third-party address supplied by PASV.
-    _data = await Socket.connect(
+    final dataTransport = FtpSocketTransport();
+    _dataTransport = dataTransport;
+    await dataTransport.connect(
       _control!.remoteAddress,
       dataPort,
       timeout: timeout,
     );
+    _check();
+    if (restartOffset != null) {
+      // RFC 3659 requires the transfer command immediately after REST. Passive
+      // endpoint negotiation is complete before sending this marker.
+      final restart = await _command('REST $restartOffset');
+      if (const {500, 502, 504}.contains(restart.$1)) {
+        throw UnsupportedError(
+          'The FTP server refused byte-offset resume. '
+          'Review a complete restart instead.',
+        );
+      }
+      _expect(restart, {350}, 'restart offset');
+    }
     final response = await _command(command);
     _expect(response, {125, 150, 226, 250}, 'data transfer');
     if (secure) {
-      _data = await SecureSocket.secure(_data!, host: host).timeout(timeout);
+      await dataTransport.secure(
+        host,
+        timeout: timeout,
+        securityContext: securityContext,
+      );
     }
+    _check();
+    _data = dataTransport.socket;
     return response.$1 == 226 || response.$1 == 250;
   }
 
@@ -200,16 +412,18 @@ class FtpTransferSession {
     final code = int.parse(prefix.group(1)!);
     if (prefix.group(2) == '-') {
       var bytes = first.length;
+      final replyLines = <String>[first];
       for (var count = 0; count < 256; count++) {
         if (!await _lines!.moveNext().timeout(timeout)) {
           throw StateError('FTP returned an incomplete multiline reply.');
         }
         final line = _lines!.current;
+        replyLines.add(line);
         bytes += line.length;
         if (bytes > 64 * 1024) {
           throw StateError('FTP reply exceeded the metadata limit.');
         }
-        if (line.startsWith('$code ')) return (code, line);
+        if (line.startsWith('$code ')) return (code, replyLines.join('\n'));
       }
       throw StateError('FTP reply exceeded the line limit.');
     }
@@ -224,6 +438,8 @@ class FtpTransferSession {
   }
 
   void close() {
+    _dataTransport?.close();
+    _controlTransport.close();
     _data?.destroy();
     _control?.destroy();
     if (_closed) return;

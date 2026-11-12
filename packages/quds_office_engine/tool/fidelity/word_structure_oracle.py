@@ -164,7 +164,7 @@ def verify_parts(parts, phase, expected=None):
     equal([[int(attr(c.find('w:tcPr/w:gridSpan', NS), 'val', '1')) for c in row.findall('w:tc', NS)] for row in rows], want['spans'], 'table merge spans')
     equal([attr(c, 'w') for c in table.findall('w:tblGrid/w:gridCol', NS)], ['2400', '2400'], 'table grid width')
     equal(attr(required(table, 'w:tblPr/w:jc'), 'val'), 'center', 'table alignment')
-    equal(attr(required(table, 'w:tblPr/w:bidiVisual'), 'val', '1'), '1', 'table text direction')
+    equal(attr(required(table, 'w:tblPr/w:bidiVisual'), 'val', 'on'), 'on', 'table text direction uses native on/off enumeration')
     grid_borders = table.findall('w:tblPr/w:tblBorders/*', NS)
     equal([(attr(b, 'color'), attr(b, 'sz')) for b in grid_borders], [('224466', '12')] * 6, 'table borders')
     equal(attr(required(rows[0], 'w:trPr/w:trHeight'), 'val'), '480', 'row height')
@@ -232,7 +232,7 @@ def verify_parts(parts, phase, expected=None):
         required(picture, 'wp:wrapNone' if target['wrap'] == 'behind' else 'wp:wrapSquare')
         equal(int(required(picture, './/pic:spPr/a:xfrm').get('rot', '0')), target['rotation'], 'picture rotation')
         equal(required(picture, 'wp:docPr').get('title'), 'Accessible picture', 'picture alternative title')
-        equal(required(picture, 'wp:docPr').get('descr'), 'Two color test picture', 'picture alternative description')
+        equal(required(picture, 'wp:docPr').get('descr'), 'Solid green test picture', 'picture alternative description')
         rid = attr(required(picture, './/a:blip'), 'embed', prefix='r')
         rels = ET.fromstring(parts['word/_rels/document.xml.rels'])
         matches = [r for r in rels if r.get('Id') == rid]

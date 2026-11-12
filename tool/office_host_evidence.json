@@ -27,6 +27,18 @@
     "build/fidelity-host/paragraph-noop-1.docx",
     "build/fidelity-host/paragraph-noop-2.docx",
     "build/fidelity-host/paragraph-noop-3.docx",
+    "build/fidelity-host/pending-cell-after-save.xlsx",
+    "build/fidelity-host/pending-cell-before-save.xlsx",
+    "build/fidelity-host/pending-cell-close-after-save.xlsx",
+    "build/fidelity-host/pending-cell-close-before-save.xlsx",
+    "build/fidelity-host/pending-note-after-save.docx",
+    "build/fidelity-host/pending-note-before-save.docx",
+    "build/fidelity-host/pending-note-close-after-save.docx",
+    "build/fidelity-host/pending-note-close-before-save.docx",
+    "build/fidelity-host/pending-slide-after-save.pptx",
+    "build/fidelity-host/pending-slide-before-save.pptx",
+    "build/fidelity-host/pending-slide-close-after-save.pptx",
+    "build/fidelity-host/pending-slide-close-before-save.pptx",
     "build/fidelity-host/retry-after-failure.docx",
     "build/fidelity-host/ribbon-edits-1.docx",
     "build/fidelity-host/ribbon-edits-2.docx",
@@ -44,6 +56,9 @@
     "build/fidelity-host/toc-action-1.docx",
     "build/fidelity-host/toc-action-2.docx",
     "build/fidelity-host/toc-action-3.docx",
+    "build/fidelity-host/word-docm-save.docm",
+    "build/fidelity-host/word-dotm-save.dotm",
+    "build/fidelity-host/word-dotx-save.dotx",
     "build/fidelity/unchanged-controller.docx"
   ]
 }

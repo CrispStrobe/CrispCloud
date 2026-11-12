@@ -83,13 +83,7 @@ void applySlideStep(
       slide.hidden = s.boolean('hidden');
     case 'slideOrder':
       final at = s.integer('to', max: deck.slides.length - 1);
-      if (deck.sections.isNotEmpty) {
-        throw ArgumentError(
-          'Slide reorder requires updating section boundaries first',
-        );
-      }
-      deck.slides.remove(slide);
-      deck.slides.insert(at, slide);
+      PmlSections.reorderSlide(deck, deck.slides.indexOf(slide), at);
     case 'slideTransition':
       slide.transition = PmlSlideTransition(
         kind: PmlTransitionKind.values.byName(s.string('kind')),

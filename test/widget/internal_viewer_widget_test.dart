@@ -466,7 +466,9 @@ void main() {
       expect(find.textContaining('Hello slide'), findsWidgets);
     });
 
-    testWidgets('legacy PPT shows a conversion hint', (tester) async {
+    testWidgets('truncated legacy PPT shows its localized extraction reason', (
+      tester,
+    ) async {
       await _pumpViewer(
         tester,
         Uint8List.fromList(<int>[0xD0, 0xCF, 0x11, 0xE0]),
@@ -478,7 +480,11 @@ void main() {
           .map((widget) => widget.data)
           .whereType<String>()
           .join('\n');
-      expect(text, contains('Legacy PowerPoint'));
+      expect(text, contains('Could not extract text from this document'));
+      expect(
+        find.textContaining('invalid or incomplete slide references'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('PNG auto-detects image mode', (tester) async {

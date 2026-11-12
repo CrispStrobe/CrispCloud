@@ -1,11 +1,12 @@
 // lib/services/proxy_service.dart
 //
-// HTTP/SOCKS5 proxy configuration service.
+// HTTP and SOCKS proxy configuration service.
 //
 // Provides a proxy-aware http.Client that can be injected into cloud adapters.
 // Supports:
 //   - HTTP/HTTPS proxy (CONNECT tunneling for HTTPS targets)
-//   - SOCKS5 proxy (via dart:io HttpClient findProxy)
+//   - SOCKS5 CONNECT with optional password authentication and remote DNS
+//   - SOCKS4 IPv4 CONNECT and explicit SOCKS4a remote DNS
 //   - No-proxy bypass list (comma-separated hostnames)
 //   - Environment variable auto-detection (HTTP_PROXY, HTTPS_PROXY, NO_PROXY)
 //   - Manual configuration via ProxyConfig model
@@ -20,9 +21,19 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'cert_pinning_service.dart';
 import 'log_service.dart';
+import 'socks_connector.dart';
 
 /// Proxy type.
-enum ProxyType { none, http, socks5 }
+enum ProxyType {
+  none,
+  http,
+  socks5,
+  socks4,
+  socks4a;
+
+  bool get isSocks4 => this == socks4 || this == socks4a;
+  bool get isSocks => this == socks5 || isSocks4;
+}
 
 /// Proxy configuration model.
 class ProxyConfig {
@@ -31,6 +42,10 @@ class ProxyConfig {
   final int port;
   final String? username;
   final String? password;
+
+  /// A selected configuration could not be restored safely. HTTP routing stays
+  /// blocked until the user saves corrected settings or explicitly disables it.
+  final bool isInvalid;
 
   /// Comma-separated list of hosts to bypass the proxy for.
   final String noProxy;
@@ -42,18 +57,136 @@ class ProxyConfig {
     this.username,
     this.password,
     this.noProxy = '',
-  });
+  }) : isInvalid = false;
 
-  bool get isEnabled => type != ProxyType.none && host.isNotEmpty && port > 0;
+  const ProxyConfig.invalid()
+    : type = ProxyType.none,
+      host = '',
+      port = 0,
+      username = null,
+      password = null,
+      noProxy = '',
+      isInvalid = true;
+
+  bool get requiresRouting => isInvalid || type != ProxyType.none;
+
+  bool get isEnabled =>
+      type != ProxyType.none && isValidHost(host) && port > 0 && port <= 65535;
+
+  /// Keep host data out of the native HTTP proxy directive grammar. Accept a
+  /// DNS/IDNA name or a literal address, not a URL, credentials or a directive.
+  static bool isValidHost(String host) {
+    if (host.isEmpty || host != host.trim()) return false;
+    // Native address parsers can stop at a NUL while preserving the original
+    // String. Reject every non-host character before either literal parser so
+    // a valid address prefix cannot hide proxy directives or credentials.
+    if (RegExp(r'[^A-Za-z0-9.:\[\]-]').hasMatch(host)) return false;
+    if (host.startsWith('[') && host.endsWith(']')) {
+      return InternetAddress.tryParse(host.substring(1, host.length - 1))
+              ?.type ==
+          InternetAddressType.IPv6;
+    }
+    if (InternetAddress.tryParse(host) != null) return true;
+    final name = host.endsWith('.') ? host.substring(0, host.length - 1) : host;
+    if (name.isEmpty || name.length > 253) return false;
+    final label = RegExp(r'^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$');
+    return name.split('.').every(label.hasMatch);
+  }
+
+  String get _connectionHost => host.startsWith('[') && host.endsWith(']')
+      ? host.substring(1, host.length - 1)
+      : host;
+
+  void validate() {
+    if (isInvalid) {
+      throw const FormatException(
+        'Saved proxy settings are invalid. Correct or disable them before connecting.',
+      );
+    }
+    if (type == ProxyType.none) return;
+    if (!isEnabled) {
+      throw const FormatException(
+        'A proxy host and port from 1 to 65535 are required.',
+      );
+    }
+    if (type == ProxyType.socks5) {
+      Socks5Connector(
+        host: _connectionHost,
+        port: port,
+        username: username,
+        password: password,
+      ).validate();
+    } else if (type.isSocks4) {
+      if (password != null) {
+        throw const FormatException('SOCKS4 does not support passwords.');
+      }
+      Socks4Connector(
+        host: _connectionHost,
+        port: port,
+        userId: username ?? '',
+        remoteDns: type == ProxyType.socks4a,
+      ).validate();
+    }
+  }
+
+  /// A hostname entry matches itself and its subdomains. Leading dots follow
+  /// the same convention; IP addresses only match exactly. No local DNS query
+  /// is performed when deciding whether a destination bypasses the proxy.
+  bool bypassesHost(String destination) {
+    String normalize(String value) {
+      var result = value.trim().toLowerCase();
+      if (result.endsWith('.')) result = result.substring(0, result.length - 1);
+      if (result.startsWith('[') && result.endsWith(']')) {
+        result = result.substring(1, result.length - 1);
+      }
+      return result;
+    }
+
+    final target = normalize(destination);
+    final targetAddress = InternetAddress.tryParse(target)?.rawAddress;
+    for (final entry in noProxy.split(',')) {
+      if (entry.trim() == '*') return true;
+      var bypass = normalize(entry);
+      if (bypass.startsWith('.')) bypass = bypass.substring(1);
+      if (bypass.isEmpty) continue;
+      final bypassAddress = InternetAddress.tryParse(bypass)?.rawAddress;
+      if (targetAddress != null || bypassAddress != null) {
+        if (targetAddress != null &&
+            bypassAddress != null &&
+            targetAddress.length == bypassAddress.length &&
+            targetAddress.indexed.every(
+              (byte) => byte.$2 == bypassAddress[byte.$1],
+            )) {
+          return true;
+        }
+        continue;
+      }
+      if (target == bypass || target.endsWith('.$bypass')) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   /// Build the proxy URI string for dart:io HttpClient.findProxy.
   String toProxyString() {
-    if (!isEnabled) return 'DIRECT';
-    return 'PROXY $host:$port';
+    validate();
+    if (type == ProxyType.none) return 'DIRECT';
+    if (type.isSocks) {
+      throw UnsupportedError(
+        'SOCKS requires the socket connector, not an HTTP proxy directive.',
+      );
+    }
+    final directiveHost =
+        InternetAddress.tryParse(_connectionHost)?.type ==
+            InternetAddressType.IPv6
+        ? '[$_connectionHost]'
+        : _connectionHost;
+    return 'PROXY $directiveHost:$port';
   }
 
   Map<String, dynamic> toJson() => {
-    'type': type.name,
+    'type': isInvalid ? 'invalid' : type.name,
     'host': host,
     'port': port,
     if (username != null) 'username': username,
@@ -65,7 +198,10 @@ class ProxyConfig {
     return ProxyConfig(
       type: ProxyType.values.firstWhere(
         (t) => t.name == json['type'],
-        orElse: () => ProxyType.none,
+        orElse: () {
+          if (json['type'] == null) return ProxyType.none;
+          throw const FormatException('Unknown proxy type.');
+        },
       ),
       host: json['host'] as String? ?? '',
       port: json['port'] as int? ?? 0,
@@ -76,41 +212,65 @@ class ProxyConfig {
   }
 
   /// Create from environment variables (HTTP_PROXY, HTTPS_PROXY, NO_PROXY).
-  factory ProxyConfig.fromEnvironment() {
+  factory ProxyConfig.fromEnvironment({Map<String, String>? environment}) {
     if (kIsWeb) return const ProxyConfig();
+    final variables = environment ?? Platform.environment;
     final proxyUrl =
-        Platform.environment['HTTPS_PROXY'] ??
-        Platform.environment['https_proxy'] ??
-        Platform.environment['HTTP_PROXY'] ??
-        Platform.environment['http_proxy'];
-    final noProxy =
-        Platform.environment['NO_PROXY'] ??
-        Platform.environment['no_proxy'] ??
-        '';
+        variables['HTTPS_PROXY'] ??
+        variables['https_proxy'] ??
+        variables['HTTP_PROXY'] ??
+        variables['http_proxy'];
+    final noProxy = variables['NO_PROXY'] ?? variables['no_proxy'] ?? '';
 
-    if (proxyUrl == null || proxyUrl.isEmpty) {
+    if (proxyUrl == null || proxyUrl.trim().isEmpty) {
       return const ProxyConfig();
     }
 
     try {
       final uri = Uri.parse(proxyUrl);
-      final isSocks = uri.scheme == 'socks5' || uri.scheme == 'socks';
-      return ProxyConfig(
-        type: isSocks ? ProxyType.socks5 : ProxyType.http,
+      final type = switch (uri.scheme) {
+        'http' => ProxyType.http,
+        'socks5' || 'socks5h' || 'socks' => ProxyType.socks5,
+        'socks4' => ProxyType.socks4,
+        'socks4a' => ProxyType.socks4a,
+        _ => null,
+      };
+      if (type == null) {
+        // Native PROXY directives connect to an HTTP proxy. A TLS connection
+        // to the proxy itself is not implemented.
+        return const ProxyConfig.invalid();
+      }
+      // Uri normalizes an explicit :0 to the default port for SOCKS schemes.
+      // Reject that malformed selection before applying a default port.
+      final authority = RegExp(r'^[^:]+://([^/?#]*)')
+          .firstMatch(proxyUrl)
+          ?.group(1);
+      if (authority == null || RegExp(r':0*$').hasMatch(authority)) {
+        return const ProxyConfig.invalid();
+      }
+      final credentialsSeparator = uri.userInfo.indexOf(':');
+      final config = ProxyConfig(
+        type: type,
         host: uri.host,
-        port: uri.port > 0 ? uri.port : (isSocks ? 1080 : 8080),
-        username: uri.userInfo.contains(':')
-            ? Uri.decodeComponent(uri.userInfo.split(':')[0])
+        port: uri.port > 0 ? uri.port : (type.isSocks ? 1080 : 8080),
+        username: credentialsSeparator >= 0
+            ? Uri.decodeComponent(
+                uri.userInfo.substring(0, credentialsSeparator),
+              )
             : (uri.userInfo.isNotEmpty
                   ? Uri.decodeComponent(uri.userInfo)
                   : null),
-        password: uri.userInfo.contains(':')
-            ? Uri.decodeComponent(uri.userInfo.split(':')[1])
+        password: credentialsSeparator >= 0
+            ? Uri.decodeComponent(
+                uri.userInfo.substring(credentialsSeparator + 1),
+              )
             : null,
         noProxy: noProxy,
       );
+      config.validate();
+      return config;
     } catch (_) {
-      return const ProxyConfig();
+      return const ProxyConfig.invalid();
     }
   }
 
@@ -120,8 +280,8 @@ class ProxyConfig {
 /// Global HttpOverrides for proxy routing and platform TLS verification.
 ///
 /// When installed via [HttpOverrides.global], this affects all dart:io HTTP
-/// clients including those created by the `http` package. This means all
-/// `http.get/post/put/delete` calls use the proxy and configured trust anchors.
+/// clients including those created by the `http` package. Direct FTP, SFTP and
+/// SMB sockets and browser networking are outside this HTTP proxy setting.
 class ProxyHttpOverrides extends HttpOverrides {
   final ProxyConfig config;
   final CertPinningService? certPinning;
@@ -130,30 +290,57 @@ class ProxyHttpOverrides extends HttpOverrides {
 
   @override
   HttpClient createHttpClient(SecurityContext? context) {
+    // Reject an invalid selected proxy instead of connecting directly.
+    config.validate();
     final secCtx = certPinning?.configureSecurityContext(context) ?? context;
     final client = super.createHttpClient(secCtx);
 
     // Proxy configuration
-    if (config.isEnabled) {
-      final noProxyHosts = config.noProxy
-          .split(',')
-          .map((h) => h.trim().toLowerCase())
-          .where((h) => h.isNotEmpty)
-          .toSet();
-
-      client.findProxy = (uri) {
-        final host = uri.host.toLowerCase();
-        for (final bypass in noProxyHosts) {
-          if (host == bypass || host.endsWith('.$bypass')) {
-            return 'DIRECT';
-          }
+    if (config.type.isSocks) {
+      final SocksConnector connector = config.type.isSocks4
+          ? Socks4Connector(
+              host: config._connectionHost,
+              port: config.port,
+              userId: config.username ?? '',
+              remoteDns: config.type == ProxyType.socks4a,
+            )
+          : Socks5Connector(
+              host: config._connectionHost,
+              port: config.port,
+              username: config.username,
+              password: config.password,
+            );
+      // The custom factory performs SOCKS itself. DIRECT here prevents the
+      // native HTTP proxy parser from adding a second proxy or a fallback.
+      client.findProxy = (_) => 'DIRECT';
+      client.connectionFactory = (uri, proxyHost, proxyPort) async {
+        if (proxyHost != null || proxyPort != null) {
+          throw const SocketException(
+            'Cannot combine SOCKS with an HTTP proxy.',
+          );
         }
-        return config.toProxyString();
+        if (config.bypassesHost(uri.host)) {
+          if (uri.scheme == 'https') {
+            return SecureSocket.startConnect(
+              uri.host,
+              uri.port,
+              context: secCtx,
+            );
+          }
+          return Socket.startConnect(uri.host, uri.port);
+        }
+        return connector.connect(
+          uri,
+          securityContext: secCtx,
+          timeout: client.connectionTimeout ?? const Duration(seconds: 30),
+        );
       };
-
+    } else if (config.type == ProxyType.http) {
+      client.findProxy = (uri) =>
+          config.bypassesHost(uri.host) ? 'DIRECT' : config.toProxyString();
       if (config.username != null) {
         client.addProxyCredentials(
-          config.host,
+          config._connectionHost,
           config.port,
           'Basic',
           HttpClientBasicCredentials(config.username!, config.password ?? ''),
@@ -189,19 +376,25 @@ class ProxyService {
       try {
         final map = Map<String, dynamic>.from(jsonDecode(raw) as Map);
         _config = ProxyConfig.fromJson(map);
+        _config.validate();
         _log.info(
           'Loaded proxy config: ${_config.type.name} ${_config.host}:${_config.port}',
         );
         return;
-      } catch (e) {
-        _log.warn('Failed to load saved proxy config', e);
+      } catch (_) {
+        // Decoding errors may contain serialized credentials; do not log them.
+        _config = const ProxyConfig.invalid();
+        _log.warn(
+          'Saved proxy settings are invalid; HTTP routing remains blocked.',
+        );
+        return;
       }
     }
 
     // Fall back to environment variables (desktop only)
     if (!kIsWeb) {
       final envConfig = ProxyConfig.fromEnvironment();
-      if (envConfig.isEnabled) {
+      if (envConfig.requiresRouting) {
         _config = envConfig;
         _log.info(
           'Using proxy from environment: ${_config.type.name} ${_config.host}:${_config.port}',
@@ -212,6 +405,7 @@ class ProxyService {
 
   /// Save proxy configuration.
   Future<void> save(ProxyConfig config) async {
+    config.validate();
     _config = config;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_prefsKey, jsonEncode(config.toJson()));
@@ -240,7 +434,7 @@ class ProxyService {
 
   void _installOverrides() {
     if (kIsWeb) return;
-    final needsProxy = _config.isEnabled;
+    final needsProxy = _config.requiresRouting;
     final needsTlsPolicy = _certPinning != null;
 
     if (needsProxy || needsTlsPolicy) {
@@ -265,7 +459,7 @@ class ProxyService {
   ///
   /// On web, always returns a plain client (browsers handle proxies natively).
   http.Client createHttpClient() {
-    if (kIsWeb || (!_config.isEnabled && _certPinning == null)) {
+    if (kIsWeb || (!_config.requiresRouting && _certPinning == null)) {
       return http.Client();
     }
 

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 
 import '../models/file_search_query.dart';
+import 'legacy_text_encoding.dart';
 
 /// Match already decoded text. Structured-document extraction bypasses the
 /// encoding choice, which describes plain input bytes rather than extracted text.
@@ -176,6 +177,10 @@ class _TextDecoder {
     }
     if (encoding == 'latin1') {
       matcher.add(latin1.decode(bytes));
+      return;
+    }
+    if (isLegacyTextEncoding(encoding)) {
+      matcher.add(decodeLegacyText(bytes, encoding));
       return;
     }
     final unit = encoding.startsWith('utf32') ? 4 : 2;
