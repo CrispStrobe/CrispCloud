@@ -1,4 +1,9 @@
-# App integration at parser 53a7f0d
+# Historical app integration at parser 53a7f0d
+
+Recovered from app branch commit `3d4d3f144ac5e51e0d466813b887f2a6bef2f0bb`.
+The source pins and counts below describe that earlier run. They do not qualify
+the current app, parser, or Quds revisions; the current development pins remain
+in their upstream metadata and source inventory.
 
 This receipt records the app integration of parser `53a7f0d` through Quds
 `09f5ec4`. All 341 upstream parser files match their immutable source bytes and
