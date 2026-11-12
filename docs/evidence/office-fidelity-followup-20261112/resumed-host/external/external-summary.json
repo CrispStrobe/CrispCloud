@@ -1,0 +1,23 @@
+{
+  "source_commit": "b7edb919def85ef78d6d34ba6eb7c74d61e0bd4d",
+  "managed_source_commit": "7641d9cfa167987216134ebfc4772918cc945d97",
+  "status": "passed",
+  "sdk_files": 358,
+  "engine_files": 296,
+  "host_files": 62,
+  "validator_exit_code": 0,
+  "schema_elapsed_seconds": 7.8651532779986155,
+  "input_manifest_sha256": "b7c0dd8b0e6b2ae7df971f8719867f330c5059577610fa750a42ba9f902e3495",
+  "native_status": "passed",
+  "sdk_passing_files": 358,
+  "sdk_failures": 0,
+  "all_schema_receipt_hashes_match": true,
+  "schema_report_sha256": "19ca37e0285d00a7ced831995a5c2fca53a2a6c0408f4bbc521882e84104fdc5",
+  "native_exit_code": 0,
+  "native_files": 14,
+  "native_pages": 26,
+  "native_scope": "Eleven uploaded files: four XLSX, four PPTX, DOCM/DOTX/DOTM, plus three custom-tab paragraph-dialog DOCX captures; source engine full rendering is independently reported.",
+  "native_failures": [],
+  "all_input_hashes_unchanged": true,
+  "host_native_report_sha256": "a5389cd22c398db8feda43c3ee1aa720a48b77ad4aff7de61c6f3ba19f649807"
+}

@@ -1,9 +1,11 @@
 # Host paragraph, style, reference and page-layout fidelity
 
-The [consolidation report](office-fidelity-consolidation-20261112.md) records the
-current vendor checkpoint and combined acceptance evidence, including pending
-Word, Sheet, and Slide edits during uploads. This report retains the earlier
-host expansion and its original measurements.
+This report retains the earlier host expansion and its original measurements.
+The [follow-up report](office-fidelity-followup-20261112.md) records the current
+shared source pin, custom-tab controls and continuation acceptance. It
+supersedes the earlier tab-creation limitation without changing these historical
+counts. The [consolidation report](office-fidelity-consolidation-20261112.md)
+records the intervening save/upload milestone.
 
 The app imports the vendored Quds packages through `pubspec.yaml` path
 overrides. The authoritative source revision is
@@ -27,9 +29,10 @@ Updating the fork alone does not update these app dependencies.
 | Report host coverage | A smaller instrumented subset could still produce a successful coverage command | The gate fails if any scoped Office source is absent from instrumentation |
 | Preserve imported note markers | Two older tests expected a new marker even though their authored note had none | Native marker absence is checked against source XML; a separately positioned superscript marker remains at UTF-16 offset 7 through three real saves |
 
-The paragraph dialog does not expose custom tab alignment or leader creation.
-It preserves that metadata for existing positions. Character-style editing,
-custom style creation and table-style selection remain separate UI gaps.
+At this earlier checkpoint, the paragraph dialog preserved imported tab
+alignment/leaders without offering their creation. The follow-up adds those
+shared controls. Character-style editing, custom style creation and table-style
+selection remain separate UI gaps.
 
 ## Executable scenarios and independent expectations
 
@@ -101,8 +104,8 @@ match suite
 [`31add779`](https://github.com/CrispStrobe/quds_office_suite/commit/31add77938bb1242d510ab544dbe886d87ebdf75).
 The following evidence-only commit on that branch did not change those tested
 source bytes. These measurements are historical; the
-[consolidation report](office-fidelity-consolidation-20261112.md) records the
-current combined acceptance evidence.
+[follow-up report](office-fidelity-followup-20261112.md) records the current
+continuation acceptance evidence.
 
 | Check | Result |
 | --- | --- |

@@ -12,15 +12,16 @@ golden files. The guard checks only those files, preserving unrelated host
 changes. Revision IDs and counts in the historical evidence below identify
 their original snapshots, not the current manifest.
 
-## Current vendor revision and gap closure
+## Current vendor revision and follow-up
 
-The [12 November gap-closure report](office-fidelity-gap-closure-20261112.md)
-records the current source pin, consolidation of newer main/viewer work, shared
-helper ownership, actual conversion/save regressions and combined acceptance.
+The [12 November follow-up report](office-fidelity-followup-20261112.md)
+records the current source pin, native spreadsheet font geometry, merged-table
+addressing, shared custom-tab controls and continuation acceptance.
 Reusable parsing, preservation, navigation, search and legacy Word conversion
 are maintained in Quds; the app consumes the public APIs and exact source pin.
 
-The [earlier consolidation report](office-fidelity-consolidation-20261112.md)
+The [gap-closure report](office-fidelity-gap-closure-20261112.md),
+[earlier consolidation report](office-fidelity-consolidation-20261112.md)
 and the sections below retain their historical snapshot scope. The manifest is
 the authority for the current committed source bytes.
 
@@ -109,13 +110,10 @@ flutter pub get
 bash tool/check_office_fidelity.sh
 ```
 
-The script checks vendored hashes, runs the independent DOCX/XLSX/PPTX corpus,
-runs 16 root host regressions and independently inspects the asynchronous-save
-DOCX produced by the controller. It includes the app's existing formatting,
-minimal-edit round-trip, header editing and select-all checks.
 The script checks the pinned files, runs the portable DOCX/XLSX/PPTX corpus and
-independent semantic oracles, requires every engine output, then runs the host
-cohort with fresh LCOV. It verifies the exact host output inventory and checks
+independent semantic oracles, requires every engine output, then runs the
+26-file host cohort with fresh LCOV. It verifies the exact 62-output host
+inventory, including custom-tab dialog exports, and checks
 the unchanged controller export with the independent ZIP/XML oracle. It deletes
 only the expected host artifacts and the intended LCOV before the relevant
 tests, preventing stale output from satisfying a missing test.
@@ -128,9 +126,8 @@ python3 tool/with_ci_system_sqlite.py bash tool/check_office_fidelity.sh
 ```
 
 The GitHub workflow `.github/workflows/office-fidelity.yml` runs this command and
-uploads exported files and JSON oracle reports. The latest local root suite
-passed all 16 tests with GCC and system SQLite; temporary compiler discovery
-settings were restored afterward. CI uses clang.
+uploads exported files and JSON oracle reports. The follow-up report records
+the current execution totals and compiler provenance. CI uses clang.
 
 The portable corpus also passed under the app toolchain. The Open XML SDK 3.3.0
 independently validated all 57 app-generated Office files, including the actual

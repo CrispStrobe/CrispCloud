@@ -1,0 +1,44 @@
+#!/usr/bin/env python3
+"""Use the official stable LibreOfficeKit engine with the corpus renderer's CLI.
+
+The installed CLI needs IPC sockets unavailable in this sandbox. LibreOfficeKit
+is the release engine's documented in-process embedding API and needs no IPC.
+Import/export errors are preserved verbatim. Only the official loader returning
+an empty component maps to the equivalent CLI import-refusal message and exit 1.
+Timeouts, signals, and other import/export errors retain distinct failure paths.
+"""
+from pathlib import Path
+import os
+import subprocess
+import sys
+
+runtime = Path(__file__).resolve().parent.parent / 'libreoffice-242'
+if sys.argv[1:] == ['--version']:
+    version = subprocess.check_output([
+        str(runtime / 'root/opt/libreoffice24.2/program/soffice'), '--version'],
+        text=True).strip()
+    print(version + ' (LibreOfficeKit embedding API)')
+    raise SystemExit(0)
+
+profile = input_path = output_directory = None
+arguments = iter(sys.argv[1:])
+for argument in arguments:
+    if argument.startswith('-env:UserInstallation='):
+        profile = argument.split('=', 1)[1]
+    elif argument == '--headless':
+        pass
+    elif argument == '--convert-to':
+        if next(arguments, None) != 'pdf':
+            raise SystemExit('Only PDF export is supported by this test adapter')
+    elif argument == '--outdir':
+        output_directory = next(arguments, None)
+    elif not argument.startswith('-') and input_path is None:
+        input_path = argument
+    else:
+        raise SystemExit('Unsupported renderer argument: ' + argument)
+if not all((profile, input_path, output_directory)):
+    raise SystemExit('Missing unique profile, input or output directory')
+destination = Path(output_directory) / Path(input_path).with_suffix('.pdf').name
+os.execv(str(runtime / 'lok_convert'), [str(runtime / 'lok_convert'),
+         str(runtime / 'root/opt/libreoffice24.2/program'),
+         profile, input_path, str(destination)])

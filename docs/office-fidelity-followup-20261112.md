@@ -85,3 +85,30 @@ is preserved. Its earlier runner and status remain historical; the full passing
 runner is archived separately as
 [run_host_acceptance_verified.py](evidence/office-fidelity-followup-20261112/runtime/run_host_acceptance_verified.py).
 The final evidence commit follows that checkpoint without overwriting it.
+
+## Resumed independent verification
+
+The resumed session independently completed the same clean implementation
+`b7edb919` with Quds `7641d9c`, before discovering the earlier session's
+concurrent final evidence commit. Both records are preserved: the original
+`final-host/` receipts above remain unchanged; the new
+[resumed-host record](evidence/office-fidelity-followup-20261112/resumed-host/README.md)
+contains the independently repeated run and its exact runtime and byte hashes.
+
+The resumed gate passed all 921 mandatory engine cases and 143 host cases, with
+no skips, the same 7/344/10/9 Python-control cohorts, and all 366 shared-file
+hashes. Its inventories require exactly 296 engine exports and 62 host
+captures; all 358 pass Open XML SDK validation. All 4,732 tracked host files
+were unchanged after the gate, including the restored pubspec and lock files.
+The measured host coverage remains 2,216/3,549 instrumented lines, with all ten
+scoped integration files instrumented; the current coverage inventory now
+points to this fresh run's source fingerprints.
+
+The independent resumed native probe rendered eleven actual uploads plus the
+three custom-tab paragraph-dialog captures to 26 pages. Those three dialog
+exports have identical page counts, extracted text and decoded RGB pixels
+across saves; separate XML checks verify exact tab values and unchanged
+paragraph indentation/spacing. It does not re-count the original session's
+additional three ribbon-upload native comparisons. All original and snapshot
+input hashes were rechecked after the probe. No production code, test, golden,
+validation gate or source pin changed during this resumed acceptance.
