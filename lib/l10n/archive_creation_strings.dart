@@ -238,6 +238,28 @@ const _messages = <String, List<String>>{
     'EAR (서명 없음)',
     'EAR (غير موقّع)',
   ],
+  'Stream local files into a new TAR or CBT archive up to 2 GiB, including headers. Existing archive editing keeps its 64 MiB member and 256 MiB total limits. Existing files are never replaced.':
+      [
+        'Lokale Dateien werden in ein neues TAR- oder CBT-Archiv bis zu 2 GiB einschließlich Headern gestreamt. Beim Bearbeiten vorhandener Archive gelten weiterhin 64 MiB pro Eintrag und 256 MiB insgesamt. Vorhandene Dateien werden nicht ersetzt.',
+        'Créez en flux une nouvelle archive TAR ou CBT à partir de fichiers locaux, jusqu’à 2 Gio, en-têtes inclus. La modification d’archives existantes reste limitée à 64 Mio par élément et 256 Mio au total. Les fichiers existants ne sont jamais remplacés.',
+        'Crea por flujo un nuevo archivo TAR o CBT con archivos locales, hasta 2 GiB incluidas las cabeceras. La edición de archivos existentes mantiene los límites de 64 MiB por elemento y 256 MiB en total. Nunca se reemplazan archivos existentes.',
+        'Crie por fluxo um novo arquivo TAR ou CBT com ficheiros locais, até 2 GiB incluindo cabeçalhos. A edição de arquivos existentes mantém os limites de 64 MiB por item e 256 MiB no total. Os ficheiros existentes nunca são substituídos.',
+        '将本地文件以流式方式写入新的 TAR 或 CBT 压缩包，最大为 2 GiB（包含头信息）。编辑现有压缩包仍限于每个成员 64 MiB、总计 256 MiB。不会覆盖已有文件。',
+        'ローカルファイルをストリーミングして、新しいTARまたはCBTアーカイブを作成します。ヘッダーを含め最大2 GiBです。既存アーカイブの編集は引き続き1メンバー64 MiB、合計256 MiBまでです。既存のファイルは上書きしません。',
+        '로컬 파일을 스트리밍하여 헤더를 포함해 최대 2 GiB의 새 TAR 또는 CBT 압축 파일을 만듭니다. 기존 압축 파일 편집은 항목당 64 MiB, 총 256 MiB 제한을 유지합니다. 기존 파일은 덮어쓰지 않습니다.',
+        'أنشئ أرشيف TAR أو CBT جديداً بتدفق الملفات المحلية، بحجم يصل إلى 2 GiB شاملاً الرؤوس. يظل تحرير الأرشيفات الموجودة محدوداً بـ64 MiB لكل عنصر و256 MiB إجمالاً. لا تُستبدل الملفات الموجودة.',
+      ],
+  'Single-file compressors and compressed TAR are limited to 64 MiB of encoded output.':
+      [
+        'Einzeldateikompressoren und komprimiertes TAR sind auf 64 MiB codierte Ausgabe begrenzt.',
+        'La sortie encodée des compresseurs de fichier unique et du TAR compressé est limitée à 64 Mio.',
+        'Los compresores de un solo archivo y TAR comprimido se limitan a 64 MiB de salida codificada.',
+        'Os compressores de ficheiro único e TAR comprimido estão limitados a 64 MiB de saída codificada.',
+        '单文件压缩和压缩的 TAR 的编码输出最大为 64 MiB。',
+        '単一ファイル圧縮と圧縮TARの符号化済み出力は64 MiBまでです。',
+        '단일 파일 압축 및 압축된 TAR의 인코딩 출력은 64 MiB로 제한됩니다.',
+        'يقتصر الإخراج المرمّز لضواغط الملف الواحد وTAR المضغوط على 64 MiB.',
+      ],
   'Create a data image from local files and folders. Up to 2 GiB of image output. Existing files are never replaced.':
       [
         'Datenabbild aus lokalen Dateien und Ordnern erstellen. Die Abbilddatei darf bis zu 2 GiB groß sein. Vorhandene Dateien werden nicht ersetzt.',

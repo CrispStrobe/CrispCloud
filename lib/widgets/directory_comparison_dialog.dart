@@ -8,15 +8,23 @@ import '../providers/providers.dart';
 import '../services/directory_comparison_service.dart';
 import '../services/file_operation_backend.dart';
 import '../services/file_operation_service.dart';
+import 'archive_directory_sync_dialog.dart';
 
 Future<void> showDirectoryComparisonDialog(
   BuildContext context,
   WidgetRef ref,
-) => showDialog<void>(
-  context: context,
-  barrierDismissible: false,
-  builder: (_) => const _DirectoryComparisonDialog(),
-);
+) async {
+  if (ref.read(panelProvider(PanelSide.local)).isInArchive ||
+      ref.read(panelProvider(PanelSide.remote)).isInArchive) {
+    await showCurrentArchiveDirectorySyncDialog(context, ref);
+    return;
+  }
+  await showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => const _DirectoryComparisonDialog(),
+  );
+}
 
 class _DirectoryComparisonDialog extends ConsumerStatefulWidget {
   const _DirectoryComparisonDialog();
