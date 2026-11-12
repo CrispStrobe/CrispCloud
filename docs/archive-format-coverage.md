@@ -244,6 +244,8 @@ commands, source revisions, fixture hashes and attribution are in
 [PBZX_REFERENCE.md](../test/fixtures/archives/PBZX_REFERENCE.md).
 These native/reference tools are test dependencies only; the app adds no
 runtime dependency or subprocess decoder.
+The complete observed test scope and local environment are recorded in
+[package-reader verification](archive-package-readers-verification.md).
 
 Writer acceptance also includes native GNU tar/Python tarfile and
 GNU ar/libarchive/dpkg-deb readback,
