@@ -27,10 +27,65 @@ Future<void> until(WidgetTester tester, Future<bool> Function() condition,
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('real inline Linux rendering, input, isolation and teardown',
-      (tester) async {
+  const testName = bool.fromEnvironment('EXPECT_RUNTIME_UNAVAILABLE')
+      ? 'installed Linux runtime fails safely before creating a reader'
+      : bool.fromEnvironment('EXPECT_PORTABLE')
+          ? 'portable-only Linux build launches and reports its capability'
+          : 'real inline Linux rendering, input, isolation and teardown';
+  testWidgets(testName, (tester) async {
+    if (const bool.fromEnvironment('EXPECT_RUNTIME_UNAVAILABLE')) {
+      // Exercise direct create before any cached probe, plus concurrent probes.
+      // None may create an in-process WebKit view after the canary fails.
+      final create = native.invokeMethod<dynamic>('create').then<dynamic>(
+            (value) => value,
+            onError: (Object error) => error,
+          );
+      final statuses = await Future.wait([
+        probeEbookLinuxHost(),
+        probeEbookLinuxHost(),
+        probeEbookLinuxHost(),
+      ]);
+      for (final status in statuses) {
+        expect(status.available, isFalse);
+        expect(status.version, isNotEmpty);
+        expect(
+            status.reason, contains('sandboxed WebKit startup check failed'));
+      }
+      expect(await create, isA<PlatformException>());
+      final current = await stats();
+      expect(current['views'], 0);
+      expect(current['surfaceSlots'], 0);
+      expect(current['canaryAttempts'], 1);
+      expect(current['canaryRunning'], isFalse);
+      expect(current['canaryReady'], isFalse);
+      await expectLater(
+        native.invokeMethod<dynamic>('create'),
+        throwsA(isA<PlatformException>()),
+      );
+      expect((await stats())['canaryAttempts'], 1);
+      var clicks = 0;
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: TextButton(
+            onPressed: () => clicks++,
+            child: const Text('Portable reader available'),
+          ),
+        ),
+      ));
+      await tester.tap(find.text('Portable reader available'));
+      await tester.pump();
+      expect(clicks, 1);
+      debugPrint(
+          'linux-host test: installed runtime safely unavailable; Flutter remains responsive');
+      return;
+    }
     debugPrint('linux-host test: probing native host');
-    final status = await probeEbookLinuxHost();
+    final statuses = await Future.wait([
+      probeEbookLinuxHost(),
+      probeEbookLinuxHost(),
+      probeEbookLinuxHost(),
+    ]);
+    final status = statuses.first;
     debugPrint('linux-host test: probe completed');
     if (const bool.fromEnvironment('EXPECT_PORTABLE')) {
       expect(status.available, isFalse);
@@ -40,6 +95,10 @@ void main() {
     expect(status.available, isTrue, reason: status.reason);
     expect(status.runtime, 'webkitgtk-4.1');
     expect(status.version, isNotEmpty);
+    expect(statuses.every((value) => value.available), isTrue);
+    expect((await stats())['canaryAttempts'], 1);
+    expect((await stats())['canaryRunning'], isFalse);
+    expect((await stats())['views'], 0);
 
     // The self-authored book contains script, image, iframe and CSS requests to
     // this distinct origin. Opening and interacting with the real WebKit book

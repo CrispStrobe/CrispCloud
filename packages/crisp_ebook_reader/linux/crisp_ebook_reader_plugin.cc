@@ -1,5 +1,6 @@
 #include "include/crisp_ebook_reader/crisp_ebook_reader_plugin.h"
 
+#include <dlfcn.h>
 #include <gmodule.h>
 #include <gtk/gtk.h>
 
@@ -17,7 +18,8 @@
 
 #ifdef CRISP_EBOOK_HAS_WEBKITGTK
 #include <epoxy/gl.h>
-#include <webkit2/webkit2.h>
+#include "webkit_runtime.h"
+#include "reader_canary_probe.h"
 #include "reader_surface_size.h"
 #endif
 
@@ -26,54 +28,11 @@ namespace {
 constexpr char kChannel[] = "crisp_ebook_reader/linux_host";
 constexpr char kRuntime[] = "webkitgtk-4.1";
 #ifdef CRISP_EBOOK_HAS_WEBKITGTK
+using crisp_ebook::Trace;
+using crisp_ebook::WebKitApi;
+
 constexpr size_t kMaximumMessage = 192 * 1024 * 1024;
 constexpr int64_t kMaximumPixels = crisp_ebook::kMaximumPixels;
-
-void WriteTraceFile(const char* fixed_label) {
-  // Flutter's Linux integration-test driver does not forward native device
-  // logs. Preserve fixed labels only, never raw native messages or arguments.
-  const char* path = g_getenv("CRISP_EBOOK_HOST_TRACE_PATH");
-  if (path != nullptr && *path != '\0') {
-    static std::mutex trace_mutex;
-    std::lock_guard<std::mutex> lock(trace_mutex);
-    if (FILE* file = std::fopen(path, "a")) {
-      std::fprintf(file, "crisp ebook linux: %s\n", fixed_label);
-      std::fclose(file);
-    }
-  }
-}
-
-void Trace(const char* stage) {
-  if (g_strcmp0(g_getenv("CRISP_EBOOK_HOST_TRACE"), "1") == 0) {
-    g_message("crisp ebook linux: %s", stage);
-    WriteTraceFile(stage);
-  }
-}
-
-void DiagnosticLog(const gchar* domain, GLogLevelFlags level,
-                    const gchar* message, gpointer data) {
-  if ((level & (G_LOG_LEVEL_ERROR | G_LOG_FLAG_FATAL)) != 0) {
-    // These fixed prefixes identify the fatal paths in WebKitGTK's upstream
-    // GLib process launcher. The trailing OS/path/argument text is discarded.
-    const char* classification = "unclassified native fatal log";
-    for (const char* prefix : {
-        "Failed to fully launch dbus-proxy", "Failed to start dbus proxy",
-        "Failed to make syncfds for dbus-proxy", "Unable to spawn a new child process",
-        "Failed to create pid socket wrapper", "Failed to read pid from child process",
-        "Spawned process died immediately", "Failed to init seccomp",
-        "Failed to block syscall", "Failed to export seccomp bpf",
-        "Failed to create memfd", "Failed to write memfd", "lseek failed"}) {
-      if (message != nullptr && g_str_has_prefix(message, prefix)) {
-        classification = prefix;
-        break;
-      }
-    }
-    // Do not call g_log recursively from a log handler. Preserve its normal
-    // fatal behavior after recording the classification, without suppressing it.
-    WriteTraceFile(classification);
-  }
-  g_log_default_handler(domain, level, message, data);
-}
 
 FlValue* Field(FlValue* map, const char* key) {
   return map != nullptr && fl_value_get_type(map) == FL_VALUE_TYPE_MAP
@@ -119,89 +78,6 @@ void Error(FlMethodCall* call, const std::string& message) {
 }
 
 #ifdef CRISP_EBOOK_HAS_WEBKITGTK
-
-// Resolve every WebKit/JSC symbol through one resident module. There are no
-// DT_NEEDED entries for WebKit: missing system runtime cannot stop app startup.
-#define WEBKIT_SYMBOLS(X) \
-  X(webkit_get_major_version) X(webkit_get_minor_version) X(webkit_get_micro_version) \
-  X(webkit_web_view_get_type) X(webkit_web_context_new_ephemeral) \
-  X(webkit_web_context_set_sandbox_enabled) X(webkit_web_context_get_sandbox_enabled) \
-  X(webkit_web_view_get_settings) X(webkit_web_view_get_user_content_manager) \
-  X(webkit_web_view_get_uri) X(webkit_web_view_load_uri) X(webkit_web_view_stop_loading) \
-  X(webkit_web_view_set_zoom_level) X(webkit_web_view_get_snapshot) \
-  X(webkit_web_view_get_snapshot_finish) X(webkit_web_view_evaluate_javascript) \
-  X(webkit_web_view_evaluate_javascript_finish) X(webkit_web_view_execute_editing_command) \
-  X(webkit_user_content_manager_register_script_message_handler) \
-  X(webkit_user_content_manager_unregister_script_message_handler) \
-  X(webkit_user_content_manager_add_script) X(webkit_user_content_manager_remove_all_scripts) \
-  X(webkit_user_script_new) X(webkit_user_script_unref) \
-  X(webkit_javascript_result_get_js_value) X(jsc_value_to_string) \
-  X(webkit_settings_set_enable_javascript) \
-  X(webkit_settings_set_javascript_can_open_windows_automatically) \
-  X(webkit_settings_set_allow_file_access_from_file_urls) \
-  X(webkit_settings_set_allow_universal_access_from_file_urls) \
-  X(webkit_settings_set_enable_html5_local_storage) \
-  X(webkit_settings_set_enable_html5_database) X(webkit_settings_set_enable_page_cache) \
-  X(webkit_settings_set_enable_developer_extras) \
-  X(webkit_settings_set_enable_media_stream) \
-  X(webkit_settings_set_media_playback_requires_user_gesture) \
-  X(webkit_settings_set_hardware_acceleration_policy) \
-  X(webkit_navigation_policy_decision_get_navigation_action) \
-  X(webkit_navigation_action_get_request) X(webkit_uri_request_get_uri) \
-  X(webkit_response_policy_decision_is_main_frame_main_resource) \
-  X(webkit_response_policy_decision_get_request) \
-  X(webkit_policy_decision_use) X(webkit_policy_decision_ignore) \
-  X(webkit_permission_request_deny) X(webkit_file_chooser_request_cancel) \
-  X(webkit_authentication_request_cancel) X(webkit_script_dialog_close) \
-  X(webkit_download_cancel) X(webkit_network_error_quark) X(webkit_policy_error_quark) \
-  X(webkit_hit_test_result_context_is_link)
-
-struct WebKitApi {
-#define DECLARE_SYMBOL(name) decltype(&::name) name = nullptr;
-  WEBKIT_SYMBOLS(DECLARE_SYMBOL)
-#undef DECLARE_SYMBOL
-  bool available = false;
-  std::string version;
-  std::string reason;
-
-  WebKitApi() {
-    if (g_strcmp0(g_getenv("CRISP_EBOOK_HOST_TRACE"), "1") == 0) {
-      g_log_set_default_handler(DiagnosticLog, nullptr);
-    }
-    Trace("loading system WebKit module");
-    GModule* module = g_module_open("libwebkit2gtk-4.1.so.0",
-                                   static_cast<GModuleFlags>(G_MODULE_BIND_LAZY | G_MODULE_BIND_LOCAL));
-    if (module == nullptr) {
-      reason = "WebKitGTK 4.1 is not installed. Install the distribution's libwebkit2gtk-4.1-0 runtime.";
-      return;
-    }
-    // GTypes and pending native callbacks outlive individual reader instances.
-    g_module_make_resident(module);
-    Trace("system WebKit module loaded");
-#define LOAD_SYMBOL(name) \
-    if (!g_module_symbol(module, #name, reinterpret_cast<gpointer*>(&name))) { \
-      reason = "The WebKitGTK runtime is missing " #name ". Update WebKitGTK to 2.48.4 or newer."; \
-      return; \
-    }
-    WEBKIT_SYMBOLS(LOAD_SYMBOL)
-#undef LOAD_SYMBOL
-    Trace("WebKit symbols resolved");
-    const guint major = webkit_get_major_version();
-    const guint minor = webkit_get_minor_version();
-    const guint micro = webkit_get_micro_version();
-    version = std::to_string(major) + "." + std::to_string(minor) + "." +
-              std::to_string(micro);
-    // 2.48.0–2.48.3 have a documented GtkOffscreenWindow initialization crash.
-    // Require the upstream fix rather than advertising the older API floor.
-    available = major > 2 || (major == 2 && (minor > 48 || (minor == 48 && micro >= 4)));
-    if (!available) reason = "WebKitGTK 2.48.4 or newer is required; installed version is " + version + ".";
-  }
-
-  static WebKitApi& Get() {
-    static WebKitApi api;
-    return api;
-  }
-};
 
 struct Frame {
   uint32_t width = 1;
@@ -358,21 +234,7 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
     webview_ = reinterpret_cast<WebKitWebView*>(
         g_object_new(api_.webkit_web_view_get_type(), "web-context", context_, nullptr));
     Trace("configuring WebKit view");
-    auto* settings = api_.webkit_web_view_get_settings(webview_);
-    api_.webkit_settings_set_enable_javascript(settings, TRUE);
-    api_.webkit_settings_set_javascript_can_open_windows_automatically(settings, FALSE);
-    api_.webkit_settings_set_allow_file_access_from_file_urls(settings, FALSE);
-    api_.webkit_settings_set_allow_universal_access_from_file_urls(settings, FALSE);
-    api_.webkit_settings_set_enable_html5_local_storage(settings, FALSE);
-    api_.webkit_settings_set_enable_html5_database(settings, FALSE);
-    api_.webkit_settings_set_enable_page_cache(settings, FALSE);
-    api_.webkit_settings_set_enable_developer_extras(settings, FALSE);
-    api_.webkit_settings_set_enable_media_stream(settings, FALSE);
-    api_.webkit_settings_set_media_playback_requires_user_gesture(settings, TRUE);
-    // GTK offscreen windows cannot present a browser compositor surface. The
-    // public snapshot API paints into CPU memory; Flutter owns the GL upload.
-    api_.webkit_settings_set_hardware_acceleration_policy(
-        settings, WEBKIT_HARDWARE_ACCELERATION_POLICY_NEVER);
+    crisp_ebook::ConfigureWebView(api_, webview_);
     content_ = api_.webkit_web_view_get_user_content_manager(webview_);
     g_signal_connect(content_, "script-message-received::CrispEbookMessage", G_CALLBACK(Message), this);
     if (!api_.webkit_user_content_manager_register_script_message_handler(content_, "CrispEbookMessage")) {
@@ -847,7 +709,7 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
 };
 #endif  // CRISP_EBOOK_HAS_WEBKITGTK
 
-class Plugin {
+class Plugin : public std::enable_shared_from_this<Plugin> {
  public:
   Plugin(FlMethodChannel* channel, FlTextureRegistrar* registrar)
       : channel_(channel), registrar_(FL_TEXTURE_REGISTRAR(g_object_ref(registrar)))
@@ -857,6 +719,7 @@ class Plugin {
         {}
   ~Plugin() {
 #ifdef CRISP_EBOOK_HAS_WEBKITGTK
+    probe_->Cancel();
     for (auto& entry : views_) entry.second->Close();
     views_.clear();
 #endif
@@ -867,49 +730,34 @@ class Plugin {
     const std::string method = fl_method_call_get_name(call);
     FlValue* args = fl_method_call_get_args(call);
     if (method == "probe") {
+#ifdef CRISP_EBOOK_HAS_WEBKITGTK
+      AwaitReady(call, false);
+#else
       g_autoptr(FlValue) status = fl_value_new_map();
       Put(status, "runtime", kRuntime);
-#ifdef CRISP_EBOOK_HAS_WEBKITGTK
-      auto& api = WebKitApi::Get();
-      const bool software = g_strcmp0(g_getenv("FLUTTER_LINUX_RENDERER"), "software") == 0;
-      const bool available = api.available && !software && gdk_display_get_default() != nullptr;
-      fl_value_set_string_take(status, "available", fl_value_new_bool(available));
-      if (!api.version.empty()) Put(status, "version", api.version);
-      if (!available) Put(status, "reason", software ?
-          "The embedded Linux reader requires Flutter's OpenGL renderer. The portable reader is available in software-rendering mode." :
-          api.reason.empty() ? "A graphical Linux session is required." : api.reason);
-#else
       fl_value_set_string_take(status, "available", fl_value_new_bool(false));
-      Put(status, "reason", "This build has no WebKitGTK4.1 host. Rebuild with libwebkit2gtk-4.1-dev (2.48.4 or newer).");
+      Put(status, "reason", "This build has no WebKitGTK4.1 host. Rebuild with libwebkit2gtk-4.1-dev (2.48.4 or newer) and CMake 3.19 or newer.");
+      fl_method_call_respond_success(call, status, nullptr);
 #endif
-      fl_method_call_respond_success(call, status, nullptr); return;
+      return;
     }
 #ifdef CRISP_EBOOK_HAS_WEBKITGTK
     if (method == "stats") {
       g_autoptr(FlValue) stats = fl_value_new_map();
       fl_value_set_string_take(stats, "views", fl_value_new_int(views_.size()));
       fl_value_set_string_take(stats, "surfaceSlots", fl_value_new_int(textures_.size()));
+      fl_value_set_string_take(stats, "canaryRunning", fl_value_new_bool(probe_->running()));
+      fl_value_set_string_take(stats, "canaryReady", fl_value_new_bool(probe_->available()));
+      fl_value_set_string_take(stats, "canaryAttempts", fl_value_new_int(probe_->attempts()));
       g_autoptr(FlValue) items = fl_value_new_list();
       for (const auto& entry : views_) fl_value_append_take(items, entry.second->Stats());
       fl_value_set_string(stats, "items", items);
       fl_method_call_respond_success(call, stats, nullptr); return;
     }
     if (method == "create") {
-      auto& api = WebKitApi::Get();
-      if (!api.available) { Error(call, api.reason); return; }
-      if (g_strcmp0(g_getenv("FLUTTER_LINUX_RENDERER"), "software") == 0) {
-        Error(call, "The embedded Linux reader requires Flutter's OpenGL renderer."); return;
-      }
-      if (views_.size() >= 4) { Error(call, "The Linux reader has reached its four-view limit."); return; }
-      const int64_t id = next_id_++;
-      auto view = std::make_shared<ReaderView>(id, channel_, registrar_, textures_);
-      std::string error;
-      if (!view->Initialize(&error)) { Error(call, error); return; }
-      views_.emplace(id, view);
-      g_autoptr(FlValue) result = fl_value_new_map();
-      fl_value_set_string_take(result, "id", fl_value_new_int(id));
-      fl_value_set_string_take(result, "textureId", fl_value_new_int(view->texture_id()));
-      fl_method_call_respond_success(call, result, nullptr); return;
+      // Direct method-channel users cannot bypass the readiness guard.
+      AwaitReady(call, true);
+      return;
     }
     auto found = views_.find(Integer(args, "id", -1));
     if (method == "dispose") {
@@ -940,6 +788,54 @@ class Plugin {
   [[maybe_unused]] FlMethodChannel* channel_;
   FlTextureRegistrar* registrar_;
 #ifdef CRISP_EBOOK_HAS_WEBKITGTK
+  static std::string CanaryPath() {
+    Dl_info module = {};
+    if (dladdr(reinterpret_cast<void*>(&crisp_ebook_reader_plugin_register_with_registrar), &module) == 0 ||
+        module.dli_fname == nullptr) return "";
+    g_autofree char* directory = g_path_get_dirname(module.dli_fname);
+    g_autofree char* absolute = g_canonicalize_filename(directory, nullptr);
+    return std::string(absolute) + "/crisp_ebook_reader_probe";
+  }
+
+  void AwaitReady(FlMethodCall* call, bool create) {
+    auto weak = weak_from_this();
+    // A queued method call stays owned until readiness resolves; the plugin
+    // itself stays weak so engine teardown cancels the canary immediately.
+    std::shared_ptr<FlMethodCall> retained(
+        FL_METHOD_CALL(g_object_ref(call)), [](FlMethodCall* value) { g_object_unref(value); });
+    probe_->Request(CanaryPath(), [weak, retained, create](const crisp_ebook::CanaryResult& result) {
+      auto self = weak.lock();
+      if (self == nullptr) return;
+      if (create) {
+        if (!result.available) { Error(retained.get(), result.reason); return; }
+        self->CreateReadyView(retained.get());
+        return;
+      }
+      g_autoptr(FlValue) status = fl_value_new_map();
+      Put(status, "runtime", kRuntime);
+      fl_value_set_string_take(status, "available", fl_value_new_bool(result.available));
+      if (!result.version.empty()) Put(status, "version", result.version);
+      if (!result.reason.empty()) Put(status, "reason", result.reason);
+      fl_method_call_respond_success(retained.get(), status, nullptr);
+    });
+  }
+
+  void CreateReadyView(FlMethodCall* call) {
+    // Recheck after the shared asynchronous probe: several queued create calls
+    // may complete together, but no more than four may acquire a view.
+    if (views_.size() >= 4) { Error(call, "The Linux reader has reached its four-view limit."); return; }
+    const int64_t id = next_id_++;
+    auto view = std::make_shared<ReaderView>(id, channel_, registrar_, textures_);
+    std::string error;
+    if (!view->Initialize(&error)) { Error(call, error); return; }
+    views_.emplace(id, view);
+    g_autoptr(FlValue) result = fl_value_new_map();
+    fl_value_set_string_take(result, "id", fl_value_new_int(id));
+    fl_value_set_string_take(result, "textureId", fl_value_new_int(view->texture_id()));
+    fl_method_call_respond_success(call, result, nullptr);
+  }
+
+  std::shared_ptr<crisp_ebook::CanaryProbe> probe_ = std::make_shared<crisp_ebook::CanaryProbe>();
   TexturePool textures_;
   int64_t next_id_ = 1;
   std::map<int64_t, std::shared_ptr<ReaderView>> views_;
@@ -952,8 +848,9 @@ void crisp_ebook_reader_plugin_register_with_registrar(FlPluginRegistrar* regist
   g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
   g_autoptr(FlMethodChannel) channel = fl_method_channel_new(
       fl_plugin_registrar_get_messenger(registrar), kChannel, FL_METHOD_CODEC(codec));
-  auto* plugin = new Plugin(channel, fl_plugin_registrar_get_texture_registrar(registrar));
+  using Owner = std::shared_ptr<Plugin>;
+  auto* owner = new Owner(std::make_shared<Plugin>(channel, fl_plugin_registrar_get_texture_registrar(registrar)));
   fl_method_channel_set_method_call_handler(channel,
-      [](FlMethodChannel*, FlMethodCall* call, gpointer data) { static_cast<Plugin*>(data)->Handle(call); },
-      plugin, [](gpointer data) { delete static_cast<Plugin*>(data); });
+      [](FlMethodChannel*, FlMethodCall* call, gpointer data) { (*static_cast<Owner*>(data))->Handle(call); },
+      owner, [](gpointer data) { delete static_cast<Owner*>(data); });
 }

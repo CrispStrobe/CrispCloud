@@ -569,6 +569,74 @@ Linux distribution still needs evidence for its actual runtime and native
 dependency graph. This source inspection does not audit the browser engine,
 prove every system's sandbox configuration, or change Apple/export decisions.
 
+### Isolated Linux startup readiness check
+
+The subsequent readiness review retains those 207 paths and binds six more,
+for 213: four new runtime sources plus the unchanged root Linux installation
+file and standalone smoke-project preparer. The latter two are newly reviewed
+inputs, not edited files. The package's existing CMake file now builds and
+installs a sibling `crisp_ebook_reader_probe` executable; WebKit itself remains
+a system dependency.
+
+[`webkit_runtime.h`](../packages/crisp_ebook_reader/linux/webkit_runtime.h)
+contains the shared dynamic API loading, version check and browser settings.
+Both the production view and the helper keep ephemeral storage, the required
+WebKit sandbox, disabled file-URL access and disabled persistent WebView storage.
+Neither adds a sandbox bypass. The helper loads only a small, fixed loopback
+document and requires its exact JavaScript message from the matching URI.
+The probe takes no publication bytes, account credentials or arbitrary URL.
+
+The worker uses GLib's `g_uuid_string_random()` for the temporary URL path.
+The [GLib API documentation](https://docs.gtk.org/glib/func.uuid_string_random.html)
+describes a version-4 UUID with `GRand` randomness guarantees and excludes
+cryptographic uses. Here it names a route to a fixed, non-sensitive test page;
+it is not an encryption key, cryptographic nonce or substitute for the
+production reader's `Random.secure()` bridge session.
+
+[`reader_canary_probe.h`](../packages/crisp_ebook_reader/linux/reader_canary_probe.h)
+resolves the helper beside the loaded plugin without a `PATH` search. Native
+`probe` and direct `create` calls share the same asynchronous readiness check;
+neither creates an in-process WebKit view after a failed result. The result
+requires exact proof bytes and a successful helper exit, with at most 64 bytes
+of captured output. Its 12-second deadline is followed by a 2-second termination
+bound, and the Dart probe waits 16 seconds. Forced termination uses GLib's
+serialized subprocess API, without raw PID/group signaling from the GTK
+callback after a possible background reap. Concurrent requests are coalesced;
+the result is cached, so installing or repairing runtime prerequisites requires
+restarting the application.
+
+The fresh [supervisor](../packages/crisp_ebook_reader/linux/reader_canary_supervisor.h)
+starts the worker directly with `posix_spawn`, gives it a separate process
+group, adopts orphaned descendants as a Linux child subreaper, and bounds
+worker time to 9 seconds plus 2 seconds for cleanup. Before reporting success
+it requires the exact worker proof, exit code zero, proof-stream EOF and no
+remaining children. It keeps the worker PID reserved before signaling its
+group and verifies child ownership before signaling later adopted processes.
+Failure, cancellation or a missing prerequisite produces an unavailable result,
+without relaxing the system's sandbox policy.
+
+The supervisor and [worker](../packages/crisp_ebook_reader/linux/reader_canary.cc)
+independently disable their own dumpability and use a zero core-size limit.
+The worker reapplies its setting after execution; Linux resets dumpability on
+[ordinary executable replacement](https://man7.org/linux/man-pages/man2/execve.2.html).
+This does not establish dump policy for every separately executed system
+WebKit descendant. Diagnostic trace output still uses fixed labels, and the
+workflow's process cleanup check reads only process IDs and kernel process
+names, without collecting command arguments, environment or memory.
+
+The enhanced build requires CMake 3.19 for a deferred `install(TARGETS)` rule.
+That rule executes after the top-level Flutter bundle cleanup and installs the
+helper into `lib` with mode 0755. The plugin and helper dynamically load WebKit;
+neither the helper nor its packaging adds a crypto implementation or production
+Dart dependency. Missing headers, insufficient CMake or an unavailable runtime
+retain the portable build/runtime path.
+
+This contains the measured startup check inside a helper process. It does not
+move the actual reader out of process, and cached readiness cannot guarantee
+that later initialization, rendering or changing system conditions will work.
+Real native rendering, input, packaging and runtime-failure tests remain
+separate evidence; the helper source is not a passing platform qualification.
+
 ### Meaning of the existing export-policy status
 
 `documentation.status: not_required` in the existing Apple policy records the

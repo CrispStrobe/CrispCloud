@@ -21,8 +21,10 @@ remain separate requirements.
 
 The initial ebook review retained all **128** previously reviewed paths and
 added **49**, for **177** unique paths. The follow-on review retains all 177
-and adds **30**, bringing the [inventory](crypto-inventory.json) to **207**
-unique paths. The initial exact-byte comparison against the main baseline
+and adds **30**, for **207** unique paths. The isolated Linux startup review
+below retains those 207 and adds **six**, bringing the
+[inventory](crypto-inventory.json) to **213** unique paths. The initial
+exact-byte comparison against the main baseline
 found changes in three of its previously listed files; the other 125 matched.
 
 | Existing input | Reviewed change |
@@ -278,3 +280,99 @@ No crypto/export gate is relaxed. Replacing the plugin digest with its
 inventory bytes, the root lock, and every non-source-digest policy field remain
 unchanged. The updated fingerprint above passes the existing source check.
 This is diagnostic evidence preparation, not a resolved WebKit startup failure.
+
+## Isolated Linux startup review
+
+The next delta starts from `67ee2af`. Exactly three of its 207 bound inputs
+change: the native plugin, its package CMake file, and `linux_host_probe.dart`.
+The plugin now waits for a separate startup helper before either `probe` or
+direct `create` can enable an in-process reader. Dynamic WebKit loading,
+version checks, browser settings and the fixed-label trace helper move into a
+shared header. The Dart probe allows 16 seconds for the bounded native attempt.
+The root dependency lock and production Dart dependencies are unchanged.
+
+Six paths are newly bound:
+
+| Path | Reviewed role |
+| --- | --- |
+| `packages/crisp_ebook_reader/linux/webkit_runtime.h` | Shared system WebKit/JSC symbol loading, minimum version, settings and opt-in diagnostics. |
+| `packages/crisp_ebook_reader/linux/reader_canary.cc` | Fresh sandboxed WebKit worker, fixed loopback document, bounded HTTP request, exact JavaScript reply and local cleanup. |
+| `packages/crisp_ebook_reader/linux/reader_canary_probe.h` | Asynchronous helper launch, bounded proof capture, timeout/cancellation, coalesced requests and cached availability. |
+| `packages/crisp_ebook_reader/linux/reader_canary_supervisor.h` | Direct worker spawning, bounded proof/exit checks, child-subreaper cleanup and termination handling. |
+| `linux/CMakeLists.txt` | Unchanged root installation order, reviewed to confirm Flutter bundle cleanup precedes the helper install. |
+| `packages/crisp_ebook_reader/tool/prepare_linux_host_smoke.py` | Unchanged standalone integration-project and fixture setup, reviewed as the second installation context. |
+
+The two existing installation/test inputs were inspected and added to the
+binding; they were not edited. The package CMake file requires CMake 3.19 for
+the enhanced host and directly defers a constant-argument `install(TARGETS)`
+call to the root directory. This schedules the executable helper's mode-0755
+installation after Flutter's bundle cleanup in both application contexts.
+WebKit and JavaScriptCore remain system dependencies, with no copied runtime
+and no direct WebKit/JSC link added to the plugin or helper.
+
+The [technical appendix](crypto-audit.md#isolated-linux-startup-readiness-check)
+records the complete scope and limits. The helper accepts application identity
+strings, not publication bytes, credentials or an arbitrary destination. Its
+fixed document has a loopback URL whose GLib UUID uses the documented `GRand`
+guarantees; it is not a cryptographic secret or a replacement for production
+reader sessions. Both native entry points require exact proof, a successful
+helper exit and completed descendant cleanup. Supervisor and worker separately
+disable their own dumpability; this does not establish the policy of every
+separately executed system browser process.
+
+The final review removed raw PID/group signaling from the GTK timeout callback:
+GLib may already have reaped that process in a background thread before the
+callback runs. The callback now uses only GLib's serialized force-exit API.
+The separate supervisor retains its own unreaped-worker ownership checks for
+group/descendant cleanup. This distinction avoids signaling a reused process
+identifier from the application's asynchronous callback.
+
+The supervisor's local regression suite exercised 16 actual process cases,
+including malformed/missing proof, crash/timeout, cancellation/parent death,
+escaped-descendant cleanup and the bounded `/proc` fallback. These checks
+validate the supervision code without requiring GTK. The revised native
+workflow separately requires real rendering, tests an installed runtime that
+cannot start safely, checks portable-only behavior and missing-runtime startup,
+and inspects helper installation and dynamic dependencies. Its cleanup check
+reads process IDs and names, without command arguments, environment or memory.
+These new hosted native checks have not yet established a passing result for
+this candidate. Previously passing browser/application checks are recorded
+separately in the [parity recovery record](recovery/ebook-parity-2026-11-12.md).
+
+Readiness is cached for the plugin lifetime, so a prerequisite repair requires
+an application restart. The actual reader remains in process; the isolated
+test contains startup failures observed in that helper, not all future
+renderer failures or changes in system conditions. Neither this review nor
+the new source hashes constitutes a native release qualification.
+
+### Isolated startup fingerprints and validation
+
+The final reviewed inputs include the race-safe GLib termination callback and
+the frozen supervisor tested above. The prior 207-path canonical source map
+reproduces the preceding `1e143af4` fingerprint. Comparing that map with these
+inputs finds only the three changed bound paths listed above, plus the six
+newly bound paths. The root pubspec matches its committed contents.
+
+```json
+{
+  "inventory_sha256": "11c8f1a9230692151df75dc434c4097d36c48f9584072caf151afb97744ed765",
+  "pubspec_lock_sha256": "3b1a93697f3b0c8b43fb436989247219524baa00b6f2357c75bac8fabb0a9673",
+  "reviewed_source_sha256": "5780117a9e14998062768652c44773e52ed1824b8ff0d40ea61bace0a33326f5"
+}
+```
+
+The unchanged gates were rerun against this candidate:
+
+- `test_crypto_release_evidence.py`: 41 tests completed, with the same two
+  platform-dependent skips.
+- `test_apple_export_preflight.py`: all 37 tests passed.
+- `crypto_release_evidence.py --check`: passed against all 213 reviewed paths,
+  the inventory and the complete root lockfile.
+- `git diff --check`: passed for the four review/policy files.
+
+A structural comparison confirms that all prior 14 feature records and 207
+paths remain intact. One feature record and six paths are appended. Only the
+policy's inventory and reviewed-source digests change; its root-lock digest,
+application identity, review date, encryption declaration, documentation
+status and evidence, France records and TestFlight records remain exactly
+unchanged. No validator or acceptance rule was modified.

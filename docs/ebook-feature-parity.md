@@ -24,14 +24,20 @@ The expansion adds a narrow Linux WebKitGTK 4.1 host for the **same bundled
 Foliate assets and command/event bridge**. It composes a native offscreen
 browser through a Flutter texture, rather than positioning a separate native
 window above Flutter dialogs. The existing stable plugin and other platform
-dependencies are retained. Linux support is selected only after a runtime
-probe; a build without the optional development headers or an installation
-without the runtime continues to launch and can use the portable EPUB reader.
+dependencies are retained. Linux support is selected only after an isolated
+startup check: a packaged helper must load the same sandboxed WebKit runtime,
+serve a fixed local readiness page, receive its JavaScript reply and clean up
+its subprocesses. Missing libraries, unusable sandbox prerequisites, helper
+failure or timeout report an unavailable host before an in-process WebView is
+created. A build without the optional development headers also continues to
+launch and can use the portable EPUB reader. The result is cached for the app
+process; restart after changing runtime prerequisites.
 
 The Linux code is not, by itself, evidence of a working shipping Linux build.
 Its dedicated gate must compile and exercise the actual WebKit process, frame
 production, Flutter texture consumption, screenshot composition, input, resize,
-navigation and disposal. An unavailable runtime is a fallback result, never a
+navigation and disposal. The startup check is not a rendering/input test, and
+does not prevent every possible later browser or graphics failure. An unavailable runtime is a fallback result, never a
 passing enhanced-reader check. See the recovery record for the latest results.
 
 ## What “the same experience” requires

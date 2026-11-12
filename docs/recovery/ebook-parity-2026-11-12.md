@@ -91,6 +91,7 @@ do not upgrade unrelated platform implementations silently.
 | `2b31742f7f63ef23c9cee0cb56783f36e202e59a` | Shared navigation/layout controls, lifecycle guard, integrated library/import/export UI, recovery flows, localization and parity analysis. |
 | `506167333440c34290e8f9acee6da4275b5f6bb7` | Optional native Linux host, bounded surface pool and real hosted rendering/input/runtime-absence gates. |
 | `1d081588f4d2a86c7422c967e3d4b6134ffbf0c9` | Browser compatibility fallback, Linux packaging/registration, reviewed technical source bindings and native diagnostic gates; saved on the existing feature branch and draft PR. |
+| `67ee2afbe06ab857e6ea654ab8aa2b5c9f1fc2d0` | Bounded native launch diagnostics, unchanged-policy sandbox probe and precise anchor/history/library limits on the checkpoint branch. |
 
 The implemented product scope is described in [the user guide](../ebooks.md)
 and [the detailed FBReader comparison](../ebook-feature-parity.md). The Linux
@@ -175,12 +176,53 @@ instances, hostile-resource isolation and runtime-removal launch must still pass
 
 The main ebook workflow at `1d08158` is
 [43225371743](https://github.com/CrispStrobe/CrispCloud/actions/runs/43225371743).
-Its direct run/job endpoints confirm that it registered, even though generic
-branch-run listings omitted it. At the diagnostic checkpoint, EPUBCheck and
-macOS had passed; application/web, Windows and the Ubuntu browser gate were
-still running or queued. Keep the Linux diagnostic work on the checkpoint
-branch while these jobs finish, so another feature-branch push does not cancel
-the actual-browser gate.
+Its direct run/job endpoints confirmed that it registered, even though generic
+branch-run listings omitted it. **All five jobs passed**: EPUBCheck,
+application tests/web release build, and the Ubuntu/macOS/Windows native
+conversion jobs. The Ubuntu job also passed actual Chromium rendering and
+interaction for EPUB/FB2/CBZ and all five Kindle fixtures. This exercised the
+new progress/history, publisher styles, CFI-preserving appearance, fixed-layout
+capabilities, highlights and script isolation, with no terminal page error.
+The earlier iframe-body lifecycle failure is therefore verified fixed on that
+browser. The production metadata adapter passed 24 assertions in actual
+Chromium, as well as 24 assertions across 11 real Node workers with none leaked.
+These browser results do not establish native WebKitGTK rendering.
+
+The next Linux diagnostic run,
+[43227210073](https://github.com/CrispStrobe/CrispCloud/actions/runs/43227210073)
+at `67ee2af`, identified WebKit's fatal startup classification as
+`Failed to fully launch dbus-proxy`. The unchanged-policy bubblewrap probe also
+failed with `loopback: Failed RTM_NEWADDR: Operation not permitted`. These
+establish unmet sandbox startup prerequisites on this runner; the network
+probe alone does not establish the proxy's exact failure. The portable-only
+application launch passed again. No runner policy or browser isolation was
+changed. A safe product availability check must contain this kind of native
+startup failure in a bounded child process before selecting the enhanced host;
+library/version presence alone is insufficient.
+
+### Startup guard implementation
+
+The follow-up implementation uses a source-built helper beside the plugin.
+Its worker creates the same ephemeral, sandboxed WebKit context and offscreen
+view, serves only a fixed loopback readiness page, and requires the exact
+JavaScript proof. A supervisor contains fatal worker exits and cleans up the
+process tree. The asynchronous parent bounds output and time, requires a clean
+helper exit and exact proof, and coalesces concurrent requests. Both public
+probe and direct create paths use that result before creating an in-process
+WebView. The result is cached for the running app; later per-view failures
+remain possible. No book or account data is passed to the helper.
+
+The helper is installed after Flutter's bundle cleanup with executable
+permissions. It uses the complete system WebKit runtime without a hard WebKit
+library dependency. Its own core dumps are disabled. Native and Dart timeouts
+leave room for orderly cleanup before an unavailable result is returned.
+
+The next native workflow distinguishes three acceptance targets: actual
+enhanced rendering/input on an unchanged Ubuntu 22.04 runner; safe reporting of
+the observed installed-but-unusable runtime on Ubuntu 24.04; and a portable-only
+Ubuntu 24.04 build. The enhanced target still requires real pixels and input and
+does not accept fallback as success. Results must be recorded after the run;
+implementation and compile checks alone do not establish a rendering pass.
 
 Shipping Linux build jobs now install the optional development headers, the
 application's generated registrants include the new plugin, and the Debian

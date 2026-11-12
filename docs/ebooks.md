@@ -48,12 +48,15 @@ location formats differ.
 | --- | --- | --- | --- | --- |
 | Android, iOS, macOS, Windows | Enhanced reader using the platform WebView; its runtime must be available. | Yes | Supported enhanced-reader formats | Available when the native converter is bundled and loads successfully. |
 | Web | Enhanced reader in a Flutter asset iframe. | Yes | Supported enhanced-reader formats | Metadata copies use the bundled offline Wasm worker. Full Kindle export and cover replacement require a native build. |
-| Linux | The same enhanced engine through the optional embedded WebKitGTK 4.1 host, selected after a runtime probe. A portable Flutter EPUB reader is used when that host is unavailable. | Yes | Supported enhanced-reader formats when the Linux host is available | Available with the native converter, including EPUB-to-Kindle export and metadata copies. |
+| Linux | The same enhanced engine through the optional embedded WebKitGTK 4.1 host, selected after an isolated startup check. A portable Flutter EPUB reader is used when that host is unavailable. | Yes | Supported enhanced-reader formats when the Linux host is available | Available with the native converter, including EPUB-to-Kindle export and metadata copies. |
 
 Linux uses the distribution's complete WebKitGTK runtime rather than bundling
 CEF or a partial browser library. See [Linux build and runtime requirements](../linux/README.md).
-Missing runtime support does not prevent the application from opening. A
-reported host startup error offers **Use portable EPUB reader** explicitly; this
+Missing or unusable runtime support does not prevent the application from
+opening. A bounded helper checks real WebKit startup before the reader uses it;
+the check does not load your book. Restart the application after installing or
+changing the runtime so it can check again. A reported host error offers
+**Use portable EPUB reader** explicitly; this
 keeps its separate locator state instead of interpreting Foliate CFIs as scroll
 positions. The same recovery action is available from the ebook menu.
 
@@ -351,6 +354,14 @@ raw-DEFLATE parser variants, and a successful full web release build. The three
 host-owned reader JavaScript modules in the built web bundle match their source
 hashes. The source audit covers 207 paths; its existing Python suites and
 source-bound evidence check passed without changing any gate or policy decision.
+
+Hosted run [43225371743](https://github.com/CrispStrobe/CrispCloud/actions/runs/43225371743)
+at `1d08158` passed all five jobs: EPUBCheck, application tests/web build and
+native conversion on Ubuntu, macOS and Windows. Actual Chromium also passed
+the EPUB/FB2/CBZ and five Kindle reader fixtures, including the new controls,
+CFI-preserving appearance, fixed-layout behavior and content isolation. The
+production browser metadata adapter passed 24 assertions. The browser lifecycle
+failure from the earlier revision did not recur.
 
 The first dedicated Linux run compiled the enhanced plugin and passed its
 package checks; the portable-only build and launch passed. The enhanced
