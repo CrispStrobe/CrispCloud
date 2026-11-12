@@ -26,6 +26,17 @@ String archiveEndpointText(
 }
 
 const archiveEndpointMessages = <String, List<String>>{
+  "streamedBounds": [
+    "Native streamed archives: up to 8 GiB per container and in total expanded content; 200,000 entries. Temporary disk space is required. Buffered editors, encryption and nested archives have separate limits.",
+    "Native Streaming-Archive: bis zu 8 GiB pro Container und insgesamt entpacktem Inhalt; 200.000 Einträge. Temporärer Speicherplatz ist erforderlich. Editoren, Verschlüsselung und verschachtelte Archive haben eigene Grenzen.",
+    "Archives natives en flux : jusqu’à 8 Gio par conteneur et au total décompressé ; 200 000 éléments. Espace disque temporaire nécessaire. Les éditeurs, le chiffrement et les archives imbriquées ont des limites distinctes.",
+    "Archivos nativos por flujo: hasta 8 GiB por contenedor y en contenido descomprimido total; 200.000 elementos. Requieren espacio temporal en disco. Editores, cifrado y archivos anidados tienen límites propios.",
+    "Arquivos nativos por fluxo: até 8 GiB por contêiner e no total descompactado; 200.000 itens. Requerem espaço temporário em disco. Editores, criptografia e arquivos aninhados têm limites próprios.",
+    "原生流式压缩包：每个容器及解压内容总量最多 8 GiB，最多 200,000 个条目。需要临时磁盘空间。编辑器、加密和嵌套压缩包另有限制。",
+    "ネイティブのストリーミングアーカイブ：コンテナおよび展開内容の合計は最大8 GiB、200,000項目。一時ディスク領域が必要です。エディター、暗号化、入れ子のアーカイブには別の制限があります。",
+    "네이티브 스트리밍 압축 파일: 컨테이너 및 압축 해제 총용량 최대 8 GiB, 200,000개 항목. 임시 디스크 공간이 필요합니다. 편집기, 암호화, 중첩 압축에는 별도 제한이 있습니다.",
+    "الأرشيفات الأصلية بالتدفق: حتى 8 GiB للحاوية ولمجموع المحتوى المفكوك، و200,000 عنصر. تتطلب مساحة مؤقتة على القرص. للمحررات والتشفير والأرشيفات المتداخلة حدود منفصلة.",
+  ],
   'copyTitle': [
     'Copy between archives',
     'Zwischen Archiven kopieren',

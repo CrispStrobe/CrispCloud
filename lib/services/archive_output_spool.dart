@@ -18,6 +18,7 @@ abstract class ArchiveOutputSpool {
 
   int get length;
   int get maxBytes;
+  bool get isSealed;
   Future<void> write(List<int> bytes);
   Future<void> finish();
   Stream<List<int>> openRead({int chunkSize = 256 * 1024});

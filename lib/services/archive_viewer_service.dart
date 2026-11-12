@@ -681,11 +681,11 @@ Future<ViewerArchive> _openWithKoni(
       }
       return builder.takeBytes();
     },
-    // The pinned TAR reader indexes headers and reads file ranges in 64 KiB
-    // chunks. Other Koni readers retain their bounded buffered adapter. Any
+    // The pinned TAR and ZIP readers index metadata and read content in
+    // bounded chunks. Other Koni readers retain their buffered adapter. Any
     // compression wrapper was already decoded under its separate container
     // limit; this does not increase that allowance or readMember's default.
-    streamReader: reader.format.name == 'tar'
+    streamReader: const {'tar', 'zip'}.contains(reader.format.name)
         ? (member, chunkSize) => readChunks(member, maxMemberBytes)
         : null,
     close: () async {

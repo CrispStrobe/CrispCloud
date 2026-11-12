@@ -24,6 +24,8 @@ class _MemorySpool extends ArchiveOutputSpool {
   @override
   int get length => _length;
   bool _finished = false, _disposed = false, _failed = false;
+  @override
+  bool get isSealed => _finished && !_disposed && !_failed;
 
   void _alive() {
     if (_disposed) throw StateError('Archive output spool was disposed.');

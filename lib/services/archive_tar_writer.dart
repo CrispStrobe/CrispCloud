@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:koni_archive/koni_archive.dart' as koni;
+
 import 'archive_compression_writer.dart';
 import 'archive_types.dart';
 import 'archive_viewer_service.dart' show decompressSingleFile;
@@ -75,7 +77,7 @@ Future<ArchiveRewriteInspection> inspectTarRewrite(
       };
       bytes = decompressSingleFile(bytes, 'payload.$suffix').data;
     }
-    return _inspectTar(bytes, archive);
+    return await _inspectTarSource(koni.MemoryByteSource(bytes), archive);
   } catch (error) {
     return ArchiveRewriteInspection(
       reason: error is _TarRefusal
@@ -96,11 +98,16 @@ Future<void> writeTarArchive(
   required Future<void> Function(List<int>) sink,
   ArchiveRewriteInspection? source,
   int maxOutputBytes = _maxOutput,
+  bool streamed = false,
   bool Function()? isCancelled,
 }) async {
   if (maxOutputBytes <= 0 ||
       maxOutputBytes >
-          (source == null ? kArchiveFreshTarOutputLimit : _maxOutput)) {
+          (streamed || source?.container['tar.streamedInspection'] == true
+              ? kArchiveStreamingLimit
+              : source == null
+              ? kArchiveFreshTarOutputLimit
+              : _maxOutput)) {
     throw ArgumentError.value(maxOutputBytes, 'maxOutputBytes');
   }
   void check() {
@@ -208,7 +215,67 @@ Future<void> writeTarArchive(
   }
 }
 
-ArchiveRewriteInspection _inspectTar(Uint8List bytes, ViewerArchive archive) {
+/// Inspects TAR headers and padding with bounded positional reads. The caller
+/// retains [source]; ordinary member payloads are never collected in memory.
+Future<ArchiveRewriteInspection> inspectTarRewriteSource(
+  koni.ByteSource source,
+  ViewerArchive archive, {
+  int maxBytes = kArchiveStreamingLimit,
+  bool Function()? isCancelled,
+}) async {
+  try {
+    if (maxBytes <= 0 ||
+        maxBytes > kArchiveStreamingLimit ||
+        source.length > maxBytes ||
+        archive.isClosed ||
+        archive.formatName != 'tar') {
+      _refuse('The streamed TAR source exceeds its supported bounds.');
+    }
+    return await _inspectTarSource(
+      source,
+      archive,
+      streamed: true,
+      isCancelled: isCancelled,
+    );
+  } catch (error) {
+    return ArchiveRewriteInspection(
+      reason: error is _TarRefusal
+          ? error.message
+          : 'The TAR metadata cannot be preserved safely: $error',
+      container: const {'package.kind': 'tar'},
+    );
+  }
+}
+
+Future<ArchiveRewriteInspection> _inspectTarSource(
+  koni.ByteSource source,
+  ViewerArchive archive, {
+  bool streamed = false,
+  bool Function()? isCancelled,
+}) async {
+  void range(int at, int count) {
+    if (at < 0 ||
+        count < 0 ||
+        at > source.length ||
+        count > source.length - at) {
+      _refuse('TAR contains a truncated record.');
+    }
+    if (isCancelled?.call() ?? false) {
+      _refuse('TAR inspection was cancelled.');
+    }
+  }
+
+  Future<void> zeros(int at, int count) async {
+    range(at, count);
+    for (var read = 0; read < count; read += 65536) {
+      range(at + read, 0);
+      final length = count - read < 65536 ? count - read : 65536;
+      if ((await source.read(at + read, length)).any((byte) => byte != 0)) {
+        _refuse('TAR has nonzero padding or opaque trailing records.');
+      }
+    }
+  }
+
   var offset = 0, index = 0, metadata = 0, records = 0;
   var trailing = 0;
   String? preferred, longName;
@@ -216,16 +283,15 @@ ArchiveRewriteInspection _inspectTar(Uint8List bytes, ViewerArchive archive) {
   _TarHeader? extension;
   Map<String, Object?>? root;
   final attributes = <String, Map<String, Object?>>{};
-  while (offset < bytes.length) {
-    _range(bytes, offset, _block);
-    final block = Uint8List.sublistView(bytes, offset, offset + _block);
+  while (offset < source.length) {
+    range(offset, _block);
+    final block = await source.read(offset, _block);
     if (block.every((byte) => byte == 0)) {
-      trailing = bytes.length - offset;
-      if (trailing < 1024 ||
-          trailing % _block != 0 ||
-          bytes.sublist(offset).any((byte) => byte != 0)) {
+      trailing = source.length - offset;
+      if (trailing < 1024 || trailing % _block != 0) {
         _refuse('TAR has incomplete, concatenated or opaque trailing records.');
       }
+      await zeros(offset, trailing);
       break;
     }
     if (++records > 400000) _refuse('TAR has too many header records.');
@@ -245,13 +311,9 @@ ArchiveRewriteInspection _inspectTar(Uint8List bytes, ViewerArchive archive) {
       if (metadata > _maxAllMetadata) {
         _refuse('TAR extension metadata exceeds its limit.');
       }
-      _range(bytes, offset, _aligned(header.size));
-      final data = Uint8List.sublistView(bytes, offset, offset + header.size);
-      _zeroPadding(
-        bytes,
-        offset + header.size,
-        _aligned(header.size) - header.size,
-      );
+      range(offset, _aligned(header.size));
+      final data = await source.read(offset, header.size);
+      await zeros(offset + header.size, _aligned(header.size) - header.size);
       if (type == 120) {
         if (header.variant != 'ustar') {
           _refuse('PAX requires a POSIX extension header.');
@@ -292,8 +354,8 @@ ArchiveRewriteInspection _inspectTar(Uint8List bytes, ViewerArchive archive) {
     if (directory && (size != 0 || header.size != 0)) {
       _refuse('TAR directories carrying file data cannot be preserved.');
     }
-    _range(bytes, offset, _aligned(size));
-    _zeroPadding(bytes, offset + size, _aligned(size) - size);
+    range(offset, _aligned(size));
+    await zeros(offset + size, _aligned(size) - size);
     final modified = pax?['mtime'] == null
         ? _headerTime(header.mtime)
         : _paxTime(pax!['mtime']!);
@@ -367,6 +429,7 @@ ArchiveRewriteInspection _inspectTar(Uint8List bytes, ViewerArchive archive) {
     container: {
       'package.kind': 'tar',
       'tar.variant': preferred ?? 'ustar',
+      if (streamed) 'tar.streamedInspection': true,
       'tar.trailingBytes': trailing,
       if (root != null) 'tar.root': root,
     },

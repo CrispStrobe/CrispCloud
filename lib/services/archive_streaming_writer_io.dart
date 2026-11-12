@@ -95,6 +95,7 @@ Future<void> writeStreamingArchiveEntries(
         sink: output.add,
         source: source,
         maxOutputBytes: maxOutputBytes,
+        streamed: true,
         isCancelled: isCancelled,
       );
     case ArchiveEndpointFormat.tarGzip:
@@ -135,7 +136,7 @@ Future<void> writeStreamingArchiveEntries(
         }
         crc = getCrc32(bytes, crc);
         await compressor.add(bytes);
-        output.check();
+        await output.cooperate();
       }
       try {
         if (format == ArchiveEndpointFormat.gzip) {
@@ -148,6 +149,7 @@ Future<void> writeStreamingArchiveEntries(
             sink: feed,
             source: source,
             maxOutputBytes: kArchiveStreamingLimit,
+            streamed: true,
             isCancelled: isCancelled,
           );
         }
@@ -239,10 +241,19 @@ class _Output {
   final int limit;
   final bool Function()? isCancelled;
   var length = 0;
+  var _chunks = 0;
 
   void check() {
     if (isCancelled?.call() ?? false) {
       throw const ArchiveViewException('Archive writing was cancelled.');
+    }
+  }
+
+  Future<void> cooperate() async {
+    check();
+    if (++_chunks % 16 == 0) {
+      await Future<void>.delayed(Duration.zero);
+      check();
     }
   }
 
@@ -354,6 +365,7 @@ Future<void> _writeZip(
         } else {
           await compressor.add(chunk);
         }
+        await output.cooperate();
       }
       await compressor?.finish();
     } finally {
@@ -434,6 +446,7 @@ Future<void> _writeZip(
   }
   final directoryBytes = output.length - directoryOffset;
   final zip64 =
+      records.any((record) => record.zip64) ||
       records.length >= 0xffff ||
       directoryOffset >= _zip32 ||
       directoryBytes >= _zip32;
@@ -484,33 +497,67 @@ Future<void> _writeSevenZip(
   final spool = await ArchiveOutputSpool.create(maxBytes: output.limit);
   final folders = <_SevenFolder>[];
   final compress = level > 0;
+  // Bounded dictionary profiles: fast (1–3), balanced (4–6), maximum (7–9).
+  // These tune the independently reset block size without retaining a member.
+  final dictionaryBytes = level <= 3
+      ? 64 * 1024
+      : level <= 6
+      ? 256 * 1024
+      : 1024 * 1024;
+  final dictionaryProperty = level <= 3
+      ? 8
+      : level <= 6
+      ? 12
+      : 16;
   try {
     for (final entry in entries) {
       output.check();
       final start = spool.length;
       var crc = 0;
+      final block = compress && entry.size > 0
+          ? Uint8List(dictionaryBytes)
+          : null;
+      var used = 0;
+      Future<void> flushBlock() async {
+        if (used == 0) return;
+        output.check();
+        // Every bounded block resets dictionary/state/properties. Remove
+        // only its end marker so all blocks form one valid LZMA2 stream.
+        final packed = Lzma2Encoder(dictSize: dictionaryBytes)
+            .encode(Uint8List.sublistView(block!, 0, used));
+        await spool.write(Uint8List.sublistView(packed, 0, packed.length - 1));
+        used = 0;
+      }
+
       await for (final data in entry.openRead(chunkSize: _chunkBytes)) {
         output.check();
         crc = getCrc32(data, crc);
         if (compress) {
-          // Every bounded block resets dictionary/state/properties. Remove
-          // only its end marker so all blocks form one valid LZMA2 stream.
-          final packed = Lzma2Encoder(dictSize: _chunkBytes)
-              .encode(data is Uint8List ? data : Uint8List.fromList(data));
-          await spool.write(
-            Uint8List.sublistView(packed, 0, packed.length - 1),
-          );
+          for (var at = 0; at < data.length;) {
+            final count = (data.length - at).clamp(0, dictionaryBytes - used);
+            block!.setRange(used, used + count, data, at);
+            used += count;
+            at += count;
+            if (used == dictionaryBytes) await flushBlock();
+          }
         } else {
           await spool.write(data);
         }
-        output.check();
+        await output.cooperate();
       }
       if (entry.size > 0) {
-        if (compress) await spool.write(const [0]);
+        if (compress) {
+          await flushBlock();
+          await spool.write(const [0]);
+        }
         folders.add(_SevenFolder(entry.size, spool.length - start, crc));
       }
     }
-    final header = _sevenHeader(entries, folders, compress);
+    final header = _sevenHeader(
+      entries,
+      folders,
+      compress ? dictionaryProperty : null,
+    );
     if (32 + spool.length + header.length > output.limit) {
       throw const ArchiveViewException(
         'The packed archive exceeds its output limit.',
@@ -541,7 +588,7 @@ Future<void> _writeSevenZip(
 Uint8List _sevenHeader(
   List<ArchiveWriteEntry> entries,
   List<_SevenFolder> folders,
-  bool compressed,
+  int? dictionaryProperty,
 ) {
   final header = _SevenBuffer()..byte(1); // kHeader
   if (folders.isNotEmpty) {
@@ -561,7 +608,11 @@ Uint8List _sevenHeader(
       ..number(folders.length)
       ..byte(0); // inline folders
     for (final _ in folders) {
-      header.bytes(compressed ? const [1, 0x21, 0x21, 1, 12] : const [1, 1, 0]);
+      header.bytes(
+        dictionaryProperty != null
+            ? [1, 0x21, 0x21, 1, dictionaryProperty]
+            : const [1, 1, 0],
+      );
     }
     header.byte(12); // CodersUnpackSize
     for (final folder in folders) {
@@ -571,7 +622,10 @@ Uint8List _sevenHeader(
     for (final folder in folders) {
       header.u32(folder.crc);
     }
-    header.bytes(const [0, 0]); // end UnpackInfo, StreamsInfo
+    // Explicit SubStreamsInfo selects the default one stream per folder.
+    // Some independent readers reject its omission even though this default
+    // can be inferred; keep this interoperable framing instead.
+    header.bytes(const [0, 8, 0, 0]);
   }
   if (entries.isNotEmpty) {
     header
@@ -646,6 +700,7 @@ class _SevenBuffer {
     }
     _bytes = Uint8List(capacity)..setRange(0, _length, _bytes);
   }
+
   void byte(int value) {
     _reserve(1);
     _bytes[_length++] = value;
@@ -662,16 +717,19 @@ class _SevenBuffer {
     ByteData.sublistView(_bytes).setUint16(_length, value, Endian.little);
     _length += 2;
   }
+
   void u32(int value) {
     _reserve(4);
     ByteData.sublistView(_bytes).setUint32(_length, value, Endian.little);
     _length += 4;
   }
+
   void u64(int value) {
     _reserve(8);
     ByteData.sublistView(_bytes).setUint64(_length, value, Endian.little);
     _length += 8;
   }
+
   void number(int value) {
     var prefix = 0, rest = value;
     final tail = <int>[];

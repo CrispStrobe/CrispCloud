@@ -97,6 +97,10 @@ class ViewerArchive {
   final String formatName;
   final List<ViewerArchiveMember> members;
 
+  /// The bounded stream reader's verified resource allowance. Buffered editor
+  /// reads retain [kArchiveReadLimit] even when extraction supports larger files.
+  final int maxStreamingMemberBytes;
+
   /// Format-specific limits or unverified protections shown beside the listing.
   final List<String> notices;
 
@@ -115,6 +119,7 @@ class ViewerArchive {
   ViewerArchive.reader({
     required this.formatName,
     required List<ViewerArchiveMember> members,
+    this.maxStreamingMemberBytes = kArchiveReadLimit,
     List<String> notices = const [],
     this.isDirectCompressionPayload = false,
     required Future<Uint8List> Function(

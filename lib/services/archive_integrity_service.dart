@@ -99,13 +99,17 @@ class ArchiveIntegrityReport {
 /// unreadable member cannot release the work budget for repeated retries.
 Future<ArchiveIntegrityReport> checkArchiveIntegrity(
   ViewerArchive archive, {
-  int maxMemberBytes = kArchiveReadLimit,
-  int maxTotalBytes = 256 * 1024 * 1024,
+  int? maxMemberBytes,
+  int? maxTotalBytes,
   int maxEntries = 200000,
   bool Function()? isCancelled,
   bool Function()? isCurrent,
   void Function(ArchiveIntegrityProgress progress)? onProgress,
 }) async {
+  maxMemberBytes ??= archive.maxStreamingMemberBytes;
+  maxTotalBytes ??= archive.maxStreamingMemberBytes > kArchiveReadLimit
+      ? archive.maxStreamingMemberBytes
+      : 256 * 1024 * 1024;
   if (maxMemberBytes <= 0 || maxTotalBytes <= 0 || maxEntries <= 0) {
     throw ArgumentError('Archive check limits must be positive.');
   }

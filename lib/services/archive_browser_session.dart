@@ -14,7 +14,7 @@ import 'viewer_spool.dart';
 
 /// Native archive input is copied to an owned, bounded temporary file, then
 /// opened through random access. Browsers retain a bounded in-memory snapshot.
-const kArchiveBrowseInputLimit = 2 * 1024 * 1024 * 1024;
+const kArchiveBrowseInputLimit = kArchiveStreamingLimit;
 const kArchiveNestingLimit = 8;
 
 class ArchiveBrowserSession {
@@ -93,7 +93,11 @@ class ArchiveBrowserSession {
           isCancelled: isCancelled,
         );
         check();
-        archive = await openViewerArchiveFile(spool.path, name: captured.name);
+        archive = await openViewerArchiveFile(
+          spool.path,
+          name: captured.name,
+          streaming: true,
+        );
       } else {
         final builder = BytesBuilder(copy: false);
         await for (final chunk in input.readFile(captured)) {
@@ -228,7 +232,16 @@ class _ArchiveBrowserBackend extends FileOperationBackend {
 
   @override
   Stream<List<int>> readFile(FileItem file) async* {
-    yield await session.read(_relative(file.path!));
+    session._check();
+    final member = session.index.file(_relative(file.path!));
+    await for (final chunk in session.archive.openMember(
+      member,
+      maxBytes: session.archive.maxStreamingMemberBytes,
+    )) {
+      session._check();
+      yield chunk;
+    }
+    session._check();
   }
 
   @override

@@ -747,6 +747,16 @@ class _ArchiveWorkspaceDialogState
                                 '${workspace.format.toUpperCase()} · ${context.commanderTr(workspace.updateSupport)}',
                               ),
                             ),
+                          if (workspace?.supportsLargeFiles == true)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
+                              child: Text(
+                                archiveEndpointText(context, 'streamedBounds'),
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            ),
                           Padding(
                             padding: const EdgeInsets.all(8),
                             child: Wrap(
