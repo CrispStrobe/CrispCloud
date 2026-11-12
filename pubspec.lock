@@ -250,6 +250,13 @@ packages:
       relative: true
     source: path
     version: "0.1.0"
+  crisperbooks:
+    dependency: "direct main"
+    description:
+      path: "packages/crisperbooks"
+      relative: true
+    source: path
+    version: "0.1.0"
   cross_file:
     dependency: "direct main"
     description:

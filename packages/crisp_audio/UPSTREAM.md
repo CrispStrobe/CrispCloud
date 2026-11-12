@@ -58,3 +58,5 @@ sha256sum miniaudio/miniaudio.h miniaudio/LICENSE
 
 Compare the revision and checksums above before replacing the two imported
 files. Run the native fixtures and the Flutter FFI contract on every upgrade.
+
+The first-party file wrapper also recognizes bounded ID3v2.2/2.3/2.4 prefixes before a FLAC stream (including the v2.4 footer). It gives the unchanged decoder a logical FLAC start for both reads and absolute seeks. Metadata and the original file remain unchanged; MP3 input keeps its existing decoder path. Native regression fixtures independently verify waveform extraction and exact trimmed PCM samples.

@@ -143,14 +143,15 @@ class _NativeHostState extends State<_NativeHost> {
         );
         widget.onConnected((message) async {
           await controller.evaluateJavascript(
-            source: 'window.crispEbookHost?.receive(${jsonEncode(message)})',
+            source:
+                'void window.crispEbookHost?.receive(${jsonEncode(message)})',
           );
         });
       },
       onLoadStop: (controller, url) async {
         if (url != null && _isHostUrl(url.toString())) {
           await controller.evaluateJavascript(
-            source: 'window.crispEbookHost?.ready()',
+            source: 'void window.crispEbookHost?.ready()',
           );
         }
       },

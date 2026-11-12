@@ -402,6 +402,50 @@ class AudioContract(unittest.TestCase):
                 self.assertAlmostEqual(float(stream["duration"]), 1, places=6)
 
 
+
+    @unittest.skipUnless(shutil.which("ffmpeg"), "FFmpeg required to author a FLAC fixture")
+    def test_id3_prefixed_flac_probes_waveforms_and_seeks_without_modifying_source(self):
+        plain = self.root / "plain.flac"
+        subprocess.run(["ffmpeg", "-v", "error", "-nostdin", "-i", str(self.source),
+                        "-c:a", "flac", str(plain)], check=True)
+        audio = plain.read_bytes()
+        for version, footer in ((2, False), (3, False), (4, False), (4, True)):
+            with self.subTest(version=version, footer=footer):
+                payload = b"TIT2" + b"metadata" * 541
+                length = len(payload)
+                header = b"ID3" + bytes((version, 0, 16 if footer else 0)) + bytes(
+                    (length >> shift) & 127 for shift in (21, 14, 7, 0))
+                original = header + payload + (b"3DI" + header[3:] if footer else b"") + audio
+                source = self.root / f"tagged-v{version}-{footer}.flac"
+                source.write_bytes(original)
+                result, info = self.native.probe(source)
+                self.assertEqual(result, OK)
+                self.assertEqual((info.frames, info.sample_rate, info.channels), (96000, 48000, 2))
+                peaks = (ctypes.c_float * 37)()
+                with self.native.job() as job:
+                    self.assertEqual(self.native.lib.crisp_audio_waveform(job, utf8(source), peaks, 37), OK)
+                self.assertGreater(max(peaks), 0.3)
+                output = self.root / f"tagged-v{version}-{footer}.wav"
+                self.assertEqual(self.native.render(source, output, start=250_000, end=1_250_000), OK)
+                params, samples = read_pcm(output)
+                self.assertEqual(params, (48000, 48000, 2))
+                self.assertEqual(samples, tuple(self.samples[12000 * 2:60000 * 2]))
+                self.assertEqual(source.read_bytes(), original)
+
+
+    def test_malformed_id3_prefix_is_rejected_without_creating_output(self):
+        for header in (b"ID3\x03\x00\x00\x80\x00\x00\x00",
+                       b"ID3\x04\x00\x10\x7f\x7f\x7f\x7f",
+                       b"ID3\x03\x00\x00\x00\x00\x01\x00"):
+            source = self.root / "invalid.flac"
+            original = header + b"fLaC"
+            source.write_bytes(original)
+            self.assertEqual(self.native.probe(source)[0], INVALID_INPUT)
+            self.assertNotEqual(self.native.render(source, self.output), OK)
+            self.assertFalse(self.output.exists())
+            self.assertEqual(source.read_bytes(), original)
+
+
 def build_library(directory):
     source = Path(__file__).resolve().parents[1] / "src" / "crisp_audio.cpp"
     if sys.platform == "darwin":

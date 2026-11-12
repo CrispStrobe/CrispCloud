@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:crisp_ebook_reader/crisp_ebook_reader.dart';
@@ -40,6 +41,70 @@ void main() {
     expect(controller.isReady, isFalse);
     await expectLater(controller.next(), throwsStateError);
     controller.dispose();
+  });
+
+  test('speech exposes local voice state and bounds controls', () async {
+    final controller = CrispEbookController();
+    addTearDown(controller.dispose);
+    final calls = <(String, EbookJson)>[];
+    controller.attach((method, args) async {
+      calls.add((method, args));
+      return {
+        'status': method == 'speechPause' ? 'paused' : 'speaking',
+        'revision': calls.length,
+        'voices': [
+          {'uri': 'local', 'name': 'Local English', 'language': 'en-US'}
+        ],
+        'voiceUri': 'local',
+        'rate': args['rate'] ?? 1,
+      };
+    });
+    await controller.startSpeech(voiceUri: 'local', rate: 4);
+    expect(calls.single.$1, 'speechStart');
+    expect(calls.single.$2, {'voiceUri': 'local', 'rate': 2});
+    expect(controller.speech.isAvailable, isTrue);
+    expect(controller.speech.isActive, isTrue);
+    expect(controller.speech.voices.single.language, 'en-US');
+    await controller.pauseSpeech();
+    expect(controller.speech.isPaused, isTrue);
+    await controller.resumeSpeech();
+    await controller.setSpeechOptions(rate: 0.1);
+    expect(calls.last.$1, 'speechOptions');
+    expect(calls.last.$2, {'rate': 0.5});
+    expect(() => controller.startSpeech(rate: double.nan), throwsArgumentError);
+    controller.updateSpeech(const EbookSpeechState(
+        status: EbookSpeechStatus.stopped, revision: 20));
+    controller.updateSpeech(const EbookSpeechState(
+        status: EbookSpeechStatus.speaking, revision: 19));
+    expect(controller.speech.status, EbookSpeechStatus.stopped,
+        reason: 'Delayed speech state cannot replace a newer stop');
+  });
+
+  test('late speech reply cannot modify a replacement reader', () async {
+    final controller = CrispEbookController();
+    addTearDown(controller.dispose);
+    final reply = Completer<dynamic>();
+    controller.attach((method, args) => reply.future);
+    final pending = controller.refreshSpeech();
+    controller.attach((method, args) async => null);
+    reply.complete({'status': 'speaking', 'revision': 50});
+    await pending;
+    expect(controller.speech.status, EbookSpeechStatus.unavailable);
+    expect(controller.speech.revision, -1);
+    controller.updateSpeech(
+        const EbookSpeechState(status: EbookSpeechStatus.paused, revision: 1));
+    controller.detach();
+    expect(controller.speech.status, EbookSpeechStatus.unavailable);
+  });
+
+  test('speech decoder fails closed for unknown state and nonfinite rate', () {
+    final state = EbookSpeechState.fromJson({
+      'status': 'remote-streaming',
+      'rate': double.infinity,
+    });
+    expect(state.status, EbookSpeechStatus.unavailable);
+    expect(state.isAvailable, isFalse);
+    expect(state.rate, 1);
   });
 
   test('normalized import requires a known schema and encoding', () {

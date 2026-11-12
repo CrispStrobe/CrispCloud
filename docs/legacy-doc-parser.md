@@ -141,3 +141,9 @@ These app tests used the documented optional-ebook-disabled hook, the retained
 Clang 19.1.7 compiler and system SQLite 3.46.1. The test wrapper restored the
 release pubspec byte for byte. These results do not validate native ebook
 conversion or certify arbitrary Word pagination.
+
+The follow-up main reconciliation incorporates app main
+`467c4a3deb31e18e33e558d3c08b19f2ddc7231c`, preserving its CrisperBooks and
+audio changes. The same 99 Word workflow tests pass on the combined tree;
+the Office manifest and 246-file CrisperBooks mirror both verify against their
+own exact source pins.

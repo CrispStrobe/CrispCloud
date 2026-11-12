@@ -10,7 +10,7 @@ The reader receives book bytes and exposes a small command/event bridge.
 | --- | --- |
 | EPUB 2/3 | Reflowable and fixed-layout reading, navigation, search, progress, highlights, and normalized export. |
 | MOBI, AZW, AZW3 | Unencrypted MOBI/KF8 reading and normalized export for creating an editable EPUB copy. |
-| FB2, FBZ, CBZ | Reading and normalized export; comic pages retain fixed-layout viewport dimensions. |
+| FB2, FBZ, FB2.ZIP, CBZ | Reading and normalized export; comic pages retain fixed-layout viewport dimensions. |
 | Android, iOS, macOS, Windows | `flutter_inappwebview` renders bundled assets served from an instance-scoped loopback server. The platform's WebView runtime must be available. |
 | Browser | A same-origin Flutter asset iframe, with a session-scoped message bridge. |
 | Linux | Optional inline WebKitGTK 4.1 texture host, selected after `probeEbookLinuxHost()` verifies isolated browser startup and painting. Missing build/runtime support or unusable startup leaves the portable Flutter EPUB reader available. See [Linux packaging and verification](../../linux/README.md). |
@@ -44,6 +44,40 @@ back into the XHTML head, and supplies missing chapter titles. Namespace-aware
 serialization preserves EPUB attributes and SVG namespaces without duplicating
 the default XHTML namespace. These are targeted Kindle/serialization changes;
 the importer does not discard unknown attributes through a blanket schema filter.
+
+## Foreground read-aloud
+
+`CrispEbookController.speech` exposes `EbookSpeechState`, including local voice
+choices, status, playback rate and an unavailable/error explanation. Subscribe
+with the controller listener or `CrispEbookReader.onSpeechChanged`.
+
+Call `refreshSpeech()` to refresh available voices, then invoke
+`startSpeech(voiceUri: ..., rate: ...)` directly from a button callback. The rate
+is bounded to 0.5–2.0. `pauseSpeech()`, `resumeSpeech()` and `stopSpeech()` control
+playback; `setSpeechOptions()` pauses active playback before changing a voice or
+rate. Some browsers require direct activation inside the WebView: an inline
+**Continue reading** button appears if the native bridge loses that gesture.
+
+Only voices with the browser's `localService` flag explicitly set to true are
+used. No publication text goes to a remote voice service. A WebView with no
+installed local voice reports unavailable; browser or platform support must be
+checked on the actual target. Speech support is independent of successful book
+rendering. This is foreground speech, without background audio, lock-screen
+controls, voice downloads or a bundled speech engine.
+
+Speech begins at the current visible range, uses bounded Unicode text chunks,
+then proceeds through the reading order. Highlights are overlays; publication
+text nodes and CFIs are unchanged. Pause retains the latest reported word
+boundary; engines without word-boundary events may repeat the current chunk on
+resume. Manual navigation stops playback, and hiding the reader or backgrounding
+the application pauses it. Stale utterance callbacks and canceled chapter loads
+cannot restart playback after pause, stop, replacement or disposal.
+
+The parser regression suite uses a deterministic speech adapter for lifecycle,
+Unicode offsets and voice filtering. The browser smoke suite uses that adapter
+with real rendered chapters to check bridge/overlay behavior. These automated
+checks do not establish audible speech on a device or guarantee an installed
+voice on any platform.
 
 ## Security boundary
 

@@ -112,6 +112,11 @@ jobs:
           (cd packages/pdf_document && dart pub get)
           (cd packages/pdf_operations && dart pub get)
 
+      - name: CrisperBooks source and reusable API contracts
+        run: |
+          python3 tool/verify_crisperbooks.py
+          (cd packages/crisperbooks && flutter pub get && flutter analyze && flutter test test)
+
       - name: Standalone legacy Word parser contracts
         run: |
           python3 tool/verify_office_fidelity.py

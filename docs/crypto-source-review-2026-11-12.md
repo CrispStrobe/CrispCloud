@@ -1043,3 +1043,23 @@ source update. Temporary test hooks have been removed before calculating:
   "reviewed_source_sha256": "4356cfd922144f46b5baa410c562e75a382ee6d4e1cf9756ed54a71f0fe1e903"
 }
 ```
+
+The CrisperBooks extraction replaces application-owned reusable ebook code with the pinned facade and matching reader packages. It retains the same storage boundary and cryptographic dependencies. Foreground speech accepts only voices explicitly marked local by the platform; publication text is not sent to an added network service. The audio wrapper recognizes bounded inert ID3 prefixes before FLAC and never rewrites source metadata; it adds no cryptographic function. These consumer inputs are included in the technical source binding; existing distribution decisions are unchanged.
+
+### Reconciliation with app main 467c4a3
+
+The combined tree retains both the preceding parser review and main's
+CrisperBooks/audio review. Their reviewed path sets are combined without
+duplicates (361 paths). All non-digest policy fields are identical in the two
+parents and remain unchanged. The resolved lock contains main's pinned local
+CrisperBooks package; the DOC parser's runtime dependency is unchanged. The 99
+focused Word workflow tests and both guarded source-mirror checks pass on this
+combined tree. Source bindings after restoring the test configuration:
+
+```json
+{
+  "inventory_sha256": "b22c2916adab5c1078ec4ff7c8e4ab8ca39f2a7bdedacf3637f38680c62e8973",
+  "pubspec_lock_sha256": "2a8c1f83455844560fb694c51d15f1b875f83a8a15b84ce083482568af4c7139",
+  "reviewed_source_sha256": "9e7a47c431be1c90a31bdb59a41aa3faa6f6d77a01ebe5c441f7ac36b654a00a"
+}
+```
