@@ -75,6 +75,8 @@ import '../widgets/lock_screen.dart';
 import '../widgets/workspace_dialog.dart';
 import '../widgets/file_view_editor_dialog.dart';
 import '../widgets/custom_command_dialog.dart';
+import '../widgets/command_entry_dialog.dart';
+import '../l10n/command_entry_strings.dart';
 import '../widgets/extensions_dialog.dart';
 import '../l10n/extension_translations.dart';
 import '../widgets/terminal_panel.dart';
@@ -159,6 +161,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           ShortcutAction.back => panel.canNavigateBack,
           ShortcutAction.forward => panel.canNavigateForward,
           ShortcutAction.reopenClosedTab => panel.canReopenClosedTab,
+          ShortcutAction.commandEntry => commandEntryAvailable(ref),
           ShortcutAction.closeTab =>
             panel.tabs.length > 1 && panel.activeTab?.isProtected != true,
           _ => true,
@@ -1953,6 +1956,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         showPanelViewDialog(context, ref, ref.read(activePanelProvider));
       case 'commands':
         showCustomCommandsDialog(context, ref, ref.read(activePanelProvider));
+      case 'command_entry':
+        if (commandEntryAvailable(ref)) showCommandEntryDialog(context, ref);
       case 'extensions':
         showExtensionsDialog(context, ref, ref.read(activePanelProvider));
       case 'multi_rename':
@@ -2106,6 +2111,14 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       tooltip: l.moreActions,
       onSelected: (value) => _runOverflowAction(context, value),
       itemBuilder: (context) => <PopupMenuEntry<String>>[
+        PopupMenuItem(
+          value: 'command_entry',
+          enabled: commandEntryAvailable(ref),
+          child: _overflowItem(
+            Icons.terminal,
+            CommandEntryStrings(context).text('title'),
+          ),
+        ),
         PopupMenuItem(
           value: 'menu_layout',
           child: _overflowItem(

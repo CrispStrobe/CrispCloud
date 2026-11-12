@@ -30,11 +30,11 @@ preserve earlier feature branches and do not rewrite or merge the main branch.
 
 ## Current progress
 
-Nine implementation increments are preserved on remote feature branches:
-**five closed scopes** (G02, G03, G13, G27, G37) and **three implemented features
-with target-runtime acceptance pending** (G01, G04, G12), plus **G25 with
-live-server acceptance pending**. The remaining 42 items
-comprise **30 implementation gaps, 10 research prerequisites and two
+Ten implementation increments are preserved on remote feature branches:
+**five closed scopes** (G02, G03, G13, G27, G37) and **five implemented features
+with target-runtime/live-server acceptance pending** (G01, G04, G09, G12, G25).
+The remaining 41 items
+comprise **29 implementation gaps, 10 research prerequisites and two
 cross-cutting acceptance items**. The acceptance work also applies to delivered
 features where their specific boundary names a target-runtime check.
 
@@ -45,7 +45,8 @@ The current stack contains the original scope and every incremental checkpoint.
 
 Continuation work from `403e942d` is recorded in
 [the active increment plan](continuation-20261112.md). G25 has verified native
-loopback/recovery coverage. G05, G09 and G49 remain in progress until their
+loopback/recovery coverage, and G09 has verified command/keyboard coverage.
+G05 and G49 remain in progress until their
 separate regression evidence and remote checkpoints are recorded.
 
 ## Lane index
@@ -71,7 +72,7 @@ separate regression evidence and remote checkpoints are recorded.
 | [G06](01-workspace-and-interaction.md#g06) | Native outgoing drag | Scoped | G01; native bridge |
 | [G07](01-workspace-and-interaction.md#g07) | General file tags | Scoped | Stable file identity; native metadata bridge |
 | [G08](01-workspace-and-interaction.md#g08) | Favorite synchronization | Scoped | Versioned favorites; selected sync backend |
-| [G09](01-workspace-and-interaction.md#g09) | Command entry and keyboard conventions | Implementing | G04; existing terminal/custom commands |
+| [G09](01-workspace-and-interaction.md#g09) | Command entry and keyboard conventions | Implemented / native acceptance pending | Captured local commands and scoped insertion verified; actual OS behavior under G50 |
 | [G10](02-viewing-search-and-tools.md#g10) | External remote editing | Scoped | Captured editor session; conflict review |
 | [G11](02-viewing-search-and-tools.md#g11) | External comparison tools | Scoped | G10 staging lifetime |
 | [G12](02-viewing-search-and-tools.md#g12) | Preferred external terminal | Implemented / native acceptance pending | Verify installed terminals on each claimed desktop OS |
@@ -142,6 +143,7 @@ wait for unavailable legacy hardware or a platform-specific entitlement.
 | Integrated validation | `feature/file-conversion-20261112` · code checkpoint `ebede8d` | Full analysis: 0 errors, 96 warnings, 1,038 infos; JavaScript release web build passed with version/hash; optional WebAssembly dry run exited 247 | [Detailed evidence and limits](validation-20261112.md) |
 | Continuation scope | `feature/gap-extension-scope-20261112` · `cd14477` · PR #69 | G05/G09/G25/G49 boundaries and staged validation plan | Scope preserved remotely |
 | G25 FTP byte-offset resume | `feature/ftp-download-resume-20261112` · initial `6b122d6`, verified cleanup follow-up · PR #70 | 285 tests passed across eight transfer/FTP suites; 89 passed in the final three-suite empty-stage/crash gate | Implemented; live-server and signed-target acceptance pending |
+| G09 command entry | `feature/command-entry-20261112` | 152 tests passed across eight command/context/keyboard suites; 62 passed in the final service/dialog/context gate | Implemented; native argument/permission/keyboard acceptance pending |
 
 Implementation status is updated only after the corresponding code and tests
 are preserved remotely. Test counts from overlapping runs are not added together.

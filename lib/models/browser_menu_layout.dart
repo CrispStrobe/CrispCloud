@@ -333,7 +333,7 @@ class BrowserMenuLayout {
         ...actions(['nextTab', 'prevTab', 'switchPanel']),
       ]),
       group('tools', [
-        ...actions(['commandPalette', 'search', 'filter']),
+        ...actions(['commandPalette', 'commandEntry', 'search', 'filter']),
         ...workflows(['findPattern']),
         separator(),
         ...workflows([

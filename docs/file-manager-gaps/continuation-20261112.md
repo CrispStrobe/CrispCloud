@@ -62,3 +62,38 @@ The [feature documentation](../ftp-resume.md) records bounds and protocol limits
 Status is **implemented / live-server acceptance pending**. Selected real
 servers and signed/native builds remain G50 acceptance; upload resume, FXP and
 direct-protocol proxies retain their separate gap IDs.
+
+## G09 — Reviewed command entry
+
+Command entry adds typed programs and saved commands, literal typed arguments,
+filename/path insertion, bounded absolute-directory PATH lookup and an immutable
+prepared invocation. It captures the actual ordinary local source, pane session,
+tab, navigation, selection, grants and filesystem evidence. Returning to an old
+selection does not revive a stale review. The existing separate Run action checks
+that evidence again; cancellation or closing during preparation starts nothing.
+
+The eight-suite command/context/runner/keyboard gate passed **152 tests**.
+Coverage includes real temporary filesystem evidence, source/tab/grant changes,
+single-use preparation, default/custom shortcuts, output/exit completion and
+enlarged German/Arabic dialogs. Focused analysis of new implementation/tests and
+the review-lifetime changes has no findings. No dependency was added.
+
+Independent review found the original argument-prefix check both missed some
+recognized inline-code modes and rejected option-like data after a script.
+The corrected finite interpreter grammars preserve script arguments, reject
+unsupported prefix/evaluation modes and normalize known shell names on Windows.
+The final service/dialog/context gate passed **62 tests**, including 14 added
+interpreter/alias/Windows regressions. Its changed Dart files analyze cleanly.
+The 152-test and 62-test gates overlap and are not summed.
+
+The final simulated-process test needed alternating bounded event-loop turns
+and widget pumps because Dart's completed stream-cancellation future is owned
+by the root zone. The test still requires actual run completion, exit zero,
+exact output and rendered exit status; production execution was not changed to
+accommodate the test harness.
+
+Status is **implemented / native acceptance pending**. Windows argument
+transport, Linux/macOS permissions and symlinks, signed/store restrictions and
+actual keyboard dispatch remain G50 acceptance. The [feature guide](../command-entry.md)
+states the finite interpreter-option model and the remaining path-based launch
+race explicitly.

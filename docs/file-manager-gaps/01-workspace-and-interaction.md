@@ -236,7 +236,7 @@ platform-menu model passing tests does not establish signed application behavior
 
 ### Command entry and keyboard conventions
 
-**Status:** Implementing. **Dependencies:** G04; existing terminal/custom commands.
+**Status:** Implemented / native acceptance pending. **Dependencies:** G04; existing terminal/custom commands.
 
 **Scope:** Complete reviewed program launch and file/path insertion shortcuts across supported desktop targets.
 
@@ -251,3 +251,25 @@ platform-menu model passing tests does not establish signed application behavior
 - Default and customized shortcuts work without stealing input from editors or the terminal; launch requires the existing command review.
 
 **Starting points:** keyboard_shortcut_service.dart; keyboard_shortcuts.dart; custom_toolbar_command_service.dart.
+
+**Delivered increment:** A dedicated command-entry dialog prepares an installed
+program or a saved command from the captured ordinary local pane. Literal typed
+arguments and JSON-style filename/path insertion produce one immutable argument
+vector; saved templates expand once. A bounded absolute-directory PATH lookup
+shows the resolved executable in the existing review. Run remains a separate
+action with final source, file, directory, grant, executable and draft checks.
+Ctrl+Enter/Ctrl+Shift+Enter insertion has its own customizable shortcut scope.
+See [command entry](../command-entry.md) for the supported syntax and programs.
+
+**Observed evidence:** The eight-suite command, context, runner, keyboard and
+dialog gate passed **152 tests**. New files and the review-lifetime change pass
+focused analysis without findings. Independent review checks captured source
+identity, immutable arguments and cancellation. The final three-suite gate
+passed **62 tests** after correcting interpreter/script option boundaries and
+Windows shell-name normalization. Overlapping counts are not added. No
+dependency was added.
+
+**Remaining acceptance:** Actual Windows argument transport, Linux/macOS file
+permissions and symlinks, signed/store-build restrictions and operating-system
+keyboard dispatch remain G50 checks. Metadata/path checks cannot eliminate a
+replacement race before the operating system opens an executable.
