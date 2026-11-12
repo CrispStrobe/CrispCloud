@@ -67,7 +67,14 @@ class EbookBookInfo {
     this.language,
     this.fixedLayout = false,
     this.warnings = const [],
-  });
+    this.supportsProgressSeeking = true,
+    this.supportsNavigationHistory = false,
+    bool supportsTextAppearance = true,
+    bool supportsLayout = true,
+    bool supportsPublisherStyles = true,
+  })  : _supportsTextAppearance = supportsTextAppearance,
+        _supportsLayout = supportsLayout,
+        _supportsPublisherStyles = supportsPublisherStyles;
   final String title;
   final List<String> authors;
   final List<EbookTocItem> toc;
@@ -76,6 +83,16 @@ class EbookBookInfo {
   final String? language;
   final bool fixedLayout;
   final List<String> warnings;
+  final bool supportsProgressSeeking;
+  final bool supportsNavigationHistory;
+  final bool _supportsTextAppearance;
+  final bool _supportsLayout;
+  final bool _supportsPublisherStyles;
+
+  /// Fixed-layout pages retain their publisher-defined typography and layout.
+  bool get supportsTextAppearance => !fixedLayout && _supportsTextAppearance;
+  bool get supportsLayout => !fixedLayout && _supportsLayout;
+  bool get supportsPublisherStyles => !fixedLayout && _supportsPublisherStyles;
   factory EbookBookInfo.fromJson(EbookJson json) => EbookBookInfo(
         title: json['title'] as String? ?? '',
         authors:
@@ -92,7 +109,35 @@ class EbookBookInfo {
         fixedLayout: json['fixedLayout'] == true,
         warnings:
             (json['warnings'] as List? ?? const []).map((e) => '$e').toList(),
+        supportsProgressSeeking: json['supportsProgressSeeking'] != false,
+        supportsNavigationHistory: json['supportsNavigationHistory'] == true,
+        supportsTextAppearance: json['supportsTextAppearance'] != false,
+        supportsLayout: json['supportsLayout'] != false,
+        supportsPublisherStyles: json['supportsPublisherStyles'] != false,
       );
+}
+
+/// The renderer's actual navigation stack, separate from previous/next pages.
+/// The pinned engine exposes this session state but no stack snapshot API.
+class EbookNavigationHistory {
+  const EbookNavigationHistory({
+    this.canGoBack = false,
+    this.canGoForward = false,
+  });
+
+  final bool canGoBack;
+  final bool canGoForward;
+
+  factory EbookNavigationHistory.fromJson(EbookJson json) =>
+      EbookNavigationHistory(
+        canGoBack: json['canGoBack'] == true,
+        canGoForward: json['canGoForward'] == true,
+      );
+
+  EbookJson toJson() => {
+        'canGoBack': canGoBack,
+        'canGoForward': canGoForward,
+      };
 }
 
 class EbookSelection {
@@ -134,6 +179,10 @@ class EbookAppearance {
     this.theme = 'light',
     this.flow = 'paginated',
     this.fontFamily = 'serif',
+    this.maxColumnCount = 2,
+    this.pageMargin = 24,
+    this.pageWidth = 780,
+    this.usePublisherStyles = true,
   });
   final double fontSize;
   final double lineHeight;
@@ -142,13 +191,99 @@ class EbookAppearance {
   final String theme;
   final String flow;
   final String fontFamily;
-  EbookJson toJson() => {
-        'fontSize': fontSize.clamp(10, 48),
-        'lineHeight': lineHeight.clamp(1, 2.5),
-        'theme': theme,
-        'flow': flow,
-        'fontFamily': fontFamily,
-      };
+
+  /// An upper bound; narrow and portrait viewports can use fewer columns.
+  final int maxColumnCount;
+
+  /// Outer margin along the text's block axis, in CSS pixels.
+  final double pageMargin;
+
+  /// Maximum inline width of one text column, in CSS pixels.
+  final double pageWidth;
+
+  /// Honor publication fonts and spacing. Disabling this applies reader
+  /// typography overrides without removing publication nodes or stylesheets.
+  final bool usePublisherStyles;
+
+  static double _number(
+    Object? value,
+    double fallback,
+    double minimum,
+    double maximum,
+  ) =>
+      value is num && value.isFinite
+          ? value.toDouble().clamp(minimum, maximum)
+          : fallback;
+
+  factory EbookAppearance.fromJson(EbookJson json) => EbookAppearance(
+        fontSize: _number(json['fontSize'], 18, 10, 48),
+        lineHeight: _number(json['lineHeight'], 1.6, 1, 2.5),
+        theme: json['theme'] is String ? json['theme'] as String : 'light',
+        flow: json['flow'] is String ? json['flow'] as String : 'paginated',
+        fontFamily: json['fontFamily'] is String
+            ? json['fontFamily'] as String
+            : 'serif',
+        maxColumnCount: _number(json['maxColumnCount'], 2, 1, 3).toInt(),
+        pageMargin: _number(json['pageMargin'], 24, 0, 96),
+        pageWidth: _number(json['pageWidth'], 780, 320, 1600),
+        usePublisherStyles: json['usePublisherStyles'] is bool
+            ? json['usePublisherStyles'] as bool
+            : true,
+      ).normalized;
+
+  EbookAppearance get normalized => EbookAppearance(
+        fontSize: _number(fontSize, 18, 10, 48),
+        lineHeight: _number(lineHeight, 1.6, 1, 2.5),
+        theme:
+            const {'light', 'sepia', 'dark'}.contains(theme) ? theme : 'light',
+        flow: flow == 'scrolled' ? 'scrolled' : 'paginated',
+        fontFamily:
+            const {'serif', 'sans-serif', 'monospace'}.contains(fontFamily)
+                ? fontFamily
+                : 'serif',
+        maxColumnCount: maxColumnCount.clamp(1, 3),
+        pageMargin: _number(pageMargin, 24, 0, 96),
+        pageWidth: _number(pageWidth, 780, 320, 1600),
+        usePublisherStyles: usePublisherStyles,
+      );
+
+  EbookAppearance copyWith({
+    double? fontSize,
+    double? lineHeight,
+    String? theme,
+    String? flow,
+    String? fontFamily,
+    int? maxColumnCount,
+    double? pageMargin,
+    double? pageWidth,
+    bool? usePublisherStyles,
+  }) =>
+      EbookAppearance(
+        fontSize: fontSize ?? this.fontSize,
+        lineHeight: lineHeight ?? this.lineHeight,
+        theme: theme ?? this.theme,
+        flow: flow ?? this.flow,
+        fontFamily: fontFamily ?? this.fontFamily,
+        maxColumnCount: maxColumnCount ?? this.maxColumnCount,
+        pageMargin: pageMargin ?? this.pageMargin,
+        pageWidth: pageWidth ?? this.pageWidth,
+        usePublisherStyles: usePublisherStyles ?? this.usePublisherStyles,
+      ).normalized;
+
+  EbookJson toJson() {
+    final value = normalized;
+    return {
+      'fontSize': value.fontSize,
+      'lineHeight': value.lineHeight,
+      'theme': value.theme,
+      'flow': value.flow,
+      'fontFamily': value.fontFamily,
+      'maxColumnCount': value.maxColumnCount,
+      'pageMargin': value.pageMargin,
+      'pageWidth': value.pageWidth,
+      'usePublisherStyles': value.usePublisherStyles,
+    };
+  }
 }
 
 class EbookHighlight {
