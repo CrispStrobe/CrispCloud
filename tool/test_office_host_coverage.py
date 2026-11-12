@@ -17,8 +17,8 @@ class HostCoverageControls(unittest.TestCase):
 
     def test_merges_records_without_doubling_denominator_and_lists_absent_files(self):
         result = report_coverage(
-            'SF:lib/widgets/office_editor_dialog.dart\nDA:1,0\nDA:2,2\nend_of_record\n'
-            f'SF:{self.root}/lib/widgets/office_editor_dialog.dart\nDA:1,1\nDA:3,0\nend_of_record\n',
+            'SF:lib/widgets/office_editor_dialog.dart\nDA:1,0\nDA:2,2\nLF:2\nLH:1\nend_of_record\n'
+            f'SF:{self.root}/lib/widgets/office_editor_dialog.dart\nDA:1,1\nDA:3,0\nLF:2\nLH:1\nend_of_record\n',
             self.root)
         self.assertEqual((result['covered_lines'], result['instrumented_lines']), (2, 3))
         self.assertEqual(result['files'][0]['uncovered_lines'], [3])
@@ -33,17 +33,34 @@ class HostCoverageControls(unittest.TestCase):
     def test_invalid_and_stale_line_numbers_fail(self):
         for record in ('DA:0,1', 'DA:1,-1', 'DA:4,1', 'DA:1'):
             with self.subTest(record=record), self.assertRaises(ValueError):
-                report_coverage('SF:lib/widgets/office_editor_dialog.dart\n' + record, self.root)
+                report_coverage('SF:lib/widgets/office_editor_dialog.dart\n' + record
+                                + '\nLF:1\nLH:1\nend_of_record\n', self.root)
+
+    def test_incomplete_or_contradictory_scoped_records_cannot_look_fully_covered(self):
+        first = 'SF:lib/widgets/office_editor_dialog.dart\nDA:1,1\nLF:1\nLH:1\nend_of_record\n'
+        second = 'SF:lib/services/office_search_text.dart\nDA:1,1\nLF:1\nLH:1\nend_of_record\n'
+        for data in (
+                first.replace('LF:1\nLH:1', 'LF:100\nLH:100') + second,
+                first + second.removesuffix('end_of_record\n'),
+                first.removesuffix('end_of_record\n') + second,
+                first + second.replace('LF:1\n', ''),
+                first + second.replace('LH:1\n', ''),
+                first + second.replace('LH:1\n', 'LH:0\n'),
+                first + second.replace('LF:1\n', 'LF:1\nLF:1\n'),
+                first + second.replace('DA:1,1\n', 'DA:1,1\nDA:1,1\n'),
+                first + second.replace('DA:1,1\n', 'DA:1,1,checksum,extra\n')):
+            with self.subTest(data=data), self.assertRaises(ValueError):
+                require_all_sources(report_coverage(data, self.root))
 
     def test_source_fingerprint_changes_with_uninstrumented_source(self):
-        lcov = 'SF:lib/widgets/office_editor_dialog.dart\nDA:1,1\n'
+        lcov = 'SF:lib/widgets/office_editor_dialog.dart\nDA:1,1\nLF:1\nLH:1\nend_of_record\n'
         before = report_coverage(lcov, self.root)
         (self.root / 'lib/services/office_search_text.dart').write_text('changed\n')
         after = report_coverage(lcov, self.root)
         self.assertNotEqual(before['source_tree_sha256'], after['source_tree_sha256'])
 
     def test_gate_rejects_an_instrumented_subset_but_keeps_the_gap_report(self):
-        lcov = 'SF:lib/widgets/office_editor_dialog.dart\nDA:1,1\n'
+        lcov = 'SF:lib/widgets/office_editor_dialog.dart\nDA:1,1\nLF:1\nLH:1\nend_of_record\n'
         report = report_coverage(lcov, self.root)
         with self.assertRaisesRegex(ValueError, 'lib/services/office_search_text.dart'):
             require_all_sources(report)
@@ -51,8 +68,8 @@ class HostCoverageControls(unittest.TestCase):
 
     def test_gate_accepts_every_source_without_claiming_every_line_is_hit(self):
         report = report_coverage(
-            'SF:lib/widgets/office_editor_dialog.dart\nDA:1,0\nend_of_record\n'
-            'SF:lib/services/office_search_text.dart\nDA:2,1\nend_of_record\n', self.root)
+            'SF:lib/widgets/office_editor_dialog.dart\nDA:1,0\nLF:1\nLH:0\nend_of_record\n'
+            'SF:lib/services/office_search_text.dart\nDA:2,1\nLF:1\nLH:1\nend_of_record\n', self.root)
         require_all_sources(report)
         self.assertEqual(report['covered_lines'], 1)
         self.assertEqual(report['instrumented_lines'], 2)
