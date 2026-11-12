@@ -4,6 +4,13 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Preserve native slide section GUIDs, empty sections, membership metadata and
+  foreign extension namespaces. Reorder slides through an atomic plan that
+  adopts the original destination section while keeping every other membership;
+  malformed sections and stale plans reject before mutation. Independent native
+  XML oracles cover within-section, forward/backward and emptied-section moves
+  through three direct/isolate saves.
+
 - Expose shared bounded compound-file reading, legacy Word text extraction and
   macro/template preservation guards. Optional ZIP limits check actual inflated
   bytes before growth; opaque-part relationships and native main-part/type

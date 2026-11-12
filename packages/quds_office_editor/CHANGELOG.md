@@ -4,6 +4,10 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Route slide reordering through the shared section-aware plan. Undo/redo keep
+  native section identities, empty sections and active-slide identity; invalid
+  memberships reject before history or dirty-state changes.
+
 - Paint explicit native Word frame outline widths, preset/custom dashes, caps,
   joins and inset alignment. Keep selection chrome separate from the document
   stroke. New frames preview their serialized one-point outline; imported

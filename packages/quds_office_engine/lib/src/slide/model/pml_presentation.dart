@@ -1,6 +1,7 @@
 import '../../office/office_document_properties.dart';
 import '../../opc/opc_archive.dart';
 import '../../visual/office_visual.dart';
+import '../../xml/xml_node.dart';
 import '../anim/pml_motion.dart';
 
 /// Class PmlTransform.
@@ -483,13 +484,38 @@ class PmlMaster {
 /// A named group of consecutive slides in the sorter.
 class PmlSection {
   /// PmlSection API.
-  PmlSection({required this.name, required this.startIndex});
+  PmlSection({
+    required this.name,
+    required this.startIndex,
+    this.id,
+    this.nativeXml,
+  });
 
   /// name API.
   String name;
 
   /// First slide index in this section (inclusive).
   int startIndex;
+
+  /// Native section GUID. Imported identities are retained across moves/saves.
+  String? id;
+
+  /// Original section properties, including opaque extension payloads.
+  /// Serialization copies this node and replaces only modeled properties.
+  final XmlElement? nativeXml;
+}
+
+/// Import provenance for native section membership that cannot be modeled.
+class PmlSectionSource {
+  /// Creates a read-only record of the imported slide order and any guard.
+  PmlSectionSource({required Iterable<int> slideIds, this.issue})
+    : slideIds = List<int>.unmodifiable(slideIds);
+
+  /// Native slide order before any edit.
+  final List<int> slideIds;
+
+  /// A non-null reason prevents section-aware mutation of ambiguous input.
+  final String? issue;
 }
 
 /// Class PmlPresentation.
@@ -502,6 +528,7 @@ class PmlPresentation {
     List<PmlSection>? sections,
     OfficeDocumentProperties? properties,
     this.package,
+    this.sectionSource,
     this.slideWidth = 9144000,
     this.slideHeight = 5143500,
   }) : slides = slides ?? <PmlSlide>[PmlSlide(id: 256)],
@@ -521,6 +548,9 @@ class PmlPresentation {
 
   /// sections API.
   final List<PmlSection> sections;
+
+  /// Native section import provenance and an optional pre-mutation guard.
+  PmlSectionSource? sectionSource;
 
   /// properties API.
   OfficeDocumentProperties properties;

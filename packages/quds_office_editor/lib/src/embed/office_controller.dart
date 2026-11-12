@@ -9622,16 +9622,19 @@ class SlideEditorController extends OfficeController {
       return;
     }
     final int active = _activeSlide;
+    final PmlSlideReorder move = PmlSections.planReorder(
+      presentation,
+      from,
+      to,
+    );
     commands.commit(
       _CallbackCommand(
         executeFn: () {
-          final PmlSlide slide = slides.removeAt(from);
-          slides.insert(to, slide);
+          move.apply();
           _activeSlide = _indexAfterReorder(active, from, to);
         },
         undoFn: () {
-          final PmlSlide slide = slides.removeAt(to);
-          slides.insert(from, slide);
+          move.undo();
           _activeSlide = active.clamp(0, slides.length - 1);
         },
       ),
