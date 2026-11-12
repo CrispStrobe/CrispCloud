@@ -166,6 +166,8 @@ grants. The link is transient and is not restored after restarting the app.
 
 ## Remaining implementation opportunities
 
+The complete follow-up scope is maintained in the [gap closure register](file-manager-gaps/README.md): 51 stable items across six implementation lanes, each with dependencies, explicit boundaries and acceptance checks. Follow that register for ongoing implementation status; baseline columns above retain their historical meaning.
+
 The following gaps can be developed within the current application design.
 They are proposals, not delivered features or promises that the existing
 implementation already handles their edge cases.
