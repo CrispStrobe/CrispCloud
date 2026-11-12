@@ -12,6 +12,7 @@ import 'cloud_storage_interface.dart';
 import 'ftp_operation_failure.dart';
 import 'upload_temp_file.dart';
 import 'ftp_config_service.dart';
+import 'ftp_security_mode.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
 import 'ftp_transfer_session.dart';
@@ -50,6 +51,7 @@ class FTPClientAdapter extends CloudStorageClient
 
   final FTPConfigService _config;
   final FTPClientFactory _createClient;
+  final SecurityContext? securityContext;
 
   // Expose config for AppState to read credentials
   FTPConfigService get config => _config;
@@ -62,7 +64,7 @@ class FTPClientAdapter extends CloudStorageClient
   String? _password;
   String? _host;
   int _port = 21;
-  bool _useTLS = false;
+  FtpSecurityMode _securityMode = FtpSecurityMode.plain;
   bool _authenticated = false;
   int _authEpoch = 0;
   final Set<FtpTransferSession> _transferSessions = {};
@@ -111,14 +113,34 @@ class FTPClientAdapter extends CloudStorageClient
     return captured.$1;
   }
 
-  FTPClientAdapter({required dynamic config, FTPClientFactory? clientFactory})
-    : _config = (config is FTPConfigService)
-          ? config
-          : FTPConfigService(
-              configPath: '',
-              secureStorage: InMemorySecureStorage(),
-            ),
-      _createClient = clientFactory ?? FTPConnect.new;
+  FTPClientAdapter({
+    required dynamic config,
+    FTPClientFactory? clientFactory,
+    this.securityContext,
+  }) : _config = (config is FTPConfigService)
+           ? config
+           : FTPConfigService(
+               configPath: '',
+               secureStorage: InMemorySecureStorage(),
+             ),
+       _createClient =
+           clientFactory ??
+           ((
+             String host, {
+             required int port,
+             required String user,
+             required String pass,
+             required SecurityType securityType,
+             required int timeout,
+           }) => FTPConnect(
+             host,
+             port: port,
+             user: user,
+             pass: pass,
+             securityType: securityType,
+             timeout: timeout,
+             securityContext: securityContext,
+           ));
 
   @override
   String get providerName => 'FTP';
@@ -164,8 +186,14 @@ class FTPClientAdapter extends CloudStorageClient
     final username = creds['username'];
     final host = creds['host'];
     final password = creds['password'];
-    final port = int.tryParse(creds['port'] ?? '21') ?? 21;
-    final tls = creds['useTLS'] == 'true';
+    final mode = FtpSecurityMode.fromStored(
+      mode: creds['securityMode'],
+      legacyUseTls: creds['useTLS'],
+    );
+    final port = int.tryParse(creds['port'] ?? '${mode.defaultPort}');
+    if (port == null || port < 1 || port > 65535) {
+      throw const FormatException('Invalid saved FTP port.');
+    }
     if (host == null || username == null || password == null) {
       throw Exception('Incomplete credentials');
     }
@@ -177,7 +205,11 @@ class FTPClientAdapter extends CloudStorageClient
       port: port,
       user: username,
       pass: password,
-      securityType: tls ? SecurityType.ftps : SecurityType.ftp,
+      securityType: switch (mode) {
+        FtpSecurityMode.plain => SecurityType.ftp,
+        FtpSecurityMode.implicitTls => SecurityType.ftps,
+        FtpSecurityMode.explicitTls => SecurityType.ftpes,
+      },
       timeout: 30,
     );
     try {
@@ -196,7 +228,7 @@ class FTPClientAdapter extends CloudStorageClient
       _host = host;
       _password = password;
       _port = port;
-      _useTLS = tls;
+      _securityMode = mode;
       _authenticated = true;
     } catch (e) {
       try {
@@ -229,48 +261,17 @@ class FTPClientAdapter extends CloudStorageClient
     if (kIsWeb) {
       throw FtpWebUnsupportedFailure();
     }
+    final identity = FtpLoginIdentity.parse(email);
     _authEpoch++;
     await _closeSessions();
 
-    String user = email;
-    String host = '';
-    String port = '21';
-    bool useTLS = false;
-
-    if (email.contains('@')) {
-      final parts = email.split('@');
-      user = parts[0];
-      final hostPart = parts[1];
-
-      if (hostPart.contains(':')) {
-        final hostParts = hostPart.split(':');
-        host = hostParts[0];
-        final portAndFlags = hostParts[1];
-        // Check for ?tls=true suffix
-        if (portAndFlags.contains('?')) {
-          final qParts = portAndFlags.split('?');
-          port = qParts[0];
-          if (qParts[1].contains('tls=true')) {
-            useTLS = true;
-          }
-        } else {
-          port = portAndFlags;
-        }
-      } else {
-        host = hostPart;
-      }
-    } else {
-      throw Exception(
-        'Format must be user@host[:port] (e.g. user@ftp.example.com:21)',
-      );
-    }
-
     await _config.saveCredentials({
-      'username': user,
+      'username': identity.username,
       'password': password,
-      'host': host,
-      'port': port,
-      'useTLS': useTLS.toString(),
+      'host': identity.host,
+      'port': '${identity.port}',
+      'securityMode': identity.securityMode.name,
+      'useTLS': '${identity.securityMode.isSecure}',
     });
 
     try {
@@ -431,7 +432,8 @@ class FTPClientAdapter extends CloudStorageClient
       port: _port,
       username: _username!,
       password: password,
-      secure: _useTLS,
+      securityMode: _securityMode,
+      securityContext: securityContext,
       isCurrent: () =>
           _authenticated &&
           _authEpoch == epoch &&
