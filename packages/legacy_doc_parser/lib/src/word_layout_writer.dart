@@ -29,9 +29,16 @@ extension _WordLayout on _StructuredWordWriter {
       throw const FormatException('Invalid Word section numbering.');
     }
     if (layout.lineNumberInterval != 0) {
+      if (layout.lineNumberStart > 32768) {
+        // Valid unsigned DOC data can exceed Word's documented native limit.
+        // Retain it, but do not call the resulting layout fully interoperable.
+        limitations.add(LegacyWordConversionLimitation.partialFormatting);
+      }
       _xml.add(
         '<w:lnNumType w:countBy="${layout.lineNumberInterval}" '
-        'w:start="${layout.lineNumberStart}" w:distance="${layout.lineNumberDistanceTwips}" '
+        // Word interprets start as the count skipped (MS-OI29500 2.1.215),
+        // matching SLnnMin. The public model exposes the displayed number.
+        'w:start="${layout.lineNumberStart - 1}" w:distance="${layout.lineNumberDistanceTwips}" '
         'w:restart="${layout.lineNumberRestart.name}"/>',
       );
     }
@@ -53,6 +60,40 @@ extension _WordLayout on _StructuredWordWriter {
         _xml.add(' w:start="${layout.pageNumberStart}"');
       }
       _xml.add('/>');
+    }
+  }
+
+  void _sectionNotes(LegacyWordSectionLayout layout) {
+    for (final (kind, numbering, position) in [
+      ('footnote', layout.footnoteNumbering, layout.footnotePosition.name),
+      ('endnote', layout.endnoteNumbering, layout.endnotePosition?.name),
+    ]) {
+      if (numbering.start < 0 || numbering.start > 16383) {
+        throw const FormatException('Invalid Word note numbering start.');
+      }
+      final format = numbering.format;
+      if (format != null &&
+          !const {
+            'decimal',
+            'upperRoman',
+            'lowerRoman',
+            'upperLetter',
+            'lowerLetter',
+            'chicago',
+            'decimalZero',
+          }.contains(format)) {
+        throw const FormatException('Invalid Word note numbering format.');
+      }
+      if (format == null) {
+        limitations.add(LegacyWordConversionLimitation.partialFormatting);
+      }
+      _xml.add('<w:${kind}Pr>');
+      if (position != null) _xml.add('<w:pos w:val="$position"/>');
+      if (format != null) _xml.add('<w:numFmt w:val="$format"/>');
+      _xml.add(
+        '<w:numStart w:val="${numbering.start}"/>'
+        '<w:numRestart w:val="${numbering.restart.name}"/></w:${kind}Pr>',
+      );
     }
   }
 

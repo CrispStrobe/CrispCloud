@@ -87,6 +87,8 @@ class _MetafileRenderer {
     4,
     5,
     6,
+    7,
+    8,
     9,
     10,
     11,
@@ -116,6 +118,8 @@ class _MetafileRenderer {
     87,
     88,
     89,
+    90,
+    91,
   };
   static const _wmfSupported = {
     0,
@@ -143,6 +147,7 @@ class _MetafileRenderer {
     0x0325,
     0x0418,
     0x041b,
+    0x0538,
     0x061c,
   };
 
@@ -335,6 +340,64 @@ class _MetafileRenderer {
               .toDouble(),
         ),
     ];
+  }
+
+  void _multiPoly(
+    _MetaBytes data, {
+    required int countOffset,
+    required int countsOffset,
+    required int countWidth,
+    required int pointWidth,
+    required bool closed,
+    int? declaredPoints,
+  }) {
+    final count = countWidth == 2
+        ? data.u16(countOffset)
+        : data.u32(countOffset);
+    if (count > 16384 || count > (data.length - countsOffset) ~/ countWidth) {
+      throw const FormatException(
+        'Metafile polygon counts exceed their extent or limit.',
+      );
+    }
+    data.require(countsOffset, count * countWidth);
+    final counts = <int>[];
+    var total = 0;
+    for (var i = 0; i < count; i++) {
+      final size = countWidth == 2
+          ? data.u16(countsOffset + i * countWidth)
+          : data.u32(countsOffset + i * countWidth);
+      // GDI PolyPolygon and PolyPolyline both require at least two points
+      // in each figure; these operations neither use nor change the current
+      // drawing position.
+      if (size < 2 || size > 100000 - _points - total) {
+        throw const FormatException('Invalid or oversized metafile polygon.');
+      }
+      counts.add(size);
+      total += size;
+    }
+    if (declaredPoints != null && total != declaredPoints) {
+      throw const FormatException('Inconsistent metafile polygon point count.');
+    }
+    final start = countsOffset + count * countWidth;
+    data.require(start, total * pointWidth * 2);
+    // The 32-bit EMF records specify device-dependent point limits. Avoid
+    // asserting a complete SVG when their total exceeds the largest limit.
+    if (countWidth == 4 && pointWidth == 4 && total > 16384) _unsupported();
+    final points = _readPoints(data, start, total, pointWidth);
+    final path = StringBuffer();
+    var cursor = 0;
+    for (final size in counts) {
+      for (var i = 0; i < size; i++, cursor++) {
+        final point = points[cursor];
+        path.write('${i == 0 ? 'M' : 'L'}${_n(point.$1)} ${_n(point.$2)}');
+      }
+      if (closed) path.write('Z');
+    }
+    if (counts.isNotEmpty) {
+      // One compound path is essential: alternate/winding fill applies to
+      // all figures together, including holes and overlapping polygons.
+      _emit('path', 'd="$path"', filled: closed);
+    }
   }
 
   void _mapMode(int value) {
@@ -578,6 +641,19 @@ class _MetafileRenderer {
           bezier: base == 2 || base == 5,
           to: base == 5 || base == 6,
         );
+      case 7:
+      case 8:
+      case 90:
+      case 91:
+        _multiPoly(
+          data,
+          countOffset: 24,
+          countsOffset: 32,
+          countWidth: 4,
+          pointWidth: type >= 90 ? 2 : 4,
+          closed: type == 8 || type == 91,
+          declaredPoints: data.u32(28),
+        );
       default:
         _unsupported();
     }
@@ -632,13 +708,24 @@ class _MetafileRenderer {
         data.require(6, 8);
         _object(_freeObject(), _brush(data.u16(6), data.u32(8)));
       case 0x012d:
-        final value = data.u16(6);
-        _select(value & 0x7fff, stock: (value & 0x8000) != 0);
+        // Unlike EMF, MS-WMF specifies only an object-table index here.
+        // Reinterpreting its high bit as a stock-object flag invents a brush
+        // or pen that the source never defined.
+        _select(data.u16(6));
       case 0x01f0:
         _delete(data.u16(6));
       case 0x0324:
       case 0x0325:
         _poly(_readPoints(data, 8, data.u16(6), 2), closed: type == 0x0324);
+      case 0x0538:
+        _multiPoly(
+          data,
+          countOffset: 6,
+          countsOffset: 8,
+          countWidth: 2,
+          pointWidth: 2,
+          closed: true,
+        );
       case 0x0418:
       case 0x041b:
       case 0x061c:

@@ -1,0 +1,659 @@
+{
+  "schema": "legacy-doc-parser/fidelity-report",
+  "version": 1,
+  "renderer": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+  "fontInventorySha256": "b42e0e2c6e9834b500eb67c1a35fe672e94ad122f43abb6f1246c3a3d84c1b25",
+  "parserCommit": "f24e5b25208368cb6c9bdf41c0c13851f862e79b",
+  "parserWorktreeDirty": false,
+  "corpusSha256": "027a1a981e9eaec42399227ee816fca1339c95bd5c56917ca101f8c46a84564e",
+  "method": "Independent DOC render + native DOCX + parser DOCX + second binary import. No automatic golden update.",
+  "fullReportSha256": "ab29c8276a25ecd1b337381fe6c104a0ea6ca4b0320139b72c6fb59a223b59a3",
+  "compressedReportSha256": "8600c95e11fc3be9279ebbe5daca4d1a1479dc4cc88d60805a4e4ec4c62fac20",
+  "dartTestsPassed": 325,
+  "pythonTestsPassed": 29,
+  "staticAnalysis": "no issues",
+  "formatting": "unchanged",
+  "javascriptAcceptance": "passed",
+  "cases": [
+    {
+      "id": "formatting",
+      "status": "measured",
+      "sourceSha256": "0ad636c6e3597152313055fd5428fb4b70ab483b3853b2666cac52498c953026",
+      "binaryDocSha256": "0ad636c6e3597152313055fd5428fb4b70ab483b3853b2666cac52498c953026",
+      "nativeDocxSha256": "8bd7fc3e2679a6e020a458e7cf6782053be302eee7c707cd50d1b795cf9c7ec1",
+      "convertedSha256": "b0045c88008231fba601574c60361f09ee7cb3b3461fb05d2af36c07d35008a7",
+      "sourceUnchanged": true,
+      "converter": {
+        "counts": {
+          "evidenceArtifacts": 4,
+          "paragraphs": 16,
+          "tables": 1,
+          "cells": 4,
+          "images": 1,
+          "pictureReferences": 1,
+          "sections": 1,
+          "headers": 3,
+          "footers": 3,
+          "footnotes": 1,
+          "compatibilityFlags": 61,
+          "numberingDefinitions": 7
+        },
+        "warnings": [
+          "unsupportedFormatting",
+          "imagesOmitted"
+        ],
+        "limitations": [
+          "partialFormatting",
+          "embeddedObjects"
+        ],
+        "signatureValidityClaimed": false
+      },
+      "pagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 10.901999999999987,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": false,
+        "exactOnThisRenderer": false
+      },
+      "nativeConversionPagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": false,
+        "maximumWordDriftPoints": null,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": false,
+        "exactOnThisRenderer": false
+      },
+      "bridgeChangesCount": null,
+      "semanticDifferencesFromNativeDocCount": 3,
+      "roundtripDifferencesCount": 2
+    },
+    {
+      "id": "word",
+      "status": "measured",
+      "sourceSha256": "501bdd2f897b9a0d417988903b3a378bac958cacbcba5f842736802a5d47af1b",
+      "binaryDocSha256": "2d2943d799d3a48430a90bff0bee68d7ab30fc2e5c26666d793160439e1f483d",
+      "nativeDocxSha256": "425439de9c35bbe8564859772ac23291f4690b34311687646cb662b6b674f9dd",
+      "convertedSha256": "22b9af3ea0ec958367b166cbe2fa2fef392ac6e46c8243fdc7e10d65c2c71a2f",
+      "sourceUnchanged": true,
+      "converter": {
+        "counts": {
+          "evidenceArtifacts": 8,
+          "paragraphs": 15,
+          "tables": 1,
+          "cells": 1,
+          "images": 1,
+          "pictureReferences": 1,
+          "sections": 1,
+          "headers": 3,
+          "footers": 3,
+          "footnotes": 1,
+          "endnotes": 1,
+          "compatibilityFlags": 61,
+          "numberingDefinitions": 2
+        },
+        "warnings": [
+          "unsupportedFormatting",
+          "fieldsUseStoredResults",
+          "imagesOmitted",
+          "recoveredNonconformingProperties"
+        ],
+        "limitations": [
+          "partialFormatting",
+          "embeddedObjects",
+          "fieldsLists"
+        ],
+        "signatureValidityClaimed": false
+      },
+      "pagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 18.902,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": false,
+        "exactOnThisRenderer": false
+      },
+      "nativeConversionPagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 5.320600000000013,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": false,
+        "exactOnThisRenderer": false
+      },
+      "bridgeChangesCount": 2,
+      "semanticDifferencesFromNativeDocCount": 4,
+      "roundtripDifferencesCount": 2
+    },
+    {
+      "id": "word-compatibility",
+      "status": "measured",
+      "sourceSha256": "8fccf5c41ac4f51136635322933065ecc786e1365709a7a10edb8734024049fe",
+      "binaryDocSha256": "6c45dd6233904fab4e3583af53d52ac06d294773c01da14992bf3782bfae17dc",
+      "nativeDocxSha256": "d255a1efb191de56281dd9621e2ea6608e231f3dfe5b454fcad45e1c9e349ba5",
+      "convertedSha256": "9b95ca119103c0e87a76ceaa2a843eb9f4159c2c6c824f5a697b3bdc19ab1e88",
+      "sourceUnchanged": true,
+      "converter": {
+        "counts": {
+          "paragraphs": 16,
+          "tables": 1,
+          "cells": 1,
+          "sections": 2,
+          "headers": 6,
+          "footnotes": 1,
+          "compatibilityFlags": 61,
+          "evidenceArtifacts": 3
+        },
+        "warnings": [
+          "unsupportedFormatting",
+          "recoveredNonconformingProperties"
+        ],
+        "limitations": [
+          "partialFormatting"
+        ],
+        "signatureValidityClaimed": false
+      },
+      "pagination": {
+        "referencePages": 2,
+        "actualPages": 2,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": false,
+        "maximumWordDriftPoints": null,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": false,
+        "exactOnThisRenderer": false
+      },
+      "nativeConversionPagination": {
+        "referencePages": 2,
+        "actualPages": 2,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": false,
+        "maximumWordDriftPoints": null,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": false,
+        "exactOnThisRenderer": false
+      },
+      "bridgeChangesCount": 4,
+      "semanticDifferencesFromNativeDocCount": 3,
+      "roundtripDifferencesCount": 2
+    },
+    {
+      "id": "table-borders",
+      "status": "measured",
+      "sourceSha256": "066f9d736e114c01436b328c2bc74ec76e3be676d6cddb3e8eb81956f2598e83",
+      "binaryDocSha256": "1ee6343bf51ce1dda4d9ef14eb106ac5826386f7530601d0f4d2c2a2b9b96115",
+      "nativeDocxSha256": "ea75a8fd035af76ff2df4ca0bac33062d1a18d8b254f136401b16d9d5377d783",
+      "convertedSha256": "5ce759a8eae569fd4eb44e1d3d1deaad482ecf6822cb644dd019c9ba043b18b8",
+      "sourceUnchanged": true,
+      "converter": {
+        "counts": {
+          "paragraphs": 6,
+          "tables": 2,
+          "cells": 4,
+          "sections": 1,
+          "footnotes": 1,
+          "compatibilityFlags": 61,
+          "evidenceArtifacts": 3
+        },
+        "warnings": [
+          "unsupportedFormatting",
+          "recoveredTableStoryBoundary"
+        ],
+        "limitations": [
+          "partialFormatting"
+        ],
+        "signatureValidityClaimed": false
+      },
+      "pagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 74.42699999999999,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": false,
+        "exactOnThisRenderer": false
+      },
+      "nativeConversionPagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": false,
+        "maximumWordDriftPoints": null,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": false,
+        "exactOnThisRenderer": false
+      },
+      "bridgeChangesCount": 5,
+      "semanticDifferencesFromNativeDocCount": 5,
+      "roundtripDifferencesCount": 2
+    },
+    {
+      "id": "story-media",
+      "status": "measured",
+      "sourceSha256": "3267ee707daac2a409e9bd1d796572949fb9e7e7891ac71ec14dcdefb59cb219",
+      "binaryDocSha256": "563e9bd799cf413d6324b86320b2e719ecc23df6f2d172ba594b03dfe121aa0c",
+      "nativeDocxSha256": "93c289033f014a3ea72ff783764df0f4a61297b473a370bb2293adce222695b5",
+      "convertedSha256": "138857e25b150967056cccecb3e578652adf7f33ed2ec44bfb064c372944e529",
+      "sourceUnchanged": true,
+      "converter": {
+        "counts": {
+          "evidenceArtifacts": 12,
+          "paragraphs": 11,
+          "images": 9,
+          "pictureReferences": 9,
+          "sections": 1,
+          "headers": 3,
+          "footers": 3,
+          "footnotes": 1,
+          "compatibilityFlags": 61
+        },
+        "warnings": [
+          "unsupportedFormatting",
+          "imagesOmitted"
+        ],
+        "limitations": [
+          "partialFormatting",
+          "embeddedObjects"
+        ],
+        "signatureValidityClaimed": false
+      },
+      "pagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 0.0,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": true,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": false
+      },
+      "nativeConversionPagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": false,
+        "maximumWordDriftPoints": null,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": false,
+        "exactOnThisRenderer": false
+      },
+      "bridgeChangesCount": 2,
+      "semanticDifferencesFromNativeDocCount": 2,
+      "roundtripDifferencesCount": 2
+    },
+    {
+      "id": "comment-threads",
+      "status": "measured",
+      "sourceSha256": "d1763533e3733a93398a0cea7043b9d188f98f5a403ff5b7f3ed5869d654e9a4",
+      "binaryDocSha256": "705bb49428dc44e09f80ac53748f7597bc3d46f5447d0daca066a4f44c8d6874",
+      "nativeDocxSha256": "75529b12dd2b5833c627d8bf7f05bbc0068eeb05ebf7e85d172c9284611f3bd8",
+      "convertedSha256": "51ff6e33ec5c1b88ddd3a6e0c63b92f25502322ce1aaa585db3e3de86405c157",
+      "sourceUnchanged": true,
+      "converter": {
+        "counts": {
+          "evidenceArtifacts": 5,
+          "paragraphs": 5,
+          "sections": 1,
+          "comments": 2,
+          "compatibilityFlags": 60
+        },
+        "warnings": [
+          "unsupportedFormatting"
+        ],
+        "limitations": [
+          "partialFormatting"
+        ],
+        "signatureValidityClaimed": false
+      },
+      "pagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 0.0,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": true,
+        "rasterExactlyMatches": true,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": true
+      },
+      "nativeConversionPagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 0.0,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": true,
+        "rasterExactlyMatches": true,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": true
+      },
+      "bridgeChangesCount": 5,
+      "semanticDifferencesFromNativeDocCount": 2,
+      "roundtripDifferencesCount": 2
+    },
+    {
+      "id": "note-markers",
+      "status": "measured",
+      "sourceSha256": "6f4e979c69c4a942796ea512490b791f8b3ea99a966c75593c1b2613880e7536",
+      "binaryDocSha256": "80c3e144945e40e90fc8dac11e9e039e2fc2eef47bac1b7ac7d6ec1ef338cd72",
+      "nativeDocxSha256": "40ad8f4b84f0942282afee05e3a08373264af35c881365fa75618aa4542aa03d",
+      "convertedSha256": "08daa39f6e45be68eba80e9cc3975fdfe416ffe7c1afce310b6a704f51c108de",
+      "sourceUnchanged": true,
+      "converter": {
+        "counts": {
+          "paragraphs": 14,
+          "sections": 1,
+          "footnotes": 6,
+          "tables": 1,
+          "cells": 1,
+          "endnotes": 3,
+          "compatibilityFlags": 61,
+          "evidenceArtifacts": 3
+        },
+        "warnings": [
+          "unsupportedFormatting"
+        ],
+        "limitations": [
+          "partialFormatting"
+        ],
+        "signatureValidityClaimed": false
+      },
+      "pagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": false,
+        "maximumWordDriftPoints": null,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": false,
+        "exactOnThisRenderer": false
+      },
+      "nativeConversionPagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": false,
+        "maximumWordDriftPoints": null,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": false,
+        "exactOnThisRenderer": false
+      },
+      "bridgeChangesCount": 9,
+      "semanticDifferencesFromNativeDocCount": 9,
+      "roundtripDifferencesCount": 3
+    },
+    {
+      "id": "bookmarks",
+      "status": "measured",
+      "sourceSha256": "acc4bc7ef24543b75d2295dbbd37a58b9a4ac5a2105cef13ef186e8178ec05b6",
+      "binaryDocSha256": "75c0f4aa9bf85d142c88d40eb23fb21720f2e9cd76ff5181ab41913345dfdb59",
+      "nativeDocxSha256": "14581c8bd463c0f17b9919fcd1a93015187d98393d663002e42d4fac1a29648f",
+      "convertedSha256": "c7ec74f6740ce1300d6f31d8332c699d1a34d76895f10588eed5c9fa9760ba4f",
+      "sourceUnchanged": true,
+      "converter": {
+        "counts": {
+          "evidenceArtifacts": 4,
+          "paragraphs": 16,
+          "bookmarks": 16,
+          "tables": 1,
+          "cells": 1,
+          "sections": 1,
+          "headers": 3,
+          "footers": 3,
+          "footnotes": 1,
+          "endnotes": 1,
+          "compatibilityFlags": 61
+        },
+        "warnings": [
+          "unsupportedFormatting",
+          "fieldsUseStoredResults"
+        ],
+        "limitations": [
+          "partialFormatting",
+          "fieldsLists"
+        ],
+        "signatureValidityClaimed": false
+      },
+      "pagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 5.400000000000006,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": false,
+        "exactOnThisRenderer": false
+      },
+      "nativeConversionPagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": false,
+        "maximumWordDriftPoints": null,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": false,
+        "exactOnThisRenderer": false
+      },
+      "bridgeChangesCount": 3,
+      "semanticDifferencesFromNativeDocCount": 3,
+      "roundtripDifferencesCount": 2
+    },
+    {
+      "id": "content-controls",
+      "status": "measured",
+      "sourceSha256": "a59cb0915fdadaa579bd28f028da5be1df2c8e036362e8e1fe21b789053b5e29",
+      "binaryDocSha256": "02ffc92fa910622066deabe1fbc1676ebcbe07034ad8f410484cf83908f78ab8",
+      "nativeDocxSha256": "15308ff4b336586f1ea182ed7222a62fa87a4751cf107e8801a197863cbf4f22",
+      "convertedSha256": "0e6bc689783c902a7c760c9d3a35965211fcb8ad40c5bcba487b32d14c605d36",
+      "sourceUnchanged": true,
+      "converter": {
+        "counts": {
+          "paragraphs": 12,
+          "tables": 1,
+          "cells": 1,
+          "sections": 1,
+          "headers": 3,
+          "footnotes": 1,
+          "compatibilityFlags": 61,
+          "evidenceArtifacts": 3
+        },
+        "warnings": [
+          "unsupportedFormatting"
+        ],
+        "limitations": [
+          "partialFormatting"
+        ],
+        "signatureValidityClaimed": false
+      },
+      "pagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 5.400000000000006,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": false,
+        "exactOnThisRenderer": false
+      },
+      "nativeConversionPagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": false,
+        "maximumWordDriftPoints": null,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": false,
+        "exactOnThisRenderer": false
+      },
+      "bridgeChangesCount": 2,
+      "semanticDifferencesFromNativeDocCount": 3,
+      "roundtripDifferencesCount": 2
+    },
+    {
+      "id": "content-controls-legacy",
+      "status": "measured",
+      "sourceSha256": "2833e0d3ef3e00ba626177fb2f40ddf51744611be1a324a3a6aabdb01926aaab",
+      "binaryDocSha256": "69481e76b39ad83411ff018be3b30914723d23d90a728159053608422c30bea3",
+      "nativeDocxSha256": "714765200fe60e5f2d5415279f79100553f9a0c9d2f66da6f1fc963e43beaa15",
+      "convertedSha256": "9c95142f532be788052d3d29b02dce1cee76c63e5be87d983992b0633a964b9e",
+      "sourceUnchanged": true,
+      "converter": {
+        "counts": {
+          "paragraphs": 12,
+          "tables": 1,
+          "cells": 1,
+          "sections": 1,
+          "headers": 3,
+          "footnotes": 1,
+          "compatibilityFlags": 61,
+          "evidenceArtifacts": 3
+        },
+        "warnings": [
+          "unsupportedFormatting"
+        ],
+        "limitations": [
+          "partialFormatting"
+        ],
+        "signatureValidityClaimed": false
+      },
+      "pagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 5.400000000000006,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": false,
+        "exactOnThisRenderer": false
+      },
+      "nativeConversionPagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": false,
+        "maximumWordDriftPoints": null,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": false,
+        "exactOnThisRenderer": false
+      },
+      "bridgeChangesCount": 2,
+      "semanticDifferencesFromNativeDocCount": 3,
+      "roundtripDifferencesCount": 2
+    },
+    {
+      "id": "word-altchunk",
+      "status": "measured",
+      "sourceSha256": "f623604dfab5865907c70d7e2e933970bca4f1e6e892187025c083f32784b05b",
+      "binaryDocSha256": "4b5d31bb21b87c311242c6dc17c84515749e37ed8baf9af20541c2504a0ac496",
+      "nativeDocxSha256": "a8ae06a5ef56f740d5e29d524a1971ef3fae2aa6992f01e21836cf334f44c5ff",
+      "convertedSha256": "b4173897d170ad8a1efa5fd5c2ba15a958b29bd60ca651cfacbd19e6ab92492a",
+      "sourceUnchanged": true,
+      "converter": {
+        "counts": {
+          "paragraphs": 11,
+          "tables": 1,
+          "cells": 1,
+          "sections": 1,
+          "footnotes": 1,
+          "compatibilityFlags": 61,
+          "evidenceArtifacts": 3
+        },
+        "warnings": [
+          "unsupportedFormatting"
+        ],
+        "limitations": [
+          "partialFormatting"
+        ],
+        "signatureValidityClaimed": false
+      },
+      "pagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 5.400000000000006,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": false,
+        "exactOnThisRenderer": false
+      },
+      "nativeConversionPagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": false,
+        "maximumWordDriftPoints": null,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": false,
+        "exactOnThisRenderer": false
+      },
+      "bridgeChangesCount": 3,
+      "semanticDifferencesFromNativeDocCount": 2,
+      "roundtripDifferencesCount": 2
+    }
+  ],
+  "aggregate": {
+    "cases": 11,
+    "measured": 11,
+    "sourceUnchanged": true,
+    "equalPageCount": 11,
+    "exactRasterTextGeometry": 1,
+    "zeroStructuralDifferences": 0
+  },
+  "schemaValidation": {
+    "files": 11,
+    "failures": 15,
+    "cause": "noWrap uses on/off enumeration, not numeric boolean",
+    "report": "schema-report.json"
+  }
+}

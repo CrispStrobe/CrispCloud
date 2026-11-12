@@ -20,6 +20,23 @@ line pitch and signed character spacing. A stored page-number start alone
 does not enable restarting. Unequal columns require complete bounded widths;
 invalid values and enabled grids without a line pitch are rejected.
 
+Automatic footnote/endnote labels now retain the basic Roman, alphabetic,
+decimal, zero-padded decimal and Chicago formats, starting values, restart
+rules, footnote placement and document-wide endnote placement. Word 97/2000
+DOP defaults are read only for versions to which those fields apply. Later
+files use section SPRMs; their note offsets are active only for continuous
+numbering. Inactive source offsets remain available in the model. Unknown
+formats retain their numeric source code and report a formatting limitation.
+Per-section endnote suppression remains a native `w:noEndnote` instruction.
+
+The public line-number start is the displayed number. Native `w:lnNumType`
+uses the source skip count (`displayed start - 1`), matching Word's documented
+interpretation. A default start of one therefore emits zero. Valid unsigned
+DOC starts outside Word's documented native range are retained with an
+interoperability limitation. Regression tests independently construct DOP and
+SEPX bytes, exercise version gates and ignored offsets, and reject invalid
+position/restart operands without reading beyond declared DOP boundaries.
+
 The PRM0 lookup is corrected against the current Microsoft table: widow
 control, no-hyphenation, mirrored indents and East Asian flags no longer use
 shifted historical lookup entries. The same flags work through direct PAPX,
@@ -63,3 +80,6 @@ Primary format references:
 - [Column width operands](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/25ac9549-1b44-49d2-a179-e066fabe6251)
 - [Column spacing operands](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/d11123e4-00fe-433d-af28-605823dbe236)
 - [Footnote text ranges](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/b30472e7-569e-4c9c-a8ca-07fd5432f365)
+- [DopBase document note settings](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/f885b87a-15b3-460e-aecc-213bd17f960e)
+- [Dop97 note numbering formats](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/2feeb178-f901-4151-bf5c-8496d5a0700b)
+- [Word line-number start semantics](https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oi29500/c4252e13-48d2-4ac9-9fb5-3b276d02be30)

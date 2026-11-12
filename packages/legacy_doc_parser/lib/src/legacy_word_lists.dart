@@ -64,6 +64,14 @@ extension _WordLists on _StructuredWordParser {
     overrides.require(4, overrideCount * 16);
     var position = 4 + overrideCount * 16;
     final seenSourceIds = <int>{};
+    final firstInstances = <int, int>{};
+    final overriddenSources = <int>{};
+    for (var instance = 0; instance < overrideCount; instance++) {
+      final at = 4 + instance * 16;
+      final sourceId = overrides.i32(at);
+      firstInstances.putIfAbsent(sourceId, () => instance + 1);
+      if (overrides.u8(at + 12) != 0) overriddenSources.add(sourceId);
+    }
     for (var instance = 0; instance < overrideCount; instance++) {
       final at = 4 + instance * 16;
       final sourceId = overrides.i32(at);
@@ -72,10 +80,12 @@ extension _WordLists on _StructuredWordParser {
       if (original == null || overrideLevels > 9) {
         throw const FormatException('Invalid Word list-instance reference.');
       }
-      // Distinct ilfo values sharing an lsid can continue a sequence across
-      // instances. Retain their identity and report that a consumer must handle
-      // that relationship rather than silently claiming independent restarts.
-      if (!seenSourceIds.add(sourceId)) {
+      // MS-DOC 2.4.6.4 counts preceding paragraphs by lsid, not ilfo. With no
+      // level overrides the instances share one sequence and identical levels.
+      // Groups involving start/format overrides need per-first-use semantics;
+      // retain the warning for those until that path is reconstructed.
+      if (!seenSourceIds.add(sourceId) &&
+          overriddenSources.contains(sourceId)) {
         warnings.add(LegacyWordWarning.numberingNotReconstructed);
       }
       final firstCp = overrides.u32(position);
@@ -136,6 +146,11 @@ extension _WordLists on _StructuredWordParser {
       final definition = LegacyWordNumberingDefinition(
         id: id,
         sourceListId: sourceId,
+        continuationOf:
+            !overriddenSources.contains(sourceId) &&
+                firstInstances[sourceId] != id
+            ? firstInstances[sourceId]
+            : null,
         levels: List.unmodifiable(levels.map((value) => value.model)),
       );
       numbering.add(definition);
@@ -256,7 +271,13 @@ extension _WordLists on _StructuredWordParser {
                   ? 2
                   : 0],
           paragraphStyle: _paragraphStyle(paragraphProperties, styleIndex ?? 0),
-          characterStyle: _characterStyle(characterProperties),
+          // Without a linked list style, absent marker font properties inherit
+          // the paragraph mark. Injecting the STSH default here would override
+          // its authored font even when LVL.grpprlChpx is completely empty.
+          characterStyle: _characterStyle(
+            characterProperties,
+            useDocumentDefaultFont: styleIndex != null,
+          ),
         ),
         List.unmodifiable(paragraph),
         styleIndex,

@@ -1018,3 +1018,28 @@ values remain unchanged:
   "reviewed_source_sha256": "83c558c0ebbaa2d429e53821e8d5022457ff13e2bd95d33a61dd178deaa07e7e"
 }
 ```
+
+## Legacy Word fidelity continuation source binding
+
+The parser mirror and Git declaration now identify upstream
+`b295a3c1ddb542b0f161ecafdcdaba3762dc7535`, synchronized through Quds
+`9fb8bf12703f32a487609a673f342a5ae0003de1`. The active dependency remains the
+reviewed local path mirror. The new table-model/style/text and shape-writer
+files are included in the 350-file source inventory. Their changes parse
+bounded Word properties and serialize document formatting, geometry, revision
+history and inert ink evidence. They add no cipher, key derivation, signature
+verification, native provider or network operation. Encrypted/obfuscated Word
+input is still rejected, and the runtime dependency remains `archive`.
+
+The root lockfile is unchanged. Only the exact inventory/source fingerprints
+are refreshed; existing declaration, questionnaire and distribution decisions
+retain their recorded evidence. No release or external filing is made by this
+source update. Temporary test hooks have been removed before calculating:
+
+```json
+{
+  "inventory_sha256": "bee7a3b1c69c300ee7c5731dd77fed4bdef97ccf8906a5f9641dd697a4cffe7c",
+  "pubspec_lock_sha256": "03e00c2707eb12fab41ab917c1d4e60ee05c1002e38c77adb02accd38bf9c247",
+  "reviewed_source_sha256": "4356cfd922144f46b5baa410c562e75a382ee6d4e1cf9756ed54a71f0fe1e903"
+}
+```

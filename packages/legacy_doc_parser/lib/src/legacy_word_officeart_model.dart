@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
+import 'dart:typed_data';
+
 /// Metafile/device or OfficeArt geometry coordinates, independent of placement.
 class LegacyWordVectorBounds {
   const LegacyWordVectorBounds(this.left, this.top, this.right, this.bottom);
@@ -112,11 +114,74 @@ class LegacyWordOfficeArtText {
   final bool? fitShapeToText, autoTextMargin;
 }
 
+/// Only the stream version and its declared byte extent are inspected. A
+/// matching header does not validate packets, properties or pen strokes.
+enum LegacyWordInkHeaderStatus {
+  version1Extent,
+  unsupportedVersion,
+  invalidHeader,
+}
+
+/// Inert ISF bytes unwrapped from a validated OfficeArt IMsoInkData envelope.
+/// Boolean values are null unless their independent source use bit is set.
+/// Neither the annotation bit nor a discussion anchor identifies a comment.
+class LegacyWordOfficeArtInk {
+  LegacyWordOfficeArtInk({
+    Uint8List? data,
+    this.annotation,
+    this.hitTestInk,
+    this.renderShape,
+    this.renderInk,
+  }) : data = _copyInkBytes(data);
+
+  static const maxDataLength = 16 * 1024 * 1024;
+  final Uint8List? data;
+  final bool? annotation, hitTestInk, renderShape, renderInk;
+
+  LegacyWordInkHeaderStatus? get headerStatus {
+    final bytes = data;
+    if (bytes == null) return null;
+    var cursor = 0;
+    int? number(int maximum) {
+      var value = 0, multiplier = 1;
+      for (var i = 0; i < 10 && cursor < bytes.length; i++) {
+        final byte = bytes[cursor++], low = byte & 0x7f;
+        if (low > (maximum - value) ~/ multiplier) return null;
+        value += low * multiplier;
+        if (byte < 128) return value;
+        // Values already beyond the bounded extent cannot become valid by
+        // adding more bits. Saturation also keeps JavaScript arithmetic exact.
+        multiplier = multiplier <= maximum ~/ 128
+            ? multiplier * 128
+            : maximum + 1;
+      }
+      return null;
+    }
+
+    final version = number(0x7fffffff);
+    if (version == null) return LegacyWordInkHeaderStatus.invalidHeader;
+    if (version != 0) return LegacyWordInkHeaderStatus.unsupportedVersion;
+    final length = number(maxDataLength);
+    return length != null && length == bytes.length - cursor
+        ? LegacyWordInkHeaderStatus.version1Extent
+        : LegacyWordInkHeaderStatus.invalidHeader;
+  }
+}
+
+Uint8List? _copyInkBytes(Uint8List? bytes) {
+  if (bytes == null) return null;
+  if (bytes.length > LegacyWordOfficeArtInk.maxDataLength) {
+    throw const FormatException('OfficeArt ink exceeds its byte limit.');
+  }
+  return Uint8List.fromList(bytes).asUnmodifiableView();
+}
+
 /// The resolved, bounded subset of an OfficeArt FSP/FOPT shape. Unknown or
 /// context-dependent data remains in the original OfficeArt artifact.
 class LegacyWordOfficeArtShape {
   LegacyWordOfficeArtShape({
     required this.type,
+    this.sourceFlags = 0,
     this.rotationFixed16 = 0,
     this.flipHorizontal = false,
     this.flipVertical = false,
@@ -125,11 +190,17 @@ class LegacyWordOfficeArtShape {
     this.line,
     this.shadow,
     this.text,
+    this.ink,
+    this.discussionAnchor = false,
     List<int> unsupportedProperties = const [],
   }) : unsupportedProperties = List.unmodifiable(unsupportedProperties);
 
   /// MSOSPT from OfficeArtFSP.recInstance, never inferred from image bytes.
   final int type;
+
+  /// Original FSP flags. Group, child, OLE and master contexts need resolution
+  /// before isolated geometry can be emitted as an active native shape.
+  final int sourceFlags;
   final int rotationFixed16;
   final bool flipHorizontal, flipVertical;
   final LegacyWordOfficeArtGeometry? geometry;
@@ -137,5 +208,9 @@ class LegacyWordOfficeArtShape {
   final LegacyWordOfficeArtLine? line;
   final LegacyWordOfficeArtShadow? shadow;
   final LegacyWordOfficeArtText? text;
+  final LegacyWordOfficeArtInk? ink;
+
+  /// MS-ODRAW idDiscussAnchor equals 1. This is not a comment identifier.
+  final bool discussionAnchor;
   final List<int> unsupportedProperties;
 }

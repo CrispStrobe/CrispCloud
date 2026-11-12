@@ -28,6 +28,81 @@ asserting UTC. Missing authors or invalid dates stay missing and produce the
 revision-metadata limitation. Unsupported pre-wall properties also produce that
 limitation, even when the supported subset can be exported.
 
+## Section formatting revisions
+
+`sprmSWall` captures the supported section properties before subsequent SPRMs
+modify the current state. `sprmSPropRMark` supplies the author and source date;
+`sprmSRsid` retains the section save identifier even without an active revision.
+The public section model exposes the prior state separately, and DOCX writes
+native `w:sectPrChange` with a complete prior set of the supported properties.
+Page size, orientation, margins, equal/unequal columns, section numbering,
+document grids and title-page state can therefore be rejected independently of
+the current settings. Prior section properties are validated too: a valid
+current value cannot hide a malformed historical snapshot. Missing or unmarked
+snapshots stay explicit evidence rather than fabricated history.
+
+A binary section's break type terminates that section, whereas OOXML places the
+break type on the following section. The writer shifts both the current break
+and its prior value. If the receiving section already has a separately authored
+layout revision, one `sectPrChange` cannot express both independent authors.
+The local layout revision remains native; the incoming break revision remains
+disclosed evidence. A changed terminal binary break likewise has no following
+OOXML section and is disclosed. These cases are not reported as full fidelity.
+Header/footer references remain outside `sectPrChange`, as required by the
+native previous-section schema. The parser does not invent revision history for
+header/footer relationships that the section SPRMs do not encode.
+
+## Paragraph numbering revisions
+
+`sprmPNumRM` is decoded as its fixed 128-byte `NumRM` record. The public
+paragraph model exposes the previous-numbered state, insertion flag, author,
+source date, and a normalized native historical numbering string, with an
+immutable copy of the source record. All nine previous level values, formats
+and placeholder positions remain in that evidence. `sprmPFNumRMIns` works both
+through ordinary paragraph properties and PRM0; paragraph-style changes retain
+these review properties independently of the current list selection.
+
+Native DOCX stores representable prior labels in `w:numPr/w:numberingChange`
+and newly applied numbering as `w:numPr/w:ins`. These do not mark the paragraph
+text inserted. Removing a list retains its previous numbering beside an
+explicit `w:numId` reset. Native numbering history is a legacy value cache; it
+does not reconstruct an unavailable old abstract-list definition or invent a
+multi-step edit history. Current numbering keeps its independent list identity
+and continuation rules.
+
+Numbering history whose template has a literal prefix, an ambiguous percent
+separator, invalid XML controls, or an unrepresentable number-format code is
+retained with a specific revision limitation. Its native revision marker has
+no fabricated `original` label. Missing author metadata stays incomplete.
+Invalid record lengths, Boolean operands, text extents, Unicode and placeholder
+indices are rejected before conversion. Non-applicable template data in a
+record for a previously unnumbered paragraph is not interpreted.
+
+## LISTNUM display-field revisions
+
+`sprmCDispFldRMark` retains the previous literal result of a `LISTNUM` field,
+its author and source timestamp, independently of revisions to surrounding text
+or paragraph numbering. The fixed 39-byte source record remains immutable
+evidence. The source flag follows its documented nonzero semantics; zero clears
+the history. The parser validates text bounds and Unicode and rejects histories
+attached to a different field type or contradictory histories on one field.
+
+Representable history is native `w:fldChar/w:numberingChange` on the begin
+character. The field remains locked with its current cached result. The parser
+does not recalculate field instructions or accept the revision. Explicitly
+hidden history and history inside private fields remain inert evidence, as do
+previous results containing unsupported XML controls. An omitted native
+`original` value never implies a reconstructed previous result.
+
+The implementation follows [MS-DOC DispFldRmOperand](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/47381e7e-b79f-4069-9634-4f24fa8d8b2b)
+and the field-specific [NumberingChange semantics](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.numberingchange).
+`test/legacy_word_display_field_revisions_test.dart` independently assembles the
+binary records and projects accepted/rejected output XML into different literal
+results. It also checks field nesting, private ancestors, repeated records,
+false flags, immutable source evidence and malformed/conflicting records. These
+checks establish native structure and cached states, not a renderer's ability
+to recalculate LISTNUM or expose its full editing interface.
+
 ## Comment threads and ink evidence
 
 Validated `ATRDPost10` / `AtrdExtra` records map to native `comments.xml` and
@@ -42,20 +117,91 @@ The original 18-byte extended record is immutable in the public model and copied
 into an inert evidence part with its Table-stream offset. The ink-annotation bit
 is retained. Already supported referenced images/objects in comment stories use
 the normal media paths; the ink bit alone is never turned into invented strokes
-or an active `o:ink` element. Proprietary pen-stroke data is not decoded. The
+or an active `o:ink` element. ISF pen-stroke data is not decoded. The
 record does not encode a resolved/done state, so none is fabricated in the native
 thread part. A hidden/private parent keeps its reply branch inert as well.
 
+OfficeArt `pInkData` is now separately exposed as `shape.ink.data` when its
+`IMsoInkData` GUID and exact byte count validate. The immutable payload omits
+that 20-byte envelope and retains the original ISF bytes. The envelope remains
+in the original OfficeArt artifact. Drawing and inline-picture occurrences
+write explicit `officeArtInk` evidence with the source artifact identity,
+occurrence CP, owning story, independently used Ink Boolean flags and header
+inspection result. The `inkPayloads` count measures preserved payload
+occurrences, not rendered or editable ink. Empty, invalid-header and
+unsupported-version ISF payloads remain inert and distinguishable.
+
+`version1Extent` means only that the stream's version and declared byte extent
+match; packets, drawing attributes, compression, transforms and strokes are
+not validated. Each payload is bounded to 16 MiB and the aggregate retained
+media budget is checked before copying it. Malformed envelopes and nonzero
+noncomplex `pInkData` values are rejected. Flags without bytes remain explicit
+loss evidence rather than being counted as an ink payload.
+
+`idDiscussAnchor=1` records a discussion-anchor Boolean. It is **not** a comment
+identifier, so it cannot connect a main-story shape to an otherwise unrelated
+comment. Neither it nor `fInkAnnotation` is used to invent a relationship to
+`ATRDPost10.fInkAtn`. The tests independently assemble the documented empty ISF
+stream and OfficeArt envelope, check byte-exact package evidence and adversarial
+headers, and verify that unrelated comment/shape flags remain independent.
+They do not establish native pen rendering or nonempty stroke round trips.
+The inspected Quds fixtures currently provide threaded comments but no ink
+payload fixture; a native ink sample and an ISF stroke oracle remain required.
+
+Primary format references:
+
+- [MS-DOC ATRDPost10](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/19181fe7-a62a-4e70-9a5f-a0cb1ebe0921)
+- [MS-ODRAW pInkData](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-odraw/27649c8d-894d-45e3-9304-3c7c85be2267)
+- [MS-ODRAW IMsoInkData](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-odraw/75eca54d-0b10-4796-969f-6ab349fa1fec)
+- [MS-ODRAW Ink Boolean Properties](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-odraw/ea9cdb07-e9b9-4412-a811-f5d80ccee608)
+- [MS-ODRAW idDiscussAnchor](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-odraw/b81344c5-9175-4b0c-a530-49c5c59fcc6b)
+- [Microsoft Ink Serialized Format specification](https://download.microsoft.com/download/0/B/E/0BE8BDD7-E5E8-422A-ABFD-4342ED7AD886/InkSerializedFormat(ISF)Specification.pdf)
+
 ## Remaining limits
 
-Table/row/cell and section formatting history, moves, list-numbering revision
-records, display-field revisions, and multi-step editing history are not
-reconstructed as native tracked changes. One binary wall contains one prior
+Table/row/cell formatting history, moves, and
+multi-step editing history are not reconstructed as native tracked changes.
+One binary wall contains one prior
 property snapshot, not an arbitrary revision log. Revision reasons are exposed
 as source codes; they are not converted into invented user-visible edits.
 No change is accepted automatically. Formatting histories for unsupported
 properties remain a limitation even when a native revision element is written
 for the supported subset.
+
+Section decoding follows [MS-DOC section properties](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/46c3ec54-53ff-4c0a-b0d6-07ad15d2546e),
+and native history follows [SectionPropertiesChange](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.sectionpropertieschange)
+and [PreviousSectionProperties](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.previoussectionproperties).
+`test/legacy_word_section_revisions_test.dart` independently assembles the binary
+records and applies accept/reject property rules to parsed XML to verify both
+states, including section-break ownership, unequal columns, conflicting authors,
+missing snapshots and malformed historical values. These are semantic tests;
+they do not certify Microsoft Word's pagination or its user-interface behavior.
+
+The opt-in `tool/fidelity/section_review_probe.py` creates an independently
+authored binary fixture and reports native source-DOC and converted-DOCX review
+loss separately. On LibreOfficeDev 26.8 build
+`2c87e51eeaa2b413ff4ae097b2705eea1995d8e5`, both native imports dropped the
+fixture's section revisions; our direct output retained two (including the
+break shifted onto the following section). That renderer is therefore not a
+positive oracle for retention of section review data. Reports keep the source
+hash, source expectations and all measured section states.
+The probe enforces the pinned fixture hash and the independently authored current
+and previous properties before accepting the parser result. Adversarial tests
+ensure that losing revisions in all three routes cannot become a passing golden.
+
+Numbering history follows [MS-DOC NumRM](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/3311b346-4291-419c-be53-34e98d809d76),
+[NumRMOperand](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/347cc059-c0cf-481e-847b-5130b7f215a9),
+the paragraph-property preservation rules, and the native
+[NumberingChange grammar](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.numberingchange).
+`test/legacy_word_numbering_revisions_test.dart` assembles independent binary
+records, evaluates old multilevel labels from the output grammar, and checks
+insertion versus ordinary paragraph text, list removal, style resets, PRM0,
+immutable source evidence and malformed extents.
+
+Full paired-move semantics must be tested on an OOXML source path: the
+[MS-DOC FibRgFcLcb2007 definition](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/f04ad697-5027-46c0-bf4c-52fc7843a2f6)
+requires the reserved MoveFrom/MoveTo lengths to be zero and their offsets to be
+ignored. Matching insertion/deletion text is not enough to invent a move pair.
 
 ## Specification and tests
 

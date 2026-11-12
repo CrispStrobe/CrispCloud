@@ -2,10 +2,13 @@
 
 CrispCloud consumes the portable Dart package
 [`legacy_doc_parser`](https://github.com/CrispStrobe/legacy-doc-parser) from the
-user-created repository. The current reviewed runtime is pinned to
-`80e9683c0d60553f7198ca89a64aa927d619c684` in both `pubspec.yaml` and
-`pubspec.lock`. It is version `0.1.0-dev.1`; no pub.dev release has been made.
-Later adoption of a hosted release is an explicit dependency update.
+user-created repository. The exact upstream revision is recorded in
+`packages/legacy_doc_parser/UPSTREAM.json` and the Git dependency declaration
+in `pubspec.yaml`. The active path override uses the reviewed local mirror;
+`pubspec.lock` therefore records a path dependency. The mirror is synchronized
+through the guarded Quds Office source manifest, rather than an unpinned copy.
+It is version `0.1.0-dev.1`; no pub.dev release has been made. Later adoption
+of a hosted release is an explicit dependency update.
 
 ## Ownership and dependency boundary
 
@@ -21,9 +24,10 @@ The package has no Flutter, platform process, network-service or native-library
 dependency. Its only runtime package dependency is `archive`, which was already
 resolved by CrispCloud. The small CFB implementation is included with its MIT
 notice. The app's DOC/DOT routes import the public `legacy_doc_parser.dart`
-library. The temporary `packages/legacy_doc_parser` mirror is removed. The
-shared Quds engine retains its existing legacy APIs for other consumers;
-CrispCloud's document previews and conversion use the standalone package.
+library. `packages/legacy_doc_parser` supplies that package to both the app
+and the shared Quds engine. The engine's legacy export adapters retain their
+existing API surface; parser and converter source come from the same reviewed
+standalone revision.
 
 ## App behavior
 
@@ -61,13 +65,18 @@ provenance. CrispCloud's existing application license is unchanged.
 
 The package includes a changelog, command-line example, standalone regression
 tests, JavaScript/Node acceptance and CI checks for formatting, analysis, tests
-and a publication dry run. The dry run passed with zero warnings at the current
-pin. Package publishing remains a separate release step.
+and a publication dry run. The extraction's publication dry run passed with
+zero warnings; each subsequent release still needs its own release validation.
+Package publishing remains a separate release step.
 The app's existing crypto evidence tracks the changed manifest and lockfile;
 the parser extraction introduces no encryption implementation or new crypto
 dependency, and does not change the recorded Apple questionnaire status.
 
-## Verified integration
+## Earlier extraction integration
+
+The following results describe the earlier extraction at
+`80e9683c0d60553f7198ca89a64aa927d619c684`. They are retained as historical
+evidence and are not reused as a test receipt for a newer parser pin.
 
 - **100 app tests passed across 16 suites** after reconciling current main:
   binary parsing/rendering, actual DOC/DOT routing, source/name guards,
@@ -88,11 +97,47 @@ unavailable; it is not validation of the native ebook engine. Normal release
 configuration and native CI remain enabled. The exact locked package source
 is also checked by the app's standalone-parser CI contract step.
 
-Current follow-ups are [CrispCloud PR #82](https://github.com/CrispStrobe/CrispCloud/pull/82)
-and [package PR #2](https://github.com/CrispStrobe/legacy-doc-parser/pull/2);
-the earlier PRs merged before these continuation commits.
+That extraction continued in [CrispCloud PR #82](https://github.com/CrispStrobe/CrispCloud/pull/82)
+and [package PR #2](https://github.com/CrispStrobe/legacy-doc-parser/pull/2).
 
 Package test counts, independent JavaScript CFB metadata checks and their
 scope are recorded in the conversion guide and the package pull request.
 These results do not certify arbitrary Word pagination, full OOXML schema
 conformance, Windows Word behavior or a complete Flutter browser build.
+
+## Fidelity continuation
+
+The current parser work adds independently checked native row origins,
+conditional table cells and text, editable bounded OfficeArt geometry,
+compound EMF/WMF previews, note layout, linked-textbox reflow checks, supported
+list continuation and revision history. Ink payloads are retained as bounded
+inert evidence; nonempty ink-stroke rendering is not claimed.
+
+The upstream [fidelity status](https://github.com/CrispStrobe/legacy-doc-parser/blob/feature/structured-doc-preservation-20261112/doc/fidelity-status.md)
+separates supported contracts from the remaining gaps in all eight feature
+families. Its native reports distinguish producer round-trip changes, parser
+changes, structural differences, renderer coordinates and raster equality.
+Successful measurement and equal page counts do not establish exact fidelity.
+
+### Saved integration checkpoint: parser b295a3c
+
+The first continuation checkpoint pins parser
+`b295a3c1ddb542b0f161ecafdcdaba3762dc7535` through Quds
+`9fb8bf12703f32a487609a673f342a5ae0003de1`. All 169 upstream files match their
+source revision, and the host manifest verifies 559 shared Office files.
+
+- 99 app tests pass across the 16 legacy Word/native-conversion suites,
+  including routing, localized disclosures, separate-copy saves, and both
+  conversion dialogs. The revision timestamp test now checks the inserted
+  text and its independently preserved inserted paragraph mark.
+- The actual production DOC/RTF/PPT/MSG JavaScript build and Node acceptance pass.
+- 67 guarded-sync/native-render harness tests pass. Deliberate native failures
+  in the harness controls are expected and must be rejected.
+- Installed LibreOffice acceptance passes for the built-in DOCX conversion,
+  native DOCX/DOCM conversion, PDF text, note/header/footer content and images.
+  Source and prepared-copy bytes remain unchanged.
+
+These app tests used the documented optional-ebook-disabled hook, the retained
+Clang 19.1.7 compiler and system SQLite 3.46.1. The test wrapper restored the
+release pubspec byte for byte. These results do not validate native ebook
+conversion or certify arbitrary Word pagination.

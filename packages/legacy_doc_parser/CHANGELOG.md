@@ -1,5 +1,18 @@
 ## 0.1.0-dev.1
 
+- Add independent structural, accepted/rejected-text and native rendering
+  oracles, pinned Office fixtures, textbox resize probes and PDF-vector shape
+  checks. Keep producer round-trip losses separate from parser losses.
+- Preserve unequal columns, paragraph pagination flags, note numbering and
+  placement, line-number skip counts, section revision history, nested tables,
+  row origins and supported list continuation.
+- Add bounded native table-style inheritance and all twelve conditional cell
+  regions, direct cell borders and padding, with explicit source defaults.
+- Emit editable bounded OfficeArt rectangles, ellipses, lines and custom
+  paths; keep unsupported effects diagnosed. Preserve native EMF/WMF payloads
+  and produce bounded previews for supported vector records.
+- Retain comment-thread relationships, paragraph-mark and property revisions,
+  and supported numbering history without accepting or rejecting edits.
 - Extract the bounded DOC/DOT parser and structured document model from
   CrispCloud as a Flutter-independent Dart package under MPL-2.0.
 - Retain MIT compound-file and 0BSD JSDoc provenance notices.

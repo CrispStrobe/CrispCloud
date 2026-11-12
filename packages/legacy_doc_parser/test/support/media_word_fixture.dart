@@ -173,14 +173,18 @@ Uint8List drawingAnchor({
   int cp = 1,
   int limit = 4,
   int? flags,
+  int left = 120,
+  int top = 240,
+  int right = 1560,
+  int bottom = 960,
 }) => Uint8List.fromList([
   ...wordU32(cp),
   ...wordU32(limit),
   ...wordU32(shapeId),
-  ...wordU32(120),
-  ...wordU32(240),
-  ...wordU32(1560),
-  ...wordU32(960),
+  ...wordU32(left),
+  ...wordU32(top),
+  ...wordU32(right),
+  ...wordU32(bottom),
   ...wordU16(flags ?? ((1 << 1) | (2 << 3) | (3 << 5) | 0xc000)),
   ...wordU32(0),
 ]);
@@ -194,12 +198,19 @@ Uint8List floatingPictureWordFixture({
   Map<int, int> imageProperties = const {},
   int shapeFlags = 0x0a00,
   int? anchorFlags,
+  (int, int, int, int) anchorBounds = (120, 240, 1560, 960),
 }) {
   final blip = pictureBlip();
   return StructuredWordFixture(
     pieces: const [WordFixturePiece('A\x08B\r')],
     extraTablePairs: {
-      40: drawingAnchor(flags: anchorFlags),
+      40: drawingAnchor(
+        flags: anchorFlags,
+        left: anchorBounds.$1,
+        top: anchorBounds.$2,
+        right: anchorBounds.$3,
+        bottom: anchorBounds.$4,
+      ),
       50: drawingContent(
         shape: pictureShape(
           textboxId: textboxId,

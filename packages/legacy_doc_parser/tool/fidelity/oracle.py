@@ -15,6 +15,8 @@ import re
 import zipfile
 import xml.etree.ElementTree as ET
 
+from structure import StructureOracle
+
 ROOT = Path(__file__).resolve().parents[2]
 W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
 R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
@@ -102,6 +104,7 @@ def snapshot(path):
         raise ValueError('Expected one internal officeDocument relationship')
     main = roots[0]['target']
     queue, seen, stories, links = [(main, 'main')], set(), [], []
+    story_trees = []
     story_types = {'header', 'footer', 'footnotes', 'endnotes', 'comments'}
     counts = Counter()
     media = []
@@ -111,6 +114,7 @@ def snapshot(path):
             continue
         seen.add(owner)
         tree = ET.fromstring(parts[owner])
+        story_trees.append((owner, kind, tree))
         stories.append({'kind': kind, 'text': text_content(tree),
                         'textWithDeletions': text_content(tree, deleted=True)})
         for tag in ('tbl', 'tr', 'tc', 'drawing', 'pict', 'txbxContent', 'footnote',
@@ -139,21 +143,25 @@ def snapshot(path):
             owner = '' if name == '_rels/.rels' else posixpath.join(posixpath.dirname(posixpath.dirname(name)), posixpath.basename(name)[:-5])
             relationships(parts, owner)
     tree = ET.fromstring(parts[main])
+    parents = {child: parent for parent in tree.iter() for child in parent}
     sections = []
     for section in tree.iter(f'{{{W}}}sectPr'):
+        if parents.get(section) is not None and parents[section].tag == f'{{{W}}}sectPrChange':
+            continue
         sections.append({child.tag.rsplit('}', 1)[-1]: local_attrs(child)
                          for child in section if child.tag.rsplit('}', 1)[-1] not in ('headerReference', 'footerReference')})
     return {'stories': sorted(stories, key=lambda item: (item['kind'], item['text'])),
             'counts': dict(sorted(counts.items())), 'sections': sections,
-            'imageDigests': sorted(media), 'externalLinks': sorted(links, key=str)}
+            'imageDigests': sorted(media), 'externalLinks': sorted(links, key=str),
+            'structure': StructureOracle(parts, main, relationships).snapshot(story_trees)}
 
 
 def compare_semantics(reference, actual):
     """Report losses and changes, including a loss to zero. No tolerant pass."""
     differences = []
-    for key in ('stories', 'sections', 'imageDigests', 'externalLinks'):
-        if reference[key] != actual[key]:
-            differences.append({'property': key, 'reference': reference[key], 'actual': actual[key]})
+    for key in ('stories', 'sections', 'imageDigests', 'externalLinks', 'structure'):
+        if reference.get(key) != actual.get(key):
+            differences.append({'property': key, 'reference': reference.get(key), 'actual': actual.get(key)})
     for key in sorted(set(reference['counts']) | set(actual['counts'])):
         before, after = reference['counts'].get(key, 0), actual['counts'].get(key, 0)
         if before != after:
