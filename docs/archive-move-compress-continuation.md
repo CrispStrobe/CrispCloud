@@ -38,6 +38,7 @@ dismissal and invalidates a borrowed source host before publication or recovery.
 | [`de2d27d7`](https://github.com/CrispStrobe/CrispCloud/commit/de2d27d7d6a782fceecd44c1c450b184188e00e6) | Reviewed native move coordinator, source authority, restart tests and independent codec evidence |
 | [`d68c2e1c`](https://github.com/CrispStrobe/CrispCloud/commit/d68c2e1c6a13f5f99ea312f3088cb60aa691a8bc) | Paired review/result/recovery UI and nine-language controls |
 | [`dee4ec1a`](https://github.com/CrispStrobe/CrispCloud/commit/dee4ec1aa7a44484fc65f2805632fee38e61b534) | Escape, completed outcomes and shared-journal source-recovery lifetime |
+| [`b9619927`](https://github.com/CrispStrobe/CrispCloud/commit/b96199272e193439439e7db4958782cd66301f30) | Reviewed English/German/French guides, format/endpoint contracts and complete regression evidence |
 
 Each checkpoint was saved through a leased fast-forward ref update after its
 remote tree was verified against the local committed tree. No force push or
@@ -52,9 +53,18 @@ passes **1,951 tests across 78 files**. Fatal-info static analysis is clean for
 all **43 changed Dart files**. The focused gates are included in that total:
 404 codec/creation/writer tests, 29 native move tests, 94 publication/affected
 transfer recovery tests, and all three final borrowed-workspace lifecycle cases.
-Three reviewed help guides retain 23 matching topics each. Remaining help and
-release-build results are being recorded in the
-[verification record](archive-move-compress-verification.md).
+Three reviewed help guides retain 23 matching topics each; all 33 help
+service/widget tests pass against those final bytes. The versioned release web
+build passes at `b9619927` with `APP_VERSION=1.2.0+13`. Both version/hash defines
+are present in the compiled JavaScript, and all three packaged guide hashes and
+the manifest match their reviewed source.
+
+The final documentation-only checkpoint records those observed gates in the
+[verification record](archive-move-compress-verification.md). Application and
+bundled guide bytes remain identical to that successful build. Dependency
+configuration and lockfile match the baseline byte-for-byte. GitHub Actions
+returned no runs for the release-build checkpoint; local results do not imply
+completed GitHub CI or full native release acceptance.
 
 Independent review corrected timestamp representation in durable file snapshots,
 recognized revision persistence, source-draft ownership, mid-publication draft

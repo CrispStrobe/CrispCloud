@@ -20,11 +20,16 @@ branch commits are not represented by its frozen review diff.
 | Actual Dart2JS/Node execution | **All 18 native-accepted codec profiles passed** |
 | Fatal-info static analysis | **All 43 changed Dart files clean**, including standalone reference tools |
 | Bundled guide manifest | **Three reviewed guides with 23 matching topics each**, English/German/French |
+| Help service/widget regression | **33 tests passed across two files**, against the final reviewed guide bytes |
+| Versioned Flutter release web build | **Passed** at `b9619927`, with version `1.2.0+13` and the commit hash embedded |
+| Packaged help assets | **All three guide SHA-256 values match the reviewed manifest**; bundled manifest matches its source |
 
-The help service/widget gate and release web build are still being completed at
-this documentation checkpoint. Focused feature counts are subsets of the full
-1,951-test gate, not numbers to add to it. Formatting and whitespace checks are
-clean. No pending gate is represented here as passed.
+Focused feature counts are subsets of the full 1,951-test gate, not numbers to
+add to it. Help tests are a separate asset/reader gate. Formatting and whitespace
+checks are clean. Both `pubspec.yaml` and `pubspec.lock` match the baseline
+byte-for-byte after validation. The final checkpoint changes only this
+verification and continuation documentation; application and bundled guide
+bytes are identical to the successful release build.
 
 ## Native move transaction and recovery
 
@@ -109,6 +114,12 @@ The three focused host-lifecycle cases pass: completed move dismissed through
 Escape, pending source recovery dismissed, and pending source recovery finished.
 Both recovery cases close the borrowed host without inventing a new move receipt.
 An independent final lifecycle rereview found no remaining concrete issue.
+
+The dedicated move-dialog suite passes 18 cases covering publication,
+cancellation, conflicts, separate passwords, both partial outcomes, captured
+source invalidation, nested refusal and recovery paths. Controls and results
+fit all nine existing languages at 320 px and 1.8x text scaling. Captured-pane
+tests additionally exercise F6 and the existing copy/ordinary-operation paths.
 
 ## UNIX compress and TAR.Z acceptance
 
@@ -196,6 +207,20 @@ checks. The release web build uses `--release --no-pub --no-wasm-dry-run`, with
 the built git checkpoint and app version supplied through `GIT_HASH` and
 `APP_VERSION`. Those values and all three packaged help asset hashes are checked
 in the build output.
+
+The successful release command was:
+
+```sh
+flutter build web --release --no-pub --no-wasm-dry-run \
+  --dart-define=GIT_HASH=b9619927 --dart-define=APP_VERSION=1.2.0+13
+```
+
+It completed in 188.2 seconds. Both define values are present in the compiled
+JavaScript. Each bundled guide's SHA-256 matches both its source bytes and the
+reviewed manifest; the bundled manifest itself also matches. GitHub Actions
+returned no workflow runs for the release-build checkpoint. The table records
+observed local gates and does not claim completed GitHub CI or full platform
+acceptance. The closed state of PR #93 is preserved.
 
 ## Acceptance boundaries
 
