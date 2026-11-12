@@ -117,8 +117,10 @@ status, and sort by recent opening, title, author or progress. **Edit library
 entry** changes favorites, shelves, tags and explicit Unread/Reading/Completed
 status. **Remove from library** removes only its catalog row.
 
-**Open book** resolves the original account and folder and checks the recorded
-object identity before loading. **Locate file** opens the original directory.
+**Open book** resolves the original account and folder and checks the object
+identity when one was recorded; otherwise it uses the saved path. It does not
+search for moved files. Changed book bytes use a separate annotation revision.
+**Locate file** opens the original directory.
 Reconnect the original account if it is unavailable. Attachments and temporary
 sources retain metadata-only entries; locate their files manually to reopen
 them. No account credential or file-access grant is created by the library.
@@ -138,7 +140,7 @@ fails or another open reader has saved a newer sidecar.
 
 Choose **Import reading data** with the exact same book open on another device.
 The app validates the JSON format/version, publication SHA-256 and byte length,
-renderer, locators, field lengths and overall size. A different edition, an
+renderer, locator envelope/structure, field lengths and overall size. A different edition, an
 edited book or a sidecar from the other renderer is refused before changes are
 made. This is deliberate: the app does not guess where old highlights belong
 in changed text.
@@ -148,9 +150,15 @@ changes. Choose **Merge, keep local conflicts**, **Merge, use imported conflicts
 or **Replace local reading data**, then **Apply import**. Replace removes local
 items absent from the imported file. The reader updates only after local
 persistence succeeds. A failed or stale import leaves the current data intact.
+The reader then restores the saved position and annotations asynchronously.
+The importer cannot guarantee that every saved anchor resolves; unresolved
+annotations stay in the stored data, and an unresolved initial position can
+fall back to the beginning. Importing recreates the reader and clears its
+session Back/Forward history.
 
-The maximum sidecar is 2 MiB, with up to 500 bookmarks and 500 highlights and
-notes of at most 2,000 characters. The file picker checks actual streamed size,
+The maximum sidecar is 2 MiB, with up to 500 bookmarks and 500 highlights.
+New notes entered in the reader are limited to 2,000 characters; the transfer
+schema permits existing notes up to 16,384 characters. The file picker checks actual streamed size,
 not just the provider's declared size. Automatic synchronization and migration
 between edited editions or locator formats are not included. See the
 [FBReader comparison and next increments](ebook-feature-parity.md).

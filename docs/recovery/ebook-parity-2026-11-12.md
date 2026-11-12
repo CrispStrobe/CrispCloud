@@ -90,6 +90,7 @@ do not upgrade unrelated platform implementations silently.
 | `7a0f3a01165b6c1ce8957a8616d4163fe5c88068` | Bounded reading-data schema/import plans, local library model, appearance model and focused tests. |
 | `2b31742f7f63ef23c9cee0cb56783f36e202e59a` | Shared navigation/layout controls, lifecycle guard, integrated library/import/export UI, recovery flows, localization and parity analysis. |
 | `506167333440c34290e8f9acee6da4275b5f6bb7` | Optional native Linux host, bounded surface pool and real hosted rendering/input/runtime-absence gates. |
+| `1d081588f4d2a86c7422c967e3d4b6134ffbf0c9` | Browser compatibility fallback, Linux packaging/registration, reviewed technical source bindings and native diagnostic gates; saved on the existing feature branch and draft PR. |
 
 The implemented product scope is described in [the user guide](../ebooks.md)
 and [the detailed FBReader comparison](../ebook-feature-parity.md). The Linux
@@ -153,12 +154,33 @@ at `5061673` produced these results:
 | Portable-only Linux host | Passed real compilation, application launch, package analysis/tests and the no-hard-browser-dependency check. |
 | Enhanced WebKitGTK host | Passed package analysis/tests and compiled the real enabled plugin. The application process then exited before completing the rendering/input test (Flutter exit 79), without an assertion or useful native stack. This is a failed runtime gate. |
 
-The next diagnostic revision adds opt-in fixed native lifecycle labels and test
-milestones. CI extracts function-only backtraces without arguments, locals or
-environment values; raw core dumps are deleted and never uploaded. No browser
-sandbox setting or test acceptance rule is relaxed. Actual texture pixels,
-Flutter overlay composition, selection/copy, navigation, multiple instances,
-hostile-resource isolation and runtime-removal launch must still pass.
+The diagnostic run
+[43225371822](https://github.com/CrispStrobe/CrispCloud/actions/runs/43225371822)
+at `1d08158` again passed the portable-only job. Its enhanced job compiled and
+completed native view creation, offscreen display setup and the first Flutter
+GL upload. It then terminated with a GLib fatal log inside WebKit while
+`webkit_web_view_load_uri` was starting the page process. This narrows the
+failure; it does not demonstrate publication rendering or an enhanced-reader
+pass. The installed system runtime was WebKitGTK 2.52.6.
+
+Opt-in diagnostics record fixed lifecycle labels and, in the follow-up
+revision, fixed classifications of upstream process-launch failures. They do
+not record the native message's path/argument suffixes. CI extracts function-only
+backtraces without arguments, locals or environment values; raw core dumps are
+deleted and never uploaded. A bubblewrap namespace probe reports runner
+availability without changing host policy or skipping the reader test. No
+browser sandbox setting or test acceptance rule is relaxed. Actual texture
+pixels, Flutter overlay composition, selection/copy, navigation, multiple
+instances, hostile-resource isolation and runtime-removal launch must still pass.
+
+The main ebook workflow at `1d08158` is
+[43225371743](https://github.com/CrispStrobe/CrispCloud/actions/runs/43225371743).
+Its direct run/job endpoints confirm that it registered, even though generic
+branch-run listings omitted it. At the diagnostic checkpoint, EPUBCheck and
+macOS had passed; application/web, Windows and the Ubuntu browser gate were
+still running or queued. Keep the Linux diagnostic work on the checkpoint
+branch while these jobs finish, so another feature-branch push does not cancel
+the actual-browser gate.
 
 Shipping Linux build jobs now install the optional development headers, the
 application's generated registrants include the new plugin, and the Debian
