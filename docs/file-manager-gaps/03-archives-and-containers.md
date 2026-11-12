@@ -48,7 +48,7 @@ required original access-policy contract. Browser publication also needs an
 operation-lifetime lease. Generic upload/move capabilities do not enable either
 path. Native publication uses two exclusive moves with a temporary original-name
 absence window. Durable packing drafts remain G21; directory synchronization
-and direct archive-to-archive transfers remain G19/G20. Native release acceptance
+and archive-to-archive moves remain G19/G20; reviewed direct copy is delivered below. Native release acceptance
 continues under G50. The implementation and its observed gates are preserved in
 [draft PR 81](https://github.com/CrispStrobe/CrispCloud/pull/81) and the
 [continuation record](continuation-tools-archives-20261112.md).
@@ -77,7 +77,7 @@ continues under G50. The implementation and its observed gates are preserved in
 
 ### Archive-to-archive transfer
 
-**Status:** Scoped. **Dependencies:** G18.
+**Status:** Partially implemented: reviewed copy delivered; two-container moves and native acceptance remain. **Dependencies:** G18.
 
 **Scope:** Copy or move members between captured archives with commit-before-delete ordering.
 
@@ -90,6 +90,21 @@ continues under G50. The implementation and its observed gates are preserved in
 - Copies and moves between supported formats preserve content, hierarchy and expected protection.
 - Same-container overlap, collisions, source/destination replacement and failures between commits cannot delete the only good copy.
 - Large/remote members obey limits and cancellation; recovery identifies each original container and member.
+
+**Delivered copy increment (2026-11-12):** Captured clean source/destination
+workspaces, independent nested passwords, recursive and empty-directory copy,
+supported time/mode preservation, keep-both/replace/skip, private staged
+verification and existing physical publication. Source fingerprints are checked
+before staging and before final destination verification/installation. Same
+outer containers and native hard-link aliases are refused. Pane F5/context Copy
+and clean workspace Copy out are connected; F6/Move out are explicitly refused
+for archive targets. Source bytes are never written or deleted. A changed source
+or late failure retains/restores the original destination through the existing
+journal. Bounds remain 64 MiB/member and 256 MiB/container/aggregate.
+
+**Remaining:** A two-container move/recovery transaction, same-container grouped
+changes, backend-specific remote/browser publication, and native release
+acceptance. This increment does not close the broader G20 scope.
 
 **Starting points:** G18; FileOperationService transfer/recovery planning.
 
@@ -139,7 +154,7 @@ Compressed streams now request strict integrity checks. Independent GNU
 ar/libarchive and native HFS+/UDIF fixtures supplement malformed, traversal,
 range, ownership and resource-bound tests. The [capability matrix](../archive-format-coverage.md)
 records per-format limits and signature/metadata boundaries. G18 publication rules are unchanged. The package continuation below adds CAB/RPM/PBZX and portable CPIO;
-UDF/APFS, ARJ/LZH/ACE/UC2, raw LZMA and additional ZIPX methods remain.
+UDF/APFS, ARJ/LZH/ACE/UC2 and additional ZIPX methods remain; bounded raw LZMA is delivered in the continuation below.
 
 **Delivered writer increment (2026-11-12):** Comic and eligible unsigned Java
 aliases, KMZ, additional compressed TAR and single-file streams, inspected
@@ -167,6 +182,18 @@ bounds. PBZX indexes up to 2 GiB logical data with one bounded 16 MiB chunk cach
 the existing 64 MiB member and nested XAR preview limits remain. CAB
 Quantum/LZX/spanning, RPM v6/stripped payloads and Apple Archive/YAA are outside
 this profile. Exact boundaries and provenance are in the capability matrix.
+
+**Delivered workflow/codec continuation (2026-11-12):** LZ4 frames and
+LZMA-alone support reading, verified creation and eligible rewriting, including
+wrapped TAR; the creation picker now has 28 choices. Lzip v1, UNIX compress
+`.Z`/`.tar.Z`/`.taz`, and modern binary CPIO in both byte orders are readable.
+Lzip/UNIX compress/binary CPIO remain read-only. Exact wrapper shape prevents
+same-codec nested streams being flattened by a single-payload save. F3 adds a
+cancellable integrity/readability report with SHA-256 and explicit failures,
+skips and unchecked members. It does not repair archives or authenticate a
+publisher; formats lacking checksums retain that limitation. Primary specs and
+independent native fixtures/readback establish codec behavior, with Dart2JS/Node
+portability checks. See the [continuation record](../archive-workflows-codecs-continuation.md).
 
 **Starting points:** archive_viewer_service.dart; archive_workspace.dart; archive_creation_service.dart; codec capability registry.
 

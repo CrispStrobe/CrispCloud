@@ -43,9 +43,39 @@ The import UI entry point is
 containerBackend: ..., containerFile: ..., nestedMembers: ..., directory: ...,
 expectedOuterFingerprint: ..., moveSources: ..., journal: ...)`.
 General pane/clipboard routing captures account, navigation, listing and local
-grant authority before awaiting the dialog. Archive-to-archive imports and
-mixed-account selections are outside this transaction's scope; copy the
-members to an ordinary directory first.
+grant authority before awaiting the dialog. Ordinary import remains separate
+from the explicit archive-source transaction described below. Mixed-account
+ordinary selections are outside one import transaction's scope.
+
+## Reviewed archive-to-archive copy
+
+`prepareArchiveCopy(source: ArchiveWorkspace, files: ..., directory: ...,
+conflict: ...)` captures a clean source and every enclosing workspace revision,
+physical storage identity and outer SHA-256. It uses the same verified overlay,
+review and destination publication machinery, with no source mutation/deletion.
+The UI captures both pane routes/selections before awaiting independent nested
+password prompts. Pane F5/context Copy and a clean workspace's Copy out action
+enter this workflow. F6/Move out explicitly refuse an archive destination.
+
+Supported regular-member content, hierarchy, empty directories, modification
+times and permission bits are imported. Protection follows the destination.
+Ownership, ACLs, resource forks and signatures are not copied; setuid/setgid
+inputs are refused. Same physical outer containers are rejected, including
+separate nested routes and native hard-link aliases under both captured grants.
+Source and destination workspaces retain 64 MiB per-member and 256 MiB
+aggregate/container bounds; the larger spooled browsing path does not raise them.
+
+The source's authority, captured revisions, physical identity and complete outer
+bytes are rechecked before staging and after destination staging. The latter
+check occurs immediately before the publisher's final candidate/backup checks
+and exclusive installation, so the potentially long source hash does not weaken
+destination verification. A late failure restores a vacant original and retains
+the existing reviewable recovery evidence. Source guards/passwords are transient;
+explicitly reviewed destination recovery operates on its verified candidate and
+never deletes the source. This is a one-destination copy transaction, not an
+atomic two-container move. Source changes after the final observation cannot be
+made atomic across independent storage; copied member bytes remain the captured,
+verified snapshot.
 
 ## Format and member policy
 
@@ -58,13 +88,27 @@ container or falls back to a direct provider upload.
 | ZIP | Plain or the supported AES-256 policy | UTC whole seconds in the supported signed timestamp range; otherwise DOS wall-time fields at two-second resolution | Mixed protected/plain files, legacy or other AES strengths, and encrypted directory entries are refused. |
 | 7z | Plain or original AES password, retaining original header visibility | Millisecond resolution | Header encryption is detected independently of file data, including containers with no ordinary files. |
 | TAR / CBT | Inspected regular-file profiles | Whole seconds for imports | Known ownership and PAX metadata are retained; unsupported extensions, links and special entries are refused. |
-| Compressed TAR | Supported TAR inside gzip/bzip2/XZ/Zstandard | Whole seconds for imports | Decoded TAR is limited to 64 MiB, including headers. Wrapper/profile inspection precedes writes. |
+| Compressed TAR | Supported TAR inside gzip/bzip2/XZ/Zstandard/LZ4/LZMA | Whole seconds for imports | Decoded TAR is limited to 64 MiB, including headers. Wrapper/profile inspection precedes writes. |
 | CBZ / CB7 / unsigned JAR/WAR/EAR / KMZ | Corresponding ZIP/7z policy | Corresponding underlying format | Java signatures/digests block editing; KMZ needs a top-level KML; original member order is retained. |
-| gzip / bzip2 / XZ / Zstandard | Exactly one ordinary payload | Not applicable | Replace its bytes; name/count/permissions cannot be changed. |
+| gzip / bzip2 / XZ / Zstandard / LZ4 / LZMA | Exactly one immediate ordinary payload | Not applicable | Replace its bytes; name/count/permissions cannot be changed. Recursive inner-container views cannot be flattened, including same-codec nested streams. |
 | AR / CPIO / XAR | Inspected regular-file profiles | Whole seconds for imports | Known ownership, package metadata and integrity/compression policies are retained. Unknown fields and unsupported structures remain read-only. |
 | DEB / UDEB | Coordinated prebuilt control/data payload replacement | Whole seconds for outer members | Exact three-member wrapper; required control fields and present md5sums checked. In-app nested payload editing is disabled. |
 | ISO | Inspected data-only ISO 9660/Rock Ridge/Joliet | Whole seconds for imports | Known volume/member metadata retained. Boot/hybrid/UDF/unknown structures block rewriting. |
+| Lzip / UNIX compress | Browsing and extraction only | Not applicable | Includes TAR.LZ, TAR.Z and TAZ. Reader support does not grant a writer or authorize conversion to another wrapper. |
 | Existing HFS / DMG and other packages | Browsing and extraction only | Not applicable | Separate fresh HFSX/DMG creation does not grant existing filesystem rewrite access. |
+
+LZ4 editing requires one complete data frame without skippable extension
+metadata. Accepted linked or independent frames are rewritten as independent
+256 KiB blocks with block and content checksums; original block sizes and
+optional checksum flags are not retained. Frame collections remain read-only.
+LZMA editing requires one strictly decoded stream with exact input consumption,
+supported properties and dictionary distances. Known-size streams may have an
+end marker; unknown-size streams must have one. Rewrites use a known size, no
+end marker, `lc=3, lp=0, pb=2`, and the default 8 MiB dictionary. These changes
+preserve the decoded content rather than the original encoder parameters.
+LZMA-alone has no stored content checksum. Both wrappers keep their 64 MiB
+compressed/decoded limits, including TAR headers, and a recursively opened
+inner container is not eligible for a single-payload rewrite.
 
 A bounded ZIP metadata finalizer writes explicit UTC-second fields to both
 local and central headers while copying compressed/encrypted payloads unchanged.
@@ -309,8 +353,14 @@ format and AES-256 encryption; support here remains limited by the pinned
 reader/writer and the verification above.
 
 The implementation reuses the existing `koni_archive` 0.9.0 and `archive`
-dependencies. `koni_codecs` 0.9.0, already present transitively, is now an
-explicit direct dependency for LZMA2 compression. The pinned codec packages use
-the MIT license. No native runtime, subprocess packer or external binary is
+dependencies. `koni_codecs` 0.9.0, already present transitively, is an
+explicit direct dependency for LZMA/LZMA2 encoding. The strict LZMA-alone packet
+driver uses `archive`'s public range-decoder primitives to verify the exact
+stream boundary; it does not modify the dependency cache. The pinned codec
+packages use the MIT license. No native runtime, subprocess packer or external binary is
 added to the app. Publication, policy, transaction, lifetime and recovery code
 is project-owned.
+
+The archive-copy and compression continuation is recorded in
+[PR #92](https://github.com/CrispStrobe/CrispCloud/pull/92), with its observed
+gates and platform boundaries in the [verification record](archive-workflows-codecs-verification.md).
