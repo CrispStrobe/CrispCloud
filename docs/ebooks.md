@@ -52,6 +52,9 @@ location formats differ.
 
 Linux uses the distribution's complete WebKitGTK runtime rather than bundling
 CEF or a partial browser library. See [Linux build and runtime requirements](../linux/README.md).
+Before opening an enhanced reader, an isolated helper checks that the browser
+can start and paint in the current session. If it cannot, the EPUB reader uses
+the portable path. The check has a bounded deadline and keeps the app responsive.
 Missing runtime support does not prevent the application from opening. A
 reported host startup error offers **Use portable EPUB reader** explicitly; this
 keeps its separate locator state instead of interpreting Foliate CFIs as scroll
@@ -345,7 +348,7 @@ completed local checks from pending platform checks.
 ### Platform/library expansion verification
 
 The [platform-parity recovery record](recovery/ebook-parity-2026-11-12.md)
-tracks the larger extension. Its local checks include **8 reader controller/model
+tracks the larger extension. The earlier `1d08158` checks include **8 reader controller/model
 tests**, **154 application/service/widget tests**, normal and missing-grouping +
 raw-DEFLATE parser variants, and a successful full web release build. The three
 host-owned reader JavaScript modules in the built web bundle match their source
@@ -359,3 +362,16 @@ That is an unresolved native runtime gate while diagnostics are investigated,
 not a successful enhanced-reader result. Consult the recovery record for later
 runs and exact revisions. Mobile, Wayland, hardware input and assistive-
 technology validation remain separate requirements.
+
+The recovery continuation adds a bounded, isolated Linux startup check and
+fixes explicit reading-data discard, concurrent chapter-resource cleanup,
+canceled search overlays, search chapter indices, and late callbacks from
+replaced books. After synchronization with integrated `main`, **157 focused
+application/service/widget tests passed**. The reader package has **8 passing
+tests** and clean analysis. The native guard has **7 passing real subprocess
+scenarios**, and both native helper and plugin pass compilation against the
+actual Flutter/GTK/WebKit headers. Header compilation does not establish a
+linked or rendered native application. The merged application's web release
+build passed, with all five reader assets and all three metadata assets
+matching source. The recovery record tracks exact revisions and the separate
+hosted rendering and recovery jobs, which remained queued at the final check.
