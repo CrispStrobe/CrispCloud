@@ -116,6 +116,7 @@ export 'src/word/model/word_toc.dart';
 export 'src/word/model/word_tree.dart';
 export 'src/word/properties/wml_properties.dart';
 export 'src/word/legacy/legacy_word_document.dart';
+export 'src/word/legacy/legacy_word_conversion.dart';
 export 'src/word/serial/word_deserializer.dart';
 export 'src/word/serial/word_drawing_io.dart';
 export 'src/word/serial/word_package_preservation.dart';

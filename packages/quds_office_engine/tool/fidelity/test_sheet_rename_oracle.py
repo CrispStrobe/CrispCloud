@@ -1,7 +1,7 @@
 """Tamper controls use explicitly authored expected XML, never Dart output."""
 import unittest
 from xml.etree import ElementTree as E
-from sheet_rename_oracle import C, CHART, CONDITIONAL, FORMULAS, NAME, NAMES, X, read_zip, verify
+from sheet_rename_oracle import C, CACHES, CHART, CONDITIONAL, FORMULAS, NAME, NAMES, X, read_zip, verify
 
 def authored():
     parts = read_zip('test/fixtures/fidelity/sheet-rename-native.xlsx')
@@ -15,6 +15,11 @@ def authored():
     def worksheet(root):
         for address, formula in FORMULAS.items():
             root.find(f'.//{X}c[@r="{address}"]/{X}f').text = formula
+        for address, (value, kind) in CACHES.items():
+            cell = root.find(f'.//{X}c[@r="{address}"]')
+            cell.find(X+'v').text = str(value)
+            if kind: cell.set('t', kind)
+            else: cell.attrib.pop('t', None)
         rules = root.find(X+'dataValidations')
         rules[0].find(X+'formula1').text = "'O''Brien 2026'!$B$2"
         rules[0].find(X+'formula2').text = "'O''Brien 2026'!$B$3"
@@ -54,5 +59,22 @@ class SheetRenameOracleTest(unittest.TestCase):
         self.reject('xl/pivotCache/pivotCacheDefinition1.xml', lambda r: r.find(X+'cacheSource/'+X+'worksheetSource').set('sheet', 'Data'))
     def test_rejects_stale_chart_title_reference(self):
         self.reject('xl/charts/chart1.xml', lambda r: setattr(next(r.iter(C+'f')), 'text', "'Data'!B1"))
+
+    def test_rejects_external_cache_recomputed_locally(self):
+        self.reject('xl/worksheets/sheet2.xml', lambda r: setattr(r.find(f'.//{X}c[@r="D7"]/{X}v'), 'text', '2'))
+    def test_rejects_3d_cache_recomputed_locally(self):
+        self.reject('xl/worksheets/sheet2.xml', lambda r: setattr(r.find(f'.//{X}c[@r="D3"]/{X}v'), 'text', '0'))
+    def test_rejects_whole_column_cache_zeroed(self):
+        self.reject('xl/worksheets/sheet2.xml', lambda r: setattr(r.find(f'.//{X}c[@r="D11"]/{X}v'), 'text', '0'))
+    def test_rejects_whole_row_cache_zeroed(self):
+        self.reject('xl/worksheets/sheet2.xml', lambda r: setattr(r.find(f'.//{X}c[@r="D12"]/{X}v'), 'text', '0'))
+    def test_rejects_missing_string_cache_type(self):
+        self.reject('xl/worksheets/sheet2.xml', lambda r: r.find(f'.//{X}c[@r="D8"]').attrib.pop('t'))
+    def test_rejects_truncated_escaped_quotes(self):
+        self.reject('xl/worksheets/sheet2.xml', lambda r: setattr(r.find(f'.//{X}c[@r="D8"]/{X}v'), 'text', 'Data!A1 '))
+    def test_rejects_missing_error_cache_type(self):
+        self.reject('xl/worksheets/sheet2.xml', lambda r: r.find(f'.//{X}c[@r="D13"]').attrib.pop('t'))
+    def test_rejects_stale_supported_arithmetic_cache(self):
+        self.reject('xl/worksheets/sheet2.xml', lambda r: setattr(r.find(f'.//{X}c[@r="D14"]/{X}v'), 'text', '42'))
 
 if __name__ == '__main__': unittest.main()

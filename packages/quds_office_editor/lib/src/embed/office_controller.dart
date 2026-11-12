@@ -7552,6 +7552,41 @@ class SheetEditorController extends OfficeController {
     notifyListeners();
   }
 
+  /// Renames a worksheet and all supported local references as one history
+  /// entry. Invalid/unsupported renames leave pending cell input untouched.
+  /// A valid pending formula is committed before its references are rewritten.
+  bool renameSheet(String name, {int? sheetIndex}) {
+    if (!config.allowsMutation) return false;
+    final index = sheetIndex ?? _activeSheet;
+    if (index < 0 || index >= workbook.sheets.length) {
+      throw RangeError.index(index, workbook.sheets, 'sheetIndex');
+    }
+    final target = workbook.sheets[index];
+    final checked = SheetRename.prepare(workbook, target, name);
+    if (checked.isEmpty) return false;
+    // Validate the buffered formula before committing it, so a malformed
+    // qualifier cannot create a cell command ahead of a rejected rename.
+    if (cellEditor.editing && cellEditor.formulaBar.trimLeft().startsWith('=')) {
+      SheetRename.rewriteFormula(cellEditor.formulaBar, target.name, name);
+    }
+    commitPendingEdits();
+    final edit = SheetRename.prepare(workbook, target, name);
+    commands.commit(
+      _CallbackCommand(
+        executeFn: () {
+          edit.apply();
+          recalculateWorkbook();
+        },
+        undoFn: () {
+          edit.undo();
+          recalculateWorkbook();
+        },
+      ),
+    );
+    notifyListeners();
+    return true;
+  }
+
   /// setSheetRightToLeft API.
   void setSheetRightToLeft(bool value) {
     if (sheet.rightToLeft == value) {

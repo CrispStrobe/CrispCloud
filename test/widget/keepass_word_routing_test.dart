@@ -16,7 +16,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quds_office_editor/quds_office_editor.dart';
 
-import '../support/legacy_word_fixture.dart';
+import '../../packages/quds_office_engine/test/support/legacy_word_fixture.dart';
 import '../support/workspace_fixture.dart';
 
 const _side = PanelSide.remote;

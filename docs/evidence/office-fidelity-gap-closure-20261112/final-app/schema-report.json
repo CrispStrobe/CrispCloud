@@ -1,0 +1,1686 @@
+{
+  "Files": 336,
+  "Failures": 0,
+  "Reports": [
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/after-late-edits.docx",
+      "Sha256": "b50e0122e351686d21f6d49c0e5f0fcb8c4cd9ea720f36b6987d2aac381cbcca",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/before-late-edits.docx",
+      "Sha256": "509230ce2e3c8a0b2a2fd9fbf33275d3294d5d9d9d7e88c2c197d48c7ac1e55e",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/close-after-late-edit.docx",
+      "Sha256": "31b5dab1468d67b615acafb33ad933b23660615f1a30aba03f7565c3ccd7d196",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/close-before-late-edit.docx",
+      "Sha256": "227c01baa58e65b9fb6276d102dc71671f96375fc45cb7053b82e243d1b222a6",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/comment-action-1.docx",
+      "Sha256": "2c23e1c560acd06b599b922b3aefdf593188409779977a2556fafc910d8541c9",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/comment-action-2.docx",
+      "Sha256": "549ce76e8652d4856d0f04751a907e546510a66b57c57a675e38c13622b63ad0",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/comment-action-3.docx",
+      "Sha256": "69eb6074c556e78248d7d44c3d66aad321f21f92c36efa4c7129ddabaca03179",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/failed-upload-attempt.docx",
+      "Sha256": "1bdee6ec2ac0f87e6527b69c26f7f393bd75d8146746a9b0b4130b6f1d0d656f",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/header-paragraph-edit-1.docx",
+      "Sha256": "f8b69291a757563fa87b3c4753b544d509820195fecdc93fb40dbc4b4dae774c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/header-paragraph-edit-2.docx",
+      "Sha256": "cee36a809e5d90bf493502a49992ac0fe2525759f93e416922a164034637124d",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/header-paragraph-edit-3.docx",
+      "Sha256": "6acacd4340bde3099fcd6e2a70b035a9f7ad37ab99617abe4f34fb124c0f3d4a",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/hyperlink-selection-1.docx",
+      "Sha256": "7c3b9f510e12e0db2b20cefaa5b0bea0c6f0a643176ba5091890184a3e71468c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/hyperlink-selection-2.docx",
+      "Sha256": "d6dbb529a96a4841afab7a30afd0312fe3aa03a84a898aaf95fac2486fea8933",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/hyperlink-selection-3.docx",
+      "Sha256": "07db2b05caa01b9303201cb40e06c16620c206de6bb0307d7680ca303485eff1",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/margins-edit-1.docx",
+      "Sha256": "c05101ea969148924a773df9f6dca8258453d0189cdcae2ee67d2300312b05ff",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/margins-edit-2.docx",
+      "Sha256": "1c132efd707a600905dceb70af4e979e85a536d48ca3b6b294ecc30d162d8db3",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/margins-edit-3.docx",
+      "Sha256": "12d2f59be884f43f052983fd7f7090a3e0b7a52505fef5eb369943cd642100c0",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/margins-noop-1.docx",
+      "Sha256": "5d327fe9451b4a166a944298f973c26235808b29d0aa36d8810fb9283dbc1312",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/margins-noop-2.docx",
+      "Sha256": "52a9e3848d3348af5f83aeee53f535d2559c75e68aeb260b7e47b3d356fefb56",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/margins-noop-3.docx",
+      "Sha256": "ec7f5fb4dd90fcea48390b0712301328626dc92917e8b3053ec28230b48ba6dc",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/paragraph-edit-1.docx",
+      "Sha256": "3a8ba1850eb27e52a854fd1ff6d0e3972ef6df3821b48407aeee25ab7b2e7c81",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/paragraph-edit-2.docx",
+      "Sha256": "621168f70b12d6b203706c93fc1be1fc72caeb22921d53ea295fb63c51bc6df0",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/paragraph-edit-3.docx",
+      "Sha256": "102c1632eea35c75e34803543715e8eac04d910c78f26835f532f6bff42a9840",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/paragraph-noop-1.docx",
+      "Sha256": "1cacc4371463beca80ab0005804cf725bb9ba60533b785406ebfd1138f338d85",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/paragraph-noop-2.docx",
+      "Sha256": "af8bcb61eea5061ca71ed744ccd46b28b12399e2e4ee0e301d48632bf32efecf",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/paragraph-noop-3.docx",
+      "Sha256": "4deb427074cd3813a05aecd742c3993d606cff5ab1c837b8ecfe5aa1a0cda43c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/pending-cell-after-save.xlsx",
+      "Sha256": "e6cea3ccc6f9b8767271bfe9412f18d17b44984c6e581b69749ba68940789dc2",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/pending-cell-before-save.xlsx",
+      "Sha256": "9e034e8c70c6d17f38548473d0d4a2160cf1a03be5b78d7f89a22611f476b5a6",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/pending-cell-close-after-save.xlsx",
+      "Sha256": "e0545a54ef606dc9bc1aea08e06980dd1205fb9bc1762c7025af15e36e351beb",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/pending-cell-close-before-save.xlsx",
+      "Sha256": "e03d106b5551d8b877f8c70e89a701c0fcf1520f09d7db05aa5a086aae5704da",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/pending-note-after-save.docx",
+      "Sha256": "aba2208af7f8cdfe6e55abcfa5cc4a7eea57ad5e428561a136e2530ded9b7a12",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/pending-note-before-save.docx",
+      "Sha256": "609dd992954904e6072353613bc63bb901b67dcef3f78daf9b9f85c5c49454a3",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/pending-note-close-after-save.docx",
+      "Sha256": "940daf0e8dae98f761452ca76752602d24edfb1b2ed7a383682a97e282bfd656",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/pending-note-close-before-save.docx",
+      "Sha256": "4519872b6fa82b104de983c4812bcf10f048b919e713cb5cf9e017e93e3e8caf",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/pending-slide-after-save.pptx",
+      "Sha256": "a039f8a79b5aba617778a5e2be25a1f9034646f5490a4298cce4efb95d760c2b",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/pending-slide-before-save.pptx",
+      "Sha256": "fce45c942b9f87d46322b4c4ded4140e5f6507475f792033b64032703bea3870",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/pending-slide-close-after-save.pptx",
+      "Sha256": "5eb5f38ee9b3b9e7d346ffdb0d74dd814c90f3063fe354c5332d4f96769160e8",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/pending-slide-close-before-save.pptx",
+      "Sha256": "5e115666bb3f6bf11079c914ef272d0c2f4b53983441e21030c9854145050b0e",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/retry-after-failure.docx",
+      "Sha256": "6dc342857fec7568d97f0bc8ea3349ea3abd17116f3c4cc06ea177aaa0892be3",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/ribbon-edits-1.docx",
+      "Sha256": "b3bbb330cd47159740a17445cb137da1f154f1c5c50a19425cfb978b58e805ae",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/ribbon-edits-2.docx",
+      "Sha256": "9d661f8b21a7e2ee4d3b57aae9977703d3c9e0d1e08be272d17a112cd90a3140",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/ribbon-edits-3.docx",
+      "Sha256": "706b1fbeae2787e24477beb7a7a3ed4598619369aab7184779e4ef8db8a7b503",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/sections-1.docx",
+      "Sha256": "8244e7305c2cc8f612798db442e1b4f10303946cde442eb0423aea5fa34c6647",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/sections-2.docx",
+      "Sha256": "a57f1bc6f2815a3107c3491219cf55cef321c3780e59a2b0a42d2effb044e6b6",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/sections-3.docx",
+      "Sha256": "e3c6b6270e18e8643fd5ff9383a4cf755c797900e29ca3ef36201641359c5f1c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/selection-save.docx",
+      "Sha256": "8a8f4a4ac5653228ef2f5a017db69c34fd07fd52c5ec51a519c26ac848923933",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/table-action-1.docx",
+      "Sha256": "b7a095c4fae2f6797c7aa19ee3fa0105ae3d5d4a637ff74c062b790a47661962",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/table-action-2.docx",
+      "Sha256": "8eea5845ee470a631842b5c2b5b767363b98a08444a598cecfdbd769874a5672",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/table-action-3.docx",
+      "Sha256": "26c84a3a334c7e2c84acd2b919f319c488bdac01d91f5f2c7cf67c374217ac75",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/text-breaks-1.docx",
+      "Sha256": "ed5fca5ee34ae87548d3236719e099a441171f91e7aae0c445d5d267651e99de",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/text-breaks-2.docx",
+      "Sha256": "900098c64f03b3a37b380700e6af3602e739b62cae7c8f0cd01690cabc56d1f7",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/text-breaks-3.docx",
+      "Sha256": "369a624f386db6100868401d4cdb72d801785866947526853776a572e7684ed0",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/toc-action-1.docx",
+      "Sha256": "146e5864a65562822309d7b94a229a0a8d22491519009da9f64476eb24c73e21",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/toc-action-2.docx",
+      "Sha256": "9f3170b92e6403f6ec71394b5aeec9bda5b7356bce019412ab93b8c30afe661e",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/toc-action-3.docx",
+      "Sha256": "7e12b2f0febe38fe725f345d41409afc02538fe9b43c59cfe2f75bac11f4ca4b",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/word-docm-save.docm",
+      "Sha256": "e011865834550948a941630f4bfc1d16662360da5e3097bbe1044f02fde1c123",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/word-dotm-save.dotm",
+      "Sha256": "5b73790026c33a3b2d990fa850c033a6502e88d594374794c64c73c8c01a1e5f",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity-host/word-dotx-save.dotx",
+      "Sha256": "5fbe48fcc87b7e44c18ef816aa7c5e4a69904b3ed07c76ef53eae32369130b4f",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/build/fidelity/unchanged-controller.docx",
+      "Sha256": "c895f6c012687d041766988cbbdfda4acc524d6a927ddb740c608cc6774796b8",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-altchunk/altchunk-imported-1.docx",
+      "Sha256": "61d2023d33d07305799e58216d21d3880d8eac5c75f515e1a3c53df662db193e",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-altchunk/altchunk-imported-2.docx",
+      "Sha256": "bf59d960726459680b75dd295b75ca6acb38b0805bd2f95f8d70e973e95391a0",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-altchunk/altchunk-imported-3.docx",
+      "Sha256": "fc97a3cdc9d1a71a22cc90bb4b9e30e60eb300e003b11b5e8641f55279c80c18",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-altchunk/altchunk-moved-1.docx",
+      "Sha256": "c7ca94e015f0a6e04aba059b2e9b3df8aa19cd824f264a4b8875cda5333fb7d1",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-altchunk/altchunk-moved-2.docx",
+      "Sha256": "31e7a656f78305b29d80e3a788b37f43beb08369ad68af12987f61ce8df0f1a2",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-altchunk/altchunk-moved-3.docx",
+      "Sha256": "0f1c83f3ab17e50c423b3d630313445f0ad0b0589168aa35f0e500c0a92d5085",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-aux-controls/edited-1.docx",
+      "Sha256": "42c081eac68acd3a90555d79cdc6bcada143b77edd8b5953266d604bd6e4daf9",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-aux-controls/edited-2.docx",
+      "Sha256": "81d43c6d705c239329de4e956ea47d98ce55c75efdb068597b1cfa572a10f2e1",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-aux-controls/edited-3.docx",
+      "Sha256": "461508fa1c554cb9fbb7cb3b2b446bddb5a5cfb8d7d87599fa0758fe44038386",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-aux-controls/imported-1.docx",
+      "Sha256": "eea83c240c6508e96c1a489c5557ea1180c3000377de942f3e99f28517dffaa9",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-aux-controls/imported-2.docx",
+      "Sha256": "d7e653237becc976380ded0b666b9e5df95fdb3f30d3ca45fc6675523d879aeb",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-aux-controls/imported-3.docx",
+      "Sha256": "b71fc14dbd807f1258024b4969965b038e3cb3fbf728ae694aaf64ac8999247f",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-aux-controls/source.docx",
+      "Sha256": "fba38173b5148646d8cd00d1f18baffaf4a5bed829bc8d02583dacfbf75ddf4e",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-aux-header-footer/edited-1.docx",
+      "Sha256": "73af5cea4ef46d96fd59560568bc4afbd10e36d4c911f025d8b56e2df2687f2a",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-aux-header-footer/edited-2.docx",
+      "Sha256": "195fe3a2b5f068d1e0cb0e35bc3105342d196262b525c4c3f010a32a89cefb21",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-aux-header-footer/edited-3.docx",
+      "Sha256": "5f5cea7668b1df2da74e6d8a581108e27b3f4399937ee07d3932fcb12cab5ea0",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-aux-header-footer/imported-1.docx",
+      "Sha256": "3fd216da5a416c7509a39ee4e98ea3ede1433b9c3288d7afba3d109e3fbc4064",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-aux-header-footer/imported-2.docx",
+      "Sha256": "eaa96d86c01994375a85e6a57c3adeaf0d070cfcdf5ae966c8b6f49e8157a94e",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-aux-header-footer/imported-3.docx",
+      "Sha256": "fe10ad57fed8defadbdf3346b7145b77b03acb8c951ada595335c10d99751b40",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-aux-header-footer/source.docx",
+      "Sha256": "2d26c7e85810e0c1ed50483ed16e02e2d03c43f83b182e819571f1e0a66c7036",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-bibliography/direct-1.docx",
+      "Sha256": "c9a391351dac9ea74b0c2fe228490c7cb0fb6ffcadab1127147fea2daca3d09a",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-bibliography/direct-2.docx",
+      "Sha256": "adb132ee4993111de3c5471aeb264cd07a7af5e3155f7221f978b4f149c0796c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-bibliography/direct-3.docx",
+      "Sha256": "0b292e544818395e93064680bb2d6798356c1b2aa63394de927ff21cc11f0847",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-bibliography/isolate-1.docx",
+      "Sha256": "920bddc44f8cc0ea1282e445d73d9a5b506e1d5e0af2b385dc31669ba556634c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-bibliography/isolate-2.docx",
+      "Sha256": "ae4cbcfb74d8bea7af338f5c2d5b3b1ae0a89231d2ff1d3296750a74cf575b24",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-bibliography/isolate-3.docx",
+      "Sha256": "c548ac2be0419a0b99f2254e3d49401054d3133504ed80868653ae9b7cb2e7bf",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-bookmarks-legacy/bookmarks-edited-1.docx",
+      "Sha256": "1c1b2e3187c6e824a1072b054cc3f821469cbf09a6a643a9f2771ef4774c17e2",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-bookmarks-legacy/bookmarks-edited-2.docx",
+      "Sha256": "9ce34d3b9fb5d4ca9185d9eb86d4ead3dfc7e2f5a45e29d49c59f2586011c9ff",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-bookmarks-legacy/bookmarks-edited-3.docx",
+      "Sha256": "ced73b1d39efbcbba5dadb34a13b8b49fc09d98f9487c9a55350001671d03a07",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-bookmarks-legacy/bookmarks-imported-1.docx",
+      "Sha256": "64c49febaed2bec6684a06d95777b4233c6e7fb0087f24e9d672cdaacb14c01d",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-bookmarks-legacy/bookmarks-imported-2.docx",
+      "Sha256": "a38e81f0dd1da762ab0843bff60e3cf64390e88988a83aac549ec48ba7f259ed",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-bookmarks-legacy/bookmarks-imported-3.docx",
+      "Sha256": "6befcfb641736858e0a2eac46818d88ee294cd8d2098b3e6767e6e1913ce86e8",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-bookmarks-legacy/bookmarks-source.docx",
+      "Sha256": "acc4bc7ef24543b75d2295dbbd37a58b9a4ac5a2105cef13ef186e8178ec05b6",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-bookmarks/cloned-1.docx",
+      "Sha256": "019d3b49a5dfc0d1e91c445a0d40991414e843a6159b12f803c384c98b880f35",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-bookmarks/cloned-2.docx",
+      "Sha256": "c7baf4b130851089337cc370be03d6b7de76fbf15f6f59e0f69b7a0be97d430b",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-bookmarks/cloned-3.docx",
+      "Sha256": "15fa1bde3fd5e1e0419bdfbb69bfc39f2114d3f1248355c55c5a07141984c3cc",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-bookmarks/edited-1.docx",
+      "Sha256": "0e86939e9266d19597ed46b50b58c96b13d3f1ac56b5c433fbd25dadafa18f07",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-bookmarks/edited-2.docx",
+      "Sha256": "a55cbe8c0a75e5391a72b52977745fc838e14f56ee67d3af30e2174c6d026a60",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-bookmarks/edited-3.docx",
+      "Sha256": "5da04e8292ae9c4d0e8701a4fad27c5b3673146d313a5bfd9169ac9f38c2afbe",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-bookmarks/frame-1.docx",
+      "Sha256": "f1eb7f5ec5e96baddfcc1a96f0f7012cd02f7bdae57fa04dadfc0498ac23598a",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-bookmarks/frame-2.docx",
+      "Sha256": "73db98f4a32b20263d446a55599083d31a46243bcd3f622c57a271943242967c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-bookmarks/frame-3.docx",
+      "Sha256": "0cfaeeea4030b5c6b29790ffed0a61c3b9b2ff041d835a66d1262c45eedfdfad",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-bookmarks/frame-source.docx",
+      "Sha256": "84efbba2da2751e303d812860309a701b71b6424ed13c811474f37081ce3d01a",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-bookmarks/imported-1.docx",
+      "Sha256": "9c5471c00a8b8e1c9de602810d65597847d248ea0da0a39e71fab61c6486b882",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-bookmarks/imported-2.docx",
+      "Sha256": "29e3085718da091cd0c52a97bcb9b23ce227431e57ce8e31e59c517c76aba708",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-bookmarks/imported-3.docx",
+      "Sha256": "76c803a220396c0ac97046d5b207cb082d3d3dd0bf96c1018e421ef3fe276fc1",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-bookmarks/source.docx",
+      "Sha256": "b469fc9d8ffc372e8dd6d84fc506acd19e47074262f9717e1fc0c6995758ea83",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-comment-threads/threads-edited-1.docx",
+      "Sha256": "d5f05570c0a4eec6405479e9f36ab819567c487a37cc1193fee68613e84cb3ca",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-comment-threads/threads-edited-2.docx",
+      "Sha256": "a0c61017bb6db383422a75b16e52e295e2ecbb86713bbacc2a5293e203436da6",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-comment-threads/threads-edited-3.docx",
+      "Sha256": "50537b536a4d88e88e55ac735e7827acc4b7e9e5f0d9b1fcbde5a16c3449498a",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-comment-threads/threads-imported-1.docx",
+      "Sha256": "0c2c6dfb0e0087786a214d576ba60a227357b5f21fc07e8c2cd225bcc28401fd",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-comment-threads/threads-imported-2.docx",
+      "Sha256": "c5e9f4134077ccac731082184d6378686c18539ab84bc7b367be1ea993080526",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-comment-threads/threads-imported-3.docx",
+      "Sha256": "e4b0ca82890305de2b3866d7c116d6d216719f126e6390d2c7bdddf13bb5618d",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-comment-threads/threads-source.docx",
+      "Sha256": "d1763533e3733a93398a0cea7043b9d188f98f5a403ff5b7f3ed5869d654e9a4",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-content-controls-legacy/controls-edited-1.docx",
+      "Sha256": "53e0ded22c05baed35baa1a81f6e962011985b93035f7671d6da4d09f6ac2fc6",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-content-controls-legacy/controls-edited-2.docx",
+      "Sha256": "a00ac057927cf1c2cb8360b48f8882e4bab7382083d4af82fd9c7a3cdda580f5",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-content-controls-legacy/controls-edited-3.docx",
+      "Sha256": "3cecd86b5628b933e6632403724af70ddaf53ef66addaeba88643dcb19985b0f",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-content-controls-legacy/controls-imported-1.docx",
+      "Sha256": "bd8732bebdd30362cacab8afc63a9b76a8498b19cf68b71a735bd8e8f5b8a5df",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-content-controls-legacy/controls-imported-2.docx",
+      "Sha256": "fc0293053ba48c260601fca2dc75147ccc3eb5bff5555ae63fb5efa82706cee5",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-content-controls-legacy/controls-imported-3.docx",
+      "Sha256": "88fd2ecf6ea259ab6d5f2d95153dfc94e2ed00cda9ce8d1d5ac0f079c4466129",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-content-controls-legacy/controls-source.docx",
+      "Sha256": "a59cb0915fdadaa579bd28f028da5be1df2c8e036362e8e1fe21b789053b5e29",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-content-controls-legacy/legacy-frame-1.docx",
+      "Sha256": "8f9401558d9c15d4e0576993f3416e891eb122e5123f2ada4c991c51ce73b7b8",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-content-controls-legacy/legacy-frame-2.docx",
+      "Sha256": "e1bcdbf87d107283ca72c47d998a3b6045abe6ebc408fab676af6ba30495b4ce",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-content-controls-legacy/legacy-frame-3.docx",
+      "Sha256": "a20c411bb0a48582e8da3a8e2061cdf8a05a5c8f6f5897eeb6f4a92f6aea6a4a",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-content-controls/direct-1.docx",
+      "Sha256": "caaeb50dc0fdd63fc341d184d7c44de9030985ddf2d743b812f911f433115331",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-content-controls/direct-2.docx",
+      "Sha256": "35254f74adc58af45251eafbf1a85f5a1e0840aa5dc9807fb821113ab4c92c63",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-content-controls/direct-3.docx",
+      "Sha256": "25e068c92b49f1adcd2858b662021279fcca7db5133e014fcc1622efd6c80dd9",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-content-controls/imported-1.docx",
+      "Sha256": "c9c1ceca40386b421799357c6ae204e2b42f217e6afb63c8376f7ab4d9002210",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-content-controls/imported-2.docx",
+      "Sha256": "2400e815a71d9821d123d96ce31a78e2224a04b6447a737d7e229a332461e1e5",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-content-controls/imported-3.docx",
+      "Sha256": "211a7314dc842987cb1eb69268fbbc90c8216301930ed553546a8dc3c8ee7e46",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-content-controls/isolate-1.docx",
+      "Sha256": "2949f9fe42c8096c09cc2738d4e3c1b26660de69b8283f94dc1546668e5f9cac",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-content-controls/isolate-2.docx",
+      "Sha256": "0b11f781217b7c2fdedacca9380e3c0175986aaab5178ed0abc3309d882b6999",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-content-controls/isolate-3.docx",
+      "Sha256": "21bd6882d761aa903d3502a3f8d97eff9153f8b8bbb78cdf735b6d625ee06431",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-content-controls/source.docx",
+      "Sha256": "5af5646742521142abb6295e0962e84a21de75f5959d66aa524f43ab48c11a40",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-frame-wrap/none-1.docx",
+      "Sha256": "630055dced335374b13ca6c1e3afffd020a584f43afc0265bd068bf22f30301c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-frame-wrap/none-2.docx",
+      "Sha256": "147655b7134a56b07fc5bda7dde2f38f7d97664fd4742729b1c0f634ecd07e8f",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-frame-wrap/none-3.docx",
+      "Sha256": "bd76489143fc42dca78953ecae965113fab1e7c4ad4ace5284bb0d4b9b4e6473",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-frame-wrap/none-source.docx",
+      "Sha256": "956a75351e281d6fcaea42829e79262c4567eba6113ea67a82fc191a61d35543",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-frame-wrap/square-1.docx",
+      "Sha256": "6e3af0ac75d3670707a7da7831379890fbdbfd13ef944ab04cf43bb1926360e1",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-frame-wrap/square-2.docx",
+      "Sha256": "2552d09df5ebc33830e96275180ae82116b75c3c0b9cff00b5ed769418d74d79",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-frame-wrap/square-3.docx",
+      "Sha256": "e1c8b3f854aeae43298678b6e09cbab4b887bda0a8e7503d1bcfc3a1f84e385e",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-frame-wrap/square-source.docx",
+      "Sha256": "cc13ec6ed3be7cfe0c37c56c0bcfd5fea15b4d5e0901ca896f18b111690ad567",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-frame-wrap/topBottom-1.docx",
+      "Sha256": "6d90953c4644d54ad3a3a08b0fb0f945ff36841e6266e5fdd0a7b5c7372967a2",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-frame-wrap/topBottom-2.docx",
+      "Sha256": "411959a3ce8ea6c3f6a7c77ac8b262eec49eda42407ce8d35573b7e06eaef15c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-frame-wrap/topBottom-3.docx",
+      "Sha256": "3098074896da867f2dc6916f2b4e327d926646c905e9f1665fc2379fb7ec8f1a",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-frame-wrap/topBottom-source.docx",
+      "Sha256": "e14aaadf28e887ae68c5492226c9d42d3954485be35511ec539bf27fe9bbf0ba",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-image/replaced-1.docx",
+      "Sha256": "83f8556d83f31538564313c30834e2625d25a0644f56d0d4bccfb4a46ed8c88e",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-image/replaced-2.docx",
+      "Sha256": "b7ebdc129fb0f0c28da06793fe62746e980d617bc10b0bb2aac8b8f8e21fc61f",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-image/replaced-3.docx",
+      "Sha256": "a5ef74fb8b22d05280a6327aaf3ba9524a7aece0a05ac22f1299bea2c0759444",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-inline-fields/direct-1.docx",
+      "Sha256": "c9191b0b4fb1e26acaaeab8162afc07d9fb48aa99072a9ceb6ca7103dcc647d1",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-inline-fields/direct-2.docx",
+      "Sha256": "a112d0e44e52c9ffb272df8a339efb72b83bf6685f00c181979606eb09933103",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-inline-fields/direct-3.docx",
+      "Sha256": "4454173f31455421f6d497ea645e43bfc0db7b9d1883347249b64b5f9477ee5b",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-inline-fields/isolate-1.docx",
+      "Sha256": "856ea0bcb499d5cbdfbe5a202dd9f708bfc1d1c69af8023a62b60f223f46b1b3",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-inline-fields/isolate-2.docx",
+      "Sha256": "dc92a470a837dffb80b18331484a028e3c939980a209a88a2a6d137cba78e240",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-inline-fields/isolate-3.docx",
+      "Sha256": "6844650e7a7fa8a903497b329fa493ba62535a54005c5b96b1cf501ce69f479b",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-lists/restarted-0.docx",
+      "Sha256": "aad100f17d8738197b46985557be3d4863a31821218b47140464fd34b7db8513",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-lists/restarted-1.docx",
+      "Sha256": "21707d67bde668a8cc353bfb8138214c06f410b856195c7f99c71a5a720fcc7a",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-lists/restarted-2.docx",
+      "Sha256": "154331ab3c9edb2cb7956df2201cf7eae0c31bb9874b3f2feee325745056d434",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-native/created-pivot-1.xlsx",
+      "Sha256": "cea639789c0872dcab81d397442af4458406ccba1c386fba99368055f701dd6c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-native/created-pivot-2.xlsx",
+      "Sha256": "73cfcbe24d908c8e04a767e9debadbc7751f4b44756c0d003aff1bf3815e6357",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-native/created-pivot-3.xlsx",
+      "Sha256": "93396e9fcb7bbe378b97ddab586db645a38b1d11bcff8c47cfd1bbd2653ca29b",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-native/native-sheet-edited-1.xlsx",
+      "Sha256": "6252782cfa34b40f4e8396790ea2d6208b5bdac879d57e5bb1178250cec45bc7",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-native/native-sheet-edited-2.xlsx",
+      "Sha256": "c395d15222d097e06d6c5405f69c19d9f56f2dc41fb87ef5106943dc871b8138",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-native/native-sheet-edited-3.xlsx",
+      "Sha256": "941cc1b65c8ab1a40f6b85e4f7fd86bbb0636ce1d9958651f1db1d025e9fde68",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-native/native-sheet-imported-1.xlsx",
+      "Sha256": "49a2a45b572a2d75e4d5d6c5073f5ac769c224493e3acfac9d7008dc820960dd",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-native/native-sheet-imported-2.xlsx",
+      "Sha256": "54e53b02c9c86b04fc3a3c14ddf13012a105cb5d5660ebd109726befd5149e44",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-native/native-sheet-imported-3.xlsx",
+      "Sha256": "3b2e7bbb09c00e57eea7d3be3844ed433a95a646674f413ff2e924f4be5f1197",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-native/native-slides-1.pptx",
+      "Sha256": "e026b35455c00237d41492ece1ab25029a4c5e9ebd60850ceec6ca64c08c7156",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-native/native-slides-2.pptx",
+      "Sha256": "5eff855940b4fdead2af973c86410a09b933eb75f6980b4f8ffe0e8f472e5289",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-native/native-slides-3.pptx",
+      "Sha256": "bc6d5f5b83bc9bb2c42903c17e3b19efcebeb85e0d416b51e0b6fd1e6a3bbacd",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-native/native-slides-edited-1.pptx",
+      "Sha256": "3d493aa212496d6081ff03b012e50565ecca55503f47bebf6be1280d0d9c6850",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-native/native-slides-edited-2.pptx",
+      "Sha256": "9f25df7458738de3521da708d511ae639658d37127bb32d97b408373378c508c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-native/native-slides-edited-3.pptx",
+      "Sha256": "165b4a839bd76aae3bd6cc72ff232af2bdd6d9c2443062b16a8a312100659e8b",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-note-markers-legacy/markers-edited-1.docx",
+      "Sha256": "281f5dbb50f8416abb6257659ccd421ea967d1ffec2ac7bcf8e9ae025dc04180",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-note-markers-legacy/markers-edited-2.docx",
+      "Sha256": "ceae3d130943156ee072477cc28cf25ba8c6f19f39b070fde949f031e1743ddc",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-note-markers-legacy/markers-edited-3.docx",
+      "Sha256": "6b6e9e4f693ef91e22bf7bb3d9b970c953b5398b7c6d0cb06ee0a828e1260010",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-note-markers-legacy/markers-imported-1.docx",
+      "Sha256": "236b72125268dd7afc6cfe33420f832af1c737d39d97a42607bd9c64f5f2fb6e",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-note-markers-legacy/markers-imported-2.docx",
+      "Sha256": "6454d712ec3a0a33fc21a780e1bceb0f3889c68f898f329228d1f5369499e987",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-note-markers-legacy/markers-imported-3.docx",
+      "Sha256": "ad949d5f7af49833f8ed0a61e9ab3845bc10cd87e2a6a378875f10cb397686fd",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-note-markers-legacy/markers-source.docx",
+      "Sha256": "6f4e979c69c4a942796ea512490b791f8b3ea99a966c75593c1b2613880e7536",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-note-markers/cloned-1.docx",
+      "Sha256": "8a6567a9899eefd9d483a119f9d504c70fc94646b3f15771109578a08bd59a71",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-note-markers/cloned-2.docx",
+      "Sha256": "58b8723b2120980ebace638013e5976f6e4b4bc3199be5149891968364965746",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-note-markers/cloned-3.docx",
+      "Sha256": "217e472691467ed35973765d6e4c8ee1197e1622e13373cfa542f51ac91a5bd9",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-note-markers/edited-1.docx",
+      "Sha256": "499637553d1da6dbf98033086678d78864d8fe453112d587bee30d9abb934eb8",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-note-markers/edited-2.docx",
+      "Sha256": "a40168c394d05ad4e4b37b309dce8bef2fda56d583628edf23ae858e0ddf3084",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-note-markers/edited-3.docx",
+      "Sha256": "d06a37b2ec9c8c7db4b4d4f6569bde1c262bdfbb963f3f4e3d749803b8651c50",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-note-markers/imported-1.docx",
+      "Sha256": "f22762256772b07b423d7678405587017b16ea642e13641ff98a464599e1bae2",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-note-markers/imported-2.docx",
+      "Sha256": "77c0d00785bede2b9516cfa47f465f835139d95382bd5e79fbf2852f3ab1845d",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-note-markers/imported-3.docx",
+      "Sha256": "eea087a63f410ecc51ca0b7fb61c31d75dd434b44f637122ca825d550078e073",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-note-markers/source.docx",
+      "Sha256": "24d80e959d01435191ccaaa6d31bed1e214becbddef6eef8b87b69d79d357a48",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-notes/edited-1.docx",
+      "Sha256": "2925f30bf03df33efde8cfdeb7b3d161b9cc322bc75dc77d73206997e026e578",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-notes/edited-2.docx",
+      "Sha256": "abaf9d186ef03fe3d7f88cacebec09f84fa8558f84b1573238c4317b24432174",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-notes/edited-3.docx",
+      "Sha256": "0c9b756b68a0db0069c6885f3812a77510c0a0a1bd3dbc8cad603002f6a364c3",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-notes/source.docx",
+      "Sha256": "11550ac3f3c06bd4093b61bf16cc879827587a53c1cf0abaf8dcbdffc19da59e",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-notes/unchanged-1.docx",
+      "Sha256": "85ed34f53e3e5400f3eb8dfc69650d894bdc42c18474ba66037c66f4cd01b904",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-notes/unchanged-2.docx",
+      "Sha256": "2e21338628dd9e55ba29bab2aa3d8df7fcb23e9105a1096c2c96233339b7cdab",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-notes/unchanged-3.docx",
+      "Sha256": "d70c856422b55781d107600601491c6c524d8b46d7acabde45ac93d669449c74",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-opaque/opaque-1.docx",
+      "Sha256": "7b3015b92fba2d48be7c1a483f326bf7616f29eeb7d2c74e056bec366258e913",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-opaque/opaque-2.docx",
+      "Sha256": "6b0bc1c97ed1e9ce2f9b39b03f3bbd17dd1286c95804ac659f3bd40b21941233",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-opaque/opaque-3.docx",
+      "Sha256": "51b9fe9ed95f259f3a3258640297201e655cc0c21d6ad403bbc18ec2df3f263a",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-revision-stories/direct-1.docx",
+      "Sha256": "f57abead0cca88438e15f59659d277f3b2b28a16f77a148e7392fb33c997cac2",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-revision-stories/direct-2.docx",
+      "Sha256": "eb1418f2fb4fdd471a63cd29fa85ec39860ae0ea14cf2c16fffcd4667c50e6ab",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-revision-stories/direct-3.docx",
+      "Sha256": "406fcbbe969dfd7074bb3939dba4d9d436f41bcb8595d841c69eb37cab72dd0a",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-revision-stories/isolate-1.docx",
+      "Sha256": "490b91942665d9ecee5b77a04ce257949cba523127935398219832ee6856c010",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-revision-stories/isolate-2.docx",
+      "Sha256": "88604c3edc5d8076cc356e858d9230f1db92dba59cd8375b4081fe41e15fd2e1",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-revision-stories/isolate-3.docx",
+      "Sha256": "4670890593254938c4c421e5a9e73adf18933b2c727801702ecd761d284a1e85",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-schema/column-metadata-1.xlsx",
+      "Sha256": "41166630bb211044b4bd5885b4bd7c76bd5665ff3427ce9776d0d9403ce97f73",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-schema/column-metadata-2.xlsx",
+      "Sha256": "95b5961065ea22cbdf2c3a0e7d0e45775a3bfa61300b08cc8ebd8a8f84ccdc09",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-schema/column-metadata-3.xlsx",
+      "Sha256": "8581bd179b2f86ae1548fc2bdb3c6a81679fad1ca7fb4d76a1c36791ed6af63d",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-schema/sheet-style-1.xlsx",
+      "Sha256": "057b10008962a8bbcbc9443f50072feb37a3e13f1b45cca6759301390b5dc2fc",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-schema/sheet-style-2.xlsx",
+      "Sha256": "726044d6c2265087ebd80684c05e9ca336c482ffb9e96a93cec5a85ccbdf4ea2",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-schema/sheet-style-3.xlsx",
+      "Sha256": "7d83e0af99a3ca935c475d543dab2dedb7013fe8294d324ba8b6b1f0ba8c57cb",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-script.docx",
+      "Sha256": "86b92df06aed08177df9a7728815676354c9f91312e1f3bdfa5422d9395d9d0c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-scripted/sheet/edited.xlsx",
+      "Sha256": "54fcac97a04d755b690f5f5e88291350b1127f8cdd4d1e9cf5ace96da31d435e",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-scripted/sheet/roundtrip-1.xlsx",
+      "Sha256": "836a0d79e96e83d25a851ad1501b8479c30ae9c1e411c500177b945eb718b2bc",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-scripted/sheet/roundtrip-2.xlsx",
+      "Sha256": "ff0cde005c5e85af28ae71187b94ef31662bcd0181faf72432a678b71f4b786c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-scripted/sheet/roundtrip-3.xlsx",
+      "Sha256": "b7d13cdf8000c2933359b1924b18492475726c2c6b5b735fe190ae6c6039ea0e",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-scripted/slide/edited.pptx",
+      "Sha256": "cd3afbfd41b06304579d1fa0476b14d74c86b0093497379522560080c77ab457",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-scripted/slide/roundtrip-1.pptx",
+      "Sha256": "08c99caf6d008076452fec074d63da0eec24d67f59cf6f7f5cd4fae9509627b2",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-scripted/slide/roundtrip-2.pptx",
+      "Sha256": "6081f08012381d6dacf4d70923caf7b205cbf5dd6b360ec7601711e4e21a0946",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-scripted/slide/roundtrip-3.pptx",
+      "Sha256": "6694bea6834b345c623fbf9e8eb9b95f66b8e4274acb39b1a582c56ea147286d",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-scripted/word/edited.docx",
+      "Sha256": "8fa94dbfb7eee9c42a2cea373d26a1b90618159fe99ee5741a6c41d773e47933",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-scripted/word/roundtrip-1.docx",
+      "Sha256": "e7cbd6ad23c65dd034047f1db626fbf1244fac9e32408c0b7d3fc24fdbe03173",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-scripted/word/roundtrip-2.docx",
+      "Sha256": "f2aabf9cdacf799af7f0ff4d3d990761dc2ef83f27dfaf06455da0f12b68893e",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-scripted/word/roundtrip-3.docx",
+      "Sha256": "f51f7c299ca8d8617ab5628bb290a210826101c01891544b1ff98d3e231cd073",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-section-clones/section-clone-1.docx",
+      "Sha256": "41e94fc900d2dd519c4a4c6c35c0e1495c8179795c97ebb3a768733c9a25d66d",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-section-clones/section-clone-2.docx",
+      "Sha256": "a28807974a824826f0badba78fde22f7fd7bc0f290eaadb453f46fa109ec9c90",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-section-clones/section-clone-3.docx",
+      "Sha256": "36abc65b4f1e88630271a041df4015c0fa282beb291dd5e1664e8a944ccbe568",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-sheet-rename/renamed-1.xlsx",
+      "Sha256": "ecbc5435bd0646645084495dc1c27d3e49e9fc84282275c4f48ff038adc0426c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-sheet-rename/renamed-2.xlsx",
+      "Sha256": "1888ed433e4a2bc6640a3b1a09ff6bf36cf5c236c50cf4a5040ddb69a34f4f05",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-sheet-rename/renamed-3.xlsx",
+      "Sha256": "f108a85d716290e507c30ca5ba1580205d4d57c60887918bc73c074ef9f6fe44",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-sheet-rename/source.xlsx",
+      "Sha256": "561a2ebf80b6f02e8b1fc00648230b341ff68e1a3ee501ea026b9e69c35fc24b",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-slide-sections/direct/backward-1.pptx",
+      "Sha256": "bf69671349209c9a638d871b14c0b07070c97497e6e2fe5ad943ea069d3775c6",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-slide-sections/direct/backward-2.pptx",
+      "Sha256": "03015b93cc1dadb4db82322f968df9b46075f7dbf690d971d344add6e5919748",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-slide-sections/direct/backward-3.pptx",
+      "Sha256": "b2fab200d2fc6337f75c4bd491f44f04c039a754e8a47fb1726ac18df1b74ea8",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-slide-sections/direct/emptied-1.pptx",
+      "Sha256": "75e8d013c5ccc346f680872601ebd51b6aa7422a69f25a8a8774a7850737514b",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-slide-sections/direct/emptied-2.pptx",
+      "Sha256": "97ec46231da00fda934fdc40b159e89371c88fd0d966c7114dbb0a332c716cdc",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-slide-sections/direct/emptied-3.pptx",
+      "Sha256": "1f454fae733fee58ed4061d634b805d8ed8075dc88937ad6c08c3d35e4068c90",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-slide-sections/direct/forward-1.pptx",
+      "Sha256": "9d9ff0b16a90be08fdadc171a19fdbae022b377f3e57cbf2395a51a13c03eb66",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-slide-sections/direct/forward-2.pptx",
+      "Sha256": "5989eaa95ccf56ef2ecc25ea874c3817d4f77bc5c8a4c452524323c1f63b8119",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-slide-sections/direct/forward-3.pptx",
+      "Sha256": "3e96f520aa65fa843868e65c7d97efc25061662747f3175d4dac94a228718af6",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-slide-sections/direct/source.pptx",
+      "Sha256": "fbbaacf2b6bbc657568bb3e507e062a949ce5304d2f77fb51bd3c9f3ec5bb39c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-slide-sections/direct/unchanged-1.pptx",
+      "Sha256": "18fea1e59d1d2e212899eef519b4943a7fc451c014668775a1ea6c19295d33da",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-slide-sections/direct/unchanged-2.pptx",
+      "Sha256": "6dd5f4b93f6c4c8eeb605d8acd43fb00a71b273f7ba6b3daec05dbd606409b6a",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-slide-sections/direct/unchanged-3.pptx",
+      "Sha256": "60fb14e11347660dd6bc43e8f9e90cb5e641eb88370dad45ebf7bc1f2e476f06",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-slide-sections/direct/within-1.pptx",
+      "Sha256": "08c09dc0d6fc9d8d57ba5c1aa6f48ceeeb3ac9c38bcc253288f6ab873720bdf7",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-slide-sections/direct/within-2.pptx",
+      "Sha256": "4a3d2318369c2e579a126d488c45fbfa84a107773ebf764f2e615ddbc6721e08",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-slide-sections/direct/within-3.pptx",
+      "Sha256": "dc6882c9708c5586eb39ee03bc55405d0a06986385ddc3ae90193f0d8d371388",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-slide-sections/isolate/backward-1.pptx",
+      "Sha256": "fd0fc7e03c85b14c1d4610e66d36b3db384b8bc1dc21901fb71c04f1f9713380",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-slide-sections/isolate/backward-2.pptx",
+      "Sha256": "00e281f2847288d1c54baf2093bfc3613e8ec9d17348c3028c6965a655c77759",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-slide-sections/isolate/backward-3.pptx",
+      "Sha256": "9b2dfc455e4cdd136190d4def0db27b0b99c4b85b22ad65b854215b54d6b36c6",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-slide-sections/isolate/emptied-1.pptx",
+      "Sha256": "44cfa930b34cc6c16f39064e7a3d98115b950a8bbd79836c47060cf0d6178e29",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-slide-sections/isolate/emptied-2.pptx",
+      "Sha256": "88a6478a443ad336f5f9e6d368f2954ab2a3dc970d4004ee9a6df6e51eac6e59",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-slide-sections/isolate/emptied-3.pptx",
+      "Sha256": "b09e4f20163bd15b1fa2e927507613d7a3e97e89d7ec052a50baf3bf6dd374be",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-slide-sections/isolate/forward-1.pptx",
+      "Sha256": "e42442ef1316a3a118199e20a8978ab11864ce0ee0f0664ca9a09cbbf2231a09",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-slide-sections/isolate/forward-2.pptx",
+      "Sha256": "eb841610d297820958185142ece970a475aa4f0a9805df534150b999c920a23b",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-slide-sections/isolate/forward-3.pptx",
+      "Sha256": "a8b45b7b3bc9e7f70cc7c45de67454637c5f6d366ad302c7b3d405cab79f46cb",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-slide-sections/isolate/source.pptx",
+      "Sha256": "fbbaacf2b6bbc657568bb3e507e062a949ce5304d2f77fb51bd3c9f3ec5bb39c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-slide-sections/isolate/unchanged-1.pptx",
+      "Sha256": "a9b12e10babde6f5db1b68a1114e406eebc0fa53124a4999a3ce438324905270",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-slide-sections/isolate/unchanged-2.pptx",
+      "Sha256": "ea07673cdcb0d4c0d099697449585af21d86c3d560c8db73317680484b71d3cd",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-slide-sections/isolate/unchanged-3.pptx",
+      "Sha256": "850298c6ec5dc593f2e5ef4d924466b27d4aa41b560fb933a97ee4baf831e66b",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-slide-sections/isolate/within-1.pptx",
+      "Sha256": "cf5687629dff3d3920cdf2ba230bc65ba4d8fffa0cf56dd1da164b1475f344f3",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-slide-sections/isolate/within-2.pptx",
+      "Sha256": "8525f00a4cffd2f5e7f848181c7ecc976b6fcf12b2efe6b34b6036da4918ddfe",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-slide-sections/isolate/within-3.pptx",
+      "Sha256": "3605f64837f735518a26f5349975fcd376a008dfda8debb0790f1656a47d02ff",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-slide-text/rich-edited-1.pptx",
+      "Sha256": "8894a06b2db15c28333e6f51e2bf5c2cc616a6bca96fa06a9b906717c05988c6",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-slide-text/rich-edited-2.pptx",
+      "Sha256": "c508efff74baf927fb655280f816aea1bba859218048d901853168575490b1e3",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-slide-text/rich-edited-3.pptx",
+      "Sha256": "dfa181888ec6e124f744ca7acaf941c7b731b1b90260121681d3069f6366c683",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-slide-text/rich-imported-1.pptx",
+      "Sha256": "aeb6c83c33653cfb0708dfee740d40b01a9348e08cf1624de84e32d5b82cafd9",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-slide-text/rich-imported-2.pptx",
+      "Sha256": "f51337c22f7f910432a68bc3290c999c1fafeb01b5070c2e58014ac8903a040c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-slide-text/rich-imported-3.pptx",
+      "Sha256": "76e6ae6318ea8df9827c37fffe311fc888688c65f40904b4f2f6ed77da21ca57",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-story-media/relocated-edited-1.docx",
+      "Sha256": "0e394f9e44ad6f524a5588bb3c8adbd8765fd6784ab09537787142ec0befceb0",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-story-media/relocated-edited-2.docx",
+      "Sha256": "f30328448773c29d3e13f87d651732fa008f78019d8e46578a113895bdbe83c3",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-story-media/relocated-edited-3.docx",
+      "Sha256": "1b40277eb1cac56eda3d0d4eccd8f642fb76e179aea5e06fe5789f0f6d64b85a",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-story-media/story-edited-1.docx",
+      "Sha256": "1af072bff380ff1fe7d263c77d4886a059355dc1a45b96afdbe3d5032093162e",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-story-media/story-edited-2.docx",
+      "Sha256": "b13df9425a524e02692ce5142e121c48b92459661f27e086f6c65fd9bcaa5bc9",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-story-media/story-edited-3.docx",
+      "Sha256": "faa7690823e2245fe35b9091d5d96d5c0606561802b34a5c7f532330d3a5fafe",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-story-media/story-imported-1.docx",
+      "Sha256": "c17c2796c0b51145ae7892022868cbd0f94dc1a78b360ce3b1de9d55abe48d1e",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-story-media/story-imported-2.docx",
+      "Sha256": "c624d2c76a46c58f7dc4d86062c5ba75dd83ae435920da6fe667d176bf745699",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-story-media/story-imported-3.docx",
+      "Sha256": "55b29e690dc3f2d5c92458f5601c6877ff1cfe18b5a370de5a94f8dfb1e1be1a",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-structure/create/edited.docx",
+      "Sha256": "452d22606fa198b317ace28c81b6018a909705788ea77907e65d65ecbf1fae09",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-structure/create/roundtrip-1.docx",
+      "Sha256": "6644141a04b38fb0479cb8cae6d9ae502f21950623cea921d50cedc032bfb5c5",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-structure/create/roundtrip-2.docx",
+      "Sha256": "b0b82a6da0ab21a82e8c7e24c370137b44980f9e0f809b534ee04124245379e7",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-structure/create/roundtrip-3.docx",
+      "Sha256": "fde0169c113053900b4f0eec274a37fc5f40dec45fe482add4dcc2baac6fbd72",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-structure/edit/edited.docx",
+      "Sha256": "18241e3f1232fbfb3758644127ad07f73cfbdd46226c6871d9d5df8cbaaa7f3e",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-structure/edit/roundtrip-1.docx",
+      "Sha256": "b3b0e7eff91dfd9c8b2204fdabe457a226b624ed47ad83c6daa61d1379c7d7a1",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-structure/edit/roundtrip-2.docx",
+      "Sha256": "b6adf79478bda4e5c258fe3679bed0d108ef23200c91d135778d4bd246b79d6c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-structure/edit/roundtrip-3.docx",
+      "Sha256": "0f149a4b7b371e7eec3368995fa3d563aea2c2fe31e2387a3a23f0c72a35ed82",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-structure/remove/edited.docx",
+      "Sha256": "8a9e05369d62837e7bdd202a6750516a7470ee12de885248f03c3358205ec92a",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-structure/remove/roundtrip-1.docx",
+      "Sha256": "ce1a866bc97a3d92ca0ebfaaad1668f6c6a01857e9c2e9cb66e7f1637d0d430a",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-structure/remove/roundtrip-2.docx",
+      "Sha256": "20e9527c977ef08436c397dc80cd0894c1c102f3bc7bf418d3628d7c0397b7e7",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-structure/remove/roundtrip-3.docx",
+      "Sha256": "df6b9eadcd2f490e0a0d30518b2e42214b3ea3152fde55daad6140a3a609fc75",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-structure/source.docx",
+      "Sha256": "19d3d78dd6823d8b2ad7173f0eb82be7b2ccf4224d50fdb889dee758ab64e88f",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-style-toggles/toggle-1.docx",
+      "Sha256": "a6c085456eaf1c8eeb317ffccf94e22313c4ddc5f121c4f4f7d1401657595c43",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-style-toggles/toggle-2.docx",
+      "Sha256": "b80b43e3e89ef1fb47b48cbf0267ef33152bfc346385bffc2b178896c126a3ea",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-style-toggles/toggle-3.docx",
+      "Sha256": "cda99ecb2d6e70ad0e9b47285d3923923c645cdc1cce44747ccf1551cf69e4a5",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-styles/edited-1.docx",
+      "Sha256": "887cf250ad88c502b7f340d62c6cd39dd5ea36a233cc6ee8feddd8707378abd5",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-styles/edited-2.docx",
+      "Sha256": "cb891b08cbed44a00d39b7b5c4ebdba445563a22fe3b9ccc7fa697678a47e918",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-styles/edited-3.docx",
+      "Sha256": "52d24ef7eb54f8c795e5ff16503cd1c326632e6a0f23afcacfc82b591f215987",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-styles/unchanged-1.docx",
+      "Sha256": "9af4a0c69912f847c290d025c9f26ac7a3db70ef5630aa156b472e15cd5f4c10",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-styles/unchanged-2.docx",
+      "Sha256": "60cb4007189ba32d2609056dcf09d30c8fbd0b3b6a1f1d551fe3462eab4a5226",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-styles/unchanged-3.docx",
+      "Sha256": "09f2ece0a447b90bc7adde44e55589ea96bc94dafa0e493dc2a7ed2e391992a9",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-table-borders/tables-edited-1.docx",
+      "Sha256": "473f486d2bed8f46ee3cd962f41fadca84dd77c4f6056ff80c442c4003a015f0",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-table-borders/tables-edited-2.docx",
+      "Sha256": "be988c68cc9ee4b154ef8f22c402611d729d1f50ccedb83d2700f9a49e85eb6a",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-table-borders/tables-edited-3.docx",
+      "Sha256": "ad6b3147209e3b8110a4687b930055be92fe006be0ff38e0710f33a16c904739",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-table-borders/tables-imported-1.docx",
+      "Sha256": "3e63b9406461b5d00f5fa3d760372b0a3d21f59ab3a2f1326c2ef742aeb65045",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-table-borders/tables-imported-2.docx",
+      "Sha256": "76be81a88ee7d18bc5d26bf94aafa1b38d9abdba13122478ac2e11eb9de44e44",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-table-borders/tables-imported-3.docx",
+      "Sha256": "3692fa0d08b8bca5deb66f983bf0ef710711c516f6d59c698176ac417c526ed0",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-word-compatibility/compatibility-edited-1.docx",
+      "Sha256": "99381da46b9945e2f0df851455130c7c485fa7bfdc964205472df6fac60012c8",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-word-compatibility/compatibility-edited-2.docx",
+      "Sha256": "1362fd385081873037abd7abadbf856e1b6e3acc85243f79fc34eda3a101c709",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-word-compatibility/compatibility-edited-3.docx",
+      "Sha256": "86326ae345fde0c6cf2a22584733fa7015cce93e4867a8b1ed05ec5b67a8fd64",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-word-compatibility/compatibility-imported-1.docx",
+      "Sha256": "5d692eca2ed5432d3ac96b11deb1e8be3fcd5857b8d6e6180fbd90d38187e097",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-word-compatibility/compatibility-imported-2.docx",
+      "Sha256": "7c69f5836bc725c5c84f9349367106f9d923f0dd4554a353f1fcb82689c09847",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-word-compatibility/compatibility-imported-3.docx",
+      "Sha256": "1483db7def351b0b6f8d470235ee64473861666120828a5f894d15de96260f1b",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-word-edits/breaks-1.docx",
+      "Sha256": "30603c803e9fcac62e08932dfb492245c5b8a5c9b0df3335c0efbfd18fd0dfb5",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-word-edits/breaks-2.docx",
+      "Sha256": "7a448c6af88a9105c772450744ef0d40a84b829b8aa507db52bb51bb458452a4",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-word-edits/breaks-3.docx",
+      "Sha256": "7c22bf0dbc7e24eddccbf0e02d6a763d7de58277bcbb5b833c3ac00307a147b3",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-word-edits/styles-1.docx",
+      "Sha256": "c8dc4683aedcc9b28f598398c0e50e86053bba702d6320c3bf60dd54fa194ddb",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-word-edits/styles-2.docx",
+      "Sha256": "5ca99af35237b84e2c634026de5206cd5be6e6a3955c7e6c6a0afe34cb499eb8",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity-word-edits/styles-3.docx",
+      "Sha256": "49a9fad586def9c0b5e0d572c03fec5a9b2fd893576c7ea5d6bc3977f8707463",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity/edited-1.docx",
+      "Sha256": "0f51a61e410b6a8d2cd4ca71f64ab7e3419f6196d25e48932fa8b80f64dd7d31",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity/edited-2.docx",
+      "Sha256": "72aea253ee8ca98edb5b296a701580b63b9676ee6c76b48ec3215e597753f06d",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity/edited-3.docx",
+      "Sha256": "c612a64f748a6c449c26663f54d6efff217c0b58ffce1145add1f9f8744e003f",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity/sheet-edited-1.xlsx",
+      "Sha256": "e380d24897784ecc247745e0c10dd9cb0b6b10d3cd89d9e904224245ebd7b222",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity/sheet-edited-2.xlsx",
+      "Sha256": "5496bc34f2699cf0cb5faeb549fd30f0496074f7753fc205e4634b19392a65e8",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity/sheet-edited-3.xlsx",
+      "Sha256": "046af42901139a510501ffdc1c02a1877c553981a81c7987713d68adc1d7c002",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity/sheet-imported-1.xlsx",
+      "Sha256": "790c4d24e3ca7382b999530aa0cb419a8de679e84d62fc06c0493785714d278c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity/sheet-imported-2.xlsx",
+      "Sha256": "18448c93aadbd6844cfb726663f9c7356c458648215e451fb771d964551fbb6a",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity/sheet-imported-3.xlsx",
+      "Sha256": "bbc76293b79e493f024c750c9c04849dfb2d385c01b2ff3833f4219c5831451c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity/slide-edited-1.pptx",
+      "Sha256": "dcbd91e0f34f0feb8ab3f705b0df74b14b9b23388f3fde151b91904024d92342",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity/slide-edited-2.pptx",
+      "Sha256": "43ecb037828bedd59e7a0ff2247b2594879947897d39462ff10de870a265a5b4",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity/slide-edited-3.pptx",
+      "Sha256": "db9c9bcd6567b379fc8aa112bf89ff990607c3e5699479ce76d4c370d55f4a62",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity/slide-imported-1.pptx",
+      "Sha256": "15ee5cf40b2df3def293a9124f5fc3e09759f3af770d5abc4dcf34a32f5327d2",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity/slide-imported-2.pptx",
+      "Sha256": "9ba9fcb4739ad9fdd761c53a8bfc6bcd5989195605ffc56b976be28d891a8519",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity/slide-imported-3.pptx",
+      "Sha256": "56ff51d9cc6422bfe3639fcff4cabf3f69b70b3c3a3058e3415bf24bd661378f",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity/unchanged-1.docx",
+      "Sha256": "ffc1ded7f9d14a2d2dc267cba31adbf3ed07f63633734e61ae6a08b6b4d046aa",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity/unchanged-2.docx",
+      "Sha256": "3c57bd4740405a5a947a960372f56e36473f0407f6561cd64a8fb4a3ba3209f1",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/inputs/packages/quds_office_engine/build/fidelity/unchanged-3.docx",
+      "Sha256": "bd9eab6c2a4c35ce8a2e9d0090e303d0df075fd8d5c2a379d6f5f95dbde8042e",
+      "Errors": []
+    }
+  ]
+}

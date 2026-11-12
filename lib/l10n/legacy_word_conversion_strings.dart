@@ -1,6 +1,7 @@
 import 'dart:ui' show Locale;
 
-import '../services/legacy_word_conversion.dart';
+import 'package:quds_office_engine/quds_office_engine.dart';
+
 import 'word_format_strings.dart';
 
 class LegacyWordConversionStrings {

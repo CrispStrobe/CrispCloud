@@ -1,0 +1,283 @@
+{
+  "observed_at_utc": "2026-11-12 11:18:56 UTC",
+  "mode": "Read-only remote audit after mandatory local acceptance; no refs, PRs, code or frozen outputs modified.",
+  "tested": {
+    "source_commit": "a9bd470a4807c65f65271be896703e587c12de00",
+    "app_commit": "5202d362a929c30266519dee178a441884056ca0",
+    "local_acceptance_receipt": "validation/app-gap-closure-final-acceptance.json"
+  },
+  "source": {
+    "repository": "CrispStrobe/quds_office_suite",
+    "branch_api": "https://api.github.com/repos/CrispStrobe/quds_office_suite/branches?per_page=100",
+    "pull_api": "https://api.github.com/repos/CrispStrobe/quds_office_suite/pulls?state=open&per_page=100",
+    "observed_branch_count": 10,
+    "relevant_branches": [
+      {
+        "name": "feature/office-fidelity-completion-20261111",
+        "sha": "0396143c3aee20d5bb70f7298c48f3d63d488947"
+      },
+      {
+        "name": "feature/office-fidelity-consolidation-20261112",
+        "sha": "3ff2e15823c86cda88d3369dc4bbabf42f45290a"
+      },
+      {
+        "name": "feature/office-fidelity-coverage-20261112",
+        "sha": "f29eb9c1c9a85224ef71595eba9163ce442c392b"
+      },
+      {
+        "name": "feature/office-fidelity-gap-closure-20261112",
+        "sha": "a9bd470a4807c65f65271be896703e587c12de00"
+      },
+      {
+        "name": "feature/office-fidelity-oracles",
+        "sha": "2873f6db4b9a0fa728dfb24907506f09b147ebae"
+      },
+      {
+        "name": "main",
+        "sha": "50f16f8707cb7a6d8d72378174bb84b0b13bd1cf"
+      }
+    ],
+    "open_pr_count": 0,
+    "open_gap_closure_prs": [],
+    "main_is_ancestor_of_tested_commit": true,
+    "main_ancestry_evidence": "git merge-base --is-ancestor 50f16f8707cb7a6d8d72378174bb84b0b13bd1cf a9bd470a4807c65f65271be896703e587c12de00 exited0."
+  },
+  "app": {
+    "repository": "CrispStrobe/CrispCloud",
+    "branch_api": "https://api.github.com/repos/CrispStrobe/CrispCloud/branches?per_page=100",
+    "pull_api": "https://api.github.com/repos/CrispStrobe/CrispCloud/pulls?state=open&per_page=100",
+    "observed_branch_count": 24,
+    "relevant_branches": [
+      {
+        "name": "feature/format-viewers-path-favorites-20261112",
+        "sha": "36f6d8c3aa04be3a8e4bf94e37d9e2443d3e51b7"
+      },
+      {
+        "name": "feature/office-fidelity-completion-20261111",
+        "sha": "d7797ecdd4da476c81b5641bce0da2e9c1e96adc"
+      },
+      {
+        "name": "feature/office-fidelity-consolidation-20261112",
+        "sha": "ce19f651004ab75d00c435760104ae3b7f7bb393"
+      },
+      {
+        "name": "feature/office-fidelity-coverage-20261112",
+        "sha": "389a2fd2b9acb6d6213b9bbf2b5b6808534195f0"
+      },
+      {
+        "name": "feature/office-fidelity-gap-closure-20261112",
+        "sha": "5202d362a929c30266519dee178a441884056ca0"
+      },
+      {
+        "name": "feature/office-fidelity-oracles",
+        "sha": "e58c5e51b0863e9e6308e742289e24e122b52ac2"
+      },
+      {
+        "name": "main",
+        "sha": "977b5037f133cb2d33c57db761864183455a705e"
+      }
+    ],
+    "open_pr_count": 13,
+    "open_gap_closure_prs": [],
+    "main_is_ancestor_of_tested_commit": true,
+    "main_ancestry_evidence": "git merge-base --is-ancestor 977b5037f133cb2d33c57db761864183455a705e 5202d362a929c30266519dee178a441884056ca0 exited0.",
+    "unrelated_new_or_updated_prs": [
+      {
+        "number": 67,
+        "title": "Add verified UUE, XXE and single-part MIME file conversion",
+        "head_sha": "403e942dc99779883210125a01841ef209e19d2e",
+        "url": "https://github.com/CrispStrobe/CrispCloud/pull/67",
+        "disposition": "Separate from the authorized Office inclusion; not integrated."
+      },
+      {
+        "number": 66,
+        "title": "Add SOCKS4 and SOCKS4a routing for native HTTP clients",
+        "head_sha": "42ae79ce5dbaec184726b538c7100823a4b1edfe",
+        "url": "https://github.com/CrispStrobe/CrispCloud/pull/66",
+        "disposition": "Separate from the authorized Office inclusion; not integrated."
+      },
+      {
+        "number": 53,
+        "title": "Add EPUB editing, offline ebook reading and Kindle conversion",
+        "head_sha": "e5a5c129df783a29599d6f3d95db8369f6ea2469",
+        "url": "https://github.com/CrispStrobe/CrispCloud/pull/53",
+        "disposition": "Separate from the authorized Office inclusion; not integrated."
+      }
+    ]
+  },
+  "pr55": {
+    "url": "https://github.com/CrispStrobe/CrispCloud/pull/55",
+    "state": "open",
+    "draft": true,
+    "previous_reviewed_head": "77a63a08da6913b444a634b95fe79e62143776c5",
+    "observed_head": "36f6d8c3aa04be3a8e4bf94e37d9e2443d3e51b7",
+    "compare_api": "https://api.github.com/repos/CrispStrobe/CrispCloud/compare/77a63a08da6913b444a634b95fe79e62143776c5...36f6d8c3aa04be3a8e4bf94e37d9e2443d3e51b7",
+    "delta_commits": [
+      {
+        "sha": "36f6d8c3aa04be3a8e4bf94e37d9e2443d3e51b7",
+        "message": "docs(crypto): inventory KeePass and require renewed export review"
+      }
+    ],
+    "delta_files": [
+      ".github/workflows/ci.yml",
+      ".github/workflows/google-play-bundle.yml",
+      ".github/workflows/ios-release.yml",
+      ".github/workflows/macos-release.yml",
+      "docs/apple-export-policy.json",
+      "docs/crypto-audit.md",
+      "docs/crypto-dependencies.md",
+      "docs/crypto-inventory.json",
+      "docs/crypto-source-review-2026-11-12.md",
+      "docs/document-viewer-evaluation.md",
+      "docs/export-compliance.md",
+      "tool/test_apple_export_preflight.py",
+      "tool/test_crypto_release_evidence.py",
+      "tool/test_testflight_export_guard.rb",
+      "tool/testflight_export_guard.rb"
+    ],
+    "missing_office_implementation_fix": false,
+    "classification": "Only one new commit: KeePass crypto inventory, release guards/tests and CI crypto-test lists; no Office parser, converter, editor or preview implementation changes. The Office-adjacent addition docs/document-viewer-evaluation.md is an explicitly source-only review with no dependency/runtime import. Its host-parser references predate the Quds migration and would require wording updates if copied.",
+    "prior_office_port_commits": [
+      "0b46b3a11acfea61381feb2d17fff96f18fc1bda",
+      "e84abea59fdfb868d3bda8022d50ef741117cd12",
+      "c6b179bfdf7a008851633f663d017600b866df3c",
+      "43519b0e2d7300e9928bb8cf8e77d6e0216e55c1",
+      "8b8d80e5437d3eee182083d696afa3aae4863595"
+    ],
+    "prior_office_port_scope": "Selected Office portions ported through Quds source and host UI; no claim of full PR55 ancestry or KeePass inclusion.",
+    "disposition": "No further code integration; preserve frozen acceptance."
+  },
+  "pr62": {
+    "url": "https://github.com/CrispStrobe/CrispCloud/pull/62",
+    "state": "open",
+    "draft": false,
+    "observed_head": "cdeedaf48f9892fe82191f090afccf15529db1a6",
+    "incorporated_commit": "90e843baa2eba234504e751615efa8b4d33fdfe2",
+    "incorporation": "CI writes the vendored editor dependency override before editor pub get; present in the tested app tree. The unrelated formatter commit is excluded."
+  },
+  "ci": {
+    "conclusion": "Local mandatory acceptance passed. Remote queued workflows have not established a passing GitHub Actions result.",
+    "source": {
+      "api": "https://api.github.com/repos/CrispStrobe/quds_office_suite/actions/runs?head_sha=a9bd470a4807c65f65271be896703e587c12de00&per_page=10",
+      "total_count": 1,
+      "runs": [
+        {
+          "id": 43206755754,
+          "name": "Office fidelity oracles",
+          "head_sha": "a9bd470a4807c65f65271be896703e587c12de00",
+          "event": "push",
+          "status": "queued",
+          "conclusion": null,
+          "created_at": "2026-11-12T11:09:55Z",
+          "updated_at": "2026-11-12T11:09:56Z",
+          "url": "https://github.com/CrispStrobe/quds_office_suite/actions/runs/43206755754"
+        }
+      ]
+    },
+    "app": {
+      "api": "https://api.github.com/repos/CrispStrobe/CrispCloud/actions/runs?head_sha=5202d362a929c30266519dee178a441884056ca0&per_page=10",
+      "total_count": 1,
+      "runs": [
+        {
+          "id": 43207020944,
+          "name": "Office fidelity integration",
+          "head_sha": "5202d362a929c30266519dee178a441884056ca0",
+          "event": "push",
+          "status": "queued",
+          "conclusion": null,
+          "created_at": "2026-11-12T11:11:44Z",
+          "updated_at": "2026-11-12T11:11:45Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43207020944"
+        }
+      ]
+    },
+    "pr55": {
+      "api": "https://api.github.com/repos/CrispStrobe/CrispCloud/actions/runs?head_sha=36f6d8c3aa04be3a8e4bf94e37d9e2443d3e51b7&per_page=5",
+      "total_count": 0,
+      "runs": []
+    },
+    "pr62": {
+      "api": "https://api.github.com/repos/CrispStrobe/CrispCloud/actions/runs?head_sha=cdeedaf48f9892fe82191f090afccf15529db1a6&per_page=10",
+      "total_count": 7,
+      "runs": [
+        {
+          "id": 43201235703,
+          "name": "CI",
+          "head_sha": "cdeedaf48f9892fe82191f090afccf15529db1a6",
+          "event": "pull_request",
+          "status": "queued",
+          "conclusion": null,
+          "created_at": "2026-11-12T10:32:14Z",
+          "updated_at": "2026-11-12T10:32:14Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43201235703"
+        },
+        {
+          "id": 43201235506,
+          "name": "PDF editor",
+          "head_sha": "cdeedaf48f9892fe82191f090afccf15529db1a6",
+          "event": "pull_request",
+          "status": "queued",
+          "conclusion": null,
+          "created_at": "2026-11-12T10:32:14Z",
+          "updated_at": "2026-11-12T10:32:14Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43201235506"
+        },
+        {
+          "id": 43201235747,
+          "name": "Shared encrypted providers",
+          "head_sha": "cdeedaf48f9892fe82191f090afccf15529db1a6",
+          "event": "pull_request",
+          "status": "queued",
+          "conclusion": null,
+          "created_at": "2026-11-12T10:32:14Z",
+          "updated_at": "2026-11-12T10:32:14Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43201235747"
+        },
+        {
+          "id": 43201235496,
+          "name": "Media editor",
+          "head_sha": "cdeedaf48f9892fe82191f090afccf15529db1a6",
+          "event": "pull_request",
+          "status": "queued",
+          "conclusion": null,
+          "created_at": "2026-11-12T10:32:14Z",
+          "updated_at": "2026-11-12T10:32:14Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43201235496"
+        },
+        {
+          "id": 43201235620,
+          "name": "Image editor",
+          "head_sha": "cdeedaf48f9892fe82191f090afccf15529db1a6",
+          "event": "pull_request",
+          "status": "queued",
+          "conclusion": null,
+          "created_at": "2026-11-12T10:32:14Z",
+          "updated_at": "2026-11-12T10:32:14Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43201235620"
+        },
+        {
+          "id": 43201235367,
+          "name": "File workspace UX",
+          "head_sha": "cdeedaf48f9892fe82191f090afccf15529db1a6",
+          "event": "pull_request",
+          "status": "completed",
+          "conclusion": "success",
+          "created_at": "2026-11-12T10:32:14Z",
+          "updated_at": "2026-11-12T11:17:23Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43201235367"
+        },
+        {
+          "id": 43201225042,
+          "name": "Shared encrypted providers",
+          "head_sha": "cdeedaf48f9892fe82191f090afccf15529db1a6",
+          "event": "push",
+          "status": "queued",
+          "conclusion": null,
+          "created_at": "2026-11-12T10:32:10Z",
+          "updated_at": "2026-11-12T10:32:10Z",
+          "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43201225042"
+        }
+      ]
+    }
+  }
+}

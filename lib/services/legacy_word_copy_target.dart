@@ -1,7 +1,8 @@
+import 'package:quds_office_engine/quds_office_engine.dart';
+
 import '../models/file_item.dart';
 import 'file_integrity_service.dart';
 import 'file_operation_service.dart';
-import 'legacy_word_conversion.dart';
 
 /// A create-only destination beside the original, on its captured storage.
 /// It never replaces either the binary document or an existing DOCX copy.

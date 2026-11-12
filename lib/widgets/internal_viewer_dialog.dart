@@ -77,6 +77,8 @@ import 'legacy_word_conversion_action.dart';
 import '../l10n/legacy_word_conversion_strings.dart';
 import '../l10n/internal_viewer_strings.dart';
 import '../l10n/office_preview_strings.dart';
+import '../l10n/legacy_word_conversion_strings.dart';
+import 'legacy_word_conversion_action.dart';
 import '../l10n/file_bytes_error_strings.dart';
 import '../l10n/archive_viewer_error_strings.dart';
 import '../l10n/native_preview_error_strings.dart';

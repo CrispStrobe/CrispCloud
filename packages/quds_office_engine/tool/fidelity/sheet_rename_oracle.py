@@ -32,6 +32,11 @@ NAMES = {
     ('_xlnm.Print_Area', '0'): "'O''Brien 2026'!$A$1:$C$5",
     ('_xlnm.Print_Titles', '0'): "'O''Brien 2026'!$1:$1",
 }
+CACHES = {
+    **{f'D{row}': (42, None) for row in range(1, 15)},
+    'D1': (2, None), 'D2': (5, None), 'D14': (4, None),
+    'D8': ('Data!A1 "quoted"', 'str'), 'D13': ('#REF!', 'e'),
+}
 CHART = ["'O''Brien 2026'!B1", "'O''Brien 2026'!$A$2:$A$3", "'O''Brien 2026'!$B$2:$B$3"]
 CONDITIONAL = ["'O''Brien 2026'!B2>0", "SUM('O''Brien 2026:Summary'!B2)>1"]
 
@@ -49,6 +54,13 @@ def verify(parts):
     sheet = E.fromstring(parts['xl/worksheets/sheet2.xml'])
     for address, expected in FORMULAS.items():
         assert sheet.find(f'.//{X}c[@r="{address}"]/{X}f').text == expected, f'Formula {address}'
+    for address, (expected, kind) in CACHES.items():
+        cell = sheet.find(f'.//{X}c[@r="{address}"]')
+        value = cell.find(X+'v').text
+        if kind is None:
+            assert cell.get('t') in (None, 'n') and float(value) == expected, f'Numeric cache {address}'
+        else:
+            assert cell.get('t') == kind and value == expected, f'Typed cache {address}'
     rules = sheet.find(X+'dataValidations')
     assert len(rules) == 2 and rules[0].get('sqref') == 'F1 F3:F4', 'Native validation scope'
     assert rules[0].get('operator') == 'between' and rules[0].get('showErrorMessage') == '1', 'Native validation metadata'

@@ -1,0 +1,23 @@
+{
+  "source_commit": "5202d362a929c30266519dee178a441884056ca0",
+  "managed_source_commit": "a9bd470a4807c65f65271be896703e587c12de00",
+  "status": "passed",
+  "sdk_files": 336,
+  "engine_files": 277,
+  "host_files": 59,
+  "validator_exit_code": 0,
+  "schema_elapsed_seconds": 7.024255817001176,
+  "input_manifest_sha256": "3b5a3bf064b0c2a8a9f69b60c9dc52490feb1ed16eb8a06ee4385f7fd1c9f2ea",
+  "native_status": "passed",
+  "sdk_passing_files": 336,
+  "sdk_failures": 0,
+  "all_schema_receipt_hashes_match": true,
+  "schema_report_sha256": "44ac311497b06a7e70afba0392c193102a82f4f3a7d4cacabec68db2387eb7a4",
+  "native_exit_code": 0,
+  "native_files": 11,
+  "native_pages": 23,
+  "native_scope": "Eleven actual host XLSX/PPTX/DOCM/DOTX/DOTM uploads; source engine full rendering is independently reported.",
+  "native_failures": [],
+  "all_input_hashes_unchanged": true,
+  "host_native_report_sha256": "85ce37cf8de1539bed159e57d16a0e972700dd2119f3c2902ddde09aff4bb3b0"
+}

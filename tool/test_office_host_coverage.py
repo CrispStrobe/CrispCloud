@@ -79,12 +79,35 @@ class HostCoverageControls(unittest.TestCase):
         report = report_coverage(
             'SF:lib/widgets/office_editor_dialog.dart\nDA:1,1\nend_of_record\n'
             'SF:lib/services/office_document_service.dart\nDA:1,1\nend_of_record\n', self.root)
-        self.assertEqual(len(report['migrated_engine_sources']), 5)
+        self.assertEqual(len(report['migrated_engine_sources']), 6)
         self.assertIn('packages/quds_office_engine/lib/src/opc/office_package_parts.dart', report['migrated_engine_sources'])
         self.assertIn('packages/quds_office_engine/lib/src/extract/office_search_text.dart', report['migrated_engine_sources'])
+        self.assertIn('packages/quds_office_engine/lib/src/word/legacy/legacy_word_conversion.dart', report['migrated_engine_sources'])
         self.assertIn('not directly comparable', report['scope_note'])
-        self.assertEqual(report['scope'], ['lib/services/office_*.dart', 'lib/widgets/office_*.dart'])
+        self.assertEqual(report['scope'], [
+            'lib/services/office_*.dart', 'lib/widgets/office_*.dart',
+            'lib/services/legacy_word_copy_target.dart',
+            'lib/widgets/legacy_word_conversion_action.dart',
+            'lib/widgets/legacy_word_conversion_dialog.dart',
+        ])
         require_all_sources(report)
+
+    def test_conversion_ui_without_office_prefix_is_required_and_fingerprinted(self):
+        helper = 'lib/widgets/legacy_word_conversion_dialog.dart'
+        (self.root / helper).write_text('disclose\nconvert\nsave\n')
+        lcov = (
+            'SF:lib/widgets/office_editor_dialog.dart\nDA:1,1\nend_of_record\n'
+            'SF:lib/services/office_document_service.dart\nDA:1,1\nend_of_record\n')
+        incomplete = report_coverage(lcov, self.root)
+        self.assertEqual(incomplete['uninstrumented_files'], [helper])
+        with self.assertRaisesRegex(ValueError, 'legacy_word_conversion_dialog.dart'):
+            require_all_sources(incomplete)
+        complete = report_coverage(
+            lcov + f'SF:{helper}\nDA:1,1\nDA:2,0\nend_of_record\n', self.root)
+        require_all_sources(complete)
+        (self.root / helper).write_text('disclose differently\nconvert\nsave\n')
+        changed = report_coverage(lcov, self.root)
+        self.assertNotEqual(incomplete['source_tree_sha256'], changed['source_tree_sha256'])
 
 
 if __name__ == '__main__':

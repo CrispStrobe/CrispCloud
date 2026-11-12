@@ -1,9 +1,9 @@
 import 'package:crisp_cloud/services/file_operation_backend.dart';
-import 'package:crisp_cloud/services/legacy_word_conversion.dart';
 import 'package:crisp_cloud/services/legacy_word_copy_target.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:quds_office_engine/quds_office_engine.dart';
 
-import 'support/legacy_word_fixture.dart';
+import '../packages/quds_office_engine/test/support/legacy_word_fixture.dart';
 import 'support/workflow_fake_client.dart';
 
 void main() {

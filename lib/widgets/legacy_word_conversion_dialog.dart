@@ -2,9 +2,9 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter/material.dart';
+import 'package:quds_office_engine/quds_office_engine.dart';
 
 import '../l10n/legacy_word_conversion_strings.dart';
-import '../services/legacy_word_conversion.dart';
 
 /// Prepares a text-only DOCX copy after describing the conversion losses.
 /// The host retains responsibility for captured-source, create-new saving.

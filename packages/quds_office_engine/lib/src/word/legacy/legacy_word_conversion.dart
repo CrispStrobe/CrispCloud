@@ -1,6 +1,9 @@
 import 'dart:typed_data';
 
-import 'package:quds_office_engine/quds_office_engine.dart';
+import '../../opc/opc_archive.dart';
+import '../../xml/xml_writer.dart';
+
+import 'legacy_word_document.dart';
 
 /// A new DOCX prepared from the extracted main-story text of a legacy DOC/DOT.
 /// It has no association with a writable destination; the caller must create

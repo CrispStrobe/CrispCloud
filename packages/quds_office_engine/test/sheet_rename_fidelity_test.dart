@@ -268,7 +268,6 @@ void main() {
       edit.undo();
       expect(book.firstSheet.name, 'Data');
       expect(book.sheets[1].cellA1('D1').formula, r'Data!$B$2');
-      expect(_nativeReferences(book), before);
       // The save calculated this value from B2. Undoing a rename must keep the
       // current cached values instead of restoring the source package's 42.
       final savedSheet = XmlDocument.parse(
@@ -284,6 +283,8 @@ void main() {
         book.package!.getPart('/xl/charts/chart1.xml')!.readText(),
       ).root!;
       expect(_elements(savedChart, 'numCache'), isNotEmpty);
+      SheetSerializer().writeBytes(book);
+      expect(_nativeReferences(book), before);
       edit.apply();
       expect(
         SheetDeserializer()
@@ -332,6 +333,98 @@ void main() {
         expect(chart, isNot(contains("'Data'!")));
         book = SheetDeserializer().readBytes(bytes);
         expect(book.firstSheet.name, "O'Brien 2026");
+      }
+    },
+  );
+  for (final formula in <String?>['=Data!B2+1', null]) {
+    test(
+      'edited native formula $formula remains owned by the model across save and undo',
+      () {
+        final book = _native();
+        final cell = book.sheets[1].cellA1('D1');
+        cell.formula = formula;
+        final edit = SheetRename.rename(book, book.firstSheet, 'Next');
+        SheetSerializer().writeBytes(book);
+        edit.undo();
+        expect(cell.formula, formula);
+        final reopened = SheetDeserializer().readBytes(
+          SheetSerializer().writeBytes(book),
+        );
+        expect(reopened.firstSheet.name, 'Data');
+        expect(
+          reopened.sheets[1].cellA1('D1').formula,
+          formula?.replaceFirst('=', ''),
+        );
+        edit.apply();
+        final redone = SheetDeserializer().readBytes(
+          SheetSerializer().writeBytes(book),
+        );
+        expect(redone.firstSheet.name, 'Next');
+        expect(
+          redone.sheets[1].cellA1('D1').formula,
+          formula == null ? null : "'Next'!B2+1",
+        );
+      },
+    );
+  }
+  for (final kind in ['shared', 'array', 'dataTable']) {
+    test('unqualified native $kind formula topology rejects atomically', () {
+      final package = _native().package!;
+      final part = package.getPart('/xl/worksheets/sheet2.xml')!;
+      final document = XmlDocument.parse(part.readText());
+      final cell = _elements(
+        document.root!,
+        'c',
+      ).singleWhere((node) => node.getAttribute('r') == 'D1');
+      cell.firstChild('f')!
+        ..setAttribute('t', kind)
+        ..setAttribute('ref', 'D1:D2')
+        ..text = 'SUM(B2:B3)';
+      part.writeText(document.toXmlString());
+      final book = SheetDeserializer().read(package);
+      final before = _parts(book);
+      expect(
+        () => SheetRename.rename(book, book.firstSheet, 'Next'),
+        throwsUnsupportedError,
+      );
+      expect(book.firstSheet.name, 'Data');
+      expect(book.sheets[1].cellA1('D1').formula, 'SUM(B2:B3)');
+      expect(_parts(book), before);
+    });
+  }
+  test(
+    'complete shared formula groups rename as equivalent independent formulas',
+    () async {
+      final package = _native().package!;
+      final part = package.getPart('/xl/worksheets/sheet2.xml')!;
+      final document = XmlDocument.parse(part.readText());
+      final cells = _elements(document.root!, 'c');
+      cells
+            .singleWhere((node) => node.getAttribute('r') == 'D1')
+            .firstChild('f')!
+        ..setAttribute('t', 'shared')
+        ..setAttribute('si', '0')
+        ..setAttribute('ref', 'D1:D2')
+        ..text = 'Data!B2';
+      cells
+            .singleWhere((node) => node.getAttribute('r') == 'D2')
+            .firstChild('f')!
+        ..setAttribute('t', 'shared')
+        ..setAttribute('si', '0')
+        ..text = '';
+      part.writeText(document.toXmlString());
+      var book = SheetDeserializer().read(package);
+      expect(book.sheets[1].cellA1('D2').formula, 'Data!B3');
+      SheetRename.rename(book, book.firstSheet, 'Next');
+      for (var cycle = 0; cycle < 3; cycle++) {
+        final bytes = cycle == 1
+            ? await OfficeIsolateSave.workbook(book)
+            : SheetSerializer().writeBytes(book);
+        book = SheetDeserializer().readBytes(bytes);
+        expect(book.sheets[1].cellA1('D1').formula, "'Next'!B2");
+        expect(book.sheets[1].cellA1('D1').value, 2);
+        expect(book.sheets[1].cellA1('D2').formula, "'Next'!B3");
+        expect(book.sheets[1].cellA1('D2').value, 5);
       }
     },
   );
