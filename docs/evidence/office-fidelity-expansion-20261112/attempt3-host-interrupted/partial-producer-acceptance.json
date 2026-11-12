@@ -1,0 +1,43 @@
+{
+  "status": "running",
+  "started_utc": "2026-11-12T15:26:15.646253+00:00",
+  "app_commit": "a915cdaa61ddf19b868d52488d9018d261a60ebf",
+  "source_commit": "2d6529e52f389e8c491ce75331d9efe6bd59a821",
+  "source_before": {
+    "head": "a915cdaa61ddf19b868d52488d9018d261a60ebf",
+    "tree": "1222e94789a13edf39fce266911f32f6ea52971c",
+    "dirty": "",
+    "tracked_files": 4874,
+    "sha256": "0a209e4b149a9dc60398c6f5389dd30178c09173d8b49e092ade8aa61fcf65ce"
+  },
+  "managed_source_files": 417,
+  "runtime": {
+    "frameworkVersion": "3.47.8",
+    "channel": "[user-branch]",
+    "repositoryUrl": "https://github.com/flutter/flutter.git",
+    "frameworkRevision": "737ba8f885dc774b53b442759999a312c9461e4e",
+    "frameworkCommitDate": "2026-10-22 21:37:31 -0700",
+    "engineRevision": "cf636b1dfb818dd6a3ff16e390e93b1a036969c8",
+    "engineCommitDate": "2026-10-23 02:13:38.000Z",
+    "engineContentHash": "dfd2e6cb7d319db05e3bf1503f3e2ac60f6288a2",
+    "engineBuildDate": "2026-10-23 05:34:48.330",
+    "dartSdkVersion": "3.13.7",
+    "devToolsVersion": "2.60.0",
+    "flutterVersion": "3.47.8",
+    "flutterRoot": "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8"
+  },
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "tool/with_ci_system_sqlite.py",
+    "bash",
+    "tool/check_office_fidelity.sh"
+  ],
+  "command_environment": {
+    "OFFICE_HOST_COVERAGE_DIR": "/workspace/scratch/07eb2580faa9/acceptance-expansion/final-host/final/producer/host-coverage-run"
+  },
+  "cwd": "/workspace/scratch/07eb2580faa9/crisp-expansion-validation-final2",
+  "runner_sha256": "f5edfab39d3361acc83e5311a2c181a3d12c786ae015f7c02b78ffe4e1402c4b",
+  "expected_engine_outputs": 346,
+  "expected_host_outputs": 122,
+  "artifacts": {}
+}

@@ -107,7 +107,7 @@ class HostPicturePixelTests(unittest.TestCase):
         'landscape': (720, 405, 72, 40.5, 360, 180),
         'portrait': (720, 405, 72, 40.5, 120, 240),
         'square': (720, 405, 72, 40.5, 240, 240),
-        'bounds': (100, 60, 10, 6, 90, 45),
+        'bounds': (100, 72, 10, 7.2, 90, 45),
     }
 
     def raster(self, case='bounds', *, rectangle=None, color=b'\0\0\0', background=b'\xff\xff\xff'):
@@ -166,41 +166,75 @@ class HostPicturePixelTests(unittest.TestCase):
 
     def test_blank_missing_wrong_aspect_shifted_clipped_colored_and_wrong_page_fail(self):
         cases = [self.raster(color=b'\xff\xff\xff'),
-                 self.raster(rectangle=(10, 6, 0, 0)),
-                 self.raster(rectangle=(10, 6, 45, 90)),
-                 self.raster(rectangle=(4, 6, 90, 45)),
-                 self.raster(rectangle=(25, 6, 90, 45)),
+                 self.raster(rectangle=(10, 7.2, 0, 0)),
+                 self.raster(rectangle=(10, 7.2, 45, 90)),
+                 self.raster(rectangle=(4, 7.2, 90, 45)),
+                 self.raster(rectangle=(25, 7.2, 90, 45)),
                  self.raster(color=b'\xff\0\0'),
                  self.raster(color=b'\x80\x80\x80'),
-                 (101, 60, b'\xff' * (101 * 60 * 3))]
+                 (101, 72, b'\xff' * (101 * 72 * 3))]
         for index, raster in enumerate(cases):
             with self.subTest(index=index), self.assertRaises(render.FidelityError):
-                render.picture_pixel_evidence('bounds', *raster, self.geometry(), (100, 60))
+                render.picture_pixel_evidence('bounds', *raster, self.geometry(), (100, 72))
 
     def test_one_pixel_edge_antialiasing_is_allowed_but_holes_and_extra_ink_fail(self):
         width, height, pixels = self.raster()
         gray_edge = bytearray(pixels)
-        gray_edge[(6 * width + 10) * 3:(6 * width + 10) * 3 + 3] = b'\x80' * 3
-        evidence = render.picture_pixel_evidence('bounds', width, height, bytes(gray_edge), self.geometry(), (100, 60))
+        gray_edge[(7 * width + 10) * 3:(7 * width + 10) * 3 + 3] = b'\x80' * 3
+        evidence = render.picture_pixel_evidence('bounds', width, height, bytes(gray_edge), self.geometry(), (100, 72))
         self.assertEqual(evidence['gray_pixels'], 1)
         for position, color in ((0, b'\0' * 3), (20 * width + 30, b'\xff' * 3),
                                 (20 * width + 30, b'\x80' * 3)):
             altered = bytearray(pixels)
             altered[position * 3:position * 3 + 3] = color
             with self.subTest(position=position, color=color), self.assertRaises(render.FidelityError):
-                render.picture_pixel_evidence('bounds', width, height, bytes(altered), self.geometry(), (100, 60))
+                render.picture_pixel_evidence('bounds', width, height, bytes(altered), self.geometry(), (100, 72))
 
     def test_only_subpixel_page_rounding_accepts_an_extra_raster_row_or_column(self):
-        self.assertEqual(render.picture_raster_size('bounds', [100.006, 60.0094]), [101, 61])
+        self.assertEqual(render.picture_raster_size('bounds', [100.006, 72.0094]), [101, 73])
         self.assertEqual(render.picture_raster_size('landscape', [720, 405.014]), [720, 406])
-        for size in ([100, 61], [100.1, 60], [99, 60], [100, float('nan')],
-                     [100, float('inf')], [True, 60], [100], None):
+        for size in ([100, 60], [100, 73], [100.1, 72], [99, 72], [100, float('nan')],
+                     [100, float('inf')], [True, 72], [100], None):
             with self.subTest(size=size), self.assertRaises(render.FidelityError):
                 render.picture_raster_size('bounds', size)
         # Supplying the correct point dimensions does not excuse a raster at
         # the wrong DPI or with different dimensions.
         with self.assertRaises(render.FidelityError):
-            render.picture_pixel_evidence('bounds', *self.raster(), self.geometry(), (100.006, 60.0094))
+            render.picture_pixel_evidence('bounds', *self.raster(), self.geometry(), (100.006, 72.0094))
+
+    def test_bounds_package_rejects_previous_subminimum_canvas_and_vertical_offset(self):
+        # Keep these literal native expectations independent of the renderer.
+        # The old 60-point slide is below OOXML's 914400 EMU size minimum;
+        # its y=6 offset is also stale when the corrected slide is 72 points.
+        expected = {'page_emu': [1270000, 914400],
+                    'rect_emu': [127000, 91440, 1143000, 571500]}
+        self.assertEqual(self.geometry(), expected)
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'picture.pptx'
+            self.package(path, geometry=expected)
+            self.assertEqual(render.picture_package_geometry(path, 'bounds'), expected)
+            for changed in ('old_canvas', 'old_y', 'old_both'):
+                geometry = copy.deepcopy(expected)
+                if changed in ('old_canvas', 'old_both'):
+                    geometry['page_emu'][1] = 762000
+                if changed in ('old_y', 'old_both'):
+                    geometry['rect_emu'][1] = 76200
+                self.package(path, geometry=geometry)
+                with self.subTest(changed=changed), self.assertRaises(render.FidelityError):
+                    render.picture_package_geometry(path, 'bounds')
+
+    def test_bounds_package_rejects_one_emu_overflow_invisible_in_the_raster(self):
+        # Even a one-EMU extent change must fail: both pictures rasterize to
+        # the same clipped pixels, so the package check must remain exact.
+        self.assertEqual(self.raster(rectangle=(10, 7.2, 90 + 1 / 12700, 45)),
+                         self.raster())
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'picture.pptx'
+            geometry = self.geometry()
+            geometry['rect_emu'][2] += 1
+            self.package(path, geometry=geometry)
+            with self.assertRaises(render.FidelityError):
+                render.picture_package_geometry(path, 'bounds')
 
     def test_package_geometry_rejects_hidden_overflow_even_when_visible_pixels_match(self):
         with tempfile.TemporaryDirectory() as folder:
@@ -209,7 +243,7 @@ class HostPicturePixelTests(unittest.TestCase):
             self.assertEqual(render.picture_package_geometry(path, 'bounds'), self.geometry())
             # 110 points at x=10 clips to exactly the same visible 90-point
             # rectangle as the correct extent. Pixel equality cannot detect it.
-            self.assertEqual(self.raster(rectangle=(10, 6, 110, 45)), self.raster())
+            self.assertEqual(self.raster(rectangle=(10, 7.2, 110, 45)), self.raster())
             for changed in ('overflow', 'canvas', 'missing', 'extra'):
                 geometry = self.geometry()
                 if changed == 'overflow':
@@ -277,14 +311,14 @@ class HostPicturePixelTests(unittest.TestCase):
                         f'P6\n{width} {height}\n255\n'.encode() + pixels)
 
             def output_text(args, **kwargs):
-                return f'Pages: {page_count}\nPage size: 100 x 60 pts\n' if args[0] == 'pdfinfo' else '\f'
+                return f'Pages: {page_count}\nPage size: 100 x 72 pts\n' if args[0] == 'pdfinfo' else '\f'
 
             with patch.object(render.subprocess, 'run', side_effect=command), \
                     patch.object(render.subprocess, 'check_output', side_effect=output_text):
                 result = render.render_document(source, root, output, 0)
                 measured = result['picture_pixel_evidence']
                 self.assertEqual(measured['black_pixels'], 4050)
-                self.assertEqual(measured['black_bbox'], [10, 6, 100, 51])
+                self.assertEqual(measured['black_bbox'], [10, 7, 100, 52])
                 self.assertEqual(result['pixel_sha256'], [measured['pixel_sha256']])
                 self.assertEqual(json.loads(json.dumps(result)), result)
                 for raster, page_count in ((self.raster(color=b'\xff' * 3), 1), (self.raster(), 2)):

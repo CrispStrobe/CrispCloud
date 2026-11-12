@@ -1,0 +1,18 @@
+{
+  "recorded_utc": "2026-11-12T15:28:09.942608+00:00",
+  "app_commit": "a915cdaa61ddf19b868d52488d9018d261a60ebf",
+  "source_commit": "2d6529e52f389e8c491ce75331d9efe6bd59a821",
+  "status": "aborted_before_test_completion",
+  "status_authority": "interruption.json supersedes the original partial producer receipt status. No full producer, SDK or native acceptance is claimed.",
+  "restoration": "Only the exact known temporary SQLite pubspec hook was restored; all tracked hashes match the initial frozen snapshot.",
+  "raw_log_sha256": "f1518ca3f0a6b0ac4c5032383badc664f0d76476dd8291be8c5f1f2a4ea60e0b",
+  "raw_analysis_log_sha256": "4442a58a97d0cffe9a6bdd88f2aaf9e350fe7e2573e3ecf6a0ce04d4f27d986a",
+  "artifacts": {
+    "analysis-receipt.json": "e4816d1b3e0a296a5f676c3155ffdfc67f2830fb7bbd2ad9593ec6cab8d579b2",
+    "host-analysis.log.gz": "ea44e08008d54336a5e6926b9edb04bfa78841211292fedbdec7058fd6c6cea8",
+    "interrupted-runtime-pubspec.yaml": "54e2a604f148bf153c2d28a219cee9c8ee8f564d0880b0d8fdb2253a72fc0c0f",
+    "interruption.json": "df14e685a01ac6185c1699ee6951180ff4d61e696a3143c06e759aab3d5d03c2",
+    "partial-host-gate.log.gz": "c11323652706f0084fbe421434cade5845aeb286c8104f9d89258a69e1eca6d6",
+    "partial-producer-acceptance.json": "e31c15f3ef092b39892f4d21e5f5a5e5f4b01e921efe356201fb9f85908c7a9a"
+  }
+}
