@@ -1,0 +1,60 @@
+{
+  "status": "producer_and_schema_passed_native_pending",
+  "recorded_utc": "2026-11-12T15:42:54.424727+00:00",
+  "implementation_commit": "561f486b9f13248f90dba679bdbf60bf8dc8ffcf",
+  "shared_source_commit": "1d19150ff35e95374fa3c11e0b6a43d187d24024",
+  "sdk_files": 468,
+  "sdk_failures": 0,
+  "native_status": "pending",
+  "artifacts": {
+    "producer--producer-acceptance.json.gz": {
+      "sha256": "0d4c9592a9d2b0a119b280938e4cb0e6d8afae9738f56c45540e1673a6472eea",
+      "original_path": "producer/producer-acceptance.json",
+      "original_sha256": "277554d1b771ad044e2f6f7fd9993fe9e19acb6fe24e2ad03b1e42ceb5a62dc9",
+      "original_bytes": 8612
+    },
+    "producer--engine-inventory.json.gz": {
+      "sha256": "461b21b5977d0b90fd5d64123fd5e1675a992a9bf0602a2ab5513d2b571f7488",
+      "original_path": "producer/engine-inventory.json",
+      "original_sha256": "75ca8e2d1f4d1768b1e49a212e3c1f5e0756ef9f29f196d05ddfad11b6959d22",
+      "original_bytes": 80816
+    },
+    "producer--host-inventory.json.gz": {
+      "sha256": "22c9414cdf817244f0dfc7843c0f801a101cf445392b1ba8981278675c023692",
+      "original_path": "producer/host-inventory.json",
+      "original_sha256": "20d1ad06878a765e6f1389e1ae29cd420e61496fbae5fcf8837db494948706a7",
+      "original_bytes": 37270
+    },
+    "producer--host-coverage.json.gz": {
+      "sha256": "a769c448683a2ce8c2928ddc6cd17b07f82d71f71814f60582b929e59648c149",
+      "original_path": "producer/host-coverage.json",
+      "original_sha256": "2c81a74c4ce6f1656b30293b6e1db5e785fd1ec442009a01ae6ad7c0362abafc",
+      "original_bytes": 24849
+    },
+    "producer--collection-receipt.json.gz": {
+      "sha256": "7cb5c15d3bf81c88b0b8db81de52d58d563b24500e5c23783701b068e53a0c14",
+      "original_path": "producer/collection-receipt.json",
+      "original_sha256": "733801c03014162fbd54c1637cf78da24987c7f5dd21facba4c6a2dbf1c2849b",
+      "original_bytes": 270022
+    },
+    "external--input-manifest.json.gz": {
+      "sha256": "91bb8e9e8e5654bcaf8919589984226d0a4faa8532dbe702c1678dd5e494db5d",
+      "original_path": "external/input-manifest.json",
+      "original_sha256": "1df30bae9b60aa4309b320f593f8c7ffe783ff0c37db500afc2e01101bdc5448",
+      "original_bytes": 111263
+    },
+    "external--schema-report.json.gz": {
+      "sha256": "53a26b14a02bf455ab5cfe774626887f136505d15c3737477b02ca15b7ee172b",
+      "original_path": "external/schema-report.json",
+      "original_sha256": "36de2e29fb60597c403c671a83f900c78abb4dff8decbb8bd502388d7fb3fda0",
+      "original_bytes": 134723
+    },
+    "producer--host-gate.log.gz": {
+      "sha256": "400632f82524f03df6d3bddc13b462c2d3e316df4f8672cd4ae92abd9acb120d",
+      "original_path": "producer/host-gate.log",
+      "original_sha256": "a6e8b71d3922a7cde813668a00d570a02ba54ab89f7b3d261aa99cbe508b29fa",
+      "original_bytes": 203484
+    }
+  },
+  "scope": "Durable completed-stage checkpoint only. Final native acceptance is recorded separately; prior failed and interrupted attempts remain unchanged."
+}

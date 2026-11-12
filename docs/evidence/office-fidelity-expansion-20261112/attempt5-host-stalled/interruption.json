@@ -1,0 +1,41 @@
+{
+  "status": "stalled_incomplete_interrupted",
+  "recorded_utc": "2026-11-12T16:24:50.158461+00:00",
+  "app_commit": "78ea8a020bb9acd6e8b1f26d8caf82c34a99202f",
+  "source_commit": "73ad0c42a8ecc81fb11dbde05c6f0cf10b9a1c74",
+  "owned_exec_session": 30640,
+  "interruption_exit_code": 130,
+  "reason": "No new host test events for more than five minutes after +142; complete producer remained running. Cause unknown.",
+  "stage_results": {
+    "setup": "passed, committed lock unchanged",
+    "changed_host_analysis": "passed six files",
+    "engine_tests": 1147,
+    "engine_inventory": 346,
+    "host_test_progress": 142,
+    "host_test_completion": false,
+    "sdk": "not run",
+    "native": "not run"
+  },
+  "raw_producer_receipt": "Original partial running receipt retained unchanged; this record supersedes its status.",
+  "temporary_configuration_cleanup": {
+    "observed_pubspec_sha256": "54e2a604f148bf153c2d28a219cee9c8ee8f564d0880b0d8fdb2253a72fc0c0f",
+    "expected_runtime_pubspec_sha256": "54e2a604f148bf153c2d28a219cee9c8ee8f564d0880b0d8fdb2253a72fc0c0f",
+    "committed_pubspec_sha256": "8ac1390a24171cca345a60abd2745007f334190d8d356f0ac1e8f73918bd954a",
+    "exact_known_hook_or_original_confirmed": true,
+    "manual_restoration_required": true
+  },
+  "source_after_cleanup": {
+    "dirty": "",
+    "tracked_files": 4905,
+    "sha256": "cf6f71f83e5335100ff4e8da7fbc42e920380c74707aa1bf12da73cd2bd14798",
+    "matches_initial_snapshot": true
+  },
+  "retry_policy": "Fresh worktree/output at the same78ea8a0/73ad0c4 pins after source native finishes; no fixtures, gates, timeout or concurrency configuration changes.",
+  "artifacts_sha256": {
+    "stall-observation.json": "30b08a59b8e98344f7d289b82847f445222c57a6475eab4422e09e08a72b44aa",
+    "producer/producer-acceptance.json": "04d977a6d0f82e7dfc8587a1aaa4a0f8c859cd85fba3c58fbec2ba5bb04151fd",
+    "producer/host-gate.log": "c4512886eee6940742b56862dcc958eccf2a2e6ff367af5dca5165d39033d673",
+    "analysis-receipt.json": "b408043d11fdbabc2d9f5f35750b0db5120e6ee41ff3e8dbc1bf3be940a38e2b",
+    "interrupted-runtime-pubspec.yaml": "54e2a604f148bf153c2d28a219cee9c8ee8f564d0880b0d8fdb2253a72fc0c0f"
+  }
+}

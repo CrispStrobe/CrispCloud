@@ -1,0 +1,41 @@
+{
+  "observed_at_utc": "2026-11-12T16:24:25.163058+00:00",
+  "app_commit": "78ea8a020bb9acd6e8b1f26d8caf82c34a99202f",
+  "source_commit": "73ad0c42a8ecc81fb11dbde05c6f0cf10b9a1c74",
+  "owned_exec_session": 30640,
+  "tool_session_status": "running at last write_stdin poll; no new tool output",
+  "producer_started_utc": "2026-11-12T16:13:58.727247+00:00",
+  "last_log_update_utc": "2026-11-12T16:18:51.824515+00:00",
+  "seconds_without_log_update": 333.33857917785645,
+  "log_bytes": 188871,
+  "log_sha256": "c4512886eee6940742b56862dcc958eccf2a2e6ff367af5dca5165d39033d673",
+  "last_test_events": [
+    "01:48 +131: /workspace/scratch/07eb2580faa9/crisp-expansion-validation-complete/test/widget/office_paragraph_fidelity_test.dart: host hyperlink insertion restores both label and link on redo",
+    "01:48 +132: /workspace/scratch/07eb2580faa9/crisp-expansion-validation-complete/test/widget/office_font_fidelity_test.dart: font result cannot move from an open header dialog to the body",
+    "01:49 +133: /workspace/scratch/07eb2580faa9/crisp-expansion-validation-complete/test/widget/office_font_fidelity_test.dart: font result cannot move from an open header dialog to the body",
+    "01:49 +134: /workspace/scratch/07eb2580faa9/crisp-expansion-validation-complete/test/widget/office_paragraph_fidelity_test.dart: page setup edits one margin and rejects nonfinite geometry",
+    "01:50 +135: /workspace/scratch/07eb2580faa9/crisp-expansion-validation-complete/test/widget/office_paragraph_fidelity_test.dart: page setup edits one margin and rejects nonfinite geometry",
+    "01:50 +136: /workspace/scratch/07eb2580faa9/crisp-expansion-validation-complete/test/widget/office_font_fidelity_test.dart: font result cannot overwrite a newer revision at the same caret",
+    "01:50 +137: /workspace/scratch/07eb2580faa9/crisp-expansion-validation-complete/test/widget/office_paragraph_fidelity_test.dart: host comment dialog exports stable ranges and authors across history",
+    "01:50 +138: /workspace/scratch/07eb2580faa9/crisp-expansion-validation-complete/test/widget/office_font_fidelity_test.dart: font result survives paint-only refreshes at its original target",
+    "01:50 +139: /workspace/scratch/07eb2580faa9/crisp-expansion-validation-complete/test/widget/office_paragraph_fidelity_test.dart: host contents action exports a TOC linked to its heading",
+    "01:51 +140: /workspace/scratch/07eb2580faa9/crisp-expansion-validation-complete/test/widget/office_font_fidelity_test.dart: font cancel and controller replacement leave documents clean",
+    "01:51 +141: /workspace/scratch/07eb2580faa9/crisp-expansion-validation-complete/test/widget/office_paragraph_fidelity_test.dart: host table dialog exports the requested grid with undo and redo",
+    "01:51 +142: /workspace/scratch/07eb2580faa9/crisp-expansion-validation-complete/test/widget/office_paragraph_fidelity_test.dart: host table dialog exports the requested grid with undo and redo"
+  ],
+  "completion_markers": [
+    "00:21 +1147: All tests passed!"
+  ],
+  "pending_file_events": {
+    "office_picture_fidelity_test.dart": 0,
+    "office_save_fidelity_test.dart": 0,
+    "legacy_word_routing_test.dart": 0
+  },
+  "narrow_process_inspection": {
+    "command": "ps -eo pid,ppid,etimes,stat,pcpu,pmem,comm,args; filtered to the owned checkout and Dart/Flutter test processes",
+    "matching_rows": [],
+    "cpu_status": "Unknown: no matching task processes are visible from the separate inspection command. No memory/CPU/root-cause claim is made."
+  },
+  "diagnosis": "The owned tool session remains running with no test events after +142. The complete producer has not succeeded; the cause is undetermined.",
+  "planned_action": "Interrupt only the owned host exec session, preserve the incomplete run, restore only the verified SQLite hook, and retry the same pins after source native completes."
+}
