@@ -783,7 +783,7 @@ digest as the initial ebook review.
 {
   "inventory_sha256": "62a167e261c14ea0daa5a18f2a5d5b2ad03b5faf2891e6ec791e4a599edb453d",
   "pubspec_lock_sha256": "3b1a93697f3b0c8b43fb436989247219524baa00b6f2357c75bac8fabb0a9673",
-  "reviewed_source_sha256": "07ba4f26beb5f2c06a388dbbe45b540d7d5c23948bf473c50ac021d131f861d4"
+  "reviewed_source_sha256": "1e143af4c222a875689389cf8f6a437442b655c6438893285d0457b8122bddd2"
 }
 ```
 
@@ -847,3 +847,24 @@ native CMake, probe/trace, packaging and descriptive changes.
 The integration combines the recorded KeePass and ebook inventories without changing the stored distribution decisions. Duplicate reviewed paths are removed. The Word parser now lives in the shared Quds engine; it parses and serializes user documents without introducing cryptographic operations. The new directory selection comparison uses names, sizes and timestamps, and the new clipboard commands only copy names or paths. Fingerprints bind the merged inventory, resolved lockfile and exact reviewed source bytes. They do not represent a new Apple approval or distribution review.
 
 The macOS transfer cleanup reconciliation uses the same existing root-owned system-link exception as normal file writes. It changes filesystem parent validation only; user-directory links remain refused. The ebook host now reports an absent browser platform plugin through its existing fallback path. Neither change adds cryptographic operations or network destinations.
+
+### Fatal-launch diagnostic refinement
+
+The next delta changes only the native plugin among the 207 bound paths. With
+`CRISP_EBOOK_HOST_TRACE=1`, a process-wide GLib log handler classifies fatal
+messages using a fixed list of process-launch prefixes. Only the matched
+literal or a fixed unclassified label is appended to the selected trace file;
+the native message's path, argument and error-detail suffix is not copied.
+The handler delegates the original message to GLib's built-in default handler
+and does not change fatal masks or suppress termination. It does not retain a
+previously installed custom default handler; this interception is opt-in
+diagnostic behavior.
+
+The accompanying workflow explicitly installs bubblewrap and runs an actual
+namespace probe before the reader test. It reports the probe result, leaves
+sandbox policy unchanged, and still runs the reader test after a failed probe.
+No crypto/export gate is relaxed. Replacing the plugin digest with its
+`1d08158` contents reproduces the preceding reviewed-source fingerprint;
+inventory bytes, the root lock, and every non-source-digest policy field remain
+unchanged. The updated fingerprint above passes the existing source check.
+This is diagnostic evidence preparation, not a resolved WebKit startup failure.

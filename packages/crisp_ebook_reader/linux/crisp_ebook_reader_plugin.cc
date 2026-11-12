@@ -29,22 +29,50 @@ constexpr char kRuntime[] = "webkitgtk-4.1";
 constexpr size_t kMaximumMessage = 192 * 1024 * 1024;
 constexpr int64_t kMaximumPixels = crisp_ebook::kMaximumPixels;
 
-void Trace(const char* stage) {
-  if (g_strcmp0(g_getenv("CRISP_EBOOK_HOST_TRACE"), "1") == 0) {
-    // Fixed lifecycle labels only: never book content, URLs or environment.
-    g_message("crisp ebook linux: %s", stage);
-    // Flutter's Linux integration-test driver does not forward native device
-    // logs. An explicitly selected trace file preserves the same fixed labels.
-    const char* path = g_getenv("CRISP_EBOOK_HOST_TRACE_PATH");
-    if (path != nullptr && *path != '\0') {
-      static std::mutex trace_mutex;
-      std::lock_guard<std::mutex> lock(trace_mutex);
-      if (FILE* file = std::fopen(path, "a")) {
-        std::fprintf(file, "crisp ebook linux: %s\n", stage);
-        std::fclose(file);
-      }
+void WriteTraceFile(const char* fixed_label) {
+  // Flutter's Linux integration-test driver does not forward native device
+  // logs. Preserve fixed labels only, never raw native messages or arguments.
+  const char* path = g_getenv("CRISP_EBOOK_HOST_TRACE_PATH");
+  if (path != nullptr && *path != '\0') {
+    static std::mutex trace_mutex;
+    std::lock_guard<std::mutex> lock(trace_mutex);
+    if (FILE* file = std::fopen(path, "a")) {
+      std::fprintf(file, "crisp ebook linux: %s\n", fixed_label);
+      std::fclose(file);
     }
   }
+}
+
+void Trace(const char* stage) {
+  if (g_strcmp0(g_getenv("CRISP_EBOOK_HOST_TRACE"), "1") == 0) {
+    g_message("crisp ebook linux: %s", stage);
+    WriteTraceFile(stage);
+  }
+}
+
+void DiagnosticLog(const gchar* domain, GLogLevelFlags level,
+                    const gchar* message, gpointer data) {
+  if ((level & (G_LOG_LEVEL_ERROR | G_LOG_FLAG_FATAL)) != 0) {
+    // These fixed prefixes identify the fatal paths in WebKitGTK's upstream
+    // GLib process launcher. The trailing OS/path/argument text is discarded.
+    const char* classification = "unclassified native fatal log";
+    for (const char* prefix : {
+        "Failed to fully launch dbus-proxy", "Failed to start dbus proxy",
+        "Failed to make syncfds for dbus-proxy", "Unable to spawn a new child process",
+        "Failed to create pid socket wrapper", "Failed to read pid from child process",
+        "Spawned process died immediately", "Failed to init seccomp",
+        "Failed to block syscall", "Failed to export seccomp bpf",
+        "Failed to create memfd", "Failed to write memfd", "lseek failed"}) {
+      if (message != nullptr && g_str_has_prefix(message, prefix)) {
+        classification = prefix;
+        break;
+      }
+    }
+    // Do not call g_log recursively from a log handler. Preserve its normal
+    // fatal behavior after recording the classification, without suppressing it.
+    WriteTraceFile(classification);
+  }
+  g_log_default_handler(domain, level, message, data);
 }
 
 FlValue* Field(FlValue* map, const char* key) {
@@ -137,6 +165,9 @@ struct WebKitApi {
   std::string reason;
 
   WebKitApi() {
+    if (g_strcmp0(g_getenv("CRISP_EBOOK_HOST_TRACE"), "1") == 0) {
+      g_log_set_default_handler(DiagnosticLog, nullptr);
+    }
     Trace("loading system WebKit module");
     GModule* module = g_module_open("libwebkit2gtk-4.1.so.0",
                                    static_cast<GModuleFlags>(G_MODULE_BIND_LAZY | G_MODULE_BIND_LOCAL));

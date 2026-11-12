@@ -92,6 +92,8 @@ nodes. Appearance settings remain separate from saved book content. The public
 Foliate history is **session-only**: the pinned engine exposes Back/Forward
 operations and availability, but not a supported serializable history stack.
 Current position persists; the complete navigation stack is not exported.
+Importing reading data, or refreshing a changed sidecar after using the library,
+recreates the reader and resets this session history.
 
 ### Local library
 
@@ -101,7 +103,9 @@ reading status, progress, search and sorting. The library is available from the
 file browser and reader. Removing an entry removes catalog metadata only.
 
 Reopening resolves the original storage account and root, then checks the
-stored file/object identity. A matching provider name is insufficient. A
+stored object identity when one was recorded; otherwise it uses the saved path.
+It does not search for moved files. Changed book bytes create a separate revision
+and annotation binding. A matching provider name is insufficient. A
 disconnected account produces a reconnect/locate message. Attachment and
 ephemeral inputs have metadata-only entries and require the user to locate the
 file again; the catalog does not manufacture a file-access grant.
@@ -121,7 +125,7 @@ does not contain the book itself, source paths, account identifiers or access
 credentials. Export is explicit; it does not modify the original publication.
 
 **Import reading data** verifies the format/version, exact book hash and length,
-renderer contract, locator syntax, field bounds and nesting budget before
+renderer contract, locator envelope/structure, field bounds and nesting budget before
 previewing changes. Three modes are available: merge while keeping local
 conflicts, merge while preferring imported conflicts, or replace the local
 reading state. The preview shows additions, conflicts, result counts and whether
@@ -131,8 +135,12 @@ items absent from the incoming sidecar.
 Application is atomic with respect to local persistence: a failed write does
 not publish a successful import. A stale preview or another reader's newer
 saved sidecar is rejected rather than silently overwriting notes. The reader
-is recreated from the committed state so removed highlights, appearance and
-the imported position are applied together. The picker checks both declared
+is recreated from the committed state, then restores appearance, position and
+highlights. Stored-state application is atomic; renderer restoration is
+asynchronous. The importer does not validate the full EPUB CFI grammar or prove
+that every target resolves. Unresolved annotations remain in the stored data,
+and renderer errors are surfaced when returned; an unresolved initial position
+can fall back to the beginning. The picker checks both declared
 and actual streamed size; the JSON limit is 2 MiB, with at most 500 bookmarks
 and 500 highlights and bounded note/locator strings.
 
