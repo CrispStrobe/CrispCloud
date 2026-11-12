@@ -21,12 +21,63 @@ Word revision fidelity.
 - A paragraph mark has its own formatting and insertion/deletion state.
   `w:pPr/w:rPr/w:ins` or `w:del` represents that state independently of the
   paragraph text. The HTML preview shows a marked paragraph symbol; plain text
-  keeps its existing content and paragraph boundaries.
+  keeps its existing content and paragraph boundaries. The native
+  [paragraph-mark property sequence](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.paragraphmarkrunproperties)
+  places insertion/deletion markers before current formatting and its
+  `rPrChange` snapshot last, including hidden and styled paragraph marks.
 
 The binary timestamp has no time zone. DOCX dates omit a zone instead of
 asserting UTC. Missing authors or invalid dates stay missing and produce the
 revision-metadata limitation. Unsupported pre-wall properties also produce that
 limitation, even when the supported subset can be exported.
+
+## Object and reference revision provenance
+
+Pictures, editable shapes, embedded objects, and note/comment anchors now keep
+separate `insertionRevision` and `deletionRevision` metadata on each
+`LegacyWordMediaPresentation`. Shared media bytes do not share review state.
+Overlapping insertion and deletion can retain different authors, dates, source
+author indices, raw DTTM values, reason codes and save identifiers. Native
+`w:ins`/`w:del` wrappers use their own metadata, and the wrapped run retains
+`w:rsidR`/`w:rsidDel`. An absent or invalid insertion identity cannot borrow the
+deletion identity. The existing `revisionAuthor`/`revisionTime` fields remain a
+compatibility view; public callers without the new fields retain their prior
+fallback behavior. Supplying metadata alone never marks an occurrence edited.
+
+`legacy_word_media_revisions_test.dart` authors binary character records for
+inline/floating pictures, an editable shape, an embedded object, a picture in a
+footnote, and footnote/endnote/comment references. Independent XML projections
+accept or reject the native object or anchor itself in all insertion/deletion
+combinations. The tests separately check immutable source/image bytes, complete
+story content, independent metadata, unique output revision IDs, false flags,
+malformed operands, unknown authors and bounded public save IDs. A footnote
+picture is written into its owning part with its own image relationship.
+The independent schema corpus includes all 24 object/reference and review-state
+combinations; its SDK result is a separate validity gate. Shared-image and
+private-field controls retain distinct occurrence metadata without exposing
+private payloads.
+
+Embedded OLE payloads with no recovered preview use an explicit generic icon
+labelled "Embedded object / Preview unavailable". The original storage bytes
+remain the relationship target and `partialFormatting` remains disclosed.
+This is a converter placeholder, not an inferred rendering of the source
+object. Its self-contained [VML shape](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.vml.shape)
+has an explicit rectangular path, and the OLE `ShapeID` resolves to that
+`v:shape`. `DrawAspect="Icon"` distinguishes it from a content snapshot;
+`ObjectID` uses the underscore-plus-int32 form required by
+[MS-OI29500 2.1.1834](https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oi29500/c9af80fa-3ee4-4a79-ace6-4fd46ff83957).
+`ProgID` is retained only when present in the source; no application identity is
+invented. Schema validity does not establish a native application's ability to
+activate every embedded payload or render its unavailable original preview.
+
+These checks do not reconstruct moved objects, formatting histories of objects,
+comment range editing, automatic cleanup of unreferenced stories, or arbitrary
+cross-story revision topology. The converter never accepts or rejects the
+source document.
+
+The binary rules are [MS-DOC Character Properties](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/7022285b-9621-42e9-ad4d-4e02c115ef18);
+the native representation follows [InsertedRun](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.insertedrun)
+and [DeletedRun](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.deletedrun).
 
 ## Section formatting revisions
 

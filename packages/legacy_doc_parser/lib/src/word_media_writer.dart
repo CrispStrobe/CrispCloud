@@ -466,14 +466,22 @@ extension _WordMedia on _StructuredWordWriter {
     );
     final id = ++_drawingId;
     _mediaStart(object.presentation);
+    // The source preview is unavailable. Keep a clearly labelled icon rather
+    // than claiming a Content snapshot, and give ShapeID a real v:shape target.
+    // MS-OI29500 2.1.1834 also limits ObjectID to an underscore plus int32.
     _xml.add(
       '<w:object w:dxaOrig="1440" w:dyaOrig="720">'
-      '<v:rect id="_legacyObject$id" style="width:72pt;height:36pt" '
+      '<v:shape id="_legacyObject$id" style="width:72pt;height:36pt" '
+      'coordsize="21600,21600" path="m0,0l21600,0,21600,21600,0,21600xe" '
+      'o:ole="t" o:oleicon="t" '
+      'alt="Embedded object; original preview unavailable" '
       'fillcolor="#EEEEEE" strokecolor="#808080">'
-      '<v:textbox><w:txbxContent><w:p><w:r><w:t>Embedded object</w:t>'
-      '</w:r></w:p></w:txbxContent></v:textbox></v:rect>'
+      '<v:textbox><w:txbxContent><w:p><w:r><w:rPr><w:sz w:val="16"/>'
+      '</w:rPr><w:t>Embedded object</w:t><w:br/>'
+      '<w:t>Preview unavailable</w:t>'
+      '</w:r></w:p></w:txbxContent></v:textbox></v:shape>'
       '<o:OLEObject Type="Embed" DrawAspect="Icon" ShapeID="_legacyObject$id" '
-      'ObjectID="_legacyOle$id" r:id="$relation"',
+      'ObjectID="_$id" r:id="$relation"',
     );
     if (object.progId != null && object.progId!.isNotEmpty) {
       _xml.add(' ProgID="');
@@ -596,16 +604,24 @@ extension _WordMedia on _StructuredWordWriter {
   }
 
   void _mediaStart(LegacyWordMediaPresentation presentation) {
-    final metadata = LegacyWordRun(
-      startCp: 0,
-      endCp: 0,
-      text: '',
-      revisionAuthor: presentation.revisionAuthor,
-      revisionTime: presentation.revisionTime,
+    final fallback = LegacyWordRevisionInfo(
+      author: presentation.revisionAuthor,
+      time: presentation.revisionTime,
     );
-    if (presentation.inserted) _revisionStart('ins', metadata);
-    if (presentation.deleted) _revisionStart('del', metadata);
-    _xml.add('<w:r>');
+    if (presentation.inserted) {
+      _revisionElementStart('ins', presentation.insertionRevision ?? fallback);
+    }
+    if (presentation.deleted) {
+      _revisionElementStart('del', presentation.deletionRevision ?? fallback);
+    }
+    _xml.add('<w:r');
+    if (presentation.inserted) {
+      _revisionSaveAttribute('rsidR', presentation.insertionRevision?.saveId);
+    }
+    if (presentation.deleted) {
+      _revisionSaveAttribute('rsidDel', presentation.deletionRevision?.saveId);
+    }
+    _xml.add('>');
     if (presentation.hidden) _xml.add('<w:rPr><w:vanish/></w:rPr>');
   }
 

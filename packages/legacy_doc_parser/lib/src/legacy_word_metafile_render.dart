@@ -44,6 +44,7 @@ class _MetaState {
       y = other.y,
       mapMode = other.mapMode,
       fillRule = other.fillRule,
+      arcClockwise = other.arcClockwise,
       pen = other.pen,
       brush = other.brush,
       penHandle = other.penHandle,
@@ -54,6 +55,7 @@ class _MetaState {
   double x = 0, y = 0;
   int mapMode = 1;
   String fillRule = 'evenodd';
+  bool arcClockwise = false;
   _MetaPen pen = const _MetaPen('000000', 1);
   _MetaBrush brush = const _MetaBrush('FFFFFF');
   int? penHandle, brushHandle;
@@ -112,7 +114,12 @@ class _MetafileRenderer {
     42,
     43,
     44,
+    45,
+    46,
+    47,
     54,
+    55,
+    57,
     85,
     86,
     87,
@@ -149,6 +156,9 @@ class _MetafileRenderer {
     0x041b,
     0x0538,
     0x061c,
+    0x0817,
+    0x081a,
+    0x0830,
   };
 
   _MetafilePreview render() {
@@ -312,6 +322,75 @@ class _MetafileRenderer {
     if (to && index > 0) {
       state.x = points[index - 1].$1;
       state.y = points[index - 1].$2;
+    }
+  }
+
+  void _arc(
+    double left,
+    double top,
+    double right,
+    double bottom,
+    double radialStartX,
+    double radialStartY,
+    double radialEndX,
+    double radialEndY, {
+    bool chord = false,
+    bool pie = false,
+    bool to = false,
+  }) {
+    // GDI's inputs describe radial lines, not points on the ellipse. Project
+    // them onto the logical ellipse before applying the current DC transform.
+    // Degenerate or reversed boxes are not asserted as a visible shape.
+    if (right <= left || bottom <= top) _unsupported();
+    final cx = (left + right) / 2, cy = (top + bottom) / 2;
+    final rx = (right - left) / 2, ry = (bottom - top) / 2;
+    final dx1 = (radialStartX - cx) / rx;
+    final dy1 = (radialStartY - cy) / ry;
+    final dx2 = (radialEndX - cx) / rx;
+    final dy2 = (radialEndY - cy) / ry;
+    // A radial whose endpoint is the center has no defined direction. Do not
+    // guess a start point and offer a complete but misleading preview.
+    if ((dx1 == 0 && dy1 == 0) || (dx2 == 0 && dy2 == 0)) {
+      _unsupported();
+    }
+    final length1 = math.sqrt(dx1 * dx1 + dy1 * dy1);
+    final length2 = math.sqrt(dx2 * dx2 + dy2 * dy2);
+    final x1 = cx + rx * dx1 / length1;
+    final y1 = cy + ry * dy1 / length1;
+    final x2 = cx + rx * dx2 / length2;
+    final y2 = cy + ry * dy2 / length2;
+    final start = math.atan2(dy1, dx1), end = math.atan2(dy2, dx2);
+    final sweep = state.arcClockwise ? 1 : 0;
+    final angle =
+        (state.arcClockwise ? end - start : start - end) % (2 * math.pi);
+    final full = angle == 0;
+    // Equal-angle, unequal radial inputs and coincident pie radials have
+    // producer-dependent zero/full-sweep and radial-outline behavior. Keep
+    // their original native image but do not guess a complete SVG.
+    if (full &&
+        (pie || radialStartX != radialEndX || radialStartY != radialEndY)) {
+      _unsupported();
+    }
+    final path = StringBuffer();
+    if (to) path.write('M${_n(state.x)} ${_n(state.y)}L');
+    if (!to) path.write('M');
+    path.write('${_n(x1)} ${_n(y1)}');
+    void segment(double x, double y, int large) =>
+        path.write('A${_n(rx)} ${_n(ry)} 0 $large $sweep ${_n(x)} ${_n(y)}');
+    if (full) {
+      // An SVG arc with identical endpoints draws nothing. Two half-ellipse
+      // segments retain the full-ellipse GDI case without flattening curves.
+      segment(2 * cx - x1, 2 * cy - y1, 0);
+      segment(x1, y1, 0);
+    } else {
+      segment(x2, y2, angle > math.pi ? 1 : 0);
+    }
+    if (pie && !full) path.write('L${_n(cx)} ${_n(cy)}');
+    if (pie || chord) path.write('Z');
+    _emit('path', 'd="$path"', filled: pie || chord);
+    if (to) {
+      state.x = x2;
+      state.y = y2;
     }
   }
 
@@ -624,6 +703,29 @@ class _MetafileRenderer {
           cornerWidth: type == 44 ? data.i32(24).toDouble() : null,
           cornerHeight: type == 44 ? data.i32(28).toDouble() : null,
         );
+      case 45:
+      case 46:
+      case 47:
+      case 55:
+        _arc(
+          data.i32(8).toDouble(),
+          data.i32(12).toDouble(),
+          data.i32(16).toDouble(),
+          data.i32(20).toDouble(),
+          data.i32(24).toDouble(),
+          data.i32(28).toDouble(),
+          data.i32(32).toDouble(),
+          data.i32(36).toDouble(),
+          chord: type == 46,
+          pie: type == 47,
+          to: type == 55,
+        );
+      case 57:
+        final direction = data.u32(8);
+        if (direction != 1 && direction != 2) {
+          throw const FormatException('Invalid metafile arc direction.');
+        }
+        state.arcClockwise = direction == 2;
       case 2:
       case 3:
       case 4:
@@ -738,6 +840,21 @@ class _MetafileRenderer {
           ellipse: type == 0x0418,
           cornerWidth: type == 0x061c ? data.i16(8).toDouble() : null,
           cornerHeight: type == 0x061c ? data.i16(6).toDouble() : null,
+        );
+      case 0x0817:
+      case 0x081a:
+      case 0x0830:
+        _arc(
+          data.i16(20).toDouble(),
+          data.i16(18).toDouble(),
+          data.i16(16).toDouble(),
+          data.i16(14).toDouble(),
+          data.i16(12).toDouble(),
+          data.i16(10).toDouble(),
+          data.i16(8).toDouble(),
+          data.i16(6).toDouble(),
+          chord: type == 0x0830,
+          pie: type == 0x081a,
         );
       default:
         _unsupported();

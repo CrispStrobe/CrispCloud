@@ -165,6 +165,18 @@ class SchemaGateTest(unittest.TestCase):
                     if name.startswith("table-width/")}
         self.assertEqual(set(names), required)
 
+    def test_required_media_review_inventory_covers_every_native_occurrence(self):
+        fixture = (schema.ROOT / "test/support/media_revision_fixture.dart").read_text()
+        declaration = re.search(r"const mediaReviewKinds = \[(.*?)\];", fixture, re.S)
+        self.assertIsNotNone(declaration)
+        kinds = re.findall(r"'([^']+)'", declaration.group(1))
+        self.assertEqual(8, len(kinds))
+        self.assertEqual(len(kinds), len(set(kinds)))
+        required = {name.removeprefix("media-reviews/") for name in schema.EXPECTED_CASES
+                    if name.startswith("media-reviews/")}
+        self.assertEqual({f"{kind}-{state}" for kind in kinds
+                          for state in ("inserted", "deleted", "overlapping")}, required)
+
     def test_required_reconciled_inventories_match_literal_case_lists(self):
         for prefix, filename, constant, count in (
             ("table-operations", "table_operations_fixture.dart", "tableOperationsCaseNames", 12),

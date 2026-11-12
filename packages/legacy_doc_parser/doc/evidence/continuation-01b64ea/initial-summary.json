@@ -1,0 +1,171 @@
+{
+  "version": 1,
+  "sourceCommit": "01b64eaa9e96ef7cf25eb8117ba0d1291a79e77f",
+  "sourceWorktreeDirty": false,
+  "dartTests": 663,
+  "pythonTests": 110,
+  "mediaJavaScriptChecks": 47,
+  "initialSchemaPassed": false,
+  "schemaFiles": 153,
+  "schemaErrors": 12,
+  "failedFiles": [
+    {
+      "file": "editable-shape-deleted.docx",
+      "errors": [
+        {
+          "Id": "Sch_UnexpectedElementContentExpectingComplex",
+          "Description": "The element has unexpected child element 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:del'.",
+          "Type": "Schema",
+          "Part": "/word/document.xml",
+          "XPath": "/w:document[1]/w:body[1]/w:p[1]/w:pPr[1]/w:rPr[1]"
+        }
+      ]
+    },
+    {
+      "file": "editable-shape-inserted.docx",
+      "errors": [
+        {
+          "Id": "Sch_UnexpectedElementContentExpectingComplex",
+          "Description": "The element has unexpected child element 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:ins'.",
+          "Type": "Schema",
+          "Part": "/word/document.xml",
+          "XPath": "/w:document[1]/w:body[1]/w:p[1]/w:pPr[1]/w:rPr[1]"
+        }
+      ]
+    },
+    {
+      "file": "editable-shape-overlapping.docx",
+      "errors": [
+        {
+          "Id": "Sch_UnexpectedElementContentExpectingComplex",
+          "Description": "The element has unexpected child element 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:ins'.",
+          "Type": "Schema",
+          "Part": "/word/document.xml",
+          "XPath": "/w:document[1]/w:body[1]/w:p[1]/w:pPr[1]/w:rPr[1]"
+        }
+      ]
+    },
+    {
+      "file": "embedded-object-deleted.docx",
+      "errors": [
+        {
+          "Id": "Sem_AttributeValueDataTypeDetailed",
+          "Description": "The attribute 'ObjectID' has invalid value '_legacyOle1'. The Pattern constraint failed. The expected pattern is ^_(\\d{1,9}|1\\d{9}|20\\d{8}|21[0-3]\\d{7}|214[0-6]\\d{6}|2147[0-3]\\d{5}|21474[0-7]\\d{4}|214748[0-2]\\d{3}|2147483[0-5]\\d{2}|21474836[0-3]\\d|214748364[0-7])$.",
+          "Type": "Schema",
+          "Part": "/word/document.xml",
+          "XPath": "/w:document[1]/w:body[1]/w:p[1]/w:del[1]/w:r[1]/w:object[1]/o:OLEObject[1]"
+        },
+        {
+          "Id": "Sem_MissingReferenceElement",
+          "Description": "Element 'v:shape' referenced by 'OLEObject@ShapeID' does not exist in part '/word/document.xml'. The reference value is '_legacyObject1'.",
+          "Type": "Semantic",
+          "Part": "/word/document.xml",
+          "XPath": "/w:document[1]/w:body[1]/w:p[1]/w:del[1]/w:r[1]/w:object[1]/o:OLEObject[1]"
+        }
+      ]
+    },
+    {
+      "file": "embedded-object-inserted.docx",
+      "errors": [
+        {
+          "Id": "Sem_AttributeValueDataTypeDetailed",
+          "Description": "The attribute 'ObjectID' has invalid value '_legacyOle1'. The Pattern constraint failed. The expected pattern is ^_(\\d{1,9}|1\\d{9}|20\\d{8}|21[0-3]\\d{7}|214[0-6]\\d{6}|2147[0-3]\\d{5}|21474[0-7]\\d{4}|214748[0-2]\\d{3}|2147483[0-5]\\d{2}|21474836[0-3]\\d|214748364[0-7])$.",
+          "Type": "Schema",
+          "Part": "/word/document.xml",
+          "XPath": "/w:document[1]/w:body[1]/w:p[1]/w:ins[1]/w:r[1]/w:object[1]/o:OLEObject[1]"
+        },
+        {
+          "Id": "Sem_MissingReferenceElement",
+          "Description": "Element 'v:shape' referenced by 'OLEObject@ShapeID' does not exist in part '/word/document.xml'. The reference value is '_legacyObject1'.",
+          "Type": "Semantic",
+          "Part": "/word/document.xml",
+          "XPath": "/w:document[1]/w:body[1]/w:p[1]/w:ins[1]/w:r[1]/w:object[1]/o:OLEObject[1]"
+        }
+      ]
+    },
+    {
+      "file": "embedded-object-overlapping.docx",
+      "errors": [
+        {
+          "Id": "Sem_AttributeValueDataTypeDetailed",
+          "Description": "The attribute 'ObjectID' has invalid value '_legacyOle1'. The Pattern constraint failed. The expected pattern is ^_(\\d{1,9}|1\\d{9}|20\\d{8}|21[0-3]\\d{7}|214[0-6]\\d{6}|2147[0-3]\\d{5}|21474[0-7]\\d{4}|214748[0-2]\\d{3}|2147483[0-5]\\d{2}|21474836[0-3]\\d|214748364[0-7])$.",
+          "Type": "Schema",
+          "Part": "/word/document.xml",
+          "XPath": "/w:document[1]/w:body[1]/w:p[1]/w:ins[1]/w:del[1]/w:r[1]/w:object[1]/o:OLEObject[1]"
+        },
+        {
+          "Id": "Sem_MissingReferenceElement",
+          "Description": "Element 'v:shape' referenced by 'OLEObject@ShapeID' does not exist in part '/word/document.xml'. The reference value is '_legacyObject1'.",
+          "Type": "Semantic",
+          "Part": "/word/document.xml",
+          "XPath": "/w:document[1]/w:body[1]/w:p[1]/w:ins[1]/w:del[1]/w:r[1]/w:object[1]/o:OLEObject[1]"
+        }
+      ]
+    },
+    {
+      "file": "floating-picture-deleted.docx",
+      "errors": [
+        {
+          "Id": "Sch_UnexpectedElementContentExpectingComplex",
+          "Description": "The element has unexpected child element 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:del'.",
+          "Type": "Schema",
+          "Part": "/word/document.xml",
+          "XPath": "/w:document[1]/w:body[1]/w:p[1]/w:pPr[1]/w:rPr[1]"
+        }
+      ]
+    },
+    {
+      "file": "floating-picture-inserted.docx",
+      "errors": [
+        {
+          "Id": "Sch_UnexpectedElementContentExpectingComplex",
+          "Description": "The element has unexpected child element 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:ins'.",
+          "Type": "Schema",
+          "Part": "/word/document.xml",
+          "XPath": "/w:document[1]/w:body[1]/w:p[1]/w:pPr[1]/w:rPr[1]"
+        }
+      ]
+    },
+    {
+      "file": "floating-picture-overlapping.docx",
+      "errors": [
+        {
+          "Id": "Sch_UnexpectedElementContentExpectingComplex",
+          "Description": "The element has unexpected child element 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:ins'.",
+          "Type": "Schema",
+          "Part": "/word/document.xml",
+          "XPath": "/w:document[1]/w:body[1]/w:p[1]/w:pPr[1]/w:rPr[1]"
+        }
+      ]
+    }
+  ],
+  "nativeRunComplete": false,
+  "nativeInterruption": "ENOSPC: temporary disk exhaustion; seven completed cases and two error cases retained; raw rasters removed after failure, native PDFs retained locally. Not a complete corpus acceptance.",
+  "files": {
+    "schema-initial-report.json.gz": {
+      "sha256": "ea0589db5672cfcee6f63862dbce10832b1021bd438aa01d9c4c283d2b76360a",
+      "uncompressedSha256": "d7cb1ca58783214adff0d4cd7b8700191d66f4658a73f66787611ff4f2ef30e3",
+      "uncompressedBytes": 178163
+    },
+    "schema-initial-validation.json.gz": {
+      "sha256": "3ad6410ce27fc77b7fd9dfef2b2bbc79e3992954a66fe80a1e5a5bfbaf63c1d4",
+      "uncompressedSha256": "67d85aedcb2f20f1236e0b3f0098f509be8ead5e9f48987039955e98dcc0e5df",
+      "uncompressedBytes": 44355
+    },
+    "portable.log.gz": {
+      "sha256": "48706ff40dab1e65cbbb1d7109e700f54f010951944e30b980bf37500776d8fe",
+      "uncompressedSha256": "fe5565bdbd939054cbc344d36f4e69287225febae26d22863c495c8753e574c8",
+      "uncompressedBytes": 80979
+    },
+    "native-interrupted-report.json.xz": {
+      "sha256": "df7ca58140b7e1faec9ef82c88121304ddef587c24c3f7cb274a071b65b053ae",
+      "uncompressedSha256": "e3a544ac9a9cdd237c69748777bc11a24efc7b08a47792dd2fd8db760225c16d",
+      "uncompressedBytes": 61192032
+    },
+    "native-interrupted.log.gz": {
+      "sha256": "947012d6b677ce7e319bb79cbfa629cd24221a28a4b6aedadab230e6ebd6e4d8",
+      "uncompressedSha256": "925ba684ee90db7615e9fd8d7dd1b2e855fa8514eed2495cff416f47e47fa066",
+      "uncompressedBytes": 2030
+    }
+  }
+}

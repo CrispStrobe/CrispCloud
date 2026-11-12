@@ -12,6 +12,7 @@ import 'package:xml/xml.dart';
 import '../test/support/media_word_fixture.dart';
 import '../test/support/metafile_fixture.dart';
 import '../test/support/officeart_shape_fixture.dart';
+import '../test/support/structured_word_fixture.dart';
 import 'fidelity/metafile_records.dart';
 
 void main() => print(
@@ -37,6 +38,67 @@ Map<String, Object> verifyMediaWebAcceptance() {
   }
 
   final recordCounts = <String, int>{};
+  final arc = parseLegacyWordMetafile(
+    emfFixture(
+      records: [
+        emfRecord(45, [
+          for (final value in [-80, -40, 80, 40, 60, 20, -60, -20])
+            ...wordU32(value),
+        ]),
+      ],
+    ),
+    format: LegacyWordImageFormat.emf,
+  );
+  check(
+    XmlDocument.parse(
+          arc.previewSvg!,
+        ).findAllElements('path').single.getAttribute('d') ==
+        'M66.564024 22.188008A80 40 0 0 0 -66.564024 -22.188008',
+    'oblique elliptical radial projection under VM and JavaScript',
+  );
+  final arcto = parseLegacyWordMetafile(
+    emfFixture(
+      records: [
+        emfRecord(57, wordU32(2)),
+        emfRecord(27, [...wordU32(3), ...wordU32(4)]),
+        emfRecord(55, [
+          for (final value in [20, 10, 180, 90, 420, 50, 100, -110])
+            ...wordU32(value),
+        ]),
+        emfRecord(54, [...wordU32(6), ...wordU32(7)]),
+      ],
+    ),
+    format: LegacyWordImageFormat.emf,
+  );
+  final arcPaths = XmlDocument.parse(arcto.previewSvg!)
+      .findAllElements('path')
+      .map((element) => element.getAttribute('d'))
+      .toList();
+  check(
+    arcPaths.length == 2 &&
+        arcPaths.first == 'M3 4L180 50A80 40 0 1 1 100 10' &&
+        arcPaths.last == 'M100 10L6 7',
+    'clockwise ArcTo projected endpoint under VM and JavaScript',
+  );
+  final wmfPie = parseLegacyWordMetafile(
+    wmfFixture(
+      placeable: true,
+      records: [
+        wmfRecord(0x081a, [
+          for (final value in [-110, 100, 50, 420, 90, 180, 10, 20])
+            ...wordU16(value),
+        ]),
+      ],
+    ),
+    format: LegacyWordImageFormat.wmf,
+  );
+  check(
+    XmlDocument.parse(
+          wmfPie.previewSvg!,
+        ).findAllElements('path').single.getAttribute('d') ==
+        'M180 50A80 40 0 0 0 100 10L100 50Z',
+    'WMF radial order and pie closure under VM and JavaScript',
+  );
   for (final (format, raw) in [
     (LegacyWordImageFormat.emf, authoredEmfVectors()),
     (LegacyWordImageFormat.wmf, authoredWmfVectors()),

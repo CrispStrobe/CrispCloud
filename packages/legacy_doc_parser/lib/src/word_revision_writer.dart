@@ -282,7 +282,8 @@ extension _WordRevisionWriter on _StructuredWordWriter {
   void _paragraphMarkProperties(LegacyWordParagraphMark? mark, int cp) {
     if (mark == null) return;
     _xml.add('<w:rPr>');
-    _runStyle(mark.style);
+    // CT_ParaRPr places paragraph-mark revisions before EG_RPrBase, unlike
+    // ordinary run properties. A styled/hidden mark must retain that order.
     if (mark.inserted) {
       _revisionElementStart(
         'ins',
@@ -299,6 +300,7 @@ extension _WordRevisionWriter on _StructuredWordWriter {
       );
       _count('paragraphMarkDeletions');
     }
+    _runStyle(mark.style);
     _characterFormattingRevision(mark.formattingRevision, cp);
     _xml.add('</w:rPr>');
   }

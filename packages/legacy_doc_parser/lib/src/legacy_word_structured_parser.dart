@@ -485,6 +485,8 @@ class _StructuredWordParser {
             deleted: deleted,
             revisionAuthor: author,
             revisionTime: time,
+            insertionRevision: insertionRevision,
+            deletionRevision: deletionRevision,
           ),
         );
       }
@@ -539,6 +541,8 @@ class _StructuredWordParser {
             deleted: deleted,
             revisionAuthor: author,
             revisionTime: time,
+            insertionRevision: insertionRevision,
+            deletionRevision: deletionRevision,
           );
         }
         if (unit == 0x13 || unit == 0x14 || unit == 0x15) {
@@ -683,6 +687,8 @@ class _StructuredWordParser {
                   deleted: presentation.deleted,
                   revisionAuthor: presentation.revisionAuthor,
                   revisionTime: presentation.revisionTime,
+                  insertionRevision: presentation.insertionRevision,
+                  deletionRevision: presentation.deletionRevision,
                 )
               : presentation,
         ),

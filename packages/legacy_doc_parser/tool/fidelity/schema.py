@@ -77,6 +77,10 @@ EXPECTED_CASES = frozenset([
     *(f"note-formats/note-formats-{name}" for name in (
         "east-asian-sepx", "korean-sepx", "rtl-dop", "south-asian-dop", "cyrillic-sepx",
         "none-sepx", "fallback-sepx", "unknown-sepx", "revision")),
+    *(f"media-reviews/{kind}-{state}" for kind in (
+        "inline-picture", "floating-picture", "embedded-object", "editable-shape",
+        "footnote-picture", "footnote-anchor", "endnote-anchor", "comment-anchor",
+    ) for state in ("inserted", "deleted", "overlapping")),
     "reviews/numbering-change", "reviews/numbering-insertion",
     "reviews/listnum-display-change", "section-review",
     "native-inputs/formatting", "native-inputs/linked-textboxes",
