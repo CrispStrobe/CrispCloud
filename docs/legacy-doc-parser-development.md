@@ -4,16 +4,26 @@ The integration pins are recorded in `packages/legacy_doc_parser/UPSTREAM.json` 
 
 ## Current continuation checkpoint
 
-The [d11fa0e continuation receipt](evidence/word-continuation-d11fa0e/README.md)
-records the guarded adoption of the integrated parser fixes on app main's
-current source. Remote app checkpoint `5bd46861` has exactly the measured
-Git tree: all 624 parser source files match upstream, all 421 non-parser Office
-files and the Quds pin remain unchanged, and all 1,045 managed files verify.
-The app passes 107 data-only Word tests, 24 synchronization controls, the
-production DOC/RTF/PPT/MSG JavaScript smoke, and 13 actual LibreOffice/Poppler
-checks. Complete logs and all 1,176 unchanged captured input hashes are retained.
-The receipt distinguishes the measured local commit from its same-tree remote
-publication. It does not claim Flutter widget execution or a release build.
+The [0c3e596 continuation receipt](evidence/word-continuation-0c3e596/README.md)
+records final acceptance on exact clean remote app checkpoint `5348fade`.
+All 653 parser files match upstream; the 421 non-parser Office files and Quds
+pin remain unchanged, and all 1,074 managed files verify. The app passes 107
+data-only Word tests, 24 synchronization controls, the unchanged production
+DOC/RTF/PPT/MSG JavaScript tool and 13 actual LibreOffice/Poppler checks.
+Complete logs, all 1,176 unchanged cohort input hashes and 49 additional
+source/tool/fixture hashes are retained. JavaScript and native acceptance use
+the genuine production package configuration resolved offline with the
+unchanged app lockfile.
+
+The technical source audit adds the new bounded internal-link module to the
+reviewed-files inventory and refreshes its two source fingerprints. All policy
+decisions, dates, references, source plist declarations and lockfile identity
+remain unchanged. Existing preflight controls and actual Office/ebook source
+verification pass. The receipt preserves two expected macOS-only control skips
+and the corrected missing-Node-path attempt. It does not claim Flutter widget
+execution, exact native glyph/page rendering or a release build. The earlier
+[d11fa0e receipt](evidence/word-continuation-d11fa0e/README.md) retains its original
+measured local and same-tree remote identities.
 
 The following sections retain earlier source-specific results. Current source
 pins remain authoritative in the upstream record and Office manifest above;
