@@ -209,18 +209,22 @@ class OpcPackage {
     if (office == null) {
       return OpcPackageKind.unknown;
     }
-    final String target = _packageRelationships.resolve(office).toLowerCase();
-    if (target.contains('/word/')) {
+    final String target = _packageRelationships.resolve(office);
+    final String lowerTarget = target.toLowerCase();
+    if (lowerTarget.contains('/word/')) {
       return OpcPackageKind.word;
     }
-    if (target.contains('/xl/')) {
+    if (lowerTarget.contains('/xl/')) {
       return OpcPackageKind.sheet;
     }
-    if (target.contains('/ppt/')) {
+    if (lowerTarget.contains('/ppt/')) {
       return OpcPackageKind.slide;
     }
-    final String type = contentTypes.contentTypeFor(target);
-    if (type.contains('wordprocessingml')) {
+    final String type = contentTypes.contentTypeFor(target).toLowerCase();
+    if (type.contains('wordprocessingml') ||
+        type == 'application/vnd.ms-word.document.macroenabled.main+xml' ||
+        type ==
+            'application/vnd.ms-word.template.macroenabledtemplate.main+xml') {
       return OpcPackageKind.word;
     }
     if (type.contains('spreadsheetml')) {

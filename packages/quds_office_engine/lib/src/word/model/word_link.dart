@@ -36,6 +36,8 @@ abstract final class WordLink {
   /// ensureHeadingBookmarks API.
   static void ensureHeadingBookmarks(WmlDocument document) {
     final List<WmlParagraph> paras = document.paragraphs.toList();
+    final native = WordBookmarks.ranges(document);
+    final nativeNames = native.map((range) => range.name).toSet();
     final Map<WmlParagraph, int> headings = <WmlParagraph, int>{};
     for (final WmlParagraph para in paras) {
       final String style = (para.properties.styleId ?? '').trim().toLowerCase();
@@ -61,11 +63,13 @@ abstract final class WordLink {
     // Reserve existing names before assigning any new ones, so an earlier
     // unbookmarked heading cannot steal a later imported target's identity.
     final Set<String> reserved = <String>{
+      ...nativeNames,
       for (final para in paras)
         if (para.properties.bookmarkName?.isNotEmpty ?? false)
           para.properties.bookmarkName!,
     };
     final Set<String> used = <String>{
+      ...nativeNames,
       for (final para in paras)
         if (!headings.containsKey(para) &&
             (para.properties.bookmarkName?.isNotEmpty ?? false))
@@ -74,6 +78,21 @@ abstract final class WordLink {
     for (final entry in headings.entries) {
       final WmlParagraph para = entry.key;
       final String? existing = para.properties.bookmarkName;
+      if (existing == null || existing == para.properties.sourceBookmarkName) {
+        final starts = para.inlines
+            .whereType<WmlBookmarkBoundary>()
+            .where((boundary) => boundary.isStart && boundary.name != null)
+            .toList();
+        final imported =
+            starts.where((boundary) => boundary.name == existing).firstOrNull ??
+            starts.firstOrNull;
+        if (imported != null) {
+          para.properties
+            ..bookmarkName = imported.name
+            ..sourceBookmarkName = imported.name;
+          continue;
+        }
+      }
       if (existing != null && existing.isNotEmpty && used.add(existing)) {
         continue;
       }
@@ -100,15 +119,13 @@ abstract final class WordLink {
       return null;
     }
     final List<WmlParagraph> paras = document.paragraphs.toList();
-    for (int i = 0; i < paras.length; i++) {
-      if (paras[i].inlines.whereType<WmlBookmarkStart>().any(
-        (WmlBookmarkStart marker) => marker.name == name,
-      )) {
-        return i;
-      }
+    final native = WordBookmarks.byName(document, name);
+    if (native != null) {
+      final index = paras.indexOf(native.startParagraph);
+      return index < 0 ? null : index;
     }
     for (int i = 0; i < paras.length; i++) {
-      if (paras[i].properties.bookmarkName == name) {
+      if (WordBookmarks.generatedName(paras[i]) == name) {
         return i;
       }
     }

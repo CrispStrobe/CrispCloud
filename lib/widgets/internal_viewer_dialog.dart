@@ -1,6 +1,6 @@
 // lib/widgets/internal_viewer_dialog.dart
 //
-// Double-Commander-style full-screen internal viewer (F3).
+// Full-screen internal viewer (F3).
 //
 // Supported modes:
 //   text     — UTF-8/UTF-16/Latin-1 decoding with syntax highlighting
@@ -58,6 +58,9 @@ import '../services/internal_viewer_service.dart';
 import '../services/local_file_service.dart';
 import '../services/log_service.dart';
 import '../services/office_document_service.dart';
+import '../services/email_message_service.dart';
+import '../l10n/email_viewer_strings.dart';
+import 'email_message_view.dart';
 import '../services/office_pdf_service.dart';
 import '../services/pdf_text_service.dart';
 import '../services/system_preview_service.dart';
@@ -69,8 +72,13 @@ import 'internal_viewer_views.dart';
 import 'pptx_slide_viewer.dart';
 import 'preview_media.dart';
 import 'xml_tree_view.dart';
+import 'keepass_editor_dialog.dart';
+import 'legacy_word_conversion_action.dart';
+import '../l10n/legacy_word_conversion_strings.dart';
 import '../l10n/internal_viewer_strings.dart';
 import '../l10n/office_preview_strings.dart';
+import '../l10n/legacy_word_conversion_strings.dart';
+import 'legacy_word_conversion_action.dart';
 import '../l10n/file_bytes_error_strings.dart';
 import '../l10n/archive_viewer_error_strings.dart';
 import '../l10n/native_preview_error_strings.dart';
@@ -87,6 +95,8 @@ const int kViewerFullDataCap = 64 * 1024 * 1024;
 
 const int _kSearchMaxMatches = 2000;
 const int _kHighlightMaxChars = 400 * 1024;
+const int _kEmailSearchMaxLines = 200000;
+const int _kEmailSearchMaxUtf8Bytes = 8 * 1024 * 1024;
 
 /// Rich rendered modes (markdown/CSV/office) are truncated above this size so
 /// a single huge document cannot freeze the UI thread.
@@ -194,6 +204,11 @@ class _ViewerSessionHostState extends ConsumerState<_ViewerSessionHost> {
   @override
   Widget build(BuildContext context) {
     final item = _items[_index];
+    final onPrevious = _index > 0 ? () => _go(-1) : null;
+    final onNext = _index + 1 < _items.length ? () => _go(1) : null;
+    final position = _items.length > 1
+        ? '${_index + 1} / ${_items.length}'
+        : null;
     if (isEbookFileName(widget.displayName ?? item.file.name)) {
       return EbookEditorDialog(
         key: ValueKey(_index),
@@ -202,25 +217,36 @@ class _ViewerSessionHostState extends ConsumerState<_ViewerSessionHost> {
         origin: item.origin,
         bytesOverride: widget.bytesOverride,
         displayName: widget.displayName,
-        onPrevious: _index > 0 ? () => _go(-1) : null,
-        onNext: _index + 1 < _items.length ? () => _go(1) : null,
-        positionLabel: _items.length > 1
-            ? '${_index + 1} / ${_items.length}'
-            : null,
+        onPrevious: onPrevious,
+        onNext: onNext,
+        positionLabel: position,
+      );
+    }
+    if (isKeePassFileName(widget.displayName ?? item.file.name)) {
+      return KeePassEditorDialog(
+        key: ValueKey(_index),
+        file: widget.bytesOverride != null && widget.displayName != null
+            ? item.file.copyWith(name: widget.displayName)
+            : item.file,
+        side: widget.side,
+        origin: item.origin,
+        bytesOverride: widget.bytesOverride,
+        readOnly: true,
+        onPrevious: onPrevious,
+        onNext: onNext,
+        positionLabel: position,
       );
     }
     return InternalViewerDialog(
       key: ValueKey(_index),
-      file: _items[_index].file,
+      file: item.file,
       side: widget.side,
-      origin: _items[_index].origin,
+      origin: item.origin,
       bytesOverride: widget.bytesOverride,
       displayName: widget.displayName,
-      onPrevious: _index > 0 ? () => _go(-1) : null,
-      onNext: _index + 1 < _items.length ? () => _go(1) : null,
-      positionLabel: _items.length > 1
-          ? '${_index + 1} / ${_items.length}'
-          : null,
+      onPrevious: onPrevious,
+      onNext: onNext,
+      positionLabel: position,
     );
   }
 }
@@ -296,6 +322,13 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   String? _encodingOverride;
   String? _richText;
   OfficeDocument? _officeDoc;
+  EmailMessageDocument? _emailMessage;
+  ViewBytesSource? _emailSearchSource;
+  Future<bool>? _emailSearchPreparation;
+  bool _emailSearchLimited = false;
+  bool _emailSearchLimitShown = false;
+  List<String>? _emailLines;
+  List<int>? _emailLineStarts;
   _OfficeView _officeView = _OfficeView.formatted;
   PdfController? _officePdfController;
   PdfDocument? _officePdfDoc;
@@ -401,7 +434,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       (_mode == ViewerMode.text ||
           _mode == ViewerMode.ascii ||
           _mode == ViewerMode.binary ||
-          _mode == ViewerMode.hex);
+          _mode == ViewerMode.hex ||
+          (_mode == ViewerMode.email && _searchOpen && _emailLines != null));
 
   @override
   void initState() {
@@ -700,6 +734,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       _cachedSafeMatchBinary = null;
       _cachedSafeMatchOffset = null;
       _officeDoc = null;
+      _emailMessage = null;
       _officeView = _OfficeView.formatted;
       _officePdfLoading = false;
       _officePdfError = null;
@@ -761,6 +796,24 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
             _preparing = false;
             _viewNote = note;
           });
+          return;
+        case ViewerMode.email:
+          setState(() => _preparing = true);
+          if (_dataSize > kEmailPreviewMaxBytes) {
+            throw const FormatException(
+              'Email exceeds the 32 MiB preview limit',
+            );
+          }
+          final data = await _ensureFullData();
+          if (!mounted || token != _prepareToken) return;
+          final message = parseEmailMessage(data, _expansionName ?? _viewName);
+          setState(() {
+            _emailMessage = message;
+            _preparing = false;
+          });
+          if (_searchOpen && _searchController.text.isNotEmpty) {
+            unawaited(_runSearch(_searchController.text));
+          }
           return;
         case ViewerMode.office:
           setState(() => _preparing = true);
@@ -873,6 +926,14 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   }
 
   void _disposeModeResources({ViewerSpool? spool}) {
+    _emailMessage = null;
+    _emailSearchSource?.dispose();
+    _emailSearchSource = null;
+    _emailSearchPreparation = null;
+    _emailSearchLimited = false;
+    _emailSearchLimitShown = false;
+    _emailLines = null;
+    _emailLineStarts = null;
     final pdf = _pdfController;
     _pdfController = null;
     final doc = _pdfDoc;
@@ -1254,7 +1315,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   }
 
   Future<void> _showGotoDialog() async {
-    final offsetMode = _mode == ViewerMode.hex || _isStreamed;
+    final offsetMode =
+        _mode == ViewerMode.hex || (_isStreamed && _mode != ViewerMode.email);
     final result = await showDialog<String>(
       context: context,
       builder: (_) => _TextPromptDialog(
@@ -1358,7 +1420,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     if (_mode != ViewerMode.text &&
         _mode != ViewerMode.ascii &&
         _mode != ViewerMode.binary &&
-        _mode != ViewerMode.hex) {
+        _mode != ViewerMode.hex &&
+        _mode != ViewerMode.email) {
       _selectMode(ViewerMode.text);
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1370,11 +1433,11 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     _searchDebounce?.cancel();
     setState(() {
       _resetSearchResults();
-      if (_isStreamed && value.isNotEmpty) {
+      if (_isStreamed && _mode != ViewerMode.email && value.isNotEmpty) {
         _searchNote = 'Press Enter to scan the file';
       }
     });
-    if (_isStreamed || value.isEmpty) return;
+    if ((_isStreamed && _mode != ViewerMode.email) || value.isEmpty) return;
     _searchDebounce = Timer(const Duration(milliseconds: 350), () {
       if (mounted) _runSearch(value);
     });
@@ -1383,6 +1446,67 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   void _onSearchSubmitted(String value) {
     _searchDebounce?.cancel();
     _runSearch(value);
+  }
+
+  Future<bool> _prepareEmailSearch() {
+    if (_emailSearchSource != null) return Future.value(true);
+    final message = _emailMessage;
+    if (message == null) return Future.value(false);
+    return _emailSearchPreparation ??= _buildEmailSearch(
+      message,
+      _prepareToken,
+    );
+  }
+
+  Future<bool> _buildEmailSearch(
+    EmailMessageDocument message,
+    int token,
+  ) async {
+    final text = message.searchText;
+    // Count before splitting or UTF-8 encoding. A small message containing
+    // millions of newlines must not allocate two huge line-index arrays just
+    // because the user opened its formatted preview.
+    var lines = 1;
+    var encodedSize = 0;
+    for (var index = 0; index < text.length; index++) {
+      final unit = text.codeUnitAt(index);
+      if (unit == 10) lines++;
+      if (unit < 0x80) {
+        encodedSize++;
+      } else if (unit < 0x800) {
+        encodedSize += 2;
+      } else if (unit >= 0xd800 &&
+          unit <= 0xdbff &&
+          index + 1 < text.length &&
+          text.codeUnitAt(index + 1) >= 0xdc00 &&
+          text.codeUnitAt(index + 1) <= 0xdfff) {
+        encodedSize += 4;
+        index++;
+      } else {
+        encodedSize += 3;
+      }
+      if (lines > _kEmailSearchMaxLines ||
+          encodedSize > _kEmailSearchMaxUtf8Bytes) {
+        _emailSearchLimited = true;
+        return false;
+      }
+    }
+    final source = ViewBytesSource.memory(
+      Uint8List.fromList(utf8.encode(text)),
+    );
+    await source.open();
+    if (!mounted ||
+        token != _prepareToken ||
+        !identical(message, _emailMessage)) {
+      source.dispose();
+      return false;
+    }
+    setState(() {
+      _emailSearchSource = source;
+      _emailLines = _splitDisplayLines(text);
+      _emailLineStarts = _lineStartsOf(text);
+    });
+    return true;
   }
 
   Future<void> _runSearch(
@@ -1396,19 +1520,36 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     if (!mounted) return;
     _searchDebounce?.cancel();
     final generation = ++_searchGeneration;
-    final textMode = _mode == ViewerMode.text;
+    final emailMode = _mode == ViewerMode.email;
+    final textMode = _mode == ViewerMode.text || emailMode;
     // Spaces and strings beginning with "0x" remain literal in Text mode.
     final query =
         _mode == ViewerMode.hex ||
             (!textMode && raw.trimLeft().toLowerCase().startsWith('0x'))
         ? raw.trim()
         : raw;
-    final source = _source;
     setState(() => _resetSearchResults(cancel: false));
-    if (query.isEmpty || source == null) return;
+    if (query.isEmpty) return;
+    if (emailMode && !await _prepareEmailSearch()) {
+      if (!mounted || generation != _searchGeneration) return;
+      if (_emailSearchLimited) {
+        final note = EmailViewerStrings(context).text('searchLimit');
+        setState(() => _searchNote = note);
+        if (!_emailSearchLimitShown) {
+          _emailSearchLimitShown = true;
+          _showSnack(note);
+        }
+      }
+      return;
+    }
+    if (!mounted || generation != _searchGeneration) return;
+    final source = emailMode ? _emailSearchSource : _source;
+    if (source == null) return;
     try {
       String? encoding;
-      if (textMode) {
+      if (emailMode) {
+        encoding = 'utf8';
+      } else if (textMode) {
         if (!source.isStreamed) _ensureText();
         encoding =
             _encodingOverride ??
@@ -1425,7 +1566,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       bool cancelled() =>
           !mounted ||
           generation != _searchGeneration ||
-          !identical(_source, source);
+          !identical(emailMode ? _emailSearchSource : _source, source);
       void checkSource() {
         if (_origin?.isCurrent == false) {
           throw StateError('The viewed source is unavailable.');
@@ -1582,6 +1723,11 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     // Hex works over the shared controller for both memory and streamed data.
     if (_mode == ViewerMode.hex) {
       _scrollToRow(offset ~/ _bytesPerLine);
+      return;
+    }
+    if (_mode == ViewerMode.email) {
+      final starts = _emailLineStarts;
+      if (starts != null) _scrollToRow(_lineIndexOfOffset(starts, offset));
       return;
     }
     if (_isStreamed) {
@@ -1799,7 +1945,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
 
   Future<void> _copyAll() async {
     String? text;
-    if (_mode == ViewerMode.ascii || _mode == ViewerMode.binary) {
+    if (_mode == ViewerMode.email) {
+      text = _emailMessage?.searchText;
+    } else if (_mode == ViewerMode.ascii || _mode == ViewerMode.binary) {
       final data = _fullData;
       if (data != null) {
         text = InternalViewerService.renderSafeBytes(
@@ -2024,6 +2172,22 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                                   : Icons.vertical_align_bottom,
                             ),
                           ),
+                        if (isLegacyWordFileName(_viewName) &&
+                            widget.bytesOverride == null &&
+                            _origin?.isCurrent == true)
+                          IconButton(
+                            tooltip: LegacyWordConversionStrings(
+                              Localizations.localeOf(context),
+                            ).title,
+                            icon: const Icon(Icons.transform),
+                            onPressed: () => showLegacyWordConversionForFile(
+                              context,
+                              ref,
+                              widget.file,
+                              widget.side,
+                              origin: _origin,
+                            ),
+                          ),
                         if (_canEdit)
                           IconButton(
                             tooltip: context.commanderTr("Edit (F4)"),
@@ -2080,6 +2244,14 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                               PopupMenuItem(
                                 value: 'latin1',
                                 child: Text(context.commanderTr("Latin-1")),
+                              ),
+                              const PopupMenuItem(
+                                value: 'cp437',
+                                child: Text('DOS (CP437)'),
+                              ),
+                              const PopupMenuItem(
+                                value: 'windows1252',
+                                child: Text('Windows-1252'),
                               ),
                             ],
                           ),
@@ -2211,6 +2383,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       ViewerMode.font,
       ViewerMode.csv,
       ViewerMode.office,
+      ViewerMode.email,
       ViewerMode.archive,
     ].where((mode) => mode == _autoMode);
 
@@ -2373,10 +2546,16 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     final document = _officeDoc;
     if (document == null) return const SizedBox.shrink();
     final lowerName = _viewName.toLowerCase();
-    final legacyPpt = lowerName.endsWith('.ppt') || lowerName.endsWith('.pps');
+    final legacyOffice =
+        lowerName.endsWith('.ppt') ||
+        lowerName.endsWith('.pps') ||
+        lowerName.endsWith('.pot') ||
+        lowerName.endsWith('.rtf') ||
+        lowerName.endsWith('.doc') ||
+        lowerName.endsWith('.dot');
     final options = <_OfficeView>[
       if (document.deck != null) _OfficeView.slides,
-      if (!legacyPpt) _OfficeView.pdf,
+      if (!legacyOffice) _OfficeView.pdf,
       if (document.kind == OfficeDocumentKind.spreadsheet &&
           (document.csv?.isNotEmpty ?? false))
         _OfficeView.table,
@@ -2406,6 +2585,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   }
 
   Widget _inlineSearch(ThemeData theme) {
+    final textSearch = _mode == ViewerMode.text || _mode == ViewerMode.email;
     final total = _totalMatches;
     final position = _matchIndex >= 0 ? '${_matchBase + _matchIndex + 1}' : '0';
     return SizedBox(
@@ -2425,7 +2605,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                   hintText: _mode == ViewerMode.hex
                       ? InternalViewerStrings(context).text('hexHint')
                       : context.commanderTr(
-                          _mode == ViewerMode.text
+                          textSearch
                               ? "Search text"
                               : "Search text or 0x… bytes",
                         ),
@@ -2439,7 +2619,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                 onSubmitted: _onSearchSubmitted,
               ),
             ),
-            if (_mode == ViewerMode.text)
+            if (textSearch)
               IconButton(
                 key: const ValueKey('viewer-match-case'),
                 tooltip: context.commanderTr("Match case"),
@@ -2564,6 +2744,43 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         return CsvTableView(content: _richText ?? '', filename: _viewName);
       case ViewerMode.office:
         return _buildOfficeBody(theme);
+      case ViewerMode.email:
+        final message = _emailMessage;
+        if (message == null) {
+          return _messagePane(
+            InternalViewerStrings(context).text('noData'),
+            theme,
+          );
+        }
+        if (_searchOpen && _emailLines != null) {
+          final span = _textMatchSpan();
+          return SelectionArea(
+            child: MonoLineListView(
+              lines: _emailLines ?? const [],
+              fontScale: _zoom,
+              controller: _vScroll,
+              activeMatchLine: span?.line,
+              activeMatchLocal: span == null ? null : (span.start, span.end),
+            ),
+          );
+        }
+        return EmailMessageView(
+          message: message,
+          fontScale: _zoom,
+          onOpenAttachment: (attachment) {
+            final bytes = attachment.bytes;
+            if (bytes == null) return;
+            unawaited(
+              showInternalViewer(
+                context,
+                file: widget.file,
+                side: widget.side,
+                bytesOverride: bytes,
+                displayName: attachment.name,
+              ),
+            );
+          },
+        );
       case ViewerMode.archive:
         return _buildArchiveList(theme);
       case ViewerMode.unsupported:
@@ -2899,6 +3116,21 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         }
         return _buildOfficeText(document, theme);
       case _OfficeView.formatted:
+        final safeHtml = document.safeHtml;
+        if (safeHtml != null && safeHtml.length <= _kRichRenderCap) {
+          return SelectionArea(
+            child: SingleChildScrollView(
+              controller: _vScroll,
+              padding: const EdgeInsets.all(12),
+              child: HtmlWidget(
+                safeHtml,
+                textStyle: TextStyle(fontSize: 13 * _zoom, height: 1.45),
+                onTapUrl: (_) => true,
+              ),
+            ),
+          );
+        }
+        if (safeHtml != null) return _buildOfficeText(document, theme);
         final locale = Localizations.localeOf(context);
         final markdown = OfficePreviewStrings(locale)
             .headings(document.markdown, document.markdownHeadings, locale)
@@ -3239,6 +3471,11 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   }
 
   Widget _buildStatusBar(ThemeData theme) {
+    final note = _mode == ViewerMode.office && _officeDoc != null
+        ? OfficePreviewStrings(Localizations.localeOf(context))
+                  .note(_officeDoc!) ??
+              _viewNote
+        : _viewNote;
     final style = TextStyle(
       fontSize: 11.5,
       color: theme.colorScheme.onSurfaceVariant,
@@ -3254,12 +3491,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       if (_mode == ViewerMode.pdf && _pdfShowText && _pdfText != null)
         context.commanderTr("{0} characters", [_pdfText!.length]),
       if (_canChangeEncoding && _encoding != null) _encoding!,
-      if (_viewNote != null)
-        if (_mode == ViewerMode.office && _officeDoc != null)
-          OfficePreviewStrings(Localizations.localeOf(context))
-              .note(_officeDoc!)!
-        else
-          _viewNote!,
+      if (note != null) note,
       if (_mode == ViewerMode.hex && _selectedByte != null) _selectedByteText(),
       if (_searchStatusText != null) _searchStatusText!,
     ];
@@ -3316,7 +3548,11 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     if (_searching) {
       return context.commanderTr("Searching {0} of {1}", [
         formatBytes(_searchBytesScanned),
-        formatBytes(_dataSize),
+        formatBytes(
+          _mode == ViewerMode.email
+              ? (_emailSearchSource?.size ?? 0)
+              : _dataSize,
+        ),
       ]);
     }
     final base = _matches.isEmpty
@@ -3333,7 +3569,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   _MatchSpan? _textMatchSpan() {
     if (!_searchOpen || _isByteSearch) return null;
     if (_matchIndex < 0 || _matchIndex >= _matches.length) return null;
-    final starts = _lineStarts;
+    final starts = _mode == ViewerMode.email ? _emailLineStarts : _lineStarts;
     if (starts == null) return null;
     final offset = _matches[_matchIndex];
     final line = _lineIndexOfOffset(starts, offset);
@@ -3397,6 +3633,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         return InternalViewerStrings(context).text('table');
       case ViewerMode.office:
         return 'Office';
+      case ViewerMode.email:
+        return EmailViewerStrings(context).text('email');
       case ViewerMode.archive:
         return InternalViewerStrings(context).text('archive');
       case ViewerMode.unsupported:

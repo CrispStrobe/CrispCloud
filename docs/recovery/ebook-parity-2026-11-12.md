@@ -309,6 +309,68 @@ Shared-reader corrections are saved at `ae0ef0bd32c786400bb28aa6f24794948e6ae1f7
 
 The Linux workflow has three explicitly different jobs: required complete enhanced rendering on Ubuntu 22.04; safe recovery from the observed blocked sandbox startup on Ubuntu 24.04; and the portable-only build. The official Jammy WebKitGTK 4.1 package is 2.50.4, above the retained 2.48.4 minimum (https://packages.ubuntu.com/jammy-updates/libwebkit2gtk-4.1-dev). Neither runner security policy nor the browser sandbox is relaxed. A recovery pass is not an enhanced-rendering pass.
 
+### Integrated main synchronization
+
+The startup guard is saved at `e2231a963ae3e5bad6e5164a38bd8006f53b8619`; `04429947003f44d9066906b340195526df8efd36` corrects the new test to use its intended Linux platform. All 22 editor-dialog tests, all 8 reader-package tests, focused/package analysis, seven actual native startup scenarios and complete enhanced-plugin/helper real-header syntax compilation passed before the next integration. The complete earlier application selection passed its 154 existing cases; the new test initially used Flutter's Android default and then passed after the platform fixture correction.
+
+Concurrent repository integration advanced main to `02be67fe`, including absent-platform-plugin recovery and macOS browser dependency fixes. The feature branch now retains those changes plus the full startup guard and shared-reader corrections. Three documentation conflicts were reconciled, retaining all inventoried paths and unchanged distribution decisions. The merged application and web build are being revalidated. Intermediate queued CI runs canceled by later checkpoints are not counted as passes.
+
+## Parallel continuation verification at `b89dbda`
+
+The integrated source checkpoint is
+`b89dbdad868cffa2cb93aa5d700270532e0136d7`. The following final documentation
+update changes no production source, dependency lock, test or workflow. Local
+and remote commit trees were checked for exact equality at every publication.
+The existing draft PR #53 was conflict-free against `main` at `02be67fe` when
+this record was written.
+
+| Check | Observed result |
+| --- | --- |
+| Merged app/service/widget selection | **157 passed** in 55 seconds, including explicit discard, failed-save recovery, library/account binding, reading-data imports and existing file-save guards. Native converter build hooks stayed enabled. |
+| Editor-dialog regression file | **22 passed**, including the corrected explicit Linux test variant. The earlier test-setup failure happened before its behavioral assertions and was repaired, not excluded. |
+| Reader Flutter package | **8 passed**; package analysis clean. |
+| Focused app analysis and formatting | No issues; all four changed Dart files passed formatting with no changes. |
+| Shared reader parser/lifecycle checks | Default and forced missing-grouping/raw-DEFLATE variants passed; suspended-search and section-resource lifecycle regressions passed. |
+| Vendor integrity | The 16 pinned JavaScript files and five notices match their recorded source; vendor code is unchanged. |
+| Native startup guard | **7 actual subprocess scenarios passed**, including concurrent probes, expiry/invalidation, missing/crashed helpers, deadlines, disposal and residual-child cleanup after normal or abnormal exit. |
+| Native compilation | Helper and complete enhanced plugin pass C++17 syntax compilation with warnings treated as errors against actual Flutter 3.47.8, GTK 3.24.49, WebKitGTK 2.52.6 and epoxy headers. This does not establish a linked or rendered Linux app. |
+| Actual application web release | **Passed**, 218.5 seconds, with `flutter build web --release --no-pub --no-wasm-dry-run`. |
+| Bundled assets | Five reader assets and the metadata Wasm/runtime/worker are byte-identical to source; all three metadata digests also match `WASM.json`. |
+| Source evidence | All **292** inventoried paths and the combined lockfile pass the unchanged source-binding validator. |
+| Existing evidence/preflight suites | **42 tests** with two existing skips, plus **38 preflight tests**, passed. These checks do not constitute distribution approval. |
+
+The local Chromium attempt used the installed browser and a fresh temporary
+profile. It failed before reader code ran because `socket()` was denied by the
+execution environment. No browser or runner isolation setting was relaxed.
+
+At the final source check, the main ebook PR workflow
+[43234364793](https://github.com/CrispStrobe/CrispCloud/actions/runs/43234364793)
+had all five jobs queued, and native workflow
+[43234364973](https://github.com/CrispStrobe/CrispCloud/actions/runs/43234364973)
+had all three matrix jobs queued. Later documentation pushes may supersede
+those runs; use the exact current head's registered workflow for final hosted
+acceptance. **No new hosted rendering, native-runtime or EPUBCheck pass is
+claimed for this continuation.** The earlier `1d08158` main-workflow results
+remain historical evidence for that revision.
+
+Keep PR #53 in draft until the enhanced Linux publication test, blocked-startup
+recovery, portable-only launch and main ebook workflow complete successfully.
+The implemented guard makes failed startup a handled capability decision;
+full Linux rendering, target-device behavior, accessibility, automatic reading
+state synchronization, OPDS, speech, dictionaries/translation and licensed DRM
+remain subject to their documented gates or further product work.
+
+### Remote checkpoints from this continuation
+
+| Revision | Saved work |
+| --- | --- |
+| `280f55167f43f227068d8a462a88aabc18e56afb` | Recovery of the latest interrupted-session checkpoint and continuation plan. |
+| `5e0b6f94c542a41db232eb62ec19d21a9ddacffb` | Initial main synchronization and retained source inventories. |
+| `ae0ef0bd32c786400bb28aa6f24794948e6ae1f7` | Explicit-discard protection, section-resource lifecycle and canceled-search fixes. |
+| `e2231a963ae3e5bad6e5164a38bd8006f53b8619` | Isolated Linux readiness helper, owned-process cleanup and distinct hosted gates. |
+| `04429947003f44d9066906b340195526df8efd36` | Corrected the portable-reader regression's Linux test platform. |
+| `b89dbdad868cffa2cb93aa5d700270532e0136d7` | Integrated current main, including ebook platform recovery and macOS dependencies; all merged local checks above target this source. |
+
 ## Consolidated native candidate
 
 The original feature branch advanced again to `e2231a9` while the combined
@@ -358,3 +420,40 @@ adds that missing test variant and the same single regression passes. It keeps
 all write-count, saved-state, late-location and explicit-discard assertions
 unchanged. No production source or source-review binding changes are needed.
 The temporary local native-hook configuration was restored byte for byte.
+
+## Integration with the current review base
+
+Draft [PR #84](https://github.com/CrispStrobe/CrispCloud/pull/84) targets the
+original feature branch. That base advanced to `5dce28e`, retaining a broader
+application integration and the same portable-reader test correction. The
+candidate merges that saved base without changing its remote branch or
+replacing its unrelated work. Overlapping documentation and source-review
+records are reconciled explicitly. The source inventory is rebound against
+the combined tree while preserving incoming policy decisions and gates.
+
+The integrated inventory contains 295 paths and 20 feature records. Every
+bound source matches a saved parent: 286 match `5dce28e`, and nine retain the
+reviewed startup implementation from `3ccfee41`. There are no newly combined
+runtime source versions among those paths. The incoming missing-platform
+fallback, dependency manifest, complete lock and macOS browser resolution are
+retained. The source check passes with the incoming validator rules; unrelated
+test suites are not rerun merely to refresh technical digests.
+
+Native run [43240472438](https://github.com/CrispStrobe/CrispCloud/actions/runs/43240472438)
+targets saved `3ccfee41`; it must pass the real enhanced target before the new
+Linux host is qualified. The earlier incoming application's verification is
+retained as attributed evidence, not relabeled as a new run of this merged tree.
+
+That run's Ubuntu 22.04 job passed the known-color startup proof while a Dart
+child remained active, then passed actual book pixels, Flutter framebuffer
+composition and overlay assertions. It next failed at keyboard selection:
+Ctrl+A did not yield a Foliate CFI. This is an input-path failure, and the
+candidate is not yet a complete enhanced-reader pass. The CFI, clipboard and
+pointer-selection requirements remain in place while that path is diagnosed.
+
+The native workflow's push paths now match its existing pull-request paths,
+covering the reader package, Linux build inputs and workflow itself. The main
+ebook workflow ignores only recovery-record-only pushes; packaged help files
+and all other inputs still trigger it. These narrow trigger changes prevent
+verification-note checkpoints from canceling queued qualification. Jobs and
+acceptance assertions are unchanged.

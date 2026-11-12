@@ -12,9 +12,11 @@ import 'cloud_storage_interface.dart';
 import 'ftp_operation_failure.dart';
 import 'upload_temp_file.dart';
 import 'ftp_config_service.dart';
+import 'ftp_security_mode.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
 import 'ftp_transfer_session.dart';
+import 'ftp_download_snapshot.dart';
 
 typedef FTPClientFactory = FTPConnect Function(
   String host, {
@@ -29,7 +31,17 @@ class FTPClientAdapter extends CloudStorageClient
     with CloudTransferOperations
     implements StorageNamespaceIdentity {
   @override
-  String get storageNamespace => '${_host ?? ''}:$_port';
+  String get storageNamespace => '${_securityMode.name}:${_host ?? ''}:$_port';
+
+  @override
+  String get transferIdentity => _authenticated
+      ? FtpDownloadSnapshot.identity(
+          host: _host!,
+          port: _port,
+          username: _username!,
+          securityMode: _securityMode,
+        )
+      : '';
 
   @override
   StorageTransferCapabilities get transferCapabilities =>
@@ -38,6 +50,9 @@ class FTPClientAdapter extends CloudStorageClient
         deleteEmptyDirectory: true,
         boundedUpload: !kIsWeb,
         boundedDownload: !kIsWeb,
+        // Requests still require a captured snapshot and server-negotiated
+        // REST STREAM. A refusal never falls back to a complete download.
+        readRanges: !kIsWeb,
       );
 
   @override
@@ -50,6 +65,7 @@ class FTPClientAdapter extends CloudStorageClient
 
   final FTPConfigService _config;
   final FTPClientFactory _createClient;
+  final SecurityContext? securityContext;
 
   // Expose config for AppState to read credentials
   FTPConfigService get config => _config;
@@ -58,11 +74,12 @@ class FTPClientAdapter extends CloudStorageClient
   // Legacy metadata operations share this connection and are serialized.
   // Bounded data transfers use independent control and data connections.
   FTPConnect? _ftpClient;
+  FTPConnect? _pendingClient;
   String? _username;
   String? _password;
   String? _host;
   int _port = 21;
-  bool _useTLS = false;
+  FtpSecurityMode _securityMode = FtpSecurityMode.plain;
   bool _authenticated = false;
   int _authEpoch = 0;
   final Set<FtpTransferSession> _transferSessions = {};
@@ -111,14 +128,34 @@ class FTPClientAdapter extends CloudStorageClient
     return captured.$1;
   }
 
-  FTPClientAdapter({required dynamic config, FTPClientFactory? clientFactory})
-    : _config = (config is FTPConfigService)
-          ? config
-          : FTPConfigService(
-              configPath: '',
-              secureStorage: InMemorySecureStorage(),
-            ),
-      _createClient = clientFactory ?? FTPConnect.new;
+  FTPClientAdapter({
+    required dynamic config,
+    FTPClientFactory? clientFactory,
+    this.securityContext,
+  }) : _config = (config is FTPConfigService)
+           ? config
+           : FTPConfigService(
+               configPath: '',
+               secureStorage: InMemorySecureStorage(),
+             ),
+       _createClient =
+           clientFactory ??
+           ((
+             String host, {
+             required int port,
+             required String user,
+             required String pass,
+             required SecurityType securityType,
+             required int timeout,
+           }) => FTPConnect(
+             host,
+             port: port,
+             user: user,
+             pass: pass,
+             securityType: securityType,
+             timeout: timeout,
+             securityContext: securityContext,
+           ));
 
   @override
   String get providerName => 'FTP';
@@ -164,8 +201,14 @@ class FTPClientAdapter extends CloudStorageClient
     final username = creds['username'];
     final host = creds['host'];
     final password = creds['password'];
-    final port = int.tryParse(creds['port'] ?? '21') ?? 21;
-    final tls = creds['useTLS'] == 'true';
+    final mode = FtpSecurityMode.fromStored(
+      mode: creds['securityMode'],
+      legacyUseTls: creds['useTLS'],
+    );
+    final port = int.tryParse(creds['port'] ?? '${mode.defaultPort}');
+    if (port == null || port < 1 || port > 65535) {
+      throw const FormatException('Invalid saved FTP port.');
+    }
     if (host == null || username == null || password == null) {
       throw Exception('Incomplete credentials');
     }
@@ -177,9 +220,14 @@ class FTPClientAdapter extends CloudStorageClient
       port: port,
       user: username,
       pass: password,
-      securityType: tls ? SecurityType.ftps : SecurityType.ftp,
+      securityType: switch (mode) {
+        FtpSecurityMode.plain => SecurityType.ftp,
+        FtpSecurityMode.implicitTls => SecurityType.ftps,
+        FtpSecurityMode.explicitTls => SecurityType.ftpes,
+      },
       timeout: 30,
     );
+    _pendingClient = connection;
     try {
       final connected = await connection.connect();
       if (!connected) {
@@ -196,7 +244,7 @@ class FTPClientAdapter extends CloudStorageClient
       _host = host;
       _password = password;
       _port = port;
-      _useTLS = tls;
+      _securityMode = mode;
       _authenticated = true;
     } catch (e) {
       try {
@@ -215,6 +263,8 @@ class FTPClientAdapter extends CloudStorageClient
         'Connection failed: $e',
         {'error': e},
       );
+    } finally {
+      if (identical(_pendingClient, connection)) _pendingClient = null;
     }
   }
 
@@ -229,48 +279,17 @@ class FTPClientAdapter extends CloudStorageClient
     if (kIsWeb) {
       throw FtpWebUnsupportedFailure();
     }
+    final identity = FtpLoginIdentity.parse(email);
     _authEpoch++;
     await _closeSessions();
 
-    String user = email;
-    String host = '';
-    String port = '21';
-    bool useTLS = false;
-
-    if (email.contains('@')) {
-      final parts = email.split('@');
-      user = parts[0];
-      final hostPart = parts[1];
-
-      if (hostPart.contains(':')) {
-        final hostParts = hostPart.split(':');
-        host = hostParts[0];
-        final portAndFlags = hostParts[1];
-        // Check for ?tls=true suffix
-        if (portAndFlags.contains('?')) {
-          final qParts = portAndFlags.split('?');
-          port = qParts[0];
-          if (qParts[1].contains('tls=true')) {
-            useTLS = true;
-          }
-        } else {
-          port = portAndFlags;
-        }
-      } else {
-        host = hostPart;
-      }
-    } else {
-      throw Exception(
-        'Format must be user@host[:port] (e.g. user@ftp.example.com:21)',
-      );
-    }
-
     await _config.saveCredentials({
-      'username': user,
+      'username': identity.username,
       'password': password,
-      'host': host,
-      'port': port,
-      'useTLS': useTLS.toString(),
+      'host': identity.host,
+      'port': '${identity.port}',
+      'securityMode': identity.securityMode.name,
+      'useTLS': '${identity.securityMode.isSecure}',
     });
 
     try {
@@ -296,12 +315,16 @@ class FTPClientAdapter extends CloudStorageClient
       session.close();
     }
     _transferSessions.clear();
-    final connection = _ftpClient;
+    final connections = {
+      _ftpClient,
+      _pendingClient,
+    }.whereType<FTPConnect>().toList();
     _ftpClient = null;
+    _pendingClient = null;
     _connecting = null;
     _authenticated = false;
     _password = null;
-    if (connection != null) {
+    for (final connection in connections) {
       try {
         await connection.disconnect();
       } catch (e) {
@@ -354,7 +377,7 @@ class FTPClientAdapter extends CloudStorageClient
         final name = item.name;
         if (name == '.' || name == '..') continue;
 
-        final fullPath = p.posix.join(path, name);
+        final fullPath = p.posix.normalize(p.posix.join('/', path, name));
         final isDir = item.type == FTPEntryType.dir;
 
         final modTimeStr = item.modifyTime?.toIso8601String();
@@ -366,6 +389,19 @@ class FTPClientAdapter extends CloudStorageClient
           'modificationTime': modTimeStr,
           'type': isDir ? 'folder' : 'file',
           'path': fullPath,
+          'isSymlink': item.type == FTPEntryType.link,
+          // This is deliberately separate from immutable version metadata.
+          // The journal must retain its original complete source digest.
+          if (item.type == FTPEntryType.file &&
+              item.size != null &&
+              item.size! >= 0 &&
+              item.modifyTime != null)
+            'rangeReadSnapshot': FtpDownloadSnapshot(
+              connectionIdentity: transferIdentity,
+              path: fullPath,
+              size: item.size!,
+              modified: FtpDownloadSnapshot.listingModified(item.modifyTime!),
+            ).encode(),
         };
 
         if (isDir) {
@@ -420,6 +456,18 @@ class FTPClientAdapter extends CloudStorageClient
   Future<FtpTransferSession> _openTransfer() async {
     if (kIsWeb) throw UnsupportedError('FTP is unavailable in a browser.');
     await _ensureConnection();
+    final session = _createTransferSession();
+    try {
+      await session.connect();
+      return session;
+    } catch (_) {
+      _transferSessions.remove(session);
+      session.close();
+      rethrow;
+    }
+  }
+
+  FtpTransferSession _createTransferSession() {
     final epoch = _authEpoch;
     final connection = _ftpClient;
     final password = _password;
@@ -431,21 +479,15 @@ class FTPClientAdapter extends CloudStorageClient
       port: _port,
       username: _username!,
       password: password,
-      secure: _useTLS,
+      securityMode: _securityMode,
+      securityContext: securityContext,
       isCurrent: () =>
           _authenticated &&
           _authEpoch == epoch &&
           identical(_ftpClient, connection),
     );
     _transferSessions.add(session);
-    try {
-      await session.connect();
-      return session;
-    } catch (_) {
-      _transferSessions.remove(session);
-      session.close();
-      rethrow;
-    }
+    return session;
   }
 
   @override
@@ -470,15 +512,87 @@ class FTPClientAdapter extends CloudStorageClient
   Stream<List<int>> downloadStream(
     String remotePath, {
     Function(int, int)? onProgress,
-  }) async* {
+  }) {
     final remote = p.posix.normalize(p.posix.join('/', remotePath));
-    final session = await _openTransfer();
-    try {
-      yield* session.download(remote, onProgress: onProgress);
-    } finally {
-      _transferSessions.remove(session);
-      session.close();
+    return _ownedDownload(
+      (session) => session.download(remote, onProgress: onProgress),
+    );
+  }
+
+  @override
+  Stream<List<int>> readTransferRange(
+    String path,
+    int offset, {
+    int? length,
+    String? expectedVersion,
+  }) {
+    final remote = p.posix.normalize(p.posix.join('/', path));
+    return _ownedDownload((session) {
+      if (expectedVersion == null) {
+        throw UnsupportedError(
+          'FTP resume requires the original source snapshot. '
+          'Review a complete restart instead.',
+        );
+      }
+      return session.downloadRange(
+        remote,
+        offset,
+        expected: FtpDownloadSnapshot.decode(expectedVersion),
+        length: length,
+      );
+    });
+  }
+
+  /// Own the session before awaiting connect, so cancellation closes pending
+  /// TCP/TLS negotiation and REST replies as well as an active data stream.
+  Stream<List<int>> _ownedDownload(
+    Stream<List<int>> Function(FtpTransferSession) read,
+  ) {
+    FtpTransferSession? session;
+    StreamSubscription<List<int>>? input;
+    late StreamController<List<int>> output;
+    var cancelled = false;
+
+    Stream<List<int>> run() async* {
+      if (kIsWeb) throw UnsupportedError('FTP is unavailable in a browser.');
+      try {
+        await _ensureConnection();
+        if (cancelled) return;
+        final owned = session = _createTransferSession();
+        await owned.connect();
+        if (cancelled) return;
+        yield* read(owned);
+      } finally {
+        if (session != null) _transferSessions.remove(session);
+        session?.close();
+      }
     }
+
+    output = StreamController<List<int>>(
+      sync: true,
+      onListen: () {
+        input = run().listen(
+          (part) {
+            if (!cancelled) output.add(part);
+          },
+          onError: (Object error, StackTrace stack) {
+            if (!cancelled) output.addError(error, stack);
+          },
+          onDone: () {
+            if (!cancelled) unawaited(output.close());
+          },
+        );
+        if (output.isPaused) input!.pause();
+      },
+      onPause: () => input?.pause(),
+      onResume: () => input?.resume(),
+      onCancel: () {
+        cancelled = true;
+        session?.close();
+        unawaited(input?.cancel().catchError((Object _) {}));
+      },
+    );
+    return output.stream;
   }
 
   @override

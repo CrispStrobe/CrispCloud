@@ -143,14 +143,14 @@ def main():
     expected = json.loads((FIXTURES / 'content_controls_expected.json').read_text())
     verify_file(FIXTURES / 'content-controls.docx', expected)
     verify_file(FIXTURES / 'content-controls-legacy.docx', expected, 'legacy')
-    copied_source = ENGINE / 'build/fidelity-content-controls/controls-source.docx'
+    copied_source = ENGINE / 'build/fidelity-content-controls-legacy/controls-source.docx'
     verify_source_copy(copied_source)
     verify_file(copied_source, expected)
     for mode in ('imported', 'edited'):
         for cycle in range(1, 4):
-            verify_file(ENGINE / f'build/fidelity-content-controls/controls-{mode}-{cycle}.docx', expected, mode)
+            verify_file(ENGINE / f'build/fidelity-content-controls-legacy/controls-{mode}-{cycle}.docx', expected, mode)
     for cycle in range(1, 4):
-        verify_file(ENGINE / f'build/fidelity-content-controls/legacy-frame-{cycle}.docx',
+        verify_file(ENGINE / f'build/fidelity-content-controls-legacy/legacy-frame-{cycle}.docx',
                     expected, 'legacy', converted_legacy=True)
     print('Content-control oracle: exact authored source copy, six native exports and three legacy conversion exports passed')
     if args.editor_dir is not None:

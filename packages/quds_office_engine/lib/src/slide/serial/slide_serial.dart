@@ -15,10 +15,10 @@ import '../../visual/png_bytes.dart';
 import '../../xml/namespaces.dart';
 import '../../xml/xml_node.dart';
 import '../../xml/xml_reader.dart';
-import '../../xml/xml_writer.dart';
 import '../anim/pml_motion_io.dart';
 import '../model/pml_presentation.dart';
 import '../shapes/drawingml.dart';
+import 'slide_section_io.dart';
 
 /// Class SlideDeserializer.
 class SlideDeserializer {
@@ -37,6 +37,7 @@ class SlideDeserializer {
       _presentationUri,
     );
     final List<String> slideUris = <String>[];
+    String? slideRelationshipIssue;
     final XmlPullReader reader = XmlPullReader(part.readText());
     while (reader.next()) {
       if (reader.eventType != XmlEventType.startElement) {
@@ -58,16 +59,19 @@ class SlideDeserializer {
         final PackageRelationship? rel = relId == null
             ? null
             : presentationRels.byId(relId);
+        if (rel == null ||
+            rel.type != RelationshipTypes.slide ||
+            rel.targetMode == RelationshipTargetMode.external ||
+            package.getPart(presentationRels.resolve(rel))?.contentType !=
+                OfficeContentTypes.slide) {
+          slideRelationshipIssue =
+              'Section membership requires modeled internal slide relationships.';
+        }
         slideUris.add(
           rel != null && rel.type == RelationshipTypes.slide
               ? presentationRels.resolve(rel)
               : '/ppt/slides/slide${pres.slides.length}.xml',
         );
-      } else if (reader.localName == 'sldSection') {
-        final String name = reader.getAttribute('name') ?? 'Section';
-        final int start =
-            int.tryParse(reader.getAttribute('start') ?? '0') ?? 0;
-        pres.sections.add(PmlSection(name: name, startIndex: start));
       } else if (reader.localName == 'sldSz') {
         pres.slideWidth = int.parse(
           reader.getAttribute('cx') ?? '${pres.slideWidth}',
@@ -78,21 +82,11 @@ class SlideDeserializer {
       }
     }
     final XmlDocument source = XmlDocument.parse(part.readText());
-    for (final XmlElement section in _descendants(source.root!, 'section')) {
-      final String? firstId = section
-          .firstChild('sldIdLst')
-          ?.firstChild('sldId')
-          ?.getAttribute('id');
-      final int start = pres.slides.indexWhere((s) => '${s.id}' == firstId);
-      if (start >= 0) {
-        pres.sections.add(
-          PmlSection(
-            name: section.getAttribute('name') ?? 'Section',
-            startIndex: start,
-          ),
-        );
-      }
-    }
+    SlideSectionXml.read(
+      pres,
+      source.root!,
+      slideRelationshipIssue: slideRelationshipIssue,
+    );
     final String? masterBg = _masterBackground(package);
     if (masterBg != null && masterBg.isNotEmpty) {
       pres.master.background = masterBg;
@@ -518,6 +512,7 @@ class SlideSerializer {
 
   /// write API.
   OpcPackage write(PmlPresentation pres) {
+    SlideSectionXml.validateForWrite(pres);
     final bool fresh = pres.package == null;
     final OpcPackage package =
         pres.package ?? OpcPackage.create(OpcPackageKind.slide);
@@ -790,17 +785,20 @@ class SlideSerializer {
       );
     }
     final XmlElement? oldNotesSize = root.firstChild('notesSz');
-    final XmlElement? oldExtensions = root.firstChild('extLst');
+    final XmlElement? oldExtensions = root.firstChild(
+      'extLst',
+      namespaceUri: OfficeNamespaces.p,
+    );
     root.children.removeWhere(
       (n) =>
           n is XmlElement &&
+          n.namespaceUri == OfficeNamespaces.p &&
           {
             'sldMasterIdLst',
             'notesMasterIdLst',
             'sldIdLst',
             'sldSz',
             'notesSz',
-            'sldSections',
             'extLst',
           }.contains(n.localName),
     );
@@ -837,50 +835,7 @@ class SlideSerializer {
       root.addChild(n);
     }
     final XmlElement extensions = oldExtensions ?? element('extLst');
-    extensions.children.removeWhere(
-      (n) => n is XmlElement && _descendants(n, 'sectionLst').isNotEmpty,
-    );
-    if (pres.sections.isNotEmpty) {
-      final XmlElement ext = element('ext', {
-        'uri': '{521415D9-36F7-43E2-AB2F-B90AF26B5E84}',
-      });
-      final XmlWriter w = XmlWriter();
-      w.writeStartElement('sectionLst', prefix: 'p14');
-      w.writeNamespace(
-        'p14',
-        'http://schemas.microsoft.com/office/powerpoint/2010/main',
-      );
-      final List<PmlSection> sections = [...pres.sections]
-        ..sort((a, b) => a.startIndex.compareTo(b.startIndex));
-      for (int i = 0; i < sections.length; i++) {
-        w.writeStartElement('section', prefix: 'p14');
-        w.writeAttribute('name', sections[i].name);
-        w.writeAttribute(
-          'id',
-          '{00000000-0000-4000-8000-${(i + 1).toRadixString(16).padLeft(12, '0')}}',
-        );
-        w.writeStartElement('sldIdLst', prefix: 'p14');
-        final int end = i + 1 < sections.length
-            ? sections[i + 1].startIndex
-            : pres.slides.length;
-        for (
-          int j = sections[i].startIndex.clamp(0, pres.slides.length);
-          j < end.clamp(0, pres.slides.length);
-          j++
-        ) {
-          w.writeEmptyElement(
-            'sldId',
-            prefix: 'p14',
-            attributes: {'id': '${pres.slides[j].id}'},
-          );
-        }
-        w.writeEndElement();
-        w.writeEndElement();
-      }
-      w.writeEndElement();
-      ext.addChild(XmlDocument.parse(w.toXml()).root!);
-      extensions.addChild(ext);
-    }
+    SlideSectionXml.write(pres, extensions);
     if (extensions.children.isNotEmpty) root.addChild(extensions);
     return document.toXmlString();
   }

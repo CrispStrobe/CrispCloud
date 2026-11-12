@@ -125,6 +125,8 @@ const Map<String, String> kExtensionToHljsLanguage = <String, String>{
   'svelte': 'xml',
   'astro': 'xml',
   'xml': 'xml',
+  'kbdx': 'xml',
+  'eml': 'plaintext',
   'xsl': 'xml',
   'xaml': 'xml',
   'svg': 'xml',

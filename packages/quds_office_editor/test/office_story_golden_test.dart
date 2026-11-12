@@ -6,7 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:quds_office_editor/quds_office_editor.dart';
 
 /// Three distinct pages prove first/even/default header and footer pictures,
-/// forced page breaks and two-column layout survive asynchronous save/reopen.
+/// forced page breaks and two-column layout survive three asynchronous exports.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(OfficeHostFonts.ensureRegistered);
@@ -17,6 +17,19 @@ void main() {
     tester.view.physicalSize = const Size(900, 1120);
     addTearDown(tester.view.resetDevicePixelRatio);
     addTearDown(tester.view.resetPhysicalSize);
+    const exportCycles = 3;
+    final outputs = Directory('build/fidelity-story-goldens');
+    outputs.createSync(recursive: true);
+    final expectedExports = [
+      for (var cycle = 1; cycle <= exportCycles; cycle++)
+        'three-pages-$cycle.docx',
+    ];
+    // Remove only this producer's declared outputs, including its former
+    // single-export name. Unexpected packages must fail the inventory below.
+    for (final name in ['three-pages.docx', ...expectedExports]) {
+      final output = File('${outputs.path}/$name');
+      if (output.existsSync()) output.deleteSync();
+    }
     var doc = WordDeserializer().readBytes(
       File(
         '../quds_office_engine/test/fixtures/fidelity/story-media.docx',
@@ -60,12 +73,15 @@ void main() {
         [0, 0, 255],
       ],
     ];
-    for (var cycle = 0; cycle < 2; cycle++) {
+    for (var cycle = 0; cycle <= exportCycles; cycle++) {
       // The authored fixture has no styles part or paragraph spacing. Keep
       // that source layout explicit when reviewing its page image; imported
       // paragraphs must not acquire the defaults used for newly created ones.
       expect(doc.paragraphs.first.properties.spacingAfter, 0);
       expect(doc.paragraphs.first.properties.lineSpacing, 1);
+      // The authored footnotes part has no separator definition. Its absence
+      // remains visible in the source model and every actual reopened export.
+      expect(doc.sourceFootnoteSeparatorsPresent, isFalse);
       final layout = WordLayoutEngine(font: null).layout(doc);
       expect(layout.pages, hasLength(3));
       for (var page = 0; page < 3; page++) {
@@ -155,15 +171,23 @@ void main() {
           matchesGoldenFile('goldens/office_stories_page_${page + 1}.png'),
         );
       }
-      if (cycle == 0) {
+      if (cycle < exportCycles) {
         final bytes = (await tester.runAsync(
           () => OfficeIsolateSave.word(doc),
         ))!;
-        final output = File('build/fidelity-story-goldens/three-pages.docx');
-        output.parent.createSync(recursive: true);
+        final output = File('${outputs.path}/${expectedExports[cycle]}');
         output.writeAsBytesSync(bytes);
         doc = WordDeserializer().readBytes(bytes);
       }
     }
+    final actualExports =
+        outputs
+            .listSync()
+            .whereType<File>()
+            .where((file) => file.path.endsWith('.docx'))
+            .map((file) => file.uri.pathSegments.last)
+            .toList()
+          ..sort();
+    expect(actualExports, expectedExports);
   });
 }

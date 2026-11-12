@@ -12,7 +12,17 @@ golden files. The guard checks only those files, preserving unrelated host
 changes. Revision IDs and counts in the historical evidence below identify
 their original snapshots, not the current manifest.
 
-## Current vendor revision and focused followup
+## Current vendor revision and gap closure
+
+The [12 November gap-closure report](office-fidelity-gap-closure-20261112.md)
+records the current source pin, consolidation of newer main/viewer work, shared
+helper ownership, actual conversion/save regressions and combined acceptance.
+Reusable parsing, preservation, navigation, search and legacy Word conversion
+are maintained in Quds; the app consumes the public APIs and exact source pin.
+
+The [earlier consolidation report](office-fidelity-consolidation-20261112.md)
+and the sections below retain their historical snapshot scope. The manifest is
+the authority for the current committed source bytes.
 
 ## Host expansion on 2026-11-12
 

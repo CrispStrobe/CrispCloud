@@ -191,6 +191,107 @@ abstract final class PmlArrange {
 
 /// Named slide sections in the sorter.
 abstract final class PmlSections {
+  /// Validate a consecutive section partition before changing any deck state.
+  static void validate(PmlPresentation presentation) {
+    if (presentation.sectionSource?.issue case final String issue) {
+      throw StateError('Cannot reorder native presentation sections: $issue');
+    }
+    final Set<int> slideIds = <int>{};
+    for (final PmlSlide slide in presentation.slides) {
+      if (!slideIds.add(slide.id)) {
+        throw StateError('Slide IDs must be unique before reordering.');
+      }
+      if (presentation.sections.isNotEmpty &&
+          slide.sourcePartUri != null &&
+          !slide.sourcePartUri!.startsWith('/')) {
+        throw StateError(
+          'Section-aware reorder requires internal slide parts.',
+        );
+      }
+    }
+    var previous = 0;
+    final Set<String> ids = <String>{};
+    for (final PmlSection section in presentation.sections) {
+      if (section.startIndex < previous ||
+          section.startIndex > presentation.slides.length) {
+        throw StateError('Section boundaries must be ordered and in range.');
+      }
+      previous = section.startIndex;
+      if (section.id case final String id) {
+        if (!RegExp(
+          r'^\{[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}\}$',
+        ).hasMatch(id)) {
+          throw StateError('Native section identity must be a GUID.');
+        }
+        if (!ids.add(id.toUpperCase())) {
+          throw StateError('Native section GUIDs must be unique.');
+        }
+      }
+    }
+  }
+
+  /// Plan an atomic move using the original destination slide's section.
+  ///
+  /// [to] is the final index after removal/insertion. Every unaffected slide
+  /// keeps its section; empty sections and section order are retained.
+  static PmlSlideReorder planReorder(
+    PmlPresentation presentation,
+    int from,
+    int to,
+  ) {
+    RangeError.checkValidIndex(from, presentation.slides, 'from');
+    RangeError.checkValidIndex(to, presentation.slides, 'to');
+    validate(presentation);
+    final List<PmlSlide> before = List<PmlSlide>.of(presentation.slides);
+    final List<PmlSection> sections = List<PmlSection>.of(
+      presentation.sections,
+    );
+    final List<int> starts = [
+      for (final section in sections) section.startIndex,
+    ];
+    final List<int> owners = List<int>.filled(before.length, -1, growable: true);
+    for (int index = 0; index < sections.length; index++) {
+      final int end = index + 1 < sections.length
+          ? starts[index + 1]
+          : before.length;
+      for (int slide = starts[index]; slide < end; slide++) {
+        owners[slide] = index;
+      }
+    }
+    final int destination = owners[to];
+    final List<PmlSlide> after = List<PmlSlide>.of(before);
+    after.insert(to, after.removeAt(from));
+    owners.removeAt(from);
+    owners.insert(to, destination);
+    final List<int> counts = List<int>.filled(sections.length, 0);
+    var prefix = 0;
+    for (final int owner in owners) {
+      if (owner < 0) {
+        prefix++;
+      } else {
+        counts[owner]++;
+      }
+    }
+    final List<int> nextStarts = <int>[];
+    var at = prefix;
+    for (final int count in counts) {
+      nextStarts.add(at);
+      at += count;
+    }
+    return PmlSlideReorder._(
+      presentation,
+      before,
+      after,
+      sections,
+      starts,
+      nextStarts,
+    );
+  }
+
+  /// Reorder one slide with the same membership contract as [planReorder].
+  static void reorderSlide(PmlPresentation presentation, int from, int to) =>
+      planReorder(presentation, from, to).apply();
+
   /// add API.
   static PmlSection add(
     PmlPresentation presentation, {
@@ -229,5 +330,64 @@ abstract final class PmlSections {
     }
     presentation.sections.removeAt(index);
     return true;
+  }
+}
+
+/// An atomic, reversible slide move and its section-boundary changes.
+class PmlSlideReorder {
+  PmlSlideReorder._(
+    this._presentation,
+    this._before,
+    this._after,
+    this._sections,
+    this._beforeStarts,
+    this._afterStarts,
+  );
+
+  final PmlPresentation _presentation;
+  final List<PmlSlide> _before;
+  final List<PmlSlide> _after;
+  final List<PmlSection> _sections;
+  final List<int> _beforeStarts;
+  final List<int> _afterStarts;
+
+  /// Apply the move, or reapply it after [undo].
+  void apply() => _restore(_before, _beforeStarts, _after, _afterStarts);
+
+  /// Restore the exact prior slide identities and section boundaries.
+  void undo() => _restore(_after, _afterStarts, _before, _beforeStarts);
+
+  void _restore(
+    List<PmlSlide> expected,
+    List<int> expectedStarts,
+    List<PmlSlide> target,
+    List<int> starts,
+  ) {
+    PmlSections.validate(_presentation);
+    if (_presentation.slides.length != expected.length ||
+        _presentation.sections.length != _sections.length) {
+      throw StateError(
+        'Presentation changed after the slide move was planned.',
+      );
+    }
+    for (int i = 0; i < expected.length; i++) {
+      if (!identical(_presentation.slides[i], expected[i])) {
+        throw StateError('Slide order changed after the move was planned.');
+      }
+    }
+    for (int i = 0; i < _sections.length; i++) {
+      if (!identical(_presentation.sections[i], _sections[i]) ||
+          _sections[i].startIndex != expectedStarts[i]) {
+        throw StateError(
+          'Section boundaries changed after the move was planned.',
+        );
+      }
+    }
+    _presentation.slides
+      ..clear()
+      ..addAll(target);
+    for (int i = 0; i < _sections.length; i++) {
+      _sections[i].startIndex = starts[i];
+    }
   }
 }

@@ -26,12 +26,13 @@ creation, image replacement and opaque body XML (`w:altChunk` and any other
 unmodeled body element, with its relationship provenance). The editor adds
 layout exports and the async controller export.
 
-The authored manifests require **150 engine files** and **20 editor files**:
-53 complete three-save series and 11 standalone inputs/exports. Exact inventory
-checks reject missing, extra, empty or invalid packages and retain SHA-256
-receipts. Eight authored source/edited baselines also participate in the external
-render comparisons; the other three standalone exports receive render-only
-coverage.
+The authored manifests require **241 engine files** and **22 editor files**.
+The engine has 73 complete three-save series and 22 standalone inputs/exports;
+the editor has seven complete three-save series and one standalone export.
+Exact inventory checks reject missing, extra, empty or invalid packages and
+retain SHA-256 receipts. Authored source/edited baselines also participate in
+external render comparisons; exports without a declared comparison baseline
+still require their own schema and render checks.
 
 ## Import, inspect, edit and export
 
@@ -80,7 +81,7 @@ stories use `section` (default 0); note stories require the actual `note` ID; co
 | `applyStyle` | `paragraph`, `style`, story selector | Apply a paragraph style from this document |
 | `characterStyle` | `paragraph`, `run`, `style`, story selector | Apply a source character style |
 | `tableStyle` | `table`, `style` | Apply a source table style |
-| `styleDefinition` | `style`, `type`; optional `rPr`, `pPr`, `tblPr`, `tcPr` | Edit sparse source style properties |
+| `styleDefinition` | `style`; optional `type`, `rPr`, `pPr`, `tblPr`, `tcPr` | Edit sparse source style properties |
 | `paragraphFormat` | `paragraph`; optional `alignment`, `before`, `after`, `lineSpacing`, `lineSpacingRule`, `left`, `right`, `firstLine`, `hanging`, `tabs`, `keepTogether`, `pageBreakBefore`, `columnBreakBefore`, `dropCapLines`, `shading`, `border`, `rtl`, story selector | Change supplied properties, preserving explicit defaults |
 | `runFormat` | `paragraph`; optional `start`, `end`, `bold`, `italic`, `strike`, `underline`, `color`, `highlight`, `font`, `size`, story selector | Format a range; explicit false/black/default-size values stay direct |
 | `addNote` | `paragraph`, `text`; optional `offset`, `endnote` | Insert a footnote/endnote at the caret offset, or the end if omitted |
@@ -97,13 +98,16 @@ stories use `section` (default 0); note stories require the actual `note` ID; co
 | `listClear` | `paragraph` | Remove list formatting |
 | `listRestart` | `paragraph`; optional `at` (default 1) | Restart a numbered list without mutating unrelated instances |
 | `hyperlink` | `paragraph`, `run`, `target`, story selector | Set a run hyperlink |
-| `tableCellText` | `table`, `row`, `column`, `text` | Replace the selected cell's text |
+| `tableCellText` | `table`, `row`, `column`, `text` | Replace the selected cell's entire story with one plain paragraph |
 | `headerFooterText` | `story`, `text`; optional `section`, `paragraph` | Replace/add text in one of the six header/footer variants |
 | `sectionFormat` | optional `section`, `width`, `height`, `top`, `bottom`, `left`, `right`, `header`, `footer`, `columns`, `columnSpace`, `columnSep`, `breakKind`, `differentFirstPage`, `differentOddEven` | Edit page/section geometry and flags |
 
 ### Word structure operations
 
-These 24 additional commands use body indexes shown by `inspect`. Exact required
+These 24 additional commands use body indexes shown by `inspect`. `tableMerge`
+uses logical grid columns; `tableUnmerge`, `tableCellText` and `tableCellFormat`
+use physical cell indexes within the selected row. TOC indexes follow depth-first
+body traversal, including controls, tables and frames. Exact required
 fields and accepted optional fields are available from `operations`.
 
 | Operations | Purpose and important fields |
@@ -122,8 +126,30 @@ Paragraph tab stops are arrays of `{ "position": 72, "alignment": "right",
 "leader": "dot" }`. Distances are points. `firstLine` and `hanging` cannot both
 be supplied. Comment `date` values, when supplied, are ISO-8601 timestamps.
 Bookmark creation rejects duplicate names and replacement of a differently named
-bookmark, preventing silent breakage of existing references. General multiple
-or cross-paragraph bookmark ranges remain a separately tracked format gap.
+bookmark, preventing silent breakage of existing references. The import/edit/export
+model also preserves native partial, multiple, overlapping and cross-paragraph
+bookmark ranges; `reference` uses their exact marked text. `bookmarkSet` remains
+a paragraph-wide creation operation. The editor's rich clipboard insertion
+rejects native-ID collisions. The scripted `paragraphDelete`, `tableRowDelete`,
+`tableColumnDelete` and `tocRemove` commands, plus note-pane edits that remove
+paragraphs, reject removal of only one native bookmark endpoint before mutation.
+These guarantees cover the named edit paths. The note-pane guard also runs before
+controller history changes. The CLI `editNote` operation intentionally replaces
+the rich note body; use paragraph/run operations for rich edits.
+
+Frame `wrap` accepts `none`, `square` and `topBottom`. Body paragraphs and TOCs
+following a frame reflow around it; native coordinates, wrap values and colors
+are checked independently. Arbitrary picture contours and floating table
+exclusions remain outside that acceptance scope.
+
+Imported block content controls retain live children and exact metadata in
+body, notes, tables and frames. Headers, footers and comments also retain
+single-paragraph block controls, including nested wrapper shells. Paired inline
+controls retain their positions. Supported paragraph operations use the actual
+container. Unsupported inline drawings/equations, multi-paragraph or
+non-paragraph auxiliary controls, table row/cell wrappers and edits crossing
+control boundaries fail before mutation. UI lock and data-binding semantics are
+not implemented.
 
 The independently authored `word_structure_source.xml`,
 `word_structure_expected.json`, and `scripts/word-structure-{create,edit,remove}.json`
@@ -137,8 +163,9 @@ and original image bytes. Normal validation never rewrites expected values.
 `endnote` defaults to false. Alignment, underline and break-kind strings use the
 model enum names printed in the source. `highlight: null` clears a highlight.
 `styleDefinition` values are maps from OOXML property names to attribute maps;
-a null property removes it. Existing style ID and type must match. The command
-retains sparse source definitions and re-evaluates inherited formatting.
+a null property removes it. The style ID must already exist; a supplied type
+must match its native type. The command retains sparse source definitions and
+re-evaluates inherited formatting.
 
 A small edit script:
 
@@ -202,16 +229,26 @@ notation and must stay within Excel row/column bounds.
 | `mergeCells` | `range` | Merge and center a multi-cell range |
 | `unmergeCells` | `range` | Unmerge the selected range |
 | `freeze` | `rows` and/or `columns` | Set frozen row/column counts |
-| `renameSheet` | `name` | Rename an unreferenced sheet with a unique valid name |
+| `renameSheet` | `name` | Atomically rename a sheet and rewrite supported local references |
 | `sheetOrder` | `to` | Move the sheet to a new index |
 | `rowHeight` | `row`, `height` | Set row height in pixels |
 | `columnWidth` | `column`, `width` | Set column width in pixels |
 
-After all edits, formulas are recalculated by the engine. The scripting command
-rejects a rename if formulas, names, charts or pivots reference that sheet;
-rewriting every possible formula grammar/reference is not implemented. This is
-an explicit unsupported operation, not a silently broken workbook. See
-`scripts/sheet.json` for formulas, styles, freeze panes, dimensions and reordering.
+After all edits, the engine recalculates supported formulas. Unsupported external,
+three-dimensional, whole-row/column and qualified-name expressions retain their
+imported cached values; preservation does not establish evaluation support.
+
+`renameSheet` uses the shared `SheetRename` plan also exposed to editor history.
+It rewrites local quoted/unquoted and three-dimensional sheet qualifiers in
+modeled and native formulas, defined/print names, validation and conditional
+rules, internal hyperlinks, consolidation sources, charts and pivot sources.
+Formula strings, structured references and external workbook qualifiers are
+retained. A unique valid name is required. Opaque executable/data-model owners,
+unrecognized reference-bearing XML, stale edits, incomplete shared formulas,
+array/data-table formulas and lossy native projections reject before mutation.
+Undo patches only the reference fields owned by the rename, preserving later
+edits and save-generated cached results. See `scripts/sheet.json` and the
+independently authored `sheet-rename-native.xlsx` fixture and XML oracle.
 
 ### PPTX: 8 operations
 
@@ -224,13 +261,20 @@ Every operation accepts `slide` (default 0). Shape indexes follow `inspect`.
 | `shapeGeometry` | `shape`; optional `x`, `y`, `width`, `height`, `rotation` | Edit points/degrees, keeping visual geometry synchronized |
 | `slideNotes` | `text` | Replace speaker notes |
 | `slideHidden` | `hidden` | Set visibility |
-| `slideOrder` | `to` | Move a slide and preserve its owning parts |
+| `slideOrder` | `to` | Move a slide, preserve its owning parts and update section membership |
 | `slideTransition` | `kind`; optional `direction`, `durationMs`, `advanceOnClick` | Set a schema-valid transition |
 | `slideImageReplace` | `shape`, `file` | Replace picture bytes |
 
-Text replacement refuses picture/table shapes. Slide reordering is rejected
-when presentation sections would also need rewriting. See `scripts/slide.json`
-for combined text, geometry, notes, transition, picture and reorder steps.
+Text replacement refuses picture/table shapes. Section-aware slide reordering
+retains native section GUIDs, order, empty sections, membership metadata and
+namespace bindings. The moved slide adopts the original destination slide's
+section; every other membership stays unchanged. Malformed, ambiguous,
+nonconsecutive or stale section membership and unresolved native slide targets
+reject before mutation. The same reversible plan is used by editor history.
+See `scripts/slide.json` for combined operations and the independently authored
+`slide-sections.pptx` corpus for three-save direct/isolate permutations. Native
+acceptance compares the complete rendered page text and RGB fingerprints with
+the corresponding source-page order.
 
 ## Evidence layers
 
@@ -240,16 +284,24 @@ for combined text, geometry, notes, transition, picture and reorder steps.
 | openpyxl / python-pptx inputs | Retained source templates/styles, live charts, pivots, speaker notes, media ownership and reorder behavior |
 | Python semantic oracles | Read output ZIP/XML directly, compare authored values, decode picture pixels, verify relationships and selected child ordering |
 | Mutation controls | Deliberately break content, note marks, style flags, list starts, formulas, media, namespaces or inventories and require rejection |
-| Flutter goldens | A full rich-note page, three pages using first/even/default header/footer pictures, and 11 pages covering RTL, columns, sections, continued notes and a tall table before and after saves |
-| Real CrispCloud widget tests | Open the real editor, use ribbon heading/paragraph/note/picture commands, capture three saves/reopens, edit during uploads, retry failures and check dirty/close behavior |
-| Open XML SDK | Validate exported packages against the external OOXML schema validator; prove the validator rejects an invalid control |
-| LibreOffice / Poppler | Render each package to PDF and retained page PNGs; compare normalized text and decoded RGB pixels between complete repeated-save groups |
+| Flutter goldens | Notes and continuation, first/even/default story pictures, columns, tall tables, structure recipes, three frame wrap modes and rich nested cells, before and after saves |
+| Real CrispCloud widget tests | Open the real editor dialog, edit during an upload, capture saved bytes, retry failures and check dirty/close behavior |
+| Open XML SDK | Validate exact package bytes against the external OOXML schema validator, report SHA-256 receipts, and prove the validator rejects an invalid control |
+| LibreOffice / Poppler | Render supported inputs to retained PDF/page PNGs; compare text and decoded RGB pixels against native sources and complete save-cycle groups; separately report strictly qualified native-only limitations |
 | VM line coverage | List every uncovered instrumented line and every absent source file; execution coverage does not establish correctness |
 
 The Python package oracle is not a general OOXML validator. The Open XML SDK
 checks structural validity, not application rendering. LibreOffice repeated-save
 comparisons check stability in that renderer, not pixel identity with Microsoft
 Office. These layers answer different questions and are all retained.
+
+The authored block-control-in-comment source is currently refused by
+LibreOffice. Its original seven packages are still required by the semantic and
+SDK gates. Only the specific raw-source importer refusal plus successful
+exact-path, exact-byte SDK receipts can qualify them as `native_schema_only`;
+they count as zero visual successes. A separate seven-file header/footer-control
+corpus is rendered strictly against its source. See `FID-065` in
+`docs/office-fidelity-gaps.json` at the repository root for this acceptance limit.
 
 ## Full checks
 
@@ -297,7 +349,8 @@ PYTHON
 dotnet run --project tool/office-validation -- --self-test
 dotnet run --project tool/office-validation -- build/office-evidence build/external/schema-report.json
 python3 -m unittest discover -s tool/office-validation -p 'test_*.py'
-python3 tool/office-validation/render.py build/office-evidence build/external-render
+python3 tool/office-validation/render.py build/office-evidence build/external-render \
+  --schema-report build/external/schema-report.json
 ```
 
 CI runs full engine/editor suites, retains the semantic reports, exports,
@@ -324,14 +377,18 @@ flutter test --no-pub test/office_story_golden_test.dart --update-goldens
 # Inspect all changed PNGs, then rerun without --update-goldens.
 ```
 
-The layout goldens compare both the original and the exported reopen to the
-same reviewed baseline for RTL/Arabic, columns, sections/page breaks, continued
-notes, and a four-page table with a late note; expected page counts are asserted
-explicitly.
+The layout goldens compare the original and each of three sequential native
+save/reopen states to the same reviewed baseline for RTL/Arabic, columns,
+sections/page breaks, continued notes, and a four-page table with a late note;
+expected page counts are asserted explicitly.
 
 The picture assertions must pass before capturing a golden, so an undecoded or
-blank page cannot become an accepted baseline. Read `docs/office-fidelity-audit.md`
-and the machine-readable gap ledger for verified fixes and remaining limits.
+blank page cannot become an accepted baseline. Use the
+[current coverage guide](../../../../docs/office-fidelity-coverage-20261112.md)
+and [gap ledger](../../../../docs/office-fidelity-gaps.json) for current fixes
+and remaining limits. The
+[historical audit](../../../../docs/office-fidelity-audit.md) retains earlier
+measurements and probe results.
 
 ## Native fixtures
 

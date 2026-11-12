@@ -185,6 +185,7 @@ Future<void> bindLegacyBookmark(
             path: bookmark.path,
             side: bookmark.side,
             storage: origin.storageReference,
+            group: bookmark.group,
           ),
         );
   } catch (error) {

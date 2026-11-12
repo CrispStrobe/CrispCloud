@@ -3,7 +3,10 @@
 // Quick-search command palette (Ctrl+Shift+P).
 // Lists all available actions, type to filter, Enter to execute.
 
+import 'dart:async';
+
 import '../l10n/commander_strings.dart';
+import '../l10n/browser_menu_strings.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -33,6 +36,7 @@ import 'transfer_history_dialog.dart';
 import 'integrity_dialogs.dart';
 import 'integrity_recovery_dialog.dart';
 import 'directory_comparison_dialog.dart';
+import 'directory_selection_actions.dart';
 import 'storage_analyzer_dialog.dart';
 import 'storage_scan_batch_dialog.dart';
 import '../l10n/storage_analyzer_strings.dart';
@@ -40,16 +44,27 @@ import 'file_clipboard_actions.dart';
 import 'pdf_editor_dialog.dart';
 import 'pdf_operations_dialog.dart';
 import 'workspace_dialog.dart';
+import 'path_favorites.dart';
 import 'file_view_editor_dialog.dart';
 import 'custom_command_dialog.dart';
 import 'extensions_dialog.dart';
 import '../l10n/extension_translations.dart';
 import '../l10n/navigation_strings.dart';
 import '../l10n/workspace_ux_strings.dart';
+import '../l10n/synchronized_browsing_strings.dart';
+import '../providers/synchronized_browsing_provider.dart';
+import 'synchronized_browsing_controls.dart';
 import '../services/keyboard_shortcut_service.dart';
 import '../services/command_search.dart';
 import 'keyboard_shortcut_dialog.dart';
 import '../screens/keyboard_shortcuts.dart' show executeBrowserShortcut;
+import '../providers/quick_open_provider.dart';
+import '../providers/panel_source_provider.dart';
+import '../providers/file_collection_provider.dart';
+import '../services/quick_open_service.dart';
+import '../l10n/quick_open_strings.dart';
+import 'batch_rename_dialog.dart';
+import 'drive_bar.dart';
 
 class _Command {
   final String name;
@@ -59,6 +74,10 @@ class _Command {
   final ShortcutAction? binding;
   final String keywords;
   final bool enabled;
+  final String? id;
+  final String? detail;
+  final String? disabledReason;
+  String get identity => id ?? name;
 
   const _Command({
     required this.name,
@@ -68,6 +87,9 @@ class _Command {
     this.binding,
     this.keywords = '',
     this.enabled = true,
+    this.id,
+    this.detail,
+    this.disabledReason,
   });
 }
 
@@ -128,6 +150,14 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
 
     return [
       // Navigation
+      _Command(
+        name: SynchronizedBrowsingStrings(context).text(
+          ref.read(synchronizedBrowsingProvider).enabled ? 'stop' : 'start',
+        ),
+        icon: Icons.link,
+        keywords: 'linked panes folders navigation synchronized browsing',
+        action: () => toggleSynchronizedBrowsing(ref),
+      ),
       _Command(
         name: WorkspaceUxStrings(context).text('back'),
         binding: ShortcutAction.back,
@@ -232,10 +262,19 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
         },
       ),
 
+      ..._quickOpenCommands(side),
+
       _Command(
         name: context.commanderTr("Commander workspaces"),
         icon: Icons.bookmarks_outlined,
         action: () => showWorkspaceDialog(widget.parentContext, ref, side),
+      ),
+      _Command(
+        name: WorkspaceUxStrings(context).action(ShortcutAction.pathFavorites),
+        binding: ShortcutAction.pathFavorites,
+        icon: Icons.star_outline,
+        keywords: 'favorites favourite bookmark path directory group',
+        action: () => showPathFavoritesMenu(widget.parentContext, side),
       ),
       _Command(
         name: context.commanderTr("Columns and view"),
@@ -373,6 +412,22 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
         action: () => showTransferHistoryDialog(widget.parentContext, ref),
       ),
       _Command(
+        name: BrowserMenuStrings(context).text('copyNames'),
+        icon: Icons.copy,
+        action: () => copySelectionNamesOrPaths(ref, namesOnly: true),
+      ),
+      _Command(
+        name: BrowserMenuStrings(context).text('copyFullPaths'),
+        icon: Icons.copy,
+        action: () => copySelectionNamesOrPaths(ref, namesOnly: false),
+      ),
+      if (canCompareDirectories(ref))
+        _Command(
+          name: BrowserMenuStrings(context).text('compareDirectories'),
+          icon: Icons.compare_arrows,
+          action: () => compareDirectories(ref),
+        ),
+      _Command(
         name: context.commanderTr("Create or Verify Checksums"),
         icon: Icons.verified_outlined,
         action: () =>
@@ -419,7 +474,9 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
       ),
       _Command(
         name: context.commanderTr("Restore Selection"),
+        binding: ShortcutAction.restoreSelection,
         icon: Icons.restore,
+        enabled: panel.restorableSelectionCount > 0,
         action: () => panel.restoreSelection(),
       ),
       if (panel.showingSearchResults)
@@ -600,6 +657,95 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
             .read(keyboardShortcutServiceProvider)
             .browserDisplay(command.binding!);
 
+  List<_Command> _quickOpenCommands(PanelSide side) {
+    final strings = QuickOpenStrings(context);
+    final saved = ref.read(quickOpenSavedItemsProvider);
+    final entries = ref
+        .read(quickOpenControllerProvider)
+        .entries(
+          side,
+          saved.valueOrNull,
+          devices: [
+            for (final device
+                in ref.read(drivesProvider).valueOrNull ?? const <DriveEntry>[])
+              QuickOpenDevice(path: device.path, name: device.label),
+          ],
+          reviewRename: (request) async {
+            if (!widget.parentContext.mounted) return;
+            await showDialog<void>(
+              context: widget.parentContext,
+              barrierDismissible: false,
+              builder: (_) => BatchRenameDialog(
+                parentRef: widget.actionRef,
+                side: request.side,
+                files: request.files,
+                initialOptions: request.options,
+                initialPresetName: request.name,
+                capturedOrigin: request.origin,
+                capturedDirectory: request.directory,
+              ),
+            );
+          },
+        );
+    return [
+      for (final entry in entries)
+        _Command(
+          id: entry.id,
+          name: entry.name,
+          detail:
+              '${strings.kind(entry.kind)} · ${entry.kind == QuickOpenKind.renamePreset ? strings.reviewCount(entry.detail) : entry.detail}',
+          disabledReason: entry.unavailable == null
+              ? null
+              : strings.reason(entry.unavailable!),
+          icon: switch (entry.kind) {
+            QuickOpenKind.favorite => Icons.star_outline,
+            QuickOpenKind.source => Icons.cloud_outlined,
+            QuickOpenKind.device => Icons.storage_outlined,
+            QuickOpenKind.workspace => Icons.view_quilt_outlined,
+            QuickOpenKind.renamePreset => Icons.drive_file_rename_outline,
+          },
+          keywords:
+              '${entry.kind.name} ${strings.kind(entry.kind)} ${entry.detail}',
+          enabled: entry.enabled,
+          action: () => unawaited(_openQuickEntry(entry)),
+        ),
+      if (saved.isLoading && !saved.hasValue)
+        _Command(
+          id: 'quick-open-loading',
+          name: strings.text('loading'),
+          icon: Icons.hourglass_empty,
+          enabled: false,
+          action: () {},
+        ),
+      if (saved.hasError ||
+          saved.valueOrNull?.workspaceError == true ||
+          saved.valueOrNull?.renamePresetError == true ||
+          ref.read(bookmarksProvider).lastError != null)
+        _Command(
+          id: 'quick-open-load-error',
+          name: strings.reason(QuickOpenUnavailable.savedItemsUnavailable),
+          icon: Icons.error_outline,
+          enabled: false,
+          action: () {},
+        ),
+    ];
+  }
+
+  Future<void> _openQuickEntry(QuickOpenEntry entry) async {
+    final parent = widget.parentContext;
+    try {
+      final controller = widget.actionRef.read(quickOpenControllerProvider);
+      await controller.executor.open(entry, isCurrent: () => parent.mounted);
+    } catch (error) {
+      if (!parent.mounted) return;
+      final message = error is QuickOpenException
+          ? QuickOpenStrings(parent).reason(error.reason)
+          : '$error';
+      ScaffoldMessenger.maybeOf(parent)
+          ?.showSnackBar(SnackBar(content: Text(message)));
+    }
+  }
+
   List<_Command> _rankCommands(String query) {
     final ranked = <({int index, int score, _Command command})>[];
     for (var i = 0; i < _allCommands.length; i++) {
@@ -622,8 +768,9 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
   void _moveSelection(int delta) {
     if (_filtered.isEmpty) return;
     var next = _selectedIndex + delta;
-    while (next >= 0 && next < _filtered.length && !_filtered[next].enabled)
+    while (next >= 0 && next < _filtered.length && !_filtered[next].enabled) {
       next += delta;
+    }
     if (next < 0 || next >= _filtered.length) return;
     setState(() => _selectedIndex = next);
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -644,8 +791,9 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
     if (_filtered.isNotEmpty &&
         _selectedIndex < _filtered.length &&
         _filtered[_selectedIndex].enabled) {
+      final command = _filtered[_selectedIndex];
       Navigator.of(context).pop();
-      _filtered[_selectedIndex].action();
+      command.action();
     }
   }
 
@@ -710,6 +858,28 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
                         color: command.enabled ? null : theme.disabledColor,
                       ),
                     ),
+                    if (command.detail != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          command.detail!,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    if (command.disabledReason != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          command.disabledReason!,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.disabledColor,
+                          ),
+                        ),
+                      ),
                     if (compact && shortcutLabel != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
@@ -733,13 +903,38 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
     ref.watch(panelProvider(side));
     ref.watch(authProvider);
     ref.watch(shortcutBindingsProvider);
-    final selectedName = _selectedIndex < _filtered.length
-        ? _filtered[_selectedIndex].name
+    ref.watch(bookmarksProvider);
+    ref.watch(availableSourcesProvider);
+    ref.watch(drivesProvider);
+    ref.watch(fileCollectionStoreProvider);
+    ref.watch(quickOpenSavedItemsProvider);
+    final previouslySelected = _selectedIndex < _filtered.length
+        ? _filtered[_selectedIndex]
         : null;
     _allCommands = _buildCommands();
+    if (previouslySelected?.id != null &&
+        !_allCommands.any(
+          (command) => command.identity == previouslySelected!.identity,
+        )) {
+      // A disconnected/removed target must not silently hand keyboard selection
+      // to another account with the same display name.
+      _allCommands.add(
+        _Command(
+          id: previouslySelected!.id,
+          name: previouslySelected.name,
+          detail: previouslySelected.detail,
+          keywords: previouslySelected.keywords,
+          icon: previouslySelected.icon,
+          enabled: false,
+          disabledReason: QuickOpenStrings(context)
+              .reason(QuickOpenUnavailable.changed),
+          action: () {},
+        ),
+      );
+    }
     _filtered = _rankCommands(_controller.text);
     _selectedIndex = _filtered.indexWhere(
-      (command) => command.name == selectedName && command.enabled,
+      (command) => command.identity == previouslySelected?.identity,
     );
     if (_selectedIndex < 0) {
       _selectedIndex = _filtered.indexWhere((command) => command.enabled);
@@ -766,8 +961,9 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
                   if (event is! KeyDownEvent) return KeyEventResult.ignored;
                   if (_filtered.isEmpty &&
                       (event.logicalKey == LogicalKeyboardKey.arrowDown ||
-                          event.logicalKey == LogicalKeyboardKey.arrowUp))
+                          event.logicalKey == LogicalKeyboardKey.arrowUp)) {
                     return KeyEventResult.handled;
+                  }
                   if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
                     _moveSelection(1);
                     return KeyEventResult.handled;
@@ -790,7 +986,7 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
                   controller: _controller,
                   focusNode: _focusNode,
                   decoration: InputDecoration(
-                    hintText: context.commanderTr("Type a command..."),
+                    hintText: QuickOpenStrings(context).text('hint'),
                     prefixIcon: const Icon(Icons.search, size: 20),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),

@@ -55,7 +55,7 @@ class _MetadataCloud extends WorkflowFakeClient
   int browsingReads = 0;
   int authenticationChecks = 0;
   int metadataRowsReturned = 0;
-  int downloads = 0;
+  int downloadCount = 0;
 
   @override
   bool get isAuthenticated {
@@ -89,7 +89,7 @@ class _MetadataCloud extends WorkflowFakeClient
     String path, {
     Function(int, int)? onProgress,
   }) async {
-    downloads++;
+    downloadCount++;
     throw StateError('The metadata benchmark must not read file contents.');
   }
 
@@ -98,7 +98,7 @@ class _MetadataCloud extends WorkflowFakeClient
     browsingReads = 0;
     authenticationChecks = 0;
     metadataRowsReturned = 0;
-    downloads = 0;
+    downloadCount = 0;
   }
 }
 
@@ -180,7 +180,7 @@ void main() {
             'browsingReads': cloud.browsingReads,
             'authenticationChecks': cloud.authenticationChecks,
             'metadataRowsReturned': cloud.metadataRowsReturned,
-            'downloads': cloud.downloads,
+            'downloads': cloud.downloadCount,
           };
           // Independent fixed fixture totals and publication checks run after
           // the clock stops. The aggregate-only API is deliberately not used.
@@ -203,7 +203,7 @@ void main() {
           expect(cloud.freshReads, {'/': 1, _targetPath: 1});
           expect(cloud.metadataRowsReturned, _paneEntries + _scannedFiles);
           expect(cloud.browsingReads, 0);
-          expect(cloud.downloads, 0);
+          expect(cloud.downloadCount, 0);
           expect(cloud.writes, isEmpty);
           final milliseconds = watch.elapsedMicroseconds / 1000;
           if (run != 0) timings.add(milliseconds);

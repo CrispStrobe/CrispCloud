@@ -219,4 +219,63 @@ void main() {
       await bookmarks.ready;
     },
   );
+
+  test('favorite order persists without changing source identities', () async {
+    final bookmarks = BookmarksNotifier();
+    addTearDown(bookmarks.dispose);
+    await bookmarks.add('First', '/reports', PanelSide.remote, storage: _first);
+    await bookmarks.add(
+      'Second',
+      '/reports',
+      PanelSide.local,
+      storage: _second,
+    );
+    await bookmarks.add('Third', '/photos', PanelSide.remote, storage: _first);
+    final second = bookmarks.bookmarks[1];
+    final identities = bookmarks.bookmarks.map((item) => item.identity).toSet();
+    await bookmarks.move(second, -1);
+    expect(bookmarks.bookmarks.map((item) => item.name), [
+      'Second',
+      'First',
+      'Third',
+    ]);
+    await bookmarks.move(second, -1); // First item cannot move past the top.
+    expect(bookmarks.bookmarks.first, same(second));
+    final restored = BookmarksNotifier();
+    addTearDown(restored.dispose);
+    await restored.ready;
+    expect(restored.bookmarks.map((item) => item.name), [
+      'Second',
+      'First',
+      'Third',
+    ]);
+    expect(restored.bookmarks.map((item) => item.identity).toSet(), identities);
+  });
+
+  test(
+    'reordering a removed row cannot move its replacement neighbor',
+    () async {
+      final bookmarks = BookmarksNotifier();
+      addTearDown(bookmarks.dispose);
+      await bookmarks.add('First', '/first', PanelSide.remote, storage: _first);
+      await bookmarks.add(
+        'Second',
+        '/second',
+        PanelSide.remote,
+        storage: _first,
+      );
+      final removed = bookmarks.bookmarks.first;
+      await bookmarks.remove(
+        removed.path,
+        removed.side,
+        storage: removed.storage,
+      );
+      await expectLater(bookmarks.move(removed, 1), throwsStateError);
+      expect(bookmarks.bookmarks.single.name, 'Second');
+      await expectLater(
+        bookmarks.move(bookmarks.bookmarks.single, 3),
+        throwsArgumentError,
+      );
+    },
+  );
 }

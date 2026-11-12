@@ -1,4 +1,8 @@
 {
+  "separator_definitions": {
+    "footnote": [],
+    "endnote": []
+  },
   "blocks": [
     "p",
     "tbl",

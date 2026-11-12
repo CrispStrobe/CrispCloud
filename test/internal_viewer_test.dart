@@ -222,7 +222,9 @@ void main() {
     test('magic bytes override extension (PNG bytes on .txt file)', () {
       final header = _bytes([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
       expect(
-          _svc.detectMode('disguised.txt', header: header), ViewerMode.image);
+        _svc.detectMode('disguised.txt', header: header),
+        ViewerMode.image,
+      );
     });
   });
 
@@ -569,8 +571,8 @@ void main() {
   // ---- ViewerMode enum completeness ----------------------------------------
 
   group('ViewerMode enum', () {
-    test('has 13 values', () {
-      expect(ViewerMode.values.length, 15);
+    test('has 16 values including saved email', () {
+      expect(ViewerMode.values.length, 16);
     });
 
     test('contains the original 7 modes plus the new lister modes', () {
@@ -588,6 +590,7 @@ void main() {
           'font',
           'csv',
           'office',
+          'email',
           'archive',
           'unsupported',
         ]),
@@ -648,7 +651,7 @@ void main() {
         0x0A,
         0x00,
         0x0A,
-        0x00
+        0x00,
       ]);
       final r = InternalViewerService.decodeTextForView(data);
       expect(r.encoding, 'utf16le');
@@ -657,8 +660,10 @@ void main() {
 
     test('explicit latin1 hint decodes high bytes as latin1 glyphs', () {
       final data = _bytes([0xE9]); // é in latin1
-      final r =
-          InternalViewerService.decodeTextForView(data, encoding: 'latin1');
+      final r = InternalViewerService.decodeTextForView(
+        data,
+        encoding: 'latin1',
+      );
       expect(r.text, 'é');
     });
   });
@@ -667,7 +672,8 @@ void main() {
     test('plain ASCII text with newlines → text', () {
       expect(
         InternalViewerService.looksLikeText(
-            _asciiBytes('line one\nline two\n')),
+          _asciiBytes('line one\nline two\n'),
+        ),
         isTrue,
       );
     });
@@ -675,7 +681,8 @@ void main() {
     test('NUL-containing binary → not text', () {
       expect(
         InternalViewerService.looksLikeText(
-            _bytes([0x01, 0x02, 0x00, 0x03, 0x04])),
+          _bytes([0x01, 0x02, 0x00, 0x03, 0x04]),
+        ),
         isFalse,
       );
     });
@@ -690,31 +697,34 @@ void main() {
     test('all-control-char header → not text', () {
       expect(
         InternalViewerService.looksLikeText(
-            _bytes([0x01, 0x02, 0x03, 0x04, 0x05])),
+          _bytes([0x01, 0x02, 0x03, 0x04, 0x05]),
+        ),
         isFalse,
       );
     });
 
     test('compressed-looking random high bytes → not text', () {
       expect(
-        InternalViewerService.looksLikeText(_bytes([
-          0x1F,
-          0x8B,
-          0x80,
-          0x9A,
-          0xC1,
-          0xFF,
-          0xEE,
-          0x80,
-          0x7F,
-          0xF3,
-          0x9C,
-          0xAB,
-          0xDE,
-          0x80,
-          0x97,
-          0xFA,
-        ])),
+        InternalViewerService.looksLikeText(
+          _bytes([
+            0x1F,
+            0x8B,
+            0x80,
+            0x9A,
+            0xC1,
+            0xFF,
+            0xEE,
+            0x80,
+            0x7F,
+            0xF3,
+            0x9C,
+            0xAB,
+            0xDE,
+            0x80,
+            0x97,
+            0xFA,
+          ]),
+        ),
         isFalse,
       );
     });
@@ -807,10 +817,7 @@ void main() {
     test('finds pattern at start/middle/end', () {
       final data = _asciiBytes('haystackneedlehaystack');
       final pattern = _asciiBytes('needle');
-      expect(
-        InternalViewerService.findBytes(data, pattern),
-        [8],
-      );
+      expect(InternalViewerService.findBytes(data, pattern), [8]);
     });
 
     test('multiple matches', () {
@@ -821,8 +828,11 @@ void main() {
 
     test('start offset skips earlier matches', () {
       final data = _asciiBytes('ababab');
-      final result =
-          InternalViewerService.findBytes(data, _asciiBytes('ab'), start: 1);
+      final result = InternalViewerService.findBytes(
+        data,
+        _asciiBytes('ab'),
+        start: 1,
+      );
       expect(result, [2, 4]);
     });
 
@@ -837,8 +847,10 @@ void main() {
     });
 
     test('no match → empty', () {
-      final result =
-          InternalViewerService.findBytes(_asciiBytes('abc'), _asciiBytes('z'));
+      final result = InternalViewerService.findBytes(
+        _asciiBytes('abc'),
+        _asciiBytes('z'),
+      );
       expect(result, isEmpty);
     });
   });
@@ -922,6 +934,44 @@ void main() {
       expect(_svc.detectMode('book.epub'), ViewerMode.office);
     });
 
+    test('legacy Word and macro/template documents route to Office', () {
+      for (final name in [
+        'report.doc',
+        'form.DOT',
+        'template.dotm',
+        'form.dotx',
+        'report.docm',
+      ]) {
+        expect(_svc.detectMode(name), ViewerMode.office, reason: name);
+      }
+    });
+
+    test('saved messages route to email and Autodesk keymaps to XML', () {
+      expect(_svc.detectMode('saved.eml'), ViewerMode.email);
+      expect(_svc.detectMode('OUTLOOK.MSG'), ViewerMode.email);
+      expect(_svc.detectMode('shortcuts.kbdx'), ViewerMode.xml);
+      expect(_svc.detectMode('passwords.kdbx'), ViewerMode.binary);
+    });
+
+    test('new formats retain their distinct MIME types', () {
+      final bytes = Uint8List(0);
+      for (final entry in {
+        'saved.eml': 'message/rfc822',
+        'saved.msg': 'application/vnd.ms-outlook',
+        'old.doc': 'application/msword',
+        'template.dotm': 'application/vnd.ms-word.template.macroEnabled.12',
+        'report.docm': 'application/vnd.ms-word.document.macroEnabled.12',
+        'template.dotx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.template',
+        'shortcuts.kbdx': 'application/xml',
+      }.entries) {
+        expect(
+          _svc.loadContent(bytes, entry.key).mimeType,
+          entry.value,
+          reason: entry.key,
+        );
+      }
+    });
+
     test('LICENSE/README recognized as text by basename', () {
       expect(_svc.detectMode('LICENSE'), ViewerMode.text);
       expect(_svc.detectMode('README'), ViewerMode.text);
@@ -930,13 +980,12 @@ void main() {
     });
 
     test('loadContent picks mime types for new modes', () {
-      expect(
-        _svc.loadContent(_bytes([0]), 'video.mp4').mimeType,
-        'video/mp4',
-      );
+      expect(_svc.loadContent(_bytes([0]), 'video.mp4').mimeType, 'video/mp4');
       expect(_svc.loadContent(_bytes([0]), 'data.csv').mimeType, 'text/csv');
-      expect(_svc.loadContent(_bytes([0]), 'r.docx').mimeType,
-          'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+      expect(
+        _svc.loadContent(_bytes([0]), 'r.docx').mimeType,
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      );
     });
   });
 }

@@ -1017,8 +1017,19 @@ IconData getFileIcon(String filename) {
     case 'pdf':
       return Icons.picture_as_pdf;
     case 'doc':
+    case 'dot':
     case 'docx':
+    case 'docm':
+    case 'dotx':
+    case 'dotm':
       return Icons.description;
+    case 'eml':
+    case 'msg':
+      return Icons.email_outlined;
+    case 'kbdx':
+      return Icons.keyboard_outlined;
+    case 'kdbx':
+      return Icons.lock_outline;
     case 'xls':
     case 'xlsx':
     case 'csv':

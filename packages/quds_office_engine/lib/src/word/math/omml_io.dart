@@ -7,6 +7,10 @@ import 'omml_document.dart';
 abstract final class OmmlIo {
   /// writeEquation API.
   static void writeEquation(XmlWriter w, OmmlEquation equation) {
+    if (equation.display == OmmlDisplay.inline) {
+      writeMath(w, equation);
+      return;
+    }
     w.writeStartElement('oMathPara', prefix: 'm');
     if (equation.display == OmmlDisplay.display) {
       w.writeStartElement('oMathParaPr', prefix: 'm');

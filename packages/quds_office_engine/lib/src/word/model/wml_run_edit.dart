@@ -1,6 +1,8 @@
 import '../properties/wml_properties.dart';
 import 'wml_clone.dart';
 import 'wml_document.dart';
+import 'word_bookmarks.dart';
+import 'word_content_controls.dart';
 
 /// Split and format [WmlRun] spans inside a paragraph.
 abstract final class WmlRunEdit {
@@ -76,51 +78,50 @@ abstract final class WmlRunEdit {
     int index,
   ) {
     RangeError.checkValueInInterval(index, 0, paragraph.text.length, 'index');
-    var offset = 0;
-    var activeInlineWrappers = 0;
+    final range = normalizeRange(paragraph, index, index);
+    if (range.start != index || range.end != index) {
+      throw ArgumentError('A paragraph cannot split an atomic text token.');
+    }
+    WordContentControls.assertCanSplit(paragraph, index);
+    final leftControls = <WmlContentControlData>{
+      for (final span in WordContentControls.spans(paragraph))
+        if (span.end < index || (span.end == index && span.start < span.end))
+          span.control,
+    };
+    final starts = <String, int>{};
+    final emptyBookmarks = <String>{};
+    var position = 0;
     for (final WmlInline inline in paragraph.inlines) {
-      if (inline is WmlRun) {
-        final int end = offset + inline.text.length;
-        if (index < end) {
-          if (inline.noteRefId != null && index > offset) {
-            throw ArgumentError('A paragraph cannot split a note reference.');
-          }
-          break;
-        }
-        if (offset >= index && inline.text.isNotEmpty) break;
-        offset = end;
-      } else {
-        if (offset >= index &&
-            (inline is! WmlZeroWidthInline || inline.isStart)) {
-          break;
-        }
-        if (inline is WmlZeroWidthInline && !inline.canCrossParagraph) {
-          activeInlineWrappers += inline.isStart ? 1 : -1;
+      if (inline is WmlRun) position += inline.text.length;
+      if (inline is WmlBookmarkBoundary) {
+        final id = WordBookmarks.canonicalId(inline.id);
+        if (inline.isStart) {
+          starts[id] = position;
+        } else if (starts[id] == position) {
+          emptyBookmarks.add(id);
         }
       }
-    }
-    if (activeInlineWrappers != 0) {
-      throw ArgumentError(
-        'A paragraph cannot split an inline content control.',
-      );
     }
     splitAt(paragraph, index);
-    offset = 0;
-    var cut = paragraph.inlines.length;
-    for (int i = 0; i < paragraph.inlines.length; i++) {
-      final WmlInline inline = paragraph.inlines[i];
-      if (offset >= index) {
-        final bool leadingEnd = inline is WmlZeroWidthInline && !inline.isStart;
-        final bool emptyRun = inline is WmlRun && inline.text.isEmpty;
-        if (!leadingEnd && !emptyRun) {
-          cut = i;
-          break;
-        }
-      }
-      if (inline is WmlRun) offset += inline.text.length;
+    position = 0;
+    final head = <WmlInline>[];
+    final tail = <WmlInline>[];
+    for (final inline in paragraph.inlines) {
+      final onLeft = inline is WmlRun
+          ? position + inline.text.length <= index
+          : inline is WmlContentControlBoundary
+          ? leftControls.contains(inline.control)
+          : inline is WmlBookmarkBoundary &&
+                !inline.isStart &&
+                !emptyBookmarks.contains(WordBookmarks.canonicalId(inline.id))
+          ? position <= index
+          : position < index;
+      (onLeft ? head : tail).add(inline);
+      if (inline is WmlRun) position += inline.text.length;
     }
-    final List<WmlInline> tail = paragraph.inlines.sublist(cut);
-    paragraph.inlines.removeRange(cut, paragraph.inlines.length);
+    paragraph.inlines
+      ..clear()
+      ..addAll(head);
     return tail;
   }
 
@@ -175,6 +176,7 @@ abstract final class WmlRunEdit {
     final range = normalizeRange(paragraph, start, end);
     start = range.start;
     end = range.end;
+    WordContentControls.assertCanEdit(paragraph, start, end);
     final int length = paragraph.text.length;
     final WmlRunProps props = propsAt(
       paragraph,
@@ -184,6 +186,18 @@ abstract final class WmlRunEdit {
       paragraph,
       start == length ? start - 1 : start,
     );
+    if (start == end && WordContentControls.hasInlineControls(paragraph)) {
+      if (insert.isNotEmpty) {
+        insertRuns(paragraph, start, <WmlRun>[
+          WmlRun(
+            text: insert,
+            properties: props.copy(),
+            commentIds: List<int>.from(commentIds),
+          ),
+        ]);
+      }
+      return;
+    }
     splitAt(paragraph, end);
     splitAt(paragraph, start);
     final List<WmlInline> next = <WmlInline>[];
@@ -338,12 +352,14 @@ abstract final class WmlRunEdit {
     if (inlines.isEmpty) {
       return;
     }
-    final int length = paragraph.text.length;
-    index = index.clamp(0, length);
+    index = normalizeRange(paragraph, index, index).start;
+    WordContentControls.assertCanEdit(paragraph, index, index);
     splitAt(paragraph, index);
     var offset = 0;
-    var insertAt = paragraph.inlines.length;
+    final controlIndex = WordContentControls.insertionIndex(paragraph, index);
+    var insertAt = controlIndex ?? paragraph.inlines.length;
     for (int i = 0; i < paragraph.inlines.length; i++) {
+      if (controlIndex != null) break;
       final WmlInline inline = paragraph.inlines[i];
       if (inline is! WmlRun) {
         continue;

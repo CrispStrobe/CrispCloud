@@ -13,6 +13,7 @@ import '../services/workspace_store.dart';
 import 'file_view_editor_dialog.dart';
 import 'rename_text_dialog.dart';
 import 'bookmark_actions.dart';
+import 'path_favorites.dart' show showPathFavoritesImportPreview;
 
 Future<void> showWorkspaceDialog(
   BuildContext context,
@@ -240,7 +241,9 @@ class _WorkspaceDialogState extends ConsumerState<WorkspaceDialog> {
         ),
       );
       if (importing && result != null && mounted) {
-        await _run(() => bookmarks.importText(result));
+        await _run(
+          () => showPathFavoritesImportPreview(context, widget.side, result),
+        );
       }
     } catch (error) {
       if (mounted) setState(() => _error = error.toString());
@@ -264,6 +267,7 @@ class _WorkspaceDialogState extends ConsumerState<WorkspaceDialog> {
               side: bookmark.side,
               storage: bookmark.storage,
               collectionId: bookmark.collectionId,
+              group: bookmark.group,
             ),
           ),
     );

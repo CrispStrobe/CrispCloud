@@ -3,6 +3,7 @@ name: Ebook reader and editor
 on:
   push:
     branches: [main, 'feature/ebook-*']
+    paths-ignore: ['docs/recovery/**']
   pull_request:
     paths:
       - 'packages/crisp_ebook*/**'

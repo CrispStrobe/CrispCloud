@@ -3,6 +3,10 @@ name: Ebook Linux embedded host
 on:
   push:
     branches: [main, 'feature/ebook-*', 'checkpoint/ebook-*']
+    paths:
+      - 'packages/crisp_ebook_reader/**'
+      - 'linux/**'
+      - '.github/workflows/ebook-linux-host.yml'
   pull_request:
     paths:
       - 'packages/crisp_ebook_reader/**'

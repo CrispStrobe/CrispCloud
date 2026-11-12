@@ -1,0 +1,115 @@
+{
+  "format_version": 1,
+  "runtime": {
+    "sdk": "8.0.428",
+    "runtime": "8.0.34",
+    "official_sdk_url": "https://builds.dotnet.microsoft.com/dotnet/Sdk/8.0.428/dotnet-sdk-8.0.428-linux-x64.tar.gz"
+  },
+  "build": {
+    "method": "Official Roslyn csc.dll with official net8.0 reference pack and pinned NuGet runtime assemblies",
+    "reason": "The normal dotnet restore path cannot initialize its NuGet migration named mutex in this restricted host. Direct compilation uses unchanged Program.cs and standard implicit usings.",
+    "build_script": {
+      "path": "/workspace/scratch/e445bd9b965c/runtime/validator/build_validator.py",
+      "sha256": "f4af656d4c2c0a6149b6fe8b38476c92f9aae80896a1eceb1dfa7594524dce19"
+    },
+    "receipt": {
+      "source": "/workspace/scratch/e445bd9b965c/quds_office_suite/tool/office-validation/Program.cs",
+      "source_sha256": "4d41f286855ed11a12ecdf0641773c33285847180a3e5cdbf43ce2385a099880",
+      "sdk": "8.0.428",
+      "runtime": "8.0.34",
+      "dependencies_sha256": {
+        "documentformat.openxml.3.3.0.nupkg": "53a74167552d886f0e312540db12c86a6133a83bd698795f3be6e25fc091b9e7",
+        "DocumentFormat.OpenXml.dll": "72e8f6e3e3527d7e6ee29f2f9182ef1b39a4de6da355a33013c0940efb24d87e",
+        "documentformat.openxml.framework.3.3.0.nupkg": "5f539f1602b642198ec6ed3ec567eac3fff62309f6ec65e28db2751a488ec30d",
+        "DocumentFormat.OpenXml.Framework.dll": "5b8c2b9ca1aa70539af0b8054d649bd09fdce4dec812b263ab511b13789c8589",
+        "system.io.packaging.8.0.1.nupkg": "c5fd0101fa90bc84e89a906cbdfa7188bb6cffab11404cdd8cd0377ffabfbd8e",
+        "System.IO.Packaging.dll": "12ddc8bff279fad856551a74894dc52b80fa437d5d2b32722e70ae6899217b7c"
+      },
+      "assembly_sha256": "b01598165e702a483892112094c8b548343e66b249d5e56378d9057a91262e6c"
+    }
+  },
+  "project": {
+    "source_path": "/workspace/scratch/e445bd9b965c/quds_office_suite/tool/office-validation/Program.cs",
+    "source_sha256": "4d41f286855ed11a12ecdf0641773c33285847180a3e5cdbf43ce2385a099880",
+    "project_path": "/workspace/scratch/e445bd9b965c/quds_office_suite/tool/office-validation/OfficeValidation.csproj",
+    "project_sha256": "e9e7985f8af8396d5b0dea81555e3c8ca51b7dba1af68a0e2cd4d2b238347e27"
+  },
+  "packages": [
+    {
+      "name": "DocumentFormat.OpenXml",
+      "version": "3.3.0",
+      "official_url": "https://api.nuget.org/v3-flatcontainer/documentformat.openxml/3.3.0/documentformat.openxml.3.3.0.nupkg",
+      "sha256": "53a74167552d886f0e312540db12c86a6133a83bd698795f3be6e25fc091b9e7"
+    },
+    {
+      "name": "DocumentFormat.OpenXml.Framework",
+      "version": "3.3.0",
+      "official_url": "https://api.nuget.org/v3-flatcontainer/documentformat.openxml.framework/3.3.0/documentformat.openxml.framework.3.3.0.nupkg",
+      "sha256": "5f539f1602b642198ec6ed3ec567eac3fff62309f6ec65e28db2751a488ec30d"
+    },
+    {
+      "name": "System.IO.Packaging",
+      "version": "8.0.1",
+      "official_url": "https://api.nuget.org/v3-flatcontainer/system.io.packaging/8.0.1/system.io.packaging.8.0.1.nupkg",
+      "sha256": "c5fd0101fa90bc84e89a906cbdfa7188bb6cffab11404cdd8cd0377ffabfbd8e"
+    }
+  ],
+  "self_test_command": "dotnet /workspace/scratch/e445bd9b965c/runtime/validator/OfficeValidation.dll --self-test",
+  "source_schema_command": {
+    "cwd": "/workspace/scratch/e445bd9b965c/quds_office_suite",
+    "command": "dotnet /workspace/scratch/e445bd9b965c/runtime/validator/OfficeValidation.dll build/office-evidence build/external/schema-report.json"
+  },
+  "host_schema_command": {
+    "cwd": "/workspace/scratch/e445bd9b965c/CrispCloud",
+    "command": "dotnet /workspace/scratch/e445bd9b965c/runtime/validator/OfficeValidation.dll /workspace/scratch/e445bd9b965c/validation/app-evidence-e226859c build/external/schema-report.json"
+  },
+  "checks": "The validator self-test must pass and source hash must still match the build receipt before each final acceptance invocation. Every schema receipt binds the exact input path and SHA-256 bytes.",
+  "validation": {
+    "supported_word_suffixes": [
+      ".docx",
+      ".docm",
+      ".dotx",
+      ".dotm"
+    ],
+    "case_normalized": true,
+    "word_package_type_matches_suffix": true,
+    "self_test": {
+      "positive_word_packages": 8,
+      "invalid_xml_controls": 4,
+      "mismatched_type_controls": 12,
+      "exact_discovery_controls": 24,
+      "all_passed": true,
+      "log": "/workspace/scratch/e445bd9b965c/validation/validator-word-types-self-test.log",
+      "log_sha256": "4945b06eb2eda6b4b7dd4ab50752ac76d91e73af5045d5bb39b3ecda55e25c56"
+    },
+    "unchanged_source_corpus": {
+      "input_count": 263,
+      "schema_failures": 0,
+      "schema_report_sha256": "914ab7c30268cd1fea3e775ffcbbd5a3da1480419ad458073286578ffe5a7faa",
+      "schema_receipts_identical_before_and_after_extension_support": true,
+      "input_manifest_sha256": "c8c37a63c346c40ac1e2beba5b79d516f32a2f68931edc8f6503b2f0b2e070b3",
+      "acceptance_summary_sha256": "b37fea3a6d3b9b6c5604f7d13131b9af8c3ee58ca6de7739684be0b47f900520",
+      "office_input_bytes_changed": false,
+      "raw_render_report_unchanged": true,
+      "log": "/workspace/scratch/e445bd9b965c/validation/source-schema-word-types.log"
+    }
+  },
+  "final_host_acceptance": {
+    "app_commit": "e226859cbde21af0b3d70b755c350978161a73c9",
+    "managed_source_commit": "3ff2e15823c86cda88d3369dc4bbabf42f45290a",
+    "input_root": "/workspace/scratch/e445bd9b965c/validation/app-evidence-e226859c",
+    "source_sha256": "4d41f286855ed11a12ecdf0641773c33285847180a3e5cdbf43ce2385a099880",
+    "app_validator_byte_identical_to_compiled_source": true,
+    "schema_files": 300,
+    "schema_failures": 0,
+    "host_inventory_verified": 59,
+    "report_sha256": {
+      "manifest": "452d28748540b3d8772f5c98f2c7c2f957bf2a23b8dae90589fdeba4895fdf92",
+      "schema": "22dda64a3f4efedf91266df235913b18cb865a312ad259891080156f76510505",
+      "host_inventory": "8827af28d687cfb71e9b121ea9dacaecb0ace552ebac68b83e23b14a447ae3cd",
+      "supplementary_native_probe": "35be50d58c4288804f37f11fed4209f962d58bb7cbddb84ba3c101c79968be2b"
+    },
+    "self_test_log": "/workspace/scratch/e445bd9b965c/validation/app-final-300-schema.log",
+    "self_test_log_sha256": "d645df668d7f687746399f95b67d40898067a31d8b60b6100ff252fe8805d39e"
+  }
+}

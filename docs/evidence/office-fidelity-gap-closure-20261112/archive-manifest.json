@@ -1,0 +1,119 @@
+{
+  "scope": "Exact receipt copies; full Office inputs, PDFs, PNGs, VM/LCOV data and raw logs remain at the original recorded validation paths. Runtime sources are included for reproduction.",
+  "files": [
+    {
+      "path": "final-app/artifact-hashes.json",
+      "original_path": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/artifact-hashes.json",
+      "bytes": 8524,
+      "sha256": "e57ef3369430a8892b3722503a83f87074270fd6b9e23c004edaf8fb57b7a679"
+    },
+    {
+      "path": "final-app/engine-inventory.json",
+      "original_path": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/engine-inventory.json",
+      "bytes": 64676,
+      "sha256": "e9b4d0a111f54a8369815c93156b05ccd369b34af4d25ad2ad57196b871f550b"
+    },
+    {
+      "path": "final-app/engine-output-manifest.json",
+      "original_path": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/engine-output-manifest.json",
+      "bytes": 14694,
+      "sha256": "3d11c081e471990115d975f73c0fb0496de2ba9ba5d41445baed02422105d2a3"
+    },
+    {
+      "path": "final-app/external-summary.json",
+      "original_path": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/external-summary.json",
+      "bytes": 968,
+      "sha256": "4caea60467cf80c8bf64a149835800e48762586bbd2f1fc57bd3bd51a0c4901c"
+    },
+    {
+      "path": "final-app/host-inventory.json",
+      "original_path": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/host-inventory.json",
+      "bytes": 14267,
+      "sha256": "4c414c01243d23d2506e9fab1624549527689fc7a9b2cfd146d448789098f492"
+    },
+    {
+      "path": "final-app/host-native/render-report.json",
+      "original_path": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/host-native/render-report.json",
+      "bytes": 15354,
+      "sha256": "85ce37cf8de1539bed159e57d16a0e972700dd2119f3c2902ddde09aff4bb3b0"
+    },
+    {
+      "path": "final-app/host-output-manifest.json",
+      "original_path": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/host-output-manifest.json",
+      "bytes": 3043,
+      "sha256": "46d73541cfd808f092399c0bbc58a7870f8be3db0430bd0d827c1292a754eb56"
+    },
+    {
+      "path": "final-app/input-manifest.json",
+      "original_path": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/input-manifest.json",
+      "bytes": 81059,
+      "sha256": "3b5a3bf064b0c2a8a9f69b60c9dc52490feb1ed16eb8a06ee4385f7fd1c9f2ea"
+    },
+    {
+      "path": "final-app/managed-source-manifest.json",
+      "original_path": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/managed-source-manifest.json",
+      "bytes": 50042,
+      "sha256": "bf65659cbf12dd7136a666ae90844ef7693c70e8100f48f8ae85b22563a63353"
+    },
+    {
+      "path": "final-app/native-renderer-provenance.json",
+      "original_path": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/native-renderer-provenance.json",
+      "bytes": 9872,
+      "sha256": "f4590fe7b329bffeb48510e7ef3d01718e0371b100a1997f33d5c5bfa480e365"
+    },
+    {
+      "path": "final-app/producer-acceptance.json",
+      "original_path": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/producer-acceptance.json",
+      "bytes": 7470,
+      "sha256": "98cb7027a7c55b6a78ad49c26001ceb1dd76fd71c793a2074939f05f0e0a0d73"
+    },
+    {
+      "path": "final-app/runtime/app_external_acceptance.py",
+      "original_path": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/runtime/app_external_acceptance.py",
+      "bytes": 15821,
+      "sha256": "3de6e8aa305b1e7d65372a4fe0cdb72c62817af81fda29c30d508b6339597326"
+    },
+    {
+      "path": "final-app/runtime/probe_host_native_gap.py",
+      "original_path": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/runtime/probe_host_native_gap.py",
+      "bytes": 5207,
+      "sha256": "471430cf06604c4b2d9c76978fefa29903f5caf49a01dd4ec2f94c5f2eab2bc0"
+    },
+    {
+      "path": "final-app/schema-report.json",
+      "original_path": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/schema-report.json",
+      "bytes": 93074,
+      "sha256": "44ac311497b06a7e70afba0392c193102a82f4f3a7d4cacabec68db2387eb7a4"
+    },
+    {
+      "path": "final-app/validator-build-receipt.json",
+      "original_path": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-5202d362/validator-build-receipt.json",
+      "bytes": 1002,
+      "sha256": "728acba67f7792c82afb131df84c0b4f4271889d8ae1eb1b23dbf4e8fa6d2817"
+    },
+    {
+      "path": "focused-format-refresh.json",
+      "original_path": "/workspace/scratch/e445bd9b965c/validation/format-refresh-focused-acceptance.json",
+      "bytes": 4741,
+      "sha256": "c1603eb98e8807103b81458d19b4109469a7b60ef7613ed27a39a0f35a052667"
+    },
+    {
+      "path": "host-coverage.json",
+      "original_path": "/workspace/scratch/e445bd9b965c/validation/app-gap-closure-final-coverage.json",
+      "bytes": 22326,
+      "sha256": "b26b656d4c3597b771b7819bedd805e38354378c33f9963a3821ad803800a212"
+    },
+    {
+      "path": "main-refresh-acceptance.json",
+      "original_path": "/workspace/scratch/e445bd9b965c/validation/app-main-refresh-acceptance.json",
+      "bytes": 1297,
+      "sha256": "9dd101e3f5e81d3b7c5411d10f63a52299e877ed0090e23785d4510c3c46aa3a"
+    },
+    {
+      "path": "remote-audit-before-pr.json",
+      "original_path": "/workspace/scratch/e445bd9b965c/validation/office-final-remote-audit.json",
+      "bytes": 11894,
+      "sha256": "689f6727038acead25db2e93102a1718a7e6b32142ce09e7edd83f6313e9fcb6"
+    }
+  ]
+}

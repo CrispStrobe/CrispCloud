@@ -1,123 +1,121 @@
-"""Independent positive/negative controls for native automatic note marks."""
-import json
-from pathlib import Path
-import tempfile
+import copy
 import unittest
 import xml.etree.ElementTree as ET
-from zipfile import ZipFile
 
 import note_markers_oracle as oracle
 
 
-class NoteMarkersOracleTest(unittest.TestCase):
-    def setUp(self):
-        self.temporary = tempfile.TemporaryDirectory()
-        self.addCleanup(self.temporary.cleanup)
-        self.folder = Path(self.temporary.name)
-        self.output = self.folder / 'mutated.docx'
-        self.expected = json.loads((oracle.FIXTURES / 'note_markers_expected.json').read_text())
-        with ZipFile(oracle.FIXTURES / 'note-markers.docx') as package:
-            self.parts = {name: package.read(name) for name in package.namelist()}
+class NoteMarkerOracleControls(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.root = oracle.ROOT/'build/fidelity-note-markers'
+        cls.parts = oracle.read_parts(cls.root/'imported-1.docx')
+        oracle.verify_parts(cls.parts, 'imported')
 
-    @staticmethod
-    def note(root, identifier):
-        return next(node for node in root if node.get('{' + oracle.W + '}id') == str(identifier))
-
-    def reject(self, kind, operation):
-        part = f'word/{kind}s.xml'
-        root = ET.fromstring(self.parts[part])
-        operation(root)
-        self.parts[part] = ET.tostring(root)
-        with ZipFile(self.output, 'w') as package:
-            for name, data in self.parts.items():
-                package.writestr(name, data)
+    def reject(self, mutate, part='word/footnotes.xml'):
+        parts = copy.deepcopy(self.parts)
+        root = ET.fromstring(parts[part])
+        mutate(root)
+        parts[part] = ET.tostring(root)
         with self.assertRaises(AssertionError):
-            oracle.verify_file(self.output, self.expected, 'imported')
+            oracle.verify_parts(parts, 'imported')
 
-    def test_authored_fixture_is_positive_control(self):
-        oracle.verify_file(oracle.FIXTURES / 'note-markers.docx', self.expected, 'imported')
+    def note(self, root, note_id):
+        return root.find(f"w:footnote[@w:id='{note_id}']", oracle.NS)
 
-    def test_absent_footnote_marker_cannot_be_manufactured(self):
-        def add(root):
-            run = ET.Element('{' + oracle.W + '}r')
-            ET.SubElement(run, '{' + oracle.W + '}footnoteRef')
-            self.note(root, 12).find('w:p', oracle.NS).insert(0, run)
-        self.reject('footnote', add)
+    def test_source_and_nine_exports_pass_authored_expectations(self):
+        self.assertEqual(oracle.verify(self.root)['files_verified'], 10)
 
-    def test_absent_endnote_marker_cannot_be_manufactured(self):
-        def add(root):
-            run = ET.Element('{' + oracle.W + '}r')
-            ET.SubElement(run, '{' + oracle.W + '}endnoteRef')
-            self.note(root, 32).find('w:p', oracle.NS).insert(0, run)
-        self.reject('endnote', add)
+    def test_invented_separator_definitions_fail(self):
+        for kind in ('footnote', 'endnote'):
+            for separator in sorted(oracle.SEPARATOR_TYPES):
+                with self.subTest(kind=kind, separator=separator):
+                    def inject(root):
+                        note = ET.Element('{'+oracle.W+'}'+kind,
+                                          {'{'+oracle.W+'}id': '-1',
+                                           '{'+oracle.W+'}type': separator})
+                        run = ET.SubElement(ET.SubElement(note, '{'+oracle.W+'}p'),
+                                            '{'+oracle.W+'}r')
+                        ET.SubElement(run, '{'+oracle.W+'}separator')
+                        root.insert(0, note)
+                    self.reject(inject, f'word/{kind}s.xml')
 
-    def test_nonleading_marker_cannot_move_before_text(self):
-        def move(root):
-            run = self.note(root, 13).find('w:p/w:r', oracle.NS)
-            marker = run.find('w:footnoteRef', oracle.NS)
-            run.remove(marker)
-            run.insert(1, marker)
-        self.reject('footnote', move)
+    def test_late_marker_moved_to_first_paragraph_fails(self):
+        def change(root):
+            note = self.note(root, 1)
+            paras = note.findall('w:p', oracle.NS)
+            run = paras[1].find('w:r', oracle.NS)
+            paras[1].remove(run)
+            paras[0].append(run)
+        self.reject(change)
 
-    def test_later_paragraph_marker_cannot_move_to_first(self):
-        def move(root):
-            note = self.note(root, 14)
-            mark_run = note[1][0]
-            note[1].remove(mark_run)
-            note[0].insert(0, mark_run)
-        self.reject('footnote', move)
+    def test_mid_run_marker_moved_to_prefix_fails(self):
+        def change(root):
+            p = self.note(root, 2).find('w:p', oracle.NS)
+            run = next(r for r in p.findall('w:r', oracle.NS) if r.find('w:footnoteRef', oracle.NS) is not None)
+            p.remove(run)
+            p.insert(0, run)
+        self.reject(change)
 
-    def test_multiple_markers_cannot_collapse(self):
-        def remove(root):
-            run = self.note(root, 15).find('w:p/w:r', oracle.NS)
-            run.remove(run.findall('w:footnoteRef', oracle.NS)[1])
-        self.reject('footnote', remove)
+    def test_empty_marker_paragraph_lost_fails(self):
+        def change(root):
+            note = self.note(root, 3)
+            note.remove(note.find('w:p', oracle.NS))
+        self.reject(change)
 
-    def test_endnote_kind_cannot_turn_into_footnote(self):
-        self.reject('endnote', lambda root: setattr(
-            self.note(root, 31).find('w:p/w:r/w:endnoteRef', oracle.NS),
-            'tag', '{' + oracle.W + '}footnoteRef'))
+    def test_nested_marker_moved_between_cells_fails(self):
+        def change(root):
+            cells = self.note(root, 4).findall('.//w:tc', oracle.NS)
+            source = cells[1].find('w:p', oracle.NS)
+            marker = next(r for r in source.findall('w:r', oracle.NS) if r.find('w:footnoteRef', oracle.NS) is not None)
+            source.remove(marker)
+            cells[0].find('w:p', oracle.NS).append(marker)
+        self.reject(change)
 
-    def test_marker_properties_cannot_be_dropped(self):
-        def remove(root):
-            run = self.note(root, 11).find('w:p/w:r', oracle.NS)
-            run.remove(run.find('w:rPr', oracle.NS))
-        self.reject('footnote', remove)
+    def test_absent_source_marker_injected_fails(self):
+        def change(root):
+            paragraph = self.note(root, 5).find('w:p', oracle.NS)
+            run = ET.Element('{'+oracle.W+'}r')
+            ET.SubElement(run, '{'+oracle.W+'}footnoteRef')
+            paragraph.insert(0, run)
+        self.reject(change)
 
-    def test_each_marker_retains_its_own_properties(self):
-        self.reject('footnote', lambda root:
-                    self.note(root, 15).find('w:p/w:r[2]/w:rPr/w:vertAlign', oracle.NS).set(
-                        '{' + oracle.W + '}val', 'superscript'))
+    def test_duplicate_marker_collapsed_fails(self):
+        def change(root):
+            p = self.note(root, 6).find('w:p', oracle.NS)
+            run = next(r for r in p.findall('w:r', oracle.NS) if r.find('w:footnoteRef', oracle.NS) is not None)
+            p.remove(run)
+        self.reject(change)
 
-    def test_unformatted_marker_cannot_gain_superscript(self):
-        def add(root):
-            run = self.note(root, 14).findall('w:p', oracle.NS)[1].find('w:r', oracle.NS)
-            props = ET.Element('{' + oracle.W + '}rPr')
-            ET.SubElement(props, '{' + oracle.W + '}vertAlign', {'{' + oracle.W + '}val': 'superscript'})
-            run.insert(0, props)
-        self.reject('footnote', add)
+    def test_wrong_marker_kind_fails(self):
+        self.reject(lambda r: setattr(r.find('.//w:footnoteRef', oracle.NS), 'tag', '{'+oracle.W+'}endnoteRef'))
 
-    def test_table_first_note_cannot_gain_a_leading_paragraph(self):
-        self.reject('footnote', lambda root: self.note(root, 16).insert(0, ET.Element('{' + oracle.W + '}p')))
+    def test_marker_run_properties_drift_fails(self):
+        self.reject(lambda r: r.find('.//w:color', oracle.NS).set('{'+oracle.W+'}val', 'FFFFFF'))
 
-    def test_text_before_same_run_marker_cannot_move_after_it(self):
-        def move(root):
-            run = self.note(root, 13).find('w:p/w:r', oracle.NS)
-            text = run.find('w:t', oracle.NS)
-            run.remove(text)
-            run.append(text)
-        self.reject('footnote', move)
+    def test_injected_rpr_on_unformatted_marker_fails(self):
+        def change(root):
+            run = self.note(root, 3).find('.//w:r', oracle.NS)
+            run.insert(0, ET.Element('{'+oracle.W+'}rPr'))
+        self.reject(change)
 
-    def test_source_baseline_cannot_be_omitted(self):
-        for mode in ('imported', 'edited'):
-            for cycle in (1, 2, 3):
-                (self.folder / f'markers-{mode}-{cycle}.docx').write_bytes(b'placeholder')
-        with self.assertRaisesRegex(AssertionError, 'missing=.*markers-source.docx'):
-            oracle.verify_corpus(self.folder, self.expected)
+    def test_inserted_leading_paragraph_before_table_fails(self):
+        self.reject(lambda r: self.note(r, 4).insert(0, ET.Element('{'+oracle.W+'}p')))
 
-    def test_empty_corpus_fails(self):
-        with self.assertRaisesRegex(AssertionError, 'Note marker corpus inventory'):
-            oracle.verify_corpus(self.folder, self.expected)
+    def test_intentional_source_whitespace_removed_fails(self):
+        def change(root):
+            t = self.note(root, 5).find('.//w:t', oracle.NS)
+            t.text = t.text.lstrip()
+        self.reject(change)
+
+    def test_note_body_reference_retargeted_fails(self):
+        self.reject(lambda r: r.find('.//w:footnoteReference', oracle.NS).set('{'+oracle.W+'}id', '99'), 'word/document.xml')
+
+    def test_note_relationship_retargeted_fails(self):
+        def change(root):
+            rel = next(r for r in root if r.get('Type', '').endswith('/footnotes'))
+            rel.set('Target', 'missing.xml')
+        self.reject(change, 'word/_rels/document.xml.rels')
 
 
 if __name__ == '__main__':

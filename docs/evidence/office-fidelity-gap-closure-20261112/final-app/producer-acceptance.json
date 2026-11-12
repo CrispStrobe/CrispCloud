@@ -1,0 +1,139 @@
+{
+  "started_utc": "2026-11-12T11:12:21.127805+00:00",
+  "app_head": "5202d362a929c30266519dee178a441884056ca0",
+  "app_tree": "fd5223c37d9c736c17b5bf581eaafc5273976430",
+  "source_commit": "a9bd470a4807c65f65271be896703e587c12de00",
+  "managed_files": 352,
+  "command": "CI=true python3 tool/with_ci_system_sqlite.py bash tool/check_office_fidelity.sh",
+  "runtime_env": "/workspace/scratch/e445bd9b965c/runtime/env-347.sh",
+  "expected_engine_files": 277,
+  "expected_host_files": 59,
+  "host_coverage_scope_files": 10,
+  "host_test_files": [
+    "test/office_fidelity_workflow_test.dart",
+    "test/office_formatting_preservation_test.dart",
+    "test/office_roundtrip_preservation_test.dart",
+    "test/office_section_break_fidelity_test.dart",
+    "test/office_editor_fixes_test.dart",
+    "test/office_footnote_test.dart",
+    "test/office_ribbon_footnotes_test.dart",
+    "test/office_ribbon_common_i18n_test.dart",
+    "test/office_document_service_test.dart",
+    "test/legacy_word_document_test.dart",
+    "test/legacy_word_conversion_strings_test.dart",
+    "test/legacy_word_copy_target_test.dart",
+    "test/word_template_preservation_test.dart",
+    "test/word_format_strings_test.dart",
+    "test/office_preview_fidelity_test.dart",
+    "test/office_preview_strings_test.dart",
+    "test/preview_media_localization_test.dart",
+    "test/recursive_search_service_test.dart",
+    "test/office_pdf_service_test.dart",
+    "test/widget/office_editor_dialog_test.dart",
+    "test/widget/office_editor_ribbon_test.dart",
+    "test/widget/office_paragraph_dialog_test.dart",
+    "test/widget/office_paragraph_fidelity_test.dart",
+    "test/widget/office_save_fidelity_test.dart",
+    "test/widget/legacy_word_conversion_dialog_test.dart",
+    "test/widget/legacy_word_routing_test.dart"
+  ],
+  "initial_sha256": {
+    "pubspec.yaml": "8ac1390a24171cca345a60abd2745007f334190d8d356f0ac1e8f73918bd954a",
+    "pubspec.lock": "f18ecce960b3b22694107cb17d4cef93e1e823b55da8f39374bcf7f081783256",
+    "tool/check_office_fidelity.sh": "9a120ac06fb018d7c3a5566dc192de6a61f16dff48e57ce8a8056c01ee693479",
+    "tool/office_fidelity_manifest.json": "bf65659cbf12dd7136a666ae90844ef7693c70e8100f48f8ae85b22563a63353",
+    "tool/office_host_evidence.json": "46d73541cfd808f092399c0bbc58a7870f8be3db0430bd0d827c1292a754eb56",
+    "packages/quds_office_engine/tool/fidelity/output_manifest.json": "3d11c081e471990115d975f73c0fb0496de2ba9ba5d41445baed02422105d2a3"
+  },
+  "exit_code": 0,
+  "finished_utc": "2026-11-12T11:15:51.261747+00:00",
+  "validated_utc": "2026-11-12T11:16:45.933172+00:00",
+  "clean_tree_after": true,
+  "pubspec_and_lock_restored": true,
+  "all_initial_fingerprints_unchanged": true,
+  "engine_dart_tests_passed": 873,
+  "host_flutter_tests_passed": 140,
+  "dart_flutter_skips": [
+    0,
+    0
+  ],
+  "python_controls": {
+    "sync": 7,
+    "engine": 344,
+    "host_evidence": 10,
+    "host_coverage": 9
+  },
+  "engine_inventory": {
+    "verified_files": 277,
+    "observed_files": 277,
+    "expected_files": 277,
+    "three_cycle_series": 84,
+    "standalone_files": 25,
+    "manifest_sha256": "3d11c081e471990115d975f73c0fb0496de2ba9ba5d41445baed02422105d2a3",
+    "errors": []
+  },
+  "host_inventory": {
+    "verified": 59,
+    "expected": 59,
+    "manifest_sha256": "46d73541cfd808f092399c0bbc58a7870f8be3db0430bd0d827c1292a754eb56",
+    "failures": []
+  },
+  "coverage": {
+    "covered_lines": 2223,
+    "instrumented_lines": 3558,
+    "source_tree_sha256": "63c6b9759e447fe3fcb7481625eda5d7466b03e48955f0e1e24229207c196920",
+    "source_sha256": {
+      "lib/services/legacy_word_copy_target.dart": "370151dffb8e30ba9bddfe2e9cd470850206c7fba0ac9eb727b7cdf01bf069b5",
+      "lib/services/office_document_service.dart": "a52e365f4fa41856168a250b78247480cf6393bba77b0f3e67674ce88b37ffed",
+      "lib/services/office_editor_menu.dart": "0a68abf5215f3c26630757fbc4f91eec0ca384f731450cdffd8dc17d604550d2",
+      "lib/services/office_pdf_service.dart": "a406c87e95508e934a16be55a6b9028a5c2f73287d8025e656597b86725c2ad2",
+      "lib/widgets/legacy_word_conversion_action.dart": "cb7b832bb1d5366f5642da1c030b41c3004b5538513b4d4f1d4ded996c6984df",
+      "lib/widgets/legacy_word_conversion_dialog.dart": "baed5578a780713d6dd19b4666db9babe188c792f4c7f0942d39fd06887c029e",
+      "lib/widgets/office_editor_dialog.dart": "a0cf4acb895010d5ff0b7d1b1e1ec6ce9dea1f96c3720ed39bcdb55f62c30ca0",
+      "lib/widgets/office_editor_dialogs.dart": "9baacc4a1955b935f53a774257667572b1b5d192d6d9a17f9974d16aa1bf6301",
+      "lib/widgets/office_editor_find_bar.dart": "fc6c9ed90f13cc16448d4b07ff527c80f9f4a4f458d57cb9c34da10943b0db08",
+      "lib/widgets/office_editor_ribbon.dart": "fbbbe5d898498adc81dc81b89f0382207a44d36a538ceec43d8a0098e0ce6e1d"
+    },
+    "uninstrumented_files": [],
+    "scope": [
+      "lib/services/office_*.dart",
+      "lib/widgets/office_*.dart",
+      "lib/services/legacy_word_copy_target.dart",
+      "lib/widgets/legacy_word_conversion_action.dart",
+      "lib/widgets/legacy_word_conversion_dialog.dart"
+    ],
+    "scope_note": "Generic package navigation, bounded Office search, Word package preservation, legacy Word extraction and text-only DOCX conversion, and bounded CFB reading live in Quds engine and are validated by its mandatory tests. Host scope includes captured conversion storage and UI; percentages are not directly comparable to the earlier 7-file, 9-file or 12-file host scopes.",
+    "migrated_engine_sources": [
+      "packages/quds_office_engine/lib/src/word/serial/word_package_preservation.dart",
+      "packages/quds_office_engine/lib/src/word/legacy/legacy_word_document.dart",
+      "packages/quds_office_engine/lib/src/opc/ole/bounded_cfb_reader.dart",
+      "packages/quds_office_engine/lib/src/opc/office_package_parts.dart",
+      "packages/quds_office_engine/lib/src/extract/office_search_text.dart",
+      "packages/quds_office_engine/lib/src/word/legacy/legacy_word_conversion.dart"
+    ]
+  },
+  "receipt_sha256": {
+    "app-gap-closure-final-engine-inventory.json": "e9b4d0a111f54a8369815c93156b05ccd369b34af4d25ad2ad57196b871f550b",
+    "app-gap-closure-final-host-inventory.json": "4c414c01243d23d2506e9fab1624549527689fc7a9b2cfd146d448789098f492",
+    "app-gap-closure-final-coverage.json": "b26b656d4c3597b771b7819bedd805e38354378c33f9963a3821ad803800a212",
+    "app-gap-closure-final-lcov.info": "5bb8dfca41f0e64e1ff9ee6d576b59db0f37b620d919b20c1e93cd9011ddb93c"
+  },
+  "log_sha256": "c32809581f8fc0242ed1cd435dd2849f450c0e4b9cd324bd34ebb230aa790a1e",
+  "dart_version": "Dart SDK version: 3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
+  "flutter_version": {
+    "frameworkVersion": "3.47.8",
+    "channel": "[user-branch]",
+    "repositoryUrl": "https://github.com/flutter/flutter.git",
+    "frameworkRevision": "737ba8f885dc774b53b442759999a312c9461e4e",
+    "frameworkCommitDate": "2026-10-22 21:37:31 -0700",
+    "engineRevision": "cf636b1dfb818dd6a3ff16e390e93b1a036969c8",
+    "engineCommitDate": "2026-10-23 02:13:38.000Z",
+    "engineContentHash": "dfd2e6cb7d319db05e3bf1503f3e2ac60f6288a2",
+    "engineBuildDate": "2026-10-23 05:34:48.330",
+    "dartSdkVersion": "3.13.7",
+    "devToolsVersion": "2.60.0",
+    "flutterVersion": "3.47.8",
+    "flutterRoot": "/workspace/scratch/e445bd9b965c/runtime/flutter-3.47.8"
+  },
+  "export_freeze": "277 engine and59 actual host packages; all336 byte hashes reverified after mandatory gate; no further producer or source mutation"
+}

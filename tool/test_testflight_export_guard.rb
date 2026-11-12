@@ -87,6 +87,26 @@ class TestFlightExportGuardTest < Minitest::Test
     assert_empty @client.posts
   end
 
+  def test_changed_crypto_requires_a_new_documentation_review_before_distribution
+    [nil, {}, { 'status' => 'unreviewed' }, { 'status' => 'unknown' }].each do |documentation|
+      @policy['documentation'] = documentation
+      error = assert_raises(TestFlightExportGuard::Error) { guard }
+      assert_match(/documentation review is pending/, error.message)
+      assert_empty @client.gets
+      assert_empty @client.posts
+    end
+  end
+
+  def test_false_answer_cannot_claim_an_approved_declaration_or_code
+    [{ 'status' => 'approved', 'compliance_code' => 'issued-code' },
+     { 'status' => 'not_required', 'compliance_code' => 'invented-code' }].each do |documentation|
+      @policy['documentation'] = documentation
+      assert_raises(TestFlightExportGuard::Error) { guard }
+      assert_empty @client.gets
+      assert_empty @client.posts
+    end
+  end
+
   def test_review_requires_evidence_unique_group_ids_and_explicit_link_policy
     cases = [{ 'reference' => nil }, { 'external_group_ids' => [] },
              { 'external_group_ids' => ['group-1', 'group-1'] }, { 'external_group_ids' => ['../other'] },

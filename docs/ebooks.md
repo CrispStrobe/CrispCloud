@@ -53,9 +53,10 @@ location formats differ.
 Linux uses the distribution's complete WebKitGTK runtime rather than bundling
 CEF or a partial browser library. See [Linux build and runtime requirements](../linux/README.md).
 Missing or unusable runtime support does not prevent the application from
-opening. A bounded helper checks real WebKit startup before the reader uses it;
-the check does not load your book. Restart the application after installing or
-changing the runtime so it can check again. A reported host error offers
+opening. A bounded helper checks WebKit startup, script execution and a
+known-color painted snapshot before the reader uses it; the check does not
+load your book. Restart the application after installing or changing the
+runtime so it can check again. A reported host startup error offers
 **Use portable EPUB reader** explicitly; this
 keeps its separate locator state instead of interpreting Foliate CFIs as scroll
 positions. The same recovery action is available from the ebook menu.
@@ -348,12 +349,13 @@ completed local checks from pending platform checks.
 ### Platform/library expansion verification
 
 The [platform-parity recovery record](recovery/ebook-parity-2026-11-12.md)
-tracks the larger extension. Its local checks include **8 reader controller/model
+tracks the larger extension. The earlier `1d08158` checks include **8 reader controller/model
 tests**, **154 application/service/widget tests**, normal and missing-grouping +
 raw-DEFLATE parser variants, and a successful full web release build. The three
 host-owned reader JavaScript modules in the built web bundle match their source
-hashes. The consolidated source audit covers 230 paths; its existing Python suites and
-source-bound evidence check passed without changing any gate or policy decision.
+hashes. The isolated startup checkpoint covered 230 source paths; its existing
+Python suites and source-bound evidence check passed without changing any gate
+or policy decision. The recovery record tracks the subsequent integrated inventory.
 
 Hosted run [43225371743](https://github.com/CrispStrobe/CrispCloud/actions/runs/43225371743)
 at `1d08158` passed all five jobs: EPUBCheck, application tests/web build and
@@ -376,3 +378,13 @@ regression. Complete enhanced rendering/input still requires a successful run
 of that candidate. Its consolidated local web release build passed in 216.4
 seconds. Mobile, Wayland, hardware input and assistive-technology validation
 remain separate requirements.
+
+The incoming integration record for `b89dbda` separately reports 157 focused
+application/service/widget tests, eight reader-package tests, clean analysis
+and a successful integrated web release build, with all five reader assets
+and three metadata assets matching source. That historical record used its
+alternate Linux helper and seven process scenarios. The current candidate
+retains the stronger supervised worker and 16 scenarios described in the
+recovery record; the histories and their verification boundaries remain
+explicit. The incoming absent-platform-plugin recovery and macOS browser
+dependency fixes are preserved.

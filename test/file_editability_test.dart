@@ -38,6 +38,8 @@ void main() {
       'movie.avi',
       'archive.zip',
       'legacy.doc',
+      'legacy.dot',
+      'message.msg',
       'legacy.xls',
       'legacy.ppt',
       'original.mobi',
@@ -48,6 +50,38 @@ void main() {
       expect(isEditableInBuiltInEditor(name), isFalse, reason: name);
     }
   });
+
+  test(
+    'saved MIME source, keyboard XML and protected Word variants are editable',
+    () {
+      for (final name in [
+        'message.eml',
+        'shortcuts.kbdx',
+        'template.dotm',
+        'template.dotx',
+        'report.DOCM',
+      ]) {
+        expect(isEditableInBuiltInEditor(name), isTrue, reason: name);
+      }
+      expect(isTextEditableName('message.eml'), isTrue);
+      expect(isTextEditableName('shortcuts.kbdx'), isTrue);
+      expect(isTextEditableName('message.msg'), isFalse);
+      expect(isTextEditableName('template.dotm'), isFalse);
+    },
+  );
+
+  test(
+    'KeePass vaults use their editor and remain distinct from keyboard XML',
+    () {
+      expect(isKeePassFileName('passwords.KDBX'), isTrue);
+      expect(isEditableInBuiltInEditor('passwords.kdbx'), isTrue);
+      expect(isTextEditableName('passwords.kdbx'), isFalse);
+      expect(isKeePassFileName('shortcuts.kbdx'), isFalse);
+      expect(isKeePassFileName('passwords.kdbx.zip'), isFalse);
+      expect(isLegacyWordFileName('letter.DOC'), isTrue);
+      expect(isLegacyWordFileName('letter.docx'), isFalse);
+    },
+  );
 
   test('image names must end in a supported image extension', () {
     expect(isEditableInBuiltInEditor('photo.jpg.zip'), isFalse);

@@ -59,6 +59,8 @@ jobs:
 
       - name: Set up bundled ebook converter
         uses: ./.github/actions/setup-ebook-rust
+      - name: Verify offline help topics and translation revisions
+        run: python3 tool/check_help_guides.py
 
       # Cache Flutter SDK
       - name: Cache Flutter SDK
@@ -103,11 +105,22 @@ jobs:
       - name: Resolve vendored package development dependencies
         run: |
           (cd packages/quds_office_engine && dart pub get)
+          # The vendored editor's pubspec stays as upstream (drift-checked), so
+          # point it at the vendored engine here; otherwise pub.dev's engine,
+          # which lacks the patched APIs, breaks `flutter analyze`.
+          printf 'dependency_overrides:\n  quds_office_engine:\n    path: ../quds_office_engine\n' > packages/quds_office_editor/pubspec_overrides.yaml
           (cd packages/quds_office_editor && flutter pub get)
           (cd packages/dart_pdf_editor && flutter pub get)
           (cd packages/dart_pdf_editor_secure_storage && flutter pub get)
           (cd packages/pdf_document && dart pub get)
           (cd packages/pdf_operations && dart pub get)
+
+      - name: Standalone legacy Word parser contracts
+        working-directory: packages/legacy_doc_parser
+        run: |
+          dart pub get
+          dart analyze
+          dart test
 
       - name: Shared storage contracts
         working-directory: packages/crisp_storage
@@ -242,6 +255,7 @@ jobs:
         run: >-
           python3 tool/with_ci_system_sqlite.py flutter test --no-pub
           test/aes_siv_test.dart test/cryptomator_test.dart
+          test/keepass_crypto_test.dart test/keepass_service_test.dart test/keepass_extended_service_test.dart
           test/veracrypt_test.dart test/veracrypt_header_vectors_test.dart
           test/encryption_service_test.dart test/filen_crypto_validation_test.dart
           test/encryption_key_lifecycle_test.dart test/file_encryption_recovery_test.dart

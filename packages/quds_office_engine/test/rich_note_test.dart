@@ -152,7 +152,7 @@ void main() {
       layout.pages
           .expand((LaidOutPage p) => p.notes)
           .map((LaidOutLine l) => l.text),
-      containsAll(<String>['1. Column note 7', '2. Column note 12']),
+      containsAll(<String>['1 Column note 7', '2 Column note 12']),
     );
   });
 

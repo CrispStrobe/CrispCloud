@@ -12,6 +12,7 @@ import '../../xml/xml_node.dart';
 import '../../xml/xml_reader.dart';
 import '../../xml/xml_writer.dart';
 import '../formula/dep_graph.dart';
+import '../formula/formula_eval.dart';
 import '../formula/formula_refs.dart';
 import '../model/sml_analysis.dart';
 import '../model/sml_sparkline.dart';
@@ -88,7 +89,15 @@ class SheetDeserializer {
       book.sheets.add(SmlWorksheet(name: 'Sheet1', sheetId: 1));
     }
     _readDefinedNames(wb.readText(), book);
+    book.sourceDefinedNameState = book.definedNameState();
     SheetChartData.refreshWorkbook(book);
+    for (final sheet in book.sheets) {
+      for (final drawing in sheet.drawings) {
+        if (drawing.sourceChartPartUri != null) {
+          drawing.sourceChartState = SheetDrawingIo.chartState(drawing, sheet);
+        }
+      }
+    }
     return book;
   }
 
@@ -117,7 +126,9 @@ class SheetDeserializer {
         if (bang > 0) {
           var sheetName = raw.substring(0, bang);
           if (sheetName.startsWith("'") && sheetName.endsWith("'")) {
-            sheetName = sheetName.substring(1, sheetName.length - 1);
+            sheetName = sheetName
+                .substring(1, sheetName.length - 1)
+                .replaceAll("''", "'");
           }
           try {
             book.namedRanges.add(
@@ -266,6 +277,7 @@ class SheetDeserializer {
   ) {
     final XmlPullReader reader = XmlPullReader(xml);
     SmlCell? current;
+    String? valueType;
     // `t="shared"` masters by `si`: formula text and the cell it is written for.
     final Map<String, ({String formula, SmlCellRef anchor})> shared =
         <String, ({String formula, SmlCellRef anchor})>{};
@@ -324,6 +336,11 @@ class SheetDeserializer {
           reader.localName == 'formula1' &&
           sheet.validations.isNotEmpty) {
         sheet.validations.last.formula1 = _readText(reader);
+      }
+      if (reader.eventType == XmlEventType.startElement &&
+          reader.localName == 'formula2' &&
+          sheet.validations.isNotEmpty) {
+        sheet.validations.last.formula2 = _readText(reader);
       }
       if (reader.eventType == XmlEventType.startElement &&
           reader.localName == 'formula' &&
@@ -391,6 +408,7 @@ class SheetDeserializer {
           reader.localName == 'c') {
         final String ref = reader.getAttribute('r') ?? 'A1';
         final String? t = reader.getAttribute('t');
+        valueType = t;
         final int s = int.parse(reader.getAttribute('s') ?? '0');
         current = sheet.cellA1(ref);
         current.styleIndex = s;
@@ -452,13 +470,20 @@ class SheetDeserializer {
           }
           if (formula != null && formula.isNotEmpty) {
             current.formula = formula;
-            current.type = SmlCellType.formula;
+            current.type = valueType == 'e'
+                ? SmlCellType.error
+                : valueType == 'str' || valueType == 's'
+                ? SmlCellType.string
+                : SmlCellType.formula;
           }
-        } else if (current.type == SmlCellType.string &&
-            int.tryParse(text) != null) {
+        } else if (valueType == 's' && int.tryParse(text) != null) {
           current.value = sst[int.parse(text)];
-        } else if (current.type == SmlCellType.boolean) {
+        } else if (valueType == 'b') {
           current.value = text == '1' || text.toLowerCase() == 'true';
+        } else if (valueType == 'str' ||
+            valueType == 'inlineStr' ||
+            valueType == 'e') {
+          current.value = text;
         } else {
           current.value = double.tryParse(text) ?? text;
         }
@@ -473,6 +498,8 @@ class SheetDeserializer {
     }
     SheetDrawingIo.readSheet(sheet, package, sheetUri);
     _readSheetExtras(sheet, package, sheetUri);
+    sheet.sourceValidationState = sheet.validationState();
+    sheet.sourceConditionalFormatState = sheet.conditionalFormatState();
   }
 
   static void _readSheetExtras(
@@ -611,6 +638,20 @@ class SheetSerializer {
     if (recalculate) {
       FormulaDepGraph(book).recalculate();
     }
+    // Explicit native cache types are authoritative. A caller bypassing
+    // recalculation must type an error-looking cache instead of asking the
+    // writer to guess whether it is literal text or an actual error.
+    for (final sheet in book.sheets) {
+      for (final cell in sheet.allCells) {
+        if (cell.formula != null &&
+            cell.type == SmlCellType.formula &&
+            FormulaEvaluator.hasErrorSpelling(cell.value)) {
+          throw UnsupportedError(
+            'Ambiguous formula cache type at ${sheet.name}!${cell.ref.a1}; recalculate or supply an explicit text/error type',
+          );
+        }
+      }
+    }
     SheetChartData.refreshWorkbook(book);
     final bool fresh = book.package == null;
     final OpcPackage package =
@@ -669,7 +710,13 @@ class SheetSerializer {
           utf8.encode(''),
         );
       }
-      SheetDrawingIo.syncSheet(book.sheets[i], package, uri, i + 1);
+      SheetDrawingIo.syncSheet(
+        book.sheets[i],
+        package,
+        uri,
+        i + 1,
+        workbook: book,
+      );
       package
           .getPart(uri)!
           .writeText(_sheetXml(book.sheets[i], sst, package, uri));
@@ -845,6 +892,9 @@ class SheetSerializer {
     OpcPackage package,
     List<String> sheetIds,
   ) {
+    final preserveNames =
+        book.sourceDefinedNameState != null &&
+        book.sourceDefinedNameState == book.definedNameState();
     final XmlWriter w = XmlWriter();
     w.writeStartDocument();
     w.writeStartElement('workbook');
@@ -860,16 +910,17 @@ class SheetSerializer {
       w.writeEndElement();
     }
     w.writeEndElement();
-    if (book.namedRanges.isNotEmpty ||
-        book.sheets.any(
-          (SmlWorksheet s) =>
-              s.printTitleRows != null || s.printTitleCols != null,
-        )) {
+    if (!preserveNames &&
+        (book.namedRanges.isNotEmpty ||
+            book.sheets.any(
+              (SmlWorksheet s) =>
+                  s.printTitleRows != null || s.printTitleCols != null,
+            ))) {
       w.writeStartElement('definedNames');
       for (final SmlNamedRange name in book.namedRanges) {
         w.writeStartElement('definedName');
         w.writeAttribute('name', name.name);
-        w.writeText("'${name.sheetName}'!${name.a1}");
+        w.writeText("'${name.sheetName.replaceAll("'", "''")}'!${name.a1}");
         w.writeEndElement();
       }
       for (int i = 0; i < book.sheets.length; i++) {
@@ -877,7 +928,9 @@ class SheetSerializer {
         final List<String> parts = <String>[];
         if (sheet.printTitleRows != null) {
           final SmlRange r = sheet.printTitleRows!;
-          parts.add("'${sheet.name}'!\$${r.minRow + 1}:\$${r.maxRow + 1}");
+          parts.add(
+            "'${sheet.name.replaceAll("'", "''")}'!\$${r.minRow + 1}:\$${r.maxRow + 1}",
+          );
         }
         if (sheet.printTitleCols != null) {
           final SmlRange c = sheet.printTitleCols!;
@@ -889,7 +942,7 @@ class SheetSerializer {
             c.maxCol,
             0,
           ).a1.replaceAll(RegExp(r'\d+'), '');
-          parts.add("'${sheet.name}'!\$$a:\$$b");
+          parts.add("'${sheet.name.replaceAll("'", "''")}'!\$$a:\$$b");
         }
         if (parts.isEmpty) {
           continue;
@@ -906,7 +959,7 @@ class SheetSerializer {
     return _preserveSheetParts(
       package.getPart('/xl/workbook.xml')?.readText(),
       w.toXml(),
-      {'sheets', 'definedNames'},
+      {'sheets', if (!preserveNames) 'definedNames'},
       _workbookOrder,
     );
   }
@@ -917,6 +970,12 @@ class SheetSerializer {
     OpcPackage package,
     String sheetUri,
   ) {
+    final preserveValidations =
+        sheet.sourceValidationState != null &&
+        sheet.sourceValidationState == sheet.validationState();
+    final preserveConditional =
+        sheet.sourceConditionalFormatState != null &&
+        sheet.sourceConditionalFormatState == sheet.conditionalFormatState();
     final XmlWriter w = XmlWriter();
     w.writeStartDocument();
     w.writeStartElement('worksheet');
@@ -950,6 +1009,11 @@ class SheetSerializer {
           w.writeAttribute('s', '${cell.styleIndex}');
         }
         if (cell.formula != null) {
+          if (cell.value is bool) {
+            w.writeAttribute('t', 'b');
+          } else if (cell.value is String) {
+            w.writeAttribute('t', cell.type == SmlCellType.error ? 'e' : 'str');
+          }
           w.writeStartElement('f');
           w.writeText(
             cell.formula!.startsWith('=')
@@ -957,6 +1021,15 @@ class SheetSerializer {
                 : cell.formula!,
           );
           w.writeEndElement();
+          w.writeStartElement('v');
+          w.writeText(
+            cell.value is bool
+                ? (cell.value == true ? '1' : '0')
+                : cell.asString,
+          );
+          w.writeEndElement();
+        } else if (cell.type == SmlCellType.error) {
+          w.writeAttribute('t', 'e');
           w.writeStartElement('v');
           w.writeText(cell.asString);
           w.writeEndElement();
@@ -995,7 +1068,7 @@ class SheetSerializer {
         attributes: <String, String>{'sheet': '1'},
       );
     }
-    if (sheet.validations.isNotEmpty) {
+    if (!preserveValidations && sheet.validations.isNotEmpty) {
       w.writeStartElement('dataValidations');
       w.writeAttribute('count', '${sheet.validations.length}');
       for (final SmlDataValidation rule in sheet.validations) {
@@ -1018,11 +1091,16 @@ class SheetSerializer {
           w.writeText(rule.formula1);
           w.writeEndElement();
         }
+        if (rule.formula2.isNotEmpty) {
+          w.writeStartElement('formula2');
+          w.writeText(rule.formula2);
+          w.writeEndElement();
+        }
         w.writeEndElement();
       }
       w.writeEndElement();
     }
-    if (sheet.conditionalFormats.isNotEmpty) {
+    if (!preserveConditional && sheet.conditionalFormats.isNotEmpty) {
       for (final SmlConditionalRule rule in sheet.conditionalFormats) {
         w.writeStartElement('conditionalFormatting');
         w.writeAttribute(
@@ -1105,8 +1183,8 @@ class SheetSerializer {
         'sheetData',
         'sheetProtection',
         'autoFilter',
-        'conditionalFormatting',
-        'dataValidations',
+        if (!preserveConditional) 'conditionalFormatting',
+        if (!preserveValidations) 'dataValidations',
         'mergeCells',
         'headerFooter',
         'drawing',

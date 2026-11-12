@@ -1,0 +1,20 @@
+{
+  "description": "Authored native note marker locations/properties. Whole-text replacement intentionally keeps only the first existing marker as a leading mark; an unmarked import remains unmarked.",
+  "properties": {
+    "plain": [],
+    "super": [{"name": "vertAlign", "attributes": {"val": "superscript"}}],
+    "color": [{"name": "color", "attributes": {"val": "123456"}}],
+    "bold_sub": [{"name": "b", "attributes": {}}, {"name": "color", "attributes": {"val": "445566"}}, {"name": "vertAlign", "attributes": {"val": "subscript"}}]
+  },
+  "notes": [
+    {"kind": "footnote", "id": 11, "blocks": ["p"], "paragraphs": [" Conventional footnote"], "markers": [{"paragraph": 0, "offset": 0, "properties": "super"}], "edited_paragraphs": ["Replacement conventional"], "edited_markers": [{"paragraph": 0, "offset": 0, "properties": "super"}]},
+    {"kind": "footnote", "id": 12, "blocks": ["p"], "paragraphs": ["Unmarked footnote"], "markers": [], "edited_paragraphs": ["Replacement unmarked footnote"], "edited_markers": []},
+    {"kind": "footnote", "id": 13, "blocks": ["p"], "paragraphs": ["Before  after"], "markers": [{"paragraph": 0, "offset": 7, "properties": "color"}], "edited_paragraphs": ["Lead Before  after"], "edited_markers": [{"paragraph": 0, "offset": 12, "properties": "color"}]},
+    {"kind": "footnote", "id": 14, "blocks": ["p", "p"], "paragraphs": ["Opening paragraph", "Later paragraph"], "markers": [{"paragraph": 1, "offset": 0, "properties": "plain"}], "edited_paragraphs": ["Opening paragraph edited", "Later paragraph"], "edited_markers": [{"paragraph": 1, "offset": 0, "properties": "plain"}]},
+    {"kind": "footnote", "id": 15, "blocks": ["p"], "paragraphs": [" first  second tail"], "markers": [{"paragraph": 0, "offset": 0, "properties": "plain"}, {"paragraph": 0, "offset": 7, "properties": "plain"}, {"paragraph": 0, "offset": 15, "properties": "bold_sub"}], "edited_paragraphs": [" first  second tail revised"], "edited_markers": [{"paragraph": 0, "offset": 0, "properties": "plain"}, {"paragraph": 0, "offset": 7, "properties": "plain"}, {"paragraph": 0, "offset": 15, "properties": "bold_sub"}]},
+    {"kind": "footnote", "id": 16, "blocks": ["tbl", "p"], "paragraphs": ["Table before  tail", "After note table"], "markers": [{"paragraph": 0, "offset": 13, "properties": "plain"}], "edited_paragraphs": ["Table before  tail edited", "After note table"], "edited_markers": [{"paragraph": 0, "offset": 13, "properties": "plain"}]},
+    {"kind": "endnote", "id": 31, "blocks": ["p"], "paragraphs": [" Conventional endnote"], "markers": [{"paragraph": 0, "offset": 0, "properties": "super"}], "edited_paragraphs": ["Replacement endnote"], "edited_markers": [{"paragraph": 0, "offset": 0, "properties": "super"}]},
+    {"kind": "endnote", "id": 32, "blocks": ["p"], "paragraphs": ["Unmarked endnote"], "markers": [], "edited_paragraphs": ["Replacement unmarked endnote"], "edited_markers": []},
+    {"kind": "endnote", "id": 33, "blocks": ["p"], "paragraphs": ["End before  middle tail"], "markers": [{"paragraph": 0, "offset": 11, "properties": "color"}, {"paragraph": 0, "offset": 19, "properties": "color"}], "edited_paragraphs": ["End before  middle tail edited"], "edited_markers": [{"paragraph": 0, "offset": 11, "properties": "color"}, {"paragraph": 0, "offset": 19, "properties": "color"}]}
+  ]
+}

@@ -45,13 +45,16 @@ class WorkspaceTestHarness {
   WorkspaceTestHarness._(this.container, this.cloud);
   final ProviderContainer container;
   final WorkflowFakeClient cloud;
-  static Future<WorkspaceTestHarness> create() async {
+  static Future<WorkspaceTestHarness> create({
+    List<Override> extraOverrides = const [],
+  }) async {
     SharedPreferences.setMockInitialValues({});
     final cloud = WorkflowFakeClient()..put('/one/file.txt', [1, 2, 3]);
     final container = ProviderContainer(
       overrides: [
         authProvider.overrideWith((_) => WorkspaceTestAuth(cloud)),
         localFileServiceProvider.overrideWithValue(_Local()),
+        ...extraOverrides,
       ],
     );
     for (final side in PanelSide.values) {

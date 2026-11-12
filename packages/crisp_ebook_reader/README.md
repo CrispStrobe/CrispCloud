@@ -13,7 +13,7 @@ The reader receives book bytes and exposes a small command/event bridge.
 | FB2, FBZ, CBZ | Reading and normalized export; comic pages retain fixed-layout viewport dimensions. |
 | Android, iOS, macOS, Windows | `flutter_inappwebview` renders bundled assets served from an instance-scoped loopback server. The platform's WebView runtime must be available. |
 | Browser | A same-origin Flutter asset iframe, with a session-scoped message bridge. |
-| Linux | Optional inline WebKitGTK 4.1 texture host, selected after `probeEbookLinuxHost()`. Missing build/runtime support leaves the portable Flutter EPUB reader available. See [Linux packaging and verification](../../linux/README.md). |
+| Linux | Optional inline WebKitGTK 4.1 texture host, selected after `probeEbookLinuxHost()` verifies isolated browser startup and painting. Missing build/runtime support or unusable startup leaves the portable Flutter EPUB reader available. See [Linux packaging and verification](../../linux/README.md). |
 
 DRM and KFX are outside this package's support. EPUB font obfuscation recognized
 by foliate-js is distinct from unsupported encryption. PDFs remain handled by

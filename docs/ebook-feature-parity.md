@@ -4,8 +4,10 @@ Assessment date: **12 November 2026**. This document distinguishes code that is
 implemented, behavior that has been exercised, and work still required for a
 release. See [the user guide](ebooks.md), [reader package](../packages/crisp_ebook_reader/README.md),
 and [recovery checkpoints](recovery/ebook-parity-2026-11-12.md) for usage and
-the verification record. Implementation is on draft PR
-[CrispStrobe/CrispCloud#53](https://github.com/CrispStrobe/CrispCloud/pull/53).
+the verification record. The shared expansion is on draft PR
+[CrispStrobe/CrispCloud#53](https://github.com/CrispStrobe/CrispCloud/pull/53), with
+the consolidated Linux continuation in stacked draft
+[PR #84](https://github.com/CrispStrobe/CrispCloud/pull/84).
 
 ## Why Linux was different
 

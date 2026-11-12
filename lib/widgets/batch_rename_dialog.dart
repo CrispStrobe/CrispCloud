@@ -8,6 +8,7 @@ import 'package:path/path.dart' as p;
 
 import '../l10n/commander_strings.dart';
 import '../l10n/app_localizations.dart';
+import '../l10n/rename_mask_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../models/rename_batch.dart';
@@ -33,11 +34,19 @@ class BatchRenameDialog extends ConsumerStatefulWidget {
     required this.parentRef,
     required this.side,
     required this.files,
+    this.initialOptions,
+    this.initialPresetName,
+    this.capturedOrigin,
+    this.capturedDirectory,
   });
 
   final WidgetRef parentRef;
   final PanelSide side;
   final List<FileItem> files;
+  final MultiRenameOptions? initialOptions;
+  final String? initialPresetName;
+  final PanelFileOrigin? capturedOrigin;
+  final String? capturedDirectory;
 
   @override
   ConsumerState<BatchRenameDialog> createState() => _BatchRenameDialogState();
@@ -106,9 +115,12 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
     super.initState();
     _files = List.of(widget.files);
     _panel = ref.read(panelProvider(widget.side));
-    _directory = _panel.currentPath;
+    _directory = widget.capturedDirectory ?? _panel.currentPath;
     try {
-      _origin = _panel.captureOperationOrigin(_files);
+      _origin = widget.capturedOrigin ?? _panel.captureOperationOrigin(_files);
+      if (_origin?.isCurrent == false) {
+        throw StateError('The original storage account disconnected. Reconnect it before reviewing this rename.');
+      }
       if (_origin == null) {
         _originError = 'These items no longer have a verified storage source. Refresh the panel.';
       } else if (_origin!.source.isLocal && !kIsWeb) {
@@ -120,6 +132,13 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
       }
     } catch (error) {
       _originError = error.toString();
+    }
+    if (widget.initialOptions case final options?) {
+      _setOptions(options);
+      if (widget.initialPresetName case final name?) {
+        _presets = {name: options};
+        _preset = name;
+      }
     }
     _loadPresets();
   }
@@ -776,15 +795,16 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
             child: _optionPicker<RenameMaskDialect>(
               context.commanderTr("Mask dialect"),
               _dialect,
-              {
-                RenameMaskDialect.crispCloud: context.commanderTr("CrispCloud"),
-                RenameMaskDialect.totalCommander: context.commanderTr(
-                  "Total Commander",
-                ),
-                RenameMaskDialect.doubleCommander: context.commanderTr(
-                  "Double Commander",
-                ),
-              },
+              // Labels follow the stable preset-variant order. Display names
+              // are independent of the serialized keys in existing presets.
+              Map<RenameMaskDialect, String>.fromIterables(
+                RenameMaskDialect.values,
+                [
+                  context.commanderTr("CrispCloud"),
+                  renameMaskVariantLabel(context, extended: false),
+                  renameMaskVariantLabel(context, extended: true),
+                ],
+              ),
               (value) => _dialect = value,
             ),
           ),
@@ -1465,7 +1485,12 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
   Future<void> _loadPresets() async {
     try {
       final presets = await _presetStore.load();
-      if (mounted) setState(() => _presets = presets);
+      if (mounted) {
+        setState(() {
+          _presets = presets;
+          if (_preset != null && !_presets.containsKey(_preset)) _preset = null;
+        });
+      }
     } catch (error) {
       _log.warn('Could not load multi-rename presets', error);
       if (mounted) setState(() => _message = 'Could not load presets: $error');
@@ -1558,6 +1583,7 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
     final history = ref.read(actionHistoryProvider.notifier);
     final service = _batchService;
     final options = _options.toJson();
+    final rememberSelection = _panel.captureSelectionMemoryForOperation(_files);
     setState(() {
       _processing = true;
       _executionPlan = plan;
@@ -1611,6 +1637,7 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
         // A stopped or partially failed batch still owns completed physical
         // steps. Its one Undo entry restores exactly the journalled work.
         if (record.canRestore) {
+          rememberSelection?.call();
           _recordBatchUndo(record, origin, storage, history, service);
         }
         if (mounted) setState(() => _result = _resultFor(plan, record));

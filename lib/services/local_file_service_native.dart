@@ -15,6 +15,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:macos_secure_bookmarks/macos_secure_bookmarks.dart';
 
 import '../models/file_item.dart';
+import 'broken_link.dart';
 import 'bookmark_service.dart';
 import 'local_file_service.dart';
 import 'ios_file_listing.dart';
@@ -548,6 +549,9 @@ class MacosFileService
   Future<bool> ensureAccess(String path) async {
     if (await hasAccessToPath(path)) return true;
     if (await _needsElevatedRights(path)) return false;
+    // A dangling link (e.g. into an unmounted volume) stays unreadable
+    // whatever folder is granted; never open the picker for it.
+    if (await missingLinkTarget(path) != null) return false;
 
     // Ask for the real target's folder. Re-picking the symlink's parent would
     // grant nothing when the link points into another volume.
@@ -579,6 +583,10 @@ class MacosFileService
     Future<T> Function() action,
   ) async {
     if (!await ensureAccess(path)) {
+      final missing = await missingLinkTarget(path);
+      if (missing != null) {
+        throw FileSystemException(missingLinkMessage(path, missing), path);
+      }
       final needsRights = await _needsElevatedRights(path);
       throw FileSystemException(
         needsRights

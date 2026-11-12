@@ -35,19 +35,23 @@ void main() {
     );
   }
 
-  test('explicit UTF-8 rejects malformed input rather than choosing another encoding', () {
-    expect(
-      () =>
-          EditorDocument.decode([0xE9], encodingOverride: EditorEncoding.utf8),
-      throwsA(isA<EditorEncodingException>()),
-    );
-    expect(
-      EditorDocument.decode([
-        0xE9,
-      ], encodingOverride: EditorEncoding.latin1).text,
-      'é',
-    );
-  });
+  test(
+    'explicit UTF-8 rejects malformed input rather than choosing another encoding',
+    () {
+      expect(
+        () => EditorDocument.decode([
+          0xE9,
+        ], encodingOverride: EditorEncoding.utf8),
+        throwsA(isA<EditorEncodingException>()),
+      );
+      expect(
+        EditorDocument.decode([
+          0xE9,
+        ], encodingOverride: EditorEncoding.latin1).text,
+        'é',
+      );
+    },
+  );
 
   test(
     'malformed Unicode units cannot be silently dropped by editable comparison',
@@ -67,29 +71,70 @@ void main() {
     },
   );
 
-  test('an explicit right encoding is retained across repeated verified merge saves', () async {
-    final directory = await Directory.systemTemp.createTemp('merge-encoding-');
-    addTearDown(() => directory.delete(recursive: true));
-    final file = File('${directory.path}/utf16.txt');
-    const document = EditorDocument(
-      text: 'old\n',
-      encoding: EditorEncoding.utf16be,
-      lineEnding: EditorLineEnding.crlf,
-      writeBom: false,
+  test(
+    'an explicit right encoding is retained across repeated verified merge saves',
+    () async {
+      final directory = await Directory.systemTemp.createTemp(
+        'merge-encoding-',
+      );
+      addTearDown(() => directory.delete(recursive: true));
+      final file = File('${directory.path}/utf16.txt');
+      const document = EditorDocument(
+        text: 'old\n',
+        encoding: EditorEncoding.utf16be,
+        lineEnding: EditorLineEnding.crlf,
+        writeBom: false,
+      );
+      await file.writeAsBytes(document.encode());
+      final source = LocalOperationBackend(
+        LocalFileService(),
+        isCurrent: () => true,
+      );
+      final session = await MergeDocumentSession.open(
+        source,
+        (await source.stat(file.path))!,
+        encodingOverride: EditorEncoding.utf16be,
+      );
+      await session.save('merged\n');
+      expect(await file.readAsBytes(), document.encode('merged\n'));
+      await session.save('second longer save\n');
+      expect(await file.readAsBytes(), document.encode('second longer save\n'));
+    },
+  );
+
+  for (final encoding in [EditorEncoding.cp437, EditorEncoding.windows1252]) {
+    test(
+      '${encoding.label} comparison saves retain encoding and reject unrepresentable merges',
+      () async {
+        final directory = await Directory.systemTemp.createTemp(
+          'legacy-merge-',
+        );
+        addTearDown(() => directory.delete(recursive: true));
+        final file = File('${directory.path}/text.txt');
+        final document = EditorDocument(
+          text: 'café\n',
+          encoding: encoding,
+          lineEnding: EditorLineEnding.crlf,
+        );
+        final original = document.encode();
+        await file.writeAsBytes(original);
+        final source = LocalOperationBackend(
+          LocalFileService(),
+          isCurrent: () => true,
+        );
+        final session = await MergeDocumentSession.open(
+          source,
+          (await source.stat(file.path))!,
+          encodingOverride: encoding,
+        );
+        await expectLater(
+          session.save('東京\n'),
+          throwsA(isA<EditorEncodingException>()),
+        );
+        expect(await file.readAsBytes(), original);
+        await session.save('café edited\n');
+        expect(await file.readAsBytes(), document.encode('café edited\n'));
+      },
     );
-    await file.writeAsBytes(document.encode());
-    final source = LocalOperationBackend(
-      LocalFileService(),
-      isCurrent: () => true,
-    );
-    final session = await MergeDocumentSession.open(
-      source,
-      (await source.stat(file.path))!,
-      encodingOverride: EditorEncoding.utf16be,
-    );
-    await session.save('merged\n');
-    expect(await file.readAsBytes(), document.encode('merged\n'));
-    await session.save('second longer save\n');
-    expect(await file.readAsBytes(), document.encode('second longer save\n'));
-  });
+  }
 }

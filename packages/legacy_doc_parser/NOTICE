@@ -1,0 +1,25 @@
+legacy_doc_parser
+
+Package-authored source is distributed under the Mozilla Public License 2.0.
+The package was extracted, at its owner's direction, from the legacy Word
+parser and converter developed for CrispCloud during November 2026. This does
+not change CrispCloud's application license or other contributors' licenses.
+
+Third-party source notices:
+
+1. lib/src/compound/cfbf_reader.dart, cfbf_writer.dart and byte_source.dart
+   are copied from the MIT-licensed quds_office_engine 1.5.0 source vendored
+   in CrispCloud at commit aba2df3248ccaf77460c74219903580223694713.
+   Copyright (c) 2026 Mohammed Asaad Asaad.
+   The exact MIT license is in third_party/quds_office_engine-MIT.txt.
+   Original repository: https://github.com/MohammedAsaadAsaad/quds_office_suite
+
+2. Selected formatting readers adapt Alpaq92/JSDoc src/docToText.js at
+   821695a884e0c0bb8592a635d9524bb3e116cd67 (0BSD). The exact license and pinned
+   source links are in third_party/JSDoc-0BSD.txt. Initial adapted package
+   files: lib/src/legacy_word_format_tables.dart and legacy_word_sprms.dart.
+
+Dependencies retain their own licenses; see each resolved package's LICENSE.
+MPL-2.0 is applied without the Exhibit B "Incompatible With Secondary Licenses"
+designation. No permission to execute an embedded third-party payload is
+conferred by parsing or retaining that payload.

@@ -2,7 +2,9 @@ import 'package:flutter/widgets.dart';
 
 import '../services/keyboard_shortcut_service.dart';
 import 'commander_strings.dart';
+import 'command_entry_strings.dart';
 import 'shortcut_strings.dart';
+import 'path_favorites_strings.dart';
 
 class WorkspaceUxStrings {
   WorkspaceUxStrings(this.context);
@@ -31,10 +33,20 @@ class WorkspaceUxStrings {
       ShortcutAction.nextTab => s.description(42),
       ShortcutAction.prevTab => s.description(43),
       ShortcutAction.commandPalette => s.description(44),
+      ShortcutAction.commandEntry => CommandEntryStrings(context).text('title'),
+      ShortcutAction.insertCommandFilename => CommandEntryStrings(
+        context,
+      ).text('insertNames'),
+      ShortcutAction.insertCommandPath => CommandEntryStrings(
+        context,
+      ).text('insertPaths'),
       ShortcutAction.connect => context.commanderTr('Connect to Cloud'),
       ShortcutAction.goToFolder => s.description(15),
       ShortcutAction.filter => s.description(16),
       ShortcutAction.selectAll => s.description(19),
+      ShortcutAction.restoreSelection => context.commanderTr(
+        'Restore Selection',
+      ),
       ShortcutAction.delete => s.description(9),
       ShortcutAction.rename => s.description(1),
       ShortcutAction.newFolder => s.description(8),
@@ -64,6 +76,9 @@ class WorkspaceUxStrings {
       ShortcutAction.sortByDate => s.description(32),
       ShortcutAction.sortBySize => s.description(33),
       ShortcutAction.bookmark => s.description(35),
+      ShortcutAction.pathFavorites => PathFavoritesStrings(
+        context,
+      ).text('title'),
       ShortcutAction.multiRename => s.extra('multiRename'),
     };
   }

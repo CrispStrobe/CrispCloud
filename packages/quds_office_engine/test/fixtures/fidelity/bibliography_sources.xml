@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<q:Sources xmlns:q="http://schemas.openxmlformats.org/officeDocument/2006/bibliography"
+           xmlns:b="urn:crispcloud:bibliography-extension"
+           xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+           mc:Ignorable="b" SelectedStyle="/APA.XSL" StyleName="APA" Version="6">
+  <q:Source b:kept="native-extension">
+    <q:Tag>Native</q:Tag>
+    <q:SourceType>Book</q:SourceType>
+    <q:Guid>{6AD1A1C2-1B2A-4DFB-A9AD-000000000001}</q:Guid>
+    <q:Author>
+      <q:Author><q:NameList>
+        <q:Person><q:Last>Lovelace</q:Last><q:First>Ada</q:First><q:Middle>Byron</q:Middle></q:Person>
+        <q:Person><q:Last>Hopper</q:Last><q:First>Grace</q:First></q:Person>
+      </q:NameList></q:Author>
+      <q:Editor><q:NameList><q:Person><q:Last>Editor</q:Last><q:First>Native</q:First></q:Person></q:NameList></q:Editor>
+    </q:Author>
+    <q:Title>Original title</q:Title>
+    <b:Title>Foreign title must remain</b:Title>
+    <q:Year>1843</q:Year>
+    <q:Pages>1-9</q:Pages>
+    <q:Publisher>Native publisher</q:Publisher>
+    <q:City>London</q:City>
+    <q:URL>https://example.org/native-source</q:URL>
+  </q:Source>
+  <q:Source b:opaque="untagged"><q:Comments>Unmodeled source without a tag</q:Comments></q:Source>
+</q:Sources>
