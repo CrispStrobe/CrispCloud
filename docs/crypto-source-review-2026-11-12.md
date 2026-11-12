@@ -259,3 +259,28 @@ source fingerprint is `d089a2d5138e8a53f5bcdbc0a2fefc709d886805223aeb2ff9c21560f
 documentation remains `unreviewed`, and submission still requires the completed
 questionnaire result. No store declaration, territory setting or filing was
 changed by this document-format work.
+
+
+## Standalone Word package extraction
+
+The app now depends on the standalone MPL-2.0 `legacy_doc_parser` package at
+Git revision `72da6223832c3cbc41929064c8f160cec10016f7`. Its only runtime
+dependency is the already-resolved `archive` package. The root lockfile adds
+only the parser's pinned Git record; existing cryptographic package versions
+and native provider inventories are unchanged. The extracted code parses
+unenciphered Word structures, writes ZIP/XML packages and preserves original
+opaque objects/VBA/signature bytes. It adds no encryption, signature validation,
+KDF, cipher or cryptographic provider.
+
+The only changed file in the existing **207-file** source binding is
+`pubspec.yaml`. The manifest was reviewed for this exact dependency addition;
+no override or alternate crypto implementation was introduced. The temporary
+in-app parser copy was removed after the standalone remote checkpoint and Git
+dependency resolution succeeded.
+
+The refreshed source fingerprint is `ecd507bf7e68c1e08b67d96e752b09e26601cda58a5cf3e16862c32b284079dd`. The root lockfile fingerprint
+is `51287d8e323b58ad8cc86b300540e0c5c5700a6cc9135925126a4d69c3b06dbe`. This binds the reviewed parser dependency without changing the
+existing source plist declarations, Apple documentation status (`unreviewed`),
+questionnaire requirement, territory decisions or distribution controls.
+The source evidence check passed; submission validation still rejects the
+missing questionnaire result. No Apple API call or filing was made.

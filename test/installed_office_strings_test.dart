@@ -12,6 +12,21 @@ Set<String> _placeholders(String value) =>
 void main() {
   const english = InstalledOfficeStrings(Locale('en'));
 
+  test('loss labels describe active content without claiming data removal', () {
+    expect(
+      english.text('vbaMissing'),
+      'The converted copy has no active VBA project.',
+    );
+    expect(
+      english.text('objectsMissing'),
+      'No active embedded objects were detected in the converted copy.',
+    );
+    expect(
+      english.text('macroNotice'),
+      contains('Macros are disabled during conversion.'),
+    );
+  });
+
   test('conversion controls and evidence cover every supported language', () {
     for (final locale in AppLocalizations.supportedLocales) {
       final strings = InstalledOfficeStrings(locale);

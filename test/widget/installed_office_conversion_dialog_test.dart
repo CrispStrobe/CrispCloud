@@ -417,7 +417,10 @@ void main() {
         },
       );
       await _convertUntil(tester, find.text('Review converted copy'));
-      expect(find.text('The original VBA project is missing.'), findsOneWidget);
+      expect(
+        find.text('The converted copy has no active VBA project.'),
+        findsOneWidget,
+      );
       expect(
         tester.widget<FilledButton>(find.byKey(_primary)).onPressed,
         isNull,

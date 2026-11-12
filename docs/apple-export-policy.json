@@ -5,7 +5,7 @@
   "uses_non_exempt_encryption": false,
   "documentation": {
     "status": "unreviewed",
-    "reference": "docs/crypto-source-review-2026-11-12.md: KeePass group/custom-field/history extensions and current viewer integration are source-reviewed with the inherited Rust cloud inventory from main 977b5037f133cb2d33c57db761864183455a705e. No new cryptographic algorithm or dependency was added by these extensions. No post-feature whole-app Apple questionnaire result or renewed classification decision is retained. Existing false declaration is a proposal only; upload/distribution remains blocked until the actual result is recorded.",
+    "reference": "docs/crypto-source-review-2026-11-12.md: KeePass group/custom-field/history extensions, viewer integration and the pinned standalone legacy Word package are source-reviewed with the inherited Rust cloud inventory from main 977b5037f133cb2d33c57db761864183455a705e. No new cryptographic algorithm or cryptographic dependency was added by these extensions. No post-feature whole-app Apple questionnaire result or renewed classification decision is retained. Existing false declaration is a proposal only; upload/distribution remains blocked until the actual result is recorded.",
     "compliance_code": null
   },
   "france": {
@@ -14,8 +14,8 @@
     "reference": "App Store Connect app 6789570314 has only two 1.0.0 PREPARE_FOR_SUBMISSION versions (macOS and iOS), no released App Store version; the public storefront returned 404. On 2026-11-08 availability was created with all territories except France, and FRA is explicitly available=false with contentStatus CANNOT_SELL."
   },
   "inventory_sha256": "4d8ef6d4c9a55f9cb5a1cbfabb317c7cb6f34e70d8604c863c8d92e81f92e810",
-  "pubspec_lock_sha256": "eb7003cf2ea16082c263ca8912090b362a5065640f7fb2e42383ef8da0021a2f",
-  "reviewed_source_sha256": "d089a2d5138e8a53f5bcdbc0a2fefc709d886805223aeb2ff9c21560f4fe4237",
+  "pubspec_lock_sha256": "51287d8e323b58ad8cc86b300540e0c5c5700a6cc9135925126a4d69c3b06dbe",
+  "reviewed_source_sha256": "ecd507bf7e68c1e08b67d96e752b09e26601cda58a5cf3e16862c32b284079dd",
   "testflight": {
     "distribution_review": "no_france",
     "reference": "Reviewed external group b044f8c9-394b-47dd-a470-796fd052580a is invitation-only (publicLinkEnabled=false) and contains exactly the project owner (cstr+beta@mailbox.org), who is outside France. The previous public-link group 2649c41c-6c58-4dfd-b07a-03b2f537e73f had its public link disabled on 2026-11-08 and is not used for this release.",

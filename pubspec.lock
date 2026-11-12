@@ -963,6 +963,15 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.2"
+  legacy_doc_parser:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: "72da6223832c3cbc41929064c8f160cec10016f7"
+      resolved-ref: "72da6223832c3cbc41929064c8f160cec10016f7"
+      url: "https://github.com/CrispStrobe/legacy-doc-parser.git"
+    source: git
+    version: "0.1.0-dev.1"
   libdbm:
     dependency: "direct overridden"
     description:
