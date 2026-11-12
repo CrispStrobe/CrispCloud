@@ -95,6 +95,11 @@ class ViewerArchive {
   /// Format-specific limits or unverified protections shown beside the listing.
   final List<String> notices;
 
+  /// True only for the immediate decoded payload of one compression layer.
+  /// A listing reached by entering another container must not be rewritten as
+  /// one compressed file, even when both layers use the same codec/name.
+  final bool isDirectCompressionPayload;
+
   final Future<Uint8List> Function(ViewerArchiveMember member, int maxBytes)
   _read;
   final Future<void> Function() _close;
@@ -106,6 +111,7 @@ class ViewerArchive {
     required this.formatName,
     required List<ViewerArchiveMember> members,
     List<String> notices = const [],
+    this.isDirectCompressionPayload = false,
     required Future<Uint8List> Function(
       ViewerArchiveMember member,
       int maxBytes,
@@ -129,6 +135,7 @@ class ViewerArchive {
     required String formatName,
     required String name,
     required Uint8List data,
+    List<String> notices = const [],
   }) {
     final member = ViewerArchiveMember(
       name: name,
@@ -140,6 +147,8 @@ class ViewerArchive {
     );
     return ViewerArchive.reader(
       formatName: formatName,
+      notices: notices,
+      isDirectCompressionPayload: true,
       members: List<ViewerArchiveMember>.unmodifiable([member]),
       read: (_, __) async => data,
       close: () async {},

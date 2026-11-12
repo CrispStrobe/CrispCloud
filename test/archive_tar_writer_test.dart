@@ -56,7 +56,7 @@ Future<_Fixture> _fixture(
 }) async {
   final archive = await openViewerArchive(bytes, name: name);
   addTearDown(archive.close);
-  return _Fixture(archive, await inspectTarRewrite(bytes, archive));
+  return _Fixture(archive, await inspectTarRewrite(bytes, archive, name: name));
 }
 
 void _checksum(Uint8List bytes, int at) {
@@ -316,12 +316,22 @@ void main() {
           ArchiveCompressionKind.bzip2 => 'bz2',
           ArchiveCompressionKind.xz => 'xz',
           ArchiveCompressionKind.zstd => 'zst',
+          ArchiveCompressionKind.lz4 => 'lz4',
+          ArchiveCompressionKind.lzma => 'lzma',
         };
         final source = await _fixture(bytes, name: 'fixture.tar.$extension');
         expect(source.inspection.reason, isNull);
         expect(
           source.inspection.attributes.values.single['tar.uid'],
           1234567890,
+        );
+        final again = await _fixture(await source.repack());
+        expect(again.inspection.reason, isNull);
+        expect(again.inspection.attributes, source.inspection.attributes);
+        expect(again.inspection.container, source.inspection.container);
+        expect(
+          await again.archive.readMember(again.archive.members.last),
+          utf8.encode('Independent TAR metadata fixture\n'),
         );
       });
     }

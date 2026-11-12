@@ -9,10 +9,16 @@ import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/file_clipboard_provider.dart';
 import 'package:crisp_cloud/providers/native_file_operations_provider.dart';
 import 'package:crisp_cloud/providers/providers.dart';
+import 'package:crisp_cloud/screens/screen_dialogs.dart';
 import 'package:crisp_cloud/services/file_operation_service.dart';
+import 'package:crisp_cloud/services/file_operation_backend.dart';
+import 'package:crisp_cloud/services/archive_publication_journal.dart';
+import 'package:crisp_cloud/services/archive_workspace.dart';
+import 'package:crisp_cloud/services/file_collection_storage.dart';
 import 'package:crisp_cloud/services/installation_identity.dart';
 import 'package:crisp_cloud/services/native_file_operations.dart';
 import 'package:crisp_cloud/widgets/archive_endpoint_actions.dart';
+import 'package:crisp_cloud/widgets/archive_workspace_dialog.dart';
 import 'package:crisp_cloud/widgets/file_clipboard_actions.dart';
 import 'package:crisp_cloud/widgets/file_context_menu.dart';
 import 'package:crisp_cloud/widgets/file_operation_dialog.dart';
@@ -105,6 +111,42 @@ void main() {
     container.read(activePanelProvider.notifier).state = PanelSide.local;
   }
 
+  Future<(String, List<int>)> prepareArchiveSource() async {
+    final path = p.join(input, 'source.zip');
+    final bytes = ZipEncoder().encode(
+      Archive()
+        ..addFile(ArchiveFile.bytes('members/new.txt', [7, 8, 9]))
+        ..addFile(ArchiveFile.bytes('members/other.txt', [10])),
+    );
+    await File(path).writeAsBytes(bytes);
+    await left.refresh();
+    await left.enterArchive(
+      left.files!.firstWhere((file) => file.path == path),
+    );
+    await left.navigateInto(
+      left.files!.firstWhere((file) => file.name == 'members'),
+    );
+    return (path, bytes);
+  }
+
+  Future<ArchiveWorkspace> openSourceWorkspace() async {
+    final origin = left.captureArchiveOrigin();
+    final location = left.captureArchiveWorkspaceLocation();
+    return ArchiveWorkspace.openNested(
+      fileOperationBackend(
+        source: origin.source,
+        local: container.read(localFileServiceProvider),
+        isCurrent: () => origin.isCurrent,
+      ),
+      location.file,
+      location.nestedMembers,
+      expectedOuterFingerprint: location.fingerprint,
+      journal: ArchivePublicationJournal(
+        storage: MemoryFileCollectionStorage(),
+      ),
+    );
+  }
+
   tearDown(() async {
     if (pendingClipboard case final pending? when !pending.isCompleted) {
       pending.complete();
@@ -162,6 +204,337 @@ void main() {
       )
       .evaluate()
       .isNotEmpty;
+
+  for (final intent in ['copy', 'move', 'dirty']) {
+    testWidgets(
+      'workspace $intent uses copy review only for a clean copy and retains source ownership',
+      (tester) async {
+        await tester.runAsync(prepareFixture);
+        final source = (await tester.runAsync(prepareArchiveSource))!;
+        final workspace = (await tester.runAsync(openSourceWorkspace))!;
+        addTearDown(workspace.close);
+        if (intent == 'dirty') {
+          workspace.replace('/members/new.txt', Uint8List.fromList([20, 21]));
+        }
+        final selected = (await workspace.backend.stat('/members/new.txt'))!;
+        var finished = false;
+        await mount(tester, () async {
+          await showFileOperationDialog(
+            widgetRef.context,
+            widgetRef,
+            PanelSide.local,
+            [selected],
+            kind: FileOperationKind.copy,
+            sourceOrigin: left.captureArchiveOrigin(),
+            sourceBackend: workspace.backend,
+            archiveSourceMove: intent == 'move',
+          );
+          finished = true;
+        });
+        await tester.tap(find.text('Transfer'));
+        if (intent == 'copy') {
+          await until(tester, canClose);
+          expect(find.text('Copy between archives'), findsOneWidget);
+          await tester.ensureVisible(find.text('Prepare review'));
+          await tester.runAsync(() => tester.tap(find.text('Prepare review')));
+          await until(
+            tester,
+            () =>
+                find.text('Review archive changes').evaluate().isNotEmpty &&
+                canClose(),
+          );
+          await tester.ensureVisible(find.text('Publish verified archive'));
+          await tester.runAsync(
+            () => tester.tap(find.text('Publish verified archive')),
+          );
+          await until(
+            tester,
+            () =>
+                find
+                    .text('Archive published and verified.')
+                    .evaluate()
+                    .isNotEmpty &&
+                canClose(),
+          );
+          await tester.tap(find.text('Close'));
+          await until(tester, () => finished);
+          final written = (await tester.runAsync(
+            () => File(archivePath).readAsBytes(),
+          ))!;
+          expect(
+            ZipDecoder()
+                .decodeBytes(written)
+                .findFile('folder/new.txt')
+                ?.content,
+            [7, 8, 9],
+          );
+        } else {
+          await until(
+            tester,
+            () => finished && find.byType(SnackBar).evaluate().isNotEmpty,
+          );
+          expect(
+            find.textContaining(
+              archiveEndpointText(
+                widgetRef.context,
+                intent == 'move' ? 'archiveMoveUnsupported' : 'sourceDraft',
+              ),
+            ),
+            findsOneWidget,
+          );
+          expect(find.byType(AlertDialog), findsNothing);
+          expect(
+            await tester.runAsync(() => File(archivePath).readAsBytes()),
+            original,
+          );
+        }
+        expect(workspace.isCurrent, isTrue);
+        expect(workspace.dirty, intent == 'dirty');
+        expect(
+          await workspace.read('/members/new.txt'),
+          intent == 'dirty' ? [20, 21] : [7, 8, 9],
+        );
+        expect(
+          await tester.runAsync(() => File(source.$1).readAsBytes()),
+          source.$2,
+        );
+        expect(tester.takeException(), isNull);
+      },
+      variant: desktop,
+    );
+  }
+
+  testWidgets(
+    'workspace Move out refuses an archive destination before showing copy review',
+    (tester) async {
+      await tester.runAsync(prepareFixture);
+      final source = (await tester.runAsync(prepareArchiveSource))!;
+      left.toggleSelection(sourceFile());
+      await mount(tester, () async {
+        await showCurrentArchiveWorkspaceDialog(
+          widgetRef.context,
+          widgetRef,
+          PanelSide.local,
+          action: ArchiveWorkspaceAction.moveOut,
+        );
+      });
+      await tester.tap(find.text('Transfer'));
+      await until(
+        tester,
+        () => find
+            .textContaining(
+              archiveEndpointText(widgetRef.context, 'archiveMoveUnsupported'),
+            )
+            .evaluate()
+            .isNotEmpty,
+      );
+      expect(find.text('Copy between archives'), findsNothing);
+      expect(find.text('Move members out of this archive?'), findsNothing);
+      expect(
+        await tester.runAsync(() => File(archivePath).readAsBytes()),
+        original,
+      );
+      expect(
+        await tester.runAsync(() => File(source.$1).readAsBytes()),
+        source.$2,
+      );
+      await tester.tap(find.byTooltip('Close archive'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    },
+    variant: desktop,
+  );
+
+  testWidgets(
+    'F5 copies the captured archive selection through review and physical publication',
+    (tester) async {
+      await tester.runAsync(prepareFixture);
+      final source = (await tester.runAsync(prepareArchiveSource))!;
+      left.toggleSelection(sourceFile());
+      await mount(tester, () async {
+        showCopyDialogFromSelection(widgetRef.context, widgetRef);
+      });
+      await tester.tap(find.text('Transfer'));
+      await until(tester, canClose);
+      expect(find.text('Copy between archives'), findsOneWidget);
+      expect(find.byType(FileOperationDialog), findsNothing);
+      expect(find.text('/members/new.txt → /folder/new.txt'), findsOneWidget);
+      expect(
+        await tester.runAsync(() => File(archivePath).readAsBytes()),
+        original,
+      );
+
+      await tester.ensureVisible(find.text('Prepare review'));
+      await tester.runAsync(() => tester.tap(find.text('Prepare review')));
+      await until(
+        tester,
+        () =>
+            find.text('Review archive changes').evaluate().isNotEmpty &&
+            canClose(),
+      );
+      await tester.ensureVisible(find.text('Publish verified archive'));
+      await tester.runAsync(
+        () => tester.tap(find.text('Publish verified archive')),
+      );
+      await until(
+        tester,
+        () =>
+            find
+                .text('Archive published and verified.')
+                .evaluate()
+                .isNotEmpty &&
+            canClose(),
+      );
+      await tester.tap(find.text('Close'));
+      await until(
+        tester,
+        () =>
+            find.text('Copy between archives').evaluate().isEmpty &&
+            !right.isLoading,
+      );
+
+      expect(
+        await tester.runAsync(() => File(source.$1).readAsBytes()),
+        source.$2,
+      );
+      final written = (await tester.runAsync(
+        () => File(archivePath).readAsBytes(),
+      ))!;
+      final decoded = ZipDecoder().decodeBytes(written);
+      expect(decoded.findFile('folder/new.txt')?.content, [7, 8, 9]);
+      expect(decoded.findFile('folder/keep.txt')?.content, [1, 2, 3]);
+      expect(decoded.findFile('folder/other.txt'), isNull);
+      expect(left.isInArchive, isTrue);
+      expect(left.selection.single.name, 'new.txt');
+      expect(tester.takeException(), isNull);
+    },
+    variant: desktop,
+  );
+
+  testWidgets(
+    'F6 between archive panes explicitly refuses move without opening a copy',
+    (tester) async {
+      await tester.runAsync(prepareFixture);
+      final source = (await tester.runAsync(prepareArchiveSource))!;
+      left.toggleSelection(sourceFile());
+      await mount(tester, () async {
+        showMoveDialogFromSelection(widgetRef.context, widgetRef);
+      });
+      await tester.tap(find.text('Transfer'));
+      await until(tester, () => find.byType(SnackBar).evaluate().isNotEmpty);
+      expect(
+        find.textContaining(
+          archiveEndpointText(widgetRef.context, 'archiveMoveUnsupported'),
+        ),
+        findsOneWidget,
+      );
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(
+        await tester.runAsync(() => File(source.$1).readAsBytes()),
+        source.$2,
+      );
+      expect(
+        await tester.runAsync(() => File(archivePath).readAsBytes()),
+        original,
+      );
+      expect(tester.takeException(), isNull);
+    },
+    variant: desktop,
+  );
+
+  testWidgets(
+    'archive context-menu copy keeps the original member selection while the popup is open',
+    (tester) async {
+      await tester.runAsync(prepareFixture);
+      await tester.runAsync(prepareArchiveSource);
+      final selected = sourceFile();
+      left.toggleSelection(selected);
+      await mount(tester, () async {
+        showFileContextMenu(
+          widgetRef.context,
+          widgetRef,
+          PanelSide.local,
+          selected,
+          const Offset(24, 24),
+        );
+      });
+      await tester.tap(find.text('Transfer'));
+      await tester.pumpAndSettle();
+      final copy = find.text('Copy to the other archive…');
+      expect(copy, findsOneWidget);
+      left.clearSelection();
+      left.toggleSelection(
+        left.files!.firstWhere((file) => file.name == 'other.txt'),
+      );
+      await tester.tap(copy);
+      await until(tester, canClose);
+      expect(find.text('Copy between archives'), findsOneWidget);
+      expect(find.text('/members/new.txt → /folder/new.txt'), findsOneWidget);
+      expect(find.textContaining('/folder/other.txt'), findsNothing);
+      await tester.tap(find.text('Close'));
+      await tester.pumpAndSettle();
+      expect(
+        await tester.runAsync(() => File(archivePath).readAsBytes()),
+        original,
+      );
+      expect(tester.takeException(), isNull);
+    },
+    variant: desktop,
+  );
+
+  testWidgets(
+    'archive context-menu copy cannot revive a source after reopening the same archive',
+    (tester) async {
+      await tester.runAsync(prepareFixture);
+      final source = (await tester.runAsync(prepareArchiveSource))!;
+      final selected = sourceFile();
+      left.toggleSelection(selected);
+      await mount(tester, () async {
+        showFileContextMenu(
+          widgetRef.context,
+          widgetRef,
+          PanelSide.local,
+          selected,
+          const Offset(24, 24),
+        );
+      });
+      await tester.tap(find.text('Transfer'));
+      await tester.pumpAndSettle();
+      final copy = find.text('Copy to the other archive…');
+      expect(copy, findsOneWidget);
+      await tester.runAsync(() async {
+        await left.navigateToPath(
+          input,
+          origin: left.captureLocalClipboardOrigin(input),
+        );
+        await left.enterArchive(
+          left.files!.firstWhere((file) => file.path == source.$1),
+        );
+        await left.navigateInto(
+          left.files!.firstWhere((file) => file.name == 'members'),
+        );
+      });
+      await tester.tap(copy);
+      await until(tester, () => find.byType(SnackBar).evaluate().isNotEmpty);
+      expect(
+        find.textContaining(
+          archiveEndpointText(widgetRef.context, 'sourceChanged'),
+        ),
+        findsOneWidget,
+      );
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(
+        await tester.runAsync(() => File(archivePath).readAsBytes()),
+        original,
+      );
+      expect(
+        await tester.runAsync(() => File(source.$1).readAsBytes()),
+        source.$2,
+      );
+      expect(tester.takeException(), isNull);
+    },
+    variant: desktop,
+  );
 
   testWidgets(
     'ordinary copy routes into the captured member directory without a generic success plan',

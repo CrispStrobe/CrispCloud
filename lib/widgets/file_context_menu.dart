@@ -27,9 +27,6 @@ import '../l10n/image_editor_strings.dart';
 import '../l10n/pdf_editor_strings.dart';
 import '../l10n/pdf_operations_strings.dart';
 import '../l10n/file_operations_strings.dart';
-import '../l10n/provider_operation_strings.dart';
-import '../l10n/link_operation_strings.dart';
-import '../l10n/checksum_error_strings.dart';
 import '../l10n/storage_analyzer_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
@@ -388,6 +385,62 @@ void _showResultListContextMenu(
   });
 }
 
+Future<void> _showArchiveMemberTransferMenu(
+  BuildContext context,
+  WidgetRef ref,
+  PanelSide side,
+  List<FileItem> files,
+  Offset position,
+) async {
+  try {
+    final opposite = side == PanelSide.local
+        ? PanelSide.remote
+        : PanelSide.local;
+    // Freeze both locations and member rows before opening the popup. A later
+    // selection or a replacement archive cannot substitute different inputs.
+    final source = CapturedArchiveCopySource.capture(ref, side, files);
+    final destination = CapturedArchiveImportDestination.capture(ref, opposite);
+    final action = await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(position.dx, position.dy, 0, 0),
+      items: [
+        PopupMenuItem(
+          value: 'copy',
+          child: Text(archiveEndpointText(context, 'copyToArchive')),
+        ),
+        PopupMenuItem(
+          value: 'workspace',
+          child: Text(archiveEndpointText(context, 'workspaceTitle')),
+        ),
+      ],
+    );
+    if (action == null || !context.mounted) return;
+    if (!source.isCurrent || !destination.isCurrent) {
+      throw StateError(archiveEndpointText(context, 'sourceChanged'));
+    }
+    if (action == 'copy') {
+      await showCapturedArchiveCopy(
+        context,
+        ref,
+        source: source,
+        destination: destination,
+      );
+    } else {
+      await showCurrentArchiveWorkspaceDialog(
+        context,
+        ref,
+        side,
+        focusedMember: files.length == 1 ? files.single : null,
+      );
+    }
+  } catch (error) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('$error')));
+    }
+  }
+}
+
 void showFileContextMenu(
   BuildContext context,
   WidgetRef ref,
@@ -414,6 +467,15 @@ void showFileContextMenu(
   }
 
   if (panel.isInArchive) {
+    final opposite = side == PanelSide.local
+        ? PanelSide.remote
+        : PanelSide.local;
+    if (ref.read(panelProvider(opposite)).isInArchive) {
+      unawaited(
+        _showArchiveMemberTransferMenu(context, ref, side, files, position),
+      );
+      return;
+    }
     showCurrentArchiveWorkspaceDialog(
       context,
       ref,
@@ -612,8 +674,9 @@ void showFileContextMenu(
           ],
         ),
         onTap: () => Future.delayed(Duration.zero, () {
-          if (context.mounted && current())
+          if (context.mounted && current()) {
             showHexEditorDialog(context, ref, file, side);
+          }
         }),
       ),
     );
@@ -631,8 +694,9 @@ void showFileContextMenu(
             ],
           ),
           onTap: () => Future.delayed(Duration.zero, () {
-            if (context.mounted && current())
+            if (context.mounted && current()) {
               showFileEditorDialog(context, ref, file, side, forceText: true);
+            }
           }),
         ),
       );

@@ -8,6 +8,7 @@ import '../models/file_item.dart';
 import '../services/archive_container_publisher.dart';
 import '../services/archive_endpoint.dart';
 import '../services/archive_publication_journal.dart';
+import '../services/archive_service.dart';
 import '../services/archive_workspace.dart';
 import '../services/file_operation_service.dart';
 import '../utils/formatters.dart';
@@ -39,6 +40,39 @@ Future<ArchiveEndpointTransferResult?> showArchiveEndpointImportDialog(
   ),
 );
 
+/// Copies members between two physical archives. Source and destination routes
+/// are captured separately, including their independent nested passwords.
+Future<ArchiveEndpointTransferResult?> showArchiveEndpointCopyDialog(
+  BuildContext context, {
+  required FileOperationBackend sourceContainerBackend,
+  required FileItem sourceContainerFile,
+  required List<FileItem> files,
+  required FileOperationBackend containerBackend,
+  required FileItem containerFile,
+  List<String> sourceNestedMembers = const [],
+  String? expectedSourceFingerprint,
+  List<String> nestedMembers = const [],
+  String directory = '/',
+  String? expectedOuterFingerprint,
+  ArchivePublicationJournal? journal,
+}) => showDialog<ArchiveEndpointTransferResult>(
+  context: context,
+  barrierDismissible: false,
+  builder: (_) => _ArchiveEndpointDialog(
+    sourceContainerBackend: sourceContainerBackend,
+    sourceContainerFile: sourceContainerFile,
+    sourceNestedMembers: List.unmodifiable(sourceNestedMembers),
+    expectedSourceFingerprint: expectedSourceFingerprint,
+    files: List.unmodifiable(files),
+    containerBackend: containerBackend,
+    containerFile: containerFile,
+    nestedMembers: List.unmodifiable(nestedMembers),
+    directory: directory,
+    expectedOuterFingerprint: expectedOuterFingerprint,
+    journal: journal ?? ArchivePublicationJournal(),
+  ),
+);
+
 Future<ArchivePublicationReceipt?> showArchiveWorkspacePublicationDialog(
   BuildContext context,
   ArchiveWorkspace workspace,
@@ -53,6 +87,51 @@ Future<ArchivePublicationReceipt?> showArchiveWorkspacePublicationDialog(
   ),
 ))?.receipt;
 
+/// Copies from a clean, unlocked workspace without taking ownership of it.
+Future<ArchiveEndpointTransferResult?> showArchiveWorkspaceCopyDialog(
+  BuildContext context,
+  ArchiveWorkspace source, {
+  required List<FileItem> files,
+  required FileOperationBackend containerBackend,
+  required FileItem containerFile,
+  List<String> nestedMembers = const [],
+  String directory = '/',
+  String? expectedOuterFingerprint,
+  bool Function()? isCopyCurrent,
+  ArchivePublicationJournal? journal,
+}) {
+  final snapshot = source.captureCopySource();
+  final selected = List<FileItem>.unmodifiable(files);
+  final sourceRoute = source.nestedMemberPaths;
+  final destinationRoute = List<String>.unmodifiable(nestedMembers);
+  var lost = false;
+  bool current() {
+    if (!lost) {
+      lost = !snapshot.isCurrent || isCopyCurrent?.call() == false;
+    }
+    return !lost;
+  }
+
+  return showDialog<ArchiveEndpointTransferResult>(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => _ArchiveEndpointDialog(
+      sourceWorkspace: source,
+      sourceContainerBackend: snapshot.containerBackend,
+      sourceContainerFile: snapshot.containerFile,
+      sourceNestedMembers: sourceRoute,
+      files: selected,
+      containerBackend: containerBackend,
+      containerFile: containerFile,
+      nestedMembers: destinationRoute,
+      directory: directory,
+      expectedOuterFingerprint: expectedOuterFingerprint,
+      isCopyCurrent: current,
+      journal: journal ?? ArchivePublicationJournal(),
+    ),
+  );
+}
+
 class _ArchiveEndpointDialog extends StatefulWidget {
   const _ArchiveEndpointDialog({
     required this.containerBackend,
@@ -65,6 +144,12 @@ class _ArchiveEndpointDialog extends StatefulWidget {
     this.expectedOuterFingerprint,
     this.moveSources = false,
     this.workspace,
+    this.sourceContainerBackend,
+    this.sourceContainerFile,
+    this.sourceNestedMembers = const [],
+    this.expectedSourceFingerprint,
+    this.sourceWorkspace,
+    this.isCopyCurrent,
   });
   final FileOperationBackend containerBackend;
   final FileItem containerFile;
@@ -76,12 +161,22 @@ class _ArchiveEndpointDialog extends StatefulWidget {
   final String? expectedOuterFingerprint;
   final bool moveSources;
   final ArchiveWorkspace? workspace;
+  final FileOperationBackend? sourceContainerBackend;
+  final FileItem? sourceContainerFile;
+  final List<String> sourceNestedMembers;
+  final String? expectedSourceFingerprint;
+  final ArchiveWorkspace? sourceWorkspace;
+  final bool Function()? isCopyCurrent;
+  bool get isArchiveCopy => sourceContainerBackend != null;
   @override
   State<_ArchiveEndpointDialog> createState() => _ArchiveEndpointDialogState();
 }
 
 class _ArchiveEndpointDialogState extends State<_ArchiveEndpointDialog> {
   ArchiveEndpoint? _endpoint;
+  ArchiveWorkspace? _sourceWorkspace;
+  List<FileItem>? _sourceMembers;
+  bool _ownsSourceWorkspace = false;
   ArchiveEndpointImportPlan? _plan;
   ArchiveWorkspaceReview? _review;
   ArchiveEndpointTransferResult? _result;
@@ -101,6 +196,7 @@ class _ArchiveEndpointDialogState extends State<_ArchiveEndpointDialog> {
     _cancelled = true;
     _control.cancel();
     unawaited(_endpoint?.close());
+    if (_ownsSourceWorkspace) unawaited(_sourceWorkspace?.close());
     super.dispose();
   }
 
@@ -148,6 +244,10 @@ class _ArchiveEndpointDialogState extends State<_ArchiveEndpointDialog> {
       if (!mounted) return;
       throw StateError(archiveEndpointText(context, 'reopen'));
     }
+    if (widget.isArchiveCopy) {
+      await _openCopySource();
+      if (!mounted || _cancelled || _sourceWorkspace == null) return;
+    }
     final passwords = List<String?>.filled(
       widget.nestedMembers.length + 1,
       null,
@@ -174,6 +274,7 @@ class _ArchiveEndpointDialogState extends State<_ArchiveEndpointDialog> {
           context,
           error.containerName,
           error.wrongPassword,
+          role: widget.isArchiveCopy ? 'destinationPassword' : null,
         );
         if (password == null) {
           _cancelled = true;
@@ -185,29 +286,124 @@ class _ArchiveEndpointDialogState extends State<_ArchiveEndpointDialog> {
     if (_endpoint != null) await _prepare();
   }, 'preparing');
 
-  Future<void> _prepare() async {
-    _plan = await _endpoint!.prepareImport(
-      source: widget.source!,
-      files: widget.files,
-      directory: widget.directory,
-      moveSources: widget.moveSources,
-      conflict: _conflict,
-      control: _control,
+  void _checkCopyCurrent() {
+    if (widget.isCopyCurrent?.call() == false) {
+      throw StateError(archiveEndpointText(context, 'sourceChanged'));
+    }
+  }
+
+  Future<void> _captureCopyMembers(ArchiveWorkspace workspace) async {
+    final members = <FileItem>[];
+    for (final selected in widget.files) {
+      final raw = selected.path;
+      if (raw == null || selected.name == '..') {
+        throw StateError(archiveEndpointText(context, 'sourceChanged'));
+      }
+      final path =
+          '/${ArchiveService.safeMemberPath(raw.replaceAll(RegExp(r'^/+|/+$'), ''))}';
+      final member = await workspace.backend.stat(path);
+      if (!mounted || _cancelled) return;
+      _checkCopyCurrent();
+      if (member == null ||
+          member.isFolder != selected.isFolder ||
+          (!member.isFolder &&
+              selected.size != null &&
+              selected.size != member.size)) {
+        throw StateError(archiveEndpointText(context, 'sourceChanged'));
+      }
+      members.add(member);
+    }
+    _sourceMembers = List.unmodifiable(members);
+  }
+
+  Future<void> _openCopySource() async {
+    _checkCopyCurrent();
+    final borrowed = widget.sourceWorkspace;
+    if (borrowed != null) {
+      if (borrowed.dirty || borrowed.pendingPublication != null) {
+        throw StateError(archiveEndpointText(context, 'sourceDraft'));
+      }
+      borrowed.captureCopySource().checkCurrent();
+      _sourceWorkspace = borrowed;
+      await _captureCopyMembers(borrowed);
+      return;
+    }
+    final passwords = List<String?>.filled(
+      widget.sourceNestedMembers.length + 1,
+      null,
     );
+    while (mounted && !_cancelled) {
+      try {
+        final workspace = await ArchiveWorkspace.openNested(
+          widget.sourceContainerBackend!,
+          widget.sourceContainerFile!,
+          widget.sourceNestedMembers,
+          passwords: passwords,
+          expectedOuterFingerprint: widget.expectedSourceFingerprint,
+          journal: widget.journal,
+        );
+        if (!mounted || _cancelled) {
+          await workspace.close();
+          return;
+        }
+        _sourceWorkspace = workspace;
+        _ownsSourceWorkspace = true;
+        await _captureCopyMembers(workspace);
+        return;
+      } on ArchiveNestedPasswordRequiredException catch (error) {
+        if (!mounted || _cancelled) return;
+        final password = await _password(
+          context,
+          error.containerName,
+          error.wrongPassword,
+          role: 'sourcePassword',
+        );
+        if (password == null) {
+          _cancelled = true;
+          return;
+        }
+        passwords[error.level] = password;
+      }
+    }
+  }
+
+  Future<void> _prepare() async {
+    _plan = null;
+    _checkCopyCurrent();
+    _plan = widget.isArchiveCopy
+        ? await _endpoint!.prepareArchiveCopy(
+            source: _sourceWorkspace!,
+            files: _sourceMembers!,
+            directory: widget.directory,
+            conflict: _conflict,
+            control: _control,
+          )
+        : await _endpoint!.prepareImport(
+            source: widget.source!,
+            files: widget.files,
+            directory: widget.directory,
+            moveSources: widget.moveSources,
+            conflict: _conflict,
+            control: _control,
+          );
   }
 
   Future<void> _stage() => _run(() async {
+    _checkCopyCurrent();
     _review = await _endpoint!.stageImport(_plan!, control: _control);
   }, 'preparing');
   Future<void> _reviewAgain() => _run(() async {
+    _checkCopyCurrent();
     _review = await _endpoint!.review(
       isCancelled: () => _cancelled || !mounted,
     );
   }, 'preparing');
   Future<void> _publish() => _run(() async {
+    _checkCopyCurrent();
     _result = await _endpoint!.commit(
       reviewed: _review!,
-      isCancelled: () => _cancelled || !mounted,
+      isCancelled: () =>
+          _cancelled || !mounted || widget.isCopyCurrent?.call() == false,
     );
   }, 'publishing');
   void _close() => Navigator.pop(context, _result);
@@ -220,7 +416,15 @@ class _ArchiveEndpointDialogState extends State<_ArchiveEndpointDialog> {
     return PopScope(
       canPop: !_busy,
       child: AlertDialog(
-        title: Text(t(_review == null ? 'importTitle' : 'reviewTitle')),
+        title: Text(
+          t(
+            _review != null
+                ? 'reviewTitle'
+                : widget.isArchiveCopy
+                ? 'copyTitle'
+                : 'importTitle',
+          ),
+        ),
         content: SizedBox(
           width: 720,
           child: SingleChildScrollView(
@@ -228,6 +432,17 @@ class _ArchiveEndpointDialogState extends State<_ArchiveEndpointDialog> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
+                if (widget.isArchiveCopy) ...[
+                  Text(t('sourceArchive')),
+                  SelectableText(
+                    [
+                      widget.sourceContainerFile!.path,
+                      ...widget.sourceNestedMembers,
+                    ].join('!/'),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(t('destinationArchive')),
+                ],
                 SelectableText(
                   [
                     widget.containerFile.path,
@@ -236,6 +451,7 @@ class _ArchiveEndpointDialogState extends State<_ArchiveEndpointDialog> {
                 ),
                 if (widget.source != null)
                   Text('${widget.source!.label} → ${widget.directory}'),
+                if (widget.isArchiveCopy) Text('→ ${widget.directory}'),
                 const SizedBox(height: 12),
                 if (_busy) ...[
                   const LinearProgressIndicator(),
@@ -274,16 +490,23 @@ class _ArchiveEndpointDialogState extends State<_ArchiveEndpointDialog> {
                     Text(t('metadata')),
                   ],
                   Text(t('publicationSafety')),
-                  Text(t(widget.moveSources ? 'movePolicy' : 'copyPolicy')),
+                  if (widget.isArchiveCopy) ...[
+                    Text(t('archiveCopySnapshot')),
+                    Text(t('archiveCopyProtection')),
+                    Text(t('archiveCopyMetadata')),
+                  ] else
+                    Text(t(widget.moveSources ? 'movePolicy' : 'copyPolicy')),
                   if (widget.moveSources) Text(t('directoriesRemain')),
                   if (workspace?.pendingPublication != null)
                     Text(t('recoveryClose')),
                   Text(t('bounds')),
                   if (_review == null &&
-                      widget.source != null &&
+                      (widget.source != null || widget.isArchiveCopy) &&
                       _endpoint != null) ...[
                     DropdownButtonFormField<FileConflictPolicy>(
                       initialValue: _conflict,
+                      isExpanded: true,
+                      itemHeight: null,
                       decoration: InputDecoration(labelText: t('collision')),
                       items: [
                         for (final value in [
@@ -293,7 +516,11 @@ class _ArchiveEndpointDialogState extends State<_ArchiveEndpointDialog> {
                         ])
                           DropdownMenuItem(
                             value: value,
-                            child: Text(t(value.name)),
+                            child: Text(
+                              t(value.name),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                       ],
                       onChanged: _busy
@@ -368,40 +595,81 @@ class _ArchiveEndpointDialogState extends State<_ArchiveEndpointDialog> {
   }
 }
 
-Future<String?> _password(BuildContext context, String name, bool wrong) async {
-  final controller = TextEditingController();
-  try {
-    return await showDialog<String>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: Text(
-          context.commanderTr(
-            wrong ? 'Incorrect password. Try again' : 'Archive password',
-          ),
-        ),
-        content: TextField(
-          controller: controller,
+Future<String?> _password(
+  BuildContext context,
+  String name,
+  bool wrong, {
+  String? role,
+}) => showDialog<String>(
+  context: context,
+  barrierDismissible: false,
+  builder: (_) =>
+      _ArchiveEndpointPasswordDialog(name: name, wrong: wrong, role: role),
+);
+
+/// Own the controller for the complete route lifetime. A popped prompt can
+/// still be animating while the next nested password is requested.
+class _ArchiveEndpointPasswordDialog extends StatefulWidget {
+  const _ArchiveEndpointPasswordDialog({
+    required this.name,
+    required this.wrong,
+    this.role,
+  });
+  final String name;
+  final bool wrong;
+  final String? role;
+  @override
+  State<_ArchiveEndpointPasswordDialog> createState() =>
+      _ArchiveEndpointPasswordDialogState();
+}
+
+class _ArchiveEndpointPasswordDialogState
+    extends State<_ArchiveEndpointPasswordDialog> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: Text(
+      widget.wrong
+          ? context.commanderTr('Incorrect password. Try again')
+          : widget.role == null
+          ? context.commanderTr('Archive password')
+          : archiveEndpointText(context, widget.role!),
+    ),
+    content: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (widget.wrong && widget.role != null)
+          Text(archiveEndpointText(context, widget.role!)),
+        TextField(
+          controller: _controller,
           obscureText: true,
           autofocus: true,
-          decoration: InputDecoration(labelText: name),
+          autocorrect: false,
+          enableSuggestions: false,
+          decoration: InputDecoration(labelText: widget.name),
           onSubmitted: (value) => Navigator.pop(context, value),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(context.commanderTr('Cancel')),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, controller.text),
-            child: Text(context.commanderTr('Continue')),
-          ),
-        ],
+      ],
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: Text(context.commanderTr('Cancel')),
       ),
-    );
-  } finally {
-    controller.dispose();
-  }
+      FilledButton(
+        onPressed: () => Navigator.pop(context, _controller.text),
+        child: Text(context.commanderTr('Continue')),
+      ),
+    ],
+  );
 }
 
 /// Recovery is scoped to one already captured account. A true result means an

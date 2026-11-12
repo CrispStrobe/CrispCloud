@@ -16,6 +16,7 @@ import '../providers/panel_provider.dart';
 import '../providers/transfer_provider.dart';
 import '../services/file_operation_backend.dart';
 import '../services/file_operation_service.dart';
+import '../services/archive_workspace.dart';
 import '../services/file_selection_pattern.dart';
 import '../services/file_operation_profiles.dart';
 import '../services/read_only_operation_backend.dart';
@@ -28,6 +29,8 @@ import 'archive_endpoint_actions.dart';
 /// follow-up operation to successful entries. Cancellation/background is null.
 /// An archive destination owns a separate physical-container review and receipt;
 /// that workflow does not return a generic per-member completion plan.
+/// [archiveSourceMove] marks a workspace move that first copies, then removes
+/// members from its draft. It is refused when the destination is an archive.
 Future<FileOperationPlan?> showFileOperationDialog(
   BuildContext context,
   WidgetRef ref,
@@ -38,6 +41,7 @@ Future<FileOperationPlan?> showFileOperationDialog(
   PanelFileOrigin? destinationOrigin,
   String? destinationPath,
   FileOperationBackend? sourceBackend,
+  bool archiveSourceMove = false,
   Map<PanelFileOrigin, List<FileItem>>? sourceGroups,
   PanelSide? externalDestinationSide,
   PanelSide? lockedDestinationSide,
@@ -91,6 +95,25 @@ Future<FileOperationPlan?> showFileOperationDialog(
           ref,
           targetSide,
         );
+        if (archiveSourceMove ||
+            sourceBackend is ArchiveOperationBackend &&
+                kind == FileOperationKind.move) {
+          throw UnsupportedError(
+            archiveEndpointText(context, 'archiveMoveUnsupported'),
+          );
+        }
+        if (sourceBackend is ArchiveOperationBackend &&
+            onPreparedPlan == null &&
+            onForegroundPlan == null) {
+          await showCapturedArchiveWorkspaceCopy(
+            context,
+            source: sourceBackend.workspace,
+            files: files,
+            destination: destination,
+            isReviewCurrent: isReviewCurrent,
+          );
+          return null;
+        }
         if (sourceBackend != null ||
             onPreparedPlan != null ||
             onForegroundPlan != null) {

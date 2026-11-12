@@ -2,6 +2,13 @@ import '../models/file_item.dart';
 import 'file_operation_service.dart';
 import 'storage_transfer_contract.dart';
 
+Future<bool> sameNativeArchiveContainer(
+  FileOperationBackend first,
+  FileItem firstFile,
+  FileOperationBackend second,
+  FileItem secondFile,
+) async => false;
+
 Future<bool> deleteNativeArchiveImportSource(
   FileOperationBackend backend,
   FileItem source, {

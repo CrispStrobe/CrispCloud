@@ -26,6 +26,10 @@ import 'archive_dmg_reader.dart';
 import 'archive_format_registry.dart';
 import 'archive_hfs_reader.dart';
 import 'archive_iso_reader.dart';
+import 'archive_lz4_codec.dart';
+import 'archive_lzma_codec.dart';
+import 'archive_lzip_codec.dart';
+import 'archive_unix_compress_codec.dart';
 import 'archive_package_readers.dart';
 import 'archive_pbzx_source.dart';
 import 'archive_rpm_reader.dart';
@@ -78,6 +82,7 @@ Future<ViewerArchive> openViewerArchiveSource(
       formatName: archive.formatName,
       members: archive.members,
       notices: [note, ...archive.notices],
+      isDirectCompressionPayload: archive.isDirectCompressionPayload,
       read: (member, limit) => archive.readMember(member, maxBytes: limit),
       streamReader: (member, chunkSize) => archive.openMember(
         member,
@@ -181,46 +186,16 @@ Future<ViewerArchive> _openSource(
         rethrow;
       }
     }
-    final compression = _compressionMagic(header);
+    final compression = await _compressionForSource(source, header);
     if (compression != null) {
-      if (depth >= 4) {
-        throw const ArchiveViewException(
-          'Too many nested compression wrappers.',
-        );
-      }
-      if (source.length > maxBufferedContainerBytes) {
-        throw ArchiveViewException(
-          'This compression format requires a buffered decode limited to '
-          '${_mb(maxBufferedContainerBytes)}.',
-        );
-      }
-      final decompressed = decompressSingleFile(
-        await source.read(0, source.length),
-        'payload.$compression',
-        maxBytes: maxMemberBytes,
-      ).data;
-      await source.close();
-      final innerName = _innerContainerName(name);
-      if (isArchiveFilename(innerName) || _hasContainerMagic(decompressed)) {
-        return await _openSource(
-          koni.MemoryByteSource(decompressed, name: innerName),
-          name: innerName,
-          password: password,
-          maxMemberBytes: maxMemberBytes,
-          maxBufferedContainerBytes: maxBufferedContainerBytes,
-          depth: depth + 1,
-        );
-      }
-      return ViewerArchive.direct(
-        formatName: compression == 'gz'
-            ? 'gzip'
-            : compression == 'bz2'
-            ? 'bzip2'
-            : compression == 'zst'
-            ? 'zstd'
-            : compression,
-        name: innerName,
-        data: decompressed,
+      return await _openCompressedSource(
+        source,
+        compression: compression,
+        name: name,
+        password: password,
+        maxMemberBytes: maxMemberBytes,
+        maxBufferedContainerBytes: maxBufferedContainerBytes,
+        depth: depth,
       );
     }
     if (_hasMagic(header, 0, const [
@@ -245,7 +220,9 @@ Future<ViewerArchive> _openSource(
         ])) {
       return await openArArchive(source, maxMemberBytes: maxMemberBytes);
     }
-    if (_hasMagic(header, 0, const [48, 55, 48, 55, 48])) {
+    if (_hasMagic(header, 0, const [48, 55, 48, 55, 48]) ||
+        _hasMagic(header, 0, const [0xc7, 0x71]) ||
+        _hasMagic(header, 0, const [0x71, 0xc7])) {
       return await openCpioArchive(source, maxMemberBytes: maxMemberBytes);
     }
     if (_hasMagic(header, 0, const [0x78, 0x61, 0x72, 0x21])) {
@@ -339,6 +316,19 @@ Future<ViewerArchive> _openSource(
     if (lower.endsWith('.hfs') || lower.endsWith('.hfsx')) {
       return await openHfsArchive(source, maxMemberBytes: maxMemberBytes);
     }
+    // LZMA-alone has no unique magic. Route an explicit suffix only after
+    // every recognized archive/filesystem signature has had priority.
+    if (lower.endsWith('.lzma') || lower.endsWith('.tlz')) {
+      return await _openCompressedSource(
+        source,
+        compression: 'lzma',
+        name: name,
+        password: password,
+        maxMemberBytes: maxMemberBytes,
+        maxBufferedContainerBytes: maxBufferedContainerBytes,
+        depth: depth,
+      );
+    }
     return await _openWithKoni(
       source,
       password: password,
@@ -348,6 +338,142 @@ Future<ViewerArchive> _openSource(
     await source.close();
     rethrow;
   }
+}
+
+Future<ViewerArchive> _openCompressedSource(
+  koni.ByteSource source, {
+  required String compression,
+  required String name,
+  required String? password,
+  required int maxMemberBytes,
+  required int maxBufferedContainerBytes,
+  required int depth,
+}) async {
+  if (depth >= 4) {
+    throw const ArchiveViewException('Too many nested compression wrappers.');
+  }
+  if (source.length > maxBufferedContainerBytes) {
+    throw ArchiveViewException(
+      'This compression format requires a buffered decode limited to ${_mb(maxBufferedContainerBytes)}.',
+    );
+  }
+  final input = await source.read(0, source.length);
+  final notices = <String>[];
+  final Uint8List decompressed;
+  if (compression == 'lz4') {
+    final decoded = decodeArchiveLz4(
+      input,
+      maxOutputBytes: maxMemberBytes < kArchiveReadLimit
+          ? maxMemberBytes
+          : kArchiveReadLimit,
+    );
+    decompressed = decoded.bytes;
+    notices.add(
+      'LZ4 frame headers and all present block/content checksums were checked. Frames without optional content checksums do not provide a stored whole-payload digest.',
+    );
+    if (!decoded.canRewrite) {
+      notices.add(
+        'This LZ4 frame collection or skippable extension metadata is read-only; a one-frame rewrite would discard its framing.',
+      );
+    }
+  } else {
+    decompressed = decompressSingleFile(
+      input,
+      'payload.$compression',
+      maxBytes: maxMemberBytes,
+    ).data;
+    if (compression == 'lzma') {
+      notices.add(
+        'LZMA-alone has no stored content checksum. Stream boundaries, decoded size, dictionary distances and range-coder completion were checked.',
+      );
+    } else if (compression == 'lz') {
+      notices.add(
+        'Lzip member CRC32, decoded lengths and complete stream boundaries were checked. Lzip is read-only.',
+      );
+    } else if (compression == 'z') {
+      notices.add(
+        'UNIX compress has no stored checksum or decoded length. Successful LZW decoding cannot detect every bit change or truncation at a valid code boundary. This format is read-only.',
+      );
+    }
+  }
+  await source.close();
+  final innerName = _innerContainerName(name);
+  if (isArchiveFilename(innerName) || _hasContainerMagic(decompressed)) {
+    final inner = await _openSource(
+      koni.MemoryByteSource(decompressed, name: innerName),
+      name: innerName,
+      password: password,
+      maxMemberBytes: maxMemberBytes,
+      maxBufferedContainerBytes: maxBufferedContainerBytes,
+      depth: depth + 1,
+    );
+    return ViewerArchive.reader(
+      formatName: inner.formatName,
+      members: inner.members,
+      notices: [...notices, ...inner.notices],
+      read: (member, limit) => inner.readMember(member, maxBytes: limit),
+      streamReader: (member, chunkSize) => inner.openMember(
+        member,
+        maxBytes: maxMemberBytes,
+        chunkSize: chunkSize,
+      ),
+      close: inner.close,
+    );
+  }
+  return ViewerArchive.direct(
+    formatName: switch (compression) {
+      'gz' => 'gzip',
+      'bz2' => 'bzip2',
+      'zst' => 'zstd',
+      'lz' => 'lzip',
+      'z' => 'compress',
+      _ => compression,
+    },
+    name: innerName,
+    data: decompressed,
+    notices: notices,
+  );
+}
+
+bool _isSkippableFrame(List<int> bytes) =>
+    bytes.length >= 4 &&
+    bytes[0] >= 0x50 &&
+    bytes[0] <= 0x5f &&
+    bytes[1] == 0x2a &&
+    bytes[2] == 0x4d &&
+    bytes[3] == 0x18;
+
+/// LZ4 and Zstandard share skippable-frame magic. Follow bounded metadata to
+/// the first actual data frame rather than choosing the wrong codec by suffix.
+Future<String?> _compressionForSource(
+  koni.ByteSource source,
+  Uint8List header,
+) async {
+  if (!_isSkippableFrame(header)) return _compressionMagic(header);
+  var offset = 0, frames = 0;
+  while (offset < source.length) {
+    if (++frames > 4096 || source.length - offset < 8) {
+      throw const ArchiveViewException(
+        'Invalid or excessive skippable compression frames.',
+      );
+    }
+    final prefix = await source.read(offset, 8);
+    if (!_isSkippableFrame(prefix)) {
+      final compression = _compressionMagic(prefix);
+      if (compression == 'lz4' || compression == 'zst') return compression;
+      throw const ArchiveViewException(
+        'Skippable frames must precede a supported LZ4 or Zstandard data frame.',
+      );
+    }
+    final size = ByteData.sublistView(prefix).getUint32(4, Endian.little);
+    if (size > source.length - offset - 8) {
+      throw const ArchiveViewException(
+        'Truncated skippable compression frame.',
+      );
+    }
+    offset += 8 + size;
+  }
+  throw const ArchiveViewException('Compression input contains no data frame.');
 }
 
 bool _hasMagic(List<int> bytes, int offset, List<int> magic) {
@@ -368,19 +494,15 @@ String? _compressionMagic(List<int> bytes) {
   if (_hasMagic(bytes, 0, const [0x42, 0x5a, 0x68])) return 'bz2';
   if (_hasMagic(bytes, 0, const [0xfd, 0x37, 0x7a, 0x58, 0x5a, 0])) return 'xz';
   if (_hasMagic(bytes, 0, const [0x28, 0xb5, 0x2f, 0xfd])) return 'zst';
-  if (bytes.length >= 4 &&
-      bytes[0] >= 0x50 &&
-      bytes[0] <= 0x5f &&
-      bytes[1] == 0x2a &&
-      bytes[2] == 0x4d &&
-      bytes[3] == 0x18) {
-    return 'zst';
-  }
+  if (_hasMagic(bytes, 0, const [0x04, 0x22, 0x4d, 0x18])) return 'lz4';
+  if (_hasMagic(bytes, 0, const [0x4c, 0x5a, 0x49, 0x50])) return 'lz';
+  if (_hasMagic(bytes, 0, const [0x1f, 0x9d])) return 'z';
   return null;
 }
 
 bool _hasContainerMagic(Uint8List bytes) =>
     _compressionMagic(bytes) != null ||
+    _isSkippableFrame(bytes) ||
     _hasMagic(bytes, 0, const [0x70, 0x62, 0x7a, 0x78]) ||
     _hasMagic(bytes, 0, const [0xed, 0xab, 0xee, 0xdb]) ||
     _hasMagic(bytes, 0, const [0x4d, 0x53, 0x43, 0x46]) ||
@@ -390,6 +512,8 @@ bool _hasContainerMagic(Uint8List bytes) =>
     _hasMagic(bytes, 0, const [0x52, 0x61, 0x72, 0x21]) ||
     _hasMagic(bytes, 0, const [0x21, 0x3c, 0x61, 0x72, 0x63, 0x68, 0x3e, 10]) ||
     _hasMagic(bytes, 0, const [48, 55, 48, 55, 48]) ||
+    _hasMagic(bytes, 0, const [0xc7, 0x71]) ||
+    _hasMagic(bytes, 0, const [0x71, 0xc7]) ||
     _hasMagic(bytes, 0, const [0x78, 0x61, 0x72, 0x21]) ||
     _hasMagic(bytes, 0, const [0x43, 0x72, 0x32, 0x34]) ||
     _hasMagic(bytes, 32769, const [0x43, 0x44, 0x30, 0x30, 0x31]) ||
@@ -399,7 +523,15 @@ bool _hasContainerMagic(Uint8List bytes) =>
 String _innerContainerName(String name) {
   name = name.replaceAll('\\', '/').split('/').last;
   final lower = name.toLowerCase();
-  for (final alias in const ['.tgz', '.tbz2', '.tbz', '.txz', '.tzst']) {
+  for (final alias in const [
+    '.tgz',
+    '.tbz2',
+    '.tbz',
+    '.txz',
+    '.tzst',
+    '.tlz',
+    '.taz',
+  ]) {
     if (lower.endsWith(alias)) {
       return '${name.substring(0, name.length - alias.length)}.tar';
     }
@@ -566,6 +698,10 @@ String stripCompressionSuffix(String name) {
   final lower = name.toLowerCase();
   for (final suffix in const [
     '.pbzx',
+    '.lzma',
+    '.lz4',
+    '.lz',
+    '.z',
     '.gzip',
     '.bzip2',
     '.zstd',
@@ -588,7 +724,30 @@ String stripCompressionSuffix(String name) {
   String name, {
   int maxBytes = kArchiveReadLimit,
 }) {
-  final lower = name.toLowerCase();
+  var lower = name.toLowerCase();
+  final boundedCodecLimit = maxBytes < kArchiveReadLimit
+      ? maxBytes
+      : kArchiveReadLimit;
+  // A real framing signature wins over a misleading compression extension.
+  // LZMA-alone remains suffix-routed because it has no unique magic.
+  var signature = bytes;
+  var frames = 0;
+  while (_isSkippableFrame(signature)) {
+    if (++frames > 4096 || signature.length < 8) {
+      throw const ArchiveViewException(
+        'Invalid or excessive skippable compression frames.',
+      );
+    }
+    final length = ByteData.sublistView(signature).getUint32(4, Endian.little);
+    if (length > signature.length - 8) {
+      throw const ArchiveViewException(
+        'Truncated skippable compression frame.',
+      );
+    }
+    signature = Uint8List.sublistView(signature, 8 + length);
+  }
+  final detected = _compressionMagic(signature);
+  if (detected != null) lower = 'payload.$detected';
   final Uint8List data;
   try {
     if (lower.endsWith('.gz') || lower.endsWith('.gzip')) {
@@ -611,6 +770,17 @@ String stripCompressionSuffix(String name) {
         bytes,
         verify: true,
         maxOutputSize: maxBytes,
+      );
+    } else if (lower.endsWith('.lzma') || lower.endsWith('.tlz')) {
+      data = decodeArchiveLzma(bytes, maxOutputBytes: boundedCodecLimit);
+    } else if (lower.endsWith('.lz4')) {
+      data = decodeArchiveLz4(bytes, maxOutputBytes: boundedCodecLimit).bytes;
+    } else if (lower.endsWith('.lz')) {
+      data = decodeArchiveLzip(bytes, maxOutputBytes: boundedCodecLimit);
+    } else if (lower.endsWith('.z') || lower.endsWith('.taz')) {
+      data = decodeArchiveUnixCompress(
+        bytes,
+        maxOutputBytes: boundedCodecLimit,
       );
     } else if (lower.endsWith('.zst') ||
         lower.endsWith('.zstd') ||

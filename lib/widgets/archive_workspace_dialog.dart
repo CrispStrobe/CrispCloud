@@ -488,6 +488,17 @@ class _ArchiveWorkspaceDialogState
   }
 
   Future<void> _moveOut() async {
+    final otherSide = widget.side == PanelSide.local
+        ? PanelSide.remote
+        : PanelSide.local;
+    if (ref.read(panelProvider(otherSide)).isInArchive) {
+      await _run(() async {
+        throw UnsupportedError(
+          archiveEndpointText(context, 'archiveMoveUnsupported'),
+        );
+      });
+      return;
+    }
     final proceed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -520,6 +531,7 @@ class _ArchiveWorkspaceDialogState
         kind: FileOperationKind.copy,
         sourceOrigin: widget.origin,
         sourceBackend: _workspace!.backend,
+        archiveSourceMove: true,
       );
       if (plan == null || !mounted) return;
       final count = await _workspace!.stageCopiedMemberRemoval(

@@ -18,12 +18,14 @@ metadata, protection or filesystem structures cannot be preserved.
 | ZIP / CBZ | Yes | Yes | Eligible ZIP policy | Original supported AES-256 protection is retained. Comic member order is preserved. |
 | 7z / CB7 | Yes | Yes | Eligible 7z policy | Original password and header visibility are retained. |
 | TAR / CBT | Yes | Yes | Inspected regular-file profiles | Preserves understood ownership, names, permissions, timestamps and PAX metadata; unknown extensions, links and special records are refused. |
-| Compressed TAR | gzip, bzip2, XZ, Zstandard | Yes, all four | Eligible TAR plus one supported wrapper | Includes TGZ, TBZ/TBZ2, TXZ, TZST and long suffix aliases. Decoded TAR is limited to 64 MiB, including headers. |
-| Compressed files | gzip, bzip2, XZ, Zstandard | Yes, one file | Replace one ordinary payload | No member add/delete/rename or filesystem modes. Output filename supplies the decompressed name. Nested archive payloads can be created/read; editing requires a supported container/wrapper profile. |
+| Compressed TAR | gzip, bzip2, XZ, Zstandard, LZ4, LZMA | Yes, all six | Eligible TAR plus one supported wrapper | Includes TGZ, TBZ/TBZ2, TXZ, TZST, TLZ and long suffix aliases. Decoded TAR is limited to 64 MiB, including headers. |
+| Compressed files | gzip, bzip2, XZ, Zstandard, LZ4, LZMA | Yes, one file | Replace one ordinary payload | No member add/delete/rename or filesystem modes. Output filename supplies the decompressed name. Nested archive payloads can be created/read; single-payload editing requires the immediate decoded payload and cannot flatten inner wrappers. |
+| Lzip | Lzip v1 and TAR.LZ | No | No | Checks CRC32, size, EOS and full member boundaries. Consecutive nonempty members are supported; v0, ignored tails and empty members inside collections are refused. |
+| UNIX compress | .Z, .tar.Z and .taz | No | No | 9–16-bit block/nonblock LZW, width changes and dictionary resets. No stored checksum or decoded size: some corruption or valid-prefix truncation cannot be detected. |
 | JAR / WAR / EAR | Yes | Unsigned archives | Unsigned archives only | Signing records and signature-related manifest digests block rewriting. This is archive editing, not compilation or signing. |
 | KMZ | Yes | Yes | Yes | A KML document must remain at the top level. |
 | AR | Ordinary, GNU and BSD members | Flat regular files | Inspected profiles | Preserves order, ownership, permissions, timestamps and supported long-name style. Symbol indexes and thin archives are refused. |
-| CPIO | Portable ASCII/odc, SVR4 newc and CRC | Newc | Inspected newc/CRC | Odc is read-only. Preserves known newc/CRC record/root/trailer metadata when rewriting. Links, hard links and device records cannot be extracted. Binary CPIO is unsupported. |
+| CPIO | Modern binary LE/BE, portable ASCII/odc, SVR4 newc and CRC | Newc | Inspected newc/CRC | Binary and odc are read-only. Preserves known newc/CRC record/root/trailer metadata when rewriting. Links, hard links and device records cannot be extracted; PWB-specific types are not interpreted. |
 | RPM | Classic v3/v4 newc/CRC payloads | No | No | gzip, bzip2, XZ, Zstandard and uncompressed payloads. Supported present MD5/SHA-256 payload checksums are checked; publisher signatures and separate header/file digests are not authenticated. No installation or script execution. |
 | CAB | Single-cabinet stored and MSZIP folders | No | No | Preserves MSZIP dictionary history across blocks and checks present block checksums when reading a folder. Spanned cabinets, split files, Quantum/LZX and unspecified non-ASCII legacy name encodings are refused. |
 | XAR | XAR v1, stored/zlib/bzip2/XZ members | Unsigned XAR | Inspected unsigned profiles | Preserves known IDs, ownership, permissions, times, checksums and compression policy. Unknown XML/heap data, signatures, ACLs and xattrs block rewriting. |
@@ -45,8 +47,8 @@ The existing source-account, review, verification and recovery requirements in
 
 ## Creating and editing
 
-Use **Create archive…** for the format picker. It exposes only implemented
-compression choices and password options. gzip/bzip2/XZ/Zstandard take one
+Use **Create archive…** for the 28-choice format picker. It exposes only implemented
+compression choices and password options. gzip/bzip2/XZ/Zstandard/LZ4/LZMA take one
 regular file; AR takes flat regular files; the other creation formats support
 folders within their format-specific name/depth limits. KMZ needs a top-level
 KML document. Java archives must be unsigned.
@@ -77,6 +79,40 @@ DEB/UDEB editing accepts externally prepared control and data archives together;
 it does not regenerate dependency metadata, Installed-Size or missing checksum
 coverage. The structural and present-md5sums checks establish the supported
 wrapper profile, not full package-build validity or publisher trust.
+
+## Copying between archives
+
+With two archive panes open, select source members and use **F5** or **Copy**.
+Review the destination directory, collision policy, staged member changes and
+protection policy before saving. The workspace's **Copy out** action also accepts
+an archive destination when its source draft is clean. Source and destination
+routes/passwords are captured independently, including nested archives. Read-only
+source formats can supply ordinary members when they fit the workspace bounds.
+
+Copies retain hierarchy, empty directories, supported times and permission bits;
+protection follows the destination archive. Source ownership, ACLs, resource
+forks, links and signatures are not imported. Save or discard a source draft
+first. The same physical outer archive, including native hard-link aliases,
+cannot be both endpoints of this transaction. Source bytes are checked before
+staging and again before destination installation. Source archives are retained.
+Archive-to-archive moves and same-container rearrangement require a separate
+transaction and remain unavailable.
+
+## Testing an archive
+
+Choose **Test archive** in F3's archive listing. The report reads regular members
+sequentially, verifies whatever checks their readers provide, calculates SHA-256
+values and distinguishes checked, failed, skipped and unprocessed entries.
+Expand a row for its digest or failure details; **Copy report** copies the full
+report. Unsafe/special entries and members exceeding limits remain visible.
+
+The default check has a 64 MiB member limit and 256 MiB declared work budget;
+failed attempts still consume their declared budget. Namespace validation is
+bounded separately. Cancellation is cooperative between reads/chunks; an active
+buffered decode may finish first. The report never changes archive contents and
+does not repair data, authenticate a publisher or invent stored checksums.
+LZMA-alone and UNIX compress lack payload checksums, and optional checksums may
+also be absent in other formats. An incomplete check is never a passing report.
 
 ## Using disk images
 
@@ -121,10 +157,10 @@ member up to the existing 64 MiB limit; larger outer members remain unavailable
 through this path. A standalone PBZX file can use the larger positional path
 described below. No package action installs software or executes scripts.
 
-The three new families remain read-only, including after a misleading filename
-change. Odc CPIO is also read-only; newc/CRC creation and inspected rewriting
-retain their prior profile. Package signature notices distinguish content
-checksums from publisher authentication.
+RPM, CAB and PBZX remain read-only, including after a misleading filename
+change. Binary and odc CPIO are also read-only; newc/CRC creation and inspected
+rewriting retain their prior profile. Package signature notices distinguish
+content checksums from publisher authentication.
 
 ## Bounds and integrity
 
@@ -147,13 +183,36 @@ checksums from publisher authentication.
   and decoded-total limits; compressed streams and decoded TAR wrappers keep
   their 64 MiB bounds. Native spooling does not make buffered codecs unbounded.
 - Compression wrappers are bounded by 64 MiB input/output by default and
-  four nested wrappers. Decompression checks integrity and truncation rather
-  than accepting partial output. Actual member length must match metadata.
+  four nested wrappers. Readers check available integrity/framing information;
+  formats without a stored checksum or decoded length cannot detect every valid
+  prefix or bit change. Actual member length must match metadata.
   Rewriting retains supported gzip name/comment/time/header-CRC metadata and XZ
   integrity checks. Concatenated gzip/XZ/Zstandard streams, gzip application
   extra fields, Zstandard dictionaries and skippable extension frames remain
   read-only because a one-stream rewrite cannot preserve all their semantics.
   XZ output uses real LZMA2 compression, including CRC32/CRC64/SHA-256 framing.
+  Fresh and rewritten LZ4 output uses independent 256 KiB blocks with
+  block/content checksums and real compression (or explicit Store at creation).
+  Eligible rewrites use this canonical block/checksum profile rather than
+  retaining the original encoder's settings; linked blocks are readable.
+  Reading is limited to 4,096 combined data/skippable frames and 1,000,000 blocks.
+  LZ4 collections and skippable metadata stay read-only. Legacy LZ4 and external
+  dictionaries are unavailable. Shared LZ4/Zstandard skippable magic is resolved by reading
+  ahead to the actual bounded data-frame header.
+- LZMA-alone uses explicit `.lzma`/`.tlz` filename hints because it has no unique
+  signature. Known/unknown sizes, mandatory end markers where needed, exact
+  input consumption, final range state and dictionary distances are checked.
+  Dictionaries are capped at 64 MiB and `lc + lp` at four; declarations below
+  4 KiB use the format's 4 KiB minimum. Fresh and rewritten output uses real
+  compression, canonical `lc=3, lp=0, pb=2` properties, a known size and no end
+  marker. Creation's Fast/Normal/Maximum choices use 64 KiB/8 MiB/64 MiB
+  dictionaries; workspace rewrites use the default 8 MiB dictionary.
+  LZMA-alone has no stored content checksum. Lzip v1 reuses this bounded engine
+  with required EOS and verifies its own CRC32 and footer. Lzip input is limited
+  to 4,096 members, with dictionaries between 4 KiB and 64 MiB; a standalone
+  empty member is supported, but empty members inside collections are refused.
+  Single compressed-file rewriting is refused once the reader has traversed
+  another container, even if nested layers have the same format name.
 - ISO and HFS enforce 100,000 entries, 64 directory levels and 32 MiB of
   directory/catalog metadata. ISO also bounds continuation and pathname data.
   The ISO writer uses an ordinary primary hierarchy of at most eight levels
@@ -203,9 +262,9 @@ checksums from publisher authentication.
 
 ## Dependencies and provenance
 
-No native runtime or subprocess packer is added to the app. The readers and
-writers are original Dart implementations using the existing locked packages;
-`koni_codecs` 0.9.0 is now an explicit direct dependency for LZMA2 compression:
+No native runtime or subprocess packer is added to the app. The Dart readers,
+writers and format adapters reuse the existing locked packages;
+`koni_codecs` 0.9.0 is an explicit direct dependency for LZMA/LZMA2 encoding:
 `koni_archive` 0.9.0 and its 0.9.0 codec/core packages (MIT), `archive` 4.6.0
 (MIT), `xml` 6.6.1 (MIT) and `crypto` 3.0.7 (BSD-3-Clause). Check `pubspec.lock`
 when updating these versions; dependency ranges are not a codec guarantee.
@@ -215,6 +274,13 @@ Primary references used for layout and validation:
 - [ECMA-119 / ISO 9660](https://ecma-international.org/publications-and-standards/standards/ecma-119/).
 - [Apple HFS Plus Volume Format, TN1150](https://developer.apple.com/library/archive/technotes/tn/tn1150.html).
 - [XZ file format](https://tukaani.org/xz/xz-file-format.txt).
+- [LZ4 frame](https://github.com/lz4/lz4/blob/dev/doc/lz4_Frame_format.md) and [block](https://github.com/lz4/lz4/blob/dev/doc/lz4_Block_format.md) specifications.
+- [XXH32 checksum specification](https://github.com/Cyan4973/xxHash/blob/dev/doc/xxhash_spec.md).
+- [LZMA-alone layout](https://github.com/tukaani-project/xz/blob/master/doc/lzma-file-format.txt).
+- [Igor Pavlov's LZMA packet/range-coder specification](https://android.googlesource.com/platform/external/lzma/+/refs/heads/nougat-dev/DOC/lzma-specification.txt).
+- [Lzip v1 format](https://www.nongnu.org/lzip/manual/lzip_manual.html#File-format).
+- [UNIX compress format](https://man.openbsd.org/compress.1) and independent public-domain ncompress validation.
+- [Binary CPIO layout](https://github.com/libarchive/libarchive/blob/master/libarchive/cpio.5).
 - [GNU binutils AR](https://sourceware.org/binutils/docs/binutils/ar.html).
 - [GNU CPIO format reference](https://www.gnu.org/software/cpio/manual/html_node/Media.html).
 - [Portable CPIO header layout](https://www.ibm.com/docs/en/zos/3.1.0?topic=formats-cpio-format-cpio-archives).
@@ -265,7 +331,20 @@ optional reference checks are:
 These reference tools are test dependencies only. Native macOS mounting and
 platform-specific release acceptance are not established by Linux readback.
 
-UDF, APFS, ARJ/LZH/ACE/UC2, raw LZMA, CAB Quantum/LZX/spanning, RPM v6/stripped
+UDF, APFS, ARJ/LZH/ACE/UC2, CAB Quantum/LZX/spanning, RPM v6/stripped
 payloads, Apple Archive/YAA and additional ZIPX methods are not enabled by these
 increments. G22 remains partial; additional profiles require their own
 implementation and independent fixtures.
+
+The workflow/codec continuation adds original liblz4, liblzma and libarchive
+fixtures, public-domain ncompress validation, binary CPIO in both byte orders,
+and independent wrapped TAR fixtures. See [LZ4](../test/fixtures/archives/LZ4-REFERENCE.md),
+[LZMA](../test/fixtures/archives/LZMA-REFERENCE.md),
+[Lzip](../test/fixtures/archives/LZIP-REFERENCE.md),
+[UNIX compress](../test/fixtures/archives/UNIX_COMPRESS_REFERENCE.md), and
+[binary CPIO](../test/fixtures/archives/CPIO_BINARY.md) for provenance and commands.
+The [continuation record](archive-workflows-codecs-continuation.md) records the
+independent feature-ideas review of VaultExplorer; none of its GPL implementation,
+tests or assets were inspected or imported.
+The [verification record](archive-workflows-codecs-verification.md) gives the
+observed regression, analysis, independent readback and portable-runtime gates.

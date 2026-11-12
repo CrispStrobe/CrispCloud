@@ -38,6 +38,8 @@ class ArchiveEndpointPolicy {
     ArchiveEndpointFormat.bzip2,
     ArchiveEndpointFormat.xz,
     ArchiveEndpointFormat.zstd,
+    ArchiveEndpointFormat.lz4,
+    ArchiveEndpointFormat.lzma,
   }.contains(format);
 
   ArchiveCompressionKind? get compression => switch (format) {
@@ -49,6 +51,10 @@ class ArchiveEndpointPolicy {
     ArchiveEndpointFormat.xz => ArchiveCompressionKind.xz,
     ArchiveEndpointFormat.tarZstd ||
     ArchiveEndpointFormat.zstd => ArchiveCompressionKind.zstd,
+    ArchiveEndpointFormat.tarLz4 ||
+    ArchiveEndpointFormat.lz4 => ArchiveCompressionKind.lz4,
+    ArchiveEndpointFormat.tarLzma ||
+    ArchiveEndpointFormat.lzma => ArchiveCompressionKind.lzma,
     _ => null,
   };
 
@@ -72,10 +78,14 @@ class ArchiveEndpointPolicy {
       'tar-bzip2' => ArchiveEndpointFormat.tarBzip2,
       'tar-xz' => ArchiveEndpointFormat.tarXz,
       'tar-zstd' => ArchiveEndpointFormat.tarZstd,
+      'tar-lz4' => ArchiveEndpointFormat.tarLz4,
+      'tar-lzma' => ArchiveEndpointFormat.tarLzma,
       'gzip' => ArchiveEndpointFormat.gzip,
       'bzip2' => ArchiveEndpointFormat.bzip2,
       'xz' => ArchiveEndpointFormat.xz,
       'zstd' => ArchiveEndpointFormat.zstd,
+      'lz4' => ArchiveEndpointFormat.lz4,
+      'lzma' => ArchiveEndpointFormat.lzma,
       'ar' || 'deb' => ArchiveEndpointFormat.ar,
       'cpio' => ArchiveEndpointFormat.cpio,
       'xar' when lower.endsWith('.xar') => ArchiveEndpointFormat.xar,
@@ -101,14 +111,30 @@ class ArchiveEndpointPolicy {
       ArchiveEndpointFormat.tarGzip ||
       ArchiveEndpointFormat.tarBzip2 ||
       ArchiveEndpointFormat.tarXz ||
-      ArchiveEndpointFormat.tarZstd => 'tar',
+      ArchiveEndpointFormat.tarZstd ||
+      ArchiveEndpointFormat.tarLz4 ||
+      ArchiveEndpointFormat.tarLzma => 'tar',
       ArchiveEndpointFormat.readOnly => null,
       _ => format.name,
     };
     if (expectedFormat != null &&
         (archive.formatName.toLowerCase() != expectedFormat ||
-            basic.compression != archiveCompressionForBytes(bytes))) {
+            basic.compression !=
+                archiveCompressionForBytes(bytes, name: name))) {
       reason = 'The detected archive format does not match its filename or supported compression wrapper. Repacking would change its format.';
+    }
+    // The 7z writer has no separate preservation inspector. The displayed
+    // inner format alone is insufficient: a read-only wrapper renamed .7z
+    // must not be silently removed on save, including shared skippable frames.
+    if (format == ArchiveEndpointFormat.sevenZip &&
+        (bytes.length < 6 ||
+            bytes[0] != 0x37 ||
+            bytes[1] != 0x7a ||
+            bytes[2] != 0xbc ||
+            bytes[3] != 0xaf ||
+            bytes[4] != 0x27 ||
+            bytes[5] != 0x1c)) {
+      reason = 'The 7z writer requires the original unwrapped 7z container; an outer compression wrapper cannot be discarded.';
     }
     if (format == ArchiveEndpointFormat.readOnly) {
       reason = switch (descriptor?.id) {
@@ -131,8 +157,10 @@ class ArchiveEndpointPolicy {
           }
         }
         if (basic.singlePayload &&
-            (files.length != 1 || archive.members.length != 1)) {
-          reason = 'A single-file compression format must contain exactly one regular payload.';
+            (!archive.isDirectCompressionPayload ||
+                files.length != 1 ||
+                archive.members.length != 1)) {
+          reason = 'A single-file compression writer requires the immediate regular payload. A listing inside another container cannot be flattened during save.';
         }
       } catch (_) {
         reason = 'The compression header cannot be preserved safely.';
@@ -161,7 +189,7 @@ class ArchiveEndpointPolicy {
       reason = 'This writer cannot preserve ownership associated with setuid or setgid archive members.';
     }
     if (reason == null && expectedFormat == 'tar') {
-      inspection = await inspectTarRewrite(bytes, archive);
+      inspection = await inspectTarRewrite(bytes, archive, name: name);
       reason = inspection.reason;
     }
     if (reason == null &&
@@ -341,6 +369,8 @@ class ArchiveEndpointPolicy {
       ArchiveEndpointFormat.tarBzip2 ||
       ArchiveEndpointFormat.tarXz ||
       ArchiveEndpointFormat.tarZstd ||
+      ArchiveEndpointFormat.tarLz4 ||
+      ArchiveEndpointFormat.tarLzma ||
       ArchiveEndpointFormat.ar ||
       ArchiveEndpointFormat.cpio ||
       ArchiveEndpointFormat.xar ||

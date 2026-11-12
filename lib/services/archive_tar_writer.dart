@@ -49,14 +49,15 @@ const _attributeKeys = {
 /// sparse files, links, opaque extensions and non-UTF-8 headers stay read-only.
 Future<ArchiveRewriteInspection> inspectTarRewrite(
   Uint8List bytes,
-  ViewerArchive archive,
-) async {
+  ViewerArchive archive, {
+  String? name,
+}) async {
   try {
     if (archive.isClosed || archive.formatName != 'tar') {
       _refuse('The TAR reader is unavailable or belongs to another format.');
     }
     if (bytes.length > _maxOutput) _refuse('TAR input exceeds 256 MiB.');
-    final compression = archiveCompressionForBytes(bytes);
+    final compression = archiveCompressionForBytes(bytes, name: name);
     if (compression != null) {
       validateArchiveCompressionRewrite(bytes, compression);
       final suffix = switch (compression) {
@@ -64,6 +65,8 @@ Future<ArchiveRewriteInspection> inspectTarRewrite(
         ArchiveCompressionKind.bzip2 => 'bz2',
         ArchiveCompressionKind.xz => 'xz',
         ArchiveCompressionKind.zstd => 'zst',
+        ArchiveCompressionKind.lz4 => 'lz4',
+        ArchiveCompressionKind.lzma => 'lzma',
       };
       bytes = decompressSingleFile(bytes, 'payload.$suffix').data;
     }

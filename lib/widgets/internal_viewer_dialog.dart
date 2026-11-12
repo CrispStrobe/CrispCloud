@@ -83,6 +83,8 @@ import '../l10n/internal_viewer_strings.dart';
 import '../l10n/office_preview_strings.dart';
 import '../l10n/file_bytes_error_strings.dart';
 import '../l10n/archive_viewer_error_strings.dart';
+import '../l10n/archive_integrity_strings.dart';
+import 'archive_integrity_dialog.dart';
 import '../l10n/native_preview_error_strings.dart';
 import '../l10n/office_pdf_error_strings.dart';
 
@@ -702,9 +704,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           'can use a local file or a streamed temporary copy.';
     }
     if (error is FileBytesTooLargeException) {
-      return '${localizedFileBytesError(context, error)}\n\n' +
-          InternalViewerStrings(context)
-              .withNumber('remoteLimit', formatBytes(kViewerFullDataCap));
+      final detail = InternalViewerStrings(context)
+          .withNumber('remoteLimit', formatBytes(kViewerFullDataCap));
+      return '${localizedFileBytesError(context, error)}\n\n$detail';
     }
     return localizedFileBytesError(context, error);
   }
@@ -1174,6 +1176,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   }
 
   Future<void> _prepareMedia(Uint8List data, int token) async {
+    final mediaGone = InternalViewerStrings(context).text('mediaGone');
     if (kIsWeb) {
       final extension = _extensionOf(_viewName);
       final blob = html.Blob([data], mimeTypeForExt(extension));
@@ -1205,10 +1208,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     for (var attempt = 0; attempt < 2 && controller == null; attempt++) {
       await File(path).writeAsBytes(data, flush: true);
       if (!await File(path).exists()) {
-        lastError = FileSystemException(
-          InternalViewerStrings(context).text('mediaGone'),
-          path,
-        );
+        lastError = FileSystemException(mediaGone, path);
         continue;
       }
       final candidate = VideoPlayerController.file(File(path));
@@ -2070,18 +2070,59 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
             encoding: _encodingOverride,
           ).text;
         } catch (e) {
+          if (!mounted) return;
           _showSnack(InternalViewerStrings(context).withNumber('copyError', e));
           return;
         }
       }
     }
+    if (!mounted) return;
     if (text == null || text.isEmpty) {
       _showSnack(InternalViewerStrings(context).text('nothingCopy'));
       return;
     }
     await Clipboard.setData(ClipboardData(text: text));
+    if (!mounted) return;
     _showSnack(
       InternalViewerStrings(context).withNumber('copied', text.length),
+    );
+  }
+
+  Future<void> _testArchiveIntegrity() async {
+    final source = _source;
+    final prepareToken = _prepareToken, loadToken = _loadToken;
+    bool sameViewer() =>
+        mounted &&
+        _mode == ViewerMode.archive &&
+        prepareToken == _prepareToken &&
+        loadToken == _loadToken &&
+        identical(_source, source);
+    var handle = _archive;
+    if (handle == null || handle.isClosed) return;
+    if (_archivePassword == null) {
+      final encrypted = handle.members.where(
+        (member) =>
+            member.isEncrypted &&
+            member.isFile &&
+            !member.isSpecial &&
+            !member.pathEscapedRoot,
+      );
+      if (encrypted.isNotEmpty) {
+        final unlocked = await _unlockArchiveEntry(
+          encrypted.first,
+          wrong: false,
+        );
+        if (!sameViewer() || unlocked == null) return;
+        handle = _archive;
+      }
+    }
+    if (!mounted || !sameViewer() || handle == null || handle.isClosed) return;
+    final captured = handle;
+    await showArchiveIntegrityDialog(
+      context,
+      archive: captured,
+      displayName: _expansionName ?? _viewName,
+      isCurrent: () => sameViewer() && identical(_archive, captured),
     );
   }
 
@@ -2852,8 +2893,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     if (_richError != null) return _messagePane(_richError!, theme);
 
     final source = _source;
-    if (source == null)
+    if (source == null) {
       return _messagePane(InternalViewerStrings(context).text('noData'), theme);
+    }
 
     switch (_mode) {
       case ViewerMode.text:
@@ -2891,11 +2933,12 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         return _buildMediaBody();
       case ViewerMode.font:
         final data = _fullData;
-        if (data == null)
+        if (data == null) {
           return _messagePane(
             InternalViewerStrings(context).text('fontUnavailable'),
             theme,
           );
+        }
         return FontPreview(fontBytes: data, filename: _viewName);
       case ViewerMode.csv:
         return CsvTableView(content: _richText ?? '', filename: _viewName);
@@ -3597,34 +3640,46 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
             },
           );
     final notices = _archive?.notices ?? const <String>[];
-    if (notices.isEmpty) return list;
     return Column(
       children: [
-        ExpansionTile(
-          key: const ValueKey('archive-format-notices'),
-          leading: const Icon(Icons.info_outline),
-          title: Text(context.commanderTr('Container details')),
-          initiallyExpanded: notices.any(
-            (notice) =>
-                notice.contains('unavailable') ||
-                notice.contains('No supported filesystem'),
+        Align(
+          alignment: AlignmentDirectional.centerEnd,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: TextButton.icon(
+              key: const ValueKey('test-archive'),
+              onPressed: () => unawaited(_testArchiveIntegrity()),
+              icon: const Icon(Icons.fact_check_outlined),
+              label: Text(archiveIntegrityText(context, 'Test archive')),
+            ),
           ),
-          children: [
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 160),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                child: Text(
-                  notices.join('\n\n'),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: theme.colorScheme.onSurfaceVariant,
+        ),
+        if (notices.isNotEmpty)
+          ExpansionTile(
+            key: const ValueKey('archive-format-notices'),
+            leading: const Icon(Icons.info_outline),
+            title: Text(context.commanderTr('Container details')),
+            initiallyExpanded: notices.any(
+              (notice) =>
+                  notice.contains('unavailable') ||
+                  notice.contains('No supported filesystem'),
+            ),
+            children: [
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 160),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: Text(
+                    notices.join('\n\n'),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
         Expanded(child: list),
       ],
     );

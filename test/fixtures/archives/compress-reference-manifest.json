@@ -1,0 +1,77 @@
+{
+  "encoder": "libarchive 3.7.4",
+  "nine_bit_encoder": "public-domain ncompress 5.1",
+  "files": [
+    {
+      "name": "compress-reference-empty.Z",
+      "encoder": "original literal-code builder",
+      "reference_decoders": [
+        "ncompress 5.1",
+        "GNU gzip"
+      ],
+      "packed_bytes": 3,
+      "packed_sha256": "7aa6f58a0a8f57b9e6a70d89961f4668b7d69eb177a8da8344d4e5ed12d7858e",
+      "decoded_bytes": 0,
+      "decoded_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "compress-reference-text.Z",
+      "encoder": "libarchive raw/compress",
+      "reference_decoders": [
+        "ncompress 5.1",
+        "GNU gzip"
+      ],
+      "packed_bytes": 2273,
+      "packed_sha256": "ac591b18e75702d5f06e827909f811e4be976b836f89781738254b0f076f70d3",
+      "decoded_bytes": 43200,
+      "decoded_sha256": "56c42e0be9190123e12f5ab6f5e536a28f63344326d40eff4ea6b17d394cd008"
+    },
+    {
+      "name": "compress-reference-width-clear.Z",
+      "encoder": "libarchive raw/compress",
+      "reference_decoders": [
+        "ncompress 5.1",
+        "GNU gzip"
+      ],
+      "packed_bytes": 256123,
+      "packed_sha256": "9823ab2d22c2f316d1be2f01a7f5d1345a9b81e47005c8dad6ea86d1c99a745d",
+      "decoded_bytes": 426000,
+      "decoded_sha256": "e954502ce8a678404203f292c662d85b99b183b6b609b0f90987a47860e6b83e"
+    },
+    {
+      "name": "compress-reference-nine-bit.Z",
+      "encoder": "ncompress 5.1 -b9",
+      "reference_decoders": [
+        "ncompress 5.1"
+      ],
+      "packed_bytes": 867,
+      "packed_sha256": "6167e8337cac5b9fd879750b38f482d668c7cce356bfbeeefb1780f8d8180292",
+      "decoded_bytes": 1280,
+      "decoded_sha256": "d414b085826eb06778483ba35564dc849e643359f69ed9747878ba6e54985bed"
+    },
+    {
+      "name": "compress-reference-nonblock.Z",
+      "encoder": "original literal-code builder",
+      "reference_decoders": [
+        "ncompress 5.1",
+        "GNU gzip"
+      ],
+      "packed_bytes": 6667,
+      "packed_sha256": "a086876b26894b40d60f93664fdb4c2699e6b2d514c8ae6be5bde85e15c3783e",
+      "decoded_bytes": 4608,
+      "decoded_sha256": "8006b43ed29e94b8b7da4ee843b9de92ace304d41bc6d8ffaabf95860b69a12b"
+    },
+    {
+      "name": "compress-reference-clear.Z",
+      "encoder": "original literal-code builder",
+      "reference_decoders": [
+        "ncompress 5.1",
+        "GNU gzip"
+      ],
+      "packed_bytes": 6277,
+      "packed_sha256": "52d803a5bc9861de6831c4cfef87a6d6bba62b8a2b952ac95cab592b121f8ecc",
+      "decoded_bytes": 4608,
+      "decoded_sha256": "8006b43ed29e94b8b7da4ee843b9de92ace304d41bc6d8ffaabf95860b69a12b"
+    }
+  ]
+}

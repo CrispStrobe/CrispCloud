@@ -103,9 +103,9 @@ the existing size limits and does not claim immutable provider snapshots.
 | [G17](02-viewing-search-and-tools.md#g17) | Additional viewer adapters | Scoped | Existing viewer dispatch; extension review |
 | [G18](03-archives-and-containers.md#g18) | Writable archive endpoints | Partially implemented: native local workflow | Remote access-policy contracts; browser operation leases; native acceptance |
 | [G19](03-archives-and-containers.md#g19) | Directory-to-archive synchronization | Scoped | G18 |
-| [G20](03-archives-and-containers.md#g20) | Archive-to-archive transfer | Scoped | G18 |
+| [G20](03-archives-and-containers.md#g20) | Archive-to-archive transfer | Partially implemented: reviewed copy | Two-container move/recovery; native acceptance |
 | [G21](03-archives-and-containers.md#g21) | Large background archive jobs | Scoped | G18; transfer queue |
-| [G22](03-archives-and-containers.md#g22) | Archive format coverage | Scoped | License and format review per codec |
+| [G22](03-archives-and-containers.md#g22) | Archive format coverage | Partially implemented: readers, writers and integrity checks | Remaining profiles; format/license review; native acceptance |
 | [G23](03-archives-and-containers.md#g23) | Remote and browser archive creation | Scoped | G18; G21 where streaming is required |
 | [G24](03-archives-and-containers.md#g24) | External packer adapters | Scoped | G17 extension isolation |
 | [G25](04-connections-and-transfers.md#g25) | FTP byte-offset resume | Implemented / live-server acceptance pending | Native loopback/recovery verified; selected server interoperability under G50 |

@@ -192,6 +192,20 @@ void main() {
         const koni.TarWriteFormat(),
         compression: ArchiveCompressionKind.zstd,
       ),
+    for (final suffix in ['tar.lz4'])
+      _WritableCase(
+        suffix,
+        ArchiveEndpointFormat.tarLz4,
+        const koni.TarWriteFormat(),
+        compression: ArchiveCompressionKind.lz4,
+      ),
+    for (final suffix in ['tar.lzma', 'tlz'])
+      _WritableCase(
+        suffix,
+        ArchiveEndpointFormat.tarLzma,
+        const koni.TarWriteFormat(),
+        compression: ArchiveCompressionKind.lzma,
+      ),
   ];
 
   for (final kind in cases) {
@@ -245,7 +259,13 @@ void main() {
         });
         expect(fixture.client.writes, isEmpty);
         await fixture.verifyPublished(reviewed: review);
-        expect(archiveCompressionForBytes(fixture.saved), kind.compression);
+        expect(
+          archiveCompressionForBytes(
+            fixture.saved,
+            name: 'work.${kind.suffix}',
+          ),
+          kind.compression,
+        );
         final saved = await fixture.reopen();
         expect(saved.formatName, before.formatName);
         final expectedOrder = [
@@ -291,7 +311,13 @@ void main() {
         workspace.replace('/added.txt', Uint8List.fromList([6, 5, 4]));
         await fixture.verifyPublished();
         expect(await workspace.read('/added.txt'), [6, 5, 4]);
-        expect(archiveCompressionForBytes(fixture.saved), kind.compression);
+        expect(
+          archiveCompressionForBytes(
+            fixture.saved,
+            name: 'work.${kind.suffix}',
+          ),
+          kind.compression,
+        );
       },
     );
   }
@@ -304,6 +330,8 @@ void main() {
     ('xz', ArchiveEndpointFormat.xz, ArchiveCompressionKind.xz),
     ('zst', ArchiveEndpointFormat.zstd, ArchiveCompressionKind.zstd),
     ('zstd', ArchiveEndpointFormat.zstd, ArchiveCompressionKind.zstd),
+    ('lz4', ArchiveEndpointFormat.lz4, ArchiveCompressionKind.lz4),
+    ('lzma', ArchiveEndpointFormat.lzma, ArchiveCompressionKind.lzma),
   ]) {
     test(
       '${kind.$1} replaces exactly one payload without changing its wrapper',
@@ -339,7 +367,10 @@ void main() {
         final saved = await fixture.reopen();
         expect(saved.members.single.name, name);
         expect(await saved.readMember(saved.members.single), [0, 255, 4, 5]);
-        expect(archiveCompressionForBytes(fixture.saved), kind.$3);
+        expect(
+          archiveCompressionForBytes(fixture.saved, name: 'payload.${kind.$1}'),
+          kind.$3,
+        );
         if (kind.$3 == ArchiveCompressionKind.gzip) {
           expect(archiveGzipHeader(fixture.saved), archiveGzipHeader(original));
         }
@@ -349,7 +380,10 @@ void main() {
         workspace.replace(name, Uint8List(0));
         await fixture.verifyPublished();
         expect(await workspace.read(name), isEmpty);
-        expect(archiveCompressionForBytes(fixture.saved), kind.$3);
+        expect(
+          archiveCompressionForBytes(fixture.saved, name: 'payload.${kind.$1}'),
+          kind.$3,
+        );
       },
     );
   }

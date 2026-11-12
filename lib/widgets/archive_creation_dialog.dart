@@ -377,6 +377,22 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
                     ),
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
+                if (_format == ArchiveCreationFormat.lz4 ||
+                    _format == ArchiveCreationFormat.tarLz4)
+                  Text(
+                    tr(
+                      'LZ4 offers fast compression or storage without compression. Both modes include content checksums.',
+                    ),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                if (_format == ArchiveCreationFormat.lzma ||
+                    _format == ArchiveCreationFormat.tarLzma)
+                  Text(
+                    tr(
+                      'LZMA uses a 64 KiB dictionary for Fast, 8 MiB for Normal and 64 MiB for Maximum. The format has no content checksum.',
+                    ),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
                 if (_format == ArchiveCreationFormat.hfsx ||
                     _format == ArchiveCreationFormat.dmg)
                   Text(

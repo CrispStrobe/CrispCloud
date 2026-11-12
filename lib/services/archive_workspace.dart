@@ -17,6 +17,7 @@ import 'archive_member_index.dart';
 import 'archive_service.dart';
 import 'archive_viewer_service.dart';
 import 'file_operation_service.dart';
+import 'storage_transfer_contract.dart';
 
 class ArchiveWorkspace {
   ArchiveWorkspace._(
@@ -55,6 +56,16 @@ class ArchiveWorkspace {
   int get revision => _revision;
   String get fingerprint => _fingerprint;
   ArchiveWorkspace get outermost => _parentWorkspace?.outermost ?? this;
+  List<String> get nestedMemberPaths {
+    final result = <String>[];
+    ArchiveWorkspace? level = this;
+    while (level?._parentWorkspace != null) {
+      result.add(level!.file.path!.replaceFirst(RegExp(r'^/+'), ''));
+      level = level._parentWorkspace;
+    }
+    return List.unmodifiable(result.reversed);
+  }
+
   ArchivePublicationReceipt? get lastReceipt => outermost._lastReceipt;
   ArchivePublicationRecord? get pendingPublication =>
       outermost._pendingPublication;
@@ -982,6 +993,7 @@ class ArchiveWorkspace {
     bool Function()? isCancelled,
     ArchiveWorkspaceReview? reviewed,
     void Function(ArchivePublicationPhase)? onPhase,
+    TransferCheckpoint? beforePublication,
   }) async {
     _check(writing: true);
     if (_saving) throw StateError('An archive publication is already running.');
@@ -989,6 +1001,7 @@ class ArchiveWorkspace {
       final receipt = await _parentWorkspace?.save(
         isCancelled: isCancelled,
         onPhase: onPhase,
+        beforePublication: beforePublication,
       );
       if (source is _NestedArchiveBackend) {
         (source as _NestedArchiveBackend)._refreshParentRevision();
@@ -1043,6 +1056,7 @@ class ArchiveWorkspace {
             retry: _pendingPublication,
             isCancelled: () => _closed || (isCancelled?.call() ?? false),
             onPhase: onPhase,
+            beforePublication: beforePublication,
           );
         } catch (_) {
           _pendingPublication = publisher.activeRecord;
@@ -1069,6 +1083,7 @@ class ArchiveWorkspace {
         receipt = await _parentWorkspace!.save(
           isCancelled: isCancelled,
           onPhase: onPhase,
+          beforePublication: beforePublication,
         );
         (source as _NestedArchiveBackend)._refreshParentRevision();
       }
@@ -1093,6 +1108,24 @@ class ArchiveWorkspace {
   }
 
   ArchiveOperationBackend get backend => ArchiveOperationBackend(this);
+
+  /// Captures a read-only, revision-bound source. A draft (including a changed
+  /// enclosing archive) is never silently treated as the physical original.
+  ArchiveWorkspaceSourceSnapshot captureCopySource() {
+    _check();
+    final generations = <ArchiveWorkspace, int>{};
+    ArchiveWorkspace? level = this;
+    while (level != null) {
+      if (level._dirty || level.pendingPublication != null || level._saving) {
+        throw StateError(
+          'Save or discard the source archive draft before copying members.',
+        );
+      }
+      generations[level] = level._revision;
+      level = level._parentWorkspace;
+    }
+    return ArchiveWorkspaceSourceSnapshot._(this, generations);
+  }
 
   Future<void> close() async {
     if (_closed) return;
@@ -1267,6 +1300,16 @@ class ArchiveOperationBackend extends FileOperationBackend {
     yield await workspace.read(file.path!);
   }
 
+  /// Archive metadata is optional per member; implicit directories and some
+  /// formats have no stored mode. Ordinary extraction retains its conservative
+  /// capabilities, while the archive copy transaction imports present values.
+  @override
+  Future<TransferMetadata> readMetadata(String path) async {
+    workspace._check();
+    final entry = workspace._entries[path.replaceFirst(RegExp(r'^/+'), '')];
+    return TransferMetadata(mode: entry?.mode, modified: entry?.modified);
+  }
+
   @override
   Future<void> createDirectory(String path) async =>
       throw UnsupportedError('Archive transfer source is read-only.');
@@ -1283,4 +1326,109 @@ class ArchiveOperationBackend extends FileOperationBackend {
   @override
   Future<void> deleteEmptyDirectory(String path) async =>
       throw UnsupportedError('Use the archive update workflow.');
+}
+
+/// Immutable identity for copying the original contents of an open workspace.
+/// Byte verification remains the transaction owner's responsibility; this
+/// snapshot prevents an in-memory draft, enclosing generation or authority
+/// change from being read under the identity of the captured physical source.
+class ArchiveWorkspaceSourceSnapshot {
+  ArchiveWorkspaceSourceSnapshot._(
+    this.workspace,
+    Map<ArchiveWorkspace, int> generations,
+  ) : _generations = Map.unmodifiable(generations),
+      containerBackend = workspace.outermost.source,
+      containerFile = _captureSourceFile(workspace.outermost.file),
+      fingerprint = workspace.outermost.fingerprint,
+      _identity = workspace.outermost.source.identity,
+      _storage = workspace.outermost.source.storageReference;
+
+  final ArchiveWorkspace workspace;
+  final Map<ArchiveWorkspace, int> _generations;
+  final FileOperationBackend containerBackend;
+  final FileItem containerFile;
+  final String fingerprint;
+  final Object _identity;
+  final Object? _storage;
+  late final ArchiveOperationBackend backend = _ArchiveCopyBackend(this);
+
+  bool get isCurrent =>
+      containerBackend.isCurrent &&
+      containerBackend.identity == _identity &&
+      containerBackend.storageReference == _storage &&
+      _generations.entries.every(
+        (entry) =>
+            entry.key.isCurrent &&
+            entry.key._revision == entry.value &&
+            !entry.key._dirty &&
+            !entry.key._saving &&
+            entry.key.pendingPublication == null,
+      ) &&
+      workspace.outermost.fingerprint == fingerprint &&
+      sameArchiveFile(containerFile, workspace.outermost.file);
+
+  void checkCurrent() {
+    if (!isCurrent) {
+      throw StateError(
+        'The captured source archive or its draft changed. Reopen the copy preview.',
+      );
+    }
+  }
+
+  bool sharesContainerWith(ArchiveWorkspace destination) {
+    final outer = destination.outermost;
+    if (identical(workspace.outermost, outer)) return true;
+    final sameStorage =
+        _identity == outer.source.identity ||
+        _storage != null && _storage == outer.source.storageReference;
+    return sameStorage &&
+        (containerBackend.samePath(containerFile.path!, outer.file.path!) ||
+            outer.source.samePath(containerFile.path!, outer.file.path!));
+  }
+
+  static FileItem _captureSourceFile(FileItem file) => file.metadata == null
+      ? file
+      : file.copyWith(
+          metadata: Map.unmodifiable(Map<String, dynamic>.of(file.metadata!)),
+        );
+}
+
+class _ArchiveCopyBackend extends ArchiveOperationBackend {
+  _ArchiveCopyBackend(this.snapshot) : super(snapshot.workspace);
+  final ArchiveWorkspaceSourceSnapshot snapshot;
+  @override
+  bool get isCurrent => snapshot.isCurrent;
+  @override
+  Future<List<FileItem>> list(String path) async {
+    snapshot.checkCurrent();
+    final result = await super.list(path);
+    snapshot.checkCurrent();
+    return result;
+  }
+
+  @override
+  Future<FileItem?> stat(String path) async {
+    snapshot.checkCurrent();
+    final result = await super.stat(path);
+    snapshot.checkCurrent();
+    return result;
+  }
+
+  @override
+  Stream<List<int>> readFile(FileItem file) async* {
+    snapshot.checkCurrent();
+    await for (final chunk in super.readFile(file)) {
+      snapshot.checkCurrent();
+      yield chunk;
+    }
+    snapshot.checkCurrent();
+  }
+
+  @override
+  Future<TransferMetadata> readMetadata(String path) async {
+    snapshot.checkCurrent();
+    final result = await super.readMetadata(path);
+    snapshot.checkCurrent();
+    return result;
+  }
 }

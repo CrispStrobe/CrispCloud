@@ -14,10 +14,14 @@ enum ArchiveEndpointFormat {
   tarBzip2,
   tarXz,
   tarZstd,
+  tarLz4,
+  tarLzma,
   gzip,
   bzip2,
   xz,
   zstd,
+  lz4,
+  lzma,
   ar,
   cpio,
   xar,
@@ -67,6 +71,8 @@ class ArchiveEndpointCapabilities {
     ArchiveEndpointFormat.bzip2,
     ArchiveEndpointFormat.xz,
     ArchiveEndpointFormat.zstd,
+    ArchiveEndpointFormat.lz4,
+    ArchiveEndpointFormat.lzma,
   }.contains(format);
   bool get repacksWholeContainer => true;
   bool get supportsDurableDrafts => false;

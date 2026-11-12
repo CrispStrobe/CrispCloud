@@ -10,6 +10,39 @@ import 'file_operation_service.dart';
 import 'local_file_service.dart';
 import 'storage_transfer_contract.dart';
 
+/// Filesystem identity catches hard-link and case aliases that logical storage
+/// paths cannot distinguish. Both captured access grants remain active while
+/// Dart asks the OS whether these are the same physical file.
+Future<bool> sameNativeArchiveContainer(
+  FileOperationBackend first,
+  FileItem firstFile,
+  FileOperationBackend second,
+  FileItem secondFile,
+) async {
+  if (first is! LocalOperationBackend || second is! LocalOperationBackend) {
+    return false;
+  }
+  return first.service.withFileOperationAccess(firstFile.path!, () async {
+    return second.service.withFileOperationAccess(secondFile.path!, () async {
+      void check() {
+        if (!first.isCurrent || !second.isCurrent) {
+          throw StateError('The captured archive storage changed.');
+        }
+      }
+
+      check();
+      _nativeSnapshot(first, firstFile);
+      _nativeSnapshot(second, secondFile);
+      final result = await FileSystemEntity.identical(
+        firstFile.path!,
+        secondFile.path!,
+      );
+      check();
+      return result;
+    });
+  });
+}
+
 /// Private evidence is captured during preview, checked around the import read,
 /// and required again after publication. It never enters a recovery journal.
 Future<Object?> captureNativeArchiveImportSource(
