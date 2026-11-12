@@ -1,0 +1,61 @@
+{
+  "purpose": "Data-only inspection suite using an import-only adapter; direct cached Dart test runner, no Flutter/pub/native hooks",
+  "original_test": "/workspace/scratch/0030b5e7939f/CrispCloud/test/word_conversion_inspection_test.dart",
+  "original_test_sha256": "37e6b741ea6b1b558250aec5e4acd7d419d4e223c350a460dc821c7f05d8bab4",
+  "adapted_test": "/workspace/scratch/0030b5e7939f/inspection-pure-dart/word_conversion_inspection_test.dart",
+  "adapted_test_sha256": "6b78f2e595ce2aece4436a44eea90bf4193cf1b02addc08bdfea3ecfcb971620",
+  "transform": {
+    "from": "import 'package:flutter_test/flutter_test.dart';",
+    "to": "import 'package:test/test.dart';",
+    "occurrences": 1,
+    "inverse_matches_source": true
+  },
+  "production_service": "/workspace/scratch/0030b5e7939f/CrispCloud/lib/services/word_conversion_inspection.dart",
+  "production_service_sha256": "0e6f318591e35eb9b32ffab23f3f40bad5d45c762fcfd51238a81b88a51147bf",
+  "original_app_package_config_sha256": "be1ecdf3e24f7d3aac8208cbce5d9ecb9f09dd9a36dbfbca82dcdb5c9d913668",
+  "runner_config_sha256": "f16b07f915e72b0226de81c77ff9b3cc268dc3582df3480bf50d50dc80350894",
+  "test_runner": "test-1.31.1",
+  "test_core": "test_core-0.6.18",
+  "test_api": "test_api-0.7.12",
+  "missing_runner_dependencies_added_from_resolved_parser_config": [
+    "cli_config",
+    "coverage",
+    "frontend_server_client",
+    "node_preamble",
+    "shelf_packages_handler",
+    "shelf_static",
+    "source_map_stack_trace",
+    "source_maps",
+    "test",
+    "test_core",
+    "webkit_inspection_protocol"
+  ],
+  "app_dependency_registrations_preserved": true,
+  "pubspec_sha256": "5075aaae70b36474859d57cf162d41f8ffddd68fe5d37199b371d4081092e678",
+  "command": [
+    "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+    "--packages=/workspace/scratch/0030b5e7939f/inspection-pure-dart/.dart_tool/package_config.json",
+    "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/pub-cache/hosted/pub.dev/test-1.31.1/bin/test.dart",
+    "--platform",
+    "vm",
+    "--concurrency",
+    "1",
+    "--reporter",
+    "expanded",
+    "/workspace/scratch/0030b5e7939f/inspection-pure-dart/word_conversion_inspection_test.dart"
+  ],
+  "runner_dependency_compatibility": {
+    "coverage": "1.15.1",
+    "reason": "Satisfies test^1.15.0 without requiring cli_util0.6; all original app dependency registrations retained."
+  },
+  "setup_attempts": [
+    {
+      "status": "local compilation error before tests",
+      "exit_code": 254,
+      "log_sha256": "fbf67d2e39a27776c49c5db67753c3b6565365c3fa37bc08007853b68719264d",
+      "reason": "coverage1.16.0 requires cli_util0.6 but app pins0.4.2; chose compatible cached coverage1.15.1"
+    }
+  ],
+  "exit_code": 0,
+  "log_sha256": "a1670cfe3786e43ea0fc5d026da16d2eebf946106d33e41f76cf812c9201d272"
+}
