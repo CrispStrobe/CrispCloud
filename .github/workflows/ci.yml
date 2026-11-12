@@ -115,6 +115,7 @@ jobs:
       - name: Standalone legacy Word parser contracts
         run: |
           python3 tool/verify_office_fidelity.py
+          python3 -m unittest discover -s tool -p test_sync_legacy_doc_parser.py
           python3 - <<'PYTHON'
           import json, pathlib, re
           pin = json.loads(pathlib.Path('packages/legacy_doc_parser/UPSTREAM.json').read_text())

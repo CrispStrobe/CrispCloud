@@ -3,6 +3,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 python3 tool/verify_office_fidelity.py
 python3 -m unittest discover -s tool -p test_sync_office_fidelity.py
+python3 -m unittest discover -s tool -p test_sync_legacy_doc_parser.py
 (cd packages/quds_office_engine && dart pub get && bash tool/fidelity/check.sh)
 python3 -m unittest discover -s tool -p test_office_host_evidence.py
 python3 tool/office_host_evidence.py clean
