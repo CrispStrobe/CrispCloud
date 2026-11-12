@@ -342,8 +342,8 @@ void _assertRibbonExport(Uint8List bytes, Uint8List pickedImage) {
           namespace: 'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing',
         )
         .map((node) => (node.getAttribute('cx'), node.getAttribute('cy'))),
-    contains(('4572000', '2540000')),
-    reason: 'The ribbon inserts its picture at 360 by 200 points.',
+    contains(('19050', '19050')),
+    reason: 'A 2x2 pixel picture retains its square ratio at 96 dpi.',
   );
   final archive = ZipDecoder().decodeBytes(bytes);
   final relationships = _part(bytes, 'word/_rels/document.xml.rels');
@@ -606,8 +606,18 @@ void main() {
           tester,
           find.widgetWithText(ElevatedButton, 'Insert'),
         );
+        // Return from the note story before choosing a body picture.
+        controller.jumpToParagraph(0);
+        controller.caret.collapseSelection();
+        controller.refresh();
+        await tester.pump();
         await _tapSettled(tester, find.text('Picture'));
         expect(picker.calls, 1);
+        await _pumpUntil(
+          tester,
+          () => controller.document.visuals.length == 2,
+          'The decoded body picture was not inserted.',
+        );
         expect(controller.document.visuals, hasLength(2));
 
         for (var cycle = 1; cycle <= 3; cycle++) {

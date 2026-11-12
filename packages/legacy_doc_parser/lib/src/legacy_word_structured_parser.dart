@@ -9,6 +9,7 @@ import 'legacy_word_structured_render.dart';
 
 part 'legacy_word_binary_source.dart';
 part 'legacy_word_sprms.dart';
+part 'legacy_word_decorations.dart';
 part 'legacy_word_format_tables.dart';
 part 'legacy_word_stories.dart';
 part 'legacy_word_fields.dart';
@@ -67,14 +68,18 @@ class _StructuredWordParser {
   LegacyWordDocument parse() {
     _storyWarnings();
     if (source.totalLength == 0) {
+      final media = _readMediaCatalog(const []);
+      final orderedWarnings = warnings.toList()
+        ..sort((a, b) => a.index.compareTo(b.index));
       return LegacyWordDocument(
         blocks: const [],
         sections: const [],
         plainText: '',
         safeHtml: '',
-        warnings: List.unmodifiable(warnings),
-        media: _readMediaCatalog(const []),
+        warnings: List.unmodifiable(orderedWarnings),
+        media: media,
         evenAndOddHeaders: source.evenAndOddHeaders,
+        defaultTabStopTwips: source.defaultTabStopTwips,
       );
     }
     body = Uint16List(source.totalLength);
@@ -130,6 +135,7 @@ class _StructuredWordParser {
       numbering: List.unmodifiable(numbering),
       media: media,
       evenAndOddHeaders: source.evenAndOddHeaders,
+      defaultTabStopTwips: source.defaultTabStopTwips,
     );
   }
 
@@ -203,7 +209,11 @@ class _StructuredWordParser {
   }
 
   String _renderBlocks(List<LegacyWordBlock> blocks) {
-    final html = renderLegacyWordHtml(blocks);
+    final html = renderLegacyWordHtml(
+      blocks,
+      numberingDefinitions: numbering,
+      defaultTabStopTwips: source.defaultTabStopTwips,
+    );
     // The renderer enforces a per-story limit; also cap their combined output
     // without allocating a second encoded copy of every generated string.
     for (final rune in html.runes) {
@@ -623,6 +633,12 @@ class _StructuredWordParser {
       pageBreakBefore: properties['pageBreakBefore'] == true,
       listId: properties['listId'] as int?,
       listLevel: properties['listLevel'] as int?,
+      tabs: properties['tabs'] as List<LegacyWordTabStop>? ?? const [],
+      borders:
+          properties['borders']
+              as Map<LegacyWordBorderSide, LegacyWordBorder>? ??
+          const {},
+      shading: properties['shading'] as LegacyWordShading?,
     );
   }
 
@@ -640,6 +656,7 @@ class _StructuredWordParser {
       bold: properties['bold'] == true,
       italic: properties['italic'] == true,
       underline: properties['underline'] == true,
+      underlineStyle: properties['underlineStyle'] as String?,
       strike: properties['strike'] == true,
       doubleStrike: properties['doubleStrike'] == true,
       smallCaps: properties['smallCaps'] == true,
@@ -698,6 +715,9 @@ class _StructuredWordParser {
                     definition != null && ((definition.flags[i] >> 5) & 3) >= 2,
                 verticalMergeContinue:
                     definition != null && ((definition.flags[i] >> 5) & 3) == 1,
+                shading:
+                    (properties['cellShading']
+                        as Map<int, LegacyWordShading>?)?[i],
               ),
           ]),
         ),

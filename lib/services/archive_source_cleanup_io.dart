@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import '../utils/system_links.dart';
+
 import 'package:crypto/crypto.dart' as crypto;
 
 import '../models/file_item.dart';
@@ -42,7 +44,7 @@ _NativeImportSnapshot _nativeSnapshot(
   final path = source.path!;
   var parent = backend.paths.dirname(path);
   while (true) {
-    if (FileSystemEntity.typeSync(parent, followLinks: false) !=
+    if (entityTypeTrustingSystemLinksSync(parent) !=
         FileSystemEntityType.directory) {
       throw StateError('Source parent changed.');
     }
@@ -102,7 +104,7 @@ Future<bool> deleteNativeArchiveImportSource(
     void parents() {
       var parent = backend.paths.dirname(path);
       while (true) {
-        if (FileSystemEntity.typeSync(parent, followLinks: false) !=
+        if (entityTypeTrustingSystemLinksSync(parent) !=
             FileSystemEntityType.directory) {
           throw StateError('Source parent changed.');
         }

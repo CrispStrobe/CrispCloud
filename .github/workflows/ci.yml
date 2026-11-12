@@ -104,6 +104,7 @@ jobs:
 
       - name: Resolve vendored package development dependencies
         run: |
+          printf 'dependency_overrides:\n  legacy_doc_parser:\n    path: ../legacy_doc_parser\n' > packages/quds_office_engine/pubspec_overrides.yaml
           (cd packages/quds_office_engine && dart pub get)
           # The vendored editor's pubspec stays as upstream (drift-checked), so
           # point it at the vendored engine here; otherwise pub.dev's engine,

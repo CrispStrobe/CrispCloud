@@ -232,6 +232,7 @@ void _applyCharacter(
       'bold',
       'italic',
       'underline',
+      'underlineStyle',
       'strike',
       'doubleStrike',
       'smallCaps',
@@ -260,8 +261,12 @@ void _applyCharacter(
     switch (operation.code) {
       case 0x2a3e:
         final kind = data.u8(0);
+        final name = _underlineStyles[kind];
+        if (name == null) {
+          throw const FormatException('Invalid Word underline style.');
+        }
         output['underline'] = kind != 0;
-        if (kind > 1) warnings.add(LegacyWordWarning.unsupportedFormatting);
+        output['underlineStyle'] = name;
       case 0x4a43:
         final size = data.u16(0);
         if (size < 2 || size > 3276) {
@@ -334,6 +339,29 @@ void _applyCharacter(
     }
   }
 }
+
+// MS-DOC Kul and the corresponding WordprocessingML ST_Underline values.
+// In particular 0x14 is heavy dotted, not the wavy style used by some readers.
+const _underlineStyles = <int, String>{
+  0x00: 'none',
+  0x01: 'single',
+  0x02: 'words',
+  0x03: 'double',
+  0x04: 'dotted',
+  0x06: 'thick',
+  0x07: 'dash',
+  0x09: 'dotDash',
+  0x0a: 'dotDotDash',
+  0x0b: 'wave',
+  0x14: 'dottedHeavy',
+  0x17: 'dashedHeavy',
+  0x19: 'dashDotHeavy',
+  0x1a: 'dashDotDotHeavy',
+  0x1b: 'wavyHeavy',
+  0x27: 'dashLong',
+  0x2b: 'wavyDouble',
+  0x37: 'dashLongHeavy',
+};
 
 class _TableDefinition {
   const _TableDefinition(this.edges, this.flags);
@@ -424,6 +452,58 @@ void _applyParagraph(
           throw const FormatException('Invalid Word list level.');
         }
         output['listLevel'] = level;
+      case 0xc60d:
+      case 0xc615:
+        output['tabs'] = _changeTabs(
+          value,
+          output['tabs'] as List<LegacyWordTabStop>? ?? const [],
+          operation.code == 0xc615,
+          budget,
+        );
+      case 0x442d:
+      case 0xc64d:
+        output['shading'] = _readShading(
+          value,
+          warnings,
+          old: operation.code == 0x442d,
+        );
+      case >= 0x6424 && <= 0x6428:
+      case 0x6629:
+      case >= 0xc64e && <= 0xc653:
+        final old = operation.code < 0x8000;
+        final side = operation.code == 0x6629
+            ? 5
+            : operation.code - (old ? 0x6424 : 0xc64e);
+        output['borders'] =
+            Map<LegacyWordBorderSide, LegacyWordBorder>.unmodifiable({
+              ...?output['borders']
+                  as Map<LegacyWordBorderSide, LegacyWordBorder>?,
+              LegacyWordBorderSide.values[side]: _readParagraphBorder(
+                value,
+                old: old,
+              ),
+            });
+      case 0xd609:
+        _applyCellShading(value, output, budget, warnings, old: true);
+      case 0xd612:
+      case 0xd616:
+      case 0xd60c:
+      case 0xd670:
+      case 0xd671:
+      case 0xd672:
+        final first = switch (operation.code) {
+          0xd616 || 0xd671 => 22,
+          0xd60c || 0xd672 => 44,
+          _ => 0,
+        };
+        _applyCellShading(
+          value,
+          output,
+          budget,
+          warnings,
+          first: first,
+          raw: operation.code >= 0xd670,
+        );
       case 0xd608:
         final count = value.u8(0);
         if (count > 63) {

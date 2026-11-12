@@ -397,6 +397,54 @@ void main() {
   );
 
   test(
+    'retains opaque artifacts and diagnostics when all stories are empty',
+    () {
+      final document = parseLegacyWordDocument(
+        StructuredWordFixture(
+          pieces: const [WordFixturePiece('\r')],
+          mainCharacterCount: 0,
+          extraStreams: {
+            'Macros/PROJECT': Uint8List.fromList('Name="Incomplete"'.codeUnits),
+            'ObjectPool/_1/Payload': Uint8List.fromList([1, 2, 3]),
+            '_signatures': Uint8List.fromList([4, 5, 6]),
+          },
+        ).build(),
+      );
+      expect(document.blocks, isEmpty);
+      expect(document.plainText, isEmpty);
+      expect(document.safeHtml, isEmpty);
+      expect(document.media.vbaProjects.single.hasRequiredStreams, isFalse);
+      expect(
+        document.media.notices.map((notice) => notice.issue),
+        containsAll([
+          LegacyWordMediaIssue.incompleteVbaProject,
+          LegacyWordMediaIssue.unreferencedObjectStorage,
+        ]),
+      );
+      expect(
+        document.warnings,
+        containsAll([
+          LegacyWordWarning.macrosOmitted,
+          LegacyWordWarning.floatingObjectsOmitted,
+        ]),
+      );
+      final object = document.media.artifacts.singleWhere(
+        (artifact) =>
+            artifact.kind == LegacyWordArtifactKind.unreferencedObjectStorage,
+      );
+      expect(
+        BoundedCfbReader(object.bytes).readPath('Payload'),
+        orderedEquals([1, 2, 3]),
+      );
+      final signature = document.media.artifacts.singleWhere(
+        (artifact) => artifact.kind == LegacyWordArtifactKind.documentSignature,
+      );
+      expect(signature.bytes, orderedEquals([4, 5, 6]));
+      expect(signature.signatureVerified, isFalse);
+    },
+  );
+
+  test(
     'rejects overlong PICF and OfficeArt records before reading outside their references',
     () {
       final picf = inlinePictureData();

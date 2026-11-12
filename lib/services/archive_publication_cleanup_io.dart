@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import '../utils/system_links.dart';
+
 import 'package:crypto/crypto.dart';
 
 import '../models/file_item.dart';
@@ -29,7 +31,7 @@ Future<bool> deleteNativeArchiveRecoveryFile(
       void parents() {
         var parent = backend.paths.dirname(path);
         while (true) {
-          if (FileSystemEntity.typeSync(parent, followLinks: false) !=
+          if (entityTypeTrustingSystemLinksSync(parent) !=
               FileSystemEntityType.directory) {
             throw StateError('Recovery cleanup parent changed.');
           }

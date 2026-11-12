@@ -1,0 +1,544 @@
+{
+  "version": 1,
+  "features": {
+    "footnotes": {
+      "description": "Rich footnote import/edit/export, markers, identity, pagination and repeated saves.",
+      "bundles": [
+        "base-word",
+        "notes",
+        "note-markers"
+      ],
+      "goldens": [
+        "word-page",
+        "layout"
+      ]
+    },
+    "endnotes": {
+      "description": "Endnote stories, markers, source ownership and repeated-save preservation.",
+      "bundles": [
+        "base-word",
+        "notes",
+        "note-markers"
+      ],
+      "goldens": [
+        "word-page"
+      ]
+    },
+    "headings": {
+      "description": "Heading levels, style references and native contents through scripted edits.",
+      "bundles": [
+        "base-word",
+        "scripted",
+        "structure"
+      ],
+      "goldens": [
+        "word-page",
+        "structure"
+      ]
+    },
+    "styles": {
+      "description": "Sparse inherited paragraph/character/table styles and explicit run formatting.",
+      "bundles": [
+        "styles",
+        "scripted"
+      ],
+      "goldens": [
+        "word-page",
+        "structure"
+      ]
+    },
+    "paragraphs": {
+      "description": "Text replacement, splitting, insertion, deletion, spacing, tabs, lists and breaks.",
+      "bundles": [
+        "base-word",
+        "scripted",
+        "structure"
+      ],
+      "goldens": [
+        "layout",
+        "structure"
+      ]
+    },
+    "images": {
+      "description": "Picture bytes, size, replacement and relationships in body, headers, footers and notes.",
+      "bundles": [
+        "story-media",
+        "image-replacement",
+        "scripted"
+      ],
+      "goldens": [
+        "stories",
+        "structure"
+      ]
+    },
+    "tables": {
+      "description": "Create/edit/remove grids, rich merged cells, logical selectors, inherited borders and nested layout.",
+      "bundles": [
+        "structure",
+        "table-borders",
+        "table-grid"
+      ],
+      "goldens": [
+        "layout",
+        "structure",
+        "nested-tables",
+        "table-grid"
+      ]
+    },
+    "tocs": {
+      "description": "Native TOC creation, refresh/removal and heading bookmark links.",
+      "bundles": [
+        "structure"
+      ],
+      "goldens": [
+        "structure"
+      ]
+    },
+    "textflow": {
+      "description": "Paragraph flow, columns, continued notes and positioned frame exclusions.",
+      "bundles": [
+        "base-word",
+        "notes",
+        "frames",
+        "structure"
+      ],
+      "goldens": [
+        "layout",
+        "frames"
+      ]
+    },
+    "placement": {
+      "description": "Drawing coordinates, dimensions, wrap distances and owning story placement.",
+      "bundles": [
+        "frames",
+        "story-media",
+        "structure"
+      ],
+      "goldens": [
+        "frames",
+        "stories",
+        "structure"
+      ]
+    },
+    "drawings": {
+      "description": "Native text frames, DrawingML outlines and square/top-bottom wrapping.",
+      "bundles": [
+        "frames",
+        "structure"
+      ],
+      "goldens": [
+        "frames",
+        "structure"
+      ]
+    },
+    "references": {
+      "description": "Bookmarks, native REF/inline fields, citations, bibliography and target ownership.",
+      "bundles": [
+        "bookmarks",
+        "bibliography",
+        "inline-fields",
+        "structure"
+      ],
+      "goldens": [
+        "structure"
+      ]
+    },
+    "comments": {
+      "description": "Anchors, thread replies, edits, resolution and deletion through repeated saves.",
+      "bundles": [
+        "comments",
+        "structure"
+      ],
+      "goldens": [
+        "structure"
+      ]
+    },
+    "spreadsheets": {
+      "description": "Scripted cells/styles/formulas, native workbook/pivot retention and atomic sheet rename.",
+      "bundles": [
+        "scripted",
+        "native-sheets-slides",
+        "cross-format",
+        "sheet-rename"
+      ],
+      "goldens": []
+    },
+    "slides": {
+      "description": "Scripted shapes/notes/geometry/transitions, native templates and section-preserving reordering.",
+      "bundles": [
+        "scripted",
+        "native-sheets-slides",
+        "cross-format",
+        "slide-sections"
+      ],
+      "goldens": []
+    }
+  },
+  "bundles": {
+    "base-word": {
+      "tests": [
+        "test/office_fidelity_oracle_test.dart"
+      ],
+      "scripts": [
+        "tool/fidelity/scenarios.dart"
+      ],
+      "oracles": [
+        [
+          "tool/fidelity/corpus.py",
+          "verify"
+        ]
+      ],
+      "controls": [
+        "tool/fidelity/test_oracles.py"
+      ]
+    },
+    "notes": {
+      "tests": [
+        "test/rich_note_test.dart",
+        "test/word_footnote_reference_test.dart",
+        "test/note_edit_test.dart",
+        "test/note_separator_fidelity_test.dart",
+        "test/note_chrome_fidelity_test.dart"
+      ],
+      "scripts": [
+        "tool/fidelity/notes.dart"
+      ],
+      "oracles": [
+        [
+          "tool/fidelity/notes_oracle.py"
+        ]
+      ],
+      "controls": [
+        "tool/fidelity/test_note_spacing_oracle.py"
+      ]
+    },
+    "note-markers": {
+      "tests": [
+        "test/note_marker_fidelity_test.dart"
+      ],
+      "scripts": [],
+      "oracles": [
+        [
+          "tool/fidelity/note_markers_oracle.py"
+        ]
+      ],
+      "controls": [
+        "tool/fidelity/test_note_markers_oracle.py"
+      ]
+    },
+    "styles": {
+      "tests": [
+        "test/style_cascade_test.dart",
+        "test/word_style_introduction_test.dart"
+      ],
+      "scripts": [],
+      "oracles": [
+        [
+          "tool/fidelity/styles_oracle.py"
+        ]
+      ],
+      "controls": []
+    },
+    "scripted": {
+      "tests": [
+        "test/scripted_workflows_test.dart"
+      ],
+      "scripts": [],
+      "oracles": [
+        [
+          "tool/fidelity/scripted_oracle.py"
+        ]
+      ],
+      "controls": [
+        "tool/fidelity/test_scripted_oracle.py"
+      ]
+    },
+    "structure": {
+      "tests": [
+        "test/word_structure_steps_test.dart",
+        "test/word_structure_integrity_test.dart",
+        "test/word_table_tall_toc_layout_test.dart"
+      ],
+      "scripts": [],
+      "oracles": [
+        [
+          "tool/fidelity/word_structure_oracle.py"
+        ]
+      ],
+      "controls": [
+        "tool/fidelity/test_word_structure_oracle.py"
+      ]
+    },
+    "story-media": {
+      "tests": [
+        "test/story_media_fidelity_test.dart",
+        "test/word_part_routing_test.dart",
+        "test/word_picture_distance_fidelity_test.dart"
+      ],
+      "scripts": [],
+      "oracles": [
+        [
+          "tool/fidelity/story_media_oracle.py"
+        ]
+      ],
+      "controls": [
+        "tool/fidelity/test_story_media_oracle.py"
+      ]
+    },
+    "image-replacement": {
+      "tests": [
+        "test/office_steps_test.dart",
+        "test/opaque_word_test.dart"
+      ],
+      "scripts": [],
+      "oracles": [
+        [
+          "tool/fidelity/edge_oracle.py"
+        ]
+      ],
+      "controls": [
+        "tool/fidelity/test_oracles.py"
+      ]
+    },
+    "table-borders": {
+      "tests": [
+        "test/table_border_fidelity_test.dart",
+        "test/word_table_nested_layout_test.dart",
+        "test/word_table_direction_test.dart"
+      ],
+      "scripts": [],
+      "oracles": [
+        [
+          "tool/fidelity/table_borders_oracle.py"
+        ]
+      ],
+      "controls": [
+        "tool/fidelity/test_table_borders_oracle.py"
+      ]
+    },
+    "table-grid": {
+      "tests": [
+        "test/table_grid_steps_test.dart",
+        "test/word_contained_text_wrap_test.dart",
+        "test/xml_namespace_capture_test.dart"
+      ],
+      "scripts": [],
+      "oracles": [
+        [
+          "tool/fidelity/table_grid_oracle.py"
+        ]
+      ],
+      "controls": [
+        "tool/fidelity/test_table_grid_oracle.py"
+      ]
+    },
+    "frames": {
+      "tests": [
+        "test/word_frame_wrap_test.dart",
+        "test/word_contained_text_wrap_test.dart",
+        "test/variable_line_breaker_test.dart",
+        "test/drawing_line_style_test.dart",
+        "test/word_table_tall_frame_layout_test.dart"
+      ],
+      "scripts": [],
+      "oracles": [
+        [
+          "tool/fidelity/frame_wrap_oracle.py"
+        ]
+      ],
+      "controls": [
+        "tool/fidelity/test_frame_wrap_oracle.py"
+      ]
+    },
+    "bookmarks": {
+      "tests": [
+        "test/word_bookmark_fidelity_test.dart",
+        "test/word_note_bookmark_edit_test.dart"
+      ],
+      "scripts": [],
+      "oracles": [
+        [
+          "tool/fidelity/bookmark_ranges_oracle.py"
+        ]
+      ],
+      "controls": [
+        "tool/fidelity/test_bookmark_ranges_oracle.py"
+      ]
+    },
+    "bibliography": {
+      "tests": [
+        "test/word_bibliography_fidelity_test.dart"
+      ],
+      "scripts": [],
+      "oracles": [
+        [
+          "tool/fidelity/bibliography_oracle.py"
+        ]
+      ],
+      "controls": [
+        "tool/fidelity/test_bibliography_oracle.py"
+      ]
+    },
+    "inline-fields": {
+      "tests": [
+        "test/inline_field_fidelity_test.dart"
+      ],
+      "scripts": [],
+      "oracles": [
+        [
+          "tool/fidelity/inline_fields_oracle.py"
+        ]
+      ],
+      "controls": [
+        "tool/fidelity/test_inline_fields_oracle.py"
+      ]
+    },
+    "comments": {
+      "tests": [
+        "test/comment_thread_fidelity_test.dart"
+      ],
+      "scripts": [],
+      "oracles": [
+        [
+          "tool/fidelity/comment_threads_oracle.py"
+        ]
+      ],
+      "controls": [
+        "tool/fidelity/test_comment_threads_oracle.py"
+      ]
+    },
+    "native-sheets-slides": {
+      "tests": [
+        "test/native_spreadsheet_test.dart",
+        "test/native_presentation_test.dart"
+      ],
+      "scripts": [],
+      "oracles": [
+        [
+          "tool/fidelity/native_oracle.py"
+        ]
+      ],
+      "controls": []
+    },
+    "cross-format": {
+      "tests": [],
+      "scripts": [
+        "tool/fidelity/cross_format.dart"
+      ],
+      "oracles": [
+        [
+          "tool/fidelity/cross_oracle.py"
+        ]
+      ],
+      "controls": []
+    },
+    "sheet-rename": {
+      "tests": [
+        "test/sheet_rename_fidelity_test.dart",
+        "test/sheet_rename_adversarial_test.dart",
+        "test/sheet_formula_cache_fidelity_test.dart"
+      ],
+      "scripts": [],
+      "oracles": [
+        [
+          "tool/fidelity/sheet_rename_oracle.py"
+        ]
+      ],
+      "controls": [
+        "tool/fidelity/test_sheet_rename_oracle.py"
+      ]
+    },
+    "slide-sections": {
+      "tests": [
+        "test/slide_section_fidelity_test.dart"
+      ],
+      "scripts": [],
+      "oracles": [
+        [
+          "tool/fidelity/slide_sections_oracle.py"
+        ]
+      ],
+      "controls": [
+        "tool/fidelity/test_slide_sections_oracle.py"
+      ]
+    }
+  },
+  "goldens": {
+    "word-page": {
+      "tests": [
+        "test/office_fidelity_golden_test.dart"
+      ],
+      "files": [
+        "test/goldens/office_fidelity_word.png"
+      ]
+    },
+    "stories": {
+      "tests": [
+        "test/office_story_golden_test.dart"
+      ],
+      "files": [
+        "test/goldens/office_stories_page_1.png",
+        "test/goldens/office_stories_page_2.png",
+        "test/goldens/office_stories_page_3.png"
+      ]
+    },
+    "layout": {
+      "tests": [
+        "test/office_layout_goldens_test.dart"
+      ],
+      "files": [
+        "test/goldens/columns_sections_1.png",
+        "test/goldens/columns_sections_2.png",
+        "test/goldens/columns_sections_3.png",
+        "test/goldens/continued_notes_1.png",
+        "test/goldens/continued_notes_2.png",
+        "test/goldens/continued_notes_3.png",
+        "test/goldens/rtl_1.png",
+        "test/goldens/tall_table_1.png",
+        "test/goldens/tall_table_2.png",
+        "test/goldens/tall_table_3.png",
+        "test/goldens/tall_table_4.png"
+      ]
+    },
+    "structure": {
+      "tests": [
+        "test/office_structure_goldens_test.dart"
+      ],
+      "files": [
+        "test/goldens/structure_create_1.png",
+        "test/goldens/structure_edit_1.png",
+        "test/goldens/structure_edit_2.png",
+        "test/goldens/structure_remove_1.png"
+      ]
+    },
+    "frames": {
+      "tests": [
+        "test/office_frame_wrap_golden_test.dart"
+      ],
+      "files": [
+        "test/goldens/frame_wrap_none.png",
+        "test/goldens/frame_wrap_square.png",
+        "test/goldens/frame_wrap_topBottom.png"
+      ]
+    },
+    "nested-tables": {
+      "tests": [
+        "test/office_nested_table_golden_test.dart"
+      ],
+      "files": [
+        "test/goldens/nested_table_content.png"
+      ]
+    },
+    "table-grid": {
+      "tests": [
+        "test/office_table_grid_golden_test.dart"
+      ],
+      "files": [
+        "test/goldens/table_grid_unchanged.png",
+        "test/goldens/table_grid_format.png",
+        "test/goldens/table_grid_replace.png",
+        "test/goldens/table_grid_unmerge.png"
+      ]
+    }
+  }
+}

@@ -11,6 +11,7 @@ part 'legacy_word_structured_conversion.dart';
 part 'opc_package_writer.dart';
 part 'word_story_writer.dart';
 part 'word_media_writer.dart';
+part 'word_decoration_writer.dart';
 
 /// DOCM is an explicit choice. The DOCX entry point never writes active VBA.
 enum LegacyWordOutputFormat { docx, docm }

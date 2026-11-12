@@ -124,6 +124,8 @@ class _BinarySource {
         throw const FormatException('Truncated Word document settings.');
       }
       evenAndOddHeaders = (table.u8(dopOffset) & 1) != 0;
+      final tabInterval = table.u16(dopOffset + 10);
+      if (tabInterval != 0) defaultTabStopTwips = tabInterval;
     }
     // An empty main story is valid, including older files whose otherwise
     // unused CLX contains a zero-length CP range. No body data is consulted.
@@ -197,6 +199,7 @@ class _BinarySource {
   late final int bodyLength;
   late final int totalLength;
   bool evenAndOddHeaders = false;
+  int? defaultTabStopTwips;
   late final int pairCount;
   late final List<int> storyLengths;
   final pieces = <_Piece>[];

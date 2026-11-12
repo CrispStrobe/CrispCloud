@@ -2,7 +2,7 @@
 
 **Cross-platform dual-panel cloud file manager** built with Flutter. Open-source, privacy-first, running on macOS, Windows, Linux, Android, iOS, and Web/PWA.
 
-14 cloud providers. 4,000+ tests. Block-level delta sync. End-to-end encryption. 9 UI languages, with English fallback for untranslated messages.
+Local, cloud and network storage. Automated unit, widget and native protocol tests. Block-level delta sync. End-to-end encryption. 9 UI languages, with English fallback for untranslated messages.
 
 ## Providers
 
@@ -45,6 +45,7 @@ We also maintain patched Nextcloud and ownCloud desktop clients with delta sync 
 - **Flexible layout:** independent dual/single panes, an account-aware folder tree, detailed and compact lists, grids, and hierarchical columns with separately scrollable ancestor folders
 - **Recoverable navigation:** source-bound history per tab, history menus, recent locations that retain their storage identity, and reopening closed tabs with their view and history
 - **Path favorites:** a `*` menu at the top right of each pane opens searchable, grouped saved locations. Ctrl+Shift+B opens the active pane's picker. The editor supports grouping, ordering and reviewed JSON import/export while retaining each favorite's original storage account. See [path favorites](docs/path-favorites.md).
+- **Edit and comparison commands:** configurable browser menus include clipboard actions, copy names/full paths, grouped selection, and Compare Directories. The latter compares the two verified pane listings and selects files in the active pane using names, dates and sizes. The separate folder comparison dialog retains its review workflow.
 - **Keyboard workspace:** searchable shortcut customization with conflict checks; command palette, shortcut help, native menus and action buttons reflect saved bindings. Text fields, editors and terminals retain their own input.
 - **Folder drop review:** drag marked files onto a folder in a list, grid or current column; hold Shift for a move. Source accounts and the destination are checked before the existing copy/move review opens. See [workspace controls and acceptance](docs/workspace-ux.md).
 - **Storage analyzer:** interactive treemap and sunburst for local and cloud folders, folder drill-down, largest files, extension filters, faster background native scans, and lossless saved scans for offline browsing. Cancellable scans retain explicit partial results; saved history survives full rescans. See [storage analysis](docs/storage-analyzer.md) for controls, measured performance, size semantics and limits.
@@ -54,8 +55,8 @@ We also maintain patched Nextcloud and ownCloud desktop clients with delta sync 
 - **Backup engine:** scheduled backups with versioning
 - **Preview pane:** images (zoom/pan), SVG, PDF (page navigation), syntax-highlighted code (30+ languages), markdown, CSV/TSV tables, DOCX/XLSX/PPTX/ODT text, fonts (TTF/OTF/WOFF2), audio/video
 - **Archive browsing:** browse ZIP/TAR/TGZ files like folders (including on web)
-- **Extended file formats:** decoded EML/Outlook MSG viewing, including compressed RTF bodies and attachments; formatted RTF previews; current-slide text from legacy PPT/PPS/POT; legacy DOC/DOT text previews; protected DOCM/DOTM/DOTX rich editing; and Autodesk KBDX XML viewing/source editing. See [format coverage and limits](docs/file-format-viewers.md).
-- **Legacy Word conversion:** supported installed Word/LibreOffice can create separate DOCX/DOCM copies for review, with a PDF page preview rendered by the same installed application before saving. An explicit built-in text-only conversion is available on every platform. Originals stay unchanged, and converted copies are checked before create-only saving. See [conversion support and limits](docs/legacy-word-conversion.md).
+- **Extended file formats:** decoded EML/Outlook MSG viewing, including compressed RTF bodies and attachments; formatted RTF previews; current-slide text from legacy PPT/PPS/POT; formatted legacy DOC/DOT previews; protected DOCM/DOTM/DOTX rich editing; and Autodesk KBDX XML viewing/source editing. See [format coverage and limits](docs/file-format-viewers.md).
+- **Legacy Word conversion:** the maintained [legacy_doc_parser](https://github.com/CrispStrobe/legacy-doc-parser) supplies portable formatted previews and separate, reviewed DOCX/DOCM copies. Supported installed Word/LibreOffice conversions and their PDF previews remain available, as does explicit text-only conversion. Originals stay unchanged; macros and embedded objects are never executed by the built-in parser. See [conversion support and limits](docs/legacy-word-conversion.md).
 - **KeePass databases:** F3 views and F4 edits existing KDBX databases with password/key-file unlock, group management, entry moves, protected custom fields, entry history restoration, explicit password reveal/copy, automatic locking and encrypted saves to the original source. See [KeePass support and limits](docs/keepass.md).
 - **Built-in editors:** F4 text/code and hex editors with explicit chooser and handoff, bounded edit history, and save/recovery tied to the original file and account. Text editing includes syntax highlighting, line numbers, encoding and newline controls; F3 also previews archive members
 - **Interactive terminal:** desktop PTY/Windows ConPTY, a built-in shell for sandboxed macOS, and SSH sessions with ANSI colors, full-screen programs, live resizing, raw control keys, scrollback, and mobile extra keys. Browser SSH uses your own secure WebSocket gateway. [Terminal design, licensing, and platform support](docs/terminal.md)
@@ -69,6 +70,12 @@ We also maintain patched Nextcloud and ownCloud desktop clients with delta sync 
 - **Unified Settings:** one surface for language, theme/accent, file-list fonts, quick search, cache, proxy/provider networking, accessibility, privacy and advanced options
 - **9 languages:** EN, DE, FR, ES, PT, ZH, JA, KO, AR — persisted in-app language switch, ~256 localized strings
 - **Accessibility:** 48dp touch targets on mobile, Semantics on file list items, tooltips on all buttons
+
+## Shared components and validation
+
+Office editing consumes the [Quds fork](https://github.com/CrispStrobe/quds_office_suite), while legacy binary Word parsing is maintained in [legacy-doc-parser](https://github.com/CrispStrobe/legacy-doc-parser). `tool/office_fidelity_manifest.json` and `packages/legacy_doc_parser/UPSTREAM.json` bind the managed files and parser source. Historical native rendering reports identify their original source snapshots; they do not automatically certify later edits.
+
+Use the Flutter version in `.fvmrc`. Run `flutter analyze --no-fatal-warnings --no-fatal-infos`, `flutter test`, and `bash tool/check_office_fidelity.sh` after shared-source changes. The Office gate includes package inventories, independent validators and coverage collection receipts. See [Office fidelity](docs/office-fidelity.md) for scope and limits, [external editing](docs/external-remote-editing.md) for retained drafts and conditional publication, and [archive endpoints](docs/archive-endpoints.md) for supported archive operations.
 
 ## Getting Started
 

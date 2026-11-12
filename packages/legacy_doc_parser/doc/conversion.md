@@ -39,7 +39,10 @@ complete fidelity to the original file.
 | Main paragraphs and runs | Editable WordprocessingML with resolved paragraph and character properties | Unsupported formatting is reported; no complete layout claim |
 | Insertions and deletions | `w:ins`, `w:del`, and deleted text nodes with available author/date metadata | Source wall-clock dates have no invented time zone |
 | Hidden text | `w:vanish` on retained runs | Private field results are excluded from ordinary display content |
-| Basic tables | Table grids, widths, cells, supported merges, and header rows | Unsupported nested structures remain a declared limitation |
+| Custom and default tabs | Resolved stop positions, alignment, leaders, and the source default interval | Source tab characters remain editable tabs |
+| Paragraph borders | Supported sides, line styles, widths, colors, spacing, and applicable shadow/frame flags | The inactive paragraph bar border stays metadata; ignored source flags are not activated |
+| Paragraph and cell shading | Exact supported pattern plus separate foreground and background colors | A binary pattern without an exact WordprocessingML counterpart remains evidence |
+| Basic tables | Table grids, widths, cells, supported merges, header rows, and cell shading | Unsupported nested structures remain a declared limitation |
 | Sections | Source section boundaries, page dimensions, margins, columns, and supported break types | Exact pagination is not certified |
 | Headers and footers | Separate parts and section relationships, including first/even/default variants | First/even activation follows the source flags, not merely the presence of stored content |
 | Footnotes and endnotes | Reference markers, note parts, and available separator stories | Hidden/private anchors produce inert story evidence instead of active notes |
@@ -123,6 +126,9 @@ The focused conversion tests cover:
   including hidden/private and tracked-change cases.
 - Exact stored image and reconstructed OLE/VBA bytes, DOCX versus explicit DOCM,
   and signatures retained solely as inert evidence.
+- Custom/default tab, border, and shading properties through the full binary
+  DOC parser-to-package path, plus inactive effects and unsupported-pattern
+  preservation.
 
 Structural verification is not a claim of pixel-identical rendering in Word or
 another office application. Review the converted copy in the application that
@@ -132,9 +138,11 @@ will be used for editing or publication.
 
 The implementation is in `lib/src/conversion.dart`,
 `legacy_word_structured_conversion.dart`, `word_story_writer.dart`,
-`word_media_writer.dart`, and `opc_package_writer.dart`. Tests are in
+`word_media_writer.dart`, `word_decoration_writer.dart`, and
+`opc_package_writer.dart`. Tests are in
 `test/legacy_word_structured_conversion_test.dart` and
-`test/extended_conversion_test.dart`. Media parsing details and source-format
+`test/extended_conversion_test.dart`, with formatting checks in
+`test/paragraph_decoration_conversion_test.dart`. Media parsing details and source-format
 references are documented in [media-preservation.md](media-preservation.md).
 
 The WordprocessingML and package structures follow the Open XML formats:

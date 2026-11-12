@@ -713,6 +713,13 @@ extension _WordStories on _StructuredWordWriter {
       );
     }
     final settings = _wordPart('settings');
+    final defaultTabs = document.defaultTabStopTwips;
+    if (defaultTabs != null) {
+      if (defaultTabs <= 0 || defaultTabs > 65535) {
+        throw const FormatException('Invalid Word default tab interval.');
+      }
+      settings.add('<w:defaultTabStop w:val="$defaultTabs"/>');
+    }
     if (document.evenAndOddHeaders) {
       settings.add('<w:evenAndOddHeaders/>');
     }
@@ -869,8 +876,10 @@ extension _WordStories on _StructuredWordWriter {
           '<w:lvlJc w:val="${level.markerAlignment == LegacyWordAlignment.justify ? 'both' : level.markerAlignment.name}"/>',
         );
         final paragraph = level.paragraphStyle;
+        xml.add('<w:pPr>');
+        _paragraphDecorations(paragraph, xml, null);
         xml.add(
-          '<w:pPr><w:ind w:left="${paragraph.leftIndentTwips}" w:right="${paragraph.rightIndentTwips}"',
+          '<w:ind w:left="${paragraph.leftIndentTwips}" w:right="${paragraph.rightIndentTwips}"',
         );
         xml.add(
           paragraph.firstLineIndentTwips < 0
@@ -897,7 +906,7 @@ extension _WordStories on _StructuredWordWriter {
         if (character.fontSizeHalfPoints != null) {
           xml.add('<w:sz w:val="${character.fontSizeHalfPoints}"/>');
         }
-        xml.add('</w:rPr></w:lvl>');
+        xml.add('<w:u w:val="${_underlineValue(character)}"/></w:rPr></w:lvl>');
       }
       xml.add('</w:abstractNum>');
     }

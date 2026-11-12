@@ -4,7 +4,7 @@ part of 'legacy_word_structured_parser.dart';
 
 // Traversal of FKP, STSH, FFN and SEPX structures is adapted in part from
 // JSDoc src/docToText.js (0BSD), 821695a884e0c0bb8592a635d9524bb3e116cd67.
-// License and exact source provenance: docs/licenses/jsdoc-0bsd.txt.
+// License and exact source provenance: third_party/JSDoc-0BSD.txt.
 // Bounds, CP/FC association, PRM precedence and error handling are authored
 // against MS-DOC rather than inheriting its permissive fallbacks.
 

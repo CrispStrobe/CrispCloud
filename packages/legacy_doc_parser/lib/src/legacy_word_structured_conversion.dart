@@ -163,6 +163,7 @@ class _StructuredWordWriter {
         limitations.add(LegacyWordConversionLimitation.fieldsLists);
       }
     }
+    _paragraphDecorations(style, _xml, paragraph.startCp);
     _xml.add(
       '<w:spacing w:before="${style.spaceBeforeTwips}" '
       'w:after="${style.spaceAfterTwips}"',
@@ -263,6 +264,14 @@ class _StructuredWordWriter {
             '<w:vMerge w:val="${cell.verticalMergeStart ? 'restart' : 'continue'}"/>',
           );
         }
+        if (cell.shading != null) {
+          _shading(
+            cell.shading!,
+            _xml,
+            'tableCell',
+            cell.paragraphs.isEmpty ? null : cell.paragraphs.first.startCp,
+          );
+        }
         _xml.add('</w:tcPr>');
         if (cell.paragraphs.isEmpty) _xml.add('<w:p/>');
         for (final paragraph in cell.paragraphs) {
@@ -316,7 +325,7 @@ class _StructuredWordWriter {
     if (highlightName != null) {
       _xml.add('<w:highlight w:val="$highlightName"/>');
     }
-    _xml.add('<w:u w:val="${style.underline ? 'single' : 'none'}"/>');
+    _xml.add('<w:u w:val="${_underlineValue(style)}"/>');
     if (highlight != null && highlightName == null) {
       _xml.add(
         '<w:shd w:val="clear" w:color="auto" w:fill="${_color(highlight)}"/>',

@@ -52,6 +52,7 @@ class LegacyWordDocument {
     this.numbering = const [],
     this.media = const LegacyWordMediaCatalog(),
     this.evenAndOddHeaders = false,
+    this.defaultTabStopTwips,
   });
   final List<LegacyWordBlock> blocks;
   final List<LegacyWordSection> sections;
@@ -76,6 +77,7 @@ class LegacyWordDocument {
 
   /// DopBase.fFacingPages. Stored even-page stories alone do not enable them.
   final bool evenAndOddHeaders;
+  final int? defaultTabStopTwips;
 }
 
 enum LegacyWordStoryKind {
@@ -347,6 +349,7 @@ class LegacyWordTableCell {
     this.mergeContinue = false,
     this.verticalMergeStart = false,
     this.verticalMergeContinue = false,
+    this.shading,
   });
   final List<LegacyWordParagraph> paragraphs;
   final int? widthTwips;
@@ -354,6 +357,62 @@ class LegacyWordTableCell {
   final bool mergeContinue;
   final bool verticalMergeStart;
   final bool verticalMergeContinue;
+  final LegacyWordShading? shading;
+}
+
+enum LegacyWordTabAlignment { left, center, right, decimal, bar, list }
+
+enum LegacyWordTabLeader { none, dot, hyphen, underscore, heavy, middleDot }
+
+class LegacyWordTabStop {
+  const LegacyWordTabStop({
+    required this.positionTwips,
+    this.alignment = LegacyWordTabAlignment.left,
+    this.leader = LegacyWordTabLeader.none,
+  });
+  final int positionTwips;
+  final LegacyWordTabAlignment alignment;
+  final LegacyWordTabLeader leader;
+}
+
+enum LegacyWordBorderSide { top, left, bottom, right, between, bar }
+
+class LegacyWordBorder {
+  const LegacyWordBorder({
+    required this.style,
+    required this.widthEighthPoints,
+    this.rawType = 0,
+    this.colorHex,
+    this.spacingPoints = 0,
+    this.shadow = false,
+    this.frame = false,
+  });
+
+  /// A fixed OOXML ST_Border identifier, including none/nil resets.
+  final String style;
+  final int rawType;
+  final int widthEighthPoints;
+  final String? colorHex;
+  final int spacingPoints;
+  final bool shadow;
+  final bool frame;
+}
+
+class LegacyWordShading {
+  const LegacyWordShading({
+    required this.pattern,
+    this.rawPattern = 0,
+    this.foregroundHex,
+    this.backgroundHex,
+  });
+
+  /// A fixed OOXML ST_Shd identifier, or null for a valid legacy pattern
+  /// without an OOXML equivalent. clear uses background, solid uses
+  /// foreground; patterned shading retains both colors independently.
+  final String? pattern;
+  final int rawPattern;
+  final String? foregroundHex;
+  final String? backgroundHex;
 }
 
 class LegacyWordRun {
@@ -390,6 +449,7 @@ class LegacyWordCharacterStyle {
     this.bold = false,
     this.italic = false,
     this.underline = false,
+    this.underlineStyle,
     this.strike = false,
     this.doubleStrike = false,
     this.smallCaps = false,
@@ -406,6 +466,10 @@ class LegacyWordCharacterStyle {
   final bool bold;
   final bool italic;
   final bool underline;
+
+  /// A fixed OOXML ST_Underline name resolved from MS-DOC Kul. Null retains
+  /// the bool-only API's single underline; explicit none clears a style.
+  final String? underlineStyle;
   final bool strike;
   final bool doubleStrike;
   final bool smallCaps;
@@ -427,6 +491,7 @@ class LegacyWordCharacterStyle {
       bold == other.bold &&
       italic == other.italic &&
       underline == other.underline &&
+      underlineStyle == other.underlineStyle &&
       strike == other.strike &&
       doubleStrike == other.doubleStrike &&
       smallCaps == other.smallCaps &&
@@ -444,6 +509,7 @@ class LegacyWordCharacterStyle {
     bold,
     italic,
     underline,
+    underlineStyle,
     strike,
     doubleStrike,
     smallCaps,
@@ -477,6 +543,9 @@ class LegacyWordParagraphStyle {
     this.pageBreakBefore = false,
     this.listId,
     this.listLevel,
+    this.tabs = const [],
+    this.borders = const {},
+    this.shading,
   });
   final int styleIndex;
   final String? styleName;
@@ -502,6 +571,12 @@ class LegacyWordParagraphStyle {
   /// as a different numbering scheme when definitions are unsupported.
   final int? listId;
   final int? listLevel;
+
+  /// Resolved, ordered custom stops after applying inherited additions and
+  /// deletions. Source tab characters remain unchanged in each run's text.
+  final List<LegacyWordTabStop> tabs;
+  final Map<LegacyWordBorderSide, LegacyWordBorder> borders;
+  final LegacyWordShading? shading;
 }
 
 class LegacyWordSection {
