@@ -106,6 +106,9 @@ dependencies:
   crypto: ^3.0.3
   web: ^1.1.1  # WebCrypto (crypto.subtle) for web secure storage
   pointycastle: ^4.0.0
+  # KeePass KDBX 3/4; pinned MIT source and local preservation/web patches.
+  kpasslib:
+    path: packages/kpasslib
   bip39: ^1.0.6
   hex: ^0.2.0
   glob: ^2.1.2
