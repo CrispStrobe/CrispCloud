@@ -6,6 +6,7 @@ cd "$(dirname "$0")/../.."
 python3 tool/fidelity/inventory.py clean
 dart test \
   test/legacy_word_document_test.dart test/bounded_cfb_reader_test.dart \
+  test/legacy_word_conversion_test.dart test/opc_word_kind_test.dart \
   test/word_package_preservation_test.dart test/zip_bounded_read_test.dart \
   test/drawing_line_style_test.dart \
   test/office_package_parts_test.dart test/office_search_fidelity_test.dart \

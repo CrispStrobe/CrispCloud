@@ -36,6 +36,7 @@ class BoundedCfbReader {
         throw const FormatException('Compound stream exceeds its container');
       }
     }
+    _indexDirectory();
   }
 
   late final CfbfFile _file;
@@ -43,19 +44,70 @@ class BoundedCfbReader {
   final int maxTotalReadBytes;
   int _readBytes = 0;
   Uint8List? _miniContainer;
+  final Map<int, List<CfbfDirectoryEntry>> _children = {};
+  final Map<int, Map<String, CfbfDirectoryEntry>> _names = {};
 
   CfbfDirectoryEntry get root => _file.root;
 
   List<CfbfDirectoryEntry> childrenOf(CfbfDirectoryEntry parent) =>
-      _file.childrenOf(parent).toList(growable: false);
+      _children[parent.index] ?? const [];
 
   /// Looks only in this storage, never in an unrelated embedded message.
   CfbfDirectoryEntry? child(CfbfDirectoryEntry parent, String name) {
-    final upper = name.toUpperCase();
-    for (final entry in _file.childrenOf(parent)) {
-      if (entry.name.toUpperCase() == upper) return entry;
+    return _names[parent.index]?[name.toUpperCase()];
+  }
+
+  /// Compound storages own disjoint sibling trees. Validate this once before
+  /// any consumer can repeatedly traverse them. Without global ownership, a
+  /// small malicious MSG could make thousands of recipients share one large
+  /// child tree and turn otherwise bounded property lookups into quadratic
+  /// work on the UI thread.
+  void _indexDirectory() {
+    const noStream = 0xffffffff;
+    final entries = _file.entries;
+    final rootEntry = root;
+    if (rootEntry.index != 0 ||
+        rootEntry.leftSibling != noStream ||
+        rootEntry.rightSibling != noStream) {
+      throw const FormatException('Invalid compound root storage');
     }
-    return null;
+    final owners = <int, int>{rootEntry.index: -1};
+    final storages = <CfbfDirectoryEntry>[rootEntry];
+    for (var cursor = 0; cursor < storages.length; cursor++) {
+      final parent = storages[cursor];
+      final children = <CfbfDirectoryEntry>[];
+      final names = <String, CfbfDirectoryEntry>{};
+      final stack = <int>[parent.child];
+      while (stack.isNotEmpty) {
+        final index = stack.removeLast();
+        if (index == noStream) continue;
+        if (index < 0 || index >= entries.length || owners.containsKey(index)) {
+          throw const FormatException(
+            'Compound directory has a cycle or shared child',
+          );
+        }
+        owners[index] = parent.index;
+        final entry = entries[index];
+        if (entry.type == CfbfObjectType.empty ||
+            entry.type == CfbfObjectType.root ||
+            entry.name.isEmpty ||
+            names.containsKey(entry.name.toUpperCase())) {
+          throw const FormatException(
+            'Invalid or duplicate compound directory entry',
+          );
+        }
+        if (!entry.isStorage && entry.child != noStream) {
+          throw const FormatException('Compound stream cannot have children');
+        }
+        children.add(entry);
+        names[entry.name.toUpperCase()] = entry;
+        if (entry.isStorage) storages.add(entry);
+        stack.add(entry.leftSibling);
+        stack.add(entry.rightSibling);
+      }
+      _children[parent.index] = List.unmodifiable(children);
+      _names[parent.index] = Map.unmodifiable(names);
+    }
   }
 
   Uint8List? readPath(String path) {
@@ -176,7 +228,7 @@ class BoundedCfbReader {
         for (var index = 0; index < size ~/ 4; index++)
           u32(offsetOf(sector) + index * 4),
     ];
-    void checkChain(int sector, int limit) {
+    List<int> checkChain(int sector, int limit) {
       final seen = <int>{};
       while (sector != end && sector != free) {
         offsetOf(sector);
@@ -187,9 +239,23 @@ class BoundedCfbReader {
         }
         sector = fat[sector];
       }
+      return seen.toList(growable: false);
     }
 
-    checkChain(u32(48), 65536 ~/ (size ~/ 128));
+    final directory = checkChain(u32(48), 65536 ~/ (size ~/ 128));
+    for (final sector in directory) {
+      final offset = offsetOf(sector);
+      for (var index = 0; index < size; index += 128) {
+        final type = bytes[offset + index + 66];
+        if ((type == 2 || type == 5) &&
+            (u32(offset + index + 124) != 0 ||
+                u32(offset + index + 120) > bytes.length)) {
+          // All preview inputs are smaller than 4 GiB. Check the raw high word
+          // too: JavaScript integer bit operations cannot represent uint64.
+          throw const FormatException('Compound stream exceeds its container');
+        }
+      }
+    }
     if (u32(64) > 0) checkChain(u32(60), sectors);
   }
 }
