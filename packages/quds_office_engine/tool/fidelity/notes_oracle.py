@@ -59,6 +59,11 @@ def snapshot(parts):
     rel = relationship_map(parts, owner)[blip.get(f'{{{R}}}embed')]
     target = posixpath.normpath(posixpath.join('word', rel['Target']))
     return {
+        'separator_definitions': {
+            kind: [attrs(node) for node in ET.fromstring(parts[f'word/{kind}s.xml']).findall('w:'+kind, NS)
+                   if attrs(node).get('type') in ('separator', 'continuationSeparator', 'continuationNotice')]
+            for kind in ('footnote', 'endnote')
+        },
         'blocks': [e.tag.split('}')[-1] for e in note],
         'paragraphs': [p for p in paras if p],
         'leading_whitespace': re.match(r'^\s*', word_text(note.find('w:p', NS))).group(),

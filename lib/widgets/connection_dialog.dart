@@ -7,6 +7,9 @@ import 'package:crisp_storage/rust_cloud.dart'
     show CloudEngine, RustCloudProvider, RustCloudUnavailable, RustCloudException, RustCloudErrorCode, configuredCloudEngine, parseCloudEngine;
 import '../services/filen_client_adapter.dart';
 import '../services/internxt_client_adapter.dart';
+import 'ftp_security_field.dart';
+import '../services/ftp_security_mode.dart';
+import '../l10n/ftp_security_strings.dart';
 import '../services/sftp_client_adapter.dart';
 import '../services/smb_client_adapter.dart';
 
@@ -71,7 +74,10 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
     text: '21',
   ); // Default FTP port
   final _ftpUserController = TextEditingController();
-  bool _ftpUseTLS = false;
+  FtpSecurityMode _ftpSecurityMode = FtpSecurityMode.explicitTls;
+  bool _invalidFtpProfile = false;
+  bool get _ftpProfileNeedsSecurity =>
+      _selectedProvider == CloudProvider.ftp && _invalidFtpProfile;
   bool _smbRequireEncryption = true;
   SmbBackend _smbBackend = SmbBackend.libsmb2;
   bool _invalidSmbProfile = false;
@@ -168,7 +174,8 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
           'host': _ftpHostController.text,
           'port': _ftpPortController.text,
           'user': _ftpUserController.text,
-          'tls': _ftpUseTLS.toString(),
+          'securityMode': _ftpSecurityMode.name,
+          'tls': '${_ftpSecurityMode.isSecure}',
         };
       case CloudProvider.s3:
         return {
@@ -233,10 +240,25 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
         _sftpUserController.text = f['user'] ?? '';
         break;
       case CloudProvider.ftp:
+        final FtpSecurityMode mode;
+        try {
+          mode = FtpSecurityMode.fromStored(
+            mode: f['securityMode'],
+            legacyUseTls: f['tls'],
+          );
+        } on FormatException {
+          setState(() {
+            _invalidFtpProfile = true;
+            _error = null;
+          });
+          return;
+        }
         _ftpHostController.text = f['host'] ?? '';
-        _ftpPortController.text = f['port'] ?? '21';
+        _ftpPortController.text = f['port'] ?? '${mode.defaultPort}';
         _ftpUserController.text = f['user'] ?? '';
-        _ftpUseTLS = f['tls'] == 'true';
+        _ftpSecurityMode = mode;
+        _invalidFtpProfile = false;
+        _error = null;
         break;
       case CloudProvider.s3:
         _s3EndpointController.text =
@@ -392,6 +414,8 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
     final l10n = AppLocalizations.of(context)!;
     final error = _smbProfileNeedsTransport
         ? t.text('invalidSmbBackendProfile')
+        : _ftpProfileNeedsSecurity
+        ? FtpSecurityStrings(context).text('invalidProfile')
         : _error;
     // Determine which fields to show based on provider
     final isAzure = _selectedProvider == CloudProvider.azure;
@@ -585,7 +609,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                   t.text('saveProfile'),
                   style: const TextStyle(fontSize: 12),
                 ),
-                onPressed: _saveProfile,
+                onPressed: _ftpProfileNeedsSecurity ? null : _saveProfile,
               ),
             ),
             const SizedBox(height: 8),
@@ -1012,19 +1036,22 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                 enabled: !_isLoading,
               ),
               const SizedBox(height: 16),
-              // FTP: Use TLS checkbox
-              CheckboxListTile(
-                title: Text(t.text('useTls')),
-                value: _ftpUseTLS,
+              FtpSecurityField(
+                value: _ftpSecurityMode,
                 onChanged: _isLoading
                     ? null
                     : (value) {
                         setState(() {
-                          _ftpUseTLS = value ?? false;
+                          final currentPort = _ftpPortController.text.trim();
+                          if (currentPort.isEmpty ||
+                              currentPort ==
+                                  '${_ftpSecurityMode.defaultPort}') {
+                            _ftpPortController.text = '${value.defaultPort}';
+                          }
+                          _ftpSecurityMode = value;
+                          _invalidFtpProfile = false;
                         });
                       },
-                controlAffinity: ListTileControlAffinity.leading,
-                contentPadding: EdgeInsets.zero,
               ),
             ] else if (isSftp) ...[
               // SFTP: Host & Port Row
@@ -1318,7 +1345,10 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
           child: Text(AppLocalizations.of(context)!.cancel),
         ),
         ElevatedButton(
-          onPressed: _isLoading || _smbProfileNeedsTransport
+          onPressed:
+              _isLoading ||
+                  _smbProfileNeedsTransport ||
+                  _ftpProfileNeedsSecurity
               ? null
               : _handleLogin,
           child: _isLoading
@@ -1365,7 +1395,8 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
   }
 
   Future<void> _handleLogin() async {
-    if (_isLoading || _smbProfileNeedsTransport) return;
+    if (_isLoading || _smbProfileNeedsTransport || _ftpProfileNeedsSecurity)
+      return;
     final t = ConnectionDialogExtraStrings(context);
     final encryptionRequested = _enableEncryption;
     final encryptionPassphrase = _passphraseController.text;
@@ -1497,17 +1528,19 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
         }
 
         // Validate port
-        final portStr = _ftpPortController.text.isEmpty
-            ? '21'
-            : _ftpPortController.text;
+        final portStr = _ftpPortController.text.trim().isEmpty
+            ? '${_ftpSecurityMode.defaultPort}'
+            : _ftpPortController.text.trim();
         final portNum = int.tryParse(portStr);
         if (portNum == null || portNum < 1 || portNum > 65535) {
           throw Exception(t.text('portInvalid'));
         }
-        // Construct composite identity for FTP Adapter: "username@host:port?tls=true"
-        final tlsFlag = _ftpUseTLS ? '?tls=true' : '';
-        identity =
-            '${_ftpUserController.text}@${_ftpHostController.text}:$portStr$tlsFlag';
+        identity = FtpLoginIdentity(
+          username: _ftpUserController.text,
+          host: _ftpHostController.text.trim(),
+          port: portNum,
+          securityMode: _ftpSecurityMode,
+        ).encode();
         password = _passwordController.text;
       } else if (_selectedProvider == CloudProvider.sftp) {
         // SFTP Validation

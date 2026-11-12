@@ -9,13 +9,15 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show FontLoader;
+import 'package:legacy_doc_parser/legacy_doc_parser.dart'
+    show extractLegacyWordText;
+import 'package:quds_office_engine/quds_office_engine.dart'
+    show OfficePackageParts;
 import 'package:universal_html/html.dart' as html;
 import 'package:video_player/video_player.dart';
 
 import '../l10n/preview_media_strings.dart';
 import '../services/archive_viewer_service.dart';
-import '../services/legacy_word_document.dart';
-import '../services/office_package_parts.dart';
 
 /// RFC 4180-style delimited parser: supports quoted cells, embedded commas,
 /// quotes and newlines. Used for CSV/TSV previews and spreadsheets.

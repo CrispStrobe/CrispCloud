@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:crisp_cloud/services/file_operation_backend.dart';
 import 'package:crisp_cloud/services/file_operation_service.dart';
+import 'package:crisp_cloud/services/installation_identity.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:crisp_cloud/services/native_file_primitives.dart';
 import 'package:crisp_cloud/services/transfer_journal.dart';
@@ -14,6 +15,7 @@ import 'package:crisp_cloud/services/transfer_recovery_service.dart';
 import 'package:crisp_cloud/models/transfer_job.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -501,6 +503,112 @@ void main() {
       });
 
       test(
+        'an acknowledged journal retains a nonempty interrupted native stage',
+        () async {
+          SharedPreferences.setMockInitialValues({});
+          await InstallationIdentityService.instance.initialize();
+          expect(backend.canRecover, isTrue);
+          final file = await existingFile();
+          String? stage;
+          Stream<List<int>> failingStream() async* {
+            yield utf8.encode('part');
+            throw StateError('source connection lost');
+          }
+
+          await expectLater(
+            backend.writeConfiguredFile(
+              file.path,
+              failingStream(),
+              20,
+              replace: true,
+              retainPartialFileOnFailure: true,
+              checkpoint: (state) async {
+                if (state['phase'] == 'staging')
+                  stage = state['stagedPath'] as String;
+              },
+            ),
+            throwsStateError,
+          );
+          expect(await file.readAsString(), 'original');
+          expect(stage, isNotNull);
+          expect(await File(stage!).readAsString(), 'part');
+          expect(p.basename(p.dirname(stage!)), startsWith('.crisp-transfer-'));
+        },
+      );
+
+      test('retention without a durable staging checkpoint does not leave partial files', () async {
+        final file = await existingFile();
+        for (final failCheckpoint in [false, true]) {
+          Stream<List<int>> failingStream() async* {
+            yield utf8.encode('part');
+            throw StateError('source connection lost');
+          }
+
+          await expectLater(
+            backend.writeConfiguredFile(
+              file.path,
+              failingStream(),
+              20,
+              replace: true,
+              retainPartialFileOnFailure: true,
+              checkpoint: failCheckpoint
+                  ? (_) async {
+                      throw StateError('journal write failed');
+                    }
+                  : null,
+            ),
+            throwsStateError,
+          );
+          expect(await file.readAsString(), 'original');
+          await expectNoStages();
+        }
+      });
+
+      test(
+        'journal retention removes empty and oversized failed stages',
+        () async {
+          final file = await existingFile();
+          for (final bytes in [<int>[], utf8.encode('too long')]) {
+            Stream<List<int>> failingStream() async* {
+              yield bytes;
+              throw StateError('source failed');
+            }
+
+            await expectLater(
+              backend.writeConfiguredFile(
+                file.path,
+                failingStream(),
+                2,
+                replace: true,
+                retainPartialFileOnFailure: true,
+                checkpoint: (_) async {},
+              ),
+              throwsStateError,
+            );
+            expect(await file.readAsString(), 'original');
+            await expectNoStages();
+          }
+        },
+      );
+
+      test(
+        'a successful journaled write cleans its private staging directory',
+        () async {
+          final file = await existingFile();
+          await backend.writeConfiguredFile(
+            file.path,
+            Stream.value(utf8.encode('replacement')),
+            11,
+            replace: true,
+            retainPartialFileOnFailure: true,
+            checkpoint: (_) async {},
+          );
+          expect(await file.readAsString(), 'replacement');
+          await expectNoStages();
+        },
+      );
+
+      test(
         'a length mismatch preserves the original and removes staging files',
         () async {
           final file = await existingFile();
@@ -608,6 +716,35 @@ void main() {
         skip: Platform.isWindows
             ? 'Creating native links requires Windows privileges.'
             : false,
+      );
+
+      test(
+        'root-level system links (macOS /var, /tmp) do not block writes',
+        () async {
+          // On macOS the temp root lives under /var -> /private/var.
+          final target = p.join(root.path, 'written.txt');
+          await backend.writeFile(
+            target,
+            Stream.value(utf8.encode('ok')),
+            2,
+            replace: false,
+          );
+          expect(await File(target).readAsString(), 'ok');
+          final viaTmp = Directory('/tmp');
+          if (Platform.isMacOS && await FileSystemEntity.isLink(viaTmp.path)) {
+            final dir = await viaTmp.createTemp('crisp_root_link_');
+            addTearDown(() => dir.delete(recursive: true));
+            final file = p.join(dir.path, 'a.txt');
+            await backend.writeFile(
+              file,
+              Stream.value(utf8.encode('tmp')),
+              3,
+              replace: false,
+            );
+            expect(await File(file).readAsString(), 'tmp');
+          }
+        },
+        skip: Platform.isWindows ? 'No root-level links on Windows.' : false,
       );
 
       test(

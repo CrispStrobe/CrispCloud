@@ -20,6 +20,11 @@ void main() {
     expect(isEditableInBuiltInEditor('image.tif'), isTrue);
     expect(isEditableInBuiltInEditor('image.TIFF'), isTrue);
     expect(isEditableInBuiltInEditor('report.pdf'), isTrue);
+    expect(isEditableInBuiltInEditor('book.EPUB'), isTrue);
+    expect(isEditableInBuiltInEditor('book.epub.zip'), isFalse);
+    expect(isTextEditableName('chapter.xhtml'), isTrue);
+    expect(isTextEditableName('package.opf'), isTrue);
+    expect(isTextEditableName('toc.ncx'), isTrue);
     expect(isEditableInBuiltInEditor('letter.docx'), isTrue);
     expect(isEditableInBuiltInEditor('book.xlsx'), isTrue);
     expect(isEditableInBuiltInEditor('slides.pptx'), isTrue);
@@ -37,6 +42,9 @@ void main() {
       'message.msg',
       'legacy.xls',
       'legacy.ppt',
+      'original.mobi',
+      'original.azw3',
+      'book.kfx',
       'font.ttf',
     ]) {
       expect(isEditableInBuiltInEditor(name), isFalse, reason: name);

@@ -47,7 +47,8 @@ document content; an installed engine receives only a temporary input copy.
 to read supported binary Word structure in Dart and create a separate,
 editable DOCX or explicitly selected DOCM without an installed office application.
 The app pins an immutable Git revision in `pubspec.yaml` and `pubspec.lock`;
-there is no duplicate parser implementation or vendored package in this app.
+the app's DOC/DOT paths select this package instead of the shared engine's
+older legacy reader, and the temporary in-app package mirror is removed.
 It uses the same captured source and create-only save target as the existing
 conversion flow. The original DOC/DOT is not rewritten.
 
@@ -411,7 +412,7 @@ from retained payload bytes.
 The extraction now lives in
 [`CrispStrobe/legacy-doc-parser`](https://github.com/CrispStrobe/legacy-doc-parser),
 with the public Dart name `legacy_doc_parser`. CrispCloud consumes the reviewed
-source commit `72da6223832c3cbc41929064c8f160cec10016f7` through its Git dependency;
+source commit `80e9683c0d60553f7198ca89a64aa927d619c684` through its Git dependency;
 the old private implementation and temporary in-app package copy were removed.
 See [package integration](legacy-doc-parser.md) for API ownership and licensing.
 

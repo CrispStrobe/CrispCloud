@@ -28,6 +28,10 @@ abstract final class OfficeNamespaces {
   static const String r =
       'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
 
+  /// Shared bibliography source data (`b:`).
+  static const String bibliography =
+      'http://schemas.openxmlformats.org/officeDocument/2006/bibliography';
+
   /// Office Math (`m:`).
   static const String m =
       'http://schemas.openxmlformats.org/officeDocument/2006/math';
@@ -186,6 +190,10 @@ abstract final class RelationshipTypes {
   /// customProperties API.
   static const String customProperties =
       'http://schemas.openxmlformats.org/officeDocument/2006/relationships/custom-properties';
+
+  /// Custom XML data, including the Word bibliography sources part.
+  static const String customXml =
+      'http://schemas.openxmlformats.org/officeDocument/2006/relationships/customXml';
 
   /// styles API.
   static const String styles =

@@ -202,7 +202,8 @@ class TransferEntryRecord {
   }
 }
 
-/// Only object/version metadata is persisted, never arbitrary provider fields.
+/// Only object/version and credential-free range snapshot metadata is persisted.
+/// A range snapshot is not an immutable object revision.
 Map<String, dynamic> transferFileJson(FileItem file) => {
   'name': file.name,
   'path': file.path,
@@ -216,6 +217,8 @@ Map<String, dynamic> transferFileJson(FileItem file) => {
   'metadata': {
     for (final key in ['version', 'versionId', 'eTag', 'etag', 'rev', 'cTag'])
       if (file.metadata?[key] != null) key: file.metadata![key].toString(),
+    if (file.metadata?['rangeReadSnapshot'] case final String snapshot)
+      'rangeReadSnapshot': snapshot,
   },
 };
 

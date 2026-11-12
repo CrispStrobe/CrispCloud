@@ -14,6 +14,7 @@ import 'package:crisp_cloud/widgets/office_editor_dialog.dart';
 import 'package:crisp_cloud/widgets/office_editor_ribbon.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quds_office_editor/quds_office_editor.dart';
@@ -119,12 +120,28 @@ Future<WordEditorController> _open(
   WidgetTester tester,
   _DelayedCloud cloud, {
   bool keepExisting = false,
+}) async => await _openFixture(
+  tester,
+  cloud,
+  name: 'report.docx',
+  fixture: 'word.docx',
+  editorType: QudsWordEditor,
+  keepExisting: keepExisting,
+) as WordEditorController;
+
+Future<OfficeController> _openFixture(
+  WidgetTester tester,
+  _DelayedCloud cloud, {
+  required String name,
+  required String fixture,
+  required Type editorType,
+  bool keepExisting = false,
 }) async {
   SharedPreferences.setMockInitialValues({});
   if (!keepExisting) {
     cloud.put(
-      '/report.docx',
-      File('packages/quds_office_engine/test/fixtures/fidelity/word.docx')
+      '/$name',
+      File('packages/quds_office_engine/test/fixtures/fidelity/$fixture')
           .readAsBytesSync(),
     );
   }
@@ -166,11 +183,11 @@ Future<WordEditorController> _open(
   await tester.tap(find.text('Open fixture'));
   await _pumpUntil(
     tester,
-    () => find.byType(QudsWordEditor).evaluate().isNotEmpty,
+    () => find.byType(editorType).evaluate().isNotEmpty,
     'The real Office host did not finish importing the remote fixture.',
   );
   await tester.pump(const Duration(milliseconds: 400));
-  return tester.widget<QudsWordEditor>(find.byType(QudsWordEditor)).controller;
+  return _ribbon(tester).controller;
 }
 
 Future<void> _beginSave(WidgetTester tester, _DelayedCloud cloud) async {
@@ -212,8 +229,8 @@ String _firstValue(xml.XmlDocument document, String local, String attribute) =>
         .firstWhere((value) => value.name.local == attribute)
         .value;
 
-void _evidence(String name, Uint8List bytes) {
-  final file = File('build/fidelity-host/$name.docx');
+void _evidence(String name, Uint8List bytes, {String extension = 'docx'}) {
+  final file = File('build/fidelity-host/$name.$extension');
   file.parent.createSync(recursive: true);
   file.writeAsBytesSync(bytes);
 }
@@ -356,6 +373,132 @@ Future<void> _tapSettled(WidgetTester tester, Finder finder) async {
   await tester.tap(finder);
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 350));
+}
+
+InlineCellEditor _inlineEditor(OfficeController controller) =>
+    switch (controller) {
+      SheetEditorController() => controller.cellEditor,
+      SlideEditorController() => controller.textEditor,
+      _ => throw ArgumentError('Expected a sheet or slide editor'),
+    };
+
+String _liveDraftValue(OfficeController controller) => switch (controller) {
+  SheetEditorController() => controller.sheet.cellA1('A1').asString,
+  SlideEditorController() =>
+    controller.slide.shapes.singleWhere((shape) => shape.id == 2).text,
+  _ => throw ArgumentError('Expected a sheet or slide editor'),
+};
+
+Future<void> _beginInlineDraft(
+  WidgetTester tester,
+  OfficeController controller,
+) async {
+  final FocusNode? focus;
+  if (controller is SheetEditorController) {
+    controller.selection.selectCell(const SmlCellRef(0, 0));
+    focus = tester
+        .widget<QudsSheetEditor>(find.byType(QudsSheetEditor))
+        .focusNode;
+  } else if (controller is SlideEditorController) {
+    controller.selectShape(
+      controller.slide.shapes.singleWhere((shape) => shape.id == 2),
+    );
+    focus = tester
+        .widget<QudsSlideEditor>(find.byType(QudsSlideEditor))
+        .focusNode;
+  } else {
+    throw ArgumentError('Expected a sheet or slide editor');
+  }
+  expect(focus, isNotNull);
+  focus!.requestFocus();
+  await tester.pump();
+  await tester.sendKeyEvent(LogicalKeyboardKey.f2);
+  await tester.pump();
+  expect(_inlineEditor(controller).editing, isTrue);
+  expect(_inlineEditor(controller).bridge.isAttached, isTrue);
+  expect(tester.testTextInput.hasAnyClients, isTrue);
+}
+
+Future<void> _saveShortcut(WidgetTester tester) async {
+  await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+  await tester.sendKeyEvent(LogicalKeyboardKey.keyS);
+  await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+  await tester.pump();
+}
+
+Future<void> _saveDraft(WidgetTester tester, {required bool close}) async {
+  if (close) {
+    await tester.tap(find.byTooltip('Close').last);
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Unsaved changes'), findsOneWidget);
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Save'));
+  } else {
+    await _saveShortcut(tester);
+  }
+}
+
+Future<void> _runAsyncDraftCase(
+  WidgetTester tester,
+  Future<void> Function() body,
+) async {
+  (Object, StackTrace)? failure;
+  await tester.runAsync(() async {
+    try {
+      await body();
+    } catch (error, stack) {
+      failure = (error, stack);
+    }
+  });
+  if (failure case final error?) {
+    Error.throwWithStackTrace(error.$1, error.$2);
+  }
+}
+
+String _savedDraftValue(Uint8List bytes, {required bool sheet}) {
+  if (sheet) {
+    const ns = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
+    final cell = _part(bytes, 'xl/worksheets/sheet1.xml')
+        .findAllElements('c', namespace: ns)
+        .singleWhere((node) => node.getAttribute('r') == 'A1');
+    if (cell.getAttribute('t') == 's') {
+      final index = int.parse(cell.getElement('v', namespace: ns)!.innerText);
+      return _part(bytes, 'xl/sharedStrings.xml')
+          .findAllElements('si', namespace: ns)
+          .elementAt(index)
+          .findAllElements('t', namespace: ns)
+          .map((node) => node.innerText)
+          .join();
+    }
+    if (cell.getAttribute('t') == 'inlineStr') {
+      return cell
+          .findAllElements('t', namespace: ns)
+          .map((node) => node.innerText)
+          .join();
+    }
+    return cell.getElement('v', namespace: ns)?.innerText ?? '';
+  }
+  const presentationNs =
+      'http://schemas.openxmlformats.org/presentationml/2006/main';
+  const drawingNs = 'http://schemas.openxmlformats.org/drawingml/2006/main';
+  final title = _part(bytes, 'ppt/slides/slide1.xml')
+      .findAllElements('sp', namespace: presentationNs)
+      .singleWhere(
+        (shape) =>
+            shape
+                .getElement('nvSpPr', namespace: presentationNs)!
+                .getElement('cNvPr', namespace: presentationNs)!
+                .getAttribute('id') ==
+            '2',
+      );
+  return title
+      .findAllElements('p', namespace: drawingNs)
+      .map(
+        (paragraph) => paragraph
+            .findAllElements('t', namespace: drawingNs)
+            .map((node) => node.innerText)
+            .join(),
+      )
+      .join('\n');
 }
 
 void main() {
@@ -582,6 +725,303 @@ void main() {
     });
     expect(tester.takeException(), isNull);
   });
+
+  for (final saveAndClose in [false, true]) {
+    testWidgets(
+      saveAndClose
+          ? 'Save and Close retains pending note typing until its next upload'
+          : 'pending note typing stays dirty until its next upload',
+      (tester) async {
+        tester.view.physicalSize = const Size(1600, 1000);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        await tester.runAsync(() async {
+          final cloud = _DelayedCloud();
+          final controller = await _open(tester, cloud);
+          controller.insertText('First saved edit ');
+          await tester.pump();
+          if (saveAndClose) {
+            await tester.tap(find.byTooltip('Close').last);
+            await tester.pump(const Duration(milliseconds: 400));
+            expect(find.text('Unsaved changes'), findsOneWidget);
+            cloud.pauseNextUpload();
+            await tester.tap(find.widgetWithText(ElevatedButton, 'Save'));
+            await _pumpUntil(
+              tester,
+              () => cloud.pendingBytes != null,
+              'Save and Close did not start its pending-note upload.',
+            );
+          } else {
+            await _beginSave(tester, cloud);
+          }
+
+          final capturedRevision = controller.contentRevision;
+          var commands = 0;
+          void onCommand() => commands++;
+          controller.commands.addListener(onCommand);
+          final field = find.byKey(const ValueKey<String>('notes-edit-12'));
+          expect(field, findsOneWidget);
+          // Keep focus in the actual notes-pane field. No focus-loss command
+          // may conceal a missing revision change while the upload is waiting.
+          await tester.enterText(
+            field,
+            'New note text while upload waits\nNote link',
+          );
+          await tester.pump();
+          expect(tester.widget<TextField>(field).focusNode!.hasFocus, isTrue);
+          expect(commands, 0);
+          expect(controller.contentRevision, greaterThan(capturedRevision));
+          expect(controller.isDirty, isTrue);
+
+          cloud.releaseUpload();
+          await _pumpUntil(
+            tester,
+            () =>
+                find.byType(OfficeEditorDialog).evaluate().isEmpty ||
+                !_ribbon(tester).saving,
+            'The older pending-note upload did not finish.',
+          );
+          expect(find.byType(OfficeEditorDialog), findsOneWidget);
+          expect(commands, 0);
+          controller.commands.removeListener(onCommand);
+          expect(controller.isDirty, isTrue);
+          expect(_ribbon(tester).dirty, isTrue);
+          expect(find.text('report.docx •'), findsOneWidget);
+          expect(cloud.files['/report.docx'], cloud.pendingBytes);
+
+          List<String> noteParagraphs(Uint8List bytes) =>
+              _part(bytes, 'word/footnotes.xml')
+                  .findAllElements('footnote', namespace: _wordNs)
+                  .singleWhere(
+                    (note) =>
+                        note.getAttribute('id', namespace: _wordNs) == '12',
+                  )
+                  .findElements('p', namespace: _wordNs)
+                  .map(_storyText)
+                  .toList();
+          expect(noteParagraphs(cloud.files['/report.docx']!), [
+            ' Footnote text',
+            'Note link',
+          ]);
+          final prefix = saveAndClose ? 'pending-note-close' : 'pending-note';
+          _evidence('$prefix-before-save', cloud.files['/report.docx']!);
+
+          if (saveAndClose) {
+            await tester.tap(find.byTooltip('Close').last);
+            await tester.pump(const Duration(milliseconds: 400));
+            expect(find.text('Unsaved changes'), findsOneWidget);
+            await tester.tap(find.widgetWithText(ElevatedButton, 'Save'));
+            await _pumpUntil(
+              tester,
+              () => find.byType(OfficeEditorDialog).evaluate().isEmpty,
+              'Save and Close did not close after uploading pending note text.',
+            );
+            expect(find.text('Open fixture'), findsOneWidget);
+          } else {
+            await tester.tap(find.byTooltip('Save'));
+            await _pumpUntil(
+              tester,
+              () => !_ribbon(tester).saving && cloud.writes.length == 2,
+              'The next save did not upload the pending note text.',
+            );
+            expect(controller.isDirty, isFalse);
+            expect(_ribbon(tester).dirty, isFalse);
+          }
+          expect(cloud.writes, hasLength(2));
+          expect(noteParagraphs(cloud.files['/report.docx']!), [
+            ' New note text while upload waits',
+            'Note link',
+          ]);
+          _evidence('$prefix-after-save', cloud.files['/report.docx']!);
+          await tester.pumpWidget(const SizedBox.shrink());
+          await tester.pump();
+        });
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
+  for (final sheet in [true, false]) {
+    for (final saveAndClose in [false, true]) {
+      final kind = sheet ? 'cell' : 'slide';
+      final extension = sheet ? 'xlsx' : 'pptx';
+      final name = sheet ? 'budget.xlsx' : 'deck.pptx';
+      testWidgets(
+        'pending $kind typing survives ${saveAndClose ? 'Save and Close' : 'Save'} uploads and retries',
+        (tester) async {
+          tester.view.physicalSize = const Size(1600, 1000);
+          tester.view.devicePixelRatio = 1;
+          addTearDown(tester.view.resetPhysicalSize);
+          addTearDown(tester.view.resetDevicePixelRatio);
+          await _runAsyncDraftCase(tester, () async {
+            final cloud = _DelayedCloud();
+            final controller = await _openFixture(
+              tester,
+              cloud,
+              name: name,
+              fixture: 'native.$extension',
+              editorType: sheet ? QudsSheetEditor : QudsSlideEditor,
+            );
+            final originalText = sheet ? 'Region' : 'Native slide 1';
+            expect(
+              _savedDraftValue(cloud.files['/$name']!, sheet: sheet),
+              originalText,
+            );
+            expect(controller.isDirty, isFalse);
+            final cleanRevision = controller.contentRevision;
+            await _beginInlineDraft(tester, controller);
+            expect(controller.contentRevision, cleanRevision);
+            expect(controller.isDirty, isFalse);
+            tester.testTextInput.updateEditingValue(
+              TextEditingValue(
+                text: originalText,
+                selection: const TextSelection.collapsed(offset: 0),
+              ),
+            );
+            await tester.pump();
+            expect(controller.contentRevision, cleanRevision);
+            expect(controller.isDirty, isFalse);
+            await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+            await tester.pump();
+            expect(_inlineEditor(controller).editing, isFalse);
+            expect(controller.isDirty, isFalse);
+            expect(controller.canUndo, isFalse);
+
+            // Real IME input followed by Escape must restore a clean document.
+            await _beginInlineDraft(tester, controller);
+            tester.testTextInput.enterText('Cancelled $kind draft');
+            await tester.pump();
+            expect(controller.isDirty, isTrue);
+            await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+            await tester.pump();
+            expect(_liveDraftValue(controller), originalText);
+            expect(controller.isDirty, isFalse);
+            expect(_ribbon(tester).dirty, isFalse);
+            expect(controller.canUndo, isFalse);
+
+            final firstText = 'First saved $kind draft';
+            await _beginInlineDraft(tester, controller);
+            tester.testTextInput.enterText(firstText);
+            await tester.pump();
+            expect(_inlineEditor(controller).editing, isTrue);
+            expect(controller.isDirty, isTrue);
+            expect(controller.commands.canUndo, isFalse);
+            cloud.pauseNextUpload();
+            await _saveDraft(tester, close: saveAndClose);
+            await _pumpUntil(
+              tester,
+              () => cloud.pendingBytes != null,
+              'The host did not upload its first pending $kind draft.',
+            );
+            expect(_inlineEditor(controller).editing, isFalse);
+            expect(
+              _savedDraftValue(cloud.pendingBytes!, sheet: sheet),
+              firstText,
+            );
+
+            await _beginInlineDraft(tester, controller);
+            final capturedRevision = controller.contentRevision;
+            var commands = 0;
+            void onCommand() => commands++;
+            controller.commands.addListener(onCommand);
+            final newerText = 'New $kind text while upload waits';
+            tester.testTextInput.enterText(newerText);
+            await tester.pump();
+            expect(_inlineEditor(controller).formulaBar, newerText);
+            expect(_inlineEditor(controller).editing, isTrue);
+            expect(_inlineEditor(controller).bridge.isAttached, isTrue);
+            expect(commands, 0);
+            expect(controller.contentRevision, greaterThan(capturedRevision));
+            expect(controller.isDirty, isTrue);
+
+            cloud.releaseUpload();
+            await _pumpUntil(
+              tester,
+              () =>
+                  find.byType(OfficeEditorDialog).evaluate().isEmpty ||
+                  !_ribbon(tester).saving,
+              'The older $kind upload did not finish.',
+            );
+            expect(find.byType(OfficeEditorDialog), findsOneWidget);
+            expect(commands, 0);
+            controller.commands.removeListener(onCommand);
+            expect(_inlineEditor(controller).editing, isTrue);
+            expect(controller.isDirty, isTrue);
+            expect(_ribbon(tester).dirty, isTrue);
+            expect(find.text('$name •'), findsOneWidget);
+            expect(cloud.files['/$name'], cloud.pendingBytes);
+            expect(
+              _savedDraftValue(cloud.files['/$name']!, sheet: sheet),
+              firstText,
+            );
+            final prefix = 'pending-$kind${saveAndClose ? '-close' : ''}';
+            _evidence(
+              '$prefix-before-save',
+              cloud.files['/$name']!,
+              extension: extension,
+            );
+
+            // A failed write must keep the newer draft and original bytes so
+            // the same host can retry, including the Save and Close path.
+            cloud.failUploads = true;
+            await _saveDraft(tester, close: saveAndClose);
+            await _pumpUntil(
+              tester,
+              () =>
+                  cloud.uploadAttempts == 2 &&
+                  !_ribbon(tester).saving &&
+                  find.textContaining('Save failed').evaluate().isNotEmpty,
+              'The failed $kind upload did not return to the editor.',
+            );
+            expect(find.textContaining('Save failed'), findsOneWidget);
+            expect(find.byType(OfficeEditorDialog), findsOneWidget);
+            expect(controller.isDirty, isTrue);
+            expect(_ribbon(tester).dirty, isTrue);
+            expect(cloud.writes, hasLength(1));
+            expect(
+              _savedDraftValue(cloud.files['/$name']!, sheet: sheet),
+              firstText,
+            );
+            expect(
+              _savedDraftValue(cloud.attemptedBytes!, sheet: sheet),
+              newerText,
+            );
+
+            cloud.failUploads = false;
+            await _saveDraft(tester, close: saveAndClose);
+            await _pumpUntil(
+              tester,
+              () => saveAndClose
+                  ? find.byType(OfficeEditorDialog).evaluate().isEmpty
+                  : !_ribbon(tester).saving && cloud.writes.length == 2,
+              'The retry did not save the pending $kind text.',
+            );
+            if (saveAndClose) {
+              expect(find.text('Open fixture'), findsOneWidget);
+            } else {
+              expect(controller.isDirty, isFalse);
+              expect(_ribbon(tester).dirty, isFalse);
+            }
+            expect(cloud.writes, hasLength(2));
+            expect(cloud.uploadAttempts, 3);
+            expect(
+              _savedDraftValue(cloud.files['/$name']!, sheet: sheet),
+              newerText,
+            );
+            _evidence(
+              '$prefix-after-save',
+              cloud.files['/$name']!,
+              extension: extension,
+            );
+            await tester.pumpWidget(const SizedBox.shrink());
+            await tester.pump();
+          });
+          expect(tester.takeException(), isNull);
+        },
+      );
+    }
+  }
 
   testWidgets('selection changes during upload do not create unsaved edits', (
     tester,

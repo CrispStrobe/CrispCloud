@@ -3,6 +3,7 @@ import hashlib
 from pathlib import Path
 import tempfile
 import unittest
+from xml.etree import ElementTree
 from zipfile import ZipFile
 
 import office_host_evidence as evidence
@@ -20,7 +21,9 @@ class HostEvidenceTest(unittest.TestCase):
             file = base / name
             file.parent.mkdir(parents=True, exist_ok=True)
             with ZipFile(file, 'w') as archive:
-                archive.writestr('word/document.xml', '<document/>')
+                main_part, root_tag = evidence.MAIN_PARTS[file.suffix]
+                archive.writestr(main_part, ElementTree.tostring(
+                    ElementTree.Element(root_tag)))
         return base
 
     def test_complete_tree_has_hashes_for_every_expected_export(self):
@@ -60,6 +63,39 @@ class HostEvidenceTest(unittest.TestCase):
         extra.unlink()
         (self.root / evidence.expected_paths()[0]).write_bytes(b'not a zip')
         self.assertTrue(evidence.inspect(self.root)['failures'])
+
+    def test_each_office_extension_requires_its_own_main_part(self):
+        for extension in evidence.OFFICE:
+            with self.subTest(extension=extension):
+                self.populate()
+                name = next(name for name in evidence.expected_paths()
+                            if Path(name).suffix == extension)
+                with ZipFile(self.root / name, 'w') as archive:
+                    wrong = ('.xlsx' if evidence.MAIN_PARTS[extension][0]
+                             == 'word/document.xml' else '.docx')
+                    main_part, root_tag = evidence.MAIN_PARTS[wrong]
+                    archive.writestr(main_part, ElementTree.tostring(
+                        ElementTree.Element(root_tag)))
+                failures = evidence.inspect(self.root)['failures']
+                self.assertEqual(len(failures), 1)
+                self.assertIn(f'{name}: invalid {extension[1:].upper()}',
+                              failures[0])
+                self.assertIn('missing main part', failures[0])
+
+    def test_main_parts_require_valid_xml_with_the_correct_root(self):
+        for extension in evidence.OFFICE:
+            for content in ('<not-the-main-part/>', '<not-xml'):
+                with self.subTest(extension=extension, content=content):
+                    self.populate()
+                    name = next(name for name in evidence.expected_paths()
+                                if Path(name).suffix == extension)
+                    main_part, _ = evidence.MAIN_PARTS[extension]
+                    with ZipFile(self.root / name, 'w') as archive:
+                        archive.writestr(main_part, content)
+                    failures = evidence.inspect(self.root)['failures']
+                    self.assertEqual(len(failures), 1)
+                    self.assertIn(f'{name}: invalid {extension[1:].upper()}',
+                                  failures[0])
 
     def test_external_file_cannot_satisfy_an_artifact(self):
         self.populate()

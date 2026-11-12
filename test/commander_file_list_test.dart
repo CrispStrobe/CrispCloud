@@ -1244,7 +1244,9 @@ void main() {
       expect(cloud.downloads, ['/two/archive.zip']);
       expect(panel.isInArchive, isTrue);
       expect(panel.archiveSource!.parent, isA<RemotePanelSource>());
-      final member = panel.files!.single;
+      // Archive frames start with a '..' row back to the containing folder.
+      expect(panel.files!.first.name, '..');
+      final member = panel.files!.singleWhere((file) => file.name != '..');
       expect(panel.originForFile(member), isNull);
       expect(
         String.fromCharCodes(await panel.readArchiveMember(member)),

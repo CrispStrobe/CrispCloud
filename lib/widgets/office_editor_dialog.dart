@@ -18,7 +18,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:quds_office_editor/quds_office_editor.dart';
+import 'package:quds_office_editor/quds_office_editor.dart' hide WordPackagePreservation;
+import 'package:quds_office_engine/quds_office_engine.dart'
+    show WordPackagePreservation;
 
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
@@ -31,7 +33,6 @@ import '../l10n/office_editor_strings.dart';
 import '../l10n/office_surface_strings.dart';
 import '../l10n/word_format_strings.dart';
 import '../services/office_editor_menu.dart';
-import '../services/word_package_preservation.dart';
 import 'office_editor_find_bar.dart';
 import 'office_editor_ribbon.dart';
 
@@ -129,9 +130,6 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
   bool _loading = true;
   bool _saving = false;
   bool _dirty = false;
-  // Only document commands advance the revision. Caret, selection, layout and
-  // menu notifications must not make an otherwise completed save look dirty.
-  int _editRevision = 0;
   String? _error;
   final FocusNode _focusNode = FocusNode(debugLabel: 'QudsOfficeEditor');
   final GlobalKey<OfficeEditorRibbonState> _ribbonKey =
@@ -180,7 +178,6 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       });
     }
     _controller?.removeListener(_onControllerChanged);
-    _controller?.commands.removeListener(_onDocumentCommand);
     _controller?.dispose();
     _focusNode.dispose();
     super.dispose();
@@ -257,7 +254,6 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
         return;
       }
       controller?.addListener(_onControllerChanged);
-      controller?.commands.addListener(_onDocumentCommand);
       // Documents with footnotes or endnotes open with the notes pane, the
       // place where their text is edited.
       if (controller is WordEditorController &&
@@ -293,11 +289,6 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
     setState(() => _dirty = dirty);
   }
 
-  void _onDocumentCommand() {
-    _editRevision++;
-    _onControllerChanged();
-  }
-
   Future<void> _save({bool popAfter = false}) async {
     final controller = _controller;
     if (controller == null || _saving) return;
@@ -308,7 +299,10 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       // Serialization captures this document revision. Editing remains enabled
       // while encoding/uploading, so completing this write cannot clean a newer
       // revision or dismiss it through Save and Close.
-      final savedRevision = _editRevision;
+      // Inline notes, cells, and slide text can be visible before their undo
+      // command is committed. Flush them before recording the saved revision.
+      controller.commitPendingEdits();
+      final savedRevision = controller.contentRevision;
       final bytes = await controller.saveBytesAsync();
       await _wordPreservation?.validateSaved(bytes);
       final target = _target;
@@ -325,7 +319,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       }
       _loadedBytes = bytes;
       if (!mounted) return;
-      if (_editRevision == savedRevision) controller.markClean();
+      if (controller.contentRevision == savedRevision) controller.markClean();
       setState(() {
         _saving = false;
         _dirty = controller.isDirty;
@@ -353,7 +347,9 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
 
   Future<void> _close() async {
     if (_saving) return;
-    if (!_dirty) {
+    // Pending inline drafts participate in the controller's dirty state. Keep
+    // them pending until Save so Cancel and Discard also work for invalid input.
+    if (!(_controller?.isDirty ?? _dirty)) {
       Navigator.of(context).pop();
       return;
     }

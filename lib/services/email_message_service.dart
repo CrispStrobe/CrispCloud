@@ -3,8 +3,9 @@ import 'dart:typed_data';
 
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as html_parser;
+import 'package:quds_office_engine/quds_office_engine.dart'
+    show BoundedCfbReader, CfbfDirectoryEntry;
 
-import 'bounded_cfb_reader.dart';
 import 'outlook_rtf_compression.dart';
 import 'rtf_document.dart';
 
@@ -131,11 +132,15 @@ class _EmailParser {
     );
   }
 
-  _EmailBody _parsePart(_MimePart part, int depth) {
+  _EmailBody _parsePart(
+    _MimePart part,
+    int depth, {
+    String defaultType = 'text/plain',
+  }) {
     if (++_parts > 512 || depth > 20) {
       throw const FormatException('Email has too many MIME parts');
     }
-    final type = _parameters(part.headers['content-type'] ?? 'text/plain');
+    final type = _parameters(part.headers['content-type'] ?? defaultType);
     final disposition = _parameters(part.headers['content-disposition'] ?? '');
     final name =
         _parameter(disposition.$2, 'filename') ?? _parameter(type.$2, 'name');
@@ -148,22 +153,23 @@ class _EmailParser {
       final boundaryPattern = RegExp(
         '(?:^|\\n)--${RegExp.escape(boundary)}(--)?[ \\t]*\\r?(?:\\n|\$)',
       );
+      final childDefaultType = type.$1 == 'multipart/digest'
+          ? 'message/rfc822'
+          : 'text/plain';
       final contents = <_EmailBody>[];
-      _EmailBody parseChild(String source) {
-        final child = _splitPart(source);
-        if (type.$1 == 'multipart/digest') {
-          child.headers.putIfAbsent('content-type', () => 'message/rfc822');
-        }
-        return _parsePart(child, depth + 1);
-      }
-
       int? start;
       var closed = false;
       for (final match in boundaryPattern.allMatches(part.body)) {
         if (start != null) {
           var end = match.start;
           if (end > start && part.body.codeUnitAt(end - 1) == 13) end--;
-          contents.add(parseChild(part.body.substring(start, end)));
+          contents.add(
+            _parsePart(
+              _splitPart(part.body.substring(start, end)),
+              depth + 1,
+              defaultType: childDefaultType,
+            ),
+          );
         }
         if (match.group(1) != null) {
           closed = true;
@@ -174,7 +180,13 @@ class _EmailParser {
       if (!closed) {
         _warnings.add(EmailPreviewWarning.incompleteMultipart);
         if (start != null && start < part.body.length) {
-          contents.add(parseChild(part.body.substring(start)));
+          contents.add(
+            _parsePart(
+              _splitPart(part.body.substring(start)),
+              depth + 1,
+              defaultType: childDefaultType,
+            ),
+          );
         }
       }
       if (contents.isEmpty) {
@@ -508,8 +520,13 @@ class _EmailParser {
   }
 
   _MimePart _splitPart(String source) {
-    if (source.startsWith('\r\n') || source.startsWith('\n')) {
-      return _MimePart({}, source.substring(source.startsWith('\r\n') ? 2 : 1));
+    // With no MIME headers, the first empty line alone separates the body.
+    // Keep any subsequent blank lines or embedded message headers intact.
+    if (source.startsWith('\r\n')) {
+      return _MimePart(const {}, source.substring(2));
+    }
+    if (source.startsWith('\n')) {
+      return _MimePart(const {}, source.substring(1));
     }
     final separator = RegExp(r'\r?\n\r?\n').firstMatch(source);
     final headerEnd = separator?.start ?? source.length;

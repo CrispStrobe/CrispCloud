@@ -1,13 +1,14 @@
 import 'dart:async';
 
 import 'package:crisp_cloud/l10n/app_localizations.dart';
-import 'package:crisp_cloud/services/legacy_word_conversion.dart';
 import 'package:crisp_cloud/widgets/legacy_word_conversion_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:quds_office_engine/quds_office_engine.dart';
+import 'package:crisp_cloud/services/legacy_word_copy.dart';
+import 'package:quds_office_engine/quds_office_engine.dart'
+    show DocxPlainReader;
 
-import '../support/legacy_word_fixture.dart';
+import '../../packages/quds_office_engine/test/support/legacy_word_fixture.dart';
 
 Future<void> _chooseText(
   WidgetTester tester, {
@@ -37,7 +38,7 @@ void main() {
     tester,
   ) async {
     final source = legacyWordFixture('Hello 世界\r');
-    LegacyWordDocxCopy? result;
+    LegacyWordCopy? result;
     await tester.pumpWidget(
       MaterialApp(
         home: Builder(
@@ -91,7 +92,7 @@ void main() {
 
   testWidgets('German conversion disclosure can be cancelled', (tester) async {
     var completed = false;
-    LegacyWordDocxCopy? result;
+    LegacyWordCopy? result;
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('de'),
@@ -128,7 +129,7 @@ void main() {
     tester,
   ) async {
     final attempts = <String>[];
-    LegacyWordDocxCopy? result;
+    LegacyWordCopy? result;
     await tester.pumpWidget(
       MaterialApp(
         home: Builder(

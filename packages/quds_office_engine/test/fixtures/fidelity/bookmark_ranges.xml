@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:q="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:body>
+    <w:p><w:r><w:t>Probe prefix</w:t></w:r></w:p>
+    <w:p>
+      <w:r><w:t xml:space="preserve">prefix </w:t></w:r>
+      <q:bookmarkStart q:id="000" q:name="Alpha" q:colFirst="0" q:colLast="1" q:displacedByCustomXml="next"/>
+      <w:r><w:t>Alpha</w:t></w:r>
+      <q:bookmarkEnd q:id="000" q:displacedByCustomXml="prev"/>
+      <w:r><w:t xml:space="preserve"> / </w:t></w:r>
+      <w:bookmarkStart w:id="1" w:name="Beta"/>
+      <w:r><w:t>Beta</w:t></w:r>
+      <w:bookmarkEnd w:id="1"/>
+      <w:r><w:t xml:space="preserve"> suffix</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:r><w:t xml:space="preserve">before </w:t></w:r>
+      <w:bookmarkStart w:id="12" w:name="AcrossParagraphs"/>
+      <w:r><w:t>Cross-paragraph start</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:r><w:t>Cross-paragraph end</w:t></w:r>
+      <w:bookmarkEnd w:id="12"/>
+      <w:r><w:t xml:space="preserve"> after</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:bookmarkStart w:id="13" w:name="OverlapA"/>
+      <w:r><w:t>A</w:t></w:r>
+      <w:bookmarkStart w:id="14" w:name="OverlapB"/>
+      <w:r><w:t>B</w:t></w:r>
+      <w:bookmarkEnd w:id="13"/>
+      <w:r><w:t>C</w:t></w:r>
+      <w:bookmarkEnd w:id="14"/>
+    </w:p>
+    <w:p>
+      <w:r><w:t xml:space="preserve">Empty before </w:t></w:r>
+      <w:bookmarkStart w:id="15" w:name="EmptyPoint"/>
+      <w:bookmarkEnd w:id="15"/>
+      <w:r><w:t>after</w:t></w:r>
+    </w:p>
+    <w:p><w:bookmarkStart w:id="16" w:name="EmptyParagraph"/><w:bookmarkEnd w:id="16"/></w:p>
+    <w:p><w:r><w:t>No bookmark source</w:t></w:r></w:p>
+    <w:tbl>
+      <w:tblPr><w:tblW w:w="4320" w:type="dxa"/></w:tblPr>
+      <w:tblGrid><w:gridCol w:w="4320"/></w:tblGrid>
+      <w:tr><w:tc><w:tcPr><w:tcW w:w="4320" w:type="dxa"/></w:tcPr>
+        <w:p><w:r><w:t xml:space="preserve">cell before </w:t></w:r><w:bookmarkStart w:id="17" w:name="TableInside"/><w:r><w:t>cell selected</w:t></w:r><w:bookmarkEnd w:id="17"/></w:p>
+        <w:p><w:r><w:t>cell after</w:t></w:r></w:p>
+      </w:tc></w:tr>
+    </w:tbl>
+    <w:p>
+      <w:r><w:t xml:space="preserve">lead </w:t></w:r>
+      <w:hyperlink r:id="rIdBookmarkLink"><w:bookmarkStart w:id="18" w:name="Linked"/><w:r><w:rPr><w:b/></w:rPr><w:t>linked</w:t></w:r><w:bookmarkEnd w:id="18"/></w:hyperlink>
+      <w:r><w:t xml:space="preserve"> tail</w:t></w:r>
+    </w:p>
+    <w:p><w:r><w:t xml:space="preserve">space </w:t></w:r><w:bookmarkStart w:id="19" w:name="Whitespace"/><w:r><w:t xml:space="preserve">  spaced  </w:t></w:r><w:bookmarkEnd w:id="19"/></w:p>
+    <w:p><w:r><w:t xml:space="preserve">emoji </w:t></w:r><w:bookmarkStart w:id="20" w:name="Emoji"/><w:r><w:t>🙂é</w:t></w:r><w:bookmarkEnd w:id="20"/><w:r><w:t>!</w:t></w:r></w:p>
+    <w:sectPr/>
+  </w:body>
+</w:document>

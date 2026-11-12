@@ -15,6 +15,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
+import 'broken_link.dart';
 import 'file_operation_backend.dart';
 import 'file_operation_service.dart';
 import 'panel_source_service.dart';
@@ -28,7 +29,11 @@ class FileBytesLoadException implements Exception {
   final String message;
   final FileBytesErrorCode? code;
   final Map<String, Object> arguments;
-  const FileBytesLoadException(this.message, {this.code, this.arguments = const {}});
+  const FileBytesLoadException(
+    this.message, {
+    this.code,
+    this.arguments = const {},
+  });
 
   @override
   String toString() => message;
@@ -126,6 +131,12 @@ Future<Uint8List> loadFileBytes(
   try {
     return await read();
   } on FileSystemException catch (error) {
+    if (source is LocalPanelSource && !kIsWeb) {
+      final missing = await missingLinkTarget(path);
+      if (missing != null) {
+        throw FileBytesLoadException(missingLinkMessage(path, missing));
+      }
+    }
     if (source is! LocalPanelSource || kIsWeb || !_isPermissionDenied(error)) {
       throw FileBytesLoadException('Could not read "$path": ${error.message}');
     }

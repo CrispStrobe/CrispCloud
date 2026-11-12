@@ -1,0 +1,49 @@
+[package]
+autobins = false
+name = "kindling-mobi"
+version = "0.46.2"
+edition = "2024"
+rust-version = "1.88"
+description = "Kindle MOBI/AZW3 builder for dictionaries, books, and comics. Drop-in kindlegen replacement."
+license = "MIT"
+repository = "https://github.com/ciscoriordan/kindling"
+homepage = "https://github.com/ciscoriordan/kindling"
+readme = "README.md"
+keywords = ["kindle", "mobi", "azw3", "epub", "ebook"]
+categories = ["command-line-utilities", "encoding", "multimedia"]
+
+[lib]
+name = "kindling"
+path = "src/lib.rs"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+# zlib for KF8 FONT resource records (already in the tree via zip's deflate
+# feature, so this adds no new crates).
+flate2 = "1"
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "gif", "webp"] }
+memchr = "2"
+quick-xml = "0.41"
+rayon = "1.10"
+regex = "1"
+# Keep upstream CSS grammar checks; its MPL-2.0 selector dependency is approved.
+lightningcss = { version = "=1.0.0-alpha.71", default-features = false }
+# Match Kindling v0.46.2's lockfile. 0.28.3 switched to cssparser 0.37,
+# which is incompatible with this lightningcss release's cssparser 0.33.
+parcel_selectors = "=0.28.2"
+zip = { version = "9.3.0", default-features = false, features = ["deflate-flate2", "deflate-zopfli"] }
+ttf-parser = { version = "0.25.1", default-features = false, features = ["std"] }
+
+# Set patched floors for these transitive dependencies too. Library consumers
+# resolve their own lockfiles.
+anyhow = "1.0.103"
+crossbeam-epoch = "0.9.20"
+
+[dev-dependencies]
+# Same version the library already pulls in, so this adds no crate to the
+# build; integration tests are separate crates and cannot borrow it otherwise.
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "gif", "webp"] }
+
+[profile.release]
+opt-level = 3
+lto = true

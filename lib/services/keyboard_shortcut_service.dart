@@ -21,10 +21,14 @@ enum ShortcutAction {
   nextTab,
   prevTab,
   commandPalette,
+  commandEntry,
+  insertCommandFilename,
+  insertCommandPath,
   connect,
   goToFolder,
   filter,
   selectAll,
+  restoreSelection,
   delete,
   rename,
   newFolder,
@@ -60,9 +64,23 @@ enum ShortcutAction {
 
 /// Redo is owned by individual editors. File operations only advertise actions
 /// for which the browser has an actual implementation.
+const commandEntryShortcutActions = [
+  ShortcutAction.insertCommandFilename,
+  ShortcutAction.insertCommandPath,
+];
+
 final browserShortcutActions = ShortcutAction.values
-    .where((action) => action != ShortcutAction.redo)
+    .where(
+      (action) =>
+          action != ShortcutAction.redo &&
+          !commandEntryShortcutActions.contains(action),
+    )
     .toList(growable: false);
+
+final shortcutSettingsActions = [
+  ...browserShortcutActions,
+  ...commandEntryShortcutActions,
+];
 
 // ---------------------------------------------------------------------------
 // ShortcutBinding
@@ -237,10 +255,27 @@ class KeyboardShortcutService {
       ctrl: true,
       shift: true,
     ),
+    ShortcutAction.commandEntry: const ShortcutBinding(
+      key: 'O',
+      ctrl: true,
+      shift: true,
+    ),
+    ShortcutAction.insertCommandFilename: const ShortcutBinding(
+      key: 'Enter',
+      ctrl: true,
+    ),
+    ShortcutAction.insertCommandPath: const ShortcutBinding(
+      key: 'Enter',
+      ctrl: true,
+      shift: true,
+    ),
     ShortcutAction.connect: const ShortcutBinding(key: 'K', ctrl: true),
     ShortcutAction.goToFolder: const ShortcutBinding(key: 'G', ctrl: true),
     ShortcutAction.filter: const ShortcutBinding(key: 'F', ctrl: true),
     ShortcutAction.selectAll: const ShortcutBinding(key: 'A', ctrl: true),
+    ShortcutAction.restoreSelection: ShortcutBinding(
+      key: LogicalKeyboardKey.numpadDivide.keyLabel,
+    ),
     ShortcutAction.delete: const ShortcutBinding(key: 'Delete'),
     ShortcutAction.rename: const ShortcutBinding(key: 'F2'),
     ShortcutAction.newFolder: const ShortcutBinding(key: 'F7'),
@@ -541,6 +576,61 @@ class KeyboardShortcutService {
         .toList(growable: false);
   }
 
+  /// Command-entry keys have their own focus scope. They may reuse browser
+  /// bindings without stealing events from a file list, editor or terminal.
+  List<ShortcutAction> shortcutConflicts(
+    ShortcutAction action,
+    ShortcutBinding binding,
+  ) => commandEntryShortcutActions.contains(action)
+      ? commandEntryShortcutActions
+            .where((other) => other != action && getBinding(other) == binding)
+            .toList(growable: false)
+      : browserConflicts(action, binding);
+
+  ShortcutAction? resolveCommandEntry(
+    KeyEvent event, {
+    required bool isCtrl,
+    required bool isShift,
+    required bool isAlt,
+    required bool isMeta,
+  }) {
+    for (final action in [..._custom.keys, ...commandEntryShortcutActions]) {
+      if (!commandEntryShortcutActions.contains(action)) continue;
+      if (_browserMatches(
+        action,
+        getBinding(action),
+        event,
+        isCtrl: isCtrl,
+        isShift: isShift,
+        isAlt: isAlt,
+        isMeta: isMeta,
+      )) {
+        return action;
+      }
+    }
+    return null;
+  }
+
+  bool suppressesCommandEntryDefault(
+    KeyEvent event, {
+    required bool isCtrl,
+    required bool isShift,
+    required bool isAlt,
+    required bool isMeta,
+  }) => commandEntryShortcutActions
+      .where(isCustomized)
+      .any(
+        (action) => _browserMatches(
+          action,
+          _defaults[action]!,
+          event,
+          isCtrl: isCtrl,
+          isShift: isShift,
+          isAlt: isAlt,
+          isMeta: isMeta,
+        ),
+      );
+
   /// Default primary-modifier shortcuts work with Control and Command.
   /// Explicit custom bindings retain the exact modifiers the user recorded.
   bool _browserMatches(
@@ -633,7 +723,11 @@ class KeyboardShortcutService {
     final mac =
         defaultTargetPlatform == TargetPlatform.macOS ||
         defaultTargetPlatform == TargetPlatform.iOS;
-    if (mac && !isCustomized(action) && binding.ctrl && !binding.meta) {
+    if (mac &&
+        !commandEntryShortcutActions.contains(action) &&
+        !isCustomized(action) &&
+        binding.ctrl &&
+        !binding.meta) {
       binding = ShortcutBinding(
         key: binding.key,
         meta: true,

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+ xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
+ xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
+ xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape">
+ <w:body>
+  <w:p><w:r><w:drawing>
+   <wp:anchor distT="0" distB="0" distL="0" distR="0" simplePos="0" relativeHeight="1" behindDoc="0" locked="0" layoutInCell="1" allowOverlap="1">
+    <wp:simplePos x="0" y="0"/>
+    <wp:positionH relativeFrom="margin"><wp:posOffset>0</wp:posOffset></wp:positionH>
+    <wp:positionV relativeFrom="margin"><wp:posOffset>0</wp:posOffset></wp:positionV>
+    <wp:extent cx="1270000" cy="914400"/>
+    <wp:wrapSquare wrapText="bothSides"/>
+    <wp:docPr id="1" name="Authored frame"/>
+    <wp:cNvGraphicFramePr/>
+    <a:graphic><a:graphicData uri="http://schemas.microsoft.com/office/word/2010/wordprocessingShape">
+     <wps:wsp><wps:cNvSpPr txBox="1"/>
+      <wps:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="1270000" cy="914400"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:solidFill><a:srgbClr val="E8F0FB"/></a:solidFill><a:ln><a:solidFill><a:srgbClr val="355C7D"/></a:solidFill></a:ln></wps:spPr>
+      <wps:txbx><w:txbxContent><w:p><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr><w:r><w:t>Frame</w:t></w:r></w:p></w:txbxContent></wps:txbx>
+      <wps:bodyPr/>
+     </wps:wsp>
+    </a:graphicData></a:graphic>
+   </wp:anchor>
+  </w:drawing></w:r></w:p>
+  <w:p><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr><w:r><w:t>Alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu nu xi omicron pi rho sigma tau upsilon phi chi psi omega. Another sentence leaves the frame behind and returns to full width. The text must retain every source character through changing line widths.</w:t></w:r></w:p>
+  <w:sectPr><w:pgSz w:w="7200" w:h="5600"/><w:pgMar w:top="480" w:right="480" w:bottom="480" w:left="480" w:header="0" w:footer="0" w:gutter="0"/></w:sectPr>
+ </w:body>
+</w:document>

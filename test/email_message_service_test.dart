@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:crisp_cloud/services/bounded_cfb_reader.dart';
+import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:crisp_cloud/services/email_message_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quds_office_engine/quds_office_engine.dart' show CfbfWriter;

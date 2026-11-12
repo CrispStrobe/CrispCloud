@@ -23,6 +23,9 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v5
+      - name: Set up bundled ebook converter
+        uses: ./.github/actions/setup-ebook-rust
+
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -139,6 +142,11 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
+      - name: Set up bundled ebook converter
+        uses: ./.github/actions/setup-ebook-rust
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin,aarch64-apple-ios,aarch64-apple-ios-sim,x86_64-apple-ios
+
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -175,6 +183,12 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
+      - name: Set up bundled ebook converter
+        uses: ./.github/actions/setup-ebook-rust
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android
+          android: 'true'
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin

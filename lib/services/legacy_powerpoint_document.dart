@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'bounded_cfb_reader.dart';
+import 'package:quds_office_engine/quds_office_engine.dart' show BoundedCfbReader, CfbfDirectoryEntry;
 
 enum LegacyPowerPointErrorCode {
   malformed,

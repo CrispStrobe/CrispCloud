@@ -1,5 +1,4 @@
-import 'package:crisp_cloud/services/legacy_word_structured_model.dart';
-import 'package:crisp_cloud/services/legacy_word_structured_render.dart';
+import 'package:legacy_doc_parser/legacy_doc_parser.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 LegacyWordParagraph _paragraph(

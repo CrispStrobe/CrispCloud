@@ -91,6 +91,21 @@ void main() {
     );
   });
 
+  test('explicit legacy tail windows retain leading high bytes', () async {
+    await file.writeAsBytes([65, 66, 0x82, 0x93, 0x80, 0x97]);
+    final tail = ViewerTailService(
+      local,
+      (await local.stat(file.path))!,
+      windowBytes: 4,
+    );
+    for (final encoding in ['cp437', 'windows1252']) {
+      final window = await tail.read(encodingOverride: encoding);
+      expect(window.offset, 2);
+      expect(window.bytes, [0x82, 0x93, 0x80, 0x97]);
+      expect(window.encoding, encoding);
+    }
+  });
+
   test(
     'tail refuses repeated full downloads and stale captured accounts',
     () async {
@@ -125,37 +140,41 @@ void main() {
     expect(File(spool.path).existsSync(), false);
   });
 
-  test('spooling rejects size overflow, cancellation, source loss and changed versions', () async {
-    final client = WorkflowFakeClient()..put('/log.txt', 'abcdef'.codeUnits);
-    var current = true;
-    final backend = CloudOperationBackend(client, isCurrent: () => current);
-    final item = (await backend.stat('/log.txt'))!;
-    await expectLater(
-      createViewerSpool(backend, item, maxBytes: 3),
-      throwsStateError,
-    );
-    var cancelled = false;
-    await expectLater(
-      createViewerSpool(
-        backend,
-        item,
-        isCancelled: () => cancelled,
-        onProgress: (_, _) => cancelled = true,
-      ),
-      throwsStateError,
-    );
-    await expectLater(
-      createViewerSpool(backend, item, onProgress: (_, _) => current = false),
-      throwsStateError,
-    );
-    current = true;
-    await expectLater(
-      createViewerSpool(
-        backend,
-        item,
-        onProgress: (_, _) => client.put('/log.txt', 'changed size'.codeUnits),
-      ),
-      throwsStateError,
-    );
-  });
+  test(
+    'spooling rejects size overflow, cancellation, source loss and changed versions',
+    () async {
+      final client = WorkflowFakeClient()..put('/log.txt', 'abcdef'.codeUnits);
+      var current = true;
+      final backend = CloudOperationBackend(client, isCurrent: () => current);
+      final item = (await backend.stat('/log.txt'))!;
+      await expectLater(
+        createViewerSpool(backend, item, maxBytes: 3),
+        throwsStateError,
+      );
+      var cancelled = false;
+      await expectLater(
+        createViewerSpool(
+          backend,
+          item,
+          isCancelled: () => cancelled,
+          onProgress: (_, _) => cancelled = true,
+        ),
+        throwsStateError,
+      );
+      await expectLater(
+        createViewerSpool(backend, item, onProgress: (_, _) => current = false),
+        throwsStateError,
+      );
+      current = true;
+      await expectLater(
+        createViewerSpool(
+          backend,
+          item,
+          onProgress: (_, _) =>
+              client.put('/log.txt', 'changed size'.codeUnits),
+        ),
+        throwsStateError,
+      );
+    },
+  );
 }

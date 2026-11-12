@@ -368,3 +368,15 @@ file operations are placeholders rather than a cryptographic toolkit.
 These are call-graph observations for the reviewed source, not a legal ruling
 about an "open cryptographic interface." Reassess when adding executable
 plugins, algorithm selection, new native commands or new key-management APIs.
+
+
+### Standalone legacy Word parsing
+
+The `legacy_doc_parser` Git dependency is pinned to `80e9683c0d60553f7198ca89a64aa927d619c684` under MPL-2.0,
+with retained MIT compound-file and 0BSD parsing provenance. Its sole runtime
+dependency is the already-resolved `archive` package. The parser rejects DOC
+encryption/obfuscation flags; its ZIP writer supplies no encryption password.
+Original signature/VBA/object data is retained as bytes without execution or
+cryptographic verification. This is a noncrypto source/lock input and does
+not change the existing export-policy decisions. See the final package
+integration section in [the source review](crypto-source-review-2026-11-12.md).

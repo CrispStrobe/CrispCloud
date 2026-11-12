@@ -1,16 +1,18 @@
+import 'package:crisp_cloud/services/legacy_word_copy.dart';
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/services/installed_office_converter.dart';
-import 'package:crisp_cloud/services/legacy_word_conversion.dart';
 import 'package:crisp_cloud/widgets/legacy_word_conversion_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:quds_office_engine/quds_office_engine.dart';
+import 'package:quds_office_engine/quds_office_engine.dart'
+    show CfbfFile, CfbfWriter, DocxPlainReader, OpcPackage;
 
-import '../support/legacy_word_fixture.dart';
+import '../../packages/quds_office_engine/test/support/legacy_word_fixture.dart';
 
 Finder _key(String name) => find.byKey(ValueKey('word-conversion-$name'));
 

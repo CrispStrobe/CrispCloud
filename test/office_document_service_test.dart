@@ -184,6 +184,30 @@ void main() {
     expect(doc.markdown, contains('- Point one'));
   });
 
+  test(
+    'EPUB extraction follows relocated OPF spine and excludes navigation',
+    () async {
+      final bytes = _zip({
+        'META-INF/container.xml': '<container><rootfiles><rootfile full-path="Book/package.opf"/></rootfiles></container>',
+        'Book/package.opf':
+            '<package><manifest>'
+            '<item id="first" href="Text/z.xhtml"/>'
+            '<item id="second" href="Text/a.xhtml"/>'
+            '<item id="toc" href="nav.xhtml" properties="nav"/>'
+            '</manifest><spine><itemref idref="first"/><itemref idref="second"/></spine></package>',
+        'Book/Text/z.xhtml': '<html><body><p>FIRST CHAPTER</p></body></html>',
+        'Book/Text/a.xhtml': '<html><body><p>SECOND CHAPTER</p></body></html>',
+        'Book/nav.xhtml': '<html><body><p>NOT A CHAPTER</p></body></html>',
+      });
+      final doc = await parseOfficeDocument(bytes, 'ordered.epub');
+      expect(
+        doc.plainText.indexOf('FIRST CHAPTER'),
+        lessThan(doc.plainText.indexOf('SECOND CHAPTER')),
+      );
+      expect(doc.plainText, isNot(contains('NOT A CHAPTER')));
+    },
+  );
+
   test('malformed documents fail gracefully', () async {
     final doc = await parseOfficeDocument(
       Uint8List.fromList(utf8.encode('not a zip')),

@@ -1,6 +1,8 @@
 import 'dart:ui' show Locale;
 
-import '../services/legacy_word_conversion.dart';
+import 'package:legacy_doc_parser/legacy_doc_parser.dart'
+    show LegacyWordConversionException, LegacyWordConversionLimitation;
+
 import 'word_format_strings.dart';
 
 class LegacyWordConversionStrings {

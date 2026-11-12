@@ -17,13 +17,15 @@ import 'dart:typed_data';
 
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as html_parser;
+import 'package:legacy_doc_parser/legacy_doc_parser.dart'
+    show parseLegacyWordDocument;
 import 'package:path/path.dart' as p;
+import 'package:quds_office_engine/quds_office_engine.dart'
+    show OfficePackageParts, OfficePartRelationship;
 import 'package:xml/xml.dart';
 
 import 'archive_viewer_service.dart';
 import 'legacy_powerpoint_document.dart';
-import 'legacy_word_document.dart';
-import 'office_package_parts.dart';
 import 'rtf_document.dart';
 
 const int _kOfficePartCap = 8 * 1024 * 1024;
@@ -1227,7 +1229,7 @@ Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
 // ---------------------------------------------------------------------------
 
 Future<OfficeDocument> _parseEpub(ViewerArchive archive) async {
-  final files =
+  var files =
       archive.members
           .where(
             (m) =>
@@ -1239,6 +1241,60 @@ Future<OfficeDocument> _parseEpub(ViewerArchive archive) async {
           .map((m) => m.name)
           .toList()
         ..sort();
+
+  // EPUB reading order belongs to the package spine, not archive filenames.
+  // Retain the old extraction fallback for incomplete/legacy EPUB-like ZIPs.
+  final container = await _readPart(archive, 'META-INF/container.xml');
+  if (container != null) {
+    try {
+      final roots = XmlDocument.parse(container).descendants
+          .whereType<XmlElement>()
+          .where((element) => element.name.local == 'rootfile');
+      final packagePath = roots.firstOrNull?.getAttribute('full-path');
+      if (packagePath != null &&
+          !p.posix.isAbsolute(packagePath) &&
+          !p.posix.split(packagePath).contains('..')) {
+        final source = await _readPart(archive, packagePath);
+        if (source != null) {
+          final package = XmlDocument.parse(source);
+          final manifest = <String, String>{};
+          for (final item in package.descendants.whereType<XmlElement>().where(
+            (element) => element.name.local == 'item',
+          )) {
+            final id = item.getAttribute('id');
+            final href = item.getAttribute('href');
+            if (id == null || href == null) continue;
+            final uri = Uri.tryParse(href);
+            if (uri == null ||
+                uri.hasScheme ||
+                uri.hasAuthority ||
+                uri.path.startsWith('/'))
+              continue;
+            final path = p.posix.normalize(
+              p.posix.join(
+                p.posix.dirname(packagePath),
+                Uri.decodeComponent(uri.path),
+              ),
+            );
+            if (path == '..' || path.startsWith('../')) continue;
+            manifest[id] = path;
+          }
+          final ordered = package.descendants
+              .whereType<XmlElement>()
+              .where((element) => element.name.local == 'itemref')
+              .map((element) => manifest[element.getAttribute('idref')])
+              .whereType<String>()
+              .where(files.contains)
+              .toList();
+          if (ordered.isNotEmpty) files = ordered;
+        }
+      }
+    } on FormatException {
+      /* Keep bounded extraction for malformed packages. */
+    } on XmlException {
+      /* Keep bounded extraction for malformed packages. */
+    }
+  }
 
   final markdown = StringBuffer();
   for (final path in files) {

@@ -5,7 +5,7 @@ import 'dart:typed_data';
 
 import 'package:path/path.dart' as p;
 
-import 'bounded_cfb_reader.dart';
+import 'package:quds_office_engine/quds_office_engine.dart';
 import 'installed_office_converter_models.dart';
 import 'installed_office_converter_scripts.dart';
 import 'word_conversion_inspection.dart';
@@ -142,8 +142,9 @@ Future<InstalledOfficeConversionResult> convertWithInstalledOffice({
     workspace = await Directory.systemTemp.createTemp('crisp-office-convert-');
     final inputExtension = p.extension(sourceName).toLowerCase();
     final input = File(p.join(workspace.path, 'input$inputExtension'));
-    final outputDirectory = await Directory(p.join(workspace.path, 'output'))
-        .create();
+    final outputDirectory = await Directory(
+      p.join(workspace.path, 'output'),
+    ).create();
     final converted = File(
       p.join(outputDirectory.path, 'input.${output.extension}'),
     );
@@ -444,10 +445,12 @@ Map<String, String> _temporaryEnvironment(Directory workspace) => {
 };
 
 Future<void> _writeLibreOfficeProfile(Directory directory) async {
-  final user = await Directory(p.join(directory.path, 'user'))
-      .create(recursive: true);
-  await File(p.join(user.path, 'registrymodifications.xcu'))
-      .writeAsString(installedOfficeLibreOfficeProfile, flush: true);
+  final user = await Directory(
+    p.join(directory.path, 'user'),
+  ).create(recursive: true);
+  await File(
+    p.join(user.path, 'registrymodifications.xcu'),
+  ).writeAsString(installedOfficeLibreOfficeProfile, flush: true);
 }
 
 Future<void> _deleteWorkspace(Directory directory) async {
@@ -566,8 +569,10 @@ Future<_OfficeProcessResult> _runProcess(
         });
   try {
     final code = await Future.any([exit, oversize.future]).timeout(timeout);
-    await Future.wait([outputDone.future, errorDone.future])
-        .timeout(const Duration(seconds: 2), onTimeout: () => <void>[]);
+    await Future.wait([
+      outputDone.future,
+      errorDone.future,
+    ]).timeout(const Duration(seconds: 2), onTimeout: () => <void>[]);
     return _OfficeProcessResult(
       code,
       utf8.decode(stdout.takeBytes(), allowMalformed: true),

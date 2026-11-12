@@ -82,6 +82,33 @@ typedef GlyphIdFn = int Function(int codePoint);
 
 /// UAX #14 opportunities + Knuth–Plass least-demerits wrapping.
 abstract final class LineBreaker {
+  /// Shape once, then choose each line's width as its layout position changes.
+  ///
+  /// The prepared paragraph retains the original bidi levels, Arabic joining
+  /// and UTF-16 offsets. Rebreaking a substring would lose that context.
+  static PreparedLineBreaker prepare({
+    required String text,
+    required GlyphWidthFn widthOf,
+    GlyphIdFn glyphIdOf = _identityGlyph,
+    int? baseLevel,
+    double spaceStretch = 3,
+    double spaceShrink = 1,
+    bool justify = true,
+    MarkAttachFn? markAttachOf,
+    List<ShapedGlyph> Function(List<ShapedGlyph> glyphs)? ligate,
+  }) {
+    final bidi = Uax9Bidi.reorder(text, baseLevel: baseLevel);
+    final logical = _logicalGlyphs(text, bidi, widthOf, glyphIdOf);
+    return PreparedLineBreaker._(
+      text,
+      ligate == null ? logical : ligate(logical),
+      spaceStretch,
+      spaceShrink,
+      justify,
+      markAttachOf,
+    );
+  }
+
   /// breakLines API.
   static List<BrokenLine> breakLines({
     required String text,
@@ -556,6 +583,137 @@ abstract final class LineBreaker {
 
   /// cp API.
   static int _identityGlyph(int cp) => cp;
+}
+
+/// A paragraph whose shaping is stable while available line widths vary.
+///
+/// [breakNext] is side-effect free: pagination can retry the same source offset
+/// at a different width without consuming characters or changing bidi context.
+class PreparedLineBreaker {
+  PreparedLineBreaker._(
+    this._text,
+    this._logical,
+    this._stretch,
+    this._shrink,
+    this._justify,
+    this._markAttach,
+  );
+
+  final String _text;
+  final List<ShapedGlyph> _logical;
+  final double _stretch;
+  final double _shrink;
+  final bool _justify;
+  final MarkAttachFn? _markAttach;
+  double? _plannedWidth;
+  final Map<int, int> _plannedBreaks = {};
+
+  /// Return one line and the exact UTF-16 offset consumed, including a hard
+  /// break or soft trailing spaces. A CRLF is one hard break; blank lines remain.
+  ({BrokenLine line, int nextOffset}) breakNext({
+    required int start,
+    required double maxWidth,
+  }) {
+    RangeError.checkValueInInterval(start, 0, _text.length, 'start');
+    if (!maxWidth.isFinite || maxWidth <= 0) {
+      throw ArgumentError.value(maxWidth, 'maxWidth', 'Must be positive');
+    }
+    var low = 0;
+    var high = _logical.length;
+    while (low < high) {
+      final mid = (low + high) ~/ 2;
+      if (_logical[mid].logicalIndex < start) {
+        low = mid + 1;
+      } else {
+        high = mid;
+      }
+    }
+    final from = low;
+    var hard = from;
+    while (hard < _logical.length &&
+        _logical[hard].codePoint != 0x0A &&
+        _logical[hard].codePoint != 0x0D) {
+      hard++;
+    }
+    var chunkEnd = _text.length;
+    if (hard < _logical.length) {
+      chunkEnd = _logical[hard].logicalIndex + 1;
+      if (_logical[hard].codePoint == 0x0D &&
+          chunkEnd < _text.length &&
+          _text.codeUnitAt(chunkEnd) == 0x0A) {
+        chunkEnd++;
+      }
+    }
+    if (from == hard) {
+      return (
+        line: BrokenLine(
+          glyphs: const [],
+          width: 0,
+          logicalStart: start,
+          logicalEnd: start,
+          justificationRatio: 0,
+        ),
+        nextOffset: chunkEnd,
+      );
+    }
+    final chunk = _logical.sublist(from, hard);
+    if (_plannedWidth != maxWidth) {
+      _plannedWidth = maxWidth;
+      _plannedBreaks.clear();
+    }
+    if (!_plannedBreaks.containsKey(from)) {
+      final points = LineBreaker._knuthPlass(
+        chunk,
+        maxWidth,
+        _stretch,
+        _shrink,
+      );
+      // The optimal suffix remains valid until the available width changes.
+      // Reuse it instead of recomputing a whole paragraph for every line.
+      for (var i = 0; i + 1 < points.length; i++) {
+        _plannedBreaks[from + points[i]] = from + points[i + 1];
+      }
+    }
+    final consumed = _plannedBreaks[from]! - from;
+    var painted = consumed;
+    while (painted > 0 &&
+        LineBreaker._isSoftTrailingSpace(chunk[painted - 1])) {
+      painted--;
+    }
+    final glyphs = LineBreaker._reorderLine(
+      chunk.sublist(0, painted),
+      _markAttach,
+    );
+    var width = 0.0;
+    var spaces = 0;
+    var logicalStart = _text.length;
+    var logicalEnd = start;
+    for (final glyph in glyphs) {
+      width += glyph.advance;
+      if (glyph.isSpace) spaces++;
+      logicalStart = math.min(logicalStart, glyph.logicalIndex);
+      final source = _text.codeUnitAt(glyph.logicalIndex);
+      final units = source >= 0xD800 && source <= 0xDBFF ? 2 : 1;
+      logicalEnd = math.max(logicalEnd, glyph.logicalIndex + units);
+    }
+    var ratio = 0.0;
+    if (_justify && spaces > 0 && width < maxWidth && consumed < chunk.length) {
+      ratio = (maxWidth - width) / (spaces * _stretch);
+      width = maxWidth;
+    }
+    return (
+      line: BrokenLine(
+        glyphs: glyphs,
+        width: width,
+        logicalStart: glyphs.isEmpty ? start : logicalStart,
+        logicalEnd: logicalEnd,
+        justificationRatio: ratio,
+      ),
+      nextOffset: consumed < chunk.length
+          ? chunk[consumed].logicalIndex
+          : chunkEnd,
+    );
+  }
 }
 
 /// Hit-test a visual X offset on [line] and return the logical UTF-16 index.

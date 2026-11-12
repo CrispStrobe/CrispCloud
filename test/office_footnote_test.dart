@@ -43,10 +43,11 @@ void main() {
 
     final LaidOutPage page = controller.documentLaidOut.pages.first;
     // Rich notes use shaped glyphs; plain overlays remain a supported fallback.
-    // Assert the actual visible text rather than an implementation-only field.
+    // The source note stories have no automatic markers; body references are
+    // still superscript. Layout must not invent note marks or punctuation.
     expect(page.notes.map(_visibleText), <String>[
-      '1. First footnote text.',
-      '2. Second footnote text.',
+      'First footnote text.',
+      'Second footnote text.',
     ]);
     final separator = page.frames
         .where((box) => box.kind == LaidOutBoxKind.footnote)

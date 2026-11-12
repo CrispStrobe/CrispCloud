@@ -51,8 +51,11 @@ void main() {
   );
 
   setUp(() async {
-    temporary = await Directory.systemTemp.createTemp(
-      'terminal-workspace-test-',
+    // Canonical path: macOS's temp folder lives below the /var link and the
+    // service stores resolved locations.
+    temporary = Directory(
+      await (await Directory.systemTemp.createTemp('terminal-workspace-test-'))
+          .resolveSymbolicLinks(),
     );
     root = p.join(temporary.path, 'workspaces');
     service = TerminalWorkspaceService(rootDirectory: root);
@@ -631,6 +634,13 @@ void main() {
     test(
       'blocks both names in a local case collision and bounds inspection reads',
       () async {
+        // A case-insensitive volume (macOS default) cannot hold both names.
+        final probe = File(p.join(temporary.path, 'case-probe'));
+        await probe.writeAsString('x');
+        if (await File(p.join(temporary.path, 'CASE-PROBE')).exists()) {
+          markTestSkipped('Case-insensitive file system');
+          return;
+        }
         final workspace = await stage();
         await edit(workspace, 'new.txt', 'new');
         await edit(workspace, 'NEW.txt', 'different');

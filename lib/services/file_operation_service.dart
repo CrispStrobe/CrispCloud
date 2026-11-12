@@ -16,6 +16,44 @@ import 'storage_scan_source.dart';
 
 export 'file_operation_options.dart';
 
+const maxRetainedTransferStages = 32;
+const maxRetainedTransferStagePathBytes = 64 * 1024;
+
+/// Preserve every journal-owned candidate until confirmed cleanup. The newest
+/// stagedPath comes last; an earlier resumeStagePath must survive its removal
+/// from a newly prepared recovery plan.
+List<String> retainedTransferStagePaths(Map<String, dynamic>? recovery) {
+  final stored = recovery?['retainedStagePaths'];
+  if (stored != null && stored is! List) {
+    throw StateError('The saved partial-file references are invalid.');
+  }
+  final result = <String>[];
+  var bytes = 0;
+  void add(Object? value) {
+    if (value is! String || value.isEmpty || value.contains('\u0000')) {
+      throw StateError('The saved partial-file references are invalid.');
+    }
+    if (result.contains(value)) return;
+    bytes += utf8.encode(value).length;
+    if (result.length >= maxRetainedTransferStages ||
+        bytes > maxRetainedTransferStagePathBytes) {
+      throw StateError(
+        'Too many retained partial files. Review the saved recovery files before retrying.',
+      );
+    }
+    result.add(value);
+  }
+
+  for (final value in stored as List? ?? const []) {
+    add(value);
+  }
+  final resumeStagePath = recovery?['resumeStagePath'];
+  final stagedPath = recovery?['stagedPath'];
+  if (resumeStagePath != null) add(resumeStagePath);
+  if (stagedPath != null) add(stagedPath);
+  return result;
+}
+
 /// Storage adapter whose identity and authentication are captured before work.
 /// [stat] and [list] must propagate access/network errors, never report them as
 /// missing files. writeFile must not delete an existing destination on failure.
@@ -28,6 +66,18 @@ abstract class FileOperationBackend implements StorageScanSource {
 
   /// The verifier runs against a complete temporary file before replacement.
   bool get supportsStagedVerification => false;
+
+  /// A backend must validate private staging paths and published contents
+  /// before deleting exactly one retained payload and its empty parent.
+  bool get supportsRetainedStageCleanup => false;
+  bool isRetainedStagePath(String stagePath, String destinationPath) => false;
+  Future<void> cleanupRetainedStage(
+    String stagePath, {
+    required FileItem published,
+    required String publishedSha256,
+    TransferCheckpoint? checkpoint,
+  }) async =>
+      throw UnsupportedError('Verified partial-file cleanup is unavailable.');
   StorageTransferCapabilities get capabilities =>
       const StorageTransferCapabilities();
   String get label;
@@ -97,6 +147,7 @@ abstract class FileOperationBackend implements StorageScanSource {
     int? length, {
     required bool replace,
     bool preallocate = false,
+    bool retainPartialFileOnFailure = false,
     String? resumeUploadPath,
     Future<void> Function(FileItem staged)? verifyStaged,
     Future<void> Function(Map<String, dynamic> state)? checkpoint,
@@ -938,6 +989,8 @@ class FileOperationService {
   Future<void> execute(
     FileOperationPlan plan, {
     required FileOperationControl control,
+    // Only a durable journal owner may opt into retaining private partial data.
+    bool retainPartialFileOnFailure = false,
     FileConflictResolver? resolveConflict,
     DetailedFileConflictResolver? resolveDetailedConflict,
     Future<void> Function(FileOperationEntry entry, String phase)? checkpoint,
@@ -992,7 +1045,13 @@ class FileOperationService {
         }
         plan.assertDestinationUnprotected(entry.destination);
         if (entry.recovery?['resumeAfterCommit'] == true) {
-          await _finishCommittedEntry(plan, entry, control, checkpoint);
+          await _finishCommittedEntry(
+            plan,
+            entry,
+            control,
+            checkpoint,
+            cleanupRetainedFiles: retainPartialFileOnFailure,
+          );
           onEntryComplete?.call(entry);
           continue;
         }
@@ -1227,6 +1286,17 @@ class FileOperationService {
         } else {
           entry.recovery = {...?entry.recovery, 'append': append};
           await checkpoint?.call(entry, 'writing');
+          if (!append &&
+              resumeOffset > 0 &&
+              entry.recovery?['sourceSha256'] == null) {
+            final digest = await _digest(source, entry.source, control, target);
+            final current = await source.stat(entry.source.path!);
+            _checkSources(source, target);
+            if (current == null || !_sameVersion(entry.source, current)) {
+              throw StateError('The source changed while preparing resume.');
+            }
+            entry.recovery = {...?entry.recovery, 'sourceSha256': digest};
+          }
           Future<void> recordWriteState(
             Map<String, dynamic> state, {
             String? contentSha256,
@@ -1240,9 +1310,34 @@ class FileOperationService {
               final path = state[key];
               if (path is String) plan.assertDestinationUnprotected(path);
             }
+            List<String>? retainedStages;
+            if (retainPartialFileOnFailure &&
+                target.supportsRetainedStageCleanup &&
+                state['phase'] == 'staging') {
+              // Merge old references before stagedPath is replaced. A failed
+              // checkpoint cannot discard the only reference to an older
+              // partial file, and an over-budget attempt creates no new data.
+              retainedStages = retainedTransferStagePaths({
+                ...?entry.recovery,
+                'retainedStagePaths': retainedTransferStagePaths(
+                  entry.recovery,
+                ),
+                'stagedPath': state['stagedPath'],
+              });
+              for (final path in retainedStages) {
+                if (!target.isRetainedStagePath(path, entry.destination)) {
+                  throw StateError(
+                    'A retained staging path is outside the reviewed destination.',
+                  );
+                }
+                plan.assertDestinationUnprotected(path);
+                plan.assertDestinationUnprotected(target.paths.dirname(path));
+              }
+            }
             entry.recovery = {
               ...?entry.recovery,
               ...state,
+              if (retainedStages != null) 'retainedStagePaths': retainedStages,
               if (contentSha256 != null) 'contentSha256': contentSha256,
             };
             final phase = state['phase'] as String;
@@ -1385,6 +1480,17 @@ class FileOperationService {
                 } finally {
                   hashSink.close();
                 }
+                // Verify the combined prefix and resumed suffix before the
+                // destination observes end-of-stream and can publish it. A
+                // server can return the right length from the wrong offset.
+                if (!append &&
+                    resumeOffset > 0 &&
+                    inputDigest.value?.toString() !=
+                        entry.recovery?['sourceSha256']) {
+                  throw StateError(
+                    'Resumed bytes differ from the original source; existing destination retained.',
+                  );
+                }
               }
 
               await target.writeConfiguredFile(
@@ -1393,6 +1499,7 @@ class FileOperationService {
                 expectedLength,
                 replace: replace,
                 preallocate: options.preallocate,
+                retainPartialFileOnFailure: retainPartialFileOnFailure,
                 resumeUploadPath: recoveredUploadPath,
                 checkpoint: (state) => recordWriteState(
                   state,
@@ -1452,6 +1559,9 @@ class FileOperationService {
             }
             entry.recovery = {...?entry.recovery, 'dataVerified': true};
             await checkpoint?.call(entry, 'verified');
+            if (retainPartialFileOnFailure) {
+              await _cleanupRetainedStages(plan, entry, control, checkpoint);
+            }
           }
           await checkpoint?.call(entry, 'metadata');
           await _preserveMetadata(source, target, entry, options);
@@ -1689,8 +1799,9 @@ class FileOperationService {
     FileOperationPlan plan,
     FileOperationEntry entry,
     FileOperationControl control,
-    Future<void> Function(FileOperationEntry, String)? checkpoint,
-  ) async {
+    Future<void> Function(FileOperationEntry, String)? checkpoint, {
+    bool cleanupRetainedFiles = false,
+  }) async {
     await checkpoint?.call(entry, 'finishingCopy');
     final written = await plan.destination.stat(entry.destination);
     final expected =
@@ -1702,6 +1813,9 @@ class FileOperationService {
       throw StateError(
         'The previously copied destination changed. Review it before retrying.',
       );
+    }
+    if (cleanupRetainedFiles) {
+      await _cleanupRetainedStages(plan, entry, control, checkpoint);
     }
     await _preserveMetadata(plan.source, plan.destination, entry, plan.options);
     if (plan.options.kind == FileOperationKind.move) {
@@ -1719,6 +1833,93 @@ class FileOperationService {
     }
     entry.message = 'Verified earlier copy; finished remaining steps.';
     await checkpoint?.call(entry, 'complete');
+  }
+
+  Future<void> _cleanupRetainedStages(
+    FileOperationPlan plan,
+    FileOperationEntry entry,
+    FileOperationControl control,
+    Future<void> Function(FileOperationEntry, String)? checkpoint,
+  ) async {
+    final target = plan.destination;
+    if (!target.supportsRetainedStageCleanup || checkpoint == null) return;
+    final pending = retainedTransferStagePaths(entry.recovery);
+    if (pending.isEmpty) return;
+    final expected =
+        entry.recovery?['contentSha256'] ??
+        (entry.recovery?['append'] == true
+            ? null
+            : entry.recovery?['sourceSha256']);
+    if (expected is! String || !RegExp(r'^[a-f0-9]{64}$').hasMatch(expected)) {
+      throw StateError('The published copy has no verified cleanup digest.');
+    }
+    for (final path in List<String>.of(pending)) {
+      try {
+        await control.checkpoint();
+        _checkSources(plan.source, target);
+        plan.assertDestinationUnprotected(path);
+        plan.assertDestinationUnprotected(target.paths.dirname(path));
+        entry.recovery = {
+          ...?entry.recovery,
+          'retainedStagePaths': List<String>.of(pending),
+          'partialCleanupPath': path,
+        };
+        await checkpoint(entry, 'cleaningPartial');
+        await control.checkpoint();
+        _checkSources(plan.source, target);
+        final published = await target.stat(entry.destination);
+        if (published == null ||
+            published.isFolder ||
+            published.isSymlink == true) {
+          throw StateError(
+            'The verified destination is no longer a regular file.',
+          );
+        }
+        await target.cleanupRetainedStage(
+          path,
+          published: published,
+          publishedSha256: expected,
+          checkpoint: () async {
+            await control.checkpoint();
+            _checkSources(plan.source, target);
+          },
+        );
+        final beforeConfirmation = Map<String, dynamic>.of(entry.recovery!);
+        final remaining = List<String>.of(pending)..remove(path);
+        final state = Map<String, dynamic>.of(entry.recovery!);
+        state['retainedStagePaths'] = remaining;
+        for (final key in ['stagedPath', 'resumeStagePath']) {
+          if (state[key] == path) state.remove(key);
+        }
+        if (state['stagingDirectory'] == target.paths.dirname(path)) {
+          state.remove('stagingDirectory');
+        }
+        state.remove('partialCleanupPath');
+        state.remove('partialCleanupError');
+        entry.recovery = state;
+        // Persist a confirmed deletion even if cancellation arrived afterward.
+        try {
+          await checkpoint(entry, 'partialCleaned');
+        } catch (_) {
+          // A failed confirmation retains the reference even if the physical
+          // deletion finished. Recovery can reconcile an already absent path.
+          entry.recovery = beforeConfirmation;
+          rethrow;
+        }
+        pending.remove(path);
+      } on FileOperationCancelled {
+        rethrow;
+      } catch (error) {
+        entry.recovery = {
+          ...?entry.recovery,
+          'retainedStagePaths': List<String>.of(pending),
+          'partialCleanupError': '$error',
+        };
+        throw StateError(
+          'The copy was published, but a retained partial file needs review: $path. $error',
+        );
+      }
+    }
   }
 
   bool _sameVersion(FileItem before, FileItem after) =>

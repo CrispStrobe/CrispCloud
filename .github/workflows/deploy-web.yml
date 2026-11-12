@@ -30,6 +30,9 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Set up bundled ebook converter
+        uses: ./.github/actions/setup-ebook-rust
+
       - name: Cache Flutter SDK + pub
         uses: actions/cache@v5
         with:

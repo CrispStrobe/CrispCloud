@@ -45,6 +45,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up bundled ebook converter
+        uses: ./.github/actions/setup-ebook-rust
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+
       - name: Verify scoped custom keychain storage
         run: |
           swiftc -swift-version 5 -parse-as-library macos/Runner/CustomKeychainStore.swift \

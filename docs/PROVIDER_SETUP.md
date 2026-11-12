@@ -202,24 +202,34 @@ aws s3api put-bucket-cors --bucket my-bucket --cors-configuration file://cors.js
 
 ## FTP / FTPS
 
-FTP and FTPS (FTP over TLS) are supported for legacy servers.
+The installed app supports plain FTP, explicit TLS (FTPES) and implicit TLS
+(FTPS), with passive data connections.
 
 ### Connection Dialog Fields
 
 | Field | Value |
 |-------|-------|
 | Hostname | FTP server hostname or IP |
-| Port | Default: 21 |
+| Port | Usually 21 for FTP/FTPES, 990 for implicit FTPS; custom ports are retained |
 | Username | FTP username |
 | Password | FTP password |
-| Use TLS | Toggle on for FTPS (explicit TLS); toggle off for plain FTP |
-| Passive Mode | Enable if behind NAT or firewall (recommended for most setups) |
+| Connection security | Explicit TLS (FTPES), implicit TLS (FTPS), or unencrypted FTP |
 
 ### Notes
 
 - Plain FTP sends credentials in cleartext. Use FTPS wherever possible.
-- FTPS uses explicit TLS (STARTTLS on port 21) by default. Implicit TLS (port 990) is not currently supported.
-- FTP does not support streaming, versioning, or sharing.
+- New connections default to explicit TLS: the app requests `AUTH TLS` before
+  sending credentials. Refusal or a failed handshake stops the connection.
+- Existing saved TLS connections keep their implicit TLS mode and saved port.
+- TLS validates the server certificate and hostname on control **and** data
+  connections, including directory listings. `PBSZ 0` and `PROT P` must succeed.
+- Native bounded streaming transfers are supported. FTP does not provide app
+  version history, native sharing, byte-range resume or FXP.
+- FTP is unavailable in the browser and is not routed through the app's HTTP
+  proxy. FTP uses the operating system/Dart trust roots; imported custom CAs in
+  HTTP settings do not change the FTP trust store.
+
+See [FTP transport behavior and verification](ftp-transport.md).
 
 ---
 
@@ -384,7 +394,9 @@ factor SSH logins are not supported by the current dialog.
 
 **Google Drive / OneDrive / Dropbox**: if the OAuth2 flow fails, try signing out of the provider in your browser first, then retrying the flow in CrispCloud.
 
-**FTP**: some servers reject "passive" mode by default. Toggle **Passive Mode** in the connection dialog.
+**FTP**: allow the server's passive data-port range through its firewall. Select
+the exact TLS mode and port required by the server; the app does not downgrade
+a failed encrypted connection to plain FTP.
 
 ### TLS / Certificate Errors
 

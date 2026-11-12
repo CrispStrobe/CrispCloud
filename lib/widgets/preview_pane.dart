@@ -33,6 +33,9 @@ import '../utils/formatters.dart';
 import 'file_list_view.dart' show getFileIcon;
 import 'preview_media.dart';
 import 'pdf_editor_dialog.dart';
+import 'ebook_editor_dialog.dart';
+import '../services/ebook_file_store.dart' show isEbookFileName;
+import '../l10n/ebook_strings.dart';
 import 'code_highlighting.dart';
 import 'email_message_view.dart';
 import 'internal_viewer_dialog.dart';
@@ -308,6 +311,12 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
       return;
     }
     final type = _classifyFile(file.name);
+    // Open the complete reader explicitly. Selecting a large ebook should not
+    // start a WebView or unpack it on every cursor movement in the file list.
+    if (isEbookFileName(file.name)) {
+      setState(() {});
+      return;
+    }
     if (type == PreviewType.none || type == PreviewType.keepass) {
       setState(() {});
       return;
@@ -642,6 +651,50 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
 
     if (file.isFolder) {
       return _buildMetadataView(context, file);
+    }
+
+    if (isEbookFileName(file.name)) {
+      return Column(
+        children: [
+          Expanded(child: _buildMetadataView(context, file)),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Wrap(
+              spacing: 8,
+              children: [
+                FilledButton.tonalIcon(
+                  icon: const Icon(Icons.menu_book),
+                  label: Text(context.ebookTr('Read ebook')),
+                  onPressed: () async {
+                    await showEbookEditorDialog(
+                      context,
+                      ref,
+                      file,
+                      widget.side,
+                      startEditing: false,
+                    );
+                    if (mounted && widget.file == file) _loadPreview();
+                  },
+                ),
+                if (file.name.toLowerCase().endsWith('.epub'))
+                  TextButton.icon(
+                    icon: const Icon(Icons.edit_document),
+                    label: Text(context.ebookTr('Edit ebook')),
+                    onPressed: () async {
+                      await showEbookEditorDialog(
+                        context,
+                        ref,
+                        file,
+                        widget.side,
+                      );
+                      if (mounted && widget.file == file) _loadPreview();
+                    },
+                  ),
+              ],
+            ),
+          ),
+        ],
+      );
     }
 
     if (_loading) {

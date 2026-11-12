@@ -112,6 +112,9 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Set up bundled ebook converter
+        uses: ./.github/actions/setup-ebook-rust
+
       - name: Cache Flutter SDK + pub
         uses: actions/cache@v5
         with:
@@ -268,6 +271,9 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Set up bundled ebook converter
+        uses: ./.github/actions/setup-ebook-rust
+
       - name: Cache Flutter SDK + pub
         uses: actions/cache@v5
         with:
@@ -293,7 +299,8 @@ jobs:
         run: |
           sudo apt-get update -y
           sudo apt-get install -y ninja-build libgtk-3-dev libsecret-1-dev \
-            libjsoncpp-dev libsecret-1-0 libsqlite3-dev libayatana-appindicator3-dev
+            libjsoncpp-dev libsecret-1-0 libsqlite3-dev libayatana-appindicator3-dev \
+            libwebkit2gtk-4.1-dev
 
       - run: flutter config --enable-linux-desktop
       - run: flutter pub get
@@ -321,6 +328,11 @@ jobs:
     continue-on-error: true  # macOS runners scarce on free tier
     steps:
       - uses: actions/checkout@v5
+
+      - name: Set up bundled ebook converter
+        uses: ./.github/actions/setup-ebook-rust
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
 
       - name: Cache Flutter SDK + pub
         uses: actions/cache@v5
@@ -421,6 +433,9 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Set up bundled ebook converter
+        uses: ./.github/actions/setup-ebook-rust
+
       - name: Cache Flutter SDK + pub
         uses: actions/cache@v5
         with:
@@ -507,6 +522,12 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v5
+
+      - name: Set up bundled ebook converter
+        uses: ./.github/actions/setup-ebook-rust
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android
+          android: 'true'
 
       - uses: actions/setup-java@v4
         with:
@@ -645,6 +666,11 @@ jobs:
       HAS_APPSTORE_KEY: 'false'
     steps:
       - uses: actions/checkout@v5
+
+      - name: Set up bundled ebook converter
+        uses: ./.github/actions/setup-ebook-rust
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin,aarch64-apple-ios,aarch64-apple-ios-sim,x86_64-apple-ios
 
       - name: Cache Flutter SDK + pub
         uses: actions/cache@v5

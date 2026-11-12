@@ -57,6 +57,11 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Set up bundled ebook converter
+        uses: ./.github/actions/setup-ebook-rust
+      - name: Verify offline help topics and translation revisions
+        run: python3 tool/check_help_guides.py
+
       # Cache Flutter SDK
       - name: Cache Flutter SDK
         uses: actions/cache@v5
@@ -100,11 +105,48 @@ jobs:
       - name: Resolve vendored package development dependencies
         run: |
           (cd packages/quds_office_engine && dart pub get)
+          # The vendored editor's pubspec stays as upstream (drift-checked), so
+          # point it at the vendored engine here; otherwise pub.dev's engine,
+          # which lacks the patched APIs, breaks `flutter analyze`.
+          printf 'dependency_overrides:\n  quds_office_engine:\n    path: ../quds_office_engine\n' > packages/quds_office_editor/pubspec_overrides.yaml
           (cd packages/quds_office_editor && flutter pub get)
           (cd packages/dart_pdf_editor && flutter pub get)
           (cd packages/dart_pdf_editor_secure_storage && flutter pub get)
           (cd packages/pdf_document && dart pub get)
           (cd packages/pdf_operations && dart pub get)
+
+      - name: Standalone legacy Word parser contracts
+        run: |
+          # Check the exact external source resolved by this app's Git lock.
+          # The standalone repository owns its formatter, web and release gates.
+          legacy_parser_dir="$(python3 - <<'PY'
+          import json, pathlib, re, subprocess, urllib.parse
+          configuration = pathlib.Path('.dart_tool/package_config.json').resolve()
+          packages = json.loads(configuration.read_text())['packages']
+          package = next(item for item in packages if item['name'] == 'legacy_doc_parser')
+          location = urllib.parse.urlparse(urllib.parse.urljoin(configuration.as_uri(), package['rootUri']))
+          if location.scheme != 'file' or location.netloc:
+              raise SystemExit('Expected a local resolved legacy_doc_parser checkout')
+          directory = pathlib.Path(urllib.parse.unquote(location.path)).resolve()
+          lock = pathlib.Path('pubspec.lock').read_text()
+          block = re.search(r'^  legacy_doc_parser:\n((?:    .*\n)+)', lock, re.MULTILINE)
+          if block is None:
+              raise SystemExit('Missing locked legacy_doc_parser dependency')
+          revision = re.search(r'^      resolved-ref: "?([0-9a-f]{40})"?$', block[1], re.MULTILINE)
+          if revision is None or 'https://github.com/CrispStrobe/legacy-doc-parser.git' not in block[1]:
+              raise SystemExit('Expected the reviewed legacy_doc_parser Git source')
+          actual = subprocess.check_output(['git', '-C', str(directory), 'rev-parse', 'HEAD'], text=True).strip()
+          if actual != revision[1]:
+              raise SystemExit('Resolved legacy_doc_parser checkout does not match its lock')
+          print(directory)
+          PY
+          )"
+          (
+            cd "$legacy_parser_dir"
+            dart pub get
+            dart analyze
+            dart test
+          )
 
       - name: Shared storage contracts
         working-directory: packages/crisp_storage
@@ -198,6 +240,9 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - uses: actions/checkout@v5
+
+      - name: Set up bundled ebook converter
+        uses: ./.github/actions/setup-ebook-rust
 
       - name: Verify native plist comparison and evidence failure paths
         if: runner.os == 'macOS'
@@ -354,6 +399,13 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Set up bundled ebook converter
+        if: matrix.platform != 'web'
+        uses: ./.github/actions/setup-ebook-rust
+        with:
+          targets: ${{ matrix.platform == 'android' && 'aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android' || '' }}
+          android: ${{ matrix.platform == 'android' }}
+
       - name: Cache Flutter SDK + pub
         uses: actions/cache@v5
         with:
@@ -400,7 +452,8 @@ jobs:
         run: |
           sudo apt-get update -y
           sudo apt-get install -y ninja-build libgtk-3-dev libsecret-1-dev \
-            libjsoncpp-dev libsecret-1-0 libsqlite3-dev libayatana-appindicator3-dev
+            libjsoncpp-dev libsecret-1-0 libsqlite3-dev libayatana-appindicator3-dev \
+            libwebkit2gtk-4.1-dev
 
       - name: Enable Linux desktop
         if: matrix.platform == 'linux'
@@ -469,6 +522,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+
+      - name: Set up bundled ebook converter
+        uses: ./.github/actions/setup-ebook-rust
 
       - name: Cache Flutter SDK + pub
         uses: actions/cache@v5
@@ -540,6 +596,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+
+      - name: Set up bundled ebook converter
+        uses: ./.github/actions/setup-ebook-rust
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
 
       - name: Cache Flutter SDK + pub
         uses: actions/cache@v5
@@ -665,6 +726,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+
+      - name: Set up bundled ebook converter
+        uses: ./.github/actions/setup-ebook-rust
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin,aarch64-apple-ios,aarch64-apple-ios-sim,x86_64-apple-ios
 
       - name: Cache verified embedded shell frameworks
         uses: actions/cache@v5

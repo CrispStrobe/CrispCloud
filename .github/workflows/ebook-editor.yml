@@ -1,0 +1,243 @@
+name: Ebook reader and editor
+
+on:
+  push:
+    branches: [main, 'feature/ebook-*']
+  pull_request:
+    paths:
+      - 'packages/crisp_ebook*/**'
+      - 'lib/**/ebook_*'
+      - 'lib/l10n/ebook_strings.dart'
+      - 'lib/main.dart'
+      - 'lib/screens/file_browser_screen.dart'
+      - 'lib/widgets/file_editor_dialog.dart'
+      - 'lib/widgets/internal_viewer_dialog.dart'
+      - 'lib/widgets/preview_pane.dart'
+      - 'lib/services/office_document_service.dart'
+      - 'lib/services/captured_file_target.dart'
+      - 'lib/services/pdf_file_store.dart'
+      - 'lib/utils/file_editability.dart'
+      - 'test/ebook_*'
+      - 'test/widget/ebook_*'
+      - 'test/file_editability_test.dart'
+      - 'test/office_document_service_test.dart'
+      - 'test/pdf_file_store_test.dart'
+      - 'android/app/src/main/**'
+      - 'ios/Runner/Info.plist'
+      - 'macos/Runner/Info.plist'
+      - 'macos/Runner/*.entitlements'
+      - 'tool/with_ci_system_sqlite.py'
+      - 'pubspec.*'
+      - '.fvmrc'
+      - '.github/actions/setup-ebook-rust/**'
+      - '.github/workflows/ebook-editor.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ebook-editor-${{ github.event.pull_request.head.repo.full_name || github.repository }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: '3.47.8'
+  NODE_VERSION: '24.22.1'
+  CI: 'true'
+  BOT: 'true'
+  FLUTTER_SUPPRESS_ANALYTICS: 'true'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  epub-core:
+    name: EPUB preservation and EPUBCheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Analyze, test and export preservation fixtures
+        working-directory: packages/crisp_ebook
+        run: |
+          dart pub get
+          dart analyze
+          dart test
+          dart run tool/generate_fixtures.dart ../../build/ebook-core
+      - name: Verify the pinned independent validator
+        run: |
+          curl --fail --location --retry 3 \
+            https://github.com/w3c/epubcheck/releases/download/v5.4.0/epubcheck-5.4.0.zip \
+            --output "$RUNNER_TEMP/epubcheck-5.4.0.zip"
+          printf '%s  %s\n' \
+            33350c61038e71dfb3d45a76aed04bf5481e6d5500cb780f6e98db8bbd15a28c \
+            "$RUNNER_TEMP/epubcheck-5.4.0.zip" | sha256sum --check
+          unzip -q "$RUNNER_TEMP/epubcheck-5.4.0.zip" -d "$RUNNER_TEMP/epubcheck"
+      - name: Validate new, unusual-path and edited EPUB packages
+        run: |
+          for book in build/ebook-core/*.epub; do
+            java -jar "$RUNNER_TEMP/epubcheck/epubcheck-5.4.0/epubcheck.jar" \
+              "$book" --failonwarnings --json "${book%.epub}.json"
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ebook-core-validation
+          path: build/ebook-core/
+          retention-days: 14
+
+  native-and-reader:
+    name: Kindle runtime (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/setup-ebook-rust
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - name: Native engine, record preservation and real build-hook tests
+        working-directory: packages/crisp_ebook_conversion
+        run: |
+          cargo test --manifest-path native/Cargo.toml --locked --lib
+          cargo build --manifest-path native/Cargo.toml --locked --release
+          python tool/smoke.py --executable "native/target/release/crisp-kindling${{ runner.os == 'Windows' && '.exe' || '' }}"
+          dart pub get
+          dart analyze
+          dart test
+      - name: Verify reviewed native and Wasm source and license inventory
+        if: runner.os == 'Linux'
+        working-directory: packages/crisp_ebook_conversion
+        run: |
+          python tool/check_vendor.py
+          python tool/check_licenses.py
+          python tool/check_wasm.py
+          mkdir -p build/web-probe
+          dart compile js tool/web_probe.dart -o build/web-probe/capabilities.js
+      - uses: actions/setup-node@v4
+        if: runner.os == 'Linux'
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: packages/crisp_ebook_reader/package-lock.json
+      - name: Verify unavailable capability in Node without DOM or Worker
+        if: runner.os == 'Linux'
+        working-directory: packages/crisp_ebook_conversion
+        run: |
+          EBOOK_NO_WORKER_PROBE_OUTPUT="$(node -e 'globalThis.self = globalThis; require("./build/web-probe/capabilities.js")')"
+          printf '%s\n' "$EBOOK_NO_WORKER_PROBE_OUTPUT"
+          test "$EBOOK_NO_WORKER_PROBE_OUTPUT" = 'Browser converter capability: unavailable, as designed.'
+      - name: Verify metadata Wasm parity and production Dart worker lifecycle
+        if: runner.os == 'Linux'
+        working-directory: packages/crisp_ebook_conversion
+        run: |
+          node tool/metadata_wasm_smoke.mjs
+          mkdir -p build/web-metadata
+          dart compile js tool/web_metadata_probe.dart -o build/web-metadata/probe.js
+          node tool/run_web_metadata_probe.mjs
+      - uses: actions/setup-java@v4
+        if: runner.os == 'Linux'
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Reader controller, vendor integrity and parser checks
+        if: runner.os == 'Linux'
+        working-directory: packages/crisp_ebook_reader
+        run: |
+          flutter pub get
+          flutter analyze
+          flutter test
+          python tool/check_vendor.py
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm run test:parser -- ../crisp_ebook_conversion/test/fixtures/generated/*.azw3 ../crisp_ebook_conversion/test/fixtures/generated/*.mobi
+          CRISP_TEST_GROUPING_FALLBACK=1 CRISP_TEST_RAW_INFLATE_FALLBACK=1 npm run test:parser
+      - name: Validate actual Kindle to EPUB imports independently
+        if: runner.os == 'Linux'
+        working-directory: packages/crisp_ebook_conversion
+        run: |
+          (cd ../crisp_ebook && dart pub get)
+          curl --fail --location --retry 3 \
+            https://github.com/w3c/epubcheck/releases/download/v5.4.0/epubcheck-5.4.0.zip \
+            --output "$RUNNER_TEMP/epubcheck-5.4.0.zip"
+          printf '%s  %s\n' \
+            33350c61038e71dfb3d45a76aed04bf5481e6d5500cb780f6e98db8bbd15a28c \
+            "$RUNNER_TEMP/epubcheck-5.4.0.zip" | sha256sum --check
+          unzip -q "$RUNNER_TEMP/epubcheck-5.4.0.zip" -d "$RUNNER_TEMP/epubcheck"
+          python tool/verify_import_chain.py \
+            --epubcheck "$RUNNER_TEMP/epubcheck/epubcheck-5.4.0/epubcheck.jar" \
+            --java-temp-dir "$RUNNER_TEMP/ebook-java"
+      - name: Install actual browser and verify rendering and sandbox behavior
+        if: runner.os == 'Linux'
+        working-directory: packages/crisp_ebook_reader
+        run: |
+          npx playwright install --with-deps chromium
+          EBOOK_CHROMIUM_PATH="$(node --input-type=module -e 'import {chromium} from "playwright"; process.stdout.write(chromium.executablePath())')"
+          printf 'EBOOK_CHROMIUM_PATH=%s\n' "$EBOOK_CHROMIUM_PATH" >> "$GITHUB_ENV"
+          CHROMIUM_PATH="$EBOOK_CHROMIUM_PATH" npm run test:browser -- ../crisp_ebook_conversion/test/fixtures/generated/*.azw3 ../crisp_ebook_conversion/test/fixtures/generated/*.mobi
+      - name: Verify production metadata worker in actual Chromium
+        if: runner.os == 'Linux'
+        working-directory: packages/crisp_ebook_conversion
+        run: CHROMIUM_PATH="$EBOOK_CHROMIUM_PATH" node tool/run_web_metadata_probe.mjs --browser
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ebook-native-${{ runner.os }}
+          path: |
+            packages/crisp_ebook_conversion/test/fixtures/generated/
+            packages/crisp_ebook_conversion/build/import-chain/
+          retention-days: 14
+
+  app-integration:
+    name: App save workflow, fallback UI and web build
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/setup-ebook-rust
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - name: Native test dependencies
+        run: sudo apt-get update && sudo apt-get install -y clang libsqlite3-dev
+      - run: flutter pub get
+      - name: Ebook save, account-target capture, fallback and editor routing
+        run: >-
+          python3 tool/with_ci_system_sqlite.py flutter test --concurrency=2
+          test/ebook_annotations_test.dart
+          test/ebook_reading_data_test.dart
+          test/ebook_reading_data_files_test.dart
+          test/ebook_library_test.dart
+          test/widget/ebook_library_dialog_test.dart
+          test/widget/ebook_reading_controls_test.dart
+          test/ebook_edit_session_test.dart
+          test/widget/ebook_editor_dialog_test.dart
+          test/widget/ebook_chapter_reader_test.dart
+          test/widget/ebook_prose_editor_test.dart
+          test/widget/ebook_kindle_metadata_editor_test.dart
+          test/file_editability_test.dart
+          test/office_document_service_test.dart
+          test/pdf_file_store_test.dart
+      - name: Compile the actual browser application and embedded reader host
+        run: flutter build web --release --no-wasm-dry-run

@@ -669,6 +669,38 @@ void main() {
   // =========================================================================
 
   group('KeyboardShortcutService.resolve()', () {
+    test(
+      'selection restore uses keypad divide and supports a saved replacement',
+      () async {
+        final service = _freshService();
+        ShortcutAction? resolve(LogicalKeyboardKey key) =>
+            service.resolveBrowser(
+              _keyDown(key),
+              isCtrl: false,
+              isMeta: false,
+              isShift: false,
+              isAlt: false,
+            );
+        expect(
+          resolve(LogicalKeyboardKey.numpadDivide),
+          ShortcutAction.restoreSelection,
+        );
+        expect(resolve(LogicalKeyboardKey.slash), isNull);
+        await service.setBinding(
+          ShortcutAction.restoreSelection,
+          const ShortcutBinding(key: 'F9'),
+        );
+        expect(resolve(LogicalKeyboardKey.numpadDivide), isNull);
+        expect(resolve(LogicalKeyboardKey.f9), ShortcutAction.restoreSelection);
+        final reloaded = _freshService();
+        await reloaded.load();
+        expect(
+          reloaded.getBinding(ShortcutAction.restoreSelection),
+          const ShortcutBinding(key: 'F9'),
+        );
+      },
+    );
+
     test('resolve returns the matching action for default binding', () {
       final svc = _freshService();
       final event = _keyDown(LogicalKeyboardKey.keyT);

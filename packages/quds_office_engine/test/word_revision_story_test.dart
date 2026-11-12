@@ -188,7 +188,9 @@ void main() {
       );
       document.sections.single.header.clear();
       expect(WordRevisions.resolveParagraph(document, revision), isNull);
-      WordRevisions.reject(document, revision);
+      expect(() => WordRevisions.reject(document, revision), throwsStateError);
+      expect(revision.accepted, isNull);
+      expect(document.revisions, contains(same(revision)));
       expect(document.paragraphs.single.text, 'Body content');
       expect(target.text, 'Header added');
 
@@ -201,7 +203,8 @@ void main() {
         text: 'New',
       );
       document.sections.single.blocks.add(_paragraph('New body'));
-      WordRevisions.accept(document, invalid);
+      expect(() => WordRevisions.accept(document, invalid), throwsStateError);
+      expect(invalid.accepted, isNull);
       expect(document.paragraphs.last.text, 'New body');
     },
   );

@@ -55,7 +55,11 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: packages/crisp_storage/rust_cloud -> target
-      - run: |
+      - # Same minimum as the app (ios/Podfile); rustc's default iOS target
+        # lacks ___chkstk_darwin, which aws-lc (rustls) needs.
+        env:
+          IPHONEOS_DEPLOYMENT_TARGET: '15.0'
+        run: |
           cargo build --manifest-path packages/crisp_storage/rust_cloud/Cargo.toml --locked --release --target aarch64-apple-ios
           cargo build --manifest-path packages/crisp_storage/rust_cloud/Cargo.toml --locked --release --target aarch64-apple-ios-sim
   app:

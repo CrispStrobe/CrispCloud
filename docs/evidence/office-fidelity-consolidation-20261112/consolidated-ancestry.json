@@ -1,0 +1,111 @@
+{
+  "quds_office_suite": {
+    "consolidated_commit": "3ff2e15823c86cda88d3369dc4bbabf42f45290a",
+    "heads": [
+      {
+        "scope": "main",
+        "sha": "84b11839126a9577b6688b6acf80edd3cc2601ee",
+        "included_in_ancestry": true
+      },
+      {
+        "scope": "coverage",
+        "sha": "f29eb9c1c9a85224ef71595eba9163ce442c392b",
+        "included_in_ancestry": true
+      },
+      {
+        "scope": "completion",
+        "sha": "0396143c3aee20d5bb70f7298c48f3d63d488947",
+        "included_in_ancestry": true
+      },
+      {
+        "scope": "oracles",
+        "sha": "2873f6db4b9a0fa728dfb24907506f09b147ebae",
+        "included_in_ancestry": true
+      },
+      {
+        "scope": "crispcloud",
+        "sha": "c9655003f14c87ec0c11d481341126ebb08a1419",
+        "included_in_ancestry": true
+      },
+      {
+        "scope": "ci/flutter-workspace",
+        "sha": "aca2f66941832bd0b19b436baeab1656a1b7de98",
+        "included_in_ancestry": true
+      },
+      {
+        "scope": "cursor/class-certificates",
+        "sha": "f45099688e7a3f67a1302efdb442830d052f2240",
+        "included_in_ancestry": true
+      },
+      {
+        "scope": "cursor/cloud-agent",
+        "sha": "9930be8df44ffe117fb22778c514eea0ee73ce21",
+        "included_in_ancestry": true
+      }
+    ]
+  },
+  "CrispCloud": {
+    "consolidated_commit": "e226859cbde21af0b3d70b755c350978161a73c9",
+    "heads": [
+      {
+        "scope": "main",
+        "sha": "d32191c3af8d74c9ec59be20d3183e323dea532f",
+        "included_in_ancestry": true
+      },
+      {
+        "scope": "coverage",
+        "sha": "389a2fd2b9acb6d6213b9bbf2b5b6808534195f0",
+        "included_in_ancestry": true
+      },
+      {
+        "scope": "format-viewers/path-favorites",
+        "sha": "9068e31d8a11c61d4f40cc09badb4c176500f7b9",
+        "included_in_ancestry": true
+      },
+      {
+        "scope": "completion",
+        "sha": "d7797ecdd4da476c81b5641bce0da2e9c1e96adc",
+        "included_in_ancestry": true
+      },
+      {
+        "scope": "oracles",
+        "sha": "e58c5e51b0863e9e6308e742289e24e122b52ac2",
+        "included_in_ancestry": true
+      },
+      {
+        "scope": "file-manager-ux",
+        "sha": "08c9f8453589c2d1c43f7b2f3a6f79199ad953b3",
+        "included_in_ancestry": true
+      },
+      {
+        "scope": "rust-smb-bundled",
+        "sha": "e0d29a7c376818c58fc82a2f9dd3129d2e53e035",
+        "included_in_ancestry": true
+      },
+      {
+        "scope": "smb-storage-optimization",
+        "sha": "7b7c89c4d76a6b3fdeb3d11fb611d32ad0fa407e",
+        "included_in_ancestry": true
+      }
+    ]
+  },
+  "separate_active_work": [
+    {
+      "repo": "CrispCloud",
+      "pr": 53,
+      "scope": "ebook reader/editor",
+      "draft": true
+    },
+    {
+      "repo": "CrispCloud",
+      "pr": 54,
+      "scope": "file-manager capabilities",
+      "draft": true
+    },
+    {
+      "repo": "CrispCloud",
+      "branch": "feature/rust-cloud-engines",
+      "scope": "explicit unfinished work"
+    }
+  ]
+}

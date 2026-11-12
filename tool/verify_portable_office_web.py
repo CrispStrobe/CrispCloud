@@ -20,8 +20,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:archive/archive.dart';
 import 'package:crisp_cloud/services/legacy_powerpoint_document.dart';
-import 'package:crisp_cloud/services/legacy_word_document.dart';
-import 'package:crisp_cloud/services/legacy_word_structured_model.dart';
+import 'package:legacy_doc_parser/legacy_doc_parser.dart';
 import 'package:crisp_cloud/services/outlook_rtf_compression.dart';
 import 'package:crisp_cloud/services/rtf_document.dart';
 

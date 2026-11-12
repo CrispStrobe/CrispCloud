@@ -2,12 +2,21 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter/material.dart';
+import 'package:legacy_doc_parser/legacy_doc_parser.dart'
+    show
+        LegacyWordConversionException,
+        LegacyWordConversionIssue,
+        LegacyWordConversionLimitation,
+        LegacyWordOutputFormat,
+        LegacyWordStructuredConversion,
+        convertLegacyWord,
+        convertLegacyWordToDocx;
 
 import '../l10n/installed_office_strings.dart';
 import '../l10n/legacy_word_conversion_strings.dart';
 import '../providers/office_conversion_provider.dart';
 import '../services/installed_office_converter.dart';
-import '../services/legacy_word_conversion.dart';
+import '../services/legacy_word_copy.dart';
 import '../services/word_conversion_inspection.dart';
 
 LegacyWordStructuredConversion _convertStructuredWord(

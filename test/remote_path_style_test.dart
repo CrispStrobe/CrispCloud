@@ -10,7 +10,8 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   test('remote adapters never use the platform path context', () {
     final platformCall = RegExp(
-        r'(?<![\w.])p\.(join|joinAll|dirname|basename|basenameWithoutExtension|split|normalize|relative|isAbsolute|isWithin|extension)\(');
+      r'(?<![\w.])p\.(join|joinAll|dirname|basename|basenameWithoutExtension|split|normalize|relative|isAbsolute|isWithin|extension)\(',
+    );
     final offenders = <String>[];
     final adapters = Directory('lib/services')
         .listSync()
@@ -27,7 +28,10 @@ void main() {
         }
       }
     }
-    expect(offenders, isEmpty,
-        reason: 'Use p.posix for remote paths:\n${offenders.join('\n')}');
+    expect(
+      offenders,
+      isEmpty,
+      reason: 'Use p.posix for remote paths:\n${offenders.join('\n')}',
+    );
   });
 }

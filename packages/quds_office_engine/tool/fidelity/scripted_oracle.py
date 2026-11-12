@@ -137,7 +137,8 @@ def verify_sheet(parts):
     chart = target(parts,drawing,rid=E.fromstring(parts[drawing]).find('.//'+C+'chart').get(R+'id'))
     chart_root = E.fromstring(parts[chart])
     equal([float(v.text) for v in chart_root.findall('.//'+C+'val/'+C+'numRef/'+C+'numCache/'+C+'pt/'+C+'v')],[7,5],'live chart data')
-    equal(chart_root.find('.//'+C+'val/'+C+'numRef/'+C+'f').text,"'Data'!B2:B3",'chart formula')
+    equal(chart_root.find('.//'+C+'val/'+C+'numRef/'+C+'f').text,"'Data'!$B$2:$B$3",'native absolute chart formula')
+    equal(chart_root.find('.//'+C+'ser/'+C+'tx/'+C+'strRef/'+C+'f').text,"'Data'!B1",'native series-title formula')
 
 def verify_slide(parts):
     expected = EXPECTED['slide']

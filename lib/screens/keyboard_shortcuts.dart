@@ -28,6 +28,7 @@ import 'package:path/path.dart' as p;
 import '../services/archive_service.dart';
 
 import '../widgets/command_palette.dart';
+import '../widgets/command_entry_dialog.dart';
 import '../widgets/bookmark_actions.dart';
 import '../widgets/path_favorites.dart';
 import '../widgets/pattern_selection_dialog.dart';
@@ -374,6 +375,11 @@ KeyEventResult executeBrowserShortcut(
       unawaited(panel.reopenClosedTab());
     case ShortcutAction.commandPalette:
       showCommandPalette(context, ref);
+    case ShortcutAction.commandEntry:
+      unawaited(showCommandEntryDialog(context, ref));
+    case ShortcutAction.insertCommandFilename:
+    case ShortcutAction.insertCommandPath:
+      return KeyEventResult.ignored;
     case ShortcutAction.connect:
       showConnectionDialogScreen(context);
     case ShortcutAction.goToFolder:
@@ -382,6 +388,8 @@ KeyEventResult executeBrowserShortcut(
       showPanelFilterDialog(context, panel);
     case ShortcutAction.selectAll:
       panel.selectAll();
+    case ShortcutAction.restoreSelection:
+      panel.restoreSelection();
     case ShortcutAction.delete:
       confirmDeleteSelected(context, ref);
     case ShortcutAction.rename:

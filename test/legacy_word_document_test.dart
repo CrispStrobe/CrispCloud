@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:crisp_cloud/services/legacy_word_document.dart';
 import 'package:crisp_cloud/services/office_document_service.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:quds_office_engine/quds_office_engine.dart';
+import 'package:legacy_doc_parser/legacy_doc_parser.dart'
+    show extractLegacyWordText;
+import 'package:quds_office_engine/quds_office_engine.dart' show CfbfWriter;
 
 // Hand-built [MS-DOC] FIB and piece tables. Text deliberately occupies a
 // different physical order from its CP order and includes unreferenced bytes.

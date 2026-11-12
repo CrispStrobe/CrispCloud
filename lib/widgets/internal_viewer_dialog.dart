@@ -1,6 +1,6 @@
 // lib/widgets/internal_viewer_dialog.dart
 //
-// Double-Commander-style full-screen internal viewer (F3).
+// Full-screen internal viewer (F3).
 //
 // Supported modes:
 //   text     — UTF-8/UTF-16/Latin-1 decoding with syntax highlighting
@@ -47,6 +47,8 @@ import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../services/archive_viewer_service.dart';
 import '../services/file_bytes_loader.dart';
+import '../services/ebook_file_store.dart' show isEbookFileName;
+import 'ebook_editor_dialog.dart';
 import '../services/file_operation_backend.dart';
 import '../services/file_operation_service.dart';
 import '../services/viewer_spool.dart';
@@ -75,6 +77,8 @@ import 'legacy_word_conversion_action.dart';
 import '../l10n/legacy_word_conversion_strings.dart';
 import '../l10n/internal_viewer_strings.dart';
 import '../l10n/office_preview_strings.dart';
+import '../l10n/legacy_word_conversion_strings.dart';
+import 'legacy_word_conversion_action.dart';
 import '../l10n/file_bytes_error_strings.dart';
 import '../l10n/archive_viewer_error_strings.dart';
 import '../l10n/native_preview_error_strings.dart';
@@ -205,6 +209,19 @@ class _ViewerSessionHostState extends ConsumerState<_ViewerSessionHost> {
     final position = _items.length > 1
         ? '${_index + 1} / ${_items.length}'
         : null;
+    if (isEbookFileName(widget.displayName ?? item.file.name)) {
+      return EbookEditorDialog(
+        key: ValueKey(_index),
+        file: item.file,
+        side: widget.side,
+        origin: item.origin,
+        bytesOverride: widget.bytesOverride,
+        displayName: widget.displayName,
+        onPrevious: onPrevious,
+        onNext: onNext,
+        positionLabel: position,
+      );
+    }
     if (isKeePassFileName(widget.displayName ?? item.file.name)) {
       return KeePassEditorDialog(
         key: ValueKey(_index),
@@ -2227,6 +2244,14 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                               PopupMenuItem(
                                 value: 'latin1',
                                 child: Text(context.commanderTr("Latin-1")),
+                              ),
+                              const PopupMenuItem(
+                                value: 'cp437',
+                                child: Text('DOS (CP437)'),
+                              ),
+                              const PopupMenuItem(
+                                value: 'windows1252',
+                                child: Text('Windows-1252'),
                               ),
                             ],
                           ),

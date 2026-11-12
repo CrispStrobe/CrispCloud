@@ -50,6 +50,8 @@ import 'image_editor_dialog.dart';
 import 'media_editor_dialog.dart';
 import 'office_editor_dialog.dart';
 import 'pdf_editor_dialog.dart';
+import 'ebook_editor_dialog.dart';
+import '../services/ebook_file_store.dart' show isEbookFileName;
 import 'keepass_editor_dialog.dart';
 import 'legacy_word_conversion_action.dart';
 
@@ -64,6 +66,10 @@ Future<void> showFileEditorDialog(
   if (file.isFolder) return;
   try {
     if (!forceText) {
+      if (isEbookFileName(file.name)) {
+        await showEbookEditorDialog(context, ref, file, side);
+        return;
+      }
       if (isKeePassFileName(file.name)) {
         await showKeePassEditorDialog(context, ref, file, side);
         return;
@@ -785,7 +791,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
 
   void _toggleBom() {
     final document = _document;
-    if (document == null || document.encoding == EditorEncoding.latin1) return;
+    if (document == null || !document.encoding.supportsBom) return;
     setState(
       () => _document = document.copyWith(
         encoding: document.encoding == EditorEncoding.utf8
@@ -1249,9 +1255,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
       onPolicySelected: _setEndingPolicy,
       onNewLineEndingSelected: _setNewLineEnding,
       writesBom: document.writesBom,
-      onToggleBom: document.encoding == EditorEncoding.latin1
-          ? null
-          : _toggleBom,
+      onToggleBom: document.encoding.supportsBom ? _toggleBom : null,
       cursorLine: _cursorLine,
       cursorColumn: _cursorColumn,
       lineCount: _lineCount,

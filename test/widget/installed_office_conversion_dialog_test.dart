@@ -1,3 +1,5 @@
+import 'package:crisp_cloud/services/legacy_word_copy.dart';
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
@@ -6,14 +8,13 @@ import 'package:archive/archive.dart';
 import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/providers/office_conversion_provider.dart';
 import 'package:crisp_cloud/services/installed_office_converter.dart';
-import 'package:crisp_cloud/services/legacy_word_conversion.dart';
 import 'package:crisp_cloud/services/word_conversion_inspection.dart';
 import 'package:crisp_cloud/widgets/legacy_word_conversion_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quds_office_engine/quds_office_engine.dart' show CfbfWriter;
 
-import '../support/legacy_word_fixture.dart';
+import '../../packages/quds_office_engine/test/support/legacy_word_fixture.dart';
 
 const _engine = InstalledOfficeInstallation(
   kind: InstalledOfficeKind.libreOffice,

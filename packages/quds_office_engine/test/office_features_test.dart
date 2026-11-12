@@ -408,8 +408,13 @@ void main() {
     );
     word.restrictMode = WmlRestrictMode.comments;
     final OpcPackage docx = WordSerializer().write(word);
-    expect(docx.getPart('/customXml/sources.xml')!.readText(), contains('Ada'));
-    expect(docx.getPart('/customXml/item1.xml')!.readText(), contains('Ada'));
+    final bibliography = docx
+        .relationshipsFor('/word/document.xml')
+        .firstByType(RelationshipTypes.customXml)!;
+    final bibliographyUri = docx
+        .relationshipsFor('/word/document.xml')
+        .resolve(bibliography);
+    expect(docx.getPart(bibliographyUri)!.readText(), contains('Ada'));
     final WmlDocument opened = WordDeserializer().read(docx);
     expect(opened.citations, isNotEmpty);
   });

@@ -7,7 +7,8 @@ import 'package:xml/xml.dart';
 import 'package:xml/xml_events.dart';
 
 import 'archive_viewer_service.dart';
-import 'bounded_cfb_reader.dart';
+import 'package:quds_office_engine/quds_office_engine.dart'
+    show BoundedCfbReader, CfbfDirectoryEntry;
 
 enum WordConversionInspectionIssue {
   invalidInput,

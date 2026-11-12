@@ -11,7 +11,7 @@ import 'package:quds_office_engine/quds_office_engine.dart'
     show OpcPackage, OpcPackageKind;
 import 'package:xml/xml.dart';
 
-import 'support/legacy_word_fixture.dart';
+import '../packages/quds_office_engine/test/support/legacy_word_fixture.dart';
 
 Matcher failure(InstalledOfficeConversionErrorCode code) => throwsA(
   isA<InstalledOfficeConversionException>().having(

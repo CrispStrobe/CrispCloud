@@ -19,6 +19,7 @@ import '../model/word_revision.dart';
 import '../model/word_styles.dart';
 import '../model/word_toc.dart';
 import '../properties/wml_properties.dart';
+import 'word_bibliography_io.dart';
 import 'word_bookmark_io.dart';
 import 'word_comment_io.dart';
 import 'word_content_control_io.dart';
@@ -28,6 +29,7 @@ import 'word_numbering_io.dart';
 import 'word_opaque_io.dart';
 import 'word_property_io.dart';
 import 'word_section_io.dart';
+import 'word_settings_io.dart';
 import 'word_table_property_io.dart';
 
 /// Writes a [WmlDocument] back to a `.docx` OPC package.
@@ -55,11 +57,10 @@ class WordSerializer {
   Map<WmlSection, _HeaderFooterIds> _headerFooterIds =
       <WmlSection, _HeaderFooterIds>{};
   WmlDocument? _document;
-  Map<WmlParagraphProps, WmlBookmarkStart> _generatedBookmarks =
-      Map<WmlParagraphProps, WmlBookmarkStart>.identity();
   late WordSectionRevisionIds _sectionRevisionIds;
   final Map<WmlParagraph, int> _restartNumberingIds =
       Map<WmlParagraph, int>.identity();
+  Map<String, String> _generatedBookmarkIds = <String, String>{};
 
   /// writeBytes API.
   Uint8List writeBytes(WmlDocument document, {String? password}) {
@@ -68,19 +69,9 @@ class WordSerializer {
 
   /// write API.
   OpcPackage write(WmlDocument document) {
-    WordContentControlIo.validate(document);
-    for (final WmlSection section in document.sections) {
-      final List<_ColumnSlice> slices = _columnSlices(section);
-      if (slices.length > 1) {
-        for (final _ColumnSlice slice in slices) {
-          WordContentControlIo.validateBlockSequence(
-            slice.blocks,
-            'automatic column slice',
-          );
-        }
-      }
-    }
-    _generatedBookmarks = WordBookmarkIo.prepare(document);
+    _generatedBookmarkIds = WordBookmarks.generatedIds(document);
+    WordRevisions.validate(document);
+    WordContentControls.validate(document);
     final OpcPackage package =
         document.package ?? OpcPackage.create(OpcPackageKind.word);
     final PackageRelationship? office = package.packageRelationships
@@ -135,7 +126,7 @@ class WordSerializer {
     _syncWatermark(document, package);
     _syncStyles(document, package);
     _syncNotes(document, package);
-    _syncCitations(document, package);
+    WordBibliographyIo.write(document, package, _mainPartUri);
     _syncSettings(document, package);
     document.properties.writeToPackage(package);
     document.package = package;
@@ -253,6 +244,17 @@ class WordSerializer {
     Map<OfficeVisual, String> imageIds,
   ) {
     switch (block) {
+      case WmlContentControlBlock():
+        final shell = WordContentControlIo.start(
+          w,
+          block.control,
+          _package!,
+          _activePartUri,
+        );
+        for (final child in block.blocks) {
+          _writeBlock(w, child, imageIds);
+        }
+        WordContentControlIo.end(w, shell);
       case WmlParagraph():
         _writeParagraph(w, block);
       case WmlTable():
@@ -295,8 +297,6 @@ class WordSerializer {
         w.writeEndElement();
       case WmlToc():
         _writeToc(w, block);
-      case WmlSdtBlockBoundary():
-        WordContentControlIo.writeBoundary(w, block.control, block.isStart);
       case WmlOpaqueBlock():
         WordOpaqueIo.write(w, block, _package!, _activePartUri);
     }
@@ -304,6 +304,13 @@ class WordSerializer {
 
   void _writeToc(XmlWriter w, WmlToc toc) {
     WordToc.ensureBody(toc);
+    final native = WordToc.nativeParagraphs(toc);
+    if (native != null) {
+      for (final paragraph in native) {
+        _writeParagraph(w, paragraph, nativeTocBoundary: true);
+      }
+      return;
+    }
     _writeParagraph(w, toc.titleParagraph);
     w.writeStartElement('p', prefix: 'w');
     _writePPr(w, WmlParagraphProps());
@@ -327,6 +334,16 @@ class WordSerializer {
     final int count = toc.itemParagraphs.length;
     for (int i = 0; i < count; i++) {
       final WmlParagraph para = _copyParagraph(toc.itemParagraphs[i]);
+      // An imported cache paragraph can also contain the source TOC's begin
+      // and instruction. The live TOC above owns that field; retaining the
+      // paragraph instruction would nest a second complete TOC in its cache.
+      if (WordToc.isTocInstruction(para.properties.fieldInstruction)) {
+        para.properties
+          ..fieldInstruction = null
+          ..fieldBegin = false
+          ..fieldSeparate = false
+          ..fieldEnd = false;
+      }
       final bool showNumber =
           i < toc.entries.length &&
           toc.showsPageNumberForLevel(toc.entries[i].level);
@@ -580,7 +597,12 @@ class WordSerializer {
     bool endnote = false,
     bool addNoteReferenceSpace = true,
     String? noteReferencePropertiesXml,
+    bool nativeTocBoundary = false,
   }) {
+    final paragraphShells = <XmlElement>[
+      for (final control in paragraph.contentControlWrappers)
+        WordContentControlIo.start(w, control, _package!, _activePartUri),
+    ];
     w.writeStartElement('p', prefix: 'w');
     final int? numberedInstance = _restartNumberingIds[paragraph];
     final WmlParagraphProps properties = numberedInstance == null
@@ -633,21 +655,36 @@ class WordSerializer {
       w.writeEndElement();
       w.writeEndElement();
     }
-    final WmlBookmarkStart? bookmark =
-        _generatedBookmarks[paragraph.properties];
-    if (bookmark != null) WordBookmarkIo.write(w, bookmark);
+    final String? bookmark = WordBookmarks.generatedName(paragraph);
+    if (bookmark != null && bookmark.isNotEmpty) {
+      w.writeEmptyElement(
+        'bookmarkStart',
+        prefix: 'w',
+        attributes: <String, String>{
+          'w:id': _generatedBookmarkIds[bookmark]!,
+          'w:name': bookmark,
+        },
+      );
+    }
     final String? field = paragraph.properties.fieldInstruction;
     final bool pageField =
         paragraph.properties.pageNumberField &&
         (field == null || field.trim().isEmpty);
-    if (field != null && field.trim().isNotEmpty) {
+    if (nativeTocBoundary && paragraph.properties.fieldBegin) {
       _writeFieldChar(w, 'begin');
+    }
+    if (field != null && field.trim().isNotEmpty) {
+      if (!nativeTocBoundary) _writeFieldChar(w, 'begin');
       w.writeStartElement('r', prefix: 'w');
       w.writeStartElement('instrText', prefix: 'w');
       w.writeAttribute('xml:space', 'preserve');
       w.writeText(field);
       w.writeEndElement();
       w.writeEndElement();
+      if (!nativeTocBoundary || paragraph.properties.fieldSeparate) {
+        _writeFieldChar(w, 'separate');
+      }
+    } else if (nativeTocBoundary && paragraph.properties.fieldSeparate) {
       _writeFieldChar(w, 'separate');
     } else if (pageField) {
       _writeFieldChar(w, 'begin');
@@ -662,6 +699,7 @@ class WordSerializer {
     var i = 0;
     var offset = 0;
     var pageFieldOpen = pageField;
+    final controlShells = <XmlElement>[];
     while (i < paragraph.inlines.length) {
       final WmlInline inline = paragraph.inlines[i];
       if (inline is WmlRun) {
@@ -702,6 +740,35 @@ class WordSerializer {
         continue;
       }
       switch (inline) {
+        case WmlContentControlBoundary():
+          if (inline.start) {
+            controlShells.add(
+              WordContentControlIo.start(
+                w,
+                inline.control,
+                _package!,
+                _activePartUri,
+              ),
+            );
+          } else {
+            WordContentControlIo.end(w, controlShells.removeLast());
+          }
+        case WmlBookmarkBoundary():
+          _writeBookmarkBoundary(w, inline);
+        case WmlNoteMarker():
+          w.writeStartElement('r', prefix: 'w');
+          final marker = inline.properties;
+          final changed = WordPropertyIo.runValues(marker).entries.any(
+            (entry) => marker.importedValues?[entry.key] != entry.value,
+          );
+          if (marker.sourcePropertiesXml != '' || changed) {
+            _writeRPr(w, marker);
+          }
+          w.writeEmptyElement(
+            inline.endnote ? 'endnoteRef' : 'footnoteRef',
+            prefix: 'w',
+          );
+          w.writeEndElement();
         case WmlRun():
           if (pageFieldOpen) {
             _writePageFieldResult(w, inline);
@@ -728,28 +795,14 @@ class WordSerializer {
           w.writeEndElement();
           w.writeEndElement();
           w.writeEndElement();
-        case WmlNoteBodyMarker():
-          w.writeStartElement('r', prefix: 'w');
-          if (inline.propertiesXml.isNotEmpty) {
-            XmlDocument.parse(inline.propertiesXml).root!.writeTo(w);
-          }
-          w.writeEmptyElement(
-            inline.endnote ? 'endnoteRef' : 'footnoteRef',
-            prefix: 'w',
-          );
-          w.writeEndElement();
-        case WmlSdtInlineBoundary():
-          WordContentControlIo.writeBoundary(w, inline.control, inline.isStart);
-        case WmlBookmarkMarker():
-          WordBookmarkIo.write(w, inline);
-        case WmlZeroWidthInline():
-          throw StateError('Unsupported inline marker: ${inline.runtimeType}');
       }
       _closeCommentsNotIn(w, _peekCommentIds(paragraph, i + 1));
       i++;
     }
     _closeCommentsNotIn(w, const <int>[]);
-    if (field != null && field.trim().isNotEmpty) {
+    if (nativeTocBoundary
+        ? paragraph.properties.fieldEnd
+        : field != null && field.trim().isNotEmpty) {
       _writeFieldChar(w, 'end');
     } else if (pageFieldOpen) {
       w.writeStartElement('r', prefix: 'w');
@@ -759,10 +812,21 @@ class WordSerializer {
       w.writeEndElement();
       _writeFieldChar(w, 'end');
     }
-    if (bookmark != null) {
-      WordBookmarkIo.write(w, WmlBookmarkEnd(id: bookmark.id));
+    if (bookmark != null && bookmark.isNotEmpty) {
+      w.writeEmptyElement(
+        'bookmarkEnd',
+        prefix: 'w',
+        attributes: <String, String>{'w:id': _generatedBookmarkIds[bookmark]!},
+      );
     }
     w.writeEndElement();
+    for (final shell in paragraphShells.reversed) {
+      WordContentControlIo.end(w, shell);
+    }
+  }
+
+  void _writeBookmarkBoundary(XmlWriter writer, WmlBookmarkBoundary boundary) {
+    WordBookmarkIo.write(writer, boundary);
   }
 
   void _writeTrackedRun(
@@ -1265,6 +1329,8 @@ class WordSerializer {
     WordFrameIo.write(
       w,
       frame,
+      writeParagraphProperties: (writer, properties) =>
+          _writePPr(writer, properties),
       writeBlock: (XmlWriter inner, WmlBlock child) {
         _writeBlock(inner, child, imageIds);
       },
@@ -1552,29 +1618,18 @@ class WordSerializer {
       RelationshipTypes.settings,
       'settings.xml',
     );
-    final XmlWriter w = XmlWriter();
-    w.writeStartDocument();
-    w.writeStartElement('settings', prefix: 'w');
-    w.writeNamespace('w', OfficeNamespaces.w);
-    if (document.trackRevisions) {
-      w.writeEmptyElement('trackRevisions', prefix: 'w');
-    }
-    if (document.restrictEditing) {
-      w.writeEmptyElement(
-        'documentProtection',
-        prefix: 'w',
-        attributes: <String, String>{'w:enforcement': '1'},
-      );
-    }
-    if (document.sections.any((WmlSection s) => s.differentOddEven)) {
-      w.writeEmptyElement('evenAndOddHeaders', prefix: 'w');
-    }
-    w.writeEndElement();
+    final xml = WordSettingsIo.merge(
+      package.getPart(uri)?.readText(),
+      tracking: document.trackRevisions,
+      protection: document.restrictEditing,
+      oddEven: document.sections.any((s) => s.differentOddEven),
+    );
+    if (xml == null) return;
     _putPart(
       package,
       uri,
       OfficeContentTypes.wordSettings,
-      w.toXml(),
+      xml,
       RelationshipTypes.settings,
     );
   }
@@ -1630,37 +1685,6 @@ class WordSerializer {
     w.writeEndElement();
     w.writeEndElement();
     w.writeEndElement();
-  }
-
-  void _syncCitations(WmlDocument document, OpcPackage package) {
-    if (document.citations.isEmpty && document.indexMarks.isEmpty) {
-      return;
-    }
-    final StringBuffer sources = StringBuffer(
-      '<?xml version="1.0" encoding="UTF-8"?>'
-      '<b:Sources xmlns:b="http://schemas.openxmlformats.org/officeDocument/2006/bibliography">',
-    );
-    for (final WmlCitation citation in document.citations) {
-      sources.write(
-        '<b:Source><b:Tag>${_xmlEscape(citation.tag)}</b:Tag>'
-        '<b:Author>${_xmlEscape(citation.author)}</b:Author>'
-        '<b:Title>${_xmlEscape(citation.title)}</b:Title>'
-        '<b:Year>${_xmlEscape(citation.year)}</b:Year></b:Source>',
-      );
-    }
-    sources.write('</b:Sources>');
-    final String xml = sources.toString();
-    for (final String uri in <String>[
-      '/customXml/sources.xml',
-      '/customXml/item1.xml',
-    ]) {
-      final PackagePart? existing = package.getPart(uri);
-      if (existing == null) {
-        package.createPart(uri, 'application/xml', utf8.encode(xml));
-      } else {
-        existing.writeText(xml);
-      }
-    }
   }
 
   void _syncNumbering(OpcPackage package) {
@@ -2041,7 +2065,44 @@ class WordSerializer {
     );
   }
 
-  void _writeNoteChrome(XmlWriter w, String item) {
+  void _writeNoteChrome(XmlWriter w, String item, XmlElement? source) {
+    if (source != null) {
+      // An imported part owns its separator choices, including their absence.
+      // Replacing them with the conventional pair adds a visible rule to
+      // documents that deliberately contain no separator definition.
+      for (final node in source.childElements) {
+        if (node.namespaceUri != OfficeNamespaces.w ||
+            node.localName != item ||
+            !const {
+              'separator',
+              'continuationSeparator',
+              'continuationNotice',
+            }.contains(
+              node.getAttribute('type', namespaceUri: OfficeNamespaces.w),
+            )) {
+          continue;
+        }
+        final retained = node.copy();
+        // Native fragments may depend on aliases or markup-compatibility
+        // context declared on their original root. Keep that context local so
+        // a foreign source `w` binding cannot reinterpret generated notes.
+        for (final attribute in source.attributes) {
+          final inherited =
+              attribute.prefix == 'xmlns' ||
+              attribute.qualifiedName == 'xmlns' ||
+              attribute.namespaceUri == OfficeNamespaces.xml ||
+              attribute.namespaceUri == OfficeNamespaces.mc;
+          if (inherited &&
+              !retained.attributes.any(
+                (existing) => existing.qualifiedName == attribute.qualifiedName,
+              )) {
+            retained.attributes.add(attribute.copy());
+          }
+        }
+        retained.writeTo(w);
+      }
+      return;
+    }
     const chrome = <({int id, String type, String element})>[
       (id: -1, type: 'separator', element: 'separator'),
       (id: 0, type: 'continuationSeparator', element: 'continuationSeparator'),
@@ -2068,6 +2129,10 @@ class WordSerializer {
     String root,
     String item,
   ) {
+    final sourcePart = package.getPart(uri);
+    final source = sourcePart == null
+        ? null
+        : XmlDocument.parse(sourcePart.readText()).root;
     final Map<OfficeVisual, String> imageIds = WordDrawingIo.syncVisuals(
       notes
           .expand((WmlNote note) => note.visuals)
@@ -2086,19 +2151,16 @@ class WordSerializer {
     w.writeNamespace('pic', WordDrawingIo.pictureUri);
     final String previousPart = _activePartUri;
     _activePartUri = uri;
-    // Word treats these two notes as footnote/endnote chrome. They are not
-    // part of the editable model, but Word and LibreOffice expect them in the
-    // package; recreate the standard pair rather than dropping them on save.
-    _writeNoteChrome(w, item);
+    // Separators are not editable note bodies. Preserve their native metadata;
+    // only a newly created note part receives the conventional standard pair.
+    _writeNoteChrome(w, item, source);
     for (final WmlNote note in notes) {
       w.writeStartElement(item, prefix: 'w');
       w.writeAttribute('w:id', '${note.id}');
-      var referenceWritten = note.preserveBodyMarkers;
+      // Imported absence is intentional. A marker already present in any
+      // paragraph or nested table must stay there without a second prefix.
+      var referenceWritten = !note.addReference || note.hasReferenceMarkers;
       for (final WmlBlock block in note.blocks) {
-        if (block is WmlSdtBlockBoundary) {
-          _writeBlock(w, block, imageIds);
-          continue;
-        }
         if (!referenceWritten) {
           _writeParagraph(
             w,
@@ -2117,7 +2179,7 @@ class WordSerializer {
         _writeParagraph(
           w,
           WmlParagraph(),
-          noteReference: !note.preserveBodyMarkers,
+          noteReference: !referenceWritten,
           endnote: note.endnote,
           addNoteReferenceSpace: note.addReferenceSpace,
           noteReferencePropertiesXml: note.referencePropertiesXml,
@@ -2157,13 +2219,6 @@ class WordSerializer {
       throw FormatException('The Word $name part must be inside its package');
     }
     return rels.resolve(rel);
-  }
-
-  static String _xmlEscape(String text) {
-    return text
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;');
   }
 }
 

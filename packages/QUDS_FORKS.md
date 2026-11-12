@@ -214,3 +214,17 @@ Run the external schema gate over the complete evidence as well, then push the
 app feature checkpoint. Keep commits small and add a CrispCloud regression test
 for every host-visible bug. Do not rewrite packages during sync or regenerate
 goldens simply to accept changed output.
+
+## Consolidated continuation — 12 November 2026
+
+`feature/office-fidelity-consolidation-20261112` combines current app main with
+the newer Office coverage branch. The vendor manifest now pins 309 shared files
+to suite commit `3ff2e15823c86cda88d3369dc4bbabf42f45290a` on the same feature
+branch. This retains both source histories and their independent regression
+corpora, and integrates the monotonic content revision used to protect pending
+Word note, spreadsheet cell, and slide text drafts during uploads.
+
+The acceptance inventory requires 241 engine exports and 59 actual host saves
+(48 DOCX, 4 XLSX, 4 PPTX, and one DOCM/DOTX/DOTM each).
+See [the consolidation report](../docs/office-fidelity-consolidation-20261112.md)
+for current validation status; the earlier measurements above remain historical.

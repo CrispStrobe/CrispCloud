@@ -3,7 +3,7 @@
 CrispCloud consumes the portable Dart package
 [`legacy_doc_parser`](https://github.com/CrispStrobe/legacy-doc-parser) from the
 user-created repository. The current reviewed runtime is pinned to
-`72da6223832c3cbc41929064c8f160cec10016f7` in both `pubspec.yaml` and
+`80e9683c0d60553f7198ca89a64aa927d619c684` in both `pubspec.yaml` and
 `pubspec.lock`. It is version `0.1.0-dev.1`; no pub.dev release has been made.
 Later adoption of a hosted release is an explicit dependency update.
 
@@ -20,9 +20,10 @@ Later adoption of a hosted release is an explicit dependency update.
 The package has no Flutter, platform process, network-service or native-library
 dependency. Its only runtime package dependency is `archive`, which was already
 resolved by CrispCloud. The small CFB implementation is included with its MIT
-notice. The app imports the public `legacy_doc_parser.dart` library through
-thin compatibility exports. It no longer contains a private copy of the Word
-parser or a `packages/legacy_doc_parser` mirror.
+notice. The app's DOC/DOT routes import the public `legacy_doc_parser.dart`
+library. The temporary `packages/legacy_doc_parser` mirror is removed. The
+shared Quds engine retains its existing legacy APIs for other consumers;
+CrispCloud's document previews and conversion use the standalone package.
 
 ## App behavior
 

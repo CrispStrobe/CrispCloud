@@ -51,7 +51,7 @@ void main() {
       final plan = await prepare(['/source/file.txt'], destination: '/folder ');
       expect(plan.targetDirectory, '/folder ');
       expect(plan.errors, isEmpty);
-    expect(plan.entries.single.destination, '/folder /file.txt');
+      expect(plan.entries.single.destination, '/folder /file.txt');
       await execute(plan);
       expect(target.text('/folder /file.txt'), 'copied contents');
       expect(target.text('/folder/file.txt'), 'other destination');
@@ -306,27 +306,33 @@ void main() {
       expect(target.text('/target/report.txt'), 'appeared after preview');
     });
 
-    test('staged writes cannot use another selected source as scratch space', () async {
-      source.file('/source/report.txt', 'new contents');
-      final guarded = _StagedPathBackend('/target/selected.txt')
-        ..directory('/target')
-        ..file('/target/selected.txt', 'protected contents');
-      final plan = await service.prepare(
-        files: [source.item('/source/report.txt')],
-        source: source,
-        destination: guarded,
-        targetDirectory: '/target',
-        protectedDestinationPaths: ['/target/selected.txt'],
-      );
-      expect(plan.canExecute, isTrue);
-      await execute(plan);
-      expect(plan.entries.single.failed, isTrue);
-      expect(plan.entries.single.message, contains('another selected source'));
-      expect(guarded.writeAttempts, isEmpty);
-      expect(guarded.text('/target/selected.txt'), 'protected contents');
-      expect(guarded.contains('/target/report.txt'), isFalse);
-      expect(source.text('/source/report.txt'), 'new contents');
-    });
+    test(
+      'staged writes cannot use another selected source as scratch space',
+      () async {
+        source.file('/source/report.txt', 'new contents');
+        final guarded = _StagedPathBackend('/target/selected.txt')
+          ..directory('/target')
+          ..file('/target/selected.txt', 'protected contents');
+        final plan = await service.prepare(
+          files: [source.item('/source/report.txt')],
+          source: source,
+          destination: guarded,
+          targetDirectory: '/target',
+          protectedDestinationPaths: ['/target/selected.txt'],
+        );
+        expect(plan.canExecute, isTrue);
+        await execute(plan);
+        expect(plan.entries.single.failed, isTrue);
+        expect(
+          plan.entries.single.message,
+          contains('another selected source'),
+        );
+        expect(guarded.writeAttempts, isEmpty);
+        expect(guarded.text('/target/selected.txt'), 'protected contents');
+        expect(guarded.contains('/target/report.txt'), isFalse);
+        expect(source.text('/source/report.txt'), 'new contents');
+      },
+    );
   });
 
   group('shared search criteria', () {
@@ -600,6 +606,28 @@ void main() {
       expect(source.text('/source/a.txt'), 'abcdefgh');
     });
 
+    test(
+      'verified resume rejects a same-length wrong suffix before publication',
+      () async {
+        source.file('/source/a.txt', 'abcdefgh');
+        source.rangeContents = 'WRNG';
+        target.file('/target/a.txt', 'abcd');
+        final plan = await prepare(
+          ['/source/a.txt'],
+          options: const FileOperationOptions(
+            kind: FileOperationKind.move,
+            fileConflict: FileConflictPolicy.resumeVerified,
+          ),
+        );
+        await execute(plan);
+        expect(plan.entries.single.outcome, FileOperationOutcome.failed);
+        expect(plan.entries.single.message, contains('Resumed bytes differ'));
+        expect(target.text('/target/a.txt'), 'abcd');
+        expect(source.text('/source/a.txt'), 'abcdefgh');
+        expect(source.deleted, isEmpty);
+      },
+    );
+
     test('append stages complete combined content before replacing', () async {
       source.file('/source/a.txt', 'new');
       target.file('/target/a.txt', 'old');
@@ -694,29 +722,37 @@ void main() {
       expect(target.contains('/target/a_copy-001_copy-001.txt'), isFalse);
     });
 
-    test('custom same-directory names respect case-insensitive collisions', () async {
-      source = _CaseInsensitiveMemoryBackend('source');
-      source.file('/tree/a.txt', 'source');
-      source.file('/tree/A_COPY-001.TXT', 'retain');
-      final plan = await prepare(
-        ['/tree/a.txt'],
-        targetBackend: source,
-        destination: '/tree',
-        options: const FileOperationOptions(
-          fileConflict: FileConflictPolicy.keepBoth,
-          duplicateNameTemplate: '{name}_copy-{counter:000}{ext}',
-        ),
-      );
-      expect(plan.entries.single.destination, '/tree/a_copy-002.txt');
-      await execute(plan);
-      expect(source.text('/tree/A_COPY-001.TXT'), 'retain');
-      expect(source.text('/tree/a_copy-002.txt'), 'source');
-    });
+    test(
+      'custom same-directory names respect case-insensitive collisions',
+      () async {
+        source = _CaseInsensitiveMemoryBackend('source');
+        source.file('/tree/a.txt', 'source');
+        source.file('/tree/A_COPY-001.TXT', 'retain');
+        final plan = await prepare(
+          ['/tree/a.txt'],
+          targetBackend: source,
+          destination: '/tree',
+          options: const FileOperationOptions(
+            fileConflict: FileConflictPolicy.keepBoth,
+            duplicateNameTemplate: '{name}_copy-{counter:000}{ext}',
+          ),
+        );
+        expect(plan.entries.single.destination, '/tree/a_copy-002.txt');
+        await execute(plan);
+        expect(source.text('/tree/A_COPY-001.TXT'), 'retain');
+        expect(source.text('/tree/a_copy-002.txt'), 'source');
+      },
+    );
 
     test('invalid template cannot preview or execute a forged plan', () async {
       source.file('/a', 'retain');
-      const invalid = FileOperationOptions(duplicateNameTemplate: '../{counter}');
-      await expectLater(prepare(['/a'], options: invalid), throwsFormatException);
+      const invalid = FileOperationOptions(
+        duplicateNameTemplate: '../{counter}',
+      );
+      await expectLater(
+        prepare(['/a'], options: invalid),
+        throwsFormatException,
+      );
       final forged = FileOperationPlan(
         source: source,
         destination: target,
@@ -729,20 +765,25 @@ void main() {
       expect(target.writeAttempts, isEmpty);
     });
 
-    test('saved duplicate-name bases cannot redirect a late conflict', () async {
-      source.file('/a', 'retain');
-      target.file('/target/a', 'old');
-      final plan = await prepare(
-        ['/a'],
-        options: const FileOperationOptions(fileConflict: FileConflictPolicy.keepBoth),
-      );
-      target.file(plan.entries.single.destination, 'late conflict');
-      plan.entries.single.recovery!['duplicateNameBase'] = '/elsewhere/a';
-      await execute(plan);
-      expect(plan.entries.single.outcome, FileOperationOutcome.failed);
-      expect(plan.entries.single.message, contains('duplicate-name base'));
-      expect(target.writeAttempts, isEmpty);
-    });
+    test(
+      'saved duplicate-name bases cannot redirect a late conflict',
+      () async {
+        source.file('/a', 'retain');
+        target.file('/target/a', 'old');
+        final plan = await prepare(
+          ['/a'],
+          options: const FileOperationOptions(
+            fileConflict: FileConflictPolicy.keepBoth,
+          ),
+        );
+        target.file(plan.entries.single.destination, 'late conflict');
+        plan.entries.single.recovery!['duplicateNameBase'] = '/elsewhere/a';
+        await execute(plan);
+        expect(plan.entries.single.outcome, FileOperationOutcome.failed);
+        expect(plan.entries.single.message, contains('duplicate-name base'));
+        expect(target.writeAttempts, isEmpty);
+      },
+    );
 
     test('same-directory Keep both creates a distinct copy and preserves the source', () async {
       source.file('/tree/a.txt', 'original');
@@ -1656,6 +1697,7 @@ class _MemoryBackend extends FileOperationBackend {
   final corruptWrites = <String>{};
   final deleted = <String>[];
   final reads = <String>[];
+  String? rangeContents;
   FutureOr<void> Function(String path, List<int> chunk)? onWriteChunk;
   FutureOr<void> Function(String path)? onWriteCommitted;
 
@@ -1752,6 +1794,15 @@ class _MemoryBackend extends FileOperationBackend {
     for (var start = 0; start < bytes.length; start += 2) {
       _check();
       yield bytes.sublist(start, (start + 2).clamp(0, bytes.length));
+    }
+  }
+
+  @override
+  Stream<List<int>> readRange(FileItem file, int offset) async* {
+    if (rangeContents != null) {
+      yield utf8.encode(rangeContents!);
+    } else {
+      yield* super.readRange(file, offset);
     }
   }
 

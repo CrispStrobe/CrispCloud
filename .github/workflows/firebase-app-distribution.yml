@@ -28,6 +28,12 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Set up bundled ebook converter
+        uses: ./.github/actions/setup-ebook-rust
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android
+          android: 'true'
+
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
