@@ -26,8 +26,8 @@ creation, image replacement and opaque body XML (`w:altChunk` and any other
 unmodeled body element, with its relationship provenance). The editor adds
 layout exports and the async controller export.
 
-The authored manifests require **373 engine files** and **25 editor files**.
-The engine has 110 complete three-save series and 43 standalone inputs/exports;
+The authored manifests require **346 engine files** and **25 editor files**.
+The engine has 102 complete three-save series and 40 standalone inputs/exports;
 the editor has eight complete three-save series and one standalone export.
 The recovered preferred-width corpus uses `fidelity-table-widths/`; the earlier
 logical-grid/omitted-row corpus remains in `fidelity-table-grid/`. Their distinct

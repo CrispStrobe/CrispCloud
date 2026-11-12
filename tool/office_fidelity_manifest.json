@@ -1,7 +1,7 @@
 {
   "source_repository": "CrispStrobe/quds_office_suite",
   "source_branch": "fix/word-package-guards-20261112",
-  "source_commit": "adff2b42b43ecb822c82fe6dc8eb221072aa82b4",
+  "source_commit": "dafaaf1899fba6f1d0079e85d8358b7dd1f27db4",
   "files": {
     "packages/quds_office_editor/CHANGELOG.md": "7290a134a6f9a039cb68584b5f5f0296a0dd7d7ffe9f215bdbdfa0efef6619d5",
     "packages/quds_office_editor/lib/src/editor_sheet/render_sheet_grid.dart": "dde600201484a04a07e922b12d0098b3334bb3c3289476a7ea4e88a28cd4e9f4",
@@ -274,7 +274,7 @@
     "packages/quds_office_engine/test/word_tree_test.dart": "761103a75d2692a378a136f59f0e4776aa1a3d707c612ab6c6ee52fb9adc9f0a",
     "packages/quds_office_engine/test/xml_whitespace_fidelity_test.dart": "f9541bc7b08f0bee825caf7ced3377372e87d0800f6c91fb065307f96fb0b48e",
     "packages/quds_office_engine/test/zip_bounded_read_test.dart": "ae33b7e3eca89abbcbe27c70f7f7ea2a42abb15bf17e3bb67fef9e03895e9ddf",
-    "packages/quds_office_engine/tool/fidelity/README.md": "ce993761761f34f2cdac9b114dabd7e6a19825b7128cd362dc818657b1abda39",
+    "packages/quds_office_engine/tool/fidelity/README.md": "12e6b8ece4f47c138f9bfd416bdbacf253f5f782ffa3f7fdaff179473b054adb",
     "packages/quds_office_engine/tool/fidelity/altchunk_oracle.py": "f0c35b0960e8e28e84695e7ce61362c6d60dbb7fdd6564c20664ab53aadf5304",
     "packages/quds_office_engine/tool/fidelity/audit_operations.py": "44c2821d062bd2b0ce221db63d41c3cce26b68d6d9dbff05ccc977c162e58d88",
     "packages/quds_office_engine/tool/fidelity/auxiliary_content_control_oracle.py": "27b040f269c52baf71ba85164d92c5c65103ee76e3714d9bb3c667dab3945139",
@@ -306,7 +306,7 @@
     "packages/quds_office_engine/tool/fidelity/notes.dart": "a7b5ed2a7813bcf38cdd80e01c1bd4149c6929ba38d8bae556b3cd3db3da682d",
     "packages/quds_office_engine/tool/fidelity/notes_oracle.py": "fb24159a825d174936b6f66cf889b88b14a47dba826a5e91cb815adfff140934",
     "packages/quds_office_engine/tool/fidelity/office_steps.dart": "614f3e09f83e70f61b3512d06daef4134e5dbafaa7f3af7ea27e4be91a07991b",
-    "packages/quds_office_engine/tool/fidelity/output_manifest.json": "cf4f65a17ea77d14627b26258c0d8021f3bde938fd949babd29562f5e7e4e5bf",
+    "packages/quds_office_engine/tool/fidelity/output_manifest.json": "66a5763116a39572c18835db5d70cd42ed8dd3dc8f293c881466533c4da5be45",
     "packages/quds_office_engine/tool/fidelity/revision_story_oracle.py": "45feb26e395a67fafadc55f129610237e0d9e80e86346c1e4274e68dc420500f",
     "packages/quds_office_engine/tool/fidelity/scenarios.dart": "417c5a2aa5f54bc99e2373958d405829544a846bc675ef2074ba186fd35d5074",
     "packages/quds_office_engine/tool/fidelity/scripted_oracle.py": "4c8aca2f13bf14fca4288bd6f6d4080dc51922c17daa7a80ffc2397197de91d3",

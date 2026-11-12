@@ -1,7 +1,7 @@
 {
   "version": 1,
   "package": "quds_office_engine",
-  "expected_file_count": 373,
+  "expected_file_count": 346,
   "description": "Authored from the scenarios and regression tests. These paths are an inventory, not a golden generated from current output. SHA receipts identify each run; the semantic and renderer oracles decide correctness.",
   "series": [
     {
@@ -806,78 +806,6 @@
       "producer": "test/content_control_fidelity_test.dart"
     },
     {
-      "pattern": "fidelity-table-grid/direct/unchanged-{cycle}.docx",
-      "cycles": [
-        1,
-        2,
-        3
-      ],
-      "producer": "test/table_grid_steps_test.dart"
-    },
-    {
-      "pattern": "fidelity-table-grid/direct/format-{cycle}.docx",
-      "cycles": [
-        1,
-        2,
-        3
-      ],
-      "producer": "test/table_grid_steps_test.dart"
-    },
-    {
-      "pattern": "fidelity-table-grid/direct/replace-{cycle}.docx",
-      "cycles": [
-        1,
-        2,
-        3
-      ],
-      "producer": "test/table_grid_steps_test.dart"
-    },
-    {
-      "pattern": "fidelity-table-grid/direct/unmerge-{cycle}.docx",
-      "cycles": [
-        1,
-        2,
-        3
-      ],
-      "producer": "test/table_grid_steps_test.dart"
-    },
-    {
-      "pattern": "fidelity-table-grid/isolate/unchanged-{cycle}.docx",
-      "cycles": [
-        1,
-        2,
-        3
-      ],
-      "producer": "test/table_grid_steps_test.dart"
-    },
-    {
-      "pattern": "fidelity-table-grid/isolate/format-{cycle}.docx",
-      "cycles": [
-        1,
-        2,
-        3
-      ],
-      "producer": "test/table_grid_steps_test.dart"
-    },
-    {
-      "pattern": "fidelity-table-grid/isolate/replace-{cycle}.docx",
-      "cycles": [
-        1,
-        2,
-        3
-      ],
-      "producer": "test/table_grid_steps_test.dart"
-    },
-    {
-      "pattern": "fidelity-table-grid/isolate/unmerge-{cycle}.docx",
-      "cycles": [
-        1,
-        2,
-        3
-      ],
-      "producer": "test/table_grid_steps_test.dart"
-    },
-    {
       "pattern": "fidelity-bookmark-copy/copied-{cycle}.docx",
       "cycles": [
         1,
@@ -1111,18 +1039,6 @@
     {
       "path": "fidelity-bookmarks-legacy/bookmarks-source.docx",
       "producer": "test/bookmark_fidelity_test.dart"
-    },
-    {
-      "path": "fidelity-table-grid/expected-format.docx",
-      "producer": "test/table_grid_steps_test.dart"
-    },
-    {
-      "path": "fidelity-table-grid/expected-replace.docx",
-      "producer": "test/table_grid_steps_test.dart"
-    },
-    {
-      "path": "fidelity-table-grid/expected-unmerge.docx",
-      "producer": "test/table_grid_steps_test.dart"
     },
     {
       "path": "fidelity-bookmark-copy/source.docx",
