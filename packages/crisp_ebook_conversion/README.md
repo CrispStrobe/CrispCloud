@@ -17,7 +17,7 @@ DRM-protected input is refused. EPUB font obfuscation using the IDPF or Adobe
 algorithms is distinguished from DRM; Kindling can decode supported embedded
 font resources. KFX is outside this package's supported formats.
 
-Metadata text retains each MOBI section's declared encoding. UTF-8 and
+New metadata text retains each MOBI section's declared encoding. UTF-8 and
 Windows-1252 are supported; text that cannot be represented losslessly in the
 declared encoding, or another encoding ID, produces an explicit error. The
 converter never relabels the preserved book body as UTF-8. Title updates keep

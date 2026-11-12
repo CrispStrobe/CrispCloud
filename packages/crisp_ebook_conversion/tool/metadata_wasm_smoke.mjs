@@ -76,20 +76,147 @@ function unchangedResources(before, after) {
         assert.deepEqual(edited[i], original[i], `Nonmetadata record ${i} was changed`)
 }
 
-async function nativeRewrite(input, patch, format) {
+function fullName(record) {
+    const start = record.readUInt32BE(84), length = record.readUInt32BE(88)
+    assert.ok(start + length <= record.length)
+    return record.subarray(start, start + length)
+}
+
+function decodeMetadata(header, bytes) {
+    const encoding = header.readUInt32BE(28)
+    assert.ok([1252, 65001].includes(encoding))
+    // Use the platform decoder, independently of Kindling's encoder.
+    return new TextDecoder(encoding === 1252 ? 'windows-1252' : 'utf-8',
+        {fatal: true}).decode(bytes)
+}
+
+function u32(value) {
+    const bytes = Buffer.alloc(4)
+    bytes.writeUInt32BE(value)
+    return bytes
+}
+
+// Fixture surgery only. Metadata is rebuilt inside the original header's
+// padding; record offsets and all nonmetadata records remain unchanged.
+function withHeader(input, index, {encoding, fields, hasExth = true} = {}) {
+    const original = records(input)[index]
+    const headerLength = 16 + original.readUInt32BE(20)
+    let block = Buffer.alloc(0)
+    if (hasExth) {
+        const entries = []
+        let count = 0
+        for (const [type, values] of fields ?? exth(original)) {
+            for (const value of values) {
+                entries.push(u32(type), u32(value.length + 8), value)
+                count++
+            }
+        }
+        const data = Buffer.concat(entries)
+        const length = (data.length + 12 + 3) & ~3
+        block = Buffer.concat([Buffer.from('EXTH'), u32(length), u32(count),
+            data, Buffer.alloc(length - data.length - 12)])
+    }
+    const name = fullName(original), nameOffset = headerLength + block.length
+    assert.ok(nameOffset + name.length <= original.length)
+    const header = Buffer.alloc(original.length)
+    original.copy(header, 0, 0, headerLength)
+    block.copy(header, headerLength)
+    name.copy(header, nameOffset)
+    header.writeUInt32BE(nameOffset, 84)
+    header.writeUInt32BE(name.length, 88)
+    const flags = original.readUInt32BE(128)
+    header.writeUInt32BE((hasExth ? flags | 0x40 : flags & ~0x40) >>> 0, 128)
+    if (encoding !== undefined) header.writeUInt32BE(encoding, 28)
+    const output = Buffer.from(input)
+    header.copy(output, output.readUInt32BE(78 + index * 8))
+    return output
+}
+
+// Match the established smoke fixture's standalone KF7 surgery, retaining all
+// of its text/resource records and marking EXTH121 as having no KF8 section.
+function legacyOnly(input) {
+    const parts = records(input), headers = sections(parts)
+    assert.equal(headers.length, 2)
+    const boundary = headers[1]
+    const fields = exth(parts[0])
+    fields.set(121, [u32(0xffffffff)])
+    const first = records(withHeader(input, 0, {fields}))[0]
+    const kept = [first, ...parts.slice(1, boundary - 1)]
+    const header = Buffer.from(input.subarray(0, 78))
+    header.writeUInt16BE(kept.length, 76)
+    const table = []
+    let offset = 78 + kept.length * 8 + 2
+    for (let index = 0; index < kept.length; index++) {
+        table.push(u32(offset), input.subarray(82 + index * 8, 86 + index * 8))
+        offset += kept[index].length
+    }
+    return Buffer.concat([header, ...table, Buffer.alloc(2), ...kept])
+}
+
+async function nativeOperation(input, patch, format, operation = 'metadata') {
     const folder = await mkdtemp(path.join(tmpdir(), 'crisp-metadata-parity-'))
     try {
-        await writeFile(path.join(folder, 'input.mobi'), input)
+        const name = operation === 'metadata' ? 'input.mobi' : 'input.epub'
+        await writeFile(path.join(folder, name), input)
         const result = spawnSync(binary, [], {cwd: folder, encoding: 'utf8',
-            input: JSON.stringify({work_dir: folder, operation: 'metadata',
+            input: JSON.stringify({work_dir: folder, operation,
                 format, metadata: patch, cover: false, limits})})
         assert.equal(result.status, 0, result.stderr || String(result.error))
         const line = result.stdout.trim().split('\n').filter(value => value.startsWith('{')).at(-1)
         const info = JSON.parse(line)
-        assert.equal(info.ok, true, JSON.stringify(info))
-        assert.deepEqual(await readFile(path.join(folder, 'input.mobi')), input)
-        return {info, bytes: await readFile(path.join(folder, `output.${format}`))}
+        assert.deepEqual(await readFile(path.join(folder, name)), input)
+        const bytes = await readFile(path.join(folder, `output.${format}`)).catch(error => {
+            assert.equal(error.code, 'ENOENT')
+            return null
+        })
+        return {info, bytes}
     } finally { await rm(folder, {recursive: true, force: true}) }
+}
+
+async function nativeRewrite(input, patch, format) {
+    const result = await nativeOperation(input, patch, format)
+    assert.equal(result.info.ok, true, JSON.stringify(result.info))
+    assert.ok(result.bytes)
+    return result
+}
+
+let edgeCases = 0, encodingRejections = 0
+async function checkedEdgeCase(input, patch, format, inspect) {
+    const baseline = Buffer.from(input)
+    const result = engine.rewrite(input, request(patch, format))
+    assert.equal(result.ok, true, JSON.stringify(result))
+    assert.equal(result.noOp, false)
+    unchangedResources(input, result.bytes)
+    const native = await nativeRewrite(input, patch, format)
+    assert.deepEqual(Buffer.from(result.bytes), native.bytes, 'Native/Wasm edge-case output differs')
+    assert.deepEqual(result.changes, native.info.changes)
+    inspect(records(result.bytes))
+    const repeated = engine.rewrite(result.bytes, request(patch, format))
+    assert.equal(repeated.ok, true, JSON.stringify(repeated))
+    assert.equal(repeated.noOp, true)
+    assert.deepEqual(repeated.bytes, result.bytes)
+    const nativeRepeated = await nativeRewrite(Buffer.from(result.bytes), patch, format)
+    assert.equal(nativeRepeated.info.noOp, true)
+    assert.deepEqual(nativeRepeated.bytes, Buffer.from(result.bytes))
+    assert.deepEqual(input, baseline)
+    edgeCases++
+    return result
+}
+
+async function rejectedEncoding(input, patch, diagnostic) {
+    const baseline = Buffer.from(input)
+    const result = engine.rewrite(input, request(patch, 'mobi'))
+    assert.equal(result.ok, false)
+    assert.equal(result.code, 'conversionFailed')
+    assert.ok(result.message.includes(diagnostic), result.message)
+    assert.equal(result.bytes, undefined)
+    const native = await nativeOperation(input, patch, 'mobi')
+    assert.equal(native.info.ok, false)
+    assert.equal(native.info.code, result.code)
+    assert.ok(native.info.message.includes(diagnostic), native.info.message)
+    assert.equal(native.bytes, null, 'Rejected encoding must not publish output')
+    assert.deepEqual(input, baseline)
+    encodingRejections++
 }
 
 const patch = {title: 'Über Café 世界', authors: ['Alice', 'Béla'],
@@ -153,9 +280,100 @@ for (const filename of ['book.azw3', 'book.mobi', 'legacy.mobi']) {
     assert.equal(engine.rewrite(input, request({}, format, {input_limit: 10})).code, 'limitExceeded')
     assert.equal(engine.rewrite(input, request(patch, format, {output_limit: 10})).code, 'limitExceeded')
     assert.equal(hash(input), baseline)
+
+    const headerIndexes = sections(records(input))
+    // For dual files keep the primary EXTH121 so the missing KF8 EXTH remains
+    // discoverable; standalone AZW3/MOBI fixtures exercise the primary header.
+    const missingIndex = headerIndexes.at(-1)
+    const withoutExth = withHeader(input, missingIndex, {hasExth: false})
+    assert.equal(exth(records(withoutExth)[missingIndex]).size, 0)
+    const newMetadata = {authors: ['New author'], publisher: 'New publisher',
+        description: 'Metadata added to a section without EXTH.'}
+    await checkedEdgeCase(withoutExth, newMetadata, format, headers => {
+        for (const index of headerIndexes) {
+            assert.equal(headers[index].readUInt32BE(128) & 0x40, 0x40)
+            const fields = exth(headers[index])
+            for (const [type, values] of [[100, newMetadata.authors],
+                [101, [newMetadata.publisher]], [103, [newMetadata.description]]])
+                assert.deepEqual(fields.get(type)?.map(value => decodeMetadata(headers[index], value)), values)
+            assert.deepEqual(fullName(headers[index]), fullName(records(withoutExth)[index]))
+        }
+    })
+
+    for (const emptyRecord of [false, true]) {
+        let missingTitle = Buffer.from(input)
+        for (const index of headerIndexes) {
+            const fields = exth(records(missingTitle)[index])
+            assert.ok(fields.has(542), 'Fixture retains a title hash to clear')
+            if (emptyRecord) fields.set(503, [Buffer.alloc(0)])
+            else fields.delete(503)
+            missingTitle = withHeader(missingTitle, index, {fields})
+            assert.ok(fullName(records(missingTitle)[index]).length > 0)
+        }
+        await checkedEdgeCase(missingTitle, {title: ''}, format, headers => {
+            for (const index of headerIndexes) {
+                assert.equal(exth(headers[index]).has(503), false)
+                assert.equal(exth(headers[index]).has(542), false)
+                assert.equal(headers[index].readUInt32BE(88), 0)
+                assert.equal(fullName(headers[index]).length, 0)
+            }
+        })
+    }
     count++
-    console.log(`PASS ${filename}: all fields, native parity, idempotence, clear, source/record preservation, DRM and budgets`)
+    console.log(`PASS ${filename}: all fields, native parity, idempotence, clear, no-EXTH, missing/empty title, source/record preservation, DRM and budgets`)
+}
+
+// The regular fixtures contain UTF-8 Greek/Japanese body text. Create a real
+// ASCII-body export before declaring Windows-1252; do not simply mislabel that
+// existing Unicode body. Python's stdlib only rewrites text fixture members.
+const asciiEpub = spawnSync(process.platform === 'win32' ? 'python' : 'python3', ['-c', `
+import io, sys, zipfile
+output = io.BytesIO()
+with zipfile.ZipFile(sys.argv[1]) as source, zipfile.ZipFile(output, 'w') as target:
+    for item in source.infolist():
+        data = source.read(item.filename)
+        if item.filename.endswith(('.xhtml', '.html', '.opf', '.ncx', '.css')):
+            data = data.decode('utf-8').encode('ascii', errors='replace')
+        target.writestr(item, data)
+sys.stdout.buffer.write(output.getvalue())
+`, path.join(root, 'test/fixtures/book.epub')])
+assert.equal(asciiEpub.status, 0, String(asciiEpub.stderr))
+const asciiExport = await nativeOperation(asciiEpub.stdout, {}, 'mobi', 'export')
+assert.equal(asciiExport.info.ok, true, JSON.stringify(asciiExport.info))
+assert.ok(asciiExport.bytes)
+const cpPatch = {title: 'Café € —', authors: ['Béla', '€ditor'],
+    publisher: 'Éditions', description: '“Quotes” — €', subjects: ['café', '€']}
+const title1252 = Buffer.from([0x43, 0x61, 0x66, 0xe9, 0x20, 0x80, 0x20, 0x97])
+for (const [name, candidate] of [['legacy', legacyOnly(asciiExport.bytes)],
+    ['mixed-codepage dual', asciiExport.bytes]]) {
+    const input = withHeader(candidate, 0, {encoding: 1252})
+    await checkedEdgeCase(input, cpPatch, 'mobi', headers => {
+        for (const index of sections(headers)) {
+            const header = headers[index]
+            assert.equal(header.readUInt32BE(28), index === 0 ? 1252 : 65001)
+            const fields = exth(header)
+            for (const [type, values] of [[503, [cpPatch.title]], [100, cpPatch.authors],
+                [101, [cpPatch.publisher]], [103, [cpPatch.description]], [105, cpPatch.subjects]])
+                assert.deepEqual(fields.get(type)?.map(value => decodeMetadata(header, value)), values)
+            const title = index === 0 ? title1252 : Buffer.from(cpPatch.title, 'utf8')
+            assert.deepEqual(fields.get(503), [title])
+            assert.deepEqual(fullName(header), title)
+            assert.deepEqual(fields.get(542), [createHash('md5').update(title).digest().subarray(0, 4)])
+        }
+    })
+    for (const patch of [{title: '世界'}, {authors: ['Author 😀']},
+        {description: 'Must not replace U+0080 with Euro: \u0080'}]) {
+        await rejectedEncoding(input, patch,
+            'metadata cannot be represented losslessly in MOBI text encoding 1252')
+    }
+    await rejectedEncoding(withHeader(input, 0, {encoding: 932}), {title: 'New ASCII title'},
+        'unsupported MOBI text encoding 932')
+    const noop = engine.rewrite(input, request({}, 'mobi'))
+    assert.equal(noop.ok, true, JSON.stringify(noop))
+    assert.equal(noop.noOp, true)
+    assert.deepEqual(Buffer.from(noop.bytes), input)
+    console.log(`PASS ${name}: Windows-1252 bytes/decoder/MD5, UTF-8 KF8 preservation, native/Wasm parity, rejection without output`)
 }
 assert.equal(engine.rewrite(new Uint8Array([1, 2, 3]), request()).code, 'conversionFailed')
 assert.equal(engine.rewrite(new Uint8Array([1]), request({title: 'x'.repeat(131073)})).code, 'limitExceeded')
-console.log(`PASS metadata Wasm (${wasm.length} bytes, no host imports), ${count} real Kindle fixtures`)
+console.log(`PASS metadata Wasm (${wasm.length} bytes, no host imports), ${count} real Kindle fixtures, ${edgeCases} native/Wasm edge cases, ${encodingRejections} explicit encoding rejections`)
