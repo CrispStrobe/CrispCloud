@@ -1,6 +1,13 @@
-// Helpers shared by the build hook and the runtime loader for the optional
-// Rust SMB bridge. No FFI or Flutter imports: unit-testable anywhere.
+// Helpers shared by the build hook and the runtime loaders for the optional
+// Rust bridges (`crisp_smb_bridge` for SMB, `crisp_cloud_bridge` for
+// Filen/Internxt). No FFI or Flutter imports: unit-testable anywhere.
 import 'dart:io' show File;
+
+/// Library stem of the Rust SMB bridge (`rust/`).
+const smbBridgeStem = 'crisp_smb_bridge';
+
+/// Library stem of the Rust Filen/Internxt bridge (`rust_cloud/`).
+const cloudBridgeStem = 'crisp_cloud_bridge';
 
 /// The Cargo target for one Dart/Flutter build target.
 class RustTarget {
@@ -12,7 +19,7 @@ class RustTarget {
   /// File name the build hook bundles (stable across targets of one OS).
   final String fileName;
 
-  const RustTarget(this.triple, this.cargoOutput, this.fileName);
+  RustTarget(this.triple, this.cargoOutput, this.fileName);
 
   /// [os] and [architecture] use package:code_assets names, case-insensitive
   /// for the OS (`ios`, `macos`, `linux`, `windows`, `android`; `arm64`, `x64`, ...). Returns null for a
@@ -21,42 +28,43 @@ class RustTarget {
     required String os,
     required String architecture,
     bool iosSimulator = false,
+    String stem = smbBridgeStem,
   }) {
-    const apple = 'libcrisp_smb_bridge.dylib';
+    final apple = 'lib$stem.dylib';
     switch (os.toLowerCase()) {
       case 'ios':
         return switch ((architecture, iosSimulator)) {
-          ('arm64', false) => const RustTarget(
+          ('arm64', false) => RustTarget(
             'aarch64-apple-ios',
             apple,
             apple,
           ),
-          ('arm64', true) => const RustTarget(
+          ('arm64', true) => RustTarget(
             'aarch64-apple-ios-sim',
             apple,
             apple,
           ),
-          ('x64', true) => const RustTarget('x86_64-apple-ios', apple, apple),
+          ('x64', true) => RustTarget('x86_64-apple-ios', apple, apple),
           _ => null,
         };
       case 'macos':
         return switch (architecture) {
-          'arm64' => const RustTarget('aarch64-apple-darwin', apple, apple),
-          'x64' => const RustTarget('x86_64-apple-darwin', apple, apple),
+          'arm64' => RustTarget('aarch64-apple-darwin', apple, apple),
+          'x64' => RustTarget('x86_64-apple-darwin', apple, apple),
           _ => null,
         };
       case 'linux':
-        const so = 'libcrisp_smb_bridge.so';
+        final so = 'lib$stem.so';
         return switch (architecture) {
-          'x64' => const RustTarget('x86_64-unknown-linux-gnu', so, so),
-          'arm64' => const RustTarget('aarch64-unknown-linux-gnu', so, so),
+          'x64' => RustTarget('x86_64-unknown-linux-gnu', so, so),
+          'arm64' => RustTarget('aarch64-unknown-linux-gnu', so, so),
           _ => null,
         };
       case 'windows':
-        const dll = 'crisp_smb_bridge.dll';
+        final dll = '$stem.dll';
         return switch (architecture) {
-          'x64' => const RustTarget('x86_64-pc-windows-msvc', dll, dll),
-          'arm64' => const RustTarget('aarch64-pc-windows-msvc', dll, dll),
+          'x64' => RustTarget('x86_64-pc-windows-msvc', dll, dll),
+          'arm64' => RustTarget('aarch64-pc-windows-msvc', dll, dll),
           _ => null,
         };
       default:
@@ -113,14 +121,15 @@ List<String> bundledRustLibraryCandidates({
   required String os,
   required String executable,
   String? workingDirectory,
+  String stem = smbBridgeStem,
 }) => [
-  ..._appCandidates(os: os, executable: executable),
+  ..._appCandidates(os: os, executable: executable, stem: stem),
   // `flutter test` runs hooks too and places code assets here.
   if (workingDirectory != null)
     for (final name in switch (os) {
-      'macos' => ['libcrisp_smb_bridge.dylib'],
-      'linux' => ['libcrisp_smb_bridge.so'],
-      'windows' => ['crisp_smb_bridge.dll'],
+      'macos' => ['lib$stem.dylib'],
+      'linux' => ['lib$stem.so'],
+      'windows' => ['$stem.dll'],
       _ => const <String>[],
     })
       os == 'windows'
@@ -128,11 +137,15 @@ List<String> bundledRustLibraryCandidates({
           : '$workingDirectory/build/native_assets/$os/$name',
 ];
 
-List<String> _appCandidates({required String os, required String executable}) {
+List<String> _appCandidates({
+  required String os,
+  required String executable,
+  required String stem,
+}) {
   final slash = os == 'windows' ? r'\' : '/';
   final cut = executable.lastIndexOf(slash);
   final dir = cut < 0 ? '.' : executable.substring(0, cut);
-  const stems = ['libcrisp_smb_bridge', 'crisp_smb_bridge'];
+  final stems = ['lib$stem', stem];
   switch (os) {
     case 'ios':
       return [
@@ -143,24 +156,24 @@ List<String> _appCandidates({required String os, required String executable}) {
       return [
         for (final s in stems) '$dir/../Frameworks/$s.framework/$s',
         for (final s in stems) '@rpath/$s.framework/$s',
-        '$dir/../Frameworks/libcrisp_smb_bridge.dylib',
+        '$dir/../Frameworks/lib$stem.dylib',
         // `dart build cli` bundle: bin/<exe>, lib/<library>.
-        '$dir/../lib/libcrisp_smb_bridge.dylib',
+        '$dir/../lib/lib$stem.dylib',
       ];
     case 'linux':
       return [
-        '$dir/lib/libcrisp_smb_bridge.so', // Flutter bundle
-        '$dir/../lib/libcrisp_smb_bridge.so', // dart build cli bundle
-        'libcrisp_smb_bridge.so',
+        '$dir/lib/lib$stem.so', // Flutter bundle
+        '$dir/../lib/lib$stem.so', // dart build cli bundle
+        'lib$stem.so',
       ];
     case 'windows':
       return [
-        '$dir${slash}crisp_smb_bridge.dll',
-        '$dir$slash..${slash}lib${slash}crisp_smb_bridge.dll',
-        'crisp_smb_bridge.dll',
+        '$dir$slash$stem.dll',
+        '$dir$slash..${slash}lib$slash$stem.dll',
+        '$stem.dll',
       ];
     case 'android':
-      return ['libcrisp_smb_bridge.so'];
+      return ['lib$stem.so'];
     default:
       return const [];
   }

@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'cloud_storage_interface.dart';
 
 import 'package:filen_client/filen_client.dart';
+import 'package:crisp_storage/rust_cloud.dart';
 
 import 'filen_config_service.dart';
 
@@ -14,6 +15,7 @@ import 'upload_temp_file.dart';
 import 'filen_stream_transfer.dart';
 import 'internxt_transfer_platform.dart' show saveInternxtDownload;
 import './filen_operation_failure.dart';
+import 'rust_cloud_delegate.dart';
 
 class FilenClientAdapter extends CloudStorageClient
     with CloudTransferOperations
@@ -30,9 +32,22 @@ class FilenClientAdapter extends CloudStorageClient
 
   final FilenClient _client;
   final FilenConfigService filenConfig;
+  final RustCloudApi? _rustApiOverride;
 
-  FilenClientAdapter({required FilenConfigService config})
+  /// Requested engine for the next sign-in (per connection profile, default
+  /// from `CRISP_FILEN_BACKEND`). A restored session keeps the engine whose
+  /// format it was saved in; Dart and Rust sessions are not interchangeable.
+  CloudEngine engine = configuredCloudEngine(RustCloudProvider.filen);
+  CloudEngine? _effectiveEngine;
+  RustCloudDelegate? _rust;
+
+  /// Engine of the current session (null before sign-in/restore).
+  CloudEngine? get effectiveEngine => _effectiveEngine;
+  RustCloudApi get _rustApi => _rustApiOverride ?? defaultRustCloudApi();
+
+  FilenClientAdapter({required FilenConfigService config, RustCloudApi? rustApi})
     : filenConfig = config,
+      _rustApiOverride = rustApi,
       _client = FilenClient(
         config: ConfigService(
           configPath: config.configPath,
@@ -44,8 +59,52 @@ class FilenClientAdapter extends CloudStorageClient
   FilenClientAdapter.withClient(
     FilenClient client, {
     required FilenConfigService config,
+    RustCloudApi? rustApi,
   }) : _client = client,
-       filenConfig = config;
+       filenConfig = config,
+       _rustApiOverride = rustApi;
+
+  Future<void> _persistRust(String email, String envelope) =>
+      filenConfig.saveCredentials({
+        'email': email,
+        'engine': CloudEngine.rust.name,
+        'rustSession': envelope,
+      });
+
+  void _closeRust() {
+    _rust?.close();
+    _rust = null;
+  }
+
+  /// Restore a saved login. Rust-format credentials require the Rust engine
+  /// (strict: no Dart fallback); legacy Dart credentials use the Dart client.
+  Future<bool> restoreSavedSession(Map<String, String> creds) async {
+    final envelope = creds['rustSession'];
+    if (envelope != null && envelope.isNotEmpty) {
+      await _rustApi.initialize();
+      final session = await RustCloudSession.restore(
+        _rustApi,
+        RustCloudProvider.filen,
+        envelope,
+      );
+      final email = creds['email'] ?? session.account;
+      _closeRust();
+      _client.setAuth({});
+      _rust = RustCloudDelegate(
+        session,
+        persist: (renewed) => _persistRust(email, renewed),
+      );
+      _effectiveEngine = CloudEngine.rust;
+      return true;
+    }
+    if (creds['email'] == null) return false;
+    final apiKey = creds['apiKey'];
+    if (apiKey == null || apiKey.isEmpty) return false;
+    _closeRust();
+    _client.setAuth(creds);
+    _effectiveEngine = CloudEngine.dart;
+    return true;
+  }
 
   (String, List<String>, String, void Function()) _captureTransfer() {
     final token = _client.apiKey;
@@ -72,6 +131,11 @@ class FilenClientAdapter extends CloudStorageClient
     String remotePath, {
     Function(int, int)? onProgress,
   }) async* {
+    final rust = _rust;
+    if (rust != null) {
+      yield* rust.downloadStream(remotePath, onProgress: onProgress);
+      return;
+    }
     final captured = _captureTransfer();
     final resolved = await _client.resolvePath(remotePath);
     captured.$4();
@@ -96,6 +160,16 @@ class FilenClientAdapter extends CloudStorageClient
     String targetPath, {
     Function(int, int)? onProgress,
   }) async {
+    final rust = _rust;
+    if (rust != null) {
+      return rust.uploadStream(
+        dataStream,
+        length,
+        fileName,
+        targetPath,
+        onProgress: onProgress,
+      );
+    }
     if (fileName.isEmpty ||
         fileName == '.' ||
         fileName == '..' ||
@@ -132,10 +206,10 @@ class FilenClientAdapter extends CloudStorageClient
 
   @override
   bool get isAuthenticated =>
-      _client.apiKey != null && _client.apiKey!.isNotEmpty;
+      _rust != null || _client.apiKey != null && _client.apiKey!.isNotEmpty;
 
   @override
-  String? get userId => _client.email;
+  String? get userId => _rust?.account ?? _client.email;
 
   @override
   String? get bucketId => null; // Filen doesn't use buckets in the same way Internxt does
@@ -152,6 +226,34 @@ class FilenClientAdapter extends CloudStorageClient
     String password, {
     String? twoFactorCode,
   }) async {
+    // Choose the engine before any credential leaves this method. Auto uses
+    // Dart only when the Rust library cannot load; sign-in failures never
+    // switch engines.
+    final selected = await selectCloudEngine(engine, () => _rustApi.initialize());
+    if (selected == CloudEngine.rust) {
+      final session = await RustCloudSession.login(
+        _rustApi,
+        RustCloudProvider.filen,
+        email,
+        password,
+        twoFactorCode: twoFactorCode,
+      );
+      try {
+        await _persistRust(email, session.envelope);
+      } catch (_) {
+        session.close();
+        rethrow;
+      }
+      _closeRust();
+      _client.setAuth({});
+      _rust = RustCloudDelegate(
+        session,
+        persist: (renewed) => _persistRust(email, renewed),
+      );
+      _effectiveEngine = CloudEngine.rust;
+      return;
+    }
+    _closeRust();
     // Authenticate
     final credentials = await _client.login(
       email,
@@ -179,6 +281,7 @@ class FilenClientAdapter extends CloudStorageClient
         'baseFolderUUID': credentials['baseFolderUUID'] ?? '',
         'userId': credentials['userId'] ?? '',
       });
+      _effectiveEngine = CloudEngine.dart;
     } catch (_) {
       // A failed login must not leave a usable session behind the error dialog.
       // Keep any durable entry intact: a failed readback may follow a write
@@ -199,6 +302,10 @@ class FilenClientAdapter extends CloudStorageClient
     String remotePath, {
     Function(int, int)? onProgress,
   }) async {
+    final rust = _rust;
+    if (rust != null) {
+      return rust.downloadBytes(remotePath, onProgress: onProgress);
+    }
     // Consume through EOF before returning any bytes. Chunk GCM tags do not
     // bind their order: the verified stream also checks the authenticated size
     // and whole-file hash when the provider metadata contains one.
@@ -214,6 +321,8 @@ class FilenClientAdapter extends CloudStorageClient
 
   @override
   Future<void> logout() async {
+    _closeRust();
+    _effectiveEngine = null;
     _client.setAuth({});
     try {
       await filenConfig.clearCredentials();
@@ -232,6 +341,8 @@ class FilenClientAdapter extends CloudStorageClient
 
   @override
   Future<Map<String, dynamic>?> resolvePath(String path) async {
+    final rust = _rust;
+    if (rust != null) return rust.resolvePath(path);
     try {
       // FilenClient has a resolvePath method
       final resolved = await _client.resolvePath(path);
@@ -246,6 +357,8 @@ class FilenClientAdapter extends CloudStorageClient
 
   @override
   Future<Map<String, dynamic>> readDirectoryForEdit(String path) async {
+    final rust = _rust;
+    if (rust != null) return rust.listPath(path, fresh: true);
     // Filen caches directory contents for ten minutes. Refresh only the path's
     // ancestors and target folder instead of evicting unrelated file listings.
     final cache = _client.cache;
@@ -267,6 +380,8 @@ class FilenClientAdapter extends CloudStorageClient
 
   @override
   Future<Map<String, dynamic>> listPath(String path) async {
+    final rust = _rust;
+    if (rust != null) return rust.listPath(path);
     try {
       // 1. Resolve path to get the UUID
       final resolved = await _client.resolvePath(path);
@@ -303,6 +418,15 @@ class FilenClientAdapter extends CloudStorageClient
     String targetPath, {
     Function(int, int)? onProgress,
   }) async {
+    final rust = _rust;
+    if (rust != null) {
+      return rust.uploadBytes(
+        fileData,
+        fileName,
+        targetPath,
+        onProgress: onProgress,
+      );
+    }
     // 1. Resolve Target
     final resolvedFolder = await _client.resolvePath(targetPath);
     if (resolvedFolder['type'] != 'folder') {
@@ -341,6 +465,10 @@ class FilenClientAdapter extends CloudStorageClient
     String localPath, {
     Function(int, int)? onProgress,
   }) async {
+    final rust = _rust;
+    if (rust != null) {
+      return rust.downloadToPath(remotePath, localPath, onProgress: onProgress);
+    }
     final captured = _captureTransfer();
     // Reuse the existing platform publisher: private staging until stream EOF,
     // then atomic replacement (or a verified copy for selected-file access).
@@ -355,12 +483,16 @@ class FilenClientAdapter extends CloudStorageClient
 
   @override
   Future<void> createFolderPath(String path) async {
+    final rust = _rust;
+    if (rust != null) return rust.createFolderPath(path);
     // Map to createFolderRecursive in FilenClient
     await _client.createFolderRecursive(path);
   }
 
   @override
   Future<void> deletePath(String path) async {
+    final rust = _rust;
+    if (rust != null) return rust.deletePath(path);
     // 1. Resolve path to get UUID
     final resolved = await resolvePath(path);
     if (resolved != null) {
@@ -380,6 +512,8 @@ class FilenClientAdapter extends CloudStorageClient
 
   @override
   Future<void> movePath(String sourcePath, String targetPath) async {
+    final rust = _rust;
+    if (rust != null) return rust.movePath(sourcePath, targetPath);
     // 1. Resolve Source
     final sourceResolved = await resolvePath(sourcePath);
     if (sourceResolved == null) {
@@ -409,6 +543,8 @@ class FilenClientAdapter extends CloudStorageClient
 
   @override
   Future<void> renamePath(String path, String newName) async {
+    final rust = _rust;
+    if (rust != null) return rust.renamePath(path, newName);
     // 1. Resolve path to UUID
     final resolved = await resolvePath(path);
 

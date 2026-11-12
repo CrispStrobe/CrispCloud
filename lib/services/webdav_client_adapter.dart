@@ -337,7 +337,7 @@ class WebDavClientAdapter extends CloudStorageClient
       // FIX: Use isDir and mTime for webdav_client 1.2.2
       return {
         'type': (item.isDir ?? false) ? 'folder' : 'file',
-        'name': item.name ?? p.basename(path),
+        'name': item.name ?? p.posix.basename(path),
         'path': path,
         'size': item.size,
         'updatedAt': item.mTime?.toIso8601String(),
@@ -526,7 +526,7 @@ class WebDavClientAdapter extends CloudStorageClient
   @override
   Future<void> renamePath(String path, String newName) async {
     await _ensureClient();
-    final newPath = p.posix.join(p.dirname(path), newName);
+    final newPath = p.posix.join(p.posix.dirname(path), newName);
     // FIX: Use rename()
     await _client!.rename(path, newPath, false);
   }

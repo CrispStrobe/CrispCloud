@@ -1,5 +1,8 @@
 import 'package:crisp_storage/crisp_storage.dart' show RemoteException;
 
+export 'package:crisp_storage/src/cloud/internxt_streaming_transfer.dart'
+    show InternxtEmptyFileUnsupported;
+
 /// App-authored connection failures that can be presented in the UI locale.
 enum ConnectionFailureCode {
   oauthWebUnsupported,
@@ -24,5 +27,5 @@ class ConnectionFailure implements Exception {
 /// Retains the RemoteException contract used by SFTP callers.
 class SftpConnectionFailure extends RemoteException {
   const SftpConnectionFailure()
-      : super('SFTP connection failed. Check server access and credentials.');
+    : super('SFTP connection failed. Check server access and credentials.');
 }

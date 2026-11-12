@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "review_date": "2026-11-11",
+  "review_date": "2026-11-12",
   "repository": "https://github.com/CrispStrobe/CrispCloud",
   "scope": "Source-level inventory of the finished application, including portable helpers. Runtime reachability and platform behavior are described in crypto-audit.md. This inventory is not an export classification or a binary scan.",
   "required_providers": [
@@ -55,7 +55,23 @@
         "packages/filen_client/UPSTREAM.md",
         "https://pub.dev/packages/filen_client/versions/0.2.2"
       ],
-      "note": "Required provider; retain protocol compatibility. The production SDK uses the same injected host secure credential store as the app, verifies saved bytes before persistent legacy-file cleanup, and preserves durable legacy credentials in session mode. The standalone SDK CLI's default credential wrapping is not a substitute for host secure storage."
+      "note": "Required provider; retain protocol compatibility. The production SDK uses the same injected host secure credential store as the app, verifies saved bytes before persistent legacy-file cleanup, and preserves durable legacy credentials in session mode. The standalone SDK CLI's default credential wrapping is not a substitute for host secure storage.",
+      "rust_engine": {
+        "sources": [
+          "packages/crisp_storage/native/crisp_filen/src/lib.rs",
+          "packages/crisp_storage/native/crisp_filen/Cargo.toml",
+          "packages/crisp_storage/native/UPSTREAM-CLOUD.md"
+        ],
+        "algorithms": [
+          "AES-256-GCM metadata and file chunks (aes-gcm)",
+          "PBKDF2-HMAC-SHA512 login (pbkdf2, sha2)",
+          "HMAC-SHA256 filenames (hmac)",
+          "HKDF / Argon2 key derivation for v3 accounts (hkdf, argon2)",
+          "RSA-OAEP sharing keys (rsa)",
+          "BLAKE3 file hashes (blake3)"
+        ],
+        "note": "Optional per-connection engine (Dart remains available). Same protocol and algorithms as the Dart provider; RustCrypto crates (aes, cbc, cipher, pbkdf2, hmac, sha1, sha2, md-5) and TLS through reqwest with rustls; standard algorithms only."
+      }
     },
     {
       "name": "Internxt provider",
@@ -72,7 +88,22 @@
         "https://pub.dev/packages/internxt_client/versions/0.2.3",
         "https://github.com/CrispStrobe/internxt-dart"
       ],
-      "note": "Required provider. Published legacy modes are preserved for interoperability; standard/public does not mean every construction provides modern authenticated encryption. See residual risks in crypto-audit.md."
+      "note": "Required provider. Published legacy modes are preserved for interoperability; standard/public does not mean every construction provides modern authenticated encryption. See residual risks in crypto-audit.md.",
+      "rust_engine": {
+        "sources": [
+          "packages/crisp_storage/native/crisp_internxt/src/lib.rs",
+          "packages/crisp_storage/native/crisp_internxt/Cargo.toml",
+          "packages/crisp_storage/native/UPSTREAM-CLOUD.md"
+        ],
+        "algorithms": [
+          "AES-256-CTR files (aes, ctr)",
+          "SHA-512 file-key derivation (sha2)",
+          "PBKDF2-HMAC-SHA1 login (pbkdf2, sha1)",
+          "AES-256-CBC legacy text with EVP_BytesToKey/MD5 (cbc, md-5)",
+          "RIPEMD-160 shard hashes (ripemd)"
+        ],
+        "note": "Optional per-connection engine. Logs in through Internxt's keyless compatibility flow, so no OpenPGP keys are generated in Rust. RustCrypto crates (aes, cbc, cipher, pbkdf2, hmac, sha1, sha2, md-5) and TLS through reqwest with rustls; standard algorithms only."
+      }
     },
     {
       "name": "Cryptomator format helpers",
@@ -506,6 +537,22 @@
     "packages/crisp_ebook_reader/linux/include/crisp_ebook_reader/crisp_ebook_reader_plugin.h",
     "linux/flutter/generated_plugin_registrant.cc",
     "linux/flutter/generated_plugins.cmake",
-    "linux/packaging/build_deb.sh"
+    "linux/packaging/build_deb.sh",
+    "packages/crisp_storage/native/crisp_filen/src/lib.rs",
+    "packages/crisp_storage/native/crisp_filen/Cargo.toml",
+    "packages/crisp_storage/native/crisp_internxt/src/lib.rs",
+    "packages/crisp_storage/native/crisp_internxt/Cargo.toml",
+    "packages/crisp_storage/rust_cloud/Cargo.toml",
+    "packages/crisp_storage/rust_cloud/Cargo.lock",
+    "packages/crisp_storage/rust_cloud/src/lib.rs",
+    "packages/crisp_storage/rust_cloud/src/api/mod.rs",
+    "packages/crisp_storage/rust_cloud/src/engine.rs",
+    "packages/crisp_storage/rust_cloud/src/providers.rs",
+    "packages/crisp_storage/rust_cloud/src/session.rs",
+    "packages/crisp_storage/lib/rust_cloud.dart",
+    "packages/crisp_storage/lib/src/cloud_engine.dart",
+    "packages/crisp_storage/lib/src/rust_cloud_native.dart",
+    "packages/crisp_storage/lib/src/cloud/internxt_streaming_transfer.dart",
+    "lib/services/rust_cloud_delegate.dart"
   ]
 }

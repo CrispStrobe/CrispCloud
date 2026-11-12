@@ -1,13 +1,16 @@
 // lib/adapters/cli_adapter_factory.dart
 //
 // Creates provider adapter instances from a CLI config map.
-// Only providers whose dependencies are pure Dart are supported here:
+// Supported providers:
 //   - S3  (http + crypto)
 //   - SFTP (dartssh2)
+//   - SMB (crisp_storage: libsmb2 or the Rust engine)
 //   - WebDAV (http)
+//   - Filen, Internxt (crisp_storage Rust engine, rust_cloud/)
 
 import '../config/cli_config.dart';
 import 'cli_storage_client.dart';
+import 'rust_cloud_adapter.dart';
 import 's3_adapter.dart';
 import 'smb_adapter.dart';
 import 'sftp_adapter.dart';
@@ -37,10 +40,13 @@ CliStorageClient createAdapter(
       return SftpCliAdapter.fromConfig(config);
     case 'webdav':
       return WebDavCliAdapter.fromConfig(config);
+    case 'filen':
+    case 'internxt':
+      return RustCloudCliAdapter.fromConfig(type.toLowerCase(), config);
     default:
       throw CliConfigException(
         'Unsupported provider type "$type". '
-        'Supported types: s3, sftp, smb, webdav.',
+        'Supported types: s3, sftp, smb, webdav, filen, internxt.',
       );
   }
 }

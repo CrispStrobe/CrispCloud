@@ -278,3 +278,19 @@ No crypto/export gate is relaxed. Replacing the plugin digest with its
 inventory bytes, the root lock, and every non-source-digest policy field remain
 unchanged. The updated fingerprint above passes the existing source check.
 This is diagnostic evidence preparation, not a resolved WebKit startup failure.
+
+## Interrupted-session recovery: main synchronization
+
+Merged `main` at `977b5037f133cb2d33c57db761864183455a705e` into the recovered ebook branch at `280f55167f43f227068d8a462a88aabc18e56afb`. The combined inventory retains all 207 ebook-branch paths and all 16 additional Rust-cloud paths from main (223 unique paths). Of those, 222 source files match one parent byte for byte. The remaining file, `lib/main.dart`, retains the ebook license import and registration from the feature branch plus the native secure-storage initialization call to `PlatformSecureStorage.detectMacOsKeychain()` from main; both parent diffs were inspected. Both inventories and their component descriptions remain present. All non-digest export-policy fields agree between the parents and remain unchanged.
+
+The committed merge-specific source was used for these bindings so concurrent, uncommitted follow-up fixes are not incorrectly covered by this checkpoint:
+
+```json
+{
+  "inventory_sha256": "1b8932cf629788fc5d3fb261155e6d515ca22900f61caebd9482204fb25e186a",
+  "pubspec_lock_sha256": "3b1a93697f3b0c8b43fb436989247219524baa00b6f2357c75bac8fabb0a9673",
+  "reviewed_source_sha256": "1eaaa2689cadc29fb891301601b692fbb76cf8212e8a79e2bc1c7f76db8cef97"
+}
+```
+
+This source identity check preserves the scope of each parent review; it does not establish native Linux readiness or alter distribution approval. Follow-up source changes require their own reviewed bindings.
