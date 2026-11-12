@@ -50,7 +50,7 @@ capability. Required live/device checks remain visible after code implementation
 
 ### Preferred external terminal
 
-**Status:** Scoped. **Dependencies:** Existing process launch bridge.
+**Status:** Implemented / native acceptance pending. **Dependencies:** Installed terminal application on each target OS.
 
 **Scope:** Choose a terminal application and open it at the verified local path.
 
@@ -65,6 +65,23 @@ capability. Required live/device checks remain visible after code implementation
 - Missing terminals show actionable selection/reset behavior; current-path opening is verified on each claimed desktop OS.
 
 **Starting points:** Existing terminal and custom command launch services; native process adapters.
+
+**Delivered:** [External terminal preferences](../external-terminal.md) provides
+per-OS executable/argument configuration, reset, and an explicit reviewed launch
+from Settings or Terminal actions. Launch preparation uses the active pane's
+captured local source and existing grants; it rejects newer navigation, missing
+paths, batch files and common shell interpreters. Argument placeholders never
+become shell command strings. No dependency was added.
+
+**Observed validation:** 45 tests passed across the new service/dialog and
+existing settings, terminal-panel and directory-resolution suites. One existing
+macOS-only terminal test was skipped on Linux. Focused analysis has no errors or
+warnings. Literal-argument, stale-preparation, unavailable-path, persistence,
+disposal and narrow German/Arabic cases are covered.
+
+**Remaining acceptance:** Open an installed terminal on each claimed desktop OS
+and verify its actual working folder and signed/sandbox behavior. Application
+argument conventions and native window behavior are not inferred from mocks.
 
 ## G13
 

@@ -23,6 +23,8 @@ import '../services/terminal_directory.dart';
 import '../services/panel_source_service.dart';
 import '../services/terminal_workspace_service.dart';
 import 'terminal_workspace_dialog.dart';
+import 'external_terminal_dialog.dart';
+import '../l10n/external_terminal_strings.dart';
 
 final _terminalFocusOwnerProvider = StateProvider<Object?>((ref) => null);
 
@@ -70,6 +72,7 @@ class TerminalPanel extends ConsumerStatefulWidget {
 
 enum _PanelAction {
   local,
+  external,
   stage,
   workspaces,
   review,
@@ -608,6 +611,8 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
     switch (action) {
       case _PanelAction.local:
         unawaited(_startLocal());
+      case _PanelAction.external:
+        unawaited(showExternalTerminalDialog(context, ref));
       case _PanelAction.stage:
         unawaited(_stageSelected());
       case _PanelAction.workspaces:
@@ -748,6 +753,14 @@ class _TerminalPanelState extends ConsumerState<TerminalPanel> {
                             child: Text(context.workspaceTr('Review uploads')),
                           ),
                       ],
+                      if (ref.read(externalTerminalServiceProvider).platform !=
+                          null)
+                        PopupMenuItem(
+                          value: _PanelAction.external,
+                          child: Text(
+                            ExternalTerminalStrings(context).text('open'),
+                          ),
+                        ),
                       PopupMenuItem(
                         value: _PanelAction.copy,
                         enabled: _canCopy,

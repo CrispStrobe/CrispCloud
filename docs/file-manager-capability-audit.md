@@ -77,6 +77,7 @@ grants. The link is transient and is not restored after restarting the app.
 | Configurable buttons and external commands with arguments | Implemented | `lib/widgets/file_command_toolbar.dart`, `lib/services/custom_toolbar_command_service.dart`; saved command/argument templates and review. |
 | Configurable main menu | Partial | Shortcuts are customizable and reflected in menus; menu structure is fixed. |
 | Command line and terminal | Implemented with platform limits | `lib/widgets/terminal_panel.dart`, `docs/terminal.md`; desktop PTY/ConPTY, SSH and sandbox-specific shells. Exact legacy key conventions differ. |
+| Preferred external terminal application | Implemented / native acceptance pending | **Added in G12.** Per-OS configuration and reviewed launch at the captured local folder, with literal arguments and stale-request checks. See [external terminal](external-terminal.md). Actual terminal-window acceptance remains per OS. |
 | Quick Open across commands, favorites, devices and rename presets | Partial | `lib/widgets/command_palette.dart` searches commands and opens managers; saved objects are not all direct searchable actions. |
 | Custom columns | Implemented | `lib/models/file_view_configuration.dart`, file-view editor; metadata columns and saved profiles. |
 | Font/color/theme customization | Implemented | Settings, theme service, file-list font controls and configurable shortcuts. |
