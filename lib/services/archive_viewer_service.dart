@@ -21,158 +21,9 @@ import 'dart:typed_data';
 import 'package:archive/archive.dart' as ar;
 import 'package:koni_archive/koni_archive.dart' as koni;
 
-/// Maximum bytes read from a single archive member / decompressed container.
-const int kArchiveReadLimit = 64 * 1024 * 1024;
+import 'archive_types.dart';
 
-/// Machine-readable identifiers for app-authored archive messages.
-enum ArchiveMessageCode {
-  closed, archiveLimit, corrupt, entryLimit, entryLimitDetail, readEntry,
-  singleFormat, decompressFile, decompressArchive, unsupported,
-  archiveEncrypted, entryEncrypted, wrongOrCorrupt,
-}
-
-/// A user-presentable archive error (unsupported, corrupt, oversized).
-class ArchiveViewException implements Exception {
-  final String message;
-  final ArchiveMessageCode? code;
-  final Map<String, Object> arguments;
-  const ArchiveViewException(this.message, {this.code, this.arguments = const {}});
-
-  @override
-  String toString() => message;
-}
-
-/// The archive (or a member) is encrypted and needs a password.
-class ArchivePasswordRequiredException implements Exception {
-  final String message;
-
-  /// True when a password was supplied but rejected.
-  final bool wrongPassword;
-  final ArchiveMessageCode? code;
-  final Map<String, Object> arguments;
-
-  const ArchivePasswordRequiredException(
-    this.message, {
-    this.wrongPassword = false,
-    this.code,
-    this.arguments = const {},
-  });
-
-  @override
-  String toString() => message;
-}
-
-/// One listing row.
-class ViewerArchiveMember {
-  final String name;
-  final int size;
-  final bool isFile;
-  final bool isEncrypted;
-
-  /// Links, devices, and other entries that must never be materialized.
-  final bool isSpecial;
-  final DateTime? modified;
-  final int? posixMode;
-
-  /// True when the stored path tried to escape the archive root (`..`) and
-  /// was sanitized by the parser.
-  final bool pathEscapedRoot;
-
-  /// Index into the underlying parser's entry list.
-  final int index;
-
-  const ViewerArchiveMember({
-    required this.name,
-    required this.size,
-    required this.isFile,
-    required this.isEncrypted,
-    this.isSpecial = false,
-    this.modified,
-    this.posixMode,
-    required this.pathEscapedRoot,
-    required this.index,
-  });
-}
-
-/// An opened archive: metadata plus lazy, size-capped member reads.
-class ViewerArchive {
-  final String formatName;
-  final List<ViewerArchiveMember> members;
-
-  final Future<Uint8List> Function(ViewerArchiveMember member, int maxBytes)
-  _read;
-  final Future<void> Function() _close;
-  bool _closed = false;
-
-  ViewerArchive._({
-    required this.formatName,
-    required this.members,
-    required Future<Uint8List> Function(
-      ViewerArchiveMember member,
-      int maxBytes,
-    )
-    read,
-    required Future<void> Function() close,
-  }) : _read = read,
-       _close = close;
-
-  /// A one-member archive over already-decompressed bytes.
-  factory ViewerArchive.direct({
-    required String formatName,
-    required String name,
-    required Uint8List data,
-  }) {
-    final member = ViewerArchiveMember(
-      name: name,
-      size: data.length,
-      isFile: true,
-      isEncrypted: false,
-      pathEscapedRoot: false,
-      index: 0,
-    );
-    return ViewerArchive._(
-      formatName: formatName,
-      members: List<ViewerArchiveMember>.unmodifiable([member]),
-      read: (_, __) async => data,
-      close: () async {},
-    );
-  }
-
-  bool get isClosed => _closed;
-
-  Future<Uint8List> readMember(
-    ViewerArchiveMember member, {
-    int maxBytes = kArchiveReadLimit,
-  }) async {
-    if (_closed) {
-      throw const ArchiveViewException('This archive has been closed.', code: ArchiveMessageCode.closed);
-    }
-    if (maxBytes <= 0) throw ArgumentError.value(maxBytes, 'maxBytes');
-    if (member.index < 0 ||
-        member.index >= members.length ||
-        !identical(members[member.index], member)) {
-      throw const ArchiveViewException(
-        'This member belongs to another archive.',
-      );
-    }
-    if (member.size > maxBytes) {
-      throw ArchiveViewException(
-        'The entry is larger than the ${_mb(maxBytes)} safety limit.',
-      );
-    }
-    return _read(member, maxBytes);
-  }
-
-  Future<void> close() async {
-    if (_closed) return;
-    _closed = true;
-    try {
-      await _close();
-    } catch (_) {
-      // Closing remains idempotent even when a parser's cleanup fails.
-    }
-  }
-}
+export 'archive_types.dart';
 
 /// Open [bytes] as an archive.
 ///
@@ -278,10 +129,18 @@ Future<ViewerArchive> _openWithKoni(
     );
   } on koni.ArchiveException catch (e) {
     await source.close();
-    throw ArchiveViewException('Unsupported or corrupt archive: ${e.message}', code: ArchiveMessageCode.corrupt, arguments: {'detail': e.message});
+    throw ArchiveViewException(
+      'Unsupported or corrupt archive: ${e.message}',
+      code: ArchiveMessageCode.corrupt,
+      arguments: {'detail': e.message},
+    );
   } catch (e) {
     await source.close();
-    throw ArchiveViewException('Unsupported or corrupt archive: $e', code: ArchiveMessageCode.corrupt, arguments: {'detail': e});
+    throw ArchiveViewException(
+      'Unsupported or corrupt archive: $e',
+      code: ArchiveMessageCode.corrupt,
+      arguments: {'detail': e},
+    );
   }
 
   final entries = reader.entries;
@@ -303,7 +162,7 @@ Future<ViewerArchive> _openWithKoni(
     );
   }
 
-  return ViewerArchive._(
+  return ViewerArchive.reader(
     formatName: reader.format.name,
     members: List<ViewerArchiveMember>.unmodifiable(members),
     read: (member, requestedCap) async {
@@ -323,7 +182,8 @@ Future<ViewerArchive> _openWithKoni(
           if (builder.length + chunk.length > limit) {
             throw ArchiveViewException(
               'The entry is larger than the ${_mb(limit)} safety limit.',
-              code: ArchiveMessageCode.entryLimit, arguments: {'limit': _mb(limit)},
+              code: ArchiveMessageCode.entryLimit,
+              arguments: {'limit': _mb(limit)},
             );
           }
           builder.add(chunk);
@@ -340,7 +200,8 @@ Future<ViewerArchive> _openWithKoni(
         throw ArchiveViewException(
           'The entry is larger than the ${_mb(limit)} safety limit '
           '(${e.message}).',
-          code: ArchiveMessageCode.entryLimitDetail, arguments: {'limit': _mb(limit), 'detail': e.message},
+          code: ArchiveMessageCode.entryLimitDetail,
+          arguments: {'limit': _mb(limit), 'detail': e.message},
         );
       } on koni.ArchiveException catch (e) {
         if (entry.isEncrypted) {
@@ -352,9 +213,17 @@ Future<ViewerArchive> _openWithKoni(
             wrongPassword: true,
           );
         }
-        throw ArchiveViewException('Could not read entry: ${e.message}', code: ArchiveMessageCode.readEntry, arguments: {'detail': e.message});
+        throw ArchiveViewException(
+          'Could not read entry: ${e.message}',
+          code: ArchiveMessageCode.readEntry,
+          arguments: {'detail': e.message},
+        );
       } catch (e) {
-        throw ArchiveViewException('Could not read entry: $e', code: ArchiveMessageCode.readEntry, arguments: {'detail': e});
+        throw ArchiveViewException(
+          'Could not read entry: $e',
+          code: ArchiveMessageCode.readEntry,
+          arguments: {'detail': e},
+        );
       }
       return builder.takeBytes();
     },
@@ -406,17 +275,37 @@ String stripCompressionSuffix(String name) {
   final Uint8List data;
   try {
     if (lower.endsWith('.gz')) {
-      data = const ar.GZipDecoder().decodeBytes(bytes, maxOutputSize: maxBytes);
+      data = const ar.GZipDecoder().decodeBytes(
+        bytes,
+        verify: true,
+        maxOutputSize: maxBytes,
+      );
     } else if (lower.endsWith('.bz2') ||
         lower.endsWith('.tbz2') ||
         lower.endsWith('.tbz')) {
-      data = ar.BZip2Decoder().decodeBytes(bytes, maxOutputSize: maxBytes);
+      data = ar.BZip2Decoder().decodeBytes(
+        bytes,
+        verify: true,
+        maxOutputSize: maxBytes,
+      );
     } else if (lower.endsWith('.xz') || lower.endsWith('.txz')) {
-      data = ar.XZDecoder().decodeBytes(bytes, maxOutputSize: maxBytes);
+      data = ar.XZDecoder().decodeBytes(
+        bytes,
+        verify: true,
+        maxOutputSize: maxBytes,
+      );
     } else if (lower.endsWith('.zst') || lower.endsWith('.tzst')) {
-      data = ar.ZstdDecoder().decodeBytes(bytes, maxOutputSize: maxBytes);
+      data = ar.ZstdDecoder().decodeBytes(
+        bytes,
+        verify: true,
+        maxOutputSize: maxBytes,
+      );
     } else {
-      throw ArchiveViewException('Not a single-file compressed format: $name', code: ArchiveMessageCode.singleFormat, arguments: {'name': name});
+      throw ArchiveViewException(
+        'Not a single-file compressed format: $name',
+        code: ArchiveMessageCode.singleFormat,
+        arguments: {'name': name},
+      );
     }
   } on ArchiveViewException {
     rethrow;
@@ -424,7 +313,8 @@ String stripCompressionSuffix(String name) {
     throw ArchiveViewException(
       'Could not decompress $name (it may be corrupt or larger than the '
       '${_mb(maxBytes)} safety limit): $e',
-      code: ArchiveMessageCode.decompressFile, arguments: {'name': name, 'limit': _mb(maxBytes), 'detail': e},
+      code: ArchiveMessageCode.decompressFile,
+      arguments: {'name': name, 'limit': _mb(maxBytes), 'detail': e},
     );
   }
   return (data: data, innerName: stripCompressionSuffix(name));
@@ -471,22 +361,39 @@ Uint8List _decompressContainer(Uint8List bytes, String lower, int cap) {
     if (lower.endsWith('.bz2') ||
         lower.endsWith('.tbz2') ||
         lower.endsWith('.tbz')) {
-      return ar.BZip2Decoder().decodeBytes(bytes, maxOutputSize: cap);
+      return ar.BZip2Decoder().decodeBytes(
+        bytes,
+        verify: true,
+        maxOutputSize: cap,
+      );
     }
     if (lower.endsWith('.xz') || lower.endsWith('.txz')) {
-      return ar.XZDecoder().decodeBytes(bytes, maxOutputSize: cap);
+      return ar.XZDecoder().decodeBytes(
+        bytes,
+        verify: true,
+        maxOutputSize: cap,
+      );
     }
     if (lower.endsWith('.zst') || lower.endsWith('.tzst')) {
-      return ar.ZstdDecoder().decodeBytes(bytes, maxOutputSize: cap);
+      return ar.ZstdDecoder().decodeBytes(
+        bytes,
+        verify: true,
+        maxOutputSize: cap,
+      );
     }
   } catch (e) {
     throw ArchiveViewException(
       'Could not decompress the archive (corrupt or larger than the '
       '${_mb(cap)} safety limit): $e',
-      code: ArchiveMessageCode.decompressArchive, arguments: {'limit': _mb(cap), 'detail': e},
+      code: ArchiveMessageCode.decompressArchive,
+      arguments: {'limit': _mb(cap), 'detail': e},
     );
   }
-  throw ArchiveViewException('Not a supported compressed archive: $lower', code: ArchiveMessageCode.unsupported, arguments: {'name': lower});
+  throw ArchiveViewException(
+    'Not a supported compressed archive: $lower',
+    code: ArchiveMessageCode.unsupported,
+    arguments: {'name': lower},
+  );
 }
 
 String _compressionLabel(String lower) {
