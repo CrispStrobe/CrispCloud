@@ -43,7 +43,16 @@ class FtpLoginIdentity {
       throw const FormatException('FTP identity must be user@host[:port].');
     }
     final username = identity.substring(0, separator);
-    final address = Uri.parse('//${identity.substring(separator + 1)}');
+    final rawAddress = identity.substring(separator + 1);
+    final rawAuthority = rawAddress.split(RegExp(r'[/?#]')).first;
+    // Uri normalizes an explicit :0 away for a scheme-less authority. Inspect
+    // the supplied port before normalization so zero/empty ports fail closed.
+    final authority = RegExp(r'^(?:\[[^\]]+\]|[^:]+)(?::([0-9]+))?$')
+        .firstMatch(rawAuthority);
+    if (authority == null) {
+      throw const FormatException('Invalid FTP host or port.');
+    }
+    final address = Uri.parse('//$rawAddress');
     if (address.host.isEmpty ||
         address.userInfo.isNotEmpty ||
         (address.path.isNotEmpty && address.path != '/') ||
@@ -63,8 +72,11 @@ class FtpLoginIdentity {
     if (parameters.containsKey('security') && parameters.containsKey('tls')) {
       throw const FormatException('Choose one FTP security setting.');
     }
-    final port = address.hasPort ? address.port : mode.defaultPort;
-    if (port < 1 || port > 65535) {
+    final suppliedPort = authority.group(1);
+    final port = suppliedPort == null
+        ? mode.defaultPort
+        : int.tryParse(suppliedPort);
+    if (port == null || port < 1 || port > 65535) {
       throw const FormatException('FTP port must be between 1 and 65535.');
     }
     return FtpLoginIdentity(
