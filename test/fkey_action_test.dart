@@ -26,8 +26,11 @@ class _StubClient extends CloudStorageClient {
   bool get isAuthenticated => false;
 
   @override
-  Future<void> login(String email, String password,
-      {String? twoFactorCode}) async {}
+  Future<void> login(
+    String email,
+    String password, {
+    String? twoFactorCode,
+  }) async {}
 
   @override
   Future<bool> is2faNeeded(String email) async => false;
@@ -45,21 +48,31 @@ class _StubClient extends CloudStorageClient {
   Future<Map<String, dynamic>?> resolvePath(String path) async => null;
 
   @override
-  Future<Map<String, dynamic>> listPath(String path) async =>
-      {'folders': <dynamic>[], 'files': <dynamic>[]};
+  Future<Map<String, dynamic>> listPath(String path) async => {
+    'folders': <dynamic>[],
+    'files': <dynamic>[],
+  };
 
   @override
-  Future<void> uploadFile(List<int> fileData, String fileName, String targetPath,
-      {Function(int, int)? onProgress}) async {}
+  Future<void> uploadFile(
+    List<int> fileData,
+    String fileName,
+    String targetPath, {
+    Function(int, int)? onProgress,
+  }) async {}
 
   @override
-  Future<void> downloadFileByPath(String remotePath, String localPath,
-      {Function(int, int)? onProgress}) async {}
+  Future<void> downloadFileByPath(
+    String remotePath,
+    String localPath, {
+    Function(int, int)? onProgress,
+  }) async {}
 
   @override
-  Future<Uint8List> downloadFileBytes(String remotePath,
-      {Function(int, int)? onProgress}) async =>
-      Uint8List(0);
+  Future<Uint8List> downloadFileBytes(
+    String remotePath, {
+    Function(int, int)? onProgress,
+  }) async => Uint8List(0);
 
   @override
   Future<void> createFolderPath(String path) async {}
@@ -83,24 +96,20 @@ const _service = FKeyActionService();
 const _localLeft = LocalPanelSource('/home/user');
 const _localRight = LocalPanelSource('/tmp');
 
-FileItem _file(String name, {bool isFolder = false}) => FileItem(
-      name: name,
-      path: '/home/user/$name',
-      isFolder: isFolder,
-    );
+FileItem _file(String name, {bool isFolder = false}) =>
+    FileItem(name: name, path: '/home/user/$name', isFolder: isFolder);
 
 FKeyContext _ctx({
   PanelSource? active,
   PanelSource? opposite,
   List<FileItem>? selected,
   FileItem? cursor,
-}) =>
-    FKeyContext(
-      activePanel: active ?? _localLeft,
-      oppositePanel: opposite ?? _localRight,
-      selectedFiles: selected ?? const [],
-      cursorFile: cursor,
-    );
+}) => FKeyContext(
+  activePanel: active ?? _localLeft,
+  oppositePanel: opposite ?? _localRight,
+  selectedFiles: selected ?? const [],
+  cursorFile: cursor,
+);
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -117,12 +126,30 @@ void main() {
       }
     });
 
-    test('view label', () => expect(_service.getActionLabel(FKeyAction.view), 'View'));
-    test('edit label', () => expect(_service.getActionLabel(FKeyAction.edit), 'Edit'));
-    test('copy label', () => expect(_service.getActionLabel(FKeyAction.copy), 'Copy'));
-    test('move label', () => expect(_service.getActionLabel(FKeyAction.move), 'Move'));
-    test('mkdir label', () => expect(_service.getActionLabel(FKeyAction.mkdir), 'MkDir'));
-    test('delete label', () => expect(_service.getActionLabel(FKeyAction.delete), 'Delete'));
+    test(
+      'view label',
+      () => expect(_service.getActionLabel(FKeyAction.view), 'View'),
+    );
+    test(
+      'edit label',
+      () => expect(_service.getActionLabel(FKeyAction.edit), 'Edit'),
+    );
+    test(
+      'copy label',
+      () => expect(_service.getActionLabel(FKeyAction.copy), 'Copy'),
+    );
+    test(
+      'move label',
+      () => expect(_service.getActionLabel(FKeyAction.move), 'Move'),
+    );
+    test(
+      'mkdir label',
+      () => expect(_service.getActionLabel(FKeyAction.mkdir), 'MkDir'),
+    );
+    test(
+      'delete label',
+      () => expect(_service.getActionLabel(FKeyAction.delete), 'Delete'),
+    );
   });
 
   // ---- All 6 actions have shortcuts F3-F8 ----------------------------------
@@ -135,16 +162,34 @@ void main() {
       }
     });
 
-    test('view shortcut is F3', () => expect(_service.getActionShortcut(FKeyAction.view), 'F3'));
-    test('edit shortcut is F4', () => expect(_service.getActionShortcut(FKeyAction.edit), 'F4'));
-    test('copy shortcut is F5', () => expect(_service.getActionShortcut(FKeyAction.copy), 'F5'));
-    test('move shortcut is F6', () => expect(_service.getActionShortcut(FKeyAction.move), 'F6'));
-    test('mkdir shortcut is F7', () => expect(_service.getActionShortcut(FKeyAction.mkdir), 'F7'));
-    test('delete shortcut is F8', () => expect(_service.getActionShortcut(FKeyAction.delete), 'F8'));
+    test(
+      'view shortcut is F3',
+      () => expect(_service.getActionShortcut(FKeyAction.view), 'F3'),
+    );
+    test(
+      'edit shortcut is F4',
+      () => expect(_service.getActionShortcut(FKeyAction.edit), 'F4'),
+    );
+    test(
+      'copy shortcut is F5',
+      () => expect(_service.getActionShortcut(FKeyAction.copy), 'F5'),
+    );
+    test(
+      'move shortcut is F6',
+      () => expect(_service.getActionShortcut(FKeyAction.move), 'F6'),
+    );
+    test(
+      'mkdir shortcut is F7',
+      () => expect(_service.getActionShortcut(FKeyAction.mkdir), 'F7'),
+    );
+    test(
+      'delete shortcut is F8',
+      () => expect(_service.getActionShortcut(FKeyAction.delete), 'F8'),
+    );
 
-    test('F-key numbers are 3–8 in order', () {
+    test('F-key numbers are 3–9 in order', () {
       final numbers = FKeyAction.values.map(_service.getFKeyNumber).toList();
-      expect(numbers, [3, 4, 5, 6, 7, 8]);
+      expect(numbers, [3, 4, 5, 6, 7, 8, 9]);
     });
 
     test('shortcuts follow Fn pattern', () {
@@ -161,27 +206,45 @@ void main() {
     final ctxNoSelection = _ctx(selected: []);
 
     test('copy unavailable with no selection', () {
-      expect(_service.isActionAvailable(FKeyAction.copy, ctxNoSelection), isFalse);
+      expect(
+        _service.isActionAvailable(FKeyAction.copy, ctxNoSelection),
+        isFalse,
+      );
     });
 
     test('move unavailable with no selection', () {
-      expect(_service.isActionAvailable(FKeyAction.move, ctxNoSelection), isFalse);
+      expect(
+        _service.isActionAvailable(FKeyAction.move, ctxNoSelection),
+        isFalse,
+      );
     });
 
     test('delete unavailable with no selection', () {
-      expect(_service.isActionAvailable(FKeyAction.delete, ctxNoSelection), isFalse);
+      expect(
+        _service.isActionAvailable(FKeyAction.delete, ctxNoSelection),
+        isFalse,
+      );
     });
 
     test('view unavailable with no selection', () {
-      expect(_service.isActionAvailable(FKeyAction.view, ctxNoSelection), isFalse);
+      expect(
+        _service.isActionAvailable(FKeyAction.view, ctxNoSelection),
+        isFalse,
+      );
     });
 
     test('edit unavailable with no selection', () {
-      expect(_service.isActionAvailable(FKeyAction.edit, ctxNoSelection), isFalse);
+      expect(
+        _service.isActionAvailable(FKeyAction.edit, ctxNoSelection),
+        isFalse,
+      );
     });
 
     test('mkdir always available with no selection', () {
-      expect(_service.isActionAvailable(FKeyAction.mkdir, ctxNoSelection), isTrue);
+      expect(
+        _service.isActionAvailable(FKeyAction.mkdir, ctxNoSelection),
+        isTrue,
+      );
     });
   });
 
@@ -230,7 +293,6 @@ void main() {
     });
   });
 
-
   // ---- Availability: cursor fallback --------------------------------------
 
   group('Action availability — cursor fallback', () {
@@ -242,8 +304,10 @@ void main() {
       final ctx = _ctx(cursor: file);
       expect(_service.isActionAvailable(FKeyAction.view, ctx), isTrue);
       expect(_service.isActionAvailable(FKeyAction.edit, ctx), isTrue);
-      final view = _service.executeAction(FKeyAction.view, ctx) as FKeyOpenViewer;
-      final edit = _service.executeAction(FKeyAction.edit, ctx) as FKeyOpenEditor;
+      final view =
+          _service.executeAction(FKeyAction.view, ctx) as FKeyOpenViewer;
+      final edit =
+          _service.executeAction(FKeyAction.edit, ctx) as FKeyOpenEditor;
       expect(view.file, file);
       expect(edit.file, file);
     });
@@ -253,7 +317,8 @@ void main() {
       expect(_service.isActionAvailable(FKeyAction.copy, ctx), isTrue);
       expect(_service.isActionAvailable(FKeyAction.move, ctx), isTrue);
       expect(_service.isActionAvailable(FKeyAction.delete, ctx), isTrue);
-      final copy = _service.executeAction(FKeyAction.copy, ctx) as FKeyNeedsConfirm;
+      final copy =
+          _service.executeAction(FKeyAction.copy, ctx) as FKeyNeedsConfirm;
       expect(copy.message, contains('1 file'));
     });
 
@@ -283,14 +348,16 @@ void main() {
     test('viewer receives the selected file', () {
       final file = _file('image.png');
       final ctx = _ctx(selected: [file]);
-      final result = _service.executeAction(FKeyAction.view, ctx) as FKeyOpenViewer;
+      final result =
+          _service.executeAction(FKeyAction.view, ctx) as FKeyOpenViewer;
       expect(result.file, file);
     });
 
     test('viewer receives active panel source', () {
       const activePanel = LocalPanelSource('/docs');
       final ctx = _ctx(active: activePanel, selected: [_file('note.txt')]);
-      final result = _service.executeAction(FKeyAction.view, ctx) as FKeyOpenViewer;
+      final result =
+          _service.executeAction(FKeyAction.view, ctx) as FKeyOpenViewer;
       expect(result.source, activePanel);
     });
   });
@@ -307,7 +374,8 @@ void main() {
     test('editor receives the selected file', () {
       final file = _file('main.dart');
       final ctx = _ctx(selected: [file]);
-      final result = _service.executeAction(FKeyAction.edit, ctx) as FKeyOpenEditor;
+      final result =
+          _service.executeAction(FKeyAction.edit, ctx) as FKeyOpenEditor;
       expect(result.file, file);
     });
   });
@@ -328,7 +396,8 @@ void main() {
         opposite: oppositeSrc,
         selected: [_file('data.csv')],
       );
-      final result = _service.executeAction(FKeyAction.copy, ctx) as FKeyNeedsConfirm;
+      final result =
+          _service.executeAction(FKeyAction.copy, ctx) as FKeyNeedsConfirm;
       expect(result.message, contains(oppositeSrc.displayName));
     });
 
@@ -350,14 +419,16 @@ void main() {
 
     test('confirm completes with FKeySuccess', () async {
       final ctx = _ctx(selected: [_file('a.txt')]);
-      final confirm = _service.executeAction(FKeyAction.copy, ctx) as FKeyNeedsConfirm;
+      final confirm =
+          _service.executeAction(FKeyAction.copy, ctx) as FKeyNeedsConfirm;
       final result = await confirm.onConfirm();
       expect(result, isA<FKeySuccess>());
     });
 
     test('cancel returns FKeyCancelled', () {
       final ctx = _ctx(selected: [_file('a.txt')]);
-      final confirm = _service.executeAction(FKeyAction.copy, ctx) as FKeyNeedsConfirm;
+      final confirm =
+          _service.executeAction(FKeyAction.copy, ctx) as FKeyNeedsConfirm;
       final cancelled = confirm.onCancel();
       expect(cancelled, isA<FKeyCancelled>());
     });
@@ -374,17 +445,16 @@ void main() {
 
     test('move message mentions destination', () {
       const oppositeSrc = LocalPanelSource('/archive');
-      final ctx = _ctx(
-        opposite: oppositeSrc,
-        selected: [_file('report.pdf')],
-      );
-      final result = _service.executeAction(FKeyAction.move, ctx) as FKeyNeedsConfirm;
+      final ctx = _ctx(opposite: oppositeSrc, selected: [_file('report.pdf')]);
+      final result =
+          _service.executeAction(FKeyAction.move, ctx) as FKeyNeedsConfirm;
       expect(result.message, contains(oppositeSrc.displayName));
     });
 
     test('move confirm completes with FKeySuccess', () async {
       final ctx = _ctx(selected: [_file('x.txt')]);
-      final confirm = _service.executeAction(FKeyAction.move, ctx) as FKeyNeedsConfirm;
+      final confirm =
+          _service.executeAction(FKeyAction.move, ctx) as FKeyNeedsConfirm;
       final result = await confirm.onConfirm();
       expect(result, isA<FKeySuccess>());
     });
@@ -401,19 +471,22 @@ void main() {
 
     test('prompt has a title', () {
       final ctx = _ctx();
-      final prompt = _service.executeAction(FKeyAction.mkdir, ctx) as FKeyNeedsPrompt;
+      final prompt =
+          _service.executeAction(FKeyAction.mkdir, ctx) as FKeyNeedsPrompt;
       expect(prompt.title, isNotEmpty);
     });
 
     test('prompt has a hint', () {
       final ctx = _ctx();
-      final prompt = _service.executeAction(FKeyAction.mkdir, ctx) as FKeyNeedsPrompt;
+      final prompt =
+          _service.executeAction(FKeyAction.mkdir, ctx) as FKeyNeedsPrompt;
       expect(prompt.hint, isNotEmpty);
     });
 
     test('mkdir with valid name returns FKeySuccess', () async {
       final ctx = _ctx();
-      final prompt = _service.executeAction(FKeyAction.mkdir, ctx) as FKeyNeedsPrompt;
+      final prompt =
+          _service.executeAction(FKeyAction.mkdir, ctx) as FKeyNeedsPrompt;
       final result = await prompt.onConfirm('NewFolder');
       expect(result, isA<FKeySuccess>());
       expect((result as FKeySuccess).message, contains('NewFolder'));
@@ -421,7 +494,8 @@ void main() {
 
     test('mkdir with empty name returns FKeyError', () async {
       final ctx = _ctx();
-      final prompt = _service.executeAction(FKeyAction.mkdir, ctx) as FKeyNeedsPrompt;
+      final prompt =
+          _service.executeAction(FKeyAction.mkdir, ctx) as FKeyNeedsPrompt;
       final result = await prompt.onConfirm('  ');
       expect(result, isA<FKeyError>());
     });
@@ -443,26 +517,30 @@ void main() {
 
     test('delete message mentions file count', () {
       final ctx = _ctx(selected: [_file('a.txt'), _file('b.txt')]);
-      final confirm = _service.executeAction(FKeyAction.delete, ctx) as FKeyNeedsConfirm;
+      final confirm =
+          _service.executeAction(FKeyAction.delete, ctx) as FKeyNeedsConfirm;
       expect(confirm.message, contains('2'));
     });
 
     test('delete message mentions filename for single file', () {
       final ctx = _ctx(selected: [_file('important.pdf')]);
-      final confirm = _service.executeAction(FKeyAction.delete, ctx) as FKeyNeedsConfirm;
+      final confirm =
+          _service.executeAction(FKeyAction.delete, ctx) as FKeyNeedsConfirm;
       expect(confirm.message, contains('important.pdf'));
     });
 
     test('delete confirm completes with FKeySuccess', () async {
       final ctx = _ctx(selected: [_file('temp.txt')]);
-      final confirm = _service.executeAction(FKeyAction.delete, ctx) as FKeyNeedsConfirm;
+      final confirm =
+          _service.executeAction(FKeyAction.delete, ctx) as FKeyNeedsConfirm;
       final result = await confirm.onConfirm();
       expect(result, isA<FKeySuccess>());
     });
 
     test('delete cancel returns FKeyCancelled', () {
       final ctx = _ctx(selected: [_file('temp.txt')]);
-      final confirm = _service.executeAction(FKeyAction.delete, ctx) as FKeyNeedsConfirm;
+      final confirm =
+          _service.executeAction(FKeyAction.delete, ctx) as FKeyNeedsConfirm;
       expect(confirm.onCancel(), isA<FKeyCancelled>());
     });
 

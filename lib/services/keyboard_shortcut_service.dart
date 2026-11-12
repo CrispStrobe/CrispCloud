@@ -60,6 +60,7 @@ enum ShortcutAction {
   bookmark,
   pathFavorites,
   multiRename,
+  terminal,
 }
 
 /// Redo is owned by individual editors. File operations only advertise actions
@@ -276,7 +277,8 @@ class KeyboardShortcutService {
     ShortcutAction.restoreSelection: ShortcutBinding(
       key: LogicalKeyboardKey.numpadDivide.keyLabel,
     ),
-    ShortcutAction.delete: const ShortcutBinding(key: 'Delete'),
+    ShortcutAction.delete: const ShortcutBinding(key: 'F8'),
+    ShortcutAction.terminal: const ShortcutBinding(key: 'F9'),
     ShortcutAction.rename: const ShortcutBinding(key: 'F2'),
     ShortcutAction.newFolder: const ShortcutBinding(key: 'F7'),
     ShortcutAction.refresh: const ShortcutBinding(key: 'R', ctrl: true),
@@ -356,7 +358,7 @@ class KeyboardShortcutService {
       ShortcutBinding(key: LogicalKeyboardKey.pageUp.keyLabel, ctrl: true),
     ],
     ShortcutAction.toggleHidden: [const ShortcutBinding(key: 'H', ctrl: true)],
-    ShortcutAction.delete: [const ShortcutBinding(key: 'F8')],
+    ShortcutAction.delete: [const ShortcutBinding(key: 'Delete')],
     ShortcutAction.copyWithOptions: [
       const ShortcutBinding(key: 'F5', shift: true),
     ],

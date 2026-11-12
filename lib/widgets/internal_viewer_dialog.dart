@@ -67,6 +67,8 @@ import '../services/system_preview_service.dart';
 import '../utils/file_editability.dart';
 import '../utils/formatters.dart';
 import 'code_highlighting.dart';
+import 'syntax_line_view.dart';
+import '../services/syntax_line_highlighting.dart';
 import 'hex_viewer.dart';
 import 'internal_viewer_views.dart';
 import 'pptx_slide_viewer.dart';
@@ -2841,6 +2843,20 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
 
     final lines = _displayLines ?? text.split('\n');
     final span = _textMatchSpan();
+    if (language != null && text.length <= kVirtualSyntaxMaxChars) {
+      return SelectionArea(
+        child: SyntaxLineView(
+          text: text,
+          language: language,
+          lines: lines,
+          fontScale: _zoom,
+          controller: _vScroll,
+          activeMatchLine: span?.line,
+          activeMatchLocal: span == null ? null : (span.start, span.end),
+        ),
+      );
+    }
+
     return SelectionArea(
       child: MonoLineListView(
         lines: lines,

@@ -41,3 +41,5 @@ and iOS variants cover removal without a route animation.
 The application manifest and lockfile control whether this maintained copy is
 selected. They must change together. Check the hosted-release failure before
 switching, then check the maintained-copy success before merging or publishing.
+
+The app fork uses the sibling `re_highlight` source package and its bounded continuation API in the highlighting worker. Large generated source no longer requires a single whole-document regex parse; original grammars, licensing and editable text remain unchanged.

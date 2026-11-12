@@ -1482,10 +1482,9 @@ packages:
   quds_reports:
     dependency: transitive
     description:
-      name: quds_reports
-      sha256: "5a839d6e27a823f7c5ebe38b849d9156d3564ba3cf8a772794886b0c0dd5f110"
-      url: "https://pub.dev"
-    source: hosted
+      path: "packages/quds_reports"
+      relative: true
+    source: path
     version: "1.5.0"
   quiver:
     dependency: transitive
@@ -1505,10 +1504,9 @@ packages:
   re_highlight:
     dependency: "direct main"
     description:
-      name: re_highlight
-      sha256: "6c4ac3f76f939fb7ca9df013df98526634e17d8f7460e028bd23a035870024f2"
-      url: "https://pub.dev"
-    source: hosted
+      path: "packages/re_highlight"
+      relative: true
+    source: path
     version: "0.0.3"
   recase:
     dependency: transitive

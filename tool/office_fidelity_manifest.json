@@ -1,7 +1,7 @@
 {
   "source_repository": "CrispStrobe/quds_office_suite",
   "source_branch": "fix/word-package-guards-20261112",
-  "source_commit": "35230d3862fbfc268ac7b5fa2a243e9f6a347057",
+  "source_commit": "173e9fe087d18401aa0e3beb44adc26596ce1a16",
   "files": {
     "packages/quds_office_editor/CHANGELOG.md": "7290a134a6f9a039cb68584b5f5f0296a0dd7d7ffe9f215bdbdfa0efef6619d5",
     "packages/quds_office_editor/lib/src/editor_sheet/render_sheet_grid.dart": "dde600201484a04a07e922b12d0098b3334bb3c3289476a7ea4e88a28cd4e9f4",
@@ -523,6 +523,9 @@
     "packages/legacy_doc_parser/test/legacy_word_textbox_layout_test.dart": "e1d4423f75ff0225319b0d32291677e3ae4b17e782e7f999f4ec5f780a06eaa2",
     "packages/legacy_doc_parser/test/support/officeart_shape_fixture.dart": "f8af0dc4e2dd0a9d598996dc64f835a7ab6be12dfb922bd70fbd80d9c0c7c9d7",
     "packages/legacy_doc_parser/tool/fidelity/structure.py": "ef00de02f51fb354ced121bab65dbe57342d0a1585059ae5c1a78c471763c283",
-    "packages/legacy_doc_parser/tool/fidelity/test_structure.py": "1089696339c59fa64c33403848e495c4128d8cd31e60a07ecf22a8f6fc22cfcd"
+    "packages/legacy_doc_parser/tool/fidelity/test_structure.py": "1089696339c59fa64c33403848e495c4128d8cd31e60a07ecf22a8f6fc22cfcd",
+    "packages/quds_reports/CHANGELOG.md": "301b7c2da9279caf42c90af66ef059146597f38024ee62174e85f4c2c185586e",
+    "packages/quds_reports/lib/quds_reports.dart": "de369f4fae7fb1d6d0f24381c7a9a42aa6b99cca25da540e69ebb3617665c1f4",
+    "packages/quds_reports/test/quds_reports_test.dart": "c28f4aa9dd90d1daaf4c301f5ffb1f8fa1c62c04601e3a73c0fd5aa57d16227e"
   }
 }

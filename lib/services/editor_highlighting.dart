@@ -15,7 +15,7 @@ import 'package:re_highlight/styles/github.dart';
 import '../widgets/code_highlighting.dart';
 
 /// Maximum source size (in characters) that is syntax-highlighted.
-const int kEditorHighlightMaxChars = 2 * 1024 * 1024;
+const int kEditorHighlightMaxChars = 8 * 1024 * 1024;
 
 /// Return the highlight.js language for [filename], or null when the file
 /// should be shown as plain text.

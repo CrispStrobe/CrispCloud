@@ -47,6 +47,7 @@ TextStyle monoTextStyle(double fontSize, Color color) {
 class MonoLineListView extends StatelessWidget {
   final List<String> lines;
   final double fontScale;
+  final InlineSpan Function(int, String, TextStyle)? lineSpanBuilder;
   final ScrollController? controller;
 
   /// Row index of the active search match (highlighted), or null.
@@ -62,6 +63,7 @@ class MonoLineListView extends StatelessWidget {
     this.controller,
     this.activeMatchLine,
     this.activeMatchLocal,
+    this.lineSpanBuilder,
   });
 
   @override
@@ -91,16 +93,16 @@ class MonoLineListView extends StatelessWidget {
         final line = lines[i];
         final isMatchRow = activeMatchLine == i && activeMatchLocal != null;
 
+        final matchStyle = style.copyWith(
+          backgroundColor: theme.colorScheme.tertiaryContainer.withValues(
+            alpha: 0.9,
+          ),
+        );
         InlineSpan lineSpan;
         if (isMatchRow) {
           final (s, e) = activeMatchLocal!;
           final cs = s.clamp(0, line.length);
           final ce = e.clamp(cs, line.length);
-          final matchStyle = style.copyWith(
-            backgroundColor: theme.colorScheme.tertiaryContainer.withValues(
-              alpha: 0.9,
-            ),
-          );
           lineSpan = TextSpan(
             children: [
               TextSpan(text: line.substring(0, cs)),
@@ -112,6 +114,9 @@ class MonoLineListView extends StatelessWidget {
           lineSpan = TextSpan(text: line);
         }
 
+        if (lineSpanBuilder != null) {
+          lineSpan = lineSpanBuilder!(i, line, matchStyle);
+        }
         return Row(
           children: [
             Text('${i + 1}'.padLeft(6), style: dimStyle),

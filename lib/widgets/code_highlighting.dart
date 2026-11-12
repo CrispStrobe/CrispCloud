@@ -47,6 +47,8 @@ const Map<String, String> kExtensionToHljsLanguage = <String, String>{
   // ---- Systems / compiled ----------------------------------
   // highlight 0.7.0 registers C under 'cpp' (no standalone 'c' language).
   'c': 'cpp',
+  'nxc': 'cpp', // Not eXactly C (LEGO NXT).
+  'nqc': 'cpp', // Not Quite C.
   'h': 'cpp',
   'cpp': 'cpp',
   'cc': 'cpp',

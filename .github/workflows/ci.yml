@@ -106,6 +106,7 @@ jobs:
         run: |
           (cd packages/quds_office_engine && dart pub get)
           # Source-only fork metadata declares the matching sibling packages.
+          (cd packages/quds_reports && dart pub get)
           (cd packages/quds_office_editor && flutter pub get)
           (cd packages/dart_pdf_editor && flutter pub get)
           (cd packages/dart_pdf_editor_secure_storage && flutter pub get)

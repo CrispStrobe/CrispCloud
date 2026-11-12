@@ -37,6 +37,8 @@ const Set<String> textEditableExtensions = <String>{
   'swift',
   'c',
   'cpp',
+  'nxc',
+  'nqc',
   'h',
   'hpp',
   'cs',

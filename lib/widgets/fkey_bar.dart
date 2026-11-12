@@ -52,6 +52,7 @@ class FKeyBar extends ConsumerWidget {
     FKeyAction.move => ShortcutAction.moveWithOptions,
     FKeyAction.mkdir => ShortcutAction.newFolder,
     FKeyAction.delete => ShortcutAction.delete,
+    FKeyAction.terminal => ShortcutAction.terminal,
   };
 }
 
@@ -95,8 +96,9 @@ class _FKeyBarContent extends StatelessWidget {
         child: Row(
           children: FKeyAction.values.map((action) {
             final available =
-                fkeyContext != null &&
-                service.isActionAvailable(action, fkeyContext!);
+                action == FKeyAction.terminal ||
+                (fkeyContext != null &&
+                    service.isActionAvailable(action, fkeyContext!));
             return _FKeyButton(
               action: action,
               label: AccessAndFKeyStrings(Localizations.localeOf(context))
@@ -222,6 +224,7 @@ class _FKeyButton extends StatelessWidget {
       FKeyAction.move => Icons.drive_file_move_outlined,
       FKeyAction.mkdir => Icons.create_new_folder_outlined,
       FKeyAction.delete => Icons.delete_outline,
+      FKeyAction.terminal => Icons.terminal,
     };
   }
 }

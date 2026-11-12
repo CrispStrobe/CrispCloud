@@ -32,7 +32,7 @@ IGNORED = {'__pycache__', '.dart_tool', 'build', 'failures'}
 CONFIG = ('pubspec.yaml', 'pubspec.lock', 'pubspec_overrides.yaml', '.fvmrc',
           'dart_test.yaml', 'analysis_options.yaml', 'l10n.yaml',
           '.dart_tool/package_config.json', '.dart_tool/package_graph.json')
-VENDORS = ('quds_office_engine', 'quds_office_editor', 'legacy_doc_parser')
+VENDORS = ('quds_office_engine', 'quds_office_editor', 'legacy_doc_parser', 'quds_reports')
 
 
 class CollectionError(ValueError):

@@ -47,7 +47,7 @@ def shared(name):
     parts = path.parts
     if parts[:2] == ('tool', 'office-validation'):
         return True
-    if len(parts) < 3 or parts[0] != 'packages' or parts[1] not in ('quds_office_engine', 'quds_office_editor', 'legacy_doc_parser'):
+    if len(parts) < 3 or parts[0] != 'packages' or parts[1] not in ('quds_office_engine', 'quds_office_editor', 'legacy_doc_parser', 'quds_reports'):
         return False
     return parts[2] in ('lib', 'test', 'tool', 'CHANGELOG.md')
 

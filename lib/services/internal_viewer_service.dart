@@ -228,6 +228,8 @@ class InternalViewerService {
       '.swift',
       '.c',
       '.cpp',
+      '.nxc',
+      '.nqc',
       '.cc',
       '.cxx',
       '.h',
