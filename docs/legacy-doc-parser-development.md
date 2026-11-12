@@ -24,6 +24,14 @@ parts, unused definitions and references inside comment content remain
 inventory evidence rather than proof of preservation. The
 [conversion guide](legacy-word-conversion.md) records these bounds.
 
+The [current app validation receipt](evidence/word-continuation-7308125/README.md)
+retains complete records from clean app `5e1adcdb`: 107 data-only Word tests,
+the four-format JavaScript smoke, 13 actual LibreOffice/Poppler checks and 24
+source-sync controls. Its source/dependency hashes and adapter reproduction
+helper preserve the execution boundary; the 13 fake-process tests within the
+Word cohort are separate from the actual native checks. These checks do not
+execute Flutter widgets or qualify a full application release.
+
 The [previous continuation receipt](evidence/legacy-doc-parser-continuation-20261112/README.md)
 remains attributed to parser `ba5f5b0` and Quds `a9f7c1a`; it does not certify
 this changed tree. The earlier evidence below likewise retains its original

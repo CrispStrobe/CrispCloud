@@ -1,0 +1,271 @@
+{
+  "appSource": {
+    "commit": "5e1adcdbcdc6763e3eeb86a4632821c2b53a8c37",
+    "repository": "CrispStrobe/CrispCloud",
+    "tree": "a32e479c9ef4a88e839c168c408ecace0cd1bb4f",
+    "worktreeDirtyAtCohortStart": false
+  },
+  "artifacts": {
+    "before-anchor-fix.log.gz": {
+      "bytes": 2046,
+      "encoding": "gzip",
+      "sha256": "bf8441ebec0f9a77038087eb3ccea1bcb0509f42680d6eafc303487b4dfdfa7c",
+      "uncompressedBytes": 9218,
+      "uncompressedName": "before-anchor-fix.log",
+      "uncompressedSha256": "961ea0fab87e4fbe77c971ec6b7ac42f3ec99c54e4b94988c43b68017418ffc2"
+    },
+    "before-nested-comment-fix.log.gz": {
+      "bytes": 391,
+      "encoding": "gzip",
+      "sha256": "f511a9f57a429c2dda7763e972b43f40e58a57a6c16dfea512239673e6c5e096",
+      "uncompressedBytes": 936,
+      "uncompressedName": "before-nested-comment-fix.log",
+      "uncompressedSha256": "06ff8e007b0bb4dd0587baadd65a314e330cf5f687b54b517dac4df41c746728"
+    },
+    "cohort-adapters.json.gz": {
+      "bytes": 1145,
+      "encoding": "gzip",
+      "sha256": "8ae4d32305fb1851e300bb7b6d60edd3f4fcad6a9197f2a5f08e50e08a0f9090",
+      "uncompressedBytes": 3021,
+      "uncompressedName": "cohort-adapters.json",
+      "uncompressedSha256": "0db9fd8ddab394adf01412ed9be946115c187770d9c8ebf862bc3a031b20c7e6"
+    },
+    "cohort-captured-runner.py.gz": {
+      "bytes": 3531,
+      "encoding": "gzip",
+      "sha256": "7f279750d8ad214afae136b2b02f6beb4b0946da7fa7bec6266f824d9dd3bf2b",
+      "uncompressedBytes": 10143,
+      "uncompressedName": "cohort-captured-runner.py",
+      "uncompressedSha256": "9455c8c20a4f384df4d11e47d088fc2e0d1ef744cc4f4c58cdd27860cea01fe2"
+    },
+    "cohort-events.jsonl.gz": {
+      "bytes": 6456,
+      "encoding": "gzip",
+      "sha256": "6fe2dfdcaf94a4e29b11c1bd70acb7f99ad8121d7db71764c1cd800a1fca10e0",
+      "uncompressedBytes": 52768,
+      "uncompressedName": "cohort-events.jsonl",
+      "uncompressedSha256": "23a856effec4ae57c69a87a718eac161d634cce19c903f548db8ef2b26b10781"
+    },
+    "cohort-inputs-after.json.gz": {
+      "bytes": 62102,
+      "encoding": "gzip",
+      "sha256": "a9a72dd5256ae2ee4bea4df41c1257096b799196d8138030910347e37e18f9e2",
+      "uncompressedBytes": 223418,
+      "uncompressedName": "cohort-inputs-after.json",
+      "uncompressedSha256": "b06e6407f5af8cacc995f435789a2b8abf648874aab154e5377369200e108710"
+    },
+    "cohort-inputs-before.json.gz": {
+      "bytes": 62102,
+      "encoding": "gzip",
+      "sha256": "a9a72dd5256ae2ee4bea4df41c1257096b799196d8138030910347e37e18f9e2",
+      "uncompressedBytes": 223418,
+      "uncompressedName": "cohort-inputs-before.json",
+      "uncompressedSha256": "b06e6407f5af8cacc995f435789a2b8abf648874aab154e5377369200e108710"
+    },
+    "cohort-package-config.json.gz": {
+      "bytes": 1292,
+      "encoding": "gzip",
+      "sha256": "c885a46a2eb7835b157c9073148ae85626a1bb0b2ed0bdd320b108ae0f395cd1",
+      "uncompressedBytes": 16032,
+      "uncompressedName": "cohort-package-config.json",
+      "uncompressedSha256": "24ae13661e641f95ad47e7bd488ae822d21e8651f00c55bed6cd355d7ebd471c"
+    },
+    "cohort-pubspec.lock.gz": {
+      "bytes": 3920,
+      "encoding": "gzip",
+      "sha256": "67395c902ac6aa2285fb0dff2631b8b7ccc52ebaac5541c4d7332704dfb4a8bf",
+      "uncompressedBytes": 15216,
+      "uncompressedName": "cohort-pubspec.lock",
+      "uncompressedSha256": "5cd981b5efa9048193a35af2e9ebbfba4a617597fb14c864d31535dfe433b762"
+    },
+    "cohort-pubspec.yaml.gz": {
+      "bytes": 232,
+      "encoding": "gzip",
+      "sha256": "edc8cc87d75cd033becc66c0c6322d9f47488082264a40039e78c2979fcc0e31",
+      "uncompressedBytes": 370,
+      "uncompressedName": "cohort-pubspec.yaml",
+      "uncompressedSha256": "2faabb5359d4897347af8368edb14b892854dfaa6324e59b3874a8bec9062624"
+    },
+    "cohort-summary.json.gz": {
+      "bytes": 1071,
+      "encoding": "gzip",
+      "sha256": "92902a238a9926aef046b268ce4e81e28c0d402a94a0fb5c352dede74c840faf",
+      "uncompressedBytes": 3138,
+      "uncompressedName": "cohort-summary.json",
+      "uncompressedSha256": "eaef0a67c1615f44740172bce2401366e23efbf70009b9382b6a99da2e8fea5a"
+    },
+    "cohort-tests.log.gz": {
+      "bytes": 3114,
+      "encoding": "gzip",
+      "sha256": "d6cb37547aba1563c47cf66cc4f04466f8f3fadbc93fc85ae30e1481742245af",
+      "uncompressedBytes": 13725,
+      "uncompressedName": "cohort-tests.log",
+      "uncompressedSha256": "4187fb13f4eb49aea874b80e67b6ae5ea1177a3a6aa329cd43403c1dd255bca4"
+    },
+    "native.json.gz": {
+      "bytes": 433,
+      "encoding": "gzip",
+      "sha256": "e60d2e83fe24c7e31baafb62e887508a449b723855af0b2744ecdbe199ae1e55",
+      "uncompressedBytes": 921,
+      "uncompressedName": "native.json",
+      "uncompressedSha256": "a5ce289f6d103516ea6393662e7cbb4c73fc6500065ea99eebe979215e28b205"
+    },
+    "portable-web.log.gz": {
+      "bytes": 212,
+      "encoding": "gzip",
+      "sha256": "2d9e43bdd83188e8c54ebf553849ca5f614281b2767598a576ed5e6ed10252e6",
+      "uncompressedBytes": 262,
+      "uncompressedName": "portable-web.log",
+      "uncompressedSha256": "2d1db9bf5998bb46cd813d7a77adc9df84b29d8af8ce5885804558da7e77d5a8"
+    },
+    "sync-controls.log.gz": {
+      "bytes": 55,
+      "encoding": "gzip",
+      "sha256": "0e5c9fccba66f3e9a135e921116f6e7d688d5aeb24feddf2f47d2e4add840cc6",
+      "uncompressedBytes": 123,
+      "uncompressedName": "sync-controls.log",
+      "uncompressedSha256": "c4636b7d43658e6324bb603ce87dc1a5d0137c6638f07a52afb49a4d23eac37a"
+    }
+  },
+  "cohort": {
+    "excludedSuites": {
+      "test/legacy_word_previous_regressions_test.dart": "Imports preview_media.dart, Flutter material/services and video_player; cannot run unchanged using a data-only test import adapter."
+    },
+    "failed": 0,
+    "finishedUtc": "2026-11-12T20:26:44.566056+00:00",
+    "scope": "Data-only test adapter; unchanged assertions except test-framework import. Installed-Office tests use fake local processes, not real Office rendering. This does not execute Flutter widgets or native build hooks.",
+    "skipped": 0,
+    "sourceAndDependenciesUnchanged": true,
+    "sourceAndDependencyFiles": 1170,
+    "startedUtc": "2026-11-12T20:26:36.067362+00:00",
+    "suites": 8,
+    "tests": 107
+  },
+  "dart": {
+    "executableSha256": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+    "recordedPath": "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+    "version": "Dart SDK version: 3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\""
+  },
+  "helpers": {
+    "run_word_cohort.py": {
+      "bytes": 11816,
+      "sha256": "0991a5fb2ea48d40aa58fe63c70240a030da4cb5208a91f607d67b55c5dab01b"
+    },
+    "verify_evidence.py": {
+      "bytes": 3940,
+      "sha256": "2e9c56941171b777acbba567c8a359ff73fe216760662477e188b172560269be"
+    }
+  },
+  "limitations": [
+    "Data-only assertion adapter, not Flutter widget execution or full release qualification.",
+    "Feature counts and anchors do not establish complete semantic preservation or rendering equivalence.",
+    "Native/web receipts are scoped checks at the named clean app commit; the cohort carries the detailed before/after dependency inventory.",
+    "The proposed textbox-depth runtime reset was disproved by native geometry and retracted before parser 7308125 was integrated. No runtime reset claim survives.",
+    "No release/distribution/fingerprint policy changed."
+  ],
+  "managedOfficeFiles": 823,
+  "managedParserFiles": 402,
+  "nativeOffice": {
+    "allPassed": true,
+    "checks": 13,
+    "receipt": "native.json.gz",
+    "renderer": "LibreOffice",
+    "sameCleanAppSourceCommit": "5e1adcdbcdc6763e3eeb86a4632821c2b53a8c37",
+    "scope": "Actual installed LibreOffice render and independent Poppler checks on the authored formatting.doc fixture. Separate from the 13 fake-process adapter tests. The original JSON identifies input/output document hashes but does not inventory renderer executables or system libraries."
+  },
+  "parserSource": {
+    "commit": "730812534e8dc045d6d97f600218228f05c51b97",
+    "patches": [],
+    "repository": "CrispStrobe/legacy-doc-parser"
+  },
+  "pinnedSourceFiles": {
+    "lib/services/word_conversion_inspection.dart": {
+      "bytes": 32146,
+      "sha256": "32feb6faf05b37b2f8128b746c1e690913b549c255ccfd01e636c39619bb0fc6"
+    },
+    "packages/legacy_doc_parser/UPSTREAM.json": {
+      "bytes": 125,
+      "sha256": "6a4f1b5f12b9ebb78a05be804a12381af1c542075c9e60f4182c79464a220ac4"
+    },
+    "pubspec.yaml": {
+      "bytes": 10756,
+      "sha256": "1e722d402fb51327443a51937ba641e2a66a7a123262582dab57ecea9f64a165"
+    },
+    "test/fixtures/legacy_powerpoint/current-slides.ppt.gz": {
+      "bytes": 26320,
+      "sha256": "f6cdb049854471226e344d21552c432b620c71e37be25cc1a177b6474be2ef04"
+    },
+    "test/fixtures/word_native/formatting.doc": {
+      "bytes": 21504,
+      "sha256": "0ad636c6e3597152313055fd5428fb4b70ab483b3853b2666cac52498c953026"
+    },
+    "tool/office_fidelity_manifest.json": {
+      "bytes": 118352,
+      "sha256": "f7f02a63e23702b89be01bd6a08f0373266e8be55c1500b7122bacde38f38aad"
+    },
+    "tool/sync_legacy_doc_parser.py": {
+      "bytes": 8587,
+      "sha256": "0fac0952344ae88de00a942d343f59b084e9c32fa99db85dd79132ed6d7d81fc"
+    },
+    "tool/sync_office_fidelity.py": {
+      "bytes": 8859,
+      "sha256": "dcf6f70382e7762ddf1e83c95125dcd8b4c900850e0e1aac98e10dbe08f8beaa"
+    },
+    "tool/test_sync_legacy_doc_parser.py": {
+      "bytes": 14014,
+      "sha256": "337b39f6e1c3db1d4e1467f84c19a469b557f9ac55f64dafe114a95fdb9a560c"
+    },
+    "tool/test_sync_office_fidelity.py": {
+      "bytes": 5278,
+      "sha256": "bf13365b5c9f4b4d6d5e0c89623cdefdeaf62b71d3c269114022ae1d5959fcac"
+    },
+    "tool/verify_legacy_word_structured.dart": {
+      "bytes": 5222,
+      "sha256": "0ac8e7960d291725650fcca37ab54aa76f82e86e29c1ff576dc9fba012c63369"
+    },
+    "tool/verify_portable_office_web.py": {
+      "bytes": 5000,
+      "sha256": "1c4c6f4de9fca0cac680e98edd4c193f6e61e6251ac16c4ba0608f37e5bac798"
+    }
+  },
+  "portableWeb": {
+    "formats": [
+      "DOC",
+      "PPT",
+      "RTF",
+      "MSG"
+    ],
+    "passed": true,
+    "receipt": "portable-web.log.gz",
+    "sameCleanAppSourceCommit": "5e1adcdbcdc6763e3eeb86a4632821c2b53a8c37"
+  },
+  "qudsSource": {
+    "commit": "74960237cea7c560f3db7ee96ca37641c4438567",
+    "nonParserOfficeFilesUnchanged": true,
+    "nonParserOfficeFilesUnchangedFromAppCommit": "3f9d2c16654366679ad71f132a60587bc46cecb4",
+    "repository": "CrispStrobe/quds_office_suite"
+  },
+  "regressionCounterexamples": [
+    {
+      "appSourceCommit": "7d11559a8e086af829725c1c21180ff93051e5e2",
+      "failed": 9,
+      "passed": 32,
+      "receipt": "before-anchor-fix.log.gz",
+      "scope": "Nine new negative controls fail on the original inspector. This earlier 41-test run predates the Office Math positive case and nested-comment follow-up."
+    },
+    {
+      "appSourceCommit": "b2cf42668102f9cda09e26de9420c319eef91e90",
+      "failed": 1,
+      "passed": 0,
+      "receipt": "before-nested-comment-fix.log.gz",
+      "scope": "A reference inside one comment incorrectly attached a second comment and its object; the final suite also checks a valid direct anchor."
+    }
+  ],
+  "syncControls": {
+    "passed": true,
+    "receipt": "sync-controls.log.gz",
+    "tests": 24
+  },
+  "unchangedNonParserOfficeFiles": 421,
+  "version": 1
+}
