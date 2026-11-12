@@ -2,7 +2,7 @@
 from pathlib import Path
 import tempfile
 import unittest
-from office_host_coverage import report_coverage
+from office_host_coverage import report_coverage, require_all_sources
 
 
 class HostCoverageControls(unittest.TestCase):
@@ -41,6 +41,21 @@ class HostCoverageControls(unittest.TestCase):
         (self.root / 'lib/services/office_search_text.dart').write_text('changed\n')
         after = report_coverage(lcov, self.root)
         self.assertNotEqual(before['source_tree_sha256'], after['source_tree_sha256'])
+
+    def test_gate_rejects_an_instrumented_subset_but_keeps_the_gap_report(self):
+        lcov = 'SF:lib/widgets/office_editor_dialog.dart\nDA:1,1\n'
+        report = report_coverage(lcov, self.root)
+        with self.assertRaisesRegex(ValueError, 'lib/services/office_search_text.dart'):
+            require_all_sources(report)
+        self.assertEqual(report['covered_lines'], 1)
+
+    def test_gate_accepts_every_source_without_claiming_every_line_is_hit(self):
+        report = report_coverage(
+            'SF:lib/widgets/office_editor_dialog.dart\nDA:1,0\nend_of_record\n'
+            'SF:lib/services/office_search_text.dart\nDA:2,1\nend_of_record\n', self.root)
+        require_all_sources(report)
+        self.assertEqual(report['covered_lines'], 1)
+        self.assertEqual(report['instrumented_lines'], 2)
 
 
 if __name__ == '__main__':

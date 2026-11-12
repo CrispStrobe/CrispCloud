@@ -1,9 +1,12 @@
 import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:quds_office_engine/src/word/serial/word_property_io.dart';
-import 'step_input.dart';
 
-const _storyFields = <String>['story', 'section', 'note'];
+import 'step_input.dart';
+import 'word_structure_steps.dart';
+
+const _storyFields = <String>['story', 'section', 'note', 'comment'];
 const wordOperations = <String, List<String>>{
+  ...wordStructureOperations,
   'replaceText': ['paragraph', 'text', 'start', 'end', ..._storyFields],
   'heading': ['paragraph', 'level', ..._storyFields],
   'applyStyle': ['paragraph', 'style', ..._storyFields],
@@ -19,6 +22,16 @@ const wordOperations = <String, List<String>>{
     'keepTogether',
     'pageBreakBefore',
     'rtl',
+    'lineSpacingRule',
+    'left',
+    'right',
+    'firstLine',
+    'hanging',
+    'tabs',
+    'columnBreakBefore',
+    'dropCapLines',
+    'shading',
+    'border',
     ..._storyFields,
   ],
   'runFormat': [
@@ -100,6 +113,7 @@ void applyStep(
       _noteHint(p);
     case 'heading':
       WordToc.applyHeading(paragraph(), s.integer('level', max: 9));
+      WordLink.ensureHeadingBookmarks(doc);
     case 'applyStyle':
       final style = s.string('style');
       if (WordStyles.byId(style, document: doc) == null) {
@@ -123,7 +137,8 @@ void applyStep(
     case 'styleDefinition':
       _editStyle(doc, s);
     case 'paragraphFormat':
-      final p = paragraph().properties;
+      final target = paragraph();
+      final p = target.properties.copy();
       // An explicit script assignment must remain direct formatting even
       // when the requested default equals the current inherited value.
       for (final entry in <String, String>{
@@ -134,28 +149,121 @@ void applyStep(
         'keepTogether': 'keepLines',
         'pageBreakBefore': 'pageBreakBefore',
         'rtl': 'bidi',
+        'lineSpacingRule': 'spacing',
+        'left': 'ind',
+        'right': 'ind',
+        'firstLine': 'ind',
+        'hanging': 'ind',
+        'tabs': 'tabs',
+        'dropCapLines': 'framePr',
+        'shading': 'shd',
+        'border': 'pBdr',
       }.entries) {
         if (s.has(entry.key)) p.importedValues?.remove(entry.value);
       }
       if (s.has('alignment')) {
         p.justification = WmlJustification.values.byName(s.string('alignment'));
+        p.explicitJustification = true;
       }
-      if (s.has('before')) p.spacingBefore = s.number('before', min: 0);
-      if (s.has('after')) p.spacingAfter = s.number('after', min: 0);
+      if (s.has('before')) {
+        p.spacingBefore = s.number('before', min: 0);
+        p.explicitSpacingBefore = true;
+      }
+      if (s.has('after')) {
+        p.spacingAfter = s.number('after', min: 0);
+        p.explicitSpacingAfter = true;
+      }
       if (s.has('lineSpacing')) {
         p.lineSpacing = s.number('lineSpacing', min: 0.01);
+        p.explicitLineSpacing = true;
+      }
+      if (s.has('lineSpacingRule')) {
+        p.lineSpacingRule = WmlLineSpacingRule.values.byName(
+          s.string('lineSpacingRule'),
+        );
+        p.explicitLineSpacing = true;
+      }
+      if (['left', 'right', 'firstLine', 'hanging'].any(s.has)) {
+        p.indent = WmlIndent(
+          left: s.number('left', fallback: p.indent.left),
+          right: s.number('right', fallback: p.indent.right),
+          firstLine: s.number(
+            'firstLine',
+            fallback: p.indent.firstLine,
+            min: 0,
+          ),
+          hanging: s.number('hanging', fallback: p.indent.hanging, min: 0),
+        );
+        if (p.indent.firstLine != 0 && p.indent.hanging != 0) {
+          throw ArgumentError('firstLine and hanging are mutually exclusive');
+        }
+        p.explicitIndent = true;
+      }
+      if (s.has('tabs')) {
+        final input = values['tabs'];
+        if (input is! List<Object?>) {
+          throw ArgumentError('tabs must be an array');
+        }
+        final positions = <double>{};
+        p.tabs = [for (final value in input) _tab(value, positions)];
+        p.tabs.sort((a, b) => a.position.compareTo(b.position));
+      }
+      if (s.has('columnBreakBefore')) {
+        p.columnBreakBefore = s.boolean('columnBreakBefore');
+      }
+      if (s.has('dropCapLines')) {
+        p.dropCapLines = s.integer('dropCapLines', max: 10);
+      }
+      if (s.has('shading')) {
+        p.shadingFill = values['shading'] == null ? null : s.color('shading');
+      }
+      if (s.has('border')) {
+        p.borderColor = values['border'] == null ? null : s.color('border');
       }
       if (s.has('keepTogether')) p.keepTogether = s.boolean('keepTogether');
       if (s.has('pageBreakBefore')) {
         p.pageBreakBefore = s.boolean('pageBreakBefore');
       }
       if (s.has('rtl')) p.rightToLeft = s.boolean('rtl');
+      if (s.has('columnBreakBefore') && !p.columnBreakBefore) {
+        // A saved leading break reopens as an inline token. Clear that token
+        // as well as the paragraph hint, without removing breaks within text.
+        var index = 0;
+        while (index < target.inlines.length) {
+          final inline = target.inlines[index];
+          if (inline is WmlRun && inline.text.isEmpty) {
+            index++;
+            continue;
+          }
+          if (inline is WmlBreak && inline.type == WmlBreakType.column) {
+            target.inlines.removeAt(index);
+          }
+          break;
+        }
+      }
+      target.properties = p;
     case 'runFormat':
       final p = paragraph();
       final range = _range(p, s);
       if (range.$1 == range.$2) {
         throw ArgumentError('runFormat requires a non-empty text range');
       }
+      // Validate before applyRange splits source runs or touches their imported
+      // property snapshots. A late invalid color must not partially bold text.
+      final bold = s.has('bold') ? s.boolean('bold') : null;
+      final italic = s.has('italic') ? s.boolean('italic') : null;
+      final strike = s.has('strike') ? s.boolean('strike') : null;
+      final underline = s.has('underline')
+          ? WmlUnderline.values.byName(s.string('underline'))
+          : null;
+      final color = s.has('color') ? s.color('color') : null;
+      final highlight = s.has('highlight') && values['highlight'] != null
+          ? s.color('highlight')
+          : null;
+      final font = s.has('font') ? s.string('font') : null;
+      final size = s.has('size')
+          ? (s.number('size', min: 0.5, max: 1638) * 2).round()
+          : null;
       WmlRunEdit.applyRange(p, range.$1, range.$2, (r) {
         for (final entry in <String, String>{
           'bold': 'b',
@@ -172,23 +280,14 @@ void applyStep(
             r.explicitProperties.add(entry.value);
           }
         }
-        if (s.has('bold')) r.bold = s.boolean('bold');
-        if (s.has('italic')) r.italic = s.boolean('italic');
-        if (s.has('strike')) r.strike = s.boolean('strike');
-        if (s.has('underline')) {
-          r.underline = WmlUnderline.values.byName(s.string('underline'));
-        }
-        if (s.has('color')) r.color = s.color('color');
-        if (s.has('highlight')) {
-          r.highlight = values['highlight'] == null
-              ? null
-              : s.color('highlight');
-        }
-        if (s.has('font')) r.asciiFont = s.string('font');
-        if (s.has('size')) {
-          r.fontSizeHalfPoints = (s.number('size', min: 0.5, max: 1638) * 2)
-              .round();
-        }
+        if (bold != null) r.bold = bold;
+        if (italic != null) r.italic = italic;
+        if (strike != null) r.strike = strike;
+        if (underline != null) r.underline = underline;
+        if (color != null) r.color = color;
+        if (s.has('highlight')) r.highlight = highlight;
+        if (font != null) r.asciiFont = font;
+        if (size != null) r.fontSizeHalfPoints = size;
       });
     case 'addNote':
       final p = paragraph();
@@ -228,8 +327,13 @@ void applyStep(
       if (!s.has('width') && !s.has('height')) {
         throw ArgumentError('imageSize needs width or height');
       }
-      if (s.has('width')) image.width = s.number('width', min: 0.01);
-      if (s.has('height')) image.height = s.number('height', min: 0.01);
+      final width = s.has('width') ? s.number('width', min: 0.01) : image.width;
+      final height = s.has('height')
+          ? s.number('height', min: 0.01)
+          : image.height;
+      image
+        ..width = width
+        ..height = height;
     case 'imageReplace':
       picture().visual.imageBytes = readPicture(s, assetDirectory);
     case 'imageAdd':
@@ -275,24 +379,12 @@ void applyStep(
       final at = s.integer('offset', max: p.text.length);
       _boundary(p, at);
       final container = _container(doc, p);
-      WmlRunEdit.splitAt(p, at);
-      var offset = 0;
-      var cut = p.inlines.length;
-      for (var i = 0; i < p.inlines.length; i++) {
-        if (offset >= at) {
-          cut = i;
-          break;
-        }
-        final inline = p.inlines[i];
-        if (inline is WmlRun) offset += inline.text.length;
-      }
       final tail = WmlParagraph(
         properties: p.properties.copy()
           ..bookmarkName = null
           ..listRestart = null,
-        inlines: p.inlines.sublist(cut),
+        inlines: WmlRunEdit.splitParagraphInlines(p, at),
       );
-      p.inlines.removeRange(cut, p.inlines.length);
       _noteHint(p);
       _noteHint(tail);
       container.insert(container.indexOf(p) + 1, tail);
@@ -322,11 +414,10 @@ void applyStep(
     case 'tableCellText':
       final row = s.item('row', table().rows);
       final cell = s.item('column', row.cells);
+      final text = s.string('text');
       cell.blocks
         ..clear()
-        ..add(
-          WmlParagraph(inlines: <WmlInline>[WmlRun(text: s.string('text'))]),
-        );
+        ..add(WmlParagraph(inlines: <WmlInline>[WmlRun(text: text)]));
     case 'headerFooterText':
       final story = s.string('story');
       if (!_headerStories.contains(story)) {
@@ -334,9 +425,10 @@ void applyStep(
       }
       final paragraphs = _headerParagraphs(section(), story);
       final at = s.integer('paragraph', fallback: 0, max: paragraphs.length);
+      final text = s.string('text');
       if (at == paragraphs.length) paragraphs.add(WmlParagraph());
       final p = paragraphs[at];
-      WmlRunEdit.replaceRange(p, 0, p.text.length, s.string('text'));
+      WmlRunEdit.replaceRange(p, 0, p.text.length, text);
     case 'sectionFormat':
       final sec = section();
       final width = s.number('width', fallback: sec.pageSize.width, min: 1);
@@ -364,22 +456,28 @@ void applyStep(
       if (gap * (columns - 1) >= width - margins.left - margins.right) {
         throw ArgumentError('Columns leave no text width');
       }
+      final separator = s.boolean('columnSep', fallback: sec.columnSep);
+      final breakKind = s.has('breakKind')
+          ? WmlSectionBreakKind.values.byName(s.string('breakKind'))
+          : sec.breakKind;
+      final firstPage = s.boolean(
+        'differentFirstPage',
+        fallback: sec.differentFirstPage,
+      );
+      final oddEven = s.boolean(
+        'differentOddEven',
+        fallback: sec.differentOddEven,
+      );
       sec.pageSize = WmlPageSize(width: width, height: height);
       sec.margins = margins;
       sec.columnCount = columns;
       sec.columnSpace = gap;
-      if (s.has('columnSep')) sec.columnSep = s.boolean('columnSep');
-      if (s.has('breakKind')) {
-        sec.breakKind = WmlSectionBreakKind.values.byName(
-          s.string('breakKind'),
-        );
-      }
-      if (s.has('differentFirstPage')) {
-        sec.differentFirstPage = s.boolean('differentFirstPage');
-      }
-      if (s.has('differentOddEven')) {
-        sec.differentOddEven = s.boolean('differentOddEven');
-      }
+      sec.columnSep = separator;
+      sec.breakKind = breakKind;
+      sec.differentFirstPage = firstPage;
+      sec.differentOddEven = oddEven;
+    default:
+      applyWordStructureStep(doc, values);
   }
 }
 
@@ -423,6 +521,7 @@ WmlNote _note(WmlDocument doc, StepInput s, String story) {
 Iterable<WmlParagraph> _paragraphs(WmlDocument doc, StepInput s) {
   final story = s.string('story', fallback: 'body');
   if (story == 'body') return doc.paragraphs;
+  if (story == 'comment') return _comment(doc, s).paragraphs;
   if (story == 'footnote' || story == 'endnote') {
     return _note(doc, s, story).allParagraphs;
   }
@@ -432,6 +531,7 @@ Iterable<WmlParagraph> _paragraphs(WmlDocument doc, StepInput s) {
 Iterable<WmlVisual> _visuals(WmlDocument doc, StepInput s) {
   final story = s.string('story', fallback: 'body');
   if (story == 'body') return doc.visuals;
+  if (story == 'comment') return _comment(doc, s).visuals;
   if (story == 'footnote' || story == 'endnote') {
     return _note(doc, s, story).visuals;
   }
@@ -490,12 +590,38 @@ List<WmlBlock> _container(WmlDocument doc, WmlBlock target) {
 }
 
 bool _removeVisual(WmlDocument doc, WmlVisual target) {
+  for (final comment in doc.comments) {
+    if (comment.visuals.remove(target)) return true;
+  }
   for (final section in doc.sections) {
     for (final story in _headerStories) {
       if (_headerVisuals(section, story).remove(target)) return true;
     }
   }
   return _container(doc, target).remove(target);
+}
+
+WmlComment _comment(WmlDocument doc, StepInput s) {
+  final comment = WordComment.byId(doc, s.integer('comment'));
+  if (comment == null) throw ArgumentError('Unknown comment id');
+  return comment;
+}
+
+WmlTabStop _tab(Object? value, Set<double> positions) {
+  if (value is! Map<String, Object?>) {
+    throw ArgumentError('tab must be an object');
+  }
+  final s = StepInput({'op': 'tab', ...value});
+  s.fields(['position', 'alignment', 'leader']);
+  final position = s.number('position', min: 0);
+  if (!positions.add(position)) throw ArgumentError('Duplicate tab position');
+  return WmlTabStop(
+    position: position,
+    alignment: WmlTabAlignment.values.byName(
+      s.string('alignment', fallback: 'left'),
+    ),
+    leader: WmlTabLeader.values.byName(s.string('leader', fallback: 'none')),
+  );
 }
 
 void _noteHint(WmlParagraph p) {
@@ -519,10 +645,8 @@ void _boundary(WmlParagraph p, int at) {
   }
   var position = 0;
   for (final run in p.inlines.whereType<WmlRun>()) {
-    if (run.noteRefId != null &&
-        at > position &&
-        at < position + run.text.length) {
-      throw ArgumentError('Offset splits an atomic note reference');
+    if (run.isAtomic && at > position && at < position + run.text.length) {
+      throw ArgumentError('Offset splits an atomic note or field result');
     }
     position += run.text.length;
   }

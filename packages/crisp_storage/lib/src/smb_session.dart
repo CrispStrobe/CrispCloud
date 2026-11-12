@@ -104,3 +104,7 @@ class SmbSession implements SmbTransport {
     }
   }
 }
+
+/// Diagnostic: where the Rust SMB bridge was loaded from in this process
+/// (`null` until a Rust/auto session initialized it successfully).
+String? get rustSmbLibraryLocation => RustSmbSession.loadedFrom;

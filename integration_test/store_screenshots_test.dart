@@ -35,6 +35,7 @@ import 'package:quds_office_engine/quds_office_engine.dart';
 
 const _target = String.fromEnvironment('STORE_TARGET', defaultValue: 'mac');
 const _storeHome = String.fromEnvironment('STORE_HOME');
+const _storeOut = String.fromEnvironment('STORE_OUT');
 
 /// Logical size and pixel ratio per store slot.
 final (Size, double) _slot = switch (_target) {
@@ -68,8 +69,13 @@ void main() {
         : Platform.isIOS
         ? (await getApplicationDocumentsDirectory()).path
         : Platform.environment['HOME']!;
-    final out = Directory('${Directory.systemTemp.path}/crispcloud-store')
-      ..createSync(recursive: true);
+    // STORE_OUT writes straight to a host folder: `flutter test` uninstalls
+    // the iOS app afterwards, deleting anything left in its container.
+    final out = Directory(
+      _storeOut.isNotEmpty
+          ? _storeOut
+          : '${Directory.systemTemp.path}/crispcloud-store',
+    )..createSync(recursive: true);
     _log('target=$_target home=$home out=${out.path}');
     await _seedDemoHome(home);
     await CredentialStorageConfig.writeSelection(

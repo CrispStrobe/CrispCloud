@@ -12,7 +12,7 @@ supported. Design rules: [STORAGE_ENGINE_ARCHITECTURE.md](STORAGE_ENGINE_ARCHITE
 | --- | --- |
 | GUI, per connection | Connection dialog → Filen/Internxt → **Storage engine**: Dart (default), Rust (experimental), Auto. Saved with the connection profile as the non-secret `engine` field. |
 | Build default | `--dart-define=CRISP_FILEN_BACKEND=dart|rust|auto`, `--dart-define=CRISP_INTERNXT_BACKEND=dart|rust|auto` (unknown values fail fast). |
-| Native library | `--dart-define=CRISP_CLOUD_LIBRARY=/abs/path` or the `CRISP_CLOUD_LIBRARY` environment variable; otherwise a library bundled next to the app (macOS `Contents/Frameworks/libcrisp_cloud_bridge.dylib`, Linux `<exe>/lib/`, Windows next to the exe). |
+| Native library | `--dart-define=CRISP_CLOUD_LIBRARY=/abs/path` or the `CRISP_CLOUD_LIBRARY` environment variable; otherwise the code asset bundled by the build hook (`rust_cloud: true`, same locations as the SMB bridge, see [SMB_RUST_ROLLOUT.md](SMB_RUST_ROLLOUT.md)); otherwise the developer build in `rust_cloud/target/release`. |
 
 Selection happens before any credential leaves the adapter:
 
@@ -60,8 +60,19 @@ dart run bin/build_cloud.dart            # prints CRISP_CLOUD_LIBRARY=...
 cargo test --manifest-path rust_cloud/Cargo.toml --locked
 CRISP_CLOUD_LIBRARY=... dart test test/rust_cloud_native_test.dart test/cloud_engine_test.dart
 python3 tool/check_rust_licenses.py --bridge cloud
-# macOS app with both Rust engines embedded (developer path):
-tool/bundle_rust_engines_macos.sh build/macos/Build/Products/Release/CrispCloud.app
+```
+
+To bundle the bridge in an app build, enable the crisp_storage build hook in
+the app's `pubspec.yaml` (it builds `rust_cloud/` with Cargo for the target,
+next to the SMB bridge, and ships it as a code asset):
+
+```yaml
+hooks:
+  user_defines:
+    crisp_storage:
+      rust_smb: true
+      rust_cloud: true
+      # rust_cloud_library: path/to/libcrisp_cloud_bridge.dylib  # prebuilt
 ```
 
 Regenerate the bridge with flutter_rust_bridge_codegen 2.11.1:

@@ -1,6 +1,7 @@
 import '../properties/wml_properties.dart';
 import 'wml_document.dart';
 import 'wml_run_edit.dart';
+import 'word_bookmarks.dart';
 
 /// Bookmark names, link look, and heading cross-references.
 abstract final class WordLink {
@@ -12,9 +13,10 @@ abstract final class WordLink {
     final String slug = text
         .trim()
         .replaceAll(RegExp(r'\s+'), '_')
-        .replaceAll(RegExp(r'[^\w\u0600-\u06FF\-_]'), '');
+        .replaceAll(RegExp(r'[^A-Za-z0-9_]'), '');
     final String safe = slug.isEmpty ? 'Heading' : slug;
-    return '_Heading${level.clamp(1, 9)}_$safe';
+    final String name = '_Heading${level.clamp(1, 9)}_$safe';
+    return name.length <= 40 ? name : name.substring(0, 40);
   }
 
   /// applyLook API.
@@ -34,19 +36,60 @@ abstract final class WordLink {
   /// ensureHeadingBookmarks API.
   static void ensureHeadingBookmarks(WmlDocument document) {
     final List<WmlParagraph> paras = document.paragraphs.toList();
-    for (int i = 0; i < paras.length; i++) {
-      final WmlParagraph para = paras[i];
+    final Map<WmlParagraph, int> headings = <WmlParagraph, int>{};
+    for (final WmlParagraph para in paras) {
       final String style = (para.properties.styleId ?? '').trim().toLowerCase();
       if (style == 'tocheading' ||
           style == 'toc heading' ||
           RegExp(r'^toc\d$').hasMatch(style)) {
         continue;
       }
-      final int? level = para.properties.headingLevel;
+      final int? stored = para.properties.headingLevel;
+      final int? level = stored != null && stored >= 1 && stored <= 9
+          ? stored
+          : int.tryParse(
+              RegExp(
+                    r'^(?:heading|عنوان)\s*([1-9])$',
+                  ).firstMatch(style)?.group(1) ??
+                  '',
+            );
       if (level == null) {
         continue;
       }
-      para.properties.bookmarkName ??= headingBookmark(para.text, level);
+      headings[para] = level;
+    }
+    // Reserve existing names before assigning any new ones, so an earlier
+    // unbookmarked heading cannot steal a later imported target's identity.
+    final Set<String> reserved = <String>{
+      for (final para in paras)
+        if (para.properties.bookmarkName?.isNotEmpty ?? false)
+          para.properties.bookmarkName!,
+    };
+    final Set<String> used = <String>{
+      for (final para in paras)
+        if (!headings.containsKey(para) &&
+            (para.properties.bookmarkName?.isNotEmpty ?? false))
+          para.properties.bookmarkName!,
+    };
+    for (final entry in headings.entries) {
+      final WmlParagraph para = entry.key;
+      final String? existing = para.properties.bookmarkName;
+      if (existing != null && existing.isNotEmpty && used.add(existing)) {
+        continue;
+      }
+      final String base = headingBookmark(para.text, entry.value);
+      String name = base;
+      var suffix = 2;
+      while (reserved.contains(name) || used.contains(name)) {
+        final String tail = '_${suffix++}';
+        final int length = base.length < 40 - tail.length
+            ? base.length
+            : 40 - tail.length;
+        name = '${base.substring(0, length)}$tail';
+      }
+      para.properties.bookmarkName = name;
+      reserved.add(name);
+      used.add(name);
     }
   }
 
@@ -57,6 +100,13 @@ abstract final class WordLink {
       return null;
     }
     final List<WmlParagraph> paras = document.paragraphs.toList();
+    for (int i = 0; i < paras.length; i++) {
+      if (paras[i].inlines.whereType<WmlBookmarkStart>().any(
+        (WmlBookmarkStart marker) => marker.name == name,
+      )) {
+        return i;
+      }
+    }
     for (int i = 0; i < paras.length; i++) {
       if (paras[i].properties.bookmarkName == name) {
         return i;

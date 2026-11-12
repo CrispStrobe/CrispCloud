@@ -201,6 +201,56 @@ class InventoryTest(unittest.TestCase):
         finally:
             os.chdir(previous)
 
+    def test_editor_manifest_requires_explicit_package_selection(self):
+        self.data['package'] = 'quds_office_editor'
+        self.manifest_path.write_text(json.dumps(self.data))
+        with self.assertRaisesRegex(inventory.InventoryError, 'Manifest package'):
+            inventory.load_manifest(self.manifest_path)
+        editor = inventory.load_manifest(self.manifest_path, package='quds_office_editor')
+        self.assertEqual(editor.package, 'quds_office_editor')
+        self.assertEqual(editor.paths, self.manifest.paths)
+
+    def test_editor_manifest_cannot_clean_engine_root(self):
+        self.complete()
+        self.data['package'] = 'quds_office_editor'
+        self.manifest_path.write_text(json.dumps(self.data))
+        editor = inventory.load_manifest(self.manifest_path, package='quds_office_editor')
+        with self.assertRaisesRegex(inventory.InventoryError, 'package root'):
+            inventory.clean(editor, self.root)
+        self.assertTrue(all((self.build / name).exists() for name in self.manifest.paths))
+
+    def test_selected_editor_inventory_and_receipt_use_editor_package(self):
+        self.complete()
+        (self.root / 'pubspec.yaml').write_text('name: quds_office_editor\n')
+        self.data['package'] = 'quds_office_editor'
+        self.manifest_path.write_text(json.dumps(self.data))
+        editor = inventory.load_manifest(self.manifest_path, package='quds_office_editor')
+        report = inventory.verify(editor, self.root)
+        self.assertTrue(report['ok'])
+        self.assertEqual(report['package'], 'quds_office_editor')
+        receipt = inventory.write_receipt(report, self.root)
+        self.assertEqual(json.loads(receipt.read_text())['package'], 'quds_office_editor')
+        engine = self.root.parent / 'other-engine/build/fidelity-word/edited-1.docx'
+        engine.parent.mkdir(parents=True)
+        engine.write_bytes(b'untouched engine evidence')
+        inventory.clean(editor, self.root)
+        self.assertEqual(engine.read_bytes(), b'untouched engine evidence')
+
+    def test_cli_refuses_wrong_package_before_cleaning_any_artifact(self):
+        self.complete()
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            status = inventory.main(['clean', '--package', 'quds_office_editor',
+                                     '--manifest', str(self.manifest_path),
+                                     '--package-root', str(self.root)])
+        self.assertEqual(status, 1)
+        self.assertTrue(all((self.build / name).exists() for name in self.manifest.paths))
+
+    def test_arbitrary_package_name_cannot_expand_clean_scope(self):
+        with self.assertRaisesRegex(inventory.InventoryError, 'Unsupported fidelity package'):
+            inventory.package_root(self.root, package='user_documents')
+        with self.assertRaisesRegex(inventory.InventoryError, 'Unsupported fidelity package'):
+            inventory.load_manifest(self.manifest_path, package='user_documents')
+
     def test_duplicate_empty_or_miscounted_manifest_fails(self):
         original = json.loads(json.dumps(self.data))
         for mutation in ("duplicate", "empty", "count"):

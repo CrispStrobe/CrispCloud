@@ -91,6 +91,8 @@ void main() {
             (attribute) => attribute.name.local == 'type',
           ),
         );
+    // Note-body reference markers are preserved exactly as imported: this
+    // fixture's notes have none, and an unedited save must not invent them.
     for (final note in notes) {
       expect(
         note.findAllElements(
@@ -98,7 +100,7 @@ void main() {
           namespace:
               'http://schemas.openxmlformats.org/wordprocessingml/2006/main',
         ),
-        hasLength(1),
+        isEmpty,
       );
     }
     // Compare the untrimmed text above: an imported note must not acquire an

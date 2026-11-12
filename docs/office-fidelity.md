@@ -6,31 +6,46 @@ Quds fork; changing the upstream branch alone cannot update the running app.
 The host also has its own save, preview and content-search behavior, which is
 tested separately from the engine.
 
-`tool/office_fidelity_manifest.json` records the source commit and SHA-256 hashes
-for the 87 shared implementation, scenario, fixture and golden files in this
-change. The guard checks only those files, preserving unrelated host changes.
-## Verified vendor revision
+`tool/office_fidelity_manifest.json` records the authoritative source commit and
+SHA-256 hashes for the selected shared implementation, scenario, fixture and
+golden files. The guard checks only those files, preserving unrelated host
+changes. Revision IDs and counts in the historical evidence below identify
+their original snapshots, not the current manifest.
 
-The current [vendor manifest](../tool/office_fidelity_manifest.json) selects
+## Current vendor revision and focused followup
+
+## Host expansion on 2026-11-12
+
+The [host paragraph/style/reference/layout audit](office-host-fidelity-20261112.md)
+records the new actual-dialog regressions, independent authored XML expectations,
+repeated exports, exact artifact inventory and coverage-completeness controls.
+It closes host precision loss, collateral formatting changes, active-story
+confusion, missing custom styles and hyperlink-history integration gaps. Read
+the current manifest and this branch's execution evidence when evaluating the
+new checkpoint; earlier coverage percentages do not measure changed code.
+
+## Previously verified vendor revision (2026-11-11)
+
+The previously verified vendor manifest selected
 Quds commit
-[`692a326`](https://github.com/CrispStrobe/quds_office_suite/commit/692a326aae2e8133b793570344028a1ceffddbdc)
-and **154 shared files**. The sync compared every existing selected app file
-with its bytes at the previous `14fa25f` pin before copying immutable Git blobs:
-26 existing files changed, 11 files were added, and no host customization
-conflicts were found. New files include the table-property helper, authored
-table-border fixture/oracle, transition and picture-distance regressions, editor
-split-identity tests and coverage-report controls. A subsequent three-file sync
-from `a7e1a207` to the final pin adds the reviewed first story-page PNG, its
-explicit paragraph-spacing assertion and a coverage-helper docstring correction.
-No production source changed in that followup. The expanded hash guard passes.
+[`431bffa`](https://github.com/CrispStrobe/quds_office_suite/commit/431bffa31a4f007d88cbb9b19d59bd5dcd04bdff)
+and **158 shared files**. Every existing selected file passed the previous
+SHA-256 guard before synchronization from immutable Git blobs. The new revision
+adds canvas image ownership and late-decode disposal to `692a326`; the two
+source lifecycle regressions pass.
 
-This revision includes the imported-note formatting, style-transition,
-table-border/paragraph-spacing and drawing-distance followup. The complete host
-gate and the external schema gate pass against the production bytes from
-`a7e1a207`, identical to the final pin. The source repository reviewed the story
-page after the intended correction to imported styleless-paragraph spacing and
-passed its full editor suite with the final PNG. The app gate does not regenerate
-those reviewed images.
+The actual host's 15-test ribbon/save/localization cohort now passes with
+Footnote and Endnote commands in the Word menu and Insert tab. A real
+heading/paragraph/note/picture editing workflow saves and reopens three times,
+inspecting captured upload bytes with an independent ZIP/XML reader. It checks
+explicit unbold, paragraph spacing/indents/tabs, note identity and exact
+whitespace, image sizes and both original/inserted image payloads. This flow
+reproduced the disposed-canvas callback and passes after the source fix.
+Cancellation, read-only behavior, localized menus and note undo/redo are covered.
+
+The host manifest now requires **17 outputs**, including all three ribbon-edited
+saves. The complete expanded gate and coverage report are still to be recorded;
+the broader figures below are explicitly the previous `692a326` milestone.
 
 The previous integrated milestone was app checkpoint
 [`78e65b9`](https://github.com/CrispStrobe/CrispCloud/commit/78e65b9eecd7861c95433819d11ac39375c40f9c)

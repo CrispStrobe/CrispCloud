@@ -34,3 +34,6 @@ class SmbSession {
   Future<void> delete(String path, {required bool directory}) => _unsupported();
   void close() {}
 }
+
+/// Browsers never load the Rust SMB bridge.
+String? get rustSmbLibraryLocation => null;

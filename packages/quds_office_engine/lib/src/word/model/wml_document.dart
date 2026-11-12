@@ -16,6 +16,30 @@ sealed class WmlBlock {
   WmlBlock();
 }
 
+/// Immutable native content-control properties, separate from editable content.
+final class WmlSdtInfo {
+  const WmlSdtInfo({
+    required this.templateXml,
+    required this.hasContent,
+    this.id,
+    this.tag,
+  });
+
+  /// Self-contained `w:sdt` with its original properties and empty content slot.
+  final String templateXml;
+  final bool hasContent;
+  final String? id;
+  final String? tag;
+}
+
+/// Zero-layout boundary around ordinary editable blocks in a native SDT.
+final class WmlSdtBlockBoundary extends WmlBlock {
+  WmlSdtBlockBoundary(this.control, {required this.isStart});
+
+  final WmlSdtInfo control;
+  final bool isStart;
+}
+
 /// An imported block retained for export without claiming layout support.
 ///
 /// Used for `w:altChunk` and for any other unmodeled body-level element, kept
@@ -64,6 +88,19 @@ sealed class WmlInline {
   WmlInline();
 }
 
+/// Source markup at a text boundary, without a character or layout width.
+/// Start-like markers stay with following content when a paragraph is split;
+/// end-like markers stay with preceding content.
+abstract class WmlZeroWidthInline extends WmlInline {
+  bool get isStart;
+
+  /// Whether a paragraph boundary may occur between this marker and its mate.
+  /// Inline wrappers override this to reject an invalid split before mutation.
+  bool get canCrossParagraph => true;
+
+  WmlZeroWidthInline copy();
+}
+
 /// Class WmlRun.
 class WmlRun extends WmlInline {
   /// WmlRun API.
@@ -74,6 +111,9 @@ class WmlRun extends WmlInline {
     List<int>? commentIds,
     this.noteRefId,
     this.noteRefEndnote = false,
+    this.fieldInstruction,
+    this.fieldLocked = false,
+    this.fieldDirty,
   }) : properties = properties ?? WmlRunProps(),
        commentIds = commentIds ?? <int>[];
 
@@ -94,6 +134,21 @@ class WmlRun extends WmlInline {
 
   /// True when [noteRefId] points at an endnote.
   bool noteRefEndnote;
+
+  /// Instruction for a single-run native inline field (w:fldSimple).
+  ///
+  /// The cached result is [text]. Complex and multi-run field containers are
+  /// not represented here; paragraph-wide fields retain their existing model.
+  String? fieldInstruction;
+
+  /// A locked imported field keeps its cached result during field updates.
+  bool fieldLocked;
+
+  /// The imported dirty marker, or null when the marker was absent.
+  bool? fieldDirty;
+
+  /// Note marks and inline field results cannot be split into ordinary text.
+  bool get isAtomic => noteRefId != null || fieldInstruction != null;
 }
 
 /// Class WmlComment.
@@ -192,7 +247,7 @@ class WmlComment {
     paragraphs: <WmlParagraph>[
       for (final WmlParagraph paragraph in paragraphs)
         WmlParagraph(
-          properties: paragraph.properties,
+          properties: paragraph.properties.copy(),
           inlines: <WmlInline>[
             for (final WmlInline inline in paragraph.inlines)
               if (inline is WmlRun)
@@ -203,6 +258,9 @@ class WmlComment {
                   commentIds: List<int>.from(inline.commentIds),
                   noteRefId: inline.noteRefId,
                   noteRefEndnote: inline.noteRefEndnote,
+                  fieldInstruction: inline.fieldInstruction,
+                  fieldLocked: inline.fieldLocked,
+                  fieldDirty: inline.fieldDirty,
                 )
               else
                 inline,
@@ -495,6 +553,8 @@ class WmlToc extends WmlBlock {
     this.minLevel = 1,
     this.maxLevel = 3,
     this.showPageNumbers = true,
+    this.omitPageNumbersFromLevel,
+    this.omitPageNumbersThroughLevel,
     this.captionLabel,
     String title = 'Table of Contents',
     List<WmlTocEntry>? entries,
@@ -531,6 +591,18 @@ class WmlToc extends WmlBlock {
 
   /// showPageNumbers API.
   bool showPageNumbers;
+
+  /// Native TOC \\n suppression for a bounded range of outline levels.
+  int? omitPageNumbersFromLevel;
+  int? omitPageNumbersThroughLevel;
+
+  /// Whether this entry has a visible page number and dotted leader.
+  bool showsPageNumberForLevel(int level) {
+    if (!showPageNumbers) return false;
+    final int? first = omitPageNumbersFromLevel;
+    final int? last = omitPageNumbersThroughLevel;
+    return first == null || last == null || level < first || level > last;
+  }
 
   /// When set, the TOC is a table of figures for this caption label.
   String? captionLabel;
@@ -985,6 +1057,7 @@ class WmlDocument {
           break;
         case WmlToc():
           break;
+        case WmlSdtBlockBoundary():
         case WmlOpaqueBlock():
           break;
       }
@@ -1011,6 +1084,7 @@ class WmlDocument {
         case WmlToc():
           yield block.titleParagraph;
           yield* block.itemParagraphs;
+        case WmlSdtBlockBoundary():
         case WmlOpaqueBlock():
           break;
       }
@@ -1040,6 +1114,7 @@ class WmlDocument {
         case WmlParagraph():
         case WmlVisual():
         case WmlToc():
+        case WmlSdtBlockBoundary():
         case WmlOpaqueBlock():
           break;
       }

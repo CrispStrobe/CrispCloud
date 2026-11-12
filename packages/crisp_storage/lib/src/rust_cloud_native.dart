@@ -1,15 +1,16 @@
 // Native (dart:io + FFI) binding of [RustCloudApi] to the generated
 // flutter_rust_bridge API in `rust_cloud/`.
 import 'dart:convert';
+import 'dart:io' show Directory, Platform;
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
     show ExternalLibrary;
 
 import 'cloud_engine.dart';
-import 'native_library_locator.dart';
 import 'rust_cloud/api.dart' as native;
 import 'rust_cloud/frb_generated.dart';
+import 'rust_library.dart';
 
 const _definedLibrary = String.fromEnvironment('CRISP_CLOUD_LIBRARY');
 
@@ -26,15 +27,31 @@ class NativeRustCloudApi implements RustCloudApi {
   @override
   Future<void> initialize() => _initializing ??= (() async {
     try {
-      final candidates = rustLibraryCandidates(
-        stem: 'crisp_cloud_bridge',
-        definedPath: _definedLibrary,
-        environmentVariable: 'CRISP_CLOUD_LIBRARY',
-      );
-      final path = firstExistingLibrary(candidates);
-      await CloudRustLib.init(
-        externalLibrary: path == null ? null : ExternalLibrary.open(path),
-      );
+      // Same order as the SMB bridge: explicit path (define/environment),
+      // a library bundled by the build hook (`rust_cloud: true`), then FRB's
+      // default developer location (rust_cloud/target/release).
+      final explicit = _definedLibrary.isNotEmpty
+          ? _definedLibrary
+          : Platform.environment['CRISP_CLOUD_LIBRARY'];
+      ExternalLibrary? library;
+      if (explicit != null && explicit.isNotEmpty) {
+        library = ExternalLibrary.open(explicit);
+      } else {
+        for (final candidate in bundledRustLibraryCandidates(
+          os: Platform.operatingSystem,
+          executable: Platform.resolvedExecutable,
+          workingDirectory: Directory.current.path,
+          stem: cloudBridgeStem,
+        )) {
+          try {
+            library = ExternalLibrary.open(candidate);
+            break;
+          } catch (_) {
+            continue;
+          }
+        }
+      }
+      await CloudRustLib.init(externalLibrary: library);
       final info = jsonDecode(native.cloudBridgeInfo()) as Map;
       if (info['session_version'] != RustCloudSessionEnvelope.version) {
         throw const RustCloudUnavailable('session format mismatch');

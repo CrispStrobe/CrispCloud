@@ -5,8 +5,8 @@ import 'dart:typed_data';
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
     show ExternalLibrary;
-import 'native_library_locator.dart';
 import 'remote_client.dart';
+import 'rust_library.dart';
 import 'rust/api.dart' as native;
 import 'rust/frb_generated.dart';
 import 'smb_backend.dart';
@@ -19,28 +19,79 @@ class RustSmbSession implements SmbTransport {
   static Future<void> initialize() => _initializing ??= (() async {
     try {
       const defined = String.fromEnvironment('CRISP_SMB_LIBRARY');
-      // Explicit path (define/environment) first, then a library bundled
-      // next to the app (macOS: Contents/Frameworks), then FRB's default.
-      final path = firstExistingLibrary(
-        rustLibraryCandidates(
-          stem: 'crisp_smb_bridge',
-          definedPath: defined,
-          environmentVariable: 'CRISP_SMB_LIBRARY',
-        ),
-      );
-      await RustLib.init(
-        externalLibrary: path == null ? null : ExternalLibrary.open(path),
-      );
+      final explicit = defined.isNotEmpty
+          ? defined
+          : Platform.environment['CRISP_SMB_LIBRARY'];
+      if (explicit != null && explicit.isNotEmpty) {
+        await RustLib.init(externalLibrary: ExternalLibrary.open(explicit));
+        loadedFrom = explicit;
+        return;
+      }
+      // App builds with `hooks.user_defines.crisp_storage.rust_smb: true`
+      // bundle the bridge next to the executable (see hook/build.dart).
+      for (final candidate in bundledRustLibraryCandidates(
+        os: Platform.operatingSystem,
+        executable: Platform.resolvedExecutable,
+        workingDirectory: Directory.current.path,
+      )) {
+        final ExternalLibrary library;
+        try {
+          library = ExternalLibrary.open(candidate);
+        } catch (_) {
+          continue;
+        }
+        await RustLib.init(externalLibrary: library);
+        loadedFrom = candidate;
+        return;
+      }
+      // Developer checkout: FRB's default (rust/target/release/...).
+      await RustLib.init();
+      loadedFrom = 'default';
     } catch (_) {
       // No session, credentials or network operations exist at this boundary.
       throw const RustSmbUnavailable();
     }
   })();
 
+  /// Diagnostic only: which library location initialized the bridge.
+  static String? loadedFrom;
+
   final RemoteConnection connection;
   late final SmbPaths _paths = SmbPaths(connection);
   late final int _id;
   bool _closed = false, _downloading = false;
+
+  /// The native session holds at most [maxOpenHandles] read/write handles
+  /// (MAX_HANDLES in crisp_smb). Extra streams/uploads wait for a slot
+  /// instead of failing with TooManyHandles, matching libsmb2's queueing.
+  static const maxOpenHandles = 8;
+  int _openHandles = 0;
+  final _slotWaiters = <Completer<void>>[];
+
+  Future<void> _acquireHandle() async {
+    if (_closed) {
+      throw const RemoteException(
+        'SMB connection closed.',
+        code: RemoteErrorCode.closed,
+      );
+    }
+    if (_openHandles < maxOpenHandles) {
+      _openHandles++;
+      return;
+    }
+    final waiter = Completer<void>();
+    _slotWaiters.add(waiter);
+    await waiter.future; // the releasing holder hands its slot over
+  }
+
+  void _releaseHandle() {
+    if (_slotWaiters.isNotEmpty) {
+      _slotWaiters.removeAt(0).complete();
+    } else {
+      _openHandles--;
+    }
+  }
+
   RustSmbSession(this.connection) {
     final user = connection.username;
     final split = user.indexOf(r'\');
@@ -186,7 +237,14 @@ class RustSmbSession implements SmbTransport {
     String path, {
     void Function(int, int)? onProgress,
   }) async* {
-    final opened = await _request('openRead', path: path);
+    await _acquireHandle();
+    final Map<String, dynamic> opened;
+    try {
+      opened = await _request('openRead', path: path) as Map<String, dynamic>;
+    } catch (_) {
+      _releaseHandle();
+      rethrow;
+    }
     final handle = opened['handle'] as int, size = opened['size'] as int;
     try {
       var offset = 0;
@@ -218,7 +276,11 @@ class RustSmbSession implements SmbTransport {
         );
       }
     } finally {
-      if (!_closed) await _request('closeRead', handle: handle);
+      try {
+        if (!_closed) await _request('closeRead', handle: handle);
+      } finally {
+        _releaseHandle();
+      }
     }
   }
 
@@ -277,7 +339,14 @@ class RustSmbSession implements SmbTransport {
       upload(path, Stream.value(bytes));
   @override
   Future<void> upload(String path, Stream<List<int>> data) async {
-    final handle = await _request('openWrite', path: path) as int;
+    await _acquireHandle();
+    final int handle;
+    try {
+      handle = await _request('openWrite', path: path) as int;
+    } catch (_) {
+      _releaseHandle();
+      rethrow;
+    }
     var finished = false;
     try {
       await for (final bytes in data) {
@@ -297,7 +366,13 @@ class RustSmbSession implements SmbTransport {
       await _request('finishWrite', handle: handle);
       finished = true;
     } finally {
-      if (!finished && !_closed) await _request('abortWrite', handle: handle);
+      try {
+        if (!finished && !_closed) {
+          await _request('abortWrite', handle: handle);
+        }
+      } finally {
+        _releaseHandle();
+      }
     }
   }
 
@@ -320,6 +395,15 @@ class RustSmbSession implements SmbTransport {
   void close() {
     if (_closed) return;
     _closed = true;
+    for (final waiter in _slotWaiters) {
+      waiter.completeError(
+        const RemoteException(
+          'SMB connection closed.',
+          code: RemoteErrorCode.closed,
+        ),
+      );
+    }
+    _slotWaiters.clear();
     native.cancelSession(id: _id);
     unawaited(native.closeSession(id: _id).catchError((Object _) {}));
   }

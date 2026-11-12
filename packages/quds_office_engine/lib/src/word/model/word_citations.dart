@@ -1,5 +1,6 @@
 import '../properties/wml_properties.dart';
 import 'wml_document.dart';
+import 'wml_run_edit.dart';
 import 'word_fields.dart';
 
 /// Citation / bibliography / index helpers.
@@ -8,15 +9,44 @@ abstract final class WordCitations {
   static void insert(
     WmlDocument document,
     WmlParagraph paragraph,
-    WmlCitation citation,
-  ) {
+    WmlCitation citation, {
+    int? index,
+  }) {
+    if (paragraph.properties.fieldInstruction?.trim().isNotEmpty == true ||
+        paragraph.properties.pageNumberField) {
+      throw UnsupportedError(
+        'Insert an inline citation in an ordinary paragraph; this paragraph '
+        'is already modeled as a whole-paragraph field.',
+      );
+    }
     document.citations.removeWhere((WmlCitation c) => c.tag == citation.tag);
     document.citations.add(citation);
-    paragraph.properties.fieldInstruction = WordFields.instructionOf(
-      WmlFieldKind.citation,
-      argument: citation.tag,
-    );
-    paragraph.inlines.add(WmlRun(text: ' ${citation.inText}'));
+    final String text = paragraph.text;
+    final int requested = index ?? text.length;
+    final int at = WmlRunEdit.normalizeRange(
+      paragraph,
+      requested,
+      requested,
+    ).start;
+    final WmlRunProps properties = WmlRunEdit.propsAt(
+      paragraph,
+      at == text.length ? at - 1 : at,
+    ).copy();
+    final whitespace = RegExp(r'\s');
+    WmlRunEdit.insertRuns(paragraph, at, <WmlRun>[
+      if (at > 0 && !whitespace.hasMatch(text[at - 1]))
+        WmlRun(text: ' ', properties: properties.copy()),
+      WmlRun(
+        text: citation.inText,
+        properties: properties,
+        fieldInstruction: WordFields.instructionOf(
+          WmlFieldKind.citation,
+          argument: citation.tag,
+        ),
+      ),
+      if (at < text.length && !whitespace.hasMatch(text[at]))
+        WmlRun(text: ' ', properties: properties.copy()),
+    ]);
   }
 
   /// bibliography API.
