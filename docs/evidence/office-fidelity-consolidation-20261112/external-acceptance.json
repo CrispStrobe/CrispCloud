@@ -1,0 +1,57 @@
+{
+  "status": "passed",
+  "source_commit": "e226859cbde21af0b3d70b755c350978161a73c9",
+  "input_count": 300,
+  "input_counts": {
+    "actual_host_exports": 59,
+    "quds_office_engine": 241
+  },
+  "schema": {
+    "files": 300,
+    "failures": 0
+  },
+  "integrity": {
+    "inputs_match_manifest": true,
+    "all_sdk_receipts_match_exact_inputs": true
+  },
+  "report_sha256": {
+    "manifest": "452d28748540b3d8772f5c98f2c7c2f957bf2a23b8dae90589fdeba4895fdf92",
+    "schema": "22dda64a3f4efedf91266df235913b18cb865a312ad259891080156f76510505",
+    "host_inventory": "8827af28d687cfb71e9b121ea9dacaecb0ace552ebac68b83e23b14a447ae3cd",
+    "supplementary_native_probe": "35be50d58c4288804f37f11fed4209f962d58bb7cbddb84ba3c101c79968be2b"
+  },
+  "managed_source_commit": "3ff2e15823c86cda88d3369dc4bbabf42f45290a",
+  "input_formats": {
+    ".docm": 1,
+    ".docx": 242,
+    ".dotm": 1,
+    ".dotx": 1,
+    ".pptx": 26,
+    ".xlsx": 29
+  },
+  "input_root": "/workspace/scratch/e445bd9b965c/validation/app-evidence-e226859c",
+  "validator_source_sha256": "4d41f286855ed11a12ecdf0641773c33285847180a3e5cdbf43ce2385a099880",
+  "host_inventory": {
+    "expected": 59,
+    "verified": 59,
+    "failures": 0,
+    "manifest_sha256": "46d73541cfd808f092399c0bbc58a7870f8be3db0430bd0d827c1292a754eb56"
+  },
+  "supplementary_native_probe": {
+    "files": 11,
+    "rendered_files": 11,
+    "rendered_pages": 23,
+    "failures": 0,
+    "elapsed_seconds": 10.830134662000091,
+    "renderer": "LibreOffice 24.2.7.2 ee3885777aa7032db5a9b65deec9457448a91162 (LibreOfficeKit embedding API)",
+    "formats": {
+      ".xlsx": 4,
+      ".pptx": 4,
+      ".docm": 1,
+      ".dotx": 1,
+      ".dotm": 1
+    },
+    "scope": "Supplementary native conversion of eleven actual host uploads: four XLSX, four PPTX, and DOCM/DOTX/DOTM. No repeated-save-cycle certification is implied.",
+    "all_input_hashes_unchanged": true
+  }
+}

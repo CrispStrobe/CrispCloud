@@ -1,0 +1,168 @@
+{
+  "result": "pass",
+  "app_commit": "e226859cbde21af0b3d70b755c350978161a73c9",
+  "source_commit": "3ff2e15823c86cda88d3369dc4bbabf42f45290a",
+  "working_tree_clean_after_sqlite_wrapper": true,
+  "pubspec_yaml_and_lock_unchanged": true,
+  "vendor_files_verified_against_source": 309,
+  "command": "CI=true python3 tool/with_ci_system_sqlite.py bash tool/check_office_fidelity.sh",
+  "runtime": {
+    "flutter": "3.47.8",
+    "dart": "3.13.7"
+  },
+  "tests": {
+    "full_host_flutter": 146,
+    "selected_engine_dart": 598,
+    "engine_python_controls": 308,
+    "host_inventory_controls": 10,
+    "host_coverage_controls": 7,
+    "host_controls_total": 17,
+    "sync_controls": 7,
+    "focused_incoming_and_integration_flutter": 299
+  },
+  "export_inventory": {
+    "engine": 241,
+    "host": 59,
+    "total": 300,
+    "failures": 0,
+    "host_extensions": {
+      ".docm": 1,
+      ".docx": 48,
+      ".dotm": 1,
+      ".dotx": 1,
+      ".pptx": 4,
+      ".xlsx": 4
+    },
+    "engine_three_cycle_series": 73,
+    "engine_standalone_files": 22,
+    "public_operations_with_executable_scenarios": 67,
+    "open_data_loss_probes": 0,
+    "host_manifest_sha256": "46d73541cfd808f092399c0bbc58a7870f8be3db0430bd0d827c1292a754eb56",
+    "engine_manifest_sha256": "7a662a9b8f16d856d06586485fcca52c4ceee5b9a61b6d86473e24b91fee54da",
+    "all_300_current_bytes_reverified_against_receipts": true,
+    "frozen_for_external_validation": true
+  },
+  "coverage": {
+    "measurement": "executed instrumented host lines; not branch coverage",
+    "scope": [
+      "lib/services/office_*.dart",
+      "lib/widgets/office_*.dart",
+      "lib/services/word_package_preservation.dart",
+      "lib/services/legacy_word_document.dart",
+      "lib/services/bounded_cfb_reader.dart"
+    ],
+    "scoped_files": 12,
+    "covered_lines": 2605,
+    "instrumented_lines": 3948,
+    "percent_rounded_1dp": 66.0,
+    "absent_files": [],
+    "source_tree_sha256": "a7cf5bf291d9d385ed0cf3f8b18401e9b8df4a4939eb0b49fa9f23fc93d35ce4",
+    "source_git_commit": "e226859cbde21af0b3d70b755c350978161a73c9",
+    "source_git_dirty": false,
+    "per_file": [
+      {
+        "path": "lib/services/bounded_cfb_reader.dart",
+        "hit": 81,
+        "total": 89
+      },
+      {
+        "path": "lib/services/legacy_word_document.dart",
+        "hit": 100,
+        "total": 102
+      },
+      {
+        "path": "lib/services/office_document_service.dart",
+        "hit": 486,
+        "total": 599
+      },
+      {
+        "path": "lib/services/office_editor_menu.dart",
+        "hit": 3,
+        "total": 3
+      },
+      {
+        "path": "lib/services/office_package_parts.dart",
+        "hit": 43,
+        "total": 43
+      },
+      {
+        "path": "lib/services/office_pdf_service.dart",
+        "hit": 15,
+        "total": 18
+      },
+      {
+        "path": "lib/services/office_search_text.dart",
+        "hit": 209,
+        "total": 214
+      },
+      {
+        "path": "lib/services/word_package_preservation.dart",
+        "hit": 73,
+        "total": 73
+      },
+      {
+        "path": "lib/widgets/office_editor_dialog.dart",
+        "hit": 210,
+        "total": 277
+      },
+      {
+        "path": "lib/widgets/office_editor_dialogs.dart",
+        "hit": 393,
+        "total": 531
+      },
+      {
+        "path": "lib/widgets/office_editor_find_bar.dart",
+        "hit": 87,
+        "total": 149
+      },
+      {
+        "path": "lib/widgets/office_editor_ribbon.dart",
+        "hit": 905,
+        "total": 1850
+      }
+    ]
+  },
+  "external_validation": {
+    "final_exact_300_sdk_status": "pending_runtime_agent",
+    "prior_actual_macro_template_probe": {
+      "packages": 3,
+      "schema_errors": 0,
+      "receipt": "/workspace/scratch/e445bd9b965c/CrispCloud/build/word-types-sdk-probe-xqod809f/schema-report.json"
+    }
+  },
+  "evidence": {
+    "full_gate_log": {
+      "path": "/workspace/scratch/e445bd9b965c/validation/app-host-expanded-final.log",
+      "sha256": "f27e4b58c568e8510591d3d2cb9859fe2afde6b496e96fd21dcebf90c765e3dd"
+    },
+    "focused_feature_gate_log": {
+      "path": "/workspace/scratch/e445bd9b965c/validation/app-format-viewers-focused.log",
+      "sha256": "ce6f928d29cdabd3529d81214d7e6e7033a87d2697953dce5d618208bd406bd7"
+    },
+    "host_inventory": {
+      "path": "/workspace/scratch/e445bd9b965c/CrispCloud/build/fidelity-host/inventory.json",
+      "sha256": "8827af28d687cfb71e9b121ea9dacaecb0ace552ebac68b83e23b14a447ae3cd"
+    },
+    "engine_inventory": {
+      "path": "/workspace/scratch/e445bd9b965c/CrispCloud/packages/quds_office_engine/build/fidelity-inventory.json",
+      "sha256": "c49dcc52bf73b57b57a4222d35e7ca195648f1a0fb9cb71c2d151208df7ff67d"
+    },
+    "host_coverage": {
+      "path": "/workspace/scratch/e445bd9b965c/CrispCloud/build/fidelity-host/coverage/gaps.json",
+      "sha256": "7ed617c1854f430a360c54f639226d664e2a4a4f8720a289aa014c60cb457987"
+    },
+    "host_lcov": {
+      "path": "/workspace/scratch/e445bd9b965c/CrispCloud/build/fidelity-host/coverage/lcov.info",
+      "sha256": "08e9424e7868dd9efcb40561a548688fa451b445dbd4bd5ea4ae3680753fcf72"
+    },
+    "vendor_manifest": {
+      "path": "/workspace/scratch/e445bd9b965c/CrispCloud/tool/office_fidelity_manifest.json",
+      "sha256": "63abebd811c932e3336eaff58b8042504bfc9df008b3de10953595a50757528a"
+    }
+  },
+  "limits": [
+    "Coverage is executed line coverage for the declared 12 Office files, not branch coverage or whole-application coverage.",
+    "Focused feature tests supplement the mandatory Office gate; email and favorites are outside the declared Office coverage scope.",
+    "No native SMB server integration test was run in this environment."
+  ]
+}

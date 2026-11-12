@@ -1,0 +1,62 @@
+[
+  {
+    "path": "host-test-acceptance.json",
+    "bytes": 5680,
+    "sha256": "7db9469a86a4c3a96c6e97b3b523ae19aec1793805680a8dcb1f17eabeaa4cd0"
+  },
+  {
+    "path": "host-coverage.json",
+    "bytes": 21979,
+    "sha256": "7ed617c1854f430a360c54f639226d664e2a4a4f8720a289aa014c60cb457987"
+  },
+  {
+    "path": "host-inventory.json",
+    "bytes": 14267,
+    "sha256": "8827af28d687cfb71e9b121ea9dacaecb0ace552ebac68b83e23b14a447ae3cd"
+  },
+  {
+    "path": "engine-inventory.json",
+    "bytes": 56057,
+    "sha256": "c49dcc52bf73b57b57a4222d35e7ca195648f1a0fb9cb71c2d151208df7ff67d"
+  },
+  {
+    "path": "external-acceptance.json",
+    "bytes": 1896,
+    "sha256": "bf4c8dd55058479212e79b206768a4be9384c4db215542bdc7aeb979f6b77d35"
+  },
+  {
+    "path": "app-inputs.json",
+    "bytes": 61346,
+    "sha256": "452d28748540b3d8772f5c98f2c7c2f957bf2a23b8dae90589fdeba4895fdf92"
+  },
+  {
+    "path": "app-schema.json",
+    "bytes": 79723,
+    "sha256": "22dda64a3f4efedf91266df235913b18cb865a312ad259891080156f76510505"
+  },
+  {
+    "path": "host-native-render.json",
+    "bytes": 15776,
+    "sha256": "35be50d58c4288804f37f11fed4209f962d58bb7cbddb84ba3c101c79968be2b"
+  },
+  {
+    "path": "schema-validator-provenance.json",
+    "bytes": 6290,
+    "sha256": "2ec47c0fc9f83566f3d3fd747dd26f0049b415aa0ac8899122e01f8cb5468df9"
+  },
+  {
+    "path": "native-renderer-provenance.json",
+    "bytes": 10888,
+    "sha256": "c7f147a4a3fcc02113c1a5cf17b076e9ad3a60b6148f963cf59c35aac415e2f3"
+  },
+  {
+    "path": "consolidated-ancestry.json",
+    "bytes": 2994,
+    "sha256": "18bac53a84044878c9ea9da0e87534c71fb4506e0000078c5a5d79338e7d946b"
+  },
+  {
+    "path": "runtime/probe_host_native.py",
+    "bytes": 3919,
+    "sha256": "d2aab88cf04d2cc88b5a2d48a0aa111152cbf47578880f25e4c2463bb20a99aa"
+  }
+]
