@@ -44,9 +44,14 @@ LCOV, source hashes, detailed gaps and test execution remain available here.
 - `initial-schema-failed-report.json`: the earlier schema result identifying
   three small-slide fixtures below the native minimum height. The fixture was
   corrected to 100 by 72 points; the schema validator was not relaxed.
+- `initial-host-native-failed-report.json` and its compressed log: the first
+  complete native host run rendered 98 exports and rejected six image-only
+  JPEG/GIF Word fixtures because its text requirement lacked a corresponding
+  Word pixel oracle. Those six cases did not receive visual acceptance.
 - Focused logs preserve the actual note/save and corrected picture regressions.
 
-The final host native-render report is added after the serial render completes.
+Successful full host native acceptance is pending the explicit image-only Word
+oracle and the corresponding rerun.
 The twelve picture-only slides require independent page/rectangle/color/pixel
 checks; their empty extracted text cannot pass by itself.
 
