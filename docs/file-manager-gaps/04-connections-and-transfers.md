@@ -10,7 +10,7 @@ capability. Required live/device checks remain visible after code implementation
 
 ### FTP byte-offset resume
 
-**Status:** Implementing. **Dependencies:** Existing transfer recovery.
+**Status:** Implemented / live-server acceptance pending. **Dependencies:** Existing transfer recovery.
 
 **Scope:** Resume verified partial downloads using server restart capabilities and durable checkpoints.
 
@@ -25,6 +25,30 @@ capability. Required live/device checks remain visible after code implementation
 - Queue recovery and cancellation resume from a proven offset without duplicating or skipping bytes; live interoperability is recorded.
 
 **Starting points:** ftp_transfer_session.dart; FTP capabilities; transfer recovery/checkpoint service.
+
+**Delivered increment:** Native range reads negotiate `REST STREAM`, fix binary
+transfer mode, validate a source/connection snapshot, establish the passive
+transport before `REST`, and send `RETR` immediately after the accepted offset.
+The actual resumed stream combines a verified retained prefix with the remote
+suffix and checks the original full SHA-256 before publication. Durable recovery
+preserves bounded references across failed/canceled retries. Consumed partials
+are deleted only after the published contents and each retained prefix are
+verified, before move-source deletion. See [FTP resume](../ftp-resume.md).
+
+**Observed evidence:** The eight-suite transfer gate passed 285 tests, including
+plain/implicit/explicit TLS loopback order/bytes, source/suffix mutation,
+interrupted real local writes, journal reload/reconnect, exact partial cleanup,
+failed checkpoint reconciliation, phase guards and physical transport lifetime.
+Focused analysis of the three shared cleanup services and their new suite has
+no findings. A follow-up three-suite gate passed **89 tests**, including an
+empty newest payload after a crash, fallback to an older verified prefix, and
+refusal to skip directory/symlink candidates. Overlapping counts are not added.
+
+**Remaining acceptance:** Record interoperability on selected real servers and
+signed target builds. Upload resume, server-to-server transfers and direct
+protocol proxy routing remain separate scopes. The connection namespace now
+includes security mode; older saved identities require a newly reviewed restart
+instead of silently migrating into a different transfer context.
 
 ## G26
 

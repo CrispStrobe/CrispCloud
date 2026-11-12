@@ -106,6 +106,32 @@ Execution verifies the prefix again. It then constructs a fresh stage from
 that prefix plus the negotiated remote suffix and checks the assembled digest
 before publication.
 
+Repeated failed or cancelled attempts keep a bounded `retainedStagePaths`
+list in the journal: at most 32 distinct paths and 64 KiB of combined UTF-8
+path bytes per entry. A new staging checkpoint preserves earlier references
+before recording its own path. Reaching either limit stops the next write for
+review. If the latest attempt created no payload, recovery can select an older
+existing prefix; it verifies that prefix against the original source again.
+An existing but changed candidate is a review failure.
+
+After publication is confirmed, native cleanup verifies the complete published
+SHA-256 digest and each retained prefix before removing the consumed payload.
+Only the exact `payload` file in its recorded `.crisp-transfer-*` directory
+beside the destination is eligible. The path and its ancestors must be ordinary
+directories/files, with no symbolic links, and the private directory must
+contain no unrelated entry. Cleanup removes that payload and its empty parent
+without recursive deletion, then records the confirmed removal in the journal.
+Cancellation, changed contents, unexpected entries, access failures and failed
+journal confirmation preserve the remaining references for another reviewed
+recovery. Already absent paths are reconciled without deleting anything else.
+
+Cleanup precedes metadata completion and move-source deletion. A published
+copy whose retained files cannot be safely cleaned is reported for review;
+the source remains intact. Recovery can finish the cleanup after revalidating
+the published contents. This stage ownership and cleanup path is used only by
+persistent, recoverable journaled transfers; ordinary writes retain their
+existing behavior.
+
 Incorrect prefixes, remote mutation, refused offsets, short reads, failed
 completion replies and interrupted reconnection cannot replace the previous
 verified destination. They remain reviewable failures. A complete restart is
@@ -143,7 +169,8 @@ The focused test command is:
 flutter test test/ftp_resume_test.dart test/ftp_transfer_session_test.dart \
   test/ftp_explicit_tls_test.dart test/ftp_transport_lifetime_test.dart \
   test/ftp_adapter_test.dart test/file_operation_service_test.dart \
-  test/file_operation_backend_test.dart test/transfer_recovery_test.dart
+  test/file_operation_backend_test.dart test/transfer_recovery_test.dart \
+  test/transfer_stage_cleanup_test.dart test/file_operation_phase_guard_test.dart
 ```
 
 The added cases cover exact wire ordering and binary bytes in all three modes;
@@ -154,6 +181,11 @@ observed peer closure during cancellation; direct conflict resume with wrong
 prefixes and wrong same-length suffixes; persisted snapshot evidence; and an
 actual cancelled local write that is recovered after reconnecting the original
 FTP account.
+
+Native stage-cleanup regressions additionally cover repeated interrupted and
+empty retries; confirmed copy/move cleanup; stage and published-file mutation;
+symbolic links and unrelated directory entries; journal failures before and
+after exact deletion; and retained-reference count/path-byte bounds.
 
 Live acceptance remains open. Record each tested server and version, operating
 system, selected security mode, passive-port configuration, relevant feature

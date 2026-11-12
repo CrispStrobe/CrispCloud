@@ -54,7 +54,9 @@ background worker.
 FTP remains a native passive-mode transport. Both secure modes verify the
 control and data certificates against the platform/Dart trust configuration.
 The HTTP custom-CA setting does not change FTP trust. Browser FTP, FTP-specific
-proxies, FXP and byte-offset restart remain gaps. Existing secure connections
+proxies and FXP remain gaps. **G25 adds verified native byte-offset download
+resume**, durable retained stages and verified cleanup; selected real-server
+interoperability remains pending. See [FTP resume](ftp-resume.md). Existing secure connections
 retain implicit TLS and their saved port; new connections default to explicit
 TLS. Details and migration rules are in [FTP transport](ftp-transport.md).
 
@@ -142,7 +144,7 @@ grants. The link is transient and is not restored after restarting the app.
 | SOCKS4/4a HTTP routing | Implemented for native HTTP/HTTPS | **Added in G27.** Explicit local IPv4 versus remote DNS, bounded user IDs, strict HTTPS trust and no automatic fallback. All 197 focused proxy/security tests passed, including the native-parser host validation regression; see [proxy routing](proxy-routing.md). |
 | FTP/SFTP-specific proxies | Missing | Separate protocol/socket adapters remain scoped in G28. |
 | FXP | Missing | Cross-server copies currently pass through the application. |
-| Resume downloads | Provider-specific | SFTP/SMB and selected cloud adapters have range/resume paths; FTP transfer has no byte-offset restart. Journal recovery is not equivalent to byte resume. |
+| Resume downloads | Provider-specific; FTP implemented / live acceptance pending | **Added in G25.** Native FTP uses negotiated binary offsets, captured source/connection evidence, verified prefixes and a full assembled-content digest before publication. Durable partial references survive retries and are cleaned only after verified publication. Upload resume and selected live-server acceptance remain separate. See [FTP resume](ftp-resume.md). |
 | Queues, download later, background operations, priority/reorder | Implemented | Durable transfer jobs, scheduled start, waiting/conflict states and history. |
 | Transfer bandwidth caps | Partial | Per-operation client-stream pacing exists; separate global upload/download wire limits do not. |
 | Sharing and provider links | Implemented with limits | Provider-aware sharing including Dropbox; no local synced-directory-to-Dropbox link resolution. |
@@ -186,7 +188,7 @@ explicitly implemented or closed entry claims delivered behavior.
 | Larger background archive jobs | Move bounded packing to a cancellable worker or streaming spool, add durable queue/recovery behavior, and validate output without whole-container buffering. |
 | Additional archive formats | Review reader/writer capability, limits, licensing and malformed-input handling individually. Read-only support does not imply editable or creatable archives. |
 | External editor with remote save/upload | Stage a source-bound file, track editor changes and require safe conflict handling before uploading to the original account/path. |
-| FTP resume, FXP and additional proxy modes | Add protocol-specific capability negotiation and live interoperability tests. General queue recovery or client-mediated copy does not supply these features. |
+| FTP resume, FXP and additional proxy modes | **G25 download resume implemented:** negotiated offsets plus verified source/prefix/assembled contents and retained-stage cleanup. Record selected live-server acceptance; implement FXP and direct-protocol proxy modes independently. |
 | Favorite synchronization | Define account, encryption and merge semantics for portable favorites without copying local access grants or credentials to another computer. |
 | Git integration | Add repository discovery, per-file status and reviewed add/commit/push/pull actions with command cancellation and credential handling. |
 | Broader localization and help | Translate remaining UI/help content and validate layout, shortcuts and terminology for each newly supported locale. |
@@ -249,7 +251,8 @@ application behavior or acceptance on all native platforms. The JavaScript
 release web build succeeded. Its optional WebAssembly dry run
 failed with exit 247, so this report does not establish WebAssembly support.
 Compilation does not establish browser behavior for every workflow.
-FTP-specific proxies, FXP and byte-offset resume remain absent. G37 now adds
+FTP-specific proxies and FXP remain absent. G25 now adds native verified download
+resume, with live-server acceptance pending. G37 adds
 observed physical FTP transport cleanup during stalled TLS negotiation,
 including pending login and data channels. Owner close/logout and deadlines
 are covered; generic pre-subscription queue-stop propagation retains the

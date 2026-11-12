@@ -30,10 +30,11 @@ preserve earlier feature branches and do not rewrite or merge the main branch.
 
 ## Current progress
 
-Eight implementation increments are preserved on remote feature branches:
+Nine implementation increments are preserved on remote feature branches:
 **five closed scopes** (G02, G03, G13, G27, G37) and **three implemented features
-with target-runtime acceptance pending** (G01, G04, G12). The remaining 43 items
-comprise **31 implementation gaps, 10 research prerequisites and two
+with target-runtime acceptance pending** (G01, G04, G12), plus **G25 with
+live-server acceptance pending**. The remaining 42 items
+comprise **30 implementation gaps, 10 research prerequisites and two
 cross-cutting acceptance items**. The acceptance work also applies to delivered
 features where their specific boundary names a target-runtime check.
 
@@ -43,9 +44,9 @@ the unsuccessful optional WebAssembly dry run and outstanding native/live checks
 The current stack contains the original scope and every incremental checkpoint.
 
 Continuation work from `403e942d` is recorded in
-[the active increment plan](continuation-20261112.md). G05, G09, G25 and G49
-are being implemented; their closure requires separate regression evidence and
-remote checkpoints.
+[the active increment plan](continuation-20261112.md). G25 has verified native
+loopback/recovery coverage. G05, G09 and G49 remain in progress until their
+separate regression evidence and remote checkpoints are recorded.
 
 ## Lane index
 
@@ -86,7 +87,7 @@ remote checkpoints.
 | [G22](03-archives-and-containers.md#g22) | Archive format coverage | Scoped | License and format review per codec |
 | [G23](03-archives-and-containers.md#g23) | Remote and browser archive creation | Scoped | G18; G21 where streaming is required |
 | [G24](03-archives-and-containers.md#g24) | External packer adapters | Scoped | G17 extension isolation |
-| [G25](04-connections-and-transfers.md#g25) | FTP byte-offset resume | Implementing | Existing transfer recovery |
+| [G25](04-connections-and-transfers.md#g25) | FTP byte-offset resume | Implemented / live-server acceptance pending | Native loopback/recovery verified; selected server interoperability under G50 |
 | [G26](04-connections-and-transfers.md#g26) | Server-to-server FTP transfer | Scoped | G25 transfer evidence; server support |
 | [G27](04-connections-and-transfers.md#g27) | SOCKS4 HTTP routing | Closed: native HTTP/HTTPS scope | Direct-protocol proxy work remains G28 |
 | [G28](04-connections-and-transfers.md#g28) | Direct-protocol proxy routing | Scoped | Per-protocol socket factories |
@@ -139,6 +140,8 @@ wait for unavailable legacy hardware or a platform-specific entitlement.
 | G27 SOCKS4/4a HTTP routing | `feature/socks4-http-routing-20261112` · `42ae79c` · PR #66 | 197 tests passed across six proxy/security/TLS suites including the final host-validation delta; focused analysis and independent review clean | Closed for native HTTP/HTTPS routing |
 | G13 file encoding/decoding | `feature/file-conversion-20261112` · implementation `ebede8d` · PR #67 | 80 tests passed across codec, service/native-filesystem and dialog suites; no analyzer findings in new files | Closed for documented UUE/XXE and single-part MIME formats on supported exclusive-output backends |
 | Integrated validation | `feature/file-conversion-20261112` · code checkpoint `ebede8d` | Full analysis: 0 errors, 96 warnings, 1,038 infos; JavaScript release web build passed with version/hash; optional WebAssembly dry run exited 247 | [Detailed evidence and limits](validation-20261112.md) |
+| Continuation scope | `feature/gap-extension-scope-20261112` · `cd14477` · PR #69 | G05/G09/G25/G49 boundaries and staged validation plan | Scope preserved remotely |
+| G25 FTP byte-offset resume | `feature/ftp-download-resume-20261112` · initial `6b122d6`, verified cleanup follow-up · PR #70 | 285 tests passed across eight transfer/FTP suites; 89 passed in the final three-suite empty-stage/crash gate | Implemented; live-server and signed-target acceptance pending |
 
 Implementation status is updated only after the corresponding code and tests
 are preserved remotely. Test counts from overlapping runs are not added together.

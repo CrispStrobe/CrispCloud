@@ -368,10 +368,32 @@ class TransferRecoveryService {
             ..message = saved.message
             ..recovery = (Map<String, dynamic>.of(saved.recovery)
               ..remove('resumeAfterCommit')
-              ..remove('resumeStagePath')
               ..remove('resumeUploadPath'));
       rows.add(entry);
       onProgress?.call(rows.length, job.entries.length);
+      try {
+        if (destination.supportsRetainedStageCleanup) {
+          final retained = retainedTransferStagePaths(saved.recovery);
+          for (final path in retained) {
+            if (!destination.isRetainedStagePath(path, saved.destination)) {
+              throw StateError(
+                'A retained staging path is outside the reviewed destination.',
+              );
+            }
+            protected.assertDestinationUnprotected(path);
+            protected.assertDestinationUnprotected(
+              destination.paths.dirname(path),
+            );
+          }
+          entry.recovery!['retainedStagePaths'] = retained;
+        }
+        entry.recovery!.remove('resumeStagePath');
+      } catch (error) {
+        entry.outcome = FileOperationOutcome.pending;
+        issues[saved.index] = error.toString();
+        actions[saved.index] = 'Needs review';
+        continue;
+      }
       if (const [
             FileOperationOutcome.copied,
             FileOperationOutcome.moved,
@@ -479,23 +501,52 @@ class TransferRecoveryService {
             'Destination changed or has an unconfirmed copy: ${saved.destination}',
           );
         }
-        final stagePath = saved.recovery['stagedPath'] as String?;
+        final savedStagePath = saved.recovery['stagedPath'] as String?;
+        final stageCandidates = destination.supportsRetainedStageCleanup
+            ? retainedTransferStagePaths(entry.recovery).reversed.toList()
+            : [if (savedStagePath != null) savedStagePath];
         if (mode == TransferRecoveryMode.retryRemaining &&
-            stagePath != null &&
+            stageCandidates.isNotEmpty &&
             !saved.source.isFolder) {
           final parent = destination.paths.dirname(saved.destination);
-          final relative = destination.paths.relative(stagePath, from: parent);
-          if (!destination.isWithin(parent, stagePath) ||
-              !destination.paths
-                  .split(relative)
-                  .first
-                  .startsWith('.crisp-transfer-')) {
-            throw StateError(
-              'The saved staging path is outside the reviewed destination.',
+          FileItem? staged;
+          String? stagePath;
+          for (final candidate in stageCandidates) {
+            final relative = destination.paths.relative(
+              candidate,
+              from: parent,
             );
+            if (!destination.isWithin(parent, candidate) ||
+                !destination.paths
+                    .split(relative)
+                    .first
+                    .startsWith('.crisp-transfer-') ||
+                (destination.supportsRetainedStageCleanup &&
+                    !destination.isRetainedStagePath(
+                      candidate,
+                      saved.destination,
+                    ))) {
+              throw StateError(
+                'The saved staging path is outside the reviewed destination.',
+              );
+            }
+            protected.assertDestinationUnprotected(candidate);
+            final candidateFile = await destination.stat(candidate);
+            if (destination.supportsRetainedStageCleanup &&
+                candidateFile != null &&
+                !candidateFile.isFolder &&
+                candidateFile.isSymlink != true &&
+                candidateFile.size == 0) {
+              // A crash may leave a journal-owned file before its first write.
+              // Keep its cleanup reference, but prefer an older usable prefix.
+              continue;
+            }
+            if (candidateFile != null) {
+              staged = candidateFile;
+              stagePath = candidate;
+              break;
+            }
           }
-          protected.assertDestinationUnprotected(stagePath);
-          final staged = await destination.stat(stagePath);
           if (staged != null) {
             if (staged.isFolder ||
                 staged.isSymlink == true ||
@@ -513,20 +564,24 @@ class TransferRecoveryService {
                 'The saved partial copy does not match the original source.',
               );
             }
-            entry.recovery = {...?entry.recovery, 'resumeStagePath': stagePath};
+            entry.recovery = {
+              ...?entry.recovery,
+              'resumeStagePath': stagePath!,
+            };
             actions[saved.index] =
                 'Resume from ${staged.size} verified staged bytes';
-          } else if (destination.capabilities.resumableUpload &&
+          } else if (savedStagePath != null &&
+              destination.capabilities.resumableUpload &&
               (saved.recovery['multipartUploadPending'] == true ||
                   (saved.recovery['multipartUploadPending'] == null &&
                       saved.recovery['lastMutationPhase'] == 'writing')) &&
               await destination.hasPendingUpload(
-                stagePath,
+                savedStagePath,
                 length: current.size,
               )) {
             entry.recovery = {
               ...?entry.recovery,
-              'resumeUploadPath': stagePath,
+              'resumeUploadPath': savedStagePath,
             };
             actions[saved.index] =
                 'Resume saved multipart upload; verify completed parts';

@@ -30,3 +30,35 @@ serializes shared host changes, Flutter runners and remote commits.
 Follow-on work is selected from the existing stable gap IDs after these
 prerequisites are verified. Final results, branch checkpoints and remaining
 boundaries are appended here rather than replacing earlier evidence.
+
+## G25 — Verified FTP download resume
+
+The first code checkpoint, `6b122d6`, is preserved on
+`feature/ftp-download-resume-20261112` in
+[PR #70](https://github.com/CrispStrobe/CrispCloud/pull/70), stacked on the
+continuation scope branch [PR #69](https://github.com/CrispStrobe/CrispCloud/pull/69).
+The follow-up adds exact cleanup of consumed, journal-owned partial files and
+keeps prior references across retries and failed checkpoint confirmations.
+
+The final eight-suite transfer gate passed **285 tests** across resume,
+retained-stage cleanup, local backend, operation service, recovery, phase guards,
+FTP session and physical transport lifetime. Tests exercise real native files
+and loopback plain/implicit/explicit TLS peers. The shared cleanup services and
+their new tests pass focused analysis without findings. No dependency was added.
+
+A final three-suite crash-edge gate passed **89 tests** after review found a
+zero-byte newest payload could hide an older usable prefix. Recovery now skips
+only an empty regular candidate, keeps its path for later verified cleanup, and
+can use the older verified prefix. Directory and symlink candidates still stop
+recovery. Counts overlap and are not summed as unique tests.
+
+Source bytes, prefix bytes and the complete reconstructed file are verified;
+the transport advertises range capability only after restart negotiation.
+Cleanup checks the published digest and retained prefix, rejects links or
+unrelated directory entries, and removes only the exact payload and empty
+private directory before move-source deletion. Errors retain review evidence.
+The [feature documentation](../ftp-resume.md) records bounds and protocol limits.
+
+Status is **implemented / live-server acceptance pending**. Selected real
+servers and signed/native builds remain G50 acceptance; upload resume, FXP and
+direct-protocol proxies retain their separate gap IDs.
