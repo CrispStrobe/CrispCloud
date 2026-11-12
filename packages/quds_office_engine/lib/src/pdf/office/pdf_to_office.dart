@@ -535,6 +535,11 @@ abstract final class PdfToOffice {
       switch (block) {
         case WmlParagraph():
           return block;
+        case WmlContentControlBlock():
+          final WmlParagraph? nested = _firstParagraph(block.blocks);
+          if (nested != null) {
+            return nested;
+          }
         case WmlFrame():
           final WmlParagraph? nested = _firstParagraph(block.blocks);
           if (nested != null) {

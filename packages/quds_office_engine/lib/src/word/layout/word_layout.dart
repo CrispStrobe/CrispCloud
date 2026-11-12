@@ -18,10 +18,12 @@ import '../model/word_link.dart';
 import '../model/word_notes.dart';
 import '../model/word_table.dart';
 import '../model/word_toc.dart';
+import '../model/word_tree.dart';
 import '../properties/wml_properties.dart';
 
 part 'word_note_layout.dart';
 part 'word_table_row_layout.dart';
+part 'word_wrap_layout.dart';
 
 /// Class LaidOutGlyph.
 class LaidOutGlyph {
@@ -993,8 +995,9 @@ class WordLayoutEngine {
       flow.y = _contentBottom(last, fallback: _bodyTopClearingLogo(section));
       flow.columnTop = flow.y;
     }
-    for (final WmlBlock block in section.blocks) {
+    for (final WmlBlock block in WordTree.visibleBlocks(section.blocks)) {
       switch (block) {
+        case WmlContentControlBlock():
         case WmlOpaqueBlock():
           break;
         case WmlParagraph():
@@ -1082,6 +1085,7 @@ class WordLayoutEngine {
             flow.pageIndex,
             flow.y,
             paragraphIndex,
+            flow: flow,
           );
           flow.y = toc.y;
           flow.pageIndex = toc.pageIndex;
@@ -1105,41 +1109,13 @@ class WordLayoutEngine {
     return _layoutParagraphCountIn(section.blocks);
   }
 
-  int _layoutParagraphCountIn(List<WmlBlock> blocks) {
-    var n = 0;
-    for (final WmlBlock block in blocks) {
-      switch (block) {
-        case WmlOpaqueBlock():
-          break;
-        case WmlParagraph():
-          n++;
-        case WmlTable():
-          n += _tableParagraphCount(block);
-        case WmlFrame():
-          n += _layoutParagraphCountIn(block.blocks);
-        case WmlToc():
-          n += 1 + block.itemParagraphs.length;
-        case WmlVisual():
-        case WmlEquation():
-          break;
-      }
-    }
-    return n;
-  }
+  int _layoutParagraphCountIn(List<WmlBlock> blocks) =>
+      WordTree.paragraphs(blocks).length;
 
-  static int _tableParagraphCount(WmlTable table) {
-    var n = 0;
-    for (final WmlTableRow row in table.rows) {
-      for (final WmlTableCell cell in row.cells) {
-        for (final WmlBlock block in cell.blocks) {
-          if (block is WmlParagraph) {
-            n++;
-          }
-        }
-      }
-    }
-    return n;
-  }
+  static int _tableParagraphCount(WmlTable table) => table.rows
+      .expand((row) => row.cells)
+      .map((cell) => WordTree.paragraphs(cell.blocks).length)
+      .fold(0, (count, length) => count + length);
 
   List<double> _columnWidths(
     WmlTable table,
@@ -1240,23 +1216,44 @@ class WordLayoutEngine {
     final double em = allowBreak
         ? fallbackWidthFactor
         : math.max(fallbackWidthFactor, 0.72);
-    final List<BrokenLine> broken = LineBreaker.breakLines(
-      text: text,
-      maxWidth: maxWidth,
-      widthOf: (int cp) => _advanceOf(cp, fontSize, em, runProps),
-      glyphIdOf: (int cp) {
-        final SfntFont? face = fonts?.faceFor(cp) ?? font;
-        return face?.glyphIdFor(cp) ?? cp;
-      },
-      markAttachOf: font == null
-          ? null
-          : GposMarkToBase.fnFor(
-              font!,
-              fontSize,
-              faceFor: (int cp) => fonts?.faceFor(cp) ?? font,
-            ),
-      baseLevel: paragraph.properties.bidiBaseLevel,
-    );
+    double widthOf(int cp) => _advanceOf(cp, fontSize, em, runProps);
+    int glyphIdOf(int cp) {
+      final SfntFont? face = fonts?.faceFor(cp) ?? font;
+      return face?.glyphIdFor(cp) ?? cp;
+    }
+
+    final MarkAttachFn? markAttach = font == null
+        ? null
+        : GposMarkToBase.fnFor(
+            font!,
+            fontSize,
+            faceFor: (int cp) => fonts?.faceFor(cp) ?? font,
+          );
+    final bool wrapsFrames =
+        allowBreak &&
+        flow != null &&
+        currentFrames.any(
+          (box) => box.frame != null && box.frame!.wrap != WmlFrameWrap.none,
+        );
+    final PreparedLineBreaker? wrapBreaker = wrapsFrames
+        ? LineBreaker.prepare(
+            text: text,
+            widthOf: widthOf,
+            glyphIdOf: glyphIdOf,
+            markAttachOf: markAttach,
+            baseLevel: paragraph.properties.bidiBaseLevel,
+          )
+        : null;
+    final List<BrokenLine> broken = wrapsFrames
+        ? const []
+        : LineBreaker.breakLines(
+            text: text,
+            maxWidth: maxWidth,
+            widthOf: widthOf,
+            glyphIdOf: glyphIdOf,
+            markAttachOf: markAttach,
+            baseLevel: paragraph.properties.bidiBaseLevel,
+          );
     var cursorY = y + paragraph.properties.spacingBefore;
     var idx = pageIndex;
     var lineOrigin = originX ?? section.margins.left;
@@ -1264,8 +1261,67 @@ class WordLayoutEngine {
     final double dropWidth = dropLines > 0 ? fontSize * 2.4 : 0;
     final int lineStart = current.length;
     final double paraTop = cursorY;
-    for (final BrokenLine line in broken) {
-      final List<int> noteIds = _noteIds(
+    var lineNumber = 0;
+    var wrappedOffset = 0;
+    while (wrapBreaker == null
+        ? lineNumber < broken.length
+        : wrappedOffset < text.length || lineNumber == 0) {
+      var line = wrapBreaker == null
+          ? broken[lineNumber]
+          : BrokenLine(
+              glyphs: const [],
+              width: 0,
+              logicalStart: 0,
+              logicalEnd: 0,
+              justificationRatio: 0,
+            );
+      var nextOffset = wrappedOffset;
+      var lineLeft = lineOrigin + textLeft;
+      var lineWidth = maxWidth;
+      void rebreakForFrame() {
+        if (wrapBreaker == null) return;
+        final shift = lineNumber == 0 ? firstLineShift : 0.0;
+        final available = math.max(12.0, maxWidth - math.max(0.0, shift));
+        final rtl = paragraph.properties.bidiBaseLevel == 1;
+        var band = _frameWrapBand(
+          currentFrames,
+          left: lineOrigin + textLeft + shift,
+          width: available,
+          y: cursorY,
+          height: lineHeight,
+          rightToLeft: rtl,
+        );
+        var candidate = wrapBreaker.breakNext(
+          start: wrappedOffset,
+          maxWidth: band.width,
+        );
+        // An unbreakable word must clear the frame before using the ordinary
+        // oversized-word behavior; it must not paint through a narrow band.
+        if (candidate.line.width > band.width + 0.001 &&
+            band.width < available) {
+          band = _frameWrapBand(
+            currentFrames,
+            left: lineOrigin + textLeft + shift,
+            width: available,
+            y: cursorY,
+            height: lineHeight,
+            rightToLeft: rtl,
+            minimumWidth: candidate.line.width.clamp(12.0, available),
+          );
+          candidate = wrapBreaker.breakNext(
+            start: wrappedOffset,
+            maxWidth: band.width,
+          );
+        }
+        cursorY = band.y;
+        lineLeft = band.left;
+        lineWidth = band.width;
+        line = candidate.line;
+        nextOffset = candidate.nextOffset;
+      }
+
+      rebreakForFrame();
+      var noteIds = _noteIds(
         paragraph,
         line.glyphs.map((ShapedGlyph g) => g.logicalIndex),
       ).toList();
@@ -1327,17 +1383,21 @@ class WordLayoutEngine {
           idx++;
           cursorY = section.margins.top;
         }
+        rebreakForFrame();
+        noteIds = _noteIds(
+          paragraph,
+          line.glyphs.map((g) => g.logicalIndex),
+        ).toList();
       }
       if (allowBreak) _reserveNotes(noteIds, section, idx, occupiedBottom());
-      final double x0 =
-          lineOrigin +
-          textLeft +
-          (identical(line, broken.first) ? firstLineShift : 0);
+      final double x0 = wrapBreaker == null
+          ? lineOrigin + textLeft + (lineNumber == 0 ? firstLineShift : 0)
+          : lineLeft;
       double x = x0;
       if (paragraph.properties.justification == WmlJustification.center) {
-        x += (maxWidth - line.width) / 2;
+        x += (lineWidth - line.width) / 2;
       } else if (paragraph.properties.justification == WmlJustification.right) {
-        x += maxWidth - line.width;
+        x += lineWidth - line.width;
       }
       var gx = x;
       final List<LaidOutGlyph> glyphs = <LaidOutGlyph>[];
@@ -1380,9 +1440,7 @@ class WordLayoutEngine {
           paragraph.properties.bidiBaseLevel == 1;
       final double markerX = listLabel == null
           ? 0
-          : (paraRtl
-                ? lineOrigin + textLeft + maxWidth + 2
-                : lineOrigin + textLeft - markerSlot);
+          : (paraRtl ? lineLeft + lineWidth + 2 : lineLeft - markerSlot);
       final LaidOutLine laid = LaidOutLine(
         glyphs: glyphs,
         x: x,
@@ -1394,18 +1452,29 @@ class WordLayoutEngine {
         paragraphIndex: paragraphIndex,
         listLabel: listLabel,
         listMarkerX: markerX,
-        isParagraphStart: identical(line, broken.first),
+        isParagraphStart: lineNumber == 0,
         sourceText: sourceText,
         tocTargetParagraph: tocTargetParagraph,
-        overlayText: identical(line, broken.last) ? overlayText : null,
-        tocLeader: tocLeader && identical(line, broken.last),
+        overlayText:
+            (wrapBreaker == null
+                ? lineNumber == broken.length - 1
+                : nextOffset >= text.length)
+            ? overlayText
+            : null,
+        tocLeader:
+            tocLeader &&
+            (wrapBreaker == null
+                ? lineNumber == broken.length - 1
+                : nextOffset >= text.length),
         justificationRatio: line.justificationRatio,
-        boxX: lineOrigin,
-        boxWidth: contentBox,
+        boxX: wrapBreaker == null ? lineOrigin : lineLeft,
+        boxWidth: wrapBreaker == null ? contentBox : lineWidth,
       );
-      laid.applyJustification(targetWidth: maxWidth);
+      laid.applyJustification(targetWidth: lineWidth);
       current.add(laid);
       cursorY += lineHeight;
+      lineNumber++;
+      wrappedOffset = nextOffset;
     }
     if (dropWidth > 0 && current.length > lineStart) {
       final LaidOutLine first = current[lineStart];
@@ -1458,8 +1527,9 @@ class WordLayoutEngine {
     List<LaidOutBox> currentFrames,
     int pageIndex,
     double y,
-    int paragraphIndex,
-  ) {
+    int paragraphIndex, {
+    _Flow? flow,
+  }) {
     var cursorY = y;
     var idx = pageIndex;
     var para = paragraphIndex;
@@ -1473,6 +1543,9 @@ class WordLayoutEngine {
       cursorY,
       para,
       sourceText: toc.titleParagraph.text,
+      originX: flow?.originX,
+      maxWidthOverride: flow?.colWidth,
+      flow: flow,
     );
     cursorY = title.y;
     idx = title.pageIndex;
@@ -1492,6 +1565,9 @@ class WordLayoutEngine {
         cursorY,
         para,
         sourceText: item.text,
+        originX: flow?.originX,
+        maxWidthOverride: flow?.colWidth,
+        flow: flow,
         tocTargetParagraph: entry?.headingParagraphIndex,
         overlayText: entry != null && toc.showsPageNumberForLevel(entry.level)
             ? '${entry.pageNumber}'
@@ -1509,9 +1585,9 @@ class WordLayoutEngine {
         final LaidOutLine last = entryLines.last;
         currentFrames.add(
           LaidOutBox(
-            x: section.margins.left,
+            x: first.boxX,
             y: first.y,
-            width: section.contentWidth,
+            width: first.boxWidth,
             height: (last.y + last.height) - first.y,
             strokeColor: '00000000',
             kind: LaidOutBoxKind.tocEntry,
@@ -1550,6 +1626,10 @@ class WordLayoutEngine {
 
     for (final WmlTableRow row in table.rows) {
       final int rowIndex = table.rows.indexOf(row);
+      final rowBlocks = [
+        for (final cell in row.cells)
+          WordTree.visibleBlocks(cell.blocks).toList(),
+      ];
       final double fullRowHeight = _measureTableRowHeightFrom(
         row,
         cols,
@@ -1590,7 +1670,7 @@ class WordLayoutEngine {
       while (true) {
         var remaining = false;
         for (int c = 0; c < row.cells.length; c++) {
-          if (nextBlock[c] < row.cells[c].blocks.length) {
+          if (nextBlock[c] < rowBlocks[c].length) {
             remaining = true;
             break;
           }
@@ -1730,8 +1810,8 @@ class WordLayoutEngine {
           final int cellParaStart = para;
           var cellY = rowStartY + cellPad;
           var bi = nextBlock[c];
-          while (bi < cell.blocks.length) {
-            final WmlBlock block = cell.blocks[bi];
+          while (bi < rowBlocks[c].length) {
+            final WmlBlock block = rowBlocks[c][bi];
             final double blockH = _estimateCellBlockHeight(
               block,
               section,
@@ -1747,10 +1827,10 @@ class WordLayoutEngine {
             // block fits but the next list sibling does not, break before
             // this block so the pair moves together (e.g. UN OCHA + CEPs).
             if (!row.cantSplit &&
-                bi + 1 < cell.blocks.length &&
+                bi + 1 < rowBlocks[c].length &&
                 cellY > rowStartY + cellPad + 0.5 &&
                 cellY + blockH <= pageBottom) {
-              final WmlBlock nextBlock = cell.blocks[bi + 1];
+              final WmlBlock nextBlock = rowBlocks[c][bi + 1];
               if (_listOrphanPair(block, nextBlock)) {
                 final double nextH = _estimateCellBlockHeight(
                   nextBlock,
@@ -1807,12 +1887,12 @@ class WordLayoutEngine {
           nextBlock[c] = bi;
           rowBottom = math.max(rowBottom, cellY + cellPad);
           final bool firstSlice = sliceStart;
-          final bool lastSlice = bi >= cell.blocks.length;
+          final bool lastSlice = bi >= rowBlocks[c].length;
           // Skip cells that were empty from the start of the row. On
           // continuation slices, still emit frames for exhausted cells so the
           // grid (e.g. empty CHAIN cell beside WORKING RELATIONS) remains.
           if (!(placed[c] == 0 &&
-              previous >= cell.blocks.length &&
+              previous >= rowBlocks[c].length &&
               sliceStart)) {
             rowFrames.add(
               LaidOutBox(
@@ -1978,9 +2058,10 @@ class WordLayoutEngine {
         colW += cols[(gridCol + k).clamp(0, cols.length - 1)];
       }
       var cellY = cellPad;
-      for (int bi = nextBlock[c]; bi < cell.blocks.length; bi++) {
+      final blocks = WordTree.visibleBlocks(cell.blocks).toList();
+      for (int bi = nextBlock[c]; bi < blocks.length; bi++) {
         cellY += _estimateCellBlockHeight(
-          cell.blocks[bi],
+          blocks[bi],
           section,
           maxWidth: math.max(12, colW - cellPad * 2),
         );
@@ -2118,8 +2199,9 @@ class WordLayoutEngine {
     var para = paragraphIndex;
     final double innerX = x + pad;
     final double innerW = math.max(12, frame.width - pad * 2);
-    for (final WmlBlock block in frame.blocks) {
+    for (final WmlBlock block in WordTree.visibleBlocks(frame.blocks)) {
       switch (block) {
+        case WmlContentControlBlock():
         case WmlOpaqueBlock():
           break;
         case WmlParagraph():

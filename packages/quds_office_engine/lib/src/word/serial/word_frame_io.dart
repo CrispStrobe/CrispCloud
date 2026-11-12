@@ -136,9 +136,10 @@ abstract final class WordFrameIo {
           if (cy != null && cy > 0) {
             height = WordDrawingIo.emuToPoints(cy);
           }
+        } else if (reader.localName == 'wrapTopAndBottom') {
+          wrap = WmlFrameWrap.topBottom;
         } else if (reader.localName == 'wrapSquare' ||
-            reader.localName == 'wrapTight' ||
-            reader.localName == 'wrapTopAndBottom') {
+            reader.localName == 'wrapTight') {
           wrap = WmlFrameWrap.square;
         } else if (reader.localName == 'solidFill') {
           inSolidFill = true;
@@ -241,6 +242,8 @@ abstract final class WordFrameIo {
         prefix: 'wp',
         attributes: <String, String>{'wrapText': 'bothSides'},
       );
+    } else if (frame.wrap == WmlFrameWrap.topBottom) {
+      w.writeEmptyElement('wrapTopAndBottom', prefix: 'wp');
     } else {
       w.writeEmptyElement('wrapNone', prefix: 'wp');
     }
@@ -361,6 +364,14 @@ abstract final class WordFrameIo {
       w.writeAttribute('stroked', 'f');
     } else {
       w.writeAttribute('strokecolor', '#$stroke');
+    }
+    if (frame.wrap == WmlFrameWrap.topBottom) {
+      w.writeEmptyElement(
+        'wrap',
+        prefix: 'w10',
+        namespaceUri: 'urn:schemas-microsoft-com:office:word',
+        attributes: {'type': 'topAndBottom'},
+      );
     }
     w.writeStartElement('textbox', prefix: 'v');
     w.writeAttribute('inset', '0,0,0,0');

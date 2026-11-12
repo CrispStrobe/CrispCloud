@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+ xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
+ xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
+ xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape">
+ <w:body>
+  <w:p><w:bookmarkStart w:id="30" w:name="BodyAroundFrame"/><w:r><w:t>Body before</w:t></w:r></w:p>
+  <w:p><w:r><w:drawing>
+   <wp:anchor distT="0" distB="0" distL="0" distR="0" simplePos="0" relativeHeight="1" behindDoc="0" locked="0" layoutInCell="1" allowOverlap="1">
+    <wp:simplePos x="0" y="0"/>
+    <wp:positionH relativeFrom="margin"><wp:posOffset>0</wp:posOffset></wp:positionH>
+    <wp:positionV relativeFrom="margin"><wp:posOffset>0</wp:posOffset></wp:positionV>
+    <wp:extent cx="1270000" cy="914400"/>
+    <wp:wrapSquare wrapText="bothSides"/>
+    <wp:docPr id="1" name="Separate bookmark story"/>
+    <wp:cNvGraphicFramePr/>
+    <a:graphic><a:graphicData uri="http://schemas.microsoft.com/office/word/2010/wordprocessingShape">
+     <wps:wsp><wps:cNvSpPr txBox="1"/>
+      <wps:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="1270000" cy="914400"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></wps:spPr>
+      <wps:txbx><w:txbxContent><w:p><w:bookmarkStart w:id="31" w:name="TextBox"/><w:r><w:rPr><w:i/></w:rPr><w:t>Textbox content</w:t></w:r><w:bookmarkEnd w:id="31"/></w:p></w:txbxContent></wps:txbx>
+      <wps:bodyPr/>
+     </wps:wsp>
+    </a:graphicData></a:graphic>
+   </wp:anchor>
+  </w:drawing></w:r></w:p>
+  <w:p><w:r><w:t>Body after</w:t></w:r><w:bookmarkEnd w:id="30"/></w:p>
+  <w:sectPr/>
+ </w:body>
+</w:document>

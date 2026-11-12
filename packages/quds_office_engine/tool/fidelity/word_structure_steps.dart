@@ -86,23 +86,8 @@ const wordStructureOperations = <String, List<String>>{
 };
 
 Iterable<WmlBlock> bodyBlocks(WmlDocument doc) sync* {
-  Iterable<WmlBlock> visit(Iterable<WmlBlock> blocks) sync* {
-    for (final block in blocks) {
-      yield block;
-      if (block is WmlTable) {
-        for (final row in block.rows) {
-          for (final cell in row.cells) {
-            yield* visit(cell.blocks);
-          }
-        }
-      } else if (block is WmlFrame) {
-        yield* visit(block.blocks);
-      }
-    }
-  }
-
   for (final section in doc.sections) {
-    yield* visit(section.blocks);
+    yield* WordTree.descendants(section.blocks);
   }
 }
 
@@ -260,14 +245,39 @@ void applyWordStructureStep(WmlDocument doc, Map<String, Object?> values) {
       WordToc.refresh(toc, doc);
     case 'tocRemove':
       final toc = s.item('toc', WordToc.tocs(doc));
-      for (final section in doc.sections) {
-        section.blocks.remove(toc);
+      final location = WordTree.locate(doc, toc);
+      if (location == null) {
+        throw ArgumentError('TOC is not attached to an editable block owner');
       }
+      final removed = WordTree.paragraphs([toc]).toSet();
+      if (WordBookmarks.ranges(doc).any(
+        (range) =>
+            removed.contains(range.startParagraph) !=
+            removed.contains(range.endParagraph),
+      )) {
+        throw ArgumentError(
+          'Removing this TOC would orphan a cross-paragraph bookmark endpoint',
+        );
+      }
+      if (doc.revisions.any(
+        (revision) =>
+            revision.accepted == null &&
+            removed.contains(WordRevisions.resolveParagraph(doc, revision)),
+      )) {
+        throw ArgumentError(
+          'Resolve tracked changes in the TOC before removing it',
+        );
+      }
+      location.parent.removeAt(location.index);
     case 'bookmarkSet':
       final p = paragraph();
       final name = s.string('name');
       if (!RegExp(r'^[A-Za-z_][A-Za-z0-9_]{0,39}$').hasMatch(name)) {
         throw ArgumentError('Invalid bookmark name');
+      }
+      final native = WordBookmarks.byName(doc, name);
+      if (native != null && !identical(native.startParagraph, p)) {
+        throw ArgumentError('Bookmark name already exists');
       }
       if (doc.paragraphs.any(
         (other) =>
@@ -285,17 +295,18 @@ void applyWordStructureStep(WmlDocument doc, Map<String, Object?> values) {
     case 'reference':
       final p = paragraph();
       final name = s.string('bookmark');
-      final target = doc.paragraphs
-          .where((item) => item.properties.bookmarkName == name)
-          .firstOrNull;
-      if (target == null || identical(target, p)) {
+      final native = WordBookmarks.byName(doc, name);
+      final target = WordBookmarks.paragraphByName(doc, name);
+      if (target == null ||
+          identical(target, p) ||
+          (native?.paragraphs.contains(p) ?? false)) {
         throw ArgumentError('Reference requires a distinct existing bookmark');
       }
       WordFields.stamp(
         p,
         WmlFieldKind.ref,
         argument: name,
-        result: target.text,
+        result: WordBookmarks.textByName(doc, name)!,
       );
     case 'commentAdd':
       final p = paragraph();
@@ -355,23 +366,9 @@ void applyWordStructureStep(WmlDocument doc, Map<String, Object?> values) {
       );
     case 'frameRemove':
       final frame = s.item('frame', bodyBlocks(doc).whereType<WmlFrame>());
-      bool remove(List<WmlBlock> blocks) {
-        if (blocks.remove(frame)) return true;
-        for (final b in blocks) {
-          if (b is WmlFrame && remove(b.blocks)) return true;
-          if (b is WmlTable) {
-            for (final r in b.rows) {
-              for (final c in r.cells) {
-                if (remove(c.blocks)) return true;
-              }
-            }
-          }
-        }
-        return false;
-      }
-      for (final section in doc.sections) {
-        if (remove(section.blocks)) break;
-      }
+      final location = WordTree.locate(doc, frame);
+      if (location == null) throw StateError('Frame container not found');
+      location.parent.removeAt(location.index);
   }
 }
 

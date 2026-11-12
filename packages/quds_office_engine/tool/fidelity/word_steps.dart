@@ -313,7 +313,7 @@ void applyStep(
         endnote: s.boolean('endnote', fallback: false),
       );
       if (note == null) throw ArgumentError('Unknown note id');
-      WordNotes.editText(note, s.string('text'));
+      note.text = s.string('text');
     case 'deleteNote':
       if (!WordNotes.delete(
         doc,
@@ -379,30 +379,31 @@ void applyStep(
       final at = s.integer('offset', max: p.text.length);
       _boundary(p, at);
       final container = _container(doc, p);
-      WmlRunEdit.splitAt(p, at);
-      var offset = 0;
-      var cut = p.inlines.length;
-      for (var i = 0; i < p.inlines.length; i++) {
-        if (offset >= at) {
-          cut = i;
-          break;
-        }
-        final inline = p.inlines[i];
-        if (inline is WmlRun) offset += inline.text.length;
-      }
+      final split = WmlClone.splitInlines(p, at);
       final tail = WmlParagraph(
         properties: p.properties.copy()
           ..bookmarkName = null
           ..listRestart = null,
-        inlines: p.inlines.sublist(cut),
+        inlines: split.tail,
       );
-      p.inlines.removeRange(cut, p.inlines.length);
+      p.inlines
+        ..clear()
+        ..addAll(split.head);
       _noteHint(p);
       _noteHint(tail);
       container.insert(container.indexOf(p) + 1, tail);
     case 'paragraphDelete':
       final p = paragraph();
       final container = _container(doc, p);
+      if (WordBookmarks.ranges(doc).any(
+        (range) =>
+            identical(range.startParagraph, p) !=
+            identical(range.endParagraph, p),
+      )) {
+        throw ArgumentError(
+          'Deleting this paragraph would orphan a cross-paragraph bookmark endpoint',
+        );
+      }
       container.remove(p);
       if (container.isEmpty) container.add(WmlParagraph());
     case 'list':
@@ -551,53 +552,14 @@ Iterable<WmlVisual> _visuals(WmlDocument doc, StepInput s) {
 }
 
 Iterable<WmlTable> _tables(WmlDocument doc) sync* {
-  Iterable<WmlTable> visit(List<WmlBlock> blocks) sync* {
-    for (final block in blocks) {
-      if (block is WmlTable) {
-        yield block;
-        for (final row in block.rows) {
-          for (final cell in row.cells) {
-            yield* visit(cell.blocks);
-          }
-        }
-      } else if (block is WmlFrame) {
-        yield* visit(block.blocks);
-      }
-    }
-  }
-
   for (final section in doc.sections) {
-    yield* visit(section.blocks);
+    yield* WordTree.descendants(section.blocks).whereType<WmlTable>();
   }
 }
 
 List<WmlBlock> _container(WmlDocument doc, WmlBlock target) {
-  List<WmlBlock>? visit(List<WmlBlock> blocks) {
-    if (blocks.contains(target)) return blocks;
-    for (final block in blocks) {
-      if (block is WmlTable) {
-        for (final row in block.rows) {
-          for (final cell in row.cells) {
-            final found = visit(cell.blocks);
-            if (found != null) return found;
-          }
-        }
-      } else if (block is WmlFrame) {
-        final found = visit(block.blocks);
-        if (found != null) return found;
-      }
-    }
-    return null;
-  }
-
-  for (final section in doc.sections) {
-    final found = visit(section.blocks);
-    if (found != null) return found;
-  }
-  for (final note in <WmlNote>[...doc.footnotes, ...doc.endnotes]) {
-    final found = visit(note.blocks);
-    if (found != null) return found;
-  }
+  final found = WordTree.locate(doc, target);
+  if (found != null) return found.parent;
   throw ArgumentError('Block is not in a document story');
 }
 

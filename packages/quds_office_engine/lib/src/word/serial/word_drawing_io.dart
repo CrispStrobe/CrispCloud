@@ -489,6 +489,7 @@ abstract final class WordDrawingIo {
     OpcPackage package,
     String docUri, {
     WmlParagraph Function(XmlPullReader reader)? readParagraph,
+    List<WmlBlock> Function(XmlPullReader reader)? readBlockContent,
   }) {
     if (reader.localName != 'drawing') {
       return null;
@@ -538,7 +539,9 @@ abstract final class WordDrawingIo {
             reader.localName == 'txbxContent') {
           sawShape = true;
         }
-        if (reader.localName == 'inline') {
+        if (reader.localName == 'txbxContent' && readBlockContent != null) {
+          frameBlocks.addAll(readBlockContent(reader));
+        } else if (reader.localName == 'inline') {
           wrap = PictureWrap.inline;
           _readWrapDist(adj, reader);
         } else if (reader.localName == 'anchor') {
@@ -550,9 +553,10 @@ abstract final class WordDrawingIo {
             localName: reader.localName,
             behindDoc: behindDoc,
           );
-          if (reader.localName == 'wrapSquare' ||
-              reader.localName == 'wrapTight' ||
-              reader.localName == 'wrapTopAndBottom') {
+          if (reader.localName == 'wrapTopAndBottom') {
+            frameWrap = WmlFrameWrap.topBottom;
+          } else if (reader.localName == 'wrapSquare' ||
+              reader.localName == 'wrapTight') {
             frameWrap = WmlFrameWrap.square;
           }
         } else if (reader.localName == 'positionH') {

@@ -4,6 +4,8 @@ import '../properties/wml_properties.dart';
 import 'wml_clone.dart';
 import 'wml_document.dart';
 import 'wml_run_edit.dart';
+import 'word_content_controls.dart';
+import 'word_tree.dart';
 
 /// Footnote or endnote body.
 class WmlNote {
@@ -210,13 +212,21 @@ abstract final class WordNotes {
     return true;
   }
 
-  /// The editable text of [note]: one line per top-level paragraph.
+  /// Editable note-pane paragraphs in their original live containers.
+  ///
+  /// Native block content controls are transparent. Table and frame content
+  /// remains outside this simple text pane, as it was before controls were
+  /// represented in the model.
+  static List<WmlParagraph> editableParagraphs(WmlNote note) =>
+      WordTree.visibleBlocks(note.blocks).whereType<WmlParagraph>().toList();
+
+  /// The editable text of [note]: one line per paragraph in its main flow.
   ///
   /// The space Word places after the automatic note number is not part of
   /// the editable text. Tables, pictures and equations inside the note are
   /// not included, and [editText] never changes them.
   static String editableText(WmlNote note) {
-    final List<WmlParagraph> paragraphs = note.paragraphs;
+    final List<WmlParagraph> paragraphs = editableParagraphs(note);
     return <String>[
       for (var i = 0; i < paragraphs.length; i++)
         i == 0 &&
@@ -237,14 +247,34 @@ abstract final class WordNotes {
   /// removed lines delete trailing paragraphs. Non-paragraph blocks are kept.
   static void editText(WmlNote note, String text) {
     final List<String> lines = text.split('\n');
-    List<WmlParagraph> paragraphs = note.paragraphs.toList();
-    if (paragraphs.isEmpty) {
-      note.blocks.insert(0, WmlParagraph(inlines: <WmlInline>[WmlRun()]));
-      paragraphs = note.paragraphs.toList();
+    List<WmlParagraph> paragraphs = editableParagraphs(note);
+    if (lines.length != paragraphs.length &&
+        paragraphs.any(WordContentControls.hasInlineControls)) {
+      throw UnsupportedError(
+        'Changing note line count with inline content controls is not supported. '
+        'Edit each existing control paragraph separately.',
+      );
     }
     final int shared = lines.length < paragraphs.length
         ? lines.length
         : paragraphs.length;
+    // A later guarded range must not leave earlier paragraphs partially
+    // updated. Preflight the exact edit on copies before touching live owners.
+    for (var i = 0; i < shared; i++) {
+      _applyLine(
+        WmlClone.paragraph(paragraphs[i]),
+        lines[i],
+        preserveReferenceSpace:
+            i == 0 && _hasLeadingReference(note, paragraphs[i]),
+      );
+    }
+    if (paragraphs.isEmpty) {
+      final parent = _emptyEditableHost(note.blocks);
+      final paragraph = WmlParagraph(inlines: <WmlInline>[WmlRun()]);
+      parent.insert(0, paragraph);
+      paragraphs = <WmlParagraph>[paragraph];
+      _applyLine(paragraph, lines.first, preserveReferenceSpace: false);
+    }
     for (var i = 0; i < shared; i++) {
       _applyLine(
         paragraphs[i],
@@ -259,9 +289,10 @@ abstract final class WordNotes {
         template,
         template.text.length - 1,
       ).copy();
-      var at = note.blocks.indexOf(template) + 1;
+      final location = WordTree.locateIn(note.blocks, template)!;
+      var at = location.index + 1;
       for (var i = paragraphs.length; i < lines.length; i++) {
-        note.blocks.insert(
+        location.parent.insert(
           at++,
           WmlParagraph(
             properties: template.properties.copy(),
@@ -273,9 +304,19 @@ abstract final class WordNotes {
       }
     } else {
       for (var i = paragraphs.length - 1; i >= lines.length; i--) {
-        note.blocks.remove(paragraphs[i]);
+        final location = WordTree.locateIn(note.blocks, paragraphs[i])!;
+        location.parent.removeAt(location.index);
       }
     }
+  }
+
+  static List<WmlBlock> _emptyEditableHost(List<WmlBlock> blocks) {
+    for (final block in blocks) {
+      if (block is WmlContentControlBlock) {
+        return _emptyEditableHost(block.blocks);
+      }
+    }
+    return blocks;
   }
 
   static void _applyLine(
@@ -320,6 +361,10 @@ abstract final class WordNotes {
     }
     for (final inline in paragraph.inlines) {
       if (inline is WmlNoteMarker) return true;
+      if (inline is WmlContentControlBoundary ||
+          inline is WmlBookmarkBoundary) {
+        continue;
+      }
       if (inline is WmlRun && inline.text.isEmpty) continue;
       return false;
     }

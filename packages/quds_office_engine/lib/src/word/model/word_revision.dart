@@ -1,5 +1,6 @@
 import 'wml_document.dart';
 import 'wml_run_edit.dart';
+import 'word_content_controls.dart';
 
 /// Insert or delete tracked as a Word revision.
 enum WmlRevisionKind { insert, delete }
@@ -391,6 +392,7 @@ abstract final class WordRevisions {
       revision.start,
       revision.end,
     );
+    WordContentControls.assertCanEdit(paragraph, range.start, range.end);
     for (final other in document.revisions) {
       if (identical(revision, other) ||
           !identical(resolveParagraph(document, other), paragraph)) {

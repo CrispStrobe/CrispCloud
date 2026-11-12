@@ -1519,107 +1519,35 @@ class WordEditorController extends OfficeController {
   }
 
   ({List<WmlBlock> parent, int index})? _hostSlotOf(WmlParagraph para) {
-    for (final WmlSection section in document.sections) {
-      for (int i = 0; i < section.blocks.length; i++) {
-        final WmlBlock block = section.blocks[i];
-        if (identical(block, para)) {
-          return (parent: section.blocks, index: i);
-        }
+    final List<WmlParagraph>? story = isEditingComment
+        ? selectedComment?.paragraphs
+        : isEditingHeaderFooter
+        ? _ensureHeaderFooterParagraphs()
+        : null;
+    if (story != null) {
+      final index = story.indexOf(para);
+      if (index >= 0) return (parent: story, index: index);
+    }
+    final exact = WordTree.locate(document, para);
+    if (exact != null) return exact;
+    // Generated TOC paragraphs are owned by the TOC, not an editable child
+    // list. Inserting adjacent blocks uses that actual TOC position.
+    for (final blocks in <List<WmlBlock>>[
+      for (final section in document.sections) section.blocks,
+      for (final note in [...document.footnotes, ...document.endnotes])
+        note.blocks,
+    ]) {
+      for (final block in WordTree.descendants(blocks)) {
         if (block is WmlToc && WordToc.ownsParagraph(block, para)) {
-          return (parent: section.blocks, index: i);
-        }
-        if (block is WmlTable) {
-          final ({List<WmlBlock> parent, int index})? nested = _tableSlotOf(
-            block,
-            para,
-          );
-          if (nested != null) {
-            return nested;
-          }
+          return WordTree.locate(document, block);
         }
       }
     }
     return null;
   }
 
-  ({List<WmlBlock> parent, int index})? _tableSlotOf(
-    WmlTable table,
-    WmlParagraph para,
-  ) {
-    for (final WmlTableRow row in table.rows) {
-      for (final WmlTableCell cell in row.cells) {
-        final int index = cell.blocks.indexOf(para);
-        if (index >= 0) {
-          return (parent: cell.blocks, index: index);
-        }
-        for (final WmlBlock block in cell.blocks) {
-          if (block is WmlTable) {
-            final ({List<WmlBlock> parent, int index})? nested = _tableSlotOf(
-              block,
-              para,
-            );
-            if (nested != null) {
-              return nested;
-            }
-          }
-        }
-      }
-    }
-    return null;
-  }
-
-  ({List<WmlBlock> parent, int index})? _topLevelInsertSlot() {
-    final WmlParagraph para = _activeParagraph;
-    for (final WmlSection section in document.sections) {
-      for (int i = 0; i < section.blocks.length; i++) {
-        final WmlBlock block = section.blocks[i];
-        if (identical(block, para)) {
-          return (parent: section.blocks, index: i);
-        }
-        if (block is WmlToc && WordToc.ownsParagraph(block, para)) {
-          return (parent: section.blocks, index: i);
-        }
-        if (block is WmlTable && _tableContainsParagraph(block, para)) {
-          return (parent: section.blocks, index: i);
-        }
-        if (block is WmlFrame && _frameContainsParagraph(block, para)) {
-          return (parent: section.blocks, index: i);
-        }
-      }
-    }
-    return null;
-  }
-
-  static bool _frameContainsParagraph(WmlFrame frame, WmlParagraph para) {
-    for (final WmlBlock block in frame.blocks) {
-      if (identical(block, para)) {
-        return true;
-      }
-      if (block is WmlTable && _tableContainsParagraph(block, para)) {
-        return true;
-      }
-      if (block is WmlFrame && _frameContainsParagraph(block, para)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  static bool _tableContainsParagraph(WmlTable table, WmlParagraph para) {
-    for (final WmlTableRow row in table.rows) {
-      for (final WmlTableCell cell in row.cells) {
-        for (final WmlBlock block in cell.blocks) {
-          if (identical(block, para)) {
-            return true;
-          }
-          if (block is WmlTable && _tableContainsParagraph(block, para)) {
-            return true;
-          }
-        }
-      }
-    }
-    return false;
-  }
+  ({List<WmlBlock> parent, int index})? _topLevelInsertSlot() =>
+      WordTree.flowHost(document, _activeParagraph);
 
   void _revealParagraph(int index) {
     const double pointsToPixels = 96 / 72;
@@ -2689,7 +2617,7 @@ class WordEditorController extends OfficeController {
   }
 
   List<WmlBlock> _captureWordFragment() {
-    if (isEditingComment) {
+    if (isEditingComment || isEditingHeaderFooter) {
       return _captureSlicedCommentParagraphs();
     }
     if (_isEntireDocumentSelected()) {
@@ -2888,6 +2816,7 @@ class WordEditorController extends OfficeController {
     if (lines.isEmpty) {
       return;
     }
+    _preflightMultilineInsert(lines);
     commands.beginBatch();
     if (!caret.isCollapsed) {
       _deleteNormalizedSelection();
@@ -2924,6 +2853,9 @@ class WordEditorController extends OfficeController {
     if (paragraphs.isEmpty) {
       return;
     }
+    _preflightMultilineInsert(<String>[
+      for (final spans in paragraphs) spans.map((span) => span.text).join(),
+    ]);
     commands.beginBatch();
     if (!caret.isCollapsed) {
       _deleteNormalizedSelection();
@@ -2945,6 +2877,37 @@ class WordEditorController extends OfficeController {
     if (blocks.isEmpty) {
       return;
     }
+    _assertSelectionCanChange();
+    WordContentControls.assertCanInsert(document, blocks);
+    _assertIncomingBookmarks(blocks);
+    final paragraphStory = isEditingComment || isEditingHeaderFooter;
+    if (paragraphStory) {
+      if (blocks.any((block) => block is! WmlParagraph)) {
+        throw UnsupportedError(
+          'This story accepts paragraph content; pasting other block objects '
+          'here is not supported.',
+        );
+      }
+      _preflightMultilineInsert(<String>[
+        for (final block in blocks) block is WmlParagraph ? block.text : '',
+      ]);
+    }
+    final mergedParagraphs = paragraphStory
+        ? blocks.whereType<WmlParagraph>()
+        : blocks.take(1).whereType<WmlParagraph>();
+    if ((paragraphStory || !_wordBodyIsBlank()) &&
+        mergedParagraphs.any(
+          (paragraph) => paragraph.inlines.any(
+            (inline) =>
+                inline is WmlContentControlBoundary ||
+                inline is WmlBookmarkBoundary,
+          ),
+        )) {
+      throw UnsupportedError(
+        'Pasting native inline ranges into an existing paragraph is not '
+        'supported. Their boundaries must be retained as complete objects.',
+      );
+    }
     commands.beginBatch();
     if (!caret.isCollapsed) {
       _deleteNormalizedSelection();
@@ -2952,7 +2915,7 @@ class WordEditorController extends OfficeController {
     final List<WmlBlock> clones = <WmlBlock>[
       for (final WmlBlock block in blocks) WmlClone.block(block),
     ];
-    if (isEditingComment) {
+    if (paragraphStory) {
       for (int i = 0; i < clones.length; i++) {
         if (i > 0) {
           _splitActiveParagraph();
@@ -2974,6 +2937,42 @@ class WordEditorController extends OfficeController {
     notifyListeners();
   }
 
+  void _assertIncomingBookmarks(List<WmlBlock> blocks) {
+    final paragraphs = blocks.expand(WmlClone.paragraphsOf).toList();
+    if (!paragraphs.any(
+      (paragraph) =>
+          paragraph.inlines.any((inline) => inline is WmlBookmarkBoundary),
+    )) {
+      return;
+    }
+    // A fragment must carry complete pairs. A copied range in a later block
+    // must not mutate the destination and defer an ID collision until save.
+    final incoming = WordBookmarks.ranges(
+      WmlDocument(sections: [WmlSection(blocks: blocks)]),
+    );
+    final ids = <String>{};
+    final names = <String>{};
+    for (final paragraph in _paragraphs) {
+      final generated = WordBookmarks.generatedName(paragraph);
+      if (generated != null) names.add(generated);
+      for (final inline in paragraph.inlines.whereType<WmlBookmarkBoundary>()) {
+        if (inline.isStart) {
+          ids.add(WordBookmarks.canonicalId(inline.id));
+          if (inline.name != null) names.add(inline.name!);
+        }
+      }
+    }
+    for (final range in incoming) {
+      if (!ids.add(WordBookmarks.canonicalId(range.start.id)) ||
+          !names.add(range.name)) {
+        throw UnsupportedError(
+          'Pasting this bookmark requires remapping its native ID and name '
+          'before it can be added to the same story.',
+        );
+      }
+    }
+  }
+
   List<OfficeClipboardSpan> _spansOfParagraph(WmlParagraph para) {
     return <OfficeClipboardSpan>[
       for (final WmlInline inline in para.inlines)
@@ -2989,7 +2988,10 @@ class WordEditorController extends OfficeController {
     for (final WmlSection section in document.sections) {
       for (final WmlBlock block in section.blocks) {
         if (block is WmlParagraph) {
-          if (block.text.isNotEmpty) {
+          if (block.text.isNotEmpty ||
+              block.inlines.any(
+                (inline) => inline is! WmlRun || inline.isAtomic,
+              )) {
             return false;
           }
         } else {
@@ -3145,13 +3147,16 @@ class WordEditorController extends OfficeController {
       caret.logicalIndex,
       caret.logicalIndex,
     ).start;
+    WordContentControls.assertCanSplit(para, index);
+    final slot = _hostSlotOf(para);
+    if (slot == null || !identical(slot.parent[slot.index], para)) {
+      throw UnsupportedError('This paragraph has no editable block owner.');
+    }
+    final List<WmlBlock> parent = slot.parent;
+    final int at = slot.index + 1;
     final List<WmlInline> before = _cloneInlines(para);
     final WmlRevisionSnapshot revisions = WordRevisions.capture(document);
-    final List<WmlRun> tail = WmlRunEdit.extractRuns(
-      para,
-      index,
-      para.text.length,
-    );
+    final split = WmlClone.splitInlines(para, index);
     // Keep both the inserted paragraph and its story stable across history.
     // Later commands hold this paragraph, even after focus moves to the body.
     final WmlParagraph next = WmlParagraph(
@@ -3160,14 +3165,10 @@ class WordEditorController extends OfficeController {
         ..listRestart = null
         ..pageBreakBefore = pageBreakBefore
         ..columnBreakBefore = columnBreakBefore,
-      inlines: tail.isEmpty ? <WmlInline>[WmlRun()] : _cloneInlinesFrom(tail),
+      inlines: split.tail.isEmpty
+          ? <WmlInline>[WmlRun()]
+          : _cloneInlinesFrom(split.tail),
     );
-    final List<WmlBlock> parent = isEditingComment
-        ? selectedComment!.paragraphs
-        : isEditingHeaderFooter
-        ? _ensureHeaderFooterParagraphs()
-        : _hostSlotOf(para)?.parent ?? sectionAtCaret.blocks;
-    final int at = parent.indexOf(para) + 1;
     commands.commit(
       _CallbackCommand(
         executeFn: () {
@@ -3176,9 +3177,12 @@ class WordEditorController extends OfficeController {
             ..clear()
             ..addAll(_cloneInlinesFrom(before));
           WordRevisions.splitParagraph(document, para, next, index);
-          if (index < para.text.length) {
-            WmlRunEdit.replaceRange(para, index, para.text.length, '');
-          }
+          para.inlines
+            ..clear()
+            ..addAll(_cloneInlinesFrom(split.head));
+          next.inlines
+            ..clear()
+            ..addAll(_cloneInlinesFrom(split.tail));
           parent.insert(at.clamp(0, parent.length), next);
         },
         undoFn: () {
@@ -3317,11 +3321,86 @@ class WordEditorController extends OfficeController {
   static List<WmlInline> _cloneInlinesFrom(List<WmlInline> source) =>
       WmlClone.inlines(source);
 
+  void _assertSelectionCanChange() {
+    if (caret.isCollapsed) return;
+    final paragraphs = _paragraphs;
+    final range = caret.normalizedRange;
+    if (range.startPara < 0 || range.endPara >= paragraphs.length) return;
+    if (range.startPara != range.endPara) {
+      for (var index = range.startPara; index <= range.endPara; index++) {
+        if (WordContentControls.hasInlineControls(paragraphs[index])) {
+          throw UnsupportedError(
+            'Changing several paragraphs containing an inline content '
+            'control is not supported. Edit each paragraph separately.',
+          );
+        }
+      }
+    }
+    for (var index = range.startPara; index <= range.endPara; index++) {
+      final paragraph = paragraphs[index];
+      final span = WmlRunEdit.normalizeRange(
+        paragraph,
+        index == range.startPara ? range.startIdx : 0,
+        index == range.endPara ? range.endIdx : paragraph.text.length,
+      );
+      WordContentControls.assertCanEdit(paragraph, span.start, span.end);
+    }
+  }
+
+  // Simulate the text portion of a paste/Enter before opening a command batch.
+  // A later unsupported split must not leave an earlier replacement committed.
+  void _preflightMultilineInsert(List<String> lines) {
+    _assertSelectionCanChange();
+    if (lines.isEmpty) return;
+    final range = caret.normalizedRange;
+    final paragraphs = _paragraphs;
+    if (range.startPara < 0 || range.startPara >= paragraphs.length) return;
+    final original = paragraphs[range.startPara];
+    if (lines.length > 1) {
+      final slot = _hostSlotOf(original);
+      if (slot == null || !identical(slot.parent[slot.index], original)) {
+        throw UnsupportedError('This paragraph has no editable block owner.');
+      }
+    }
+    // Multi-paragraph inline-control changes were rejected above. No wrapper
+    // can be split in that branch; existing structural selection rules apply.
+    if (range.startPara != range.endPara) return;
+    var preview = WmlClone.paragraph(original);
+    final span = WmlRunEdit.normalizeRange(
+      preview,
+      range.startIdx,
+      range.endIdx,
+    );
+    var offset = span.start;
+    if (!caret.isCollapsed && !document.trackRevisions) {
+      WmlRunEdit.replaceRange(preview, span.start, span.end, '');
+    }
+    for (var index = 0; index < lines.length; index++) {
+      if (lines[index].isNotEmpty) {
+        WmlRunEdit.replaceRange(preview, offset, offset, lines[index]);
+        offset += lines[index].length;
+      }
+      if (index + 1 < lines.length) {
+        WordContentControls.assertCanSplit(preview, offset);
+        final split = WmlClone.splitInlines(preview, offset);
+        preview = WmlParagraph(inlines: split.tail);
+        offset = 0;
+      }
+    }
+  }
+
   void _commitParagraphInlines(
     WmlParagraph paragraph,
     void Function() update, {
     ({int start, int end, int insertedLength})? textEdit,
   }) {
+    if (textEdit != null) {
+      WordContentControls.assertCanEdit(
+        paragraph,
+        textEdit.start,
+        textEdit.end,
+      );
+    }
     final List<WmlInline> before = _cloneInlines(paragraph);
     final WmlRevisionSnapshot revisions = WordRevisions.capture(document);
     final String oldText = paragraph.text;
@@ -3400,6 +3479,7 @@ class WordEditorController extends OfficeController {
     if (selectedVisual != null) {
       return;
     }
+    _assertSelectionCanChange();
     final String previous = _activeParagraph.text;
     commands.beginBatch();
     if (!caret.isCollapsed) {
@@ -3463,6 +3543,7 @@ class WordEditorController extends OfficeController {
     }
     final String previous = _activeParagraph.text;
     if (!caret.isCollapsed) {
+      _assertSelectionCanChange();
       commands.beginBatch();
       _deleteNormalizedSelection();
       commands.endBatch();
@@ -3534,6 +3615,7 @@ class WordEditorController extends OfficeController {
   }
 
   void _deleteNormalizedSelection() {
+    _assertSelectionCanChange();
     if (document.trackRevisions) {
       _deleteNormalizedTextOnly();
       return;
@@ -3862,6 +3944,7 @@ class WordEditorController extends OfficeController {
       return;
     }
     final String text = _activeParagraph.text;
+    _preflightMultilineInsert(const <String>['', '']);
     commands.beginBatch();
     if (!caret.isCollapsed) {
       _deleteNormalizedSelection();
@@ -4017,6 +4100,7 @@ class WordEditorController extends OfficeController {
     final WmlParagraph para = _activeParagraph;
     final String old = para.text;
     if (value.text != old) {
+      _setParagraphText(WmlClone.paragraph(para), value.text);
       _applyingIme = true;
       _syncParagraphDirection(para, incoming: value.text);
       _commitParagraphInlines(para, () => _setParagraphText(para, value.text));
@@ -4282,6 +4366,13 @@ class WordEditorController extends OfficeController {
     final WmlParagraph drop = backward
         ? paras[currentIndex]
         : paras[otherIndex];
+    if (WordContentControls.hasInlineControls(keep) ||
+        WordContentControls.hasInlineControls(drop)) {
+      throw UnsupportedError(
+        'Joining paragraphs containing an inline content control is not '
+        'supported. Their wrapper boundaries must remain in one paragraph.',
+      );
+    }
     if (isEditingComment || isEditingHeaderFooter) {
       final List<WmlParagraph> parent = isEditingComment
           ? selectedComment!.paragraphs
@@ -5912,35 +6003,8 @@ class WordEditorController extends OfficeController {
   List<WmlBlock>? _parentBlocksOfVisual(WmlVisual visual) =>
       _parentBlocksOfBlock(visual);
 
-  List<WmlBlock>? _parentBlocksOfBlock(WmlBlock target) {
-    List<WmlBlock>? walk(List<WmlBlock> blocks) {
-      if (blocks.contains(target)) {
-        return blocks;
-      }
-      for (final WmlBlock block in blocks) {
-        if (block is! WmlTable) {
-          continue;
-        }
-        for (final WmlTableRow row in block.rows) {
-          for (final WmlTableCell cell in row.cells) {
-            final List<WmlBlock>? found = walk(cell.blocks);
-            if (found != null) {
-              return found;
-            }
-          }
-        }
-      }
-      return null;
-    }
-
-    for (final WmlSection section in document.sections) {
-      final List<WmlBlock>? found = walk(section.blocks);
-      if (found != null) {
-        return found;
-      }
-    }
-    return null;
-  }
+  List<WmlBlock>? _parentBlocksOfBlock(WmlBlock target) =>
+      WordTree.locate(document, target)?.parent;
 
   List<LaidOutLine> _contentLines() {
     return <LaidOutLine>[
@@ -6107,26 +6171,8 @@ class WordEditorController extends OfficeController {
     return OfficeVisual.nextKind(kind);
   }
 
-  List<WmlBlock>? _parentBlocksOf(WmlParagraph para) {
-    for (final WmlSection section in document.sections) {
-      if (section.blocks.contains(para)) {
-        return section.blocks;
-      }
-      for (final WmlBlock block in section.blocks) {
-        if (block is! WmlTable) {
-          continue;
-        }
-        for (final WmlTableRow row in block.rows) {
-          for (final WmlTableCell cell in row.cells) {
-            if (cell.blocks.contains(para)) {
-              return cell.blocks;
-            }
-          }
-        }
-      }
-    }
-    return null;
-  }
+  List<WmlBlock>? _parentBlocksOf(WmlParagraph para) =>
+      WordTree.locate(document, para)?.parent;
 
   @override
   /// semanticsLabel API.
@@ -6182,12 +6228,39 @@ class WordEditorController extends OfficeController {
   @override
   /// applyReplace API.
   int applyReplace(OfficeFindOptions options, {OfficeFindHit? only}) {
-    final int count = OfficeFind.replaceWord(document, options, only: only);
-    if (count > 0) {
-      relayout();
-      notifyListeners();
+    if (!config.allowsMutation) return 0;
+    final plan = OfficeFind.prepareWordReplace(document, options, only: only);
+    if (plan.count == 0) return 0;
+    commitNoteEdits();
+    final before = <WmlParagraph, List<WmlInline>>{
+      for (final paragraph in plan.paragraphs)
+        paragraph: _cloneInlines(paragraph),
+    };
+    final revisions = WordRevisions.capture(document);
+    final previous = _activeParagraph.text;
+    void restore() {
+      for (final entry in before.entries) {
+        entry.key.inlines
+          ..clear()
+          ..addAll(_cloneInlinesFrom(entry.value));
+      }
+      revisions.restore(document);
     }
-    return count;
+
+    commands.commit(
+      _CallbackCommand(
+        executeFn: () {
+          restore();
+          plan.apply();
+        },
+        undoFn: restore,
+      ),
+    );
+    relayout();
+    _markLocalEdit(previousText: previous);
+    _syncImeSelection();
+    notifyListeners();
+    return plan.count;
   }
 
   @override
@@ -6401,7 +6474,7 @@ class WordEditorController extends OfficeController {
     }
     final int cols = columns.clamp(1, 20);
     final WmlTable table = WmlTable(
-      grid: List<double>.filled(cols, 96),
+      grid: List<double>.filled(cols, 96, growable: true),
       rows: <WmlTableRow>[
         for (int r = 0; r < rows.clamp(1, 50); r++)
           WmlTableRow(
@@ -6953,6 +7026,29 @@ class WordEditorController extends OfficeController {
     if (!config.allowsMutation) {
       return;
     }
+    if (note.allParagraphs.any(WordContentControls.hasInlineControls)) {
+      if (text.split('\n').length !=
+          WordNotes.editableParagraphs(note).length) {
+        throw UnsupportedError(
+          'Changing paragraph boundaries in a note containing an inline '
+          'content control is not supported.',
+        );
+      }
+      // Validate all paragraph replacements before the first live edit.
+      WordNotes.editText(
+        WmlNote(
+          id: note.id,
+          endnote: note.endnote,
+          addReference: note.addReference,
+          addReferenceSpace: note.addReferenceSpace,
+          referencePropertiesXml: note.referencePropertiesXml,
+          blocks: <WmlBlock>[
+            for (final block in note.blocks) WmlClone.block(block),
+          ],
+        ),
+        text,
+      );
+    }
     for (final WmlNote other in _noteEditStart.keys.toList()) {
       if (!identical(other, note)) {
         commitNoteEdit(other);
@@ -6963,7 +7059,8 @@ class WordEditorController extends OfficeController {
       () => _WordNoteEditSnapshot(note, document),
     );
     final Map<WmlParagraph, String> previousText = <WmlParagraph, String>{
-      for (final paragraph in note.paragraphs) paragraph: paragraph.text,
+      for (final paragraph in WordNotes.editableParagraphs(note))
+        paragraph: paragraph.text,
     };
     WordNotes.editText(note, text);
     for (final entry in previousText.entries) {
@@ -11148,6 +11245,11 @@ class _WordNoteEditSnapshot {
   _WordNoteEditSnapshot(WmlNote note, WmlDocument document)
     : blocks = List<WmlBlock>.of(note.blocks),
       text = WmlClone.plainTextOf(note.blocks),
+      parents = <List<WmlBlock>, List<WmlBlock>>{
+        for (final block in WordTree.descendants(note.blocks))
+          for (final children in WordTree.childLists(block))
+            children: List<WmlBlock>.of(children),
+      },
       inlines = <WmlParagraph, List<WmlInline>>{
         for (final paragraph in note.allParagraphs)
           paragraph: WmlClone.inlines(paragraph.inlines),
@@ -11156,6 +11258,7 @@ class _WordNoteEditSnapshot {
 
   final List<WmlBlock> blocks;
   final String text;
+  final Map<List<WmlBlock>, List<WmlBlock>> parents;
   final Map<WmlParagraph, List<WmlInline>> inlines;
   final WmlRevisionSnapshot revisions;
 
@@ -11163,6 +11266,11 @@ class _WordNoteEditSnapshot {
     note.blocks
       ..clear()
       ..addAll(blocks);
+    for (final entry in parents.entries) {
+      entry.key
+        ..clear()
+        ..addAll(entry.value);
+    }
     for (final entry in inlines.entries) {
       entry.key.inlines
         ..clear()

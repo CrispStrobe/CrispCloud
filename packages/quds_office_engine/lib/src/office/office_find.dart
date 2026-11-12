@@ -4,6 +4,8 @@ import '../sheet/model/sml_workbook.dart';
 import '../slide/model/pml_presentation.dart';
 import '../word/model/wml_document.dart';
 import '../word/model/wml_run_edit.dart';
+import '../word/model/word_content_controls.dart';
+import '../word/model/word_revision.dart';
 
 /// Options shared by find / replace across Word, sheets, and slides.
 class OfficeFindOptions {
@@ -62,6 +64,7 @@ class OfficeFindOptions {
 }
 
 /// One hit inside a document, workbook, or deck.
+/// Word replacement requires a bound hit returned by [OfficeFind.inWord].
 class OfficeFindHit {
   /// OfficeFindHit API.
   const OfficeFindHit({
@@ -75,7 +78,26 @@ class OfficeFindHit {
     this.slideIndex,
     this.shapeId,
     this.pageIndex,
-  });
+  }) : _wordTarget = null;
+
+  OfficeFindHit._word({
+    required this.preview,
+    required this.paragraphIndex,
+    required this.start,
+    required this.end,
+    required _WordFindTarget target,
+  }) : kind = OpcPackageKindHint.word,
+       _wordTarget = target,
+       sheetName = null,
+       a1 = null,
+       slideIndex = null,
+       shapeId = null,
+       pageIndex = null;
+
+  // Word replacement requires a hit returned by inWord, with its original
+  // document, paragraph and inline shape. An index alone can name another
+  // paragraph after an insertion, deletion or reorder.
+  final _WordFindTarget? _wordTarget;
 
   /// kind API.
   final OpcPackageKindHint kind;
@@ -111,6 +133,139 @@ class OfficeFindHit {
 /// Discriminator that does not import OPC.
 enum OpcPackageKindHint { word, sheet, slide, pdf }
 
+const _staleWordReplacement =
+    'The document changed after finding or preparing replacements. '
+    'Find the matches again before replacing them.';
+
+/// Text and typed range structure, independent of mutable inline identities.
+/// Rich undo restores cloned runs and boundary tokens with this same shape.
+final class _WordParagraphSnapshot {
+  _WordParagraphSnapshot(WmlParagraph paragraph)
+    : text = paragraph.text,
+      shape = [for (final inline in paragraph.inlines) _inlineShape(inline)];
+
+  final String text;
+  final List<Object> shape;
+
+  bool matches(WmlParagraph paragraph) {
+    if (paragraph.text != text || paragraph.inlines.length != shape.length) {
+      return false;
+    }
+    for (var index = 0; index < shape.length; index++) {
+      if (_inlineShape(paragraph.inlines[index]) != shape[index]) return false;
+    }
+    return true;
+  }
+
+  static Object _inlineShape(WmlInline inline) => switch (inline) {
+    WmlRun() => (
+      WmlRun,
+      inline.text.length,
+      inline.noteRefId,
+      inline.noteRefEndnote,
+      inline.fieldInstruction,
+      inline.fieldLocked,
+      inline.fieldDirty,
+    ),
+    WmlContentControlBoundary() => (
+      WmlContentControlBoundary,
+      inline.control,
+      inline.start,
+    ),
+    WmlBookmarkBoundary() => (
+      WmlBookmarkBoundary,
+      inline.id,
+      inline.isStart,
+      inline.name,
+      inline.sourceXml,
+    ),
+    WmlNoteMarker() => (WmlNoteMarker, inline.endnote),
+    WmlBreak() => (WmlBreak, inline.type),
+    WmlObject() => (
+      WmlObject,
+      inline.relationshipId,
+      inline.embedded,
+      inline.width,
+      inline.height,
+    ),
+  };
+}
+
+final class _WordFindTarget {
+  _WordFindTarget(this.document, this.paragraph)
+    : snapshot = _WordParagraphSnapshot(paragraph);
+
+  final WmlDocument document;
+  final WmlParagraph paragraph;
+  final _WordParagraphSnapshot snapshot;
+}
+
+/// A validated replacement operation whose paragraph identities stay stable.
+///
+/// Hosts can capture rich paragraph contents and revision metadata after
+/// preparing a plan, then execute it as one undoable command. All affected
+/// paragraphs and their typed inline ranges are checked before the first text
+/// mutation, including on replay.
+class OfficeWordReplacePlan {
+  OfficeWordReplacePlan._(this._document, this._replacement, this._edits)
+    : _before = <WmlParagraph, _WordParagraphSnapshot>{
+        for (final paragraph in _edits.map((edit) => edit.paragraph).toSet())
+          paragraph: _WordParagraphSnapshot(paragraph),
+      };
+
+  final WmlDocument _document;
+  final String _replacement;
+  final List<({WmlParagraph paragraph, int start, int end})> _edits;
+  final Map<WmlParagraph, _WordParagraphSnapshot> _before;
+
+  /// Distinct live paragraphs affected by this operation.
+  Iterable<WmlParagraph> get paragraphs => _before.keys;
+
+  /// Number of distinct, atomic replacement ranges.
+  int get count => _edits.length;
+
+  void _validate() {
+    final live = _document.paragraphs.toSet();
+    for (final entry in _before.entries) {
+      if (!live.contains(entry.key) || !entry.value.matches(entry.key)) {
+        throw StateError(_staleWordReplacement);
+      }
+    }
+    for (final edit in _edits) {
+      final range = WmlRunEdit.normalizeRange(
+        edit.paragraph,
+        edit.start,
+        edit.end,
+      );
+      if (range.start != edit.start || range.end != edit.end) {
+        throw StateError(_staleWordReplacement);
+      }
+      WordContentControls.assertCanEdit(edit.paragraph, edit.start, edit.end);
+    }
+  }
+
+  /// Applies preflighted replacements from right to left in each paragraph.
+  int apply() {
+    _validate();
+    for (final edit in _edits) {
+      WordRevisions.rebaseEdit(
+        _document,
+        edit.paragraph,
+        start: edit.start,
+        end: edit.end,
+        insertedLength: _replacement.length,
+      );
+      WmlRunEdit.replaceRange(
+        edit.paragraph,
+        edit.start,
+        edit.end,
+        _replacement,
+      );
+    }
+    return count;
+  }
+}
+
 /// Model-level find and replace. Hosts drive caret / selection from hits.
 abstract final class OfficeFind {
   /// inWord API.
@@ -125,14 +280,15 @@ abstract final class OfficeFind {
     final List<WmlParagraph> paras = document.paragraphs.toList();
     for (int i = 0; i < paras.length; i++) {
       final String text = paras[i].text;
+      _WordFindTarget? target;
       for (final (int start, int end) in _spans(text, options)) {
         hits.add(
-          OfficeFindHit(
-            kind: OpcPackageKindHint.word,
+          OfficeFindHit._word(
             preview: text,
             paragraphIndex: i,
             start: start,
             end: end,
+            target: target ??= _WordFindTarget(document, paras[i]),
           ),
         );
       }
@@ -146,34 +302,59 @@ abstract final class OfficeFind {
     OfficeFindOptions options, {
     OfficeFindHit? only,
   }) {
-    if (options.query.isEmpty) {
-      return 0;
-    }
+    return prepareWordReplace(document, options, only: only).apply();
+  }
+
+  /// Collects and validates every replacement before any live text changes.
+  static OfficeWordReplacePlan prepareWordReplace(
+    WmlDocument document,
+    OfficeFindOptions options, {
+    OfficeFindHit? only,
+  }) {
     final List<WmlParagraph> paras = document.paragraphs.toList();
-    var count = 0;
     if (only != null) {
-      final int index = only.paragraphIndex ?? -1;
-      if (index < 0 || index >= paras.length) {
-        return 0;
-      }
-      WmlRunEdit.replaceRange(
-        paras[index],
-        only.start,
-        only.end,
-        options.replaceWith,
-      );
-      return 1;
-    }
-    for (final WmlParagraph paragraph in paras) {
-      final String text = paragraph.text;
-      final List<(int, int)> spans = _spans(text, options).toList();
-      for (int i = spans.length - 1; i >= 0; i--) {
-        final (int start, int end) = spans[i];
-        WmlRunEdit.replaceRange(paragraph, start, end, options.replaceWith);
-        count++;
+      final target = only._wordTarget;
+      final index = only.paragraphIndex;
+      if (target == null ||
+          !identical(target.document, document) ||
+          index == null ||
+          index < 0 ||
+          index >= paras.length ||
+          !identical(paras[index], target.paragraph) ||
+          !target.snapshot.matches(target.paragraph)) {
+        throw StateError(_staleWordReplacement);
       }
     }
-    return count;
+    final edits = <({WmlParagraph paragraph, int start, int end})>[];
+    if (options.query.isNotEmpty) {
+      for (var index = 0; index < paras.length; index++) {
+        if (only != null && only.paragraphIndex != index) continue;
+        final paragraph = paras[index];
+        final ranges = <({int start, int end})>{};
+        for (final (start, end) in _spans(paragraph.text, options)) {
+          if (only != null && (only.start != start || only.end != end)) {
+            continue;
+          }
+          ranges.add(WmlRunEdit.normalizeRange(paragraph, start, end));
+        }
+        final ordered = ranges.toList()
+          ..sort((a, b) => b.start.compareTo(a.start));
+        int? nextStart;
+        for (final range in ordered) {
+          if (nextStart != null && range.end > nextStart) {
+            throw UnsupportedError(
+              'Replacement matches overlap an atomic '
+              'field or note reference. Replace that object as one range.',
+            );
+          }
+          edits.add((paragraph: paragraph, start: range.start, end: range.end));
+          nextStart = range.start;
+        }
+      }
+    }
+    final plan = OfficeWordReplacePlan._(document, options.replaceWith, edits);
+    plan._validate();
+    return plan;
   }
 
   /// inWorkbook API.

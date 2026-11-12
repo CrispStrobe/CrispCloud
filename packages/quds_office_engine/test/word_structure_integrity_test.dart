@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:test/test.dart';
 
+import '../tool/fidelity/word_structure_steps.dart';
+
 List<XmlElement> _all(XmlElement node, String name) => <XmlElement>[
   for (final child in node.childElements) ...<XmlElement>[
     if (child.localName == name) child,
@@ -34,6 +36,120 @@ WmlDocument _document(WmlBlock block) => WmlDocument(
 );
 
 void main() {
+  for (final owner in ['control', 'table', 'frame', 'control-table-frame']) {
+    test('script removes a nested $owner TOC from its exact live owner', () {
+      final toc = WmlToc(title: 'Remove this contents');
+      final keepBefore = _paragraph('Keep before');
+      final keepAfter = _paragraph('Keep after');
+      final children = <WmlBlock>[keepBefore, toc, keepAfter];
+      WmlBlock controlled(List<WmlBlock> content) {
+        final control =
+            WordDeserializer()
+                    .read(
+                      _source(
+                        '<w:sdt><w:sdtPr><w:id w:val="71"/><w:alias w:val="TOC owner"/></w:sdtPr>'
+                        '<w:sdtContent><w:p/></w:sdtContent></w:sdt>',
+                      ),
+                    )
+                    .sections
+                    .single
+                    .blocks
+                    .single
+                as WmlContentControlBlock;
+        control.blocks
+          ..clear()
+          ..addAll(content);
+        return control;
+      }
+
+      WmlTable table(List<WmlBlock> content) => WmlTable(
+        rows: [
+          WmlTableRow(cells: [WmlTableCell(blocks: content)]),
+        ],
+      );
+      final WmlBlock container = switch (owner) {
+        'control' => controlled(children),
+        'table' => table(children),
+        'frame' => WmlFrame(blocks: children),
+        _ => controlled([
+          table([WmlFrame(blocks: children)]),
+        ]),
+      };
+      final document = _document(container);
+      final parent = WordTree.locate(document, toc)!.parent;
+      applyWordStructureStep(document, {'op': 'tocRemove', 'toc': 0});
+      expect(parent, [same(keepBefore), same(keepAfter)]);
+      expect(document.sections.single.blocks.single, same(container));
+      expect(WordToc.tocs(document), isEmpty);
+      final reopened = WordDeserializer().readBytes(
+        WordSerializer().writeBytes(document),
+      );
+      expect(WordToc.tocs(reopened), isEmpty);
+      expect(reopened.paragraphs.map((p) => p.text), [
+        'Keep before',
+        'Keep after',
+      ]);
+      if (owner.startsWith('control')) {
+        expect(
+          (reopened.sections.single.blocks.single as WmlContentControlBlock)
+              .control
+              .id,
+          '71',
+        );
+      }
+    });
+  }
+
+  test(
+    'script TOC removal preflights cross-boundary bookmarks before mutation',
+    () {
+      final toc = WmlToc(title: 'Keep contents');
+      toc.titleParagraph.inlines.insert(
+        0,
+        WmlBookmarkBoundary(id: '1', isStart: true, name: 'CrossToc'),
+      );
+      final after = _paragraph('Keep after')
+        ..inlines.add(WmlBookmarkBoundary(id: '1', isStart: false));
+      final frame = WmlFrame(blocks: [toc, after]);
+      final document = _document(frame);
+      expect(WordBookmarks.ranges(document), hasLength(1));
+      expect(
+        () => applyWordStructureStep(document, {'op': 'tocRemove', 'toc': 0}),
+        throwsArgumentError,
+      );
+      expect(frame.blocks, [same(toc), same(after)]);
+      expect(WordBookmarks.ranges(document), hasLength(1));
+    },
+  );
+
+  test(
+    'script TOC removal cannot detach unresolved tracked paragraph targets',
+    () {
+      final toc = WmlToc(title: 'Keep contents');
+      final frame = WmlFrame(blocks: [toc]);
+      final document = _document(frame);
+      final revision = WordRevisions.record(
+        document,
+        paragraph: toc.titleParagraph,
+        paragraphIndex: 0,
+        kind: WmlRevisionKind.insert,
+        start: 0,
+        end: 4,
+        text: 'Keep',
+      );
+      expect(
+        () => applyWordStructureStep(document, {'op': 'tocRemove', 'toc': 0}),
+        throwsArgumentError,
+      );
+      expect(frame.blocks.single, same(toc));
+      expect(
+        WordRevisions.resolveParagraph(document, revision),
+        same(toc.titleParagraph),
+      );
+      expect(revision.accepted, isNull);
+    },
+  );
+
   test(
     'TOC page-number suppression and numbered titles survive three saves',
     () {

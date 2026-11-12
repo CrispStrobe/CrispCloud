@@ -12,6 +12,8 @@ import '../../xml/xml_writer.dart';
 import '../math/omml_io.dart';
 import '../model/wml_clone.dart';
 import '../model/wml_document.dart';
+import '../model/word_bookmarks.dart';
+import '../model/word_content_controls.dart';
 import '../model/word_notes.dart';
 import '../model/word_revision.dart';
 import '../model/word_styles.dart';
@@ -19,6 +21,7 @@ import '../model/word_toc.dart';
 import '../properties/wml_properties.dart';
 import 'word_bibliography_io.dart';
 import 'word_comment_io.dart';
+import 'word_content_control_io.dart';
 import 'word_drawing_io.dart';
 import 'word_frame_io.dart';
 import 'word_numbering_io.dart';
@@ -55,6 +58,7 @@ class WordSerializer {
   late WordSectionRevisionIds _sectionRevisionIds;
   final Map<WmlParagraph, int> _restartNumberingIds =
       Map<WmlParagraph, int>.identity();
+  Map<String, String> _generatedBookmarkIds = <String, String>{};
 
   /// writeBytes API.
   Uint8List writeBytes(WmlDocument document, {String? password}) {
@@ -63,7 +67,9 @@ class WordSerializer {
 
   /// write API.
   OpcPackage write(WmlDocument document) {
+    _generatedBookmarkIds = WordBookmarks.generatedIds(document);
     WordRevisions.validate(document);
+    WordContentControls.validate(document);
     final OpcPackage package =
         document.package ?? OpcPackage.create(OpcPackageKind.word);
     final PackageRelationship? office = package.packageRelationships
@@ -236,6 +242,17 @@ class WordSerializer {
     Map<OfficeVisual, String> imageIds,
   ) {
     switch (block) {
+      case WmlContentControlBlock():
+        final shell = WordContentControlIo.start(
+          w,
+          block.control,
+          _package!,
+          _activePartUri,
+        );
+        for (final child in block.blocks) {
+          _writeBlock(w, child, imageIds);
+        }
+        WordContentControlIo.end(w, shell);
       case WmlParagraph():
         _writeParagraph(w, block);
       case WmlTable():
@@ -308,6 +325,15 @@ class WordSerializer {
     final int count = toc.itemParagraphs.length;
     for (int i = 0; i < count; i++) {
       final WmlParagraph para = _copyParagraph(toc.itemParagraphs[i]);
+      // An imported cache paragraph can also contain the source TOC's begin
+      // and instruction. The live TOC above owns that field; retaining the
+      // paragraph instruction would nest a second complete TOC in its cache.
+      if (WordToc.isTocInstruction(para.properties.fieldInstruction)) {
+        para.properties
+          ..fieldInstruction = null
+          ..fieldBegin = false
+          ..fieldEnd = false;
+      }
       final bool showNumber =
           i < toc.entries.length &&
           toc.showsPageNumberForLevel(toc.entries[i].level);
@@ -614,13 +640,13 @@ class WordSerializer {
       w.writeEndElement();
       w.writeEndElement();
     }
-    final String? bookmark = paragraph.properties.bookmarkName;
+    final String? bookmark = WordBookmarks.generatedName(paragraph);
     if (bookmark != null && bookmark.isNotEmpty) {
       w.writeEmptyElement(
         'bookmarkStart',
         prefix: 'w',
         attributes: <String, String>{
-          'w:id': '${bookmark.hashCode & 0x7fffffff}',
+          'w:id': _generatedBookmarkIds[bookmark]!,
           'w:name': bookmark,
         },
       );
@@ -651,6 +677,7 @@ class WordSerializer {
     var i = 0;
     var offset = 0;
     var pageFieldOpen = pageField;
+    final controlShells = <XmlElement>[];
     while (i < paragraph.inlines.length) {
       final WmlInline inline = paragraph.inlines[i];
       if (inline is WmlRun) {
@@ -691,6 +718,21 @@ class WordSerializer {
         continue;
       }
       switch (inline) {
+        case WmlContentControlBoundary():
+          if (inline.start) {
+            controlShells.add(
+              WordContentControlIo.start(
+                w,
+                inline.control,
+                _package!,
+                _activePartUri,
+              ),
+            );
+          } else {
+            WordContentControlIo.end(w, controlShells.removeLast());
+          }
+        case WmlBookmarkBoundary():
+          _writeBookmarkBoundary(w, inline);
         case WmlNoteMarker():
           w.writeStartElement('r', prefix: 'w');
           final marker = inline.properties;
@@ -750,12 +792,27 @@ class WordSerializer {
       w.writeEmptyElement(
         'bookmarkEnd',
         prefix: 'w',
-        attributes: <String, String>{
-          'w:id': '${bookmark.hashCode & 0x7fffffff}',
-        },
+        attributes: <String, String>{'w:id': _generatedBookmarkIds[bookmark]!},
       );
     }
     w.writeEndElement();
+  }
+
+  void _writeBookmarkBoundary(XmlWriter writer, WmlBookmarkBoundary boundary) {
+    final kind = boundary.isStart ? 'bookmarkStart' : 'bookmarkEnd';
+    if (boundary.sourceXml != null) {
+      final element = XmlDocument.parse(boundary.sourceXml!).root!;
+      element.writeTo(writer);
+      return;
+    }
+    writer.writeEmptyElement(
+      kind,
+      prefix: 'w',
+      attributes: {
+        'w:id': boundary.id,
+        if (boundary.isStart) 'w:name': boundary.name!,
+      },
+    );
   }
 
   void _writeTrackedRun(

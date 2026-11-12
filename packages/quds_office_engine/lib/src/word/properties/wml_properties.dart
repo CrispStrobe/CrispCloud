@@ -57,7 +57,7 @@ enum WmlBreakType { page, column, textWrapping }
 enum WmlFrameAnchor { page, margin }
 
 /// Enum WmlFrameWrap.
-enum WmlFrameWrap { none, square }
+enum WmlFrameWrap { none, square, topBottom }
 
 /// Class WmlPageSize.
 class WmlPageSize {
@@ -293,6 +293,7 @@ class WmlParagraphProps {
     this.fieldBegin = false,
     this.fieldEnd = false,
     this.bookmarkName,
+    this.sourceBookmarkName,
     this.rightToLeft,
     this.dropCapLines = 0,
     this.shadingFill,
@@ -383,6 +384,10 @@ class WmlParagraphProps {
   /// bookmarkName API.
   String? bookmarkName;
 
+  /// Imported compatibility alias whose real extent is stored in inline
+  /// bookmark endpoints. The alias must not generate a second paragraph range.
+  String? sourceBookmarkName;
+
   /// Word `w:bidi`. `null` lets UAX #9 pick the paragraph level.
   bool? rightToLeft;
 
@@ -442,6 +447,7 @@ class WmlParagraphProps {
           fieldBegin: fieldBegin,
           fieldEnd: fieldEnd,
           bookmarkName: bookmarkName,
+          sourceBookmarkName: sourceBookmarkName,
           rightToLeft: rightToLeft,
           dropCapLines: dropCapLines,
           shadingFill: shadingFill,

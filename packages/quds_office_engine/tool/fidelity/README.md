@@ -98,8 +98,8 @@ stories use `section` (default 0); note stories require the actual `note` ID; co
 
 These 24 additional commands use body indexes shown by `inspect`. `tableMerge`
 uses logical grid columns; `tableUnmerge`, `tableCellText` and `tableCellFormat`
-use physical cell indexes within the selected row. TOC indexes address top-level
-section TOCs. Exact required
+use physical cell indexes within the selected row. TOC indexes follow depth-first
+body traversal, including controls, tables and frames. Exact required
 fields and accepted optional fields are available from `operations`.
 
 | Operations | Purpose and important fields |
@@ -118,8 +118,23 @@ Paragraph tab stops are arrays of `{ "position": 72, "alignment": "right",
 "leader": "dot" }`. Distances are points. `firstLine` and `hanging` cannot both
 be supplied. Comment `date` values, when supplied, are ISO-8601 timestamps.
 Bookmark creation rejects duplicate names and replacement of a differently named
-bookmark, preventing silent breakage of existing references. General multiple
-or cross-paragraph bookmark ranges remain a separately tracked format gap.
+bookmark, preventing silent breakage of existing references. The import/edit/export
+model also preserves native partial, multiple, overlapping and cross-paragraph
+bookmark ranges; `reference` uses their exact marked text. `bookmarkSet` remains
+a paragraph-wide creation operation. Copies that would duplicate native IDs and
+destructive edits that erase only one endpoint are rejected before mutation.
+
+Frame `wrap` accepts `none`, `square` and `topBottom`. Body paragraphs and TOCs
+following a frame reflow around it; native coordinates, wrap values and colors
+are checked independently. Arbitrary picture contours and floating table
+exclusions remain outside that acceptance scope.
+
+Imported block content controls retain live children and exact metadata in
+body, notes, tables and frames. Paired inline controls retain their positions.
+Supported paragraph operations use the actual container. Unsupported inline
+drawings/equations, auxiliary block stories, table row/cell wrappers and edits
+crossing control boundaries fail before output. UI lock and data-binding
+semantics are not implemented.
 
 The independently authored `word_structure_source.xml`,
 `word_structure_expected.json`, and `scripts/word-structure-{create,edit,remove}.json`

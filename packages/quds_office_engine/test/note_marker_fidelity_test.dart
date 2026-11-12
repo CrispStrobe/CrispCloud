@@ -100,15 +100,15 @@ void _editStories(WmlDocument doc) {
     final notes = _notes(doc, endnote);
     for (final id in [1, 2, 5, 6]) {
       final note = notes.firstWhere((n) => n.id == id);
-      final before = WordNotes.editableText(note);
-      final text = id == 1
-          ? before.replaceFirst('Opening text', 'Opening text edited')
-          : '$before edited';
+      final paragraph = note.allParagraphs.first;
       cli.applyStep(doc, {
-        'op': 'editNote',
-        'id': id,
-        'endnote': endnote,
-        'text': text,
+        'op': 'replaceText',
+        'story': endnote ? 'endnote' : 'footnote',
+        'note': id,
+        'paragraph': 0,
+        'start': paragraph.text.length,
+        'end': paragraph.text.length,
+        'text': ' edited',
       });
     }
     final cell = notes.firstWhere((n) => n.id == 4).allParagraphs.elementAt(1);
@@ -225,7 +225,7 @@ void main() {
   );
 
   test(
-    'plain note script edit preserves nested content and exact unnumbered whitespace',
+    'paragraph-scoped note script edit preserves nested content and exact unnumbered whitespace',
     () {
       final doc = _document();
       final unnumbered = doc.footnotes.firstWhere((n) => n.id == 5);

@@ -3,6 +3,7 @@ import '../properties/wml_properties.dart';
 import 'wml_document.dart';
 import 'wml_run_edit.dart';
 import 'word_link.dart';
+import 'word_tree.dart';
 
 /// Heading styles and live TOC field maintenance.
 abstract final class WordToc {
@@ -230,7 +231,7 @@ abstract final class WordToc {
   /// tocs API.
   static Iterable<WmlToc> tocs(WmlDocument document) sync* {
     for (final WmlSection section in document.sections) {
-      for (final WmlBlock block in section.blocks) {
+      for (final WmlBlock block in WordTree.descendants(section.blocks)) {
         if (block is WmlToc) {
           yield block;
         }

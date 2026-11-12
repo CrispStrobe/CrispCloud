@@ -1,0 +1,31 @@
+{
+  "source_ranges": {
+    "Alpha": {"id": "000", "start": [1, 7], "end": [1, 12], "text": "Alpha"},
+    "Beta": {"id": "1", "start": [1, 15], "end": [1, 19], "text": "Beta"},
+    "AcrossParagraphs": {"id": "12", "start": [2, 7], "end": [3, 19], "text": "Cross-paragraph start\nCross-paragraph end"},
+    "OverlapA": {"id": "13", "start": [4, 0], "end": [4, 2], "text": "AB"},
+    "OverlapB": {"id": "14", "start": [4, 1], "end": [4, 3], "text": "BC"},
+    "EmptyPoint": {"id": "15", "start": [5, 13], "end": [5, 13], "text": ""},
+    "EmptyParagraph": {"id": "16", "start": [6, 0], "end": [6, 0], "text": ""},
+    "TableInside": {"id": "17", "start": [8, 12], "end": [8, 25], "text": "cell selected"},
+    "Linked": {"id": "18", "start": [10, 5], "end": [10, 11], "text": "linked"},
+    "Whitespace": {"id": "19", "start": [11, 6], "end": [11, 16], "text": "  spaced  "},
+    "Emoji": {"id": "20", "start": [12, 6], "end": [12, 9], "text": "🙂é"}
+  },
+  "edited_paragraphs": {"0": "Probe prefix edited", "1": "prefix ALPHA! / Beta suffix", "2": "before Cross-", "3": "paragraph start"},
+  "edited_ranges": {
+    "Alpha": {"id": "000", "start": [1, 7], "end": [1, 13], "text": "ALPHA!"},
+    "Beta": {"id": "1", "start": [1, 16], "end": [1, 20], "text": "Beta"},
+    "AcrossParagraphs": {"id": "12", "start": [2, 7], "end": [4, 19], "text": "Cross-\nparagraph start\nCross-paragraph end"},
+    "OverlapA": {"id": "13", "start": [5, 0], "end": [5, 2], "text": "AB"},
+    "OverlapB": {"id": "14", "start": [5, 1], "end": [5, 3], "text": "BC"},
+    "EmptyPoint": {"id": "15", "start": [6, 13], "end": [6, 13], "text": ""},
+    "EmptyParagraph": {"id": "16", "start": [7, 0], "end": [7, 0], "text": ""},
+    "TableInside": {"id": "17", "start": [9, 12], "end": [9, 25], "text": "cell selected"},
+    "Linked": {"id": "18", "start": [11, 5], "end": [11, 11], "text": "linked"},
+    "Whitespace": {"id": "19", "start": [12, 6], "end": [12, 16], "text": "  spaced  "},
+    "Emoji": {"id": "20", "start": [13, 6], "end": [13, 9], "text": "🙂é"},
+    "Generated": {"id": "2", "start": [14, 0], "end": [14, 20], "text": "New generated target"}
+  },
+  "reference_names": ["Alpha", "Beta", "AcrossParagraphs", "EmptyPoint", "EmptyParagraph", "OverlapA", "OverlapB", "TableInside", "Linked", "Whitespace", "Emoji", "Generated"]
+}

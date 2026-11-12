@@ -16,6 +16,43 @@ WmlRevision _record(
 );
 
 void main() {
+  test(
+    'cross-control revision validation cannot rebase another pending span',
+    () {
+      final control = WmlContentControlData(
+        xml: '<w:sdt xmlns:w="${OfficeNamespaces.w}"><w:sdtContent/></w:sdt>',
+        sourcePartUri: '/word/document.xml',
+        relationships: const [],
+      );
+      final paragraph = WmlParagraph(
+        inlines: [
+          WmlRun(text: 'ab'),
+          WmlContentControlBoundary(control: control, start: true),
+          WmlRun(text: 'XYZ'),
+          WmlContentControlBoundary(control: control, start: false),
+          WmlRun(text: 'cdQQ'),
+        ],
+      );
+      final document = WmlDocument(
+        sections: [
+          WmlSection(blocks: [paragraph]),
+        ],
+      );
+      final crossing = _record(document, 1, 4);
+      final later = _record(document, 7, 9);
+      expect(
+        () => WordRevisions.reject(document, crossing),
+        throwsUnsupportedError,
+      );
+      expect(() => WordSerializer().write(document), throwsUnsupportedError);
+      expect(paragraph.text, 'abXYZcdQQ');
+      expect((later.start, later.end, later.text), (7, 9, 'QQ'));
+      expect(document.revisions, [same(crossing), same(later)]);
+      expect(crossing.accepted, isNull);
+      expect(later.conflict, isNull);
+    },
+  );
+
   for (final isolate in [false, true]) {
     test(
       '${isolate ? 'isolate' : 'direct'} export rejects stale spans before package mutation',

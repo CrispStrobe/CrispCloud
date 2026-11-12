@@ -301,6 +301,7 @@ class _StyleCascade {
       fieldEnd: old.fieldEnd,
       pageNumberField: old.pageNumberField,
       bookmarkName: old.bookmarkName,
+      sourceBookmarkName: old.sourceBookmarkName,
       noteId: old.noteId,
       endnoteRef: old.endnoteRef,
       listLabel: old.listLabel,
@@ -367,6 +368,8 @@ class _StyleCascade {
     for (final block in blocks) {
       if (block is WmlParagraph) {
         paragraph(block, tableLayers);
+      } else if (block is WmlContentControlBlock) {
+        walk(block.blocks, tableLayers);
       } else if (block is WmlFrame) {
         walk(block.blocks, tableLayers);
       } else if (block is WmlTable) {

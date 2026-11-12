@@ -1,5 +1,6 @@
 import '../properties/wml_properties.dart';
 import 'wml_document.dart';
+import 'word_content_controls.dart';
 
 /// Split and format [WmlRun] spans inside a paragraph.
 abstract final class WmlRunEdit {
@@ -115,6 +116,7 @@ abstract final class WmlRunEdit {
     final range = normalizeRange(paragraph, start, end);
     start = range.start;
     end = range.end;
+    WordContentControls.assertCanEdit(paragraph, start, end);
     final int length = paragraph.text.length;
     final WmlRunProps props = propsAt(
       paragraph,
@@ -124,6 +126,18 @@ abstract final class WmlRunEdit {
       paragraph,
       start == length ? start - 1 : start,
     );
+    if (start == end && WordContentControls.hasInlineControls(paragraph)) {
+      if (insert.isNotEmpty) {
+        insertRuns(paragraph, start, <WmlRun>[
+          WmlRun(
+            text: insert,
+            properties: props.copy(),
+            commentIds: List<int>.from(commentIds),
+          ),
+        ]);
+      }
+      return;
+    }
     splitAt(paragraph, end);
     splitAt(paragraph, start);
     final List<WmlInline> next = <WmlInline>[];
@@ -269,12 +283,14 @@ abstract final class WmlRunEdit {
     if (runs.isEmpty) {
       return;
     }
-    final int length = paragraph.text.length;
-    index = index.clamp(0, length);
+    index = normalizeRange(paragraph, index, index).start;
+    WordContentControls.assertCanEdit(paragraph, index, index);
     splitAt(paragraph, index);
     var offset = 0;
-    var insertAt = paragraph.inlines.length;
+    final controlIndex = WordContentControls.insertionIndex(paragraph, index);
+    var insertAt = controlIndex ?? paragraph.inlines.length;
     for (int i = 0; i < paragraph.inlines.length; i++) {
+      if (controlIndex != null) break;
       final WmlInline inline = paragraph.inlines[i];
       if (inline is! WmlRun) {
         continue;

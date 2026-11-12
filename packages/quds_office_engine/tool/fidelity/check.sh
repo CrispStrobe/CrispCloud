@@ -22,7 +22,11 @@ dart test \
   test/word_structure_steps_test.dart test/word_structure_integrity_test.dart \
   test/word_revision_story_test.dart test/word_step_atomicity_test.dart \
   test/word_bibliography_fidelity_test.dart test/note_marker_fidelity_test.dart \
+  test/word_note_script_break_test.dart \
   test/word_revision_validation_test.dart test/word_tree_test.dart \
+  test/word_frame_wrap_test.dart test/variable_line_breaker_test.dart \
+  test/word_content_control_fidelity_test.dart test/word_bookmark_fidelity_test.dart \
+  test/word_find_replace_atomic_test.dart \
   test/word_style_introduction_test.dart test/word_table_direction_test.dart \
   test/scripted_transitions_test.dart
 dart run tool/fidelity/scenarios.dart
@@ -48,6 +52,10 @@ python3 tool/fidelity/word_structure_oracle.py
 python3 tool/fidelity/revision_story_oracle.py
 python3 tool/fidelity/bibliography_oracle.py
 python3 tool/fidelity/note_markers_oracle.py
+python3 tool/fidelity/frame_wrap_oracle.py
+python3 tool/fidelity/content_control_oracle.py
+python3 tool/fidelity/bookmark_ranges_oracle.py
+python3 tool/fidelity/unsupported_word_audit.py
 python3 tool/fidelity/audit_operations.py
 python3 tool/fidelity/inventory.py verify
 python3 -m unittest discover -s tool/fidelity -p 'test_*.py'

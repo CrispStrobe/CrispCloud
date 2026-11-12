@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import '../../office/office_document_properties.dart';
+import '../../opc/content_types.dart';
 import '../../opc/ole/embedded_part.dart';
 import '../../opc/opc_archive.dart';
 import '../../opc/package_part.dart';
@@ -16,9 +17,11 @@ import '../model/word_notes.dart';
 import '../model/word_revision.dart';
 import '../model/word_styles.dart';
 import '../model/word_toc.dart';
+import '../model/word_tree.dart';
 import '../properties/wml_properties.dart';
 import 'word_bibliography_io.dart';
 import 'word_comment_io.dart';
+import 'word_content_control_io.dart';
 import 'word_drawing_io.dart';
 import 'word_markup_compatibility.dart';
 import 'word_opaque_io.dart';
@@ -158,20 +161,62 @@ class WordDeserializer {
     OpcPackage package,
     String docUri,
   ) {
-    var tag = '';
+    final contentType = package.getPart(docUri)?.contentType;
+    if (contentType == OfficeContentTypes.wordHeader ||
+        contentType == OfficeContentTypes.wordFooter ||
+        contentType == OfficeContentTypes.wordComments) {
+      _unsupportedControl(
+        docUri,
+        'block control in a paragraph-only auxiliary story',
+      );
+    }
+    final source = XmlDocument.readElement(reader);
+    final control = WordContentControlIo.capture(source, package, docUri);
+    final content = _sdtContentReader(source);
+    final blocks = content == null
+        ? <WmlBlock>[]
+        : _readBlockContent(content, package, docUri);
+    final tag = control.tag ?? '';
+    if (tag.startsWith('qudsFrame:')) {
+      return <WmlBlock>[_frameFromTag(tag, blocks)];
+    }
+    return <WmlBlock>[WmlContentControlBlock(control: control, blocks: blocks)];
+  }
+
+  XmlPullReader? _sdtContentReader(XmlElement source) {
+    final inner = WordMarkupCompatibilityReader(
+      XmlDocument(root: source).toXmlString(declaration: false),
+    )..next();
+    final depth = inner.depth;
+    while (inner.next()) {
+      if (inner.eventType == XmlEventType.startElement &&
+          inner.depth == depth + 1 &&
+          inner.localName == 'sdtContent' &&
+          inner.namespaceUri == OfficeNamespaces.w) {
+        return inner;
+      }
+    }
+    return null;
+  }
+
+  List<WmlBlock> _readBlockContent(
+    XmlPullReader reader,
+    OpcPackage package,
+    String docUri,
+  ) {
     final List<WmlBlock> blocks = <WmlBlock>[];
     if (reader.isEmptyElement) {
       return blocks;
     }
     final int depth = reader.depth;
     while (reader.next() && reader.depth >= depth) {
+      // Compatibility wrappers are hidden by the reader but retain source
+      // depth. Each block reader consumes its entire subtree, so accepting the
+      // selected child at any depth preserves that block without flattening it.
       if (reader.eventType != XmlEventType.startElement) {
         continue;
       }
-      if (reader.localName == 'tag') {
-        tag =
-            reader.getAttribute('val', namespaceUri: OfficeNamespaces.w) ?? tag;
-      } else if (reader.localName == 'p' &&
+      if (reader.localName == 'p' &&
           reader.namespaceUri == OfficeNamespaces.w) {
         _addParagraph(blocks, _readParagraph(reader, package, docUri));
       } else if (reader.localName == 'tbl' &&
@@ -183,12 +228,61 @@ class WordDeserializer {
       } else if (reader.localName == 'altChunk' &&
           reader.namespaceUri == OfficeNamespaces.w) {
         blocks.add(WordOpaqueIo.read(reader, package, docUri));
+      } else if ((reader.localName == 'oMath' ||
+              reader.localName == 'oMathPara') &&
+          reader.namespaceUri == OfficeNamespaces.m) {
+        final math = OmmlIo.readFrom(reader);
+        if (math != null) blocks.add(WmlEquation(math: math));
+      } else {
+        blocks.add(WordOpaqueIo.read(reader, package, docUri));
       }
     }
-    if (tag.startsWith('qudsFrame:')) {
-      return <WmlBlock>[_frameFromTag(tag, blocks)];
-    }
     return blocks;
+  }
+
+  void _readInlineControl(
+    XmlPullReader reader,
+    OpcPackage package,
+    String docUri,
+    WmlParagraph paragraph,
+  ) {
+    final source = XmlDocument.readElement(reader);
+    bool containsBlockOnlyContent(XmlElement element) {
+      if ((element.namespaceUri == OfficeNamespaces.w &&
+              (element.localName == 'drawing' ||
+                  element.localName == 'pict')) ||
+          (element.namespaceUri == OfficeNamespaces.m &&
+              (element.localName == 'oMath' ||
+                  element.localName == 'oMathPara'))) {
+        return true;
+      }
+      return element.childElements.any(containsBlockOnlyContent);
+    }
+
+    if (containsBlockOnlyContent(source)) {
+      _unsupportedControl(
+        docUri,
+        'inline control containing a drawing or equation',
+      );
+    }
+    final control = WordContentControlIo.capture(source, package, docUri);
+    paragraph.inlines.add(
+      WmlContentControlBoundary(control: control, start: true),
+    );
+    final content = _sdtContentReader(source);
+    if (content != null) {
+      _readParagraphContent(content, package, docUri, paragraph);
+    }
+    paragraph.inlines.add(
+      WmlContentControlBoundary(control: control, start: false),
+    );
+  }
+
+  Never _unsupportedControl(String docUri, String context) {
+    throw UnsupportedError(
+      'Content control in $docUri: $context is not supported. '
+      'Import stopped before changing the package to preserve its native structure.',
+    );
   }
 
   WmlFrame _frameFromTag(String tag, List<WmlBlock> blocks) {
@@ -212,7 +306,11 @@ class WordDeserializer {
       anchor: anchorName == 'margin'
           ? WmlFrameAnchor.margin
           : WmlFrameAnchor.page,
-      wrap: wrapName == 'square' ? WmlFrameWrap.square : WmlFrameWrap.none,
+      wrap: switch (wrapName) {
+        'square' => WmlFrameWrap.square,
+        'topBottom' => WmlFrameWrap.topBottom,
+        _ => WmlFrameWrap.none,
+      },
       fillColor: colorAt(6),
       strokeColor: colorAt(7),
       blocks: blocks,
@@ -224,7 +322,12 @@ class WordDeserializer {
         paragraph.inlines.isEmpty && _pendingEquations.isNotEmpty;
     final bool drawingHost =
         paragraph.text.trim().isEmpty &&
-        !paragraph.inlines.any((inline) => inline is WmlNoteMarker) &&
+        !paragraph.inlines.any(
+          (inline) =>
+              inline is WmlNoteMarker ||
+              inline is WmlBookmarkBoundary ||
+              inline is WmlContentControlBoundary,
+        ) &&
         (_pendingVisuals.isNotEmpty || _pendingFrames.isNotEmpty);
     if (!mathOnly && !drawingHost) {
       blocks.add(paragraph);
@@ -257,6 +360,8 @@ class WordDeserializer {
       docUri,
       readParagraph: (XmlPullReader inner) =>
           _readParagraph(inner, package, docUri),
+      readBlockContent: (XmlPullReader inner) =>
+          _readBlockContent(inner, package, docUri),
     );
     if (block is WmlVisual) {
       _pendingVisuals.add(block);
@@ -273,8 +378,18 @@ class WordDeserializer {
   ) {
     final WmlParagraph paragraph = WmlParagraph()
       ..properties.sourcePropertiesXml = '';
+    _readParagraphContent(reader, package, docUri, paragraph);
+    return paragraph;
+  }
+
+  void _readParagraphContent(
+    XmlPullReader reader,
+    OpcPackage package,
+    String docUri,
+    WmlParagraph paragraph,
+  ) {
     if (reader.isEmptyElement) {
-      return paragraph;
+      return;
     }
     final int depth = reader.depth;
     while (reader.next() && reader.depth >= depth) {
@@ -291,6 +406,9 @@ class WordDeserializer {
         _readTracked(reader, package, docUri, paragraph);
       } else if (reader.localName == 'hyperlink') {
         _readHyperlink(reader, package, docUri, paragraph);
+      } else if (reader.localName == 'sdt' &&
+          reader.namespaceUri == OfficeNamespaces.w) {
+        _readInlineControl(reader, package, docUri, paragraph);
       } else if (reader.localName == 'fldSimple' &&
           reader.namespaceUri == OfficeNamespaces.w) {
         paragraph.inlines.addAll(
@@ -310,11 +428,10 @@ class WordDeserializer {
         if (id != null) {
           _openCommentIds.remove(id);
         }
-      } else if (reader.localName == 'bookmarkStart') {
-        paragraph.properties.bookmarkName ??= reader.getAttribute(
-          'name',
-          namespaceUri: OfficeNamespaces.w,
-        );
+      } else if ((reader.localName == 'bookmarkStart' ||
+              reader.localName == 'bookmarkEnd') &&
+          reader.namespaceUri == OfficeNamespaces.w) {
+        _readBookmark(reader, paragraph);
       } else if (reader.localName == 'br') {
         final String? type = reader.getAttribute(
           'type',
@@ -348,7 +465,6 @@ class WordDeserializer {
         }
       }
     }
-    return paragraph;
   }
 
   List<WmlInline> _readSimpleField(
@@ -420,6 +536,25 @@ class WordDeserializer {
       }
     }
     return result.inlines;
+  }
+
+  void _readBookmark(XmlPullReader reader, WmlParagraph paragraph) {
+    final element = XmlDocument.readElement(reader);
+    final isStart = element.localName == 'bookmarkStart';
+    final name = element.getAttribute('name', namespaceUri: OfficeNamespaces.w);
+    paragraph.inlines.add(
+      WmlBookmarkBoundary(
+        id: element.getAttribute('id', namespaceUri: OfficeNamespaces.w) ?? '',
+        isStart: isStart,
+        name: name,
+        sourceXml: XmlDocument(root: element).toXmlString(declaration: false),
+      ),
+    );
+    if (isStart && name != null && paragraph.properties.bookmarkName == null) {
+      paragraph.properties
+        ..bookmarkName = name
+        ..sourceBookmarkName = name;
+    }
   }
 
   List<WmlInline> _readRunInlines(
@@ -584,6 +719,15 @@ class WordDeserializer {
       } else if (reader.eventType == XmlEventType.startElement &&
           reader.localName == 'hyperlink') {
         _readHyperlink(reader, package, docUri, paragraph);
+      } else if (reader.eventType == XmlEventType.startElement &&
+          (reader.localName == 'bookmarkStart' ||
+              reader.localName == 'bookmarkEnd') &&
+          reader.namespaceUri == OfficeNamespaces.w) {
+        _readBookmark(reader, paragraph);
+      } else if (reader.eventType == XmlEventType.startElement &&
+          reader.localName == 'sdt' &&
+          reader.namespaceUri == OfficeNamespaces.w) {
+        _readInlineControl(reader, package, docUri, paragraph);
       }
     }
     final WmlDocument? document = _document;
@@ -813,6 +957,13 @@ class WordDeserializer {
         );
       } else if (reader.localName == 'hyperlink') {
         _readHyperlink(reader, package, docUri, paragraph);
+      } else if ((reader.localName == 'bookmarkStart' ||
+              reader.localName == 'bookmarkEnd') &&
+          reader.namespaceUri == OfficeNamespaces.w) {
+        _readBookmark(reader, paragraph);
+      } else if (reader.localName == 'sdt' &&
+          reader.namespaceUri == OfficeNamespaces.w) {
+        _readInlineControl(reader, package, docUri, paragraph);
       }
       for (final WmlInline inline in paragraph.inlines.skip(firstInline)) {
         if (inline is WmlRun) {
@@ -863,10 +1014,15 @@ class WordDeserializer {
   }
 
   void _collapseTocFields(WmlDocument document) {
-    for (final WmlSection section in document.sections) {
+    void collapse(List<WmlBlock> blocks) {
+      for (final block in blocks) {
+        for (final children in WordTree.childLists(block)) {
+          collapse(children);
+        }
+      }
       final List<WmlBlock> collapsed = <WmlBlock>[];
       WmlToc? open;
-      for (final WmlBlock block in section.blocks) {
+      for (final WmlBlock block in blocks) {
         if (block is! WmlParagraph) {
           if (open != null) {
             collapsed.add(open);
@@ -933,9 +1089,13 @@ class WordDeserializer {
       if (open != null) {
         collapsed.add(open);
       }
-      section.blocks
+      blocks
         ..clear()
         ..addAll(collapsed);
+    }
+
+    for (final section in document.sections) {
+      collapse(section.blocks);
     }
   }
 
@@ -1126,6 +1286,9 @@ class WordDeserializer {
         table.grid.add(w == null ? 100 : twipsToPoints(int.parse(w)));
       } else if (reader.localName == 'tr') {
         table.rows.add(_readRow(reader, package, docUri, table));
+      } else if (reader.localName == 'sdt' &&
+          reader.namespaceUri == OfficeNamespaces.w) {
+        _unsupportedControl(docUri, 'content control wrapping table rows');
       }
     }
     _applyTableStyleToCells(table);
@@ -1285,6 +1448,8 @@ class WordDeserializer {
         visit(block);
       } else if (block is WmlFrame) {
         _walkTables(block.blocks, visit);
+      } else if (block is WmlContentControlBlock) {
+        _walkTables(block.blocks, visit);
       }
     }
   }
@@ -1308,7 +1473,7 @@ class WordDeserializer {
     }
     for (final WmlTableRow row in table.rows) {
       for (final WmlTableCell cell in row.cells) {
-        for (final WmlBlock block in cell.blocks) {
+        for (final WmlBlock block in WordTree.visibleBlocks(cell.blocks)) {
           if (block is! WmlParagraph) {
             continue;
           }
@@ -1353,6 +1518,9 @@ class WordDeserializer {
         }
       } else if (reader.localName == 'tc') {
         row.cells.add(_readCell(reader, package, docUri));
+      } else if (reader.localName == 'sdt' &&
+          reader.namespaceUri == OfficeNamespaces.w) {
+        _unsupportedControl(docUri, 'content control wrapping table cells');
       }
     }
     return row;
@@ -1405,6 +1573,9 @@ class WordDeserializer {
         }
       } else if (reader.localName == 'tbl') {
         cell.blocks.add(_readTable(reader, package, docUri));
+      } else if (reader.localName == 'sdt' &&
+          reader.namespaceUri == OfficeNamespaces.w) {
+        cell.blocks.addAll(_readSdt(reader, package, docUri));
       } else if (reader.localName == 'altChunk' &&
           reader.namespaceUri == OfficeNamespaces.w) {
         cell.blocks.add(WordOpaqueIo.read(reader, package, docUri));
@@ -1687,6 +1858,13 @@ class WordDeserializer {
           _pendingVisuals.clear();
         }
         _pendingEquations.clear();
+      } else if (reader.eventType == XmlEventType.startElement &&
+          reader.localName == 'sdt' &&
+          reader.namespaceUri == OfficeNamespaces.w) {
+        _unsupportedControl(
+          storyUri,
+          'block control in a paragraph-only header/footer story',
+        );
       }
     }
     if (visualsOut != null && _pendingVisuals.isNotEmpty) {
@@ -2455,6 +2633,12 @@ class WordDeserializer {
           paragraphs.add(_readParagraph(reader, package, commentsUri));
         } else if (reader.localName == 'drawing') {
           _takeDrawing(reader, package, commentsUri);
+        } else if (reader.localName == 'sdt' &&
+            reader.namespaceUri == OfficeNamespaces.w) {
+          _unsupportedControl(
+            commentsUri,
+            'block control in a paragraph-only comment story',
+          );
         } else if (reader.localName == 't') {
           if (fallback.isNotEmpty) {
             fallback.write('\n');

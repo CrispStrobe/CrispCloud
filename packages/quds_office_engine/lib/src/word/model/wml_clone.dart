@@ -1,4 +1,8 @@
 import 'wml_document.dart';
+import 'wml_run_edit.dart';
+import 'word_bookmarks.dart';
+import 'word_content_controls.dart';
+import 'word_tree.dart';
 
 /// Deep copies of Word blocks so cut / paste / undo never share mutable state.
 abstract final class WmlClone {
@@ -53,6 +57,11 @@ abstract final class WmlClone {
         return visual(source);
       case WmlFrame():
         return frame(source);
+      case WmlContentControlBlock():
+        return WmlContentControlBlock(
+          control: source.control,
+          blocks: <WmlBlock>[for (final child in source.blocks) block(child)],
+        );
       case WmlEquation():
         return equation(source);
       case WmlToc():
@@ -84,7 +93,7 @@ abstract final class WmlClone {
     }
     return WmlParagraph(
       properties: source.properties.copy(),
-      inlines: inlines(_extractRuns(source, start, end < start ? start : end)),
+      inlines: sliceInlines(source, start, end < start ? start : end),
     );
   }
 
@@ -181,9 +190,7 @@ abstract final class WmlClone {
 
   /// paragraphsOf API.
   static List<WmlParagraph> paragraphsOf(WmlBlock block) {
-    final List<WmlParagraph> out = <WmlParagraph>[];
-    _collectParagraphs(<WmlBlock>[block], out);
-    return out;
+    return WordTree.paragraphs(<WmlBlock>[block]).toList();
   }
 
   /// plainTextOf API.
@@ -200,34 +207,21 @@ abstract final class WmlClone {
     return buffer.toString();
   }
 
-  static void _collectParagraphs(
-    List<WmlBlock> blocks,
-    List<WmlParagraph> out,
-  ) {
-    for (final WmlBlock block in blocks) {
-      switch (block) {
-        case WmlParagraph():
-          out.add(block);
-        case WmlTable(:final List<WmlTableRow> rows):
-          for (final WmlTableRow row in rows) {
-            for (final WmlTableCell cell in row.cells) {
-              _collectParagraphs(cell.blocks, out);
-            }
-          }
-        case WmlToc():
-          out.add(block.titleParagraph);
-          out.addAll(block.itemParagraphs);
-        case WmlFrame():
-          _collectParagraphs(block.blocks, out);
-        case WmlVisual():
-        case WmlEquation():
-        case WmlOpaqueBlock():
-          break;
-      }
-    }
-  }
-
   static WmlInline _inline(WmlInline inline) {
+    if (inline is WmlBookmarkBoundary) {
+      return WmlBookmarkBoundary(
+        id: inline.id,
+        isStart: inline.isStart,
+        name: inline.name,
+        sourceXml: inline.sourceXml,
+      );
+    }
+    if (inline is WmlContentControlBoundary) {
+      return WmlContentControlBoundary(
+        control: inline.control,
+        start: inline.start,
+      );
+    }
     if (inline is WmlNoteMarker) {
       return WmlNoteMarker(
         endnote: inline.endnote,
@@ -261,15 +255,26 @@ abstract final class WmlClone {
     return inline;
   }
 
-  static List<WmlInline> _extractRuns(WmlParagraph source, int from, int to) {
+  /// Copies typed inlines, retaining complete control boundaries in the slice.
+  static List<WmlInline> sliceInlines(WmlParagraph source, int from, int to) {
+    from = from.clamp(0, source.text.length);
+    to = to.clamp(from, source.text.length);
     if (to <= from) {
-      return <WmlInline>[WmlRun()];
+      return <WmlInline>[];
     }
+    final controls = WordContentControls.controlsInSlice(source, from, to);
+    final emptyBookmarks = _emptyBookmarks(source);
     final List<WmlInline> out = <WmlInline>[];
     var offset = 0;
     for (final WmlInline inline in source.inlines) {
       if (inline is! WmlRun) {
-        if (offset >= from && offset < to) {
+        if (inline is WmlContentControlBoundary
+            ? controls.contains(inline.control)
+            : inline is WmlBookmarkBoundary &&
+                  !inline.isStart &&
+                  !emptyBookmarks.contains(WordBookmarks.canonicalId(inline.id))
+            ? offset > from && offset <= to
+            : offset >= from && offset < to) {
           out.add(_inline(inline));
         }
         continue;
@@ -299,6 +304,75 @@ abstract final class WmlClone {
       );
       offset = end;
     }
-    return out.isEmpty ? <WmlInline>[WmlRun()] : out;
+    return out;
+  }
+
+  /// Partitions all typed inlines exactly once at a paragraph break.
+  ///
+  /// Empty control pairs move together to the right. Nonempty controls cannot
+  /// be split internally; controls ending at the break stay on the left.
+  static ({List<WmlInline> head, List<WmlInline> tail}) splitInlines(
+    WmlParagraph source,
+    int offset,
+  ) {
+    final at = WmlRunEdit.normalizeRange(source, offset, offset).start;
+    WordContentControls.assertCanSplit(source, at);
+    final leftControls = <WmlContentControlData>{
+      for (final span in WordContentControls.spans(source))
+        if (span.end < at || (span.end == at && span.start < span.end))
+          span.control,
+    };
+    final emptyBookmarks = _emptyBookmarks(source);
+    final head = <WmlInline>[];
+    final tail = <WmlInline>[];
+    var position = 0;
+    for (final inline in source.inlines) {
+      if (inline is WmlRun) {
+        final end = position + inline.text.length;
+        if (end <= at) {
+          head.add(_inline(inline));
+        } else if (position >= at) {
+          tail.add(_inline(inline));
+        } else {
+          head.add(
+            (_inline(inline) as WmlRun)
+              ..text = inline.text.substring(0, at - position),
+          );
+          tail.add(
+            (_inline(inline) as WmlRun)
+              ..text = inline.text.substring(at - position),
+          );
+        }
+        position = end;
+      } else {
+        final onLeft = inline is WmlContentControlBoundary
+            ? leftControls.contains(inline.control)
+            : inline is WmlBookmarkBoundary &&
+                  !inline.isStart &&
+                  !emptyBookmarks.contains(WordBookmarks.canonicalId(inline.id))
+            ? position <= at
+            : position < at;
+        (onLeft ? head : tail).add(_inline(inline));
+      }
+    }
+    return (head: head, tail: tail);
+  }
+
+  static Set<String> _emptyBookmarks(WmlParagraph source) {
+    final starts = <String, int>{};
+    final empty = <String>{};
+    var offset = 0;
+    for (final inline in source.inlines) {
+      if (inline is WmlRun) offset += inline.text.length;
+      if (inline is WmlBookmarkBoundary) {
+        final id = WordBookmarks.canonicalId(inline.id);
+        if (inline.isStart) {
+          starts[id] = offset;
+        } else if (starts[id] == offset) {
+          empty.add(id);
+        }
+      }
+    }
+    return empty;
   }
 }

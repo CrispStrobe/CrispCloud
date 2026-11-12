@@ -11,7 +11,13 @@ abstract final class WordTree {
   /// Tables and frames remain layout objects; their children have their own
   /// layout context. Transparent content-control containers are unwrapped.
   static Iterable<WmlBlock> visibleBlocks(Iterable<WmlBlock> blocks) sync* {
-    yield* blocks;
+    for (final block in blocks) {
+      if (block is WmlContentControlBlock) {
+        yield* visibleBlocks(block.blocks);
+      } else {
+        yield block;
+      }
+    }
   }
 
   /// Every block in document order, including containers themselves.
@@ -26,7 +32,9 @@ abstract final class WordTree {
 
   /// Actual mutable block lists owned by a container.
   static Iterable<List<WmlBlock>> childLists(WmlBlock block) sync* {
-    if (block is WmlFrame) {
+    if (block is WmlContentControlBlock) {
+      yield block.blocks;
+    } else if (block is WmlFrame) {
       yield block.blocks;
     } else if (block is WmlTable) {
       for (final row in block.rows) {
@@ -95,6 +103,11 @@ abstract final class WordTree {
   ) {
     for (var index = 0; index < blocks.length; index++) {
       final block = blocks[index];
+      if (block is WmlContentControlBlock) {
+        final found = flowHostIn(block.blocks, paragraph);
+        if (found != null) return found;
+        continue;
+      }
       if (identical(block, paragraph) ||
           paragraphs(<WmlBlock>[block]).any((p) => identical(p, paragraph))) {
         return (parent: blocks, index: index);

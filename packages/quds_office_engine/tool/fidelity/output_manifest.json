@@ -1,9 +1,18 @@
 {
   "version": 1,
   "package": "quds_office_engine",
-  "expected_file_count": 167,
+  "expected_file_count": 196,
   "description": "Authored from the scenarios and regression tests. These paths are an inventory, not a golden generated from current output. SHA receipts identify each run; the semantic and renderer oracles decide correctness.",
   "series": [
+    {"pattern": "fidelity-content-controls/direct-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_content_control_fidelity_test.dart"},
+    {"pattern": "fidelity-content-controls/isolate-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_content_control_fidelity_test.dart"},
+    {"pattern": "fidelity-bookmarks/imported-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_bookmark_fidelity_test.dart"},
+    {"pattern": "fidelity-bookmarks/cloned-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_bookmark_fidelity_test.dart"},
+    {"pattern": "fidelity-bookmarks/edited-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_bookmark_fidelity_test.dart"},
+    {"pattern": "fidelity-bookmarks/frame-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_bookmark_fidelity_test.dart"},
+    {"pattern": "fidelity-frame-wrap/none-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_frame_wrap_test.dart"},
+    {"pattern": "fidelity-frame-wrap/square-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_frame_wrap_test.dart"},
+    {"pattern": "fidelity-frame-wrap/topBottom-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_frame_wrap_test.dart"},
     {"pattern": "fidelity-note-markers/imported-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/note_marker_fidelity_test.dart"},
     {"pattern": "fidelity-note-markers/cloned-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/note_marker_fidelity_test.dart"},
     {"pattern": "fidelity-note-markers/edited-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/note_marker_fidelity_test.dart"},
@@ -58,6 +67,8 @@
     {"pattern": "fidelity-structure/remove/roundtrip-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_structure_steps_test.dart"}
   ],
   "standalone": [
+    {"path": "fidelity-bookmarks/source.docx", "producer": "test/word_bookmark_fidelity_test.dart"},
+    {"path": "fidelity-bookmarks/frame-source.docx", "producer": "test/word_bookmark_fidelity_test.dart"},
     {"path": "fidelity-note-markers/source.docx", "producer": "test/note_marker_fidelity_test.dart"},
     {"path": "fidelity-structure/source.docx", "producer": "test/word_structure_steps_test.dart"},
     {"path": "fidelity-structure/create/edited.docx", "producer": "test/word_structure_steps_test.dart"},

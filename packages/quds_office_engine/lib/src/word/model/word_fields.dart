@@ -1,5 +1,6 @@
 import 'wml_document.dart';
 import 'wml_run_edit.dart';
+import 'word_bookmarks.dart';
 import 'word_link.dart';
 import 'word_mail_merge.dart';
 
@@ -222,15 +223,7 @@ abstract final class WordFields {
     if (bookmark.isEmpty) {
       return '';
     }
-    final int? index = WordLink.paragraphIndexForAnchor(document, bookmark);
-    if (index == null || index < 0) {
-      return bookmark;
-    }
-    final List<WmlParagraph> paras = document.paragraphs.toList();
-    if (index >= paras.length) {
-      return bookmark;
-    }
-    return paras[index].text.trim();
+    return WordBookmarks.textByName(document, bookmark) ?? bookmark;
   }
 
   /// Marks [paragraph] as a live field and writes the current result.
@@ -241,6 +234,18 @@ abstract final class WordFields {
     String? result,
     String? instruction,
   }) {
+    if (paragraph.inlines.any(
+      (inline) => inline is WmlContentControlBoundary,
+    )) {
+      throw ArgumentError(
+        'A paragraph field cannot replace an inline content control.',
+      );
+    }
+    if (paragraph.inlines.any((inline) => inline is WmlBookmarkBoundary)) {
+      throw ArgumentError(
+        'A paragraph field cannot replace native bookmark endpoints.',
+      );
+    }
     final String instr = instruction ?? instructionOf(kind, argument: argument);
     paragraph.properties
       ..fieldInstruction = instr
@@ -317,7 +322,14 @@ abstract final class WordFields {
             seqIndex: seqIndex,
           );
         }
-        if (!updateParagraphFields) continue;
+        if (!updateParagraphFields ||
+            paragraph.inlines.any(
+              (inline) =>
+                  inline is WmlContentControlBoundary ||
+                  inline is WmlBookmarkBoundary,
+            )) {
+          continue;
+        }
         final WmlFieldKind kind = kindOf(paragraph.properties.fieldInstruction);
         if (kind == WmlFieldKind.unknown &&
             !paragraph.properties.pageNumberField) {
