@@ -1,5 +1,28 @@
 # Ebook platform and reader parity expansion — 12 November 2026
 
+## Resumed from the interrupted session
+
+The next recovery started from remote checkpoint
+`67ee2afbe06ab857e6ea654ab8aa2b5c9f1fc2d0`, after the pasted conversation's
+last visible `7a0f3a0` checkpoint. The shared reader, library and reading-data
+integration therefore did not need reconstruction. The existing feature
+branch was at `1d081588f4d2a86c7422c967e3d4b6134ffbf0c9`.
+
+The main ebook workflow at `1d08158` completed all five jobs successfully.
+The later Linux diagnostic run `43227210073` still failed the enhanced host:
+WebKit's D-Bus proxy could not launch, and the independent Bubblewrap check
+reported that the runner denied network-namespace loopback setup. Portable
+compilation and launch passed. A successful dynamic-library lookup is not a
+successful browser startup.
+
+Continuation work isolates the browser readiness check in a bounded child
+process so a failed runtime prerequisite cannot terminate the main app,
+retains the required real rendering/input gate, reviews the shared workflows,
+and reconciles the feature branch with current `main`. No browser sandbox or
+runner security policy is relaxed. Every coherent increment is committed and
+pushed to `feature/ebook-reader-editor`; final qualification is recorded below
+only after its checks complete.
+
 ## Goal and starting point
 
 Continue from `88936891af019001bc8da1c3ed3273749ad7238b` on
