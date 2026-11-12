@@ -51,9 +51,14 @@ while the expected selection event never reached the reader bridge. The
 compatibility increment therefore observes existing selections from the trusted
 reader page and routes bare Linux left/right keys through the existing
 authenticated navigation queue. Publication scripts remain disabled and the
-vendored engine is unchanged. This increment needs its real native/browser
-acceptance run; other WebKit paths that depend on child-frame listeners, such
-as publication-link interception, still need explicit qualification.
+vendored engine is unchanged. The complete fix is saved at `c1df5e8`. Its
+focused local regressions pass, but both the initial hosted acceptance runs
+and a targeted retry were canceled; the retried browser and Linux jobs never
+started. Full native interaction and actual-browser acceptance therefore
+remain unverified for this fix. Other WebKit paths that depend on child-frame
+listeners, such as publication-link interception, also need explicit
+qualification. The recovery record preserves the exact executed and canceled
+runs separately.
 
 ## What “the same experience” requires
 
@@ -132,8 +137,11 @@ file browser and reader. Removing an entry removes catalog metadata only.
 
 Reopening resolves the original storage account and root, then checks the
 stored object identity when one was recorded; otherwise it uses the saved path.
-It does not search for moved files. Changed book bytes create a separate revision
-and annotation binding. A matching provider name is insufficient. A
+It does not search for moved files. Reopening a persistent source with changed
+book bytes updates its existing catalog entry and creates a new annotation
+binding. Favorites, shelves and tags remain attached to the source;
+incompatible progress is reset. The library does not retain a browsable history
+of earlier book revisions. A matching provider name is insufficient. A
 disconnected account produces a reconnect/locate message. Attachment and
 ephemeral inputs have metadata-only entries and require the user to locate the
 file again; the catalog does not manufacture a file-access grant.
@@ -180,6 +188,15 @@ the exact same book and compatible renderer. A portable-reader sidecar cannot
 be applied as Foliate CFIs, and edited book bytes deliberately need a new
 annotation binding. A future migration/re-anchoring tool must preview ambiguous
 matches instead of guessing.
+
+### Format and conversion differences that remain
+
+The enhanced reader can create normalized editable EPUB copies from supported
+unencrypted books. Browser builds can also rewrite existing Kindle metadata
+locally with the bundled WebAssembly worker. Generating AZW3 or legacy MOBI
+files and replacing Kindle covers require an available native converter. KFX
+is unsupported. Shared reading support does not establish equal conversion
+capabilities or native rendering qualification on every platform.
 
 ## FBReader comparison: choose the correct baseline
 

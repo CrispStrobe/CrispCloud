@@ -518,3 +518,89 @@ analysis passed. The source review now binds 296 paths and 20 feature records,
 adding only the parent selection helper; its existing source check and the
 owned-file whitespace check passed. The new actual Chromium assertions and
 full Linux interaction result remain the next acceptance evidence.
+
+## Final implementation checkpoint and validation blocker
+
+The complete reviewed runtime change is saved at
+[`c1df5e855d54f83a75a013f480ae9d6be9161d06`](https://github.com/CrispStrobe/CrispCloud/commit/c1df5e855d54f83a75a013f480ae9d6be9161d06)
+on `feature/ebook-parity-canary-20261112`, in stacked draft
+[PR #84](https://github.com/CrispStrobe/CrispCloud/pull/84). The independent
+diagnostic remains at `7e20b40` on `checkpoint/ebook-native-input-20261112`.
+The original feature branch and its parallel continuation were not overwritten.
+
+### Exact verification status
+
+| Revision / evidence | Result |
+| --- | --- |
+| `c1df5e8`, local shared parser suites | Passed in normal mode and forced grouping/raw-inflate compatibility mode, including all five Kindle fixtures and selection lifecycle, bounds, multi-range and key-direction regressions. |
+| `c1df5e8`, focused real Dart-host widget regression | Passed immediate pointer-focus routing, Ctrl/arrow modifier transitions, subsequent Shift+Arrow and exactly one held-key release before blur. The native platform channel is mocked in this test; it is not a WebKit integration result. |
+| `c1df5e8`, focused analysis and source binding | Passed. The inventory binds 296 unique paths and 20 feature records; runtime authors and an independent reviewer cleared the final changes. |
+| `7e20b40`, real Ubuntu 22.04 diagnostic | Passed isolated startup paint, coexistence with a live Dart child, actual book pixels, Flutter framebuffer/overlay composition, native focus and noncollapsed selection. Failed the unchanged selection-CFI assertion before the parent-observer fix. |
+| `7e20b40`, Ubuntu 24.04 recovery and portable jobs | Passed both targets, including nine package tests, 600 sizing combinations, 16 supervisor subprocess cases, installation/runtime-removal checks and process cleanup. |
+| `1d08158`, earlier main workflow | All five jobs passed: actual Chromium, application/web, EPUBCheck, macOS conversion and Windows conversion. These remain evidence for that earlier revision. |
+| `e20e2cc`, integrated main workflow | Windows conversion passed. Four other jobs were canceled before execution. |
+
+The main run
+[43251009351](https://github.com/CrispStrobe/CrispCloud/actions/runs/43251009351)
+and native run
+[43251009802](https://github.com/CrispStrobe/CrispCloud/actions/runs/43251009802)
+were canceled on the unchanged `c1df5e8` head. The main macOS and Windows logs
+end with an operation-canceled error and contain no preceding test assertion
+failure. All native jobs were still queued.
+
+One targeted retry was requested for actual Ubuntu Chromium and enhanced
+Ubuntu 22.04 only. Both were canceled again before starting:
+
+| Retry | Job | Observed cancellation, UTC |
+| --- | --- | --- |
+| Main attempt 2 | `131305384527` | 12 November 2026, 16:01:00 |
+| Native attempt 2 | `131305378025` | 12 November 2026, 16:01:03 |
+
+The retried jobs have no executed steps or job logs. There was no superseding
+feature head. The API does not identify a cancellation actor or reason, and
+the two workflows have distinct concurrency groups. No further retry loop or
+acceptance weakening was performed. A separate request to retry app/web was
+rejected because the main workflow was already running; it did not launch a
+test.
+
+**The current fix has not passed actual Chromium, app/web integration or the
+complete Linux interaction gate.** In particular, CFI notification, clipboard,
+drag selection, page turns, two-reader focus and modal isolation still require
+the unchanged real native acceptance run against the fix. A canceled job is
+neither a pass nor an implementation failure. Keep the PR in draft until the
+required acceptance completes and the normal review gates are satisfied.
+
+### Final product-claim review
+
+The platform comparison now explicitly states that reopening changed bytes
+updates the persistent source's existing catalog row while creating a new
+annotation binding. Favorites/shelves/tags remain attached to the source;
+incompatible progress is reset. The catalog does not retain a browsable book
+revision history.
+
+It also distinguishes enhanced reading/normalized EPUB copies and browser
+Kindle metadata rewriting from native-only AZW3/MOBI generation and Kindle
+cover replacement. KFX remains unsupported. The trusted selection observer is
+shared across hosts; the native arrow adapter added here is specific to Linux
+and does not establish Apple-native keyboard behavior.
+
+This final documentation checkpoint changes only this recovery record and
+`docs/ebook-feature-parity.md`. All runtime, dependency, workflow, test and
+source-binding bytes remain identical to `c1df5e8`. Any automatic workflow
+created by the documentation push must be assessed separately; it is not a
+completed result in this record.
+
+### Remaining qualification and product work
+
+After unblocking the exact native/browser acceptance, qualify the shared book
+corpus and interaction contract on shipping hosts, including WebKit child-frame
+link/annotation paths, Linux text accessibility and in-book Tab traversal,
+Wayland, touch, graphics drivers and device performance. A Flutter texture
+does not automatically expose publication semantics to assistive technology.
+
+The largest subsequent product increments are automatic versioned reading-data
+sync with offline/conflict handling; OPDS and managed library downloads;
+speech with text-to-location mapping; dictionary/optional translation;
+typography and annotation depth; and licensed LCP/media support. None is
+implied by local JSON transfer or shared rendering. The full comparison and
+acceptance criteria are in [ebook-feature-parity.md](../ebook-feature-parity.md).
