@@ -1,7 +1,7 @@
 import 'dart:ui' show Locale;
 
 import 'package:crisp_cloud/l10n/legacy_word_conversion_strings.dart';
-import 'package:quds_office_engine/quds_office_engine.dart';
+import 'package:legacy_doc_parser/legacy_doc_parser.dart';
 import 'package:crisp_cloud/services/locale_preference.dart';
 import 'package:flutter_test/flutter_test.dart';
 

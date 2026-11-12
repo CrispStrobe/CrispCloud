@@ -1,19 +1,24 @@
-import 'package:quds_office_engine/quds_office_engine.dart';
+import 'dart:typed_data';
+
+import 'package:legacy_doc_parser/legacy_doc_parser.dart'
+    show LegacyWordConversionException, LegacyWordConversionIssue;
 
 import 'word_conversion_inspection.dart';
 
 /// A new Word package prepared from a legacy DOC/DOT.
 /// It has no association with a writable destination; the caller must create
 /// a separate file using its captured storage source.
-class LegacyWordCopy extends LegacyWordDocxCopy {
+class LegacyWordCopy {
   const LegacyWordCopy({
-    required super.fileName,
-    required super.bytes,
+    required this.fileName,
+    required this.bytes,
     this.extension = 'docx',
     this.converterName,
     this.inspection,
   });
 
+  final String fileName;
+  final Uint8List bytes;
   final String extension;
   final String? converterName;
   final WordConversionInspection? inspection;

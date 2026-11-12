@@ -4,10 +4,12 @@ import 'dart:typed_data';
 import 'package:crisp_cloud/services/office_document_service.dart';
 import 'package:crisp_cloud/widgets/preview_media.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:quds_office_engine/quds_office_engine.dart';
+import 'package:quds_office_engine/quds_office_engine.dart' show CfbfWriter;
+
+import 'support/structured_word_fixture.dart';
 
 // One authored binary Word body for host routing. Detailed piece-table,
-// encryption, ordering and resource controls live in quds_office_engine tests.
+// encryption, ordering and resource controls live in legacy_doc_parser tests.
 Uint8List _document() {
   const text = 'Hello\rWorld\r';
   final word = Uint8List(4096);
@@ -38,6 +40,26 @@ Uint8List _document() {
 }
 
 void main() {
+  test('DOC and DOT previews use external parser underline variants', () async {
+    final source = StructuredWordFixture(
+      pieces: const [WordFixturePiece('Text\r')],
+      characterRuns: [
+        WordFixtureFkpRun(8192, 8197, properties: wordSprm(0x2a3e, [0x14])),
+      ],
+    ).build();
+    for (final name in ['report.doc', 'template.DOT']) {
+      final preview = await parseOfficeDocument(source, name);
+      expect(preview.fallback, isNull);
+      expect(preview.plainText, 'Text');
+      expect(
+        preview.safeHtml,
+        contains('text-decoration:underline;text-decoration-style:dotted'),
+      );
+      expect(preview.safeHtml, contains('text-decoration-thickness:0.12em'));
+      expect(preview.notice, OfficePreviewNotice.legacyWordPartial);
+    }
+  });
+
   test(
     'DOC and DOT previews retain main-story text and disclose partial fidelity',
     () async {

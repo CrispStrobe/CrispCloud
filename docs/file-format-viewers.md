@@ -256,7 +256,7 @@ control coverage. Focused overlapping runs and actual LibreOffice/JavaScript
 acceptance results are recorded in the
 [structured conversion verification](legacy-word-conversion.md#structured-doc-parser-and-docx-follow-up).
 
-The subsequent standalone-package integration passed **54 app tests**, both
+The subsequent standalone-package integration passed **100 app tests**, both
 portable JavaScript acceptance checks, and **13 installed-LibreOffice checks**
 on the built-in converter's output. The real DOC now retains an image,
 header/footer parts and a footnote in addition to formatting and table cells;

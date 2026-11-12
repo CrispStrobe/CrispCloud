@@ -9,8 +9,10 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show FontLoader;
+import 'package:legacy_doc_parser/legacy_doc_parser.dart'
+    show extractLegacyWordText;
 import 'package:quds_office_engine/quds_office_engine.dart'
-    show OfficePackageParts, extractLegacyWordText;
+    show OfficePackageParts;
 import 'package:universal_html/html.dart' as html;
 import 'package:video_player/video_player.dart';
 

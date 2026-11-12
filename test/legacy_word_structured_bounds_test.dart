@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:quds_office_engine/quds_office_engine.dart';
+import 'package:legacy_doc_parser/legacy_doc_parser.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quds_office_engine/quds_office_engine.dart' show CfbfWriter;
 

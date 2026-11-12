@@ -1,5 +1,3 @@
-import 'package:quds_office_engine/quds_office_engine.dart';
-
 import '../models/file_item.dart';
 import 'file_integrity_service.dart';
 import 'legacy_word_copy.dart';
@@ -13,14 +11,14 @@ class LegacyWordCopyTarget {
   final FileOperationBackend backend;
   final String sourcePath;
 
-  Future<FileItem> create(LegacyWordDocxCopy copy) async {
+  Future<FileItem> create(LegacyWordCopy copy) async {
     checkIntegrityCurrent(backend, null);
     if (!backend.paths.isAbsolute(sourcePath)) {
       throw StateError('The original file path could not be verified.');
     }
     final name = validateLegacyWordCopyName(
       copy.fileName,
-      extension: copy is LegacyWordCopy ? copy.extension : 'docx',
+      extension: copy.extension,
     );
     final directory = backend.paths.dirname(sourcePath);
     final output = backend.paths.join(directory, name);

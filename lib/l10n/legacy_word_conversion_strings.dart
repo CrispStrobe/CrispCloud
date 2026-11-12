@@ -1,6 +1,7 @@
 import 'dart:ui' show Locale;
 
-import 'package:quds_office_engine/quds_office_engine.dart';
+import 'package:legacy_doc_parser/legacy_doc_parser.dart'
+    show LegacyWordConversionException, LegacyWordConversionLimitation;
 
 import 'word_format_strings.dart';
 

@@ -872,20 +872,9 @@ This is diagnostic evidence preparation, not a resolved WebKit startup failure.
 
 ## Standalone Word package extraction
 
-The app now depends on the standalone MPL-2.0 `legacy_doc_parser` package at
-Git revision `72da6223832c3cbc41929064c8f160cec10016f7`. Its only runtime
-dependency is the already-resolved `archive` package. The root lockfile adds
-only the parser's pinned Git record; existing cryptographic package versions
-and native provider inventories are unchanged. The extracted code parses
-unenciphered Word structures, writes ZIP/XML packages and preserves original
-opaque objects/VBA/signature bytes. It adds no encryption, signature validation,
-KDF, cipher or cryptographic provider.
 
-The only changed file in the existing **207-file** source binding is
-`pubspec.yaml`. The manifest was reviewed for this exact dependency addition;
-no override or alternate crypto implementation was introduced. The temporary
-in-app parser copy was removed after the standalone remote checkpoint and Git
-dependency resolution succeeded.
+
+## Standalone Word package after integration
 
 The refreshed source fingerprint is `ecd507bf7e68c1e08b67d96e752b09e26601cda58a5cf3e16862c32b284079dd`. The root lockfile fingerprint
 is `51287d8e323b58ad8cc86b300540e0c5c5700a6cc9135925126a4d69c3b06dbe`. This binds the reviewed parser dependency without changing the
@@ -961,3 +950,32 @@ The merged source now requires its own application/build verification. Historica
   "reviewed_source_sha256": "c1077a5e50563e81a56c326e1100595d10e943d16268ab52350b4a3af99426f8"
 }
 ```
+
+This continuation uses merged main `02be67fecad5be2a040e6dcd1579a2a54fa51933`
+as its source baseline and preserves its **288-file** inventory and every
+non-digest policy field. The earlier 207-file and pending-questionnaire
+paragraphs record historical checkpoints; they do not replace the current
+main policy's stored decisions or evidence references. This update makes no
+release, live-store, classification or distribution decision.
+
+CrispCloud's DOC/DOT preview and conversion routes now call the standalone
+MPL-2.0 `legacy_doc_parser` package at Git commit `80e9683c0d60553f7198ca89a64aa927d619c684`. The shared Quds
+engine keeps its existing legacy APIs for other consumers; the temporary
+`packages/legacy_doc_parser` extraction mirror is removed. The app's copy
+model and create-only captured storage target remain app-owned.
+
+Compared with this merged-main baseline, the only changed source in the
+288-file binding is `pubspec.yaml`. The resolved lock adds only the new
+parser Git dependency. Its only runtime dependency is the already-resolved
+`archive` package. It rejects encrypted/obfuscated DOC input before parsing
+and writes unencrypted Word ZIP/XML output. Keeping opaque objects, VBA or
+signature bytes adds no encryption, signature validation, cipher, KDF or
+cryptographic provider. Other resolved package versions and the native
+provider inventory remain unchanged.
+
+The refreshed reviewed-source fingerprint is `31729566c3e14851b493270ae3efb96fa3dde66a88a0935423f197016dbf19fa`; the root lockfile
+fingerprint is `30d89e6ff313698a76f2ffa25ac4fbd3eeb5f91fb88b4e4cbfcdf9091a6eb19b`. The inventory fingerprint remains
+`508a2646b34d1db60933c7723abf9a4db3655c4e1875a3859dcc57f52581b4c2`. The source evidence check and source plist consistency checks
+passed. These bind this dependency update while retaining the current
+policy's documentation status, declaration, France/TestFlight decisions
+and artifact/live evidence controls. No Apple API call or filing was made.

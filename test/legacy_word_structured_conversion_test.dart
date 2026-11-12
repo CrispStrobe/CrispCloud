@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:quds_office_engine/quds_office_engine.dart' hide XmlDocument, XmlElement, XmlNode, XmlText, XmlAttribute;
+import 'package:legacy_doc_parser/legacy_doc_parser.dart';
 import 'package:crisp_cloud/services/word_conversion_inspection.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quds_office_engine/quds_office_engine.dart' show OpcPackage;

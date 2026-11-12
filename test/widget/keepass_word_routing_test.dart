@@ -7,7 +7,7 @@ import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/providers/office_conversion_provider.dart';
 import 'package:crisp_cloud/services/installed_office_converter.dart';
-import 'package:quds_office_engine/quds_office_engine.dart';
+import 'package:legacy_doc_parser/legacy_doc_parser.dart';
 import 'package:crisp_cloud/widgets/file_editor_dialog.dart';
 import 'package:crisp_cloud/widgets/internal_viewer_dialog.dart';
 import 'package:crisp_cloud/widgets/keepass_editor_dialog.dart';
@@ -17,7 +17,7 @@ import 'package:crisp_cloud/widgets/preview_pane.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:quds_office_editor/quds_office_editor.dart';
+import 'package:quds_office_editor/quds_office_editor.dart' show QudsWordEditor;
 
 import '../../packages/quds_office_engine/test/support/legacy_word_fixture.dart';
 import '../support/workspace_fixture.dart';
