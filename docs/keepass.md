@@ -153,7 +153,10 @@ round trips for group/subtree moves, recycling/permanent deletion, custom-field
 renaming/protection and full history restoration. The widget scenarios cover
 the actual group controls, protected custom drafts retained after lock
 validation fails, explicit history restoration, and history dialogs closing on
-background lock. They use the same unchanged upstream KDBX fixtures; no new
+background lock. A route-local privacy shield also blanks revealed history
+while its dialog is already closing, before its reverse animation completes.
+The regression checks the first frame after an inactive lifecycle event.
+These suites use the same unchanged upstream KDBX fixtures; no new
 cryptographic algorithm or database-format conversion is introduced.
 
 `tool/verify_keepass_crypto.dart` checks a known Argon2 answer on VM/JavaScript.

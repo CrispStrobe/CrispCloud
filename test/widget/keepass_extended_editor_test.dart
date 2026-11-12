@@ -337,6 +337,36 @@ void main() {
   );
 
   testWidgets(
+    'background lock hides revealed history while its dialog is closing',
+    (tester) async {
+      final (bytes, id) = await historyFixture(tester);
+      await _open(tester, bytes: bytes, readOnly: true);
+      await _tap(tester, _key('entry-$id'));
+      await _tap(tester, _key('history'));
+      await _tap(tester, _key('history-0'));
+      await _tap(tester, _key('history-reveal'));
+      await _tap(tester, _key('reveal-field-Past field'));
+      expect(find.text('historical password'), findsOneWidget);
+      expect(find.text('historical custom'), findsOneWidget);
+
+      // Start the pop without settling its reverse animation. The route is
+      // already inactive when the lock arrives, but its content still paints.
+      await tester.tap(find.widgetWithText(TextButton, 'Close'));
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      await tester.pump();
+      expect(find.text('historical password'), findsNothing);
+      expect(find.text('historical custom'), findsNothing);
+      expect(_key('dialog-shield'), findsOneWidget);
+
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pumpAndSettle();
+      expect(find.text('historical password'), findsNothing);
+      expect(find.text('historical custom'), findsNothing);
+      expect(find.text('KeePass database locked'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
     'read-only history has no restore or group mutation and closes on background lock',
     (tester) async {
       final (bytes, id) = await historyFixture(tester);

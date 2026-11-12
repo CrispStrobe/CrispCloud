@@ -164,6 +164,7 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
   Future<void>? _activeLock;
   Route<dynamic>? _prompt;
   NavigatorState? _promptNavigator;
+  ValueNotifier<bool>? _promptShield;
   int _generation = 0;
   int _documentEpoch = 0;
   int _clipboardGeneration = 0;
@@ -1209,22 +1210,30 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
   Future<T?> _ask<T>(Widget dialog) async {
     if (_prompt != null) return null;
     final navigator = Navigator.of(context);
+    final shield = ValueNotifier<bool>(false);
     final route = DialogRoute<T>(
       context: context,
-      builder: (_) => Listener(
-        onPointerDown: (_) => _touch(),
-        onPointerSignal: (_) => _touch(),
-        child: Focus(
-          onKeyEvent: (_, _) {
-            _touch();
-            return KeyEventResult.ignored;
-          },
-          child: dialog,
+      builder: (_) => ValueListenableBuilder<bool>(
+        valueListenable: shield,
+        builder: (_, hidden, child) => hidden
+            ? const SizedBox.shrink(key: ValueKey('keepass-dialog-shield'))
+            : child!,
+        child: Listener(
+          onPointerDown: (_) => _touch(),
+          onPointerSignal: (_) => _touch(),
+          child: Focus(
+            onKeyEvent: (_, _) {
+              _touch();
+              return KeyEventResult.ignored;
+            },
+            child: dialog,
+          ),
         ),
       ),
     );
     _prompt = route;
     _promptNavigator = navigator;
+    _promptShield = shield;
     try {
       final result = await navigator.push(route);
       // The pop result precedes the reverse animation. Callers may own secret
@@ -1235,13 +1244,19 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
       if (identical(route, _prompt)) {
         _prompt = null;
         _promptNavigator = null;
+        _promptShield = null;
       }
+      shield.dispose();
     }
   }
 
   void _removePrompt() {
     final route = _prompt;
     final navigator = _promptNavigator;
+    // Popping routes are no longer active but can still paint during their
+    // reverse animation. Blank their content before dropping our reference.
+    _promptShield?.value = true;
+    _promptShield = null;
     _prompt = null;
     _promptNavigator = null;
     if (route != null && navigator != null && route.isActive) {
@@ -1349,6 +1364,8 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
     _idleTimer?.cancel();
     if (disposing) {
       // The Navigator removes its routes while the widget tree is disposed.
+      _promptShield?.value = true;
+      _promptShield = null;
       _prompt = null;
       _promptNavigator = null;
     } else {

@@ -177,7 +177,7 @@ source-consistency check is relaxed.
 | Merged `docs/crypto-inventory.json` | `87daa40bfe8f76ab097c19896902f6189a597c91d65bce505ad132024a593013` |
 | Merged 207-file source fingerprint | `0fc9c45bca156ff7924ceceb333a004111dde6efa4a61b25fa95069ae74fcf9c` |
 | Extended editing/viewer inventory | `4d8ef6d4c9a55f9cb5a1cbfabb317c7cb6f34e70d8604c863c8d92e81f92e810` |
-| Extended editing/viewer 207-file source fingerprint | `60c243958aa142a8e86e27afcc4fd7d64389d9fd889fc7bca462a505feb2282d` |
+| Extended editing/viewer 207-file source fingerprint | `80ad902d45a2de4458d10d412b43684e6ac082122876d7ffa40c79b216e32857` |
 
 These identify source facts. They do not renew external approvals or establish
 correspondence with a signed or uploaded binary.
@@ -214,8 +214,8 @@ again rejected the missing questionnaire result. No live Apple API was called.
 
 ## Validation of the further extensions
 
-The group, protected custom-field and history UI is covered by **45 unique
-KeePass checks** across focused runs: 26 backend/crypto, 18 widget and one
+The group, protected custom-field and history UI is covered by **46 unique
+KeePass checks** across focused runs: 26 backend/crypto, 19 widget and one
 localization test. The new backend suite is also included in the desktop, iOS,
 macOS and Play crypto gates. No dependency, vendor crypto implementation,
 accepted cipher/KDF or retained vault parameter changed in this increment.
@@ -236,3 +236,11 @@ provenance file. It changes no algorithms or copyright/license notices. All
 141 PR Dart files then passed the formatter without changes, and all 26
 KeePass backend/crypto tests passed again. The current source fingerprint
 includes those exact formatted bytes and the updated provenance record.
+
+A final dialog-lifecycle review found that Flutter can continue painting a
+popped history dialog during its reverse animation. A route-local notifier
+now removes its sensitive content on lock even when the route is no longer
+active. Both KeePass widget suites passed **19 tests**, including explicit
+password/custom-field reveal, Close without settling, an inactive event, and
+the first rendered frame. The source fingerprint below the historical entries
+includes this correction; no crypto algorithm or release declaration changed.
