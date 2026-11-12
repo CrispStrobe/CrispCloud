@@ -80,6 +80,10 @@ L’enregistrement d’un caractère que l’encodage ancien sélectionné ne pe
 
 Le lancement d’un éditeur externe est limité aux fichiers locaux vérifiés sur les plateformes natives. Une application externe ne renvoie pas automatiquement ses modifications vers un compte distant. Utilisez l’éditeur distant intégré pour bénéficier des vérifications lors des enregistrements à distance.
 
+Sur un ordinateur avec l’application native, sélectionnez deux fichiers dans un volet ou un fichier dans chaque volet, puis choisissez **Comparer avec un outil externe**. Le menu contextuel d’un fichier propose aussi cette action lorsqu’exactement un fichier du même nom existe dans l’autre volet. **Outils de comparaison externes** conserve des réglages distincts pour les outils de comparaison de textes et d’images. Indiquez le chemin absolu d’un exécutable installé et utilisez `{left}` et `{right}` une seule fois chacun comme arguments entiers ; aucune expansion shell n’est effectuée. Vérifiez les sources capturées et les arguments réels avant le lancement.
+
+Les deux entrées de comparaison sont des copies privées, même pour les fichiers locaux. Chaque entrée est limitée à 256 Mio, la préparation et la validation finale disposent chacune de 15 minutes, et huit comparaisons au maximum sont conservées. Les modifications de l’outil externe ne mettent jamais à jour les originaux. Fermez toutes les fenêtres externes qui utilisent les copies, puis libérez explicitement cette session dans **Outils de comparaison externes**. La fermeture d’un dialogue ou le redémarrage de l’application conserve les copies ; la récupération les présente pour nettoyage sans relancer l’outil. Une source modifiée ou déconnectée nécessite une nouvelle sélection et une nouvelle vérification.
+
 <a id="search-and-filters"></a>
 ## Recherche, filtres et doublons
 

@@ -30,11 +30,11 @@ preserve earlier feature branches and do not rewrite or merge the main branch.
 
 ## Current progress
 
-Twelve implementation increments are preserved on remote feature branches:
-**seven closed scopes** (G02, G03, G05, G13, G27, G37, G49) and **five implemented features
-with target-runtime/live-server acceptance pending** (G01, G04, G09, G12, G25).
-The remaining 39 items
-comprise **27 implementation gaps, 10 research prerequisites and two
+Thirteen implementation increments are preserved on remote feature branches:
+**seven closed scopes** (G02, G03, G05, G13, G27, G37, G49) and **six implemented features
+with target-runtime/live-server acceptance pending** (G01, G04, G09, G11, G12, G25).
+The remaining 38 items
+comprise **26 implementation gaps, 10 research prerequisites and two
 cross-cutting acceptance items**. The acceptance work also applies to delivered
 features where their specific boundary names a target-runtime check.
 
@@ -50,8 +50,9 @@ G05's reviewed reference workflow and G49's maintained three-language offline
 help are closed with their separate regression evidence and remote checkpoints.
 
 The [external tools and archive continuation](continuation-tools-archives-20261112.md)
-starts from `d76fe9b`. G10, G11 and G18 are implementing; their implementation
-and acceptance status will change only after verified remote checkpoints.
+starts from `d76fe9b`. G11's reviewed external comparison workflow is implemented
+with native acceptance pending. G10 and G18 remain implementing; shared retained
+staging and conditional publication have separate verified foundation checkpoints.
 
 ## Lane index
 
@@ -78,7 +79,7 @@ and acceptance status will change only after verified remote checkpoints.
 | [G08](01-workspace-and-interaction.md#g08) | Favorite synchronization | Scoped | Versioned favorites; selected sync backend |
 | [G09](01-workspace-and-interaction.md#g09) | Command entry and keyboard conventions | Implemented / native acceptance pending | Captured local commands and scoped insertion verified; actual OS behavior under G50 |
 | [G10](02-viewing-search-and-tools.md#g10) | External remote editing | Implementing | Captured editor session; conflict review |
-| [G11](02-viewing-search-and-tools.md#g11) | External comparison tools | Implementing | G10 staging lifetime |
+| [G11](02-viewing-search-and-tools.md#g11) | External comparison tools | Implemented / native acceptance pending | Private-copy workflow verified; installed GUI tools under G50 |
 | [G12](02-viewing-search-and-tools.md#g12) | Preferred external terminal | Implemented / native acceptance pending | Verify installed terminals on each claimed desktop OS |
 | [G13](02-viewing-search-and-tools.md#g13) | UUE, XXE and MIME conversion | Closed: documented streaming formats | Single-part Base64 MIME; verified exclusive-output backends only |
 | [G14](02-viewing-search-and-tools.md#g14) | Large-file viewer and comparison limits | Scoped | Provider range capabilities |

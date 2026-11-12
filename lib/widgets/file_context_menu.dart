@@ -65,6 +65,7 @@ import 'integrity_dialogs.dart';
 import 'integrity_recovery_dialog.dart';
 import '../services/file_operation_service.dart';
 import 'diff_viewer_dialog.dart' show showDiffViewerDialog;
+import 'external_comparison_menu_action.dart';
 import 'hex_editor_dialog.dart' show showHexEditorDialog;
 import 'editor_chooser_dialog.dart' show showEditorChooser;
 import 'file_editor_dialog.dart' show showFileEditorDialog;
@@ -148,6 +149,12 @@ void _showResultListContextMenu(
     verified = false;
   }
   if (panel.isPagedCollection && !panel.collectionBusy) verified = true;
+  final externalComparison = ExternalComparisonMenuAction.capture(
+    context,
+    ref,
+    side,
+    files,
+  );
   final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
   PopupMenuItem<void> command(
     String label,
@@ -186,6 +193,7 @@ void _showResultListContextMenu(
       Offset.zero & overlay.size,
     ),
     items: [
+      if (externalComparison != null) externalComparison.buildItem(),
       if (folder != null && panel.folderSizeFor(folder)?.isActive == true)
         command(
           StorageAnalyzerStrings(context).text('cancel'),
@@ -323,7 +331,7 @@ void _showResultListContextMenu(
         () => confirmDelete(context, ref, side, files),
       ),
     ],
-  );
+  ).whenComplete(() => externalComparison?.menuClosed());
 }
 
 void showFileContextMenu(
@@ -430,9 +438,16 @@ void showFileContextMenu(
 
   final isMultiSelect = files.length > 1;
   final isSingleFolder = files.length == 1 && files.first.isFolder;
+  final externalComparison = ExternalComparisonMenuAction.capture(
+    context,
+    ref,
+    side,
+    files,
+  );
 
   // Build items list dynamically
   final items = <PopupMenuEntry<dynamic>>[];
+  if (externalComparison != null) items.add(externalComparison.buildItem());
 
   for (final action in pdfOperationsForSelection(files)) {
     items.add(
@@ -1660,7 +1675,7 @@ void showFileContextMenu(
       position.dy + 1,
     ),
     items: items,
-  );
+  ).whenComplete(() => externalComparison?.menuClosed());
 }
 
 Future<void> showRenameDialog(

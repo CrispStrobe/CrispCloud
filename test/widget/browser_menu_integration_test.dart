@@ -5,12 +5,14 @@ import 'package:crisp_cloud/models/browser_menu_layout.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/browser_menu_provider.dart';
 import 'package:crisp_cloud/providers/custom_command_provider.dart';
+import 'package:crisp_cloud/providers/external_comparison_provider.dart';
 import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/screens/file_browser_screen.dart';
 import 'package:crisp_cloud/screens/screen_dialogs.dart';
 import 'package:crisp_cloud/services/browser_menu_store.dart';
 import 'package:crisp_cloud/services/code_editor_menu.dart';
 import 'package:crisp_cloud/services/custom_toolbar_command_service.dart';
+import 'package:crisp_cloud/services/external_comparison_service.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:crisp_cloud/services/secure_storage_service.dart';
 import 'package:crisp_cloud/services/sync_database.dart';
@@ -21,6 +23,7 @@ import 'package:crisp_cloud/services/transfer_journal.dart';
 import 'package:crisp_cloud/services/transfer_journal_storage.dart';
 import 'package:crisp_cloud/widgets/configurable_browser_menu.dart';
 import 'package:crisp_cloud/widgets/help_guide_dialog.dart';
+import 'package:crisp_cloud/widgets/external_comparison_dialog.dart';
 import 'package:crisp_cloud/widgets/drive_bar.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
@@ -32,6 +35,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../support/browser_menu_storage.dart';
 import '../support/external_drop_fixture.dart';
+import '../support/external_comparison_fixture.dart';
 
 class _Local extends Fake implements LocalFileService {
   @override
@@ -88,6 +92,12 @@ void main() {
         secureStorageProvider.overrideWithValue(InMemorySecureStorage()),
         browserMenuStoreProvider.overrideWith((_) => menus),
         customToolbarCommandServiceProvider.overrideWith((_) => commands),
+        externalComparisonServiceProvider.overrideWith(
+          (_) => ExternalComparisonService(
+            host: ComparisonHost(),
+            staging: ComparisonMemoryStages(),
+          ),
+        ),
         transferJournalProvider.overrideWithValue(
           TransferJournal(MemoryTransferJournalStorage()),
         ),
@@ -197,6 +207,48 @@ void main() {
       expect(tester.takeException(), isNull);
     },
     variant: TargetPlatformVariant.only(TargetPlatform.linux),
+  );
+
+  testWidgets(
+    'external comparison routes open settings and preserve modal ownership',
+    (tester) async {
+      final service = container.read(externalComparisonServiceProvider);
+      await service.ready;
+      await mount(tester);
+      final menu = tester.widget<ConfigurableBrowserMenu>(
+        find.byType(ConfigurableBrowserMenu),
+      );
+      final openSettings =
+          menu.commands['workflow:externalComparisonTools']!.onSelected!;
+      openSettings();
+      await tester.pumpAndSettle();
+      expect(find.byType(ExternalComparisonDialog), findsOneWidget);
+      expect(
+        tester
+            .widget<ExternalComparisonDialog>(
+              find.byType(ExternalComparisonDialog),
+            )
+            .pair,
+        isNull,
+      );
+      openSettings();
+      await tester.pumpAndSettle();
+      expect(find.byType(ExternalComparisonDialog), findsOneWidget);
+      await tester.tap(find.widgetWithText(TextButton, 'Close').last);
+      await tester.pumpAndSettle();
+      final refreshed = tester.widget<ConfigurableBrowserMenu>(
+        find.byType(ConfigurableBrowserMenu),
+      );
+      refreshed.commands['workflow:externalCompare']!.onSelected!();
+      await tester.pumpAndSettle();
+      final dialog = tester.widget<ExternalComparisonDialog>(
+        find.byType(ExternalComparisonDialog),
+      );
+      expect(dialog.pair, isNull);
+      expect(dialog.initialError, isA<ExternalComparisonException>());
+      expect((service.host as ComparisonHost).launches, isEmpty);
+      expect(service.sessions, isEmpty);
+    },
   );
 
   testWidgets(

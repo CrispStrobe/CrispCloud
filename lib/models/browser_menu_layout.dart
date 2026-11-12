@@ -352,6 +352,8 @@ class BrowserMenuLayout {
           'workspaces',
           'columns',
           'customCommands',
+          'externalCompare',
+          'externalComparisonTools',
           'gatherSelection',
           'gatheringStack',
           'extensions',

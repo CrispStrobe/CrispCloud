@@ -30,7 +30,7 @@ capability. Required live/device checks remain visible after code implementation
 
 ### External comparison tools
 
-**Status:** Implementing. **Dependencies:** G10 staging lifetime.
+**Status:** Implemented / native acceptance pending. **Dependencies:** Shared private staging lifetime.
 
 **Scope:** Configure text/image comparison tools and stage reviewed local or remote pairs.
 
@@ -45,6 +45,28 @@ capability. Required live/device checks remain visible after code implementation
 - Staged data stays available for the tool session and is cleaned only when safe; supported OS integration is accepted separately.
 
 **Starting points:** file_comparison_service.dart; captured viewer/editor sources; external command service.
+
+**Delivered:** [External comparison tools](../external-comparison.md) adds
+separate text/image executable preferences, literal whole-argument templates,
+captured local/remote pairs, private copies of both inputs, a separate launch
+review and retained-session cleanup. Tools, configurable menus, overflow and
+file context menus expose the workflow. Popup dismissal cannot invalidate a
+chosen handoff or silently substitute a later selection. Restored records grant
+inspection/cleanup only, never automatic relaunch or original-write authority.
+
+**Observed validation:** 119 tests passed across nine focused service, widget,
+source-capture, menu and offline-help suites. The full browser suite was checked
+in an isolated worktree containing exactly this increment and its remote base,
+excluding the independent archive refactor. Narrow feature analysis reported no
+issues; host files retain existing unrelated warnings. English, German and
+French guides include the workflow with matching current digests.
+
+**Remaining acceptance:** Installed GUI comparison tools on each supported
+desktop OS, including actual argument conventions and detached-window behavior.
+Inputs are limited to 256 MiB each, eight sessions and separate 15-minute
+preparation/final-validation deadlines. No merge-back or browser/mobile process
+launch is provided. Source metadata checks and final executable inspection do
+not imply universal atomic snapshots or atomic execution by handle.
 
 ## G12
 
