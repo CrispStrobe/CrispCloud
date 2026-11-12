@@ -301,6 +301,32 @@ void main() {
       });
 
       test(
+        'root keeps its order relative to surviving original members',
+        () async {
+          final original = await _open(
+            _fixture(format, [
+              (name: 'before', bytes: [1], fields: _fields(1)),
+              (name: '.', bytes: <int>[], fields: _fields(2, directory: true)),
+              (name: 'after', bytes: [2], fields: _fields(3)),
+            ]),
+          );
+          expect(original.inspection.reason, isNull);
+          final rebuilt = await _write(format, [
+            original.entries.last,
+            packageEntry('added', [3]),
+          ], source: original.inspection);
+          final reopened = await _open(rebuilt);
+          expect(reopened.inspection.reason, isNull);
+          expect(
+            (reopened.inspection.container['cpio.root']
+                as Map)['package.order'],
+            0,
+          );
+          expect(await reopened.repack(), rebuilt);
+        },
+      );
+
+      test(
         'allocates a free inode when the original already uses the maximum',
         () async {
           final maximum = format == ArchiveCpioFormat.odc ? 0x3ffff : 0xffff;

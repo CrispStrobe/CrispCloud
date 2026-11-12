@@ -560,7 +560,10 @@ Future<void> _writeNewcCpio(
     final rootEntry = all.removeLast();
     all.addAll(entries);
     final position = rootEntry.attributes['package.order'];
-    all.insert(position is int ? position.clamp(0, all.length) : 0, rootEntry);
+    all.insert(
+      position is int ? _cpioRootPosition(all, position) : 0,
+      rootEntry,
+    );
   }
   var planned = 0, nextInode = 1;
   for (final entry in entries) {
@@ -688,6 +691,18 @@ String _cpioMagic(_Input input, int offset) {
 
 bool _isLegacyCpio(String variant) =>
     variant == '070707' || variant == 'binary-le' || variant == 'binary-be';
+
+// The stored root position counts original non-root records. Deleting an
+// earlier record must not move the root behind a surviving later member;
+// additions have no original order and do not shift this anchor.
+int _cpioRootPosition(List<ArchiveWriteEntry> entries, int originalPosition) {
+  var position = 0;
+  for (var index = 0; index < entries.length; index++) {
+    final order = entries[index].attributes['package.order'];
+    if (order is int && order < originalPosition) position = index + 1;
+  }
+  return position;
+}
 
 int _legacyCpioAlign(int value, String variant) =>
     variant == '070707' ? value : value + value % 2;
@@ -883,7 +898,7 @@ Future<void> _writeLegacyCpio(
       _refuse('Invalid legacy CPIO root metadata.');
     }
     all.insert(
-      (root['package.order'] as int).clamp(0, all.length),
+      _cpioRootPosition(all, root['package.order'] as int),
       ArchiveWriteEntry(
         path: '.',
         isDirectory: true,

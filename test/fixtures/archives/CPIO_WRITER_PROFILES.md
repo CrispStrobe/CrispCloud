@@ -73,3 +73,17 @@ preservation and refusal coverage for root location, stored-name spelling,
 trailer metadata, repeated saves, output/input bounds, malformed metadata,
 hardlinks, inode collisions and field overflow. The verification record for
 this increment records the observed test and native-reference results.
+
+## Portable runtime check
+
+The optional `test/support/verify_archive_cpio_profiles_portable.dart` entry
+point is compiled with Dart2JS and executed by Node. It recreates the three
+fresh cases above and requires byte identities already accepted by native
+libarchive, then reopens and rewrites them. It also checks odc's maximum
+33-bit timestamp and rejects overflowing binary ownership metadata.
+
+| Fresh output | SHA-256 |
+| --- | --- |
+| odc | `61cea07ea722ec14e24dbe5f08e4e9e40613bad20c7c5cafbb881ba57b8ca555` |
+| binary LE | `35d91c10e3d2e4d56bc4cce7908f21574492a0f1aa702f5b47d4f21aad4afa21` |
+| binary BE | `24f6f69dc70e64c1b99baa1f642abceb6def7b3c2a1e5a982296f517503fb9cf` |
