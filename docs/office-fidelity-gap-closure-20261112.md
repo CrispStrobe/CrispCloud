@@ -69,12 +69,47 @@ Excel evaluation and Microsoft Office layout equivalence are not implied.
 
 ## Final acceptance and provenance
 
-The final source pin, managed-file count, host test/coverage and captured-output
-inventory, independent schema/native results and remote comparison are recorded
-under `docs/evidence/office-fidelity-gap-closure-20261112/` and summarized here
-before the final remote checkpoint. Older consolidation receipts are historical.
+Final acceptance ran against clean app implementation
+`5202d362a929c30266519dee178a441884056ca0`. Its **352 managed files** match Quds
+implementation `a9bd470a4807c65f65271be896703e587c12de00` exactly. Subsequent
+report/evidence commits preserve those production and test bytes.
 
-Host coverage tracks the explicit host integration scope. Moving generic helpers
-upstream changes that denominator, so the previous 12-file/9-file percentages
-must not be compared as if the source population were unchanged. Source tests
-and source-hashed coverage now account for those shared components.
+| Gate | Result |
+| --- | --- |
+| Mandatory vendored engine Dart cases | 873 passed |
+| Mandatory host Flutter cases | 140 passed across 26 test files |
+| Engine independent Python controls | 344 passed |
+| Sync / host-inventory / coverage controls | 7 / 10 / 9 passed |
+| Scripted engine operations | 67/67 |
+| Engine export inventory | 277/277 |
+| Actual host capture inventory | 59/59 |
+| Open XML SDK | 336/336 exact inputs pass; no errors |
+| Supplementary native host probe | 11 actual XLSX/PPTX/DOCM/DOTX/DOTM uploads; 23 pages; no failures |
+| Host line coverage | 2,223/3,558 (62.5%); all ten declared sources present |
+| Working-tree and capture integrity | Clean tested tree, restored pubspec/lock and all 336 original/snapshot hashes unchanged |
+
+No test was skipped in the complete mandatory app gate. It used Flutter 3.47.8 /
+Dart 3.13.7 and the documented SQLite runtime wrapper. The native probe reused
+the unchanged renderer and exact input/schema hash checks; it does not imply a
+repeated-save comparison for every host capture. Quds separately passed its
+complete 1,336-test engine and 448-test editor suites, all 299 source schema
+inputs, and 292 native packages/592 pages with the seven documented importer
+limitations explicitly retained.
+
+[The evidence index](evidence/office-fidelity-gap-closure-20261112/README.md)
+contains producer, inventory, coverage, exact SDK/native and runtime receipts.
+The archived files are byte-identical copies; their archive manifest records
+original paths, sizes and SHA-256 values. The complete generated native artifacts
+remain at the recorded validation paths. Older consolidation receipts retain
+their original historical scope.
+
+Host coverage now includes the copy target, conversion action and conversion
+dialog. Six reusable format modules are maintained and measured in Quds. Earlier
+12-file/9-file percentages use a different source population and cannot be
+compared directly with the current ten-file measurement.
+
+The final remote audit at 11:18:56 UTC verified current main as an ancestor and
+found no missing Office implementation in PR55's new `36f6d8c3` commit. Its
+KeePass/export-review changes and documentation remain separate. The relevant
+PR62 dependency fix is incorporated. Source/app Actions runs were queued at
+that observation; these local acceptance results do not claim remote CI success.

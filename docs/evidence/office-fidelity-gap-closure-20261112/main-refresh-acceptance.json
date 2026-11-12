@@ -1,0 +1,22 @@
+{
+  "source_commit": "ced4ad7c945cd16049fc3f5dc9c4fef691cb26e0",
+  "tree": "27a31656f4a85f8ed730e66d47c76cb92f4a8fe3",
+  "merged_main": "977b5037f133cb2d33c57db761864183455a705e",
+  "passed": 69,
+  "skipped": 4,
+  "failures": 0,
+  "skip_reason": "SFTP server fixture requires CRISPER_SFTP_PYTHON with paramiko; this environment has no paramiko.",
+  "tests": [
+    "test/remote_path_style_test.dart",
+    "test/rust_cloud_engine_adapter_test.dart",
+    "test/cloud_engine_field_test.dart",
+    "test/cloud_engine_profile_dialog_test.dart",
+    "test/internxt_bounded_transfer_test.dart",
+    "test/storage_transport_test.dart"
+  ],
+  "command": "python3 tool/with_ci_system_sqlite.py flutter test --no-pub test/remote_path_style_test.dart test/rust_cloud_engine_adapter_test.dart test/cloud_engine_field_test.dart test/cloud_engine_profile_dialog_test.dart test/internxt_bounded_transfer_test.dart test/storage_transport_test.dart",
+  "runtime": "Flutter 3.47.8 / Dart 3.13.7 with runtime/env-347.sh and CI=true",
+  "log_path": "/workspace/scratch/e445bd9b965c/validation/app-main-refresh-tests.log",
+  "log_sha256": "88e88d286797dfe39aac298590167fd39787502e977173a000a276216d76570f",
+  "scope": "Focused local integration regression for the upstream merge; no live-cloud or all-platform claim."
+}
