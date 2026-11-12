@@ -25,13 +25,19 @@ env:
 
 jobs:
   linux-host:
-    name: Ubuntu 24.04 / ${{ matrix.host }}
-    runs-on: ubuntu-24.04
+    name: ${{ matrix.distro }} / ${{ matrix.host }}
+    runs-on: ${{ matrix.distro }}
     timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
-        host: [webkitgtk, portable-only]
+        include:
+          - distro: ubuntu-22.04
+            host: enhanced-rendering
+          - distro: ubuntu-24.04
+            host: installed-runtime-unavailable
+          - distro: ubuntu-24.04
+            host: portable-only
     steps:
       - uses: actions/checkout@v5
       - uses: subosito/flutter-action@v2
@@ -52,6 +58,10 @@ jobs:
             packages/crisp_ebook_reader/test/linux/surface_size_test.cc \
             -o "$RUNNER_TEMP/ebook-surface-test"
           "$RUNNER_TEMP/ebook-surface-test"
+          clang++ -std=c++17 -Wall -Wextra -Werror \
+            packages/crisp_ebook_reader/test/linux/canary_supervisor_test.cc \
+            -o "$RUNNER_TEMP/ebook-canary-supervisor-test"
+          "$RUNNER_TEMP/ebook-canary-supervisor-test"
       - name: Prepare isolated Linux app
         run: |
           flutter create --platforms=linux --project-name crisp_linux_host_smoke "$RUNNER_TEMP/ebook-linux-host"
@@ -66,7 +76,7 @@ jobs:
           flutter pub get
           flutter analyze
           flutter test --reporter expanded
-      - name: Exercise real inline rendering, input, composition and lifecycle
+      - name: Exercise the declared native mode without changing sandbox policy
         env:
           LIBGL_ALWAYS_SOFTWARE: '1'
           GDK_BACKEND: x11
@@ -88,10 +98,22 @@ jobs:
           fi
           extra=()
           if [[ '${{ matrix.host }}' == 'portable-only' ]]; then extra+=(--dart-define=EXPECT_PORTABLE=true); fi
+          if [[ '${{ matrix.host }}' == 'installed-runtime-unavailable' ]]; then extra+=(--dart-define=EXPECT_RUNTIME_UNAVAILABLE=true); fi
+          # The 22.04 job must render. The 24.04 job proves recovery from the
+          # observed sandbox prerequisite failure, and cannot count as rendering.
+          python3 "$GITHUB_WORKSPACE/packages/crisp_ebook_reader/tool/check_linux_host_processes.py" \
+            before native-process-baseline.json
           set -o pipefail
           xvfb-run -a -s '-screen 0 1280x900x24' dbus-run-session -- \
             flutter test integration_test/reader_host_test.dart -d linux \
               --reporter expanded "${extra[@]}" 2>&1 | tee linux-host-test.log
+      - name: Verify native child cleanup
+        if: always()
+        run: |
+          baseline="$RUNNER_TEMP/ebook-linux-host/native-process-baseline.json"
+          if [[ -f "$baseline" ]]; then
+            python3 packages/crisp_ebook_reader/tool/check_linux_host_processes.py after "$baseline"
+          fi
       - name: Extract native stacks and discard process memory
         if: always()
         run: |
@@ -122,8 +144,23 @@ jobs:
             echo 'The optional browser runtime became a startup dependency.' >&2
             exit 1
           fi
+      - name: Verify the helper survives clean and repeated bundle installation
+        if: matrix.host != 'portable-only'
+        run: |
+          cd "$RUNNER_TEMP/ebook-linux-host"
+          helper=build/linux/x64/debug/bundle/lib/crisp_ebook_reader_probe
+          test -x "$helper"
+          test "$(stat -c '%a' "$helper")" = 755
+          readelf -d "$helper" | tee native-helper-dependencies.log
+          if readelf -d "$helper" | grep 'NEEDED' | grep -Ei 'webkit|javascriptcore'; then
+            echo 'The startup helper must load the optional runtime dynamically.' >&2
+            exit 1
+          fi
+          cmake --install build/linux/x64/debug --config Debug
+          test -x "$helper"
+          test "$(stat -c '%a' "$helper")" = 755
       - name: Prove the enabled build launches when the optional runtime is absent
-        if: matrix.host == 'webkitgtk'
+        if: matrix.host != 'portable-only'
         env:
           LIBGL_ALWAYS_SOFTWARE: '1'
           GDK_BACKEND: x11
@@ -145,6 +182,7 @@ jobs:
           path: |
             ${{ runner.temp }}/ebook-linux-host/linux-host-test.log
             ${{ runner.temp }}/ebook-linux-host/native-dependencies.log
+            ${{ runner.temp }}/ebook-linux-host/native-helper-dependencies.log
             ${{ runner.temp }}/ebook-linux-host/native-backtrace.log
             ${{ runner.temp }}/ebook-linux-host/native-milestones.log
             ${{ runner.temp }}/ebook-linux-host/runtime-missing-launch.log

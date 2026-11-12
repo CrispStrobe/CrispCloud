@@ -114,6 +114,9 @@ do not upgrade unrelated platform implementations silently.
 | `2b31742f7f63ef23c9cee0cb56783f36e202e59a` | Shared navigation/layout controls, lifecycle guard, integrated library/import/export UI, recovery flows, localization and parity analysis. |
 | `506167333440c34290e8f9acee6da4275b5f6bb7` | Optional native Linux host, bounded surface pool and real hosted rendering/input/runtime-absence gates. |
 | `1d081588f4d2a86c7422c967e3d4b6134ffbf0c9` | Browser compatibility fallback, Linux packaging/registration, reviewed technical source bindings and native diagnostic gates; saved on the existing feature branch and draft PR. |
+| `67ee2afbe06ab857e6ea654ab8aa2b5c9f1fc2d0` | Bounded native launch diagnostics, unchanged-policy sandbox probe and precise anchor/history/library limits on the checkpoint branch. |
+| `0ba63f3f1b783593108a35df606af799a56e7a06` | Isolated native startup helper, guarded probe/create paths, executable installation, 16 process-lifecycle cases and the explicit rendering/unavailability/portable CI matrix. Saved remotely on the checkpoint branch. |
+| `5e0b6f94c542a41db232eb62ec19d21a9ddacffb` | Concurrent feature-branch synchronization with current main, including Rust cloud work and its source inventory. Preserved when combining the native helper work. |
 
 The implemented product scope is described in [the user guide](../ebooks.md)
 and [the detailed FBReader comparison](../ebook-feature-parity.md). The Linux
@@ -155,7 +158,7 @@ WebViews; the remaining runtime feature requirements still apply.
   denied; actual-browser confirmation is a hosted gate.
 - Native surface arithmetic passed **600 boundary combinations**, including
   high-DPI inputs that previously could round above the 16-megapixel cap.
-- The engineering inventory retains all 177 prior paths and adds 30, for
+- At `1d08158`, the engineering inventory retains all 177 prior paths and adds 30, for
   **207 reviewed paths**. Existing release-evidence tests completed 41 cases
   with two existing platform skips; all 37 Apple preflight tests passed. The
   source evidence check passed. All non-digest distribution/policy fields and
@@ -198,12 +201,80 @@ instances, hostile-resource isolation and runtime-removal launch must still pass
 
 The main ebook workflow at `1d08158` is
 [43225371743](https://github.com/CrispStrobe/CrispCloud/actions/runs/43225371743).
-Its direct run/job endpoints confirm that it registered, even though generic
-branch-run listings omitted it. At the diagnostic checkpoint, EPUBCheck and
-macOS had passed; application/web, Windows and the Ubuntu browser gate were
-still running or queued. Keep the Linux diagnostic work on the checkpoint
-branch while these jobs finish, so another feature-branch push does not cancel
-the actual-browser gate.
+Its direct run/job endpoints confirmed that it registered, even though generic
+branch-run listings omitted it. **All five jobs passed**: EPUBCheck,
+application tests/web release build, and the Ubuntu/macOS/Windows native
+conversion jobs. The Ubuntu job also passed actual Chromium rendering and
+interaction for EPUB/FB2/CBZ and all five Kindle fixtures. This exercised the
+new progress/history, publisher styles, CFI-preserving appearance, fixed-layout
+capabilities, highlights and script isolation, with no terminal page error.
+The earlier iframe-body lifecycle failure is therefore verified fixed on that
+browser. The production metadata adapter passed 24 assertions in actual
+Chromium, as well as 24 assertions across 11 real Node workers with none leaked.
+These browser results do not establish native WebKitGTK rendering.
+
+The next Linux diagnostic run,
+[43227210073](https://github.com/CrispStrobe/CrispCloud/actions/runs/43227210073)
+at `67ee2af`, identified WebKit's fatal startup classification as
+`Failed to fully launch dbus-proxy`. The unchanged-policy bubblewrap probe also
+failed with `loopback: Failed RTM_NEWADDR: Operation not permitted`. These
+establish unmet sandbox startup prerequisites on this runner; the network
+probe alone does not establish the proxy's exact failure. The portable-only
+application launch passed again. No runner policy or browser isolation was
+changed. A safe product availability check must contain this kind of native
+startup failure in a bounded child process before selecting the enhanced host;
+library/version presence alone is insufficient.
+
+### Startup guard implementation
+
+The follow-up implementation uses a source-built helper beside the plugin.
+Its worker creates the same ephemeral, sandboxed WebKit context and offscreen
+view, serves only a fixed loopback readiness page, and requires the exact
+JavaScript proof. A supervisor contains fatal worker exits and cleans up the
+process tree. The asynchronous parent bounds output and time, requires a clean
+helper exit and exact proof, and coalesces concurrent requests. Both public
+probe and direct create paths use that result before creating an in-process
+WebView. The result is cached for the running app; later per-view failures
+remain possible. No book or account data is passed to the helper.
+
+The helper is installed after Flutter's bundle cleanup with executable
+permissions. It uses the complete system WebKit runtime without a hard WebKit
+library dependency. Its own core dumps are disabled. Native and Dart timeouts
+leave room for orderly cleanup before an unavailable result is returned.
+
+The next native workflow distinguishes three acceptance targets: actual
+enhanced rendering/input on an unchanged Ubuntu 22.04 runner; safe reporting of
+the observed installed-but-unusable runtime on Ubuntu 24.04; and a portable-only
+Ubuntu 24.04 build. The enhanced target still requires real pixels and input and
+does not accept fallback as success. Results must be recorded after the run;
+implementation and compile checks alone do not establish a rendering pass.
+
+This implementation is saved at `0ba63f3` and its native run is
+[43232310526](https://github.com/CrispStrobe/CrispCloud/actions/runs/43232310526).
+The standalone supervisor passed 16 actual process/proof/cleanup cases under
+strict C++17 warnings, including fatal exits, timeouts, cancellation, parent
+death and detached descendants. The package Dart analyzer and syntax checks
+passed. The final source review removed raw PID/group signaling from the
+emergency path because GLib can reap concurrently; it now uses GLib's
+synchronized subprocess termination. Normal success requires every descendant
+to have been reaped. The final hard termination fallback does not itself prove
+descendant cleanup.
+
+While this checkpoint was being saved, the feature branch advanced to
+`5e0b6f9`. The expected-SHA guard prevented replacement of that work. Integration
+retains both histories and the incoming main/storage changes, unions their
+source-review records with the new helper inputs, and refreshes the technical
+bindings against the combined tree. The ebook runtime source bytes are unchanged
+from `0ba63f3`; the combined application still has its normal integration gates.
+
+The combined inventory has 229 unique paths and 15 feature records. It retains
+all 223 incoming paths and 14 records, plus the helper's six reviewed inputs
+and feature record. Every bound source matches one of the saved parents: 220
+match the incoming branch, while three changed Linux files and six additional
+bindings match `0ba63f3`. Existing evidence tests completed 41 cases with the
+same two skips; all 37 preflight cases and the combined source check passed.
+Only technical digests changed in the incoming policy. Its decisions and the
+validation rules remain unchanged.
 
 Shipping Linux build jobs now install the optional development headers, the
 application's generated registrants include the new plugin, and the Debian

@@ -10,10 +10,13 @@ cannot start.
 ## Build and runtime dependencies
 
 The native host uses the GTK3 WebKitGTK API **4.1**, version **2.48.4 or newer**.
-The hosted native gate targets Ubuntu 24.04 with the distribution's real headers
-and runtime. The Linux build jobs install `libwebkit2gtk-4.1-dev` alongside the
-existing Flutter GTK development dependencies. Ubuntu publishes this package
-for [24.04 LTS](https://packages.ubuntu.com/noble/libwebkit2gtk-4.1-dev).
+The hosted native gate uses real distribution headers and runtime packages.
+Ubuntu 22.04 must pass actual enhanced rendering and input. Ubuntu 24.04 has a
+separate recovery gate for its observed sandbox startup constraint; that result
+is not counted as enhanced rendering. The Linux build jobs install
+`libwebkit2gtk-4.1-dev` alongside the existing Flutter GTK development dependencies. Ubuntu publishes this package
+for [22.04 LTS updates](https://packages.ubuntu.com/jammy-updates/libwebkit2gtk-4.1-dev)
+and [24.04 LTS](https://packages.ubuntu.com/noble/libwebkit2gtk-4.1-dev).
 
 The minimum includes the upstream fix for a `GtkOffscreenWindow` initialization
 crash, documented in the official
@@ -22,9 +25,9 @@ Older releases are rejected by the runtime probe even if their APIs appear
 compatible. That known older crash is separate from any failure on a newer
 runtime, which still requires its own native diagnostics and verification.
 
-`packages/crisp_ebook_reader/linux/CMakeLists.txt` checks for those headers. If
-they are absent, or `CRISP_EBOOK_WEBKITGTK=OFF` is set in CMake, it compiles a small
-plugin that reports the enhanced host as unavailable. The application remains
+`packages/crisp_ebook_reader/linux/CMakeLists.txt` checks for those headers and
+CMake 3.19 or newer. If either is absent, or `CRISP_EBOOK_WEBKITGTK=OFF` is set,
+it compiles a small plugin that reports the enhanced host as unavailable. The application remains
 buildable and launchable. GTK, GModule and the enhanced host's epoxy OpenGL
 interface are ordinary system dependencies; WebKit and JavaScriptCore are
 resolved on demand through `GModule`, with no hard browser-library dependency.
@@ -36,7 +39,7 @@ sudo apt-get install libwebkit2gtk-4.1-0
 ```
 
 Restart CrispCloud after installing or updating the runtime; the native module
-probe is cached for the life of the process.
+and startup result are cached for the life of the process.
 
 The Debian package recommends `libwebkit2gtk-4.1-0 (>= 2.48.4)`. It is deliberately
 an optional recommendation so the portable reader remains usable on an
@@ -44,6 +47,37 @@ installation without the browser runtime. Tar and AppImage bundles also use the
 system runtime. They do not include a partial copy of WebKit's shared libraries,
 subprocesses, resources or sandbox helpers. A self-contained Flatpak/Snap runtime
 would need its own complete packaging and validation work.
+
+Enhanced bundles include the source-built `lib/crisp_ebook_reader_probe`
+executable next to the plugin shared library. The plugin resolves that sibling
+path directly; it does not search `PATH` or private WebKit helper directories.
+CMake defers `install(TARGETS)` until after Flutter's bundle cleanup and installs
+mode 0755. CI checks a clean installation and a repeated installation. Both
+plugin and helper load WebKit dynamically, so neither gains a hard WebKit or
+JavaScriptCore dependency.
+
+Before either a probe or a direct native `create` can succeed, a fresh helper
+process starts WebKit with the same ephemeral context, required sandbox,
+application identity, offscreen window and browser settings. It serves only a
+small fixed loopback document, then requires that document's exact JavaScript
+reply from the real WebProcess. The supervisor and fresh worker disable their
+own dumpability and set a zero core-size limit inherited by their children.
+The supervisor bounds startup and kills/reaps its children on success,
+failure, timeout or cancellation. Readiness requires the exact bounded proof,
+clean worker exit, and completed child cleanup. The plugin coalesces concurrent
+checks, keeps pending calls safely owned, and creates no reader after a failed
+check. The native check has a 12-second deadline plus a 2-second termination
+bound; Dart waits 16 seconds. These limits do not change the user's system or
+WebKit sandbox policy.
+
+This guards the measured installed-but-unusable runtime case: the Ubuntu 24.04
+runner's WebKit startup previously raised a fatal `Failed to fully launch
+dbus-proxy` in the UI process. It now runs that risky startup inside the helper.
+A cached positive check is evidence of startup readiness in that environment,
+not a guarantee that every later reader, graphic driver or runtime transition
+will succeed. Per-reader error handling and the portable option remain needed.
+Flatpak/Snap and other container-specific sandbox backends require their own
+validation.
 
 The host requires Flutter's OpenGL renderer and a graphical session. Mesa's
 software OpenGL implementation is exercised in CI. Flutter's distinct
@@ -100,9 +134,14 @@ hostile test publication must send no script/image/iframe/CSS requests to a
 listening local probe. The native surface arithmetic test includes large and
 high-DPI allocations at the pixel budget boundary.
 
-The matrix also compiles a portable-only host. `readelf` must show no WebKit or
-JavaScriptCore `DT_NEEDED` entry. Finally the enhanced job builds a fresh probe
-application while headers are present, removes the optional runtime on that
+The matrix also compiles a portable-only host. The installed-runtime recovery
+job must return unavailable after one shared canary attempt, reject direct
+creation, retain zero native views/surfaces, and keep Flutter responsive. Native
+supervisor tests exercise proof validation and child cleanup; the real display
+job also checks that no new canary/WebKit/proxy processes remain. `readelf` must
+show no WebKit or JavaScriptCore `DT_NEEDED` entry in either plugin or helper.
+Finally each enabled job builds a fresh probe application while headers are
+present, removes the optional runtime on that
 disposable runner, and launches the **already-built** executable successfully
 with an unavailable-host result. No rebuilding after removal is allowed.
 
