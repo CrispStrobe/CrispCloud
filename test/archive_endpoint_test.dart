@@ -644,6 +644,104 @@ void main() {
       [2],
     );
   });
+  test('empty whitespace malformed and shadowing revisions retain move sources after publication', () async {
+    const cases = <Map<String, dynamic>>[
+      {'versionId': ''},
+      {'versionId': ' \t '},
+      {'versionId': 42},
+      {'versionId': true},
+      {'version': '', 'versionId': 'usable-later-version'},
+      {
+        'versionId': 'usable',
+        'eTag': <String, dynamic>{'unexpected': 'object'},
+      },
+    ];
+    for (var index = 0; index < cases.length; index++) {
+      final source = _MalformedRevisionSource(cases[index]);
+      final path = '/out/revision-$index.zip';
+      backend.put(path, original);
+      final guarded = await ArchiveEndpoint.open(
+        containerBackend: backend,
+        containerFile: (await backend.stat(path))!,
+        journal: journal,
+      );
+      try {
+        final plan = await guarded.prepareImport(
+          source: source,
+          files: [(await source.stat('/input/new.txt'))!],
+          moveSources: true,
+        );
+        final review = await guarded.stageImport(
+          plan,
+          control: FileOperationControl(),
+        );
+        final result = await guarded.commit(reviewed: review);
+        expect(result.receipt, isNotNull);
+        expect(result.publishedFiles, 1);
+        expect(result.retainedSources, ['/input/new.txt'], reason: '$index');
+        expect(result.removedSources, 0);
+        expect(source.deletes, 0);
+        expect(source.files['/input/new.txt'], [3, 4, 5]);
+      } finally {
+        await guarded.close();
+      }
+    }
+  });
+  test(
+    'provider metadata mutation cannot rewrite captured or cleanup revisions',
+    () async {
+      for (final duringRead in [false, true]) {
+        final source = _MutableRevisionSource();
+        final path = '/out/mutable-$duringRead.zip';
+        backend.put(path, original);
+        final guarded = await ArchiveEndpoint.open(
+          containerBackend: backend,
+          containerFile: (await backend.stat(path))!,
+          journal: journal,
+        );
+        try {
+          // A directory selection exercises listed children as well as fresh
+          // stat snapshots, each returning the same provider-owned map.
+          final plan = await guarded.prepareImport(
+            source: source,
+            files: [(await source.stat('/input'))!],
+            moveSources: true,
+          );
+          final captured = plan.entries
+              .singleWhere((entry) => !entry.source.isFolder)
+              .source;
+          final review = await guarded.stageImport(
+            plan,
+            control: FileOperationControl(),
+          );
+          if (duringRead) {
+            source.after = (action, _, __) {
+              if (action == 'read') source.revisions['versionId'] = 'v2';
+            };
+          } else {
+            backend.after = (action, _, destination) {
+              if (action == 'move' && destination == path) {
+                source.revisions['versionId'] = 'v2';
+              }
+            };
+          }
+          final result = await guarded.commit(reviewed: review);
+          expect(result.receipt, isNotNull);
+          expect(result.publishedFiles, 1);
+          expect(result.retainedSources, contains('/input/new.txt'));
+          expect(result.removedSources, 0);
+          expect(source.deletes, 0);
+          expect(source.files['/input/new.txt'], [3, 4, 5]);
+          expect(source.revisions['versionId'], 'v2');
+          expect(captured.metadata?['versionId'], 'v1');
+          expect(await guarded.workspace.read('/input/new.txt'), [3, 4, 5]);
+        } finally {
+          backend.after = null;
+          await guarded.close();
+        }
+      }
+    },
+  );
   test('misnamed detected containers cannot silently change format', () async {
     backend.put(
       '/out/misnamed.zip',
@@ -764,6 +862,52 @@ void main() {
       expect(backend.mutations, isEmpty);
     },
   );
+  test(
+    'every original encrypted file authenticates before edits are allowed',
+    () async {
+      final bytes = await protected(const koni.ZipWriteFormat(), {
+        'first': [1],
+        'later': [2],
+      }, password: 'secret');
+      final damaged = Uint8List.fromList(bytes);
+      final data = ByteData.sublistView(damaged);
+      int u16(int offset) => data.getUint16(offset, Endian.little);
+      int u32(int offset) => data.getUint32(offset, Endian.little);
+      final first = u32(damaged.length - 22 + 16);
+      final later =
+          first + 46 + u16(first + 28) + u16(first + 30) + u16(first + 32);
+      expect(u32(later), 0x02014b50);
+      final local = u32(later + 42);
+      final payload = local + 30 + u16(local + 26) + u16(local + 28);
+      // Keep every descriptor and the first authenticated member valid, but
+      // corrupt the later member's authentication tag. Replacing/removing that
+      // member must not bypass its original password/MAC validation.
+      damaged[payload + u32(later + 20) - 1] ^= 1;
+      final readable = await openViewerArchive(
+        damaged,
+        name: 'protected.zip',
+        password: 'secret',
+      );
+      try {
+        expect(await readable.readMember(readable.members.first), [1]);
+      } finally {
+        await readable.close();
+      }
+      backend.put('/out/damaged.zip', damaged);
+      await expectLater(
+        ArchiveWorkspace.open(
+          backend,
+          (await backend.stat('/out/damaged.zip'))!,
+          password: 'secret',
+          journal: journal,
+        ),
+        throwsA(isA<ArchivePasswordRequiredException>()),
+      );
+      expect(backend.files['/out/damaged.zip'], damaged);
+      expect(backend.mutations, isEmpty);
+      expect(journal.records, isEmpty);
+    },
+  );
   test('empty unverified password policy is read-only rather than silently unencrypted', () async {
     backend.put('/out/empty.zip', zip({}));
     final workspace = await ArchiveWorkspace.open(
@@ -840,6 +984,47 @@ class _VersionOnlySource extends ArchiveEndpointTestBackend {
   @override
   Future<void> deleteFile(FileItem file) async {
     if (file.metadata?['versionId'] != revision) {
+      throw StateError('Revision changed.');
+    }
+    deletes++;
+    files.remove(file.path!);
+  }
+}
+
+class _MalformedRevisionSource extends _VersionOnlySource {
+  _MalformedRevisionSource(this.revisions);
+  final Map<String, dynamic> revisions;
+  @override
+  Future<FileItem?> stat(String path) async {
+    final file = await super.stat(path);
+    return path == '/input/new.txt' && file != null
+        ? file.copyWith(metadata: revisions)
+        : file;
+  }
+
+  @override
+  Future<void> deleteFile(FileItem file) async {
+    deletes++;
+    files.remove(file.path!);
+  }
+}
+
+class _MutableRevisionSource extends _VersionOnlySource {
+  _MutableRevisionSource() {
+    modes['/input'] = 0x1ed;
+  }
+  final revisions = <String, dynamic>{'versionId': 'v1'};
+  @override
+  Future<FileItem?> stat(String path) async {
+    final file = await super.stat(path);
+    return path == '/input/new.txt' && file != null
+        ? file.copyWith(metadata: revisions)
+        : file;
+  }
+
+  @override
+  Future<void> deleteFile(FileItem file) async {
+    if (file.metadata?['versionId'] != revisions['versionId']) {
       throw StateError('Revision changed.');
     }
     deletes++;

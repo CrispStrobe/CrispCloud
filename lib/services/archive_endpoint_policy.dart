@@ -160,9 +160,11 @@ class ArchiveEndpointPolicy {
             commentBytes = u16(offset + 32);
         final next = offset + 46 + nameBytes + extraBytes + commentBytes;
         if (next > limit) return false;
-        if ((flags & 1) != 0) {
+        if ((flags & 1) != 0 || (flags & 0x40) != 0 || method == 99) {
           encrypted++;
-          if ((flags & 0x40) != 0 || method != 99) return false;
+          if ((flags & 1) == 0 || (flags & 0x40) != 0 || method != 99) {
+            return false;
+          }
           var extra = offset + 46 + nameBytes;
           final extraEnd = extra + extraBytes;
           var aes = false;

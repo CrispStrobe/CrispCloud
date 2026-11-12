@@ -259,6 +259,7 @@ class _ZipTimeRecord {
 String? archiveZipTimestampPolicyIssue(Uint8List bytes) {
   const unsupported =
       'This ZIP timestamp metadata cannot be preserved by the current reader and writer.';
+  if (bytes.length > 256 * 1024 * 1024) return unsupported;
   try {
     final input = ByteData.sublistView(bytes);
     int u16(int at) => input.getUint16(at, Endian.little);
@@ -305,7 +306,11 @@ String? archiveZipTimestampPolicyIssue(Uint8List bytes) {
         position + size > end) {
       return unsupported;
     }
+    final directoryStart = position;
     final limit = position + size;
+    final localOffsets = <int>{};
+    final localMetadata = <({int start, int end})>[];
+    var localMetadataBytes = 0;
     int? timestamp(int begin, int length) {
       final finish = begin + length;
       int? result;
@@ -363,15 +368,38 @@ String? archiveZipTimestampPolicyIssue(Uint8List bytes) {
           at += 4 + length;
         }
       }
-      if (local < 0 || local + 30 > position || u32(local) != 0x04034b50) {
+      if (local < 0 ||
+          local + 30 > directoryStart ||
+          !localOffsets.add(local) ||
+          u32(local) != 0x04034b50) {
         return unsupported;
       }
-      final localExtra = local + 30 + u16(local + 26),
-          localLength = u16(local + 28);
-      if (localExtra + localLength > position) return unsupported;
+      final localNameLength = u16(local + 26), localLength = u16(local + 28);
+      final localExtra = local + 30 + localNameLength;
+      final localEnd = localExtra + localLength;
+      if (localEnd > directoryStart || localNameLength != nameLength) {
+        return unsupported;
+      }
+      // Central records must not amplify a tiny input into repeated scans of
+      // shared/overlapping local metadata. Charge the entire region before
+      // comparing names or parsing extras, then reject overlaps below.
+      localMetadataBytes += localEnd - local;
+      if (localMetadataBytes > bytes.length) return unsupported;
+      for (var index = 0; index < nameLength; index++) {
+        if (bytes[local + 30 + index] != bytes[position + 46 + index]) {
+          return unsupported;
+        }
+      }
       final localTime = timestamp(localExtra, localLength);
       if (localTime != null && localTime != centralTime) return unsupported;
+      localMetadata.add((start: local, end: localEnd));
       position = next;
+    }
+    localMetadata.sort((a, b) => a.start.compareTo(b.start));
+    for (var index = 1; index < localMetadata.length; index++) {
+      if (localMetadata[index - 1].end > localMetadata[index].start) {
+        return unsupported;
+      }
     }
     return position == limit ? null : unsupported;
   } on RangeError {
