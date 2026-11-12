@@ -40,6 +40,34 @@ Archive members and detached attachments remain view-only: extract them to a
 writable location before converting. No remote conversion service receives
 document content; an installed engine receives only a temporary input copy.
 
+### What the conversion inventory establishes
+
+The review's counts describe the emitted package, including unused parts.
+Clearing a source-feature loss additionally requires an anchor in the document:
+current section header/footer references must select their matching relationship,
+and note/comment references must match an unambiguous definition ID. An unused
+relationship, a separator-only note part, or a comment range without its comment
+reference cannot clear the corresponding warning. Strict and transitional
+namespaces and relocated package parts use the same checks.
+
+Only referenced note/comment definitions and section-attached headers/footers
+contribute further content. For example, an object left in an unreferenced
+footnote does not establish object preservation. Embedded objects require
+`w:objectEmbed` or `o:OLEObject` markup selecting an internal object/package
+relationship. An unrelated image's relationship ID is insufficient.
+
+These are category-presence checks, not source/output count or content equality.
+They do not establish complete threaded-reply association, every markup
+compatibility alternative, object behavior, or visual fidelity. Full schema and
+native rendering checks remain separate. The independently assembled package
+controls live in `test/word_conversion_inspection_test.dart`.
+
+References: [header attachment](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.headerreference),
+[note IDs](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.footnoteendnotetype.id),
+[comment attachment](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.comment),
+[embedded object references](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.objectembed),
+and [VML object references](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.vml.office.oleobject).
+
 ## Built-in structured conversion
 
 **Structured Word (built in)** uses the standalone MPL-2.0
