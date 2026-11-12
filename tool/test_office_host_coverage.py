@@ -57,6 +57,24 @@ class HostCoverageControls(unittest.TestCase):
         self.assertEqual(report['covered_lines'], 1)
         self.assertEqual(report['instrumented_lines'], 2)
 
+    def test_new_word_helper_cannot_silently_disappear_from_instrumentation(self):
+        helper = 'lib/services/word_package_preservation.dart'
+        (self.root / helper).write_text('capture\nvalidate\n')
+        original_scope = (
+            'SF:lib/widgets/office_editor_dialog.dart\nDA:1,1\nend_of_record\n'
+            'SF:lib/services/office_search_text.dart\nDA:1,1\nend_of_record\n')
+        incomplete = report_coverage(original_scope, self.root)
+        self.assertEqual(incomplete['uninstrumented_files'], [helper])
+        self.assertIn(helper, incomplete['source_sha256'])
+        with self.assertRaisesRegex(ValueError, 'word_package_preservation.dart'):
+            require_all_sources(incomplete)
+        complete = report_coverage(
+            original_scope + f'SF:{helper}\nDA:1,1\nDA:2,0\nend_of_record\n',
+            self.root)
+        require_all_sources(complete)
+        details = next(file for file in complete['files'] if file['path'] == helper)
+        self.assertEqual(details['uncovered_lines'], [2])
+
 
 if __name__ == '__main__':
     unittest.main()

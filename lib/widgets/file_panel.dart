@@ -33,6 +33,7 @@ import 'folder_drop_target.dart';
 import 'pattern_selection_dialog.dart';
 import 'file_tree_view_stub.dart' if (dart.library.io) 'file_tree_view.dart';
 import 'panel_tab_bar.dart';
+import 'path_favorites.dart';
 import 'panel_header.dart';
 import 'panel_listing_placeholder.dart';
 import '../l10n/file_panel_strings.dart';
@@ -690,34 +691,49 @@ class _FilePanelState extends ConsumerState<FilePanel> {
       ),
       child: Column(
         children: [
-          PanelTabBar(
-            tabs: panel.tabs,
-            activeTabId: panel.activeTabId,
-            activeSelectionCount: selection.length,
-            onTabSelected: (id) => panel.selectTab(id),
-            onTabClosed: (id) => panel.closeTab(id),
-            onNewTab: () => panel.addTab(),
-            onTabPinToggle: (id) => panel.toggleTabPin(id),
-            onTabRenamed: (id, name) => panel.renameTab(id, name),
-            onReopenClosedTab: panel.reopenClosedTab,
-            canReopenClosedTab: panel.canReopenClosedTab,
-            onTabLockChanged: (id, mode) => panel.setTabLock(id, mode),
-            onTabDuplicated: (id) => panel.duplicateTab(id),
-            onTabReordered: panel.reorderTabs,
-            onTabForceClosed: (id) => panel.closeTab(id, force: true),
-            onCloseDuplicates: () => panel.closeDuplicateTabs(),
-            onWorkspace: () => showWorkspaceDialog(context, ref, widget.side),
-            tabDropTargetBuilder: (tab, child) => FolderDropTarget(
-              key: ValueKey('tab-folder-drop-${widget.side.name}-${tab.id}'),
-              side: widget.side,
-              folder: FileItem(name: tab.label, path: tab.path, isFolder: true),
-              captureDestination: () => const FolderDropService().captureTab(
-                panel,
-                tab,
-                ref.read(localFileServiceProvider),
+          Row(
+            children: [
+              Expanded(
+                child: PanelTabBar(
+                  tabs: panel.tabs,
+                  activeTabId: panel.activeTabId,
+                  activeSelectionCount: selection.length,
+                  onTabSelected: (id) => panel.selectTab(id),
+                  onTabClosed: (id) => panel.closeTab(id),
+                  onNewTab: () => panel.addTab(),
+                  onTabPinToggle: (id) => panel.toggleTabPin(id),
+                  onTabRenamed: (id, name) => panel.renameTab(id, name),
+                  onReopenClosedTab: panel.reopenClosedTab,
+                  canReopenClosedTab: panel.canReopenClosedTab,
+                  onTabLockChanged: (id, mode) => panel.setTabLock(id, mode),
+                  onTabDuplicated: (id) => panel.duplicateTab(id),
+                  onTabReordered: panel.reorderTabs,
+                  onTabForceClosed: (id) => panel.closeTab(id, force: true),
+                  onCloseDuplicates: () => panel.closeDuplicateTabs(),
+                  onWorkspace: () =>
+                      showWorkspaceDialog(context, ref, widget.side),
+                  tabDropTargetBuilder: (tab, child) => FolderDropTarget(
+                    key: ValueKey(
+                      'tab-folder-drop-${widget.side.name}-${tab.id}',
+                    ),
+                    side: widget.side,
+                    folder: FileItem(
+                      name: tab.label,
+                      path: tab.path,
+                      isFolder: true,
+                    ),
+                    captureDestination: () =>
+                        const FolderDropService().captureTab(
+                          panel,
+                          tab,
+                          ref.read(localFileServiceProvider),
+                        ),
+                    child: child,
+                  ),
+                ),
               ),
-              child: child,
-            ),
+              PathFavoritesButton(side: widget.side),
+            ],
           ),
           PanelHeader(
             side: widget.side,

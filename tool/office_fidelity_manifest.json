@@ -1,7 +1,7 @@
 {
   "source_repository": "CrispStrobe/quds_office_suite",
   "source_branch": "feature/office-fidelity-consolidation-20261112",
-  "source_commit": "7bd56f609d5ec63e44e0393560b3ec1055c3bf7e",
+  "source_commit": "3ff2e15823c86cda88d3369dc4bbabf42f45290a",
   "files": {
     "packages/quds_office_editor/CHANGELOG.md": "29318f1dfae60312d9612b971bfc56eda7f53c2d6e4a712ba4525f88537d6acd",
     "packages/quds_office_editor/lib/src/editor_sheet/render_sheet_grid.dart": "dde600201484a04a07e922b12d0098b3334bb3c3289476a7ea4e88a28cd4e9f4",
@@ -308,7 +308,7 @@
     "packages/quds_office_engine/tool/fidelity/word_structure_oracle.py": "c3877a89604a2b2b0c100173b05fb7dc133c89f06632e9de2970747fb3ee4964",
     "packages/quds_office_engine/tool/fidelity/word_structure_steps.dart": "08d01e9547f12407473c033ceb242d16c74cc7ac815ba44c38b0dee235834bd9",
     "tool/office-validation/OfficeValidation.csproj": "e9e7985f8af8396d5b0dea81555e3c8ca51b7dba1af68a0e2cd4d2b238347e27",
-    "tool/office-validation/Program.cs": "755bd8c32ce0b4c23ecb38c614f316150722e06ea07dd296988a7fa743618a13",
+    "tool/office-validation/Program.cs": "4d41f286855ed11a12ecdf0641773c33285847180a3e5cdbf43ce2385a099880",
     "tool/office-validation/render.py": "245c3697ae0dff7b31578e58f84d3c926e17331a1c5c9b7d21e2276cebda7b3d",
     "tool/office-validation/test_native_render_limitations.py": "ffc4e367871bf40079b2b2868af6b146de5bcfe13b50a17bdede2f2b3398308b",
     "tool/office-validation/test_render.py": "f7b5969f27ceab74d863901e7842c4bbae59c5c0b2af9d2aa2fe92a0eb4822f5"

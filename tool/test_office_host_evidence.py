@@ -71,7 +71,8 @@ class HostEvidenceTest(unittest.TestCase):
                 name = next(name for name in evidence.expected_paths()
                             if Path(name).suffix == extension)
                 with ZipFile(self.root / name, 'w') as archive:
-                    wrong = '.xlsx' if extension == '.docx' else '.docx'
+                    wrong = ('.xlsx' if evidence.MAIN_PARTS[extension][0]
+                             == 'word/document.xml' else '.docx')
                     main_part, root_tag = evidence.MAIN_PARTS[wrong]
                     archive.writestr(main_part, ElementTree.tostring(
                         ElementTree.Element(root_tag)))

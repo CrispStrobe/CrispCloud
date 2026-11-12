@@ -185,7 +185,7 @@ void main() {
     await panel.navigateInto(
       panel.files!.firstWhere((file) => file.name == 'nested'),
     );
-    final nested = panel.files!.single;
+    final nested = panel.files!.singleWhere((file) => file.name == 'inner.zip');
     await panel.navigateInto(nested.copyWith());
     expect(panel.archiveSource!.archiveName, 'sample.zip');
     await panel.navigateInto(nested);
@@ -236,8 +236,10 @@ void main() {
       await panel.enterArchive(
         panel.files!.firstWhere((file) => file.path == zipPath),
       );
-      await panel.navigateInto(panel.files!.single);
-      final stale = panel.files!.single;
+      await panel.navigateInto(
+        panel.files!.singleWhere((file) => file.name == 'inner.zip'),
+      );
+      final stale = panel.files!.singleWhere((file) => file.name == 'edit.txt');
       final location = panel.captureArchiveWorkspaceLocation();
       final origin = panel.captureArchiveOrigin();
       final backend = fileOperationBackend(
@@ -256,7 +258,12 @@ void main() {
       await workspace.close();
       await panel.refresh();
       expect(panel.archiveSource!.archiveName, 'inner.zip');
-      expect(await panel.readArchiveMember(panel.files!.single), [2, 3]);
+      expect(
+        await panel.readArchiveMember(
+          panel.files!.singleWhere((file) => file.name == 'edit.txt'),
+        ),
+        [2, 3],
+      );
       await expectLater(
         panel.readArchiveMember(stale),
         throwsA(isA<ArchiveViewException>()),

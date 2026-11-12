@@ -10,7 +10,6 @@ from zipfile import BadZipFile, ZipFile
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = Path(__file__).with_suffix('.json')
 REPORT = 'build/fidelity-host/inventory.json'
-OFFICE = {'.docx', '.xlsx', '.pptx'}
 MAIN_PARTS = {
     '.docx': ('word/document.xml',
               '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}document'),
@@ -19,6 +18,9 @@ MAIN_PARTS = {
     '.pptx': ('ppt/presentation.xml',
               '{http://schemas.openxmlformats.org/presentationml/2006/main}presentation'),
 }
+for extension in ('.docm', '.dotx', '.dotm'):
+    MAIN_PARTS[extension] = MAIN_PARTS['.docx']
+OFFICE = set(MAIN_PARTS)
 
 
 def expected_paths():

@@ -98,6 +98,7 @@ class BookmarksNotifier extends ChangeNotifier {
   String? _loadError;
   String? lastError;
   List<Bookmark> get bookmarks => List.unmodifiable(_bookmarks);
+  bool get isLoaded => _loaded;
 
   Future<void> _load() async {
     try {
@@ -213,6 +214,25 @@ class BookmarksNotifier extends ChangeNotifier {
         throw StateError('This source and location are already bookmarked.');
       }
       items[index] = replacement;
+    });
+  }
+
+  /// Move the saved item one place without applying a stale row index to a
+  /// different favorite after another window edits the list.
+  Future<void> move(Bookmark bookmark, int direction) async {
+    if (direction != -1 && direction != 1) {
+      throw ArgumentError.value(direction, 'direction', 'Use -1 or 1.');
+    }
+    await ready;
+    await _change((items) {
+      final index = items.indexWhere(
+        (item) => item.identity == bookmark.identity,
+      );
+      if (index < 0) throw StateError('The bookmark no longer exists.');
+      final target = index + direction;
+      if (target < 0 || target >= items.length) return;
+      final current = items.removeAt(index);
+      items.insert(target, current);
     });
   }
 

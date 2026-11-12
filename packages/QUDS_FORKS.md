@@ -219,11 +219,12 @@ goldens simply to accept changed output.
 
 `feature/office-fidelity-consolidation-20261112` combines current app main with
 the newer Office coverage branch. The vendor manifest now pins 309 shared files
-to suite commit `7bd56f609d5ec63e44e0393560b3ec1055c3bf7e` on the same feature
+to suite commit `3ff2e15823c86cda88d3369dc4bbabf42f45290a` on the same feature
 branch. This retains both source histories and their independent regression
 corpora, and integrates the monotonic content revision used to protect pending
 Word note, spreadsheet cell, and slide text drafts during uploads.
 
-The acceptance inventory requires 241 engine exports and 56 actual host saves (48 DOCX, 4 XLSX, and 4 PPTX).
+The acceptance inventory requires 241 engine exports and 59 actual host saves
+(48 DOCX, 4 XLSX, 4 PPTX, and one DOCM/DOTX/DOTM each).
 See [the consolidation report](../docs/office-fidelity-consolidation-20261112.md)
 for current validation status; the earlier measurements above remain historical.

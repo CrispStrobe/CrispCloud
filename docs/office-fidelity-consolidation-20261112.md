@@ -7,7 +7,7 @@ the newer Office coverage branch at
 
 The corresponding source history combines current suite `main` and the newer
 native fidelity work. The app now pins **309 shared source files** to
-`7bd56f609d5ec63e44e0393560b3ec1055c3bf7e`. The guarded synchronization verified
+`3ff2e15823c86cda88d3369dc4bbabf42f45290a`. The guarded synchronization verified
 the previous vendor baseline, copied committed source bytes, and checked every
 pinned hash against the consolidated suite.
 
@@ -44,12 +44,43 @@ checks. See the
 [source consolidation report](https://github.com/CrispStrobe/quds_office_suite/blob/feature/office-fidelity-consolidation-20261112/docs/office-fidelity-consolidation-20261112.md)
 for the merge decisions and bounded support claims.
 
+## Extended Word formats and incoming feature integration
+
+The feature branch at `9068e31d8a11c61d4f40cc09badb4c176500f7b9` is also merged.
+It adds bounded legacy DOC/DOT text preview, guarded DOCM/DOTX/DOTM editing,
+saved email viewers, archive parent navigation, and path favorites. Legacy binary
+Word files remain preview-only; that preview does not claim to reproduce
+formatting, images, headers, notes, or tracked changes.
+
+Macro/template saves keep their original main package type, opaque binary/VBA
+parts, and protected relationships. The host validates the produced package
+before upload and retains dirty state on failure. Macros are preserved as opaque
+bytes and are never executed. The generic pending-edit precommit and revision
+comparison remain intact around the new asynchronous preservation check.
+
+Three actual host uploads independently check the MIME type, edited document
+text, opaque VBA bytes, and relationships for DOCM/DOTX/DOTM. A fourth case corrupts
+a protected VBA part and proves that upload is blocked while the editor stays
+dirty. The new captures pass the independent SDK's matching Word-type checks.
+
+The merged feature's focused gate passes 299 tests across its nine incoming test
+files and affected archive/viewer/editability/Office entrypoints. Two concrete
+incoming integration defects were fixed: headerless MIME bodies and the default
+message type of multipart/digest are preserved, and archive tests select named
+members while retaining the new parent row and source-identity assertions.
+The incoming parser regression assertions are unchanged.
+
+Fresh host coverage now explicitly includes `word_package_preservation.dart`,
+`legacy_word_document.dart`, and `bounded_cfb_reader.dart` in addition to the
+existing Office-prefixed services/widgets. Their Word tests are part of the
+mandatory host gate, and a negative control rejects an uninstrumented new helper.
+
 ## Acceptance requirements
 
 The merged engine inventory requires **241 Office packages**. The app's own
-inventory requires **56 captured Office packages**, including old/new uploads from
+inventory requires **59 captured Office packages**, including old/new uploads from
 both pending-note scenarios and eight XLSX/PPTX files from pending-cell and
-pending-slide scenarios. The gate verifies the vendor pin, runs the shared
+pending-slide scenarios, plus one actual DOCM, DOTX, and DOTM upload each. The gate verifies the vendor pin, runs the shared
 scripted corpus and independent controls, executes the full declared Office
 host test set with fresh coverage, and rejects missing or unexpected artifacts.
 
@@ -90,5 +121,5 @@ The earlier Office completion/oracle work is represented in the combined
 histories. Two independent draft PRs are open: [#53 for ebooks](https://github.com/CrispStrobe/CrispCloud/pull/53)
 and [#54 for file-manager capabilities](https://github.com/CrispStrobe/CrispCloud/pull/54).
 They and the unfinished Rust cloud-engine branch remain outside this Office
-consolidation. The format-viewers/path-favorites branch has no changes beyond
-current main.
+consolidation. The format-viewers/path-favorites work is incorporated at the exact
+`9068e31d` snapshot described above.
