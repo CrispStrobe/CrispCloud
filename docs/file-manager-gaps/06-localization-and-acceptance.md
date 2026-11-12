@@ -66,6 +66,13 @@ capability. Required live/device checks remain visible after code implementation
 
 **Starting points:** Target machines, signing identities, isolated provider accounts; feature-specific fixtures.
 
+**Current evidence:** G01 incoming drops, G04 configurable menus and G12 external
+terminal launch are implemented and have automated regression evidence, but their
+named real OS/browser interaction checks remain pending. The native conversion
+fixture ran on Linux and transport fixtures ran on loopback; these do not replace
+signed application, macOS access-grant or live-provider acceptance. See the
+[current validation record](validation-20261112.md).
+
 ## G51
 
 ### Web runtime and WebAssembly acceptance
@@ -85,3 +92,10 @@ capability. Required live/device checks remain visible after code implementation
 - WebAssembly support is enabled only after a successful build and representative runtime tests, with dependency limitations documented.
 
 **Starting points:** Browser harness; web dependency/build configuration; G01/G50 acceptance.
+
+**Current evidence:** The JavaScript release build for code checkpoint `ebede8d`
+passed with `APP_VERSION=1.1.0+12` and `GIT_HASH=ebede8d`. The optional WebAssembly
+dry run again exited 247. No WebAssembly support or browser-runtime acceptance
+is established by this compilation. The failure's underlying cause remains to
+be diagnosed; an exit code alone is not evidence of a specific memory or
+dependency cause.

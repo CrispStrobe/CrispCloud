@@ -254,3 +254,26 @@ observed physical FTP transport cleanup during stalled TLS negotiation,
 including pending login and data channels. Owner close/logout and deadlines
 are covered; generic pre-subscription queue-stop propagation retains the
 separate [FTP API boundary](ftp-transport.md).
+
+## Follow-up gap closure validation
+
+All 51 remaining gap scopes are recorded in six lane documents. Eight further
+implementation increments are preserved on remote feature branches: five closed
+scopes (G02, G03, G13, G27, G37), and three implemented features with named
+target-runtime acceptance pending (G01, G04, G12). The remaining 43 items are
+31 scoped implementations, ten research prerequisites and two cross-cutting
+acceptance items.
+
+The [follow-up validation record](file-manager-gaps/validation-20261112.md)
+contains the branch/PR checkpoints and individual test gates. Counts from
+overlapping gates are not added together. The final conversion gate passed 80
+tests; the final proxy/security gate passed 197. Full application analysis
+completed with **0 errors, 96 warnings and 1,038 informational findings** under
+the existing nonfatal warning/info gate.
+
+The integrated **JavaScript release web build passed** for code checkpoint
+`ebede8d596e8a5f83cf78ccd420573505a2e4531`, with `APP_VERSION=1.1.0+12` and
+`GIT_HASH=ebede8d`. Its optional WebAssembly dry run again exited 247. Browser
+runtime, WebAssembly, signed/native and live-provider acceptance remain open.
+The current feature branch checks were queued at inspection; hosted CI success
+is not claimed. No new dependency was introduced in these eight increments.
