@@ -1,0 +1,25 @@
+{
+  "description": "Authored UTF-16 endpoints and copy identities; never regenerated from Dart output.",
+  "source_ranges": {
+    "Alpha": {"id": "000", "start": [0, 7], "end": [0, 11], "text": "A😀B"},
+    "Overlap": {"id": "5", "start": [0, 10], "end": [1, 4], "text": "BCTail\nHead"},
+    "Cross": {"id": "6", "start": [0, 12], "end": [1, 8], "text": "Tail\nHead End"},
+    "Empty": {"id": "7", "start": [1, 4], "end": [1, 4], "text": ""},
+    "Alpha_copy": {"id": "1", "start": [2, 0], "end": [2, 12], "text": "Reserved one"},
+    "Alpha_copy2": {"id": "2", "start": [2, 12], "end": [2, 24], "text": "Reserved two"}
+  },
+  "copy_mapping": {
+    "Alpha": {"id": "3", "name": "Alpha_copy3"},
+    "Overlap": {"id": "4", "name": "Overlap_copy"},
+    "Cross": {"id": "8", "name": "Cross_copy"},
+    "Empty": {"id": "9", "name": "Empty_copy"}
+  },
+  "copied_ranges": {
+    "Alpha_copy3": {"id": "3", "start": [3, 7], "end": [3, 11], "text": "A😀B"},
+    "Overlap_copy": {"id": "4", "start": [3, 10], "end": [4, 4], "text": "BCTail\nHead"},
+    "Cross_copy": {"id": "8", "start": [3, 12], "end": [4, 8], "text": "Tail\nHead End"},
+    "Empty_copy": {"id": "9", "start": [4, 4], "end": [4, 4], "text": ""}
+  },
+  "reference_target": "Alpha",
+  "reference_text": "A😀B"
+}

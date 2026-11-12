@@ -210,31 +210,46 @@ void main() {
     },
   );
 
-  test('native range paste cannot silently flatten its endpoints', () async {
-    OfficeClipboard.instance.useSystem = false;
-    addTearDown(() {
-      OfficeClipboard.instance.clear();
-      OfficeClipboard.instance.useSystem = true;
-    });
-    final controller = _controller();
-    final paragraph = controller.document.paragraphs.single;
-    final copy = WmlClone.paragraph(paragraph);
-    await OfficeClipboard.instance.write(
-      OfficeClipboardPayload(
-        kind: OfficeClipboardKind.richText,
-        plain: copy.text,
-        wordBlocks: [copy],
-      ),
-    );
-    _at(controller, paragraph.text.length);
-    await expectLater(controller.pasteFromClipboard(), throwsUnsupportedError);
-    expect(paragraph.text, 'pre SELECTED post');
-    expect(controller.commands.canUndo, isFalse);
-    _assertNative(controller);
-  });
+  test(
+    'complete native range paste remaps without flattening endpoints',
+    () async {
+      OfficeClipboard.instance.useSystem = false;
+      addTearDown(() {
+        OfficeClipboard.instance.clear();
+        OfficeClipboard.instance.useSystem = true;
+      });
+      final controller = _controller();
+      final paragraph = controller.document.paragraphs.single;
+      final copy = WmlClone.paragraph(paragraph);
+      await OfficeClipboard.instance.write(
+        OfficeClipboardPayload(
+          kind: OfficeClipboardKind.richText,
+          plain: copy.text,
+          wordBlocks: [copy],
+        ),
+      );
+      _at(controller, paragraph.text.length);
+      await controller.pasteFromClipboard();
+      expect(paragraph.text, 'pre SELECTED postpre SELECTED post');
+      expect(
+        WordBookmarks.byName(controller.document, 'SelectedRange_copy')!.text,
+        'SELECTED',
+      );
+      expect(
+        WordBookmarks.byName(
+          controller.document,
+          'SelectedRange_copy',
+        )!.start.id,
+        '1',
+      );
+      controller.undo();
+      expect(paragraph.text, 'pre SELECTED post');
+      _assertNative(controller);
+    },
+  );
 
   test(
-    'a copied bookmark in a later block rejects before preceding text is inserted',
+    'a partial bookmark in a later block rejects before preceding text is inserted',
     () async {
       OfficeClipboard.instance.useSystem = false;
       addTearDown(() {
@@ -249,15 +264,15 @@ void main() {
           plain: 'Inserted prefix\n${paragraph.text}',
           wordBlocks: [
             WmlParagraph(inlines: [WmlRun(text: 'Inserted prefix')]),
-            WmlClone.paragraph(paragraph),
+            WmlClone.paragraph(paragraph)
+              ..inlines.removeWhere(
+                (inline) => inline is WmlBookmarkBoundary && !inline.isStart,
+              ),
           ],
         ),
       );
       _at(controller, paragraph.text.length);
-      await expectLater(
-        controller.pasteFromClipboard(),
-        throwsUnsupportedError,
-      );
+      await expectLater(controller.pasteFromClipboard(), throwsStateError);
       expect(paragraph.text, 'pre SELECTED post');
       expect(controller.document.paragraphs.single, same(paragraph));
       expect(controller.commands.canUndo, isFalse);

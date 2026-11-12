@@ -1,16 +1,32 @@
 import 'sml_workbook.dart';
 
-/// A workbook-defined name (`definedName`).
-class SmlNamedRange {
+/// A defined name and its owner. [localSheetId] is a zero-based worksheet
+/// index, not the worksheet's OOXML sheetId. Null denotes workbook scope.
+abstract class SmlDefinedName {
+  SmlDefinedName({
+    required this.name,
+    this.localSheetId,
+    Map<String, String>? attributes,
+  }) : attributes = attributes ?? <String, String>{};
+
+  String name;
+  int? localSheetId;
+
+  /// Native metadata such as hidden/comment, excluding name and localSheetId.
+  final Map<String, String> attributes;
+  String get formula;
+}
+
+/// An absolute cell/range definition editable by the compact spreadsheet model.
+class SmlNamedRange extends SmlDefinedName {
   /// SmlNamedRange API.
   SmlNamedRange({
-    required this.name,
+    required super.name,
     required this.sheetName,
     required this.range,
+    super.localSheetId,
+    super.attributes,
   });
-
-  /// name API.
-  String name;
 
   /// sheetName API.
   String sheetName;
@@ -20,6 +36,31 @@ class SmlNamedRange {
 
   /// a1 API.
   String get a1 => '${range.start.a1}:${range.end.a1}';
+
+  @override
+  String get formula {
+    String absolute(SmlCellRef cell) => cell.a1.replaceFirstMapped(
+      RegExp(r'^([A-Z]+)(\d+)$'),
+      (match) => '\$${match[1]}\$${match[2]}',
+    );
+    final first = absolute(range.start);
+    final ref = range.isSingleCell ? first : '$first:${absolute(range.end)}';
+    return "'${sheetName.replaceAll("'", "''")}'!$ref";
+  }
+}
+
+/// Retains native scalar or unmodeled definitions without pretending they are
+/// ordinary cell ranges. Evaluation deliberately supports only scalar literals.
+class SmlFormulaName extends SmlDefinedName {
+  SmlFormulaName({
+    required super.name,
+    required this.formula,
+    super.localSheetId,
+    super.attributes,
+  });
+
+  @override
+  String formula;
 }
 
 /// How a cell value is validated.
@@ -351,7 +392,9 @@ abstract final class SmlAnalysis {
   ) {
     for (final SmlDataValidation rule in sheet.validations) {
       if (rule.range.containsRef(ref) && !rule.accepts(text)) {
-        return rule.error.isEmpty ? 'This value does not match the data validation restrictions.' : rule.error;
+        return rule.error.isEmpty
+            ? 'This value does not match the data validation restrictions.'
+            : rule.error;
       }
     }
     return null;
@@ -486,7 +529,10 @@ class SmlTable {
       if (headerName(sheet, c).toUpperCase() == header.toUpperCase()) {
         final int r0 = headerRow ? range.minRow + 1 : range.minRow;
         if (r0 > range.maxRow) {
-          return SmlRange(SmlCellRef(c, range.minRow), SmlCellRef(c, range.minRow));
+          return SmlRange(
+            SmlCellRef(c, range.minRow),
+            SmlCellRef(c, range.minRow),
+          );
         }
         return SmlRange(SmlCellRef(c, r0), SmlCellRef(c, range.maxRow));
       }
@@ -513,8 +559,12 @@ class SmlTable {
         .trim();
     final String column = bracket < 0
         ? ''
-        : token.substring(bracket + 1, token.endsWith(']') ? token.length - 1 : token.length)
-            .trim();
+        : token
+              .substring(
+                bracket + 1,
+                token.endsWith(']') ? token.length - 1 : token.length,
+              )
+              .trim();
     for (final SmlTable table in sheet.tables) {
       if (table.name.toUpperCase() != tableName.toUpperCase()) {
         continue;

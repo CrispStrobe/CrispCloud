@@ -1,9 +1,10 @@
 {
   "version": 1,
   "package": "quds_office_editor",
-  "expected_file_count": 25,
+  "expected_file_count": 29,
   "description": "Authored inventory of actual Flutter controller exports. The engine and editor are checked separately so cleaning one package cannot remove the other's evidence.",
   "series": [
+    {"pattern": "fidelity-bookmark-copy/editor-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_bookmark_copy_test.dart"},
     {
       "pattern": "fidelity-bookmarks-legacy/editor-bookmarks-{cycle}.docx",
       "cycles": [
@@ -78,6 +79,7 @@
     }
   ],
   "standalone": [
+    {"path": "fidelity-bookmark-copy/copied-expected.docx", "producer": "test/word_bookmark_copy_test.dart"},
     {
       "path": "fidelity/unchanged-controller.docx",
       "producer": "test/office_fidelity_workflow_test.dart"

@@ -134,6 +134,7 @@ class FormulaLexer {
   }
 
   FormulaToken _quotedSheetRef() {
+    final int start = _i;
     final int rawStart = _raw;
     _i++;
     final StringBuffer name = StringBuffer();
@@ -160,11 +161,10 @@ class FormulaLexer {
       );
     }
     _i++;
-    return _classifyRef(
-      "'${name.toString()}'!${_readA1()}",
-      start: rawStart,
-      end: _raw,
-    );
+    while (!_done && _isIdentPart(_src.codeUnitAt(_i))) {
+      _i++;
+    }
+    return _classifyRef(_src.substring(start, _i), start: rawStart, end: _raw);
   }
 
   FormulaToken _nameOrRef() {
@@ -182,14 +182,6 @@ class FormulaLexer {
       }
     }
     return _classifyRef(_src.substring(start, _i), start: rawStart, end: _raw);
-  }
-
-  String _readA1() {
-    final int start = _i;
-    while (!_done && _isA1Part(_src.codeUnitAt(_i))) {
-      _i++;
-    }
-    return _src.substring(start, _i);
   }
 
   /// start API.
@@ -256,15 +248,14 @@ class FormulaLexer {
   static bool _isAlpha(int ch) =>
       (ch >= 65 && ch <= 90) || (ch >= 97 && ch <= 122);
   static bool _isIdentStart(int ch) =>
-      _isAlpha(ch) || ch == 0x24 || ch == 0x5F || _isLetter(ch);
+      _isAlpha(ch) || ch == 0x24 || ch == 0x5F || ch == 0x5C || _isLetter(ch);
   static bool _isIdentPart(int ch) =>
       _isIdentStart(ch) ||
       _isDigit(ch) ||
       ch == 0x21 ||
       ch == 0x3A ||
-      ch == 0x2E;
-  static bool _isA1Part(int ch) =>
-      _isAlpha(ch) || _isDigit(ch) || ch == 0x24 || ch == 0x3A;
+      ch == 0x2E ||
+      ch == 0x3F;
   static bool _isLetter(int ch) =>
       ch > 127 && _unicodeLetter.hasMatch(String.fromCharCode(ch));
 }
@@ -352,13 +343,20 @@ class FormulaParser {
           _eat();
           return CallNode(tok.lexeme.toUpperCase(), args);
         }
-        // Qualified names, whole rows/columns and 3-D references need a
-        // richer reference model. Returning a name error from inside SUM
-        // would be silently coerced to zero, corrupting an imported cache.
+        // Worksheet-local names have a scope owner independently of their
+        // referenced sheet. External, 3-D and whole-row/column references
+        // remain unsupported and cannot be mistaken for ordinary names.
         final prefix = tok.lexeme.split('[').first;
-        if (prefix.contains('!') ||
-            prefix.contains(':') ||
-            (tok.lexeme.startsWith("'") && tok.lexeme.contains('!'))) {
+        if (prefix.contains('!')) {
+          final bang = tok.lexeme.lastIndexOf('!');
+          final owner = _sheetName(tok.lexeme.substring(0, bang));
+          final name = tok.lexeme.substring(bang + 1);
+          if (!_definedNamePattern.hasMatch(name)) {
+            throw UnsupportedError('Unmodeled formula reference ${tok.lexeme}');
+          }
+          return NamedRangeNode(name, sheetName: owner);
+        }
+        if (prefix.contains(':')) {
           throw UnsupportedError('Unmodeled formula reference ${tok.lexeme}');
         }
         return NamedRangeNode(tok.lexeme);
@@ -423,6 +421,11 @@ class FormulaParser {
     return name;
   }
 
+  static final _definedNamePattern = RegExp(
+    r'^[\p{L}_\\][\p{L}\p{N}_.?\\]*$',
+    unicode: true,
+  );
+
   static int? _lbp(String op) {
     return switch (op) {
       '=' || '<>' || '<' || '>' || '<=' || '>=' => 10,
@@ -451,7 +454,7 @@ Object? evaluateFormulaForCache(String source, FormulaContext ctx) =>
       try {
         return parseFormula(source).eval(ctx);
       } on Object catch (error) {
-        return FormulaErrorValue('#ERROR! $error');
+        return FormulaErrorValue('#ERROR! $error', isUnsupported: true);
       }
     });
 

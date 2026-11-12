@@ -618,7 +618,7 @@ class _WordMediaReader {
       0xf01a => LegacyWordImageFormat.emf,
       0xf01b => LegacyWordImageFormat.wmf,
       0xf01c => LegacyWordImageFormat.pict,
-      0xf01d => LegacyWordImageFormat.jpeg,
+      0xf01d || 0xf02a => LegacyWordImageFormat.jpeg,
       0xf01e => LegacyWordImageFormat.png,
       0xf01f => LegacyWordImageFormat.dib,
       0xf029 => LegacyWordImageFormat.tiff,
@@ -631,6 +631,8 @@ class _WordMediaReader {
       }.contains(node.instance),
       LegacyWordImageFormat.png => node.instance == 0x6e1,
       LegacyWordImageFormat.tiff => node.instance == 0x6e5,
+      LegacyWordImageFormat.emf => node.instance == 0x3d5,
+      LegacyWordImageFormat.wmf => node.instance == 0x217,
       _ => false,
     };
     final raster =
@@ -649,11 +651,32 @@ class _WordMediaReader {
         0x6e4,
         0x6e5,
       }.contains(node.instance),
+      LegacyWordImageFormat.emf => const {0x3d4, 0x3d5}.contains(node.instance),
+      LegacyWordImageFormat.wmf => const {0x216, 0x217}.contains(node.instance),
       _ => true,
     };
     Uint8List bytes;
     LegacyWordSourceReference reference;
-    if (raster && node.version == 0 && validInstance) {
+    LegacyWordMetafileInfo? metafile;
+    if ((format == LegacyWordImageFormat.emf ||
+            format == LegacyWordImageFormat.wmf) &&
+        node.version == 0 &&
+        validInstance) {
+      final decoded = decodeOfficeArtMetafile(
+        node.data.slice(0, node.data.length),
+        format: format,
+        twoUids: twoUids,
+        maxDecodedBytes: _byteLimit - _retainedBytes,
+      );
+      bytes = decoded.bytes;
+      metafile = decoded.info;
+      reference = _reference(
+        node.path,
+        node.absoluteStart + 8 + decoded.dataOffset,
+        decoded.encodedLength,
+        'OfficeArtMetafileData',
+      );
+    } else if (raster && node.version == 0 && validInstance) {
       final skip = (twoUids ? 32 : 16) + 1;
       bytes = node.data.slice(skip, node.data.length - skip);
       reference = _reference(
@@ -689,6 +712,7 @@ class _WordMediaReader {
       bytes: bytes,
       source: reference,
       officeArtArtifactId: artifact,
+      metafile: metafile,
     );
     assets.add(asset);
     if (!asset.isRenderable) {

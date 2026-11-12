@@ -40,6 +40,7 @@ python3 tool/collect_office_host_coverage.py "$office_host_coverage_dir" -- \
 python3 -m unittest discover -s tool -p 'test*office*coverage.py'
 python3 tool/office_host_coverage.py "$office_host_coverage_dir/lcov.info" \
   --output "$office_host_coverage_dir/gaps.json" --require-receipt --require-all-sources
+mkdir -p build/fidelity-host/coverage
 cp "$office_host_coverage_dir/gaps.json" build/fidelity-host/coverage/gaps.json
 python3 tool/office_host_evidence.py verify
 python3 packages/quds_office_engine/tool/fidelity/corpus.py verify build/fidelity

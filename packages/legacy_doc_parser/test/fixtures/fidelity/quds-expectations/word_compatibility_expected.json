@@ -1,0 +1,35 @@
+{
+  "body_paragraphs": [
+    "Selected supported body",
+    "Selected fallback body",
+    "Selected nested fallback",
+    "Before selected inline after",
+    "Selected run fallback",
+    "Selected table fallback",
+    "First section ending",
+    "Second section text3"
+  ],
+  "default_header": "Selected header fallback",
+  "first_header": "First page header retained",
+  "footnote": "Selected supported footnote",
+  "page_number_starts": [
+    "17",
+    "31"
+  ],
+  "grid_line_pitches": [
+    "360",
+    "400"
+  ],
+  "grid_types": [
+    "lines",
+    "linesAndChars"
+  ],
+  "gutters": [
+    "240",
+    "120"
+  ],
+  "paper_codes": [
+    "9",
+    "9"
+  ]
+}

@@ -157,7 +157,12 @@ void main() {
       ],
     ).build();
     final xml = _main(convertLegacyWordToStructuredDocx(source).bytes);
-    expect(_attr(_elements(xml, 'ins').single, 'date'), '2026-11-12T08:45:00');
+    expect(_elements(xml, 'ins'), hasLength(2));
+    expect(
+      _elements(xml, 'ins').map((node) => _attr(node, 'date')),
+      everyElement('2026-11-12T08:45:00'),
+    );
+    // The source range includes the inserted paragraph mark as well as text.
   });
 
   test(

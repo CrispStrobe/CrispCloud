@@ -4,16 +4,20 @@ import 'dart:typed_data';
 
 import 'bounded_cfb_reader.dart';
 import 'compound/cfbf_writer.dart';
+import 'legacy_word_metafile.dart';
 import 'legacy_word_structured_model.dart';
 import 'legacy_word_structured_render.dart';
 
 part 'legacy_word_binary_source.dart';
 part 'legacy_word_sprms.dart';
+part 'legacy_word_layout_parser.dart';
+part 'legacy_word_revisions.dart';
 part 'legacy_word_decorations.dart';
 part 'legacy_word_format_tables.dart';
 part 'legacy_word_stories.dart';
 part 'legacy_word_fields.dart';
 part 'legacy_word_lists.dart';
+part 'legacy_word_tables.dart';
 part 'legacy_word_media_parser.dart';
 
 typedef _Props = Map<String, Object?>;
@@ -177,35 +181,31 @@ class _StructuredWordParser {
 
   String _plainText(List<LegacyWordBlock> blocks) {
     final plain = StringBuffer();
-    void paragraphText(LegacyWordParagraph paragraph) {
-      for (final run in paragraph.runs) {
-        if (!run.style.hidden) plain.write(run.text);
+    void content(List<LegacyWordBlock> values, int depth) {
+      if (depth > 63) {
+        throw const FormatException('Word tables are nested too deeply.');
+      }
+      for (var index = 0; index < values.length; index++) {
+        if (index != 0) plain.write('\n');
+        switch (values[index]) {
+          case LegacyWordParagraph(:final runs):
+            for (final run in runs) {
+              if (!run.style.hidden) plain.write(run.text);
+            }
+          case LegacyWordTable(:final rows):
+            for (var row = 0; row < rows.length; row++) {
+              if (row != 0) plain.write('\n');
+              for (var cell = 0; cell < rows[row].cells.length; cell++) {
+                if (cell != 0) plain.write('\t');
+                content(rows[row].cells[cell].blocks, depth + 1);
+              }
+            }
+        }
       }
     }
 
-    for (final block in blocks) {
-      switch (block) {
-        case LegacyWordParagraph():
-          paragraphText(block);
-          plain.writeln();
-        case LegacyWordTable():
-          for (final row in block.rows) {
-            for (var cell = 0; cell < row.cells.length; cell++) {
-              if (cell != 0) plain.write('\t');
-              final paragraphs = row.cells[cell].paragraphs;
-              for (var p = 0; p < paragraphs.length; p++) {
-                if (p != 0) plain.write('\n');
-                paragraphText(paragraphs[p]);
-              }
-            }
-            plain.writeln();
-          }
-      }
-    }
-    final plainText = plain.toString();
-    return plainText.endsWith('\n')
-        ? plainText.substring(0, plainText.length - 1)
-        : plainText;
+    content(blocks, 0);
+    return plain.toString();
   }
 
   String _renderBlocks(List<LegacyWordBlock> blocks) {
@@ -251,13 +251,26 @@ class _StructuredWordParser {
     }
   }
 
-  List<_Sprm> _readProperties(Uint8List bytes, [int depth = 0]) {
+  List<_Sprm> _readProperties(
+    Uint8List bytes, [
+    int depth = 0,
+    bool recoverPapxOrphanByte = false,
+  ]) {
     if (depth > 16) {
       throw const FormatException(
         'Word indirect properties are nested too deeply.',
       );
     }
-    final operations = _decodeSprms(bytes, budget);
+    final operations = _decodeSprms(
+      bytes,
+      budget,
+      onPapxOrphanByte: recoverPapxOrphanByte
+          ? () {
+              warnings.add(LegacyWordWarning.recoveredNonconformingProperties);
+              warnings.add(LegacyWordWarning.unsupportedFormatting);
+            }
+          : null,
+    );
     final output = <_Sprm>[];
     void append(List<_Sprm> values) {
       if (values.length > 100000 - output.length) {
@@ -270,9 +283,9 @@ class _StructuredWordParser {
     }
 
     for (final operation in operations) {
-      if ((const {0x2a83, 0x3668}.contains(operation.code) &&
+      if ((const {0x3668, 0x3239}.contains(operation.code) &&
               operation.data.u8(0) != 0) ||
-          const {0xca89, 0xd667}.contains(operation.code)) {
+          const {0xd667, 0xd243}.contains(operation.code)) {
         warnings.add(LegacyWordWarning.revisionMetadataIncomplete);
       }
       if (operation.code != 0x6646 &&
@@ -322,16 +335,26 @@ class _StructuredWordParser {
     final terminalPiece = source.pieceAt(terminalCp);
     final papx = paragraphFormatting.at(terminalPiece.fc(terminalCp));
     final prm = _pieceProperties(terminalPiece);
-    var styleIndex = papx.styleIndex;
-    for (final op in [...papx.operations, ...prm]) {
-      if (op.code == 0x4600) styleIndex = op.data.u16(0);
-    }
+    final initial = _resolveStyle(papx.styleIndex);
+    final properties = <String, Object?>{
+      ...initial.paragraph,
+      'styleIndex': papx.styleIndex,
+    };
+    _applyParagraph(
+      [...papx.operations, ...prm],
+      properties,
+      budget,
+      warnings,
+      resolveParagraphStyle: (index) => _resolveStyle(index).paragraph,
+    );
+    final styleIndex = properties['styleIndex'] as int? ?? papx.styleIndex;
     final resolved = _resolveStyle(styleIndex);
-    final properties = <String, Object?>{...resolved.paragraph};
-    _applyParagraph(papx.operations, properties, budget, warnings);
-    _applyParagraph(prm, properties, budget, warnings);
     final characterBase = _applyListFormatting(properties, resolved.character);
     final style = _paragraphStyle(properties, styleIndex);
+    final formattingRevision = _paragraphRevision(properties);
+    final mark = terminator == 13 || terminator == 12 || terminator == 7
+        ? _paragraphMark(terminalCp, characterBase)
+        : null;
     final runs = <LegacyWordRun>[];
     _PendingRun? pendingRun;
     void finishRun() {
@@ -351,26 +374,7 @@ class _StructuredWordParser {
       final piece = source.pieceAt(cp);
       final fc = piece.fc(cp);
       final chpx = characterFormatting.at(fc);
-      final characterPrm = _pieceProperties(piece);
-      final base = <String, Object?>{...characterBase};
-      final character = <String, Object?>{...base};
-      _applyCharacter(
-        [...chpx.operations, ...characterPrm],
-        character,
-        base,
-        budget,
-        warnings,
-        paragraphStyle: characterBase,
-        resolveCharacterStyle: (index) {
-          if (index == 10 && !styles.containsKey(index)) return const {};
-          if (styles[index]?.kind != 2) {
-            throw const FormatException(
-              'Invalid Word character-style reference.',
-            );
-          }
-          return _resolveStyle(index).character;
-        },
-      );
+      final character = _characterAt(cp, characterBase);
       var spanEnd = cp + (chpx.endFc - fc) ~/ (piece.compressed ? 1 : 2);
       if (spanEnd > piece.endCp) spanEnd = piece.endCp;
       if (spanEnd > contentEnd) spanEnd = contentEnd;
@@ -386,21 +390,17 @@ class _StructuredWordParser {
       final runStyle = _characterStyle(character);
       final inserted = character['inserted'] == true;
       final deleted = character['deleted'] == true;
-      String? author;
-      DateTime? time;
-      if (inserted || deleted) {
-        final authorIndex =
-            character[deleted ? 'deletionAuthor' : 'insertionAuthor'] as int?;
-        if (authorIndex != null && authorIndex < authors.length) {
-          author = authors[authorIndex];
-        }
-        time = _revisionDate(
-          character[deleted ? 'deletionDate' : 'insertionDate'] as int?,
-        );
-        if (author == null || time == null || (inserted && deleted)) {
-          warnings.add(LegacyWordWarning.revisionMetadataIncomplete);
-        }
-      }
+      final insertionRevision = inserted
+          ? _revisionInfo(character, 'insertion')
+          : null;
+      final deletionRevision = deleted
+          ? _revisionInfo(character, 'deletion')
+          : null;
+      final revision = deletionRevision ?? insertionRevision;
+      final author = revision?.author;
+      final time = revision?.time;
+      final characterRevision = _characterRevision(character);
+      final formattingSaveId = character['formattingSaveId'] as int?;
       if (character['special'] == true ||
           character['object'] == true ||
           character['ole2'] == true ||
@@ -432,7 +432,11 @@ class _StructuredWordParser {
             previous.inserted == inserted &&
             previous.deleted == deleted &&
             previous.author == author &&
-            previous.time == time) {
+            previous.time == time &&
+            previous.insertionRevision == insertionRevision &&
+            previous.deletionRevision == deletionRevision &&
+            previous.formattingRevision == characterRevision &&
+            previous.formattingSaveId == formattingSaveId) {
           previous.text.write(value);
           previous.endCp = segmentEnd;
           return;
@@ -447,6 +451,10 @@ class _StructuredWordParser {
           deleted,
           author,
           time,
+          insertionRevision,
+          deletionRevision,
+          characterRevision,
+          formattingSaveId,
         );
       }
 
@@ -517,7 +525,7 @@ class _StructuredWordParser {
           case 31:
             printable = 0x00ad;
           default:
-            if (unit < 32 && unit != 9 && unit != 12) {
+            if (unit < 32 && unit != 9 && unit != 12 && unit != 14) {
               warnings.add(LegacyWordWarning.unsupportedFormatting);
               printable = -1;
             }
@@ -545,6 +553,9 @@ class _StructuredWordParser {
         endCp: end,
         runs: List.unmodifiable(runs),
         style: style,
+        formattingRevision: formattingRevision,
+        mark: mark,
+        revisionSaveId: properties['paragraphSaveId'] as int?,
       ),
       properties,
       terminator,
@@ -611,6 +622,7 @@ class _StructuredWordParser {
   LegacyWordParagraphStyle _paragraphStyle(_Props properties, int styleIndex) {
     final outline = properties['outline'] as int?;
     return LegacyWordParagraphStyle(
+      layout: _paragraphLayout(properties),
       styleIndex: styleIndex,
       styleName: styles[styleIndex]?.name,
       headingLevel: outline != null && outline < 9 ? outline + 1 : null,
@@ -675,107 +687,6 @@ class _StructuredWordParser {
       spacingTwips: properties['spacing'] as int?,
     );
   }
-
-  List<LegacyWordBlock> _assembleTables(List<_Paragraph> paragraphs) {
-    final blocks = <LegacyWordBlock>[];
-    final rows = <LegacyWordTableRow>[];
-    final cells = <List<LegacyWordParagraph>>[];
-    var cell = <LegacyWordParagraph>[];
-    int? start;
-    var end = 0;
-    void finishRow(_Props properties) {
-      if (cell.isNotEmpty) {
-        cells.add(cell);
-        cell = [];
-      }
-      if (cells.isEmpty) {
-        throw const FormatException('Word table row has no cells.');
-      }
-      final definition = properties['tableDefinition'] as _TableDefinition?;
-      if (definition != null && definition.flags.length != cells.length) {
-        throw const FormatException(
-          'Word table cell count does not match its row.',
-        );
-      }
-      rows.add(
-        LegacyWordTableRow(
-          isHeader: properties['rowHeader'] == true,
-          cells: List.unmodifiable([
-            for (var i = 0; i < cells.length; i++)
-              LegacyWordTableCell(
-                paragraphs: List.unmodifiable(cells[i]),
-                widthTwips: definition == null
-                    ? null
-                    : definition.edges[i + 1] - definition.edges[i],
-                mergeStart:
-                    definition != null && (definition.flags[i] & 3) >= 2,
-                mergeContinue:
-                    definition != null && (definition.flags[i] & 3) == 1,
-                verticalMergeStart:
-                    definition != null && ((definition.flags[i] >> 5) & 3) >= 2,
-                verticalMergeContinue:
-                    definition != null && ((definition.flags[i] >> 5) & 3) == 1,
-                shading:
-                    (properties['cellShading']
-                        as Map<int, LegacyWordShading>?)?[i],
-              ),
-          ]),
-        ),
-      );
-      cells.clear();
-    }
-
-    void finishTable() {
-      if (start == null) return;
-      if (cell.isNotEmpty || cells.isNotEmpty) {
-        warnings.add(LegacyWordWarning.unsupportedFormatting);
-        finishRow(const {});
-      }
-      blocks.add(
-        LegacyWordTable(
-          startCp: start!,
-          endCp: end,
-          rows: List.unmodifiable(rows),
-        ),
-      );
-      rows.clear();
-      start = null;
-    }
-
-    for (final item in paragraphs) {
-      final paragraph = item.paragraph;
-      final properties = item.properties;
-      final depth = properties['tableDepth'] as int? ?? 0;
-      if (depth > 1 ||
-          properties['innerCellEnd'] == true ||
-          properties['innerRowEnd'] == true) {
-        warnings.add(LegacyWordWarning.nestedTablesFlattened);
-        finishTable();
-        blocks.add(paragraph);
-        continue;
-      }
-      if (properties['inTable'] != true && depth == 0) {
-        finishTable();
-        blocks.add(paragraph);
-        continue;
-      }
-      start ??= paragraph.startCp;
-      end = paragraph.endCp;
-      if (properties['rowEnd'] == true) {
-        if (paragraph.runs.isNotEmpty) cell.add(paragraph);
-        finishRow(properties);
-      } else {
-        cell.add(paragraph);
-        if (item.terminator == 7) {
-          cells.add(cell);
-          cell = [];
-        }
-      }
-      if (sectionEnds.contains(end)) finishTable();
-    }
-    finishTable();
-    return blocks;
-  }
 }
 
 class _Paragraph {
@@ -795,6 +706,10 @@ class _PendingRun {
     this.deleted,
     this.author,
     this.time,
+    this.insertionRevision,
+    this.deletionRevision,
+    this.formattingRevision,
+    this.formattingSaveId,
   ) {
     text.write(value);
   }
@@ -805,6 +720,10 @@ class _PendingRun {
   final bool deleted;
   final String? author;
   final DateTime? time;
+  final LegacyWordRevisionInfo? insertionRevision;
+  final LegacyWordRevisionInfo? deletionRevision;
+  final LegacyWordCharacterFormattingRevision? formattingRevision;
+  final int? formattingSaveId;
   final text = StringBuffer();
   LegacyWordRun finish() => LegacyWordRun(
     startCp: startCp,
@@ -815,6 +734,10 @@ class _PendingRun {
     deleted: deleted,
     revisionAuthor: author,
     revisionTime: time,
+    insertionRevision: insertionRevision,
+    deletionRevision: deletionRevision,
+    formattingRevision: formattingRevision,
+    formattingSaveId: formattingSaveId,
   );
 }
 

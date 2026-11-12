@@ -104,18 +104,8 @@ Iterable<WmlBlock> bodyBlocks(WmlDocument doc) sync* {
   WmlTable table,
   StepInput step,
 ) {
-  final row = step.integer('row', max: table.rows.length - 1);
-  if (step.has('column') && step.has('gridColumn')) {
-    throw ArgumentError('Choose column or gridColumn, not both');
-  }
-  if (step.has('gridColumn')) {
-    final column = step.integer('gridColumn');
-    final selected = WordTable.cellAtGrid(table, row, column);
-    if (selected == null) throw ArgumentError('gridColumn is outside the row');
-    return selected;
-  }
-  final column = step.integer('column', max: table.rows[row].cells.length - 1);
-  return (row: row, col: column, cell: table.rows[row].cells[column]);
+  final selected = selectTableCell(table, step);
+  return (row: selected.row, col: selected.column, cell: selected.cell);
 }
 
 int _mergeColumn(StepInput step, int max, {bool end = false}) {

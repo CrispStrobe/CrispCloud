@@ -11,7 +11,8 @@ do not execute objects, evaluate fields, run VBA, or fetch linked resources.
 | --- | --- | --- |
 | Inline picture | U+0001 with resolved `CFSpec` and `CPicLocation` → `Data` PICF → inline OfficeArt shape and BLIP. Global CP, intended dimensions and crop are retained. | One unambiguous picture BLIP is mapped. Multiple inline BLIPs remain in the original PICF artifact, with a notice. |
 | PNG, JPEG, TIFF | Referenced raster payload bytes, format, content type and precise source extent. | Header identification is not full image-decoder validation. No decompression or pixel allocation occurs here. |
-| DIB, EMF, WMF, PICT, unknown BLIP | Whole referenced OfficeArt BLIP record. | Opaque evidence; no metafile execution, inflation, rasterization or guessed file extraction. |
+| EMF, WMF | Bounded decoded file data and structural metadata, plus the original BLIP evidence. | Native image parts are permitted for structurally validated, escape-free files; see [metafile fidelity](media-fidelity.md) for the exact boundary. |
+| DIB, PICT, unknown BLIP | Whole referenced OfficeArt BLIP record. | Opaque evidence; no execution, rasterization or guessed file extraction. |
 | Floating image or drawing | `PlcfSpaMom` / `PlcfSpaHdr` → matching OfficeArt shape → referenced BStore entry. Anchor CP, rectangle, origins, wrapping, crop and shape identity are retained. | Both the original anchor table and OfficeArt graph remain evidence. Arbitrary geometry, rotation, flips, effects and tight-wrap polygons are not fully reconstructed. |
 | Delayed BLIP | Reads the declared size at the FBSE `foDelay` location in `WordDocument`. | No fallback search when the reference is invalid; unreferenced BStore images are not materialized. |
 | Textbox links | Full `OfficeArtClientTextbox` identifier and `hspNext` shape identity; the story parser validates linked text-story and chain indices. | Retaining chain identifiers does not establish identical text reflow or pagination. |

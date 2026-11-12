@@ -46,6 +46,16 @@ REQUIRED_SERIES_BASELINES = {
     # Physical story replacement has prescribed text and plain-paragraph
     # defaults. Its expected native package is authored independently of saves.
     ('fidelity-table-grid', 'omitted-edited.docx'): 'omitted-edited-expected.docx',
+    # These edits have independent authored appearance references. Repeated
+    # saves alone cannot establish that their first export was correct.
+    ('fidelity-bookmark-copy', 'copied.docx'): 'copied-expected.docx',
+    ('fidelity-bookmark-copy', 'editor.docx'): 'copied-expected.docx',
+    ('fidelity-sheet-qualified-names', 'recalculated.xlsx'): 'expected-recalculated.xlsx',
+    ('fidelity-sheet-qualified-names', 'renamed.xlsx'): 'expected-renamed.xlsx',
+    ('fidelity-sheet-rename', 'renamed.xlsx'): 'qualified-expected.xlsx',
+    # Flat grouping changes membership while retaining the source appearance.
+    ('fidelity-slide-arrange', 'direct.pptx'): 'source.pptx',
+    ('fidelity-slide-arrange', 'isolate.pptx'): 'source.pptx',
 }
 # This six-slide native fixture changes only slide order and section membership.
 # These are authored page orders, independent of the engine/XML oracle. Scope
@@ -71,7 +81,7 @@ HOST_PICTURE_GEOMETRY = {
     'landscape': ((720, 405), (72, 40.5, 360, 180)),
     'portrait': ((720, 405), (72, 40.5, 120, 240)),
     'square': ((720, 405), (72, 40.5, 240, 240)),
-    'bounds': ((100, 60), (10, 6, 90, 45)),
+    'bounds': ((100, 72), (10, 7.2, 90, 45)),
 }
 HOST_PICTURE_ORACLE = 'host-slide-black-picture-v1'
 
@@ -264,7 +274,7 @@ def picture_raster_size(case, page_points):
                    or abs(value - target) > 0.03 for value, target in zip(page_points, expected))):
         raise FidelityError('Host picture PDF page size differs from the authored slide')
     # Poppler rounds the physical page up to whole pixels at 72 dpi. For
-    # example, LibreOffice's 100.006 x 60.0094 pt page yields 101 x 61 pixels.
+    # example, LibreOffice's 100.006 x 72 pt page yields 101 x 72 pixels.
     return [math.ceil(value) for value in page_points]
 
 
@@ -393,7 +403,7 @@ def section_page_order(case, root=None):
 def table_grid_baseline(case, root=None):
     """Select authored native expectations for the exact merged-table corpus."""
     context = Path(root) / case if root is not None else case
-    if (context.parent.parent.name == 'fidelity-table-grid'
+    if (context.parent.parent.name == 'fidelity-table-widths'
             and context.parent.name in ('direct', 'isolate')
             and case.suffix == '.docx'
             and case.stem in ('unchanged', 'format', 'replace', 'unmerge')):

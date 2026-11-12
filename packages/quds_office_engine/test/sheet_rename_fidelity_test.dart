@@ -63,6 +63,9 @@ void main() {
     final output = Directory('build/fidelity-sheet-rename')
       ..createSync(recursive: true);
     File('${output.path}/source.xlsx').writeAsBytesSync(source);
+    File(
+      'test/fixtures/fidelity/sheet-rename-qualified-expected.xlsx',
+    ).copySync('${output.path}/qualified-expected.xlsx');
     final originalExternal = book.package!
         .getPart('/xl/externalLinks/externalLink1.xml')!
         .readBytes();

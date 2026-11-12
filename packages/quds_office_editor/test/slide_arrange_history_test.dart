@@ -206,4 +206,74 @@ void main() {
     expect(controller.canUndo, isFalse);
     expect(controller.isDirty, isFalse);
   });
+
+  for (final ungroup in [false, true]) {
+    test(
+      '${ungroup ? 'ungroup' : 'regroup'} cannot split an existing group',
+      () {
+        final controller = _controller();
+        final shapes = controller.slide.shapes;
+        for (final shape in shapes) {
+          shape.groupId = 9;
+        }
+        expect(
+          () => ungroup
+              ? controller.ungroupShapes(shapes: shapes.sublist(1, 3))
+              : controller.groupShapes(shapes: shapes.sublist(1, 3)),
+          throwsStateError,
+        );
+        expect(shapes.map((shape) => shape.groupId), everyElement(9));
+        expect(controller.isDirty, isFalse);
+        expect(controller.canUndo, isFalse);
+        expect(controller.contentRevision, 0);
+      },
+    );
+  }
+
+  for (final operation in ['group', 'ungroup', 'align', 'distribute']) {
+    test('$operation rejects duplicate and foreign shapes atomically', () {
+      final controller = _controller();
+      final own = controller.slide.shapes;
+      final foreign = controller.presentation.slides[1].shapes.first;
+      final original = _geometry(controller.slide);
+      for (final shapes in [
+        [own[0], foreign, own[1]],
+        [own[0], own[1], own[0]],
+      ]) {
+        void arrange() {
+          switch (operation) {
+            case 'group':
+              controller.groupShapes(shapes: shapes);
+            case 'ungroup':
+              controller.ungroupShapes(shapes: shapes);
+            case 'align':
+              controller.alignShapes(PmlAlignAxis.right, shapes: shapes);
+            case 'distribute':
+              controller.distributeShapes(horizontal: true, shapes: shapes);
+          }
+        }
+
+        expect(arrange, throwsArgumentError);
+        expect(_geometry(controller.slide), original);
+        expect(own.map((shape) => shape.groupId), everyElement(isNull));
+        expect(controller.isDirty, isFalse);
+        expect(controller.canUndo, isFalse);
+      }
+    });
+  }
+
+  test('regrouping an entire existing group preserves identity and redo', () {
+    final controller = _controller();
+    final shapes = controller.slide.shapes;
+    final id = controller.groupShapes(shapes: shapes.sublist(0, 2));
+    controller.groupShapes(shapes: shapes.sublist(2, 4));
+    controller.undo();
+    final revision = controller.contentRevision;
+    expect(controller.canRedo, isTrue);
+    expect(controller.groupShapes(shapes: shapes.sublist(0, 2)), id);
+    expect(controller.contentRevision, revision);
+    expect(controller.canRedo, isTrue);
+    controller.undo();
+    expect(shapes.map((shape) => shape.groupId), everyElement(isNull));
+  });
 }

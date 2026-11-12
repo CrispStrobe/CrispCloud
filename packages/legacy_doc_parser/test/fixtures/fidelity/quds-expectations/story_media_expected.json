@@ -1,0 +1,30 @@
+{
+  "body_text": "Story media fixture",
+  "edited_body_text": "Edited manuscript",
+  "note_text": "Note picture",
+  "edited_note_text": "Edited relocated note",
+  "body_colors": [[255, 0, 0], [128, 0, 128]],
+  "story_colors": {
+    "default header": [0, 128, 0],
+    "default footer": [0, 0, 255],
+    "first header": [255, 255, 0],
+    "first footer": [0, 255, 255],
+    "even header": [255, 0, 255],
+    "even footer": [255, 165, 0]
+  },
+  "note_color": [0, 0, 255],
+  "image_pixels": [2, 2],
+  "width_emu": 457200,
+  "height_emu": 228600,
+  "wrap_distances_emu": [0, 0, 0, 0],
+  "wrap_distance_attributes": [false, false, false, false],
+  "replacement_body_color": [128, 0, 128],
+  "replacement_body_extents": [1028700, 571500],
+  "replacement_header_color": [255, 0, 0],
+  "replacement_header_extents": [914400, 228600],
+  "footer_edit": "Edited footer",
+  "footer_link": "https://example.test/footer",
+  "relocated_main": "content/manuscript.xml",
+  "relocated_notes": "support/notes-7.xml",
+  "relocated_styles": "support/catalog-9.xml"
+}

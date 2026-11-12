@@ -36,7 +36,6 @@ void main() {
     'SUM(Data!1:3)': "SUM('Next'!1:3)",
     r"SUM('Data'!$1:$3)": r"SUM('Next'!$1:$3)",
     'SUM(A:A)': 'SUM(A:A)',
-    'Data!LocalRange': "'Next'!LocalRange",
     '2+3 unparsed': '2+3 unparsed',
   };
   for (final entry in unsupported.entries) {
@@ -64,6 +63,7 @@ void main() {
   }
 
   final typed = <String, ({Object value, String? type, String xml})>{
+    'Data!LocalRange': (value: 2, type: null, xml: '2'),
     'IF(Data!B2>0,"Data!A1 ""quoted""","unused")': (
       value: 'Data!A1 "quoted"',
       type: 'str',

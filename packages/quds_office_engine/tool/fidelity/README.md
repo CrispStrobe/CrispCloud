@@ -26,9 +26,12 @@ creation, image replacement and opaque body XML (`w:altChunk` and any other
 unmodeled body element, with its relationship provenance). The editor adds
 layout exports and the async controller export.
 
-The authored manifests require **324 engine files** and **25 editor files**.
-The engine has 97 complete three-save series and 33 standalone inputs/exports;
-the editor has 8 complete three-save series and 1 standalone exports.
+The authored manifests require **373 engine files** and **25 editor files**.
+The engine has 110 complete three-save series and 43 standalone inputs/exports;
+the editor has eight complete three-save series and one standalone export.
+The recovered preferred-width corpus uses `fidelity-table-widths/`; the earlier
+logical-grid/omitted-row corpus remains in `fidelity-table-grid/`. Their distinct
+authored `source.docx` files must never share an output path.
 Exact inventory checks reject missing, extra, empty or invalid packages and
 retain SHA-256 receipts. Authored source/edited baselines also participate in
 external render comparisons; exports without a declared comparison baseline
@@ -50,7 +53,7 @@ Available names are `footnotes`, `endnotes`, `headings`, `styles`, `paragraphs`,
 `comments`, `spreadsheets` and `slides`. The committed matrix connects these
 15 areas to 19 producer/oracle bundles. Selecting every area currently requires
 214 freshly generated Office packages and 38 commands. The full `check.sh`
-gate also covers other regression corpora and requires all 305 engine files.
+gate also covers other regression corpora and requires all 324 engine files.
 
 `plan` prints the exact commands, required exports and separate editor golden
 commands without changing files. `run` validates every reference, removes only
@@ -142,7 +145,8 @@ and physical row-cell indexes for `tableUnmerge`, `tableCellText` and
 `tableMerge` accepts `endGridColumn` instead of `endColumn`. Each pair is mutually
 exclusive. A logical slot inside a horizontal or vertical merge resolves to the
 visible master cell. `inspect` reports both coordinate systems and whether the
-table supports grid addressing.
+table supports grid addressing. Each inspected cell also identifies its merge
+origin, or a grid diagnostic when logical edits are guarded.
 
 Logical addressing and merge/unmerge require a rectangular grid with matching
 vertical continuation spans. Partial merges crossing an existing vertical region

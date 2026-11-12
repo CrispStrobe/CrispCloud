@@ -1,5 +1,6 @@
 import '../../xml/namespaces.dart';
 import '../../xml/xml_node.dart';
+import 'wml_clone.dart';
 import 'wml_document.dart';
 import 'word_toc.dart';
 import 'word_tree.dart';
@@ -30,6 +31,175 @@ final class WmlBookmarkRange {
 
 /// Bookmark pairing, source preservation and generated-name/ID ownership.
 abstract final class WordBookmarks {
+  /// Deep-copies complete editable ranges for insertion into [destination].
+  ///
+  /// Colliding IDs and names are remapped only in the returned copy. Names
+  /// allocated here use at most 40 ASCII letters, digits or underscores and
+  /// start with a letter or underscore. Noncolliding native identities keep
+  /// their source spelling. The whole destination reserves identities,
+  /// including independent stories and preserved opaque XML.
+  ///
+  /// Range order, native attributes and paragraph aliases are retained. REF
+  /// instructions and hyperlink targets continue to refer to their original
+  /// names; this operation does not retarget references. Partial ranges and
+  /// bookmarks inside opaque XML or preserved TOC caches require a separate
+  /// editing operation and are rejected before either input is changed.
+  ///
+  /// Use [WmlClone] directly for history snapshots or identity-preserving
+  /// replacement. This method is specifically for duplicate-producing copies.
+  static List<WmlBlock> copyForInsertion(
+    WmlDocument destination,
+    Iterable<WmlBlock> blocks,
+  ) {
+    final source = blocks.toList();
+    if (_opaqueMarkersIn(source).isNotEmpty) {
+      throw UnsupportedError(
+        'Copying bookmarks inside opaque XML requires an explicit native edit.',
+      );
+    }
+    for (final toc in WordTree.descendants(source).whereType<WmlToc>()) {
+      final native = WordToc.nativeParagraphs(toc);
+      if (native?.any(
+            (paragraph) => paragraph.inlines.any(
+              (inline) => inline is WmlBookmarkBoundary,
+            ),
+          ) ??
+          false) {
+        throw UnsupportedError(
+          'Copying bookmarks inside a preserved TOC cache is not supported.',
+        );
+      }
+    }
+    final copies = source.map(WmlClone.block).toList();
+    final fragment = WmlDocument(sections: [WmlSection(blocks: copies)]);
+    // Pair and validate the entire fragment before allocating any identities.
+    // This also rejects duplicate IDs across textbox stories in the same part.
+    final native = ranges(fragment);
+    final generated = generatedIds(fragment);
+    if (native.isEmpty && generated.isEmpty) return copies;
+
+    final destinationGenerated = generatedIds(destination);
+    final destinationNative = ranges(destination);
+    final destinationOpaque = _opaqueMarkers(destination).toList();
+    final usedIds = <String>{
+      ...destinationNative.map((range) => canonicalId(range.start.id)),
+      ...destinationOpaque.map((marker) => canonicalId(marker.id)),
+      ...destinationGenerated.values,
+    };
+    final usedNames = <String>{
+      ...destinationNative.map((range) => range.name.toLowerCase()),
+      for (final marker in destinationOpaque)
+        if (marker.isStart) marker.name!.toLowerCase(),
+      ...destinationGenerated.keys.map((name) => name.toLowerCase()),
+    };
+    // Reserve later incoming identities before changing earlier collisions.
+    // A copied Alpha must not steal a distinct incoming Alpha_copy bookmark.
+    final reservedIds = <String>{
+      ...usedIds,
+      ...native.map((range) => canonicalId(range.start.id)),
+    };
+    final reservedNames = <String>{
+      ...usedNames,
+      ...native.map((range) => range.name.toLowerCase()),
+      ...generated.keys.map((name) => name.toLowerCase()),
+    };
+    var nextId = 1;
+    String allocateId(String original) {
+      if (usedIds.add(canonicalId(original))) return original;
+      while (reservedIds.contains('$nextId')) {
+        nextId++;
+      }
+      final result = '${nextId++}';
+      reservedIds.add(result);
+      usedIds.add(result);
+      return result;
+    }
+
+    String allocateName(String original) {
+      if (usedNames.add(original.toLowerCase())) return original;
+      var base = original.replaceAll(RegExp(r'[^A-Za-z0-9_]'), '_');
+      if (base.isEmpty) base = 'Bookmark';
+      if (!RegExp(r'^[A-Za-z_]').hasMatch(base)) base = 'Bookmark_$base';
+      for (var number = 1; ; number++) {
+        final suffix = number == 1 ? '_copy' : '_copy$number';
+        final length = base.length.clamp(0, 40 - suffix.length);
+        final name = '${base.substring(0, length)}$suffix';
+        if (reservedNames.add(name.toLowerCase())) {
+          usedNames.add(name.toLowerCase());
+          return name;
+        }
+      }
+    }
+
+    final byStart = Map<WmlBookmarkBoundary, WmlBookmarkRange>.identity();
+    for (final range in native) {
+      byStart[range.start] = range;
+    }
+    final replacements =
+        Map<WmlBookmarkBoundary, WmlBookmarkBoundary>.identity();
+    final names = <String, String>{};
+    final paragraphs = _stories(fragment).expand((story) => story).toList();
+    // Starts determine allocation order, even when ranges overlap and their
+    // ends occur in a different order.
+    for (final paragraph in paragraphs) {
+      for (final start in paragraph.inlines.whereType<WmlBookmarkBoundary>()) {
+        if (!start.isStart) continue;
+        final range = byStart[start]!;
+        final id = allocateId(start.id);
+        final name = allocateName(range.name);
+        names[range.name] = name;
+        replacements[start] = _copiedBoundary(start, id: id, name: name);
+        replacements[range.end] = _copiedBoundary(
+          range.end,
+          // If no collision exists, retain each endpoint's native spelling.
+          id: id == start.id ? range.end.id : id,
+        );
+      }
+    }
+    for (final paragraph in paragraphs) {
+      final generatedName = WordBookmarks.generatedName(paragraph);
+      for (var index = 0; index < paragraph.inlines.length; index++) {
+        final replacement = replacements[paragraph.inlines[index]];
+        if (replacement != null) paragraph.inlines[index] = replacement;
+      }
+      final properties = paragraph.properties;
+      if (generatedName != null) {
+        properties.bookmarkName = allocateName(generatedName);
+      } else if (names.containsKey(properties.bookmarkName)) {
+        properties.bookmarkName = names[properties.bookmarkName];
+      }
+      if (names.containsKey(properties.sourceBookmarkName)) {
+        properties.sourceBookmarkName = names[properties.sourceBookmarkName];
+      }
+    }
+    generatedIds(fragment);
+    return copies;
+  }
+
+  static WmlBookmarkBoundary _copiedBoundary(
+    WmlBookmarkBoundary marker, {
+    required String id,
+    String? name,
+  }) {
+    var source = marker.sourceXml;
+    if (source != null && (id != marker.id || name != marker.name)) {
+      final element = XmlDocument.parse(source).root!;
+      element.setAttribute('id', id, namespaceUri: OfficeNamespaces.w);
+      if (marker.isStart) {
+        element.setAttribute('name', name!, namespaceUri: OfficeNamespaces.w);
+      }
+      source = XmlDocument(root: element).toXmlString(declaration: false);
+    }
+    final result = WmlBookmarkBoundary(
+      id: id,
+      isStart: marker.isStart,
+      name: name,
+      sourceXml: source,
+    );
+    validateSource(result);
+    return result;
+  }
+
   /// Native ranges are joined by ID, not by a nesting stack: Word permits
   /// overlapping bookmarks whose end order differs from their start order.
   static List<WmlBookmarkRange> ranges(WmlDocument document) {

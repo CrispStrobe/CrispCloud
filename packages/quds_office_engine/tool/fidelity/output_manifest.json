@@ -1,7 +1,7 @@
 {
   "version": 1,
   "package": "quds_office_engine",
-  "expected_file_count": 324,
+  "expected_file_count": 373,
   "description": "Authored from the scenarios and regression tests. These paths are an inventory, not a golden generated from current output. SHA receipts identify each run; the semantic and renderer oracles decide correctness.",
   "series": [
     {
@@ -876,6 +876,123 @@
         3
       ],
       "producer": "test/table_grid_steps_test.dart"
+    },
+    {
+      "pattern": "fidelity-bookmark-copy/copied-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/word_bookmark_copy_test.dart"
+    },
+    {
+      "pattern": "fidelity-sheet-qualified-names/recalculated-{cycle}.xlsx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/sheet_qualified_names_test.dart"
+    },
+    {
+      "pattern": "fidelity-sheet-qualified-names/renamed-{cycle}.xlsx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/sheet_qualified_names_test.dart"
+    },
+    {
+      "pattern": "fidelity-slide-arrange/direct-{cycle}.pptx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/slide_arrange_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-slide-arrange/isolate-{cycle}.pptx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/slide_arrange_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-table-widths/direct/unchanged-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/table_grid_steps_test.dart"
+    },
+    {
+      "pattern": "fidelity-table-widths/direct/format-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/table_grid_steps_test.dart"
+    },
+    {
+      "pattern": "fidelity-table-widths/direct/replace-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/table_grid_steps_test.dart"
+    },
+    {
+      "pattern": "fidelity-table-widths/direct/unmerge-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/table_grid_steps_test.dart"
+    },
+    {
+      "pattern": "fidelity-table-widths/isolate/unchanged-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/table_grid_steps_test.dart"
+    },
+    {
+      "pattern": "fidelity-table-widths/isolate/format-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/table_grid_steps_test.dart"
+    },
+    {
+      "pattern": "fidelity-table-widths/isolate/replace-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/table_grid_steps_test.dart"
+    },
+    {
+      "pattern": "fidelity-table-widths/isolate/unmerge-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/table_grid_steps_test.dart"
     }
   ],
   "standalone": [
@@ -996,10 +1113,6 @@
       "producer": "test/bookmark_fidelity_test.dart"
     },
     {
-      "path": "fidelity-table-grid/source.docx",
-      "producer": "test/table_grid_steps_test.dart"
-    },
-    {
       "path": "fidelity-table-grid/expected-format.docx",
       "producer": "test/table_grid_steps_test.dart"
     },
@@ -1009,6 +1122,50 @@
     },
     {
       "path": "fidelity-table-grid/expected-unmerge.docx",
+      "producer": "test/table_grid_steps_test.dart"
+    },
+    {
+      "path": "fidelity-bookmark-copy/source.docx",
+      "producer": "test/word_bookmark_copy_test.dart"
+    },
+    {
+      "path": "fidelity-bookmark-copy/copied-expected.docx",
+      "producer": "test/word_bookmark_copy_test.dart"
+    },
+    {
+      "path": "fidelity-sheet-qualified-names/source.xlsx",
+      "producer": "test/sheet_qualified_names_test.dart"
+    },
+    {
+      "path": "fidelity-sheet-qualified-names/expected-recalculated.xlsx",
+      "producer": "test/sheet_qualified_names_test.dart"
+    },
+    {
+      "path": "fidelity-sheet-qualified-names/expected-renamed.xlsx",
+      "producer": "test/sheet_qualified_names_test.dart"
+    },
+    {
+      "path": "fidelity-sheet-rename/qualified-expected.xlsx",
+      "producer": "test/sheet_rename_fidelity_test.dart"
+    },
+    {
+      "path": "fidelity-slide-arrange/source.pptx",
+      "producer": "test/slide_arrange_fidelity_test.dart"
+    },
+    {
+      "path": "fidelity-table-widths/source.docx",
+      "producer": "test/table_grid_steps_test.dart"
+    },
+    {
+      "path": "fidelity-table-widths/expected-format.docx",
+      "producer": "test/table_grid_steps_test.dart"
+    },
+    {
+      "path": "fidelity-table-widths/expected-replace.docx",
+      "producer": "test/table_grid_steps_test.dart"
+    },
+    {
+      "path": "fidelity-table-widths/expected-unmerge.docx",
       "producer": "test/table_grid_steps_test.dart"
     }
   ]

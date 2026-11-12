@@ -157,6 +157,52 @@ void main() {
     expect(tables, hasLength(2));
   });
 
+  test(
+    'inspect retains omitted-grid coordinates while logical edits reject',
+    () {
+      final doc = _source();
+      final table = _tables(doc).first;
+      table.rows.first.gridBefore = 1;
+      final inspected = cli.inspectWord(doc)['tables'] as List<Object?>;
+      final first = inspected.first as Map<String, Object?>;
+      final rows = first['rows'] as List<Object?>;
+      final row = rows.first as Map<String, Object?>;
+      final cells = row['cells'] as List<Object?>;
+      final leading = cells.first as Map<String, Object?>;
+      final trailing = cells.last as Map<String, Object?>;
+      expect(first['gridAddressingSupported'], isFalse);
+      expect(row['gridBefore'], 1);
+      expect(leading['column'], 0);
+      expect(leading['gridColumn'], 1);
+      expect(leading['endGridColumn'], 2);
+      expect(leading['mergeOrigin'], isNull);
+      expect(leading['gridError'], isNotNull);
+      expect(trailing['column'], 1);
+      expect(trailing['gridColumn'], 3);
+      final before = jsonEncode(cli.inspectWord(doc));
+      expect(
+        () => cli.applyStep(doc, {
+          'op': 'tableCellText',
+          'table': 0,
+          'row': 0,
+          'gridColumn': 1,
+          'text': 'Wrong',
+        }),
+        throwsArgumentError,
+      );
+      expect(jsonEncode(cli.inspectWord(doc)), before);
+      cli.applyStep(doc, {
+        'op': 'tableCellText',
+        'table': 0,
+        'row': 0,
+        'column': 1,
+        'text': 'Physical omitted-row tail',
+      });
+      expect(_text(table.rows.first.cells.last), 'Physical omitted-row tail');
+      expect(table.rows.first.gridBefore, 1);
+    },
+  );
+
   test('logical selection edits the visible owner and nested actual cells', () {
     final doc = _source();
     final tables = _tables(doc);
@@ -344,7 +390,7 @@ void main() {
     test(
       '${isolate ? 'isolate' : 'direct'} authored grid scripts survive three saves',
       () async {
-        const root = 'build/fidelity-table-grid';
+        const root = 'build/fidelity-table-widths';
         writeOutput('$root/source.docx', _sourcePackage().save());
         for (final phase in ['format', 'replace', 'unmerge']) {
           writeOutput(

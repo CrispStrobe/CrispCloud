@@ -107,7 +107,7 @@ class HostPicturePixelTests(unittest.TestCase):
         'landscape': (720, 405, 72, 40.5, 360, 180),
         'portrait': (720, 405, 72, 40.5, 120, 240),
         'square': (720, 405, 72, 40.5, 240, 240),
-        'bounds': (100, 60, 10, 6, 90, 45),
+        'bounds': (100, 72, 10, 7.2, 90, 45),
     }
 
     def raster(self, case='bounds', *, rectangle=None, color=b'\0\0\0', background=b'\xff\xff\xff'):
@@ -166,41 +166,41 @@ class HostPicturePixelTests(unittest.TestCase):
 
     def test_blank_missing_wrong_aspect_shifted_clipped_colored_and_wrong_page_fail(self):
         cases = [self.raster(color=b'\xff\xff\xff'),
-                 self.raster(rectangle=(10, 6, 0, 0)),
-                 self.raster(rectangle=(10, 6, 45, 90)),
-                 self.raster(rectangle=(4, 6, 90, 45)),
-                 self.raster(rectangle=(25, 6, 90, 45)),
+                 self.raster(rectangle=(10, 7.2, 0, 0)),
+                 self.raster(rectangle=(10, 7.2, 45, 90)),
+                 self.raster(rectangle=(4, 7.2, 90, 45)),
+                 self.raster(rectangle=(25, 7.2, 90, 45)),
                  self.raster(color=b'\xff\0\0'),
                  self.raster(color=b'\x80\x80\x80'),
-                 (101, 60, b'\xff' * (101 * 60 * 3))]
+                 (101, 72, b'\xff' * (101 * 72 * 3))]
         for index, raster in enumerate(cases):
             with self.subTest(index=index), self.assertRaises(render.FidelityError):
-                render.picture_pixel_evidence('bounds', *raster, self.geometry(), (100, 60))
+                render.picture_pixel_evidence('bounds', *raster, self.geometry(), (100, 72))
 
     def test_one_pixel_edge_antialiasing_is_allowed_but_holes_and_extra_ink_fail(self):
         width, height, pixels = self.raster()
         gray_edge = bytearray(pixels)
-        gray_edge[(6 * width + 10) * 3:(6 * width + 10) * 3 + 3] = b'\x80' * 3
-        evidence = render.picture_pixel_evidence('bounds', width, height, bytes(gray_edge), self.geometry(), (100, 60))
+        gray_edge[(7 * width + 10) * 3:(7 * width + 10) * 3 + 3] = b'\x80' * 3
+        evidence = render.picture_pixel_evidence('bounds', width, height, bytes(gray_edge), self.geometry(), (100, 72))
         self.assertEqual(evidence['gray_pixels'], 1)
         for position, color in ((0, b'\0' * 3), (20 * width + 30, b'\xff' * 3),
                                 (20 * width + 30, b'\x80' * 3)):
             altered = bytearray(pixels)
             altered[position * 3:position * 3 + 3] = color
             with self.subTest(position=position, color=color), self.assertRaises(render.FidelityError):
-                render.picture_pixel_evidence('bounds', width, height, bytes(altered), self.geometry(), (100, 60))
+                render.picture_pixel_evidence('bounds', width, height, bytes(altered), self.geometry(), (100, 72))
 
     def test_only_subpixel_page_rounding_accepts_an_extra_raster_row_or_column(self):
-        self.assertEqual(render.picture_raster_size('bounds', [100.006, 60.0094]), [101, 61])
+        self.assertEqual(render.picture_raster_size('bounds', [100.006, 72]), [101, 72])
         self.assertEqual(render.picture_raster_size('landscape', [720, 405.014]), [720, 406])
-        for size in ([100, 61], [100.1, 60], [99, 60], [100, float('nan')],
-                     [100, float('inf')], [True, 60], [100], None):
+        for size in ([100, 73], [100.1, 72], [99, 72], [100, float('nan')],
+                     [100, float('inf')], [True, 72], [100], None):
             with self.subTest(size=size), self.assertRaises(render.FidelityError):
                 render.picture_raster_size('bounds', size)
         # Supplying the correct point dimensions does not excuse a raster at
         # the wrong DPI or with different dimensions.
         with self.assertRaises(render.FidelityError):
-            render.picture_pixel_evidence('bounds', *self.raster(), self.geometry(), (100.006, 60.0094))
+            render.picture_pixel_evidence('bounds', *self.raster(), self.geometry(), (100.006, 72))
 
     def test_package_geometry_rejects_hidden_overflow_even_when_visible_pixels_match(self):
         with tempfile.TemporaryDirectory() as folder:
@@ -209,7 +209,7 @@ class HostPicturePixelTests(unittest.TestCase):
             self.assertEqual(render.picture_package_geometry(path, 'bounds'), self.geometry())
             # 110 points at x=10 clips to exactly the same visible 90-point
             # rectangle as the correct extent. Pixel equality cannot detect it.
-            self.assertEqual(self.raster(rectangle=(10, 6, 110, 45)), self.raster())
+            self.assertEqual(self.raster(rectangle=(10, 7.2, 110, 45)), self.raster())
             for changed in ('overflow', 'canvas', 'missing', 'extra'):
                 geometry = self.geometry()
                 if changed == 'overflow':
@@ -277,14 +277,14 @@ class HostPicturePixelTests(unittest.TestCase):
                         f'P6\n{width} {height}\n255\n'.encode() + pixels)
 
             def output_text(args, **kwargs):
-                return f'Pages: {page_count}\nPage size: 100 x 60 pts\n' if args[0] == 'pdfinfo' else '\f'
+                return f'Pages: {page_count}\nPage size: 100 x 72 pts\n' if args[0] == 'pdfinfo' else '\f'
 
             with patch.object(render.subprocess, 'run', side_effect=command), \
                     patch.object(render.subprocess, 'check_output', side_effect=output_text):
                 result = render.render_document(source, root, output, 0)
                 measured = result['picture_pixel_evidence']
                 self.assertEqual(measured['black_pixels'], 4050)
-                self.assertEqual(measured['black_bbox'], [10, 6, 100, 51])
+                self.assertEqual(measured['black_bbox'], [10, 7, 100, 52])
                 self.assertEqual(result['pixel_sha256'], [measured['pixel_sha256']])
                 self.assertEqual(json.loads(json.dumps(result)), result)
                 for raster, page_count in ((self.raster(color=b'\xff' * 3), 1), (self.raster(), 2)):
@@ -445,6 +445,35 @@ class CycleComparisonTests(unittest.TestCase):
                 self.assertIn('Render changed', result['failures'][0]['error'])
                 self.assertFalse(result['cycle_comparisons'][0]['passed'])
 
+    def test_expansion_first_saves_require_their_independent_native_references(self):
+        authored = [
+            ('fidelity-bookmark-copy', 'copied', '.docx', 'copied-expected.docx'),
+            ('fidelity-bookmark-copy', 'editor', '.docx', 'copied-expected.docx'),
+            ('fidelity-sheet-qualified-names', 'recalculated', '.xlsx', 'expected-recalculated.xlsx'),
+            ('fidelity-sheet-qualified-names', 'renamed', '.xlsx', 'expected-renamed.xlsx'),
+            ('fidelity-sheet-rename', 'renamed', '.xlsx', 'qualified-expected.xlsx'),
+            ('fidelity-slide-arrange', 'direct', '.pptx', 'source.pptx'),
+            ('fidelity-slide-arrange', 'isolate', '.pptx', 'source.pptx'),
+        ]
+        for folder, stem, suffix, expected in authored:
+            with self.subTest(folder=folder, case=stem):
+                cycles = [f'package/{folder}/{stem}-{n}{suffix}' for n in (1, 2, 3)]
+                baseline = f'package/{folder}/{expected}'
+                files = cycles + [baseline]
+                records = {name: record(name) for name in files}
+                passing = render.cycle_coverage(files, records)
+                self.assertEqual(passing['failures'], [])
+                self.assertEqual(passing['baseline_comparisons'], 1)
+                self.assertEqual(passing['cycle_comparisons'][0]['baseline'], baseline)
+                missing = render.cycle_coverage(cycles, records)
+                self.assertIn('Missing required native baseline', missing['failures'][0]['error'])
+                for difference in ({'text': 'Different authored content'},
+                                   {'pixels': ['9' * 64]}, {'pages': 2}):
+                    records[baseline] = record(baseline, **difference)
+                    failure = render.cycle_coverage(files, records)
+                    self.assertEqual(len(failure['failures']), 1)
+                    self.assertIn('Render changed', failure['failures'][0]['error'])
+
     def test_explicit_clone_mapping_does_not_guess_other_scenario_baselines(self):
         for folder, case, suffix in (
                 ('other-corpus', 'cloned', '.docx'),
@@ -482,7 +511,7 @@ class CycleComparisonTests(unittest.TestCase):
 
 class TableGridBaselineTests(unittest.TestCase):
     def test_each_phase_and_route_requires_authored_native_baseline(self):
-        for prefix in ('fidelity-table-grid', 'engine/fidelity-table-grid'):
+        for prefix in ('fidelity-table-widths', 'engine/fidelity-table-widths'):
             for route in ('direct', 'isolate'):
                 for phase in ('unchanged', 'format', 'replace', 'unmerge'):
                     with self.subTest(prefix=prefix, route=route, phase=phase):
@@ -501,10 +530,10 @@ class TableGridBaselineTests(unittest.TestCase):
                         self.assertIn('Render changed (pixel_sha256)', changed['failures'][0]['error'])
 
     def test_corpus_root_preserves_mapping_and_other_names_are_not_guessed(self):
-        self.assertEqual(render.table_grid_baseline(Path('direct/format.docx'), '/tmp/fidelity-table-grid'),
+        self.assertEqual(render.table_grid_baseline(Path('direct/format.docx'), '/tmp/fidelity-table-widths'),
                          'expected-format.docx')
-        for case in ('fidelity-table-grid/preview/format.docx', 'other/direct/format.docx',
-                     'fidelity-table-grid/direct/format.xlsx', 'fidelity-table-grid/direct/other.docx'):
+        for case in ('fidelity-table-widths/preview/format.docx', 'other/direct/format.docx',
+                     'fidelity-table-widths/direct/format.xlsx', 'fidelity-table-widths/direct/other.docx'):
             self.assertIsNone(render.table_grid_baseline(Path(case)))
 
 

@@ -1,0 +1,204 @@
+{
+  "schema": "legacy-doc-parser/fidelity-corpus",
+  "version": 1,
+  "sources": {
+    "quds": {
+      "repository": "CrispStrobe/quds_office_suite",
+      "commit": "ca9853b5b08784beac50df5680176cb4e5b3cb25",
+      "license": "MIT",
+      "license_file": "third_party/quds-fixtures-MIT.txt"
+    }
+  },
+  "cases": [
+    {
+      "id": "formatting",
+      "path": "test/fixtures/word_native/formatting.doc",
+      "sha256": "0ad636c6e3597152313055fd5428fb4b70ab483b3853b2666cac52498c953026",
+      "source": "existing-package-fixture",
+      "features": [
+        "pagination",
+        "tables",
+        "images",
+        "stories",
+        "footnotes"
+      ],
+      "origin": "existing LibreOffice-generated binary DOC; see adjacent README.md"
+    },
+    {
+      "id": "word",
+      "path": "test/fixtures/fidelity/word.docx",
+      "sha256": "501bdd2f897b9a0d417988903b3a378bac958cacbcba5f842736802a5d47af1b",
+      "source": "quds",
+      "source_path": "packages/quds_office_engine/test/fixtures/fidelity/word.docx",
+      "features": [
+        "pagination",
+        "tables",
+        "lists",
+        "stories",
+        "images"
+      ],
+      "origin": "independently authored OOXML; native DOC bridge must be measured separately"
+    },
+    {
+      "id": "word-compatibility",
+      "path": "test/fixtures/fidelity/word-compatibility.docx",
+      "sha256": "8fccf5c41ac4f51136635322933065ecc786e1365709a7a10edb8734024049fe",
+      "source": "quds",
+      "source_path": "packages/quds_office_engine/test/fixtures/fidelity/word-compatibility.docx",
+      "features": [
+        "pagination",
+        "sections",
+        "columns",
+        "comments"
+      ],
+      "origin": "independently authored OOXML; native DOC bridge must be measured separately"
+    },
+    {
+      "id": "table-borders",
+      "path": "test/fixtures/fidelity/table-borders.docx",
+      "sha256": "066f9d736e114c01436b328c2bc74ec76e3be676d6cddb3e8eb81956f2598e83",
+      "source": "quds",
+      "source_path": "packages/quds_office_engine/test/fixtures/fidelity/table-borders.docx",
+      "features": [
+        "tables",
+        "borders",
+        "conditional-table-styles"
+      ],
+      "origin": "independently authored OOXML; native DOC bridge must be measured separately"
+    },
+    {
+      "id": "story-media",
+      "path": "test/fixtures/fidelity/story-media.docx",
+      "sha256": "3267ee707daac2a409e9bd1d796572949fb9e7e7891ac71ec14dcdefb59cb219",
+      "source": "quds",
+      "source_path": "packages/quds_office_engine/test/fixtures/fidelity/story-media.docx",
+      "features": [
+        "images",
+        "stories",
+        "floating-drawings"
+      ],
+      "origin": "independently authored OOXML; native DOC bridge must be measured separately"
+    },
+    {
+      "id": "comment-threads",
+      "path": "test/fixtures/fidelity/comment-threads.docx",
+      "sha256": "d1763533e3733a93398a0cea7043b9d188f98f5a403ff5b7f3ed5869d654e9a4",
+      "source": "quds",
+      "source_path": "packages/quds_office_engine/test/fixtures/fidelity/comment-threads.docx",
+      "features": [
+        "threaded-comments"
+      ],
+      "origin": "independently authored OOXML; native DOC bridge must be measured separately"
+    },
+    {
+      "id": "note-markers",
+      "path": "test/fixtures/fidelity/note-markers.docx",
+      "sha256": "6f4e979c69c4a942796ea512490b791f8b3ea99a966c75593c1b2613880e7536",
+      "source": "quds",
+      "source_path": "packages/quds_office_engine/test/fixtures/fidelity/note-markers.docx",
+      "features": [
+        "footnotes",
+        "endnotes",
+        "pagination"
+      ],
+      "origin": "independently authored OOXML; native DOC bridge must be measured separately"
+    },
+    {
+      "id": "bookmarks",
+      "path": "test/fixtures/fidelity/bookmarks.docx",
+      "sha256": "acc4bc7ef24543b75d2295dbbd37a58b9a4ac5a2105cef13ef186e8178ec05b6",
+      "source": "quds",
+      "source_path": "packages/quds_office_engine/test/fixtures/fidelity/bookmarks.docx",
+      "features": [
+        "bookmarks",
+        "references"
+      ],
+      "origin": "independently authored OOXML; native DOC bridge must be measured separately"
+    },
+    {
+      "id": "content-controls",
+      "path": "test/fixtures/fidelity/content-controls.docx",
+      "sha256": "a59cb0915fdadaa579bd28f028da5be1df2c8e036362e8e1fe21b789053b5e29",
+      "source": "quds",
+      "source_path": "packages/quds_office_engine/test/fixtures/fidelity/content-controls.docx",
+      "features": [
+        "content-controls",
+        "revisions"
+      ],
+      "origin": "independently authored OOXML; native DOC bridge must be measured separately"
+    },
+    {
+      "id": "content-controls-legacy",
+      "path": "test/fixtures/fidelity/content-controls-legacy.docx",
+      "sha256": "2833e0d3ef3e00ba626177fb2f40ddf51744611be1a324a3a6aabdb01926aaab",
+      "source": "quds",
+      "source_path": "packages/quds_office_engine/test/fixtures/fidelity/content-controls-legacy.docx",
+      "features": [
+        "content-controls",
+        "form-fields"
+      ],
+      "origin": "independently authored OOXML; native DOC bridge must be measured separately"
+    },
+    {
+      "id": "word-altchunk",
+      "path": "test/fixtures/fidelity/word-altchunk.docx",
+      "sha256": "f623604dfab5865907c70d7e2e933970bca4f1e6e892187025c083f32784b05b",
+      "source": "quds",
+      "source_path": "packages/quds_office_engine/test/fixtures/fidelity/word-altchunk.docx",
+      "features": [
+        "embedded-content"
+      ],
+      "origin": "independently authored OOXML; native DOC bridge must be measured separately"
+    }
+  ],
+  "reference_expectations": [
+    {
+      "path": "test/fixtures/fidelity/quds-expectations/comment_threads_expected.json",
+      "sha256": "ae855242c5660f4ec2d867c71d1c45b0e6a8e2ffeb9df31b7381dd6bb9d7d78b",
+      "source": "quds",
+      "source_path": "packages/quds_office_engine/test/fixtures/fidelity/comment_threads_expected.json"
+    },
+    {
+      "path": "test/fixtures/fidelity/quds-expectations/content_controls_expected.json",
+      "sha256": "35ec769972e506fb26aa810190d65bbbf23fe6ef50a607df8f486d047550099f",
+      "source": "quds",
+      "source_path": "packages/quds_office_engine/test/fixtures/fidelity/content_controls_expected.json"
+    },
+    {
+      "path": "test/fixtures/fidelity/quds-expectations/note_markers_expected.json",
+      "sha256": "cbe97ee0f9371855f7e6c78b32c81db21755ec337c5a9d8665ddfcf289f71bd5",
+      "source": "quds",
+      "source_path": "packages/quds_office_engine/test/fixtures/fidelity/note_markers_expected.json"
+    },
+    {
+      "path": "test/fixtures/fidelity/quds-expectations/note_markers_legacy_expected.json",
+      "sha256": "3f6038e2bf02b22a56fca3714c664d2afc3f777583a317113460a6b2d0dd98a7",
+      "source": "quds",
+      "source_path": "packages/quds_office_engine/test/fixtures/fidelity/note_markers_legacy_expected.json"
+    },
+    {
+      "path": "test/fixtures/fidelity/quds-expectations/story_media_expected.json",
+      "sha256": "abd59a6a04a0618a9216532c7d9855fb33593334d105fd348e3a0fb1ff08647e",
+      "source": "quds",
+      "source_path": "packages/quds_office_engine/test/fixtures/fidelity/story_media_expected.json"
+    },
+    {
+      "path": "test/fixtures/fidelity/quds-expectations/table_borders_expected.json",
+      "sha256": "0a910c6cfebb4afcd3dbf469c3628d136f20022fd0eb22a591bc43cb83f43be2",
+      "source": "quds",
+      "source_path": "packages/quds_office_engine/test/fixtures/fidelity/table_borders_expected.json"
+    },
+    {
+      "path": "test/fixtures/fidelity/quds-expectations/word_compatibility_expected.json",
+      "sha256": "d3208c46c034b68f9003c37814d54d1e00d64542fd893ee944cc2dbad56106c7",
+      "source": "quds",
+      "source_path": "packages/quds_office_engine/test/fixtures/fidelity/word_compatibility_expected.json"
+    },
+    {
+      "path": "test/fixtures/fidelity/quds-expectations/word_structure_expected.json",
+      "sha256": "e3e38a1f71b53ffc09d14b7857b2fac24cb6003748c49635531b0dd417acd963",
+      "source": "quds",
+      "source_path": "packages/quds_office_engine/test/fixtures/fidelity/word_structure_expected.json"
+    }
+  ]
+}

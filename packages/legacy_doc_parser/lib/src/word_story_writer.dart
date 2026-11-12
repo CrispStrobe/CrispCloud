@@ -198,7 +198,9 @@ extension _WordStories on _StructuredWordWriter {
     if (events == null || (_eventOffsets[_storyId] ?? 0) == events.length) {
       return;
     }
-    _xml.add('<w:p>');
+    _xml.add('<w:p');
+    _commentParagraphAttribute();
+    _xml.add('>');
     _emitEventsThrough(
       _storyId == 'main' ? _mainEnd : _stories[_storyId]!.endCp,
     );
@@ -239,6 +241,10 @@ extension _WordStories on _StructuredWordWriter {
             deleted: run.deleted,
             revisionAuthor: run.revisionAuthor,
             revisionTime: run.revisionTime,
+            insertionRevision: run.insertionRevision,
+            deletionRevision: run.deletionRevision,
+            formattingRevision: run.formattingRevision,
+            formattingSaveId: run.formattingSaveId,
           ),
         );
       }
@@ -335,28 +341,20 @@ extension _WordStories on _StructuredWordWriter {
         );
       }
     }
+    _prepareCommentThreads();
     for (final reference in document.commentReferences) {
       if (reference.id < 0 ||
           _stories[reference.storyId]?.kind != LegacyWordStoryKind.comment) {
         throw const FormatException('Invalid Word comment reference.');
       }
+      _commentEvidence(reference);
       if (!_displayPosition(reference.anchorCp) ||
-          reference.presentation.hidden) {
+          reference.presentation.hidden ||
+          _inertStories.containsKey(reference.storyId)) {
         _inertStories[reference.storyId] =
             'comment marker hidden or inside a private field';
         limitations.add(LegacyWordConversionLimitation.notesComments);
         continue;
-      }
-      if (reference.parentId != null || reference.ink) {
-        _evidenceRecords.add({
-          'kind': 'commentMetadata',
-          'id': reference.id,
-          'parentId': reference.parentId,
-          'ink': reference.ink,
-          'reason':
-              'reply and ink metadata retained; not converted to threaded/ink markup',
-        });
-        limitations.add(LegacyWordConversionLimitation.notesComments);
       }
       final owner = _storyAt(reference.anchorCp);
       if (owner == null) {
@@ -451,36 +449,42 @@ extension _WordStories on _StructuredWordWriter {
     _prepareTextboxes();
   }
 
-  bool _safeField(LegacyWordField field) => const {
-    'TOC',
-    'REF',
-    'PAGEREF',
-    'NOTEREF',
-    'STYLEREF',
-    'PAGE',
-    'NUMPAGES',
-    'SECTION',
-    'SECTIONPAGES',
-    'SEQ',
-    'TC',
-    'XE',
-    'INDEX',
-    'HYPERLINK',
-    'DATE',
-    'TIME',
-    'CREATEDATE',
-    'SAVEDATE',
-    'PRINTDATE',
-    'AUTHOR',
-    'TITLE',
-    'SUBJECT',
-    'KEYWORDS',
-    'DOCPROPERTY',
-    'DOCVARIABLE',
-    'QUOTE',
-    'IF',
-    '=',
-  }.contains(field.type.toUpperCase());
+  bool _safeField(LegacyWordField field) =>
+      const {
+        'TOC',
+        'REF',
+        'PAGEREF',
+        'NOTEREF',
+        'STYLEREF',
+        'PAGE',
+        'NUMPAGES',
+        'SECTION',
+        'SECTIONPAGES',
+        'SEQ',
+        'TC',
+        'XE',
+        'INDEX',
+        'HYPERLINK',
+        'DATE',
+        'TIME',
+        'CREATEDATE',
+        'SAVEDATE',
+        'PRINTDATE',
+        'AUTHOR',
+        'TITLE',
+        'SUBJECT',
+        'KEYWORDS',
+        'DOCPROPERTY',
+        'DOCVARIABLE',
+        'QUOTE',
+        'IF',
+        '=',
+      }.contains(field.type.toUpperCase()) &&
+      field.instruction.runes.every(
+        (rune) =>
+            (rune >= 0x20 && rune != 0xfffe && rune != 0xffff) ||
+            const {9, 10, 13, 19, 20, 21}.contains(rune),
+      );
 
   bool _safeFieldTree(LegacyWordField field, [int depth = 0]) {
     if (depth > 64) _tooComplex();
@@ -711,6 +715,7 @@ extension _WordStories on _StructuredWordWriter {
         '$_relationshipNamespace/comments',
         'comments.xml',
       );
+      _writeCommentThreads(comments.toList());
     }
     final settings = _wordPart('settings');
     final defaultTabs = document.defaultTabStopTwips;
@@ -774,7 +779,11 @@ extension _WordStories on _StructuredWordWriter {
           _table(block);
       }
     }
-    if (blocks.isEmpty || blocks.last is LegacyWordTable) _xml.add('<w:p/>');
+    if (blocks.isEmpty || blocks.last is LegacyWordTable) {
+      _xml.add('<w:p');
+      _commentParagraphAttribute();
+      _xml.add('/>');
+    }
   }
 
   void _writeNumbering() {
@@ -932,8 +941,12 @@ extension _WordStories on _StructuredWordWriter {
   void _summarizeLimitations() {
     for (final warning in document.warnings) {
       switch (warning) {
+        case LegacyWordWarning.recoveredTableStoryBoundary:
+          limitations.add(LegacyWordConversionLimitation.partialFormatting);
         case LegacyWordWarning.unsupportedFormatting:
         case LegacyWordWarning.nestedTablesFlattened:
+        case LegacyWordWarning.recoveredNonconformingProperties:
+        case LegacyWordWarning.recoveredEmptySection:
           limitations.add(LegacyWordConversionLimitation.partialFormatting);
         case LegacyWordWarning.numberingNotReconstructed:
           limitations.add(LegacyWordConversionLimitation.fieldsLists);

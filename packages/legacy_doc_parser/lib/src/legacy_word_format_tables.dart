@@ -148,7 +148,11 @@ extension _WordFormattingTables on _StructuredWordParser {
               'Truncated Word formatting properties.',
             );
           }
-          operations = _readProperties(page.slice(start, end - start));
+          operations = _readProperties(
+            page.slice(start, end - start),
+            0,
+            paragraph && cb == 0,
+          );
         }
         result.add(_FkpRun(clippedFirst, clippedLast, styleIndex, operations));
         if (result.length > 200000) {
@@ -383,13 +387,18 @@ extension _WordFormattingTables on _StructuredWordParser {
     final result = <LegacyWordSection>[];
     for (var i = 0; i < count; i++) {
       final start = input.u32(i * 4), declaredEnd = input.u32((i + 1) * 4);
-      if (declaredEnd <= start ||
+      // LibreOffice can emit an empty initial section on a DOCX -> DOC save.
+      // Keep its layout/header identity rather than attaching its settings to
+      // the following text. Other duplicate/decreasing CPs remain invalid.
+      final emptyInitial =
+          i == 0 && count > 1 && start == 0 && declaredEnd == 0;
+      if ((declaredEnd <= start && !emptyInitial) ||
           start >= mainLength ||
           (i < count - 1 && declaredEnd > mainLength)) {
         throw const FormatException('Word section positions are not ordered.');
       }
       final end = declaredEnd > mainLength ? mainLength : declaredEnd;
-      if (i < count - 1 && body[end - 1] != 12) {
+      if (!emptyInitial && i < count - 1 && body[end - 1] != 12) {
         throw const FormatException(
           'Word section has no terminating section mark.',
         );
@@ -401,14 +410,19 @@ extension _WordFormattingTables on _StructuredWordParser {
         operations = _readProperties(source.word.slice(sepx + 2, size));
       }
       final properties = _sectionProperties(
-        [...operations, ..._pieceProperties(source.pieceAt(end - 1))],
+        [
+          ...operations,
+          if (!emptyInitial) ..._pieceProperties(source.pieceAt(end - 1)),
+        ],
         budget,
         warnings,
       );
+      if (emptyInitial) warnings.add(LegacyWordWarning.recoveredEmptySection);
       result.add(
         LegacyWordSection(
           startCp: start,
           endCp: end,
+          layout: _sectionLayout(properties),
           pageWidthTwips: properties['width'] as int?,
           pageHeightTwips: properties['height'] as int?,
           marginTopTwips: properties['top'] as int?,

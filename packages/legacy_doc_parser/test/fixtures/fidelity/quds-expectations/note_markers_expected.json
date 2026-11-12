@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "note_ids": [1, 2, 3, 4, 5, 6],
+  "edited_paragraphs": {
+    "1": {"0": "Opening text edited"},
+    "2": {"0": "Before  after edited"},
+    "4": {"1": "Cell  tail edited"},
+    "5": {"0": "  Intentionally unnumbered edited"},
+    "6": {"0": "AB edited"}
+  },
+  "marker_offsets": {
+    "1": {"1": [0]},
+    "2": {"0": [7]},
+    "3": {"0": [0]},
+    "4": {"1": [5]},
+    "5": {},
+    "6": {"0": [0, 1, 2]}
+  }
+}

@@ -247,26 +247,23 @@ void main() {
     },
   );
 
-  test(
-    'retains opaque metafile records without inflating or rendering them',
-    () {
-      final metafile = officeArtRecord(
-        0xf01b,
-        List.filled(50, 0),
-        instance: 0x216,
-      );
-      final media = parseLegacyWordDocument(
-        inlinePictureWordFixture(picture: inlinePictureData(blip: metafile)),
-      ).media;
-      expect(media.assets.single.format, LegacyWordImageFormat.wmf);
-      expect(media.assets.single.isRenderable, isFalse);
-      expect(media.assets.single.bytes, orderedEquals(metafile));
-      expect(
-        media.notices.map((n) => n.issue),
-        contains(LegacyWordMediaIssue.unsupportedImage),
-      );
-    },
-  );
+  test('retains unsupported PICT records without interpreting them', () {
+    final metafile = officeArtRecord(
+      0xf01c,
+      List.filled(50, 0),
+      instance: 0x542,
+    );
+    final media = parseLegacyWordDocument(
+      inlinePictureWordFixture(picture: inlinePictureData(blip: metafile)),
+    ).media;
+    expect(media.assets.single.format, LegacyWordImageFormat.pict);
+    expect(media.assets.single.isRenderable, isFalse);
+    expect(media.assets.single.bytes, orderedEquals(metafile));
+    expect(
+      media.notices.map((n) => n.issue),
+      contains(LegacyWordMediaIssue.unsupportedImage),
+    );
+  });
 
   test(
     'preserves referenced OLE streams and directory metadata in a reusable CFB',

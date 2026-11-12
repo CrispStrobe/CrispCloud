@@ -157,6 +157,14 @@ abstract final class PmlArrange {
   /// unsupported changes reject before mutating any membership.
   static int group(List<PmlShape> shapes, {List<PmlShape>? allShapes}) {
     final List<PmlShape> scope = allShapes ?? shapes;
+    final int? existing = shapes.isEmpty ? null : shapes.first.groupId;
+    if (existing != null &&
+        shapes.every((shape) => shape.groupId == existing) &&
+        scope.where((shape) => shape.groupId == existing).length ==
+            shapes.length) {
+      _setGroup(shapes, scope, existing);
+      return existing;
+    }
     var id = 1;
     for (final PmlShape shape in scope) {
       final int? existing = shape.groupId;

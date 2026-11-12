@@ -60,7 +60,13 @@ void main() {
         ],
       ).build();
       final xml = _xml(_parts(convertLegacyWordToStructuredDocx(source)));
-      expect(_attr(_elements(xml, 'u').single, 'val'), expected);
+      final run = _elements(xml, 'r').singleWhere((r) => r.innerText == 'Text');
+      expect(_attr(_elements(run, 'u').single, 'val'), expected);
+      final paragraphProperties = _elements(xml, 'pPr').first;
+      expect(
+        _attr(_elements(paragraphProperties, 'u').single, 'val'),
+        expected,
+      );
     }
   });
 

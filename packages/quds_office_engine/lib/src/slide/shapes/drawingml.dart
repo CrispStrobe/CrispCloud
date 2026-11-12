@@ -565,12 +565,11 @@ String slideToXml(PmlSlide slide, {Map<PmlShape, String>? embedIds}) {
   PmlArrange.validateGrouping(slide.shapes);
   // Group keys identify model membership. They need not be valid native
   // drawing IDs: the importer intentionally assigns compact local keys.
+  final Set<int> reservedDrawingIds = {
+    1,
+    for (final shape in slide.shapes) shape.id,
+  };
   var nextGroupDrawingId = 2;
-  for (final shape in slide.shapes) {
-    if (shape.id >= nextGroupDrawingId) {
-      nextGroupDrawingId = shape.id + 1;
-    }
-  }
 
   /// w API.
   final XmlWriter w = XmlWriter();
@@ -636,6 +635,9 @@ String slideToXml(PmlSlide slide, {Map<PmlShape, String>? embedIds}) {
         w.writeEndElement();
       }
       if (shape.groupId != null) {
+        while (reservedDrawingIds.contains(nextGroupDrawingId)) {
+          nextGroupDrawingId++;
+        }
         w.writeStartElement('grpSp', prefix: 'p');
         w.writeStartElement('nvGrpSpPr', prefix: 'p');
         w.writeEmptyElement(

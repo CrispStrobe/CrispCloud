@@ -28,6 +28,7 @@ class _HtmlWriter {
   var _bytes = 0;
   var _items = 0;
   var _markerUnits = 0;
+  var _tableDepth = 0;
 
   String render(List<LegacyWordBlock> blocks) {
     _prepareNumbering(blocks);
@@ -39,6 +40,12 @@ class _HtmlWriter {
       '<div style="white-space:pre-wrap;overflow-wrap:anywhere;'
       '${defaultTabStopTwips == null ? '' : 'tab-size:${_twips(defaultTabStopTwips!)}pt;'}">',
     );
+    _blocks(blocks);
+    _write('</div>');
+    return _buffer.toString();
+  }
+
+  void _blocks(List<LegacyWordBlock> blocks) {
     for (var index = 0; index < blocks.length; index++) {
       final block = blocks[index];
       _item();
@@ -59,8 +66,6 @@ class _HtmlWriter {
           _table(block);
       }
     }
-    _write('</div>');
-    return _buffer.toString();
   }
 
   void _prepareNumbering(List<LegacyWordBlock> blocks) {
@@ -119,23 +124,28 @@ class _HtmlWriter {
       }
     }
 
-    for (final block in blocks) {
-      scanItem();
-      switch (block) {
-        case LegacyWordParagraph():
-          add(block);
-        case LegacyWordTable():
-          for (final row in block.rows) {
-            scanItem();
-            for (final cell in row.cells) {
+    void scan(List<LegacyWordBlock> values, int depth) {
+      if (depth > 63) {
+        throw const FormatException('Word tables are nested too deeply.');
+      }
+      for (final block in values) {
+        scanItem();
+        switch (block) {
+          case LegacyWordParagraph():
+            add(block);
+          case LegacyWordTable():
+            for (final row in block.rows) {
               scanItem();
-              for (final paragraph in cell.paragraphs) {
-                add(paragraph);
+              for (final cell in row.cells) {
+                scanItem();
+                scan(cell.blocks, depth + 1);
               }
             }
-          }
+        }
       }
     }
+
+    scan(blocks, 0);
     // A vertically merged HTML cell can move a continuation's text earlier in
     // markup order. Number source paragraphs in CP order before merging them.
     ordered.sort((a, b) {
@@ -463,6 +473,10 @@ class _HtmlWriter {
     var attributes = heading != null && heading >= 7 && heading <= 9
         ? ' role="heading" aria-level="$heading"'
         : '';
+    if (paragraph.formattingRevision?.marked == true) {
+      attributes +=
+          ' data-word-formatting-revision="paragraph" title="Paragraph formatting changed"';
+    }
     final css = <String>[
       'font-weight:normal',
       'font-size:inherit',
@@ -482,6 +496,11 @@ class _HtmlWriter {
       if (style.keepNext) 'break-after:avoid',
       if (style.keepTogether) 'break-inside:avoid',
       if (style.pageBreakBefore) 'break-before:page',
+      if (style.layout.rightToLeft) 'direction:rtl',
+      if (style.layout.rightToLeft) 'unicode-bidi:plaintext',
+      if (style.layout.suppressAutoHyphens) 'hyphens:none',
+      'widows:${style.layout.widowControl ? 2 : 1}',
+      'orphans:${style.layout.widowControl ? 2 : 1}',
     ];
     final marker = _markers[paragraph];
     if (marker?.unsupported == true ||
@@ -544,6 +563,15 @@ class _HtmlWriter {
       hasVisibleText = true;
       _run(run);
     }
+    final mark = paragraph.mark;
+    if (mark != null && !mark.style.hidden && (mark.inserted || mark.deleted)) {
+      final kind = mark.deleted ? 'deleted' : 'inserted';
+      _write(
+        '<span data-word-paragraph-mark="$kind" title="Paragraph mark $kind" '
+        'style="${mark.deleted ? 'background-color:#ffe8e8;text-decoration:line-through' : 'background-color:#e5f5e5;text-decoration:underline'};">¶</span>',
+      );
+      hasVisibleText = true;
+    }
     if (!hasVisibleText) _write('<br>');
     _write('</$tag>');
   }
@@ -580,6 +608,12 @@ class _HtmlWriter {
           .map((rune) => '\\${rune.toRadixString(16)} ')
           .join();
       css.add("font-family:'$escapedFont'");
+    }
+    if (run.formattingRevision?.marked == true) {
+      _write(
+        '<span data-word-formatting-revision="character" '
+        'title="Character formatting changed" style="outline:1px dotted #805a00;">',
+      );
     }
     if (run.deleted) {
       _write(
@@ -640,9 +674,13 @@ class _HtmlWriter {
     if (css.isNotEmpty) _write('</span>');
     if (run.inserted) _write('</ins>');
     if (run.deleted) _write('</del>');
+    if (run.formattingRevision?.marked == true) _write('</span>');
   }
 
   void _table(LegacyWordTable table) {
+    if (++_tableDepth > 63) {
+      throw const FormatException('Word tables are nested too deeply.');
+    }
     final rows = <List<_HtmlCell>>[];
     var active = <(int, int), _HtmlCell>{};
     for (final row in table.rows) {
@@ -663,11 +701,11 @@ class _HtmlWriter {
           }
         }
         final span = column - start;
-        final paragraphs = <LegacyWordParagraph>[];
+        final blocks = <LegacyWordBlock>[];
         for (final cell in source) {
-          for (final paragraph in cell.paragraphs) {
+          for (final block in cell.blocks) {
             _item();
-            paragraphs.add(paragraph);
+            blocks.add(block);
           }
         }
         final continues = source.every(
@@ -677,12 +715,12 @@ class _HtmlWriter {
         final previous = active[key];
         if (continues && previous != null) {
           previous.rowSpan++;
-          previous.paragraphs.addAll(paragraphs);
+          previous.blocks.addAll(blocks);
           nextActive[key] = previous;
           continue;
         }
         final cell = _HtmlCell(
-          paragraphs: paragraphs,
+          blocks: blocks,
           isHeader: row.isHeader,
           columnSpan: span,
           widthTwips: source.every((cell) => cell.widthTwips != null)
@@ -716,20 +754,13 @@ class _HtmlWriter {
           '${shading.css.isEmpty ? '' : '${shading.css.join(';')};'}'
           '${width != null && width > 0 ? 'width:${_twips(width)}pt;' : ''}">',
         );
-        for (var index = 0; index < cell.paragraphs.length; index++) {
-          _paragraph(
-            cell.paragraphs[index],
-            previous: index > 0 ? cell.paragraphs[index - 1] : null,
-            next: index + 1 < cell.paragraphs.length
-                ? cell.paragraphs[index + 1]
-                : null,
-          );
-        }
+        _blocks(cell.blocks);
         _write('</$tag>');
       }
       _write('</tr>');
     }
     _write('</tbody></table>');
+    _tableDepth--;
   }
 
   void _text(String text) {
@@ -746,7 +777,8 @@ class _HtmlWriter {
       _write(
         escaped
             .replaceAll('\n', '<br>')
-            .replaceAll('\f', '<br style="break-after:page;">'),
+            .replaceAll('\f', '<br style="break-after:page;">')
+            .replaceAll('\u000e', '<br style="break-after:column;">'),
       );
       start = end;
     }
@@ -774,13 +806,13 @@ class _HtmlWriter {
 
 class _HtmlCell {
   _HtmlCell({
-    required this.paragraphs,
+    required this.blocks,
     required this.isHeader,
     required this.columnSpan,
     required this.widthTwips,
     required this.shading,
   });
-  final List<LegacyWordParagraph> paragraphs;
+  final List<LegacyWordBlock> blocks;
   final bool isHeader;
   final int columnSpan;
   final int? widthTwips;

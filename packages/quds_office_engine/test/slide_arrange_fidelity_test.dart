@@ -241,4 +241,81 @@ void main() {
       }, before);
     },
   );
+
+  test(
+    'group allocation reserves the complete scope and ungroup preserves other groups',
+    () {
+      final shapes = [
+        for (int id = 2; id <= 5; id++) _shape(id, id * 20, 0, 10, 10),
+      ];
+      shapes[0].groupId = 7;
+      shapes[1].groupId = 7;
+      final id = PmlArrange.group(shapes.sublist(2), allShapes: shapes);
+      expect(id, isNot(7));
+      expect(PmlArrange.mates(shapes, shapes[2]), shapes.sublist(2));
+      PmlArrange.ungroup(shapes.sublist(2), allShapes: shapes);
+      expect(shapes.map((shape) => shape.groupId), [7, 7, null, null]);
+    },
+  );
+
+  for (final ungroup in [false, true]) {
+    test(
+      '${ungroup ? 'ungrouping' : 'regrouping'} the middle of an existing group rejects atomically',
+      () {
+        final shapes = [
+          for (int id = 2; id <= 5; id++)
+            _shape(id, id * 20, 0, 10, 10)..groupId = 7,
+        ];
+        expect(
+          () => ungroup
+              ? PmlArrange.ungroup(shapes.sublist(1, 3), allShapes: shapes)
+              : PmlArrange.group(shapes.sublist(1, 3), allShapes: shapes),
+          throwsStateError,
+        );
+        expect(shapes.map((shape) => shape.groupId), everyElement(7));
+      },
+    );
+  }
+
+  for (final duplicate in [false, true]) {
+    test(
+      '${duplicate ? 'duplicate' : 'foreign'} group members reject before mutation',
+      () {
+        final shapes = [_shape(2, 0, 0, 10, 10), _shape(3, 20, 0, 10, 10)];
+        final extra = duplicate ? shapes[0] : _shape(4, 40, 0, 10, 10);
+        expect(
+          () => PmlArrange.group([shapes[0], extra], allShapes: shapes),
+          throwsArgumentError,
+        );
+        expect(shapes.map((shape) => shape.groupId), everyElement(isNull));
+        expect(extra.groupId, isNull);
+      },
+    );
+  }
+
+  test('regrouping an entire existing group retains its identity', () {
+    final shapes = [
+      _shape(2, 0, 0, 10, 10)..groupId = 7,
+      _shape(3, 20, 0, 10, 10)..groupId = 7,
+    ];
+    expect(PmlArrange.group(shapes, allShapes: shapes), 7);
+    expect(shapes.map((shape) => shape.groupId), [7, 7]);
+  });
+
+  test(
+    'native group IDs stay in unsigned range with a maximal existing shape ID',
+    () {
+      final deck = _groupedDeck();
+      deck.slides.single.shapes.last.id = 0xffffffff;
+      final document = XmlDocument.parse(slideToXml(deck.slides.single));
+      final ids = [
+        for (final node in _elements(document.root!))
+          if (node.localName == 'cNvPr' &&
+              node.namespaceUri == OfficeNamespaces.p)
+            int.parse(node.getAttribute('id')!),
+      ];
+      expect(ids.toSet(), hasLength(ids.length));
+      expect(ids, everyElement(inInclusiveRange(1, 0xffffffff)));
+    },
+  );
 }

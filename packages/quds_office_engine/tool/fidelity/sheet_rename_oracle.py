@@ -35,6 +35,8 @@ NAMES = {
 CACHES = {
     **{f'D{row}': (42, None) for row in range(1, 15)},
     'D1': (2, None), 'D2': (5, None), 'D14': (4, None),
+    # FID-027 expansion: qualified local names now recalculate their targets.
+    'D10': (2, None),
     'D8': ('Data!A1 "quoted"', 'str'), 'D13': ('#REF!', 'e'),
 }
 CHART = ["'O''Brien 2026'!B1", "'O''Brien 2026'!$A$2:$A$3", "'O''Brien 2026'!$B$2:$B$3"]
@@ -85,8 +87,10 @@ def verify(parts):
 
 def main():
     output = Path('build/fidelity-sheet-rename')
-    assert {p.name for p in output.glob('*.xlsx')} == {'source.xlsx', 'renamed-1.xlsx', 'renamed-2.xlsx', 'renamed-3.xlsx'}, 'Exact rename corpus'
+    assert {p.name for p in output.glob('*.xlsx')} == {'source.xlsx', 'qualified-expected.xlsx', 'renamed-1.xlsx', 'renamed-2.xlsx', 'renamed-3.xlsx'}, 'Exact rename corpus'
     assert read_zip(output/'source.xlsx') == read_zip('test/fixtures/fidelity/sheet-rename-native.xlsx'), 'Authored source changed'
+    assert read_zip(output/'qualified-expected.xlsx') == read_zip('test/fixtures/fidelity/sheet-rename-qualified-expected.xlsx'), 'Authored expected fixture changed'
+    verify(read_zip(output/'qualified-expected.xlsx'))
     for cycle in (1, 2, 3):
         verify(read_zip(output/f'renamed-{cycle}.xlsx'))
     print('Native sheet-rename references passed across all three saves.')

@@ -5,9 +5,13 @@
 /// position is exclusive. Paragraph endCp includes its terminating mark.
 library;
 
+import 'dart:typed_data';
+
 import 'legacy_word_media_model.dart';
+import 'legacy_word_layout_model.dart';
 
 export 'legacy_word_media_model.dart';
+export 'legacy_word_layout_model.dart';
 
 enum LegacyWordWarning {
   unsupportedFormatting,
@@ -22,6 +26,11 @@ enum LegacyWordWarning {
   textboxesOmitted,
   macrosOmitted,
   revisionMetadataIncomplete,
+  recoveredTableStoryBoundary,
+  recoveredEmptySection,
+
+  /// A cb=0 PAPX had one uninterpreted final byte after complete properties.
+  recoveredNonconformingProperties,
 }
 
 enum LegacyWordAlignment { left, center, right, justify, distribute }
@@ -152,6 +161,7 @@ class LegacyWordCommentReference {
     this.time,
     this.parentId,
     this.ink = false,
+    this.sourceRecord,
     this.presentation = const LegacyWordMediaPresentation(),
   });
   final int id;
@@ -165,10 +175,32 @@ class LegacyWordCommentReference {
   /// Source wall-clock fields without a time-zone claim, as for run revisions.
   final DateTime? time;
 
-  /// Earlier comment ID for a validated ATRDPost10 reply relationship.
+  /// Comment ID for a validated reply relationship. Binary AtrdExtra records
+  /// use pre-order; the public writer also accepts a parent listed later.
   final int? parentId;
   final bool ink;
+  final LegacyWordCommentSourceRecord? sourceRecord;
   final LegacyWordMediaPresentation presentation;
+}
+
+/// Original 18-byte ATRDPost10 record, retained as immutable source evidence.
+/// The ink flag is metadata; this record does not itself contain pen strokes.
+class LegacyWordCommentSourceRecord {
+  LegacyWordCommentSourceRecord({
+    required Uint8List bytes,
+    required this.tableOffset,
+  }) : bytes = Uint8List.fromList(bytes).asUnmodifiableView() {
+    if (bytes.length != 18 || tableOffset < 0) {
+      throw const FormatException('Invalid Word extended comment evidence.');
+    }
+  }
+  final Uint8List bytes;
+  final int tableOffset;
+  int get rawDate => ByteData.sublistView(bytes).getUint32(0, Endian.little);
+  int get depth => ByteData.sublistView(bytes).getUint32(6, Endian.little);
+  int get relativeParent =>
+      ByteData.sublistView(bytes).getInt32(10, Endian.little);
+  bool get ink => (bytes[14] & 2) != 0;
 }
 
 class LegacyWordTextboxReference {
@@ -321,9 +353,18 @@ class LegacyWordParagraph extends LegacyWordBlock {
     required super.endCp,
     required this.runs,
     this.style = const LegacyWordParagraphStyle(),
+    this.formattingRevision,
+    this.mark,
+    this.revisionSaveId,
   });
   final List<LegacyWordRun> runs;
   final LegacyWordParagraphStyle style;
+  final LegacyWordParagraphFormattingRevision? formattingRevision;
+
+  /// Properties of the terminating paragraph mark, independently of text.
+  /// Deleting this mark does not delete the paragraph contents.
+  final LegacyWordParagraphMark? mark;
+  final int? revisionSaveId;
 }
 
 class LegacyWordTable extends LegacyWordBlock {
@@ -344,14 +385,20 @@ class LegacyWordTableRow {
 class LegacyWordTableCell {
   const LegacyWordTableCell({
     required this.paragraphs,
+    List<LegacyWordBlock>? blocks,
     this.widthTwips,
     this.mergeStart = false,
     this.mergeContinue = false,
     this.verticalMergeStart = false,
     this.verticalMergeContinue = false,
     this.shading,
-  });
+  }) : _blocks = blocks;
+
+  /// Direct paragraphs in this cell. [blocks] retains their order relative to
+  /// nested tables; consumers rendering complete content should use [blocks].
   final List<LegacyWordParagraph> paragraphs;
+  final List<LegacyWordBlock>? _blocks;
+  List<LegacyWordBlock> get blocks => _blocks ?? paragraphs;
   final int? widthTwips;
   final bool mergeStart;
   final bool mergeContinue;
@@ -425,12 +472,16 @@ class LegacyWordRun {
     this.deleted = false,
     this.revisionAuthor,
     this.revisionTime,
+    this.insertionRevision,
+    this.deletionRevision,
+    this.formattingRevision,
+    this.formattingSaveId,
   });
   final int startCp;
   final int endCp;
 
   /// Paragraph/cell/section terminators are removed. Tabs remain '\t', soft
-  /// line breaks are '\n', and explicit non-section page breaks are '\f'.
+  /// line breaks are '\n', page breaks are '\f', and column breaks '\u000e'.
   /// Text marked as inserted or deleted is retained, never silently accepted.
   final String text;
   final LegacyWordCharacterStyle style;
@@ -442,6 +493,106 @@ class LegacyWordRun {
   /// A UTC DateTime is only a stable carrier; consumers must not add a claimed
   /// UTC offset or convert these source fields to another time zone.
   final DateTime? revisionTime;
+
+  /// Separate provenance for overlapping insertion and deletion revisions.
+  /// The older revisionAuthor/revisionTime pair remains a compatibility view.
+  final LegacyWordRevisionInfo? insertionRevision;
+  final LegacyWordRevisionInfo? deletionRevision;
+  final LegacyWordCharacterFormattingRevision? formattingRevision;
+  final int? formattingSaveId;
+}
+
+/// Source revision metadata. A missing name/date remains missing; the parser
+/// never invents an author or converts the source wall-clock timestamp to UTC.
+class LegacyWordRevisionInfo {
+  const LegacyWordRevisionInfo({
+    this.author,
+    this.time,
+    this.authorIndex,
+    this.rawDate,
+    this.saveId,
+    this.reason,
+  });
+  final String? author;
+  final DateTime? time;
+  final int? authorIndex;
+  final int? rawDate;
+  final int? saveId;
+
+  /// Original AutoFormat reason code, when recorded in the binary source.
+  final int? reason;
+
+  @override
+  bool operator ==(Object other) =>
+      other is LegacyWordRevisionInfo &&
+      author == other.author &&
+      time == other.time &&
+      authorIndex == other.authorIndex &&
+      rawDate == other.rawDate &&
+      saveId == other.saveId &&
+      reason == other.reason;
+  @override
+  int get hashCode =>
+      Object.hash(author, time, authorIndex, rawDate, saveId, reason);
+}
+
+class LegacyWordCharacterFormattingRevision {
+  const LegacyWordCharacterFormattingRevision({
+    required this.previousStyle,
+    this.revision = const LegacyWordRevisionInfo(),
+    this.marked = true,
+    this.previousPropertiesComplete = true,
+  });
+
+  /// Resolved properties immediately before sprmCWall. Null means the file
+  /// supplied a revision mark without its previous-formatting snapshot.
+  final LegacyWordCharacterStyle? previousStyle;
+  final LegacyWordRevisionInfo revision;
+  final bool marked;
+  final bool previousPropertiesComplete;
+
+  @override
+  bool operator ==(Object other) =>
+      other is LegacyWordCharacterFormattingRevision &&
+      previousStyle == other.previousStyle &&
+      revision == other.revision &&
+      marked == other.marked &&
+      previousPropertiesComplete == other.previousPropertiesComplete;
+  @override
+  int get hashCode =>
+      Object.hash(previousStyle, revision, marked, previousPropertiesComplete);
+}
+
+class LegacyWordParagraphFormattingRevision {
+  const LegacyWordParagraphFormattingRevision({
+    required this.previousStyle,
+    this.revision = const LegacyWordRevisionInfo(),
+    this.marked = true,
+    this.previousPropertiesComplete = true,
+  });
+  final LegacyWordParagraphStyle? previousStyle;
+  final LegacyWordRevisionInfo revision;
+  final bool marked;
+  final bool previousPropertiesComplete;
+}
+
+class LegacyWordParagraphMark {
+  const LegacyWordParagraphMark({
+    this.style = const LegacyWordCharacterStyle(),
+    this.inserted = false,
+    this.deleted = false,
+    this.insertionRevision,
+    this.deletionRevision,
+    this.formattingRevision,
+    this.formattingSaveId,
+  });
+  final LegacyWordCharacterStyle style;
+  final bool inserted;
+  final bool deleted;
+  final LegacyWordRevisionInfo? insertionRevision;
+  final LegacyWordRevisionInfo? deletionRevision;
+  final LegacyWordCharacterFormattingRevision? formattingRevision;
+  final int? formattingSaveId;
 }
 
 class LegacyWordCharacterStyle {
@@ -527,6 +678,7 @@ class LegacyWordCharacterStyle {
 
 class LegacyWordParagraphStyle {
   const LegacyWordParagraphStyle({
+    this.layout = const LegacyWordParagraphLayout(),
     this.styleIndex = 0,
     this.styleName,
     this.headingLevel,
@@ -547,6 +699,7 @@ class LegacyWordParagraphStyle {
     this.borders = const {},
     this.shading,
   });
+  final LegacyWordParagraphLayout layout;
   final int styleIndex;
   final String? styleName;
 
@@ -581,6 +734,7 @@ class LegacyWordParagraphStyle {
 
 class LegacyWordSection {
   const LegacyWordSection({
+    this.layout = const LegacyWordSectionLayout(),
     required this.startCp,
     required this.endCp,
     this.pageWidthTwips,
@@ -598,6 +752,7 @@ class LegacyWordSection {
     this.breakKind = LegacyWordSectionBreak.newPage,
     this.titlePage = false,
   });
+  final LegacyWordSectionLayout layout;
   final int startCp;
   final int endCp;
   final int? pageWidthTwips;

@@ -35,12 +35,16 @@ class _StructuredWordWriter {
   final counts = <String, int>{};
   final signatureEvidenceParts = <String>[];
   final _stories = <String, LegacyWordStory>{};
+  final _commentsById = <int, LegacyWordCommentReference>{};
+  final _commentParagraphIds = <String, String>{};
+  var _commentParagraphSequence = 0;
   final _storyRanges = <(int, int, String)>[];
   final _events = <String, List<_WordInlineEvent>>{};
   final _eventOffsets = <String, int>{};
   final _headerFooters = <int, List<(bool, String, String)>>{};
   final _storyParts = <String, String>{};
   final _numberingIds = <int>{};
+  var _tableDepth = 0;
   final _fields = <int, LegacyWordField>{};
   final _fieldChildren = <int, List<LegacyWordField>>{};
   final _mediaAssets = <String, LegacyWordImageAsset>{};
@@ -55,8 +59,8 @@ class _StructuredWordWriter {
   var _inlineEventCount = 0;
   var _drawingId = 0;
   final _styles = <int, LegacyWordParagraphStyle>{};
-  final _sectionBreaks = <int, LegacyWordSectionBreak>{};
-  final _sectionIndices = <int, int>{};
+  final _sectionBreaks = <LegacyWordSection, LegacyWordSectionBreak>{};
+  final _sectionIndices = <LegacyWordSection, int>{};
   var _revisionId = 0;
   var _breaks = 0;
 
@@ -69,18 +73,41 @@ class _StructuredWordWriter {
     var sectionIndex = 0;
     final sections = document.sections;
     for (var i = 0; i < sections.length; i++) {
-      if (_sectionIndices.containsKey(sections[i].startCp)) {
-        throw const FormatException('Duplicate Word section start.');
+      final section = sections[i];
+      final emptyInitial =
+          i == 0 &&
+          sections.length > 1 &&
+          section.startCp == 0 &&
+          section.endCp == 0;
+      if (_sectionIndices.containsKey(section) ||
+          section.startCp < 0 ||
+          (section.endCp <= section.startCp && !emptyInitial) ||
+          (i > 0 && section.startCp != sections[i - 1].endCp)) {
+        throw const FormatException('Invalid or duplicate Word section range.');
       }
-      _sectionIndices[sections[i].startCp] = i;
+      _sectionIndices[section] = i;
       // MS-DOC sprmSBkc terminates this section. WordprocessingML w:type
       // instead places this section relative to the previous one. Shift only
       // the break type; dimensions/margins stay with their original section.
-      _sectionBreaks[sections[i].startCp] = i == 0
+      _sectionBreaks[section] = i == 0
           ? LegacyWordSectionBreak.newPage
           : sections[i - 1].breakKind;
     }
     for (final block in document.blocks) {
+      if (sectionIndex == 0 &&
+          sections.length > 1 &&
+          sections.first.endCp == 0) {
+        _xml.add('<w:p><w:pPr>');
+        _section(sections.first);
+        _xml.add('</w:pPr></w:p>');
+        _evidenceRecords.add({
+          'kind': 'emptyInitialSection',
+          'sourceCp': 0,
+          'reason':
+              'native zero-length section retained as an empty OOXML section; exact reflow not claimed',
+        });
+        sectionIndex++;
+      }
       // A section boundary must land at the end of a block. Inventing a
       // different position changes pagination; refuse instead of moving it.
       final section = sectionIndex < sections.length
@@ -149,10 +176,17 @@ class _StructuredWordWriter {
     _countBreak();
     final style = paragraph.style;
     _styles.putIfAbsent(style.styleIndex, () => style);
-    _xml.add('<w:p><w:pPr><w:pStyle w:val="Legacy${style.styleIndex}"/>');
+    _xml.add('<w:p');
+    _revisionSaveAttribute('rsidP', paragraph.revisionSaveId);
+    _revisionSaveAttribute('rsidR', paragraph.mark?.insertionRevision?.saveId);
+    _revisionSaveAttribute('rsidDel', paragraph.mark?.deletionRevision?.saveId);
+    _revisionSaveAttribute('rsidRPr', paragraph.mark?.formattingSaveId);
+    _commentParagraphAttribute();
+    _xml.add('><w:pPr><w:pStyle w:val="Legacy${style.styleIndex}"/>');
     _bool('keepNext', style.keepNext);
     _bool('keepLines', style.keepTogether);
     _bool('pageBreakBefore', style.pageBreakBefore);
+    _bool('widowControl', style.layout.widowControl);
     final listId = style.listId?.abs();
     if (listId != null && listId != 0) {
       if (_numberingIds.contains(listId)) {
@@ -163,11 +197,15 @@ class _StructuredWordWriter {
         limitations.add(LegacyWordConversionLimitation.fieldsLists);
       }
     }
+    _bool('suppressLineNumbers', style.layout.suppressLineNumbers);
     _paragraphDecorations(style, _xml, paragraph.startCp);
+    _paragraphLayoutBeforeSpacing(style.layout);
     _xml.add(
       '<w:spacing w:before="${style.spaceBeforeTwips}" '
       'w:after="${style.spaceAfterTwips}"',
     );
+    if (style.layout.spaceBeforeAuto) _xml.add(' w:beforeAutospacing="1"');
+    if (style.layout.spaceAfterAuto) _xml.add(' w:afterAutospacing="1"');
     final line = style.lineSpacingValue;
     if (line != null) {
       final rule = style.lineSpacingMultiple
@@ -186,12 +224,17 @@ class _StructuredWordWriter {
     } else {
       _xml.add(' w:firstLine="${style.firstLineIndentTwips}"');
     }
+    _xml.add('/>');
+    _bool('contextualSpacing', style.layout.contextualSpacing);
+    _bool('mirrorIndents', style.layout.mirrorIndents);
     _xml.add(
-      '/><w:jc w:val="${style.alignment == LegacyWordAlignment.justify ? 'both' : style.alignment.name}"/>',
+      '<w:jc w:val="${style.alignment == LegacyWordAlignment.justify ? 'both' : style.alignment.name}"/>',
     );
     final heading = style.headingLevel;
     _xml.add('<w:outlineLvl w:val="${heading == null ? 9 : heading - 1}"/>');
+    _paragraphMarkProperties(paragraph.mark, paragraph.endCp - 1);
     if (section != null) _section(section);
+    _paragraphFormattingRevision(paragraph);
     _xml.add('</w:pPr>');
     _emitEventsThrough(paragraph.startCp);
     for (final run in paragraph.runs) {
@@ -204,6 +247,9 @@ class _StructuredWordWriter {
   }
 
   void _table(LegacyWordTable table) {
+    if (++_tableDepth > 63) {
+      throw const FormatException('Word tables are nested too deeply.');
+    }
     _count('tables');
     _xml.add(
       '<w:tbl><w:tblPr><w:tblW w:w="0" w:type="auto"/>'
@@ -269,26 +315,47 @@ class _StructuredWordWriter {
             cell.shading!,
             _xml,
             'tableCell',
-            cell.paragraphs.isEmpty ? null : cell.paragraphs.first.startCp,
+            cell.blocks.isEmpty ? null : cell.blocks.first.startCp,
           );
         }
         _xml.add('</w:tcPr>');
-        if (cell.paragraphs.isEmpty) _xml.add('<w:p/>');
-        for (final paragraph in cell.paragraphs) {
-          _paragraph(paragraph);
+        for (final block in cell.blocks) {
+          switch (block) {
+            case LegacyWordParagraph():
+              _paragraph(block);
+            case LegacyWordTable():
+              _table(block);
+          }
+        }
+        if (cell.blocks.isEmpty || cell.blocks.last is LegacyWordTable) {
+          _xml.add('<w:p/>');
         }
         _xml.add('</w:tc>');
       }
       _xml.add('</w:tr>');
     }
     _xml.add('</w:tbl>');
+    _tableDepth--;
   }
 
   void _writeRun(LegacyWordRun run) {
     if (run.inserted) _revisionStart('ins', run);
     if (run.deleted) _revisionStart('del', run);
-    _xml.add('<w:r><w:rPr>');
-    final style = run.style;
+    _xml.add('<w:r');
+    _revisionSaveAttribute('rsidR', run.insertionRevision?.saveId);
+    _revisionSaveAttribute('rsidDel', run.deletionRevision?.saveId);
+    _revisionSaveAttribute('rsidRPr', run.formattingSaveId);
+    _xml.add('><w:rPr>');
+    _runStyle(run.style);
+    _characterFormattingRevision(run.formattingRevision, run.startCp);
+    _xml.add('</w:rPr>');
+    _writeRunText(run);
+    _xml.add('</w:r>');
+    if (run.deleted) _xml.add('</w:del>');
+    if (run.inserted) _xml.add('</w:ins>');
+  }
+
+  void _runStyle(LegacyWordCharacterStyle style, {bool resetDefaults = false}) {
     final font = style.fontName;
     if (font != null && font.isNotEmpty) {
       _xml.add('<w:rFonts w:ascii="');
@@ -306,24 +373,26 @@ class _StructuredWordWriter {
     _bool('strike', style.strike);
     _bool('dstrike', style.doubleStrike);
     _bool('vanish', style.hidden);
-    if (style.colorHex != null) {
-      _xml.add('<w:color w:val="${_color(style.colorHex!)}"/>');
+    if (style.colorHex != null || resetDefaults) {
+      _xml.add(
+        '<w:color w:val="${style.colorHex == null ? 'auto' : _color(style.colorHex!)}"/>',
+      );
     }
-    if (style.spacingTwips != null) {
-      _xml.add('<w:spacing w:val="${style.spacingTwips}"/>');
+    if (style.spacingTwips != null || resetDefaults) {
+      _xml.add('<w:spacing w:val="${style.spacingTwips ?? 0}"/>');
     }
-    if (style.positionHalfPoints != null) {
-      _xml.add('<w:position w:val="${style.positionHalfPoints}"/>');
+    if (style.positionHalfPoints != null || resetDefaults) {
+      _xml.add('<w:position w:val="${style.positionHalfPoints ?? 0}"/>');
     }
-    if (style.fontSizeHalfPoints != null) {
-      _xml.add('<w:sz w:val="${style.fontSizeHalfPoints}"/>');
+    if (style.fontSizeHalfPoints != null || resetDefaults) {
+      _xml.add('<w:sz w:val="${style.fontSizeHalfPoints ?? 20}"/>');
     }
     final highlight = style.highlightHex;
     final highlightName = highlight == null
         ? null
         : _highlights[_color(highlight)];
-    if (highlightName != null) {
-      _xml.add('<w:highlight w:val="$highlightName"/>');
+    if (highlightName != null || resetDefaults) {
+      _xml.add('<w:highlight w:val="${highlightName ?? 'none'}"/>');
     }
     _xml.add('<w:u w:val="${_underlineValue(style)}"/>');
     if (highlight != null && highlightName == null) {
@@ -332,12 +401,16 @@ class _StructuredWordWriter {
       );
     }
     _xml.add('<w:vertAlign w:val="${style.verticalAlign.name}"/>');
-    _xml.add('</w:rPr>');
+  }
+
+  void _writeRunText(LegacyWordRun run) {
     var start = 0;
     final text = run.text;
     for (var i = 0; i <= text.length; i++) {
       final code = i == text.length ? -1 : text.codeUnitAt(i);
-      if (code != -1 && code != 9 && code != 10 && code != 12) continue;
+      if (code != -1 && code != 9 && code != 10 && code != 12 && code != 14) {
+        continue;
+      }
       if (i > start) {
         final tag = run.deleted ? 'delText' : 't';
         _xml.add('<w:$tag xml:space="preserve">');
@@ -349,39 +422,29 @@ class _StructuredWordWriter {
         _xml.add(switch (code) {
           9 => '<w:tab/>',
           12 => '<w:br w:type="page"/>',
+          14 => '<w:br w:type="column"/>',
           _ => '<w:br/>',
         });
       }
       start = i + 1;
     }
-    _xml.add('</w:r>');
-    if (run.deleted) _xml.add('</w:del>');
-    if (run.inserted) _xml.add('</w:ins>');
   }
 
   void _revisionStart(String tag, LegacyWordRun run) {
-    _xml.add('<w:$tag w:id="${_revisionId++}" w:author="');
-    _xml.text(run.revisionAuthor ?? '', attribute: true);
-    _xml.add('"');
-    if (run.revisionTime != null) {
-      // DTTM carries a wall-clock date/time without a timezone. xsd:dateTime
-      // allows an unspecified zone; emitting Z would invent UTC metadata.
-      final time = run.revisionTime!;
-      String two(int value) => value.toString().padLeft(2, '0');
-      _xml.add(
-        ' w:date="${time.year.toString().padLeft(4, '0')}-'
-        '${two(time.month)}-${two(time.day)}T'
-        '${two(time.hour)}:${two(time.minute)}:00"',
-      );
-    }
-    _xml.add('>');
+    final info =
+        (tag == 'del' ? run.deletionRevision : run.insertionRevision) ??
+        LegacyWordRevisionInfo(
+          author: run.revisionAuthor,
+          time: run.revisionTime,
+        );
+    _revisionElementStart(tag, info);
   }
 
   void _section(LegacyWordSection section) {
     final breakBefore =
-        _sectionBreaks[section.startCp] ?? LegacyWordSectionBreak.newPage;
+        _sectionBreaks[section] ?? LegacyWordSectionBreak.newPage;
     _xml.add('<w:sectPr>');
-    final sectionIndex = _sectionIndices[section.startCp] ?? 0;
+    final sectionIndex = _sectionIndices[section] ?? 0;
     final references = _headerFooters[sectionIndex] ?? const [];
     for (final reference in references) {
       _xml.add(
@@ -425,12 +488,12 @@ class _StructuredWordWriter {
         'w:gutter="${section.gutterTwips ?? 0}"/>',
       );
     }
-    _xml.add('<w:cols w:num="${section.columns}"');
-    _optional('space', section.columnsSpaceTwips);
-    _xml.add('/>');
+    _sectionNumbering(section.layout);
+    _sectionColumns(section);
     if (section.titlePage) {
       _xml.add('<w:titlePg/>');
     }
+    _sectionGrid(section.layout);
     _xml.add('</w:sectPr>');
     _count('sections');
   }

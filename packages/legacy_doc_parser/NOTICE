@@ -20,6 +20,13 @@ Third-party source notices:
    files: lib/src/legacy_word_format_tables.dart and legacy_word_sprms.dart.
 
 Dependencies retain their own licenses; see each resolved package's LICENSE.
+
+3. test/fixtures/fidelity contains independently authored Office fixtures and
+   reference expectations from CrispStrobe/quds_office_suite at commit
+   ca9853b5b08784beac50df5680176cb4e5b3cb25 (MIT, Copyright (c) 2026).
+   Exact source paths/hashes are recorded in tool/fidelity/corpus.json;
+   the license is retained in third_party/quds-fixtures-MIT.txt.
+
 MPL-2.0 is applied without the Exhibit B "Incompatible With Secondary Licenses"
 designation. No permission to execute an embedded third-party payload is
 conferred by parsing or retaining that payload.

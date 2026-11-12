@@ -1,0 +1,30 @@
+{
+  "description": "Authored table-property expectations, independent of the Quds serializer and exports. A missing direct border inherits; explicit nil suppresses inherited borders.",
+  "style": {"id": "ReviewGrid", "border": {"value": "single", "color": "CC0000", "size": 8}},
+  "tables": [
+    {
+      "part": "word/document.xml", "text": "Unbordered body table", "style": null,
+      "width": 3600, "layout": "fixed", "top_margin": 80, "caption": "Retained caption",
+      "imported": null,
+      "edited": {"value": "single", "color": "224466", "size": 12}
+    },
+    {
+      "part": "word/document.xml", "text": "Inherited table borders", "style": "ReviewGrid",
+      "width": 3600, "layout": null, "top_margin": null, "caption": null,
+      "imported": null,
+      "edited": {"value": "nil", "color": null, "size": null}
+    },
+    {
+      "part": "word/document.xml", "text": "Explicitly hidden borders", "style": "ReviewGrid",
+      "width": 3600, "layout": null, "top_margin": null, "caption": null,
+      "imported": {"value": "nil", "color": null, "size": null},
+      "edited": {"value": "nil", "color": null, "size": null}
+    },
+    {
+      "part": "word/footnotes.xml", "text": "Unbordered note table", "style": null,
+      "width": 2000, "layout": null, "top_margin": null, "caption": null,
+      "imported": null,
+      "edited": {"value": "single", "color": "996633", "size": 6}
+    }
+  ]
+}

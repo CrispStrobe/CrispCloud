@@ -2924,7 +2924,10 @@ class WordEditorController extends OfficeController {
     }
     _assertSelectionCanChange();
     WordContentControls.assertCanInsert(document, blocks);
-    _assertIncomingBookmarks(blocks);
+    final List<WmlBlock> clones = WordBookmarks.copyForInsertion(
+      document,
+      blocks,
+    );
     final paragraphStory = isEditingComment || isEditingHeaderFooter;
     if (paragraphStory) {
       if (blocks.any((block) => block is! WmlParagraph)) {
@@ -2940,6 +2943,17 @@ class WordEditorController extends OfficeController {
     final mergedParagraphs = paragraphStory
         ? blocks.whereType<WmlParagraph>()
         : blocks.take(1).whereType<WmlParagraph>();
+    if ((paragraphStory ||
+            (!_wordBodyIsBlank() &&
+                (!caret.isCollapsed || _activeParagraph.text.isNotEmpty))) &&
+        mergedParagraphs.any(
+          (paragraph) => WordBookmarks.generatedName(paragraph) != null,
+        )) {
+      throw UnsupportedError(
+        'Pasting a generated paragraph bookmark into this text would discard '
+        'its range. Retain it as a complete paragraph in an empty body target.',
+      );
+    }
     if ((paragraphStory || !_wordBodyIsBlank()) &&
         mergedParagraphs.any(
           (paragraph) =>
@@ -2957,9 +2971,6 @@ class WordEditorController extends OfficeController {
     if (!caret.isCollapsed) {
       _deleteNormalizedSelection();
     }
-    final List<WmlBlock> clones = <WmlBlock>[
-      for (final WmlBlock block in blocks) WmlClone.block(block),
-    ];
     if (paragraphStory) {
       for (int i = 0; i < clones.length; i++) {
         if (i > 0) {
@@ -2980,42 +2991,6 @@ class WordEditorController extends OfficeController {
     _markLocalEdit();
     _syncImeSelection();
     notifyListeners();
-  }
-
-  void _assertIncomingBookmarks(List<WmlBlock> blocks) {
-    final paragraphs = blocks.expand(WmlClone.paragraphsOf).toList();
-    if (!paragraphs.any(
-      (paragraph) =>
-          paragraph.inlines.any((inline) => inline is WmlBookmarkBoundary),
-    )) {
-      return;
-    }
-    // A fragment must carry complete pairs. A copied range in a later block
-    // must not mutate the destination and defer an ID collision until save.
-    final incoming = WordBookmarks.ranges(
-      WmlDocument(sections: [WmlSection(blocks: blocks)]),
-    );
-    final ids = <String>{};
-    final names = <String>{};
-    for (final paragraph in _paragraphs) {
-      final generated = WordBookmarks.generatedName(paragraph);
-      if (generated != null) names.add(generated);
-      for (final inline in paragraph.inlines.whereType<WmlBookmarkBoundary>()) {
-        if (inline.isStart) {
-          ids.add(WordBookmarks.canonicalId(inline.id));
-          if (inline.name != null) names.add(inline.name!);
-        }
-      }
-    }
-    for (final range in incoming) {
-      if (!ids.add(WordBookmarks.canonicalId(range.start.id)) ||
-          !names.add(range.name)) {
-        throw UnsupportedError(
-          'Pasting this bookmark requires remapping its native ID and name '
-          'before it can be added to the same story.',
-        );
-      }
-    }
   }
 
   bool _wordBodyIsBlank() {

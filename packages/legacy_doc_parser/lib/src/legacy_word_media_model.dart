@@ -61,6 +61,40 @@ class LegacyWordSourceReference {
 
 enum LegacyWordImageFormat { png, jpeg, tiff, dib, emf, wmf, pict, unknown }
 
+/// Metafile/device coordinates, independent of the picture's Word dimensions.
+class LegacyWordVectorBounds {
+  const LegacyWordVectorBounds(this.left, this.top, this.right, this.bottom);
+  final int left, top, right, bottom;
+  int get width => right - left;
+  int get height => bottom - top;
+}
+
+/// Bounded structural inspection, not a claim that every GDI record was drawn.
+class LegacyWordMetafileInfo {
+  LegacyWordMetafileInfo({
+    required this.bounds,
+    required this.recordCount,
+    required this.nativeEmbeddingAllowed,
+    this.widthEmu,
+    this.heightEmu,
+    this.previewSvg,
+    List<int> unsupportedPreviewRecords = const [],
+  }) : unsupportedPreviewRecords = List.unmodifiable(unsupportedPreviewRecords);
+
+  final LegacyWordVectorBounds bounds;
+  final int recordCount;
+  final int? widthEmu, heightEmu;
+
+  /// Escape records stay inert; they are never forwarded to native rendering.
+  final bool nativeEmbeddingAllowed;
+
+  /// Generated fixed-tag SVG only when the bounded renderer supports every
+  /// relevant record. Original XML, scripts, links and fonts are never copied.
+  final String? previewSvg;
+  final List<int> unsupportedPreviewRecords;
+  bool get hasCompletePreview => previewSvg != null;
+}
+
 class LegacyWordImageAsset {
   LegacyWordImageAsset({
     required this.id,
@@ -68,29 +102,39 @@ class LegacyWordImageAsset {
     required Uint8List bytes,
     required this.source,
     required this.officeArtArtifactId,
+    this.metafile,
   }) : bytes = Uint8List.fromList(bytes).asUnmodifiableView();
   final String id;
   final LegacyWordImageFormat format;
   final Uint8List bytes;
   final LegacyWordSourceReference source;
   final String officeArtArtifactId;
+  final LegacyWordMetafileInfo? metafile;
 
-  /// Only these formats have a directly reusable, bounded raster file payload.
-  /// Metafiles and DIBs remain opaque records; they are not rendered or inflated.
+  /// Reusable raster bytes or a structurally validated, escape-free EMF/WMF.
+  /// This is native Office reuse; [LegacyWordMetafileInfo.previewSvg] records
+  /// the separate, deliberately narrower portable rendering capability.
   bool get isRenderable =>
       format == LegacyWordImageFormat.png ||
       format == LegacyWordImageFormat.jpeg ||
-      format == LegacyWordImageFormat.tiff;
+      format == LegacyWordImageFormat.tiff ||
+      ((format == LegacyWordImageFormat.emf ||
+              format == LegacyWordImageFormat.wmf) &&
+          metafile?.nativeEmbeddingAllowed == true);
   String get contentType => switch (format) {
     LegacyWordImageFormat.png => 'image/png',
     LegacyWordImageFormat.jpeg => 'image/jpeg',
     LegacyWordImageFormat.tiff => 'image/tiff',
+    LegacyWordImageFormat.emf => 'image/x-emf',
+    LegacyWordImageFormat.wmf => 'image/x-wmf',
     _ => 'application/octet-stream',
   };
   String get extension => switch (format) {
     LegacyWordImageFormat.png => 'png',
     LegacyWordImageFormat.jpeg => 'jpg',
     LegacyWordImageFormat.tiff => 'tif',
+    LegacyWordImageFormat.emf => 'emf',
+    LegacyWordImageFormat.wmf => 'wmf',
     _ => 'bin',
   };
 }

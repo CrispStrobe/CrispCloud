@@ -112,7 +112,8 @@
       "bundles": [
         "frames",
         "story-media",
-        "structure"
+        "structure",
+        "slide-arrange"
       ],
       "goldens": [
         "frames",
@@ -124,7 +125,8 @@
       "description": "Native text frames, DrawingML outlines and square/top-bottom wrapping.",
       "bundles": [
         "frames",
-        "structure"
+        "structure",
+        "slide-arrange"
       ],
       "goldens": [
         "frames",
@@ -132,12 +134,13 @@
       ]
     },
     "references": {
-      "description": "Bookmarks, native REF/inline fields, citations, bibliography and target ownership.",
+      "description": "Bookmarks, complete native-range insertion copies, native REF/inline fields, citations, bibliography and target ownership.",
       "bundles": [
         "bookmarks",
         "bibliography",
         "inline-fields",
-        "structure"
+        "structure",
+        "bookmark-copy"
       ],
       "goldens": [
         "structure"
@@ -154,22 +157,24 @@
       ]
     },
     "spreadsheets": {
-      "description": "Scripted cells/styles/formulas, native workbook/pivot retention and atomic sheet rename.",
+      "description": "Scripted cells/styles/formulas, native workbook/pivot retention, scoped defined-name recalculation and atomic sheet rename.",
       "bundles": [
         "scripted",
         "native-sheets-slides",
         "cross-format",
-        "sheet-rename"
+        "sheet-rename",
+        "sheet-qualified-names"
       ],
       "goldens": []
     },
     "slides": {
-      "description": "Scripted shapes/notes/geometry/transitions, native templates and section-preserving reordering.",
+      "description": "Scripted shapes/notes/geometry/transitions, endpoint-stable arrangement, collision-free flat grouping, native templates and section-preserving reordering.",
       "bundles": [
         "scripted",
         "native-sheets-slides",
         "cross-format",
-        "slide-sections"
+        "slide-sections",
+        "slide-arrange"
       ],
       "goldens": []
     }
@@ -460,6 +465,49 @@
       ],
       "controls": [
         "tool/fidelity/test_slide_sections_oracle.py"
+      ]
+    },
+    "bookmark-copy": {
+      "tests": [
+        "test/word_bookmark_copy_test.dart"
+      ],
+      "scripts": [],
+      "oracles": [
+        [
+          "tool/fidelity/bookmark_copy_oracle.py"
+        ]
+      ],
+      "controls": [
+        "tool/fidelity/test_bookmark_copy_oracle.py"
+      ]
+    },
+    "sheet-qualified-names": {
+      "tests": [
+        "test/sheet_qualified_names_test.dart",
+        "test/sheet_qualified_name_error_test.dart"
+      ],
+      "scripts": [],
+      "oracles": [
+        [
+          "tool/fidelity/sheet_qualified_names_oracle.py"
+        ]
+      ],
+      "controls": [
+        "tool/fidelity/test_sheet_qualified_names_oracle.py"
+      ]
+    },
+    "slide-arrange": {
+      "tests": [
+        "test/slide_arrange_fidelity_test.dart"
+      ],
+      "scripts": [],
+      "oracles": [
+        [
+          "tool/fidelity/slide_arrange_oracle.py"
+        ]
+      ],
+      "controls": [
+        "tool/fidelity/test_slide_arrange_oracle.py"
       ]
     }
   },

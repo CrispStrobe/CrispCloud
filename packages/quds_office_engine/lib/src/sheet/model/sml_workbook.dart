@@ -1391,6 +1391,7 @@ class SmlWorkbook {
     List<SmlWorksheet>? sheets,
     List<String>? sharedStrings,
     List<SmlNamedRange>? namedRanges,
+    List<SmlFormulaName>? formulaNames,
     OfficeDocumentProperties? properties,
     this.package,
     this.styles,
@@ -1398,6 +1399,7 @@ class SmlWorkbook {
            sheets ?? <SmlWorksheet>[SmlWorksheet(name: 'Sheet1', sheetId: 1)],
        sharedStrings = sharedStrings ?? <String>[],
        namedRanges = namedRanges ?? <SmlNamedRange>[],
+       formulaNames = formulaNames ?? <SmlFormulaName>[],
        properties = properties ?? OfficeDocumentProperties();
 
   /// sheets API.
@@ -1408,6 +1410,14 @@ class SmlWorkbook {
 
   /// namedRanges API.
   final List<SmlNamedRange> namedRanges;
+
+  /// Native scalar and unsupported definitions, including worksheet scopes.
+  final List<SmlFormulaName> formulaNames;
+
+  Iterable<SmlDefinedName> get definedNames sync* {
+    yield* namedRanges;
+    yield* formulaNames;
+  }
 
   /// properties API.
   OfficeDocumentProperties properties;
@@ -1421,7 +1431,11 @@ class SmlWorkbook {
 
   /// Snapshot used to retain the native name collection without losing names
   /// outside the editable A1-range projection.
-  String definedNameState({String? from, String? to}) {
+  String definedNameState({
+    String? from,
+    String? to,
+    String Function(String)? rewriteFormula,
+  }) {
     String sheetName(String value) =>
         from != null && value.toLowerCase() == from.toLowerCase() ? to! : value;
     String? range(SmlRange? value) =>
@@ -1429,7 +1443,22 @@ class SmlWorkbook {
     return jsonEncode([
       [
         for (final name in namedRanges)
-          [name.name, sheetName(name.sheetName), range(name.range)],
+          [
+            name.name,
+            name.localSheetId,
+            sheetName(name.sheetName),
+            range(name.range),
+            name.attributes,
+          ],
+      ],
+      [
+        for (final name in formulaNames)
+          [
+            name.name,
+            name.localSheetId,
+            rewriteFormula?.call(name.formula) ?? name.formula,
+            name.attributes,
+          ],
       ],
       [
         for (final sheet in sheets)
@@ -1478,14 +1507,42 @@ class SmlWorkbook {
   SmlWorksheet get firstSheet => sheets.first;
 
   /// namedRange API.
-  SmlNamedRange? namedRange(String name) {
-    final String key = name.toUpperCase();
-    for (final SmlNamedRange range in namedRanges) {
-      if (range.name.toUpperCase() == key) {
-        return range;
+  SmlNamedRange? namedRange(String name, {SmlWorksheet? onSheet}) =>
+      switch (definedName(name, onSheet: onSheet)) {
+        final SmlNamedRange range => range,
+        _ => null,
+      };
+
+  /// Locals shadow globals, even when the local definition cannot be evaluated.
+  /// Explicit worksheet qualification uses [localOnly] and never guesses a
+  /// global fallback. Ambiguous native names are retained but not calculated.
+  SmlDefinedName? definedName(
+    String name, {
+    SmlWorksheet? onSheet,
+    bool localOnly = false,
+  }) {
+    final key = name.toUpperCase();
+    SmlDefinedName? find(int? scope) {
+      SmlDefinedName? result;
+      for (final candidate in definedNames) {
+        if (candidate.name.toUpperCase() == key &&
+            candidate.localSheetId == scope) {
+          if (result != null) {
+            throw UnsupportedError('Ambiguous defined name $name');
+          }
+          result = candidate;
+        }
       }
+      return result;
     }
-    return null;
+
+    if (onSheet != null) {
+      final index = sheets.indexOf(onSheet);
+      if (index < 0) throw ArgumentError.value(onSheet, 'onSheet');
+      final local = find(index);
+      if (local != null) return local;
+    }
+    return localOnly ? null : find(null);
   }
 
   /// sheetByName API.

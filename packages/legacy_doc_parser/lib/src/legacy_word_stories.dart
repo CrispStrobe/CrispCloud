@@ -133,6 +133,7 @@ extension _WordStories on _StructuredWordParser {
         time: old.time,
         parentId: old.parentId,
         ink: old.ink,
+        sourceRecord: old.sourceRecord,
         presentation: at(old.anchorCp),
       );
     }
@@ -159,7 +160,18 @@ extension _WordStories on _StructuredWordParser {
       final anchor = refs.cps[i],
           start = base + ranges[i],
           end = base + ranges[i + 1];
-      if (anchor >= source.bodyLength || end <= start || body[end - 1] != 13) {
+      // Some native DOC exporters place the final note boundary on its table
+      // terminating mark, immediately before the guard CR. MS-DOC PlcffndTxt
+      // normally requires CR. Recover only this closed table, never an arbitrary
+      // unterminated paragraph or a range reaching into the following story.
+      final tableBoundary =
+          end > start &&
+          end == base + length - 1 &&
+          body[end - 1] == 7 &&
+          body[end] == 13;
+      if (anchor >= source.bodyLength ||
+          end <= start ||
+          (body[end - 1] != 13 && !tableBoundary)) {
         throw const FormatException(
           'Invalid Word note reference or terminator.',
         );
@@ -190,6 +202,15 @@ extension _WordStories on _StructuredWordParser {
         start,
         end,
       );
+      if (tableBoundary) {
+        final blocks = stories.last.blocks;
+        if (blocks.isEmpty ||
+            blocks.last is! LegacyWordTable ||
+            blocks.last.endCp != end) {
+          throw const FormatException('Unclosed Word table at note boundary.');
+        }
+        warnings.add(LegacyWordWarning.recoveredTableStoryBoundary);
+      }
     }
   }
 
@@ -286,19 +307,23 @@ extension _WordStories on _StructuredWordParser {
         throw const FormatException('Invalid Word extended comment records.');
       }
       extra = _Bytes(source.table.slice(extraOffset, extraLength));
+      final ancestors = <int>[];
       for (var i = 0; i < refs.count; i++) {
         final depth = extra.u32(i * 18 + 6),
             relativeParent = extra.i32(i * 18 + 10);
         if (depth > 64 ||
+            depth > ancestors.length ||
             (depth == 0 && relativeParent != 0) ||
             (depth != 0 &&
                 (relativeParent >= 0 ||
-                    i + relativeParent < 0 ||
+                    i + relativeParent != ancestors[depth - 1] ||
                     extra.u32((i + relativeParent) * 18 + 6) + 1 != depth))) {
           throw const FormatException(
             'Invalid Word comment-parent relationship.',
           );
         }
+        ancestors.length = depth;
+        ancestors.add(i);
       }
     }
     final base = _storyBase(2);
@@ -345,6 +370,12 @@ extension _WordStories on _StructuredWordParser {
               ? null
               : i + extra.i32(i * 18 + 10),
           ink: extra != null && (extra.u32(i * 18 + 14) & 2) != 0,
+          sourceRecord: extra == null
+              ? null
+              : LegacyWordCommentSourceRecord(
+                  bytes: extra.slice(i * 18, 18),
+                  tableOffset: extraOffset + i * 18,
+                ),
         ),
       );
       _addStory(id, LegacyWordStoryKind.comment, first, end);

@@ -418,7 +418,11 @@ void main() {
           document.numbering.single.levels.single.format,
         );
         expect(_attr(_elements(numbering, 'b').single, 'val'), '1');
-        expect(_attr(_elements(_xml(files), 'b').single, 'val'), '0');
+        // Body text and its paragraph mark both retain non-marker formatting.
+        expect(
+          _elements(_xml(files), 'b').map((e) => _attr(e, 'val')).toSet(),
+          {'0'},
+        );
       }
     },
   );

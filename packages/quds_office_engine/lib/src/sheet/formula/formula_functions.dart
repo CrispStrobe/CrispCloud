@@ -8,8 +8,11 @@ import 'formula_ast.dart';
 abstract final class FormulaFunctions {
   /// call API.
   static Object? call(String name, List<FormulaNode> args, FormulaContext ctx) {
-    final result = _call(name, args, ctx);
-    return ctx.tracksErrorTypes ? result : FormulaErrorValue.unwrap(result);
+    final typed = ctx.tracksErrorTypes;
+    final result = typed
+        ? _call(name, args, ctx)
+        : ctx.withErrorTypes(() => _call(name, args, ctx));
+    return typed ? result : FormulaErrorValue.unwrap(result);
   }
 
   static Object? _call(
@@ -21,13 +24,107 @@ abstract final class FormulaFunctions {
     if (n == 'LET') {
       return _let(args, ctx);
     }
+    // Branching functions consume errors intentionally and evaluate only the
+    // selected expression. An unused opaque name must not block a known result.
+    if (n == 'IF') {
+      final condition = args.isEmpty ? null : args[0].eval(ctx);
+      if (condition is FormulaErrorValue) return condition;
+      final selected = _truth(condition) ? 1 : 2;
+      return args.length > selected ? args[selected].eval(ctx) : selected == 1;
+    }
+    if (n == 'IFERROR' || n == 'IFNA') {
+      final value = args.isEmpty ? null : args[0].eval(ctx);
+      // Missing evaluator capability is not a genuine Excel error that a
+      // fallback can safely replace. Preserve its provenance for cache policy.
+      if (value is FormulaErrorValue && value.isUnsupported) return value;
+      final fallback =
+          _isErr(value, ctx) &&
+          (n == 'IFERROR' || formulaString(value) == '#N/A');
+      return fallback ? (args.length > 1 ? args[1].eval(ctx) : 0) : value;
+    }
     final List<Object?> vals = args
         .map((FormulaNode a) => a.eval(ctx))
         .toList();
-    // Text-producing functions must not stringify an actual error into
-    // ordinary text. Literal strings with the same spelling remain strings.
+    // Aggregators must not ignore native errors as nonnumeric text, and text
+    // functions must not turn them into ordinary strings. Error-looking text
+    // remains text, including when returned by a named scalar constant.
     if (ctx.tracksErrorTypes &&
         <String>{
+          'SUM',
+          'AVERAGE',
+          'MIN',
+          'MAX',
+          'PRODUCT',
+          'SUMPRODUCT',
+          'SUMSQ',
+          'ABS',
+          'ROUND',
+          'ROUNDUP',
+          'ROUNDDOWN',
+          'MOD',
+          'POWER',
+          'POW',
+          'SQRT',
+          'EXP',
+          'LN',
+          'LOG',
+          'LOG10',
+          'SIGN',
+          'INT',
+          'TRUNC',
+          'CEILING',
+          'FLOOR',
+          'EVEN',
+          'ODD',
+          'FACT',
+          'GCD',
+          'LCM',
+          'QUOTIENT',
+          'MROUND',
+          'MEDIAN',
+          'AVEDEV',
+          'STDEV',
+          'STDEVP',
+          'VAR',
+          'VARP',
+          'RANDBETWEEN',
+          'IRR',
+          'TIME',
+          'DAYS',
+          'VALUE',
+          'CHAR',
+          'CODE',
+          'UNICHAR',
+          'UNICODE',
+          'LEN',
+          'FIND',
+          'SEARCH',
+          'N',
+          'ADDRESS',
+          'FIXED',
+          'DOLLAR',
+          'RMB',
+          'YEN',
+          'BAHTTEXT',
+          'DATE',
+          'YEAR',
+          'MONTH',
+          'DAY',
+          'HOUR',
+          'MINUTE',
+          'SECOND',
+          'WEEKDAY',
+          'PV',
+          'FV',
+          'PMT',
+          'NPV',
+          'SIN',
+          'COS',
+          'TAN',
+          'EDATE',
+          'EOMONTH',
+          'NETWORKDAYS',
+          'SEQUENCE',
           'CONCAT',
           'CONCATENATE',
           'TEXTJOIN',
@@ -162,10 +259,6 @@ abstract final class FormulaFunctions {
         return (ctx.workbook.sheets.indexOf(ctx.sheet) + 1).toDouble();
       case 'SHEETS':
         return ctx.workbook.sheets.length.toDouble();
-      case 'IF':
-        return _truth(vals.isEmpty ? null : vals[0])
-            ? (vals.length > 1 ? vals[1] : true)
-            : (vals.length > 2 ? vals[2] : false);
       case 'AND':
         return vals.every(_truth);
       case 'OR':
@@ -178,15 +271,6 @@ abstract final class FormulaFunctions {
         return true;
       case 'FALSE':
         return false;
-      case 'IFERROR':
-        return _isErr(vals.isEmpty ? null : vals[0], ctx)
-            ? (vals.length > 1 ? vals[1] : 0)
-            : vals[0];
-      case 'IFNA':
-        return vals.isNotEmpty &&
-                (_isErr(vals[0], ctx) && formulaString(vals[0]) == '#N/A')
-            ? (vals.length > 1 ? vals[1] : 0)
-            : vals[0];
       case 'IFS':
         for (int i = 0; i + 1 < vals.length; i += 2) {
           if (_truth(vals[i])) return vals[i + 1];
@@ -552,7 +636,7 @@ abstract final class FormulaFunctions {
         if (_aliases.containsKey(n)) {
           return call(_aliases[n]!, args, ctx);
         }
-        return const FormulaErrorValue('#NAME?');
+        return const FormulaErrorValue('#NAME?', isUnsupported: true);
     }
   }
 
@@ -1221,6 +1305,12 @@ abstract final class FormulaFunctions {
     } else if (first is RangeNode) {
       origin = first.range.start;
     } else if (first is NamedRangeNode) {
+      final definition = first.resolve(ctx.workbook, ctx.sheet);
+      if (first.sheetName != null || definition?.localSheetId != null) {
+        // OFFSET requires dynamic target dependencies beyond a name's range.
+        // Do not accidentally extend it by the new scoped-name parser.
+        throw UnsupportedError('OFFSET of scoped names is not evaluated');
+      }
       final SmlNamedRange? named = ctx.workbook.namedRange(first.name);
       origin = named?.range.start;
     }

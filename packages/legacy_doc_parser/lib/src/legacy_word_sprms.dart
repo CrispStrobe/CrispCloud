@@ -46,13 +46,25 @@ class _Sprm {
   int get group => (code >> 10) & 7;
 }
 
-List<_Sprm> _decodeSprms(Uint8List bytes, _Budget budget) {
+List<_Sprm> _decodeSprms(
+  Uint8List bytes,
+  _Budget budget, {
+  void Function()? onPapxOrphanByte,
+}) {
   final input = _Bytes(bytes);
   final output = <_Sprm>[];
   var position = 0;
   while (position < input.length) {
     final remaining = input.length - position;
     if (remaining <= 2 && bytes.skip(position).every((byte) => byte == 0)) {
+      break;
+    }
+    // Narrow interoperability recovery requested only by cb=0 PapxInFkp.
+    // This is not valid GrpPrlAndIstd padding: it requires whole Prl records.
+    // A complete prior record and exactly one remaining byte are essential;
+    // no operand, opcode pair, length prefix or indirect property is repaired.
+    if (remaining == 1 && output.isNotEmpty && onPapxOrphanByte != null) {
+      onPapxOrphanByte();
       break;
     }
     budget.property();
@@ -102,27 +114,27 @@ List<_Sprm> _decodeSprms(Uint8List bytes, _Budget budget) {
 const _prm0Codes = <int, int>{
   0x04: 0x2602,
   0x05: 0x2403,
-  0x06: 0x2404,
   0x07: 0x2405,
   0x08: 0x2406,
   0x09: 0x2407,
   0x0a: 0x2408,
   0x0c: 0x260a,
-  0x0d: 0x240c,
-  0x0e: 0x240d,
+  0x0d: 0x2470,
+  0x0e: 0x240c,
+  0x0f: 0x2471,
   0x18: 0x2416,
   0x19: 0x2417,
   0x1d: 0x2423,
-  0x25: 0x242a,
-  0x2c: 0x2430,
-  0x2d: 0x2431,
-  0x2e: 0x2433,
-  0x2f: 0x2434,
-  0x30: 0x2435,
-  0x31: 0x2436,
-  0x32: 0x2437,
-  0x33: 0x2438,
-  0x35: 0x243a,
+  0x25: 0x2423,
+  0x2c: 0x242a,
+  0x32: 0x2430,
+  0x33: 0x2431,
+  0x35: 0x2433,
+  0x36: 0x2434,
+  0x37: 0x2435,
+  0x38: 0x2436,
+  0x39: 0x2437,
+  0x3a: 0x2438,
   0x41: 0x0800,
   0x42: 0x0801,
   0x43: 0x0802,
@@ -304,6 +316,23 @@ void _applyCharacter(
         output['position'] = position;
       case 0x8840:
         output['spacing'] = data.i16(0);
+      case 0x2a83:
+        output['_oldCharacter'] = _boolean(data)
+            ? _revisionSnapshot(output)
+            : null;
+      case 0xca57:
+      case 0xca89:
+        _applyPropertyRevision(data, output, 'character');
+      case 0x6815:
+        output['formattingSaveId'] = data.u32(0);
+      case 0x6816:
+        output['insertionSaveId'] = data.u32(0);
+      case 0x6817:
+        output['deletionSaveId'] = data.u32(0);
+      case 0x4807:
+        output['insertionReason'] = data.u16(0);
+      case 0x4867:
+        output['deletionReason'] = data.u16(0);
       case 0x4804:
         output['insertionAuthor'] = data.u16(0);
       case 0x4863:
@@ -329,12 +358,10 @@ void _applyCharacter(
       case 0x4874:
       case 0x4a41:
       case 0x680e:
-      case 0x6815:
-      case 0x6816:
-      case 0x6817:
       case 0x0802:
         break;
       default:
+        output['_unsupportedCharacter'] = true;
         warnings.add(LegacyWordWarning.unsupportedFormatting);
     }
   }
@@ -373,15 +400,39 @@ void _applyParagraph(
   List<_Sprm> operations,
   _Props output,
   _Budget budget,
-  Set<LegacyWordWarning> warnings,
-) {
+  Set<LegacyWordWarning> warnings, {
+  _Props Function(int)? resolveParagraphStyle,
+}) {
   for (final operation in operations) {
     if (operation.group != 1 && operation.group != 5) continue;
     budget.apply();
+    if (_applyParagraphLayout(operation, output)) continue;
     final value = operation.data;
     switch (operation.code) {
       case 0x4600:
-        output['styleIndex'] = value.u16(0);
+        final index = value.u16(0);
+        if (resolveParagraphStyle != null) {
+          final preserved = <String, Object?>{
+            for (final entry in output.entries)
+              if (_paragraphStylePreserved.contains(entry.key) ||
+                  entry.key.startsWith('paragraphRevision'))
+                entry.key: entry.value,
+          };
+          output
+            ..clear()
+            ..addAll(resolveParagraphStyle(index))
+            ..addAll(preserved);
+        }
+        output['styleIndex'] = index;
+      case 0x2664:
+        output['_oldParagraph'] = _boolean(value)
+            ? _revisionSnapshot(output)
+            : null;
+      case 0xc63f:
+      case 0xc66f:
+        _applyPropertyRevision(value, output, 'paragraph');
+      case 0x6467:
+        output['paragraphSaveId'] = value.u32(0);
       case 0x2403:
       case 0x2461:
         final alignment = value.u8(0);
@@ -399,7 +450,15 @@ void _applyParagraph(
       case 0x2407:
         output['pageBreakBefore'] = _boolean(value);
       case 0x2416:
-        output['inTable'] = _boolean(value);
+        final inTable = _boolean(value);
+        output['inTable'] = inTable;
+        // PFInTable is the Word 97 representation. Later PItap/PDtap values
+        // replace its implied depth; a false value clears it in sequence.
+        if (!inTable) {
+          output['tableDepth'] = 0;
+        } else if ((output['tableDepth'] as int? ?? 0) == 0) {
+          output['tableDepth'] = 1;
+        }
       case 0x2417:
         output['rowEnd'] = _boolean(value);
       case 0x244b:
@@ -412,6 +471,14 @@ void _applyParagraph(
           throw const FormatException('Invalid Word table nesting.');
         }
         output['tableDepth'] = depth;
+        output['inTable'] = depth != 0;
+      case 0x664a:
+        final depth = (output['tableDepth'] as int? ?? 0) + value.i32(0);
+        if (depth < 0 || depth > 63) {
+          throw const FormatException('Invalid Word table nesting adjustment.');
+        }
+        output['tableDepth'] = depth;
+        output['inTable'] = depth != 0;
       case 0x3404:
         output['rowHeader'] = _boolean(value);
       case 0x840f:
@@ -534,6 +601,7 @@ void _applyParagraph(
       // Section/table style properties beyond the represented subset are
       // reported rather than being represented as a different formatting.
       default:
+        if (operation.group == 1) output['_unsupportedParagraph'] = true;
         warnings.add(LegacyWordWarning.unsupportedFormatting);
     }
   }
@@ -548,6 +616,7 @@ Map<String, Object?> _sectionProperties(
   for (final operation in operations) {
     if (operation.group != 4) continue;
     budget.apply();
+    if (_applySectionLayout(operation, output, warnings)) continue;
     final value = operation.data;
     switch (operation.code) {
       case 0x3009:

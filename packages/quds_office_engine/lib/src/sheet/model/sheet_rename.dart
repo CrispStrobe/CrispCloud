@@ -72,6 +72,7 @@ class SheetRenameEdit {
     book.sourceDefinedNameState,
     book.definedNameState(),
     for (final name in book.namedRanges) name,
+    for (final name in book.formulaNames) name,
     for (final sheet in book.sheets) ...[
       sheet,
       sheet.name,
@@ -374,10 +375,17 @@ abstract final class SheetRename {
         change(range.sheetName, name, (v) => range.sheetName = v);
       }
     }
+    for (final definition in book.formulaNames) {
+      change(
+        definition.formula,
+        rewrite(definition.formula),
+        (value) => definition.formula = value,
+      );
+    }
     if (book.sourceDefinedNameState == book.definedNameState()) {
       change(
         book.sourceDefinedNameState,
-        book.definedNameState(from: old, to: name),
+        book.definedNameState(from: old, to: name, rewriteFormula: rewrite),
         (v) => book.sourceDefinedNameState = v,
       );
     }
