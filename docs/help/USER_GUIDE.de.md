@@ -69,6 +69,8 @@ Zu den Textoptionen gehören Schriftgröße, Zeilendarstellung und Zeichenkodier
 
 Text- und Hexansichten für große Dateien verwenden begrenzte Seiten. Für das Bereitstellen entfernter Dateien gilt eine Obergrenze von 2 GiB; komplexe Dokumente und Archiveinträge haben kleinere Budgets. Bei einer Grenzwertmeldung benötigen Sie einen unterstützten externen Arbeitsablauf oder eine kleinere Eingabe. Der Betrachter verspricht keine unbegrenzten Dateigrößen oder extrahierten Inhalte.
 
+Das Anlegen einer temporären Kopie auf nativen Geräten endet nach zwei Minuten ohne erfolgreich geschriebene Daten oder nach insgesamt sechs Stunden. Abbrechen beendet die Vorbereitung auch bei einem stockenden entfernten Lesevorgang; ein nicht reagierender Anbieter kann die Schließung seiner Verbindung erst später bestätigen. CrispCloud prüft das erfasste Konto und die gemeldeten Versionsdaten vor und nach dem Lesen. Ohne eine vom Anbieter durchgesetzte feste Version garantieren diese Prüfungen keine unveränderliche Momentaufnahme.
+
 <a id="built-in-editor"></a>
 ## Dateien bearbeiten
 
