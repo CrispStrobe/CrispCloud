@@ -2,7 +2,7 @@
 
 Assessment date: **12 November 2026**. This document distinguishes code that is
 implemented, behavior that has been exercised, and work still required for a
-release. See [the user guide](ebooks.md), [reader package](../packages/crisp_ebook_reader/README.md),
+release. See [the user guide](ebooks.md), [reader package](https://github.com/CrispStrobe/crisperbooks/blob/c7d2dcdd64665fd4bd28f6818c1083274aae8141/packages/crisp_ebook_reader/README.md),
 and [recovery checkpoints](recovery/ebook-parity-2026-11-12.md) for usage and
 the verification record. Implementation is on draft PR
 [CrispStrobe/CrispCloud#53](https://github.com/CrispStrobe/CrispCloud/pull/53).
@@ -189,7 +189,7 @@ These are platform/edition distinctions, not a universal FBReader feature list.
 | Library | Stable title/author/recent/series views; RC redesigned library, favorites/custom shelves and bulk actions | Local title/author/format/recent/progress index, favorites, shelves, tags, status, filtering and sorting | Covers, series, batch operations, scanning, managed downloads and synchronized shelves |
 | Cross-device synchronization | Book Network synchronizes collection, positions and bookmarks; synchronized desktop favorites/custom shelves are a 2.5 RC addition | Explicit portable reading-data files; existing cloud file access | Versioned remote sidecars, conditional writes, conflict review, offline retry, deletion tombstones and account/device management |
 | Online catalogues | OPDS on desktop; RC OPDS 2.0 groups/filters/profiles and browser/QR authentication | General file providers can supply books, but no OPDS client | OPDS 1/2 parsing, discovery, authenticated acquisition, pagination, download queue and safe credential scoping |
-| Speech | Android Premium; desktop system TTS in 2.5 RC | Not integrated into the ebook reader | Shared speech queue, text/CFI mapping, platform voices, controls, background playback/audio focus and accessibility testing |
+| Speech | Android Premium; desktop system TTS in 2.5 RC | Foreground read-aloud through the enhanced reader, with local voice/rate controls and selection speech | Background playback/audio focus, portable-reader speech and actual device/voice accessibility testing |
 | Dictionary and translation | Android Premium translation and platform-dependent integrations | Text selection/copy only | Dictionary adapter, optional selected-text translation, language handling, clear network consent and privacy behavior |
 | EPUB audio/video and read-aloud | Desktop 2.5 RC adds media playback | Offline reading sanitizer has a deliberately narrower content model | Reviewed local media support, codecs, controls, playback lifecycle and separate SMIL/media-overlay synchronization |
 | Protected loans | LCP-protected EPUBs on desktop 2.1+, Android 3.7+ and iOS | Unsupported encrypted purchases/loans are refused | Licensed/certified LCP integration, key handling, loan/expiry UX and distribution requirements; never promise generic DRM removal |

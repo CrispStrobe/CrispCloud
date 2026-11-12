@@ -36,3 +36,9 @@ will be recorded as they complete; this checkpoint is not a release claim.
 
 For Flutter automation use `CI=true BOT=true` to avoid its optional environment
 probe. Use the repository-pinned Flutter 3.47.8 / Dart 3.13 toolchain.
+
+## Verified app checkpoint
+
+`13a1d78abdbddf0608a9c5e8c212771a6058ea30` saves the migration and actual enhanced-reader speech controls. The 14-file app regression suite passes **158 tests**, including save/discard conflicts, reading-data rollback and limits, routing, editing, portable fallback and speech integration. Analysis of the nine changed source/test files reports no issues. These results use package revision `c7d2dcdd64665fd4bd28f6818c1083274aae8141`.
+
+The unused in-app ebook packages and their duplicate package workflows are removed. EPUB/Kindle/reader/native platform qualification belongs to crisperbooks; CrispCloud retains its app integration and actual web build gate. The source verifier checks all **262 files** in the initial pin, including native code, assets, hooks and licenses, against the manifest, Git tree and actual Pub-resolved bytes.

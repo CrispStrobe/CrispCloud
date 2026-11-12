@@ -961,3 +961,9 @@ values remain unchanged:
   "reviewed_source_sha256": "83c558c0ebbaa2d429e53821e8d5022457ff13e2bd95d33a61dd178deaa07e7e"
 }
 ```
+
+## Shared ebook dependency extraction continuation
+
+CrispCloud now consumes `crisperbooks`, `crisp_ebook`, `crisp_ebook_reader`, and `crisp_ebook_conversion` from one immutable revision recorded in `docs/ebook-source-manifest.json`. The former in-repository paths are retained as pinned upstream source URLs in the inventory. The complete dependency Git tree replaces the old partial bundled-path list: verification checks package pins, the lockfile resolved revision, actual package roots, every tracked path, Git blob identity and SHA-256 bytes. The manifest itself is included in the existing reviewed-source digest, and release evidence records the verified external revision and manifest hash.
+
+The app adds foreground speech controls using the already-extracted shared reader API. This migration adds no new cipher, credential store or automatic network transmission of books. Native/browser font compatibility, format MD5 fields and bundled archive cryptography retain their existing inventory entries. Their runtime reachability and package build assets must be reviewed again when advancing the pin. Existing declaration, territory and submission decisions are unchanged; this section records source identity and implementation review only.

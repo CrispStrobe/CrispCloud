@@ -21,6 +21,7 @@ import sys
 from pathlib import Path
 
 import apple_export_preflight as apple_export
+import verify_ebook_sources as ebook_sources
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -108,6 +109,14 @@ def validate(root: Path) -> dict:
     if overrides:
         names = ", ".join(str(p.relative_to(root)) for p in overrides)
         raise EvidenceError(f"Remove local dependency overrides for release evidence: {names}")
+    external = inventory.get("external_source_manifests", [])
+    if external:
+        if external != [ebook_sources.MANIFEST]:
+            raise EvidenceError("Unsupported external source manifest")
+        try:
+            ebook_sources.verify(root)
+        except ebook_sources.SourceError as error:
+            raise EvidenceError(str(error)) from error
     try:
         policy = apple_export.validate_policy(root)
         for relative in apple_export.SOURCE_PLISTS.values():
@@ -302,6 +311,10 @@ def collect(root: Path, platform: str, artifacts: list[Path],
         ),
         "inventory_sha256": sha256(root / INVENTORY),
         "reviewed_files_sha256": reviewed_files,
+        "external_sources": (
+            {"crisperbooks": ebook_sources.verify(root)}
+            if inventory.get("external_source_manifests") else {}
+        ),
         "native_evidence_sha256": {
             name: sha256(repository_file(root, name))
             for name in NATIVE_EVIDENCE if (root / name).is_file()

@@ -298,23 +298,23 @@ validation, and retain Source mode for complex or unsupported content.
 
 ## Implementation, provenance and verification
 
-- [EPUB package core](../packages/crisp_ebook/README.md): preservation model,
+- [EPUB package core](https://github.com/CrispStrobe/crisperbooks/blob/c7d2dcdd64665fd4bd28f6818c1083274aae8141/packages/crisp_ebook/README.md): preservation model,
   structural operations, validation and limits.
-- [Reader integration](../packages/crisp_ebook_reader/README.md): hosts,
+- [Reader integration](https://github.com/CrispStrobe/crisperbooks/blob/c7d2dcdd64665fd4bd28f6818c1083274aae8141/packages/crisp_ebook_reader/README.md): hosts,
   offline behavior, tests and licenses. The exact foliate-js revision is
   [78914aef4466eb960965702401634c2cb348e9b1](https://github.com/johnfactotum/foliate-js/tree/78914aef4466eb960965702401634c2cb348e9b1);
-  [UPSTREAM.json](../packages/crisp_ebook_reader/UPSTREAM.json) and the
-  [local patch](../packages/crisp_ebook_reader/patches/foliate.patch) record the
+  [UPSTREAM.json](https://github.com/CrispStrobe/crisperbooks/blob/c7d2dcdd64665fd4bd28f6818c1083274aae8141/packages/crisp_ebook_reader/UPSTREAM.json) and the
+  [local patch](https://github.com/CrispStrobe/crisperbooks/blob/c7d2dcdd64665fd4bd28f6818c1083274aae8141/packages/crisp_ebook_reader/patches/foliate.patch) record the
   vendored sources and modifications. No Anx Reader or Foliate desktop app code
   is vendored.
-- [Kindle conversion](../packages/crisp_ebook_conversion/README.md): native
+- [Kindle conversion](https://github.com/CrispStrobe/crisperbooks/blob/c7d2dcdd64665fd4bd28f6818c1083274aae8141/packages/crisp_ebook_conversion/README.md): native
   build instructions, runtime capability checks and reproducible import/export
-  tests. [Kindling provenance](../packages/crisp_ebook_conversion/UPSTREAM.md)
+  tests. [Kindling provenance](https://github.com/CrispStrobe/crisperbooks/blob/c7d2dcdd64665fd4bd28f6818c1083274aae8141/packages/crisp_ebook_conversion/UPSTREAM.md)
   pins MIT-licensed Kindling 0.46.2 at
   [7774dbae758435d6ed94a4cd4a50e3f33ab61aa7](https://github.com/ciscoriordan/kindling/tree/7774dbae758435d6ed94a4cd4a50e3f33ab61aa7).
   Native builds require Rust 1.88+ and the target toolchain. Approved MPL-2.0
   dependencies, including the CSS parser, are recorded with the other
-  [third-party notices](../packages/crisp_ebook_conversion/licensing/THIRD_PARTY_LICENSES.txt).
+  [third-party notices](https://github.com/CrispStrobe/crisperbooks/blob/c7d2dcdd64665fd4bd28f6818c1083274aae8141/packages/crisp_ebook_conversion/licensing/THIRD_PARTY_LICENSES.txt).
 - [Ebook CI workflow](../.github/workflows/ebook-editor.yml): package checks,
   EPUBCheck, native conversion, independent reader parsing, browser probes and
   focused application tests. The package READMEs contain local commands.
@@ -375,3 +375,9 @@ linked or rendered native application. The merged application's web release
 build passed, with all five reader assets and all three metadata assets
 matching source. The recovery record tracks exact revisions and the separate
 hosted rendering and recovery jobs, which remained queued at the final check.
+
+## Shared implementation and read-aloud
+
+CrispCloud consumes the four packages in [crisperbooks](https://github.com/CrispStrobe/crisperbooks) at one immutable Git revision. The app owns file access, conflicts, persistence and library entries; the shared packages own editing, conversion and reader behavior. `docs/ebook-source-manifest.json` records the exact complete dependency tree.
+
+In the enhanced reader, **Read aloud** opens the platform voice, rate and playback controls. Voices must be available on the current host. Reading remains in the foreground: backgrounding pauses speech and closing or replacing the reader stops it. Closing only the speech controls leaves foreground speech running. The portable reader does not offer speech controls. This does not establish background audio support or device-level voice availability.
