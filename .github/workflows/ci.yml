@@ -103,6 +103,10 @@ jobs:
       - name: Resolve vendored package development dependencies
         run: |
           (cd packages/quds_office_engine && dart pub get)
+          # The vendored editor's pubspec stays as upstream (drift-checked), so
+          # point it at the vendored engine here; otherwise pub.dev's engine,
+          # which lacks the patched APIs, breaks `flutter analyze`.
+          printf 'dependency_overrides:\n  quds_office_engine:\n    path: ../quds_office_engine\n' > packages/quds_office_editor/pubspec_overrides.yaml
           (cd packages/quds_office_editor && flutter pub get)
           (cd packages/dart_pdf_editor && flutter pub get)
           (cd packages/dart_pdf_editor_secure_storage && flutter pub get)
