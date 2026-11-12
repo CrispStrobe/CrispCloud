@@ -1,6 +1,7 @@
 """Negative controls for independent rendering and save-cycle comparisons."""
 from pathlib import Path
 import copy
+import hashlib
 import json
 import struct
 import subprocess
@@ -249,6 +250,7 @@ class HostPicturePixelTests(unittest.TestCase):
                     width, height, pixels = raster
                     prefix.with_name('page-1.ppm').write_bytes(
                         f'P6\n{width} {height}\n255\n'.encode() + pixels)
+                return subprocess.CompletedProcess(args, 0, stdout=b'', stderr=b'')
 
             def output_text(args, **kwargs):
                 return f'Pages: {page_count}\nPage size: 100 x 72 pts\n' if args[0] == 'pdfinfo' else '\f'
@@ -599,7 +601,8 @@ class RenderExecutionTests(unittest.TestCase):
             old.mkdir(parents=True)
             (old / 'source.pdf').write_bytes(b'%PDF stale')
             (old / 'document.pdf').write_bytes(b'%PDF stale')
-            with patch.object(render.subprocess, 'run'):
+            with patch.object(render.subprocess, 'run', return_value=subprocess.CompletedProcess(
+                    ['soffice'], 0, stdout=b'', stderr=b'')):
                 with self.assertRaisesRegex(render.FidelityError, 'did not produce'):
                     render.render_document(source, root, output, 0)
 
@@ -641,6 +644,10 @@ class RenderExecutionTests(unittest.TestCase):
                 report = json.loads((output / 'render-report.json').read_text())
                 self.assertEqual(report['native_schema_only_files'], 0)
                 self.assertEqual(report['rendered_files'], 0)
+                attempts = report['failures'][0].pop('conversion_attempts')
+                self.assertEqual(len(attempts), 1)
+                self.assertEqual(attempts[0]['returncode'], 0)
+                self.assertTrue(attempts[0]['input_unchanged'])
                 self.assertEqual(report['failures'], [{
                     'file': 'ordinary.docx', 'error': 'LibreOffice did not produce a nonempty PDF',
                     'returncode': 0, 'stdout': 'Converter stdout\n', 'stderr': diagnostic.decode()}])
@@ -660,6 +667,7 @@ class RenderExecutionTests(unittest.TestCase):
                 elif args[0] == 'pdftoppm':
                     prefix = Path(args[-1])
                     prefix.with_name('page-1.ppm').write_bytes(b'P6\n1 1\n255\n\xff\0\0')
+                return subprocess.CompletedProcess(args, 0, stdout=b'', stderr=b'')
 
             def output_text(args, **kwargs):
                 return 'Pages: 1\n' if args[0] == 'pdfinfo' else 'Known document text\n'
@@ -674,6 +682,203 @@ class RenderExecutionTests(unittest.TestCase):
             self.assertEqual((output / '000' / 'text.txt').read_text(), 'Known document text\n')
             self.assertEqual(list(output.glob('render-*')), [])
             self.assertEqual(list(output.rglob('*.ppm')), [])
+
+
+class KilledConversionRetryTests(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.folder = Path(temporary.name)
+        self.root = self.folder / 'input'
+        self.root.mkdir()
+        self.source = self.root / 'source.docx'
+        self.source.write_bytes(b'Office input')
+        self.output = self.folder / 'output'
+        self.output.mkdir()
+        self.calls = []
+        self.workspaces = []
+        self.codes = []
+        self.errors = []
+        self.converter_error = None
+        self.raster_error = None
+        self.mutate = False
+        self.text = 'Known document text\n'
+
+    def command(self, argv, **kwargs):
+        if Path(argv[0]).name in ('libreoffice', 'soffice'):
+            self.calls.append(argv)
+            work = Path(argv[argv.index('--outdir') + 1])
+            self.assertFalse((work / 'source.pdf').exists())
+            self.assertFalse((work / 'profile').exists())
+            if self.workspaces:
+                self.assertFalse(self.workspaces[-1].exists())
+            self.workspaces.append(work)
+            (work / 'profile').mkdir()
+            # Even a killed attempt may leave a PDF. A later attempt must not
+            # consume it, or reuse the failed converter's profile.
+            (work / 'source.pdf').write_bytes(b'%PDF partial')
+            if self.mutate:
+                self.source.write_bytes(b'Office other')  # Same length.
+            if self.converter_error is not None:
+                raise self.converter_error
+            number = len(self.calls) - 1
+            if number < len(self.codes) and self.codes[number] is not None:
+                error = subprocess.CalledProcessError(
+                    self.codes[number], argv, output=b'Converter output\n',
+                    stderr=b'Error: source file could not be loaded\n')
+                self.errors.append(error)
+                raise error
+            (work / 'source.pdf').write_bytes(b'%PDF complete')
+        elif argv[0] == 'pdftoppm':
+            if self.raster_error is not None:
+                raise self.raster_error
+            Path(argv[-1]).with_name('page-1.ppm').write_bytes(b'P6\n1 1\n255\n\xff\0\0')
+        return subprocess.CompletedProcess(argv, 0, stdout=b'Converted\n', stderr=b'')
+
+    def output_text(self, argv, **kwargs):
+        if '--version' in argv:
+            return 'LibreOffice test'
+        return 'Pages: 1\n' if argv[0] == 'pdfinfo' else self.text
+
+    def execute(self):
+        with patch.object(render.subprocess, 'run', side_effect=self.command), \
+                patch.object(render.subprocess, 'check_output', side_effect=self.output_text):
+            return render.render_document(self.source, self.root, self.output, 0)
+
+    def test_killed_then_success_uses_fresh_profile_and_retains_both_attempts(self):
+        self.codes = [-9]
+        result = self.execute()
+        attempts = result['conversion_attempts']
+        digest = hashlib.sha256(b'Office input').hexdigest()
+        self.assertEqual([item['returncode'] for item in attempts], [-9, 0])
+        self.assertEqual([item['status'] for item in attempts], ['failed', 'converted'])
+        self.assertEqual(attempts[0]['stdout'], 'Converter output\n')
+        self.assertEqual(attempts[0]['stderr'], 'Error: source file could not be loaded\n')
+        self.assertEqual(result['input_sha256'], digest)
+        self.assertTrue(all(item['input_sha256_before'] == item['input_sha256_after'] == digest
+                            and item['input_unchanged'] for item in attempts))
+        self.assertEqual(len(set(self.workspaces)), 2)
+        self.assertTrue(all(not work.exists() for work in self.workspaces))
+        self.assertEqual((self.output / result['pdf']).read_bytes(), b'%PDF complete')
+
+    def test_exhausted_kills_are_finite_and_every_attempt_remains_in_failed_report(self):
+        self.codes = [-9] * 10
+        with patch.object(render.subprocess, 'run', side_effect=self.command), \
+                patch.object(render.subprocess, 'check_output', side_effect=self.output_text):
+            self.assertEqual(render.main([str(self.root), str(self.output)]), 1)
+        report = json.loads((self.output / 'render-report.json').read_text())
+        self.assertEqual(len(self.calls), 3)
+        self.assertEqual(report['reports'], [])
+        self.assertEqual(report['native_schema_only'], [])
+        self.assertEqual(report['failures'][0]['returncode'], -9)
+        attempts = report['failures'][0]['conversion_attempts']
+        self.assertEqual([item['returncode'] for item in attempts], [-9, -9, -9])
+        self.assertTrue(all(item['input_unchanged'] for item in attempts))
+        self.assertEqual(len(set(self.workspaces)), 3)
+
+    def test_ordinary_exits_timeouts_and_os_errors_keep_original_exception_without_retry(self):
+        errors = [subprocess.CalledProcessError(code, ['soffice'], stderr='diagnostic')
+                  for code in (1, 2, 9, 137, -11)]
+        errors += [subprocess.TimeoutExpired(['soffice'], 60), FileNotFoundError('converter absent')]
+        for error in errors:
+            self.calls.clear()
+            self.converter_error = error
+            with self.subTest(error=error), self.assertRaises(type(error)) as caught:
+                self.execute()
+            self.assertIs(caught.exception, error)
+            self.assertEqual(len(self.calls), 1)
+            self.assertEqual(len(error.conversion_attempts), 1)
+
+    def test_platform_without_sigkill_has_no_retry_code(self):
+        self.codes = [-9]
+        with patch.object(render, 'SOFFICE_SIGKILL_RETURN_CODE', None), \
+                self.assertRaises(subprocess.CalledProcessError):
+            self.execute()
+        self.assertEqual(len(self.calls), 1)
+
+    def test_poppler_sigkill_is_not_a_soffice_retry(self):
+        error = subprocess.CalledProcessError(-9, ['pdftoppm'], stderr='raster killed')
+        self.raster_error = error
+        with self.assertRaises(subprocess.CalledProcessError) as caught:
+            self.execute()
+        self.assertIs(caught.exception, error)
+        self.assertEqual(len(self.calls), 1)
+        self.assertEqual(error.conversion_attempts[0]['returncode'], 0)
+
+    def test_semantic_failure_after_recovery_does_not_retry_again(self):
+        self.codes = [-9]
+        self.text = ''
+        with self.assertRaisesRegex(render.FidelityError, 'no extractable text') as caught:
+            self.execute()
+        self.assertEqual(len(self.calls), 2)
+        self.assertEqual([item['returncode'] for item in caught.exception.conversion_attempts], [-9, 0])
+
+    def test_input_mutation_after_kill_aborts_without_discarding_kill_diagnostics(self):
+        self.codes = [-9]
+        self.mutate = True
+        with self.assertRaisesRegex(render.FidelityError, 'input changed') as caught:
+            self.execute()
+        self.assertEqual(len(self.calls), 1)
+        attempt = render.failure_details(caught.exception)['conversion_attempts'][0]
+        self.assertEqual(attempt['returncode'], -9)
+        self.assertIn('source file could not be loaded', attempt['stderr'])
+        self.assertNotEqual(attempt['input_sha256_before'], attempt['input_sha256_after'])
+        self.assertFalse(attempt['input_unchanged'])
+        self.assertFalse(render.known_native_import_rejection(caught.exception))
+
+    def test_input_mutation_after_success_cannot_return_a_verified_render(self):
+        self.mutate = True
+        with self.assertRaisesRegex(render.FidelityError, 'input changed') as caught:
+            self.execute()
+        self.assertEqual(len(self.calls), 1)
+        self.assertFalse(caught.exception.conversion_attempts[0]['input_unchanged'])
+
+    def test_normal_import_refusal_after_kill_preserves_the_qualifier_and_history(self):
+        self.codes = [-9, 1]
+        with self.assertRaises(subprocess.CalledProcessError) as caught:
+            self.execute()
+        self.assertIs(caught.exception, self.errors[-1])
+        self.assertEqual(caught.exception.returncode, 1)
+        self.assertTrue(render.known_native_import_rejection(caught.exception))
+        self.assertEqual([item['returncode'] for item in
+                          render.failure_details(caught.exception)['conversion_attempts']], [-9, 1])
+
+    def test_qualified_schema_only_report_keeps_killed_and_refused_attempts(self):
+        self.source.unlink()
+        corpus = self.root / 'fidelity-aux-controls'
+        corpus.mkdir()
+        for name in render.NATIVE_AUX_FILES:
+            (corpus / name).write_bytes(b'Office input')
+        self.source = corpus / 'source.docx'
+        receipt = self.folder / 'schema.json'
+        receipt.write_text(json.dumps({'Reports': [
+            {'File': str(corpus / name), 'Sha256': hashlib.sha256(b'Office input').hexdigest(), 'Errors': []}
+            for name in sorted(render.NATIVE_AUX_FILES)]}))
+        self.codes = [-9, 1]
+        # The existing native-limitation controls separately exercise malformed
+        # XML and all receipt failures. Here the real conversion retry must
+        # retain its history through the qualified-report routing.
+        with patch.object(render, 'validate_native_aux_corpus'), \
+                patch.object(render.subprocess, 'run', side_effect=self.command), \
+                patch.object(render.subprocess, 'check_output', side_effect=self.output_text):
+            self.assertEqual(render.main([str(self.root), str(self.output), '--schema-report', str(receipt)]), 0)
+        report = json.loads((self.output / 'render-report.json').read_text())
+        self.assertEqual(report['failures'], [])
+        self.assertEqual(report['rendered_files'], 0)
+        self.assertEqual(report['native_schema_only_files'], 7)
+        self.assertEqual(len(self.calls), 2)
+        for item in report['native_schema_only']:
+            self.assertEqual(item['source_conversion']['returncode'], 1)
+            self.assertEqual([attempt['returncode'] for attempt in item['source_conversion_attempts']], [-9, 1])
+
+    def test_retry_success_still_requires_strict_text_and_pixel_comparison(self):
+        self.codes = [-9]
+        actual = self.execute()
+        for key, value in (('text', 'Different native text'), ('pixel_sha256', ['2' * 64])):
+            expected = dict(actual, file='baseline.docx')
+            expected[key] = value
+            with self.subTest(key=key), self.assertRaisesRegex(render.FidelityError, f'Render changed \\({key}\\)'):
+                render.compare_records(expected, actual)
 
 
 if __name__ == '__main__':

@@ -22,6 +22,7 @@ import os
 from pathlib import Path
 import re
 import shutil
+import signal
 import struct
 import subprocess
 import tempfile
@@ -31,6 +32,10 @@ from zipfile import BadZipFile, ZipFile
 
 OFFICE_SUFFIXES = {'.docx', '.xlsx', '.pptx'}
 CYCLE_COUNT = 3
+SOFFICE_MAX_ATTEMPTS = 3
+# POSIX subprocess return codes identify signal termination by a negative
+# number. Platforms without SIGKILL simply have no eligible retry code.
+SOFFICE_SIGKILL_RETURN_CODE = -int(signal.SIGKILL) if hasattr(signal, 'SIGKILL') else None
 # This producer deep-clones imported body blocks without intended visible edits.
 # Do not infer that other "cloned", "edited", or "frame" series are unchanged.
 # The directory and Office format are part of this specific corpus contract.
@@ -88,20 +93,24 @@ class MissingPdfError(FidelityError):
         self.stderr = conversion.stderr
 
 
+def diagnostic_text(value):
+    return value.decode('utf-8', errors='replace') if isinstance(value, bytes) else value or ''
+
+
 def conversion_diagnostics(error):
     """Keep both output streams, including the zero-exit/no-PDF case."""
     if not isinstance(error, (MissingPdfError, subprocess.CalledProcessError)):
         return {}
 
-    def text(value):
-        return value.decode('utf-8', errors='replace') if isinstance(value, bytes) else value or ''
-
-    return {'returncode': error.returncode, 'stdout': text(error.stdout),
-            'stderr': text(error.stderr)}
+    return {'returncode': error.returncode, 'stdout': diagnostic_text(error.stdout),
+            'stderr': diagnostic_text(error.stderr)}
 
 
 def failure_details(error):
-    return {'error': str(error), **conversion_diagnostics(error)}
+    details = {'error': str(error), **conversion_diagnostics(error)}
+    if hasattr(error, 'conversion_attempts'):
+        details['conversion_attempts'] = error.conversion_attempts
+    return details
 
 
 def discover_inputs(root):
@@ -560,17 +569,71 @@ def known_native_import_rejection(error):
 
 
 def render_document(path, root, output, index):
-    """Render in a fresh directory so stale artifacts cannot satisfy a check."""
+    """Retry only killed SOFFICE conversions, retaining every attempt's evidence.
+
+    Each attempt uses a fresh profile/output and the exact original input bytes.
+    Normal converter errors and all subsequent PDF/text/pixel checks fail as
+    before; a killed Poppler process cannot qualify for this bounded retry.
+    """
     path, root, output = (Path(value).resolve() for value in (path, root, output))
+    input_sha256 = hashlib.sha256(path.read_bytes()).hexdigest()
+    attempts = []
+
+    def unchanged(attempt=None):
+        try:
+            current = hashlib.sha256(path.read_bytes()).hexdigest()
+            if attempt is not None:
+                attempt.update(input_sha256_after=current, input_unchanged=current == input_sha256)
+            if current != input_sha256:
+                raise FidelityError('Office input changed during native rendering; retry rejected')
+        except (OSError, FidelityError) as error:
+            error.conversion_attempts = attempts
+            raise
+
+    for number in range(SOFFICE_MAX_ATTEMPTS):
+        unchanged()
+        try:
+            record = _render_document_once(path, root, output, index, attempts, input_sha256)
+        except (OSError, subprocess.SubprocessError, FidelityError) as error:
+            unchanged(attempts[-1] if attempts else None)
+            error.conversion_attempts = attempts
+            if (isinstance(error, subprocess.CalledProcessError)
+                    and getattr(error, '_soffice_sigkill', False)
+                    and error.returncode == SOFFICE_SIGKILL_RETURN_CODE
+                    and number + 1 < SOFFICE_MAX_ATTEMPTS):
+                continue
+            raise
+        unchanged(attempts[-1])
+        record.update(input_sha256=input_sha256, conversion_attempts=attempts)
+        return record
+
+
+def _render_document_once(path, root, output, index, attempts, input_sha256):
     picture_case = host_picture_case(path)
     geometry = picture_package_geometry(path, picture_case) if picture_case is not None else None
     environment = dict(os.environ, LC_ALL='C')
-    with tempfile.TemporaryDirectory(prefix=f'render-{index:03d}-', dir=output) as temporary:
+    number = len(attempts) + 1
+    with tempfile.TemporaryDirectory(prefix=f'render-{index:03d}-attempt-{number}-', dir=output) as temporary:
         work = Path(temporary)
-        conversion = subprocess.run(
-            [office_binary(), f'-env:UserInstallation={(work / "profile").as_uri()}',
-             '--headless', '--convert-to', 'pdf', '--outdir', str(work), str(path.resolve())],
-            check=True, timeout=60, capture_output=True, env=environment)
+        command = [office_binary(), f'-env:UserInstallation={(work / "profile").as_uri()}',
+                   '--headless', '--convert-to', 'pdf', '--outdir', str(work), str(path)]
+        attempt = {'attempt': number, 'command': command, 'input_sha256_before': input_sha256}
+        attempts.append(attempt)
+        try:
+            conversion = subprocess.run(command, check=True, timeout=60, capture_output=True, env=environment)
+        except (OSError, subprocess.SubprocessError) as error:
+            attempt.update(status='failed', error=str(error), returncode=getattr(error, 'returncode', None),
+                           stdout=diagnostic_text(getattr(error, 'stdout', None)),
+                           stderr=diagnostic_text(getattr(error, 'stderr', None)))
+            # Mark only this exact subprocess failure, never downstream PDF or
+            # image commands with the same negative return code.
+            if (SOFFICE_SIGKILL_RETURN_CODE is not None
+                    and isinstance(error, subprocess.CalledProcessError)
+                    and error.returncode == SOFFICE_SIGKILL_RETURN_CODE):
+                error._soffice_sigkill = True
+            raise
+        attempt.update(status='converted', returncode=conversion.returncode,
+                       stdout=diagnostic_text(conversion.stdout), stderr=diagnostic_text(conversion.stderr))
         pdf = work / (path.stem + '.pdf')
         if not pdf.is_file() or pdf.stat().st_size == 0:
             raise MissingPdfError(conversion)
@@ -681,6 +744,7 @@ def main(argv=None):
                                         'reason': NATIVE_AUX_REASON, 'source': source_name,
                                         'source_diagnostic': diagnostic,
                                         'source_conversion': conversion,
+                                        'source_conversion_attempts': getattr(error, 'conversion_attempts', []),
                                         'schema_sha256': receipts[path]})
                     print(f'{name}: native_schema_only; no visual certification', flush=True)
         for index, path in enumerate(paths):
@@ -701,6 +765,9 @@ def main(argv=None):
                               root=root)
     failures.extend(coverage.pop('failures'))
     report = {'renderer': renderer, 'files': len(paths), 'rendered_files': len(reports),
+              'soffice_retry_policy': {'maximum_attempts': SOFFICE_MAX_ATTEMPTS,
+                                       'retry_returncode': SOFFICE_SIGKILL_RETURN_CODE,
+                                       'scope': 'SOFFICE conversion only; unchanged input and fresh profile/output per attempt'},
               'picture_pixel_oracle_files': sum('picture_pixel_evidence' in record
                                                 for record in reports.values()),
               'visual_input_files': len(paths) - len(excluded),
