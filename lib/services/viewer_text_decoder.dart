@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'file_bytes_loader.dart';
+import 'legacy_text_encoding.dart';
 
 class ViewerDecodedText {
   const ViewerDecodedText(this.text, this.starts, this.ends);
@@ -24,6 +25,8 @@ class ViewerTextDecoder {
       'utf32le',
       'utf32be',
       'latin1',
+      'cp437',
+      'windows1252',
     ].contains(encoding)) {
       throw FormatException('Unsupported text encoding: $encoding');
     }
@@ -59,6 +62,10 @@ class ViewerTextDecoder {
     if (encoding == 'latin1') {
       for (; index < data.length; index++) {
         emit(data[index], index, 1);
+      }
+    } else if (isLegacyTextEncoding(encoding)) {
+      for (; index < data.length; index++) {
+        emit(decodeLegacyTextByte(data[index], encoding), index, 1);
       }
     } else if (encoding == 'utf8') {
       while (index < data.length) {

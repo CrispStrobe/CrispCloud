@@ -7,6 +7,8 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'legacy_text_encoding.dart';
+
 // ---------------------------------------------------------------------------
 // ViewerMode enum
 // ---------------------------------------------------------------------------
@@ -17,11 +19,11 @@ enum ViewerMode {
   text,
 
   /// Safe ASCII view — bytes rendered with control chars replaced by '·'
-  /// but Latin-1 high bytes still readable (DC "ASCII" lister mode).
+  /// but Latin-1 high bytes still readable.
   ascii,
 
   /// Pure byte view — only 0x20–0x7E shown literally, everything else '.'.
-  /// This is the DC "Binary" lister mode; also the default for unknown
+  /// This is the binary display mode; also the default for unknown
   /// or non-decodable binary files.
   binary,
 
@@ -799,7 +801,7 @@ class InternalViewerService {
   }
 
   /// Decode bytes to a string for the viewer, honouring BOMs and optional
-  /// [encoding] hints: 'utf8', 'utf16le', 'utf16be', 'latin1'.
+  /// [encoding] accepts UTF-8/16/32, Latin-1, 'cp437' and 'windows1252'.
   ///
   /// Without an explicit hint the decoder tries: UTF-16 BOM → UTF-8 BOM →
   /// strict UTF-8 → UTF-16 NUL-pattern sniff → Latin-1 fallback (which always
@@ -811,6 +813,10 @@ class InternalViewerService {
     if (data.isEmpty) return (text: '', encoding: 'utf8');
 
     switch (encoding) {
+      case 'cp437':
+      case 'windows1252':
+        final selected = encoding!;
+        return (text: decodeLegacyText(data, selected), encoding: selected);
       case 'latin1':
         return (text: latin1.decode(data), encoding: 'latin1');
       case 'utf16le':

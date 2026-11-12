@@ -1,6 +1,6 @@
 // lib/widgets/internal_viewer_dialog.dart
 //
-// Double-Commander-style full-screen internal viewer (F3).
+// Full-screen internal viewer (F3).
 //
 // Supported modes:
 //   text     — UTF-8/UTF-16/Latin-1 decoding with syntax highlighting
@@ -2060,6 +2060,14 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                               PopupMenuItem(
                                 value: 'latin1',
                                 child: Text(context.commanderTr("Latin-1")),
+                              ),
+                              const PopupMenuItem(
+                                value: 'cp437',
+                                child: Text('DOS (CP437)'),
+                              ),
+                              const PopupMenuItem(
+                                value: 'windows1252',
+                                child: Text('Windows-1252'),
                               ),
                             ],
                           ),

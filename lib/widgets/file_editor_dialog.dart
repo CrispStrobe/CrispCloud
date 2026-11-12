@@ -774,7 +774,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
 
   void _toggleBom() {
     final document = _document;
-    if (document == null || document.encoding == EditorEncoding.latin1) return;
+    if (document == null || !document.encoding.supportsBom) return;
     setState(
       () => _document = document.copyWith(
         encoding: document.encoding == EditorEncoding.utf8
@@ -1238,9 +1238,7 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
       onPolicySelected: _setEndingPolicy,
       onNewLineEndingSelected: _setNewLineEnding,
       writesBom: document.writesBom,
-      onToggleBom: document.encoding == EditorEncoding.latin1
-          ? null
-          : _toggleBom,
+      onToggleBom: document.encoding.supportsBom ? _toggleBom : null,
       cursorLine: _cursorLine,
       cursorColumn: _cursorColumn,
       lineCount: _lineCount,

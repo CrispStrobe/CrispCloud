@@ -600,15 +600,7 @@ class _FindDialogState extends State<_FindDialog> {
                   DropdownButton<String>(
                     value: _encoding,
                     items: [
-                      for (final encoding in [
-                        'auto',
-                        'utf8',
-                        'utf16le',
-                        'utf16be',
-                        'utf32le',
-                        'utf32be',
-                        'latin1',
-                      ])
+                      for (final encoding in FileSearchQuery.contentEncodings)
                         DropdownMenuItem(
                           value: encoding,
                           child: Text(encoding),
