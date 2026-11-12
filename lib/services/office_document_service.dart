@@ -330,7 +330,8 @@ int _sortedNumber(String path, String prefix) {
 Future<List<OfficePartRelationship>> _officePartRelationships(
   ViewerArchive archive,
   String owner,
-) => OfficePackageParts((name) => _readPart(archive, name)).relationships(owner);
+) =>
+    OfficePackageParts((name) => _readPart(archive, name)).relationships(owner);
 
 Future<String> _officeMainPart(ViewerArchive archive, String fallback) =>
     OfficePackageParts((name) => _readPart(archive, name)).mainPart(fallback);
@@ -433,10 +434,10 @@ String _docxParagraph(
       .findAllElements('numPr', namespace: _wordNamespace)
       .any(
         (numbering) =>
-            numbering.findElements(
-              'numId',
-              namespace: _wordNamespace,
-            ).firstOrNull?.getAttribute('val', namespace: _wordNamespace) !=
+            numbering
+                .findElements('numId', namespace: _wordNamespace)
+                .firstOrNull
+                ?.getAttribute('val', namespace: _wordNamespace) !=
             '0',
       );
 
@@ -748,7 +749,13 @@ Future<OfficeDocument> _parseOds(ViewerArchive archive) async {
       if (cells.any((c) => c.isNotEmpty)) rows.add(cells);
     }
     if (rows.isEmpty) continue;
-    _writeHeading(markdown, '## ', OfficeHeadingKind.sheet, tableNumber, headings);
+    _writeHeading(
+      markdown,
+      '## ',
+      OfficeHeadingKind.sheet,
+      tableNumber,
+      headings,
+    );
     markdown.writeln();
     markdown.writeln(_markdownTable(rows));
     markdown.writeln();
@@ -775,16 +782,20 @@ Future<OfficeDocument> _parseOds(ViewerArchive archive) async {
 // ---------------------------------------------------------------------------
 
 Future<OfficeDocument> _parsePptx(ViewerArchive archive) async {
-  final slides = archive.members
-      .where((m) =>
-          m.isFile &&
-          m.name.startsWith('ppt/slides/slide') &&
-          m.name.endsWith('.xml'))
-      .map((m) => m.name)
-      .toList()
-    ..sort((a, b) => _sortedNumber(a, 'slide').compareTo(
-          _sortedNumber(b, 'slide'),
-        ));
+  final slides =
+      archive.members
+          .where(
+            (m) =>
+                m.isFile &&
+                m.name.startsWith('ppt/slides/slide') &&
+                m.name.endsWith('.xml'),
+          )
+          .map((m) => m.name)
+          .toList()
+        ..sort(
+          (a, b) =>
+              _sortedNumber(a, 'slide').compareTo(_sortedNumber(b, 'slide')),
+        );
 
   // Slide size from presentation.xml (EMU); fall back to 4:3.
   var slideWidth = 9144000;
@@ -853,17 +864,19 @@ Future<OfficeDocument> _parsePptx(ViewerArchive archive) async {
           ?.findAllElements('a:srgbClr')
           .firstOrNull
           ?.getAttribute('val');
-      shapes.add(SlideShape(
-        x: box?.$1 ?? 228600,
-        y: box?.$2 ?? 228600,
-        width: box?.$3 ?? slideWidth - 457200,
-        height: box?.$4 ?? slideHeight - 457200,
-        text: text.trim().isEmpty ? null : text.trim(),
-        fontSizePt: ((size ?? 1800) / 100).clamp(6, 96).toDouble(),
-        bold: bold,
-        textColorHex: color,
-        fillColorHex: fill,
-      ));
+      shapes.add(
+        SlideShape(
+          x: box?.$1 ?? 228600,
+          y: box?.$2 ?? 228600,
+          width: box?.$3 ?? slideWidth - 457200,
+          height: box?.$4 ?? slideHeight - 457200,
+          text: text.trim().isEmpty ? null : text.trim(),
+          fontSizePt: ((size ?? 1800) / 100).clamp(6, 96).toDouble(),
+          bold: bold,
+          textColorHex: color,
+          fillColorHex: fill,
+        ),
+      );
     }
 
     for (final picture in document.findAllElements('p:pic')) {
@@ -882,18 +895,26 @@ Future<OfficeDocument> _parsePptx(ViewerArchive archive) async {
       );
       final image = await _readPartBytes(archive, imagePath);
       if (image == null) continue;
-      shapes.add(SlideShape(
-        x: box.$1,
-        y: box.$2,
-        width: box.$3,
-        height: box.$4,
-        image: image,
-      ));
+      shapes.add(
+        SlideShape(
+          x: box.$1,
+          y: box.$2,
+          width: box.$3,
+          height: box.$4,
+          image: image,
+        ),
+      );
     }
 
     pages.add(SlidePage(backgroundHex: background, shapes: shapes));
 
-    _writeHeading(markdown, '## ', OfficeHeadingKind.slide, slideNumber, headings);
+    _writeHeading(
+      markdown,
+      '## ',
+      OfficeHeadingKind.slide,
+      slideNumber,
+      headings,
+    );
     markdown.writeln();
     if (textParagraphs.isNotEmpty) {
       markdown.writeln(textParagraphs.first);
@@ -949,8 +970,11 @@ Future<Map<String, String>> _readSlideRelationships(
 String _pptxShapeText(XmlElement shape) {
   final paragraphs = <String>[];
   for (final paragraph in shape.findAllElements('a:p')) {
-    final text =
-        paragraph.findAllElements('a:t').map((e) => e.innerText).join().trim();
+    final text = paragraph
+        .findAllElements('a:t')
+        .map((e) => e.innerText)
+        .join()
+        .trim();
     if (text.isNotEmpty) paragraphs.add(text);
   }
   return paragraphs.join('\n');
@@ -1000,7 +1024,13 @@ Future<OfficeDocument> _parseOdp(ViewerArchive archive) async {
   var pageNumber = 0;
   for (final page in document.findAllElements('draw:page')) {
     pageNumber++;
-    _writeHeading(markdown, '## ', OfficeHeadingKind.slide, pageNumber, headings);
+    _writeHeading(
+      markdown,
+      '## ',
+      OfficeHeadingKind.slide,
+      pageNumber,
+      headings,
+    );
     markdown.writeln();
     for (final paragraph in page.findAllElements('text:p')) {
       final text = paragraph.innerText.trim();
@@ -1086,15 +1116,72 @@ Future<OfficeDocument> _parseOdt(ViewerArchive archive) async {
 // ---------------------------------------------------------------------------
 
 Future<OfficeDocument> _parseEpub(ViewerArchive archive) async {
-  final files = archive.members
-      .where((m) =>
-          m.isFile &&
-          (m.name.endsWith('.xhtml') ||
-              m.name.endsWith('.html') ||
-              m.name.endsWith('.htm')))
-      .map((m) => m.name)
-      .toList()
-    ..sort();
+  var files =
+      archive.members
+          .where(
+            (m) =>
+                m.isFile &&
+                (m.name.endsWith('.xhtml') ||
+                    m.name.endsWith('.html') ||
+                    m.name.endsWith('.htm')),
+          )
+          .map((m) => m.name)
+          .toList()
+        ..sort();
+
+  // EPUB reading order belongs to the package spine, not archive filenames.
+  // Retain the old extraction fallback for incomplete/legacy EPUB-like ZIPs.
+  final container = await _readPart(archive, 'META-INF/container.xml');
+  if (container != null) {
+    try {
+      final roots = XmlDocument.parse(container).descendants
+          .whereType<XmlElement>()
+          .where((element) => element.name.local == 'rootfile');
+      final packagePath = roots.firstOrNull?.getAttribute('full-path');
+      if (packagePath != null &&
+          !p.posix.isAbsolute(packagePath) &&
+          !p.posix.split(packagePath).contains('..')) {
+        final source = await _readPart(archive, packagePath);
+        if (source != null) {
+          final package = XmlDocument.parse(source);
+          final manifest = <String, String>{};
+          for (final item in package.descendants.whereType<XmlElement>().where(
+            (element) => element.name.local == 'item',
+          )) {
+            final id = item.getAttribute('id');
+            final href = item.getAttribute('href');
+            if (id == null || href == null) continue;
+            final uri = Uri.tryParse(href);
+            if (uri == null ||
+                uri.hasScheme ||
+                uri.hasAuthority ||
+                uri.path.startsWith('/'))
+              continue;
+            final path = p.posix.normalize(
+              p.posix.join(
+                p.posix.dirname(packagePath),
+                Uri.decodeComponent(uri.path),
+              ),
+            );
+            if (path == '..' || path.startsWith('../')) continue;
+            manifest[id] = path;
+          }
+          final ordered = package.descendants
+              .whereType<XmlElement>()
+              .where((element) => element.name.local == 'itemref')
+              .map((element) => manifest[element.getAttribute('idref')])
+              .whereType<String>()
+              .where(files.contains)
+              .toList();
+          if (ordered.isNotEmpty) files = ordered;
+        }
+      }
+    } on FormatException {
+      /* Keep bounded extraction for malformed packages. */
+    } on XmlException {
+      /* Keep bounded extraction for malformed packages. */
+    }
+  }
 
   final markdown = StringBuffer();
   for (final path in files) {
@@ -1185,8 +1272,9 @@ String _htmlToMarkdown(String html) {
 // ---------------------------------------------------------------------------
 
 String? _capRaw(String xml, String name) {
-  final body =
-      xml.length > _kOfficeRawCap ? xml.substring(0, _kOfficeRawCap) : xml;
+  final body = xml.length > _kOfficeRawCap
+      ? xml.substring(0, _kOfficeRawCap)
+      : xml;
   return '<!-- $name -->\n$body';
 }
 

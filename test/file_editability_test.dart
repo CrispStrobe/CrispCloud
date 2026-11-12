@@ -20,6 +20,11 @@ void main() {
     expect(isEditableInBuiltInEditor('image.tif'), isTrue);
     expect(isEditableInBuiltInEditor('image.TIFF'), isTrue);
     expect(isEditableInBuiltInEditor('report.pdf'), isTrue);
+    expect(isEditableInBuiltInEditor('book.EPUB'), isTrue);
+    expect(isEditableInBuiltInEditor('book.epub.zip'), isFalse);
+    expect(isTextEditableName('chapter.xhtml'), isTrue);
+    expect(isTextEditableName('package.opf'), isTrue);
+    expect(isTextEditableName('toc.ncx'), isTrue);
     expect(isEditableInBuiltInEditor('letter.docx'), isTrue);
     expect(isEditableInBuiltInEditor('book.xlsx'), isTrue);
     expect(isEditableInBuiltInEditor('slides.pptx'), isTrue);
@@ -35,6 +40,9 @@ void main() {
       'legacy.doc',
       'legacy.xls',
       'legacy.ppt',
+      'original.mobi',
+      'original.azw3',
+      'book.kfx',
       'font.ttf',
     ]) {
       expect(isEditableInBuiltInEditor(name), isFalse, reason: name);
@@ -63,7 +71,13 @@ void main() {
   });
 
   test('PEM certificates, requests and armored keys open as text', () {
-    for (final name in ['server.crt', 'ca.pem', 'root.cer', 'req.csr', 'key.asc']) {
+    for (final name in [
+      'server.crt',
+      'ca.pem',
+      'root.cer',
+      'req.csr',
+      'key.asc',
+    ]) {
       expect(isTextEditableName(name), isTrue, reason: name);
       expect(isEditableInBuiltInEditor(name), isTrue, reason: name);
     }

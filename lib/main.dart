@@ -52,6 +52,7 @@ import 'services/thumbnail_service.dart';
 import 'services/proxy_service.dart';
 import 'services/pdf_font_licenses.dart';
 import 'services/terminal_licenses.dart';
+import 'services/ebook_licenses.dart';
 import 'services/secure_storage_service.dart';
 import 'services/secure_storage_web.dart';
 import 'services/secure_storage_file.dart';
@@ -226,6 +227,7 @@ Future<void> main() async {
       registerBundledEditorAssets();
       registerPdfFontLicenses();
       registerTerminalLicenses();
+      registerEbookLicenses();
       registerMediaVideoLicenses();
       LicenseRegistry.addLicense(
         () => Stream.value(

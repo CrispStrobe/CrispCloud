@@ -28,11 +28,13 @@ import '../services/office_editor_menu.dart';
 import '../services/image_editor_menu.dart';
 import '../services/media_editor_menu.dart';
 import '../services/pdf_editor_menu.dart';
+import '../services/ebook_editor_menu.dart';
 import '../services/terminal_menu.dart';
 import '../widgets/code_editor_menus.dart';
 import '../widgets/image_editor_menus.dart';
 import '../widgets/media_editor_menus.dart';
 import '../widgets/pdf_editor_menus.dart';
+import '../widgets/ebook_editor_menus.dart';
 import '../widgets/audit_log_dialog.dart';
 import '../widgets/log_viewer_dialog.dart';
 import '../widgets/file_panel.dart';
@@ -130,6 +132,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       ref.read(officeEditorMenuProvider) == null &&
       ref.read(imageEditorMenuProvider) == null &&
       ref.read(pdfEditorMenuProvider) == null &&
+      ref.read(ebookEditorMenuProvider) == null &&
       ref.read(codeEditorMenuProvider) == null &&
       ref.read(mediaEditorMenuProvider) == null;
 
@@ -190,6 +193,9 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       mediaEditorMenuProvider,
     );
     final PdfEditorMenuActions? pdfEditor = ref.watch(pdfEditorMenuProvider);
+    final EbookEditorMenuActions? ebookEditor = ref.watch(
+      ebookEditorMenuProvider,
+    );
     final TerminalMenuActions? terminal = ref.watch(terminalMenuProvider);
     final auth = ref.watch(authProvider);
     final showPreview = ref.watch(showPreviewProvider);
@@ -280,6 +286,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           officeEditor,
           imageEditor,
           pdfEditor,
+          ebookEditor,
           codeEditor,
           mediaEditor,
           terminal,
@@ -307,6 +314,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     OfficeEditorMenuActions? editor,
     ImageEditorMenuActions? imageEditor,
     PdfEditorMenuActions? pdfEditor,
+    EbookEditorMenuActions? ebookEditor,
     CodeEditorMenuActions? codeEditor,
     MediaEditorMenuActions? mediaEditor,
     TerminalMenuActions? terminal,
@@ -360,6 +368,13 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       return <PlatformMenuItem>[
         appMenu,
         ...buildImageEditorPlatformMenus(context, imageEditor),
+      ];
+    }
+
+    if (ebookEditor != null) {
+      return <PlatformMenuItem>[
+        appMenu,
+        ...buildEbookEditorPlatformMenus(context, ebookEditor),
       ];
     }
 

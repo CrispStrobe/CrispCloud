@@ -57,6 +57,9 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Set up bundled ebook converter
+        uses: ./.github/actions/setup-ebook-rust
+
       # Cache Flutter SDK
       - name: Cache Flutter SDK
         uses: actions/cache@v5
@@ -198,6 +201,9 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - uses: actions/checkout@v5
+
+      - name: Set up bundled ebook converter
+        uses: ./.github/actions/setup-ebook-rust
 
       - name: Verify native plist comparison and evidence failure paths
         if: runner.os == 'macOS'
@@ -353,6 +359,13 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Set up bundled ebook converter
+        if: matrix.platform != 'web'
+        uses: ./.github/actions/setup-ebook-rust
+        with:
+          targets: ${{ matrix.platform == 'android' && 'aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android' || '' }}
+          android: ${{ matrix.platform == 'android' }}
+
       - name: Cache Flutter SDK + pub
         uses: actions/cache@v5
         with:
@@ -469,6 +482,9 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Set up bundled ebook converter
+        uses: ./.github/actions/setup-ebook-rust
+
       - name: Cache Flutter SDK + pub
         uses: actions/cache@v5
         with:
@@ -539,6 +555,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+
+      - name: Set up bundled ebook converter
+        uses: ./.github/actions/setup-ebook-rust
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
 
       - name: Cache Flutter SDK + pub
         uses: actions/cache@v5
@@ -664,6 +685,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+
+      - name: Set up bundled ebook converter
+        uses: ./.github/actions/setup-ebook-rust
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin,aarch64-apple-ios,aarch64-apple-ios-sim,x86_64-apple-ios
 
       - name: Cache verified embedded shell frameworks
         uses: actions/cache@v5

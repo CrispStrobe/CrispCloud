@@ -21,6 +21,8 @@ class NativePdfDeviceExport {
     LocalFileService? files,
     bool? useNativeDocumentExport,
     bool? requestMacOSFolderAccess,
+    this.dialogTitle = 'Export a PDF copy',
+    this.allowedExtensions = const ['pdf'],
   }) : _picker = picker ?? FilePicker.platform,
        _files = files ?? LocalFileService(),
        _useNativeDocumentExport =
@@ -31,16 +33,18 @@ class NativePdfDeviceExport {
   final LocalFileService _files;
   final bool _useNativeDocumentExport;
   final bool _requestMacOSFolderAccess;
+  final String dialogTitle;
+  final List<String> allowedExtensions;
 
   Future<PdfSaveOutcome?> exportCopy(
     Uint8List bytes,
     String suggestedName,
   ) async {
     final path = await _picker.saveFile(
-      dialogTitle: 'Export a PDF copy',
+      dialogTitle: dialogTitle,
       fileName: suggestedName,
       type: FileType.custom,
-      allowedExtensions: const ['pdf'],
+      allowedExtensions: allowedExtensions,
       bytes: _useNativeDocumentExport ? bytes : null,
       lockParentWindow: true,
     );

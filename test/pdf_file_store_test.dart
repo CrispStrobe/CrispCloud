@@ -82,6 +82,29 @@ void main() {
       expect(client.uploads, isEmpty);
     });
 
+    test(
+      'ebook copies retain their declared extension with the shared store',
+      () async {
+        client.files['/docs/book.epub'] = _bytes(1);
+        final ebooks = PdfFileStore.remote(
+          client: client,
+          providerName: 'test-cloud',
+          cache: cache,
+          file: _file('/docs/book.epub'),
+          copyExtension: null,
+        );
+        await ebooks.load();
+        await ebooks.saveCopy(_bytes(2), 'copy.epub');
+        expect(client.files['/docs/copy.epub'], _bytes(2));
+        expect(client.files.containsKey('/docs/copy.epub.pdf'), isFalse);
+        await expectLater(
+          ebooks.saveCopy(_bytes(3), '../escape.epub'),
+          throwsA(isA<ArgumentError>()),
+        );
+        expect(client.files['/docs/book.epub'], _bytes(1));
+      },
+    );
+
     test('rejects a document changed during its initial read', () async {
       client.revision = 'v1';
       client.afterDownload = () => client.revision = 'v2';

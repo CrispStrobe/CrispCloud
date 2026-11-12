@@ -1,0 +1,21 @@
+name: crisp_ebook_conversion
+flutter:
+  assets:
+    - licensing/THIRD_PARTY_LICENSES.txt
+description: Offline Kindle export and metadata updates using pinned MIT Kindling.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: '>=3.10.0 <4.0.0'
+
+dependencies:
+  code_assets: ^2.1.0
+  hooks: ^2.2.0
+  ffi: ^2.2.0
+  path: ^1.9.1
+
+dev_dependencies:
+  test: ^1.25.0
+  lints: ^5.0.0
+

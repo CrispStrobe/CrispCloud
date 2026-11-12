@@ -49,6 +49,8 @@ import 'image_editor_dialog.dart';
 import 'media_editor_dialog.dart';
 import 'office_editor_dialog.dart';
 import 'pdf_editor_dialog.dart';
+import 'ebook_editor_dialog.dart';
+import '../services/ebook_file_store.dart' show isEbookFileName;
 
 /// Opens a full-screen editor dialog for the given file.
 Future<void> showFileEditorDialog(
@@ -61,6 +63,10 @@ Future<void> showFileEditorDialog(
   if (file.isFolder) return;
   try {
     if (!forceText) {
+      if (isEbookFileName(file.name)) {
+        await showEbookEditorDialog(context, ref, file, side);
+        return;
+      }
       if (isImageEditorFileName(file.name)) {
         await showImageEditorDialog(context, ref, file, side);
         return;

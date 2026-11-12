@@ -1,0 +1,4 @@
+.dart_tool/
+native/target/
+test/fixtures/generated/
+

@@ -1,0 +1,229 @@
+import 'dart:async';
+import 'dart:typed_data';
+
+import 'package:crisp_cloud/models/file_item.dart';
+import 'package:crisp_cloud/models/panel_side.dart';
+import 'package:crisp_cloud/services/ebook_device_export.dart';
+import 'package:crisp_cloud/services/ebook_editor_menu.dart';
+import 'package:crisp_cloud/services/ebook_file_store.dart';
+import 'package:crisp_cloud/services/pdf_file_store.dart';
+import 'package:crisp_cloud/widgets/ebook_editor_dialog.dart';
+import 'package:crisp_ebook/crisp_ebook.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class _Store implements PdfFileStore {
+  _Store()
+    : input = EpubDocument.create(
+        title: 'Original',
+        authors: ['Author'],
+      ).toBytes();
+  Uint8List input;
+  final writes = <Uint8List>[];
+  Future<PdfSaveOutcome> Function(Uint8List)? writer;
+  @override
+  String get documentId => 'account-one:/books/original.epub';
+  @override
+  String get displayName => 'original.epub';
+  @override
+  String get path => '/books/original.epub';
+  @override
+  bool get isRemote => true;
+  @override
+  Future<Uint8List> load() async => Uint8List.fromList(input);
+  @override
+  Future<PdfSaveOutcome> save(Uint8List bytes) async {
+    writes.add(Uint8List.fromList(bytes));
+    final outcome =
+        await (writer?.call(bytes) ??
+            Future.value(PdfSaveOutcome.savedOriginal));
+    if (outcome == PdfSaveOutcome.savedOriginal)
+      input = Uint8List.fromList(bytes);
+    return outcome;
+  }
+
+  @override
+  Future<PdfSaveOutcome> saveCopy(Uint8List bytes, String name) async =>
+      PdfSaveOutcome.savedCopy;
+}
+
+Future<ProviderContainer> _open(
+  WidgetTester tester,
+  _Store store, {
+  EbookDeviceExporter? exporter,
+}) async {
+  tester.view.physicalSize = const Size(1200, 900);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
+  final container = ProviderContainer();
+  addTearDown(container.dispose);
+  addTearDown(() => tester.pumpWidget(const SizedBox()));
+  await tester.pumpWidget(
+    UncontrolledProviderScope(
+      container: container,
+      child: MaterialApp(
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              onPressed: () => showDialog<void>(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) => Dialog.fullscreen(
+                  child: EbookEditorDialog(
+                    file: FileItem(name: 'original.epub', isFolder: false),
+                    side: PanelSide.local,
+                    startEditing: true,
+                    storeOverride: EbookFileStore(store),
+                    deviceExporterOverride: exporter,
+                    documentLoaderOverride: (bytes) async =>
+                        EpubDocument.open(bytes),
+                    readerBuilderOverride: (_, _, _, _) =>
+                        const Text('Reader preview'),
+                  ),
+                ),
+              ),
+              child: const Text('Open book'),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+  await tester.tap(find.text('Open book'));
+  await tester.pumpAndSettle();
+  expect(find.byType(EbookEditorDialog), findsOneWidget);
+  expect(find.text('Original'), findsOneWidget);
+  return container;
+}
+
+Finder get _titleField => find.byWidgetPredicate(
+  (widget) => widget is TextField && widget.decoration?.labelText == 'Title',
+);
+Finder get _save => find.byKey(const ValueKey('ebook-save'));
+Finder get _close => find.descendant(
+  of: find.byType(AppBar).first,
+  matching: find.byTooltip('Close'),
+);
+
+void main() {
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
+  test('ebook routing uses only complete supported extensions', () {
+    for (final name in [
+      'book.EPUB',
+      'book.mobi',
+      'book.azw3',
+      'book.fb2',
+      'book.cbz',
+    ]) {
+      expect(isEbookFileName(name), isTrue, reason: name);
+    }
+    for (final name in [
+      'README',
+      'book.epub.zip',
+      'book.mobi.',
+      'book.kfx',
+      'book.pdf',
+    ]) {
+      expect(isEbookFileName(name), isFalse, reason: name);
+    }
+  });
+
+  testWidgets(
+    'metadata save preserves chapter data and acknowledges original',
+    (tester) async {
+      final store = _Store();
+      final before = EpubDocument.open(store.input);
+      await _open(tester, store);
+      await tester.enterText(_titleField, 'Edited title');
+      await tester.pump();
+      expect(find.text('* original.epub'), findsOneWidget);
+      await tester.tap(_save);
+      await tester.pumpAndSettle();
+      expect(store.writes, hasLength(1));
+      final saved = EpubDocument.open(store.writes.single);
+      expect(saved.title, 'Edited title');
+      for (final chapter in before.chapters) {
+        expect(
+          saved.readBytes(chapter.path),
+          orderedEquals(before.readBytes(chapter.path)),
+        );
+      }
+      expect(find.text('* original.epub'), findsNothing);
+    },
+  );
+
+  testWidgets('failed upload keeps edits and close can retry', (tester) async {
+    final store = _Store()
+      ..writer = (_) async => throw StateError('upload failed');
+    await _open(tester, store);
+    await tester.enterText(_titleField, 'Keep this edit');
+    await tester.pump();
+    await tester.tap(_save);
+    await tester.pumpAndSettle();
+    expect(find.text('upload failed'), findsOneWidget);
+    expect(find.text('* original.epub'), findsOneWidget);
+    store.writer = null;
+    await tester.tap(_close);
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.descendant(
+        of: find.byKey(const ValueKey('ebook-unsaved-dialog')),
+        matching: find.text('Save'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(store.writes, hasLength(2));
+    expect(EpubDocument.open(store.input).title, 'Keep this edit');
+    expect(find.byType(EbookEditorDialog), findsNothing);
+  });
+
+  testWidgets('new drafts typed during upload remain unsaved', (tester) async {
+    final upload = Completer<PdfSaveOutcome>();
+    final store = _Store()..writer = (_) => upload.future;
+    await _open(tester, store);
+    await tester.enterText(_titleField, 'Submitted title');
+    await tester.pump();
+    await tester.tap(_save);
+    await tester.pump();
+    expect(store.writes, hasLength(1));
+    await tester.enterText(_titleField, 'Newer title');
+    upload.complete(PdfSaveOutcome.savedOriginal);
+    await tester.pumpAndSettle();
+    expect(EpubDocument.open(store.input).title, 'Submitted title');
+    expect(find.text('* original.epub'), findsOneWidget);
+    expect(tester.widget<IconButton>(_save).onPressed, isNotNull);
+  });
+
+  testWidgets('browser-style copy outcome stays dirty and close is explicit', (
+    tester,
+  ) async {
+    final store = _Store()..writer = (_) async => PdfSaveOutcome.downloadedCopy;
+    final original = Uint8List.fromList(store.input);
+    await _open(tester, store);
+    await tester.enterText(_titleField, 'Downloaded title');
+    await tester.pump();
+    await tester.tap(_save);
+    await tester.pumpAndSettle();
+    expect(store.input, orderedEquals(original));
+    expect(find.text('* original.epub'), findsOneWidget);
+    await tester.tap(_close);
+    await tester.pumpAndSettle();
+    expect(
+      find.text(
+        'A separate copy was exported. Close and leave the original unchanged?',
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('closing removes only this editor’s native menu', (tester) async {
+    final container = await _open(tester, _Store());
+    expect(container.read(ebookEditorMenuProvider), isNotNull);
+    await tester.tap(_close);
+    await tester.pumpAndSettle();
+    expect(container.read(ebookEditorMenuProvider), isNull);
+  });
+}

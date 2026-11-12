@@ -26,6 +26,12 @@ analyzer:
     - packages/pdf_operations/test/**
     - packages/pdf_operations/tool/**
     - packages/crisp_storage/test/**
+    # Ebook packages keep package-local dependencies and test configurations.
+    - packages/crisp_ebook/test/**
+    - packages/crisp_ebook_conversion/test/**
+    - packages/crisp_ebook_conversion/tool/**
+    - packages/crisp_ebook_reader/test/**
+    - packages/crisp_ebook_reader/native/**
     - build/**
     - android/**
     - ios/**

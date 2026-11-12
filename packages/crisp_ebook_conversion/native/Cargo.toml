@@ -1,0 +1,30 @@
+[package]
+name = "crisp_kindling_bridge"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.88"
+license = "MIT"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "crisp-kindling"
+path = "src/main.rs"
+
+[dependencies]
+kindling-mobi = { path = "vendor/kindling", version = "=0.46.2" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+zip = { version = "=9.3.0", default-features = false, features = ["deflate-flate2"] }
+roxmltree = "0.21"
+percent-encoding = "2"
+regex = "1"
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "gif"] }
+
+[profile.release]
+opt-level = 2
+lto = "thin"
+panic = "unwind"
+
