@@ -54,7 +54,8 @@ We also maintain patched Nextcloud and ownCloud desktop clients with delta sync 
 - **Backup engine:** scheduled backups with versioning
 - **Preview pane:** images (zoom/pan), SVG, PDF (page navigation), syntax-highlighted code (30+ languages), markdown, CSV/TSV tables, DOCX/XLSX/PPTX/ODT text, fonts (TTF/OTF/WOFF2), audio/video
 - **Archive browsing:** browse ZIP/TAR/TGZ files like folders (including on web)
-- **Extended file formats:** decoded EML/Outlook MSG viewing with attachments, legacy DOC/DOT text previews and conversion into new editable DOCX copies, protected DOCM/DOTM/DOTX rich editing, and Autodesk KBDX XML viewing/source editing. See [format coverage and limits](docs/file-format-viewers.md).
+- **Extended file formats:** decoded EML/Outlook MSG viewing with attachments, legacy DOC/DOT text previews, protected DOCM/DOTM/DOTX rich editing, and Autodesk KBDX XML viewing/source editing. See [format coverage and limits](docs/file-format-viewers.md).
+- **Legacy Word conversion:** supported installed Word/LibreOffice can create separate DOCX/DOCM copies for review; an explicit built-in text-only conversion is available on every platform. Originals stay unchanged, and converted copies are checked before create-only saving. See [conversion support and limits](docs/legacy-word-conversion.md).
 - **KeePass databases:** F3 views and F4 edits existing KDBX databases with password/key-file unlock, groups, entry search, explicit password reveal/copy, automatic locking and encrypted saves to the original source. See [KeePass support and limits](docs/keepass.md).
 - **Built-in editors:** F4 text/code and hex editors with explicit chooser and handoff, bounded edit history, and save/recovery tied to the original file and account. Text editing includes syntax highlighting, line numbers, encoding and newline controls; F3 also previews archive members
 - **Interactive terminal:** desktop PTY/Windows ConPTY, a built-in shell for sandboxed macOS, and SSH sessions with ANSI colors, full-screen programs, live resizing, raw control keys, scrollback, and mobile extra keys. Browser SSH uses your own secure WebSocket gateway. [Terminal design, licensing, and platform support](docs/terminal.md)
@@ -160,7 +161,7 @@ to change a binding, review conflicts or restore defaults.
 
 ## License
 
-AGPL-3.0. See [LICENSE](LICENSE).
+AGPL-3.0. See [LICENSE.txt](LICENSE.txt).
 
 Not affiliated with any cloud provider. All trademarks belong to their respective owners.
 

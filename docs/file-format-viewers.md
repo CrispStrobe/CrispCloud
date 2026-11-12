@@ -11,7 +11,7 @@ its original bytes.
 | --- | --- | --- |
 | `.eml` | Decoded subject, sender, recipients, date, plain text or safe HTML, attachments | MIME source in the text/code editor |
 | `.msg` | Outlook compound-message headers, plain text or safe HTML, ordinary attachments | Existing explicit hex editor; no structured Outlook writer |
-| `.doc`, `.dot` | Main-document text from unencrypted Word 97–2007 binary files | Offers a new text-only DOCX beside the original, then opens the new file in the rich editor |
+| `.doc`, `.dot` | Main-document text from unencrypted Word 97–2007 binary files | Converts a separate DOCX/DOCM copy through supported installed Word/LibreOffice, or an explicitly selected text-only DOCX |
 | `.docm`, `.dotm`, `.dotx` | Existing formatted Word view, text and page rendering | Rich Word editor with macro/template preservation checks before saving |
 | `.kdbx` | Password/key-file unlock, groups, standard fields and entry search | Add/edit/delete entries, preserving other database data and saving encrypted KDBX |
 | `.kbdx` | XML tree and source for Autodesk keyboard-shortcut profiles | XML source in the text/code editor |
@@ -74,19 +74,30 @@ formatting, images, headers, notes or tracked-change semantics. Encrypted files,
 older pre-Word-97 variants and malformed structures produce a clear failure.
 The main story is capped at 4 × 1024 × 1024 UTF-16 code units.
 
-F4 on DOC/DOT, or **Convert to DOCX** in F3, offers an explicitly text-only
-conversion. It creates a new sibling such as `report (text).docx`, rejects
-filename collisions, and opens the verified new file in the Word editor. It
-keeps the original captured account and directory even if the pane navigates
-elsewhere. Formatting, layout, images, objects, headers, notes, tracked-change
-state, macros and signatures are omitted. No installed application or remote
-conversion service is used. See [legacy Word conversion](legacy-word-conversion.md)
-for the implementation, source review and optional desktop-converter discussion.
+F4 on DOC/DOT, or **Convert to DOCX** in F3, offers detected Microsoft Word on
+Windows or LibreOffice 7+ on Windows/Linux/macOS. Availability depends on the
+installation and sandbox. **Text only (built in)** is an explicit choice on all
+platforms and the only route on web/mobile. CrispCloud never installs an office
+suite, silently falls back after a native failure, or sends content to a remote
+conversion service.
 
-Macro-enabled documents and templates use the already-vendored Word editor.
+Native conversion checks the resulting Word package, shows content counts and
+potential losses, and requires acknowledgement of reported losses. DOCM is the
+default when document VBA is detected; DOCX cannot contain it. These checks do
+not certify formatting, object or signature fidelity. **Save copy** writes the
+exact converter bytes as a new sibling on the captured original account, rejects
+collisions, and opens the copy in F3; F4 editing is a separate action. Text-only
+conversion instead creates `report (text).docx` and opens it in the rich editor,
+omitting formatting, layout, images, objects, headers, notes, tracked-change
+state, macros and signatures. Both routes preserve the original file and save
+destination even if the pane navigates elsewhere. See
+[legacy Word conversion](legacy-word-conversion.md) for platform limits, source
+review, preservation warnings and acceptance evidence.
+
+Word documents and templates use the already-vendored Word editor.
 Before editing, the package's main content type must match its extension.
 Before every upload, the preservation guard checks the original main-part path
-and content type, opaque binary/VBA/custom-UI payload hashes, and VBA
+and content type, opaque binary/VBA/custom-UI payload hashes, and protected VBA/OLE
 relationships. A failed check leaves the original untouched and the editor
 dirty. Macros are retained as opaque data and never run.
 
@@ -113,6 +124,10 @@ The email and Word additions require no new package. Compound-file parsing reuse
 resource checks and format routing are CrispCloud code. HTML parsing/rendering
 uses existing dependencies. This avoids adding a native-only mail parser or a
 new dependency with a different license merely to recognize these extensions.
+The optional installed-application conversion adapters add no Office-engine
+package dependency and bundle no third-party converter. The user's separately
+installed Word/LibreOffice remains subject to its own license; see the
+[conversion guide](legacy-word-conversion.md#installed-application-conversion).
 
 ## Verification
 
@@ -138,18 +153,28 @@ Focused regression suites include:
   `test/widget/legacy_word_conversion_dialog_test.dart` and
   `test/widget/keepass_word_routing_test.dart`: create-only conversion,
   source identity and the actual viewer/editor handoffs.
+- `test/installed_office_converter_test.dart`,
+  `test/word_conversion_inspection_test.dart`,
+  `test/installed_office_strings_test.dart` and
+  `test/widget/installed_office_conversion_dialog_test.dart`: native-process
+  failure/cleanup, bounded package checks, source/VBA scope, localized controls,
+  loss acknowledgement and exact-byte copy saving. The opt-in installed-engine
+  fixture run and its limits are recorded in the conversion guide.
 
 Macro fixtures contain synthetic opaque payloads. They establish preservation
 and failure behavior, not macro execution or a Microsoft Word certification.
 
-The final combined development validation run passed 360 tests across 28 focused
-parser, archive, favorites, viewer, preview, conversion and editor suites. A separate JavaScript
+Before the installed-engine addition, the combined development validation run
+passed 360 tests across 28 focused parser, archive, favorites, viewer, preview,
+conversion and editor suites. A separate JavaScript
 compilation and execution smoke check passed Unicode EML, MSG/CFB and legacy DOC
 parsing. A full Flutter web release build was not run locally because the cached
 SDK lacks the Flutter web target artifacts; the JavaScript parser check does not
 replace that application build or platform acceptance testing. KeePass also
 passes a separate JavaScript open/edit/save/reopen smoke run against public
 KeePass-generated KDBX3/AES, KDBX4/Argon2id/AES and KDBX4/Argon2d/ChaCha20 fixtures.
-The PR records the final combined regression results.
+The installed-conversion follow-up passed 72 unique tests across nine suites in
+separate focused runs; the PR records the regression results and remaining
+platform acceptance limits.
 The last inner-header resource guard was followed by a passing 18-test KeePass
 backend/crypto rerun, including excessive-attachment rejection.
