@@ -87,6 +87,10 @@ extension _WordTables on _StructuredWordParser {
                   properties['tableBorders']
                       as Map<LegacyWordTableBorderSide, LegacyWordBorder>? ??
                   const {},
+              defaultCellMargins:
+                  properties['tableMargins']
+                      as Map<LegacyWordBorderSide, int?>? ??
+                  const {},
               // Only leading, contiguous rows are repeating headers.
               isHeader:
                   properties['rowHeader'] == true &&

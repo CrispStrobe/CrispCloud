@@ -349,7 +349,6 @@ jobs:
     needs: [test, create-release]
     runs-on: macos-15-intel
     timeout-minutes: 75
-    continue-on-error: true  # macOS runners scarce on free tier
     steps:
       - uses: actions/checkout@v5
 
@@ -528,6 +527,14 @@ jobs:
       #     Remove-Item cert.pfx
       # ────────────────────────────────────────────────────────────────────
 
+      - name: Verify native Windows file-drag receiver format
+        shell: pwsh
+        run: |
+          cmake --build build/windows/x64 --config Release --target crisp_file_drag_data_test
+          if ($LASTEXITCODE -ne 0) { throw "Native drag protocol test did not build" }
+          & ./build/windows/x64/native-tests/Release/crisp_file_drag_data_test.exe
+          if ($LASTEXITCODE -ne 0) { throw "Native drag protocol test failed" }
+
       - name: Package Windows build
         shell: pwsh
         run: Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath crispcloud-windows-x64.zip
@@ -691,7 +698,6 @@ jobs:
     needs: [test, create-release]
     runs-on: macos-15-intel
     timeout-minutes: 75
-    continue-on-error: true  # macOS runners scarce on free tier
     env:
       # Signed App Store/TestFlight uploads are owned by ios-release.yml.
       # Keeping them out of the multi-platform release prevents two workflows

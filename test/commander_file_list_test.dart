@@ -458,6 +458,15 @@ void main() {
       'a.txt',
       'd.txt',
     });
+    panel.selectVisibleItems([rows.last], cursor: rows.last);
+    panel.shiftMoveCursor(1);
+    expect(panel.selection, isEmpty);
+    expect(panel.cursorItem, same(rows.last));
+    panel.toggleSelection(rows.last, ctrlKey: true);
+    panel.setFilter('e');
+    panel.shiftMoveCursor(-1);
+    expect(panel.selection, isEmpty);
+    expect(panel.cursorItem, same(rows.last));
   });
 
   for (final mode in [PanelViewMode.full, PanelViewMode.brief]) {

@@ -7,6 +7,7 @@ import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/providers.dart';
+import 'package:crisp_cloud/screens/screen_dialogs.dart';
 import 'package:crisp_cloud/widgets/file_editor_dialog.dart';
 import 'package:crisp_cloud/widgets/internal_viewer_dialog.dart';
 import 'package:crisp_cloud/widgets/legacy_word_conversion_dialog.dart';
@@ -57,6 +58,51 @@ Future<void> _until(WidgetTester tester, bool Function() ready) async {
 }
 
 void main() {
+  testWidgets('F3 views the focused file while retaining unrelated marks', (
+    tester,
+  ) async {
+    final harness = await WorkspaceTestHarness.create();
+    addTearDown(harness.dispose);
+    harness.cloud.put('/marked.doc', legacyWordFixture('Marked document\r'));
+    harness.cloud.put('/focused.doc', legacyWordFixture('Focused document\r'));
+    harness.container.read(activePanelProvider.notifier).state = _side;
+    final panel = harness.container.read(panelProvider(_side));
+    await panel.refresh();
+    final marked = panel.displayedFiles!.singleWhere(
+      (file) => file.name == 'marked.doc',
+    );
+    final focused = panel.displayedFiles!.singleWhere(
+      (file) => file.name == 'focused.doc',
+    );
+    panel.toggleSelection(marked, ctrlKey: true);
+    panel.setCursorOnly(focused);
+    await _mount(
+      tester,
+      harness,
+      (context, ref) => TextButton(
+        onPressed: () => viewSelectedFile(context, ref),
+        child: const Text('F3'),
+      ),
+    );
+    await tester.runAsync(() async {
+      await tester.tap(find.text('F3'));
+      await _until(
+        tester,
+        () => find
+            .textContaining('Focused document', findRichText: true)
+            .evaluate()
+            .isNotEmpty,
+      );
+    });
+    expect(
+      find.textContaining('Marked document', findRichText: true),
+      findsNothing,
+    );
+    expect(panel.selection, contains(marked));
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
   testWidgets(
     'F3 offers conversion for a captured DOT and cancel keeps it intact',
     (tester) async {

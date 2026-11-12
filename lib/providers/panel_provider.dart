@@ -4048,7 +4048,11 @@ class PanelNotifier extends ChangeNotifier {
     );
     final files = _files;
     if (files == null || !_containsIdentical(files, item)) return;
-    final rangeAnchor = _lastSelected ?? cursorItem;
+    final visible = displayedFiles ?? const <FileItem>[];
+    final rangeAnchor = _lastSelected != null &&
+            _containsIdentical(visible, _lastSelected!)
+        ? _lastSelected
+        : cursorItem;
     // Ensure this panel is the active panel (drives F-key context).
     if (_ref.read(activePanelProvider) != side) {
       _ref.read(activePanelProvider.notifier).state = side;
@@ -5123,6 +5127,7 @@ class PanelNotifier extends ChangeNotifier {
   /// Commander Shift+Arrow toggles the rows being left and moves the cursor.
   /// Existing marks can therefore be removed using the same gesture.
   void shiftMoveCursor(int delta, {List<FileItem>? visibleFiles}) {
+    if (delta == 0) return;
     final displayed = visibleFiles ??
         (_isTypeahead && _ref.read(quickSearchSettingsProvider).arrowNavigation
             ? _typeaheadMatches()
@@ -5136,12 +5141,18 @@ class PanelNotifier extends ChangeNotifier {
     var cur = current == null ? 0 : _indexOfIdentical(displayed, current);
     if (cur < 0) cur = 0;
     final next = (cur + delta).clamp(0, displayed.length - 1);
-    if (next == cur) return;
-    final direction = next > cur ? 1 : -1;
-    for (var i = cur; i != next; i += direction) {
-      final item = displayed[i];
+    void toggleRow(int index) {
+      final item = displayed[index];
       if (item.name != '..' && item.name != '.') {
         if (!_selection.remove(item)) _selection.add(item);
+      }
+    }
+    if (next == cur) {
+      toggleRow(cur);
+    } else {
+      final direction = next > cur ? 1 : -1;
+      for (var i = cur; i != next; i += direction) {
+        toggleRow(i);
       }
     }
     _lastSelected = displayed[next].name == '..' ? null : displayed[next];

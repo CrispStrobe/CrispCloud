@@ -522,7 +522,7 @@ class _FileGridViewState extends ConsumerState<FileGridView> {
       final target = next.clamp(0, _visible.length - 1);
       final file = _visible[target];
       if (keyboard.isShiftPressed) {
-        panel.shiftMoveCursor(target - index, visibleFiles: _visible);
+        panel.shiftMoveCursor(next - index, visibleFiles: _visible);
       } else {
         panel.setCursorToItem(file);
       }

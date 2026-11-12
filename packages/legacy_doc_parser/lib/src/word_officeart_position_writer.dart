@@ -6,6 +6,30 @@ part of 'conversion.dart';
 /// and the discrepancy with the generic MS-ODRAW table. Offsets are never
 /// adjusted for page margins: the receiving layout engine resolves the origin.
 extension _WordOfficeArtPositionWriter on _StructuredWordWriter {
+  Map<String, int> _officeArtWrapDistances(LegacyWordDrawing drawing) {
+    final wrap = drawing.shape?.wrapDistances;
+    final values = <String, int>{};
+    for (final (side, value) in [
+      ('left', wrap?.leftEmu),
+      ('top', wrap?.topEmu),
+      ('right', wrap?.rightEmu),
+      ('bottom', wrap?.bottomEmu),
+    ]) {
+      if (value == null) continue;
+      if (value < 0 || value > 0x7fffffff) _tooComplex();
+      values[side] = value;
+    }
+    return values;
+  }
+
+  String _officeArtVmlWrapDistances(LegacyWordDrawing drawing) =>
+      _officeArtWrapDistances(drawing).entries
+          .map(
+            (entry) =>
+                'mso-wrap-distance-${entry.key}:${entry.value / 12700}pt;',
+          )
+          .join();
+
   ({int horizontal, int vertical, int horizontalMode, int verticalMode})
   _officeArtPosition(LegacyWordDrawing drawing) {
     final position = drawing.shape?.position;
@@ -51,7 +75,8 @@ extension _WordOfficeArtPositionWriter on _StructuredWordWriter {
     return 'mso-position-horizontal:${horizontalModes[position.horizontalMode]};'
         'mso-position-horizontal-relative:${horizontal[position.horizontal]};'
         'mso-position-vertical:${verticalModes[position.verticalMode]};'
-        'mso-position-vertical-relative:${vertical[position.vertical]};';
+        'mso-position-vertical-relative:${vertical[position.vertical]};'
+        '${_officeArtVmlWrapDistances(drawing)}';
   }
 
   String _officeArtVmlWrapOrigins(LegacyWordDrawing drawing) {

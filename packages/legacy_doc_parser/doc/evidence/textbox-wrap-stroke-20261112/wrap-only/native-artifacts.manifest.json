@@ -1,0 +1,224 @@
+{
+  "version": 1,
+  "sourceCommit": "ab575729720f0b6f7f2316e8613e7780be950356",
+  "sourceWorktreeDirty": false,
+  "report": {
+    "path": "native-report.json.xz",
+    "sha256": "5c123bd2edf19c9a7d97ab2d937799beb564c9f0e6cde9bc9bf4e58a561915e6",
+    "bytes": 15296,
+    "uncompressedSha256": "3dee4c18e023c6bfea2d12316b82ce1c7768fee887437b30578b9c011a57dfc2",
+    "uncompressedBytes": 415133
+  },
+  "archive": {
+    "path": "native-artifacts.tar.xz",
+    "sha256": "c28f8a2407aea24eac8b8fb84ae5b887f450e9d825ae406998a368d9f81f58e6",
+    "bytes": 209176,
+    "format": "USTAR/XZ",
+    "compressionPreset": 6
+  },
+  "fileCount": 35,
+  "uncompressedFileBytes": 1120971,
+  "excludedGeneratedFiles": [
+    "Office profile directories",
+    "temporary directory",
+    "compiled parser executable (hash retained in report)"
+  ],
+  "files": [
+    {
+      "path": "inputs/word14-margin-origin.doc",
+      "bytes": 55296,
+      "sha256": "cab742e55b62e7a638ada283e877144a574e0412032ac5d797c1eb8cfedcfb9a"
+    },
+    {
+      "path": "run/compile.log",
+      "bytes": 94,
+      "sha256": "3a674a51dbf31d00f25e3ef1d3c820b67be9de7b679e782b862908d02de4a7ae"
+    },
+    {
+      "path": "run/font-files.json",
+      "bytes": 73404,
+      "sha256": "e2c60484a974489eb566adfdc45b7e6d498a2f3159fea1583b8930ee64f67909"
+    },
+    {
+      "path": "run/fonts.txt",
+      "bytes": 51943,
+      "sha256": "cda9e96d268b4149761b3233661bd91d6fcd03573ed3d540cd378714a2c821fc"
+    },
+    {
+      "path": "run/word14-margin-origin/binary-render.json",
+      "bytes": 4395,
+      "sha256": "c33f3ab270299559b17ecda0ff60bde7b2b76d812f8afc057dead4aeec0f3904"
+    },
+    {
+      "path": "run/word14-margin-origin/converted-render.json",
+      "bytes": 4391,
+      "sha256": "3d9ae2adbc6df5f433a342d790f594ba6f2be6bed4e6dd6abe1d5a8a6f91b395"
+    },
+    {
+      "path": "run/word14-margin-origin/converted-semantic.json",
+      "bytes": 160578,
+      "sha256": "5ee47c91a7cb16aa38266f068f06ae2fa26977bfef1ba815279d85f7368545ba"
+    },
+    {
+      "path": "run/word14-margin-origin/converted.docx",
+      "bytes": 24104,
+      "sha256": "45fcf8987b3d875e5586d784089ab76c16fc988b78e6883032fd1645394df1e9"
+    },
+    {
+      "path": "run/word14-margin-origin/native-docx/conversion.log",
+      "bytes": 295,
+      "sha256": "d0501fa1d1bd315be9c5fd0ac8df8cee8ca9604c30d19306c1f585251a934883"
+    },
+    {
+      "path": "run/word14-margin-origin/native-docx/source.docx",
+      "bytes": 16520,
+      "sha256": "3f1be988ac63740ba03fbf94e0d90fb4c17437e083661104835a904f26a19102"
+    },
+    {
+      "path": "run/word14-margin-origin/native-render.json",
+      "bytes": 4458,
+      "sha256": "a23073ec1dfcd119502dd2f12ed2244e8760b5547bf12a704f38ad815f23ac72"
+    },
+    {
+      "path": "run/word14-margin-origin/native-semantic.json",
+      "bytes": 146464,
+      "sha256": "f8118486e556091639b4bc02b3a31231a0fe2541f0d8409acd0f27983e5ae9b1"
+    },
+    {
+      "path": "run/word14-margin-origin/render-binary/conversion.log",
+      "bytes": 293,
+      "sha256": "8a533bcaeea04e0dda05b9aa9b371e5b6a1d825391aa6c104083827671ea91c1"
+    },
+    {
+      "path": "run/word14-margin-origin/render-binary/page-0001.ppm.gz",
+      "bytes": 35621,
+      "sha256": "6b3bcc717e5fe7971b0a800b98f04b274af8dd766c6b57688ba20e357f4280cd",
+      "uncompressedSha256": "a52939fe5dcda90a2df08e7f7cd3a647a32f3952ad44808a2fdcf240af4e1e71",
+      "uncompressedBytes": 750975,
+      "rasterContext": {
+        "render": "run/word14-margin-origin/binary-render.json",
+        "manifest": "run/word14-margin-origin/render-binary/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/word14-margin-origin/render-binary/pages.txt",
+      "bytes": 147,
+      "sha256": "e4cb02b8069b78a85a491622efcfdf8e54d79e8cd526b9d0fc14889135b7a942"
+    },
+    {
+      "path": "run/word14-margin-origin/render-binary/pages.xhtml",
+      "bytes": 3862,
+      "sha256": "f76fcd4dc116c09eac3e0f86c360c5d8f24dbd7e1ce9ba3451dd1bf1ef183d02"
+    },
+    {
+      "path": "run/word14-margin-origin/render-binary/pdfinfo.txt",
+      "bytes": 468,
+      "sha256": "f4ae4734e89a9a54f4116ae4df8f114546cd2cb4fb81a8529971d93371ce90b5"
+    },
+    {
+      "path": "run/word14-margin-origin/render-binary/raster-manifest.json",
+      "bytes": 849,
+      "sha256": "3772be3f5b637fbdd2a470a36480eb415acfe750c98859c8034b8bc6b96e837e"
+    },
+    {
+      "path": "run/word14-margin-origin/render-binary/source.pdf",
+      "bytes": 29520,
+      "sha256": "fe91216fe9601aa5adcda0cb340f5c5b6154e2f33c88f12303b43a01dd4d3241"
+    },
+    {
+      "path": "run/word14-margin-origin/render-converted/conversion.log",
+      "bytes": 303,
+      "sha256": "88e4b15765ee4629e935f9673b953246e556f0fa9f4f81f8de391c222f115fb9"
+    },
+    {
+      "path": "run/word14-margin-origin/render-converted/converted.pdf",
+      "bytes": 16553,
+      "sha256": "17da113a4c4dbc5722ceb848c79e55e0898c57722359a1c0c6dc73ecda3722ea"
+    },
+    {
+      "path": "run/word14-margin-origin/render-converted/page-0001.ppm.gz",
+      "bytes": 7959,
+      "sha256": "c41a952ed63a63fdbdc1d65713f0e21e6f6665b160ef4ed3c0e14c514e6edbd8",
+      "uncompressedSha256": "cc688a2805c755bba86864a393adb044984bbc7319c3f93ffb4ecc48878a5dcd",
+      "uncompressedBytes": 750975,
+      "rasterContext": {
+        "render": "run/word14-margin-origin/converted-render.json",
+        "manifest": "run/word14-margin-origin/render-converted/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/word14-margin-origin/render-converted/pages.txt",
+      "bytes": 147,
+      "sha256": "e4cb02b8069b78a85a491622efcfdf8e54d79e8cd526b9d0fc14889135b7a942"
+    },
+    {
+      "path": "run/word14-margin-origin/render-converted/pages.xhtml",
+      "bytes": 3817,
+      "sha256": "73b6718e45c5345aace4403fcb822c46b6b1e25348258c671077eac0e3b261c8"
+    },
+    {
+      "path": "run/word14-margin-origin/render-converted/pdfinfo.txt",
+      "bytes": 438,
+      "sha256": "79b965392f8a4b9a2cbcdf3f777af70958ac636fdabf99aca1649db3bd299b29"
+    },
+    {
+      "path": "run/word14-margin-origin/render-converted/raster-manifest.json",
+      "bytes": 848,
+      "sha256": "513fa4903b3275b64169fe3b59fa88b740e972253e0113736e66100056df3aa6"
+    },
+    {
+      "path": "run/word14-margin-origin/render-native/conversion.log",
+      "bytes": 306,
+      "sha256": "d2dd685a037f77938f31c129a0432f75b9cbf9224dcf4701213b4b24b2e552df"
+    },
+    {
+      "path": "run/word14-margin-origin/render-native/page-0001.ppm.gz",
+      "bytes": 34528,
+      "sha256": "18553ee995125816c0f313d89b5e5bd6afc90221df2c1819145d0acadbbfa240",
+      "uncompressedSha256": "ce30a283d74b269e156cd9cfba009368cd47fea4cbdb0f0eff4ad7420cabc3d0",
+      "uncompressedBytes": 750975,
+      "rasterContext": {
+        "render": "run/word14-margin-origin/native-render.json",
+        "manifest": "run/word14-margin-origin/render-native/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/word14-margin-origin/render-native/pages.txt",
+      "bytes": 210,
+      "sha256": "a252d8ee91fd1a254432da13e7d1f2a416a813d961c70540126a8dbf79705c59"
+    },
+    {
+      "path": "run/word14-margin-origin/render-native/pages.xhtml",
+      "bytes": 3865,
+      "sha256": "e2ea229f4a7fbbadf58204a60db2a2f3a3a2a5e126c62892459d20804822a8fa"
+    },
+    {
+      "path": "run/word14-margin-origin/render-native/pdfinfo.txt",
+      "bytes": 468,
+      "sha256": "4d11d198cfc7bb682098a1fe297f353e2122d25749561e91defb134df03fae23"
+    },
+    {
+      "path": "run/word14-margin-origin/render-native/raster-manifest.json",
+      "bytes": 849,
+      "sha256": "eedffb9900ad92a828950c78ece62c2e0da234a57b20f8cc29cab42af5cd9dc2"
+    },
+    {
+      "path": "run/word14-margin-origin/render-native/source.pdf",
+      "bytes": 30137,
+      "sha256": "50fcc829cd41bece44d2740c1f3e7771858de94bddf7b89e4a91c6b04ee9ec04"
+    },
+    {
+      "path": "run/word14-margin-origin/result.json",
+      "bytes": 352545,
+      "sha256": "6598182cace64ee0c4fa8cc5b95370b22328741e134f40ab0f0c6ab84162ac87"
+    },
+    {
+      "path": "run/word14-margin-origin/source.doc",
+      "bytes": 55296,
+      "sha256": "cab742e55b62e7a638ada283e877144a574e0412032ac5d797c1eb8cfedcfb9a"
+    }
+  ]
+}

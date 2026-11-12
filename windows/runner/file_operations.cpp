@@ -1,4 +1,5 @@
 #include "file_operations.h"
+#include "file_drag_data.h"
 #include "utils.h"
 #include <windows.h>
 #include <ole2.h>
@@ -169,71 +170,7 @@ class FileDragSource final : public IDropSource {
   }
 };
 
-// Expose only the real CF_HDROP payload. An empty shell ID-list format must
-// not shadow the file list when the receiver prefers shell-item formats.
-class FileDragDataObject final : public IDataObject {
- public:
-  explicit FileDragDataObject(std::vector<wchar_t> names) : names_(std::move(names)) {}
-  LONG refs = 1;
-  HRESULT STDMETHODCALLTYPE QueryInterface(REFIID id, void** out) override {
-    if (!out) return E_POINTER;
-    *out = nullptr;
-    if (id != IID_IUnknown && id != IID_IDataObject) return E_NOINTERFACE;
-    *out = static_cast<IDataObject*>(this);
-    AddRef();
-    return S_OK;
-  }
-  ULONG STDMETHODCALLTYPE AddRef() override { return InterlockedIncrement(&refs); }
-  ULONG STDMETHODCALLTYPE Release() override {
-    const auto count = InterlockedDecrement(&refs);
-    if (!count) delete this;
-    return count;
-  }
-  HRESULT STDMETHODCALLTYPE QueryGetData(FORMATETC* format) override {
-    if (!format) return E_POINTER;
-    return format->cfFormat == CF_HDROP && (format->tymed & TYMED_HGLOBAL) &&
-        format->dwAspect == DVASPECT_CONTENT && format->lindex == -1 ? S_OK : DV_E_FORMATETC;
-  }
-  HRESULT STDMETHODCALLTYPE GetData(FORMATETC* format, STGMEDIUM* medium) override {
-    if (!medium) return E_POINTER;
-    *medium = {};
-    const HRESULT supported = QueryGetData(format);
-    if (FAILED(supported)) return supported;
-    HGLOBAL memory = GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT,
-        sizeof(DROPFILES) + names_.size() * sizeof(wchar_t));
-    auto* drop = memory ? static_cast<DROPFILES*>(GlobalLock(memory)) : nullptr;
-    if (!drop) {
-      if (memory) GlobalFree(memory);
-      return E_OUTOFMEMORY;
-    }
-    drop->pFiles = sizeof(DROPFILES);
-    drop->fWide = TRUE;
-    std::memcpy(reinterpret_cast<char*>(drop) + sizeof(DROPFILES), names_.data(), names_.size() * sizeof(wchar_t));
-    GlobalUnlock(memory);
-    medium->tymed = TYMED_HGLOBAL;
-    medium->hGlobal = memory;
-    return S_OK;
-  }
-  HRESULT STDMETHODCALLTYPE GetDataHere(FORMATETC*, STGMEDIUM*) override { return E_NOTIMPL; }
-  HRESULT STDMETHODCALLTYPE GetCanonicalFormatEtc(FORMATETC*, FORMATETC* output) override {
-    if (!output) return E_POINTER;
-    output->ptd = nullptr;
-    return DATA_S_SAMEFORMATETC;
-  }
-  HRESULT STDMETHODCALLTYPE SetData(FORMATETC*, STGMEDIUM*, BOOL) override { return E_NOTIMPL; }
-  HRESULT STDMETHODCALLTYPE EnumFormatEtc(DWORD direction, IEnumFORMATETC** result) override {
-    if (!result) return E_POINTER;
-    *result = nullptr;
-    if (direction != DATADIR_GET) return E_NOTIMPL;
-    FORMATETC format = {CF_HDROP, nullptr, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
-    return SHCreateStdEnumFmtEtc(1, &format, result);
-  }
-  HRESULT STDMETHODCALLTYPE DAdvise(FORMATETC*, DWORD, IAdviseSink*, DWORD*) override { return OLE_E_ADVISENOTSUPPORTED; }
-  HRESULT STDMETHODCALLTYPE DUnadvise(DWORD) override { return OLE_E_ADVISENOTSUPPORTED; }
-  HRESULT STDMETHODCALLTYPE EnumDAdvise(IEnumSTATDATA**) override { return OLE_E_ADVISENOTSUPPORTED; }
- private:
-  const std::vector<wchar_t> names_;
-};
+using crisp_file_drag::FileDragDataObject;
 
 HRESULT StartFileDrag(const EncodableMap* args, bool* accepted) {
   *accepted = false;
@@ -242,24 +179,22 @@ HRESULT StartFileDrag(const EncodableMap* args, bool* accepted) {
   if (found == args->end()) return E_INVALIDARG;
   const auto* paths = std::get_if<EncodableList>(&found->second);
   if (!paths || paths->empty()) return E_INVALIDARG;
-  std::vector<wchar_t> names;
+  std::vector<std::wstring> file_paths;
   for (const auto& value : *paths) {
     const auto* path = std::get_if<std::string>(&value);
     if (!path || path->find('\0') != std::string::npos) return E_INVALIDARG;
     const auto wide = Wide(*path);
     if (wide.empty() || !std::filesystem::path(wide).is_absolute() ||
         GetFileAttributesW(wide.c_str()) == INVALID_FILE_ATTRIBUTES) return E_INVALIDARG;
-    names.insert(names.end(), wide.begin(), wide.end());
-    names.push_back(L'\0');
+    file_paths.push_back(wide);
   }
-  names.push_back(L'\0');
   if (!(GetAsyncKeyState(VK_LBUTTON) & 0x8000)) return S_OK;
   const HRESULT initialized = OleInitialize(nullptr);
   if (FAILED(initialized)) return initialized;
   HRESULT outcome;
   {
     ComPtr<FileDragDataObject> data;
-    data.Attach(new FileDragDataObject(std::move(names)));
+    data.Attach(new FileDragDataObject(file_paths));
     ComPtr<FileDragSource> source;
     source.Attach(new FileDragSource());
     DWORD effect = DROPEFFECT_NONE;

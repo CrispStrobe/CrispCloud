@@ -90,25 +90,7 @@ extension _WordTableStyleWriter on _StructuredWordWriter {
     if (format.noWrap != null) {
       xml.add('<w:noWrap w:val="${format.noWrap! ? 'on' : 'off'}"/>');
     }
-    if (format.margins.isNotEmpty) {
-      xml.add('<w:tcMar>');
-      for (final side in [
-        LegacyWordBorderSide.top,
-        LegacyWordBorderSide.left,
-        LegacyWordBorderSide.bottom,
-        LegacyWordBorderSide.right,
-      ]) {
-        if (!format.margins.containsKey(side)) continue;
-        final width = format.margins[side];
-        if (width != null && (width < 0 || width > 31680)) {
-          throw const FormatException('Invalid Word cell margin.');
-        }
-        xml.add(
-          '<w:${side.name} w:w="${width ?? 0}" w:type="${width == null ? 'nil' : 'dxa'}"/>',
-        );
-      }
-      xml.add('</w:tcMar>');
-    }
+    _tableCellMargins(format.margins, xml, 'tcMar');
     if (format.textDirection != null) {
       xml.add('<w:textDirection w:val="${format.textDirection!.name}"/>');
     }
@@ -121,6 +103,31 @@ extension _WordTableStyleWriter on _StructuredWordWriter {
     if (format.hideMark != null) {
       xml.add('<w:hideMark w:val="${format.hideMark! ? 'on' : 'off'}"/>');
     }
+  }
+
+  void _tableCellMargins(
+    Map<LegacyWordBorderSide, int?> margins,
+    _BoundedWordXml xml,
+    String element,
+  ) {
+    if (margins.isEmpty) return;
+    xml.add('<w:$element>');
+    for (final side in [
+      LegacyWordBorderSide.top,
+      LegacyWordBorderSide.left,
+      LegacyWordBorderSide.bottom,
+      LegacyWordBorderSide.right,
+    ]) {
+      if (!margins.containsKey(side)) continue;
+      final width = margins[side];
+      if (width != null && (width < 0 || width > 31680)) {
+        throw const FormatException('Invalid Word cell margin.');
+      }
+      xml.add(
+        '<w:${side.name} w:w="${width ?? 0}" w:type="${width == null ? 'nil' : 'dxa'}"/>',
+      );
+    }
+    xml.add('</w:$element>');
   }
 
   void _tableStyleXml(_BoundedWordXml xml) {

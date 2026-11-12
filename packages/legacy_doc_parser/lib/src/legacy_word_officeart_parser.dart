@@ -121,7 +121,7 @@ class _OfficeArtShapeReader {
             type: _enum(0x01c4, 4),
             color: _color(0x01c0),
             opacityFixed16: _opacity(0x01c1),
-            widthEmu: _nonnegative(0x01cb),
+            widthEmu: _nonnegative(0x01cb, maximum: 0x0132f540),
             dash: _enum(0x01ce, 10),
             join: _enum(0x01d6, 2),
             cap: _enum(0x01d7, 2),
@@ -171,9 +171,25 @@ class _OfficeArtShapeReader {
         unsupported.add(id);
       }
     }
+    const wrapProperties = {0x0384, 0x0385, 0x0386, 0x0387};
+    final wrapDistances =
+        wrapProperties.any(
+          (id) => p.containsKey(id) || properties.complex.containsKey(id),
+        )
+        ? LegacyWordOfficeArtWrapDistances(
+            leftEmu: _nonnegative(0x0384),
+            topEmu: _nonnegative(0x0385),
+            rightEmu: _nonnegative(0x0386),
+            bottomEmu: _nonnegative(0x0387),
+          )
+        : null;
+    for (final id in wrapProperties) {
+      if (properties.complex.containsKey(id)) unsupported.add(id);
+    }
     final geometry = _geometry();
     if (fill?.type != null && fill!.type != 0) unsupported.add(0x0180);
     if (line?.type != null && line!.type != 0) unsupported.add(0x01c4);
+    if (properties.complex.containsKey(0x01cb)) unsupported.add(0x01cb);
     if (shadow?.type != null && shadow!.type != 0) unsupported.add(0x0200);
     // MS-ODRAW 2.3.7.2 marks the background color unused for a solid fill.
     // Line background color is inactive for a solid line unless the separate
@@ -249,6 +265,7 @@ class _OfficeArtShapeReader {
               id != 0x0380 &&
               id != 0x0381 &&
               id != 0x03bf &&
+              !wrapProperties.contains(id) &&
               !positionProperties.contains(id))) {
         unsupported.add(id);
       }
@@ -273,6 +290,7 @@ class _OfficeArtShapeReader {
       shadow: shadow,
       text: text,
       position: position,
+      wrapDistances: wrapDistances,
       groupShapeBooleanProperties: p[0x03bf],
       ink: ink,
       discussionAnchor: p[0x0307] == 1,
@@ -304,9 +322,9 @@ class _OfficeArtShapeReader {
     return value;
   }
 
-  int? _nonnegative(int id) {
+  int? _nonnegative(int id, {int maximum = 0x7fffffff}) {
     final value = p[id];
-    if (value != null && value > 0x7fffffff) {
+    if (value != null && value > maximum) {
       unsupported.add(id);
       return null;
     }

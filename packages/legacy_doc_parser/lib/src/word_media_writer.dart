@@ -410,9 +410,14 @@ extension _WordMedia on _StructuredWordWriter {
       _tooComplex();
     }
     final id = ++_drawingId;
+    final wrapDistances = _officeArtWrapDistances(drawing);
     _mediaStart(drawing.presentation);
     _xml.add(
-      '<w:drawing><wp:anchor distT="0" distB="0" distL="0" distR="0" '
+      '<w:drawing><wp:anchor '
+      'distT="${wrapDistances['top'] ?? 0}" '
+      'distB="${wrapDistances['bottom'] ?? 0}" '
+      'distL="${wrapDistances['left'] ?? 0}" '
+      'distR="${wrapDistances['right'] ?? 0}" '
       'simplePos="0" relativeHeight="$id" behindDoc="${drawing.behindText ? 1 : 0}" '
       'locked="${drawing.anchorLocked ? 1 : 0}" '
       'layoutInCell="${drawing.shape?.layoutInCell == false ? 0 : 1}" allowOverlap="1">'
@@ -945,6 +950,13 @@ Map<String, Object?> _drawingMetadata(LegacyWordDrawing drawing) => {
       'verticalRelativeTo': position.verticalRelativeTo,
       'semantics': 'WordFoptZeroBased',
       'unsupportedProperties': drawing.shape!.unsupportedProperties,
+    },
+  if (drawing.shape?.wrapDistances case final wrap?)
+    'officeArtWrapDistancesEmu': {
+      'left': wrap.leftEmu,
+      'top': wrap.topEmu,
+      'right': wrap.rightEmu,
+      'bottom': wrap.bottomEmu,
     },
   'wrapMode': drawing.wrapMode,
   'wrapSide': drawing.wrapSide,

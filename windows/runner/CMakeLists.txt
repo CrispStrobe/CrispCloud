@@ -46,3 +46,10 @@ add_dependencies(${BINARY_NAME} flutter_assemble)
 set(INTERNXT_DRIVE_RESOURCES
   "resources/app_icon.ico"
 )
+
+# Native receiver-format test; kept outside the distributed app bundle.
+add_executable(crisp_file_drag_data_test EXCLUDE_FROM_ALL "tests/file_drag_data_test.cpp")
+apply_standard_settings(crisp_file_drag_data_test)
+target_include_directories(crisp_file_drag_data_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+target_link_libraries(crisp_file_drag_data_test PRIVATE "shell32.lib" "ole32.lib" "uuid.lib")
+set_target_properties(crisp_file_drag_data_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/native-tests")

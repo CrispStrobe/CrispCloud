@@ -589,6 +589,14 @@ jobs:
           # Suppress MSVC experimental coroutine deprecation in local_auth_windows
           CL: /D_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS
 
+      - name: Verify native Windows file-drag receiver format
+        shell: pwsh
+        run: |
+          cmake --build build/windows/x64 --config Release --target crisp_file_drag_data_test
+          if ($LASTEXITCODE -ne 0) { throw "Native drag protocol test did not build" }
+          & ./build/windows/x64/native-tests/Release/crisp_file_drag_data_test.exe
+          if ($LASTEXITCODE -ne 0) { throw "Native drag protocol test failed" }
+
       - name: Package Windows build
         shell: pwsh
         run: Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath crispcloud-windows-x64.zip

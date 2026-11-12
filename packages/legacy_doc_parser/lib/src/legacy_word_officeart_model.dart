@@ -140,6 +140,21 @@ class LegacyWordOfficeArtPosition {
   final int? horizontalRelativeTo, verticalRelativeTo;
 }
 
+/// Explicit nonnegative distances between a shape and surrounding content.
+/// Word stores these OfficeArt values in EMUs, independently of text insets,
+/// the FSPA wrapping mode, and the shape's anchor rectangle. Null preserves
+/// absence; an explicit zero must not become a consumer's default clearance.
+/// Unsupported signed-negative/complex operands remain source evidence.
+class LegacyWordOfficeArtWrapDistances {
+  const LegacyWordOfficeArtWrapDistances({
+    this.leftEmu,
+    this.topEmu,
+    this.rightEmu,
+    this.bottomEmu,
+  });
+  final int? leftEmu, topEmu, rightEmu, bottomEmu;
+}
+
 /// Only the stream version and its declared byte extent are inspected. A
 /// matching header does not validate packets, properties or pen strokes.
 enum LegacyWordInkHeaderStatus {
@@ -217,6 +232,7 @@ class LegacyWordOfficeArtShape {
     this.shadow,
     this.text,
     this.position,
+    this.wrapDistances,
     this.groupShapeBooleanProperties,
     this.ink,
     this.discussionAnchor = false,
@@ -255,6 +271,7 @@ class LegacyWordOfficeArtShape {
   final LegacyWordOfficeArtShadow? shadow;
   final LegacyWordOfficeArtText? text;
   final LegacyWordOfficeArtPosition? position;
+  final LegacyWordOfficeArtWrapDistances? wrapDistances;
   final LegacyWordOfficeArtInk? ink;
 
   /// MS-ODRAW idDiscussAnchor equals 1. This is not a comment identifier.

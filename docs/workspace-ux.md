@@ -1,5 +1,38 @@
 # File workspace UX implementation
 
+## Selection, Find and external dragging in 1.2.8
+
+A plain click moves the cursor without clearing existing marks. Shift-click
+marks the visible range from the previous cursor anchor; Cmd-click on macOS
+or Ctrl-click elsewhere toggles individual marks. Shift with an arrow toggles
+the departed row, so it can also remove marks. At a pane boundary it toggles
+the current row. Copy, move and drag use the marks; F3 and F4 use the focused
+file. These rules share the same provider across desktop platforms, including
+list, grid and current-column layouts.
+
+While Find is active, Up/Down traverse its matching files. Jump and select
+modes wrap between matches; filter mode stays within the visible matches and
+stops at either end. A modifier is captured when the pointer goes down, so
+releasing Shift before a delayed click is recognized does not change the click.
+Leaving a top-level archive with `..` restores the archive's cursor, mark and
+scroll position in its containing folder.
+
+For local files and folders, dragging outside the window hands the complete
+captured selection to the desktop OS: file URLs on macOS, Unicode `CF_HDROP`
+on Windows, and `text/uri-list` on Linux. The receiver is offered a copy and
+sandbox read access remains held until it accepts or cancels. Existing in-app
+folder drops retain their reviewed copy/move workflow. Cloud and archive
+members must first be saved locally for external dragging. Native external
+drag-out is not implemented for Android, iOS or the browser; their existing
+in-app interactions remain available.
+
+Provider and widget regressions cover range selection, preserved marks,
+modifier timing, Shift deselection, Find navigation and archive return. A
+Windows receiver test independently decodes every exported Unicode path.
+The native desktop implementations also require their platform builds; a
+passing Dart gesture test alone does not certify OS drag behavior.
+
+
 ## Current integrated implementation
 
 The current runtime checkpoint is
