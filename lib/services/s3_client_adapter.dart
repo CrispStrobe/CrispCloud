@@ -1118,9 +1118,11 @@ class S3ClientAdapter extends CloudStorageClient
 
       if (response.statusCode != 200) {
         await _config.clearCredentials();
-        throw S3OperationFailure(S3OperationCode.connection,
+        throw S3OperationFailure(
+          S3OperationCode.connection,
           'S3 connection test failed (HTTP ${response.statusCode}): ${response.body}',
-          {'status': response.statusCode, 'body': response.body});
+          {'status': response.statusCode, 'body': response.body},
+        );
       }
 
       _authenticated = true;
@@ -1626,9 +1628,11 @@ class S3ClientAdapter extends CloudStorageClient
       final response = await _signedRequest('GET', uri, boundedResponse: true);
 
       if (response.statusCode != 200) {
-        throw S3OperationFailure(S3OperationCode.listParts,
+        throw S3OperationFailure(
+          S3OperationCode.listParts,
           'S3 ListParts failed (HTTP ${response.statusCode}): ${response.body}',
-          {'status': response.statusCode, 'body': response.body});
+          {'status': response.statusCode, 'body': response.body},
+        );
       }
 
       final root = xml.XmlDocument.parse(response.body).rootElement;
@@ -1708,7 +1712,11 @@ class S3ClientAdapter extends CloudStorageClient
         .where((record) => record['key'] == key)
         .toList();
     if (tracked.isEmpty) {
-      throw S3OperationFailure(S3OperationCode.missingInterruptedUpload, 'No interrupted upload found for $remotePath', {'path': remotePath});
+      throw S3OperationFailure(
+        S3OperationCode.missingInterruptedUpload,
+        'No interrupted upload found for $remotePath',
+        {'path': remotePath},
+      );
     }
     final matching = tracked
         .where(
@@ -2012,7 +2020,11 @@ class S3ClientAdapter extends CloudStorageClient
     );
 
     if (response.statusCode != 206 && response.statusCode != 200) {
-      throw S3OperationFailure(S3OperationCode.rangeDownload, 'S3 range download failed (HTTP ${response.statusCode})', {'status': response.statusCode});
+      throw S3OperationFailure(
+        S3OperationCode.rangeDownload,
+        'S3 range download failed (HTTP ${response.statusCode})',
+        {'status': response.statusCode},
+      );
     }
     return response.bodyBytes;
   }
@@ -2147,7 +2159,11 @@ class S3ClientAdapter extends CloudStorageClient
 
     // S3 doesn't support partial writes — upload the full file
     final bytes = await file.readAsBytes();
-    await uploadFile(bytes, p.posix.basename(remotePath), p.posix.dirname(remotePath));
+    await uploadFile(
+      bytes,
+      p.posix.basename(remotePath),
+      p.posix.dirname(remotePath),
+    );
 
     // Cache new block map
     if (cacheDir != null) {
@@ -2164,7 +2180,10 @@ class S3ClientAdapter extends CloudStorageClient
 
   void _ensureAuth() {
     if (!_authenticated || _accessKey == null || _secretKey == null) {
-      throw S3OperationFailure(S3OperationCode.notAuthenticated, 'Not authenticated. Call login() first.');
+      throw S3OperationFailure(
+        S3OperationCode.notAuthenticated,
+        'Not authenticated. Call login() first.',
+      );
     }
   }
 
