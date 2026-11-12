@@ -112,7 +112,7 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
   final _password = TextEditingController();
   final _url = TextEditingController();
   final _notes = TextEditingController();
-  final _saves = SaveCoordinator<Uint8List>();
+  var _saves = SaveCoordinator<Uint8List>();
   final _messenger = GlobalKey<ScaffoldMessengerState>();
 
   CapturedFileTarget? _target;
@@ -134,6 +134,8 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
   Route<dynamic>? _prompt;
   NavigatorState? _promptNavigator;
   int _generation = 0;
+  int _documentEpoch = 0;
+  int _clipboardGeneration = 0;
   bool _loading = true;
   bool _locked = true;
   bool _unlocking = false;
@@ -169,13 +171,21 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
     super.didUpdateWidget(oldWidget);
     if (oldWidget.file != widget.file ||
         oldWidget.file.name != widget.file.name ||
+        oldWidget.side != widget.side ||
+        oldWidget.readOnly != widget.readOnly ||
+        !identical(oldWidget.targetOverride, widget.targetOverride) ||
         !identical(oldWidget.origin, widget.origin) ||
         !identical(oldWidget.bytesOverride, widget.bytesOverride)) {
       _releaseSecrets();
       _encrypted = null;
       _target = null;
       _encryptedRevision = 0;
-      _saves.markLoaded();
+      _saves.dispose();
+      _saves = SaveCoordinator<Uint8List>();
+      _activeSave = null;
+      _activeLock = null;
+      _saving = false;
+      _pickingKeyFile = false;
       _loading = true;
       _errorKey = null;
       unawaited(_load());
@@ -243,6 +253,7 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
 
   Future<void> _pickKeyFile() async {
     if (_busy) return;
+    final document = _documentEpoch;
     setState(() {
       _pickingKeyFile = true;
       _errorKey = null;
@@ -254,18 +265,24 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
         withData: false,
         withReadStream: true,
       );
+      if (!mounted || document != _documentEpoch) return;
       if (result == null || result.files.isEmpty) return;
       final file = result.files.single;
       if (file.size > kKeePassMaxKeyFileBytes) {
-        if (mounted) setState(() => _errorKey = 'keyFileLimit');
+        if (mounted && document == _documentEpoch) {
+          setState(() => _errorKey = 'keyFileLimit');
+        }
         return;
       }
       final stream = file.readStream;
       if (stream != null) {
         final builder = BytesBuilder(copy: true);
         await for (final chunk in stream) {
+          if (!mounted || document != _documentEpoch) return;
           if (builder.length + chunk.length > kKeePassMaxKeyFileBytes) {
-            if (mounted) setState(() => _errorKey = 'keyFileLimit');
+            if (mounted && document == _documentEpoch) {
+              setState(() => _errorKey = 'keyFileLimit');
+            }
             return;
           }
           builder.add(chunk);
@@ -273,15 +290,19 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
         chosen = builder.takeBytes();
       } else if (file.bytes case final bytes?) {
         if (bytes.length > kKeePassMaxKeyFileBytes) {
-          if (mounted) setState(() => _errorKey = 'keyFileLimit');
+          if (mounted && document == _documentEpoch) {
+            setState(() => _errorKey = 'keyFileLimit');
+          }
           return;
         }
         chosen = Uint8List.fromList(bytes);
       } else {
-        if (mounted) setState(() => _errorKey = 'keyFileError');
+        if (mounted && document == _documentEpoch) {
+          setState(() => _errorKey = 'keyFileError');
+        }
         return;
       }
-      if (!mounted || _backgrounded) return;
+      if (!mounted || document != _documentEpoch || _backgrounded) return;
       setState(() {
         _clearKeyFile();
         _keyFile = chosen;
@@ -289,10 +310,14 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
         _keyFileName = file.name;
       });
     } catch (_) {
-      if (mounted) setState(() => _errorKey = 'keyFileError');
+      if (mounted && document == _documentEpoch) {
+        setState(() => _errorKey = 'keyFileError');
+      }
     } finally {
       chosen?.fillRange(0, chosen!.length, 0);
-      if (mounted) setState(() => _pickingKeyFile = false);
+      if (mounted && document == _documentEpoch) {
+        setState(() => _pickingKeyFile = false);
+      }
     }
   }
 
@@ -379,10 +404,13 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
     if (_locked && !_unlocking) return Future<void>.value();
     final future = _performLock();
     _activeLock = future;
-    return future.whenComplete(() => _activeLock = null);
+    return future.whenComplete(() {
+      if (identical(_activeLock, future)) _activeLock = null;
+    });
   }
 
   Future<void> _performLock() async {
+    final document = _documentEpoch;
     ++_generation;
     _idleTimer?.cancel();
     _masterPassword.clear();
@@ -401,6 +429,7 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
     // A write already in flight owns its session until serialization completes.
     // The privacy shield above is immediate, even if the network is slow.
     await _activeSave;
+    if (!mounted || document != _documentEpoch) return;
     final session = _session;
     if (!mounted || session == null) {
       if (mounted) setState(() => _locking = false);
@@ -415,7 +444,11 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
         if (checkpoint.length > kKeePassMaxFileBytes) {
           throw const KeePassException(KeePassErrorCode.resourceLimit);
         }
-        if (!mounted || !identical(session, _session)) return;
+        if (!mounted ||
+            document != _documentEpoch ||
+            !identical(session, _session)) {
+          return;
+        }
         _encrypted = Uint8List.fromList(checkpoint);
         _encryptedRevision = _saves.revision;
       }
@@ -427,7 +460,7 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
       _search.clear();
       _lockFailed = false;
     } catch (_) {
-      if (!mounted) return;
+      if (!mounted || document != _documentEpoch) return;
       if (_draftChanged) {
         _hiddenDraft = _HiddenDraft(
           fields: _draftFields,
@@ -441,7 +474,9 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
       _lockFailed = true;
       _errorKey = 'lockFailure';
     } finally {
-      if (mounted) setState(() => _locking = false);
+      if (mounted && document == _documentEpoch) {
+        setState(() => _locking = false);
+      }
     }
   }
 
@@ -597,10 +632,14 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
     }
     final future = _performSave();
     _activeSave = future;
-    return future.whenComplete(() => _activeSave = null);
+    return future.whenComplete(() {
+      if (identical(_activeSave, future)) _activeSave = null;
+    });
   }
 
   Future<bool> _performSave() async {
+    final document = _documentEpoch;
+    final saves = _saves;
     final session = _session!;
     final target = _target!;
     setState(() {
@@ -609,15 +648,19 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
     });
     try {
       if (!_applyDraft()) return false;
-      final revision = _saves.revision;
+      final revision = saves.revision;
       final bytes = await session.save();
-      if (!mounted || !identical(session, _session)) return false;
+      if (!mounted ||
+          document != _documentEpoch ||
+          !identical(session, _session)) {
+        return false;
+      }
       if (bytes.length > kKeePassMaxFileBytes) {
         throw const KeePassException(KeePassErrorCode.resourceLimit);
       }
       _encrypted = Uint8List.fromList(bytes);
       _encryptedRevision = revision;
-      final result = await _saves.save(
+      final result = await saves.save(
         snapshot: () => SaveSnapshot(revision: revision, value: bytes),
         write: (snapshot) async {
           final outcome = await target.save(snapshot.value);
@@ -626,7 +669,7 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
           }
         },
       );
-      if (!mounted) return false;
+      if (!mounted || document != _documentEpoch) return false;
       if (!result.isSuccess) {
         _errorKey = switch (result.error) {
           _DownloadedCopy() => 'downloadedCopy',
@@ -639,13 +682,15 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
       if (!_locked) _notice('saved');
       return !result.isDirty;
     } on KeePassException catch (error) {
-      if (mounted) _errorKey = _errorFor(error);
+      if (mounted && document == _documentEpoch) _errorKey = _errorFor(error);
       return false;
     } catch (_) {
-      if (mounted) _errorKey = 'saveError';
+      if (mounted && document == _documentEpoch) _errorKey = 'saveError';
       return false;
     } finally {
-      if (mounted) setState(() => _saving = false);
+      if (mounted && document == _documentEpoch) {
+        setState(() => _saving = false);
+      }
     }
   }
 
@@ -721,11 +766,13 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
   }
 
   Future<void> _copy(String value, {bool secret = false}) async {
+    final generation = ++_clipboardGeneration;
     try {
       await Clipboard.setData(ClipboardData(text: value));
+      if (generation != _clipboardGeneration) return;
+      _clipboardTimer?.cancel();
+      _copiedPassword = secret ? value : null;
       if (secret) {
-        _clipboardTimer?.cancel();
-        _copiedPassword = value;
         if (_locked || !mounted) {
           unawaited(_clearCopiedPassword());
         } else {
@@ -744,11 +791,12 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
   Future<void> _clearCopiedPassword() async {
     _clipboardTimer?.cancel();
     final copied = _copiedPassword;
+    final generation = _clipboardGeneration;
     _copiedPassword = null;
     if (copied == null) return;
     try {
       final current = await Clipboard.getData(Clipboard.kTextPlain);
-      if (current?.text == copied) {
+      if (generation == _clipboardGeneration && current?.text == copied) {
         await Clipboard.setData(const ClipboardData(text: ''));
       }
     } catch (_) {
@@ -768,6 +816,7 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
 
   void _releaseSecrets({bool disposing = false}) {
     ++_generation;
+    ++_documentEpoch;
     _idleTimer?.cancel();
     if (disposing) {
       // The Navigator removes its routes while the widget tree is disposed.

@@ -54,6 +54,37 @@ Matcher _error(KeePassErrorCode code) =>
     isA<KeePassException>().having((error) => error.code, 'code', code);
 
 void main() {
+  test('caps tiny inner binary records before allocation and before save', () {
+    final writer = BytesWriter()
+      ..writeUint8(1)
+      ..writeUint32(4)
+      ..writeUint32(2)
+      ..writeUint8(2)
+      ..writeUint32(32)
+      ..writeBytes(Uint8List(32));
+    for (var index = 0; index < 4097; index++) {
+      writer
+        ..writeUint8(3)
+        ..writeUint32(1)
+        ..writeUint8(0);
+    }
+    writer
+      ..writeUint8(0)
+      ..writeUint32(0);
+    final header = KdbxHeader.create(credentials: KdbxCredentials());
+    expect(
+      () => header.readInnerHeader(BytesReader(writer.bytes)),
+      throwsA(isA<ResourceLimitError>()),
+    );
+    expect(header.binaries.length, 4096);
+    header.binaries.appendFromInnerHeader(
+      PlainBinary(data: Uint8List(0), compressed: false),
+    );
+    expect(() => header.innerBytes, throwsA(isA<ResourceLimitError>()));
+    header.binaries.dispose();
+    header.credentials.dispose();
+  });
+
   test(
     'opens a KeePass-authored KDBX3 file with XML v1 key and decoded fields',
     () async {
@@ -176,7 +207,7 @@ void main() {
 
   test('retains KDBX4.1 custom metadata on an unchanged round trip', () async {
     final data = _fixture('kdbx4.1.kdbx');
-    final credentials = () =>
+    KdbxCredentials credentials() =>
         KdbxCredentials(password: ProtectedData.fromString('test'));
     final original = await KdbxRawDocument.open(
       data: data,

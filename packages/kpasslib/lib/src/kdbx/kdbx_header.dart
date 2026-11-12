@@ -352,6 +352,9 @@ class KdbxHeader {
   }
 
   _writeBinaries(BytesWriter writer) {
+    if (binaries.length > 4096) {
+      throw const ResourceLimitError('inner binary count');
+    }
     for (final item in binaries.all) {
       final binary = item;
       final isProtected = binary is ProtectedBinary;
@@ -507,6 +510,8 @@ class KdbxHeader {
         case _OuterField.comment:
           comment = bytes;
         case _OuterField.cipherID:
+          if (size != 16)
+            throw const FileCorruptedError('cipher identifier size');
           dataCipherUuid = KdbxUuid.fromBytes(bytes);
         case _OuterField.compressionFlags:
           if (size != 4)
@@ -539,6 +544,9 @@ class KdbxHeader {
   }
 
   _readBinary(List<int> bytes) {
+    if (binaries.length >= 4096) {
+      throw const ResourceLimitError('inner binary count');
+    }
     if (bytes.isEmpty || (bytes.first & ~1) != 0) {
       throw const UnsupportedValueError('inner binary flags');
     }
@@ -607,6 +615,16 @@ class KdbxHeader {
     }
     if (crsAlgorithm == null) {
       throw FileCorruptedError('no crs algorithm in header');
+    }
+    if (crsAlgorithm != CrsAlgorithm.salsa20 &&
+        crsAlgorithm != CrsAlgorithm.chaCha20) {
+      throw const UnsupportedValueError('inner stream algorithm');
+    }
+    if (protectedStreamKey!.isEmpty) {
+      throw const FileCorruptedError('empty protected stream key');
+    }
+    if (protectedStreamKey!.length > 1024) {
+      throw const ResourceLimitError('protected stream key size');
     }
   }
 

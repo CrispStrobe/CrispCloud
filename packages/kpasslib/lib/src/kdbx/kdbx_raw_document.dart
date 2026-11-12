@@ -79,6 +79,41 @@ class KdbxRawDocument {
 
   bool isProtected(XmlElement element) => _protected.containsKey(element);
 
+  /// Conservative storage estimate used before growing the editing tree.
+  int get estimatedBytes {
+    _checkOpen();
+    var result = _estimateNode(xml) + 1024;
+    for (final binary in header.binaries.all) {
+      result += binary is ProtectedBinary
+          ? binary.protectedData.length
+          : binary.data.length;
+    }
+    return result;
+  }
+
+  int estimateHistorySnapshot(XmlElement entry) {
+    _checkOpen();
+    var result = 1024;
+    for (final child in entry.children) {
+      if (child is XmlElement && child.name.qualified == 'History') continue;
+      result += _estimateNode(child);
+    }
+    return result;
+  }
+
+  int _estimateNode(XmlNode node) {
+    var result = utf8.encode(node.toXmlString()).length;
+    final elements = [
+      if (node is XmlElement) node,
+      ...node.descendants.whereType<XmlElement>(),
+    ];
+    for (final element in elements) {
+      final value = _protected[element];
+      if (value != null) result += ((value.length + 2) ~/ 3) * 4;
+    }
+    return result;
+  }
+
   String textOf(XmlElement element) {
     _checkOpen();
     return _protected[element]?.text ?? element.innerText;

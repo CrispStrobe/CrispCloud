@@ -139,8 +139,9 @@ class KeePassSession {
 
   void _checkMutable() {
     _openDocument;
-    if (_pendingSave != null)
+    if (_pendingSave != null) {
       throw const KeePassException(KeePassErrorCode.locked);
+    }
   }
 
   String get databaseName {
@@ -175,8 +176,10 @@ class KeePassSession {
   List<KeePassEntryInfo> get entries {
     final raw = _openDocument;
     final meta = raw.xml.rootElement.getElement('Meta')!;
-    final recycle = meta.getElement('RecycleBinEnabled')?.innerText.toLowerCase() == 'true'
-        ? _groups[meta.getElement('RecycleBinUUID')?.innerText] : null;
+    final recycle =
+        meta.getElement('RecycleBinEnabled')?.innerText.toLowerCase() == 'true'
+        ? _groups[meta.getElement('RecycleBinUUID')?.innerText]
+        : null;
     return List.unmodifiable(
       _entries.entries.map((entry) {
         final fields = _fieldNodes(entry.value);
@@ -187,7 +190,8 @@ class KeePassSession {
           userName: fields['UserName'] == null
               ? ''
               : raw.textOf(fields['UserName']!),
-        isRecycled: recycle != null && entry.value.ancestors.contains(recycle),
+          isRecycled:
+              recycle != null && entry.value.ancestors.contains(recycle),
         );
       }),
     );
@@ -218,6 +222,7 @@ class KeePassSession {
     final group = _groups[groupId];
     if (group == null) throw const KeePassException(KeePassErrorCode.corrupt);
     _validateFields(fields);
+    _checkGrowth(fields);
     if (_groups.length + _entries.length >= _maxItems) {
       throw const KeePassException(KeePassErrorCode.resourceLimit);
     }
@@ -242,8 +247,12 @@ class KeePassSession {
     final entry = _entries[id];
     if (entry == null) throw const KeePassException(KeePassErrorCode.corrupt);
     final old = entryFields(id)._values;
-    if (fields._values.entries.every((value) => old[value.key] == value.value))
+    if (fields._values.entries.every(
+      (value) => old[value.key] == value.value,
+    )) {
       return;
+    }
+    _checkGrowth(fields, history: entry);
     final snapshot = raw.cloneElement(entry, omitHistory: true);
     final history =
         entry.getElement('History') ?? XmlElement(XmlName('History'));
@@ -373,10 +382,12 @@ class KeePassSession {
           group(child, path, depth + 1);
         } else if (child.name.qualified == 'Entry') {
           final entryId = _id(child);
-          if (!seen.add(entryId))
+          if (!seen.add(entryId)) {
             throw const KeePassException(KeePassErrorCode.corrupt);
-          if (seen.length > _maxItems)
+          }
+          if (seen.length > _maxItems) {
             throw const KeePassException(KeePassErrorCode.resourceLimit);
+          }
           _fieldNodes(child);
           _entries[entryId] = child;
           _entryGroups[entryId] = id;
@@ -474,13 +485,30 @@ class KeePassSession {
   }
 
   static String _id(XmlElement node) {
-    if (node.findElements('UUID').length != 1)
+    if (node.findElements('UUID').length != 1) {
       throw const KeePassException(KeePassErrorCode.corrupt);
+    }
     final id = node.getElement('UUID')!.innerText;
     final decoded = base64.decode(id);
-    if (decoded.length != 16 || base64.encode(decoded) != id)
+    if (decoded.length != 16 || base64.encode(decoded) != id) {
       throw const KeePassException(KeePassErrorCode.corrupt);
+    }
     return id;
+  }
+
+  void _checkGrowth(KeePassEntryFields fields, {XmlElement? history}) {
+    final raw = _openDocument;
+    var added = 4096;
+    for (final value in fields._values.values) {
+      // Account for XML escaping and protected base64 expansion before changing
+      // original values or creating a potentially large history snapshot.
+      added += utf8.encode(XmlText(value).toXmlString()).length;
+      added += ((utf8.encode(value).length + 2) ~/ 3) * 4;
+    }
+    if (history != null) added += raw.estimateHistorySnapshot(history);
+    if (raw.estimatedBytes + added > kKeePassMaxFileBytes) {
+      throw const KeePassException(KeePassErrorCode.resourceLimit);
+    }
   }
 
   static void _validateFields(KeePassEntryFields fields) {
@@ -545,8 +573,9 @@ Future<Uint8List> _saveKeePass(KdbxRawDocument document) async {
   try {
     _validateHeader(document.header);
     final data = await document.save(maxDecodedBytes: kKeePassMaxFileBytes);
-    if (data.length > kKeePassMaxFileBytes)
+    if (data.length > kKeePassMaxFileBytes) {
       throw const KeePassException(KeePassErrorCode.resourceLimit);
+    }
     return data;
   } catch (error) {
     throw _safeError(error);
@@ -563,10 +592,12 @@ void _validateHeader(KdbxHeader header) {
     throw const KeePassException(KeePassErrorCode.corrupt);
   }
   void aesRounds(Object? rounds) {
-    if (rounds is! int || rounds < 1)
+    if (rounds is! int || rounds < 1) {
       throw const KeePassException(KeePassErrorCode.corrupt);
-    if (rounds > 2000000)
+    }
+    if (rounds > 2000000) {
       throw const KeePassException(KeePassErrorCode.resourceLimit);
+    }
   }
 
   if (header.version.$1 == 3) {
@@ -629,11 +660,14 @@ void _validateHeader(KdbxHeader header) {
 
 KeePassException _safeError(Object error) {
   if (error is KeePassException) return error;
-  if (error is InvalidCredentialsError)
+  if (error is InvalidCredentialsError) {
     return const KeePassException(KeePassErrorCode.invalidCredentials);
-  if (error is UnsupportedValueError)
+  }
+  if (error is UnsupportedValueError) {
     return const KeePassException(KeePassErrorCode.unsupported);
-  if (error is ResourceLimitError || error is ArchiveLimitException)
+  }
+  if (error is ResourceLimitError || error is ArchiveLimitException) {
     return const KeePassException(KeePassErrorCode.resourceLimit);
+  }
   return const KeePassException(KeePassErrorCode.corrupt);
 }

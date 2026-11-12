@@ -184,11 +184,28 @@ Future<void> _open(
   bool detached = false,
   Duration inactivity = const Duration(minutes: 5),
   KeePassSessionOpener? opener,
+  ValueNotifier<_Target>? targetSwitcher,
 }) async {
   tester.view.physicalSize = const Size(1100, 900);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   addTearDown(() => tester.pumpWidget(const SizedBox.shrink()));
+  final initialTarget = target ?? _Target(sessions.bytes(0));
+  final file = FileItem(
+    name: 'vault.kdbx',
+    path: '/vault.kdbx',
+    isFolder: false,
+    size: 9,
+  );
+  Widget editor(_Target selectedTarget) => KeePassEditorDialog(
+    file: file,
+    side: PanelSide.local,
+    targetOverride: detached ? null : selectedTarget,
+    bytesOverride: detached ? sessions.bytes(0) : null,
+    sessionOpener: opener ?? sessions.open,
+    readOnly: readOnly,
+    inactivityTimeout: inactivity,
+  );
   await tester.pumpWidget(
     ProviderScope(
       child: MaterialApp(
@@ -199,21 +216,13 @@ Future<void> _open(
                 context: context,
                 barrierDismissible: false,
                 builder: (_) => Dialog.fullscreen(
-                  child: KeePassEditorDialog(
-                    file: FileItem(
-                      name: 'vault.kdbx',
-                      isFolder: false,
-                      size: 9,
-                    ),
-                    side: PanelSide.local,
-                    targetOverride: detached
-                        ? null
-                        : target ?? _Target(sessions.bytes(0)),
-                    bytesOverride: detached ? sessions.bytes(0) : null,
-                    sessionOpener: opener ?? sessions.open,
-                    readOnly: readOnly,
-                    inactivityTimeout: inactivity,
-                  ),
+                  child: targetSwitcher == null
+                      ? editor(initialTarget)
+                      : ValueListenableBuilder<_Target>(
+                          valueListenable: targetSwitcher,
+                          builder: (_, selectedTarget, _) =>
+                              editor(selectedTarget),
+                        ),
                 ),
               ),
               child: const Text('Open database'),
@@ -254,6 +263,91 @@ void main() {
   });
 
   testWidgets(
+    'an old save cannot clean a replacement document with the same file name',
+    (tester) async {
+      final sessions = _Sessions();
+      final first = _Target(sessions.bytes(0))..barrier = Completer<void>();
+      final second = _Target(sessions.bytes(0));
+      final current = ValueNotifier(first);
+      addTearDown(current.dispose);
+      await _open(tester, sessions, targetSwitcher: current);
+      await _unlock(tester);
+      await _editPassword(tester, 'first-document-edit');
+      await tester.tap(_key('save'));
+      await tester.pump();
+      current.value = second;
+      await tester.pumpAndSettle();
+      expect(find.text('KeePass database locked'), findsOneWidget);
+      expect(sessions.opened.first.disposed, isTrue);
+      await _unlock(tester);
+      await _editPassword(tester, 'second-document-edit');
+      await tester.ensureVisible(_key('apply-entry'));
+      await tester.tap(_key('apply-entry'));
+      await tester.pump();
+      first.barrier!.complete();
+      await tester.pumpAndSettle();
+      expect(first.writes, hasLength(1));
+      expect(second.writes, isEmpty);
+      expect(find.text('vault.kdbx *'), findsOneWidget);
+      expect(tester.widget<IconButton>(_key('save')).onPressed, isNotNull);
+      await tester.tap(_key('save'));
+      await tester.pumpAndSettle();
+      expect(second.writes, hasLength(1));
+      expect(
+        sessions.snapshots[second.bytes.last]!['one']!.fields.password,
+        'second-document-edit',
+      );
+      expect(find.text('vault.kdbx *'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'delayed clipboard cleanup cannot erase a newer copied password',
+    (tester) async {
+      String? clipboard;
+      final delayedRead = Completer<Object?>();
+      var reads = 0;
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (call) async {
+          if (call.method == 'Clipboard.setData') {
+            clipboard = (call.arguments as Map)['text'] as String;
+          }
+          if (call.method == 'Clipboard.getData') {
+            if (reads++ == 0) return delayedRead.future;
+            return {'text': clipboard};
+          }
+          return null;
+        },
+      );
+      final sessions = _Sessions();
+      sessions.snapshots[0]!['two'] = const _Record(
+        'personal',
+        KeePassEntryFields(
+          title: 'Second login',
+          password: 'newer-clipboard-secret',
+        ),
+      );
+      await _open(tester, sessions);
+      await _unlock(tester);
+      await tester.tap(_key('entry-one'));
+      await tester.pump();
+      await tester.tap(_key('copy-password'));
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 31));
+      expect(reads, 1);
+      await tester.tap(_key('entry-two'));
+      await tester.pump();
+      await tester.tap(_key('copy-password'));
+      await tester.pump();
+      expect(clipboard, 'newer-clipboard-secret');
+      delayedRead.complete({'text': 'entry-secret-42'});
+      await tester.pump();
+      expect(clipboard, 'newer-clipboard-secret');
+    },
+  );
+
+  testWidgets(
     'real KeePass fixture unlocks, edits and saves a reopenable encrypted file',
     (tester) async {
       Uint8List fixture(String name) => base64.decode(
@@ -262,7 +356,9 @@ void main() {
             .replaceAll(RegExp(r'\s'), ''),
       );
       final keyFile = fixture('demo.key');
-      final target = _Target(fixture('demo.kdbx'));
+      final target = (await tester.runAsync(
+        () async => _Target(fixture('demo.kdbx')),
+      ))!;
       final originalPicker = FilePicker.platform;
       FilePicker.platform = _Picker(
         PlatformFile(
@@ -272,7 +368,7 @@ void main() {
         ),
       );
       addTearDown(() => FilePicker.platform = originalPicker);
-      final unlocked = Completer<void>();
+      final unlocked = (await tester.runAsync(() async => Completer<void>()))!;
       await _open(
         tester,
         _Sessions(),
