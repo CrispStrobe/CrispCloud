@@ -5,16 +5,43 @@
 // chrome: menu bar, tabbed ribbon, font and paragraph controls, insert/layout
 // commands, sheet formatting, slide transitions and animations.
 
+import 'dart:math' as math;
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart'
-    show defaultTargetPlatform, kIsWeb, listEquals;
+    show compute, defaultTargetPlatform, kIsWeb, listEquals;
 import 'package:flutter/material.dart';
 import 'package:quds_office_editor/quds_office_editor.dart';
 
 import '../l10n/office_editor_strings.dart';
 import '../l10n/office_ribbon_control_strings.dart';
 import '../services/office_editor_menu.dart';
+import '../services/office_picture.dart';
 import 'office_editor_dialogs.dart';
+
+// A modal result belongs to the document/story/range that opened it. Layout and
+// viewport notifications are harmless; content or target changes invalidate it.
+Object _wordEditTarget(WordEditorController controller) => (
+  document: controller.document,
+  revision: controller.contentRevision,
+  caret: controller.caret,
+  paragraph: controller.caret.paragraphIndex,
+  offset: controller.caret.logicalIndex,
+  anchorParagraph: controller.caret.selectionAnchorParagraph,
+  anchorOffset: controller.caret.selectionAnchor,
+  headerFooter: controller.isEditingHeaderFooter,
+  footer: controller.isEditingFooter,
+  section: controller.isEditingHeaderFooter
+      ? controller.editingSectionIndex
+      : null,
+  comment: controller.isEditingComment ? controller.selectedComment : null,
+  frame: controller.selectedFrame,
+  editingFrame: controller.editingFrame,
+  visual: controller.selectedVisual,
+  equation: controller.selectedEquation,
+  table: controller.selectedTable,
+  tableBand: controller.selectedTableBand,
+);
 
 /// Full ribbon chrome for an [OfficeController].
 class OfficeEditorRibbon extends StatefulWidget {
@@ -2068,7 +2095,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
   bool get _canMutate => _c.config.allowsMutation;
 
   /// Entry point used by the native macOS menu bar.
-  void perform(OfficeEditorAction action) {
+  Future<void> perform(OfficeEditorAction action) async {
     switch (action) {
       case OfficeEditorAction.save:
         widget.onSave();
@@ -2126,9 +2153,9 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
         if (widget.kind == OfficeEditorKind.word) _insertHyperlink();
       case OfficeEditorAction.insertPicture:
         if (widget.kind == OfficeEditorKind.word) {
-          _wordInsertPicture();
+          await _wordInsertPicture();
         } else if (widget.kind == OfficeEditorKind.slides) {
-          _slideInsertPicture();
+          await _slideInsertPicture();
         }
       case OfficeEditorAction.insertComment:
         if (widget.kind == OfficeEditorKind.word) _insertComment();
@@ -2239,7 +2266,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
       case OfficeEditorAction.slideTable:
         if (widget.kind == OfficeEditorKind.slides) _slideInsertTable();
       case OfficeEditorAction.slidePicture:
-        if (widget.kind == OfficeEditorKind.slides) _slideInsertPicture();
+        if (widget.kind == OfficeEditorKind.slides) await _slideInsertPicture();
       case OfficeEditorAction.speakerNotes:
         if (widget.kind == OfficeEditorKind.slides) _slideNotes();
       case OfficeEditorAction.slideShow:
@@ -2449,6 +2476,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
     if (!_canMutate) return;
     final WordEditorController controller = _word;
     final WmlRunProps current = _runProps.copy();
+    final Object target = _wordEditTarget(controller);
     final WordFontChoice? choice = await showWordFontDialog(
       context,
       current: current,
@@ -2456,42 +2484,37 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
     if (choice == null ||
         !mounted ||
         !_canMutate ||
-        !identical(controller, widget.controller)) {
+        !identical(controller, widget.controller) ||
+        _wordEditTarget(controller) != target ||
+        choice.edited.isEmpty) {
       return;
     }
-    final String initialFamily = current.asciiFont.isEmpty
-        ? 'Arial'
-        : current.asciiFont;
-    final bool familyChanged = choice.family != initialFamily;
+    final Set<WordFontProperty> edited = choice.edited;
     final int halfPoints = (choice.sizePt * 2).round();
-    if (!familyChanged &&
-        halfPoints == current.fontSizeHalfPoints &&
-        choice.bold == current.bold &&
-        choice.italic == current.italic &&
-        choice.underline == current.underline &&
-        choice.strike == current.strike &&
-        choice.color == current.color &&
-        choice.highlight == current.highlight &&
-        choice.vertAlign == current.vertAlign) {
-      return;
-    }
     controller.applyRunFormat((WmlRunProps p) {
       // A selection can contain several fonts and character styles. Apply
-      // only controls the user changed, preserving every other run property.
-      if (familyChanged) {
+      // only controls explicitly used, including choosing the caret's value
+      // to make a mixed selection uniform. Untouched Apply remains a no-op.
+      if (edited.contains(WordFontProperty.family)) {
         p.asciiFont = choice.family;
         p.csFont = choice.family;
       }
-      if (halfPoints != current.fontSizeHalfPoints) {
+      if (edited.contains(WordFontProperty.size)) {
         p.fontSizeHalfPoints = halfPoints;
       }
-      if (choice.bold != current.bold) p.bold = choice.bold;
-      if (choice.italic != current.italic) p.italic = choice.italic;
-      if (choice.underline != current.underline) p.underline = choice.underline;
-      if (choice.strike != current.strike) p.strike = choice.strike;
-      if (choice.color != current.color) p.color = choice.color;
-      if (choice.highlight != current.highlight) p.highlight = choice.highlight;
-      if (choice.vertAlign != current.vertAlign) p.vertAlign = choice.vertAlign;
+      if (edited.contains(WordFontProperty.bold)) p.bold = choice.bold;
+      if (edited.contains(WordFontProperty.italic)) p.italic = choice.italic;
+      if (edited.contains(WordFontProperty.underline)) {
+        p.underline = choice.underline;
+      }
+      if (edited.contains(WordFontProperty.strike)) p.strike = choice.strike;
+      if (edited.contains(WordFontProperty.color)) p.color = choice.color;
+      if (edited.contains(WordFontProperty.highlight)) {
+        p.highlight = choice.highlight;
+      }
+      if (edited.contains(WordFontProperty.vertAlign)) {
+        p.vertAlign = choice.vertAlign;
+      }
     });
   }
 
@@ -2584,35 +2607,63 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
   }
 
   Future<void> _wordInsertPicture() async {
-    final PlatformFile? file = await _pickImage();
-    if (file?.bytes == null) return;
-    _word.insertPicture(
+    if (!_canMutate) return;
+    final controller = _word;
+    final target = _wordEditTarget(controller);
+    final picture = await _pickImage();
+    if (picture == null || !mounted || !_canMutate ||
+        !identical(controller, widget.controller) ||
+        _wordEditTarget(controller) != target) {
+      return;
+    }
+    final section = controller.sectionAtCaret;
+    final columns = section.resolvedColumnCount;
+    final columnWidth =
+        (section.contentWidth - section.columnSpace * (columns - 1)) / columns;
+    final size = picture.info.fit(
+      maxWidth: math.min(360, columnWidth),
+      maxHeight: math.min(240, section.contentHeight),
+    );
+    if (size == null) {
+      _pictureError();
+      return;
+    }
+    controller.insertPicture(
       OfficeVisual(
         kind: OfficeVisualKind.picture,
-        title: file!.name,
-        imageBytes: file.bytes,
-        width: 360,
-        height: 200,
+        title: picture.file.name,
+        imageBytes: picture.file.bytes,
+        width: size.width,
+        height: size.height,
       ),
     );
   }
 
-  Future<PlatformFile?> _pickImage() async {
-    final FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.image,
-      withData: true,
+  void _pictureError() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(context.tr('Could not read the selected image.'))),
     );
+  }
+
+  Future<({PlatformFile file, OfficePictureInfo info})?> _pickImage() async {
+    FilePickerResult? result;
+    try {
+      result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        withData: true,
+      );
+    } catch (_) {
+      _pictureError();
+      return null;
+    }
     if (result == null || result.files.isEmpty) return null;
     final PlatformFile file = result.files.first;
     if (file.bytes == null) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('Could not read the selected image.'))),
-        );
-      }
+      _pictureError();
       return null;
     }
-    if (file.bytes!.length > 32 * 1024 * 1024) {
+    if (file.bytes!.length > officePictureMaxBytes) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(context.tr('Images larger than 32 MB are not supported.'))),
@@ -2620,7 +2671,12 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
       }
       return null;
     }
-    return file;
+    final info = await compute(inspectOfficePicture, file.bytes!);
+    if (info == null) {
+      _pictureError();
+      return null;
+    }
+    return (file: file, info: info);
   }
 
   void _insertTable() async {
@@ -3033,9 +3089,28 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
 
   Future<void> _slideInsertPicture() async {
     if (!_canMutate) return;
-    final PlatformFile? file = await _pickImage();
-    if (file?.bytes == null) return;
-    final PmlSlide slide = _slides.slide;
+    final controller = _slides;
+    final PmlSlide slide = controller.slide;
+    final int revision = controller.contentRevision;
+    final picture = await _pickImage();
+    if (picture == null || !mounted || !_canMutate ||
+        !identical(controller, widget.controller) ||
+        !identical(slide, controller.slide) ||
+        revision != controller.contentRevision) {
+      return;
+    }
+    final presentation = controller.presentation;
+    // Keep the familiar inset where it fits, and reduce it on small slides.
+    final x = math.min(1200000, presentation.slideWidth ~/ 10);
+    final y = math.min(1200000, presentation.slideHeight ~/ 10);
+    final size = picture.info.fit(
+      maxWidth: math.min(360, (presentation.slideWidth - x) / 12700),
+      maxHeight: math.min(240, (presentation.slideHeight - y) / 12700),
+    );
+    if (size == null) {
+      _pictureError();
+      return;
+    }
     final int id = slide.shapes.fold<int>(
           2,
           (int max, PmlShape shape) => shape.id > max ? shape.id : max,
@@ -3043,25 +3118,25 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
         1;
     final PmlShape shape = PmlShape(
       id: id,
-      name: file!.name,
+      name: picture.file.name,
       preset: PmlShapePreset.rect,
-      transform: const PmlTransform(
-        x: 1200000,
-        y: 1200000,
-        cx: 4572000,
-        cy: 2571750,
+      transform: PmlTransform(
+        x: x,
+        y: y,
+        cx: (size.width * 12700).round(),
+        cy: (size.height * 12700).round(),
       ),
       fillColor: '',
       visual: OfficeVisual(
         kind: OfficeVisualKind.picture,
-        title: file.name,
-        imageBytes: file.bytes,
-        width: 360,
-        height: 203,
+        title: picture.file.name,
+        imageBytes: picture.file.bytes,
+        width: size.width,
+        height: size.height,
       ),
     );
-    _slides.commands.commit(_AddShapeCommand(_slides, shape));
-    _slides.refresh();
+    controller.commands.commit(_AddShapeCommand(controller, shape));
+    controller.refresh();
   }
 
   void _slideInsertTable() async {
@@ -3385,24 +3460,28 @@ class _DeleteSlideCommand implements OfficeCommand {
 }
 
 class _AddShapeCommand implements OfficeCommand {
-  _AddShapeCommand(this.controller, this.shape);
+  _AddShapeCommand(this.controller, this.shape)
+      : _slide = controller.slide,
+        _previousSelection = controller.selected;
 
   final SlideEditorController controller;
   final PmlShape shape;
-  PmlShape? _previousSelection;
+  final PmlSlide _slide;
+  final PmlShape? _previousSelection;
 
   @override
   void execute() {
-    _previousSelection ??= controller.selected;
-    controller.slide.shapes.add(shape);
-    controller.selected = shape;
+    _slide.shapes.add(shape);
+    if (identical(controller.slide, _slide)) controller.selected = shape;
     controller.refresh();
   }
 
   @override
   void undo() {
-    controller.slide.shapes.remove(shape);
-    controller.selected = _previousSelection;
+    _slide.shapes.remove(shape);
+    if (identical(controller.slide, _slide)) {
+      controller.selected = _previousSelection;
+    }
     controller.refresh();
   }
 

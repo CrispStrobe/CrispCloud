@@ -75,6 +75,7 @@ void _expectBody(
   int? sizeOverride,
   bool? italicOverride,
   String? familyOverride,
+  String? underlineOverride,
 }) {
   final body = _part(
     bytes,
@@ -110,7 +111,7 @@ void _expectBody(
     expect(_on(properties, 'strike'), index == 0);
     expect(_value(properties, 'color'), colors[index]);
     expect(_value(properties, 'highlight'), index == 0 ? 'yellow' : null);
-    expect(_value(properties, 'u'), underlines[index]);
+    expect(_value(properties, 'u'), underlineOverride ?? underlines[index]);
     expect(_value(properties, 'vertAlign'), vertical[index]);
   }
 }
@@ -267,6 +268,94 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
+  testWidgets('untouched font Apply preserves a mixed selection', (
+    tester,
+  ) async {
+    final (controller, key) = await _host(tester);
+    controller.selectAll();
+    await _dialog(tester, key);
+    await _apply(tester);
+    expect(controller.isDirty, isFalse);
+    expect(controller.canUndo, isFalse);
+    _expectBody(controller.saveBytes());
+    _expectHeader(controller.saveBytes());
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('explicit current font family normalizes a mixed selection', (
+    tester,
+  ) async {
+    final (controller, key) = await _host(tester);
+    controller.selectAll();
+    await _dialog(tester, key);
+    expect(_dialogText('Cambria'), findsOneWidget);
+    await tester.tap(find.byTooltip('Family'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Cambria').last);
+    await tester.pumpAndSettle();
+    await _apply(tester);
+    expect(controller.isDirty, isTrue);
+    _cycles(controller, 'font-family-current', (bytes) {
+      _expectBody(bytes, familyOverride: 'Cambria');
+      _expectHeader(bytes);
+    });
+    controller.undo();
+    _expectBody(controller.saveBytes());
+    controller.redo();
+    _expectBody(controller.saveBytes(), familyOverride: 'Cambria');
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('explicit current half-point size normalizes a mixed selection', (
+    tester,
+  ) async {
+    final (controller, key) = await _host(tester);
+    controller.selectAll();
+    await _dialog(tester, key);
+    final sizeField = find.byType(DropdownButtonFormField<double>);
+    expect(
+      tester.widget<DropdownButtonFormField<double>>(sizeField).initialValue,
+      14.5,
+    );
+    await tester.tap(sizeField);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('14.5').last);
+    await tester.pumpAndSettle();
+    await _apply(tester);
+    expect(controller.isDirty, isTrue);
+    _cycles(controller, 'font-size-current', (bytes) {
+      _expectBody(bytes, sizeOverride: 29);
+      _expectHeader(bytes);
+    });
+    controller.undo();
+    _expectBody(controller.saveBytes());
+    controller.redo();
+    _expectBody(controller.saveBytes(), sizeOverride: 29);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('explicit current underline normalizes only that property', (
+    tester,
+  ) async {
+    final (controller, key) = await _host(tester);
+    controller.selectAll();
+    await _dialog(tester, key);
+    await tester.tap(find.byType(DropdownButtonFormField<WmlUnderline>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Dotted').last);
+    await tester.pumpAndSettle();
+    await _apply(tester);
+    _cycles(controller, 'font-underline-current', (bytes) {
+      _expectBody(bytes, underlineOverride: 'dotted');
+      _expectHeader(bytes);
+    });
+    controller.undo();
+    _expectBody(controller.saveBytes());
+    controller.redo();
+    _expectBody(controller.saveBytes(), underlineOverride: 'dotted');
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
   testWidgets('font size edit changes only size across selected runs', (
     tester,
   ) async {
@@ -328,6 +417,79 @@ void main() {
     _expectHeader(controller.saveBytes(), italic: true);
     await tester.pumpWidget(const SizedBox.shrink());
   });
+
+  testWidgets(
+    'font result cannot move from an open header dialog to the body',
+    (tester) async {
+      final (controller, key) = await _host(tester);
+      controller.beginHeaderFooterEdit(0, footer: false);
+      await _dialog(tester, key);
+      await tester.tap(_dialogText('I'));
+      controller.endHeaderFooterEdit();
+      await _apply(tester);
+      expect(controller.isDirty, isFalse);
+      expect(controller.canUndo, isFalse);
+      _expectBody(controller.saveBytes());
+      _expectHeader(controller.saveBytes());
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
+  testWidgets('font result cannot follow a changed selection in one document', (
+    tester,
+  ) async {
+    final (controller, key) = await _host(tester);
+    await _dialog(tester, key);
+    await tester.tap(_dialogText('I'));
+    controller.selectAll();
+    await _apply(tester);
+    expect(controller.isDirty, isFalse);
+    expect(controller.canUndo, isFalse);
+    _expectBody(controller.saveBytes());
+    _expectHeader(controller.saveBytes());
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets(
+    'font result cannot overwrite a newer revision at the same caret',
+    (tester) async {
+      final (controller, key) = await _host(tester);
+      await _dialog(tester, key);
+      await tester.tap(_dialogText('I'));
+      controller.applyRunFormat((properties) => properties.color = '556677');
+      final revision = controller.contentRevision;
+      final before = _part(
+        controller.saveBytes(),
+        'word/document.xml',
+      ).toXmlString();
+      await _apply(tester);
+      expect(controller.contentRevision, revision);
+      expect(
+        _part(controller.saveBytes(), 'word/document.xml').toXmlString(),
+        before,
+      );
+      // The external color edit is still the only undo entry.
+      controller.undo();
+      _expectBody(controller.saveBytes());
+      expect(controller.canUndo, isFalse);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
+  testWidgets(
+    'font result survives paint-only refreshes at its original target',
+    (tester) async {
+      final (controller, key) = await _host(tester);
+      await _dialog(tester, key);
+      await tester.tap(_dialogText('I'));
+      controller.refreshMetrics();
+      await _apply(tester);
+      expect(controller.isDirty, isTrue);
+      _expectBody(controller.saveBytes(), italicOverride: false);
+      _expectHeader(controller.saveBytes());
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
 
   testWidgets('font cancel and controller replacement leave documents clean', (
     tester,

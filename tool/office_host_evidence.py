@@ -4,34 +4,112 @@ import argparse
 import hashlib
 import json
 from pathlib import Path, PurePosixPath
-from xml.etree import ElementTree
+import posixpath
+from urllib.parse import unquote, urlsplit
+from xml.etree import ElementTree as ET
 from zipfile import BadZipFile, ZipFile
 
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = Path(__file__).with_suffix('.json')
 REPORT = 'build/fidelity-host/inventory.json'
-MAIN_PARTS = {
-    '.docx': ('word/document.xml',
-              '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}document'),
-    '.xlsx': ('xl/workbook.xml',
-              '{http://schemas.openxmlformats.org/spreadsheetml/2006/main}workbook'),
-    '.pptx': ('ppt/presentation.xml',
-              '{http://schemas.openxmlformats.org/presentationml/2006/main}presentation'),
+OFFICE = {'.docx', '.xlsx', '.pptx'}
+PACKAGE_REL = 'http://schemas.openxmlformats.org/package/2006/relationships'
+CONTENT_TYPES = 'http://schemas.openxmlformats.org/package/2006/content-types'
+MAIN_TYPES = {
+    '.docx': ('wordprocessingml.document', 'wordprocessingml', 'document'),
+    '.xlsx': ('spreadsheetml.sheet', 'spreadsheetml', 'workbook'),
+    '.pptx': ('presentationml.presentation', 'presentationml', 'presentation'),
 }
-for extension in ('.docm', '.dotx', '.dotm'):
-    MAIN_PARTS[extension] = MAIN_PARTS['.docx']
-OFFICE = set(MAIN_PARTS)
+
+MAIN_TYPES.update({
+    '.docm': MAIN_TYPES['.docx'],
+    '.dotx': ('wordprocessingml.template', 'wordprocessingml', 'document'),
+    '.dotm': MAIN_TYPES['.docx'],
+})
+OFFICE = set(MAIN_TYPES)
+MAIN_PARTS = {
+    ext: ({'.docx': 'word/document.xml', '.docm': 'word/document.xml', '.dotx': 'word/document.xml', '.dotm': 'word/document.xml', '.xlsx': 'xl/workbook.xml', '.pptx': 'ppt/presentation.xml'}[ext],
+          f'{{http://schemas.openxmlformats.org/{space}/2006/main}}{local}')
+    for ext, (_, space, local) in MAIN_TYPES.items()
+}
+
+def main_content_type(extension):
+    if extension == '.docm':
+        return 'application/vnd.ms-word.document.macroEnabled.main+xml'
+    if extension == '.dotm':
+        return 'application/vnd.ms-word.template.macroEnabledTemplate.main+xml'
+    return f'application/vnd.openxmlformats-officedocument.{MAIN_TYPES[extension][0]}.main+xml'
 
 
 def expected_paths():
-    paths = json.loads(MANIFEST.read_text())['outputs']
-    if not paths or len(paths) != len(set(paths)):
+    data = json.loads(MANIFEST.read_text())
+    paths = data.get('outputs') if isinstance(data, dict) else None
+    if (not isinstance(data, dict) or data.get('version') != 1
+            or not isinstance(paths, list) or not paths
+            or any(not isinstance(name, str) for name in paths)
+            or len(paths) != len(set(paths))):
         raise ValueError('Host evidence manifest must be nonempty and unique')
     for name in paths:
         path = PurePosixPath(name)
-        if path.is_absolute() or '..' in path.parts or path.suffix not in OFFICE:
+        if (path.is_absolute() or '..' in path.parts or '\\' in name
+                or str(path) != name or path.suffix not in OFFICE
+                or path.parts[:2] not in (('build', 'fidelity-host'), ('build', 'fidelity'), ('build', 'fidelity-custom-tabs'))):
             raise ValueError(f'Invalid host evidence path: {name}')
     return paths
+
+
+def inspect_package(file):
+    """Require the expected format through the owning OPC relationship.
+
+    This is an artifact-integrity check; the Open XML SDK remains responsible
+    for schema validation. Main parts may be relocated within the package.
+    """
+    content_type, namespace, local_name = MAIN_TYPES[file.suffix.lower()]
+    with ZipFile(file) as archive:
+        names = archive.namelist()
+        if len(names) != len(set(names)):
+            raise ValueError('duplicate ZIP member names')
+        if not {'[Content_Types].xml', '_rels/.rels'}.issubset(names):
+            raise ValueError('missing OPC content types or package relationships')
+        if archive.testzip() is not None:
+            raise ValueError('damaged ZIP entry')
+        relationships = ET.fromstring(archive.read('_rels/.rels'))
+        if relationships.tag != f'{{{PACKAGE_REL}}}Relationships':
+            raise ValueError('invalid package relationships namespace')
+        main_relationships = [r for r in relationships if r.get('Type') in {
+            'http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument',
+            'http://purl.oclc.org/ooxml/officeDocument/relationships/officeDocument',
+        }]
+        if len(main_relationships) != 1:
+            raise ValueError('expected exactly one Office main-part relationship')
+        relation = main_relationships[0]
+        target = relation.get('Target', '')
+        uri = urlsplit(target)
+        if relation.get('TargetMode', 'Internal') != 'Internal' or uri.scheme or uri.netloc or uri.query or uri.fragment:
+            raise ValueError('Office main part must be an internal package target')
+        decoded = unquote(uri.path)
+        if not decoded or '\\' in decoded:
+            raise ValueError('invalid Office main-part target')
+        main = posixpath.normpath(decoded.lstrip('/'))
+        if main in ('.', '..') or main.startswith('../'):
+            raise ValueError('escaping Office main part')
+        if main not in names:
+            raise ValueError(f'missing main part {main}')
+        types = ET.fromstring(archive.read('[Content_Types].xml'))
+        if types.tag != f'{{{CONTENT_TYPES}}}Types':
+            raise ValueError('invalid content-types namespace')
+        matches = [entry.get('ContentType') for entry in types.findall(f'{{{CONTENT_TYPES}}}Override')
+                   if unquote(entry.get('PartName', '')).lstrip('/') == main]
+        expected_type = main_content_type(file.suffix.lower())
+        if matches != [expected_type]:
+            raise ValueError('Office main-part content type does not match filename format')
+        document = ET.fromstring(archive.read(main))
+        if document.tag not in {
+            f'{{http://schemas.openxmlformats.org/{namespace}/2006/main}}{local_name}',
+            f'{{http://purl.oclc.org/ooxml/{namespace}/main}}{local_name}',
+        }:
+            raise ValueError('Office main-part root does not match filename format')
+    return main
 
 
 def clean(root):
@@ -77,16 +155,9 @@ def inspect(root):
         used_bases.add(file.parents[len(PurePosixPath(name).parts) - 1])
         extension = PurePosixPath(name).suffix
         try:
-            with ZipFile(file) as archive:
-                main_part, root_tag = MAIN_PARTS[extension]
-                if main_part not in archive.namelist():
-                    raise ValueError(f'missing main part {main_part}')
-                if ElementTree.fromstring(archive.read(main_part)).tag != root_tag:
-                    raise ValueError(f'wrong document root in {main_part}')
-                if archive.testzip() is not None:
-                    raise ValueError('damaged ZIP entry')
+            main_part = inspect_package(file)
             content = file.read_bytes()
-        except (BadZipFile, OSError, ValueError, ElementTree.ParseError) as error:
+        except (BadZipFile, OSError, ValueError, ET.ParseError, KeyError) as error:
             failures.append(f'{name}: invalid {extension[1:].upper()}: {error}')
             continue
         files.append({
@@ -94,6 +165,8 @@ def inspect(root):
             'file': str(file.relative_to(root)),
             'bytes': len(content),
             'sha256': hashlib.sha256(content).hexdigest(),
+            'format': file.suffix.lower()[1:],
+            'main_part': main_part,
         })
     if len(used_bases) > 1:
         failures.append('Required host files are spread across different artifact roots')
