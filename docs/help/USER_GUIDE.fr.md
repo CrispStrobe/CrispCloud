@@ -69,6 +69,8 @@ Les commandes de texte comprennent la taille de police, l’affichage des lignes
 
 Les vues texte et hexadécimales des fichiers volumineux utilisent des pages de taille limitée. Le stockage temporaire des contenus distants est plafonné à 2 Gio ; les documents enrichis et les membres d’archives ont des limites plus basses. Un message de limite nécessite un autre traitement externe pris en charge ou une entrée plus petite. La visionneuse ne garantit pas le traitement de fichiers ou de contenus extraits sans limite de taille.
 
+La préparation d’une copie temporaire sur les appareils natifs s’arrête après deux minutes sans données écrites avec succès, ou après six heures au total. Annuler arrête aussi la préparation lorsqu’une lecture distante est bloquée ; un fournisseur qui ne répond pas peut confirmer la fermeture de sa connexion plus tard. CrispCloud vérifie le compte capturé et les métadonnées de version signalées avant et après la lecture. Si le fournisseur ne peut pas imposer une version fixe, ces vérifications ne garantissent pas un instantané immuable.
+
 <a id="built-in-editor"></a>
 ## Modifier des fichiers
 

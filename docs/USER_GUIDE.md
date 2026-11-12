@@ -69,6 +69,8 @@ Text controls include font size, line display and encoding choices. UTF-8/16/32 
 
 Large-file text/hex views use bounded pages. Remote staging has a 2 GiB ceiling; rich documents and archive members have smaller budgets. A limit message requires a supported external workflow or a smaller input. The viewer does not promise unlimited files or extracted content.
 
+Native temporary-copy preparation stops after two minutes without successfully written data or six hours overall. Cancel also stops preparation while a remote read is stalled; an unresponsive provider may take longer to confirm that its connection has closed. CrispCloud checks the captured account and reported version metadata before and after reading. When a provider cannot enforce a fixed version, these checks do not guarantee an immutable snapshot.
+
 <a id="built-in-editor"></a>
 ## Editing files
 

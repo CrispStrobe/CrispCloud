@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../models/file_item.dart';
 import 'file_operation_service.dart';
 
@@ -14,6 +16,11 @@ Future<ViewerSpool> createViewerSpool(
   int maxBytes = 2 * 1024 * 1024 * 1024,
   bool Function()? isCancelled,
   void Function(int bytes, int? total)? onProgress,
+  Duration overallTimeout = const Duration(hours: 6),
+  Duration inactivityTimeout = const Duration(minutes: 2),
+  Duration Function()? clock,
+  Timer Function(Duration, void Function())? createTimer,
+  String? temporaryRoot,
 }) async => throw UnsupportedError(
   'Temporary disk viewing is unavailable in the browser.',
 );
