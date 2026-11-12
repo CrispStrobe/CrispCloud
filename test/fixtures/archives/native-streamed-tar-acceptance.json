@@ -1,0 +1,144 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "archive": "native-large.tar",
+      "bytes": 269489664,
+      "sha256": "4ba8316fee37a59ce78f61ca9241e833e4348497d3517fdc5689ba39b17154e3",
+      "members": [
+        {
+          "path": "input",
+          "directory": true,
+          "size": 0,
+          "mode": 493,
+          "mtime": 1794522043
+        },
+        {
+          "path": "input/empty-folder",
+          "directory": true,
+          "size": 0,
+          "mode": 493,
+          "mtime": 1794522043
+        },
+        {
+          "path": "input/member-192MiB.bin",
+          "directory": false,
+          "size": 201327369,
+          "mode": 420,
+          "mtime": 1767323045,
+          "sha256": "866494d74211fbb141619471b48e6304ea3d1e6e7ab529cd225bf05e7dfceee2",
+          "pattern_seed": 19
+        },
+        {
+          "path": "input/member-65MiB.bin",
+          "directory": false,
+          "size": 68157773,
+          "mode": 420,
+          "mtime": 1767323045,
+          "sha256": "15f3e3feb1f08f3923b22ae25957c4d046b9848e47c899d1db209194a58fb0fd",
+          "pattern_seed": 7
+        },
+        {
+          "path": "input/資料",
+          "directory": true,
+          "size": 0,
+          "mode": 493,
+          "mtime": 1794522043
+        },
+        {
+          "path": "input/資料/empty.txt",
+          "directory": false,
+          "size": 0,
+          "mode": 420,
+          "mtime": 1767323045,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "pattern_seed": 0
+        }
+      ],
+      "source_read_passes": 3,
+      "max_source_or_staged_chunk": 65536,
+      "max_output_chunk": 262144,
+      "progress": {
+        "baseline_rss": 293982208,
+        "peak_sampled_rss": 339468288,
+        "peak_rss_increase": 45486080,
+        "phases": {
+          "scanning": {
+            "completed": 6,
+            "total": 0,
+            "events": 6,
+            "timer_ticks": 2
+          },
+          "packing": {
+            "completed": 269485142,
+            "total": 269485142,
+            "events": 4115,
+            "timer_ticks": 1018
+          },
+          "verifying": {
+            "completed": 808459948,
+            "total": 808459948,
+            "events": 9258,
+            "timer_ticks": 2461
+          },
+          "saving": {
+            "completed": 808464470,
+            "total": 808464470,
+            "events": 9257,
+            "timer_ticks": 1824
+          }
+        }
+      }
+    },
+    {
+      "archive": "native-large.cbt",
+      "bytes": 68159488,
+      "sha256": "1ce7fb6316cde36e2d0988042936c7a2e5e37b88e052d3ba1b9cecfdee6a7aba",
+      "members": [
+        {
+          "path": "member-65MiB.bin",
+          "directory": false,
+          "size": 68157773,
+          "mode": 420,
+          "mtime": 1767323045,
+          "sha256": "15f3e3feb1f08f3923b22ae25957c4d046b9848e47c899d1db209194a58fb0fd",
+          "pattern_seed": 7
+        }
+      ],
+      "source_read_passes": 3,
+      "max_source_or_staged_chunk": 65536,
+      "max_output_chunk": 262144,
+      "progress": {
+        "baseline_rss": 314621952,
+        "peak_sampled_rss": 347897856,
+        "peak_rss_increase": 33275904,
+        "phases": {
+          "scanning": {
+            "completed": 1,
+            "total": 0,
+            "events": 1,
+            "timer_ticks": 0
+          },
+          "packing": {
+            "completed": 68157773,
+            "total": 68157773,
+            "events": 1042,
+            "timer_ticks": 240
+          },
+          "verifying": {
+            "completed": 204475034,
+            "total": 204475034,
+            "events": 2344,
+            "timer_ticks": 631
+          },
+          "saving": {
+            "completed": 204476749,
+            "total": 204476749,
+            "events": 2344,
+            "timer_ticks": 474
+          }
+        }
+      }
+    }
+  ]
+}
