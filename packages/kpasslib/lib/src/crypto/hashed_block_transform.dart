@@ -66,4 +66,3 @@ abstract final class HashedBlockTransform {
     return builder.toBytes();
   }
 }
-

@@ -4,8 +4,10 @@ import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
 import 'package:collection/collection.dart';
+import 'package:crypto/crypto.dart';
 import 'package:kpasslib/kpasslib.dart';
 import 'package:xml/xml.dart';
+import 'package:xml/xml_events.dart';
 
 import '../crypto/crypto_utils.dart';
 import '../crypto/hashed_block_transform.dart';
@@ -13,6 +15,8 @@ import '../crypto/hmac_block_transform.dart';
 import '../utils/byte_utils.dart';
 import '../utils/merge_utils.dart';
 import '../utils/xml_utils.dart';
+
+part 'kdbx_raw_document.dart';
 
 /// An edit state of a [KdbxDatabase].
 class KdbxEditState {
@@ -477,7 +481,7 @@ class KdbxDatabase {
     required BytesReader reader,
     required KdbxHeader header,
   }) async {
-    final xml = XmlDocument.parse(await _decryptXmlV3(
+    final xml = _parseBoundedKdbxXml(await _decryptXmlV3(
       bytes: reader.readBytesToEnd(),
       header: header,
     ));
@@ -491,18 +495,29 @@ class KdbxDatabase {
   static Future<KdbxDatabase> _loadV4({
     required BytesReader reader,
     required KdbxHeader header,
+  }) async =>
+      _xmlToDB(
+        header: header,
+        xml: await _readXmlV4(reader: reader, header: header),
+        binaryTime: true,
+      );
+
+  static Future<XmlDocument> _readXmlV4({
+    required BytesReader reader,
+    required KdbxHeader header,
+    int maxDecodedBytes = 32 * 1024 * 1024,
   }) async {
     final headerBytes = reader.past;
 
     final expectedHeaderSha = reader.readBytes(header.hash.length);
-    if (!ListEquality().equals(expectedHeaderSha, header.hash)) {
+    if (Digest(expectedHeaderSha) != Digest(header.hash)) {
       throw FileCorruptedError('header hash mismatch');
     }
 
     final (cipherKey, hmacKey, hmac) = await header.computeKeysV4(headerBytes);
 
     final expectedHeaderHmac = reader.readBytes(hmac.length);
-    if (!ListEquality().equals(expectedHeaderHmac, hmac)) {
+    if (Digest(expectedHeaderHmac) != Digest(hmac)) {
       throw InvalidCredentialsError('invalid key');
     }
 
@@ -522,18 +537,26 @@ class KdbxDatabase {
     CryptoUtils.wipeData(cipherKey);
 
     if (header.compression == CompressionAlgorithm.gzip) {
-      data = GZipDecoder().decodeBytes(data);
+      data = GZipDecoder().decodeBytes(
+        data,
+        verify: true,
+        throwOnError: true,
+        maxOutputSize: maxDecodedBytes,
+      );
+    }
+    if (data.length > maxDecodedBytes) {
+      throw const ResourceLimitError('decoded database size');
     }
 
     reader = BytesReader(data);
     header.readInnerHeader(reader);
-    final xml = XmlDocument.parse(
+    final xml = _parseBoundedKdbxXml(
       utf8.decode(
         reader.readBytesToEnd(),
       ),
     );
 
-    return _xmlToDB(header: header, xml: xml, binaryTime: true);
+    return xml;
   }
 
   Future<Uint8List> get _v3Bytes {
@@ -541,9 +564,12 @@ class KdbxDatabase {
     return _getXmlV3Bytes(xml);
   }
 
-  Future<Uint8List> get _v4Bytes async {
-    final xml = _buildXml(exportXml: false, binaryTime: true);
+  Future<Uint8List> get _v4Bytes => _getXmlV4Bytes(
+        _buildXml(exportXml: false, binaryTime: true),
+      );
 
+  Future<Uint8List> _getXmlV4Bytes(XmlDocument xml,
+      {int maxDecodedBytes = 32 * 1024 * 1024}) async {
     final (cipherKey, hmacKey, hmac) = await header.computeKeysV4();
 
     final writer = BytesWriter();
@@ -552,6 +578,11 @@ class KdbxDatabase {
 
     final innerHeaderData = header.innerBytes;
     final xmlData = utf8.encode(xml.toXmlString());
+    if (innerHeaderData.length + xmlData.length > maxDecodedBytes) {
+      CryptoUtils.wipeData(innerHeaderData);
+      CryptoUtils.wipeData(xmlData);
+      throw const ResourceLimitError('decoded database size');
+    }
     var data = innerHeaderData + xmlData;
     CryptoUtils.wipeData(xmlData);
     CryptoUtils.wipeData(innerHeaderData);
@@ -620,6 +651,7 @@ class KdbxDatabase {
   static Future<String> _decryptXmlV3({
     required Uint8List bytes,
     required KdbxHeader header,
+    int maxDecodedBytes = 32 * 1024 * 1024,
   }) async {
     final masterKey = await header.masterKeyV3;
     var data = await _transformData(
@@ -634,14 +666,27 @@ class KdbxDatabase {
     data = HashedBlockTransform.decrypt(data);
 
     if (header.compression == CompressionAlgorithm.gzip) {
-      data = GZipDecoder().decodeBytes(data);
+      data = GZipDecoder().decodeBytes(
+        data,
+        verify: true,
+        throwOnError: true,
+        maxOutputSize: maxDecodedBytes,
+      );
+    }
+    if (data.length > maxDecodedBytes) {
+      throw const ResourceLimitError('decoded database size');
     }
 
     return utf8.decode(data);
   }
 
-  Future<Uint8List> _getXmlV3Bytes(XmlDocument xml) async {
+  Future<Uint8List> _getXmlV3Bytes(XmlDocument xml,
+      {int maxDecodedBytes = 32 * 1024 * 1024}) async {
     var data = utf8.encode(xml.toXmlString());
+    if (data.length > maxDecodedBytes) {
+      CryptoUtils.wipeData(data);
+      throw const ResourceLimitError('decoded database size');
+    }
 
     if (header.compression == CompressionAlgorithm.gzip) {
       data = GZipEncoder().encodeBytes(data);
@@ -838,4 +883,3 @@ class KdbxDatabase {
     return objectMap;
   }
 }
-

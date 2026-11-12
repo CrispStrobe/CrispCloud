@@ -58,10 +58,21 @@ class ParametersMap {
       throw UnsupportedValueError('invalid kdf version');
     }
 
-    for (var entry = _readEntry(reader);
-        reader.bytesLeft > 0 && entry != null;
-        entry = _readEntry(reader)) {
-      parameters._map.addEntries({entry});
+    while (true) {
+      final entry = _readEntry(reader);
+      if (entry == null) {
+        if (reader.bytesLeft != 0) {
+          throw const FileCorruptedError('data after parameter terminator');
+        }
+        break;
+      }
+      if (parameters._map.length >= 256) {
+        throw const ResourceLimitError('parameter count');
+      }
+      if (parameters._map.containsKey(entry.key)) {
+        throw const FileCorruptedError('duplicate parameter key');
+      }
+      parameters._map[entry.key] = entry.value;
     }
 
     return parameters;
@@ -129,7 +140,7 @@ class ParametersMap {
     }
 
     final keySize = reader.readInt32();
-    if (keySize <= 0) {
+    if (keySize <= 0 || keySize > 4096) {
       throw FileCorruptedError('bad key length');
     }
     final key = utf8.decode(reader.readBytes(keySize));
@@ -196,4 +207,3 @@ class ParametersMap {
     }
   }
 }
-

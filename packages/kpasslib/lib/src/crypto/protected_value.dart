@@ -64,4 +64,3 @@ class ProtectedData {
         salt: _salt,
       );
 }
-

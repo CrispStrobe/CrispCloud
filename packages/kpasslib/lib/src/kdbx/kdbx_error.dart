@@ -43,4 +43,3 @@ class MergeError extends KdbxError {
 class ResourceLimitError extends KdbxError {
   const ResourceLimitError(String message) : super(message);
 }
-

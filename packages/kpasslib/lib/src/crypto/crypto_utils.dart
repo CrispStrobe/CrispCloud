@@ -27,4 +27,3 @@ abstract final class CryptoUtils {
   }) =>
       List.generate(data.length, (i) => data[i] ^ salt[i % salt.length]);
 }
-

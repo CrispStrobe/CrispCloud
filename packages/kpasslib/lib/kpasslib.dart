@@ -18,4 +18,3 @@ export 'src/kdbx/kdbx_item.dart';
 export 'src/kdbx/kdbx_meta.dart';
 export 'src/kdbx/kdbx_time.dart';
 export 'src/kdbx/kdbx_uuid.dart';
-
