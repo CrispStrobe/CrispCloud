@@ -33,6 +33,34 @@ Uint8List _properties(int header, Map<int, int> values) {
 
 void main() {
   group('EML', () {
+    test('empty sanitized HTML cannot hide a readable alternative', () {
+      final email = parseEmailMessage(
+        _eml(
+          'Subject: Empty HTML\r\nContent-Type: multipart/alternative; boundary="alt"\r\n\r\n'
+          '--alt\r\nContent-Type: text/plain\r\n\r\nReadable plain body\r\n'
+          '--alt\r\nContent-Type: text/html\r\n\r\n<div> </div><script>hidden</script>\r\n'
+          '--alt--\r\n',
+        ),
+        'empty-html.eml',
+      );
+      expect(email.plainText, 'Readable plain body');
+      expect(email.safeHtml, isNull);
+    });
+
+    test('whitespace plain alternative falls back to readable HTML', () {
+      final email = parseEmailMessage(
+        _eml(
+          'Subject: Empty text\r\nContent-Type: multipart/alternative; boundary="alt"\r\n\r\n'
+          '--alt\r\nContent-Type: text/plain\r\n\r\n \t \r\n'
+          '--alt\r\nContent-Type: text/html\r\n\r\n<p>Readable HTML body</p>\r\n'
+          '--alt--\r\n',
+        ),
+        'empty-text.eml',
+      );
+      expect(email.plainText, 'Readable HTML body');
+      expect(email.safeHtml, contains('Readable HTML body'));
+    });
+
     test('decodes folded RFC 2047 headers and quoted-printable body', () {
       final email = parseEmailMessage(
         _eml(
@@ -436,6 +464,37 @@ Readable body'''),
         expect(email.searchText, contains('formatted body'));
         expect(email.warnings, isEmpty);
       }
+    });
+
+    test('whitespace plain and empty HTML do not hide a readable RTF body', () {
+      final writer = CfbfWriter()
+        ..addStream('__properties_version1.0', _properties(32, {}))
+        ..addStream('__substg1.0_1000001F', _utf16(' \r\n\t '))
+        ..addStream(
+          '__substg1.0_10130102',
+          utf8.encode('<div> </div><script>hidden</script>'),
+        )
+        ..addStream(
+          '__substg1.0_10090102',
+          literalOutlookRtf(r'{\rtf1 Readable RTF body}'),
+        );
+      final email = parseEmailMessage(writer.build(), 'blank-alternatives.msg');
+      expect(email.plainText, 'Readable RTF body');
+      expect(email.safeHtml, contains('Readable RTF body'));
+      expect(email.warnings, isEmpty);
+    });
+
+    test('empty sanitized HTML cannot mask a readable Outlook plain body', () {
+      final writer = CfbfWriter()
+        ..addStream('__properties_version1.0', _properties(32, {}))
+        ..addStream('__substg1.0_1000001F', _utf16('Readable plain body'))
+        ..addStream(
+          '__substg1.0_10130102',
+          utf8.encode('<div> </div><script>hidden</script>'),
+        );
+      final email = parseEmailMessage(writer.build(), 'blank-html.msg');
+      expect(email.plainText, 'Readable plain body');
+      expect(email.safeHtml, isNull);
     });
 
     test(

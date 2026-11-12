@@ -3446,6 +3446,11 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   }
 
   Widget _buildStatusBar(ThemeData theme) {
+    final note = _mode == ViewerMode.office && _officeDoc != null
+        ? OfficePreviewStrings(Localizations.localeOf(context))
+                  .note(_officeDoc!) ??
+              _viewNote
+        : _viewNote;
     final style = TextStyle(
       fontSize: 11.5,
       color: theme.colorScheme.onSurfaceVariant,
@@ -3461,12 +3466,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       if (_mode == ViewerMode.pdf && _pdfShowText && _pdfText != null)
         context.commanderTr("{0} characters", [_pdfText!.length]),
       if (_canChangeEncoding && _encoding != null) _encoding!,
-      if (_viewNote != null)
-        if (_mode == ViewerMode.office && _officeDoc != null)
-          OfficePreviewStrings(Localizations.localeOf(context))
-              .note(_officeDoc!)!
-        else
-          _viewNote!,
+      if (note != null) note,
       if (_mode == ViewerMode.hex && _selectedByte != null) _selectedByteText(),
       if (_searchStatusText != null) _searchStatusText!,
     ];

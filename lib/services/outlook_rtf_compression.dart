@@ -88,10 +88,11 @@ Uint8List decompressOutlookRtf(Uint8List bytes) {
         final reference = (read() << 8) | read();
         var offset = reference >>> 4;
         if (offset == write) {
-          if (produced == rawSize) return output.asUnmodifiableView();
-          if (rawSize == 0 && produced == 1 && output[0] == 0) {
+          if (rawSize == 0 &&
+              (produced == 0 || (produced == 1 && output[0] == 0))) {
             return Uint8List(0).asUnmodifiableView();
           }
+          if (produced == rawSize) return output.asUnmodifiableView();
           malformed();
         }
         final length = (reference & 0xf) + 2;

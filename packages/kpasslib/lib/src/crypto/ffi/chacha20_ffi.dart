@@ -63,4 +63,3 @@ class ChaCha20Ffi extends ChaCha20 {
     }
   }
 }
-

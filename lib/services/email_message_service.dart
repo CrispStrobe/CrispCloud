@@ -112,7 +112,9 @@ class _EmailParser {
         (content.html?.length ?? 0) > _maxBodyBytes) {
       throw const FormatException('Email body exceeds the 8 MiB preview limit');
     }
-    final html = content.html == null ? null : _safeHtml(content.html!);
+    var html = content.html == null ? null : _safeHtml(content.html!);
+    final htmlText = html == null ? '' : _htmlText(html);
+    if (htmlText.trim().isEmpty) html = null;
     return EmailMessageDocument(
       subject: _header(root.headers['subject'] ?? ''),
       from: _header(root.headers['from'] ?? ''),
@@ -120,7 +122,9 @@ class _EmailParser {
       cc: _header(root.headers['cc'] ?? ''),
       bcc: _header(root.headers['bcc'] ?? ''),
       date: _header(root.headers['date'] ?? ''),
-      plainText: content.text ?? (html == null ? '' : _htmlText(html)),
+      plainText: content.text?.trim().isNotEmpty == true
+          ? content.text!
+          : htmlText,
       safeHtml: html,
       attachments: List.unmodifiable(_attachments),
       warnings: List.unmodifiable(_warnings),
@@ -382,9 +386,11 @@ class _EmailParser {
       throw const FormatException('Email body exceeds the preview size limit');
     }
     var safeHtml = html.isEmpty ? null : _safeHtml(html);
-    if (body.isEmpty && safeHtml != null) body = _htmlText(safeHtml);
+    final htmlText = safeHtml == null ? '' : _htmlText(safeHtml);
+    if (htmlText.trim().isEmpty) safeHtml = null;
+    if (body.trim().isEmpty) body = htmlText;
     final richText = cfb.child(root, '__substg1.0_10090102');
-    if (body.isEmpty && richText != null) {
+    if (body.trim().isEmpty && richText != null) {
       try {
         if (!richText.isStream) {
           throw const OutlookRtfException(OutlookRtfErrorCode.malformed);

@@ -108,4 +108,3 @@ class Argon2Ffi extends Argon2 {
     }
   }
 }
-

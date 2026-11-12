@@ -507,4 +507,3 @@ class KdbxEntry extends KdbxItem {
 }
 
 enum _EditAction { added, deleted }
-

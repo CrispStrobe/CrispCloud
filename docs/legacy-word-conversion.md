@@ -15,6 +15,18 @@ detected, DOCM is the default when supported by the selected engine. DOCX cannot
 contain VBA. A filename such as `report (converted).docm` is proposed; saving
 with reported losses requires explicit acknowledgement.
 
+**Preview pages** renders the prepared DOCX/DOCM with the same installed engine
+and opens the resulting PDF in a detached read-only viewer. No destination file
+is created during preview, and the prepared Word bytes remain unchanged for
+**Save copy**. A failed preview leaves that reviewed copy available for retry or
+saving. The output-format selector remains DOCX/DOCM; PDF is a review surface.
+
+This preview helps inspect page breaks, fonts, tables, images, headers and
+footnotes as rendered by the selected engine. It does not verify editable-object
+behavior, VBA, signatures, or equivalence to the original layout. Installed
+fonts and engine settings affect the result. Word's PDF export includes markup;
+LibreOffice renders using its imported document state and isolated profile.
+
 The exact converter output bytes are saved as a new sibling on the original
 captured storage account. The original and existing files are never replaced.
 A collision or provider error leaves the dialog open for a new name/retry;
@@ -166,6 +178,14 @@ operating-system sandbox or proof that every external application's behavior is
 contained. Process arguments and request files keep document names out of
 executable script text.
 
+PDF review uses LibreOffice's documented
+[`writer_pdf_Export` filter](https://help.libreoffice.org/latest/en-GB/text/shared/guide/pdf_params.html)
+or Word's [`ExportAsFixedFormat`](https://learn.microsoft.com/en-us/office/vba/api/word.document.exportasfixedformat).
+Word receives `wdExportDocumentWithMarkup` and retains the IRM/label option;
+export never opens the result in another external app. The same macro/link
+policy, process ownership, timeout, size limits and cleanup apply. PDF input
+is restricted to validated binary DOC/DOT or inspected DOCX/DOCM packages.
+
 LibreOffice is available under [MPL 2.0 with additional component licenses](https://www.libreoffice.org/licenses/).
 No third-party converter is bundled or downloaded. Microsoft Word remains the
 user's separately installed/licensed application, and invoking LibreOffice does
@@ -246,6 +266,14 @@ unchanged. This fixture contains no VBA, signatures, OLE objects or tracked
 changes, so the run establishes no preservation result for those features and
 no visual/pagination equivalence. Windows Word and sandboxed macOS conversions
 still need platform acceptance testing.
+
+The page-preview follow-up passed 26 tests across the native backend, conversion
+dialogs and nine-language controls. It additionally ran the acceptance tool
+with `--verify-pdf-tools` against that installed LibreOffice: both DOCX and DOCM
+produced accepted PDF previews; independent `pdfinfo`/`pdftotext` checks found
+pages, table text, header, footer and footnote. The Word package hashes remained
+unchanged by preview. These checks establish valid readable previews of the
+fixture, not pixel or pagination equivalence for arbitrary documents.
 
 The separate [document-viewer evaluation](document-viewer-evaluation.md) retains
 the source/license findings for other suggested packages; those viewers were

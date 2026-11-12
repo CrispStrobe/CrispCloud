@@ -192,4 +192,3 @@ class ChaCha20Dart extends ChaCha20 {
     out[15] = StreamCipher.add32(x15, state[15]);
   }
 }
-

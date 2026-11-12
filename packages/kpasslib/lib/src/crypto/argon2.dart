@@ -43,4 +43,3 @@ abstract class Argon2 {
   /// Derives a key from [password].
   Uint8List convert(List<int> password);
 }
-

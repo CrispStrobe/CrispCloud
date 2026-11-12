@@ -181,6 +181,7 @@ class _RtfParser {
     final html = StringBuffer();
     for (final block in blocks) {
       if (block is _Paragraph) {
+        _normalizeUnicodeRuns(block);
         plain.writeln(_paragraphText(block));
         markdown.writeln('${_paragraphMarkdown(block)}\n');
         html.write(_paragraphHtml(block));
@@ -188,6 +189,11 @@ class _RtfParser {
         html.write('<table><tbody>');
         for (var index = 0; index < block.rows.length; index++) {
           final cells = block.rows[index];
+          for (final parts in cells) {
+            for (final part in parts) {
+              _normalizeUnicodeRuns(part);
+            }
+          }
           plain.writeln(
             cells
                 .map((parts) => parts.map(_paragraphText).join('\n'))
@@ -521,6 +527,32 @@ String _prefix(_Paragraph paragraph) => paragraph.marker.isNotEmpty
     : paragraph.list
     ? '•'
     : '';
+
+// Formatting groups can split a UTF-16 surrogate pair. Keep the scalar in the
+// first run rather than generating two invalid HTML text nodes around tags.
+void _normalizeUnicodeRuns(_Paragraph paragraph) {
+  for (var index = 0; index < paragraph.runs.length; index++) {
+    final run = paragraph.runs[index];
+    var text = run.text.toString();
+    if (text.isEmpty) continue;
+    final last = text.codeUnitAt(text.length - 1);
+    if (last >= 0xd800 && last <= 0xdbff && index + 1 < paragraph.runs.length) {
+      final next = paragraph.runs[index + 1];
+      final suffix = next.text.toString();
+      if (suffix.isNotEmpty &&
+          suffix.codeUnitAt(0) >= 0xdc00 &&
+          suffix.codeUnitAt(0) <= 0xdfff) {
+        run.text.write(suffix.substring(0, 1));
+        next.text
+          ..clear()
+          ..write(suffix.substring(1));
+        text = run.text.toString();
+      }
+    }
+    _validateUnicode(text);
+  }
+}
+
 String _paragraphText(_Paragraph paragraph) {
   final prefix = _prefix(paragraph);
   return '${prefix.isEmpty ? '' : '$prefix '}'
@@ -532,6 +564,7 @@ String _paragraphMarkdown(_Paragraph paragraph) {
   final text = paragraph.runs
       .map((run) {
         var text = _markdown(run.text.toString());
+        if (text.isEmpty) return '';
         if ((run.style & 1) != 0) text = '**$text**';
         if ((run.style & 2) != 0) text = '*$text*';
         if ((run.style & 8) != 0) text = '~~$text~~';
@@ -548,6 +581,7 @@ String _paragraphHtml(_Paragraph paragraph) {
     var text = _escape(run.text.toString())
         .replaceAll('\n', '<br>')
         .replaceAll('\t', '&#9;');
+    if (text.isEmpty) return '';
     if ((run.style & 1) != 0) text = '<strong>$text</strong>';
     if ((run.style & 2) != 0) text = '<em>$text</em>';
     if ((run.style & 4) != 0) text = '<u>$text</u>';

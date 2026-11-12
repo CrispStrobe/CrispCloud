@@ -33,7 +33,7 @@ jobs:
           flutter pub get --enforce-lockfile
           python3 tool/crypto_release_evidence.py --check
           python3 tool/with_ci_system_sqlite.py flutter test --no-pub test/aes_siv_test.dart test/cryptomator_test.dart \
-            test/keepass_crypto_test.dart test/keepass_service_test.dart \
+            test/keepass_crypto_test.dart test/keepass_service_test.dart test/keepass_extended_service_test.dart \
             test/veracrypt_header_vectors_test.dart test/internxt_secure_config_test.dart \
             test/crypto_paths_test.dart test/filen_adapter_test.dart \
             test/filen_bounded_transfer_test.dart test/internxt_rewire_test.dart \

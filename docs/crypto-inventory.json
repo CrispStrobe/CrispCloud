@@ -238,7 +238,7 @@
         "https://keepass.info/help/kb/kdbx.html",
         "https://keepass.info/help/base/security.html"
       ],
-      "note": "New confidentiality workflow for existing KDBX 3.0/3.1/4.0/4.1 databases on native and web. Preserves existing cipher/KDF costs and untouched XML/history/attachments, with bounded input/KDF work. Source-bound saves and lock checkpoints contain ciphertext only; no persistent master credentials or plaintext recovery copies. App does not load upstream FFI engine or expose runtime cipher plugins. This is not Apple-OS-only cryptography. No claim that every algorithm or construction is internationally standardized, no new legal classification, and no post-feature Apple questionnaire result; documentation review remains pending."
+      "note": "New confidentiality workflow for existing KDBX 3.0/3.1/4.0/4.1 databases on native and web. Group management, entry moves, protected custom-field edits and complete history restoration use the same encrypted session. Preserves existing cipher/KDF costs and untouched XML/history/attachments, with bounded input/KDF work and pre-mutation structure/size checks. Source-bound saves and lock checkpoints contain ciphertext only; no persistent master credentials or plaintext recovery copies. App does not load upstream FFI engine or expose runtime cipher plugins. This is not Apple-OS-only cryptography. No claim that every algorithm or construction is internationally standardized, no new legal classification, and no post-feature Apple questionnaire result; documentation review remains pending."
     },
     {
       "name": "Documents, backups, and transitive crypto",

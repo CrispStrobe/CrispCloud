@@ -295,4 +295,3 @@ class Aes256Dart extends Aes256 {
         _td3[s & 0xff];
   }
 }
-

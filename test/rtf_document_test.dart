@@ -15,6 +15,12 @@ Matcher _error(RtfDocumentErrorCode code) => throwsA(
 );
 
 void main() {
+  test('keeps surrogate pairs intact across formatting run boundaries', () {
+    final document = _read(r'{\rtf1\uc0\b\u-10179\b0\u-8704  text}');
+    expect(document.plainText, '😀 text');
+    expect(document.html, contains('<strong>😀</strong> text'));
+    expect(document.markdown, '**😀** text');
+  });
   test('preserves scoped emphasis, alignment and paragraph boundaries', () {
     final document = _read(
       r'{\rtf1\ansi\qc Title\par\pard Normal {\b bold {\i both}} {\ul under}\line last\par}',

@@ -143,13 +143,13 @@ class ViewerContent {
 
   /// Serialise non-binary fields for logging / caching.
   Map<String, dynamic> toJson() => {
-        'filename': filename,
-        'mode': mode.name,
-        'sizeBytes': sizeBytes,
-        if (encoding != null) 'encoding': encoding,
-        if (lineCount != null) 'lineCount': lineCount,
-        if (mimeType != null) 'mimeType': mimeType,
-      };
+    'filename': filename,
+    'mode': mode.name,
+    'sizeBytes': sizeBytes,
+    if (encoding != null) 'encoding': encoding,
+    if (lineCount != null) 'lineCount': lineCount,
+    if (mimeType != null) 'mimeType': mimeType,
+  };
 
   @override
   String toString() =>
@@ -174,302 +174,287 @@ class InternalViewerService {
   /// Returns a map from [ViewerMode] to the list of file extensions handled by
   /// that mode (lower-case, including the leading dot).
   Map<ViewerMode, List<String>> getSupportedExtensions() => const {
-        ViewerMode.text: [
-          '.txt',
-          '.text',
-          '.log',
-          '.log2',
-          '.json',
-          '.json5',
-          '.jsonl',
-          '.ndjson',
-          '.vim',
-          '.sty',
-          '.cls',
-          '.properties',
-          '.cfg',
-          '.conf',
-          '.ini',
-          '.env',
-          '.yaml',
-          '.yml',
-          '.toml',
-          '.gradle',
-          '.groovy',
-          '.cmake',
-          '.mk',
-          '.make',
-          '.bazel',
-          '.ninja',
-          '.edn',
-          '.gitconfig',
-          '.gitignore',
-          '.gitattributes',
-          '.gitmodules',
-          '.editorconfig',
-          // ---- Programming languages ----
-          '.dart',
-          '.py',
-          '.pyw',
-          '.pyi',
-          '.js',
-          '.mjs',
-          '.cjs',
-          '.ts',
-          '.mts',
-          '.cts',
-          '.jsx',
-          '.tsx',
-          '.java',
-          '.kt',
-          '.kts',
-          '.swift',
-          '.c',
-          '.cpp',
-          '.cc',
-          '.cxx',
-          '.h',
-          '.hpp',
-          '.hh',
-          '.hxx',
-          '.cs',
-          '.go',
-          '.rs',
-          '.rb',
-          '.php',
-          '.lua',
-          '.sh',
-          '.bash',
-          '.zsh',
-          '.fish',
-          '.ksh',
-          '.bat',
-          '.cmd',
-          '.ps1',
-          '.psm1',
-          '.sql',
-          '.r',
-          '.m',
-          '.mm',
-          '.tex',
-          '.diff',
-          '.patch',
-          '.asm',
-          '.s',
-          '.nasm',
-          '.coffee',
-          '.pl',
-          '.pm',
-          '.ex',
-          '.exs',
-          '.erl',
-          '.hrl',
-          '.hs',
-          '.elm',
-          '.fs',
-          '.fsi',
-          '.fsx',
-          '.gd',
-          '.ipynb',
-          '.jl',
-          '.nim',
-          '.pas',
-          '.purs',
-          '.smali',
-          '.twig',
-          '.vue',
-          '.svelte',
-          '.sol',
-          '.pug',
-          '.jade',
-          '.sass',
-          '.less',
-          '.scss',
-          '.css',
-          '.astro',
-          '.hcl',
-          '.tf',
-          '.tfvars',
-          '.rego',
-          '.srt',
-          '.vtt',
-          '.sub',
-        ],
-        ViewerMode.html: [
-          '.html',
-          '.htm',
-          '.xhtml',
-        ],
-        ViewerMode.xml: [
-          '.xml',
-          '.xsl',
-          '.xslt',
-          '.plist',
-          '.xaml',
-          '.ui',
-          '.resx',
-          '.rss',
-          '.atom',
-          '.csproj',
-          '.vcxproj',
-          '.props',
-          '.targets',
-          '.kbdx',
-        ],
-        ViewerMode.image: [
-          '.png',
-          '.jpg',
-          '.jpeg',
-          '.gif',
-          '.webp',
-          '.bmp',
-          '.svg',
-          '.svgz',
-          '.ico',
-          '.tiff',
-          '.tif',
-          '.avif',
-          '.heic',
-          '.heif',
-          '.psd',
-          '.xcf',
-        ],
-        ViewerMode.markdown: [
-          '.md',
-          '.markdown',
-          '.mdown',
-          '.mkd',
-          '.mkdn',
-          '.mdx',
-        ],
-        ViewerMode.pdf: [
-          '.pdf',
-        ],
-        ViewerMode.media: [
-          '.mp4',
-          '.m4v',
-          '.mov',
-          '.avi',
-          '.mkv',
-          '.webm',
-          '.wmv',
-          '.flv',
-          '.ogv',
-          '.3gp',
-          '.mpg',
-          '.mpeg',
-          '.mp3',
-          '.wav',
-          '.flac',
-          '.aac',
-          '.ogg',
-          '.oga',
-          '.opus',
-          '.m4a',
-          '.wma',
-          '.aiff',
-          '.aif',
-          '.mid',
-          '.midi',
-          '.gsm',
-          '.amr',
-          '.au',
-        ],
-        ViewerMode.font: [
-          '.ttf',
-          '.otf',
-          '.woff',
-          '.woff2',
-          '.pfb',
-        ],
-        ViewerMode.csv: [
-          '.csv',
-          '.tsv',
-        ],
-        ViewerMode.office: [
-          '.ppt',
-          '.pps',
-          '.pot',
-          '.rtf',
-          '.doc',
-          '.dot',
-          '.docx',
-          '.docm',
-          '.dotx',
-          '.dotm',
-          '.xlsx',
-          '.xlsm',
-          '.xltx',
-          '.pptx',
-          '.pptm',
-          '.potx',
-          '.odt',
-          '.ods',
-          '.odp',
-          '.epub',
-        ],
-        ViewerMode.email: ['.eml', '.msg'],
-        ViewerMode.archive: [
-          '.zip',
-          '.jar',
-          '.whl',
-          '.apk',
-          '.ipa',
-          '.aab',
-          '.crx',
-          '.xpi',
-          '.nupkg',
-          '.vsix',
-          '.cbz',
-          '.cbt',
-          '.cb7',
-          '.cbr',
-          '.7z',
-          '.rar',
-          '.tar',
-          '.tgz',
-          '.tbz2',
-          '.tbz',
-          '.txz',
-          '.tzst',
-          '.gz',
-          '.bz2',
-          '.xz',
-          '.zst',
-        ],
-        ViewerMode.binary: [
-          '.exe',
-          '.dll',
-          '.so',
-          '.dylib',
-          '.bin',
-          '.dat',
-          '.db',
-          '.sqlite',
-          '.sqlite3',
-          '.o',
-          '.obj',
-          '.class',
-          '.pyc',
-          '.deb',
-          '.rpm',
-          '.dmg',
-          '.iso',
-          '.img',
-          '.vhd',
-          '.vhdx',
-          '.wasm',
-          '.z',
-          '.cab',
-          '.pak',
-          '.pack',
-          '.cache',
-          '.swp',
-          '.core',
-          '.a',
-          '.lib',
-        ],
-      };
+    ViewerMode.text: [
+      '.txt',
+      '.text',
+      '.log',
+      '.log2',
+      '.json',
+      '.json5',
+      '.jsonl',
+      '.ndjson',
+      '.vim',
+      '.sty',
+      '.cls',
+      '.properties',
+      '.cfg',
+      '.conf',
+      '.ini',
+      '.env',
+      '.yaml',
+      '.yml',
+      '.toml',
+      '.gradle',
+      '.groovy',
+      '.cmake',
+      '.mk',
+      '.make',
+      '.bazel',
+      '.ninja',
+      '.edn',
+      '.gitconfig',
+      '.gitignore',
+      '.gitattributes',
+      '.gitmodules',
+      '.editorconfig',
+      // ---- Programming languages ----
+      '.dart',
+      '.py',
+      '.pyw',
+      '.pyi',
+      '.js',
+      '.mjs',
+      '.cjs',
+      '.ts',
+      '.mts',
+      '.cts',
+      '.jsx',
+      '.tsx',
+      '.java',
+      '.kt',
+      '.kts',
+      '.swift',
+      '.c',
+      '.cpp',
+      '.cc',
+      '.cxx',
+      '.h',
+      '.hpp',
+      '.hh',
+      '.hxx',
+      '.cs',
+      '.go',
+      '.rs',
+      '.rb',
+      '.php',
+      '.lua',
+      '.sh',
+      '.bash',
+      '.zsh',
+      '.fish',
+      '.ksh',
+      '.bat',
+      '.cmd',
+      '.ps1',
+      '.psm1',
+      '.sql',
+      '.r',
+      '.m',
+      '.mm',
+      '.tex',
+      '.diff',
+      '.patch',
+      '.asm',
+      '.s',
+      '.nasm',
+      '.coffee',
+      '.pl',
+      '.pm',
+      '.ex',
+      '.exs',
+      '.erl',
+      '.hrl',
+      '.hs',
+      '.elm',
+      '.fs',
+      '.fsi',
+      '.fsx',
+      '.gd',
+      '.ipynb',
+      '.jl',
+      '.nim',
+      '.pas',
+      '.purs',
+      '.smali',
+      '.twig',
+      '.vue',
+      '.svelte',
+      '.sol',
+      '.pug',
+      '.jade',
+      '.sass',
+      '.less',
+      '.scss',
+      '.css',
+      '.astro',
+      '.hcl',
+      '.tf',
+      '.tfvars',
+      '.rego',
+      '.srt',
+      '.vtt',
+      '.sub',
+    ],
+    ViewerMode.html: ['.html', '.htm', '.xhtml'],
+    ViewerMode.xml: [
+      '.xml',
+      '.xsl',
+      '.xslt',
+      '.plist',
+      '.xaml',
+      '.ui',
+      '.resx',
+      '.rss',
+      '.atom',
+      '.csproj',
+      '.vcxproj',
+      '.props',
+      '.targets',
+      '.kbdx',
+    ],
+    ViewerMode.image: [
+      '.png',
+      '.jpg',
+      '.jpeg',
+      '.gif',
+      '.webp',
+      '.bmp',
+      '.svg',
+      '.svgz',
+      '.ico',
+      '.tiff',
+      '.tif',
+      '.avif',
+      '.heic',
+      '.heif',
+      '.psd',
+      '.xcf',
+    ],
+    ViewerMode.markdown: [
+      '.md',
+      '.markdown',
+      '.mdown',
+      '.mkd',
+      '.mkdn',
+      '.mdx',
+    ],
+    ViewerMode.pdf: ['.pdf'],
+    ViewerMode.media: [
+      '.mp4',
+      '.m4v',
+      '.mov',
+      '.avi',
+      '.mkv',
+      '.webm',
+      '.wmv',
+      '.flv',
+      '.ogv',
+      '.3gp',
+      '.mpg',
+      '.mpeg',
+      '.mp3',
+      '.wav',
+      '.flac',
+      '.aac',
+      '.ogg',
+      '.oga',
+      '.opus',
+      '.m4a',
+      '.wma',
+      '.aiff',
+      '.aif',
+      '.mid',
+      '.midi',
+      '.gsm',
+      '.amr',
+      '.au',
+    ],
+    ViewerMode.font: ['.ttf', '.otf', '.woff', '.woff2', '.pfb'],
+    ViewerMode.csv: ['.csv', '.tsv'],
+    ViewerMode.office: [
+      '.ppt',
+      '.pps',
+      '.pot',
+      '.rtf',
+      '.doc',
+      '.dot',
+      '.docx',
+      '.docm',
+      '.dotx',
+      '.dotm',
+      '.xlsx',
+      '.xlsm',
+      '.xltx',
+      '.pptx',
+      '.pptm',
+      '.potx',
+      '.odt',
+      '.ods',
+      '.odp',
+      '.epub',
+    ],
+    ViewerMode.email: ['.eml', '.msg'],
+    ViewerMode.archive: [
+      '.zip',
+      '.jar',
+      '.whl',
+      '.apk',
+      '.ipa',
+      '.aab',
+      '.crx',
+      '.xpi',
+      '.nupkg',
+      '.vsix',
+      '.cbz',
+      '.cbt',
+      '.cb7',
+      '.cbr',
+      '.7z',
+      '.rar',
+      '.tar',
+      '.tgz',
+      '.tbz2',
+      '.tbz',
+      '.txz',
+      '.tzst',
+      '.gz',
+      '.bz2',
+      '.xz',
+      '.zst',
+    ],
+    ViewerMode.binary: [
+      '.exe',
+      '.dll',
+      '.so',
+      '.dylib',
+      '.bin',
+      '.dat',
+      '.db',
+      '.sqlite',
+      '.sqlite3',
+      '.o',
+      '.obj',
+      '.class',
+      '.pyc',
+      '.deb',
+      '.rpm',
+      '.dmg',
+      '.iso',
+      '.img',
+      '.vhd',
+      '.vhdx',
+      '.wasm',
+      '.z',
+      '.cab',
+      '.pak',
+      '.pack',
+      '.cache',
+      '.swp',
+      '.core',
+      '.a',
+      '.lib',
+    ],
+  };
 
   // ---- Mode detection -------------------------------------------------------
 
@@ -506,8 +491,7 @@ class InternalViewerService {
           .trimLeft()
           .toLowerCase();
       if (snippet.startsWith('<?xml')) return ViewerMode.xml;
-      if (snippet.startsWith('<!doctype html') ||
-          snippet.startsWith('<html')) {
+      if (snippet.startsWith('<!doctype html') || snippet.startsWith('<html')) {
         return ViewerMode.html;
       }
     }
@@ -607,7 +591,10 @@ class InternalViewerService {
 
     // Skip a UTF-8 BOM for the statistics if present.
     int start = 0;
-    if (header.length >= 3 && header[0] == 0xEF && header[1] == 0xBB && header[2] == 0xBF) {
+    if (header.length >= 3 &&
+        header[0] == 0xEF &&
+        header[1] == 0xBB &&
+        header[2] == 0xBF) {
       start = 3;
     }
 
@@ -638,8 +625,9 @@ class InternalViewerService {
       );
     }
 
-    final header =
-        data.length >= 16 ? Uint8List.sublistView(data, 0, 16) : data;
+    final header = data.length >= 16
+        ? Uint8List.sublistView(data, 0, 16)
+        : data;
     final mode = detectMode(filename, header: header);
 
     String? encoding;
@@ -721,8 +709,9 @@ class InternalViewerService {
     int? limit,
   }) {
     if (bytesPerLine < 1) bytesPerLine = 16;
-    final end =
-        limit != null ? (offset + limit).clamp(0, data.length) : data.length;
+    final end = limit != null
+        ? (offset + limit).clamp(0, data.length)
+        : data.length;
     final lines = <HexLine>[];
 
     for (var pos = offset; pos < end; pos += bytesPerLine) {
@@ -733,13 +722,11 @@ class InternalViewerService {
           .map((b) => b.toRadixString(16).toUpperCase().padLeft(2, '0'))
           .toList();
 
-      final asciiPart = chunk.map((b) => (b >= 0x20 && b < 0x7F) ? String.fromCharCode(b) : '.').join();
+      final asciiPart = chunk
+          .map((b) => (b >= 0x20 && b < 0x7F) ? String.fromCharCode(b) : '.')
+          .join();
 
-      lines.add(HexLine(
-        offset: pos,
-        hexParts: hexParts,
-        asciiPart: asciiPart,
-      ));
+      lines.add(HexLine(offset: pos, hexParts: hexParts, asciiPart: asciiPart));
     }
 
     return lines;
@@ -758,7 +745,8 @@ class InternalViewerService {
     if (cleaned.length > 512) return null; // sanity cap
     final out = Uint8List(cleaned.length ~/ 2);
     for (var i = 0; i < out.length; i++) {
-      out[i] = int.tryParse(cleaned.substring(i * 2, i * 2 + 2), radix: 16) ?? 0;
+      out[i] =
+          int.tryParse(cleaned.substring(i * 2, i * 2 + 2), radix: 16) ?? 0;
     }
     return out;
   }
@@ -837,7 +825,10 @@ class InternalViewerService {
       case 'utf32be':
         return (text: _decodeUtf32(data, true), encoding: 'utf32be');
       case 'utf8':
-        return (text: utf8.decode(data, allowMalformed: true), encoding: 'utf8');
+        return (
+          text: utf8.decode(data, allowMalformed: true),
+          encoding: 'utf8',
+        );
     }
 
     // Test four-byte BOMs before the UTF-16 prefixes they can share.
@@ -889,7 +880,9 @@ class InternalViewerService {
 
     try {
       return (text: utf8.decode(data, allowMalformed: false), encoding: 'utf8');
-    } catch (_) {/* fall through */}
+    } catch (_) {
+      /* fall through */
+    }
 
     // Fall back to Latin-1 which can always decode arbitrary bytes.
     return (text: latin1.decode(data), encoding: 'latin1');
@@ -913,7 +906,9 @@ class InternalViewerService {
   /// Detect BOM-less UTF-16 by sampling the first kilobyte.
   static ({String text, String encoding})? _sniffUtf16(Uint8List data) {
     if (data.length < 16) return null;
-    final sample = data.length > 1024 ? Uint8List.sublistView(data, 0, 1024) : data;
+    final sample = data.length > 1024
+        ? Uint8List.sublistView(data, 0, 1024)
+        : data;
     final pairs = sample.length ~/ 2;
     var leMatch = 0;
     var beMatch = 0;
@@ -921,9 +916,11 @@ class InternalViewerService {
       final lo = sample[i * 2];
       final hi = sample[i * 2 + 1];
       // Count code units that look like ASCII with a specific byte order.
-      final isLeAscii = hi == 0x00 &&
+      final isLeAscii =
+          hi == 0x00 &&
           (lo >= 0x20 && lo < 0x7F || lo == 0x0A || lo == 0x0D || lo == 0x09);
-      final isBeAscii = lo == 0x00 &&
+      final isBeAscii =
+          lo == 0x00 &&
           (hi >= 0x20 && hi < 0x7F || hi == 0x0A || hi == 0x0D || hi == 0x09);
       if (isLeAscii) leMatch++;
       if (isBeAscii) beMatch++;
@@ -988,7 +985,10 @@ class InternalViewerService {
       } else if (b == 0x0D) {
         // CRLF → emit only the LF (the loop writes it next).
         if (i + 1 >= e || data[i + 1] != 0x0A) buf.write('\n');
-      } else if (binaryMode || b == 0x7F || b < 0x20 || (b >= 0x80 && b < 0xA0)) {
+      } else if (binaryMode ||
+          b == 0x7F ||
+          b < 0x20 ||
+          (b >= 0x80 && b < 0xA0)) {
         buf.write(binaryMode ? '.' : '·');
       } else {
         // Latin-1 high byte (0xA0–0xFF) — only reachable in ASCII mode.
@@ -1093,7 +1093,8 @@ class InternalViewerService {
       '.docm' => 'application/vnd.ms-word.document.macroEnabled.12',
       '.dotx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.template',
       '.dotm' => 'application/vnd.ms-word.template.macroEnabled.12',
-      '.xlsx' || '.xlsm' || '.xltx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      '.xlsx' || '.xlsm' || '.xltx' =>
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       '.pptx' || '.pptm' || '.potx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
       '.odt' => 'application/vnd.oasis.opendocument.text',
       '.ods' => 'application/vnd.oasis.opendocument.spreadsheet',
@@ -1107,9 +1108,17 @@ class InternalViewerService {
   static String _mimeForArchive(String lower) {
     final ext = _extensionOf(lower);
     return switch (ext) {
-      '.zip' || '.jar' || '.whl' || '.apk' || '.ipa' || '.aab'
-          || '.crx' || '.xpi' || '.nupkg' || '.vsix'
-          || '.cbz' => 'application/zip',
+      '.zip' ||
+      '.jar' ||
+      '.whl' ||
+      '.apk' ||
+      '.ipa' ||
+      '.aab' ||
+      '.crx' ||
+      '.xpi' ||
+      '.nupkg' ||
+      '.vsix' ||
+      '.cbz' => 'application/zip',
       '.7z' || '.cb7' => 'application/x-7z-compressed',
       '.rar' || '.cbr' => 'application/vnd.rar',
       '.tar' || '.cbt' => 'application/x-tar',
@@ -1240,8 +1249,14 @@ class InternalViewerService {
       }
 
       // TTF: 00 01 00 00 | OTF: OTTO
-      if ((header[0] == 0x00 && header[1] == 0x01 && header[2] == 0x00 && header[3] == 0x00) ||
-          (header[0] == 0x4F && header[1] == 0x54 && header[2] == 0x54 && header[3] == 0x4F)) {
+      if ((header[0] == 0x00 &&
+              header[1] == 0x01 &&
+              header[2] == 0x00 &&
+              header[3] == 0x00) ||
+          (header[0] == 0x4F &&
+              header[1] == 0x54 &&
+              header[2] == 0x54 &&
+              header[3] == 0x4F)) {
         return ViewerMode.font;
       }
 
@@ -1354,14 +1369,12 @@ class InternalViewerService {
 
   /// Decoded text with metadata.
   static ({String text, String encoding, int lineCount}) _decodeText(
-      Uint8List data) {
+    Uint8List data,
+  ) {
     final result = decodeTextForView(data);
-    final lineCount = '\n'.allMatches(result.text).length + (result.text.isNotEmpty ? 1 : 0);
-    return (
-      text: result.text,
-      encoding: result.encoding,
-      lineCount: lineCount,
-    );
+    final lineCount =
+        '\n'.allMatches(result.text).length + (result.text.isNotEmpty ? 1 : 0);
+    return (text: result.text, encoding: result.encoding, lineCount: lineCount);
   }
 
   // ---- Search helpers -------------------------------------------------------

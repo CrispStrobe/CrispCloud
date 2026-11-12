@@ -68,17 +68,25 @@ Uint8List _unicode(String text) {
 }
 
 void main() {
-  testWidgets('RTF opens a formatted safe preview without unsupported page layout', (tester) async {
-    await _open(tester, 'formatted.rtf', _bytes(
-      r'{\rtf1\ansi Plain \b bold\b0  body\par Second paragraph}',
-    ));
-    expect(find.byType(HtmlWidget), findsOneWidget);
-    expect(find.textContaining('bold', findRichText: true), findsWidgets);
-    expect(find.textContaining('Second paragraph', findRichText: true), findsWidgets);
-    expect(find.text('Pages'), findsNothing);
-    expect(find.byTooltip('Edit (F4)'), findsNothing);
-    expect(tester.takeException(), isNull);
-  });
+  testWidgets(
+    'RTF opens a formatted safe preview without unsupported page layout',
+    (tester) async {
+      await _open(
+        tester,
+        'formatted.rtf',
+        _bytes(r'{\rtf1\ansi Plain \b bold\b0  body\par Second paragraph}'),
+      );
+      expect(find.byType(HtmlWidget), findsOneWidget);
+      expect(find.textContaining('bold', findRichText: true), findsWidgets);
+      expect(
+        find.textContaining('Second paragraph', findRichText: true),
+        findsWidgets,
+      );
+      expect(find.text('Pages'), findsNothing);
+      expect(find.byTooltip('Edit (F4)'), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('F3 decodes MIME text and searches decoded message content', (
     tester,
@@ -140,7 +148,7 @@ void main() {
           'Subject: Newline-dense message\r\n'
           'Content-Type: multipart/alternative; boundary="parts"\r\n\r\n'
           '--parts\r\nContent-Type: text/plain; charset=utf-8\r\n\r\n'
-          '${'\n' * 200010}\r\n'
+          'Readable prefix\n${'\n' * 200010}\r\n'
           '--parts\r\nContent-Type: text/html; charset=utf-8\r\n\r\n'
           '<p>Readable message</p>\r\n'
           '--parts--\r\n',

@@ -106,6 +106,30 @@ approval to distribute.
 
 ## Declarations and regulatory review
 
+### KeePass editing follow-up
+
+The subsequent editor increment adds group creation/renaming/moving/deletion,
+entry moves, custom-field viewing/editing (including protected values), and
+history inspection/restoration. It continues to operate on existing databases
+through the same retained XML document, KPassLib engine and PointyCastle Argon2
+adapter. There is no new cipher, KDF, cryptographic dependency, native binary,
+master-key change or format downgrade. Saves retain the existing vault's
+version/cipher/compression/KDF parameters and use the established fresh-randomness
+encryption path. History restoration retains the displaced current entry;
+custom-field protection uses the existing inner protected-value mechanism.
+
+Source-bound encrypted saves and encrypted in-memory lock checkpoints still
+apply. Protected custom values and historical passwords require explicit reveal
+or copy; history/group dialogs close on lock. New service/widget regressions
+exercise encrypted round trips and preservation. These are implementation tests,
+not a fresh independent cryptographic audit or an export classification. The
+expanded editing surface does not resolve the pending whole-app questionnaire.
+Its changed bound files are included in the refreshed source fingerprint
+below. Earlier fingerprints remain historical checkpoints; the updated source
+binding does not approve distribution.
+
+### Retained classification and store state
+
 Apple's export overview, documentation table and plist guidance were read on
 2026-11-12. The BIS Part 740 page displayed a current-eCFR date of 2026-11-11;
 the 2021 reporting-change table and BIS's March 2017 FAQ were checked to avoid
@@ -152,6 +176,8 @@ source-consistency check is relaxed.
 | Main's 144-file source fingerprint, reproduced at `977b503` | `80a040a7b19c93c0203c2612168a698a07cfcc2a3333e5af09be30116e82f8cc` |
 | Merged `docs/crypto-inventory.json` | `87daa40bfe8f76ab097c19896902f6189a597c91d65bce505ad132024a593013` |
 | Merged 207-file source fingerprint | `0fc9c45bca156ff7924ceceb333a004111dde6efa4a61b25fa95069ae74fcf9c` |
+| Extended editing/viewer inventory | `4d8ef6d4c9a55f9cb5a1cbfabb317c7cb6f34e70d8604c863c8d92e81f92e810` |
+| Extended editing/viewer 207-file source fingerprint | `60c243958aa142a8e86e27afcc4fd7d64389d9fd889fc7bca462a505feb2282d` |
 
 These identify source facts. They do not renew external approvals or establish
 correspondence with a signed or uploaded binary.
@@ -184,3 +210,29 @@ same results (**38 passed**; **40 passed, 2 platform skips**).
 `crypto_release_evidence.py --check` passed against the 207-file binding. Both
 source plists still matched the proposed declaration, and submission validation
 again rejected the missing questionnaire result. No live Apple API was called.
+
+
+## Validation of the further extensions
+
+The group, protected custom-field and history UI is covered by **45 unique
+KeePass checks** across focused runs: 26 backend/crypto, 18 widget and one
+localization test. The new backend suite is also included in the desktop, iOS,
+macOS and Play crypto gates. No dependency, vendor crypto implementation,
+accepted cipher/KDF or retained vault parameter changed in this increment.
+
+The updated viewer integration and KeePass files remain in the same **207-file**
+binding. The current inventory and source fingerprints appear above; the
+resolved root lockfile remains unchanged. Both Python suites passed again
+(**38 passed**; **40 passed, 2 Apple-plutil skips**), the source evidence check
+passed, and both source plists matched the existing proposed declaration.
+Submission validation still rejects the missing whole-app questionnaire
+result. No Apple API call, store declaration, distribution change or filing
+was made.
+
+The existing workspace CI gate formats every Dart file changed by the PR,
+including the new vendored package. The Dart 3.13.7 formatter normalized the
+remaining vendor and authored-file layout; this is recorded in KPassLib's
+provenance file. It changes no algorithms or copyright/license notices. All
+141 PR Dart files then passed the formatter without changes, and all 26
+KeePass backend/crypto tests passed again. The current source fingerprint
+includes those exact formatted bytes and the updated provenance record.

@@ -109,6 +109,7 @@ void main() {
   });
 
   test('specified empty stream and empty MELA are accepted', () {
+    expect(decompressOutlookRtf(outlookRtfPacket([1, 0x0c, 0xf0], 0)), isEmpty);
     expect(decompressOutlookRtf(outlookRtfPacket([2, 0, 0x0d, 0], 0)), isEmpty);
     expect(
       decompressOutlookRtf(outlookRtfPacket([], 0, uncompressed: true)),

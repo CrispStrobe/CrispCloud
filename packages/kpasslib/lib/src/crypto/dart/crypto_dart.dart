@@ -38,4 +38,3 @@ class CryptoDart extends CryptoEngine {
     );
   }
 }
-
